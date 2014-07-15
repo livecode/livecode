@@ -776,7 +776,7 @@ void MCGraphic::SetDashes(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_d
 
 void MCGraphic::GetPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points)
 {
-    // MERG-2014-06-25
+    // SN-2014-06-25: [[ MERGE-6.7 ]] P_POINTS getter updated
     // MDW-2014-06-18: [[ rect_points ]] allow effective points as read-only
     uint4 t_graphic_type;
     
@@ -814,7 +814,7 @@ void MCGraphic::SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_poin
 
 void MCGraphic::GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points)
 {
-    // MERG-2014-06-25
+    // SN-2014-06-25: [[ MERGE-6.7 ]]
     // MDW-2014-06-18: [[ rect_points ]] allow effective relativepoints as read-only
     uint4 t_graphic_type;
     
@@ -860,7 +860,7 @@ void MCGraphic::SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint
     Redraw();
 }
 
-// MERG-2014-06-25
+// SN-2014-06-25: [[ MERGE-6.7 ]] Effective points getter udpated
 // MDW-2014-06-18: [[ rect_points ]] allow effective points as read-only
 void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoint *&r_points)
 {
@@ -903,7 +903,7 @@ void MCGraphic::GetEffectivePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoi
 }
 
 
-// MERG-2014-06-25
+// SN-2014-06-25: [[ MERGE-6.7 ]] Effective relative point getter updated
 // MDW-2014-06-18: [[ rect_points ]] allow effective points as read-only
 void MCGraphic::GetEffectiveRelativePoints(MCExecContext &ctxt, uindex_t &r_count, MCPoint *&r_points)
 {

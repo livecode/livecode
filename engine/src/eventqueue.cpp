@@ -102,7 +102,7 @@ struct MCEvent
 			{
 				struct
 				{
-                    // MERG-2014-06-23: pick updated to StringRef
+                    // SN-2014-06-23: pick updated to StringRef
 					MCStringRef string;
 				} pick;
 			};
@@ -302,7 +302,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		MCObject *t_target;
 		t_target = t_event -> menu . target -> Get();
 		if (t_target != nil)
-            // MERG-2014-06-23: pick updated to StringRef
+            // SN-2014-06-23: pick updated to StringRef
 			t_target->message_with_valueref_args(MCM_menu_pick, t_event -> menu . pick . string);
 	}
 	break;
@@ -607,7 +607,7 @@ static void MCEventQueueDestroyEvent(MCEvent *p_event)
 	else if (p_event -> type == kMCEventTypeMenuPick)
 	{
 		p_event -> menu . target -> Release();
-        // MERG-2014-06-23: pick updated to StringRef
+        // SN-2014-06-23: pick updated to StringRef
 		MCValueRelease(p_event -> menu . pick . string);
 	}
 #ifdef _MOBILE
@@ -1067,7 +1067,7 @@ bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, MCStringRef p_string)
 		return false;
 	p_target -> Retain();
 	t_event -> menu . target = p_target;
-    // MERG-2014-06-23: pick updated to StringRef
+    // SN-2014-06-23: pick updated to StringRef
 	return MCStringCopy(p_string, t_event -> menu . pick . string);
 }
 

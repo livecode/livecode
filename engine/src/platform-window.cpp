@@ -37,7 +37,7 @@ MCPlatformWindow::MCPlatformWindow(void)
 	
 	MCMemoryClear(&m_changes, sizeof(m_changes));
 	m_style = kMCPlatformWindowStyleDocument;
-    // MERG-2014-06-23: Title updated to StringRef
+    // SN-2014-06-23: Title updated to StringRef
 	m_title = nil;
 	m_opacity = 1.0f;
 	m_content = MCRectangleMake(0, 0, 0, 0);
@@ -71,7 +71,7 @@ MCPlatformWindow::~MCPlatformWindow(void)
 	MCRegionDestroy(m_dirty_region);
 	
 	MCPlatformWindowMaskRelease(m_mask);
-    // MERG-2014-06-23: Title updated to StringRef
+    // SN-2014-06-23: Title updated to StringRef
 	MCValueRelease(m_title);
 	
 	free(m_attachments);
@@ -280,7 +280,7 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			break;
 		case kMCPlatformWindowPropertyTitle:
 			assert(p_type == kMCPlatformPropertyTypeMCString);
-            // MERG-2014-06-23: Title updated to StringRef
+            // SN-2014-06-23: Title updated to StringRef
             MCValueAssign(m_title, *(MCStringRef*)p_value);
 			m_changes . title_changed = true;
 			break;
@@ -389,7 +389,7 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 	{
 		case kMCPlatformWindowPropertyTitle:
 			assert(p_type == kMCPlatformPropertyTypeMCString);
-            // MERG-2014-06-23: Title updated to StringRef
+            // SN-2014-06-23: Title updated to StringRef
             *(MCStringRef*)r_value = MCValueRetain(m_title);
 			break;
 		case kMCPlatformWindowPropertyStyle:

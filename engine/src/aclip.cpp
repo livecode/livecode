@@ -42,7 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static MCPlatformSoundRef s_current_sound = nil;
 #elif defined _WINDOWS_DESKTOP
 #include "w32prefix.h"
-// MERG-2014-06-26 [[ PlatformPlayer ]]
+// SN-2014-06-26 [[ PlatformPlayer ]]
 // These 2 definitions must be accessible from exec-interface-aclip
 HWAVEOUT hwaveout;  //handle to audio device opened
 WAVEHDR wh;         //wave header structure

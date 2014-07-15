@@ -23,6 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "globals.h"
 
+#include "variable.h"
+
 #undef isatty
 #include <unistd.h>
 #include <stdio.h>
@@ -49,6 +51,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIDevice.h>
 
 #include "mbliphone.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCSystemLaunchUrl(MCStringRef p_url);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1118,9 +1124,11 @@ void MCIPhoneSystem::LaunchDocument(MCStringRef p_document)
     return;
 }
 
-void MCIPhoneSystem::LaunchUrl(MCStringRef p_document)
+void MCIPhoneSystem::LaunchUrl(MCStringRef p_url)
 {
-    return;
+    // AL-2014-06-26: [[ Bug 12700 ]] Implement launch url
+	if (!MCSystemLaunchUrl(p_url))
+        MCresult -> sets("no association");
 }
 
 void MCIPhoneSystem::DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)

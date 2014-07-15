@@ -2156,6 +2156,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 void MCStringsEvalMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_string);
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result);
+void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result);
 void MCStringsEvalConcatenateWithSpace(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result);
 void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result);
 

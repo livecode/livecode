@@ -268,7 +268,7 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_DEFAULT, Bool, MCButton, Default)
 	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCButton, Text)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, BinaryString, MCButton, UnicodeText)
-    // MERG-2014-06-25 [[ IconGravity ]]
+    // SN-2014-06-25 [[ IconGravity ]]
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_ICON_GRAVITY, InterfaceButtonIconGravity, MCButton, IconGravity)
 	
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ICON, InterfaceButtonIcon, MCButton, Icon)

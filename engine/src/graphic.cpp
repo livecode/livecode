@@ -91,7 +91,7 @@ MCPropertyInfo MCGraphic::kProperties[] =
     DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
-    // MERG-2014-06-24: [[ rect_point ]] allow effective [relative] points as read-only
+    // SN-2014-06-24: [[ rect_point ]] allow effective [relative] points as read-only
     DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
     DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
 };

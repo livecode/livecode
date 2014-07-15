@@ -3910,11 +3910,15 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
     MCListCreateMutable(t_delimiter, &t_list);
 
     uindex_t i;
-	for (i = 0; i < t_sorted_count; i++)
+    for (i = 0; i < t_sorted_count; i++)
         MCListAppend(*t_list, t_sorted[i]);
 
     MCAutoStringRef t_list_string;
     /* UNCHECKED */ MCListCopyAsString(*t_list, &t_list_string);
+
+    // SN-2014-07-09: [[ MemoryLeak ]] Delete the array generated.
+    //  The strings stored in t_sorted are only pointers though, not new strings
+    MCMemoryDeleteArray(t_sorted);
     
     if (t_trailing_delim)
     {

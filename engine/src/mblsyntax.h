@@ -512,4 +512,9 @@ enum MCMiscKeyboardReturnKey
     kMCMiscKeyboardReturnKeyEmergencyCall
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// From Url module
+
+bool MCSystemLaunchUrl(MCStringRef p_url);
+
 #endif

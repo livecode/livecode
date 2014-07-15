@@ -48,11 +48,11 @@ enum QTVRstate {
 };
 #endif
 
-// MERG-2014-07-03: [[ PlatformPlayer ]] Player constraints must be the same for
+// SN-2014-07-03: [[ PlatformPlayer ]] Player constraints must be the same for
 // new platform or old player
 struct MCMultimediaQTVRConstraints;
 
-// MERG-2014-07-02: [[ PlatformPlayer ]]
+// SN-2014-07-02: [[ PlatformPlayer ]]
 // Needed to refactor the new players, since we need to have the property table
 // MCPlayerInterface comprises all the former MCPlayer functions appearing as well
 // in the new PlatformPlayer.
@@ -145,7 +145,7 @@ public:
     
     virtual Boolean isbuffering() = 0;
     
-    // MERG-2014-07-03: [[ PlatformPlayer ]]
+    // SN-2014-07-03: [[ PlatformPlayer ]]
     // The functions from exec-interface-player.cpp should
     // not bother anymore with the kind of player in use.
     // Missing functions added here.
@@ -171,7 +171,7 @@ public:
     virtual void updatevisibility() = 0;
     virtual void updatetraversal() = 0;
     
-    // MERG-2014-07-03: [[ PlatformPlayer ]]
+    // SN-2014-07-03: [[ PlatformPlayer ]]
     // New properties P_FORE_COLOR and P_HILITE_COLOR added for the player
     virtual void setforegroundcolor(const MCInterfaceNamedColor& p_color) = 0;
     virtual void getforegrouncolor(MCInterfaceNamedColor& r_color) = 0;

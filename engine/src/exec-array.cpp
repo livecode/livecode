@@ -407,8 +407,9 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
             else
             {
                 t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
+                // AL-2014-06-12: [[ Bug 12610 ]] Range parameter to MCStringFormat must be a pointer to an MCRange
                 if (t_success)
-                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", t_range, p_string);
+                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", &t_range, p_string);
             }
             
             if (!t_success)

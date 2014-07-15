@@ -2561,31 +2561,59 @@ void MCObject::positionrel(const MCRectangle &drect,
 // SN-2014-04-03 [[ Bug 12075 ]] Tooltips need to be able to resolve the text direction of their label
 void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font)
 {
-    /*MCAutoArray<uint8_t> t_levels;
+    
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+    // AL-2014-06-24: [[ Bug 12343 ]] Restore splitting of object text into differing directional sections
+    //  when drawing on android; HarfBuzz needs all the directions resolved to display in the correct order.
+    MCAutoArray<uint8_t> t_levels;
     
     MCBidiResolveTextDirection(p_string, MCBidiFirstStrongIsolate(p_string, 0), t_levels . PtrRef(), t_levels . SizeRef());
     
     MCRange t_block_range;
-    for (uindex_t i = 0; i < t_levels . Size(); ++i)
+
+    bool t_initially_ltr;
+    t_initially_ltr = (t_levels[0] & 1) == 0;
+    
+    uindex_t t_length = t_levels . Size();
+    
+    for (uindex_t i = 0; i < t_length; ++i)
     {
+        uint8_t t_cur_level;
         // Check the range of this text direction
-        uint8_t t_cur_level = t_levels[i];
-        
-        t_block_range . offset = i;
-        while (i + 1 < t_levels . Size() && t_cur_level == t_levels[i + 1])
-            ++i;
-        
-        t_block_range . length = i + 1 - t_block_range . offset;
+        if (t_initially_ltr)
+        {
+            t_cur_level = t_levels[i];
+            
+            t_block_range . offset = i;
+            while (i + 1 < t_levels . Size() && t_cur_level == t_levels[i + 1])
+                ++i;
+            
+            t_block_range . length = i + 1 - t_block_range . offset;
+        }
+        else
+        {
+            // If the resolved text direction is rtl, we need to traverse the runs backwards
+            //  for the correct display order.
+            t_cur_level = t_levels[t_length - (i + 1)];
+            
+            uindex_t t_range_end = t_length - i;
+            t_block_range . length = i;
+            while (i + 1 < t_length && t_cur_level == t_levels[t_length - (i + 2)])
+                ++i;
+            
+            t_block_range . offset = t_length - (i + 1);
+            t_block_range . length = t_range_end - t_block_range . offset;
+        }
         
         // RTL when the level is odd
         dc -> drawtext_substring(sx, sy, p_string, t_block_range, font, false, kMCDrawTextNoBreak, (t_cur_level & 1) ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
-        sx += MCFontMeasureTextSubstring(font, p_string, t_block_range);
-    }*/
-    
+        sx += MCFontMeasureTextSubstring(font, p_string, t_block_range, getstack() -> getdevicetransform());
+    }
+#else
     bool t_is_rtl;
     t_is_rtl = !MCStringResolvesLeftToRight(p_string);
-    
     dc -> drawtext(sx, sy, p_string, font, false, kMCDrawTextNoBreak, t_is_rtl ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
+#endif
 }
 
 Exec_stat MCObject::domess(MCStringRef sptr)

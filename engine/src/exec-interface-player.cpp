@@ -450,7 +450,7 @@ void MCPlayer::GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks)
 
 void MCPlayer::SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks)
 {
-	// MERG-2014-07-03: [[ PlatformPlayer ]]
+    // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_CALLBACKS property refactored in the MCPlayer implementations
     setcallbacks(p_callbacks);
 }
@@ -472,7 +472,7 @@ void MCPlayer::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 
 void MCPlayer::GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id)
 {
-    // MERG-2014-07-03: [[ PlatformPlayer ]]
+    // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_MOVIE_CONTROLLER_ID property refactor in the MCPlayer implementations
     r_id = getmoviecontrollerid();
 }
@@ -551,28 +551,28 @@ void MCPlayer::SetZoom(MCExecContext& ctxt, double p_zoom)
 
 void MCPlayer::GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks)
 {
-    // MERG-2014-07-03: [[ PlatformPlayer ]]
+    // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_TRACKS getter refactored to the MCPlayer implementation
     gettracks(r_tracks);
 }
 
 void MCPlayer::GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints)
 {
-    // MERG-2014-07-03: [[ PlatformPlayer ]]
+    // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_CONSTRAITNS getter refactored to the MCPlayer implementations
     getconstraints(r_constraints);
 }
 
 void MCPlayer::GetNodes(MCExecContext& ctxt, MCStringRef& r_nodes)
 {
-    // MERG-2014-07-03: [[ PlatformPlayer ]]
+    // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_NODES getter refactored to the MCPlayer implementations
     getnodes(r_nodes);
 }
 	
 void MCPlayer::GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots)
 {
-    // MERG-2014-07-03: [[ PlatformPlayer ]]
+    // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_HOTSPOTS getter refactored to the MCPlayer implementations
     gethotspots(r_spots);
 }
@@ -598,7 +598,7 @@ void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting,
     if (flags != oldflags && !(flags & F_VISIBLE))
         playstop();
     
-    // MERG-2014-07-03: [[ PlatformPlayer ]]
+    // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_VISIBLE getter refactored to the MCPlayer implementations
     updatevisibility();
 }
@@ -619,7 +619,7 @@ void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
     
     if (!ctxt . HasError())
     {
-        // MERG-2014-07-03: [[ PlatformPlayer ]]
+        // SN-2014-07-03: [[ PlatformPlayer ]]
         // P_TRAVERSAL_ON needs an update on a QuickTime player 
         updatetraversal();
     }
@@ -627,7 +627,7 @@ void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
 
 void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks)
 {
-    // MERG-2014-07-03: [[ PlatformPlayer ]]
+    // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_ENABLED_TRACKS getter refactored to the MCPlayer implementations
     getenabledtracks(r_count, r_tracks);
 }

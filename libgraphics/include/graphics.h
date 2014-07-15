@@ -469,6 +469,19 @@ struct MCGFont
 	bool		ideal : 1;
 };
 
+inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, int32_t ascent, int32_t descent, bool ideal)
+{
+    MCGFont t_font;
+    t_font . fid = fid;
+	t_font . size = size;
+	t_font . fixed_advance = fixed_advance;
+	t_font . ascent = ascent;
+	t_font . descent = descent;
+	t_font . ideal = ideal;
+    
+    return t_font;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline bool MCGPointIsEqual(const MCGPoint &p_a, const MCGPoint &p_b)

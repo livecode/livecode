@@ -776,3 +776,16 @@ void MCGroup::SetLockUpdates(MCExecContext& ctxt, bool p_locked)
     if (!p_locked)
         computeminrect(True);
 }
+
+
+// MERG-2013-08-12: [[ ClipsToRect ]]
+void MCGroup::SetClipsToRect(MCExecContext& ctxt, bool p_clips_to_rect)
+{
+    m_clips_to_rect = p_clips_to_rect;
+    computeminrect(True);
+}
+
+void MCGroup::GetClipsToRect(MCExecContext& ctxt, bool& r_clips_to_rect)
+{
+    r_clips_to_rect = m_clips_to_rect;
+}

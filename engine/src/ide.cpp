@@ -779,10 +779,10 @@ extern uint8_t type_table[256];
 
 
 MCIdeScriptColourize::MCIdeScriptColourize(void)
-	: f_target(NULL),
+    :   f_type(CT_UNDEFINED),
 		f_start(0),
-		f_end(0),
-		f_type(CT_UNDEFINED)
+        f_end(0),
+        f_target(NULL)
 {
 }
 

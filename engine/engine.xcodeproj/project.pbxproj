@@ -595,6 +595,8 @@
 		BEBC51F21953510200215C85 /* platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEBC51EE195350F700215C85 /* platform.cpp */; };
 		BEBC51F51953513A00215C85 /* quicktime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEBC51F31953513A00215C85 /* quicktime.cpp */; };
 		BEBC51F61953513A00215C85 /* quicktime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEBC51F31953513A00215C85 /* quicktime.cpp */; };
+		BEEC4C67196C0DF3000DA7F5 /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = BEEC4C64196C0DF3000DA7F5 /* mac-av-player.mm */; };
+		BEEC4C68196C0DF3000DA7F5 /* mac-qt-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = BEEC4C66196C0DF3000DA7F5 /* mac-qt-player.mm */; };
 		BEF6186019470E1E00C42C57 /* exec-engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0F115888AB8008EB6B5 /* exec-engine.cpp */; };
 		BEF6186119470E6100C42C57 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
 		BEF6186219470EA700C42C57 /* exec-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0EF15888AB8008EB6B5 /* exec-array.cpp */; };
@@ -1797,6 +1799,9 @@
 		BEDE3F9E19534E290050F19B /* mac-sound.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-sound.mm"; path = "src/mac-sound.mm"; sourceTree = "<group>"; };
 		BEDE3F9F19534E290050F19B /* mac-surface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-surface.mm"; path = "src/mac-surface.mm"; sourceTree = "<group>"; };
 		BEDE3FA019534E290050F19B /* mac-window.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-window.mm"; path = "src/mac-window.mm"; sourceTree = "<group>"; };
+		BEEC4C64196C0DF3000DA7F5 /* mac-av-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-av-player.mm"; path = "src/mac-av-player.mm"; sourceTree = "<group>"; };
+		BEEC4C65196C0DF3000DA7F5 /* mac-player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "mac-player.h"; path = "src/mac-player.h"; sourceTree = "<group>"; };
+		BEEC4C66196C0DF3000DA7F5 /* mac-qt-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-player.mm"; path = "src/mac-qt-player.mm"; sourceTree = "<group>"; };
 		BEF2C0EF17BA493A00E96459 /* socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = socket.h; path = src/socket.h; sourceTree = "<group>"; };
 		BEF3110417C217C30073D70F /* dskw32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskw32.cpp; path = src/dskw32.cpp; sourceTree = "<group>"; };
 		BEF618A71947205D00C42C57 /* srvtheme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvtheme.cpp; path = src/srvtheme.cpp; sourceTree = "<group>"; };
@@ -2254,6 +2259,9 @@
 		4D6F92ED12AA5C7800026A72 /* Desktop - Mac */ = {
 			isa = PBXGroup;
 			children = (
+				BEEC4C64196C0DF3000DA7F5 /* mac-av-player.mm */,
+				BEEC4C65196C0DF3000DA7F5 /* mac-player.h */,
+				BEEC4C66196C0DF3000DA7F5 /* mac-qt-player.mm */,
 				BEBC51D81953505400215C85 /* coretextfonts.cpp */,
 				BEDE3F9119534E290050F19B /* mac-abort.mm */,
 				BEDE3F9219534E290050F19B /* mac-color.mm */,
@@ -4416,6 +4424,8 @@
 				1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */,
 				1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */,
 				BE64444119656F7300C2092C /* player.cpp in Sources */,
+				BEEC4C67196C0DF3000DA7F5 /* mac-av-player.mm in Sources */,
+				BEEC4C68196C0DF3000DA7F5 /* mac-qt-player.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

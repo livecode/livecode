@@ -803,7 +803,7 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
 
     MCRectangle drect = p_field -> getrect();
     findex_t ssi, sei;
-    p_field -> selectedmark(false, ssi, sei, false, false);
+    p_field -> selectedmark(false, ssi, sei, false);
     int4 savex = p_field -> textx;
     int4 savey = p_field -> texty;
 
@@ -1031,7 +1031,9 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             }
             // end of MCParagraph scope
 
-            if (t_need_layout && !all && pgptr->getopened())
+            // AL-2014-07-14: [[ Bug 12789 ]] Defragging can cause paragraph to need layout, do make sure we relayout
+            //  if it did. Otherwise setting properties that avoid relayout can cause crashes.
+            if (pgptr -> getneedslayout() && !all && pgptr->getopened())
             {
                 // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
                 pgptr -> layout(false);

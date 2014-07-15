@@ -1786,6 +1786,10 @@ void MCInterfaceGetHidePalettes(MCExecContext& ctxt, bool& r_value)
 void MCInterfaceSetHidePalettes(MCExecContext& ctxt, bool p_value)
 {
 	MChidepalettes = p_value ? True : False;
+    // MW-2014-04-23: [[ Bug 12080 ]] Make sure we update the hidesOnSuspend of all palettes.
+#ifdef _MACOSX
+    MCstacks->hidepaletteschanged();
+#endif
 }
 
 

@@ -4769,13 +4769,10 @@ bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFD(MCStringRef self, MCStringRef &r_string)
 {
-    if (MCStringIsNative(self))
-        return MCStringCopy(self, r_string);
-    
-    // Normalise
+    // AL-2014-06-24: [[ Bug 12656 ]] Native strings can be decomposed into non-native ones.
     unichar_t *t_norm = nil;
     uindex_t t_norm_length;
-    if (MCUnicodeNormaliseNFD(self -> chars, self -> char_count, t_norm, t_norm_length)
+    if (MCUnicodeNormaliseNFD(MCStringGetCharPtr(self), self -> char_count, t_norm, t_norm_length)
         && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
         return true;
     MCMemoryDelete(t_norm);
@@ -4784,6 +4781,7 @@ bool MCStringNormalizedCopyNFD(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFKC(MCStringRef self, MCStringRef &r_string)
 {
+    // Native strings are already normalized
     if (MCStringIsNative(self))
         return MCStringCopy(self, r_string);
     
@@ -4799,13 +4797,11 @@ bool MCStringNormalizedCopyNFKC(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFKD(MCStringRef self, MCStringRef &r_string)
 {
-    if (MCStringIsNative(self))
-        return MCStringCopy(self, r_string);
-    
+    // AL-2014-06-24: [[ Bug 12656 ]] Native strings can be decomposed into non-native ones.
     // Normalise
     unichar_t *t_norm = nil;
     uindex_t t_norm_length;
-    if (MCUnicodeNormaliseNFKD(self -> chars, self -> char_count, t_norm, t_norm_length)
+    if (MCUnicodeNormaliseNFKD(MCStringGetCharPtr(self), self -> char_count, t_norm, t_norm_length)
         && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
         return true;
     MCMemoryDelete(t_norm);
@@ -4839,7 +4835,8 @@ bool MCStringSetNumericValue(MCStringRef self, double p_value)
     {
         if (MCMemoryReallocate(self -> chars, ((self -> char_count * 2 + 7) & ~7) + 8, self -> chars))
         {
-            *(double*)(&(self -> chars[(self -> char_count + 3) & ~3])) = p_value;
+            // AL-2014-06-25: [[ Bug 12676 ]] Put numeric value at correct memory address
+            *(double*)(&(self -> native_chars[(self -> char_count * 2 + 7) & ~7])) = p_value;
             t_success = true;
         }
     }
@@ -4860,7 +4857,7 @@ bool MCStringGetNumericValue(MCStringRef self, double &r_value)
         if (MCStringIsNative(self))
             r_value = *(double*)(&(self -> native_chars[(self -> char_count + 7) & ~7]));
         else
-            r_value = *(double*)(&(self -> chars[(self -> char_count + 7) & ~7]));
+            r_value = *(double*)(&(self -> native_chars[(self -> char_count * 2 + 7) & ~7]));
 
         return true;
     }

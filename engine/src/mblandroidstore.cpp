@@ -829,7 +829,7 @@ void MCStoreProductRequestResponseEvent::Dispatch()
 		MCAutoArrayRef t_array;
 		MCArrayCreateMutable(&t_array);
         
-        // MERG-2014-06-26 [[ MobileRefactor ]]
+        // SN-2014-06-26 [[ MERGE-6.7 ]]
         // We directly fetch the values from the android data
         // The former code was only retrieving the productId since
         // the other entries don't exist in the s_purchase_property table
