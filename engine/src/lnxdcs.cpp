@@ -555,6 +555,11 @@ Boolean MCScreenDC::open()
 	m_DND_store = new MCGdkTransferStore(dpy);
 	m_Clipboard_store = new MCGdkTransferStore(dpy);
 	m_Selection_store = new MCGdkTransferStore(dpy);
+    
+    // There are also some atoms that we need to set up
+    MCworkareaatom = gdk_atom_intern_static_string("_NET_WORKAREA");
+    MCclientlistatom = gdk_atom_intern_static_string("_NET_CLIENT_LIST");
+    MCstrutpartialatom = gdk_atom_intern_static_string("_NET_WM_STRUT_PARTIAL");
 
 	return True; 
 }
