@@ -1905,8 +1905,8 @@ void MCMacPlatformWindow::DoShow(void)
 }
 
 // SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
-//  Combo popup are 'weak' ones (cancelling a mousedown if it is not inside the combo window)
-void MCMacPlatformWindow::DoShowAsCombo(void)
+//  Combo and popup windows are 'weak' ones (cancelling with a mousedown if it is not inside)
+void MCMacPlatformWindow::DoShowAsWeakWindow(void)
 {
     [m_window_handle popupAndMonitor: true];
 }
