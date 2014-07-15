@@ -255,7 +255,7 @@ extern HANDLE g_notify_wakeup;
 Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
                            Boolean &abort, Boolean &reset)
 {
-	MSG msg;
+	MSG msg, tmsg;
 	stateinfo oldinfo = *curinfo;
 	curinfo->abort = curinfo->reset = False;
 	curinfo->dispatch = dispatch;

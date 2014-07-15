@@ -2254,7 +2254,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                         r_value . type = kMCExecValueTypeStringRef;
                     }
                 }
-                for (uint i = 0; i < t_count; ++i)
+                for (uinteger_t i = 0; i < t_count; ++i)
                     MCValueRelease(t_value[i]);
                 if (t_count > 0)
                     MCMemoryDeleteArray(t_value);
