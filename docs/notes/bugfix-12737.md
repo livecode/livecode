@@ -1,0 +1,1 @@
+# Player: Can't drag out or create a player in script 

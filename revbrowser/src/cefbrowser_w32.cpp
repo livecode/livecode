@@ -114,13 +114,19 @@ bool MCCefWin32AppendPath(const char *p_base, const char *p_path, char *&r_path)
 		return MCCStringFormat(r_path, "%s\\%s", p_base, p_path);
 }
 
+#ifdef _DEBUG
+#define CEF_PATH_PREFIX ""
+#else
+#define CEF_PATH_PREFIX "CEF\\"
+#endif
+
 // IM-2014-03-25: [[ revBrowserCEF ]] locales located in CEF subfolder relative to revbrowser dll
 const char *MCCefPlatformGetLocalePath(void)
 {
 	static char *s_locale_path = nil;
 
 	if (s_locale_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), "CEF\\locales", s_locale_path);
+		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"locales", s_locale_path);
 
 	return s_locale_path;
 }
@@ -131,7 +137,7 @@ const char *MCCefPlatformGetSubProcessName(void)
 	static char *s_exe_path = nil;
 
 	if (s_exe_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), "CEF\\revbrowser-cefprocess.exe", s_exe_path);
+		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"revbrowser-cefprocess.exe", s_exe_path);
 
 	return s_exe_path;
 }
@@ -142,7 +148,7 @@ const char *MCCefPlatformGetCefLibraryPath(void)
 	static char *s_lib_path = nil;
 
 	if (s_lib_path == nil)
-		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), "CEF\\libcef.dll", s_lib_path);
+		/* UNCHECKED */ MCCefWin32AppendPath(MCCefWin32GetExternalPath(), CEF_PATH_PREFIX"libcef.dll", s_lib_path);
 
 	return s_lib_path;
 }

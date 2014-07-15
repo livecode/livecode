@@ -131,7 +131,7 @@ void MCStack::realize()
 
 		MCRectangle t_rect;
 		// IM-2014-01-29: [[ HiDPI ]] Convert logical to screen coords
-		t_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(view_getrect());
+		t_rect = MCscreen->logicaltoscreenrect(view_getrect());
 
 		if (t_rect.width == 0)
 			t_rect.width = MCminsize << 4;
@@ -209,8 +209,8 @@ void MCStack::setsizehints(void)
 			t_maxrect = MCRectangleMake(0, 0, maxwidth, maxheight);
 			
 			// IM-2014-01-29: [[ HiDPI ]] Convert logical to screen coords
-			t_minrect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_minrect);
-			t_maxrect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_maxrect);
+			t_minrect = MCscreen->logicaltoscreenrect(t_minrect);
+			t_maxrect = MCscreen->logicaltoscreenrect(t_maxrect);
 			
             t_geo.min_width = t_minrect.width;
             t_geo.max_width = t_maxrect.width;
@@ -222,7 +222,7 @@ void MCStack::setsizehints(void)
 		{
 			// IM-2014-01-29: [[ HiDPI ]] Convert logical to screen coords
 			MCRectangle t_device_rect;
-			t_device_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(view_getrect());
+			t_device_rect = MCscreen->logicaltoscreenrect(view_getrect());
 			
 			t_geo.min_width = t_geo.max_width = t_device_rect.width;
             t_geo.min_height = t_geo.max_height = t_device_rect.height;

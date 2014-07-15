@@ -285,12 +285,11 @@ public:
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
 	virtual void flushevents(uint2 e);
 	virtual Boolean istripleclick();
-	
-	
-	//virtual MCTransferType querydragdata(void);
-	virtual MCDragAction dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
 
-	
+	// SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
+    virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
+    //virtual MCTransferType querydragdata(void);
+    
 	// Clipboard and selection interface
 	virtual bool ownsselection(void);
 	virtual bool setselection(MCPasteboard *p_pasteboard);

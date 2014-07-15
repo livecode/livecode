@@ -1497,9 +1497,9 @@ MCStack *MCDispatch::findchildstackd(Window w,uint2 cindex)
 	return NULL;
 }
 
-MCStack *MCDispatch::findstackd(Window w)
+MCStack *MCDispatch::findstackwindowid(uint32_t p_win_id)
 {
-	if (w == NULL)
+	if (p_win_id == 0)
 		return NULL;
 	
 	if (stacks != NULL)
@@ -1508,7 +1508,7 @@ MCStack *MCDispatch::findstackd(Window w)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = tstk->findstackd(w)) != NULL)
+			if ((foundstk = tstk->findstackwindowid(p_win_id)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1520,7 +1520,7 @@ MCStack *MCDispatch::findstackd(Window w)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = tstk->findstackd(w)) != NULL)
+			if ((foundstk = tstk->findstackwindowid(p_win_id)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1533,7 +1533,7 @@ MCStack *MCDispatch::findstackd(Window w)
         do
         {
             MCStack *foundstk;
-            if ((foundstk = tstk -> findstackd(w)) != NULL)
+            if ((foundstk = tstk -> findstackwindowid(p_win_id)) != NULL)
                 return foundstk;
 			tstk = (MCStack *)tstk->next();
         }
@@ -1541,6 +1541,12 @@ MCStack *MCDispatch::findstackd(Window w)
     }
     
     return NULL;
+}
+
+MCStack *MCDispatch::findstackd(Window w)
+{
+	// IM-2014-07-09: [[ Bug 12225 ]] Use window ID to find stack
+	return findstackwindowid(MCscreen->dtouint4((Drawable)w));
 }
 
 MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)

@@ -255,7 +255,7 @@ extern HANDLE g_notify_wakeup;
 Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
                            Boolean &abort, Boolean &reset)
 {
-	MSG msg;
+	MSG msg, tmsg;
 	stateinfo oldinfo = *curinfo;
 	curinfo->abort = curinfo->reset = False;
 	curinfo->dispatch = dispatch;
@@ -293,8 +293,30 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 				        || msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
 					curinfo->keysym = getkeysym(msg.wParam, msg.lParam);
 				
-				TranslateMessage(&msg);
-				DispatchMessageW(&msg);
+                TranslateMessage(&msg);
+
+				bool t_char_found;
+				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
+					t_char_found = PeekMessageW(&tmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
+				                 PeekMessageW(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
+				else
+					t_char_found = PeekMessageA(&tmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
+				                 PeekMessageA(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
+				if (t_char_found)
+				{
+					if (MCdispatcher->findstackwindowid((uint32_t)msg.hwnd) == NULL)
+					{
+						if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
+							DispatchMessageW(&msg);
+						else
+							DispatchMessageA(&msg);
+					}
+					memcpy(&msg, &tmsg, sizeof(MSG));
+				}
+				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
+					DispatchMessageW(&msg);
+				else
+					DispatchMessageA(&msg);
 			}
 		}
 	}
@@ -330,12 +352,9 @@ void MCScreenDC::restackwindows(HWND p_window, UINT p_message, WPARAM p_wparam, 
 {
 	WINDOWPOS *t_info;
 	MCStack *t_stack;
-	_Drawable t_drawable;
-	t_drawable . handle . window = (MCSysWindowHandle)p_window;
-	t_drawable . type = DC_WINDOW;
 
 	t_info = (WINDOWPOS *)p_lparam;
-	t_stack = MCdispatcher -> findstackd(&t_drawable);
+	t_stack = MCdispatcher -> findstackwindowid((uint32_t)p_window);
 
 	if (t_stack != NULL && t_stack -> getflag(F_DECORATIONS) && (t_stack -> getdecorations() & WD_UTILITY) != 0)
 		return;
@@ -477,7 +496,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	t_mouseloc = MCPointMake(LOWORD(lParam), HIWORD(lParam));
 
 	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
-	t_mouseloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(t_mouseloc);
+	t_mouseloc = MCscreen->screentologicalpoint(t_mouseloc);
 
 	// MW-2005-02-20: Seed the SSL random number generator
 #ifdef MCSSL

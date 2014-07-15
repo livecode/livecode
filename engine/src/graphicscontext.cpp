@@ -1305,6 +1305,30 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
     // no 'fringing' occurs when using a filter, or the transforms result in sub-pixel
     // coverage. The trade-off is a slight non-linearity in rendering nine-way bitmaps.
     
+	MCGContextSave(m_gcontext);
+	
+    MCGRectangle t_src_center, t_src_rect;
+    t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(p_image . image), MCGImageGetHeight(p_image . image));
+	t_src_center = p_image.center;
+    
+	// IM-2014-07-10: [[ Bug 12794 ]] Transform the context if the image has a scale factor so we don't need to account for it later
+	if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
+	{
+		int32_t t_dx, t_dy;
+		t_dx = dx - sx;
+		t_dy = dy - sy;
+		
+		MCGContextTranslateCTM(m_gcontext, t_dx, t_dy);
+		MCGContextScaleCTM(m_gcontext, 1.0 / p_image.scale_factor, 1.0 / p_image.scale_factor);
+		MCGContextTranslateCTM(m_gcontext, -t_dx, -t_dy);
+		
+		// IM-2014-07-10: [[ Bug 12794 ]] Scale the center rect to match the image scale
+		t_src_center = MCGRectangleScale(t_src_center, p_image . scale_factor);
+	}
+	
+    // Align the source center to the pixel grid.
+    t_src_center = get_rect_pixel_exterior(t_src_center);
+    
     MCGAffineTransform t_device, t_inv_device;
     t_device = MCGContextGetDeviceTransform(m_gcontext);
     t_inv_device = MCGAffineTransformInvert(t_device);
@@ -1318,12 +1342,6 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
     else
         t_scale_x = t_scale_y = 1.0;
     
-    MCGRectangle t_src_center, t_src_rect;
-    t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(p_image . image), MCGImageGetHeight(p_image . image));
-    
-    // Align the source center to the pixel grid.
-    t_src_center = get_rect_pixel_exterior(MCGRectangleScale(p_image . center, p_image . scale_factor));
-    
     MCGFloat t_stop, t_sleft, t_sright, t_sbottom;
     t_sleft = t_src_center . origin . x;
     t_stop = t_src_center . origin . y;
@@ -1331,13 +1349,13 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
     t_sbottom = t_src_center . origin . y + t_src_center . size . height;
     
     MCGFloat t_top, t_left, t_right, t_bottom;
-    t_left = MCMax(0.0f, t_src_center . origin . x / p_image . scale_factor);
-    t_top = MCMax(0.0f, t_src_center . origin . y / p_image . scale_factor);
-    t_right = MCMax(0.0f, (t_src_rect . size . width - (t_src_center . origin . x + t_src_center . size . width)) / p_image . scale_factor);
-    t_bottom = MCMax(0.0f, (t_src_rect . size . height - (t_src_center . origin . y + t_src_center . size . height)) / p_image . scale_factor);
+    t_left = MCMax(0.0f, t_src_center . origin . x);
+    t_top = MCMax(0.0f, t_src_center . origin . y);
+    t_right = MCMax(0.0f, t_src_rect . size . width - (t_src_center . origin . x + t_src_center . size . width));
+    t_bottom = MCMax(0.0f, t_src_rect . size . height - (t_src_center . origin . y + t_src_center . size . height));
     
     MCGRectangle t_dst_rect, t_dst_center;
-    t_dst_rect = MCGRectangleMake(dx - sx, dy - sy, MCGImageGetWidth(p_image . image) * t_scale_x / p_image . scale_factor, MCGImageGetHeight(p_image . image) * t_scale_y / p_image . scale_factor);
+    t_dst_rect = MCGRectangleMake(dx - sx, dy - sy, MCGImageGetWidth(p_image . image) * t_scale_x, MCGImageGetHeight(p_image . image) * t_scale_y);
     t_dst_center . origin . x = t_dst_rect . origin . x + t_left;
     t_dst_center . origin . y = t_dst_rect . origin . y + t_top;
     t_dst_center . size . width = t_dst_rect . size . width - t_left - t_right;
@@ -1384,6 +1402,8 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
                               MCGRectangleMakeLTRB(t_src_center . origin . x + t_src_center . size . width, t_src_center . origin . y + t_src_center . size . height, t_src_rect . origin . x + t_src_rect . size . width, t_src_rect . origin . y + t_src_rect . size . height),
                               MCGRectangleMakeLTRB(t_dst_center . origin . x + t_dst_center . size . width, t_dst_center . origin . y + t_dst_center . size . height, t_dst_rect . origin . x + t_dst_rect . size . width, t_dst_rect . origin . y + t_dst_rect . size . height),
                               p_image . filter);
+	
+	MCGContextRestore(m_gcontext);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

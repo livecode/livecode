@@ -44,6 +44,14 @@ typedef struct _ExternalArray
   char **keys;
 } ExternalArray;
 
+typedef struct _MCRectangle32
+{
+	int x;
+	int y;
+	unsigned int width;
+	unsigned int height;
+} MCRectangle32;
+
 // Function:
 //   SendCardMessage
 // Parameters:
@@ -436,6 +444,11 @@ extern void RemoveRunloopAction(MCRunloopActionRef p_action, int *r_success);
 
 // IM-2014-03-06: [[ revBrowserCEF ]] Run the engine runloop
 extern void RunloopWait(int *r_success);
+
+// IM-2014-07-09: [[ Bug 12225 ]] Convert stack coords to logical window coords
+extern void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success);
+// IM-2014-07-09: [[ Bug 12225 ]] Convert logical window coords to stack coords
+extern void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success);
 
 //
 extern Bool SecurityCanAccessFile(const char *p_file);
