@@ -1,0 +1,1 @@
+# Player: Setting player size to < 132 width breaks some controller elements

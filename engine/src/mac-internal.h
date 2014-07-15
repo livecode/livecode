@@ -416,7 +416,9 @@ protected:
 	virtual bool DoSetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value);
 	virtual bool DoGetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, void *r_value);
 	
-	virtual void DoShow(void);
+	virtual void DoShow(void);    
+    // SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
+    virtual void DoShowAsCombo(void);
 	virtual void DoShowAsSheet(MCPlatformWindowRef parent);
 	virtual void DoHide(void);
 	virtual void DoFocus(void);

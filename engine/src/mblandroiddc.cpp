@@ -2008,7 +2008,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTouch(JNIEnv *env, jobje
 	t_loc = MCPointMake(x, y);
 	
 	// IM-2014-01-31: [[ HiDPI ]] Convert screen to logical coords
-	t_loc = MCScreenDC::screentologicalpoint(t_loc);
+	t_loc = MCscreen -> screentologicalpoint(t_loc);
 	
 	// MW-2014-01-06: [[ Bug 11641 ]] Make sure we use 'id + 1' for the id as it needs to be non-zero
 	//   (non-nil) for 'getmouse()'. (Android touch ids are 0 based).

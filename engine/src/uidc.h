@@ -333,6 +333,13 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 	
+	// IM-2014-01-28: [[ HiDPI ]] Convenience methods to convert logical to screen coords and back
+	// IM-2014-07-09: [[ Bug 12602 ]] Move screen coord conversion methods into MCUIDC
+	virtual MCPoint logicaltoscreenpoint(const MCPoint &p_point);
+	virtual MCPoint screentologicalpoint(const MCPoint &p_point);
+	virtual MCRectangle logicaltoscreenrect(const MCRectangle &p_rect);
+	virtual MCRectangle screentologicalrect(const MCRectangle &p_rect);
+
 	// IM-2013-07-31: [[ ResIndependence ]] refactor logical coordinate based methods
 	uint2 getwidth();
 	uint2 getheight();

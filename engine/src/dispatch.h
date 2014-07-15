@@ -201,6 +201,8 @@ public:
 	
 	MCStack *findstackname(MCNameRef);
 	MCStack *findstackid(uint4 fid);
+	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
+	MCStack *findstackwindowid(uint32_t p_win_id);
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 index);
 	MCObject *getobjid(Chunk_term type, uint4 inid);

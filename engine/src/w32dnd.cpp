@@ -100,7 +100,8 @@ HRESULT DropSource::GiveFeedback(DWORD p_effect)
 	return DRAGDROP_S_USEDEFAULTCURSORS;
 }
 
-MCDragAction MCScreenDC::dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
+// SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
+MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
 {
 	bool t_success;
 	t_success = true;
@@ -333,7 +334,7 @@ STDMETHODIMP CDropTarget::DragOver(DWORD grfKeyState, POINTL pt,
 
 	// IM-2014-05-06: [[ Bug 12319 ]] Convert screen to logical coords
 	MCPoint t_mouseloc;
-	t_mouseloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(MCPointFromWin32POINT(pt));
+	t_mouseloc = MCscreen->screentologicalpoint(MCPointFromWin32POINT(pt));
 
 	MCDragAction t_action;
 	t_action = MCdispatcher -> wmdragmove(dropstack -> getw(), t_mouseloc . x, t_mouseloc . y);
@@ -384,7 +385,7 @@ STDMETHODIMP CDropTarget::Drop(LPDATAOBJECT pDataObj, DWORD grfKeyState,
 
 	// IM-2014-05-06: [[ Bug 12319 ]] Convert screen to logical coords
 	MCPoint t_mouseloc;
-	t_mouseloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(MCPointFromWin32POINT(pt));
+	t_mouseloc = MCscreen->screentologicalpoint(MCPointFromWin32POINT(pt));
 
 	uint4 t_old_modifierstate;
 	t_old_modifierstate = MCmodifierstate;
