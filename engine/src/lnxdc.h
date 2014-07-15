@@ -84,7 +84,7 @@ public:
 	}
 };
 
-extern Atom MCstateatom;
+/*extern Atom MCstateatom;
 extern Atom MCprotocolatom;
 extern Atom MCtakefocusatom;
 extern Atom MCdeletewindowatom;
@@ -99,7 +99,7 @@ extern Atom MColresizeatom;
 extern Atom MColheaderatom;
 extern Atom MColcloseatom;
 extern Atom MClayeratom;
-extern Atom MCclipboardatom;
+extern Atom MCclipboardatom;*/
 
 extern Atom MCclientlistatom;
 extern Atom MCstrutpartialatom;
