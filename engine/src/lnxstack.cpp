@@ -153,8 +153,6 @@ void MCStack::realize()
         
         window = gdk_window_new(screen->getroot(), &gdkwa, gdk_valid_wa);
         
-        //fprintf(stderr, "Window %p - \"%s\"\n", window, MCNameGetCString(_name));
-        
 		// This is necessary to be able to receive drag-and-drop events
         gdk_window_register_dnd(window);
         
@@ -535,6 +533,8 @@ MCRectangle MCStack::view_device_setgeom(const MCRectangle &p_rect,
         GdkGeometry t_geom;
         t_geom.win_gravity = GDK_GRAVITY_STATIC;
         
+        gint t_hints = GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE|GDK_HINT_WIN_GRAVITY;
+        
         if (flags & F_RESIZABLE)
         {
             t_geom.min_width = p_minwidth;
@@ -548,8 +548,15 @@ MCRectangle MCStack::view_device_setgeom(const MCRectangle &p_rect,
             t_geom.min_height = t_geom.max_height = p_rect.height;
         }
         
-        gdk_window_set_geometry_hints(window, &t_geom, GdkWindowHints(GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE|GDK_HINT_WIN_GRAVITY));
-        gdk_window_move_resize(window, p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+        // By setting these "user" flags, we tell the window manager that we
+        // know best and it should not attempt to remove or resize the window
+        // according to its preferences.
+        if (!(flags & F_WM_PLACE) || (state & CS_BEEN_MOVED))
+            t_hints |= GDK_HINT_USER_POS;
+        t_hints |= GDK_HINT_USER_SIZE;
+        
+        gdk_window_set_geometry_hints(window, &t_geom, GdkWindowHints(t_hints));
+        //gdk_window_move_resize(window, p_rect.x, p_rect.y, p_rect.width, p_rect.height);
     }
     
     if ((!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED) && (t_root_x != p_rect.x || t_root_y != p_rect.y))
