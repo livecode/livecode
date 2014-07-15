@@ -1130,6 +1130,21 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
             }
 
 			cptr = sptr->getchild(card->etype, *t_exp, card->otype);
+
+            // SN-2014-06-03 [[ Bug 12552]] go to url "internet stack path" does not work
+            // If getchild() failed, we try to find a stack from the expression
+            if (cptr == NULL)
+            {
+				sptr = findstack(ctxt, *t_exp, CT_STACK, cptr);
+				if (sptr == NULL)
+				{
+					if (MCresult->isclear())
+						MCresult->setvalueref(MCSTR("No such a card"));
+
+					return;
+				}
+				cptr = (MCCard *)sptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
+            }
 		}
 			break;
 		default:

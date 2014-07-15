@@ -811,6 +811,10 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
 
     if (t_need_layout)
     {
+        // SN-2014-06-02 [[ Bug 12562 ]] Changing the back color of a line which contains a tab makes LC crash
+        // Make sure that the segments and the lines are recomputed in case defrag() changed them
+        sptr -> layout(false);
+        
         if (all)
         {
             p_field -> recompute();
@@ -822,6 +826,7 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
         }
         else
             p_field -> removecursor();
+        
         // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
         p_field -> layer_redrawrect(drect);
         if (!all)
@@ -1031,7 +1036,9 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             }
             // end of MCParagraph scope
 
-            if (t_need_layout && !all && pgptr->getopened())
+            // AL-2014-07-14: [[ Bug 12789 ]] Defragging can cause paragraph to need layout, do make sure we relayout
+            //  if it did. Otherwise setting properties that avoid relayout can cause crashes.
+            if (pgptr -> getneedslayout() && !all && pgptr->getopened())
             {
                 // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
                 pgptr -> layout(false);

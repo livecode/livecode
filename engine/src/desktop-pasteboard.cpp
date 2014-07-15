@@ -254,11 +254,12 @@ bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	{
 		case kMCPlatformPasteboardFlavorUTF8:
 		{
+            // AL-2014-07-11: [[ Bug 12792 ]] Always convert unicode pasteboard data to UTF16
             MCAutoStringRef t_input_mac;
             /* UNCHECKED */ MCStringDecode(*t_in_data, kMCStringEncodingUTF8, false, &t_input_mac);
             MCAutoStringRef t_output;
-            /* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(*t_input_mac, &t_output);
-            /* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF8, false, &t_out_data);
+            /* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input_mac, &t_output);
+            /* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16, false, &t_out_data);
 		}
 		break;
 			
