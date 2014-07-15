@@ -1386,6 +1386,8 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)concludeDragOperation:(id<NSDraggingInfo>)sender
 {
+    // MW-2014-07-15: [[ Bug 12773 ]] Make sure mouseMove is sent after end of drag operation.
+    MCMacPlatformSyncMouseAfterTracking();
 }
 
 //////////
