@@ -67,6 +67,7 @@ class MCMacPlatformSurface;
 @interface com_runrev_livecode_MCWindow: NSWindow
 {
 	bool m_can_become_key : 1;
+    bool m_is_popup : 1;
     id m_monitor;
 }
 

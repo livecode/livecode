@@ -57,6 +57,7 @@ static bool s_lock_responder_change = false;
         return nil;
     
     m_can_become_key = false;
+    m_is_popup = false;
     m_monitor = nil;
     
     return self;
@@ -128,6 +129,13 @@ static bool s_lock_responder_change = false;
 //   other mouse events outside the host window. This allows us to close them and still
 //   continue to process the event as normal.
 
+// MW-2014-07-16: [[ Bug 12708 ]] Mouse events targeted as popup windows don't cancel popups
+//   so that cascading menus work.
+- (bool)isPopupWindow
+{
+    return m_is_popup;
+}
+
 - (void)popupWindowClosed: (NSNotification *)notification
 {
     if (m_monitor != nil)
@@ -138,6 +146,8 @@ static bool s_lock_responder_change = false;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSApplicationDidResignActiveNotification object:nil];
+
+    m_is_popup = false;
 }
 
 - (void)popupWindowShouldClose: (NSNotification *)notification
@@ -151,6 +161,8 @@ static bool s_lock_responder_change = false;
     NSWindow *t_window;
     t_window = self;
     
+    m_is_popup = true;
+    
     [self makeKeyAndOrderFront: nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(popupWindowClosed:) name:NSWindowWillCloseNotification object:self];
@@ -162,8 +174,12 @@ static bool s_lock_responder_change = false;
                      NSEvent *result = incomingEvent;
                      NSWindow *targetWindowForEvent = [incomingEvent window];
 
-                     if (targetWindowForEvent != t_window)
-                         [self popupWindowShouldClose: nil];
+                     if (![targetWindowForEvent respondsToSelector: @selector(isPopupWindow)] ||
+                         ![targetWindowForEvent isPopupWindow])
+                     {
+                         if (targetWindowForEvent != t_window)
+                             [self popupWindowShouldClose: nil];
+                     }
                      
                      return result;
                  }];
