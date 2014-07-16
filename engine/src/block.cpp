@@ -984,9 +984,12 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 			//t_tab_width = 64; //gettabwidth(0, t_index);
 
 			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            // FG-2014-07-16: [[ Bug 12539 ]] Make sure not to draw tab characters
 			coord_t t_width;
 			MCRange t_range;
 			t_range = MCRangeMake(t_index, t_next_index - t_index);
+            if (length > 0 && parent->GetCodepointAtIndex(t_next_index - 1) == '\t')
+                t_range.length--;
             t_width = MCFontMeasureTextSubstringFloat(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
@@ -1091,8 +1094,11 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 			}
 		}*/
 
-		MCRange t_range;
-		t_range = MCRangeMake(sptr, size);
+        // FG-2014-07-16: [[ Bug 12539 ]] Make sure not to draw tab characters
+        MCRange t_range;
+        t_range = MCRangeMake(sptr, size);
+        if (size > 0 && parent->GetCodepointAtIndex(sptr + size - 1) == '\t')
+            t_range.length--;
         dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, kMCDrawTextBreak, is_rtl() ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
 
 		// Apply strike/underline.
