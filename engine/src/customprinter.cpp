@@ -515,6 +515,8 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 			bool t_mask, t_alpha;
 			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
 			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
+			// IM-2014-06-26: [[ Bug 12699 ]] Set image type appropriately.
+			t_image . type = t_alpha ? kMCCustomPrinterImageRawARGB : (t_mask ? kMCCustomPrinterImageRawMRGB : kMCCustomPrinterImageRawXRGB);
 			t_image . id = (uint32_t)(intptr_t)p_mark->image.descriptor.image;
 			t_image . data = t_raster.pixels;
 			t_image . data_size = t_raster.stride * t_img_height;
