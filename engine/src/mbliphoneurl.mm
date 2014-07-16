@@ -210,15 +210,21 @@ bool UrlRequestSetHTTPHeader(MCStringRef p_key, MCStringRef p_value, void *p_con
 	if (!m_loading)
 		return;
 	
-	MCString t_data;
-	t_data . set((const char *)[data bytes], [data length]);
-	m_callback(m_context, kMCSystemUrlStatusLoading, &t_data);
+    // AL-2014-07-15: [[ Bug 12478 ]] Pass a DataRef to url callbacks
+    MCAutoDataRef t_data;
+    MCDataCreateWithBytes((const byte_t *)[data bytes], [data length], &t_data);
+	
+	m_callback(m_context, kMCSystemUrlStatusLoading, *t_data);
 }
 
 - (void)connection: (NSURLConnection *)connection didFailWithError: (NSError *)error
 {
 	[self cancelTimer];
-	m_callback(m_context, kMCSystemUrlStatusError, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+
+    // AL-2014-07-15: [[ Bug 12478 ]] Pass a StringRef to url callbacks for error.
+    MCAutoStringRef t_error;
+    MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+	m_callback(m_context, kMCSystemUrlStatusError, *t_error);
 	[connection release];
 }
 
@@ -228,7 +234,11 @@ bool UrlRequestSetHTTPHeader(MCStringRef p_key, MCStringRef p_value, void *p_con
     if (m_status_error)
     {
         NSString *t_err_string = [NSString stringWithFormat:@"%d %@", m_status_code, [NSHTTPURLResponse localizedStringForStatusCode:m_status_code]];
-        m_callback(m_context, kMCSystemUrlStatusError, [ t_err_string cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+        
+        // AL-2014-07-15: [[ Bug 12478 ]] Pass a StringRef to url callbacks for error.
+        MCAutoStringRef t_error;
+        MCStringCreateWithCFString((CFStringRef)t_err_string, &t_error);
+        m_callback(m_context, kMCSystemUrlStatusError, *t_error);
     }
     else
     {
@@ -576,18 +586,21 @@ void PutFTPUrlClientCallback(CFWriteStreamRef p_stream, CFStreamEventType p_even
 	
 	if (!t_success)
 	{
+        // AL-2014-07-15: [[ Bug 12478 ]] Pass a StringRef to url callbacks for error.
 		CFErrorRef t_err = nil;
 		t_err = CFWriteStreamCopyError(p_stream);
 		const char *t_err_str = nil;
 		if (t_err == nil) // synthetic timeout error from timer
-			t_err_str = "timed out";
+            t_context->callback(t_context->context, kMCSystemUrlStatusError, MCSTR("timed out"));
 		else
 		{
 			CFStringRef t_description = CFErrorCopyDescription(t_err);
-			t_err_str = [(NSString*)t_description cStringUsingEncoding: NSMacOSRomanStringEncoding];
-			CFRelease(t_description);
+            MCAutoStringRef t_error;
+            MCStringCreateWithCFString(t_description, &t_error);
+            t_context->callback(t_context->context, kMCSystemUrlStatusError, *t_error);
+            CFRelease(t_description);
 		}
-		t_context->callback(t_context->context, kMCSystemUrlStatusError, t_err_str);
+
 		if (t_err)
 			CFRelease(t_err);
 		t_close_stream = true;

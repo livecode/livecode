@@ -202,15 +202,21 @@ void MCUrlProgressEvent::Dispatch(void)
 	}
 }
 
-static void send_url_progress(MCObjectHandle *p_object, MCSystemUrlStatus p_status, MCStringRef p_url, int32_t p_amount, int32_t& x_total, MCStringRef p_data)
+static void send_url_progress(MCObjectHandle *p_object, MCSystemUrlStatus p_status, MCStringRef p_url, int32_t p_amount, int32_t& x_total, const void *p_data)
 {
 	if (p_status == kMCSystemUrlStatusNegotiated)
-        x_total = *(int32_t *)MCStringGetCString(p_data);
+        x_total = *(int32_t *)p_data;
     
 	MCUrlProgressEvent *t_event;
     t_event = nil;
     
-    t_event = MCUrlProgressEvent::CreateUrlProgressEvent(p_object, p_url, p_status, p_amount, x_total, p_data);
+    MCStringRef t_error;
+    if (p_status == kMCSystemUrlStatusError)
+        t_error = (MCStringRef)p_data;
+    else
+        t_error = kMCEmptyString;
+    
+    t_event = MCUrlProgressEvent::CreateUrlProgressEvent(p_object, p_url, p_status, p_amount, x_total, t_error);
 	if (t_event)
 		MCEventQueuePostCustom(t_event);
 }
@@ -221,12 +227,13 @@ struct MCSGetUrlState
 {
 	MCStringRef url;
 	MCSystemUrlStatus status;
-	MCStringRef data;
+	MCDataRef data;
 	MCObjectHandle *object;
 	int32_t total;
     MCStringRef error;
 };
 
+// AL-2014-07-15: [[ Bug 12478 ]] Rewritten to take downloaded data as a DataRef
 static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, const void *p_data)
 {
 	MCSGetUrlState *context;
@@ -234,32 +241,34 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 	
 	context -> status = p_status;
 	
-	if (p_status == kMCSystemUrlStatusError)
+    if (p_data == nil || (p_status != kMCSystemUrlStatusError && p_status != kMCSystemUrlStatusLoading))
     {
-        if (context -> error != nil)
-            MCValueRelease(context -> error);
-		MCStringCreateWithCString((const char *)p_data, context -> error);
+        send_url_progress(context -> object, p_status, context -> url, MCDataGetLength(context -> data), context -> total, p_data);
+        return true;
+    }
+	
+    if (p_status == kMCSystemUrlStatusError)
+    {
+        MCValueAssign(context -> error, (MCStringRef)p_data);
         send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> error), context -> total, context -> error);
     }
 	else
     {
-        if (p_status == kMCSystemUrlStatusLoading)
+        MCAutoDataRef t_new_data;
+        if (context -> data != nil)
         {
-            MCAutoStringRef t_new_data;
-            if (context -> data != nil)
-            {
-                /* UNCHECKED */ MCStringMutableCopy(context -> data, &t_new_data);
-                MCValueRelease(context -> data);
-            }
-            else
-                /* UNCHECKED */ MCStringCreateMutable(0, &t_new_data);
-            
-            /* UNCHECKED */ MCStringAppendFormat(*t_new_data, "%s", (const char *)p_data);
-            /* UNCHECKED */ MCStringCopy(*t_new_data, context -> data);
+            /* UNCHECKED */ MCDataMutableCopy(context -> data, &t_new_data);
+            MCValueRelease(context -> data);
         }
-        send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> data), context -> total, context -> data);
+        else
+        /* UNCHECKED */ MCDataCreateMutable(0, &t_new_data);
+        
+        /* UNCHECKED */ MCDataAppend(*t_new_data, (MCDataRef)p_data);
+        /* UNCHECKED */ MCDataCopy(*t_new_data, context -> data);
+        send_url_progress(context -> object, p_status, context -> url, MCDataGetLength(context -> data), context -> total, p_data);
     }
 	return true;
+
 }
 
 void MCS_geturl(MCObject *p_target, MCStringRef p_url)
@@ -275,7 +284,7 @@ void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
     t_state . error = MCValueRetain(kMCEmptyString);
-    t_state . data = MCValueRetain(kMCEmptyString);
+    t_state . data = MCValueRetain(kMCEmptyData);
 	
 	if (!MCSystemLoadUrl(*t_processed_url, MCS_geturl_callback, &t_state))
 	{
@@ -416,25 +425,28 @@ struct MCSLoadUrlState
 	MCNameRef message;
 };
 
+// AL-2014-07-15: [[ Bug 12478 ]] Rewritten to take downloaded data as a DataRef
 static bool MCS_loadurl_callback(void *p_context, MCSystemUrlStatus p_status, const void *p_data)
 {
 	MCSLoadUrlState *context;
 	context = static_cast<MCSLoadUrlState *>(p_context);
 	
 	context -> status = p_status;
-
-    MCAutoStringRef t_data;
-    /* UNCHECKED */ MCStringCreateWithCString((const char *)p_data, &t_data);
     
 	if (p_status == kMCSystemUrlStatusLoading)
-        /* UNCHECKED */ MCDataAppendBytes(context -> data, (const byte_t *)p_data, MCStringGetLength(*t_data));
+        /* UNCHECKED */ MCDataAppend(context -> data, (MCDataRef)p_data);
+
+    MCStringRef t_string;
+    t_string = nil;
+    if (p_status == kMCSystemUrlStatusError)
+        t_string = (MCStringRef)p_data;
     
-    send_url_progress(context -> object, p_status, context -> url, MCDataGetLength(context -> data), context -> total, *t_data);
+    send_url_progress(context -> object, p_status, context -> url, MCDataGetLength(context -> data), context -> total, p_data);
 	
 	if (p_status == kMCSystemUrlStatusError || p_status == kMCSystemUrlStatusFinished)
 	{
 		MCUrlLoadEvent *t_event;
-		t_event = MCUrlLoadEvent::CreateUrlLoadEvent(context->object, context->message, context -> url, p_status, context->data, *t_data);
+		t_event = MCUrlLoadEvent::CreateUrlLoadEvent(context->object, context->message, context -> url, p_status, context->data, (MCStringRef)p_data);
 		if (t_event)
 			MCEventQueuePostCustom(t_event);
 	}
@@ -478,13 +490,14 @@ struct MCSPostUrlState
 {
 	MCStringRef url;
 	MCSystemUrlStatus status;
-	MCStringRef data;
+	MCDataRef data;
 	MCObjectHandle *object;
 	int32_t post_sent;
 	int32_t post_length;
 	int32_t total;
 };
 
+// AL-2014-07-15: [[ Bug 12478 ]] Rewritten to use value refs returned by platform url methods.
 static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, const void *p_data)
 {
 	MCSPostUrlState *context;
@@ -493,9 +506,15 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	context -> status = p_status;
     
 	if (p_status == kMCSystemUrlStatusError)
-		/* UNCHECKED */ MCStringCreateWithCString((const char *)p_data, context -> data);
+    {
+        MCAutoDataRef t_err;
+        MCDataCreateWithBytes((const byte_t *)MCStringGetCString((MCStringRef)p_data), MCStringGetLength((MCStringRef)p_data), &t_err);
+		MCValueAssign(context -> data, *t_err);
+    }
 	else if (p_status == kMCSystemUrlStatusLoading)
-		/* UNCHECKED */ MCStringAppendFormat(context -> data, "%s", (const char *)p_data);
+    {
+		/* UNCHECKED */ MCDataAppend(context -> data, (MCDataRef)p_data);
+    }
 
 	if (p_status == kMCSystemUrlStatusUploading || p_status == kMCSystemUrlStatusUploaded)
 	{
@@ -503,7 +522,7 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 		send_url_progress(context -> object, p_status, context -> url, context -> post_sent, context -> post_length, nil);
 	}
 	else
-		send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> data), context -> total, context -> data);
+		send_url_progress(context -> object, p_status, context -> url, MCDataGetLength(context -> data), context -> total, context -> data);
 	
 	return true;
 }
@@ -527,7 +546,7 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 		t_state . object = t_obj;
 		t_state . post_sent = 0;
 		t_state . post_length = MCDataGetLength(p_data);
-        MCStringCreateMutable(0, t_state . data);
+        MCDataCreateMutable(0, t_state . data);
         
 		t_success = MCSystemPostUrl(*t_processed, p_data, MCDataGetLength(p_data), MCS_posturl_callback, &t_state);
 	}
@@ -581,7 +600,7 @@ static bool MCS_puturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 	context->status = p_status;
 	
 	if (p_status == kMCSystemUrlStatusError)
-		MCStringCreateWithCString((const char*)p_data, context->error);
+		MCValueAssign(context->error, (MCStringRef)p_data);
 	
 	if (p_status == kMCSystemUrlStatusUploading || p_status == kMCSystemUrlStatusUploaded)
 	{
@@ -646,24 +665,28 @@ struct MCSDownloadUrlState
 	int32_t total;
 };
 
+// AL-2014-07-15: [[ Bug 12478 ]] Rewritten to use value refs returned by platform url methods.
 static bool MCS_downloadurl_callback(void *p_context, MCSystemUrlStatus p_status, const void *p_data)
 {
 	MCSDownloadUrlState *context;
 	context = static_cast<MCSDownloadUrlState *>(p_context);
 	
 	context -> status = p_status;
-    MCAutoStringRef t_data;
-    /* UNCHECKED */ MCStringCreateWithCString((const char *)p_data, &t_data);
 	
 	if (p_status == kMCSystemUrlStatusError)
-		MCresult -> setvalueref(*t_data);
+		MCresult -> setvalueref((MCStringRef)p_data);
 	else if (p_status == kMCSystemUrlStatusLoading)
 	{
-		context -> length += MCStringGetLength(*t_data);
-        IO_write_stringref_legacy(*t_data, context -> output, false);
+        MCDataRef t_data;
+        t_data = (MCDataRef)p_data;
+        uindex_t t_length = MCDataGetLength(t_data);
+        const char *t_bytes = (const char *)MCDataGetBytePtr(t_data);
+        
+        context -> length += t_length;
+        IO_write_string_legacy_full(MCString(t_bytes, t_length), context -> output, 2, true);
 	}
 	
-	send_url_progress(context -> object, p_status, context -> url, context -> length, context -> total, *t_data);
+	send_url_progress(context -> object, p_status, context -> url, context -> length, context -> total, p_data);
 	
 	return true;
 }
