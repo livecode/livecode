@@ -195,6 +195,10 @@ void MCImage::close()
 		endsel();
 	if (state & CS_MAGNIFY)
 		endmag(True);
+	
+	// IM-2014-06-26: [[ Bug 12702 ]] Make sure editing is finished when closing.
+	recompress();
+	
 	if (opened == 1 && m_image_opened)
 		closeimage();
 	MCControl::close();
