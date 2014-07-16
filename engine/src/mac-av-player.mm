@@ -117,6 +117,7 @@ private:
     CVDisplayLinkRef m_display_link;
     com_runrev_livecode_MCAVFoundationPlayerView *m_view;
     uint32_t m_selection_start, m_selection_finish;
+    uint32_t m_selection_duration;
     bool m_play_selection_only : 1;
     bool m_looping : 1;
     
@@ -310,7 +311,11 @@ void MCAVFoundationPlayer::MovieFinished(void)
     }
     else
     {
-        [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        // PM-2014-07-15: [[ Bug 12812 ]] Make sure we loop within start and finish time when playSelection is true 
+        if (m_play_selection_only)
+            [[m_player currentItem] seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        else
+            [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         
         if (m_offscreen)
             CVDisplayLinkStart(m_display_link);
@@ -359,7 +364,13 @@ void MCAVFoundationPlayer::RateChanged(void)
 void MCAVFoundationPlayer::SelectionChanged(void)
 {
     if (m_play_selection_only)
-        [[m_player currentItem] setForwardPlaybackEndTime:CMTimeMake(m_selection_finish, 1000)];
+    {
+        // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+        if (m_selection_duration != 0)
+            [[m_player currentItem] setForwardPlaybackEndTime:CMTimeMake(m_selection_finish, 1000)];
+        else
+            [[m_player currentItem] setForwardPlaybackEndTime:kCMTimeInvalid];
+    }
     else
         [[m_player currentItem] setForwardPlaybackEndTime:kCMTimeInvalid];
     
@@ -457,6 +468,8 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
     MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
     
+    if (!t_player -> m_frame_changed_pending)
+        return;
     // PM-2014-07-07: [[Bug 12746]] Removed code to make player display the first frame when a new movie is loaded
     //if (t_player -> m_loaded && !t_player -> IsPlaying())
         //return;
@@ -695,21 +708,36 @@ void MCAVFoundationPlayer::Start(double rate)
 {
     if (m_offscreen && !CVDisplayLinkIsRunning(m_display_link))
         CVDisplayLinkStart(m_display_link);
-    
-    if (m_finished && !m_play_selection_only)
+ 
+    // PM-2014-07-15 Various tweaks to handle all cases of playback
+    if (!m_play_selection_only)
     {
-        [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-        m_playing = true;
-        m_finished = false;
+        if (m_finished && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
+        {
+            [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        }
     }
-
-    // put the thumb in the beginning of the selected area, if it is outside
-    if (m_play_selection_only && (CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_finish, 1000)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_start, 1000)) <= 0))
+    else
     {
-        [m_player seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-        
+        if (m_finished)
+        {
+            if (m_selection_duration > 0 && m_play_selection_only && (CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_finish, 1000)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_start, 1000)) <= 0))
+            {
+                [m_player seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+                
+            }
+            
+            // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+            if (m_selection_duration == 0 && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
+            {
+                [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            }
+            
+        }
     }
     
+    m_playing = true;
+    m_finished = false;
     [m_player setRate:rate];
 }
 
@@ -825,7 +853,8 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
                 // PM-2014-07-09: [[ Bug 12761 ]] Make sure dragging the selection_start marker does not move the selection_finish marker
                 m_selection_start = m_selection_finish;
             }
-            
+            // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+            m_selection_duration = m_selection_finish - m_selection_start;
         }
             break;
 		case kMCPlatformPlayerPropertyFinishTime:
@@ -836,7 +865,8 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             {
                 m_selection_finish = m_selection_start;
             }
-            
+            // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+            m_selection_duration = m_selection_finish - m_selection_start;
         }
             break;
 		case kMCPlatformPlayerPropertyPlayRate:

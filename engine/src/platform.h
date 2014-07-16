@@ -507,6 +507,8 @@ void MCPlatformUngrabPointer(void);
 // Get the window (that we know about) at the given co-ords.
 void MCPlatformGetWindowAtPoint(MCPoint location, MCPlatformWindowRef& r_window);
 
+bool MCPlatformGetWindowWithId(uint32_t p_window_id, MCPlatformWindowRef& r_window);
+
 // Return the 'time' of the last event.
 uint32_t MCPlatformGetEventTime(void);
 
@@ -742,6 +744,9 @@ void MCPlatformInvalidateWindow(MCPlatformWindowRef window, MCRegionRef region);
 void MCPlatformUpdateWindow(MCPlatformWindowRef window);
 
 void MCPlatformShowWindow(MCPlatformWindowRef window);
+// SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
+//  Combo and popup-specific window creation
+void MCPlatformShowWindowAsWeakWindow(MCPlatformWindowRef window);
 void MCPlatformShowWindowAsSheet(MCPlatformWindowRef window, MCPlatformWindowRef parent_window);
 void MCPlatformShowWindowAsDrawer(MCPlatformWindowRef window, MCPlatformWindowRef parent_window, MCPlatformWindowEdge edge);
 void MCPlatformHideWindow(MCPlatformWindowRef window);
@@ -975,7 +980,6 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyVolume,
     kMCPlatformPlayerPropertyMarkers,
     
-    kMCPlatformPlayerPropertyShowController,
     kMCPlatformPlayerPropertyShowSelection,
 	kMCPlatformPlayerPropertyOnlyPlaySelection,
 	

@@ -411,7 +411,11 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 	if (t_stack != nil)
 		t_parent = t_stack -> getparentwindow();
 		
-	if (t_stack -> getmode() != WM_SHEET)
+    // SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
+    //  We want a weak window for the combo and the popup windows (being deleted each time it's not the target of a click)
+	if (t_stack -> getmode() == WM_COMBO || t_stack -> getmode() == WM_POPUP)
+        MCPlatformShowWindowAsWeakWindow(w);
+    else if (t_stack -> getmode() != WM_SHEET)
 		MCPlatformShowWindow(w);
 	else
 		MCPlatformShowWindowAsSheet(w, t_parent);
@@ -467,9 +471,17 @@ uint4 MCScreenDC::dtouint4(Drawable d)
 	return t_id;
 }
 
-Boolean MCScreenDC::uint4towindow(uint4, Window &w)
+Boolean MCScreenDC::uint4towindow(uint4 p_id, Window &w)
 {
-	return False;
+    // MW-2014-07-15: [[ Bug 12800 ]] Map the windowId to a platform window if one exists.
+    MCPlatformWindowRef t_window;
+    
+    if (!MCPlatformGetWindowWithId(p_id, t_window))
+        return False;
+    
+    w = (Window)t_window;
+    
+	return True;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

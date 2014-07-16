@@ -1100,6 +1100,11 @@ bool MCPDFPrintingDevice::create_surface_from_image(const MCCustomPrinterImage &
 	case kMCCustomPrinterImagePNG:
 		t_success = false;
 		break;
+			
+	// [[ Bug 12699 ]] Handle unrecognised image type
+	default:
+		t_success = false;
+		break;
 	}
 
 	if (t_image_surface != nil)

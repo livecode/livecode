@@ -660,6 +660,8 @@ Boolean MCPlayer::kdown(const char *string, KeySym key)
             default:
                 break;
         }
+        // PM-2014-07-14: [[ Bug 12810 ]] Make sure we redraw the controller after using keyboard shortcuts to control playback
+        layer_redrawrect(getcontrollerrect());
     }
 	if (!(state & CS_NO_MESSAGES))
 		if (MCObject::kdown(string, key))
@@ -799,12 +801,8 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 	{
 		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
         
-        // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX 10.7, use the old QTKit player
-        if (MCmajorosversion >= 0x1080)
-        {
-            if (getflag(F_SHOW_CONTROLLER))
-                trect . height -= CONTROLLER_HEIGHT;
-        }
+        if (getflag(F_SHOW_CONTROLLER))
+            trect . height -= CONTROLLER_HEIGHT;
         
         // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
         //   (backscale factor handled in platform layer).
@@ -1577,26 +1575,23 @@ void MCPlayer::showcontroller(Boolean show)
         MCRectangle drect;
         drect = rect;
         
-        // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX >= 10.8, we use AVFoundation with our custom controller
+        // MW-2014-07-16: [[ QTSupport ]] We always use our own controller now.
         int t_height;
-        // 16 is the height of the default QTKit controller
-        t_height = (MCmajorosversion >= 0x1080 ? CONTROLLER_HEIGHT : 16);
+        t_height = CONTROLLER_HEIGHT;
                 
         if (show )
             drect . height += t_height;  // This is the height of the default QTKit controller
         else
             drect . height -= t_height;
         
-		bool t_show;
-		t_show = show;
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show);
         layer_setrect(drect, true);
 	}
 }
 
 Boolean MCPlayer::prepare(const char *options)
 {
-    if (MCmajorosversion <= 0x1080)
+    // For osversion < 10.8 we have to have QT initialized.
+    if (MCmajorosversion < 0x1080)
     {
         extern bool MCQTInit(void);
         if (!MCQTInit())
@@ -1632,15 +1627,11 @@ Boolean MCPlayer::prepare(const char *options)
 	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
 	
 	MCRectangle trect = resize(t_movie_rect);
-    
-    // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX 10.7 we use QTKit player with its native controller
-    if (MCmajorosversion >= 0x1080)
-    {
-        // Adjust so that the controller isn't included in the movie rect.
-        if (getflag(F_SHOW_CONTROLLER))
-            trect . height -= CONTROLLER_HEIGHT;
-    }
 	
+    // Adjust so that the controller isn't included in the movie rect.
+    if (getflag(F_SHOW_CONTROLLER))
+        trect . height -= CONTROLLER_HEIGHT;
+    
 	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
     // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
     //   (backscale factor handled in platform layer).
@@ -1652,12 +1643,10 @@ Boolean MCPlayer::prepare(const char *options)
 	
 	t_looping = getflag(F_LOOPING);
 	t_show_selection = getflag(F_SHOW_SELECTION);
-    t_show_controller = getflag(F_SHOW_CONTROLLER);
     t_play_selection = getflag(F_PLAY_SELECTION);
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
-    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show_controller);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
     
 	setselection();
@@ -1875,7 +1864,8 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaTypeName, kMCPlatformPropertyTypeNativeCString, &(&t_name));
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_offset);
-				ep . concatuint(t_id, EC_RETURN, i == 1);
+                // PM-2014-07-14: [[ Bug 12809 ]] Make sure each track is displayed on a separate line
+				ep . concatuint(t_id, EC_RETURN, i == 0);
 				ep . concatcstring(*t_name, EC_COMMA, false);
 				ep . concatuint(t_offset, EC_COMMA, false);
 				ep . concatuint(t_duration, EC_COMMA, false);
@@ -1993,12 +1983,9 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 			trect.width = (uint2)(formattedwidth * scale);
 			trect.height = (uint2)(formattedheight * scale);
             
-            // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX 10.7 we use QTKit player with its native controller
-            if (MCmajorosversion >= 0x1080)
-            {
-                if (flags & F_SHOW_CONTROLLER)
-                    trect.height += CONTROLLER_HEIGHT;
-            }
+            if (flags & F_SHOW_CONTROLLER)
+                trect.height += CONTROLLER_HEIGHT;
+            
 			trect.x = x - (trect.width >> 1);
 			trect.y = y - (trect.height >> 1);
 			if (flags & F_SHOW_BORDER)
@@ -2198,14 +2185,10 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 	}
  
-    // PM-2014-07-10: [[ Bug 12737 ]] We use AVFoundation player with our custom controller only if OSX version >= 10.8
-    if (MCmajorosversion >= 0x1080)
+    // Draw our controller
+    if (getflag(F_SHOW_CONTROLLER))
     {
-        // Draw our controller
-        if (getflag(F_SHOW_CONTROLLER))
-        {
-            drawcontroller(dc);
-        }
+        drawcontroller(dc);
     }
     
 	if (getflag(F_SHOW_BORDER))
@@ -2247,7 +2230,8 @@ void MCPlayer::drawcontroller(MCDC *dc)
     drawControllerPlayPauseButton(t_gcontext);
     drawControllerWellButton(t_gcontext);
     
-    if (getflag(F_SHOW_SELECTION))
+    // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then selection handles are invisible
+    if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
     {
         drawControllerSelectedAreaButton(t_gcontext);
     }
@@ -2257,8 +2241,8 @@ void MCPlayer::drawcontroller(MCDC *dc)
     
     drawControllerPlayedAreaButton(t_gcontext);
     
-    
-    if (getflag(F_SHOW_SELECTION))
+    // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then selection handles are invisible
+    if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
     {
         drawControllerSelectionStartButton(t_gcontext);
         drawControllerSelectionFinishButton(t_gcontext);
@@ -2885,7 +2869,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             uint32_t t_start_time, t_current_time, t_finish_time, t_duration;
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
             
-            if (getflag(F_SHOW_SELECTION))
+            // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+            if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
             {
                 MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
                 MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
@@ -3159,6 +3144,9 @@ void MCPlayer::handle_mfocus(int x, int y)
                     x = t_part_well_rect . x;
                 
                 t_new_start_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                
+                if (t_new_start_time >= endtime)
+                    t_new_start_time = endtime;
                 setstarttime(t_new_start_time);
             }
                 break;
@@ -3172,6 +3160,8 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 t_new_finish_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 
+                if (t_new_finish_time <= starttime)
+                    t_new_finish_time = starttime;
                 setendtime(t_new_finish_time);
             }
                 break;

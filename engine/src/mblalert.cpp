@@ -73,6 +73,8 @@ Exec_stat MCHandleVibrate(void *p_context, MCParameter *p_parameters)
     if (p_parameters)
     {
         p_parameters->eval(ep);
+        // PM-2014-05-23: [[ Bug 12055 ]] Make sure that
+        ep.ton();
         t_number_of_times = ep . getint4();
     }
     MCSystemVibrate(t_number_of_times);
