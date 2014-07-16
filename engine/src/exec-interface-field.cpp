@@ -1038,6 +1038,9 @@ void MCField::GetCursorMovement(MCExecContext& ctxt, intenum_t &r_movement)
 void MCField::SetTextDirection(MCExecContext& ctxt, intenum_t p_direction)
 {
     text_direction = (MCTextDirection)p_direction;
+    
+    // AL-2014-16-07: [[ Bug 12814 ]] Redraw after setting text direction
+    Redraw(true);
 }
 
 void MCField::GetTextDirection(MCExecContext& ctxt, intenum_t &r_direction)
