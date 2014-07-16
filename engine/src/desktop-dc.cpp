@@ -411,11 +411,7 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 	if (t_stack != nil)
 		t_parent = t_stack -> getparentwindow();
 		
-    // SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
-    //  We want a weak popup for the combo (being deleted each time it's not the target a click)
-	if (t_stack -> getmode() == WM_COMBO)
-        MCPlatformShowWindowAsCombo(w);
-    else if (t_stack -> getmode() != WM_SHEET)
+	if (t_stack -> getmode() != WM_SHEET)
 		MCPlatformShowWindow(w);
 	else
 		MCPlatformShowWindowAsSheet(w, t_parent);
