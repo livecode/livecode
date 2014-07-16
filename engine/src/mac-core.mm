@@ -836,6 +836,27 @@ void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
 		r_window = nil;
 }
 
+// MW-2014-07-15: [[ Bug 12800 ]] Map a window number to a platform window - if there is one.
+bool MCPlatformGetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
+{
+    NSWindow *t_ns_window;
+    t_ns_window = [NSApp windowWithWindowNumber: p_id];
+    if (t_ns_window == nil)
+        return false;
+    
+    id t_delegate;
+    t_delegate = [t_ns_window delegate];
+    if (t_delegate == nil)
+        return false;
+    
+    if (![t_delegate isKindOfClass: [MCWindowDelegate class]])
+        return false;
+    
+    r_window = [(MCWindowDelegate *)t_delegate platformWindow];
+    
+    return true;
+}
+
 uint32_t MCPlatformGetEventTime(void)
 {
 	return [[NSApp currentEvent] timestamp] * 1000.0;

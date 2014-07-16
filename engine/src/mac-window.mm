@@ -56,6 +56,7 @@ static bool s_lock_responder_change = false;
         return nil;
     
     m_can_become_key = false;
+    m_is_popup = false;
     m_monitor = nil;
     
     return self;
@@ -127,6 +128,13 @@ static bool s_lock_responder_change = false;
 //   other mouse events outside the host window. This allows us to close them and still
 //   continue to process the event as normal.
 
+// MW-2014-07-16: [[ Bug 12708 ]] Mouse events targeted as popup windows don't cancel popups
+//   so that cascading menus work.
+- (bool)isPopupWindow
+{
+    return m_is_popup;
+}
+
 - (void)popupWindowClosed: (NSNotification *)notification
 {
     if (m_monitor != nil)
@@ -137,6 +145,8 @@ static bool s_lock_responder_change = false;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSApplicationDidResignActiveNotification object:nil];
+
+    m_is_popup = false;
 }
 
 - (void)popupWindowShouldClose: (NSNotification *)notification
@@ -145,12 +155,12 @@ static bool s_lock_responder_change = false;
     MCPlatformCallbackSendWindowCancel([(MCWindowDelegate *)[self delegate] platformWindow]);
 }
 
-// SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
-//  weak_popup added to allow combo popup deletion, without affecting the pulldown/cascade nested menus
-- (void)popupAndMonitor: (Boolean) weak_popup
+- (void)popupAndMonitor
 {
     NSWindow *t_window;
     t_window = self;
+    
+    m_is_popup = true;
     
     [self makeKeyAndOrderFront: nil];
     
@@ -162,14 +172,13 @@ static bool s_lock_responder_change = false;
                  {
                      NSEvent *result = incomingEvent;
                      NSWindow *targetWindowForEvent = [incomingEvent window];
-                     
-                     // SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
-                     //  Only the combo is a weak popup which should be closed
-                     //  when it's not the target. This causes otherwise the cascade submenus of a pulldown menu to be cancelled
-                     //  since the pulldown is not the one targetted, and thus popupWindowShouldClose is called before the mousedown
-                     //  is handled
-                     if (weak_popup && targetWindowForEvent != t_window)
-                         [self popupWindowShouldClose: nil];
+
+                     if (![targetWindowForEvent respondsToSelector: @selector(isPopupWindow)] ||
+                         ![targetWindowForEvent isPopupWindow])
+                     {
+                         if (targetWindowForEvent != t_window)
+                             [self popupWindowShouldClose: nil];
+                     }
                      
                      return result;
                  }];
@@ -1385,6 +1394,8 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)concludeDragOperation:(id<NSDraggingInfo>)sender
 {
+    // MW-2014-07-15: [[ Bug 12773 ]] Make sure mouseMove is sent after end of drag operation.
+    MCMacPlatformSyncMouseAfterTracking();
 }
 
 //////////
@@ -1706,14 +1717,16 @@ void MCMacPlatformWindow::ProcessMouseScroll(CGFloat dx, CGFloat dy)
 	MCMacPlatformHandleMouseScroll(dx, dy);
 }
 
-void MCMacPlatformWindow::ProcessKeyDown(MCPlatformKeyCode p_key_code, codepoint_t p_unmapped_char, codepoint_t p_mapped_char)
+// SN-2014-07-11: [[ Bug 12747 ]] Shortcuts: the uncomment script shortcut cmd _ does not work
+// Changed parameters order to follow *KeyDown functions consistency
+void MCMacPlatformWindow::ProcessKeyDown(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
 {
-	HandleKeyDown(p_key_code, p_unmapped_char, p_mapped_char);
+	HandleKeyDown(p_key_code, p_mapped_char, p_unmapped_char);
 }
 
-void MCMacPlatformWindow::ProcessKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_unmapped_char, codepoint_t p_mapped_char)
+void MCMacPlatformWindow::ProcessKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
 {
-	HandleKeyUp(p_key_code, p_unmapped_char, p_mapped_char);
+	HandleKeyUp(p_key_code, p_mapped_char, p_unmapped_char);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1893,21 +1906,13 @@ void MCMacPlatformWindow::DoShow(void)
 		MCMacPlatformBeginModalSession(this);
 	else if (m_style == kMCPlatformWindowStylePopUp)
     {
-        // SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
-        [m_window_handle popupAndMonitor: false];
+        [m_window_handle popupAndMonitor];
     }
 	else
 	{
 		[m_view setNeedsDisplay: YES];
 		[m_window_handle makeKeyAndOrderFront: nil];
 	}
-}
-
-// SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
-//  Combo popup are 'weak' ones (cancelling a mousedown if it is not inside the combo window)
-void MCMacPlatformWindow::DoShowAsCombo(void)
-{
-    [m_window_handle popupAndMonitor: true];
 }
 
 void MCMacPlatformWindow::DoShowAsSheet(MCPlatformWindowRef p_parent)

@@ -123,6 +123,7 @@ engine/src/deploy_sign.cpp
 engine/src/deploy_windows.cpp
 engine/src/deploysecurity.cpp
 engine/src/deploysecurity.h
+engine/src/desktop.cpp
 engine/src/dispatch.cpp
 engine/src/dispatch.h
 engine/src/dllst.cpp

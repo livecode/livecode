@@ -1,1 +1,1 @@
-#  Pulldown menu submenus don't trigger menuPick
+# Submenus of popups don't send menuPick on selection.

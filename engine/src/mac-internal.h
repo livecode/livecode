@@ -67,6 +67,7 @@ class MCMacPlatformSurface;
 @interface com_runrev_livecode_MCWindow: NSWindow
 {
 	bool m_can_become_key : 1;
+    bool m_is_popup : 1;
     id m_monitor;
 }
 
@@ -400,8 +401,10 @@ public:
 	void ProcessMousePress(NSInteger button, bool is_down);
 	void ProcessMouseScroll(CGFloat dx, CGFloat dy);
 	
-	void ProcessKeyDown(MCPlatformKeyCode key_code, codepoint_t unmapped_char, codepoint_t mapped_char);
-	void ProcessKeyUp(MCPlatformKeyCode key_code, codepoint_t unmapped_char, codepoint_t mapped_char);
+    // SN-2014-07-11: [[ Bug 12747 ]] Shortcuts: the uncomment script shortcut cmd _ does not work
+    // Changed parameters order to follow *KeyDown functions consistency
+	void ProcessKeyDown(MCPlatformKeyCode key_code, codepoint_t mapped_char, codepoint_t unmapped_char);
+	void ProcessKeyUp(MCPlatformKeyCode key_code, codepoint_t mapped_char, codepoint_t unmapped_char);
 	
 	void MapMCPointToNSPoint(MCPoint location, NSPoint& r_ns_location);
 	void MapNSPointToMCPoint(NSPoint location, MCPoint& r_mc_location);
@@ -416,9 +419,7 @@ protected:
 	virtual bool DoSetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value);
 	virtual bool DoGetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, void *r_value);
 	
-	virtual void DoShow(void);    
-    // SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
-    virtual void DoShowAsCombo(void);
+	virtual void DoShow(void);
 	virtual void DoShowAsSheet(MCPlatformWindowRef parent);
 	virtual void DoHide(void);
 	virtual void DoFocus(void);
