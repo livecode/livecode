@@ -45,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "font.h"
 #include "redraw.h"
-
+#include "objectstream.h"
 
 #include "mctheme.h"
 #include "globals.h"
@@ -73,6 +73,9 @@ MCGroup::MCGroup()
 	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
 	//   when created.
     m_updates_locked = false;
+    
+    // MW-2014-06-20: [[ ClipsToRect ]] Initialize to false.
+    m_clips_to_rect = false;
 }
 
 MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
@@ -144,6 +147,9 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 	scrolly = gref.scrolly;
 	scrollbarwidth = gref.scrollbarwidth;
 	
+    // MW-2014-06-20: [[ ClipsToRect ]] Copy other group's value.
+    m_clips_to_rect = gref.m_clips_to_rect;
+    
 	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
 	//   when cloned.
     m_updates_locked = false;
@@ -596,10 +602,15 @@ Boolean MCGroup::mdown(uint2 which)
 {
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mdown(which);
-	if (sbdown(which, hscrollbar, vscrollbar))
-		return True;
+
 	Tool tool = getstack()->gettool(this);
-	if (tool == T_POINTER && (mfocused == NULL || !MCselectgrouped || getflag(F_SELECT_GROUP)))
+	
+    // MW-2014-04-25: [[ Bug 8041 ]] Only handle the group scrollbars in browse mode.
+    //   This is consistent with field behavior.
+    if (tool == T_BROWSE && sbdown(which, hscrollbar, vscrollbar))
+        return True;
+    
+    if (tool == T_POINTER && (mfocused == NULL || !MCselectgrouped || getflag(F_SELECT_GROUP)))
 	{
 		if (which == Button1)
 		{
@@ -612,6 +623,7 @@ Boolean MCGroup::mdown(uint2 which)
 			message_with_args(MCM_mouse_down, which);
 		return True;
 	}
+    
 	if (mfocused == NULL)
 		return False;
 	mgrabbed = True;
@@ -635,16 +647,16 @@ Boolean MCGroup::mdown(uint2 which)
 	return t_handled;
 }
 
-Boolean MCGroup::mup(uint2 which)
+Boolean MCGroup::mup(uint2 which, bool p_release)
 {
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	if (state & CS_GRAB)
 	{
 		state &= ~(CS_GRAB | CS_MFOCUSED);
 		mgrabbed = False;
 		mfocused->mfocus(mx, my);
-		return mfocused->mup(which);
+		return mfocused->mup(which, p_release);
 	}
 	if (sbup(which, hscrollbar, vscrollbar))
 		return True;
@@ -656,10 +668,13 @@ Boolean MCGroup::mup(uint2 which)
 			if (!(state & CS_MFOCUSED))
 				return False;
 			state &= ~CS_MFOCUSED;
-			end();
+			end(true, p_release);
 		}
 		else
-			message_with_args(MCM_mouse_up, which);
+            if (p_release)
+                message_with_args(MCM_mouse_release, which);
+            else
+                message_with_args(MCM_mouse_up, which);
 		return True;
 	}
 	state &= ~CS_MFOCUSED;
@@ -669,7 +684,7 @@ Boolean MCGroup::mup(uint2 which)
 	if (tool != T_POINTER)
 		radio(0, oldfocused);
 	mgrabbed = False;
-	if (mfocused == NULL || mfocused->mup(which))
+	if (mfocused == NULL || mfocused->mup(which, p_release))
 	{
 		newkfocused = NULL;
 		// MH-2007-03-20: [[ Bug 705 ]] Selecting a radio button using pointer tool unhilites other radio buttons in the group with radiobehavior set.
@@ -972,7 +987,11 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_LOCK_UPDATES:
 		ep.setboolean(m_updates_locked);
 		break;
-#endif /* MCGroup::getprop */
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    case P_CLIPS_TO_RECT:
+        ep.setboolean(m_clips_to_rect);
+        break;
+#endif
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -1335,6 +1354,22 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		return t_stat;
 	}
 	break;
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    case P_CLIPS_TO_RECT:
+    {
+        Exec_stat t_stat;
+        Boolean t_clips_to_rect;
+        
+        t_stat = ep.getboolean(t_clips_to_rect, 0, 0, EE_PROPERTY_NAB);
+        if (t_stat == ES_NORMAL)
+            if (t_clips_to_rect != m_clips_to_rect)
+            {
+                m_clips_to_rect = t_clips_to_rect;
+                computeminrect(True);
+            }
+        return t_stat;
+    }
+    break;
 #endif /* MCGroup::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
@@ -2316,7 +2351,8 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 		if (flags & F_SHOW_BORDER)
 			minrect = MCU_reduce_rect(minrect, -borderwidth);
 	}
-	if (flags & F_LOCK_LOCATION)
+	// MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    if (getflag(F_LOCK_LOCATION) || m_clips_to_rect)
 	{
 		boundcontrols();
 		if (scrolling && flags & F_BOUNDING_RECT)
@@ -2520,7 +2556,11 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 				!MCcurtheme -> drawmetalbackground(dc, dirty, rect, this))
 			{
 				setforeground(dc, DI_BACK, False);
-				dc->fillrect(rect);
+				// IM-2014-04-16: [[ Bug 12044 ]] The sprite background should fill the whole redraw area. 
+				if (!p_sprite)
+					dc->fillrect(rect);
+				else
+					dc->fillrect(p_dirty);
 			}
 
 			// MW-2009-06-14: Non-themed, opaque backgrounds are (unsurprisingly!) opaque.
@@ -2546,18 +2586,8 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		MCControl *cptr = controls;
 		do
 		{
-			if (cptr -> getopened() != 0 && (MCshowinvisibles || cptr -> getflag(F_VISIBLE)))
-			{
-				MCRectangle trect = MCU_intersect_rect(drect, cptr -> geteffectiverect());
-				if (trect.width != 0 && trect.height != 0)
-				{
-					dc -> setopacity(255);
-					dc -> setfunction(GXcopy);
-					dc -> setclip(trect);
-					cptr -> draw(dc, trect, false, false);
-				}
-
-			}
+			// IM-2014-06-11: [[ Bug 12557 ]] Use common control redraw method
+			cptr->redraw(dc, drect);
 
 			cptr = cptr->next();
 		}
@@ -2568,7 +2598,9 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		dc -> changeopaque(t_was_opaque);
 
 	drect = MCU_intersect_rect(dirty, rect);
-	dc->setclip(drect);
+	
+	dc->save();
+	dc->cliprect(drect);
 
 	if (flags & F_HSCROLLBAR)
 	{
@@ -2584,9 +2616,10 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 			vscrollbar->draw(dc, vrect, false, false);
 	}
 
+	dc->restore();
+	
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
-	dc -> setclip(dirty);
 	drawbord(dc, dirty);
 
 	if (!p_isolated)
@@ -2623,7 +2656,8 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 				slabel.set(label,labelsize), isunicode = hasunicode();
 			else
 				slabel = getname_oldstring(), isunicode = false;
-			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode) + 4;
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode, getstack() -> getdevicetransform()) + 4;
 			//exclude text area from widget drawing region for those themes that draw text on top of frame.
 			winfo.datatype = WTHEME_DATA_RECT;
 			winfo.data = &textrect;
@@ -2675,7 +2709,8 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 				slabel.set(label,labelsize), isunicode = hasunicode();
 			else
 				slabel = getname_oldstring(), isunicode = false;
-			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode) + 4;
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode, getstack() -> getdevicetransform()) + 4;
 
 			if (flags & F_SHOW_BORDER)
 			{
@@ -2780,14 +2815,56 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 //  SAVING AND LOADING
 //
 
+#define GROUP_EXTRA_CLIPSTORECT (1 << 0UL)
+
 IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
-	return defaultextendedsave(p_stream, p_part);
+	uint32_t t_size, t_flags;
+	t_size = 0;
+	t_flags = 0;
+    
+    // MW-2014-06-20: [[ ClipsToRect ]] ClipsToRect doesn't require any storage
+    //   as if the flag is present its true, otherwise false.
+    if (m_clips_to_rect)
+        t_flags |= GROUP_EXTRA_CLIPSTORECT;
+    
+	IO_stat t_stat;
+	t_stat = p_stream . WriteTag(t_flags, t_size);
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedsave(p_stream, p_part);
+    
+	return t_stat;
 }
 
 IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
 {
-	return defaultextendedload(p_stream, p_version, p_remaining);
+	IO_stat t_stat;
+	t_stat = IO_NORMAL;
+
+	if (p_remaining > 0)
+	{
+		uint4 t_flags, t_length, t_header_length;
+		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+        
+		if (t_stat == IO_NORMAL)
+			t_stat = p_stream . Mark();
+        
+        // MW-2014-06-20: [[ ClipsToRect ]] ClipsToRect doesn't require any storage
+        //   as if the flag is present its true, otherwise false.
+		if (t_stat == IO_NORMAL && (t_flags & GROUP_EXTRA_CLIPSTORECT))
+            m_clips_to_rect = true;
+        
+		if (t_stat == IO_NORMAL)
+			t_stat = p_stream . Skip(t_length);
+        
+		if (t_stat == IO_NORMAL)
+			p_remaining -= t_length + t_header_length;
+	}
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedload(p_stream, p_version, p_remaining);
+    
+	return t_stat;
 }
 
 IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
@@ -2796,7 +2873,15 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if ((stat = IO_write_uint1(OT_GROUP, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+    
+    // MW-2014-06-20: [[ ClipsToRect ]] If clipsToRect is set, then force extensions so the
+    //   flag can be written.
+    bool t_has_extensions;
+    t_has_extensions = false;
+    if (m_clips_to_rect)
+        t_has_extensions = true;
+
+	if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
 		return stat;
 	if (flags & F_LABEL)
 		if ((stat = IO_write_string(label, labelsize, stream, hasunicode())) != IO_NORMAL)

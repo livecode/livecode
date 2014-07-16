@@ -174,7 +174,8 @@ void MCTooltip::opentip()
 		MCExecPoint ep;
 		ep . setsvalue(MCString(t_tooltip, t_next_line - t_tooltip));
 		ep . utf8toutf16();
-		rect.width = MCU_max(MCFontMeasureText(m_font, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), true) + 8, rect.width);
+		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+		rect.width = MCU_max(MCFontMeasureText(m_font, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), true, getstack() -> getdevicetransform()) + 8, rect.width);
 		rect.height += t_fheight + 3;
 
 		t_tooltip = t_next_line;
@@ -186,7 +187,7 @@ void MCTooltip::opentip()
 	openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE);
 	state |= CS_NO_FOCUS;
 
-	if (MCcurtheme != NULL && window != DNULL)
+	if (MCcurtheme != NULL && window != NULL)
 		MCcurtheme -> applythemetotooltipwindow(window, rect);
 }
 
@@ -204,7 +205,10 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 {
 	// IM-2012-05-31 [[ Malte ]] fix linux crashes that can occur when the tooltip text is NULL
 	// (probably shouldn't happen, but there you go)!
-	if (tooltip == nil)
+	// SJT-2014-05-29 Fix crash when m_font was NULL, seems we
+	// were being called on a closed window.  Probably caused by
+	// stale update events.
+	if (!opened)
 		return;
 	MCRectangle trect;
 	MCU_set_rect(trect, 0, 0, rect.width, rect.height);

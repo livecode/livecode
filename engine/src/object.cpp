@@ -691,7 +691,7 @@ Boolean MCObject::mdown(uint2 which)
 }
 
 extern bool MCmenupoppedup;
-Boolean MCObject::mup(uint2 which)
+Boolean MCObject::mup(uint2 which, bool p_release)
 {
 	if (state & CS_MENU_ATTACHED)
 	{
@@ -703,7 +703,7 @@ Boolean MCObject::mup(uint2 which)
 		if (focused != NULL && focused->gettype() == CT_BUTTON
 		        && focused->getmenumode() == WM_CASCADE)
 		{
-			focused->mup(which); // send mup directly to cascade button
+			focused->mup(which, p_release); // send mup directly to cascade button
 			closemenu(True, True);
 		}
 		else
@@ -1869,7 +1869,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
 		Window mywindow = mystack->getw();
 		if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
-		        && (MCtracewindow == DNULL
+		        && (MCtracewindow == NULL
 		            || memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
 		{
 			// PASS STATE FIX
@@ -4557,8 +4557,9 @@ MCRectangle MCObject::measuretext(const MCString& p_text, bool p_is_unicode)
     t_bounds . x = 0;
 	// MW-2013-08-23: [[ MeasureText ]] Shortcut if no text - useful for just
 	//   getting the font ascent/descent (as used in MCGroup methods).
+	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 	if (p_text . getlength() != 0)
-		t_bounds . width = MCFontMeasureText(m_font, p_text . getstring(), p_text . getlength(), p_is_unicode);
+		t_bounds . width = MCFontMeasureText(m_font, p_text . getstring(), p_text . getlength(), p_is_unicode, getstack() -> getdevicetransform());
 	else
 		t_bounds . width = 0;
     t_bounds . y = -MCFontGetAscent(m_font);

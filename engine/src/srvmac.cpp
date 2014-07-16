@@ -194,6 +194,7 @@ static char *do_resolvealias(const char *);
 static char *do_getspecialfolder(const char *);
 static char *do_tmpnam(void);
 
+#ifndef __MAC_10_8
 static char *strndup(const char *s, uint32_t l)
 {
 	char *r;
@@ -201,6 +202,7 @@ static char *strndup(const char *s, uint32_t l)
 	strncpy(r, s, l);
 	return r;
 }
+#endif
 
 static struct { uint1 charset; CFStringEncoding encoding; } s_encoding_map[] =
 {

@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "font.h"
 
+#include "graphics_util.h"
+
 #ifdef _LINUX_DESKTOP
 #include "flst.h"
 #endif
@@ -262,7 +264,8 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 			// Devices have to support unmasked images (otherwise we couldn't
 			// rasterize!).
 			bool t_mask, t_alpha;
-			t_mask = MCImageBitmapHasTransparency(p_mark -> image . descriptor . bitmap, t_alpha);
+			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
+			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
 
 			if (!t_mask)
 				return true;
@@ -353,6 +356,15 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_RECTANGLE:
 		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
+            // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+			if (!(p_mark -> rectangle . inset % 2))
+				p_mark -> rectangle . inset ++;
+			p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2,
+														   p_mark -> rectangle . bounds . y + p_mark -> rectangle . inset / 2, 
+														   p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset, 
+														   p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset);
+			
 			MCPath *t_path;
 			if (p_mark -> stroke != nil && p_mark -> rectangle . bounds . height == 1)
 				t_path = MCPath::create_line(p_mark -> rectangle . bounds . x, p_mark -> rectangle . bounds . y, p_mark -> rectangle . bounds . x + p_mark -> rectangle . bounds . width - 1, p_mark -> rectangle . bounds . y, true);
@@ -371,8 +383,17 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_ROUND_RECTANGLE:
 		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
+            // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+			if (!(p_mark -> round_rectangle . inset % 2))
+				p_mark -> round_rectangle . inset ++;
+			p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2,
+														   p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . inset / 2, 
+														   p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset, 
+														   p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset);
+			
 			MCPath *t_path;
-			t_path = MCPath::create_rounded_rectangle(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius, p_mark -> stroke != nil);
+			t_path = MCPath::create_rounded_rectangle(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius / 2, p_mark -> stroke != nil);
 			if (t_path != nil)
 			{
 				dopathmark(p_mark, t_path);
@@ -384,6 +405,15 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_ARC:
 		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
+            // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+			if (!(p_mark -> arc . inset % 2))
+				p_mark -> arc . inset ++;
+			p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2,
+														   p_mark -> arc . bounds . y + p_mark -> arc . inset / 2, 
+														   p_mark -> arc . bounds . width - p_mark -> arc . inset, 
+														   p_mark -> arc . bounds . height - p_mark -> arc . inset);
+			
 			MCPath *t_path;
 			if (p_mark -> arc . complete)
 				t_path = MCPath::create_segment(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle, p_mark -> stroke != nil);
@@ -465,23 +495,29 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 	}
 
 	uint2 t_img_width, t_img_height;
-	MCImageBitmap *t_img_bitmap = nil;
-	t_img_bitmap = p_mark -> image . descriptor . bitmap;
-	t_img_width = t_img_bitmap -> width;
-	t_img_height = t_img_bitmap -> height;
+	MCGRaster t_raster;
 
 	if (!m_execute_error)
 	{
+		if (!MCGImageGetRaster(p_mark->image.descriptor.image, t_raster))
+			m_execute_error = true;
+	}
+
+	if (!m_execute_error)
+	{
+		t_img_width = t_raster.width;
+		t_img_height = t_raster.height;
+
 		// Fill in the printer image info
 		MCCustomPrinterImage t_image;
 		if (t_image_type == kMCCustomPrinterImageNone)
 		{
 			bool t_mask, t_alpha;
-			t_mask = MCImageBitmapHasTransparency(t_img_bitmap, t_alpha);
-			t_image . type = t_alpha ? kMCCustomPrinterImageRawARGB : (t_mask ? kMCCustomPrinterImageRawMRGB : kMCCustomPrinterImageRawXRGB);
-			t_image . id = (uint32_t)(intptr_t)t_img_bitmap;
-			t_image . data = t_img_bitmap -> data;
-			t_image . data_size = t_img_bitmap -> stride * t_img_height;
+			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
+			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
+			t_image . id = (uint32_t)(intptr_t)p_mark->image.descriptor.image;
+			t_image . data = t_raster.pixels;
+			t_image . data_size = t_raster.stride * t_img_height;
 		}
 		else
 		{
@@ -790,9 +826,19 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 		else if (p_mark -> fill -> style == FillTiled)
 		{
 			// Fetch the size of the tile, and its data.
-			MCGRaster t_tile_raster;
-			if (MCGImageGetRaster(p_mark -> fill -> pattern -> image, t_tile_raster))
+			MCGImageRef t_image;
+			t_image = nil;
+			
+			MCGAffineTransform t_transform;
+			
+			// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+			if (MCPatternLockForContextTransform(p_mark->fill->pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform))
 			{
+				MCGRaster t_tile_raster;
+				/* UNCHECKED */ MCGImageGetRaster(t_image, t_tile_raster);
+				
+				t_transform = MCGAffineTransformTranslate(t_transform, p_mark->fill->origin.x, p_mark->fill->origin.y);
+				
 				// Construct the paint pattern.
 				t_paint . type = kMCCustomPrinterPaintPattern;
 				t_paint . pattern . image . type = MCCustomPrinterImageTypeFromMCGRasterFormat(t_tile_raster . format);
@@ -801,12 +847,9 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 				t_paint . pattern . image . height = t_tile_raster . height;
 				t_paint . pattern . image . data = t_tile_raster . pixels;
 				t_paint . pattern . image . data_size = t_tile_raster . stride * t_tile_raster . height;
-				t_paint . pattern . transform . scale_x = 1.0 / p_mark -> fill -> pattern -> scale;
-				t_paint . pattern . transform . scale_y = 1.0 / p_mark -> fill -> pattern -> scale;
-				t_paint . pattern . transform . skew_x = 0.0;
-				t_paint . pattern . transform . skew_y = 0.0;
-				t_paint . pattern . transform . translate_x = p_mark -> fill -> origin . x;
-				t_paint . pattern . transform . translate_y = p_mark -> fill -> origin . y;
+				t_paint . pattern . transform = MCCustomPrinterTransformFromMCGAffineTransform(t_transform);
+				
+				MCPatternUnlock(p_mark->fill->pattern, t_image);
 			}
 			else
 				m_execute_error = true;

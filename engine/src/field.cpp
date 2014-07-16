@@ -571,8 +571,10 @@ Boolean MCField::kdown(const char *string, KeySym key)
 		{
 			if (MCnullmcstring == string)
 				return False;
-
-			getstack()->hidecursor();
+            
+            // MW-2014-04-25: [[ Bug 5545 ]] This method will do the appropriate behavior
+            //   based on platform.
+            MCscreen -> hidecursoruntilmousemoves();
 
 			// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
 			//   native mode.
@@ -925,12 +927,12 @@ Boolean MCField::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCField::mup(uint2 which)
+Boolean MCField::mup(uint2 which, bool p_release)
 {
 	if (!(state & (CS_MFOCUSED | CS_DRAG_TEXT)))
 		return False;
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	state &= ~(CS_MFOCUSED | CS_MOUSEDOWN);
 	if (state & CS_GRAB)
 	{
@@ -979,7 +981,7 @@ Boolean MCField::mup(uint2 which)
 			}
 			if (!(state & CS_DRAG_TEXT))
 				if ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL))
-					if (MCU_point_in_rect(rect, mx, my))
+					if (!p_release && MCU_point_in_rect(rect, mx, my))
 						if (flags & F_LIST_BEHAVIOR
 						        && (my - rect.y > (int4)(textheight + topmargin - texty)
 						            || paragraphs == paragraphs->next()
@@ -1018,7 +1020,7 @@ Boolean MCField::mup(uint2 which)
 			break;
 		case T_FIELD:
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -1030,7 +1032,7 @@ Boolean MCField::mup(uint2 which)
 	case Button2:
 		if (flags & F_LOCK_TEXT || getstack()->gettool(this) != T_BROWSE)
 		{
-			if (MCU_point_in_rect(rect, mx, my))
+			if (!p_release && MCU_point_in_rect(rect, mx, my))
 				message_with_args(MCM_mouse_up, "2");
 			else
 				message_with_args(MCM_mouse_release, "2");
@@ -1049,7 +1051,7 @@ Boolean MCField::mup(uint2 which)
 		}
 		break;
 	case Button3:
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 			message_with_args(MCM_mouse_up, "3");
 		else
 			message_with_args(MCM_mouse_release, "3");
@@ -1108,7 +1110,7 @@ Boolean MCField::doubleup(uint2 which)
 		if (sbdoubleup(which, hscrollbar, vscrollbar))
 			return True;
 		if (flags & F_LIST_BEHAVIOR && (flags & F_TOGGLE_HILITE))
-			mup(which);
+			mup(which, false);
 	}
 	return MCControl::doubleup(which);
 }
@@ -1383,8 +1385,9 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
             MCParagraph *pgptr = paragraphs;
             uint2 height = getfheight();
             uint2 theight = height;
-            uint2 tstart = 1;
-            uint2 tend = 0;
+            // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
+            uint4 tstart = 1;
+            uint4 tend = 0;
             MCLine *lastline = NULL;
             uint2 j = 0;
             while (True)
@@ -2107,7 +2110,7 @@ void MCField::undo(Ustruct *us)
 			if (us->ud.text.data != NULL)
 			{
 				insertparagraph(us->ud.text.data);
-				selectedmark(False, si, ei, False, False);
+				selectedmark(False, si, ei, False);
 				seltext(us->ud.text.index, si, True);
 				us->type = UT_REPLACE_TEXT;
 			}
@@ -2899,7 +2902,9 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	}
 
 	MCRectangle frect = getfrect();
-	dc->setclip(dirty);
+	
+	dc->save();
+	dc->cliprect(dirty);
 	
 	MCRectangle trect = frect;
 	if (flags & F_SHOW_BORDER && borderwidth)
@@ -2928,7 +2933,8 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		else
 			drawborder(dc, trect, borderwidth);
 	}
-	dc->clearclip();
+	
+	dc->restore();
 
 	// MW-2009-06-14: If the field is opaque, then render the contents with that
 	//   marked.
@@ -2940,7 +2946,6 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		dc -> changeopaque(t_was_opaque);
 
 	frect = getfrect();
-	dc->setclip(dirty);
 	if (flags & F_SHADOW)
 	{
 		MCRectangle trect = rect;

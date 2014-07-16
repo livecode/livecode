@@ -507,9 +507,17 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
 			CGContextTranslateCTM(t_img_context, 0, -(CGFloat)t_bitmap_height);
 			
-			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_width / r . height);
-			
+            // MW-2014-04-22: [[ Bug 12008 ]] Translate before scale.
 			CGContextTranslateCTM(t_img_context, -(CGFloat)r.x, -(CGFloat)r.y);
+            
+            // MW-2014-04-22: [[ Bug 12008 ]] Make sure we take into account the logical to device screen
+            //   scale (and invert appropriately!).
+            float t_scale;
+            t_scale = ((MCScreenDC *)MCscreen) -> logicaltoscreenscale();
+			CGContextScaleCTM(t_img_context, 1.0 / t_scale, 1.0 / t_scale);
+            
+			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_height / r . height);
+			
 			
 			bool t_is_rotated;
 			CGSize t_offset;
@@ -543,12 +551,8 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextTranslateCTM(t_img_context, t_screen_rect . width / 2, t_screen_rect . height / 2);
 			CGContextRotateCTM(t_img_context, t_angle);
 			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
-			
-            // MM-2013-01-10: [[ Bug 11653 ]] As above, our rects are also in device pixels, so use the device scale when working out x and y of bounds.
-            //float t_scale;
-            //t_scale = MCIPhoneGetDeviceScale();
-			//CGContextScaleCTM(t_img_context, t_scale, t_scale);
-			
+            
+            
 #ifndef USE_UNDOCUMENTED_METHODS
 			NSArray *t_windows;
 			t_windows = [[[UIApplication sharedApplication] windows] retain];
@@ -654,6 +658,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	
 	do
 	{
+		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
+		DoRunloopActions();
+		
 		// MW-2013-08-18: [[ XPlatNotify ]] Handle any pending notifications
 		if (MCNotifyDispatch(dispatch == True) && anyevent)
 			break;
@@ -803,6 +810,10 @@ Window MCScreenDC::get_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic);
+extern void coretext_font_destroy(void *p_font);
+extern void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
+
 struct do_iphone_font_create_env
 {
 	const char *name;
@@ -817,70 +828,14 @@ static void do_iphone_font_create(void *p_env)
 {
 	do_iphone_font_create_env *env;
 	env = (do_iphone_font_create_env *)p_env;
-	
-	const char *p_name;
-	uint32_t p_size;
-	bool p_bold;
-	bool p_italic;
-	p_name = env -> name;
-	p_size = env -> size;
-	p_bold = env -> bold;
-	p_italic = env -> italic;
-	
-	char t_font_name[256];
-	UIFont *t_font;
-	t_font = nil;
-	
-    // MW-2012-03-22: [[ Bug ]] First see if we can find the font with the given name. We
-    //   use this to get the correct 'family' name so styled names work correctly.
-    UIFont *t_base_font;
-    t_base_font = [ UIFont fontWithName: [ NSString stringWithCString: p_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
     
-    char t_base_name[256];
-    if (t_base_font != nil)
-        sprintf(t_base_name, "%s", [[t_base_font fontName] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-    else
-        strcpy(t_base_name, p_name);
-    
-	if (p_bold && p_italic)
-	{
-		sprintf(t_font_name, "%s-BoldItalic", t_base_name);
-		t_font = [ UIFont fontWithName: [ NSString stringWithCString: t_font_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-		if (t_font == nil)
-		{
-			sprintf(t_font_name, "%s-BoldOblique", t_base_name);
-			t_font = [ UIFont fontWithName: [ NSString stringWithCString: t_font_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-		}
-	}
-	
-	if (t_font == nil && p_bold)
-	{
-		sprintf(t_font_name, "%s-Bold", t_base_name);
-		t_font = [ UIFont fontWithName: [ NSString stringWithCString: t_font_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-	}
-	
-	if (t_font == nil && p_italic)
-	{
-		sprintf(t_font_name, "%s-Italic", t_base_name);
-		t_font = [ UIFont fontWithName: [ NSString stringWithCString: t_font_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-		if (t_font == nil)
-		{
-			sprintf(t_font_name, "%s-Oblique", t_base_name);
-			t_font = [ UIFont fontWithName: [ NSString stringWithCString: t_font_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-		}
-	}
-	
-    // MW-2012-03-22: If the font is nil here either there was no styling, or no styled
-    //   variants were found so use the base font.
-	if (t_font == nil)
-		t_font = t_base_font;
-	
-	if (t_font == nil)
-		t_font = [ UIFont systemFontOfSize: p_size ];
-	
-	[ t_font retain ];
-	
-	env -> result = t_font;
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+	env -> result = coretext_font_create_with_name_size_and_style(env -> name, env -> size, env -> bold, env -> italic);
+}
+
+static void do_iphone_font_destroy(void *p_font)
+{
+    coretext_font_destroy(p_font);
 }
 
 void *iphone_font_create(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic)
@@ -897,150 +852,14 @@ void *iphone_font_create(const char *p_name, uint32_t p_size, bool p_bold, bool 
 
 void iphone_font_get_metrics(void *p_font, float& r_ascent, float& r_descent)
 {
-	r_ascent = [ (UIFont *)p_font ascender ];
-	r_descent = fabsf([ (UIFont *)p_font descender ]);
+    coretext_font_get_metrics(p_font, r_ascent, r_descent);
 }
 
 void iphone_font_destroy(void *p_font)
 {
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
-	/* REMOTE */ MCFiberCallSelector(s_main_fiber, (UIFont *)p_font, @selector(release));
-}
-
-//////////
-
-typedef void for_each_word_callback_t(void *context, const void *text, uindex_t text_length, bool is_unicode);
-
-static void for_each_word(const void *p_text, uint32_t p_text_length, bool p_is_unicode, for_each_word_callback_t p_callback, void *p_context)
-{
-	void *t_text_ptr;
-	if (p_is_unicode && ((uintptr_t)p_text & 1) != 0)
-	{
-		t_text_ptr = malloc(p_text_length);
-		memcpy(t_text_ptr, p_text, p_text_length);
-	}
-	else
-		t_text_ptr = (void *)p_text;
-		
-	if (!p_is_unicode)
-	{
-		char *t_native_text_ptr;
-		t_native_text_ptr = (char *)t_text_ptr;
-		
-		uindex_t t_word_start;
-		t_word_start = 0;
-		while(t_word_start < p_text_length)
-		{
-			uindex_t t_word_end;
-			t_word_end = t_word_start;
-			while(t_native_text_ptr[t_word_end] != ' ' && t_word_end < p_text_length)
-				t_word_end++;
-			while(t_native_text_ptr[t_word_end] == ' ' && t_word_end < p_text_length)
-				t_word_end++;
-			
-			p_callback(p_context, t_native_text_ptr + t_word_start, t_word_end - t_word_start, p_is_unicode);
-			
-			t_word_start = t_word_end;
-		}
-	}
-	else
-	{
-		unichar_t *t_unicode_text_ptr;
-		t_unicode_text_ptr = (unichar_t *)t_text_ptr;
-	
-		uindex_t t_word_start;
-		t_word_start = 0;
-		while(t_word_start < p_text_length / 2)
-		{
-			uindex_t t_word_end;
-			t_word_end = t_word_start;
-			while(t_unicode_text_ptr[t_word_end] != ' ' && t_word_end < p_text_length / 2)
-				t_word_end++;
-			while(t_unicode_text_ptr[t_word_end] == ' ' && t_word_end < p_text_length / 2)
-				t_word_end++;
-			
-			p_callback(p_context, t_unicode_text_ptr + t_word_start, (t_word_end - t_word_start) * 2, p_is_unicode);
-			
-			t_word_start = t_word_end;
-		}
-	}
-		
-	if (t_text_ptr != p_text)
-		free(t_text_ptr);
-}
-
-struct iphone_font_measure_text_context_t
-{
-	void *font;
-	float width;
-};
-
-static void iphone_font_do_measure_text(void *p_context, const void *p_text, uint32_t p_text_length, bool p_is_unicode)
-{
-	iphone_font_measure_text_context_t *t_context;
-	t_context = (iphone_font_measure_text_context_t *)p_context;
-	
-	NSString *t_string;
-	t_string = [[NSString alloc] initWithBytes: (uint8_t *)p_text length: p_text_length encoding: (p_is_unicode ? NSUTF16LittleEndianStringEncoding : NSMacOSRomanStringEncoding)];
-
-	UIFont *t_font;
-	t_font = (UIFont *)t_context -> font;
-	
-	t_context -> width += ceil([ t_string sizeWithFont: t_font ] . width);
-	
-	[t_string release];
-}
-
-float iphone_font_measure_text(void *p_font, const char *p_text, uint32_t p_text_length, bool p_is_unicode)
-{
-	uindex_t t_word_start;
-	t_word_start = 0;
-
-	iphone_font_measure_text_context_t t_context;
-	t_context . font = p_font;
-t_context . width = 0.0f;
-	for_each_word(p_text, p_text_length, p_is_unicode, iphone_font_do_measure_text, &t_context);
-
-	return t_context . width;
-}
-
-struct iphone_font_draw_text_context_t
-{
-	void *font;
-	float x;
-	float y;
-};
-
-static void iphone_font_do_draw_text(void *p_context, const void *p_text, uint32_t p_text_length, bool p_is_unicode)
-{
-	iphone_font_draw_text_context_t *t_context;
-	t_context = (iphone_font_draw_text_context_t *)p_context;
-
-	NSString *t_string;
-	t_string = [[NSString alloc] initWithBytes: (uint8_t *)p_text length: p_text_length encoding: (p_is_unicode ? NSUTF16LittleEndianStringEncoding : NSMacOSRomanStringEncoding)];
-	
-	UIFont *t_font;
-	t_font = (UIFont *)t_context -> font;
-	
-	CGSize t_size;
-	t_size = [t_string drawAtPoint: CGPointMake(t_context -> x, t_context -> y - ceilf([ t_font ascender ])) withFont: t_font];
-	
-	t_context -> x += ceil(t_size . width);
-	
-	[t_string release];
-}
-
-void iphone_font_draw_text(void *p_font, CGContextRef p_context, CGFloat x, CGFloat y, const char *p_text, uint32_t p_text_length, bool p_is_unicode)
-{
-	UIGraphicsPushContext(p_context);
-	
-	iphone_font_draw_text_context_t t_context;
-	t_context . font = p_font;
-	t_context . x = x;
-	t_context . y = y;
-	for_each_word(p_text, p_text_length, p_is_unicode, iphone_font_do_draw_text, &t_context);
-	
-	UIGraphicsPopContext();
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+	/* REMOTE */ MCFiberCall(s_main_fiber, do_iphone_font_destroy, p_font);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1593,7 +1412,7 @@ void MCIPhoneHandleTouches(UIView *p_view, NSSet *p_touches, UITouchPhase p_phas
 		t_loc = MCPointMake(t_location.x, t_location.y);
 		
 		// IM-2014-01-30: [[ HiDPI ]] Convert screen to logical coords
-		t_loc = MCScreenDC::screentologicalpoint(t_loc);
+		t_loc = MCscreen -> screentologicalpoint(t_loc);
 		
 		static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, t_touch, [t_touch timestamp] * 1000, t_loc . x, t_loc . y);
 	}

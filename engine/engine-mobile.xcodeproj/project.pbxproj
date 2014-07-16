@@ -22,6 +22,7 @@
 
 /* Begin PBXBuildFile section */
 		3CC6F42812AD0A6100852B3B /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC6F42712AD0A6100852B3B /* CFNetwork.framework */; };
+		4C977245193C986700DB2F4A /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C977244193C986700DB2F4A /* coretextfonts.cpp */; };
 		4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
 		4CD7DFE318A140D800CBCB57 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */; };
 		4D08A0D0138EA51D0081F990 /* libstandalone-mobile-lib-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */; };
@@ -34,6 +35,7 @@
 		4D222098171D782800E7E557 /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CE7B26D1704A8810072029F /* stacksecurity.cpp */; };
 		4D2220BA171D7A3E00E7E557 /* mbliphonead.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C34550114F3FEA1008D7E50 /* mbliphonead.mm */; };
 		4D222406171D7F9D00E7E557 /* libsecurity-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D222092171D770900E7E557 /* libsecurity-community.a */; };
+		4D232D6018DAF07F00A4FF3E /* quicktime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D232D5F18DAF06800A4FF3E /* quicktime.cpp */; };
 		4D7B149717141A5F006782C1 /* libpngmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13F41714198F006782C1 /* libpngmobile.a */; };
 		4D7B149817141A63006782C1 /* libgifmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13AD171418F2006782C1 /* libgifmobile.a */; };
 		4D7B149917141A67006782C1 /* libjpegmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13B5171418FC006782C1 /* libjpegmobile.a */; };
@@ -233,7 +235,6 @@
 		4DABCE4B15ECD4B50085E214 /* styledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF061040ADFC00CAC7EF /* styledtext.cpp */; };
 		4DABCE4C15ECD4B50085E214 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E18D1040BDF000CAC7EF /* surface.cpp */; };
 		4DABCE4D15ECD4B50085E214 /* syscfdate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */; };
-		4DABCE4E15ECD4B50085E214 /* sysregion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6E59571408344300EE960D /* sysregion.cpp */; };
 		4DABCE4F15ECD4B50085E214 /* sysspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE7ED6413B33CEA002634F5 /* sysspec.cpp */; };
 		4DABCE5015ECD4B50085E214 /* sysunxnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C6D0A371407D04D003B1BA3 /* sysunxnetwork.cpp */; };
 		4DABCE5115ECD4B50085E214 /* text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF091040ADFC00CAC7EF /* text.cpp */; };
@@ -277,6 +278,7 @@
 		E8C22E57177B2884003785D3 /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22E55177B2884003785D3 /* imagelist.cpp */; };
 		E8C22E73177B2960003785D3 /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22E71177B2960003785D3 /* graphicscontext.cpp */; };
 		E8C22E75177B2B53003785D3 /* mbltheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22E74177B2B53003785D3 /* mbltheme.cpp */; };
+		E8F7445A194071C400DCCE28 /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8F74459194071C400DCCE28 /* region.cpp */; };
 		F670DB6A147D462B008FEA1E /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F62512621455C7F100BDAACF /* CoreMedia.framework */; };
 		F6DF4CA615597DD000450B64 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA515597DD000450B64 /* EventKit.framework */; };
 		F6DF4CA815597DEB00450B64 /* EventKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA715597DEA00450B64 /* EventKitUI.framework */; };
@@ -510,6 +512,7 @@
 		4C7D1CF714767FD000129F01 /* mbliphonecamera.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonecamera.mm; path = src/mbliphonecamera.mm; sourceTree = "<group>"; };
 		4C7D1CFA1476863600129F01 /* mblsyntax.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblsyntax.h; path = src/mblsyntax.h; sourceTree = "<group>"; };
 		4C88A916147E652400A528AB /* mbliphonesensor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonesensor.mm; path = src/mbliphonesensor.mm; sourceTree = "<group>"; };
+		4C977244193C986700DB2F4A /* coretextfonts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = coretextfonts.cpp; path = src/coretextfonts.cpp; sourceTree = "<group>"; };
 		4C9EAA0314E58FE100CCF92C /* SoundModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = SoundModule.java; sourceTree = "<group>"; };
 		4C9EAA0414E5900A00CCF92C /* mblsound.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblsound.cpp; path = src/mblsound.cpp; sourceTree = "<group>"; };
 		4C9EAA0514E5902B00CCF92C /* mblandroidsound.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsound.cpp; path = src/mblandroidsound.cpp; sourceTree = "<group>"; };
@@ -533,6 +536,7 @@
 		4D18948C1323CCFD00488783 /* mbliphoneplayer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneplayer.mm; path = src/mbliphoneplayer.mm; sourceTree = "<group>"; };
 		4D1F75B0135CD559005EE740 /* mblandroidtextlayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextlayout.cpp; path = src/mblandroidtextlayout.cpp; sourceTree = "<group>"; };
 		4D222092171D770900E7E557 /* libsecurity-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libsecurity-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D232D5F18DAF06800A4FF3E /* quicktime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = quicktime.cpp; path = src/quicktime.cpp; sourceTree = "<group>"; };
 		4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libstandalone-mobile-lib-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D33766A13F926410096DCFE /* fiber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fiber.h; path = src/fiber.h; sourceTree = "<group>"; };
 		4D33766B13F926410096DCFE /* fiber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fiber.cpp; path = src/fiber.cpp; sourceTree = "<group>"; };
@@ -547,7 +551,6 @@
 		4D6E58E21407E94200EE960D /* tilecache.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tilecache.cpp; path = src/tilecache.cpp; sourceTree = "<group>"; };
 		4D6E5951140833FA00EE960D /* redraw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = redraw.h; path = src/redraw.h; sourceTree = "<group>"; };
 		4D6E5952140833FA00EE960D /* redraw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = redraw.cpp; path = src/redraw.cpp; sourceTree = "<group>"; };
-		4D6E59571408344300EE960D /* sysregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysregion.cpp; path = src/sysregion.cpp; sourceTree = "<group>"; };
 		4D6E5959140834BD00EE960D /* region.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = region.h; path = src/region.h; sourceTree = "<group>"; };
 		4D6F954B12AC157100026A72 /* mbliphonedialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonedialog.mm; path = src/mbliphonedialog.mm; sourceTree = "<group>"; };
 		4D7651611342243D0042EB2D /* mbliphonelocation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonelocation.mm; path = src/mbliphonelocation.mm; sourceTree = "<group>"; };
@@ -953,6 +956,7 @@
 		E8EB28CF147C0DF20081452B /* mblandroidsensor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsensor.cpp; path = src/mblandroidsensor.cpp; sourceTree = "<group>"; };
 		E8EB28D0147D12660081452B /* SensorModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = SensorModule.java; sourceTree = "<group>"; };
 		E8EB28D1147D36790081452B /* ScreenOrientationEventListener.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = ScreenOrientationEventListener.java; sourceTree = "<group>"; };
+		E8F74459194071C400DCCE28 /* region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = region.cpp; path = src/region.cpp; sourceTree = "<group>"; };
 		E8F7CAE91497ACF600A5D60B /* NetworkModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = NetworkModule.java; sourceTree = "<group>"; };
 		F60A5A3F148003E9000982BF /* mblbusyindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblbusyindicator.cpp; path = src/mblbusyindicator.cpp; sourceTree = "<group>"; };
 		F60A5A4114800404000982BF /* mbliphonebusyindicator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonebusyindicator.mm; path = src/mbliphonebusyindicator.mm; sourceTree = "<group>"; };
@@ -1078,6 +1082,7 @@
 		4D7E389E1281528500E7F80A /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				4C977244193C986700DB2F4A /* coretextfonts.cpp */,
 				4D4BA4E412C14F850031AB06 /* mbliphone.h */,
 				4DD3E1B11041192800CAC7EF /* mbliphone.mm */,
 				4C34550114F3FEA1008D7E50 /* mbliphonead.mm */,
@@ -1349,6 +1354,7 @@
 		E81AC137170C8E1000315861 /* Core - Graphics */ = {
 			isa = PBXGroup;
 			children = (
+				E8F74459194071C400DCCE28 /* region.cpp */,
 				4DD3DDAD1040AC1A00CAC7EF /* bitmapeffect.cpp */,
 				4DD3DDB71040AC1A00CAC7EF /* bitmapeffect.h */,
 				4DD3DDB61040AC1A00CAC7EF /* bitmapeffectblur.cpp */,
@@ -1635,10 +1641,10 @@
 		E84BE35B170C967B00807CF6 /* System */ = {
 			isa = PBXGroup;
 			children = (
+				4D232D5F18DAF06800A4FF3E /* quicktime.cpp */,
 				4DD3DEA31040AD9300CAC7EF /* osspec.h */,
 				4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */,
 				4D01C36F13CE3C810041A281 /* sysdefs.h */,
-				4D6E59571408344300EE960D /* sysregion.cpp */,
 				4DE7ED6413B33CEA002634F5 /* sysspec.cpp */,
 				4DD3DF041040ADFC00CAC7EF /* System.h */,
 				4C6D0A371407D04D003B1BA3 /* sysunxnetwork.cpp */,
@@ -2103,6 +2109,7 @@
 				4DABCDC115ECD4700085E214 /* fiber.cpp in Sources */,
 				4DABCDC315ECD4700085E214 /* field.cpp in Sources */,
 				4DABCDC415ECD4700085E214 /* fieldf.cpp in Sources */,
+				E8F7445A194071C400DCCE28 /* region.cpp in Sources */,
 				4DABCDC515ECD4700085E214 /* fieldh.cpp in Sources */,
 				4DABCDC615ECD4700085E214 /* fieldhtml.cpp in Sources */,
 				4DABCDC715ECD4700085E214 /* fieldrtf.cpp in Sources */,
@@ -2176,6 +2183,7 @@
 				4DABCE0615ECD4B50085E214 /* mbliphonenotification.mm in Sources */,
 				4DABCE0715ECD4B50085E214 /* mbliphonepick.mm in Sources */,
 				4DABCE0815ECD4B50085E214 /* mbliphonepickdate.mm in Sources */,
+				4D232D6018DAF07F00A4FF3E /* quicktime.cpp in Sources */,
 				4DABCE0915ECD4B50085E214 /* mbliphoneplayer.mm in Sources */,
 				4DABCE0A15ECD4B50085E214 /* mbliphonereachability.mm in Sources */,
 				4DABCE0B15ECD4B50085E214 /* mbliphonescroller.mm in Sources */,
@@ -2245,7 +2253,6 @@
 				4DABCE4B15ECD4B50085E214 /* styledtext.cpp in Sources */,
 				4DABCE4C15ECD4B50085E214 /* surface.cpp in Sources */,
 				4DABCE4D15ECD4B50085E214 /* syscfdate.cpp in Sources */,
-				4DABCE4E15ECD4B50085E214 /* sysregion.cpp in Sources */,
 				4DABCE4F15ECD4B50085E214 /* sysspec.cpp in Sources */,
 				4DABCE5015ECD4B50085E214 /* sysunxnetwork.cpp in Sources */,
 				4DABCE5115ECD4B50085E214 /* text.cpp in Sources */,
@@ -2266,6 +2273,7 @@
 				4DABCE6115ECD4B50085E214 /* visual.cpp in Sources */,
 				4DBF5B291802E63F009CAB2E /* socket_resolve.cpp in Sources */,
 				E8C22C46177B1700003785D3 /* cgimageutil.cpp in Sources */,
+				4C977245193C986700DB2F4A /* coretextfonts.cpp in Sources */,
 				E8C22E57177B2884003785D3 /* imagelist.cpp in Sources */,
 				E8C22E73177B2960003785D3 /* graphicscontext.cpp in Sources */,
 				E8C22E75177B2B53003785D3 /* mbltheme.cpp in Sources */,
@@ -2434,6 +2442,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEAD_CODE_STRIPPING = NO;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = "rsrc/standalone-mobile-Info.plist";
 				OTHER_LDFLAGS = (
 					"-Wl,-x",
@@ -2470,6 +2479,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GCC_VERSION = "";
 				INFOPLIST_FILE = "rsrc/standalone-mobile-Info.plist";
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";

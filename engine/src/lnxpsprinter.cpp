@@ -1019,78 +1019,66 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 		
 		
 		case MARK_TYPE_RECTANGLE:
-			if (isStroke)
-			{
-				MCRectangle t_rect;
-				t_rect = p_mark->rectangle.bounds;
+		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds.
+			MCGRectangle t_rect;
+			t_rect = MCGRectangleMake(p_mark-> rectangle . bounds . x + p_mark-> rectangle . inset / 2.0f, p_mark-> rectangle . bounds . y + p_mark-> rectangle . inset / 2.0f,
+							 p_mark-> rectangle . bounds . width - p_mark-> rectangle . inset, p_mark-> rectangle . bounds . height - p_mark-> rectangle . inset);
 			
-				sprintf( buffer, "%d %d %d %d R \n", t_rect . width, t_rect . height, t_rect . x , cardheight - (t_rect.y + t_rect.height) ) ;
-				PSwrite ( buffer ) ;
-				
-			}
+			if (!isStroke)
+				sprintf(buffer, "%f %f %f %f FR \n", t_rect . size . width, t_rect . size . height, t_rect . origin . x , cardheight - (t_rect. origin . y + t_rect . size . height));
 			else
-			{
-				if ( isFilled ) 
-					sprintf( buffer, "%d %d %d %d FR \n", p_mark -> rectangle .bounds. width , p_mark -> rectangle . bounds . height , 
-														  p_mark -> rectangle . bounds . x ,
-														  cardheight - ( p_mark -> rectangle . bounds . y + p_mark -> rectangle . bounds . height ) );
-				else
-					sprintf( buffer, "%d %d %d %d R \n", p_mark -> rectangle .bounds. width , p_mark -> rectangle . bounds . height , 
-														  p_mark -> rectangle . bounds . x ,
-														  cardheight - ( p_mark -> rectangle . bounds . y + p_mark -> rectangle . bounds . height ) );
-				PSwrite ( buffer ) ;
-			}
-
-		break;
-		
+				sprintf(buffer, "%f %f %f %f R \n", t_rect . size . width, t_rect . size . height, t_rect . origin . x , cardheight - (t_rect. origin . y + t_rect . size . height));
+			PSwrite ( buffer ) ;			
+			break;
+		}		
 		
 		
 		case MARK_TYPE_ROUND_RECTANGLE:
+		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds.
+			MCGRectangle t_rect;
+			t_rect = MCGRectangleMake(p_mark-> round_rectangle . bounds . x + p_mark-> round_rectangle . inset / 2.0f, p_mark-> round_rectangle . bounds . y + p_mark-> round_rectangle . inset / 2.0f,
+									  p_mark-> round_rectangle . bounds . width - p_mark-> round_rectangle . inset, p_mark-> round_rectangle . bounds . height - p_mark-> round_rectangle . inset);
+			float t_radius;
+			t_radius = p_mark -> round_rectangle . radius / 2.0f;
 			
-			//%usage: topLeftx, topLefty, width, height, radius  FRR
-			if ( !isStroke ) 
-				sprintf( buffer, "%d %d %d %d %d FRR \n",  p_mark -> round_rectangle . bounds. x , 
-													   	cardheight - ( p_mark -> round_rectangle . bounds . y  ),  //+ p_mark -> round_rectangle . bounds . height
-														p_mark -> round_rectangle . bounds . width,
-													   	p_mark -> round_rectangle . bounds . height,
-														p_mark -> round_rectangle . radius);
+			if (!isStroke)
+				sprintf(buffer, "%f %f %f %f %f FRR \n", t_rect . origin . x, cardheight - t_rect . origin . y, t_rect . size . width, t_rect . size . height, t_radius);
 			else
-				sprintf( buffer, "%d %d %d %d %d RR \n",   p_mark -> round_rectangle . bounds. x , 
-													   	cardheight - ( p_mark -> round_rectangle . bounds . y ) , 
-														p_mark -> round_rectangle . bounds . width ,
-													   	p_mark -> round_rectangle . bounds . height ,
-														p_mark -> round_rectangle . radius);
-		
+				sprintf(buffer, "%f %f %f %f %f RR \n", t_rect . origin . x, cardheight - t_rect . origin . y, t_rect . size . width, t_rect . size . height, t_radius);
 			PSwrite ( buffer ) ;
-
-		break;
+			break;
+		}
 		
 		case MARK_TYPE_ARC:
-			uint4 t_x, t_y, t_r, t_rw ;
-			uint4 t_width, t_height ;
+		{
+			real8 t_x, t_y, t_r, t_rw ;
+			real8 t_width, t_height ;
 			
-			t_x = p_mark -> arc . bounds . x;
-			t_y = p_mark -> arc . bounds . y ;
-			t_width = p_mark -> arc . bounds . width ;
-			t_height = p_mark -> arc . bounds . height ;
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds and store as floating point values.
+			t_x = p_mark -> arc . bounds . x + p_mark -> arc . inset / 2.0;
+			t_y = p_mark -> arc . bounds . y + p_mark -> arc . inset / 2.0;
+			t_width = p_mark -> arc . bounds . width - p_mark -> arc . inset;
+			t_height = p_mark -> arc . bounds . height - p_mark -> arc . inset;
 		
 			t_r = (t_height / 2.0 );
 			t_rw = ( t_width / 2.0 ) ;
 		
 		
 			if ( isStroke ) 
-				sprintf(buffer, "%g 0 0 %d %d %d %g %d %d DA\n", (real8)t_height / (real8)t_width ,
-																 t_height >> 1,
+				sprintf(buffer, "%g 0 0 %g %d %d %g %g %g DA\n", t_height / t_width ,
+																 t_height / 2.0,
 																 p_mark -> arc . start,
 																 p_mark -> arc . angle + p_mark -> arc . start, 
-																 (real8)t_width / (real8)t_height, 
+																 t_width / t_height, 
 																 t_x + t_rw ,
 																 cardheight - ( t_y + t_r )  ) ;				
 			else			
-				sprintf(buffer, "%d %d %d %g %d %d FA\n", t_height >>1 , 
+				sprintf(buffer, "%g %d %d %g %g %g FA\n", t_height / 2 , 
 														  p_mark -> arc . start ,
  														  p_mark -> arc . angle + p_mark -> arc . start, 
-														  (real8) t_width / (real8)t_height, 
+														  t_width / t_height, 
 						 								  t_x + t_rw ,
 														  cardheight - ( t_y + t_r )  ) ;		
 		
@@ -1098,8 +1086,8 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 			
 			if ( ( p_mark -> arc . complete ) && ( p_mark -> arc . angle < 360 ) )
 			{
-				int2 cx = t_x + t_rw ;
-				int2 cy = cardheight - ( t_y + t_r ) ;
+				real8 cx = t_x + t_rw ;
+				real8 cy = cardheight - ( t_y + t_r ) ;
 				
 				real8 torad = M_PI * 2.0 / 360.0;
 				
@@ -1108,26 +1096,22 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 				
 				real8 sa = (real8)p_mark -> arc . start * torad;
 				
-				int2 dx = cx + (int2)(cos(sa) * tw / 2.0);
-				int2 dy = cy + (int2)(sin(sa) * th / 2.0);
+				real8 dx = cx + (int2)(cos(sa) * tw / 2.0);
+				real8 dy = cy + (int2)(sin(sa) * th / 2.0);
 				
-				sprintf(buffer, "%d %d %d %d L\n", cx, cy, dx, dy ) ;
+				sprintf(buffer, "%g %g %g %g L\n", cx, cy, dx, dy ) ;
 				PSwrite ( buffer ) ;
 
 				sa = (real8)(p_mark -> arc . start + p_mark -> arc . angle) * torad;
 				dx = cx + (int2)(cos(sa) * tw / 2.0);
 				dy = cy + (int2)(sin(sa) * th / 2.0);
 				
-				sprintf(buffer, "%d %d %d %d L\n", cx, cy, dx, dy ) ;
+				sprintf(buffer, "%g %g %g %g L\n", cx, cy, dx, dy ) ;
 				PSwrite ( buffer ) ;
-			}
+			}			
 		
-		
-			
-		
-		break;
-		
-		
+			break;
+		}
 		
 		case MARK_TYPE_IMAGE:
 		{
@@ -1143,10 +1127,23 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 			MCRectangle t_src_rect;
 			MCU_set_rect(t_src_rect, sx, sy, sw, sh);
 			
-			MCImageBitmap *t_image = nil;
-			/* UNCHECKED */ MCImageCopyBitmapRegion(p_mark->image.descriptor.bitmap, t_src_rect, t_image);
-			printimage ( t_image, dx, dy, 1.0, 1.0);
-			MCImageFreeBitmap(t_image);
+			// IM-2014-05-14: [[ HiResPatterns ]] Update to use MCGImage in descriptor
+			MCGRaster t_raster;
+			/* UNCHECKED */ MCGImageGetRaster(p_mark->image.descriptor.image, t_raster);
+			
+			// We can adjust the raster fields to match sx, sy, sw, sh rather than
+			// create a copy of that region.
+			uint8_t *t_pixels = (uint8_t*)t_raster.pixels;
+			t_pixels += t_raster.stride * sy + sizeof(uint32_t) * sx;
+			t_raster.pixels = t_pixels;
+			t_raster.width -= sx;
+			t_raster.height -= sy;
+			if (t_raster.width > sw)
+				t_raster.width = sw;
+			if (t_raster.height > sh)
+				t_raster.height = sh;
+			
+			printraster(t_raster, dx, dy, 1.0, 1.0);
 		}
 		break;
 		
@@ -1237,7 +1234,8 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	char *text = new char[l + 1];
 	memcpy(text, p_mark -> text . data , l);
 	
-    uint2 w = MCFontMeasureText(p_mark -> text . font, text, l, false);
+	// MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
+    uint2 w = MCFontMeasureText(p_mark -> text . font, text, l, false, MCGAffineTransformMakeIdentity());
 	
 	text[l] = '\0';
 	const char *sptr = text;
@@ -1330,18 +1328,6 @@ void MCPSMetaContext::printraster(const MCGRaster &p_raster, int16_t dx, int16_t
 		t_src_row += p_raster.stride;
 	}
 	PSwrite("\n");
-}
-
-void MCPSMetaContext::printimage(MCImageBitmap *p_image, int16_t dx, int16_t dy, real64_t xscale, real64_t yscale)
-{
-	MCGRaster t_raster;
-	t_raster.width = p_image->width;
-	t_raster.height = p_image->height;
-	t_raster.pixels = p_image->data;
-	t_raster.stride = p_image->stride;
-	t_raster.format = kMCGRasterFormat_xRGB;
-	
-	printraster(t_raster, dx, dy, xscale, yscale);
 }
 
 void MCPSMetaContext::setfont(MCFontStruct *font)
@@ -1468,15 +1454,26 @@ bool MCPSMetaContext::pattern_created( MCGImageRef p_pattern )
 // IM-2013-09-04: [[ ResIndependence ]] update fillpattern to take MCPatternRef & apply scale factor
 void MCPSMetaContext::fillpattern(MCPatternRef p_pattern, MCPoint p_origin)
 {
-	if (!pattern_created(p_pattern->image))
-		create_pattern(p_pattern->image);
+	MCGImageRef t_image;
+	t_image = nil;
+	
+	MCGAffineTransform t_transform;
+	
+	// IM-2014-05-14: [[ HiResPatterns ]] Update pattern access to use lock function
+	/* UNCHECKED */ MCPatternLockForContextTransform(p_pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform);
+	t_transform = MCGAffineTransformTranslate(t_transform, p_origin.x, cardheight - p_origin.y);
+	
+	if (!pattern_created(t_image))
+		create_pattern(t_image);
 	// MDW-2013-04-16: [[ x64 ]] p_pattern is an XID (long unsigned int), so need $ld here
-	sprintf(buffer, "pattern_id_%ld\n", p_pattern->image);
+	sprintf(buffer, "pattern_id_%ld\n", t_image);
 	PSwrite ( buffer );
-	sprintf(buffer, "[%f 0 0 %f %d %d]\n", 1.0 / p_pattern->scale, 1.0 / p_pattern->scale, p_origin.x, cardheight - p_origin.y);
+	sprintf(buffer, "[%f %f %f %f %f %f]\n", t_transform.a, t_transform.b, t_transform.c, t_transform.d, t_transform.tx, t_transform.ty);
 	PSwrite(buffer);
 	PSwrite("makepattern\n");
 	PSwrite("setpattern\n");
+	
+	MCPatternUnlock(p_pattern, t_image);
 }
 		
 void MCPSMetaContext::create_pattern ( MCGImageRef p_pattern )

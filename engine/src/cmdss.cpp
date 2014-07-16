@@ -720,7 +720,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 	MCStack *oldstack = NULL;
 	if (window != NULL || thisstack)
 	{
-		Window w = DNULL;
+		Window w = NULL;
 		if (thisstack)
 		{
 			oldstack = MCdefaultstackptr;
@@ -1136,7 +1136,7 @@ Exec_stat MCLock::exec(MCExecPoint &ep)
 		MClockmessages = True;
 		break;
 	case LC_MOVES:
-		MClockmoves = True;
+		MCscreen->setlockmoves(True);
 		break;
 	case LC_RECENT:
 		MClockrecent = True;
@@ -1756,7 +1756,7 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 		if (bptr->findmenu())
 		{
 			if (MCbuttonstate)
-				MCtargetptr -> mup(0);
+				MCtargetptr -> mup(0, false);
 			bptr->openmenu(True);
 		}
 		return ES_NORMAL;
@@ -2004,7 +2004,7 @@ Exec_stat MCUnlock::exec(MCExecPoint &ep)
 		MClockmessages = False;
 		break;
 	case LC_MOVES:
-		MClockmoves = False;
+		MCscreen->setlockmoves(False);
 		break;
 	case LC_RECENT:
 		MClockrecent = False;

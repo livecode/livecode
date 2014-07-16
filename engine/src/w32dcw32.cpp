@@ -278,11 +278,7 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 				                 PeekMessageA(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
 				if (t_char_found)
 				{
-					_Drawable _dw;
-					Drawable dw = &_dw;
-					dw->type = DC_WINDOW;
-					dw->handle.window = (MCSysWindowHandle)msg.hwnd;
-					if (MCdispatcher->findstackd(dw) == NULL)
+					if (MCdispatcher->findstackwindowid((uint32_t)msg.hwnd) == NULL)
 					{
 						if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
 							DispatchMessageW(&msg);
@@ -298,8 +294,9 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 			}
 		}
 	}
-	if (MCrecording)
-		MCtemplateplayer->handlerecord();
+	
+	extern void MCQTHandleRecord(void);
+	MCQTHandleRecord();
 
 	abort = curinfo->abort;
 	reset = curinfo->reset;
@@ -329,12 +326,9 @@ void MCScreenDC::restackwindows(HWND p_window, UINT p_message, WPARAM p_wparam, 
 {
 	WINDOWPOS *t_info;
 	MCStack *t_stack;
-	_Drawable t_drawable;
-	t_drawable . handle . window = (MCSysWindowHandle)p_window;
-	t_drawable . type = DC_WINDOW;
 
 	t_info = (WINDOWPOS *)p_lparam;
-	t_stack = MCdispatcher -> findstackd(&t_drawable);
+	t_stack = MCdispatcher -> findstackwindowid((uint32_t)p_window);
 
 	if (t_stack != NULL && t_stack -> getflag(F_DECORATIONS) && (t_stack -> getdecorations() & WD_UTILITY) != 0)
 		return;
@@ -476,7 +470,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	t_mouseloc = MCPointMake(LOWORD(lParam), HIWORD(lParam));
 
 	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
-	t_mouseloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(t_mouseloc);
+	t_mouseloc = MCscreen->screentologicalpoint(t_mouseloc);
 
 	// MW-2005-02-20: Seed the SSL random number generator
 #ifdef MCSSL
@@ -954,7 +948,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				if (sptr != NULL)
 				{
 					if (lastdown != 0)
-						sptr->mup(lastdown);
+						sptr->mup(lastdown, false);
 					buffer[0] = 0x1B; // escape
 					buffer[1] = '\0';
 					Boolean oldlock = MClockmessages;
@@ -1019,9 +1013,13 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	case WM_APP:
 		if (MCmousestackptr != NULL && MCdispatcher->getmenu() == NULL)
 		{
+			// IM-2014-04-17: [[ Bug 12227 ]] Convert logical stack rect to screen coords when testing for mouse intersection
+			MCRectangle t_rect;
+			t_rect = pms->logicaltoscreenrect(MCmousestackptr->getrect());
+
 			POINT p;
 			if (!GetCursorPos(&p)
-			        || !MCU_point_in_rect(MCmousestackptr->getrect(),
+			        || !MCU_point_in_rect(t_rect,
 			                              (int2)p.x, (int2)p.y))
 			{
 				if (MCmousestackptr != MCtracestackptr)

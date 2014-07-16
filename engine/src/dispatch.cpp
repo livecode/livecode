@@ -94,6 +94,8 @@ MCDispatch::MCDispatch()
 	m_drag_end_sent = false;
 
 	m_externals = nil;
+
+    m_transient_stacks = nil;
 }
 
 MCDispatch::~MCDispatch()
@@ -1086,6 +1088,10 @@ void MCDispatch::wmdrag(Window w)
 		
 		MCdragsource = MCdragtargetptr;
 
+		// PLATFORM-TODO: This is needed at the moment to make sure that we don't
+		//   get the selection 'going away' when we start dragging. At the moment
+		//   MouseRelease is mapped to mup without messages, which isn't quite
+		//   correct from the point of view of the field.
 		if (MCdragtargetptr->gettype() > CT_CARD)
 		{
 			MCControl *cptr = (MCControl *)MCdragtargetptr;
@@ -1094,8 +1100,8 @@ void MCDispatch::wmdrag(Window w)
 		}
 		MCdragtargetptr->getstack()->resetcursor(True);
 		MCdragtargetptr -> getstack() -> munfocus();
-
-		MCdragaction = MCscreen -> dodragdrop(t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
+		
+		MCdragaction = MCscreen -> dodragdrop(w, t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
 
 		dodrop(true);
 		MCdragdata -> ResetSource();
@@ -1147,11 +1153,11 @@ void MCDispatch::wmdown(Window w, uint2 which)
 void MCDispatch::wmup_stack(MCStack *target, uint2 which)
 {
 	if (menu != NULL)
-		menu->mup(which);
+		menu->mup(which, false);
 	else
 	{
 		if (target != NULL)
-			target->mup(which);
+			target->mup(which, false);
 	}
 }
 
@@ -1194,7 +1200,6 @@ void MCDispatch::kfocusset(Window w)
 
 void MCDispatch::wmdragenter(Window w, MCPasteboard *p_data)
 {
-	
 	MCStack *target = findstackd(w);
 	
 	m_drag_target = true;
@@ -1266,45 +1271,6 @@ MCDragAction MCDispatch::wmdragdrop(Window w)
 
 void MCDispatch::property(Window w, Atom atom)
 {
-}
-
-void MCDispatch::sync_stack_windows(void)
-{
-	if (stacks == nil)
-		return;
-	
-	MCStack *t_stack;
-	t_stack = stacks;
-	
-	do
-	{
-		if (t_stack->getopened() && t_stack->isvisible())
-		{
-			t_stack->view_sync_window_geometry();
-			t_stack->view_dirty_all();
-		}
-		
-		t_stack = (MCStack*)t_stack->next();
-	}
-	while (t_stack != stacks);
-}
-
-void MCDispatch::reopen_stack_windows(void)
-{
-	if (stacks == nil)
-		return;
-	
-	MCStack *t_stack;
-	t_stack = stacks;
-	
-	do
-	{
-		if (t_stack->getopened() && t_stack->getwindow() != nil)
-			t_stack->reopenwindow();
-		
-		t_stack = (MCStack*)t_stack->next();
-	}
-	while (t_stack != stacks);
 }
 
 void MCDispatch::configure(Window w)
@@ -1446,9 +1412,9 @@ MCStack *MCDispatch::findchildstackd(Window w,uint2 cindex)
 	return NULL;
 }
 
-MCStack *MCDispatch::findstackd(Window w)
+MCStack *MCDispatch::findstackwindowid(uint32_t p_win_id)
 {
-	if (w == DNULL)
+	if (p_win_id == 0)
 		return NULL;
 	
 	if (stacks != NULL)
@@ -1457,7 +1423,7 @@ MCStack *MCDispatch::findstackd(Window w)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = tstk->findstackd(w)) != NULL)
+			if ((foundstk = tstk->findstackwindowid(p_win_id)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1469,18 +1435,33 @@ MCStack *MCDispatch::findstackd(Window w)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = tstk->findstackd(w)) != NULL)
+			if ((foundstk = tstk->findstackwindowid(p_win_id)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
 		while (tstk != panels);
 	}
 
-	// MW-2006-04-24: [[ Purify ]] It is possible to get here after MCtooltip has been
-	//   deleted. So MCtooltip is now NULL in this situation and we test for it here.
-	if (MCtooltip != NULL && MCtooltip->findstackd(w))
-		return MCtooltip;
-	return NULL;
+	if (m_transient_stacks != nil)
+    {
+        MCStack *tstk = m_transient_stacks;
+        do
+        {
+            MCStack *foundstk;
+            if ((foundstk = tstk -> findstackwindowid(p_win_id)) != NULL)
+                return foundstk;
+			tstk = (MCStack *)tstk->next();
+        }
+        while(tstk != m_transient_stacks);
+    }
+    
+    return NULL;
+}
+
+MCStack *MCDispatch::findstackd(Window w)
+{
+	// IM-2014-07-09: [[ Bug 12225 ]] Use window ID to find stack
+	return findstackwindowid(MCscreen->dtouint4((Drawable)w));
 }
 
 MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)
@@ -1613,6 +1594,33 @@ void MCDispatch::appendpanel(MCStack *sptr)
 void MCDispatch::removepanel(MCStack *sptr)
 {
 	sptr->remove(panels);
+}
+
+bool MCDispatch::is_transient_stack(MCStack *sptr)
+{
+	if (m_transient_stacks != NULL)
+	{
+		MCStack *tstk = m_transient_stacks;
+		do
+		{
+			if (tstk == sptr)
+				return true;
+			tstk = (MCStack *)tstk->next();
+		}
+		while (tstk != m_transient_stacks);
+	}
+	return false;
+}
+
+void MCDispatch::add_transient_stack(MCStack *sptr)
+{
+	sptr->appendto(m_transient_stacks);
+}
+
+void MCDispatch::remove_transient_stack(MCStack *sptr)
+{
+    
+	sptr->remove(m_transient_stacks);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1861,7 +1869,7 @@ void MCDispatch::dodrop(bool p_source)
 		t_field = static_cast<MCField *>(MCdragsource);
 
 		int4 t_from_start_index, t_from_end_index;
-		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False, False);
+		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False);
 
 		// We are dropping in the target selection - so just send the messages and do nothing
 		if (t_start_index >= t_from_start_index && t_start_index < t_from_end_index)
@@ -1920,7 +1928,7 @@ void MCDispatch::dodrop(bool p_source)
 	int4 t_src_start, t_src_end;
 	t_src_start = t_src_end = 0;
 	if (t_auto_source)
-		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False, False);
+		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False);
 
 	bool t_auto_drop;
 	t_auto_drop = MCdragdest != NULL && MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;

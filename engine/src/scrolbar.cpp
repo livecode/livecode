@@ -465,12 +465,12 @@ Boolean MCScrollbar::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCScrollbar::mup(uint2 which)
+Boolean MCScrollbar::mup(uint2 which, bool p_release)
 {
 	if (!(state & CS_MFOCUSED))
 		return False;
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	state &= ~CS_MFOCUSED;
 	if (state & CS_GRAB)
 	{
@@ -507,14 +507,14 @@ Boolean MCScrollbar::mup(uint2 which)
 				else if (oldmode == SM_LINEDEC || oldmode == SM_LINEINC)
 					redrawarrow(oldmode);
 			}
-			if (MCU_point_in_rect(rect, mx, my))
+			if (!p_release && MCU_point_in_rect(rect, mx, my))
 				message_with_args(MCM_mouse_up, "1");
 			else
 				message_with_args(MCM_mouse_release, "1");
 			break;
 		case T_SCROLLBAR:
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -531,7 +531,7 @@ Boolean MCScrollbar::mup(uint2 which)
 			redrawall();
 		}
 	case Button3:
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 			message_with_args(MCM_mouse_up, which);
 		else
 			message_with_args(MCM_mouse_release, which);
@@ -550,7 +550,7 @@ Boolean MCScrollbar::doubledown(uint2 which)
 Boolean MCScrollbar::doubleup(uint2 which)
 {
 	if (which == Button1 && getstack()->gettool(this) == T_BROWSE)
-		return mup(which);
+		return mup(which, false);
 	return MCControl::doubleup(which);
 }
 
@@ -573,11 +573,14 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 		//   inbetween timer invocations was too high. So, instead, we process
 		//   all events at this point to ensure the mouseUp is handled.
 		//   (In the future we should flush mouseUp events to the dispatch queue)
-
-		MCscreen->wait(MCsyncrate / 1000.0, True, False); // dispatch mup
+        // MW-2014-04-16: [[ Bug 12183 ]] This wait does not seem to make much
+        //   sense. It seems to be so that a mouseUp in a short space of time
+        //   stops the scrollbar from moving. This isn't how things should be I
+        //   don't think - so commenting it out for now.
+        // MCscreen->wait(MCsyncrate / 1000.0, True, False); // dispatch mup
 		if (state & CS_MFOCUSED && !MCbuttonstate)
 		{
-			mup(Button1);
+			mup(Button1, false);
 			return;
 		}
 
@@ -887,7 +890,8 @@ void MCScrollbar::compute_barsize()
 			else
 				if ((uint2)strlen(endstring) > barsize)
 					barsize = strlen(endstring);
-			barsize *= MCFontMeasureText(m_font, "0", 1, false);
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			barsize *= MCFontMeasureText(m_font, "0", 1, false, getstack() -> getdevicetransform());
 			barsize = twidth - (barsize + barsize * (twidth - barsize) / twidth);
 		}
 		else

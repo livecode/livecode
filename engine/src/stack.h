@@ -93,13 +93,13 @@ class MCStackSurface
 {
 public:
 	// Lock the surface for access with an MCGContextRef
-	virtual bool LockGraphics(MCRegionRef area, MCGContextRef& r_context) = 0;
+	virtual bool LockGraphics(MCGRegionRef area, MCGContextRef& r_context) = 0;
 	// Unlock the surface.
 	virtual void UnlockGraphics(void) = 0;
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
-	virtual bool LockPixels(MCRegionRef area, MCGRaster& r_raster) = 0;
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
 	// Unlock the surface.
 	virtual void UnlockPixels(void) = 0;
 	
@@ -242,6 +242,9 @@ protected:
 	// MW-2014-03-12: [[ Bug 11914 ]] If this is true then the stack is an engine menu.
 	bool m_is_menu : 1;
 	
+	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
+	bool m_purge_fonts;
+
 public:
 	Boolean menuwindow;
 
@@ -267,7 +270,7 @@ public:
 	virtual void munfocus(void);
 	virtual void mdrag(void);
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
@@ -318,7 +321,7 @@ public:
 	
 	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given surface.
 	// IM-2014-01-24: [[ HiDPI ]] Update region is given in surface coordinates.
-	void view_surface_redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	void view_surface_redrawwindow(MCStackSurface *surface, MCGRegionRef region);
 	
 	//////////
 
@@ -412,6 +415,7 @@ public:
 	
 	// IM-2013-10-10: [[ FullscreenMode ]] Reconfigure view after window rect changes
 	void view_configure(bool p_user);
+	void view_configure_with_rect(bool p_user, MCRectangle rect);
 	
 	// IM-2013-10-10: [[ FullscreenMode ]] Update the on-screen bounds of the view
 	void view_setrect(const MCRectangle &p_new_rect);
@@ -491,7 +495,7 @@ public:
 	MCRectangle getcardrect() const;
 	// IM-2014-01-07: [[ StackScale ]] Update the rect of the current card to fit the stack
 	void updatecardsize();
-	
+    
 	//////////
 	
 	void setgeom();
@@ -547,6 +551,8 @@ public:
 	void setopacity(uint1 p_value);
 	
 	void updatemodifiedmark(void);
+    
+    void updateignoremouseevents(void);
 
     // MW-2008-10-28: [[ ParentScripts ]]
 	// This method is used to resolve any
@@ -747,13 +753,17 @@ public:
 
 	void effectrect(const MCRectangle &drect, Boolean &abort);
 	
+	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
+	MCStack *findstackwindowid(uint32_t p_win_id);
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 &ccount, uint2 cindex);
 	void realize();
 	void sethints();
 	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
 	void setsizehints();
+    
 	void destroywindowshape();
+    void updatewindowshape(MCWindowShape *shape);
 
 	// MW-2011-08-17: [[ Redraw ]] Mark the whole content area as needing redrawn.
 	void dirtyall(void);
@@ -826,6 +836,8 @@ public:
 	
 	MCWindowShape *getwindowshape(void) { return m_window_shape; }
 
+	void constrain(MCPoint p_size, MCPoint& r_out_size);
+	
 #if defined(_WINDOWS_DESKTOP)
 	MCSysWindowHandle getrealwindow();
 	MCSysWindowHandle getqtwindow(void);
@@ -841,15 +853,6 @@ public:
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
 #elif defined(_MAC_DESKTOP)
-	MCSysWindowHandle getrealwindow()
-	{
-		return window->handle.window;
-	}
-	MCSysWindowHandle getqtwindow(void);
-	void showmenubar();
-	void getWinstyle(uint32_t &wstyle, uint32_t &wclass);
-
-	void getminmax(MCMacSysRect *winrect);
 #elif defined(_LINUX_DESKTOP)
 	void setmodalhints(void);
 
@@ -913,7 +916,7 @@ public:
 	MCRectangle rectfromroot(const MCRectangle& rrect);
 	
 	void enablewindow(bool p_enable);
-	bool mode_haswindow(void);
+	bool haswindow(void);
 
 	void mode_openasmenu(MCStack *grab);
 	void mode_closeasmenu(void);

@@ -55,9 +55,8 @@ void MCTextLayoutFinalize(void)
 
 static CTFontRef ctfont_from_fontstruct(MCFontStruct *p_font_struct)
 {
-	UIFont *t_ui_font;
-	t_ui_font = (UIFont *)p_font_struct -> fid;
-	return CTFontCreateWithName((CFStringRef)[t_ui_font fontName], [t_ui_font pointSize], nil);
+    // MM-2014-06-04: [[ CoreText ]] Fonts are now already coretext font refs. No extra work needed here anymore.
+    return (CTFontRef)CFRetain((CTFontRef) p_font_struct -> fid);
 }
 
 static CTFontRef ctfont_from_ctfont(CTFontRef p_ct_font)

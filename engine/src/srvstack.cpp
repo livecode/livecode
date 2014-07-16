@@ -103,7 +103,7 @@ MCStack *MCStack::findstackd(Window w)
 MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
 {
 	Window pwindow = getparentwindow();
-	if (pwindow != DNULL && w == pwindow)
+	if (pwindow != NULL && w == pwindow)
 		if  (++ccount == cindex)
 			return this;
 	if (substacks != NULL)
@@ -112,7 +112,7 @@ MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
 		do
 		{
 			pwindow = tptr->getparentwindow();
-			if (pwindow != DNULL && w == pwindow)
+			if (pwindow != NULL && w == pwindow)
 			{
 				ccount++;
 				if (ccount == cindex)
@@ -172,6 +172,11 @@ void MCStack::setopacity(unsigned char p_level)
 }
 
 void MCStack::updatemodifiedmark(void)
+{
+}
+
+// MERG-2014-06-02: [[ IgnoreMouseEvents ]] Stub for ignoreMouseEvents.
+void MCStack::updateignoremouseevents(void)
 {
 }
 

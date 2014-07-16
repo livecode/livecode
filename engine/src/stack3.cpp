@@ -985,7 +985,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 
 	if (editing != NULL && card != curcard)
 		stopedit();
-	if (!opened || !mode_haswindow())
+	if (!opened || !haswindow())
 	{
 		if (opened)
 		{
@@ -1274,6 +1274,26 @@ MCStack *MCStack::findsubstackid(uint4 fid)
 			tptr = (MCStack *)tptr->next();
 		}
 		while (tptr != sptr->substacks);
+	}
+	return NULL;
+}
+
+MCStack *MCStack::findstackwindowid(uint32_t p_win_id)
+{
+	if (p_win_id == 0)
+		return NULL;
+	if (MCscreen->dtouint4((Drawable)window) == p_win_id)
+		return this;
+	if (substacks != NULL)
+	{
+		MCStack *tptr = substacks;
+		do
+		{
+			if (MCscreen->dtouint4((Drawable)tptr->window) == p_win_id)
+				return tptr;
+			tptr = (MCStack *)tptr->next();
+		}
+		while (tptr != substacks);
 	}
 	return NULL;
 }
@@ -1594,7 +1614,7 @@ void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
 				curcard->count(CT_LAYER, CT_UNDEFINED, focused, selline, True);
 		}
 	}
-	curcard->mup(which);
+	curcard->mup(which, false);
 }
 
 void MCStack::menukdown(const char *string, KeySym key,

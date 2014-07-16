@@ -72,7 +72,7 @@ class CWebBrowser: public CWebBrowserBase
 public:
 	CWebBrowser(HWND hparent, BOOL isvisible);
 	CWebBrowser(HWND hparent, BOOL isvisible, BrowserType browser);
-	~CWebBrowser(void);
+	virtual ~CWebBrowser(void);
 
 	BOOL IsInited() {return inited;}
 
@@ -145,6 +145,9 @@ public:
 	void SetHScroll(int p_hscroll_pixels);
 	void SetWindowId(int id);
 	void SetUserAgent(const char *p_user_agent);
+
+	virtual void AddJavaScriptHandler(const char *p_handler);
+	virtual void RemoveJavaScriptHandler(const char *p_handler);
 
 	HWND GetHWND();
 	HWND GetHostWindow()

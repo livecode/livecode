@@ -321,7 +321,7 @@ void MCPrinter::SetJobColor(bool p_color)
 	m_job_color = p_color;
 }
 
-void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCRange *p_ranges)
+void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCInterval *p_ranges)
 {
 	// MW-2008-02-28: [[ Bug 5623 ]] Intermittant crash when using printing commands is caused
 	//   by this being deleted, but not set to NULL to prevent it being deleted in future.
@@ -331,8 +331,8 @@ void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCRange *p_r
 	m_job_range_count = p_count;
 	if (p_count > 0)
 	{
-		m_job_ranges = new MCRange[p_count];
-		memcpy(m_job_ranges, p_ranges, sizeof(MCRange) * p_count);
+		m_job_ranges = new MCInterval[p_count];
+		memcpy(m_job_ranges, p_ranges, sizeof(MCInterval) * p_count);
 	}
 }
 

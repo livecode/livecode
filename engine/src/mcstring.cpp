@@ -442,6 +442,9 @@ MCNameRef MCM_input_begin_editing;
 MCNameRef MCM_input_end_editing;
 MCNameRef MCM_input_return_key;
 MCNameRef MCM_input_text_changed;
+MCNameRef MCM_product_details_received;
+MCNameRef MCM_product_request_error;
+
 #endif
 
 #ifdef _IOS_MOBILE
@@ -457,8 +460,8 @@ MCNameRef MCM_player_state_changed;
 MCNameRef MCM_player_movie_changed;
 MCNameRef MCM_player_stopped;
 MCNameRef MCM_reachability_changed;
-MCNameRef MCM_product_details_received;
-MCNameRef MCM_product_request_error;
+//MCNameRef MCM_product_details_received;
+//MCNameRef MCM_product_request_error;
 MCNameRef MCM_protected_data_available;
 MCNameRef MCM_protected_data_unavailable;
 
@@ -727,6 +730,8 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("inputEndEditing", MCM_input_end_editing);
 	/* UNCHECKED */ MCNameCreateWithCString("inputReturnKey", MCM_input_return_key);
 	/* UNCHECKED */ MCNameCreateWithCString("inputTextChanged", MCM_input_text_changed);
+    /* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
+    /* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
 #endif
 	
 #ifdef _IOS_MOBILE
@@ -742,8 +747,8 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("playerMovieChanged", MCM_player_movie_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("playerStopped", MCM_player_stopped);
 	/* UNCHECKED */ MCNameCreateWithCString("reachabilityChanged", MCM_reachability_changed);
-    /* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
-    /* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
+    ///* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
+    ///* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataDidBecomeAvailable", MCM_protected_data_available);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataWillBecomeUnavailable", MCM_protected_data_unavailable);
 	

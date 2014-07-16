@@ -53,6 +53,8 @@ class MCDispatch : public MCObject
 
 	MCExternalHandlerList *m_externals;
 
+    MCStack *m_transient_stacks;
+    
 	static MCImage *imagecache;
 
 public:
@@ -88,7 +90,12 @@ public:
 	void cleanup(IO_handle stream, char *lname, char *bname);
 	IO_stat savestack(MCStack *sptr, const MCString &);
 	IO_stat startup(void);
-
+	
+	void wreshape(Window w);
+	void wredraw(Window w, MCPlatformSurfaceRef surface, MCGRegionRef region);
+	void wiconify(Window w);
+	void wuniconify(Window w);
+	
 	void wclose(Window w);
 	void wkfocus(Window w);
 	void wkunfocus(Window w);
@@ -158,12 +165,6 @@ public:
 	void enter(Window w);
 	void redraw(Window w, MCRegionRef dirty_region);
 	MCFontStruct *loadfont(const MCString &fname, uint2 &size, uint2 style, Boolean printer);
-
-	// IM-2013-12-04: [[ PixelScale ]] Reset window size of all open stacks
-	void sync_stack_windows();
-	
-	// IM-2014-01-27: [[ HiDPI ]] Reopen all currently open stack windows
-	void reopen_stack_windows();
 	
 	// This method iterates through all stacks and ensures none have a reference
 	// to one of the ones in MCcursors.
@@ -176,6 +177,13 @@ public:
 	// environment.
 	bool isolatedsend(const char *p_stack_data, uint32_t p_stack_data_length, const char *p_message, MCParameter *p_parameters);
 
+    // MW-2014-06-24: [[ TransientStack ]] Transient stacks are a generalization of MCtooltip
+    //   allowing controls to create popup windows temporarily by deriving from MCStack and then
+    //   adding to MCdispatch for the time they are in use.
+    bool is_transient_stack(MCStack *stack);
+    void add_transient_stack(MCStack *stack);
+    void remove_transient_stack(MCStack *stack);
+    
 #ifdef _WINDOWS_DESKTOP
 	void freeprinterfonts();
 #endif
@@ -187,6 +195,8 @@ public:
 	
 	MCStack *findstackname(const MCString &);
 	MCStack *findstackid(uint4 fid);
+	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
+	MCStack *findstackwindowid(uint32_t p_win_id);
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 index);
 	MCObject *getobjid(Chunk_term type, uint4 inid);

@@ -431,14 +431,15 @@ inline SkBitmap::Config MCGRasterFormatToSkBitmapConfig(MCGRasterFormat p_format
 	}
 }
 
-inline MCGRasterFormat MCGRasterFormatFromSkBitmapConfig(SkBitmap::Config p_config)
+// IM-2014-05-20: [[ GraphicsPerformance ]] Use bitmap opaqueness when determining raster format
+inline MCGRasterFormat MCGRasterFormatFromSkBitmapConfig(SkBitmap::Config p_config, bool p_opaque)
 {
 	switch (p_config)
 	{
 	case SkBitmap::kA8_Config:
 		return kMCGRasterFormat_A;
 	case SkBitmap::kARGB_8888_Config:
-		return kMCGRasterFormat_ARGB;
+		return p_opaque ? kMCGRasterFormat_xRGB : kMCGRasterFormat_ARGB;
 	}
 }
 
@@ -470,7 +471,8 @@ void *MCGCacheTableGet(MCGCacheTableRef cache_table, void *key, uint32_t key_len
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font);
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -550,6 +552,13 @@ protected:
 	
 private:    
     typedef SkShader INHERITED;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct __MCGRegion
+{
+	SkRegion region;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -14,6 +14,8 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "core.h"
+
 #include "w32browser.h"
 #include <activscp.h>
 #include <revolution/support.h>
@@ -185,10 +187,6 @@ CWebBrowser::CWebBrowser(HWND hparent,  BOOL isvisible)
 
 	next = s_browsers;
 	s_browsers = this;
-}
-
-CWebBrowserBase::~CWebBrowserBase(void)
-{
 }
 
 CWebBrowser::~CWebBrowser()
@@ -1315,7 +1313,9 @@ bool CWebBrowser::GetImage(void*& r_data, int& r_length)
 		desthdc = CreateCompatibleDC(desktophdc);
 		ReleaseDC(NULL, desktophdc);
 		HBITMAP odbm = (HBITMAP)SelectObject(desthdc, browserimage->bm);
-		BOOL res = Draw(desthdc);
+		// MW-2014-04-30: [[ Bug 12210 ]] Use IViewObject to render rather than DrawToDC as the latter
+		//   has been deprecated in IE9+.
+		BOOL res = Draw(twidth, theight, desthdc);
 		SelectObject(desthdc, odbm);
 		DeleteDC(desthdc);
 		if (res)
@@ -1373,6 +1373,16 @@ char *CWebBrowser::GetUserAgent(void)
 }
 
 void CWebBrowser::SetUserAgent(const char *p_user_agent)
+{
+}
+
+//////////
+
+void CWebBrowser::AddJavaScriptHandler(const char *p_handler)
+{
+}
+
+void CWebBrowser::RemoveJavaScriptHandler(const char *p_handler)
 {
 }
 
@@ -2004,6 +2014,11 @@ class CWebBrowserModule: public CAtlDllModuleT<CWebBrowserModule>
 CWebBrowserModule _AtlModule;
 
 HINSTANCE theInstance;
+
+HINSTANCE MCWin32BrowserGetHINSTANCE()
+{
+	return theInstance;
+}
 
 // DLL Entry Point
 extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)

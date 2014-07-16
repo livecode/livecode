@@ -271,11 +271,7 @@ MCStack *MCScreenDC::platform_getstackatpoint(int32_t x, int32_t y)
 	if (t_window == nil)
 		return nil;
 		
-	_Drawable d;
-	d . type = DC_WINDOW;
-	d . handle . window = (MCSysWindowHandle)t_window;
-		
-	return MCdispatcher -> findstackd(&d);
+	return MCdispatcher->findstackwindowid((uint32_t)t_window);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -487,12 +483,16 @@ MCPoint MCScreenDC::screentologicalpoint(const MCPoint &p_point)
 
 MCRectangle MCScreenDC::logicaltoscreenrect(const MCRectangle &p_rect)
 {
-	return MCRectangleGetScaledInterior(p_rect, MCWin32GetLogicalToScreenScale());
+	// IM-2014-04-21: [[ Bug 12236 ]] Switch to scaled floor function which
+	// gives consistent width & height for different x, y values
+	return MCRectangleGetScaledFloorRect(p_rect, MCWin32GetLogicalToScreenScale());
 }
 
 MCRectangle MCScreenDC::screentologicalrect(const MCRectangle &p_rect)
 {
-	return MCRectangleGetScaledBounds(p_rect, 1 / MCWin32GetLogicalToScreenScale());
+	// IM-2014-04-21: [[ Bug 12236 ]] Switch to scaled ceiling function which
+	// gives consistent width & height for different x, y values
+	return MCRectangleGetScaledCeilingRect(p_rect, 1 / MCWin32GetLogicalToScreenScale());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -331,18 +331,19 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern void coretext_get_font_names(MCExecPoint &ep);
+extern void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint &ep);
+
 void MCSystemListFontFamilies(MCExecPoint& ep)
 {
-	ep . clear();
-	for(NSString *t_family in [UIFont familyNames])
-		ep . concatcstring([t_family cStringUsingEncoding: NSMacOSRomanStringEncoding], EC_RETURN, ep . getsvalue() . getlength() == 0);
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
+    coretext_get_font_names(ep);
 }
 
-void MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family)
+void MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family, uint2 p_size)
 {
-	ep . clear();
-	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithCString: p_family encoding: NSMacOSRomanStringEncoding]])
-		ep . concatcstring([t_font cStringUsingEncoding: NSMacOSRomanStringEncoding], EC_RETURN, ep . getsvalue() . getlength() == 0);
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
+    core_text_get_font_styles(p_family, p_size, ep);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1394,6 +1395,14 @@ extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
 
+extern Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters);
+
+
 extern Exec_stat MCHandleComposeTextMessage(void *, MCParameter *);
 extern Exec_stat MCHandleCanComposeTextMessage(void *, MCParameter *);
 
@@ -1740,6 +1749,20 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
 	{false, "mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
     
+    {false, "mobileStoreCanMakePurchase", MCHandleCanMakePurchase, nil},
+    {false, "mobileStoreEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+	{false, "mobileStoreDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+    {false, "mobileStoreRestorePurchases", MCHandleRestorePurchases, nil},
+    {false, "mobileStoreMakePurchase", MCHandleMakePurchase, nil},
+    {false, "mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
+    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
+    {false, "mobileStoreSetProductType", MCHandleProductSetType, nil},
+    {false, "mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
+    {false, "mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},
+    {false, "mobileStorePurchasedProducts", MCHandleGetPurchases, nil},
+    {false, "mobileStorePurchaseError", MCHandlePurchaseError, nil},
+    //{false, "mobileGetPurchases", MCHandlePurchaseList, nil},
+
     {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
     
     {true, "mobilePickContact", MCHandlePickContact, nil},       // ABPeoplePickerNavigationController

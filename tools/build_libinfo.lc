@@ -41,11 +41,12 @@ on startup
     end if
 
     put format("extern \"C\" void *%s;", tSymbol) & return after tSymbolExterns
-    put format("    { \"%s\", %s },", tSymbol, tSymbol) & return after tSymbolEntries
+    put format("    { \"%s\", &%s },", tSymbol, tSymbol) & return after tSymbolEntries
 
   end repeat
 
   write tSymbolExterns to stdout
+  output "extern" && quote & "C" & quote && "{"
   output "struct LibExport { const char *name; void *address; };"
   output "struct LibInfo { const char **name; struct LibExport *exports; };"
   output "static const char *__libexternalname =" && quote & tName & quote & ";"
@@ -59,7 +60,8 @@ on startup
   output "    &__libexternalname,"
   output "    __libexports"
   output "};"
-  output "LibInfo *__libinfoptr_" & tName & " = &__libinfo;"
+  output "__attribute((section(" & quote & "__DATA,__libs" & quote & "))) volatile struct LibInfo *__libinfoptr_" & tName & " = &__libinfo;"
+  output "};"
 end startup
 
 on output pLine

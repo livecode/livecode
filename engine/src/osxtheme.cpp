@@ -28,7 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 
 #include "context.h"
-#include "osxdc.h"
 #include "osxtheme.h"
 
 #include "graphics_util.h"
@@ -37,11 +36,41 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define CGFloat float
 #endif
 
+extern double MCMacGetAnimationStartTime(void);
+extern double MCMacGetAnimationCurrentTime(void);
+
+static inline Rect MCRectToMacRect(const MCRectangle &p_rect)
+{
+	Rect t_rect;
+	t_rect.left = p_rect.x;
+	t_rect.top = p_rect.y;
+	t_rect.right = p_rect.x + p_rect.width;
+	t_rect.bottom = p_rect.y + p_rect.height;
+	
+	return t_rect;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static inline CGAffineTransform MCGAffineTransformToCGAffineTransform(const MCGAffineTransform &p_transform)
 {
 	return CGAffineTransformMake(p_transform.a, p_transform.b, p_transform.c, p_transform.d, p_transform.tx, p_transform.ty);
+}
+
+static void convertcgtomcrect(CGRect r, MCRectangle& r_mc)
+{
+    r_mc . x = r . origin . x;
+    r_mc . y = r . origin . y;
+    r_mc . width = r . size . width;
+    r_mc . height = r . size . height;
+}
+
+static void convertmctocgrect(MCRectangle r, CGRect& r_cg)
+{
+    r_cg . origin . x = r . x;
+    r_cg . origin . y = r . y;
+    r_cg . size . width = r . width;
+    r_cg . size . height = r . height;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,8 +81,8 @@ static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRect
 static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2 my, const MCRectangle &drect);
 static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect);
 static ThemeTrackKind getscrollbarkind(Widget_Type wtype);
-static void getscrollbarpressedstate(const MCWidgetInfo &winfo, ThemeTrackDrawInfo &drawInfo);
-static void fillTrackDrawInfo(const MCWidgetInfo &winfo, ThemeTrackDrawInfo &drawInfo, const MCRectangle &drect);
+static void getscrollbarpressedstate(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo);
+static void fillTrackDrawInfo(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo, const MCRectangle &drect);
 
 enum {
     kControlLowerUpButtonPart = 28,
@@ -176,23 +205,23 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 	case WTHEME_TYPE_SLIDER:
 		if (wmetric == WTHEME_METRIC_PARTSIZE)
 		{
-			ThemeTrackDrawInfo drawInfo;
+			HIThemeTrackDrawInfo drawInfo;
 			fillTrackDrawInfo(winfo,drawInfo,srect);
 			if (winfo.part == WTHEME_PART_THUMB)
 			{
-				RgnHandle r = NewRgn();
-				GetThemeTrackThumbRgn(&drawInfo, r);
-				Rect vrect;
-				GetRegionBounds(r, &vrect);
-				DisposeRgn(r);
-				converttomcrect(vrect,drect);
+				HIShapeRef t_shape;
+				HIThemeGetTrackThumbShape(&drawInfo, &t_shape);
+				CGRect t_rect;
+                HIShapeGetBounds(t_shape, &t_rect);
+                CFRelease(t_shape);
+				convertcgtomcrect(t_rect,drect);
 				return;
 			}
 			else if (winfo.part == WTHEME_PART_TRACK_INC)
 			{
-				Rect vrect;
-				GetThemeTrackBounds(&drawInfo,&vrect);
-				converttomcrect(vrect,drect);
+				CGRect t_rect;
+				HIThemeGetTrackBounds(&drawInfo, &t_rect);
+				convertcgtomcrect(t_rect,drect);
 				return;
 			}
 		}
@@ -424,7 +453,7 @@ static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo
 		if (!(widgetinfo.state & (WTHEME_STATE_PRESSED | WTHEME_STATE_SUPPRESSDEFAULT)))
 			bNewInfo.adornment = kThemeAdornmentDefault;
 	}
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	//MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	converttonativerect(trect, macR);
 	
 	if (themebuttonkind == kThemeCheckBox || themebuttonkind == kThemeRadioButton)
@@ -469,8 +498,8 @@ static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRe
 	t_info . button . kind =  getthemebuttonpartandstate(widgetinfo, t_info . button . info, drect, t_info . button . bounds);
 	if (t_info . button . kind == kThemePushButton && t_info . button . info . adornment == kThemeAdornmentDefault)
 	{
-		t_info . button . animation_start = MCScreenDC::s_animation_start_time;
-		t_info . button . animation_current = MCScreenDC::s_animation_current_time;
+		t_info . button . animation_start = MCMacGetAnimationStartTime();
+		t_info . button . animation_current = MCMacGetAnimationCurrentTime();
 	}
 	else
 		t_info . button . animation_start = t_info . button . animation_current = 0;
@@ -514,10 +543,10 @@ static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRect
 static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2 my, const MCRectangle &drect)
 {
 	Widget_Part wpart =  WTHEME_PART_THUMB;
-	Point mouseLoc;
-	mouseLoc.h = mx;
-	mouseLoc.v = my;
-	ThemeTrackDrawInfo ttdi;
+	HIPoint mouseLoc;
+	mouseLoc.x = mx;
+	mouseLoc.y = my;
+	HIThemeTrackDrawInfo ttdi;
 	fillTrackDrawInfo(winfo,ttdi,drect);
 	Boolean inScrollbarArrow = False;
 	ControlPartCode partCode;
@@ -538,25 +567,32 @@ static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2
 			//   part code for little arrows.
 			inScrollbarArrow = True;
 		}
-		else if (HitTestThemeScrollBarArrows(&ttdi.bounds, ttdi.enableState,
-		                                ttdi.trackInfo.scrollbar.pressState,
-		                                drect.width > drect.height, mouseLoc,
+		else
+        {
+            HIScrollBarTrackInfo t_sbinfo;
+            t_sbinfo . version = 0;
+            t_sbinfo . pressState = ttdi . trackInfo . scrollbar . pressState;
+            t_sbinfo . enableState = ttdi . enableState;
+            t_sbinfo . viewsize = ttdi . trackInfo . scrollbar . viewsize;
+            if (HIThemeHitTestScrollBarArrows(&ttdi.bounds, &t_sbinfo,
+		                                drect.width > drect.height, &mouseLoc,
 		                                &ttdi.bounds, &partCode))
-		{
-			inScrollbarArrow = True;
-			if (partCode == kControlUpButtonPart
-			        || partCode == kControlLowerUpButtonPart)
-				wpart = WTHEME_PART_ARROW_DEC;
-			else if (partCode == kControlDownButtonPart
-			         || partCode == kControlUpperDownButtonPart)
-				wpart = WTHEME_PART_ARROW_INC;
-			doublesbarrows = partCode == kControlLowerUpButtonPart
-			                 || partCode == kControlUpperDownButtonPart;
-		}
+            {
+                inScrollbarArrow = True;
+                if (partCode == kControlUpButtonPart
+                        || partCode == kControlLowerUpButtonPart)
+                    wpart = WTHEME_PART_ARROW_DEC;
+                else if (partCode == kControlDownButtonPart
+                         || partCode == kControlUpperDownButtonPart)
+                    wpart = WTHEME_PART_ARROW_INC;
+                doublesbarrows = partCode == kControlLowerUpButtonPart
+                                 || partCode == kControlUpperDownButtonPart;
+            }
+        }
 	}
 	if (!inScrollbarArrow)
 	{
-		if (HitTestThemeTrack(&ttdi, mouseLoc, &partCode))
+		if (HIThemeHitTestTrack(&ttdi, &mouseLoc, &partCode))
 		{
 			if (partCode == kControlPageUpPart)
 				wpart = WTHEME_PART_TRACK_DEC;
@@ -624,7 +660,7 @@ static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const M
 		
 		// MW-2012-10-01: [[ Bug 10419 ]] Wrap phase at 256 as more frames on Lion+
 		//   animation than in Snow Leopard.
-		t_info . progress . info . trackInfo . progress . phase = ((int32_t)((MCScreenDC::s_animation_current_time - MCScreenDC::s_animation_start_time) * 1000)) / t_millisecs_per_step % 256;
+		t_info . progress . info . trackInfo . progress . phase = ((int32_t)((MCMacGetAnimationCurrentTime() - MCMacGetAnimationStartTime()) * 1000)) / t_millisecs_per_step % 256;
 		dc -> drawtheme(THEME_DRAW_TYPE_PROGRESS, &t_info);
 	}
 }
@@ -649,7 +685,7 @@ static ThemeTrackKind getscrollbarkind(Widget_Type wtype)
 }
 
 //fill themetrackinfo with state
-static void getscrollbarpressedstate(const MCWidgetInfo &winfo, ThemeTrackDrawInfo &drawInfo)
+static void getscrollbarpressedstate(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo)
 {
 	ThemeTrackPressState ps = 0;
 	if (winfo.state & WTHEME_STATE_PRESSED)
@@ -702,12 +738,15 @@ static void getscrollbarpressedstate(const MCWidgetInfo &winfo, ThemeTrackDrawIn
 		drawInfo.trackInfo.scrollbar.pressState = ps;
 }
 
-static void fillTrackDrawInfo(const MCWidgetInfo &winfo, ThemeTrackDrawInfo &drawInfo, const MCRectangle &drect)
+#define SB_MAXVALUE 16384
+
+static void fillTrackDrawInfo(const MCWidgetInfo &winfo, HIThemeTrackDrawInfo &drawInfo, const MCRectangle &drect)
 {
 	/******************************************************************************
 	* fill in the fields in the ThemeTrackDrawInfo structure to be used by other *
 	* Appearance Manager routines                                                *
 	******************************************************************************/
+    drawInfo.version = 0;
 	drawInfo.kind = getscrollbarkind(winfo.type);
 	if (winfo.datatype != WTHEME_DATA_SCROLLBAR)
 		return;
@@ -715,18 +754,49 @@ static void fillTrackDrawInfo(const MCWidgetInfo &winfo, ThemeTrackDrawInfo &dra
 	// MW-2010-12-05: [[ Bug 9211 ]] If the height of the control >= 20 then render as a large progress bar.
 	if (drawInfo.kind == kThemeProgressBar && drect.height >= 20)
 		drawInfo.kind = kThemeLargeProgressBar;
-	
-	drawInfo.min = 0;
-	drawInfo.max = MAXINT2;
+    
+    MCRectangle trect = winfo.type == WTHEME_TYPE_SLIDER ? MCU_reduce_rect(drect, 2) : drect;
+	convertmctocgrect(trect, drawInfo.bounds);
+    
 	//FIX
 	MCWidgetScrollBarInfo *sbinfo = (MCWidgetScrollBarInfo *)winfo.data;
-	real8 range = sbinfo->endvalue - sbinfo->startvalue - ((winfo.type == WTHEME_TYPE_PROGRESSBAR || winfo.type == WTHEME_TYPE_SLIDER) ? 0: sbinfo->thumbsize);
-	if (range == 0.0)
-		drawInfo.value = 0;
-	else
-		drawInfo.value = (SInt32)((sbinfo->thumbpos - sbinfo->startvalue) * MAXINT2 / range);
-	MCRectangle trect = winfo.type == WTHEME_TYPE_SLIDER ? MCU_reduce_rect(drect, 2) : drect;
-	converttonativerect(trect, drawInfo.bounds);
+    
+    // MW-2014-04-10: [[ Bug 12027 ]] Calculate all the values in pixels (rather than relative to INT2_MAX). This
+    //   means we know the size of the thumb (viewsize) and thus can work-around the HiDPI rendering glitch.
+    //   (in HiDPI mode, the min size of thumb that will be rendered is < in non-HiDPI mode; however hittesting
+    //    is not adjusted by the HITheme API).
+    int t_size;
+	if (drect.width > drect.height)
+        t_size = drect . width;
+    else
+        t_size = drect . height;
+    
+    int t_viewsize, t_maxval, t_val;
+    
+    if (winfo . type == WTHEME_TYPE_PROGRESSBAR || winfo . type == WTHEME_TYPE_SLIDER)
+    {
+        t_maxval = t_size;
+        if ((sbinfo -> endvalue - sbinfo -> startvalue) != 0.0)
+            t_val = (sbinfo -> thumbpos - sbinfo -> startvalue) * t_maxval / (sbinfo -> endvalue - sbinfo -> startvalue);
+        else
+            t_maxval = 0, t_val = 0;
+    }
+    else
+    {
+        if ((sbinfo -> endvalue - sbinfo -> startvalue - sbinfo -> thumbsize) != 0.0)
+        {
+            t_viewsize = sbinfo -> thumbsize / (sbinfo -> endvalue - sbinfo -> startvalue) * t_size;
+            t_maxval = t_size - t_viewsize;
+            t_val = (sbinfo -> thumbpos - sbinfo -> startvalue) * t_maxval / (sbinfo -> endvalue - sbinfo -> startvalue - sbinfo -> thumbsize);
+        }
+        else
+            t_maxval = 0, t_val = 0, t_viewsize = 0;
+    }
+
+	drawInfo.min = 0;
+	drawInfo.max = t_maxval;
+	drawInfo.value = t_val;
+	
 	if (drect.width > drect.height)
 		drawInfo.attributes = kThemeTrackHorizontal | kThemeTrackShowThumb;
 	else
@@ -747,9 +817,9 @@ static void fillTrackDrawInfo(const MCWidgetInfo &winfo, ThemeTrackDrawInfo &dra
 		break;
 	case kThemeSlider:
 		if (drect.width > drect.height)
-			drawInfo.bounds.bottom = drect.y - 1 + 17;
+			drawInfo.bounds.size.height = (drect.y - 1 + 17) - drawInfo . bounds . origin . y;
 		else
-			drawInfo.bounds.right = drawInfo.bounds.left + 17;
+			drawInfo.bounds.size.width = drawInfo.bounds.origin.x + 17 - drawInfo . bounds . origin . x;
 		if (winfo.attributes & WTHEME_ATT_SHOWVALUE)
 			drawInfo.trackInfo.slider.thumbDir = kThemeThumbDownward;
 		else
@@ -767,13 +837,7 @@ static void fillTrackDrawInfo(const MCWidgetInfo &winfo, ThemeTrackDrawInfo &dra
 		else
 			drawInfo . trackInfo . scrollbar . pressState = 0;
 			
-		if (range == 0.0)
-		{
-			drawInfo.max = 0;
-			drawInfo.trackInfo.scrollbar.viewsize = 1;
-		}
-		else
-			drawInfo.trackInfo.scrollbar.viewsize	= (int)(sbinfo->thumbsize * MAXINT2 / range);
+        drawInfo.trackInfo.scrollbar.viewsize = t_viewsize;
 		break;
 	default:
 		break;
@@ -790,7 +854,7 @@ static inline void assign(HIRect& d, Rect s)
 	d . size . height = s . bottom - s . top;
 }
 
-void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRef p_context)
+void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRef p_context, bool p_hidpi)
 {
 	CGContextRef t_context = p_context;
 	
@@ -802,7 +866,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			
 			t_info . version = 0;
 			t_info . kind = p_info . slider . info . kind;
-			assign(t_info . bounds, p_info . slider . info . bounds);
+			t_info . bounds = p_info . slider . info . bounds;
 			t_info . min = p_info . slider . info . min;
 			t_info . max = p_info . slider . info . max;
 			t_info . value = p_info . slider . info . value;
@@ -826,7 +890,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			
 			t_info . version = 0;
 			t_info . kind = p_info . scrollbar . info . kind;
-			assign(t_info . bounds, p_info . scrollbar . info . bounds);
+			t_info . bounds = p_info . slider . info . bounds;
 			t_info . min = p_info . scrollbar . info . min;
 			t_info . max = p_info . scrollbar . info . max;
 			t_info . value = p_info . scrollbar . info . value;
@@ -836,6 +900,15 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . filler1 = 0;
 			t_info . trackInfo . scrollbar . viewsize = p_info . scrollbar . info . trackInfo . scrollbar . viewsize;
 			t_info . trackInfo . scrollbar . pressState = p_info . scrollbar . info . trackInfo . scrollbar . pressState;
+            
+            // MW-2014-04-11: [[ Bug 12027 ]] It seems that the minimum size of a scrollbar thumb is 18px. However
+            //   when rendering at Retina resolution the HITheme API will render them smaller, even though the
+            //   hit-test rect is still 18px. We account for this here.
+            if (p_hidpi && t_info . trackInfo . scrollbar . viewsize < 18)
+            {
+                t_info . trackInfo . scrollbar . viewsize = 18;
+            }
+            
 			HIThemeDrawTrack(&t_info, NULL, t_context, kHIThemeOrientationNormal);
 		}
 			break;
@@ -846,7 +919,7 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			
 			t_info . version = 0;
 			t_info . kind = p_info . progress . info . kind;
-			assign(t_info . bounds, p_info . progress . info . bounds);
+			t_info . bounds = p_info . slider . info . bounds;
 			t_info . min = p_info . progress . info . min;
 			t_info . max = p_info . progress . info . max;
 			t_info . value = p_info . progress . info . value;
@@ -1002,7 +1075,7 @@ bool MCNativeTheme::drawfocusborder(MCContext *p_context, const MCRectangle& p_d
 	trect = MCU_reduce_rect(p_rect, 3);
 	MCThemeDrawInfo t_info;
 	t_info.dest = p_rect;
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	//MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	t_info . focus_rect . focused = True;
 	t_info . focus_rect . bounds = MCRectToMacRect(trect);
 	p_context -> drawtheme(THEME_DRAW_TYPE_FOCUS_RECT, &t_info);
@@ -1028,17 +1101,23 @@ bool MCNativeTheme::drawmetalbackground(MCContext *p_context, const MCRectangle&
 	
 	Window t_window;
 	t_window = p_object -> getstack() -> getwindow();
+	// COCOA-TODO: metalbackground drawing
+#ifdef OLD_MAC
 	if (t_window  != nil)
 		p_info . background . state = IsWindowHilited((WindowPtr)t_window -> handle . window) ? kThemeStateActive : kThemeStateInactive;
 	else
+#endif
 		p_info . background . state = kThemeStateActive;
 
 	MCRectangle t_clip;
 	t_clip = p_context -> getclip();
-	p_context -> setclip(MCU_intersect_rect(p_rect, p_dirty));
+	
+	p_context->save();
+	p_context->cliprect(MCU_intersect_rect(p_rect, p_dirty));
 	p_context -> drawtheme(THEME_DRAW_TYPE_BACKGROUND, &p_info);
-	p_context -> setclip(t_clip);
 
+	p_context->restore();
+	
 	return true;
 }
 
@@ -1172,7 +1251,7 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 		// Apply UI scaling transform
 		CGContextConcatCTM(t_cgcontext, t_cg_transform);
 		
-		MCMacDrawTheme(p_type, *p_info_ptr, t_cgcontext);
+		MCMacDrawTheme(p_type, *p_info_ptr, t_cgcontext, t_ui_scale > 1.0);
 		
 		CGContextRelease(t_cgcontext);
 		

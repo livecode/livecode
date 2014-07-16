@@ -40,6 +40,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "scriptpt.h"
 #include "chunk.h"
 
+#include "dispatch.h"
+
+#include "graphics_util.h"
+
 #include "external.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,6 +59,9 @@ extern MCExecPoint *MCEPptr;
 #define xresFail 1
 #define xresNotImp 2
 #define xresAbort 3
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Add revision number to v0 external interface
+#define EXTERNAL_INTERFACE_VERSION 1
 
 typedef struct _Xternal
 {
@@ -84,6 +91,9 @@ typedef void (*DELETER)(void *data);
 typedef void (*GETXTABLE)(XCB *, DELETER, const char **, Xternal **, DELETER *);
 typedef void (*CONFIGURESECURITY)(SECURITYHANDLER *handlers);
 typedef void (*SHUTDOWNXTABLE)(void);
+
+// IM-2014-03-06: [[ revBrowserCEF ]] define setVersion function signature
+typedef void (*SETEXTERNALINTERFACEVERSION)(unsigned int version);
 
 extern XCB MCcbs[];
 extern SECURITYHANDLER MCsecuritycbs[];
@@ -133,7 +143,13 @@ static void deleter(void *d)
 
 bool MCExternalV0::Prepare(void)
 {
-	// Get the info from the main external entry point (we now this symbol exists
+	// IM-2014-03-06: [[ revBrowserCEF ]] call the setExternalInterfaceVersion() function if present
+	SETEXTERNALINTERFACEVERSION t_set_version;
+	t_set_version = (SETEXTERNALINTERFACEVERSION)MCS_resolvemodulesymbol(m_module, "setExternalInterfaceVersion");
+	if (t_set_version != nil)
+		t_set_version(EXTERNAL_INTERFACE_VERSION);
+	
+	// Get the info from the main external entry point (we know this symbol exists
 	// as it is used to determine if its a V0 external!).
 
 	GETXTABLE t_getter;
@@ -687,8 +703,116 @@ static char *set_array(const char *arg1, const char *arg2,
 	return NULL;
 }
 
+// IM-2014-03-06: [[ revBrowserCEF ]] Extend the externals interface to allow externals to hook into the wait loop
+
+// Add callback function (arg1) to the wait loop
+static char *add_runloop_action(const char *arg1, const char *arg2,
+								const char *arg3, int *retval)
+{
+	MCRunloopActionCallback t_callback;
+	t_callback = (MCRunloopActionCallback)arg1;
+
+	void *t_context;
+	t_context = (void*)arg2;
+
+	MCRunloopActionRef *r_action;
+	r_action = (MCRunloopActionRef*)arg3;
+
+	if (!MCscreen->AddRunloopAction(t_callback, t_context, *r_action))
+	{
+		*retval = xresFail;
+		return NULL;
+	}
+
+	*retval = xresSucc;
+
+	return NULL;
+}
+
+// Remove callback function from the wait loop
+static char *remove_runloop_action(const char *arg1, const char *arg2,
+								const char *arg3, int *retval)
+{
+	MCRunloopActionRef t_action;
+	t_action = (MCRunloopActionRef)arg1;
+	
+	MCscreen->RemoveRunloopAction(t_action);
+
+	*retval = xresSucc;
+	return NULL;
+}
+
+// Run the waitloop
+static char *runloop_wait(const char *arg1, const char *arg2,
+						  const char *arg3, int *retval)
+{
+	MCscreen->wait(60.0, True, True);
+	*retval = xresSucc;
+	return NULL;
+}
+
+// IM-2014-07-09: [[ Bug 12225 ]] Add external functions to convert stack coordinates based on current transform
+
+// convert stack to logical window coords
+static char *stack_to_window_rect(const char *arg1, const char *arg2,
+									   const char *arg3, int *retval)
+{
+	uint32_t t_win_id;
+	t_win_id = (uint32_t)arg1;
+
+	MCStack *t_stack;
+	t_stack = MCdispatcher->findstackwindowid(t_win_id);
+
+	if (t_stack == nil)
+	{
+		*retval = xresFail;
+		return nil;
+	}
+
+	MCRectangle32 *t_rect;
+	t_rect = (MCRectangle32*)arg2;
+
+	*t_rect = MCRectangle32GetTransformedBounds(*t_rect, t_stack->getviewtransform());
+
+	// IM-2014-07-09: [[ Bug 12602 ]] Convert window -> screen coords
+	*t_rect = MCRectangle32FromMCRectangle(MCscreen->logicaltoscreenrect(MCRectangle32ToMCRectangle(*t_rect)));
+
+	*retval = xresSucc;
+	return nil;
+}
+
+// convert logical window to stack coords
+static char *window_to_stack_rect(const char *arg1, const char *arg2,
+									   const char *arg3, int *retval)
+{
+	uint32_t t_win_id;
+	t_win_id = (uint32_t)arg1;
+
+	MCStack *t_stack;
+	t_stack = MCdispatcher->findstackwindowid(t_win_id);
+
+	if (t_stack == nil)
+	{
+		*retval = xresFail;
+		return nil;
+	}
+
+	MCRectangle32 *t_rect;
+	t_rect = (MCRectangle32*)arg2;
+
+	// IM-2014-07-09: [[ Bug 12602 ]] Convert screen -> window coords
+	*t_rect = MCRectangle32FromMCRectangle(MCscreen->screentologicalrect(MCRectangle32ToMCRectangle(*t_rect)));
+
+	*t_rect = MCRectangle32GetTransformedBounds(*t_rect, MCGAffineTransformInvert(t_stack->getviewtransform()));
+
+	*retval = xresSucc;
+	return nil;
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Add externals extension to the callback list
 XCB MCcbs[] =
 {
+	// Externals interface V0 functions
 	set_idle_func,
 	NULL,
 	set_idle_rate,
@@ -711,7 +835,17 @@ XCB MCcbs[] =
 	get_variable_ex,
 	set_variable_ex,
 	get_array,
-	set_array
+	set_array,
+
+	// Externals interface V1 functions
+	add_runloop_action,
+	remove_runloop_action,
+	runloop_wait,
+
+	stack_to_window_rect,
+	window_to_stack_rect,
+
+	NULL
 };
 
 ////////////////////////////////////////////////////////////////////////////////

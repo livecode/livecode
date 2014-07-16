@@ -298,6 +298,11 @@ real8 MCS_time()
 	return starttime;
 }
 
+real8 MCS_starttime(void)
+{
+	return starttime;
+}
+
 void MCS_reset_time()
 {
 	if (!MClowrestimers)
@@ -1004,6 +1009,10 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 	siStartInfo.hStdInput = hChildStdinRd;
 	siStartInfo.hStdOutput = hChildStdoutWr;
 
+	// SN-2014-06-16 [[ Bug 12648 ]] Shell command does not accept spaces despite being quoted (Windows)
+	// Quotes surrounding the command call are needed to preserve the quotes of the command and command arguments
+	ep.insert("\"", 0, 0);
+	ep.appendchar('\"');
 	ep.insert(" /C ", 0, 0);
 	ep.insert(MCshellcmd, 0, 0);
 	char *pname = ep.getsvalue().clone();

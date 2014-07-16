@@ -235,7 +235,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 	struct stat buf;
 	if (fptr == NULL || fstat(fileno(fptr), (struct stat *)&buf))
 		MCresult->sets("can't open file");
-	else
+	else if (buf.st_size > 0)
 	{
 		char *buffer = ep.getbuffer(buf.st_size);
 		if (buffer == NULL)
@@ -258,9 +258,16 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 					ep.texttobinary();
 				MCresult->clear(False);
 			}
-			fclose(fptr);
 		}
 	}
+    else
+    {
+        MCresult -> clear(False);
+    }
+    // MW-2014-06-20: [[ Bug 12668 ]] Always close the filehandle if it
+    //   was successfully opened.
+    if (fptr != nil)
+        fclose(fptr);
 }
 
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
@@ -374,7 +381,8 @@ IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 			nread = size * n;
 			if (nread > stream->len - (stream->ioptr - stream->buffer))
 			{
-				n = stream->len - (stream->ioptr - stream->buffer) / size;
+				// IM-2014-05-21: [[ Bug 12458 ]] Fix incorrect calculation of remaining blocks
+				n = (stream->len - (stream->ioptr - stream->buffer)) / size;
 				nread = size * n;
 				stat = IO_EOF;
 			}
@@ -2146,6 +2154,35 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 			// folders
 			UInt16 t_is_folder;
 			t_is_folder = t_catalog_infos[t_i] . nodeFlags & kFSNodeIsDirectoryMask;
+            
+            // MW-2014-04-16: [[ Bug 12200 ]] Certain folders in the root of the volume
+            //   (net / home / dev) do not report correctly as directories. Fortunately the
+            //   fileType of these filey-folders is 'rhaplcmt'.
+            char t_filetype[9];
+            if (!t_is_folder)
+            {
+                FileInfo *t_file_info;
+                t_file_info = (FileInfo *)&t_catalog_infos[t_i] . finderInfo;
+                uint4 t_creator;
+                t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
+                uint4 t_type;
+                t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
+                
+                if (t_file_info != NULL)
+                {
+                    memcpy(t_filetype, (char*)&t_creator, 4);
+                    memcpy(&t_filetype[4], (char *)&t_type, 4);
+                    t_filetype[8] = '\0';
+                }
+                else
+                    t_filetype[0] = '\0';
+
+                if (strcmp(t_filetype, "rhaplcmt") == 0)
+                    t_is_folder = true;
+            }
+            else
+                strcpy(t_filetype, "????????"); // this is what the "old" getentries did
+            
 			if ( (!p_files && t_is_folder) || (p_files && !t_is_folder))
 			{
 				char t_native_name[256];
@@ -2166,27 +2203,6 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 				
 					t_tmp_context . copysvalue(t_native_name, t_native_length);
 					MCU_urlencode(t_tmp_context);
-				
-					char t_filetype[9];
-					if (!t_is_folder)
-					{
-						FileInfo *t_file_info;
-						t_file_info = (FileInfo *) &t_catalog_infos[t_i] . finderInfo;
-						uint4 t_creator;
-						t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
-						uint4 t_type;
-						t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
-						
-						if (t_file_info != NULL)
-						{
-							memcpy(t_filetype, (char*)&t_creator, 4);
-							memcpy(&t_filetype[4], (char *)&t_type, 4);
-							t_filetype[8] = '\0';
-						}
-						else
-							t_filetype[0] = '\0';
-					} else
-						strcpy(t_filetype, "????????"); // this is what the "old" getentries did	
 
 					CFAbsoluteTime t_creation_time;
 					UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . createDate, &t_creation_time);

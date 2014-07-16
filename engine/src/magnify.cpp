@@ -96,7 +96,7 @@ Boolean MCMagnify::mdown(uint2 which)
 	return False;
 }
 
-Boolean MCMagnify::mup(uint2 which)
+Boolean MCMagnify::mup(uint2 which, bool p_release)
 {
 	if (MCmagimage != NULL)
 		return MCmagimage->magmup(which);

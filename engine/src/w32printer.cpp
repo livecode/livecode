@@ -41,6 +41,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphics.h"
 #include "graphicscontext.h"
 
+#include "graphics_util.h"
+
 #include "font.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -50,7 +52,7 @@ extern void Windows_RenderMetaFile(HDC p_color_dc, HDC p_mask_dc, uint1 *p_data,
 extern void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
 extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
 
-extern bool MCImageBitmapSplitHBITMAPWithMask(HDC p_dc, MCImageBitmap *p_bitmap, HBITMAP &r_bitmap, HBITMAP &r_mask);
+extern bool MCGImageSplitHBITMAPWithMask(HDC p_dc, MCGImageRef p_image, HBITMAP &r_bitmap, HBITMAP &r_mask);
 extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -533,7 +535,12 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 	bool t_is_pattern_fill, t_is_stroke;
 	t_is_pattern_fill = false;
 	t_is_stroke = false;
-
+	
+    // MM-2014-04-23: [[ Bug 11884 ]] If possible, we should let GDI handle insetting, using the PS_INSIDEFRAME pen type.
+    //  This only works for stroking solid lines, so for fills and dashed strokes, inset ourselves.
+	bool t_should_inset;
+	t_should_inset = false;
+	
 	if (p_mark -> stroke != NULL)
 	{
 		uint4 t_style;
@@ -579,7 +586,24 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 			t_width = p_mark -> stroke -> width;
 
-			if (t_width < 2)
+            // MM-2014-04-23: [[ Bug 11884 ]] If we want to inset this mark, use the PS_INSIDEFRAME pen type.
+			uint2 t_inset;
+			switch(p_mark -> type)
+			{
+				case MARK_TYPE_RECTANGLE:
+					t_inset = p_mark -> rectangle . inset;
+					break;
+				case MARK_TYPE_ROUND_RECTANGLE:
+					t_inset = p_mark -> round_rectangle . inset;
+					break;
+				case MARK_TYPE_ARC:
+					t_inset = p_mark -> arc . inset;
+					break;
+				default:
+					t_inset = 0;
+					break;
+			}
+			if (t_width < 2 || t_inset > 0)
 				t_style |= PS_INSIDEFRAME;
 		}
 
@@ -623,6 +647,9 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			t_style |= PS_USERSTYLE;
 			
 			resolve_dashes(p_mark -> stroke -> dash . offset, p_mark -> stroke -> dash . data, p_mark -> stroke -> dash . length, t_dashes, t_dash_length);
+
+            // MM-2014-04-23: [[ Bug 11884 ]] For dashed lines, we can't use the PS_INSIDEFRAME, so we must inset ourselves.
+			t_should_inset = true;
 		}
 
 		t_brush . lbColor = colour_to_pixel(p_mark -> fill -> colour);
@@ -684,11 +711,17 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 		SetBrushOrgEx(t_dc, t_origin.x, t_origin.y, NULL);
 		SelectObject(t_dc, GetStockObject(NULL_PEN));
+		
+        // MM-2014-04-23: [[ Bug 11884 ]] For fills, we can't use the PS_INSIDEFRAME, so we must inset ourselves.
+		t_should_inset = true;
 	}
 	else
 	{
 		SelectObject(t_dc, GetStockObject(NULL_PEN));
 		SelectObject(t_dc, GetStockObject(NULL_BRUSH));
+		
+        // MM-2014-04-23: [[ Bug 11884 ]] For fills, we can't use the PS_INSIDEFRAME, so we must inset ourselves.
+		t_should_inset = true;
 	}
 
 	if (t_is_pattern_fill)
@@ -767,26 +800,60 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 		case MARK_TYPE_RECTANGLE:
 		{
-			int4 t_adjust;
-			t_adjust = p_mark -> stroke != NULL ? 0 : 1;
+			if (t_should_inset)
+			{
+                // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
+                // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+				if (!(p_mark -> rectangle . inset % 2))
+					p_mark -> rectangle . inset ++;
+				p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2,
+															   p_mark -> rectangle . bounds . y + p_mark -> rectangle . inset / 2, 
+															   p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset, 
+															   p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset);
+			}
+			
 			Rectangle(t_dc, p_mark -> rectangle . bounds . x, p_mark -> rectangle . bounds . y,
-											p_mark -> rectangle . bounds . x + p_mark -> rectangle . bounds . width + t_adjust,
-											p_mark -> rectangle . bounds . y + p_mark -> rectangle . bounds . height + t_adjust);
+											p_mark -> rectangle . bounds . x + p_mark -> rectangle . bounds . width,
+											p_mark -> rectangle . bounds . y + p_mark -> rectangle . bounds . height);
 		}
 		break;
 
 		case MARK_TYPE_ROUND_RECTANGLE:
 		{
+			if (t_should_inset)
+			{
+                // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
+                // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+				if (!(p_mark -> round_rectangle . inset % 2))
+					p_mark -> round_rectangle . inset ++;
+				p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2,
+																	 p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . inset / 2, 
+																	 p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset, 
+																	 p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset);
+			}
+			
 			int4 t_adjust;
 			t_adjust = p_mark -> stroke != NULL ? 0 : 1;
 			RoundRect(t_dc, p_mark -> round_rectangle . bounds . x, p_mark -> round_rectangle . bounds . y,
-											p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . bounds . width + t_adjust,
-											p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . bounds . height + t_adjust, p_mark -> round_rectangle . radius,
+											p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . bounds . width,
+											p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . bounds . height, p_mark -> round_rectangle . radius,
 											p_mark -> round_rectangle . radius);
 		}
 		break;
 
 		case MARK_TYPE_ARC:
+			if (t_should_inset)
+			{
+                // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
+                // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+				if (!(p_mark -> arc . inset % 2))
+					p_mark -> arc . inset ++;
+				p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2,
+														 p_mark -> arc . bounds . y + p_mark -> arc . inset / 2, 
+														 p_mark -> arc . bounds . width - p_mark -> arc . inset, 
+														 p_mark -> arc . bounds . height - p_mark -> arc . inset);				
+			}
+			
 			gdi_do_arc(t_dc, NULL, p_mark -> stroke == NULL, p_mark -> arc . bounds . x, p_mark -> arc . bounds . y, p_mark -> arc . bounds . x + p_mark -> arc . bounds . width, p_mark -> arc . bounds . y + p_mark -> arc . bounds . height, p_mark -> arc . start, p_mark -> arc . start + p_mark -> arc . angle);
 			if (p_mark -> stroke != NULL)
 			{
@@ -826,11 +893,11 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			int32_t t_src_y = p_mark->image.dy - p_mark->image.sy;
 
 			DWORD t_err;
-			if (p_mark->image.descriptor.bitmap != nil)
+			if (p_mark->image.descriptor.image != nil)
 			{
-				/* UNCHECKED */ MCImageBitmapSplitHBITMAPWithMask(t_src_dc, p_mark->image.descriptor.bitmap, t_src_bitmap, t_src_mask);
-				t_src_width = p_mark->image.descriptor.bitmap->width;
-				t_src_height = p_mark->image.descriptor.bitmap->height;
+				/* UNCHECKED */ MCGImageSplitHBITMAPWithMask(t_src_dc, p_mark->image.descriptor.image, t_src_bitmap, t_src_mask);
+				t_src_width = MCGImageGetWidth(p_mark->image.descriptor.image);
+				t_src_height = MCGImageGetHeight(p_mark->image.descriptor.image);
 			}
 
 			if (!p_mark->image.descriptor.has_transform)
@@ -920,64 +987,74 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		RECT t_clip;
 		GetClipBox(t_dc, &t_clip);
 
-		// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
-		MCGFloat t_scale;
-		t_scale = p_mark -> fill -> pattern -> scale;
+		MCGImageRef t_image;
+		MCGAffineTransform t_transform;
 
-		// Now create a suitable pattern by tiling out the selected pattern to be
-		// at least 32x32
-		int32_t t_src_width, t_src_height;
-		t_src_width = MCGImageGetWidth(p_mark -> fill -> pattern -> image) / t_scale;
-		t_src_height = MCGImageGetHeight(p_mark -> fill -> pattern -> image) / t_scale;
+		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+		if (MCPatternLockForContextTransform(p_mark->fill->pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform))
+		{
+			MCGRectangle t_src_rect;
+			t_src_rect = MCGRectangleMake(0, 0,
+				MCGImageGetWidth(t_image), MCGImageGetHeight(t_image));
 
-		int32_t t_width, t_height;
-		t_width = t_src_width;
-		t_height = t_src_height;
-		while(t_width < 32)
-			t_width *= 2;
-		while(t_height < 32)
-			t_height *= 2;
+			MCGRectangle t_dst_rect;
+			t_dst_rect = MCGRectangleApplyAffineTransform(t_src_rect, t_transform);
 
-		HDC t_src_dc;
-		t_src_dc = CreateCompatibleDC(m_dc);
+			// Now create a suitable pattern by tiling out the selected pattern to be
+			// at least 32x32
 
-		// draw the pattern image into a bitmap
-		HBITMAP t_pattern = nil;
-		void *t_bits = nil;
-		/* UNCHECKED */ create_temporary_dib(t_src_dc, t_width, t_height, t_pattern, t_bits);
-		MCGContextRef t_context = nil;
-		/* UNCHECKED */ MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
+			int32_t t_x_tiles, t_y_tiles;
+			t_x_tiles = ceilf(32.0 / t_dst_rect.size.width);
+			t_y_tiles = ceilf(32.0 / t_dst_rect.size.height);
 
-		// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
-		MCGContextSetFillPattern(t_context, p_mark->fill->pattern->image, MCGAffineTransformMakeScale(1.0 / t_scale, 1.0 / t_scale), kMCGImageFilterNone);
-		MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
-		MCGContextFill(t_context);
+			int32_t t_width, t_height;
+			t_width = ceilf(t_x_tiles * t_dst_rect.size.width);
+			t_height = ceilf(t_y_tiles * t_dst_rect.size.height);
 
-		MCGContextRelease(t_context);
-		
-		// Finally adjust the starting position based on origin, and tile the clip.
-		int32_t x, y;
-		x = p_mark -> fill -> origin . x;
-		y = p_mark -> fill -> origin . y;
-		while(x > t_clip . left)
-			x -= t_width;
-		while(x + t_width < t_clip . left)
-			x += t_width;
-		while(y > t_clip . top)
-			y -= t_height;
-		while(y + t_height < t_clip . top)
-			y += t_height;
+			HDC t_src_dc;
+			t_src_dc = CreateCompatibleDC(m_dc);
 
-		SelectObject(t_src_dc, t_pattern);
-		for(; y < t_clip . bottom; y += t_height)
-			for(int32_t tx = x; tx < t_clip . right; tx += t_width)
-				BitBlt(m_dc, tx, y, t_width, t_height, t_src_dc, 0, 0, SRCCOPY);
+			// draw the pattern image into a bitmap
+			HBITMAP t_pattern = nil;
+			void *t_bits = nil;
+			/* UNCHECKED */ create_temporary_dib(t_src_dc, t_width, t_height, t_pattern, t_bits);
+			MCGContextRef t_context = nil;
+			/* UNCHECKED */ MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
 
-		if (t_pattern != nil)
-			DeleteObject(t_pattern);
-		if (t_src_dc != nil)
-			DeleteDC(t_src_dc);
+			// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextSetFillPattern(t_context, t_image, t_transform, kMCGImageFilterNone);
+			MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
+			MCGContextFill(t_context);
+
+			MCGContextRelease(t_context);
+
+			MCPatternUnlock(p_mark->fill->pattern, t_image);
+
+
+			// Finally adjust the starting position based on origin, and tile the clip.
+			int32_t x, y;
+			x = p_mark -> fill -> origin . x;
+			y = p_mark -> fill -> origin . y;
+			while(x > t_clip . left)
+				x -= t_width;
+			while(x + t_width < t_clip . left)
+				x += t_width;
+			while(y > t_clip . top)
+				y -= t_height;
+			while(y + t_height < t_clip . top)
+				y += t_height;
+
+			SelectObject(t_src_dc, t_pattern);
+			for(; y < t_clip . bottom; y += t_height)
+				for(int32_t tx = x; tx < t_clip . right; tx += t_width)
+					BitBlt(m_dc, tx, y, t_width, t_height, t_src_dc, 0, 0, SRCCOPY);
+
+			if (t_pattern != nil)
+				DeleteObject(t_pattern);
+			if (t_src_dc != nil)
+				DeleteDC(t_src_dc);
+		}
 	}
 
 	if (t_old_pen != NULL)
@@ -1510,7 +1587,7 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
 
 	if (t_apply)
 	{
-		MCRange *t_page_ranges;
+		MCInterval *t_page_ranges;
 		t_page_ranges = NULL;
 		int t_page_range_count;
 		t_page_range_count = 0;

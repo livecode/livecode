@@ -124,8 +124,9 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 		unichar_t t_char;
 		t_char = (unichar_t)((" ilmw")[i]);
 		
+		// MM-2014-04-16: [[ Bug 11964 ]] MCGContextMeasurePlatformText prototype updated to take scale. Pass identity.
 		MCGFloat t_this_width;
-		t_this_width = MCGContextMeasurePlatformText(nil, &t_char, 2, t_gfont);
+		t_this_width = MCGContextMeasurePlatformText(nil, &t_char, 2, t_gfont, MCGAffineTransformMakeIdentity());
 		if (t_this_width == 0.0 ||
 			(i != 0 && t_this_width != t_last_width))
 		{
@@ -333,6 +334,9 @@ struct font_measure_text_context
 {
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we use a float to accumulate the width.
     MCGFloat m_width;
+
+	// MM-2014-04-16: [[ Bug 11964 ]] Store the transform that effects the measurement.
+	MCGAffineTransform m_transform;
 };
 
 static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_measure_text_context *ctxt)
@@ -354,22 +358,26 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint
 	else if ((((uintptr_t)ep . getsvalue() . getstring()) & 1) != 0)
 		ep . grabsvalue();
 	
-    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
+	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform.
+    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font, ctxt -> m_transform);
 }
 
-MCGFloat MCFontMeasureTextFloat(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode)
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+MCGFloat MCFontMeasureTextFloat(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, const MCGAffineTransform &p_transform)
 {
     font_measure_text_context ctxt;
     ctxt.m_width = 0;
+	ctxt.m_transform = p_transform;
     
     MCFontBreakText(p_font, p_text, p_length, p_is_unicode, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt);
 	
 	return ctxt . m_width;
 }
 
-int32_t MCFontMeasureText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode)
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+int32_t MCFontMeasureText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, const MCGAffineTransform &p_transform)
 {
-    return (int32_t)floorf(MCFontMeasureTextFloat(p_font, p_text, p_length, p_is_unicode));
+    return (int32_t)floorf(MCFontMeasureTextFloat(p_font, p_text, p_length, p_is_unicode, p_transform));
 }
 
 struct font_draw_text_context
@@ -399,10 +407,11 @@ static void MCFontDrawTextCallback(MCFontRef p_font, const char *p_text, uint32_
 	MCGContextDrawPlatformText(ctxt->m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(ctxt->x, ctxt->y), t_font);
     
     // The draw position needs to be advanced. Can this be done more efficiently?
-    ctxt -> x += MCGContextMeasurePlatformText(NULL, (unichar_t*)ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_font);
+	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the scale of the context to make sure the measurment is correct.
+    ctxt -> x += MCGContextMeasurePlatformText(NULL, (unichar_t*)ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_font, MCGContextGetDeviceTransform(ctxt->m_gcontext));
 }
 
-void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, const char *p_text, uint32_t p_length, MCFontRef p_font, bool p_is_unicode)
+void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, int32_t y, const char *p_text, uint32_t p_length, MCFontRef p_font, bool p_is_unicode)
 {
     font_draw_text_context ctxt;
     ctxt.x = x;

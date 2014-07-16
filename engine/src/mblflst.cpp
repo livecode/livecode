@@ -152,10 +152,10 @@ void MCFontlist::getfontsizes(const char *fname, MCExecPoint &ep)
 	ep . setuint(0);
 }
 
-extern void MCSystemListFontsForFamily(MCExecPoint& ep, const char *fname);
+extern void MCSystemListFontsForFamily(MCExecPoint& ep, const char *fname, uint2 fsize);
 void MCFontlist::getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep)
 {
-	MCSystemListFontsForFamily(ep, fname);
+	MCSystemListFontsForFamily(ep, fname, fsize);
 }
 
 // MW-2012-09-19: [[ Bug 10248 ]] Previously unimplemented, this method is required
