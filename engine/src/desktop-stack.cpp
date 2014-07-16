@@ -369,14 +369,14 @@ public:
 	{
 	}
 	
-	bool LockGraphics(MCGRegionRef p_area, MCGContextRef& r_context)
+	bool LockGraphics(MCGIntegerRectangle p_region, MCGContextRef& r_context, MCGRaster &r_raster)
 	{
-		return MCPlatformSurfaceLockGraphics(m_surface, p_area, r_context);
+		return MCPlatformSurfaceLockGraphics(m_surface, p_region, r_context, r_raster);
 	}
 	
-	void UnlockGraphics(void)
+	void UnlockGraphics(MCGIntegerRectangle p_region, MCGContextRef p_context, MCGRaster &p_raster)
 	{
-		MCPlatformSurfaceUnlockGraphics(m_surface);
+		MCPlatformSurfaceUnlockGraphics(m_surface, p_region, p_context, p_raster);
 	}
 	
 	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
@@ -384,9 +384,9 @@ public:
 		return MCPlatformSurfaceLockPixels(m_surface, p_area, r_raster);
 	}
 	
-	void UnlockPixels(void)
+	void UnlockPixels(MCGIntegerRectangle p_area, MCGRaster& p_raster)
 	{
-		MCPlatformSurfaceUnlockPixels(m_surface);
+		MCPlatformSurfaceUnlockPixels(m_surface, p_area, p_raster);
 	}
 	
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_context)

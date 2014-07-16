@@ -344,11 +344,11 @@ public:
 	MCMacPlatformSurface(MCMacPlatformWindow *window, CGContextRef cg_context, MCGRegionRef update_rgn);
 	~MCMacPlatformSurface(void);
 	
-	virtual bool LockGraphics(MCGRegionRef region, MCGContextRef& r_context);
-	virtual void UnlockGraphics(void);
+	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster);
+	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster);
 	
-	virtual bool LockPixels(MCGIntegerRectangle region, MCGRaster& r_raster);
-	virtual void UnlockPixels(void);
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster);
+	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster);
 	
 	virtual bool LockSystemContext(void*& r_context);
 	virtual void UnlockSystemContext(void);
@@ -360,19 +360,10 @@ public:
 	void Lock(void);
 	void Unlock(void);
     
-    void SetDeferUnlock(bool p_defer_unlock);
-	
 private:
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
-	MCGRegionRef m_update_rgn;
-	
-	MCGIntegerRectangle m_locked_area;
-	MCGContextRef m_locked_context;
-	MCGRaster m_locked_raster;
-	void *m_locked_bits;
-    
-    bool m_defer_unlock : 1;
+	MCGRegionRef m_update_rgn;	
 };
 
 ////////////////////////////////////////////////////////////////////////////////

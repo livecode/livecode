@@ -963,9 +963,12 @@ MCGLegacyGradientShader::~MCGLegacyGradientShader()
 {
 	MCGGradientRelease(m_gradient_ref);
 	MCMemoryDeallocate(m_mask);
-	delete m_gradient_combiner -> ramp;
-	delete ((MCGradientAffineCombiner *)m_gradient_combiner) -> buffer;
-	delete m_gradient_combiner;
+    if (m_gradient_combiner != NULL)
+    {
+        delete m_gradient_combiner -> ramp;
+        delete ((MCGradientAffineCombiner *)m_gradient_combiner) -> buffer;
+        delete m_gradient_combiner;
+    }
 }
 
 bool MCGLegacyGradientShader::setContext(const SkBitmap& p_bitmap, const SkPaint& p_paint, const SkMatrix& p_matrix)

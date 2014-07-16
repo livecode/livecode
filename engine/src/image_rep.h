@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_IMAGE_REP_H__
 #define __MC_IMAGE_REP_H__
 
+#include "systhreads.h"
+
 typedef enum
 {
 	kMCImageRepUnknown,
@@ -160,6 +162,8 @@ private:
 	MCGImageFrame *m_frames;
 	uindex_t m_frame_count;
 	bool m_frames_premultiplied;
+    
+    MCThreadMutexRef m_frame_lock;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

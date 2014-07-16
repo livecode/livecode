@@ -17,19 +17,31 @@
 #ifndef __STACK_TILE__
 #define __STACK_TILE__
 
+#include "graphics.h"
+
 bool MCStackTileInitialize();
 void MCStackTileFinalize();
+
+class MCStack;
+class MCStackSurface;
 
 class MCPlatformStackTile
 {
 public:
-    virtual bool Lock(void) = 0;
-	virtual void Unlock(void) = 0;
-    virtual void Render() = 0;
+    MCPlatformStackTile(MCStack *stack, MCStackSurface *surface, const MCGIntegerRectangle &region);
+    ~MCPlatformStackTile();
+    
+    bool Lock(void);
+	void Unlock(void);
+    void Render(void);
+    
+private:
+    MCStack             *m_stack;
+    MCStackSurface      *m_surface;
+    MCGIntegerRectangle m_region;
+    MCGContextRef       m_context;
+    MCGRaster           m_raster;
 };
-
-void MCStackTileMainThreadLock(void);
-void MCStackTileMainThreadUnlock(void);
 
 void MCStackTilePush(MCPlatformStackTile *tile);
 void MCStackTileCollectAll(void);

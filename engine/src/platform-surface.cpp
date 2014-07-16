@@ -35,14 +35,14 @@ MCPlatformSurface::~MCPlatformSurface(void)
 //  Platform Surface Procedural Wrappers
 //
 
-bool MCPlatformSurfaceLockGraphics(MCPlatformSurfaceRef p_surface, MCGRegionRef p_region, MCGContextRef& r_context)
+bool MCPlatformSurfaceLockGraphics(MCPlatformSurfaceRef p_surface, MCGIntegerRectangle p_region, MCGContextRef& r_context, MCGRaster& r_raster)
 {
-	return p_surface -> LockGraphics(p_region, r_context);
+	return p_surface -> LockGraphics(p_region, r_context, r_raster);
 }
 
-void MCPlatformSurfaceUnlockGraphics(MCPlatformSurfaceRef p_surface)
+void MCPlatformSurfaceUnlockGraphics(MCPlatformSurfaceRef p_surface, MCGIntegerRectangle p_region, MCGContextRef p_context, MCGRaster& p_raster)
 {
-	p_surface -> UnlockGraphics();
+	p_surface -> UnlockGraphics(p_region, p_context, p_raster);
 }
 
 bool MCPlatformSurfaceLockPixels(MCPlatformSurfaceRef p_surface, MCGIntegerRectangle p_region, MCGRaster& r_raster)
@@ -50,9 +50,9 @@ bool MCPlatformSurfaceLockPixels(MCPlatformSurfaceRef p_surface, MCGIntegerRecta
 	return p_surface -> LockPixels(p_region, r_raster);
 }
 
-void MCPlatformSurfaceUnlockPixels(MCPlatformSurfaceRef p_surface)
+void MCPlatformSurfaceUnlockPixels(MCPlatformSurfaceRef p_surface, MCGIntegerRectangle p_region, MCGRaster& p_raster)
 {
-	p_surface -> UnlockPixels();
+	p_surface -> UnlockPixels(p_region, p_raster);
 }
 
 bool MCPlatformSurfaceLockSystemContext(MCPlatformSurfaceRef p_surface, void*& r_context)

@@ -14,8 +14,6 @@
 
 #include "graphics_util.h"
 
-#include "stacktile.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM-2013-08-14: [[ ResIndependence ]] MCPattern struct which associates an image with a scale
@@ -215,9 +213,7 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 		MCGFloat t_scale;
 		t_scale = MCGAffineTransformGetEffectiveScale(t_combined);
 		
-        MCStackTileMainThreadLock();
 		t_success = p_pattern->source->LockImageFrame(0, t_scale, t_frame);
-		MCStackTileMainThreadUnlock();
         
 		if (t_success)
 		{
@@ -267,9 +263,7 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 				
 				t_image = MCGImageRetain(t_frame->image);
 			}
-            MCStackTileMainThreadLock();
 			p_pattern->source->UnlockImageFrame(0, t_frame);
-            MCStackTileMainThreadUnlock();
 		}
 		
 		if (!t_success)

@@ -14,8 +14,6 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "systhreads.h"
-
 #include "prefix.h"
 
 #include "core.h"
@@ -24,6 +22,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
+#include "systhreads.h"
 #include <pthread.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,18 +55,16 @@ static MCThreadPoolTaskRef s_task_list_end = NULL;
 static MCThreadMutexRef s_task_mutex = NULL;
 static MCThreadConditionRef s_task_condition = NULL;
 
-static MCThreadMutexRef s_global_mutex = NULL;
-
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(_DARWIN_SERVER)
+#if defined(_MAC_DESKTOP)
 extern void *MCMacPlatfromCreateAutoReleasePool();
 extern void MCMacPlatformReleaseAutoReleasePool(void *pool);
 #endif
 
 void *MCThreadPoolThreadExecute(void *)
 {
-#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(_DARWIN_SERVER)
+#if defined(_MAC_DESKTOP)
     void *t_pool;
     t_pool = MCMacPlatfromCreateAutoReleasePool();
 #endif    
@@ -121,16 +118,12 @@ bool MCThreadPoolInitialize()
     s_task_list_start = NULL;
     s_task_list_end = NULL;
     s_thread_pool_running = false;
-    s_global_mutex = NULL;
     
     if (t_success)
         t_success = MCThreadMutexCreate(s_task_mutex);
     
     if (t_success)
         t_success = MCThreadConditionCreate(s_task_condition);
-    
-    if (t_success)
-        t_success = MCThreadMutexCreate(s_global_mutex);
     
     if (t_success)
     {
@@ -166,16 +159,14 @@ bool MCThreadPoolInitialize()
 
 void MCThreadPoolFinalize()
 {
-    MCThreadMutexRelese(s_task_mutex);
-    MCThreadConditionRelese(s_task_condition);
-    MCThreadMutexRelese(s_global_mutex);
+    MCThreadMutexRelease(s_task_mutex);
+    MCThreadConditionRelease(s_task_condition);
     
     s_task_mutex = NULL;
     s_task_condition = NULL;
     s_task_list_start = NULL;
     s_task_list_end = NULL;
     s_thread_pool_running = false;
-    s_global_mutex = NULL;
 }
 
 bool MCThreadPoolPushTask(void (*p_task)(void*), void* p_context)
@@ -266,7 +257,7 @@ MCThreadMutexRef MCThreadMutexRetain(MCThreadMutexRef self)
     return self;
 }
 
-void MCThreadMutexRelese(MCThreadMutexRef self)
+void MCThreadMutexRelease(MCThreadMutexRef self)
 {
  	if (self != NULL)
 	{
@@ -334,7 +325,7 @@ MCThreadConditionRef MCThreadConditionRetain(MCThreadConditionRef self)
     return self;   
 }
 
-void MCThreadConditionRelese(MCThreadConditionRef self)
+void MCThreadConditionRelease(MCThreadConditionRef self)
 {
   	if (self != NULL)
 	{
@@ -354,23 +345,6 @@ void MCThreadConditionSignal(MCThreadConditionRef self)
 {
     if (self != NULL)
         pthread_cond_signal(&self -> condition);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCThreadGlobalMutexLock()
-{
-    MCThreadMutexLock(s_global_mutex);
-}
-
-void MCThreadGlobalMutexUnlock()
-{
-    MCThreadMutexUnlock(s_global_mutex);
-}
-
-MCThreadMutexRef MCThreadGlobalMutexFetch()
-{
-    return s_global_mutex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

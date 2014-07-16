@@ -69,12 +69,6 @@ MCMacPlatformSurface::MCMacPlatformSurface(MCMacPlatformWindow *p_window, CGCont
 	// Borrow the CGContext and MCRegion for now.
 	m_cg_context = p_cg_context;
 	m_update_rgn = p_update_rgn;
-	
-	// Initialize state.
-	m_locked_context = nil;
-	m_locked_bits = nil;
-	
-    m_defer_unlock = false;
     
 	// Setup everything so that its ready for use.
 	Lock();
@@ -88,41 +82,42 @@ MCMacPlatformSurface::~MCMacPlatformSurface(void)
 	m_window -> Release();
 }
 
-bool MCMacPlatformSurface::LockGraphics(MCGRegionRef p_region, MCGContextRef& r_context)
+bool MCMacPlatformSurface::LockGraphics(MCGIntegerRectangle p_region, MCGContextRef& r_context, MCGRaster &r_raster)
 {
 	MCGRaster t_raster;
-	if (LockPixels(MCGRegionGetBounds(p_region), t_raster))
+	if (LockPixels(p_region, t_raster))
 	{
-		if (MCGContextCreateWithRaster(t_raster, m_locked_context))
+        MCGContextRef t_gcontext;
+		if (MCGContextCreateWithRaster(t_raster, t_gcontext))
 		{
 			MCGFloat t_scale;
 			t_scale = GetBackingScaleFactor();
 			
 			// Scale by backing scale
-			MCGContextScaleCTM(m_locked_context, t_scale, t_scale);
+			MCGContextScaleCTM(t_gcontext, t_scale, t_scale);
 			
 			// Set origin
-			MCGContextTranslateCTM(m_locked_context, -m_locked_area . origin . x, -m_locked_area . origin . y);
+			MCGContextTranslateCTM(t_gcontext, -p_region . origin . x, -p_region . origin . y);
 			
 			// Set clipping rect
-			MCGContextClipToRegion(m_locked_context, p_region);
+            MCGContextClipToRect(t_gcontext, MCGIntegerRectangleToMCGRectangle(p_region));
 			
-			r_context = m_locked_context;
+			r_context = t_gcontext;
+            r_raster = t_raster;
 			
 			return true;
 		}
 	}
+    return false;
 }
 
-void MCMacPlatformSurface::UnlockGraphics(void)
+void MCMacPlatformSurface::UnlockGraphics(MCGIntegerRectangle p_region, MCGContextRef p_context, MCGRaster &p_raster)
 {
-	if (m_locked_context == nil)
+	if (p_context == nil)
 		return;
 	   
-	MCGContextRelease(m_locked_context);
-	m_locked_context = nil;
-	
-	UnlockPixels();
+	MCGContextRelease(p_context);
+	UnlockPixels(p_region, p_raster);
 }
 
 bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r_raster)
@@ -135,31 +130,26 @@ bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r
 	
 	MCGFloat t_scale;
 	t_scale = GetBackingScaleFactor();
-	
-	m_locked_raster.width = t_actual_area . size . width * t_scale;
-	m_locked_raster.height = t_actual_area . size . height * t_scale;
-	m_locked_raster.stride = m_locked_raster.width * sizeof(uint32_t);
-	m_locked_raster.format = kMCGRasterFormat_xRGB;
 
-	m_locked_bits = malloc(m_locked_raster.height * m_locked_raster.stride);
-	if (m_locked_bits != nil)
+    void *t_bits;
+	t_bits = malloc(t_actual_area . size . height * t_scale * t_actual_area . size . width * t_scale * sizeof(uint32_t));
+	if (t_bits != nil)
 	{
-		m_locked_area = t_actual_area;
-		m_locked_raster.pixels = m_locked_bits;
-		r_raster = m_locked_raster;
+        r_raster . width = t_actual_area . size . width * t_scale;
+        r_raster . height = t_actual_area . size . height * t_scale;
+        r_raster . stride = r_raster . width * sizeof(uint32_t);
+        r_raster . format = kMCGRasterFormat_xRGB;
+		r_raster . pixels = t_bits;
 		return true;
 	}
 	
 	return false;
 }
 
-void MCMacPlatformSurface::UnlockPixels(void)
+void MCMacPlatformSurface::UnlockPixels(MCGIntegerRectangle p_region, MCGRaster& p_raster)
 {
-	if (m_locked_bits == nil)
+	if (p_raster . pixels == nil)
 		return;
-	
-    if (m_defer_unlock)
-        return;
     
 	// COCOA-TODO: Getting the height to flip round is dependent on a friend.
 	int t_surface_height;
@@ -169,13 +159,12 @@ void MCMacPlatformSurface::UnlockPixels(void)
 	t_scale = GetBackingScaleFactor();
 	
 	CGRect t_dst_rect;
-	t_dst_rect = MCMacFlipCGRect(MCGIntegerRectangleToCGRect(m_locked_area), t_surface_height);
+	t_dst_rect = MCMacFlipCGRect(MCGIntegerRectangleToCGRect(p_region), t_surface_height);
 	
 	MCMacClipCGContextToRegion(m_cg_context, m_update_rgn, t_surface_height);
-	MCMacRenderRasterToCG(m_cg_context, t_dst_rect, m_locked_raster);
+	MCMacRenderRasterToCG(m_cg_context, t_dst_rect, p_raster);
 	
-	free(m_locked_bits);
-	m_locked_bits = nil;
+	free(p_raster . pixels);
 }
 
 bool MCMacPlatformSurface::LockSystemContext(void*& r_context)
@@ -284,11 +273,6 @@ MCGFloat MCMacPlatformSurface::GetBackingScaleFactor(void)
 	return 1.0f;
 }
 
-void MCMacPlatformSurface::SetDeferUnlock(bool p_defer_unlock)
-{ 
-    m_defer_unlock = p_defer_unlock; 
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
@@ -389,9 +373,11 @@ static void MCMacRenderRasterToCG(CGContextRef p_target, CGRect p_area, const MC
 		
 		if (MCGRasterToCGImage(p_raster, MCGRectangleMake(0, 0, p_raster.width, p_raster.height), t_colorspace, false, false, t_image))
 		{
+            CGContextSaveGState((CGContextRef)p_target);
 			CGContextClipToRect((CGContextRef)p_target, p_area);
 			CGContextDrawImage((CGContextRef)p_target, p_area, t_image);
 			CGImageRelease(t_image);
+            CGContextRestoreGState((CGContextRef)p_target);
 		}
 		
 		CGColorSpaceRelease(t_colorspace);

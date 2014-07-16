@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "tilecache.h"
+#include "systhreads.h"
 
 #define EXTERNAL_WAIT 10.0
 #define MENU_SPACE 8
@@ -93,15 +94,15 @@ class MCStackSurface
 {
 public:
 	// Lock the surface for access with an MCGContextRef
-	virtual bool LockGraphics(MCGRegionRef area, MCGContextRef& r_context) = 0;
+	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster) = 0;
 	// Unlock the surface.
-	virtual void UnlockGraphics(void) = 0;
+	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster) = 0;
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
 	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
 	// Unlock the surface.
-	virtual void UnlockPixels(void) = 0;
+	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster) = 0;
 	
 	// Lock the surface for direct access via the underlying system resource.
 	virtual bool LockTarget(MCStackSurfaceTargetType type, void*& r_context) = 0;
@@ -116,8 +117,6 @@ public:
 	virtual bool Lock(void) = 0;
 	// Atomically update target surface with drawn image - do not call from within drawing code
 	virtual void Unlock(void) = 0;
-    
-    virtual void SetDeferUnlock(bool p_defer_unlock) = 0;
 };
 
 typedef bool (*MCStackUpdateCallback)(MCStackSurface *p_surface, MCRegionRef p_region, void *p_context);
@@ -196,6 +195,8 @@ protected:
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
+    
+    MCThreadMutexRef m_id_cache_lock;
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] If true, then updates to this stack should only
 	//   be flushed at the next updateScreen point.

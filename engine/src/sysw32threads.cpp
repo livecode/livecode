@@ -56,8 +56,6 @@ static MCThreadPoolTaskRef s_task_list_end = NULL;
 static MCThreadMutexRef s_task_mutex = NULL;
 static MCThreadConditionRef s_task_condition = NULL;
 
-static MCThreadMutexRef s_global_mutex = NULL;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 DWORD WINAPI MCThreadPoolThreadExecute(LPVOID p_arg)
@@ -97,16 +95,11 @@ bool MCThreadPoolInitialize()
     bool t_success;
     t_success = true;
     
-	s_main_thread_mutex = NULL;
-	s_main_thread_condition = NULL;
     s_task_mutex = NULL;
     s_task_condition = NULL;
     s_task_list_start = NULL;
     s_task_list_end = NULL;
     s_thread_pool_running = false;
-    
-	if (t_success)
-        t_success = MCThreadMutexCreate(s_global_mutex);
     
     if (t_success)
         t_success = MCThreadMutexCreate(s_task_mutex);
@@ -151,13 +144,9 @@ bool MCThreadPoolInitialize()
 
 void MCThreadPoolFinalize()
 {
-    MCThreadMutexRelese(s_main_thread_mutex);
-    MCThreadConditionRelese(s_main_thread_condition);
-	MCThreadMutexRelese(s_task_mutex);
-    MCThreadConditionRelese(s_task_condition);
+	MCThreadMutexRelease(s_task_mutex);
+    MCThreadConditionRelease(s_task_condition);
     
-	s_main_thread_mutex = NULL;
-	s_main_thread_condition = NULL;
     s_task_mutex = NULL;
     s_task_condition = NULL;
     s_task_list_start = NULL;
@@ -251,7 +240,7 @@ MCThreadMutexRef MCThreadMutexRetain(MCThreadMutexRef self)
     return self;
 }
 
-void MCThreadMutexRelese(MCThreadMutexRef self)
+void MCThreadMutexRelease(MCThreadMutexRef self)
 {
  	if (self != NULL)
 	{
@@ -322,7 +311,7 @@ MCThreadConditionRef MCThreadConditionRetain(MCThreadConditionRef self)
     return self;
 }
 
-void MCThreadConditionRelese(MCThreadConditionRef self)
+void MCThreadConditionRelease(MCThreadConditionRef self)
 {
   	if (self != NULL)
 	{
@@ -346,23 +335,6 @@ void MCThreadConditionSignal(MCThreadConditionRef self)
 {
     if (self != NULL)
 		ReleaseSemaphore(self -> condition, 1, NULL);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCThreadGlobalMutexLock()
-{
-    MCThreadMutexLock(s_global_mutex);
-}
-
-void MCThreadGlobalMutexUnlock()
-{
-    MCThreadMutexUnlock(s_global_mutex);
-}
-
-MCThreadMutexRef MCThreadGlobalMutexFetch()
-{
-    return s_global_mutex;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

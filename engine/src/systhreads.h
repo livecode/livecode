@@ -28,18 +28,14 @@ bool MCThreadPoolPushTask(void (*task)(void*), void* context);
 
 bool MCThreadMutexCreate(MCThreadMutexRef &r_mutex);
 MCThreadMutexRef MCThreadMutexRetain(MCThreadMutexRef mutex);
-void MCThreadMutexRelese(MCThreadMutexRef mutex);
+void MCThreadMutexRelease(MCThreadMutexRef mutex);
 void MCThreadMutexLock(MCThreadMutexRef mutex);
 void MCThreadMutexUnlock(MCThreadMutexRef mutex);
 
 bool MCThreadConditionCreate(MCThreadConditionRef &r_condition);
 MCThreadConditionRef MCThreadConditionRetain(MCThreadConditionRef condition);
-void MCThreadConditionRelese(MCThreadConditionRef condition);
+void MCThreadConditionRelease(MCThreadConditionRef condition);
 void MCThreadConditionWait(MCThreadConditionRef condition, MCThreadMutexRef mutex);
 void MCThreadConditionSignal(MCThreadConditionRef condition);
-
-void MCThreadGlobalMutexLock();
-void MCThreadGlobalMutexUnlock();
-MCThreadMutexRef MCThreadGlobalMutexFetch();
 
 #endif

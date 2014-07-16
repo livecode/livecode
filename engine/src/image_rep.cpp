@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "image.h"
 #include "image_rep.h"
+#include "systhreads.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,11 +74,14 @@ MCLoadableImageRep::MCLoadableImageRep()
 	m_frames_premultiplied = false;
 	
 	m_next = m_prev = nil;
+    
+    /* UNCHECKED */ MCThreadMutexCreate(m_frame_lock);
 }
 
 MCLoadableImageRep::~MCLoadableImageRep()
 {
 	ReleaseFrames();
+    MCThreadMutexRelease(m_frame_lock);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,6 +245,8 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 	if (p_frame >= m_frame_count)
 		return false;
 	
+    MCThreadMutexLock(m_frame_lock);
+    
 	// prevent data being removed by cache flush
 	m_lock_count++;
 	
@@ -248,6 +254,8 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 	Retain();
 	
 	r_frame = &m_frames[p_frame];
+    
+    MCThreadMutexUnlock(m_frame_lock);
 	
 	return true;
 }
@@ -325,10 +333,14 @@ void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_fra
 	if (m_frames == nil || &m_frames[p_index] != p_frame)
 		return;
 	
+    MCThreadMutexLock(m_frame_lock);
+
 	m_lock_count--;
 	Release();
 	
 	MoveRepToHead(this);
+    
+    MCThreadMutexUnlock(m_frame_lock);
 }
 
 void MCLoadableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
