@@ -72,10 +72,7 @@ public:
 	void Invalidate(MCRegionRef region);
 	
 	// Make the window visible as the given class.
-	void Show();
-    // SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
-    //  Combo/Popup-specific window showing
-    void ShowAsWeakWindow();
+	void Show(void);
 	void ShowAsSheet(MCPlatformWindowRef parent);
 	
 	// Make the window invisible.
@@ -140,9 +137,6 @@ public:
 	virtual bool DoGetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, void *r_value) = 0;
 	
 	virtual void DoShow(void) = 0;
-    // SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
-    //  Combos and popup are weak windows (cancelling with a mousedown if it is not inside)
-    virtual void DoShowAsWeakWindow(void) = 0;
 	virtual void DoShowAsSheet(MCPlatformWindowRef parent) = 0;
 	virtual void DoHide(void) = 0;
 	virtual void DoFocus(void) = 0;
