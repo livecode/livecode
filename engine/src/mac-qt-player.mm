@@ -179,6 +179,11 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
 	if (m_current_frame != nil)
 		CFRelease(m_current_frame);
 	
+    // MW-2014-07-16: [[ Bug 12506 ]] Make sure we unhook the callbacks before releasing (it
+    //   seems it takes a while for QTKit to actually release the objects!).
+    MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
+    
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     [m_observer release];
 	[m_view release];
@@ -506,29 +511,15 @@ void MCQTKitPlayer::Step(int amount)
 
 void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 {
-	// First get the image from the view - this will have black where the movie
-	// should be.
-	
-	NSRect t_rect;
-	if (m_offscreen)
-		t_rect = NSMakeRect(0, 0, m_rect . width, m_rect . height);
-	else
-		t_rect = [m_view frame];
-	
-	NSRect t_movie_rect;
-	t_movie_rect = [m_view movieBounds];
-	
-	NSBitmapImageRep *t_rep;
-	t_rep = [m_view bitmapImageRepForCachingDisplayInRect: t_rect];
-	[m_view cacheDisplayInRect: t_rect toBitmapImageRep: t_rep];
-	
 	MCImageBitmap *t_bitmap;
 	t_bitmap = new MCImageBitmap;
-	t_bitmap -> width = [t_rep pixelsWide];
-	t_bitmap -> height = [t_rep pixelsHigh];
-	t_bitmap -> stride = [t_rep bytesPerRow];
-	t_bitmap -> data = (uint32_t *)[t_rep bitmapData];
+	t_bitmap -> width = m_rect . width;
+	t_bitmap -> height = m_rect . height;
+	t_bitmap -> stride = m_rect . width * sizeof(uint32_t);
+	t_bitmap -> data = (uint32_t *)malloc(t_bitmap -> stride * t_bitmap -> height);
+    memset(t_bitmap -> data, 0,t_bitmap -> stride * t_bitmap -> height);
 	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;
+    
 	
 	// Now if we have a current frame, then composite at the appropriate size into
 	// the movie portion of the buffer.
@@ -551,7 +542,7 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		CIContext *t_ci_context;
 		t_ci_context = [CIContext contextWithCGContext: t_cg_context options: nil];
 		
-		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, t_rect . size . height - t_movie_rect . size . height, t_movie_rect . size . width, t_movie_rect . size . height) fromRect: [t_ci_image extent]];
+		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, 0, m_rect . width, m_rect . height) fromRect: [t_ci_image extent]];
 		
         [t_pool release];
         
