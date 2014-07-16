@@ -33,6 +33,22 @@ command revTestExternalTestWait
 
 command revTestExternalTestArrays
 
+command revTextExternalTestUTF8String
+    in string as utf8-c-string
+    return utf8-c-string
+    
+command revTestExternalTestUTF16String
+    in string as utf16-c-string
+    return utf16-c-string
+    
+command revTestExternalTestUTF8Data
+    in data as utf8-c-data
+    return utf8-c-data
+    
+command revTestExternalTestUTF16Data
+    in data as utf16-c-data
+    return utf16-c-data
+
 use java on android
 command revTestExternalTestPostAndSend
 
@@ -45,7 +61,15 @@ use objc on mac, ios
 
 command revTestExternalTestObjcDictionaries
 	in dict as objc-dictionary
-	return objc-dictionary*/
+	return objc-dictionary
+    
+command revtestExternalTestObjcNumber
+    in number as objc-number
+    return objc-number
+    
+command revTestExternalTestObbjcData
+    in data as objc-data
+    return objc-data*/
 
 use none on mac, linux, windows, android, ios
 use java on android

@@ -128,7 +128,7 @@ extern char *GetGlobalUTF8(const char *p_name, int *r_success);
 //   
 extern void SetGlobal(const char *p_name, const char *p_value, int *r_success);
 // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to SetGlobal, but with UTF8-encoded parameters
-extern void SetGlobal(const char *p_name, const char *p_value, int *r_success);
+extern void SetGlobalUTF8(const char *p_name, const char *p_value, int *r_success);
     
 // Function:
 //   GetVariable
@@ -212,10 +212,10 @@ extern void SetVariableUTF8(const char *p_name, const char *p_value, int *r_succ
 //
 extern void GetVariableEx(const char *p_name, const char *p_key, ExternalString *r_value, int *r_success);
 // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to GetVariableEx, but with UTF8-encoded parameters
-// p_want_utf8 allows to choose how r_value is encoded.
-//      with p_want_utf8 set to true, the returned value is UTF8-encoded
-//      with p_want_utf8 set to false, the value is returned as it is got - native chars / binary data.
-extern void GetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *r_value, Bool p_want_utf8, int *r_success);
+// p_is_text allows to choose how r_value is encoded.
+//      with p_is_text set to true, the value is returned as utf-8 encoded text
+//      with p_is_text set to false, the value is returned as binary data (the same as native encoded text)
+extern void GetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *r_value, Bool p_is_text, int *r_success);
 
 // Function:
 //   SetVariableEx
@@ -250,10 +250,10 @@ extern void GetVariableExUTF8(const char *p_name, const char *p_key, const Exter
 //
 extern void SetVariableEx(const char *p_name, const char *p_key, const ExternalString *p_value, int *r_success);
 // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to SetVariableEx, but with UTF8-encoded parameters
-// p_want_utf8 allows to choose how p_value is encoded.
-//      with p_want_utf8 set to true, p_value is UTF8-encoded
-//      with p_want_utf8 set to false, p_value is left as it is - native chars / binary data.
-extern void SetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *p_value, Bool p_want_utf8, int *r_success);
+// p_is_text allows to choose how p_value is encoded.
+//      with p_is_text set to true, the value is returned as utf-8 encoded text
+//      with p_is_text set to false, the value is returned as binary data (the same as native encoded text)
+extern void SetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *p_value, Bool p_is_text, int *r_success);
 
 // Function:
 //   GetArray
@@ -296,10 +296,10 @@ extern void SetVariableExUTF8(const char *p_name, const char *p_key, const Exter
 //
 extern void GetArray(const char *p_name, int *r_element_count, ExternalString *r_values, char **r_keys, int *r_success);
 // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to GetArray, but with UTF8-encoded parameters
-// p_want_utf8 allows to choose how r_values are encoded.
-//      with p_want_utf8 set to true, r_values are UTF8-encoded
-//      with p_want_utf8 set to false, r_value are returned as they are got - native chars / binary data.
-extern void GetArrayUTF8(const char *p_name, int *r_element_count, ExternalString *r_values, char **r_keys, Bool p_want_utf8, int *r_success);
+// p_is_text allows to choose how r_values are encoded.
+//      with p_is_text set to true, the values are returned as utf-8 encoded text
+//      with p_is_text set to false, the values are returned as binary data (the same as native encoded text)
+extern void GetArrayUTF8(const char *p_name, int *r_element_count, ExternalString *r_values, char **r_keys, Bool p_is_text, int *r_success);
 
 // Function:
 //   SetArray
@@ -339,10 +339,10 @@ extern void GetArrayUTF8(const char *p_name, int *r_element_count, ExternalStrin
 //
 extern void SetArray(const char *p_name, int p_element_count, ExternalString *p_values, char **p_keys, int *r_success);
 // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to SetArray, but with UTF8-encoded parameters
-// p_want_utf8 allows to choose how p_values are encoded.
-//      with p_want_utf8 set to true, p_values are UTF8-encoded
-//      with p_want_utf8 set to false, p_values are left as they are - native chars / binary data.
-extern void SetArrayUTF8(const char *p_name, int p_element_count, ExternalString *p_values, char **p_keys, Bool p_want_utf8, int *r_success);
+// p_is_text allows to choose how p_values are encoded.
+//      with p_is_text set to true, the values are returned as utf-8 encoded text
+//      with p_is_text set to false, the values are returned as binary data (the same as native encoded text)
+extern void SetArrayUTF8(const char *p_name, int p_element_count, ExternalString *p_values, char **p_keys, Bool p_is_text, int *r_success);
 
 // Function:
 //   GetFieldBy*

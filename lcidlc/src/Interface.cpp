@@ -67,6 +67,10 @@ static const char *s_interface_native_types[] =
 	"boolean",
 	"c-string",
 	"c-data",
+	"utf8-c-string",
+	"utf8-c-data",
+    "utf16-c-string",
+    "utf16-c-data",
 	"integer",
 	"real",
 	
@@ -552,6 +556,8 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
                 break;
             case kNativeTypeObjcString:
             case kNativeTypeCString:
+            case kNativeTypeUTF8CString:
+            case kNativeTypeUTF16CString:
             case kNativeTypeEnum:
                 t_correct_type = ValueIsString(p_default);
                 break;

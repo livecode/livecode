@@ -129,7 +129,7 @@
 
 /* Begin PBXFileReference section */
 		4D332C95178D7BDF005DFE92 /* revtestexternal.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = revtestexternal.java; path = src/revtestexternal.java; sourceTree = "<group>"; };
-		4D40528E176B3EF10097F2D6 /* revtestexternal.lcidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.livecode.idl; path = revtestexternal.lcidl; sourceTree = "<group>"; };
+		4D40528E176B3EF10097F2D6 /* revtestexternal.lcidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = revtestexternal.lcidl; sourceTree = "<group>"; };
 		4D405323176B3FC50097F2D6 /* lcidlc.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = lcidlc.xcodeproj; path = ../lcidlc/lcidlc.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D40532D176B3FCE0097F2D6 /* engine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = engine.xcodeproj; path = ../engine/engine.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4DCD7229176B47E00033F2AB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -181,8 +181,8 @@
 				4D405343176B3FCE0097F2D6 /* libsecurity-community.a */,
 				4D405345176B3FCE0097F2D6 /* LiveCode-Community.app */,
 				4D405347176B3FCE0097F2D6 /* Standalone-Community.app */,
-				4D405349176B3FCE0097F2D6 /* Server-Community */,
 				4D40534B176B3FCE0097F2D6 /* Installer.app */,
+				4D405349176B3FCE0097F2D6 /* Server-Community */,
 			);
 			name = Products;
 			sourceTree = "<group>";

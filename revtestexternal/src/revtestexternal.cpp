@@ -127,6 +127,42 @@ void revTestExternalTestArrays(void)
 {
 }
 
+char* revTextExternalTestUTF8String(const char* string)
+{
+}
+
+char* revTestExternalTestUTF16String(const char* string)
+{
+    
+}
+
+LCBytes revTestExternalTestUTF8Data(LCBytes data)
+{
+    
+}
+
+LCBytes revTestExternalTestUTF16Data(LCBytes data)
+{
+    
+}
+/*
+command revTestExternalTestObjcArrays
+in array as objc-array
+return objc-array
+
+command revTestExternalTestObjcDictionaries
+in dict as objc-dictionary
+return objc-dictionary
+
+command revtestExternalTestObjcNumber
+in number as objc-number
+return objc-number
+
+command revTestExternalTestObbjcData
+in data as objc-data
+return objc-data
+*/
+
 #ifndef __ANDROID__
 void revTestExternalTestPostAndSend(void)
 {

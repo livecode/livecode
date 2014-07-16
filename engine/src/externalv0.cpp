@@ -799,7 +799,7 @@ struct get_array_element_t
 	uindex_t limit;
 	char **keys;
     MCstring *strings;
-    bool want_utf8;
+    bool is_text;
 };
 
 static bool get_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
@@ -1269,7 +1269,7 @@ static char *set_variable_utf8(const char *arg1, const char *arg2,
 //////////
 
 static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
-                                  const char *arg3, int *retval, Bool p_want_utf8)
+                                  const char *arg3, int *retval, Bool p_is_text)
 {
 	MCString *value = (MCString *)arg3;
 	Boolean array = False;
@@ -1303,7 +1303,7 @@ static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
     
     char *t_result;
     uindex_t t_char_count;
-    if (p_want_utf8)
+    if (p_is_text)
         /* UNCHECKED */ MCStringConvertToUTF8(*t_string, t_result, t_char_count);
     else
         /* UNCHECKED */ MCStringConvertToNative(*t_string, (char_t*&)t_result, t_char_count);
@@ -1330,7 +1330,7 @@ static char *get_variable_ex_utf8_binary(const char *arg1, const char *arg2,
 //////////
 
 static char *set_variable_ex_utf8(const char *arg1, const char *arg2,
-                             const char *arg3, int *retval, Bool p_want_utf8)
+                             const char *arg3, int *retval, Bool p_is_text)
 {
     MCString *t_value = (MCString*)arg3;
 	MCVariable *var = NULL;
@@ -1344,7 +1344,7 @@ static char *set_variable_ex_utf8(const char *arg1, const char *arg2,
 		return NULL;
     
     MCAutoStringRef t_string;
-    if (p_want_utf8)
+    if (p_is_text)
         /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)t_value->getstring(), t_value->getlength(), kMCStringEncodingUTF8, false, &t_string);
     else
         /* UNCHECKED */ MCStringCreateWithOldString(*t_value, &t_string);
@@ -1399,7 +1399,7 @@ static bool get_array_element_utf8(void *p_context, MCArrayRef p_array, MCNameRe
         if (!MCECptr -> ConvertToString(p_value, &t_string))
             t_string = kMCEmptyString;
         
-        if (ctxt -> want_utf8)
+        if (ctxt -> is_text)
             /* UNCHECKED */ MCStringConvertToUTF8(*t_string, t_chars, t_length);
         else
             /* UNCHECKED */ MCStringConvertToNative(*t_string, (char_t*&)t_chars, t_length);
@@ -1418,7 +1418,7 @@ static bool get_array_element_utf8(void *p_context, MCArrayRef p_array, MCNameRe
 }
 
 static char *get_array_utf8(const char *arg1, const char *arg2,
-                       const char *arg3, int *retval, bool p_want_utf8)
+                       const char *arg3, int *retval, bool p_is_text)
 {
 	MCarray *value = (MCarray *)arg3;
 	MCVariable *var = NULL;
@@ -1452,7 +1452,7 @@ static char *get_array_utf8(const char *arg1, const char *arg2,
 	t_ctxt . limit = value -> nelements;
 	t_ctxt . keys = value -> keys;
     t_ctxt . strings = value -> strings;
-    t_ctxt . want_utf8 = p_want_utf8;
+    t_ctxt . is_text = p_is_text;
 	MCArrayApply(t_array, get_array_element_utf8, &t_ctxt);
     
 	return NULL;
@@ -1509,7 +1509,7 @@ static char *get_array_utf8_binary(const char *arg1, const char *arg2,
 //////////
 
 static char *set_array_utf8(const char *arg1, const char *arg2,
-                       const char *arg3, int *retval, bool p_want_utf8)
+                       const char *arg3, int *retval, bool p_is_text)
 {
 	MCarray *value = (MCarray *)arg3;
 	MCVariable *var = NULL;
@@ -1527,7 +1527,7 @@ static char *set_array_utf8(const char *arg1, const char *arg2,
 	{
 		MCString *s = (MCString *)&value->strings[i];
         MCAutoStringRef t_string;
-        if (p_want_utf8)
+        if (p_is_text)
             /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)s->getstring(), s->getlength(), kMCStringEncodingUTF8, false, &t_string);
         else
             /* UNCHECKED */ MCStringCreateWithOldString(*s, &t_string);

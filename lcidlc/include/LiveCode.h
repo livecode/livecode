@@ -347,29 +347,31 @@ enum
     
     // SN-2014-07-01: [[ ExternalsApiV6 ]] Unicode strings
     // The 'value' parameter is a point to an LCBytes storing a UTF-8-encoded string
-    kLCValueOptionAsUTF8String = 7,
+    kLCValueOptionAsUTF8CData = 7,
     // The 'value' parameter is a point to a char * variable (UTF-8 encoding)
     kLCValueOptionAsUTF8CString = 8,
     // The 'value' parameter is a point to an LCBytes storing a UTF-16-encoded string
-    kLCValueOptionAsUTF16String = 9,
+    kLCValueOptionAsUTF16CData = 9,
     // The 'value' parameter is a point to a uint16_t * variable (UTF-16 encoding)
     kLCValueOptionAsUTF16CString = 10,
 
+    // SN-2014-07-16: [[ ExternalsApiV6 ]] Enum updated to match
+    //  the enum declared in externalsv1.cpp in the Engine
 	// The 'value' parameter is a pointer to an LCArrayRef variable.
 	kLCValueOptionAsLCArray = 16,
 	// The 'value' parameter is a pointer to an NSNumber* variable.
 	kLCValueOptionAsObjcNumber = 17,
 	// The 'value' parameter is a pointer to an NSString* variable.
-	kLCValueOptionAsObjcString = 18,
+	kLCValueOptionAsObjcString = 19,
 	// The 'value' parameter is a pointer to an NSData* variable.
-	kLCValueOptionAsObjcData = 19,
+	kLCValueOptionAsObjcData = 21,
 	// The 'value' parameter is a pointer to an NSArray* variable.
-	kLCValueOptionAsObjcArray = 20,
+	kLCValueOptionAsObjcArray = 23,
 	// The 'value' parameter is a pointer to an NSDictionary *variable.
-	kLCValueOptionAsObjcDictionary = 21,
+	kLCValueOptionAsObjcDictionary = 25,
 	
 	// The 'value' parameter is a pointer to a char variable (native encoding)
-	kLCValueOptionAsCChar = 22,
+	kLCValueOptionAsCChar = 28,
 	
 	// Treat array keys as case-insensitive.
 	kLCValueOptionCaseSensitiveFalse = 0 << 30,

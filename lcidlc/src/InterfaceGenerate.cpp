@@ -343,6 +343,11 @@ protected:
 class CStringTypeMapper: public CTypesTypeMapper
 {
 public:
+    CStringTypeMapper(NativeType p_type)
+    {
+        m_tag = NativeTypeGetTag(p_type);
+    }
+    
 	virtual const char *GetTypedef(ParameterType mode)
 	{
 		return mode == kParameterTypeIn ? "const char *" : "char *";
@@ -364,7 +369,7 @@ public:
 	
 	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
 	{
-		CoderWriteStatement(p_coder, "success = default__cstring(\"%s\", %s)", StringGetCStringPtr(p_value), p_name);
+		CoderWriteStatement(p_coder, "success = default__%s(\"%s\", %s)", GetTag(), StringGetCStringPtr(p_value), p_name);
 		CodeInOutCopy(p_coder, p_mode, p_name);
 	}
 	
@@ -380,12 +385,21 @@ public:
 	}
 	
 protected:
-	const char *GetTag(void) {return "cstring";}
+	const char *GetTag(void) {return m_tag;}
+    
+private:
+    const char *m_tag;
 };
 
 class CDataTypeMapper: public CTypesTypeMapper
 {
 public:
+    
+    CDataTypeMapper(NativeType p_type)
+    {
+        m_tag = NativeTypeGetTag(p_type);
+    }
+    
 	virtual const char *GetTypedef(ParameterType mode)
 	{
 		return "LCBytes";
@@ -425,7 +439,10 @@ public:
 	}
 	
 protected:
-	const char *GetTag(void) {return "cdata";}
+	const char *GetTag(void) {return m_tag;}
+    
+private:
+    const char* m_tag;
 };
 
 //////////
@@ -1064,10 +1081,16 @@ static TypeMapper *map_parameter_type(InterfaceRef self, HandlerMapping p_mappin
 	case kNativeTypeInteger: return new IntegerTypeMapper;
 	case kNativeTypeReal: return new RealTypeMapper;
 	case kNativeTypeEnum: return new EnumTypeMapper(p_type, p_default_value != nil ? InterfaceResolveEnumElement(self, p_type, p_default_value) : 0);
-	case kNativeTypeCString: return new CStringTypeMapper;
-	case kNativeTypeCData: return new CDataTypeMapper;
-	//case kNativeTypeCArray: 
-	//case kNativeTypeCDictionary:
+    case kNativeTypeCString:
+    case kNativeTypeUTF8CString:
+    case kNativeTypeUTF16CString:
+        return new CStringTypeMapper(t_type);
+    case kNativeTypeCData:
+    case kNativeTypeUTF8CData:
+    case kNativeTypeUTF16CData:
+        return new CDataTypeMapper(t_type);
+//	case kNativeTypeCArray:
+//	case kNativeTypeCDictionary:
 	case kNativeTypeObjcString: return new ObjcStringTypeMapper;
 	case kNativeTypeObjcNumber: return new ObjcNumberTypeMapper;
 	case kNativeTypeObjcData: return new ObjcDataTypeMapper;

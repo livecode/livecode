@@ -130,11 +130,14 @@ enum
     kMCOptionAsUTF16String = 9,
     kMCOptionAsUTF16CString = 10,
     
+    // SN-2014-07-16: [[ ExternalsApiV6 ]] Update the numbering of the enum
+    //  to match the enum in externalv1.cpp
+    //  (NS types and CF types are different: NS types are autoreleasing)
 	kMCOptionAsObjcNumber = 17,
-	kMCOptionAsObjcString = 18,
-	kMCOptionAsObjcData = 19,
-	kMCOptionAsObjcArray = 20,
-	kMCOptionAsObjcDictionary = 21,
+	kMCOptionAsObjcString = 19,
+	kMCOptionAsObjcData = 21,
+	kMCOptionAsObjcArray = 23,
+	kMCOptionAsObjcDictionary = 25,
     
 	kMCOptionNumberFormatDefault = 0 << 26,
 	kMCOptionNumberFormatDecimal = 1 << 26,
@@ -715,26 +718,28 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				t_value_to_use = &t_array_value;
 				break;
                 
-            // SN-2014-07-01: [[ ExternalsApiV6 ]] Handling unicode types                
-            case kLCValueOptionAsUTF8String:
+            // SN-2014-07-01: [[ ExternalsApiV6 ]] Handling unicode types
+            //  There is no need to duplicate the strings fetched from the variable
+            //  since the Unicode strings are already user-free'd
+            case kLCValueOptionAsUTF8CData:
                 t_options_to_use = kMCOptionAsUTF8String;
                 t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
-                t_value_to_use = &t_cdata_value;
+                t_value_to_use = r_value;
                 break;
             case kLCValueOptionAsUTF8CString:
                 t_options_to_use = kMCOptionAsUTF8CString;
                 t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
-                t_value_to_use = &t_cstring_value;
+                t_value_to_use = r_value;
                 break;
-            case kLCValueOptionAsUTF16String:
+            case kLCValueOptionAsUTF16CData:
                 t_options_to_use = kMCOptionAsUTF16String;
                 t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
-                t_value_to_use = &t_cdata_value;
+                t_value_to_use = r_value;
                 break;
             case kLCValueOptionAsUTF16CString:
                 t_options_to_use = kMCOptionAsUTF16CString;
                 t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
-                t_value_to_use = &t_cstring_value;
+                t_value_to_use = r_value;
                 break;
 				
 #ifdef __OBJC__                
@@ -781,8 +786,6 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 	{
 		switch(p_options & kLCValueOptionMaskAs)
 		{
-            // SN-2014-07-01: [[ ExternalsApiV6 ]] UTF-8 is the same as a CString
-            case kLCValueOptionAsUTF8CString:
 			case kLCValueOptionAsCString:
 				t_cstring_value = strdup(t_cstring_value);
 				if (t_cstring_value != nil)
@@ -790,10 +793,6 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				else
 					t_error = kLCErrorOutOfMemory;
 				break;
-            // SN-2014-07-01: [[ ExternalsApiV6 ]] The length stored is the length in bytes
-            // so UTF16 or UTF8 do not differ from native encoding
-            case kLCValueOptionAsUTF16String:
-            case kLCValueOptionAsUTF8String:
 			case kLCValueOptionAsCData:
 			{
 				void *t_buffer;
@@ -815,29 +814,7 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				else
 					t_error = kLCErrorNotAChar;
 			}
-			break;
-                
-            // SN-2014-07-01: [[ ExternalsApiV6 ]] Specific case for UTF-16 strings
-            case kLCValueOptionAsUTF16CString:
-            {
-                uint32_t t_char_count;
-                uint16_t *t_chars;
-                t_chars = (uint16_t *)t_cstring_value;
-                
-                for (t_char_count = 0; *t_chars != 0; ++t_char_count)
-                    ++t_chars;
-                
-                t_chars = nil;
-                t_chars = (uint16_t*) malloc(t_char_count * 2 + 2);
-                if (t_chars != nil)
-                {
-                    memcpy(t_chars, t_cstring_value, t_char_count * 2);
-                    *(uint16_t**)r_value = t_chars;
-                }
-                else
-                    t_error = kLCErrorOutOfMemory;
-            }
-			
+            break;
 			case kLCValueOptionAsLCArray:
 			{
 				// Check the value is actually an array.
@@ -867,7 +844,7 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 			break;
 
             // SN-2014-07-01: [[ ExternalsApiV6 ]] Obj-C types now passed straight to the externals
-#if 0
+#ifdef __EXTERNALS_V5__
 #ifdef __OBJC__
 			case kLCValueOptionAsObjcNumber:
 				*(NSNumber **)r_value = [NSNumber numberWithDouble: t_number_value];
@@ -919,9 +896,9 @@ static LCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
 		case kLCValueOptionAsCData:
         // SN-2014-07-01: [[ ExternalsApiV6 ]] Obj-C types can now be passed as parameter to the externals
         // and unicode-encoded string/data exist as well
-        case kLCValueOptionAsUTF8String:
+        case kLCValueOptionAsUTF8CData:
         case kLCValueOptionAsUTF8CString:
-        case kLCValueOptionAsUTF16String:
+        case kLCValueOptionAsUTF16CData:
         case kLCValueOptionAsUTF16CString:
 #ifdef __OBJC__
 		case kLCValueOptionAsObjcNumber:
@@ -1193,8 +1170,8 @@ LCError LCArrayLookupKeyOnPath(LCArrayRef p_array, unsigned int p_options, const
 			*(char *)r_value = '\0';
 			break;
 		case kLCValueOptionAsCData:
-        case kLCValueOptionAsUTF8String:
-        case kLCValueOptionAsUTF16String:
+        case kLCValueOptionAsUTF8CData:
+        case kLCValueOptionAsUTF16CData:
 			((LCBytes *)r_value) -> length = 0;
 			((LCBytes *)r_value) -> buffer = nil;
 			break;
@@ -2634,11 +2611,29 @@ static bool fetch__bool(const char *arg, MCVariableRef var, bool& r_value)
 
 static bool fetch__cstring(const char *arg, MCVariableRef var, char*& r_value)
 {
-	LCError err;
-	err = LCValueFetch(var, kLCValueOptionAsCString, &r_value);
-	if (err == kLCErrorNone)
-		return true;
-	return fetch__report_error(err, arg);
+    LCError err;
+    err = LCValueFetch(var, kLCValueOptionAsCString, &r_value);
+    if (err == kLCErrorNone)
+        return true;
+    return fetch__report_error(err, arg);
+}
+
+static bool fetch__utf8cstring(const char *arg, MCVariableRef var, char*& r_value)
+{
+    LCError err;
+    err = LCValueFetch(var, kLCValueOptionAsUTF8CString, &r_value);
+    if (err == kLCErrorNone)
+        return true;
+    return fetch__report_error(err, arg);
+}
+
+static bool fetch__utf16cstring(const char *arg, MCVariableRef var, char*& r_value)
+{
+    LCError err;
+    err = LCValueFetch(var, kLCValueOptionAsUTF16CString, &r_value);
+    if (err == kLCErrorNone)
+        return true;
+    return fetch__report_error(err, arg);
 }
 
 static bool fetch__cdata(const char *arg, MCVariableRef var, LCBytes& r_value)
@@ -2648,6 +2643,24 @@ static bool fetch__cdata(const char *arg, MCVariableRef var, LCBytes& r_value)
 	if (err == kLCErrorNone)
 		return true;
 	return fetch__report_error(err, arg);
+}
+
+static bool fetch__utf8cdata(const char *arg, MCVariableRef var, LCBytes& r_value)
+{
+    LCError err;
+    err = LCValueFetch(var, kLCValueOptionAsUTF8CData, &r_value);
+    if (err == kLCErrorNone)
+        return true;
+    return fetch__report_error(err, arg);
+}
+
+static bool fetch__utf16cdata(const char *arg, MCVariableRef var, LCBytes& r_value)
+{
+    LCError err;
+    err = LCValueFetch(var, kLCValueOptionAsUTF16CData, &r_value);
+    if (err == kLCErrorNone)
+        return true;
+    return fetch__report_error(err, arg);
 }
 
 static bool fetch__int(const char *arg, MCVariableRef var, int& r_value)
@@ -2761,23 +2774,59 @@ static bool store__bool(MCVariableRef var, bool value)
 		return true;
 	return store__report_error(err);
 }
-
+    
 static bool store__cstring(MCVariableRef var, const char* value)
 {
-	LCError err;
-	err = LCValueStore(var, kLCValueOptionAsCString, &value);
-	if (err == kLCErrorNone)
-		return true;
-	return store__report_error(err);
+    LCError err;
+    err = LCValueStore(var, kLCValueOptionAsCString, &value);
+    if (err == kLCErrorNone)
+        return true;
+    return store__report_error(err);
 }
 
 static bool store__cdata(MCVariableRef var, LCBytes value)
 {
-	LCError err;
-	err = LCValueStore(var, kLCValueOptionAsCData, &value);
-	if (err == kLCErrorNone)
-		return true;
-	return store__report_error(err);
+    LCError err;
+    err = LCValueStore(var, kLCValueOptionAsCData, &value);
+    if (err == kLCErrorNone)
+        return true;
+    return store__report_error(err);
+}
+
+static bool store__utf8cstring(MCVariableRef var, const char* value)
+{
+    LCError err;
+    err = LCValueStore(var, kLCValueOptionAsUTF8CString, &value);
+    if (err == kLCErrorNone)
+        return true;
+    return store__report_error(err);
+}
+
+static bool store__utf8cdata(MCVariableRef var, LCBytes value)
+{
+    LCError err;
+    err = LCValueStore(var, kLCValueOptionAsUTF8CData, &value);
+    if (err == kLCErrorNone)
+        return true;
+    return store__report_error(err);
+}
+
+static bool store__utf16cstring(MCVariableRef var, const char* value)
+{
+    LCError err;
+    err = LCValueStore(var, kLCValueOptionAsUTF16CString, &value);
+    if (err == kLCErrorNone)
+        return true;
+    return store__report_error(err);
+}
+
+static bool store__utf16cdata(MCVariableRef var, LCBytes value)
+{
+    LCError err;
+    err = LCValueStore(var, kLCValueOptionAsUTF16CData, &value);
+    if (err == kLCErrorNone)
+        return true;
+    return store__report_error(err);
 }
 
 static bool store__lc_array(MCVariableRef var, LCArrayRef value)
@@ -2996,6 +3045,65 @@ static LCError java_from__cstring(JNIEnv *env, const char* p_value, jobject& r_v
     
     return err;
 }
+    
+// SN-2014-07-16: [[ ExternalsApiV6 ]] Added conversion methods
+static LCError java_from__utf8cstring(JNIEnv *env, const char* p_value, jobject& r_value)
+{
+    LCError err;
+    err = kLCErrorNone;
+    
+    size_t t_char_count;
+    t_char_count = strlen(p_value);
+    
+    jobject t_java_value;
+    if (err == kLCErrorNone)
+    {
+        //  JNI uses UTF-8 Modified instead of UTF-8
+        //  but there is no difference since no nil chars should be in the string passed
+        //  (strlen would discard the other of the string)
+        t_java_value = (jobject)env -> NewStringUTF(p_value, t_char_count);
+        if (t_java_value == nil || env -> ExceptionOccurred() != nil)
+        {
+            env -> ExceptionClear();
+            err = kLCErrorOutOfMemory;
+        }
+    }
+    
+    if (err == kLCErrorNone)
+        r_value = t_java_value;
+    
+    return err;
+}
+    
+static LCError java_from__utf16cstring(JNIEnv *env, const char* p_value, jobject& r_value)
+{
+    LCError err;
+    err = kLCErrorNone;
+    
+    size_t t_char_count;
+    jchar *t_jchar_value;
+    t_jchar_value = p_value;
+    
+    // We only need to find the length of the string, and pass it straight to NewString
+    while(*t_jchar_value++ != 0)
+        ++t_char_count;
+    
+    jobject t_java_value;
+    if (err == kLCErrorNone)
+    {
+        t_java_value = (jobject)env -> NewString(t_jchar_value, t_char_count);
+        if (t_java_value == nil || env -> ExceptionOccurred() != nil)
+        {
+            env -> ExceptionClear();
+            err = kLCErrorOutOfMemory;
+        }
+    }
+    
+    if (err == kLCErrorNone)
+        r_value = t_java_value;
+    
+    return err;
+}
 
 static bool default__java_string(JNIEnv *env, const char *p_value, jobject& r_java_value)
 {
@@ -3045,7 +3153,7 @@ static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, jo
 	t_cdata_value . buffer = nil;
 	t_cdata_value . length = 0;
 	if (err == kLCErrorNone)
-		err = LCValueFetch(var, kLCValueOptionAsCString, &t_cdata_value);
+		err = LCValueFetch(var, kLCValueOptionAsCData, &t_cdata_value);
 	
 	jobject t_java_value;
 	t_java_value = nil;
@@ -3125,6 +3233,154 @@ static LCError java_to__cstring(JNIEnv *env, jobject value, char*& r_cstring)
 		env -> ReleaseStringChars((jstring)value, t_unichars);
 
 	return err;
+}
+    
+// UTF-8 Modified uses CESU-8 encoding for surrogate pairs (http://en.wikipedia.org/wiki/CESU-8)
+//  so that we need to decode the UTF-8 string got through JNI
+static void cesu8_to_utf8(const char* p_cesu8, char* r_utf8)
+{
+    uint16_t t_surrogate_pair[2] = {0,0};
+    
+    // We assume that the CESU-8 surrogate is valid and 6-byte long.
+    //  We decode the UTF16 surrogate pair which is
+    //  UTF-8 encoded and thus stored as:   1110xxxx 10xxxxxx 10xxxxxx 1110xxxx 10xxxxxx 10xxxxxx
+    t_surrogate_pair[0] = (uint16_t)(((uint16_t)(p_cesu8[0] & 0x0f)) << 12)
+                        | (uint16_t)(((uint16_t)(p_cesu8[1] & 0x3f)) << 6)
+                        | (uint16_t)(((uint16_t)(p_cesu8[2] & 0x3f)));
+    t_surrogate_pair[1] = (uint16_t)(((uint16_t)(p_cesu8[3] & 0x0f)) << 12)
+                        | (uint16_t)(((uint16_t)(p_cesu8[4] & 0x3f)) << 6)
+                        | (uint16_t)(((uint16_t)(p_cesu8[5] & 0x3f)));
+    
+    // Convert the UTF16 surrogate to the initial codepoint
+    uint32_t t_codepoint;
+    t_codepoint = 0x10000 + ((t_surrogate_pair[0] & 0x3FF) << 10) + (t_surrogate_pair[1] & 0x3FF);
+    
+    // Now we can encode in UTF-8 the 4-byte codepoint
+    //  being comprised between 0x10000 and 0x1FFFFF
+    r_utf8[0] = 0xf0 | (t_codepoint >> 18);          	// ........|...xxx..|........|........
+    r_utf8[1] = 0x80 | ((t_codepoint >> 12) & 0x3F);  	// ........|......xx|xxxx....|........
+    r_utf8[2] = 0x80 | ((t_codepoint >> 6) & 0x3F);   	// ........|........|....xxxx|xx......
+    r_utf8[3] = 0x80 | (t_codepoint & 0x3F);        	// ........|........|........|..xxxxxx
+}
+    
+// SN-2014-07-16: [[ ExternalsApiV6 ]] Added new conversion functions
+static LCError java_to__utf8cstring(JNIEnv *env, jobject value, char*& r_cstring)
+{
+    // JNI uses UTF-8 Modified (http://en.wikipedia.org/wiki/UTF-8#Modified_UTF-8)
+    //  but we don't expect any nil char returned for a string
+    LCError err;
+    err = kLCErrorNone;
+    
+    const char *t_utf8_modified_chars;
+    uint32_t t_utf8_modified_char_count;
+    
+    t_utf8_modified_count = 0;
+    if (err == kLCErrorNone)
+    {
+        t_utf8_modified_chars = env -> GetStringUTFChars((jstring)value, nil);
+        if (t_utf8_modified_chars == nil || env -> ExceptionOccurred() != nil)
+        {
+            env -> ExceptionClear();
+            err = kLCErrorOutOfMemory;
+        }
+    }
+    
+    const char *t_utf8_chars;
+    uint32_t t_utf8_char_count;
+    if (err == kLCErrorNone)
+    {
+        t_utf8_modified_char_count = env -> GetStringUTFLength((jstring)value);
+        
+        // Mesure the string's length when encoded in UTF-8 (converting 6-byte long CESU-8 surrogate pairs
+        //  to 4-byte long UTF-8 surrogate pairs
+        for (uint32_t i = 0; i < t_utf8_modified_char_count; )
+        {
+            if (t_utf8_modified_chars[i] == 0xED)
+            {
+                 // Start of a surrogate pair in CESU-8
+                t_utf8_char_count += 4;
+                i += 6;
+            }
+            else
+            {
+                ++t_utf8_char_count;
+                ++i;
+            }
+        }
+        
+        t_utf8_chars = (char *)malloc(t_utf8_char_count + 1);
+        if (t_utf8_chars == nil)
+            err = kLCErrorOutOfMemory;
+    }
+    
+    if (err == kLCErrorNone)
+    {
+        // Convert the UTF-8 Modified to UTF-8
+        for (uint32_t i = 0; i < t_utf8_modified_char_count; )
+        {
+            if (t_utf8_modified_chars[i] == 0xED)
+            {
+                cesu8_to_utf8(t_utf8_modified_chars, t_utf8_chars);
+                t_utf8_modified_chars += 6;
+                t_utf8_chars += 4;
+            }
+            else
+                t_utf8_chars++ = t_utf8_modified_chars++:
+        }
+    }
+    
+    if (err == kLCErrorNone)
+        r_cstring = t_utf8_chars;
+    else
+        free(t_utf8_chars);
+    
+    if (t_unichars != nil)
+        env -> ReleaseStringUTFChars((jstring)value, t_utf8_modified_chars);
+    
+    return err;
+}
+
+static LCError java_to__16cstring(JNIEnv *env, jobject value, char*& r_cstring)
+{
+    LCError err;
+    err = kLCErrorNone;
+    
+    const jchar *t_unichars;
+    uint32_t t_unichar_count;
+    t_unichars = 0;
+    t_unichar_count = 0;
+    if (err == kLCErrorNone)
+    {
+        t_unichars = env -> GetStringChars((jstring)value, nil);
+        if (t_unichars == nil || env -> ExceptionOccurred() != nil)
+        {
+            env -> ExceptionClear();
+            err = kLCErrorOutOfMemory;
+        }
+    }
+    
+    // GetStringChars returns a non nil-terminated string...
+    jchar* t_terminater_unichars;
+    
+    if (err == kLCErrorNone)
+    {
+        t_unichar_count = env -> GetStringLength((jstring)value);
+        t_terminated_unichars = (char *)malloc((t_unichar_count + 1) * sizeof(jchar));
+        if (t_terminated_unichars == nil)
+            err = kLCErrorOutOfMemory;
+        else
+            memcpy(t_terminated_unichars, t_unichars, (t_unichar_count + 1) * sizeof*jchar));
+    }
+    
+    if (err == kLCErrorNone)
+        r_cstring = t_terminated_unichars;
+    else
+        free(t_terminated_unichars);
+    
+    if (t_unichars != nil)
+        env -> ReleaseStringChars((jstring)value, t_unichars);
+    
+    return err;
 }
 
 static bool store__java_string(JNIEnv *env, MCVariableRef var, jobject value)

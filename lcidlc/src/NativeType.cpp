@@ -32,6 +32,14 @@ NativeType NativeTypeFromName(NameRef p_type)
 		return kNativeTypeCString;
 	else if (NameEqualToCString(p_type, "c-data"))
 		return kNativeTypeCData;
+	else if (NameEqualToCString(p_type, "utf8-c-string"))
+		return kNativeTypeUTF8CString;
+	else if (NameEqualToCString(p_type, "utf8-c-data"))
+		return kNativeTypeUTF8CData;
+	else if (NameEqualToCString(p_type, "utf16-c-string"))
+		return kNativeTypeUTF16CString;
+	else if (NameEqualToCString(p_type, "utf16-c-data"))
+		return kNativeTypeUTF16CData;
 	else if (NameEqualToCString(p_type, "objc-string"))
 		return kNativeTypeObjcString;
 	else if (NameEqualToCString(p_type, "objc-number"))
@@ -59,8 +67,12 @@ const char *NativeTypeGetTypedef(NativeType p_type)
         case kNativeTypeEnum:
             return "int";
         case kNativeTypeCString:
+        case kNativeTypeUTF8CString:
+        case kNativeTypeUTF16CString:
             return "char*";
         case kNativeTypeCData:
+        case kNativeTypeUTF8CData:
+        case kNativeTypeUTF16CData:
             return "LCBytes";
         case kNativeTypeObjcString:
             return "NSString*";
@@ -93,6 +105,8 @@ const char *NativeTypeGetSecondaryPrefix(NativeType p_type)
 	switch(p_type)
 	{
         case kNativeTypeCString:
+        case kNativeTypeUTF8CString:
+        case kNativeTypeUTF16CString:
         case kNativeTypeObjcString:
         case kNativeTypeObjcNumber:
         case kNativeTypeObjcData:
@@ -112,8 +126,16 @@ const char *NativeTypeGetTag(NativeType p_type)
             return "bool";
         case kNativeTypeCString:
             return "cstring";
+        case kNativeTypeUTF8CString:
+            return "utf8cstring";
+        case kNativeTypeUTF16CString:
+            return "utf16cstring";
         case kNativeTypeCData:
             return "cdata";
+        case kNativeTypeUTF8CData:
+            return "utf8cdata";
+        case kNativeTypeUTF16CData:
+            return "utf16cdata";
         case kNativeTypeInteger:
             return "int";
         case kNativeTypeReal:
@@ -153,6 +175,8 @@ const char *NativeTypeGetInitializer(NativeType p_type)
         case kNativeTypeBoolean:
             return "false";
         case kNativeTypeCString:
+        case kNativeTypeUTF8CString:
+        case kNativeTypeUTF16CString:
         case kNativeTypeObjcString:
         case kNativeTypeObjcNumber:
         case kNativeTypeObjcData:
@@ -165,6 +189,8 @@ const char *NativeTypeGetInitializer(NativeType p_type)
 		case kNativeTypeJavaDictionary:
             return "nil";
         case kNativeTypeCData:
+        case kNativeTypeUTF8CData:
+        case kNativeTypeUTF16CData:
             return "{ 0, nil }";
         case kNativeTypeInteger:
             return "0";
@@ -186,8 +212,12 @@ const char *native_type_to_java_type_cstring(NativeType p_type)
 		case kNativeTypeBoolean:
 			return "bool";
 		case kNativeTypeCString:
+        case kNativeTypeUTF8CString:
+        case kNativeTypeUTF16CString:
 			return "jobject";
 		case kNativeTypeCData:
+        case kNativeTypeUTF8CData:
+        case kNativeTypeUTF16CData:
 			return "jobject";
 		case kNativeTypeInteger:
 		case kNativeTypeEnum:
@@ -208,9 +238,13 @@ const char *native_type_to_java_sig(NativeType p_type)
 			return "Z";
 		case kNativeTypeJavaString:
 		case kNativeTypeCString:
+        case kNativeTypeUTF8CString:
+        case kNativeTypeUTF16CString:
 			return "Ljava/lang/String;";
 		case kNativeTypeJavaData:
 		case kNativeTypeCData:
+        case kNativeTypeUTF8CData:
+        case kNativeTypeUTF16CData:
 			return "[B";
 		case kNativeTypeInteger:
 		case kNativeTypeEnum:
@@ -230,8 +264,12 @@ const char *native_type_to_java_method_type_cstring(NativeType p_type)
 		case kNativeTypeBoolean:
 			return "Boolean";
 		case kNativeTypeCString:
+        case kNativeTypeUTF8CString:
+        case kNativeTypeUTF16CString:
 			return "Object";
 		case kNativeTypeCData:
+        case kNativeTypeUTF8CData:
+        case kNativeTypeUTF16CData:
 			return "Object";
 		case kNativeTypeInteger:
 		case kNativeTypeEnum:
@@ -251,8 +289,12 @@ const char *native_type_to_type_in_cstring(NativeType p_type)
 		case kNativeTypeBoolean:
 			return "bool";
 		case kNativeTypeCString:
+		case kNativeTypeUTF8CString:
+		case kNativeTypeUTF16CString:
 			return "const char *";
 		case kNativeTypeCData:
+		case kNativeTypeUTF8CData:
+		case kNativeTypeUTF16CData:
 			return "LCBytes";
 		case kNativeTypeInteger:
 		case kNativeTypeEnum:
@@ -272,8 +314,12 @@ const char *native_type_to_type_out_cstring(NativeType p_type)
 		case kNativeTypeBoolean:
 			return "bool";
 		case kNativeTypeCString:
+		case kNativeTypeUTF8CString:
+		case kNativeTypeUTF16CString:
 			return "char *";
 		case kNativeTypeCData:
+		case kNativeTypeUTF8CData:
+		case kNativeTypeUTF16CData:
 			return "LCBytes";
 		case kNativeTypeInteger:
 		case kNativeTypeEnum:

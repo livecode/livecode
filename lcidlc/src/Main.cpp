@@ -35,6 +35,8 @@ MCLocaleRef kMCBasicLocale;
 
 int main(int argc, char *argv[])
 {
+    MCInitialize();
+    
 	bool t_success;
 	t_success = true;
 
@@ -47,11 +49,6 @@ int main(int argc, char *argv[])
 	// Improve XCode error output.
 	g_input_filename = argv[1];
     
-    
-    // Create the basic locale and the system locale
-    if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
-        return false;
-	
 	ScannerRef t_scanner;
 	t_scanner = nil;
 	if (t_success)

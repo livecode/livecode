@@ -31,7 +31,7 @@ foreach my $line (@lines)
 	{
 		next;
 	}
-#	$line =~ s/\\/\\\\/g;
+	$line =~ s/\\/\\\\/g;
 	$line =~ s/\"/\\"/g;
 	$line =~ s/\n/\\n/g;
 	print OUTPUT "\t\"$line\",\n";

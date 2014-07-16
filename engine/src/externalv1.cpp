@@ -106,16 +106,16 @@ enum
     kMCExternalValueOptionAsUTF16CString = 10,
     
 #ifdef __HAS_CORE_FOUNDATION__
-    kMCExternalValueOptionAsCFNumber = 17,
-    kMCExternalValueOptionAsNSNumber = kMCExternalValueOptionAsCFNumber,
-    kMCExternalValueOptionAsCFString = 18,
-    kMCExternalValueOptionAsNSString = kMCExternalValueOptionAsCFString,
-    kMCExternalValueOptionAsCFData = 19,
-    kMCExternalValueOptionAsNSData = kMCExternalValueOptionAsCFData,
-    kMCExternalValueOptionAsCFArray = 20,
-    kMCExternalValueOptionAsNSArray = kMCExternalValueOptionAsCFArray,
-    kMCExternalValueOptionAsCFDictionary = 21,
-    kMCExternalValueOptionAsNSDictionary = kMCExternalValueOptionAsCFDictionary,
+    kMCExternalValueOptionAsNSNumber = 17,
+    kMCExternalValueOptionAsCFNumber = 18,
+    kMCExternalValueOptionAsNSString = 19,
+    kMCExternalValueOptionAsCFString = 20,
+    kMCExternalValueOptionAsNSData = 21,
+    kMCExternalValueOptionAsCFData = 22,
+    kMCExternalValueOptionAsNSArray = 23,
+    kMCExternalValueOptionAsCFArray = 24,
+    kMCExternalValueOptionAsNSDictionary = 25,
+    kMCExternalValueOptionAsCFDictionary = 26,
 #endif
     // V6-ADDITIONS-END
     
@@ -426,7 +426,9 @@ public:
 	MCExternalError GetCardinal(MCExternalValueOptions options, uint32_t& r_value);
 	MCExternalError GetReal(MCExternalValueOptions options, real64_t& r_value);
     // SN-2014-07-01: [[ ExternalsApiV6 ]] Default string in use is now a StringRef
+    //  New function added to get the CData - allowing nil bytes in the string
 	MCExternalError GetString(MCExternalValueOptions options, MCStringRef& r_string);
+    MCExternalError GetCData(MCExternalValueOptions options, MCString r_data);
 	MCExternalError GetCString(MCExternalValueOptions options, const char*& r_cstring);
     
 	virtual bool IsTemporary(void) = 0;
@@ -434,13 +436,10 @@ public:
 	
 	virtual MCValueRef GetValueRef(void) = 0;
 	virtual void SetValueRef(MCValueRef value) = 0;
-    
-    // SN-2014-07-01: [[ ExternalsApiV6 ]] Clears the converted string stored (was not used before)
-    void ClearConversion(void);
 	
 private:
 	uint32_t m_references;
-	MCStringRef m_string_conversion;
+	char* m_string_conversion;
 };
 
 class MCTransientExternalVariable: public MCExternalVariable
@@ -868,7 +867,8 @@ MCExternalVariable::MCExternalVariable(void)
 
 MCExternalVariable::~MCExternalVariable(void)
 {
-    MCValueRelease(m_string_conversion);
+    if (m_string_conversion != nil)
+        MCMemoryDeleteArray(m_string_conversion);
 }
 
 uint32_t MCExternalVariable::GetReferenceCount(void)
@@ -1104,13 +1104,6 @@ MCExternalError MCExternalVariable::GetString(MCExternalValueOptions p_options, 
     // Avoid null pointer dereferences in externals
     if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNull)
         t_value = kMCEmptyString;
-    
-    // SN-2014-07-01 [[ ExternalsApiV6 ]] Make use of the m_string_conversion member - cleared each time SetValueRef is called
-    if (m_string_conversion != nil)
-    {
-        r_value = MCValueRetain(m_string_conversion);
-        return kMCExternalErrorNone;
-    }
 
 	switch(MCValueGetTypeCode(t_value))
 	{
@@ -1125,24 +1118,16 @@ MCExternalError MCExternalVariable::GetString(MCExternalValueOptions p_options, 
 			
 			if (!number_to_string(t_number, p_options, &t_string_value))
                 return kMCExternalErrorOutOfMemory;
-            
-			m_string_conversion = MCValueRetain(*t_string_value);
 		}
 			break;
 		case kMCValueTypeCodeName:
         {
             t_string_value = MCNameGetString((MCNameRef)t_value);
-            // Store the string as the converted value in the externalvar (so
-			// it doesn't get lost).
-			m_string_conversion = MCValueRetain(*t_string_value);
 		}
 			break;
 		case kMCValueTypeCodeString:
 		{
 			t_string_value = (MCStringRef)t_value;
-			// Store the string as the converted value in the externalvar (so
-			// it doesn't get lost).
-			m_string_conversion = MCValueRetain(*t_string_value);
 		}
 			break;
 		case kMCValueTypeCodeData:
@@ -1151,8 +1136,6 @@ MCExternalError MCExternalVariable::GetString(MCExternalValueOptions p_options, 
             t_dataref = (MCDataRef)t_value;
             if (!MCStringCreateWithBytes(MCDataGetBytePtr(t_dataref), MCDataGetLength(t_dataref), kMCStringEncodingNative, false, &t_string_value))
                 return kMCExternalErrorOutOfMemory;
-            
-            m_string_conversion = MCValueRetain(*t_string_value);
 		}
 			break;
 		case kMCValueTypeCodeArray:
@@ -1168,34 +1151,52 @@ MCExternalError MCExternalVariable::GetString(MCExternalValueOptions p_options, 
 	return kMCExternalErrorNone;
 }
 
-MCExternalError MCExternalVariable::GetCString(MCExternalValueOptions p_options, const char*& r_value)
+// SN-2014-07-16: [[ ExternalsApiV6 ]] Function to get the CData type - allowing nil bytes in the string
+MCExternalError MCExternalVariable::GetCData(MCExternalValueOptions p_options, MCString r_data)
 {
 	MCAutoStringRef t_string_value;
 	MCExternalError t_error;
-    char* t_chars;
     uindex_t t_length;
     
 	t_error = GetString(p_options, &t_string_value);
 	if (t_error != kMCExternalErrorNone)
 		return t_error;
+    
+    if (m_string_conversion != nil)
+        MCMemoryDeleteArray(m_string_conversion);
 	
-    if (!MCStringConvertToNative(*t_string_value, (char_t*&)t_chars, t_length))
+    if (!MCStringConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
         return kMCExternalErrorOutOfMemory;
 	
-	if (memchr(t_chars, '\0', t_length) != nil)
-    {
-        free(t_chars);
-		return kMCExternalErrorNotACString;
-    }
-	
-	r_value = t_chars;	
+	r_data . set(m_string_conversion, t_length);
 	return kMCExternalErrorNone;
 }
 
-void MCExternalVariable::ClearConversion()
+MCExternalError MCExternalVariable::GetCString(MCExternalValueOptions p_options, const char*& r_value)
 {
-    MCValueRelease(m_string_conversion);
-    m_string_conversion = nil;
+	MCAutoStringRef t_string_value;
+	MCExternalError t_error;
+    uindex_t t_length;
+    
+	t_error = GetString(p_options, &t_string_value);
+	if (t_error != kMCExternalErrorNone)
+		return t_error;
+    
+    if (m_string_conversion != nil)
+        MCMemoryDeleteArray(m_string_conversion);
+	
+    if (!MCStringConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
+        return kMCExternalErrorOutOfMemory;
+	
+	if (memchr(m_string_conversion, '\0', t_length) != nil)
+    {
+        MCMemoryDeleteArray(m_string_conversion);
+        m_string_conversion = nil;
+		return kMCExternalErrorNotACString;
+    }
+	
+	r_value = m_string_conversion;
+	return kMCExternalErrorNone;
 }
 
 //////////
@@ -1230,8 +1231,6 @@ void MCTransientExternalVariable::SetValueRef(MCValueRef p_value)
 	MCValueRetain(p_value);
 	MCValueRelease(m_value);
 	m_value = p_value;
-    // SN-2014-07-01: [[ ExternalsApiV6 ]] Ensure the conversion is cleared if the value gets changed
-    ClearConversion();
 }
 
 //////////
@@ -1275,8 +1274,6 @@ MCValueRef MCReferenceExternalVariable::GetValueRef(void)
 void MCReferenceExternalVariable::SetValueRef(MCValueRef p_value)
 {
 	m_variable -> setvalueref(p_value);
-    // SN-2014-07-01: [[ ExternalsApiV6 ]] Ensure the conversion is cleared if the value gets changed
-    ClearConversion();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1544,56 +1541,56 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 		break;
     // SN-2014-07-01: [[ ExternalsApiV6 ]] Unicode delimiters, UTF-16 encoded
     case kMCExternalContextQueryUnicodeColumnDelimiter:
-        {
-            uindex_t t_dummy;
-            if (!MCStringConvertToUnicode(MCECptr -> GetColumnDelimiter(), *(unichar_t**)result, t_dummy))
-                return kMCExternalErrorOutOfMemory;
-            break;
-        }
-        case kMCExternalContextQueryUnicodeItemDelimiter:
-        {
-            uindex_t t_dummy;
-            if (!MCStringConvertToUnicode(MCECptr -> GetItemDelimiter(), *(unichar_t**)result, t_dummy))
-                return kMCExternalErrorOutOfMemory;
-            break;
-        }
-        case kMCExternalContextQueryUnicodeLineDelimiter:
-        {
-            uindex_t t_dummy;
-            if (!MCStringConvertToUnicode(MCECptr -> GetLineDelimiter(), *(unichar_t**)result, t_dummy))
-                return kMCExternalErrorOutOfMemory;
-            break;
-        }
-        case kMCExternalContextQueryUnicodeRowDelimiter:
-        {
-            uindex_t t_dummy;
-            if (!MCStringConvertToUnicode(MCECptr -> GetRowDelimiter(), *(unichar_t**)result, t_dummy))
-                return kMCExternalErrorOutOfMemory;
-            break;
-        }
+    {
+        uindex_t t_dummy;
+        if (!MCStringConvertToUnicode(MCECptr -> GetColumnDelimiter(), *(unichar_t**)result, t_dummy))
+            return kMCExternalErrorOutOfMemory;
+        break;
+    }
+    case kMCExternalContextQueryUnicodeItemDelimiter:
+    {
+        uindex_t t_dummy;
+        if (!MCStringConvertToUnicode(MCECptr -> GetItemDelimiter(), *(unichar_t**)result, t_dummy))
+            return kMCExternalErrorOutOfMemory;
+        break;
+    }
+    case kMCExternalContextQueryUnicodeLineDelimiter:
+    {
+        uindex_t t_dummy;
+        if (!MCStringConvertToUnicode(MCECptr -> GetLineDelimiter(), *(unichar_t**)result, t_dummy))
+            return kMCExternalErrorOutOfMemory;
+        break;
+    }
+    case kMCExternalContextQueryUnicodeRowDelimiter:
+    {
+        uindex_t t_dummy;
+        if (!MCStringConvertToUnicode(MCECptr -> GetRowDelimiter(), *(unichar_t**)result, t_dummy))
+            return kMCExternalErrorOutOfMemory;
+        break;
+    }
 	case kMCExternalContextQueryDefaultStack:
-		{
-			if (MCdefaultstackptr == nil)
-				return kMCExternalErrorNoDefaultStack;
-			
-			MCObjectHandle *t_handle;
-			t_handle = MCdefaultstackptr -> gethandle();
-			if (t_handle == nil)
-				return kMCExternalErrorOutOfMemory;
-			*(MCObjectHandle **)result = t_handle;
-		}
-		break;
+    {
+        if (MCdefaultstackptr == nil)
+            return kMCExternalErrorNoDefaultStack;
+        
+        MCObjectHandle *t_handle;
+        t_handle = MCdefaultstackptr -> gethandle();
+        if (t_handle == nil)
+            return kMCExternalErrorOutOfMemory;
+        *(MCObjectHandle **)result = t_handle;
+    }
+        break;
 	case kMCExternalContextQueryDefaultCard:
-		{
-			if (MCdefaultstackptr == nil)
-				return kMCExternalErrorNoDefaultStack;
-			
-			MCObjectHandle *t_handle;
-			t_handle = MCdefaultstackptr -> getcurcard() -> gethandle();
-			if (t_handle == nil)
-				return kMCExternalErrorOutOfMemory;
-			*(MCObjectHandle **)result = t_handle;
-		}
+    {
+        if (MCdefaultstackptr == nil)
+            return kMCExternalErrorNoDefaultStack;
+        
+        MCObjectHandle *t_handle;
+        t_handle = MCdefaultstackptr -> getcurcard() -> gethandle();
+        if (t_handle == nil)
+            return kMCExternalErrorOutOfMemory;
+        *(MCObjectHandle **)result = t_handle;
+    }
 		break;
 	default:
 		return kMCExternalErrorInvalidContextQuery;
@@ -1825,6 +1822,7 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     }
 #ifdef __HAS_CORE_FOUNDATION__
     case kMCExternalValueOptionAsCFNumber:
+    case kMCExternalValueOptionAsNSNumber:
     {
         CFNumberRef t_number;
         t_number = *(CFNumberRef*)p_value;
@@ -1844,9 +1842,10 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
                 return kMCExternalErrorNotANumber;
             else
                 return var -> SetInteger(t_integer);
-        }            
+        }
     }
     case kMCExternalValueOptionAsCFString:
+    case kMCExternalValueOptionAsNSString:
     {
         MCAutoStringRef t_string;
         
@@ -1856,6 +1855,7 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         return var -> SetString(*t_string);
     }
     case kMCExternalValueOptionAsCFData:
+    case kMCExternalValueOptionAsNSData:
     {
         MCAutoStringRef t_string;
         CFDataRef t_data;
@@ -1867,42 +1867,44 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         return var -> SetString(*t_string);
     }
     case kMCExternalValueOptionAsCFArray:
-        {
-			// For efficiency, we use 'exchange' - this prevents copying a temporary array.
-			MCExternalVariableRef t_tmp_array;
-            MCExternalError t_error;
-            
-            t_error = kMCExternalErrorNone;
-			t_tmp_array = nil;
-			if (t_error == kMCExternalErrorNone)
-				t_error = MCExternalVariableCreate(&t_tmp_array);
-			if (t_error == kMCExternalErrorNone)
-				t_error = MCExternalValueArrayFromObjcArray(t_tmp_array, *(NSArray **)p_value);
-			if (t_error == kMCExternalErrorNone)
-				t_error = g_external_interface . variable_exchange(var, t_tmp_array);
-			if (t_tmp_array != nil)
-				MCExternalVariableRelease(t_tmp_array);
-            
-			return t_error;
-        }
-        case kMCExternalValueOptionAsCFDictionary:
-        {
-			// For efficiency, we use 'exchange' - this prevents copying a temporary array.
-			MCExternalVariableRef t_tmp_array;
-            MCExternalError t_error;
-            
-            t_error = kMCExternalErrorNone;
-			t_tmp_array = nil;
-			if (t_error == kMCExternalErrorNone)
-				t_error = MCExternalVariableCreate(&t_tmp_array);
-			if (t_error == kMCExternalErrorNone)
-				t_error = MCExternalValueArrayFromObjcDictionary(t_tmp_array, *(NSDictionary **)p_value);
-			if (t_error == kMCExternalErrorNone)
-				t_error = g_external_interface . variable_exchange(var, t_tmp_array);
-			if (t_tmp_array != nil)
-				MCExternalVariableRelease(t_tmp_array);
-			return t_error;
-        }
+    case kMCExternalValueOptionAsNSArray:
+    {
+        // For efficiency, we use 'exchange' - this prevents copying a temporary array.
+        MCExternalVariableRef t_tmp_array;
+        MCExternalError t_error;
+        
+        t_error = kMCExternalErrorNone;
+        t_tmp_array = nil;
+        if (t_error == kMCExternalErrorNone)
+            t_error = MCExternalVariableCreate(&t_tmp_array);
+        if (t_error == kMCExternalErrorNone)
+            t_error = MCExternalValueArrayFromObjcArray(t_tmp_array, *(NSArray **)p_value);
+        if (t_error == kMCExternalErrorNone)
+            t_error = g_external_interface . variable_exchange(var, t_tmp_array);
+        if (t_tmp_array != nil)
+            MCExternalVariableRelease(t_tmp_array);
+        
+        return t_error;
+    }
+    case kMCExternalValueOptionAsCFDictionary:
+    case kMCExternalValueOptionAsNSDictionary:
+    {
+        // For efficiency, we use 'exchange' - this prevents copying a temporary array.
+        MCExternalVariableRef t_tmp_array;
+        MCExternalError t_error;
+        
+        t_error = kMCExternalErrorNone;
+        t_tmp_array = nil;
+        if (t_error == kMCExternalErrorNone)
+            t_error = MCExternalVariableCreate(&t_tmp_array);
+        if (t_error == kMCExternalErrorNone)
+            t_error = MCExternalValueArrayFromObjcDictionary(t_tmp_array, *(NSDictionary **)p_value);
+        if (t_error == kMCExternalErrorNone)
+            t_error = g_external_interface . variable_exchange(var, t_tmp_array);
+        if (t_tmp_array != nil)
+            MCExternalVariableRelease(t_tmp_array);
+        return t_error;
+    }
 #endif
 	default:
 		return kMCExternalErrorInvalidValueType;
@@ -1925,7 +1927,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
 	{
 	case kMCExternalValueOptionAsVariable:
 		return ((MCExternalVariableRef)p_value) -> Set(var);
-
 	case kMCExternalValueOptionAsBoolean:
 		return var -> GetBoolean(p_options, *(bool *)p_value);
 	case kMCExternalValueOptionAsInteger:
@@ -1935,21 +1936,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
 	case kMCExternalValueOptionAsReal:
         return var -> GetReal(p_options, *(real64_t *)p_value);
     case kMCExternalValueOptionAsString:
-    {
-        MCAutoStringRef t_stringref;
-        char_t* t_chars;
-        uindex_t t_length;
-        
-        t_error = var -> GetString(p_options, &t_stringref);
-        
-        if (t_error != kMCExternalErrorNone)
-            return t_error;
-        
-        if (!MCStringConvertToNative(*t_stringref, t_chars, t_length))
-            return kMCExternalErrorOutOfMemory;
-        
-        ((MCString*)p_value) -> set((char*)t_chars, t_length);
-    }            
+        return var -> GetCData(p_options, *(MCString*)p_value);     
     case kMCExternalValueOptionAsCString:
         return var -> GetCString(p_options, *(const char **)p_value);
         
@@ -1969,6 +1956,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
             return kMCExternalErrorOutOfMemory;
         
         ((MCString*)p_value) -> set(t_chars, t_length);
+        break;
     }
     case kMCExternalValueOptionAsUTF8CString:
     {
@@ -1984,6 +1972,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
             return kMCExternalErrorOutOfMemory;
         
         (*(char**)p_value) = t_chars;
+        break;
     }
     case kMCExternalValueOptionAsUTF16String:
     {
@@ -2000,6 +1989,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
             return kMCExternalErrorOutOfMemory;
         
         ((MCString*)p_value) -> set((char*)t_chars, t_char_count * 2);
+        break;
     }
     case kMCExternalValueOptionAsUTF16CString:
     {
@@ -2016,9 +2006,11 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
             return kMCExternalErrorOutOfMemory;
         
         (*(unichar_t**)p_value) = t_chars;
+        break;
     }
 #ifdef __HAS_CORE_FOUNDATION__
     case kMCExternalValueOptionAsCFNumber:
+    case kMCExternalValueOptionAsNSNumber:
     {
         CFNumberRef t_number;
         real64_t t_real;
@@ -2028,8 +2020,15 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
             return t_error;
         
         *(CFNumberRef*)p_value = CFNumberCreate(NULL, kCFNumberFloat64Type, &t_real);
+        
+        // NS types must be autoreleasing
+        if ((p_options & 0xf) == kMCExternalValueOptionAsNSNumber)
+            [*(NSArray**)p_value autorelease];
+        
+        break;
     }
     case kMCExternalValueOptionAsCFString:
+    case kMCExternalValueOptionAsNSString:
     {
         MCAutoStringRef t_stringref;
         
@@ -2039,8 +2038,14 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         
         if (!MCStringConvertToCFStringRef(*t_stringref, *(CFStringRef*)p_value))
             return kMCExternalErrorOutOfMemory;
+        
+        // NS types must be autoreleasing
+        if ((p_options & 0xf) == kMCExternalValueOptionAsNSString)
+            [*(NSString**)p_value autorelease];
+        break;
     }
     case kMCExternalValueOptionAsCFData:
+    case kMCExternalValueOptionAsNSData:
     {
         MCAutoStringRef t_stringref;
         char *t_chars;
@@ -2054,11 +2059,47 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
             return kMCExternalErrorOutOfMemory;
         
         *(CFDataRef*)p_value = CFDataCreate(NULL, (UInt8*)t_chars, t_char_count);
+        
+        MCMemoryDeleteArray(t_chars);
+        
+        // NS types must be autoreleasing
+        if ((p_options & 0xf) == kMCExternalValueOptionAsNSData)
+            [*(NSData**)p_value autorelease];
+        break;
     }
     case kMCExternalValueOptionAsCFArray:
-        // TODO: conversion between CFArray and MCArray?
+    case kMCExternalValueOptionAsNSArray:
+    {
+        MCExternalError t_error;
+        NSArray* t_value = *(NSArray**)p_value;
+        
+        t_error = MCExternalValueArrayToObjcArray(var, t_value);
+        
+        if (t_error != kMCExternalErrorNone)
+            return t_error;
+        
+        // NS types must be autoreleasing
+        if ((p_options & 0xf) == kMCExternalValueOptionAsNSArray)
+            [*(NSArray**)p_value autorelease];
+        return t_error;
+    }
     case kMCExternalValueOptionAsCFDictionary:
-        // TODO: conversion between CFDictionary and MCArray?
+    case kMCExternalValueOptionAsNSDictionary:
+    {
+        MCExternalError t_error;
+        NSDictionary* t_value = *(NSDictionary**)p_value;
+        
+        t_error = MCExternalValueArrayToObjcDictionary(var, t_value);
+        
+        if (t_error != kMCExternalErrorNone)
+            return t_error;
+        
+        // NS types must be autoreleasing
+        if ((p_options & 0xf) == kMCExternalValueOptionAsNSDictionary)
+            [*(NSDictionary**)p_value autorelease];
+        
+        return t_error;
+    }
 #endif
 	default:
 		return kMCExternalErrorInvalidValueType;
@@ -2147,6 +2188,7 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
     }
 #ifdef __HAS_CORE_FOUNDATION__
     case kMCExternalValueOptionAsCFNumber:
+    case kMCExternalValueOptionAsNSNumber:
     {
         CFNumberRef t_number;
         t_number = *(CFNumberRef*)p_value;
@@ -2167,8 +2209,10 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
             else
                 return var -> AppendInteger(p_options, t_integer);
         }
+        break;
     }
     case kMCExternalValueOptionAsCFString:
+    case kMCExternalValueOptionAsNSString:
     {
         MCAutoStringRef t_string;
         
@@ -2178,6 +2222,7 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
         return var -> AppendString(p_options, *t_string);
     }
     case kMCExternalValueOptionAsCFData:
+    case kMCExternalValueOptionAsNSData:
     {
         MCAutoStringRef t_string;
         CFDataRef t_data;
@@ -2190,7 +2235,9 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
     }
     // SN-2014-07-01: [[ ExternalsApiV6 ]] CFArray and CFDictionary can't be appended.
     case kMCExternalValueOptionAsCFArray:
+    case kMCExternalValueOptionAsNSArray:
     case kMCExternalValueOptionAsCFDictionary:
+    case kMCExternalValueOptionAsNSDictionary:
 #endif
 	default:
 		return kMCExternalErrorInvalidValueType;
@@ -2701,7 +2748,7 @@ static MCExternalError MCExternalValueArrayValueFromObjcValue(MCExternalVariable
 }
 
 // Convert a LiveCode array into an NSArray. The returned NSArray is alloc'd.
-static MCExternalError LCValueArrayToObjcArray(MCExternalVariableRef src, NSArray*& r_dst)
+static MCExternalError MCExternalValueArrayToObjcArray(MCExternalVariableRef src, NSArray*& r_dst)
 {
 	MCExternalError t_error;
 	t_error = kMCExternalErrorNone;

@@ -642,7 +642,7 @@ void SetVariableUTF8(const char *p_name, const char *p_value, int *r_success)
 		s_delete(t_result);
 }
 
-void GetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *r_value, Bool p_want_utf8, int *r_success)
+void GetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *r_value, Bool p_is_text, int *r_success)
 {
 	char *t_result;
     int t_operation;
@@ -653,7 +653,7 @@ void GetVariableExUTF8(const char *p_name, const char *p_key, const ExternalStri
 		return;
 	}
     
-    if (p_want_utf8)
+    if (p_is_text)
         t_operation = OPERATION_GET_VARIABLE_EX_UTF8_TEXT;
     else
         t_operation = OPERATION_GET_VARIABLE_EX_UTF8_BINARY;
@@ -663,7 +663,7 @@ void GetVariableExUTF8(const char *p_name, const char *p_key, const ExternalStri
 		s_delete(t_result);
 }
 
-void SetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *p_value, Bool p_want_utf8, int *r_success)
+void SetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *p_value, Bool p_is_text, int *r_success)
 {
 	char *t_result;
     int t_operation;
@@ -674,7 +674,7 @@ void SetVariableExUTF8(const char *p_name, const char *p_key, const ExternalStri
 		return;
 	}
     
-    if (p_want_utf8)
+    if (p_is_text)
         t_operation = OPERATION_SET_VARIABLE_EX_UTF8_TEXT;
     else
         t_operation = OPERATION_SET_VARIABLE_EX_UTF8_BINARY;
@@ -684,7 +684,7 @@ void SetVariableExUTF8(const char *p_name, const char *p_key, const ExternalStri
 		s_delete(t_result);
 }
 
-void GetArrayUTF8(const char *p_name, int *r_element_count, ExternalString *r_values, char **r_keys, Bool p_want_utf8, int *r_success)
+void GetArrayUTF8(const char *p_name, int *r_element_count, ExternalString *r_values, char **r_keys, Bool p_is_text, int *r_success)
 {
 	ExternalArray t_array;
 	char *t_result;
@@ -696,7 +696,7 @@ void GetArrayUTF8(const char *p_name, int *r_element_count, ExternalString *r_va
 	}
     
     int t_operation;
-    if (p_want_utf8)
+    if (p_is_text)
         t_operation = OPERATION_GET_ARRAY_UTF8_TEXT;
     else
         t_operation = OPERATION_GET_ARRAY_UTF8_BINARY;
@@ -712,7 +712,7 @@ void GetArrayUTF8(const char *p_name, int *r_element_count, ExternalString *r_va
 		*r_element_count = t_array . nelements;
 }
 
-void SetArrayUTF8(const char *p_name, int p_element_count, ExternalString *p_values, char **p_keys, Bool p_want_utf8, int *r_success)
+void SetArrayUTF8(const char *p_name, int p_element_count, ExternalString *p_values, char **p_keys, Bool p_is_text, int *r_success)
 {
 	ExternalArray t_array;
 	char *t_result;
@@ -724,7 +724,7 @@ void SetArrayUTF8(const char *p_name, int p_element_count, ExternalString *p_val
 	}
     
     int t_operation;
-    if (p_want_utf8)
+    if (p_is_text)
         t_operation = OPERATION_SET_ARRAY_UTF8_TEXT;
     else
         t_operation = OPERATION_SET_ARRAY_UTF8_BINARY;
