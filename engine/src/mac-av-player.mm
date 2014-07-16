@@ -310,7 +310,11 @@ void MCAVFoundationPlayer::MovieFinished(void)
     }
     else
     {
-        [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        // PM-2014-07-15: [[ Bug 12812 ]] Make sure we loop within start and finish time when playSelection is true 
+        if (m_play_selection_only)
+            [[m_player currentItem] seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        else
+            [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         
         if (m_offscreen)
             CVDisplayLinkStart(m_display_link);
