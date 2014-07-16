@@ -2250,7 +2250,8 @@ void MCPlayer::drawcontroller(MCDC *dc)
     drawControllerPlayPauseButton(t_gcontext);
     drawControllerWellButton(t_gcontext);
     
-    if (getflag(F_SHOW_SELECTION))
+    // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then selection handles are invisible
+    if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
     {
         drawControllerSelectedAreaButton(t_gcontext);
     }
@@ -2260,8 +2261,8 @@ void MCPlayer::drawcontroller(MCDC *dc)
     
     drawControllerPlayedAreaButton(t_gcontext);
     
-    
-    if (getflag(F_SHOW_SELECTION))
+    // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then selection handles are invisible
+    if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
     {
         drawControllerSelectionStartButton(t_gcontext);
         drawControllerSelectionFinishButton(t_gcontext);
@@ -2885,7 +2886,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             uint32_t t_start_time, t_current_time, t_finish_time, t_duration;
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
             
-            if (getflag(F_SHOW_SELECTION))
+            // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+            if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
             {
                 MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
                 MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
@@ -3159,6 +3161,9 @@ void MCPlayer::handle_mfocus(int x, int y)
                     x = t_part_well_rect . x;
                 
                 t_new_start_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                
+                if (t_new_start_time >= endtime)
+                    t_new_start_time = endtime;
                 setstarttime(t_new_start_time);
             }
                 break;
@@ -3172,6 +3177,8 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 t_new_finish_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 
+                if (t_new_finish_time <= starttime)
+                    t_new_finish_time = starttime;
                 setendtime(t_new_finish_time);
             }
                 break;
