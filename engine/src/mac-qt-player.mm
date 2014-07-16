@@ -310,7 +310,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 			t_player -> m_current_frame = nil;
 		}
 		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
-		
+        
 		// Switching to non-offscreen
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 		t_player -> Realize();
@@ -435,6 +435,7 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	m_movie = t_new_movie;
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
+    
     extern NSString **QTMovieDidEndNotification_ptr;
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: *QTMovieDidEndNotification_ptr object: m_movie];
     
@@ -557,6 +558,7 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 
 void MCQTKitPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 {
+    delete bitmap -> data;
 	delete bitmap;
 }
 
