@@ -2980,7 +2980,7 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
 	x -= computelineoffset(lptr);
 
-	focusedindex = lptr->GetCursorIndex(MCU_max(x, 0), False, moving_left);
+	focusedindex = lptr->GetCursorIndex(MCU_max(x, 0), False, moving_forward);
 	if (extend)
 	{
 		if (originalindex == PARAGRAPH_MAX_LEN)

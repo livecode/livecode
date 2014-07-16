@@ -1705,7 +1705,7 @@ coord_t MCBlock::GetCursorX(findex_t fi)
         return origin + getsubwidth(NULL, tabpos, m_index, j);
 }
 
-findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last)
+findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool moving_forward)
 {
     // The x coordinate is relative to the line, not ourselves
     x -= getorigin();
@@ -1735,7 +1735,8 @@ findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last)
     
     MCRange t_char_range;
     MCRange t_cp_range;
-        
+    
+    coord_t t_pos = t_last_width;
     while(i < m_index + m_size)
     {
         findex_t t_new_i;
@@ -1746,14 +1747,25 @@ findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last)
         coord_t t_new_width;
         t_new_width = GetCursorX(t_new_i) - origin;
         
-        int32_t t_pos;
         if (chunk)
             t_pos = t_new_width;
+        else if (t_last_width == t_new_width)
+            // Don't update the position if this character was zero-width
+            ;
         else
             t_pos = (t_last_width + t_new_width) / 2;
         
         if ((is_rtl() && x >= t_pos) || (!is_rtl() && x < t_pos))
+        {
+            // FG-2014-07-16: [[ Bugfix 12166 ]] Make sure that we don't return
+            // an index pointing at a zero-width character.
+            while (moving_forward && i < m_size && (GetCursorX(i) - origin) == t_new_width)
+                i++;
+            while (!moving_forward && i > 0 && (GetCursorX(i-1) - origin) == t_last_width)
+                i--;
+
             break;
+        }
         
         t_last_width = t_new_width;
         i = t_new_i;
