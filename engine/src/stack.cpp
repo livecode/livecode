@@ -3104,7 +3104,8 @@ MCRectangle MCStack::getwindowrect(void) const
 	t_rect = view_getwindowrect();
 	
 	// IM-2014-01-23: [[ HiDPI ]] Use inverse view transform to get stack coords
-	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(getviewtransform()));
+	// IM-2014-07-14: [[ Bug 12765 ]] Don't use the stack transform as this should be in view coords.
+	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(view_getviewtransform()));
 }
 
 //////////
