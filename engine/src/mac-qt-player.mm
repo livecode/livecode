@@ -93,6 +93,7 @@ private:
     QTMovie *m_movie;
     QTMovieView *m_view;
     CVImageBufferRef m_current_frame;
+    QTTime m_last_current_time;
     
     com_runrev_livecode_MCQTKitPlayerObserver *m_observer;
     
@@ -150,6 +151,21 @@ private:
  
 ////////////////////////////////////////////////////////////////////////////////
 
+
+inline QTTime do_QTMakeTime(long long timeValue, long timeScale)
+{
+    typedef QTTime (*QTMakeTimePtr)(long long timeValue, long timescale);
+    extern QTMakeTimePtr QTMakeTime_ptr;
+    return QTMakeTime_ptr(timeValue, timeScale);
+}
+
+inline NSComparisonResult do_QTTimeCompare (QTTime time, QTTime otherTime)
+{
+    typedef NSComparisonResult (*QTTimeComparePtr)(QTTime time, QTTime otherTime);
+    extern QTTimeComparePtr QTTimeCompare_ptr;
+    return QTTimeCompare_ptr(time, otherTime);
+}
+
 MCQTKitPlayer::MCQTKitPlayer(void)
 {
 	m_movie = [[NSClassFromString(@"QTMovie") movie] retain];
@@ -172,6 +188,8 @@ MCQTKitPlayer::MCQTKitPlayer(void)
     m_show_controller = false;
 	m_show_selection = false;
     m_synchronizing = false;
+    
+    m_last_current_time = do_QTMakeTime(INT64_MAX, 1);
 }
 
 MCQTKitPlayer::~MCQTKitPlayer(void)
@@ -196,13 +214,6 @@ void MCQTKitPlayer::MovieFinished(void)
 {
     m_playing = false;
     MCPlatformCallbackSendPlayerStopped(this);
-}
-
-inline NSComparisonResult do_QTTimeCompare (QTTime time, QTTime otherTime)
-{
-    typedef NSComparisonResult (*QTTimeComparePtr)(QTTime time, QTTime otherTime);
-    extern QTTimeComparePtr QTTimeCompare_ptr;
-    return QTTimeCompare_ptr(time, otherTime);
 }
 
 void MCQTKitPlayer::RateChanged(void)
@@ -310,7 +321,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 			t_player -> m_current_frame = nil;
 		}
 		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
-		
+        
 		// Switching to non-offscreen
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 		t_player -> Realize();
@@ -363,11 +374,11 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
             MCQTKitPlayer *self;
             self = (MCQTKitPlayer *)refcon;
             
+            QTTime t_current_time;
+            t_current_time = [self -> m_movie currentTime];
+            
             if (self -> m_marker_count > 0)
             {
-                QTTime t_current_time;
-                t_current_time = [self -> m_movie currentTime];
-                
                 // We search for the marker time immediately before the
                 // current time and if last marker is not that time,
                 // dispatch it.
@@ -386,8 +397,14 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
                     }
                 }
             }
+            
+            if (do_QTTimeCompare(t_current_time, self -> m_last_current_time))
+            {
+                self -> m_last_current_time = t_current_time;
+                self -> CurrentTimeChanged();
+            }
         }
-            break;
+        break;
             
         default:
             break;
@@ -435,6 +452,7 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	m_movie = t_new_movie;
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
+    
     extern NSString **QTMovieDidEndNotification_ptr;
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: *QTMovieDidEndNotification_ptr object: m_movie];
     
@@ -557,14 +575,8 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 
 void MCQTKitPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 {
+    delete bitmap -> data;
 	delete bitmap;
-}
-
-inline QTTime do_QTMakeTime(long long timeValue, long timeScale)
-{
-    typedef QTTime (*QTMakeTimePtr)(long long timeValue, long timescale);
-    extern QTMakeTimePtr QTMakeTime_ptr;
-    return QTMakeTime_ptr(timeValue, timeScale);
 }
 
 extern NSString **QTMovieLoopsAttribute_ptr;

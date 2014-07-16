@@ -539,6 +539,10 @@ MCPlayer::MCPlayer()
     m_show_volume = false;
     m_scrub_back_is_pressed = false;
     m_scrub_forward_is_pressed = false;
+    
+    // MW-2014-07-16: [[ Bug ]] Put the player in the list.
+    nextplayer = MCplayers;
+    MCplayers = this;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -571,6 +575,10 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     m_show_volume = false;
     m_scrub_back_is_pressed = false;
     m_scrub_forward_is_pressed = false;
+    
+    // MW-2014-07-16: [[ Bug ]] Put the player in the list.
+    nextplayer = MCplayers;
+    MCplayers = this;
 }
 
 MCPlayer::~MCPlayer()
@@ -580,6 +588,22 @@ MCPlayer::~MCPlayer()
 		close();
 	
 	playstop();
+    
+    // MW-2014-07-16: [[ Bug ]] Remove the player from the player's list.
+	if (MCplayers != NULL)
+	{
+		if (MCplayers == this)
+			MCplayers = nextplayer;
+		else
+		{
+			MCPlayer *tptr = MCplayers;
+			while (tptr->nextplayer != NULL && tptr->nextplayer != this)
+				tptr = tptr->nextplayer;
+			if (tptr->nextplayer == this)
+                tptr->nextplayer = nextplayer;
+		}
+	}
+	nextplayer = NULL;
     
 	if (m_platform_player != nil)
 		MCPlatformPlayerRelease(m_platform_player);
@@ -1285,6 +1309,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 				return ES_ERROR;
 			}
+            
 			if (m_platform_player != nil)
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
             
@@ -1297,25 +1322,12 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		{
 			uint4 oldflags = flags;
 			Exec_stat stat = MCControl::setprop(parid, p, ep, effective);
-			if (flags != oldflags && !(flags & F_VISIBLE))
-				playstop();
+            
 			if (m_platform_player != nil)
 			{
 				bool t_visible;
 				t_visible = getflag(F_VISIBLE);
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
-                
-                // PM-2014-07-09: [[ Bug 12731 ]] Hiding and showing resized player preserves its size (and the position of the controller thumb, if it is paused)
-                if (t_visible)
-                {
-                    MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-                    layer_redrawall();
-                    state |= CS_PREPARED | CS_PAUSED;
-                    {
-                        nextplayer = MCplayers;
-                        MCplayers = this;
-                    }
-                }
 			}
             
 			return stat;
@@ -1678,10 +1690,6 @@ Boolean MCPlayer::prepare(const char *options)
 	if (ok)
 	{
 		state |= CS_PREPARED | CS_PAUSED;
-		{
-			nextplayer = MCplayers;
-			MCplayers = this;
-		}
 	}
     
 	return ok;
@@ -1759,6 +1767,7 @@ Boolean MCPlayer::playstop()
     
 	freetmp();
     
+    /*
 	if (MCplayers != NULL)
 	{
 		if (MCplayers == this)
@@ -1772,7 +1781,7 @@ Boolean MCPlayer::playstop()
                 tptr->nextplayer = nextplayer;
 		}
 	}
-	nextplayer = NULL;
+	nextplayer = NULL;*/
     
 	if (disposable)
 	{
@@ -1867,7 +1876,7 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaTypeName, kMCPlatformPropertyTypeNativeCString, &(&t_name));
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
-				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_offset);
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
                 // PM-2014-07-14: [[ Bug 12809 ]] Make sure each track is displayed on a separate line
 				ep . concatuint(t_id, EC_RETURN, i == 0);
 				ep . concatcstring(*t_name, EC_COMMA, false);
