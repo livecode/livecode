@@ -383,7 +383,8 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 		// MM-2014-04-16: [[ Bug 11964 ]] Use MCGContextMeasurePlatformText to fetch the width of the text.
 		// MM-2014-04-22: [[ Bug 11904 ]] Offset the x value to take into account any underhang of the first char of italic text.
 		MCGRectangle t_float_text_bounds;
-		t_float_text_bounds . origin . x = t_x_offset;
+		// AL-2014-07-16: [[ Bug 12488 ]] Fudge the text bounds back by to prevent clipping text
+		t_float_text_bounds . origin . x = t_x_offset - 1;
 		t_float_text_bounds . origin . y = -t_metrics . tmAscent;
 		t_float_text_bounds . size . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font, t_transform) + t_overhang;
 		t_float_text_bounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
