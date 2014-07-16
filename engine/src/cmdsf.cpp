@@ -586,6 +586,8 @@ MCExport::~MCExport()
 	delete palette_color_count;
 	delete palette_color_list;
 	delete size;
+    // MERG-2014-07-11: metadata array
+    delete metadata;
 }
 
 Parse_stat MCExport::parse(MCScriptPoint &sp)
@@ -680,6 +682,17 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 				}
 			}
 		}
+        
+        // MERG-2014-07-11: metadata array
+        if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH))
+        {
+            if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) != PS_NORMAL ||
+				sp . parseexp(False, True, &metadata) != PS_NORMAL)
+			{
+				MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+				return PS_ERROR;
+			}
+        }
 		
 		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
 		{
@@ -833,6 +846,11 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 	}
+    
+    // MERG-2014-07-11: metadata array
+    MCVariableArray * t_metadata;
+    t_metadata = NULL;
+    
 	
 	// MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
 	//   bitmap, which needs to be processed before compression. This flag
@@ -889,8 +907,19 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 		}
-
-		MCRectangle r;
+        
+        // MERG-2014-07-11: metadata array
+        if (metadata != NULL)
+        {
+            if (size -> eval(ep) != ES_NORMAL)
+			{
+				MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
+				return ES_ERROR;
+			}
+            t_metadata = ep . getarray() -> get_array();
+        }
+        
+        MCRectangle r;
 		r.x = r.y = -32768;
 		r.width = r.height = 0;
 		if (srect != NULL)
@@ -1098,7 +1127,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 		if (t_status == ES_NORMAL)
 		{
-			if (!MCImageExport(t_bitmap, format, &t_palette_settings, t_dither, t_out_stream, mstream))
+			if (!MCImageExport(t_bitmap, format, &t_palette_settings, t_dither, t_out_stream, mstream, t_metadata))
 			{
 				t_delete_file_on_error = true;
 				MCeerror->add(EE_EXPORT_CANTWRITE, line, pos, name);
