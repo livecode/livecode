@@ -507,6 +507,8 @@ void MCPlatformUngrabPointer(void);
 // Get the window (that we know about) at the given co-ords.
 void MCPlatformGetWindowAtPoint(MCPoint location, MCPlatformWindowRef& r_window);
 
+bool MCPlatformGetWindowWithId(uint32_t p_window_id, MCPlatformWindowRef& r_window);
+
 // Return the 'time' of the last event.
 uint32_t MCPlatformGetEventTime(void);
 
