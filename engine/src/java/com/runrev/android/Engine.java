@@ -2916,69 +2916,6 @@ public class Engine extends View implements EngineApi
 	
     ////////////////////////////////////////////////////////////////////////////////
 
-	// EngineApi implementation
-	
-	public Activity getActivity()
-	{
-		return (LiveCodeActivity)getContext();
-	}
-	
-	public ViewGroup getContainer()
-	{
-		return (ViewGroup)getParent();
-	}
-	
-	private boolean m_pending_activity_running = false;
-	private int m_pending_activity_result_code = 0;
-	private Intent m_pending_activity_data = null;
-	public void runActivity(Intent p_intent, ActivityResultCallback p_callback)
-	{
-		// We aren't re-entrant, so just invoke the callback as 'cancelled' if one is
-		// already running.
-		if (m_pending_activity_running)
-		{
-			p_callback . handleActivityResult(Activity.RESULT_CANCELED, null);
-			return;
-		}
-		
-		// Mark an activity as running.
-		m_pending_activity_running = true;
-		
-		// Run the activity.
-		((LiveCodeActivity)getContext()) . startActivityForResult(p_intent, RUN_ACTIVITY_RESULT);
-		
-		// Wait until the activity returns.
-		while(m_pending_activity_running)
-			doWait(60.0, false, true);
-		
-		// Take local copies of the instance vars (to stop hanging data).
-		Intent t_data;
-		int t_result_code;
-		t_data = m_pending_activity_data;
-		t_result_code = m_pending_activity_result_code;
-		
-		// Reset the instance vars (to stop hanging data and so that the callback
-		// can start another activity if it wants).
-		m_pending_activity_data = null;
-		m_pending_activity_result_code = 0;
-		
-		p_callback . handleActivityResult(t_result_code, t_data);
-	}
-	
-	private void onRunActivityResult(int p_result_code, Intent p_data)
-	{
-		// Store the result details.
-		m_pending_activity_data = p_data;
-		m_pending_activity_result_code = p_result_code;
-		m_pending_activity_running = false;
-		
-		// Make sure we signal a switch back to the script thread.
-		if (m_wake_on_event)
-			doProcess(false);
-	}
-	
-    ////////////////////////////////////////////////////////////////////////////////
-
     // url launch callback
     public static native void doLaunchFromUrl(String url);
 

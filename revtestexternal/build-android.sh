@@ -3,6 +3,7 @@ WORKSPACE=`cd ..; pwd`
 PROJECT=$WORKSPACE/$NAME
 
 export MODE=debug
+export MAC_MODE=Debug
 export DEBUGGABLE_FLAG=false
 export DEBUG_FLAG=0
 export ANDROID_NDK=$WORKSPACE/sdks/android-ndk
@@ -23,8 +24,8 @@ JAR=$JAVA_SDK/bin/jar
 
 echo "Building external stubs…"
 mkdir -p "$PROJECT/derived_src"
-echo "$PROJECT/../_build/mac/$MODE/lcidlc"
-"$PROJECT/../_build/mac/$MODE/lcidlc" "$PROJECT/$NAME.lcidl" "$PROJECT/derived_src/"
+echo "$PROJECT/../_build/mac/$MAC_MODE/lcidlc"
+"$PROJECT/../_build/mac/$MAC_MODE/lcidlc" "$PROJECT/$NAME.lcidl" "$PROJECT/derived_src/"
 
 echo "Building native code components…"
 export NDK_PROJECT_PATH=$DSTROOT
