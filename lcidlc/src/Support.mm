@@ -3003,6 +3003,80 @@ static jobject java__get_engine(void)
 }
 
 //////////
+// UTF-8 Modified uses CESU-8 encoding for surrogate pairs (http://en.wikipedia.org/wiki/CESU-8)
+//  so that we need to decode/encode the UTF-8 string when interacting with the JNI engine
+
+// We write the transcoding straight to the UTF-8 string
+// and the index given is updated
+static void cesu8_to_utf8(const char* x_cesu8, uint32_t& x_cesu8_index, char* x_utf8, uint32_t& x_utf8_index)
+{
+    uint16_t t_surrogate_pair[2] = {0,0};
+    
+    // We assume that the CESU-8 surrogate is valid and at least 6-byte long.
+    //  We decode the UTF16 surrogate pair which is
+    //  UTF-8 encoded and thus stored as:   1110xxxx 10xxxxxx 10xxxxxx 1110xxxx 10xxxxxx 10xxxxxx
+    t_surrogate_pair[0] = (uint16_t)(((uint16_t)(x_cesu8[x_cesu8_index++] & 0x0f)) << 12)
+                        | (uint16_t)(((uint16_t)(x_cesu8[x_cesu8_index++] & 0x3f)) << 6)
+                        | (uint16_t)(((uint16_t)(x_cesu8[x_cesu8_index++] & 0x3f)));
+    t_surrogate_pair[1] = (uint16_t)(((uint16_t)(x_cesu8[x_cesu8_index++] & 0x0f)) << 12)
+                        | (uint16_t)(((uint16_t)(x_cesu8[x_cesu8_index++] & 0x3f)) << 6)
+                        | (uint16_t)(((uint16_t)(x_cesu8[x_cesu8_index++] & 0x3f)));
+    
+    // Convert the UTF16 surrogate to the initial codepoint
+    uint32_t t_codepoint;
+    t_codepoint = 0x10000 + ((t_surrogate_pair[0] & 0x3FF) << 10) + (t_surrogate_pair[1] & 0x3FF);
+    
+    // Now we can encode in UTF-8 the 4-byte codepoint
+    //  being comprised between 0x10000 and 0x1FFFFF
+    x_utf8[x_utf8_index++] = 0xf0 | (t_codepoint >> 18);          	// ........|...xxx..|........|........
+    x_utf8[x_utf8_index++] = 0x80 | ((t_codepoint >> 12) & 0x3F);  	// ........|......xx|xxxx....|........
+    x_utf8[x_utf8_index++] = 0x80 | ((t_codepoint >> 6) & 0x3F);   	// ........|........|....xxxx|xx......
+    x_utf8[x_utf8_index++] = 0x80 | (t_codepoint & 0x3F);        	// ........|........|........|..xxxxxx
+}
+    
+// We write the transcoding straight to the CESU-8 string
+static void utf8_to_cesu8(const char* x_utf8, uint32_t& x_utf8_index, char* x_cesu8, uint32_t& x_cesu8_index)
+{
+    uint32_t t_codepoint;
+    t_codepoint = 0;
+    
+    // We assume that the UTF-8 surrogate is correctly encoded on 4-bytes
+    //  and thus that the pointer given has least 4 bytes following.
+    //  The surrogate pair is encoded as 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+    t_codepoint = (((uint16_t)(x_utf8[x_utf8_index++] & 0x07)) << 18)  //  ........|..xxx...|........|........
+                | (((uint16_t)(x_utf8[x_utf8_index++] & 0x3F)) << 12)  //  ........|......xx|xxxx....|........
+                | (((uint16_t)(x_utf8[x_utf8_index++] & 0x3F)) << 6)   //  ........|........|....xxxx|xx......
+                | (((uint16_t)(x_utf8[x_utf8_index++] & 0x3F)));       //  ........|........|........|..xxxxxx
+    
+    // We need the UTF-16 surrogate pair
+    uint16_t t_surrogate_pair[2] = {0, 0};
+    t_surrogate_pair[0] = (((t_codepoint - 0x10000) & 0xFFC00) >> 10) + 0xD800;
+    t_surrogate_pair[1] = (t_codepoint & 0x3FF) + 0xDC00;
+    
+    // We now encode the pair in UTF-8
+    // We assume that r_cesu8 is 6-byte long
+    // The pair is stored as 1110xxxx 10xxxxxx 10xxxxxx 1110xxxx 10xxxxxx 10xxxxx
+    x_cesu8[x_cesu8_index++] = 0xe0 | ((t_surrogate_pair[0] & 0xf000) >> 12);   // xxxx....|........ ........|........ -> ....xxxx
+    x_cesu8[x_cesu8_index++] = 0x80 | ((t_surrogate_pair[0] & 0x0f00) >> 6)     // ....xxxx|........ ........|........ -> ..xxxx..
+                                    | ((t_surrogate_pair[0] & 0x00c0) >> 6);    // ........|xx...... ........|........ -> ......xx
+    x_cesu8[x_cesu8_index++] = 0x80 | ((t_surrogate_pair[0] & 0x003f));         // ........|..xxxxxx ........|........ -> ..xxxxxx
+    x_cesu8[x_cesu8_index++] = 0xe0 | ((t_surrogate_pair[1] & 0xf000) >> 12);   // ........|........ xxxx....|........ -> ....xxxx
+    x_cesu8[x_cesu8_index++] = 0x80 | ((t_surrogate_pair[1] & 0x0f00) >> 6)     // ........|........ ....xxxx|........ -> ..xxxx..
+                                    | ((t_surrogate_pair[1] & 0x00c0) >> 6);    // ........|........ ........|xx...... -> ......xx
+    x_cesu8[x_cesu8_index++] = 0x80 | ((t_surrogate_pair[1] & 0x003f));         // ........|........ ........|..xxxxxx -> ..xxxxxx
+}
+    
+static bool starts_cesu8_surrogate(char p_char)
+{
+    return p_char == 0xED;
+}
+
+static bool starts_utf8_surrogate(char p_char)
+{
+    return p_char > 0xeff && p_char < 0xf8;
+}
+    
+//////////
     
 
 static LCError java_from__cstring(JNIEnv *env, const char* p_value, jobject& r_value)
@@ -3052,16 +3126,51 @@ static LCError java_from__utf8cstring(JNIEnv *env, const char* p_value, jobject&
     LCError err;
     err = kLCErrorNone;
     
-    size_t t_char_count;
-    t_char_count = strlen(p_value);
+    uint32_t t_utf8_char_count;
+    uint32_t t_cesu8_char_count;
+    
+    t_utf8_char_count = strlen(p_value);
+    char *t_cesu8_chars;
     
     jobject t_java_value;
     if (err == kLCErrorNone)
     {
         //  JNI uses UTF-8 Modified instead of UTF-8
-        //  but there is no difference since no nil chars should be in the string passed
-        //  (strlen would discard the other of the string)
-        t_java_value = (jobject)env -> NewStringUTF(p_value, t_char_count);
+        //  so we need to update all the surrogate pairs
+        //  We first want the new size.        
+        for (uint32_t i = 0; i < t_utf8_char_count; )
+        {
+            if (starts_utf8_surrogate(p_value[i]))
+            {
+                t_cesu8_char_count += 6;
+                i += 4;
+            }
+            else
+            {
+                ++i;
+                ++t_cesu8_char_count;
+            }
+        }
+        
+        // NULL-terminated string
+        t_cesu8_chars = (char*)malloc(t_cesu8_char_count + 1);
+        
+        if (t_cesu8_chars == nil)
+            err = kLCErrorOutOfMemory;
+    }
+    
+    if (err == kLCErrorNone)
+    {
+        // We now encode the UTF-8 string to UTF-8 Modified
+        for (uint32_t cesu8_index = 0, utf8_index = 0; utf8_index < t_utf8_char_count; )
+        {
+            if (starts_utf8_surrogate(p_value[utf8_index]))
+                utf8_to_cesu8(p_value, utf8_index, t_cesu8_chars, cesu8_index);
+            else
+                t_cesu8_chars[cesu8_index++] = p_value[utf8_index++];
+        }
+        
+        t_java_value = (jobject)env -> NewStringUTF(p_value);
         if (t_java_value == nil || env -> ExceptionOccurred() != nil)
         {
             env -> ExceptionClear();
@@ -3082,7 +3191,7 @@ static LCError java_from__utf16cstring(JNIEnv *env, const char* p_value, jobject
     
     size_t t_char_count;
     jchar *t_jchar_value;
-    t_jchar_value = p_value;
+    t_jchar_value = (jchar*)p_value;
     
     // We only need to find the length of the string, and pass it straight to NewString
     while(*t_jchar_value++ != 0)
@@ -3235,34 +3344,6 @@ static LCError java_to__cstring(JNIEnv *env, jobject value, char*& r_cstring)
 	return err;
 }
     
-// UTF-8 Modified uses CESU-8 encoding for surrogate pairs (http://en.wikipedia.org/wiki/CESU-8)
-//  so that we need to decode the UTF-8 string got through JNI
-static void cesu8_to_utf8(const char* p_cesu8, char* r_utf8)
-{
-    uint16_t t_surrogate_pair[2] = {0,0};
-    
-    // We assume that the CESU-8 surrogate is valid and 6-byte long.
-    //  We decode the UTF16 surrogate pair which is
-    //  UTF-8 encoded and thus stored as:   1110xxxx 10xxxxxx 10xxxxxx 1110xxxx 10xxxxxx 10xxxxxx
-    t_surrogate_pair[0] = (uint16_t)(((uint16_t)(p_cesu8[0] & 0x0f)) << 12)
-                        | (uint16_t)(((uint16_t)(p_cesu8[1] & 0x3f)) << 6)
-                        | (uint16_t)(((uint16_t)(p_cesu8[2] & 0x3f)));
-    t_surrogate_pair[1] = (uint16_t)(((uint16_t)(p_cesu8[3] & 0x0f)) << 12)
-                        | (uint16_t)(((uint16_t)(p_cesu8[4] & 0x3f)) << 6)
-                        | (uint16_t)(((uint16_t)(p_cesu8[5] & 0x3f)));
-    
-    // Convert the UTF16 surrogate to the initial codepoint
-    uint32_t t_codepoint;
-    t_codepoint = 0x10000 + ((t_surrogate_pair[0] & 0x3FF) << 10) + (t_surrogate_pair[1] & 0x3FF);
-    
-    // Now we can encode in UTF-8 the 4-byte codepoint
-    //  being comprised between 0x10000 and 0x1FFFFF
-    r_utf8[0] = 0xf0 | (t_codepoint >> 18);          	// ........|...xxx..|........|........
-    r_utf8[1] = 0x80 | ((t_codepoint >> 12) & 0x3F);  	// ........|......xx|xxxx....|........
-    r_utf8[2] = 0x80 | ((t_codepoint >> 6) & 0x3F);   	// ........|........|....xxxx|xx......
-    r_utf8[3] = 0x80 | (t_codepoint & 0x3F);        	// ........|........|........|..xxxxxx
-}
-    
 // SN-2014-07-16: [[ ExternalsApiV6 ]] Added new conversion functions
 static LCError java_to__utf8cstring(JNIEnv *env, jobject value, char*& r_cstring)
 {
@@ -3271,33 +3352,32 @@ static LCError java_to__utf8cstring(JNIEnv *env, jobject value, char*& r_cstring
     LCError err;
     err = kLCErrorNone;
     
-    const char *t_utf8_modified_chars;
-    uint32_t t_utf8_modified_char_count;
+    const char *t_cesu8_chars;
+    uint32_t t_cesu8_char_count;
     
-    t_utf8_modified_count = 0;
+    t_cesu8_char_count = 0;
     if (err == kLCErrorNone)
     {
-        t_utf8_modified_chars = env -> GetStringUTFChars((jstring)value, nil);
-        if (t_utf8_modified_chars == nil || env -> ExceptionOccurred() != nil)
+        t_cesu8_chars = env -> GetStringUTFChars((jstring)value, nil);
+        if (t_cesu8_chars == nil || env -> ExceptionOccurred() != nil)
         {
             env -> ExceptionClear();
             err = kLCErrorOutOfMemory;
         }
     }
     
-    const char *t_utf8_chars;
+    char *t_utf8_chars;
     uint32_t t_utf8_char_count;
     if (err == kLCErrorNone)
     {
-        t_utf8_modified_char_count = env -> GetStringUTFLength((jstring)value);
+        t_cesu8_char_count = env -> GetStringUTFLength((jstring)value);
         
         // Mesure the string's length when encoded in UTF-8 (converting 6-byte long CESU-8 surrogate pairs
         //  to 4-byte long UTF-8 surrogate pairs
-        for (uint32_t i = 0; i < t_utf8_modified_char_count; )
+        for (uint32_t i = 0; i < t_cesu8_char_count; )
         {
-            if (t_utf8_modified_chars[i] == 0xED)
+            if (starts_cesu8_surrogate(t_cesu8_chars[i]))
             {
-                 // Start of a surrogate pair in CESU-8
                 t_utf8_char_count += 4;
                 i += 6;
             }
@@ -3316,16 +3396,12 @@ static LCError java_to__utf8cstring(JNIEnv *env, jobject value, char*& r_cstring
     if (err == kLCErrorNone)
     {
         // Convert the UTF-8 Modified to UTF-8
-        for (uint32_t i = 0; i < t_utf8_modified_char_count; )
+        for (uint32_t utf8_index = 0, cesu8_index = 0; cesu8_index < t_cesu8_char_count; )
         {
-            if (t_utf8_modified_chars[i] == 0xED)
-            {
-                cesu8_to_utf8(t_utf8_modified_chars, t_utf8_chars);
-                t_utf8_modified_chars += 6;
-                t_utf8_chars += 4;
-            }
+            if (starts_cesu8_surrogate(t_cesu8_chars[cesu8_index]))
+                cesu8_to_utf8(t_cesu8_chars, cesu8_index, t_utf8_chars, utf8_index);
             else
-                t_utf8_chars++ = t_utf8_modified_chars++:
+                t_utf8_chars[utf8_index++] = t_cesu8_chars[cesu8_index++];
         }
     }
     
@@ -3334,8 +3410,8 @@ static LCError java_to__utf8cstring(JNIEnv *env, jobject value, char*& r_cstring
     else
         free(t_utf8_chars);
     
-    if (t_unichars != nil)
-        env -> ReleaseStringUTFChars((jstring)value, t_utf8_modified_chars);
+    if (t_cesu8_chars != nil)
+        env -> ReleaseStringUTFChars((jstring)value, t_cesu8_chars);
     
     return err;
 }
@@ -3360,20 +3436,20 @@ static LCError java_to__16cstring(JNIEnv *env, jobject value, char*& r_cstring)
     }
     
     // GetStringChars returns a non nil-terminated string...
-    jchar* t_terminater_unichars;
+    jchar* t_terminated_unichars;
     
     if (err == kLCErrorNone)
     {
         t_unichar_count = env -> GetStringLength((jstring)value);
-        t_terminated_unichars = (char *)malloc((t_unichar_count + 1) * sizeof(jchar));
+        t_terminated_unichars = (jchar *)malloc((t_unichar_count + 1) * sizeof(jchar));
         if (t_terminated_unichars == nil)
             err = kLCErrorOutOfMemory;
         else
-            memcpy(t_terminated_unichars, t_unichars, (t_unichar_count + 1) * sizeof*jchar));
+            memcpy(t_terminated_unichars, t_unichars, (t_unichar_count + 1) * sizeof(jchar));
     }
     
     if (err == kLCErrorNone)
-        r_cstring = t_terminated_unichars;
+        r_cstring = (char*)t_terminated_unichars;
     else
         free(t_terminated_unichars);
     
