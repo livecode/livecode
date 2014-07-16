@@ -676,15 +676,24 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 					if (t_need_effects &&
 						sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EFFECTS) != PS_NORMAL)
 					{
-						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-						return PS_ERROR;
+                        // MERG-2014-07-11: [[ ImageMetadata ]] Allow metadata without having to specify effects
+                        if (with_effects && sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) == PS_NORMAL)
+                        {
+                            sp . backup();
+                            sp . backup();
+                        }
+                        else
+                        {
+                            MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+                            return PS_ERROR;
+                        }
 					}
 				}
 			}
 		}
         
-        // MERG-2014-07-11: metadata array
-        if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH))
+        // MERG-2014-07-11: [[ ImageMetadata ]] metadata array
+        if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL || sp . skip_token(SP_FACTOR, TT_BINOP, O_AND) == PS_NORMAL )
         {
             if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) != PS_NORMAL ||
 				sp . parseexp(False, True, &metadata) != PS_NORMAL)
@@ -911,7 +920,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
         // MERG-2014-07-11: metadata array
         if (metadata != NULL)
         {
-            if (size -> eval(ep) != ES_NORMAL)
+            if (metadata -> eval(ep) != ES_NORMAL)
 			{
 				MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
 				return ES_ERROR;

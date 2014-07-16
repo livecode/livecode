@@ -310,9 +310,7 @@ void parsemetadata(png_structp png_ptr, png_infop info_ptr, MCVariableArray * p_
             if (t_ppi > 0)
             {
                 // Convert to pixels per metre from pixels per inch
-                uint16_t t_ppm;
-                t_ppm = (uint16_t) (t_ppi * 10000 + 127) / 254;
-                png_set_pHYs(png_ptr, info_ptr, t_ppm, t_ppm, PNG_RESOLUTION_METER);
+                png_set_pHYs(png_ptr, info_ptr, t_ppi / 0.0254, t_ppi / 0.0254, PNG_RESOLUTION_METER);
             }
         }
     }
