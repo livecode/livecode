@@ -446,6 +446,8 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	// as it works on the platforms we support, it should be fine.
 	[m_movie setDraggable: NO];
 	
+    [m_view setControllerVisible: NO];
+    
 	[m_view setMovie: m_movie];
     
     // Set the last marker to very large so that any marker will trigger.
@@ -653,10 +655,6 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 		case kMCPlatformPlayerPropertyVolume:
 			[m_movie setVolume: *(uint16_t *)p_value / 100.0f];
 			break;
-        case kMCPlatformPlayerPropertyShowController:
-			m_show_controller = *(bool *)p_value;
-			Synchronize();
-			break;
 		case kMCPlatformPlayerPropertyShowSelection:
 			m_show_selection = *(bool *)p_value;
 			Synchronize();
@@ -782,9 +780,7 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 		case kMCPlatformPlayerPropertyVolume:
 			*(uint16_t *)r_value = [m_movie volume] * 100.0f;
 			break;
-        case kMCPlatformPlayerPropertyShowController:
-			*(bool *)r_value = m_show_controller;
-			break;
+            
 		case kMCPlatformPlayerPropertyShowSelection:
 			*(bool *)r_value = m_show_selection;
 			break;

@@ -56,6 +56,28 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
 #define PIXEL_FORMAT_32 k32ARGBPixelFormat
 #endif
 
+inline void SetRect(Rect *t_rect, int l, int t, int r, int b)
+{
+    t_rect -> left = l;
+    t_rect -> top = t;
+    t_rect -> right = r;
+    t_rect -> bottom = b;
+}
+
+enum
+{
+    ditherCopy = 0x40
+};
+
+extern "C"
+{
+PixMapHandle GetGWorldPixMap(GWorldPtr gworld);
+void DisposeGWorld(GWorldPtr gworld);
+void *GetPixBaseAddr(PixMapHandle pix);
+void LockPixels(PixMapHandle pix);
+void UnlockPixels(PixMapHandle pix);
+}
+
 #endif
 
 #ifdef FEATURE_QUICKTIME_EFFECTS
@@ -80,6 +102,7 @@ static void MCQTFinit(void);
 
 extern "C" int initialise_weak_link_QuickTime(void);
 extern "C" int initialise_weak_link_QTKit(void);
+extern "C" int initialise_weak_link_QuickDraw(void);
 
 /////////
 
@@ -100,7 +123,8 @@ bool MCQTInit(void)
 	}
 #elif defined _MACOSX
     if (initialise_weak_link_QuickTime() == 0 ||
-        initialise_weak_link_QTKit() == 0)
+        initialise_weak_link_QTKit() == 0 ||
+        initialise_weak_link_QuickDraw() == 0)
     {
         s_qt_initted = false;
         return false;
@@ -527,7 +551,6 @@ void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
 static CGrafPtr s_qt_target_port = nil;
 
 static MCGImageRef s_qt_start_image = nil;
@@ -938,7 +961,7 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 		PixMapHandle t_src_pixmap = GetGWorldPixMap(s_qt_start_port);
 		MakeImageDescriptionForPixMap(t_src_pixmap, &s_qt_start_desc);
 		CDSequenceNewDataSource(s_qt_effect_seq, &t_src_sequence, 'srcA', 1, (Handle)s_qt_start_desc, nil, 0);
-		CDSequenceSetSourceData(t_src_sequence, QTGetPixBaseAddr(t_src_pixmap), (**s_qt_start_desc) . dataSize);
+		CDSequenceSetSourceData(t_src_sequence, GetPixBaseAddr(t_src_pixmap), (**s_qt_start_desc) . dataSize);
 	}
 	
 	if (s_qt_start_desc != NULL)
@@ -1047,34 +1070,6 @@ void MCQTEffectEnd(void)
 		s_qt_effect_desc = NULL;
 	}
 }
-
-#else    // here #if 0 stops
-
-void MCQTEffectsList(MCExecPoint& ep)
-{
-	ep . clear();
-}
-
-Boolean MCQTEffectsDialog(MCExecPoint& ep, const char *p_title, Boolean p_sheet)
-{
-	return True;
-}
-
-bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, MCGImageRef p_start, MCGImageRef p_end, const MCRectangle& p_area)
-{
-    return false;
-}
-
-bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_delta, uint4 p_duration)
-{
-    return false;
-}
-
-void MCQTEffectEnd(void)
-{
-}
-
-#endif
 
 #else    // if not FEATURE_QUICKTIME_EFFECTS
 
