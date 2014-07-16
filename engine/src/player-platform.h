@@ -259,6 +259,7 @@ public:
     
     void handle_mdown(int which);
     void handle_mstilldown(int which);
+    void handle_shift_mdown(int which);
     void handle_mup(int which);
     void handle_mfocus(int x, int y);
     
