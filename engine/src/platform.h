@@ -742,6 +742,9 @@ void MCPlatformInvalidateWindow(MCPlatformWindowRef window, MCRegionRef region);
 void MCPlatformUpdateWindow(MCPlatformWindowRef window);
 
 void MCPlatformShowWindow(MCPlatformWindowRef window);
+// SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
+//  Combo-specific window creation
+void MCPlatformShowWindowAsCombo(MCPlatformWindowRef window);
 void MCPlatformShowWindowAsSheet(MCPlatformWindowRef window, MCPlatformWindowRef parent_window);
 void MCPlatformShowWindowAsDrawer(MCPlatformWindowRef window, MCPlatformWindowRef parent_window, MCPlatformWindowEdge edge);
 void MCPlatformHideWindow(MCPlatformWindowRef window);
@@ -977,7 +980,7 @@ enum MCPlatformPlayerProperty
     kMCPlatformPlayerPropertyMarkers,
     
     kMCPlatformPlayerPropertyShowController,
-
+    kMCPlatformPlayerPropertyShowSelection,
 	kMCPlatformPlayerPropertyOnlyPlaySelection,
 	
 	kMCPlatformPlayerPropertyLoop,

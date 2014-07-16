@@ -65,7 +65,11 @@ enum
 	OPERATION_GET_ARRAY_UTF8_TEXT,
 	OPERATION_GET_ARRAY_UTF8_BINARY,
 	OPERATION_SET_ARRAY_UTF8_TEXT,
-	OPERATION_SET_ARRAY_UTF8_BINARY
+	OPERATION_SET_ARRAY_UTF8_BINARY,
+
+	// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
+	OPERATION_STACK_TO_WINDOW_RECT,
+	OPERATION_WINDOW_TO_STACK_RECT,
 };
 
 enum
@@ -765,6 +769,38 @@ Bool SecurityCanAccessLibraryUTF8(const char *p_library)
 	if (s_security_handlers != NULL)
 		return s_security_handlers[SECURITY_CHECK_LIBRARY_UTF8](p_library);
 	return True;
+}
+    
+    
+// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
+void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+{
+    char *t_result;
+    
+    if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+    
+	t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])(p_win_id, x_rect, NULL, &r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+{
+	char *t_result;
+    
+	if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+    
+	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])(p_win_id, x_rect, NULL, &r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

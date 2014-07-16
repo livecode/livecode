@@ -24,12 +24,12 @@
 		1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
 		1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D01945DD31000E3705 /* mac-qt-player.mm */; };
 		1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D21945DD43000E3705 /* mac-av-player.mm */; };
-		1DDE08E71945F036000E3705 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; };
+		1DDE08E71945F036000E3705 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		1DDE08E91945F0DE000E3705 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
 		1DE9AF8E1963197C008529DC /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
-		1DE9AF8F19631984008529DC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; };
+		1DE9AF8F19631984008529DC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		1DE9AF901963199B008529DC /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
-		1DE9AF91196319A2008529DC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; };
+		1DE9AF91196319A2008529DC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		1DED772C19129F27000FFFE3 /* button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3F0B8096FD00200116 /* button.cpp */; };
 		3C03ED921134205A009DE406 /* socket_resolve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C03ED911134205A009DE406 /* socket_resolve.cpp */; };
 		3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C0A3CC310BAF6120074D630 /* iquantization.cpp */; };
@@ -197,11 +197,9 @@
 		4D1F9E51171C69940091C6CB /* libsecurity-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D1F9C2E171C64320091C6CB /* libsecurity-community.a */; };
 		4D221A6F171D577400E7E557 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A67171D574F00E7E557 /* libcrypto.dylib */; };
 		4D221A70171D577400E7E557 /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A69171D574F00E7E557 /* libcups.dylib */; };
-		4D221A71171D577400E7E557 /* libcurl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6B171D574F00E7E557 /* libcurl.dylib */; };
 		4D221A72171D577400E7E557 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6D171D574F00E7E557 /* libssl.dylib */; };
 		4D221A73171D577E00E7E557 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A67171D574F00E7E557 /* libcrypto.dylib */; };
 		4D221A74171D577E00E7E557 /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A69171D574F00E7E557 /* libcups.dylib */; };
-		4D221A75171D577E00E7E557 /* libcurl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6B171D574F00E7E557 /* libcurl.dylib */; };
 		4D221A76171D577E00E7E557 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6D171D574F00E7E557 /* libssl.dylib */; };
 		4D221ABA171D599D00E7E557 /* encodederrors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5A21F0170343FD003C62E2 /* encodederrors.cpp */; };
 		4D221ABB171D59A600E7E557 /* ide.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5D0B8096FD00200116 /* ide.cpp */; };
@@ -225,7 +223,6 @@
 		4D221F46171D632600E7E557 /* startupstack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5884DB0B80D3BA00200116 /* startupstack.cpp */; };
 		4D221FDC171D65AA00E7E557 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A67171D574F00E7E557 /* libcrypto.dylib */; };
 		4D221FDD171D65AA00E7E557 /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A69171D574F00E7E557 /* libcups.dylib */; };
-		4D221FDE171D65AA00E7E557 /* libcurl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6B171D574F00E7E557 /* libcurl.dylib */; };
 		4D221FDF171D65AA00E7E557 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6D171D574F00E7E557 /* libssl.dylib */; };
 		4D23416916AD41B300F5B5DA /* exec-interface2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D23416816AD41B300F5B5DA /* exec-interface2.cpp */; };
 		4D2A57AF1198634300135143 /* LiveCode.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode.rsrc */; };
@@ -1901,7 +1898,6 @@
 				4D2A57CD1198634300135143 /* SystemConfiguration.framework in Frameworks */,
 				4D221FDC171D65AA00E7E557 /* libcrypto.dylib in Frameworks */,
 				4D221FDD171D65AA00E7E557 /* libcups.dylib in Frameworks */,
-				4D221FDE171D65AA00E7E557 /* libcurl.dylib in Frameworks */,
 				4D221FDF171D65AA00E7E557 /* libssl.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1941,7 +1937,6 @@
 				4D8BED0211B959F500DED42A /* Security.framework in Frameworks */,
 				4D221A73171D577E00E7E557 /* libcrypto.dylib in Frameworks */,
 				4D221A74171D577E00E7E557 /* libcups.dylib in Frameworks */,
-				4D221A75171D577E00E7E557 /* libcurl.dylib in Frameworks */,
 				4D221A76171D577E00E7E557 /* libssl.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2014,7 +2009,6 @@
 				4D00C62A0CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */,
 				4D221A6F171D577400E7E557 /* libcrypto.dylib in Frameworks */,
 				4D221A70171D577400E7E557 /* libcups.dylib in Frameworks */,
-				4D221A71171D577400E7E557 /* libcurl.dylib in Frameworks */,
 				4D221A72171D577400E7E557 /* libssl.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

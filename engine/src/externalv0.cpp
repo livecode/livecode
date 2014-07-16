@@ -40,6 +40,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "scriptpt.h"
 #include "chunk.h"
 
+#include "dispatch.h"
+
+#include "graphics_util.h"
+
 #include "external.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1565,6 +1569,64 @@ static char *set_array_utf8_binary(const char *arg1, const char *arg2,
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// IM-2014-07-09: [[ Bug 12225 ]] Add external functions to convert stack coordinates based on current transform
+
+// convert stack to logical window coords
+static char *stack_to_window_rect(const char *arg1, const char *arg2,
+									   const char *arg3, int *retval)
+{
+	uint32_t t_win_id;
+	t_win_id = (uint32_t)arg1;
+
+	MCStack *t_stack;
+	t_stack = MCdispatcher->findstackwindowid(t_win_id);
+
+	if (t_stack == nil)
+	{
+		*retval = xresFail;
+		return nil;
+	}
+
+	MCRectangle32 *t_rect;
+	t_rect = (MCRectangle32*)arg2;
+
+	*t_rect = MCRectangle32GetTransformedBounds(*t_rect, t_stack->getviewtransform());
+
+	// IM-2014-07-09: [[ Bug 12602 ]] Convert window -> screen coords
+	*t_rect = MCRectangle32FromMCRectangle(MCscreen->logicaltoscreenrect(MCRectangle32ToMCRectangle(*t_rect)));
+
+	*retval = xresSucc;
+	return nil;
+}
+
+// convert logical window to stack coords
+static char *window_to_stack_rect(const char *arg1, const char *arg2,
+									   const char *arg3, int *retval)
+{
+	uint32_t t_win_id;
+	t_win_id = (uint32_t)arg1;
+
+	MCStack *t_stack;
+	t_stack = MCdispatcher->findstackwindowid(t_win_id);
+
+	if (t_stack == nil)
+	{
+		*retval = xresFail;
+		return nil;
+	}
+
+	MCRectangle32 *t_rect;
+	t_rect = (MCRectangle32*)arg2;
+
+	// IM-2014-07-09: [[ Bug 12602 ]] Convert screen -> window coords
+	*t_rect = MCRectangle32FromMCRectangle(MCscreen->screentologicalrect(MCRectangle32ToMCRectangle(*t_rect)));
+
+	*t_rect = MCRectangle32GetTransformedBounds(*t_rect, MCGAffineTransformInvert(t_stack->getviewtransform()));
+
+	*retval = xresSucc;
+	return nil;
+}
+
 // IM-2014-03-06: [[ revBrowserCEF ]] Add externals extension to the callback list
 // SN-2014-07-08: [[ UnicodeExternalsV0 ]] Add externals extension to handle UTF8-encoded parameters
 XCB MCcbs[] =
@@ -1620,6 +1682,9 @@ XCB MCcbs[] =
 	get_array_utf8_binary,
 	set_array_utf8_text,
 	set_array_utf8_binary,
+
+	stack_to_window_rect,
+	window_to_stack_rect,
 
 	NULL
 };

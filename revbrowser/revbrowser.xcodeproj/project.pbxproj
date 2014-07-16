@@ -358,6 +358,7 @@
 				E8D3735418CDDA3F005C1182 /* Sources */,
 				E8D3735518CDDA3F005C1182 /* Frameworks */,
 				E8D3787718CF44C0005C1182 /* CopyFiles */,
+				E812E09E196AFE3A001F6EC4 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -460,6 +461,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E812E09E196AFE3A001F6EC4 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(CONFIGURATION_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			outputPaths = (
+				"$(CONFIGURATION_BUILD_DIR)/$(PRODUCT_NAME) EH.$(EXECUTABLE_EXTENSION)",
+				"$(CONFIGURATION_BUILD_DIR)/$(PRODUCT_NAME) NP.$(EXECUTABLE_EXTENSION)",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "exec tools/make_more_helpers.sh";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4DF42AA50B0488CE003F2D95 /* Sources */ = {

@@ -1076,19 +1076,7 @@ void MCQTEffectEnd(void)
 	}
 }
 
-#else
-
-#ifndef PLAYER_LEGACY_H
-bool MCQTInit(void)
-{
-    return false;
-}
-
-void MCQTGetVersion(MCStringRef& r_version)
-{
-    r_version = MCValueRetain(kMCEmptyString);
-}
-#endif
+#else    // here #if 0 stops
 
 void MCQTEffectsList(MCStringRef &r_effect_list)
 {
@@ -1118,22 +1106,22 @@ void MCQTEffectEnd(void)
 
 #endif
 
-#else
+#else    // if not FEATURE_QUICKTIME_EFFECTS
 
 void MCQTEffectsList(MCStringRef &r_list)
 {
-	r_list = MCValueRetain(kMCEmptyString);
+    r_list = MCValueRetain(kMCEmptyString);
 }
 
 Boolean MCQTEffectsDialog(MCStringRef &r_value)
 {
     r_value = MCValueRetain(kMCEmptyString);
-	return True;
+    return True;
 }
 
 void MCQTRecordSound(MCStringRef file)
 {
-	MCresult -> sets("not supported");
+    MCresult -> sets("not supported");
 }
 
 void MCQTGetRecordLoudness(integer_t &r_loudness)
@@ -1158,7 +1146,9 @@ void MCQTRecordDialog()
 
 void MCQTGetVersion(MCStringRef& r_version)
 {
-	r_version = MCValueRetain(MCSTR("0.0"));  //indicates that no QT installed
+    r_version = MCValueRetain(MCSTR("0.0"));  //indicates that no QT installed
 }
+
+
 #endif
 
