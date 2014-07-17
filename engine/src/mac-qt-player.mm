@@ -55,6 +55,7 @@ public:
     virtual ~MCQTKitPlayer(void);
     
     virtual bool IsPlaying(void);
+    // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
     virtual void Start(double rate);
     virtual void Stop(void);
     virtual void Step(int amount);
@@ -509,6 +510,7 @@ bool MCQTKitPlayer::IsPlaying(void)
 	return [m_movie rate] != 0;
 }
 
+// PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
 void MCQTKitPlayer::Start(double rate)
 {
 	[m_movie setRate: rate];
