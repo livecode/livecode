@@ -33,43 +33,44 @@ command revTestExternalTestWait
 
 command revTestExternalTestArrays
 
-command revTextExternalTestUTF8String
+function revTestExternalTestUTF8String
     in string as utf8-c-string
     return utf8-c-string
     
-command revTestExternalTestUTF16String
+function revTestExternalTestUTF16String
     in string as utf16-c-string
     return utf16-c-string
     
-command revTestExternalTestUTF8Data
+function revTestExternalTestUTF8Data
     in data as utf8-c-data
     return utf8-c-data
     
-command revTestExternalTestUTF16Data
+function revTestExternalTestUTF16Data
     in data as utf16-c-data
     return utf16-c-data
 
 use java on android
+use none on linux,mac,windows,ios
 command revTestExternalTestPostAndSend
 
 use none on linux, windows, android
 use objc on mac, ios
 
-/*command revTestExternalTestObjcArrays
+function revTestExternalTestObjcArrays
 	in array as objc-array
 	return objc-array
 
-command revTestExternalTestObjcDictionaries
+function revTestExternalTestObjcDictionaries
 	in dict as objc-dictionary
 	return objc-dictionary
     
-command revtestExternalTestObjcNumber
+function revtestExternalTestObjcNumber
     in number as objc-number
     return objc-number
     
-command revTestExternalTestObbjcData
+function revTestExternalTestObbjcData
     in data as objc-data
-    return objc-data*/
+    return objc-data
 
 use none on mac, linux, windows, android, ios
 use java on android
@@ -78,5 +79,21 @@ tail command revTestExternalAndroidButtonCreate
 tail command revTestExternalAndroidButtonDestroy
 
 function revTestExternalRunActivity return c-string
+
+function revTestExternalTestAndroidUTF8String
+    in string as utf8-c-string
+    return utf8-c-string
+    
+function revTestExternalTestAndroidUTF16String
+    in string as utf16-c-string
+    return utf16-c-string
+    
+function revTestExternalTestAndroidUTF8Data
+    in data as utf8-c-data
+    return utf8-c-data
+    
+function revTestExternalTestAndroidUTF16Data
+    in data as utf16-c-data
+    return utf16-c-data
 
 command revTestExternalRunOnSystemThread

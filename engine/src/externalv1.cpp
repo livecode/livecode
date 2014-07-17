@@ -1790,6 +1790,8 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     {
         MCAutoStringRef t_stringref;
         
+        char* t_string = *(char**)p_value;
+        
         if (!MCStringCreateWithBytes(*(byte_t**)p_value, strlen(*(char**)p_value), kMCStringEncodingUTF8, false, &t_stringref))
             return kMCExternalErrorOutOfMemory;
         
@@ -1799,8 +1801,8 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     {
         MCAutoStringRef t_stringref;
         MCString* t_string;
-        t_string = (MCString*)t_string;
-        if (!MCStringCreateWithBytes((byte_t*)t_string->getstring(), t_string->getlength(), kMCStringEncodingUTF16, false, &t_stringref))
+        t_string = (MCString*)p_value;
+        if (!MCStringCreateWithBytes((byte_t*)t_string->getstring(), 2 * t_string->getlength(), kMCStringEncodingUTF16, false, &t_stringref))
             return kMCExternalErrorOutOfMemory;
         
         return var -> SetString(*t_stringref);
@@ -1814,6 +1816,7 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         t_chars = *(unichar_t**)p_value;
         for (t_char_count = 0 ; *t_chars; ++t_char_count)
             ++t_chars;
+        
         
         if (!MCStringCreateWithChars(*(const unichar_t**)p_value, t_char_count, &t_stringref))
             return kMCExternalErrorOutOfMemory;
@@ -1988,7 +1991,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         if (!MCStringConvertToUnicode(*t_stringref, t_chars, t_char_count))
             return kMCExternalErrorOutOfMemory;
         
-        ((MCString*)p_value) -> set((char*)t_chars, t_char_count * 2);
+        ((MCString*)p_value) -> set((char*)t_chars, t_char_count);
         break;
     }
     case kMCExternalValueOptionAsUTF16CString:
@@ -2166,7 +2169,7 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
         MCAutoStringRef t_stringref;
         MCString* t_string;
         t_string = (MCString*)t_string;
-        if (!MCStringCreateWithBytes((byte_t*)t_string->getstring(), t_string->getlength(), kMCStringEncodingUTF16, false, &t_stringref))
+        if (!MCStringCreateWithBytes((byte_t*)t_string->getstring(), 2 * t_string->getlength(), kMCStringEncodingUTF16, false, &t_stringref))
             return kMCExternalErrorOutOfMemory;
         
         return var -> AppendString(p_options, *t_stringref);

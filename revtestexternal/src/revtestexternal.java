@@ -8,6 +8,8 @@ import android.view.*;
 import android.widget.*;
 import android.content.*;
 import android.net.*;
+import java.lang.String;
+import java.io.UnsupportedEncodingException;
 
 // We must export a public class with the same name as the external.
 public class revtestexternal
@@ -17,6 +19,12 @@ public class revtestexternal
 	
 	// The LC object to send the pressed message to.
 	static LC.Object s_target;
+    
+    // Treble UTF-8 clef
+    char[] m_utf8_clef = null;
+    
+    // Treble UTF-16 clef
+    short[] m_utf16_clef = null;
 	
 	public static void revTestExternalAndroidButtonCreate()
 	{
@@ -106,6 +114,48 @@ public class revtestexternal
 		
 		t_wait . Release();
 	}
+    
+    private static String trebleClef()
+    {
+        byte[] t_utf8_clef = new byte[4];
+        t_utf8_clef[0] = Integer.decode("0xF0").byteValue();
+        t_utf8_clef[1] = Integer.decode("0x9D").byteValue();
+        t_utf8_clef[2] = Integer.decode("0x84").byteValue();
+        t_utf8_clef[3] = Integer.decode("0x9E").byteValue();
+        
+        try
+        {
+            return  new String(t_utf8_clef, "UTF8");
+        }
+        catch(UnsupportedEncodingException e)
+        {
+            return null;
+        }
+    }
+    
+    public static String revTestExternalTestAndroidUTF8String(String p_string)
+    {
+        String t_string = new String();
+        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+    }
+
+    public static String revTestExternalTestAndroidUTF16String(String p_string)
+    {
+        String t_string = new String();
+        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+    }
+    
+    public static String revTestExternalTestAndroidUTF8Data(String p_string)
+    {
+        String t_string = new String();
+        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+    }
+    
+    public static String revTestExternalTestAndroidUTF16Data(String p_string)
+    {
+        String t_string = new String();
+        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+    }
 	
 	public static void revTestExternalTestPostAndSend()
 	{

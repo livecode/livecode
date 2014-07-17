@@ -33,4 +33,21 @@ NSDictionary *revTestExternalTestObjcDictionaries(NSDictionary *dictionary)
     return dictionary;
 }
 
+NSNumber * revtestExternalTestObjcNumber(NSNumber *number)
+{
+    double t_double;
+    t_double = [number doubleValue];
+    
+    t_double += 3.14;
+    
+    NSNumber * t_nsnumber;
+    [t_nsnumber initWithDouble:t_double];
+    return t_nsnumber;
+}
+
+NSData* revTestExternalTestObbjcData(NSData* data)
+{
+    return data;
+}
+
 ////////////////////////////////////////////////////////////////////////////////

@@ -11,6 +11,7 @@
 		4DCD722A176B47E00033F2AB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DCD7229176B47E00033F2AB /* Foundation.framework */; };
 		4DCD722D176B47E40033F2AB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DCD7229176B47E00033F2AB /* Foundation.framework */; };
 		4DCD72BE176B48B40033F2AB /* revtestexternal.lcidl in Sources */ = {isa = PBXBuildFile; fileRef = 4D40528E176B3EF10097F2D6 /* revtestexternal.lcidl */; };
+		BEB1BDAF1977C7D60017E28B /* revtestexternal.mm in Sources */ = {isa = PBXBuildFile; fileRef = BEB1BDAE1977C7D60017E28B /* revtestexternal.mm */; };
 		E82D44EE17131E7700A10289 /* revtestexternal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82D44ED17131E7700A10289 /* revtestexternal.cpp */; };
 		E82D458F1713237A00A10289 /* revtestexternal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82D44ED17131E7700A10289 /* revtestexternal.cpp */; };
 /* End PBXBuildFile section */
@@ -133,6 +134,7 @@
 		4D405323176B3FC50097F2D6 /* lcidlc.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = lcidlc.xcodeproj; path = ../lcidlc/lcidlc.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D40532D176B3FCE0097F2D6 /* engine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = engine.xcodeproj; path = ../engine/engine.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4DCD7229176B47E00033F2AB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		BEB1BDAE1977C7D60017E28B /* revtestexternal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = revtestexternal.mm; path = src/revtestexternal.mm; sourceTree = "<group>"; };
 		E82D44D717131C3400A10289 /* revtestexternal.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = revtestexternal.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		E82D44E917131D7500A10289 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = "<group>"; };
 		E82D44EA17131D7500A10289 /* Global.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = "<group>"; };
@@ -230,6 +232,7 @@
 		E82D44EC17131E6800A10289 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				BEB1BDAE1977C7D60017E28B /* revtestexternal.mm */,
 				4D332C95178D7BDF005DFE92 /* revtestexternal.java */,
 				4D40528E176B3EF10097F2D6 /* revtestexternal.lcidl */,
 				E82D44ED17131E7700A10289 /* revtestexternal.cpp */,
@@ -431,6 +434,7 @@
 			files = (
 				4D405352176B40B70097F2D6 /* revtestexternal.lcidl in Sources */,
 				E82D44EE17131E7700A10289 /* revtestexternal.cpp in Sources */,
+				BEB1BDAF1977C7D60017E28B /* revtestexternal.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

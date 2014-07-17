@@ -16,6 +16,9 @@
 
 #include <cstdio>
 #include <cstdarg>
+#include <stdint.h>
+#include <cstring>
+#include <cstdlib>
 
 #include <LiveCode.h>
 
@@ -122,28 +125,93 @@ void revTestExternalTestWait(void)
 	LCContextExecute("answer \"Done!\"", 0);
 }
 
+void write_utf8_clef(char* t_string)
+{
+    t_string[0] = 0xF0;
+    t_string[1] = 0x9D;
+    t_string[2] = 0x84;
+    t_string[3] = 0x9E;
+}
+
+void write_utf16_clef(uint16_t* t_string)
+{
+    t_string[0] = 0xD834;
+    t_string[1] = 0xDD1E;
+}
+
+int measure_utf16(uint16_t* string)
+{
+    uint32_t t_size  = 0;
+    
+    while (*string != 0)
+        string++, t_size++;
+    
+    return t_size;
+}
 
 void revTestExternalTestArrays(void)
 {
 }
 
-char* revTextExternalTestUTF8String(const char* string)
+char* revTestExternalTestUTF8String(const char* string)
 {
+    uint32_t t_length;
+    
+    t_length = strlen(string);
+    fprintf(stderr, "%hhX%hhX%hhX", string[0], string[1], string[2]);
+    
+    char* t_out = (char*)malloc(t_length + 9);
+    
+    write_utf8_clef(t_out);
+    memcpy(t_out + 4, string, t_length);
+    write_utf8_clef(t_out + 4 + t_length);
+    t_out[t_length + 8] = '\0';
+    
+    return t_out;
 }
 
 char* revTestExternalTestUTF16String(const char* string)
 {
+    uint32_t t_length;
     
+    t_length = measure_utf16((uint16_t*)string);
+    
+    uint16_t* t_out = (uint16_t*)malloc(2 * (t_length + 5));
+    
+    write_utf16_clef(t_out);
+    memcpy(t_out + 2, string, 2 * t_length);
+    write_utf16_clef(t_out + 2 + t_length);
+    t_out[t_length + 4] = '\0';
+    
+    return (char*)t_out;
 }
 
 LCBytes revTestExternalTestUTF8Data(LCBytes data)
 {
+    LCBytes t_out;
+    t_out.buffer = malloc(data.length + 9);
     
+    write_utf8_clef((char*)t_out.buffer);
+    memcpy(((char*)t_out.buffer) + 4, data.buffer, data.length);
+    write_utf8_clef(((char*)t_out.buffer) + 4 + data.length);
+    ((char*)t_out.buffer)[data.length + 8] = '\0';
+    t_out.length = data.length + 8;
+    
+    return t_out;
 }
 
 LCBytes revTestExternalTestUTF16Data(LCBytes data)
-{
+{    
+    LCBytes t_out;
+    t_out.buffer = malloc(2 * (data.length + 5));
     
+    write_utf16_clef((uint16_t*)t_out.buffer);
+    memcpy(((uint16_t*)t_out.buffer) + 2, data.buffer, 2 * data.length);
+    write_utf16_clef(((uint16_t*)t_out.buffer) + 2 + data.length);
+    ((uint16_t*)t_out.buffer)[data.length + 4] = '\0';
+    t_out.length = data.length + 4;
+    
+    return t_out;
 }
 /*
 command revTestExternalTestObjcArrays

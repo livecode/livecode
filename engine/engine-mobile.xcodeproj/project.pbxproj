@@ -655,7 +655,7 @@
 		4DA2CA351136D07600B9F27B /* eventqueue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = eventqueue.cpp; path = src/eventqueue.cpp; sourceTree = "<group>"; };
 		4DA2CA371136D08700B9F27B /* eventqueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = eventqueue.h; path = src/eventqueue.h; sourceTree = "<group>"; };
 		4DA2CA381136D08700B9F27B /* externalv0.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = externalv0.cpp; path = src/externalv0.cpp; sourceTree = "<group>"; };
-		4DA2CA391136D08700B9F27B /* externalv1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = externalv1.cpp; path = src/externalv1.cpp; sourceTree = "<group>"; };
+		4DA2CA391136D08700B9F27B /* externalv1.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = externalv1.cpp; path = src/externalv1.cpp; sourceTree = "<group>"; };
 		4DA2CA3D1136D0A800B9F27B /* notify.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notify.cpp; path = src/notify.cpp; sourceTree = "<group>"; };
 		4DA2CA3E1136D0A800B9F27B /* notify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notify.h; path = src/notify.h; sourceTree = "<group>"; };
 		4DA7BA391324E50300F9214A /* mbliphoneinput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneinput.mm; path = src/mbliphoneinput.mm; sourceTree = "<group>"; };
