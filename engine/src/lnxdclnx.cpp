@@ -984,6 +984,7 @@ void MCScreenDC::IME_OnCommit(GtkIMContext*, gchar *p_utf8_string)
     else
     {
         // Insert the text from the IME into the active field
+        MCactivefield->stopcomposition(True, False);
         MCactivefield->finsertnew(FT_IMEINSERT, *t_text, LCH_UNICODE);
     }
 }
@@ -993,9 +994,23 @@ bool MCScreenDC::IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_le
     return false;
 }
 
-void MCScreenDC::IME_OnPreeditChanged(GtkIMContext*)
+void MCScreenDC::IME_OnPreeditChanged(GtkIMContext* p_context)
 {
-    ;
+    if (MCactivefield == NULL)
+        return;
+    
+    // Get the string. We ignore the attributes list entirely.
+    gchar *t_utf8_string;
+    gint t_cursor_pos;
+    gtk_im_context_get_preedit_string(p_context, &t_utf8_string, NULL, &t_cursor_pos);
+    
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)t_utf8_string, strlen(t_utf8_string), kMCStringEncodingUTF8, false, &t_string);
+    g_free(t_utf8_string);
+    
+    // Do the insert
+    MCactivefield->startcomposition();
+    MCactivefield->finsertnew(FT_IMEINSERT, *t_string, LCH_UNICODE);
 }
 
 void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
@@ -1036,7 +1051,9 @@ void MCScreenDC::activateIME(Boolean activate)
     {
         gtk_im_context_set_client_window(m_im_context, MCactivefield->getstack()->getwindow());
         gtk_im_context_focus_in(m_im_context);
-        gtk_im_context_set_use_preedit(m_im_context, FALSE);
+        
+        // If this call is made, the IME handles the pre-editing itself
+        //gtk_im_context_set_use_preedit(m_im_context, FALSE);
     }
     else
     {
