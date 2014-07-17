@@ -74,7 +74,8 @@ static const char *ppmediastrings[] =
 
 #define CONTROLLER_HEIGHT 26
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 2
-#define PLAYER_MIN_WIDTH 5 * CONTROLLER_HEIGHT
+// PM-2014-07-17: [[ Bug 12835 ]] Adjustments to prevent selectedArea and playedArea to be drawn without taking into account the width of the well
+#define PLAYER_MIN_WIDTH 5 * CONTROLLER_HEIGHT + 2 * SELECTION_RECT_WIDTH
 #define LIGHTGRAY 1
 #define PURPLE 2
 #define SOMEGRAY 3
@@ -2738,12 +2739,13 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             // PM-2014-07-08: [[ Bug 12763 ]] Make sure controller elememts are not broken when player width becomes too small
             // Now, reducing the player width below a threshold results in gradually removing controller elements from right to left
             // i.e first the scrubBack/scrubForward buttons will be removed, then the well/thumb rects etc. This behaviour is similar to the old player that used QuickTime
-             
+            
             if (p_rect . width < 3 * CONTROLLER_HEIGHT)
                 return MCRectangleMake(0,0,0,0);
         
+            // PM-2014-07-17: [[ Bug 12835 ]] Adjustments to prevent selectedArea and playedArea to be drawn without taking into account the width of the well
             if (p_rect . width < PLAYER_MIN_WIDTH)
-                return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y, p_rect . width - 2 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT);
+                return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT, p_rect . y, p_rect . width - 2 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
             
             return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y , p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT );
             
