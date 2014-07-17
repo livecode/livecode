@@ -1052,8 +1052,10 @@ void MCScreenDC::activateIME(Boolean activate)
         gtk_im_context_set_client_window(m_im_context, MCactivefield->getstack()->getwindow());
         gtk_im_context_focus_in(m_im_context);
         
-        // If this call is made, the IME handles the pre-editing itself
-        //gtk_im_context_set_use_preedit(m_im_context, FALSE);
+        if (MCinlineinput)
+            gtk_im_context_set_use_preedit(m_im_context, TRUE);
+        else
+            gtk_im_context_set_use_preedit(m_im_context, FALSE);
     }
     else
     {
