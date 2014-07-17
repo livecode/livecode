@@ -16,6 +16,7 @@ public:
 	void Detach(void);
     
 	virtual bool IsPlaying(void) = 0;
+    // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
 	virtual void Start(double rate) = 0;
 	virtual void Stop(void) = 0;
 	virtual void Step(int amount) = 0;
