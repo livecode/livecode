@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
+#include "variable.h"
+
 #include <setjmp.h>
 
 extern "C"
@@ -833,7 +835,7 @@ void MCJPEGFreeDestManager(MCJPEGDestManager *p_manager)
 	}
 }
 
-bool MCImageEncodeJPEG(MCImageBitmap *p_image, IO_handle p_stream, uindex_t &r_bytes_written)
+bool MCImageEncodeJPEG(MCImageBitmap *p_image, IO_handle p_stream, uindex_t &r_bytes_written, MCVariableArray * p_metadata)
 {
 	bool t_success = true;
 
@@ -866,10 +868,26 @@ bool MCImageEncodeJPEG(MCImageBitmap *p_image, IO_handle p_stream, uindex_t &r_b
 
 		jpeg_set_defaults(&t_jpeg);
 		jpeg_set_quality(&t_jpeg, MCjpegquality, True);
-
+        
+        if (p_metadata != nil)
+        {
+            MCHashentry *e;
+            e = p_metadata -> lookuphash("density",false,false);
+            if (e && e -> value.is_number())
+            {
+                uint16_t t_ppi = (uint16_t) e -> value.get_real();
+                if (t_ppi > 0)
+                {
+                    t_jpeg.density_unit = 1; // dots per inch
+                    t_jpeg.X_density = t_ppi;
+                    t_jpeg.Y_density = t_ppi;
+                }
+            }
+        }
+        
 		jpeg_start_compress(&t_jpeg, True);
 	}
-
+    
 	//Allocate array of pixel RGB values
 	if (t_success)
 		t_success = MCMemoryAllocate(p_image->width * 3, t_row_buffer);
