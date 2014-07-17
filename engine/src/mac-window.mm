@@ -556,24 +556,28 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 //   called in response to it (if the notification is sent as a result of makeKeyAndOrderFront').
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
+    MCPlatformRetainWindow(m_window);
     [self performSelector: @selector(doWindowDidBecomeKey:) withObject: notification afterDelay: 0];
 }
 
 - (void)doWindowDidBecomeKey: (NSNotification *)notification
 {
     m_window -> ProcessDidBecomeKey();
+    MCPlatformReleaseWindow(m_window);
 }
 
 // MW-2014-07-17: [[ Bug 12720 ]] 'Thread' the notification as things break if 'makeKeyAndOrderFront:' is
 //   called in response to it (if the notification is sent as a result of makeKeyAndOrderFront').
 - (void)windowDidResignKey:(NSNotification *)notification
 {
+    MCPlatformRetainWindow(m_window);
     [self performSelector: @selector(doWindowDidResignKey:) withObject: notification afterDelay: 0];
 }
 
 - (void)doWindowDidResignKey:(NSNotification *)notification
 {
 	m_window -> ProcessDidResignKey();
+    MCPlatformReleaseWindow(m_window);
 }
 
 - (void)windowDidChangeBackingProperties:(NSNotification *)notification

@@ -270,6 +270,7 @@ OSErr MCQTKitPlayer::MovieDrawingComplete(Movie p_movie, long p_ref)
     t_self -> CacheCurrentFrame();
 	
 	MCPlatformCallbackSendPlayerFrameChanged(t_self);
+    t_self -> CurrentTimeChanged();
 	
 	return noErr;
 }
@@ -399,7 +400,7 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
                 }
             }
             
-            if (do_QTTimeCompare(t_current_time, self -> m_last_current_time))
+            if (!self -> m_offscreen && do_QTTimeCompare(t_current_time, self -> m_last_current_time) != 0)
             {
                 self -> m_last_current_time = t_current_time;
                 self -> CurrentTimeChanged();
@@ -419,6 +420,9 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	NSError *t_error;
 	t_error = nil;
 	
+    if (p_filename == nil)
+        p_filename = "";
+    
     id t_filename_or_url;
     if (!p_is_url)
         t_filename_or_url = [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding];
