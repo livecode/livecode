@@ -1000,12 +1000,18 @@ void MCScreenDC::IME_OnPreeditChanged(GtkIMContext*)
 
 void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
 {
-    ;
+    if (MCactivefield == NULL)
+        return;
+    
+    MCactivefield->stopcomposition(True, False);
 }
 
 void MCScreenDC::IME_OnPreeditStart(GtkIMContext*)
 {
-    ;
+    if (MCactivefield == NULL)
+        return;
+    
+    MCactivefield->startcomposition();
 }
 
 void MCScreenDC::IME_OnRetrieveSurrounding(GtkIMContext*)
@@ -1030,6 +1036,7 @@ void MCScreenDC::activateIME(Boolean activate)
     {
         gtk_im_context_set_client_window(m_im_context, MCactivefield->getstack()->getwindow());
         gtk_im_context_focus_in(m_im_context);
+        gtk_im_context_set_use_preedit(m_im_context, FALSE);
     }
     else
     {
