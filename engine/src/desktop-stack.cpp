@@ -250,6 +250,14 @@ void MCStack::stop_externals()
 	
 	MCPlayer *tptr = MCplayers;
 	
+#ifdef FEATURE_PLATFORM_PLAYER
+    while(tptr != NULL)
+    {
+        if (tptr -> getstack() == this)
+            tptr -> playstop();
+        tptr = tptr -> getnextplayer();
+    }
+#else
 	while (tptr != NULL)
 	{
 		if (tptr->getstack() == this)
@@ -260,6 +268,7 @@ void MCStack::stop_externals()
 		else
 			tptr = tptr->getnextplayer();
 	}
+#endif
 	destroywindowshape();
 	
 	MClockmessages = oldlock;

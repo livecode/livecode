@@ -555,9 +555,12 @@ static void map_key_to_engine(MCPlatformKeyCode p_key_code, codepoint_t p_mapped
 {
     if (p_mapped_codepoint <= 0xffff)
 	{
-		uint16_t t_unicode_char;
-		t_unicode_char = p_mapped_codepoint & 0xffff;
+        uint16_t t_unicode_char;
         char_t t_native_char;
+
+        // SN-2014-07-11: [[ Bug 12747 ]] Shortcuts: the uncomment script shortcut cmd _ does not work
+        //  We want to take in account the unmapped char, since with the mapped one, Cmd discards the Shift modifier
+        t_unicode_char = p_unmapped_codepoint & 0xffff;
 		
 		if (MCUnicodeMapToNative(&t_unicode_char, 1, t_native_char))
 		{
