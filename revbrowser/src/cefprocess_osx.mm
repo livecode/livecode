@@ -15,9 +15,6 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <include/cef_app.h>
-
-#include "core.h"
-
 #include <AppKit/AppKit.h>
 
 ////////////////////////////////////////////////////////////////////////////////
