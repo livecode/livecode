@@ -277,12 +277,17 @@ void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mod
 	{
 		// COCOA-TODO: These values should be queryable (once we figure out what
 		//   'title' is meant to do...)
+        // MW-2014-07-17: [[ Bug 12824 ]] Adjust the height of srect when we adjust the origin.
 		if (mode == WM_PALETTE)
+        {
 			srect.y += 13;
+            srect . height -= 13;
+        }
 		else
 		{
 			srect.y += 22;
-		}
+            srect . height -= 22;
+        }
 		sr = sb = 10;
 		sw = 20;
 		sh = 12;
