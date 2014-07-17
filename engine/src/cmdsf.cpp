@@ -602,7 +602,11 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 	if (sp.lookup(SP_EXPORT, te) == PS_NORMAL)
+    {
 		sformat = (Export_format)te->which;
+        // MERG-2014-07-17: Bugfix because export JPEG etc was failing to set the format
+        format = sformat;
+    }
 	else
 	{
 		sp.backup();
@@ -692,18 +696,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 			}
 		}
         
-        // MERG-2014-07-11: [[ ImageMetadata ]] metadata array
-        if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL || sp . skip_token(SP_FACTOR, TT_BINOP, O_AND) == PS_NORMAL )
-        {
-            if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) != PS_NORMAL ||
-				sp . parseexp(False, True, &metadata) != PS_NORMAL)
-			{
-				MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-				return PS_ERROR;
-			}
-        }
-		
-		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+        if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
 		{
 			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
 				sp . parseexp(False, True, &size) != PS_NORMAL)
@@ -713,6 +706,17 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 			}
 		}
 	}
+    
+    // MERG-2014-07-11: [[ ImageMetadata ]] metadata array
+    if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL || sp . skip_token(SP_FACTOR, TT_BINOP, O_AND) == PS_NORMAL )
+    {
+        if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) != PS_NORMAL ||
+            sp . parseexp(False, True, &metadata) != PS_NORMAL)
+        {
+            MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+            return PS_ERROR;
+        }
+    }
 
 	if (sp.skip_token(SP_FACTOR, TT_TO) != PS_NORMAL)
 	{
@@ -856,12 +860,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 	}
     
-    // MERG-2014-07-11: metadata array
-    MCVariableArray * t_metadata;
-    t_metadata = NULL;
-    
-	
-	// MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+    // MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
 	//   bitmap, which needs to be processed before compression. This flag
 	//   indicates to do this processing later on in the method.
 	bool t_needs_unpremultiply;
@@ -916,17 +915,6 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 		}
-        
-        // MERG-2014-07-11: metadata array
-        if (metadata != NULL)
-        {
-            if (metadata -> eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
-				return ES_ERROR;
-			}
-            t_metadata = ep . getarray() -> get_array();
-        }
         
         MCRectangle r;
 		r.x = r.y = -32768;
@@ -1010,6 +998,20 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 	}
+    
+    // MERG-2014-07-11: metadata array
+    MCVariableArray * t_metadata;
+    t_metadata = NULL;
+    
+    if (metadata != NULL)
+    {
+        if (metadata -> eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
+            return ES_ERROR;
+        }
+        t_metadata = ep . getarray() -> get_array();
+    }
 
 	IO_handle stream = NULL;
 	char *name = NULL;
