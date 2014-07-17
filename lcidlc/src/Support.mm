@@ -3200,7 +3200,6 @@ static LCError java_from__utf16cstring(JNIEnv *env, const char* p_value, jobject
     while(*t_unichar_value++ != 0)
         ++t_char_count;
     
-    
     jobject t_java_value;
     if (err == kLCErrorNone)
     {
@@ -3269,7 +3268,6 @@ static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, 
     
     return fetch__report_error(err, arg);
 }
-    
  
 static bool fetch__java_cstring(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
 {
@@ -3338,7 +3336,6 @@ static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, in
     
 	if (err == kLCErrorNone)
 	{
-        
 		t_java_value = (jobject)env -> NewByteArray(t_data_length);
 		if (t_java_value == nil || env -> ExceptionOccurred() != nil)
 		{
@@ -3513,6 +3510,7 @@ static LCError java_to__utf8cstring(JNIEnv *env, jobject value, char*& r_cstring
             else
                 t_utf8_chars[utf8_index++] = t_cesu8_chars[cesu8_index++];
         }
+        t_utf8_chars[t_utf8_char_count] = '\0';
     }
     
     if (err == kLCErrorNone)
@@ -3554,9 +3552,18 @@ static LCError java_to__utf16cstring(JNIEnv *env, jobject value, char*& r_cstrin
         t_terminated_unichars = (jchar *)malloc((t_unichar_count + 1) * sizeof(jchar));
         
         if (t_terminated_unichars == nil)
+        {
+            __android_log_write(ANDROID_LOG_INFO, "revandroid", "NULL pointer");
             err = kLCErrorOutOfMemory;
+        }
         else
+        {
+            char t[123];
+            sprintf(t, "pointer sent: %p", t_terminated_unichars);
+            __android_log_write(ANDROID_LOG_INFO, "revandroid", t);
             memcpy(t_terminated_unichars, t_unichars, (t_unichar_count + 1) * sizeof(jchar));
+            t_terminated_unichars[t_unichar_count] = '\0';
+        }
     }
     
     if (err == kLCErrorNone)
@@ -3647,7 +3654,7 @@ static bool store__java_data(JNIEnv *env, MCVariableRef var, int p_value_as, job
         // SN-2014-07-17: [[ ExternalsApiV6 ]] UTF-16 data carry the char count, not the byte length
         if (p_value_as == kLCValueOptionAsUTF16CData)
             t_native_value . length /= 2;
-		err = LCValueStore(var, kLCValueOptionAsCData, &t_native_value);
+		err = LCValueStore(var, p_value_as, &t_native_value);
 	}
 	
 	if (t_native_value . buffer != nil)

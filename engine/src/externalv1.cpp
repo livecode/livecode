@@ -428,7 +428,7 @@ public:
     // SN-2014-07-01: [[ ExternalsApiV6 ]] Default string in use is now a StringRef
     //  New function added to get the CData - allowing nil bytes in the string
 	MCExternalError GetString(MCExternalValueOptions options, MCStringRef& r_string);
-    MCExternalError GetCData(MCExternalValueOptions options, MCString r_data);
+    MCExternalError GetCData(MCExternalValueOptions options, void* r_data);
 	MCExternalError GetCString(MCExternalValueOptions options, const char*& r_cstring);
     
 	virtual bool IsTemporary(void) = 0;
@@ -1152,10 +1152,11 @@ MCExternalError MCExternalVariable::GetString(MCExternalValueOptions p_options, 
 }
 
 // SN-2014-07-16: [[ ExternalsApiV6 ]] Function to get the CData type - allowing nil bytes in the string
-MCExternalError MCExternalVariable::GetCData(MCExternalValueOptions p_options, MCString r_data)
+MCExternalError MCExternalVariable::GetCData(MCExternalValueOptions p_options, void *r_value)
 {
 	MCAutoStringRef t_string_value;
 	MCExternalError t_error;
+    MCString t_string;
     uindex_t t_length;
     
 	t_error = GetString(p_options, &t_string_value);
@@ -1168,7 +1169,8 @@ MCExternalError MCExternalVariable::GetCData(MCExternalValueOptions p_options, M
     if (!MCStringConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
         return kMCExternalErrorOutOfMemory;
 	
-	r_data . set(m_string_conversion, t_length);
+	t_string . set(m_string_conversion, t_length);
+    *(MCString*)r_value = t_string;
 	return kMCExternalErrorNone;
 }
 
@@ -1781,6 +1783,7 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         MCAutoStringRef t_stringref;
         MCString* t_string;
         t_string = (MCString*)p_value;
+
         if (!MCStringCreateWithBytes((byte_t*)t_string->getstring(), t_string->getlength(), kMCStringEncodingUTF8, false, &t_stringref))
             return kMCExternalErrorOutOfMemory;
         
@@ -1810,13 +1813,16 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsUTF16CString:
     {
         MCAutoStringRef t_stringref;
-        unichar_t *t_chars;
+        uint16_t *t_chars;
         uindex_t t_char_count;
         
-        t_chars = *(unichar_t**)p_value;
-        for (t_char_count = 0 ; *t_chars; ++t_char_count)
+        t_chars = *(uint16_t**)p_value;
+
+        for (t_char_count = 0 ; *t_chars != 0; ++t_char_count)
             ++t_chars;
         
+        MCLog("char found: %d", t_char_count);
+        MCLog("Pointer: %p", p_value);
         
         if (!MCStringCreateWithChars(*(const unichar_t**)p_value, t_char_count, &t_stringref))
             return kMCExternalErrorOutOfMemory;
@@ -1939,7 +1945,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
 	case kMCExternalValueOptionAsReal:
         return var -> GetReal(p_options, *(real64_t *)p_value);
     case kMCExternalValueOptionAsString:
-        return var -> GetCData(p_options, *(MCString*)p_value);     
+        return var -> GetCData(p_options, p_value);
     case kMCExternalValueOptionAsCString:
         return var -> GetCString(p_options, *(const char **)p_value);
         

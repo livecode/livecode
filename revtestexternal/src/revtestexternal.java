@@ -109,7 +109,7 @@ public class revtestexternal
 		t_wait . Release();
 	}
     
-    private static String trebleClef()
+    private static byte[] utf8TrebleKey()
     {
         byte[] t_utf8_clef = new byte[4];
         t_utf8_clef[0] = Integer.decode("0xF0").byteValue();
@@ -117,9 +117,14 @@ public class revtestexternal
         t_utf8_clef[2] = Integer.decode("0x84").byteValue();
         t_utf8_clef[3] = Integer.decode("0x9E").byteValue();
         
+        return t_utf8_clef;
+    }
+    
+    private static String trebleClef()
+    {        
         try
         {
-            return  new String(t_utf8_clef, "UTF8");
+            return  new String(utf8TrebleKey(), "UTF8");
         }
         catch(UnsupportedEncodingException e)
         {
@@ -129,43 +134,50 @@ public class revtestexternal
     
     public static String revTestExternalTestNativeString(String p_string)
     {
-        //        String t_string = new String();
-        //        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
-        return p_string;
+        String t_string = new String();
+        return t_string . concat(p_string) . concat(p_string);
     }
     
     public static String revTestExternalTestUTF8String(String p_string)
     {
         String t_string = new String();
-        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+        return t_string . concat(p_string) . concat(p_string);
     }
 
     public static String revTestExternalTestUTF16String(String p_string)
     {
-//        String t_string = new String();
-//        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
-        return p_string;
+        String t_string = new String();
+        return t_string . concat(p_string) . concat(p_string);
     }
     
     public static byte[] revTestExternalTestNativeData(byte[] p_string)
     {
-        //        String t_string = new String();
-        //        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
-        return p_string;
+        byte[] t_bytes = new byte[p_string.length * 2];
+        
+        System.arraycopy(p_string, 0, t_bytes, 0, p_string.length);
+        System.arraycopy(p_string, 0, t_bytes, p_string .length, p_string .length);
+        
+        return t_bytes;
     }
     
     public static byte[] revTestExternalTestUTF8Data(byte[] p_string)
     {
-//        String t_string = new String();
-//        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
-        return p_string;
+        byte[] t_bytes = new byte[p_string.length * 2];
+        
+        System.arraycopy(p_string, 0, t_bytes, 0, p_string.length);
+        System.arraycopy(p_string, 0, t_bytes, p_string .length, p_string .length);
+        
+        return t_bytes;
     }
     
     public static byte[] revTestExternalTestUTF16Data(byte[] p_string)
     {
-//        String t_string = new String();
-//        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
-        return p_string;
+        byte[] t_bytes = new byte[p_string.length * 2];
+        
+        System.arraycopy(p_string, 0, t_bytes, 0, p_string.length);
+        System.arraycopy(p_string, 0, t_bytes, p_string .length, p_string .length);
+        
+        return t_bytes;
     }
 	
 	public static void revTestExternalTestPostAndSend()
