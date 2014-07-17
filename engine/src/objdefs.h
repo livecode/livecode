@@ -782,6 +782,14 @@ typedef struct _MCImagePaletteSettings
 	uint32_t ncolors;
 } MCImagePaletteSettings;
 
+// MW-2014-07-17: [[ ImageMetadata ]] Struct representing image metadata contents - at
+//   some point (post-7.0) this would be better as an opaque type, but this will do for now.
+struct MCImageMetadata
+{
+    bool has_density : 1;
+    double density;
+};
+
 enum MCGravity
 {
     kMCGravityNone,
