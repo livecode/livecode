@@ -29,8 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
-#include "variable.h"
-
 #include <setjmp.h>
 
 extern "C"
@@ -835,7 +833,7 @@ void MCJPEGFreeDestManager(MCJPEGDestManager *p_manager)
 	}
 }
 
-bool MCImageEncodeJPEG(MCImageBitmap *p_image, IO_handle p_stream, uindex_t &r_bytes_written, MCVariableArray * p_metadata)
+bool MCImageEncodeJPEG(MCImageBitmap *p_image, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written)
 {
 	bool t_success = true;
 
@@ -871,11 +869,9 @@ bool MCImageEncodeJPEG(MCImageBitmap *p_image, IO_handle p_stream, uindex_t &r_b
         
         if (p_metadata != nil)
         {
-            MCHashentry *e;
-            e = p_metadata -> lookuphash("density",false,false);
-            if (e && e -> value.is_number())
+            if (p_metadata -> has_density)
             {
-                uint16_t t_ppi = (uint16_t) e -> value.get_real();
+                uint16_t t_ppi = (uint16_t)p_metadata -> density;
                 if (t_ppi > 0)
                 {
                     t_jpeg.density_unit = 1; // dots per inch

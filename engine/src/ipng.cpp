@@ -31,8 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
-#include "variable.h"
-
 #define NATIVE_ALPHA_BEFORE ((kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == kMCGPixelAlphaPositionFirst)
 #define NATIVE_ORDER_BGR ((kMCGPixelFormatNative & kMCGPixelOrderRGB) == 0)
 
@@ -298,25 +296,23 @@ extern "C" void fakewrite(png_structp png_ptr, png_bytep data, png_size_t length
 }
 
 // MERG-2014-07-16: [[ ImageMetadata ]] Parse the metadata array
-void parsemetadata(png_structp png_ptr, png_infop info_ptr, MCVariableArray * p_metadata)
+static void parsemetadata(png_structp png_ptr, png_infop info_ptr, MCImageMetadata *p_metadata)
 {
-    if (p_metadata != nil)
+    if (p_metadata == nil)
+        return;
+    
+    if (p_metadata -> has_density)
     {
-        MCHashentry *e;
-        e = p_metadata -> lookuphash("density",false,false);
-        if (e && e -> value.is_number())
+        real64_t t_ppi = p_metadata -> density;
+        if (t_ppi > 0)
         {
-            real64_t t_ppi = e -> value.get_real();
-            if (t_ppi > 0)
-            {
-                // Convert to pixels per metre from pixels per inch
-                png_set_pHYs(png_ptr, info_ptr, t_ppi / 0.0254, t_ppi / 0.0254, PNG_RESOLUTION_METER);
-            }
+            // Convert to pixels per metre from pixels per inch
+            png_set_pHYs(png_ptr, info_ptr, t_ppi / 0.0254, t_ppi / 0.0254, PNG_RESOLUTION_METER);
         }
     }
 }
 
-bool MCImageEncodePNG(MCImageIndexedBitmap *p_indexed, IO_handle p_stream, uindex_t &r_bytes_written, MCVariableArray * p_metadata)
+bool MCImageEncodePNG(MCImageIndexedBitmap *p_indexed, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written)
 {
 	bool t_success = true;
 
@@ -423,7 +419,7 @@ bool MCImageEncodePNG(MCImageIndexedBitmap *p_indexed, IO_handle p_stream, uinde
 	return t_success;
 }
 
-bool MCImageEncodePNG(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written, MCVariableArray * p_metadata)
+bool MCImageEncodePNG(MCImageBitmap *p_bitmap, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written)
 {
 	bool t_success = true;
 
@@ -442,7 +438,7 @@ bool MCImageEncodePNG(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 	MCImageIndexedBitmap *t_indexed = nil;
 	if (MCImageConvertBitmapToIndexed(p_bitmap, false, t_indexed))
 	{
-		t_success = MCImageEncodePNG(t_indexed, p_stream, r_bytes_written, p_metadata);
+		t_success = MCImageEncodePNG(t_indexed, p_metadata, p_stream, r_bytes_written);
 		MCImageFreeIndexedBitmap(t_indexed);
 		return t_success;
 	}

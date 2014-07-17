@@ -1000,9 +1000,10 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	}
     
     // MERG-2014-07-11: metadata array
-    MCVariableArray * t_metadata;
-    t_metadata = NULL;
-    
+    // MW-2014-07-17: [[ ImageMetadata ]] Parse out the contents of the metadata array here
+    //   (saves copying as further use of ep might clobber it).
+    MCImageMetadata t_metadata;
+    MCMemoryClear(&t_metadata, sizeof(t_metadata));
     if (metadata != NULL)
     {
         if (metadata -> eval(ep) != ES_NORMAL)
@@ -1010,7 +1011,13 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
             MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
             return ES_ERROR;
         }
-        t_metadata = ep . getarray() -> get_array();
+        
+        if (ep . getformat() == VF_ARRAY)
+        {
+            // Make a copy of the array in ep so the parsing function can use the ep to eval.
+            MCVariableValue t_metadata_array(*ep . getarray());
+            MCImageParseMetadata(ep, t_metadata_array, t_metadata);
+        }
     }
 
 	IO_handle stream = NULL;
@@ -1138,7 +1145,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 		if (t_status == ES_NORMAL)
 		{
-			if (!MCImageExport(t_bitmap, format, &t_palette_settings, t_dither, t_out_stream, mstream, t_metadata))
+			if (!MCImageExport(t_bitmap, format, &t_palette_settings, t_dither, &t_metadata, t_out_stream, mstream))
 			{
 				t_delete_file_on_error = true;
 				MCeerror->add(EE_EXPORT_CANTWRITE, line, pos, name);

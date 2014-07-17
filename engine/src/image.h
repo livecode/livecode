@@ -61,11 +61,11 @@ bool MCImageEncodeGIF(MCImageBitmap *p_image, IO_handle p_stream, bool p_dither,
 bool MCImageEncodeGIF(MCImageIndexedBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
 bool MCImageDecodeGIF(IO_handle p_stream, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
 
-bool MCImageEncodeJPEG(MCImageBitmap *p_image, IO_handle p_stream, uindex_t &r_bytes_written, MCVariableArray * p_metadata);
+bool MCImageEncodeJPEG(MCImageBitmap *p_image, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written);
 bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image);
 
-bool MCImageEncodePNG(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written, MCVariableArray * p_metadata);
-bool MCImageEncodePNG(MCImageIndexedBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written, MCVariableArray * p_metadata);
+bool MCImageEncodePNG(MCImageBitmap *p_bitmap, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written);
+bool MCImageEncodePNG(MCImageIndexedBitmap *p_bitmap, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written);
 bool MCImageDecodePNG(IO_handle p_stream, MCImageBitmap *&r_bitmap);
 
 bool MCImageEncodeBMP(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
@@ -86,6 +86,8 @@ bool MCImageDecodeXWD(IO_handle stream, char *&r_name, MCImageBitmap *&r_bitmap)
 
 // Legacy Functions
 void MCImageBitmapSetAlphaValue(MCImageBitmap *p_bitmap, uint8_t p_alpha);
+
+bool MCImageParseMetadata(MCExecPoint& ep, MCVariableValue& p_array, MCImageMetadata& r_metadata);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -119,7 +121,7 @@ bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCBitmapFrame *&r_
 
 bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t &r_height);
 bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotspot, char *&r_name, MCImageCompressedBitmap *&r_compressed, MCImageBitmap *&r_bitmap);
-bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePaletteSettings *p_palette_settings, bool p_dither, IO_handle p_stream, IO_handle p_mask_stream, MCVariableArray * p_metadata);
+bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePaletteSettings *p_palette_settings, bool p_dither, MCImageMetadata *metadata, IO_handle p_stream, IO_handle p_mask_stream);
 
 bool MCImageDecode(IO_handle p_stream, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
 bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
