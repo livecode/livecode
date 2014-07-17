@@ -735,7 +735,11 @@ Boolean MCPlayer::mdown(uint2 which)
 		{
             case T_BROWSE:
                 message_with_args(MCM_mouse_down, "1");
-                handle_mdown(which);
+                // PM-2014-07-16: [[ Bug 12817 ]] Create selection when click and drag on the well while shift key is pressed
+                if ((MCmodifierstate & MS_SHIFT) != 0)
+                    handle_shift_mdown(which);
+                else
+                    handle_mdown(which);
                 MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
                 break;
             case T_POINTER:
@@ -3264,6 +3268,7 @@ void MCPlayer::handle_mup(int p_which)
         case kMCPlayerControllerPartSelectionStart:
         case kMCPlayerControllerPartSelectionFinish:
             setselection();
+            layer_redrawrect(getcontrollerrect());
             break;
 
 
@@ -3281,4 +3286,62 @@ void MCPlayer::popup_closed(void)
     
     m_show_volume = false;
     layer_redrawall();
+}
+
+// PM-2014-07-16: [[ Bug 12817 ]] Create selection when click and drag on the well while shift key is pressed
+void MCPlayer::handle_shift_mdown(int p_which)
+{
+    if (!getflag(F_SHOW_CONTROLLER))
+        return;
+    
+    int t_part;
+    t_part = hittestcontroller(mx, my);
+    
+    switch(t_part)
+    {
+        case kMCPlayerControllerPartThumb:
+        case kMCPlayerControllerPartWell:
+        {
+            MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
+            
+            uint32_t t_new_time, t_old_time, t_duration;
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_old_time);
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            
+            t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+            
+            if (t_new_time <= t_old_time)
+            {
+                starttime = t_new_time;
+                endtime = t_old_time;
+                m_grabbed_part = kMCPlayerControllerPartSelectionStart;
+            }
+            else
+            {
+                starttime = t_old_time;
+                endtime = t_new_time;
+                m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
+            }
+            
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+            
+            bool t_show_selection;
+            t_show_selection = true;
+            setflag(True, F_SHOW_SELECTION);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+           
+            bool t_play_selection;
+            t_play_selection = true;
+            setflag(True, F_PLAY_SELECTION);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
+            
+            layer_redrawrect(getcontrollerrect());
+        }
+            break;
+                     
+        default:
+            break;
+    }
+
 }
