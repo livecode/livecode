@@ -148,7 +148,6 @@
 		4DF42ABF0B0488ED003F2D95 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42AC20B0488ED003F2D95 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libexternal.xcodeproj; path = ../libexternal/libexternal.xcodeproj; sourceTree = SOURCE_ROOT; };
-		72CC354A18AA38F600BEC655 /* libcore.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcore.xcodeproj; path = ../libcore/libcore.xcodeproj; sourceTree = "<group>"; };
 		769568ED1823D0E700779255 /* libcore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcore.a; path = ../_build/mac/Debug/libcore.a; sourceTree = "<group>"; };
 		E832B19618D9C20D00083DF8 /* libcef.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcef.xcodeproj; path = ../thirdparty/libcef/libcef.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E857DDA819081FA9002714D6 /* WebAuthenticationPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebAuthenticationPanel.h; path = src/WebAuthenticationPanel.h; sourceTree = "<group>"; };
@@ -338,7 +337,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				72CC355118AA38FB00BEC655 /* PBXTargetDependency */,
 				4DF42AEF0B0489B4003F2D95 /* PBXTargetDependency */,
 				E8589AFF18C9FA9F00958234 /* PBXTargetDependency */,
 				E8D371D718CDD2F3005C1182 /* PBXTargetDependency */,
@@ -377,6 +375,8 @@
 /* Begin PBXProject section */
 		4DF42A990B0488B2003F2D95 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4DF42A9A0B0488B2003F2D95 /* Build configuration list for PBXProject "revbrowser" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -554,28 +554,8 @@
 			baseConfigurationReference = 4DF42ABE0B0488ED003F2D95 /* Debug.xcconfig */;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
-					"\"$(SOLUTION_DIR)/engine/include\"",
-					"\"$(SOLUTION_DIR)/libfoundation/include\"",
-					"\"$(SOLUTION_DIR)/libexternal/include\"",
-					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
-					"\"$(SOLUTION_DIR)/libgraphics/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpq/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libiodbc/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libcef\",
+					"$(HEADER_SEARCH_PATHS)",
+					"$(SOLUTION_DIR)/thirdparty/libcef",
 				);
 			};
 			name = Debug;
@@ -585,28 +565,8 @@
 			baseConfigurationReference = 4DF42AC20B0488ED003F2D95 /* Release.xcconfig */;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
-					"\"$(SOLUTION_DIR)/engine/include\"",
-					"\"$(SOLUTION_DIR)/libfoundation/include\"",
-					"\"$(SOLUTION_DIR)/libexternal/include\"",
-					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
-					"\"$(SOLUTION_DIR)/libgraphics/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpq/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libiodbc/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libcef\"",
+					"$(HEADER_SEARCH_PATHS)",
+					"$(SOLUTION_DIR)/thirdparty/libcef",
 				);
 			};
 			name = Release;
@@ -621,6 +581,11 @@
 				);
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS)",
+					"$(SOLUTION_DIR)/thirdparty/libcef",
+					"$(SOLUTION_DIR)/libcore/include",
+				);
 				INFOPLIST_FILE = "rsrc/revbrowser-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -645,6 +610,11 @@
 					"\"$(SRCROOT)/../prebuilt/lib/libcef\"",
 				);
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS)",
+					"$(SOLUTION_DIR)/thirdparty/libcef",
+					"$(SOLUTION_DIR)/libcore/include",
+				);
 				INFOPLIST_FILE = "rsrc/revbrowser-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
