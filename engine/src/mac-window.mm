@@ -85,7 +85,7 @@ static bool s_lock_responder_change = false;
 {
 	NSResponder *t_previous;
 	t_previous = [self firstResponder];
-	
+    
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
@@ -204,7 +204,7 @@ static bool s_lock_responder_change = false;
 {
 	NSResponder *t_previous;
 	t_previous = [self firstResponder];
-	
+
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
@@ -552,12 +552,26 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	m_window -> ProcessDidDeminiaturize();
 }
 
+// MW-2014-07-17: [[ Bug 12720 ]] 'Thread' the notification as things break if 'makeKeyAndOrderFront:' is
+//   called in response to it (if the notification is sent as a result of makeKeyAndOrderFront').
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-	m_window -> ProcessDidBecomeKey();
+    [self performSelector: @selector(doWindowDidBecomeKey:) withObject: notification afterDelay: 0];
 }
 
+- (void)doWindowDidBecomeKey: (NSNotification *)notification
+{
+    m_window -> ProcessDidBecomeKey();
+}
+
+// MW-2014-07-17: [[ Bug 12720 ]] 'Thread' the notification as things break if 'makeKeyAndOrderFront:' is
+//   called in response to it (if the notification is sent as a result of makeKeyAndOrderFront').
 - (void)windowDidResignKey:(NSNotification *)notification
+{
+    [self performSelector: @selector(doWindowDidResignKey:) withObject: notification afterDelay: 0];
+}
+
+- (void)doWindowDidResignKey:(NSNotification *)notification
 {
 	m_window -> ProcessDidResignKey();
 }
