@@ -2357,7 +2357,7 @@ void MCPlayer::drawControllerWellButton(MCGContextRef p_gcontext)
     t_drawn_well_rect . y = t_drawn_well_rect . y + 2 * CONTROLLER_HEIGHT / 5;
     t_drawn_well_rect . height = CONTROLLER_HEIGHT / 5;
     
-    // PM-2014-07-17: [[ Bug 12832 ]] and [[ Bug 12833 ]] Reduce the length of the drawn well so as to fix alignment issues with the start/end point of selectedArea and playedArea 
+    // PM-2014-07-17: [[ Bug 12833 ]] Reduce the length of the drawn well so as to fix alignment issues with the start/end point of selectedArea and playedArea 
     t_drawn_well_rect . x += 4;
     t_drawn_well_rect . width -= 10;
     
