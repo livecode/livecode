@@ -1576,12 +1576,7 @@ static void MCIPhoneDoBreakWait(void *)
 		t_modes = [[NSArray alloc] initWithObjects: NSRunLoopCommonModes, nil];
 		[s_break_wait_helper performSelector: @selector(breakWait) withObject: nil afterDelay: 0 inModes: t_modes];
 		[t_modes release];
-}
-}
-
-static void MCIPhoneDoBreakWaitOnCorrectThread(void *context)
-{
-	MCFiberCall(s_main_fiber, MCIPhoneDoBreakWait, nil);
+    }
 }
 
 static void MCIPhoneDoBreakWaitOnCorrectThread(void *context)
