@@ -46,6 +46,11 @@ enum NativeType
 	kNativeTypeJavaData,
 	kNativeTypeJavaArray,
 	kNativeTypeJavaDictionary,
+    // SN-22014-07-17: [[ ExternalsApiV6 ]] Added Java unicode types
+    kNativeTypeJavaUTF8String,
+    kNativeTypeJavaUTF16String,
+	kNativeTypeJavaUTF8Data,
+	kNativeTypeJavaUTF16Data,
 };
 
 NativeType NativeTypeFromName(NameRef p_type);

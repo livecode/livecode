@@ -85,10 +85,14 @@ const char *NativeTypeGetTypedef(NativeType p_type)
         case kNativeTypeObjcDictionary:
             return "NSDictionary*";
 		case kNativeTypeJavaString:
+		case kNativeTypeJavaUTF8String:
+		case kNativeTypeJavaUTF16String:
 			return "jstring";
 		case kNativeTypeJavaNumber:
 			return "jobject";
 		case kNativeTypeJavaData:
+		case kNativeTypeJavaUTF8Data:
+		case kNativeTypeJavaUTF16Data:
 			return "jobject";
 		case kNativeTypeJavaArray:
 			return "jobject";
@@ -153,15 +157,24 @@ const char *NativeTypeGetTag(NativeType p_type)
         case kNativeTypeObjcDictionary:
             return "objc_dictionary";
 		case kNativeTypeJavaString:
-			return "java_string";
+			return "java_cstring";
 		case kNativeTypeJavaNumber:
 			return "java_number";
 		case kNativeTypeJavaData:
-			return "java_data";
+			return "java_cdata";
 		case kNativeTypeJavaArray:
 			return "java_array";
 		case kNativeTypeJavaDictionary:
 			return "java_dictionary";
+        // SN-2014-07-17: [[ ExternalsApiV6 ]] New getter for unicode strings
+		case kNativeTypeJavaUTF8String:
+			return "java_utf8cstring";
+		case kNativeTypeJavaUTF16String:
+			return "java_utf16cstring";
+		case kNativeTypeJavaUTF8Data:
+			return "java_utf8cdata";
+		case kNativeTypeJavaUTF16Data:
+			return "java_utf16cdata";
         default:
             break;
 	}
@@ -183,8 +196,12 @@ const char *NativeTypeGetInitializer(NativeType p_type)
         case kNativeTypeObjcArray:
         case kNativeTypeObjcDictionary:
 		case kNativeTypeJavaString:
+		case kNativeTypeJavaUTF8String:
+		case kNativeTypeJavaUTF16String:
 		case kNativeTypeJavaNumber:
 		case kNativeTypeJavaData:
+		case kNativeTypeJavaUTF8Data:
+		case kNativeTypeJavaUTF16Data:
 		case kNativeTypeJavaArray:
 		case kNativeTypeJavaDictionary:
             return "nil";

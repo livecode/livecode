@@ -19,12 +19,6 @@ public class revtestexternal
 	
 	// The LC object to send the pressed message to.
 	static LC.Object s_target;
-    
-    // Treble UTF-8 clef
-    char[] m_utf8_clef = null;
-    
-    // Treble UTF-16 clef
-    short[] m_utf16_clef = null;
 	
 	public static void revTestExternalAndroidButtonCreate()
 	{
@@ -133,28 +127,45 @@ public class revtestexternal
         }
     }
     
-    public static String revTestExternalTestAndroidUTF8String(String p_string)
+    public static String revTestExternalTestNativeString(String p_string)
+    {
+        //        String t_string = new String();
+        //        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+        return p_string;
+    }
+    
+    public static String revTestExternalTestUTF8String(String p_string)
     {
         String t_string = new String();
         return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
     }
 
-    public static String revTestExternalTestAndroidUTF16String(String p_string)
+    public static String revTestExternalTestUTF16String(String p_string)
     {
-        String t_string = new String();
-        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+//        String t_string = new String();
+//        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+        return p_string;
     }
     
-    public static String revTestExternalTestAndroidUTF8Data(String p_string)
+    public static byte[] revTestExternalTestNativeData(byte[] p_string)
     {
-        String t_string = new String();
-        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+        //        String t_string = new String();
+        //        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+        return p_string;
     }
     
-    public static String revTestExternalTestAndroidUTF16Data(String p_string)
+    public static byte[] revTestExternalTestUTF8Data(byte[] p_string)
     {
-        String t_string = new String();
-        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+//        String t_string = new String();
+//        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+        return p_string;
+    }
+    
+    public static byte[] revTestExternalTestUTF16Data(byte[] p_string)
+    {
+//        String t_string = new String();
+//        return t_string . concat(trebleClef()) . concat(p_string) . concat(trebleClef());
+        return p_string;
     }
 	
 	public static void revTestExternalTestPostAndSend()

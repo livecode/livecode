@@ -125,6 +125,11 @@ void revTestExternalTestWait(void)
 	LCContextExecute("answer \"Done!\"", 0);
 }
 
+void revTestExternalTestArrays(void)
+{
+}
+
+#ifndef __ANDROID__
 void write_utf8_clef(char* t_string)
 {
     t_string[0] = 0xF0;
@@ -149,16 +154,10 @@ int measure_utf16(uint16_t* string)
     return t_size;
 }
 
-void revTestExternalTestArrays(void)
-{
-}
-
 char* revTestExternalTestUTF8String(const char* string)
 {
-    uint32_t t_length;
-    
+    uint32_t t_length;    
     t_length = strlen(string);
-    fprintf(stderr, "%hhX%hhX%hhX", string[0], string[1], string[2]);
     
     char* t_out = (char*)malloc(t_length + 9);
     
@@ -184,6 +183,21 @@ char* revTestExternalTestUTF16String(const char* string)
     t_out[t_length + 4] = '\0';
     
     return (char*)t_out;
+}
+
+char *revTestExternalTestNativeString(const char* string)
+{
+    uint32_t t_length;
+    t_length = strlen(string);
+    
+    char* t_out = (char*)malloc(t_length + 3);
+    
+    t_out[0] = '?';
+    memcpy(t_out + 1, string, t_length);
+    t_out[t_length + 1] = '?';
+    t_out[t_length + 2] = '\0';
+    
+    return t_out;
 }
 
 LCBytes revTestExternalTestUTF8Data(LCBytes data)
@@ -213,6 +227,22 @@ LCBytes revTestExternalTestUTF16Data(LCBytes data)
     
     return t_out;
 }
+
+LCBytes revTestExternalTestNativeData(LCBytes data)
+{
+    LCBytes t_out;
+    t_out.buffer = malloc(data.length + 3);
+    
+    ((char*)t_out.buffer)[0] = '?';
+    memcpy(((char*)t_out.buffer) + 1, data.buffer, data.length);
+    ((char*)t_out.buffer)[data.length + 1] = '?';
+    ((char*)t_out.buffer)[data.length + 2] = '\0';
+    t_out.length = data.length + 2;
+    
+    return t_out;
+}
+#endif
+
 /*
 command revTestExternalTestObjcArrays
 in array as objc-array

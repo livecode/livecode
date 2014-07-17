@@ -3129,6 +3129,7 @@ static LCError java_from__utf8cstring(JNIEnv *env, const char* p_value, jobject&
     uint32_t t_utf8_char_count;
     uint32_t t_cesu8_char_count;
     
+    t_cesu8_char_count = 0;
     t_utf8_char_count = strlen(p_value);
     char *t_cesu8_chars;
     
@@ -3190,17 +3191,20 @@ static LCError java_from__utf16cstring(JNIEnv *env, const char* p_value, jobject
     err = kLCErrorNone;
     
     size_t t_char_count;
-    jchar *t_jchar_value;
-    t_jchar_value = (jchar*)p_value;
+    uint16_t *t_unichar_value;
+    t_unichar_value = (uint16_t*)p_value;
+    
+    t_char_count = 0;
     
     // We only need to find the length of the string, and pass it straight to NewString
-    while(*t_jchar_value++ != 0)
+    while(*t_unichar_value++ != 0)
         ++t_char_count;
+    
     
     jobject t_java_value;
     if (err == kLCErrorNone)
     {
-        t_java_value = (jobject)env -> NewString(t_jchar_value, t_char_count);
+        t_java_value = (jobject)env -> NewString((jchar*)t_unichar_value, t_char_count);
         if (t_java_value == nil || env -> ExceptionOccurred() != nil)
         {
             env -> ExceptionClear();
@@ -3227,48 +3231,115 @@ static bool default__java_string(JNIEnv *env, const char *p_value, jobject& r_ja
         return error__out_of_memory();
 }
     
-static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
+// SN-2014-07-17: [[ ExternalsApiV6 ]] Added Java string conversion
+static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, int p_value_as, jobject& r_value)
 {
-	LCError err;
-	err = kLCErrorNone;
-	
-	char *t_cstring_value;
-	t_cstring_value = nil;
-	if (err == kLCErrorNone)
-		err = LCValueFetch(var, kLCValueOptionAsCString, &t_cstring_value);
+    LCError err;
+    err = kLCErrorNone;
+    
+    if (p_value_as != kLCValueOptionAsCString
+            && p_value_as != kLCValueOptionAsUTF8CString
+            && p_value_as != kLCValueOptionAsUTF16CString)
+        return false;
+    
+    char *t_cstring_value;
+    t_cstring_value = nil;
+    if (err == kLCErrorNone)
+        err = LCValueFetch(var, p_value_as, &t_cstring_value);
     
     jobject t_java_value;
     t_java_value = nil;
     if (err == kLCErrorNone)
-        err = java_from__cstring(env, t_cstring_value, t_java_value);
-
+    {
+        if (p_value_as == kLCValueOptionAsCString)
+            err = java_from__cstring(env, t_cstring_value, t_java_value);
+        else if (p_value_as == kLCValueOptionAsUTF8CString)
+            err = java_from__utf8cstring(env, t_cstring_value, t_java_value);
+        else
+            err = java_from__utf16cstring(env, t_cstring_value, t_java_value);
+    }
+    
     free(t_cstring_value);
-	
-	if (err == kLCErrorNone)
-	{
-		r_value = t_java_value;
-		return true;
-	}
-	
-	return fetch__report_error(err, arg);
+    
+    if (err == kLCErrorNone)
+    {
+        r_value = t_java_value;
+        return true;
+    }
+    
+    return fetch__report_error(err, arg);
 }
     
-static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
+ 
+static bool fetch__java_cstring(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
+{
+    jobject t_return;
+    bool t_success;
+    
+    t_success = fetch__java_string(env, arg, var, kLCValueOptionAsCString, t_return);
+    
+    if (t_success)
+        r_value = t_return;
+    
+    return t_success;
+}
+
+static bool fetch__java_utf8cstring(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
+{
+    jobject t_return;
+    bool t_success;
+    
+    t_success = fetch__java_string(env, arg, var, kLCValueOptionAsUTF8CString, t_return);
+    
+    if (t_success)
+        r_value = t_return;
+    
+    return t_success;
+}
+
+static bool fetch__java_utf16cstring(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
+{
+    jobject t_return;
+    bool t_success;
+    
+    t_success = fetch__java_string(env, arg, var, kLCValueOptionAsUTF16CString, t_return);
+    
+    if (t_success)
+        r_value = t_return;
+    
+    return t_success;
+}
+
+// SN-2014-07-17: [[ ExternalsApiV6 ]] Added Java data conversion
+static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, int p_value_as, jobject& r_value)
 {
 	LCError err;
 	err = kLCErrorNone;
+    
+    if (p_value_as != kLCValueOptionAsCData
+            && p_value_as != kLCValueOptionAsUTF8CData
+            && p_value_as != kLCValueOptionAsUTF16CData)
+        return false;
 	
 	LCBytes t_cdata_value;
 	t_cdata_value . buffer = nil;
 	t_cdata_value . length = 0;
 	if (err == kLCErrorNone)
-		err = LCValueFetch(var, kLCValueOptionAsCData, &t_cdata_value);
+		err = LCValueFetch(var, p_value_as, &t_cdata_value);
 	
 	jobject t_java_value;
 	t_java_value = nil;
+    // The UTF16 data carry the char count, not the byte length.
+    int t_data_length;
+    if (p_value_as == kLCValueOptionAsUTF16CData)
+        t_data_length = 2 * t_cdata_value . length;
+    else
+        t_data_length = t_cdata_value . length;
+    
 	if (err == kLCErrorNone)
 	{
-		t_java_value = (jobject)env -> NewByteArray(t_cdata_value . length);
+        
+		t_java_value = (jobject)env -> NewByteArray(t_data_length);
 		if (t_java_value == nil || env -> ExceptionOccurred() != nil)
 		{
 			env -> ExceptionClear();
@@ -3278,7 +3349,7 @@ static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, jo
 	
 	if (err == kLCErrorNone)
 	{
-		env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, t_cdata_value . length, (const jbyte *)t_cdata_value . buffer);
+		env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, t_data_length, (const jbyte *)t_cdata_value . buffer);
 		if (env -> ExceptionOccurred() != nil)
 		{
 			env -> ExceptionClear();
@@ -3295,6 +3366,43 @@ static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, jo
 	}
 	
 	return fetch__report_error(err, arg);
+}
+    
+static bool fetch__java_cdata(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
+{
+    jobject t_return;
+    bool t_success;
+    
+    t_success = fetch__java_data(env, arg, var, kLCValueOptionAsCData, t_return);
+    
+    if (t_success)
+        r_value = t_return;
+    
+    return t_return;
+}
+static bool fetch__java_utf8cdata(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
+{
+    jobject t_return;
+    bool t_success;
+    
+    t_success = fetch__java_data(env, arg, var, kLCValueOptionAsUTF8CData, t_return);
+    
+    if (t_success)
+        r_value = t_return;
+    
+    return t_success;
+}
+static bool fetch__java_utf16cdata(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
+{
+    jobject t_return;
+    bool t_success;
+    
+    t_success = fetch__java_data(env, arg, var, kLCValueOptionAsUTF16CData, t_return);
+    
+    if (t_success)
+        r_value = t_return;
+    
+    return t_success;
 }
 
 static LCError java_to__cstring(JNIEnv *env, jobject value, char*& r_cstring)
@@ -3368,6 +3476,8 @@ static LCError java_to__utf8cstring(JNIEnv *env, jobject value, char*& r_cstring
     
     char *t_utf8_chars;
     uint32_t t_utf8_char_count;
+    t_utf8_char_count = 0;
+    
     if (err == kLCErrorNone)
     {
         t_cesu8_char_count = env -> GetStringUTFLength((jstring)value);
@@ -3416,7 +3526,7 @@ static LCError java_to__utf8cstring(JNIEnv *env, jobject value, char*& r_cstring
     return err;
 }
 
-static LCError java_to__16cstring(JNIEnv *env, jobject value, char*& r_cstring)
+static LCError java_to__utf16cstring(JNIEnv *env, jobject value, char*& r_cstring)
 {
     LCError err;
     err = kLCErrorNone;
@@ -3442,6 +3552,7 @@ static LCError java_to__16cstring(JNIEnv *env, jobject value, char*& r_cstring)
     {
         t_unichar_count = env -> GetStringLength((jstring)value);
         t_terminated_unichars = (jchar *)malloc((t_unichar_count + 1) * sizeof(jchar));
+        
         if (t_terminated_unichars == nil)
             err = kLCErrorOutOfMemory;
         else
@@ -3458,18 +3569,31 @@ static LCError java_to__16cstring(JNIEnv *env, jobject value, char*& r_cstring)
     
     return err;
 }
-
-static bool store__java_string(JNIEnv *env, MCVariableRef var, jobject value)
+    
+// SN-2014-07-17: [[ ExternalsApiV6 ]] Updated unicode setter for data/string
+static bool store__java_string(JNIEnv *env, MCVariableRef var, int p_value_as, jobject value)
 {
 	LCError err;
 	err = kLCErrorNone;
+    
+    if (p_value_as != kLCValueOptionAsCString
+            && p_value_as != kLCValueOptionAsUTF8CString
+            && p_value_as != kLCValueOptionAsUTF16CString)
+        return false;
 	
 	char *t_native_value;
 	if (err == kLCErrorNone)
-		err = java_to__cstring(env, value, t_native_value);
+    {
+        if (p_value_as == kLCValueOptionAsCString)
+            err = java_to__cstring(env, value, t_native_value);
+        else if (p_value_as == kLCValueOptionAsUTF8CString)
+            err = java_to__utf8cstring(env, value, t_native_value);
+        else
+            err = java_to__utf16cstring(env, value, t_native_value);
+    }
 	
 	if (err == kLCErrorNone)
-		err = LCValueStore(var, kLCValueOptionAsCString, &t_native_value);
+		err = LCValueStore(var, p_value_as, &t_native_value);
 		
 	free(t_native_value);
 		
@@ -3478,11 +3602,31 @@ static bool store__java_string(JNIEnv *env, MCVariableRef var, jobject value)
 		
 	return store__report_error(err);
 }
+    
+static bool store__java_cstring(JNIEnv *env, MCVariableRef var, jobject value)
+{
+    return store__java_string(env, var, kLCValueOptionAsCString, value);
+}
 
-static bool store__java_data(JNIEnv *env, MCVariableRef var, jobject value)
+static bool store__java_utf8cstring(JNIEnv *env, MCVariableRef var, jobject value)
+{
+    return store__java_string(env, var, kLCValueOptionAsUTF8CString, value);
+}
+
+static bool store__java_utf16cstring(JNIEnv *env, MCVariableRef var, jobject value)
+{
+    return store__java_string(env, var, kLCValueOptionAsUTF16CString, value);
+}
+
+static bool store__java_data(JNIEnv *env, MCVariableRef var, int p_value_as, jobject value)
 {
 	LCError err;
 	err = kLCErrorNone;
+    
+    if (p_value_as != kLCValueOptionAsCData
+            && p_value_as != kLCValueOptionAsUTF8CData
+            && p_value_as != kLCValueOptionAsUTF16CData)
+        return false;
 	
 	LCBytes t_native_value;
 	t_native_value . buffer = nil;
@@ -3500,6 +3644,9 @@ static bool store__java_data(JNIEnv *env, MCVariableRef var, jobject value)
 	if (err == kLCErrorNone)
 	{
 		t_native_value . length = env -> GetArrayLength((jbyteArray)value);
+        // SN-2014-07-17: [[ ExternalsApiV6 ]] UTF-16 data carry the char count, not the byte length
+        if (p_value_as == kLCValueOptionAsUTF16CData)
+            t_native_value . length /= 2;
 		err = LCValueStore(var, kLCValueOptionAsCData, &t_native_value);
 	}
 	
@@ -3510,6 +3657,21 @@ static bool store__java_data(JNIEnv *env, MCVariableRef var, jobject value)
 		return true;
 		
 	return store__report_error(err);
+}
+
+static bool store__java_cdata(JNIEnv *env, MCVariableRef var, jobject value)
+{
+    return store__java_data(env, var, kLCValueOptionAsCData, value);
+}
+
+static bool store__java_utf8cdata(JNIEnv *env, MCVariableRef var, jobject value)
+{
+    return store__java_data(env, var, kLCValueOptionAsUTF8CData, value);
+}
+
+static bool store__java_utf16cdata(JNIEnv *env, MCVariableRef var, jobject value)
+{
+    return store__java_data(env, var, kLCValueOptionAsUTF16CData, value);
 }
 
 static void free__java_string(JNIEnv *env, jobject value)

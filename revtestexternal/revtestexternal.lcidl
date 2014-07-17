@@ -33,6 +33,13 @@ command revTestExternalTestWait
 
 command revTestExternalTestArrays
 
+use c on linux,windows,mac,ios
+use java on android
+
+function revTestExternalTestNativeString
+    in string as c-string
+    return c-string
+
 function revTestExternalTestUTF8String
     in string as utf8-c-string
     return utf8-c-string
@@ -40,6 +47,10 @@ function revTestExternalTestUTF8String
 function revTestExternalTestUTF16String
     in string as utf16-c-string
     return utf16-c-string
+    
+function revTestExternalTestNativeData
+    in data as c-data
+    return c-data
     
 function revTestExternalTestUTF8Data
     in data as utf8-c-data
@@ -79,21 +90,5 @@ tail command revTestExternalAndroidButtonCreate
 tail command revTestExternalAndroidButtonDestroy
 
 function revTestExternalRunActivity return c-string
-
-function revTestExternalTestAndroidUTF8String
-    in string as utf8-c-string
-    return utf8-c-string
-    
-function revTestExternalTestAndroidUTF16String
-    in string as utf16-c-string
-    return utf16-c-string
-    
-function revTestExternalTestAndroidUTF8Data
-    in data as utf8-c-data
-    return utf8-c-data
-    
-function revTestExternalTestAndroidUTF16Data
-    in data as utf16-c-data
-    return utf16-c-data
 
 command revTestExternalRunOnSystemThread

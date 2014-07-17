@@ -139,9 +139,17 @@ static NativeType map_native_type(HandlerMapping p_mapping, NameRef p_type)
 		switch(NativeTypeFromName(p_type))
 		{
 		case kNativeTypeCString:
-			return kNativeTypeJavaString;
+            return kNativeTypeJavaString;
+        case kNativeTypeUTF8CString:
+            return kNativeTypeJavaUTF8String;
+        case kNativeTypeUTF16CString:
+            return kNativeTypeJavaUTF16String;
 		case kNativeTypeCData:
 			return kNativeTypeJavaData;
+        case kNativeTypeUTF8CData:
+            return kNativeTypeJavaUTF8Data;
+        case kNativeTypeUTF16CData:
+            return kNativeTypeJavaUTF16Data;
 		}
 	}
 	
@@ -496,6 +504,11 @@ private:
 class JavaStringTypeMapper: public TypeMapper
 {
 public:
+    JavaStringTypeMapper(NativeType p_type)
+    {
+        m_tag = NativeTypeGetTag(p_type);
+    }
+    
 	virtual const char *GetTypedef(ParameterType type)
 	{
 		return "__INTERNAL_ERROR__";
@@ -509,7 +522,7 @@ public:
 	
 	virtual void Fetch(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_source)
 	{
-		CoderWriteStatement(p_coder, "success = fetch__java_string(__java_env, name__%s, %s, %s)", p_name, p_source, p_name);
+		CoderWriteStatement(p_coder, "success = fetch__%s(__java_env, name__%s, %s, %s)", m_tag, p_name, p_source, p_name);
 	}
 	
 	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
@@ -519,18 +532,27 @@ public:
 	
 	virtual void Store(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_target)
 	{
-		CoderWriteStatement(p_coder, "success = store__java_string(__java_env, %s, %s)", p_target, p_name);
+		CoderWriteStatement(p_coder, "success = store__%s(__java_env, %s, %s)", m_tag, p_target, p_name);
 	}
 	
 	virtual void Finalize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
 	{
 		CoderWriteStatement(p_coder, "free__java_string(__java_env, %s)", p_name);
 	}
+    
+private:
+    const char* m_tag;
 };
 
 class JavaDataTypeMapper: public TypeMapper
 {
 public:
+    
+    JavaDataTypeMapper(NativeType p_type)
+    {
+        m_tag = NativeTypeGetTag(p_type);
+    }
+    
 	virtual const char *GetTypedef(ParameterType type)
 	{
 		return "__INTERNAL_ERROR__";
@@ -544,7 +566,7 @@ public:
 	
 	virtual void Fetch(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_source)
 	{
-		CoderWriteStatement(p_coder, "success = fetch__java_data(__java_env, name__%s, %s, %s)", p_name, p_source, p_name);
+		CoderWriteStatement(p_coder, "success = fetch__%s(__java_env, name__%s, %s, %s)", m_tag, p_name, p_source, p_name);
 	}
 	
 	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
@@ -554,13 +576,16 @@ public:
 	
 	virtual void Store(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_target)
 	{
-		CoderWriteStatement(p_coder, "success = store__java_data(__java_env, %s, %s)", p_target, p_name);
+		CoderWriteStatement(p_coder, "success = store__%s(__java_env, %s, %s)", m_tag, p_target, p_name);
 	}
 	
 	virtual void Finalize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
 	{
 		CoderWriteStatement(p_coder, "free__java_data(__java_env, %s)", p_name);
 	}
+    
+private:
+    const char* m_tag;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1096,8 +1121,14 @@ static TypeMapper *map_parameter_type(InterfaceRef self, HandlerMapping p_mappin
 	case kNativeTypeObjcData: return new ObjcDataTypeMapper;
 	case kNativeTypeObjcArray: return new ObjcArrayTypeMapper;
 	case kNativeTypeObjcDictionary: return new ObjcDictionaryTypeMapper;
-	case kNativeTypeJavaString: return new JavaStringTypeMapper;
-	case kNativeTypeJavaData: return new JavaDataTypeMapper;
+    case kNativeTypeJavaString:
+    case kNativeTypeJavaUTF8String:
+    case kNativeTypeJavaUTF16String:
+        return new JavaStringTypeMapper(t_type);
+	case kNativeTypeJavaData:
+    case kNativeTypeJavaUTF8Data:
+    case kNativeTypeJavaUTF16Data:
+        return new JavaDataTypeMapper(t_type);
 	}
 	return nil;
 }
