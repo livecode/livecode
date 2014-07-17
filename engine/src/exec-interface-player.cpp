@@ -595,8 +595,6 @@ void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting,
 {
     uint4 oldflags = flags;
     MCObject::SetVisibility(ctxt, part, setting, visible);
-    if (flags != oldflags && !(flags & F_VISIBLE))
-        playstop();
     
     // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_VISIBLE getter refactored to the MCPlayer implementations

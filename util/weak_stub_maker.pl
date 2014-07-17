@@ -67,7 +67,7 @@ output "#include <stdlib.h>";
 output "#include <stdio.h>";
 output "#include <cstring>";
 output ;
-output "#if defined(_MACOSX)";
+output "#if defined(_MACOSX) || defined(_MAC_SERVER)";
 output "#include <mach-o/dyld.h>";
 output "typedef const struct mach_header *module_t;";
 output "#define SYMBOL_PREFIX \"_\"";
@@ -96,7 +96,7 @@ output ;
 output "static int module_load(const char *p_source, module_t *r_module)";
 output "{";
 output "  module_t t_module;";
-output "#if defined(_MACOSX)";
+output "#if defined(_MACOSX) || defined(_MAC_SERVER)";
 output "  t_module  = NSAddImage(p_source, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);";
 # MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
 output "  if (t_module == NULL)";
@@ -154,7 +154,7 @@ output ;
 output "static int module_resolve(module_t p_module, const char *p_name, handler_t *r_handler)";
 output "{";
 output "  handler_t t_handler = NULL;";
-output "#if defined(_MACOSX)";
+output "#if defined(_MACOSX) || defined(_MAC_SERVER)";
 output "  NSSymbol t_symbol;";
 output "  t_symbol = NSLookupSymbolInImage(p_module, p_name, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);";
 output "  if (t_symbol != NULL)";
@@ -239,28 +239,17 @@ sub generateModule
     output "  module_$module = NULL;";
     output "}";
     output ;
-    output "int initialise_weak_link_$module(void)";
+    output "int initialise_weak_link_${module}_with_path(const char *p_path)";
     output "{";
     output "  module_$module = NULL;";
 	
-	# The list of libraries for Linux may be comma-separated
-	output "#if defined(_LINUX)";
-	foreach my $item (split(',', $unixLibrary))
-	{
-		output "  if (!module_load(\"$item\", &module_$module))";
-	}
-	
-	output "#else";
-	output "  if (!module_load(MODULE_${moduleUpper}_NAME, &module_$module))";
-	output "#endif";
-	
-    output "{";
-    output "#ifdef _DEBUG";
+    output "  if (!module_load(p_path, &module_$module))";
+    output "  {";
+    output "  #ifdef _DEBUG";
     output "    fprintf(stderr, \"Unable to load library: $unixLibrary\\n\");";
-    output "#endif";
-    output "goto err;";
-    output "}";
-	output ;
+    output "  #endif";
+    output "    goto err;";
+    output "  }";
 	
 	foreach my $symbol (@symbols)
 	{
@@ -290,6 +279,29 @@ sub generateModule
     output "  return 0;";
     output "}";
     output ;
+
+    output "int initialise_weak_link_${module}(void)";
+    output "{";
+
+	# The list of libraries for Linux may be comma-separated
+	output "#if defined(_LINUX)";
+	foreach my $item (split(',', $unixLibrary))
+	{
+		output "  if(!initialise_weak_link_${module}_with_path(\"$item\")";
+	}
+	
+	output "#else";
+        output "  if (!initialise_weak_link_${module}_with_path(MODULE_${moduleUpper}_NAME))";
+	output "#endif";
+	
+    output "{";
+    output "#ifdef _DEBUG";
+    output "    fprintf(stderr, \"Unable to load library: $unixLibrary\\n\");";
+    output "#endif";
+    output "return 0;";
+    output "}";
+    output "return -1;";
+    output "}";
 	
 	foreach my $symbol (@symbols)
 	{
@@ -434,6 +446,10 @@ sub typeListToProto
 		elsif ($line eq "double")
 		{
 			$proto .= "double ";
+		}
+		elsif ($line eq "integer64")
+		{
+			$proto .= "long long int ";
 		}
 		else
 		{
