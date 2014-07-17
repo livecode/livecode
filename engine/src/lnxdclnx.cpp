@@ -1011,6 +1011,9 @@ void MCScreenDC::IME_OnPreeditChanged(GtkIMContext* p_context)
     // Do the insert
     MCactivefield->startcomposition();
     MCactivefield->finsertnew(FT_IMEINSERT, *t_string, LCH_UNICODE);
+    
+    // Update the cursor position
+    MCactivefield->setcompositioncursoroffset(t_cursor_pos);
 }
 
 void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
