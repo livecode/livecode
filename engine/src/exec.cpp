@@ -2851,6 +2851,11 @@ void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValu
 				ctxt . Throw();
 			break;
             
+        case kMCExecValueTypeFloat:
+			if (!MCNumberCreateWithReal(*(float *)p_from_value, (MCNumberRef&)r_value))
+				ctxt . Throw();
+			break;
+            
         case kMCExecValueTypeColor:
             if(!MCStringFormat((MCStringRef&)r_value, "%u,%u,%u", (((MCColor *)p_from_value) -> red >> 8) & 0xff, (((MCColor *)p_from_value) -> green >> 8) & 0xff, (((MCColor *)p_from_value) -> blue >> 8) & 0xff))
                 ctxt . Throw();
