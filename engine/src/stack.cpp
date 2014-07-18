@@ -771,8 +771,15 @@ void MCStack::kfocus()
 	if (state & CS_SUSPENDED)
 	{
 		curcard->message(MCM_resume_stack);
+        
+        // We have just invoked script, so it is entirely possible that focus is now
+        // 'elsewhere' - if the focused stack is not us, then do nothing.
+        if (MCfocusedstackptr != this)
+            return;
+
 		state &= ~CS_SUSPENDED;
 	}
+    
 	if (!(state & CS_KFOCUSED))
 	{
 		state |= CS_KFOCUSED;
@@ -823,6 +830,12 @@ void MCStack::kunfocus()
 	if (!opened)
 		return;
 	curcard->message(MCM_suspend_stack);
+    
+    // We have just invoked script, so we might be the focused stack again. So
+    // if focused stack is us, then do nothing.
+    if (MCfocusedstackptr == this)
+        return;
+    
 	state |= CS_SUSPENDED;
 	curcard->kunfocus();
 }

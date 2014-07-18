@@ -93,7 +93,7 @@ protected:
 	virtual void Unrealize(void);
     
 private:
-	void Load(const char *filename, bool is_url);
+	void Load(MCStringRef filename, bool is_url);
 	void Synchronize(void);
 	void Switch(bool new_offscreen);
     
@@ -568,10 +568,10 @@ void MCAVFoundationPlayer::Unrealize(void)
 	}
 }
 
-void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
+void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 {
     // Ensure that removing the video source from the property inspector results immediately in empty player with the controller thumb in the beginning
-    if (p_filename_or_url == nil)
+    if (MCStringIsEmpty(p_filename_or_url))
     {
         m_player_item_video_output = nil;
         [m_view setPlayer: nil];
@@ -582,9 +582,9 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
 
     id t_url;
     if (!p_is_url)
-        t_url = [NSURL fileURLWithPath: [NSString stringWithCString: p_filename_or_url encoding: NSMacOSRomanStringEncoding]];
+        t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: p_filename_or_url]];
     else
-        t_url = [NSURL URLWithString: [NSString stringWithCString: p_filename_or_url encoding: NSMacOSRomanStringEncoding]];
+        t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: p_filename_or_url]];
 
     AVPlayer *t_player;
     t_player = [[AVPlayer alloc] initWithURL: t_url];
@@ -808,11 +808,11 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 	switch(p_property)
 	{
 		case kMCPlatformPlayerPropertyURL:
-			Load(*(const char **)p_value, true);
+			Load(*(MCStringRef*)p_value, true);
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyFilename:
-			Load(*(const char **)p_value, false);
+			Load(*(MCStringRef*)p_value, false);
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyOffscreen:
@@ -1007,41 +1007,35 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
     NSArray *t_tracks;
     t_tracks = [[[m_player currentItem] asset] tracks];
     
-    /*
-    AVPlayerItemTrack *t_playerItemTrack;
-    t_playerItemTrack = [t_tracks objectAtIndex:p_index];
-    
-    // TODO: Fix error "LiveCode-Community[18526:303] -[AVAssetTrack assetTrack]: unrecognized selector sent to instance 0xa9d5aa0"
-    AVAssetTrack *t_assetTrack = t_playerItemTrack.assetTrack;
-    */
-    AVAssetTrack *t_assetTrack = (AVAssetTrack *)[t_tracks objectAtIndex:p_index];
+    // PM-2014-07-10: [[ Bug 12757 ]] Get the AVAssetTrack from t_tracks 
+    AVAssetTrack *t_asset_track = (AVAssetTrack *)[t_tracks objectAtIndex:p_index];
     
 	switch(p_property)
 	{
 		case kMCPlatformPlayerTrackPropertyId:
-			*(uint32_t *)r_value = [t_assetTrack trackID];
+			*(uint32_t *)r_value = [t_asset_track trackID];
 			break;
 		case kMCPlatformPlayerTrackPropertyMediaTypeName:
 		{
             NSString *t_mediaType;
-            t_mediaType = [t_assetTrack mediaType];
-            *(char **)r_value = strdup([t_mediaType cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+            t_mediaType = [t_asset_track mediaType];
+            MCStringCreateWithCFString((CFStringRef)t_mediaType, *(MCStringRef*)r_value);
 		}
             break;
 		case kMCPlatformPlayerTrackPropertyOffset:
         {
-			CMTimeRange t_timeRange = [t_assetTrack timeRange];
+			CMTimeRange t_timeRange = [t_asset_track timeRange];
             *(uint32_t *)r_value = t_timeRange . start . value;
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyDuration:
         {
-            CMTimeRange t_timeRange = [t_assetTrack timeRange];
+            CMTimeRange t_timeRange = [t_asset_track timeRange];
             *(uint32_t *)r_value = t_timeRange . duration . value;
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyEnabled:
-			*(bool *)r_value = [t_assetTrack isEnabled];
+			*(bool *)r_value = [t_asset_track isEnabled];
 			break;
 	}
 }

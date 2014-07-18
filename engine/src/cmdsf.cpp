@@ -801,6 +801,8 @@ MCExport::~MCExport()
 	delete palette_color_count;
 	delete palette_color_list;
 	delete size;
+    // MERG-2014-07-11: metadata array
+    delete metadata;
 }
 
 Parse_stat MCExport::parse(MCScriptPoint &sp)
@@ -815,7 +817,11 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 	if (sp.lookup(SP_EXPORT, te) == PS_NORMAL)
+    {
 		sformat = (Export_format)te->which;
+        // MERG-2014-07-17: Bugfix because export JPEG etc was failing to set the format
+        format = sformat;
+    }
 	else
 	{
 		sp.backup();
@@ -889,14 +895,23 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 					if (t_need_effects &&
 						sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EFFECTS) != PS_NORMAL)
 					{
-						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-						return PS_ERROR;
+                        // MERG-2014-07-11: [[ ImageMetadata ]] Allow metadata without having to specify effects
+                        if (with_effects && sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) == PS_NORMAL)
+                        {
+                            sp . backup();
+                            sp . backup();
+                        }
+                        else
+                        {
+                            MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+                            return PS_ERROR;
+                        }
 					}
 				}
 			}
 		}
-		
-		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+        
+        if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
 		{
 			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
 				sp . parseexp(False, True, &size) != PS_NORMAL)
@@ -906,6 +921,17 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 			}
 		}
 	}
+    
+    // MERG-2014-07-11: [[ ImageMetadata ]] metadata array
+    if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL || sp . skip_token(SP_FACTOR, TT_BINOP, O_AND) == PS_NORMAL )
+    {
+        if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) != PS_NORMAL ||
+            sp . parseexp(False, True, &metadata) != PS_NORMAL)
+        {
+            MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+            return PS_ERROR;
+        }
+    }
 
 	if (sp.skip_token(SP_FACTOR, TT_TO) != PS_NORMAL)
 	{
@@ -1048,8 +1074,8 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 			return ES_ERROR;
 		}
 	}
-	
-	// MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+    
+    // MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
 	//   bitmap, which needs to be processed before compression. This flag
 	//   indicates to do this processing later on in the method.
 	bool t_needs_unpremultiply;
@@ -1104,8 +1130,8 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 				return ES_ERROR;
 			}
 		}
-
-		MCRectangle r;
+        
+        MCRectangle r;
 		r.x = r.y = -32768;
 		r.width = r.height = 0;
 		if (srect != NULL)
@@ -1187,6 +1213,27 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 			return ES_ERROR;
 		}
 	}
+    
+    // MERG-2014-07-11: metadata array
+    // MW-2014-07-17: [[ ImageMetadata ]] Parse out the contents of the metadata array here
+    //   (saves copying as further use of ep might clobber it).
+    MCImageMetadata t_metadata;
+    MCMemoryClear(&t_metadata, sizeof(t_metadata));
+    if (metadata != NULL)
+    {
+        if (metadata -> eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
+            return ES_ERROR;
+        }
+        
+        if (ep . getformat() == VF_ARRAY)
+        {
+            // Make a copy of the array in ep so the parsing function can use the ep to eval.
+            MCVariableValue t_metadata_array(*ep . getarray());
+            MCImageParseMetadata(ep, t_metadata_array, t_metadata);
+        }
+    }
 
 	IO_handle stream = NULL;
 	char *name = NULL;
@@ -1313,7 +1360,7 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 		}
 		if (t_status == ES_NORMAL)
 		{
-			if (!MCImageExport(t_bitmap, format, &t_palette_settings, t_dither, t_out_stream, mstream))
+			if (!MCImageExport(t_bitmap, format, &t_palette_settings, t_dither, &t_metadata, t_out_stream, mstream))
 			{
 				t_delete_file_on_error = true;
 				MCeerror->add(EE_EXPORT_CANTWRITE, line, pos, name);
@@ -1363,6 +1410,16 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	MCAutoStringRef t_mask_filename;
     if (!ctxt . EvalOptionalExprAsNullableStringRef(mname, EE_EXPORT_BADNAME, &t_mask_filename))
         return;
+    
+    // MERG-2014-07-11: metadata array
+    MCAutoArrayRef t_metadata_array;
+    MCImageMetadata t_metadata;
+    MCImageMetadata *t_metadata_ptr;
+    t_metadata_ptr = NULL;
+    if (!ctxt . EvalOptionalExprAsArrayRef(metadata, kMCEmptyArray , EE_EXPORT_NOSELECTED, &t_metadata_array))
+        return;
+
+    MCImageParseMetadata(ctxt, *t_metadata_array, t_metadata);
 
 	MCObject *optr = NULL;
 	if (image != NULL)
@@ -1455,34 +1512,34 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
                 if (t_success)
                 {
 					if (*t_filename == nil)
-						MCInterfaceExecExportSnapshotOfStack(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_return_data);
+						MCInterfaceExecExportSnapshotOfStack(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, &t_return_data);
 					else
-						MCInterfaceExecExportSnapshotOfStackToFile(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+						MCInterfaceExecExportSnapshotOfStackToFile(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
 				}
 			}
             else if (optr != NULL)
             {
                 
                 if (*t_filename == nil)
-                    MCInterfaceExecExportSnapshotOfObject(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_return_data);
+                    MCInterfaceExecExportSnapshotOfObject(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_metadata, &t_return_data);
                 else
-                    MCInterfaceExecExportSnapshotOfObjectToFile(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+                    MCInterfaceExecExportSnapshotOfObjectToFile(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
             }
             else
             {
                 if (*t_filename == nil)
-                    MCInterfaceExecExportSnapshotOfScreen(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_return_data);
+                    MCInterfaceExecExportSnapshotOfScreen(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, &t_return_data);
                 else
-                    MCInterfaceExecExportSnapshotOfScreenToFile(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+                    MCInterfaceExecExportSnapshotOfScreenToFile(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
             }
         }
 	}
 	else
 	{
 		if (*t_filename == nil)
-			MCInterfaceExecExportImage(ctxt, (MCImage *)optr, format, t_settings_ptr, &t_return_data);
+			MCInterfaceExecExportImage(ctxt, (MCImage *)optr, format, t_settings_ptr, &t_metadata, &t_return_data);
 		else
-			MCInterfaceExecExportImageToFile(ctxt, (MCImage *)optr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+			MCInterfaceExecExportImageToFile(ctxt, (MCImage *)optr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
 	}
     
     MCInterfaceImagePaletteSettingsFree(ctxt, t_settings);

@@ -574,17 +574,19 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 	else
 		[t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
 	
-	if (p_type_count > 1)
-	{
-		MCFileDialogAccessoryView *t_accessory;
-		t_accessory = [[MCFileDialogAccessoryView alloc] init];
-		[t_accessory setTypes: p_types length: p_type_count];
-		[t_accessory setLabel: @"Format:"];
-		[t_panel setAccessoryView: t_accessory];
-		[t_panel setDelegate: t_accessory];
-		[t_accessory release];
+    // MW-2014-07-17: [[ Bug 12826 ]] If we have at least one type, add a delegate. Only add as
+    //   an accessory view if more than one type.
+    MCFileDialogAccessoryView *t_accessory;
+    if (p_type_count > 0)
+    {
+        t_accessory = [[MCFileDialogAccessoryView alloc] init];
+        [t_accessory setTypes: p_types length: p_type_count];
+        [t_accessory setLabel: @"Format:"];
+        if (p_type_count > 1)
+            [t_panel setAccessoryView: t_accessory];
+        [t_panel setDelegate: t_accessory];
 	}
-	
+    
 	if (p_kind != kMCPlatformFileDialogKindSave)
 	{
 		[(NSOpenPanel *)t_panel setCanChooseFiles: YES];
@@ -640,6 +642,13 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 	}
 	else
 		r_paths = nil, r_type = nil;
+    
+    // MW-2014-07-17: [[ Bug 12826 ]] Make sure we release the delegate (might be nil, but no
+    //   problem here with that).
+    id t_delegate;
+    t_delegate = [s_dialog_nesting -> panel delegate];
+    [s_dialog_nesting -> panel setDelegate: nil];
+    [t_delegate release];
 	
 	return MCPlatformEndOpenSaveDialog();
 }
