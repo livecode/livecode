@@ -925,8 +925,13 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 	}
 	
 	Rect t_src_rect, t_dst_rect;
+#ifdef __WINDOWS__
+	SetRect((LPRECT)&t_src_rect, 0, 0, p_area . width, p_area . height);
+	SetRect((LPRECT)&t_dst_rect, 0, 0, p_area . width, p_area . height);
+#else
 	SetRect(&t_src_rect, 0, 0, p_area . width, p_area . height);
 	SetRect(&t_dst_rect, 0, 0, p_area . width, p_area . height);
+#endif
 	
 	if (qteffect != 0)
 	{
