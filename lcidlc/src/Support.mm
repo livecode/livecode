@@ -3203,7 +3203,7 @@ static LCError java_from__utf16cstring(JNIEnv *env, const char* p_value, jobject
     jobject t_java_value;
     if (err == kLCErrorNone)
     {
-        t_java_value = (jobject)env -> NewString((jchar*)t_unichar_value, t_char_count);
+        t_java_value = (jobject)env -> NewString((jchar*)p_value, t_char_count);
         if (t_java_value == nil || env -> ExceptionOccurred() != nil)
         {
             env -> ExceptionClear();
@@ -3552,15 +3552,9 @@ static LCError java_to__utf16cstring(JNIEnv *env, jobject value, char*& r_cstrin
         t_terminated_unichars = (jchar *)malloc((t_unichar_count + 1) * sizeof(jchar));
         
         if (t_terminated_unichars == nil)
-        {
-            __android_log_write(ANDROID_LOG_INFO, "revandroid", "NULL pointer");
             err = kLCErrorOutOfMemory;
-        }
         else
         {
-            char t[123];
-            sprintf(t, "pointer sent: %p", t_terminated_unichars);
-            __android_log_write(ANDROID_LOG_INFO, "revandroid", t);
             memcpy(t_terminated_unichars, t_unichars, (t_unichar_count + 1) * sizeof(jchar));
             t_terminated_unichars[t_unichar_count] = '\0';
         }

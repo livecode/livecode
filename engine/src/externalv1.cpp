@@ -1821,9 +1821,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
         for (t_char_count = 0 ; *t_chars != 0; ++t_char_count)
             ++t_chars;
         
-        MCLog("char found: %d", t_char_count);
-        MCLog("Pointer: %p", p_value);
-        
         if (!MCStringCreateWithChars(*(const unichar_t**)p_value, t_char_count, &t_stringref))
             return kMCExternalErrorOutOfMemory;
         
