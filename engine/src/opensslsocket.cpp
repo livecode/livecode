@@ -1108,7 +1108,7 @@ MCSocket::MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHan
 	init(fd);
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
-	endhostname = NULL;
+	endhostname = MCValueRetain(kMCEmptyName);
 }
 
 MCSocket::~MCSocket()
@@ -2252,7 +2252,7 @@ Boolean MCSocket::sslconnect()
 			MCAutoStringRef t_hostname;
 			// MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
 			//   Otherwise, use the socket name as before.
-            if (endhostname != NULL)
+            if (!MCNameIsEmpty(endhostname))
                 /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(endhostname), &t_hostname);
             else
                 /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
