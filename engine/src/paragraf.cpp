@@ -1138,19 +1138,21 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 
                 // Get the X coordinates for the selection
                 int2 bix, bex;
-                // AL-2014-07-17: [[ Bug 12823 ]] Include segment offset in the block coordinate calculation 
-                bix = bptr->GetCursorX(si) + sgptr -> GetCursorOffset();
-                bex = bptr->GetCursorX(ei) + sgptr -> GetCursorOffset();
-                
+                bix = bptr->GetCursorX(si);
+                bex = bptr->GetCursorX(ei);
+        
+                // AL-2014-07-17: [[ Bug 12823 ]] Include segment offset in the block coordinate calculation
+                // AL_2014-07-18: [[ Bug 12828 ]] RTL text is right-aligned in tabbed cell, so adjust the
+                //  x coordinate of the selection accordingly
                 // Re-ordering will be required if the block is RTL
                 if (bix > bex)
                 {
-                    srect.x = x + bex;
+                    srect.x = x + (sgptr -> GetRight() - bex - bptr -> getwidth());
                     srect.width = bix - bex;
                 }
                 else
                 {
-                    srect.x = x + bix;
+                    srect.x = x + sgptr -> GetCursorOffset() + bix;
                     srect.width = bex - bix;
                 }
 
