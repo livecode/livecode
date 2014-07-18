@@ -984,9 +984,12 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 			//t_tab_width = 64; //gettabwidth(0, t_index);
 
 			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            // FG-2014-07-16: [[ Bug 12539 ]] Make sure not to draw tab characters
 			coord_t t_width;
 			MCRange t_range;
 			t_range = MCRangeMake(t_index, t_next_index - t_index);
+            if (length > 0 && parent->GetCodepointAtIndex(t_next_index - 1) == '\t')
+                t_range.length--;
             t_width = MCFontMeasureTextSubstringFloat(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
@@ -1091,8 +1094,11 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 			}
 		}*/
 
-		MCRange t_range;
-		t_range = MCRangeMake(sptr, size);
+        // FG-2014-07-16: [[ Bug 12539 ]] Make sure not to draw tab characters
+        MCRange t_range;
+        t_range = MCRangeMake(sptr, size);
+        if (size > 0 && parent->GetCodepointAtIndex(sptr + size - 1) == '\t')
+            t_range.length--;
         dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, kMCDrawTextBreak, is_rtl() ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
 
 		// Apply strike/underline.
@@ -1705,7 +1711,7 @@ coord_t MCBlock::GetCursorX(findex_t fi)
         return origin + getsubwidth(NULL, tabpos, m_index, j);
 }
 
-findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last)
+findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool moving_forward)
 {
     // The x coordinate is relative to the line, not ourselves
     x -= getorigin();
@@ -1735,7 +1741,8 @@ findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last)
     
     MCRange t_char_range;
     MCRange t_cp_range;
-        
+    
+    coord_t t_pos = t_last_width;
     while(i < m_index + m_size)
     {
         findex_t t_new_i;
@@ -1746,14 +1753,25 @@ findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last)
         coord_t t_new_width;
         t_new_width = GetCursorX(t_new_i) - origin;
         
-        int32_t t_pos;
         if (chunk)
             t_pos = t_new_width;
+        else if (t_last_width == t_new_width)
+            // Don't update the position if this character was zero-width
+            ;
         else
             t_pos = (t_last_width + t_new_width) / 2;
         
         if ((is_rtl() && x >= t_pos) || (!is_rtl() && x < t_pos))
+        {
+            // FG-2014-07-16: [[ Bugfix 12166 ]] Make sure that we don't return
+            // an index pointing at a zero-width character.
+            while (moving_forward && i < m_size && (GetCursorX(i) - origin) == t_new_width)
+                i++;
+            while (!moving_forward && i > 0 && (GetCursorX(i-1) - origin) == t_last_width)
+                i--;
+
             break;
+        }
         
         t_last_width = t_new_width;
         i = t_new_i;

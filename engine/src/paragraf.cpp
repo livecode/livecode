@@ -722,7 +722,9 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 			t_data = (char *)t_swapped_data;
 		}
 
-		if ((stat = IO_write_string_legacy_full(MCString(t_data, t_data_len), stream, 2, true)) != IO_NORMAL)
+        // AL-2014-07-15: [[ Bug 12672 ]] If the data is larger than MAXUINT2,
+        //  make sure appropriate size is passed to IO_write_string_legacy_full
+		if ((stat = IO_write_string_legacy_full(MCString(t_data, t_data_len), stream, t_data_len > MAXUINT2 ? 4 : 2, true)) != IO_NORMAL)
 			return stat;
 
 		// If the string had to be byte swapped, delete the allocated data
@@ -1109,8 +1111,16 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         MCBlock *firstblock, *lastblock;
         lptr->getblocks(firstblock, lastblock);
         MCBlock *bptr = firstblock;
+        MCSegment *sgptr = segments;
+        
         do
         {
+            // AL-2014-07-17: [[ Bug 12823 ]] Block origin is relative to the segment, so keep track
+            //  of the current segment to get correct selection coordinates.
+            // Advance to the next segment, if necessary
+            if (sgptr->next()->GetFirstBlock() == bptr)
+                sgptr = sgptr->next();
+            
             // Is part of this block selected?
             findex_t bi, bl;
             bptr->GetRange(bi, bl);
@@ -1128,8 +1138,9 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 
                 // Get the X coordinates for the selection
                 int2 bix, bex;
-                bix = bptr->GetCursorX(si);
-                bex = bptr->GetCursorX(ei);
+                // AL-2014-07-17: [[ Bug 12823 ]] Include segment offset in the block coordinate calculation 
+                bix = bptr->GetCursorX(si) + sgptr -> GetCursorOffset();
+                bex = bptr->GetCursorX(ei) + sgptr -> GetCursorOffset();
                 
                 // Re-ordering will be required if the block is RTL
                 if (bix > bex)
@@ -2980,7 +2991,7 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
 	x -= computelineoffset(lptr);
 
-	focusedindex = lptr->GetCursorIndex(MCU_max(x, 0), False, moving_left);
+	focusedindex = lptr->GetCursorIndex(MCU_max(x, 0), False, moving_forward);
 	if (extend)
 	{
 		if (originalindex == PARAGRAPH_MAX_LEN)

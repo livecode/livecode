@@ -84,7 +84,7 @@ static bool s_lock_responder_change = false;
 {
 	NSResponder *t_previous;
 	t_previous = [self firstResponder];
-	
+    
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
@@ -203,7 +203,7 @@ static bool s_lock_responder_change = false;
 {
 	NSResponder *t_previous;
 	t_previous = [self firstResponder];
-	
+
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
@@ -551,14 +551,32 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	m_window -> ProcessDidDeminiaturize();
 }
 
+// MW-2014-07-17: [[ Bug 12720 ]] 'Thread' the notification as things break if 'makeKeyAndOrderFront:' is
+//   called in response to it (if the notification is sent as a result of makeKeyAndOrderFront').
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-	m_window -> ProcessDidBecomeKey();
+    MCPlatformRetainWindow(m_window);
+    [self performSelector: @selector(doWindowDidBecomeKey:) withObject: notification afterDelay: 0];
 }
 
+- (void)doWindowDidBecomeKey: (NSNotification *)notification
+{
+    m_window -> ProcessDidBecomeKey();
+    MCPlatformReleaseWindow(m_window);
+}
+
+// MW-2014-07-17: [[ Bug 12720 ]] 'Thread' the notification as things break if 'makeKeyAndOrderFront:' is
+//   called in response to it (if the notification is sent as a result of makeKeyAndOrderFront').
 - (void)windowDidResignKey:(NSNotification *)notification
 {
+    MCPlatformRetainWindow(m_window);
+    [self performSelector: @selector(doWindowDidResignKey:) withObject: notification afterDelay: 0];
+}
+
+- (void)doWindowDidResignKey:(NSNotification *)notification
+{
 	m_window -> ProcessDidResignKey();
+    MCPlatformReleaseWindow(m_window);
 }
 
 - (void)windowDidChangeBackingProperties:(NSNotification *)notification
@@ -816,11 +834,24 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
         return;
     }
     
-	if (!MCMacMapNSStringToCodepoint([event characters], r_mapped))
-		r_mapped = 0xffffffffU;
-	
-	if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], r_unmapped))
-		r_unmapped = 0xffffffffU;
+    // MW-2014-07-17: [[ Bug 12747 ]] For reasons currently unknown to me, if Cmd is in the modifier
+    //   flags, the characters / charactersIgnoringModifiers fields seem to be inverted.
+    if (([event modifierFlags] & NSCommandKeyMask) == 0)
+    {
+        if (!MCMacMapNSStringToCodepoint([event characters], r_mapped))
+            r_mapped = 0xffffffffU;
+        
+        if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], r_unmapped))
+            r_unmapped = 0xffffffffU;
+    }
+    else
+    {
+        if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], r_mapped))
+            r_mapped = 0xffffffffU;
+        
+        if (!MCMacMapNSStringToCodepoint([event characters], r_unmapped))
+            r_unmapped = 0xffffffffU;
+    }
     
 	// The unicode range 0xF700 - 0xF8FF is reserved by the system to indicate
 	// keys which have no printable value, but represent an action (such as F11,

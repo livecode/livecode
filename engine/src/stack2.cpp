@@ -449,7 +449,7 @@ void MCStack::extraclose(bool p_force)
 
 Window MCStack::getwindow()
 {
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(_LINUX)
 	if (!opened)
 #else
 	if (!opened || state & CS_ICONIC)

@@ -581,8 +581,21 @@ void MCScreenDC::setname(Window w, MCStringRef newname)
 
 	if (IsWindowUnicode((HWND)w -> handle . window))
 	{
-		MCAutoStringRefAsWString t_newname_w;
-		/* UNCHECKED */ t_newname_w . Lock(newname);
+		// If the name begins with an RTL character, force windows to interpret
+        // it as such by pre-pending an RTL embedding (RTL) control.
+        MCAutoStringRef t_newname;
+        if (MCBidiFirstStrongIsolate(newname, 0) != 0)
+        {
+            /* UNCHECKED */ MCStringMutableCopy(newname, &t_newname);
+            /* UNCHECKED */ MCStringPrependChar(*t_newname, 0x202B);
+        }
+        else
+        {
+            t_newname = newname;
+        }
+        
+        MCAutoStringRefAsWString t_newname_w;
+		/* UNCHECKED */ t_newname_w . Lock(*t_newname);
 		SetWindowTextW((HWND)w -> handle . window, *t_newname_w);
 	}
 	else

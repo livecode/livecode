@@ -1322,6 +1322,8 @@ class MCExport : public MCStatement
 	MCChunk *dest;
 	MCExpression *size;
 	bool with_effects : 1;
+    // MERG-2014-07-11: metadata array
+    MCExpression *metadata;
 public:
 	MCExport()
 	{
@@ -1339,6 +1341,8 @@ public:
 		palette_color_count = NULL;
 		with_effects = false;
 		size = NULL;
+        // MERG-2014-07-11: metadata array
+        metadata = NULL;
 	}
 	virtual ~MCExport();
 	virtual Parse_stat parse(MCScriptPoint &);

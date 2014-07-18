@@ -25,6 +25,7 @@
 				E8DAE48B171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE48F171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE491171428B100B96A87 /* PBXTargetDependency */,
+				4DF1BF8F197932DD00E4AC49 /* PBXTargetDependency */,
 				4D9BF3D4171445BB00B32D29 /* PBXTargetDependency */,
 				4D9BF4C01714474E00B32D29 /* PBXTargetDependency */,
 				4D9B6AD917144CC5001349F2 /* PBXTargetDependency */,
@@ -247,6 +248,20 @@
 			remoteGlobalIDString = 4DB846B4192B53E800771914;
 			remoteInfo = "Server-Community";
 		};
+		4DCACF3A197927FA0065D0A2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D6758FE0A79F9A400FA96D2;
+			remoteInfo = revvideograbber;
+		};
+		4DF1BF8E197932DD00E4AC49 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D6758FD0A79F9A400FA96D2;
+			remoteInfo = revvideograbber;
+		};
 		E8D3735D18CDDA40005C1182 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E8DAE3F41714275B00B96A87 /* revbrowser.xcodeproj */;
@@ -432,6 +447,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revvideograbber.xcodeproj; path = revvideograbber/revvideograbber.xcodeproj; sourceTree = "<group>"; };
 		E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = engine.xcodeproj; path = engine/engine.xcodeproj; sourceTree = "<group>"; };
 		E8DAE3F41714275B00B96A87 /* revbrowser.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revbrowser.xcodeproj; path = revbrowser/revbrowser.xcodeproj; sourceTree = "<group>"; };
 		E8DAE4151714277D00B96A87 /* revdb.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revdb.xcodeproj; path = engine/../revdb/revdb.xcodeproj; sourceTree = "<group>"; };
@@ -465,6 +481,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		4DCACF2D197927FA0065D0A2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4DCACF3B197927FA0065D0A2 /* revvideograbber.bundle */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		E8DAE3D31714259A00B96A87 = {
 			isa = PBXGroup;
 			children = (
@@ -476,6 +500,7 @@
 		E8DAE3DA1714270E00B96A87 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */,
 				E8DAE451171427BA00B96A87 /* revzip.xcodeproj */,
 				E8DAE448171427B400B96A87 /* revxml.xcodeproj */,
 				E8DAE439171427A800B96A87 /* revspeech.xcodeproj */,
@@ -635,6 +660,10 @@
 					ProjectRef = E8DAE439171427A800B96A87 /* revspeech.xcodeproj */;
 				},
 				{
+					ProductGroup = 4DCACF2D197927FA0065D0A2 /* Products */;
+					ProjectRef = 4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */;
+				},
+				{
 					ProductGroup = E8DAE449171427B400B96A87 /* Products */;
 					ProjectRef = E8DAE448171427B400B96A87 /* revxml.xcodeproj */;
 				},
@@ -761,6 +790,12 @@
 			fileType = "compiled.mach-o.executable";
 			path = "Server-Community";
 			remoteRef = 7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */;
+		};
+		4DCACF3B197927FA0065D0A2 /* revvideograbber.bundle */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = revvideograbber.bundle;
+			remoteRef = 4DCACF3A197927FA0065D0A2 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		E8D3735E18CDDA40005C1182 /* revbrowser-cefprocess.app */ = {
@@ -935,6 +970,11 @@
 			isa = PBXTargetDependency;
 			name = "Server-Community";
 			targetProxy = 7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */;
+		};
+		4DF1BF8F197932DD00E4AC49 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = revvideograbber;
+			targetProxy = 4DF1BF8E197932DD00E4AC49 /* PBXContainerItemProxy */;
 		};
 		E8DAE479171428B100B96A87 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

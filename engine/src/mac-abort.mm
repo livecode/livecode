@@ -98,6 +98,10 @@ static unichar map_keycode_to_char(TISInputSourceRef p_input_source, CGKeyCode p
 	CFDataRef t_layout_data;
 	t_layout_data = (CFDataRef)TISGetInputSourceProperty(p_input_source, kTISPropertyUnicodeKeyLayoutData);
 	
+    // MW-2014-07-18: [[ Bug 12841 ]] If we don't have any layout data, then we can't map :(
+    if (t_layout_data == nil)
+        return 0;
+    
 	const UCKeyboardLayout *t_layout;
 	t_layout = (const UCKeyboardLayout *)CFDataGetBytePtr(t_layout_data);
 	

@@ -273,8 +273,7 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
 	if (t_result == kMCPlatformDialogResultSuccess)
 	{
         r_value = MCValueRetain(*t_file);
-		if (*t_type != nil)
-			MCresult -> setvalueref(*t_type);
+        r_result = MCValueRetain(*t_type);
 	}
 	
 	return 0;

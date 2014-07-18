@@ -74,8 +74,9 @@ static const char *ppmediastrings[] =
 };
 
 #define CONTROLLER_HEIGHT 26
-#define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 4
-#define PLAYER_MIN_WIDTH 5 * CONTROLLER_HEIGHT
+#define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 2
+// PM-2014-07-17: [[ Bug 12835 ]] Adjustments to prevent selectedArea and playedArea to be drawn without taking into account the width of the well
+#define PLAYER_MIN_WIDTH 5 * CONTROLLER_HEIGHT + 2 * SELECTION_RECT_WIDTH
 #define LIGHTGRAY 1
 #define PURPLE 2
 #define SOMEGRAY 3
@@ -736,7 +737,11 @@ Boolean MCPlayer::mdown(uint2 which)
 		{
             case T_BROWSE:
                 message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
-                handle_mdown(which);
+                // PM-2014-07-16: [[ Bug 12817 ]] Create selection when click and drag on the well while shift key is pressed
+                if ((MCmodifierstate & MS_SHIFT) != 0)
+                    handle_shift_mdown(which);
+                else
+                    handle_mdown(which);
                 MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
                 break;
             case T_POINTER:
@@ -1900,6 +1905,7 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaTypeName, kMCPlatformPropertyTypeNativeCString, &(&t_name));
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
+                // MW-2014-07-11: [[ Bug 12757 ]] Fetch the duration and store it in t_duration
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
                 // PM-2014-07-14: [[ Bug 12809 ]] Make sure each track is displayed on a separate line
 				ep . concatuint(t_id, EC_RETURN, i == 0);
@@ -2614,6 +2620,10 @@ void MCPlayer::drawControllerWellButton(MCGContextRef p_gcontext)
     t_drawn_well_rect . y = t_drawn_well_rect . y + 2 * CONTROLLER_HEIGHT / 5;
     t_drawn_well_rect . height = CONTROLLER_HEIGHT / 5;
     
+    // PM-2014-07-17: [[ Bug 12833 ]] Reduce the length of the drawn well so as to fix alignment issues with the start/end point of selectedArea and playedArea 
+    t_drawn_well_rect . x += 4;
+    t_drawn_well_rect . width -= 10;
+    
     MCGBitmapEffects t_effects;
 	t_effects . has_drop_shadow = false;
 	t_effects . has_outer_glow = false;
@@ -2675,8 +2685,8 @@ void MCPlayer::drawControllerThumbButton(MCGContextRef p_gcontext)
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
     MCRectangle t_drawn_thumb_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb);
-    // Adjust to look prettier
-    t_drawn_thumb_rect . y = t_drawn_thumb_rect . y + 2 *CONTROLLER_HEIGHT / 7;
+    // Adjust to look prettier. Note that these adjustments should match hittestcontroller in cases where thumb overlaps with selectionStart/selectionFinish handles
+    t_drawn_thumb_rect . y = t_drawn_thumb_rect . y + 2 * CONTROLLER_HEIGHT / 7;
     t_drawn_thumb_rect . height = 3 * CONTROLLER_HEIGHT / 7;
     t_drawn_thumb_rect . width = CONTROLLER_HEIGHT / 3;
        
@@ -2713,51 +2723,29 @@ void MCPlayer::drawControllerSelectionStartButton(MCGContextRef p_gcontext)
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
     MCRectangle t_drawn_selection_start_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart);
-    // Adjust to look prettier
-    t_drawn_selection_start_rect . y = t_drawn_selection_start_rect . y + CONTROLLER_HEIGHT / 4;
-    t_drawn_selection_start_rect . height = CONTROLLER_HEIGHT / 2;
-    t_drawn_selection_start_rect . width --;
-    
-    MCGBitmapEffects t_effects;
-	t_effects . has_drop_shadow = false;
-	t_effects . has_outer_glow = true;
-	t_effects . has_inner_glow = false;
-	t_effects . has_inner_shadow = false;
-    t_effects . has_color_overlay = false;
-    
-    MCGGlowEffect t_outer_glow;
-    t_outer_glow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 1.0f);
-    
-    t_outer_glow . blend_mode = kMCGBlendModeClear;
-    t_outer_glow . size = t_drawn_selection_start_rect . width / 2;
-    t_outer_glow . spread = 0;
-    
-    t_effects . outer_glow = t_outer_glow;
-    
-    MCAutoPointer<MCGColor> t_colors;
-    MCAutoPointer<MCGFloat> t_stops;
-    setRamp(&t_colors, &t_stops);
-    
-    MCGAffineTransform t_transform;
-    
-    float origin_x = t_drawn_selection_start_rect.x + t_drawn_selection_start_rect . width / 2.0;
-	float origin_y = t_drawn_selection_start_rect.y;
-	float primary_x = t_drawn_selection_start_rect.x + t_drawn_selection_start_rect.width / 2.0;
-	float primary_y = t_drawn_selection_start_rect.y + t_drawn_selection_start_rect . height;
-	float secondary_x = t_drawn_selection_start_rect.x - 2 * t_drawn_selection_start_rect.width;
-	float secondary_y = t_drawn_selection_start_rect.y;
-    
-    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
-        
-    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, *t_stops, *t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
     MCGContextSetShouldAntialias(p_gcontext, true);
-    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_drawn_selection_start_rect);
-    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 5));
-    MCGContextBeginWithEffects(p_gcontext, t_grect, t_effects);
     
+    MCGContextBeginPath(p_gcontext);
+    
+    // PM-2014-07-16: [[ Bug 12816 ]] Change the appearance of selection handles so as not to obscure player thumb
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.05));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.7, 0.05));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.7, 0.1));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.5, 0.25));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.1));
+    MCGContextCloseSubpath(p_gcontext);
+    
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.93));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.7, 0.93));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.7, 0.88));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.5, 0.73));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.88));
+    MCGContextCloseSubpath(p_gcontext);
+
+    
+    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
     MCGContextFill(p_gcontext);
-    MCGContextEnd(p_gcontext);
 }
 
 void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
@@ -2765,51 +2753,29 @@ void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
     MCRectangle t_drawn_selection_finish_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish);
-    // Adjust to look prettier
-    t_drawn_selection_finish_rect . y = t_drawn_selection_finish_rect . y + CONTROLLER_HEIGHT / 4;
-    t_drawn_selection_finish_rect . height = CONTROLLER_HEIGHT / 2;
-    t_drawn_selection_finish_rect . width --;
-    
-    MCGBitmapEffects t_effects;
-	t_effects . has_drop_shadow = false;
-	t_effects . has_outer_glow = true;
-	t_effects . has_inner_glow = false;
-	t_effects . has_inner_shadow = false;
-    t_effects . has_color_overlay = false;
-    
-    MCGGlowEffect t_outer_glow;
-    t_outer_glow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 1.0f);
-    
-    t_outer_glow . blend_mode = kMCGBlendModeClear;
-    t_outer_glow . size = t_drawn_selection_finish_rect . width / 2;
-    t_outer_glow . spread = 0;
-    
-    t_effects . outer_glow = t_outer_glow;
-    
-    MCAutoPointer<MCGColor> t_colors;
-    MCAutoPointer<MCGFloat> t_stops;
-    setRamp(&t_colors, &t_stops);
-    
-    MCGAffineTransform t_transform;
-    
-    float origin_x = t_drawn_selection_finish_rect.x + t_drawn_selection_finish_rect . width / 2.0;
-	float origin_y = t_drawn_selection_finish_rect.y;
-	float primary_x = t_drawn_selection_finish_rect.x + t_drawn_selection_finish_rect.width / 2.0;
-	float primary_y = t_drawn_selection_finish_rect.y + t_drawn_selection_finish_rect . height;
-	float secondary_x = t_drawn_selection_finish_rect.x - 2 * t_drawn_selection_finish_rect.width;
-	float secondary_y = t_drawn_selection_finish_rect.y;
-    
-    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
-        
-    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, *t_stops, *t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
     MCGContextSetShouldAntialias(p_gcontext, true);
     
-    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_drawn_selection_finish_rect);
-    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 5));
-    MCGContextBeginWithEffects(p_gcontext, t_grect, t_effects);
+    MCGContextBeginPath(p_gcontext);
+    
+    // PM-2014-07-16: [[ Bug 12816 ]] Change the appearance of selection handles so as not to obscure player thumb
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.05));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.7, 0.05));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.7, 0.1));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.5, 0.25));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.1));
+    MCGContextCloseSubpath(p_gcontext);
+    
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.93));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.7, 0.93));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.7, 0.88));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.5, 0.73));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.88));
+    MCGContextCloseSubpath(p_gcontext);
+    
+    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
     MCGContextFill(p_gcontext);
-    MCGContextEnd(p_gcontext);
+
 }
 
 void MCPlayer::drawControllerScrubForwardButton(MCGContextRef p_gcontext)
@@ -2890,6 +2856,7 @@ void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
     // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartWell and kMCPlayerControllerPartSelectedArea
     t_drawn_played_area . y = t_drawn_played_area . y + 3 * CONTROLLER_HEIGHT / 7;
     t_drawn_played_area . height = CONTROLLER_HEIGHT / 7;
+    t_drawn_played_area . x--;
 
     
     MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
@@ -2904,7 +2871,38 @@ int MCPlayer::hittestcontroller(int x, int y)
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
     
-    if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartPlay), x, y))
+    // PM-2014-07-16 [[ Bug 12816 ]] Handle case where player thumb and selection handles overlap
+    if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb), x, y) && MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart), x, y))
+    {
+        MCRectangle t_thumb_rect;
+        t_thumb_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb);
+        
+        // Look in drawControllerThumbButton and match the dimensions of the drawn thumb rect
+        MCRectangle t_drawn_thumb_rect;
+        t_drawn_thumb_rect = MCRectangleMake(t_thumb_rect . x, t_thumb_rect . y + 2 * CONTROLLER_HEIGHT / 7, CONTROLLER_HEIGHT / 3, 3 * CONTROLLER_HEIGHT / 7);
+        
+        if (MCU_point_in_rect(t_drawn_thumb_rect, x, y))
+            return kMCPlayerControllerPartThumb;
+        else
+            return kMCPlayerControllerPartSelectionStart;
+    }
+    
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb), x, y) && MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish), x, y))
+    {
+        MCRectangle t_thumb_rect;
+        t_thumb_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb);
+        
+        // Look in drawControllerThumbButton and match the dimensions of the drawn thumb rect
+        MCRectangle t_drawn_thumb_rect;
+        t_drawn_thumb_rect = MCRectangleMake(t_thumb_rect . x, t_thumb_rect . y + 2 * CONTROLLER_HEIGHT / 7, CONTROLLER_HEIGHT / 3, 3 * CONTROLLER_HEIGHT / 7);
+        
+        if (MCU_point_in_rect(t_drawn_thumb_rect, x, y))
+            return kMCPlayerControllerPartThumb;
+        else
+            return kMCPlayerControllerPartSelectionFinish;
+    }
+    
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartPlay), x, y))
         return kMCPlayerControllerPartPlay;
     
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume), x, y))
@@ -2916,14 +2914,14 @@ int MCPlayer::hittestcontroller(int x, int y)
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubForward), x, y))
         return kMCPlayerControllerPartScrubForward;
     
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb), x, y))
+        return kMCPlayerControllerPartThumb;
+    
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart), x, y))
         return kMCPlayerControllerPartSelectionStart;
     
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish), x, y))
         return kMCPlayerControllerPartSelectionFinish;
-    
-    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb), x, y))
-        return kMCPlayerControllerPartThumb;
     
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell), x, y))
         return kMCPlayerControllerPartWell;
@@ -2995,7 +2993,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             if (t_duration != 0)
                 t_thumb_left = t_active_well_width * t_current_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_thumb_left + SELECTION_RECT_WIDTH / 2, t_well_rect . y, CONTROLLER_HEIGHT / 2, t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_thumb_left + CONTROLLER_HEIGHT / 8 - 1, t_well_rect . y, CONTROLLER_HEIGHT / 2, t_well_rect . height);
         }
             break;
             
@@ -3003,12 +3001,13 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             // PM-2014-07-08: [[ Bug 12763 ]] Make sure controller elememts are not broken when player width becomes too small
             // Now, reducing the player width below a threshold results in gradually removing controller elements from right to left
             // i.e first the scrubBack/scrubForward buttons will be removed, then the well/thumb rects etc. This behaviour is similar to the old player that used QuickTime
-             
+            
             if (p_rect . width < 3 * CONTROLLER_HEIGHT)
                 return MCRectangleMake(0,0,0,0);
         
+            // PM-2014-07-17: [[ Bug 12835 ]] Adjustments to prevent selectedArea and playedArea to be drawn without taking into account the width of the well
             if (p_rect . width < PLAYER_MIN_WIDTH)
-                return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y, p_rect . width - 2 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT);
+                return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT, p_rect . y, p_rect . width - 2 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
             
             return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y , p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT );
             
@@ -3064,7 +3063,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
             
             // PM-2014-07-09: [[ Bug 12750 ]] Make sure progress thumb and selectionFinish handle light up
-            return MCRectangleMake(t_well_rect . x + t_selection_finish_left + SELECTION_RECT_WIDTH, t_well_rect . y , SELECTION_RECT_WIDTH, t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_selection_finish_left, t_well_rect . y , SELECTION_RECT_WIDTH, t_well_rect . height);
         }
             break;
             
@@ -3110,7 +3109,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
             }
             
-            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_selection_finish_left - t_selection_start_left + t_thumb_rect . width, t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . y, t_selection_finish_left - t_selection_start_left, t_well_rect . height);
         }
             break;
             
@@ -3174,7 +3173,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 t_current_time_left = t_active_well_width * t_current_time / t_duration;
             }
             
-            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_current_time_left - t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . y, t_current_time_left - t_selection_start_left, t_well_rect . height);
         }
             break;
         case kMCPlayerControllerPartVolumeWell:
@@ -3521,6 +3520,7 @@ void MCPlayer::handle_mup(int p_which)
         case kMCPlayerControllerPartSelectionStart:
         case kMCPlayerControllerPartSelectionFinish:
             setselection();
+            layer_redrawrect(getcontrollerrect());
             break;
 
 
@@ -3538,4 +3538,62 @@ void MCPlayer::popup_closed(void)
     
     m_show_volume = false;
     layer_redrawall();
+}
+
+// PM-2014-07-16: [[ Bug 12817 ]] Create selection when click and drag on the well while shift key is pressed
+void MCPlayer::handle_shift_mdown(int p_which)
+{
+    if (!getflag(F_SHOW_CONTROLLER))
+        return;
+    
+    int t_part;
+    t_part = hittestcontroller(mx, my);
+    
+    switch(t_part)
+    {
+        case kMCPlayerControllerPartThumb:
+        case kMCPlayerControllerPartWell:
+        {
+            MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
+            
+            uint32_t t_new_time, t_old_time, t_duration;
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_old_time);
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            
+            t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+            
+            if (t_new_time <= t_old_time)
+            {
+                starttime = t_new_time;
+                endtime = t_old_time;
+                m_grabbed_part = kMCPlayerControllerPartSelectionStart;
+            }
+            else
+            {
+                starttime = t_old_time;
+                endtime = t_new_time;
+                m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
+            }
+            
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+            
+            bool t_show_selection;
+            t_show_selection = true;
+            setflag(True, F_SHOW_SELECTION);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+           
+            bool t_play_selection;
+            t_play_selection = true;
+            setflag(True, F_PLAY_SELECTION);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
+            
+            layer_redrawrect(getcontrollerrect());
+        }
+            break;
+                     
+        default:
+            break;
+    }
+
 }

@@ -231,11 +231,6 @@ class CDropTarget;
 
 typedef uintptr_t MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 typedef struct __MCWinSysHandle *MCWinSysHandle;
 typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
@@ -316,11 +311,6 @@ struct MCMacProcessSerialNumber
 	uint32_t lowLongOfPSN;
 };
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -366,11 +356,6 @@ struct MCFontStruct
 #define SIGBOGUS 100
 
 typedef int MCSocketHandle;
-
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
 
 extern uint1 MClowercasingtable[];
 inline uint1 MCS_tolower(uint1 p_char)
@@ -431,11 +416,6 @@ struct MCMacProcessSerialNumber
 
 typedef int MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -479,11 +459,6 @@ struct MCFontStruct
 
 typedef int MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -511,6 +486,16 @@ struct MCFontStruct
 #define SECONDS_MAX 32535244799.0
 
 #endif
+
+//////////////////////////////////////////////////////////////////////
+//
+//  NEW / DELETE REDEFINTIONS
+//
+
+inline void *operator new(size_t, void *p)
+{
+	return p;
+}
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -639,33 +624,35 @@ struct MCBitmap
 	MCSysBitmapHandle bm;
 };
 #else
-struct MCBitmap
-{
-    int width, height;          /* size of image */
-    int xoffset;                /* number of pixels offset in X direction */
-    int format;                 /* XYBitmap, XYPixmap, ZPixmap */
-    char *data;                 /* pointer to image data */
-    int byte_order;             /* data byte order, LSBFirst, MSBFirst */
-    int bitmap_unit;            /* quant. of scanline 8, 16, 32 */
-    int bitmap_bit_order;       /* LSBFirst, MSBFirst */
-    int bitmap_pad;             /* 8, 16, 32 either XY or ZPixmap */
-    int depth;                  /* depth of image */
-    int bytes_per_line;         /* accelarator to next line */
-    int bits_per_pixel;         /* bits per pixel (ZPixmap) */
-    unsigned long red_mask;     /* bits in z arrangment */
-    unsigned long green_mask;
-    unsigned long blue_mask;
-    void *obdata;            /* hook for the object routines to hang on */
-    struct
-	{
-		void *create_image;
-		void *destroy_image;
-		void *get_pixel;
-		void *put_pixel;
-		void *sub_image;
-		void *add_pixel;
-	} f;
-};
+// FG-2014-05-15: [[ GDK ]] We no longer use an XImage for bitmaps
+typedef struct _GdkPixbuf MCBitmap;
+//struct MCBitmap
+//{
+//    int width, height;          /* size of image */
+//    int xoffset;                /* number of pixels offset in X direction */
+//    int format;                 /* XYBitmap, XYPixmap, ZPixmap */
+//    char *data;                 /* pointer to image data */
+//    int byte_order;             /* data byte order, LSBFirst, MSBFirst */
+//    int bitmap_unit;            /* quant. of scanline 8, 16, 32 */
+//    int bitmap_bit_order;       /* LSBFirst, MSBFirst */
+//    int bitmap_pad;             /* 8, 16, 32 either XY or ZPixmap */
+//    int depth;                  /* depth of image */
+//    int bytes_per_line;         /* accelarator to next line */
+//    int bits_per_pixel;         /* bits per pixel (ZPixmap) */
+//    unsigned long red_mask;     /* bits in z arrangment */
+//    unsigned long green_mask;
+//    unsigned long blue_mask;
+//    void *obdata;            /* hook for the object routines to hang on */
+//    struct
+//	{
+//		void *create_image;
+//		void *destroy_image;
+//		void *get_pixel;
+//		void *put_pixel;
+//		void *sub_image;
+//		void *add_pixel;
+//	} f;
+//};
 #endif
 
 ////////////////////////////////////////
@@ -678,7 +665,7 @@ typedef MCSysWindowHandle Drawable;
 #elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
 
 // MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
-#ifndef __LP64__
+/*#ifndef __LP64__
 #   if !defined(Window)
         typedef unsigned long Window;
 #   endif
@@ -698,7 +685,13 @@ typedef MCSysWindowHandle Drawable;
 #   if !defined(Drawable)
         typedef unsigned long int Drawable;
 #   endif
-#endif
+#endif*/
+
+#include <gdk/gdk.h>
+
+typedef GdkWindow*      Window;
+typedef GdkPixmap*      Pixmap;
+typedef GdkDrawable*    Drawable;
 
 #else
 
@@ -729,6 +722,7 @@ typedef  _Drawable *        Window;
 typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
 
+
 #endif
 
 #define DNULL ((Drawable)0)
@@ -741,7 +735,12 @@ typedef  _Drawable *        Drawable;
 #define Button3              3
 
 typedef unsigned long       KeySym;
+
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+typedef GdkAtom             Atom;
+#else
 typedef unsigned long       Atom;
+#endif
 
 ////////////////////////////////////////
 

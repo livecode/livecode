@@ -1621,6 +1621,11 @@
 		721CAAC618351E7400858545 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
 		721CAAC718351E7400858545 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
 		7238DF4E1848B189007EA049 /* MCBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MCBlock.h; path = src/MCBlock.h; sourceTree = "<group>"; };
+		72C22E951945E48E00B18E8D /* syslnxfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxfs.cpp; path = src/syslnxfs.cpp; sourceTree = "<group>"; };
+		72C22E961945E48E00B18E8D /* syslnxregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxregion.cpp; path = src/syslnxregion.cpp; sourceTree = "<group>"; };
+		72C22E971945E48E00B18E8D /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
+		72C22E981945E48E00B18E8D /* sysw32fs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32fs.cpp; path = src/sysw32fs.cpp; sourceTree = "<group>"; };
+		72C22E991945E48E00B18E8D /* sysw32random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32random.cpp; path = src/sysw32random.cpp; sourceTree = "<group>"; };
 		72C28AF819112FDE007F2AA0 /* segment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = segment.h; path = src/segment.h; sourceTree = "<group>"; };
 		72C28AF91911300D007F2AA0 /* segment.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = segment.cpp; path = src/segment.cpp; sourceTree = "<group>"; };
 		7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
@@ -2756,6 +2761,11 @@
 		4DFD486413BA28BF008DB91F /* System */ = {
 			isa = PBXGroup;
 			children = (
+				72C22E951945E48E00B18E8D /* syslnxfs.cpp */,
+				72C22E961945E48E00B18E8D /* syslnxregion.cpp */,
+				72C22E971945E48E00B18E8D /* sysunxrandom.cpp */,
+				72C22E981945E48E00B18E8D /* sysw32fs.cpp */,
+				72C22E991945E48E00B18E8D /* sysw32random.cpp */,
 				76EF31A9181E801800FAC195 /* sysosxrandom.cpp */,
 				4DDB66531413990400E5C84C /* sysunxdate.cpp */,
 				4DDB66541413990400E5C84C /* sysw32network.cpp */,

@@ -36,53 +36,50 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 bool MCScreenDC::ownsselection(void)
 {
-	Window w ;
-	w = XGetSelectionOwner(dpy, XA_PRIMARY) ;
-	return ( (MCdispatcher -> findstackd(  w ) != NULL ) || w == NULLWindow );
+	GdkWindow *t_sel_owner;
+	t_sel_owner = gdk_selection_owner_get_for_display(dpy, GDK_SELECTION_PRIMARY);
+    bool t_owns;
+    t_owns = t_sel_owner == NULLWindow || (t_sel_owner != NULL && MCdispatcher->findstackd(t_sel_owner));
+    return t_owns;
 }
-
-
-
-
 
 MCPasteboard *MCScreenDC::getselection(void)
 {
-	
-	MCXPasteboard *t_pasteboard ;
+	MCGdkPasteboard *t_pasteboard ;
 
-	if ( !ownsclipboard()) 
-		m_Selection_store -> GetExternalTypes(MCclipboardatom, make_atom("REV_SELECTION_TYPES"), NULLWindow);
+	if (!ownsclipboard()) 
+		m_Selection_store->GetExternalTypes(GDK_SELECTION_CLIPBOARD, NULLWindow);
 
 	// Create the pasteboard we will use, wrapping the clipboard
-	t_pasteboard = new MCXPasteboard ( XA_PRIMARY,make_atom("REV_SELECTION"), m_Selection_store );
-	t_pasteboard -> SetWindows( XGetSelectionOwner(dpy, XA_PRIMARY), NULLWindow );
+	t_pasteboard = new MCGdkPasteboard(GDK_SELECTION_PRIMARY, m_Selection_store);
+	t_pasteboard->SetWindows(gdk_selection_owner_get_for_display(dpy, GDK_SELECTION_PRIMARY), NULLWindow);
 	
-	return t_pasteboard ;
+	return t_pasteboard;
 }
 
 bool MCScreenDC::setselection(MCPasteboard *p_pasteboard)
 {
-	MCTransferType *t_ttypes ;
-	uint4 ntypes ;
+	MCTransferType *t_ttypes;
+	uint32_t ntypes;
 	
-	if ( p_pasteboard != NULL)
+	if (p_pasteboard != NULL)
 	{
-		m_Selection_store -> cleartypes() ;
+		m_Selection_store->cleartypes();
 
-		p_pasteboard -> Query ( t_ttypes, ntypes ) ;
+		p_pasteboard->Query(t_ttypes, ntypes);
 		
-		for ( uint4 a = 0 ; a < ntypes ; a++)
+		for (uint32_t i = 0; i < ntypes; i++)
 		{
 			MCAutoDataRef t_data;
-			if ( p_pasteboard -> Fetch ( t_ttypes[a], &t_data ) )
-				m_Selection_store -> addRevType ( t_ttypes[a], *t_data) ;
+			if (p_pasteboard->Fetch(t_ttypes[i], &t_data))
+				m_Selection_store->addRevType(t_ttypes[i], *t_data);
 		}
 		
-		if ( NULLWindow > 0 ) 
-			XSetSelectionOwner(dpy, XA_PRIMARY, NULLWindow, MCeventtime);
-		
+        gdk_selection_owner_set_for_display(dpy, NULLWindow, GDK_SELECTION_PRIMARY, MCeventtime, TRUE);
+ 
 		return true;
 	}
+    
 	return false ;
 }
 
@@ -96,10 +93,11 @@ bool MCScreenDC::setselection(MCPasteboard *p_pasteboard)
 // and that it supports clipboard persistance
 bool MCScreenDC::check_clipboard_manager(void)
 {
- Atom clipboard_manager;
+    //Atom clipboard_manager;
 
-  clipboard_manager = make_atom ("CLIPBOARD_MANAGER");
-  return XGetSelectionOwner (dpy, clipboard_manager) != None;	
+    //clipboard_manager = make_atom ("CLIPBOARD_MANAGER");
+    //return XGetSelectionOwner (dpy, clipboard_manager) != None;
+    return false;
 }
 
 
@@ -135,7 +133,7 @@ bool MCScreenDC::check_clipboard_manager(void)
 
 void MCScreenDC::make_clipboard_persistant(void)
 {
-	XEvent xevent ;
+	/*XEvent xevent ;
 	
 	Atom clipboard_manager, save_targets, rev_targets;
  
@@ -264,71 +262,54 @@ void MCScreenDC::make_clipboard_persistant(void)
 			}
 		}
 	}
+     */
 }
-
-
-
-
-
-
-
 
 void MCScreenDC::flushclipboard(void)
 {
-	if ( check_clipboard_manager() )
-		make_clipboard_persistant() ;
+	if (check_clipboard_manager())
+		make_clipboard_persistant();
 }
-
-
 
 bool MCScreenDC::ownsclipboard(void)
 {
-	Window w ;
-	w = XGetSelectionOwner(dpy, MCclipboardatom) ;
-	return ( (MCdispatcher -> findstackd(  w ) != NULL ) || w == NULLWindow );
+	GdkWindow *w;
+	w = gdk_selection_owner_get_for_display(dpy, GDK_SELECTION_CLIPBOARD);
+	return w == NULLWindow || (w != NULL && MCdispatcher -> findstackd(w) != NULL);
 }
-
-
-
-
 
 MCPasteboard *MCScreenDC::getclipboard(void)
 {
-	
-	MCXPasteboard *t_pasteboard ;
+	MCGdkPasteboard *t_pasteboard ;
 
-	if ( !ownsclipboard()) 
-		m_Clipboard_store -> GetExternalTypes(MCclipboardatom, make_atom("REV_CLIPBOARD_TYPES"), NULLWindow);
+	if (!ownsclipboard()) 
+		m_Clipboard_store -> GetExternalTypes(GDK_SELECTION_CLIPBOARD, NULLWindow);
 
 	// Create the pasteboard we will use, wrapping the clipboard
-	t_pasteboard = new MCXPasteboard ( MCclipboardatom,make_atom("REV_CLIPBOARD"), m_Clipboard_store );
-	t_pasteboard -> SetWindows( XGetSelectionOwner(dpy, MCclipboardatom), NULLWindow );
+	t_pasteboard = new MCGdkPasteboard(GDK_SELECTION_CLIPBOARD, m_Clipboard_store);
+	t_pasteboard -> SetWindows(gdk_selection_owner_get_for_display(dpy, GDK_SELECTION_CLIPBOARD), NULLWindow);
 	
-	return t_pasteboard ;
+	return t_pasteboard;
 }
-
-
-
 
 bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 {
-	MCTransferType *t_ttypes ;
-	uint4 ntypes ;
+	MCTransferType *t_ttypes;
+	uint32_t ntypes;
 	
-	m_Clipboard_store -> cleartypes() ;
+	m_Clipboard_store -> cleartypes();
 
-	p_pasteboard -> Query ( t_ttypes, ntypes ) ;
+	p_pasteboard -> Query(t_ttypes, ntypes);
 	
-	for ( uint4 a = 0 ; a < ntypes ; a++)
+	for (uint32_t i = 0; i < ntypes; i++)
 	{
 		MCAutoDataRef t_data;
-		if ( p_pasteboard -> Fetch ( t_ttypes[a], &t_data ) )
-			m_Clipboard_store -> addRevType ( t_ttypes[a], *t_data) ;
+		if (p_pasteboard -> Fetch(t_ttypes[i], &t_data))
+			m_Clipboard_store -> addRevType(t_ttypes[i], *t_data);
 	}
 	
-	if ( NULLWindow > 0 ) 
-		XSetSelectionOwner(dpy, MCclipboardatom, NULLWindow, MCeventtime);
-	
+	gdk_selection_owner_set_for_display(dpy, NULLWindow, GDK_SELECTION_CLIPBOARD, MCeventtime, TRUE);
+
 	return true;
 }
 

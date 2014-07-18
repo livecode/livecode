@@ -54,6 +54,7 @@ public:
     virtual ~MCQTKitPlayer(void);
     
     virtual bool IsPlaying(void);
+    // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
     virtual void Start(double rate);
     virtual void Stop(void);
     virtual void Step(int amount);
@@ -79,7 +80,7 @@ protected:
     virtual void Unrealize(void);
     
 private:
-    void Load(const char *filename, bool is_url);
+    void Load(MCStringRef filename, bool is_url);
     void Synchronize(void);
     void Switch(bool new_offscreen);
     
@@ -268,6 +269,7 @@ OSErr MCQTKitPlayer::MovieDrawingComplete(Movie p_movie, long p_ref)
     t_self -> CacheCurrentFrame();
 	
 	MCPlatformCallbackSendPlayerFrameChanged(t_self);
+    t_self -> CurrentTimeChanged();
 	
 	return noErr;
 }
@@ -280,7 +282,7 @@ void MCQTKitPlayer::Switch(bool p_new_offscreen)
 	
 	// Update the pending offscreen setting and schedule a switch.
 	m_pending_offscreen = p_new_offscreen;
-    
+
 	if (m_switch_scheduled)
 		return;
 	
@@ -307,7 +309,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
         
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
-        
+
 		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
         
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
@@ -319,6 +321,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 			CFRelease(t_player -> m_current_frame);
 			t_player -> m_current_frame = nil;
 		}
+
 		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
         
 		// Switching to non-offscreen
@@ -397,7 +400,7 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
                 }
             }
             
-            if (do_QTTimeCompare(t_current_time, self -> m_last_current_time))
+            if (!self -> m_offscreen && do_QTTimeCompare(t_current_time, self -> m_last_current_time) != 0)
             {
                 self -> m_last_current_time = t_current_time;
                 self -> CurrentTimeChanged();
@@ -412,16 +415,22 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
     return False;
 }
 
-void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
+void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
 {
 	NSError *t_error;
 	t_error = nil;
-	
+    
+    MCStringRef t_filename;
+    if (p_filename == nil)
+        t_filename = kMCEmptyString;
+    else
+        t_filename = p_filename;
+    
     id t_filename_or_url;
     if (!p_is_url)
-        t_filename_or_url = [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding];
+        t_filename_or_url = [NSString stringWithMCStringRef: t_filename];
     else
-        t_filename_or_url = [NSURL URLWithString: [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding]];
+        t_filename_or_url = [NSURL URLWithString: [NSString stringWithMCStringRef: t_filename]];
     
 	NSDictionary *t_attrs;
     extern NSString **QTMovieFileNameAttribute_ptr;
@@ -446,6 +455,9 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 		return;
 	}
 	
+    // MW-2014-07-18: [[ Bug ]] Clean up callbacks before we release.
+    MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
 	[m_movie release];
     
 	m_movie = t_new_movie;
@@ -472,10 +484,22 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
     
 	[m_view setMovie: m_movie];
     
+    // MW-2014-07-16: [[ Bug 12836 ]] Make sure we give movies some time to collect the first
+    //   frame.
+    MoviesTask([m_movie quickTimeMovie], 0);
+    
     // Set the last marker to very large so that any marker will trigger.
     m_last_marker = UINT32_MAX;
     
     MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], MovieActionFilter, (long)this);
+    
+    // MW-2014-07-18: [[ Bug 12837 ]] Make sure we add a moviedrawingcomplete callback to the object
+    //   if we are already offscreen.
+    if (m_offscreen)
+    {
+		SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)this);
+        CacheCurrentFrame();
+    }
 }
 
 void MCQTKitPlayer::Synchronize(void)
@@ -508,6 +532,7 @@ bool MCQTKitPlayer::IsPlaying(void)
 	return [m_movie rate] != 0;
 }
 
+// PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
 void MCQTKitPlayer::Start(double rate)
 {
 	[m_movie setRate: rate];
@@ -588,11 +613,11 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 	switch(p_property)
 	{
 		case kMCPlatformPlayerPropertyURL:
-			Load(*(const char **)p_value, true);
+			Load(*(MCStringRef*)p_value, true);
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyFilename:
-			Load(*(const char **)p_value, false);
+			Load(*(MCStringRef*)p_value, false);
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyOffscreen:
@@ -850,7 +875,7 @@ void MCQTKitPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProp
 			unsigned char t_name[256];
 			MediaGetName(t_handler, t_name, 0, nil);
 			p2cstr(t_name);
-			*(char **)r_value = strdup((const char *)t_name);
+            MCStringCreateWithCString((char*)t_name, *(MCStringRef*)r_value);
 		}
             break;
 		case kMCPlatformPlayerTrackPropertyOffset:
