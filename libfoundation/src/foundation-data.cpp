@@ -105,7 +105,7 @@ bool MCDataIsEqualTo(MCDataRef p_left, MCDataRef p_right)
     if (p_left -> byte_count != p_right -> byte_count)
         return false;
     
-    return MCMemoryCompare(p_left -> bytes, p_right -> bytes, p_left -> byte_count);
+    return MCMemoryCompare(p_left -> bytes, p_right -> bytes, p_left -> byte_count) == 0;
 }
 
 compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right);
