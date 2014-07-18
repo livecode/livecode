@@ -984,6 +984,7 @@ void MCScreenDC::IME_OnCommit(GtkIMContext*, gchar *p_utf8_string)
     else
     {
         // Insert the text from the IME into the active field
+        MCactivefield->stopcomposition(True, False);
         MCactivefield->finsertnew(FT_IMEINSERT, *t_text, LCH_UNICODE);
     }
 }
@@ -993,24 +994,89 @@ bool MCScreenDC::IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_le
     return false;
 }
 
-void MCScreenDC::IME_OnPreeditChanged(GtkIMContext*)
+void MCScreenDC::IME_OnPreeditChanged(GtkIMContext* p_context)
 {
-    ;
+    if (MCactivefield == NULL)
+        return;
+    
+    // Get the string. We ignore the attributes list entirely.
+    gchar *t_utf8_string;
+    gint t_cursor_pos;
+    gtk_im_context_get_preedit_string(p_context, &t_utf8_string, NULL, &t_cursor_pos);
+    
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)t_utf8_string, strlen(t_utf8_string), kMCStringEncodingUTF8, false, &t_string);
+    g_free(t_utf8_string);
+    
+    // Do the insert
+    MCactivefield->startcomposition();
+    MCactivefield->finsertnew(FT_IMEINSERT, *t_string, LCH_UNICODE);
+    
+    // Update the cursor position
+    MCactivefield->setcompositioncursoroffset(t_cursor_pos);
 }
 
 void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
 {
-    ;
+    if (MCactivefield == NULL)
+        return;
+    
+    MCactivefield->stopcomposition(True, False);
 }
 
 void MCScreenDC::IME_OnPreeditStart(GtkIMContext*)
 {
-    ;
+    if (MCactivefield == NULL)
+        return;
+    
+    MCactivefield->startcomposition();
 }
 
 void MCScreenDC::IME_OnRetrieveSurrounding(GtkIMContext*)
 {
     ;
+}
+
+void MCScreenDC::clearIME(Window w)
+{
+    if (!m_has_gtk)
+        return;
+    
+    gtk_im_context_reset(m_im_context);
+}
+
+void MCScreenDC::activateIME(Boolean activate)
+{
+    if (!m_has_gtk)
+        return;
+    
+    if (activate)
+    {
+        gtk_im_context_set_client_window(m_im_context, MCactivefield->getstack()->getwindow());
+        gtk_im_context_focus_in(m_im_context);
+        
+        if (MCinlineinput)
+            gtk_im_context_set_use_preedit(m_im_context, TRUE);
+        else
+            gtk_im_context_set_use_preedit(m_im_context, FALSE);
+    }
+    else
+    {
+        gtk_im_context_focus_out(m_im_context);
+    }
+}
+
+void MCScreenDC::configureIME(int32_t x, int32_t y)
+{
+    if (!m_has_gtk)
+        return;
+    
+    GdkRectangle t_cursor;
+    t_cursor.x = x;
+    t_cursor.y = y;
+    t_cursor.width = t_cursor.height = 1;
+    
+    gtk_im_context_set_cursor_location(m_im_context, &t_cursor);
 }
 
 void init_xDnD()

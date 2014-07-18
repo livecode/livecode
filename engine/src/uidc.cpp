@@ -954,6 +954,8 @@ void MCUIDC::clearIME(Window w)
 {}
 void MCUIDC::closeIME()
 {}
+void MCUIDC::configureIME(int32_t x, int32_t y)
+{}
 
 void MCUIDC::updatemenubar(Boolean force)
 {
