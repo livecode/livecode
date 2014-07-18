@@ -33,6 +33,8 @@ static void __MCDataShrinkAt(MCDataRef r_data, uindex_t at, uindex_t count);
 // This method clamps the given range to the valid limits for the byte sequence.
 static void __MCDataClampRange(MCDataRef r_data, MCRange& x_range);
 
+static bool __MCDataMakeImmutable(__MCData *self);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -121,19 +123,12 @@ bool MCDataCreateMutable(uindex_t p_initial_capacity, MCDataRef& r_data)
 		t_success = __MCValueCreate(kMCValueTypeCodeData, self);
     
 	if (t_success)
-		t_success = MCMemoryNewArray(p_initial_capacity, self -> bytes);
+		t_success = __MCDataExpandAt(self, 0, p_initial_capacity);
     
 	if (t_success)
 	{
         self->flags |= kMCDataFlagIsMutable;
 		r_data = self;
-	}
-	else
-	{
-		if (self != nil)
-			MCMemoryDeleteArray(self -> bytes);
-        
-		MCMemoryDelete(self);
 	}
     
 	return t_success;
@@ -163,6 +158,7 @@ bool MCDataCopyAndRelease(MCDataRef p_data, MCDataRef& r_new_data)
     // If the reference is 1, convert it to an immutable MCData
     if (p_data->references == 1)
     {
+        __MCDataMakeImmutable(p_data);
         p_data->flags &= ~kMCDataFlagIsMutable;
         r_new_data = p_data;
         return true;
@@ -184,7 +180,6 @@ bool MCDataMutableCopy(MCDataRef p_data, MCDataRef& r_mutable_data)
     
     MCMemoryCopy(t_mutable_data->bytes, p_data->bytes, p_data->byte_count);
     t_mutable_data->byte_count = p_data->byte_count;
-    
     r_mutable_data = t_mutable_data;
     return true;
 }
@@ -486,6 +481,14 @@ static bool __MCDataExpandAt(MCDataRef r_data, uindex_t p_at, uindex_t p_count)
     
 	// We succeeded.
 	return true;
+}
+
+static bool __MCDataMakeImmutable(__MCData *self)
+{
+    if (!MCMemoryResizeArray(self -> byte_count, self -> bytes, self -> byte_count))
+        return false;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
