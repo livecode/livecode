@@ -2894,3 +2894,25 @@ bool MCU_random_bytes(size_t p_count, void *p_buffer)
 	// Otherwise use the system provided CPRNG.
 	return MCS_random_bytes(p_count, p_buffer);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+void *operator new (size_t size)
+{
+    return malloc(size);
+}
+
+void operator delete (void *p)
+{
+    free(p);
+}
+
+void *operator new[] (size_t size)
+{
+    return malloc(size);
+}
+
+void operator delete[] (void *p)
+{
+    free(p);
+}
