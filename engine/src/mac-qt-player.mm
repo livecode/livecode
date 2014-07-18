@@ -283,7 +283,7 @@ void MCQTKitPlayer::Switch(bool p_new_offscreen)
 	
 	// Update the pending offscreen setting and schedule a switch.
 	m_pending_offscreen = p_new_offscreen;
-    
+
 	if (m_switch_scheduled)
 		return;
 	
@@ -477,6 +477,10 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
     [m_view setControllerVisible: NO];
     
 	[m_view setMovie: m_movie];
+    
+    // MW-2014-07-16: [[ Bug 12836 ]] Make sure we give movies some time to collect the first
+    //   frame.
+    MoviesTask([m_movie quickTimeMovie], 0);
     
     // Set the last marker to very large so that any marker will trigger.
     m_last_marker = UINT32_MAX;

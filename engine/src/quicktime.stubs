@@ -71,6 +71,7 @@ QuickTime none /System/Library/Frameworks/QuickTime.framework/QuickTime none
 	SetTimeBaseRate: (pointer, integer) -> ()
 	SetTimeBaseValue: (pointer, integer, integer) -> ()
 	SetTrackEnabled: (pointer, integer) -> ()
+	MoviesTask: (pointer, integer) -> ()
 
 
 QuickDraw none /System/Library/Frameworks/ApplicationServices.framework/Frameworks/QD.framework/QD
