@@ -113,7 +113,7 @@
 		4D75BF1812FB598600C2C8E6 /* qtxvideograbber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qtxvideograbber.h; path = src/qtxvideograbber.h; sourceTree = "<group>"; };
 		4D75BF5112FB64AA00C2C8E6 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		4D75C07C12FB700700C2C8E6 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
-		4D81C48E0D7824F4004EC824 /* qtvideograbber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = qtvideograbber.cpp; path = src/qtvideograbber.cpp; sourceTree = "<group>"; };
+		4D81C48E0D7824F4004EC824 /* qtvideograbber.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = qtvideograbber.cpp; path = src/qtvideograbber.cpp; sourceTree = "<group>"; };
 		4D81C48F0D7824F4004EC824 /* qtvideograbber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = qtvideograbber.h; path = src/qtvideograbber.h; sourceTree = "<group>"; };
 		4D81C4990D782534004EC824 /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
 		4D84DA19132B90A6004604F7 /* revcapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = revcapture.h; path = src/revcapture.h; sourceTree = "<group>"; };
@@ -156,9 +156,9 @@
 				B28449861799E9F100E27E26 /* libkernel-development.a */,
 				B28449881799E9F100E27E26 /* libkernel-standalone.a */,
 				B284498A1799E9F100E27E26 /* libsecurity-community.a */,
-				4D5151960BCF96B700F73C6E /* LiveCode.app */,
-				4D5151A00BCF96B700F73C6E /* Standalone.app */,
-				E88527651704974200CEFCC5 /* server */,
+				4D5151960BCF96B700F73C6E /* LiveCode-Community.app */,
+				4D5151A00BCF96B700F73C6E /* Standalone-Community.app */,
+				E88527651704974200CEFCC5 /* Server-Community */,
 				4D41477E120431AE0088006F /* Installer.app */,
 			);
 			name = Products;
@@ -271,6 +271,8 @@
 /* Begin PBXProject section */
 		4D6758CF0A79F96300FA96D2 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4D6758D00A79F96300FA96D2 /* Build configuration list for PBXProject "revvideograbber" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -316,14 +318,14 @@
 			remoteRef = 4D414781120431AE0088006F /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		4D5151960BCF96B700F73C6E /* LiveCode.app */ = {
+		4D5151960BCF96B700F73C6E /* LiveCode-Community.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
 			path = "LiveCode-Community.app";
 			remoteRef = 4D5151950BCF96B700F73C6E /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		4D5151A00BCF96B700F73C6E /* Standalone.app */ = {
+		4D5151A00BCF96B700F73C6E /* Standalone-Community.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
 			path = "Standalone-Community.app";
@@ -365,7 +367,7 @@
 			remoteRef = B55AFA1D0BCE905300E1F7F0 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		E88527651704974200CEFCC5 /* server */ = {
+		E88527651704974200CEFCC5 /* Server-Community */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
 			path = "Server-Community";
@@ -433,6 +435,7 @@
 					Carbon,
 				);
 				PRODUCT_NAME = revvideograbber;
+				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Debug;
@@ -447,6 +450,7 @@
 					Carbon,
 				);
 				PRODUCT_NAME = revvideograbber;
+				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Release;
