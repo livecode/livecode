@@ -330,7 +330,7 @@ public:
 	void MoveRange(findex_t t_index_offset, findex_t t_length_offset); 
 	
 	// Translates from a pixel position to a cursor index
-	findex_t GetCursorIndex(coord_t x, Boolean chunk, Boolean last);
+	findex_t GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool moving_forward);
 	
 	// Returns the x coordinate of the cursor
 	coord_t GetCursorX(findex_t fi);
