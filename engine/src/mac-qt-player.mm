@@ -373,6 +373,7 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
     switch(action)
     {
         case mcActionIdle:
+        case mcActionGoToTime:
         {
             MCQTKitPlayer *self;
             self = (MCQTKitPlayer *)refcon;
@@ -380,31 +381,33 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
             QTTime t_current_time;
             t_current_time = [self -> m_movie currentTime];
             
-            if (self -> m_marker_count > 0)
-            {
-                // We search for the marker time immediately before the
-                // current time and if last marker is not that time,
-                // dispatch it.
-                uindex_t t_index;
-                for(t_index = 0; t_index < self -> m_marker_count; t_index++)
-                    if (self -> m_markers[t_index] > t_current_time . timeValue)
-                        break;
-                
-                // t_index is now the first marker greater than the current time.
-                if (t_index > 0)
-                {
-                    if (self -> m_markers[t_index - 1] != self -> m_last_marker)
-                    {
-                        self -> m_last_marker = self -> m_markers[t_index - 1];
-                        MCPlatformCallbackSendPlayerMarkerChanged(self, self -> m_last_marker);
-                    }
-                }
-            }
-            
-            if (!self -> m_offscreen && do_QTTimeCompare(t_current_time, self -> m_last_current_time) != 0)
+            if (do_QTTimeCompare(t_current_time, self -> m_last_current_time) != 0)
             {
                 self -> m_last_current_time = t_current_time;
-                self -> CurrentTimeChanged();
+                
+                if (self -> m_marker_count > 0)
+                {
+                    // We search for the marker time immediately before the
+                    // current time and if last marker is not that time,
+                    // dispatch it.
+                    uindex_t t_index;
+                    for(t_index = 0; t_index < self -> m_marker_count; t_index++)
+                        if (self -> m_markers[t_index] > t_current_time . timeValue)
+                            break;
+                    
+                    // t_index is now the first marker greater than the current time.
+                    if (t_index > 0)
+                    {
+                        if (self -> m_markers[t_index - 1] != self -> m_last_marker)
+                        {
+                            self -> m_last_marker = self -> m_markers[t_index - 1];
+                            MCPlatformCallbackSendPlayerMarkerChanged(self, self -> m_last_marker);
+                        }
+                    }
+                }
+                
+                if (!self -> m_offscreen)
+                    self -> CurrentTimeChanged();
             }
         }
         break;
