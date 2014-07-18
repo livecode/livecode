@@ -310,7 +310,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
         
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
-        
+
 		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
         
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
@@ -322,6 +322,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 			CFRelease(t_player -> m_current_frame);
 			t_player -> m_current_frame = nil;
 		}
+
 		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
         
 		// Switching to non-offscreen
@@ -452,6 +453,9 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 		return;
 	}
 	
+    // MW-2014-07-18: [[ Bug ]] Clean up callbacks before we release.
+    MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
 	[m_movie release];
     
 	m_movie = t_new_movie;
@@ -486,6 +490,14 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
     m_last_marker = UINT32_MAX;
     
     MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], MovieActionFilter, (long)this);
+    
+    // MW-2014-07-18: [[ Bug 12837 ]] Make sure we add a moviedrawingcomplete callback to the object
+    //   if we are already offscreen.
+    if (m_offscreen)
+    {
+		SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)this);
+        CacheCurrentFrame();
+    }
 }
 
 void MCQTKitPlayer::Synchronize(void)
