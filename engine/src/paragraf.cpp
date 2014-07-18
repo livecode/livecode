@@ -1109,8 +1109,16 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         MCBlock *firstblock, *lastblock;
         lptr->getblocks(firstblock, lastblock);
         MCBlock *bptr = firstblock;
+        MCSegment *sgptr = segments;
+        
         do
         {
+            // AL-2014-07-17: [[ Bug 12823 ]] Block origin is relative to the segment, so keep track
+            //  of the current segment to get correct selection coordinates.
+            // Advance to the next segment, if necessary
+            if (sgptr->next()->GetFirstBlock() == bptr)
+                sgptr = sgptr->next();
+            
             // Is part of this block selected?
             findex_t bi, bl;
             bptr->GetRange(bi, bl);
@@ -1128,8 +1136,9 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 
                 // Get the X coordinates for the selection
                 int2 bix, bex;
-                bix = bptr->GetCursorX(si);
-                bex = bptr->GetCursorX(ei);
+                // AL-2014-07-17: [[ Bug 12823 ]] Include segment offset in the block coordinate calculation 
+                bix = bptr->GetCursorX(si) + sgptr -> GetCursorOffset();
+                bex = bptr->GetCursorX(ei) + sgptr -> GetCursorOffset();
                 
                 // Re-ordering will be required if the block is RTL
                 if (bix > bex)
