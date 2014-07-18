@@ -294,29 +294,7 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 					curinfo->keysym = getkeysym(msg.wParam, msg.lParam);
 				
                 TranslateMessage(&msg);
-
-				bool t_char_found;
-				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
-					t_char_found = PeekMessageW(&tmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
-				                 PeekMessageW(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
-				else
-					t_char_found = PeekMessageA(&tmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
-				                 PeekMessageA(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
-				if (t_char_found)
-				{
-					if (MCdispatcher->findstackwindowid((uint32_t)msg.hwnd) == NULL)
-					{
-						if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
-							DispatchMessageW(&msg);
-						else
-							DispatchMessageA(&msg);
-					}
-					memcpy(&msg, &tmsg, sizeof(MSG));
-				}
-				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
-					DispatchMessageW(&msg);
-				else
-					DispatchMessageA(&msg);
+				DispatchMessageW(&msg);
 			}
 		}
 	}
