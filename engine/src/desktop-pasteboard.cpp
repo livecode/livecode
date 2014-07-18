@@ -299,7 +299,7 @@ bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		return false;
 	
 	m_entries[t_entry] . data = MCValueRetain(*t_out_data);	
-	r_data = m_entries[t_entry] . data;
+	r_data = MCValueRetain(m_entries[t_entry] . data);
 	
 	return true;
 }
