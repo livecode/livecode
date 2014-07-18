@@ -473,8 +473,9 @@ void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_
     t_field = static_cast<MCField *>(p_target . object);
     
     findex_t t_si, t_ei;
+    // AL-2014-07-14: [[ Bug 12777 ]] t_ei is end index, not length of chunk.
     t_si = p_target . mark . start;
-    t_ei = p_target . mark . finish - p_target . mark . start;
+    t_ei = p_target . mark . finish;
     
 	if (p_cut)
 		t_field -> cuttextindex(p_target . part_id, t_si, t_ei);
