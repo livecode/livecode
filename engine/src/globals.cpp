@@ -1134,9 +1134,10 @@ int X_close(void)
 	delete MCcstack;
 	delete MCrecent;
 
-	MCS_close(IO_stdin);
-	MCS_close(IO_stdout);
-	MCS_close(IO_stderr);
+	// Temporary workaround for a crash
+    //MCS_close(IO_stdin);
+	//MCS_close(IO_stdout);
+	//MCS_close(IO_stderr);
 
 	delete MCpatternlist;
 	delete MCresult;
