@@ -557,7 +557,10 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 				{
 					uint32_t *t_dst_pxl;
 					t_dst_pxl = r_bitmap . getAddr32(x, y);
-					*t_dst_pxl = SkPreMultiplyColor(*t_pixel);
+                    
+                    uint8_t a, r, g, b;
+                    MCGPixelUnpackNative(*t_pixel, r, g, b, a);
+                    *t_dst_pxl = SkPreMultiplyARGB(a, r, g, b);
 					t_pixel++;
 				}
 				t_row_ptr += p_raster . stride;

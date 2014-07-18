@@ -116,6 +116,8 @@
 /* Begin PBXProject section */
 		4DF42A350B04860B003F2D95 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4DF42A360B04860B003F2D95 /* Build configuration list for PBXProject "libexternal" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;

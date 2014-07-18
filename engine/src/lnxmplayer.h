@@ -63,7 +63,7 @@ class MPlayer
 		char * m_filename ;
 		uint4 m_osd_level ;
 		MCStack *m_stack ;
-		Window m_window; 
+		GdkWindow *m_window;
 		MCRectangle m_player_rect ;
 		int m_pfd_write[2];
 		int m_pfd_read[2];

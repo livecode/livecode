@@ -326,6 +326,10 @@ sub generateModule
 		
 		output "$outputs" . symbolName($symbol) . "($inputs)";
 		output "{";
+		if (symbolName($symbol) =~ /gdk_(?!pixbuf)/)
+		{
+			#output "  fprintf(stderr, \"" . symbolName($symbol) . "\\n\");";
+		}
 		if ($outputs ne "void")
 		{
 			output "  return " . symbolName($symbol) . "_ptr($args);";
