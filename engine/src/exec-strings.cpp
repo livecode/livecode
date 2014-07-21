@@ -2164,7 +2164,8 @@ void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems,
             break;
 			
         case ST_NUMERIC:
-            if (t_success && ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
+            // AL-2014-07-21: [[ Bug 12847 ]] If output is empty, don't construe as 0 for sorting purposes
+            if (t_success && !MCValueIsEmpty(*t_output) && ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
                 break;
 			
             /* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
