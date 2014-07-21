@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: /Users/sebastien/Workspace/refactor-syntax_unicode/engine/src/java/com/sec/android/iap/IAPConnector.aidl
+ * Original file: /Users/frasergordon/Workspace/livecode/engine/src/java/com/sec/android/iap/IAPConnector.aidl
  */
 package com.sec.android.iap;
 public interface IAPConnector extends android.os.IInterface
@@ -23,13 +23,13 @@ public static com.sec.android.iap.IAPConnector asInterface(android.os.IBinder ob
 if ((obj==null)) {
 return null;
 }
-android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
+android.os.IInterface iin = (android.os.IInterface)obj.queryLocalInterface(DESCRIPTOR);
 if (((iin!=null)&&(iin instanceof com.sec.android.iap.IAPConnector))) {
 return ((com.sec.android.iap.IAPConnector)iin);
 }
 return new com.sec.android.iap.IAPConnector.Stub.Proxy(obj);
 }
-@Override public android.os.IBinder asBinder()
+public android.os.IBinder asBinder()
 {
 return this;
 }
@@ -147,7 +147,7 @@ Proxy(android.os.IBinder remote)
 {
 mRemote = remote;
 }
-@Override public android.os.IBinder asBinder()
+public android.os.IBinder asBinder()
 {
 return mRemote;
 }
@@ -155,7 +155,7 @@ public java.lang.String getInterfaceDescriptor()
 {
 return DESCRIPTOR;
 }
-@Override public boolean requestCmd(com.sec.android.iap.IAPServiceCallback callback, android.os.Bundle bundle) throws android.os.RemoteException
+public boolean requestCmd(com.sec.android.iap.IAPServiceCallback callback, android.os.Bundle bundle) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();
@@ -180,7 +180,7 @@ _data.recycle();
 }
 return _result;
 }
-@Override public boolean unregisterCallback(com.sec.android.iap.IAPServiceCallback callback) throws android.os.RemoteException
+public boolean unregisterCallback(com.sec.android.iap.IAPServiceCallback callback) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();
@@ -198,7 +198,7 @@ _data.recycle();
 }
 return _result;
 }
-@Override public android.os.Bundle init(int mode) throws android.os.RemoteException
+public android.os.Bundle init(int mode) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();
@@ -221,7 +221,7 @@ _data.recycle();
 }
 return _result;
 }
-@Override public android.os.Bundle getItemList(int mode, java.lang.String packageName, java.lang.String itemGroupId, int startNum, int endNum, java.lang.String itemType) throws android.os.RemoteException
+public android.os.Bundle getItemList(int mode, java.lang.String packageName, java.lang.String itemGroupId, int startNum, int endNum, java.lang.String itemType) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();
@@ -249,7 +249,7 @@ _data.recycle();
 }
 return _result;
 }
-@Override public android.os.Bundle getItemsInbox(java.lang.String packageName, java.lang.String itemGroupId, int startNum, int endNum, java.lang.String startDate, java.lang.String endDate) throws android.os.RemoteException
+public android.os.Bundle getItemsInbox(java.lang.String packageName, java.lang.String itemGroupId, int startNum, int endNum, java.lang.String startDate, java.lang.String endDate) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();

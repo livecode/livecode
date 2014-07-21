@@ -1336,6 +1336,13 @@ int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
     icu::Collator* t_collator;
     t_collator = icu::Collator::createInstance(MCLocaleGetICULocale(p_locale), t_error);
     
+    // If we couldn't create a collator for the given locale, create a default one
+    if (t_collator == NULL)
+    {
+        t_error = U_ZERO_ERROR;
+        t_collator = icu::Collator::createInstance(t_error);
+    }
+    
     // Set the collation options
     // Note that the enumerated strengths have the same values as the ICU enum
     switch (p_options & kMCUnicodeCollateOptionStrengthMask)

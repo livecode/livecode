@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: /Users/sebastien/Workspace/refactor-syntax_unicode/engine/src/java/com/sec/android/iap/IAPServiceCallback.aidl
+ * Original file: /Users/frasergordon/Workspace/livecode/engine/src/java/com/sec/android/iap/IAPServiceCallback.aidl
  */
 package com.sec.android.iap;
 public interface IAPServiceCallback extends android.os.IInterface
@@ -23,13 +23,13 @@ public static com.sec.android.iap.IAPServiceCallback asInterface(android.os.IBin
 if ((obj==null)) {
 return null;
 }
-android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
+android.os.IInterface iin = (android.os.IInterface)obj.queryLocalInterface(DESCRIPTOR);
 if (((iin!=null)&&(iin instanceof com.sec.android.iap.IAPServiceCallback))) {
 return ((com.sec.android.iap.IAPServiceCallback)iin);
 }
 return new com.sec.android.iap.IAPServiceCallback.Stub.Proxy(obj);
 }
-@Override public android.os.IBinder asBinder()
+public android.os.IBinder asBinder()
 {
 return this;
 }
@@ -65,7 +65,7 @@ Proxy(android.os.IBinder remote)
 {
 mRemote = remote;
 }
-@Override public android.os.IBinder asBinder()
+public android.os.IBinder asBinder()
 {
 return mRemote;
 }
@@ -73,7 +73,7 @@ public java.lang.String getInterfaceDescriptor()
 {
 return DESCRIPTOR;
 }
-@Override public void responseCallback(android.os.Bundle bundle) throws android.os.RemoteException
+public void responseCallback(android.os.Bundle bundle) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 try {

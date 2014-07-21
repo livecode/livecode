@@ -287,7 +287,7 @@ sub generateModule
 	output "#if defined(_LINUX)";
 	foreach my $item (split(',', $unixLibrary))
 	{
-		output "  if(!initialise_weak_link_${module}_with_path(\"$item\")";
+		output "  if(!initialise_weak_link_${module}_with_path(\"$item\"))";
 	}
 	
 	output "#else";

@@ -50,6 +50,41 @@
 			remoteGlobalIDString = 4DE18D930B82296A0086DB92;
 			remoteInfo = standalone;
 		};
+		729039D1197985C6007E0FF3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D1F9D17171C67B00091C6CB;
+			remoteInfo = "kernel-server";
+		};
+		729039D3197985C6007E0FF3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D221A9E171D58A700E7E557;
+			remoteInfo = "kernel-development";
+		};
+		729039D5197985C6007E0FF3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D221AF6171D5EC500E7E557;
+			remoteInfo = "kernel-standalone";
+		};
+		729039D7197985C6007E0FF3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D1F9C2E171C64320091C6CB;
+			remoteInfo = "security-community";
+		};
+		729039D9197985C6007E0FF3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DB846B4192B53E800771914;
+			remoteInfo = "Server-Community";
+		};
 		B55AFA1D0BCE905300E1F7F0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B55AFA190BCE905300E1F7F0 /* libexternal.xcodeproj */;
@@ -63,34 +98,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = external;
-		};
-		E84B5CAF173285C500AB0500 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4D1F9D17171C67B00091C6CB;
-			remoteInfo = "kernel-server";
-		};
-		E84B5CB1173285C500AB0500 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4D221A9E171D58A700E7E557;
-			remoteInfo = "kernel-development";
-		};
-		E84B5CB3173285C500AB0500 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4D221AF6171D5EC500E7E557;
-			remoteInfo = "kernel-standalone";
-		};
-		E84B5CB5173285C500AB0500 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4D51518C0BCF96B700F73C6E /* engine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4D1F9C2E171C64320091C6CB;
-			remoteInfo = "security-community";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -145,14 +152,14 @@
 			isa = PBXGroup;
 			children = (
 				4D414782120431AE0088006F /* libkernel.a */,
-				B28449841799E9F100E27E26 /* libkernel-server.a */,
-				B28449861799E9F100E27E26 /* libkernel-development.a */,
-				B28449881799E9F100E27E26 /* libkernel-standalone.a */,
-				B284498A1799E9F100E27E26 /* libsecurity-community.a */,
+				729039D2197985C6007E0FF3 /* libkernel-server.a */,
+				729039D4197985C6007E0FF3 /* libkernel-development.a */,
+				729039D6197985C6007E0FF3 /* libkernel-standalone.a */,
+				729039D8197985C6007E0FF3 /* libsecurity-community.a */,
 				4D5151960BCF96B700F73C6E /* LiveCode-Community.app */,
 				4D5151A00BCF96B700F73C6E /* Standalone-Community.app */,
-				E88527651704974200CEFCC5 /* Server-Community */,
 				4D41477E120431AE0088006F /* Installer.app */,
+				729039DA197985C6007E0FF3 /* Server-Community */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -325,46 +332,46 @@
 			remoteRef = 4D51519F0BCF96B700F73C6E /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		729039D2197985C6007E0FF3 /* libkernel-server.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-server.a";
+			remoteRef = 729039D1197985C6007E0FF3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		729039D4197985C6007E0FF3 /* libkernel-development.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-development.a";
+			remoteRef = 729039D3197985C6007E0FF3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		729039D6197985C6007E0FF3 /* libkernel-standalone.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-standalone.a";
+			remoteRef = 729039D5197985C6007E0FF3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		729039D8197985C6007E0FF3 /* libsecurity-community.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libsecurity-community.a";
+			remoteRef = 729039D7197985C6007E0FF3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		729039DA197985C6007E0FF3 /* Server-Community */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "Server-Community";
+			remoteRef = 729039D9197985C6007E0FF3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		B55AFA1E0BCE905300E1F7F0 /* libexternal.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libexternal.a;
 			remoteRef = B55AFA1D0BCE905300E1F7F0 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		E84B5CB0173285C500AB0500 /* libkernel-server.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libkernel-server.a";
-			remoteRef = E84B5CAF173285C500AB0500 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		E84B5CB2173285C500AB0500 /* libkernel-development.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libkernel-development.a";
-			remoteRef = E84B5CB1173285C500AB0500 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		E84B5CB4173285C500AB0500 /* libkernel-standalone.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libkernel-standalone.a";
-			remoteRef = E84B5CB3173285C500AB0500 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		E84B5CB6173285C500AB0500 /* libsecurity-community.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libsecurity-community.a";
-			remoteRef = E84B5CB5173285C500AB0500 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		E88527651704974200CEFCC5 /* Server-Community */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = "Server-Community";
-			remoteRef = E88527641704974200CEFCC5 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
