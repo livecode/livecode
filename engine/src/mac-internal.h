@@ -1,0 +1,556 @@
+#ifndef __MC_MAC_PLATFORM__
+#define __MC_MAC_PLATFORM__
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMacPlatformWindow;
+class MCMacPlatformSurface;
+
+////////////////////////////////////////////////////////////////////////////////
+
+@interface com_runrev_livecode_MCApplicationDelegate: NSObject<NSApplicationDelegate>
+{
+	int m_argc;
+	MCStringRef *m_argv;
+	MCStringRef *m_envp;
+    
+    bool m_explicit_quit : 1;
+}
+
+// Platform init / finit.
+- (void)initializeModules;
+- (void)finalizeModules;
+
+// Shutdown and reopening handling
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender;
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender;
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)sender hasVisibleWindows:(BOOL)flag;
+
+// File opening related requests.
+- (BOOL)application:(NSApplication *)sender openFile:(NSString *)filename;
+- (void)application:(NSApplication *)sender openFiles:(NSArray *)filenames;
+- (BOOL)application:(NSApplication *)sender openTempFile:(NSString *)filename;
+- (BOOL)applicationShouldOpenUntitledFile:(NSApplication *)sender;
+- (BOOL)applicationOpenUntitledFile:(NSApplication *)sender;
+- (BOOL)application:(id)sender openFileWithoutUI:(NSString *)filename;
+
+// Printing handling
+// DEPRECATED - (BOOL)application:(NSApplication *)sender printFile:(NSString *)filename;
+- (NSApplicationPrintReply)application:(NSApplication *)application printFiles:(NSArray *)fileNames withSettings:(NSDictionary *)printSettings showPrintPanels:(BOOL)showPrintPanels;
+
+// Dock menu handling.
+- (NSMenu *)applicationDockMenu:(NSApplication *)sender;
+
+- (void)applicationWillFinishLaunching:(NSNotification *)notification;
+- (void)applicationDidFinishLaunching:(NSNotification *)notification;
+- (void)applicationWillHide:(NSNotification *)notification;
+- (void)applicationDidHide:(NSNotification *)notification;
+- (void)applicationWillUnhide:(NSNotification *)notification;
+- (void)applicationDidUnhide:(NSNotification *)notification;
+- (void)applicationWillBecomeActive:(NSNotification *)notification;
+- (void)applicationDidBecomeActive:(NSNotification *)notification;
+- (void)applicationWillResignActive:(NSNotification *)notification;
+- (void)applicationDidResignActive:(NSNotification *)notification;
+- (void)applicationWillUpdate:(NSNotification *)notification;
+- (void)applicationDidUpdate:(NSNotification *)notification;
+- (void)applicationWillTerminate:(NSNotification *)notification;
+- (void)applicationDidChangeScreenParameters:(NSNotification *)notification;
+
+- (NSError *)application:(NSApplication *)application willPresentError:(NSError *)error;
+
+@end
+
+@compatibility_alias MCApplicationDelegate com_runrev_livecode_MCApplicationDelegate;
+
+////////////////////////////////////////////////////////////////////////////////
+
+@interface com_runrev_livecode_MCWindow: NSWindow
+{
+	bool m_can_become_key : 1;
+    bool m_is_popup : 1;
+    id m_monitor;
+}
+
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
+- (void)dealloc;
+
+- (void)setCanBecomeKeyWindow: (BOOL)value;
+
+- (BOOL)canBecomeKeyWindow;
+- (BOOL)makeFirstResponder: (NSResponder *)responder;
+
+// MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
+- (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
+
+- (void)popupAndMonitor;
+
+@end
+
+@interface com_runrev_livecode_MCPanel: NSPanel
+{
+	bool m_can_become_key : 1;
+}
+
+- (void)setCanBecomeKeyWindow: (BOOL)value;
+
+- (BOOL)canBecomeKeyWindow;
+- (BOOL)makeFirstResponder: (NSResponder *)responder;
+
+// MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
+- (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
+@interface com_runrev_livecode_MCWindowDelegate: NSObject<NSWindowDelegate>
+{
+	MCMacPlatformWindow *m_window;
+    
+    // MW-2014-04-23: [[ Bug 12270 ]] If true the size / position of the window is
+    //   being changed by the user.
+    bool m_user_reshape : 1;
+}
+
+//////////
+
+- (id)initWithPlatformWindow: (MCMacPlatformWindow *)window;
+- (void)dealloc;
+
+- (MCMacPlatformWindow *)platformWindow;
+
+// MW-2014-04-23: [[ Bug 12270 ]] Returns the value of 'm_user_reshape'
+- (bool)inUserReshape;
+
+//////////
+
+- (BOOL)windowShouldClose:(id)sender;
+
+- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize;
+- (void)windowDidMove:(NSNotification *)notification;
+
+- (void)windowWillStartLiveResize:(NSNotification *)notification;
+- (void)windowDidEndLiveResize:(NSNotification *)notification;
+
+- (void)windowDidMiniaturize:(NSNotification *)notification;
+- (void)windowDidDeminiaturize:(NSNotification *)notification;
+
+- (void)windowDidBecomeKey:(NSNotification *)notification;
+- (void)windowDidResignKey:(NSNotification *)notification;
+
+- (void)windowDidChangeBackingProperties:(NSNotification *)notification;
+
+//////////
+
+- (void)viewFocusSwitched: (uint32_t)id;
+
+@end
+
+@compatibility_alias MCWindowDelegate com_runrev_livecode_MCWindowDelegate;
+
+////////////////////////////////////////////////////////////////////////////////
+
+@interface com_runrev_livecode_MCWindowContainerView: NSView
+{
+    MCMacPlatformWindow *m_window;
+}
+
+- (id)initWithPlatformWindow:(MCMacPlatformWindow *)window;
+
+- (void)setFrameSize: (NSSize)size;
+
+@end
+
+@compatibility_alias MCWindowContainerView com_runrev_livecode_MCWindowContainerView;
+
+@interface com_runrev_livecode_MCWindowView: NSView<NSTextInputClient>
+{
+    MCMacPlatformWindow *m_window;
+    
+	NSTrackingArea *m_tracking_area;
+    
+    // The last event that was passed to the IME.
+	NSEvent *m_input_method_event;
+    // Whether to pass events through the IME or not.
+    bool m_use_input_method : 1;
+    
+	NSDragOperation m_allowed_drag_operations;
+}
+
+- (id)initWithPlatformWindow:(MCMacPlatformWindow *)window;
+- (void)dealloc;
+
+- (void)updateTrackingAreas;
+
+- (BOOL)isFlipped;
+
+- (BOOL)canBecomeKeyView;
+
+- (BOOL)acceptsFirstMouse:(NSEvent *)theEvent;
+- (BOOL)acceptsFirstResponder;
+- (BOOL)becomeFirstResponder;
+- (BOOL)resignFirstResponder;
+
+- (void)mouseDown: (NSEvent *)event;
+- (void)mouseUp: (NSEvent *)event;
+- (void)mouseMoved: (NSEvent *)event;
+- (void)mouseDragged: (NSEvent *)event;
+
+- (void)rightMouseDown: (NSEvent *)event;
+- (void)rightMouseUp: (NSEvent *)event;
+- (void)rightMouseMoved: (NSEvent *)event;
+- (void)rightMouseDragged: (NSEvent *)event;
+
+- (void)otherMouseDown: (NSEvent *)event;
+- (void)otherMouseUp: (NSEvent *)event;
+- (void)otherMouseMoved: (NSEvent *)event;
+- (void)otherMouseDragged: (NSEvent *)event;
+
+- (void)mouseEntered: (NSEvent *)event;
+- (void)mouseExited: (NSEvent *)event;
+
+- (void)flagsChanged: (NSEvent *)event;
+
+- (void)keyDown: (NSEvent *)event;
+- (void)keyUp: (NSEvent *)event;
+
+//////////
+
+- (BOOL)useTextInput;
+
+- (void)insertText:(id)aString replacementRange:(NSRange)replacementRange;
+- (void)doCommandBySelector:(SEL)aSelector;
+- (void)setMarkedText:(id)aString selectedRange:(NSRange)newSelection replacementRange:(NSRange)replacementRange;
+- (void)unmarkText;
+- (NSRange)selectedRange;
+- (NSRange)markedRange;
+- (BOOL)hasMarkedText;
+- (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange;
+- (NSArray*)validAttributesForMarkedText;
+- (NSRect)firstRectForCharacterRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange;
+- (NSUInteger)characterIndexForPoint:(NSPoint)aPoint;
+
+//////////
+
+- (void)undo:(id)sender;
+- (void)redo:(id)sender;
+- (void)cut:(id)sender;
+- (void)copy:(id)sender;
+- (void)paste:(id)sender;
+- (void)selectAll:(id)sender;
+- (void)delete:(id)sender;
+
+//////////
+
+- (BOOL)wantsPeriodicDraggingUpdates;
+- (NSDragOperation)draggingEntered: (id<NSDraggingInfo>)sender;
+- (void)draggingExited: (id<NSDraggingInfo>)sender;
+- (NSDragOperation)draggingUpdated: (id<NSDraggingInfo>)sender;
+
+- (BOOL)performDragOperation: (id<NSDraggingInfo>)sender;
+- (BOOL)prepareForDragOperation: (id<NSDraggingInfo>)sender;
+- (void)concludeDragOperation:(id<NSDraggingInfo>)sender;
+
+//////////
+
+- (BOOL)shouldDelayWindowOrderingForEvent: (NSEvent *)event;
+- (NSDragOperation)draggingSourceOperationMaskForLocal: (BOOL)isLocal;
+- (BOOL)ignoreModifierKeysWhileDragging;
+- (void)draggedImage:(NSImage *)image beganAt:(NSPoint)point;
+- (void)draggedImage:(NSImage *)image movedTo:(NSPoint)point;
+- (void)draggedImage:(NSImage *)image endedAt:(NSPoint)point operation:(NSDragOperation)operation;
+- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations pasteboard:(NSPasteboard *)pboard;
+
+//////////
+
+- (void)handleMouseMove: (NSEvent *)event;
+- (void)handleMousePress: (NSEvent *)event isDown: (BOOL)pressed;
+- (void)handleKeyPress: (NSEvent *)event isDown: (BOOL)pressed;
+- (void)handleAction:(SEL)selector with:(id)sender;
+
+//////////
+
+- (void)setFrameSize: (NSSize)size;
+- (void)drawRect: (NSRect)dirtyRect;
+
+//////////
+
+- (MCRectangle)mapNSRectToMCRectangle: (NSRect)r;
+- (NSRect)mapMCRectangleToNSRect: (MCRectangle)r;
+
+- (MCPoint)mapNSPointToMCPoint: (NSPoint)r;
+- (NSPoint)mapMCPointToNSPoint: (MCPoint)r;
+
+@end
+
+@compatibility_alias MCWindowView com_runrev_livecode_MCWindowView;
+
+////////////////////////////////////////////////////////////////////////////////
+
+@interface com_runrev_livecode_MCMenuDelegate: NSObject<NSMenuDelegate>
+{
+	MCPlatformMenuRef m_menu;
+}
+
+//////////
+
+- (id)initWithPlatformMenuRef: (MCPlatformMenuRef)p_menu_ref;
+- (void)dealloc;
+
+//////////
+
+- (MCPlatformMenuRef)platformMenuRef;
+
+//////////
+
+- (void)menuNeedsUpdate: (NSMenu *)menu;
+- (void)menuItemSelected: (id)sender;
+
+- (BOOL)validateMenuItem: (NSMenuItem *)item;
+
+- (BOOL)worksWhenModal;
+
+- (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
+
+@end
+
+@compatibility_alias MCMenuDelegate com_runrev_livecode_MCMenuDelegate;
+
+@interface com_runrev_livecode_MCAppMenuDelegate: NSObject<NSMenuDelegate>
+
+- (id)init;
+- (void)dealloc;
+
+- (void)shadowedMenuItemSelected:(NSString*)tag;
+- (NSMenuItem *)findShadowedMenuItem: (NSString *)tag;
+
+- (void)aboutMenuItemSelected: (id)sender;
+- (void)preferencesMenuItemSelected: (id)sender;
+
+- (void)menuNeedsUpdate: (NSMenu *)menu;
+
+- (BOOL)validateMenuItem: (NSMenuItem *)item;
+
+- (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
+
+@end
+
+@compatibility_alias MCAppMenuDelegate com_runrev_livecode_MCAppMenuDelegate;
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMacPlatformSurface: public MCPlatformSurface
+{
+public:
+	MCMacPlatformSurface(MCMacPlatformWindow *window, CGContextRef cg_context, MCGRegionRef update_rgn);
+	~MCMacPlatformSurface(void);
+	
+	virtual bool LockGraphics(MCGRegionRef region, MCGContextRef& r_context);
+	virtual void UnlockGraphics(void);
+	
+	virtual bool LockPixels(MCGIntegerRectangle region, MCGRaster& r_raster);
+	virtual void UnlockPixels(void);
+	
+	virtual bool LockSystemContext(void*& r_context);
+	virtual void UnlockSystemContext(void);
+	
+	virtual bool Composite(MCGRectangle dst_rect, MCGImageRef src_image, MCGRectangle src_rect, MCGFloat opacity, MCGBlendMode blend);
+	
+	virtual MCGFloat GetBackingScaleFactor(void);
+	
+private:
+	void Lock(void);
+	void Unlock(void);
+	
+private:
+	MCMacPlatformWindow *m_window;
+	CGContextRef m_cg_context;
+	MCGRegionRef m_update_rgn;
+	
+	MCGIntegerRectangle m_locked_area;
+	MCGContextRef m_locked_context;
+	MCGRaster m_locked_raster;
+	void *m_locked_bits;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMacPlatformWindow: public MCPlatformWindow
+{
+public:
+	MCMacPlatformWindow(void);
+	virtual ~MCMacPlatformWindow(void);
+
+	MCWindowView *GetView(void);
+    MCWindowContainerView *GetContainerView(void);
+    
+	id GetHandle(void);
+	
+    bool IsSynchronizing(void);
+    
+	void ProcessCloseRequest(void);
+	void ProcessDidMove(void);
+	void ProcessDidResize(void);
+	void ProcessWillMiniaturize(void);
+	void ProcessDidMiniaturize(void);
+	void ProcessDidDeminiaturize(void);
+	void ProcessDidBecomeKey(void);
+	void ProcessDidResignKey(void);
+	
+	void ProcessMouseMove(NSPoint location);
+	void ProcessMousePress(NSInteger button, bool is_down);
+	void ProcessMouseScroll(CGFloat dx, CGFloat dy);
+	
+    // SN-2014-07-11: [[ Bug 12747 ]] Shortcuts: the uncomment script shortcut cmd _ does not work
+    // Changed parameters order to follow *KeyDown functions consistency
+	void ProcessKeyDown(MCPlatformKeyCode key_code, codepoint_t mapped_char, codepoint_t unmapped_char);
+	void ProcessKeyUp(MCPlatformKeyCode key_code, codepoint_t mapped_char, codepoint_t unmapped_char);
+	
+	void MapMCPointToNSPoint(MCPoint location, NSPoint& r_ns_location);
+	void MapNSPointToMCPoint(NSPoint location, MCPoint& r_mc_location);
+	
+	void MapMCRectangleToNSRect(MCRectangle rect, NSRect& r_ns_rect);
+	void MapNSRectToMCRectangle(NSRect rect, MCRectangle& r_mc_rect);
+	
+protected:
+	virtual void DoRealize(void);
+	virtual void DoSynchronize(void);
+	
+	virtual bool DoSetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value);
+	virtual bool DoGetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, void *r_value);
+	
+	virtual void DoShow(void);
+	virtual void DoShowAsSheet(MCPlatformWindowRef parent);
+	virtual void DoHide(void);
+	virtual void DoFocus(void);
+	virtual void DoRaise(void);
+	virtual void DoUpdate(void);
+	virtual void DoIconify(void);
+	virtual void DoUniconify(void);
+	
+	virtual void DoConfigureTextInput(void);
+	virtual void DoResetTextInput(void);
+	
+public:
+	virtual void DoMapContentRectToFrameRect(MCRectangle content, MCRectangle& r_frame);
+	virtual void DoMapFrameRectToContentRect(MCRectangle frame, MCRectangle& r_content);
+	
+private:
+	// Compute the Cocoa window style from the window's current properties.
+	void ComputeCocoaStyle(NSUInteger& r_window_style);
+	
+	// The window delegate object.
+	MCWindowDelegate *m_delegate;
+	
+	// The window container view.
+	MCWindowContainerView *m_container_view;
+	
+    // The window's content view.
+    MCWindowView *m_view;
+    
+	struct
+	{
+		// When the mask changes and the window has a shadow we have to
+		// explicitly invalidate when updating. If this is true, the Update()
+		// method will ensure this is done.
+		bool m_shadow_changed : 1;
+		
+		// When set to true, the window's properties are being synced. This
+		// stops events being propagated for state changes caused by script.
+		bool m_synchronizing : 1;
+		
+		// When set to true, the window has a sheet.
+		bool m_has_sheet : 1;
+	};
+	
+	// A window might map to one of several different classes, so we use a
+	// union for the different types to avoid casts everywhere.
+	union 
+	{
+		id m_handle;
+		NSWindow *m_window_handle;
+		NSPanel *m_panel_handle;
+	};
+	
+	// The parent pointer for sheets and drawers.
+	MCPlatformWindowRef m_parent;
+	
+	friend class MCMacPlatformSurface;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCMacPlatformScheduleCallback(void (*)(void*), void *);
+
+void MCMacPlatformBeginModalSession(MCMacPlatformWindow *window);
+void MCMacPlatformEndModalSession(MCMacPlatformWindow *window);
+
+void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef window);
+void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
+void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
+void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy);
+void MCMacPlatformHandleMouseSync(void);
+void MCMacPlatformHandleMouseAfterWindowHidden(void);
+
+void MCMacPlatformSyncMouseBeforeDragging(void);
+void MCMacPlatformSyncMouseAfterTracking(void);
+
+void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
+
+bool MCMacPlatformMapKeyCode(uint32_t mac_key_code, uint32_t modifier_flags, MCPlatformKeyCode& r_key_code);
+
+bool MCMacMapNSStringToCodepoint(NSString *string, codepoint_t& r_codepoint);
+bool MCMacMapCodepointToNSString(codepoint_t p_codepoint, NSString*& r_string);
+bool MCMacMapSelectorToTextInputAction(SEL p_selector, MCPlatformTextInputAction& r_action);
+
+void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint point, NSPoint& r_point);
+void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint point, MCPoint& r_point);
+
+void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle rect, NSRect& r_rect);
+void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect);
+
+MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers);
+
+NSEvent *MCMacPlatformGetLastMouseEvent(void);
+
+NSMenu *MCMacPlatformGetIconMenu(void);
+
+void MCMacPlatformLockMenuSelect(void);
+void MCMacPlatformUnlockMenuSelect(void);
+bool MCMacPlatformWasMenuSelect(void);
+
+bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
+
+void MCMacPlatformResetCursor(void);
+
+void MCMacPlatformGetGlobalVolume(double& r_volume);
+void MCMacPlatformSetGlobalVolume(double volume);
+
+// MW-2014-04-23: [[ CocoaBackdrop ]] Ensures the windows are stacked correctly.
+void MCMacPlatformSyncBackdrop(void);
+
+// MW-2014-06-11: [[ Bug 12436 ]] These are used to ensure that the cursor doesn't get clobbered whilst in an user area snapshot.
+void MCMacPlatformLockCursor(void);
+void MCMacPlatformUnlockCursor(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);
+MCPlatformDragOperation MCMacPlatformMapNSDragOperationToDragOperation(NSDragOperation);
+
+void MCMacPlatformPasteboardCreate(NSPasteboard *pasteboard, MCPlatformPasteboardRef& r_pasteboard);
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCPlatformInitializeMenu(void);
+void MCPlatformFinalizeMenu(void);
+
+bool MCPlatformInitializeAbortKey(void);
+void MCPlatformFinalizeAbortKey(void);
+
+bool MCPlatformInitializeColorTransform(void);
+void MCPlatformFinalizeColorTransform(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+#endif

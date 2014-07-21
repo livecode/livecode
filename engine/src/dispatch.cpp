@@ -148,6 +148,8 @@ MCDispatch::MCDispatch()
 	m_drag_end_sent = false;
 
 	m_externals = nil;
+
+    m_transient_stacks = nil;
 }
 
 MCDispatch::~MCDispatch()
@@ -1171,6 +1173,10 @@ void MCDispatch::wmdrag(Window w)
 		
 		MCdragsource = MCdragtargetptr;
 
+		// PLATFORM-TODO: This is needed at the moment to make sure that we don't
+		//   get the selection 'going away' when we start dragging. At the moment
+		//   MouseRelease is mapped to mup without messages, which isn't quite
+		//   correct from the point of view of the field.
 		if (MCdragtargetptr->gettype() > CT_CARD)
 		{
 			MCControl *cptr = (MCControl *)MCdragtargetptr;
@@ -1179,8 +1185,8 @@ void MCDispatch::wmdrag(Window w)
 		}
 		MCdragtargetptr->getstack()->resetcursor(True);
 		MCdragtargetptr -> getstack() -> munfocus();
-
-		MCdragaction = MCscreen -> dodragdrop(t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
+		
+		MCdragaction = MCscreen -> dodragdrop(w, t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
 
 		dodrop(true);
 		MCdragdata -> ResetSource();
@@ -1232,11 +1238,11 @@ void MCDispatch::wmdown(Window w, uint2 which)
 void MCDispatch::wmup_stack(MCStack *target, uint2 which)
 {
 	if (menu != NULL)
-		menu->mup(which);
+		menu->mup(which, false);
 	else
 	{
 		if (target != NULL)
-			target->mup(which);
+			target->mup(which, false);
 	}
 }
 
@@ -1279,7 +1285,6 @@ void MCDispatch::kfocusset(Window w)
 
 void MCDispatch::wmdragenter(Window w, MCPasteboard *p_data)
 {
-	
 	MCStack *target = findstackd(w);
 	
 	m_drag_target = true;
@@ -1492,9 +1497,9 @@ MCStack *MCDispatch::findchildstackd(Window w,uint2 cindex)
 	return NULL;
 }
 
-MCStack *MCDispatch::findstackd(Window w)
+MCStack *MCDispatch::findstackwindowid(uint32_t p_win_id)
 {
-	if (w == DNULL)
+	if (p_win_id == 0)
 		return NULL;
 	
 	if (stacks != NULL)
@@ -1503,7 +1508,7 @@ MCStack *MCDispatch::findstackd(Window w)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = tstk->findstackd(w)) != NULL)
+			if ((foundstk = tstk->findstackwindowid(p_win_id)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1515,18 +1520,33 @@ MCStack *MCDispatch::findstackd(Window w)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = tstk->findstackd(w)) != NULL)
+			if ((foundstk = tstk->findstackwindowid(p_win_id)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
 		while (tstk != panels);
 	}
 
-	// MW-2006-04-24: [[ Purify ]] It is possible to get here after MCtooltip has been
-	//   deleted. So MCtooltip is now NULL in this situation and we test for it here.
-	if (MCtooltip != NULL && MCtooltip->findstackd(w))
-		return MCtooltip;
-	return NULL;
+	if (m_transient_stacks != nil)
+    {
+        MCStack *tstk = m_transient_stacks;
+        do
+        {
+            MCStack *foundstk;
+            if ((foundstk = tstk -> findstackwindowid(p_win_id)) != NULL)
+                return foundstk;
+			tstk = (MCStack *)tstk->next();
+        }
+        while(tstk != m_transient_stacks);
+    }
+    
+    return NULL;
+}
+
+MCStack *MCDispatch::findstackd(Window w)
+{
+	// IM-2014-07-09: [[ Bug 12225 ]] Use window ID to find stack
+	return findstackwindowid(MCscreen->dtouint4((Drawable)w));
 }
 
 MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)
@@ -1687,6 +1707,33 @@ void MCDispatch::removepanel(MCStack *sptr)
 	sptr->remove(panels);
 }
 
+bool MCDispatch::is_transient_stack(MCStack *sptr)
+{
+	if (m_transient_stacks != NULL)
+	{
+		MCStack *tstk = m_transient_stacks;
+		do
+		{
+			if (tstk == sptr)
+				return true;
+			tstk = (MCStack *)tstk->next();
+		}
+		while (tstk != m_transient_stacks);
+	}
+	return false;
+}
+
+void MCDispatch::add_transient_stack(MCStack *sptr)
+{
+	sptr->appendto(m_transient_stacks);
+}
+
+void MCDispatch::remove_transient_stack(MCStack *sptr)
+{
+    
+	sptr->remove(m_transient_stacks);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 bool MCDispatch::loadexternal(MCStringRef p_external)
@@ -1803,7 +1850,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 	
 	if (MCactiveimage != NULL && MCclipboarddata -> HasImage())
 	{
-		MCAutoDataRef t_data;
+		MCAutoValueRef t_data;
 		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
         {
             MCExecContext ctxt(nil, nil, nil);
@@ -1812,7 +1859,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			t_image = new MCImage;
 			t_image -> open();
 			t_image -> openimage();
-			t_image -> SetText(ctxt, *t_data);
+			t_image -> SetText(ctxt, (MCDataRef)*t_data);
 			MCactiveimage -> pasteimage(t_image);
 			t_image -> closeimage();
 			t_image -> close();
@@ -1833,20 +1880,20 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			return false;
 		if (MCclipboarddata -> HasObjects())
 		{
-			MCAutoDataRef t_data;
+			MCAutoValueRef t_data;
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS, &t_data))
-				t_objects = MCObject::unpickle(*t_data, MCdefaultstackptr);
+				t_objects = MCObject::unpickle((MCDataRef)*t_data, MCdefaultstackptr);
 		}
 		else if (MCclipboarddata -> HasImage())
 		{
-			MCAutoDataRef t_data;
+			MCAutoValueRef t_data;
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
             {
                 MCExecContext ctxt(nil, nil, nil);
 				
 				t_objects = new MCImage(*MCtemplateimage);
 				t_objects -> open();
-				static_cast<MCImage *>(t_objects) -> SetText(ctxt, *t_data);
+				static_cast<MCImage *>(t_objects) -> SetText(ctxt, (MCDataRef)*t_data);
 				t_objects -> close();
 			}
 		}
@@ -1944,7 +1991,7 @@ void MCDispatch::dodrop(bool p_source)
 		t_field = static_cast<MCField *>(MCdragsource);
 
 		findex_t t_from_start_index, t_from_end_index;
-		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False, False);
+		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False);
 
 		// We are dropping in the target selection - so just send the messages and do nothing
 		if (t_start_index >= t_from_start_index && t_start_index < t_from_end_index)
@@ -2003,7 +2050,7 @@ void MCDispatch::dodrop(bool p_source)
 	findex_t t_src_start, t_src_end;
 	t_src_start = t_src_end = 0;
 	if (t_auto_source)
-		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False, False);
+		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False);
 
 	bool t_auto_drop;
 	t_auto_drop = MCdragdest != NULL && MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;

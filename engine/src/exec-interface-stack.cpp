@@ -1412,7 +1412,7 @@ void MCStack::SetWmPlace(MCExecContext& ctxt, bool setting)
 
 void MCStack::GetWindowId(MCExecContext& ctxt, uinteger_t& r_id)
 {
-	r_id = MCscreen -> dtouint4(window);
+	r_id = MCscreen -> dtouint4((Drawable)window);
 }
 
 void MCStack::GetPixmapId(MCExecContext& ctxt, uinteger_t& r_id)
@@ -1915,7 +1915,7 @@ void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p
             reopenwindow();
         else
         {
-            if (window != DNULL)
+            if (window != NULL)
             {
                 stop_externals();
                 MCscreen->destroywindow(window);
@@ -2163,3 +2163,16 @@ void MCStack::GetKey(MCExecContext& ctxt, bool& r_value)
     //   whether or not the script is available.
     r_value = iskeyed();
 }
+
+// SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter for the P_IGNORE_MOUSE_EVENTS property
+void MCStack::SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore)
+{
+    if (changeextendedstate(p_ignore, ECS_IGNORE_MOUSE_EVENTS) && opened)
+        updateignoremouseevents();
+}
+
+void MCStack::GetIgnoreMouseEvents(MCExecContext &ctxt, bool &r_ignored)
+{
+    r_ignored = getextendedstate(ECS_IGNORE_MOUSE_EVENTS);
+}
+

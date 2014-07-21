@@ -273,7 +273,7 @@ public:
 	virtual void munfocus();
 	virtual void mdrag(void);
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
@@ -390,6 +390,7 @@ public:
 	void stopcomposition(Boolean del, Boolean force);
 	void setcompositioncursoroffset(findex_t coffset);
 	void setcompositionconvertingrange(findex_t si, findex_t ei);
+    bool getcompositionrange(findex_t& si, findex_t& ei);
 	void deletecomposition();
 	Boolean getcompositionrect(MCRectangle &r, findex_t offset);
 	void syncfonttokeyboard();
@@ -397,7 +398,6 @@ public:
 	
 	MCParagraph *verifyindices(MCParagraph *top, findex_t& si, findex_t& ei);
 	
-	void indextorect(MCParagraph *top, findex_t si, findex_t ei, MCRectangle &r);
 	void insertparagraph(MCParagraph *newtext);
 	// MCField selection functions in fields.cc
 	Boolean find(MCExecContext &ctxt, uint4 cardid,
@@ -416,8 +416,8 @@ public:
 	//   the specified 'parid'.
 	MCParagraph *resolveparagraphs(uint4 parid);
 
-    void setparagraphs(MCParagraph *newpgptr, uint4 parid);
-    void setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end);
+    void setparagraphs(MCParagraph *newpgptr, uint4 parid, bool p_preserv_zero_length_styles = false);
+    void setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end, bool p_preserv_zero_length_styles = false);
     // SN-2014-01-17: [[ Unicodification ]] Suppressed old string version of settext and settextindex
     Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
 	Exec_stat settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef s, Boolean undoing);
@@ -454,6 +454,7 @@ public:
 	bool loctext(Boolean click, MCStringRef& r_string);
 	Boolean locmark(Boolean wholeline, Boolean wholeword,
 	                Boolean click, Boolean chunk, Boolean inc_cr, findex_t &si, findex_t &ei);
+    Boolean locmarkpoint(MCPoint p_location, Boolean wholeline, Boolean wholeword, Boolean chunk, Boolean inc_cr, findex_t &si, findex_t &ei);
 
 	bool foundchunk(MCStringRef& r_string);
 	bool foundline(MCStringRef& r_string);
@@ -469,7 +470,7 @@ public:
 #endif
 	bool selectedtext(MCStringRef& r_string);
 	Boolean selectedmark(Boolean wholeline, findex_t &si, findex_t &ei,
-	                     Boolean force, Boolean inc_cr, bool p_char_indices = false);
+	                     Boolean force, bool p_char_indices = false);
 
 	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string, bool p_char_indices = false);
 	bool returnline(findex_t si, findex_t ei, MCStringRef& r_string);
@@ -591,6 +592,7 @@ public:
     void exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
 #endif
 	bool exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);
+    bool exportasstyledtext(MCParagraph* p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);\
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
     MCParagraph *importhtmltext(MCValueRef p_data);
@@ -627,6 +629,8 @@ public:
 	void adjustpixmapoffset(MCDC *dc, uint2 index, int4 dy = 0);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
+    
+    MCRectangle firstRectForCharacterRange(int32_t& si, int32_t& ei);
 
     ////////// BIDIRECTIONAL SUPPORT
     

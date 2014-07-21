@@ -511,8 +511,6 @@ Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
-
-
 Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
 {
 #ifdef /* MCHandlePurchaseSendRequest */ LEGACY_EXEC
@@ -549,6 +547,127 @@ Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
     
     return ES_ERROR;
 }
+
+Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleMakePurchase */ LEGACY_EXEC
+    bool t_success = true;
+    
+    char  *t_prod_id;
+    char  *t_quantity;
+    char  *t_payload;
+    MCPurchase *t_purchase = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "sss", &t_prod_id, &t_quantity, &t_payload);
+    
+    
+    if (t_success)
+        t_success = MCPurchaseCreate(t_prod_id, nil, t_purchase);
+    
+    //if (t_success)
+    //t_success = MCStoreMakePurchase(t_purchase);
+    if (t_success)
+        t_success = MCStoreMakePurchase(t_purchase->prod_id, t_quantity, t_payload);
+    
+    MCCStringFree(t_prod_id);
+    MCCStringFree(t_quantity);
+    MCCStringFree(t_payload);
+    
+    return ES_NORMAL;
+#endif /* MCHandleMakePurchase */
+    bool t_success = true;
+    
+    MCAutoStringRef t_prod_id;
+    MCAutoStringRef t_quantity;
+    MCAutoStringRef t_payload;
+    MCPurchase *t_purchase = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "xxx", &(&t_prod_id), &(&t_quantity), &(&t_payload));
+    
+    MCExecContext ctxt(nil, nil, nil);
+    //if (t_success)
+    //t_success = MCStoreMakePurchase(t_purchase);
+    if (t_success)
+        MCStoreExecMakePurchase(ctxt, *t_prod_id, *t_quantity, *t_payload);
+    
+    if (!ctxt. HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleConfirmPurchase */ LEGACY_EXEC
+    bool t_success = true;
+    
+    char *t_prod_id;
+    MCPurchase *t_purchase = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_prod_id);
+    
+    if (t_success)
+        t_success = MCPurchaseFindByProdId(t_prod_id, t_purchase);
+    
+    if (t_success)
+        t_success = MCPurchaseConfirmDelivery(t_purchase);
+    
+    return ES_NORMAL;
+#endif /* MCHandleConfirmPurchase */
+    bool t_success = true;
+    
+    MCAutoStringRef t_prod_id;
+    MCPurchase *t_purchase = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "x", &(&t_prod_id));
+    
+    MCExecContext ctxt(nil, nil, nil);
+    
+    if (t_success)
+        MCStoreExecConfirmPurchase(ctxt, *t_prod_id);
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameter)
+{
+#ifdef /* MCHandleProductSetType */ LEGACY_EXEC
+    bool t_success = true;
+    char *t_product_id = nil;
+    char *t_product_type;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "ss", &t_product_id, &t_product_type);
+    if (t_success)
+        t_success = MCStoreProductSetType(t_product_id, t_product_type);
+    
+    MCCStringFree(t_product_id);
+    MCCStringFree(t_product_type);
+    
+    return ES_NORMAL;
+#endif /* MCHandleProductSetType */
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_product_id, t_product_type;
+    bool t_success;
+    
+    t_success = MCParseParameters(p_parameter, "xx", &(&t_product_id), &(&t_product_type));
+    
+    if (t_success)
+        MCStoreExecProductSetType(ctxt, *t_product_id, *t_product_type);
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
 
 Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters)
 {
@@ -617,6 +736,95 @@ Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters
     if (!ctxt.HasError())
         return ES_NORMAL;
     
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleReceiveProductDetails(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleReceiveProductDetails */ LEGACY_EXEC
+    bool t_success = true;
+    char *t_product_id = nil;
+    const char* t_product_details;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_product_details = MCStoreReceiveProductDetails(t_product_id);
+    
+    MCCStringFree(t_product_id);
+    MCresult -> sets(t_product_details);
+    
+    return ES_NORMAL;
+#endif /* MCHandleReceiveProductDetails */
+    MCAutoStringRef t_product;
+    bool t_success = true;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "x", &(&t_product));
+    
+    MCExecContext ctxt(nil, nil, nil);
+    MCAutoStringRef t_result;
+    
+    if (t_success)
+        MCStoreExecReceiveProductDetails(ctxt, *t_product, &t_result);
+    
+    ctxt . SetTheResultToValue(*t_result);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleConsumePurchase */ LEGACY_EXEC
+    bool t_success = true;
+    char *t_product_id = nil;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_success = MCStoreConsumePurchase(t_product_id);
+    
+    MCCStringFree(t_product_id);
+    return ES_NORMAL;
+#endif /* MCHandleConsumePurchase */
+    MCAutoStringRef t_product;
+    bool t_success = true;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "x", &(&t_product));
+    
+    MCExecContext ctxt(nil, nil, nil);
+    
+    if (t_success)
+        MCStoreExecConsumePurchase(ctxt, *t_product);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleGetPurchases */ LEGACY_EXEC
+    char *t_purchases;
+    t_purchases = MCStoreGetPurchaseList();
+    
+    MCresult -> sets(t_purchases);
+    return ES_NORMAL;
+#endif /* MCHandleGetPurchases */
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_purchases;
+    MCStoreGetPurchaseList(ctxt, &t_purchases);
+    
+    if (!ctxt . HasError())
+    {
+        ctxt . SetTheResultToValue(*t_purchases);
+        return ES_NORMAL;
+    }
+    
+    ctxt . SetTheResultToEmpty();
     return ES_ERROR;
 }
 
@@ -3998,6 +4206,8 @@ Exec_stat MCHandleVibrate(void *p_context, MCParameter *p_parameters)
     if (p_parameters)
     {
         p_parameters->eval(ep);
+        // PM-2014-05-23: [[ Bug 12055 ]] Make sure that
+        ep.ton();
         t_number_of_times = ep . getint4();
     }
     MCSystemVibrate(t_number_of_times);
@@ -6533,6 +6743,20 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
     {false, "mobilePurchaseVerify", MCHandlePurchaseVerify, nil},
     {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
+    
+    {false, "mobileStoreCanMakePurchase", MCHandleCanMakePurchase, nil},
+    {false, "mobileStoreEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+    {false, "mobileStoreDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+    {false, "mobileStoreRestorePurchases", MCHandleRestorePurchases, nil},
+    {false, "mobileStoreMakePurchase", MCHandleMakePurchase, nil},
+    {false, "mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
+//    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
+    {false, "mobileStoreSetProductType", MCHandleProductSetType, nil},
+    {false, "mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
+    {false, "mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},
+    {false, "mobileStorePurchasedProducts", MCHandleGetPurchases, nil},
+    {false, "mobileStorePurchaseError", MCHandlePurchaseError, nil},	
+    {false, "mobileStoreVerifyPurchase", MCHandlePurchaseVerify, nil},
 	
 	{false, "iphoneControlCreate", MCHandleControlCreate, nil},
 	{false, "iphoneControlDelete", MCHandleControlDelete, nil},

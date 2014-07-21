@@ -31,6 +31,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	object.cpp objectpropsets.cpp objptr.cpp operator.cpp paragraf.cpp paragrafattr.cpp param.cpp \
 	property.cpp pickle.cpp \
 	regex.cpp \
+	region.cpp \
 	resolution.cpp \
 	scriptpt.cpp \
 	scrolbar.cpp scrollbardraw.cpp segment.cpp sellst.cpp \
@@ -53,9 +54,10 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp \
 	mode_standalone.cpp lextable.cpp eventqueue.cpp sha1.cpp stacke.cpp \
-	redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp sysregion.cpp \
+	redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp \
 	sysunxdate.cpp sysunxrandom.cpp sysspec.cpp stackcache.cpp uuid.cpp \
 	mblad.cpp mblcalendar.cpp mblcamera.cpp mblcontact.cpp \
+	quicktime.cpp \
 	mblcontrol.cpp mbldc.cpp mbldialog.cpp mblflst.cpp mblhandlers.cpp mblmain.cpp mblnotification.cpp \
 	mblsensor.cpp mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltheme.cpp \
 	mblandroid.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \
@@ -118,7 +120,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_CFLAGS := -DGL_GLEXT_PROTOTYPES=1
 
-LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libgraphics libjpeg libpcre libpng libgif libskia libfreetype libexpat_static openssl
+LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libgraphics libjpeg libpcre libpng libgif libskia libfreetype libharfbuzz libexpat_static openssl
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 

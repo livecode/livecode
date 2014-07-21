@@ -216,10 +216,38 @@ static MCExecCustomTypeInfo _kMCInterfaceButtonIconTypeInfo =
 
 //////////
 
+// SN-2014-06-25: [[ MERGE-6.7 ]] Definition of the iconGravity relocated
+// MW-2014-06-19: [[ IconGravity ]] Strings for the 'iconGravity' property.
+static MCExecEnumTypeElementInfo _kMCInterfaceButtonIconGravityElementInfo[] =
+{
+	{ "", kMCGravityNone, false },
+	{ "left", kMCGravityLeft, false },
+	{ "right", kMCGravityRight, false },
+	{ "bottom", kMCGravityBottom, false },
+	{ "topLeft", kMCGravityTopLeft, false },
+	{ "topRight", kMCGravityTopRight, false },
+	{ "bottomLeft", kMCGravityBottomLeft, false },
+	{ "bottomRight", kMCGravityBottomRight, false },
+    { "center", kMCGravityCenter, false },
+    { "resize", kMCGravityResize, false },
+    { "resizeAspect", kMCGravityResizeAspect, false },
+    { "resizeAspectFill", kMCGravityResizeAspectFill, false }
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceButtonIconGravityTypeInfo =
+{
+	"Interface.ButtonGravity",
+	sizeof(_kMCInterfaceButtonIconGravityElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceButtonIconGravityElementInfo
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo = &_kMCInterfaceButtonStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo = &_kMCInterfaceButtonMenuModeTypeInfo;
 MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo = &_kMCInterfaceButtonAcceleratorModifiersTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo = &_kMCInterfaceButtonIconTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceButtonIconGravityTypeInfo = &_kMCInterfaceButtonIconGravityTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -525,6 +553,16 @@ void MCButton::SetHoverIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_
 void MCButton::GetHoverIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon)
 {
     DoGetIcon(ctxt, CI_HOVER, r_icon);    
+}
+
+void MCButton::GetIconGravity(MCExecContext &ctxt, intenum_t &r_gravity)
+{
+    r_gravity = (intenum_t)m_icon_gravity;
+}
+
+void MCButton::SetIconGravity(MCExecContext &ctxt, intenum_t p_gravity)
+{
+    m_icon_gravity = (MCGravity)p_gravity;
 }
 
 void MCButton::GetSharedHilite(MCExecContext& ctxt, bool& r_setting)

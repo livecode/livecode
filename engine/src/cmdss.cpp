@@ -519,8 +519,11 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
     uint4 offset;
     if (MCStringFirstIndexOf(p_value, MCSTR(SIGNATURE), 0, kMCCompareExact, offset)
             || (MCStringGetLength(p_value) > 8 && MCStringBeginsWithCString(p_value, (char_t*)"REVO", kMCCompareExact)))
-	{
-        IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_value));
+    {
+        char_t* t_cstring_value;
+        uindex_t t_length;
+        /* UNCHECKED */ MCStringConvertToNative(p_value, t_cstring_value, t_length);
+        IO_handle stream = MCS_fakeopen(t_cstring_value, t_length);
 		if (MCdispatcher->readfile(NULL, NULL, stream, sptr) != IO_NORMAL)
 		{
 			MCS_close(stream);
@@ -812,7 +815,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 	MCStack *oldstack = NULL;
 	if (window != NULL || thisstack)
 	{
-		Window w = DNULL;
+		Window w = NULL;
 		if (thisstack)
 		{
 			oldstack = MCdefaultstackptr;
@@ -1127,6 +1130,21 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
             }
 
 			cptr = sptr->getchild(card->etype, *t_exp, card->otype);
+
+            // SN-2014-06-03 [[ Bug 12552]] go to url "internet stack path" does not work
+            // If getchild() failed, we try to find a stack from the expression
+            if (cptr == NULL)
+            {
+				sptr = findstack(ctxt, *t_exp, CT_STACK, cptr);
+				if (sptr == NULL)
+				{
+					if (MCresult->isclear())
+						MCresult->setvalueref(MCSTR("No such a card"));
+
+					return;
+				}
+				cptr = (MCCard *)sptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
+            }
 		}
 			break;
 		default:
@@ -1679,7 +1697,7 @@ void MCLock::exec_ctxt(MCExecContext &ctxt)
 		MClockmessages = True;
 		break;
 	case LC_MOVES:
-		MClockmoves = True;
+		MCscreen->setlockmoves(True);
 		break;
 	case LC_RECENT:
 		MClockrecent = True;
@@ -2615,7 +2633,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 		if (bptr->findmenu())
 		{
 			if (MCbuttonstate)
-				MCtargetptr -> mup(0);
+				MCtargetptr -> mup(0, false);
 			bptr->openmenu(True);
 		}
 		return ES_NORMAL;
@@ -3076,7 +3094,7 @@ void MCUnlock::exec_ctxt(MCExecContext &ctxt)
 		MClockmessages = False;
 		break;
 	case LC_MOVES:
-		MClockmoves = False;
+		MCscreen->setlockmoves(False);
 		break;
 	case LC_RECENT:
 		MClockrecent = False;

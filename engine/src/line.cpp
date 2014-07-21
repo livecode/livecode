@@ -367,7 +367,7 @@ coord_t MCLine::GetCursorXSecondary(findex_t fi, bool moving_forward)
     return GetCursorXHelper(fi, moving_forward);
 }
 
-findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_left)
+findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
 {    
     // BIDIRECTIONAL SUPPORT -
     //  Blocks cannot be assumed to be in visual order
@@ -427,7 +427,7 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_left)
     }
     while (sgptr->prev() != lastsegment);
     
-    return bptr->GetCursorIndex(cx - sgptr->GetCursorOffset(), chunk, bptr == lastblock);
+    return bptr->GetCursorIndex(cx - sgptr->GetCursorOffset(), chunk, bptr == lastblock, moving_forward);
 }
 
 uint2 MCLine::getwidth()

@@ -407,8 +407,9 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
             else
             {
                 t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
+                // AL-2014-06-12: [[ Bug 12610 ]] Range parameter to MCStringFormat must be a pointer to an MCRange
                 if (t_success)
-                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", t_range, p_string);
+                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", &t_range, p_string);
             }
             
             if (!t_success)
@@ -653,7 +654,7 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 	t_stream_handle = nil;
     if (t_success)
     {
-		t_stream_handle = MCS_fakeopen(MCDataGetOldString(p_encoding));
+        t_stream_handle = MCS_fakeopen(MCDataGetBytePtr(p_encoding), MCDataGetLength(p_encoding));
 		if (t_stream_handle == nil)
 			t_success = false;
 	}
@@ -664,7 +665,7 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 			t_success = false;
         
     // AL-2014-05-01: [[ Bug 11989 ]] If the type is 'empty' then just return the empty array.
-	if (t_type == kMCEncodedValueTypeEmpty)
+	if (t_success && t_type == kMCEncodedValueTypeEmpty)
     {
         r_array = MCValueRetain(kMCEmptyArray);
         return;

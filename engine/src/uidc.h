@@ -53,6 +53,7 @@ enum Window_position
 { //Will use in the future for allowing scripter to specify position
     //of window when opening
     WP_DEFAULT,
+    WP_ASRECT,
     WP_CENTERMAINSCREEN,
     WP_CENTERPARENT,
     WP_CENTERPARENTSCREEN,
@@ -210,6 +211,17 @@ struct MCImageBuffer;
 
 //
 
+// IM-2014-03-06: [[ revBrowserCEF ]] Actions to call during the runloop
+typedef void (*MCRunloopActionCallback)(void *context);
+
+typedef struct _MCRunloopAction
+{
+	MCRunloopActionCallback callback;
+	void *context;
+
+	_MCRunloopAction *next;
+} MCRunloopAction, *MCRunloopActionRef;
+
 enum
 {
 	kMCAnswerDialogButtonOk,
@@ -246,9 +258,12 @@ class MCUIDC
 protected:
 	MCMessageList *messages;
 	MCMovingList *moving;
+	Boolean lockmoves;
+	real8 locktime;
 	uint4 messageid;
-	uint2 nmessages;
-	uint2 maxmessages;
+    // MW-2014-05-28: [[ Bug 12463 ]] Change these to 32-bit to stop wrap-around of messages.
+	uint32_t nmessages;
+	uint32_t maxmessages;
 	MCColor *colors;
 	MCStringRef *colornames;
 	int2 *allocs;
@@ -267,6 +282,9 @@ protected:
 	static MCDisplay *s_displays;
 	static uint4 s_display_count;
 	static bool s_display_info_effective;
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] List of actions to run during the runloop
+	MCRunloopAction *m_runloop_actions;
 	
 public:
 	MCColor white_pixel;
@@ -315,6 +333,13 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 	
+	// IM-2014-01-28: [[ HiDPI ]] Convenience methods to convert logical to screen coords and back
+	// IM-2014-07-09: [[ Bug 12602 ]] Move screen coord conversion methods into MCUIDC
+	virtual MCPoint logicaltoscreenpoint(const MCPoint &p_point);
+	virtual MCPoint screentologicalpoint(const MCPoint &p_point);
+	virtual MCRectangle logicaltoscreenrect(const MCRectangle &p_rect);
+	virtual MCRectangle screentologicalrect(const MCRectangle &p_rect);
+
 	// IM-2013-07-31: [[ ResIndependence ]] refactor logical coordinate based methods
 	uint2 getwidth();
 	uint2 getheight();
@@ -433,7 +458,6 @@ public:
     virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
     virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
     virtual void delaymessage(MCObject *optr, MCNameRef name, MCStringRef p1 = nil, MCStringRef p2 = nil);
-
 	
 	// Wait for at most 'duration' seconds. If 'dispatch' is true then event
 	// dispatch will occur. If 'anyevent' is true then the call will return
@@ -445,7 +469,17 @@ public:
 	// and such to be processed. If the wait was called with 'anyevent' True
 	// then it will cause termination of the wait.
 	virtual void pingwait(void);
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] Add action to runloop
+	bool AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
+	// IM-2014-03-06: [[ revBrowserCEF ]] Remove action from runloop
+	void RemoveRunloopAction(MCRunloopActionRef p_action);
+	// IM-2014-03-06: [[ revBrowserCEF ]] Perform runloop actions
+	void DoRunloopActions(void);
 	
+	// IM-2014-06-25: [[ Bug 12671 ]] Return if any runloop actions are registered.
+	bool HasRunloopActions(void);
+
 	virtual void flushevents(uint2 e);
 	virtual void updatemenubar(Boolean force);
 	virtual Boolean istripleclick();
@@ -455,6 +489,7 @@ public:
 //	virtual char *charsettofontname(uint1 charset, const char *oldfontname);
 	
 	virtual void clearIME(Window w);
+    virtual void configureIME(int32_t x, int32_t y);
 	virtual void openIME();
 	virtual void activateIME(Boolean activate);
 	virtual void closeIME();
@@ -549,7 +584,7 @@ public:
 	// The method returns the actual result of the drag-drop operation - DRAG_ACTION_NONE meaning
 	// that no drop occured.
 	//
-	virtual MCDragAction dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
+	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
 	
 	//
 
@@ -567,6 +602,17 @@ public:
     virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
     
     //
+	
+	virtual void controlgainedfocus(MCStack *s, uint32_t id);
+	virtual void controllostfocus(MCStack *s, uint32_t id);
+	
+	//
+    
+    // MW-2014-04-26: [[ Bug 5545 ]] Hides the cursor until the mouse moves on platforms which
+    //   require this action.
+    virtual void hidecursoruntilmousemoves(void);
+    
+    //
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);
@@ -575,7 +621,14 @@ public:
     bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
     void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params);
     int doshiftmessage(int index, real8 newtime);
+    
+    // MW-2014-05-28: [[ Bug 12463 ]] This is used by 'send in time' - separating user sent messages from
+    //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
+    bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
+    
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);
+	Boolean getlockmoves() const;
+	void setlockmoves(Boolean b);
 	void addmove(MCObject *optr, MCPoint *pts, uint2 npts,
 	             real8 &duration, Boolean waiting);
 	bool listmoves(MCExecContext& ctxt, MCListRef& r_list);

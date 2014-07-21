@@ -67,6 +67,8 @@ static struct {const char *name; MCPurchaseState state;} s_purchase_states[] =
 	{"complete", kMCPurchaseStateComplete},
 	{"restored", kMCPurchaseStateRestored},
 	{"cancelled", kMCPurchaseStateCancelled},
+    {"alreadyEntitled", kMCPurchaseStateAlreadyEntitled},
+    {"invalidSKU", kMCPurchaseStateInvalidSKU},
     {"refunded", kMCPurchaseStateRefunded},
 	{"error", kMCPurchaseStateError},
     {"unverified", kMCPurchaseStateUnverified},
@@ -83,6 +85,19 @@ bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase)
 		if (t_purchase->id == p_id)
 		{
 			r_purchase = t_purchase;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool MCPurchaseFindByProdId(MCStringRef p_prod_id, MCPurchase *&r_purchase)
+{
+	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
+	{
+        if (MCStringIsEqualTo(t_purchase->prod_id, p_prod_id, kMCStringOptionCompareCaseless))
+		{
+            r_purchase = t_purchase;
 			return true;
 		}
 	}
@@ -121,7 +136,7 @@ bool MCPurchaseList(MCStringRef& r_string)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
-		MCListAppendInteger(*t_list, t_purchase -> id);
+		MCListAppendUnsignedInteger(*t_list, t_purchase -> id);
 	
 	return MCListCopyAsString(*t_list, r_string);	
 }
@@ -137,8 +152,11 @@ bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_
 	
 	if (t_success)
 	{
+        t_purchase->prod_id = MCValueRetain(p_product_id);
+        MCLog("MCPurchaseCreate :purchase->prod_id is : %@", t_purchase->prod_id);
 		t_purchase->id = s_last_purchase_id++;
 		t_purchase->ref_count = 1;
+        MCLog("MCPurchaseCreate : reference count : %d", t_purchase->ref_count);
 		t_purchase->state = kMCPurchaseStateInitialized;
 		
 		t_success = MCPurchaseInit(t_purchase, p_product_id, p_context);
@@ -152,7 +170,9 @@ bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_
 		r_purchase = t_purchase;
 	}
 	else
-		MCMemoryDelete(t_purchase);
+    {
+        MCPurchaseDelete(t_purchase);
+    }
 	
 	return t_success;
 }
@@ -180,6 +200,7 @@ void MCPurchaseDelete(MCPurchase *p_purchase)
 	
 	//MCLog("finalizing...", nil);
 	MCPurchaseFinalize(p_purchase);
+    MCValueRelease(p_purchase -> prod_id);
 	//MCLog("freeing memory...", nil);
 	MCMemoryDelete(p_purchase);
 	//MCLog("...done", nil);
@@ -189,6 +210,7 @@ void MCPurchaseRetain(MCPurchase *p_purchase)
 {
 	if (p_purchase != NULL)
 		p_purchase -> ref_count ++;
+    MCLog("MCPurchaseRetain : reference count: %d", p_purchase->ref_count);
 }
 
 void MCPurchaseRelease(MCPurchase *p_purchase)
@@ -196,12 +218,14 @@ void MCPurchaseRelease(MCPurchase *p_purchase)
 	MCLog("MCPurchaseRelease(%p)...", p_purchase);
 	if (p_purchase != NULL)
 	{
-		MCLog("reference count: %d", p_purchase->ref_count);
+        MCLog("MCPurchaseRelease : p_purchase is NOT null", nil);
+        MCLog("MCPurchaseRelease : referencecount : %d", p_purchase->ref_count);
 		if (p_purchase -> ref_count > 1)
 			p_purchase -> ref_count -= 1;
 		else
 			MCPurchaseDelete(p_purchase);
 	}
+    MCLog("reference count: %d", p_purchase->ref_count);
 	//MCLog("...done", nil);
 }
 
@@ -233,7 +257,7 @@ MCPurchaseUpdateEvent *MCPurchaseUpdateEvent::s_pending_events = NULL;
 MCPurchaseUpdateEvent::MCPurchaseUpdateEvent(MCPurchase *p_purchase)
 {
 	m_purchase = p_purchase;
-	//MCLog("retaining purchase (%p) until event dispatch", p_purchase);
+	MCLog("retaining purchase (%p) until event dispatch", p_purchase);
 	MCPurchaseRetain(m_purchase);
 	
 	m_next = s_pending_events;
@@ -242,16 +266,20 @@ MCPurchaseUpdateEvent::MCPurchaseUpdateEvent(MCPurchase *p_purchase)
 
 void MCPurchaseUpdateEvent::Destroy()
 {
-	//MCLog("releasing purchase (%p) after event deletion", m_purchase);
+	MCLog("releasing purchase (%p) after event deletion", m_purchase);
 	MCPurchaseRelease(m_purchase);
 	delete this;
 }
 
+/*
+     PM : CONSIDER - backward compatibility. purchaseStateUpdate callback was returned with purchaseId and purchaseState.
+     Now is returned with purchaseId, productId and purchaseState     
+*/
 void MCPurchaseUpdateEvent::Dispatch()
 {
 	bool t_success = true;
 	
-	//MCLog("removing purchase (%p) event from pending list", m_purchase);
+	MCLog("removing purchase (%p) event from pending list", m_purchase);
 	if (s_pending_events == this)
 		s_pending_events = m_next;
 	else
@@ -266,9 +294,9 @@ void MCPurchaseUpdateEvent::Dispatch()
 		}
 	}
 
-	//MCLog("dispatching purchase (%p) event", m_purchase);
+	MCLog("dispatching purchase (%p) event", m_purchase);
 
-	MCAutoStringRef t_id, t_state;
+	MCAutoStringRef t_id, t_state, t_prod_id;
 	const char *t_state_str = NULL;
 	
 	t_success = MCPurchaseStateToString(m_purchase->state, t_state_str);
@@ -278,9 +306,18 @@ void MCPurchaseUpdateEvent::Dispatch()
 	
 	if (t_success)
         t_success = MCStringFormat(&t_id, "%d", m_purchase->id);
-	
+    
+    if (t_success)
+        t_success = MCStringFormat(&t_prod_id, "%s", m_purchase->prod_id);
+    
+    //if (m_purchase->prod_id == NULL)
+        //t_prod_id = "Null prod_id";
+       // MCLog("m_purchase->prod_id is null",nil);
+    
 	if (t_success)
-		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_purchase_updated, *t_id, *t_state);
+		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_purchase_updated, *t_id, *t_prod_id, *t_state);
+	
+    MCLog("MCPurchaseUpdateEvent::Dispatch() : m_purchase->prod_id is :  %@",*t_prod_id);
 }
 
 bool MCPurchaseUpdateEvent::EventPendingForPurchase(MCPurchase *p_purchase)

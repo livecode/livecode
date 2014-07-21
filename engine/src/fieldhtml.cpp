@@ -826,6 +826,8 @@ static struct { const char *attr; import_html_attr_type_t type; } s_import_html_
 	{ "metadata", kImportHtmlAttrMetadata },
 	{ "align", kImportHtmlAttrAlign },
 	{ "firstindent", kImportHtmlAttrFirstIndent },
+    // MW-2014-06-10: [[ Bug 12578 ]] Make sure listIndent attribute is processed on import.
+	{ "listindent", kImportHtmlAttrListIndent },
 	{ "leftindent", kImportHtmlAttrLeftIndent },
 	{ "rightindent", kImportHtmlAttrRightIndent },
 	{ "spaceabove", kImportHtmlAttrSpaceAbove},

@@ -137,9 +137,13 @@ bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGCo
 		
 	}
 	
+	// IM-2014-05-20: [[ GraphicsPerformance ]] Opaque rasters should indicate no alpha in the bitmap info
+	bool t_alpha;
+	t_alpha = p_raster.format != kMCGRasterFormat_xRGB;
+	
 	// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
 	CGBitmapInfo t_bm_info;
-	t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true);
+	t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, t_alpha);
 	
 	if (t_success)
 		t_success = nil != (t_image = CGImageCreate(t_width, t_height, 8, 32, t_dst_stride, p_colorspace, t_bm_info, t_data_provider, nil, true, kCGRenderingIntentDefault));
@@ -189,11 +193,7 @@ bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, CGColorSpaceRef p_colorspac
 	t_mask = MCImageBitmapHasTransparency(p_bitmap);
 	
 	MCGRaster t_raster;
-	t_raster.width = p_bitmap->width;
-	t_raster.height = p_bitmap->height;
-	t_raster.pixels = p_bitmap->data;
-	t_raster.stride = p_bitmap->stride;
-	t_raster.format = t_mask ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
+	t_raster = MCImageBitmapGetMCGRaster(p_bitmap, true);
 	
 	return MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, p_bitmap->width, p_bitmap->height), p_colorspace, p_copy, p_invert, r_image);
 }

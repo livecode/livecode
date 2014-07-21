@@ -55,29 +55,29 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCDateTimeLocale
-{
-	const char *weekday_names[7];
-	const char *abbrev_weekday_names[7];
-	const char *month_names[12];
-	const char *abbrev_month_names[12];
-	const char *date_formats[3];
-	const char *time_formats[2];
-	const char *time24_formats[2];
-	const char *time_morning_suffix;
-	const char *time_evening_suffix;
-};
+//struct MCDateTimeLocale
+//{
+//	const char *weekday_names[7];
+//	const char *abbrev_weekday_names[7];
+//	const char *month_names[12];
+//	const char *abbrev_month_names[12];
+//	const char *date_formats[3];
+//	const char *time_formats[2];
+//	const char *time24_formats[2];
+//	const char *time_morning_suffix;
+//	const char *time_evening_suffix;
+//};
 
-struct MCDateTime
-{
-	int4 year;
-	int4 month;
-	int4 day;
-	int4 hour;
-	int4 minute;
-	int4 second;
-	int4 bias;
-};
+//struct MCDateTime
+//{
+//	int4 year;
+//	int4 month;
+//	int4 day;
+//	int4 hour;
+//	int4 minute;
+//	int4 second;
+//	int4 bias;
+//};
 
 static int inet_aton(const char *cp, struct in_addr *inp)
 {
@@ -140,6 +140,7 @@ static uint2 MCS_charsettolangid(uint1 charset)
 	return 0;
 }
 
+#ifdef LEGACY_SERVER
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
@@ -1224,13 +1225,24 @@ bool MCS_isnan(double v)
 {
 	return _isnan(v) != 0;
 }
+#endif /* LEGACY_SERVER */
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 {
-	/* UNCHECKED */ MCStringCreateWithCString(MCsystem -> GetStandardFolder("temporary"), r_temp_folder);
-	return true;
+	// MCS_get_temporay_folder is supposed to return an existing folder
+	// which is not the case with MCsystem -> GetTemporaryFilename
+//	  return MCsystem -> GetTemporaryFilename(r_temp_folder);
+	WCHAR t_tmpdir[MAX_PATH];
+	int32_t t_tmpdir_len = 0;
+	t_tmpdir_len = GetTempPathW(MAX_PATH, t_tmpdir);
+
+	MCAutoStringRef t_native_tmp, t_short_tmp;
+
+	return (MCStringCreateWithWString(t_tmpdir, &t_native_tmp)
+			&& MCsystem->PathFromNative(*t_native_tmp, &t_short_tmp)
+			&& MCS_longfilepath(*t_short_tmp, r_temp_folder));
 }
 
 bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_string, IO_handle &r_file, MCStringRef &r_name_string)
@@ -1286,7 +1298,7 @@ bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_s
 	
 	if (t_success)
 	{
-		r_file = new IO_header(MCStdioFileHandle :: OpenFd(_open_osfhandle((intptr_t)t_temp_handle, _O_RDWR), "w+"), 0);
+		r_file = MCsystem -> OpenFd(_open_osfhandle((intptr_t)t_temp_handle, _O_RDWR), kMCOpenFileModeCreate);
 		t_name = t_temp_file;
 		/* UNCHECKED */ MCStringCreateWithCString(t_name, r_name_string);
 
@@ -1300,9 +1312,8 @@ bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_s
 
 bool MCSystemLockFile(MCSystemFileHandle *p_file, bool p_shared, bool p_wait)
 {
-	int t_fd = fileno(((MCStdioFileHandle*)p_file)->GetStream());
-	
-	HANDLE t_fhandle = (HANDLE)_get_osfhandle(t_fd);
+	HANDLE t_fhandle;
+	t_fhandle = p_file->GetFilePointer();
 
 	bool t_success = true;
 

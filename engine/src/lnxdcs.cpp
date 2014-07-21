@@ -88,6 +88,7 @@ extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libxv ( void ) ;
 extern "C" int initialise_weak_link_gdk_pixbuf();
+extern "C" int initialise_weak_link_cairo();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -165,6 +166,11 @@ void gdk_event_fn(GdkEvent *p_event, gpointer dc)
     ((MCScreenDC*)dc)->EnqueueEvent(gdk_event_copy(p_event));
 }
 
+void gdk_event_fn_lost(void*)
+{
+    ;
+}
+
 // Functions for re-directing GTK IM context signals
 static void on_commit(GtkIMContext *p_context, gchar *p_str, gpointer p_data)
 {
@@ -197,7 +203,8 @@ Boolean MCScreenDC::open()
     bool t_has_gdk;
     t_has_gdk = initialise_weak_link_gobject() != 0
         && initialise_weak_link_gdk() != 0
-        && initialise_weak_link_gdk_pixbuf() != 0;
+        && initialise_weak_link_gdk_pixbuf() != 0
+        && initialise_weak_link_cairo() != 0;
     
     if (!t_has_gdk)
     {
@@ -206,7 +213,7 @@ Boolean MCScreenDC::open()
     }
     
     gdk_init(0, NULL);
-    gdk_threads_init();
+    //gdk_threads_init();
     
     // Check to see if we are in a UTF8 locale
 	// TS : Changed 2008-01-08 as a more relaible way of testing for UTF-8
@@ -243,7 +250,7 @@ Boolean MCScreenDC::open()
     
     // The GLib event loop calls this function to respond to GDK events.
     // Unfortunately, when GTK gets initied, it will try to steal this from us.
-    gdk_event_handler_set(&gdk_event_fn, gpointer(this), NULL);
+    gdk_event_handler_set(&gdk_event_fn, gpointer(this), &gdk_event_fn_lost);
     
     x11::Display* XDisplay;
     XDisplay = x11::gdk_x11_display_get_xdisplay(dpy);
@@ -392,7 +399,7 @@ Boolean MCScreenDC::open()
 			fprintf(stderr, "Composite window manager detected. Trying to use RGBA visual.\n");
 #endif
             vis = gdk_screen_get_rgba_visual(t_screen);
-            cmap = gdk_colormap_new(vis, FALSE);
+            cmap = gdk_screen_get_rgba_colormap(t_screen);
         }
         else
         {
@@ -402,8 +409,8 @@ Boolean MCScreenDC::open()
         }
         
         // Create a 32-bit visual for internal use
-        vis32 = gdk_visual_get_best_with_depth(32);
-        cmap32 = gdk_colormap_new(vis32, FALSE);
+        //vis32 = gdk_visual_get_best_with_depth(32);
+        //cmap32 = gdk_colormap_new(vis32, FALSE);
         
 		if (gdk_visual_get_visual_type(vis) == GDK_VISUAL_TRUE_COLOR)
 		{
@@ -436,14 +443,14 @@ Boolean MCScreenDC::open()
     
     GdkWindow *w = gdk_window_new(gdk_screen_get_root_window(t_screen),
                                   &gdkwa,
-                                  GDK_WA_X|GDK_WA_Y|GDK_WA_COLORMAP|GDK_WA_VISUAL);
+                                  GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL);
     gc = gdk_gc_new(w);
     gdk_window_destroy(w);
     
     // Create the NULL window
     NULLWindow = gdk_window_new(gdk_screen_get_root_window(t_screen),
                                 &gdkwa,
-                                GDK_WA_X|GDK_WA_Y|GDK_WA_COLORMAP|GDK_WA_VISUAL);
+                                GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL);
 
     GdkColor t_color;
     t_color.pixel = 0;
@@ -548,6 +555,11 @@ Boolean MCScreenDC::open()
 	m_DND_store = new MCGdkTransferStore(dpy);
 	m_Clipboard_store = new MCGdkTransferStore(dpy);
 	m_Selection_store = new MCGdkTransferStore(dpy);
+    
+    // There are also some atoms that we need to set up
+    MCworkareaatom = gdk_atom_intern_static_string("_NET_WORKAREA");
+    MCclientlistatom = gdk_atom_intern_static_string("_NET_CLIENT_LIST");
+    MCstrutpartialatom = gdk_atom_intern_static_string("_NET_WM_STRUT_PARTIAL");
 
 	return True; 
 }
@@ -571,6 +583,7 @@ Boolean MCScreenDC::close(Boolean force)
 	// TODO - We may need to do clipboard persistance here
 	
 	destroybackdrop();
+    gdk_window_destroy(NULLWindow);
     
     gdk_display_flush(dpy);
     g_object_unref(gc);
@@ -736,7 +749,7 @@ void MCScreenDC::setname(Window window, MCStringRef newname)
 
 void MCScreenDC::setcmap(MCStack *sptr)
 {
-	gdk_drawable_set_colormap(sptr->getw(), getcmap());
+	//gdk_drawable_set_colormap(sptr->getw(), getcmap());
 }
 
 void MCScreenDC::sync(Window w)
@@ -933,11 +946,16 @@ void MCScreenDC::putimage(Drawable d, MCBitmap *source, int2 sx, int2 sy,
 	if (d == nil)
 		return;
 
-    // Temporary GC for drawing
-    GdkGC *t_gc = gdk_gc_new(d);
-    
-    gdk_draw_pixbuf(d, t_gc, (GdkPixbuf*)source, sx, sy, dx, dy, w, h, GDK_RGB_DITHER_MAX, 0, 0);
-    g_object_unref(t_gc);
+    // If we use gdk_draw_pixbuf, the pixbuf gets blended with the existing
+    // contents of the window - something that we definitely do not want. We
+    // need to use Cairo directly to do the drawing to the window surface.
+    cairo_t *t_cr = gdk_cairo_create(d);
+    cairo_set_operator(t_cr, CAIRO_OPERATOR_SOURCE);
+    cairo_rectangle(t_cr, dx, dy, w, h);
+    cairo_clip(t_cr);
+    gdk_cairo_set_source_pixbuf(t_cr, source, dx-sx, dy-sy);
+    cairo_paint(t_cr);
+    cairo_destroy(t_cr);
 }
 
 MCBitmap *MCScreenDC::getimage(Drawable d, int2 x, int2 y, uint2 w, uint2 h)
@@ -986,7 +1004,7 @@ void MCScreenDC::setfunction(uint4 rop)
 uint4 MCScreenDC::dtouint4(Drawable d)
 {
 	// Return the XID
-    return x11::gdk_x11_drawable_get_xid(d);
+    return d != DNULL ? x11::gdk_x11_drawable_get_xid(d) : 0;
 }
 
 Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
@@ -1357,7 +1375,7 @@ void MCScreenDC::createbackdrop_window(void)
     gdkwa.colormap = getcmap();
     gdkwa.window_type = GDK_WINDOW_TOPLEVEL;
     
-    backdrop = gdk_window_new(NULL, &gdkwa, GDK_WA_COLORMAP|GDK_WA_VISUAL);
+    backdrop = gdk_window_new(NULL, &gdkwa, GDK_WA_VISUAL);
 }
 
 
@@ -1427,12 +1445,11 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 		
 	if ( backdrop == DNULL ) 
 		createbackdrop_window();
-
-    // MAYBE
+	
     if (m_backdrop_pixmap == nil)
     {
         backdropcolor = p_colour;
-        alloccolor(backdropcolor);
+		alloccolor(backdropcolor);
     }
 	else
 		backdropcolor.pixel = 0;

@@ -786,7 +786,7 @@ Exec_stat MCField::sethtml(uint4 parid, MCValueRef data)
 	state |= CS_NO_FILE; // prevent interactions while downloading images
 	// MW-2012-03-08: [[ FieldImport ]] Use the new htmlText importer.
 	MCParagraph *htmlpgptr = importhtmltext(data);
-	setparagraphs(htmlpgptr, parid);
+	setparagraphs(htmlpgptr, parid, false);
 	state &= ~CS_NO_FILE;
 	return ES_NORMAL;
 }
@@ -829,7 +829,8 @@ Exec_stat MCField::setpartialtext(uint4 parid, const MCString &data, bool p_unic
 {
 	state |= CS_NO_FILE; // prevent interactions while downloading images
 	MCParagraph *htmlpgptr = texttoparagraphs(data, p_unicode);
-	setparagraphs(htmlpgptr, parid);
+    // SN-2014-06-23: [[ Bug 12303 ]] Parameter added to preserve the 0-length styles
+	setparagraphs(htmlpgptr, parid, true);
 	state &= ~CS_NO_FILE;
 	return ES_NORMAL;
 }

@@ -40,6 +40,7 @@
 
 #include "foundation.h"
 
+#include <signal.h>
 #ifdef _WIN32
 #include <float.h> // _isnan()
 #endif 
@@ -72,6 +73,141 @@ extern MCSystemInterface *MCMobileCreateAndroidSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _SERVER
+extern "C" char *__cxa_demangle(const char *, char *, size_t *, int*);
+
+char *strndup(const char *s, size_t n)
+{
+	char *r;
+	r = (char *)malloc(n + 1);
+	strncpy(r, s, n);
+	r[n] = '\0';
+	return r;
+}
+
+#ifdef _LINUX_SERVER
+#include <execinfo.h>
+#include <dlfcn.h>
+
+#define dl_info Dl_info
+
+static void handle_backtrace()
+{
+	void *t_callstack[16];
+	int t_frame_count;
+	t_frame_count = backtrace(t_callstack, 16);
+	
+	for(int i = 1; i < t_frame_count; i++)
+	{
+		dl_info t_info;
+		if (dladdr(t_callstack[i], &t_info) != 0 && t_info . dli_sname != NULL)
+		{
+			bool t_handled;
+			t_handled = false;
+			
+			if (t_info . dli_sname[0] == '_' && t_info . dli_sname[1] == 'Z')
+			{
+				int t_status;
+				char *t_symbol;
+				t_symbol = __cxa_demangle(t_info . dli_sname, NULL, NULL, &t_status);
+				if (t_status == 0)
+				{
+					fprintf(stderr, "  in %s @ %u\n", t_symbol, (char *)t_callstack[i] - (char *)t_info . dli_saddr);
+					t_handled = true;
+				}
+			}
+			
+			if (!t_handled)
+				fprintf(stderr, "  in %s @ %u\n", t_info . dli_sname, (char *)t_callstack[i] - (char *)t_info . dli_saddr);
+		}
+		else
+			fprintf(stderr, "  in <unknown> @ %p\n", t_callstack[i]);
+	}
+}
+#else
+void handle_backtrace(void)
+{
+}
+#endif
+
+#ifdef _WINDOWS_SERVER
+static void handle_signal(int p_signal)
+{
+	switch(p_signal)
+	{
+		case SIGTERM:
+			fprintf(stderr, "livecode-server exited by request\n");
+			MCquit = True;
+			MCexitall = True;
+			break;
+		case SIGILL:
+		case SIGSEGV:
+		case SIGABRT:
+			fprintf(stderr, "livecode-server exited due to fatal signal %d\n", p_signal);
+			handle_backtrace();
+			exit(-1);
+			break;
+		case SIGINT:
+			// We received an interrupt so let the debugger (if present) handle it.
+			extern void MCServerDebugInterrupt();
+			MCServerDebugInterrupt();
+			break;
+		case SIGFPE:
+			errno = EDOM;
+			break;
+		default:
+			break;
+	}
+}
+#else
+static void handle_signal(int p_signal)
+{
+	switch(p_signal)
+	{
+		case SIGUSR1:
+			MCsiguser1++;
+			break;
+		case SIGUSR2:
+			MCsiguser2++;
+			break;
+		case SIGTERM:
+			fprintf(stderr, "livecode-server exited by request\n");
+			MCquit = True;
+			MCexitall = True;
+			break;
+		case SIGILL:
+		case SIGSEGV:
+		case SIGABRT:
+			fprintf(stderr, "livecode-server exited due to fatal signal %d\n", p_signal);
+			handle_backtrace();
+			exit(-1);
+			break;
+		case SIGINT:
+			// We received an interrupt so let the debugger (if present) handle it.
+			extern void MCServerDebugInterrupt();
+			MCServerDebugInterrupt();
+			break;
+		case SIGHUP:
+		case SIGQUIT:
+			fprintf(stderr, "livecode-server exited due to termination signal %d\n", p_signal);
+			exit(1);
+			break;
+		case SIGFPE:
+			MCS_seterrno(EDOM);
+			break;
+		case SIGCHLD:
+			break;
+		case SIGALRM:
+			break;
+		case SIGPIPE:
+			break;
+		default:
+			break;
+	}
+}
+#endif
+#endif
+
 void MCS_common_init(void)
 {	
 	MCsystem -> Initialize();    
@@ -97,11 +233,11 @@ void MCS_common_init(void)
 void MCS_init(void)
 {
 #if defined(_WINDOWS_SERVER)
-	MCsystem = MCServerCreateWindowsSystem();
+	MCsystem = MCDesktopCreateWindowsSystem();
 #elif defined(_MAC_SERVER)
-	MCsystem = MCServerCreateMacSystem();
-#elif defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
-	MCsystem = MCServerCreatePosixSystem();
+	MCsystem = MCDesktopCreateMacSystem();
+#elif defined(_LINUX_SERVER) /*|| defined(_DARWIN_SERVER)*/
+	MCsystem = MCDesktopCreateLinuxSystem();
 #elif defined(_MAC_DESKTOP)
     MCsystem = MCDesktopCreateMacSystem();
 #elif defined(_WINDOWS_DESKTOP)
@@ -164,11 +300,7 @@ void MCS_unsetenv(MCStringRef p_name_string)
 
 bool MCS_getenv(MCStringRef p_name_string, MCStringRef& r_result)
 {
-	MCsystem -> GetEnv(p_name_string, r_result);
-    if (r_result != nil)
-        return true;
-    return false;
-        
+    return MCsystem -> GetEnv(p_name_string, r_result);
 }
 
 real8 MCS_getfreediskspace(void)
@@ -922,10 +1054,10 @@ bool MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-IO_handle MCS_fakeopen(const MCString& data)
+IO_handle MCS_fakeopen(const void *p_data, uindex_t p_size)
 {
 	MCMemoryFileHandle *t_handle;
-	t_handle = new MCMemoryFileHandle(data . getstring(), data . getlength());
+    t_handle = new MCMemoryFileHandle(p_data, p_size);
 	return t_handle;
 }
 

@@ -806,7 +806,21 @@ void MCField::GetText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
 
 void MCField::SetText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text)
 {
-	settext(part, p_text, False);
+    MCString t_text;
+    bool t_is_unicode;
+    
+    if (MCStringIsNative(p_text))
+    {
+        t_text . set((const char*)MCStringGetNativeCharPtr(p_text), MCStringGetLength(p_text));
+        t_is_unicode = false;
+    }
+    else
+    {
+        t_text . set((const char*)MCStringGetCharPtr(p_text), MCStringGetLength(p_text) * 2);
+        t_is_unicode = true;
+    }
+    
+    setpartialtext(part, t_text, t_is_unicode);
 }
 
 void MCField::GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_text)
@@ -1024,6 +1038,9 @@ void MCField::GetCursorMovement(MCExecContext& ctxt, intenum_t &r_movement)
 void MCField::SetTextDirection(MCExecContext& ctxt, intenum_t p_direction)
 {
     text_direction = (MCTextDirection)p_direction;
+    
+    // AL-2014-16-07: [[ Bug 12814 ]] Redraw after setting text direction
+    Redraw(true);
 }
 
 void MCField::GetTextDirection(MCExecContext& ctxt, intenum_t &r_direction)
@@ -1145,13 +1162,17 @@ void MCField::DoSetTabStops(MCExecContext& ctxt, bool is_relative, uindex_t p_co
             return;
         }
 
-        if (is_relative)
+        // AL-2014-06-25: [[ Bug 12697]] If a tabStop is smaller than the preceding one,
+        //  then calculate as relative distance.
+        if (is_relative || p_tabs[i] < t_previous_tab_stop)
         {
             t_new_tabs . Push(p_tabs[i] + t_previous_tab_stop);
             t_previous_tab_stop = t_new_tabs[i];
         }
         else
             t_new_tabs . Push(p_tabs[i]);
+        
+        t_previous_tab_stop = p_tabs[i];
     }
     
     t_new_tabs . Take(t_new, t_new_count);

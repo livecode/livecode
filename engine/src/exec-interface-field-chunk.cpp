@@ -803,7 +803,7 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
 
     MCRectangle drect = p_field -> getrect();
     findex_t ssi, sei;
-    p_field -> selectedmark(false, ssi, sei, false, false);
+    p_field -> selectedmark(false, ssi, sei, false);
     int4 savex = p_field -> textx;
     int4 savey = p_field -> texty;
 
@@ -811,6 +811,10 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
 
     if (t_need_layout)
     {
+        // SN-2014-06-02 [[ Bug 12562 ]] Changing the back color of a line which contains a tab makes LC crash
+        // Make sure that the segments and the lines are recomputed in case defrag() changed them
+        sptr -> layout(false);
+        
         if (all)
         {
             p_field -> recompute();
@@ -822,6 +826,7 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
         }
         else
             p_field -> removecursor();
+        
         // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
         p_field -> layer_redrawrect(drect);
         if (!all)
@@ -896,7 +901,7 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
     if (t_blocks_changed)
         p_paragraph -> setDirty();
 
-    if (T::need_layout || t_blocks_changed)
+    if (T::need_layout() || t_blocks_changed)
         p_paragraph -> layoutchanged();
 }
 
@@ -940,7 +945,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             // Same as this?
             if (MCactivefield == p_field)
             {
-                p_field -> selectedmark(False, ssi, sei, False, False);
+                p_field -> selectedmark(False, ssi, sei, False);
                 p_field -> unselect(False, True);
             }
             p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;
@@ -1019,7 +1024,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                        && t_block_index + t_block_length < t_ei);
 
                 // avoid relayout for certain block attributes
-                t_need_layout = T::need_layout;
+                t_need_layout = T::need_layout();
                 
                 // MP-2013-09-02: [[ FasterField ]] If attributes on existing blocks needing layout changed,
                 //   or the blocks themselves changed, we need layout.
@@ -1031,7 +1036,9 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             }
             // end of MCParagraph scope
 
-            if (t_need_layout && !all && pgptr->getopened())
+            // AL-2014-07-14: [[ Bug 12789 ]] Defragging can cause paragraph to need layout, do make sure we relayout
+            //  if it did. Otherwise setting properties that avoid relayout can cause crashes.
+            if (pgptr -> getneedslayout() && !all && pgptr->getopened())
             {
                 // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
                 pgptr -> layout(false);
@@ -1111,7 +1118,7 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             // Same as this?
             if (MCactivefield == p_field)
             {
-                p_field -> selectedmark(False, ssi, sei, False, False);
+                p_field -> selectedmark(False, ssi, sei, False);
                 p_field -> unselect(False, True);
             }
             p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;
@@ -1190,7 +1197,7 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
                        && t_block_index + t_block_length < t_ei);
                 
                 // avoid relayout for certain block attributes
-                t_need_layout = T::need_layout;
+                t_need_layout = T::need_layout();
                 
                 // MP-2013-09-02: [[ FasterField ]] If attributes on existing blocks needing layout changed,
                 //   or the blocks themselves changed, we need layout.
@@ -1584,8 +1591,8 @@ void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
         //   This is because minx/maxx are uninitialized and it seems that they have to be for
         //   calls to getxextents() to make sense.
-        minx = INFINITY;
-        maxx = -INFINITY;
+        minx = MCinfinity;
+        maxx = -MCinfinity;
 
         do
         {
@@ -1616,8 +1623,8 @@ void MCField::GetFormattedWidthOfCharChunk(MCExecContext& ctxt, uint32_t p_part_
         // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
         //   This is because minx/maxx are uninitialized and it seems that they have to be for
         //   calls to getxextents() to make sense.
-        minx = INFINITY;
-        maxx = -INFINITY;
+        minx = MCinfinity;
+        maxx = -MCinfinity;
 
         do
         {
@@ -1676,8 +1683,8 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         coord_t yoffset = getcontenty() + paragraphtoy(sptr);
         coord_t minx, maxx;
         coord_t maxy = y;
-        minx = INFINITY;
-        maxx = -INFINITY;
+        minx = MCinfinity;
+        maxx = -MCinfinity;
         do
         {
             // MW-2012-01-25: [[ FieldMetrics ]] Increment the y-extent by the height of the

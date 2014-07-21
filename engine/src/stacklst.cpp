@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "sellst.h"
 #include "util.h"
 #include <wctype.h>
+#include "redraw.h"
 
 #include "globals.h"
 #include "exec.h"
@@ -198,10 +199,7 @@ void MCStacklist::top(MCStack *sptr)
 			tptr = tptr->next();
 		}
 		while (tptr != stacks);
-		// This is only necessary on MWM...
-#ifdef X11
-		restack(sptr);
-#endif
+        // AL-2014-07-14: [[ Bug 12790 ]] Removed call to restack which was only necessary for MWM.
 #endif
 	}
 
@@ -258,7 +256,7 @@ MCStack *MCStacklist::getstack(uint2 n)
 		tptr = tptr->next();
 	}
 	if (tptr->getstack()->getparent()->gettype() == CT_BUTTON
-	        || tptr->getstack() == (MCStack *)MCtooltip)
+	        || MCdispatcher -> is_transient_stack(tptr -> getstack()))
 		return NULL;
 	return tptr->getstack();
 }
@@ -275,7 +273,7 @@ bool MCStacklist::stackprops(MCExecContext& ctxt, Properties p_property, MCListR
 	{
 		MCStack *stackptr = tptr->getstack();
 
-		if (stackptr->getparent()->gettype() != CT_BUTTON && stackptr != (MCStack *)MCtooltip)
+		if (stackptr->getparent()->gettype() != CT_BUTTON && !MCdispatcher -> is_transient_stack(stackptr))
 		{
 			MCAutoStringRef t_string;
 			stackptr->getstringprop(ctxt, 0, p_property, True, &t_string);
@@ -327,6 +325,9 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 
 	if (t_menubar != NULL)
 	{
+        // MW-2014-06-10: [[ Bug 12590 ]] Make sure we lock screen around the menu update message.
+        MCRedrawLockScreen();
+        
 		// OK-2008-03-20 : Bug 6153. Don't send a mouse button number if the mouseDown is due to
 		// a menu accelerator.
 		// MW-2008-08-27: [[ Bug 6995 ]] Slowdown caused by repeated invocation of mouseDown even if
@@ -345,6 +346,7 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 					{
 						MCmodifierstate &= t_mod_mask;
 						accelerators[i] . button -> activate(True, t_lowersym);
+                        MCRedrawUnlockScreen();
 						return True;
 					}
 				}
@@ -354,6 +356,8 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 				break;
 			}
 		}
+        
+        MCRedrawUnlockScreen();
 	}
 
 	// IM-2008-09-05: Reorganize loop to be more efficient - only loop through stacks once we've
@@ -522,7 +526,7 @@ Window MCStacklist::restack(MCStack *sptr)
 		if (bottompalette != NULL)
 			return bottompalette->getstack()->getwindow();
 	}
-	return DNULL;
+	return NULL;
 }
 
 void MCStacklist::restartidle()
@@ -559,11 +563,9 @@ void MCStacklist::refresh(void)
 	while(t_node != stacks);
 }
 
-#if !defined(_MAC_DESKTOP)
 void MCStacklist::ensureinputfocus(Window window)
 {
 }
-#endif
 
 void MCStacklist::purgefonts()
 {
@@ -675,7 +677,8 @@ void MCStacklist::reopenallstackwindows(void)
 {
 	if (stacks != NULL)
 	{
-		MCStacknode *tptr = stacks;
+        // MW-2014-05-15: [[ Bug 12414 ]] Go backwards through the list to stop infinite loopage.
+		MCStacknode *tptr = stacks -> prev();
 		do
 		{
             MCStack *t_stack;
@@ -684,9 +687,9 @@ void MCStacklist::reopenallstackwindows(void)
             if (t_stack->getopened() && t_stack->getwindow() != nil)
                 t_stack->reopenwindow();
             
-            tptr = tptr->next();
+            tptr = tptr->prev();
 		}
-		while (tptr != stacks);
+		while (tptr != stacks -> prev());
 	}
 }
 

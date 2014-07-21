@@ -322,8 +322,16 @@ public:
 class MCAndBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEvalBitwiseAnd, EE_ANDBITS_BADLEFT, EE_ANDBITS_BADRIGHT, FR_AND_BITS, kMCMathEvalBitwiseAndMethodInfo>
 {};
 
-class MCConcat : public MCBinaryOperatorCtxt<MCStringRef, MCStringRef, MCStringsEvalConcatenate, EE_CONCAT_BADLEFT, EE_CONCAT_BADRIGHT, FR_CONCAT, kMCStringsEvalConcatenateMethodInfo>
-{};
+class MCConcat : public MCExpression
+{
+public:
+	MCConcat()
+	{
+		rank = FR_CONCAT;
+    }
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+	virtual void compile(MCSyntaxFactoryRef ctxt);
+};
 
 class MCConcatSpace : public MCBinaryOperatorCtxt<MCStringRef, MCStringRef, MCStringsEvalConcatenateWithSpace, EE_CONCATSPACE_BADLEFT, EE_CONCATSPACE_BADRIGHT, FR_CONCAT, kMCStringsEvalConcatenateWithSpaceMethodInfo>
 {};

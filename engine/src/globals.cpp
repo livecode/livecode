@@ -397,7 +397,6 @@ Boolean MClockcolormap;
 Boolean MClockerrors;
 Boolean MClockmenus;
 Boolean MClockmessages;
-Boolean MClockmoves;
 Boolean MClockrecent;
 Boolean MCtwelvetime = True;
 Boolean MCuseprivatecmap;
@@ -677,7 +676,7 @@ void X_clear_globals(void)
 	MCscriptfont = MCValueRetain(kMCEmptyString);
 	MCscriptsize = 0;
 	MCscrollbarwidth = DEFAULT_SB_WIDTH;
-	uint2 MCfocuswidth = 2;
+	MCfocuswidth = 2;
 	MCsizewidth = 8;
 	MCminsize = 8;
 	MCcloneoffset = 32;
@@ -769,7 +768,6 @@ void X_clear_globals(void)
 	MClockerrors = False;
 	MClockmenus = False;
 	MClockmessages = False;
-	MClockmoves = False;
 	MClockrecent = False;
 	MCtwelvetime = True;
 	MCuseprivatecmap = False;
@@ -881,6 +879,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_each, MCeach);
 
+    // SN-2014-06-12 [[ RefactorServer ]] We don't want to duplicate the environment variables
+    // on server, as they have been copied to $_SERVER
+#ifndef _SERVER
 	if (envp != nil)
 		for (uint32_t i = 0 ; envp[i] != nil ; i++)
 		{
@@ -915,6 +916,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 				tvar->setvalueref(*t_value);
 			}
 		}
+#endif // _SERVER
 
 	/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
 	MCtemplateaudio = new MCAudioClip;
@@ -963,6 +965,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCValueAssign(MCserialcontrolsettings, MCSTR("baud=9600 parity=N data=8 stop=1"));
 
 	MCdispatcher = new MCDispatch;
+    MCdispatcher -> add_transient_stack(MCtooltip);
 
 	if (MCnoui)
 		MCscreen = new MCUIDC;
@@ -1058,7 +1061,10 @@ int X_close(void)
 
 	MCU_play_stop();
 	if (MCrecording)
-		MCtemplateplayer->stoprecording();
+	{
+		extern void MCQTStopRecording(void);
+		MCQTStopRecording();
+	}
 	MClockmessages = True;
 	MCS_killall();
 
@@ -1070,6 +1076,7 @@ int X_close(void)
 		delete optr;
 	}
 
+    MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
 	MCtooltip = NULL;
 
@@ -1127,9 +1134,10 @@ int X_close(void)
 	delete MCcstack;
 	delete MCrecent;
 
-	MCS_close(IO_stdin);
-	MCS_close(IO_stdout);
-	MCS_close(IO_stderr);
+	// Temporary workaround for a crash
+    //MCS_close(IO_stdin);
+	//MCS_close(IO_stdout);
+	//MCS_close(IO_stderr);
 
 	delete MCpatternlist;
 	delete MCresult;

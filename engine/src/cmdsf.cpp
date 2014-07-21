@@ -801,6 +801,8 @@ MCExport::~MCExport()
 	delete palette_color_count;
 	delete palette_color_list;
 	delete size;
+    // MERG-2014-07-11: metadata array
+    delete metadata;
 }
 
 Parse_stat MCExport::parse(MCScriptPoint &sp)
@@ -815,7 +817,11 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 	if (sp.lookup(SP_EXPORT, te) == PS_NORMAL)
+    {
 		sformat = (Export_format)te->which;
+        // MERG-2014-07-17: Bugfix because export JPEG etc was failing to set the format
+        format = sformat;
+    }
 	else
 	{
 		sp.backup();
@@ -889,14 +895,23 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 					if (t_need_effects &&
 						sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EFFECTS) != PS_NORMAL)
 					{
-						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-						return PS_ERROR;
+                        // MERG-2014-07-11: [[ ImageMetadata ]] Allow metadata without having to specify effects
+                        if (with_effects && sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) == PS_NORMAL)
+                        {
+                            sp . backup();
+                            sp . backup();
+                        }
+                        else
+                        {
+                            MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+                            return PS_ERROR;
+                        }
 					}
 				}
 			}
 		}
-		
-		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+        
+        if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
 		{
 			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
 				sp . parseexp(False, True, &size) != PS_NORMAL)
@@ -906,6 +921,17 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 			}
 		}
 	}
+    
+    // MERG-2014-07-11: [[ ImageMetadata ]] metadata array
+    if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL || sp . skip_token(SP_FACTOR, TT_BINOP, O_AND) == PS_NORMAL )
+    {
+        if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) != PS_NORMAL ||
+            sp . parseexp(False, True, &metadata) != PS_NORMAL)
+        {
+            MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+            return PS_ERROR;
+        }
+    }
 
 	if (sp.skip_token(SP_FACTOR, TT_TO) != PS_NORMAL)
 	{
@@ -1048,8 +1074,8 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 			return ES_ERROR;
 		}
 	}
-	
-	// MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+    
+    // MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
 	//   bitmap, which needs to be processed before compression. This flag
 	//   indicates to do this processing later on in the method.
 	bool t_needs_unpremultiply;
@@ -1104,8 +1130,8 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 				return ES_ERROR;
 			}
 		}
-
-		MCRectangle r;
+        
+        MCRectangle r;
 		r.x = r.y = -32768;
 		r.width = r.height = 0;
 		if (srect != NULL)
@@ -1187,6 +1213,27 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 			return ES_ERROR;
 		}
 	}
+    
+    // MERG-2014-07-11: metadata array
+    // MW-2014-07-17: [[ ImageMetadata ]] Parse out the contents of the metadata array here
+    //   (saves copying as further use of ep might clobber it).
+    MCImageMetadata t_metadata;
+    MCMemoryClear(&t_metadata, sizeof(t_metadata));
+    if (metadata != NULL)
+    {
+        if (metadata -> eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
+            return ES_ERROR;
+        }
+        
+        if (ep . getformat() == VF_ARRAY)
+        {
+            // Make a copy of the array in ep so the parsing function can use the ep to eval.
+            MCVariableValue t_metadata_array(*ep . getarray());
+            MCImageParseMetadata(ep, t_metadata_array, t_metadata);
+        }
+    }
 
 	IO_handle stream = NULL;
 	char *name = NULL;
@@ -1313,7 +1360,7 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 		}
 		if (t_status == ES_NORMAL)
 		{
-			if (!MCImageExport(t_bitmap, format, &t_palette_settings, t_dither, t_out_stream, mstream))
+			if (!MCImageExport(t_bitmap, format, &t_palette_settings, t_dither, &t_metadata, t_out_stream, mstream))
 			{
 				t_delete_file_on_error = true;
 				MCeerror->add(EE_EXPORT_CANTWRITE, line, pos, name);
@@ -1363,6 +1410,16 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	MCAutoStringRef t_mask_filename;
     if (!ctxt . EvalOptionalExprAsNullableStringRef(mname, EE_EXPORT_BADNAME, &t_mask_filename))
         return;
+    
+    // MERG-2014-07-11: metadata array
+    MCAutoArrayRef t_metadata_array;
+    MCImageMetadata t_metadata;
+    MCImageMetadata *t_metadata_ptr;
+    t_metadata_ptr = NULL;
+    if (!ctxt . EvalOptionalExprAsArrayRef(metadata, kMCEmptyArray , EE_EXPORT_NOSELECTED, &t_metadata_array))
+        return;
+
+    MCImageParseMetadata(ctxt, *t_metadata_array, t_metadata);
 
 	MCObject *optr = NULL;
 	if (image != NULL)
@@ -1455,34 +1512,34 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
                 if (t_success)
                 {
 					if (*t_filename == nil)
-						MCInterfaceExecExportSnapshotOfStack(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_return_data);
+						MCInterfaceExecExportSnapshotOfStack(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, &t_return_data);
 					else
-						MCInterfaceExecExportSnapshotOfStackToFile(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+						MCInterfaceExecExportSnapshotOfStackToFile(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
 				}
 			}
             else if (optr != NULL)
             {
                 
                 if (*t_filename == nil)
-                    MCInterfaceExecExportSnapshotOfObject(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_return_data);
+                    MCInterfaceExecExportSnapshotOfObject(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_metadata, &t_return_data);
                 else
-                    MCInterfaceExecExportSnapshotOfObjectToFile(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+                    MCInterfaceExecExportSnapshotOfObjectToFile(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
             }
             else
             {
                 if (*t_filename == nil)
-                    MCInterfaceExecExportSnapshotOfScreen(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_return_data);
+                    MCInterfaceExecExportSnapshotOfScreen(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, &t_return_data);
                 else
-                    MCInterfaceExecExportSnapshotOfScreenToFile(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+                    MCInterfaceExecExportSnapshotOfScreenToFile(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
             }
         }
 	}
 	else
 	{
 		if (*t_filename == nil)
-			MCInterfaceExecExportImage(ctxt, (MCImage *)optr, format, t_settings_ptr, &t_return_data);
+			MCInterfaceExecExportImage(ctxt, (MCImage *)optr, format, t_settings_ptr, &t_metadata, &t_return_data);
 		else
-			MCInterfaceExecExportImageToFile(ctxt, (MCImage *)optr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+			MCInterfaceExecExportImageToFile(ctxt, (MCImage *)optr, format, t_settings_ptr, &t_metadata, *t_filename, *t_mask_filename);
 	}
     
     MCInterfaceImagePaletteSettingsFree(ctxt, t_settings);
@@ -2897,6 +2954,7 @@ MCOpen::~MCOpen()
     delete encoding;
 	MCValueRelease(destination);
 	delete certificate;
+	delete verifyhostname;
 }
 
 Parse_stat MCOpen::parse(MCScriptPoint &sp)
@@ -3054,11 +3112,28 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 		}
 	}
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+	{
 		if (sp.skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) != PS_NORMAL)
 		{
 			MCperror->add
 			(PE_OPEN_BADMESSAGE, sp);
 		}
+		
+		// MM-2014-06-13: [[ Bug 12567 ]] Added new "with verification for <host>" variant.
+		if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_FOR) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_HOST) != PS_NORMAL)
+			{
+				MCperror -> add(PE_OPEN_NOHOST, sp);
+				return PS_ERROR;
+			}			
+			if (sp . parseexp(False, True, &verifyhostname) != PS_NORMAL)
+			{
+				MCperror -> add(PE_OPEN_BADHOST, sp);
+				return PS_ERROR;
+			}
+		}	
+	}
 
 	if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
 		if (sp.skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
@@ -3234,9 +3309,24 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
 				}
 				/* UNCHECKED */ ep . copyasnameref(t_message_name);
 			}
+			
+			// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+			char *t_verify_host_name;
+			t_verify_host_name = NULL;
+			if (verifyhostname != NULL)
+			{
+				if (verifyhostname -> eval(ep) != ES_NORMAL)
+				{
+					MCeerror -> add(EE_OPEN_BADHOST, line, pos);
+					return ES_ERROR;
+				}
+				
+				t_verify_host_name = ep . getsvalue() . clone();
+			}		
+			
 			// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 			MCresult -> clear(True);
-			MCSocket *s = MCS_open_socket(name, datagram, ep.getobj(), t_message_name, secure, secureverify, NULL);
+			MCSocket *s = MCS_open_socket(name, datagram, ep.getobj(), t_message_name, secure, secureverify, NULL, t_verify_host_name);
 			if (s != NULL)
 			{
 				MCU_realloc((char **)&MCsockets, MCnsockets, MCnsockets + 1, sizeof(MCSocket *));
@@ -3371,16 +3461,23 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
                 MCFilesExecOpenProcess(ctxt, *t_name, mode, t_encoding);
 			break;
 		case OA_SOCKET:
+        {                
             if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name))
+                return;
+            
+            // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
+            MCNewAutoNameRef t_end_hostname;
+            if (!ctxt . EvalOptionalExprAsNameRef(verifyhostname, kMCEmptyName, EE_OPEN_BADHOST, &t_end_hostname))
                 return;
 
 			if (datagram)
-				MCNetworkExecOpenDatagramSocket(ctxt, *t_name, *t_message_name);
+				MCNetworkExecOpenDatagramSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
 			else if (secure)
-				MCNetworkExecOpenSecureSocket(ctxt, *t_name, *t_message_name, secureverify);
+				MCNetworkExecOpenSecureSocket(ctxt, *t_name, *t_message_name, *t_end_hostname, secureverify);
 			else
-				MCNetworkExecOpenSocket(ctxt, *t_name, *t_message_name);
+				MCNetworkExecOpenSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
 			break;
+        }
 		default:
 			break;
 		}
@@ -5166,7 +5263,8 @@ void MCWrite::compile(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MM-2014-02-12: [[ SecureSocket ]] 
+// MM-2014-02-12: [[ SecureSocket ]]
+// MM-2014-06-13: [[ Bug 12567 ]] Added new "with verification for <host>" variant.
 //  New secure socket command, used to ensure all future communications over the given socket are encrypted.
 //
 //  After securing:
@@ -5179,10 +5277,12 @@ void MCWrite::compile(MCSyntaxFactoryRef ctxt)
 //    secure socket <socket>
 //    secure socket <socket> with verification
 //    secure socket <socket> without verification
+//    secure socket <socket> with verification for host <host>
 //
 MCSecure::~MCSecure()
 {
 	delete m_sock_name;
+	delete m_verify_host_name;
 }
 
 Parse_stat MCSecure::parse(MCScriptPoint &sp)
@@ -5219,13 +5319,28 @@ Parse_stat MCSecure::parse(MCScriptPoint &sp)
 	
 	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 	{
-		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
-			secureverify = True;
-		else
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) != PS_NORMAL)
 		{
 			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
 			return PS_ERROR;
 		}
+		
+		secureverify = True;
+			
+		// MM-2014-06-13: [[ Bug 12567 ]] Added new "with verification for <host>" variant.
+		if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_FOR) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_HOST) != PS_NORMAL)
+			{
+				MCperror -> add(PE_SECURE_NOHOST, sp);
+				return PS_ERROR;
+			}			
+			if (sp . parseexp(False, True, &m_verify_host_name) != PS_NORMAL)
+			{
+				MCperror -> add(PE_SECURE_BADHOST, sp);
+				return PS_ERROR;
+			}
+		}	
 	}
 	
 	if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
@@ -5255,10 +5370,24 @@ void MCSecure::exec_ctxt(MCExecContext& ctxt)
 	char *t_sock_name;
 	t_sock_name = ep . getsvalue() . clone();
 	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+	char *t_host_name;
+	t_host_name = NULL;
+	if (m_verify_host_name != NULL)
+	{
+		if (m_verify_host_name -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_SECURE_BADHOST, line, pos);
+			return ES_ERROR;
+		}
+		
+		t_host_name = ep . getsvalue() . clone();
+	}
+	
 	uint2 t_index;
 	if (IO_findsocket(t_sock_name, t_index))
 	{
-		MCS_secure_socket(MCsockets[t_index], secureverify);
+		MCS_secure_socket(MCsockets[t_index], secureverify, t_host_name);
 		MCresult->clear(False);
 	}
 	else
@@ -5272,8 +5401,13 @@ void MCSecure::exec_ctxt(MCExecContext& ctxt)
     MCNewAutoNameRef t_name;
     if (!ctxt . EvalExprAsNameRef(m_sock_name, EE_SECURE_BADNAME, &t_name))
         return;
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+	MCNewAutoNameRef t_host_name;
+    if (!ctxt . EvalOptionalExprAsNullableNameRef(m_verify_host_name, EE_SECURE_BADHOST, &t_host_name))
+        return;
 
-    MCSecurityExecSecureSocket(ctxt, *t_name, secureverify == True);
+    MCSecurityExecSecureSocket(ctxt, *t_name, secureverify == True, *t_host_name);
 }
 
 void MCSecure::compile(MCSyntaxFactoryRef ctxt)

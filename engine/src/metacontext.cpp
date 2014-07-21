@@ -57,6 +57,11 @@ MCMetaContext::MCMetaContext(const MCRectangle& p_page)
 	f_fill_foreground_used = false;
 	f_fill_background_used = false;
 	f_state_stack = NULL;
+	
+	m_clip_stack = nil;
+	m_clip_stack_size = 0;
+	m_clip_stack_index = 0;
+	
 	begin(true);
 }
 
@@ -76,6 +81,8 @@ MCMetaContext::~MCMetaContext(void)
 		MCPatternRelease(f_fill_background -> pattern);
 		f_fill_background = f_fill_background -> previous;
 	}
+	
+	MCMemoryDeleteArray(m_clip_stack);
 }
 
 
@@ -176,6 +183,24 @@ bool MCMetaContext::changeopaque(bool p_new_value)
 
 void MCMetaContext::setprintmode(void)
 {
+}
+
+void MCMetaContext::save()
+{
+	if (m_clip_stack_index + 1 > m_clip_stack_size)
+		/* UNCHECKED */ MCMemoryResizeArray(m_clip_stack_size + 1, m_clip_stack, m_clip_stack_size);
+	m_clip_stack[m_clip_stack_index++] = f_clip;
+}
+
+void MCMetaContext::restore()
+{
+	if (m_clip_stack_index > 0)
+		f_clip = m_clip_stack[--m_clip_stack_index];
+}
+
+void MCMetaContext::cliprect(const MCRectangle &p_rect)
+{
+	f_clip = MCU_intersect_rect(f_clip, p_rect);
 }
 
 void MCMetaContext::setclip(const MCRectangle& rect)
@@ -440,7 +465,8 @@ void MCMetaContext::drawtext_substring(coord_t x, int2 y, MCStringRef p_string, 
             t_mark -> text . data = new_array<unichar_t>(t_length);
             t_mark -> text . length = t_length;
             if (t_mark -> text . data != NULL)
-                memcpy(t_mark -> text . data, MCStringGetCharPtr(p_string) + p_range.offset, t_length);
+                // SN-2014-06-17 [[ Bug 12595 ]] Printing to PDF does not yield all information
+                memcpy(t_mark -> text . data, MCStringGetCharPtr(p_string) + p_range.offset, t_length * 2);
             t_mark -> text . unicode_override = true;
         }
 	}
@@ -543,7 +569,7 @@ void MCMetaContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy
 	MCMark *t_mark;
 	bool t_need_group;
 
-	t_need_group = (MCImageBitmapHasTransparency(p_image . bitmap) || f_function != GXcopy || f_opacity != 255);
+	t_need_group = (!MCGImageIsOpaque(p_image.image) || f_function != GXcopy || f_opacity != 255);
 
 	MCRectangle t_old_clip;
 	t_old_clip = getclip();
@@ -653,6 +679,15 @@ const MCColor& MCMetaContext::getbg(void) const
 		return MCscreen -> background_pixel;
 	
 	return MCscreen -> white_pixel;
+}
+
+bool MCMetaContext::lockgcontext(MCGContextRef& r_ctxt)
+{
+	return false;
+}
+
+void MCMetaContext::unlockgcontext(MCGContextRef ctxt)
+{
 }
 
 static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_mark, const MCRectangle& p_clip)

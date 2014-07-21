@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __ERROR__
 #define __ERROR__
 
+#include "foundation.h"
+
 #ifndef __VALUE__
 #include "Value.h"
 #endif

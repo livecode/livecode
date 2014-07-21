@@ -17,12 +17,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 package com.runrev.android;
 
 import com.runrev.android.billing.*;
+/*
 import com.runrev.android.billing.C.ResponseCode;
 import com.runrev.android.billing.PurchaseUpdate.Purchase;
 import com.runrev.android.billing.BillingService.RestoreTransactions;
 import com.runrev.android.billing.BillingService.GetPurchaseInformation;
 import com.runrev.android.billing.BillingService.ConfirmNotification;
 import com.runrev.android.billing.BillingService.RequestPurchase;
+ */
 
 import com.runrev.android.nativecontrol.NativeControlModule;
 import com.runrev.android.nativecontrol.VideoControl;
@@ -1890,6 +1892,9 @@ public class Engine extends View implements EngineApi
     private static final int CREATE_CALENDAR_RESULT = 11;
     private static final int UPDATE_CALENDAR_RESULT = 12;
     private static final int SHOW_CALENDAR_RESULT = 13;
+    private static final int GOOGLE_BILLING_RESULT = 10001;
+    private static final int SAMSUNG_BILLING_RESULT = 100;
+    private static final int SAMSUNG_ACCOUNT_CERTIFICATION_RESULT = 101;
 	
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Activity result code for activities
 	//   launched through 'runActivity' API.
@@ -1940,6 +1945,11 @@ public class Engine extends View implements EngineApi
 			case RUN_ACTIVITY_RESULT:
 				onRunActivityResult(resultCode, data);
 				break;
+            case GOOGLE_BILLING_RESULT:
+            case SAMSUNG_BILLING_RESULT:
+            case SAMSUNG_ACCOUNT_CERTIFICATION_RESULT:
+                mBillingProvider.onActivityResult(requestCode, resultCode, data);
+                break;
 			default:
 				break;
 		}
@@ -2019,90 +2029,113 @@ public class Engine extends View implements EngineApi
 
 	// in-app purchasing
 
-	private static Class mBillingServiceClass = null;
-
-	public static Class getBillingServiceClass()
-	{
-		return mBillingServiceClass;
-	}
-
-	private static void setBillingServiceClass(Class pClass)
-	{
-		mBillingServiceClass = pClass;
-	}
-
-	private BillingService mBilling = null;
-	private EnginePurchaseObserver mPurchaseObserver = null;
+	public static BillingModule mBillingModule;
+    
+    public static BillingProvider mBillingProvider;
+    
+    public EnginePurchaseObserver mPurchaseObserver;
 
 	private void initBilling()
 	{
-        String t_public_key = doGetCustomPropertyValue("cREVStandaloneSettings", "android,storeKey");
-        if (t_public_key != null && t_public_key.length() > 0)
-            Security.setPublicKey(t_public_key);
-
-		String classFqn = getContext().getPackageName() + ".AppService";
-		try
-		{
-			Class tClass = Class.forName(classFqn);
-			setBillingServiceClass(tClass);
-
-			mBilling = (BillingService)tClass.newInstance();
-		}
-		catch (Exception e)
-		{
-			return;
-		}
-
-		mBilling.setContext(this.getContext());
-
-		mPurchaseObserver = new EnginePurchaseObserver((Activity)getContext());
-		ResponseHandler.register(mPurchaseObserver);
+        mBillingModule = new BillingModule();
+        if (mBillingModule == null)
+            return;
+        
+        mBillingProvider = mBillingModule.getBillingProvider();
+        // PM-2014-04-03: [[Bug 12116]] Avoid a NullPointerException is in-app purchasing is not used
+        if (mBillingProvider == null)
+            return;
+        mBillingProvider.setActivity(getActivity());
+        mPurchaseObserver = new EnginePurchaseObserver((Activity)getContext());
+        mBillingProvider.setPurchaseObserver(mPurchaseObserver);
+        mBillingProvider.initBilling();
 	}
 
 	public boolean storeCanMakePurchase()
 	{
-		if (mBilling == null)
-			return false;
-
-		return mBilling.checkBillingSupported();
+		return mBillingProvider.canMakePurchase();
 	}
 
 	public void storeSetUpdates(boolean enabled)
 	{
-		if (mBilling == null)
+		if (mPurchaseObserver == null)
 			return;
 
 		if (enabled)
-			ResponseHandler.register(mPurchaseObserver);
+			mBillingProvider.enableUpdates();
 		else
-			ResponseHandler.unregister(mPurchaseObserver);
+			mBillingProvider.disableUpdates();
 	}
 
 	public boolean storeRestorePurchases()
 	{
-		if (mBilling == null)
+		if (mPurchaseObserver == null)
 			return false;
 
-		return mBilling.restoreTransactions();
+		return mBillingProvider.restorePurchases();
 	}
 
 	public boolean purchaseSendRequest(int purchaseId, String productId, String developerPayload)
 	{
-		if (mBilling == null)
+		if (mPurchaseObserver == null)
 			return false;
 
 		Log.i(TAG, "purchaseSendRequest(" + purchaseId + ", " + productId + ")");
-		return mBilling.requestPurchase(purchaseId, productId, developerPayload);
+        return mBillingProvider.sendRequest(purchaseId, productId, developerPayload);
 	}
+    
+    public boolean storeConsumePurchase(String productID)
+    {
+        if (mPurchaseObserver == null)
+			return false;
+        
+        return mBillingProvider.consumePurchase(productID);
+    }
+    
+    public boolean storeRequestProductDetails(String productId)
+    {
+        return mBillingProvider.requestProductDetails(productId);
+    }
+    
+    public String storeReceiveProductDetails(String productId)
+    {
+        return mBillingProvider.receiveProductDetails(productId);
+    }
+    
+    public boolean storeMakePurchase(String productId, String quantity, String payload)
+    {
+        return mBillingProvider.makePurchase(productId, quantity, payload);
+    }
+    
+    public boolean storeProductSetType(String productId, String productType)
+    {
+        Log.d(TAG, "Setting type for productId" + productId + ", type is : " + productType);
+        return mBillingProvider.productSetType(productId, productType);
+    }
+    
+    public boolean storeSetPurchaseProperty(String productId, String propertyName, String propertyValue)
+    {
+        return mBillingProvider.setPurchaseProperty(productId, propertyName, propertyValue);
+    }
+    
+    public String storeGetPurchaseProperty(String productId, String propName)
+    {
+        return mBillingProvider.getPurchaseProperty(productId, propName);
+    }
 
 	public boolean purchaseConfirmDelivery(int purchaseId, String notificationId)
 	{
-		if (mBilling == null)
+		if (mPurchaseObserver == null)
 			return false;
 
-		return mBilling.confirmNotification(purchaseId, notificationId);
+		return mBillingProvider.confirmDelivery(purchaseId);
 	}
 
+    public String storeGetPurchaseList()
+    {
+        return mBillingProvider.getPurchaseList();
+    }
+    
 ////////
 
 	private class EnginePurchaseObserver extends PurchaseObserver
@@ -2112,78 +2145,66 @@ public class Engine extends View implements EngineApi
 			super(pActivity);
 		}
 
-		public void onBillingSupported(boolean supported)
-		{
-			final boolean tSupported = supported;
-			post(new Runnable() {
-				public void run() {
-					doBillingSupported(tSupported);
-					if (m_wake_on_event)
-						doProcess(false);
-				}
-			});
-		}
-
-		public void onPurchaseStateChanged(Purchase purchase, boolean verified, String signedData, String signature)
-		{
-			final boolean tVerified = verified;
-			final int tPurchaseState = purchase.purchaseState.ordinal();
-			final String tNotificationId = purchase.notificationId;
-			final String tProductId = purchase.productId;
-			final String tOrderId = purchase.orderId;
-			final long tPurchaseTime = purchase.purchaseTime;
-			final String tDeveloperPayload = purchase.developerPayload;
-			final String tSignedData = signedData;
-			final String tSignature = signature;
-
-			post(new Runnable() {
-				public void run() {
-					doPurchaseStateChanged(tVerified, tPurchaseState,
-						tNotificationId, tProductId, tOrderId,
-						tPurchaseTime, tDeveloperPayload, tSignedData, tSignature);
-					if (m_wake_on_event)
-						doProcess(false);
-				}
-			});
-		}
-
-		public void onRestoreTransactionsResponse(RestoreTransactions request, ResponseCode responseCode)
-		{
-			final int tResponseCode = responseCode.ordinal();
-			post(new Runnable() {
-				public void run() {
-					doRestoreTransactionsResponse(tResponseCode);
-					if (m_wake_on_event)
-						doProcess(false);
-				}
-			});
-		}
-
-		public void onConfirmNotificationResponse(ConfirmNotification request, ResponseCode responseCode)
-		{
-			final int tPurchaseId = request.mPurchaseId;
-			final int tResponseCode = responseCode.ordinal();
-			post(new Runnable() {
-				public void run() {
-					doConfirmNotificationResponse(tPurchaseId, tResponseCode);
-					if (m_wake_on_event)
-						doProcess(false);
-				}
-			});
-		}
-
-		public void onRequestPurchaseResponse(RequestPurchase request, ResponseCode responseCode)
-		{
-			final int tPurchaseId = request.mPurchaseId;
-			final int tResponseCode = responseCode.ordinal();
-			post(new Runnable() {
-				public void run() {
-					doRequestPurchaseResponse(tPurchaseId, tResponseCode);
-					if (m_wake_on_event)
-						doProcess(false);
-				}
-			});
-		}
+        // Sent to the observer to indicate a change in the purchase state
+        public void onPurchaseStateChanged(String productId, int state)
+        {
+            final boolean tVerified = true;
+            final int tPurchaseState = state;
+            final String tNotificationId = "";
+            final String tProductId = productId;
+            final String tOrderId = storeGetPurchaseProperty(productId, "orderId");
+            
+            String tTimeString = storeGetPurchaseProperty(productId, "purchaseTime");
+            long tTime = 0l;
+            try
+            {
+                tTime = Long.parseLong(tTimeString, 10);
+            }
+            catch (NumberFormatException nfe)
+            {
+                
+            }
+            
+            final long tPurchaseTime = tTime;
+            final String tDeveloperPayload = storeGetPurchaseProperty(productId, "developerPayload");
+            final String tSignedData = "";
+            final String tSignature = storeGetPurchaseProperty(productId, "signature");
+            
+            post(new Runnable() {
+                public void run() {
+                    doPurchaseStateChanged(tVerified, tPurchaseState,
+                                           tNotificationId, tProductId, tOrderId,
+                                           tPurchaseTime, tDeveloperPayload, tSignedData, tSignature);
+                    if (m_wake_on_event)
+                        doProcess(false);
+                }
+            });
+        }
+        
+        public void onProductDetailsReceived(String productId)
+        {
+            final String tProductId = productId;
+            post(new Runnable() {
+                public void run() {
+                    doProductDetailsResponse(tProductId);
+                    if (m_wake_on_event)
+                        doProcess(false);
+                }
+            });
+        }
+        
+        public void onProductDetailsError(String productId, String error)
+        {
+            final String tProductId = productId;
+            final String tError = error;
+            post(new Runnable() {
+                public void run() {
+                    doProductDetailsError(tProductId, tError);
+                    if (m_wake_on_event)
+                        doProcess(false);
+                }
+            });
+        }
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2686,6 +2707,9 @@ public class Engine extends View implements EngineApi
 	public void onDestroy()
 	{
 		doDestroy();
+        // PM-2014-04-03: [[Bug 12116]] Avoid a NullPointerException is in-app purchasing is not used
+        if (mBillingProvider != null)
+            mBillingProvider.onDestroy();
         s_engine_instance = null;
 	}
 
@@ -2905,6 +2929,9 @@ public class Engine extends View implements EngineApi
 	public static native void doConfirmNotificationResponse(int purchaseId, int responseCode);
 	public static native void doRestoreTransactionsResponse(int responseCode);
 	public static native void doRequestPurchaseResponse(int purchaseId, int responseCode);
+    public static native void doProductDetailsResponse(String productId);
+    public static native void doProductDetailsError(String productId, String error);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

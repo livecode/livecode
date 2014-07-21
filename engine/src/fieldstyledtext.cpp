@@ -483,6 +483,11 @@ void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_
 
 bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array)
 {
+    return exportasstyledtext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_formatted, p_effective, r_array);
+}
+
+bool MCField::exportasstyledtext(MCParagraph* p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array)
+{
 	export_styled_text_t t_context;
 	t_context . effective = p_effective;
 	t_context . formatted = p_formatted;
@@ -499,15 +504,15 @@ bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int3
 			t_flags |= kMCFieldExportFlattenStyles;
 		if (p_formatted)
 			t_flags |= kMCFieldExportLines;
-		doexport(t_flags, p_part_id, p_start_index, p_finish_index, export_styled_text, &t_context);
+		doexport(t_flags, p_paragraphs, p_start_index, p_finish_index, export_styled_text, &t_context);
 
 		if (MCArrayCopy(t_context . paragraphs_array, r_array))
 			return true;
 	}
 
 	return false;
-
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This method converts a general styledText array to paragraphs objects. The

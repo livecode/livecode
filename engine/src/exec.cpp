@@ -1960,6 +1960,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 {
                     r_value . type = kMCExecValueTypeStringRef;
                 }
+                if (t_count > 0)
+                    MCMemoryDeleteArray(t_value);
             }
         }
             break;
@@ -1977,6 +1979,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 {
                     r_value . type = kMCExecValueTypeStringRef;
                 }
+                if (t_count > 0)
+                    MCMemoryDeleteArray(t_value);
             }
         }
             break;
@@ -1992,6 +1996,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 {
                     r_value . type = kMCExecValueTypeStringRef;
                 }
+                if (t_count > 0)
+                    MCMemoryDeleteArray(t_value);
             }
         }
             break;
@@ -2248,7 +2254,10 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                         r_value . type = kMCExecValueTypeStringRef;
                     }
                 }
-                MCMemoryDeleteArray(t_value);
+                for (uinteger_t i = 0; i < t_count; ++i)
+                    MCValueRelease(t_value[i]);
+                if (t_count > 0)
+                    MCMemoryDeleteArray(t_value);
             }
         }
             break;
@@ -2839,6 +2848,11 @@ void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValu
             
         case kMCExecValueTypeDouble:
 			if (!MCNumberCreateWithReal(*(double *)p_from_value, (MCNumberRef&)r_value))
+				ctxt . Throw();
+			break;
+            
+        case kMCExecValueTypeFloat:
+			if (!MCNumberCreateWithReal(*(float *)p_from_value, (MCNumberRef&)r_value))
 				ctxt . Throw();
 			break;
             

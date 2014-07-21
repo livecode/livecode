@@ -40,7 +40,7 @@ public:
 
 	uint4 GetFileIndexForContext(MCExecContext &ctxt);
 	
-	const char *GetFileForContext(MCExecContext &ctxt);
+    bool GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file);
 	
 	// Lookup the file index for the given filename. If <p_add> is true then
 	// add new entry and return its index.
@@ -55,7 +55,7 @@ private:
 		File *next;
 		
 		// The absolute filename of the file it refers to.
-		char *filename;
+        MCStringRef filename;
 		
 		// The buffer containing the file's contents. This should be treated
 		// as read-only as it could be mmapped. We need to keep this around

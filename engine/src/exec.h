@@ -1139,6 +1139,7 @@ template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNative
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 enum MCPurchaseState
 {
 	kMCPurchaseStateInitialized,
@@ -1147,6 +1148,9 @@ enum MCPurchaseState
 	kMCPurchaseStateComplete,
 	kMCPurchaseStateRestored,
 	kMCPurchaseStateCancelled,
+    //Amazon
+    kMCPurchaseStateInvalidSKU,
+    kMCPurchaseStateAlreadyEntitled,
 	kMCPurchaseStateRefunded,
 	kMCPurchaseStateError,
     kMCPurchaseStateUnverified,
@@ -1156,6 +1160,7 @@ enum MCPurchaseState
 
 typedef struct _mcpurchase_t
 {
+    MCStringRef         prod_id;
 	uint32_t			id;
 	MCPurchaseState		state;
 	uint32_t			ref_count;
@@ -2151,6 +2156,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 void MCStringsEvalMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_string);
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result);
+void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result);
 void MCStringsEvalConcatenateWithSpace(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result);
 void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result);
 
@@ -3026,14 +3032,14 @@ void MCInterfaceExecImportAudioClip(MCExecContext& ctxt, MCStringRef p_filename)
 void MCInterfaceExecImportVideoClip(MCExecContext& ctxt, MCStringRef p_filename);
 void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_mask_filename, MCObject *p_container);
 
-void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
-void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
-void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
-void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
-void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
-void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
-void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
-void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
+void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data);
+void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename);
+void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data);
+void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename);
+void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data);
+void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename);
+void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data);
+void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename);
 
 void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, bool p_ascending, int p_format, MCExpression *p_by, bool p_only_marked);
 void MCInterfaceExecSortField(MCExecContext &ctxt, MCObjectPtr p_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by);
@@ -3392,6 +3398,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceBitmapEffectFilterTypeInfo;
 
 extern MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceButtonIconGravityTypeInfo;
 extern MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo;
 
 ///////////
@@ -4216,9 +4223,9 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target);
 void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_message);
 void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url);
 
-void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
-void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_with_verification);
-void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
+void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
+void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification);
+void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
 
 void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p_url);
 
@@ -4368,7 +4375,7 @@ void MCSecurityExecBlockDecryptWithKey(MCExecContext& ctxt, MCStringRef p_data, 
 void MCSecurityGetSslCertificates(MCExecContext& ctxt, MCStringRef& r_value);
 void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value);
 
-void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify);
+void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify, MCNameRef p_end_hostname);
 
 ///////////
 
@@ -4973,6 +4980,12 @@ void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id);
 void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id);
 void MCStoreExecRequestProductDetails(MCExecContext& ctxt, MCStringRef p_product_id);
 void MCStoreExecPurchaseVerify(MCExecContext& ctxt, uint32_t p_id, bool p_verified);
+void MCStoreExecConfirmPurchase(MCExecContext& ctxt, MCStringRef p_product_id);
+void MCStoreExecMakePurchase(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload);
+void MCStoreExecReceiveProductDetails(MCExecContext &ctxt, MCStringRef p_product_id, MCStringRef &r_details);
+void MCStoreExecConsumePurchase(MCExecContext &ctxt, MCStringRef p_product_id);
+void MCStoreExecProductSetType(MCExecContext &ctxt, MCStringRef p_product_id, MCStringRef p_product_type);
+
 
 ///////////
 

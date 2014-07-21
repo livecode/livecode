@@ -139,6 +139,8 @@ int ChildCount(char *childname, int maxdepth);
 void CopyElement(CXMLElement *telement,Bool truecopy = False);
 void AddElement(CXMLElement *telement);
 bool MoveElement(CXMLElement *tsrcelement, bool p_sibling, bool p_before);
+// MW-2014-06-12: [[ Bug 12628 ]] Uses appropriate libxml calls to move srclement from another document
+bool MoveRemoteElement(CXMLElement *tsrcelement, bool p_sibling, bool p_before);
 char *GetContent(Bool isbuffered = True);
 void SetContent(char *tdata);
 Bool GoChild(char *ename, bool inc_text = false);

@@ -83,7 +83,7 @@ bool MCCStringFormat(char*& r_string, const char *p_format, ...)
 	va_start(t_args, p_format);
 	t_count = _vscprintf(p_format, t_args);
 	va_end(t_args);
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER)
 	va_start(t_args, p_format);
 	t_count = vsnprintf(nil, 0, p_format, t_args);
 	va_end(t_args);
@@ -109,7 +109,7 @@ bool MCCStringFormatV(char*& r_string, const char *p_format, va_list p_args)
 	int t_count;
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 	t_count = _vscprintf(p_format, p_args);
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER)
 	t_count = vsnprintf(nil, 0, p_format, p_args);
 #else
 #error "Implement MCCStringFormat"
@@ -134,7 +134,7 @@ bool MCCStringAppendFormat(char*& x_string, const char *p_format, ...)
 	va_start(t_args, p_format);
 	t_count = _vscprintf(p_format, t_args);
 	va_end(t_args);
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER)
 	va_start(t_args, p_format);
 	t_count = vsnprintf(nil, 0, p_format, t_args);
 	va_end(t_args);
@@ -898,7 +898,7 @@ bool MCCStringFromNative(const char *p_native, char*& r_cstring)
 
 	return t_success;
 }
-#elif defined(_LINUX)
+#elif defined(_LINUX) || defined (_LINUX_SERVER)
 bool MCCStringFromNativeSubstring(const char *p_string, uint32_t p_length, char*& r_cstring)
 {
 	char *t_native;
@@ -1804,6 +1804,13 @@ bool MCListAppendInteger(MCListRef self, integer_t p_value)
 {
 	char_t t_buffer[16];
 	sprintf((char *)t_buffer, "%d", p_value);
+	return MCListAppendNativeChars(self, t_buffer, strlen((char *)t_buffer));
+}
+
+bool MCListAppendUnsignedInteger(MCListRef self, uinteger_t p_value)
+{
+	char_t t_buffer[16];
+	sprintf((char *)t_buffer, "%u", p_value);
 	return MCListAppendNativeChars(self, t_buffer, strlen((char *)t_buffer));
 }
 

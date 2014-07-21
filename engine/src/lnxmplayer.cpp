@@ -237,7 +237,7 @@ bool MPlayer::init(const char * p_filename, MCStack *p_stack, MCRectangle p_rect
     t_wa.visual = ((MCScreenDC*)MCscreen)->getvisual();
     t_wa.window_type = GDK_WINDOW_CHILD;
     
-    w = gdk_window_new(stack_window, &t_wa, GDK_WA_X|GDK_WA_Y|GDK_WA_COLORMAP|GDK_WA_VISUAL);
+    w = gdk_window_new(stack_window, &t_wa, GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL);
 	
 	if ( w == DNULL )
 		return False;

@@ -20,8 +20,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "system.h"
-#include "mblandroid.h"
+#include "globdefs.h"
 #include "filedefs.h"
+#include "objdefs.h"
+#include "parsedef.h"
+#include "globals.h"
+
+#include "mblandroid.h"
+#include "variable.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCSystemLaunchUrl(MCStringRef p_url);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -152,9 +162,11 @@ void MCAndroidSystem::LaunchDocument(MCStringRef p_document)
     return;
 }
 
-void MCAndroidSystem::LaunchUrl(MCStringRef p_document)
+void MCAndroidSystem::LaunchUrl(MCStringRef p_url)
 {
-    return;
+    // AL-2014-06-26: [[ Bug 12700 ]] Implement launch url
+	if (!MCSystemLaunchUrl(p_url))
+        MCresult -> sets("no association");
 }
 
 void MCAndroidSystem::DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)

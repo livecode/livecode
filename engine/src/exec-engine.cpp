@@ -729,12 +729,25 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
         else if (p_where == PT_AFTER)
             p_var . mark . start = p_var . mark . finish;
         
-        if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeString)
+        // AL-2014-06-12: [[ Bug 12195 ]] If either the mark or the value is non-data, then convert to string.
+        //  Otherwise we get data loss for 'put <unicode string> after byte <n> of tVar'
+        if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData &&
+            MCValueGetTypeCode(p_value) == kMCValueTypeCodeData)
         {
-            MCAutoStringRef t_string;
-            if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
-                return;
-            
+            if (p_var . mark . changed)
+            {
+                MCAutoDataRef t_data;
+                if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
+                    return;
+                
+                /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), (MCDataRef)p_value);
+                p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
+            }
+            else
+                p_var . variable -> replace(ctxt, (MCDataRef)p_value, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+        }
+        else
+        {
             MCAutoStringRef t_value_string;
             if (!ctxt . ConvertToString(p_value, &t_value_string))
             {
@@ -742,24 +755,17 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 return;
             }
             
-            /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
-            p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
-        }
-        else
-        {
-            MCAutoDataRef t_data;
-            if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
-                return;
-            
-            MCAutoDataRef t_value_data;
-            if (!ctxt . ConvertToData(p_value, &t_value_data))
+            if (p_var . mark . changed)
             {
-                ctxt . Throw();
-                return;
-            }
+                MCAutoStringRef t_string;
+                if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
+                    return;
             
-            /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_data);
-            p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
+                /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
+                p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
+            }
+            else
+                p_var . variable -> replace(ctxt, *t_value_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
         }
         MCValueRelease(p_var . mark . text);
 	}
@@ -781,50 +787,19 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
 	}
 	else
     {
-        if (p_where == PT_BEFORE)
-            p_var . mark . finish = p_var . mark . start;
-        else if (p_where == PT_AFTER)
-            p_var . mark . start = p_var . mark . finish;
+        if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData &&
+            p_value . type == kMCExecValueTypeDataRef)
+        {
+            MCEngineExecPutIntoVariable(ctxt, p_value . dataref_value, p_where, p_var);
+            return;
+        }
         
-        if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData)
-        {
-            MCAutoDataRef t_value_data;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDataRef, &(&t_value_data));
-            if (ctxt . HasError())
-                return;
-            
-            if (p_var . mark . changed)
-            {            
-                MCAutoDataRef t_data;
-                if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
-                    return;
-            
-                /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_data);
-                p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
-            }
-            else
-                p_var . variable -> replace(ctxt, *t_value_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
-        }
-        else
-        {
-            MCAutoStringRef t_value_string;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value_string));
-            if (ctxt . HasError())
-                return;
-            
-            if (p_var . mark . changed)
-            {
-                MCAutoStringRef t_string;
-                if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
-                    return;
-                
-                /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
-                p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
-            }
-            else
-                p_var . variable -> replace(ctxt, *t_value_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
-        }
-        MCValueRelease(p_var . mark . text);
+        MCAutoStringRef t_value_string;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value_string));
+        if (ctxt . HasError())
+            return;
+        
+        MCEngineExecPutIntoVariable(ctxt, *t_value_string, p_where, p_var);
     }
 }
 

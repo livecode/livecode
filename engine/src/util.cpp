@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 #include "w32prefix.h"
 #endif
 
@@ -40,6 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "mcssl.h"
+#include "player.h"
 
 #include "globals.h"
 #include "exec.h"
@@ -150,7 +151,8 @@ void MCU_resetprops(Boolean update)
 		}
 	}
 	MCerrorlock = 0;
-	MClockerrors = MClockmessages = MClockmoves = MClockrecent = False;
+	MClockerrors = MClockmessages = MClockrecent = False;
+	MCscreen->setlockmoves(False);
 	MCerrorlockptr = NULL;
 	MCinterrupt = False;
 	MCdragspeed = 0;
@@ -169,7 +171,7 @@ void MCU_saveprops(MCSaveprops &sp)
 	sp.errorlockptr = MCerrorlockptr;
 	sp.lockerrors = MClockerrors;
 	sp.lockmessages = MClockmessages;
-	sp.lockmoves = MClockmoves;
+	sp.lockmoves = MCscreen->getlockmoves();
 	sp.lockrecent = MClockrecent;
 	sp.interrupt = MCinterrupt;
 	sp.dragspeed = MCdragspeed;
@@ -191,7 +193,7 @@ void MCU_restoreprops(MCSaveprops &sp)
 	MCerrorlockptr = sp.errorlockptr;
 	MClockerrors = sp.lockerrors;
 	MClockmessages = sp.lockmessages;
-	MClockmoves = sp.lockmoves;
+	MCscreen->setlockmoves(sp.lockmoves);
 	MClockrecent = sp.lockrecent;
 	MCinterrupt = sp.interrupt;
 	MCdragspeed = sp.dragspeed;
@@ -1992,6 +1994,11 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
+    
+    // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
+    for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
+        t_player -> syncbuffering(nil);
+    
 	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
 
@@ -2048,6 +2055,11 @@ Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
+    
+    // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
+    for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
+        t_player -> syncbuffering(nil);
+    
 	ep.getobj()->message_with_valueref_args(MCM_new_tool, ep.getvalueref());
 	return ES_NORMAL;
 }
@@ -3076,4 +3088,26 @@ bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
 
 	// Otherwise use the system provided CPRNG.
 	return MCS_random_bytes(p_bytecount, r_bytes);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void *operator new (size_t size)
+{
+    return malloc(size);
+}
+
+void operator delete (void *p)
+{
+    free(p);
+}
+
+void *operator new[] (size_t size)
+{
+    return malloc(size);
+}
+
+void operator delete[] (void *p)
+{
+    free(p);
 }

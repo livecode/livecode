@@ -12,6 +12,7 @@ GLOBAL_PACKAGES=\
 GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/engine/include \
 	$(SOLUTION_DIR)/libfoundation/include \
+	$(SOLUTION_DIR)/lcidlc/include \
 	$(SOLUTION_DIR)/libcore/include \
 	$(SOLUTION_DIR)/libexternal/include \
 	$(SOLUTION_DIR)/libgraphics/include \
@@ -40,7 +41,7 @@ GLOBAL_INCLUDES=\
 	
 GLOBAL_LIBS=\
 	$(PREBUILT_LIB_DIR) \
-	$(SOLUTION_DIR)/prebuilt/lib/linux/$(ARCH)
+	$(SOLUTION_DIR)/prebuilt/lib/linux-$(ARCH)
 
 ifeq ($(MODE),debug)
 	DEFINES+=_DEBUG

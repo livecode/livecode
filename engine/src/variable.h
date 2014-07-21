@@ -233,7 +233,8 @@ private:
 	void calcextents(void);
 
 	// Get the extent of the given dimension
-	uint2 getextent(uint1 tdimension) const;
+    // MW-2014-05-28: [[ Bug 12479 ]] Make sure extents use 32-bit ints.
+	uint32_t getextent(uint1 tdimension) const;
 
 	// Return True if the extents and number of keys do not match up
 	Boolean ismissingelement(void) const;
@@ -281,6 +282,7 @@ inline uint32_t MCVariableArray::getnfilled(void) const
 #define kMCEncodedValueTypeNumber 4
 #define kMCEncodedValueTypeLegacyArray 5
 #define kMCEncodedValueTypeArray 6
+
 
 #ifdef LEGACY_EXEC
 class MCVariableValue
@@ -613,6 +615,9 @@ protected:
     
     bool modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting);
     bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting);
+    
+    // Modify the content of the variable - append or prepend (nested key). Target must already be data.
+    bool modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
 public:
 	
 	// Destructor
@@ -818,6 +823,11 @@ public:
 	/* CAN FAIL */ static bool createwithname(MCNameRef name, MCVariable*& r_var);
 
 	/* CAN FAIL */ static bool createcopy(MCVariable& other, MCVariable*& r_var);
+
+    ///////////
+    // Does what MCVariableValue equivalent was doing
+    bool encode(void *&r_buffer, uindex_t r_size);
+    bool decode(void *p_buffer, uindex_t p_size);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -991,7 +1001,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 // This callback is invoked by a deferred variable when its value is needed.
-typedef Exec_stat (*MCDeferredVariableComputeCallback)(void *context, MCVariable *variable);
+typedef bool (*MCDeferredVariableComputeCallback)(void *context, MCVariable *variable);
 
 class MCDeferredVariable: public MCVariable
 {
@@ -1002,7 +1012,7 @@ protected:
 public:
 	static bool createwithname(MCNameRef p_name, MCDeferredVariableComputeCallback callback, void *context, MCVariable*& r_var);
 
-	Exec_stat compute(void);
+    bool compute(void);
 };
 
 // A 'deferred' varref works identically to a normal varref except that it

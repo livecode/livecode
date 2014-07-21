@@ -188,6 +188,8 @@
 /* Begin PBXProject section */
 		4DF42A350B04860B003F2D95 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4DF42A360B04860B003F2D95 /* Build configuration list for PBXProject "libfoundation" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -257,6 +259,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				HEADER_SEARCH_PATHS = (
 					"\"$(SOLUTION_DIR)/engine/include\"",
 					"\"$(SOLUTION_DIR)/libfoundation/include\"",
@@ -289,6 +293,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				HEADER_SEARCH_PATHS = (
 					"\"$(SOLUTION_DIR)/engine/include\"",
 					"\"$(SOLUTION_DIR)/libfoundation/include\"",

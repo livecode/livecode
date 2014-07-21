@@ -149,7 +149,6 @@ bool MCScreenDC::getkeysdown(MCListRef& r_list)
     
     // GDK does not provide a wrapper for XQueryKeymap so we have to use it
     // directly if we want to get the key state from X11.
-	char kstring[U4L];
 	char km[32];
 	MCmodifierstate = querymods();
     x11::XQueryKeymap(x11::gdk_x11_display_get_xdisplay(dpy), km);
@@ -188,10 +187,7 @@ bool MCScreenDC::getkeysdown(MCListRef& r_list)
                 break;
 		}
 	}
-    
-    // Clean up the keymap
-    g_object_unref(t_keymap);
-    
+
 	return t_success && MCListCopy(*t_list, r_list);
 }
 
@@ -200,7 +196,7 @@ void MCScreenDC::setmods(guint state, KeySym sym,
 {
 	if (lockmods)
 		return;
-    
+
     // Set the button state
     uint2 t_buttons = 0;
     if (state & GDK_BUTTON1_MASK)
@@ -225,7 +221,7 @@ void MCScreenDC::setmods(guint state, KeySym sym,
 	else
     {
 		// Update all the buttons
-        MCbuttonstate = state >> 8 & 0x1F;
+        MCbuttonstate = t_buttons;
     }
     
     // Assumption: GDK keysyms and X11 keysyms have the same values
@@ -261,6 +257,11 @@ void gtk_main_do_event(GdkEvent*);
 
 void DnDClientEvent(GdkEvent* p_event);
 
+static bool motion_event_filter_fn(GdkEvent *p_event, void*)
+{
+    return p_event->type == GDK_MOTION_NOTIFY;
+}
+
 Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, Boolean& reset)
 {
     // Event object. Note that GDK requires these to be disposed of after handling
@@ -287,7 +288,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
         {
             break;
         }
-        
+
         // What type of event are we dealing with?
         switch (t_event->type)
         {
@@ -414,7 +415,10 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                         
                         // No further processing of the event if the IME ate it
                         if (t_ignore)
+                        {
+                            t_handled = true;
                             break;
+                        }
                         
                         // Convert the key event into a Unicode character
                         codepoint_t t_codepoint = gdk_keyval_to_unicode(t_event->key.keyval);
@@ -486,6 +490,14 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 
             case GDK_MOTION_NOTIFY:
             {
+                // Get the most up-to-date motion event
+                GdkEvent *t_new_event;
+                while (GetFilteredEvent(&motion_event_filter_fn, t_new_event, NULL))
+                {
+                    gdk_event_free(t_event);
+                    t_event = t_new_event;
+                }
+                
                 // Update the modifier keys flags
                 setmods(t_event->motion.state, 0, 0, False);
                 
@@ -579,12 +591,13 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                             {
                                 switch (t_event->scroll.direction)
                                 {
+                                    // Up and down are switched. For some reason...
                                     case GDK_SCROLL_UP:
-                                        mfocused->kdown(kMCEmptyString, XK_WheelUp);
+                                        mfocused->kdown(kMCEmptyString, XK_WheelDown);
                                         break;
                                         
                                     case GDK_SCROLL_DOWN:
-                                        mfocused->kdown(kMCEmptyString, XK_WheelDown);
+                                        mfocused->kdown(kMCEmptyString, XK_WheelUp);
                                         break;
                                         
                                     case GDK_SCROLL_LEFT:
@@ -631,13 +644,15 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                                     {
                                         // This is a double-click event
                                         doubleclick = True;
-                                        MCdispatcher->wmdown(t_event->button.window, t_event->button.button);
+                                        MCdispatcher->wdoubledown(t_event->button.window, t_event->button.button);
                                     }
                                     
                                     reset = True;
                                 }
                                 else
                                 {
+                                    doubleclick = tripleclick = false;
+                                    MCdispatcher->wmfocus(t_event->button.window, t_clickloc.x, t_clickloc.y);
                                     MCdispatcher->wmdown(t_event->button.window, t_event->button.button);
                                 }
                             }
@@ -893,24 +908,29 @@ void MCScreenDC::waitmessage(GdkWindow* w, int event_type)
 	// Does nothing
 }
 
+
 GdkAtom MCworkareaatom;
 GdkAtom MCstrutpartialatom;
 GdkAtom MCclientlistatom;
+
 
 void MCScreenDC::EnqueueGdkEvents()
 {
     while (true)
     {
         // Run the GLib main loop
-        gdk_threads_leave();
+        //gdk_threads_leave();
         while (g_main_context_iteration(NULL, FALSE))
             ;
-        gdk_threads_enter();
+        //gdk_threads_enter();
         
         // Enqueue any further GDK events
         GdkEvent *t_event = gdk_event_get();
         if (t_event == NULL)
             break;
+        
+        // GTK hasn't had a chance at this event yet
+        //gtk_main_do_event(t_event);
         
         MCEventnode *t_eventnode = new MCEventnode(t_event);
         t_eventnode->appendto(pendingevents);
@@ -954,8 +974,19 @@ void MCScreenDC::IME_OnCommit(GtkIMContext*, gchar *p_utf8_string)
     MCAutoStringRef t_text;
     /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)p_utf8_string, strlen(p_utf8_string), kMCStringEncodingUTF8, false, &t_text);
     
-    // Insert the text from the IME into the active field
-    MCactivefield->finsertnew(FT_IMEINSERT, *t_text, LCH_UNICODE);
+    if (MCStringGetLength(*t_text) == 1)
+    {
+        if (MCStringIsNative(*t_text))
+            MCdispatcher->wkdown(MCactivefield->getstack()->getwindow(), *t_text, MCStringGetCodepointAtIndex(*t_text, 0));
+        else
+            MCdispatcher->wkdown(MCactivefield->getstack()->getwindow(), *t_text, MCStringGetCodepointAtIndex(*t_text, 0)|XK_Class_codepoint);
+    }
+    else
+    {
+        // Insert the text from the IME into the active field
+        MCactivefield->stopcomposition(True, False);
+        MCactivefield->finsertnew(FT_IMEINSERT, *t_text, LCH_UNICODE);
+    }
 }
 
 bool MCScreenDC::IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_length)
@@ -963,24 +994,89 @@ bool MCScreenDC::IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_le
     return false;
 }
 
-void MCScreenDC::IME_OnPreeditChanged(GtkIMContext*)
+void MCScreenDC::IME_OnPreeditChanged(GtkIMContext* p_context)
 {
-    ;
+    if (MCactivefield == NULL)
+        return;
+    
+    // Get the string. We ignore the attributes list entirely.
+    gchar *t_utf8_string;
+    gint t_cursor_pos;
+    gtk_im_context_get_preedit_string(p_context, &t_utf8_string, NULL, &t_cursor_pos);
+    
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)t_utf8_string, strlen(t_utf8_string), kMCStringEncodingUTF8, false, &t_string);
+    g_free(t_utf8_string);
+    
+    // Do the insert
+    MCactivefield->startcomposition();
+    MCactivefield->finsertnew(FT_IMEINSERT, *t_string, LCH_UNICODE);
+    
+    // Update the cursor position
+    MCactivefield->setcompositioncursoroffset(t_cursor_pos);
 }
 
 void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
 {
-    ;
+    if (MCactivefield == NULL)
+        return;
+    
+    MCactivefield->stopcomposition(True, False);
 }
 
 void MCScreenDC::IME_OnPreeditStart(GtkIMContext*)
 {
-    ;
+    if (MCactivefield == NULL)
+        return;
+    
+    MCactivefield->startcomposition();
 }
 
 void MCScreenDC::IME_OnRetrieveSurrounding(GtkIMContext*)
 {
     ;
+}
+
+void MCScreenDC::clearIME(Window w)
+{
+    if (!m_has_gtk)
+        return;
+    
+    gtk_im_context_reset(m_im_context);
+}
+
+void MCScreenDC::activateIME(Boolean activate)
+{
+    if (!m_has_gtk)
+        return;
+    
+    if (activate)
+    {
+        gtk_im_context_set_client_window(m_im_context, MCactivefield->getstack()->getwindow());
+        gtk_im_context_focus_in(m_im_context);
+        
+        if (MCinlineinput)
+            gtk_im_context_set_use_preedit(m_im_context, TRUE);
+        else
+            gtk_im_context_set_use_preedit(m_im_context, FALSE);
+    }
+    else
+    {
+        gtk_im_context_focus_out(m_im_context);
+    }
+}
+
+void MCScreenDC::configureIME(int32_t x, int32_t y)
+{
+    if (!m_has_gtk)
+        return;
+    
+    GdkRectangle t_cursor;
+    t_cursor.x = x;
+    t_cursor.y = y;
+    t_cursor.width = t_cursor.height = 1;
+    
+    gtk_im_context_set_cursor_location(m_im_context, &t_cursor);
 }
 
 void init_xDnD()

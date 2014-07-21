@@ -32,6 +32,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "context.h"
 
+//////////////////////////////////////////////////////////////////////
+
+// MW-2014-07-17: [[ ImageMetadata ]] Convert array to the metadata struct.
+bool MCImageParseMetadata(MCExecContext& ctxt, MCArrayRef p_array, MCImageMetadata& r_metadata)
+{
+    MCValueRef t_value;
+    real64_t t_density;
+    
+    if (MCArrayFetchValue(p_array, false, MCNAME("density"), t_value)
+            && ctxt . ConvertToReal(t_value, t_density))
+    {
+        r_metadata . has_density = true;
+        r_metadata . density = t_density;
+    }
+    else
+        r_metadata . has_density = false;
+    
+    return true;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBitmap *&r_compressed)
 {
 	bool t_success = true;
@@ -62,12 +84,12 @@ bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBi
 			 else if (MCpaintcompression == EX_JPEG)
 			 {
 				 t_compression = F_JPEG;
-				 t_success = MCImageEncodeJPEG(p_bitmap, t_stream, t_size);
+				 t_success = MCImageEncodeJPEG(p_bitmap, nil, t_stream, t_size);
 			 }
 			 else
 			 {
 				 t_compression = F_PNG;
-				 t_success = MCImageEncodePNG(p_bitmap, t_stream, t_size);
+				 t_success = MCImageEncodePNG(p_bitmap, nil, t_stream, t_size);
 			 }
 		}
 
@@ -102,12 +124,12 @@ void MCImage::recompress()
 	flags &= ~F_NEED_FIXING;
 }
 
-bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_frames, uindex_t &r_frame_count)
+bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCBitmapFrame *&r_frames, uindex_t &r_frame_count)
 {
 	bool t_success = true;
 
 	IO_handle t_stream = nil;
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 1;
     MCAutoDataRef t_data;
 
@@ -117,7 +139,7 @@ bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_f
 
 	// create stream for non-rle compressed images
 	if (t_success && p_compressed->compression != F_RLE)
-		t_success = nil != (t_stream = MCS_fakeopen(MCString((const char *)p_compressed -> data, p_compressed -> size)));
+        t_success = nil != (t_stream = MCS_fakeopen((const char *)p_compressed -> data, p_compressed -> size));
 
 	if (t_success)
 	{
@@ -171,24 +193,15 @@ bool MCImage::decompressbrush(MCGImageRef &r_brush)
 
 	bool t_success = true;
 
-	MCImageFrame *t_frame = nil;
+	MCGImageFrame *t_frame = nil;
 
 	// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: We try here to acquire the brush
 	// bitmap at 1.0 scale, but currently ignore the set density value of the returned frame.
 	// We may have to add support for hi-res brushes OR scale the resulting bitmap appropriately.
-	t_success = m_rep->LockImageFrame(0, true, 1.0, t_frame);
+	t_success = m_rep->LockImageFrame(0, 1.0, t_frame);
 
 	if (t_success)
-	{
-		MCGRaster t_raster;
-		t_raster.width = t_frame->image->width;
-		t_raster.height = t_frame->image->height;
-		t_raster.stride = t_frame->image->stride;
-		t_raster.format = MCImageBitmapHasTransparency(t_frame->image) ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
-		t_raster.pixels = t_frame->image->data;
-
-		t_success = MCGImageCreateWithRaster(t_raster, r_brush);
-	}
+		r_brush = MCGImageRetain(t_frame->image);
 
 	m_rep->UnlockImageFrame(0, t_frame);
 
@@ -202,8 +215,8 @@ void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density)
 		/* OVERHAUL - REVISIT: for the moment, prepared images are premultiplied
 		 * as we expect them to be rendered, but if not then this is actually
 		 * causing more work to be done than needed */
-		MCImageFrame *t_frame = nil;
-		p_rep->LockImageFrame(0, true, p_density, t_frame);
+		MCGImageFrame *t_frame = nil;
+		p_rep->LockImageFrame(0, p_density, t_frame);
 		p_rep->UnlockImageFrame(0, t_frame);
 	}
 }
@@ -285,17 +298,17 @@ bool MCU_israwimageformat(Export_format p_format)
 		p_format == EX_RAW_RGBA || p_format == EX_RAW_BGRA || p_format == EX_RAW_INDEXED;
 }
 
-bool MCImageEncode(MCImageBitmap *p_bitmap, Export_format p_format, bool p_dither, IO_handle p_stream, uindex_t &r_bytes_written)
+bool MCImageEncode(MCImageBitmap *p_bitmap, Export_format p_format, bool p_dither, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written)
 {
 	bool t_success = true;
 	switch (p_format)
 	{
 	case EX_JPEG:
-		t_success = MCImageEncodeJPEG(p_bitmap, p_stream, r_bytes_written);
+		t_success = MCImageEncodeJPEG(p_bitmap, p_metadata, p_stream, r_bytes_written);
 		break;
 
 	case EX_PNG:
-		t_success = MCImageEncodePNG(p_bitmap, p_stream, r_bytes_written);
+		t_success = MCImageEncodePNG(p_bitmap, p_metadata, p_stream, r_bytes_written);
 		break;
 
 	case EX_GIF:
@@ -324,13 +337,13 @@ bool MCImageEncode(MCImageBitmap *p_bitmap, Export_format p_format, bool p_dithe
 	return t_success;
 }
 
-bool MCImageEncode(MCImageIndexedBitmap *p_indexed, Export_format p_format, IO_handle p_stream, uindex_t &r_bytes_written)
+bool MCImageEncode(MCImageIndexedBitmap *p_indexed, Export_format p_format, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written)
 {
 	bool t_success = true;
 	switch (p_format)
 	{
 	case EX_PNG:
-		t_success = MCImageEncodePNG(p_indexed, p_stream, r_bytes_written);
+		t_success = MCImageEncodePNG(p_indexed, p_metadata, p_stream, r_bytes_written);
 		break;
 
 	case EX_GIF:
@@ -346,7 +359,7 @@ bool MCImageEncode(MCImageIndexedBitmap *p_indexed, Export_format p_format, IO_h
 			MCImageBitmap *t_bitmap = nil;
 			t_success = MCImageConvertIndexedToBitmap(p_indexed, t_bitmap);
 			if (t_success)
-				t_success = MCImageEncode(t_bitmap, p_format, false, p_stream, r_bytes_written);
+				t_success = MCImageEncode(t_bitmap, p_format, false, p_metadata, p_stream, r_bytes_written);
 			MCImageFreeBitmap(t_bitmap);
 		}
 	}
@@ -354,7 +367,7 @@ bool MCImageEncode(MCImageIndexedBitmap *p_indexed, Export_format p_format, IO_h
 	return t_success;
 }
 
-bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePaletteSettings *p_palette_settings, bool p_dither, IO_handle p_stream, IO_handle p_mstream)
+bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePaletteSettings *p_palette_settings, bool p_dither, MCImageMetadata *p_metadata, IO_handle p_stream, IO_handle p_mstream)
 {
 	bool t_success = true;
 
@@ -367,10 +380,10 @@ bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePalet
 		{
 			t_success = MCImageQuantizeColors(p_bitmap, p_palette_settings, p_dither, p_format == F_GIF || p_format == F_PNG, t_indexed);
 			if (t_success)
-				t_success = MCImageEncode(t_indexed, p_format, p_stream, t_size);
+				t_success = MCImageEncode(t_indexed, p_format, p_metadata, p_stream, t_size);
 		}
 		else
-			t_success = MCImageEncode(p_bitmap, p_format, p_dither, p_stream, t_size);
+			t_success = MCImageEncode(p_bitmap, p_format, p_dither, p_metadata, p_stream, t_size);
 	}
 
 	if (t_success && p_mstream != nil)

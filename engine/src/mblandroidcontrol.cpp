@@ -147,9 +147,9 @@ void MCAndroidControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
     int16_t i1, i2, i3, i4;
 
     // MM-2013-11-26: [[ Bug 11485 ]] The rect of the control is passed in user space. Convert to device space when setting on view.
+    // AL-2014-06-16: [[ Bug 12588 ]] Actually use the passed in rect parameter
     MCGRectangle t_rect;
-    t_rect = MCGRectangleMake(i1, i2, i3 - i1, i4 -i2);
-    t_rect = MCNativeControlUserRectToDeviceRect(t_rect);
+    t_rect = MCNativeControlUserRectToDeviceRect(MCRectangleToMCGRectangle(p_rect));
     i1 = (int16_t) roundf(t_rect . origin . x);
     i2 = (int16_t) roundf(t_rect . origin . y);
     i3 = (int16_t) roundf(t_rect . size . width) + i1;

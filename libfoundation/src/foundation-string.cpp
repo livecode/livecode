@@ -817,6 +817,10 @@ bool MCStringCopySubstring(MCStringRef self, MCRange p_range, MCStringRef& r_sub
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
+    // Avoid copying in case the substring is actually the whole string
+    if (p_range . offset == 0 && self -> char_count < p_range . length)
+        return MCStringCopy(self, r_substring);
+
 	__MCStringClampRange(self, p_range);
 	
     if (MCStringIsNative(self))
@@ -4637,6 +4641,7 @@ bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_str
         return true;
     }
 
+
     // What is the system character encoding?
     //
     // Doing this here is unpleasant but the MCString*SysString functions are
@@ -4688,12 +4693,23 @@ bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_str
 bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_string)
 {
     // Create the pseudo-FD that iconv uses for character conversion. For
-	// efficiency, convert straight from the internal format.
+    // efficiency, convert straight from the internal format.
 	iconv_t t_fd;
 	const char *t_mc_string;
 	size_t t_mc_len;
+
+    // What is the system character encoding?
+    //
+    // Doing this here is unpleasant but the MCString*SysString functions are
+    // needed before the libfoundation initialise call is made
+    if (__MCSysCharset == nil)
+    {
+        setlocale(LC_CTYPE, "");
+        __MCSysCharset = nl_langinfo(CODESET);
+    }
+
 	if (MCStringIsNative(p_string) && MCStringGetNativeCharPtr(p_string) != nil)
-	{
+    {
         t_fd = iconv_open(__MCSysCharset, "ISO-8859-1");
 		t_mc_string = (const char *)MCStringGetNativeCharPtr(p_string);
 		t_mc_len = MCStringGetLength(p_string);
@@ -4756,13 +4772,10 @@ bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFD(MCStringRef self, MCStringRef &r_string)
 {
-    if (MCStringIsNative(self))
-        return MCStringCopy(self, r_string);
-    
-    // Normalise
+    // AL-2014-06-24: [[ Bug 12656 ]] Native strings can be decomposed into non-native ones.
     unichar_t *t_norm = nil;
     uindex_t t_norm_length;
-    if (MCUnicodeNormaliseNFD(self -> chars, self -> char_count, t_norm, t_norm_length)
+    if (MCUnicodeNormaliseNFD(MCStringGetCharPtr(self), self -> char_count, t_norm, t_norm_length)
         && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
         return true;
     MCMemoryDelete(t_norm);
@@ -4771,6 +4784,7 @@ bool MCStringNormalizedCopyNFD(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFKC(MCStringRef self, MCStringRef &r_string)
 {
+    // Native strings are already normalized
     if (MCStringIsNative(self))
         return MCStringCopy(self, r_string);
     
@@ -4786,13 +4800,11 @@ bool MCStringNormalizedCopyNFKC(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFKD(MCStringRef self, MCStringRef &r_string)
 {
-    if (MCStringIsNative(self))
-        return MCStringCopy(self, r_string);
-    
+    // AL-2014-06-24: [[ Bug 12656 ]] Native strings can be decomposed into non-native ones.
     // Normalise
     unichar_t *t_norm = nil;
     uindex_t t_norm_length;
-    if (MCUnicodeNormaliseNFKD(self -> chars, self -> char_count, t_norm, t_norm_length)
+    if (MCUnicodeNormaliseNFKD(MCStringGetCharPtr(self), self -> char_count, t_norm, t_norm_length)
         && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
         return true;
     MCMemoryDelete(t_norm);
@@ -4826,7 +4838,8 @@ bool MCStringSetNumericValue(MCStringRef self, double p_value)
     {
         if (MCMemoryReallocate(self -> chars, ((self -> char_count * 2 + 7) & ~7) + 8, self -> chars))
         {
-            *(double*)(&(self -> chars[(self -> char_count + 3) & ~3])) = p_value;
+            // AL-2014-06-25: [[ Bug 12676 ]] Put numeric value at correct memory address
+            *(double*)(&(self -> native_chars[(self -> char_count * 2 + 7) & ~7])) = p_value;
             t_success = true;
         }
     }
@@ -4847,7 +4860,7 @@ bool MCStringGetNumericValue(MCStringRef self, double &r_value)
         if (MCStringIsNative(self))
             r_value = *(double*)(&(self -> native_chars[(self -> char_count + 7) & ~7]));
         else
-            r_value = *(double*)(&(self -> chars[(self -> char_count + 7) & ~7]));
+            r_value = *(double*)(&(self -> native_chars[(self -> char_count * 2 + 7) & ~7]));
 
         return true;
     }
@@ -4995,18 +5008,26 @@ static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string)
     __MCString *t_string;
 	t_string = nil;
 	
-    if (!__MCValueCreate(kMCValueTypeCodeString, t_string))
-        return false;
-    
-    t_string -> char_count = self -> char_count;
-    if (MCStringIsNative(self))
-        t_string -> native_chars = self -> native_chars;
+    if (self -> char_count == 0)
+    {
+        t_string = MCValueRetain(kMCEmptyString);
+        MCMemoryDeleteArray(self -> native_chars);
+    }
     else
     {
-        t_string -> chars = self -> chars;
-        t_string -> flags |= kMCStringFlagIsNotNative;
+        if (!__MCValueCreate(kMCValueTypeCodeString, t_string))
+            return false;
+        
+        t_string -> char_count = self -> char_count;
+        if (MCStringIsNative(self))
+            t_string -> native_chars = self -> native_chars;
+        else
+        {
+            t_string -> chars = self -> chars;
+            t_string -> flags |= kMCStringFlagIsNotNative;
+        }
+        t_string -> capacity = 0;
     }
-    t_string -> capacity = 0;
     
     self -> char_count = 0;
     self -> chars = nil;

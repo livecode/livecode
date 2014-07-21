@@ -1,0 +1,1 @@
+# Pasting text from Text Edit into field creates gibberish

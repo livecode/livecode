@@ -125,6 +125,7 @@ enum MCTransferType
 	TRANSFER_TYPE_TEXT__FIRST = TRANSFER_TYPE_TEXT,
 	TRANSFER_TYPE_UNICODE_TEXT,
 	TRANSFER_TYPE_STYLED_TEXT,
+	TRANSFER_TYPE_STYLED_TEXT_ARRAY,
 	TRANSFER_TYPE_RTF_TEXT,
 	TRANSFER_TYPE_HTML_TEXT,
 	TRANSFER_TYPE_TEXT__LAST = TRANSFER_TYPE_HTML_TEXT,
@@ -344,7 +345,7 @@ public:
 	// Return data of the given type, converting as necessary.
 	// The returned string has copy semantics, i.e. the caller must
 	// release it when done with it.
-    bool Fetch(MCTransferType p_type, MCDataRef &r_data);
+    bool Fetch(MCTransferType p_type, MCValueRef &r_data);
 	
 	// Unlock the object.
 	void Unlock(void);
@@ -574,6 +575,10 @@ bool MCConvertTextToStyledText(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertUnicodeToStyledText(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertRTFToStyledText(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output);
+
+// MW-2014-03-12: [[ ClipboardStyledText ]] Converters to and from styledText arrays.
+bool MCConvertStyledTextToStyledTextArray(MCDataRef p_string, MCArrayRef &r_array);
+bool MCConvertStyledTextArrayToStyledText(MCArrayRef p_array, MCDataRef &r_output);
 
 ///////////////////////////////////////////////////////////////////////////////
 

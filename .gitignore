@@ -5,6 +5,7 @@ engine/src/hashedstrings.cpp
 engine/src/encodederrors.cpp
 engine/src/startupstack.cpp
 engine/src/linuxstubs.cpp
+engine/src/quicktimestubs.mac.cpp
 engine/include/revbuild.h
 lcidlc/src/EncodedSupport.c
 lcidlc/src/EncodedJavaSupport.c
@@ -96,4 +97,3 @@ prebuilt/lib
 prebuilt/build
 prebuilt/packaged
 prebuilt/fetched
-

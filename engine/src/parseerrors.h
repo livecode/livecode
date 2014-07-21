@@ -1678,6 +1678,22 @@ enum Parse_errors
     // SN-2014-05-06 [[ Bug 12360 ]]
     // {PE-0547} open: no encoding when opening in binary mode
     PE_OPEN_BADBINARYENCODING,
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant secure socket <socket> with verification for host <host>
+	// {PE-0548} secure: bad host name
+	PE_SECURE_BADHOST,
+
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant secure socket <socket> with verification for host <host>
+	// {PE-0549} secure: expected 'host'
+	PE_SECURE_NOHOST,
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
+	// {PE-0550} open: bad host name
+	PE_OPEN_BADHOST,
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
+	// {PE-0551} open: expected 'host'
+	PE_OPEN_NOHOST,
 };
 
 extern const char *MCparsingerrors;

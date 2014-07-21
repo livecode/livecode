@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphic.h"
 
 #include "exec-interface.h"
+#include "graphics_util.h"
 
 //////////
 
@@ -285,8 +286,8 @@ void MCImage::SetRepeatCount(MCExecContext& ctxt, integer_t p_count)
 	if (opened && m_rep != nil && m_rep->GetFrameCount() > 1 && repeatcount != 0)
 	{
 		setframe(currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
-		MCImageFrame *t_frame = nil;
-		if (m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame))
+		MCGImageFrame *t_frame = nil;
+		if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 		{
 			MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 			m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -375,7 +376,7 @@ void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 	else
 	{
 		if (t_success)
-			t_success = nil != (t_stream = MCS_fakeopen(MCString((const char *)MCDataGetBytePtr(p_text), MCDataGetLength(p_text))));
+            t_success = nil != (t_stream = MCS_fakeopen(MCDataGetBytePtr(p_text), MCDataGetLength(p_text)));
 		if (t_success)
 			t_success = MCImageImport(t_stream, nil, t_hotspot, t_name, t_compressed, t_bitmap);
 		if (t_success)
@@ -531,7 +532,20 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		if (m_rep == nil)
 			MCMemoryClear(t_data_ptr, t_data_size);
 		else
-		{
+        {
+            // SN-2014-07-09: [[ MERGE-6.7 ]] Apply Ian's fix in the exec file
+            // IM-2014-06-18: [[ Bug 12646 ]] Apply Seb's fix here too.
+            // SN-2014-01-31: [[ Bug 11462 ]] Opening an image to get its data should not
+            // reset its size: F_LOCK_LOCATION ensures the size - and the location, which
+            // doesn't matter here - are read as they are stored.
+            bool t_tmp_locked;
+            t_tmp_locked = false;
+
+            if (!getflag(F_LOCK_LOCATION))
+            {
+                setflag(true, F_LOCK_LOCATION);
+                t_tmp_locked = true;
+            }
 			openimage();
 			
 			MCImageBitmap *t_bitmap = nil;
@@ -555,6 +569,9 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 				}
 			}
             MCImageFreeBitmap(t_bitmap);
+
+            if (t_tmp_locked)
+                setflag(false, F_LOCK_LOCATION);
 			
 			closeimage();
 		}
@@ -671,6 +688,39 @@ void MCImage::SetAngle(MCExecContext& ctxt, integer_t p_angle)
 	}
 }
 
+// SN-2014-06-25: [[ MERGE-6.7 ]] P_CENTER_RECT property's getter added
+// MW-2014-06-20: [[ ImageCenterRect ]] Setter for centerRect property.
+void MCImage::SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle)
+{
+    if (p_rectangle == nil)
+        m_center_rect = MCRectangleMake(INT16_MIN, INT16_MIN, UINT16_MAX, UINT16_MAX);
+    else
+    {
+        m_center_rect . x = MCU_max(p_rectangle -> x, 0);
+        m_center_rect . y = MCU_max(p_rectangle -> y, 0);
+        m_center_rect . width = MCU_max(p_rectangle -> width, 0);
+        m_center_rect . height = MCU_max(p_rectangle -> height, 0);
+    }
+    
+    notifyneeds(false);
+    
+    if (opened)
+        layer_redrawall();
+}
+
+// SN-2014-06-25: [[ MERGE-6.7 ]] P_CENTER_RECT property's setter added
+// MW-2014-06-20: [[ ImageCenterRect ]] Getter for centerRect property.
+void MCImage::GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle)
+{
+    if (m_center_rect . x != INT16_MIN)
+    {
+        r_rectangle = new MCRectangle;
+        *r_rectangle = m_center_rect;
+    }
+    else
+        r_rectangle = NULL;
+}
+
 void MCImage::SetBlendLevel(MCExecContext& ctxt, uinteger_t level)
 {
     MCObject::SetBlendLevel(ctxt, level);
@@ -697,8 +747,8 @@ void MCImage::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, 
     }
     if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
     {
-        MCImageFrame *t_frame = nil;
-        if (m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame))
+        MCGImageFrame *t_frame = nil;
+        if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
         {
             MCscreen->addtimer(this, MCM_internal, t_frame->duration);
             m_rep->UnlockImageFrame(currentframe, t_frame);

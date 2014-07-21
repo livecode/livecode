@@ -88,20 +88,22 @@ static bool MCExposeEventFilter(GdkEvent *e, void *)
     return e->type == GDK_EXPOSE || e->type == GDK_DAMAGE;
 }
 
+bool MCLinuxRegionToMCGRegion(GdkRegion*, MCGRegionRef&);
+
 void MCScreenDC::expose()
 {
 	GdkEvent *event;
 
     while (true)
     {
-        MCRegionRef t_dirty;
+        MCGRegionRef t_dirty;
         Window t_window;
         if (GetFilteredEvent(&MCExposeEventFilter, event, NULL))
         {
             GdkEventExpose *eevent = (GdkEventExpose*)event;
             t_window = eevent->window;
             
-            t_dirty = (MCRegionRef)gdk_region_copy(eevent->region);
+            MCLinuxRegionToMCGRegion(eevent->region, t_dirty);
             
             gdk_event_free(event);
         }
@@ -111,9 +113,9 @@ void MCScreenDC::expose()
         MCStack *t_stack;
 		t_stack = MCdispatcher -> findstackd(t_window);
 		if (t_stack != nil)
-			t_stack -> onexpose(t_dirty);
+			t_stack -> onexpose((MCRegionRef)t_dirty);
         
-		MCRegionDestroy(t_dirty);
+		MCGRegionDestroy(t_dirty);
     }
 }
 
@@ -262,23 +264,23 @@ Boolean MCScreenDC::getmouse(uint2 button, Boolean& r_abort)
     
     GdkModifierType state;
     gdk_display_get_pointer(dpy, NULL, NULL, NULL, &state);
-    
+
     switch (button)
     {
         case 0:
-            return state & GDK_BUTTON1_MASK;
+            return !!(state & GDK_BUTTON1_MASK);
             
         case 1:
-            return state & GDK_BUTTON2_MASK;
+            return !!(state & GDK_BUTTON2_MASK);
             
         case 2:
-            return state & GDK_BUTTON3_MASK;
+            return !!(state & GDK_BUTTON3_MASK);
             
         case 3:
-            return state & GDK_BUTTON4_MASK;
+            return !!(state & GDK_BUTTON4_MASK);
             
         case 4:
-            return state & GDK_BUTTON5_MASK;
+            return !!(state & GDK_BUTTON5_MASK);
             
         default:
             return false;
@@ -379,6 +381,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	Boolean donepending = False;
 	do
 	{
+		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
+		DoRunloopActions();
+
 		real8 eventtime = exittime;
 		donepending = handlepending(curtime, eventtime, dispatch);
 		siguser();

@@ -722,7 +722,9 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 			t_data = (char *)t_swapped_data;
 		}
 
-		if ((stat = IO_write_string_legacy_full(MCString(t_data, t_data_len), stream, 2, true)) != IO_NORMAL)
+        // AL-2014-07-15: [[ Bug 12672 ]] If the data is larger than MAXUINT2,
+        //  make sure appropriate size is passed to IO_write_string_legacy_full
+		if ((stat = IO_write_string_legacy_full(MCString(t_data, t_data_len), stream, t_data_len > MAXUINT2 ? 4 : 2, true)) != IO_NORMAL)
 			return stat;
 
 		// If the string had to be byte swapped, delete the allocated data
@@ -1109,8 +1111,16 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         MCBlock *firstblock, *lastblock;
         lptr->getblocks(firstblock, lastblock);
         MCBlock *bptr = firstblock;
+        MCSegment *sgptr = segments;
+        
         do
         {
+            // AL-2014-07-17: [[ Bug 12823 ]] Block origin is relative to the segment, so keep track
+            //  of the current segment to get correct selection coordinates.
+            // Advance to the next segment, if necessary
+            if (sgptr->next()->GetFirstBlock() == bptr)
+                sgptr = sgptr->next();
+            
             // Is part of this block selected?
             findex_t bi, bl;
             bptr->GetRange(bi, bl);
@@ -1130,16 +1140,19 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 int2 bix, bex;
                 bix = bptr->GetCursorX(si);
                 bex = bptr->GetCursorX(ei);
-                
+        
+                // AL-2014-07-17: [[ Bug 12823 ]] Include segment offset in the block coordinate calculation
+                // AL_2014-07-18: [[ Bug 12828 ]] RTL text is right-aligned in tabbed cell, so adjust the
+                //  x coordinate of the selection accordingly
                 // Re-ordering will be required if the block is RTL
                 if (bix > bex)
                 {
-                    srect.x = x + bex;
+                    srect.x = x + (sgptr -> GetRight() - bex - bptr -> getwidth());
                     srect.width = bix - bex;
                 }
                 else
                 {
-                    srect.x = x + bix;
+                    srect.x = x + sgptr -> GetCursorOffset() + bix;
                     srect.width = bex - bix;
                 }
 
@@ -1311,6 +1324,8 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 	MCRectangle t_clip;
 	t_clip = dc -> getclip();
+	
+	dc->save();
 
 	uint2 ascent, descent;
 	ascent = fixeda;
@@ -1467,7 +1482,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	}
 	while (lptr != lines);
 
-	dc -> setclip(t_clip);
+	dc->restore();
 	
 	// MW-2012-01-08: [[ Paragraph Border ]] Render the paragraph's border (if
 	//   any).
@@ -1581,7 +1596,9 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				//   table mode, we are done.
 				// MW-2013-05-20: [[ Bug 10878 ]] Tweaked conditions to work for min two tabStops
 				//   rather than 3.
-				if (ct >= nt - 2 && t[nt - 2] == t[nt - 1])
+                // MW-2015-05-28: [[ Bug 12341 ]] Only stop rendering lines if in 'fixed width table'
+                //   mode - indicated by the last two tabstops being the same.
+				if (nt >= 2 && t[nt - 1] == t[nt - 2] && ct == nt - 1)
 					break;
 			}
 		}
@@ -1639,7 +1656,8 @@ Boolean MCParagraph::getatts(uint2 si, uint2 ei, Properties which, Font_textstyl
 	}
 	
 	do
-    {
+	{
+
         switch (which)
         {
             case P_TEXT_FONT:
@@ -2050,7 +2068,11 @@ MCLine *MCParagraph::indextoline(findex_t tindex)
 	return lines->prev();
 }
 
-void MCParagraph::join()
+// MW-2014-05-28: [[ Bug 12303 ]] Special-case added for when setting 'text' of field chunks. If
+//   'preserve_if_zero' is true, then 'this' paragraph's styles are preserved even if it has no
+//   text. This is used in the case of 'set the text of <chunk>' to ensure that paragraph properties
+//   of the first paragraph the text is set in do not get clobbered.
+void MCParagraph::join(bool p_preserve_zero_length_styles_if_zero)
 {
 	if (blocks == NULL)
 		inittext();
@@ -2061,7 +2083,9 @@ void MCParagraph::join()
 	//   the next paragraphs attrs.
 	// MW-2012-08-31: [[ Bug 10344 ]] If the textsize is 0 then always take the next
 	//   paragraphs attrs.
-	if (gettextlength() == 0)
+	if (!p_preserve_zero_length_styles_if_zero && gettextlength() == 0)
+	// MW-2014-05-28: [[ Bug 12303 ]] If the textsize is 0 and we don't want to preserve the style
+    //   changes, then copy the next paragraph's.
 		copyattrs(*pgptr);
 
 	// MW-2006-04-13: If the total new text size is greater than 65536 - 34 we just delete the next paragraph
@@ -2969,7 +2993,7 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
 	x -= computelineoffset(lptr);
 
-	focusedindex = lptr->GetCursorIndex(MCU_max(x, 0), False, moving_left);
+	focusedindex = lptr->GetCursorIndex(MCU_max(x, 0), False, moving_forward);
 	if (extend)
 	{
 		if (originalindex == PARAGRAPH_MAX_LEN)
@@ -3176,8 +3200,10 @@ MCRectangle MCParagraph::getdirty(uint2 fixedheight)
 
 				dirty.y = y;
 				// MW-2012-01-08: [[ ParaStyles ]] If on the first line, adjust for spacing before.
+                // MW-2014-06-10: [[ Bug 11809 ]] Make sure we adjust the top of the dirty rect if on
+                //   the first line and there is space above.
 				if (lptr == lines)
-					dirty.y -= t_space_above;
+					t_dirty_top -= t_space_above;
 			}
 
 			int32_t t_new_dirty_left, t_new_dirty_right;
@@ -4215,4 +4241,41 @@ bool MCParagraph::imagechanged(MCImage *p_image, bool p_deleting)
 	while (t_block != blocks);
 
 	return t_used;
+}
+
+void MCParagraph::restricttoline(findex_t& si, findex_t& ei)
+{
+	MCLine *t_line;
+	t_line = lines;
+	do
+	{
+		findex_t i, l;
+		t_line -> GetRange(i, l);
+		if (i >= si && si < (i + l))
+		{
+			si = i;
+			ei = i + l;
+			return;
+		}
+		t_line = t_line -> next();
+	}
+	while(t_line != lines);
+
+	si = ei = 0;
+}
+
+findex_t MCParagraph::heightoflinewithindex(findex_t si, uint2 fixedheight)
+{
+	MCLine *t_line;
+	t_line = lines;
+	do
+	{
+		findex_t i, l;
+		t_line -> GetRange(i, l);
+		if (i >= si && si < (i + l))
+			return fixedheight == 0 ? t_line -> getheight() : fixedheight;
+		t_line = t_line -> next();
+	}
+	while(t_line != lines);
+	return 0;
 }

@@ -13,6 +13,7 @@
 			buildPhases = (
 			);
 			dependencies = (
+				7249F9F7196571C300D4D0DC /* PBXTargetDependency */,
 				E8DAE479171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE47B171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE47D171428B100B96A87 /* PBXTargetDependency */,
@@ -24,7 +25,7 @@
 				E8DAE48B171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE48F171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE491171428B100B96A87 /* PBXTargetDependency */,
-				E8DAE493171428B100B96A87 /* PBXTargetDependency */,
+				4DF1BF8F197932DD00E4AC49 /* PBXTargetDependency */,
 				4D9BF3D4171445BB00B32D29 /* PBXTargetDependency */,
 				4D9BF4C01714474E00B32D29 /* PBXTargetDependency */,
 				4D9B6AD917144CC5001349F2 /* PBXTargetDependency */,
@@ -233,6 +234,41 @@
 			remoteGlobalIDString = 4D9BF4FE171447CB00B32D29;
 			remoteInfo = "server-dbodbc";
 		};
+		7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DB846B3192B53E800771914;
+			remoteInfo = "Server-Community";
+		};
+		7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DB846B4192B53E800771914;
+			remoteInfo = "Server-Community";
+		};
+		4DCACF3A197927FA0065D0A2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D6758FE0A79F9A400FA96D2;
+			remoteInfo = revvideograbber;
+		};
+		4DF1BF8E197932DD00E4AC49 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D6758FD0A79F9A400FA96D2;
+			remoteInfo = revvideograbber;
+		};
+		E8D3735D18CDDA40005C1182 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3F41714275B00B96A87 /* revbrowser.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E8D3735718CDDA3F005C1182;
+			remoteInfo = cefprocess;
+		};
 		E8DAE3EA1714271D00B96A87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
@@ -309,13 +345,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = E82D44A11713199700A10289;
 			remoteInfo = revspeech;
-		};
-		E8DAE446171427B000B96A87 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E8DAE440171427B000B96A87 /* revvideograbber.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4D6758FE0A79F9A400FA96D2;
-			remoteInfo = revvideograbber;
 		};
 		E8DAE44F171427B500B96A87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -415,16 +444,10 @@
 			remoteGlobalIDString = 4D6758FD0A79F9A400FA96D2;
 			remoteInfo = revfont;
 		};
-		E8DAE492171428B100B96A87 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E8DAE440171427B000B96A87 /* revvideograbber.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 4D6758FD0A79F9A400FA96D2;
-			remoteInfo = revvideograbber;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revvideograbber.xcodeproj; path = revvideograbber/revvideograbber.xcodeproj; sourceTree = "<group>"; };
 		E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = engine.xcodeproj; path = engine/engine.xcodeproj; sourceTree = "<group>"; };
 		E8DAE3F41714275B00B96A87 /* revbrowser.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revbrowser.xcodeproj; path = revbrowser/revbrowser.xcodeproj; sourceTree = "<group>"; };
 		E8DAE4151714277D00B96A87 /* revdb.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revdb.xcodeproj; path = engine/../revdb/revdb.xcodeproj; sourceTree = "<group>"; };
@@ -433,7 +456,6 @@
 		E8DAE4221714279E00B96A87 /* reviphone.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = reviphone.xcodeproj; path = revmobile/reviphone.xcodeproj; sourceTree = "<group>"; };
 		E8DAE42F171427A400B96A87 /* revpdfprinter.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revpdfprinter.xcodeproj; path = revpdfprinter/revpdfprinter.xcodeproj; sourceTree = "<group>"; };
 		E8DAE439171427A800B96A87 /* revspeech.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revspeech.xcodeproj; path = revspeech/revspeech.xcodeproj; sourceTree = "<group>"; };
-		E8DAE440171427B000B96A87 /* revvideograbber.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revvideograbber.xcodeproj; path = revvideograbber/revvideograbber.xcodeproj; sourceTree = "<group>"; };
 		E8DAE448171427B400B96A87 /* revxml.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revxml.xcodeproj; path = revxml/revxml.xcodeproj; sourceTree = "<group>"; };
 		E8DAE451171427BA00B96A87 /* revzip.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revzip.xcodeproj; path = revzip/revzip.xcodeproj; sourceTree = "<group>"; };
 		E8DAE4711714284E00B96A87 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = rules/Debug.xcconfig; sourceTree = "<group>"; };
@@ -459,6 +481,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		4DCACF2D197927FA0065D0A2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4DCACF3B197927FA0065D0A2 /* revvideograbber.bundle */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		E8DAE3D31714259A00B96A87 = {
 			isa = PBXGroup;
 			children = (
@@ -470,9 +500,9 @@
 		E8DAE3DA1714270E00B96A87 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */,
 				E8DAE451171427BA00B96A87 /* revzip.xcodeproj */,
 				E8DAE448171427B400B96A87 /* revxml.xcodeproj */,
-				E8DAE440171427B000B96A87 /* revvideograbber.xcodeproj */,
 				E8DAE439171427A800B96A87 /* revspeech.xcodeproj */,
 				E8DAE42F171427A400B96A87 /* revpdfprinter.xcodeproj */,
 				E8DAE41E1714279E00B96A87 /* revandroid.xcodeproj */,
@@ -496,6 +526,7 @@
 				E8DAE3EB1714271D00B96A87 /* LiveCode-Community.app */,
 				E8DAE3ED1714271D00B96A87 /* Standalone-Community.app */,
 				E8DAE3EF1714271D00B96A87 /* Installer.app */,
+				7249FA00196571C400D4D0DC /* Server-Community */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -504,6 +535,7 @@
 			isa = PBXGroup;
 			children = (
 				E8DAE3FA1714275C00B96A87 /* revbrowser.bundle */,
+				E8D3735E18CDDA40005C1182 /* revbrowser-cefprocess.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -545,14 +577,6 @@
 			isa = PBXGroup;
 			children = (
 				E8DAE43F171427A800B96A87 /* revspeech.bundle */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		E8DAE441171427B000B96A87 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				E8DAE447171427B000B96A87 /* revvideograbber.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -636,8 +660,8 @@
 					ProjectRef = E8DAE439171427A800B96A87 /* revspeech.xcodeproj */;
 				},
 				{
-					ProductGroup = E8DAE441171427B000B96A87 /* Products */;
-					ProjectRef = E8DAE440171427B000B96A87 /* revvideograbber.xcodeproj */;
+					ProductGroup = 4DCACF2D197927FA0065D0A2 /* Products */;
+					ProjectRef = 4DCACF2C197927FA0065D0A2 /* revvideograbber.xcodeproj */;
 				},
 				{
 					ProductGroup = E8DAE449171427B400B96A87 /* Products */;
@@ -761,6 +785,26 @@
 			remoteRef = 4D9BF505171447E900B32D29 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		7249FA00196571C400D4D0DC /* Server-Community */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "Server-Community";
+			remoteRef = 7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */;
+		};
+		4DCACF3B197927FA0065D0A2 /* revvideograbber.bundle */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = revvideograbber.bundle;
+			remoteRef = 4DCACF3A197927FA0065D0A2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E8D3735E18CDDA40005C1182 /* revbrowser-cefprocess.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "revbrowser-cefprocess.app";
+			remoteRef = E8D3735D18CDDA40005C1182 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		E8DAE3EB1714271D00B96A87 /* LiveCode-Community.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
@@ -836,13 +880,6 @@
 			fileType = wrapper.cfbundle;
 			path = revspeech.bundle;
 			remoteRef = E8DAE43E171427A800B96A87 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		E8DAE447171427B000B96A87 /* revvideograbber.bundle */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = revvideograbber.bundle;
-			remoteRef = E8DAE446171427B000B96A87 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		E8DAE450171427B500B96A87 /* revxml.bundle */ = {
@@ -929,6 +966,16 @@
 			name = "server-revxml";
 			targetProxy = 4D9BF4BF1714474E00B32D29 /* PBXContainerItemProxy */;
 		};
+		7249F9F7196571C300D4D0DC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "Server-Community";
+			targetProxy = 7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */;
+		};
+		4DF1BF8F197932DD00E4AC49 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = revvideograbber;
+			targetProxy = 4DF1BF8E197932DD00E4AC49 /* PBXContainerItemProxy */;
+		};
 		E8DAE479171428B100B96A87 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = LiveCode;
@@ -983,11 +1030,6 @@
 			isa = PBXTargetDependency;
 			name = revfont;
 			targetProxy = E8DAE490171428B100B96A87 /* PBXContainerItemProxy */;
-		};
-		E8DAE493171428B100B96A87 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = revvideograbber;
-			targetProxy = E8DAE492171428B100B96A87 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

@@ -108,22 +108,20 @@ class MCButton : public MCControl
 	MCStack *menu;
 	MCStringRef acceltext;
 	MCArrayRef tabs;
+	MCPlatformMenuRef m_system_menu;
 	uint2 menuhistory;
 	uint2 menulines;
 	uint2 accelkey;
 	uint2 labelwidth;
 	uint2 family;
-#ifdef _MAC_DESKTOP
-	short bMenuID;
-#endif
-
 	uint1 mymenudepth;
 	uint1 menubutton;
 	uint1 menumode;
 	uint1 accelmods;
 	uint1 mnemonic;
 	uint1 menucontrol;
-	bool menuhasitemtags;
+    MCGravity m_icon_gravity : 4;
+	bool menuhasitemtags : 1;
 
 	Boolean ishovering;
 	static uint2 focusedtab;
@@ -168,7 +166,7 @@ public:
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 #ifdef _MACOSX
@@ -315,7 +313,7 @@ public:
 	Bool macfindmenu(bool p_just_for_accel);
 	void macopenmenu(void);
 	void macfreemenu(void);
-	static void getmacmenuitemtextfromaccelerator(short menuid, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu);
+    static void getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu);
 #endif
 
 	MCCdata *getcdata(void) {return bdata;}
@@ -443,6 +441,9 @@ public:
     void GetDisabledIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
     void SetIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    // SN-2014-06-25 [[ IconGravity ]]
+    void GetIconGravity(MCExecContext &ctxt, intenum_t &r_gravity);
+    void SetIconGravity(MCExecContext &ctxt, intenum_t p_gravity);
     void SetHiliteIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetHiliteIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
     void SetVisitedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
