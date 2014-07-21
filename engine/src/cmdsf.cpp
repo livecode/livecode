@@ -3467,7 +3467,7 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
             
             // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
             MCNewAutoNameRef t_end_hostname;
-            if (!ctxt . EvalOptionalExprAsNullableNameRef(verifyhostname, EE_OPEN_BADHOST, &t_end_hostname))
+            if (!ctxt . EvalOptionalExprAsNameRef(verifyhostname, kMCEmptyName, EE_OPEN_BADHOST, &t_end_hostname))
                 return;
 
 			if (datagram)
