@@ -431,7 +431,7 @@ char *EvalExprUTF8(const char *p_expression, int *r_success)
 	if (s_external_interface_version < 2)
 	{
 		*r_success = EXTERNAL_FAILURE;
-		return nil;
+		return NULL;
 	}
     
 	t_result = (s_operations[OPERATION_EVAL_EXP_UTF8])(p_expression, NULL, NULL, r_success);
@@ -445,7 +445,7 @@ char *GetGlobalUTF8(const char *p_name, int *r_success)
 	if (s_external_interface_version < 2)
 	{
 		*r_success = EXTERNAL_FAILURE;
-		return nil;
+		return NULL;
 	}
     
 	t_result = (s_operations[OPERATION_GET_GLOBAL_UTF8])(p_name, NULL, NULL, r_success);
@@ -475,7 +475,7 @@ char *GetFieldByNameUTF8(const char *p_group, const char *p_name, int *r_success
 	if (s_external_interface_version < 2)
 	{
 		*r_success = EXTERNAL_FAILURE;
-		return nil;
+		return NULL;
 	}
     
 	// MDW-2013-05-08 : fix for bug 7913
@@ -491,7 +491,7 @@ char *GetFieldByNumUTF8(const char *p_group, int p_index, int *r_success)
 	if (s_external_interface_version < 2)
 	{
 		*r_success = EXTERNAL_FAILURE;
-		return nil;
+		return NULL;
 	}
 	
 	sprintf(t_index_str, "%d", p_index);
@@ -508,7 +508,7 @@ char *GetFieldByIdUTF8(const char *p_group, unsigned long p_id, int *r_success)
 	if (s_external_interface_version < 2)
 	{
 		*r_success = EXTERNAL_FAILURE;
-		return nil;
+		return NULL;
 	}
     
 	sprintf(t_index_str, "%ld", p_id);
@@ -624,7 +624,7 @@ char *GetVariableUTF8(const char *p_name, int *r_success)
 	if (s_external_interface_version < 2)
 	{
 		*r_success = EXTERNAL_FAILURE;
-		return nil;
+		return NULL;
 	}
     
 	t_result = (s_operations[OPERATION_GET_VARIABLE_UTF8])(p_name, NULL, NULL, r_success);
