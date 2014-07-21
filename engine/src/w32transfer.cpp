@@ -1247,7 +1247,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 			t_success = nil != (t_stream = MCS_fakeopenwrite());
 
 		if (t_success)
-			t_success = MCImageEncodePNG(t_bitmap, t_stream, t_byte_count);
+			t_success = MCImageEncodePNG(t_bitmap, NULL, t_stream, t_byte_count);
 
 		if (t_success)
 			t_success = IO_NORMAL == MCS_fakeclosewrite(t_stream, t_buffer, t_length);
@@ -1298,7 +1298,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 		if (t_success)
 		{
 			MCImageBitmapUnpremultiply(t_bitmap);
-			t_success = MCImageEncodePNG(t_bitmap, t_stream, t_byte_count);
+			t_success = MCImageEncodePNG(t_bitmap, NULL, t_stream, t_byte_count);
 		}
 
 		if (t_success)

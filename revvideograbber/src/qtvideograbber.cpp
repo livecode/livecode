@@ -361,7 +361,11 @@ void CQTVideoGrabber::Init()
 		AddError("Can't create video channel");
 		return;
 	}
+#ifdef _MACOSX
 	result = SGNewChannel (videograbber, SGAudioMediaType, &soundchannel);
+#else
+	result = SGNewChannel (videograbber, SoundMediaType, &soundchannel);
+#endif
 	if ((soundchannel != nil) && (result == noErr))
 	{
 		if (soundchannel != nil)
