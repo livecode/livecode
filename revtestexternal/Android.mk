@@ -1,5 +1,8 @@
 LOCAL_PATH := $(call my-dir)
 
+# only build if run from the revtestexternal/build-android.sh script
+ifeq ($(NAME),revtestexternal)
+
 include $(CLEAR_VARS)
 
 TARGET_PLATFORM=android-8
@@ -31,3 +34,5 @@ LOCAL_LDFLAGS += \
  	-Wl,-u,MCExternalFinalize
 
 include $(BUILD_SHARED_LIBRARY)
+
+endif

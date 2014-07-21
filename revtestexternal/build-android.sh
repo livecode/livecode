@@ -1,4 +1,4 @@
-NAME=revtestexternal
+export NAME=revtestexternal
 WORKSPACE=`cd ..; pwd`
 PROJECT=$WORKSPACE/$NAME
 
@@ -21,6 +21,9 @@ DSTROOT=$SRCROOT/_build/android/$MODE/$NAME
 
 JAVAC=$JAVA_SDK/bin/javac
 JAR=$JAVA_SDK/bin/jar
+
+echo "Building LCIDL for mac..."
+sdks/Xcode_5_1/usr/bin/xcodebuild -project lcidlc/lcidlc.xcodeproj -configuration $MAC_MODE
 
 echo "Building external stubs…"
 mkdir -p "$PROJECT/derived_src"
