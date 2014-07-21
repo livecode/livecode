@@ -75,13 +75,17 @@ function revTestExternalTestObjcDictionaries
 	in dict as objc-dictionary
 	return objc-dictionary
     
-function revtestExternalTestObjcNumber
+function revTestExternalTestObjcNumber
     in number as objc-number
     return objc-number
     
-function revTestExternalTestObbjcData
+function revTestExternalTestObjcData
     in data as objc-data
     return objc-data
+    
+function revTestExternalTestObjcString
+    in data as objc-string
+    return objc-string
 
 use none on mac, linux, windows, android, ios
 use java on android

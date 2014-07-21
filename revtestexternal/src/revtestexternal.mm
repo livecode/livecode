@@ -25,29 +25,48 @@
 
 NSArray *revTestExternalTestObjcArrays(NSArray *array)
 {
+    [array setValue: @"Hello" forKey: @"greetings"];
     return array;
 }
 
 NSDictionary *revTestExternalTestObjcDictionaries(NSDictionary *dictionary)
 {
+    [dictionary setValue: @"Hello" forKey: @"greetings"];
     return dictionary;
 }
 
-NSNumber * revtestExternalTestObjcNumber(NSNumber *number)
+NSNumber * revTestExternalTestObjcNumber(NSNumber *number)
 {
     double t_double;
     t_double = [number doubleValue];
     
     t_double += 3.14;
     
-    NSNumber * t_nsnumber;
-    [t_nsnumber initWithDouble:t_double];
-    return t_nsnumber;
+    return [NSNumber numberWithDouble: t_double];
 }
 
-NSData* revTestExternalTestObbjcData(NSData* data)
+NSData* revTestExternalTestObjcData(NSData* data)
 {
-    return data;
+    char* t_bytes;
+    uint32_t t_length;
+    
+    fprintf(stderr, "revTestExternalTestObjcData\n");
+    
+    t_length = [data length];
+    t_bytes  = (char*)malloc(t_length);
+    
+    fprintf(stderr, "\tlength: %u\n", t_length);
+    [data getBytes:t_bytes length:t_length];
+    
+    for (uint32_t i = 0; i < t_length; ++i)
+        t_bytes[i]++;
+    
+    return [NSData dataWithBytes:t_bytes length:t_length];
+}
+
+NSString* revTestExternalTestObjcString(NSString* string)
+{
+    return [string stringByAppendingString: string];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

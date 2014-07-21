@@ -1752,7 +1752,7 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
 	if (p_value == nil)
 		return kMCExternalErrorNoValue;
 
-	switch(p_options & 0xf)
+	switch(p_options & 0xff)
 	{
 	case kMCExternalValueOptionAsVariable:
 		return var -> Set((MCExternalVariableRef)p_value);
@@ -1928,8 +1928,8 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
 		return kMCExternalErrorNoValue;
     
     MCExternalError t_error;
-
-	switch(p_options & 0xf)
+    
+	switch(p_options & 0xff)
 	{
 	case kMCExternalValueOptionAsVariable:
 		return ((MCExternalVariableRef)p_value) -> Set(var);
@@ -2028,8 +2028,8 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         *(CFNumberRef*)p_value = CFNumberCreate(NULL, kCFNumberFloat64Type, &t_real);
         
         // NS types must be autoreleasing
-        if ((p_options & 0xf) == kMCExternalValueOptionAsNSNumber)
-            [*(NSArray**)p_value autorelease];
+        if ((p_options & 0xff) == kMCExternalValueOptionAsNSNumber)
+            [*(NSNumber**)p_value autorelease];
         
         break;
     }
@@ -2046,7 +2046,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
             return kMCExternalErrorOutOfMemory;
         
         // NS types must be autoreleasing
-        if ((p_options & 0xf) == kMCExternalValueOptionAsNSString)
+        if ((p_options & 0xff) == kMCExternalValueOptionAsNSString)
             [*(NSString**)p_value autorelease];
         break;
     }
@@ -2064,12 +2064,10 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
         if (!MCStringConvertToNative(*t_stringref, (char_t*&)t_chars, t_char_count))
             return kMCExternalErrorOutOfMemory;
         
-        *(CFDataRef*)p_value = CFDataCreate(NULL, (UInt8*)t_chars, t_char_count);
-        
-        MCMemoryDeleteArray(t_chars);
+        *(CFDataRef*)p_value = CFDataCreateWithBytesNoCopy(NULL, (UInt8*)t_chars, t_char_count, NULL);
         
         // NS types must be autoreleasing
-        if ((p_options & 0xf) == kMCExternalValueOptionAsNSData)
+        if ((p_options & 0xff) == kMCExternalValueOptionAsNSData)
             [*(NSData**)p_value autorelease];
         break;
     }
@@ -2085,7 +2083,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
             return t_error;
         
         // NS types must be autoreleasing
-        if ((p_options & 0xf) == kMCExternalValueOptionAsNSArray)
+        if ((p_options & 0xff) == kMCExternalValueOptionAsNSArray)
             [*(NSArray**)p_value autorelease];
         return t_error;
     }
@@ -2101,7 +2099,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
             return t_error;
         
         // NS types must be autoreleasing
-        if ((p_options & 0xf) == kMCExternalValueOptionAsNSDictionary)
+        if ((p_options & 0xff) == kMCExternalValueOptionAsNSDictionary)
             [*(NSDictionary**)p_value autorelease];
         
         return t_error;
@@ -2122,7 +2120,7 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
 	if (p_value == nil)
 		return kMCExternalErrorNoValue;
 
-	switch(p_options & 0xf)
+	switch(p_options & 0xff)
 	{
 	case kMCExternalValueOptionAsVariable:
 		return var -> Append(p_options, (MCExternalVariableRef)p_value);
