@@ -192,7 +192,7 @@ static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 		aTrack = GetMovieIndTrack(tmovie, index);
 		aMedia = GetTrackMedia(aTrack);
 		GetMediaHandlerDescription(aMedia, &aTrackType, 0, 0);
-		if (aTrackType == SoundMediaType)
+		if (aTrackType == SGAudioMediaType)
 		{
 			aDesc = (SampleDescriptionHandle)NewHandle(sizeof(SoundDescription));
 			GetMediaSampleDescription(aMedia, 1, aDesc);
@@ -285,7 +285,7 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 				cd.componentSubType = kQTFileTypeMovie;
 				break;
 		}
-		cd.componentManufacturer = SoundMediaType;
+		cd.componentManufacturer = SGAudioMediaType;
 		cd.componentFlags = canMovieExportFiles;
 		cd.componentFlagsMask = canMovieExportFiles;
 		c = FindNextComponent(nil, &cd);
@@ -295,7 +295,7 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 		exporter = nil;
 		exporter = OpenComponent(c);
 		result = MovieExportSetSampleDescription(exporter, (SampleDescriptionHandle)myDesc,
-												 SoundMediaType);
+												 SGAudioMediaType);
 		errno = ConvertMovieToDataRef(tmovie, 0, t_dst_rec . dataRef, t_dst_rec . dataRefType, cd.componentSubType,
 									  0, 0, exporter);
 		// try showUserSettingsDialog | movieToFileOnlyExport | movieFileSpecValid
@@ -405,7 +405,7 @@ void MCQTRecordSound(char *fname)
 	if (errno == noErr)
 	{
 		SGChannel sgSoundChan;
-		if ((errno = SGNewChannel((SeqGrabComponent)sgSoundComp, SoundMediaType, &sgSoundChan)) == noErr
+		if ((errno = SGNewChannel((SeqGrabComponent)sgSoundComp, SGAudioMediaType, &sgSoundChan)) == noErr
 			&& (errno = SGSetChannelUsage(sgSoundChan, seqGrabRecord)) == noErr
 			&& (errno = SGSetSoundInputRate(sgSoundChan, sampleRate)) == noErr
 			&& (errno = SGSetSoundInputParameters(sgSoundChan, sampleSize,

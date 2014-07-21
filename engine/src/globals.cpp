@@ -851,6 +851,14 @@ bool X_open(int argc, char *argv[], char *envp[])
     
     ////
     
+#ifdef _MACOSX
+    // MW-2014-07-21: Make AVFoundation the default on 10.8 and above.
+    if (MCmajorosversion >= 0x1080)
+        MCdontuseQT = True;
+#endif
+    
+    ////
+    
 	MCpatternlist = new MCImageList();
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_msg, MCmb);
