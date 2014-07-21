@@ -5469,7 +5469,8 @@ static bool MCStringsIsAmongTheParagraphsOfRange(MCExecContext& ctxt, MCStringRe
 	if (t_range . offset != 0)
     {
         t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset - 1);
-        if (t_delimiter != '\n' && t_delimiter != 0x2029)
+        // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+        if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
             return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_chunk, p_string, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
     }
     
@@ -5477,7 +5478,8 @@ static bool MCStringsIsAmongTheParagraphsOfRange(MCExecContext& ctxt, MCStringRe
 	if (t_range . offset + t_range . length != MCStringGetLength(p_string))
     {
         t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset + t_range . length);
-        if (t_delimiter != '\n' && t_delimiter != 0x2029)
+        // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+        if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
             return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_chunk, p_string, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
     }
 	return true;
@@ -5525,7 +5527,8 @@ static bool MCStringsFindParagraphInRange(MCExecContext& ctxt, MCStringRef p_str
         if (t_range . offset != 0)
         {
             t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset - 1);
-            if (t_delimiter != '\n' && t_delimiter != 0x2029)
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
                 return MCStringsFindParagraphInRange(ctxt, p_string, p_needle, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
         }
         
@@ -5533,7 +5536,8 @@ static bool MCStringsFindParagraphInRange(MCExecContext& ctxt, MCStringRef p_str
         if (t_range . offset + t_range . length != MCStringGetLength(p_string))
         {
             t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset + t_range . length);
-            if (t_delimiter != '\n' && t_delimiter != 0x2029)
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
                 return MCStringsFindParagraphInRange(ctxt, p_string, p_needle, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
         }
 	}
@@ -5699,7 +5703,8 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             
             t_pg_offset = t_offset;
             t_newline_found = MCStringFirstIndexOfChar(text, '\n', t_offset, kMCCompareExact, t_offset);
-            t_pg_found = MCStringFirstIndexOfChar(text, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            t_pg_found = false; /*MCStringFirstIndexOfChar(text, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);*/
             
             t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
             
@@ -5859,10 +5864,12 @@ uindex_t MCTextChunkIterator::chunkoffset(MCExecContext& ctxt, MCStringRef p_nee
             
             // Count the number of delimiters between the start of the first chunk
             // and the start of the found string.
-            t_chunk_offset += MCStringCount(text, MCRangeMake(range . offset, t_found_offset - range . offset), t_delimiter, t_options);
             
-            if (type == CT_PARAGRAPH)
-                t_chunk_offset += MCStringCountChar(text, MCRangeMake(range . offset, t_found_offset - range . offset), 0x2029, t_options);
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            if (type != CT_PARAGRAPH)
+                t_chunk_offset += MCStringCount(text, MCRangeMake(range . offset, t_found_offset - range . offset), t_delimiter, t_options);
+            else
+                t_chunk_offset += MCStringCountChar(text, MCRangeMake(range . offset, t_found_offset - range . offset), '\n', t_options);
             
             return t_chunk_offset;
         }
