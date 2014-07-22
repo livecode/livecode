@@ -236,6 +236,8 @@ MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 
 void MCStack::syncscroll(void)
 {
+    // AL-2014-07-22: [[ Bug 12764 ]] Update the stack viewport after applying menu scroll
+    view_setstackviewport(rect);
 	// COCOA-TODO: Make sure contained views also scroll (?)
 }
 
