@@ -2953,15 +2953,16 @@ void MCPlayer::handle_mdown(int p_which)
     {
         case kMCPlayerControllerPartPlay:
         {
+            // MW-2014-07-18: [[ Bug 12825 ]] When play button clicked, previous behavior was to
+            //   force rate to 1.0.
+            if (!getstate(CS_PREPARED) || ispaused())
+                rate = 1.0;
             if (getstate(CS_PREPARED))
             {
                 playpause(!ispaused());
             }
             else
             {
-                // MW-2014-07-18: [[ Bug 12825 ]] When play button clicked, previous behavior was to
-                //   force rate to 1.0.
-                rate = 1.0;
                 playstart(nil);
             }
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlay));
