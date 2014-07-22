@@ -1462,7 +1462,7 @@ void MCPlayer::freetmp()
 uint4 MCPlayer::getduration() //get movie duration/length
 {
 	uint4 duration;
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &duration);
 	else
 		duration = 0;
@@ -1472,7 +1472,7 @@ uint4 MCPlayer::getduration() //get movie duration/length
 uint4 MCPlayer::gettimescale() //get moive time scale
 {
 	uint4 timescale;
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyTimescale, kMCPlatformPropertyTypeUInt32, &timescale);
 	else
 		timescale = 0;
@@ -1482,7 +1482,7 @@ uint4 MCPlayer::gettimescale() //get moive time scale
 uint4 MCPlayer::getmoviecurtime()
 {
 	uint4 curtime;
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &curtime);
 	else
 		curtime = 0;
@@ -1492,13 +1492,13 @@ uint4 MCPlayer::getmoviecurtime()
 void MCPlayer::setcurtime(uint4 newtime)
 {
 	lasttime = newtime;
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &newtime);
 }
 
 void MCPlayer::setselection()
 {
-    if (m_platform_player != nil)
+    if (m_platform_player != nil && hasfilename())
 	{
 		if (starttime == MAXUINT4 && endtime == MAXUINT4)
         {
@@ -1517,7 +1517,7 @@ void MCPlayer::setselection()
 
 void MCPlayer::setlooping(Boolean loop)
 {
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 	{
 		bool t_loop;
 		t_loop = loop;
@@ -1527,7 +1527,7 @@ void MCPlayer::setlooping(Boolean loop)
 
 void MCPlayer::setplayrate()
 {
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 	{
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &rate);
 		if (rate != 0.0f)
@@ -1556,7 +1556,7 @@ void MCPlayer::showbadge(Boolean show)
 void MCPlayer::editmovie(Boolean edit)
 {
 
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 	{
 		bool t_edit;
 		t_edit = edit;
@@ -1567,7 +1567,7 @@ void MCPlayer::editmovie(Boolean edit)
 
 void MCPlayer::playselection(Boolean play)
 {
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 	{
 		bool t_play;
 		t_play = play;
@@ -1577,8 +1577,10 @@ void MCPlayer::playselection(Boolean play)
 
 Boolean MCPlayer::ispaused()
 {
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 		return !MCPlatformPlayerIsPlaying(m_platform_player);
+    
+    return True;
 }
 
 void MCPlayer::showcontroller(Boolean show)
@@ -1621,13 +1623,8 @@ Boolean MCPlayer::prepare(const char *options)
 		return True;
     
     // Fixes the issue of invisible player being created by script
-	if (filename == NULL && state & CS_PREPARED)
-    {
-        if (m_platform_player != nil)
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
+	if (!hasfilename())
         return True;
-    }
-    
     
 	if (!opened)
 		return False;
@@ -1708,7 +1705,7 @@ Boolean MCPlayer::playpause(Boolean on)
 {
 	if (!(state & CS_PREPARED))
 		return False;
-	
+    
 	Boolean ok;
 	ok = False;
 	
@@ -1760,7 +1757,7 @@ Boolean MCPlayer::playstop()
 	if (m_platform_player != nil)
 	{
 		MCPlatformStopPlayer(m_platform_player);
-		
+
 		needmessage = getduration() > getmoviecurtime();
 		
 		MCPlatformDetachPlayer(m_platform_player);
@@ -2111,6 +2108,9 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 	}
 	delete cblist;
     
+    if (!hasfilename())
+        return True;
+    
     // Now set the markers in the player so that we get notified.
     array_t<uint32_t> t_markers;
     /* UNCHECKED */ MCMemoryNewArray(m_callback_count, t_markers . ptr);
@@ -2125,7 +2125,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 
 Boolean MCPlayer::isbuffering(void)
 {
-	if (m_platform_player == nil)
+	if (m_platform_player == nil || !hasfilename())
 		return false;
 	
 	bool t_buffering;
@@ -2141,8 +2141,6 @@ Boolean MCPlayer::isbuffering(void)
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite)
 {
-    if (m_platform_player == nil)
-        return;
 	MCRectangle dirty;
 	dirty = p_dirty;
     
@@ -2172,7 +2170,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
     //if (!(state & CS_CLOSING))
 		//prepare(MCnullstring);
 	
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 	{
 		syncbuffering(dc);
 		
@@ -2717,8 +2715,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 return MCRectangleMake(0, 0, 0, 0);
             
             uint32_t t_current_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_current_time = getmoviecurtime();
+            t_duration = getduration();
             
             if (t_current_time >= t_duration)
                 t_current_time = t_duration;
@@ -2769,8 +2767,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         case kMCPlayerControllerPartSelectionStart:
         {
             uint32_t t_start_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_start_time = getstarttime();
+            t_duration = getduration();
             
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
@@ -2789,8 +2787,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         case kMCPlayerControllerPartSelectionFinish:
         {
             uint32_t t_finish_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_finish_time = getendtime();
+            t_duration = getduration();
             
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
@@ -2827,9 +2825,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         case kMCPlayerControllerPartSelectedArea:
         {
             uint32_t t_start_time, t_finish_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_start_time = getstarttime();
+            t_finish_time = getendtime();
+            t_duration = getduration();
             
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
@@ -2871,13 +2869,13 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         case kMCPlayerControllerPartPlayedArea:
         {
             uint32_t t_start_time, t_current_time, t_finish_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_duration = getduration();
             
             // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
             if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
             {
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
+                t_start_time = getstarttime();
+                t_finish_time = getendtime();
             }
             else
             {
@@ -2885,8 +2883,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 t_finish_time = t_duration;
             }
             
-            
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
+            t_current_time = getmoviecurtime();
             
             if (t_current_time == 0)
                 t_current_time = t_start_time;
@@ -2955,16 +2952,21 @@ void MCPlayer::handle_mdown(int p_which)
     switch(t_part)
     {
         case kMCPlayerControllerPartPlay:
+        {
             if (getstate(CS_PREPARED))
             {
                 playpause(!ispaused());
             }
             else
+            {
+                // MW-2014-07-18: [[ Bug 12825 ]] When play button clicked, previous behavior was to
+                //   force rate to 1.0.
+                rate = 1.0;
                 playstart(nil);
+            }
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlay));
-    
-            
-            break;
+        }
+        break;
         case kMCPlayerControllerPartVolume:
         {
             if (!m_show_volume)
@@ -3027,7 +3029,7 @@ void MCPlayer::handle_mdown(int p_which)
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             
             uint32_t t_new_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_duration = getduration();
             
             t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
             
@@ -3123,7 +3125,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 
                 int32_t t_new_time, t_duration;
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                t_duration = getduration();
                 
                 t_new_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 
@@ -3141,7 +3143,7 @@ void MCPlayer::handle_mfocus(int x, int y)
             {
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 uint32_t t_new_start_time, t_duration;
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                t_duration = getduration();
                 
                 // PM-2014-07-08: [[Bug 12759]] Make sure we don't drag the selection start beyond the start point of the player
                 if (x <= t_part_well_rect . x)
@@ -3160,7 +3162,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 
                 uint32_t t_new_finish_time, t_duration;
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                t_duration = getduration();
                 
                 t_new_finish_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 
@@ -3195,9 +3197,8 @@ void MCPlayer::handle_mstilldown(int p_which)
         case kMCPlayerControllerPartScrubForward:
         {
             uint32_t t_current_time, t_duration;
-            
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_current_time = getmoviecurtime();
+            t_duration = getduration();
             
             if (t_current_time > t_duration)
                 t_current_time = t_duration;
@@ -3210,16 +3211,16 @@ void MCPlayer::handle_mstilldown(int p_which)
             else
                 t_rate = 0.0;
             
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+            if (hasfilename())
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
         }
             break;
             
         case kMCPlayerControllerPartScrubBack:
         {
             uint32_t t_current_time, t_duration;
-            
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_current_time = getmoviecurtime();
+            t_duration = getduration();
             
             if (t_current_time < 0.0)
                 t_current_time = 0.0;
@@ -3232,7 +3233,8 @@ void MCPlayer::handle_mstilldown(int p_which)
             else
                 t_rate = 0.0;
             
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+            if (hasfilename())
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
         }
             break;
             
@@ -3299,8 +3301,8 @@ void MCPlayer::handle_shift_mdown(int p_which)
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             
             uint32_t t_new_time, t_old_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_old_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_old_time = getmoviecurtime();
+            t_duration = getduration();
             
             t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
             
@@ -3317,18 +3319,21 @@ void MCPlayer::handle_shift_mdown(int p_which)
                 m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
             }
             
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
-            
-            bool t_show_selection;
-            t_show_selection = true;
-            setflag(True, F_SHOW_SELECTION);
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-           
-            bool t_play_selection;
-            t_play_selection = true;
-            setflag(True, F_PLAY_SELECTION);
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
+            if (hasfilename())
+            {
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+                
+                bool t_show_selection;
+                t_show_selection = true;
+                setflag(True, F_SHOW_SELECTION);
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+               
+                bool t_play_selection;
+                t_play_selection = true;
+                setflag(True, F_PLAY_SELECTION);
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
+            }
             
             layer_redrawrect(getcontrollerrect());
         }
