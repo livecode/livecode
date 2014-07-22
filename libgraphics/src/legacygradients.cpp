@@ -838,14 +838,10 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 				t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);
 		}
  
-    // AL-2014-07-21: [[ Bug 12867 ]] Ensure PixelPackNative is used to pack RBGA values on Android
-#if defined(TARGET_SUBPLATFORM_IPHONE) || defined(ANDROID)
+        // AL-2014-07-21: [[ Bug 12867 ]] Ensure RBGA values are always packed in native format
         uint8_t t_red, t_green, t_blue, t_alpha;
 		MCGPixelUnpack(kMCGPixelFormatBGRA, t_ramp[i] . color, t_red, t_green, t_blue, t_alpha);
         t_ramp[i] . hw_color = MCGPixelPackNative(t_red, t_green, t_blue, t_alpha);
-#else
-		t_ramp[i] . hw_color = t_ramp[i] . color;
-#endif
         
 	}
 	
