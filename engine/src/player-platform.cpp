@@ -1512,6 +1512,10 @@ void MCPlayer::setselection()
         bool t_play_selection;
         MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
         MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
+        
+        // MW-2014-07-22: [[ Bug 12870 ]] Make sure controller rect redrawn when setting selection
+        //   by script.
+        layer_redrawrect(getcontrollerrect());
 	}
 }
 
