@@ -178,6 +178,12 @@ static long sgSndDriver = 0;
 static const char *recordtempfile = NULL;
 static char *recordexportfile = NULL;
 
+#ifdef _MACOSX
+#define AUDIO_MEDIA_TYPE SGAudioMediaType
+#else
+#define AUDIO_MEDIA_TYPE SoundMediaType
+#endif
+
 // Utility functions
 static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 {
@@ -192,7 +198,7 @@ static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 		aTrack = GetMovieIndTrack(tmovie, index);
 		aMedia = GetTrackMedia(aTrack);
 		GetMediaHandlerDescription(aMedia, &aTrackType, 0, 0);
-		if (aTrackType == SGAudioMediaType)
+		if (aTrackType == AUDIO_MEDIA_TYPE)
 		{
 			aDesc = (SampleDescriptionHandle)NewHandle(sizeof(SoundDescription));
 			GetMediaSampleDescription(aMedia, 1, aDesc);
@@ -285,7 +291,7 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 				cd.componentSubType = kQTFileTypeMovie;
 				break;
 		}
-		cd.componentManufacturer = SGAudioMediaType;
+		cd.componentManufacturer = AUDIO_MEDIA_TYPE;
 		cd.componentFlags = canMovieExportFiles;
 		cd.componentFlagsMask = canMovieExportFiles;
 		c = FindNextComponent(nil, &cd);
@@ -295,7 +301,7 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 		exporter = nil;
 		exporter = OpenComponent(c);
 		result = MovieExportSetSampleDescription(exporter, (SampleDescriptionHandle)myDesc,
-												 SGAudioMediaType);
+												 AUDIO_MEDIA_TYPE);
 		errno = ConvertMovieToDataRef(tmovie, 0, t_dst_rec . dataRef, t_dst_rec . dataRefType, cd.componentSubType,
 									  0, 0, exporter);
 		// try showUserSettingsDialog | movieToFileOnlyExport | movieFileSpecValid
@@ -405,7 +411,7 @@ void MCQTRecordSound(char *fname)
 	if (errno == noErr)
 	{
 		SGChannel sgSoundChan;
-		if ((errno = SGNewChannel((SeqGrabComponent)sgSoundComp, SGAudioMediaType, &sgSoundChan)) == noErr
+		if ((errno = SGNewChannel((SeqGrabComponent)sgSoundComp, AUDIO_MEDIA_TYPE, &sgSoundChan)) == noErr
 			&& (errno = SGSetChannelUsage(sgSoundChan, seqGrabRecord)) == noErr
 			&& (errno = SGSetSoundInputRate(sgSoundChan, sampleRate)) == noErr
 			&& (errno = SGSetSoundInputParameters(sgSoundChan, sampleSize,
