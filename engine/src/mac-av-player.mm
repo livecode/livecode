@@ -373,10 +373,6 @@ void MCAVFoundationPlayer::SelectionChanged(void)
     }
     else
         [[m_player currentItem] setForwardPlaybackEndTime:kCMTimeInvalid];
-    
-    NSLog(@"Selection changed");
-    if (!m_synchronizing)
-        MCPlatformCallbackSendPlayerSelectionChanged(this);
 }
 
 void MCAVFoundationPlayer::CurrentTimeChanged(void)

@@ -540,6 +540,7 @@ MCPlayer::MCPlayer()
     m_show_volume = false;
     m_scrub_back_is_pressed = false;
     m_scrub_forward_is_pressed = false;
+    m_modify_selection_while_playing = false;
     
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
@@ -576,6 +577,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     m_show_volume = false;
     m_scrub_back_is_pressed = false;
     m_scrub_forward_is_pressed = false;
+    m_modify_selection_while_playing = false;
     
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
@@ -851,6 +853,8 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         {
             state |= CS_PAUSED;
             
+            m_modify_selection_while_playing = false;
+            
             if (disposable)
             {
                 playstop();
@@ -861,6 +865,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 		{
 			state |= CS_PAUSED;
             
+            m_modify_selection_while_playing = false;
 		}
         else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
         {
@@ -1507,11 +1512,9 @@ void MCPlayer::setselection()
         }
         MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
-        
-        // TODO: Update this ugly way of calling SelectionChanged() via re-setting the kMCPlatformPlayerPropertyOnlyPlaySelection property
-        bool t_play_selection;
-        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
+
+        if (!m_modify_selection_while_playing)
+            playselection(getflag(F_PLAY_SELECTION));
         
         // MW-2014-07-22: [[ Bug 12870 ]] Make sure controller rect redrawn when setting selection
         //   by script.
@@ -1712,13 +1715,21 @@ Boolean MCPlayer::playpause(Boolean on)
     
 	Boolean ok;
 	ok = False;
-	
+    
+    if (on)
+        m_modify_selection_while_playing = false;
+    
 	if (m_platform_player != nil)
 	{
 		if (!on)
+        {
+            playselection(getflag(F_PLAY_SELECTION) && !m_modify_selection_while_playing);
 			MCPlatformStartPlayer(m_platform_player, rate);
-		else
+		}
+        else
+        {
 			MCPlatformStopPlayer(m_platform_player);
+        }
 		ok = True;
 	}
 	
@@ -1757,6 +1768,8 @@ Boolean MCPlayer::playstop()
 	
 	state &= ~(CS_PREPARED | CS_PAUSED);
 	lasttime = 0;
+    
+    m_modify_selection_while_playing = false;
 	
 	if (m_platform_player != nil)
 	{
@@ -2042,6 +2055,22 @@ void MCPlayer::selectionchanged(void)
 
 void MCPlayer::currenttimechanged(MCParameter *p_param)
 {
+    if (m_modify_selection_while_playing)
+    {
+        uint32_t t_current_time;
+        t_current_time = getmoviecurtime();
+        
+        if (t_current_time < endtime && t_current_time > starttime)
+            starttime = t_current_time;
+        if (t_current_time > endtime)
+            endtime = t_current_time;
+        
+        if ((MCmodifierstate & MS_SHIFT) == 0)
+            playpause(True);
+        
+        setselection();
+    }
+    
     redrawcontroller();
     
     timer(MCM_current_time_changed, p_param);
@@ -3347,6 +3376,11 @@ void MCPlayer::handle_shift_mdown(int p_which)
             
             layer_redrawrect(getcontrollerrect());
         }
+            break;
+            
+        case kMCPlayerControllerPartPlay:
+            m_modify_selection_while_playing = true;
+            handle_mdown(p_which);
             break;
                      
         default:
