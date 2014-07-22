@@ -3024,6 +3024,11 @@ void MCPlayer::handle_mdown(int p_which)
             
         case kMCPlayerControllerPartWell:
         {
+            // MW-2014-07-22: [[ Bug 12871 ]] If we click in the well without shift and there
+            //   is a selection, the selection is removed.
+            endtime = starttime;
+            setselection();
+            
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             
             uint32_t t_new_time, t_duration;
