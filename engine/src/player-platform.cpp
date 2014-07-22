@@ -1918,7 +1918,7 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 				if (t_enabled)
-					ep . concatuint(t_id, EC_RETURN, i == 1);
+					ep . concatuint(t_id, EC_RETURN, i == 0);
 			}
 		}
 }
