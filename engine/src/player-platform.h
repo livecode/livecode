@@ -208,7 +208,8 @@ public:
         else
             starttime = stime;
         
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+        if (hasfilename())
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
         layer_redrawrect(getcontrollerrect());
 	}
 	void setendtime(uint4 etime)
@@ -220,7 +221,8 @@ public:
         else
             endtime = etime;
         
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+        if (hasfilename())
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
         layer_redrawrect(getcontrollerrect());
 	}
 	void setlasttime(int4 ltime)
@@ -232,6 +234,11 @@ public:
 	{
 		return m_platform_player;
 	}
+    
+    bool hasfilename(void) const
+    {
+        return filename != NULL;
+    }
     
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
