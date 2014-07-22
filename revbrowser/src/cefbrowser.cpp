@@ -415,6 +415,12 @@ public:
 		m_browser_id = 0;
 	}
 
+	// IM-2014-07-21: [[ Bug 12296 ]] Method to allow owner to notify client of its deletion
+	void OnOwnerClosed(void)
+	{
+		m_owner = nil;
+	}
+
 	// Tell browser which callback interfaces we implement
 	virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE { return this; }
@@ -488,7 +494,14 @@ public:
 			t_arg_strings = nil;
 
 			bool t_success;
-			t_success = MCCefStringToCString(t_args->GetString(0), t_handler);
+			t_success = true;
+			
+			// IM-2014-07-21: [[ Bug 12296 ]] Don't proceed with callback if browser has been closed
+			if (t_success)
+				t_success = nil != m_owner;
+			
+			if (t_success)
+				t_success = MCCefStringToCString(t_args->GetString(0), t_handler);
 
 			uint32_t t_arg_count;
 			t_arg_count = 0;
@@ -532,7 +545,9 @@ public:
 		if (m_browser_id == 0)
 		{
 			m_browser_id = p_browser->GetIdentifier();
-			m_owner->OnCefBrowserCreated(p_browser);
+			// IM-2014-07-21: [[ Bug 12296 ]] Check owner has not been closed before invoking callback
+			if (m_owner != nil)
+				m_owner->OnCefBrowserCreated(p_browser);
 		}
 
 		MCCefIncrementInstanceCount();
@@ -573,6 +588,10 @@ public:
 		bool* p_no_javascript_access ) OVERRIDE
 	{
 		// returning true here will prevent popup windows from opening
+		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
+		if (nil == m_owner)
+			return true;
+		
 		return !m_owner->GetNewWindow();
 	}
 
@@ -581,6 +600,10 @@ public:
 	// Called on UI thread
 	virtual bool OnBeforeBrowse(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request, bool p_is_redirect) OVERRIDE
 	{
+		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
+		if (nil == m_owner)
+			return true;
+		
 		bool t_cancel;
 		t_cancel = false;
 
@@ -611,6 +634,10 @@ public:
 
 	virtual bool OnBeforeResourceLoad(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request) OVERRIDE
 	{
+		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
+		if (nil == m_owner)
+			return true;
+		
 		CefString t_url;
 		t_url = p_request->GetURL();
 
@@ -643,6 +670,10 @@ public:
 	// IM-2014-04-28: [[ CefBrowser ]] Use platform-specific method to get credentials when requested
 	virtual bool GetAuthCredentials( CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, bool p_is_proxy, const CefString &p_host, int p_port, const CefString &p_realm, const CefString &p_method, CefRefPtr<CefAuthCallback> p_callback) OVERRIDE
 	{
+		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
+		if (nil == m_owner)
+			return true;
+		
 		bool t_success;
 		t_success = true;
 		
@@ -669,6 +700,10 @@ public:
 
 	virtual void OnBeforeDownload(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefDownloadItem> p_item, const CefString & p_suggested_name, CefRefPtr<CefBeforeDownloadCallback> p_callback) OVERRIDE
 	{
+		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
+		if (nil == m_owner)
+			return;
+		
 		bool t_cancel;
 		t_cancel = false;
 
@@ -695,6 +730,10 @@ public:
 
 	virtual void OnLoadStart(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame) OVERRIDE
 	{
+		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
+		if (nil == m_owner)
+			return;
+		
 		CefString t_url;
 		t_url = p_frame->GetURL();
 
@@ -716,6 +755,10 @@ public:
 
 	virtual void OnLoadEnd(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, int p_http_status_code) OVERRIDE
 	{
+		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
+		if (nil == m_owner)
+			return;
+		
 		CefString t_url;
 
 		bool t_is_error;
@@ -755,6 +798,10 @@ public:
 
 	virtual void OnBeforeContextMenu(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefContextMenuParams> p_params, CefRefPtr<CefMenuModel> p_model) OVERRIDE
 	{
+		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
+		if (nil == m_owner)
+			return;
+		
 		// clearing the menu model prevents the context menu from opening
 		if (!m_owner->GetContextMenu())
 			p_model->Clear();
@@ -802,6 +849,10 @@ MCCefBrowserBase::~MCCefBrowserBase(void)
 	if (m_browser != nil)
 		m_browser->GetHost()->CloseBrowser(false);
 
+	// IM-2014-07-21: [[ Bug 12296 ]] Notify client of browser being closed
+	if (m_client)
+		m_client->OnOwnerClosed();
+	
 	m_browser = nil;
 	m_client = nil;
 
