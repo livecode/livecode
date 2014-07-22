@@ -93,6 +93,9 @@ MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
 
 void MCStack::realize(void)
 {
+	// IM-2014-07-21: [[ Bug 12860 ]] Initialize window backing scale to the pixel scale
+	view_setbackingscale(MCResGetPixelScale());
+	
 	start_externals();
 
 	// For now, we just use the MCStack* as the window handle...
