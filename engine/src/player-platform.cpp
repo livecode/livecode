@@ -3339,21 +3339,29 @@ void MCPlayer::handle_shift_mdown(int p_which)
         {
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             
-            uint32_t t_new_time, t_old_time, t_duration;
+            uint32_t t_new_time, t_old_time, t_duration, t_old_start, t_old_end;;
             t_old_time = getmoviecurtime();
             t_duration = getduration();
+            t_old_start = getstarttime();
+            t_old_end = getendtime();
             
             t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
             
-            if (t_new_time <= t_old_time)
+            // If there was previously no selection, then take it to be currenttime, currenttime.
+            if (starttime == endtime)
+                starttime = endtime = t_old_time;
+            
+            // If click before current starttime, adjust that.
+            // If click after current endtime, adjust that.
+            // If click first half of current selection, adjust start.
+            // If click last half of current selection, adjust end.
+            if (t_new_time <= (t_old_end - t_old_start) / 2)
             {
                 starttime = t_new_time;
-                endtime = t_old_time;
                 m_grabbed_part = kMCPlayerControllerPartSelectionStart;
             }
             else
             {
-                starttime = t_old_time;
                 endtime = t_new_time;
                 m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
             }
