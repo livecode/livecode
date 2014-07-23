@@ -309,7 +309,9 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial, bool as_sheet, bool& r_ch
         r_chosen = false;
 	}
 
-	return 0;
+    // SN-2014-07-23: [[ Bug 12901 ]] Object colors not selectable in inspector
+    //  A bool is expected from MCS_color, not an int defaulting to 0.
+	return true;
 }
 
 // MERG-2013-08-18: Stubs for colorDialogColors. Possibly implement when color dialog moves to Cocoa
