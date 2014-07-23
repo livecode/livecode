@@ -32,7 +32,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 struct MCPlayerOffscreenBuffer;
 #endif
 
-class MCPlayer : public MCPlayerInterface, public MCControl
+// SN-2014-07-23: [[ Bug 12893 ]] MCControl must be the first class inherited
+//  since we use &MCControl::kPropertyTable
+class MCPlayer : public MCControl, public MCPlayerInterface
 {	
 #ifdef FEATURE_MPLAYER
 	char *command;
@@ -215,10 +217,7 @@ public:
     virtual void setforegroundcolor(const MCInterfaceNamedColor& p_color);
     virtual void getforegrouncolor(MCInterfaceNamedColor& r_color);
     virtual void sethilitecolor(const MCInterfaceNamedColor& p_color);
-    virtual void gethilitecolor(MCInterfaceNamedColor& r_color);
-    
-    virtual 
-    
+    virtual void gethilitecolor(MCInterfaceNamedColor& r_color);    
     
     // End of virtual functions from MCPlayerInterface
     

@@ -24,6 +24,12 @@
 #include "player.h"
 #include "exec.h"
 
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "player-platform.cpp"
+#else
+#include "player-legacy.cpp"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPropertyInfo MCPlayer::kProperties[] =
@@ -67,10 +73,4 @@ MCObjectPropertyTable MCPlayer::kPropertyTable =
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
-
-#ifdef FEATURE_PLATFORM_PLAYER
-#include "player-platform.cpp"
-#else
-#include "player-legacy.cpp"
-#endif
 
