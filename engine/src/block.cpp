@@ -1765,9 +1765,9 @@ findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool mo
         {
             // FG-2014-07-16: [[ Bugfix 12166 ]] Make sure that we don't return
             // an index pointing at a zero-width character.
-            while (moving_forward && i < m_size && (GetCursorX(i) - origin) == t_new_width)
+            while (moving_forward && i < m_index + m_size && (GetCursorX(i) - origin) == t_new_width)
                 i++;
-            while (!moving_forward && i > 0 && (GetCursorX(i-1) - origin) == t_last_width)
+            while (!moving_forward && i > m_index && (GetCursorX(i-1) - origin) == t_last_width)
                 i--;
 
             break;
