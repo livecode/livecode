@@ -1909,8 +1909,14 @@ Exec_stat MCQTEffects::eval(MCExecPoint &ep)
 Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
 {
 #ifdef /* MCRecordCompressionTypes */ LEGACY_EXEC
+
+#ifdef FEATURE_PLATFORM_RECORDER
+    // TODO-RECORDER: Implement using MCPlatformSoundRecorder - the format is list of 'label,id'.
+#else
 	extern void MCQTGetRecordCompressionList(MCExecPoint& ep);
 	MCQTGetRecordCompressionList(ep);
+#endif
+    
 	return ES_NORMAL;
 #endif /* MCRecordCompressionTypes */
 }
@@ -1918,8 +1924,14 @@ Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
 Exec_stat MCRecordLoudness::eval(MCExecPoint &ep)
 {
 #ifdef /* MCRecordLoudness */ LEGACY_EXEC
+    
+#ifdef FEATURE_PLATFORM_RECORDER
+    // TODO-RECORDER: Implement using MCPlatformSoundRecorder.
+#else
 	extern void MCQTGetRecordLoudness(MCExecPoint& ep);
 	MCQTGetRecordLoudness(ep);
+#endif
+    
 	return ES_NORMAL;
 #endif /* MCRecordLoudness */
 }

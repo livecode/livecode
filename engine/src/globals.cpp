@@ -1025,11 +1025,15 @@ int X_close(void)
 	MCselected->clear(False);
 
 	MCU_play_stop();
+#ifdef FEATURE_PLATFORM_RECORDER
+    // TODO-RECORDER: Implement using MCPlatformSoundRecorder
+#else
 	if (MCrecording)
 	{
 		extern void MCQTStopRecording(void);
 		MCQTStopRecording();
 	}
+#endif
 	MClockmessages = True;
 	MCS_killall();
 

@@ -2240,8 +2240,12 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 				return ES_ERROR;
 			if (!trecording)
 			{
+#ifdef FEATURE_PLATFORM_RECORDER
+                // TODO-RECORDER: Implement using MCPlatformSoundRecorder
+#else
 				extern void MCQTStopRecording(void);
 				MCQTStopRecording();
+#endif
 			}
 		}
 		break;

@@ -425,8 +425,13 @@ Exec_errors MCAnswer::exec_effect(MCExecPoint& ep, const char *p_title)
 Exec_errors MCAnswer::exec_record(MCExecPoint& ep, const char *p_title)
 {
 	MCresult -> clear(False);
+    
+#ifdef FEATURE_PLATFORM_RECORDER
+    // TODO-RECORDER: Implement using MCPlatformSoundRecorder.
+#else
 	extern void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet);
 	MCQTRecordDialog(ep, p_title, sheet);
+#endif
 	return EE_UNDEFINED;
 }
 #endif /* MCAnswer::exec_record */

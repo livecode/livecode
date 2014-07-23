@@ -172,6 +172,7 @@ void MCQTGetVersion(MCExecPoint& ep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef FEATURE_PLATFORM_RECORDER
 // Related class variables
 static void *sgSoundComp = NULL;
 static long sgSndDriver = 0;
@@ -554,6 +555,7 @@ void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet)
 		}
 	CloseComponent(ci);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

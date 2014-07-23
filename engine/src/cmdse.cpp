@@ -2265,8 +2265,12 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 				MCU_play_stop();
 		break;
 	case SC_RECORDING:
-		extern void MCQTStopRecording(void);	
+#ifdef FEATURE_PLATFORM_RECORDER
+        // TODO-RECORDER: Implement using MCPlatformSoundRecorder
+#else
+		extern void MCQTStopRecording(void);
 		MCQTStopRecording();
+#endif
 		break;
 	case SC_USING:
 		{
