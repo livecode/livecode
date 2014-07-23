@@ -568,7 +568,9 @@ char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arg
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformScriptEnvironmentCreate(const char *language, MCPlatformScriptEnvironmentRef& r_env)
+// SN-2014-07-23: [[ Bug 12907 ]]
+//  Update as well MCSreenDC::createscriptenvironment (and callees)
+void MCPlatformScriptEnvironmentCreate(MCStringRef language, MCPlatformScriptEnvironmentRef& r_env)
 {
 	if (JavaScriptCoreLibrary == NULL)
 	{
