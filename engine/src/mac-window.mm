@@ -1812,7 +1812,14 @@ void MCMacPlatformWindow::DoRealize(void)
 		m_window_handle = [[com_runrev_livecode_MCWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: NO];
 	else
 		m_panel_handle = [[com_runrev_livecode_MCPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: NO];
-	
+    
+    // AL-2014-07-23: [[ Bug 12131 ]] Explicitly set frame, since initWithContentRect
+    //  assumes content is on primary screen.
+    NSRect t_cocoa_frame;
+    t_cocoa_frame = [m_window_handle frameRectForContentRect: t_cocoa_content];
+    
+    [m_window_handle setFrame: t_cocoa_frame display: YES];
+    
 	m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
 	[m_window_handle setDelegate: m_delegate];
 	
