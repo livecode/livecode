@@ -309,7 +309,8 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial, bool as_sheet, bool& r_ch
         r_chosen = false;
 	}
 
-	return 0;
+    // AL-2014-07-21: [[ Bug 12868 ]] MCA functions now return bools 
+	return true;
 }
 
 // MERG-2013-08-18: Stubs for colorDialogColors. Possibly implement when color dialog moves to Cocoa
