@@ -1071,7 +1071,9 @@ typedef struct MCPlatformScriptEnvironment *MCPlatformScriptEnvironmentRef;
 
 typedef char *(*MCPlatformScriptEnvironmentCallback)(const char * const *arguments, uindex_t argument_count);
 
-void MCPlatformScriptEnvironmentCreate(const char *language, MCPlatformScriptEnvironmentRef& r_env);
+// SN-2014-07-23: [[ Bug 12907 ]]
+//  Update as well MCSreenDC::createscriptenvironment (and callees)
+void MCPlatformScriptEnvironmentCreate(MCStringRef language, MCPlatformScriptEnvironmentRef& r_env);
 void MCPlatformScriptEnvironmentRetain(MCPlatformScriptEnvironmentRef env);
 void MCPlatformScriptEnvironmentRelease(MCPlatformScriptEnvironmentRef env);
 bool MCPlatformScriptEnvironmentDefine(MCPlatformScriptEnvironmentRef env, const char *function, MCPlatformScriptEnvironmentCallback callback);

@@ -151,10 +151,14 @@ public:
 	virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
     virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
 	
-	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
+    // SN-2014-07-23: [[ Bug 12907 ]] File > Import as control > Snapshot from screen
+    //  Mismatching types - thus the 'unimplemented' MCUICDC::snapshot was called instead of the MCScreenDC one
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size);
 	
 	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
-	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
+    // SN-2014-07-23: [[ Bug 12907 ]] File > Import as control > Snapshot from screen
+    //  Update as well MCSreenDC::createscriptenvironment (and callees)
+	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 	
 	// IM-2014-01-28: [[ HiDPI ]] Return true if the platform can detect
 	//   desktop changes and will clear the cache when changes occur.
