@@ -146,6 +146,16 @@ void MCGraphicsExecFlipSelection(MCExecContext& ctxt, bool p_horizontal)
 void MCGraphicsExecFlipImage(MCExecContext& ctxt, MCImage *p_image, bool p_horizontal)
 {
 	MColdtool = MCcurtool;
+
+    // SN-2014-07-23: [[ Bug 12918 ]] Ported bugfix 11300 to 7.0
+    // MW-2013-10-25: [[ Bug 11300 ]] If this is a reference image, then flip using
+    //   transient flags in the image object.
+    if (p_image -> getflag(F_HAS_FILENAME))
+    {
+        p_image -> flip(p_horizontal);
+        return;
+    }
+
 	p_image->selimage();
 
 	MCGraphicsExecFlipSelection(ctxt, p_horizontal);
