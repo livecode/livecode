@@ -120,6 +120,8 @@ public:
 
 typedef bool (*MCStackUpdateCallback)(MCStackSurface *p_surface, MCRegionRef p_region, void *p_context);
 
+typedef bool (*MCStackForEachCallback)(MCStack *p_stack, void *p_context);
+
 class MCStack : public MCObject
 {
 	friend class MCHcstak;
@@ -178,7 +180,8 @@ protected:
 	CDropTarget *droptarget;
 #endif
 
-	Window parentwindow;
+	// IM-2014-07-23: [[ Bug 12930 ]] The stack whose window is parent to this stack
+	MCObjectHandle *m_parent_stack;
 	
 	MCExternalHandlerList *m_externals;
 
@@ -571,6 +574,10 @@ public:
 
 	Window getwindow();
 	Window getparentwindow();
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] Set the stack whose window is parent to this stack
+	void setparentstack(MCStack *p_parent);
+	MCStack *getparentstack(void);
 
 	void redrawicon();
 
@@ -586,7 +593,6 @@ public:
 
 	Boolean takewindow(MCStack *sptr);
 	Boolean setwindow(Window w);
-	void setparentwindow(Window w);
 
 	void kfocusset(MCControl *target);
 	MCStack *clone();
@@ -756,7 +762,10 @@ public:
 	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
 	MCStack *findstackwindowid(uint32_t p_win_id);
 	MCStack *findstackd(Window w);
-	MCStack *findchildstackd(Window w,uint2 &ccount, uint2 cindex);
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
+	bool foreachchildstack(MCStackForEachCallback p_callback, void *p_context);
+	
 	void realize();
 	void sethints();
 	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
