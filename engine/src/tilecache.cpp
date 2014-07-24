@@ -1513,6 +1513,13 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 	t_index = 0;
 	while(self -> valid && t_index < self -> sprite_render_list . length)
 	{
+		// IM-2014-07-03: [[ GraphicsPerformance ]] MCGRegion to collect dirty tile rects.
+		MCGRegionRef t_tile_region;
+		t_tile_region = nil;
+		
+		if (!MCGRegionCreate(t_tile_region))
+			MCTileCacheInvalidate(self);
+		
 		// Record the first index
 		uint32_t t_sprite_index;
 		t_sprite_index = t_index;
@@ -1526,7 +1533,7 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 		MCTileCacheRectangle t_required_tiles;
 		t_required_tiles . left = t_required_tiles . top = INT32_MAX;
 		t_required_tiles . right = t_required_tiles . bottom = INT32_MIN;
-		while(t_index < self -> sprite_render_list . length)
+		while(self -> valid && t_index < self -> sprite_render_list . length)
 		{
 			// Fetch the current tile.
 			MCTileCacheTile *t_tile;
@@ -1536,6 +1543,9 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 			if (t_tile -> first_layer != t_sprite_id)
 				break;
 
+			if (!MCGRegionAddRect(t_tile_region, MCGIntegerRectangleMake(t_tile->x * self->tile_size, t_tile->y * self->tile_size, self->tile_size, self->tile_size)))
+				MCTileCacheInvalidate(self);
+			
 			// Extend the required tiles rect.
 			if (t_tile -> x < t_required_tiles . left)
 				t_required_tiles . left = t_tile -> x;
@@ -1554,13 +1564,12 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 		MCTileCacheSprite *t_sprite;
 		t_sprite = MCTileCacheGetSprite(self, t_sprite_id);
 
+		// IM-2014-07-03: [[ GraphicsPerformance ]] Offset region to sprite origin
+		MCGRegionTranslate(t_tile_region, -t_sprite->xorg, -t_sprite->yorg);
+		
 		// Compute the rect of the tiles
 		MCRectangle32 t_required_rect;
-		MCRectangle32Set(t_required_rect,
-						-t_sprite -> xorg + t_required_tiles . left * self -> tile_size,
-						-t_sprite -> yorg + t_required_tiles . top * self -> tile_size,
-						(t_required_tiles . right - t_required_tiles . left) * self -> tile_size,
-						(t_required_tiles . bottom - t_required_tiles . top) * self -> tile_size);
+		t_required_rect = MCRectangle32FromMCGIntegerRectangle(MCGRegionGetBounds(t_tile_region));
 
 		// Create a memory context of the appropriate size.
 		MCGContextRef t_context = nil;
@@ -1583,11 +1592,20 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 
 		// Invoke the sprite renderer to draw it.
 		if (self -> valid)
+		{
+			// IM-2014-07-03: [[ GraphicsPerformance ]] Set the origin of the context to the topleft of the sprite
+			MCGContextTranslateCTM(t_context, -t_required_rect.x, -t_required_rect.y);
+			// IM-2014-07-03: [[ GraphicsPerformance ]] Clip the context to only the damaged tiles
+			MCGContextClipToRegion(t_context, t_tile_region);
 			MCTileCacheDrawSprite(self, t_sprite_id, t_context, t_required_rect);
+		}
 
 		// Get rid of the temporary context.
 		MCGContextRelease(t_context);
 
+		// Free the tile region
+		MCGRegionDestroy(t_tile_region);
+		
 		// Now extract each of the required tiles.
 		if (self -> valid)
 			for(uint32_t i = t_sprite_index; i < t_index; i++)
@@ -1692,6 +1710,14 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 		stdc_qsort(t_render_list, t_render_list_length, sizeof(uint16_t), MCTileCacheSortRenderListByIncreasingTo, self);
 	}
 
+	// IM-2014-07-02: [[ GraphicsPerformance ]] MCGRegion used to collect required tile rects.
+	MCGRegionRef t_tile_region;
+	t_tile_region = nil;
+	
+	if (self->valid)
+		if (!MCGRegionCreate(t_tile_region))
+			MCTileCacheInvalidate(self);
+	
 	// Work out the bounds of the update.
 	MCTileCacheRectangle t_required_tiles;
 	t_required_tiles . left = t_required_tiles . top = INT32_MAX;
@@ -1702,6 +1728,9 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 		MCTileCacheTile *t_tile;
 		t_tile = &self -> tiles[t_render_list[i]];
 
+		// IM-2014-07-02: [[ GraphicsPerformance ]] Add tile rect to redraw region
+		MCGRegionAddRect(t_tile_region, MCGIntegerRectangleMake(t_tile -> x * self -> tile_size, t_tile -> y * self -> tile_size, self -> tile_size, self -> tile_size));
+		
 		// Extend the required tiles rect.
 		if (t_tile -> x < t_required_tiles . left)
 			t_required_tiles . left = t_tile -> x;
@@ -1720,11 +1749,8 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 
 	// Compute the rect of the tiles
 	MCRectangle32 t_required_rect;
-	MCRectangle32Set(t_required_rect,
-					t_required_tiles . left * self -> tile_size,
-					t_required_tiles . top * self -> tile_size,
-					t_required_width * self -> tile_size,
-					t_required_height * self -> tile_size);
+	// IM-2014-07-02: [[ GraphicsPerformance ]] Required rect is the bounds of all required tile rects
+	t_required_rect = MCRectangle32FromMCGIntegerRectangle(MCGRegionGetBounds(t_tile_region));
 
 	// While rendering, we need to keep track of the 'active' tiles so we know
 	// when to erase.
@@ -1750,8 +1776,12 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 
 	// Configure the context.
 	if (self -> valid)
-	MCGContextTranslateCTM(t_context, -t_required_rect . x, -t_required_rect . y);
-
+	{
+		MCGContextTranslateCTM(t_context, -t_required_rect.x, -t_required_rect.y);
+		// IM-2014-07-02: [[ GraphicsPerformance ]] Clip context to only the tiles we need.
+		MCGContextClipToRegion(t_context, t_tile_region);
+	}
+	
 	// Now we use the original render list in reverse to determine what layers
 	// to render, siphoning off tiles as we reach them in the sorted render
 	// list.
@@ -1837,6 +1867,9 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 
 	// Get rid of the active tiles array
 	MCMemoryDeleteArray(t_active_tiles);
+
+	// Get rid of the tile region
+	MCGRegionDestroy(t_tile_region);
 
 	// Finally, update the tile cache list.
 	if (self -> valid)
