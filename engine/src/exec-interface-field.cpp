@@ -806,21 +806,9 @@ void MCField::GetText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
 
 void MCField::SetText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text)
 {
-    MCString t_text;
-    bool t_is_unicode;
-    
-    if (MCStringIsNative(p_text))
-    {
-        t_text . set((const char*)MCStringGetNativeCharPtr(p_text), MCStringGetLength(p_text));
-        t_is_unicode = false;
-    }
-    else
-    {
-        t_text . set((const char*)MCStringGetCharPtr(p_text), MCStringGetLength(p_text) * 2);
-        t_is_unicode = true;
-    }
-    
-    setpartialtext(part, t_text, t_is_unicode);
+    // SN-2014-07-24: [[ Bug 12948 ]]  Fix for the horrendous slow-down:
+    //  P_TEXT property for a field should call settext, not setpartialtext (avoid text formatting)
+    settext(part, p_text, False);
 }
 
 void MCField::GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_text)
