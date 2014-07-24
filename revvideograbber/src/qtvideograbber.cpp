@@ -274,6 +274,33 @@ CQTVideoGrabber::CQTVideoGrabber(HWND whichwindow)
 }
 #else
 
+// IM-2014-07-24: [[ Bug 12863 ]] Observer class to monitor changes to parent window size
+@interface MCQTVideoGrabberWindowObserver : NSObject
+{
+	CQTVideoGrabber *m_video_grabber;
+}
+
+- (id)initWithVideoGrabber:(CQTVideoGrabber *)p_grabber;
+- (void)windowDidResize:(NSNotification *)notification;
+@end
+
+@implementation MCQTVideoGrabberWindowObserver
+
+- (id) initWithVideoGrabber:(CQTVideoGrabber *)p_grabber
+{
+	self = [self init];
+	if (self == nil)
+		return nil;
+	
+	m_video_grabber = p_grabber;
+}
+
+- (void)windowDidResize:(NSNotification *)notification
+{
+	m_video_grabber->Synchronize(true);
+}
+
+@end
 CQTVideoGrabber::CQTVideoGrabber(WindowPtr whichwindow)
 {
     parentwindow = [NSApp windowWithWindowNumber: (uint32_t)whichwindow];
@@ -295,6 +322,11 @@ CQTVideoGrabber::CQTVideoGrabber(WindowPtr whichwindow)
 	Init();
 	Synchronize(true);
     [(NSWindow *)parentwindow addChildWindow: (id)videowindow_cocoa ordered: NSWindowAbove];
+	
+	// IM-2014-07-24: [[ Bug 12863 ]] Add observer to reposition video window when parent size changes
+	m_window_observer = [[MCQTVideoGrabberWindowObserver alloc] initWithVideoGrabber:this];
+	[[NSNotificationCenter defaultCenter] addObserver:(id)m_window_observer selector: @selector(windowDidResize:) name:NSWindowDidResizeNotification object:(NSWindow*)parentwindow];
+	
 	ShowWindow(videowindow);
 }
 #endif
@@ -403,6 +435,10 @@ CQTVideoGrabber::~CQTVideoGrabber()
 #else
         [(NSWindow *)parentwindow removeChildWindow: (id)videowindow_cocoa];
 		[(NSWindow *)videowindow_cocoa release];
+		
+		// IM-2014-07-24: [[ Bug 12863 ]] Remove and release observer class
+		[[NSNotificationCenter defaultCenter] removeObserver:(id)m_window_observer];
+		[(MCQTVideoGrabberWindowObserver*)m_window_observer release];
 #endif
 	}
 	else 
