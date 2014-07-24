@@ -844,6 +844,7 @@ public:
 				MCGContextTranslateCTM(t_context, -p_area . origin.x, -p_area . origin.y);
 
 				// Set clipping rect
+                MCGContextClipToRegion(t_context, m_region);
 				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(p_area));
 				
 				r_context = t_context;

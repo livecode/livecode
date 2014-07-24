@@ -22,28 +22,15 @@
 bool MCStackTileInitialize();
 void MCStackTileFinalize();
 
-class MCStack;
-class MCStackSurface;
-
-class MCPlatformStackTile
+class MCStackTile
 {
 public:
-    MCPlatformStackTile(MCStack *stack, MCStackSurface *surface, const MCGIntegerRectangle &region);
-    ~MCPlatformStackTile();
-    
-    bool Lock(void);
-	void Unlock(void);
-    void Render(void);
-    
-private:
-    MCStack             *m_stack;
-    MCStackSurface      *m_surface;
-    MCGIntegerRectangle m_region;
-    MCGContextRef       m_context;
-    MCGRaster           m_raster;
+    virtual bool Lock(void) = 0;
+	virtual void Unlock(void) = 0;
+    virtual void Render(void) = 0;
 };
 
-void MCStackTilePush(MCPlatformStackTile *tile);
+void MCStackTilePush(MCStackTile *tile);
 void MCStackTileCollectAll(void);
 
 #endif

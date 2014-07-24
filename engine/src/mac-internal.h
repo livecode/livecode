@@ -356,14 +356,16 @@ public:
 	virtual bool Composite(MCGRectangle dst_rect, MCGImageRef src_image, MCGRectangle src_rect, MCGFloat opacity, MCGBlendMode blend);
 	
 	virtual MCGFloat GetBackingScaleFactor(void);
-	
-	void Lock(void);
+	   
+private:
+    void Lock(void);
 	void Unlock(void);
     
-private:
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
-	MCGRegionRef m_update_rgn;	
+	MCGRegionRef m_update_rgn;
+    
+    MCGRaster m_raster;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

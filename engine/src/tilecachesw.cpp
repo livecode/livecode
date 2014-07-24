@@ -92,10 +92,7 @@ bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p
 	MCGRaster t_raster;
 	if (!p_surface -> LockPixels(t_dirty, t_raster))
 		return false;
-	
-	//self -> bits = t_raster . pixels;
-	//self -> stride = t_raster . stride;
-    
+	    
     self -> raster = t_raster;
 
 	MCMemoryDeallocate(self -> tile_row);

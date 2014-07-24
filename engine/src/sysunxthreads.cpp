@@ -67,7 +67,8 @@ void *MCThreadPoolThreadExecute(void *)
 #if defined(_MAC_DESKTOP)
     void *t_pool;
     t_pool = MCMacPlatfromCreateAutoReleasePool();
-#endif    
+#endif
+    
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
     pthread_setname_np("Thread Pool Worker");
 #endif
@@ -93,16 +94,17 @@ void *MCThreadPoolThreadExecute(void *)
         {
             t_task = s_task_list_start;
             s_task_list_start = t_task -> next;
-            
             MCThreadMutexUnlock(s_task_mutex);
+            
             t_task -> task(t_task -> context);
             MCMemoryDelete(t_task);
         }
     }
     
-#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(_DARWIN_SERVER)
+#if defined(_MAC_DESKTOP)
     MCMacPlatformReleaseAutoReleasePool(t_pool);
 #endif
+    
     return NULL;
 }
 
@@ -189,7 +191,6 @@ bool MCThreadPoolPushTask(void (*p_task)(void*), void* p_context)
         t_task -> next = NULL;
         
         MCThreadMutexLock(s_task_mutex);
-        
         if (s_task_list_start == NULL)
         {
             s_task_list_start = t_task;
@@ -200,7 +201,6 @@ bool MCThreadPoolPushTask(void (*p_task)(void*), void* p_context)
             s_task_list_end -> next = t_task;
             s_task_list_end = t_task;
         }
-        
         MCThreadConditionSignal(s_task_condition);
         MCThreadMutexUnlock(s_task_mutex);
     }

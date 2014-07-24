@@ -675,6 +675,7 @@ public:
                 MCGContextTranslateCTM(t_context, -p_area . origin . x, -p_area . origin . y);
                 
 				// Set clipping rect
+                MCGContextClipToRegion(t_context, m_region);
 				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(p_area));
 				
 				r_context = t_context;
@@ -714,7 +715,7 @@ public:
         r_raster . height = t_actual_area . size . height;
         r_raster . stride = s_android_bitmap_stride;
         r_raster . format = kMCGRasterFormat_xRGB;
-		r_raster.pixels = (uint8_t*) m_pixels + t_actual_area . origin . y * s_android_bitmap_stride + t_actual_area . origin . x * sizeof(uint32_t);
+		r_raster.pixels = (uint8_t*)m_pixels + t_actual_area . origin . y * s_android_bitmap_stride + t_actual_area . origin . x * sizeof(uint32_t);
         return true;
     }
 
@@ -731,7 +732,6 @@ public:
 		if (p_update)
 			MCGRegionAddRect(s_android_bitmap_dirty_region, p_area);
 	}
-
 
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_target)
 	{

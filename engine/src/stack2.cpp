@@ -2491,6 +2491,61 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 	delete t_old_context;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+class MCGContextStackTile: public MCStackTile
+{
+public:
+    MCGContextStackTile(MCStack *p_stack, MCStackSurface *p_surface, const MCGIntegerRectangle &p_region)
+    {
+        m_stack = p_stack;
+        m_surface = p_surface;
+        m_region = p_region;
+        m_context = NULL;
+    }
+    
+    ~MCGContextStackTile()
+    {
+    }
+    
+    bool Lock(void)
+    {
+        return m_surface -> LockGraphics(m_region, m_context, m_raster);
+    }
+    
+	void Unlock(void)
+    {
+        m_surface -> UnlockGraphics(m_region, m_context, m_raster);
+    }
+    
+    void Render(void)
+    {
+#ifndef _MAC_DESKTOP
+        // IM-2014-01-24: [[ HiDPI ]] Use view backing scale to transform surface -> logical coords
+        MCGFloat t_backing_scale;
+        t_backing_scale = m_stack -> view_getbackingscale();
+        
+        // p_region is in surface coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
+        MCRectangle t_rect;
+        t_rect = MCRectangleGetScaledBounds(MCRectangleFromMCGIntegerRectangle(m_region), 1 / t_backing_scale);
+        
+        // scale user -> surface space
+        MCGContextScaleCTM(m_context, t_backing_scale, t_backing_scale);
+        
+        m_stack -> view_render(m_context, t_rect);
+#else
+        m_stack -> view_render(m_context, MCRectangleFromMCGIntegerRectangle(m_region));
+#endif
+    }
+    
+private:
+    MCStack             *m_stack;
+    MCStackSurface      *m_surface;
+    MCGIntegerRectangle m_region;
+    MCGContextRef       m_context;
+    MCGRaster           m_raster;
+};
+
 void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef p_region)
 {
 	MCTileCacheRef t_tilecache;
@@ -2498,37 +2553,41 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
 	
 	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{
-
         MCGIntegerRectangle t_bounds;
         t_bounds = MCGRegionGetBounds(p_region);
-        
         if (t_bounds . size . width > 32 && t_bounds . size . height > 32)
         {
-            MCStackTilePush(new MCPlatformStackTile(this, p_surface,
-                                                    MCGIntegerRectangleMake(t_bounds . origin . x,
-                                                                            t_bounds . origin . y,
-                                                                            t_bounds . size . width / 2,
-                                                                            t_bounds . size . height / 2)));
-            MCStackTilePush(new MCPlatformStackTile(this, p_surface,
-                                                    MCGIntegerRectangleMake(t_bounds . origin . x + t_bounds . size . width / 2,
-                                                                            t_bounds . origin . y,
-                                                                            t_bounds . size . width - t_bounds . size . width / 2,
-                                                                            t_bounds . size . height / 2)));
-            MCStackTilePush(new MCPlatformStackTile(this, p_surface,
-                                                    MCGIntegerRectangleMake(t_bounds . origin . x,
-                                                                            t_bounds . origin . y + t_bounds . size . height / 2,
-                                                                            t_bounds . size . width / 2,
-                                                                            t_bounds . size . height - t_bounds . size . height / 2)));
-            MCStackTilePush(new MCPlatformStackTile(this, p_surface,
-                                                    MCGIntegerRectangleMake(t_bounds . origin . x + t_bounds . size . width / 2,
-                                                                            t_bounds . origin . y + t_bounds . size . height / 2,
-                                                                            t_bounds . size . width - t_bounds . size . width / 2,
-                                                                            t_bounds . size . height - t_bounds . size . height / 2)));
+            MCGContextStackTile t_tile1(this, p_surface,
+                                        MCGIntegerRectangleMake(t_bounds . origin . x,
+                                                                t_bounds . origin . y,
+                                                                t_bounds . size . width / 2,
+                                                                t_bounds . size . height / 2));
+            MCGContextStackTile t_tile2(this, p_surface,
+                                        MCGIntegerRectangleMake(t_bounds . origin . x + t_bounds . size . width / 2,
+                                                                t_bounds . origin . y,
+                                                                t_bounds . size . width - t_bounds . size . width / 2,
+                                                                t_bounds . size . height / 2));
+            MCGContextStackTile t_tile3(this, p_surface,
+                                        MCGIntegerRectangleMake(t_bounds . origin . x,
+                                                                t_bounds . origin . y + t_bounds . size . height / 2,
+                                                                t_bounds . size . width / 2,
+                                                                t_bounds . size . height - t_bounds . size . height / 2));
+            MCGContextStackTile t_tile4(this, p_surface,
+                                        MCGIntegerRectangleMake(t_bounds . origin . x + t_bounds . size . width / 2,
+                                                                t_bounds . origin . y + t_bounds . size . height / 2,
+                                                                t_bounds . size . width - t_bounds . size . width / 2,
+                                                                t_bounds . size . height - t_bounds . size . height / 2));
+            MCLog("BEGIN TILE RENDERING", NULL);
+            MCStackTilePush(&t_tile1);
+            MCStackTilePush(&t_tile2);
+            MCStackTilePush(&t_tile3);
+            MCStackTilePush(&t_tile4);
             MCStackTileCollectAll();
+            MCLog("END TILE RENDERING", NULL);
         }
         else
         {
-            MCPlatformStackTile t_tile(this, p_surface, t_bounds);
+            MCGContextStackTile t_tile(this, p_surface, t_bounds);
             if (t_tile . Lock())
             {
                 t_tile . Render();
@@ -2542,6 +2601,9 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
 		MCTileCacheComposite(t_tilecache, p_surface, p_region);
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 void MCStack::takewindowsnapshot(MCStack *p_other_stack)
 {
