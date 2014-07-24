@@ -2203,7 +2203,7 @@ void MCImage::apply_transform()
 	else
 		m_has_transform = false;
 	
-	if (m_resampled_rep != nil && !(m_has_transform && MCGAffineTransformIsRectangular(m_transform) && m_resampled_rep->Matches(m_transform.a, m_transform.d, m_rep)))
+	if (m_resampled_rep != nil && !(m_has_transform && MCGAffineTransformIsRectangular(m_transform) && m_resampled_rep->Matches(rect.width, rect.height, m_transform.a == -1.0, m_transform.d == -1.0, m_rep)))
 	{
 		m_resampled_rep->Release();
 		m_resampled_rep = nil;

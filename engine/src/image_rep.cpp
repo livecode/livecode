@@ -597,11 +597,13 @@ bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *
 }
 
 // IM-2013-11-05: [[ RefactorGraphics ]] Create new resampled image rep and add to the cache list
-bool MCImageRepGetResampled(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source, MCImageRep *&r_rep)
+// IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
+// and explicit flip params instead of scale values.
+bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCResampledImageRep(p_h_scale, p_v_scale, p_source);
+	MCCachedImageRep *t_rep = new MCResampledImageRep(p_width, p_height, p_flip_horizontal, p_flip_vertical, p_source);
 	
 	t_success = t_rep != nil;
 	if (t_success)
