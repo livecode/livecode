@@ -60,7 +60,7 @@ MCPasteboard *MCScreenDC::getselection(void)
 bool MCScreenDC::setselection(MCPasteboard *p_pasteboard)
 {
 	MCTransferType *t_ttypes;
-	uint32_t ntypes;
+	size_t ntypes;
 	
 	if (p_pasteboard != NULL)
 	{
@@ -68,7 +68,7 @@ bool MCScreenDC::setselection(MCPasteboard *p_pasteboard)
 
 		p_pasteboard->Query(t_ttypes, ntypes);
 		
-		for (uint32_t i = 0; i < ntypes; i++)
+		for (size_t i = 0; i < ntypes; i++)
 		{
 			MCAutoDataRef t_data;
 			if (p_pasteboard->Fetch(t_ttypes[i], &t_data))
@@ -295,13 +295,13 @@ MCPasteboard *MCScreenDC::getclipboard(void)
 bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 {
 	MCTransferType *t_ttypes;
-	uint32_t ntypes;
+	size_t ntypes;
 	
 	m_Clipboard_store -> cleartypes();
 
 	p_pasteboard -> Query(t_ttypes, ntypes);
 	
-	for (uint32_t i = 0; i < ntypes; i++)
+	for (size_t i = 0; i < ntypes; i++)
 	{
 		MCAutoDataRef t_data;
 		if (p_pasteboard -> Fetch(t_ttypes[i], &t_data))

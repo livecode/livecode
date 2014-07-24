@@ -183,7 +183,7 @@ bool MCPasteboardListKeys(MCTransferData *p_data, char_t p_delimiter, MCListRef&
 		return false;
 
 	MCTransferType *t_types;
-	uint32_t t_count;
+	size_t t_count;
 
 	if (!p_data->Lock())
 		return false;

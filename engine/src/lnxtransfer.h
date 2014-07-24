@@ -74,7 +74,7 @@ public:
     void GetExternalTypes(GdkAtom p_selection, GdkWindow *p_source);
     
     // Interface with MCGdkPasteboard
-    bool Query(MCTransferType* &r_types, unsigned int &r_type_count);
+    bool Query(MCTransferType* &r_types, size_t &r_type_count);
     bool Fetch(MCTransferType p_type, MCDataRef &r_data, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, guint32 p_event_time);
     bool Fetch(MCMIMEtype* p_mime_type, MCDataRef &r_data, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, guint32 p_event_time);
     

@@ -1010,7 +1010,7 @@ static struct { MCTransferType type; MCPlatformPasteboardFlavor flavor; bool (*c
 static bool fetch_pasteboard(MCPasteboard *p_pasteboard, MCPlatformPasteboardFlavor p_flavor, void*& r_data, size_t& r_data_size)
 {
 	MCTransferType *t_types;
-	uindex_t t_type_count;
+	size_t t_type_count;
 	if (!p_pasteboard -> Query(t_types, t_type_count))
 		return false;
 	
@@ -1082,7 +1082,7 @@ bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 	}
 	
 	MCTransferType *t_types;
-	uindex_t t_type_count;
+	size_t t_type_count;
 	if (!p_pasteboard -> Query(t_types, t_type_count))
 		return false;
 	
@@ -1250,7 +1250,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 	// COCOA-TODO: Duplicate code - needs refactored along with code in setclipboard().
 	
 	MCTransferType *t_types;
-	uindex_t t_type_count;
+	size_t t_type_count;
 	if (!p_pasteboard -> Query(t_types, t_type_count))
 	{
 		t_type_count = 0;

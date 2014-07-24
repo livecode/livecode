@@ -18,7 +18,7 @@ public:
 	virtual void Retain(void);
 	virtual void Release(void);	
 	
-	virtual bool Query(MCTransferType*& r_types, unsigned int& r_type_count);
+	virtual bool Query(MCTransferType*& r_types, size_t& r_type_count);
 	virtual bool Fetch(MCTransferType p_type, MCDataRef& r_data);
 	
 private:

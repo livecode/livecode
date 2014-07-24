@@ -414,7 +414,7 @@ void MCInterfaceMakeOptimalImagePaletteSettings(MCExecContext& ctxt, integer_t *
 			ctxt . LegacyThrow(EE_EXPORT_BADPALETTESIZE);
 			return;
 		}
-		r_settings . optimal . palette_size = (uinteger_t)count;
+		r_settings . optimal . palette_size = *count;
 	}
 	else
 		r_settings . optimal . palette_size = 256;	
