@@ -36,6 +36,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 static NSDragOperation s_drag_operation_result = NSDragOperationNone;
+static bool s_inside_focus_event = false;
+
+//static MCMacPlatformWindow *s_focused_window = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -163,7 +166,12 @@ static bool s_lock_responder_change = false;
     
     m_is_popup = true;
     
-    [self makeKeyAndOrderFront: nil];
+    // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
+    //   as it seems to confuse Cocoa.
+    if (s_inside_focus_event)
+        [self orderFront: nil];
+    else
+        [self makeKeyAndOrderFront: nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(popupWindowClosed:) name:NSWindowWillCloseNotification object:self];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(popupWindowShouldClose:) name:NSApplicationDidResignActiveNotification object:nil];
@@ -552,32 +560,30 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	m_window -> ProcessDidDeminiaturize();
 }
 
-// MW-2014-07-17: [[ Bug 12720 ]] 'Thread' the notification as things break if 'makeKeyAndOrderFront:' is
-//   called in response to it (if the notification is sent as a result of makeKeyAndOrderFront').
+// MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-    MCPlatformRetainWindow(m_window);
-    [self performSelector: @selector(doWindowDidBecomeKey:) withObject: notification afterDelay: 0];
+    if (s_inside_focus_event)
+        m_window -> ProcessDidBecomeKey();
+    else
+    {
+        s_inside_focus_event = true;
+        m_window -> ProcessDidBecomeKey();
+        s_inside_focus_event = false;
+    }
 }
 
-- (void)doWindowDidBecomeKey: (NSNotification *)notification
-{
-    m_window -> ProcessDidBecomeKey();
-    MCPlatformReleaseWindow(m_window);
-}
-
-// MW-2014-07-17: [[ Bug 12720 ]] 'Thread' the notification as things break if 'makeKeyAndOrderFront:' is
-//   called in response to it (if the notification is sent as a result of makeKeyAndOrderFront').
+// MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
 - (void)windowDidResignKey:(NSNotification *)notification
 {
-    MCPlatformRetainWindow(m_window);
-    [self performSelector: @selector(doWindowDidResignKey:) withObject: notification afterDelay: 0];
-}
-
-- (void)doWindowDidResignKey:(NSNotification *)notification
-{
-	m_window -> ProcessDidResignKey();
-    MCPlatformReleaseWindow(m_window);
+    if (s_inside_focus_event)
+        m_window -> ProcessDidBecomeKey();
+    else
+    {
+        s_inside_focus_event = true;
+        m_window -> ProcessDidResignKey();
+        s_inside_focus_event = false;
+    }
 }
 
 - (void)windowDidChangeBackingProperties:(NSNotification *)notification
@@ -1729,7 +1735,7 @@ void MCMacPlatformWindow::ProcessDidBecomeKey(void)
 
 void MCMacPlatformWindow::ProcessDidResignKey(void)
 {
-	HandleUnfocus();
+    HandleUnfocus();
 }
 
 void MCMacPlatformWindow::ProcessMouseMove(NSPoint p_location_cocoa)
@@ -1943,7 +1949,12 @@ void MCMacPlatformWindow::DoShow(void)
 	else
 	{
 		[m_view setNeedsDisplay: YES];
-		[m_window_handle makeKeyAndOrderFront: nil];
+        // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
+        //   as it seems to confuse Cocoa.
+        if (s_inside_focus_event)
+            [m_window_handle orderFront: nil];
+        else
+            [m_window_handle makeKeyAndOrderFront: nil];
 	}
 }
 
@@ -2002,7 +2013,10 @@ void MCMacPlatformWindow::DoHide(void)
 
 void MCMacPlatformWindow::DoFocus(void)
 {
-	[m_window_handle makeKeyWindow];
+    // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
+    //   as it seems to confuse Cocoa.
+    if (!s_inside_focus_event)
+        [m_window_handle makeKeyWindow];
 }
 
 void MCMacPlatformWindow::DoRaise(void)
