@@ -553,13 +553,12 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 			{
 				uint32_t *t_pixel;
 				t_pixel = (uint32_t*) t_row_ptr;
+				uint32_t *t_dst_pxl;
+				t_dst_pxl = r_bitmap . getAddr32(0, y);
+				
+				// IM-2014-07-23: [[ Bug 12892 ]] Use MCGPixel function to premultiply native format pixels
 				for (uint32_t x = 0; x < p_raster . width; x++)
-				{
-					uint32_t *t_dst_pxl;
-					t_dst_pxl = r_bitmap . getAddr32(x, y);
-					*t_dst_pxl = SkPreMultiplyColor(*t_pixel);
-					t_pixel++;
-				}
+					*t_dst_pxl++ = MCGPixelPreMultiplyNative(*t_pixel++);
 				t_row_ptr += p_raster . stride;
 			}
 		}
