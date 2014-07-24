@@ -275,7 +275,7 @@ CQTVideoGrabber::CQTVideoGrabber(HWND whichwindow)
 #else
 
 // IM-2014-07-24: [[ Bug 12863 ]] Observer class to monitor changes to parent window size
-@interface MCQTVideoGrabberWindowObserver : NSObject
+@interface com_runrev_livecode_MCQTVideoGrabberWindowObserver : NSObject
 {
 	CQTVideoGrabber *m_video_grabber;
 }
@@ -284,7 +284,7 @@ CQTVideoGrabber::CQTVideoGrabber(HWND whichwindow)
 - (void)windowDidResize:(NSNotification *)notification;
 @end
 
-@implementation MCQTVideoGrabberWindowObserver
+@implementation com_runrev_livecode_MCQTVideoGrabberWindowObserver
 
 - (id) initWithVideoGrabber:(CQTVideoGrabber *)p_grabber
 {
@@ -301,6 +301,9 @@ CQTVideoGrabber::CQTVideoGrabber(HWND whichwindow)
 }
 
 @end
+
+@compatibility_alias MCQTVideoGrabberWindowObserver com_runrev_livecode_MCQTVideoGrabberWindowObserver;
+
 CQTVideoGrabber::CQTVideoGrabber(WindowPtr whichwindow)
 {
     parentwindow = [NSApp windowWithWindowNumber: (uint32_t)whichwindow];
