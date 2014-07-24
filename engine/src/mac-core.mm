@@ -568,6 +568,11 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
 {
+    // MW-2014-07-24: [[ Bug 12898 ]] The context of the click is changing, so make sure we sync
+    //   mouse state - i.e. send a mouse release if in mouseDown and send a mouseLeave for the
+    //   current mouse window.
+	MCMacPlatformSyncMouseBeforeDragging();
+    
 	/* UNCHECKED */ MCMemoryResizeArray(s_modal_session_count + 1, s_modal_sessions, s_modal_session_count);
 	
 	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
