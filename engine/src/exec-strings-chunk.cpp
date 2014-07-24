@@ -303,7 +303,8 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             {
                 t_pg_offset = t_offset;
                 t_newline_found = MCStringFirstIndexOfChar(p_string, '\n', t_offset, kMCCompareExact, t_offset);
-                t_pg_found = MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);
+                // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.                
+                t_pg_found = false; /*MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);*/
                 
                 if (!t_newline_found && !t_pg_found)
                     break;
