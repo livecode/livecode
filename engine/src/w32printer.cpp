@@ -1940,7 +1940,9 @@ bool MCWindowsPrinter::FetchDialogData(HGLOBAL& r_devmode_handle, HGLOBAL& r_dev
 		/* UNCHECKED */ MCStringFormat(&t_string, "%@\0FILE:\0", m_name);
 		
 		int t_devnames_size;
-		t_devnames_size = sizeof(DEVNAMES) + MCStringGetLength(*t_string);
+		// SN-2014-07-24: [[ Bug 12916 ]] Closing the Page Setup dialog causes a crash
+		//  The size is indeed in unichars, not chars
+		t_devnames_size = sizeof(DEVNAMES) + sizeof(unichar_t) * MCStringGetLength(*t_string);
 		t_devnames_handle = GlobalAlloc(GMEM_MOVEABLE, t_devnames_size);
 		if (t_devnames_handle != NULL)
 		{
