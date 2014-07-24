@@ -76,6 +76,7 @@ GdkDisplay *MCdpy;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" int initialise_weak_link_X11(void);
 extern "C" int initialise_weak_link_gobject(void);
 extern "C" int initialise_weak_link_gdk(void);
 extern "C" int initialise_weak_link_gtk(void);
@@ -87,8 +88,8 @@ extern "C" int initialise_weak_link_glib ( void ) ;
 extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libxv ( void ) ;
-extern "C" int initialise_weak_link_gdk_pixbuf();
-extern "C" int initialise_weak_link_cairo();
+extern "C" int initialise_weak_link_gdk_pixbuf(void);
+extern "C" int initialise_weak_link_cairo(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -201,7 +202,8 @@ Boolean MCScreenDC::open()
 {
 	// We require GDK in order to do any windowing at all
     bool t_has_gdk;
-    t_has_gdk = initialise_weak_link_gobject() != 0
+    t_has_gdk = initialise_weak_link_X11() != 0
+        && initialise_weak_link_gobject() != 0
         && initialise_weak_link_gdk() != 0
         && initialise_weak_link_gdk_pixbuf() != 0
         && initialise_weak_link_cairo() != 0;

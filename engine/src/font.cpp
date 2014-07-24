@@ -356,7 +356,12 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         
         // Move on to the next chunk
         t_offset += t_break_point;
-        t_length -= t_break_point;
+        // SN-2014-07-23: [[ Bug 12910 ]] Script editor crashes
+        //  Make sure we get 0 as a minimum, not a negative value since t_length is a uindex_t.
+        if (t_length < t_break_point)
+            t_length = 0;
+        else
+            t_length -= t_break_point;
     }
 }
 

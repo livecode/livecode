@@ -1575,8 +1575,8 @@ static char *set_array_utf8_binary(const char *arg1, const char *arg2,
 static char *stack_to_window_rect(const char *arg1, const char *arg2,
 									   const char *arg3, int *retval)
 {
-	uint32_t t_win_id;
-	t_win_id = (uint32_t)arg1;
+	uintptr_t t_win_id;
+	t_win_id = uintptr_t(arg1);
 
 	MCStack *t_stack;
 	t_stack = MCdispatcher->findstackwindowid(t_win_id);
@@ -1603,8 +1603,8 @@ static char *stack_to_window_rect(const char *arg1, const char *arg2,
 static char *window_to_stack_rect(const char *arg1, const char *arg2,
 									   const char *arg3, int *retval)
 {
-	uint32_t t_win_id;
-	t_win_id = (uint32_t)arg1;
+	uintptr_t t_win_id;
+	t_win_id = (uintptr_t)arg1;
 
 	MCStack *t_stack;
 	t_stack = MCdispatcher->findstackwindowid(t_win_id);
@@ -1662,16 +1662,21 @@ XCB MCcbs[] =
 	runloop_wait,
     
     // Externals interface unicode functions
+    // SN-2014-07-22: [[ Bug 12874 ]] revBrowser (both original and CEF) crashes LiveCode 7.0 DP7
+    //  added *_by_id_* in the MCcbs...
 	card_message_utf8,
 	eval_expr_utf8,
 	get_global_utf8,
 	set_global_utf8,
 	get_field_by_name_utf8,
 	get_field_by_num_utf8,
+    get_field_by_id_utf8,
 	set_field_by_name_utf8,
 	set_field_by_num_utf8,
+    set_field_by_id_utf8,
 	show_image_by_name_utf8,
 	show_image_by_num_utf8,
+    show_image_by_id_utf8,
 	get_variable_utf8,
 	set_variable_utf8,
 	get_variable_ex_utf8_text,

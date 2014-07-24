@@ -506,8 +506,8 @@ static bool __MCStringFormatSupportedForUnicode(const char *p_format)
 #define FORMAT_ARG_32_BIT 1
 #define FORMAT_ARG_64_BIT 2
 #elif defined(__64_BIT__)
-#define FORMAT_ARG_32_BIT 2
-#define FORMAT_ARG_64_BIT 2
+#define FORMAT_ARG_32_BIT 1
+#define FORMAT_ARG_64_BIT 1
 #endif
 
 bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args)
@@ -608,7 +608,10 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
             {
                 memcpy(t_format, t_format_start_ptr, t_format_size);
                 t_format[t_format_size] = '\0';
-				t_success = MCNativeCharsFormatV(t_string, t_size, t_format, p_args);
+                va_list t_args;
+                va_copy(t_args, p_args);
+				t_success = MCNativeCharsFormatV(t_string, t_size, t_format, t_args);
+                va_end(t_args);
 			}
 			
 			if (t_success)
@@ -617,7 +620,7 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 			if (t_success)
 				while(t_arg_count > 0)
 				{
-					va_arg(p_args, int);
+					va_arg(p_args, uintptr_t);
 					t_arg_count -= 1;
 				}
 					
@@ -4563,7 +4566,7 @@ static bool do_iconv(iconv_t fd, const char *in, size_t in_len, char * &out, siz
 	// Begin conversion. As a start, assume both encodings take the same
 	// space. This is probably wrong but the array is grown as needed.
 	size_t t_status = 0;
-	uindex_t t_alloc_remain = 0;
+	size_t t_alloc_remain = 0;
     char * t_out;
 	char * t_out_cursor;
 

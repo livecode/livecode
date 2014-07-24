@@ -105,7 +105,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
     
     // Get the list of supported transfer types
     MCTransferType *t_transfer_types;
-    uint32_t t_transfer_types_count;
+    size_t t_transfer_types_count;
     MCtransferstore->cleartypes();
     if (!p_pasteboard->Query(t_transfer_types, t_transfer_types_count))
     {

@@ -1010,7 +1010,7 @@ static struct { MCTransferType type; MCPlatformPasteboardFlavor flavor; bool (*c
 static bool fetch_pasteboard(MCPasteboard *p_pasteboard, MCPlatformPasteboardFlavor p_flavor, void*& r_data, size_t& r_data_size)
 {
 	MCTransferType *t_types;
-	uindex_t t_type_count;
+	size_t t_type_count;
 	if (!p_pasteboard -> Query(t_types, t_type_count))
 		return false;
 	
@@ -1082,7 +1082,7 @@ bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 	}
 	
 	MCTransferType *t_types;
-	uindex_t t_type_count;
+	size_t t_type_count;
 	if (!p_pasteboard -> Query(t_types, t_type_count))
 		return false;
 	
@@ -1171,7 +1171,9 @@ bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *p_loaded_
 class MCSystemScriptEnvironment: public MCScriptEnvironment
 {
 public:
-	MCSystemScriptEnvironment(const char *p_language)
+    // SN-2014-07-23: [[ Bug 12907 ]]
+    //  Update as well MCSreenDC::createscriptenvironment (and callees)
+	MCSystemScriptEnvironment(MCStringRef p_language)
 	{
 		m_references = 1;
 		MCPlatformScriptEnvironmentCreate(p_language, m_env);
@@ -1217,7 +1219,9 @@ private:
 	MCPlatformScriptEnvironmentRef m_env;
 };
 
-MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
+// SN-2014-07-23: [[ Bug 12907 ]]
+//  Update as well MCSreenDC::createscriptenvironment (and callees)
+MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 {
 	return new MCSystemScriptEnvironment(p_language);
 }
@@ -1246,7 +1250,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 	// COCOA-TODO: Duplicate code - needs refactored along with code in setclipboard().
 	
 	MCTransferType *t_types;
-	uindex_t t_type_count;
+	size_t t_type_count;
 	if (!p_pasteboard -> Query(t_types, t_type_count))
 	{
 		t_type_count = 0;
@@ -1351,7 +1355,9 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &p_rect, uint4 p_window, const char *p_display_name, MCPoint *p_size)
+// SN-2014-07-23: [[ Bug 12907 ]] File > Import as control > Snapshot from screen
+//  Mismatching types - thus the 'unimplemented' MCUICDC::snapshot was called instead of the MCScreenDC one
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &p_rect, uint4 p_window, MCStringRef p_display_name, MCPoint *p_size)
 {
 	MCImageBitmap *t_bitmap;
 	if (p_window == 0)

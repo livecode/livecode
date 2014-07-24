@@ -200,7 +200,7 @@ void MCSystemPasteboard::AddEntry(MCTransferType p_type, MCPlatformPasteboardFla
 	m_entries[m_entry_count - 1] . data = nil;
 }
 
-bool MCSystemPasteboard::Query(MCTransferType*& r_types, unsigned int& r_type_count)
+bool MCSystemPasteboard::Query(MCTransferType*& r_types, size_t& r_type_count)
 {
 	if (!IsValid())
 		return false;

@@ -183,7 +183,7 @@ public:
 	//
 	// If the pasteboard could not be queried, false should be returned.
 	//
-	virtual bool Query(MCTransferType*& r_types, unsigned int& r_type_count) = 0;
+	virtual bool Query(MCTransferType*& r_types, size_t& r_type_count) = 0;
 
 	// Fetch the given transfer type from the pasteboard. It is an error
 	// for this method to be called with a transfer type that was not
@@ -236,7 +236,7 @@ public:
 
 	// Query the object for its list of types (see MCPasteboard for
 	// precise semantics).
-	bool Query(MCTransferType*& r_types, unsigned int& r_type_count);
+	bool Query(MCTransferType*& r_types, size_t& r_type_count);
 
 	// Fetch the data of the given data type from the object (see
 	// MCPasteboard for precise semantics).
@@ -335,7 +335,7 @@ public:
 	// Return a list of (non-derived) types present on the clipboard
 	// note this call must be made inside an explicit Lock/Unlock pair
 	// due to the lifetime of the returned arrays.
-	bool Query(MCTransferType*& r_types, uint4& r_type_count);
+	bool Query(MCTransferType*& r_types, size_t& r_type_count);
 
 	// Return true if fetching the given type would succeed. If
 	// <p_with_conversion> is true, it also checks to see if <p_type>

@@ -27,7 +27,10 @@ bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *p_for
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 	t_count = _vscprintf(p_format, p_args);
 #elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
-	t_count = vsnprintf(nil, 0, p_format, p_args);
+    va_list t_args;
+    va_copy(t_args, p_args);
+	t_count = vsnprintf(nil, 0, p_format, t_args);
+    va_end(t_args);
 #else
 #error "Implement MCCStringFormat"
 #endif

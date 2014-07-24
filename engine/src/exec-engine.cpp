@@ -1364,8 +1364,14 @@ void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectP
 	default:
 		break;
 	}
-	
-	MCscreen->addmessage(p_target . object, *t_message, MCS_time() + p_delay, t_params);
+    
+    // AL-2014-07-22: [[ Bug 12846 ]] Copy bugfix to refactored code
+    // MW-2014-05-28: [[ Bug 12463 ]] If we cannot add the pending message, then throw an
+    //   error.
+	if (MCscreen->addusermessage(p_target . object, *t_message, MCS_time() + p_delay, t_params))
+        return;
+    
+    ctxt . LegacyThrow(EE_SEND_TOOMANYPENDING, *t_message);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
