@@ -55,7 +55,9 @@ struct MCPlayerCallback
     uint32_t time;
 };
 
-class MCPlayer : public MCPlayerInterface, public MCControl
+// SN-2014-07-23: [[ Bug 12893 ]] MCControl must be the first class inherited
+//  since we use &MCControl::kPropertyTable
+class MCPlayer : public MCControl, public MCPlayerInterface
 {
 	MCPlayer *nextplayer;
     
