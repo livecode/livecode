@@ -373,14 +373,34 @@ void MCAVFoundationPlayer::SelectionChanged(void)
     }
     else
         [[m_player currentItem] setForwardPlaybackEndTime:kCMTimeInvalid];
-    
-    NSLog(@"Selection changed");
-    if (!m_synchronizing)
-        MCPlatformCallbackSendPlayerSelectionChanged(this);
 }
 
 void MCAVFoundationPlayer::CurrentTimeChanged(void)
 {
+    uint32_t t_current_time;
+    t_current_time = 1000 * CMTimeGetSeconds([m_player currentTime]);
+    
+    if (m_marker_count > 0)
+    {
+        // We search for the marker time immediately before the
+        // current time and if last marker is not that time,
+        // dispatch it.
+        uindex_t t_index;
+        for(t_index = 0; t_index < m_marker_count; t_index++)
+            if (m_markers[t_index] > t_current_time)
+                break;
+        
+        // t_index is now the first marker greater than the current time.
+        if (t_index > 0)
+        {
+            if (m_markers[t_index - 1] != m_last_marker)
+            {
+                m_last_marker = m_markers[t_index - 1];
+                MCPlatformCallbackSendPlayerMarkerChanged(this, m_last_marker);
+            }
+        }
+    }
+    
     if (!m_synchronizing)
         MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
 }
@@ -658,6 +678,8 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     // Now set the player of the view.
     [m_view setPlayer: m_player];
     
+    m_last_marker = UINT32_MAX;
+    
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: AVPlayerItemDidPlayToEndTimeNotification object: [m_player currentItem]];
@@ -843,6 +865,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 		case kMCPlatformPlayerPropertyCurrentTime:
             // Add toleranceBefore/toleranceAfter for accurate scrubbing
             [[m_player currentItem] seekToTime:CMTimeMake(*(uint32_t *)p_value, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            CurrentTimeChanged();
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
 		{
@@ -1022,41 +1045,35 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
     NSArray *t_tracks;
     t_tracks = [[[m_player currentItem] asset] tracks];
     
-    /*
-    AVPlayerItemTrack *t_playerItemTrack;
-    t_playerItemTrack = [t_tracks objectAtIndex:p_index];
-    
-    // TODO: Fix error "LiveCode-Community[18526:303] -[AVAssetTrack assetTrack]: unrecognized selector sent to instance 0xa9d5aa0"
-    AVAssetTrack *t_assetTrack = t_playerItemTrack.assetTrack;
-    */
-    AVAssetTrack *t_assetTrack = (AVAssetTrack *)[t_tracks objectAtIndex:p_index];
+    // PM-2014-07-10: [[ Bug 12757 ]] Get the AVAssetTrack from t_tracks 
+    AVAssetTrack *t_asset_track = (AVAssetTrack *)[t_tracks objectAtIndex:p_index];
     
 	switch(p_property)
 	{
 		case kMCPlatformPlayerTrackPropertyId:
-			*(uint32_t *)r_value = [t_assetTrack trackID];
+			*(uint32_t *)r_value = [t_asset_track trackID];
 			break;
 		case kMCPlatformPlayerTrackPropertyMediaTypeName:
 		{
             NSString *t_mediaType;
-            t_mediaType = [t_assetTrack mediaType];
+            t_mediaType = [t_asset_track mediaType];
             *(char **)r_value = strdup([t_mediaType cStringUsingEncoding: NSMacOSRomanStringEncoding]);
 		}
             break;
 		case kMCPlatformPlayerTrackPropertyOffset:
         {
-			CMTimeRange t_timeRange = [t_assetTrack timeRange];
+			CMTimeRange t_timeRange = [t_asset_track timeRange];
             *(uint32_t *)r_value = t_timeRange . start . value;
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyDuration:
         {
-            CMTimeRange t_timeRange = [t_assetTrack timeRange];
+            CMTimeRange t_timeRange = [t_asset_track timeRange];
             *(uint32_t *)r_value = t_timeRange . duration . value;
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyEnabled:
-			*(bool *)r_value = [t_assetTrack isEnabled];
+			*(bool *)r_value = [t_asset_track isEnabled];
 			break;
 	}
 }

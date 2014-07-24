@@ -1124,11 +1124,87 @@ void TAltBrowser::Print()
 	[op runOperation];
 }
 
+// IM-2014-07-17: [[ Bug 12401 ]] Implement snapshot function for Cocoa-based revBrowser
+extern bool MCOSXSnapshotNSView(NSView *p_view, void *&r_data, uint32_t &r_length)
+{
+	bool t_success;
+	t_success = true;
+	
+	uint32_t t_width, t_height;
+	
+	void *t_data;
+	t_data = nil;
+	
+	uint32_t t_length;
+	t_length = 0;
+	
+	CGContextRef t_context;
+	t_context = nil;
+	
+	if (t_success)
+	{
+		NSRect t_rect;
+		t_rect = [p_view bounds];
+		
+		t_width = t_rect.size.width;
+		t_height = t_rect.size.height;
+		
+		t_length = t_width * t_height * sizeof(uint32_t);
+		t_success = nil != (t_data = malloc(t_length));
+	}
+	
+	CGColorSpace *t_colorspace;
+	t_colorspace = nil;
+	
+	if (t_success)
+		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
+	
+	if (t_success)
+	{
+		CGBitmapInfo t_bitmapinfo;
+		t_bitmapinfo = kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipFirst;
+		t_success = nil != (t_context = CGBitmapContextCreate(t_data, t_width, t_height, 8, t_width * sizeof(uint32_t), t_colorspace, t_bitmapinfo));
+	}
+	
+	NSGraphicsContext *t_ns_context;
+	t_ns_context = nil;
+	
+	if (t_success)
+		t_success = nil != (t_ns_context = [NSGraphicsContext graphicsContextWithGraphicsPort:t_context flipped:false]);
+	
+	if (t_success)
+	{
+		[p_view displayRectIgnoringOpacity:[p_view bounds] inContext:t_ns_context];
+		
+		[t_ns_context flushGraphics];
+		CGContextFlush(t_context);
+	}
+	
+	if (t_context != nil)
+		CGContextRelease(t_context);
+	
+	if (t_success)
+	{
+		r_data = t_data;
+		r_length = t_length;
+	}
+	else
+		free(t_data);
+	
+	return t_success;
+}
+
 // MW-2012-11-14: [[ Bug 10509 ]] Reimplemented to fix image corruption.
 bool TAltBrowser::GetImage(void*& r_data, int& r_length)
 {	
 	bool t_success;
 	t_success = true;
+	
+	void *t_data;
+	t_data = nil;
+	
+	uint32_t t_length;
+	t_length = 0;
 	
 #ifdef PRE_COCOA
 	CGImageRef t_image;
@@ -1141,14 +1217,12 @@ bool TAltBrowser::GetImage(void*& r_data, int& r_length)
 		t_success = t_err == noErr;
 	}
 	
-	size_t t_width, t_height;
-	void *t_bits;
-	t_bits = nil;
 	if (t_success)
 	{
 		t_width = CGImageGetWidth(t_image);
 		t_height = CGImageGetHeight(t_image);
-		t_bits = malloc(t_width * t_height * 4);
+		t_length = t_width * t_height * sizeof(uint32_t);
+		t_bits = malloc(t_length);
 		if (t_bits == nil)
 			t_success = false;
 	}
@@ -1176,12 +1250,7 @@ bool TAltBrowser::GetImage(void*& r_data, int& r_length)
 	if (t_success)
 	{
 		CGContextDrawImage(t_context, CGRectMake(0, 0, t_width, t_height), t_image);
-
-		r_data = t_bits;
-		r_length = t_width * t_height * 4;
 	}
-	else
-		free(t_bits);
 	
 	if (t_context != nil)
 		CGContextRelease(t_context);
@@ -1192,8 +1261,14 @@ bool TAltBrowser::GetImage(void*& r_data, int& r_length)
 	if (t_image != nil)
 		CGImageRelease(t_image);
 #else
-	t_success = false;
+	t_success = MCOSXSnapshotNSView(m_web_browser, t_data, t_length);
 #endif
+	
+	if (t_success)
+	{
+		r_data = t_data;
+		r_length = t_length;
+	}
 	
 	return t_success;
 }

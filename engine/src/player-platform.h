@@ -81,6 +81,7 @@ class MCPlayer : public MCControl
     bool m_show_volume : 1;
     bool m_scrub_back_is_pressed : 1;
     bool m_scrub_forward_is_pressed : 1;
+    bool m_modify_selection_while_playing : 1;
 	
 public:
 	MCPlayer();
@@ -208,7 +209,8 @@ public:
         else
             starttime = stime;
         
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+        if (hasfilename())
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
         layer_redrawrect(getcontrollerrect());
 	}
 	void setendtime(uint4 etime)
@@ -220,7 +222,8 @@ public:
         else
             endtime = etime;
         
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+        if (hasfilename())
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
         layer_redrawrect(getcontrollerrect());
 	}
 	void setlasttime(int4 ltime)
@@ -232,6 +235,11 @@ public:
 	{
 		return m_platform_player;
 	}
+    
+    bool hasfilename(void) const
+    {
+        return filename != NULL;
+    }
     
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
@@ -259,6 +267,7 @@ public:
     
     void handle_mdown(int which);
     void handle_mstilldown(int which);
+    void handle_shift_mdown(int which);
     void handle_mup(int which);
     void handle_mfocus(int x, int y);
     

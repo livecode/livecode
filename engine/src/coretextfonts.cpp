@@ -63,14 +63,18 @@ static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_
     t_attributes = NULL;
     if (t_success)
     {
+        // MW-2014-07-23: [[ Bug 12426 ]] Only specify the 'name' attribute in the font descriptor
+        //   otherwise things don't work correctly on iOS. It seems going via a descriptor stops
+        //   the warning on 10.9.
+        //
         // Updated the font creation routine to use font descriptors. Though CTFontCreateWithName worked,
         // it logged warnings (on 10.9) whenever it was passed a non-postscript font name. Hopefully using
         // the display name first in the descriptor will remove the warnings but still keep the fall back behaviour.
         CFStringRef t_keys[] =
         {
-            kCTFontDisplayNameAttribute,
+//            kCTFontDisplayNameAttribute,
             kCTFontNameAttribute,
-            kCTFontFamilyNameAttribute,
+//            kCTFontFamilyNameAttribute,
         };
         CFTypeRef t_values[] = {
             t_name,

@@ -55,6 +55,7 @@ public:
     virtual ~MCQTKitPlayer(void);
     
     virtual bool IsPlaying(void);
+    // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
     virtual void Start(double rate);
     virtual void Stop(void);
     virtual void Step(int amount);
@@ -269,6 +270,7 @@ OSErr MCQTKitPlayer::MovieDrawingComplete(Movie p_movie, long p_ref)
     t_self -> CacheCurrentFrame();
 	
 	MCPlatformCallbackSendPlayerFrameChanged(t_self);
+    t_self -> CurrentTimeChanged();
 	
 	return noErr;
 }
@@ -281,7 +283,7 @@ void MCQTKitPlayer::Switch(bool p_new_offscreen)
 	
 	// Update the pending offscreen setting and schedule a switch.
 	m_pending_offscreen = p_new_offscreen;
-    
+
 	if (m_switch_scheduled)
 		return;
 	
@@ -308,7 +310,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
         
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
-        
+
 		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
         
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
@@ -320,6 +322,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 			CFRelease(t_player -> m_current_frame);
 			t_player -> m_current_frame = nil;
 		}
+
 		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
         
 		// Switching to non-offscreen
@@ -370,6 +373,7 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
     switch(action)
     {
         case mcActionIdle:
+        case mcActionGoToTime:
         {
             MCQTKitPlayer *self;
             self = (MCQTKitPlayer *)refcon;
@@ -377,31 +381,33 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
             QTTime t_current_time;
             t_current_time = [self -> m_movie currentTime];
             
-            if (self -> m_marker_count > 0)
-            {
-                // We search for the marker time immediately before the
-                // current time and if last marker is not that time,
-                // dispatch it.
-                uindex_t t_index;
-                for(t_index = 0; t_index < self -> m_marker_count; t_index++)
-                    if (self -> m_markers[t_index] > t_current_time . timeValue)
-                        break;
-                
-                // t_index is now the first marker greater than the current time.
-                if (t_index > 0)
-                {
-                    if (self -> m_markers[t_index - 1] != self -> m_last_marker)
-                    {
-                        self -> m_last_marker = self -> m_markers[t_index - 1];
-                        MCPlatformCallbackSendPlayerMarkerChanged(self, self -> m_last_marker);
-                    }
-                }
-            }
-            
-            if (do_QTTimeCompare(t_current_time, self -> m_last_current_time))
+            if (do_QTTimeCompare(t_current_time, self -> m_last_current_time) != 0)
             {
                 self -> m_last_current_time = t_current_time;
-                self -> CurrentTimeChanged();
+                
+                if (self -> m_marker_count > 0)
+                {
+                    // We search for the marker time immediately before the
+                    // current time and if last marker is not that time,
+                    // dispatch it.
+                    uindex_t t_index;
+                    for(t_index = 0; t_index < self -> m_marker_count; t_index++)
+                        if (self -> m_markers[t_index] > t_current_time . timeValue)
+                            break;
+                    
+                    // t_index is now the first marker greater than the current time.
+                    if (t_index > 0)
+                    {
+                        if (self -> m_markers[t_index - 1] != self -> m_last_marker)
+                        {
+                            self -> m_last_marker = self -> m_markers[t_index - 1];
+                            MCPlatformCallbackSendPlayerMarkerChanged(self, self -> m_last_marker);
+                        }
+                    }
+                }
+                
+                if (!self -> m_offscreen)
+                    self -> CurrentTimeChanged();
             }
         }
         break;
@@ -418,6 +424,9 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	NSError *t_error;
 	t_error = nil;
 	
+    if (p_filename == nil)
+        p_filename = "";
+    
     id t_filename_or_url;
     if (!p_is_url)
         t_filename_or_url = [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding];
@@ -447,6 +456,9 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 		return;
 	}
 	
+    // MW-2014-07-18: [[ Bug ]] Clean up callbacks before we release.
+    MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
 	[m_movie release];
     
 	m_movie = t_new_movie;
@@ -473,10 +485,22 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
     
 	[m_view setMovie: m_movie];
     
+    // MW-2014-07-16: [[ Bug 12836 ]] Make sure we give movies some time to collect the first
+    //   frame.
+    MoviesTask([m_movie quickTimeMovie], 0);
+    
     // Set the last marker to very large so that any marker will trigger.
     m_last_marker = UINT32_MAX;
     
     MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], MovieActionFilter, (long)this);
+    
+    // MW-2014-07-18: [[ Bug 12837 ]] Make sure we add a moviedrawingcomplete callback to the object
+    //   if we are already offscreen.
+    if (m_offscreen)
+    {
+		SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)this);
+        CacheCurrentFrame();
+    }
 }
 
 void MCQTKitPlayer::Synchronize(void)
@@ -509,6 +533,7 @@ bool MCQTKitPlayer::IsPlaying(void)
 	return [m_movie rate] != 0;
 }
 
+// PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
 void MCQTKitPlayer::Start(double rate)
 {
 	[m_movie setRate: rate];

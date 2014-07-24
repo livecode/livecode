@@ -277,11 +277,6 @@ class CDropTarget;
 
 typedef uintptr_t MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 typedef struct __MCWinSysHandle *MCWinSysHandle;
 typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
@@ -357,11 +352,6 @@ struct MCMacProcessSerialNumber
 	uint32_t lowLongOfPSN;
 };
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -407,11 +397,6 @@ struct MCFontStruct
 #define SIGBOGUS 100
 
 typedef int MCSocketHandle;
-
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
 
 extern uint1 MClowercasingtable[];
 inline uint1 MCS_tolower(uint1 p_char)
@@ -466,11 +451,6 @@ struct MCFontStruct
 
 typedef int MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -514,11 +494,6 @@ struct MCFontStruct
 
 typedef int MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -546,6 +521,16 @@ struct MCFontStruct
 #define SECONDS_MAX 32535244799.0
 
 #endif
+
+//////////////////////////////////////////////////////////////////////
+//
+//  NEW / DELETE REDEFINTIONS
+//
+
+inline void *operator new(size_t, void *p)
+{
+	return p;
+}
 
 //////////////////////////////////////////////////////////////////////
 //
