@@ -607,11 +607,15 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 			if (t_success)
             {
                 memcpy(t_format, t_format_start_ptr, t_format_size);
-                t_format[t_format_size] = '\0';
+				t_format[t_format_size] = '\0';
+#ifdef _WINDOWS
+				t_success = MCNativeCharsFormatV(t_string, t_size, t_format, p_args);
+#else
                 va_list t_args;
                 va_copy(t_args, p_args);
 				t_success = MCNativeCharsFormatV(t_string, t_size, t_format, t_args);
                 va_end(t_args);
+#endif
 			}
 			
 			if (t_success)
