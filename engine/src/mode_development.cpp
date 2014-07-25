@@ -758,9 +758,13 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 
 		if (!effective)
 		{
-			parsescript(False);
-			if (hlist != NULL)
-				t_first = hlist -> enumerate(ep, t_first);
+            // MW-2014-07-25: [[ Bug 12819 ]] Make sure we don't list handlers of passworded stacks.
+            if (getstack() -> iskeyed())
+            {
+                parsescript(False);
+                if (hlist != NULL)
+                    t_first = hlist -> enumerate(ep, t_first);
+            }
 		}
 		else
 		{
@@ -804,7 +808,8 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 	case P_REV_AVAILABLE_VARIABLES:
 	{
 		ep.clear();
-		if (hlist == NULL)
+        // MW-2014-07-25: [[ Bug 12819 ]] Make sure we don't list variables of passworded stacks.
+		if (hlist == NULL || !getstack() -> iskeyed())
 		{
 			return ES_NORMAL;
 		}
