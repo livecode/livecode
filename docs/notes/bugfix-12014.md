@@ -1,0 +1,1 @@
+# Stack with iOS deployment checked(mac) when opened on windows system does not allow you to disable this deployment option. This in turn breaks Android APK generation

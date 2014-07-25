@@ -315,13 +315,15 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Image representation that will return the given source at the specified scale using
+// Image representation that will return the given source at the specified size using
 // bicubic filter
 
+// IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
+// and explicit flip params instead of scale values.
 class MCResampledImageRep : public MCLoadableImageRep
 {
 public:
-	MCResampledImageRep(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source);
+	MCResampledImageRep(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source);
 	~MCResampledImageRep();
 	
 	MCImageRepType GetType() { return kMCImageRepResampled; }
@@ -330,7 +332,7 @@ public:
 	
 	//////////
 	
-	bool Matches(MCGFloat p_h_scale, MCGFloat p_v_scale, const MCImageRep *p_source);
+	bool Matches(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, const MCImageRep *p_source);
 	
 protected:
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
@@ -338,7 +340,7 @@ protected:
 	
 	//////////
 	
-	MCGFloat m_h_scale, m_v_scale;
+	uint32_t m_target_width, m_target_height;
 	bool m_h_flip, m_v_flip;
 	MCImageRep *m_source;
 };
@@ -407,7 +409,9 @@ bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);
 bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep);
 
-bool MCImageRepGetResampled(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source, MCImageRep *&r_rep);
+// IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
+// and explicit flip params instead of scale values.
+bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source, MCImageRep *&r_rep);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "object.h"
 
-typedef bool (*MCForEachStackCallback)(void *state, MCStack *stack);
+typedef bool (*MCStackForEachCallback)(MCStack *p_stack, void *p_context);
 
 class MCDispatch : public MCObject
 {
@@ -204,7 +204,10 @@ public:
 	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
 	MCStack *findstackwindowid(uint32_t p_win_id);
 	MCStack *findstackd(Window w);
-	MCStack *findchildstackd(Window w,uint2 index);
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
+	bool foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_callback, void *p_context);
+	
 	MCObject *getobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjname(Chunk_term type, MCNameRef);
 	MCStack *gethome();
@@ -218,9 +221,6 @@ public:
 	}
 	void appendpanel(MCStack *sptr);
 	void removepanel(MCStack *sptr);
-
-	// Iterate through all stacks and substacks, invoking the callback for each one.
-	bool foreachstack(MCForEachStackCallback p_callback, void *p_state);
 
 	// Recreate the fontlist.
 	void flushfonts(void);

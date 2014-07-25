@@ -211,7 +211,10 @@ MCStack::MCStack()
 	obj_id = START_ID;
 	flags = F_VISIBLE | F_RESIZABLE | F_OPAQUE;
 	window = NULL;
-	parentwindow = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] No parent window to start with
+	m_parent_stack = nil;
+	
 	cursor = None;
 	substacks = NULL;
 	cards = curcard = savecards = NULL;
@@ -315,7 +318,10 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		}
 	}
 	window = NULL;
-	parentwindow = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] No parent window to start with
+	m_parent_stack = nil;
+	
 	cursor = None;
 	substacks = NULL;
 	cards = curcard = savecards = NULL;
@@ -506,8 +512,10 @@ MCStack::~MCStack()
 		opened++;
 		MCObject::close();
 	}
-	if (parentwindow != NULL)
-		setparentwindow(NULL);
+	
+	if (m_parent_stack != nil)
+		setparentstack(nil);
+
 	delete mnemonics;
 	MCValueRelease(title);
 	MCValueRelease(titlestring);

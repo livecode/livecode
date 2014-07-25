@@ -90,31 +90,6 @@ MCStack *MCStack::findstackd(Window w)
 	return findstackwindowid(MCscreen->dtouint4((Drawable)w));
 }
 
-MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
-{
-	Window pwindow = getparentwindow();
-	if (pwindow != DNULL && w->handle.window == pwindow->handle.window)
-		if  (++ccount == cindex)
-			return this;
-	if (substacks != NULL)
-	{
-		MCStack *tptr = substacks;
-		do
-		{
-			pwindow = tptr->getparentwindow();
-			if (pwindow != DNULL && w->handle.window == pwindow->handle.window)
-			{
-				ccount++;
-				if (ccount == cindex)
-					return tptr;
-			}
-			tptr = (MCStack *)tptr->next();
-		}
-		while (tptr != substacks);
-	}
-	return NULL;
-}
-
 void MCStack::openwindow(Boolean p_override)
 {
 	if (MCModeMakeLocalWindows())
