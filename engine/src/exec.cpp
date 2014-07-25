@@ -1951,6 +1951,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             uinteger_t* t_value;
             uindex_t t_count;
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            t_count = 0;
             ((void(*)(MCExecContext&, void *, uindex_t&, uinteger_t*&))prop -> getter)(ctxt, mark, t_count, t_value);
             if (!ctxt . HasError())
             {
@@ -1970,6 +1972,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             double* t_value;
             uindex_t t_count;
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            t_count = 0;
             ((void(*)(MCExecContext&, void *, uindex_t&, double*&))prop -> getter)(ctxt, mark, t_count, t_value);
             if (!ctxt . HasError())
             {
@@ -1989,6 +1993,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             MCPoint* t_value;
             uindex_t t_count;
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            t_count = 0;
             ((void(*)(MCExecContext&, void *, uindex_t&, MCPoint*&))prop -> getter)(ctxt, mark, t_count, t_value);
             if (!ctxt . HasError())
             {
@@ -2237,6 +2243,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             bool t_mixed;
             MCStringRef* t_value;
             uindex_t t_count;
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            t_count = 0;
             ((void(*)(MCExecContext&, void *, bool&, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_mixed, t_count, t_value);
             if (!ctxt . HasError())
             {
@@ -2268,6 +2276,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             bool t_mixed;
             uinteger_t* t_value;
             uindex_t t_count;
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            t_count = 0;
             ((void(*)(MCExecContext&, void *, bool&, uindex_t&, uinteger_t*&))prop -> getter)(ctxt, mark, t_mixed, t_count, t_value);
             if (!ctxt . HasError())
             {
@@ -2285,7 +2295,9 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                         r_value . type = kMCExecValueTypeStringRef;
                     }
                 }
-                MCMemoryDeleteArray(t_value);
+                // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+                if (t_count > 0)
+                    MCMemoryDeleteArray(t_value);
             }
         }
             break;    
@@ -2730,6 +2742,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCAutoStringRef t_input;
             MCStringRef *t_value;
             uindex_t t_count;
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            t_count = 0;
             
             char_t t_delimiter;
             t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
@@ -2744,17 +2758,20 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
             for(uindex_t i = 0; i < t_count; i++)
                 MCValueRelease(t_value[i]);
-            MCMemoryDeleteArray(t_value);
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            if (t_count > 0)
+                MCMemoryDeleteArray(t_value);
         }
             break;
-            
-        case kMCPropertyTypeMixedItemsOfUInt:            
+                      
         case kMCPropertyTypeLinesOfUInt:
         case kMCPropertyTypeItemsOfUInt:
         {
             MCAutoStringRef t_input;
             uinteger_t* t_value;
             uindex_t t_count;
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            t_count = 0;
             
             char_t t_delimiter;
             t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
@@ -2766,7 +2783,9 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uindex_t, uinteger_t*))prop -> setter)(ctxt, mark, t_count, t_value);
             
-            MCMemoryDeleteArray(t_value);
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            if (t_count > 0)
+                MCMemoryDeleteArray(t_value);
         }
             break;
             
@@ -2775,6 +2794,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             MCAutoStringRef t_input;
             double* t_value;
             uindex_t t_count;
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            t_count = 0;
             
             char_t t_delimiter;
             t_delimiter = prop -> type == kMCPropertyTypeLinesOfDouble ? '\n' : ',';
@@ -2786,7 +2807,9 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uindex_t, double*))prop -> setter)(ctxt, mark, t_count, t_value);
             
-            MCMemoryDeleteArray(t_value);
+            // SN-2014-07-25: [[ Bug 12945 ]] Make sure not to deallocate un-allocated memory
+            if (t_count > 0)
+                MCMemoryDeleteArray(t_value);
         }
             break;
             
@@ -2804,7 +2827,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uindex_t, MCPoint*))prop -> setter)(ctxt, mark, t_count, t_value);
             
-            MCMemoryDeleteArray(t_value);
+            if (t_count > 0)
+                MCMemoryDeleteArray(t_value);
         }
             break;
             
