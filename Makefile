@@ -187,7 +187,7 @@ revandroid: libexternalv1
 all: revzip server-revzip
 all: revxml server-revxml
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
-#all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
+all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
 all: revpdfprinter revandroid
 
