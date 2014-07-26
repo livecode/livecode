@@ -87,7 +87,8 @@ void MCU_init()
 	real8 increment = (M_PI / 2.0) / (real8)QA_NPOINTS;
 	real8 angle = 0.0;
 
-	for (i = 0 ; i < QA_NPOINTS ; i++)
+	// MDW 2014-07-26: [[ oval_points ]] bumped by one to fix
+	for (i = 0 ; i < QA_NPOINTS+1 ; i++)
 	{
 		qa_points[i].x = (short)(sin(angle) * (real8)MAXINT2);
 		qa_points[i].y = MAXINT2 - (short)(cos(angle) * (real8)MAXINT2);
@@ -1227,18 +1228,18 @@ void MCU_snap(int2 &p)
 void MCU_roundrect(MCPoint *&points, uint2 &npoints,
                    const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle)
 {
-	uint2 i, j, k;
+	uint2 i, j, k, count;
+	uint2 x, y;
 
 	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
 	{
 		delete points;
 		points = new MCPoint[4 * QA_NPOINTS + 1];
-		npoints = 4 * QA_NPOINTS + 1;
 	}
 
 	MCRectangle tr = rect;
-	tr.width--;
-	tr.height--;
+	tr . width--;
+	tr . height--;
 
 	uint2 rr_width, rr_height;
 	if (radius < tr.width >> 1)
@@ -1263,49 +1264,58 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 	}
 
 	j = QA_NPOINTS; // iterator for quadrants 1 and 3
-	k = 0;			// iterator for quadrants 2 and 4
+	k = 1;			// iterator for quadrants 2 and 4
+	i = 0;
 	// each time through the loop: the quadrant table is prebuilt.
 	// check for startAngle/arcAngle interaction
-	for (i = 0; i < (QA_NPOINTS*4)+1; i++)
+	for (count = 0; count < (QA_NPOINTS*4); count++)
 	{
 		// open wedge segment
-		if ((i < startAngle && arclength > 0 && i > arclength) || 
-			(arclength < 0 && i < startAngle) ||
-			(arclength < 0 && i > arcAngle+startAngle) )
+		if ((count < startAngle && arclength > 0 && count > arclength) || 
+			(arclength < 0 && count < startAngle) ||
+			(arclength < 0 && count > arcAngle+startAngle) )
 		{
-			points[i].x = origin_horiz;
-			points[i].y = origin_vert;
+			x = origin_horiz;
+			y = origin_vert;
 		}
-		else if (i < 91) // quadrant 1
+		else if (count < 90) // quadrant 1
 		{
-			points[i].x = tr.x + tr.width - rr_width + (qa_points[j].x * rr_width / MAXINT2);
-			points[i].y = tr.y                       + (qa_points[j].y * rr_height / MAXINT2);
+			x = tr . x + tr . width - rr_width + (qa_points[j] . x * rr_width / MAXINT2);
+			y = tr . y                         + (qa_points[j] . y * rr_height / MAXINT2);
 		}
-		else if (i < 181) // quadrant 2
+		else if (count < 180) // quadrant 2
 		{
-			points[i].x = origin_horiz - (qa_points[k].x * rr_width / MAXINT2);
-			points[i].y = tr.y         + (qa_points[k].y * rr_height / MAXINT2);
+			x = origin_horiz - (qa_points[k] . x * rr_width / MAXINT2);
+			y = tr . y       + (qa_points[k] . y * rr_height / MAXINT2);
 		}
-		else if (i < 271) // quadrant 3
+		else if (count < 270) // quadrant 3
 		{
-			points[i].x = origin_horiz     - (qa_points[j].x * rr_width / MAXINT2);
-			points[i].y = tr.y + tr.height - (qa_points[j].y * rr_height / MAXINT2);
+			x = origin_horiz         - (qa_points[j] . x * rr_width / MAXINT2);
+			y = tr . y + tr . height - (qa_points[j] . y * rr_height / MAXINT2);
 		}
 		else // quadrant 4
 		{
-			points[i].x = tr.x + tr.width - rr_width + (qa_points[k].x * rr_width / MAXINT2);
-			points[i].y = tr.y + tr.height           - (qa_points[k].y * rr_height / MAXINT2);
+			x = tr . x + tr . width - rr_width + (qa_points[k] . x * rr_width / MAXINT2);
+			y = tr . y + tr . height           - (qa_points[k] . y * rr_height / MAXINT2);
 		}
+		
+		// MDW 2014-07-26 it should be possible to eliminate duplicate points
+		// in an oval, but that doesn't seem possible without making it jagged.
+//		if (x != points[i-1] . x && y != points[i-1] . y)
+//		{
+			points[i] . x = x;
+			points[i] . y = y;
+			i++;
+//		}
 
 		j--;
 		if (j == 0)
 			j = QA_NPOINTS;
 		k++;
 		if (k > QA_NPOINTS)
-			k = 0;
+			k = 1;
 	}
-	points[0] = points[(QA_NPOINTS * 4) - 1];
-	points[271] = points[270];
+	npoints = i;
 }
 
 void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
