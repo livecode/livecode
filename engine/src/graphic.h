@@ -138,5 +138,9 @@ public:
 	uint2 getfillrule();
 	void setfillrule(uint2 p_rule);
 
+	bool get_points_for_rect(MCPoint*& r_points, uint2& r_point_count);
+	bool get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count);
+	bool get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_point_count);
+	bool get_points_for_oval(MCPoint*& r_points, uint2& r_point_count);
 };
 #endif

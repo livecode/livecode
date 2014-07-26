@@ -44,6 +44,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define GRAPHIC_EXTRA_STROKEGRADIENT	(1UL << 2)
 #define GRAPHIC_EXTRA_MARGINS			(1UL << 3)
 
+bool effective_points_only(int graphic_type);
+
 MCGraphic::MCGraphic()
 {
 	initialise();
@@ -180,7 +182,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 	        || flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if ((state & CS_SIZE || state & CS_MOVE) && points != NULL
-	        && getstyleint(flags) != F_G_RECTANGLE && getstyleint(flags) != F_OVAL)
+	        && getstyleint(flags) != F_G_RECTANGLE)
 	{
 		delete points;
 		points = NULL;
@@ -275,7 +277,7 @@ Boolean MCGraphic::mdown(uint2 which)
 		return False;
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mdown(which);
-	state |= CS_MFOCUSED;
+	state |= CS_MFOCUSED; // what does this do?
 	if (which == Button1)
 		switch (getstack()->gettool(this))
 		{
@@ -462,6 +464,10 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 i;
+	int graphic_type;
+	uint2 nfakepoints;
+	MCPoint *fakepoints;
+	MCRectangle trect;
 
 	switch (which)
 	{
@@ -547,14 +553,120 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		ep.setint(nsides);
 		break;
 	case P_POINTS:
-		MCU_unparsepoints(realpoints, nrealpoints, ep);
+		// MDW-2014-06-18: [[ rect_points ]] allow effective points as read-only
+		graphic_type = getstyleint(flags);
+		if (effective_points_only(graphic_type))
+		{
+				if (!effective)
+				{
+					ep.setstaticcstring("");
+					break;
+				}
+		}
+		switch (graphic_type)
+		{
+			case F_ROUNDRECT:
+			{
+				fakepoints = NULL;
+				nfakepoints = 0;
+				get_points_for_roundrect(fakepoints, nfakepoints);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			case F_G_RECTANGLE:
+			{
+				nfakepoints = 4;
+				fakepoints = new MCPoint[nfakepoints];
+				get_points_for_rect(fakepoints, nfakepoints);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			case F_REGULAR:
+			{
+				nfakepoints = nsides;
+				fakepoints = new MCPoint[nsides];
+				get_points_for_regular_polygon(fakepoints, nfakepoints);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			// MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
+			case F_OVAL:
+			{
+				fakepoints = NULL;
+				nfakepoints = 0;
+				get_points_for_oval(fakepoints, nfakepoints);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			default:
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
+		}
 		break;
 	case P_RELATIVE_POINTS:
+		// MDW-2014-06-18: [[ rect_points ]] allow effective relativepoints as read-only
+		graphic_type = getstyleint(flags);
+		if (effective_points_only(graphic_type))
 		{
-			MCRectangle trect = reduce_minrect(rect);
-			MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
-			MCU_unparsepoints(realpoints, nrealpoints, ep);
-			MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+				if (!effective)
+				{
+					ep.setstaticcstring("");
+					break;
+				}
+		}
+		trect = reduce_minrect(rect);
+		switch (graphic_type)
+		{
+			case F_ROUNDRECT:
+			{
+				fakepoints = NULL;
+				nfakepoints = 0;
+				get_points_for_roundrect(fakepoints, nfakepoints);
+				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			case F_G_RECTANGLE:
+			{
+				nfakepoints = 4;
+				fakepoints = new MCPoint[nfakepoints];
+				get_points_for_rect(fakepoints, nfakepoints);
+				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			case F_REGULAR:
+			{
+				nfakepoints = nsides;
+				fakepoints = new MCPoint[nsides];
+				get_points_for_regular_polygon(fakepoints, nfakepoints);
+				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			// MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
+			case F_OVAL:
+			{
+				fakepoints = NULL;
+				nfakepoints = 0;
+				get_points_for_oval(fakepoints, nfakepoints);
+				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			default:
+			{
+				MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
+				MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+			}
 		}
 		break;
 	case P_ANGLE:
@@ -665,6 +777,84 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		return MCControl::getprop(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
+}
+
+// MDW-2014-06-21: [[ oval_points ]] refactoring
+bool effective_points_only(int graphic_type)
+{
+	bool effective_only = False;
+	
+	switch (graphic_type)
+	{
+		case F_ROUNDRECT:
+		case F_G_RECTANGLE:
+		case F_REGULAR:
+		case F_OVAL:
+			effective_only = True;
+	}
+	return (effective_only);
+}
+
+// MDW-2014-06-18: [[ rect_points ]] refactoring: return points for rectangles, round rects, and regular polygons
+bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count)
+{
+	r_points = NULL;
+	r_point_count = 0;
+	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0);
+	return (true);
+}
+
+bool MCGraphic::get_points_for_rect(MCPoint*& r_points, uint2& r_point_count)
+{
+	r_points[0].x = rect.x;
+	r_points[0].y = rect.y;
+	r_points[1].x = rect.x + rect.width;
+	r_points[1].y = rect.y;
+	r_points[2].x = rect.x + rect.width;
+	r_points[2].y = rect.y + rect.height;
+	r_points[3].x = rect.x;
+	r_points[3].y = rect.y + rect.height;
+	return (true);
+}
+
+bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_point_count)
+{
+	MCPoint fakepoint;
+	
+	real8 dx = (real8)((rect.width >> 1) - 1);
+	real8 dy = (real8)((rect.height >> 1) - 1);
+	real8 rangle = (real8)angle * 2.0 * M_PI / 360.0;
+	int2 cx = rect.x + (rect.width >> 1);
+	int2 cy = rect.y + (rect.height >> 1);
+	real8 factor = 2.0 * M_PI / (real8)nsides;
+	uint2 i;
+
+	for (i = 0 ; i < nsides ; i++)
+	{
+		real8 iangle = rangle + (real8)i * factor;
+		fakepoint.x = cx + (int2)(cos(iangle) * dx);
+		fakepoint.y = cy + (int2)(sin(iangle) * dy);
+		r_points[i] = fakepoint;
+	}
+	r_points[nsides] = fakepoint;
+	r_point_count = nsides;
+	return (true);
+}
+
+// MDW-2014-07-06: [[ oval_points ]] treat an oval like a rounded rect with radius = 1/2 max(width, height)
+bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
+{
+	MCRectangle trect;
+	int	tRadius;
+	
+	r_points = NULL;
+	r_point_count = 0;
+	if (rect.width < rect.height)
+		tRadius = rect.height;
+	else
+		tRadius = rect.width;
+	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle);
+	return (true);
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
@@ -793,6 +983,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 	case P_BACK_COLOR:
 	case P_BACK_PATTERN:
 		if (data.getlength() != 0 && m_fill_gradient != NULL)
+
 		{
 			MCGradientFillFree(m_fill_gradient);
 			m_fill_gradient = NULL;
@@ -1787,20 +1978,12 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 				delete points;
 			points = new MCPoint[npoints];
 		}
-		real8 dx = (real8)((trect.width >> 1) - 1);
-		real8 dy = (real8)((trect.height >> 1) - 1);
-		real8 rangle = (real8)angle * 2.0 * M_PI / 360.0;
-		int2 cx = trect.x + (trect.width >> 1);
-		int2 cy = trect.y + (trect.height >> 1);
-		real8 factor = 2.0 * M_PI / (real8)nsides;
-		uint2 i;
-		for (i = 0 ; i < nsides ; i++)
-		{
-			real8 iangle = rangle + (real8)i * factor;
-			points[i].x = cx + (int2)(cos(iangle) * dx);
-			points[i].y = cy + (int2)(sin(iangle) * dy);
-		}
-		points[nsides] = points[0];
+		// MDW-2014-06-18: [[ rect_points ]] refactored
+		get_points_for_regular_polygon(points, npoints);
+	}
+	if (points == NULL && getstyleint(flags) == F_OVAL)
+	{
+		// MDW-2014-06-18: [[ oval_points ]] refactored
 	}
 	if (flags & F_OPAQUE)
 	{
