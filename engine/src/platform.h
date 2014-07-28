@@ -1178,6 +1178,9 @@ bool MCPlatformSoundRecorderStart(MCPlatformSoundRecorderRef recorder, const cha
 // Stop the sound recording.
 void MCPlatformSoundRecorderStop(MCPlatformSoundRecorderRef recorder);
 
+void MCPlatformSoundRecorderPause(MCPlatformSoundRecorderRef recorder);
+void MCPlatformSoundRecorderResume(MCPlatformSoundRecorderRef recorder);
+
 // Call callback for each possible input device available - if the callback returns 'false' at any point
 // enumeration is cancelled, and the false will be returned.
 bool MCPlatformSoundRecorderListInputs(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderListInputsCallback callback, void *context);

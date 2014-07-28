@@ -219,29 +219,9 @@ void MCPlatformSoundRecorderResume(MCPlatformSoundRecorderRef p_recorder)
     return p_recorder -> ResumeRecording();
 }
 
-bool list_inputs_callback(void *context, unsigned int id, const char *label)
-{
-    // TODO- First has no delimiter
-    MCExecPoint* ep = (MCExecPoint *)context;
-    ep -> concatcstring(label, EC_RETURN, false);
-    ep -> concatuint(id, EC_COMMA, false);
-    
-    return true;
-}
-
 bool MCPlatformSoundRecorderListInputs(MCPlatformSoundRecorderRef p_recorder, MCPlatformSoundRecorderListInputsCallback callback, void *context)
 {
     return p_recorder -> ListInputs(callback, context);
-}
-
-bool list_compressors_callback(void *context, unsigned int id, const char *label)
-{
-    // TODO- First has no delimiter
-    MCExecPoint* ep = (MCExecPoint *)context;
-    ep -> concatcstring(label, EC_RETURN, false);
-    ep -> concatuint(id, EC_COMMA, false);
-    
-    return true;
 }
 
 bool MCPlatformSoundRecorderListCompressors(MCPlatformSoundRecorderRef p_recorder, MCPlatformSoundRecorderListCompressorsCallback callback, void *context)

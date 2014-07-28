@@ -847,7 +847,9 @@ enum Record_params {
     RC_BEST,
     RC_BETTER,
     RC_GOOD,
+    RC_PAUSE,
     RC_QUALITY,
+    RC_RESUME,
     RC_SOUND
 };
 

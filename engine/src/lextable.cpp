@@ -1853,7 +1853,9 @@ static LT record_table[] =
         {"best", TT_UNDEFINED, RC_BEST},
         {"better", TT_UNDEFINED, RC_BETTER},
         {"good", TT_UNDEFINED, RC_GOOD},
+        {"pause", TT_UNDEFINED, RC_PAUSE},
         {"quality", TT_UNDEFINED, RC_QUALITY},
+        {"resume", TT_UNDEFINED, RC_RESUME},
         {"sound", TT_UNDEFINED, RC_SOUND}
     };
 

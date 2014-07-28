@@ -1906,6 +1906,22 @@ Exec_stat MCQTEffects::eval(MCExecPoint &ep)
 #endif /* MCQTEffects */
 }
 
+struct MCPlatformSoundRecorderListCompressorsState
+{
+	bool first;
+	MCExecPoint *ep;
+};
+
+static bool list_compressors_callback(void *context, unsigned int id, const char *label)
+{
+    MCPlatformSoundRecorderListCompressorsState *t_state = static_cast<MCPlatformSoundRecorderListCompressorsState *>(context);
+    t_state -> ep -> concatcstring(label, EC_RETURN, t_state -> first);
+    t_state -> ep -> concatuint(id, EC_COMMA, false);
+    
+    t_state -> first = false;
+    return true;
+}
+
 Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
 {
 #ifdef /* MCRecordCompressionTypes */ LEGACY_EXEC
@@ -1918,9 +1934,11 @@ Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
     if (MCrecorder == nil)
         MCPlatformSoundRecorderCreate(MCrecorder);
     
-    extern bool list_inputs_callback(void *context, unsigned int id, const char *label);
+    MCPlatformSoundRecorderListCompressorsState t_state;
+    t_state . ep = &ep;
+    t_state . first = true;
     
-    MCPlatformSoundRecorderListInputs(MCrecorder, list_inputs_callback, &ep);
+    MCPlatformSoundRecorderListCompressors(MCrecorder, list_compressors_callback, &t_state);
 #else
 	extern void MCQTGetRecordCompressionList(MCExecPoint& ep);
 	MCQTGetRecordCompressionList(ep);

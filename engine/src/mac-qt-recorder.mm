@@ -82,6 +82,7 @@ protected:
     com_runrev_livecode_MCQTSoundRecorderObserver *m_observer;
     
     bool EnsureInitialized(void);
+    void InitializeConfiguration(void);
     
 private:
     char *m_temp_file;
@@ -142,33 +143,22 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void initialize_configuration(MCPlatformSoundRecorderConfiguration& r_config)
-{
-    r_config . sample_rate = MCrecordrate;
-    r_config . sample_bit_count = MCrecordsamplesize;
-    r_config . channel_count = MCrecordchannels;
-    
-    uint32_t t_compression;
-    memcpy(&t_compression, MCrecordcompression, 4);
-    t_compression = EndianU32_NtoB(t_compression);
-    
-    r_config . compression_type = t_compression;
-    r_config . input = 0;
-    r_config . extra_info = nil;
-    r_config . extra_info_size = 0;
-}
-
 static void config_to_absd(const MCPlatformSoundRecorderConfiguration& p_config, AudioStreamBasicDescription& r_description)
 {
+    ComponentInstance ci;
+    OpenADefaultComponent(StandardCompressionType, StandardCompressionSubTypeAudio, &ci);
+    
+    QTGetComponentProperty(ci, kQTPropertyClass_SCAudio,kQTSCAudioPropertyID_BasicDescription,sizeof(r_description), &r_description, NULL);
+    
+    r_description . mFormatID = p_config . compression_type;
     r_description . mSampleRate = (Float64)p_config . sample_rate * 1000;
-    r_description . mFormatID = kAudioFormatLinearPCM; //p_config . compression_type;
-    r_description . mFormatFlags = 12;
-    r_description . mFramesPerPacket = 1;
     r_description . mChannelsPerFrame = p_config . channel_count;
     r_description . mBitsPerChannel = p_config . sample_bit_count;
-    r_description . mBytesPerPacket = sizeof(short) * 2;
-    r_description . mBytesPerFrame = sizeof(short) * 2;
-    r_description . mReserved = 0;
+    r_description . mFramesPerPacket = 1;
+    r_description . mBytesPerFrame = 1;
+    r_description . mBytesPerPacket = 1;
+    
+    CloseComponent(ci);
 }
 
 static void absd_to_config(const AudioStreamBasicDescription& p_description, MCPlatformSoundRecorderConfiguration& r_config)
@@ -193,7 +183,7 @@ static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 		aTrack = GetMovieIndTrack(tmovie, index);
 		aMedia = GetTrackMedia(aTrack);
 		GetMediaHandlerDescription(aMedia, &aTrackType, 0, 0);
-		if (aTrackType == SGAudioMediaType)
+		if (aTrackType == SoundMediaType)
 		{
 			aDesc = (SampleDescriptionHandle)NewHandle(sizeof(SoundDescription));
 			GetMediaSampleDescription(aMedia, 1, aDesc);
@@ -286,7 +276,7 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 				cd.componentSubType = kQTFileTypeMovie;
 				break;
 		}
-		cd.componentManufacturer = SGAudioMediaType;
+		cd.componentManufacturer = SoundMediaType;
 		cd.componentFlags = canMovieExportFiles;
 		cd.componentFlagsMask = canMovieExportFiles;
 		c = FindNextComponent(nil, &cd);
@@ -336,6 +326,44 @@ MCQTSoundRecorder::~MCQTSoundRecorder(void)
 
 ////////////////////////////////////////////////////////
 
+void MCQTSoundRecorder::InitializeConfiguration()
+{
+    m_configuration . sample_rate = MCrecordrate;
+    m_configuration . sample_bit_count = MCrecordsamplesize;
+    m_configuration . channel_count = MCrecordchannels;
+    
+    uint32_t t_compression;
+    memcpy(&t_compression, MCrecordcompression, 4);
+    t_compression = EndianU32_NtoB(t_compression);
+    
+    m_configuration . compression_type = kAudioFormatLinearPCM;// t_compression;
+    
+    uint32_t t_input;
+    t_input = 0;
+    
+    if (!MCCStringEqual(MCrecordinput, "dflt"))
+    {
+        memcpy(&t_input, MCrecordinput, 4);
+        t_input = EndianU32_NtoB(t_input);
+    }
+    else
+    {
+        NSArray *t_input_list = nil;
+        QTGetComponentProperty(m_channel, kQTPropertyClass_SGAudioRecordDevice, kQTSGAudioPropertyID_InputListWithAttributes, sizeof(t_input_list), &t_input_list, NULL);
+        
+        if (t_input_list)
+        {
+            NSDictionary *t_dict = [t_input_list objectAtIndex:0];
+                
+            t_input = [(NSNumber*)[t_dict objectForKey:(id)kQTAudioDeviceAttribute_DeviceInputID] unsignedIntValue];
+        }
+    }
+    m_configuration . input = t_input;
+    
+    m_configuration . extra_info = nil;
+    m_configuration . extra_info_size = 0;
+}
+
 bool MCQTSoundRecorder::EnsureInitialized()
 {
     if (m_seq_grab != nil)
@@ -355,12 +383,7 @@ bool MCQTSoundRecorder::EnsureInitialized()
     if (t_success)
         t_success = SGSetChannelUsage(m_channel, seqGrabRecord) == noErr;
     
-    initialize_configuration(m_configuration);
-    
-    AudioStreamBasicDescription t_desc;
-    config_to_absd(m_configuration, t_desc);
-    if (t_success)
-        t_success = QTSetComponentProperty(m_channel, kQTPropertyClass_SCAudio,kQTSCAudioPropertyID_BasicDescription,sizeof(t_desc), &t_desc) == noErr;
+    InitializeConfiguration();
     
     if (!t_success)
     {
@@ -369,6 +392,25 @@ bool MCQTSoundRecorder::EnsureInitialized()
     }
     
     return t_success;
+}
+
+struct MCQTSoundRecorderAvailableCompressionIdsState
+{
+    UInt32 *list;
+    uindex_t count;
+};
+
+static bool available_compression_ids(void *context, unsigned int p_id, const char *p_label)
+{
+    MCQTSoundRecorderAvailableCompressionIdsState *t_state = static_cast<MCQTSoundRecorderAvailableCompressionIdsState *>(context);
+    
+    if (MCMemoryResizeArray(t_state -> count + 1, t_state -> list, t_state -> count))
+    {
+        t_state -> list[t_state -> count - 1] = p_id;
+        return true;
+    }
+    
+    return false;
 }
 
 void MCQTSoundRecorder::BeginDialog()
@@ -384,20 +426,36 @@ void MCQTSoundRecorder::BeginDialog()
 	}
     
     AudioStreamBasicDescription t_description;
-    MCPlatformSoundRecorderConfiguration t_configuration;
-    
-    initialize_configuration(t_configuration);
-    config_to_absd(t_configuration, t_description);
+    InitializeConfiguration();
+    config_to_absd(m_configuration, t_description);
     
     OSErr t_error;
-    
     t_error = QTSetComponentProperty(ci, kQTPropertyClass_SCAudio,kQTSCAudioPropertyID_BasicDescription,sizeof(t_description), &t_description);
+    
+    MCQTSoundRecorderAvailableCompressionIdsState t_state;
+    t_state . list = nil;
+    t_state . count = 0;
+    UInt32 limitedFormats[] = { 'lpcm', 'aac ', 'alac', 'samr', 'ima4' };
+   // if (ListCompressors(available_compression_ids, &t_state))
+        t_error = QTSetComponentProperty(ci, kQTPropertyClass_SCAudio,kQTSCAudioPropertyID_ClientRestrictedCompressionFormatList,sizeof(limitedFormats), &limitedFormats);
+    
+    MCMemoryDeleteArray(t_state . list);
+    
+    AudioChannelLayoutTag t_layout_tags[] =
+    {
+        kAudioChannelLayoutTag_UseChannelDescriptions,
+        kAudioChannelLayoutTag_Mono,
+        kAudioChannelLayoutTag_Stereo,
+    };
+
+    QTSetComponentProperty(ci, kQTPropertyClass_SCAudio, kQTSCAudioPropertyID_ClientRestrictedChannelLayoutTagList,
+                           sizeof(t_layout_tags), t_layout_tags);
     
 	errno = SCRequestImageSettings(ci);
 	if (errno == noErr)
 	{
         QTGetComponentProperty(ci, kQTPropertyClass_SCAudio,kQTSCAudioPropertyID_BasicDescription,sizeof(t_description), &t_description, NULL);
-
+        
         absd_to_config(t_description, m_configuration);
         
 		MCrecordrate = m_configuration . sample_rate;
@@ -440,41 +498,27 @@ bool MCQTSoundRecorder::StartRecording(const char *p_filename)
     // Stop recording in case currently recording already
     StopRecording();
     
-    if (m_seq_grab == nil)
-        return false;
-    
     bool t_success;
     t_success = true;
     
     AudioStreamBasicDescription t_description;
     config_to_absd(m_configuration, t_description);
     
+    // Set the chosen settings
     if (t_success)
         t_success = QTSetComponentProperty(m_channel, kQTPropertyClass_SGAudio, kQTSGAudioPropertyID_StreamFormat, sizeof(t_description), &t_description) == noErr;
     
+    // Set the device input
+    if (t_success)
+        t_success = QTSetComponentProperty(m_channel, kQTPropertyClass_SGAudioRecordDevice, kQTSGAudioPropertyID_InputSelection, sizeof(m_configuration . input), &m_configuration . input) == noErr;
+    
+    // Turn on sound input metering
     if (t_success)
     {
-        NSArray * list = nil;
-        QTGetComponentProperty(m_channel, kQTPropertyClass_SGAudioRecordDevice, kQTSGAudioPropertyID_InputListWithAttributes, sizeof(list), &list, NULL);
-        
-        uint32_t t_driver;
-        if (list)
-        {
-            NSDictionary * selDict = [list objectAtIndex:0];
-            t_driver =
-            [(NSNumber*)[selDict objectForKey:(id)kQTAudioDeviceAttribute_DeviceInputID]
-             unsignedIntValue];
-            t_success = QTSetComponentProperty(m_channel, kQTPropertyClass_SGAudioRecordDevice, kQTSGAudioPropertyID_InputSelection, sizeof(t_driver), &t_driver) == noErr;
-            
-            if (t_success)
-            {
-                //turn on sound input metering
-                bool t_meter = true;
-                t_success = QTSetComponentProperty(m_channel, kQTPropertyClass_SGAudioRecordDevice, kQTSGAudioPropertyID_LevelMetersEnabled, sizeof(t_meter), &t_meter) == noErr;
-            }
-        }
+        bool t_meter = true;
+        t_success = QTSetComponentProperty(m_channel, kQTPropertyClass_SGAudio, kQTSGAudioPropertyID_LevelMetersEnabled, sizeof(t_meter), &t_meter) == noErr;
     }
-
+    
     if (t_success)
         t_success = MCCStringClone(MCS_tmpnam(), m_temp_file);
     
@@ -497,7 +541,7 @@ bool MCQTSoundRecorder::StartRecording(const char *p_filename)
         if (t_capture_path)
         {
             QTNewDataReferenceFromFullPathCFString((CFStringRef)t_capture_path, (UInt32)kQTNativeDefaultPathStyle, 0, &t_data_ref, &t_data_ref_type);
-        
+            
             int t_flags;
             t_flags = seqGrabToDisk | seqGrabDontPreAllocateFileSize | seqGrabAppendToFile;
             
@@ -542,7 +586,7 @@ void MCQTSoundRecorder::StopRecording(void)
         CloseComponent(m_seq_grab);
         m_seq_grab = nil;
     }
-
+    
     exportToSoundFile(m_temp_file, m_filename);
     
     delete m_filename;
@@ -587,7 +631,7 @@ bool MCQTSoundRecorder::ListInputs(MCPlatformSoundRecorderListInputsCallback p_c
         return false;
     
     NSArray *t_input_list = nil;
-    QTGetComponentProperty(m_channel, kQTPropertyClass_SGAudioRecordDevice, kQTSGAudioPropertyID_InputListWithAttributes, sizeof(t_input_list), &t_input_list, NULL);
+    QTGetComponentProperty(m_channel, kQTPropertyClass_SGAudioRecordDevice, kQTSGAudioPropertyID_DeviceListWithAttributes, sizeof(t_input_list), &t_input_list, NULL);
     
     if (t_input_list)
     {
@@ -608,65 +652,29 @@ bool MCQTSoundRecorder::ListInputs(MCPlatformSoundRecorderListInputsCallback p_c
 
 bool MCQTSoundRecorder::ListCompressors(MCPlatformSoundRecorderListCompressorsCallback p_callback, void *context)
 {
-    // How does one get the full description of a compression from its id????
-    
-    if (!EnsureInitialized())
-        return false;
-    
-    OSStatus err = noErr;
-    AudioStreamBasicDescription *t_formats = NULL;
-    ByteCount t_size = 0;
-    uindex_t t_num_formats;
-
-    QTGetComponentPropertyInfo(m_channel, kQTPropertyClass_SGAudioRecordDevice, kQTSGAudioPropertyID_StreamFormatList, NULL, &t_size, NULL);
-    
-    MCMemoryAllocate(t_size, t_formats);
-    t_num_formats = t_size / sizeof(AudioStreamBasicDescription);
-    
-    QTGetComponentProperty(m_channel, kQTPropertyClass_SGAudioRecordDevice, kQTSGAudioPropertyID_StreamFormatList, t_size, t_formats, NULL);
-    
-    for (uindex_t i = 0; i < t_num_formats; i++)
-    {
-        uint32_t t_id, t_comp;
-        char t_label[5];
-        t_id = t_formats[i] . mFormatID;
-        t_comp = EndianU32_BtoN(t_id);
-		memcpy(t_label, &t_comp, 4);
-        
-        if (!p_callback(context, t_id, t_label))
-            return false;
-    }
+     Component component = 0;
+     ComponentDescription desc, info;
+     Handle name = NewHandle(0);
+     desc.componentType = kSoundCompressor;
+     desc.componentSubType = 0;
+     desc.componentManufacturer = 0;
+     desc.componentFlags = 0;
+     desc.componentFlagsMask = 0;
+     
+     while ((component = FindNextComponent(component, &desc)) != NULL)
+     {
+         GetComponentInfo(component, &info, name, 0, 0);
+        if (GetHandleSize(name))
+        {
+            HLock(name);
+            if (!p_callback(context, info.componentSubType, p2cstr((unsigned char *)*name)))
+                return false;
+            HUnlock(name);
+        }
+     }
+     DisposeHandle(name);
     
     return true;
-    
-    /*
-    Component component = 0;
-	ComponentDescription desc, info;
-	Handle name = NewHandle(0);
-	desc.componentType = kSoundCompressor;
-	desc.componentSubType = 0;
-	desc.componentManufacturer = 0;
-	desc.componentFlags = 0;
-	desc.componentFlagsMask = 0;
-	
-    if (!p_callback(context, 'raw', "No compression"))
-        return false;
-    
-	while ((component = FindNextComponent(component, &desc)) != NULL)
-	{
-		GetComponentInfo(component, &info, name, 0, 0);
-		if (GetHandleSize(name))
-		{
-			HLock(name);
-			long compType;
-			compType = EndianU32_BtoN(info.componentSubType);
-			if (!p_callback(context, compType, p2cstr((unsigned char *)*name)))
-                return false;
-			HUnlock(name);
-		}
-	}
-	DisposeHandle(name);
-     */
 }
 
 void MCQTSoundRecorder::Idle()
@@ -679,21 +687,17 @@ double MCQTSoundRecorder::GetLoudness()
 {
     if (!m_recording)
         return 0;
-    
-    if (!EnsureInitialized())
-        return 0;
-    
-    uint1 t_channel_count;
-    t_channel_count = m_configuration . channel_count;
-    
+
+    double t_loudness = 0; 
     Float32 *t_levels;
-    MCMemoryNewArray(t_channel_count, t_levels);
+    size_t t_array_size;
+    t_array_size = m_configuration . channel_count * sizeof(Float32);
+    MCMemoryNewArray(m_configuration . channel_count, t_levels);
+    QTGetComponentProperty(m_channel, kQTPropertyClass_SGAudio, kQTSGAudioPropertyID_AveragePowerLevels, t_array_size,  t_levels, NULL);
     
-    QTGetComponentProperty(m_channel, kQTPropertyClass_SGAudioRecordDevice, kQTSGAudioPropertyID_AveragePowerLevels, t_channel_count * sizeof(Float32), t_levels, NULL);
-    
-    double t_loudness = t_levels[0];
+    t_loudness = t_levels[0];
     MCMemoryDeleteArray(t_levels);
-    
+
     return t_loudness;
 }
 
