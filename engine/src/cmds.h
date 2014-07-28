@@ -770,10 +770,12 @@ public:
 class MCRecord : public MCStatement
 {
 	MCExpression *file;
+    Boolean pause;
 public:
 	MCRecord()
 	{
 		file = NULL;
+        pause = False;
 	}
 	virtual ~MCRecord();
 	virtual Parse_stat parse(MCScriptPoint &);
