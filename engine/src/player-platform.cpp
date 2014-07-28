@@ -2370,8 +2370,16 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         /* UNCHECKED */ MCMemoryResizeArray(m_callback_count + 1, m_callbacks, m_callback_count);
         // Converts the first part to a number.
         MCAutoNumberRef t_time;
-        MCNumberParseOffset(*t_callback, t_start_index, t_comma_index - t_start_index, &t_time);
-        m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsInteger(*t_time);
+        
+        // SN-2014-07-28: [[ Bug 12984 ]] MCNumberParseOffset expects the string to finish after the number
+        MCAutoStringRef t_callback_substring;
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_start_index, t_comma_index - t_start_index), &t_callback_substring);
+        
+        // SN-2014-07-28: [[ Bug 12984 ]] Mimic the strtol behaviour in case of a parsing failure
+        if (MCNumberParse(*t_callback_substring, &t_time))
+            m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsInteger(*t_time);
+        else
+            m_callbacks[m_callback_count - 1] . time = 0;
         
         t_callback_index = t_comma_index;
         while (isspace(MCStringGetCharAtIndex(*t_callback, t_callback_index))) //strip off preceding and trailing blanks
