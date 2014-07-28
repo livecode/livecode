@@ -2460,12 +2460,14 @@ void MCParagraph::GetTextAlign(MCExecContext& ctxt, intenum_t*& r_value)
     if (attrs == nil || (attrs -> flags & PA_HAS_TEXT_ALIGN) == 0)
         r_value = nil;
     else
-        *r_value = gettextalign();
+        // SN-2014-07-28: [[ Bug 12925 ]] The output value needs to be translated as well
+        *r_value = gettextalign() << F_ALIGNMENT_SHIFT;
 }
 
 void MCParagraph::GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_value)
 {
-    r_value = gettextalign();
+    // SN-2014-07-28: [[ Bug 12925 ]] The output value needs to be translated as well
+    r_value = gettextalign() << F_ALIGNMENT_SHIFT;
 }
 
 void MCParagraph::SetTextAlign(MCExecContext& ctxt, intenum_t* p_value)
