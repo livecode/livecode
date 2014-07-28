@@ -2577,13 +2577,11 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
                                                                 t_bounds . origin . y + t_bounds . size . height / 2,
                                                                 t_bounds . size . width - t_bounds . size . width / 2,
                                                                 t_bounds . size . height - t_bounds . size . height / 2));
-            MCLog("BEGIN TILE RENDERING", NULL);
             MCStackTilePush(&t_tile1);
             MCStackTilePush(&t_tile2);
             MCStackTilePush(&t_tile3);
             MCStackTilePush(&t_tile4);
             MCStackTileCollectAll();
-            MCLog("END TILE RENDERING", NULL);
         }
         else
         {

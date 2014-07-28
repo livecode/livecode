@@ -323,15 +323,39 @@ void gdi_do_arc(HDC p_dc, HDC p_mask_dc, bool p_fill, int4 p_left, int4 p_top, i
 	}
 }
 
+static __declspec( thread ) bool s_initialized_on_thread = false;
+static __declspec( thread ) HDC s_theme_dc = NULL;
+
+static void MCThemeDCIntialize()
+{
+	if (s_initialized_on_thread)
+		return;
+
+	s_initialized_on_thread = true;
+	s_theme_dc = CreateCompatibleDC(NULL);
+}
+
+static void MCThemeDCFinalize()
+{
+	if (!s_initialized_on_thread)
+		return;
+
+	DeleteDC(s_theme_dc);
+	s_initialized_on_thread = false;
+}
+
 typedef void (*MCGDIDrawFunc)(HDC p_hdc, void *p_context);
 
 bool MCGDIDrawAlpha(uint32_t p_width, uint32_t p_height, MCGDIDrawFunc p_draw, void *p_context, MCImageBitmap *&r_bitmap)
 {
 	bool t_success = true;
 
+	MCThemeDCIntialize();
+
 	HDC t_dc;
 	//t_dc = CreateCompatibleDC(NULL);
-	t_dc = ((MCScreenDC*)MCscreen)->getdsthdc();
+	//t_dc = ((MCScreenDC*)MCscreen)->getdsthdc();
+	t_dc = s_theme_dc;
 	t_success = t_dc != nil;
 
 	bool t_alpha = false;

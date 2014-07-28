@@ -79,9 +79,9 @@ DWORD WINAPI MCThreadPoolThreadExecute(LPVOID p_arg)
         if (s_task_list_start != NULL)
         {
             t_task = s_task_list_start;
-            s_task_list_start = t_task -> next;
-            
+            s_task_list_start = t_task -> next;            
             MCThreadMutexUnlock(s_task_mutex);
+
             t_task -> task(t_task -> context);
             MCMemoryDelete(t_task);
         }
@@ -173,8 +173,7 @@ bool MCThreadPoolPushTask(void (*p_task)(void*), void* p_context)
         t_task -> context = p_context;
         t_task -> next = NULL;
         
-        MCThreadMutexLock(s_task_mutex);
-        
+        MCThreadMutexLock(s_task_mutex);        
         if (s_task_list_start == NULL)
         {
             s_task_list_start = t_task;
@@ -184,8 +183,7 @@ bool MCThreadPoolPushTask(void (*p_task)(void*), void* p_context)
         {
             s_task_list_end -> next = t_task;
             s_task_list_end = t_task;
-        }
-        
+        }        
         MCThreadConditionSignal(s_task_condition);
         MCThreadMutexUnlock(s_task_mutex);
     }
@@ -289,7 +287,7 @@ bool MCThreadConditionCreate(MCThreadConditionRef &r_condition)
     
     if (t_success)
 	{
-		t_condition -> condition = CreateSemaphore(NULL, 10, 10, NULL);
+		t_condition -> condition = CreateSemaphore(NULL, 0, 10, NULL);
 		t_success = t_condition -> condition != NULL;
 	}
     

@@ -29,7 +29,6 @@
 
 struct MCStackTileList
 {
-    uint32_t            index;
     MCStackTileList     *next;
     MCStackTile         *tile;
 };
@@ -79,7 +78,6 @@ void MCStackTileRender(void *p_ctxt)
     MCStackTileList *t_tile;
 	t_tile = (MCStackTileList *)p_ctxt;
     t_tile -> tile -> Render();
-    MCLog("TILE %d RENDERED", t_tile -> index);
     
     MCThreadMutexLock(s_main_thread_mutex);
     t_tile -> next = s_waiting_tiles;
@@ -108,7 +106,6 @@ void MCStackTilePush(MCStackTile *p_tile)
     t_tile = s_inactive_tiles;
     s_inactive_tiles = t_tile -> next;
     s_active_tile_count++;
-    t_tile -> index = s_active_tile_count;
     
     t_tile -> tile = p_tile;
     /* UNCHECKED */ MCThreadPoolPushTask(MCStackTileRender, (void *) t_tile);
@@ -131,7 +128,6 @@ void MCStackTileCollectAll(void)
             
             t_tile -> tile -> Unlock();
             t_tile -> tile = NULL;
-            MCLog("TILE %d COLLECTED", t_tile -> index);
             
             // Move the tile to the inactive list.
             t_tile -> next = s_inactive_tiles;
