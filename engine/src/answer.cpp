@@ -42,6 +42,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "answer.h"
 #include "printer.h"
 
+#include "platform.h"
+
 const char *MCdialogtypes[] =
 {
 	"plain",
@@ -427,7 +429,31 @@ Exec_errors MCAnswer::exec_record(MCExecPoint& ep, const char *p_title)
 	MCresult -> clear(False);
     
 #ifdef FEATURE_PLATFORM_RECORDER
-    // TODO-RECORDER: Implement using MCPlatformSoundRecorder.
+
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    MCPlatformSoundRecorderBeginConfigurationDialog(MCrecorder);
+    
+    MCPlatformDialogResult t_result;
+    
+    for (;;)
+    {
+        t_result = MCPlatformSoundRecorderEndConfigurationDialog(MCrecorder);
+        if (t_result != kMCPlatformDialogResultContinue)
+            break;
+        
+		MCscreen -> wait(REFRESH_INTERVAL, True, True);
+    }
+    
+    ep.clear();
+    
+    if (t_result == kMCPlatformDialogResultCancel)
+		MCresult->sets(MCcancelstring);
+    
+    return EE_UNDEFINED;
+    
 #else
 	extern void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet);
 	MCQTRecordDialog(ep, p_title, sheet);

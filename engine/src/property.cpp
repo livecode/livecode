@@ -2241,7 +2241,13 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			if (!trecording)
 			{
 #ifdef FEATURE_PLATFORM_RECORDER
-                // TODO-RECORDER: Implement using MCPlatformSoundRecorder
+                bool t_recording;
+                t_recording = false;
+                
+                extern MCPlatformSoundRecorderRef MCrecorder;
+                
+                if (MCrecorder != nil)
+                    t_recording = MCPlatformSoundRecorderIsRecording(MCrecorder);
 #else
 				extern void MCQTStopRecording(void);
 				MCQTStopRecording();

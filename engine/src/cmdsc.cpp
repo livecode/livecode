@@ -1926,8 +1926,12 @@ Exec_stat MCRecord::exec(MCExecPoint &ep)
 	char *soundfile = MCS_get_canonical_path(ep.getcstring());
 	
 #ifdef FEATURE_PLATFORM_RECORDER
-    // TODO-RECORD: Implement using MCPlatformSoundRecorder.
-#else
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    MCPlatformSoundRecorderStart(MCrecorder, soundfile);
+ #else
 	extern void MCQTRecordSound(char *soundfile);
 	MCQTRecordSound(soundfile);
 #endif

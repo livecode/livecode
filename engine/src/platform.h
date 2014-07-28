@@ -1129,6 +1129,17 @@ void MCPlatformSoundGetProperty(MCPlatformSoundRef sound, MCPlatformSoundPropert
 
 typedef struct MCPlatformSoundRecorder *MCPlatformSoundRecorderRef;
 
+enum MCPlatformSoundRecorderProperty
+{
+	kMCPlatformSoundRecorderPropertyInput,
+	kMCPlatformSoundRecorderPropertySampleRate,
+    kMCPlatformSoundRecorderPropertySampleBitCount,
+	kMCPlatformSoundRecorderPropertyChannelCount,
+    kMCPlatformSoundRecorderPropertyCompressionType,
+	kMCPlatformSoundRecorderPropertyExtraInfo,
+};
+
+
 struct MCPlatformSoundRecorderConfiguration
 {
     // The input to use for sound recording - this should be an id as returned by ListInputs.

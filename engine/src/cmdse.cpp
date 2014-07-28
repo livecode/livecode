@@ -2266,7 +2266,11 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 		break;
 	case SC_RECORDING:
 #ifdef FEATURE_PLATFORM_RECORDER
-        // TODO-RECORDER: Implement using MCPlatformSoundRecorder
+            extern MCPlatformSoundRecorderRef MCrecorder;
+            if (MCrecorder == nil)
+                break;
+            
+            MCPlatformSoundRecorderStop(MCrecorder);
 #else
 		extern void MCQTStopRecording(void);
 		MCQTStopRecording();
