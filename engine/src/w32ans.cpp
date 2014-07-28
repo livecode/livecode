@@ -720,7 +720,10 @@ static void get_new_filter(MCStringRef *p_types, uint4 p_type_count, MCStringRef
 		{
 			MCAutoStringRefArray t_extensions;
 			/* UNCHECKED */ MCStringsSplit(t_split[1], ',', t_extensions.PtrRef(), t_extensions.CountRef());
-			if (t_extensions.Count() == 0)
+			// SN-2014-07-28: [[ Bug 12972 ]] Filters "Tag|" should be understood as "Tag"
+			//  and allow all the file types
+			if (t_extensions.Count() == 0 || 
+					(t_extensions.Count() == 1 && MCStringIsEmpty(t_extensions[0])))
 				/* UNCHECKED */ MCStringAppendChars(*t_filters, L"\0*.*", 4);
 			else
 			{
