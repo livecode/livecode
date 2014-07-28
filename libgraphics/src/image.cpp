@@ -24,7 +24,10 @@ static void MCGImageDestroy(MCGImageRef self)
 	if (self != NULL)
 	{
 		if (self -> bitmap != NULL)
+        {
+            self -> bitmap -> unlockPixels();
 			delete self -> bitmap;
+        }
 		MCMemoryDelete(self);
 	}
 }
@@ -44,6 +47,7 @@ bool MCGImageCreateWithSkBitmap(const SkBitmap &p_bitmap, MCGImageRef &r_image)
 	if (t_success)
 	{
 		t_bitmap = new SkBitmap(p_bitmap);
+        t_bitmap -> lockPixels();
 		t_success = nil != t_bitmap;
 	}
 	

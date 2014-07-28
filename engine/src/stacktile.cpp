@@ -132,7 +132,6 @@ void MCStackTileCollectAll(void)
             t_tile -> tile -> Unlock();
             t_tile -> tile = NULL;
             MCLog("TILE %d COLLECTED", t_tile -> index);
-
             
             // Move the tile to the inactive list.
             t_tile -> next = s_inactive_tiles;

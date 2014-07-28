@@ -239,13 +239,16 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 	if (m_frame_count != 0 && p_frame >= m_frame_count)
 		return false;
 	
+    MCThreadMutexLock(m_frame_lock);
+    
+	if (m_frame_count != 0 && p_frame >= m_frame_count)
+		return false;
+    
 	if (!EnsureMCGImageFrames())
 		return false;
 	
 	if (p_frame >= m_frame_count)
 		return false;
-	
-    MCThreadMutexLock(m_frame_lock);
     
 	// prevent data being removed by cache flush
 	m_lock_count++;
