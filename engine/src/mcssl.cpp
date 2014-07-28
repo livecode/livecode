@@ -32,6 +32,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "osspec.h"
+#include "filesystem.h"
+
 #include "license.h"
 
 #ifdef MCSSL
@@ -43,6 +46,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 static Boolean cryptinited = False;
+
+// IM-2014-07-28: [[ Bug 12822 ]] OS-specified root certificates
+static STACK_OF(X509) *s_ssl_system_root_certs;
+// IM-2014-07-28: [[ Bug 12822 ]] OS-specified CRLs
+static STACK_OF(X509_CRL) *s_ssl_system_crls;
 
 extern "C" int initialise_weak_link_crypto(void);
 extern "C" int initialise_weak_link_ssl(void);
@@ -84,6 +92,9 @@ Boolean InitSSLCrypt()
 		OpenSSL_add_all_ciphers();
 		RAND_seed(&MCrandomseed,I4L);
 		cryptinited = True;
+		
+		s_ssl_system_root_certs = nil;
+		s_ssl_system_crls = nil;
 #endif
 
 	}
@@ -532,3 +543,397 @@ void ShutdownSSL()
 
 void shutdown()
 {}
+
+////////////////////////////////////////////////////////////////////////////////
+// IM-2014-07-28: [[ Bug 12822 ]] Common certificate loading code refactored from opensslsocket.cpp
+
+bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path);
+bool load_ssl_ctx_certs_from_file(SSL_CTX *p_ssl_ctx, const char *p_path);
+bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx);
+
+bool MCSSLContextLoadCertificates(SSL_CTX *p_ssl_ctx, char **r_error)
+{
+	bool t_success;
+	t_success = true;
+	
+	if (MCsslcertificates && MCCStringLength(MCsslcertificates) > 0)
+	{
+		MCString *certs = NULL;
+		uint2 ncerts = 0;
+
+		/* UNCHECKED */ MCU_break_string(MCsslcertificates, certs, ncerts);
+		if (t_success && ncerts > 0)
+		{
+			uint2 i;
+			for (i = 0; t_success && i < ncerts; i++)
+			{
+				char *oldcertpath = certs[i].clone();
+				
+#ifdef _MACOSX
+
+				char *certpath = path2utf(MCS_resolvepath(oldcertpath));
+#else
+
+				char *certpath = MCS_resolvepath(oldcertpath);
+#endif
+
+				delete oldcertpath;
+				
+				t_success = (MCS_exists(certpath, True) && load_ssl_ctx_certs_from_file(p_ssl_ctx, certpath)) ||
+						(MCS_exists(certpath, False) && load_ssl_ctx_certs_from_folder(p_ssl_ctx, certpath));
+				if (!t_success)
+				{
+					if (r_error != nil)
+						MCCStringFormat(*r_error, "Error loading CA file and/or directory %s", certpath);
+				}
+				delete certpath;
+			}
+		}
+		if (certs != NULL)
+			delete certs;
+	}
+	else
+	{
+		if (!ssl_set_default_certificates(p_ssl_ctx))
+		{
+			if (r_error != nil)
+				MCCStringClone("Error loading default CAs", *r_error);
+			
+			t_success = false;
+		}
+	}
+	
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct cert_folder_load_context_t
+{
+	const char *path;
+	SSL_CTX *ssl_context;
+};
+
+bool cert_dir_list_callback(void *context, const MCFileSystemEntry& entry)
+{
+	bool t_success = true;
+	cert_folder_load_context_t *t_context = (cert_folder_load_context_t*)context;
+	
+	if (entry.type != kMCFileSystemEntryFolder && MCCStringEndsWith(entry.filename, ".pem"))
+	{
+		char *t_file_path = nil;
+		t_success = MCCStringFormat(t_file_path, "%s/%s", t_context->path, entry.filename);
+		if (t_success)
+			t_success = load_ssl_ctx_certs_from_file(t_context->ssl_context, t_file_path);
+	}
+	return t_success;
+}
+
+bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path)
+{
+	bool t_success = true;
+	
+	cert_folder_load_context_t t_context;
+	t_context.path = p_path;
+	
+	t_context.ssl_context = p_ssl_ctx;
+	
+	t_success = MCFileSystemListEntries(p_path, 0, cert_dir_list_callback, &t_context);
+	
+	return t_success;
+}
+
+bool load_ssl_ctx_certs_from_file(SSL_CTX *p_ssl_ctx, const char *p_path)
+{
+	return SSL_CTX_load_verify_locations(p_ssl_ctx, p_path, NULL) != 0;
+}
+
+#if defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_WINDOWS)
+
+void free_x509_stack(STACK_OF(X509) *p_stack)
+{
+	if (p_stack != NULL)
+	{
+		while (sk_X509_num(p_stack) > 0)
+		{
+			X509 *t_x509 = sk_X509_pop(p_stack);
+			X509_free(t_x509);
+		}
+		sk_X509_free(p_stack);
+	}
+}
+
+void free_x509_crl_stack(STACK_OF(X509_CRL) *p_stack)
+{
+	if (p_stack != NULL)
+	{
+		while (sk_X509_CRL_num(p_stack) > 0)
+		{
+			X509_CRL *t_crl = sk_X509_CRL_pop(p_stack);
+			X509_CRL_free(t_crl);
+		}
+		sk_X509_CRL_free(p_stack);
+	}
+}
+
+bool ssl_ctx_add_cert_stack(SSL_CTX *p_ssl_ctx, STACK_OF(X509) *p_cert_stack, STACK_OF(X509_CRL) *p_crl_stack)
+{
+	bool t_success = true;
+	
+	X509_STORE *t_cert_store = NULL;
+	
+	t_success = NULL != (t_cert_store = SSL_CTX_get_cert_store(p_ssl_ctx));
+	
+	if (t_success && p_cert_stack != NULL)
+	{
+		for (int32_t i = 0; t_success && i < sk_X509_num(p_cert_stack); i++)
+		{
+			X509 *t_x509 = sk_X509_value(p_cert_stack, i);
+			if (0 == X509_STORE_add_cert(t_cert_store, t_x509))
+			{
+				if (ERR_GET_REASON(ERR_get_error()) != X509_R_CERT_ALREADY_IN_HASH_TABLE)
+					t_success = false;
+			}
+		}
+	}
+	
+	if (t_success && p_crl_stack != NULL)
+	{
+		for (int32_t i = 0; t_success && i < sk_X509_CRL_num(p_crl_stack); i++)
+		{
+			X509_CRL *t_crl = sk_X509_CRL_value(p_crl_stack, i);
+			if (0 == X509_STORE_add_crl(t_cert_store, t_crl))
+			{
+				t_success = false;
+			}
+		}
+	}
+	return t_success;
+}
+
+bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack);
+bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crl_stack);
+
+bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx)
+{
+	bool t_success;
+	t_success = true;
+	
+	if (s_ssl_system_root_certs == nil)
+		t_success = export_system_root_cert_stack(s_ssl_root_certs);
+	
+	if (t_success && s_ssl_system_crls == nil)
+		t_success = export_system_crl_stack(s_ssl_system_crls);
+		
+	if (t_success)
+		t_success = ssl_ctx_add_cert_stack(p_ssl_ctx, s_ssl_system_root_certs, s_ssl_system_crls);
+		
+	return t_success;
+}
+
+#else
+
+static const char *s_ssl_bundle_paths[] = {
+	"/etc/ssl/certs/ca-bundle.crt",
+	"/etc/ssl/certs/ca-certificates.crt",
+	"/etc/pki/tls/certs/ca-bundle.crt",
+};
+
+static const char *s_ssl_hash_dir_paths[] = {
+	"/etc/ssl/certs",
+	"/etc/pki/tls/certs",
+};
+
+bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx)
+{
+	bool t_success = true;
+	bool t_found = false;
+	uint32_t t_path_count = 0;
+	
+	t_path_count = sizeof(s_ssl_bundle_paths) / sizeof(const char*);
+	for (uint32_t i = 0; t_success && !t_found && i < t_path_count; i++)
+	{
+		if (MCS_exists(s_ssl_bundle_paths[i], true))
+		{
+			t_success = load_ssl_ctx_certs_from_file(p_ssl_ctx, s_ssl_bundle_paths[i]);
+			if (t_success)
+				t_found = true;
+		}
+	}
+	
+	t_path_count = sizeof(s_ssl_hash_dir_paths) / sizeof(const char*);
+	for (uint32_t i = 0; t_success && !t_found && i < t_path_count; i++)
+	{
+		if (MCS_exists(s_ssl_hash_dir_paths[i], false))
+		{
+			t_success = load_ssl_ctx_certs_from_folder(p_ssl_ctx, s_ssl_bundle_paths[i]);
+			if (t_success)
+				t_found = true;
+		}
+	}
+	
+	return t_success;
+}
+
+#endif
+
+#ifdef TARGET_PLATFORM_MACOS_X
+bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
+{
+	bool t_success = true;
+	
+	CFArrayRef t_anchors = NULL;
+	STACK_OF(X509) *t_stack = NULL;
+	
+	t_success = noErr == SecTrustCopyAnchorCertificates(&t_anchors);
+	
+	t_stack = sk_X509_new(NULL);
+	if (t_success)
+	{
+		UInt32 t_anchor_count = CFArrayGetCount(t_anchors);
+		for (UInt32 i = 0; t_success && i < t_anchor_count; i++)
+		{
+			X509 *t_x509 = NULL;
+			const unsigned char* t_data_ptr = NULL;
+			UInt32 t_data_len = 0;
+			
+			CSSM_DATA t_cert_data;
+			t_success = noErr == SecCertificateGetData((SecCertificateRef)CFArrayGetValueAtIndex(t_anchors, i), &t_cert_data);
+			
+			if (t_success)
+			{
+				t_data_ptr = t_cert_data.Data;
+				t_data_len = t_cert_data.Length;
+				t_success = NULL != (t_x509 = d2i_X509(NULL, &t_data_ptr, t_data_len));
+			}
+			if (t_success)
+				t_success = 0 != sk_X509_push(t_stack, t_x509);
+		}
+	}
+	
+	if (t_anchors != NULL)
+		CFRelease(t_anchors);
+	
+	if (t_success)
+		r_x509_stack = t_stack;
+	else if (t_stack != NULL)
+		free_x509_stack(t_stack);
+
+	return t_success;
+}
+
+bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
+{
+	r_crls = NULL;
+	return true;
+}
+
+#elif defined(TARGET_PLATFORM_WINDOWS)
+
+bool export_system_root_cert_stack(STACK_OF(X509) *&r_cert_stack)
+{
+	bool t_success = true;
+
+	STACK_OF(X509) *t_cert_stack = NULL;
+	HCERTSTORE t_cert_store = NULL;
+	PCCERT_CONTEXT t_cert_enum = NULL;
+
+	t_success = NULL != (t_cert_stack = sk_X509_new(NULL));
+
+	if (t_success)
+		t_success = NULL != (t_cert_store = CertOpenSystemStore(NULL, L"ROOT"));
+
+	while (t_success && NULL != (t_cert_enum = CertEnumCertificatesInStore(t_cert_store, t_cert_enum)))
+	{
+		bool t_valid = true;
+		if (CertVerifyTimeValidity(NULL, t_cert_enum->pCertInfo))
+			t_valid = false;
+		if (t_valid)
+		{
+			X509 *t_x509 = NULL;
+#if defined(TARGET_PLATFORM_WINDOWS)
+			const unsigned char *t_data = (const unsigned char*) t_cert_enum->pbCertEncoded;
+#else
+			unsigned char *t_data = t_cert_enum->pbCertEncoded;
+#endif
+			long t_len = t_cert_enum->cbCertEncoded;
+
+			t_success = NULL != (t_x509 = d2i_X509(NULL, &t_data, t_len));
+
+			if (t_success)
+				t_success = 0 != sk_X509_push(t_cert_stack, t_x509);
+		}
+	}
+
+	if (t_cert_store != NULL)
+		CertCloseStore(t_cert_store, 0);
+
+	if (t_success)
+		r_cert_stack = t_cert_stack;
+	else
+		free_x509_stack(t_cert_stack);
+
+	return t_success;
+}
+
+bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
+{
+	bool t_success = true;
+
+	STACK_OF(X509_CRL) *t_crl_stack = NULL;
+	HCERTSTORE t_cert_store = NULL;
+	PCCRL_CONTEXT t_crl_enum = NULL;
+
+	t_success = NULL != (t_crl_stack = sk_X509_CRL_new(NULL));
+
+	if (t_success)
+		t_success = NULL != (t_cert_store = CertOpenSystemStore(NULL, L"ROOT"));
+
+	while (t_success && NULL != (t_crl_enum = CertEnumCRLsInStore(t_cert_store, t_crl_enum)))
+	{
+		bool t_valid = true;
+		if (CertVerifyCRLTimeValidity(NULL, t_crl_enum->pCrlInfo))
+			t_valid = false;
+		if (t_valid)
+		{
+			X509_CRL *t_crl = NULL;
+#if defined(TARGET_PLATFORM_WINDOWS)
+			const unsigned char *t_data = (const unsigned char*)t_crl_enum->pbCrlEncoded;
+#else
+			unsigned char *t_data = t_crl_enum->pbCrlEncoded;
+#endif
+			long t_len = t_crl_enum->cbCrlEncoded;
+
+			t_success = NULL != (t_crl = d2i_X509_CRL(NULL, &t_data, t_len));
+
+			if (t_success)
+				t_success = 0 != sk_X509_CRL_push(t_crl_stack, t_crl);
+		}
+	}
+
+	if (t_cert_store != NULL)
+		CertCloseStore(t_cert_store, 0);
+
+	if (t_success)
+		r_crls = t_crl_stack;
+	else
+		free_x509_crl_stack(t_crl_stack);
+
+	return t_success;
+}
+
+#else
+
+bool export_system_root_cert_stack(STACK_OF(X509) *&r_cert_stack)
+{
+	r_cert_stack = NULL;
+	return true;
+}
+
+bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
+{
+	r_crls = NULL;
+	return true;
+}
+
+#endif
