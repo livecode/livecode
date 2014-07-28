@@ -3161,12 +3161,12 @@ void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_fr
             MCExecTypeConvertNumbers(ctxt, p_from_type, p_from_value, p_to_type, p_to_value);
             return;
         }
-        else if (p_from_type == kMCExecTypeString)
+        else if (p_from_type == kMCExecValueTypeStringRef)
         {
             MCExecTypeConvertStringToNumber(ctxt, *(MCStringRef*)p_from_value, p_to_type, p_to_value);
             return;
         }
-        else if (p_from_type == kMCExecTypeName)
+        else if (p_from_type == kMCExecValueTypeNameRef)
         {
             MCExecTypeConvertStringToNumber(ctxt, MCNameGetString(*(MCNameRef*)p_from_value), p_to_type, p_to_value);
             return;

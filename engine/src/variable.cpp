@@ -360,6 +360,8 @@ MCValueRef MCVariable::getvalueref(void)
         {
             MCExecContext ctxt(nil, nil, nil);
             /* UNCHECKED */ MCExecTypeConvertAndReleaseAlways(ctxt, value . type, &value, kMCExecValueTypeValueRef, &value);
+            // SN-2014-07-28: [[ Bug 12937 ]] The value stored is now a valueRef
+            value . type = kMCExecValueTypeValueRef;
         }
         
         return value . valueref_value;
