@@ -277,8 +277,10 @@ Boolean MCCard::kfocusnext(Boolean top)
 				if (kfocused == NULL)
 					kfocused = tptr;
 			}
-			kfocused->getref()->kfocus();
+            // MW-2014-07-29: [[ Bug 13001 ]] Sync the view focus before the engine state
+            //   (otherwise the engine state can change due to script).
 			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+			kfocused->getref()->kfocus();
 			done = True;
 			break;
 		}
@@ -332,8 +334,10 @@ Boolean MCCard::kfocusprev(Boolean bottom)
 				if (kfocused == NULL)
 					kfocused = tptr;
 			}
-			kfocused->getref()->kfocus();
+            // MW-2014-07-29: [[ Bug 13001 ]] Sync the view focus before the engine state
+            //   (otherwise the engine state can change due to script).
 			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+			kfocused->getref()->kfocus();
 			done = True;
 			break;
 		}
