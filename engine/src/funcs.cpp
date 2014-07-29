@@ -1916,8 +1916,11 @@ static bool list_compressors_callback(void *context, unsigned int id, const char
 {
     MCPlatformSoundRecorderListCompressorsState *t_state = static_cast<MCPlatformSoundRecorderListCompressorsState *>(context);
     t_state -> ep -> concatcstring(label, EC_RETURN, t_state -> first);
-    t_state -> ep -> concatuint(id, EC_COMMA, false);
     
+    char t_code[] = "????";
+    memcpy(t_code, (char *)&id, 4);
+    
+    t_state -> ep -> concatcstring(t_code, EC_COMMA, false);
     t_state -> first = false;
     return true;
 }

@@ -1,3 +1,4 @@
+
 QuickTime none /System/Library/Frameworks/QuickTime.framework/QuickTime none
 	CDSequenceEnd: (integer) -> (integer)
 	CDSequenceNewDataSource: (integer, pointer, integer, integer, pointer, pointer, pointer) -> (integer)
@@ -59,6 +60,7 @@ QuickTime none /System/Library/Frameworks/QuickTime.framework/QuickTime none
 	SCGetInfo: (pointer, integer, pointer) -> (integer)
 	SCRequestImageSettings: (pointer) -> (integer)
 	SCSetInfo: (pointer, integer, pointer) -> (integer)
+	SGDisposeChannel: (pointer, pointer) -> (integer)
 	SGGetSoundInputDriver: (pointer) -> (integer)
 	SGIdle: (pointer) -> (integer)
 	SGInitialize: (pointer) -> (integer)
