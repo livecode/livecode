@@ -1708,15 +1708,8 @@ coord_t MCBlock::GetCursorX(findex_t fi)
     // AL-2014-07-29: [[ Bug 12896 ]] Include tab width in block cursor calculation
     if (j == m_size && parent -> GetCodepointAtIndex(fi - 1) == '\t')
     {
-        MCSegment *first = parent -> getsegments();
-        MCSegment *sgptr = first;
-        do
-        {
-            if (sgptr -> GetLastBlock() == this)
-                return sgptr -> GetWidth() - origin;
-            sgptr = sgptr -> next();
-        }
-        while (sgptr != first);
+        if (segment -> GetLastBlock() == this)
+            return segment -> GetWidth() - origin;
     }
     
     // [[ BiDi Support ]]
@@ -2325,14 +2318,9 @@ MCBlock *MCBlock::GetNextBlockVisualOrder()
         bptr = bptr->next();
     } while (bptr != this);
     
-    MCSegment *t_first = parent -> getsegments();
-    MCSegment *sgptr = t_first -> prev() -> prev();
-    while (sgptr != t_first -> prev())
-    {
-        if (this == sgptr -> GetLastVisualBlock())
-            return sgptr -> next() -> GetFirstVisualBlock();
-        sgptr = sgptr -> prev();
-    }
+    MCSegment *last_segment = parent -> getsegments() -> prev();
+    if (segment != last_segment && this == segment -> GetLastVisualBlock())
+        return segment -> next() -> GetFirstVisualBlock();
     
     return nil;
 }
@@ -2347,14 +2335,9 @@ MCBlock *MCBlock::GetPrevBlockVisualOrder()
         bptr = bptr->next();
     } while (bptr != this);
     
-    MCSegment *t_first = parent -> getsegments();
-    MCSegment *sgptr = t_first -> next();
-    while (sgptr != t_first)
-    {
-        if (this == sgptr -> GetFirstVisualBlock())
-            return sgptr -> prev() -> GetLastVisualBlock();
-        sgptr = sgptr -> next();
-    }
+    MCSegment *first_segment = parent -> getsegments();
+    if (segment != first_segment && this == segment -> GetFirstVisualBlock())
+        return segment -> prev() -> GetLastVisualBlock();
     
     return nil;
 }
