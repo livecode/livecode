@@ -152,6 +152,13 @@ void MCStack::resize(uint2 oldw, uint2 oldh)
 	MCRedrawUpdateScreen();
 }
 
+static bool _MCStackConfigureCallback(MCStack *p_stack, void *p_context)
+{
+	p_stack->configure(True);
+	
+	return true;
+}
+
 // MW-2007-07-03: [[ Bug 2332 ]] - It makes more sense for resize to be issue before move.
 //   Not doing so results in the stack's rect property being incorrect size-wise during execution
 //   of moveStack.
@@ -197,18 +204,7 @@ void MCStack::configure(Boolean user)
 		}
 	}
 	if (beenchanged)
-	{
-		MCStack *cstack = NULL;
-		uint2 ccount = 1;
-		while (True)
-		{
-			cstack = MCdispatcher->findchildstackd(window, ccount);
-			if (cstack == NULL)
-				break;
-			ccount++;
-			cstack->configure(True); //update children
-		}
-	}
+		foreachchildstack(_MCStackConfigureCallback, nil);
 }
 
 void MCStack::iconify()
@@ -460,50 +456,56 @@ Window MCStack::getwindow()
 		return window;
 }
 
+// IM-2014-07-23: [[ Bug 12930 ]] Reimplement to return the window of the parent stack
 Window MCStack::getparentwindow()
 {
-#if defined(_WINDOWS)
-	if (parentwindow != NULL)
-	{
-		if (MCdispatcher->findstackd(parentwindow) == NULL)
-		{
-			delete parentwindow;
-			parentwindow = NULL;
-		}
-		return parentwindow;
-	}
-	return DNULL;
-#else
-	if (parentwindow != NULL &&
-		MCdispatcher -> findstackd(parentwindow) == NULL)
-		parentwindow = NULL;
-	return parentwindow;
-#endif
+	MCStack *t_parent;
+	t_parent = getparentstack();
+	
+	if (t_parent == nil)
+		return nil;
+	
+	return t_parent->getwindow();
 }
 
-void MCStack::setparentwindow(Window w)
+void MCStack::setparentstack(MCStack *p_parent)
 {
-#if defined(_WINDOWS)
-	if (w != DNULL && w->handle.window != 0)
+	MCStack *t_parent;
+	t_parent = getparentstack();
+	
+	if (t_parent == p_parent)
+		return;
+	
+	if (m_parent_stack != nil)
 	{
-		if (parentwindow == DNULL)
-		{
-			parentwindow = new _Drawable;
-			parentwindow->type = DC_WINDOW;
-		}
-		parentwindow->handle.window = w->handle.window;
+		m_parent_stack->Release();
+		m_parent_stack = nil;
 	}
-	else
-		if (parentwindow != DNULL)
-		{
-			delete parentwindow;
-			parentwindow = DNULL;
-		}
-#else
-	if (parentwindow == window)
-		parentwindow = None;
-	parentwindow = w;
-#endif
+	
+	if (p_parent != nil)
+		m_parent_stack = p_parent->gethandle();
+}
+
+MCStack *MCStack::getparentstack()
+{
+	if (m_parent_stack == nil)
+		return nil;
+	
+	if (!m_parent_stack->Exists())
+	{
+		m_parent_stack->Release();
+		m_parent_stack = nil;
+		return nil;
+	}
+	
+	return (MCStack*)m_parent_stack->Get();
+}
+
+static bool _MCStackTakeWindowCallback(MCStack *p_stack, void *p_context)
+{
+	p_stack->setparentstack((MCStack*)p_context);
+	
+	return true;
 }
 
 Boolean MCStack::takewindow(MCStack *sptr)
@@ -532,6 +534,9 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	iconid = sptr->iconid;
 	sptr->stop_externals();
 	sptr->window = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] Update the child stacks of sptr to be child stacks of this.
+	MCdispatcher->foreachchildstack(sptr, _MCStackTakeWindowCallback, this);
 	
 	state = sptr->state;
 	state &= ~(CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK);
@@ -2204,13 +2209,11 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	mode = wm;
 	wposition = wpos;
 	walignment = walign;
+	// IM-2014-07-23: [[ Bug 12930 ]] We can now get & set the parent stack directly
 	if (parentptr == NULL)
-	{
-		if (parentwindow != NULL)
-			parentptr = MCdispatcher->findstackd(parentwindow);
-	}
+		parentptr = getparentstack();
 	else
-		setparentwindow(parentptr->getw());
+		setparentstack(parentptr);
 	
 	// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
 	view_setstackviewport(rect);
@@ -3242,3 +3245,25 @@ MCRectangle MCStack::getvisiblerect(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCStack::foreachchildstack(MCStackForEachCallback p_callback, void *p_context)
+{
+	bool t_continue;
+	t_continue = true;
+	
+	if (substacks != NULL)
+	{
+		MCStack *t_stack = substacks;
+		do
+		{
+			if (t_stack->getparentstack() == this)
+				t_continue = p_callback(t_stack, p_context);
+
+			t_stack = (MCStack *)t_stack->next();
+		}
+		while (t_continue && t_stack != substacks);
+	}
+	
+	return t_continue;
+}
+

@@ -3092,6 +3092,7 @@ bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef _DEBUG_MEMORY
 void *operator new (size_t size)
 {
     return malloc(size);
@@ -3111,3 +3112,4 @@ void operator delete[] (void *p)
 {
     free(p);
 }
+#endif

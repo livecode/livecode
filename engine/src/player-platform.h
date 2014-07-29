@@ -75,6 +75,7 @@ class MCPlayer : public MCControl, public MCPlayerInterface
     bool m_show_volume : 1;
     bool m_scrub_back_is_pressed : 1;
     bool m_scrub_forward_is_pressed : 1;
+    bool m_modify_selection_while_playing : 1;
     
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
@@ -175,7 +176,8 @@ public:
         else
             starttime = stime;
         
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+        if (hasfilename())
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
         layer_redrawrect(getcontrollerrect());
 	}
     
@@ -188,7 +190,8 @@ public:
         else
             endtime = etime;
         
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+        if (hasfilename())
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
         layer_redrawrect(getcontrollerrect());
 	}
     
@@ -324,7 +327,13 @@ public:
 		return m_platform_player;
 	}
 
+    bool hasfilename()
+    {
+        return !MCStringIsEmpty(filename);
+    }
+    
     MCRectangle resize(MCRectangle rect);
+
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
     void currenttimechanged(MCParameter *p_param);

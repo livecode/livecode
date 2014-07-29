@@ -1799,7 +1799,8 @@ coord_t MCBlock::getsubwidth(MCDC *dc, coord_t x /* IGNORED */, findex_t i, find
 			l--;
         
         // AL-2014-07-18: [[ Bug 12828 ]] If the last char is a tab character then ignore it.
-        if (parent->GetCodepointAtIndex(sptr + l - 1) == '\t')
+        // SN-2014-07-24: [[ Bug 12948 ]] Fix for the crash (negative length possible)
+        if (l && parent->GetCodepointAtIndex(sptr + l - 1) == '\t')
 			l--;
 
 		// MW-2012-08-29: [[ Bug 10325 ]] Use 32-bit int to compute the width, then clamp

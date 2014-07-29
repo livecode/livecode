@@ -1251,7 +1251,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 			t_success = nil != (t_stream = MCS_fakeopenwrite());
 
 		if (t_success)
-			t_success = MCImageEncodePNG(t_bitmap, nil, t_stream, t_byte_count);
+			t_success = MCImageEncodePNG(t_bitmap, NULL, t_stream, t_byte_count);
 
 		if (t_success)
 			t_success = IO_NORMAL == MCS_closetakingbuffer(t_stream, *(void**)(&t_buffer), t_length);
@@ -1296,8 +1296,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 
 		if (t_success)
 		{
-			MCImageBitmapUnpremultiply(t_bitmap);
-			t_success = MCImageEncodePNG(t_bitmap, nil, t_stream, t_byte_count);
+			t_success = MCImageEncodePNG(t_bitmap, NULL, t_stream, t_byte_count);
 		}
         
         if (t_success)
@@ -1327,7 +1326,9 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 			t_size = DragQueryFileW(t_hdrop, i, NULL, 0);
 
 			MCAutoArray<unichar_t> t_buffer;
-			/* UNCHECKED */ t_buffer.New(t_size);
+			// SN-2014-07-24: [[ Bug 12953 ]] The buffer must be able to contain the
+			//  NULL-terminated char, which is not included in the size returned by DragQueryFileW
+			/* UNCHECKED */ t_buffer.New(t_size + 1);
 
 			DragQueryFileW(t_hdrop, i, t_buffer.Ptr(), t_buffer.Size());
 			MCAutoStringRef t_std_path;

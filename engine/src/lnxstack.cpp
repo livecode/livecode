@@ -88,32 +88,6 @@ MCStack *MCStack::findstackd(Window w)
 	return NULL;
 }
 
-
-MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
-{
-	Window pwindow = getparentwindow();
-	if (pwindow != DNULL && w == pwindow)
-		if  (++ccount == cindex)
-			return this;
-	if (substacks != NULL)
-	{
-		MCStack *tptr = substacks;
-		do
-		{
-			pwindow = tptr->getparentwindow();
-			if (pwindow != DNULL && w == pwindow)
-			{
-				ccount++;
-				if (ccount == cindex)
-					return tptr;
-			}
-			tptr = (MCStack *)tptr->next();
-		}
-		while (tptr != substacks);
-	}
-	return NULL;
-}
-
 void MCStack::realize()
 {
 	if (MCnoui)
@@ -182,7 +156,7 @@ void MCStack::setmodalhints()
 	if (mode == WM_MODAL || mode == WM_SHEET)
 	{
 		if (mode == WM_SHEET)
-            gdk_window_set_transient_for(window, (mode == WM_SHEET) ? parentwindow : NULL);
+            gdk_window_set_transient_for(window, (mode == WM_SHEET) ? ((MCStack*)m_parent_stack->Get())->getwindow() : NULL);
         gdk_window_set_modal_hint(window, TRUE);
 	}
 }

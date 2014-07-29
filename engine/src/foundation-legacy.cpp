@@ -353,6 +353,12 @@ bool MCStringConvertLineEndingsToLiveCode(MCStringRef p_input, MCStringRef& r_ou
 	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r\n"), MCSTR("\n\r"), kMCStringOptionCompareExact);
 	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n\r"), MCSTR("\n"), kMCStringOptionCompareExact);
     /* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r"), MCSTR("\n"), kMCStringOptionCompareExact);
+    
+    // AL-2014-07-21: [[ Bug 12162 ]] Convert PS to LF, and LS to VT on text import.
+    /* UNCHECKED */ MCStringFindAndReplaceChar (t_mutable_input, 0x2028, 0x0B, kMCStringOptionCompareExact);
+    /* UNCHECKED */ MCStringFindAndReplaceChar (t_mutable_input, 0x2029, 0x0A, kMCStringOptionCompareExact);
+    
+    
 	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
 	return true;
 }

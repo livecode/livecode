@@ -74,27 +74,27 @@ fi
 echo "Building java classes..."
 mkdir -p "$DSTROOT/classes_livecode_community"
 mkdir -p "$DSTROOT/classes_app"
-"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/LiveCodeActivity.java"
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -source 1.5 -target 1.5 -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/LiveCodeActivity.java"
 if [ $? != 0 ]; then
 	exit $?
 fi
 
-"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/EngineReceiver.java"
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -source 1.5 -target 1.5 -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/EngineReceiver.java"
 if [ $? != 0 ]; then
 	exit $?
 fi
 
-"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/PushReceiver.java"
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -source 1.5 -target 1.5 -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/PushReceiver.java"
 if [ $? != 0 ]; then
 	exit $?
 fi
 
-"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/billing/google/GoogleBillingProvider.java"
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -source 1.5 -target 1.5 -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/billing/google/GoogleBillingProvider.java"
 if [ $? != 0 ]; then
 	exit $?
 fi
 
-"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/billing/samsung/SamsungBillingProvider.java"
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -source 1.5 -target 1.5 -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/billing/samsung/SamsungBillingProvider.java"
 if [ $? != 0 ]; then
 	exit $?
 fi

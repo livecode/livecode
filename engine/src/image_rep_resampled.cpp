@@ -28,13 +28,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCResampledImageRep::MCResampledImageRep(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source)
+MCResampledImageRep::MCResampledImageRep(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source)
 {
-	// IM-2013-11-07: [[ RefactorGraphics ]] If the scale values are negative we need to flip the resulting resampled image
-	m_h_scale = fabs(p_h_scale);
-	m_v_scale = fabs(p_v_scale);
-	m_h_flip = p_h_scale < 0.0;
-	m_v_flip = p_v_scale < 0.0;
+	// IM-2013-11-07: [[ RefactorGraphics ]] If the size values are negative we need to flip the resulting resampled image
+	m_target_width = p_width;
+	m_target_height = p_height;
+	m_h_flip = p_flip_horizontal;
+	m_v_flip = p_flip_vertical;
 	m_source = p_source->Retain();
 }
 
@@ -47,27 +47,16 @@ MCResampledImageRep::~MCResampledImageRep()
 
 bool MCResampledImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 {
-	uindex_t t_src_width, t_src_height;
-	if (!m_source->GetGeometry(t_src_width, t_src_height))
-		return false;
-	
-	MCGFloat t_density;
-	t_density = m_source->GetDensity();
-	
-	MCGFloat t_h_scale, t_v_scale;
-	t_h_scale = m_h_scale / t_density;
-	t_v_scale = m_v_scale / t_density;
-	
-	r_width = ceilf(t_src_width * t_h_scale);
-	r_height = ceilf(t_src_height * t_v_scale);
+	r_width = m_target_width;
+	r_height = m_target_height;
 	
 	return true;
 }
 
 bool MCResampledImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
 {
-	uindex_t t_target_width, t_target_height;
-	if (!GetGeometry(t_target_width, t_target_height))
+	uindex_t t_src_width, t_src_height;
+	if (!m_source->GetGeometry(t_src_width, t_src_height))
 		return false;
 	
 	bool t_success = true;
@@ -84,7 +73,7 @@ bool MCResampledImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_
 		t_success = MCMemoryNewArray(t_frame_count, t_frames);
 	
 	MCGFloat t_scale;
-	t_scale = MCMax(m_h_scale, m_v_scale);
+	t_scale = MCMax(m_target_width / (float)t_src_width, m_target_height / (float)t_src_height);
 	
 	for (uindex_t i = 0; t_success && i < t_frame_count; i++)
 	{
@@ -95,7 +84,7 @@ bool MCResampledImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_
 		{
 			t_frames[i].duration = t_src_frame->duration;
 			
-			t_success = MCImageScaleBitmap(t_src_frame->image, t_target_width, t_target_height, INTERPOLATION_BICUBIC, t_frames[i].image);
+			t_success = MCImageScaleBitmap(t_src_frame->image, m_target_width, m_target_height, INTERPOLATION_BICUBIC, t_frames[i].image);
 			if (t_success)
 				MCImageFlipBitmapInPlace(t_frames[i].image, m_h_flip, m_v_flip);
 		}
@@ -116,12 +105,9 @@ bool MCResampledImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCResampledImageRep::Matches(MCGFloat p_h_scale, MCGFloat p_v_scale, const MCImageRep *p_source)
+bool MCResampledImageRep::Matches(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, const MCImageRep *p_source)
 {
-	MCGFloat t_h_scale, t_v_scale;
-	t_h_scale = m_h_flip ? -m_h_scale : m_h_scale;
-	t_v_scale = m_v_flip ? -m_v_scale : m_v_scale;
-	return m_source == p_source && t_h_scale == p_h_scale && t_v_scale == p_v_scale;
+	return m_source == p_source && m_target_width == p_width && m_target_height == p_height && m_h_flip == p_flip_horizontal && m_v_flip == p_flip_vertical;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

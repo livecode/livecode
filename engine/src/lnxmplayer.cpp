@@ -38,6 +38,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/stat.h>
 #include <sys/wait.h>
 
+#include <unistd.h>
+
 #define C_PLAYER_CMD "/usr/bin/mplayer"
 #define C_PLAYER_ARG "/usr/bin/mplayer -vo x11 -slave -wid %d" 
 

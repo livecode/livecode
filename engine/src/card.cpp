@@ -867,10 +867,11 @@ Boolean MCCard::mup(uint2 which, bool p_release)
 				break;
 			case Button2:
 			case Button3:
+                // MW-2014-07-24: [[ Bug 12882 ]] Make sure we pass through correct button number.
                 if (p_release)
-                    message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
+                    message_with_valueref_args(MCM_mouse_release, which == Button2 ? MCSTR("2") : MCSTR("3"));
                 else
-                    message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
+                    message_with_valueref_args(MCM_mouse_up, which == Button2 ? MCSTR("2") : MCSTR("3"));
 				break;
 			}
 			mgrabbed = False;

@@ -1,0 +1,1 @@
+# Command click in project browser

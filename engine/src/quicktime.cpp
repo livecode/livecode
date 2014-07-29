@@ -179,6 +179,12 @@ static long sgSndDriver = 0;
 static MCStringRef recordtempfile = NULL;
 static MCStringRef recordexportfile = NULL;
 
+#ifdef _MACOSX
+#define AUDIO_MEDIA_TYPE SGAudioMediaType
+#else
+#define AUDIO_MEDIA_TYPE SoundMediaType
+#endif
+
 // Utility functions
 static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 {
@@ -193,7 +199,7 @@ static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 		aTrack = GetMovieIndTrack(tmovie, index);
 		aMedia = GetTrackMedia(aTrack);
 		GetMediaHandlerDescription(aMedia, &aTrackType, 0, 0);
-		if (aTrackType == SoundMediaType)
+		if (aTrackType == AUDIO_MEDIA_TYPE)
 		{
 			aDesc = (SampleDescriptionHandle)NewHandle(sizeof(SoundDescription));
 			GetMediaSampleDescription(aMedia, 1, aDesc);
@@ -285,7 +291,7 @@ static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 				cd.componentSubType = kQTFileTypeMovie;
 				break;
 		}
-		cd.componentManufacturer = SoundMediaType;
+		cd.componentManufacturer = AUDIO_MEDIA_TYPE;
 		cd.componentFlags = canMovieExportFiles;
 		cd.componentFlagsMask = canMovieExportFiles;
 		c = FindNextComponent(nil, &cd);
@@ -295,7 +301,7 @@ static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 		exporter = nil;
 		exporter = OpenComponent(c);
 		result = MovieExportSetSampleDescription(exporter, (SampleDescriptionHandle)myDesc,
-												 SoundMediaType);
+												 AUDIO_MEDIA_TYPE);
 		errno = ConvertMovieToDataRef(tmovie, 0, t_dst_rec . dataRef, t_dst_rec . dataRefType, cd.componentSubType,
 									  0, 0, exporter);
 		// try showUserSettingsDialog | movieToFileOnlyExport | movieFileSpecValid
@@ -416,7 +422,7 @@ void MCQTRecordSound(MCStringRef fname)
 	if (errno == noErr)
 	{
 		SGChannel sgSoundChan;
-		if ((errno = SGNewChannel((SeqGrabComponent)sgSoundComp, SoundMediaType, &sgSoundChan)) == noErr
+		if ((errno = SGNewChannel((SeqGrabComponent)sgSoundComp, AUDIO_MEDIA_TYPE, &sgSoundChan)) == noErr
 			&& (errno = SGSetChannelUsage(sgSoundChan, seqGrabRecord)) == noErr
 			&& (errno = SGSetSoundInputRate(sgSoundChan, sampleRate)) == noErr
 			&& (errno = SGSetSoundInputParameters(sgSoundChan, sampleSize,
@@ -925,14 +931,15 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 	}
 	
 	Rect t_src_rect, t_dst_rect;
-#ifdef __WINDOWS__
+
+#ifdef _WINDOWS
 	SetRect((LPRECT)&t_src_rect, 0, 0, p_area . width, p_area . height);
 	SetRect((LPRECT)&t_dst_rect, 0, 0, p_area . width, p_area . height);
 #else
 	SetRect(&t_src_rect, 0, 0, p_area . width, p_area . height);
 	SetRect(&t_dst_rect, 0, 0, p_area . width, p_area . height);
 #endif
-	
+
 	if (qteffect != 0)
 	{
 		MCGRaster t_start_raster, t_end_raster;

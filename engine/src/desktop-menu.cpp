@@ -857,6 +857,10 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 		return;
 	}
 	
+	// IM-2014-07-23: [[ Bug 12897 ]] If there is no menubar then we don't need to go any further
+	if (s_menubar == nil)
+		return;
+	
 	// We get MenuUpdate callbacks for all menus before they open, however at
 	// the moment we are only interested in ones directly in the menubar. So
 	// fetch the menu's parent and see what it is.
