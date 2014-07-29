@@ -215,6 +215,7 @@ protected:
 		bool m_is_focused : 1;
 		bool m_is_iconified : 1;
 		bool m_use_text_input : 1;
+        bool m_is_realized : 1;
 	};
 };
 

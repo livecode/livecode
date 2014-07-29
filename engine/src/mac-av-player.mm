@@ -302,28 +302,6 @@ void MCAVFoundationPlayer::MovieFinished(void)
     }
 }
 
-AVPlayer* MCAVFoundationPlayer::getPlayer(void)
-{
-    return m_player;
-}
-
-#if 0
-double MCAVFoundationPlayer::getDuration(void)
-{
-    AVPlayerItem *t_player_item = [m_player currentItem];
-    
-    if ([t_player_item status] == AVPlayerItemStatusReadyToPlay)
-        return CMTimeGetSeconds([[t_player_item asset] duration]);
-    else
-        return 0.f;
-}
-
-double MCAVFoundationPlayer::getCurrentTime(void)
-{
-    return CMTimeGetSeconds([m_player currentTime]);
-}
-#endif
-
 void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
 {
     uint32_t t_current_time;
@@ -439,11 +417,6 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
     
     if (!t_player -> m_frame_changed_pending)
         return;
-    // PM-2014-07-07: [[Bug 12746]] Removed code to make player display the first frame when a new movie is loaded
-    //if (t_player -> m_loaded && !t_player -> IsPlaying())
-        //return;
-    
-    NSLog(@"We have a new frame!");
     
     CVImageBufferRef t_image;
     [t_player -> m_lock lock];
