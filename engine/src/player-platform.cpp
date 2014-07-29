@@ -1103,7 +1103,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                 return ES_ERROR;
             }
-            setcurtime(ctime);
+            setcurtime(ctime, false);
             if (isbuffering())
                 dirty = True;
             break;
@@ -1494,11 +1494,15 @@ uint4 MCPlayer::getmoviecurtime()
 	return curtime;
 }
 
-void MCPlayer::setcurtime(uint4 newtime)
+void MCPlayer::setcurtime(uint4 newtime, bool notify)
 {
 	lasttime = newtime;
 	if (m_platform_player != nil && hasfilename())
+    {
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &newtime);
+        if (notify)
+            currenttimechanged();
+    }
 }
 
 void MCPlayer::setselection()
@@ -2053,8 +2057,13 @@ void MCPlayer::selectionchanged(void)
     */
 }
 
-void MCPlayer::currenttimechanged(MCParameter *p_param)
+void MCPlayer::currenttimechanged(void)
 {
+    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
+    MCParameter t_param;
+    t_param . setn_argument(getmoviecurtime());
+    timer(MCM_current_time_changed, &t_param);
+    
     if (m_modify_selection_while_playing)
     {
         uint32_t t_current_time;
@@ -2072,8 +2081,6 @@ void MCPlayer::currenttimechanged(MCParameter *p_param)
     }
     
     redrawcontroller();
-    
-    timer(MCM_current_time_changed, p_param);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)
@@ -3076,7 +3083,7 @@ void MCPlayer::handle_mdown(int p_which)
             if (!ispaused() && t_new_time < starttime && getflag(F_PLAY_SELECTION))
                 t_new_time = starttime;
             
-            setcurtime(t_new_time);
+            setcurtime(t_new_time, true);
             
             layer_redrawall();
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb));
@@ -3170,7 +3177,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 if (t_new_time < 0)
                     t_new_time = 0;
-                setcurtime(t_new_time);
+                setcurtime(t_new_time, true);
                 
                 layer_redrawall();
                 layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb));

@@ -72,7 +72,6 @@ public:
     virtual void GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
     
     void MovieFinished(void);
-    void SelectionChanged(void);
     void CurrentTimeChanged(void);
     void RateChanged(void);
     
@@ -141,11 +140,6 @@ private:
 - (void)rateChanged: (id)object
 {
     m_player -> RateChanged();
-}
-
-- (void)selectionChanged: (id)object
-{
-    m_player -> SelectionChanged();
 }
 
 @end
@@ -229,12 +223,6 @@ void MCQTKitPlayer::RateChanged(void)
         m_playing = true;
         MCPlatformCallbackSendPlayerStarted(this);
     }
-}
-
-void MCQTKitPlayer::SelectionChanged(void)
-{
-    if (!m_synchronizing)
-        MCPlatformCallbackSendPlayerSelectionChanged(this);
 }
 
 void MCQTKitPlayer::CurrentTimeChanged(void)
@@ -473,9 +461,6 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
     
     extern NSString **QTMovieRateDidChangeNotification_ptr;
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(rateChanged:) name: *QTMovieRateDidChangeNotification_ptr object: m_movie];
-    
-    extern NSString **QTMovieSelectionDidChangeNotification_ptr;
-    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(selectionChanged:) name: *QTMovieSelectionDidChangeNotification_ptr object: m_movie];
     
 	// This method seems to be there - but isn't 'public'. Given QTKit is now deprecated as long
 	// as it works on the platforms we support, it should be fine.

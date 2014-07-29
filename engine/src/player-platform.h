@@ -135,7 +135,7 @@ public:
 	uint4 gettimescale();  //get movie time scale
 	uint4 getmoviecurtime();//get movie current time
 	void getminwait(real8 &wait);
-	void setcurtime(uint4 curtime);
+	void setcurtime(uint4 curtime, bool notify);
 	void setselection();                  //set movie selection
 	void setlooping(Boolean loop);        //to loop or not to loop a movie
 	void setplayrate();                   //set the movie playing rate
@@ -243,7 +243,7 @@ public:
     
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
-    void currenttimechanged(MCParameter *p_param);
+    void currenttimechanged(void);
 	
     MCRectangle getcontrollerrect(void);
     MCRectangle getcontrollerpartrect(const MCRectangle& total_rect, int part);
