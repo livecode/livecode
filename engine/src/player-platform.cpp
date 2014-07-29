@@ -1516,18 +1516,26 @@ void MCPlayer::setselection(bool notify)
             starttime = 0;
             endtime = getduration();
         }
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
-
+        
+        uint32_t t_current_start, t_current_finish;
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_current_start);
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_current_finish);
+        
+        if (starttime != t_current_start || endtime != t_current_finish)
+        {
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+            
+            if (notify)
+                selectionchanged();
+            
+            // MW-2014-07-22: [[ Bug 12870 ]] Make sure controller rect redrawn when setting selection
+            //   by script.
+            layer_redrawrect(getcontrollerrect());
+        }
+        
         if (!m_modify_selection_while_playing)
             playselection(getflag(F_PLAY_SELECTION));
-        
-        if (notify)
-            selectionchanged();
-        
-        // MW-2014-07-22: [[ Bug 12870 ]] Make sure controller rect redrawn when setting selection
-        //   by script.
-        layer_redrawrect(getcontrollerrect());
 	}
 }
 
@@ -3379,7 +3387,7 @@ void MCPlayer::handle_shift_mdown(int p_which)
             // If click after current endtime, adjust that.
             // If click first half of current selection, adjust start.
             // If click last half of current selection, adjust end.
-            if (t_new_time <= (t_old_end - t_old_start) / 2)
+            if (t_new_time <= (t_old_end + t_old_start) / 2)
             {
                 starttime = t_new_time;
                 m_grabbed_part = kMCPlayerControllerPartSelectionStart;
