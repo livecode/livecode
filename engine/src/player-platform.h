@@ -136,7 +136,7 @@ public:
 	uint4 getmoviecurtime();//get movie current time
 	void getminwait(real8 &wait);
 	void setcurtime(uint4 curtime, bool notify);
-	void setselection();                  //set movie selection
+	void setselection(bool notify);                  //set movie selection
 	void setlooping(Boolean loop);        //to loop or not to loop a movie
 	void setplayrate();                   //set the movie playing rate
 	Boolean setInterestingTimeCB();       //True, if set, False, if not
@@ -200,27 +200,8 @@ public:
 	{
 		return lasttime;
 	}
-	void setstarttime(uint4 stime)
-	{
-        if (stime <= 0)
-            starttime = 0;
-        else if (stime > getduration())
-            starttime = getduration();
-        else
-            starttime = stime;
-        
-        if (hasfilename())
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
-        layer_redrawrect(getcontrollerrect());
-	}
 	void setendtime(uint4 etime)
 	{
-        if (etime <= 0)
-            endtime = 0;
-        else if (etime > getduration())
-            endtime = getduration();
-        else
-            endtime = etime;
         
         if (hasfilename())
             MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
