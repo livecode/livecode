@@ -289,23 +289,14 @@ bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, M
 	
 	if (t_success)
 	{
-		if (p_frame < m_frame_count)
-		{
-			m_frame_count = t_frame_count;
-			m_locked_frames = t_frames;
-			t_frames = nil;
+		// IM-2014-07-28: [[ Bug 13009 ]] If we have valid frames then store in locked frames and return requested frame.
+		m_frame_count = t_frame_count;
+		m_locked_frames = t_frames;
+		t_frames = nil;
 			
-			Retain();
+		Retain();
 			
-			r_frame = &m_locked_frames[p_frame];
-		}
-		else
-		{
-			// store frames in cache if not already loaded
-			if (m_frames == nil)
-				t_success = ConvertToMCGFrames(t_frames, t_frame_count, false);
-			t_success = false;
-		}
+		r_frame = &m_locked_frames[p_frame];
 	}
 	
 	MCImageFreeFrames(t_frames, t_frame_count);
