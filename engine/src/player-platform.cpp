@@ -847,11 +847,13 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
     if (MCNameIsEqualTo(mptr, MCM_play_started, kMCCompareCaseless))
     {
         state &= ~CS_PAUSED;
+        redrawcontroller();
     }
     else
         if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
         {
             state |= CS_PAUSED;
+            redrawcontroller();
             
             m_modify_selection_while_playing = false;
             
@@ -864,6 +866,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
 		{
 			state |= CS_PAUSED;
+            redrawcontroller();
             
             m_modify_selection_while_playing = false;
 		}
@@ -1103,9 +1106,11 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                 return ES_ERROR;
             }
-            setcurtime(ctime);
+            setcurtime(ctime, false);
             if (isbuffering())
                 dirty = True;
+            else
+                redrawcontroller();
             break;
         case P_LOOPING:
             if (!MCU_matchflags(data, flags, F_LOOPING, dirty))
@@ -1137,8 +1142,13 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                     MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                     return ES_ERROR;
                 }
+                
+                if (endtime == MAXUINT4) //if endtime is not set, set it to the length of movie
+                    endtime = getduration();
+                else if (starttime > endtime)
+                    endtime = starttime;
             }
-            setselection();
+            setselection(false);
             break;
         case P_END_TIME: //this is the selection end time
             if (data.getlength() == 0)
@@ -1150,8 +1160,13 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                     MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                     return ES_ERROR;
                 }
+                
+                if (starttime == MAXUINT4)
+                    starttime = 0;
+                else if (starttime > endtime)
+                    starttime = endtime;
             }
-            setselection();
+            setselection(false);
             break;
         case P_TRAVERSAL_ON:
             if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
@@ -1494,31 +1509,49 @@ uint4 MCPlayer::getmoviecurtime()
 	return curtime;
 }
 
-void MCPlayer::setcurtime(uint4 newtime)
+void MCPlayer::setcurtime(uint4 newtime, bool notify)
 {
 	lasttime = newtime;
 	if (m_platform_player != nil && hasfilename())
+    {
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &newtime);
+        if (notify)
+            currenttimechanged();
+    }
 }
 
-void MCPlayer::setselection()
+void MCPlayer::setselection(bool notify)
 {
     if (m_platform_player != nil && hasfilename())
 	{
-		if (starttime == MAXUINT4 && endtime == MAXUINT4)
+        uint32_t t_current_start, t_current_finish;
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_current_start);
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_current_finish);
+        
+        if (starttime != t_current_start || endtime != t_current_finish)
         {
-            starttime = 0;
-            endtime = getduration();
+            uint32_t t_st, t_et;
+            if (starttime == MAXUINT4 || endtime == MAXUINT4)
+                t_st = t_et = 0;
+            else
+            {
+                t_st = starttime;
+                t_et = endtime;
+            }
+            
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_st);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_et);
+            
+            if (notify)
+                selectionchanged();
+            
+            // MW-2014-07-22: [[ Bug 12870 ]] Make sure controller rect redrawn when setting selection
+            //   by script.
+            layer_redrawrect(getcontrollerrect());
         }
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
-
+        
         if (!m_modify_selection_while_playing)
             playselection(getflag(F_PLAY_SELECTION));
-        
-        // MW-2014-07-22: [[ Bug 12870 ]] Make sure controller rect redrawn when setting selection
-        //   by script.
-        layer_redrawrect(getcontrollerrect());
 	}
 }
 
@@ -1543,9 +1576,19 @@ void MCPlayer::setplayrate()
 	}
     
 	if (rate != 0)
+    {
+        if (getstate(CS_PAUSED))
+            timer(MCM_play_started, nil);
 		state = state & ~CS_PAUSED;
+    }
 	else
+    {
+        if (!getstate(CS_PAUSED))
+            timer(MCM_play_paused, nil);
 		state = state | CS_PAUSED;
+    }
+    
+    redrawcontroller();
 }
 
 void MCPlayer::showbadge(Boolean show)
@@ -1670,7 +1713,7 @@ Boolean MCPlayer::prepare(const char *options)
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
     
-	setselection();
+	setselection(false);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
 	SynchronizeUserCallbacks();
 	
@@ -1734,7 +1777,15 @@ Boolean MCPlayer::playpause(Boolean on)
 	}
 	
 	if (ok)
+    {
+        if (getstate(CS_PAUSED) && !on)
+            timer(MCM_play_started, nil);
+        else if (!getstate(CS_PAUSED) && on)
+            timer(MCM_play_paused, nil);
 		setstate(on, CS_PAUSED);
+        
+        redrawcontroller();
+    }
     
 	return ok;
 }
@@ -1780,6 +1831,8 @@ Boolean MCPlayer::playstop()
 		MCPlatformDetachPlayer(m_platform_player);
 	}
     
+    redrawcontroller();
+    
 	freetmp();
     
     /*
@@ -1800,13 +1853,13 @@ Boolean MCPlayer::playstop()
     
 	if (disposable)
 	{
-		if (needmessage)
-			getcard()->message_with_args(MCM_play_stopped, getname());
+		//if (needmessage)
+		//	getcard()->message_with_args(MCM_play_stopped, getname());
 		delete this;
 	}
-	else
-		if (needmessage)
-			message_with_args(MCM_play_stopped, getname());
+	//else
+		//if (needmessage)
+	//		message_with_args(MCM_play_stopped, getname());
     
 	return True;
 }
@@ -2044,17 +2097,16 @@ void MCPlayer::markerchanged(uint32_t p_time)
 
 void MCPlayer::selectionchanged(void)
 {
-/*
-    MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
-    MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
-    
-    redrawcontroller();
     timer(MCM_selection_changed, nil);
-    */
 }
 
-void MCPlayer::currenttimechanged(MCParameter *p_param)
+void MCPlayer::currenttimechanged(void)
 {
+    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
+    MCParameter t_param;
+    t_param . setn_argument(getmoviecurtime());
+    timer(MCM_current_time_changed, &t_param);
+    
     if (m_modify_selection_while_playing)
     {
         uint32_t t_current_time;
@@ -2068,12 +2120,15 @@ void MCPlayer::currenttimechanged(MCParameter *p_param)
         if ((MCmodifierstate & MS_SHIFT) == 0)
             playpause(True);
         
-        setselection();
+        setselection(true);
     }
     
     redrawcontroller();
-    
-    timer(MCM_current_time_changed, p_param);
+}
+
+void MCPlayer::moviefinished(void)
+{
+    timer(MCM_play_stopped, nil);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)
@@ -3063,7 +3118,7 @@ void MCPlayer::handle_mdown(int p_which)
             // MW-2014-07-22: [[ Bug 12871 ]] If we click in the well without shift and there
             //   is a selection, the selection is removed.
             endtime = starttime;
-            setselection();
+            setselection(true);
             
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             
@@ -3076,7 +3131,7 @@ void MCPlayer::handle_mdown(int p_which)
             if (!ispaused() && t_new_time < starttime && getflag(F_PLAY_SELECTION))
                 t_new_time = starttime;
             
-            setcurtime(t_new_time);
+            setcurtime(t_new_time, true);
             
             layer_redrawall();
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb));
@@ -3170,7 +3225,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 if (t_new_time < 0)
                     t_new_time = 0;
-                setcurtime(t_new_time);
+                setcurtime(t_new_time, true);
                 
                 layer_redrawall();
                 layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb));
@@ -3192,7 +3247,16 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 if (t_new_start_time >= endtime)
                     t_new_start_time = endtime;
-                setstarttime(t_new_start_time);
+                
+                if (t_new_start_time <= 0)
+                    starttime = 0;
+                else if (t_new_start_time > getduration())
+                    starttime = getduration();
+                else
+                    starttime = t_new_start_time;
+                
+                setselection(true);
+                
             }
                 break;
                 
@@ -3207,7 +3271,16 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 if (t_new_finish_time <= starttime)
                     t_new_finish_time = starttime;
-                setendtime(t_new_finish_time);
+                
+                if (t_new_finish_time <= 0)
+                    endtime = 0;
+                else if (t_new_finish_time > getduration())
+                    endtime = getduration();
+                else
+                    endtime = t_new_finish_time;
+                
+                setselection(true);
+                
             }
                 break;
                 
@@ -3302,7 +3375,7 @@ void MCPlayer::handle_mup(int p_which)
         // We want the SelectionChanged message to fire on mup
         case kMCPlayerControllerPartSelectionStart:
         case kMCPlayerControllerPartSelectionFinish:
-            setselection();
+            setselection(true);
             layer_redrawrect(getcontrollerrect());
             break;
 
@@ -3342,20 +3415,21 @@ void MCPlayer::handle_shift_mdown(int p_which)
             uint32_t t_new_time, t_old_time, t_duration, t_old_start, t_old_end;;
             t_old_time = getmoviecurtime();
             t_duration = getduration();
+            
+            // If there was previously no selection, then take it to be currenttime, currenttime.
+            if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
+                starttime = endtime = t_old_time;
+            
             t_old_start = getstarttime();
             t_old_end = getendtime();
             
             t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
             
-            // If there was previously no selection, then take it to be currenttime, currenttime.
-            if (starttime == endtime)
-                starttime = endtime = t_old_time;
-            
             // If click before current starttime, adjust that.
             // If click after current endtime, adjust that.
             // If click first half of current selection, adjust start.
             // If click last half of current selection, adjust end.
-            if (t_new_time <= (t_old_end - t_old_start) / 2)
+            if (t_new_time <= (t_old_end + t_old_start) / 2)
             {
                 starttime = t_new_time;
                 m_grabbed_part = kMCPlayerControllerPartSelectionStart;
@@ -3368,18 +3442,12 @@ void MCPlayer::handle_shift_mdown(int p_which)
             
             if (hasfilename())
             {
-                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
-                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
-                
                 bool t_show_selection;
                 t_show_selection = true;
                 setflag(True, F_SHOW_SELECTION);
                 MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-               
-                bool t_play_selection;
-                t_play_selection = true;
-                setflag(True, F_PLAY_SELECTION);
-                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
+                
+                setselection(true);
             }
             
             layer_redrawrect(getcontrollerrect());
