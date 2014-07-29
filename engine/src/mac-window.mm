@@ -1881,6 +1881,9 @@ void MCMacPlatformWindow::DoSynchronize(void)
     
 	if (m_changes . mask_changed)
 	{
+        // MW-2014-07-29: [ Bug 12997 ]] Make sure we invalidate the whole window when
+        //   the mask changes.
+        [[m_window_handle contentView] setNeedsDisplay: YES];
 		[m_window_handle setOpaque: m_mask == nil];
 		if (m_has_shadow)
 			m_shadow_changed = true;
