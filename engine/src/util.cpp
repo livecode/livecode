@@ -1300,15 +1300,13 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 			x = tr . x + tr . width - rr_width + (qa_points[k] . x * rr_width / MAXINT2);
 			y = tr . y + tr . height           - (qa_points[k] . y * rr_height / MAXINT2);
 		}
-		
-		// MDW 2014-07-26 it should be possible to eliminate duplicate points
-		// in an oval, but that doesn't seem possible without making it jagged.
-//		if (x != points[i-1] . x && y != points[i-1] . y)
-//		{
+
+		if (x != points[i-1] . x || y != points[i-1] . y)
+		{
 			points[i] . x = x;
 			points[i] . y = y;
 			i++;
-//		}
+		}
 
 		j--;
 		if (j == 0)
