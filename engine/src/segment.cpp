@@ -532,6 +532,9 @@ void MCSegment::ResolveDisplayOrder()
         bptr -> SetVisualIndex(i);
         t_width += bptr -> getwidth(NULL);
     }
+    
+    m_FirstVisualBlock = t_visual_order[0];
+    m_LastVisualBlock = t_visual_order[t_block_count - 1];
 }
 
 coord_t MCSegment::GetCursorOffset()

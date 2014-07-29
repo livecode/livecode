@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 #include "font.h"
 #include "path.h"
+#include "segment.h"
 
 #include "exec-interface.h"
 
@@ -1703,6 +1704,20 @@ coord_t MCBlock::GetCursorX(findex_t fi)
 	if (j > m_size)
 		j = m_size;
     
+    // AL-2014-07-29: [[ Bug 12896 ]] Include tab width in block cursor calculation
+    if (j == m_size && parent -> GetCodepointAtIndex(fi - 1) == '\t')
+    {
+        MCSegment *first = parent -> getsegments();
+        MCSegment *sgptr = first;
+        do
+        {
+            if (sgptr -> GetLastBlock() == this)
+                return sgptr -> GetWidth() - origin;
+            sgptr = sgptr -> next();
+        }
+        while (sgptr != first);
+    }
+    
     // [[ BiDi Support ]]
     // If the block is RTL, x decreases as fi increases
     if (is_rtl())
@@ -1713,7 +1728,7 @@ coord_t MCBlock::GetCursorX(findex_t fi)
 
 findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool moving_forward)
 {
-    // The x coordinate is relative to the line, not ourselves
+    // The x coordinate is relative to the segment, not ourselves
     x -= getorigin();
     
     // MW-2007-07-05: [[ Bug 5099 ]] If we have an image and are unicode, the char
@@ -2298,6 +2313,7 @@ codepoint_t MCBlock::GetCodepointAtIndex(findex_t p_index) const
 	return parent->GetCodepointAtIndex(m_index + p_index);
 }
 
+// AL-2014-07-29: [[ Bug 12896 ]] The next and previous blocks in the visual order may go over segment boundaries
 MCBlock *MCBlock::GetNextBlockVisualOrder()
 {
     MCBlock *bptr = this;
@@ -2307,6 +2323,15 @@ MCBlock *MCBlock::GetNextBlockVisualOrder()
             return bptr;
         bptr = bptr->next();
     } while (bptr != this);
+    
+    MCSegment *t_first = parent -> getsegments();
+    MCSegment *sgptr = t_first -> prev() -> prev();
+    while (sgptr != t_first -> prev())
+    {
+        if (this == sgptr -> GetLastVisualBlock())
+            return sgptr -> next() -> GetFirstVisualBlock();
+        sgptr = sgptr -> prev();
+    }
     
     return nil;
 }
@@ -2320,6 +2345,15 @@ MCBlock *MCBlock::GetPrevBlockVisualOrder()
             return bptr;
         bptr = bptr->next();
     } while (bptr != this);
+    
+    MCSegment *t_first = parent -> getsegments();
+    MCSegment *sgptr = t_first -> next();
+    while (sgptr != t_first)
+    {
+        if (this == sgptr -> GetFirstVisualBlock())
+            return sgptr -> prev() -> GetLastVisualBlock();
+        sgptr = sgptr -> next();
+    }
     
     return nil;
 }
