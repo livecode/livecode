@@ -34,8 +34,6 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 			const char *p_key, uint32_t p_key_length, const char *p_passphrase,
 			char *&r_message_out, uint32_t &r_message_out_length, char *&r_result, uint32_t &r_error);
 
-#include <openssl/x509v3.h>
-
 // IM-2014-07-28: [[ Bug 12822 ]] Shared certificate loading function for SSL contexts.
 bool MCSSLContextLoadCertificates(SSL_CTX *p_context, char **r_error);
 

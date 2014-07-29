@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "handler.h"
 #include "util.h"
 #include "globals.h"
-#include "mcssl.h"
 #include "osspec.h"
 
 #include "ports.cpp"
@@ -94,6 +93,8 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 #include <openssl/rand.h>
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
+
+#include "mcssl.h"
 
 #if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE))
 #define socklen_t int
