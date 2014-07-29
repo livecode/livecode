@@ -1139,6 +1139,11 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                     MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                     return ES_ERROR;
                 }
+                
+                if (endtime == MAXUINT4) //if endtime is not set, set it to the length of movie
+                    endtime = getduration();
+                else if (starttime > endtime)
+                    endtime = starttime;
             }
             setselection(false);
             break;
@@ -1152,6 +1157,11 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                     MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                     return ES_ERROR;
                 }
+                
+                if (starttime == MAXUINT4)
+                    starttime = 0;
+                else if (starttime > endtime)
+                    starttime = endtime;
             }
             setselection(false);
             break;
@@ -1511,20 +1521,23 @@ void MCPlayer::setselection(bool notify)
 {
     if (m_platform_player != nil && hasfilename())
 	{
-		if (starttime == MAXUINT4 && endtime == MAXUINT4)
-        {
-            starttime = 0;
-            endtime = getduration();
-        }
-        
         uint32_t t_current_start, t_current_finish;
         MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_current_start);
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_current_finish);
         
         if (starttime != t_current_start || endtime != t_current_finish)
         {
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+            uint32_t t_st, t_et;
+            if (starttime == MAXUINT4 || endtime == MAXUINT4)
+                t_st = t_et = 0;
+            else
+            {
+                t_st = starttime;
+                t_et = endtime;
+            }
+            
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_st);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_et);
             
             if (notify)
                 selectionchanged();
@@ -3374,14 +3387,15 @@ void MCPlayer::handle_shift_mdown(int p_which)
             uint32_t t_new_time, t_old_time, t_duration, t_old_start, t_old_end;;
             t_old_time = getmoviecurtime();
             t_duration = getduration();
+            
+            // If there was previously no selection, then take it to be currenttime, currenttime.
+            if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
+                starttime = endtime = t_old_time;
+            
             t_old_start = getstarttime();
             t_old_end = getendtime();
             
             t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
-            
-            // If there was previously no selection, then take it to be currenttime, currenttime.
-            if (starttime == endtime)
-                starttime = endtime = t_old_time;
             
             // If click before current starttime, adjust that.
             // If click after current endtime, adjust that.

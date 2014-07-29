@@ -240,6 +240,9 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_loaded = false;
     
     m_time_scale = 0;
+    
+    m_selection_start = 0;
+    m_selection_finish = 0;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
