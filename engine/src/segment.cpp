@@ -64,6 +64,14 @@ void MCSegment::AddBlockRange(MCBlock *first, MCBlock *last)
 {
     m_FirstBlock = first;
     m_LastBlock = last;
+    
+    MCBlock *bptr = m_FirstBlock;
+    do
+    {
+        bptr -> SetSegment(this);
+        bptr = bptr->next();
+    }
+    while (bptr->prev() != m_LastBlock);
 }
 
 coord_t MCSegment::GetContentLength()

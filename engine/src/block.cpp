@@ -994,7 +994,8 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
 			t_cell_clip . x = x - 1;
-			t_cell_clip . width = MCU_max(p_cell_right - x - t_padding * 2, 0.0f);
+            // AL-2014-07-29: [[ Bug 12952 ]] Clip to segment boundaries
+			t_cell_clip . width = MCU_max(segment -> GetWidth() - origin - t_padding * 2, 0.0f);
 
             dc -> cliprect(t_cell_clip);
             dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, kMCDrawTextBreak, is_rtl() ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
