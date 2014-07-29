@@ -45,17 +45,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <openssl/x509v3.h>
 #endif
 
+#ifdef _MACOSX
+#include "osxprefix.h"
+#endif
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef _MACOSX
+extern char *path2utf(char *path);
+#endif
+
+extern "C" int initialise_weak_link_crypto(void);
+extern "C" int initialise_weak_link_ssl(void);
+extern "C" void finalise_weak_link_crypto(void);
+extern "C" void finalise_weak_link_ssl(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
 static Boolean cryptinited = False;
 
 // IM-2014-07-28: [[ Bug 12822 ]] OS-specified root certificates
 static STACK_OF(X509) *s_ssl_system_root_certs;
 // IM-2014-07-28: [[ Bug 12822 ]] OS-specified CRLs
 static STACK_OF(X509_CRL) *s_ssl_system_crls;
-
-extern "C" int initialise_weak_link_crypto(void);
-extern "C" int initialise_weak_link_ssl(void);
-extern "C" void finalise_weak_link_crypto(void);
-extern "C" void finalise_weak_link_ssl(void);
 
 Boolean load_crypto_symbols()
 {
@@ -720,7 +731,7 @@ bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx)
 	t_success = true;
 	
 	if (s_ssl_system_root_certs == nil)
-		t_success = export_system_root_cert_stack(s_ssl_root_certs);
+		t_success = export_system_root_cert_stack(s_ssl_system_root_certs);
 	
 	if (t_success && s_ssl_system_crls == nil)
 		t_success = export_system_crl_stack(s_ssl_system_crls);
