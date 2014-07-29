@@ -3955,10 +3955,18 @@ public:
 		
 		MCStringRef t_tag = nil;
 		
+        // SN-2014-07-29: [[ Bug 12998 ]] has_tag member put back
+        //  as it was in 6.x
 		if (!MCStringIsEmpty(p_menu_item->tag))
-			t_tag = p_menu_item->tag;
+        {
+            p_menu_item -> has_tag = true;
+            t_tag = p_menu_item->tag;
+        }
 		else
-			t_tag = p_menu_item->label;
+        {
+            p_menu_item -> has_tag = false;
+            t_tag = p_menu_item->label;
+        }
 		
 		for(uint32_t i = p_menu_item -> depth; i < m_tag_count; i++)
 			MCValueRelease(m_tags[i]);
