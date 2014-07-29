@@ -1383,7 +1383,6 @@ void MCScreenDC::createbackdrop_window(void)
 
 void MCScreenDC::enablebackdrop(bool p_hard)
 {
-
 	bool t_error;
 	t_error = false;
 	
@@ -1398,7 +1397,7 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	else
 		backdrop_active = True;
 	
-	t_error = ( backdrop == DNULL) ;
+	t_error = (backdrop == DNULL) ;
 	
 	if (!t_error)	
 	{
@@ -1429,7 +1428,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 
 	if (!backdrop_active && !backdrop_hard)
 	{
-		if ( backdrop != DNULL)
+		if (backdrop != DNULL)
 			gdk_window_hide(backdrop);
 		MCstacks -> refresh();
 	}
@@ -1441,6 +1440,7 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 {
 	// IM-2014-04-15: [[ Bug 11603 ]] Convert pattern to Pixmap for use with XSetWindowAttributes structure
 	freepixmap(m_backdrop_pixmap);
+    m_backdrop_pixmap = NULL;
 	
 	if (p_pattern != nil)
 		/* UNCHECKED */ MCPatternToX11Pixmap(p_pattern, m_backdrop_pixmap);
@@ -1472,6 +1472,8 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
         gdk_rgb_find_color(gdk_drawable_get_colormap(backdrop), &t_colour);
         gdk_window_set_background(backdrop, &t_colour);
 	}
+    
+    gdk_window_clear(backdrop);
 
 	MCstacks -> refresh();
 }
