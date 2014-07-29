@@ -73,7 +73,6 @@ public:
     
     void MovieFinished(void);
     void CurrentTimeChanged(void);
-    void RateChanged(void);
     
 protected:
     virtual void Realize(void);
@@ -135,11 +134,6 @@ private:
 - (void)currentTimeChanged: (id)object
 {
     m_player -> CurrentTimeChanged();
-}
-
-- (void)rateChanged: (id)object
-{
-    m_player -> RateChanged();
 }
 
 @end
@@ -208,21 +202,7 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
 void MCQTKitPlayer::MovieFinished(void)
 {
     m_playing = false;
-    MCPlatformCallbackSendPlayerStopped(this);
-}
-
-void MCQTKitPlayer::RateChanged(void)
-{
-    if (m_playing && [m_movie rate] == 0.0 && do_QTTimeCompare([m_movie currentTime], [m_movie duration]) != 0)
-    {
-        m_playing = false;
-        MCPlatformCallbackSendPlayerPaused(this);
-    }
-    else if (!m_playing && [m_movie rate] != 0.0)
-    {
-        m_playing = true;
-        MCPlatformCallbackSendPlayerStarted(this);
-    }
+    MCPlatformCallbackSendPlayerFinished(this);
 }
 
 void MCQTKitPlayer::CurrentTimeChanged(void)

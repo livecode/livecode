@@ -1136,27 +1136,7 @@ void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
     t_player -> currenttimechanged();
 }
 
-void MCPlatformHandlePlayerStarted(MCPlatformPlayerRef p_player)
-{
-    MCPlayer *t_player;
-    t_player = find_player(p_player);
-    if (t_player == nil)
-        return;
-    
-    t_player -> timer(MCM_play_started, nil);
-}
-
-void MCPlatformHandlePlayerPaused(MCPlatformPlayerRef p_player)
-{
-    MCPlayer *t_player;
-    t_player = find_player(p_player);
-    if (t_player == nil)
-        return;
-    
-    t_player -> timer(MCM_play_paused, nil);
-}
-
-void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef p_player)
+void MCPlatformHandlePlayerFinished(MCPlatformPlayerRef p_player)
 {
     MCPlayer *t_player;
     t_player = find_player(p_player);
@@ -1164,7 +1144,7 @@ void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef p_player)
         return;
     
     t_player -> layer_redrawall();
-    t_player -> timer(MCM_play_stopped, nil);
+    t_player -> moviefinished();;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -225,7 +225,8 @@ public:
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
     void currenttimechanged(void);
-	
+	void moviefinished(void);
+    
     MCRectangle getcontrollerrect(void);
     MCRectangle getcontrollerpartrect(const MCRectangle& total_rect, int part);
 

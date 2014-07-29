@@ -282,9 +282,7 @@ void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
 void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerStarted(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerPaused(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerStopped(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef player);
 
 void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef sound);
 

@@ -60,9 +60,7 @@ void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef window, uint32_t id);
 void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef player);
 void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
 void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef player);
-void MCPlatformHandlePlayerStarted(MCPlatformPlayerRef player);
-void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef player);
-void MCPlatformHandlePlayerPaused(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerFinished(MCPlatformPlayerRef player);
 
 void MCPlatformHandleSoundFinished(MCPlatformSoundRef sound);
 
@@ -389,22 +387,10 @@ void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef p_player
     MCPlatformHandlePlayerCurrentTimeChanged(p_player);
 }
 
-void MCPlatformCallbackSendPlayerStarted(MCPlatformPlayerRef p_player)
+void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef p_player)
 {
-    MCLog("Player(%p) -> Started()", p_player);
-    MCPlatformHandlePlayerStarted(p_player);
-}
-
-void MCPlatformCallbackSendPlayerPaused(MCPlatformPlayerRef p_player)
-{
-    MCLog("Player(%p) -> Paused()", p_player);
-    MCPlatformHandlePlayerPaused(p_player);
-}
-
-void MCPlatformCallbackSendPlayerStopped(MCPlatformPlayerRef p_player)
-{
-    MCLog("Player(%p) -> Stopped()", p_player);
-    MCPlatformHandlePlayerStopped(p_player);
+    MCLog("Player(%p) -> Finished()", p_player);
+    MCPlatformHandlePlayerFinished(p_player);
 }
 
 //////////

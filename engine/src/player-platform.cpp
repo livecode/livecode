@@ -847,11 +847,13 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
     if (MCNameIsEqualTo(mptr, MCM_play_started, kMCCompareCaseless))
     {
         state &= ~CS_PAUSED;
+        redrawcontroller();
     }
     else
         if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
         {
             state |= CS_PAUSED;
+            redrawcontroller();
             
             m_modify_selection_while_playing = false;
             
@@ -864,6 +866,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
 		{
 			state |= CS_PAUSED;
+            redrawcontroller();
             
             m_modify_selection_while_playing = false;
 		}
@@ -1573,9 +1576,19 @@ void MCPlayer::setplayrate()
 	}
     
 	if (rate != 0)
+    {
+        if (getstate(CS_PAUSED))
+            timer(MCM_play_started, nil);
 		state = state & ~CS_PAUSED;
+    }
 	else
+    {
+        if (!getstate(CS_PAUSED))
+            timer(MCM_play_paused, nil);
 		state = state | CS_PAUSED;
+    }
+    
+    redrawcontroller();
 }
 
 void MCPlayer::showbadge(Boolean show)
@@ -1764,7 +1777,15 @@ Boolean MCPlayer::playpause(Boolean on)
 	}
 	
 	if (ok)
+    {
+        if (getstate(CS_PAUSED) && !on)
+            timer(MCM_play_started, nil);
+        else if (!getstate(CS_PAUSED) && on)
+            timer(MCM_play_paused, nil);
 		setstate(on, CS_PAUSED);
+        
+        redrawcontroller();
+    }
     
 	return ok;
 }
@@ -1810,6 +1831,8 @@ Boolean MCPlayer::playstop()
 		MCPlatformDetachPlayer(m_platform_player);
 	}
     
+    redrawcontroller();
+    
 	freetmp();
     
     /*
@@ -1830,13 +1853,13 @@ Boolean MCPlayer::playstop()
     
 	if (disposable)
 	{
-		if (needmessage)
-			getcard()->message_with_args(MCM_play_stopped, getname());
+		//if (needmessage)
+		//	getcard()->message_with_args(MCM_play_stopped, getname());
 		delete this;
 	}
-	else
-		if (needmessage)
-			message_with_args(MCM_play_stopped, getname());
+	//else
+		//if (needmessage)
+	//		message_with_args(MCM_play_stopped, getname());
     
 	return True;
 }
@@ -2101,6 +2124,11 @@ void MCPlayer::currenttimechanged(void)
     }
     
     redrawcontroller();
+}
+
+void MCPlayer::moviefinished(void)
+{
+    timer(MCM_play_stopped, nil);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)

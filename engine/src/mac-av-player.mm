@@ -283,7 +283,7 @@ void MCAVFoundationPlayer::MovieFinished(void)
     if (!m_looping)
     {
         m_playing = false;
-        MCPlatformCallbackSendPlayerStopped(this);
+        MCPlatformCallbackSendPlayerFinished(this);
     }
     else
     {
@@ -299,7 +299,6 @@ void MCAVFoundationPlayer::MovieFinished(void)
         [m_player play];
         m_playing = true;
         m_finished = false;
-        MCPlatformCallbackSendPlayerStarted(this);
     }
 }
 
@@ -717,7 +716,6 @@ void MCAVFoundationPlayer::Stop(void)
     // Calling CVDisplayLinkStop here will cause problems, since Stop() is called when switching from run to edit mode and the player IsPlaying()
     
     [m_player pause];
-    MCPlatformCallbackSendPlayerPaused(this);    
 }
 
 void MCAVFoundationPlayer::Step(int amount)
