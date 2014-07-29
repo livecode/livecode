@@ -1165,14 +1165,20 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 // Re-ordering will be required if the block is RTL
                 if (bix > bex)
                 {
-                    srect.x = x + sgptr -> GetCursorOffset() + bex;
-                    srect.width = bix - bex;
+                    int2 t_temp;
+                    t_temp = bix;
+                    bix  = bex;
+                    bex = t_temp;
                 }
+
+                srect.x = x + sgptr -> GetCursorOffset() + bix;
+                
+                // AL-2014-07-29: [[ Bug 12951 ]] If selection traverses a segment boundary, include the boundary in the fill rect.
+                if (startindex < bi + bl && endindex > bi + bl &&
+                    bptr == sgptr -> GetLastBlock() && sgptr -> next() != segments)
+                    srect.width = sgptr -> GetWidth() - bix;
                 else
-                {
-                    srect.x = x + sgptr -> GetCursorOffset() + bix;
                     srect.width = bex - bix;
-                }
                 
                 // Draw this block
                 dc->fillrect(srect);
@@ -1204,7 +1210,8 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 t_first_visual = t_first_visual->GetPrevBlockVisualOrder();
             
             srect.x = sx;
-            srect.width = x + t_first_visual->getorigin() - sx;
+            // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
+            srect.width = x + segments -> GetCursorOffset() + t_first_visual->getorigin() - sx;
             dc->fillrect(srect);
         }
         
@@ -1218,7 +1225,8 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             while (t_last_visual->GetNextBlockVisualOrder() != nil)
                 t_last_visual = t_last_visual->GetNextBlockVisualOrder();
             
-            srect.x = x + t_last_visual->getorigin() + t_last_visual->getwidth();
+            // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
+            srect.x = x + segments -> prev() -> GetCursorOffset() + t_last_visual->getorigin() + t_last_visual->getwidth();
             srect.width = swidth - (srect.x - sx);
             dc->fillrect(srect);
         }
