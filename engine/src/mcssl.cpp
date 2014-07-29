@@ -27,7 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "execpt.h"
 #include "util.h"
 #include "object.h"
-#include "mcssl.h"
 #include "mode.h"
 
 #include "globals.h"
@@ -48,6 +47,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifdef _MACOSX
 #include "osxprefix.h"
 #endif
+
+#include "mcssl.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _MACOSX
