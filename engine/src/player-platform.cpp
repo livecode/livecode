@@ -1106,6 +1106,8 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             setcurtime(ctime, false);
             if (isbuffering())
                 dirty = True;
+            else
+                redrawcontroller();
             break;
         case P_LOOPING:
             if (!MCU_matchflags(data, flags, F_LOOPING, dirty))
