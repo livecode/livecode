@@ -43,9 +43,6 @@ class MCAVFoundationPlayer;
 - (id)initWithPlayer: (MCAVFoundationPlayer *)player;
 
 - (void)movieFinished: (id)object;
-- (void)currentTimeChanged: (id)object;
-- (void)rateChanged: (id)object;
-- (void)selectionChanged: (id)object;
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context;
 
@@ -79,14 +76,9 @@ public:
 	virtual bool FindTrackWithId(uint32_t id, uindex_t& r_index);
 	virtual void SetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
 	virtual void GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
-    virtual double getDuration(void);
-    virtual double getCurrentTime(void);
     
     void MovieFinished(void);
-    void SelectionFinished(void);
-    void SelectionChanged(void);
-    void CurrentTimeChanged(void);
-    void RateChanged(void);
+    
     AVPlayer *getPlayer(void);
     
 protected:
@@ -97,6 +89,11 @@ private:
 	void Load(const char *filename, bool is_url);
 	void Synchronize(void);
 	void Switch(bool new_offscreen);
+    
+    CMTime CMTimeFromLCTime(uint32_t lc_time);
+    uint32_t CMTimeToLCTime(CMTime cm_time);
+    
+    void HandleCurrentTimeChanged(void);
     
     void CacheCurrentFrame(void);
     static CVReturn MyDisplayLinkCallback (CVDisplayLinkRef displayLink,
@@ -118,6 +115,8 @@ private:
     com_runrev_livecode_MCAVFoundationPlayerView *m_view;
     uint32_t m_selection_start, m_selection_finish;
     uint32_t m_selection_duration;
+    CMTimeScale m_time_scale;
+    
     bool m_play_selection_only : 1;
     bool m_looping : 1;
     
@@ -164,21 +163,6 @@ private:
 - (void)movieFinished: (id)object
 {
     m_av_player -> MovieFinished();
-}
-
-- (void)currentTimeChanged: (id)object
-{
-    m_av_player -> CurrentTimeChanged();
-}
-
-- (void)rateChanged: (id)object
-{
-    m_av_player -> RateChanged();
-}
-
-- (void)selectionChanged: (id)object
-{
-    m_av_player -> SelectionChanged();
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -254,6 +238,8 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_frame_changed_pending = false;
     m_finished = false;
     m_loaded = false;
+    
+    m_time_scale = 0;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -283,19 +269,6 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     [m_lock release];
 }
 
-void MCAVFoundationPlayer::SelectionFinished(void)
-{
-/*
-    if (m_play_selection_only && CMTimeCompare(m_observed_time, CMTimeMake(m_selection_finish, 1000)) >= 0)
-    {
-        if (m_player.rate != 0.0)
-        {
-            [m_player setRate:0.0];
-            [m_player seekToTime:CMTimeMake(m_selection_finish, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-        }
-    }
-    */
-}
 
 void MCAVFoundationPlayer::MovieFinished(void)
 {
@@ -313,7 +286,7 @@ void MCAVFoundationPlayer::MovieFinished(void)
     {
         // PM-2014-07-15: [[ Bug 12812 ]] Make sure we loop within start and finish time when playSelection is true 
         if (m_play_selection_only)
-            [[m_player currentItem] seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            [[m_player currentItem] seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         else
             [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         
@@ -332,6 +305,7 @@ AVPlayer* MCAVFoundationPlayer::getPlayer(void)
     return m_player;
 }
 
+#if 0
 double MCAVFoundationPlayer::getDuration(void)
 {
     AVPlayerItem *t_player_item = [m_player currentItem];
@@ -346,39 +320,12 @@ double MCAVFoundationPlayer::getCurrentTime(void)
 {
     return CMTimeGetSeconds([m_player currentTime]);
 }
+#endif
 
-void MCAVFoundationPlayer::RateChanged(void)
-{
-    if (m_playing && [m_player rate] == 0.0 && getCurrentTime() != getDuration())
-    {
-        m_playing = false;
-        MCPlatformCallbackSendPlayerPaused(this);
-    }
-    else if (!m_playing && [m_player rate] != 0.0)
-    {
-        m_playing = true;
-        MCPlatformCallbackSendPlayerStarted(this);
-    }
-}
-
-void MCAVFoundationPlayer::SelectionChanged(void)
-{
-    if (m_play_selection_only)
-    {
-        // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
-        if (m_selection_duration != 0)
-            [[m_player currentItem] setForwardPlaybackEndTime:CMTimeMake(m_selection_finish, 1000)];
-        else
-            [[m_player currentItem] setForwardPlaybackEndTime:kCMTimeInvalid];
-    }
-    else
-        [[m_player currentItem] setForwardPlaybackEndTime:kCMTimeInvalid];
-}
-
-void MCAVFoundationPlayer::CurrentTimeChanged(void)
+void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
 {
     uint32_t t_current_time;
-    t_current_time = 1000 * CMTimeGetSeconds([m_player currentTime]);
+    t_current_time = CMTimeToLCTime([m_player currentTime]);
     
     if (m_marker_count > 0)
     {
@@ -480,7 +427,7 @@ void MCAVFoundationPlayer::DoUpdateCurrentTime(void *ctxt)
     MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
     
-    t_player -> CurrentTimeChanged();
+    t_player -> HandleCurrentTimeChanged();
 }
 
 void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
@@ -692,13 +639,12 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
 
         // This fixes the issue of pause not being instant when alwaysBuffer = false
         if (IsPlaying() && !m_offscreen)
-        {
-            //SelectionFinished();
-            CurrentTimeChanged();
-        }
+            HandleCurrentTimeChanged();
         
         }];
     
+    
+    m_time_scale = [m_player currentItem] . asset . duration . timescale;
 }
 
 void MCAVFoundationPlayer::Synchronize(void)
@@ -743,9 +689,9 @@ void MCAVFoundationPlayer::Start(double rate)
     {
         if (m_finished)
         {
-            if (m_selection_duration > 0 && m_play_selection_only && (CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_finish, 1000)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_start, 1000)) <= 0))
+            if (m_selection_duration > 0 && m_play_selection_only && (CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_finish)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_start)) <= 0))
             {
-                [m_player seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+                [m_player seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
                 
             }
             
@@ -864,8 +810,8 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
             // Add toleranceBefore/toleranceAfter for accurate scrubbing
-            [[m_player currentItem] seekToTime:CMTimeMake(*(uint32_t *)p_value, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-            CurrentTimeChanged();
+            // MW-2014-07-29: [[ Bug 12989 ]] Make sure we use the duration timescale.
+            [[m_player currentItem] seekToTime:CMTimeFromLCTime(*(uint32_t *)p_value) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
 		{
@@ -894,14 +840,12 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             break;
 		case kMCPlatformPlayerPropertyPlayRate:
             [m_player setRate: *(double *)p_value];
-            //RateChanged();
 			break;
 		case kMCPlatformPlayerPropertyVolume:
             [m_player setVolume: *(uint16_t *)p_value / 100.0f];
 			break;
         case kMCPlatformPlayerPropertyOnlyPlaySelection:
 			m_play_selection_only = *(bool *)p_value;
-            SelectionChanged();
 			break;
 		case kMCPlatformPlayerPropertyLoop:
 			m_looping = *(bool *)p_value;
@@ -922,6 +866,16 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 	}
     
     m_synchronizing = false;
+}
+
+uint32_t MCAVFoundationPlayer::CMTimeToLCTime(CMTime p_cm_time)
+{
+    return CMTimeConvertScale(p_cm_time, m_time_scale, kCMTimeRoundingMethod_QuickTime) . value;
+}
+
+CMTime MCAVFoundationPlayer::CMTimeFromLCTime(uint32_t p_lc_time)
+{
+    return CMTimeMake(p_lc_time, m_time_scale);
 }
 
 static Boolean AVAssetHasType(AVAsset *p_asset, NSString *p_type)
@@ -975,13 +929,14 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 		}
         break;
 		case kMCPlatformPlayerPropertyDuration:
-            *(uint32_t *)r_value = 1000 * CMTimeGetSeconds([m_player currentItem] . asset . duration);
+            *(uint32_t *)r_value = CMTimeToLCTime([m_player currentItem] . asset . duration);
 			break;
 		case kMCPlatformPlayerPropertyTimescale:
-			*(uint32_t *)r_value = [m_player currentItem] . currentTime . timescale;
+            // MW-2014-07-29: [[ Bug 12989 ]] Use the duration timescale.
+			*(uint32_t *)r_value = [m_player currentItem] . asset . duration . timescale;
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
-			*(uint32_t *)r_value = 1000 * CMTimeGetSeconds([m_player currentTime]);
+			*(uint32_t *)r_value = CMTimeToLCTime([m_player currentItem] . currentTime);
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
 			*(uint32_t *)r_value = m_selection_start;
@@ -1063,13 +1018,13 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		case kMCPlatformPlayerTrackPropertyOffset:
         {
 			CMTimeRange t_timeRange = [t_asset_track timeRange];
-            *(uint32_t *)r_value = t_timeRange . start . value;
+            *(uint32_t *)r_value = CMTimeToLCTime(t_timeRange . start);
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyDuration:
         {
             CMTimeRange t_timeRange = [t_asset_track timeRange];
-            *(uint32_t *)r_value = t_timeRange . duration . value;
+            *(uint32_t *)r_value = CMTimeToLCTime(t_timeRange . duration);
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyEnabled:
