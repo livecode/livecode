@@ -269,8 +269,10 @@ bool MCParseMenuString(MCString &r_string, IParseMenuCallback *p_callback, bool 
 		if (t_menuitem . tag . getlength() == 0)
 		{
 			ep . setsvalue(t_menuitem . label);
-			ep . utf8toutf16();
-			if (ep . trytoconvertutf16tonative())
+            // MW-2014-07-29: [[ Bug 13007 ]] Only go UTF8->UTF16->Native if is unicode.
+            if (p_is_unicode)
+                ep . utf8toutf16();
+			if (!p_is_unicode || ep . trytoconvertutf16tonative())
 			{
 				delete t_menuitem . tag . getstring();
 				t_menuitem . tag = ep . getsvalue() . clone();
