@@ -1371,13 +1371,14 @@ void MCScreenDC::createbackdrop_window(void)
     gdkwa.event_mask = GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_FOCUS_CHANGE_MASK
         | GDK_POINTER_MOTION_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_EXPOSURE_MASK;
     gdkwa.x = gdkwa.y = 0;
-    gdkwa.width = gdkwa.height = 0;
+    gdkwa.width = gdkwa.height = 100;
     gdkwa.wclass = GDK_INPUT_OUTPUT;
     gdkwa.visual = getvisual();
     gdkwa.colormap = getcmap();
     gdkwa.window_type = GDK_WINDOW_TOPLEVEL;
     
-    backdrop = gdk_window_new(NULL, &gdkwa, GDK_WA_VISUAL);
+    backdrop = gdk_window_new(getroot(), &gdkwa, GDK_WA_VISUAL);
+    gdk_display_sync(MCdpy);
 }
 
 
@@ -1402,7 +1403,11 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	
 	if (!t_error)	
 	{
-		gdk_window_fullscreen(backdrop);
+        gdk_window_set_functions(backdrop, GdkWMFunction(0));
+        gdk_window_set_decorations(backdrop, GdkWMDecoration(0));
+        gdk_window_set_skip_taskbar_hint(backdrop, TRUE);
+        gdk_window_set_skip_pager_hint(backdrop, TRUE);
+        gdk_window_fullscreen(backdrop);
         gdk_window_show_unraised(backdrop);
 		MCstacks -> refresh();
 	}
@@ -1484,9 +1489,7 @@ void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 }
 
 
-
-
-void MCScreenDC::createbackdrop(MCStringRef color)
+/*void MCScreenDC::createbackdrop(MCStringRef color)
 {
 	if (m_backdrop_pixmap == DNULL &&
             parsecolor(color, backdropcolor))
@@ -1522,7 +1525,7 @@ void MCScreenDC::createbackdrop(MCStringRef color)
 	}
     
     gdk_window_show_unraised(backdrop);
-}
+}*/
 
 
 void MCScreenDC::destroybackdrop()
@@ -1539,18 +1542,7 @@ void MCScreenDC::destroybackdrop()
 }
 
 
-
-
-
-
 Bool MCScreenDC::is_composite_wm ( int screen_id ) 
 {
     return gdk_display_supports_composite(dpy);
 }
-
-
-
-
-
-
-

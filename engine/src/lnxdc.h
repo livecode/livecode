@@ -238,8 +238,8 @@ public:
 
 	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size);
 	
-    virtual void createbackdrop(MCStringRef color);
-	virtual void destroybackdrop();
+    //virtual void createbackdrop(MCStringRef color);
+	void destroybackdrop();
 	
 	void createbackdrop_window(void);
 	Window get_backdrop(void) { return backdrop; };
