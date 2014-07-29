@@ -53,7 +53,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SystemConfiguration/SCDynamicStore.h>
 #include <SystemConfiguration/SCDynamicStoreKey.h>
 #include <SystemConfiguration/SCSchemaDefinitions.h>
-#include <Security/Security.h>
 extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 #endif
 
@@ -104,10 +103,6 @@ extern real8 curtime;
 static char *sslerror = NULL;
 static long post_connection_check(SSL *ssl, char *host);
 static int verify_callback(int ok, X509_STORE_CTX *store);
-
-#ifdef _MACOSX
-extern char *path2utf(char *path);
-#endif
 
 #ifdef _WINDOWS
 extern Boolean wsainit(void);
