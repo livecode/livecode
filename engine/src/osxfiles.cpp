@@ -2043,7 +2043,7 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 			memcpy(&t_mac_folder, p_context . getsvalue() . getstring(), 4);
 			t_mac_folder = MCSwapInt32NetworkToHost(t_mac_folder);
 		}
-		else if (strcmp(p_context . getsvalue() . getstring(), "engine") == 0)
+		else if (p_context . getsvalue() == "engine")
         {
             uint32_t t_path_length;
             t_path_length = 1024;
@@ -2051,7 +2051,7 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
             
             t_found_folder = _NSGetExecutablePath(t_path, &t_path_length) == 0;
             
-            // SN-2014-07-39: [[ Bug 13026 ]] _NSGetExecutablePath might leave symlink or '..' in the path
+            // _NSGetExecutablePath might leave symlinks or '..' in the path
             if (t_found_folder)
             {
                 t_folder_path = MCS_resolvepath(t_path);

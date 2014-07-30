@@ -10,7 +10,7 @@
 	<synonyms>
 	</synonyms>
 
-	<summary>Returns the path to the engine folder on mobile devices.</summary>
+	<summary>Returns the path to the engine folder.</summary>
 
 	<examples>
 <example>get the engine folder</example>
@@ -21,18 +21,25 @@
 		<introduced version="5.0.2">Added.</introduced>
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
-		
+		<changed version="6.7.0">Now supported on Desktop platforms</changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
 	</history>
 
 	<objects>
 	</objects>
 
 	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
 		<ios/>
 		<android/>
 	</platforms>
 
 	<classes>
+		<desktop/>
+		<server/>
 		<mobile/>
 	</classes>
 
@@ -58,6 +65,6 @@
 		</parameters>
 
 	<value></value>
-	<comments>On iOS <b>the engine folder </b>property returns the path to the folder containing the built standalone engine (i.e. the bundle). This is useful for constructing paths to resources that have been copied into the bundle at build time.<p></p><p>On Android <b>the engine folder</b> property returns the (virtual) path to the engine and its assets.</p><p></p><p>This property is read only and is equivalent to the specialFolderPath(&quot;engine&quot;) function.</p></comments>
+	<comments>On iOS <b>the engine folder </b>property returns the path to the folder containing the built standalone engine (i.e. the bundle). This is useful for constructing paths to resources that have been copied into the bundle at build time.<p></p><p>On Android <b>the engine folder</b> property returns the (virtual) path to the engine and its assets.<p></p><p>On Desktop platforms <b>the engine folder</b> property returns the folder of the engine.</p><p></p><p>This property is read only and is equivalent to the specialFolderPath("engine") function.</p></comments>
 	</description>
 </doc>
