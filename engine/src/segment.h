@@ -54,6 +54,10 @@ private:
     MCBlock *m_FirstBlock;
     MCBlock *m_LastBlock;
     
+    // First and last blocks in the visual order
+    MCBlock *m_FirstVisualBlock;
+    MCBlock *m_LastVisualBlock;
+    
     // Boundaries within the line of this segment
     int16_t m_LeftEdge;     // Also serves as x coordinate
     int16_t m_RightEdge;
@@ -85,6 +89,16 @@ public:
     {
         return m_LastBlock;
     }
+    
+    MCBlock* GetFirstVisualBlock() const
+    {
+        return m_FirstVisualBlock;
+    }
+    MCBlock* GetLastVisualBlock() const
+    {
+        return m_LastVisualBlock;
+    }
+    
     void SetParent(MCLine *parent)
     {
         m_Parent = parent;

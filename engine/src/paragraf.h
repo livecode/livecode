@@ -325,6 +325,12 @@ public:
 	{
 		return lines;
 	}
+    
+    // Return the list of segments in the paragraph, if any.
+	MCSegment *getsegments(void) const
+	{
+		return segments;
+	}
 
 	// Make sure style-runs that are next to each other don't have
 	// the same attributes.

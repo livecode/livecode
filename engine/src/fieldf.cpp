@@ -2213,7 +2213,8 @@ void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym ke
 					{
 						tptr = focusedparagraph->prev();
 						tptr->fmovefocus(FT_RIGHTPARA);
-						if (moved != FT_LEFTCHAR)
+                        // AL_2014-07-29: [[ Bug 12896 ]] FT_LEFTCHAR is now FT_BACKCHAR here
+						if (moved != FT_BACKCHAR)
 							tptr->fmovefocus((Field_translations)moved);
 						// MW-2012-01-25: [[ ParaStyles ]] Fetch the cursor rect including any space.
 						trect = tptr->getcursorrect(-1, fixedheight, true);
@@ -2232,7 +2233,8 @@ void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym ke
 						drect.y += focusedparagraph->getheight(fixedheight) - trect.y;
 						tptr = focusedparagraph->next();
 						tptr->fmovefocus(FT_LEFTPARA);
-						if (moved != FT_RIGHTCHAR)
+                        // AL_2014-07-29: [[ Bug 12896 ]] FT_RIGHTCHAR is now FT_FORWARDCHAR here
+						if (moved != FT_FORWARDCHAR)
 							tptr->fmovefocus((Field_translations)moved);
 
 						// MW-2012-01-25: [[ ParaStyles ]] Fetch the cursor rect including any space.

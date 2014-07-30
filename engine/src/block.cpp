@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 #include "font.h"
 #include "path.h"
+#include "segment.h"
 
 #include "exec-interface.h"
 
@@ -994,7 +995,8 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
 			t_cell_clip . x = x - 1;
-			t_cell_clip . width = MCU_max(p_cell_right - x - t_padding * 2, 0.0f);
+            // AL-2014-07-29: [[ Bug 12952 ]] Clip to segment boundaries
+			t_cell_clip . width = MCU_max(segment -> GetWidth() - origin - t_padding * 2, 0.0f);
 
             dc -> cliprect(t_cell_clip);
             dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, kMCDrawTextBreak, is_rtl() ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
@@ -1703,6 +1705,13 @@ coord_t MCBlock::GetCursorX(findex_t fi)
 	if (j > m_size)
 		j = m_size;
     
+    // AL-2014-07-29: [[ Bug 12896 ]] Include tab width in block cursor calculation
+    if (j == m_size && parent -> GetCodepointAtIndex(fi - 1) == '\t')
+    {
+        if (segment -> GetLastBlock() == this)
+            return segment -> GetWidth() - origin;
+    }
+    
     // [[ BiDi Support ]]
     // If the block is RTL, x decreases as fi increases
     if (is_rtl())
@@ -1713,7 +1722,7 @@ coord_t MCBlock::GetCursorX(findex_t fi)
 
 findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool moving_forward)
 {
-    // The x coordinate is relative to the line, not ourselves
+    // The x coordinate is relative to the segment, not ourselves
     x -= getorigin();
     
     // MW-2007-07-05: [[ Bug 5099 ]] If we have an image and are unicode, the char
@@ -2298,6 +2307,7 @@ codepoint_t MCBlock::GetCodepointAtIndex(findex_t p_index) const
 	return parent->GetCodepointAtIndex(m_index + p_index);
 }
 
+// AL-2014-07-29: [[ Bug 12896 ]] The next and previous blocks in the visual order may go over segment boundaries
 MCBlock *MCBlock::GetNextBlockVisualOrder()
 {
     MCBlock *bptr = this;
@@ -2307,6 +2317,10 @@ MCBlock *MCBlock::GetNextBlockVisualOrder()
             return bptr;
         bptr = bptr->next();
     } while (bptr != this);
+    
+    MCSegment *last_segment = parent -> getsegments() -> prev();
+    if (segment != last_segment && this == segment -> GetLastVisualBlock())
+        return segment -> next() -> GetFirstVisualBlock();
     
     return nil;
 }
@@ -2320,6 +2334,10 @@ MCBlock *MCBlock::GetPrevBlockVisualOrder()
             return bptr;
         bptr = bptr->next();
     } while (bptr != this);
+    
+    MCSegment *first_segment = parent -> getsegments();
+    if (segment != first_segment && this == segment -> GetFirstVisualBlock())
+        return segment -> prev() -> GetLastVisualBlock();
     
     return nil;
 }

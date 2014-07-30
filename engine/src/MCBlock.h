@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCParagraph;
 class MCField;
 class MCLine;
+class MCSegment;
 struct MCFieldCharacterStyle;
 
 typedef struct Blockatts
@@ -68,7 +69,10 @@ protected:
     uint2 visual_index;     // Visual ordering index from left to right
     uint8_t direction_level;
 
-	// MW-2012-02-14: [[ FontRefs ]] The concrete font to use for the block.
+    // Store pointer to containing segment for convenience
+    MCSegment *segment;
+	
+    // MW-2012-02-14: [[ FontRefs ]] The concrete font to use for the block.
 	//   (only valid when the block is open).
 	MCFontRef m_font;
 public:
@@ -312,6 +316,16 @@ public:
     MCBlock *GetNextBlockVisualOrder();
     MCBlock *GetPrevBlockVisualOrder();
 	
+    void SetSegment(MCSegment *p_segment)
+    {
+        segment = p_segment;
+    }
+    
+    MCSegment *GetSegment(void)
+    {
+        return segment;
+    }
+    
 	////////////////////
 	
 	// Returns only the "index" component of the range

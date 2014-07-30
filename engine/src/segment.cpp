@@ -64,6 +64,14 @@ void MCSegment::AddBlockRange(MCBlock *first, MCBlock *last)
 {
     m_FirstBlock = first;
     m_LastBlock = last;
+    
+    MCBlock *bptr = m_FirstBlock;
+    do
+    {
+        bptr -> SetSegment(this);
+        bptr = bptr->next();
+    }
+    while (bptr->prev() != m_LastBlock);
 }
 
 coord_t MCSegment::GetContentLength()
@@ -532,6 +540,9 @@ void MCSegment::ResolveDisplayOrder()
         bptr -> SetVisualIndex(i);
         t_width += bptr -> getwidth(NULL);
     }
+    
+    m_FirstVisualBlock = t_visual_order[0];
+    m_LastVisualBlock = t_visual_order[t_block_count - 1];
 }
 
 coord_t MCSegment::GetCursorOffset()
