@@ -1303,10 +1303,12 @@ MCPrinterResult MCCustomPrinterDevice::Begin(const MCPrinterRectangle& p_src_rec
 		if (!StartPage())
 			return PRINTER_RESULT_ERROR;
 
+    // MW-2014-07-30: [[ Bug 12804 ]] Make sure we get left / top round the right way else clipping
+    //   is wrong.
 	// Calculate the convex integer hull of the source rectangle.
 	MCRectangle t_src_rect_hull;
-	t_src_rect_hull . x = (int2)floor(p_src_rect . top);
-	t_src_rect_hull . y = (int2)floor(p_src_rect . left);
+	t_src_rect_hull . x = (int2)floor(p_src_rect . left);
+	t_src_rect_hull . y = (int2)floor(p_src_rect . top);
 	t_src_rect_hull . width = (uint2)(ceil(p_src_rect . right) - floor(p_src_rect . left));
 	t_src_rect_hull . height = (uint2)(ceil(p_src_rect . bottom) - floor(p_src_rect . top));
 
