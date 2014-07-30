@@ -1,0 +1,1 @@
+# Setting the text style in the Text menu does not update correctly
