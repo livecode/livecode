@@ -1592,6 +1592,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		t_value = color;
 		break;
 	case P_TEXT_STYLE:
+        // AL-2014-07-30: [[ Bug 12923 ]] Field relayout may be necessary when setting textStyle in the array style 
+        all = True;
+            
 		// MW-2011-11-23: [[ Array TextStyle ]] If we have an index then change the prop
 		//   to the pseudo add/remove ones. In this case 'value' is the textStyle to process.
 		if (!MCNameIsEmpty(index))
