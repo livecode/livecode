@@ -1217,6 +1217,10 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
                     x11::gdk_x11_ungrab_server();
                     t_done = true;
                     break;
+                    
+                case GDK_GRAB_BROKEN:
+                    t_done = true;
+                    break;
             }
             
             // The event needs to be released
