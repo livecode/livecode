@@ -127,6 +127,11 @@ void MCStack::realize()
         
         window = gdk_window_new(screen->getroot(), &gdkwa, gdk_valid_wa);
         
+        // FG-2014-07-30: [[ Bugfix 12905 ]]
+        // This is necessary otherwise the window manager might ignore the
+        // position that we have specified for the new window
+        view_platform_setgeom(t_rect);
+        
 		// This is necessary to be able to receive drag-and-drop events
         gdk_window_register_dnd(window);
         
