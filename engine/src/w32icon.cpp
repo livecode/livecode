@@ -331,7 +331,8 @@ static HMENU create_icon_menu(MCStringRef p_menu)
 	{
 		// Scan for the next newline to determine the end of the item
 		uindex_t t_item_end;
-		if (MCStringFirstIndexOfChar(p_menu, '\n', t_offset, kMCStringOptionCompareExact, t_item_end))
+        // AL-2014-07-30: [[ Bug 13029 ]] If there is no return character, then the whole string is one menuitem
+		if (!MCStringFirstIndexOfChar(p_menu, '\n', t_offset, kMCStringOptionCompareExact, t_item_end))
 			t_item_end = t_length;
 
 		// Scan for the tag separator
