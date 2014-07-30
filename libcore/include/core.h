@@ -122,6 +122,17 @@ typedef __builtin_va_list va_list;
 typedef uint32_t size_t;
 #endif
 
+// AL-2014-07-30: [[ Bug 13000 ]] Ensure ___LITTLE_ENDIAN__ is defined appropriately
+#ifdef __ppc__
+#undef __LITTLE_ENDIAN__
+#undef __BIG_ENDIAN__
+#define __BIG_ENDIAN__ 1
+#else
+#undef __LITTLE_ENDIAN__
+#undef __BIG_ENDIAN__
+#define __LITTLE_ENDIAN__ 1
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _DEBUG
