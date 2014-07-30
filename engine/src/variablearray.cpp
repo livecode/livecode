@@ -1771,6 +1771,11 @@ IO_stat MCVariableArray::load(MCObjectInputStream& p_stream, bool p_merge)
 		return t_stat;
 	}
 
+    // MW-2014-07-30: [[ Bug 12844 ]] If the number of entries read is bigger than
+    //   2^32 then its a malformed array record so return error.
+    if (t_nfilled >= 1U<<31)
+        return IO_ERROR;
+    
 	if (t_stat == IO_NORMAL)
 	{
 		uint32_t t_table_size;
