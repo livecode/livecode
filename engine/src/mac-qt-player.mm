@@ -439,9 +439,6 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
     extern NSString **QTMovieTimeDidChangeNotification_ptr;
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: *QTMovieTimeDidChangeNotification_ptr object: m_movie];
     
-    extern NSString **QTMovieRateDidChangeNotification_ptr;
-    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(rateChanged:) name: *QTMovieRateDidChangeNotification_ptr object: m_movie];
-    
 	// This method seems to be there - but isn't 'public'. Given QTKit is now deprecated as long
 	// as it works on the platforms we support, it should be fine.
 	[m_movie setDraggable: NO];
