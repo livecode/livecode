@@ -1207,7 +1207,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             
             srect.x = sx;
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
-            srect.width = x + segments -> GetCursorOffset() + t_first_visual->getorigin() - sx;
+            srect.width = x + bptr -> GetSegment() -> GetCursorOffset() + t_first_visual->getorigin() - sx;
             dc->fillrect(srect);
         }
         
@@ -1218,7 +1218,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             MCBlock *t_last_visual = bptr -> GetSegment() -> GetLastVisualBlock();
             
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
-            srect.x = x + segments -> prev() -> GetCursorOffset() + t_last_visual->getorigin() + t_last_visual->getwidth();
+            srect.x = x + bptr -> GetSegment() -> GetCursorOffset() + t_last_visual->getorigin() + t_last_visual->getwidth();
             srect.width = swidth - (srect.x - sx);
             dc->fillrect(srect);
         }
