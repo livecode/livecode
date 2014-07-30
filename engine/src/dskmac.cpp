@@ -7837,9 +7837,25 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         CFStringRef t_cf_document;
         t_cf_document = NULL;
+        
+        // SN-2014-07-30: [[ Bug 13024 ]] URLs for local files aren't URL-encoded, and the "file:"
+        //  prefix is not to be part of the URL.
+        MCAutoStringRef t_url;
+        bool t_is_path;
+        if (MCStringBeginsWithCString(p_document, (const char_t*)"file:", kMCStringOptionCompareCaseless))
+        {
+            MCStringCopySubstring(p_document, MCRangeMake(5, MCStringGetLength(p_document) - 5), &t_url);
+            t_is_path = true;
+        }
+        else
+        {
+            t_url = p_document;
+            t_is_path = false;
+        }
+        
         if (t_success)
         {
-            if (!MCStringConvertToCFStringRef(p_document, t_cf_document))
+            if (!MCStringConvertToCFStringRef(*t_url, t_cf_document))
                 t_success = false;
         }
         
@@ -7847,7 +7863,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         t_cf_url = NULL;
         if (t_success)
         {
-            t_cf_url = CFURLCreateWithString(kCFAllocatorDefault, t_cf_document, NULL);
+            // SN-2014-07-30: [[ Bug 13024 ]] Local file URLs are not built like standard URLs since they
+            //  are not URL-encoded
+            if (t_is_path)
+                t_cf_url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, t_cf_document, kCFURLPOSIXPathStyle, False);
+            else
+                t_cf_url = CFURLCreateWithString(kCFAllocatorDefault, t_cf_document, NULL);
+            
             if (t_cf_url == NULL)
                 t_success = false;
         }
