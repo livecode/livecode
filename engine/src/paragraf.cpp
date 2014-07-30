@@ -1202,12 +1202,8 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         // Draw the left-hand side, if required
         if (t_show_front || startindex < i)
         {
-            MCBlock *t_first_visual;
-            t_first_visual = firstblock;
-            
-            // TODO: avoid this loop
-            while (t_first_visual->GetPrevBlockVisualOrder() != nil)
-                t_first_visual = t_first_visual->GetPrevBlockVisualOrder();
+            // AL-2014-07-30: [[ Bug 12924 ]] Get first visual block in the line for front selection fill
+            MCBlock *t_first_visual = bptr -> GetSegment() -> GetFirstVisualBlock();
             
             srect.x = sx;
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
@@ -1218,12 +1214,8 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         // Draw the right-hand side, if required
         if (t_show_back || endindex > i + l)
         {
-            MCBlock *t_last_visual;
-            t_last_visual = lastblock;
-            
-            // TODO: avoid this loop
-            while (t_last_visual->GetNextBlockVisualOrder() != nil)
-                t_last_visual = t_last_visual->GetNextBlockVisualOrder();
+            // AL-2014-07-30: [[ Bug 12924 ]] Get last visual block in the line for back selection fill
+            MCBlock *t_last_visual = bptr -> GetSegment() -> GetLastVisualBlock();
             
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
             srect.x = x + segments -> prev() -> GetCursorOffset() + t_last_visual->getorigin() + t_last_visual->getwidth();

@@ -2308,18 +2308,19 @@ codepoint_t MCBlock::GetCodepointAtIndex(findex_t p_index) const
 }
 
 // AL-2014-07-29: [[ Bug 12896 ]] The next and previous blocks in the visual order may go over segment boundaries
+// AL-2014-07-30: [[ Bug 12924 ]] Calculate next and previous blocks more efficiently (and correctly).
 MCBlock *MCBlock::GetNextBlockVisualOrder()
 {
-    MCBlock *bptr = this;
-    do
+    MCBlock *bptr = GetSegment() -> GetFirstBlock();
+    while (bptr != GetSegment() -> GetLastBlock())
     {
         if (bptr->visual_index == visual_index + 1)
             return bptr;
         bptr = bptr->next();
-    } while (bptr != this);
+    }
     
     MCSegment *last_segment = parent -> getsegments() -> prev();
-    if (segment != last_segment && this == segment -> GetLastVisualBlock())
+    if (segment != last_segment)
         return segment -> next() -> GetFirstVisualBlock();
     
     return nil;
@@ -2327,16 +2328,16 @@ MCBlock *MCBlock::GetNextBlockVisualOrder()
 
 MCBlock *MCBlock::GetPrevBlockVisualOrder()
 {
-    MCBlock *bptr = this;
-    do
+    MCBlock *bptr = GetSegment() -> GetFirstBlock();
+    while (bptr != GetSegment() -> GetLastBlock())
     {
         if (bptr->visual_index == visual_index - 1)
             return bptr;
         bptr = bptr->next();
-    } while (bptr != this);
+    }
     
     MCSegment *first_segment = parent -> getsegments();
-    if (segment != first_segment && this == segment -> GetFirstVisualBlock())
+    if (segment != first_segment)
         return segment -> prev() -> GetLastVisualBlock();
     
     return nil;
