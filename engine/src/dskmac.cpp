@@ -49,6 +49,8 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
+#include <mach-o/dyld.h>
+
 #include "foundation.h"
 
 #include <Security/Authorization.h>
@@ -5509,6 +5511,30 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         if (MCS_mac_specialfolder_to_mac_folder(MCNameGetString(p_type), t_mac_folder, t_domain))
             t_found_folder = true;
+        // SN-2014-07-30: [[ Bug 13026 ]] specialFolderPath for Mac
+        else if (MCNameIsEqualToCString(p_type, "engine", kMCStringOptionCompareCaseless))
+        {
+            uint32_t t_path_length;
+            t_path_length = 1024;
+            char t_path[1024];
+            char *t_folder_path;
+            
+            // _NSGetExecutablePath might leave symlinks or '..' in the path
+            if (_NSGetExecutablePath(t_path, &t_path_length) == 0)
+            {
+                t_folder_path = MCS_resolvepath(t_path);
+                char *t_last_slash;
+                t_last_slash = strrchr(t_folder_path, '/');
+                
+                if (t_last_slash != NULL)
+                    *t_last_slash = '\0';
+            
+                if (MCStringCreateWithCString(t_folder_path, r_folder))
+                    return True;
+            }
+            
+            return False;
+        }
         else if (MCStringGetLength(MCNameGetString(p_type)) == 4 &&
                  MCStringIsNative(MCNameGetString(p_type)))
         {

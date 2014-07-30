@@ -1411,6 +1411,22 @@ public:
             ep.setcstring(c_dir);
         else if (ep.getsvalue() == "temporary")
             ep.setcstring("/tmp");
+        // SN-2014-07-30: [[ Bug 13029 ]] specialfolderpath added for Linux
+        else if (ep.getsvalue() == "engine")
+        {
+            char* t_executable;
+            MCMemoryAllocate(1024, t_executable);
+            memset(t_executable, 0, 1024);
+            readlink("/proc/self/exe", t_executable, 1024);
+            
+            char *t_last_slash;
+            t_last_slash = strrchr(t_executable, '/');
+            if (t_last_slash != 0)
+                *t_last_slash = '\0';
+            
+            ep.setcstring(t_executable);
+            MCMemoryDeallocate(t_executable);
+        }
         else
         {
             MCresult->sets("not supported");
@@ -1428,6 +1444,20 @@ public:
             return MCStringFormat(r_folder, "%@/Desktop", *t_home);
         else if (MCNameIsEqualTo(p_type, MCN_home, kMCCompareCaseless))
             return MCStringCopy(*t_home, r_folder);
+        // SN-2014-07-30: [[ Bug 13029 ]] specialfolderpath added for Linux
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+        {
+            MCAutoPointer<char> t_executable;
+            t_executable . New(1024);
+            readlink("/proc/self/exe", t_executable.Ptr(), 1024);
+            
+            char *t_last_slash;
+            t_last_slash = strrchr(t_executable.Ptr(), '/');
+            if (t_last_slash != 0)
+                *t_last_slash = '\0';
+            
+            return MCStringCreateWithSysString(*t_executable, r_folder);
+        }
         else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
             return MCStringCreateWithCString("/tmp", r_folder);
 
