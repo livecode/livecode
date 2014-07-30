@@ -1037,7 +1037,7 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	t_font . handle = t_font_handle;
 
 	bool t_success;
-	t_success = context -> device -> DrawText((const MCCustomPrinterGlyph *)p_span -> glyphs, p_span -> glyph_count, (const char *)t_bytes, t_clusters, t_font, context -> paint, context -> transform, context -> clip);
+	t_success = context -> device -> DrawText((const MCCustomPrinterGlyph *)p_span -> glyphs, p_span -> glyph_count, (const char *)t_bytes, t_byte_count, t_clusters, t_font, context -> paint, context -> transform, context -> clip);
 
 	MCMemoryDeleteArray(t_clusters);
 	
@@ -1727,9 +1727,9 @@ public:
 		return true;
 	}
 
-	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
+	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
 	{
-		if (!m_target -> DrawText(glyphs, glyph_count, text, clusters, font, paint, transform, p_clip))
+		if (!m_target -> DrawText(glyphs, glyph_count, text_bytes, text_byte_count, clusters, font, paint, transform, p_clip))
 			return Failed("DrawText");
 		return true;
 	}
@@ -1916,9 +1916,9 @@ public:
 		return true;
 	}
 
-	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
+	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
 	{
-		Enter("begin text '%s' with clip (%f, %f)-(%f, %f)", text, 
+		Enter("begin text '%s' with clip (%f, %f)-(%f, %f)", text_bytes, 
 				p_clip . left, p_clip . top, p_clip . right, p_clip . bottom);
 		for(uint32_t i = 0; i < glyph_count; i++)
 			Print("glyph %d at (%f, %f)", glyphs[i] . id, glyphs[i] . x, glyphs[i] . y);
