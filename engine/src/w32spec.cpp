@@ -1832,6 +1832,28 @@ void MCS_getspecialfolder(MCExecPoint &ep)
 			if (GetWindowsDirectoryA(ep.getbuffer(PATH_MAX), PATH_MAX))
 				wasfound = True;
 		}
+		// SN-2014-07-30: [[ Bug 13026 ]] specialFolderPath("engine") added for Windows
+		else if (ep.getsvalue() == "engine")
+		{
+			char * t_executable;
+			MCMemoryAllocate(PATH_MAX, t_executable);
+			DWORD t_length;
+			t_length = GetModuleFileNameA(NULL, t_executable, PATH_MAX);
+
+			if (t_length != 0)
+			{
+				char *t_last_slash;
+				t_last_slash = strrchr(t_executable, '\\');
+
+				if (t_last_slash != 0)
+					*t_last_slash = 0;
+	
+				ep.grabbuffer(t_executable, strlen(t_executable));
+				t_executable = NULL;
+				wasfound = True;
+			}
+			MCMemoryDeallocate(t_executable);
+		}
 		else
 		{
 			if (ep.ton() == ES_NORMAL)
