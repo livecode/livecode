@@ -108,12 +108,12 @@ bool MCEncodedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_fr
 
 bool MCEncodedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 {
-	MCGImageFrame *t_frame = nil;
+	MCGImageFrame t_frame;
 	if (!LockImageFrame(0, 1.0, t_frame))
 		return false;
 
-	r_width = MCGImageGetWidth(t_frame->image);
-	r_height = MCGImageGetHeight(t_frame->image);
+	r_width = MCGImageGetWidth(t_frame.image);
+	r_height = MCGImageGetHeight(t_frame.image);
 
 	UnlockImageFrame(0, t_frame);
 
@@ -128,7 +128,7 @@ uint32_t MCEncodedImageRep::GetDataCompression()
 	if (m_have_geometry)
 		return m_compression;
 
-	MCGImageFrame *t_frame = nil;
+	MCGImageFrame t_frame;
 	if (LockImageFrame(0, 1.0, t_frame))
 		UnlockImageFrame(0, t_frame);
 

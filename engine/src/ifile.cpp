@@ -188,7 +188,7 @@ bool MCImage::decompressbrush(MCGImageRef &r_brush)
 
 	bool t_success = true;
 
-	MCGImageFrame *t_frame = nil;
+	MCGImageFrame t_frame;
 
 	// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: We try here to acquire the brush
 	// bitmap at 1.0 scale, but currently ignore the set density value of the returned frame.
@@ -196,10 +196,12 @@ bool MCImage::decompressbrush(MCGImageRef &r_brush)
 	t_success = m_rep->LockImageFrame(0, 1.0, t_frame);
 
 	if (t_success)
-		r_brush = MCGImageRetain(t_frame->image);
+    {
+		r_brush = MCGImageRetain(t_frame.image);
 
-	m_rep->UnlockImageFrame(0, t_frame);
-
+        m_rep->UnlockImageFrame(0, t_frame);
+    }
+    
 	return t_success;
 }
 
@@ -210,9 +212,9 @@ void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density)
 		/* OVERHAUL - REVISIT: for the moment, prepared images are premultiplied
 		 * as we expect them to be rendered, but if not then this is actually
 		 * causing more work to be done than needed */
-		MCGImageFrame *t_frame = nil;
-		p_rep->LockImageFrame(0, p_density, t_frame);
-		p_rep->UnlockImageFrame(0, t_frame);
+		MCGImageFrame t_frame;
+		if (p_rep->LockImageFrame(0, p_density, t_frame))
+            p_rep->UnlockImageFrame(0, t_frame);
 	}
 }
 
