@@ -3829,7 +3829,8 @@ static void split_find_end_of_element_and_key(const void *sptr, uindex_t length,
     MCRange t_key_found_range, t_del_found_range;
     
     t_del_found = MCUnicodeFind(sptr, length, native, p_del, p_del_length, p_del_native, (MCUnicodeCompareOption)p_options, t_del_found_range);
-    t_key_found = MCUnicodeFind(sptr, length, native, p_key, p_key_length, p_key_native, (MCUnicodeCompareOption)p_options, t_del_found_range);
+    // SN-2014-07-29: [[ Bug 13018 ]] Use t_key_found_range for the key, not t_del_found_range
+    t_key_found = MCUnicodeFind(sptr, length, native, p_key, p_key_length, p_key_native, (MCUnicodeCompareOption)p_options, t_key_found_range);
     
     if (!t_key_found)
         r_key_end = length;
