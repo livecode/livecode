@@ -173,7 +173,7 @@ void MCStack::setmodalhints()
 	if (mode == WM_MODAL || mode == WM_SHEET)
 	{
 		wmspec_change_state(window, XInternAtom(MCdpy, "_NET_WM_STATE_MODAL", True), None, true);
-		XSetTransientForHint(MCdpy, window, mode == WM_SHEET ? parentwindow : None);
+		XSetTransientForHint(MCdpy, window, mode == WM_SHEET ? getparentwindow() : None);
 	}
 }
 
