@@ -71,9 +71,7 @@ public:
     virtual void GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
     
     void MovieFinished(void);
-    void SelectionChanged(void);
     void CurrentTimeChanged(void);
-    void RateChanged(void);
     
 protected:
     virtual void Realize(void);
@@ -135,16 +133,6 @@ private:
 - (void)currentTimeChanged: (id)object
 {
     m_player -> CurrentTimeChanged();
-}
-
-- (void)rateChanged: (id)object
-{
-    m_player -> RateChanged();
-}
-
-- (void)selectionChanged: (id)object
-{
-    m_player -> SelectionChanged();
 }
 
 @end
@@ -213,27 +201,7 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
 void MCQTKitPlayer::MovieFinished(void)
 {
     m_playing = false;
-    MCPlatformCallbackSendPlayerStopped(this);
-}
-
-void MCQTKitPlayer::RateChanged(void)
-{
-    if (m_playing && [m_movie rate] == 0.0 && do_QTTimeCompare([m_movie currentTime], [m_movie duration]) != 0)
-    {
-        m_playing = false;
-        MCPlatformCallbackSendPlayerPaused(this);
-    }
-    else if (!m_playing && [m_movie rate] != 0.0)
-    {
-        m_playing = true;
-        MCPlatformCallbackSendPlayerStarted(this);
-    }
-}
-
-void MCQTKitPlayer::SelectionChanged(void)
-{
-    if (!m_synchronizing)
-        MCPlatformCallbackSendPlayerSelectionChanged(this);
+    MCPlatformCallbackSendPlayerFinished(this);
 }
 
 void MCQTKitPlayer::CurrentTimeChanged(void)
@@ -472,12 +440,6 @@ void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
     
     extern NSString **QTMovieTimeDidChangeNotification_ptr;
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: *QTMovieTimeDidChangeNotification_ptr object: m_movie];
-    
-    extern NSString **QTMovieRateDidChangeNotification_ptr;
-    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(rateChanged:) name: *QTMovieRateDidChangeNotification_ptr object: m_movie];
-    
-    extern NSString **QTMovieSelectionDidChangeNotification_ptr;
-    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(selectionChanged:) name: *QTMovieSelectionDidChangeNotification_ptr object: m_movie];
     
 	// This method seems to be there - but isn't 'public'. Given QTKit is now deprecated as long
 	// as it works on the platforms we support, it should be fine.

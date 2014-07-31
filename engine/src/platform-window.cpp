@@ -62,6 +62,7 @@ MCPlatformWindow::MCPlatformWindow(void)
 	m_is_visible = false;
 	m_is_focused = false;
 	m_is_iconified = false;
+    m_is_realized = false;
 }
 
 MCPlatformWindow::~MCPlatformWindow(void)
@@ -125,7 +126,8 @@ void MCPlatformWindow::Show(void)
 		return;
 	
 	// Make sure the window has been created.
-	RealizeAndNotify();
+    if (!m_is_realized)
+        RealizeAndNotify();
 	
 	// Update the state.
 	m_is_visible = true;
@@ -475,7 +477,7 @@ void MCPlatformWindow::DetachObject(void *p_object)
 	for(uindex_t i = 0; i < m_attachment_count; i++)
 		if (m_attachments[i] . object == p_object)
 		{
-			if (m_is_visible)
+			if (m_is_realized)
 				m_attachments[i] . callback(m_attachments[i] . object, false);
 			MCMemoryMove(m_attachments + i, m_attachments + i + 1, (m_attachment_count - i - 1) * sizeof(m_attachments[0]));
 			m_attachment_count -= 1;
@@ -485,7 +487,9 @@ void MCPlatformWindow::DetachObject(void *p_object)
 
 void MCPlatformWindow::RealizeAndNotify(void)
 {
-	DoRealize();
+    m_is_realized = true;
+	
+    DoRealize();
 	
 	for(uindex_t i = 0; i < m_attachment_count; i++)
 		m_attachments[i] . callback(m_attachments[i] . object, true);

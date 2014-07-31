@@ -364,8 +364,10 @@ Boolean MCCard::kfocusnext(Boolean top)
 				if (kfocused == NULL)
 					kfocused = tptr;
 			}
-			kfocused->getref()->kfocus();
+            // MW-2014-07-29: [[ Bug 13001 ]] Sync the view focus before the engine state
+            //   (otherwise the engine state can change due to script).
 			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+			kfocused->getref()->kfocus();
 			done = True;
 			break;
 		}
@@ -419,8 +421,10 @@ Boolean MCCard::kfocusprev(Boolean bottom)
 				if (kfocused == NULL)
 					kfocused = tptr;
 			}
-			kfocused->getref()->kfocus();
+            // MW-2014-07-29: [[ Bug 13001 ]] Sync the view focus before the engine state
+            //   (otherwise the engine state can change due to script).
 			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+			kfocused->getref()->kfocus();
 			done = True;
 			break;
 		}
@@ -678,8 +682,11 @@ Boolean MCCard::mdown(uint2 which)
 		MCControl *oldfocused = mfocused->getref();
         
         // AL-2013-01-14: [[ Bug 11343 ]] Add timer if the object handles mouseStillDown in the behavior chain.
-        if (oldfocused -> handlesmessage(MCM_mouse_still_down))
-            MCscreen->addtimer(oldfocused, MCM_idle, MCidleRate);
+        // MW-2014-07-29: [[ Bug 13010 ]] Make sure we use the deepest mfocused child.
+        MCControl *t_child_oldfocused = getmfocused();
+        if (t_child_oldfocused != NULL &&
+            t_child_oldfocused -> handlesmessage(MCM_mouse_still_down))
+            MCscreen->addtimer(t_child_oldfocused, MCM_idle, MCidleRate);
 
 		if (!mfocused->getref()->mdown(which)
 		        && getstack()->gettool(this) == T_BROWSE)

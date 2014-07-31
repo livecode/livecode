@@ -275,7 +275,7 @@ void MCPlayer::GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time)
 
 void MCPlayer::SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time)
 {
-	setcurtime(p_time);
+	setcurtime(p_time, false);
 	if (isbuffering())
 		Redraw();
 }
@@ -359,7 +359,7 @@ void MCPlayer::SetStartTime(MCExecContext& ctxt, uinteger_t* p_time)
 				endtime = starttime;
 #endif
 	}
-	setselection();
+	setselection(false);
 }
 
 void MCPlayer::GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time)
@@ -386,7 +386,7 @@ void MCPlayer::SetEndTime(MCExecContext& ctxt, uinteger_t* p_time)
 				starttime = endtime;
 #endif
 	}
-	setselection();
+	setselection(false);
 }
 
 void MCPlayer::GetShowBadge(MCExecContext& ctxt, bool& r_setting)

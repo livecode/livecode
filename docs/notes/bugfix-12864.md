@@ -1,0 +1,1 @@
+# The contents of a folder added to the Copy Files section of the Standalone Application Settings are not copied during a standalone build when it's a subfolder of the defaultFolder and the defaultFolder contains the main stack file.

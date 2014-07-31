@@ -927,8 +927,10 @@ void MCBlock::split(findex_t p_index)
 			// MW-2012-09-19: [[ Bug 10239 ]] The tab difference can now be zero, in
 			//   the non-vGrid case, if this is the case then just take lasttab to be
 			//   x.
+            // MW-2014-07-29: [[ Bug 12944 ] Make sure we round x to an int, otherwise the
+            //   rounding up to nearest tab code becomes a little bit broken.
 			if (diff != 0)
-				lasttab = tabs[ntabs - 1] + diff * ((x - tabs[ntabs - 1]) / diff + 1);
+				lasttab = tabs[ntabs - 1] + diff * (((int)ceilf(x) - tabs[ntabs - 1]) / diff + 1);
 			else
 				lasttab = x;
 		}

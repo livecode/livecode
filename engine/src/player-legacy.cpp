@@ -1340,7 +1340,7 @@ uint4 MCPlayer::getmoviecurtime()
 #endif
 }
 
-void MCPlayer::setcurtime(uint4 newtime)
+void MCPlayer::setcurtime(uint4 newtime, bool notify)
 {
 	lasttime = newtime;
 #ifdef FEATURE_QUICKTIME
@@ -3731,31 +3731,51 @@ Boolean MCPlayer::avi_prepare(void)
 	//stretched to fit the destination rectangle on the display
 	MCI_DGV_RECT_PARMS mciRect;
 	mciSendCommandA(deviceID, MCI_WHERE, MCI_DGV_WHERE_SOURCE,
-                    (DWORD)(LPSTR)&mciRect);
-	formattedheight = (uint2)mciRect.rc.bottom;
-	formattedwidth = (uint2)mciRect.rc.right;
-    
+
+    (DWORD)(LPSTR)&mciRect);
+
+	MCRectangle t_formattedrect;
+	t_formattedrect = MCRectangleMake(0, 0, mciRect.rc.right, mciRect.rc.bottom);
+
+	// IM-2014-07-29: [[ Bug 12979 ]] Transform formatted rect to stack coords
+	t_formattedrect = MCRectangleGetTransformedInterior(t_formattedrect, MCGAffineTransformInvert(getstack()->getdevicetransform()));
+
+	formattedwidth = t_formattedrect.width;
+	formattedheight = t_formattedrect.height;
+
 	// Note that the Right and Bottom members of RECT structures in MCI
 	// are unusual; rc.right is set to the rectangle's width, and rc.bottom
 	// is set to the rectangle's height.
 	MCRectangle trect = rect;
 	if (!(flags & F_LOCK_LOCATION))
 	{
+		// IM-2014-07-29: [[ Bug 12979 ]] Transform player rect to device coords
+		trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+
 		int2 x = trect.x + (trect.width >> 1);
 		int2 y = trect.y + (trect.height >> 1);
 		trect.width = (uint2)(mciRect.rc.right * scale);
 		trect.height = (uint2)(mciRect.rc.bottom * scale);
 		trect.x = x - (trect.width >> 1);
 		trect.y = y - (trect.height >> 1);
+		
+		// IM-2014-07-29: [[ Bug 12979 ]] Transform formatted rect to stack coords
+		rect = MCRectangleGetTransformedInterior(trect, MCGAffineTransformInvert(getstack()->getdevicetransform()));
+
 		if (flags & F_SHOW_BORDER)
 			rect = MCU_reduce_rect(trect, -borderwidth);
 		else
 			rect = trect;
 	}
 	else
+	{
 		if (flags & F_SHOW_BORDER)
 			trect = MCU_reduce_rect(trect, borderwidth);
-    
+
+		// IM-2014-07-29: [[ Bug 12979 ]] Transform player rect to device coords
+		trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+	}
+
 	// Create the playing window. Make it bigger for the border
 	// Center the movie in the playing window
 	hwndMovie = (MCSysWindowHandle)create_player_child_window(trect, (HWND)getstack()->getrealwindow(), MC_VIDEO_WIN_CLASS_NAME);
@@ -3923,13 +3943,18 @@ void MCPlayer::avi_setrect(const MCRectangle& nrect)
 	if (!hwndMovie)
 		return;
     
-	MoveWindow((HWND)hwndMovie,rect.x,rect.y,rect.width,rect.height,True);
+	// IM-2014-07-29: [[ Bug 12979 ]] Transform player rect to device coords
+	MCRectangle trect;
+	trect = MCRectangleGetTransformedBounds(nrect, getstack()->getdevicetransform());
+    
+	MoveWindow((HWND)hwndMovie,trect.x,trect.y,trect.width,trect.height,True);
+
 	MCI_DGV_PUT_PARMS mciPut;
 	memset(&mciPut, 0, sizeof(MCI_DGV_PUT_PARMS));
 	mciPut.rc.left = 0; //relative to hwndMovie's coord
 	mciPut.rc.top = 0;  //relative to hwndMovie's coord
-	mciPut.rc.right = rect.width;
-	mciPut.rc.bottom = rect.height;
+	mciPut.rc.right = trect.width;
+	mciPut.rc.bottom = trect.height;
 	mciSendCommandA(deviceID, MCI_PUT, MCI_DGV_RECT | MCI_DGV_PUT_DESTINATION, (DWORD)(LPSTR)&mciPut);
 	
 	MCI_DGV_UPDATE_PARMS gp;
@@ -3938,8 +3963,8 @@ void MCPlayer::avi_setrect(const MCRectangle& nrect)
 	gp.hDC = GetDC((HWND)hwndMovie);
 	gp.rc.left = 0;
 	gp.rc.right = 0;
-	gp.rc.right = rect.width;
-	gp.rc.bottom = rect.height;
+	gp.rc.right = trect.width;
+	gp.rc.bottom = trect.height;
 	mciSendCommandA(deviceID, MCI_UPDATE, MCI_DGV_UPDATE_HDC | MCI_DGV_UPDATE_PAINT , (DWORD)&gp);
 	ReleaseDC((HWND)hwndMovie, gp.hDC);
 }

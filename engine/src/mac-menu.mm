@@ -663,9 +663,11 @@ bool MCPlatformPopUpMenu(MCPlatformMenuRef p_menu, MCPlatformWindowRef p_window,
 	}
 	else
 		MCMacPlatformMapScreenMCPointToNSPoint(p_location, t_location);
-
+    
+    // MW-2014-07-29: [[ Bug 12990 ]] If item is UINDEX_MAX then don't specify an item, thus preventing
+    //   one from being highlighted.
 	bool t_result;
-	t_result = [t_menu popUpMenuPositioningItem: [t_menu itemAtIndex: p_item] atLocation: t_location inView: t_view];
+	t_result = [t_menu popUpMenuPositioningItem: p_item == UINDEX_MAX ? nil : [t_menu itemAtIndex: p_item] atLocation: t_location inView: t_view];
 	
 	MCMacPlatformSyncMouseAfterTracking();
 	

@@ -398,7 +398,9 @@ void MCButton::macopenmenu(void)
 	{
 		case WM_COMBO:
 		case WM_OPTION:
-			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), menuhistory - 1))
+            // MW-2014-07-29: [[ Bug 12990 ]] If menuhistory is not set, then make sure we don't highlight
+            //   an item (Platform layer indices start at 0, so map no item to UINDEX_MAX).
+			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), menuhistory == 0 ? UINDEX_MAX : menuhistory - 1))
 			{
 				setmenuhistoryprop(s_popup_menuitem + 1);
 				
@@ -424,7 +426,8 @@ void MCButton::macopenmenu(void)
 		case WM_PULLDOWN:
 		case WM_CASCADE:
 		case WM_POPUP:
-			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), 0))
+            // MW-2014-07-29: [[ Bug 12990 ]] Popups always popup without an item selected.
+			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), UINDEX_MAX))
 			{
 				setmenuhistoryprop(s_popup_menuitem + 1);
 				

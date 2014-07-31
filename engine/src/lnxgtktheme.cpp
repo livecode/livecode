@@ -199,12 +199,13 @@ static GtkWidgetState getpartandstate(const MCWidgetInfo &winfo, GtkThemeWidgetT
 		break;
 	case WTHEME_TYPE_SMALLSCROLLBAR:
 		{
+			// FG-2014-07-30: [[ Bugfix 13025 ]] Linux spinboxes were inverted
 			moztype = MOZ_GTK_SPINBUTTON;
-			if(winfo.part == WTHEME_PART_ARROW_INC)
+			if(winfo.part == WTHEME_PART_ARROW_DEC)
 			{
 				flags = GTK_POS_TOP;
 			}
-			else if(winfo.part == WTHEME_PART_ARROW_DEC)
+			else if(winfo.part == WTHEME_PART_ARROW_INC)
 			{
 				flags = GTK_POS_BOTTOM;
 			}
@@ -851,9 +852,10 @@ Widget_Part MCNativeTheme::hittestspinbutton(const MCWidgetInfo &winfo,
 	brect.y = buttonrect.y;
 	brect.width = buttonrect.width;
 
+	// FG-2014-07-30: [[ Bugfix 13025 ]] Spinbox arrows were inverted
 	brect.height = buttonrect.height;
 	if(MCU_point_in_rect(brect, mx, my))
-		wpart = WTHEME_PART_ARROW_INC;
+		wpart = WTHEME_PART_ARROW_DEC;
 	if(wpart == WTHEME_PART_UNDEFINED)
 	{
 		spinbutton_get_rects(GTK_ARROW_DOWN, &rect, buttonrect, arrowrect);
@@ -862,7 +864,7 @@ Widget_Part MCNativeTheme::hittestspinbutton(const MCWidgetInfo &winfo,
 		brect.width = buttonrect.width;
 		brect.height = buttonrect.height;
 		if(MCU_point_in_rect(brect, mx, my))
-			wpart = WTHEME_PART_ARROW_DEC;
+			wpart = WTHEME_PART_ARROW_INC;
 	}
 	return wpart;
 }

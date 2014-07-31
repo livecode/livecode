@@ -1137,49 +1137,11 @@ void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
     t_player = find_player(p_player);
     if (t_player == nil)
         return;
-    
-    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
-    MCParameter *t_param;
-    t_param = new MCParameter();
-    t_param -> setn_argument(t_player -> getmoviecurtime());
-    
-    t_player -> currenttimechanged(t_param);
 
+    t_player -> currenttimechanged();
 }
 
-void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef p_player)
-{
-    MCPlayer *t_player;
-    t_player = find_player(p_player);
-    if (t_player == nil)
-        return;
-    
-    // MW-2014-04-24: [[ Bug ]] Make sure we update the start/end time of the
-    //   player.
-    t_player -> selectionchanged();
-}
-
-void MCPlatformHandlePlayerStarted(MCPlatformPlayerRef p_player)
-{
-    MCPlayer *t_player;
-    t_player = find_player(p_player);
-    if (t_player == nil)
-        return;
-    
-    t_player -> timer(MCM_play_started, nil);
-}
-
-void MCPlatformHandlePlayerPaused(MCPlatformPlayerRef p_player)
-{
-    MCPlayer *t_player;
-    t_player = find_player(p_player);
-    if (t_player == nil)
-        return;
-    
-    t_player -> timer(MCM_play_paused, nil);
-}
-
-void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef p_player)
+void MCPlatformHandlePlayerFinished(MCPlatformPlayerRef p_player)
 {
     MCPlayer *t_player;
     t_player = find_player(p_player);
@@ -1187,7 +1149,7 @@ void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef p_player)
         return;
     
     t_player -> layer_redrawall();
-    t_player -> timer(MCM_play_stopped, nil);
+    t_player -> moviefinished();;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

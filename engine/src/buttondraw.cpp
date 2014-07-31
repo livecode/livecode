@@ -300,6 +300,11 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					         && state & (CS_ARMED | CS_KFOCUSED) && (!getcindex(DI_BACK, i) && !getpindex(DI_BACK,i))
 					         && flags & MENU_ITEM_FLAGS && flags & F_AUTO_ARM)
 					{
+						// FG-2014-07-30: [[ Bugfix 9405 ]]
+						// Clear the previously drawn highlight before drawing GTK highlight
+						setforeground(dc, DI_BACK, False, False);
+						dc->fillrect(shadowrect);
+
 						MCWidgetInfo winfo;
 						winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
 						getwidgetthemeinfo(winfo);
@@ -1036,6 +1041,11 @@ void MCButton::drawpulldown(MCDC *dc, MCRectangle &srect)
 	if (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEGTK &&
 	        state & CS_ARMED && !(flags & F_SHOW_BORDER))
 	{
+		// FG-2014-07-30: [[ Bugfix 9405 ]]
+		// Clear the previously drawn highlight before drawing GTK highlight
+		setforeground(dc, DI_BACK, False, False);
+		dc->fillrect(srect);
+
 		MCWidgetInfo winfo;
 		winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
 		getwidgetthemeinfo(winfo);

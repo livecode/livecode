@@ -707,45 +707,55 @@ static void cgi_fix_path_variables()
 {
 	char *t_path, *t_path_end;
 
-	MCAutoStringRef env;
+	MCStringRef env;
+    env = nil;
 	t_path = nil;
-	
-	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), &env))
-	{
-		t_path = strdup(MCStringGetCString(*env));
-		t_path_end = t_path + strlen(t_path);
+    t_path_end = nil;
+    
+    // SN-2014-07-29: [[ Bug 12865 ]] When a LiveCode CGI script has a .cgi extension and has
+    //  the appropriate shebang pointing to the LiveCode server, PATH_TRANSLATED is not set by Apache.
+    //  The current file (stored in SCRIPT_FILENAME) is the one containing the script.
+	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), env))
+		t_path = strdup(MCStringGetCString(env));
+    else if (MCS_getenv(MCSTR("SCRIPT_FILENAME"), env)
+        t_path = strdup(MCStringGetCString(*env));
 
+    MCAutoStringRef t_path_string;
+    /* UNCHECKED */ MCStringCreateWithCString(t_path, &t_path_string);
+             
+    if (t_path != nil)
+    {
+		t_path_end = t_path + strlen(t_path);
+        
 #ifdef _WINDOWS_SERVER
 		for(uint32_t i = 0; t_path[i] != '\0'; i++)
 			if (t_path[i] == '\\')
 				t_path[i] = '/';
 #endif
-	}
+             
+        char t_sep;
+        t_sep = '\0';
+        
+        while (!MCS_exists(*t_path_string, True))
+        {
+            char *t_new_end;
+            t_new_end = strrchr(t_path, '/');
+            *t_path_end = t_sep;
+            if (t_new_end == NULL)
+            {
+                t_sep = '\0';
+                break;
+            }
+            t_path_end = t_new_end;
+            t_sep = *t_path_end;
+            *t_path_end = '\0';
+        }
+        
+        *t_path_end = t_sep;
+    }
 
-	char t_sep;
-	t_sep = '\0';
-
-	MCAutoStringRef t_path_string;
-	/* UNCHECKED */ MCStringCreateWithCString(t_path, &t_path_string);
-
-	while (!MCS_exists(*t_path_string, True))
-	{
-		char *t_new_end;
-		t_new_end = strrchr(t_path, '/');
-		*t_path_end = t_sep;
-		if (t_new_end == NULL)
-		{
-			t_sep = '\0';
-			break;
-		}
-		t_path_end = t_new_end;
-		t_sep = *t_path_end;
-		*t_path_end = '\0';
-	}
-
-	MCS_setenv(MCSTR("PATH_TRANSLATED"), *t_path_string);
-	*t_path_end = t_sep;
-	
+    MCS_setenv(MCSTR("PATH_TRANSLATED"), *t_path_string);
+             
 	MCAutoStringRef t_path_end_string;
 	/* UNCHECKED */ MCStringCreateWithCString(t_path_end, &t_path_end_string);
 	MCS_setenv(MCSTR("PATH_INFO"), *t_path_end_string);

@@ -37,6 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "srvdebug.h"
 #include "srvmain.h"
 
+#include "mcssl.h"
+
 #include <signal.h>
 
 #define CURL_STATICLIB
@@ -292,6 +294,14 @@ static size_t url_write_callback(void *p_buffer, size_t p_size, size_t p_count, 
 	return p_count;
 }
 
+// IM-2014-07-28: [[ Bug 12822 ]] Setup CURL ssl certificates using shared loading function.
+static CURLcode _set_ssl_certificates_callback(CURL *p_curl, void *p_ssl_ctx, void *p_context)
+{
+	/* UNCHECKED */ MCSSLContextLoadCertificates((SSL_CTX*)p_ssl_ctx, nil);
+	
+	return CURLE_OK;
+}
+
 static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void *p_state, MCStringRef& r_error)
 {
 	const char *t_error;
@@ -338,9 +348,11 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 	
 	if (t_error == NULL && t_is_https)
 	{
+		// IM-2014-07-28: [[ Bug 12822 ]] Override default ssl certificate loading.
 		if (curl_easy_setopt(t_url_handle, CURLOPT_SSL_VERIFYPEER, 1) != CURLE_OK ||
 			curl_easy_setopt(t_url_handle, CURLOPT_SSL_VERIFYHOST, 2) != CURLE_OK ||
-			(MCsslcertificates != NULL && curl_easy_setopt(t_url_handle, CURLOPT_CAINFO, MCsslcertificates) != CURLE_OK))
+-			curl_easy_setopt(t_url_handle, CURLOPT_CAINFO, nil) != CURLE_OK ||
+			curl_easy_setopt(t_url_handle, CURLOPT_SSL_CTX_FUNCTION, _set_ssl_certificates_callback) != CURLE_OK)
 			t_error = "couldn't configure ssl";
 	}
 

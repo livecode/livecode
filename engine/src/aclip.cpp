@@ -713,10 +713,6 @@ Boolean MCAudioClip::open_audio(void)
     
     MCPlatformSoundPlay(s_current_sound);
     
-    // PM-2014-05-28: [[Bug 12529]] Make sure we release s_current_sound after it is played
-    MCPlatformSoundRelease(s_current_sound);
-    s_current_sound = nil;
-    
     return True;
 }
 #elif defined _WINDOWS
@@ -862,7 +858,15 @@ Boolean MCAudioClip::play()
 #endif
     
 #if defined FEATURE_PLATFORM_AUDIO
-    return MCPlatformSoundIsPlaying(s_current_sound);
+    // MW-2014-07-25: [[ Bug 12946 ]] If the sound is no longer playing the 'stop'
+    //   (i.e. send a playStopped message).
+    if (!MCPlatformSoundIsPlaying(s_current_sound))
+    {
+        stop(False);
+        return False;
+    }
+    
+    return True;
 #elif defined _WINDOWS
 	if (wh.dwFlags & WHDR_DONE)
 	{
@@ -965,6 +969,8 @@ void MCAudioClip::stop(Boolean abort)
 #if defined FEATURE_PLATFORM_AUDIO
     if (s_current_sound != nil)
     {
+        // MW-2014-07-25: [[ Bug 12946 ]] Make sure we actually stop the sound.
+        MCPlatformSoundStop(s_current_sound);
         MCPlatformSoundRelease(s_current_sound);
         s_current_sound = nil;
     }

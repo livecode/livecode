@@ -133,6 +133,7 @@ public:
 	MCRectangle getactiverect(void);
     // End MCObjet functions
     
+
     ////////////////////////////////////////////////////////////////////////////////
     // virtual MCPlayerInterface functions
     //
@@ -141,8 +142,8 @@ public:
 	virtual uint4 getduration();    //get movie duration/length
 	virtual uint4 gettimescale();  //get movie time scale
 	virtual uint4 getmoviecurtime();//get movie current time
-	virtual void setcurtime(uint4 curtime);
-	virtual void setselection();                  //set movie selection
+	virtual void setcurtime(uint4 curtime, bool notify);
+	virtual void setselection(bool notify);                  //set movie selection
 	virtual void setlooping(Boolean loop);        //to loop or not to loop a movie
 	virtual void setplayrate();                   //set the movie playing rate
 	virtual void showbadge(Boolean show);         //show & hide the movie's badge
@@ -150,13 +151,14 @@ public:
 	virtual void editmovie(Boolean edit);
 	virtual void playselection(Boolean play);     //play the selected part of QT moive only
 	virtual Boolean ispaused();
+
+    virtual void gettracks(MCStringRef& r_tracks);
     
-	virtual MCRectangle getpreferredrect();
+    virtual Boolean setenabledtracks(MCStringRef s);
+    virtual MCRectangle getpreferredrect();
 	virtual uint2 getloudness();
     virtual void updateloudness(int2 newloudness);
 	virtual void setloudness();
-    
-    virtual Boolean setenabledtracks(MCStringRef s);
 
     virtual Boolean prepare(MCStringRef options);
     virtual Boolean playstart(MCStringRef options);
@@ -182,19 +184,38 @@ public:
 	}
     
 	virtual void setendtime(uint4 etime)
-	{
-        if (etime <= 0)
-            endtime = 0;
-        else if (etime > getduration())
-            endtime = getduration();
-        else
-            endtime = etime;
-        
+    {
         if (hasfilename())
             MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
         layer_redrawrect(getcontrollerrect());
 	}
-    
+	
+	Boolean isdisposable()
+	{
+		return disposable;
+	}
+	void setscale(real8 &s)
+	{
+		scale = s;
+	}
+
+    //void playfast(Boolean forward);
+    //void playfastforward();
+    //void playfastback();
+	
+	uint4 getstarttime()
+	{
+		return starttime;
+	}
+	uint4 getendtime()
+	{
+		return endtime;
+	}
+	int4 getlasttime()
+	{
+		return lasttime;
+	}
+
 	virtual void setlasttime(int4 ltime)
 	{
 		lasttime = ltime;
@@ -218,7 +239,7 @@ public:
 	virtual bool changetilt(real8 tilt);
 	virtual real8 getzoom();
 	virtual bool changezoom(real8 zoom);
-    virtual void gettracks(MCStringRef &r_tracks);
+    
     virtual uinteger_t gettrackcount();
     virtual void getnodes(MCStringRef &r_nodes);
     virtual void gethotspots(MCStringRef &r_nodes);
@@ -336,8 +357,9 @@ public:
 
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
-    void currenttimechanged(MCParameter *p_param);
-	
+    void currenttimechanged(void);
+	void moviefinished(void);
+    
     MCRectangle getcontrollerrect(void);
     MCRectangle getcontrollerpartrect(const MCRectangle& total_rect, int part);
 

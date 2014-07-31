@@ -215,7 +215,7 @@ enum MCFileSystemEntryType
 struct MCFileSystemEntry
 {
 	MCFileSystemEntryType type;
-	const char *filename;
+	MCStringRef filename;
 };
 
 typedef bool (*MCFileSystemListCallback)(void *context, const MCFileSystemEntry& entry);

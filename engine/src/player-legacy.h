@@ -151,8 +151,8 @@ public:
 	virtual uint4 getduration();    //get movie duration/length
 	virtual uint4 gettimescale();  //get movie time scale
 	virtual uint4 getmoviecurtime();//get movie current time
-	virtual void setcurtime(uint4 curtime);
-	virtual void setselection();                  //set movie selection
+	virtual void setcurtime(uint4 curtime, bool notify);
+	virtual void setselection(bool notify);                  //set movie selection
 	virtual void setlooping(Boolean loop);        //to loop or not to loop a movie
 	virtual void setplayrate();                   //set the movie playing rate
 	virtual void showbadge(Boolean show);         //show & hide the movie's badge
@@ -160,11 +160,12 @@ public:
 	virtual void editmovie(Boolean edit);
 	virtual void playselection(Boolean play);     //play the selected part of QT moive only
 	virtual Boolean ispaused();
-    
+
+    virtual void gettracks(MCStringRef& r_tracks);
+
 	virtual MCRectangle getpreferredrect();
     virtual uint2 getloudness();
 	virtual void setloudness();
-    
 	virtual Boolean setenabledtracks(MCStringRef s);
 
 	virtual Boolean prepare(MCStringRef options);

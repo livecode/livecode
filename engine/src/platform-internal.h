@@ -215,6 +215,7 @@ protected:
 		bool m_is_focused : 1;
 		bool m_is_iconified : 1;
 		bool m_use_text_input : 1;
+        bool m_is_realized : 1;
 	};
 };
 
@@ -281,11 +282,8 @@ void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_
 
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
-void MCPlatformCallbackSendPlayerSelectionChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerStarted(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerPaused(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerStopped(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef player);
 
 void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef sound);
 
