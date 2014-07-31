@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
+#include "imageloader.h"
+
 #include <setjmp.h>
 
 extern "C"
@@ -567,109 +569,176 @@ void MCJPEGFreeSrcManager(MCJPEGSrcManager *p_manager)
 	}
 }
 
-bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image)
+class MCJPEGImageLoader : public MCImageLoader
+{
+public:
+	MCJPEGImageLoader(IO_handle p_stream);
+	virtual ~MCJPEGImageLoader();
+	
+	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatJPEG; }
+	
+protected:
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadFrames(MCImageFrame *&r_frames, uint32_t &r_count);
+	
+private:
+	jpeg_decompress_struct m_jpeg;
+	MC_jpegerr m_error;
+	MCJPEGSrcManager *m_src;
+	JOCTET *m_icc;
+	uint32_t m_icc_length;
+	uint32_t m_orientation;
+	bool m_invert_cmyk;
+};
+
+MCJPEGImageLoader::MCJPEGImageLoader(IO_handle p_stream) : MCImageLoader(p_stream)
+{
+	m_src = nil;
+	m_icc = nil;
+	m_icc_length = 0;
+	m_orientation = 0;
+	m_invert_cmyk = false;
+	
+	MCMemoryClear(&m_jpeg, sizeof(m_jpeg));
+}
+
+MCJPEGImageLoader::~MCJPEGImageLoader()
+{
+	jpeg_destroy_decompress(&m_jpeg);
+	
+	if (m_src != nil)
+		MCJPEGFreeSrcManager(m_src);
+
+	if (m_icc != nil)
+		MCMemoryDeallocate(m_icc);
+}
+
+bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
 {
 	bool t_success = true;
-
-	jpeg_decompress_struct t_jpeg;
-	MC_jpegerr t_err;
-	MCJPEGSrcManager *t_src = nil;
-	JSAMPROW t_row_buffer = nil;
-
-	JOCTET *t_icc = nil;
-	uint32_t t_icc_length = 0;
-	uint32_t t_orientation = 0;
-	bool t_invert_cmyk = false;
-
-	MCImageBitmap *t_image = nil;
-
-	t_jpeg.err = jpeg_std_error((jpeg_error_mgr*) &t_err);
-	t_err.pub.error_exit = jpg_MCerr_exit;
-
-	if (setjmp(t_err.setjmp_buffer))
+	
+	m_jpeg.err = jpeg_std_error((jpeg_error_mgr*) &m_error);
+	m_error.pub.error_exit = jpg_MCerr_exit;
+	
+	if (setjmp(m_error.setjmp_buffer))
 	{
 		t_success = false;
 	}
 
 	if (t_success)
-		jpeg_create_decompress(&t_jpeg);
+		jpeg_create_decompress(&m_jpeg);
 
 	if (t_success)
-		t_success = MCJPEGCreateSrcManager(p_stream, t_src);
+		t_success = MCJPEGCreateSrcManager(GetStream(), m_src);
 
 	if (t_success)
 	{
-		t_jpeg.src = (jpeg_source_mgr*)t_src;
+		m_jpeg.src = (jpeg_source_mgr*)m_src;
 
 		// MW-2009-12-09: [[ Bug 2983 ]] Add support for CMYK jpegs. We need this to
 		//   determine whether to invert the CMYK data.
-		jpeg_save_markers(&t_jpeg, JPEG_APP0 + 14, 256);
+		jpeg_save_markers(&m_jpeg, JPEG_APP0 + 14, 256);
 		
 		// MW-2012-09-04: [[ Exif ]] Save any APP1 markers so we can see if there is
 		//   any orientation flags.
-		jpeg_save_markers(&t_jpeg, JPEG_APP0 + 1, 0xffff);
+		jpeg_save_markers(&m_jpeg, JPEG_APP0 + 1, 0xffff);
 		
 		// MW-2009-12-09: Save any APP2 markers so we can see if there is any color
 		//   profile data.
-		jpeg_save_markers(&t_jpeg, JPEG_APP0 + 2, 0xffff);
+		jpeg_save_markers(&m_jpeg, JPEG_APP0 + 2, 0xffff);
 
-		jpeg_read_header(&t_jpeg, TRUE);
+		jpeg_read_header(&m_jpeg, TRUE);
+
+		// IM-2014-07-31: [[ ImageLoader ]] call calculate_dimensions here to ensure output width & height are set in the jpeg struct
+		jpeg_calc_output_dimensions(&m_jpeg);
 	}
 
 	if (t_success)
 	{
 		// MW-2009-12-09: [[ Bug 2983 ]] Add support for CMYK jpegs.
-		if (t_jpeg.jpeg_color_space == JCS_CMYK ||
-			t_jpeg.jpeg_color_space == JCS_YCCK)
+		if (m_jpeg.jpeg_color_space == JCS_CMYK ||
+			m_jpeg.jpeg_color_space == JCS_YCCK)
 		{
 			// We need to check to see if the CMYK image was produced by Adobe
 			// software. If it is, then the values need to be inverted.
-			for(jpeg_saved_marker_ptr t_marker = t_jpeg . marker_list; t_marker != nil; t_marker = t_marker -> next)
+			for(jpeg_saved_marker_ptr t_marker = m_jpeg . marker_list; t_marker != nil; t_marker = t_marker -> next)
 				if ((t_marker->marker == (JPEG_APP0 + 14)) && (t_marker->data_length >= 12) && (!strncmp ((const char *)t_marker->data, "Adobe", 5)))
 				{
-					t_invert_cmyk = true;
+					m_invert_cmyk = true;
 					break;
 				}
 
-			t_jpeg.out_color_space = JCS_CMYK;
+			m_jpeg.out_color_space = JCS_CMYK;
 		}
 		else
-			t_jpeg.out_color_space = JCS_RGB;
+			m_jpeg.out_color_space = JCS_RGB;
 	}
 
 	if (t_success)
 	{
 		// Fetch the color profile, if any.
-		read_icc_profile(&t_jpeg, &t_icc, &t_icc_length);
+		read_icc_profile(&m_jpeg, &m_icc, &m_icc_length);
 		
 		// Fetch the orientation tag, if any.
-		if (!read_exif_orientation(&t_jpeg, &t_orientation))
-			t_orientation = 0;
+		if (!read_exif_orientation(&m_jpeg, &m_orientation))
+			m_orientation = 0;
 	}
 
 	if (t_success)
-		jpeg_start_decompress(&t_jpeg);
+	{
+		r_width = m_jpeg.output_width;
+		r_height = m_jpeg.output_height;
+		
+		if (m_orientation > 4 && m_orientation <= 8)
+			swap(r_width, r_height);
+		
+		r_xhot = r_yhot = 0;
+		r_name = nil;
+	}
+	
+	return t_success;
+}
+
+bool MCJPEGImageLoader::LoadFrames(MCImageFrame *&r_frames, uint32_t &r_count)
+{
+	bool t_success = true;
+	
+	MCImageFrame *t_frame;
+	t_frame = nil;
+	
+	JSAMPROW t_row_buffer = nil;
+	
+	if (setjmp(m_error.setjmp_buffer))
+	{
+		t_success = false;
+	}
 
 	if (t_success)
-		t_success = MCImageBitmapCreate(t_jpeg.output_width, t_jpeg.output_height, t_image);
+		jpeg_start_decompress(&m_jpeg);
 
 	if (t_success)
-		t_success = MCMemoryAllocate(t_jpeg.output_width * t_jpeg.output_components, t_row_buffer);
+		t_success = MCMemoryNew(t_frame);
+
+	if (t_success)
+		t_success = MCImageBitmapCreate(m_jpeg.output_width, m_jpeg.output_height, t_frame->image);
+
+	if (t_success)
+		t_success = MCMemoryAllocate(m_jpeg.output_width * m_jpeg.output_components, t_row_buffer);
 
 	// Read the input data scanline by scanline and convert into the bit format
 	// we need. This is ARGB or KYMC order (as bytes in a 32-bit word).
 	if (t_success)
 	{
-		while (t_jpeg.output_scanline < t_jpeg.output_height)
+		while (m_jpeg.output_scanline < m_jpeg.output_height)
 		{
-			uint32_t *t_dst_ptr = (uint32_t*) (((uint8_t*)t_image->data) + t_jpeg.output_scanline * t_image->stride);
+			uint32_t *t_dst_ptr = (uint32_t*) (((uint8_t*)t_frame->image->data) + m_jpeg.output_scanline * t_frame->image->stride);
 
-			jpeg_read_scanlines(&t_jpeg, &t_row_buffer, 1);
+			jpeg_read_scanlines(&m_jpeg, &t_row_buffer, 1);
 			JSAMPROW t_src_ptr = t_row_buffer;
 
-			if (t_jpeg.out_color_space != JCS_CMYK)
+			if (m_jpeg.out_color_space != JCS_CMYK)
 			{
-				for (uindex_t x = 0; x < t_jpeg.output_width; x++)
+				for (uindex_t x = 0; x < m_jpeg.output_width; x++)
 				{
 					*t_dst_ptr++ = MCGPixelPackNative(t_src_ptr[0], t_src_ptr[1], t_src_ptr[2], 255);
 					t_src_ptr += 3;
@@ -677,11 +746,11 @@ bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image)
 			}
 			else
 			{
-				for (uindex_t x = 0; x < t_jpeg.output_width; x++)
+				for (uindex_t x = 0; x < m_jpeg.output_width; x++)
 				{
 					uint32_t t_pixel;
 					t_pixel = (t_src_ptr[3] << 24) | (t_src_ptr[2] << 16) | (t_src_ptr[1] << 8) | t_src_ptr[0];
-					if (t_invert_cmyk)
+					if (m_invert_cmyk)
 						t_pixel ^= 0xFFFFFFFF;
 
 					*t_dst_ptr++ = t_pixel;
@@ -697,25 +766,25 @@ bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image)
 	MCColorTransformRef t_transform = nil;
 	if (t_success)
 	{
-		if (t_icc != nil)
+		if (m_icc != nil)
 		{
 			MCColorSpaceInfo t_colorspace;
 			t_colorspace . type = kMCColorSpaceEmbedded;
-			t_colorspace . embedded . data = t_icc;
-			t_colorspace . embedded . data_size = t_icc_length;
+			t_colorspace . embedded . data = m_icc;
+			t_colorspace . embedded . data_size = m_icc_length;
 		
 			t_transform = MCscreen -> createcolortransform(t_colorspace);
 		}
 
 		if ((t_transform == nil ||
-			 !MCImageBitmapApplyColorTransform(t_image, t_transform)) &&
-			 t_jpeg . out_color_space == JCS_CMYK)
+			 !MCImageBitmapApplyColorTransform(t_frame->image, t_transform)) &&
+			m_jpeg . out_color_space == JCS_CMYK)
 		{
-			uint8_t *t_img_ptr = (uint8_t*)t_image->data;
-			for(uint32_t y = 0; y < t_image -> height; y++)
+			uint8_t *t_img_ptr = (uint8_t*)t_frame->image->data;
+			for(uint32_t y = 0; y < t_frame->image -> height; y++)
 			{
 				uint4 *dptr = (uint4 *)t_img_ptr;
-				for(uint32_t x = 0; x < t_image -> width; x++)
+				for(uint32_t x = 0; x < t_frame->image -> width; x++)
 				{
 					uint32_t p, k;
 					p = *dptr;
@@ -726,39 +795,45 @@ bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image)
 					t_b = ((255 - ((p >> 16) & 0xff)) * k / 255);
 					*dptr++ = MCGPixelPackNative(t_r, t_g, t_b, 255);
 				}
-				t_img_ptr += t_image->stride;
+				t_img_ptr += t_frame->image->stride;
 			}
-		}	
+		}
 
 		if (t_transform != nil)
 			MCscreen -> destroycolortransform(t_transform);
 	}
 
 	if (t_success)
-		jpeg_finish_decompress(&t_jpeg);
+		jpeg_finish_decompress(&m_jpeg);
 
-	jpeg_destroy_decompress(&t_jpeg);
-
-	if (t_src != nil)
-		MCJPEGFreeSrcManager(t_src);
 	if (t_row_buffer != nil)
 		MCMemoryDeallocate(t_row_buffer);
-	if (t_icc != nil)
-		MCMemoryDeallocate(t_icc);
-	
-	if (t_orientation != 0)
-		apply_exif_orientation(t_orientation, t_image);
-		
+
+	if (m_orientation != 0)
+		apply_exif_orientation(m_orientation, t_frame->image);
 
 	if (t_success)
-		r_image = t_image;
-	else
 	{
-		if (t_image != nil)
-			MCImageFreeBitmap(t_image);
+		r_frames = t_frame;
+		r_count = 1;
 	}
+	else
+		MCImageFreeFrames(t_frame, 1);
 
 	return t_success;
+}
+
+bool MCImageLoaderCreateForJPEGStream(IO_handle p_stream, MCImageLoader *&r_loader)
+{
+	MCJPEGImageLoader *t_loader;
+	t_loader = new MCJPEGImageLoader(p_stream);
+	
+	if (t_loader == nil)
+		return false;
+	
+	r_loader = t_loader;
+	
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
