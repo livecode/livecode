@@ -49,17 +49,30 @@ static inline __attribute__((always_inline)) int32_t MCThreadAtomicDec(int32_t* 
 
 #else
 
+#pragma push_macro("_interlockedbittestandset")
+#pragma push_macro("_interlockedbittestandreset")
+#pragma push_macro("_interlockedbittestandset64")
+#pragma push_macro("_interlockedbittestandreset64")
+#define _interlockedbittestandset _local_interlockedbittestandset
+#define _interlockedbittestandreset _local_interlockedbittestandreset
+#define _interlockedbittestandset64 _local_interlockedbittestandset64
+#define _interlockedbittestandreset64 _local_interlockedbittestandreset64
 #include <intrin.h>
+#pragma pop_macro("_interlockedbittestandreset64")
+#pragma pop_macro("_interlockedbittestandset64")
+#pragma pop_macro("_interlockedbittestandreset")
+#pragma pop_macro("_interlockedbittestandset")
+#pragma intrinsic(_ReadWriteBarrier)
 
 #pragma intrinsic(_InterlockedIncrement, _InterlockedExchangeAdd, _InterlockedDecrement)
 #pragma intrinsic(_InterlockedCompareExchange)
 
-static inline int32_t sk_atomic_inc(int32_t* addr) {
+static inline int32_t MCThreadAtomicInc(int32_t* addr) {
     // InterlockedIncrement returns the new value, we want to return the old.
     return _InterlockedIncrement(reinterpret_cast<long*>(addr)) - 1;
 }
 
-static inline int32_t sk_atomic_dec(int32_t* addr) {
+static inline int32_t MCThreadAtomicDec(int32_t* addr) {
     // InterlockedDecrement returns the new value, we want to return the old.
     return _InterlockedDecrement(reinterpret_cast<long*>(addr)) + 1;
 }
