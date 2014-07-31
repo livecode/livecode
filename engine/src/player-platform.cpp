@@ -2364,7 +2364,8 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 		}
 		
         uindex_t t_callback2_index;
-        if (MCStringFirstIndexOfChar(*t_callback, ',', t_comma_index + 1, kMCStringOptionCompareExact, t_end_index))
+        // AL-2014-07-31: [[ Bug 12936 ]] Callbacks are one per line
+        if (!MCStringFirstIndexOfChar(*t_callback, '\n', t_comma_index + 1, kMCStringOptionCompareExact, t_end_index))
             t_end_index = MCStringGetLength(*t_callback);
         
         /* UNCHECKED */ MCMemoryResizeArray(m_callback_count + 1, m_callbacks, m_callback_count);
@@ -2373,7 +2374,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         MCNumberParseOffset(*t_callback, t_start_index, t_comma_index - t_start_index, &t_time);
         m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsInteger(*t_time);
         
-        t_callback_index = t_comma_index;
+        t_callback_index = t_comma_index + 1;
         while (isspace(MCStringGetCharAtIndex(*t_callback, t_callback_index))) //strip off preceding and trailing blanks
             ++t_callback_index;
         
@@ -2406,7 +2407,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
             /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
         }
 		
-        // Skip the last comma if any
+        // Skip to the next callback, if there is one
         t_start_index = t_end_index + 1;
 	}
     
