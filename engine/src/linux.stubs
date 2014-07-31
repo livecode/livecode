@@ -233,6 +233,7 @@ gdk libgdk-x11-2.0.so.0
 	gdk_display_get_event: (pointer) -> (pointer)
 	gdk_display_put_event: (pointer, pointer) -> ()
 	gdk_property_change: (pointer, integer, integer, integer, integer, pointer, integer) -> ()
+	gdk_property_delete: (pointer, pointer) -> ()
 	gdk_selection_send_notify: (pointer, integer, integer, integer, integer) -> ()
 	gdk_drag_context_get_source_window: (pointer) -> (pointer)
 	gdk_drag_context_list_targets: (pointer) -> (pointer)

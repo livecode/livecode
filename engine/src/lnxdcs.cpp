@@ -1499,11 +1499,11 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 
 void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 {
-	if ( p_mode <= WM_PALETTE && backdrop != DNULL )
+	if (p_mode <= WM_PALETTE && backdrop != DNULL && (backdrop_active||backdrop_hard))
 		gdk_window_set_transient_for(p_window, backdrop);
+    else
+        gdk_property_delete(p_window, gdk_atom_intern_static_string("WM_TRANSIENT_FOR"));
 }
-
-
 
 
 void MCScreenDC::createbackdrop(MCStringRef color)
