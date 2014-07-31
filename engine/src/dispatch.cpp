@@ -1393,23 +1393,26 @@ MCStack *MCDispatch::findstackid(uint4 fid)
 	return NULL;
 }
 
-MCStack *MCDispatch::findchildstackd(Window w,uint2 cindex)
+bool MCDispatch::foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_callback, void *p_context)
 {
-	uint2 ccount = 0;
-	if (stacks != NULL)
+	bool t_continue;
+	t_continue = true;
+	
+	if (stacks)
 	{
-		MCStack *tstk = stacks;
+		MCStack *t_stack;
+		t_stack = stacks;
+		
 		do
 		{
-			MCStack *foundstk;
-			if ((foundstk =
-			            (MCStack *)tstk->findchildstackd(w,ccount,cindex))!= NULL)
-				return foundstk;
-			tstk = (MCStack *)tstk->next();
+			t_continue = t_stack->foreachchildstack(p_callback, p_context);
+			
+			t_stack = (MCStack*)t_stack->next();
 		}
-		while (tstk != stacks);
+		while (t_continue && t_stack != stacks);
 	}
-	return NULL;
+	
+	return t_continue;
 }
 
 MCStack *MCDispatch::findstackwindowid(uint32_t p_win_id)

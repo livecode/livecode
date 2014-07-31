@@ -34,6 +34,23 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
+//////////////////////////////////////////////////////////////////////
+
+// MW-2014-07-17: [[ ImageMetadata ]] Convert array to the metadata struct.
+bool MCImageParseMetadata(MCExecPoint& ep, MCVariableValue& p_array, MCImageMetadata& r_metadata)
+{
+    if (p_array . fetch_element(ep, "density") == ES_NORMAL &&
+        ep . ton() == ES_NORMAL)
+    {
+        r_metadata . has_density = true;
+        r_metadata . density = ep . getnvalue();
+    }
+    
+    return true;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBitmap *&r_compressed)
 {
 	bool t_success = true;
@@ -64,12 +81,12 @@ bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBi
 			 else if (MCpaintcompression == EX_JPEG)
 			 {
 				 t_compression = F_JPEG;
-				 t_success = MCImageEncodeJPEG(p_bitmap, t_stream, t_size);
+				 t_success = MCImageEncodeJPEG(p_bitmap, nil, t_stream, t_size);
 			 }
 			 else
 			 {
 				 t_compression = F_PNG;
-				 t_success = MCImageEncodePNG(p_bitmap, t_stream, t_size);
+				 t_success = MCImageEncodePNG(p_bitmap, nil, t_stream, t_size);
 			 }
 		}
 		if (t_stream != nil)
@@ -275,17 +292,17 @@ bool MCU_israwimageformat(Export_format p_format)
 		p_format == EX_RAW_RGBA || p_format == EX_RAW_BGRA || p_format == EX_RAW_INDEXED;
 }
 
-bool MCImageEncode(MCImageBitmap *p_bitmap, Export_format p_format, bool p_dither, IO_handle p_stream, uindex_t &r_bytes_written)
+bool MCImageEncode(MCImageBitmap *p_bitmap, Export_format p_format, bool p_dither, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written)
 {
 	bool t_success = true;
 	switch (p_format)
 	{
 	case EX_JPEG:
-		t_success = MCImageEncodeJPEG(p_bitmap, p_stream, r_bytes_written);
+		t_success = MCImageEncodeJPEG(p_bitmap, p_metadata, p_stream, r_bytes_written);
 		break;
 
 	case EX_PNG:
-		t_success = MCImageEncodePNG(p_bitmap, p_stream, r_bytes_written);
+		t_success = MCImageEncodePNG(p_bitmap, p_metadata, p_stream, r_bytes_written);
 		break;
 
 	case EX_GIF:
@@ -314,13 +331,13 @@ bool MCImageEncode(MCImageBitmap *p_bitmap, Export_format p_format, bool p_dithe
 	return t_success;
 }
 
-bool MCImageEncode(MCImageIndexedBitmap *p_indexed, Export_format p_format, IO_handle p_stream, uindex_t &r_bytes_written)
+bool MCImageEncode(MCImageIndexedBitmap *p_indexed, Export_format p_format, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written)
 {
 	bool t_success = true;
 	switch (p_format)
 	{
 	case EX_PNG:
-		t_success = MCImageEncodePNG(p_indexed, p_stream, r_bytes_written);
+		t_success = MCImageEncodePNG(p_indexed, p_metadata, p_stream, r_bytes_written);
 		break;
 
 	case EX_GIF:
@@ -336,7 +353,7 @@ bool MCImageEncode(MCImageIndexedBitmap *p_indexed, Export_format p_format, IO_h
 			MCImageBitmap *t_bitmap = nil;
 			t_success = MCImageConvertIndexedToBitmap(p_indexed, t_bitmap);
 			if (t_success)
-				t_success = MCImageEncode(t_bitmap, p_format, false, p_stream, r_bytes_written);
+				t_success = MCImageEncode(t_bitmap, p_format, false, p_metadata, p_stream, r_bytes_written);
 			MCImageFreeBitmap(t_bitmap);
 		}
 	}
@@ -344,7 +361,7 @@ bool MCImageEncode(MCImageIndexedBitmap *p_indexed, Export_format p_format, IO_h
 	return t_success;
 }
 
-bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePaletteSettings *p_palette_settings, bool p_dither, IO_handle p_stream, IO_handle p_mstream)
+bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePaletteSettings *p_palette_settings, bool p_dither, MCImageMetadata *p_metadata, IO_handle p_stream, IO_handle p_mstream)
 {
 	bool t_success = true;
 
@@ -357,10 +374,10 @@ bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePalet
 		{
 			t_success = MCImageQuantizeColors(p_bitmap, p_palette_settings, p_dither, p_format == F_GIF || p_format == F_PNG, t_indexed);
 			if (t_success)
-				t_success = MCImageEncode(t_indexed, p_format, p_stream, t_size);
+				t_success = MCImageEncode(t_indexed, p_format, p_metadata, p_stream, t_size);
 		}
 		else
-			t_success = MCImageEncode(p_bitmap, p_format, p_dither, p_stream, t_size);
+			t_success = MCImageEncode(p_bitmap, p_format, p_dither, p_metadata, p_stream, t_size);
 	}
 
 	if (t_success && p_mstream != nil)

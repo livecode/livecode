@@ -733,7 +733,15 @@ static void cgi_store_form_urlencoded(MCExecPoint& ep, MCVariable *p_variable, c
 static void cgi_fix_path_variables()
 {
 	char *t_path, *t_path_end;
-	t_path = strdup(MCS_getenv("PATH_TRANSLATED"));
+    
+    // SN-2014-07-29: [[ Bug 12865 ]] When a LiveCode CGI script has a .cgi extension and has
+    //  the appropriate shebang pointing to the LiveCode server, PATH_TRANSLATED is not set by Apache.
+    //  The current file (stored in SCRIPT_FILENAME) is the one containing the script.
+    if (MCS_getenv("PATH_TRANSLATED") == NULL)
+        t_path = strdup(MCS_getenv("SCRIPT_FILENAME"));
+    else
+        t_path = strdup(MCS_getenv("PATH_TRANSLATED"));
+    
 	t_path_end = t_path + strlen(t_path);
 
 #ifdef _WINDOWS_SERVER

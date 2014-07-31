@@ -36,6 +36,9 @@
 ///////////////////////////////////////////////////////////////////////////
 
 static NSDragOperation s_drag_operation_result = NSDragOperationNone;
+static bool s_inside_focus_event = false;
+
+//static MCMacPlatformWindow *s_focused_window = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,6 +60,7 @@ static bool s_lock_responder_change = false;
         return nil;
     
     m_can_become_key = false;
+    m_is_popup = false;
     m_monitor = nil;
     
     return self;
@@ -84,7 +88,7 @@ static bool s_lock_responder_change = false;
 {
 	NSResponder *t_previous;
 	t_previous = [self firstResponder];
-	
+    
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
@@ -128,6 +132,13 @@ static bool s_lock_responder_change = false;
 //   other mouse events outside the host window. This allows us to close them and still
 //   continue to process the event as normal.
 
+// MW-2014-07-16: [[ Bug 12708 ]] Mouse events targeted as popup windows don't cancel popups
+//   so that cascading menus work.
+- (bool)isPopupWindow
+{
+    return m_is_popup;
+}
+
 - (void)popupWindowClosed: (NSNotification *)notification
 {
     if (m_monitor != nil)
@@ -138,6 +149,8 @@ static bool s_lock_responder_change = false;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSApplicationDidResignActiveNotification object:nil];
+
+    m_is_popup = false;
 }
 
 - (void)popupWindowShouldClose: (NSNotification *)notification
@@ -151,7 +164,14 @@ static bool s_lock_responder_change = false;
     NSWindow *t_window;
     t_window = self;
     
-    [self makeKeyAndOrderFront: nil];
+    m_is_popup = true;
+    
+    // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
+    //   as it seems to confuse Cocoa.
+    if (s_inside_focus_event)
+        [self orderFront: nil];
+    else
+        [self makeKeyAndOrderFront: nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(popupWindowClosed:) name:NSWindowWillCloseNotification object:self];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(popupWindowShouldClose:) name:NSApplicationDidResignActiveNotification object:nil];
@@ -162,8 +182,12 @@ static bool s_lock_responder_change = false;
                      NSEvent *result = incomingEvent;
                      NSWindow *targetWindowForEvent = [incomingEvent window];
 
-                     if (targetWindowForEvent != t_window)
-                         [self popupWindowShouldClose: nil];
+                     if (![targetWindowForEvent respondsToSelector: @selector(isPopupWindow)] ||
+                         ![targetWindowForEvent isPopupWindow])
+                     {
+                         if (targetWindowForEvent != t_window)
+                             [self popupWindowShouldClose: nil];
+                     }
                      
                      return result;
                  }];
@@ -188,7 +212,7 @@ static bool s_lock_responder_change = false;
 {
 	NSResponder *t_previous;
 	t_previous = [self firstResponder];
-	
+
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
@@ -536,14 +560,30 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	m_window -> ProcessDidDeminiaturize();
 }
 
+// MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-	m_window -> ProcessDidBecomeKey();
+    if (s_inside_focus_event)
+        m_window -> ProcessDidBecomeKey();
+    else
+    {
+        s_inside_focus_event = true;
+        m_window -> ProcessDidBecomeKey();
+        s_inside_focus_event = false;
+    }
 }
 
+// MW-2014-07-22: [[ Bug 12720 ]] Mark the period we are inside a focus event handler.
 - (void)windowDidResignKey:(NSNotification *)notification
 {
-	m_window -> ProcessDidResignKey();
+    if (s_inside_focus_event)
+        m_window -> ProcessDidBecomeKey();
+    else
+    {
+        s_inside_focus_event = true;
+        m_window -> ProcessDidResignKey();
+        s_inside_focus_event = false;
+    }
 }
 
 - (void)windowDidChangeBackingProperties:(NSNotification *)notification
@@ -801,11 +841,24 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
         return;
     }
     
-	if (!MCMacMapNSStringToCodepoint([event characters], r_mapped))
-		r_mapped = 0xffffffffU;
-	
-	if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], r_unmapped))
-		r_unmapped = 0xffffffffU;
+    // MW-2014-07-17: [[ Bug 12747 ]] For reasons currently unknown to me, if Cmd is in the modifier
+    //   flags, the characters / charactersIgnoringModifiers fields seem to be inverted.
+    if (([event modifierFlags] & NSCommandKeyMask) == 0)
+    {
+        if (!MCMacMapNSStringToCodepoint([event characters], r_mapped))
+            r_mapped = 0xffffffffU;
+        
+        if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], r_unmapped))
+            r_unmapped = 0xffffffffU;
+    }
+    else
+    {
+        if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], r_mapped))
+            r_mapped = 0xffffffffU;
+        
+        if (!MCMacMapNSStringToCodepoint([event characters], r_unmapped))
+            r_unmapped = 0xffffffffU;
+    }
     
 	// The unicode range 0xF700 - 0xF8FF is reserved by the system to indicate
 	// keys which have no printable value, but represent an action (such as F11,
@@ -1379,6 +1432,8 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)concludeDragOperation:(id<NSDraggingInfo>)sender
 {
+    // MW-2014-07-15: [[ Bug 12773 ]] Make sure mouseMove is sent after end of drag operation.
+    MCMacPlatformSyncMouseAfterTracking();
 }
 
 //////////
@@ -1680,7 +1735,7 @@ void MCMacPlatformWindow::ProcessDidBecomeKey(void)
 
 void MCMacPlatformWindow::ProcessDidResignKey(void)
 {
-	HandleUnfocus();
+    HandleUnfocus();
 }
 
 void MCMacPlatformWindow::ProcessMouseMove(NSPoint p_location_cocoa)
@@ -1700,14 +1755,16 @@ void MCMacPlatformWindow::ProcessMouseScroll(CGFloat dx, CGFloat dy)
 	MCMacPlatformHandleMouseScroll(dx, dy);
 }
 
-void MCMacPlatformWindow::ProcessKeyDown(MCPlatformKeyCode p_key_code, codepoint_t p_unmapped_char, codepoint_t p_mapped_char)
+// SN-2014-07-11: [[ Bug 12747 ]] Shortcuts: the uncomment script shortcut cmd _ does not work
+// Changed parameters order to follow *KeyDown functions consistency
+void MCMacPlatformWindow::ProcessKeyDown(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
 {
-	HandleKeyDown(p_key_code, p_unmapped_char, p_mapped_char);
+	HandleKeyDown(p_key_code, p_mapped_char, p_unmapped_char);
 }
 
-void MCMacPlatformWindow::ProcessKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_unmapped_char, codepoint_t p_mapped_char)
+void MCMacPlatformWindow::ProcessKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
 {
-	HandleKeyUp(p_key_code, p_unmapped_char, p_mapped_char);
+	HandleKeyUp(p_key_code, p_mapped_char, p_unmapped_char);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1761,7 +1818,14 @@ void MCMacPlatformWindow::DoRealize(void)
 		m_window_handle = [[com_runrev_livecode_MCWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: NO];
 	else
 		m_panel_handle = [[com_runrev_livecode_MCPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: NO];
-	
+    
+    // AL-2014-07-23: [[ Bug 12131 ]] Explicitly set frame, since initWithContentRect
+    //  assumes content is on primary screen.
+    NSRect t_cocoa_frame;
+    t_cocoa_frame = [m_window_handle frameRectForContentRect: t_cocoa_content];
+    
+    [m_window_handle setFrame: t_cocoa_frame display: YES];
+    
 	m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
 	[m_window_handle setDelegate: m_delegate];
 	
@@ -1817,6 +1881,9 @@ void MCMacPlatformWindow::DoSynchronize(void)
     
 	if (m_changes . mask_changed)
 	{
+        // MW-2014-07-29: [ Bug 12997 ]] Make sure we invalidate the whole window when
+        //   the mask changes.
+        [[m_window_handle contentView] setNeedsDisplay: YES];
 		[m_window_handle setOpaque: m_mask == nil];
 		if (m_has_shadow)
 			m_shadow_changed = true;
@@ -1892,7 +1959,12 @@ void MCMacPlatformWindow::DoShow(void)
 	else
 	{
 		[m_view setNeedsDisplay: YES];
-		[m_window_handle makeKeyAndOrderFront: nil];
+        // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
+        //   as it seems to confuse Cocoa.
+        if (s_inside_focus_event)
+            [m_window_handle orderFront: nil];
+        else
+            [m_window_handle makeKeyAndOrderFront: nil];
 	}
 }
 
@@ -1951,7 +2023,10 @@ void MCMacPlatformWindow::DoHide(void)
 
 void MCMacPlatformWindow::DoFocus(void)
 {
-	[m_window_handle makeKeyWindow];
+    // MW-2014-07-24: [[ Bug 12720 ]] We must not change focus if inside a focus/unfocus event
+    //   as it seems to confuse Cocoa.
+    if (!s_inside_focus_event)
+        [m_window_handle makeKeyWindow];
 }
 
 void MCMacPlatformWindow::DoRaise(void)

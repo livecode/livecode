@@ -236,6 +236,8 @@ MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 
 void MCStack::syncscroll(void)
 {
+    // AL-2014-07-22: [[ Bug 12764 ]] Update the stack viewport after applying menu scroll
+    view_setstackviewport(rect);
 	// COCOA-TODO: Make sure contained views also scroll (?)
 }
 
@@ -251,6 +253,14 @@ void MCStack::stop_externals()
 	
 	MCPlayer *tptr = MCplayers;
 	
+#ifdef FEATURE_PLATFORM_PLAYER
+    while(tptr != NULL)
+    {
+        if (tptr -> getstack() == this)
+            tptr -> playstop();
+        tptr = tptr -> getnextplayer();
+    }
+#else
 	while (tptr != NULL)
 	{
 		if (tptr->getstack() == this)
@@ -261,6 +271,7 @@ void MCStack::stop_externals()
 		else
 			tptr = tptr->getnextplayer();
 	}
+#endif
 	destroywindowshape();
 	
 	MClockmessages = oldlock;

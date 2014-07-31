@@ -42,15 +42,15 @@ bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, M
 	// IM-2013-11-05: [[ RefactorGraphics ]] Use resampled image rep for best-quality scaling
 	if (m_has_transform && MCGAffineTransformIsRectangular(m_transform) && resizequality == INTERPOLATION_BICUBIC)
 	{
-		MCGFloat t_h_scale, t_v_scale;
-		t_h_scale = m_transform.a;
-		t_v_scale = m_transform.d;
-		
-		if (m_resampled_rep != nil && m_resampled_rep->Matches(t_h_scale, t_v_scale, m_rep))
+		bool t_h_flip, t_v_flip;
+		t_h_flip = m_transform.a == -1.0;
+		t_v_flip = m_transform.d == -1.0;
+
+		if (m_resampled_rep != nil && m_resampled_rep->Matches(rect.width, rect.height, t_h_flip, t_v_flip, m_rep))
 			r_rep = m_resampled_rep;
 		else
 		{
-			if (!MCImageRepGetResampled(t_h_scale, t_v_scale, m_rep, r_rep))
+			if (!MCImageRepGetResampled(rect.width, rect.height, t_h_flip, t_v_flip, m_rep, r_rep))
 				return false;
 			
 			if (m_resampled_rep != nil)

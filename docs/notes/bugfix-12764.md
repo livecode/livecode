@@ -1,0 +1,1 @@
+# setting the effective rect of a stack with vscroll > 0 doesn't work properly

@@ -360,9 +360,13 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 	MCFileFilter *m_filters;
 	MCFileFilter *m_filter;
 	uint32_t m_filter_index;
+    
+    NSSavePanel *m_panel;
+    
+    id m_panel_view_hack;
 }
 
-- (id)init;
+- (id)initWithPanel: (NSSavePanel *)panel;
 - (void)dealloc;
 
 - (void)setLabel: (NSString *)newLabel;
@@ -380,9 +384,11 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 
 @implementation com_runrev_livecode_MCFileDialogAccessoryView
 
-- (id)init
+- (id)initWithPanel: (NSSavePanel *)panel;
 {
 	self = [ super init ];
+    if (self == nil)
+        return nil;
 	
 	m_label = [ [ NSTextField alloc ] initWithFrame: NSMakeRect(0, 9, 61, 17) ];
 	[ m_label setEditable: NO ];
@@ -404,6 +410,8 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 	m_filters = nil;
 	m_filter = nil;
 	m_filter_index = 0;
+    
+    m_panel = panel;
 	
 	return self;
 }
@@ -438,6 +446,33 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 	m_filter = m_filters;
 }
 
+// MW-2014-07-25: [[ Bug 12250 ]] Hack to find tableview inside the savepanel so we can force
+//   an update.
+- (id)findPanelViewHack: (NSArray *)subviews
+{
+    id t_table = nil;
+    for(id t_view in subviews)
+    {
+        if ([[t_view className] isEqualToString: @"FI_TListView"])
+        {
+            t_table = t_view;
+            break;
+        }
+        
+        t_table = [self findPanelViewHack: [t_view subviews]];
+        if (t_table != nil)
+            break;
+    }
+    
+    return t_table;
+}
+
+// MW-2014-07-25: [[ Bug 12250 ]] Use the hack from:
+//     http://stackoverflow.com/questions/18192986/nsopenpanel-doesnt-validatevisiblecolumns
+//   To make sure the file list updates - it appears to be an apple bug and it might
+//   be that 'setAllowedFileTypes' would work (although my testing appears to indicate otherwise)
+//   however using that would require a change to how the answer command is used in this case
+//   so we need to make sure the current method works anyway.
 - (void)typeChanged: (id)sender
 {
 	uint32_t t_new_index;
@@ -447,7 +482,13 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 	for(uint32_t i = 0; i < t_new_index; i++)
 		m_filter = m_filter -> next;
 	
-	[(NSSavePanel *)[self window] validateVisibleColumns];
+    if (m_panel_view_hack == nil)
+        m_panel_view_hack = [self findPanelViewHack: [[m_panel contentView] subviews]];
+    
+    if (m_panel_view_hack != nil)
+        [m_panel_view_hack reloadData];
+        
+	[m_panel validateVisibleColumns];
 }
 
 - (const char *)currentType
@@ -582,17 +623,19 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 	else
 		[t_panel setTitle: [NSString stringWithCString: p_prompt encoding: NSMacOSRomanStringEncoding]];
 	
-	if (p_type_count > 1)
-	{
-		MCFileDialogAccessoryView *t_accessory;
-		t_accessory = [[MCFileDialogAccessoryView alloc] init];
-		[t_accessory setTypes: p_types length: p_type_count];
-		[t_accessory setLabel: @"Format:"];
-		[t_panel setAccessoryView: t_accessory];
-		[t_panel setDelegate: t_accessory];
-		[t_accessory release];
+    // MW-2014-07-17: [[ Bug 12826 ]] If we have at least one type, add a delegate. Only add as
+    //   an accessory view if more than one type.
+    MCFileDialogAccessoryView *t_accessory;
+    if (p_type_count > 0)
+    {
+        t_accessory = [[MCFileDialogAccessoryView alloc] initWithPanel: t_panel];
+        [t_accessory setTypes: p_types length: p_type_count];
+        [t_accessory setLabel: @"Format:"];
+        if (p_type_count > 1)
+            [t_panel setAccessoryView: t_accessory];
+        [t_panel setDelegate: t_accessory];
 	}
-	
+    
 	if (p_kind != kMCPlatformFileDialogKindSave)
 	{
 		[(NSOpenPanel *)t_panel setCanChooseFiles: YES];
@@ -650,6 +693,13 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 	}
 	else
 		r_paths = nil, r_type = nil;
+    
+    // MW-2014-07-17: [[ Bug 12826 ]] Make sure we release the delegate (might be nil, but no
+    //   problem here with that).
+    id t_delegate;
+    t_delegate = [s_dialog_nesting -> panel delegate];
+    [s_dialog_nesting -> panel setDelegate: nil];
+    [t_delegate release];
 	
 	return MCPlatformEndOpenSaveDialog();
 }

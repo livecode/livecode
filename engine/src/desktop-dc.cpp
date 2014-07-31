@@ -277,12 +277,17 @@ void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mod
 	{
 		// COCOA-TODO: These values should be queryable (once we figure out what
 		//   'title' is meant to do...)
+        // MW-2014-07-17: [[ Bug 12824 ]] Adjust the height of srect when we adjust the origin.
 		if (mode == WM_PALETTE)
+        {
 			srect.y += 13;
+            srect . height -= 13;
+        }
 		else
 		{
 			srect.y += 22;
-		}
+            srect . height -= 22;
+        }
 		sr = sb = 10;
 		sw = 20;
 		sh = 12;
@@ -467,9 +472,17 @@ uint4 MCScreenDC::dtouint4(Drawable d)
 	return t_id;
 }
 
-Boolean MCScreenDC::uint4towindow(uint4, Window &w)
+Boolean MCScreenDC::uint4towindow(uint4 p_id, Window &w)
 {
-	return False;
+    // MW-2014-07-15: [[ Bug 12800 ]] Map the windowId to a platform window if one exists.
+    MCPlatformWindowRef t_window;
+    
+    if (!MCPlatformGetWindowWithId(p_id, t_window))
+        return False;
+    
+    w = (Window)t_window;
+    
+	return True;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -836,6 +849,11 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		if (HasRunloopActions())
 			t_sleep = MCMin(0.01, t_sleep);
 		
+        // MW-2014-07-16: [[ Bug 12799 ]] If polling sockets does something then don't wait for long.
+        extern Boolean MCS_handle_sockets();
+        if (MCS_handle_sockets())
+            t_sleep = 0.0;
+        
 		// Wait for t_sleep seconds and collect at most one event. If an event
 		// is collected and anyevent is True, then we are done.
 		if (MCPlatformWaitForEvent(t_sleep, dispatch == False) && anyevent)

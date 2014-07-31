@@ -515,6 +515,8 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 			bool t_mask, t_alpha;
 			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
 			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
+			// IM-2014-06-26: [[ Bug 12699 ]] Set image type appropriately.
+			t_image . type = t_alpha ? kMCCustomPrinterImageRawARGB : (t_mask ? kMCCustomPrinterImageRawMRGB : kMCCustomPrinterImageRawXRGB);
 			t_image . id = (uint32_t)(intptr_t)p_mark->image.descriptor.image;
 			t_image . data = t_raster.pixels;
 			t_image . data_size = t_raster.stride * t_img_height;
@@ -531,9 +533,10 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 
 		// Compute the transform that is needed - this transform goes from image
 		// space to page space.
+		// IM-2014-06-26: [[ Bug 12699 ]] Rework to ensure transforms are applied in the correct order - page transform -> image offset -> image transform
 		MCGAffineTransform t_transform;
-		t_transform = MCGAffineTransformMakeScale(m_scale_x, m_scale_y);
-		t_transform = MCGAffineTransformTranslate(t_transform, m_translate_x + p_mark -> image . dx - p_mark -> image . sx, m_translate_y + p_mark -> image . dy - p_mark -> image . sy);
+		t_transform = MCGAffineTransformMake(m_scale_x, 0, 0, m_scale_y, m_translate_x, m_translate_y);
+		t_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeTranslation(p_mark -> image . dx - p_mark -> image . sx, p_mark -> image . dy - p_mark -> image . sy));
 		if (p_mark -> image . descriptor . has_transform)
 			t_transform = MCGAffineTransformConcat(t_transform, p_mark -> image . descriptor . transform);
 
@@ -1034,7 +1037,7 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	t_font . handle = t_font_handle;
 
 	bool t_success;
-	t_success = context -> device -> DrawText((const MCCustomPrinterGlyph *)p_span -> glyphs, p_span -> glyph_count, (const char *)t_bytes, t_clusters, t_font, context -> paint, context -> transform, context -> clip);
+	t_success = context -> device -> DrawText((const MCCustomPrinterGlyph *)p_span -> glyphs, p_span -> glyph_count, (const char *)t_bytes, t_byte_count, t_clusters, t_font, context -> paint, context -> transform, context -> clip);
 
 	MCMemoryDeleteArray(t_clusters);
 	
@@ -1316,10 +1319,12 @@ MCPrinterResult MCCustomPrinterDevice::Begin(const MCPrinterRectangle& p_src_rec
 		if (!StartPage())
 			return PRINTER_RESULT_ERROR;
 
+    // MW-2014-07-30: [[ Bug 12804 ]] Make sure we get left / top round the right way else clipping
+    //   is wrong.
 	// Calculate the convex integer hull of the source rectangle.
 	MCRectangle t_src_rect_hull;
-	t_src_rect_hull . x = (int2)floor(p_src_rect . top);
-	t_src_rect_hull . y = (int2)floor(p_src_rect . left);
+	t_src_rect_hull . x = (int2)floor(p_src_rect . left);
+	t_src_rect_hull . y = (int2)floor(p_src_rect . top);
 	t_src_rect_hull . width = (uint2)(ceil(p_src_rect . right) - floor(p_src_rect . left));
 	t_src_rect_hull . height = (uint2)(ceil(p_src_rect . bottom) - floor(p_src_rect . top));
 
@@ -1724,9 +1729,9 @@ public:
 		return true;
 	}
 
-	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
+	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
 	{
-		if (!m_target -> DrawText(glyphs, glyph_count, text, clusters, font, paint, transform, p_clip))
+		if (!m_target -> DrawText(glyphs, glyph_count, text_bytes, text_byte_count, clusters, font, paint, transform, p_clip))
 			return Failed("DrawText");
 		return true;
 	}
@@ -1913,9 +1918,9 @@ public:
 		return true;
 	}
 
-	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
+	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
 	{
-		Enter("begin text '%s' with clip (%f, %f)-(%f, %f)", text, 
+		Enter("begin text '%s' with clip (%f, %f)-(%f, %f)", text_bytes, 
 				p_clip . left, p_clip . top, p_clip . right, p_clip . bottom);
 		for(uint32_t i = 0; i < glyph_count; i++)
 			Print("glyph %d at (%f, %f)", glyphs[i] . id, glyphs[i] . x, glyphs[i] . y);

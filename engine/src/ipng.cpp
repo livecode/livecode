@@ -295,7 +295,24 @@ extern "C" void fakewrite(png_structp png_ptr, png_bytep data, png_size_t length
 	t_context->byte_count += length;
 }
 
-bool MCImageEncodePNG(MCImageIndexedBitmap *p_indexed, IO_handle p_stream, uindex_t &r_bytes_written)
+// MERG-2014-07-16: [[ ImageMetadata ]] Parse the metadata array
+static void parsemetadata(png_structp png_ptr, png_infop info_ptr, MCImageMetadata *p_metadata)
+{
+    if (p_metadata == nil)
+        return;
+    
+    if (p_metadata -> has_density)
+    {
+        real64_t t_ppi = p_metadata -> density;
+        if (t_ppi > 0)
+        {
+            // Convert to pixels per metre from pixels per inch
+            png_set_pHYs(png_ptr, info_ptr, t_ppi / 0.0254, t_ppi / 0.0254, PNG_RESOLUTION_METER);
+        }
+    }
+}
+
+bool MCImageEncodePNG(MCImageIndexedBitmap *p_indexed, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written)
 {
 	bool t_success = true;
 
@@ -336,7 +353,11 @@ bool MCImageEncodePNG(MCImageIndexedBitmap *p_indexed, IO_handle p_stream, uinde
 					 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 		png_set_gAMA(t_png_ptr, t_info_ptr, 1/MCgamma);
 	}
-
+    
+    // MERG-2014-07-16: [[ ImageMetadata ]] Parse the metadata array
+    if (t_success)
+        parsemetadata(t_png_ptr, t_info_ptr, p_metadata);
+    
 	if (t_success)
 		t_success = MCMemoryNewArray(p_indexed->palette_size, t_png_palette);
 
@@ -398,7 +419,7 @@ bool MCImageEncodePNG(MCImageIndexedBitmap *p_indexed, IO_handle p_stream, uinde
 	return t_success;
 }
 
-bool MCImageEncodePNG(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written)
+bool MCImageEncodePNG(MCImageBitmap *p_bitmap, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written)
 {
 	bool t_success = true;
 
@@ -417,7 +438,7 @@ bool MCImageEncodePNG(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 	MCImageIndexedBitmap *t_indexed = nil;
 	if (MCImageConvertBitmapToIndexed(p_bitmap, false, t_indexed))
 	{
-		t_success = MCImageEncodePNG(t_indexed, p_stream, r_bytes_written);
+		t_success = MCImageEncodePNG(t_indexed, p_metadata, p_stream, r_bytes_written);
 		MCImageFreeIndexedBitmap(t_indexed);
 		return t_success;
 	}
@@ -450,7 +471,11 @@ bool MCImageEncodePNG(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 			PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 		png_set_gAMA(t_png_ptr, t_info_ptr, 1/MCgamma);
 	}
-
+    
+    // MERG-2014-07-16: [[ ImageMetadata ]] Parse the metadata array
+    if (t_success)
+        parsemetadata(t_png_ptr, t_info_ptr, p_metadata);
+    
 	if (t_success)
 	{
 		png_write_info(t_png_ptr, t_info_ptr);

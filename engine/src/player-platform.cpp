@@ -73,8 +73,9 @@ static const char *ppmediastrings[] =
 };
 
 #define CONTROLLER_HEIGHT 26
-#define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 4
-#define PLAYER_MIN_WIDTH 5 * CONTROLLER_HEIGHT
+#define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 2
+// PM-2014-07-17: [[ Bug 12835 ]] Adjustments to prevent selectedArea and playedArea to be drawn without taking into account the width of the well
+#define PLAYER_MIN_WIDTH 5 * CONTROLLER_HEIGHT + 2 * SELECTION_RECT_WIDTH
 #define LIGHTGRAY 1
 #define PURPLE 2
 #define SOMEGRAY 3
@@ -539,6 +540,11 @@ MCPlayer::MCPlayer()
     m_show_volume = false;
     m_scrub_back_is_pressed = false;
     m_scrub_forward_is_pressed = false;
+    m_modify_selection_while_playing = false;
+    
+    // MW-2014-07-16: [[ Bug ]] Put the player in the list.
+    nextplayer = MCplayers;
+    MCplayers = this;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -571,6 +577,11 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     m_show_volume = false;
     m_scrub_back_is_pressed = false;
     m_scrub_forward_is_pressed = false;
+    m_modify_selection_while_playing = false;
+    
+    // MW-2014-07-16: [[ Bug ]] Put the player in the list.
+    nextplayer = MCplayers;
+    MCplayers = this;
 }
 
 MCPlayer::~MCPlayer()
@@ -580,6 +591,22 @@ MCPlayer::~MCPlayer()
 		close();
 	
 	playstop();
+    
+    // MW-2014-07-16: [[ Bug ]] Remove the player from the player's list.
+	if (MCplayers != NULL)
+	{
+		if (MCplayers == this)
+			MCplayers = nextplayer;
+		else
+		{
+			MCPlayer *tptr = MCplayers;
+			while (tptr->nextplayer != NULL && tptr->nextplayer != this)
+				tptr = tptr->nextplayer;
+			if (tptr->nextplayer == this)
+                tptr->nextplayer = nextplayer;
+		}
+	}
+	nextplayer = NULL;
     
 	if (m_platform_player != nil)
 		MCPlatformPlayerRelease(m_platform_player);
@@ -660,6 +687,8 @@ Boolean MCPlayer::kdown(const char *string, KeySym key)
             default:
                 break;
         }
+        // PM-2014-07-14: [[ Bug 12810 ]] Make sure we redraw the controller after using keyboard shortcuts to control playback
+        layer_redrawrect(getcontrollerrect());
     }
 	if (!(state & CS_NO_MESSAGES))
 		if (MCObject::kdown(string, key))
@@ -709,7 +738,11 @@ Boolean MCPlayer::mdown(uint2 which)
 		{
             case T_BROWSE:
                 message_with_args(MCM_mouse_down, "1");
-                handle_mdown(which);
+                // PM-2014-07-16: [[ Bug 12817 ]] Create selection when click and drag on the well while shift key is pressed
+                if ((MCmodifierstate & MS_SHIFT) != 0)
+                    handle_shift_mdown(which);
+                else
+                    handle_mdown(which);
                 MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
                 break;
             case T_POINTER:
@@ -799,12 +832,8 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 	{
 		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
         
-        // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX 10.7, use the old QTKit player
-        if (MCmajorosversion >= 0x1080)
-        {
-            if (getflag(F_SHOW_CONTROLLER))
-                trect . height -= CONTROLLER_HEIGHT;
-        }
+        if (getflag(F_SHOW_CONTROLLER))
+            trect . height -= CONTROLLER_HEIGHT;
         
         // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
         //   (backscale factor handled in platform layer).
@@ -818,11 +847,15 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
     if (MCNameIsEqualTo(mptr, MCM_play_started, kMCCompareCaseless))
     {
         state &= ~CS_PAUSED;
+        redrawcontroller();
     }
     else
         if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
         {
             state |= CS_PAUSED;
+            redrawcontroller();
+            
+            m_modify_selection_while_playing = false;
             
             if (disposable)
             {
@@ -833,7 +866,9 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
 		{
 			state |= CS_PAUSED;
+            redrawcontroller();
             
+            m_modify_selection_while_playing = false;
 		}
         else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
         {
@@ -1071,9 +1106,11 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                 return ES_ERROR;
             }
-            setcurtime(ctime);
+            setcurtime(ctime, false);
             if (isbuffering())
                 dirty = True;
+            else
+                redrawcontroller();
             break;
         case P_LOOPING:
             if (!MCU_matchflags(data, flags, F_LOOPING, dirty))
@@ -1105,8 +1142,13 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                     MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                     return ES_ERROR;
                 }
+                
+                if (endtime == MAXUINT4) //if endtime is not set, set it to the length of movie
+                    endtime = getduration();
+                else if (starttime > endtime)
+                    endtime = starttime;
             }
-            setselection();
+            setselection(false);
             break;
         case P_END_TIME: //this is the selection end time
             if (data.getlength() == 0)
@@ -1118,8 +1160,13 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                     MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                     return ES_ERROR;
                 }
+                
+                if (starttime == MAXUINT4)
+                    starttime = 0;
+                else if (starttime > endtime)
+                    starttime = endtime;
             }
-            setselection();
+            setselection(false);
             break;
         case P_TRAVERSAL_ON:
             if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
@@ -1283,6 +1330,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 				return ES_ERROR;
 			}
+            
 			if (m_platform_player != nil)
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
             
@@ -1295,25 +1343,12 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		{
 			uint4 oldflags = flags;
 			Exec_stat stat = MCControl::setprop(parid, p, ep, effective);
-			if (flags != oldflags && !(flags & F_VISIBLE))
-				playstop();
+            
 			if (m_platform_player != nil)
 			{
 				bool t_visible;
 				t_visible = getflag(F_VISIBLE);
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
-                
-                // PM-2014-07-09: [[ Bug 12731 ]] Hiding and showing resized player preserves its size (and the position of the controller thumb, if it is paused)
-                if (t_visible)
-                {
-                    MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-                    layer_redrawall();
-                    state |= CS_PREPARED | CS_PAUSED;
-                    {
-                        nextplayer = MCplayers;
-                        MCplayers = this;
-                    }
-                }
 			}
             
 			return stat;
@@ -1447,7 +1482,7 @@ void MCPlayer::freetmp()
 uint4 MCPlayer::getduration() //get movie duration/length
 {
 	uint4 duration;
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &duration);
 	else
 		duration = 0;
@@ -1457,7 +1492,7 @@ uint4 MCPlayer::getduration() //get movie duration/length
 uint4 MCPlayer::gettimescale() //get moive time scale
 {
 	uint4 timescale;
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyTimescale, kMCPlatformPropertyTypeUInt32, &timescale);
 	else
 		timescale = 0;
@@ -1467,42 +1502,62 @@ uint4 MCPlayer::gettimescale() //get moive time scale
 uint4 MCPlayer::getmoviecurtime()
 {
 	uint4 curtime;
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &curtime);
 	else
 		curtime = 0;
 	return curtime;
 }
 
-void MCPlayer::setcurtime(uint4 newtime)
+void MCPlayer::setcurtime(uint4 newtime, bool notify)
 {
 	lasttime = newtime;
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
+    {
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &newtime);
+        if (notify)
+            currenttimechanged();
+    }
 }
 
-void MCPlayer::setselection()
+void MCPlayer::setselection(bool notify)
 {
-    if (m_platform_player != nil)
+    if (m_platform_player != nil && hasfilename())
 	{
-		if (starttime == MAXUINT4 && endtime == MAXUINT4)
-        {
-            starttime = 0;
-            endtime = getduration();
-        }
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+        uint32_t t_current_start, t_current_finish;
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_current_start);
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_current_finish);
         
-        // TODO: Update this ugly way of calling SelectionChanged() via re-setting the kMCPlatformPlayerPropertyOnlyPlaySelection property
-        bool t_play_selection;
-        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
+        if (starttime != t_current_start || endtime != t_current_finish)
+        {
+            uint32_t t_st, t_et;
+            if (starttime == MAXUINT4 || endtime == MAXUINT4)
+                t_st = t_et = 0;
+            else
+            {
+                t_st = starttime;
+                t_et = endtime;
+            }
+            
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_st);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_et);
+            
+            if (notify)
+                selectionchanged();
+            
+            // MW-2014-07-22: [[ Bug 12870 ]] Make sure controller rect redrawn when setting selection
+            //   by script.
+            layer_redrawrect(getcontrollerrect());
+        }
+        
+        if (!m_modify_selection_while_playing)
+            playselection(getflag(F_PLAY_SELECTION));
 	}
 }
 
 void MCPlayer::setlooping(Boolean loop)
 {
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 	{
 		bool t_loop;
 		t_loop = loop;
@@ -1512,7 +1567,7 @@ void MCPlayer::setlooping(Boolean loop)
 
 void MCPlayer::setplayrate()
 {
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 	{
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &rate);
 		if (rate != 0.0f)
@@ -1521,9 +1576,19 @@ void MCPlayer::setplayrate()
 	}
     
 	if (rate != 0)
+    {
+        if (getstate(CS_PAUSED))
+            timer(MCM_play_started, nil);
 		state = state & ~CS_PAUSED;
+    }
 	else
+    {
+        if (!getstate(CS_PAUSED))
+            timer(MCM_play_paused, nil);
 		state = state | CS_PAUSED;
+    }
+    
+    redrawcontroller();
 }
 
 void MCPlayer::showbadge(Boolean show)
@@ -1541,7 +1606,7 @@ void MCPlayer::showbadge(Boolean show)
 void MCPlayer::editmovie(Boolean edit)
 {
 
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 	{
 		bool t_edit;
 		t_edit = edit;
@@ -1552,7 +1617,7 @@ void MCPlayer::editmovie(Boolean edit)
 
 void MCPlayer::playselection(Boolean play)
 {
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 	{
 		bool t_play;
 		t_play = play;
@@ -1562,8 +1627,10 @@ void MCPlayer::playselection(Boolean play)
 
 Boolean MCPlayer::ispaused()
 {
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 		return !MCPlatformPlayerIsPlaying(m_platform_player);
+    
+    return True;
 }
 
 void MCPlayer::showcontroller(Boolean show)
@@ -1577,26 +1644,23 @@ void MCPlayer::showcontroller(Boolean show)
         MCRectangle drect;
         drect = rect;
         
-        // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX >= 10.8, we use AVFoundation with our custom controller
+        // MW-2014-07-16: [[ QTSupport ]] We always use our own controller now.
         int t_height;
-        // 16 is the height of the default QTKit controller
-        t_height = (MCmajorosversion >= 0x1080 ? CONTROLLER_HEIGHT : 16);
+        t_height = CONTROLLER_HEIGHT;
                 
         if (show )
             drect . height += t_height;  // This is the height of the default QTKit controller
         else
             drect . height -= t_height;
         
-		bool t_show;
-		t_show = show;
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show);
         layer_setrect(drect, true);
 	}
 }
 
 Boolean MCPlayer::prepare(const char *options)
 {
-    if (MCmajorosversion <= 0x1080)
+    // For osversion < 10.8 we have to have QT initialized.
+    if (MCmajorosversion < 0x1080)
     {
         extern bool MCQTInit(void);
         if (!MCQTInit())
@@ -1609,13 +1673,8 @@ Boolean MCPlayer::prepare(const char *options)
 		return True;
     
     // Fixes the issue of invisible player being created by script
-	if (filename == NULL && state & CS_PREPARED)
-    {
-        if (m_platform_player != nil)
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
+	if (!hasfilename())
         return True;
-    }
-    
     
 	if (!opened)
 		return False;
@@ -1632,15 +1691,11 @@ Boolean MCPlayer::prepare(const char *options)
 	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
 	
 	MCRectangle trect = resize(t_movie_rect);
-    
-    // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX 10.7 we use QTKit player with its native controller
-    if (MCmajorosversion >= 0x1080)
-    {
-        // Adjust so that the controller isn't included in the movie rect.
-        if (getflag(F_SHOW_CONTROLLER))
-            trect . height -= CONTROLLER_HEIGHT;
-    }
 	
+    // Adjust so that the controller isn't included in the movie rect.
+    if (getflag(F_SHOW_CONTROLLER))
+        trect . height -= CONTROLLER_HEIGHT;
+    
 	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
     // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
     //   (backscale factor handled in platform layer).
@@ -1652,15 +1707,13 @@ Boolean MCPlayer::prepare(const char *options)
 	
 	t_looping = getflag(F_LOOPING);
 	t_show_selection = getflag(F_SHOW_SELECTION);
-    t_show_controller = getflag(F_SHOW_CONTROLLER);
     t_play_selection = getflag(F_PLAY_SELECTION);
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
-    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show_controller);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
     
-	setselection();
+	setselection(false);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
 	SynchronizeUserCallbacks();
 	
@@ -1685,10 +1738,6 @@ Boolean MCPlayer::prepare(const char *options)
 	if (ok)
 	{
 		state |= CS_PREPARED | CS_PAUSED;
-		{
-			nextplayer = MCplayers;
-			MCplayers = this;
-		}
 	}
     
 	return ok;
@@ -1706,21 +1755,37 @@ Boolean MCPlayer::playpause(Boolean on)
 {
 	if (!(state & CS_PREPARED))
 		return False;
-	
+    
 	Boolean ok;
 	ok = False;
-	
+    
+    if (on)
+        m_modify_selection_while_playing = false;
+    
 	if (m_platform_player != nil)
 	{
 		if (!on)
+        {
+            playselection(getflag(F_PLAY_SELECTION) && !m_modify_selection_while_playing);
 			MCPlatformStartPlayer(m_platform_player, rate);
-		else
+		}
+        else
+        {
 			MCPlatformStopPlayer(m_platform_player);
+        }
 		ok = True;
 	}
 	
 	if (ok)
+    {
+        if (getstate(CS_PAUSED) && !on)
+            timer(MCM_play_started, nil);
+        else if (!getstate(CS_PAUSED) && on)
+            timer(MCM_play_paused, nil);
 		setstate(on, CS_PAUSED);
+        
+        redrawcontroller();
+    }
     
 	return ok;
 }
@@ -1754,18 +1819,23 @@ Boolean MCPlayer::playstop()
 	
 	state &= ~(CS_PREPARED | CS_PAUSED);
 	lasttime = 0;
+    
+    m_modify_selection_while_playing = false;
 	
 	if (m_platform_player != nil)
 	{
 		MCPlatformStopPlayer(m_platform_player);
-		
+
 		needmessage = getduration() > getmoviecurtime();
 		
 		MCPlatformDetachPlayer(m_platform_player);
 	}
     
+    redrawcontroller();
+    
 	freetmp();
     
+    /*
 	if (MCplayers != NULL)
 	{
 		if (MCplayers == this)
@@ -1779,17 +1849,17 @@ Boolean MCPlayer::playstop()
                 tptr->nextplayer = nextplayer;
 		}
 	}
-	nextplayer = NULL;
+	nextplayer = NULL;*/
     
 	if (disposable)
 	{
-		if (needmessage)
-			getcard()->message_with_args(MCM_play_stopped, getname());
+		//if (needmessage)
+		//	getcard()->message_with_args(MCM_play_stopped, getname());
 		delete this;
 	}
-	else
-		if (needmessage)
-			message_with_args(MCM_play_stopped, getname());
+	//else
+		//if (needmessage)
+	//		message_with_args(MCM_play_stopped, getname());
     
 	return True;
 }
@@ -1874,8 +1944,10 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaTypeName, kMCPlatformPropertyTypeNativeCString, &(&t_name));
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
-				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_offset);
-				ep . concatuint(t_id, EC_RETURN, i == 1);
+                // MW-2014-07-11: [[ Bug 12757 ]] Fetch the duration and store it in t_duration
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                // PM-2014-07-14: [[ Bug 12809 ]] Make sure each track is displayed on a separate line
+				ep . concatuint(t_id, EC_RETURN, i == 0);
 				ep . concatcstring(*t_name, EC_COMMA, false);
 				ep . concatuint(t_offset, EC_COMMA, false);
 				ep . concatuint(t_duration, EC_COMMA, false);
@@ -1899,7 +1971,7 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
 				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 				if (t_enabled)
-					ep . concatuint(t_id, EC_RETURN, i == 1);
+					ep . concatuint(t_id, EC_RETURN, i == 0);
 			}
 		}
 }
@@ -1993,12 +2065,9 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 			trect.width = (uint2)(formattedwidth * scale);
 			trect.height = (uint2)(formattedheight * scale);
             
-            // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX 10.7 we use QTKit player with its native controller
-            if (MCmajorosversion >= 0x1080)
-            {
-                if (flags & F_SHOW_CONTROLLER)
-                    trect.height += CONTROLLER_HEIGHT;
-            }
+            if (flags & F_SHOW_CONTROLLER)
+                trect.height += CONTROLLER_HEIGHT;
+            
 			trect.x = x - (trect.width >> 1);
 			trect.y = y - (trect.height >> 1);
 			if (flags & F_SHOW_BORDER)
@@ -2028,20 +2097,38 @@ void MCPlayer::markerchanged(uint32_t p_time)
 
 void MCPlayer::selectionchanged(void)
 {
-/*
-    MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
-    MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
-    
-    redrawcontroller();
     timer(MCM_selection_changed, nil);
-    */
 }
 
-void MCPlayer::currenttimechanged(MCParameter *p_param)
+void MCPlayer::currenttimechanged(void)
 {
-    redrawcontroller();
+    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
+    MCParameter t_param;
+    t_param . setn_argument(getmoviecurtime());
+    timer(MCM_current_time_changed, &t_param);
     
-    timer(MCM_current_time_changed, p_param);
+    if (m_modify_selection_while_playing)
+    {
+        uint32_t t_current_time;
+        t_current_time = getmoviecurtime();
+        
+        if (t_current_time < endtime && t_current_time > starttime)
+            starttime = t_current_time;
+        if (t_current_time > endtime)
+            endtime = t_current_time;
+        
+        if ((MCmodifierstate & MS_SHIFT) == 0)
+            playpause(True);
+        
+        setselection(true);
+    }
+    
+    redrawcontroller();
+}
+
+void MCPlayer::moviefinished(void)
+{
+    timer(MCM_play_stopped, nil);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)
@@ -2109,6 +2196,9 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 	}
 	delete cblist;
     
+    if (!hasfilename())
+        return True;
+    
     // Now set the markers in the player so that we get notified.
     array_t<uint32_t> t_markers;
     /* UNCHECKED */ MCMemoryNewArray(m_callback_count, t_markers . ptr);
@@ -2123,7 +2213,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 
 Boolean MCPlayer::isbuffering(void)
 {
-	if (m_platform_player == nil)
+	if (m_platform_player == nil || !hasfilename())
 		return false;
 	
 	bool t_buffering;
@@ -2139,8 +2229,6 @@ Boolean MCPlayer::isbuffering(void)
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite)
 {
-    if (m_platform_player == nil)
-        return;
 	MCRectangle dirty;
 	dirty = p_dirty;
     
@@ -2170,7 +2258,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
     //if (!(state & CS_CLOSING))
 		//prepare(MCnullstring);
 	
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && hasfilename())
 	{
 		syncbuffering(dc);
 		
@@ -2198,14 +2286,10 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 	}
  
-    // PM-2014-07-10: [[ Bug 12737 ]] We use AVFoundation player with our custom controller only if OSX version >= 10.8
-    if (MCmajorosversion >= 0x1080)
+    // Draw our controller
+    if (getflag(F_SHOW_CONTROLLER))
     {
-        // Draw our controller
-        if (getflag(F_SHOW_CONTROLLER))
-        {
-            drawcontroller(dc);
-        }
+        drawcontroller(dc);
     }
     
 	if (getflag(F_SHOW_BORDER))
@@ -2247,7 +2331,8 @@ void MCPlayer::drawcontroller(MCDC *dc)
     drawControllerPlayPauseButton(t_gcontext);
     drawControllerWellButton(t_gcontext);
     
-    if (getflag(F_SHOW_SELECTION))
+    // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then selection handles are invisible
+    if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
     {
         drawControllerSelectedAreaButton(t_gcontext);
     }
@@ -2257,8 +2342,8 @@ void MCPlayer::drawcontroller(MCDC *dc)
     
     drawControllerPlayedAreaButton(t_gcontext);
     
-    
-    if (getflag(F_SHOW_SELECTION))
+    // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then selection handles are invisible
+    if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
     {
         drawControllerSelectionStartButton(t_gcontext);
         drawControllerSelectionFinishButton(t_gcontext);
@@ -2358,7 +2443,10 @@ void MCPlayer::drawControllerWellButton(MCGContextRef p_gcontext)
     // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartSelectedArea and kMCPlayerControllerPartPlayedArea
     t_drawn_well_rect . y = t_drawn_well_rect . y + 2 * CONTROLLER_HEIGHT / 5;
     t_drawn_well_rect . height = CONTROLLER_HEIGHT / 5;
-    t_drawn_well_rect . width -= 4;
+    
+    // PM-2014-07-17: [[ Bug 12833 ]] Reduce the length of the drawn well so as to fix alignment issues with the start/end point of selectedArea and playedArea 
+    t_drawn_well_rect . x += 4;
+    t_drawn_well_rect . width -= 10;
     
     MCGBitmapEffects t_effects;
 	t_effects . has_drop_shadow = false;
@@ -2421,8 +2509,8 @@ void MCPlayer::drawControllerThumbButton(MCGContextRef p_gcontext)
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
     MCRectangle t_drawn_thumb_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb);
-    // Adjust to look prettier
-    t_drawn_thumb_rect . y = t_drawn_thumb_rect . y + 2 *CONTROLLER_HEIGHT / 7;
+    // Adjust to look prettier. Note that these adjustments should match hittestcontroller in cases where thumb overlaps with selectionStart/selectionFinish handles
+    t_drawn_thumb_rect . y = t_drawn_thumb_rect . y + 2 * CONTROLLER_HEIGHT / 7;
     t_drawn_thumb_rect . height = 3 * CONTROLLER_HEIGHT / 7;
     t_drawn_thumb_rect . width = CONTROLLER_HEIGHT / 3;
        
@@ -2459,51 +2547,29 @@ void MCPlayer::drawControllerSelectionStartButton(MCGContextRef p_gcontext)
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
     MCRectangle t_drawn_selection_start_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart);
-    // Adjust to look prettier
-    t_drawn_selection_start_rect . y = t_drawn_selection_start_rect . y + CONTROLLER_HEIGHT / 4;
-    t_drawn_selection_start_rect . height = CONTROLLER_HEIGHT / 2;
-    t_drawn_selection_start_rect . width --;
-    
-    MCGBitmapEffects t_effects;
-	t_effects . has_drop_shadow = false;
-	t_effects . has_outer_glow = true;
-	t_effects . has_inner_glow = false;
-	t_effects . has_inner_shadow = false;
-    t_effects . has_color_overlay = false;
-    
-    MCGGlowEffect t_outer_glow;
-    t_outer_glow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 1.0f);
-    
-    t_outer_glow . blend_mode = kMCGBlendModeClear;
-    t_outer_glow . size = t_drawn_selection_start_rect . width / 2;
-    t_outer_glow . spread = 0;
-    
-    t_effects . outer_glow = t_outer_glow;
-    
-    MCAutoPointer<MCGColor> t_colors;
-    MCAutoPointer<MCGFloat> t_stops;
-    setRamp(&t_colors, &t_stops);
-    
-    MCGAffineTransform t_transform;
-    
-    float origin_x = t_drawn_selection_start_rect.x + t_drawn_selection_start_rect . width / 2.0;
-	float origin_y = t_drawn_selection_start_rect.y;
-	float primary_x = t_drawn_selection_start_rect.x + t_drawn_selection_start_rect.width / 2.0;
-	float primary_y = t_drawn_selection_start_rect.y + t_drawn_selection_start_rect . height;
-	float secondary_x = t_drawn_selection_start_rect.x - 2 * t_drawn_selection_start_rect.width;
-	float secondary_y = t_drawn_selection_start_rect.y;
-    
-    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
-        
-    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, *t_stops, *t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
     MCGContextSetShouldAntialias(p_gcontext, true);
-    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_drawn_selection_start_rect);
-    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 5));
-    MCGContextBeginWithEffects(p_gcontext, t_grect, t_effects);
     
+    MCGContextBeginPath(p_gcontext);
+    
+    // PM-2014-07-16: [[ Bug 12816 ]] Change the appearance of selection handles so as not to obscure player thumb
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.05));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.7, 0.05));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.7, 0.1));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.5, 0.25));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.1));
+    MCGContextCloseSubpath(p_gcontext);
+    
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.93));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.7, 0.93));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.7, 0.88));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.5, 0.73));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.88));
+    MCGContextCloseSubpath(p_gcontext);
+
+    
+    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
     MCGContextFill(p_gcontext);
-    MCGContextEnd(p_gcontext);
 }
 
 void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
@@ -2511,51 +2577,29 @@ void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
     MCRectangle t_drawn_selection_finish_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish);
-    // Adjust to look prettier
-    t_drawn_selection_finish_rect . y = t_drawn_selection_finish_rect . y + CONTROLLER_HEIGHT / 4;
-    t_drawn_selection_finish_rect . height = CONTROLLER_HEIGHT / 2;
-    t_drawn_selection_finish_rect . width --;
-    
-    MCGBitmapEffects t_effects;
-	t_effects . has_drop_shadow = false;
-	t_effects . has_outer_glow = true;
-	t_effects . has_inner_glow = false;
-	t_effects . has_inner_shadow = false;
-    t_effects . has_color_overlay = false;
-    
-    MCGGlowEffect t_outer_glow;
-    t_outer_glow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 1.0f);
-    
-    t_outer_glow . blend_mode = kMCGBlendModeClear;
-    t_outer_glow . size = t_drawn_selection_finish_rect . width / 2;
-    t_outer_glow . spread = 0;
-    
-    t_effects . outer_glow = t_outer_glow;
-    
-    MCAutoPointer<MCGColor> t_colors;
-    MCAutoPointer<MCGFloat> t_stops;
-    setRamp(&t_colors, &t_stops);
-    
-    MCGAffineTransform t_transform;
-    
-    float origin_x = t_drawn_selection_finish_rect.x + t_drawn_selection_finish_rect . width / 2.0;
-	float origin_y = t_drawn_selection_finish_rect.y;
-	float primary_x = t_drawn_selection_finish_rect.x + t_drawn_selection_finish_rect.width / 2.0;
-	float primary_y = t_drawn_selection_finish_rect.y + t_drawn_selection_finish_rect . height;
-	float secondary_x = t_drawn_selection_finish_rect.x - 2 * t_drawn_selection_finish_rect.width;
-	float secondary_y = t_drawn_selection_finish_rect.y;
-    
-    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
-        
-    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, *t_stops, *t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
     MCGContextSetShouldAntialias(p_gcontext, true);
     
-    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_drawn_selection_finish_rect);
-    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 5));
-    MCGContextBeginWithEffects(p_gcontext, t_grect, t_effects);
+    MCGContextBeginPath(p_gcontext);
+    
+    // PM-2014-07-16: [[ Bug 12816 ]] Change the appearance of selection handles so as not to obscure player thumb
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.05));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.7, 0.05));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.7, 0.1));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.5, 0.25));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.1));
+    MCGContextCloseSubpath(p_gcontext);
+    
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.93));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.7, 0.93));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.7, 0.88));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.5, 0.73));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.88));
+    MCGContextCloseSubpath(p_gcontext);
+    
+    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
     MCGContextFill(p_gcontext);
-    MCGContextEnd(p_gcontext);
+
 }
 
 void MCPlayer::drawControllerScrubForwardButton(MCGContextRef p_gcontext)
@@ -2636,6 +2680,7 @@ void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
     // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartWell and kMCPlayerControllerPartSelectedArea
     t_drawn_played_area . y = t_drawn_played_area . y + 3 * CONTROLLER_HEIGHT / 7;
     t_drawn_played_area . height = CONTROLLER_HEIGHT / 7;
+    t_drawn_played_area . x--;
 
     
     MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
@@ -2650,7 +2695,38 @@ int MCPlayer::hittestcontroller(int x, int y)
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
     
-    if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartPlay), x, y))
+    // PM-2014-07-16 [[ Bug 12816 ]] Handle case where player thumb and selection handles overlap
+    if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb), x, y) && MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart), x, y))
+    {
+        MCRectangle t_thumb_rect;
+        t_thumb_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb);
+        
+        // Look in drawControllerThumbButton and match the dimensions of the drawn thumb rect
+        MCRectangle t_drawn_thumb_rect;
+        t_drawn_thumb_rect = MCRectangleMake(t_thumb_rect . x, t_thumb_rect . y + 2 * CONTROLLER_HEIGHT / 7, CONTROLLER_HEIGHT / 3, 3 * CONTROLLER_HEIGHT / 7);
+        
+        if (MCU_point_in_rect(t_drawn_thumb_rect, x, y))
+            return kMCPlayerControllerPartThumb;
+        else
+            return kMCPlayerControllerPartSelectionStart;
+    }
+    
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb), x, y) && MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish), x, y))
+    {
+        MCRectangle t_thumb_rect;
+        t_thumb_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb);
+        
+        // Look in drawControllerThumbButton and match the dimensions of the drawn thumb rect
+        MCRectangle t_drawn_thumb_rect;
+        t_drawn_thumb_rect = MCRectangleMake(t_thumb_rect . x, t_thumb_rect . y + 2 * CONTROLLER_HEIGHT / 7, CONTROLLER_HEIGHT / 3, 3 * CONTROLLER_HEIGHT / 7);
+        
+        if (MCU_point_in_rect(t_drawn_thumb_rect, x, y))
+            return kMCPlayerControllerPartThumb;
+        else
+            return kMCPlayerControllerPartSelectionFinish;
+    }
+    
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartPlay), x, y))
         return kMCPlayerControllerPartPlay;
     
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume), x, y))
@@ -2662,14 +2738,14 @@ int MCPlayer::hittestcontroller(int x, int y)
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubForward), x, y))
         return kMCPlayerControllerPartScrubForward;
     
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb), x, y))
+        return kMCPlayerControllerPartThumb;
+    
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart), x, y))
         return kMCPlayerControllerPartSelectionStart;
     
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish), x, y))
         return kMCPlayerControllerPartSelectionFinish;
-    
-    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb), x, y))
-        return kMCPlayerControllerPartThumb;
     
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell), x, y))
         return kMCPlayerControllerPartWell;
@@ -2727,8 +2803,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 return MCRectangleMake(0, 0, 0, 0);
             
             uint32_t t_current_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_current_time = getmoviecurtime();
+            t_duration = getduration();
             
             if (t_current_time >= t_duration)
                 t_current_time = t_duration;
@@ -2744,7 +2820,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             if (t_duration != 0)
                 t_thumb_left = t_active_well_width * t_current_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_thumb_left + SELECTION_RECT_WIDTH / 2, t_well_rect . y, CONTROLLER_HEIGHT / 2, t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_thumb_left + CONTROLLER_HEIGHT / 8 - 1, t_well_rect . y, CONTROLLER_HEIGHT / 2, t_well_rect . height);
         }
             break;
             
@@ -2752,12 +2828,13 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             // PM-2014-07-08: [[ Bug 12763 ]] Make sure controller elememts are not broken when player width becomes too small
             // Now, reducing the player width below a threshold results in gradually removing controller elements from right to left
             // i.e first the scrubBack/scrubForward buttons will be removed, then the well/thumb rects etc. This behaviour is similar to the old player that used QuickTime
-             
+            
             if (p_rect . width < 3 * CONTROLLER_HEIGHT)
                 return MCRectangleMake(0,0,0,0);
         
+            // PM-2014-07-17: [[ Bug 12835 ]] Adjustments to prevent selectedArea and playedArea to be drawn without taking into account the width of the well
             if (p_rect . width < PLAYER_MIN_WIDTH)
-                return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y, p_rect . width - 2 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT);
+                return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT, p_rect . y, p_rect . width - 2 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
             
             return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y , p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT );
             
@@ -2778,8 +2855,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         case kMCPlayerControllerPartSelectionStart:
         {
             uint32_t t_start_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_start_time = getstarttime();
+            t_duration = getduration();
             
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
@@ -2798,8 +2875,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         case kMCPlayerControllerPartSelectionFinish:
         {
             uint32_t t_finish_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_finish_time = getendtime();
+            t_duration = getduration();
             
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
@@ -2813,7 +2890,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
             
             // PM-2014-07-09: [[ Bug 12750 ]] Make sure progress thumb and selectionFinish handle light up
-            return MCRectangleMake(t_well_rect . x + t_selection_finish_left + SELECTION_RECT_WIDTH, t_well_rect . y , SELECTION_RECT_WIDTH, t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_selection_finish_left, t_well_rect . y , SELECTION_RECT_WIDTH, t_well_rect . height);
         }
             break;
             
@@ -2836,9 +2913,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         case kMCPlayerControllerPartSelectedArea:
         {
             uint32_t t_start_time, t_finish_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_start_time = getstarttime();
+            t_finish_time = getendtime();
+            t_duration = getduration();
             
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
@@ -2859,7 +2936,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
             }
             
-            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_selection_finish_left - t_selection_start_left + t_thumb_rect . width, t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . y, t_selection_finish_left - t_selection_start_left, t_well_rect . height);
         }
             break;
             
@@ -2880,12 +2957,13 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         case kMCPlayerControllerPartPlayedArea:
         {
             uint32_t t_start_time, t_current_time, t_finish_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_duration = getduration();
             
-            if (getflag(F_SHOW_SELECTION))
+            // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+            if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
             {
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
+                t_start_time = getstarttime();
+                t_finish_time = getendtime();
             }
             else
             {
@@ -2893,8 +2971,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 t_finish_time = t_duration;
             }
             
-            
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
+            t_current_time = getmoviecurtime();
             
             if (t_current_time == 0)
                 t_current_time = t_start_time;
@@ -2922,7 +2999,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 t_current_time_left = t_active_well_width * t_current_time / t_duration;
             }
             
-            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_current_time_left - t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . y, t_current_time_left - t_selection_start_left, t_well_rect . height);
         }
             break;
         case kMCPlayerControllerPartVolumeWell:
@@ -2963,16 +3040,22 @@ void MCPlayer::handle_mdown(int p_which)
     switch(t_part)
     {
         case kMCPlayerControllerPartPlay:
+        {
+            // MW-2014-07-18: [[ Bug 12825 ]] When play button clicked, previous behavior was to
+            //   force rate to 1.0.
+            if (!getstate(CS_PREPARED) || ispaused())
+                rate = 1.0;
             if (getstate(CS_PREPARED))
             {
                 playpause(!ispaused());
             }
             else
+            {
                 playstart(nil);
+            }
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlay));
-    
-            
-            break;
+        }
+        break;
         case kMCPlayerControllerPartVolume:
         {
             if (!m_show_volume)
@@ -3032,10 +3115,15 @@ void MCPlayer::handle_mdown(int p_which)
             
         case kMCPlayerControllerPartWell:
         {
+            // MW-2014-07-22: [[ Bug 12871 ]] If we click in the well without shift and there
+            //   is a selection, the selection is removed.
+            endtime = starttime;
+            setselection(true);
+            
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             
             uint32_t t_new_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_duration = getduration();
             
             t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
             
@@ -3043,7 +3131,7 @@ void MCPlayer::handle_mdown(int p_which)
             if (!ispaused() && t_new_time < starttime && getflag(F_PLAY_SELECTION))
                 t_new_time = starttime;
             
-            setcurtime(t_new_time);
+            setcurtime(t_new_time, true);
             
             layer_redrawall();
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb));
@@ -3131,13 +3219,13 @@ void MCPlayer::handle_mfocus(int x, int y)
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 
                 int32_t t_new_time, t_duration;
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                t_duration = getduration();
                 
                 t_new_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 
                 if (t_new_time < 0)
                     t_new_time = 0;
-                setcurtime(t_new_time);
+                setcurtime(t_new_time, true);
                 
                 layer_redrawall();
                 layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb));
@@ -3149,14 +3237,26 @@ void MCPlayer::handle_mfocus(int x, int y)
             {
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 uint32_t t_new_start_time, t_duration;
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                t_duration = getduration();
                 
                 // PM-2014-07-08: [[Bug 12759]] Make sure we don't drag the selection start beyond the start point of the player
                 if (x <= t_part_well_rect . x)
                     x = t_part_well_rect . x;
                 
                 t_new_start_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
-                setstarttime(t_new_start_time);
+                
+                if (t_new_start_time >= endtime)
+                    t_new_start_time = endtime;
+                
+                if (t_new_start_time <= 0)
+                    starttime = 0;
+                else if (t_new_start_time > getduration())
+                    starttime = getduration();
+                else
+                    starttime = t_new_start_time;
+                
+                setselection(true);
+                
             }
                 break;
                 
@@ -3165,11 +3265,22 @@ void MCPlayer::handle_mfocus(int x, int y)
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 
                 uint32_t t_new_finish_time, t_duration;
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                t_duration = getduration();
                 
                 t_new_finish_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 
-                setendtime(t_new_finish_time);
+                if (t_new_finish_time <= starttime)
+                    t_new_finish_time = starttime;
+                
+                if (t_new_finish_time <= 0)
+                    endtime = 0;
+                else if (t_new_finish_time > getduration())
+                    endtime = getduration();
+                else
+                    endtime = t_new_finish_time;
+                
+                setselection(true);
+                
             }
                 break;
                 
@@ -3198,9 +3309,8 @@ void MCPlayer::handle_mstilldown(int p_which)
         case kMCPlayerControllerPartScrubForward:
         {
             uint32_t t_current_time, t_duration;
-            
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_current_time = getmoviecurtime();
+            t_duration = getduration();
             
             if (t_current_time > t_duration)
                 t_current_time = t_duration;
@@ -3213,16 +3323,16 @@ void MCPlayer::handle_mstilldown(int p_which)
             else
                 t_rate = 0.0;
             
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+            if (hasfilename())
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
         }
             break;
             
         case kMCPlayerControllerPartScrubBack:
         {
             uint32_t t_current_time, t_duration;
-            
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            t_current_time = getmoviecurtime();
+            t_duration = getduration();
             
             if (t_current_time < 0.0)
                 t_current_time = 0.0;
@@ -3235,7 +3345,8 @@ void MCPlayer::handle_mstilldown(int p_which)
             else
                 t_rate = 0.0;
             
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+            if (hasfilename())
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
         }
             break;
             
@@ -3264,7 +3375,8 @@ void MCPlayer::handle_mup(int p_which)
         // We want the SelectionChanged message to fire on mup
         case kMCPlayerControllerPartSelectionStart:
         case kMCPlayerControllerPartSelectionFinish:
-            setselection();
+            setselection(true);
+            layer_redrawrect(getcontrollerrect());
             break;
 
 
@@ -3282,4 +3394,73 @@ void MCPlayer::popup_closed(void)
     
     m_show_volume = false;
     layer_redrawall();
+}
+
+// PM-2014-07-16: [[ Bug 12817 ]] Create selection when click and drag on the well while shift key is pressed
+void MCPlayer::handle_shift_mdown(int p_which)
+{
+    if (!getflag(F_SHOW_CONTROLLER))
+        return;
+    
+    int t_part;
+    t_part = hittestcontroller(mx, my);
+    
+    switch(t_part)
+    {
+        case kMCPlayerControllerPartThumb:
+        case kMCPlayerControllerPartWell:
+        {
+            MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
+            
+            uint32_t t_new_time, t_old_time, t_duration, t_old_start, t_old_end;;
+            t_old_time = getmoviecurtime();
+            t_duration = getduration();
+            
+            // If there was previously no selection, then take it to be currenttime, currenttime.
+            if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
+                starttime = endtime = t_old_time;
+            
+            t_old_start = getstarttime();
+            t_old_end = getendtime();
+            
+            t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+            
+            // If click before current starttime, adjust that.
+            // If click after current endtime, adjust that.
+            // If click first half of current selection, adjust start.
+            // If click last half of current selection, adjust end.
+            if (t_new_time <= (t_old_end + t_old_start) / 2)
+            {
+                starttime = t_new_time;
+                m_grabbed_part = kMCPlayerControllerPartSelectionStart;
+            }
+            else
+            {
+                endtime = t_new_time;
+                m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
+            }
+            
+            if (hasfilename())
+            {
+                bool t_show_selection;
+                t_show_selection = true;
+                setflag(True, F_SHOW_SELECTION);
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+                
+                setselection(true);
+            }
+            
+            layer_redrawrect(getcontrollerrect());
+        }
+            break;
+            
+        case kMCPlayerControllerPartPlay:
+            m_modify_selection_while_playing = true;
+            handle_mdown(p_which);
+            break;
+                     
+        default:
+            break;
+    }
+
 }

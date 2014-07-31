@@ -73,7 +73,10 @@ MCStack::MCStack()
 	obj_id = START_ID;
 	flags = F_VISIBLE | F_RESIZABLE | F_OPAQUE;
 	window = NULL;
-	parentwindow = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] No parent window to start with
+	m_parent_stack = nil;
+	
 	cursor = None;
 	substacks = NULL;
 	cards = curcard = savecards = NULL;
@@ -180,7 +183,10 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		}
 	}
 	window = NULL;
-	parentwindow = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] No parent window to start with
+	m_parent_stack = nil;
+	
 	cursor = None;
 	substacks = NULL;
 	cards = curcard = savecards = NULL;
@@ -373,8 +379,10 @@ MCStack::~MCStack()
 		opened++;
 		MCObject::close();
 	}
-	if (parentwindow != NULL)
-		setparentwindow(NULL);
+	
+	if (m_parent_stack != nil)
+		setparentstack(nil);
+
 	delete mnemonics;
 	delete title;
 	delete titlestring;
@@ -642,8 +650,15 @@ void MCStack::kfocus()
 	if (state & CS_SUSPENDED)
 	{
 		curcard->message(MCM_resume_stack);
+        
+        // We have just invoked script, so it is entirely possible that focus is now
+        // 'elsewhere' - if the focused stack is not us, then do nothing.
+        if (MCfocusedstackptr != this)
+            return;
+
 		state &= ~CS_SUSPENDED;
 	}
+    
 	if (!(state & CS_KFOCUSED))
 	{
 		state |= CS_KFOCUSED;
@@ -694,6 +709,12 @@ void MCStack::kunfocus()
 	if (!opened)
 		return;
 	curcard->message(MCM_suspend_stack);
+    
+    // We have just invoked script, so we might be the focused stack again. So
+    // if focused stack is us, then do nothing.
+    if (MCfocusedstackptr == this)
+        return;
+    
 	state |= CS_SUSPENDED;
 	curcard->kunfocus();
 }
@@ -3113,7 +3134,8 @@ MCRectangle MCStack::getwindowrect(void) const
 	t_rect = view_getwindowrect();
 	
 	// IM-2014-01-23: [[ HiDPI ]] Use inverse view transform to get stack coords
-	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(getviewtransform()));
+	// IM-2014-07-14: [[ Bug 12765 ]] Don't use the stack transform as this should be in view coords.
+	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(view_getviewtransform()));
 }
 
 //////////

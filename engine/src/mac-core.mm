@@ -520,17 +520,24 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
+    // MW-2014-07-24: [[ Bug 12939 ]] If we are running a modal session, then don't then wait
+    //   for events - event handling happens inside the modal session.
+    NSEvent *t_event;
 	if (t_modal)
+    {
 		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
-	
-    // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
-    //   WebViews from working.
-	NSEvent *t_event;
-	t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
-								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
-									inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
-								   dequeue: YES];
-	
+        t_event = nil;
+    }
+	else
+    {
+        // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
+        //   WebViews from working.
+        t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
+                                     untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
+                                        inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
+                                       dequeue: YES];
+    }
+    
 	s_in_blocking_wait = false;
 
 	if (t_event != nil)
@@ -561,6 +568,11 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
 {
+    // MW-2014-07-24: [[ Bug 12898 ]] The context of the click is changing, so make sure we sync
+    //   mouse state - i.e. send a mouse release if in mouseDown and send a mouseLeave for the
+    //   current mouse window.
+	MCMacPlatformSyncMouseBeforeDragging();
+    
 	/* UNCHECKED */ MCMemoryResizeArray(s_modal_session_count + 1, s_modal_sessions, s_modal_session_count);
 	
 	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
@@ -834,6 +846,27 @@ void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
 		r_window = [(MCWindowDelegate *)[t_window delegate] platformWindow];
 	else
 		r_window = nil;
+}
+
+// MW-2014-07-15: [[ Bug 12800 ]] Map a window number to a platform window - if there is one.
+bool MCPlatformGetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
+{
+    NSWindow *t_ns_window;
+    t_ns_window = [NSApp windowWithWindowNumber: p_id];
+    if (t_ns_window == nil)
+        return false;
+    
+    id t_delegate;
+    t_delegate = [t_ns_window delegate];
+    if (t_delegate == nil)
+        return false;
+    
+    if (![t_delegate isKindOfClass: [MCWindowDelegate class]])
+        return false;
+    
+    r_window = [(MCWindowDelegate *)t_delegate platformWindow];
+    
+    return true;
 }
 
 uint32_t MCPlatformGetEventTime(void)

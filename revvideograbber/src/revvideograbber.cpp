@@ -185,12 +185,13 @@ Bool InitQT()
 {
 	static Bool QTInited = False;
 	if (QTInited) return QTInited;
-	#ifdef WIN32
+#ifdef WIN32
 	if (InitializeQTML(0L) == noErr || EnterMovies() == noErr)
 		QTInited = True;
-		#else
-		QTInited = True;
-		#endif
+#else
+    if (EnterMovies() == noErr)
+        QTInited = True;
+#endif
 	return QTInited;
 }
 

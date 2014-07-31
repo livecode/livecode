@@ -305,23 +305,14 @@ bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, M
 	
 	if (t_success)
 	{
-		if (p_frame < m_frame_count)
-		{
-			m_frame_count = t_frame_count;
-			m_locked_frames = t_frames;
-			t_frames = nil;
+		// IM-2014-07-28: [[ Bug 13009 ]] If we have valid frames then store in locked frames and return requested frame.
+		m_frame_count = t_frame_count;
+		m_locked_frames = t_frames;
+		t_frames = nil;
 			
-			Retain();
+		Retain();
 			
-			r_frame = &m_locked_frames[p_frame];
-		}
-		else
-		{
-			// store frames in cache if not already loaded
-			if (m_frames == nil)
-				t_success = ConvertToMCGFrames(t_frames, t_frame_count, false);
-			t_success = false;
-		}
+		r_frame = &m_locked_frames[p_frame];
 	}
 	
 	MCImageFreeFrames(t_frames, t_frame_count);
@@ -621,11 +612,13 @@ bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *
 }
 
 // IM-2013-11-05: [[ RefactorGraphics ]] Create new resampled image rep and add to the cache list
-bool MCImageRepGetResampled(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source, MCImageRep *&r_rep)
+// IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
+// and explicit flip params instead of scale values.
+bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCResampledImageRep(p_h_scale, p_v_scale, p_source);
+	MCCachedImageRep *t_rep = new MCResampledImageRep(p_width, p_height, p_flip_horizontal, p_flip_vertical, p_source);
 	
 	t_success = t_rep != nil;
 	if (t_success)
