@@ -37,7 +37,7 @@ void MCThreadConditionSignal(MCThreadConditionRef condition);
 
 uint32_t MCThreadGetNumberOfCores(void);
 
-#ifndef _WINDOWS
+#ifndef WIN32
 
 static inline __attribute__((always_inline)) int32_t MCThreadAtomicInc(int32_t* addr) {
     return __sync_fetch_and_add(addr, 1);
