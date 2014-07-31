@@ -278,6 +278,8 @@ MCButton::MCButton()
     
     // MW-2014-06-19: [[ IconGravity ]] By default buttons use legacy behavior.
     m_icon_gravity = kMCGravityNone;
+    
+    m_animate_posted = false;
 }
 
 MCButton::MCButton(const MCButton &bref) : MCControl(bref)
@@ -351,6 +353,8 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
     
     // MW-2014-06-19: [[ IconGravity ]] Copy the other buttons gravity
     m_icon_gravity = kMCGravityNone;
+    
+    m_animate_posted = false;
 }
 
 MCButton::~MCButton()
@@ -1559,6 +1563,7 @@ void MCButton::timer(MCNameRef mptr, MCParameter *params)
 	{
 		if (state & CS_SHOW_DEFAULT)
 		{
+            m_animate_posted = false;            
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 		}

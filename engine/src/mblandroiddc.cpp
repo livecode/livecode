@@ -701,7 +701,6 @@ public:
 		// IM-2014-06-11: [[ Graphics Performance ]] Mark the locked region for redraw
 		MCGRegionAddRegion(s_android_bitmap_dirty_region, m_region);
 	}
-
     
     bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
     {
@@ -775,8 +774,6 @@ class MCOpenGLStackSurface: public MCStackSurface
 	void *m_buffer_pixels;
 	uint32_t m_buffer_stride;
 	
-	MCGContextRef m_locked_context;
-	MCRectangle m_locked_area;
 	bool m_locked;
 	bool m_update;
 
@@ -784,7 +781,6 @@ public:
 	MCOpenGLStackSurface(void)
 	{
 		m_buffer_pixels = nil;
-		m_locked_context = nil;
 		m_locked = false;
 		m_update = false;
 	}
@@ -812,54 +808,54 @@ public:
 		MCMemoryDeallocate(m_buffer_pixels);
 		m_buffer_pixels = nil;
 	}
-	
-	bool LockGraphics(MCGRegionRef p_area, MCGContextRef &r_context)
+    
+    bool LockGraphics(MCGIntegerRectangle p_area, MCGContextRef &r_context, MCGRaster &r_raster)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(MCGRegionGetBounds(p_area), t_raster))
+		if (LockPixels(p_area, t_raster))
 		{
-			if (MCGContextCreateWithRaster(t_raster, r_context))
+            MCGContextRef t_context;
+            if (MCGContextCreateWithRaster(t_raster, t_context))
+			{
+                r_raster = t_raster;
 				return true;
-			
-			UnlockPixels(false);
+			}
+			UnlockPixels(p_area, t_raster, false);
 		}
-		
 		return false;
 	}
-
-	void UnlockGraphics(void)
+    
+	void UnlockGraphics(MCGIntegerRectangle p_area, MCGContextRef p_context, MCGRaster &p_raster)
 	{
-		if (m_locked_context == nil)
+		if (p_context == nil)
 			return;
-
-		MCGContextRelease(m_locked_context);
-		m_locked_context = nil;
-
-		UnlockPixels();
+		
+		MCGContextRelease(p_context);
+		UnlockPixels(p_area, p_raster);
 	}
 
-	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster &r_raster)
+    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster &r_raster)
 	{
 		if (m_locked)
 			return false;
-
+        
 		r_raster.width = s_android_bitmap_width;
 		r_raster.height = s_android_bitmap_height;
 		r_raster.stride = m_buffer_stride;
 		r_raster.pixels = m_buffer_pixels;
 		r_raster.format = kMCGRasterFormat_xRGB;
-
+        
 		m_locked = true;
-
+        
 		return true;
 	}
-
-	void UnlockPixels(void)
+    
+	void UnlockPixels(MCGIntegerRectangle p_area, MCGRaster& p_raster)
 	{
-		UnlockPixels(true);
+		UnlockPixels(p_area, p_raster, true);
 	}
 
-	void UnlockPixels(bool p_update)
+	void UnlockPixels(MCGIntegerRectangle p_area, MCGRaster& p_raster, bool p_update)
 	{
 		if (!m_locked)
 			return;
@@ -869,7 +865,7 @@ public:
 		
 		m_locked = false;
 	}
-
+    
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_context)
 	{
 		if (p_type != kMCStackSurfaceTargetEAGLContext)
@@ -881,37 +877,34 @@ public:
 	void UnlockTarget(void)
 	{
 	}
-
-	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+    
+    bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 	{
 		bool t_success = true;
-		
-		MCGContextRef t_context = nil;
-		MCGRegionRef t_region = nil;
-		
-		t_success = MCGRegionCreate(t_region);
-		
+        
+        MCGIntegerRectangle t_bounds;
+        MCGContextRef t_context = nil;
+        MCGRaster t_raster;
 		if (t_success)
-			t_success = MCGRegionSetRect(t_region, MCGRectangleGetBounds(p_dst_rect));
-		
-		if (t_success)
-			t_success = LockGraphics(t_region, t_context);
+        {
+            t_bounds = MCGRectangleGetBounds(p_dst_rect);
+            t_success = LockGraphics(t_bounds, t_context, t_raster);
+        }
 		
 		if (t_success)
 		{
-			MCGContextSetBlendMode(t_context, p_blend);
+            MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
+            
             // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNone);
 		}
 		
-		UnlockGraphics();
-		
-		MCGRegionDestroy(t_region);
+		UnlockGraphics(t_bounds, t_context, t_raster);
 		
 		return t_success;
 	}
-	   
+
 protected:
 	static void FlushBits(void *p_bits, uint32_t p_stride)
 	{

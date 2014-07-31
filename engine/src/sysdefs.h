@@ -1310,6 +1310,9 @@ class MCStyledText;
 
 typedef struct MCFont *MCFontRef;
 
+typedef struct __MCThreadCondition *MCThreadConditionRef;
+typedef struct __MCThreadMutex *MCThreadMutexRef;
+
 //////////////////////////////////////////////////////////////////////
 
 #endif

@@ -348,6 +348,8 @@ class MCImage : public MCControl
 	static MCCursorRef cursor;
 	static MCCursorRef defaultcursor;
 	static uint2 cmasks[8];
+    
+    bool m_animate_posted : 1;
 	
 public:
 	// replace the current image data with the new bitmap

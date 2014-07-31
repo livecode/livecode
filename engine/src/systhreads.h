@@ -19,9 +19,6 @@
 
 #define kMCThreadPoolSize 4
 
-typedef struct __MCThreadCondition *MCThreadConditionRef;
-typedef struct __MCThreadMutex *MCThreadMutexRef;
-
 bool MCThreadPoolInitialize();
 void MCThreadPoolFinalize();
 bool MCThreadPoolPushTask(void (*task)(void*), void* context);
@@ -37,5 +34,7 @@ MCThreadConditionRef MCThreadConditionRetain(MCThreadConditionRef condition);
 void MCThreadConditionRelease(MCThreadConditionRef condition);
 void MCThreadConditionWait(MCThreadConditionRef condition, MCThreadMutexRef mutex);
 void MCThreadConditionSignal(MCThreadConditionRef condition);
+
+uint32_t MCThreadGetNumberOfCores(void);
 
 #endif

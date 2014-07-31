@@ -60,6 +60,8 @@ class MCScrollbar : public MCControl
 	
 	static real8 markpos;
 	static uint2 mode;
+    
+    bool m_animate_posted : 1;
 	
 public:
 	MCScrollbar();

@@ -139,6 +139,9 @@ class MCButton : public MCControl
 	static MCImage *macrbtrack;
 	static MCImage *macrbhilite;
 	static MCImage *macrbhilitetrack;
+    
+    bool m_animate_posted : 1;
+
 public:
 	MCButton();
 	MCButton(const MCButton &bref);

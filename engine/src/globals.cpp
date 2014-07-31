@@ -496,6 +496,8 @@ Boolean MCmainstackschanged = False;
 //   UDP sockets.
 Boolean MCallowdatagrambroadcasts = False;
 
+MCThreadMutexRef MCanimationmutex = NULL;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -818,6 +820,8 @@ void X_clear_globals(void)
     
 	// MW-2013-03-20: [[ MainStacksChanged ]]
 	MCmainstackschanged = False;
+    
+    MCanimationmutex = NULL;
 
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -854,6 +858,7 @@ bool X_open(int argc, char *argv[], char *envp[])
     
     MCThreadPoolInitialize();
     MCStackTileInitialize();
+    MCThreadMutexCreate(MCanimationmutex);
     
     ////
     
@@ -1205,6 +1210,7 @@ int X_close(void)
     
     MCThreadPoolFinalize();
     MCStackTileFinalize();
+    MCThreadMutexRelease(MCanimationmutex);
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions

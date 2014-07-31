@@ -23,7 +23,9 @@
 #include "parsedef.h"
 
 #include "systhreads.h"
+
 #include <pthread.h>
+#include <unistd.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -121,6 +123,7 @@ bool MCThreadPoolInitialize()
     s_task_list_end = NULL;
     s_thread_pool_running = false;
     
+    
     if (t_success)
         t_success = MCThreadMutexCreate(s_task_mutex);
     
@@ -129,8 +132,11 @@ bool MCThreadPoolInitialize()
     
     if (t_success)
     {
+        uint32_t t_thread_pool_size;
+        t_thread_pool_size = MCMin(MCThreadGetNumberOfCores(), (uint32_t) kMCThreadPoolSize);
+        
         s_thread_pool_running = true;
-        for (uint32_t i = 0; i < kMCThreadPoolSize && t_success; i++)
+        for (uint32_t i = 0; i < t_thread_pool_size && t_success; i++)
         {
             __MCThreadPoolThread *t_thread;
             t_thread = NULL;
@@ -345,6 +351,15 @@ void MCThreadConditionSignal(MCThreadConditionRef self)
 {
     if (self != NULL)
         pthread_cond_signal(&self -> condition);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint32_t MCThreadGetNumberOfCores()
+{
+    //return 2;
+    //return (uint32_t) sysconf(_SC_NPROCESSORS_CONF);
+    return (uint32_t) sysconf(_SC_NPROCESSORS_ONLN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

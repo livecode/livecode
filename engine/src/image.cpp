@@ -101,6 +101,8 @@ MCImage::MCImage()
 	resizequality = INTERPOLATION_BOX;
     
     m_center_rect = MCRectangleMake(INT16_MIN, INT16_MIN, UINT16_MAX, UINT16_MAX);
+    
+    m_animate_posted = false;
 }
 
 MCImage::MCImage(const MCImage &iref) : MCControl(iref)
@@ -151,6 +153,8 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	resizequality = iref.resizequality;
     
     m_center_rect = iref.m_center_rect;
+    
+    m_animate_posted = false;
 }
 
 MCImage::~MCImage()
@@ -493,6 +497,7 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 		else
 			if ((isvisible() || m_needs) && irepeatcount && m_rep != nil && m_rep->GetFrameCount() > 1)
 			{
+                m_animate_posted = false;
 				advanceframe();
 				if (irepeatcount)
 				{

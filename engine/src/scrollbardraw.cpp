@@ -80,7 +80,18 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
 		// MW-2012-09-17: [[ Bug 9212 ]] If we are a progress bar then make sure
 		//   we animate.
 		if (getflag(F_PROGRESS))
-			MCscreen -> addtimer(this, MCM_internal3, 1000 / 30);
+        {
+            if (!m_animate_posted)
+            {
+                MCThreadMutexLock(MCanimationmutex);
+                if (!m_animate_posted)
+                {
+                    m_animate_posted = true;
+                    MCscreen -> addtimer(this, MCM_internal3, 1000 / 30);
+                }
+                MCThreadMutexUnlock(MCanimationmutex);
+            }
+        }
 #endif
 		if (flags & F_SHOW_VALUE)
 		{

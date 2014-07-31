@@ -330,14 +330,17 @@ void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_fra
 	if (p_frame == nil || m_lock_count == 0)
 		return;
 	
+    MCThreadMutexLock(m_frame_lock);
+
+    if (p_frame == nil || m_lock_count == 0)
+		return;
+
 	if (p_index >= m_frame_count)
 		return;
 	
 	if (m_frames == nil || &m_frames[p_index] != p_frame)
 		return;
 	
-    MCThreadMutexLock(m_frame_lock);
-
 	m_lock_count--;
 	Release();
 	

@@ -1678,7 +1678,16 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
 			if (!(winfo.state & WTHEME_STATE_PRESSED) && winfo.state & WTHEME_STATE_HASDEFAULT && IsMacLFAM() && MCaqua && dc -> gettype() == CONTEXT_TYPE_SCREEN && !(flags & F_DISABLED) && getstyleint(flags) == F_STANDARD)
 			{
 				MCcurtheme->drawwidget(dc, winfo, srect);
-				MCscreen->addtimer(this, MCM_internal, THROB_RATE);
+                if (!m_animate_posted)
+                {
+                    MCThreadMutexLock(MCanimationmutex);
+                    if (!m_animate_posted)
+                    {
+                        m_animate_posted = true;
+                        MCscreen->addtimer(this, MCM_internal, THROB_RATE);
+                    }
+                    MCThreadMutexUnlock(MCanimationmutex);
+                }
 			}
 			else
 				MCcurtheme->drawwidget(dc, winfo, srect);

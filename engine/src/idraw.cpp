@@ -212,8 +212,18 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 		{
 			MCGImageFrame *t_frame = nil;
 			if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
-			{
-				MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+			{                
+                if (!m_animate_posted)
+                {
+                    MCThreadMutexLock(MCanimationmutex);
+                    if (!m_animate_posted)
+                    {
+                        m_animate_posted = true;
+                        MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+                    }
+                    MCThreadMutexUnlock(MCanimationmutex);
+                }
+                
 				m_rep->UnlockImageFrame(currentframe, t_frame);
 
 				state &= ~CS_DO_START;

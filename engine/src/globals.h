@@ -411,6 +411,8 @@ extern MCPoint MCgroupedobjectoffset;
 //   addresses will work.
 extern Boolean MCallowdatagrambroadcasts;
 
+extern MCThreadMutexRef MCanimationmutex;
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #endif
