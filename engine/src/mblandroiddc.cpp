@@ -628,6 +628,7 @@ static MCRectangle android_view_get_bounds(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
 class MCAndroidStackSurface: public MCStackSurface
 {
 	MCGRegionRef m_region;
@@ -769,6 +770,7 @@ public:
 	}
 };
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
 class MCOpenGLStackSurface: public MCStackSurface
 {
 	void *m_buffer_pixels;

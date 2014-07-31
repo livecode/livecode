@@ -95,6 +95,7 @@ void MCStack::view_device_updatewindow(MCRegionRef p_dirty_rgn)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
 class MCIPhoneStackSurface: public MCStackSurface
 {
 protected:
@@ -331,6 +332,7 @@ public:
 	}
 	
 protected:
+    // MM-2014-07-31: [[ ThreadedRendering ]] Updated to pass in the area we wish to draw.
 	void FlushBits(MCGIntegerRectangle p_area, void *p_bits, uint32_t p_stride)
 	{
 		void *t_target;
@@ -430,6 +432,7 @@ static MCGRegionRef s_redraw_region = nil;
     CGContext *t_cgcontext;
 	t_cgcontext = UIGraphicsGetCurrentContext();
 	
+    // MM-2014-07-31: [[ ThreadedRendering ]] Moved context configuration out of stack surface, to ensure it only occurs once.
 	CGContextScaleCTM(t_cgcontext, 1.0 / t_scale, 1.0 / t_scale);
     
     // MW-2011-10-18: Turn off image interpolation to stop artifacts occuring
@@ -509,6 +512,7 @@ public:
 	}
 
 protected:
+    // MM-2014-07-31: [[ ThreadedRendering ]] Updated to pass in the area we wish to draw.
 	void FlushBits(MCGIntegerRectangle p_area, void *p_bits, uint32_t p_stride)
 	{
 		GLuint t_texture;

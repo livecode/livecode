@@ -62,6 +62,7 @@ MCScrollbar::MCScrollbar()
 
 	m_embedded = false;
     
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the progress bar animate message is only posted from a single thread.
     m_animate_posted = false;
 }
 
@@ -85,6 +86,7 @@ MCScrollbar::MCScrollbar(const MCScrollbar &sref) : MCControl(sref)
 
 	m_embedded = false;
     
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the progress bar animate message is only posted from a single thread.
     m_animate_posted = false;
 }
 
@@ -651,7 +653,9 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 		// MW-2012-09-17: [[ Bug 9212 ]] Mac progress bars do not animate.
 		if (getflag(F_PROGRESS))
 		{
-            m_animate_posted = false;            
+            // MM-2014-07-31: [[ ThreadedRendering ]] Flag that there is no longer a progress bar animation message pending.
+            m_animate_posted = false;
+            
 			redrawall();
 		}
 #endif

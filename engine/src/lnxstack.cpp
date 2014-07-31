@@ -733,6 +733,7 @@ void MCLinuxRegionDestroy(Region p_region);
 
 //////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
 class MCLinuxStackSurface: public MCStackSurface
 {
 	MCStack *m_stack;

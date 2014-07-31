@@ -323,6 +323,8 @@ void gdi_do_arc(HDC p_dc, HDC p_mask_dc, bool p_fill, int4 p_left, int4 p_top, i
 	}
 }
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to make theme drawing thread safe, by using TLS to ensure we have seperate DCs for each thread.
+//  This should probably be moved to a central thread library at some point, which will also help with clean up.
 static __declspec( thread ) bool s_initialized_on_thread = false;
 static __declspec( thread ) HDC s_theme_dc = NULL;
 

@@ -349,6 +349,7 @@ class MCImage : public MCControl
 	static MCCursorRef defaultcursor;
 	static uint2 cmasks[8];
     
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the image animate message is only posted from a single thread.
     bool m_animate_posted : 1;
 	
 public:

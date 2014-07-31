@@ -2493,6 +2493,8 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] MCStackTile wraps a MCStackSurface and allows for the locking and rendring of the given region.
+//  This way we can easily split the stack surface into multiple regions and render each on a separate thread.
 class MCGContextStackTile: public MCStackTile
 {
 public:
@@ -2559,6 +2561,10 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
         uint32_t t_cores;
         t_cores = MCThreadGetNumberOfCores();
         
+        // MM-2014-07-31: [[ ThreadedRendering ]] If the region is suitably large and the machine supports simultaneous execution,
+        //  split the stack surface into multiple regions and render each in an individual thread. The collect all function waits until all pending tiles have been rendered.
+        //  For dual core machines, we just split things into top and bottom half.
+        //  For machines with 4 or more cores, we split into 4 tiles -  top left, top right, bottom left, bottom right.
         if (t_cores > 1 && t_bounds . size . width > 32 && t_bounds . size . height > 32)
         {
             if (t_cores >= 4)
@@ -2617,10 +2623,8 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
         }
 	}
 	else
-	{
 		// We have a valid tilecache, so get it to composite.
 		MCTileCacheComposite(t_tilecache, p_surface, p_region);
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

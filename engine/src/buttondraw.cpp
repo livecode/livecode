@@ -1678,6 +1678,8 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
 			if (!(winfo.state & WTHEME_STATE_PRESSED) && winfo.state & WTHEME_STATE_HASDEFAULT && IsMacLFAM() && MCaqua && dc -> gettype() == CONTEXT_TYPE_SCREEN && !(flags & F_DISABLED) && getstyleint(flags) == F_STANDARD)
 			{
 				MCcurtheme->drawwidget(dc, winfo, srect);
+                
+                // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
                 if (!m_animate_posted)
                 {
                     MCThreadMutexLock(MCanimationmutex);

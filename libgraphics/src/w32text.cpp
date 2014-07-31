@@ -21,6 +21,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to make text rendering thread safe, by using TLS to ensure we have seperate DC for each thread.
+//  This should probably be moved to a central thread library at some point, which will also help with clean up (we only clean up the main thread at the moment).
+
 static __declspec( thread ) bool s_initialized_on_thread = false;
 static __declspec( thread ) HDC s_measure_dc = NULL;
 static __declspec( thread ) HDC s_draw_dc = NULL;

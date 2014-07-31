@@ -1748,6 +1748,7 @@ int main(int argc, char *argv[], char *envp[])
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Helper functions used to create an auto-release pool for each new thread.
 void *MCMacPlatfromCreateAutoReleasePool()
 {
     NSAutoreleasePool *t_pool;

@@ -338,6 +338,7 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new platform surface API.
 class MCMacPlatformSurface: public MCPlatformSurface
 {
 public:

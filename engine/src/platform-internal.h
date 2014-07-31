@@ -19,6 +19,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to match the new stack surface API.
+//  You can now lock/unlock multiple areas of the surface, but need to store the context and raster for those areas locally.
 class MCPlatformSurface
 {
 public:

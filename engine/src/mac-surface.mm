@@ -84,6 +84,7 @@ MCMacPlatformSurface::~MCMacPlatformSurface(void)
 	m_window -> Release();
 }
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new platform surface API.
 bool MCMacPlatformSurface::LockGraphics(MCGIntegerRectangle p_region, MCGContextRef& r_context, MCGRaster &r_raster)
 {
 	MCGRaster t_raster;
@@ -117,6 +118,7 @@ bool MCMacPlatformSurface::LockGraphics(MCGIntegerRectangle p_region, MCGContext
     return false;
 }
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new platform surface API.
 void MCMacPlatformSurface::UnlockGraphics(MCGIntegerRectangle p_region, MCGContextRef p_context, MCGRaster &p_raster)
 {
 	if (p_context == nil)
@@ -126,6 +128,9 @@ void MCMacPlatformSurface::UnlockGraphics(MCGIntegerRectangle p_region, MCGConte
 	UnlockPixels(p_region, p_raster);
 }
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new platform surface API.
+//  We create a single backing buffer for the entire surface (created the first time lock pixels is called)
+//  and return a raster that points to the desired region of the backing buffer.
 bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r_raster)
 {
     MCGIntegerRectangle t_bounds;
@@ -163,6 +168,7 @@ bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r
     return true;
 }
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new platform surface API.
 void MCMacPlatformSurface::UnlockPixels(MCGIntegerRectangle p_region, MCGRaster& p_raster)
 {
 }
@@ -264,6 +270,8 @@ void MCMacPlatformSurface::Lock(void)
 
 void MCMacPlatformSurface::Unlock(void)
 {
+    // MM-2014-07-31: [[ ThreadedRendering ]] Moved the drawing to the system context to unlock from unlock pixels.
+    //  This way, we only blit to screen once, after all individual tiles have been rendered.
     if (m_raster . pixels != nil)
     {
         // COCOA-TODO: Getting the height to flip round is dependent on a friend.

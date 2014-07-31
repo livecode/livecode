@@ -741,6 +741,7 @@ bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, MCGFloat p_raster_scale
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to implement the new stack surface API.
 class MCWindowsStackSurface: public MCStackSurface
 {
 	MCStack *m_stack;
@@ -954,6 +955,7 @@ public:
 	}
 };
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to implement the new stack surface API.
 class MCWindowsLayeredStackSurface: public MCStackSurface
 {
 	MCGRaster m_raster;

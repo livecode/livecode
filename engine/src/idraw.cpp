@@ -212,7 +212,9 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 		{
 			MCGImageFrame *t_frame = nil;
 			if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
-			{                
+			{
+                
+                // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
                 if (!m_animate_posted)
                 {
                     MCThreadMutexLock(MCanimationmutex);

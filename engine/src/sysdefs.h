@@ -1310,6 +1310,7 @@ class MCStyledText;
 
 typedef struct MCFont *MCFontRef;
 
+// MM-2014-07-31: [[ ThreadedRendering ]]
 typedef struct __MCThreadCondition *MCThreadConditionRef;
 typedef struct __MCThreadMutex *MCThreadMutexRef;
 

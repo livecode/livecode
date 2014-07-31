@@ -26,7 +26,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "tilecache.h"
-#include "systhreads.h"
 
 #define EXTERNAL_WAIT 10.0
 #define MENU_SPACE 8
@@ -90,6 +89,8 @@ extern bool MCStackFullscreenModeFromString(const char *p_string, MCStackFullscr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated the API so you can now lock multiple areas of the surface.
+//  The context and raster for the locked area must now be stored locally rather than directly in the surface.
 class MCStackSurface
 {
 public:
@@ -196,6 +197,7 @@ protected:
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
     
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
     MCThreadMutexRef m_id_cache_lock;
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] If true, then updates to this stack should only

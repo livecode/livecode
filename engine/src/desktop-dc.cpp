@@ -555,6 +555,7 @@ bool MCScreenDC::isbackdrop(MCPlatformWindowRef p_window)
 
 void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCGRegionRef p_region)
 {
+    // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use new platform surface API.
 	MCGContextRef t_context;
     MCGRaster t_raster;
     MCGIntegerRectangle t_bounds;

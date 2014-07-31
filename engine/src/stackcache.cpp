@@ -24,6 +24,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stack.h"
 
+#include "systhreads.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #define UINDEX_MAX UINT32_MAX
@@ -363,6 +365,7 @@ bool MCStackIdCache::RehashBuckets(uindex_t p_new_item_count)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to ensure only a single thread mutates the ID cache at a time.
 
 void MCStack::cacheobjectbyid(MCObject *p_object)
 {

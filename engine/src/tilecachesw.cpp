@@ -89,6 +89,7 @@ bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p
 	MCGIntegerRectangle t_dirty;
 	t_dirty = MCGRegionGetBounds(p_dirty);
 	
+    // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
 	MCGRaster t_raster;
 	if (!p_surface -> LockPixels(t_dirty, t_raster))
 		return false;
@@ -113,6 +114,7 @@ bool MCTileCacheSoftwareCompositor_EndFrame(void *p_context, MCStackSurface *p_s
 	MCTileCacheSoftwareCompositorContext *self;
 	self = (MCTileCacheSoftwareCompositorContext *)p_context;
     
+    // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
 	p_surface -> UnlockPixels(MCRectangleToMCGIntegerRectangle(self -> dirty), self-> raster);
 	
 	return true;
@@ -189,6 +191,7 @@ bool MCTileCacheSoftwareCompositor_CompositeRect(void *p_context, int32_t p_x, i
 	t_dst_rect . height = self -> tile_size;
 	t_dst_rect = MCU_intersect_rect(t_dst_rect, self -> clip);
 
+    // MM-2014-07-31: [[ ThreadedRendering ]] We now wrap the bits in a raster.
 	void *t_dst_ptr;
 	t_dst_ptr = (uint8_t *)self -> raster . pixels + self -> raster . stride * (t_dst_rect . y - self -> dirty . y) + (t_dst_rect . x - self -> dirty . x) * sizeof(uint32_t);
 	

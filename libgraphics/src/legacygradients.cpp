@@ -775,8 +775,8 @@ template<MCGradientFillKind x_type> static void MCGradientFillBilinearCombine(MC
 
 MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, MCGRectangle &r_clip)
 {
+    // MM-2014-07-31: [[ ThreadedRendering ]] Removed use of single static combiner to make things thread safe.
 	MCGradientAffineCombiner *t_combiner;
-	
 	t_combiner = new MCGradientAffineCombiner;
 	MCMemoryClear(t_combiner, sizeof(MCGradientAffineCombiner));
 	t_combiner -> begin = gradient_combiner_begin;

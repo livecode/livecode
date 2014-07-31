@@ -279,6 +279,7 @@ MCButton::MCButton()
     // MW-2014-06-19: [[ IconGravity ]] By default buttons use legacy behavior.
     m_icon_gravity = kMCGravityNone;
     
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
     m_animate_posted = false;
 }
 
@@ -354,6 +355,7 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
     // MW-2014-06-19: [[ IconGravity ]] Copy the other buttons gravity
     m_icon_gravity = kMCGravityNone;
     
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
     m_animate_posted = false;
 }
 
@@ -1563,6 +1565,7 @@ void MCButton::timer(MCNameRef mptr, MCParameter *params)
 	{
 		if (state & CS_SHOW_DEFAULT)
 		{
+            // MM-2014-07-31: [[ ThreadedRendering ]] Flag that there is no longer a default button animation message pending.
             m_animate_posted = false;            
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();

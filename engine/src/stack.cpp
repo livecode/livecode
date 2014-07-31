@@ -136,6 +136,8 @@ MCStack::MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
     /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
 
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
@@ -208,6 +210,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
 	
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
     /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
     
 	mnemonics = NULL;
@@ -461,6 +464,8 @@ MCStack::~MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Release cache mutex.
     MCThreadMutexRelease(m_id_cache_lock);
 	
 	view_destroy();
