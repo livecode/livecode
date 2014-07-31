@@ -1447,16 +1447,11 @@ public:
         // SN-2014-07-30: [[ Bug 13029 ]] specialfolderpath added for Linux
         else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
         {
-            MCAutoPointer<char> t_executable;
-            t_executable . New(1024);
-            readlink("/proc/self/exe", t_executable.Ptr(), 1024);
+            uindex_t t_last_slash;
+            if (MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+                t_last_slash = MCStringGetLength(MCcmd);
             
-            char *t_last_slash;
-            t_last_slash = strrchr(t_executable.Ptr(), '/');
-            if (t_last_slash != 0)
-                *t_last_slash = '\0';
-            
-            return MCStringCreateWithSysString(*t_executable, r_folder);
+            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder);
         }
         else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
             return MCStringCreateWithCString("/tmp", r_folder);

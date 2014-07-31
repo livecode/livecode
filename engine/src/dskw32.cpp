@@ -2600,24 +2600,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             // SN-2014-07-30: [[ Bug 13026 ]] specialFolderPath("engine") added for Windows
             else if (ep.getsvalue() == "engine")
             {
-                char * t_executable;
-                MCMemoryAllocate(PATH_MAX, t_executable);
-                DWORD t_length;
-                t_length = GetModuleFileNameA(NULL, t_executable, PATH_MAX);
+                uindex_t t_last_slash;
+                if (MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+                    t_last_slash = MCStringGetLength(MCcmd);
                 
-                if (t_length != 0)
-                {
-                    char *t_last_slash;
-                    t_last_slash = strrchr(t_executable, '\\');
-                    
-                    if (t_last_slash != 0)
-                        *t_last_slash = 0;
-                    
-                    ep.grabbuffer(t_executable, strlen(t_executable));
-                    t_executable = NULL;
-                    wasfound = True;
-                }
-                MCMemoryDeallocate(t_executable);
+                return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder);
             }
             else
             {
