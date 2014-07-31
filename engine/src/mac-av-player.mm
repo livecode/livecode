@@ -378,7 +378,6 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
     
     if (![t_self -> m_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
     {
-        //NSLog(@"We do NOT have a new frame!");
         return kCVReturnSuccess;
     }
     
@@ -567,7 +566,6 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     */
     if ([t_player currentItem] == nil)
     {
-        NSLog(@"Invalid filename or URL!");
         [t_player removeObserver: m_observer forKeyPath: @"status"];
         [t_player release];
         return;
