@@ -757,11 +757,6 @@ public:
 		return substacks;
 	}
 
-	MCStackModeData *getmodedata(void)
-	{
-		return m_mode_data;
-	}
-
 	void effectrect(const MCRectangle &drect, Boolean &abort);
 	
 	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
@@ -941,13 +936,6 @@ public:
 private:
 	void loadexternals(void);
 	void unloadexternals(void);
-
-	// Mode-specific hooks, implemented in the various mode* files.
-	MCStackModeData *m_mode_data;
-
-	void mode_create(void);
-	void mode_copy(const MCStack& other);
-	void mode_destroy(void);
 
 	void mode_load(void);
 
