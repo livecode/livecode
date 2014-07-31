@@ -22,9 +22,11 @@ struct MCMenuItem
 {
 	int4 depth;
 	MCStringRef label;
-	bool is_disabled;
-	bool is_radio;
-	bool is_hilited;
+	bool is_disabled: 1;
+	bool is_radio: 1;
+	bool is_hilited: 1;
+    // SN-2014-07-29: [[ Bug 12998 ]] has_tag member put back
+    bool has_tag: 1;
 	uint4 accelerator;
 	MCStringRef accelerator_name;
 	uint1 modifiers;
@@ -44,6 +46,8 @@ struct MCMenuItem
 		modifiers = 0;
 		mnemonic = 0;
 		tag = MCValueRetain(kMCEmptyString);
+        // SN-2014-07-29: [[ Bug 12998 ]] has_tag member put back
+        has_tag = false;
 		menumode = 0;
 	}
 	

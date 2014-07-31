@@ -219,6 +219,8 @@ void MCMenuItem::assignFrom(MCMenuItem *p_other)
 	mnemonic = p_other->mnemonic;
 	MCValueAssign(tag, p_other->tag);
 	menumode = p_other->menumode;
+    // SN-2014-07-29: [[ Bug 12998 ]] has_tag member put back
+    has_tag = p_other->has_tag;
 }
 
 uint4 MCLookupAcceleratorKeysym(MCStringRef p_name)

@@ -315,7 +315,9 @@ public:
             // MW-2014-04-22: [[ Bug 12252 ]] If the menuitem didn't have a direct tag, map
             //   special-cased actions to appropriate tag.
             MCStringRef t_tag;
-            if (MCStringIsEmpty(p_menuitem -> tag))
+            // SN-2014-07-29: [[ Bug 12998 ]] We want to check if the has_tag member, not if the menu item
+            //  contains a tag (which is always true)
+            if (!p_menuitem -> has_tag)
             {
                 if (t_action == kMCPlatformMenuItemActionAbout)
                     /* UNCHECKED */ MCStringCreateWithCString("About", t_tag);
