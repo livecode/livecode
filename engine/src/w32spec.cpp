@@ -1832,19 +1832,6 @@ void MCS_getspecialfolder(MCExecPoint &ep)
 			if (GetWindowsDirectoryA(ep.getbuffer(PATH_MAX), PATH_MAX))
 				wasfound = True;
 		}
-		// SN-2014-07-30: [[ Bug 13026 ]] specialFolderPath("engine") added for Windows
-		else if (ep.getsvalue() == "engine")
-		{
-            extern char *MCcmd;
-            uindex_t t_length = strrchr(MCcmd, '/') - MCcmd;
-			char *t_folder_path;
-			t_folder_path = strdup(MCcmd);
-			t_folder_path[t_length] = '\0';
-            ep.setbuffer(t_folder_path, t_length);
-			// We expect the buffer to be a native path
-			MCU_path2std(ep.getbuffer(0));
-            wasfound = true;
-		}
 		else
 		{
 			if (ep.ton() == ES_NORMAL)
