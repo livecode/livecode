@@ -236,7 +236,8 @@ IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream)
 	strtok(ptr, "\n");
 	length = strlen(ptr) + 1;
 	if (length != bytes)
-		if (MCS_seek_cur(stream, length - bytes) != IO_NORMAL)
+		// IM-2014-07-31: [[ ImageLoader ]] Fix unsigned math resulting in huge positive offsets
+		if (MCS_seek_cur(stream, (int64_t)length - (int64_t)bytes) != IO_NORMAL)
 			return IO_ERROR;
 	return IO_NORMAL;
 }
