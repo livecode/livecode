@@ -174,8 +174,7 @@ void MCGImageRelease(MCGImageRef self)
 {
 	if (self != NULL)
 	{
-        sk_atomic_dec((int32_t *)&self -> references);
-		if (self -> references <= 0)
+        if (sk_atomic_dec((int32_t *)&self -> references) == 1)
 			MCGImageDestroy(self);
 	}	
 }

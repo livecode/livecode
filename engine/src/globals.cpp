@@ -499,6 +499,7 @@ Boolean MCallowdatagrambroadcasts = False;
 // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
 MCThreadMutexRef MCanimationmutex = NULL;
 MCThreadMutexRef MCpatternmutex = NULL;
+MCThreadMutexRef MCimagerepmutex = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -826,6 +827,7 @@ void X_clear_globals(void)
     // MM-2014-07-31: [[ ThreadedRendering ]]
     MCanimationmutex = NULL;
     MCpatternmutex = NULL;
+    MCimagerepmutex = NULL;
 
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -865,6 +867,7 @@ bool X_open(int argc, char *argv[], char *envp[])
     MCStackTileInitialize();
     MCThreadMutexCreate(MCanimationmutex);
     MCThreadMutexCreate(MCpatternmutex);
+    MCThreadMutexCreate(MCimagerepmutex);
     
     ////
     
@@ -1227,6 +1230,7 @@ int X_close(void)
     MCStackTileFinalize();
     MCThreadMutexRelease(MCanimationmutex);
     MCThreadMutexRelease(MCpatternmutex);
+    MCThreadMutexRelease(MCimagerepmutex);
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions

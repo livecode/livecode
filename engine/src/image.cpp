@@ -509,10 +509,10 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 				advanceframe();
 				if (irepeatcount)
 				{
-					MCGImageFrame *t_frame = nil;
+					MCGImageFrame t_frame;
 					if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 					{
-						MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+						MCscreen->addtimer(this, MCM_internal, t_frame.duration);
 						m_rep->UnlockImageFrame(currentframe, t_frame);
 					}
 				}
@@ -945,10 +945,10 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			}
 			if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
 			{
-				MCGImageFrame *t_frame = nil;
+				MCGImageFrame t_frame;
 				if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 				{
-					MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+					MCscreen->addtimer(this, MCM_internal, t_frame.duration);
 					m_rep->UnlockImageFrame(currentframe, t_frame);
 				}
 			}
@@ -1094,10 +1094,10 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			if (opened && m_rep != nil && m_rep->GetFrameCount() > 1 && repeatcount != 0)
 			{
 				setframe(currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
-				MCGImageFrame *t_frame = nil;
+				MCGImageFrame t_frame;
 				if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 				{
-					MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+					MCscreen->addtimer(this, MCM_internal, t_frame.duration);
 					m_rep->UnlockImageFrame(currentframe, t_frame);
 				}
 			}
@@ -1409,7 +1409,7 @@ Boolean MCImage::maskrect(const MCRectangle &srect)
 		return True;
 
 	// MW-2007-09-11: [[ Bug 5177 ]] If the object is currently selected, make its mask the whole rectangle
-	MCGImageFrame *t_frame = nil;
+	MCGImageFrame t_frame;
 	if (!getstate(CS_SELECTED) && m_rep != nil && m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 	{
 		int32_t t_x = srect.x - rect.x;
@@ -1423,16 +1423,16 @@ Boolean MCImage::maskrect(const MCRectangle &srect)
 		}
 		
 		// IM-2013-10-30: [[ FullscreenMode ]] Account for image density when locating pixel position
-		t_x = t_x * t_frame->density;
-		t_y = t_y * t_frame->density;
+		t_x = t_x * t_frame.density;
+		t_y = t_y * t_frame.density;
 		
 		uint32_t t_width, t_height;
-		t_width = MCGImageGetWidth(t_frame->image);
-		t_height = MCGImageGetHeight(t_frame->image);
+		t_width = MCGImageGetWidth(t_frame.image);
+		t_height = MCGImageGetHeight(t_frame.image);
 
 		uint32_t t_pixel = 0;
 		if (t_x >= 0 && t_y >= 0 && t_x < t_width && t_y < t_height)
-			MCGImageGetPixel(t_frame->image, t_x, t_y, t_pixel);
+			MCGImageGetPixel(t_frame.image, t_x, t_y, t_pixel);
 
 		m_rep->UnlockImageFrame(currentframe, t_frame);
 		return MCGPixelGetNativeAlpha(t_pixel) != 0;
@@ -2608,15 +2608,14 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat
 		}
 		else if (t_copy_pixels && p_premultiplied)
 		{
-			MCGImageFrame *t_frame;
-			t_frame = nil;
+			MCGImageFrame t_frame;
 			
 			t_success = t_rep->LockImageFrame(currentframe, t_src_density, t_frame);
 			
 			if (t_success)
 			{
 				MCGRaster t_raster;
-				t_success = MCGImageGetRaster(t_frame->image, t_raster);
+				t_success = MCGImageGetRaster(t_frame.image, t_raster);
 
 				if (t_success)
 					t_success = MCMemoryNew(m_locked_bitmap);
@@ -2624,7 +2623,7 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat
 				if (t_success)
 				{
 					*m_locked_bitmap = MCImageBitmapFromMCGRaster(t_raster);
-					m_locked_image = MCGImageRetain(t_frame->image);
+					m_locked_image = MCGImageRetain(t_frame.image);
 				}
 			
 				t_rep->UnlockImageFrame(currentframe, t_frame);
@@ -2632,8 +2631,7 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat
 		}
 		else
 		{
-			MCGImageFrame *t_frame;
-			t_frame = nil;
+			MCGImageFrame t_frame;
 			
 			t_success = t_rep->LockImageFrame(currentframe, t_src_density, t_frame);
 			
@@ -2644,7 +2642,7 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat
 				MCGImageFilter t_filter;
 				t_filter = getimagefilter();
 				
-				t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame->image, t_transform, t_filter, m_locked_bitmap);
+				t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame.image, t_transform, t_filter, m_locked_bitmap);
 				
 				if (t_success && !p_premultiplied)
 					MCImageBitmapUnpremultiply(m_locked_bitmap);

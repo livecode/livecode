@@ -39,19 +39,14 @@ MCImageRep::~MCImageRep()
 
 MCImageRep *MCImageRep::Retain()
 {
-	m_reference_count++;
+    MCThreadAtomicInc((int32_t *)&m_reference_count);
 	return this;
 }
 
 void MCImageRep::Release()
 {
-	if (m_reference_count > 1)
-	{
-		m_reference_count--;
-		return;
-	}
-
-	delete this;
+	if (MCThreadAtomicDec((int32_t *)&m_reference_count) == 1)
+        delete this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,17 +69,11 @@ MCLoadableImageRep::MCLoadableImageRep()
 	m_frames_premultiplied = false;
 	
 	m_next = m_prev = nil;
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single threrad locks an image frame at a time.
-    /* UNCHECKED */ MCThreadMutexCreate(m_frame_lock);
 }
 
 MCLoadableImageRep::~MCLoadableImageRep()
 {
 	ReleaseFrames();
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single threrad locks an image frame at a time.
-    MCThreadMutexRelease(m_frame_lock);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +225,7 @@ bool convert_to_mcbitmapframes(MCGImageFrame *p_frames, uint32_t p_frame_count, 
 	return t_success;
 }
 
-bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCGImageFrame *&r_frame)
+bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCGImageFrame& r_frame)
 {
 	// frame index check
 	if (m_frame_count != 0 && p_frame >= m_frame_count)
@@ -244,7 +233,7 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 	
     // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread locks an image frame at a time.
     //  This could potentially be improved to be less obtrusive and resource hungry (mutex per image)
-    MCThreadMutexLock(m_frame_lock);
+    MCThreadMutexLock(MCimagerepmutex);
     
 	if (m_frame_count != 0 && p_frame >= m_frame_count)
 		return false;
@@ -255,17 +244,19 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 	if (p_frame >= m_frame_count)
 		return false;
     
-	// prevent data being removed by cache flush
-	m_lock_count++;
-	
-	// prevent deletion due to ImageRep::Release()
-	Retain();
-	
-	r_frame = &m_frames[p_frame];
+	r_frame = m_frames[p_frame];
+    MCGImageRetain(r_frame . image);
     
-    MCThreadMutexUnlock(m_frame_lock);
+	MoveRepToHead(this);
+    
+    MCThreadMutexUnlock(MCimagerepmutex);
 	
 	return true;
+}
+
+void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame)
+{
+    MCGImageRelease(p_frame . image);
 }
 
 bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, MCBitmapFrame *&r_frame)
@@ -319,31 +310,6 @@ bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, M
 
 
 	return t_success;
-}
-
-void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame)
-{
-	if (p_frame == nil || m_lock_count == 0)
-		return;
-	
-    // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread locks an image frame at a time.
-    MCThreadMutexLock(m_frame_lock);
-
-    if (p_frame == nil || m_lock_count == 0)
-		return;
-
-	if (p_index >= m_frame_count)
-		return;
-	
-	if (m_frames == nil || &m_frames[p_index] != p_frame)
-		return;
-	
-	m_lock_count--;
-	Release();
-	
-	MoveRepToHead(this);
-    
-    MCThreadMutexUnlock(m_frame_lock);
 }
 
 void MCLoadableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
