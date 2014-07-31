@@ -356,13 +356,15 @@ template<typename T> struct VectorFieldPropType
     };
     typedef vector_t<T> return_type;
     typedef const vector_t<T>& arg_type;
-
-    template<typename X> static void getter(MCExecContext ctxt, X *sptr, void (X::*p_getter)(MCExecContext& ctxt, return_type&), stack_type& r_value)
+    
+    // SN-2014-07-25: [[ Bug 12945 ]] While fixing, let's avoid a copy of the ExecContext
+    template<typename X> static void getter(MCExecContext& ctxt, X *sptr, void (X::*p_getter)(MCExecContext& ctxt, return_type&), stack_type& r_value)
     {
         (sptr ->* p_getter)(ctxt, r_value . list);
     }
-
-    template <typename X> static void setter(MCExecContext ctxt, X *sptr, void (X::*p_setter)(MCExecContext& ctxt, arg_type), arg_type p_value)
+    
+    // SN-2014-07-25: [[ Bug 12945 ]] While fixing, let's avoid a copy of the ExecContext
+    template <typename X> static void setter(MCExecContext& ctxt, X *sptr, void (X::*p_setter)(MCExecContext& ctxt, arg_type), arg_type p_value)
     {
         (sptr ->* p_setter)(ctxt, p_value);
     }
@@ -392,8 +394,10 @@ template<typename T> struct VectorFieldPropType
         }
         return true;
     }
-
-    static void output(stack_type a, return_type& r_value)
+    
+    // SN-2014-07-25: [[ Bug 12945 ]] Making the stack_type a reference argument might allow to set
+    //  the elements to nil
+    static void output(stack_type& a, return_type& r_value)
     {
         r_value . elements = a . list . elements;
         r_value . count = a . list . count;
