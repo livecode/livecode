@@ -413,6 +413,8 @@ extern Boolean MCallowdatagrambroadcasts;
 
 // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
 extern MCThreadMutexRef MCanimationmutex;
+extern MCThreadMutexRef MCpatternmutex;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 

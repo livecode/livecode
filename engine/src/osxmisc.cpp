@@ -266,10 +266,6 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 	bool t_success = true;
 	
 	static MCPatternRef s_patterns[8] = {nil, nil, nil, nil, nil, nil, nil, nil};
-    static MCThreadMutexRef s_pattern_lock = nil;
-
-    if (s_pattern_lock == nil)
-        /* UNCHECKED */ MCThreadMutexCreate(s_pattern_lock);
 	
 	ThemeBrush t_themebrush = 0;
 	uint32_t t_index = 0;
@@ -329,12 +325,18 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 			break;
 	}
 	
-    MCThreadMutexLock(s_pattern_lock);
+    if (s_patterns[t_index] != nil)
+	{
+		r_pattern = s_patterns[t_index];
+		return true;
+	}
+    
+    MCThreadMutexLock(MCpatternmutex);
     
 	if (s_patterns[t_index] != nil)
 	{
 		r_pattern = s_patterns[t_index];
-        MCThreadMutexUnlock(s_pattern_lock);
+        MCThreadMutexUnlock(MCpatternmutex);
 		return true;
 	}
     
@@ -370,7 +372,7 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
     CGContextRelease(t_context);
     CGColorSpaceRelease(t_colorspace);
 	
-    MCThreadMutexUnlock(s_pattern_lock);
+    MCThreadMutexUnlock(MCpatternmutex);
     
 	return t_success;
 }
