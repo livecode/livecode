@@ -1374,13 +1374,11 @@ void MCScreenDC::hidebackdrop(bool p_hide)
 
 	if ( p_hide )
 	{
-		gdk_window_hide(backdrop);
-		MCstacks -> refresh() ;
+		disablebackdrop(false);
 	}
 	else
 	{
-		gdk_window_fullscreen(backdrop);
-        gdk_window_show_unraised(backdrop);
+		enablebackdrop(false);
 	}
 }
 
@@ -1422,13 +1420,13 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	
 	if (!t_error)	
 	{
+        MCstacks -> refresh();
         gdk_window_set_functions(backdrop, GdkWMFunction(0));
         gdk_window_set_decorations(backdrop, GdkWMDecoration(0));
         gdk_window_set_skip_taskbar_hint(backdrop, TRUE);
         gdk_window_set_skip_pager_hint(backdrop, TRUE);
         gdk_window_fullscreen(backdrop);
         gdk_window_show_unraised(backdrop);
-		MCstacks -> refresh();
 	}
 	else
 	{
@@ -1506,10 +1504,13 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 
 void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 {
-	if (p_mode <= WM_PALETTE && backdrop != DNULL && (backdrop_active||backdrop_hard))
-		gdk_window_set_transient_for(p_window, backdrop);
-    else
-        gdk_property_delete(p_window, gdk_atom_intern_static_string("WM_TRANSIENT_FOR"));
+	if (p_mode <= WM_PALETTE && backdrop != DNULL)
+    {
+        if (backdrop_active||backdrop_hard)
+            gdk_window_set_transient_for(p_window, backdrop);
+        else
+            gdk_property_delete(p_window, gdk_atom_intern_static_string("WM_TRANSIENT_FOR"));
+    }
 }
 
 
