@@ -19,17 +19,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to match the new stack surface API.
+//  You can now lock/unlock multiple areas of the surface, but need to store the context and raster for those areas locally.
 class MCPlatformSurface
 {
 public:
 	MCPlatformSurface(void);
 	virtual ~MCPlatformSurface(void);
 	
-	virtual bool LockGraphics(MCGRegionRef region, MCGContextRef& r_context) = 0;
-	virtual void UnlockGraphics(void) = 0;
+	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster) = 0;
+	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster) = 0;
 	
-	virtual bool LockPixels(MCGIntegerRectangle region, MCGRaster& r_raster) = 0;
-	virtual void UnlockPixels(void) = 0;
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
+	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster) = 0;
 	
 	virtual bool LockSystemContext(void*& r_context) = 0;
 	virtual void UnlockSystemContext(void) = 0;

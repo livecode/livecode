@@ -35,6 +35,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "graphics_util.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform)
 {
 	// IM-2013-11-05: [[ RefactorGraphics ]] Use resampled image rep for best-quality scaling
@@ -211,7 +213,19 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			MCGImageFrame *t_frame = nil;
 			if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 			{
-				MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+                
+                // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
+                if (!m_animate_posted)
+                {
+                    MCThreadMutexLock(MCanimationmutex);
+                    if (!m_animate_posted)
+                    {
+                        m_animate_posted = true;
+                        MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+                    }
+                    MCThreadMutexUnlock(MCanimationmutex);
+                }
+                
 				m_rep->UnlockImageFrame(currentframe, t_frame);
 
 				state &= ~CS_DO_START;

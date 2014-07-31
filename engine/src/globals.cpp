@@ -69,6 +69,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "resolution.h"
 
+#include "systhreads.h"
+#include "stacktile.h"
+
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
 
@@ -493,6 +496,10 @@ Boolean MCmainstackschanged = False;
 //   UDP sockets.
 Boolean MCallowdatagrambroadcasts = False;
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
+MCThreadMutexRef MCanimationmutex = NULL;
+MCThreadMutexRef MCpatternmutex = NULL;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -815,6 +822,10 @@ void X_clear_globals(void)
     
 	// MW-2013-03-20: [[ MainStacksChanged ]]
 	MCmainstackschanged = False;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]]
+    MCanimationmutex = NULL;
+    MCpatternmutex = NULL;
 
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -848,6 +859,12 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
 	InitialiseSSL();
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]]
+    MCThreadPoolInitialize();
+    MCStackTileInitialize();
+    MCThreadMutexCreate(MCanimationmutex);
+    MCThreadMutexCreate(MCpatternmutex);
     
     ////
     
@@ -1204,6 +1221,12 @@ int X_close(void)
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]]
+    MCThreadPoolFinalize();
+    MCStackTileFinalize();
+    MCThreadMutexRelease(MCanimationmutex);
+    MCThreadMutexRelease(MCpatternmutex);
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions
