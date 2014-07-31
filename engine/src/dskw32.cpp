@@ -2683,6 +2683,19 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 }
             }
         }
+		// SN-2014-07-30: [[ Bug 13026 ]] specialFolderPath("engine") added for Windows
+        else if (MCNameIsEqualTo(p_type, MCN_engine))
+        {
+            extern MCStringRef MCcmd;
+            uindex_t t_last_slash;
+            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareCaseless, t_last_slash))
+                t_last_slash = MCStringGetLength(MCcmd);
+            MCAutoStringRef t_path;
+            if (!MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_path) ||
+                !MCU_path2native(*t_path, &t_native_path))
+                return false;
+            t_wasfound = true;
+        }
         //else if (MCStringIsEqualTo(p_special, MCNameGetString(MCN_system), kMCStringOptionCompareCaseless))
         //{
 		//char *buf;
