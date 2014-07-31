@@ -717,8 +717,8 @@ static void cgi_fix_path_variables()
     //  The current file (stored in SCRIPT_FILENAME) is the one containing the script.
 	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), env))
 		t_path = strdup(MCStringGetCString(env));
-    else if (MCS_getenv(MCSTR("SCRIPT_FILENAME"), env)
-        t_path = strdup(MCStringGetCString(*env));
+    else if (MCS_getenv(MCSTR("SCRIPT_FILENAME"), env))
+        t_path = strdup(MCStringGetCString(env));
 
     MCAutoStringRef t_path_string;
     /* UNCHECKED */ MCStringCreateWithCString(t_path, &t_path_string);
