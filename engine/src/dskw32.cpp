@@ -2597,6 +2597,15 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 if (GetWindowsDirectoryA(ep.getbuffer(PATH_MAX), PATH_MAX))
                     wasfound = True;
             }
+            // SN-2014-07-30: [[ Bug 13026 ]] specialFolderPath("engine") added for Windows
+            else if (ep.getsvalue() == "engine")
+            {
+                uindex_t t_last_slash;
+                if (MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+                    t_last_slash = MCStringGetLength(MCcmd);
+                
+                return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder);
+            }
             else
             {
                 if (ep.ton() == ES_NORMAL)
@@ -2683,6 +2692,27 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 }
             }
         }
+		// SN-2014-07-30: [[ Bug 13026 ]] specialFolderPath("engine") added for Windows
+		else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+		{
+			MCAutoPointer<unichar_t> t_executable;
+			MCMemoryNewArray(PATH_MAX, &t_executable);
+			DWORD t_length = 0;
+
+			t_length = GetModuleFileNameW(NULL, *t_executable, PATH_MAX);
+
+			if (t_length != 0)
+			{
+				unichar_t *t_last_slash;
+				t_last_slash = StrRChrW(*t_executable, NULL, '\\');
+				if (t_last_slash != 0)
+					*t_last_slash = '\0';
+
+                if (!MCStringCreateWithChars(*t_executable, t_length, &t_native_path))
+                    return false;
+                t_wasfound = true;
+			}
+		}
         //else if (MCStringIsEqualTo(p_special, MCNameGetString(MCN_system), kMCStringOptionCompareCaseless))
         //{
 		//char *buf;
