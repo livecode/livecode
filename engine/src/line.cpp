@@ -406,16 +406,17 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
         // alignment within the segment. Pick the appropriate block.
         if (!done && cx >= sgptr->GetLeft() && cx < sgptr->GetRight())
         {
-            if (t_firstvisual->getorigin() + sgptr->GetCursorOffset() > cx)
+            // AL-2014-07-29: [[ Bug 12896 ]] Wrong coordinate returned for clicks in segment align space
+            if (sgptr -> GetFirstVisualBlock() -> getorigin() + sgptr->GetCursorOffset() > cx)
             {
                 // Before the first block in visual ordering
-                bptr = t_firstvisual;
+                bptr = sgptr -> GetFirstVisualBlock();
                 done = true;
             }
             else
             {
                 // Otherwise, must be after the last block in visual ordering
-                bptr = t_lastvisual;
+                bptr = sgptr -> GetLastVisualBlock();
                 done = true;
             }
         }
@@ -423,7 +424,7 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
         if (done)
             break;
         
-        sgptr = sgptr->next();
+        sgptr = sgptr -> next();
     }
     while (sgptr->prev() != lastsegment);
     

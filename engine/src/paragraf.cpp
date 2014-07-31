@@ -1113,18 +1113,38 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         MCBlock *bptr = firstblock;
         MCSegment *sgptr = segments;
         
+        bool t_whole_segment;
+        t_whole_segment = false;
+        
         do
         {
-            // AL-2014-07-17: [[ Bug 12823 ]] Block origin is relative to the segment, so keep track
-            //  of the current segment to get correct selection coordinates.
-            // Advance to the next segment, if necessary
-            if (sgptr->next()->GetFirstBlock() == bptr)
-                sgptr = sgptr->next();
-            
             // Is part of this block selected?
             findex_t bi, bl;
             bptr->GetRange(bi, bl);
-            if (t_show_all || (startindex <= bi + bl && endindex >= bi))
+            
+            // AL-2014-07-29: [[ Bug 12951 ]] Selection rect should include whitespace between tabbed cells
+            // If this is the first block of a segment, check if the selection covers the whole segment.
+            if (bptr == sgptr -> GetFirstBlock() && startindex <= bi)
+            {
+                findex_t ei, el;
+                MCBlock *t_seg_last = sgptr -> GetLastBlock();
+                t_seg_last -> GetRange(ei, el);
+                
+                if (endindex >= ei + el)
+                    t_whole_segment = true;
+            }
+             // If selection covers the whole segment, we can fill it and skip to the first block of the next segment.           
+            if (t_whole_segment)
+            {
+                srect . x  = x + sgptr -> GetCursorOffset();
+                srect . width = sgptr -> GetWidth();
+                dc->fillrect(srect);
+                
+                bptr = sgptr -> GetLastBlock();
+                sgptr = sgptr->next();
+                t_whole_segment = false;
+            }
+            else if (t_show_all || (startindex <= bi + bl && endindex >= bi))
             {
                 findex_t si, ei;
                 if (startindex_draw > bi)
@@ -1140,20 +1160,26 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 int2 bix, bex;
                 bix = bptr->GetCursorX(si);
                 bex = bptr->GetCursorX(ei);
-        
+                
                 // AL-2014-07-17: [[ Bug 12823 ]] Include segment offset in the block coordinate calculation
                 // Re-ordering will be required if the block is RTL
                 if (bix > bex)
                 {
-                    srect.x = x + sgptr -> GetCursorOffset() + bex;
-                    srect.width = bix - bex;
-                }
-                else
-                {
-                    srect.x = x + sgptr -> GetCursorOffset() + bix;
-                    srect.width = bex - bix;
+                    int2 t_temp;
+                    t_temp = bix;
+                    bix  = bex;
+                    bex = t_temp;
                 }
 
+                srect.x = x + sgptr -> GetCursorOffset() + bix;
+                
+                // AL-2014-07-29: [[ Bug 12951 ]] If selection traverses a segment boundary, include the boundary in the fill rect.
+                if (startindex < bi + bl && endindex > bi + bl &&
+                    bptr == sgptr -> GetLastBlock() && sgptr -> next() != segments)
+                    srect.width = sgptr -> GetWidth() - bix;
+                else
+                    srect.width = bex - bix;
+                
                 // Draw this block
                 dc->fillrect(srect);
             }
@@ -1164,35 +1190,35 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 break;
             
             bptr = bptr->next();
+            
+            // AL-2014-07-17: [[ Bug 12823 ]] Block origin is relative to the segment, so keep track
+            //  of the current segment to get correct selection coordinates.
+            // Advance to the next segment, if necessary
+            if (sgptr->next()->GetFirstBlock() == bptr)
+                sgptr = sgptr->next();
         }
         while (bptr != firstblock);
         
         // Draw the left-hand side, if required
         if (t_show_front || startindex < i)
         {
-            MCBlock *t_first_visual;
-            t_first_visual = firstblock;
-            
-            // TODO: avoid this loop
-            while (t_first_visual->GetPrevBlockVisualOrder() != nil)
-                t_first_visual = t_first_visual->GetPrevBlockVisualOrder();
+            // AL-2014-07-30: [[ Bug 12924 ]] Get first visual block in the line for front selection fill
+            MCBlock *t_first_visual = bptr -> GetSegment() -> GetFirstVisualBlock();
             
             srect.x = sx;
-            srect.width = x + t_first_visual->getorigin() - sx;
+            // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
+            srect.width = x + bptr -> GetSegment() -> GetCursorOffset() + t_first_visual->getorigin() - sx;
             dc->fillrect(srect);
         }
         
         // Draw the right-hand side, if required
         if (t_show_back || endindex > i + l)
         {
-            MCBlock *t_last_visual;
-            t_last_visual = lastblock;
+            // AL-2014-07-30: [[ Bug 12924 ]] Get last visual block in the line for back selection fill
+            MCBlock *t_last_visual = bptr -> GetSegment() -> GetLastVisualBlock();
             
-            // TODO: avoid this loop
-            while (t_last_visual->GetNextBlockVisualOrder() != nil)
-                t_last_visual = t_last_visual->GetNextBlockVisualOrder();
-            
-            srect.x = x + t_last_visual->getorigin() + t_last_visual->getwidth();
+            // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
+            srect.x = x + bptr -> GetSegment() -> GetCursorOffset() + t_last_visual->getorigin() + t_last_visual->getwidth();
             srect.width = swidth - (srect.x - sx);
             dc->fillrect(srect);
         }
