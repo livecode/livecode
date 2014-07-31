@@ -56,8 +56,8 @@ void init_dnd()
 // Nothing ever calls this but somebody might, one day...
 void shutdown_xdnd()
 {
-    gdk_cursor_unref(g_dnd_cursor_drop_okay);
-    gdk_cursor_unref(g_dnd_cursor_drop_fail);
+    //gdk_cursor_unref(g_dnd_cursor_drop_okay);
+    //gdk_cursor_unref(g_dnd_cursor_drop_fail);
     delete MCtransferstore;
     g_dnd_init = false;
 }

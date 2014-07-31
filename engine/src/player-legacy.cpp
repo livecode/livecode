@@ -1355,7 +1355,7 @@ void MCPlayer::setcurtime(uint4 newtime, bool notify)
 #endif
 }
 
-void MCPlayer::setselection()
+void MCPlayer::setselection(bool notify)
 {
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)

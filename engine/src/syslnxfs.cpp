@@ -93,7 +93,7 @@ bool MCFileSystemListEntries(const char *p_folder, uint32_t p_options, MCFileSys
 				MCCStringFree(t_child_path);
 				if (t_success)
 				{
-					t_fs_entry.filename = t_entry->d_name;
+					MCStringCreateWithSysString(t_entry->d_name, t_fs_entry.filename);
 					if (S_ISLNK(t_entry_stat.st_mode))
 						t_fs_entry.type = kMCFileSystemEntryLink;
 					else if (S_ISDIR(t_entry_stat.st_mode))
