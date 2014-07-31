@@ -54,7 +54,6 @@
 #include <Security/Authorization.h>
 #include <Security/AuthorizationTags.h>
 
-#include <mach-o/dyld.h>
 
 #define ENTRIES_CHUNK 1024
 
@@ -657,9 +656,7 @@ static sysfolders sysfolderlist[] = {
     // MW-2007-09-11: Added for uniformity across platforms
     {&MCN_documents, 'docs', kUserDomain, 'docs'},
     // MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
-    // SN-2014-07-30: [[ Bug 13026 ]] We don't want any folder which doesn't match one above
-    //  to return the Application Support folder
-    {&MCN_support, 'asup', kUserDomain, 'asup'},
+    {&MCN_support, 0, kUserDomain, 'asup'},
 };
 
 static bool MCS_mac_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, OSType& r_domain)
@@ -5442,10 +5439,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         const char *t_error;
         t_error = NULL;
         
-        // SN-2014-07-30: [[ 13026 ]] We can get the engine folder on desktop as well
-        char *t_folder_path;
-        t_folder_path = NULL;
-        
         FSRef t_folder_ref;
         if (t_error == NULL)
         {
@@ -5458,15 +5451,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 memcpy(&t_mac_folder, p_context . getsvalue() . getstring(), 4);
                 t_mac_folder = MCSwapInt32NetworkToHost(t_mac_folder);
             }
-            else if (p_context . getsvalue() == "engine")
-            {
-                extern char *MCcmd;
-                char* t_folder;
-                t_folder_path = strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
-                
+            else
                 t_mac_folder = 0;
-                t_found_folder = true;
-            }
 			
             OSErr t_os_error;
             uint2 t_i;
@@ -5497,9 +5483,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             if (!t_found_folder)
                 t_error = "folder not found";
         }
-
-        // SN-2014-07-30: [[ Bug 13026 ]] If the engine was asked, the folder path is directly set
-        if (t_error == NULL && t_folder_path == NULL)
+		
+        char *t_folder_path;
+        t_folder_path = NULL;
+        if (t_error == NULL)
         {
             t_folder_path = MCS_fsref_to_path(t_folder_ref);
             if (t_folder_path == NULL)
@@ -5528,14 +5515,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetNativeCharPtr(MCNameGetString(p_type))));
             t_domain = kOnAppropriateDisk;
             t_found_folder = true;
-        }
-        else if (MCNameIsEqualTo(p_type, MCN_engine))
-        {
-            extern MCStringRef MCcmd;
-            uindex_t t_last_slash;
-            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareCaseless, t_last_slash))
-                t_last_slash = MCStringGetLength(MCcmd);
-            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder);
         }
         
         FSRef t_folder_ref;
