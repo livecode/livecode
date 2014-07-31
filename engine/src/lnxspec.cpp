@@ -1985,6 +1985,14 @@ void MCS_getspecialfolder(MCExecPoint &ep)
 		ep.setcstring(c_dir);
 	else if (ep.getsvalue() == "temporary")
 		ep.setcstring("/tmp");
+    // SN-2014-07-30: [[ Bug 13029 ]] specialfolderpath added for Linux
+    else if (ep.getsvalue() == "engine")
+    {
+        extern char *MCcmd;
+        char* t_folder;
+        t_folder = strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+        ep.setcstring(t_folder);
+    }
 	else
 	{
 		MCresult->sets("not supported");
