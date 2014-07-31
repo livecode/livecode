@@ -135,7 +135,8 @@ public:
     
     uindex_t getindex(void)
     {
-        return tokenptr + length - endptr;
+        // AL-2014-07-28: [[ Bug 12729 ]] Fix the initial index of a token with quotation marks.
+        return (const unichar_t *)token . getstring() + length - endptr;
     }
 
 	Parse_stat skip_space();

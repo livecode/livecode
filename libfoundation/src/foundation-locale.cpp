@@ -25,6 +25,7 @@
 #include "unicode/numfmt.h"
 #include "unicode/rbnf.h"
 #include "unicode/timezone.h"
+#include "unicode/uclean.h"
 
 #include "foundation-auto.h"
 
@@ -197,6 +198,13 @@ bool __MCLocaleInitialize()
     
     // DIRTY EVIL HACK FOR TESTING
     //u_setDataDirectory("/Users/frasergordon/Workspace/livecode/prebuilt/data/icu");
+    
+    // FG-2014-07-28: [[ Bugfix 12974 ]]
+    // This is required to work around an ICU crashing bug in 52.1 - according
+    // to the ICU docs, it is completely un-necessary. It also only happens in
+    // Linux standalones, strangely.
+    UErrorCode t_error = U_ZERO_ERROR;
+    u_init(&t_error);
     
     // Create the well-known locales
     // The default locale to be used needs to be determined using setlocale

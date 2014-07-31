@@ -1137,9 +1137,25 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
         // Minature event loop for handling mouse and key events while selecting
         while (!t_done)
         {
-            // Get the next event
-            GdkEvent *t_event;
-            t_event = gdk_event_get();
+            // Place all events onto the pending event queue
+            EnqueueGdkEvents();
+            
+            bool t_queue = false;
+            GdkEvent *t_event = NULL;
+            if (pendingevents != NULL)
+            {
+                // Get the next event from the queue
+                t_event = gdk_event_copy(pendingevents->event);
+                MCEventnode *tptr = (MCEventnode *)pendingevents->remove(pendingevents);
+                delete tptr;
+            }
+            
+            // If there are no events, actively wait for one
+            if (t_event == NULL)
+            {
+                g_main_context_iteration(NULL, TRUE);
+                continue;
+            }
             
             // Various type casts of the event structure
             GdkEventKey *t_event_key = (GdkEventKey*)t_event;
@@ -1199,6 +1215,10 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
                     if (r.width < 4 && r.height < 4)
                         r.width = r.height = 0;
                     x11::gdk_x11_ungrab_server();
+                    t_done = true;
+                    break;
+                    
+                case GDK_GRAB_BROKEN:
                     t_done = true;
                     break;
             }
@@ -1384,7 +1404,6 @@ void MCScreenDC::createbackdrop_window(void)
 
 void MCScreenDC::enablebackdrop(bool p_hard)
 {
-
 	bool t_error;
 	t_error = false;
 	
@@ -1399,7 +1418,7 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	else
 		backdrop_active = True;
 	
-	t_error = ( backdrop == DNULL) ;
+	t_error = (backdrop == DNULL) ;
 	
 	if (!t_error)	
 	{
@@ -1434,7 +1453,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 
 	if (!backdrop_active && !backdrop_hard)
 	{
-		if ( backdrop != DNULL)
+		if (backdrop != DNULL)
 			gdk_window_hide(backdrop);
 		MCstacks -> refresh();
 	}
@@ -1446,6 +1465,7 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 {
 	// IM-2014-04-15: [[ Bug 11603 ]] Convert pattern to Pixmap for use with XSetWindowAttributes structure
 	freepixmap(m_backdrop_pixmap);
+    m_backdrop_pixmap = NULL;
 	
 	if (p_pattern != nil)
 		/* UNCHECKED */ MCPatternToX11Pixmap(p_pattern, m_backdrop_pixmap);
@@ -1477,6 +1497,8 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
         gdk_rgb_find_color(gdk_drawable_get_colormap(backdrop), &t_colour);
         gdk_window_set_background(backdrop, &t_colour);
 	}
+    
+    gdk_window_clear(backdrop);
 
 	MCstacks -> refresh();
 }
@@ -1484,12 +1506,15 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 
 void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 {
-	if ( p_mode <= WM_PALETTE && backdrop != DNULL )
+	if (p_mode <= WM_PALETTE && backdrop != DNULL && (backdrop_active||backdrop_hard))
 		gdk_window_set_transient_for(p_window, backdrop);
+    else
+        gdk_property_delete(p_window, gdk_atom_intern_static_string("WM_TRANSIENT_FOR"));
 }
 
 
 /*void MCScreenDC::createbackdrop(MCStringRef color)
+void MCScreenDC::createbackdrop(MCStringRef color)
 {
 	if (m_backdrop_pixmap == DNULL &&
             parsecolor(color, backdropcolor))
