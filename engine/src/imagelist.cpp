@@ -9,6 +9,7 @@
 #include "stack.h"
 #include "image.h"
 #include "imagelist.h"
+#include "systhreads.h"
 
 #include "globals.h"
 
@@ -103,7 +104,7 @@ MCPatternRef MCPatternRetain(MCPatternRef p_pattern)
 	if (p_pattern == nil)
 		return nil;
 	
-	p_pattern->references++;
+	MCThreadAtomicInc((int32_t *)&p_pattern -> references);
 	
 	return p_pattern;
 }
@@ -113,7 +114,8 @@ void MCPatternRelease(MCPatternRef p_pattern)
 	if (p_pattern == nil)
 		return;
 	
-	p_pattern->references--;
+    MCThreadAtomicDec((int32_t *)&p_pattern -> references);
+    
 	if (p_pattern->references == 0)
 	{
 		MCGImageRelease(p_pattern->image);

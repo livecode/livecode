@@ -37,4 +37,33 @@ void MCThreadConditionSignal(MCThreadConditionRef condition);
 
 uint32_t MCThreadGetNumberOfCores(void);
 
+#ifndef _WINDOWS
+
+static inline __attribute__((always_inline)) int32_t MCThreadAtomicInc(int32_t* addr) {
+    return __sync_fetch_and_add(addr, 1);
+}
+
+static inline __attribute__((always_inline)) int32_t MCThreadAtomicDec(int32_t* addr) {
+    return __sync_fetch_and_add(addr, -1);
+}
+
+#else
+
+#include <intrin.h>
+
+#pragma intrinsic(_InterlockedIncrement, _InterlockedExchangeAdd, _InterlockedDecrement)
+#pragma intrinsic(_InterlockedCompareExchange)
+
+static inline int32_t sk_atomic_inc(int32_t* addr) {
+    // InterlockedIncrement returns the new value, we want to return the old.
+    return _InterlockedIncrement(reinterpret_cast<long*>(addr)) - 1;
+}
+
+static inline int32_t sk_atomic_dec(int32_t* addr) {
+    // InterlockedDecrement returns the new value, we want to return the old.
+    return _InterlockedDecrement(reinterpret_cast<long*>(addr)) + 1;
+}
+
+#endif
+
 #endif
