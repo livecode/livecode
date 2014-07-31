@@ -1835,24 +1835,15 @@ void MCS_getspecialfolder(MCExecPoint &ep)
 		// SN-2014-07-30: [[ Bug 13026 ]] specialFolderPath("engine") added for Windows
 		else if (ep.getsvalue() == "engine")
 		{
-			char * t_executable;
-			MCMemoryAllocate(PATH_MAX, t_executable);
-			DWORD t_length;
-			t_length = GetModuleFileNameA(NULL, t_executable, PATH_MAX);
-
-			if (t_length != 0)
-			{
-				char *t_last_slash;
-				t_last_slash = strrchr(t_executable, '\\');
-
-				if (t_last_slash != 0)
-					*t_last_slash = 0;
-	
-				ep.grabbuffer(t_executable, strlen(t_executable));
-				t_executable = NULL;
-				wasfound = True;
-			}
-			MCMemoryDeallocate(t_executable);
+            extern char *MCcmd;
+            uindex_t t_length = strrchr(MCcmd, '/') - MCcmd;
+			char *t_folder_path;
+			t_folder_path = strdup(MCcmd);
+			t_folder_path[t_length] = '\0';
+            ep.setbuffer(t_folder_path, t_length);
+			// We expect the buffer to be a native path
+			MCU_path2std(ep.getbuffer(0));
+            wasfound = true;
 		}
 		else
 		{

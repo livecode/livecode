@@ -1988,18 +1988,10 @@ void MCS_getspecialfolder(MCExecPoint &ep)
     // SN-2014-07-30: [[ Bug 13029 ]] specialfolderpath added for Linux
     else if (ep.getsvalue() == "engine")
     {
-        char* t_executable;
-        MCMemoryAllocate(1024, t_executable);
-        memset(t_executable, 0, 1024);
-        readlink("/proc/self/exe", t_executable, 1024);
-
-        char *t_last_slash;
-        t_last_slash = strrchr(t_executable, '/');
-        if (t_last_slash != 0)
-            *t_last_slash = '\0';
-
-        ep.setcstring(t_executable);
-        MCMemoryDeallocate(t_executable);
+        extern char *MCcmd;
+        char* t_folder;
+        t_folder = strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+        ep.setcstring(t_folder);
     }
 	else
 	{

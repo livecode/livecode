@@ -2045,24 +2045,12 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 		}
 		else if (p_context . getsvalue() == "engine")
         {
-            uint32_t t_path_length;
-            t_path_length = 1024;
-            char t_path[1024];
-            
-            t_found_folder = _NSGetExecutablePath(t_path, &t_path_length) == 0;
-            
-            // _NSGetExecutablePath might leave symlinks or '..' in the path
-            if (t_found_folder)
-            {
-                t_folder_path = MCS_resolvepath(t_path);
-                char *t_last_slash;
-                t_last_slash = strrchr(t_folder_path, '/');
-                
-                if (t_last_slash != NULL)
-                    *t_last_slash = '\0';
-            }
+            extern char *MCcmd;
+            char* t_folder;
+            t_folder_path = strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
             
             t_mac_folder = 0;
+            t_found_folder = true;
         }
 			
 		OSErr t_os_error;
