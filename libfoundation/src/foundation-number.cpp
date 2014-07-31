@@ -141,15 +141,17 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
         char *t_end;
         integer_t t_integer;
         t_integer = strtoul(t_chars, &t_end, 10);
-
-        if (*t_end == '\0')
+        
+        // AL-2014-07-31: [[ Bug 12936 ]] Check the right number of chars has been consumed
+        if (t_end - t_chars == char_count)
             t_success = MCNumberCreateWithInteger(t_integer, r_number);
         else
         {
             real64_t t_real;
             t_real = strtod(t_chars, &t_end);
             
-            if (*t_end == '\0')
+            // AL-2014-07-31: [[ Bug 12936 ]] Check the right number of chars has been consumed
+            if (t_end - t_chars == char_count)
                 t_success = MCNumberCreateWithReal(t_real, r_number);
         }
     }
