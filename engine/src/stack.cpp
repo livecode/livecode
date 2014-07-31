@@ -150,8 +150,6 @@ MCStack::MCStack()
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
 	view_init();
-
-	mode_create();
 }
 
 MCStack::MCStack(const MCStack &sref) : MCObject(sref)
@@ -341,14 +339,10 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	m_purge_fonts = false;
 
 	view_copy(sref);
-
-	mode_copy(sref);
 }
 
 MCStack::~MCStack()
 {
-	mode_destroy();
-
 	flags &= ~F_DESTROY_STACK;
 	state |= CS_DELETE_STACK;
 	while (opened)
