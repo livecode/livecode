@@ -21,6 +21,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	ijpg.cpp \
 	image.cpp \
 	imagelist.cpp \
+	imageloader.cpp \
 	image_rep.cpp \
 	image_rep_encoded.cpp \
 	image_rep_mutable.cpp \
