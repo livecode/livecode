@@ -317,19 +317,20 @@ public:
             MCStringRef t_tag;
             // SN-2014-07-29: [[ Bug 12998 ]] We want to check if the has_tag member, not if the menu item
             //  contains a tag (which is always true)
+            t_tag = MCValueRetain(p_menuitem -> tag);
             if (!p_menuitem -> has_tag)
             {
+                MCAutoStringRef t_replacement;
                 if (t_action == kMCPlatformMenuItemActionAbout)
-                    /* UNCHECKED */ MCStringCreateWithCString("About", t_tag);
+                    /* UNCHECKED */ MCStringCreateWithCString("About", &t_replacement);
                 else if (t_action == kMCPlatformMenuItemActionQuit)
-                    /* UNCHECKED */ MCStringCreateWithCString("Quit", t_tag);
+                    /* UNCHECKED */ MCStringCreateWithCString("Quit", &t_replacement);
                 else if (t_action == kMCPlatformMenuItemActionPreferences)
-                    /* UNCHECKED */ MCStringCreateWithCString("Preferences", t_tag);
-                else
-                    t_tag = MCValueRetain(kMCEmptyString);
+                    /* UNCHECKED */ MCStringCreateWithCString("Preferences", &t_replacement);
+                
+                if (*t_replacement != nil)
+                    MCValueAssign(t_tag, *t_replacement);
             }
-            else
-                t_tag = MCValueRetain(p_menuitem -> tag);
 			
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeMCString, &(p_menuitem -> label));
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeMCString, &t_tag);
