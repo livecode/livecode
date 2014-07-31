@@ -769,6 +769,7 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
 	
     bool t_success, t_can_debug;
     t_success = false;
+    t_can_debug = true;
     
     // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
     Boolean t_old_expectation = m_numberexpected;
@@ -777,6 +778,15 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
     {
         MCExecValue t_value;        
         p_expr -> eval_ctxt(*this, t_value);
+        
+        if (!HasError())
+            t_success = true;
+        else
+        {
+            t_can_debug = MCB_error(*this, line, pos, p_error);
+            IgnoreLastError();
+            break;
+        }
         
         if (!MCExecTypeIsNumber(t_value . type))
             MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &r_result);
@@ -788,12 +798,6 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
             r_result = t_value . float_value;
         else
             r_result = t_value . double_value;
-        
-        if (!HasError())
-            t_success = true;
-        else
-            t_can_debug = MCB_error(*this, line, pos, p_error);
-        IgnoreLastError();
     }
 	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
@@ -3161,12 +3165,12 @@ void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_fr
             MCExecTypeConvertNumbers(ctxt, p_from_type, p_from_value, p_to_type, p_to_value);
             return;
         }
-        else if (p_from_type == kMCExecTypeString)
+        else if (p_from_type == kMCExecValueTypeStringRef)
         {
             MCExecTypeConvertStringToNumber(ctxt, *(MCStringRef*)p_from_value, p_to_type, p_to_value);
             return;
         }
-        else if (p_from_type == kMCExecTypeName)
+        else if (p_from_type == kMCExecValueTypeNameRef)
         {
             MCExecTypeConvertStringToNumber(ctxt, MCNameGetString(*(MCNameRef*)p_from_value), p_to_type, p_to_value);
             return;

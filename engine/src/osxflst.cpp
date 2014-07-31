@@ -171,7 +171,7 @@ bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles)
 {
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
-    core_text_get_font_styles(p_fname, fsize, r_styles);
+    return core_text_get_font_styles(p_fname, fsize, r_styles);
 }
 
 bool MCFontlist::getfontstructinfo(MCNameRef& r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
