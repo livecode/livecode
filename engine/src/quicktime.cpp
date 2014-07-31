@@ -682,24 +682,37 @@ static int compare_qteffect(const void *a, const void *b)
 }
 
 void MCQTEffectsList(MCStringRef &r_string)
-{	
+{
 	if (!MCQTInit())
+    {
+        // SN-2014-07-28: [[ Bug 12983 ]] We need to return at least an empty string
+        r_string = MCValueRetain(kMCEmptyString);
 		return;
+    }
 	
 	QTEffectsQuery(NULL);
     
     MCAutoListRef t_list;
-	/* UNCHECKED */ MCListCreateMutable('\n', &t_list);
+	
+    // SN-2014-07-28: [[ Bug 12983 ]] Ensure an empty string is returned in case one of a failure
+    //  in building the list
+    bool t_success;
+    t_success = MCListCreateMutable('\n', &t_list);
 	
 	// MW-2008-01-08: [[ Bug 5700 ]] Make sure the effect list is sorted alphabetically
 	qsort(qteffects, neffects, sizeof(QTEffect), compare_qteffect);
 	
 	uint2 i;
-	for (i = 0; i < neffects; i++)
-		if (!MCListAppendCString(*t_list, qteffects[i].token))
-			return;
+	for (i = 0; i < neffects && t_success; i++)
+		t_success = MCListAppendCString(*t_list, qteffects[i].token);
+    
 
-    /* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
+    if (t_success)
+        t_success = MCListCopyAsString(*t_list, r_string);
+    
+    
+    if (!t_success)
+        r_string = MCValueRetain(kMCEmptyString);
 }
 
 static void QTEffectsQuery(void **effectatomptr)
