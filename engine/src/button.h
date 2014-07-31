@@ -139,6 +139,10 @@ class MCButton : public MCControl
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
+    bool m_animate_posted : 1;
+
 public:
 	MCButton();
 	MCButton(const MCButton &bref);

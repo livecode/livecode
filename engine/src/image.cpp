@@ -142,6 +142,9 @@ MCImage::MCImage()
 	resizequality = INTERPOLATION_BOX;
     
     m_center_rect = MCRectangleMake(INT16_MIN, INT16_MIN, UINT16_MAX, UINT16_MAX);
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the image animate message is only posted from a single thread.
+    m_animate_posted = false;
 }
 
 MCImage::MCImage(const MCImage &iref) : MCControl(iref)
@@ -190,6 +193,9 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	resizequality = iref.resizequality;
     
     m_center_rect = iref.m_center_rect;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the image animate message is only posted from a single thread.
+    m_animate_posted = false;
 }
 
 MCImage::~MCImage()
@@ -535,6 +541,9 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 		else
 			if ((isvisible() || m_needs) && irepeatcount && m_rep != nil && m_rep->GetFrameCount() > 1)
 			{
+                // MM-2014-07-31: [[ ThreadedRendering ]] Flag that there is no longer an image animation message pending.
+                m_animate_posted = false;
+                
 				advanceframe();
 				if (irepeatcount)
 				{

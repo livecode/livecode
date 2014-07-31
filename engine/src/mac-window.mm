@@ -32,7 +32,7 @@
 
 #include "graphics_util.h"
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
 static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 static bool s_inside_focus_event = false;
@@ -1552,18 +1552,18 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		/* UNCHECKED */ MCGRegionAddRect(t_update_region, MCRectangleToMCGIntegerRectangle([self mapNSRectToMCRectangle: t_update_rects[i]]));
 
 	//////////
-	
-	// Save the context state
-	CGContextSaveGState(t_graphics);
-	
+    
+    // Save the context state
+    CGContextSaveGState(t_graphics);
+
 	{
-		MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
-		t_window -> HandleRedraw(&t_surface, t_update_region);
-	}
-	
-	// Restore the context state
-	CGContextRestoreGState(t_graphics);
-	
+        MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
+        t_window -> HandleRedraw(&t_surface, t_update_region);
+    }
+    
+    // Restore the context state
+    CGContextRestoreGState(t_graphics);
+
 	//////////
 	
 	MCGRegionDestroy(t_update_region);

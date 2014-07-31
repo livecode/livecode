@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "image.h"
 #include "image_rep.h"
+#include "systhreads.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,11 +73,17 @@ MCLoadableImageRep::MCLoadableImageRep()
 	m_frames_premultiplied = false;
 	
 	m_next = m_prev = nil;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single threrad locks an image frame at a time.
+    /* UNCHECKED */ MCThreadMutexCreate(m_frame_lock);
 }
 
 MCLoadableImageRep::~MCLoadableImageRep()
 {
 	ReleaseFrames();
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single threrad locks an image frame at a time.
+    MCThreadMutexRelease(m_frame_lock);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -235,12 +242,19 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 	if (m_frame_count != 0 && p_frame >= m_frame_count)
 		return false;
 	
+    // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread locks an image frame at a time.
+    //  This could potentially be improved to be less obtrusive and resource hungry (mutex per image)
+    MCThreadMutexLock(m_frame_lock);
+    
+	if (m_frame_count != 0 && p_frame >= m_frame_count)
+		return false;
+    
 	if (!EnsureMCGImageFrames())
 		return false;
 	
 	if (p_frame >= m_frame_count)
 		return false;
-	
+    
 	// prevent data being removed by cache flush
 	m_lock_count++;
 	
@@ -248,6 +262,8 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 	Retain();
 	
 	r_frame = &m_frames[p_frame];
+    
+    MCThreadMutexUnlock(m_frame_lock);
 	
 	return true;
 }
@@ -310,6 +326,12 @@ void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_fra
 	if (p_frame == nil || m_lock_count == 0)
 		return;
 	
+    // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread locks an image frame at a time.
+    MCThreadMutexLock(m_frame_lock);
+
+    if (p_frame == nil || m_lock_count == 0)
+		return;
+
 	if (p_index >= m_frame_count)
 		return;
 	
@@ -320,6 +342,8 @@ void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_fra
 	Release();
 	
 	MoveRepToHead(this);
+    
+    MCThreadMutexUnlock(m_frame_lock);
 }
 
 void MCLoadableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
