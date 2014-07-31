@@ -109,8 +109,11 @@ bool MCThreadPoolInitialize()
     
     if (t_success)
     {
+		uint32_t t_thread_pool_size;
+        t_thread_pool_size = MCMin(MCThreadGetNumberOfCores(), (uint32_t) kMCThreadPoolSize);
+        
         s_thread_pool_running = true;
-        for (uint32_t i = 0; i < kMCThreadPoolSize && t_success; i++)
+        for (uint32_t i = 0; i < t_thread_pool_size && t_success; i++)
         {
             __MCThreadPoolThread *t_thread;
             t_thread = NULL;
@@ -333,6 +336,15 @@ void MCThreadConditionSignal(MCThreadConditionRef self)
 {
     if (self != NULL)
 		ReleaseSemaphore(self -> condition, 1, NULL);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint32_t MCThreadGetNumberOfCores()
+{
+    SYSTEM_INFO t_sysinfo;
+    GetSystemInfo(&t_sysinfo);
+    return (uint32_t)t_sysinfo . dwNumberOfProcessors;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
