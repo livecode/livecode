@@ -286,10 +286,10 @@ void MCImage::SetRepeatCount(MCExecContext& ctxt, integer_t p_count)
 	if (opened && m_rep != nil && m_rep->GetFrameCount() > 1 && repeatcount != 0)
 	{
 		setframe(currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
-		MCGImageFrame *t_frame = nil;
+		MCGImageFrame t_frame;
 		if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 		{
-			MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+			MCscreen->addtimer(this, MCM_internal, t_frame.duration);
 			m_rep->UnlockImageFrame(currentframe, t_frame);
 		}
 	}
@@ -747,10 +747,10 @@ void MCImage::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, 
     }
     if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
     {
-        MCGImageFrame *t_frame = nil;
+        MCGImageFrame t_frame;
         if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
         {
-            MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+            MCscreen->addtimer(this, MCM_internal, t_frame.duration);
             m_rep->UnlockImageFrame(currentframe, t_frame);
         }
     }
