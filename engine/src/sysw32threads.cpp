@@ -343,9 +343,10 @@ void MCThreadConditionSignal(MCThreadConditionRef self)
 
 uint32_t MCThreadGetNumberOfCores()
 {
-    SYSTEM_INFO t_sysinfo;
+    /*SYSTEM_INFO t_sysinfo;
     GetSystemInfo(&t_sysinfo);
-    return (uint32_t)t_sysinfo . dwNumberOfProcessors;
+    return (uint32_t)t_sysinfo . dwNumberOfProcessors;*/
+    return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
