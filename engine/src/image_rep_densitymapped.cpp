@@ -34,7 +34,6 @@ MCDensityMappedImageRep::MCDensityMappedImageRep(const char *p_filename)
 	m_source_densities = nil;
 	m_source_count = 0;
 	
-	m_last_density = 1.0;
 	m_locked = false;
 	
 	m_filename = nil;
@@ -60,7 +59,7 @@ MCDensityMappedImageRep::~MCDensityMappedImageRep()
 uindex_t MCDensityMappedImageRep::GetFrameCount()
 {
 	uindex_t t_match;
-	if (!GetBestMatch(m_last_density, t_match))
+	if (!GetBestMatch(1.0, t_match))
 		return 0;
 	
 	return m_sources[t_match]->GetFrameCount();
@@ -71,8 +70,6 @@ bool MCDensityMappedImageRep::LockImageFrame(uindex_t p_index, MCGFloat p_densit
 	uindex_t t_match;
 	if (!GetBestMatch(p_density, t_match))
 		return false;
-	
-	m_last_density = p_density;
 	
 	m_locked = m_sources[t_match]->LockImageFrame(p_index, p_density, r_frame);
 	m_locked_source = t_match;
@@ -99,8 +96,6 @@ bool MCDensityMappedImageRep::LockBitmapFrame(uindex_t p_index, MCGFloat p_densi
 	if (!GetBestMatch(p_density, t_match))
 		return false;
 	
-	m_last_density = p_density;
-
 	m_locked = m_sources[t_match]->LockBitmapFrame(p_index, p_density, r_frame);
 	m_locked_source = t_match;
 	
@@ -123,37 +118,26 @@ void MCDensityMappedImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame 
 bool MCDensityMappedImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
 {
 	uindex_t t_match;
-	if (!GetBestMatch(m_last_density, t_match))
+	// IM-2014-08-01: [[ Bug 13021 ]] Make the 1.0 density source (or nearest match) the basis for the image geometry
+	if (!GetBestMatch(1.0, t_match))
 		return false;
 	
-	return m_sources[t_match]->GetGeometry(r_width, r_height);
-}
-
-MCGFloat MCDensityMappedImageRep::GetDensity()
-{
-	uindex_t t_match;
-	if (!GetBestMatch(m_last_density, t_match))
-		return 1.0;
+	if (!m_sources[t_match]->GetGeometry(r_width, r_height))
+		return false;
+		
+	r_width /= m_source_densities[t_match];
+	r_height /= m_source_densities[t_match];
 	
-	return m_source_densities[t_match];
+	return true;
 }
 
 uint32_t MCDensityMappedImageRep::GetDataCompression()
 {
 	uindex_t t_match;
-	if (!GetBestMatch(m_last_density, t_match))
+	if (!GetBestMatch(1.0, t_match))
 		return F_RLE;
 	
 	return m_sources[t_match]->GetDataCompression();
-}
-
-MCGFloat MCDensityMappedImageRep::GetBestDensityMatch(MCGFloat p_target_density)
-{
-	uindex_t t_match;
-	if (!GetBestMatch(p_target_density, t_match))
-		return 1.0;
-	
-	return m_sources[t_match]->GetBestDensityMatch(p_target_density);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

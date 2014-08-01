@@ -466,8 +466,6 @@ public:
 	// IM-2013-11-06: [[ RefactorGraphics ]] get the image rep & transform used to render the image
 	bool get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform);
 	
-	MCGFloat getscalefactor(void);
-	
 	// IM-2013-10-30: [[ FullscreenMode ]] Returns the stack device scale or 1.0 if image object not attached
 	MCGFloat getdevicescale(void);
 	

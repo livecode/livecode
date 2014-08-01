@@ -63,9 +63,6 @@ public:
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 
-	virtual MCGFloat GetDensity() { return 1.0; };
-	virtual MCGFloat GetBestDensityMatch(MCGFloat p_target_density) { return GetDensity(); };
-	
 	//////////
 
 	MCImageRep *Retain();
@@ -366,9 +363,6 @@ public:
 	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	
-	MCGFloat GetDensity();
-	MCGFloat GetBestDensityMatch(MCGFloat p_target_density);
-	
 	//////////
 
 	const char *GetSearchKey() { return m_filename; }
@@ -392,7 +386,6 @@ protected:
 	MCGFloat *m_source_densities;
 	uindex_t m_source_count;
 	
-	MCGFloat m_last_density;
 	bool m_locked;
 	uint32_t m_locked_source;
 	

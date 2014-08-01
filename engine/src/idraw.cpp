@@ -74,6 +74,9 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 	if (m_rep != nil)
 	{
+		uint32_t t_frame_duration;
+		t_frame_duration = 0;
+		
 		if (m_rep->GetType() == kMCImageRepVector)
 		{
 			MCU_set_rect(drect, dx - sx, dy - sy, rect.width, rect.height);
@@ -152,6 +155,9 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			t_success = t_rep->LockImageFrame(currentframe, t_device_scale, t_frame);
 			if (t_success)
 			{
+				// IM-2014-08-01: [[ Bug 13021 ]] Get frame duration to avoid re-locking later
+				t_frame_duration = t_frame->duration;
+				
 				MCImageDescriptor t_image;
 				MCMemoryClear(&t_image, sizeof(MCImageDescriptor));
 
@@ -160,8 +166,11 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 					t_image.transform = t_transform;
 				
 				// IM-2013-07-19: [[ ResIndependence ]] set scale factor so hi-res image draws at the right size
-				// IM-2013-10-30: [[ FullscreenMode ]] Get scale factor from the returned frame
-				t_image.scale_factor = t_frame->density;
+				// IM-2014-08-01: [[ Bug 13021 ]] Calculate horizontal & vertical scales from locked image size.
+				uint32_t t_width, t_height;
+				/* UNCHECKED */ t_rep->GetGeometry(t_width, t_height);
+				t_image.h_scale = (MCGFloat)MCGImageGetWidth(t_frame->image) / t_width;
+				t_image.v_scale = (MCGFloat)MCGImageGetHeight(t_frame->image) / t_height;
 
                 // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 				t_image.filter = getimagefilter();
@@ -208,14 +217,8 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 		if (state & CS_DO_START)
 		{
-			MCGImageFrame *t_frame = nil;
-			if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
-			{
-				MCscreen->addtimer(this, MCM_internal, t_frame->duration);
-				m_rep->UnlockImageFrame(currentframe, t_frame);
-
-				state &= ~CS_DO_START;
-			}
+			MCscreen->addtimer(this, MCM_internal, t_frame_duration);
+			state &= ~CS_DO_START;
 		}
 	}
     else if (filename != nil)
