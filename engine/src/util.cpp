@@ -1347,7 +1347,8 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 }
 #endif
 
-static const char * nametable[] =
+// MM-2014-08-01: [[ Bug ]] Pulled name table initialisation out of MCU_matchname to prevent crah on Linux.
+static const char *nametable[] =
 {
     MCstackstring, MCaudiostring,
     MCvideostring, MCbackgroundstring,
@@ -1364,7 +1365,7 @@ bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
 {
 	if (name == nil || MCNameIsEmpty(name) || MCNameIsEmpty(test))
 		return false;
-
+    
 	if (MCNameIsEqualTo(name, test, kMCCompareCaseless))
 		return true;
 

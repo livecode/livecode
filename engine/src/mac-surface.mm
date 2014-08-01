@@ -162,7 +162,7 @@ bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r
     r_raster . height = t_actual_area . size . height * t_scale;
     r_raster . stride = m_raster . stride;
     r_raster . format = kMCGRasterFormat_xRGB;
-    r_raster . pixels = (uint8_t*)m_raster . pixels + (t_actual_area . origin . y - t_bounds . origin.y) * m_raster . stride + (t_actual_area . origin . x - t_bounds . origin . x) * sizeof(uint32_t);
+    r_raster . pixels = (uint8_t*)m_raster . pixels + (int32_t)((t_actual_area . origin . y - t_bounds . origin.y) * t_scale * m_raster . stride + (t_actual_area . origin . x - t_bounds . origin . x) * t_scale * sizeof(uint32_t));
     
     return true;
 }
@@ -276,9 +276,6 @@ void MCMacPlatformSurface::Unlock(void)
         // COCOA-TODO: Getting the height to flip round is dependent on a friend.
         int t_surface_height;
         t_surface_height = m_window -> m_content . height;
-        
-        MCGFloat t_scale;
-        t_scale = GetBackingScaleFactor();
         
         MCGIntegerRectangle t_bounds;
         t_bounds = MCGRegionGetBounds(m_update_rgn);
