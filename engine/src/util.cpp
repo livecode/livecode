@@ -1347,6 +1347,19 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 }
 #endif
 
+static const char * nametable[] =
+{
+    MCstackstring, MCaudiostring,
+    MCvideostring, MCbackgroundstring,
+    MCcardstring, MCnullstring,
+    MCgroupstring, MCnullstring,
+    MCbuttonstring, MCnullstring,
+    MCnullstring, MCscrollbarstring,
+    MCimagestring, MCgraphicstring,
+    MCepsstring, MCmagnifierstring,
+    MCcolorstring, MCfieldstring
+};
+
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
 {
 	if (name == nil || MCNameIsEmpty(name) || MCNameIsEmpty(test))
@@ -1356,18 +1369,6 @@ bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
 		return true;
 
     bool match = false;
-	static const char *nametable[] =
-	    {
-	        MCstackstring, MCaudiostring,
-	        MCvideostring, MCbackgroundstring,
-	        MCcardstring, MCnullstring,
-	        MCgroupstring, MCnullstring,
-	        MCbuttonstring, MCnullstring,
-	        MCnullstring, MCscrollbarstring,
-	        MCimagestring, MCgraphicstring,
-	        MCepsstring, MCmagnifierstring,
-	        MCcolorstring, MCfieldstring
-	    };
 
     MCStringRef t_name, t_test;
     t_name = MCNameGetString(name);

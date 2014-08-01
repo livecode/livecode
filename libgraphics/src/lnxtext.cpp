@@ -34,6 +34,9 @@ extern "C" int initialise_weak_link_pangoft2();
 extern "C" int initialise_weak_link_glib();
 extern "C" int initialise_weak_link_gobject();
 
+extern void MCCStringFree(char *p_string);
+extern bool MCCStringFromUnicodeSubstring(const unichar_t *p_chars, uint32_t p_char_count, char*& r_string);
+
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to make text rendering thread safe, by using pthread TLS to ensure we have seperate panog objects for each thread.
 //  This should probably be moved to a central thread library at some point, which will also help with clean up (we only clean up the main thread at the moment).
 static pthread_key_t /* PangoFontMap * */ s_font_map_key = NULL;
