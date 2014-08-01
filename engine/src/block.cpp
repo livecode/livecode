@@ -1708,7 +1708,7 @@ coord_t MCBlock::GetCursorX(findex_t fi)
 		j = m_size;
     
     // AL-2014-07-29: [[ Bug 12896 ]] Include tab width in block cursor calculation
-    if (j == m_size && parent -> GetCodepointAtIndex(fi - 1) == '\t')
+    if (j == m_size && fi > 0 && parent -> GetCodepointAtIndex(fi - 1) == '\t')
     {
         if (segment -> GetLastBlock() == this)
             return segment -> GetWidth() - origin;

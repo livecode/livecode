@@ -3068,7 +3068,7 @@ Boolean MCPlayer::qt_prepare(void)
 	MCDoAction((MovieController)theMC, mcActionSetUseBadge, (void*)((flags & F_SHOW_BADGE) != 0));
 	MCDoAction((MovieController)theMC, mcActionSetLooping, (void*)((flags & F_LOOPING) != 0));
 	MCEnableEditing((MovieController)theMC, (flags & F_SHOW_SELECTION) != 0);
-	setselection(); //set or unset selection
+	setselection(false); //set or unset selection
 	MCDoAction((MovieController)theMC, mcActionSetPlaySelection,
 	           (void*)((flags & F_PLAY_SELECTION) != 0));
 	MCMovieChanged((MovieController)theMC, (Movie)theMovie);
