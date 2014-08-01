@@ -534,6 +534,8 @@
 		7635171E182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		763FF4E918522CBE00B45FBA /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */; };
 		763FF4EA18522CC100B45FBA /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */; };
+		76570D51198BBBDF00614ECD /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		76570D52198BBBE800614ECD /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		766E3298180EE4ED00CF7FCF /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3293180EE4E000CF7FCF /* graphicscontext.cpp */; };
 		766E3299180EE4ED00CF7FCF /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3295180EE4E000CF7FCF /* imagelist.cpp */; };
 		766E329A180EE4EE00CF7FCF /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3293180EE4E000CF7FCF /* graphicscontext.cpp */; };
@@ -1880,6 +1882,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76570D52198BBBE800614ECD /* CoreMedia.framework in Frameworks */,
+				76570D51198BBBDF00614ECD /* AVFoundation.framework in Frameworks */,
 				BE6444491965B8CB00C2092C /* AudioToolbox.framework in Frameworks */,
 				72876DE718CF32D700C20405 /* libskia.a in Frameworks */,
 				72D6032418476FC90022379C /* libicudata.a in Frameworks */,
