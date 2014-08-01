@@ -1014,21 +1014,34 @@ int4 MCNativeTheme::getmetric(Widget_Metric wmetric)
 		ret = 0;
 		break;
 	case WTHEME_METRIC_TRACKSIZE:
-		if ( gtktracksize == 0 ) 
-			gtktracksize = getscrollbarmintracksize();
+		if ( gtktracksize == 0 )
+        {
+            MCThreadMutexLock(MCimagerepmutex);
+            if (gtktracksize == 0)
+                gtktracksize = getscrollbarmintracksize();
+            MCThreadMutexUnlock(MCimagerepmutex);
+        }
 		return gtktracksize;
 		break;
 	case WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE:
-		moz_gtk_checkbox_get_metrics(&ret, 0);
+        MCThreadMutexLock(MCimagerepmutex);
+        moz_gtk_checkbox_get_metrics(&ret, 0);
+        MCThreadMutexUnlock(MCimagerepmutex);
 		break;
-	case WTHEME_METRIC_CHECKBUTTON_INDICATORSPACING:
-		moz_gtk_checkbox_get_metrics(0, &ret);
+        case WTHEME_METRIC_CHECKBUTTON_INDICATORSPACING:
+        MCThreadMutexLock(MCimagerepmutex);
+        moz_gtk_checkbox_get_metrics(0, &ret);
+        MCThreadMutexUnlock(MCimagerepmutex);
 		break;
-	case WTHEME_METRIC_RADIOBUTTON_INDICATORSIZE:
-		moz_gtk_radiobutton_get_metrics(&ret, 0);
+        case WTHEME_METRIC_RADIOBUTTON_INDICATORSIZE:
+        MCThreadMutexLock(MCimagerepmutex);
+        moz_gtk_radiobutton_get_metrics(&ret, 0);
+        MCThreadMutexUnlock(MCimagerepmutex);
 		break;
-	case WTHEME_METRIC_RADIOBUTTON_INDICATORSPACING:
-		moz_gtk_radiobutton_get_metrics(0, &ret);
+        case WTHEME_METRIC_RADIOBUTTON_INDICATORSPACING:
+        MCThreadMutexLock(MCimagerepmutex);
+        moz_gtk_radiobutton_get_metrics(0, &ret);
+        MCThreadMutexUnlock(MCimagerepmutex);
 		break;
 	default:
 		break;
