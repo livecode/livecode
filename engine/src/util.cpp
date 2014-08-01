@@ -1182,6 +1182,20 @@ Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
 	return False;
 }
 
+// MM-2014-08-01: [[ Bug ]] Pulled name table initialisation out of MCU_matchname to prevent crah on Linux.
+static const char *nametable[] =
+{
+    MCstackstring, MCaudiostring,
+    MCvideostring, MCbackgroundstring,
+    MCcardstring, MCnullstring,
+    MCgroupstring, MCnullstring,
+    MCbuttonstring, MCnullstring,
+    MCnullstring, MCscrollbarstring,
+    MCimagestring, MCgraphicstring,
+    MCepsstring, MCmagnifierstring,
+    MCcolorstring, MCfieldstring
+};
+
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 {
 	if (name == nil || MCNameIsEmpty(name) || test == MCnullmcstring)
@@ -1192,18 +1206,6 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 
 	Boolean match = False;
 	MCString tname = MCNameGetOldString(name);
-	static const char *nametable[] =
-	    {
-	        MCstackstring, MCaudiostring,
-	        MCvideostring, MCbackgroundstring,
-	        MCcardstring, MCnullstring,
-	        MCgroupstring, MCnullstring,
-	        MCbuttonstring, MCnullstring,
-	        MCnullstring, MCscrollbarstring,
-	        MCimagestring, MCgraphicstring,
-	        MCepsstring, MCmagnifierstring,
-	        MCcolorstring, MCfieldstring
-	    };
 	const char *sptr = test.getstring();
 	uint4 l = test.getlength();
 	if (MCU_strchr(sptr, l, '"')
