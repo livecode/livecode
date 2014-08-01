@@ -221,7 +221,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatGIF; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCImageFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -245,7 +245,7 @@ MCGIFImageLoader::~MCGIFImageLoader()
 	}
 }
 
-bool MCGIFImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
+bool MCGIFImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
 {
 	bool t_success;
 	t_success = true;
@@ -260,6 +260,7 @@ bool MCGIFImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 		
 		r_xhot = r_yhot = 0;
 		r_name = nil;
+		r_frame_count = m_gif->ImageCount;
 	}
 	
 	return t_success;
@@ -295,9 +296,8 @@ bool MCGIFImageLoader::LoadFrames(MCImageFrame *&r_frames, uint32_t &r_count)
 		t_success = MCImageBitmapCreate(t_width, t_height, t_canvas);
 	}
 
-	// The current frame count. The number of frames is not the same as the
-	// number of images in the GIF as an image with delay 0 is composited with
-	// all previous ones with delay 0 to build a single frame.
+	// The current frame count. The number of frames is the same as the
+	// number of images in the GIF.
 	uint32_t t_frame_count;
 	t_frame_count = 0;
 	

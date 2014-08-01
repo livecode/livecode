@@ -80,17 +80,6 @@ MCLoadableImageRep::~MCLoadableImageRep()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uindex_t MCLoadableImageRep::GetFrameCount()
-{
-	if (!m_have_geometry)
-	{
-		if (!EnsureImageFrames(m_premultiplied))
-			return false;
-	}
-
-	return m_frame_count;
-}
-
 void MCLoadableImageRep::PremultiplyFrames()
 {
 	if (m_premultiplied)

@@ -115,7 +115,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatPNG; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCImageFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -140,7 +140,7 @@ MCPNGImageLoader::~MCPNGImageLoader()
 		png_destroy_read_struct(&m_png, &m_info, &m_end_info);
 }
 
-bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
+bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 	
@@ -183,6 +183,7 @@ bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 		
 		r_xhot = r_yhot = 0;
 		r_name = nil;
+		r_frame_count = 1;
 	}
 
 	return t_success;

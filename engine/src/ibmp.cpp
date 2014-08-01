@@ -945,7 +945,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatBMP; }
 
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCImageFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -954,7 +954,7 @@ private:
 	bool m_is_os2;
 };
 
-bool MCBitmapStructImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
+bool MCBitmapStructImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
 {
 	bool t_success;
 	t_success = true;
@@ -1016,6 +1016,7 @@ bool MCBitmapStructImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height
 		r_xhot = r_yhot = 0;
 		
 		r_name = nil;
+		r_frame_count = 1;
 	}
 	
 	return t_success;
@@ -1138,12 +1139,12 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatBMP; }
 
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 
 private:
 };
 
-bool MCBitmapImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
+bool MCBitmapImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
 {
 	bool t_success;
 	t_success = true;
@@ -1158,7 +1159,7 @@ bool MCBitmapImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint
 		t_success = bmp_read_file_header(GetStream(), t_bytes_read, t_file_type, t_file_size, t_reserved_1, t_reserved_2, t_image_offset);
 
 	if (t_success)
-		t_success = MCBitmapStructImageLoader::LoadHeader(r_width, r_height, r_xhot, r_yhot, r_name);
+		t_success = MCBitmapStructImageLoader::LoadHeader(r_width, r_height, r_xhot, r_yhot, r_name, r_frame_count);
 
 	if (t_success)
 	{
@@ -1470,7 +1471,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatNetPBM; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCImageFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -1491,7 +1492,7 @@ MCNetPBMImageLoader::~MCNetPBMImageLoader()
 		delete m_reader;
 }
 
-bool MCNetPBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
+bool MCNetPBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 
@@ -1535,6 +1536,7 @@ bool MCNetPBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint
 		
 		r_xhot = r_yhot = 0;
 		r_name = nil;
+		r_frame_count = 1;
 	}
 
 	return t_success;
@@ -1834,7 +1836,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatXBM; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCImageFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -1849,7 +1851,7 @@ MCXBMImageLoader::~MCXBMImageLoader()
 {
 }
 
-bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
+bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 	
@@ -1937,6 +1939,7 @@ bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 		r_xhot = t_xhot;
 		r_yhot = t_yhot;
 		r_name = t_name;
+		r_frame_count = 1;
 	}
 	else
 		MCCStringFree(t_name);
@@ -2478,7 +2481,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatXPM; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCImageFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -2503,7 +2506,7 @@ MCXPMImageLoader::~MCXPMImageLoader()
 	MCMemoryDeleteArray(m_color_chars);
 }
 
-bool MCXPMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
+bool MCXPMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 	
@@ -2530,6 +2533,7 @@ bool MCXPMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 		r_xhot = r_yhot = 0;
 		
 		r_name = nil;
+		r_frame_count = 1;
 	}
 	
 	return t_success;
@@ -2666,7 +2670,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatXWD; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCImageFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -2681,7 +2685,7 @@ MCXWDImageLoader::~MCXWDImageLoader()
 {
 }
 
-bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
+bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 	
@@ -2715,6 +2719,7 @@ bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 		r_xhot = r_yhot = 0;
 		
 		r_name = newname;
+		r_frame_count = 1;
 	}
 	else
 		MCCStringFree(newname);
