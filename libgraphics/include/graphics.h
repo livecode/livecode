@@ -525,15 +525,14 @@ inline MCGRectangle MCGRectangleTranslate(MCGRectangle p_rect, MCGFloat p_dx, MC
 	return t_rect;
 }
 
-inline MCGRectangle MCGRectangleScale(MCGRectangle p_rect, MCGFloat p_scale)
+inline MCGRectangle MCGRectangleScale(const MCGRectangle &p_rect, MCGFloat p_h_scale, MCGFloat p_v_scale)
 {
-	MCGRectangle t_rect;
-	t_rect.origin.x = p_rect.origin.x * p_scale;
-	t_rect.origin.y = p_rect.origin.y * p_scale;
-	t_rect.size.width = p_rect.size.width * p_scale;
-	t_rect.size.height = p_rect.size.height * p_scale;
-	
-	return t_rect;
+	return MCGRectangleMake(p_rect.origin.x * p_h_scale, p_rect.origin.y * p_v_scale, p_rect.size.width * p_h_scale, p_rect.size.height * p_v_scale);
+}
+
+inline MCGRectangle MCGRectangleScale(const MCGRectangle &p_rect, MCGFloat p_scale)
+{
+	return MCGRectangleScale(p_rect, p_scale, p_scale);
 }
 
 inline bool MCGRectangleIsEmpty(const MCGRectangle &p_rect)
