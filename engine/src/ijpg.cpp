@@ -578,7 +578,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatJPEG; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -613,7 +613,7 @@ MCJPEGImageLoader::~MCJPEGImageLoader()
 		MCMemoryDeallocate(m_icc);
 }
 
-bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
+bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 	
@@ -694,6 +694,7 @@ bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32
 		
 		r_xhot = r_yhot = 0;
 		r_name = nil;
+		r_frame_count = 1;
 	}
 	
 	return t_success;
@@ -955,10 +956,10 @@ bool MCImageEncodeJPEG(MCImageBitmap *p_image, MCImageMetadata *p_metadata, IO_h
                 }
             }
         }
-        
+
 		jpeg_start_compress(&t_jpeg, True);
 	}
-    
+
 	//Allocate array of pixel RGB values
 	if (t_success)
 		t_success = MCMemoryAllocate(p_image->width * 3, t_row_buffer);

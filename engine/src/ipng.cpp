@@ -115,7 +115,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatPNG; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -140,7 +140,7 @@ MCPNGImageLoader::~MCPNGImageLoader()
 		png_destroy_read_struct(&m_png, &m_info, &m_end_info);
 }
 
-bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name)
+bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 	
@@ -183,6 +183,7 @@ bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 		
 		r_xhot = r_yhot = 0;
 		r_name = nil;
+		r_frame_count = 1;
 	}
 
 	return t_success;
@@ -427,7 +428,7 @@ bool MCImageEncodePNG(MCImageIndexedBitmap *p_indexed, MCImageMetadata *p_metada
 					 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 		png_set_gAMA(t_png_ptr, t_info_ptr, 1/MCgamma);
 	}
-    
+
     // MERG-2014-07-16: [[ ImageMetadata ]] Parse the metadata array
     if (t_success)
         parsemetadata(t_png_ptr, t_info_ptr, p_metadata);
@@ -549,7 +550,7 @@ bool MCImageEncodePNG(MCImageBitmap *p_bitmap, MCImageMetadata *p_metadata, IO_h
     // MERG-2014-07-16: [[ ImageMetadata ]] Parse the metadata array
     if (t_success)
         parsemetadata(t_png_ptr, t_info_ptr, p_metadata);
-    
+
 	if (t_success)
 	{
 		png_write_info(t_png_ptr, t_info_ptr);

@@ -49,6 +49,8 @@ public:
 	bool GetHotSpot(uint32_t &r_x, uint32_t &r_y);
 	// Returns the image name or nil if not specified
 	bool GetName(const char *&r_name);
+	// Returns the number of frames in the image
+	bool GetFrameCount(uint32_t &r_frame_count);
 	// Returns the decoded image bitmap frames
 	bool GetFrames(MCBitmapFrame *&r_frames, uint32_t &r_frame_count);
 	
@@ -68,7 +70,7 @@ public:
 
 protected:
 	// Implemented by subclasses to perform the image header loading
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name) = 0;
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count) = 0;
 	// Implemented by subclasses to perform the image bitmap frame loading
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count) = 0;
 	

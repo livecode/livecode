@@ -123,7 +123,6 @@ public:
 	MCLoadableImageRep();
 	virtual ~MCLoadableImageRep();
 
-	virtual uindex_t GetFrameCount();
 	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
 	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
 	
@@ -172,6 +171,7 @@ public:
 
 	virtual ~MCEncodedImageRep();
 
+	virtual uindex_t GetFrameCount();
 	uint32_t GetDataCompression();
 
 protected:
@@ -187,6 +187,7 @@ protected:
 	//////////
 
 	uint32_t m_compression;
+	uint32_t m_header_frame_count;
 };
 
 //////////

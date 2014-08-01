@@ -86,6 +86,16 @@ bool MCImageLoader::TakeName(char *&r_name)
 	return true;
 }
 
+bool MCImageLoader::GetFrameCount(uint32_t &r_frame_count)
+{
+	if (!EnsureHeader())
+		return false;
+	
+	r_frame_count = m_frame_count;
+	
+	return true;
+}
+
 bool MCImageLoader::GetFrames(MCBitmapFrame *&r_frames, uint32_t &r_frame_count)
 {
 	if (!EnsureFrames())
@@ -128,7 +138,7 @@ bool MCImageLoader::EnsureHeader()
 	if (!m_valid)
 		return false;
 	
-	m_valid = m_header_loaded = LoadHeader(m_width, m_height, m_xhot, m_yhot, m_name);
+	m_valid = m_header_loaded = LoadHeader(m_width, m_height, m_xhot, m_yhot, m_name, m_frame_count);
 	
 	return m_valid;
 }
