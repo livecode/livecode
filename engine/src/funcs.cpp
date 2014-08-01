@@ -1937,11 +1937,14 @@ Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
     if (MCrecorder == nil)
         MCPlatformSoundRecorderCreate(MCrecorder);
     
-    MCPlatformSoundRecorderListCompressorsState t_state;
-    t_state . ep = &ep;
-    t_state . first = true;
-    
-    MCPlatformSoundRecorderListCompressors(MCrecorder, list_compressors_callback, &t_state);
+    if (MCrecorder != nil)
+    {
+        MCPlatformSoundRecorderListCompressorsState t_state;
+        t_state . ep = &ep;
+        t_state . first = true;
+        
+        MCPlatformSoundRecorderListCompressors(MCrecorder, list_compressors_callback, &t_state);
+    }
 #else
 	extern void MCQTGetRecordCompressionList(MCExecPoint& ep);
 	MCQTGetRecordCompressionList(ep);

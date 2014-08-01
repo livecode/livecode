@@ -434,26 +434,26 @@ Exec_errors MCAnswer::exec_record(MCExecPoint& ep, const char *p_title)
     if (MCrecorder == nil)
         MCPlatformSoundRecorderCreate(MCrecorder);
     
-    MCPlatformSoundRecorderBeginConfigurationDialog(MCrecorder);
-    
-    MCPlatformDialogResult t_result;
-    
-    for (;;)
+    if (MCrecorder != nil)
     {
-        t_result = MCPlatformSoundRecorderEndConfigurationDialog(MCrecorder);
-        if (t_result != kMCPlatformDialogResultContinue)
-            break;
+        MCPlatformSoundRecorderBeginConfigurationDialog(MCrecorder);
         
-		MCscreen -> wait(REFRESH_INTERVAL, True, True);
-    }
-    
-    ep.clear();
-    
-    if (t_result == kMCPlatformDialogResultCancel)
-		MCresult->sets(MCcancelstring);
-    
-    return EE_UNDEFINED;
-    
+        MCPlatformDialogResult t_result;
+        
+        for (;;)
+        {
+            t_result = MCPlatformSoundRecorderEndConfigurationDialog(MCrecorder);
+            if (t_result != kMCPlatformDialogResultContinue)
+                break;
+            
+            MCscreen -> wait(REFRESH_INTERVAL, True, True);
+        }
+        
+        ep.clear();
+        
+        if (t_result == kMCPlatformDialogResultCancel)
+            MCresult->sets(MCcancelstring);
+    }    
 #else
 	extern void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet);
 	MCQTRecordDialog(ep, p_title, sheet);

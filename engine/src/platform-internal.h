@@ -226,10 +226,7 @@ public:
 	MCPlatformSoundRecorder(void);
 	virtual ~MCPlatformSoundRecorder(void);
     
-	// Increase the reference count on the window.
 	void Retain(void);
-	
-	// Decrease the reference count on the window.
 	void Release(void);
     
 	virtual bool IsRecording(void);

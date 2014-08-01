@@ -1943,7 +1943,8 @@ Exec_stat MCRecord::exec(MCExecPoint &ep)
         if (MCrecorder == nil)
             MCPlatformSoundRecorderCreate(MCrecorder);
         
-        MCPlatformSoundRecorderStart(MCrecorder, soundfile);
+        if (MCrecorder != nil)
+            MCPlatformSoundRecorderStart(MCrecorder, soundfile);
 #else
         extern void MCQTRecordSound(char *soundfile);
         MCQTRecordSound(soundfile);
