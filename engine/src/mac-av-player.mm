@@ -250,7 +250,6 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 		CFRelease(m_current_frame);
     
     // First detach the observer from everything we've attached it to.
-    [m_player removeObserver: m_observer forKeyPath: @"status"];
     [m_player removeTimeObserver:m_time_observer_token];
     
     // Now we can release it.
@@ -377,7 +376,6 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
     
     if (![t_self -> m_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
     {
-        //NSLog(@"We do NOT have a new frame!");
         return kCVReturnSuccess;
     }
     
@@ -540,18 +538,17 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     AVPlayer *t_player;
     t_player = [[AVPlayer alloc] initWithURL: t_url];
 
-    // Observe the status property.
-    [t_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
-
     // Block-wait until the status becomes something.
+    [t_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
     while([t_player status] == AVPlayerStatusUnknown)
         MCPlatformWaitForEvent(60.0, true);
+
+    [t_player removeObserver: m_observer forKeyPath: @"status"];
 
     // If we've failed, leave things as they are (dealloc the new player).
     if ([t_player status] == AVPlayerStatusFailed)
     {
         // error obtainable via [t_player error]
-        [t_player removeObserver: m_observer forKeyPath: @"status"];
         [t_player release];
         return;
     }
@@ -562,8 +559,6 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     */
     if ([t_player currentItem] == nil)
     {
-        NSLog(@"Invalid filename or URL!");
-        [t_player removeObserver: m_observer forKeyPath: @"status"];
         [t_player release];
         return;
     }
@@ -584,7 +579,6 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 
     // Release the old player (if any).
     [m_view setPlayer: nil];
-    [m_player removeObserver: m_observer forKeyPath: @"status"];
     [m_player removeTimeObserver:m_time_observer_token];
 
     [m_player release];
@@ -776,10 +770,19 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
-            // Add toleranceBefore/toleranceAfter for accurate scrubbing
+        {
             // MW-2014-07-29: [[ Bug 12989 ]] Make sure we use the duration timescale.
-            [[m_player currentItem] seekToTime:CMTimeFromLCTime(*(uint32_t *)p_value) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-			break;
+            // MW-2014-08-01: [[ Bug 13046 ]] Use a completion handler to wait until the currentTime is
+            //   where we want it to be.
+            __block bool t_is_finished = false;
+            [[m_player currentItem] seekToTime:CMTimeFromLCTime(*(uint32_t *)p_value) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
+                t_is_finished = true;
+                MCPlatformBreakWait();
+            }];
+            while(!t_is_finished)
+                MCPlatformWaitForEvent(60.0, true);
+        }
+        break;
 		case kMCPlatformPlayerPropertyStartTime:
 		{
             m_selection_start = *(uint32_t *)p_value;

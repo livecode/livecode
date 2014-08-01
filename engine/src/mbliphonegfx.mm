@@ -409,19 +409,22 @@ static MCGRegionRef s_redraw_region = nil;
 	MCGRegionRef t_region;
 	t_region = nil;
 	
-	if (s_redraw_region == nil)
-	{
+    // MW-2014-07-31: [[ Bug ]] The clipping region iOS wants is not what we ask for
+    //   and there's no way to get it, so the best we can do is just use the rect it
+    //   gives us.
+	//if (s_redraw_region == nil)
+	//{
 		MCGIntegerRectangle t_hull;
 		t_hull = MCGRectangleGetBounds(MCGRectangleScale(MCGRectangleFromCGRect(rect), t_scale));
 		
 		MCGRegionCreate(t_region);
 		MCGRegionSetRect(t_region, t_hull);
-	}
+	/*}
 	else
 	{
 		MCGRegionCopyWithTransform(s_redraw_region, t_scale_transform, t_region);
 		MCGRegionSetEmpty(s_redraw_region);
-	}
+	}*/
 	
 	// IM-2013-08-23: [[ RefactorGraphics ]] pass scaled surface height to stack surface constructor
 	// IM-2013-09-30: [[ FullscreenMode ]] Use the stack transform to get the device rect

@@ -91,7 +91,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			// source images from flushing everything else out of the cache.
 			bool t_success = true;
 
-			MCGImageFrame *t_frame = nil;
+			MCGImageFrame t_frame;
 
 			bool t_printer = dc->gettype() == CONTEXT_TYPE_PRINTER;
 			bool t_update = !((state & CS_SIZE) && (state & CS_EDITED));
@@ -164,12 +164,12 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 				
 				// IM-2013-07-19: [[ ResIndependence ]] set scale factor so hi-res image draws at the right size
 				// IM-2013-10-30: [[ FullscreenMode ]] Get scale factor from the returned frame
-				t_image.scale_factor = t_frame->density;
+				t_image.scale_factor = t_frame.density;
 
                 // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 				t_image.filter = getimagefilter();
 
-				t_image . image = t_frame->image;
+				t_image . image = t_frame.image;
 
 				if (t_printer && m_rep->GetType() == kMCImageRepResident)
 				{
@@ -206,12 +206,13 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
                 drawnodata(dc, drect, sw, sh, dx, dy, dw, dh);
 			}
 
-			t_rep->UnlockImageFrame(currentframe, t_frame);
+            if (t_success)
+                t_rep->UnlockImageFrame(currentframe, t_frame);
 		}
 
 		if (state & CS_DO_START)
 		{
-			MCGImageFrame *t_frame = nil;
+			MCGImageFrame t_frame;
 			if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 			{
                 
@@ -222,7 +223,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
                     if (!m_animate_posted)
                     {
                         m_animate_posted = true;
-                        MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+                        MCscreen->addtimer(this, MCM_internal, t_frame.duration);
                     }
                     MCThreadMutexUnlock(MCanimationmutex);
                 }

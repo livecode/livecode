@@ -60,8 +60,8 @@ public:
 	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame) = 0;
 	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame) = 0;
 
-	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame) = 0;
-	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame) = 0;
+	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame) = 0;
+	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame) = 0;
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 
@@ -132,8 +132,8 @@ public:
 	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
 	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
 	
-	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame);
-	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame);
+	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
+	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 
@@ -366,8 +366,8 @@ public:
 	bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
 	void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
 	
-	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame);
-	void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame);
+	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
+	void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	

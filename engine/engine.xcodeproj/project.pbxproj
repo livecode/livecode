@@ -21,6 +21,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1D733BC5198AA31C0098E717 /* stacktile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BBB19733AB10014058F /* stacktile.cpp */; };
+		1D733BC6198AA3340098E717 /* sysunxthreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BB91972A6B90014058F /* sysunxthreads.cpp */; };
 		1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
 		1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D01945DD31000E3705 /* mac-qt-player.mm */; };
 		1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D21945DD43000E3705 /* mac-av-player.mm */; };
@@ -3987,6 +3989,7 @@
 				4D1F9D61171C682E0091C6CB /* line.cpp in Sources */,
 				4D1F9D62171C682E0091C6CB /* literal.cpp in Sources */,
 				4D1F9D63171C682E0091C6CB /* mcerror.cpp in Sources */,
+				1D733BC5198AA31C0098E717 /* stacktile.cpp in Sources */,
 				4D1F9D64171C682E0091C6CB /* mcio.cpp in Sources */,
 				4D1F9D65171C682E0091C6CB /* mcssl.cpp in Sources */,
 				4D1F9D66171C682E0091C6CB /* mcstring.cpp in Sources */,
@@ -4021,6 +4024,7 @@
 				4D1F9D85171C682E0091C6CB /* sha1.cpp in Sources */,
 				4D1F9D86171C682E0091C6CB /* stack.cpp in Sources */,
 				4D1F9D87171C682E0091C6CB /* stack2.cpp in Sources */,
+				1D733BC6198AA3340098E717 /* sysunxthreads.cpp in Sources */,
 				4D1F9D88171C682E0091C6CB /* stack3.cpp in Sources */,
 				4D1F9D89171C682E0091C6CB /* stacklst.cpp in Sources */,
 				4D1F9D8A171C682E0091C6CB /* statemnt.cpp in Sources */,

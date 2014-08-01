@@ -87,7 +87,7 @@ uint2 MCMutableImageRep::polypoints;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCGImageFrame *&r_frame)
+bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCGImageFrame& r_frame)
 {
 	if (p_frame > 0)
 		return false;
@@ -95,24 +95,26 @@ bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCG
 	MCGRaster t_raster;
 	t_raster = MCImageBitmapGetMCGRaster(m_bitmap, true);
 	
-	if (!MCGImageCreateWithRasterNoCopy(t_raster, m_gframe.image))
+    MCGImageFrame t_frame;
+    t_frame.density = 1.0;
+    t_frame.duration = 0.0;
+    
+	if (!MCGImageCreateWithRasterNoCopy(t_raster, t_frame.image))
 		return false;
-	
 
 	Retain();
 
-	r_frame = &m_gframe;
+    r_frame = t_frame;
 
 	return true;
 }
 
-void MCMutableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame)
+void MCMutableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame)
 {
-	if (p_index > 0 || p_frame != &m_gframe)
+	if (p_index > 0)
 		return;
 
-	MCGImageRelease(m_gframe.image);
-	m_gframe.image = nil;
+	MCGImageRelease(p_frame.image);
 
 	Release();
 }

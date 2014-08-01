@@ -929,8 +929,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
 {
-	NSLog(@"insertText('%@', (%d, %d))", aString, replacementRange . location, replacementRange . length);
-	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
 	if (t_window == nil)
@@ -1009,8 +1007,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)setMarkedText:(id)aString selectedRange:(NSRange)newSelection replacementRange:(NSRange)replacementRange
 {
-	NSLog(@"setMarkedText('%@', (%d, %d), (%d, %d)", aString, newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
-	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
 	if (t_window == nil)
@@ -1142,7 +1138,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (actualRange != nil)
 		*actualRange = NSMakeRange(t_actual_range . offset, t_actual_range . length);
 	
-	NSLog(@"attributedSubstringForProposedRange(%d, %d -> %d, %d) = '%@'", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_attr_string);
 	return t_attr_string;
 }
 
