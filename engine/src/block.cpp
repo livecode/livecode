@@ -2277,6 +2277,10 @@ void MCBlock::SetRange(findex_t p_index, findex_t p_length)
 	m_size = p_length;
 	width = 0;
     
+    // AL-2014-08-04: [[ Bug 13082 ]] Make sure imagesource is deleted in zero-width blocks
+    if (flags & F_HAS_IMAGE && m_size == 0)
+        freeatts();
+    
 	// Update the 'has tabs' flag
     // FG-2014-04-30 [[ TabAlignments ]] Blocks no longer contain tabs
 	/*uindex_t t_where;
@@ -2292,7 +2296,12 @@ void MCBlock::MoveRange(findex_t p_index, findex_t p_length)
 	m_index += p_index;
 	m_size += p_length;
     if (p_length)
+    {
         width = 0;
+        // AL-2014-08-04: [[ Bug 13082 ]] Make sure imagesource is deleted in zero-width blocks
+        if (flags & F_HAS_IMAGE && m_size == 0)
+			freeatts();
+    }
     
 	// Update the 'has tabs' flag
     // FG-2014-04-30 [[ TabAlignments ]] Blocks no longer contain tabs
