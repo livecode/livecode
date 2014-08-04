@@ -219,7 +219,8 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			}
 		}
 	}
-    else if (filename != nil)
+    // AL-2014-08-04: [[ Bug 13097 ]] Image filename is never nil; check for emptiness instead
+    else if (!MCStringIsEmpty(filename))
     {
         // AL-2014-01-15: [[ Bug 11570 ]] Draw stippled background when referenced image file not found
         drawnodata(dc, rect, sw, sh, dx, dy, dw, dh);
