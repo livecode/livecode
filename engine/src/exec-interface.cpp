@@ -163,6 +163,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResetTemplate, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, Revert, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectEmpty, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectAllTextOfField, 1)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectAllTextOfButton, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectTextOfField, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectTextOfButton, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectObjects, 1)
@@ -2331,6 +2332,26 @@ void MCInterfaceExecSelectAllTextOfField(MCExecContext& ctxt, MCObjectPtr p_targ
 	}
 
 	static_cast<MCField *>(p_target . object) -> seltext(0, static_cast<MCField *>(p_target . object) -> getpgsize(nil), True);
+}
+
+// AL-2014-08-04: [[ Bug 13079 ]] Implement 'select text of button'
+void MCInterfaceExecSelectAllTextOfButton(MCExecContext& ctxt, MCObjectPtr p_target)
+{
+	if (!p_target . object -> getopened() && p_target . object -> getid())
+	{
+		ctxt . LegacyThrow(EE_CHUNK_NOTOPEN);
+		return;
+	}
+    
+    MCButton *bptr = static_cast<MCButton *>(p_target . object);
+    
+    if (bptr -> getentry() != nil)
+    {
+        p_target . object = bptr -> getentry();
+        MCInterfaceExecSelectAllTextOfField(ctxt, p_target);
+    }
+    else if (!MCStringIsEmpty(bptr -> getmenustring()))
+        bptr -> setmenuhistory(1);
 }
 
 void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type p_type, MCObjectChunkPtr p_target)

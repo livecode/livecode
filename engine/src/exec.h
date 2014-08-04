@@ -2421,6 +2421,7 @@ extern MCExecMethodInfo *kMCInterfaceExecResetTemplateMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecRevertMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectEmptyMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectAllTextOfFieldMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecSelectAllTextOfButtonMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectTextOfFieldMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectTextOfButtonMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectObjectsMethodInfo;
@@ -2930,6 +2931,7 @@ void MCInterfaceExecRevert(MCExecContext& ctxt);
 
 void MCInterfaceExecSelectEmpty(MCExecContext& ctxt);
 void MCInterfaceExecSelectAllTextOfField(MCExecContext& ctxt, MCObjectPtr target);
+void MCInterfaceExecSelectAllTextOfButton(MCExecContext& ctxt, MCObjectPtr target);
 void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type preposition, MCObjectChunkPtr target);
 void MCInterfaceExecSelectTextOfButton(MCExecContext& ctxt, Preposition_type preposition, MCObjectChunkPtr target);
 void MCInterfaceExecSelectObjects(MCExecContext& ctxt, MCObjectPtr *p_controls, uindex_t p_control_count);

@@ -3699,7 +3699,8 @@ void MCSelect::exec_ctxt(MCExecContext& ctxt)
 
 	if (targets == NULL)
 		MCInterfaceExecSelectEmpty(ctxt);
-	else if (text)
+    // AL-2014-08-04: [[ Bug 13079 ]] 'select before/after text' should use chunk variant
+	else if (text && where == PT_AT)
 	{
 		MCObjectPtr t_object;
         if (!targets -> getobj(ctxt, t_object, True))
@@ -3707,9 +3708,18 @@ void MCSelect::exec_ctxt(MCExecContext& ctxt)
             ctxt . LegacyThrow(EE_SELECT_BADTARGET);
             return;
         }
-		MCInterfaceExecSelectAllTextOfField(ctxt, t_object);
+        if (t_object . object -> gettype() == CT_FIELD)
+            MCInterfaceExecSelectAllTextOfField(ctxt, t_object);
+        else if (t_object . object -> gettype() == CT_BUTTON)
+            // AL-2014-08-04: [[ Bug 13079 ]] 'select text of button' is valid
+            MCInterfaceExecSelectAllTextOfButton(ctxt, t_object);
+        else
+        {
+            ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
+            return;
+        }
 	}
-    else if (targets -> next == nil)
+    else if (text || targets -> next == nil)
 	{
 		MCObjectChunkPtr t_chunk;
 		
@@ -3718,8 +3728,7 @@ void MCSelect::exec_ctxt(MCExecContext& ctxt)
             ctxt . LegacyThrow(EE_SELECT_BADTARGET);
             return;
         }
-        
-		
+
 		if (t_chunk . chunk != CT_UNDEFINED || where == PT_BEFORE || where == PT_AFTER)
 		{
 			if (t_chunk . object -> gettype() == CT_FIELD)
@@ -3774,11 +3783,12 @@ void MCSelect::compile(MCSyntaxFactoryRef ctxt)
 
 	if (targets == NULL)
 		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectEmptyMethodInfo);
-	else if (text)
+	else if (text && where == PT_AT)
 	{
 		targets -> compile_object_ptr(ctxt);
 		
 		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectAllTextOfFieldMethodInfo);
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectAllTextOfButtonMethodInfo);
 	}
 	else 
 	{
@@ -3787,12 +3797,15 @@ void MCSelect::compile(MCSyntaxFactoryRef ctxt)
 		uindex_t t_count;
 		t_count = 0;
 
-		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr = chunkptr -> next)
-		{
-			chunkptr -> compile_object_ptr(ctxt);
-			t_count++;
+        if (!text)
+        {
+            for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr = chunkptr -> next)
+            {
+                chunkptr -> compile_object_ptr(ctxt);
+                t_count++;
+            }
 		}
-		
+        
 		if (t_count > 1)
 		{
 			MCSyntaxFactoryEvalList(ctxt, t_count);
