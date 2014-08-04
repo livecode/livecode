@@ -3840,8 +3840,10 @@ bool MCButton::resetlabel()
 			{
 				/* UNCHECKED */ MCStringCopySubstring(menustring, t_range, &t_label);
 			}
+            
+            // AL-2014-08-04: [[ Bug 13089 ]] Set entry text to new label
 			if (entry != NULL)
-				entry->settext(0, label, False);
+				entry->settext(0, *t_label, False);
 
 			if (!MCStringIsEqualTo(label, *t_label, kMCStringOptionCompareExact))
 			{
