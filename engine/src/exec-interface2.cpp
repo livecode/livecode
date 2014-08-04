@@ -3365,16 +3365,17 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
         r_mark . changed = false;
     	return;
     }
-    r_mark . text = nil;
+    // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk
+    r_mark . text = MCValueRetain(kMCEmptyString);
 }
 
-void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMarkedText& r_mark)
+void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, Boolean wholechunk, MCMarkedText& r_mark)
 {
     switch (p_container . object -> gettype())
     {
         case CT_FIELD:
         case CT_BUTTON:
-            MCInterfaceMarkObject(ctxt, p_container, false, r_mark);
+            MCInterfaceMarkObject(ctxt, p_container, wholechunk, r_mark);
             return;
         case CT_IMAGE:
         case CT_AUDIO_CLIP:
@@ -3387,14 +3388,19 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
             break;
     }
     
-    r_mark . text = nil;
+    // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk
+    r_mark . text = MCValueRetain(kMCEmptyString);
     ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
 }
 
 void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Functions p_function, bool p_whole_chunk, MCMarkedText& r_mark)
 {
     if (p_object . object -> gettype() != CT_FIELD)
+    {
+        // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk
+        r_mark . text = MCValueRetain(kMCEmptyString);
         return;
+    }
     
     MCInterfaceMarkObject(ctxt, p_object, p_whole_chunk, r_mark);
     
