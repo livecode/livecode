@@ -2331,6 +2331,9 @@ void MCField::GetEffectiveForeColorOfCharChunk(MCExecContext& ctxt, uint32_t p_p
 void MCField::SetForeColorOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceNamedColor& color)
 {
     SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, false, p_part_id, si, ei, &MCBlock::SetForeColor, color);
+    
+    // AL-2014-08-04: [[ Bug 13076 ]] Redraw without relayout after changing block color
+    MCObject::Redraw();
 }
 
 void MCField::GetBackColorOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)
@@ -2355,6 +2358,9 @@ void MCField::GetEffectiveBackColorOfCharChunk(MCExecContext& ctxt, uint32_t p_p
 void MCField::SetBackColorOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceNamedColor& color)
 {
     SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, false, p_part_id, si, ei, &MCBlock::SetBackColor, color);
+    
+    // AL-2014-08-04: [[ Bug 13076 ]] Redraw without relayout after changing block color
+    MCObject::Redraw();
 }
 
 //////////
