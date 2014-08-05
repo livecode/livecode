@@ -929,6 +929,11 @@ public:
 
 	void start_externals();
 	void stop_externals();
+    
+    uint2 getminwidth() const { return minwidth; }
+    uint2 getmaxwidth() const { return maxwidth; }
+    uint2 getminheight() const { return minheight; }
+    uint2 getmaxheight() const { return maxheight; }
 
 	MCStack *next()
 	{

@@ -735,9 +735,35 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 break;
                 
             case GDK_CONFIGURE:
+            {
                 // Window geometry has changed
+                // We may need to handle window geometry limits ourselves
+                MCStack *t_stack = MCdispatcher->findstackd(t_event->configure.window);
+                if (t_stack == nil)
+                    break;
+                
+                GdkGeometry t_geom;
+                gint t_new_width, t_new_height;
+                guint t_flags = GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE;
+ 
+                t_geom.min_width = t_stack->getminwidth();
+                t_geom.max_width = t_stack->getmaxwidth();
+                t_geom.min_height = t_stack->getminheight();
+                t_geom.max_height = t_stack->getmaxheight();
+                
+                gdk_window_constrain_size(&t_geom, t_flags,
+                                         t_event->configure.width, t_event->configure.height,
+                                         &t_new_width, &t_new_height);
+                
+                if (t_new_width != t_event->configure.width || t_new_height != t_event->configure.height)
+                {
+                    gdk_window_unmaximize(t_event->configure.window);
+                    gdk_window_resize(t_event->configure.window, t_new_width, t_new_height);
+                }                        
+                
                 MCdispatcher->configure(t_event->configure.window);
                 break;
+            }
                 
             case GDK_CLIENT_EVENT:
                 // Hmm - do we still need to react to any of these?
