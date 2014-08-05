@@ -77,6 +77,7 @@ public:
 	virtual void SetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
 	virtual void GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
     
+    void SelectionChanged(void);
     void MovieFinished(void);
     
     AVPlayer *getPlayer(void);
@@ -128,6 +129,7 @@ private:
     com_runrev_livecode_MCAVFoundationPlayerObserver *m_observer;
     
     id m_time_observer_token;
+    id m_selection_finish_observer_token;
     
     uint32_t *m_markers;
     uindex_t m_marker_count;
@@ -252,6 +254,7 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     
     // First detach the observer from everything we've attached it to.
     [m_player removeTimeObserver:m_time_observer_token];
+    [m_player removeTimeObserver:m_selection_finish_observer_token];
     
     // Now we can release it.
     [m_observer release];
@@ -330,7 +333,19 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
     if (!m_synchronizing)
         MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
 }
-
+void MCAVFoundationPlayer::SelectionChanged(void)
+{
+    if (m_play_selection_only)
+    {
+        // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+        if (m_selection_duration != 0)
+            [[m_player currentItem] setForwardPlaybackEndTime:CMTimeFromLCTime(m_selection_finish)];
+        else
+            [[m_player currentItem] setForwardPlaybackEndTime:[[m_player currentItem] duration]];
+    }
+    else
+        [[m_player currentItem] setForwardPlaybackEndTime:[[m_player currentItem] duration]];
+}
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
@@ -584,6 +599,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     // Release the old player (if any).
     [m_view setPlayer: nil];
     [m_player removeTimeObserver:m_time_observer_token];
+    [m_player removeTimeObserver:m_selection_finish_observer_token];
 
     [m_player release];
     
@@ -610,7 +626,6 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
             HandleCurrentTimeChanged();
         
         }];
-    
     
     m_time_scale = [m_player currentItem] . asset . duration . timescale;
 }
@@ -642,6 +657,8 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 
 void MCAVFoundationPlayer::Start(double rate)
 {
+    // TODO: The more often SelectionChanged is called, the bigger delay appears when pause is called
+    SelectionChanged();
     if (m_offscreen && !CVDisplayLinkIsRunning(m_display_link))
         CVDisplayLinkStart(m_display_link);
  
