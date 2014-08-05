@@ -1208,6 +1208,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
                     t_rect = MCU_compute_rect(t_start_x, t_start_y, t_start_x, t_start_y);
                     gdk_draw_rectangle(t_root, t_gc, FALSE, t_rect.x, t_rect.y, t_rect.width - 1, t_rect.height - 1);
                     t_drawing = true;
+                    break;
                     
                 case GDK_BUTTON_RELEASE:
                     MCeventtime = gdk_event_get_time(t_event);
