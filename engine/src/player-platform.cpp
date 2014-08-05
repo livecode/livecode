@@ -3456,6 +3456,24 @@ void MCPlayer::handle_shift_mdown(int p_which)
             
         case kMCPlayerControllerPartPlay:
             m_modify_selection_while_playing = true;
+            
+            // PM-2014-08-05: [[ Bug 13063 ]] Make sure shift + play sets the starttime to the currenttime if there is previously no selection
+            uint32_t t_old_time;
+            t_old_time = getmoviecurtime();
+            
+            // If there was previously no selection, then take it to be currenttime, currenttime.
+            if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
+                starttime = endtime = t_old_time;
+            if (hasfilename())
+            {
+                bool t_show_selection;
+                t_show_selection = true;
+                setflag(True, F_SHOW_SELECTION);
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+                
+                setselection(true);
+            }
+            
             handle_mdown(p_which);
             break;
                      
