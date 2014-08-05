@@ -610,6 +610,12 @@ template<ExternalHandler u_handler> void ExternalWrapper(char *p_arguments[], in
 #define EXTERNAL_DECLARE_FUNCTION(m_name, m_function) \
 		{ m_name, "F", 0, ExternalWrapper<m_function>, NULL },
 
+#define EXTERNAL_DECLARE_COMMAND_UTF8(m_name, m_function) \
+        { m_name, "c", 0, ExternalWrapper<m_function>, NULL },
+
+#define EXTERNAL_DECLARE_FUNCTION_UTF8(m_name, m_function) \
+        { m_name, "f", 0, ExternalWrapper<m_function>, NULL },
+
 
 #ifdef __OBJC__
 
@@ -662,7 +668,13 @@ template<ExternalHandler u_handler> void ExternalWrapperObjC(char *p_arguments[]
 
 #define EXTERNAL_DECLARE_FUNCTION_OBJC(m_name, m_function) \
 		{ m_name, "F", 0, ExternalWrapperObjC<m_function>, NULL },
-		
+
+#define EXTERNAL_DECLARE_COMMAND_OBJC(m_name, m_function) \
+        { m_name, "c", 0, ExternalWrapperObjC<m_function>, NULL },
+
+#define EXTERNAL_DECLARE_FUNCTION_OBJC(m_name, m_function) \
+        { m_name, "f", 0, ExternalWrapperObjC<m_function>, NULL },
+
 #else
 
 
@@ -671,6 +683,12 @@ template<ExternalHandler u_handler> void ExternalWrapperObjC(char *p_arguments[]
 
 #define EXTERNAL_DECLARE_FUNCTION_OBJC(m_name, m_function) \
 		{ m_name, "F", 0, ExternalWrapper<m_function>, NULL },
+
+#define EXTERNAL_DECLARE_COMMAND_OBJC_UTF8(m_name, m_function) \
+        { m_name, "c", 0, ExternalWrapper<m_function>, NULL },
+
+#define EXTERNAL_DECLARE_FUNCTION_OBJC_UTF8(m_name, m_function) \
+        { m_name, "f", 0, ExternalWrapper<m_function>, NULL },
 
 #endif
 
@@ -681,6 +699,12 @@ template<ExternalHandler u_handler> void ExternalWrapperObjC(char *p_arguments[]
 
 #define EXTERNAL_DECLARE_FUNCTION(m_name, m_function) \
 		{ m_name, "F", 0, m_function, 0 },
+
+#define EXTERNAL_DECLARE_COMMAND_UTF8(m_name, m_function) \
+        { m_name, "c", 0, m_function, 0 },
+
+#define EXTERNAL_DECLARE_FUNCTION_UTF8(m_name, m_function) \
+        { m_name, "f", 0, m_function, 0 },
 
 #endif
 

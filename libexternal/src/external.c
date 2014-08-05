@@ -37,39 +37,38 @@ enum
 	OPERATION_SET_ARRAY,
 
 	// IM-2014-03-06: [[ revBrowserCEF ]] Add externals extensions for V1
-	// V1
-	OPERATION_ADD_RUNLOOP_ACTION,
-	OPERATION_REMOVE_RUNLOOP_ACTION,
-	OPERATION_RUNLOOP_WAIT,
+	/* V1 */ OPERATION_ADD_RUNLOOP_ACTION,
+	/* V1 */ OPERATION_REMOVE_RUNLOOP_ACTION,
+	/* V1 */ OPERATION_RUNLOOP_WAIT,
+    
+	// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
+	/* V1 */ OPERATION_STACK_TO_WINDOW_RECT,
+	/* V1 */ OPERATION_WINDOW_TO_STACK_RECT,
     
     // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Add externals extensions to allow utf8-encoded arguments    
-	OPERATION_SEND_CARD_MESSAGE_UTF8,
-	OPERATION_EVAL_EXP_UTF8,
-	OPERATION_GET_GLOBAL_UTF8,
-	OPERATION_SET_GLOBAL_UTF8,
-	OPERATION_GET_FIELD_BY_NAME_UTF8,
-	OPERATION_GET_FIELD_BY_NUM_UTF8,
-	OPERATION_GET_FIELD_BY_ID_UTF8,
-	OPERATION_SET_FIELD_BY_NAME_UTF8,
-	OPERATION_SET_FIELD_BY_NUM_UTF8,
-	OPERATION_SET_FIELD_BY_ID_UTF8,
-	OPERATION_SHOW_IMAGE_BY_NAME_UTF8,
-	OPERATION_SHOW_IMAGE_BY_NUM_UTF8,
-	OPERATION_SHOW_IMAGE_BY_ID_UTF8,
-	OPERATION_GET_VARIABLE_UTF8,
-	OPERATION_SET_VARIABLE_UTF8,
-	OPERATION_GET_VARIABLE_EX_UTF8_TEXT,
-	OPERATION_GET_VARIABLE_EX_UTF8_BINARY,
-	OPERATION_SET_VARIABLE_EX_UTF8_TEXT,
-	OPERATION_SET_VARIABLE_EX_UTF8_BINARY,
-	OPERATION_GET_ARRAY_UTF8_TEXT,
-	OPERATION_GET_ARRAY_UTF8_BINARY,
-	OPERATION_SET_ARRAY_UTF8_TEXT,
-	OPERATION_SET_ARRAY_UTF8_BINARY,
-
-	// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
-	OPERATION_STACK_TO_WINDOW_RECT,
-	OPERATION_WINDOW_TO_STACK_RECT,
+	/* V2 */ OPERATION_SEND_CARD_MESSAGE_UTF8,
+	/* V2 */ OPERATION_EVAL_EXP_UTF8,
+	/* V2 */ OPERATION_GET_GLOBAL_UTF8,
+	/* V2 */ OPERATION_SET_GLOBAL_UTF8,
+	/* V2 */ OPERATION_GET_FIELD_BY_NAME_UTF8,
+	/* V2 */ OPERATION_GET_FIELD_BY_NUM_UTF8,
+	/* V2 */ OPERATION_GET_FIELD_BY_ID_UTF8,
+	/* V2 */ OPERATION_SET_FIELD_BY_NAME_UTF8,
+	/* V2 */ OPERATION_SET_FIELD_BY_NUM_UTF8,
+	/* V2 */ OPERATION_SET_FIELD_BY_ID_UTF8,
+	/* V2 */ OPERATION_SHOW_IMAGE_BY_NAME_UTF8,
+	/* V2 */ OPERATION_SHOW_IMAGE_BY_NUM_UTF8,
+	/* V2 */ OPERATION_SHOW_IMAGE_BY_ID_UTF8,
+	/* V2 */ OPERATION_GET_VARIABLE_UTF8,
+	/* V2 */ OPERATION_SET_VARIABLE_UTF8,
+	/* V2 */ OPERATION_GET_VARIABLE_EX_UTF8_TEXT,
+	/* V2 */ OPERATION_GET_VARIABLE_EX_UTF8_BINARY,
+	/* V2 */ OPERATION_SET_VARIABLE_EX_UTF8_TEXT,
+	/* V2 */ OPERATION_SET_VARIABLE_EX_UTF8_BINARY,
+	/* V2 */ OPERATION_GET_ARRAY_UTF8_TEXT,
+	/* V2 */ OPERATION_GET_ARRAY_UTF8_BINARY,
+	/* V2 */ OPERATION_SET_ARRAY_UTF8_TEXT,
+	/* V2 */ OPERATION_SET_ARRAY_UTF8_BINARY,
 };
 
 enum
@@ -79,9 +78,9 @@ enum
 	SECURITY_CHECK_LIBRARY,
     
     // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Add security checks with unicode parameters
-	SECURITY_CHECK_FILE_UTF8,
-	SECURITY_CHECK_HOST_UTF8,
-	SECURITY_CHECK_LIBRARY_UTF8    
+	/* V2 */ SECURITY_CHECK_FILE_UTF8,
+	/* V2 */ SECURITY_CHECK_HOST_UTF8,
+	/* V2 */ SECURITY_CHECK_LIBRARY_UTF8
 };
 
 typedef char *(*ExternalOperationCallback)(const char *p_arg_1, const char *p_arg_2, const char *p_arg_3, int *r_success);
@@ -399,6 +398,37 @@ void RunloopWait(int *r_success)
 	}
 
 	t_result = (s_operations[OPERATION_RUNLOOP_WAIT])(NULL, NULL, NULL, &r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
+void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+{
+    char *t_result;
+    
+    if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+    
+	t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])(p_win_id, x_rect, NULL, &r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+{
+	char *t_result;
+    
+	if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+    
+	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])(p_win_id, x_rect, NULL, &r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
@@ -769,38 +799,6 @@ Bool SecurityCanAccessLibraryUTF8(const char *p_library)
 		return s_security_handlers[SECURITY_CHECK_LIBRARY_UTF8](p_library);
 	return True;
 }
-    
-    
-// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
-void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
-{
-    char *t_result;
-    
-    if (s_external_interface_version < 1)
-	{
-		*r_success = EXTERNAL_FAILURE;
-		return;
-	}
-    
-	t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])(p_win_id, x_rect, NULL, &r_success);
-	if (t_result != NULL)
-		s_delete(t_result);
-}
-
-void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
-{
-	char *t_result;
-    
-	if (s_external_interface_version < 1)
-	{
-		*r_success = EXTERNAL_FAILURE;
-		return;
-	}
-    
-	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])(p_win_id, x_rect, NULL, &r_success);
-	if (t_result != NULL)
-		s_delete(t_result);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -821,6 +819,7 @@ static struct LibExport __libexports[] =
 {
 	{ "getXtable", getXtable },
 	{ "configureSecurity", configureSecurity },
+    { "setExternalInterfaceVersion", setExternalInterfaceVersion },
 	{ 0, 0 }
 };
 

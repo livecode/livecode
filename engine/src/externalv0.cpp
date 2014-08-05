@@ -236,11 +236,35 @@ Handler_type MCExternalV0::GetHandlerType(uint32_t p_index) const
 bool MCExternalV0::ListHandlers(MCExternalListHandlersCallback p_callback, void *p_state)
 {
 	for(uint32_t i = 0; m_table[i] . name[0] != '\0'; i++)
-		if (!p_callback(p_state, m_table[i] . type[0] == XCOMMAND[0] ? HT_MESSAGE : HT_FUNCTION, m_table[i] . name, i))
+    {
+        // MW-2014-08-05: [[ OldExternalsV2 ]] If there is a UTF8 variant of the handler with
+        //   the same name, then we don't include the non-UTF8 variant.
+        bool t_has_utf8_variant;
+        t_has_utf8_variant = false;
+        
+        if (isupper(m_table[i] . type[0]))
+            for(uint32_t j = 0; m_table[j] . name[0] != '\0'; j++)
+            {
+                if (i == j)
+                    continue;
+                
+                if (islower(m_table[j] . name[0]) &&
+                    strcmp(m_table[j] . name, m_table[i] . name) == 0)
+                {
+                    t_has_utf8_variant = true;
+                    break;
+                }
+            }
+    
+        if (t_has_utf8_variant)
+            continue;
+        
+		if (!p_callback(p_state, toupper(m_table[i] . type[0]) == XCOMMAND[0] ? HT_MESSAGE : HT_FUNCTION, m_table[i] . name, i))
 			return false;
-
+    }
+    
 	return true;
-	}
+}
 
 Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_t p_index, MCParameter *p_parameters)
 {
@@ -249,76 +273,93 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		t_type = XFUNCTION[0];
 	else
 		t_type = XCOMMAND[0];
-
+    
+    // MW-2014-08-05: [[ OldExternalsV2 ]] Compare the upper of the handler tags.
 	_Xternal *t_handler;
 	t_handler = &m_table[p_index];
-	if (t_handler -> type[0] != t_type)
+	if (toupper(t_handler -> type[0]) != t_type)
 		return ES_NOT_HANDLED;
-
-		char *retval;
-		Bool Xpass, Xerr;
-		int nargs = 0;
-        char **args = NULL;
-        MCExecContext ctxt(p_context, nil, nil);
-
-		while (p_parameters != NULL)
-		{
-			// MW-2013-06-20: [[ Bug 10961 ]] Make sure we evaluate the parameter as an
-			//   argument. This takes the value from the variable (by-ref), or built-in
-			//   value (by-value).
-            MCAutoValueRef t_value;
-            MCAutoStringRef t_string;
-
-            if (!p_parameters->eval_argument(ctxt, &t_value))
-				return ES_ERROR;
-			MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
-
-            if (!ctxt . ConvertToString(*t_value, &t_string))
-                return ES_ERROR;
-
+    
+    // If we want UTF8, then the type is lowercase.
+    bool t_wants_utf8;
+    t_wants_utf8 = islower(t_handler -> type[0]);
+    
+    char *retval;
+    Bool Xpass, Xerr;
+    int nargs = 0;
+    char **args = NULL;
+    MCExecContext ctxt(p_context, nil, nil);
+    
+    while (p_parameters != NULL)
+    {
+        // MW-2013-06-20: [[ Bug 10961 ]] Make sure we evaluate the parameter as an
+        //   argument. This takes the value from the variable (by-ref), or built-in
+        //   value (by-value).
+        MCAutoValueRef t_value;
+        MCAutoStringRef t_string;
+        
+        if (!p_parameters->eval_argument(ctxt, &t_value))
+            return ES_ERROR;
+        MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
+        
+        if (!ctxt . ConvertToString(*t_value, &t_string))
+            return ES_ERROR;
+        
+        // If we want UTF8 use a different conversion method.
+        if (t_wants_utf8)
+            MCStringConvertToUTF8String(*t_string, args[nargs++]);
+        else
             MCStringConvertToCString(*t_string, args[nargs++]);
-			p_parameters = p_parameters -> getnext();
-		}
-
-        // Handling of memory allocation for C-strings
-        MCExternalAllocPool *t_old_pool = MCexternalallocpool;
-        MCexternalallocpool = new MCExternalAllocPool;
-
-		(t_handler -> call)(args, nargs, &retval, &Xpass, &Xerr);
-
-        MCExternalDeallocatePool(MCexternalallocpool);
-        MCexternalallocpool = t_old_pool;
-
-		// MW-2011-03-02: [[ Bug ]] Memory leak as we aren't freeing any error string that
-		//   is returned.
-		if (Xerr)
-		{
-			MCeerror -> add(EE_EXTERNAL_EXCEPTION, 0, 0, retval == NULL ? "" : retval);
-			m_free(retval);
-		}
-		else if (retval == NULL)
-            ctxt . SetTheResultToEmpty();
-		else
-		{
+        p_parameters = p_parameters -> getnext();
+    }
+    
+    // Handling of memory allocation for C-strings
+    MCExternalAllocPool *t_old_pool = MCexternalallocpool;
+    MCexternalallocpool = new MCExternalAllocPool;
+    
+    (t_handler -> call)(args, nargs, &retval, &Xpass, &Xerr);
+    
+    MCExternalDeallocatePool(MCexternalallocpool);
+    MCexternalallocpool = t_old_pool;
+    
+    // MW-2011-03-02: [[ Bug ]] Memory leak as we aren't freeing any error string that
+    //   is returned.
+    if (Xerr)
+    {
+        MCeerror -> add(EE_EXTERNAL_EXCEPTION, 0, 0, retval == NULL ? "" : retval);
+        m_free(retval);
+    }
+    else if (retval == NULL)
+        ctxt . SetTheResultToEmpty();
+    else
+    {
+        // If we want UTF8 use a different conversion method.
+        if (t_wants_utf8)
+        {
+            MCAutoStringRef t_res_string;
+            MCStringCreateWithBytes((byte_t *)retval, strlen(retval), kMCStringEncodingUTF8, false, &t_res_string);
+            ctxt . SetTheResultToValue(*t_res_string);
+        }
+        else
             ctxt . SetTheResultToCString(retval);
-			m_free(retval);
-		}
-
-		if (args != NULL)
-		{
-			while (nargs--)
-				delete args[nargs];
-
-			delete args;
-		}
-
-		if (Xerr)
-			return ES_ERROR;
+        m_free(retval);
+    }
+    
+    if (args != NULL)
+    {
+        while (nargs--)
+            delete args[nargs];
+        
+        delete args;
+    }
+    
+    if (Xerr)
+        return ES_ERROR;
 	else if (Xpass)
-				return ES_PASS;
-
-				return ES_NORMAL;
-	}
+        return ES_PASS;
+    
+    return ES_NORMAL;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1661,6 +1702,9 @@ XCB MCcbs[] =
 	remove_runloop_action,
 	runloop_wait,
     
+	stack_to_window_rect,
+	window_to_stack_rect,
+    
     // Externals interface unicode functions
     // SN-2014-07-22: [[ Bug 12874 ]] revBrowser (both original and CEF) crashes LiveCode 7.0 DP7
     //  added *_by_id_* in the MCcbs...
@@ -1687,9 +1731,6 @@ XCB MCcbs[] =
 	get_array_utf8_binary,
 	set_array_utf8_text,
 	set_array_utf8_binary,
-
-	stack_to_window_rect,
-	window_to_stack_rect,
 
 	NULL
 };
