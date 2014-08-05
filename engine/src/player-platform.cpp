@@ -3417,7 +3417,7 @@ void MCPlayer::handle_shift_mdown(int p_which)
             t_duration = getduration();
             
             // If there was previously no selection, then take it to be currenttime, currenttime.
-            if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
+            if (starttime == MAXUINT4 || endtime == MAXUINT4)
                 starttime = endtime = t_old_time;
             
             t_old_start = getstarttime();
@@ -3431,11 +3431,23 @@ void MCPlayer::handle_shift_mdown(int p_which)
             // If click last half of current selection, adjust end.
             if (t_new_time <= (t_old_end + t_old_start) / 2)
             {
+                // PM-2014-08-05: [[ Bug 13065 ]] If there was previously no selection, then
+                // endTime is set as currentTime when mouse is clicked
+                // startTime is set to currentTime and then updated as thumb dragged to the left
+                if (starttime == endtime)
+                    endtime = t_old_time;
+        
                 starttime = t_new_time;
                 m_grabbed_part = kMCPlayerControllerPartSelectionStart;
             }
             else
             {
+                // PM-2014-08-05: [[ Bug 13065 ]] If there was previously no selection, then
+                // startTime is set as currentTime when mouse is clicked
+                // endTime is set to currentTime and then updated as thumb dragged to the right
+                if (starttime == endtime)
+                    starttime = t_old_time;
+                
                 endtime = t_new_time;
                 m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
             }
