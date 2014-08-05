@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+    /* Copyright (C) 2003-2013 Runtime Revolution Ltd.
 
 This file is part of LiveCode.
 
@@ -626,6 +626,9 @@ void MCButton::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 		return;
 	
 	MCValueAssign(label, p_label);
+    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+    //  we need to rely on the F_LABEL flag
+    flags |= F_LABEL;
 
 	if (entry != NULL)
 		entry->settext(0, label, False);
