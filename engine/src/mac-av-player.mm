@@ -129,7 +129,6 @@ private:
     com_runrev_livecode_MCAVFoundationPlayerObserver *m_observer;
     
     id m_time_observer_token;
-    id m_selection_finish_observer_token;
     
     uint32_t *m_markers;
     uindex_t m_marker_count;
@@ -254,7 +253,6 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     
     // First detach the observer from everything we've attached it to.
     [m_player removeTimeObserver:m_time_observer_token];
-    [m_player removeTimeObserver:m_selection_finish_observer_token];
     
     // Now we can release it.
     [m_observer release];
@@ -600,7 +598,6 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     // Release the old player (if any).
     [m_view setPlayer: nil];
     [m_player removeTimeObserver:m_time_observer_token];
-    [m_player removeTimeObserver:m_selection_finish_observer_token];
 
     [m_player release];
     
