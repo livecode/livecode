@@ -110,9 +110,6 @@ typedef enum _mcsocketstate
 	kMCSocketStateError,
 } MCSocketState ;
 
-typedef struct ssl_st SSL;
-typedef struct ssl_ctx_st SSL_CTX;
-
 class MCSocket
 {
 public:
@@ -170,7 +167,6 @@ public:
 	char *sslgraberror();
 	Boolean secure;
 	Boolean initsslcontext();
-	bool ssl_set_default_certificates();
 	Boolean sslconnect();
 	Boolean sslaccept();
 	void sslclose();
