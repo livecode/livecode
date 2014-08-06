@@ -1,0 +1,1 @@
+# Wrong mouseLeave messages if the stack is pixelScaled or scaled in any fullscreen mode.
