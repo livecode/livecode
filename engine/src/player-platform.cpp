@@ -1713,6 +1713,9 @@ Boolean MCPlayer::prepare(const char *options)
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
     
+    // PM-2014-08-06: [[ Bug 13104 ]] When new movie is opened then playRate should be set to 0
+    rate = 0.0;
+    
 	setselection(false);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
 	SynchronizeUserCallbacks();
@@ -1767,11 +1770,15 @@ Boolean MCPlayer::playpause(Boolean on)
 		if (!on)
         {
             playselection(getflag(F_PLAY_SELECTION) && !m_modify_selection_while_playing);
+            // PM-2014-08-06: [[ Bug 13104 ]] Force playRate to 1.0 (needed when starting player by pressing space/enter keys 
+            rate = 1.0;
 			MCPlatformStartPlayer(m_platform_player, rate);
 		}
         else
         {
 			MCPlatformStopPlayer(m_platform_player);
+            // PM-2014-08-06: [[ Bug 13104 ]] Make sure playRate is zero when player is paused
+            rate = 0.0;
         }
 		ok = True;
 	}
@@ -2128,6 +2135,8 @@ void MCPlayer::currenttimechanged(void)
 
 void MCPlayer::moviefinished(void)
 {
+    // PM-2014-08-06: [[ Bug 13104 ]] Set rate to zero when movie finish
+    rate = 0.0;
     timer(MCM_play_stopped, nil);
 }
 
