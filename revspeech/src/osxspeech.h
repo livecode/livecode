@@ -51,7 +51,7 @@ public:
 private:
 	SpeechChannel spchannel;
 	char speechvoice[255];
-	char *speechbuffer;
+    CFStringRef speechtext;
 	Fixed speechspeed, speechpitch;
 	
 	bool SpeechStart(bool StartInit);
