@@ -1556,9 +1556,8 @@ void MCStack::menuset(uint2 button, uint2 defy)
 
 void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
 {
-	// MW-2014-03-12: [[ Bug 11914 ]] Only do internal menu actions if this is an
-	//   engine menu.
-	if (m_is_menu)
+	// IM-2014-08-06: [[ Bug 13059 ]] menumup() can be called on pop-up menu stacks
+	// configured through menuname so remove check for m_is_menu
 	{
 		MCControl *focused = curcard->getmfocused();
 		s.set(NULL, 0);
