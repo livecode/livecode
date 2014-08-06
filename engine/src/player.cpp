@@ -65,6 +65,9 @@ MCPropertyInfo MCPlayer::kProperties[] =
     DEFINE_RO_OBJ_PROPERTY(P_TIME_SCALE, UInt32, MCPlayer, TimeScale)
     DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_FORE_COLOR, InterfaceNamedColor, MCPlayer, ForeColor)
     DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HILITE_COLOR, InterfaceNamedColor, MCPlayer, HiliteColor)
+    // SN-2014-08-06: [[ Bug 13115 ]] Missing formatted (width|height) in the property table
+    DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int32, MCPlayer, FormattedHeight)
+    DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, Int32, MCPlayer, FormattedWidth)
 };
 
 MCObjectPropertyTable MCPlayer::kPropertyTable =
