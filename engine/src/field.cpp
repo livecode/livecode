@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "context.h"
 #include "redraw.h"
+#include "systhreads.h"
 
 int2 MCField::clickx;
 int2 MCField::clicky;
@@ -2890,6 +2891,8 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	if ((state & CS_SIZE || state & CS_MOVE) && flags & F_SCROLLBAR)
 		setsbrects();
 
+    // MM-2014-08-05: [[ Bug 13012 ]] Put locks around recompute to prevent threading issues.
+    MCThreadMutexLock(MCfieldmutex);
 	if (state & CS_SIZE)
 	{
 		resetparagraphs();
@@ -2900,6 +2903,7 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		resetparagraphs();
 		do_recompute(false);
 	}
+    MCThreadMutexUnlock(MCfieldmutex);
 
 	MCRectangle frect = getfrect();
 	
