@@ -2836,7 +2836,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             if (p_rect . width < PLAYER_MIN_WIDTH)
                 return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT, p_rect . y, p_rect . width - 2 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
             
-            return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y , p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT );
+            // PM-2014-08-06 : [[ Bug 13006 ]] Make controller well slightly wider
+            return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT, p_rect . y , p_rect . width - 4 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT );
             
         case kMCPlayerControllerPartScrubBack:
             // PM-2014-07-08: [[ Bug 12763 ]] Make sure controller elememts are not broken when player width becomes too small

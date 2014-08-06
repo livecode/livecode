@@ -1,0 +1,1 @@
+#  [[Player]] Make controller scrollbar slightly wider
