@@ -76,10 +76,11 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
             case ES_NEXT_REPEAT:
                 tspr = NULL;
                 break;
+            // SN-2014-08-06: [[ Bug 13122 ]] We want to know that we got an EXIT_SWITCH,
+            //  since we might be inside an IF statement
             case ES_EXIT_REPEAT:
-                return stat;
             case ES_EXIT_SWITCH:
-                return ES_NORMAL;
+                return stat;
             case ES_ERROR:
                 if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
                     do
@@ -316,7 +317,13 @@ void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpres
 		while (match--)
 			tspr = tspr->getnext();
         
-        ctxt . SetExecStat(MCKeywordsExecuteStatements(ctxt, tspr, EE_SWITCH_BADSTATEMENT));
+        // SN-2014-08-06: [[ Bug 13122 ]] If we get an EXIT_SWITCH, it's all right
+        Exec_stat t_stat;
+        t_stat = MCKeywordsExecuteStatements(ctxt, tspr, EE_SWITCH_BADSTATEMENT);
+        if (t_stat == ES_EXIT_SWITCH)
+            t_stat = ES_NORMAL;
+        
+        ctxt . SetExecStat(t_stat);
     }
 }
 
