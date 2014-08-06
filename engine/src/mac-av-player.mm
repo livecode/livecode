@@ -77,7 +77,7 @@ public:
 	virtual void SetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
 	virtual void GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
     
-    void SelectionChanged(void);
+    void EndTimeChanged(void);
     void MovieFinished(void);
     
     AVPlayer *getPlayer(void);
@@ -290,7 +290,7 @@ void MCAVFoundationPlayer::MovieFinished(void)
     else
     {
         // PM-2014-07-15: [[ Bug 12812 ]] Make sure we loop within start and finish time when playSelection is true 
-        if (m_play_selection_only)
+        if (m_play_selection_only && m_selection_duration > 0)
             [[m_player currentItem] seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         else
             [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
@@ -333,8 +333,9 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
     if (!m_synchronizing)
         MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
 }
-void MCAVFoundationPlayer::SelectionChanged(void)
+void MCAVFoundationPlayer::EndTimeChanged(void)
 {
+    // PM-2014-08-06: [[ Bug 13064 ]] Make sure selection start/end points are respected
     if (m_play_selection_only)
     {
         // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
@@ -657,8 +658,6 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 
 void MCAVFoundationPlayer::Start(double rate)
 {
-    // TODO: The more often SelectionChanged is called, the bigger delay appears when pause is called
-    SelectionChanged();
     if (m_offscreen && !CVDisplayLinkIsRunning(m_display_link))
         CVDisplayLinkStart(m_display_link);
  
@@ -672,21 +671,21 @@ void MCAVFoundationPlayer::Start(double rate)
     }
     else
     {
-        if (m_finished)
+        // TODO: The more often EndTimeChanged is called, the bigger delay appears when pause is called
+        EndTimeChanged();
+        
+        if (m_selection_duration > 0 && (CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_finish)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_start)) <= 0))
         {
-            if (m_selection_duration > 0 && m_play_selection_only && (CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_finish)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_start)) <= 0))
-            {
-                [m_player seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-                
-            }
-            
-            // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
-            if (m_selection_duration == 0 && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
-            {
-                [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-            }
+            [m_player seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
             
         }
+        
+        // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+        if (m_selection_duration == 0 && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
+        {
+            [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        }
+
     }
     
     m_playing = true;

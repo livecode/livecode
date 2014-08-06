@@ -1539,8 +1539,11 @@ void MCPlayer::setselection(bool notify)
                 t_et = endtime;
             }
             
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_st);
+            // PM-2014-08-06: [[ Bug 13064 ]] 
+            // If we first set StartTime and FinishTime is not set (= 0), then startTime becomes 0 (Since if StartTime > FinishTime then StartTime = FinishTime)
+            // For this reason, we first set FinishTime 
             MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_et);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_st);
             
             if (notify)
                 selectionchanged();
@@ -3372,7 +3375,6 @@ void MCPlayer::handle_mup(int p_which)
             layer_redrawall();
             break;
          
-        // We want the SelectionChanged message to fire on mup
         case kMCPlayerControllerPartSelectionStart:
         case kMCPlayerControllerPartSelectionFinish:
             setselection(true);
