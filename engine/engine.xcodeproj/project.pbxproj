@@ -325,7 +325,6 @@
 		4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D270FF3A0100009F91E /* md5.cpp */; };
 		4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DADCD5912392EAF003CD17C /* sha1.cpp */; };
 		4DADCDFD12393F55003CD17C /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4DADCDFC12393F26003CD17C /* Installer.icns */; };
-		4DB32401174BEE1400046FFE /* sysunxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB3222E174BD06200046FFE /* sysunxrandom.cpp */; };
 		4DB32402174BEE1900046FFE /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8589AA173A856600B20951 /* uuid.cpp */; };
 		4DB32404174BEE3300046FFE /* sysosxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB32230174BD08E00046FFE /* sysosxrandom.cpp */; };
 		4DB382EE1714418A00D3F102 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C797917134897000BCF78 /* libz.a */; };
@@ -527,6 +526,7 @@
 		E8AE876C177B3F5C0041B7E0 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AE876B177B3F5C0041B7E0 /* cgimageutil.cpp */; };
 		E8AF465B174CF247000B2F9E /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9DFA13CDE63000B9B15D /* surface.cpp */; };
 		E8B5BB1416DF77DF00CA02FB /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */; };
+		E8D1ECDD1992395A00984EFE /* sysosxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB32230174BD08E00046FFE /* sysosxrandom.cpp */; };
 		E8D7F8321785A88200EC051A /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */; };
 		E8D7F8391785A8AC00EC051A /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */; };
 		E8D7F8471785A99900EC051A /* srvtheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8D7F8461785A99900EC051A /* srvtheme.cpp */; };
@@ -3183,6 +3183,7 @@
 				4D1F9D28171C682E0091C6CB /* button.cpp in Sources */,
 				4D1F9D29171C682E0091C6CB /* card.cpp in Sources */,
 				4D1F9D2A171C682E0091C6CB /* cardlst.cpp in Sources */,
+				E8D1ECDD1992395A00984EFE /* sysosxrandom.cpp in Sources */,
 				4D1F9D2B171C682E0091C6CB /* cdata.cpp in Sources */,
 				4D1F9D2C171C682E0091C6CB /* chunk.cpp in Sources */,
 				4D1F9D2D171C682E0091C6CB /* cmds.cpp in Sources */,
@@ -3318,7 +3319,6 @@
 				4D1F9DB2171C682E0091C6CB /* irle.cpp in Sources */,
 				4D1F9DB3171C682E0091C6CB /* stackcache.cpp in Sources */,
 				4D1F9DB4171C682E0091C6CB /* stacksecurity.cpp in Sources */,
-				4DB32401174BEE1400046FFE /* sysunxrandom.cpp in Sources */,
 				4DB32402174BEE1900046FFE /* uuid.cpp in Sources */,
 				E8D7F8321785A88200EC051A /* imagelist.cpp in Sources */,
 				E8D7F8391785A8AC00EC051A /* graphicscontext.cpp in Sources */,
