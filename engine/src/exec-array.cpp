@@ -370,7 +370,14 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
     uindex_t t_offset, t_length;
     t_offset = 0;
     t_length = MCStringGetLength(p_string);
-    while (t_offset < t_length)
+    
+    bool t_success;
+    t_success = true;
+    
+    uindex_t t_row_index;
+    t_row_index = 0;
+    
+    while (t_success && t_offset < t_length)
     {
         // Find the end of this row
         MCRange t_row_found;
@@ -384,14 +391,15 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
         uindex_t t_cell_offset, t_column_index;
         t_cell_offset = t_offset;
         t_column_index = 0;
-        while (t_cell_offset < t_row_found . offset)
+        while (t_success && t_cell_offset <= t_row_found . offset)
         {
             // Find the end of this cell
             MCRange t_cell_found;
             if (!MCStringFind(p_string, MCRangeMake(t_cell_offset, UINDEX_MAX), t_column_delim, ctxt . GetStringComparisonType(), &t_cell_found) || t_cell_found . offset > t_row_found . offset)
             {
                 t_cell_found . offset = t_row_found . offset;
-                t_cell_found . length = 0;
+                // AL-2014-08-04: [[ Bug 13090 ]] Make sure cell offset is incremented eventually when the delimiter is not found
+                t_cell_found . length = 1;
             }
             
             // Check that the output array has a slot for this column
@@ -399,11 +407,20 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
                 t_temp_array.Extend(t_column_index + 1);
             
             // Check that a string has been created to store this column
-            bool t_success;
             MCRange t_range;
             t_range = MCRangeMake(t_cell_offset, t_cell_found . offset - t_cell_offset);
             if (t_temp_array[t_column_index] == nil)
-                t_success = MCStringMutableCopySubstring(p_string, t_range, t_temp_array[t_column_index]);
+            {
+                t_success = MCStringCreateMutable(0, t_temp_array[t_column_index]);
+                
+                // AL-2014-08-04: [[ Bug 13090 ]] If we are creating a new column, make sure we pad with empty cells 'above' this one
+                uindex_t t_rows = t_row_index;
+                while (t_success && t_rows--)
+                    t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
+                
+                if (t_success)
+                    t_success = MCStringAppendSubstring(t_temp_array[t_column_index], p_string, t_range);
+            }
             else
             {
                 t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
@@ -412,33 +429,37 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
                     t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", &t_range, p_string);
             }
             
-            if (!t_success)
-            {
-                ctxt . Throw();
-                return;
-            }
-            
             // Next cell
             t_column_index++;
             t_cell_offset = t_cell_found . offset + t_cell_found . length;
         }
         
+        // AL-2014-08-04: [[ Bug 13090 ]] Pad the rest of this row with empty cells
+        index_t t_pad_number;
+        t_pad_number = t_temp_array . Size() - t_column_index;
+        if (t_success && t_pad_number > 0)
+        {
+            while (t_success && t_pad_number--)
+                t_success = MCStringAppend(t_temp_array[t_column_index++], t_row_delim);
+        }
+        
         // Next row
+        t_row_index++;
         t_offset = t_row_found . offset + t_row_found . length;
     }
     
     // Convert the temporary array into a "proper" array
-    for (uindex_t i = 0; i < t_temp_array.Size(); i++)
+    for (uindex_t i = 0; i < t_temp_array.Size() && t_success; i++)
     {
-        if (!MCArrayStoreValueAtIndex(*t_array, i + 1, t_temp_array[i]))
-        {
-            ctxt . Throw();
-            return;
-        }
+        t_success = MCArrayStoreValueAtIndex(*t_array, i + 1, t_temp_array[i]);
         MCValueRelease(t_temp_array[i]);
     }
 
-    MCArrayCopy(*t_array, r_array);
+    if (t_success)
+        t_success = MCArrayCopy(*t_array, r_array);
+    
+    if (!t_success)
+        ctxt . Throw();
 }
 
 void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCArrayRef& r_array)
