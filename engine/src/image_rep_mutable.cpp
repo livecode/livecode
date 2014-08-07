@@ -97,7 +97,7 @@ bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCG
 	t_raster = MCImageBitmapGetMCGRaster(m_bitmap, true);
 	
     MCGImageFrame t_frame;
-    t_frame.density = 1.0;
+    t_frame.x_scale = t_frame.y_scale = 1.0;
     t_frame.duration = 0.0;
     
 	if (!MCGImageCreateWithRasterNoCopy(t_raster, t_frame.image))
@@ -186,7 +186,8 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	m_gframe.image = nil;
 	
 	m_frame.duration = m_gframe.duration = 0;
-	m_frame.density = m_gframe.density = 1.0;
+	m_frame.x_scale = m_frame.y_scale = 1.0;
+	m_gframe.x_scale = m_gframe.y_scale = 1.0;
 }
 
 MCMutableImageRep::~MCMutableImageRep()

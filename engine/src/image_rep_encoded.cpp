@@ -76,7 +76,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_fr
 	if (t_success)
 	{
 		if (t_count == 1)
-			t_frames[0].density = 1.0;
+			t_frames[0].x_scale = t_frames[0].y_scale = 1.0;
 
 		m_width = t_frames[0].image->width;
 		m_height = t_frames[0].image->height;
@@ -304,7 +304,7 @@ bool MCCompressedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r
 
 	if (t_success)
 	{
-		t_frame->density = 1.0;
+		t_frame->x_scale = t_frame->y_scale = 1.0;
 		
 		r_frames = t_frame;
 		r_frame_count = 1;

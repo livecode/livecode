@@ -30,7 +30,8 @@ struct MCPattern
 	{
 		MCGImageRef image;
 		MCGAffineTransform transform;
-		MCGFloat density;
+		MCGFloat x_scale;
+		MCGFloat y_scale;
 	} cache;
 	
 	uint32_t references;
@@ -208,12 +209,12 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 		
 		if (t_success)
 		{
-			t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.density, 1.0 / t_frame.density);
+			t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.x_scale, 1.0 / t_frame.y_scale);
 			
 			if (!MCGAffineTransformIsRectangular(p_pattern->transform))
 			{
                 MCThreadMutexLock(MCimagerepmutex);
-				if (p_pattern->cache.density != t_frame.density)
+				if (p_pattern->cache.x_scale != t_frame.x_scale || p_pattern->cache.y_scale != t_frame.y_scale)
 				{
 					MCGImageRelease(p_pattern->cache.image);
 					p_pattern->cache.image = nil;
@@ -236,7 +237,8 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 					{
 						p_pattern->cache.image = t_image;
 						p_pattern->cache.transform = t_transform;
-						p_pattern->cache.density = t_frame.density;
+						p_pattern->cache.x_scale = t_frame.x_scale;
+						p_pattern->cache.y_scale = t_frame.y_scale;
 					}
 					
 					MCImageFreeBitmap(t_bitmap);

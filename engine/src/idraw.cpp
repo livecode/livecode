@@ -179,11 +179,9 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 					t_image.transform = t_transform;
 				
 				// IM-2013-07-19: [[ ResIndependence ]] set scale factor so hi-res image draws at the right size
-				// IM-2014-08-01: [[ Bug 13021 ]] Calculate horizontal & vertical scales from locked image size.
-				uint32_t t_width, t_height;
-				/* UNCHECKED */ t_rep->GetGeometry(t_width, t_height);
-				t_image.h_scale = (MCGFloat)MCGImageGetWidth(t_frame.image) / t_width;
-				t_image.v_scale = (MCGFloat)MCGImageGetHeight(t_frame.image) / t_height;
+				// IM-2014-08-07: [[ Bug 13021 ]] Split density into x / y scale components
+				t_image.x_scale = t_frame.x_scale;
+				t_image.y_scale = t_frame.y_scale;
 
                 // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 				t_image.filter = getimagefilter();
