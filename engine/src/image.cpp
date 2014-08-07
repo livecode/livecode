@@ -1465,8 +1465,9 @@ Boolean MCImage::maskrect(const MCRectangle &srect)
 		}
 		
 		// IM-2013-10-30: [[ FullscreenMode ]] Account for image density when locating pixel position
-		t_x = t_x * t_frame.density;
-		t_y = t_y * t_frame.density;
+		// IM-2014-08-07: [[ Bug 13021 ]] Split density into x / y scale components
+		t_x = t_x * t_frame.x_scale;
+		t_y = t_y * t_frame.y_scale;
 		
 		uint32_t t_width, t_height;
 		t_width = MCGImageGetWidth(t_frame.image);
@@ -1530,15 +1531,13 @@ bool MCImage::lockbitmapshape(const MCRectangle &p_bounds, const MCPoint &p_orig
 	}
 	
 	// Otherwise we have a nice mask to pass back!
-	// MM-2012-10-03: [[ ResIndependence ]] Make sure we take into account the scale factor of the image when returning the mask.
-	//   Note that (as a side effect of transformed images no longer being cacehd) if the the image has a transform,
-	//   lockbitmap will create a new transformed image with a scale factor of 1. 
+	// IM-2014-08-01: [[ Bug 13021 ]] lockbitmap() always returns an image with 1.0 scale
 	r_shape . type = kMCObjectShapeMask;
 	r_shape . bounds = p_bounds;
 	r_shape . mask . origin . x = p_origin . x;
 	r_shape . mask . origin . y = p_origin . y;
 	r_shape . mask . bits = t_bitmap;
-	r_shape . mask . scale = m_has_transform ? 1.0f : getscalefactor();
+	r_shape . mask . scale = 1.0;
 	return true;
 }
 
@@ -2267,11 +2266,13 @@ void MCImage::apply_transform()
 	else
 		m_has_transform = false;
 	
+	MCThreadMutexLock(MCimagerepmutex);
 	if (m_resampled_rep != nil && !(m_has_transform && MCGAffineTransformIsRectangular(m_transform) && m_resampled_rep->Matches(rect.width, rect.height, m_transform.a == -1.0, m_transform.d == -1.0, m_rep)))
 	{
 		m_resampled_rep->Release();
 		m_resampled_rep = nil;
 	}
+	MCThreadMutexUnlock(MCimagerepmutex);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2625,10 +2626,21 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat
 	bool t_has_transform;
 	MCGAffineTransform t_transform;
 	
+	MCGImageFrame t_frame;
+	
+	uint32_t t_width, t_height;
+	MCGFloat t_transform_scale;
+	
 	t_success = get_rep_and_transform(t_rep, t_has_transform, t_transform);
 	
 	if (t_success)
 		t_success = t_rep != nil;
+	
+	// IM-2014-08-01: [[ Bug 13021 ]] We can't reliably determine the image density before
+	// locking, so instead we lock the image, then calculate the resulting horizontal &
+	// vertical densities.
+	if (t_success)
+		t_success = t_rep->GetGeometry(t_width, t_height);
 	
 	if (t_success)
 	{
@@ -2637,73 +2649,65 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat
 		
 		t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(p_scale, p_scale), t_transform);
 		
-		// IM-2014-05-12: [[ ImageRepUpdate ]] Get best density match for the resulting transform
-		MCGFloat t_src_density;
-		t_src_density = t_rep->GetBestDensityMatch(MCGAffineTransformGetEffectiveScale(t_transform));
+		t_transform_scale = MCGAffineTransformGetEffectiveScale(t_transform);
+		t_success = t_rep->LockImageFrame(currentframe, t_transform_scale, t_frame);
+	}
 
-		// IM-2014-05-12: [[ ImageRepUpdate ]] Apply density scale to drawing transform
-		t_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeScale(1.0 / t_src_density, 1.0 / t_src_density));
+	if (t_success)
+	{
+		// IM-2014-08-01: [[ Bug 13021 ]] Scale image frame size -> logical size
+		t_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeScale(t_width / (MCGFloat)MCGImageGetWidth(t_frame.image), t_height / (MCGFloat)MCGImageGetHeight(t_frame.image)));
 		
 		bool t_copy_pixels;
 		t_copy_pixels = MCGAffineTransformIsIdentity(t_transform);
 
 		if (t_copy_pixels && !p_premultiplied)
 		{
-			MCBitmapFrame *t_frame;
-			t_frame = nil;
+			// IM-2014-08-01: [[ Bug 13021 ]] The locked frame has premultiplied alpha,
+			// so we have to release and lock the unpremultiplied bitmap frame.
+			t_rep->UnlockImageFrame(currentframe, t_frame);
 			
-			t_success = t_rep->LockBitmapFrame(currentframe, t_src_density, t_frame);
+			MCBitmapFrame *t_bitmap_frame;
+			t_bitmap_frame = nil;
+			
+			t_success = t_rep->LockBitmapFrame(currentframe, t_transform_scale, t_bitmap_frame);
 			
 			if (t_success)
 			{
-				m_locked_bitmap = t_frame->image;
+				m_locked_bitmap = t_bitmap_frame->image;
 				m_locked_rep = t_rep;
-				m_locked_bitmap_frame = t_frame;
+				m_locked_bitmap_frame = t_bitmap_frame;
 			}
 		}
 		else if (t_copy_pixels && p_premultiplied)
 		{
-			MCGImageFrame t_frame;
-			
-			t_success = t_rep->LockImageFrame(currentframe, t_src_density, t_frame);
-			
+			MCGRaster t_raster;
+			t_success = MCGImageGetRaster(t_frame.image, t_raster);
+
+			if (t_success)
+				t_success = MCMemoryNew(m_locked_bitmap);
+
 			if (t_success)
 			{
-				MCGRaster t_raster;
-				t_success = MCGImageGetRaster(t_frame.image, t_raster);
-
-				if (t_success)
-					t_success = MCMemoryNew(m_locked_bitmap);
-
-				if (t_success)
-				{
-					*m_locked_bitmap = MCImageBitmapFromMCGRaster(t_raster);
-					m_locked_image = MCGImageRetain(t_frame.image);
-				}
-			
-				t_rep->UnlockImageFrame(currentframe, t_frame);
+				*m_locked_bitmap = MCImageBitmapFromMCGRaster(t_raster);
+				m_locked_image = MCGImageRetain(t_frame.image);
 			}
+		
+			t_rep->UnlockImageFrame(currentframe, t_frame);
 		}
 		else
 		{
-			MCGImageFrame t_frame;
+			// IM-2013-11-06: [[ RefactorGraphics ]] Factor out transformed image creation code
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
+			MCGImageFilter t_filter;
+			t_filter = getimagefilter();
 			
-			t_success = t_rep->LockImageFrame(currentframe, t_src_density, t_frame);
+			t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame.image, t_transform, t_filter, m_locked_bitmap);
 			
-			if (t_success)
-			{
-				// IM-2013-11-06: [[ RefactorGraphics ]] Factor out transformed image creation code
-				// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
-				MCGImageFilter t_filter;
-				t_filter = getimagefilter();
-				
-				t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame.image, t_transform, t_filter, m_locked_bitmap);
-				
-				if (t_success && !p_premultiplied)
-					MCImageBitmapUnpremultiply(m_locked_bitmap);
-				
-				t_rep->UnlockImageFrame(currentframe, t_frame);
-			}
+			if (t_success && !p_premultiplied)
+				MCImageBitmapUnpremultiply(m_locked_bitmap);
+			
+			t_rep->UnlockImageFrame(currentframe, t_frame);
 		}
 	}
 	
@@ -2815,17 +2819,8 @@ void MCImage::getrawdata(MCDataRef& r_data)
 
 bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 {
-	if (m_rep == nil || !m_rep->GetGeometry(r_pixwidth, r_pixheight))
-		return false;
-	
-	MCGFloat t_scale_factor;
-	t_scale_factor = getscalefactor();
-	
-	r_pixwidth = r_pixwidth / t_scale_factor;
-	r_pixheight = r_pixheight / t_scale_factor;
-	
-	// MM-2013-09-16: [[ Bug 11178 ]] Missing return statement.
-	return true;
+	// IM-2014-08-01: [[ Bug 13021 ]] GetGeometry() now returns the logical image size, so just pass that through without scaling
+	return m_rep != nil && m_rep->GetGeometry(r_pixwidth, r_pixheight);
 }
 
 void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
@@ -2843,14 +2838,6 @@ void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 
 	r_pixwidth = rect.width;
 	r_pixheight = rect.height;
-}
-
-MCGFloat MCImage::getscalefactor(void)
-{
-	if (m_rep == nil)
-		return 1.0;
-	else
-		return m_rep->GetDensity();
 }
 
 MCGFloat MCImage::getdevicescale(void)

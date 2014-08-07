@@ -1045,8 +1045,9 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		if (MCmousestackptr != NULL && MCdispatcher->getmenu() == NULL)
 		{
 			// IM-2014-04-17: [[ Bug 12227 ]] Convert logical stack rect to screen coords when testing for mouse intersection
+			// IM-2014-08-01: [[ Bug 13058 ]] Use stack view rect to get logical window rect
 			MCRectangle t_rect;
-			t_rect = pms->logicaltoscreenrect(MCmousestackptr->getrect());
+			t_rect = pms->logicaltoscreenrect(MCmousestackptr->view_getrect());
 
 			POINT p;
 			if (!GetCursorPos(&p)

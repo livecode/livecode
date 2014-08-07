@@ -2180,6 +2180,11 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	//   'unicodeLabel'.
 	case P_LABEL:
 	case P_UNICODE_LABEL:
+    {
+        // MW-2014-08-01: [[ Bug 12852 ]] Make sure we use the value of EP after conversion.
+        //   (i.e. not data!).
+        MCString t_data;
+        
 		// Make sure the label is up to date.
 		if (entry != NULL)
 			getentrytext();
@@ -2191,17 +2196,19 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 			switchunicode(true);
 		else if (p == P_LABEL && hasunicode())
 			ep.nativetoutf16();
+        
+        t_data = ep . getsvalue();
 
 		// Only do anything if there is a change.
-		if (label == NULL || data.getlength() != labelsize
-		        || memcmp(data.getstring(), label, data.getlength()) != 0)
+		if (label == NULL || t_data.getlength() != labelsize
+		        || memcmp(t_data.getstring(), label, t_data.getlength()) != 0)
 		{
 			delete label;
-			if (data != MCnullmcstring)
+			if (t_data != MCnullmcstring)
 			{
-				labelsize = data.getlength();
+				labelsize = t_data.getlength();
 				label = new char[labelsize];
-				memcpy(label, data.getstring(), labelsize);
+				memcpy(label, t_data.getstring(), labelsize);
 				flags |= F_LABEL;
 			}
 			else
@@ -2269,7 +2276,8 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 
 			dirty = False;
 		}
-		break;
+    }
+    break;
 	case P_LABEL_WIDTH:
 		if (!MCU_stoi2(data, i1))
 		{

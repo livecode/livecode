@@ -493,6 +493,8 @@ MCLocaleRef kMCSystemLocale = nil;
 MCThreadMutexRef MCanimationmutex = NULL;
 MCThreadMutexRef MCpatternmutex = NULL;
 MCThreadMutexRef MCimagerepmutex = NULL;
+MCThreadMutexRef MCfieldmutex = NULL;
+MCThreadMutexRef MCthememutex = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -838,6 +840,8 @@ void X_clear_globals(void)
     MCanimationmutex = NULL;
     MCpatternmutex = NULL;
     MCimagerepmutex = NULL;
+    MCfieldmutex = NULL;
+    MCthememutex = NULL;
 
 #ifdef _ANDROID_MOBILE
     extern void MCAndroidMediaPickInitialize();
@@ -883,11 +887,13 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	InitialiseSSL();
     
     // MM-2014-07-31: [[ ThreadedRendering ]]
-    MCThreadPoolInitialize();
-    MCStackTileInitialize();
-    MCThreadMutexCreate(MCanimationmutex);
-    MCThreadMutexCreate(MCpatternmutex);
-    MCThreadMutexCreate(MCimagerepmutex);
+    /* UNCHECKED */ MCThreadPoolInitialize();
+    /* UNCHECKED */ MCStackTileInitialize();
+    /* UNCHECKED */ MCThreadMutexCreate(MCanimationmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCpatternmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCimagerepmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCfieldmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCthememutex);
     
     ////
     
@@ -1272,6 +1278,8 @@ int X_close(void)
     MCThreadMutexRelease(MCanimationmutex);
     MCThreadMutexRelease(MCpatternmutex);
     MCThreadMutexRelease(MCimagerepmutex);
+    MCThreadMutexRelease(MCfieldmutex);
+    MCThreadMutexRelease(MCthememutex);
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions

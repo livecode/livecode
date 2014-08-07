@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "imageloader.h"
+
 #define NATIVE_ALPHA_BEFORE ((kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == kMCGPixelAlphaPositionFirst)
 
 #define NATIVE_ORDER_BGR ((kMCGPixelFormatNative & kMCGPixelOrderRGB) == 0)
@@ -104,96 +106,160 @@ static void MCPNGSetNativePixelFormat(png_structp p_png)
 #endif
 }
 
-bool MCImageDecodePNG(IO_handle p_stream, MCImageBitmap *&r_bitmap)
+class MCPNGImageLoader : public MCImageLoader
+{
+public:
+	MCPNGImageLoader(IO_handle p_stream);
+	virtual ~MCPNGImageLoader();
+	
+	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatPNG; }
+	
+protected:
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count);
+	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
+	
+private:
+	png_structp m_png;
+	png_infop m_info;
+	png_infop m_end_info;
+	
+	int m_bit_depth;
+	int m_color_type;
+};
+
+MCPNGImageLoader::MCPNGImageLoader(IO_handle p_stream) : MCImageLoader(p_stream)
+{
+	m_png = nil;
+	m_info = nil;
+	m_end_info = nil;
+}
+
+MCPNGImageLoader::~MCPNGImageLoader()
+{
+	if (m_png != nil)
+		png_destroy_read_struct(&m_png, &m_info, &m_end_info);
+}
+
+bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
-
-	MCImageBitmap *t_bitmap = nil;
-
-	png_structp t_png = nil;
-	png_infop t_info = nil;
-	png_infop t_end_info = nil;
-
-	t_success = nil != (t_png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL));
+	
+	t_success = nil != (m_png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL));
 
 	if (t_success)
-		t_success = nil != (t_info = png_create_info_struct(t_png));
+		t_success = nil != (m_info = png_create_info_struct(m_png));
 
 	if (t_success)
-		t_success = nil != (t_end_info = png_create_info_struct(t_png));
+		t_success = nil != (m_end_info = png_create_info_struct(m_png));
 
-	if (setjmp(png_jmpbuf(t_png)))
+	if (t_success)
 	{
-		t_success = false;
+		if (setjmp(png_jmpbuf(m_png)))
+		{
+			t_success = false;
+		}
 	}
 
 	if (t_success)
 	{
-		png_set_read_fn(t_png, p_stream, stream_read);
-		png_read_info(t_png, t_info);
+		png_set_read_fn(m_png, GetStream(), stream_read);
+		png_read_info(m_png, m_info);
 	}
 
 	png_uint_32 t_width, t_height;
-	int t_bit_depth, t_color_type;
 	int t_interlace_method, t_compression_method, t_filter_method;
-	int t_interlace_passes;
 
 	if (t_success)
 	{
-		png_get_IHDR(t_png, t_info, &t_width, &t_height,
-			&t_bit_depth, &t_color_type,
+		png_get_IHDR(m_png, m_info, &t_width, &t_height,
+			&m_bit_depth, &m_color_type,
 			&t_interlace_method, &t_compression_method, &t_filter_method);
 	}
 
 	if (t_success)
-		t_success = MCImageBitmapCreate(t_width, t_height, t_bitmap);
+	{
+		r_width = t_width;
+		r_height = t_height;
+		
+		r_xhot = r_yhot = 0;
+		r_name = MCValueRetain(kMCEmptyString);
+		r_frame_count = 1;
+	}
+
+	return t_success;
+}
+
+bool MCPNGImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
+{
+	bool t_success = true;
 	
+	MCBitmapFrame *t_frame;
+	t_frame = nil;
+	
+	MCColorTransformRef t_color_xform;
+	t_color_xform = nil;
+	
+	if (setjmp(png_jmpbuf(m_png)))
+	{
+		t_success = false;
+	}
+
+	int t_interlace_passes;
+
+	uint32_t t_width, t_height;
+
+	if (t_success)
+		t_success = GetGeometry(t_width, t_height);
+	
+	if (t_success)
+		t_success = MCMemoryNew(t_frame);
+
+	if (t_success)
+		t_success = MCImageBitmapCreate(t_width, t_height, t_frame->image);
+
 	if (t_success)
 	{
 		bool t_need_alpha = false;
 
-		t_interlace_passes = png_set_interlace_handling(t_png);
+		t_interlace_passes = png_set_interlace_handling(m_png);
 
-		if (t_color_type == PNG_COLOR_TYPE_PALETTE)
-			png_set_palette_to_rgb(t_png);
-		if (t_color_type == PNG_COLOR_TYPE_GRAY || t_color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-			png_set_gray_to_rgb(t_png);
-	
-		if (png_get_valid(t_png, t_info, PNG_INFO_tRNS))
+		if (m_color_type == PNG_COLOR_TYPE_PALETTE)
+			png_set_palette_to_rgb(m_png);
+		if (m_color_type == PNG_COLOR_TYPE_GRAY || m_color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+			png_set_gray_to_rgb(m_png);
+
+		if (png_get_valid(m_png, m_info, PNG_INFO_tRNS))
 		{
-			png_set_tRNS_to_alpha(t_png);
+			png_set_tRNS_to_alpha(m_png);
 			t_need_alpha = true;
 			/* OVERHAUL - REVISIT - assume image has transparent pixels if tRNS is present */
-			t_bitmap->has_transparency = true;
+			t_frame->image->has_transparency = true;
 		}
 
-		if (t_color_type & PNG_COLOR_MASK_ALPHA)
+		if (m_color_type & PNG_COLOR_MASK_ALPHA)
 		{
 			t_need_alpha = true;
 			/* OVERHAUL - REVISIT - assume image has alpha if color type allows it */
-			t_bitmap->has_alpha = t_bitmap->has_transparency = true;
+			t_frame->image->has_alpha = t_frame->image->has_transparency = true;
 		}
 		else if (!t_need_alpha)
-			png_set_add_alpha(t_png, 0xFF, MCPNG_FILLER_POSITION);
+			png_set_add_alpha(m_png, 0xFF, MCPNG_FILLER_POSITION);
 
-		if (t_bit_depth == 16)
-			png_set_strip_16(t_png);
+		if (m_bit_depth == 16)
+			png_set_strip_16(m_png);
 
-		MCPNGSetNativePixelFormat(t_png);
+		MCPNGSetNativePixelFormat(m_png);
 	}
 
 	// MW-2009-12-10: Support for color profiles
-	MCColorTransformRef t_color_xform;
-	t_color_xform = nil;
-
 	// Try to get an embedded ICC profile...
-	if (t_success && t_color_xform == nil && png_get_valid(t_png, t_info, PNG_INFO_iCCP))
+	if (t_success && t_color_xform == nil && png_get_valid(m_png, m_info, PNG_INFO_iCCP))
 	{
 		png_charp t_ccp_name;
 		png_bytep t_ccp_profile;
 		int t_ccp_compression_type;
 		png_uint_32 t_ccp_profile_length;
-		png_get_iCCP(t_png, t_info, &t_ccp_name, &t_ccp_compression_type, &t_ccp_profile, &t_ccp_profile_length);
+		png_get_iCCP(m_png, m_info, &t_ccp_name, &t_ccp_compression_type, &t_ccp_profile, &t_ccp_profile_length);
 		
 		MCColorSpaceInfo t_csinfo;
 		t_csinfo . type = kMCColorSpaceEmbedded;
@@ -203,10 +269,10 @@ bool MCImageDecodePNG(IO_handle p_stream, MCImageBitmap *&r_bitmap)
 	}
 
 	// Next try an sRGB style profile...
-	if (t_success && t_color_xform == nil && png_get_valid(t_png, t_info, PNG_INFO_sRGB))
+	if (t_success && t_color_xform == nil && png_get_valid(m_png, m_info, PNG_INFO_sRGB))
 	{
 		int t_intent;
-		png_get_sRGB(t_png, t_info, &t_intent);
+		png_get_sRGB(m_png, m_info, &t_intent);
 
 		MCColorSpaceInfo t_csinfo;
 		t_csinfo . type = kMCColorSpaceStandardRGB;
@@ -215,17 +281,17 @@ bool MCImageDecodePNG(IO_handle p_stream, MCImageBitmap *&r_bitmap)
 	}
 
 	// Finally try for cHRM + gAMA...
-	if (t_success && t_color_xform == nil && png_get_valid(t_png, t_info, PNG_INFO_cHRM) &&
-		png_get_valid(t_png, t_info, PNG_INFO_gAMA))
+	if (t_success && t_color_xform == nil && png_get_valid(m_png, m_info, PNG_INFO_cHRM) &&
+		png_get_valid(m_png, m_info, PNG_INFO_gAMA))
 	{
 		MCColorSpaceInfo t_csinfo;
 		t_csinfo . type = kMCColorSpaceCalibratedRGB;
-		png_get_cHRM(t_png, t_info,
-				&t_csinfo . calibrated . white_x, &t_csinfo . calibrated . white_y,
-				&t_csinfo . calibrated . red_x, &t_csinfo . calibrated . red_y,
-				&t_csinfo . calibrated . green_x, &t_csinfo . calibrated . green_y,
-				&t_csinfo . calibrated . blue_x, &t_csinfo . calibrated . blue_y);
-		png_get_gAMA(t_png, t_info, &t_csinfo . calibrated . gamma);
+		png_get_cHRM(m_png, m_info,
+			&t_csinfo . calibrated . white_x, &t_csinfo . calibrated . white_y,
+			&t_csinfo . calibrated . red_x, &t_csinfo . calibrated . red_y,
+			&t_csinfo . calibrated . green_x, &t_csinfo . calibrated . green_y,
+			&t_csinfo . calibrated . blue_x, &t_csinfo . calibrated . blue_y);
+		png_get_gAMA(m_png, m_info, &t_csinfo . calibrated . gamma);
 		t_color_xform = MCscreen -> createcolortransform(t_csinfo);
 	}
 
@@ -233,47 +299,57 @@ bool MCImageDecodePNG(IO_handle p_stream, MCImageBitmap *&r_bitmap)
 	if (t_success && t_color_xform == nil)
 	{
 		double image_gamma;
-		if (png_get_gAMA(t_png, t_info, &image_gamma))
-			png_set_gamma(t_png, MCgamma, image_gamma);
+		if (png_get_gAMA(m_png, m_info, &image_gamma))
+			png_set_gamma(m_png, MCgamma, image_gamma);
 		else
-			png_set_gamma(t_png, MCgamma, 0.45);
+			png_set_gamma(m_png, MCgamma, 0.45);
 	}
-	
+
 	if (t_success)
 	{
 		for (uindex_t t_pass = 0; t_pass < t_interlace_passes; t_pass++)
 		{
-			png_bytep t_data_ptr = (png_bytep)t_bitmap->data;
+			png_bytep t_data_ptr = (png_bytep)t_frame->image->data;
 			for (uindex_t i = 0; i < t_height; i++)
 			{
-				png_read_row(t_png, t_data_ptr, nil);
-				t_data_ptr += t_bitmap->stride;
+				png_read_row(m_png, t_data_ptr, nil);
+				t_data_ptr += t_frame->image->stride;
 			}
 		}
 	}
 
 	if (t_success)
-		png_read_end(t_png, t_end_info);
-
-	if (t_png != nil)
-		png_destroy_read_struct(&t_png, &t_info, &t_end_info);
+		png_read_end(m_png, m_end_info);
 
 	// transform colours using extracted colour profile
 	if (t_success && t_color_xform != nil)
-		MCImageBitmapApplyColorTransform(t_bitmap,  t_color_xform);
+		MCImageBitmapApplyColorTransform(t_frame->image,  t_color_xform);
 
 	if (t_color_xform != nil)
 		MCscreen -> destroycolortransform(t_color_xform);
 
 	if (t_success)
-		r_bitmap = t_bitmap;
-	else
 	{
-		if (t_bitmap != nil)
-			MCImageFreeBitmap(t_bitmap);
+		r_frames = t_frame;
+		r_count = 1;
 	}
+	else
+		MCImageFreeFrames(t_frame, 1);
 
 	return t_success;
+}
+
+bool MCImageLoaderCreateForPNGStream(IO_handle p_stream, MCImageLoader *&r_loader)
+{
+	MCPNGImageLoader *t_loader;
+	t_loader = new MCPNGImageLoader(p_stream);
+	
+	if (t_loader == nil)
+		return false;
+	
+	r_loader = t_loader;
+	
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -352,7 +428,7 @@ bool MCImageEncodePNG(MCImageIndexedBitmap *p_indexed, MCImageMetadata *p_metada
 					 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 		png_set_gAMA(t_png_ptr, t_info_ptr, 1/MCgamma);
 	}
-    
+
     // MERG-2014-07-16: [[ ImageMetadata ]] Parse the metadata array
     if (t_success)
         parsemetadata(t_png_ptr, t_info_ptr, p_metadata);
@@ -474,7 +550,7 @@ bool MCImageEncodePNG(MCImageBitmap *p_bitmap, MCImageMetadata *p_metadata, IO_h
     // MERG-2014-07-16: [[ ImageMetadata ]] Parse the metadata array
     if (t_success)
         parsemetadata(t_png_ptr, t_info_ptr, p_metadata);
-    
+
 	if (t_success)
 	{
 		png_write_info(t_png_ptr, t_info_ptr);

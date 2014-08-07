@@ -44,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "syntax.h"
+#include "osspec.h"
 
 MCAnswer::~MCAnswer()
 {
@@ -337,6 +338,18 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 			if (!ctxt . EvalOptionalExprAsStringRef(file.filter, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_filter))
                 return;
             
+            
+            MCAutoStringRef t_initial_resolved;            
+            if (*t_initial != nil)
+            {
+                // IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+                if (!MCS_resolvepath(*t_initial, &t_initial_resolved))
+                {
+                    ctxt . LegacyThrow(EE_NO_MEMORY);
+                    return;
+                }
+            }
+            
             /* UNCHECKED */ t_types.Extend(file.type_count);
 			for (uindex_t i = 0; i < file.type_count; i++)
 			{
@@ -345,11 +358,11 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 			}
             
 			if (t_types.Count() > 0)
-				MCDialogExecAnswerFileWithTypes(ctxt, mode == AT_FILES, *t_prompt, *t_initial, *t_types, t_types.Count(), *t_title, sheet == True);
+				MCDialogExecAnswerFileWithTypes(ctxt, mode == AT_FILES, *t_prompt, *t_initial_resolved, *t_types, t_types.Count(), *t_title, sheet == True);
 			else if (*t_filter != nil)
-				MCDialogExecAnswerFileWithFilter(ctxt, mode == AT_FILES, *t_prompt, *t_initial, *t_filter, *t_title, sheet == True);
+				MCDialogExecAnswerFileWithFilter(ctxt, mode == AT_FILES, *t_prompt, *t_initial_resolved, *t_filter, *t_title, sheet == True);
 			else
-				MCDialogExecAnswerFile(ctxt, mode == AT_FILES, *t_prompt, *t_initial, *t_title, sheet == True);
+				MCDialogExecAnswerFile(ctxt, mode == AT_FILES, *t_prompt, *t_initial_resolved, *t_title, sheet == True);
             
 			break;
 		}
@@ -363,7 +376,18 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 			if (!ctxt . EvalOptionalExprAsNullableStringRef(file.initial, EE_ANSWER_BADQUESTION, &t_initial))
                 return;
             
-			MCDialogExecAnswerFolder(ctxt, mode == AT_FOLDERS, *t_prompt, *t_initial, *t_title, sheet == True);
+            MCAutoStringRef t_initial_resolved;
+            if (*t_initial != nil)
+            {
+                // IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+                if (!MCS_resolvepath(*t_initial, &t_initial_resolved))
+                {
+                    ctxt . LegacyThrow(EE_NO_MEMORY);
+                    return;
+                }
+            }
+            
+			MCDialogExecAnswerFolder(ctxt, mode == AT_FOLDERS, *t_prompt, *t_initial_resolved, *t_title, sheet == True);
             
 			break;
 		}
@@ -575,6 +599,17 @@ Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 	if (!t_error && !MCSecureModeCanAccessDisk())
 		t_error = EE_DISK_NOPERM;
 
+	char *t_initial_resolved;
+	t_initial_resolved = nil;
+
+	if (!t_error && t_initial != nil)
+	{
+		// IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+		t_initial_resolved = MCS_get_canonical_path(t_initial);
+		if (nil == t_initial_resolved)
+			t_error == EE_NO_MEMORY;
+	}
+
 	if (!t_error)
 	{
 		if (MCsystemFS && MCscreen -> hasfeature ( PLATFORM_FEATURE_OS_FILE_DIALOGS ) )
@@ -586,9 +621,9 @@ Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 				t_options |= MCA_OPTION_PLURAL;
 
 			if (t_types != NULL)
-				MCA_file_with_types(ep, p_title, t_prompt, t_type_strings, t_type_count, t_initial, t_options);
+				MCA_file_with_types(ep, p_title, t_prompt, t_type_strings, t_type_count, t_initial_resolved, t_options);
 			else
-				MCA_file(ep, p_title, t_prompt, t_filter, t_initial, t_options);
+				MCA_file(ep, p_title, t_prompt, t_filter, t_initial_resolved, t_options);
 		}
 		else
 		{
@@ -596,12 +631,15 @@ Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 			ep2 . clear();
 			for(uint4 t_type = 0; t_type < t_type_count; ++t_type)
 				ep2 . concatcstring(t_type_strings[t_type], EC_RETURN, t_type == 0);
-			t_error = exec_custom(ep, MCfsnamestring, mode == AT_FILE ? "file" : "files", 5, p_title, *t_prompt, *t_filter, *t_initial, ep2 . getsvalue() . getstring());
+			t_error = exec_custom(ep, MCfsnamestring, mode == AT_FILE ? "file" : "files", 5, p_title, *t_prompt, *t_filter, t_initial_resolved, ep2 . getsvalue() . getstring());
 		}
 		
 		if (ep . getsvalue() == MCnullmcstring && t_types == NULL)
 			MCresult -> sets(MCcancelstring);
 	}
+
+	if (t_initial_resolved != nil)
+		MCCStringFree(t_initial_resolved);
 
 	delete[] t_types;
 	delete t_type_strings;
@@ -627,6 +665,17 @@ Exec_errors MCAnswer::exec_folder(MCExecPoint& ep, const char *p_title)
 	if (!t_error && !MCSecureModeCanAccessDisk())
 		t_error = EE_DISK_NOPERM;
 
+	char *t_initial_resolved;
+	t_initial_resolved = nil;
+
+	if (!t_error && t_initial != nil)
+	{
+		// IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+		t_initial_resolved = MCS_get_canonical_path(t_initial);
+		if (nil == t_initial_resolved)
+			t_error == EE_NO_MEMORY;
+	}
+
 	if (!t_error)
 	{
 		unsigned int t_options = 0;
@@ -636,13 +685,16 @@ Exec_errors MCAnswer::exec_folder(MCExecPoint& ep, const char *p_title)
 			t_options |= MCA_OPTION_PLURAL;
 
 		if (MCsystemFS)
-			MCA_folder(ep, p_title, t_prompt, t_initial, t_options);
+			MCA_folder(ep, p_title, t_prompt, t_initial_resolved, t_options);
 		else
-			t_error = exec_custom(ep, MCfsnamestring, mode == AT_FOLDER ? "folder" : "folders", 4, p_title, *t_prompt, NULL, *t_initial);
+			t_error = exec_custom(ep, MCfsnamestring, mode == AT_FOLDER ? "folder" : "folders", 4, p_title, *t_prompt, NULL, t_initial_resolved);
 
 		if (ep . getsvalue() == MCnullmcstring)
 			MCresult -> sets(MCcancelstring);
 	}
+
+	if (t_initial_resolved != nil)
+		MCCStringFree(t_initial_resolved);
 
 	return t_error;
 }

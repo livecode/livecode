@@ -1010,32 +1010,32 @@ int4 MCNativeTheme::getmetric(Widget_Metric wmetric)
 	case WTHEME_METRIC_TRACKSIZE:
 		if ( gtktracksize == 0 )
         {
-            MCThreadMutexLock(MCimagerepmutex);
+            MCThreadMutexLock(MCthememutex);
             if (gtktracksize == 0)
                 gtktracksize = getscrollbarmintracksize();
-            MCThreadMutexUnlock(MCimagerepmutex);
+            MCThreadMutexUnlock(MCthememutex);
         }
 		return gtktracksize;
 		break;
 	case WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE:
-        MCThreadMutexLock(MCimagerepmutex);
+        MCThreadMutexLock(MCthememutex);
         moz_gtk_checkbox_get_metrics(&ret, 0);
-        MCThreadMutexUnlock(MCimagerepmutex);
+        MCThreadMutexUnlock(MCthememutex);
 		break;
         case WTHEME_METRIC_CHECKBUTTON_INDICATORSPACING:
-        MCThreadMutexLock(MCimagerepmutex);
+        MCThreadMutexLock(MCthememutex);
         moz_gtk_checkbox_get_metrics(0, &ret);
-        MCThreadMutexUnlock(MCimagerepmutex);
+        MCThreadMutexUnlock(MCthememutex);
 		break;
         case WTHEME_METRIC_RADIOBUTTON_INDICATORSIZE:
-        MCThreadMutexLock(MCimagerepmutex);
+        MCThreadMutexLock(MCthememutex);
         moz_gtk_radiobutton_get_metrics(&ret, 0);
-        MCThreadMutexUnlock(MCimagerepmutex);
+        MCThreadMutexUnlock(MCthememutex);
 		break;
         case WTHEME_METRIC_RADIOBUTTON_INDICATORSPACING:
-        MCThreadMutexLock(MCimagerepmutex);
+        MCThreadMutexLock(MCthememutex);
         moz_gtk_radiobutton_get_metrics(0, &ret);
-        MCThreadMutexUnlock(MCimagerepmutex);
+        MCThreadMutexUnlock(MCthememutex);
 		break;
 	default:
 		break;
@@ -1674,7 +1674,7 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	GdkPixbuf* t_argb_image ;
 	bool t_cached ;
 	
-    MCThreadMutexLock(MCimagerepmutex);
+    MCThreadMutexLock(MCthememutex);
     
 	if ( ( p_info -> moztype != MOZ_GTK_CHECKBUTTON ) && ( p_info -> moztype != MOZ_GTK_RADIOBUTTON ) )
 		cache_node = MCimagecache -> find_cached_image ( p_info -> drect.width, p_info -> drect.height, p_info -> moztype, &p_info -> state, p_info -> flags ) ;
@@ -1711,7 +1711,7 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	if (!t_cached)
 		g_object_unref(t_argb_image);
 	
-    MCThreadMutexUnlock(MCimagerepmutex);
+    MCThreadMutexUnlock(MCthememutex);
     
 	return true;
 }

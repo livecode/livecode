@@ -43,6 +43,9 @@ class MCAVFoundationPlayer;
 
 - (void)movieFinished: (id)object;
 
+// PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
+- (void)timeJumped: (id)object;
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context;
 
 @end
@@ -77,6 +80,7 @@ public:
 	virtual void GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
     
     void MovieFinished(void);
+    void TimeJumped(void);
     
     AVPlayer *getPlayer(void);
     
@@ -157,6 +161,12 @@ private:
     m_av_player = player;
     
     return self;
+}
+
+// PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
+- (void)timeJumped: (id)object
+{
+    m_av_player -> TimeJumped();
 }
 
 - (void)movieFinished: (id)object
@@ -270,6 +280,12 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     [m_lock release];
 }
 
+void MCAVFoundationPlayer::TimeJumped(void)
+{
+    // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
+    if (!m_synchronizing)
+        MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
+}
 
 void MCAVFoundationPlayer::MovieFinished(void)
 {
@@ -594,9 +610,10 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
 
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: AVPlayerItemDidPlayToEndTimeNotification object: [m_player currentItem]];
-
-    //[[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
-
+    
+    // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
+    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(timeJumped:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
+    
     m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:nil usingBlock:^(CMTime time) {
 
         m_observed_time = time;
@@ -774,13 +791,16 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             // MW-2014-07-29: [[ Bug 12989 ]] Make sure we use the duration timescale.
             // MW-2014-08-01: [[ Bug 13046 ]] Use a completion handler to wait until the currentTime is
             //   where we want it to be.
-            __block bool t_is_finished = false;
-            [[m_player currentItem] seekToTime:CMTimeFromLCTime(*(uint32_t *)p_value) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
-                t_is_finished = true;
-                MCPlatformBreakWait();
-            }];
-            while(!t_is_finished)
-                MCPlatformWaitForEvent(60.0, true);
+            if (m_player != nil)
+            {
+                __block bool t_is_finished = false;
+                [[m_player currentItem] seekToTime:CMTimeFromLCTime(*(uint32_t *)p_value) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
+                    t_is_finished = true;
+                    MCPlatformBreakWait();
+                }];
+                while(!t_is_finished)
+                    MCPlatformWaitForEvent(60.0, true);
+            }
         }
         break;
 		case kMCPlatformPlayerPropertyStartTime:
@@ -809,10 +829,12 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
         }
             break;
 		case kMCPlatformPlayerPropertyPlayRate:
-            [m_player setRate: *(double *)p_value];
+            if (m_player != nil)
+                [m_player setRate: *(double *)p_value];
 			break;
 		case kMCPlatformPlayerPropertyVolume:
-            [m_player setVolume: *(uint16_t *)p_value / 100.0f];
+            if (m_player != nil)
+                [m_player setVolume: *(uint16_t *)p_value / 100.0f];
 			break;
         case kMCPlatformPlayerPropertyOnlyPlaySelection:
 			m_play_selection_only = *(bool *)p_value;

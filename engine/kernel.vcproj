@@ -384,6 +384,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\imageloader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\imageloader.h"
+				>
+			</File>
+			<File
 				RelativePath="src\ipng.cpp"
 				>
 			</File>

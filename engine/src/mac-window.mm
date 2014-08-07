@@ -1196,6 +1196,40 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 //////////
 
+// MW-2014-08-06: [[ Bug 13114 ]] It seems Cmd+Ctrl+Arrow by-passes the input system and various
+//   other mechanisms for no apparant reason. Therefore if we get these selectors we dispatch
+//   directly.
+- (void)synthesizeKeyPress: (uint32_t)p_key_code
+{
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
+    
+    t_window -> ProcessKeyDown(p_key_code, 0xffffffffU, 0xffffffffU);
+    t_window -> ProcessKeyUp(p_key_code, 0xffffffffU, 0xffffffffU);
+}
+
+- (void)moveLeft:(id)sender
+{
+    [self synthesizeKeyPress: 0xff51];
+}
+
+- (void)moveRight:(id)sender
+{
+    [self synthesizeKeyPress: 0xff53];
+}
+
+- (void)moveUp:(id)sender
+{
+    [self synthesizeKeyPress: 0xff52];
+}
+
+- (void)moveDown:(id)sender
+{
+    [self synthesizeKeyPress: 0xff54];
+}
+
 // MW-2014-05-12: [[ Bug 12383 ]] We need these handlers to ensure things are
 //   not disabled in menus when they have a standard tag.
 
@@ -1235,6 +1269,14 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 }
 
 //////////
+
+#if DEBUG_ACTION_MESSAGES
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+    MCLog("selector = %s", sel_getName(aSelector));
+    return [super respondsToSelector: aSelector];
+}
+#endif
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem
 {

@@ -77,18 +77,6 @@ MCLoadableImageRep::~MCLoadableImageRep()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uindex_t MCLoadableImageRep::GetFrameCount()
-{
-	if (!m_have_geometry)
-	{
-		if (!EnsureMCGImageFrames())
-			return false;
-	}
-
-	return m_frame_count;
-}
-
-
 bool MCLoadableImageRep::ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p_frame_count, bool p_premultiplied)
 {
 	bool t_success;
@@ -103,7 +91,8 @@ bool MCLoadableImageRep::ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p
 	for (uint32_t i = 0; t_success && i < p_frame_count; i++)
 	{
 		// IM-2014-05-14: [[ ImageRepUpdate ]] Fix density & duration not being copied from the bitmap frames
-		t_frames[i].density = x_frames[i].density;
+		t_frames[i].x_scale = x_frames[i].x_scale;
+		t_frames[i].y_scale = x_frames[i].y_scale;
 		t_frames[i].duration = x_frames[i].duration;
 		
 		t_success = MCImageBitmapCopyAsMCGImageAndRelease(x_frames[i].image, p_premultiplied, t_frames[i].image);
@@ -236,13 +225,22 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
     MCThreadMutexLock(MCimagerepmutex);
     
 	if (m_frame_count != 0 && p_frame >= m_frame_count)
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
 		return false;
+    }
     
 	if (!EnsureMCGImageFrames())
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
 		return false;
+    }
 	
 	if (p_frame >= m_frame_count)
-		return false;
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
+        return false;
+    }
     
 	r_frame = m_frames[p_frame];
     MCGImageRetain(r_frame . image);

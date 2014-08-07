@@ -1075,6 +1075,8 @@
 		E891124A148675C900B554CF /* DialogModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = DialogModule.java; sourceTree = "<group>"; };
 		E89112EB148E73EB00B554CF /* mbldialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbldialog.cpp; path = src/mbldialog.cpp; sourceTree = "<group>"; };
 		E89A45D314EE7603007250AA /* mblnotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblnotification.h; path = src/mblnotification.h; sourceTree = "<group>"; };
+		E89DBC50198A6F410009651B /* imageloader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imageloader.cpp; path = src/imageloader.cpp; sourceTree = "<group>"; };
+		E89DBC51198A6F410009651B /* imageloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imageloader.h; path = src/imageloader.h; sourceTree = "<group>"; };
 		E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		E8B4FDD8152CAF8300CBAF90 /* mbliphonefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonefs.mm; path = src/mbliphonefs.mm; sourceTree = "<group>"; };
 		E8C8A774147BC020003780F0 /* mblsensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblsensor.cpp; path = src/mblsensor.cpp; sourceTree = "<group>"; };
@@ -1759,6 +1761,8 @@
 				E8BE6E29182966BA00D7C604 /* image_rep_resampled.cpp */,
 				4D8C699B167A22B500D3CCE7 /* imagebitmap.cpp */,
 				E865A51E1695BF3E00C4CBC3 /* imagebitmap.h */,
+				E89DBC50198A6F410009651B /* imageloader.cpp */,
+				E89DBC51198A6F410009651B /* imageloader.h */,
 				4DD3DE661040AD2800CAC7EF /* ipng.cpp */,
 				4DDD7F28134BA5BF009037A0 /* iquantization.cpp */,
 				E865A51F1695BF3E00C4CBC3 /* iquantization.h */,
@@ -2551,15 +2555,8 @@
 				7268ED951848C30200D10598 /* exec-textmessaging.cpp in Sources */,
 				BE449501175CDE7400346B49 /* exec.cpp in Sources */,
 				4DBF5B291802E63F009CAB2E /* socket_resolve.cpp in Sources */,
-				E8C22C46177B1700003785D3 /* cgimageutil.cpp in Sources */,
 				4C977245193C986700DB2F4A /* coretextfonts.cpp in Sources */,
 				4C529CBF1973CF4A007C5F7C /* stacktile.cpp in Sources */,
-				E8C22E57177B2884003785D3 /* imagelist.cpp in Sources */,
-				E8C22E73177B2960003785D3 /* graphicscontext.cpp in Sources */,
-				E8C22E75177B2B53003785D3 /* mbltheme.cpp in Sources */,
-				E8B6EE1417F0A1C900F77E0E /* stackview.cpp in Sources */,
-				E8AB9053180E9DCD0050A249 /* image_rep_densitymapped.cpp in Sources */,
-				E8BE6E2A182966BA00D7C604 /* image_rep_resampled.cpp in Sources */,
 				E877A6181850D85F008FDE2C /* resolution.cpp in Sources */,
 				7231B08718CF3FFF00295AE6 /* graphicscontext.cpp in Sources */,
 				7231B08A18CF40B600295AE6 /* imagelist.cpp in Sources */,

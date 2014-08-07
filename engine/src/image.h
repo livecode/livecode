@@ -60,18 +60,14 @@ void MCImageFlipBitmapInPlace(MCImageBitmap *p_bitmap, bool p_horizontal, bool p
 // Image format encode / decode function
 bool MCImageEncodeGIF(MCImageBitmap *p_image, IO_handle p_stream, bool p_dither, uindex_t &r_bytes_written);
 bool MCImageEncodeGIF(MCImageIndexedBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
-bool MCImageDecodeGIF(IO_handle p_stream, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
 
 bool MCImageEncodeJPEG(MCImageBitmap *p_image, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written);
-bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image);
 
 bool MCImageEncodePNG(MCImageBitmap *p_bitmap, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written);
 bool MCImageEncodePNG(MCImageIndexedBitmap *p_bitmap, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written);
-bool MCImageDecodePNG(IO_handle p_stream, MCImageBitmap *&r_bitmap);
 
 bool MCImageEncodeBMP(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
 bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *&r_bitmap);
-bool MCImageDecodeBMP(IO_handle p_stream, MCPoint &r_hotspot, MCImageBitmap *&r_bitmap);
 
 bool MCImageEncodeRawTrueColor(MCImageBitmap *p_bitmap, IO_handle p_stream, Export_format p_format, uindex_t &r_bytes_written);
 bool MCImageEncodeRawIndexed(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
@@ -80,10 +76,6 @@ bool MCImageEncodeRawIndexed(MCImageIndexedBitmap *p_indexed, IO_handle p_stream
 bool MCImageEncodePBM(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
 bool MCImageEncodePPM(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
 bool MCImageDecodeNetPBM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
-
-bool MCImageDecodeXBM(IO_handle p_stream, MCPoint &r_hotspot, MCStringRef &r_name, MCImageBitmap *&r_bitmap);
-bool MCImageDecodeXPM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
-bool MCImageDecodeXWD(IO_handle stream, MCStringRef &r_name, MCImageBitmap *&r_bitmap);
 
 // Legacy Functions
 void MCImageBitmapSetAlphaValue(MCImageBitmap *p_bitmap, uint8_t p_alpha);
@@ -118,7 +110,6 @@ bool MCImageCompressRLE(MCImageIndexedBitmap *p_indexed, MCImageCompressedBitmap
 bool MCImageDecompressRLE(MCImageCompressedBitmap *p_compressed, MCImageBitmap *&r_bitmap);
 
 bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBitmap *&r_compressed);
-bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
 
 bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t &r_height);
 bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotspot, MCStringRef &r_name, MCImageCompressedBitmap *&r_compressed, MCImageBitmap *&r_bitmap);
@@ -489,8 +480,6 @@ public:
 	// IM-2013-11-06: [[ RefactorGraphics ]] get the image rep & transform used to render the image
 	bool get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform);
 	
-	MCGFloat getscalefactor(void);
-	
 	// IM-2013-10-30: [[ FullscreenMode ]] Returns the stack device scale or 1.0 if image object not attached
 	MCGFloat getdevicescale(void);
 	
@@ -504,7 +493,7 @@ public:
     void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
 
     void drawwithgravity(MCDC *dc, MCRectangle rect, MCGravity gravity);
-    
+
 	void canceldraw(void);
 	void startmag(int2 x, int2 y);
 	void endmag(Boolean close);

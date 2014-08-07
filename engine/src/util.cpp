@@ -46,9 +46,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "system.h"
 
-#ifdef MCSSL
-#include <openssl/rand.h>
-#endif
 
 // MDW-2014-07-06: [[ oval_points ]]
 #define QA_NPOINTS 90
@@ -3097,28 +3094,10 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes
-//   which uses OpenSSL if available, otherwise falls back on system support.
+// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes.
 bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
 {
-#ifdef MCSSL
-	// If SSL is available, then use that.
-	static bool s_donotuse_ssl = false;
-	if (!s_donotuse_ssl)
-	{
-        MCAutoByteArray t_buffer;
-        
-        if (InitSSLCrypt())
-        {
-            return (t_buffer.New(p_bytecount) &&
-                    (RAND_bytes((unsigned char *)t_buffer.Bytes(), p_bytecount) == 1) &&
-                    t_buffer.CreateData(r_bytes));
-        }
-		s_donotuse_ssl = true;
-	}
-#endif
-
-	// Otherwise use the system provided CPRNG.
+	// IM-2014-08-06: [[ Bug 13038 ]] Use system implementation directly instead of SSL
 	return MCS_random_bytes(p_bytecount, r_bytes);
 }
 
@@ -3145,3 +3124,4 @@ void operator delete[] (void *p)
     free(p);
 }
 #endif
+

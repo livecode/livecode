@@ -31,106 +31,132 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "image.h"
 
+#include "imageloader.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCEncodedImageRep::~MCEncodedImageRep()
 {
 }
 
+// IM-2014-07-31: [[ ImageLoader ]] Use image loader class to read image frames
+extern bool MCImageLoaderFormatToCompression(MCImageLoaderFormat p_format, uint32_t &r_compression);
 bool MCEncodedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
 {
 	bool t_success = true;
 
-	// IM-2013-02-18 - switching this back to using MCImageImport as we need to
-	// determine the compression type for m_compression
-
 	IO_handle t_stream = nil;
-	IO_handle t_mask_stream = nil;
 
-	MCImageCompressedBitmap *t_compressed = nil;
-	MCImageBitmap *t_bitmap = nil;
+	MCImageLoader *t_loader;
+	t_loader = nil;
 
-	MCPoint t_hotspot = {1, 1};
-	MCStringRef t_name = nil;
+	MCBitmapFrame *t_frames;
+	uint32_t t_count;
 
-	t_success = GetDataStream(t_stream) &&
-		MCImageImport(t_stream, t_mask_stream, t_hotspot, t_name, t_compressed, t_bitmap);
+	MCImageLoaderFormat t_format;
 
+	if (t_success)
+		t_success = GetDataStream(t_stream);
+
+	if (t_success)
+		t_success = MCImageLoader::LoaderForStream(t_stream, t_loader);
+	
+	if (t_success)
+	{
+		t_format = t_loader->GetFormat();
+		t_success = t_loader->TakeFrames(t_frames, t_count);
+			}
+	
+	if (t_loader != nil)
+		delete t_loader;
+	
 	if (t_stream != nil)
 		MCS_close(t_stream);
 
-	MCBitmapFrame *t_frames;
-	t_frames = nil;
-	
-	uindex_t t_frame_count;
-	t_frame_count = 0;
-	
 	if (t_success)
 	{
-		if (t_compressed != nil)
-			t_success = MCImageDecompress(t_compressed, t_frames, t_frame_count);
-		else
-		{
-			t_success = MCMemoryNewArray(1, t_frames);
-			if (t_success)
-			{
-				t_frames[0].image = t_bitmap;
-				t_frames[0].density = 1.0;
-				t_bitmap = nil;
-				t_frame_count = 1;
-			}
-		}
-	}
-
-	if (t_success)
-	{
+		if (t_count == 1)
+			t_frames[0].x_scale = t_frames[0].y_scale = 1.0;
 
 		m_width = t_frames[0].image->width;
 		m_height = t_frames[0].image->height;
+		m_header_frame_count = t_count;
 
-		if (t_compressed != nil)
-			m_compression = t_compressed->compression;
+		/* UNCHECKED */ MCImageLoaderFormatToCompression(t_format, m_compression);
 
 		m_have_geometry = true;
 		
 		r_frames = t_frames;
-		r_frame_count = t_frame_count;
+		r_frame_count = t_count;
 		r_frames_premultiplied = false;
 	}
 
-	MCValueRelease(t_name);
-	
-	MCImageFreeBitmap(t_bitmap);
-	MCImageFreeCompressedBitmap(t_compressed);
-
 	return t_success;
 }
+	
+// IM-2014-08-01: [[ ImageLoader ]] The frame count is determined when reading the header
+// during CalculateGeometry or LoadImageFrames
+uindex_t MCEncodedImageRep::GetFrameCount()
+{
+	uint32_t t_width, t_height;
+	if (m_have_geometry)
+		return m_header_frame_count;
 
+	if (GetGeometry(t_width, t_height))
+		return m_header_frame_count;
+	
+	return 0;
+}
+
+// IM-2014-07-31: [[ ImageLoader ]] Use image loader class to read image geometry from stream header
 bool MCEncodedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 {
-	MCGImageFrame t_frame;
-	if (!LockImageFrame(0, 1.0, t_frame))
-		return false;
+	bool t_success;
+	t_success = true;
 
-	r_width = MCGImageGetWidth(t_frame.image);
-	r_height = MCGImageGetHeight(t_frame.image);
+	IO_handle t_stream;
+	t_stream = nil;
 
-	UnlockImageFrame(0, t_frame);
+	MCImageLoader *t_loader;
+	t_loader = nil;
+	
+	if (t_success)
+		t_success = GetDataStream(t_stream);
+	
+	if (t_success)
+		t_success = MCImageLoader::LoaderForStream(t_stream, t_loader);
+	
+	if (t_success)
+	{
+		/* UNCHECKED */ MCImageLoaderFormatToCompression(t_loader->GetFormat(), m_compression);
+		t_success = t_loader->GetGeometry(r_width, r_height) && t_loader->GetFrameCount(m_header_frame_count);
+	}
+	
+	if (t_loader != nil)
+		delete t_loader;
+	
+	if (t_stream != nil)
+		MCS_close(t_stream);
 
 	return true;
 }
 
+// IM-2014-07-31: [[ ImageLoader ]] Use image loader method to identify stream format
 uint32_t MCEncodedImageRep::GetDataCompression()
 {
-	/* OVERHAUL - REVISIT - need to refactor image import code so we can detect
-	image compression & geometry without reading whole file */
-
 	if (m_have_geometry)
 		return m_compression;
 
-	MCGImageFrame t_frame;
-	if (LockImageFrame(0, 1.0, t_frame))
-		UnlockImageFrame(0, t_frame);
+	IO_handle t_stream;
+	t_stream = nil;
+	
+	MCImageLoaderFormat t_format;
+	
+	if (GetDataStream(t_stream) && MCImageLoader::IdentifyFormat(t_stream, t_format))
+		/* UNCHECKED */ MCImageLoaderFormatToCompression(t_format, m_compression);
+
+	if (t_stream != nil)
+		MCS_close(t_stream);
 
 	return m_compression;
 }
@@ -280,7 +306,7 @@ bool MCCompressedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r
 
 	if (t_success)
 	{
-		t_frame->density = 1.0;
+		t_frame->x_scale = t_frame->y_scale = 1.0;
 		
 		r_frames = t_frame;
 		r_frame_count = 1;

@@ -3828,18 +3828,11 @@ void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_fo
 		}
         
         MCImageBitmap *t_bitmap;
-        
-		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
-		// so if the image has a scale factor we need to get a 1:1 copy
-		if (p_target->getscalefactor() == 1.0)
-		{
-			/* UNCHECKED */ p_target->lockbitmap(t_bitmap, false);
-			t_image_locked = true;
-		}
-		else
-		{
-			/* UNCHECKED */ p_target->copybitmap(1.0, false, t_bitmap);
-		}
+		
+		// IM-2014-08-01: [[ Bug 13021 ]] Provide required scale to lockbitmap(),
+		// which will then copy if necessary.
+		/* UNCHECKED */ p_target->lockbitmap(false, true, 1.0, t_bitmap);
+		t_image_locked = true;
         
         MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_metadata, r_data);
         
@@ -3859,18 +3852,11 @@ void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, in
 	if (p_target != nil)
 	{
         MCImageBitmap *t_bitmap;
-        
-		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
-		// so if the image has a scale factor we need to get a 1:1 copy
-		if (p_target->getscalefactor() == 1.0)
-		{
-			/* UNCHECKED */ p_target->lockbitmap(t_bitmap, false);
-			t_image_locked = true;
-		}
-		else
-		{
-			/* UNCHECKED */ p_target->copybitmap(1.0, false, t_bitmap);
-		}
+		
+		// IM-2014-08-01: [[ Bug 13021 ]] Provide required scale to lockbitmap(),
+		// which will then copy if necessary.
+		/* UNCHECKED */ p_target->lockbitmap(false, true, 1.0, t_bitmap);
+		t_image_locked = true;
         
         MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_metadata, p_filename, p_mask_filename);
         

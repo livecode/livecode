@@ -1681,9 +1681,8 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 	// function succeeded but there is no text while the null string indicates
 	// that no menu handled the key event.
 	r_string = nil;
-	// MW-2014-03-12: [[ Bug 11914 ]] Only do internal menu actions if this is an
-	//   engine menu.
-	if (m_is_menu)
+	// IM-2014-08-06: [[ Bug 13059 ]] menumup() can be called on pop-up menu stacks
+	// configured through menuname so remove check for m_is_menu
 	{
         MCControl *focused = curcard->getmfocused();
         if (focused == NULL)

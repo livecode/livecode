@@ -1495,7 +1495,10 @@ void MCCard::kfocusset(MCControl *target)
 			if (kfocused->getref()->kfocusset(target))
 			{
 				kfocused->getref()->kfocus();
-				MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+                // MW-2014-08-06: [[ Bug 13072 ]] Only invoke this if kfocused is still non-nil
+                //   (if focusing the control refocuses, it will be nil).
+                if (kfocused != nil)
+                    MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 
 				// OK-2009-04-29: [[Bug 8013]] - Its possible that kfocus() can set kfocused to NULL if the 
 				// user handles the message and does something to unfocus the object (e.g. select empty)

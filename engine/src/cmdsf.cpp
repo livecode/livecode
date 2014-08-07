@@ -1286,17 +1286,10 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	{
 		MCImage *t_img = static_cast<MCImage*>(optr);
 		
-		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
-		// so if the image has a scale factor we need to get a 1:1 copy
-		if (t_img->getscalefactor() == 1.0)
-		{
-			/* UNCHECKED */ t_img->lockbitmap(t_bitmap, false);
-			t_image_locked = true;
-		}
-		else
-		{
-			/* UNCHECKED */ t_img->copybitmap(1.0, false, t_bitmap);
-		}
+		// IM-2014-08-01: [[ Bug 13021 ]] Provide required scale to lockbitmap(),
+		// which will then copy if necessary.
+		/* UNCHECKED */ t_img->lockbitmap(false, true, 1.0, t_bitmap);
+		t_image_locked = true;
 		t_dither = !t_img->getflag(F_DONT_DITHER);
 	}
 	else
