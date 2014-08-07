@@ -58,9 +58,9 @@ SOURCES=\
 	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	srvmain.cpp dsklnx.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvdebug.cpp \
 	srvscript.cpp srvoutput.cpp srvtheme.cpp \
-        eventqueue.cpp encodederrors.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
+    eventqueue.cpp encodederrors.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
 	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
-        graphicscontext.cpp lnxflst.cpp lnxflstold.cpp lnxelevate.cpp \
+    graphicscontext.cpp lnxflst.cpp lnxflstold.cpp lnxelevate.cpp \
 	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
 	exec-logic exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting \
 	exec-strings.cpp exec-strings-chunk.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \
@@ -69,11 +69,12 @@ SOURCES=\
 	exec-interface-field.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \
 	exec-interface-object.cpp exec-interface-field-chunk.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
 	exec-interface-vclip.cpp exec-keywords.cpp exec-legacy.cpp exec-dialog.cpp exec-strings-chunk.cpp \
-        syntax.cpp quicktime.cpp \
+    syntax.cpp quicktime.cpp \
 	foundation-legacy.cpp legacy_spec.cpp \
 	srvposix.cpp \
-        srvcgi.cpp srvmultipart.cpp
-
+    srvcgi.cpp srvmultipart.cpp \
+	sysunxthreads.cpp, stacktile.cpp
+	
 SOURCE_DIRS=
 
 CUSTOM_OVERRIDE_DEFINES=1
@@ -86,7 +87,7 @@ CUSTOM_INCLUDES=\
 
 CUSTOM_CCFLAGS=\
 	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -fno-exceptions -fno-rtti -fno-strict-aliasing \
-	-fmessage-length=0 
+	-fmessage-length=0 -march=i486
 
 include/revbuild.h: include/revbuild.h.in ../version ../util/encode_version.pl
 	../util/encode_version.pl
