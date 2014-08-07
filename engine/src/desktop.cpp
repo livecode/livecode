@@ -558,9 +558,9 @@ static void map_key_to_engine(MCPlatformKeyCode p_key_code, codepoint_t p_mapped
         uint16_t t_unicode_char;
         char_t t_native_char;
 
-        // SN-2014-07-11: [[ Bug 12747 ]] Shortcuts: the uncomment script shortcut cmd _ does not work
-        //  We want to take in account the unmapped char, since with the mapped one, Cmd discards the Shift modifier
-        t_unicode_char = p_unmapped_codepoint & 0xffff;
+        // MW-2014-08-05: [[ Bug 13042 ]] This was a mis-merge from an updated fix to bug 12747
+        //   (the code previously was using unmapped codepoint).
+        t_unicode_char = p_mapped_codepoint & 0xffff;
 		
 		if (MCUnicodeMapToNative(&t_unicode_char, 1, t_native_char))
 		{
@@ -732,6 +732,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	
 	if (!p_mark)
 	{
+        // MW-2014-08-05: [[ Bug 13098 ]] If we have been compositing, then don't synthesise a
+        //   keyDown / keyUp.
+        bool t_was_compositing;
 		int4 si, ei;
 		if (MCactivefield -> getcompositionrange(si, ei))
 		{
@@ -741,7 +744,11 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 				t_r_ei -= MCMin(t_r_ei - si, ei - si);
 			
 			MCactivefield -> stopcomposition(True, False);
+            
+            t_was_compositing = true;
 		}
+        else
+            t_was_compositing = false;
 		
 		// If the char count is 1 and the replacement range matches the current selection,
 		// the char is native and the requested selection is after the char, then synthesis a
@@ -750,7 +757,8 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         //   the keycodes the engine expects.
 		char_t t_char;
 
-		if (p_char_count == 1 &&
+		if (!t_was_compositing &&
+            p_char_count == 1 &&
 			MCUnicodeMapToNative(p_chars, 1, t_char) &&
 			p_selection_range . offset == p_replace_range . offset + 1 &&
 			p_selection_range . length == 0)
