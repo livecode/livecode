@@ -306,7 +306,7 @@ void MCGdkTransferStore::GetExternalTypes(GdkAtom p_selection, GdkWindow *p_targ
     if (t_property_type != GDK_SELECTION_TYPE_ATOM || t_property_format != 32)
         return;
     
-    for (gint i = 0; i < t_byte_len/4; i++)
+    for (gint i = 0; i < t_byte_len/sizeof(GdkAtom); i++)
     {
         addAtom(((GdkAtom*)t_bytes)[i]);
     }
