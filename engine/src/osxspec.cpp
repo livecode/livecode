@@ -110,37 +110,6 @@ OSAcomponent;
 static OSAcomponent *osacomponents = NULL;
 static uint2 osancomponents = 0;
 
-//required apple event handler
-static pascal OSErr DoOpenApp(const AppleEvent *mess, AppleEvent *rep, long refcon);
-static pascal OSErr DoOpenDoc(const AppleEvent *mess, AppleEvent *rep, long refcon);
-static pascal OSErr DoPrintDoc(const AppleEvent *m, AppleEvent *rep, long refcon);
-static pascal OSErr DoQuitApp(const AppleEvent *mess, AppleEvent *rep, long refcon);
-static pascal OSErr DoAppDied(const AppleEvent *mess, AppleEvent *rep, long refcon);
-static pascal OSErr DoAEAnswer(const AppleEvent *m, AppleEvent *rep, long refcon);
-static pascal OSErr DoAppPreferences(const AppleEvent *m, AppleEvent *rep, long refcon);
-
-#define kAEReopenApplication FOUR_CHAR_CODE('rapp')
-static triplets ourkeys[] =
-{
-	/* The following are the four required AppleEvents. */
-	{ kCoreEventClass, kAEReopenApplication, DoOpenApp,  nil },
-  { kCoreEventClass, kAEOpenApplication, DoOpenApp,  nil },
-  { kCoreEventClass, kAEOpenDocuments, DoOpenDoc,  nil },
-  { kCoreEventClass, kAEPrintDocuments, DoPrintDoc, nil },
-  { kCoreEventClass, kAEQuitApplication, DoQuitApp,  nil },
-  { kCoreEventClass, kAEApplicationDied, DoAppDied,  nil },
-
-  { kCoreEventClass, kAEShowPreferences, DoAppPreferences,  nil },
-
-/*if MCS_send() command requires an reply(answer) back from the
- *server app the following handler is used to process the
- *reply(answer) descirption record */
-  { kCoreEventClass, kAEAnswer, DoAEAnswer, nil}
-};
-
-static Boolean hasPPCToolbox = False;
-static Boolean hasAppleEvents = False;
-
 #define MINIMUM_FAKE_PID (1 << 29)
 
 static int4 curpid = MINIMUM_FAKE_PID;
@@ -173,7 +142,7 @@ static OSErr osacompile(MCString &s, ComponentInstance compinstance, OSAID &id);
 static OSErr osaexecute(MCString &s,ComponentInstance compinstance, OSAID id);
 /***************************************************************************/
 
-static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refCon)
+OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
 	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
 	//   don't handle the event.
@@ -305,13 +274,7 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 	return err;
 }
 
-//Apple event handlers table is installed in MCS_init() macspec.cpp file
-static pascal OSErr DoOpenApp(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{
-	return errAEEventNotHandled;
-}
-
-static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
+OSErr MCAppleEventHandlerDoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
 	//Apple Event for opening documnets, in our use is to open stacks when user
 	//double clicked on a MC stack icon
@@ -363,95 +326,7 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 	return noErr;
 }
 
-static pascal OSErr DoPrintDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{
-	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
-	//   don't handle the event.
-	if (!MCSecureModeCanAccessAppleScript())
-	if (!MCSecureModeCheckAppleScript())
-		return errAEEventNotHandled;
-
-	errno = errAEEventNotHandled;
-	if (reply != NULL)
-	{
-		short e = errno;
-		AEPutParamPtr(reply, keyReplyErr, typeShortInteger, &e, sizeof(short));
-	}
-	return errno;
-}
-
-static pascal OSErr DoQuitApp(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{
-	// MW-2013-08-07: [[ Bug 10865 ]] Even if AppleScript is disabled we still need
-	//   to handle the 'quit' message.
-	// if (!MCSecureModeCanAccessAppleScript())
-	//	return errAEEventNotHandled;
-
-	errno = errAEEventNotHandled;
-	switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
-	{
-	case ES_PASS:
-	case ES_NOT_HANDLED:
-		MCdefaultstackptr->getcard()->message(MCM_shut_down);
-		MCquit = True; //set MC quit flag, to invoke quitting
-		errno = noErr;
-		break;
-	default:
-		errno = userCanceledErr;
-		break;
-	}
-	if (reply != NULL)
-	{
-		short e = errno;
-		AEPutParamPtr(reply, keyReplyErr, typeShortInteger, &e, sizeof(short));
-	}
-	return errno;
-}
-
-static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{
-	// MW-2013-08-07: [[ Bug 10865 ]] Even if AppleScript is disabled we still need
-	//   to handle the 'preferences' message.
-	//if (!MCSecureModeCanAccessAppleScript())
-	//	return errAEEventNotHandled;
-
-	MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
-	if (mb == NULL)
-		return errAEEventNotHandled;
-	MCButton *bptr = (MCButton *)mb->findname(CT_MENU, "Edit");
-	if (bptr == NULL)
-		return errAEEventNotHandled;
-	if (bptr != NULL)
-	{
-		bptr->message_with_args(MCM_menu_pick, "Preferences");
-	}
-	return noErr;
-}
-
-
-static pascal OSErr DoAppDied(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{
-	errno = errAEEventNotHandled;
-	DescType rType;
-	Size rSize;
-	ProcessSerialNumber sn;
-	AEGetParamPtr(theAppleEvent, keyProcessSerialNumber, typeProcessSerialNumber, &rType,	&sn, sizeof(ProcessSerialNumber), &rSize);
-	uint2 i;
-	for (i = 0 ; i < MCnprocesses ; i++)
-	{
-		Boolean result;
-		SameProcess((ProcessSerialNumber *)&MCprocesses[i].sn, &sn, &result);
-		if (result)
-		{
-			MCprocesses[i].pid = 0;
-			IO_cleanprocesses();
-			return noErr;
-		}
-	}
-	return errno;
-}
-
-static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long refCon)
+OSErr MCAppleEventHandlerDoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
 	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
 	//   don't handle the event.
@@ -707,42 +582,6 @@ void MCS_init()
 	delete dptr;
 
 	MCS_reset_time();
-	//do toolbox checking
-	long result;
-	hasPPCToolbox = (Gestalt(gestaltPPCToolboxAttr, &result)
-	                 ? False : result != 0);
-	hasAppleEvents = (Gestalt(gestaltAppleEventsAttr, &result)
-	                  ? False : result != 0);
-	uint1 i;
-	if (hasAppleEvents)
-	{ //install required AE event handler
-		for (i = 0; i < (sizeof(ourkeys) / sizeof(triplets)); ++i)
-		{
-			if (!ourkeys[i].theUPP)
-			{
-				ourkeys[i].theUPP = NewAEEventHandlerUPP(ourkeys[i].theHandler);
-				AEInstallEventHandler(ourkeys[i].theEventClass,
-				                      ourkeys[i].theEventID,
-				                      ourkeys[i].theUPP, 0L, False);
-			}
-		}
-	}
-
-// ** MODE CHOICE
-	if (MCModeShouldPreprocessOpeningStacks())
-	{
-		EventRecord event;
-		i = 2;
-		// predispatch any openapp or opendoc events so that stacks[] array
-		// can be properly initialized
-		while (i--)
-			while (WaitNextEvent(highLevelEventMask, &event,
-								 (unsigned long)0, (RgnHandle)NULL))
-				AEProcessAppleEvent(&event);
-	}
-	//install special handler
-	AEEventHandlerUPP specialUPP = NewAEEventHandlerUPP(DoSpecial);
-	AEInstallSpecialHandler(keyPreDispatch, specialUPP, False);
 
 	if (Gestalt('ICAp', &response) == noErr)
 	{
