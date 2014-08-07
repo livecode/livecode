@@ -1748,14 +1748,19 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		{
 		case VF_UNDEFINED:
 			break;
-		case VF_STRING:
-			t_stat = ctxt -> stream -> WriteU32(MCStringGetLength(t_str_value));
+        case VF_STRING:
+        {
+            // SN-2014-08-05: [[ Bug 13050 ]] VF_STRING is used for binary as well, so that
+            //  we can't use strlen() to get the size of the string.
+            uindex_t t_length;
+            char_t *t_cstring;
+            /* UNCHECKED */ MCStringConvertToNative(t_str_value, t_cstring, t_length);
+			t_stat = ctxt -> stream -> WriteU32(t_length);
 			if (t_stat == IO_NORMAL)
             {
-                MCAutoStringRefAsCString t_cstring;
-                t_cstring . Lock(t_str_value);
-				t_stat = ctxt -> stream -> Write(*t_cstring, strlen(*t_cstring));
+				t_stat = ctxt -> stream -> Write(t_cstring, t_length);
             }
+        }
 			break;
 		case VF_NUMBER:
 			t_stat = ctxt -> stream -> WriteFloat64(MCNumberFetchAsReal((MCNumberRef)p_value));
