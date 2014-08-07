@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //#include "execpt.h"
 #include "debug.h"
 #include "osspec.h"
+#include "stacklst.h"
 
 #include "globals.h"
 
@@ -322,6 +323,8 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                         hidebackdrop(true);
                         if (MCdefaultstackptr != NULL)
                             MCdefaultstackptr->getcard()->message(MCM_resume);
+                        
+                        MCstacks->hidepalettes(false);
                     }
                     
                     if (dispatch)
@@ -355,7 +358,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                         // Even if we found it, it may not be ours. This is very
                         // unlikely but could happen if we've created a GdkWindow
                         // for it in the past (e.g. in import snapshot)
-                        if (t_window == backdrop || MCdispatcher->findstackd(t_window) != NULL)
+                        if ((backdrop != NULL && t_window == backdrop) || MCdispatcher->findstackd(t_window) != NULL)
                             t_lostfocus = false;
                         
                         if (t_lostfocus)
@@ -365,6 +368,8 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                             hidebackdrop(true);
                             if (MCdefaultstackptr != NULL)
                                 MCdefaultstackptr->getcard()->message(MCM_suspend);
+                            
+                            MCstacks->hidepalettes(true);
                         }
                     }
                     
