@@ -1090,6 +1090,9 @@ IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle p_stream)
 					MCValueRelease(t_mutable_array);
 			}
 			break;
+            // AL-2014-08-04: [[ Bug 13056 ]] Return IO_ERROR if we don't read a valid type
+            default:
+                return IO_ERROR;
 		}
 	
 	return t_stat;
