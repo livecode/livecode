@@ -3026,7 +3026,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                     break;
                 default:
                     MCMarkedText t_mark;
-                    MCInterfaceMarkContainer(ctxt, t_object, t_mark);
+                    MCInterfaceMarkContainer(ctxt, t_object, false, t_mark);
                     MCStringsEvalTextChunk(ctxt, t_mark, (MCStringRef&)&t_valueref);
                     MCValueRelease(t_mark . text);
                     break;
@@ -3343,7 +3343,21 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
             if (t_obj_chunk . object -> gettype() == CT_FIELD)
                 MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
             else
-                MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
+            {
+                // AL-2014-08-04: [[ Bug 13081 ]] 'put into <chunk>' is valid for any container type
+                switch (t_obj_chunk . object -> gettype())
+                {
+                    case CT_BUTTON:
+                    case CT_IMAGE:
+                    case CT_AUDIO_CLIP:
+                    case CT_VIDEO_CLIP:
+                        MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
+                        break;
+                    default:
+                        ctxt . LegacyThrow(EE_CHUNK_SETNOTACONTAINER);
+                        break;
+                }
+            }
         }
         MCValueRelease(t_obj_chunk . mark . text);
     }
@@ -4397,10 +4411,10 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         return true;
     }
 
-    if (t_function)
+    if (t_function && t_object . object -> gettype() == CT_FIELD)
         MCInterfaceMarkFunction(ctxt, t_object, function, p_whole_chunk, r_chunk . mark);
     else
-        MCInterfaceMarkObject(ctxt, t_object, p_whole_chunk, r_chunk . mark);
+        MCInterfaceMarkContainer(ctxt, t_object, p_whole_chunk, r_chunk . mark);
 
     mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
 
