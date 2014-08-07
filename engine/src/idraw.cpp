@@ -50,12 +50,23 @@ bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, M
 			r_rep = m_resampled_rep;
 		else
 		{
-			if (!MCImageRepGetResampled(rect.width, rect.height, t_h_flip, t_v_flip, m_rep, r_rep))
-				return false;
-			
-			if (m_resampled_rep != nil)
-				m_resampled_rep->Release();
-			m_resampled_rep = static_cast<MCResampledImageRep*>(r_rep);
+            // MM-2014-08-05: [[ Bug 13112 ]] Make sure only a single thread resamples the image.
+            MCThreadMutexLock(MCimagerepmutex);
+            if (m_resampled_rep != nil && m_resampled_rep->Matches(rect.width, rect.height, t_h_flip, t_v_flip, m_rep))
+                r_rep = m_resampled_rep;
+            else
+            {
+                if (!MCImageRepGetResampled(rect.width, rect.height, t_h_flip, t_v_flip, m_rep, r_rep))
+                {
+                    MCThreadMutexUnlock(MCimagerepmutex);
+                    return false;
+                }
+                
+                if (m_resampled_rep != nil)
+                    m_resampled_rep->Release();
+                m_resampled_rep = static_cast<MCResampledImageRep*>(r_rep);
+            }
+            MCThreadMutexUnlock(MCimagerepmutex);
 		}
 		
 		r_has_transform = false;
