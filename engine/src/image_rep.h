@@ -39,7 +39,9 @@ struct MCGImageFrame
 	uint32_t duration;
 	
 	// IM-2013-10-30: [[ FullscreenMode ]] add density value to image frames
-	MCGFloat density;
+	// IM-2014-08-07: [[ Bug 13021 ]] Split density into x / y scale components
+	MCGFloat x_scale;
+	MCGFloat y_scale;
 };
 
 void MCGImageFramesFree(MCGImageFrame *p_frames, uindex_t p_count);

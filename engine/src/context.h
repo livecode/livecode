@@ -81,9 +81,9 @@ struct MCImageDescriptor
     MCGImageFilter filter;
 	
 	// IM-2013-07-19: [[ ResIndependence ]] add scale factor field for scaled images
-	// IM-2014-08-01: [[ Bug 13021 ]] Split scale into horizontal / vertical components
-	MCGFloat h_scale;
-	MCGFloat v_scale;
+	// IM-2014-08-07: [[ Bug 13021 ]] Split scale into x / y components
+	MCGFloat x_scale;
+	MCGFloat y_scale;
 
 	// IM-2014-06-12: [[ ImageRepUpdate ]] Update image to be an MCGImage
 	MCGImageRef image;

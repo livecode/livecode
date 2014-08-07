@@ -71,9 +71,15 @@ bool MCDensityMappedImageRep::LockImageFrame(uindex_t p_index, MCGFloat p_densit
 	if (!GetBestMatch(p_density, t_match))
     	return false;
 	
+	uint32_t t_width, t_height;
+	if (!GetGeometry(t_width, t_height))
+		return false;
+	
 	if (m_sources[t_match]->LockImageFrame(p_index, p_density, r_frame))
     {
-        r_frame.density = m_source_densities[t_match];
+		// IM-2014-08-07: [[ Bug 13021 ]] Calculate image x/y scale from logical & actual size
+		r_frame.x_scale = (MCGFloat)MCGImageGetWidth(r_frame.image) / t_width;
+		r_frame.y_scale = (MCGFloat)MCGImageGetHeight(r_frame.image) / t_height;
         return true;
     }
     
@@ -91,11 +97,19 @@ bool MCDensityMappedImageRep::LockBitmapFrame(uindex_t p_index, MCGFloat p_densi
 	if (!GetBestMatch(p_density, t_match))
 		return false;
 	
+	uint32_t t_width, t_height;
+	if (!GetGeometry(t_width, t_height))
+		return false;
+	
 	m_locked = m_sources[t_match]->LockBitmapFrame(p_index, p_density, r_frame);
 	m_locked_source = t_match;
 	
 	if (m_locked)
-		r_frame->density = m_source_densities[t_match];
+	{
+		// IM-2014-08-07: [[ Bug 13021 ]] Calculate image x/y scale from logical & actual size
+		r_frame->x_scale = (MCGFloat)r_frame->image->width / t_width;
+		r_frame->y_scale = (MCGFloat)r_frame->image->height / t_height;
+	}
 	
 	return m_locked;
 }

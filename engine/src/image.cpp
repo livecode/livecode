@@ -1423,8 +1423,9 @@ Boolean MCImage::maskrect(const MCRectangle &srect)
 		}
 		
 		// IM-2013-10-30: [[ FullscreenMode ]] Account for image density when locating pixel position
-		t_x = t_x * t_frame.density;
-		t_y = t_y * t_frame.density;
+		// IM-2014-08-07: [[ Bug 13021 ]] Split density into x / y scale components
+		t_x = t_x * t_frame.x_scale;
+		t_y = t_y * t_frame.y_scale;
 		
 		uint32_t t_width, t_height;
 		t_width = MCGImageGetWidth(t_frame.image);
