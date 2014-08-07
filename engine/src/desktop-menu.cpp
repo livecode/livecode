@@ -266,7 +266,9 @@ public:
         if (!t_utf_title . Lock(p_menuitem -> label))
             return false;
 		
-		if (MCStringGetCharAtIndex(p_menuitem -> label, 0) == '-')
+        // SN-2014-08-05: [[ Bug 13103 ]] The item label must be "-" to be a menu separator,
+        //  not only start with '-'
+		if (MCStringIsEqualToCString(p_menuitem -> label, "-", kMCStringOptionCompareExact))
 			MCPlatformAddMenuSeparatorItem(TopMenu(), UINDEX_MAX);
 		else
 		{
