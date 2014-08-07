@@ -734,6 +734,9 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
 					MCValueAssign(label, *t_pick);
+                    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+                    //  we need to rely on the F_LABEL flag
+                    flags |= F_LABEL;
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
 					Exec_stat es = message_with_valueref_args(MCM_menu_pick, *t_pick);
@@ -1337,6 +1340,9 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
 					MCValueAssign(label, *t_pick);
+                    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+                    //  we need to rely on the F_LABEL flag
+                    flags |= F_LABEL;
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
 				}
@@ -3034,6 +3040,10 @@ void MCButton::getentrytext()
     MCAutoStringRef t_label;
     if (entry -> exportasplaintext((uinteger_t)0, 0, INT32_MAX, &t_label))
         MCValueAssign(label, *t_label);
+    
+    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+    //  we need to rely on the F_LABEL flag
+    flags |= F_LABEL;
 }
 
 void MCButton::createentry()
@@ -3804,7 +3814,9 @@ MCStringRef MCButton::getlabeltext()
 {
 	if (entry != nil)
 		getentrytext();
-	if (!MCStringIsEmpty(label))
+    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+    //  we need to rely on the F_LABEL flag
+	if (flags & F_LABEL)
 		return label;
 	else
 		return MCNameGetString(getname());
@@ -3825,6 +3837,10 @@ bool MCButton::resetlabel()
 				MCValueAssign(label, kMCEmptyString);
 				changed = true;
 			}
+            
+            // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+            //  we need to rely on the F_LABEL flag
+            flags &= ~F_LABEL;
 		}
 		else
 		{
@@ -3842,6 +3858,10 @@ bool MCButton::resetlabel()
 			}
 			if (entry != NULL)
 				entry->settext(0, label, False);
+            
+            // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+            //  we need to rely on the F_LABEL flag
+            flags |= F_LABEL;
 
 			if (!MCStringIsEqualTo(label, *t_label, kMCStringOptionCompareExact))
 			{
@@ -4345,12 +4365,6 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
 	IO_stat stat;
-
-	// Does the label need to be written out?
-	if (MCStringIsEmpty(label))
-		flags &= ~F_LABEL;
-	else 
-		flags |= F_LABEL;
 	
 	if ((stat = IO_write_uint1(OT_BUTTON, stream)) != IO_NORMAL)
 		return stat;
@@ -4385,6 +4399,8 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
+    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+    //  we need to rely on the F_LABEL flag
     if (flags & F_LABEL)
 	{
 		if (MCstackfileversion < 7000)
