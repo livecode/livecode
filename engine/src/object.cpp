@@ -3586,7 +3586,12 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         // in 5.5 format, the length of the string + 1 (for nul char) is written out,
         // whereas in 7.0 we write out the 32-bit length and then the string.
         
-        t_size += 1 + 1 + 4 + MCStringGetLength(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()));
+        // AL-2014-07-31: [[ Bug 13043 ]] It is possible for utf8 string length to be different
+        // here from the char count of the string.
+        MCAutoStringRefAsUTF8String t_utf8_string;
+        t_utf8_string . Lock(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()));
+        
+        t_size += 1 + 1 + 4 + t_utf8_string . Size();
 
         // for < 7.0, add 2 (for the 2 nul terminators). For >= 7.0, add 8 for the 2 uint32s
         if (MCstackfileversion < 7000)
