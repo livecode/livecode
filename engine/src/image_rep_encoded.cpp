@@ -65,7 +65,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_fr
 	{
 		t_format = t_loader->GetFormat();
 		t_success = t_loader->TakeFrames(t_frames, t_count);
-	}
+			}
 	
 	if (t_loader != nil)
 		delete t_loader;
@@ -93,7 +93,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_fr
 
 	return t_success;
 }
-
+	
 // IM-2014-08-01: [[ ImageLoader ]] The frame count is determined when reading the header
 // during CalculateGeometry or LoadImageFrames
 uindex_t MCEncodedImageRep::GetFrameCount()
@@ -101,7 +101,7 @@ uindex_t MCEncodedImageRep::GetFrameCount()
 	uint32_t t_width, t_height;
 	if (m_have_geometry)
 		return m_header_frame_count;
-		
+
 	if (GetGeometry(t_width, t_height))
 		return m_header_frame_count;
 	
@@ -148,11 +148,15 @@ uint32_t MCEncodedImageRep::GetDataCompression()
 		return m_compression;
 
 	IO_handle t_stream;
+	t_stream = nil;
 	
 	MCImageLoaderFormat t_format;
 	
 	if (GetDataStream(t_stream) && MCImageLoader::IdentifyFormat(t_stream, t_format))
 		/* UNCHECKED */ MCImageLoaderFormatToCompression(t_format, m_compression);
+
+	if (t_stream != nil)
+		MCS_close(t_stream);
 
 	return m_compression;
 }

@@ -322,7 +322,7 @@ inline void MCVariableValue::destroy(void)
 
 inline Boolean MCVariableArray::issequence(void)
 {
-	return isnumeric() && dimensions == 1 && extents[0] . min == 1;
+	return isnumeric() && dimensions == 1 && extents[0] . minimum == 1;
 }
 
 #endif

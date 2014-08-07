@@ -33,7 +33,7 @@
 
 #include "graphics_util.h"
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
 static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 static bool s_inside_focus_event = false;
@@ -930,8 +930,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
 {
-	NSLog(@"insertText('%@', (%d, %d))", aString, replacementRange . location, replacementRange . length);
-	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
 	if (t_window == nil)
@@ -1010,8 +1008,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)setMarkedText:(id)aString selectedRange:(NSRange)newSelection replacementRange:(NSRange)replacementRange
 {
-	NSLog(@"setMarkedText('%@', (%d, %d), (%d, %d)", aString, newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
-	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
 	if (t_window == nil)
@@ -1143,7 +1139,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (actualRange != nil)
 		*actualRange = NSMakeRange(t_actual_range . offset, t_actual_range . length);
 	
-	NSLog(@"attributedSubstringForProposedRange(%d, %d -> %d, %d) = '%@'", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_attr_string);
 	return t_attr_string;
 }
 
@@ -1202,6 +1197,40 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 //////////
 
+// MW-2014-08-06: [[ Bug 13114 ]] It seems Cmd+Ctrl+Arrow by-passes the input system and various
+//   other mechanisms for no apparant reason. Therefore if we get these selectors we dispatch
+//   directly.
+- (void)synthesizeKeyPress: (uint32_t)p_key_code
+{
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
+    
+    t_window -> ProcessKeyDown(p_key_code, 0xffffffffU, 0xffffffffU);
+    t_window -> ProcessKeyUp(p_key_code, 0xffffffffU, 0xffffffffU);
+}
+
+- (void)moveLeft:(id)sender
+{
+    [self synthesizeKeyPress: 0xff51];
+}
+
+- (void)moveRight:(id)sender
+{
+    [self synthesizeKeyPress: 0xff53];
+}
+
+- (void)moveUp:(id)sender
+{
+    [self synthesizeKeyPress: 0xff52];
+}
+
+- (void)moveDown:(id)sender
+{
+    [self synthesizeKeyPress: 0xff54];
+}
+
 // MW-2014-05-12: [[ Bug 12383 ]] We need these handlers to ensure things are
 //   not disabled in menus when they have a standard tag.
 
@@ -1241,6 +1270,14 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 }
 
 //////////
+
+#if DEBUG_ACTION_MESSAGES
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+    MCLog("selector = %s", sel_getName(aSelector));
+    return [super respondsToSelector: aSelector];
+}
+#endif
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem
 {
@@ -1553,18 +1590,18 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 		/* UNCHECKED */ MCGRegionAddRect(t_update_region, MCRectangleToMCGIntegerRectangle([self mapNSRectToMCRectangle: t_update_rects[i]]));
 
 	//////////
-	
-	// Save the context state
-	CGContextSaveGState(t_graphics);
-	
+    
+    // Save the context state
+    CGContextSaveGState(t_graphics);
+
 	{
-		MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
-		t_window -> HandleRedraw(&t_surface, t_update_region);
-	}
-	
-	// Restore the context state
-	CGContextRestoreGState(t_graphics);
-	
+        MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
+        t_window -> HandleRedraw(&t_surface, t_update_region);
+    }
+    
+    // Restore the context state
+    CGContextRestoreGState(t_graphics);
+
 	//////////
 	
 	MCGRegionDestroy(t_update_region);

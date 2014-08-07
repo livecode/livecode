@@ -71,7 +71,8 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	mblandroidprocess.cpp mblandroidscroller.cpp mblandroidsensor.cpp mblandroidstore.cpp mblandroidsound.cpp \
 	mblandroidtextlayout.cpp mblandroidtextmessaging.cpp \
 	mblandroidtypeface.cpp \
-	mblandroidurl.cpp )
+	mblandroidurl.cpp \
+	stacktile.cpp sysunxthreads.cpp)
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \

@@ -65,29 +65,24 @@ uindex_t MCDensityMappedImageRep::GetFrameCount()
 	return m_sources[t_match]->GetFrameCount();
 }
 
-bool MCDensityMappedImageRep::LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame)
+bool MCDensityMappedImageRep::LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame)
 {
 	uindex_t t_match;
 	if (!GetBestMatch(p_density, t_match))
 		return false;
 	
-	m_locked = m_sources[t_match]->LockImageFrame(p_index, p_density, r_frame);
-	m_locked_source = t_match;
+	if (m_sources[t_match]->LockImageFrame(p_index, p_density, r_frame))
+    {
+        r_frame.density = m_source_densities[t_match];
+        return true;
+    }
 	
-	if (m_locked)
-		r_frame->density = m_source_densities[t_match];
-	
-	return m_locked;
+    return false;
 }
 
-void MCDensityMappedImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame)
+void MCDensityMappedImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame)
 {
-	if (!m_locked)
-		return;
-	
-	m_sources[m_locked_source]->UnlockImageFrame(p_index, p_frame);
-	
-	m_locked = false;
+    MCGImageRelease(p_frame.image);
 }
 
 bool MCDensityMappedImageRep::LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame)
@@ -124,7 +119,7 @@ bool MCDensityMappedImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
 	
 	if (!m_sources[t_match]->GetGeometry(r_width, r_height))
 		return false;
-		
+
 	r_width /= m_source_densities[t_match];
 	r_height /= m_source_densities[t_match];
 	

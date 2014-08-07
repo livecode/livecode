@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "image.h"
 #include "image_rep.h"
+#include "systhreads.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,18 +39,13 @@ MCImageRep::~MCImageRep()
 
 MCImageRep *MCImageRep::Retain()
 {
-	m_reference_count++;
+    MCThreadAtomicInc((int32_t *)&m_reference_count);
 	return this;
 }
 
 void MCImageRep::Release()
 {
-	if (m_reference_count > 1)
-	{
-		m_reference_count--;
-		return;
-	}
-
+	if (MCThreadAtomicDec((int32_t *)&m_reference_count) == 1)
 	delete this;
 }
 
@@ -86,10 +82,10 @@ bool MCLoadableImageRep::ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p
 {
 	bool t_success;
 	t_success = true;
-
+	
 	MCGImageFrame *t_frames;
 	t_frames = nil;
-
+	
 	if (t_success)
 		t_success = MCMemoryNewArray(p_frame_count, t_frames);
 	
@@ -100,17 +96,17 @@ bool MCLoadableImageRep::ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p
 		t_frames[i].duration = x_frames[i].duration;
 		
 		t_success = MCImageBitmapCopyAsMCGImageAndRelease(x_frames[i].image, p_premultiplied, t_frames[i].image);
-}
-
+	}
+	
 	if (t_success)
-{
+	{
 		MCImageFreeFrames(x_frames, p_frame_count);
 		x_frames = nil;
-	
+
 		m_frames = t_frames;
 		m_frame_count = p_frame_count;
 		m_frames_premultiplied = p_premultiplied;
-	
+		
 		s_cache_size += GetFrameByteCount();
 		
 		if (s_cache_size > s_cache_limit)
@@ -119,21 +115,21 @@ bool MCLoadableImageRep::ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p
 			m_lock_count++;
 			FlushCacheToLimit();
 			m_lock_count--;
-}
+		}
 	}
 	else
 		MCGImageFramesFree(t_frames, p_frame_count);
-
+	
 	return t_success;
 }
 
 bool MCLoadableImageRep::EnsureMCGImageFrames()
 {
 	// IM-2013-11-05: [[ RefactorGraphics ]] Rework to allow LoadImageFrames to return either
-	// premultiplied or non-premultiplied bitmaps 
+	// premultiplied or non-premultiplied bitmaps
 	if (m_frames != nil)
-			return true;
-		
+		return true;
+	
 	bool t_success;
 	t_success = true;
 	
@@ -156,19 +152,19 @@ bool MCLoadableImageRep::EnsureMCGImageFrames()
 }
 
 bool MCImageBitmapCreateWithPixels(void *p_pixels, uint32_t p_stride, uint32_t p_width, uint32_t p_height, MCImageBitmap *&r_bitmap)
-		{
+{
 	if (!MCImageBitmapCreate(p_width, p_height, r_bitmap))
 		return false;
 	
 	if (p_stride == r_bitmap->stride)
 		MCMemoryCopy(r_bitmap->data, p_pixels, p_stride * p_height);
-			else
+	else
 	{
 		uint8_t *t_dst;
 		uint8_t *t_src;
 		t_dst = (uint8_t*)r_bitmap->data;
 		t_src = (uint8_t*)p_pixels;
-			
+		
 		for (uint32_t i = 0; i < p_height; i++)
 		{
 			MCMemoryCopy(t_dst, t_src, p_width * sizeof(uint32_t));
@@ -176,8 +172,8 @@ bool MCImageBitmapCreateWithPixels(void *p_pixels, uint32_t p_stride, uint32_t p
 			t_src +=  p_stride;
 		}
 	}
-			return true;
-		}
+	return true;
+}
 
 bool convert_to_mcbitmapframes(MCGImageFrame *p_frames, uint32_t p_frame_count, MCBitmapFrame *&r_frames)
 {
@@ -217,34 +213,54 @@ bool convert_to_mcbitmapframes(MCGImageFrame *p_frames, uint32_t p_frame_count, 
 	return t_success;
 }
 
-bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCGImageFrame *&r_frame)
+bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCGImageFrame& r_frame)
 {
 	// frame index check
 	if (m_frame_count != 0 && p_frame >= m_frame_count)
 		return false;
-
-	if (!EnsureMCGImageFrames())
+	
+    // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread locks an image frame at a time.
+    //  This could potentially be improved to be less obtrusive and resource hungry (mutex per image)
+    MCThreadMutexLock(MCimagerepmutex);
+    
+	if (m_frame_count != 0 && p_frame >= m_frame_count)
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
 		return false;
+    }
+    
+	if (!EnsureMCGImageFrames())
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
+		return false;
+    }
 	
 	if (p_frame >= m_frame_count)
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
 		return false;
+    }
 	
-	// prevent data being removed by cache flush
-		m_lock_count++;
+	r_frame = m_frames[p_frame];
+    MCGImageRetain(r_frame . image);
 	
-	// prevent deletion due to ImageRep::Release()
-		Retain();
+	MoveRepToHead(this);
+	
+    MCThreadMutexUnlock(MCimagerepmutex);
+	
+	return true;
+}
 
-		r_frame = &m_frames[p_frame];
-
-		return true;
-	}
+void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame)
+{
+    MCGImageRelease(p_frame . image);
+}
 
 bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, MCBitmapFrame *&r_frame)
 {
 	// frame index check
 	if (m_frame_count != 0 && p_frame >= m_frame_count)
-	return false;
+		return false;
 	
 	bool t_success;
 	t_success = true;
@@ -265,8 +281,8 @@ bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, M
 			// the source frames are premultiplied, so we'll use them to construct our MCGImageFrames then convert to unpremultiplied
 			t_success = ConvertToMCGFrames(t_frames, t_frame_count, t_premultiplied);
 		}
-}
-
+	}
+	
 	// at this point, t_frames will either be filled or we will have m_frames to convert from
 	if (t_success && t_frames == nil)
 	{
@@ -291,23 +307,6 @@ bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, M
 
 
 	return t_success;
-}
-
-void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame)
-{
-	if (p_frame == nil || m_lock_count == 0)
-		return;
-
-	if (p_index >= m_frame_count)
-		return;
-
-	if (m_frames == nil || &m_frames[p_index] != p_frame)
-		return;
-
-	m_lock_count--;
-	Release();
-	
-	MoveRepToHead(this);
 }
 
 void MCLoadableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)

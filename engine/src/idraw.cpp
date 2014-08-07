@@ -35,6 +35,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "graphics_util.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform)
 {
 	// IM-2013-11-05: [[ RefactorGraphics ]] Use resampled image rep for best-quality scaling
@@ -48,12 +50,23 @@ bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, M
 			r_rep = m_resampled_rep;
 		else
 		{
-			if (!MCImageRepGetResampled(rect.width, rect.height, t_h_flip, t_v_flip, m_rep, r_rep))
-				return false;
-			
-			if (m_resampled_rep != nil)
-				m_resampled_rep->Release();
-			m_resampled_rep = static_cast<MCResampledImageRep*>(r_rep);
+			// MM-2014-08-05: [[ Bug 13112 ]] Make sure only a single thread resamples the image.
+			MCThreadMutexLock(MCimagerepmutex);
+			if (m_resampled_rep != nil && m_resampled_rep->Matches(rect.width, rect.height, t_h_flip, t_v_flip, m_rep))
+				r_rep = m_resampled_rep;
+			else
+			{
+				if (!MCImageRepGetResampled(rect.width, rect.height, t_h_flip, t_v_flip, m_rep, r_rep))
+				{
+					MCThreadMutexUnlock(MCimagerepmutex);
+					return false;
+				}
+
+				if (m_resampled_rep != nil)
+					m_resampled_rep->Release();
+				m_resampled_rep = static_cast<MCResampledImageRep*>(r_rep);
+			}
+			MCThreadMutexUnlock(MCimagerepmutex);
 		}
 		
 		r_has_transform = false;
@@ -91,7 +104,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			// source images from flushing everything else out of the cache.
 			bool t_success = true;
 
-			MCGImageFrame *t_frame = nil;
+			MCGImageFrame t_frame;
 
 			bool t_printer = dc->gettype() == CONTEXT_TYPE_PRINTER;
 			bool t_update = !((state & CS_SIZE) && (state & CS_EDITED));
@@ -156,7 +169,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			if (t_success)
 			{
 				// IM-2014-08-01: [[ Bug 13021 ]] Get frame duration to avoid re-locking later
-				t_frame_duration = t_frame->duration;
+				t_frame_duration = t_frame.duration;
 				
 				MCImageDescriptor t_image;
 				MCMemoryClear(&t_image, sizeof(MCImageDescriptor));
@@ -169,13 +182,13 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 				// IM-2014-08-01: [[ Bug 13021 ]] Calculate horizontal & vertical scales from locked image size.
 				uint32_t t_width, t_height;
 				/* UNCHECKED */ t_rep->GetGeometry(t_width, t_height);
-				t_image.h_scale = (MCGFloat)MCGImageGetWidth(t_frame->image) / t_width;
-				t_image.v_scale = (MCGFloat)MCGImageGetHeight(t_frame->image) / t_height;
+				t_image.h_scale = (MCGFloat)MCGImageGetWidth(t_frame.image) / t_width;
+				t_image.v_scale = (MCGFloat)MCGImageGetHeight(t_frame.image) / t_height;
 
                 // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 				t_image.filter = getimagefilter();
 
-				t_image . image = t_frame->image;
+				t_image . image = t_frame.image;
 
 				if (t_printer && m_rep->GetType() == kMCImageRepResident)
 				{
@@ -212,12 +225,24 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
                 drawnodata(dc, drect, sw, sh, dx, dy, dw, dh);
 			}
 
-			t_rep->UnlockImageFrame(currentframe, t_frame);
+            if (t_success)
+				t_rep->UnlockImageFrame(currentframe, t_frame);
 		}
 
 		if (state & CS_DO_START)
 		{
-			MCscreen->addtimer(this, MCM_internal, t_frame_duration);
+			// MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
+			if (!m_animate_posted)
+			{
+				MCThreadMutexLock(MCanimationmutex);
+				if (!m_animate_posted)
+				{
+					m_animate_posted = true;
+					MCscreen->addtimer(this, MCM_internal, t_frame_duration);
+				}
+				MCThreadMutexUnlock(MCanimationmutex);
+			}
+
 			state &= ~CS_DO_START;
 		}
 	}

@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_IMAGE_REP_H__
 #define __MC_IMAGE_REP_H__
 
+#include "systhreads.h"
+
 typedef enum
 {
 	kMCImageRepUnknown,
@@ -58,8 +60,8 @@ public:
 	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame) = 0;
 	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame) = 0;
 
-	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame) = 0;
-	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame) = 0;
+	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame) = 0;
+	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame) = 0;
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 
@@ -126,8 +128,8 @@ public:
 	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
 	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
 	
-	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame);
-	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame);
+	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
+	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 
@@ -156,6 +158,9 @@ private:
 	MCGImageFrame *m_frames;
 	uindex_t m_frame_count;
 	bool m_frames_premultiplied;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single threrad locks an image frame at a time.
+    MCThreadMutexRef m_frame_lock;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,8 +364,8 @@ public:
 	bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
 	void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
 	
-	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame);
-	void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame);
+	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
+	void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	

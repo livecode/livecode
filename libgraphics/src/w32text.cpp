@@ -21,8 +21,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static HDC s_measure_dc = NULL;
-static HDC s_draw_dc = NULL;
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to make text rendering thread safe, by using TLS to ensure we have seperate DC for each thread.
+//  This should probably be moved to a central thread library at some point, which will also help with clean up (we only clean up the main thread at the moment).
+
+static __declspec( thread ) bool s_initialized_on_thread = false;
+static __declspec( thread ) HDC s_measure_dc = NULL;
+static __declspec( thread ) HDC s_draw_dc = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -568,6 +572,8 @@ static void __MCGContextDrawPlatformTextIdeal(MCGContextRef self, const unichar_
 //   using ideal metrics or not.
 void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont& p_font)
 {
+	MCGPlatformInitialize();
+
 	if (p_font . ideal)
 	{
 		__MCGContextDrawPlatformTextIdeal(self, p_text, p_length, p_location, p_font);
@@ -668,6 +674,8 @@ MCGFloat __MCGContextMeasurePlatformTextIdeal(MCGContextRef self, const unichar_
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform)
 {
+	MCGPlatformInitialize();
+
 	if (p_font . ideal)
 		return __MCGContextMeasurePlatformTextIdeal(self, p_text, p_length, p_font);
 
@@ -678,6 +686,11 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 
 void MCGPlatformInitialize(void)
 {
+	if (s_initialized_on_thread)
+		return;
+
+	s_initialized_on_thread = true;
+
 	s_measure_dc = CreateCompatibleDC(NULL);
 	SetGraphicsMode(s_measure_dc, GM_ADVANCED);
 
@@ -687,8 +700,12 @@ void MCGPlatformInitialize(void)
 
 void MCGPlatformFinalize(void)
 {
+	if (!s_initialized_on_thread)
+		return;
+
 	DeleteDC(s_draw_dc);
 	DeleteDC(s_measure_dc);
+	s_initialized_on_thread = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -904,6 +904,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\stacktile.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\text.cpp"
 				>
 			</File>
@@ -1444,6 +1448,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\systhreads.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\sysw32network.cpp"
 				>
 			</File>
@@ -1453,6 +1461,10 @@
 			</File>
 			<File
 				RelativePath=".\src\sysw32registry.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\sysw32threads.cpp"
 				>
 			</File>
 			<File

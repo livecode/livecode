@@ -89,19 +89,21 @@ extern bool MCStackFullscreenModeFromString(const char *p_string, MCStackFullscr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated the API so you can now lock multiple areas of the surface.
+//  The context and raster for the locked area must now be stored locally rather than directly in the surface.
 class MCStackSurface
 {
 public:
 	// Lock the surface for access with an MCGContextRef
-	virtual bool LockGraphics(MCGRegionRef area, MCGContextRef& r_context) = 0;
+	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster) = 0;
 	// Unlock the surface.
-	virtual void UnlockGraphics(void) = 0;
+	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster) = 0;
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
 	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
 	// Unlock the surface.
-	virtual void UnlockPixels(void) = 0;
+	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster) = 0;
 	
 	// Lock the surface for direct access via the underlying system resource.
 	virtual bool LockTarget(MCStackSurfaceTargetType type, void*& r_context) = 0;
@@ -197,6 +199,9 @@ protected:
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
+    MCThreadMutexRef m_id_cache_lock;
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] If true, then updates to this stack should only
 	//   be flushed at the next updateScreen point.

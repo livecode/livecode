@@ -41,9 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#ifdef MCSSL
-#include <openssl/rand.h>
-#endif
 
 // MDW-2014-07-06: [[ oval_points ]]
 #define QA_NPOINTS 90
@@ -1182,6 +1179,20 @@ Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
 	return False;
 }
 
+// MM-2014-08-01: [[ Bug ]] Pulled name table initialisation out of MCU_matchname to prevent crah on Linux.
+static const char *nametable[] =
+{
+    MCstackstring, MCaudiostring,
+    MCvideostring, MCbackgroundstring,
+    MCcardstring, MCnullstring,
+    MCgroupstring, MCnullstring,
+    MCbuttonstring, MCnullstring,
+    MCnullstring, MCscrollbarstring,
+    MCimagestring, MCgraphicstring,
+    MCepsstring, MCmagnifierstring,
+    MCcolorstring, MCfieldstring
+};
+
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 {
 	if (name == nil || MCNameIsEmpty(name) || test == MCnullmcstring)
@@ -1192,18 +1203,6 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 
 	Boolean match = False;
 	MCString tname = MCNameGetOldString(name);
-	static const char *nametable[] =
-	    {
-	        MCstackstring, MCaudiostring,
-	        MCvideostring, MCbackgroundstring,
-	        MCcardstring, MCnullstring,
-	        MCgroupstring, MCnullstring,
-	        MCbuttonstring, MCnullstring,
-	        MCnullstring, MCscrollbarstring,
-	        MCimagestring, MCgraphicstring,
-	        MCepsstring, MCmagnifierstring,
-	        MCcolorstring, MCfieldstring
-	    };
 	const char *sptr = test.getstring();
 	uint4 l = test.getlength();
 	if (MCU_strchr(sptr, l, '"')
@@ -2905,23 +2904,10 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes
-//   which uses OpenSSL if available, otherwise falls back on system support.
+// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes.
 bool MCU_random_bytes(size_t p_count, void *p_buffer)
 {
-#ifdef MCSSL
-	// If SSL is available, then use that.
-	static bool s_donotuse_ssl = false;
-	if (!s_donotuse_ssl)
-	{
-		if (InitSSLCrypt())
-			return RAND_bytes((unsigned char *)p_buffer, p_count) == 1;
-		
-		s_donotuse_ssl = true;
-	}
-#endif
-
-	// Otherwise use the system provided CPRNG.
+	// IM-2014-08-06: [[ Bug 13038 ]] Use system implementation directly instead of SSL
 	return MCS_random_bytes(p_count, p_buffer);
 }
 
@@ -2948,3 +2934,4 @@ void operator delete[] (void *p)
     free(p);
 }
 #endif
+

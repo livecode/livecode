@@ -278,6 +278,9 @@ MCButton::MCButton()
     
     // MW-2014-06-19: [[ IconGravity ]] By default buttons use legacy behavior.
     m_icon_gravity = kMCGravityNone;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
+    m_animate_posted = false;
 }
 
 MCButton::MCButton(const MCButton &bref) : MCControl(bref)
@@ -351,6 +354,9 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
     
     // MW-2014-06-19: [[ IconGravity ]] Copy the other buttons gravity
     m_icon_gravity = kMCGravityNone;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
+    m_animate_posted = false;
 }
 
 MCButton::~MCButton()
@@ -1559,6 +1565,8 @@ void MCButton::timer(MCNameRef mptr, MCParameter *params)
 	{
 		if (state & CS_SHOW_DEFAULT)
 		{
+            // MM-2014-07-31: [[ ThreadedRendering ]] Flag that there is no longer a default button animation message pending.
+            m_animate_posted = false;            
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 		}
@@ -2144,6 +2152,11 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	//   'unicodeLabel'.
 	case P_LABEL:
 	case P_UNICODE_LABEL:
+    {
+        // MW-2014-08-01: [[ Bug 12852 ]] Make sure we use the value of EP after conversion.
+        //   (i.e. not data!).
+        MCString t_data;
+        
 		// Make sure the label is up to date.
 		if (entry != NULL)
 			getentrytext();
@@ -2155,17 +2168,19 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			switchunicode(true);
 		else if (p == P_LABEL && hasunicode())
 			ep.nativetoutf16();
+        
+        t_data = ep . getsvalue();
 
 		// Only do anything if there is a change.
-		if (label == NULL || data.getlength() != labelsize
-		        || memcmp(data.getstring(), label, data.getlength()) != 0)
+		if (label == NULL || t_data.getlength() != labelsize
+		        || memcmp(t_data.getstring(), label, t_data.getlength()) != 0)
 		{
 			delete label;
-			if (data != MCnullmcstring)
+			if (t_data != MCnullmcstring)
 			{
-				labelsize = data.getlength();
+				labelsize = t_data.getlength();
 				label = new char[labelsize];
-				memcpy(label, data.getstring(), labelsize);
+				memcpy(label, t_data.getstring(), labelsize);
 				flags |= F_LABEL;
 			}
 			else
@@ -2233,7 +2248,8 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 
 			dirty = False;
 		}
-		break;
+    }
+    break;
 	case P_LABEL_WIDTH:
 		if (!MCU_stoi2(data, i1))
 		{
