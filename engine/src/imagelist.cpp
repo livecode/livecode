@@ -152,11 +152,6 @@ bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r
 	{
 		if (!p_pattern->source->GetGeometry(t_src_width, t_src_height))
 			return false;
-
-		MCGFloat t_density;
-		t_density = p_pattern->source->GetDensity();
-		
-		t_transform = MCGAffineTransformScale(t_transform, 1.0 / t_density, 1.0 / t_density);
 	}
 	
 	
@@ -191,7 +186,7 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 	
 	MCGAffineTransform t_transform;
 	
-	bool t_success = t_success = true;
+	bool t_success = true;
 	
 	if (p_pattern->image != nil)
 	{
@@ -208,9 +203,9 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 		
         bool t_locked;
 		t_locked = p_pattern->source->LockImageFrame(0, t_scale, t_frame);
-        
-        if (t_locked)
-            t_success = true;
+		
+		t_success = t_locked;
+		
 		if (t_success)
 		{
 			t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.density, 1.0 / t_frame.density);

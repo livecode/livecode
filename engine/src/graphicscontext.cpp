@@ -1257,6 +1257,11 @@ static MCGRectangle MCGRectangleMakeLTRB(MCGFloat l, MCGFloat t, MCGFloat r, MCG
 
 void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy)
 {
+	// IM-2014-08-01: [[ Bug 13021 ]] Set scale values to 1.0 if not set
+	MCGFloat t_h_scale, t_v_scale;
+	t_h_scale = (p_image.h_scale == 0.0) ? 1.0 : p_image.h_scale;
+	t_v_scale = (p_image.v_scale == 0.0) ? 1.0 : p_image.v_scale;
+	
     if (!p_image . has_center || (p_image . transform . b != 0.0f || p_image . transform . c != 0.0f))
     {
         MCGRectangle t_clip;
@@ -1288,10 +1293,10 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
         }
         
         // IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
-        if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
+        if (t_h_scale != 1.0 || t_v_scale != 1.0)
         {
             MCGContextTranslateCTM(m_gcontext, t_dest.origin.x, t_dest.origin.y);
-            MCGContextScaleCTM(m_gcontext, 1.0 / p_image.scale_factor, 1.0 / p_image.scale_factor);
+            MCGContextScaleCTM(m_gcontext, 1.0 / t_h_scale, 1.0 / t_v_scale);
             MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
         }
         
@@ -1313,18 +1318,18 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 	t_src_center = p_image.center;
     
 	// IM-2014-07-10: [[ Bug 12794 ]] Transform the context if the image has a scale factor so we don't need to account for it later
-	if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
+	if (t_h_scale != 1.0 || t_v_scale != 1.0)
 	{
 		int32_t t_dx, t_dy;
 		t_dx = dx - sx;
 		t_dy = dy - sy;
 		
 		MCGContextTranslateCTM(m_gcontext, t_dx, t_dy);
-		MCGContextScaleCTM(m_gcontext, 1.0 / p_image.scale_factor, 1.0 / p_image.scale_factor);
+		MCGContextScaleCTM(m_gcontext, 1.0 / t_h_scale, 1.0 / t_v_scale);
 		MCGContextTranslateCTM(m_gcontext, -t_dx, -t_dy);
 		
 		// IM-2014-07-10: [[ Bug 12794 ]] Scale the center rect to match the image scale
-		t_src_center = MCGRectangleScale(t_src_center, p_image . scale_factor);
+		t_src_center = MCGRectangleScale(t_src_center, t_h_scale, t_v_scale);
 	}
 	
     // Align the source center to the pixel grid.

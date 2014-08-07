@@ -78,18 +78,6 @@ MCLoadableImageRep::~MCLoadableImageRep()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uindex_t MCLoadableImageRep::GetFrameCount()
-{
-	if (!m_have_geometry)
-	{
-		if (!EnsureMCGImageFrames())
-			return false;
-	}
-
-	return m_frame_count;
-}
-
-
 bool MCLoadableImageRep::ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p_frame_count, bool p_premultiplied)
 {
 	bool t_success;
@@ -236,13 +224,22 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
     MCThreadMutexLock(MCimagerepmutex);
     
 	if (m_frame_count != 0 && p_frame >= m_frame_count)
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
 		return false;
+    }
     
 	if (!EnsureMCGImageFrames())
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
 		return false;
+    }
 	
 	if (p_frame >= m_frame_count)
-		return false;
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
+        return false;
+    }
     
 	r_frame = m_frames[p_frame];
     MCGImageRetain(r_frame . image);
