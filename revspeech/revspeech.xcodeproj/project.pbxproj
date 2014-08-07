@@ -31,6 +31,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4D7113541991129F00C1710F /* w32sapi4speech.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = w32sapi4speech.cpp; path = src/w32sapi4speech.cpp; sourceTree = "<group>"; };
+		4D7113551991129F00C1710F /* w32sapi4speech.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = w32sapi4speech.h; path = src/w32sapi4speech.h; sourceTree = "<group>"; };
+		4D7113561991129F00C1710F /* w32sapi5speech.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = w32sapi5speech.cpp; path = src/w32sapi5speech.cpp; sourceTree = "<group>"; };
+		4D7113571991129F00C1710F /* w32sapi5speech.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = w32sapi5speech.h; path = src/w32sapi5speech.h; sourceTree = "<group>"; };
+		4D7113581991129F00C1710F /* w32speech.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = w32speech.cpp; path = src/w32speech.cpp; sourceTree = "<group>"; };
 		E82D44A11713199700A10289 /* revspeech.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = revspeech.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		E82D44B217131A4800A10289 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = "<group>"; };
 		E82D44B317131A4800A10289 /* Global.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = "<group>"; };
@@ -106,6 +111,11 @@
 		E82D44B917131B3500A10289 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				4D7113541991129F00C1710F /* w32sapi4speech.cpp */,
+				4D7113551991129F00C1710F /* w32sapi4speech.h */,
+				4D7113561991129F00C1710F /* w32sapi5speech.cpp */,
+				4D7113571991129F00C1710F /* w32sapi5speech.h */,
+				4D7113581991129F00C1710F /* w32speech.cpp */,
 				E82D44BA17131B4700A10289 /* osxspeech.cpp */,
 				E82D44BB17131B4700A10289 /* osxspeech.h */,
 				E82D44BC17131B4700A10289 /* revspeech.cpp */,

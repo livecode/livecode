@@ -39,7 +39,7 @@ OSXSpeechNarrator::OSXSpeechNarrator(void)
 {
 	spchannel = NULL;
 	strcpy(speechvoice, "empty");
-	speechbuffer = NULL;
+	speechtext = NULL;
 	speechspeed = 0;
 	speechpitch = 0;
 }
@@ -64,24 +64,17 @@ bool OSXSpeechNarrator::Finalize(void)
 	return false;
 }
 
-bool OSXSpeechNarrator::Start(const char* p_string)
+bool OSXSpeechNarrator::Start(const char* p_string, bool p_is_utf8)
 {
 	if (SpeechStart(true) == false)
 	{
 		return false;
 	}
-        
-	if (speechbuffer != nil)
-	{
-		if (spchannel != nil)
-			StopSpeech(spchannel);
-			
-		free(speechbuffer);
-        speechbuffer = nil;
-    }
-	
-	speechbuffer = strdup(p_string);
-	SpeakText(spchannel, speechbuffer, strlen(speechbuffer) + 1);
+    
+    if (speechtext != nil)
+        CFRelease(speechtext);
+    speechtext = CFStringCreateWithCString(kCFAllocatorDefault, p_string, p_is_utf8 ? kCFStringEncodingUTF8 : kCFStringEncodingMacRoman);
+	SpeakCFString(spchannel, speechtext, nil);
 	return true;
 }
 
@@ -268,13 +261,14 @@ bool OSXSpeechNarrator::SpeechStop(bool ReleaseInit)
 	}
 	while(SpeechBusy() > 0);
 	
-       DisposeSpeechChannel(spchannel);
-       spchannel = nil;
-       if (speechbuffer != nil)
-	{
-           free(speechbuffer);
-           speechbuffer = nil;
-	}
+    DisposeSpeechChannel(spchannel);
+    spchannel = nil;
+    if (speechtext != nil)
+    {
+        CFRelease(speechtext);
+        speechtext = nil;
+    }
+    
    	return true;
 }
 

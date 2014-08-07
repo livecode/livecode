@@ -32,7 +32,7 @@ public:
 	bool Initialize(void);
 	bool Finalize(void);
 	
-	bool Start(const char* p_string);
+	bool Start(const char* p_string, bool p_is_utf8);
 	bool Stop(void);
 	bool Busy(void);
 
@@ -51,7 +51,7 @@ public:
 private:
 	SpeechChannel spchannel;
 	char speechvoice[255];
-	char *speechbuffer;
+    CFStringRef speechtext;
 	Fixed speechspeed, speechpitch;
 	
 	bool SpeechStart(bool StartInit);
