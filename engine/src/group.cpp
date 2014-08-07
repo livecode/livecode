@@ -3128,12 +3128,6 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
 	IO_stat stat;
 	
-	// Update the "has label" flag
-	if (!MCStringIsEmpty(label))
-		flags |= F_LABEL;
-	else
-		flags &= ~F_LABEL;
-	
 	if ((stat = IO_write_uint1(OT_GROUP, stream)) != IO_NORMAL)
 		return stat;
     
