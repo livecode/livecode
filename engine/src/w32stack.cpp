@@ -714,6 +714,7 @@ bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, MCGFloat p_raster_scale
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to implement the new stack surface API.
 class MCWindowsStackSurface: public MCStackSurface
 {
 	MCStack *m_stack;
@@ -722,12 +723,9 @@ class MCWindowsStackSurface: public MCStackSurface
 
 	MCGRaster *m_mask;
 
-	bool m_locked;
-	MCGContextRef m_locked_context;
-
 	MCGRegionRef m_redraw_region;
 	MCGIntegerRectangle m_area;
-	MCGIntegerRectangle m_locked_area;
+
 	HBITMAP m_bitmap;
 	MCGRaster m_raster;
 	MCGFloat m_raster_scale;
@@ -741,8 +739,6 @@ public:
 		m_mask = p_mask;
 		m_raster_scale = p_mask_scale;
 
-		m_locked = false;
-		m_locked_context = nil;
 		m_bitmap = nil;
 	}
 
@@ -825,77 +821,73 @@ public:
 			DeleteObject(t_clip);
 		}
 
-		DeleteObject(m_redraw_region);
+		MCGRegionDestroy(m_redraw_region);
 		DeleteObject(m_bitmap);
 		m_bitmap = nil;
 	}
 
-	bool LockGraphics(MCGRegionRef p_area, MCGContextRef& r_context)
+    bool LockGraphics(MCGIntegerRectangle p_area, MCGContextRef &r_context, MCGRaster &r_raster)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(MCGRegionGetBounds(p_area), t_raster))
+		if (LockPixels(p_area, t_raster))
 		{
-			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
+            MCGContextRef t_context;
+            if (MCGContextCreateWithRaster(t_raster, t_context))
 			{
 				// Set origin
-				MCGContextTranslateCTM(m_locked_context, -m_locked_area.origin.x, -m_locked_area.origin.y);
+                MCGContextTranslateCTM(t_context, -p_area . origin . x, -p_area . origin . y);
+                
 				// Set clipping rect
-				MCGContextClipToRegion(m_locked_context, p_area);
-				MCGContextClipToRect(m_locked_context, MCGIntegerRectangleToMCGRectangle(m_locked_area));
+				MCGContextClipToRegion(t_context, m_region);
+				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(p_area));
 				
-				r_context = m_locked_context;
+				r_context = t_context;
+                r_raster = t_raster;
 				
 				return true;
 			}
-
-			UnlockPixels();
+			
+			UnlockPixels(p_area, t_raster);
 		}
 		
 		return false;
 	}
-	
-	void UnlockGraphics(void)
+
+	void UnlockGraphics(MCGIntegerRectangle p_area, MCGContextRef p_context, MCGRaster &p_raster)
 	{
-		if (m_locked_context == nil)
+		if (p_context == nil)
 			return;
-
-		MCGContextRelease(m_locked_context);
-		m_locked_context = nil;
 		
-		UnlockPixels();
+		MCGContextRelease(p_context);
+		UnlockPixels(p_area, p_raster);
 	}
-	
-	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
-	{
-		if (m_bitmap == nil || m_locked)
+
+    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
+    {
+		if (m_bitmap == nil)
 			return false;
 
-		MCGIntegerRectangle t_bounds = MCGRegionGetBounds(m_region);
-		MCGIntegerRectangle t_actual_area;
-		t_actual_area = MCGIntegerRectangleIntersection(p_area, t_bounds);
-		if (MCGIntegerRectangleIsEmpty(t_actual_area))
-			return false;
+		MCGIntegerRectangle t_bounds;
+		t_bounds = MCGRegionGetBounds(m_region);
+
+        MCGIntegerRectangle t_actual_area;
+        t_actual_area = MCGIntegerRectangleIntersection(p_area, t_bounds);
+        
+        if (MCGIntegerRectangleIsEmpty(t_actual_area))
+            return false;
 
 		/* UNCHECKED */ MCGRegionAddRect(m_redraw_region, t_actual_area);
-
-		uint8_t *t_bits = (uint8_t*)m_raster.pixels + (t_actual_area.origin.y - t_bounds.origin.y) * m_raster.stride + (t_actual_area.origin.x - t_bounds.origin.x) * sizeof(uint32_t);
-
-		m_locked_area = t_actual_area;
-
-		r_raster . format = kMCGRasterFormat_ARGB;
-		r_raster . width = t_actual_area.size.width;
-		r_raster . height = t_actual_area.size.height;
-		r_raster . stride = m_raster.stride;
-		r_raster . pixels = t_bits;
-
-		m_locked = true;
-
-		return true;
+        
+        r_raster . width = t_actual_area . size . width ;
+        r_raster . height = t_actual_area . size . height;
+        r_raster . stride = m_raster . stride;
+        r_raster . format = kMCGRasterFormat_ARGB;
+		r_raster . pixels = (uint8_t*)m_raster . pixels + (t_actual_area . origin . y - t_bounds . origin.y) * m_raster . stride + (t_actual_area . origin . x - t_bounds . origin . x) * sizeof(uint32_t);
+        return true;
 	}
-	
-	void UnlockPixels(void)
+
+	void UnlockPixels(MCGIntegerRectangle p_area, MCGRaster& p_raster)
 	{
-		m_locked = false;
 	}
 
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_context)
@@ -910,35 +902,33 @@ public:
 	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 	{
 		bool t_success = true;
-
-		MCGContextRef t_context = nil;
-		MCGRegionRef t_region = nil;
-
-		t_success = MCGRegionCreate(t_region);
-
+				
+        MCGIntegerRectangle t_bounds;
+        MCGContextRef t_context = nil;
+        MCGRaster t_raster;
 		if (t_success)
-			t_success = MCGRegionSetRect(t_region, MCGRectangleGetBounds(p_dst_rect));
-
-		if (t_success)
-			t_success = LockGraphics(t_region, t_context);
-
+        {
+            t_bounds = MCGRectangleGetBounds(p_dst_rect);
+            t_success = LockGraphics(t_bounds, t_context, t_raster);
+        }
+		
 		if (t_success)
 		{
 			// MW-2013-11-08: [[ Bug ]] Make sure we set the blend/alpha on the context.
 			MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
+
             // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNone);
 		}
-
-		UnlockGraphics();
-
-		MCGRegionDestroy(t_region);
-
+		
+		UnlockGraphics(t_bounds, t_context, t_raster);
+		
 		return t_success;
 	}
 };
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to implement the new stack surface API.
 class MCWindowsLayeredStackSurface: public MCStackSurface
 {
 	MCGRaster m_raster;
@@ -948,11 +938,6 @@ class MCWindowsLayeredStackSurface: public MCStackSurface
 
 	bool m_locked;
 
-	MCGIntegerRectangle m_locked_area;
-	MCGContextRef m_locked_context;
-	void *m_locked_bits;
-	uint32_t m_locked_stride;
-
 public:
 	MCWindowsLayeredStackSurface(MCGRaster p_raster, MCGFloat p_raster_scale, MCGRaster *p_mask)
 	{
@@ -960,12 +945,7 @@ public:
 		m_raster_scale = p_raster_scale;
 		m_mask = p_mask;
 		m_redraw_region = nil;
-
 		m_locked = false;
-
-		m_locked_context = nil;
-		m_locked_bits = nil;
-		m_locked_stride = 0;
 	}
 
 	bool Lock()
@@ -1002,62 +982,66 @@ public:
 		}
 	}
 
-	bool LockGraphics(MCGRegionRef p_area, MCGContextRef& r_context)
+	
+    bool LockGraphics(MCGIntegerRectangle p_area, MCGContextRef &r_context, MCGRaster &r_raster)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(MCGRegionGetBounds(p_area), t_raster))
+		if (LockPixels(p_area, t_raster))
 		{
-			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
+            MCGContextRef t_context;
+            if (MCGContextCreateWithRaster(t_raster, t_context))
 			{
 				// Set origin
-				MCGContextTranslateCTM(m_locked_context, -m_locked_area.origin.x, -m_locked_area.origin.y);
+                MCGContextTranslateCTM(t_context, -p_area . origin . x, -p_area . origin . y);
+                
 				// Set clipping rect
-				MCGContextClipToRegion(m_locked_context, p_area);
-				MCGContextClipToRect(m_locked_context, MCGIntegerRectangleToMCGRectangle(m_locked_area));
+				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(p_area));
 				
-				r_context = m_locked_context;
+				r_context = t_context;
+                r_raster = t_raster;
 				
 				return true;
 			}
-
-			UnlockPixels();
+			
+			UnlockPixels(p_area, t_raster);
 		}
-
+		
 		return false;
 	}
 	
-	void UnlockGraphics(void)
+	void UnlockGraphics(MCGIntegerRectangle p_area, MCGContextRef p_context, MCGRaster &p_raster)
 	{
-		if (m_locked_context == nil)
+		if (p_context == nil)
 			return;
 		
-		MCGContextRelease(m_locked_context);
-		m_locked_context = nil;
-
-		UnlockPixels();
+		MCGContextRelease(p_context);
+		UnlockPixels(p_area, p_raster);
 	}
 	
-	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster &r_raster)
-	{
-		m_locked_bits = m_raster.pixels;
-		m_locked_stride = m_raster.stride;
+    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
+    {
+		if (m_raster . pixels == nil)
+			return false;
 
-		// restrict locked area to intersection with raster
-		m_locked_area = MCGIntegerRectangleIntersection(p_area, MCGIntegerRectangleMake(0, 0, m_raster.width, m_raster.height));
+        MCGIntegerRectangle t_actual_area;
+        t_actual_area = MCGIntegerRectangleIntersection(p_area, MCGIntegerRectangleMake(0, 0, m_raster . width, m_raster . height));
+        
+        if (MCGIntegerRectangleIsEmpty(t_actual_area))
+            return false;
 
-		/* UNCHECKED */ MCGRegionAddRect(m_redraw_region, m_locked_area);
+		/* UNCHECKED */ MCGRegionAddRect(m_redraw_region, t_actual_area);
+        
+        r_raster . width = t_actual_area . size . width ;
+        r_raster . height = t_actual_area . size . height;
+        r_raster . stride = m_raster . stride;
+        r_raster . format = kMCGRasterFormat_ARGB;
+		r_raster . pixels = (uint8_t*) m_raster . pixels + t_actual_area . origin . y * m_raster . stride + t_actual_area . origin . x * sizeof(uint32_t);
 
-		r_raster.width = m_locked_area.size.width;
-		r_raster.height = m_locked_area.size.height;
-		r_raster.pixels = (uint8_t *)m_locked_bits + m_locked_area.origin.y * m_locked_stride + m_locked_area.origin.x * sizeof(uint32_t);
-		r_raster.stride = m_locked_stride;
-		r_raster.format = m_raster.format;
-		return true;
+        return true;
 	}
 	
-	void UnlockPixels(void)
+	void UnlockPixels(MCGIntegerRectangle p_area, MCGRaster& p_raster)
 	{
-		m_locked_bits = nil;
 	}
 
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_context)
@@ -1072,31 +1056,28 @@ public:
 	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 	{
 		bool t_success = true;
-
-		MCGContextRef t_context = nil;
-		MCGRegionRef t_region = nil;
-
-		t_success = MCGRegionCreate(t_region);
-
+				
+        MCGIntegerRectangle t_bounds;
+        MCGContextRef t_context = nil;
+        MCGRaster t_raster;
 		if (t_success)
-			t_success = MCGRegionSetRect(t_region, MCGRectangleGetBounds(p_dst_rect));
-
-		if (t_success)
-			t_success = LockGraphics(t_region, t_context);
-
+        {
+            t_bounds = MCGRectangleGetBounds(p_dst_rect);
+            t_success = LockGraphics(t_bounds, t_context, t_raster);
+        }
+		
 		if (t_success)
 		{
 			// MW-2013-11-08: [[ Bug ]] Make sure we set the blend/alpha on the context.
 			MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
+
             // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNone);
 		}
-
-		UnlockGraphics();
-
-		MCGRegionDestroy(t_region);
-
+		
+		UnlockGraphics(t_bounds, t_context, t_raster);
+		
 		return t_success;
 	}
 };

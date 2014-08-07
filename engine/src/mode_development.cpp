@@ -406,56 +406,6 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for DEVELOPMENT mode.
 //
 
-static MCStack *s_links = NULL;
-
-struct MCStackModeData
-{
-	MCStack *next;
-	MCStack *previous;
-	MCStack *referrer;
-};
-
-void MCStack::mode_create(void)
-{
-	m_mode_data = new MCStackModeData;
-	m_mode_data -> next = NULL;
-	m_mode_data -> previous = NULL;
-	m_mode_data -> referrer = MCtargetptr != NULL ? MCtargetptr -> getstack() : NULL;
-	s_links = this;
-}
-
-void MCStack::mode_copy(const MCStack& stack)
-{
-	mode_create();
-}
-
-void MCStack::mode_destroy(void)
-{
-	MCStack *t_previous_link;
-	bool t_link_found;
-	t_link_found = false;
-	t_previous_link = NULL;
-	for(MCStack *t_link = s_links; t_link != NULL; t_link = t_link -> m_mode_data -> next)
-	{
-		if (t_link -> m_mode_data -> referrer == this)
-			t_link -> m_mode_data -> referrer = m_mode_data -> referrer;
-			
-		if (!t_link_found)
-		{
-			t_link_found = t_link == this;
-			if (!t_link_found)
-				t_previous_link = t_link;
-		}
-	}
-			
-	if (t_previous_link == NULL)
-		s_links = m_mode_data -> next;
-	else
-		t_previous_link -> m_mode_data -> next = m_mode_data -> next;
-
-	delete m_mode_data;
-}
-
 #ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
@@ -463,10 +413,7 @@ Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, 
 	switch(which)
 	{
 	case P_REFERRING_STACK:
-		if (m_mode_data -> referrer != NULL)
-			return m_mode_data -> referrer -> getprop(0, P_LONG_ID, ep, False);
-		else
-			ep . clear();
+		ep . clear();
 	break;
 
 	case P_UNPLACED_GROUP_IDS:
@@ -1638,10 +1585,7 @@ void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
 
 void MCStack::GetReferringStack(MCExecContext& ctxt, MCStringRef& r_id)
 {
-    if (m_mode_data -> referrer != NULL)
-        m_mode_data -> referrer -> GetLongId(ctxt, r_id);
-    else
-        r_id = MCValueRetain(kMCEmptyString);
+    r_id = MCValueRetain(kMCEmptyString);
 }
 
 void MCStack::GetUnplacedGroupIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids)

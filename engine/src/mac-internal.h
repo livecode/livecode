@@ -339,17 +339,18 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new platform surface API.
 class MCMacPlatformSurface: public MCPlatformSurface
 {
 public:
 	MCMacPlatformSurface(MCMacPlatformWindow *window, CGContextRef cg_context, MCGRegionRef update_rgn);
 	~MCMacPlatformSurface(void);
 	
-	virtual bool LockGraphics(MCGRegionRef region, MCGContextRef& r_context);
-	virtual void UnlockGraphics(void);
+	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster);
+	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster);
 	
-	virtual bool LockPixels(MCGIntegerRectangle region, MCGRaster& r_raster);
-	virtual void UnlockPixels(void);
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster);
+	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster);
 	
 	virtual bool LockSystemContext(void*& r_context);
 	virtual void UnlockSystemContext(void);
@@ -357,20 +358,16 @@ public:
 	virtual bool Composite(MCGRectangle dst_rect, MCGImageRef src_image, MCGRectangle src_rect, MCGFloat opacity, MCGBlendMode blend);
 	
 	virtual MCGFloat GetBackingScaleFactor(void);
-	
+	   
 private:
-	void Lock(void);
+    void Lock(void);
 	void Unlock(void);
-	
-private:
+    
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
 	MCGRegionRef m_update_rgn;
-	
-	MCGIntegerRectangle m_locked_area;
-	MCGContextRef m_locked_context;
-	MCGRaster m_locked_raster;
-	void *m_locked_bits;
+    
+    MCGRaster m_raster;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

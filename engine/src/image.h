@@ -161,8 +161,8 @@ public:
 	bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
 	void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
 	
-	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame);
-	void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame);
+	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
+	void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	
@@ -351,6 +351,9 @@ class MCImage : public MCControl
 	static MCCursorRef cursor;
 	static MCCursorRef defaultcursor;
 	static uint2 cmasks[8];
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the image animate message is only posted from a single thread.
+    bool m_animate_posted : 1;
 	
 public:
 	// replace the current image data with the new bitmap

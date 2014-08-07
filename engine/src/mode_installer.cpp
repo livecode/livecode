@@ -1374,18 +1374,6 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for STANDALONE mode.
 //
 
-void MCStack::mode_create(void)
-{
-}
-
-void MCStack::mode_copy(const MCStack& stack)
-{
-}
-
-void MCStack::mode_destroy(void)
-{
-}
-
 #ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {

@@ -6,7 +6,7 @@ TARGET_PLATFORM=android-8
 
 LOCAL_MODULE := libcore
 
-LOCAL_SRC_FILES := src/core.cpp src/binary.cpp
+LOCAL_SRC_FILES := src/core.cpp src/binary.cpp src/filesystem.cpp
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include
