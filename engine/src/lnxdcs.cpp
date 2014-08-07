@@ -1137,6 +1137,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
         // Minature event loop for handling mouse and key events while selecting
         while (!t_done)
         {
+            gdk_display_sync(t_display);
+            
             // Place all events onto the pending event queue
             EnqueueGdkEvents();
             
@@ -1206,6 +1208,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
                     t_rect = MCU_compute_rect(t_start_x, t_start_y, t_start_x, t_start_y);
                     gdk_draw_rectangle(t_root, t_gc, FALSE, t_rect.x, t_rect.y, t_rect.width - 1, t_rect.height - 1);
                     t_drawing = true;
+                    break;
                     
                 case GDK_BUTTON_RELEASE:
                     MCeventtime = gdk_event_get_time(t_event);
@@ -1328,9 +1331,12 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
     if (r.width == 0 || r.height == 0)
         return NULL;
     
-    // Get the snapshot from the root window
+    // Get the snapshot from the root window.
+    // FG-2014-08-05: [[ Bugfix 13032 ]]
+    // We need to pre-create the pixbuf to ensure we get one with alpha.
     GdkPixbuf *t_image;
-    t_image = gdk_pixbuf_get_from_drawable(NULL, t_root, NULL, r.x, r.y, 0, 0, r.width, r.height);
+    t_image = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, r.width, r.height);
+    t_image = gdk_pixbuf_get_from_drawable(t_image, t_root, NULL, r.x, r.y, 0, 0, r.width, r.height);
     
     // Abort if the pixbuf could not be captured
     if (t_image == NULL)
