@@ -67,16 +67,16 @@ uindex_t MCDensityMappedImageRep::GetFrameCount()
 
 bool MCDensityMappedImageRep::LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame)
 {
-	uindex_t t_match;
+    uindex_t t_match;
 	if (!GetBestMatch(p_density, t_match))
-		return false;
+    	return false;
 	
 	if (m_sources[t_match]->LockImageFrame(p_index, p_density, r_frame))
     {
         r_frame.density = m_source_densities[t_match];
         return true;
     }
-	
+    
     return false;
 }
 

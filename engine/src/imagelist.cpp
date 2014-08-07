@@ -112,7 +112,7 @@ void MCPatternRelease(MCPatternRef p_pattern)
 		return;
 	
     if (MCThreadAtomicDec((int32_t *)&p_pattern -> references) == 1)
-	{
+    {
 		MCGImageRelease(p_pattern->image);
 		MCGImageRelease(p_pattern->cache.image);
 		if (p_pattern->source != nil)
@@ -257,7 +257,7 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 				t_image = MCGImageRetain(t_frame.image);
 			}
             if (t_locked)
-				p_pattern->source->UnlockImageFrame(0, t_frame);
+                p_pattern->source->UnlockImageFrame(0, t_frame);
 		}
 	}
 	

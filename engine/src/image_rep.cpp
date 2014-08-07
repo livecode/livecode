@@ -46,7 +46,7 @@ MCImageRep *MCImageRep::Retain()
 void MCImageRep::Release()
 {
 	if (MCThreadAtomicDec((int32_t *)&m_reference_count) == 1)
-	delete this;
+        delete this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,14 +238,14 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 	if (p_frame >= m_frame_count)
     {
         MCThreadMutexUnlock(MCimagerepmutex);
-		return false;
+        return false;
     }
-	
+    
 	r_frame = m_frames[p_frame];
     MCGImageRetain(r_frame . image);
-	
+    
 	MoveRepToHead(this);
-	
+    
     MCThreadMutexUnlock(MCimagerepmutex);
 	
 	return true;
