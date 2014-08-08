@@ -1430,6 +1430,16 @@ public:
             return MCStringCopy(*t_home, r_folder);
         else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
             return MCStringCreateWithCString("/tmp", r_folder);
+        // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        {
+            uindex_t t_last_slash;
+            
+            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+                t_last_slash = MCStringGetLength(MCcmd);
+            
+            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+        }
 
         r_folder = MCValueRetain(kMCEmptyString);
         return true;
