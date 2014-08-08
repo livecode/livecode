@@ -12,6 +12,10 @@ CUSTOM_INCLUDES=./src \
 		../libskia/include/config \
 		../libskia/include/effects
 
-CUSTOM_CCFLAGS=-fno-exceptions -fno-rtti -pthread -march=i486
+CUSTOM_CCFLAGS=-fno-exceptions -fno-rtti -pthread
+
+ifeq ($(ARCH),i386)
+	CUSTOM_CCFLAGS:=$(CUSTOM_CCFLAGS) -march=i486
+endif
 
 include ../rules/archive.linux.makefile
