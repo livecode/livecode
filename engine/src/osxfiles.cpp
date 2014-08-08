@@ -84,6 +84,15 @@ char *path2utf(char *path);
 
 void MCS_setfiletype(const char *newpath);
 
+// PM-2014-08-08: [[ Bug 13132 ]] OSX 10.6 does not contain an implementation for strndup so use our own regardless of the OSX version
+static char *my_strndup(const char *s, uint32_t l)
+{
+	char *r;
+	r = new char[l + 1];
+	strncpy(r, s, l);
+    r[l] = '\0';
+	return r;
+}
 
 /********************************************************************/
 /*                        File Handling                             */
@@ -2047,7 +2056,7 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
         {
             extern char *MCcmd;
             char* t_folder;
-            t_folder_path = strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+            t_folder_path = my_strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
             
             t_mac_folder = 0;
             t_found_folder = true;
