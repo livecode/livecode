@@ -3444,6 +3444,7 @@ public:
 			if (width > bstack[stackdepth].maxwidth)
 				bstack[stackdepth].maxwidth = width;
 			MCValueAssign(newbutton->label, p_menuitem->label);
+			newbutton -> flags |= F_LABEL;
 		}
 		return false;
 	}
@@ -3609,6 +3610,7 @@ void MCButton::openmenu(Boolean grab)
 												  MCRangeMake(t_offset, t_new_offset - t_offset),
 												  &t_label);
 			MCValueAssign(label, *t_label);
+			flags |= F_LABEL;
 			message_with_valueref_args(MCM_menu_pick, *t_label);
 		}
 		return;

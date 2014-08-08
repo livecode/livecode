@@ -290,6 +290,7 @@ void MCGroup::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 void MCGroup::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
 	MCValueAssign(label, p_label);
+	flags |= F_LABEL;
 	Redraw();
 }
 
