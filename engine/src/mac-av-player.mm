@@ -94,6 +94,8 @@ private:
     CMTime CMTimeFromLCTime(uint32_t lc_time);
     uint32_t CMTimeToLCTime(CMTime cm_time);
     
+    void SeekToTimeAndWait(uint32_t p_lc_time);
+    
     void HandleCurrentTimeChanged(void);
     
     void CacheCurrentFrame(void);
@@ -289,9 +291,11 @@ void MCAVFoundationPlayer::MovieFinished(void)
     {
         // PM-2014-07-15: [[ Bug 12812 ]] Make sure we loop within start and finish time when playSelection is true 
         if (m_play_selection_only && m_selection_duration > 0)
-            [[m_player currentItem] seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            SeekToTimeAndWait(m_selection_start);
+            //[[m_player currentItem] seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         else
-            [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            SeekToTimeAndWait(0);
+            //[[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         
         if (m_offscreen)
             CVDisplayLinkStart(m_display_link);
@@ -336,14 +340,15 @@ void MCAVFoundationPlayer::EndTimeChanged(void)
     // PM-2014-08-06: [[ Bug 13064 ]] Make sure selection start/end points are respected
     if (m_play_selection_only)
     {
+        [m_player setActionAtItemEnd: AVPlayerActionAtItemEndPause];
         // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
         if (m_selection_duration != 0)
             [[m_player currentItem] setForwardPlaybackEndTime:CMTimeFromLCTime(m_selection_finish)];
         else
-            [[m_player currentItem] setForwardPlaybackEndTime:[[m_player currentItem] duration]];
+            [[m_player currentItem] setForwardPlaybackEndTime:kCMTimeInvalid];
     }
     else
-        [[m_player currentItem] setForwardPlaybackEndTime:[[m_player currentItem] duration]];
+        [[m_player currentItem] setForwardPlaybackEndTime: kCMTimeInvalid];
 }
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
@@ -376,6 +381,17 @@ void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
 	MCMacPlatformScheduleCallback(DoSwitch, this);
     
 	m_switch_scheduled = true;
+}
+
+void MCAVFoundationPlayer::SeekToTimeAndWait(uint32_t p_time)
+{
+    __block bool t_is_finished = false;
+    [[m_player currentItem] seekToTime:CMTimeFromLCTime(p_time) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
+        t_is_finished = true;
+        MCPlatformBreakWait();
+    }];
+    while(!t_is_finished)
+        MCPlatformWaitForEvent(60.0, true);
 }
 
 CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLink,
@@ -615,8 +631,11 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
     //[[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
     
-    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:nil usingBlock:^(CMTime time) {
+    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(30, 1000) queue:nil usingBlock:^(CMTime time) {
     
+        if (CMTimeCompare(time, m_observed_time) == 0)
+            return;
+        
         m_observed_time = time;
 
         // This fixes the issue of pause not being instant when alwaysBuffer = false
@@ -663,7 +682,8 @@ void MCAVFoundationPlayer::Start(double rate)
     {
         if (m_finished && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
         {
-            [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            //[m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            SeekToTimeAndWait(0);
         }
     }
     else
@@ -673,14 +693,15 @@ void MCAVFoundationPlayer::Start(double rate)
         
         if (m_selection_duration > 0 && (CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_finish)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_start)) <= 0))
         {
-            [m_player seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-            
+            //[m_player seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            SeekToTimeAndWait(m_selection_start);
         }
         
         // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
         if (m_selection_duration == 0 && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
         {
-            [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            //[m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            SeekToTimeAndWait(0);
         }
 
     }
@@ -793,13 +814,14 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             // MW-2014-07-29: [[ Bug 12989 ]] Make sure we use the duration timescale.
             // MW-2014-08-01: [[ Bug 13046 ]] Use a completion handler to wait until the currentTime is
             //   where we want it to be.
-            __block bool t_is_finished = false;
+            /*__block bool t_is_finished = false;
             [[m_player currentItem] seekToTime:CMTimeFromLCTime(*(uint32_t *)p_value) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
                 t_is_finished = true;
                 MCPlatformBreakWait();
             }];
             while(!t_is_finished)
-                MCPlatformWaitForEvent(60.0, true);
+                MCPlatformWaitForEvent(60.0, true);*/
+            SeekToTimeAndWait(*(uint32_t *)p_value);
         }
         break;
 		case kMCPlatformPlayerPropertyStartTime:
