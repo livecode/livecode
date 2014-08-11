@@ -545,7 +545,7 @@ void MCSegment::ResolveDisplayOrder()
     m_LastVisualBlock = t_visual_order[t_block_count - 1];
 }
 
-coord_t MCSegment::GetCursorOffset()
+coord_t MCSegment::GetLeftEdge()
 {
     // The offset depends on the alignment of the segment
     switch (m_HAlign)
@@ -563,5 +563,20 @@ coord_t MCSegment::GetCursorOffset()
         default:
             MCAssert(false);
             return 0;
+    }
+}
+
+coord_t MCSegment::GetRightEdge()
+{
+    // The right limit depends on the TAB alignment
+    switch(m_HAlign)
+    {
+        case kMCSegmentTextHAlignLeft:
+            return m_LeftEdge + GetContentLength();
+        case kMCSegmentTextHAlignCenter:
+            return m_RightEdge - ((m_RightEdge - m_LeftEdge) / 2) - (GetContentLength() / 2);
+        case kMCSegmentTextHAlignJustify:
+        case kMCSegmentTextHAlignRight:
+            return m_RightEdge;
     }
 }

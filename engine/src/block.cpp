@@ -1708,7 +1708,9 @@ coord_t MCBlock::GetCursorX(findex_t fi)
 		j = m_size;
     
     // AL-2014-07-29: [[ Bug 12896 ]] Include tab width in block cursor calculation
-    if (j == m_size && fi > 0 && parent -> GetCodepointAtIndex(fi - 1) == '\t')
+    // SN-2014-08-08: [[ Bug 13124 ]] Ignore the last tab width if we are the empty, last block
+    //  of a TAB-terminated paragraph
+    if (m_size && j == m_size && fi > 0 && parent -> GetCodepointAtIndex(fi - 1) == '\t')
     {
         if (segment -> GetLastBlock() == this)
             return segment -> GetWidth() - origin;
@@ -2325,13 +2327,18 @@ MCBlock *MCBlock::GetNextBlockVisualOrder()
     MCBlock *bptr = GetSegment() -> GetFirstBlock();
     while (bptr != GetSegment() -> GetLastBlock())
     {
-        if (bptr->visual_index == visual_index + 1)
+        // SN-2014-08-08: [[ Bug 13124 ]] Make sure we ignore the last empty block
+        //  of the TAB-terminated paragraphs
+        if (bptr->visual_index == visual_index + 1 && bptr -> m_size)
             return bptr;
         bptr = bptr->next();
     }
     
     MCSegment *last_segment = parent -> getsegments() -> prev();
-    if (segment != last_segment)
+    // SN-2014-08-08: [[ Bug 13124 ]] Make sure we ignore the last empty block
+    //  of the TAB-terminated paragraphs
+    if (segment != last_segment
+            && segment -> next() -> GetFirstVisualBlock() -> m_size)
         return segment -> next() -> GetFirstVisualBlock();
     
     return nil;

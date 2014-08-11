@@ -1136,7 +1136,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
              // If selection covers the whole segment, we can fill it and skip to the first block of the next segment.           
             if (t_whole_segment)
             {
-                srect . x  = x + sgptr -> GetCursorOffset();
+                srect . x  = x + sgptr -> GetLeftEdge();
                 srect . width = sgptr -> GetWidth();
                 dc->fillrect(srect);
                 
@@ -1171,7 +1171,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                     bex = t_temp;
                 }
 
-                srect.x = x + sgptr -> GetCursorOffset() + bix;
+                srect.x = x + sgptr -> GetLeftEdge() + bix;
                 
                 // AL-2014-07-29: [[ Bug 12951 ]] If selection traverses a segment boundary, include the boundary in the fill rect.
                 if (startindex < bi + bl && endindex > bi + bl &&
@@ -1207,7 +1207,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             
             srect.x = sx;
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
-            srect.width = x + bptr -> GetSegment() -> GetCursorOffset() + t_first_visual->getorigin() - sx;
+            srect.width = x + bptr -> GetSegment() -> GetLeftEdge() + t_first_visual->getorigin() - sx;
             dc->fillrect(srect);
         }
         
@@ -1218,7 +1218,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             MCBlock *t_last_visual = bptr -> GetSegment() -> GetLastVisualBlock();
             
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
-            srect.x = x + bptr -> GetSegment() -> GetCursorOffset() + t_last_visual->getorigin() + t_last_visual->getwidth();
+            srect.x = x + bptr -> GetSegment() -> GetLeftEdge() + t_last_visual->getorigin() + t_last_visual->getwidth();
             srect.width = swidth - (srect.x - sx);
             dc->fillrect(srect);
         }
