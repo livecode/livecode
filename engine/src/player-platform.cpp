@@ -3485,6 +3485,8 @@ void MCPlayer::handle_shift_mdown(int p_which)
             // If there was previously no selection, then take it to be currenttime, currenttime.
             if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
                 starttime = endtime = t_old_time;
+           
+            
             if (hasfilename())
             {
                 bool t_show_selection;
@@ -3492,10 +3494,11 @@ void MCPlayer::handle_shift_mdown(int p_which)
                 setflag(True, F_SHOW_SELECTION);
                 MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
                 
+                handle_mdown(p_which);
+                if (ispaused())
+                    endtime = getmoviecurtime();
                 setselection(true);
             }
-            
-            handle_mdown(p_which);
             break;
                      
         default:
