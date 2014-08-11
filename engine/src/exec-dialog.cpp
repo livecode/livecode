@@ -78,7 +78,7 @@ MC_EXEC_DEFINE_SET_METHOD(Dialog, ColorDialogColors, 2)
 void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCStringRef p_title, bool p_as_sheet)
 {
     MCAutoStringRef t_value;
-	bool t_chosen = true;
+	bool t_chosen = false;
 	if (MCsystemCS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_COLOR_DIALOGS))
 	{
 		MCColor t_color;
@@ -128,14 +128,18 @@ void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCSt
 		if (MCStringGetLength(*t_value) == 0)
 			t_chosen = false;
 	}
-
-	if (*t_value != nil)
-		ctxt.SetItToValue(*t_value);
-
+    
+    // SN-2014-08-11: [[ Bug 13144 ]] it should be set to empty if nothing has been made
 	if (t_chosen)
-		ctxt . SetTheResultToEmpty();
+    {
+        ctxt.SetItToValue(*t_value);
+		ctxt.SetTheResultToEmpty();
+    }
 	else
-		ctxt . SetTheResultToValue(MCN_cancel);
+    {
+        ctxt.SetItToEmpty();
+		ctxt.SetTheResultToValue(MCN_cancel);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -197,7 +201,11 @@ void MCDialogExecAnswerFileWithFilter(MCExecContext &ctxt, bool p_plural, MCStri
             ctxt.SetTheResultToEmpty();
     }
 	else
+    {
+        // SN-2014-08-11: [[ Bug 13144 ]] it should be set to empty if nothing has been made
+        ctxt.SetItToEmpty();
 		ctxt.SetTheResultToValue(MCN_cancel);
+    }
 }
 
 bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
@@ -266,7 +274,11 @@ void MCDialogExecAnswerFileWithTypes(MCExecContext &ctxt, bool p_plural, MCStrin
             ctxt.SetTheResultToEmpty();
 	}
 	else
+    {
+        // SN-2014-08-11: [[ Bug 13144 ]] it should be set to empty if nothing has been made
+        ctxt.SetItToEmpty();
 		ctxt.SetTheResultToValue(MCN_cancel);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -324,7 +336,11 @@ void MCDialogExecAnswerFolder(MCExecContext &ctxt, bool p_plural, MCStringRef p_
             ctxt.SetTheResultToEmpty();
 	}
 	else
+    {
+        // SN-2014-08-11: [[ Bug 13144 ]] it should be set to empty if nothing has been made
+        ctxt.SetItToEmpty();
 		ctxt.SetTheResultToValue(MCN_cancel);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,7 +381,11 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 		ctxt.SetTheResultToEmpty();
 	}
 	else
+    {
+        // SN-2014-08-11: [[ Bug 13144 ]] it should be set to empty if nothing has been made
+        ctxt.SetItToEmpty();
 		ctxt.SetTheResultToValue(MCN_cancel);
+    }
 #else
 	uint32_t t_type;
 	switch(p_type)

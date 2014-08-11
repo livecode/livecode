@@ -613,7 +613,8 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("each", MCN_each);
 	/* UNCHECKED */ MCNameCreateWithCString("it", MCN_it);
 	
-	/* UNCHECKED */ MCNameCreateWithCString("cancel", MCN_cancel);
+    // SN-2014-08-11: [[ Bug 13144 ]] Cancel string should be 'Cancel', not 'cancel'
+	/* UNCHECKED */ MCNameCreateWithCString("Cancel", MCN_cancel);
 
 	/* UNCHECKED */ MCNameCreateWithCString(DEFAULT_TEXT_FONT, MCN_default_text_font);
 	/* UNCHECKED */ MCNameCreateWithCString(PLATFORM_STRING, MCN_platform_string);
