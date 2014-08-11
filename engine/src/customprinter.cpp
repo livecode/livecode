@@ -1182,11 +1182,20 @@ static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef
 
 	if (!MCStringConvertToCString(MCNameGetString(p_key), ctxt -> option_keys[ctxt -> index]))
 		return false;
+    
+    // SN-2014-08-11: [[ Bug 13146 ]] Also allow NameRef to be passed as options.
+	MCAutoStringRef t_value;
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName)
+        t_value = MCNameGetString((MCNameRef)p_value);
+    else if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString)
+        t_value = (MCStringRef)p_value;
+    else
+    {
+        ctxt -> option_values[ctxt -> index] = NULL;
+        return false;
+    }
 	
-    if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeString)
-		return false;
-	
-	if (!MCStringConvertToCString((MCStringRef)p_value, ctxt -> option_values[ctxt -> index]))
+	if (!MCStringConvertToCString(*t_value, ctxt -> option_values[ctxt -> index]))
 		return false;
 	
 	ctxt -> index += 1;
