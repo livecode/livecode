@@ -816,12 +816,25 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 
 Boolean MCPlayer::doubledown(uint2 which)
 {
-	return MCControl::doubledown(which);
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+        return MCControl::doubledown(which);
+    if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
+    {
+        if ((MCmodifierstate & MS_SHIFT) != 0)
+            handle_shift_mdown(which);
+        else
+            handle_mdown(which);
+    }
+    return True;
 }
 
 Boolean MCPlayer::doubleup(uint2 which)
 {
-	return MCControl::doubleup(which);
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+        return MCControl::doubleup(which);
+    if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
+        handle_mup(which);
+    return True;
 }
 
 void MCPlayer::setrect(const MCRectangle &nrect)
@@ -2109,13 +2122,11 @@ void MCPlayer::selectionchanged(void)
 
 void MCPlayer::currenttimechanged(void)
 {
-    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
-    MCParameter t_param;
-    t_param . setn_argument(getmoviecurtime());
-    timer(MCM_current_time_changed, &t_param);
-    
     if (m_modify_selection_while_playing)
     {
+        if ((MCmodifierstate & MS_SHIFT) == 0)
+            playpause(True);
+        
         uint32_t t_current_time;
         t_current_time = getmoviecurtime();
         
@@ -2124,11 +2135,13 @@ void MCPlayer::currenttimechanged(void)
         if (t_current_time > endtime)
             endtime = t_current_time;
         
-        if ((MCmodifierstate & MS_SHIFT) == 0)
-            playpause(True);
-        
         setselection(true);
     }
+    
+    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
+    MCParameter t_param;
+    t_param . setn_argument(getmoviecurtime());
+    timer(MCM_current_time_changed, &t_param);
     
     redrawcontroller();
 }
