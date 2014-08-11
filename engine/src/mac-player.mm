@@ -36,8 +36,8 @@ MCPlatformPlayer::MCPlatformPlayer(void)
 
 MCPlatformPlayer::~MCPlatformPlayer(void)
 {
-	if (m_window != nil)
-		Detach();
+	//if (m_window != nil)
+	//	Detach();
 }
 
 void MCPlatformPlayer::Retain(void)
@@ -49,7 +49,11 @@ void MCPlatformPlayer::Release(void)
 {
 	m_references -= 1;
 	if (m_references == 0)
+    {
+        if (m_window != nil)
+            Detach();
 		delete this;
+    }
 }
 
 void MCPlatformPlayer::Attach(MCPlatformWindowRef p_window)

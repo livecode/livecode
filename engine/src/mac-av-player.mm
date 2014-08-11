@@ -263,6 +263,7 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     // First detach the observer from everything we've attached it to.
     [m_player removeTimeObserver:m_time_observer_token];
     
+    [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     // Now we can release it.
     [m_observer release];
     
