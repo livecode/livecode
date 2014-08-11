@@ -1352,6 +1352,8 @@ bool MCStringsMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_st
 					else
 						ctxt.GetHandlerList()->doscript(t_ctxt, *t_expression);
 					t_value = MCresult->getvalueref();
+                    // SN-2014-08-11: [[ Bug 13139 ]] The result must be emptied after a doscript()
+                    ctxt . SetTheResultToEmpty();
 				}
 				t_valid = !t_ctxt.HasError();
 				MCerrorlock--;
