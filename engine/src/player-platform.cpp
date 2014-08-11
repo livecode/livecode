@@ -1716,6 +1716,9 @@ Boolean MCPlayer::prepare(const char *options)
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
     
+    // PM-2014-08-06: [[ Bug 13104 ]] When new movie is opened then playRate should be set to 0
+    rate = 0.0;
+    
 	setselection(false);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
 	SynchronizeUserCallbacks();
@@ -1770,11 +1773,15 @@ Boolean MCPlayer::playpause(Boolean on)
 		if (!on)
         {
             playselection(getflag(F_PLAY_SELECTION) && !m_modify_selection_while_playing);
+            // PM-2014-08-06: [[ Bug 13104 ]] Force playRate to 1.0 (needed when starting player by pressing space/enter keys 
+            rate = 1.0;
 			MCPlatformStartPlayer(m_platform_player, rate);
 		}
         else
         {
 			MCPlatformStopPlayer(m_platform_player);
+            // PM-2014-08-06: [[ Bug 13104 ]] Make sure playRate is zero when player is paused
+            rate = 0.0;
         }
 		ok = True;
 	}
@@ -2131,6 +2138,8 @@ void MCPlayer::currenttimechanged(void)
 
 void MCPlayer::moviefinished(void)
 {
+    // PM-2014-08-06: [[ Bug 13104 ]] Set rate to zero when movie finish
+    rate = 0.0;
     timer(MCM_play_stopped, nil);
 }
 
@@ -3419,7 +3428,7 @@ void MCPlayer::handle_shift_mdown(int p_which)
             t_duration = getduration();
             
             // If there was previously no selection, then take it to be currenttime, currenttime.
-            if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
+            if (starttime == MAXUINT4 || endtime == MAXUINT4)
                 starttime = endtime = t_old_time;
             
             t_old_start = getstarttime();
@@ -3433,11 +3442,23 @@ void MCPlayer::handle_shift_mdown(int p_which)
             // If click last half of current selection, adjust end.
             if (t_new_time <= (t_old_end + t_old_start) / 2)
             {
+                // PM-2014-08-05: [[ Bug 13065 ]] If there was previously no selection, then
+                // endTime is set as currentTime when mouse is clicked
+                // startTime is set to currentTime and then updated as thumb dragged to the left
+                if (starttime == endtime)
+                    endtime = t_old_time;
+        
                 starttime = t_new_time;
                 m_grabbed_part = kMCPlayerControllerPartSelectionStart;
             }
             else
             {
+                // PM-2014-08-05: [[ Bug 13065 ]] If there was previously no selection, then
+                // startTime is set as currentTime when mouse is clicked
+                // endTime is set to currentTime and then updated as thumb dragged to the right
+                if (starttime == endtime)
+                    starttime = t_old_time;
+                
                 endtime = t_new_time;
                 m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
             }

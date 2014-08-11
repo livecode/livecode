@@ -39,7 +39,9 @@ struct MCGImageFrame
 	uint32_t duration;
 	
 	// IM-2013-10-30: [[ FullscreenMode ]] add density value to image frames
-	MCGFloat density;
+	// IM-2014-08-07: [[ Bug 13021 ]] Split density into x / y scale components
+	MCGFloat x_scale;
+	MCGFloat y_scale;
 };
 
 void MCGImageFramesFree(MCGImageFrame *p_frames, uindex_t p_count);
@@ -65,9 +67,6 @@ public:
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 
-	virtual MCGFloat GetDensity() { return 1.0; };
-	virtual MCGFloat GetBestDensityMatch(MCGFloat p_target_density) { return GetDensity(); };
-	
 	//////////
 
 	MCImageRep *Retain();
@@ -128,7 +127,6 @@ public:
 	MCLoadableImageRep();
 	virtual ~MCLoadableImageRep();
 
-	virtual uindex_t GetFrameCount();
 	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
 	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
 	
@@ -180,6 +178,7 @@ public:
 
 	virtual ~MCEncodedImageRep();
 
+	virtual uindex_t GetFrameCount();
 	uint32_t GetDataCompression();
 
 protected:
@@ -195,6 +194,7 @@ protected:
 	//////////
 
 	uint32_t m_compression;
+	uint32_t m_header_frame_count;
 };
 
 //////////
@@ -371,9 +371,6 @@ public:
 	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	
-	MCGFloat GetDensity();
-	MCGFloat GetBestDensityMatch(MCGFloat p_target_density);
-	
 	//////////
 
 	const char *GetSearchKey() { return m_filename; }
@@ -397,7 +394,6 @@ protected:
 	MCGFloat *m_source_densities;
 	uindex_t m_source_count;
 	
-	MCGFloat m_last_density;
 	bool m_locked;
 	uint32_t m_locked_source;
 	

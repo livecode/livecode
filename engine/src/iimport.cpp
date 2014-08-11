@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "imageloader.h"
+
 bool read_all(IO_handle p_stream, uint8_t *&r_data, uindex_t &r_data_size)
 {
 	bool t_success = true;
@@ -154,34 +156,18 @@ bool MCImageDecode(IO_handle p_stream, MCBitmapFrame *&r_frames, uindex_t &r_fra
 {
 	bool t_success = true;
 
-	MCImageBitmap *t_bitmap = nil;
-	MCImageCompressedBitmap *t_compressed = nil;
-
-	MCPoint t_hotspot;
-	char *t_name = nil;
+	// IM-2014-07-31: [[ ImageLoader ]] Update to use MCImageLoader class
+	MCImageLoader *t_loader;
+	t_loader = nil;
 
 	if (t_success)
-		t_success = MCImageImport(p_stream, nil, t_hotspot, t_name, t_compressed, t_bitmap);
+		t_success = MCImageLoader::LoaderForStream(p_stream, t_loader);
 
 	if (t_success)
-	{
-		if (t_compressed != nil)
-			t_success = MCImageDecompress(t_compressed, r_frames, r_frame_count);
-		else
-		{
-			t_success = MCMemoryNewArray(1, r_frames);
-			if (t_success)
-			{
-				r_frames[0].image = t_bitmap;
-				t_bitmap = nil;
-				r_frame_count = 1;
-			}
-		}
-	}
+		t_success = t_loader->TakeFrames(r_frames, r_frame_count);
 
-	MCImageFreeCompressedBitmap(t_compressed);
-	MCImageFreeBitmap(t_bitmap);
-	MCCStringFree(t_name);
+	if (t_loader != nil)
+		delete t_loader;
 
 	return t_success;
 }
@@ -203,36 +189,48 @@ bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCBitmapFrame *&r_fra
 	return t_success;
 }
 
+bool MCImageLoaderFormatToCompression(MCImageLoaderFormat p_format, uint32_t &r_compression)
+{
+	switch (p_format) {
+		case kMCImageFormatGIF:
+			r_compression = F_GIF;
+			return true;
+			
+		case kMCImageFormatPNG:
+			r_compression = F_PNG;
+			return true;
+			
+		case kMCImageFormatJPEG:
+			r_compression = F_JPEG;
+			return true;
+			
+		case kMCImageFormatMetafile:
+			r_compression = F_PICT;
+			return true;
+			
+		default:
+			break;
+	}
+	
+	return false;
+}
+
 // if the image is in a directly supported format return the raw data otherwise decode & return the bitmap
 bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotspot, char *&r_name, MCImageCompressedBitmap *&r_compressed, MCImageBitmap *&r_bitmap)
 {
-	bool t_success = true;
+	bool t_success;
+	t_success = true;
 
-	uindex_t t_width = 0, t_height = 0;
-
-	uint8_t t_head[8];
-	uindex_t t_size = 8;
-
-	uint32_t t_compression = F_RLE;
+	// IM-2014-07-31: [[ ImageLoader ]] Update to use MCImageLoader class
+	MCImageLoaderFormat t_format;
 
 	if (t_success)
-		t_success = MCS_read(t_head, sizeof(uint8_t), t_size, p_stream) == IO_NORMAL &&
-		t_size == 8 && MCS_seek_cur(p_stream, -8) == IO_NORMAL;
+		t_success = MCImageLoader::IdentifyFormat(p_stream, t_format);
 
 	if (t_success)
 	{
-		if (memcmp(t_head, "GIF87a", 6) == 0)
-			t_compression = F_GIF;
-		else if (memcmp(t_head, "GIF89a", 6) == 0)
-			t_compression = F_GIF;
-		else if (memcmp(t_head, "\211PNG", 4) == 0)
-			t_compression = F_PNG;
-		else if (memcmp(t_head, "\xff\xd8", 2) == 0)
-			t_compression = F_JPEG;
-		else if (MCImageGetMetafileGeometry(p_stream, t_width, t_height))
-			t_compression = F_PICT;
-
-		if (t_compression != F_RLE)
+		uint32_t t_compression;
+		if (MCImageLoaderFormatToCompression(t_format, t_compression))
 		{
 			t_success = MCImageCreateCompressedBitmap(t_compression, r_compressed);
 			if (t_success)
@@ -240,39 +238,65 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 				if (t_success)
 					t_success = read_all(p_stream, r_compressed->data, r_compressed->size);
 
+				uint32_t t_width, t_height;
+				t_width = t_height = 0;
+				
+				if (t_success && t_compression == F_PICT)
+					t_success = MCImageGetMetafileGeometry(p_stream, t_width, t_height);
+				
 				r_compressed->width = t_width;
 				r_compressed->height = t_height;
 			}
 		}
 		else
 		{
-			MCImageBitmap *t_bitmap = nil;
+			MCImageLoader *t_loader;
+			t_loader = nil;
 			
-			if (memcmp(t_head, "BM", 2) == 0)
-				t_success = MCImageDecodeBMP(p_stream, r_hotspot, t_bitmap);
-			else if (memcmp(t_head, "#define", 7) == 0)
-				t_success = MCImageDecodeXBM(p_stream, r_hotspot, r_name, t_bitmap);
-			else if (memcmp(t_head, "/* XPM", 6) == 0)
-				t_success = MCImageDecodeXPM(p_stream, t_bitmap);
-			else if (t_head[0] == 'P' && (t_head[1] >= '1' && t_head[1] <= '6'))
-			{
-				t_success = MCImageDecodeNetPBM(p_stream, t_bitmap);
-				// may have a mask image
-				if (t_success && p_mask_stream != nil)
+			t_success = MCImageLoader::LoaderForStreamWithFormat(p_stream, t_format, t_loader);
+			
+			uint32_t t_xhot, t_yhot;
+			
+			char *t_name;
+			t_name = nil;
+			
+			MCBitmapFrame *t_frames;
+			t_frames = nil;
+			
+			uint32_t t_count;
+			
+			if (t_success)
+				t_success = t_loader->GetHotSpot(t_xhot, t_yhot);
+			
+			if (t_success)
+				t_success = t_loader->TakeName(t_name);
+			
+			if (t_success)
+				t_success = t_loader->TakeFrames(t_frames, t_count);
+			
+			if (t_success && p_mask_stream != nil && t_loader->GetFormat() == kMCImageFormatNetPBM)
 				{
 					MCImageBitmap *t_mask = nil;
 					t_success = MCImageDecodeNetPBM(p_mask_stream, t_mask) &&
-						MCImageBitmapApplyMask(t_bitmap, t_mask);
+				MCImageBitmapApplyMask(t_frames[0].image, t_mask);
 					MCImageFreeBitmap(t_mask);
 				}
-			}
-			else // if all else fails, assume it's an XWD
-				t_success = MCImageDecodeXWD(p_stream, r_name, t_bitmap);
 
 			if (t_success)
-				r_bitmap = t_bitmap;
+			{
+				r_hotspot.x = t_xhot;
+				r_hotspot.y = t_yhot;
+				r_name = t_name;
+				r_bitmap = t_frames[0].image;
+				t_frames[0].image = nil;
+			}
 			else
-				MCImageFreeBitmap(t_bitmap);
+				MCCStringFree(t_name);
+			
+			MCImageFreeFrames(t_frames, t_count);
+			
+			if (t_loader != nil)
+				delete t_loader;
 		}
 	}
 
