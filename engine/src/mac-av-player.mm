@@ -147,6 +147,7 @@ private:
     bool m_frame_changed_pending : 1;
     bool m_finished : 1;
     bool m_loaded : 1;
+    bool m_stepped : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -253,6 +254,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     
     m_selection_start = 0;
     m_selection_finish = 0;
+    m_stepped = false;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -284,13 +286,16 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 void MCAVFoundationPlayer::TimeJumped(void)
 {
     // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
-    if (!m_synchronizing)
+    if (!m_synchronizing && m_stepped)
+    {
         MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
+    }
 }
 
 void MCAVFoundationPlayer::MovieFinished(void)
 {
     m_finished = true;
+    m_stepped = false;
     
     if (m_offscreen)
         CVDisplayLinkStop(m_display_link);
@@ -691,6 +696,7 @@ void MCAVFoundationPlayer::Start(double rate)
     
     m_playing = true;
     m_finished = false;
+    m_stepped = false;
     [m_player setRate:rate];
 }
 
@@ -704,6 +710,7 @@ void MCAVFoundationPlayer::Stop(void)
 void MCAVFoundationPlayer::Step(int amount)
 {
     [[m_player currentItem] stepByCount:amount];
+    m_stepped = true;
 }
 
 void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
