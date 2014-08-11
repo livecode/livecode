@@ -816,6 +816,7 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 
 Boolean MCPlayer::doubledown(uint2 which)
 {
+    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown 
     if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
         return MCControl::doubledown(which);
     if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
@@ -830,6 +831,7 @@ Boolean MCPlayer::doubledown(uint2 which)
 
 Boolean MCPlayer::doubleup(uint2 which)
 {
+    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubleup on the controller as a single mup
     if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
         return MCControl::doubleup(which);
     if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
