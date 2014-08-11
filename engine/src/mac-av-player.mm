@@ -307,11 +307,11 @@ void MCAVFoundationPlayer::MovieFinished(void)
     {
         // PM-2014-07-15: [[ Bug 12812 ]] Make sure we loop within start and finish time when playSelection is true 
         if (m_play_selection_only && m_selection_duration > 0)
-            SeekToTimeAndWait(m_selection_start);
-            //[[m_player currentItem] seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            // Note: Calling breakSeekToTimeAndWait(m_selection_start) here causes loop property to break
+            [[m_player currentItem] seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         else
-            SeekToTimeAndWait(0);
-            //[[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            // Note: Calling SeekToTimeAndWait(0) here causes loop property to break
+            [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         
         if (m_offscreen)
             CVDisplayLinkStart(m_display_link);
