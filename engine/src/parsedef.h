@@ -1617,6 +1617,9 @@ enum Properties {
     // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
     P_CLIPS_TO_RECT,
 
+    // MW-2014-08-12: [[ EditionType ]] Returns whether the engine is commercial or community
+    P_EDITION_TYPE,
+    
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
