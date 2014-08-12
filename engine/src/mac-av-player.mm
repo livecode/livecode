@@ -361,7 +361,6 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
     
     if (!m_synchronizing)
         MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
-    MCLog("Last marker is %d", m_last_marker);
 }
 void MCAVFoundationPlayer::EndTimeChanged(void)
 {
