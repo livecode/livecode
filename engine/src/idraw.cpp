@@ -40,7 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform)
 {
 	// IM-2013-11-05: [[ RefactorGraphics ]] Use resampled image rep for best-quality scaling
-	if (m_has_transform && MCGAffineTransformIsRectangular(m_transform) && resizequality == INTERPOLATION_BICUBIC)
+	// IM-2014-08-07: [[ Bug 13127 ]] Don't use resampled rep for images with a centerRect
+	if (m_has_transform && MCGAffineTransformIsRectangular(m_transform) && resizequality == INTERPOLATION_BICUBIC && m_center_rect.x == INT16_MIN)
 	{
 		bool t_h_flip, t_v_flip;
 		t_h_flip = m_transform.a == -1.0;
