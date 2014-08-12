@@ -190,6 +190,15 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 	AEEventID aeid;
 	AEGetAttributePtr(p_event, keyEventIDAttr, typeType, &rType, &aeid, sizeof(AEEventID), &rSize);
     
+    // MW-2014-08-12: [[ Bug 13140 ]] Handle the appleEvent to cause a termination otherwise
+    //   we don't quit if the app is in the background (I think this is because we roll our
+    //   own event handling loop and don't use [NSApp run]).
+    if (aeclass == kCoreEventClass && aeid == kAEQuitApplication)
+    {
+        [NSApp terminate: self];
+        return noErr;
+    }
+    
     if (aeclass == kCoreEventClass && aeid == kAEAnswer)
         return MCAppleEventHandlerDoAEAnswer(p_event, p_reply, 0);
 
