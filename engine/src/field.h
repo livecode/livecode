@@ -191,6 +191,9 @@ class MCField : public MCControl
 	MCScrollbar *vscrollbar;
 	MCScrollbar *hscrollbar;
 	char *label;
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Used to flag if a recompute is required during the next draw.
+    bool m_recompute : 1;
 	
 	static int2 clickx;
 	static int2 clicky;
