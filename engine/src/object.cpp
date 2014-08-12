@@ -2020,10 +2020,21 @@ void MCObject::senderror()
 
 void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 {
-	static const char *htypes[] =
-	    {
-	        "undefined", "message", "function", "getprop", "setprop"
-	    };
+	static const char *htypes[] =	{
+		"undefined",
+		"message",
+		"function",
+		"getprop",
+		"setprop",
+		"before",
+		"after",
+		"private"
+	};
+	enum { max_htype = (sizeof(htypes)/sizeof(htypes[0])) - 1 };
+
+	MCAssert(htype <= max_htype);
+	MCStaticAssert(max_htype == HT_MAX);
+
 	MCmessagemessages = False;
 	MCExecPoint ep(this, NULL, NULL);
 	MCresult->fetch(ep);
