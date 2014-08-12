@@ -736,9 +736,6 @@ void MCQTSoundRecorder::PauseRecording(void)
         return;
     
     SGPause(m_seq_grab, seqGrabPause);
-    
-    m_recording = false;
-    MCrecording = false;
 }
 
 void MCQTSoundRecorder::ResumeRecording(void)
@@ -747,9 +744,6 @@ void MCQTSoundRecorder::ResumeRecording(void)
         return;
     
     SGPause(m_seq_grab, seqGrabUnpause);
-    
-    m_recording = true;
-    MCrecording = true;
 }
 
 bool MCQTSoundRecorder::ListInputs(MCPlatformSoundRecorderListInputsCallback p_callback, void *context)

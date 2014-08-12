@@ -1961,8 +1961,16 @@ Exec_stat MCRecord::exec(MCExecPoint &ep)
                 MCPlatformSoundRecorderResume(MCrecorder);
         }
 #else
-        MCeerror->add(EE_RECORD_BADFILE, line, pos);
-        return ES_ERROR;
+        if (pause)
+        {
+            extern void MCQTRecordPause(void)
+            MCQTRecordPause();
+        }
+        else
+        {
+            extern void MCQTRecordResume(void)
+            MCQTRecordResume();
+        }
 #endif
     }
 	return ES_NORMAL;
