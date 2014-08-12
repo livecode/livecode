@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "cefbrowser.h"
 #include "cefbrowser_msg.h"
+#include "cefshared.h"
 
 #include <include/cef_app.h>
 
@@ -179,10 +180,10 @@ bool MCCefInitialise(void)
 	CefRefPtr<CefApp> t_app = nil;
 
 	if (t_success)
-		t_success = -1 == CefExecuteProcess(t_args, t_app);
+		t_success = -1 == CefExecuteProcess(t_args, t_app, nil);
 
 	if (t_success)
-		t_success = CefInitialize(t_args, t_settings, t_app);
+		t_success = CefInitialize(t_args, t_settings, t_app, nil);
 
 	s_cef_initialised = t_success;
 	
@@ -558,9 +559,6 @@ public:
 		// We handle browser closing here to stop CEF sending WM_CLOSE to the stack window
 		if (p_browser->GetIdentifier() == m_browser_id)
 		{
-			// Inform the browser that it's window will close
-			p_browser->GetHost()->ParentWindowWillClose();
-
 			// Close the browser window
 			MCCefPlatformCloseBrowserWindow(p_browser);
 

@@ -177,9 +177,8 @@ public:
 
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser);
 void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
+
 const char *MCCefPlatformGetSubProcessName(void);
-const char *MCCefPlatformGetCefLibraryPath(void);
-const char *MCCefPlatformGetLocalePath(void);
 
 bool MCCefStringToCString(const CefString &p_cef_string, char *&r_c_string);
 bool MCCefStringFromCString(const char *p_c_string, CefString &r_cef_string);
