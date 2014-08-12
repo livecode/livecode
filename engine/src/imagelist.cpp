@@ -9,6 +9,7 @@
 #include "stack.h"
 #include "image.h"
 #include "imagelist.h"
+#include "systhreads.h"
 
 #include "globals.h"
 
@@ -25,14 +26,12 @@ struct MCPattern
 	
 	MCGImageRef image;
 	
-	MCGImageRef locked_image;
-	MCGImageFrame *locked_frame;
-	
 	struct
 	{
 		MCGImageRef image;
 		MCGAffineTransform transform;
-		MCGFloat density;
+		MCGFloat x_scale;
+		MCGFloat y_scale;
 	} cache;
 	
 	uint32_t references;
@@ -103,7 +102,7 @@ MCPatternRef MCPatternRetain(MCPatternRef p_pattern)
 	if (p_pattern == nil)
 		return nil;
 	
-	p_pattern->references++;
+	MCThreadAtomicInc((int32_t *)&p_pattern -> references);
 	
 	return p_pattern;
 }
@@ -113,9 +112,8 @@ void MCPatternRelease(MCPatternRef p_pattern)
 	if (p_pattern == nil)
 		return;
 	
-	p_pattern->references--;
-	if (p_pattern->references == 0)
-	{
+    if (MCThreadAtomicDec((int32_t *)&p_pattern -> references) == 1)
+    {
 		MCGImageRelease(p_pattern->image);
 		MCGImageRelease(p_pattern->cache.image);
 		if (p_pattern->source != nil)
@@ -155,11 +153,6 @@ bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r
 	{
 		if (!p_pattern->source->GetGeometry(t_src_width, t_src_height))
 			return false;
-
-		MCGFloat t_density;
-		t_density = p_pattern->source->GetDensity();
-		
-		t_transform = MCGAffineTransformScale(t_transform, 1.0 / t_density, 1.0 / t_density);
 	}
 	
 	
@@ -187,18 +180,14 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 	if (p_pattern == nil)
 		return false;
 	
-	if (p_pattern->locked_image != nil)
-		return false;
-	
 	MCGImageRef t_image;
 	t_image = nil;
 	
-	MCGImageFrame *t_frame;
-	t_frame = nil;
+	MCGImageFrame t_frame;
 	
 	MCGAffineTransform t_transform;
 	
-	bool t_success = t_success = true;
+	bool t_success = true;
 	
 	if (p_pattern->image != nil)
 	{
@@ -213,15 +202,19 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 		MCGFloat t_scale;
 		t_scale = MCGAffineTransformGetEffectiveScale(t_combined);
 		
-		t_success = p_pattern->source->LockImageFrame(0, t_scale, t_frame);
+        bool t_locked;
+		t_locked = p_pattern->source->LockImageFrame(0, t_scale, t_frame);
+		
+		t_success = t_locked;
 		
 		if (t_success)
 		{
-			t_transform = MCGAffineTransformMakeScale(1.0 / t_frame->density, 1.0 / t_frame->density);
+			t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.x_scale, 1.0 / t_frame.y_scale);
 			
 			if (!MCGAffineTransformIsRectangular(p_pattern->transform))
 			{
-				if (p_pattern->cache.density != t_frame->density)
+                MCThreadMutexLock(MCimagerepmutex);
+				if (p_pattern->cache.x_scale != t_frame.x_scale || p_pattern->cache.y_scale != t_frame.y_scale)
 				{
 					MCGImageRelease(p_pattern->cache.image);
 					p_pattern->cache.image = nil;
@@ -235,7 +228,7 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 					t_copy_transform = MCGAffineTransformConcat(p_pattern->transform, t_transform);
 					t_copy_transform = MCGAffineTransformConcat(MCGAffineTransformInvert(t_transform), t_copy_transform);
 					
-					t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame->image, t_copy_transform, p_pattern->filter, t_bitmap);
+					t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame.image, t_copy_transform, p_pattern->filter, t_bitmap);
 					
 					if (t_success)
 						t_success = MCImageBitmapCopyAsMCGImageAndRelease(t_bitmap, true, t_image);
@@ -244,7 +237,8 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 					{
 						p_pattern->cache.image = t_image;
 						p_pattern->cache.transform = t_transform;
-						p_pattern->cache.density = t_frame->density;
+						p_pattern->cache.x_scale = t_frame.x_scale;
+						p_pattern->cache.y_scale = t_frame.y_scale;
 					}
 					
 					MCImageFreeBitmap(t_bitmap);
@@ -255,29 +249,22 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 					t_image = MCGImageRetain(p_pattern->cache.image);
 					t_transform = p_pattern->cache.transform;
 				}
+                MCThreadMutexUnlock(MCimagerepmutex);
 			}
 			else
 			{
 				// return image & transform scaled for image density
 				t_transform = MCGAffineTransformConcat(p_pattern->transform, t_transform);
 				
-				t_image = MCGImageRetain(t_frame->image);
+				t_image = MCGImageRetain(t_frame.image);
 			}
-			p_pattern->source->UnlockImageFrame(0, t_frame);
-		}
-		
-		if (!t_success)
-		{
-//			p_pattern->source->UnlockImageFrame(0, t_frame);
-			t_frame = nil;
+            if (t_locked)
+                p_pattern->source->UnlockImageFrame(0, t_frame);
 		}
 	}
 	
 	if (t_success)
 	{
-		p_pattern->locked_image = t_image;
-//		p_pattern->locked_frame = t_frame;
-		
 		r_image = t_image;
 		r_pattern_transform = t_transform;
 	}
@@ -290,11 +277,7 @@ void MCPatternUnlock(MCPatternRef p_pattern, MCGImageRef p_locked_image)
 	if (p_pattern == nil)
 		return;
 	
-	if (p_locked_image != p_pattern->locked_image)
-		return;
-	
-	MCGImageRelease(p_pattern->locked_image);
-	p_pattern->locked_image = nil;
+    MCGImageRelease(p_locked_image);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -57,6 +57,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "resolution.h"
 
+#include "stacktile.h"
+
 void MCStack::external_idle()
 {
 	if (idlefunc != NULL)
@@ -153,6 +155,13 @@ void MCStack::resize(uint2 oldw, uint2 oldh)
 	MCRedrawUpdateScreen();
 }
 
+static bool _MCStackConfigureCallback(MCStack *p_stack, void *p_context)
+{
+	p_stack->configure(True);
+	
+	return true;
+}
+
 // MW-2007-07-03: [[ Bug 2332 ]] - It makes more sense for resize to be issue before move.
 //   Not doing so results in the stack's rect property being incorrect size-wise during execution
 //   of moveStack.
@@ -198,18 +207,7 @@ void MCStack::configure(Boolean user)
 		}
 	}
 	if (beenchanged)
-	{
-		MCStack *cstack = NULL;
-		uint2 ccount = 1;
-		while (True)
-		{
-			cstack = MCdispatcher->findchildstackd(window, ccount);
-			if (cstack == NULL)
-				break;
-			ccount++;
-			cstack->configure(True); //update children
-		}
-	}
+		foreachchildstack(_MCStackConfigureCallback, nil);
 }
 
 void MCStack::iconify()
@@ -461,50 +459,56 @@ Window MCStack::getwindow()
 		return window;
 }
 
+// IM-2014-07-23: [[ Bug 12930 ]] Reimplement to return the window of the parent stack
 Window MCStack::getparentwindow()
 {
-#if defined(_WINDOWS)
-	if (parentwindow != NULL)
-	{
-		if (MCdispatcher->findstackd(parentwindow) == NULL)
-		{
-			delete parentwindow;
-			parentwindow = NULL;
-		}
-		return parentwindow;
-	}
-	return DNULL;
-#else
-	if (parentwindow != NULL &&
-		MCdispatcher -> findstackd(parentwindow) == NULL)
-		parentwindow = NULL;
-	return parentwindow;
-#endif
+	MCStack *t_parent;
+	t_parent = getparentstack();
+	
+	if (t_parent == nil)
+		return nil;
+	
+	return t_parent->getwindow();
 }
 
-void MCStack::setparentwindow(Window w)
+void MCStack::setparentstack(MCStack *p_parent)
 {
-#if defined(_WINDOWS)
-	if (w != DNULL && w->handle.window != 0)
+	MCStack *t_parent;
+	t_parent = getparentstack();
+	
+	if (t_parent == p_parent)
+		return;
+	
+	if (m_parent_stack != nil)
 	{
-		if (parentwindow == DNULL)
-		{
-			parentwindow = new _Drawable;
-			parentwindow->type = DC_WINDOW;
-		}
-		parentwindow->handle.window = w->handle.window;
+		m_parent_stack->Release();
+		m_parent_stack = nil;
 	}
-	else
-		if (parentwindow != DNULL)
-		{
-			delete parentwindow;
-			parentwindow = DNULL;
-		}
-#else
-	if (parentwindow == window)
-		parentwindow = None;
-	parentwindow = w;
-#endif
+	
+	if (p_parent != nil)
+		m_parent_stack = p_parent->gethandle();
+}
+
+MCStack *MCStack::getparentstack()
+{
+	if (m_parent_stack == nil)
+		return nil;
+	
+	if (!m_parent_stack->Exists())
+	{
+		m_parent_stack->Release();
+		m_parent_stack = nil;
+		return nil;
+	}
+	
+	return (MCStack*)m_parent_stack->Get();
+}
+
+static bool _MCStackTakeWindowCallback(MCStack *p_stack, void *p_context)
+{
+	p_stack->setparentstack((MCStack*)p_context);
+	
+	return true;
 }
 
 Boolean MCStack::takewindow(MCStack *sptr)
@@ -535,6 +539,9 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	iconid = sptr->iconid;
 	sptr->stop_externals();
 	sptr->window = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] Update the child stacks of sptr to be child stacks of this.
+	MCdispatcher->foreachchildstack(sptr, _MCStackTakeWindowCallback, this);
 	
 	state = sptr->state;
 	state &= ~(CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK);
@@ -1780,13 +1787,11 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	mode = wm;
 	wposition = wpos;
 	walignment = walign;
+	// IM-2014-07-23: [[ Bug 12930 ]] We can now get & set the parent stack directly
 	if (parentptr == NULL)
-	{
-		if (parentwindow != NULL)
-			parentptr = MCdispatcher->findstackd(parentwindow);
-	}
+		parentptr = getparentstack();
 	else
-		setparentwindow(parentptr->getw());
+		setparentstack(parentptr);
 	
 	// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
 	view_setstackviewport(rect);
@@ -2489,6 +2494,63 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 	delete t_old_context;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// MM-2014-07-31: [[ ThreadedRendering ]] MCStackTile wraps a MCStackSurface and allows for the locking and rendring of the given region.
+//  This way we can easily split the stack surface into multiple regions and render each on a separate thread.
+class MCGContextStackTile: public MCStackTile
+{
+public:
+    MCGContextStackTile(MCStack *p_stack, MCStackSurface *p_surface, const MCGIntegerRectangle &p_region)
+    {
+        m_stack = p_stack;
+        m_surface = p_surface;
+        m_region = p_region;
+        m_context = NULL;
+    }
+    
+    ~MCGContextStackTile()
+    {
+    }
+    
+    bool Lock(void)
+    {
+        return m_surface -> LockGraphics(m_region, m_context, m_raster);
+    }
+    
+	void Unlock(void)
+    {
+        m_surface -> UnlockGraphics(m_region, m_context, m_raster);
+    }
+    
+    void Render(void)
+    {
+#ifndef _MAC_DESKTOP
+        // IM-2014-01-24: [[ HiDPI ]] Use view backing scale to transform surface -> logical coords
+        MCGFloat t_backing_scale;
+        t_backing_scale = m_stack -> view_getbackingscale();
+        
+        // p_region is in surface coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
+        MCRectangle t_rect;
+        t_rect = MCRectangleGetScaledBounds(MCRectangleFromMCGIntegerRectangle(m_region), 1 / t_backing_scale);
+        
+        // scale user -> surface space
+        MCGContextScaleCTM(m_context, t_backing_scale, t_backing_scale);
+        
+        m_stack -> view_render(m_context, t_rect);
+#else
+        m_stack -> view_render(m_context, MCRectangleFromMCGIntegerRectangle(m_region));
+#endif
+    }
+    
+private:
+    MCStack             *m_stack;
+    MCStackSurface      *m_surface;
+    MCGIntegerRectangle m_region;
+    MCGContextRef       m_context;
+    MCGRaster           m_raster;
+};
+
 void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef p_region)
 {
 	MCTileCacheRef t_tilecache;
@@ -2496,40 +2558,80 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
 	
 	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{
-		// If there is no tilecache, or the tilecache is invalid then fetch an
-		// MCGContext for the surface and render.
-		MCGContextRef t_context = nil;
-		if (p_surface -> LockGraphics(p_region, t_context))
-		{
-			MCRectangle t_bounds;
-			t_bounds = MCRectangleFromMCGIntegerRectangle(MCGRegionGetBounds(p_region));
-			
-#ifndef _MAC_DESKTOP
-			// IM-2014-01-24: [[ HiDPI ]] Use view backing scale to transform surface -> logical coords
-			MCGFloat t_backing_scale;
-			t_backing_scale = view_getbackingscale();
-			
-			// p_region is in surface coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
-			MCRectangle t_rect;
-			t_rect = MCRectangleGetScaledBounds(t_bounds, 1 / t_backing_scale);
-			
-			// scale user -> surface space
-			MCGContextScaleCTM(t_context, t_backing_scale, t_backing_scale);
-			
-			view_render(t_context, t_rect);
-#else
-			view_render(t_context, t_bounds);
-#endif		
-			
-			p_surface -> UnlockGraphics();
-		}
+        MCGIntegerRectangle t_bounds;
+        t_bounds = MCGRegionGetBounds(p_region);
+        
+        uint32_t t_cores;
+        t_cores = MCThreadGetNumberOfCores();
+        
+        // MM-2014-07-31: [[ ThreadedRendering ]] If the region is suitably large and the machine supports simultaneous execution,
+        //  split the stack surface into multiple regions and render each in an individual thread. The collect all function waits until all pending tiles have been rendered.
+        //  For dual core machines, we just split things into top and bottom half.
+        //  For machines with 4 or more cores, we split into 4 tiles -  top left, top right, bottom left, bottom right.
+        if (t_cores > 1 && t_bounds . size . width > 32 && t_bounds . size . height > 32)
+        {
+            if (t_cores >= 4)
+            {
+                MCGContextStackTile t_tile1(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x,
+                                                                    t_bounds . origin . y,
+                                                                    t_bounds . size . width / 2,
+                                                                    t_bounds . size . height / 2));
+                MCGContextStackTile t_tile2(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x + t_bounds . size . width / 2,
+                                                                    t_bounds . origin . y,
+                                                                    t_bounds . size . width - t_bounds . size . width / 2,
+                                                                    t_bounds . size . height / 2));
+                MCGContextStackTile t_tile3(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x,
+                                                                    t_bounds . origin . y + t_bounds . size . height / 2,
+                                                                    t_bounds . size . width / 2,
+                                                                    t_bounds . size . height - t_bounds . size . height / 2));
+                MCGContextStackTile t_tile4(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x + t_bounds . size . width / 2,
+                                                                    t_bounds . origin . y + t_bounds . size . height / 2,
+                                                                    t_bounds . size . width - t_bounds . size . width / 2,
+                                                                    t_bounds . size . height - t_bounds . size . height / 2));
+                MCStackTilePush(&t_tile1);
+                MCStackTilePush(&t_tile2);
+                MCStackTilePush(&t_tile3);
+                MCStackTilePush(&t_tile4);
+                MCStackTileCollectAll();
+            }
+            else
+            {
+                MCGContextStackTile t_tile1(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x,
+                                                                    t_bounds . origin . y,
+                                                                    t_bounds . size . width,
+                                                                    t_bounds . size . height / 2));
+                MCGContextStackTile t_tile2(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x,
+                                                                    t_bounds . origin . y + t_bounds . size . height / 2,
+                                                                    t_bounds . size . width,
+                                                                    t_bounds . size . height - t_bounds . size . height / 2));
+                MCStackTilePush(&t_tile1);
+                MCStackTilePush(&t_tile2);
+                MCStackTileCollectAll();
+            }
+        }
+        else
+        {
+            MCGContextStackTile t_tile(this, p_surface, t_bounds);
+            if (t_tile . Lock())
+            {
+                t_tile . Render();
+                t_tile . Unlock();
+            }
+        }
 	}
 	else
-	{
 		// We have a valid tilecache, so get it to composite.
 		MCTileCacheComposite(t_tilecache, p_surface, p_region);
-	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 void MCStack::takewindowsnapshot(MCStack *p_other_stack)
 {
@@ -2767,3 +2869,25 @@ MCRectangle MCStack::getvisiblerect(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCStack::foreachchildstack(MCStackForEachCallback p_callback, void *p_context)
+{
+	bool t_continue;
+	t_continue = true;
+	
+	if (substacks != NULL)
+	{
+		MCStack *t_stack = substacks;
+		do
+		{
+			if (t_stack->getparentstack() == this)
+				t_continue = p_callback(t_stack, p_context);
+
+			t_stack = (MCStack *)t_stack->next();
+		}
+		while (t_continue && t_stack != substacks);
+	}
+	
+	return t_continue;
+}
+

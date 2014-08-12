@@ -73,7 +73,10 @@ MCStack::MCStack()
 	obj_id = START_ID;
 	flags = F_VISIBLE | F_RESIZABLE | F_OPAQUE;
 	window = NULL;
-	parentwindow = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] No parent window to start with
+	m_parent_stack = nil;
+	
 	cursor = None;
 	substacks = NULL;
 	cards = curcard = savecards = NULL;
@@ -136,6 +139,9 @@ MCStack::MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
+    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
 
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
@@ -147,8 +153,6 @@ MCStack::MCStack()
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
 	view_init();
-
-	mode_create();
 }
 
 MCStack::MCStack(const MCStack &sref) : MCObject(sref)
@@ -177,7 +181,10 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		}
 	}
 	window = NULL;
-	parentwindow = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] No parent window to start with
+	m_parent_stack = nil;
+	
 	cursor = None;
 	substacks = NULL;
 	cards = curcard = savecards = NULL;
@@ -207,6 +214,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
 	
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
+    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
+    
 	mnemonics = NULL;
 	nfuncs = 0;
 	nmnemonics = 0;
@@ -335,14 +345,10 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	m_purge_fonts = false;
 
 	view_copy(sref);
-
-	mode_copy(sref);
 }
 
 MCStack::~MCStack()
 {
-	mode_destroy();
-
 	flags &= ~F_DESTROY_STACK;
 	state |= CS_DELETE_STACK;
 	while (opened)
@@ -367,8 +373,10 @@ MCStack::~MCStack()
 		opened++;
 		MCObject::close();
 	}
-	if (parentwindow != NULL)
-		setparentwindow(NULL);
+	
+	if (m_parent_stack != nil)
+		setparentstack(nil);
+
 	delete mnemonics;
 	delete title;
 	delete titlestring;
@@ -458,6 +466,9 @@ MCStack::~MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Release cache mutex.
+    MCThreadMutexRelease(m_id_cache_lock);
 	
 	view_destroy();
 }

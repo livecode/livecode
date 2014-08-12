@@ -898,11 +898,13 @@ void MCPlatformConfigureBackdrop(MCPlatformWindowRef backdrop_window);
 
 typedef class MCPlatformSurface *MCPlatformSurfaceRef;
 
-bool MCPlatformSurfaceLockGraphics(MCPlatformSurfaceRef surface, MCGRegionRef region, MCGContextRef& r_context);
-void MCPlatformSurfaceUnlockGraphics(MCPlatformSurfaceRef surface);
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to match new platform surface API.
+bool MCPlatformSurfaceLockGraphics(MCPlatformSurfaceRef surface, MCGIntegerRectangle region, MCGContextRef& r_context, MCGRaster& r_raster);
+void MCPlatformSurfaceUnlockGraphics(MCPlatformSurfaceRef surface, MCGIntegerRectangle region, MCGContextRef p_context, MCGRaster& p_raster);
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to match new platform surface API.
 bool MCPlatformSurfaceLockPixels(MCPlatformSurfaceRef surface, MCGIntegerRectangle region, MCGRaster& r_raster);
-void MCPlatformSurfaceUnlockPixels(MCPlatformSurfaceRef surface);
+void MCPlatformSurfaceUnlockPixels(MCPlatformSurfaceRef surface, MCGIntegerRectangle region, MCGRaster& p_raster);
 
 bool MCPlatformSurfaceLockSystemContext(MCPlatformSurfaceRef surface, void*& r_context);
 void MCPlatformSurfaceUnlockSystemContext(MCPlatformSurfaceRef surface);

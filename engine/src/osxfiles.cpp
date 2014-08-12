@@ -45,6 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+#include <mach-o/dyld.h>
+
 #define ENTRIES_CHUNK 1024
 
 #define SERIAL_PORT_BUFFER_SIZE  16384 //set new buffer size for serial input port
@@ -82,6 +84,15 @@ char *path2utf(char *path);
 
 void MCS_setfiletype(const char *newpath);
 
+// PM-2014-08-08: [[ Bug 13132 ]] OSX 10.6 does not contain an implementation for strndup so use our own regardless of the OSX version
+static char *my_strndup(const char *s, uint32_t l)
+{
+	char *r;
+	r = new char[l + 1];
+	strncpy(r, s, l);
+    r[l] = '\0';
+	return r;
+}
 
 /********************************************************************/
 /*                        File Handling                             */
@@ -2011,7 +2022,9 @@ static sysfolders sysfolderlist[] = {
 										// MW-2007-09-11: Added for uniformity across platforms
 										{"Documents", 'docs', kUserDomain, 'docs'},
 										// MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
-										{"Support", 0, kUserDomain, 'asup'},
+                                        // SN-2014-07-30: [[ Bug 13026 ]] We don't want any folder which doesn't match one above
+                                        //  to return the Application Support folder
+										{"Support", 'asup', kUserDomain, 'asup'},
                                     };
 
 // MW-2008-06-18: [[ Bug 6577 ]] specialFolderPath("home") didn't work as it is 4 chars long and
@@ -2022,6 +2035,10 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 {
 	const char *t_error;
 	t_error = NULL;
+    
+    // SN-2014-07-30: [[ 13026 ]] We can get the engine folder on desktop as well
+	char *t_folder_path;
+	t_folder_path = NULL;
 	
 	FSRef t_folder_ref;
 	if (t_error == NULL)
@@ -2035,26 +2052,36 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 			memcpy(&t_mac_folder, p_context . getsvalue() . getstring(), 4);
 			t_mac_folder = MCSwapInt32NetworkToHost(t_mac_folder);
 		}
-		else
-			t_mac_folder = 0;
+		else if (p_context . getsvalue() == "engine")
+        {
+            extern char *MCcmd;
+            char* t_folder;
+            t_folder_path = my_strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+            
+            t_mac_folder = 0;
+            t_found_folder = true;
+        }
 			
 		OSErr t_os_error;
 		uint2 t_i;
-		for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
-			if (p_context . getsvalue() == sysfolderlist[t_i] . token || t_mac_folder == sysfolderlist[t_i] . macfolder)
-			{
-				Boolean t_create_folder;
-				t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
-				
-				// MW-2012-10-10: [[ Bug 10453 ]] Use the 'mactag' field for the folder id as macfolder can be
-				//   zero.
-				t_os_error = FSFindFolder(sysfolderlist[t_i] . domain, sysfolderlist[t_i] . mactag, t_create_folder, &t_folder_ref);
-				if (t_os_error == noErr)
-				{
-					t_found_folder = true;
-					break;
-				}
-			}
+        if (t_mac_folder != 0)
+        {
+            for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
+                if (p_context . getsvalue() == sysfolderlist[t_i] . token || t_mac_folder == sysfolderlist[t_i] . macfolder)
+                {
+                    Boolean t_create_folder;
+                    t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
+                    
+                    // MW-2012-10-10: [[ Bug 10453 ]] Use the 'mactag' field for the folder id as macfolder can be
+                    //   zero.
+                    t_os_error = FSFindFolder(sysfolderlist[t_i] . domain, sysfolderlist[t_i] . mactag, t_create_folder, &t_folder_ref);
+                    if (t_os_error == noErr)
+                    {
+                        t_found_folder = true;
+                        break;
+                    }
+                }
+        }
 
 		if (!t_found_folder && p_context . getsvalue() . getlength() == 4)
 		{
@@ -2068,9 +2095,8 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 			t_error = "folder not found";
 	}
 		
-	char *t_folder_path;
-	t_folder_path = NULL;
-	if (t_error == NULL)
+    // SN-2014-07-30: [[ Bug 13026 ]] If the engine was asked, the folder path is directly set
+	if (t_error == NULL && t_folder_path == NULL)
 	{
 		t_folder_path = MCS_fsref_to_path(t_folder_ref);
 		if (t_folder_path == NULL)

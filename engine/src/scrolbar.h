@@ -60,6 +60,9 @@ class MCScrollbar : public MCControl
 	
 	static real8 markpos;
 	static uint2 mode;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the progress bar animate message is only posted from a single thread.
+    bool m_animate_posted : 1;
 	
 public:
 	MCScrollbar();

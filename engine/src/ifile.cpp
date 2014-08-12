@@ -120,61 +120,6 @@ void MCImage::recompress()
 	flags &= ~F_NEED_FIXING;
 }
 
-bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCBitmapFrame *&r_frames, uindex_t &r_frame_count)
-{
-	bool t_success = true;
-
-	IO_handle t_stream = nil;
-	MCBitmapFrame *t_frames = nil;
-	uindex_t t_frame_count = 1;
-
-	// create single frame for non-animated formats
-	if (t_success && p_compressed->compression != F_GIF)
-		t_success = MCMemoryNewArray(1, t_frames);
-
-	// create stream for non-rle compressed images
-	if (t_success && p_compressed->compression != F_RLE)
-		t_success = nil != (t_stream = MCS_fakeopen(MCString((char*)p_compressed->data, p_compressed->size)));
-
-	if (t_success)
-	{
-		switch (p_compressed->compression)
-		{
-		case F_GIF:
-			t_success = MCImageDecodeGIF(t_stream, t_frames, t_frame_count);
-			break;
-
-		case F_PNG:
-			t_frames[0].density = 1.0;
-			t_success = MCImageDecodePNG(t_stream, t_frames[0].image);
-			break;
-
-		case F_JPEG:
-			t_frames[0].density = 1.0;
-			t_success = MCImageDecodeJPEG(t_stream, t_frames[0].image);
-			break;
-
-		case F_RLE:
-			t_frames[0].density = 1.0;
-			t_success = MCImageDecompressRLE(p_compressed, t_frames[0].image);
-			break;
-		}
-	}
-
-	if (t_stream != nil)
-		MCS_close(t_stream);
-
-	if (t_success)
-	{
-		r_frames = t_frames;
-		r_frame_count = t_frame_count;
-	}
-	else
-		MCImageFreeFrames(t_frames, t_frame_count);
-
-	return t_success;
-}
-
 bool MCImage::decompressbrush(MCGImageRef &r_brush)
 {
 	/* TODO - may be able to improve this now by rasterizing the metafile */
@@ -188,7 +133,7 @@ bool MCImage::decompressbrush(MCGImageRef &r_brush)
 
 	bool t_success = true;
 
-	MCGImageFrame *t_frame = nil;
+	MCGImageFrame t_frame;
 
 	// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: We try here to acquire the brush
 	// bitmap at 1.0 scale, but currently ignore the set density value of the returned frame.
@@ -196,10 +141,12 @@ bool MCImage::decompressbrush(MCGImageRef &r_brush)
 	t_success = m_rep->LockImageFrame(0, 1.0, t_frame);
 
 	if (t_success)
-		r_brush = MCGImageRetain(t_frame->image);
+    {
+		r_brush = MCGImageRetain(t_frame.image);
 
-	m_rep->UnlockImageFrame(0, t_frame);
-
+        m_rep->UnlockImageFrame(0, t_frame);
+    }
+    
 	return t_success;
 }
 
@@ -210,9 +157,9 @@ void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density)
 		/* OVERHAUL - REVISIT: for the moment, prepared images are premultiplied
 		 * as we expect them to be rendered, but if not then this is actually
 		 * causing more work to be done than needed */
-		MCGImageFrame *t_frame = nil;
-		p_rep->LockImageFrame(0, p_density, t_frame);
-		p_rep->UnlockImageFrame(0, t_frame);
+		MCGImageFrame t_frame;
+		if (p_rep->LockImageFrame(0, p_density, t_frame))
+            p_rep->UnlockImageFrame(0, t_frame);
 	}
 }
 

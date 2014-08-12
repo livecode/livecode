@@ -259,6 +259,8 @@ IO_stat MCHcstak::macreadresources(void)
 //  MISC 
 //
 
+#include "systhreads.h"
+
 bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern)
 {
 	bool t_success = true;
@@ -323,9 +325,18 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 			break;
 	}
 	
+    if (s_patterns[t_index] != nil)
+	{
+		r_pattern = s_patterns[t_index];
+		return true;
+	}
+    
+    MCThreadMutexLock(MCpatternmutex);
+    
 	if (s_patterns[t_index] != nil)
 	{
 		r_pattern = s_patterns[t_index];
+        MCThreadMutexUnlock(MCpatternmutex);
 		return true;
 	}
     
@@ -361,6 +372,8 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
     CGContextRelease(t_context);
     CGColorSpaceRelease(t_colorspace);
 	
+    MCThreadMutexUnlock(MCpatternmutex);
+    
 	return t_success;
 }
 

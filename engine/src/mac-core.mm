@@ -68,6 +68,46 @@ enum
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@implementation com_runrev_livecode_MCPendingAppleEvent
+
+- (id)initWithEvent: (const AppleEvent *)event andReply: (AppleEvent *)reply
+{
+    self = [super init];
+    if (self == nil)
+        return nil;
+    
+    AEDuplicateDesc(event, &m_event);
+    AEDuplicateDesc(reply, &m_reply);
+    
+    return self;
+}
+
+- (void)dealloc
+{
+    AEDisposeDesc(&m_event);
+    AEDisposeDesc(&m_reply);
+    [super dealloc];
+}
+
+- (OSErr)process
+{
+    return AEResumeTheCurrentEvent(&m_event, &m_reply, (AEEventHandlerUPP)kAEUseStandardDispatch, 0);
+}
+
+- (AppleEvent *)getEvent
+{
+    return &m_event;
+}
+
+- (AppleEvent *)getReply
+{
+    return &m_reply;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
 @implementation com_runrev_livecode_MCApplicationDelegate
 
 //////////
@@ -83,6 +123,10 @@ enum
 	m_envp = envp;
 	
     m_explicit_quit = false;
+    
+    m_running = false;
+    
+    m_pending_apple_events = [[NSMutableArray alloc] initWithCapacity: 0];
     
 	return self;
 }
@@ -118,8 +162,60 @@ enum
 
 //////////
 
+static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_reply, long p_context)
+{
+    return [[NSApp delegate] preDispatchAppleEvent: p_event withReply: p_reply];
+}
+
+- (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply
+{
+    extern OSErr MCAppleEventHandlerDoAEAnswer(const AppleEvent *event, AppleEvent *reply, long refcon);
+    extern OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *event, AppleEvent *reply, long refcon);
+    extern OSErr MCAppleEventHandlerDoOpenDoc(const AppleEvent *event, AppleEvent *reply, long refcon);
+    
+    if (!m_running)
+    {
+        MCPendingAppleEvent *t_event;
+        t_event = [[MCPendingAppleEvent alloc] initWithEvent: p_event andReply: p_reply];
+        [m_pending_apple_events addObject: t_event];
+        AESuspendTheCurrentEvent(p_event);
+        return noErr;
+    }
+    
+	DescType rType;
+	Size rSize;
+	AEEventClass aeclass;
+	AEGetAttributePtr(p_event, keyEventClassAttr, typeType, &rType, &aeclass, sizeof(AEEventClass), &rSize);
+    
+	AEEventID aeid;
+	AEGetAttributePtr(p_event, keyEventIDAttr, typeType, &rType, &aeid, sizeof(AEEventID), &rSize);
+    
+    // MW-2014-08-12: [[ Bug 13140 ]] Handle the appleEvent to cause a termination otherwise
+    //   we don't quit if the app is in the background (I think this is because we roll our
+    //   own event handling loop and don't use [NSApp run]).
+    if (aeclass == kCoreEventClass && aeid == kAEQuitApplication)
+    {
+        [NSApp terminate: self];
+        return noErr;
+    }
+    
+    if (aeclass == kCoreEventClass && aeid == kAEAnswer)
+        return MCAppleEventHandlerDoAEAnswer(p_event, p_reply, 0);
+
+    OSErr t_err;
+    t_err = MCAppleEventHandlerDoSpecial(p_event, p_reply, 0);
+    if (t_err != errAEEventNotHandled)
+        return t_err;
+    
+    if (aeclass == kCoreEventClass && aeid == kAEOpenDocuments)
+        return MCAppleEventHandlerDoOpenDoc(p_event, p_reply, 0);
+    
+    return errAEEventNotHandled;
+}
+
 - (void)applicationWillFinishLaunching: (NSNotification *)notification
 {
+    AEInstallSpecialHandler(keyPreDispatch, preDispatchAppleEvent, False);
 }
 
 - (void)applicationDidFinishLaunching: (NSNotification *)notification
@@ -160,7 +256,24 @@ enum
 		// Now exit the application with the appropriate code.
 		exit(t_error_code);
 	}
+    
+    m_running = true;
 
+    // Dispatch pending apple events
+    while([m_pending_apple_events count] > 0)
+    {
+        MCPendingAppleEvent *t_event;
+        t_event = [m_pending_apple_events objectAtIndex: 0];
+        [m_pending_apple_events removeObjectAtIndex: 0];
+        
+        [self preDispatchAppleEvent: [t_event getEvent] withReply: [t_event getReply]];
+        AEResumeTheCurrentEvent([t_event getEvent], [t_event getReply], (AEEventHandlerUPP)kAENoDispatch, 0);
+        
+        //[t_event process];
+        
+        [t_event release];
+    }
+    
 	// We started up successfully, so queue the root runloop invocation
 	// message.
 	[self performSelector: @selector(runMainLoop) withObject: nil afterDelay: 0];
@@ -520,17 +633,24 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
+    // MW-2014-07-24: [[ Bug 12939 ]] If we are running a modal session, then don't then wait
+    //   for events - event handling happens inside the modal session.
+    NSEvent *t_event;
 	if (t_modal)
+    {
 		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
-	
-    // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
-    //   WebViews from working.
-	NSEvent *t_event;
-	t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
-								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
-									inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
-								   dequeue: YES];
-	
+        t_event = nil;
+    }
+	else
+    {
+        // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
+        //   WebViews from working.
+        t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
+                                     untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
+                                        inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
+                                       dequeue: YES];
+    }
+    
 	s_in_blocking_wait = false;
 
 	if (t_event != nil)
@@ -561,6 +681,11 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
 {
+    // MW-2014-07-24: [[ Bug 12898 ]] The context of the click is changing, so make sure we sync
+    //   mouse state - i.e. send a mouse release if in mouseDown and send a mouseLeave for the
+    //   current mouse window.
+	MCMacPlatformSyncMouseBeforeDragging();
+    
 	/* UNCHECKED */ MCMemoryResizeArray(s_modal_session_count + 1, s_modal_sessions, s_modal_session_count);
 	
 	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
@@ -1767,4 +1892,20 @@ int main(int argc, char *argv[], char *envp[])
 	return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// MM-2014-07-31: [[ ThreadedRendering ]] Helper functions used to create an auto-release pool for each new thread.
+void *MCMacPlatfromCreateAutoReleasePool()
+{
+    NSAutoreleasePool *t_pool;
+    t_pool = [[NSAutoreleasePool alloc] init];
+    return (void *) t_pool;
+}
+
+void MCMacPlatformReleaseAutoReleasePool(void *p_pool)
+{
+    NSAutoreleasePool *t_pool;
+    t_pool = (NSAutoreleasePool *) p_pool;
+    [t_pool release];
+}
 ////////////////////////////////////////////////////////////////////////////////

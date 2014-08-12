@@ -1201,6 +1201,9 @@ IO_stat MCVariableValue::loadarray(MCObjectInputStream& p_stream, bool p_merge)
 		destroy();
 	
 	set_type(VF_ARRAY);
+    // MW-2014-08-12: [[ Bug 13154 ]] If we aren't merging reset the array.
+    if (!p_merge)
+        array . clear();
 
 	IO_stat t_stat;
 	t_stat = array . load(p_stream, p_merge);
