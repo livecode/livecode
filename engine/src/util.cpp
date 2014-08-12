@@ -2380,7 +2380,11 @@ void MCU_geturl(MCExecPoint &ep)
 			MCurlresult->fetch(ep);
 		}
 		else
+        {
+			// MM-2014-08-12: [[ Bug 2902 ]] Make sure we set the result accordingly if the URL is invalid.
 			ep . clear();
+            MCresult -> sets("invalid host address");
+        }
 	}
 }
 
