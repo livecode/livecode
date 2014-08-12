@@ -376,7 +376,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		getlabeltext(slabel, isunicode);
 		Boolean icondrawed = False;
 		
-		if (m_icon_gravity != kMCGravityNone)
+        // SN-2014-08-12: [[ Bug 13155 ]] Don't try to draw the icons if the button has not got any
+		if (icons != NULL && m_icon_gravity != kMCGravityNone)
 		{
 			// MW-2014-06-19: [[ IconGravity ]] Use iconGravity to place the icon.
 			int t_left, t_top, t_right, t_bottom;
