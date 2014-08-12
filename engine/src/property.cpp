@@ -537,10 +537,12 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	// IM-2014-01-24: [[ HiDPI ]] Add support for global usePixelScaling, screenPixelScale, screenPixelScales properties
 	case P_USE_PIXEL_SCALING:
 	case P_SCREEN_PIXEL_SCALE:
-	case P_SCREEN_PIXEL_SCALES:
-			
-		break;
-
+    case P_SCREEN_PIXEL_SCALES:
+            
+    // MW-2014-08-12: [[ EditionType ]] Add support for global editionType property.
+    case P_EDITION_TYPE:
+        break;
+	        
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only
 	case P_REV_LICENSE_INFO:
 	case P_DRAG_DATA:
@@ -575,7 +577,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		}
 	case P_BRUSH_COLOR:
 	case P_BRUSH_BACK_COLOR:
-
 	case P_BRUSH_PATTERN:
 	case P_PEN_COLOR:
 	case P_PEN_BACK_COLOR:
@@ -3745,6 +3746,11 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		break;
 	}
 
+    // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
+    case P_EDITION_TYPE:
+        ep . setstaticcstring(MClicenseparameters . license_class == kMCLicenseClassCommunity ? "community" : "commercial");
+        break;
+            
 	case P_SHELL_COMMAND:
 		ep.setsvalue(MCshellcmd);
 		break;
