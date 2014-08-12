@@ -1902,7 +1902,7 @@ Parse_stat MCRecord::parse(MCScriptPoint &sp)
     
     if (sp.skip_token(SP_PLAY, TT_UNDEFINED, RC_PAUSE) == PS_NORMAL)
 		pause = True;
-	else if (sp.skip_token(SP_PLAY, TT_UNDEFINED, PP_RESUME) == PS_NORMAL)
+	else if (sp.skip_token(SP_PLAY, TT_UNDEFINED, RC_RESUME) == PS_NORMAL)
 		pause = False;
     else
     {

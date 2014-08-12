@@ -1917,8 +1917,11 @@ static bool list_compressors_callback(void *context, unsigned int id, const char
     MCPlatformSoundRecorderListCompressorsState *t_state = static_cast<MCPlatformSoundRecorderListCompressorsState *>(context);
     t_state -> ep -> concatcstring(label, EC_RETURN, t_state -> first);
     
+    uint32_t t_id;
+    t_id = MCSwapInt32NetworkToHost(id);
+    
     char t_code[] = "????";
-    memcpy(t_code, (char *)&id, 4);
+    memcpy(t_code, (char *)&t_id, 4);
     
     t_state -> ep -> concatcstring(t_code, EC_COMMA, false);
     t_state -> first = false;
@@ -1967,7 +1970,7 @@ Exec_stat MCRecordLoudness::eval(MCExecPoint &ep)
     if (MCrecorder != nil)
         t_loudness = MCPlatformSoundRecorderGetLoudness(MCrecorder);
     
-    ep . setnvalue(t_loudness);
+    ep . setuint(floor(t_loudness));
         
 #else
 	extern void MCQTGetRecordLoudness(MCExecPoint& ep);
