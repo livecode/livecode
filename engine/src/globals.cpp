@@ -368,7 +368,9 @@ MCVariable *MCurlresult;
 Boolean MCexitall;
 int4 MCretcode;
 Boolean MCrecording;
+#ifdef FEATURE_PLATFORM_RECORDER
 MCPlatformSoundRecorderRef MCrecorder;
+#endif
 
 // MW-2012-03-08: [[ StackFile5500 ]] Make stackfile version 5.5 the default.
 uint4 MCstackfileversion = 5500;
@@ -739,7 +741,9 @@ void X_clear_globals(void)
 	MCexitall = False;
 	MCretcode = 0;
 	MCrecording = False;
+#ifdef FEATURE_PLATFORM_RECORDER
     MCrecorder = nil;
+#endif
 	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
 	MCstackfileversion = 5500;
 	MClook = LF_MOTIF;

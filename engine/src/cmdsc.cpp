@@ -1963,12 +1963,12 @@ Exec_stat MCRecord::exec(MCExecPoint &ep)
 #else
         if (pause)
         {
-            extern void MCQTRecordPause(void)
+            extern void MCQTRecordPause(void);
             MCQTRecordPause();
         }
         else
         {
-            extern void MCQTRecordResume(void)
+            extern void MCQTRecordResume(void);
             MCQTRecordResume();
         }
 #endif
