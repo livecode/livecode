@@ -1173,6 +1173,7 @@ IO_stat MCVariableValue::loadkeys(IO_header *stream, bool p_merge)
 	IO_stat t_stat;
 
 	set_type(VF_ARRAY);
+    array . clear();
 
 	t_stat = array . loadkeys(stream, p_merge);
 	if (!p_merge && array . getnfilled() == 0)
@@ -1201,6 +1202,7 @@ IO_stat MCVariableValue::loadarray(MCObjectInputStream& p_stream, bool p_merge)
 		destroy();
 	
 	set_type(VF_ARRAY);
+    array . clear();
 
 	IO_stat t_stat;
 	t_stat = array . load(p_stream, p_merge);

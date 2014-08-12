@@ -60,6 +60,9 @@ class MCVariableArray
 	arrayextent *extents;
 
 public:
+    // Initialize the array to empty
+    void clear(void);
+    
 	// Initialize the hash to the given size
 	void presethash(uint4 p_size);
 

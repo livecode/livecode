@@ -41,6 +41,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stacksecurity.h"
 
+void MCVariableArray::clear(void)
+{
+    tablesize = 0;
+    table = NULL;
+    nfilled = keysize =0;
+    dimensions = EXTENT_ALLOCEVAL;
+    extents = NULL;
+}
+
 void MCVariableArray::presethash(uint4 size)
 {
 	tablesize = size;
