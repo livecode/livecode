@@ -50,6 +50,10 @@ do
 	if [ "${PLATFORM}" == "mac" -a "${ARCH}" == "ppc" ] ; then
 		CURL_ARCH_CONFIG="${CURL_ARCH_CONFIG} --host i386"
 	fi
+
+	if [ "${PLATFORM}" == "linux" -a "${ARCH}" == "armv6-hf" ] ; then
+		CURL_ARCH_CONFIG="${CURL_ARCH_CONFIG} --host i386"
+	fi
 	
 	if [ ! -d "${CURL_ARCH_SRC}" ] ; then
 		echo "Duplicating Curl source directory for ${PLATFORM}/${ARCH}"

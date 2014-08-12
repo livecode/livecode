@@ -330,7 +330,7 @@ sub generateModule
 		{
 			#output "  fprintf(stderr, \"" . symbolName($symbol) . "\\n\");";
 		}
-		if ($outputs ne "void")
+		if ($outputs ne "void ")
 		{
 			output "  return " . symbolName($symbol) . "_ptr($args);";
 		}
