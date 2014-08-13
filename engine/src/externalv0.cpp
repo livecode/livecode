@@ -248,7 +248,7 @@ bool MCExternalV0::ListHandlers(MCExternalListHandlersCallback p_callback, void 
                 if (i == j)
                     continue;
                 
-                if (islower(m_table[j] . name[0]) &&
+                if (islower(m_table[j] . type[0]) &&
                     strcmp(m_table[j] . name, m_table[i] . name) == 0)
                 {
                     t_has_utf8_variant = true;

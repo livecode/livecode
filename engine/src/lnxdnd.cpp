@@ -185,10 +185,6 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
             case GDK_MOTION_NOTIFY:
             {
                 //fprintf(stderr, "DND: motion notify\n");
-                
-                // Take ownership of the drag-and-drop selection
-                gdk_selection_owner_set_for_display(dpy, t_source, gdk_drag_get_selection(t_context), t_event->motion.time, TRUE);
-                
                 // Find the window that the motion has moved us into
                 GdkWindow *t_dest_window;
                 GdkDragProtocol t_protocol;
@@ -214,6 +210,10 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
             {
                 // Drop the item that was being dragged
                 //fprintf(stderr, "DND: button release\n");
+                
+                // Take ownership of the drag-and-drop selection
+                gdk_selection_owner_set_for_display(dpy, t_source, gdk_drag_get_selection(t_context), t_event->motion.time, TRUE);
+                
                 gdk_drag_drop(t_context, t_event->button.time);
                 break;
             }
