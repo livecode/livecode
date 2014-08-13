@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Abort building if any errors occur
-#set -e
+set -e
 
 # Build location
 export BASEDIR=$(dirname $0)
