@@ -176,7 +176,9 @@ public:
     void ResolveDisplayOrder();
     
     // Returns the offset used for cursor positioning within the segment
-    coord_t GetCursorOffset();
+    coord_t GetLeftEdge();
+    // SN-2014-08-11: [[ Bug 13124 ]] Returns the most on the right position within the segment
+    coord_t GetRightEdge();
     
     // Linked list management
     MCSegment *next()

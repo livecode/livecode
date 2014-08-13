@@ -342,8 +342,10 @@ coord_t MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
 	bptr->GetRange(i, l);
     
     while (bptr != lastblock
-           && ((prefer_forward && fi >= i + l)
-           || (!prefer_forward && fi >  i + l)))
+           // SN-2014-08-11: [[ Bug 13124 ]] If we are the last visual block of the segment,
+           //  we don't split the cursor
+           && (((bptr == sgptr -> GetLastVisualBlock() || prefer_forward) && fi >= i + l)
+           || (!prefer_forward && fi > i + l)))
     {
         bptr = bptr -> next();
         bptr -> GetRange(i, l);
@@ -354,7 +356,7 @@ coord_t MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
     }
    
     // The position of the segment containing the block needs to be included
-    return bptr->GetCursorX(fi) + sgptr->GetCursorOffset();
+    return bptr->GetCursorX(fi) + sgptr->GetLeftEdge();
 }
 
 coord_t MCLine::GetCursorXPrimary(findex_t fi, bool moving_forward)
@@ -388,8 +390,13 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
         {
             bptr = bptr->next();
             
-            int4 origin = bptr->getorigin() + sgptr->GetCursorOffset();
-            if (cx >= origin && cx < (origin + bptr->getwidth()))
+            coord_t origin = bptr->getorigin() + sgptr->GetLeftEdge();
+            // Different cases, according to the alignment:
+            //  right-aligned: the origin belongs to the previous block
+            //  others:        the origin belongs to the current block
+            if ((sgptr -> GetHorizontalAlignment() == kMCSegmentTextHAlignRight
+                        && cx > origin && cx <= (origin + bptr->getwidth()))
+                    || (cx >= origin && cx < (origin + bptr->getwidth())))
             {
                 done = true;
                 break;
@@ -404,19 +411,52 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
         
         // It is possible to be within the segment but not within a block due to
         // alignment within the segment. Pick the appropriate block.
-        if (!done && cx >= sgptr->GetLeft() && cx < sgptr->GetRight())
+        if (!done && cx > sgptr->GetLeft() && cx <= sgptr->GetRight())
         {
+            // SN-2014-08-11: [[ Bug 13124 ]] We want to get the right block,
+            // which might the one right before this segment in case we are centred/right-aligned
+            
             // AL-2014-07-29: [[ Bug 12896 ]] Wrong coordinate returned for clicks in segment align space
-            if (sgptr -> GetFirstVisualBlock() -> getorigin() + sgptr->GetCursorOffset() > cx)
+            if (cx <= sgptr -> GetLeftEdge())
             {
                 // Before the first block in visual ordering
-                bptr = sgptr -> GetFirstVisualBlock();
+                if (sgptr == firstsegment)
+                    bptr = sgptr -> GetFirstVisualBlock();
+                else
+                {
+                    // We need to find the appropriate block in which the cursor must be rendered
+                    coord_t t_limit;
+                    t_limit = (sgptr -> prev() -> GetRightEdge() + sgptr -> GetLeftEdge()) / 2;
+                    
+                    if (cx < t_limit)
+                    {
+                        bptr = sgptr -> prev() -> GetLastVisualBlock();
+                        sgptr = sgptr -> prev();
+                    }
+                    else
+                        bptr = sgptr -> GetFirstVisualBlock();
+                }
                 done = true;
             }
             else
             {
                 // Otherwise, must be after the last block in visual ordering
-                bptr = sgptr -> GetLastVisualBlock();
+                if (sgptr == lastsegment)
+                    bptr = sgptr -> GetLastVisualBlock();
+                else
+                {
+                    // We need to find the appropriate block in which the cursor must be rendered
+                    coord_t t_limit;
+                    t_limit = (+ sgptr -> GetRightEdge() + sgptr -> next() -> GetLeftEdge() ) / 2;
+                    
+                    if (cx < t_limit)
+                        bptr = sgptr -> GetLastVisualBlock();
+                    else
+                    {
+                        bptr = sgptr -> next() -> GetFirstVisualBlock();
+                        sgptr = sgptr -> next();
+                    }
+                }
                 done = true;
             }
         }
@@ -428,7 +468,7 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
     }
     while (sgptr->prev() != lastsegment);
     
-    return bptr->GetCursorIndex(cx - sgptr->GetCursorOffset(), chunk, bptr == lastblock, moving_forward);
+    return bptr->GetCursorIndex(cx - sgptr->GetLeftEdge(), chunk, bptr == lastblock, moving_forward);
 }
 
 uint2 MCLine::getwidth()
