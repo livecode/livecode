@@ -397,7 +397,8 @@ void MCSegment::Draw(MCDC *dc, coord_t p_line_origin_x, int16_t p_line_origin_y,
 		}
         
 		// Pass the computed flags to the block to draw.
-		bptr->draw(dc, x + bptr->getorigin(), x + m_RightEdge, y, si, ei, p_text, p_style, t_flags);
+        // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+		bptr->draw(dc, x + bptr->getorigin(), p_line_origin_x + m_LeftEdge, p_line_origin_x + m_RightEdge, y, si, ei, p_text, p_style, t_flags);
 		
 		coord_t twidth;
 		twidth = bptr->getwidth(dc);

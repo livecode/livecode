@@ -944,7 +944,8 @@ void MCBlock::split(findex_t p_index)
 	}
 }*/
 
-void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style)
+// SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cell_right, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style)
 {
 	// MW-2012-02-16: [[ FontRefs ]] Fetch the font metrics we need to draw.
 	int32_t t_ascent, t_descent;
@@ -996,7 +997,8 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
             t_width = MCFontMeasureTextSubstringFloat(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
-			t_cell_clip . x = x - 1;
+            // SN-2014-08-13: [[ Bug 13106 ]] Fixes the cell clipping
+            t_cell_clip . x = p_cell_left - 1;
             // AL-2014-07-29: [[ Bug 12952 ]] Clip to segment boundaries
 			t_cell_clip . width = MCU_max(segment -> GetWidth() - origin - t_padding * 2, 0.0f);
 
@@ -1113,7 +1115,9 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 	}
 }
 
-void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_t ei, MCStringRef p_string, uint2 pstyle, uint32_t p_border_flags)
+
+// SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t si, findex_t ei, MCStringRef p_string, uint2 pstyle, uint32_t p_border_flags)
 {
 	if (flags & F_HAS_SHIFT)
 		y += atts->shift;
@@ -1190,7 +1194,8 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 	// the selected portion of text, thus stopping drawing the selection changing the
 	// metrics of the text (due to sub-pixel positioning).
 	if (ei == si || si >= m_index + m_size || ei <= m_index)
-		drawstring(dc, x, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
+        // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+		drawstring(dc, x, lx, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 	else
 	{
         // Save the current clip.
@@ -1228,7 +1233,8 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 
             // SN-2014-07-09: [[ MERGE-6.7 ]] Update to the new clipping methods
             dc -> cliprect(t_unsel_clip);
-			drawstring(dc, x, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
+            // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+			drawstring(dc, x, lx, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
         }
 
         // SN-2014-07-09: [[ MERGE-6.7 ]] Switch back to the initial clip
@@ -1260,7 +1266,8 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
             }
 
             dc -> cliprect(t_unsel_clip);
-			drawstring(dc, x, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
+            // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+			drawstring(dc, x, lx, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
         }
 
         // SN-2014-07-09: [[ MERGE-6.7 ]] Switch back to the initial clip
@@ -1289,7 +1296,8 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 		}
 		
 		// Draw the selected text.
-		drawstring(dc, x, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
+        // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+		drawstring(dc, x, lx, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 		
 		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
 		// Revert to the previous clip and foreground color.
