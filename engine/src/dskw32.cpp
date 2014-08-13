@@ -2693,6 +2693,16 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		//	ep.commit(strlen(buf));
 		//}
         //}
+        // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        {
+            uindex_t t_last_slash;
+            
+            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+                t_last_slash = MCStringGetLength(MCcmd);
+            
+            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+        }
         else
         {
 			if (MCNumberParseUnicodeChars(MCStringGetCharPtr(MCNameGetString(p_type)), MCStringGetLength(MCNameGetString(p_type)), &t_special_folder) ||

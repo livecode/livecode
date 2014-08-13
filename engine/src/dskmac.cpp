@@ -5310,6 +5310,18 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         OSType t_domain = kOnAppropriateDisk;
         bool t_found_folder = false;
         
+        
+        // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
+        if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        {
+            uindex_t t_last_slash;
+            
+            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+                t_last_slash = MCStringGetLength(MCcmd);
+            
+            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+        }
+        
         if (MCS_mac_specialfolder_to_mac_folder(MCNameGetString(p_type), t_mac_folder, t_domain))
             t_found_folder = true;
         else if (MCStringGetLength(MCNameGetString(p_type)) == 4 &&
