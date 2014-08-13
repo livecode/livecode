@@ -50,14 +50,17 @@ void MCVariableArray::clear(void)
     extents = NULL;
 }
 
-void MCVariableArray::presethash(uint4 size)
+bool MCVariableArray::presethash(uint4 size)
 {
+	table = new MCHashentry *[size];
+    if (table == NULL)
+        return false;
 	tablesize = size;
-	table = new MCHashentry *[tablesize];
 	memset((char *)table, 0, tablesize * sizeof(MCHashentry *));
 	nfilled = keysize = 0;
 	dimensions = EXTENT_ALLOCEVAL;
 	extents = NULL;
+    return true;
 }
 
 void MCVariableArray::freehash(void)
@@ -80,17 +83,24 @@ void MCVariableArray::freehash(void)
 		delete extents;
 }
 
-void MCVariableArray::resizehash(uint32_t p_new_tablesize)
+bool MCVariableArray::resizehash(uint32_t p_new_tablesize)
 {
 	uint4 oldsize = tablesize;
-
+    uint4 newsize = tablesize;
+    
 	if (p_new_tablesize == 0)
-		tablesize <<= 1;
+		newsize <<= 1;
 	else
-		tablesize = p_new_tablesize;
+		newsize = p_new_tablesize;
 
 	MCHashentry **oldtable = table;
-	table = new MCHashentry *[tablesize];
+    MCHashentry **newtable;
+	newtable = new MCHashentry *[newsize];
+    if (newtable == NULL)
+        return false;
+    
+    table = newtable;
+    tablesize = newsize;
 	memset((char *)table, 0, tablesize * sizeof(MCHashentry *));
 	uint4 i;
 	for (i = 0 ; i < oldsize ; i++)
@@ -423,7 +433,8 @@ Exec_stat MCVariableArray::transpose(MCVariableArray& v)
 	v.calcextents();
 	if (v.extents == NULL || v.dimensions != 2 || v.ismissingelement() == True)
 		return ES_ERROR;
-	presethash(v.nfilled);
+	if (!presethash(v.nfilled))
+        return ES_ERROR;
     // MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
 	int32_t i, j;
 	char tbuf[(I4L * 2) + 1];
@@ -719,7 +730,8 @@ Exec_stat MCVariableArray::matrixmultiply(MCExecPoint& ep, MCVariableArray &va, 
 	        !(va.getextent(COL_DIM) == vb.getextent(ROW_DIM)) ||
 	        !(!va.ismissingelement() && !vb.ismissingelement()))
 		return ES_ERROR; //columns does not equal rows
-	presethash(va.getextent(ROW_DIM) * vb.getextent(COL_DIM));
+	if (!presethash(va.getextent(ROW_DIM) * vb.getextent(COL_DIM)))
+        return ES_ERROR;
     
     // MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
 	int32_t i,j,k;
@@ -1798,10 +1810,12 @@ IO_stat MCVariableArray::load(MCObjectInputStream& p_stream, bool p_merge)
 		if (p_merge)
 		{
 			if (tablesize < t_table_size)
-				resizehash(t_table_size);
+				if (!resizehash(t_table_size))
+                    return IO_ERROR;
 		}
 		else
-			presethash(t_table_size);
+			if (!presethash(t_table_size))
+                return IO_ERROR;
 	}
 
 	while(t_stat == IO_NORMAL)
