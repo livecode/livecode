@@ -90,6 +90,9 @@ MCField::MCField()
 	tabs = NULL;
 	ntabs = 0;
 	label = NULL;
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Used to flag if a recompute is required during the next draw.
+    m_recompute = false;
 }
 
 MCField::MCField(const MCField &fref) : MCControl(fref)
@@ -152,6 +155,9 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 	}
 	label = strclone(fref.label);
 	state &= ~CS_KFOCUSED;
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Used to flag if a recompute is required during the next draw.
+    m_recompute = false;
 }
 
 MCField::~MCField()
@@ -480,6 +486,10 @@ void MCField::kunfocus()
 				MCactivefield = NULL;
 		}
 	}
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Flag that a recompute is potentially required at the next draw.
+    if (state & CS_SELECTED)
+        m_recompute = false;
 }
 
 Boolean MCField::kdown(const char *string, KeySym key)
@@ -1184,6 +1194,10 @@ void MCField::setrect(const MCRectangle &nrect)
     
     if (t_resized)
         do_recompute(true);
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Flag that a recompute is potentially required at the next draw.
+    if (state & CS_SIZE)
+        m_recompute = true;
 }
 
 Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
@@ -2891,19 +2905,27 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	if ((state & CS_SIZE || state & CS_MOVE) && flags & F_SCROLLBAR)
 		setsbrects();
 
-    // MM-2014-08-05: [[ Bug 13012 ]] Put locks around recompute to prevent threading issues.
-    MCThreadMutexLock(MCfieldmutex);
-	if (state & CS_SIZE)
-	{
-		resetparagraphs();
-		do_recompute(true);
-	}
-	else if (state & CS_SELECTED && (texty != 0 || textx != 0))
-	{
-		resetparagraphs();
-		do_recompute(false);
-	}
-    MCThreadMutexUnlock(MCfieldmutex);
+    // MM-2014-08-11: [[ Bug 13149 ]] Make sure only the first thread calls do_recompute.
+    if (m_recompute)
+    {
+        // MM-2014-08-05: [[ Bug 13012 ]] Put locks around recompute to prevent threading issues.
+        MCThreadMutexLock(MCfieldmutex);
+        if (m_recompute)
+        {
+            if (state & CS_SIZE)
+            {
+                resetparagraphs();
+                do_recompute(true);
+            }
+            else if (state & CS_SELECTED && (texty != 0 || textx != 0))
+            {
+                resetparagraphs();
+                do_recompute(false);
+            }
+            m_recompute = false;
+        }
+        MCThreadMutexUnlock(MCfieldmutex);
+    }
 
 	MCRectangle frect = getfrect();
 	

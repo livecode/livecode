@@ -50,23 +50,23 @@ bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, M
 			r_rep = m_resampled_rep;
 		else
 		{
-            // MM-2014-08-05: [[ Bug 13112 ]] Make sure only a single thread resamples the image.
-            MCThreadMutexLock(MCimagerepmutex);
-            if (m_resampled_rep != nil && m_resampled_rep->Matches(rect.width, rect.height, t_h_flip, t_v_flip, m_rep))
-                r_rep = m_resampled_rep;
-            else
-            {
-                if (!MCImageRepGetResampled(rect.width, rect.height, t_h_flip, t_v_flip, m_rep, r_rep))
-                {
-                    MCThreadMutexUnlock(MCimagerepmutex);
-                    return false;
-                }
-                
-                if (m_resampled_rep != nil)
-                    m_resampled_rep->Release();
-                m_resampled_rep = static_cast<MCResampledImageRep*>(r_rep);
-            }
-            MCThreadMutexUnlock(MCimagerepmutex);
+			// MM-2014-08-05: [[ Bug 13112 ]] Make sure only a single thread resamples the image.
+			MCThreadMutexLock(MCimagerepmutex);
+			if (m_resampled_rep != nil && m_resampled_rep->Matches(rect.width, rect.height, t_h_flip, t_v_flip, m_rep))
+				r_rep = m_resampled_rep;
+			else
+			{
+				if (!MCImageRepGetResampled(rect.width, rect.height, t_h_flip, t_v_flip, m_rep, r_rep))
+				{
+					MCThreadMutexUnlock(MCimagerepmutex);
+					return false;
+				}
+
+				if (m_resampled_rep != nil)
+					m_resampled_rep->Release();
+				m_resampled_rep = static_cast<MCResampledImageRep*>(r_rep);
+			}
+			MCThreadMutexUnlock(MCimagerepmutex);
 		}
 		
 		r_has_transform = false;
@@ -87,6 +87,9 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 	if (m_rep != nil)
 	{
+		uint32_t t_frame_duration;
+		t_frame_duration = 0;
+		
 		if (m_rep->GetType() == kMCImageRepVector)
 		{
 			MCU_set_rect(drect, dx - sx, dy - sy, rect.width, rect.height);
@@ -165,6 +168,9 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			t_success = t_rep->LockImageFrame(currentframe, t_device_scale, t_frame);
 			if (t_success)
 			{
+				// IM-2014-08-01: [[ Bug 13021 ]] Get frame duration to avoid re-locking later
+				t_frame_duration = t_frame.duration;
+				
 				MCImageDescriptor t_image;
 				MCMemoryClear(&t_image, sizeof(MCImageDescriptor));
 
@@ -173,8 +179,9 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 					t_image.transform = t_transform;
 				
 				// IM-2013-07-19: [[ ResIndependence ]] set scale factor so hi-res image draws at the right size
-				// IM-2013-10-30: [[ FullscreenMode ]] Get scale factor from the returned frame
-				t_image.scale_factor = t_frame.density;
+				// IM-2014-08-07: [[ Bug 13021 ]] Split density into x / y scale components
+				t_image.x_scale = t_frame.x_scale;
+				t_image.y_scale = t_frame.y_scale;
 
                 // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 				t_image.filter = getimagefilter();
@@ -217,31 +224,24 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			}
 
             if (t_success)
-                t_rep->UnlockImageFrame(currentframe, t_frame);
+				t_rep->UnlockImageFrame(currentframe, t_frame);
 		}
 
 		if (state & CS_DO_START)
 		{
-			MCGImageFrame t_frame;
-			if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
+			// MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
+			if (!m_animate_posted)
 			{
-                
-                // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
-                if (!m_animate_posted)
-                {
-                    MCThreadMutexLock(MCanimationmutex);
-                    if (!m_animate_posted)
-                    {
-                        m_animate_posted = true;
-                        MCscreen->addtimer(this, MCM_internal, t_frame.duration);
-                    }
-                    MCThreadMutexUnlock(MCanimationmutex);
-                }
-                
-				m_rep->UnlockImageFrame(currentframe, t_frame);
-
-				state &= ~CS_DO_START;
+				MCThreadMutexLock(MCanimationmutex);
+				if (!m_animate_posted)
+				{
+					m_animate_posted = true;
+					MCscreen->addtimer(this, MCM_internal, t_frame_duration);
+				}
+				MCThreadMutexUnlock(MCanimationmutex);
 			}
+
+			state &= ~CS_DO_START;
 		}
 	}
     else if (filename != nil)

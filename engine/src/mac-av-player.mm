@@ -80,6 +80,7 @@ public:
 	virtual void SetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
 	virtual void GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
     
+    void EndTimeChanged(void);
     void MovieFinished(void);
     void TimeJumped(void);
     
@@ -96,6 +97,8 @@ private:
     
     CMTime CMTimeFromLCTime(uint32_t lc_time);
     uint32_t CMTimeToLCTime(CMTime cm_time);
+    
+    void SeekToTimeAndWait(uint32_t p_lc_time);
     
     void HandleCurrentTimeChanged(void);
     
@@ -147,6 +150,7 @@ private:
     bool m_frame_changed_pending : 1;
     bool m_finished : 1;
     bool m_loaded : 1;
+    bool m_stepped : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -253,6 +257,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     
     m_selection_start = 0;
     m_selection_finish = 0;
+    m_stepped = false;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -263,6 +268,7 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     // First detach the observer from everything we've attached it to.
     [m_player removeTimeObserver:m_time_observer_token];
     
+    [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     // Now we can release it.
     [m_observer release];
     
@@ -284,13 +290,16 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 void MCAVFoundationPlayer::TimeJumped(void)
 {
     // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
-    if (!m_synchronizing)
+    if (!m_synchronizing && m_stepped)
+    {
         MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
+    }
 }
 
 void MCAVFoundationPlayer::MovieFinished(void)
 {
     m_finished = true;
+    m_stepped = false;
     
     if (m_offscreen)
         CVDisplayLinkStop(m_display_link);
@@ -303,9 +312,11 @@ void MCAVFoundationPlayer::MovieFinished(void)
     else
     {
         // PM-2014-07-15: [[ Bug 12812 ]] Make sure we loop within start and finish time when playSelection is true 
-        if (m_play_selection_only)
+        if (m_play_selection_only && m_selection_duration > 0)
+            // Note: Calling breakSeekToTimeAndWait(m_selection_start) here causes loop property to break
             [[m_player currentItem] seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         else
+            // Note: Calling SeekToTimeAndWait(0) here causes loop property to break
             [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         
         if (m_offscreen)
@@ -346,7 +357,21 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
     if (!m_synchronizing)
         MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
 }
-
+void MCAVFoundationPlayer::EndTimeChanged(void)
+{
+    // PM-2014-08-06: [[ Bug 13064 ]] Make sure selection start/end points are respected
+    if (m_play_selection_only)
+    {
+        [m_player setActionAtItemEnd: AVPlayerActionAtItemEndPause];
+        // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+        if (m_selection_duration != 0)
+            [[m_player currentItem] setForwardPlaybackEndTime:CMTimeFromLCTime(m_selection_finish)];
+        else
+            [[m_player currentItem] setForwardPlaybackEndTime:kCMTimeInvalid];
+    }
+    else
+        [[m_player currentItem] setForwardPlaybackEndTime: kCMTimeInvalid];
+}
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
@@ -378,6 +403,17 @@ void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
 	MCMacPlatformScheduleCallback(DoSwitch, this);
     
 	m_switch_scheduled = true;
+}
+
+void MCAVFoundationPlayer::SeekToTimeAndWait(uint32_t p_time)
+{
+    __block bool t_is_finished = false;
+    [[m_player currentItem] seekToTime:CMTimeFromLCTime(p_time) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
+        t_is_finished = true;
+        MCPlatformBreakWait();
+    }];
+    while(!t_is_finished)
+        MCPlatformWaitForEvent(60.0, true);
 }
 
 CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLink,
@@ -618,8 +654,11 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(timeJumped:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
     
-    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:nil usingBlock:^(CMTime time) {
+    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(30, 1000) queue:nil usingBlock:^(CMTime time) {
     
+        if (CMTimeCompare(time, m_observed_time) == 0)
+            return;
+        
         m_observed_time = time;
 
         // This fixes the issue of pause not being instant when alwaysBuffer = false
@@ -627,7 +666,6 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
             HandleCurrentTimeChanged();
         
         }];
-    
     
     m_time_scale = [m_player currentItem] . asset . duration . timescale;
 }
@@ -667,30 +705,33 @@ void MCAVFoundationPlayer::Start(double rate)
     {
         if (m_finished && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
         {
-            [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            //[m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            SeekToTimeAndWait(0);
         }
     }
     else
     {
-        if (m_finished)
+        // TODO: The more often EndTimeChanged is called, the bigger delay appears when pause is called
+        EndTimeChanged();
+        
+        if (m_selection_duration > 0 && (CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_finish)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_start)) <= 0))
         {
-            if (m_selection_duration > 0 && m_play_selection_only && (CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_finish)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_start)) <= 0))
-            {
-                [m_player seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-                
-            }
-            
-            // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
-            if (m_selection_duration == 0 && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
-            {
-                [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-            }
-            
+            //[m_player seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            SeekToTimeAndWait(m_selection_start);
         }
+        
+        // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
+        if (m_selection_duration == 0 && CMTimeCompare(m_player . currentTime, m_player . currentItem . duration) >= 0)
+        {
+            //[m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+            SeekToTimeAndWait(0);
+        }
+
     }
     
     m_playing = true;
     m_finished = false;
+    m_stepped = false;
     [m_player setRate:rate];
 }
 
@@ -704,6 +745,7 @@ void MCAVFoundationPlayer::Stop(void)
 void MCAVFoundationPlayer::Step(int amount)
 {
     [[m_player currentItem] stepByCount:amount];
+    m_stepped = true;
 }
 
 void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
@@ -797,16 +839,14 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             // MW-2014-07-29: [[ Bug 12989 ]] Make sure we use the duration timescale.
             // MW-2014-08-01: [[ Bug 13046 ]] Use a completion handler to wait until the currentTime is
             //   where we want it to be.
-            if (m_player != nil)
-            {
-                __block bool t_is_finished = false;
-                [[m_player currentItem] seekToTime:CMTimeFromLCTime(*(uint32_t *)p_value) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
-                    t_is_finished = true;
-                    MCPlatformBreakWait();
-                }];
-                while(!t_is_finished)
-                    MCPlatformWaitForEvent(60.0, true);
-            }
+            /*__block bool t_is_finished = false;
+            [[m_player currentItem] seekToTime:CMTimeFromLCTime(*(uint32_t *)p_value) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
+                t_is_finished = true;
+                MCPlatformBreakWait();
+            }];
+            while(!t_is_finished)
+                MCPlatformWaitForEvent(60.0, true);*/
+            SeekToTimeAndWait(*(uint32_t *)p_value);
         }
         break;
 		case kMCPlatformPlayerPropertyStartTime:
