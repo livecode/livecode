@@ -337,6 +337,11 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	int i;
 	MCstackbottom = (char *)&i;
 
+    ////
+
+    // SN-2014-08-14: [[ Bug 13177 ]] X_clear_globals sets MCswapbytes to False
+    X_clear_globals();
+
 	////
 	
 	MCswapbytes = byte_swapped();
@@ -359,11 +364,8 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 #endif
 
 	////
+
 	MCS_init();
-
-    ////
-
-    X_clear_globals();
 
 	////
 	
