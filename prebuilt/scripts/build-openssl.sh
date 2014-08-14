@@ -44,7 +44,11 @@ function buildOpenSSL {
 				fi
 				;;
 			linux)
-				SPEC="linux-generic32"
+        if [ "${ARCH}" == "x86_64" ] ; then
+          SPEC="linux-x86_64"
+				else
+		      SPEC="linux-generic32"
+				fi
 				;;
 			android)
 				if [ "${ARCH}" == "armv6" ] ; then
