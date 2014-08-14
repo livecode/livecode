@@ -76,23 +76,8 @@ void MCScreenDC::setstatus(const char *status)
 { //No action
 }
 
-// IM-2014-08-08: [[ Bug 12372 ]] Set up dpi-awareness if pixel scaling is enabled
-bool MCWin32ConfigurePixelScaling()
-{
-	if (MCModeGetPixelScalingEnabled())
-	{
-		BOOL t_result;
-		return MCWin32SetProcessDPIAware(t_result) && t_result;
-	}
-
-	return true;
-}
-
 Boolean MCScreenDC::open()
 {
-	// configure pixel scaling
-	/* UNCHECKED */ MCWin32ConfigurePixelScaling();
-
 	WNDCLASSA  wc;  //window class
 
 	// Fill in window class structure with parameters that describe

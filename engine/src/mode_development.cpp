@@ -1540,7 +1540,8 @@ bool MCModeGetPixelScalingEnabled()
 		return true;
 	}
 
-	return ep.getsvalue() == "true";
+	// IM-2014-08-14: [[ Bug 12372 ]] PixelScaling is enabled by default.
+	return ep.isempty() || ep.getsvalue() == "true";
 }
 
 #endif

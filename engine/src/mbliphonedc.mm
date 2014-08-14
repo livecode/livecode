@@ -1622,6 +1622,10 @@ static bool MCIPhoneWait(double p_sleep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCResPlatformInitPixelScaling(void)
+{
+}
+
 // IM-2014-01-30: [[ HiDPI ]] Pixel scaling supported on iOS
 bool MCResPlatformSupportsPixelScaling(void)
 {
