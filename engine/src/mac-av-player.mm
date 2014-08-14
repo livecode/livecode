@@ -326,8 +326,13 @@ void MCAVFoundationPlayer::MovieFinished(void)
 
 void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
 {
-    uint32_t t_current_time;
+    int32_t t_current_time;
     t_current_time = CMTimeToLCTime([m_player currentTime]);
+    
+    // PM-2014-08-12: [[ Bug 13156 ]] When clicked'n'hold the back button of the controller, t_current_time was negative after returning to the start of the video, and this was causing the last callback of the queue to be invoked after the first one. So make sure that t_current_time is valid.
+    
+    if (t_current_time > CMTimeToLCTime(m_player.currentItem.asset.duration) || t_current_time < 0)
+        return;
     
     if (m_marker_count > 0)
     {
