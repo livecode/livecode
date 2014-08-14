@@ -109,11 +109,13 @@ public:
 
 	bool fit(coord_t x, coord_t width, findex_t& r_break_index, bool& r_break_fits);
 	void split(findex_t p_index);
-	void drawstring(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style);
+    // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+	void drawstring(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style);
 	
 	// MW-2012-02-27: [[ Bug 2939 ]] The 'flags' parameter indicates whether the left and/or
 	//   right edge of any box or 3d-box should be rendered.
-	void draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_t ei, MCStringRef p_text, uint2 pstyle, uint32_t flags);
+    // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+	void draw(MCDC *dc, coord_t x, coord_t p_left_cell, coord_t cx, int2 y, findex_t si, findex_t ei, MCStringRef p_text, uint2 pstyle, uint32_t flags);
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] Returns the effective font attrs of the block.
 	//   If 'base_attrs' is non-nil, it uses that to derive the attrs.

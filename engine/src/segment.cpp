@@ -39,6 +39,11 @@ MCSegment::MCSegment(MCLine *p_parent)
     
     m_LeftEdge = m_RightEdge = m_TopEdge = m_BottomEdge = 0;
     m_ContentWidth = 0;
+    // SN-2014-08-14: [[ Bug 13106 ]] m_Padding initialisation according to the VGrid property of the field
+    if (p_parent -> getparent() -> getvgrid())
+        m_Padding = p_parent -> getparent() -> gethpadding();
+    else
+        m_Padding = 0.0;
 }
 
 
@@ -52,6 +57,8 @@ MCSegment::MCSegment(const MCSegment *sg)
     
     m_HAlign = sg->m_HAlign;
     m_VAlign = sg->m_VAlign;
+    // SN-2014-08-14: [[ Bug 13106 ]] m_Padding member added to Segment
+    m_Padding = sg->m_Padding;
 }
 
 
@@ -333,12 +340,14 @@ void MCSegment::Draw(MCDC *dc, coord_t p_line_origin_x, int16_t p_line_origin_y,
     else if (m_HAlign == kMCSegmentTextHAlignCenter)
     {
         // Centre of the cell minus half the length of the content
-        x = p_line_origin_x + m_LeftEdge + ((m_RightEdge - m_LeftEdge) / 2) - (GetContentLength() / 2);
+        // SN-2014-08-14: [[ Bug 13106 ]] Update to GetInnerWidth
+        x = p_line_origin_x + m_LeftEdge + (GetInnerWidth() / 2) - (GetContentLength() / 2);
     }
     else if (m_HAlign == kMCSegmentTextHAlignRight)
     {
         // Right-hand edge of the cell
-        x = p_line_origin_x + m_RightEdge - GetContentLength();
+        // SN-2014-08-14: [[ Bug 13106 ]] Update to GetInnerWidth
+        x = p_line_origin_x + m_LeftEdge + GetInnerWidth() - GetContentLength();
     }
     else    // m_HAlign == kMCSegmentTextHAlignJustify
     {
@@ -397,8 +406,9 @@ void MCSegment::Draw(MCDC *dc, coord_t p_line_origin_x, int16_t p_line_origin_y,
 		}
         
 		// Pass the computed flags to the block to draw.
-		bptr->draw(dc, x + bptr->getorigin(), x + m_RightEdge, y, si, ei, p_text, p_style, t_flags);
-		
+        // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+		bptr->draw(dc, x + bptr->getorigin(), p_line_origin_x + m_LeftEdge, p_line_origin_x + m_RightEdge, y, si, ei, p_text, p_style, t_flags);
+
 		coord_t twidth;
 		twidth = bptr->getwidth(dc);
 		
@@ -545,21 +555,53 @@ void MCSegment::ResolveDisplayOrder()
     m_LastVisualBlock = t_visual_order[t_block_count - 1];
 }
 
-coord_t MCSegment::GetCursorOffset()
+coord_t MCSegment::GetLeftEdge()
 {
     // The offset depends on the alignment of the segment
+    // SN-2014-08-14: [[ Bug 13106 ]] GetLeftEdge updated to adapt to the VGrid mode
     switch (m_HAlign)
     {
         case kMCSegmentTextHAlignLeft:
         case kMCSegmentTextHAlignJustify:
-            return m_LeftEdge;
-            
+            return m_LeftEdge + m_Padding;
         case kMCSegmentTextHAlignCenter:
-            return m_LeftEdge + ((m_RightEdge - m_LeftEdge) / 2) - (GetContentLength() / 2);
-            
+            if (m_Parent -> getparent() -> getvgrid())
+                return MCMax(m_LeftEdge + (GetWidth() - GetContentLength()) / 2,
+                             m_LeftEdge + m_Padding);
+            else
+                return m_LeftEdge + (GetWidth() - GetContentLength()) / 2;
         case kMCSegmentTextHAlignRight:
-            return m_RightEdge - GetContentLength();
-            
+            if (m_Parent -> getparent() -> getvgrid())
+                return MCMax(m_RightEdge - m_Padding - GetContentLength(),
+                             m_LeftEdge + m_Padding);
+            else
+                return m_RightEdge - GetContentLength();
+        default:
+            MCAssert(false);
+            return 0;
+    }
+}
+
+coord_t MCSegment::GetRightEdge()
+{
+    // The right limit depends on the TAB alignment
+    // SN-2014-08-14: [[ Bug 13106 ]] GetRightEdge updated to adapt to the VGrid mode
+    switch(m_HAlign)
+    {
+        case kMCSegmentTextHAlignLeft:   
+            if (m_Parent -> getparent() -> getvgrid())
+                return MCMin(m_LeftEdge + m_Padding + GetContentLength(),
+                             m_RightEdge - m_Padding);
+            else
+                return ((coord_t)m_LeftEdge + m_Padding) + GetContentLength();
+        case kMCSegmentTextHAlignCenter:
+            if (m_Parent -> getparent() -> getvgrid())
+                return MCMin(m_RightEdge - (GetWidth() - GetContentLength()) / 2,
+                             m_RightEdge - m_Padding);
+            else
+                return m_RightEdge - (GetWidth() - GetContentLength()) / 2;
+        case kMCSegmentTextHAlignRight:
+            return m_RightEdge - m_Padding;
         default:
             MCAssert(false);
             return 0;
