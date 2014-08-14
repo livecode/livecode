@@ -172,6 +172,7 @@ void MCQTGetVersion(MCExecPoint& ep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef FEATURE_PLATFORM_RECORDER
 // Related class variables
 static void *sgSoundComp = NULL;
 static long sgSndDriver = 0;
@@ -355,6 +356,18 @@ void MCQTStopRecording(void)
 		recordexportfile = NULL;
 		delete recordexportfile;
 	}
+}
+
+void MCQTRecordPause(void)
+{
+    if (MCrecording)
+        SGPause((SeqGrabComponent)sgSoundComp, seqGrabPause);
+}
+
+void MCQTRecordResume(void)
+{
+    if (MCrecording)
+        SGPause((SeqGrabComponent)sgSoundComp, seqGrabUnpause);
 }
 
 void MCQTRecordSound(char *fname)
@@ -554,6 +567,7 @@ void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet)
 		}
 	CloseComponent(ci);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

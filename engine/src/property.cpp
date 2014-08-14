@@ -1585,13 +1585,13 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			else
 
 				if (MCrecordrate <= (11.127 + 22.050) / 2.0)
-					MCrecordrate = 11.127;
+					MCrecordrate = 12.000;
 				else
 					if (MCrecordrate <= (22.050 + 22.255) / 2.0)
 						MCrecordrate = 22.050;
 					else
 						if (MCrecordrate <= (22.255 + 32.000) / 2.0)
-							MCrecordrate = 22.255;
+							MCrecordrate = 24.000;
 						else
 							if (MCrecordrate <= (32.000 + 44.100) / 2.0)
 								MCrecordrate = 32.000;
@@ -2241,8 +2241,18 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 				return ES_ERROR;
 			if (!trecording)
 			{
+#ifdef FEATURE_PLATFORM_RECORDER
+                bool t_recording;
+                t_recording = false;
+                
+                extern MCPlatformSoundRecorderRef MCrecorder;
+                
+                if (MCrecorder != nil)
+                    t_recording = MCPlatformSoundRecorderIsRecording(MCrecorder);
+#else
 				extern void MCQTStopRecording(void);
 				MCQTStopRecording();
+#endif
 			}
 		}
 		break;

@@ -1899,14 +1899,21 @@ MCRecord::~MCRecord()
 Parse_stat MCRecord::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	sp.skip_token(SP_RECORD, TT_UNDEFINED, RC_SOUND); //skip for sc compat
-	sp.skip_token(SP_THERE, TT_UNDEFINED, TM_FILE); //always file in mc
-	if (sp.parseexp(False, True, &file) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_RECORD_BADFILEEXP, sp);
-		return PS_ERROR;
-	}
+    
+    if (sp.skip_token(SP_RECORD, TT_UNDEFINED, RC_PAUSE) == PS_NORMAL)
+		pause = True;
+	else if (sp.skip_token(SP_RECORD, TT_UNDEFINED, RC_RESUME) == PS_NORMAL)
+		pause = False;
+    else
+    {
+        sp.skip_token(SP_RECORD, TT_UNDEFINED, RC_SOUND); //skip for sc compat
+        sp.skip_token(SP_THERE, TT_UNDEFINED, TM_FILE); //always file in mc
+        if (sp.parseexp(False, True, &file) != PS_NORMAL)
+        {
+            MCperror->add(PE_RECORD_BADFILEEXP, sp);
+            return PS_ERROR;
+        }
+    }
 	return PS_NORMAL;
 }
 
@@ -1918,15 +1925,54 @@ Exec_stat MCRecord::exec(MCExecPoint &ep)
 		MCeerror->add(EE_PROCESS_NOPERM, line, pos);
 		return ES_ERROR;
 	}
-	if (file->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_RECORD_BADFILE, line, pos);
-		return ES_ERROR;
-	}
-	char *soundfile = MCS_get_canonical_path(ep.getcstring());
-	
-	extern void MCQTRecordSound(char *soundfile);
-	MCQTRecordSound(soundfile);
+
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+#endif
+    
+    if (file != nil)
+    {
+        if (file->eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_RECORD_BADFILE, line, pos);
+            return ES_ERROR;
+        }
+        char *soundfile = MCS_get_canonical_path(ep.getcstring());
+        
+#ifdef FEATURE_PLATFORM_RECORDER
+        if (MCrecorder == nil)
+            MCPlatformSoundRecorderCreate(MCrecorder);
+        
+        if (MCrecorder != nil)
+            MCPlatformSoundRecorderStart(MCrecorder, soundfile);
+#else
+        extern void MCQTRecordSound(char *soundfile);
+        MCQTRecordSound(soundfile);
+#endif
+    }
+    else
+    {
+#ifdef FEATURE_PLATFORM_RECORDER
+        if (MCrecorder != nil)
+        {
+            if (pause)
+                MCPlatformSoundRecorderPause(MCrecorder);
+            else
+                MCPlatformSoundRecorderResume(MCrecorder);
+        }
+#else
+        if (pause)
+        {
+            extern void MCQTRecordPause(void);
+            MCQTRecordPause();
+        }
+        else
+        {
+            extern void MCQTRecordResume(void);
+            MCQTRecordResume();
+        }
+#endif
+    }
 	return ES_NORMAL;
 #endif /* MCRecord */
 }
