@@ -1133,6 +1133,14 @@ void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet)
 {
 }
 
+void MCQTRecordPause(void)
+{
+}
+
+void MCQTRecordResume(void)
+{
+}
+
 void MCQTGetVersion(MCExecPoint& ep)
 {
     ep.setstaticcstring("0.0");  //indicates that no QT installed
