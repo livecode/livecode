@@ -35,6 +35,8 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 static NSLock *s_callback_lock = nil;
 
+// MW-2014-08-14: [[ Bug 13016 ]] This holds the window that is currently being
+//   moved by the windowserver.
 static MCPlatformWindowRef s_moving_window = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +66,8 @@ enum
         MCMacPlatformHandleMouseSync();
     else
     {
+        // MW-2014-08-14: [[ Bug 13016 ]] Whilst the windowserver moves a window
+        //   we intercept mouseDragged events so we can keep script informed.
         NSWindow *t_window;
         t_window = [event window];
         if (s_moving_window != nil &&
