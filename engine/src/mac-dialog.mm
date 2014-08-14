@@ -599,7 +599,8 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 	{
 		uindex_t t_last_slash;
         if (MCStringLastIndexOfChar(p_initial, '/', UINT32_MAX, kMCStringOptionCompareExact, t_last_slash))
-            MCStringCopySubstring(p_initial, MCRangeMake(0, t_last_slash), &t_initial_file);
+            // SN-2014-08-11: [[ Bug 13143 ]] Take the right part: after the last slash, not before
+            MCStringCopySubstring(p_initial, MCRangeMake(t_last_slash + 1, MCStringGetLength(p_initial) - t_last_slash - 1), &t_initial_file);
         else
             t_initial_file = p_initial;
 	}
