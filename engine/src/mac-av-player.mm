@@ -289,11 +289,7 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 
 void MCAVFoundationPlayer::TimeJumped(void)
 {
-    // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
-    if (!m_synchronizing && m_stepped)
-    {
-        MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
-    }
+    //MCLog("Time Jumped!", nil);
 }
 
 void MCAVFoundationPlayer::MovieFinished(void)
@@ -656,13 +652,16 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
     m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(30, 1000) queue:nil usingBlock:^(CMTime time) {
     
+        // The block is invoked periodically at the interval specified, interpreted according to the timeline of the current item.
+        // The block is also invoked whenever time jumps and whenever playback starts or stops.
         if (CMTimeCompare(time, m_observed_time) == 0)
             return;
         
         m_observed_time = time;
 
-        // This fixes the issue of pause not being instant when alwaysBuffer = false
-        if (IsPlaying() && !m_offscreen)
+        // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
+        // PM-2014-08-12: [[ Bug 13091 ]] Removed the isPlaying() condition, so as to receive currenttimechanged messages when dragging the thumb, clicking in the well or using the forward/back buttons. This will trigger callbacks
+        if (!m_offscreen)
             HandleCurrentTimeChanged();
         
         }];
