@@ -119,6 +119,7 @@ bool MCVariableArray::resizehash(uint32_t p_new_tablesize)
 		}
 	}
 	delete oldtable;
+    return true;
 }
 
 ////
