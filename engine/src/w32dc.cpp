@@ -35,6 +35,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32dc.h"
 #include "w32printer.h"
 #include "w32context.h"
+#include "resolution.h"
+#include "mode.h"
+
+#include "w32compat.h"
 
 #include "mctheme.h"
 
@@ -276,99 +280,6 @@ MCStack *MCScreenDC::platform_getstackatpoint(int32_t x, int32_t y)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// IM-2014-01-28: [[ HiDPI ]] Weak-linked IsProcessDPIAware function
-typedef BOOL (WINAPI *IsProcessDPIAwarePtr)(VOID);
-bool MCWin32IsProcessDPIAware(bool &r_aware)
-{
-	static IsProcessDPIAwarePtr s_IsProcessDPIAware = NULL;
-	static bool s_init = true;
-
-	if (s_init)
-	{
-		s_IsProcessDPIAware = (IsProcessDPIAwarePtr)GetProcAddress(GetModuleHandleA("user32.dll"), "IsProcessDPIAware");
-		s_init = false;
-	}
-
-	if (s_IsProcessDPIAware == nil)
-		return false;
-
-	r_aware = s_IsProcessDPIAware();
-
-	return true;
-}
-
-//////////
-
-typedef enum __MCW32ProcessDPIAwareness
-{
-	kMCW32ProcessDPIUnaware,
-	kMCW32ProcessSystemDPIAware,
-	kMCW32ProcessPerMonitorDPIAware,
-} MCW32ProcessDPIAwareness;
-
-// IM-2014-01-28: [[ HiDPI ]] Weak-linked GetProcessDPIAwareness function
-typedef HRESULT (WINAPI *GetProcessDPIAwarenessPTR)(HANDLE hprocess, MCW32ProcessDPIAwareness *value);
-bool MCWin32GetProcessDPIAwareness(MCW32ProcessDPIAwareness &r_awareness)
-{
-	static GetProcessDPIAwarenessPTR s_GetProcessDPIAwareness = NULL;
-	static bool s_init = true;
-
-	if (s_init)
-	{
-		s_GetProcessDPIAwareness = (GetProcessDPIAwarenessPTR)GetProcAddress(GetModuleHandleA("shcore.dll"), "GetProcessDPIAwareness");
-		s_init = false;
-	}
-
-	if (s_GetProcessDPIAwareness == nil)
-		return false;
-
-	HRESULT t_result;
-	t_result = s_GetProcessDPIAwareness(NULL, &r_awareness);
-
-	return t_result == S_OK;
-}
-
-//////////
-
-typedef enum __MCW32MonitorDPIType
-{
-	kMCW32MDTEffectiveDPI,
-	kMCW32MDTAngularDPI,
-	kMCW32MDTRawDPI,
-	kMCW32MDTDefault = kMCW32MDTEffectiveDPI,
-} MCW32MonitorDPIType;
-
-// IM-2014-01-28: [[ HiDPI ]] Weak-linked GetDPIForMonitor function
-typedef HRESULT (WINAPI *GetDPIForMonitorPTR)(HMONITOR hmonitor, MCW32MonitorDPIType dpiType, UINT *dpiX, UINT *dpiY);
-bool MCWin32GetDPIForMonitor(HMONITOR p_monitor, uint32_t &r_xdpi, uint32_t &r_ydpi)
-{
-	static GetDPIForMonitorPTR s_GetDPIForMonitor = NULL;
-	static bool s_init = true;
-
-	if (s_init)
-	{
-		s_GetDPIForMonitor = (GetDPIForMonitorPTR)GetProcAddress(GetModuleHandleA("shcore.dll"), "GetDPIForMonitor");
-		s_init = false;
-	}
-
-	if (s_GetDPIForMonitor == nil)
-		return false;
-
-	HRESULT t_result;
-	UINT t_x, t_y;
-	t_result = s_GetDPIForMonitor(p_monitor, kMCW32MDTEffectiveDPI, &t_x, &t_y);
-
-	if (t_result != S_OK)
-		return false;
-
-	r_xdpi = t_x;
-	r_ydpi = t_y;
-
-	return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 // IM-2014-01-28: [[ HiDPI ]] Return the x & y dpi of the main screen
 bool MCWin32GetScreenDPI(uint32_t &r_xdpi, uint32_t &r_ydpi)
 {
@@ -396,6 +307,11 @@ MCGFloat MCWin32GetLogicalToScreenScale(void)
 {
 	// TODO - determine the correct value on Win8.1 - this may depend on the display in question
 
+	// IM-2014-08-08: [[ Bug 12372 ]] If pixel scaling is disabled, then
+	// we don't need to scale from logical -> screen.
+	if (!MCResGetUsePixelScaling())
+		return 1.0;
+
 	uint32_t t_x, t_y;
 	/* UNCHECKED */ MCWin32GetScreenDPI(t_x, t_y);
 
@@ -409,13 +325,20 @@ MCGFloat MCWin32GetLogicalToScreenScale(void)
 //   For Per-Monitor-DPI-aware applications, this will be the effective DPI scale of the given monitor
 bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale)
 {
-	uint32_t t_xdpi, t_ydpi;
-
+	UINT t_xdpi, t_ydpi;
+	HRESULT t_result;
+	
 	// try to get per-monitor DPI setting
-	if (!MCWin32GetDPIForMonitor(p_monitor, t_xdpi, t_ydpi) &&
+	if (!MCWin32GetDPIForMonitor(t_result, p_monitor, kMCWin32MDTDefault, &t_xdpi, &t_ydpi) ||
+		t_result != S_OK)
+	{
 		// fallback to the global system DPI setting
-		!MCWin32GetScreenDPI(t_xdpi, t_ydpi))
+		uint32_t t_screen_xdpi, t_screen_ydpi;
+		if (!MCWin32GetScreenDPI(t_screen_xdpi, t_screen_ydpi))
 			return false;
+		t_xdpi = t_screen_xdpi;
+		t_ydpi = t_screen_ydpi;
+	}
 
 	r_pixel_scale = (MCGFloat)MCMax(t_xdpi, t_ydpi) / NORMAL_DENSITY;
 
@@ -424,14 +347,26 @@ bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-08-08: [[ Bug 12372 ]] Set up dpi-awareness if pixel scaling is enabled
+void MCResPlatformInitPixelScaling()
+{
+	if (MCModeGetPixelScalingEnabled())
+	{
+		BOOL t_result;
+		/* UNCHECKED */ MCWin32SetProcessDPIAware(t_result);
+	}
+}
+
 // IM-2014-01-27: [[ HiDPI ]] Return whether the application is DPI-aware
 bool MCResPlatformSupportsPixelScaling(void)
 {
-	bool t_aware;
-	if (MCWin32IsProcessDPIAware(t_aware))
-		return t_aware;
+	BOOL t_aware;
+	if (!MCWin32IsProcessDPIAware(t_aware) || !t_aware)
+		return false;
 
-	return false;
+	// IM-2014-08-08: [[ Bug 12372 ]] Support for pixel scaling depends on
+	// whether or not it is enabled for the current environment.
+	return MCModeGetPixelScalingEnabled();
 }
 
 // IM-2014-01-27: [[ HiDPI ]] On Windows, DPI-awareness can only be set at app startup or in the app manifest

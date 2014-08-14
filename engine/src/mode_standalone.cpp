@@ -57,6 +57,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
+#include "w32compat.h"
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 #endif
@@ -957,6 +958,27 @@ bool MCModeHandleMessage(LPARAM lparam)
 bool MCPlayer::mode_avi_closewindowonplaystop()
 {
 	return true;
+}
+
+// IM-2014-08-08: [[ Bug 12372 ]] Only use pixel scaling in the standalone
+// if dpiAwareness has been configured in the application manifest.
+bool MCModeGetPixelScalingEnabled()
+{
+	bool t_success;
+	t_success = true;
+
+	unichar_t *t_value;
+	t_value = nil;
+
+	t_success = MCWin32QueryActCtxSettings(L"dpiAware", t_value);
+
+	if (t_success)
+		t_success = 0 == wcscmp(t_value, L"true");
+
+	if (t_value != nil)
+		MCMemoryDeallocate(t_value);
+
+	return t_success;
 }
 
 #endif

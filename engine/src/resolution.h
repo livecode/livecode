@@ -46,6 +46,8 @@ void MCResListScreenPixelScales(MCExecPoint &ep, bool p_plural);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-08-14: [[ Bug 12372 ]] Perform any platform-specific pixel scaling setup.
+void MCResPlatformInitPixelScaling(void);
 // IM-2014-01-30: [[ HiDPI ]] Return the default pixel scale for the platform
 MCGFloat MCResPlatformGetDefaultPixelScale(void);
 // IM-2014-03-14: [[ HiDPI ]] Return the scale factor from platform UI coords to device pixels
