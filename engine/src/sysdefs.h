@@ -541,6 +541,12 @@ inline void *operator new (size_t size, void *p)
 }
 #endif
 
+// MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
+#ifndef __VISUALC__
+void *operator new (size_t size) throw();
+void *operator new[] (size_t size) throw();
+#endif
+
 //////////////////////////////////////////////////////////////////////
 //
 //  INTERVAL DEFINITIONS
