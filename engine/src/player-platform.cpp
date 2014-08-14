@@ -1705,7 +1705,8 @@ Boolean MCPlayer::prepare(MCStringRef options)
 		MCPlatformCreatePlayer(m_platform_player);
     
 	if (MCStringBeginsWithCString(filename, (const char_t*)"https:", kMCStringOptionCompareCaseless)
-            || MCStringBeginsWithCString(filename, (const char_t*)"https", kMCStringOptionCompareCaseless)
+            // SN-2014-08-14: [[ Bug 13178 ]] Check if the sentence starts with 'http:' instead of 'https'
+            || MCStringBeginsWithCString(filename, (const char_t*)"http:", kMCStringOptionCompareCaseless)
             || MCStringBeginsWithCString(filename, (const char_t*)"ftp:", kMCStringOptionCompareCaseless)
             || MCStringBeginsWithCString(filename, (const char_t*)"file:", kMCStringOptionCompareCaseless)
             || MCStringBeginsWithCString(filename, (const char_t*)"rtsp:", kMCStringOptionCompareCaseless))
