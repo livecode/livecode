@@ -293,7 +293,7 @@ static bool s_lock_responder_change = false;
 
 @implementation NSWindow (com_runrev_livecode_MCWindowTrackingAdditions)
 
-- (void)com_runrev_livecode_windowMoved: (MCWindowTrackingThread *)tracker
+- (void)com_runrev_livecode_windowMoved: (MCPlatformWindowRef)window
 {
     // The NSWindow's frame isn't updated whilst a window is being moved. However,
     // the window server's bounds *are*. Thus we ask for the updated bounds from
@@ -325,15 +325,13 @@ static bool s_lock_responder_change = false;
         _frame . origin . x = t_rect . origin . x;
         _frame . origin . y = [[NSScreen mainScreen] frame] . size . height - t_rect . origin . y - t_rect . size . height;
         
-        [tracker platformWindow] -> ProcessDidMove();
+        ((MCMacPlatformWindow *)window) -> ProcessDidMove();
     
         _frame . origin = t_origin;
     }
     
     [t_info_array release];
     CFRelease(t_window_id_array);
-    
-    [tracker setSignalled: false];
 }
 
 @end
@@ -511,22 +509,31 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
     {
         // MW-2014-04-08: [[ Bug 12087 ]] Launch a tracking thread so that we get
         //   continuous moveStack messages.
-        MCWindowTrackingThread *t_thread;
+        /*MCWindowTrackingThread *t_thread;
         t_thread = [[MCWindowTrackingThread alloc] initWithPlatformWindow: m_window];
         [t_thread autorelease];
-        [t_thread start];
+        [t_thread start];*/
         
         // MW-2014-04-23: [[ Bug 12270 ]] The user has started moving the window
         //   so set us as reshape by user.
         m_user_reshape = true;
+        
+        [NSApp windowStartedMoving: m_window];
     }
+}
+
+- (void)windowWillMoveFinished: (NSNotification *)notification
+{
+    m_user_reshape = false;
 }
 
 - (void)windowDidMove:(NSNotification *)notification
 {
+    /*[NSApp windowStoppedMoving: m_window];
+    
     // MW-2014-04-23: [[ Bug 12270 ]] The user has stopped moving the window
     //   so unset us as reshape by user.
-    m_user_reshape = false;
+    m_user_reshape = false;*/
     
 	m_window -> ProcessDidMove();
 }
@@ -1926,7 +1933,7 @@ void MCMacPlatformWindow::DoSynchronize(void)
 			m_shadow_changed = true;
 	}
 	
-	if (m_changes . content_changed)
+	if (m_changes . content_changed && ![m_delegate inUserReshape])
 	{
 		NSRect t_cocoa_content;
 		MCMacPlatformMapScreenMCRectangleToNSRect(m_content, t_cocoa_content);

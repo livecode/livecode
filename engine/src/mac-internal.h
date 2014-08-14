@@ -419,7 +419,7 @@ public:
     // Changed parameters order to follow *KeyDown functions consistency
 	void ProcessKeyDown(MCPlatformKeyCode key_code, codepoint_t mapped_char, codepoint_t unmapped_char);
 	void ProcessKeyUp(MCPlatformKeyCode key_code, codepoint_t mapped_char, codepoint_t unmapped_char);
-	
+    
 	void MapMCPointToNSPoint(MCPoint location, NSPoint& r_ns_location);
 	void MapNSPointToMCPoint(NSPoint location, MCPoint& r_mc_location);
 	

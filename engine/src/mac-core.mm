@@ -35,6 +35,8 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 static NSLock *s_callback_lock = nil;
 
+static MCPlatformWindowRef s_moving_window = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum
@@ -61,7 +63,40 @@ enum
         [event subtype] == kMCMacPlatformMouseSyncEvent)
         MCMacPlatformHandleMouseSync();
     else
+    {
+        NSWindow *t_window;
+        t_window = [event window];
+        if (s_moving_window != nil &&
+            [event window] == ((MCMacPlatformWindow *)s_moving_window) -> GetHandle())
+        {
+            if ([event type] == NSLeftMouseDragged)
+                [t_window com_runrev_livecode_windowMoved: s_moving_window];
+            else if ([event type] == NSLeftMouseUp)
+                [self windowStoppedMoving: s_moving_window];
+        }
+        
         [super sendEvent: event];
+    }
+}
+
+- (void)windowStartedMoving: (MCPlatformWindowRef)window
+{
+    if (s_moving_window != nil)
+        [self windowStoppedMoving: window];
+    
+    MCPlatformRetainWindow(window);
+    s_moving_window = window;
+}
+
+- (void)windowStoppedMoving: (MCPlatformWindowRef)window
+{
+    if (s_moving_window == nil)
+        return;
+    
+    [[((MCMacPlatformWindow *)s_moving_window) -> GetHandle() delegate] windowWillMoveFinished: nil];
+    
+    MCPlatformReleaseWindow(s_moving_window);
+    s_moving_window = nil;
 }
 
 @end
