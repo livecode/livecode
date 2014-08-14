@@ -2416,7 +2416,14 @@ void MCU_geturl(MCExecPoint &ep)
 			MCurlresult->fetch(ep);
 		}
 		else
+        {
+			// MM-2014-08-12: [[ Bug 2902 ]] Make sure we set the result accordingly if the URL is invalid.
+			char *t_err;
+            MCCStringFormat(t_err, "invalid URL: %s", ep . getcstring());
 			ep . clear();
+            MCresult -> sets(t_err);
+            MCCStringFree(t_err);
+        }
 	}
 }
 
