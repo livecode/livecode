@@ -704,6 +704,34 @@ void MCAVFoundationPlayer::Start(double rate)
     if (m_offscreen && !CVDisplayLinkIsRunning(m_display_link))
         CVDisplayLinkStart(m_display_link);
  
+    EndTimeChanged();
+    
+    // PM-2014-08-14: This fixes the issue of pause not being instant. 
+    if (m_time_observer_token)
+    {
+        [m_player removeTimeObserver:m_time_observer_token];
+        m_time_observer_token = nil;
+    }
+    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(30, 1000) queue:nil usingBlock:^(CMTime time) {
+    
+        /* 
+        When alwaysBuffer is true and movie finishes, the CVDisplayLink stops. After that, in case currenttime changes
+        (for example when user clicks on the controller well), we have to re-start the CVDisplayLink so as to update
+        the current movie frame
+        */
+        if (m_offscreen && !CVDisplayLinkIsRunning(m_display_link))
+            CVDisplayLinkStart(m_display_link);
+        
+        if (CMTimeCompare(time, m_observed_time) == 0)
+            return;
+        
+        m_observed_time = time;
+        
+        if (!m_offscreen)
+            HandleCurrentTimeChanged();
+        
+    }];
+
     // PM-2014-07-15 Various tweaks to handle all cases of playback
     if (!m_play_selection_only)
     {
@@ -715,9 +743,6 @@ void MCAVFoundationPlayer::Start(double rate)
     }
     else
     {
-        // TODO: The more often EndTimeChanged is called, the bigger delay appears when pause is called
-        EndTimeChanged();
-        
         if (m_selection_duration > 0 && (CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_finish)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeFromLCTime(m_selection_start)) <= 0))
         {
             //[m_player seekToTime:CMTimeFromLCTime(m_selection_start) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
