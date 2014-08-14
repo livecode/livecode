@@ -106,6 +106,16 @@ public:
         return m_offset;
     }
     
+    MCSegment *GetFirstSegment() const
+    {
+        return firstsegment;
+    }
+    
+    MCSegment *GetLastSegment() const
+    {
+        return lastsegment;
+    }
+    
 	//////////
 	
 	MCLine *next()

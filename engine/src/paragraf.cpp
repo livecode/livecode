@@ -1113,36 +1113,45 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         MCBlock *bptr = firstblock;
         MCSegment *sgptr = segments;
         
-        bool t_whole_segment;
-        t_whole_segment = false;
+        // AL-2014-08-13: [[ Bug 13108 ]] Use left and right of segments for boundaries of fill rect if necessary
+        bool t_segment_front, t_segment_back, t_whole_segment;
         
         do
         {
+            t_segment_front = false;
+            t_segment_back = false;
+            t_whole_segment = false;
+            
             // Is part of this block selected?
             findex_t bi, bl;
             bptr->GetRange(bi, bl);
             
             // AL-2014-07-29: [[ Bug 12951 ]] Selection rect should include whitespace between tabbed cells
-            // If this is the first block of a segment, check if the selection covers the whole segment.
-            if (bptr == sgptr -> GetFirstBlock() && startindex <= bi)
+            // If this is the first block of a segment, check if the selection covers the front of the segment.
+            if (bptr == sgptr -> GetFirstBlock() && endindex > bi && (startindex < bi || (t_show_front && startindex == bi)))
             {
+                t_segment_front = true;
                 findex_t ei, el;
                 MCBlock *t_seg_last = sgptr -> GetLastBlock();
                 t_seg_last -> GetRange(ei, el);
                 
-                if (endindex >= ei + el)
+                if (endindex > ei + el || (t_show_back && endindex == bi + bl))
                     t_whole_segment = true;
             }
+            
+            // If this is the last block of a segment, check if the selection covers the back of the segment.
+            if (!t_whole_segment && bptr == sgptr -> GetLastBlock() && startindex < bi + bl &&
+                ((sgptr -> next() != segments && endindex > bi + bl) || (t_show_back && endindex == bi + bl)))
+                t_segment_back = true;
+
              // If selection covers the whole segment, we can fill it and skip to the first block of the next segment.           
             if (t_whole_segment)
             {
-                srect . x  = x + sgptr -> GetLeftEdge();
+                srect . x  = x + sgptr -> GetLeft();
                 srect . width = sgptr -> GetWidth();
                 dc->fillrect(srect);
                 
                 bptr = sgptr -> GetLastBlock();
-                sgptr = sgptr->next();
-                t_whole_segment = false;
             }
             else if (t_show_all || (startindex <= bi + bl && endindex >= bi))
             {
@@ -1172,14 +1181,16 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                     bex = t_temp;
                 }
 
-                srect.x = x + sgptr -> GetLeftEdge() + bix;
+                if (t_segment_front)
+                    srect.x = x + sgptr -> GetLeft();
+                else
+                    srect.x = x + sgptr -> GetLeftEdge() + bix;
                 
                 // AL-2014-07-29: [[ Bug 12951 ]] If selection traverses a segment boundary, include the boundary in the fill rect.
-                if (startindex < bi + bl && endindex > bi + bl &&
-                    bptr == sgptr -> GetLastBlock() && sgptr -> next() != segments)
-                    srect.width = sgptr -> GetWidth() - bix;
+                if (t_segment_back)
+                    srect.width = x + sgptr -> GetRight() - srect . x;
                 else
-                    srect.width = bex - bix;
+                    srect.width = x + sgptr -> GetLeftEdge() + bex - srect . x;
                 
                 // Draw this block
                 dc->fillrect(srect);
@@ -1204,11 +1215,11 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         if (t_show_front || startindex < i)
         {
             // AL-2014-07-30: [[ Bug 12924 ]] Get first visual block in the line for front selection fill
-            MCBlock *t_first_visual = bptr -> GetSegment() -> GetFirstVisualBlock();
+            MCBlock *t_first_visual = lptr -> GetFirstSegment() -> GetFirstVisualBlock();
             
             srect.x = sx;
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
-            srect.width = x + bptr -> GetSegment() -> GetLeftEdge() + t_first_visual->getorigin() - sx;
+            srect.width = x + lptr -> GetFirstSegment() -> GetLeftEdge() + t_first_visual->getorigin() - sx;
             dc->fillrect(srect);
         }
         
@@ -1216,10 +1227,10 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         if (t_show_back || endindex > i + l)
         {
             // AL-2014-07-30: [[ Bug 12924 ]] Get last visual block in the line for back selection fill
-            MCBlock *t_last_visual = bptr -> GetSegment() -> GetLastVisualBlock();
+            MCBlock *t_last_visual = lptr -> GetLastSegment() -> GetLastVisualBlock();
             
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
-            srect.x = x + bptr -> GetSegment() -> GetLeftEdge() + t_last_visual->getorigin() + t_last_visual->getwidth();
+            srect.x = x + lptr -> GetLastSegment() -> GetLeftEdge() + t_last_visual->getorigin() + t_last_visual->getwidth();
             srect.width = swidth - (srect.x - sx);
             dc->fillrect(srect);
         }
