@@ -100,7 +100,8 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 		MCEffectArgument *t_argument;
 		
 		for(t_argument = p_arguments; t_argument != NULL; t_argument = t_argument -> next)
-			if (MCStringIsEqualToCString(t_argument -> key, t_info -> parameters[t_parameter] . name, kMCCompareExact))
+            // AL-2014-08-14: [[ Bug 13176 ]] argument key is caseless comparison
+			if (MCStringIsEqualToCString(t_argument -> key, t_info -> parameters[t_parameter] . name, kMCStringOptionCompareCaseless))
 			{
 				t_name = t_info -> parameters[t_parameter] . name;
 				t_type = t_info -> parameters[t_parameter] . type;
@@ -148,11 +149,13 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 				double t_vector[4];
 				unsigned int t_count = 0;
 				uindex_t t_pos = 0;
-				uindex_t t_comma;
+				uindex_t t_comma, t_length;
+                t_length = MCStringGetLength(t_argument -> value);
+                // AL-2014-08-14: [[ Bug 13176 ]] Parse last vector element correctly  
 				do
 				{
 					if (!MCStringFirstIndexOfChar(t_argument -> value, ',', t_pos, kMCCompareExact, t_comma))
-						t_success = false;
+						t_comma = t_length;
 					MCAutoStringRef t_substring;
 					if (!MCStringCopySubstring(t_argument -> value, MCRangeMake(t_pos, t_comma - t_pos), &t_substring))
 						t_success = false;
@@ -163,7 +166,7 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 					t_pos = t_comma + 1;
 					t_count += 1;
 				}
-				while(t_success && t_count < 4);
+				while(t_success && t_count < 4 && t_comma < t_length);
 				if (t_success)
 				{
 					t_parameters -> entries[t_index] . value . vector . length = t_count;
@@ -180,7 +183,7 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 			
 			case REI_VISUALEFFECT_PARAMETER_TYPE_IMAGE:
 				MCImage *t_image;
-				if (MCStringBeginsWith(t_argument -> value, MCSTR("id "), kMCCompareExact))
+				if (MCStringBeginsWith(t_argument -> value, MCSTR("id "), kMCStringOptionCompareCaseless))
                 {
                     MCAutoStringRef t_id;
                     /* UNCHECKED */ MCStringCopySubstring(t_argument -> value, MCRangeMake(3, MCStringGetLength(t_argument -> value) - 3), &t_id); 

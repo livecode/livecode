@@ -349,8 +349,9 @@ void MCVisualEffect::exec_ctxt(MCExecContext &ctxt)
 		/* UNCHECKED */ t_args_array . Push(t_argument);
 	}
 
+    // AL-2014-08-14: [[ Bug 13176 ]] Pass in array Ptr rather than PtrRef
 	MCInterfaceVisualEffect t_effect;
-	MCInterfaceMakeVisualEffect(ctxt, *t_name, *t_sound, t_args_array . PtrRef(), t_args_array . Size(), effect, direction, speed, image, t_effect);
+	MCInterfaceMakeVisualEffect(ctxt, *t_name, *t_sound, t_args_array . Ptr(), t_args_array . Size(), effect, direction, speed, image, t_effect);
 
 	for (uindex_t i = 0; i < t_args_array . Size(); i++)
 		MCInterfaceVisualEffectArgumentFree(ctxt, t_args_array[i]);
