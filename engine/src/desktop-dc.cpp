@@ -1442,6 +1442,10 @@ void MCMacBreakWait(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCResPlatformInitPixelScaling(void)
+{
+}
+
 bool MCResPlatformSupportsPixelScaling(void)
 {
 	return true;

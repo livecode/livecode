@@ -2939,6 +2939,22 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath=".\src\w32compat.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\src\w32compat.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\w32cursor.cpp"
 					>
 					<FileConfiguration
