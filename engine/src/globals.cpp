@@ -69,6 +69,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "resolution.h"
 
+#include "systhreads.h"
+#include "stacktile.h"
+
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
 
@@ -368,7 +371,9 @@ MCVariable *MCurlresult;
 Boolean MCexitall;
 int4 MCretcode;
 Boolean MCrecording;
+#ifdef FEATURE_PLATFORM_RECORDER
 MCPlatformSoundRecorderRef MCrecorder;
+#endif
 
 // MW-2012-03-08: [[ StackFile5500 ]] Make stackfile version 5.5 the default.
 uint4 MCstackfileversion = 5500;
@@ -493,6 +498,13 @@ Boolean MCmainstackschanged = False;
 // MW-2012-11-13: [[ Bug 10516 ]] Flag to determine whether we allow broadcast
 //   UDP sockets.
 Boolean MCallowdatagrambroadcasts = False;
+
+// MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
+MCThreadMutexRef MCanimationmutex = NULL;
+MCThreadMutexRef MCpatternmutex = NULL;
+MCThreadMutexRef MCimagerepmutex = NULL;
+MCThreadMutexRef MCfieldmutex = NULL;
+MCThreadMutexRef MCthememutex = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -739,7 +751,9 @@ void X_clear_globals(void)
 	MCexitall = False;
 	MCretcode = 0;
 	MCrecording = False;
+#ifdef FEATURE_PLATFORM_RECORDER
     MCrecorder = nil;
+#endif
 	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
 	MCstackfileversion = 5500;
 	MClook = LF_MOTIF;
@@ -817,6 +831,13 @@ void X_clear_globals(void)
     
 	// MW-2013-03-20: [[ MainStacksChanged ]]
 	MCmainstackschanged = False;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]]
+    MCanimationmutex = NULL;
+    MCpatternmutex = NULL;
+    MCimagerepmutex = NULL;
+    MCfieldmutex = NULL;
+    MCthememutex = NULL;
 
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -850,6 +871,15 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
 	InitialiseSSL();
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]]
+    /* UNCHECKED */ MCThreadPoolInitialize();
+    /* UNCHECKED */ MCStackTileInitialize();
+    /* UNCHECKED */ MCThreadMutexCreate(MCanimationmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCpatternmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCimagerepmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCfieldmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCthememutex);
     
     ////
     
@@ -1214,6 +1244,15 @@ int X_close(void)
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]]
+    MCThreadPoolFinalize();
+    MCStackTileFinalize();
+    MCThreadMutexRelease(MCanimationmutex);
+    MCThreadMutexRelease(MCpatternmutex);
+    MCThreadMutexRelease(MCimagerepmutex);
+    MCThreadMutexRelease(MCfieldmutex);
+    MCThreadMutexRelease(MCthememutex);
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions

@@ -628,7 +628,7 @@ enum Functions {
 };
 
 enum Handler_type {
-    HT_UNDEFINED,
+    HT_UNDEFINED = 0,
     HT_MESSAGE,
     HT_FUNCTION,
     HT_GETPROP,
@@ -639,7 +639,9 @@ enum Handler_type {
 	HT_BEFORE,
 	HT_AFTER,
 
-	HT_PRIVATE
+		HT_PRIVATE,
+
+		HT_MAX = HT_PRIVATE
 };
 
 enum If_format {

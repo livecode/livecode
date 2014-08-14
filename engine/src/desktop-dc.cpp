@@ -568,8 +568,12 @@ bool MCScreenDC::isbackdrop(MCPlatformWindowRef p_window)
 
 void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCGRegionRef p_region)
 {
+    // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use new platform surface API.
 	MCGContextRef t_context;
-	if (MCPlatformSurfaceLockGraphics(p_surface, p_region, t_context))
+    MCGRaster t_raster;
+    MCGIntegerRectangle t_bounds;
+    t_bounds = MCGRegionGetBounds(p_region);
+	if (MCPlatformSurfaceLockGraphics(p_surface, t_bounds, t_context, t_raster))
 	{
 		MCGraphicsContext *t_gfxcontext;
 		/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
@@ -581,7 +585,7 @@ void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCGRegionRef p_r
 		t_gfxcontext -> fillrect(MCRectangleFromMCGIntegerRectangle(MCGRegionGetBounds(p_region)), false);
 		delete t_gfxcontext;
 		
-		MCPlatformSurfaceUnlockGraphics(p_surface);
+		MCPlatformSurfaceUnlockGraphics(p_surface, t_bounds, t_context, t_raster);
 	}
 }
 

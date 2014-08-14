@@ -283,6 +283,12 @@ typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
+#define PLACEMENT_NEW_DEFINED
+inline void *operator new (size_t size, void *p)
+{
+	return p;
+}
+
 #if defined(_DEBUG)
 
 #include <crtdbg.h>
@@ -528,10 +534,12 @@ struct MCFontStruct
 //  NEW / DELETE REDEFINTIONS
 //
 
-inline void *operator new(size_t, void *p)
+#ifndef PLACEMENT_NEW_DEFINED
+inline void *operator new (size_t size, void *p)
 {
 	return p;
 }
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -1295,6 +1303,10 @@ class MCError;
 class MCStyledText;
 
 typedef struct MCFont *MCFontRef;
+
+// MM-2014-07-31: [[ ThreadedRendering ]]
+typedef struct __MCThreadCondition *MCThreadConditionRef;
+typedef struct __MCThreadMutex *MCThreadMutexRef;
 
 //////////////////////////////////////////////////////////////////////
 

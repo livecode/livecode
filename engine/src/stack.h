@@ -89,19 +89,21 @@ extern bool MCStackFullscreenModeFromString(const char *p_string, MCStackFullscr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated the API so you can now lock multiple areas of the surface.
+//  The context and raster for the locked area must now be stored locally rather than directly in the surface.
 class MCStackSurface
 {
 public:
 	// Lock the surface for access with an MCGContextRef
-	virtual bool LockGraphics(MCGRegionRef area, MCGContextRef& r_context) = 0;
+	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster) = 0;
 	// Unlock the surface.
-	virtual void UnlockGraphics(void) = 0;
+	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster) = 0;
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
 	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
 	// Unlock the surface.
-	virtual void UnlockPixels(void) = 0;
+	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster) = 0;
 	
 	// Lock the surface for direct access via the underlying system resource.
 	virtual bool LockTarget(MCStackSurfaceTargetType type, void*& r_context) = 0;
@@ -119,6 +121,8 @@ public:
 };
 
 typedef bool (*MCStackUpdateCallback)(MCStackSurface *p_surface, MCRegionRef p_region, void *p_context);
+
+typedef bool (*MCStackForEachCallback)(MCStack *p_stack, void *p_context);
 
 class MCStack : public MCObject
 {
@@ -178,7 +182,8 @@ protected:
 	CDropTarget *droptarget;
 #endif
 
-	Window parentwindow;
+	// IM-2014-07-23: [[ Bug 12930 ]] The stack whose window is parent to this stack
+	MCObjectHandle *m_parent_stack;
 	
 	MCExternalHandlerList *m_externals;
 
@@ -194,6 +199,9 @@ protected:
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
+    MCThreadMutexRef m_id_cache_lock;
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] If true, then updates to this stack should only
 	//   be flushed at the next updateScreen point.
@@ -571,6 +579,10 @@ public:
 
 	Window getwindow();
 	Window getparentwindow();
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] Set the stack whose window is parent to this stack
+	void setparentstack(MCStack *p_parent);
+	MCStack *getparentstack(void);
 
 	void redrawicon();
 
@@ -586,7 +598,6 @@ public:
 
 	Boolean takewindow(MCStack *sptr);
 	Boolean setwindow(Window w);
-	void setparentwindow(Window w);
 
 	void kfocusset(MCControl *target);
 	MCStack *clone();
@@ -746,17 +757,15 @@ public:
 		return substacks;
 	}
 
-	MCStackModeData *getmodedata(void)
-	{
-		return m_mode_data;
-	}
-
 	void effectrect(const MCRectangle &drect, Boolean &abort);
 	
 	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
 	MCStack *findstackwindowid(uint32_t p_win_id);
 	MCStack *findstackd(Window w);
-	MCStack *findchildstackd(Window w,uint2 &ccount, uint2 cindex);
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
+	bool foreachchildstack(MCStackForEachCallback p_callback, void *p_context);
+	
 	void realize();
 	void sethints();
 	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
@@ -927,13 +936,6 @@ public:
 private:
 	void loadexternals(void);
 	void unloadexternals(void);
-
-	// Mode-specific hooks, implemented in the various mode* files.
-	MCStackModeData *m_mode_data;
-
-	void mode_create(void);
-	void mode_copy(const MCStack& other);
-	void mode_destroy(void);
 
 	void mode_load(void);
 

@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "image.h"
 #include "image_rep.h"
+#include "systhreads.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,19 +39,14 @@ MCImageRep::~MCImageRep()
 
 MCImageRep *MCImageRep::Retain()
 {
-	m_reference_count++;
+    MCThreadAtomicInc((int32_t *)&m_reference_count);
 	return this;
 }
 
 void MCImageRep::Release()
 {
-	if (m_reference_count > 1)
-	{
-		m_reference_count--;
-		return;
-	}
-
-	delete this;
+	if (MCThreadAtomicDec((int32_t *)&m_reference_count) == 1)
+        delete this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,18 +78,6 @@ MCLoadableImageRep::~MCLoadableImageRep()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uindex_t MCLoadableImageRep::GetFrameCount()
-{
-	if (!m_have_geometry)
-	{
-		if (!EnsureMCGImageFrames())
-			return false;
-	}
-
-	return m_frame_count;
-}
-
-
 bool MCLoadableImageRep::ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p_frame_count, bool p_premultiplied)
 {
 	bool t_success;
@@ -108,7 +92,8 @@ bool MCLoadableImageRep::ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p
 	for (uint32_t i = 0; t_success && i < p_frame_count; i++)
 	{
 		// IM-2014-05-14: [[ ImageRepUpdate ]] Fix density & duration not being copied from the bitmap frames
-		t_frames[i].density = x_frames[i].density;
+		t_frames[i].x_scale = x_frames[i].x_scale;
+		t_frames[i].y_scale = x_frames[i].y_scale;
 		t_frames[i].duration = x_frames[i].duration;
 		
 		t_success = MCImageBitmapCopyAsMCGImageAndRelease(x_frames[i].image, p_premultiplied, t_frames[i].image);
@@ -229,27 +214,47 @@ bool convert_to_mcbitmapframes(MCGImageFrame *p_frames, uint32_t p_frame_count, 
 	return t_success;
 }
 
-bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCGImageFrame *&r_frame)
+bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCGImageFrame& r_frame)
 {
 	// frame index check
 	if (m_frame_count != 0 && p_frame >= m_frame_count)
 		return false;
 	
-	if (!EnsureMCGImageFrames())
+    // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread locks an image frame at a time.
+    //  This could potentially be improved to be less obtrusive and resource hungry (mutex per image)
+    MCThreadMutexLock(MCimagerepmutex);
+    
+	if (m_frame_count != 0 && p_frame >= m_frame_count)
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
 		return false;
+    }
+    
+	if (!EnsureMCGImageFrames())
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
+		return false;
+    }
 	
 	if (p_frame >= m_frame_count)
-		return false;
-	
-	// prevent data being removed by cache flush
-	m_lock_count++;
-	
-	// prevent deletion due to ImageRep::Release()
-	Retain();
-	
-	r_frame = &m_frames[p_frame];
+    {
+        MCThreadMutexUnlock(MCimagerepmutex);
+        return false;
+    }
+    
+	r_frame = m_frames[p_frame];
+    MCGImageRetain(r_frame . image);
+    
+	MoveRepToHead(this);
+    
+    MCThreadMutexUnlock(MCimagerepmutex);
 	
 	return true;
+}
+
+void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame)
+{
+    MCGImageRelease(p_frame . image);
 }
 
 bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, MCBitmapFrame *&r_frame)
@@ -289,46 +294,20 @@ bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, M
 	
 	if (t_success)
 	{
-		if (p_frame < m_frame_count)
-		{
-			m_frame_count = t_frame_count;
-			m_locked_frames = t_frames;
-			t_frames = nil;
+		// IM-2014-07-28: [[ Bug 13009 ]] If we have valid frames then store in locked frames and return requested frame.
+		m_frame_count = t_frame_count;
+		m_locked_frames = t_frames;
+		t_frames = nil;
 			
-			Retain();
+		Retain();
 			
-			r_frame = &m_locked_frames[p_frame];
-		}
-		else
-		{
-			// store frames in cache if not already loaded
-			if (m_frames == nil)
-				t_success = ConvertToMCGFrames(t_frames, t_frame_count, false);
-			t_success = false;
-		}
+		r_frame = &m_locked_frames[p_frame];
 	}
 	
 	MCImageFreeFrames(t_frames, t_frame_count);
 
 
 	return t_success;
-}
-
-void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame)
-{
-	if (p_frame == nil || m_lock_count == 0)
-		return;
-	
-	if (p_index >= m_frame_count)
-		return;
-	
-	if (m_frames == nil || &m_frames[p_index] != p_frame)
-		return;
-	
-	m_lock_count--;
-	Release();
-	
-	MoveRepToHead(this);
 }
 
 void MCLoadableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
@@ -597,11 +576,13 @@ bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *
 }
 
 // IM-2013-11-05: [[ RefactorGraphics ]] Create new resampled image rep and add to the cache list
-bool MCImageRepGetResampled(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source, MCImageRep *&r_rep)
+// IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
+// and explicit flip params instead of scale values.
+bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
-	MCCachedImageRep *t_rep = new MCResampledImageRep(p_h_scale, p_v_scale, p_source);
+	MCCachedImageRep *t_rep = new MCResampledImageRep(p_width, p_height, p_flip_horizontal, p_flip_vertical, p_source);
 	
 	t_success = t_rep != nil;
 	if (t_success)

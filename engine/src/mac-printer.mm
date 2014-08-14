@@ -42,6 +42,13 @@ struct MCMacPlatformPrintDialogNest
 	MCMacPlatformPrintDialogNest *next;
 	MCPlatformPrintDialogResult result;
 	MCPlatformWindowRef owner;
+    
+    // MW-2014-07-29: [[ Bug 12961 ]] Make sure we store the objects we need to
+    //   apply settings as sheets end after the end of BeginDialog.
+    NSPrintInfo *info;
+    void *session;
+    void *settings;
+    void *page_format;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,6 +142,12 @@ static void MCPlatformBeginPrintDialog(MCPlatformWindowRef p_owner, void *p_sess
 	
 	MCMacPlatformPrintDialogNest *t_nest;
 	/* UNCHECKED */ MCMemoryNew(t_nest);
+    
+    t_nest -> info = t_info;
+    t_nest -> session = p_session;
+    t_nest -> settings = p_settings;
+    t_nest -> page_format = p_page_format;
+    
 	t_nest -> next = s_print_dialog_nesting;
 	t_nest -> result = kMCPlatformPrintDialogResultContinue;
 	s_print_dialog_nesting = t_nest;
@@ -173,8 +186,6 @@ static void MCPlatformBeginPrintDialog(MCPlatformWindowRef p_owner, void *p_sess
 		else
 			t_nest -> result = kMCPlatformPrintDialogResultCancel;
 	}
-	
-	MCPlatformEndPrintInfo(t_info, p_session, p_settings, p_page_format);
 }
 
 void MCPlatformBeginPageSetupDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format)
@@ -203,6 +214,9 @@ MCPlatformPrintDialogResult MCPlatformEndPrintDialog(void)
 	if (t_nest -> owner != nil)
 		MCPlatformReleaseWindow(t_nest -> owner);
 	
+    // MW-2014-07-29: [[ Bug 12961 ]] Write back the print settings.
+	MCPlatformEndPrintInfo(t_nest -> info, t_nest -> session, t_nest -> settings, t_nest -> page_format);
+    
 	MCMemoryDelete(t_nest);
 	
 	return t_result;

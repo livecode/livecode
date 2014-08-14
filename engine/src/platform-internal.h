@@ -19,17 +19,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to match the new stack surface API.
+//  You can now lock/unlock multiple areas of the surface, but need to store the context and raster for those areas locally.
 class MCPlatformSurface
 {
 public:
 	MCPlatformSurface(void);
 	virtual ~MCPlatformSurface(void);
 	
-	virtual bool LockGraphics(MCGRegionRef region, MCGContextRef& r_context) = 0;
-	virtual void UnlockGraphics(void) = 0;
+	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster) = 0;
+	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster) = 0;
 	
-	virtual bool LockPixels(MCGIntegerRectangle region, MCGRaster& r_raster) = 0;
-	virtual void UnlockPixels(void) = 0;
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
+	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster) = 0;
 	
 	virtual bool LockSystemContext(void*& r_context) = 0;
 	virtual void UnlockSystemContext(void) = 0;
@@ -215,6 +217,7 @@ protected:
 		bool m_is_focused : 1;
 		bool m_is_iconified : 1;
 		bool m_use_text_input : 1;
+        bool m_is_realized : 1;
 	};
 };
 
@@ -226,10 +229,7 @@ public:
 	MCPlatformSoundRecorder(void);
 	virtual ~MCPlatformSoundRecorder(void);
     
-	// Increase the reference count on the window.
 	void Retain(void);
-	
-	// Decrease the reference count on the window.
 	void Release(void);
     
 	virtual bool IsRecording(void);
@@ -326,11 +326,8 @@ void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_
 
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
-void MCPlatformCallbackSendPlayerSelectionChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerStarted(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerPaused(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerStopped(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef player);
 
 void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef sound);
 

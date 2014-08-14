@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 
 #include "platform.h"
+#include "osspec.h"
 
 const char *MCdialogtypes[] =
 {
@@ -434,26 +435,26 @@ Exec_errors MCAnswer::exec_record(MCExecPoint& ep, const char *p_title)
     if (MCrecorder == nil)
         MCPlatformSoundRecorderCreate(MCrecorder);
     
-    MCPlatformSoundRecorderBeginConfigurationDialog(MCrecorder);
-    
-    MCPlatformDialogResult t_result;
-    
-    for (;;)
+    if (MCrecorder != nil)
     {
-        t_result = MCPlatformSoundRecorderEndConfigurationDialog(MCrecorder);
-        if (t_result != kMCPlatformDialogResultContinue)
-            break;
+        MCPlatformSoundRecorderBeginConfigurationDialog(MCrecorder);
         
-		MCscreen -> wait(REFRESH_INTERVAL, True, True);
-    }
-    
-    ep.clear();
-    
-    if (t_result == kMCPlatformDialogResultCancel)
-		MCresult->sets(MCcancelstring);
-    
-    return EE_UNDEFINED;
-    
+        MCPlatformDialogResult t_result;
+        
+        for (;;)
+        {
+            t_result = MCPlatformSoundRecorderEndConfigurationDialog(MCrecorder);
+            if (t_result != kMCPlatformDialogResultContinue)
+                break;
+            
+            MCscreen -> wait(REFRESH_INTERVAL, True, True);
+        }
+        
+        ep.clear();
+        
+        if (t_result == kMCPlatformDialogResultCancel)
+            MCresult->sets(MCcancelstring);
+    }    
 #else
 	extern void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet);
 	MCQTRecordDialog(ep, p_title, sheet);
@@ -525,6 +526,17 @@ Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 	if (!t_error && !MCSecureModeCanAccessDisk())
 		t_error = EE_DISK_NOPERM;
 
+	char *t_initial_resolved;
+	t_initial_resolved = nil;
+
+	if (!t_error && t_initial != nil)
+	{
+		// IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+		t_initial_resolved = MCS_get_canonical_path(t_initial);
+		if (nil == t_initial_resolved)
+			t_error == EE_NO_MEMORY;
+	}
+
 	if (!t_error)
 	{
 		if (MCsystemFS && MCscreen -> hasfeature ( PLATFORM_FEATURE_OS_FILE_DIALOGS ) )
@@ -536,9 +548,9 @@ Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 				t_options |= MCA_OPTION_PLURAL;
 
 			if (t_types != NULL)
-				MCA_file_with_types(ep, p_title, t_prompt, t_type_strings, t_type_count, t_initial, t_options);
+				MCA_file_with_types(ep, p_title, t_prompt, t_type_strings, t_type_count, t_initial_resolved, t_options);
 			else
-				MCA_file(ep, p_title, t_prompt, t_filter, t_initial, t_options);
+				MCA_file(ep, p_title, t_prompt, t_filter, t_initial_resolved, t_options);
 		}
 		else
 		{
@@ -546,12 +558,15 @@ Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 			ep2 . clear();
 			for(uint4 t_type = 0; t_type < t_type_count; ++t_type)
 				ep2 . concatcstring(t_type_strings[t_type], EC_RETURN, t_type == 0);
-			t_error = exec_custom(ep, MCfsnamestring, mode == AT_FILE ? "file" : "files", 5, p_title, *t_prompt, *t_filter, *t_initial, ep2 . getsvalue() . getstring());
+			t_error = exec_custom(ep, MCfsnamestring, mode == AT_FILE ? "file" : "files", 5, p_title, *t_prompt, *t_filter, t_initial_resolved, ep2 . getsvalue() . getstring());
 		}
 		
 		if (ep . getsvalue() == MCnullmcstring && t_types == NULL)
 			MCresult -> sets(MCcancelstring);
 	}
+
+	if (t_initial_resolved != nil)
+		MCCStringFree(t_initial_resolved);
 
 	delete[] t_types;
 	delete t_type_strings;
@@ -577,6 +592,17 @@ Exec_errors MCAnswer::exec_folder(MCExecPoint& ep, const char *p_title)
 	if (!t_error && !MCSecureModeCanAccessDisk())
 		t_error = EE_DISK_NOPERM;
 
+	char *t_initial_resolved;
+	t_initial_resolved = nil;
+
+	if (!t_error && t_initial != nil)
+	{
+		// IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+		t_initial_resolved = MCS_get_canonical_path(t_initial);
+		if (nil == t_initial_resolved)
+			t_error == EE_NO_MEMORY;
+	}
+
 	if (!t_error)
 	{
 		unsigned int t_options = 0;
@@ -586,13 +612,16 @@ Exec_errors MCAnswer::exec_folder(MCExecPoint& ep, const char *p_title)
 			t_options |= MCA_OPTION_PLURAL;
 
 		if (MCsystemFS)
-			MCA_folder(ep, p_title, t_prompt, t_initial, t_options);
+			MCA_folder(ep, p_title, t_prompt, t_initial_resolved, t_options);
 		else
-			t_error = exec_custom(ep, MCfsnamestring, mode == AT_FOLDER ? "folder" : "folders", 4, p_title, *t_prompt, NULL, *t_initial);
+			t_error = exec_custom(ep, MCfsnamestring, mode == AT_FOLDER ? "folder" : "folders", 4, p_title, *t_prompt, NULL, t_initial_resolved);
 
 		if (ep . getsvalue() == MCnullmcstring)
 			MCresult -> sets(MCcancelstring);
 	}
+
+	if (t_initial_resolved != nil)
+		MCCStringFree(t_initial_resolved);
 
 	return t_error;
 }

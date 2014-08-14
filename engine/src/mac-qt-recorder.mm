@@ -345,7 +345,7 @@ void MCQTSoundRecorder::InitializeConfiguration()
     if (!MCCStringEqual(MCrecordcompression, "raw "))
     {
         memcpy(&t_compression, MCrecordcompression, 4);
-        t_compression = EndianU32_NtoB(t_compression);
+        t_compression = MCSwapInt32HostToNetwork(t_compression);
     }
     
     if (m_configuration . compression_type != t_compression)
@@ -366,7 +366,7 @@ void MCQTSoundRecorder::InitializeConfiguration()
     if (!MCCStringEqual(MCrecordinput, "dflt"))
     {
         memcpy(&t_input, MCrecordinput, 4);
-        t_input = EndianU32_NtoB(t_input);
+        t_input = MCSwapInt32HostToNetwork(t_input);
     }
     else
     {
@@ -544,11 +544,7 @@ void MCQTSoundRecorder::BeginDialog()
     };
 
     QTSetComponentProperty(ci, kQTPropertyClass_SCAudio, kQTSCAudioPropertyID_ClientRestrictedChannelLayoutTagList,sizeof(t_layout_tags), t_layout_tags);
-
-    /*
-    UInt32 limitedFormats[] = { kAudioFormatiLBC };
-    QTSetComponentProperty(ci, kQTPropertyClass_SCAudio,kQTSCAudioPropertyID_ClientRestrictedCompressionFormatList,sizeof(limitedFormats), limitedFormats);
-    */
+    
     if (t_error == noErr)
         t_error = SCRequestImageSettings(ci);
     
@@ -583,7 +579,7 @@ void MCQTSoundRecorder::BeginDialog()
         MCrecordsamplesize = m_configuration . sample_bit_count;
 		MCrecordchannels = m_configuration . channel_count;
         
-        uint32_t t_comp = EndianU32_BtoN(m_configuration . compression_type);
+        uint32_t t_comp = MCSwapInt32NetworkToHost(m_configuration . compression_type);
 		memcpy(MCrecordcompression, &t_comp, 4);
         
         m_dialog_result = kMCPlatformDialogResultSuccess;
@@ -740,9 +736,6 @@ void MCQTSoundRecorder::PauseRecording(void)
         return;
     
     SGPause(m_seq_grab, seqGrabPause);
-    
-    m_recording = false;
-    MCrecording = false;
 }
 
 void MCQTSoundRecorder::ResumeRecording(void)
@@ -751,16 +744,10 @@ void MCQTSoundRecorder::ResumeRecording(void)
         return;
     
     SGPause(m_seq_grab, seqGrabUnpause);
-    
-    m_recording = true;
-    MCrecording = true;
 }
 
 bool MCQTSoundRecorder::ListInputs(MCPlatformSoundRecorderListInputsCallback p_callback, void *context)
-{
-    // kQTSGAudioPropertyID_DeviceListWithAttributes
-    // Should be listing kQTSGAudioPropertyID_DeviceUID?
-    
+{    
     if (!EnsureInitialized())
         return false;
     
@@ -795,7 +782,7 @@ bool MCQTSoundRecorder::ListCompressors(MCPlatformSoundRecorderListCompressorsCa
      desc.componentFlags = 0;
      desc.componentFlagsMask = 0;
     
-    if (!p_callback(context, MCSwapInt32NetworkToHost(kAudioFormatLinearPCM), "Linear PCM"))
+    if (!p_callback(context, kAudioFormatLinearPCM, "Linear PCM"))
         return false;
     
      while ((component = FindNextComponent(component, &desc)) != NULL)
@@ -804,7 +791,7 @@ bool MCQTSoundRecorder::ListCompressors(MCPlatformSoundRecorderListCompressorsCa
         if (GetHandleSize(name))
         {
             HLock(name);
-            if (!p_callback(context, MCSwapInt32NetworkToHost(info.componentSubType), p2cstr((unsigned char *)*name)))
+            if (!p_callback(context, info.componentSubType, p2cstr((unsigned char *)*name)))
                 return false;
             HUnlock(name);
         }
@@ -832,10 +819,12 @@ double MCQTSoundRecorder::GetLoudness()
     MCMemoryNewArray(m_configuration . channel_count, t_levels);
     QTGetComponentProperty(m_channel, kQTPropertyClass_SGAudio, kQTSGAudioPropertyID_AveragePowerLevels, t_array_size,  t_levels, NULL);
     
-    t_loudness = t_levels[0];
+    // convert decibels to amplitude
+    t_loudness = pow(10., t_levels[0] * 0.05);
+    
     MCMemoryDeleteArray(t_levels);
-
-    return t_loudness;
+    
+    return MCU_min(t_loudness * 100, 100);
 }
 
 MCQTSoundRecorder *MCQTSoundRecorderCreate(void)

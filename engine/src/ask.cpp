@@ -37,6 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "securemode.h"
 
+#include "osspec.h"
+
 #include "globals.h"
 
 #include "meta.h"
@@ -366,6 +368,17 @@ Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 	if (!t_error && !MCSecureModeCanAccessDisk())
 		t_error = EE_DISK_NOPERM;
 
+	char *t_initial_resolved;
+	t_initial_resolved = nil;
+
+	if (!t_error && t_initial != nil)
+	{
+		// IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+		t_initial_resolved = MCS_get_canonical_path(t_initial);
+		if (nil == t_initial_resolved)
+			t_error == EE_NO_MEMORY;
+	}
+
 	if (!t_error)
 	{
 		if (MCsystemFS)
@@ -375,9 +388,9 @@ Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 				t_options |= MCA_OPTION_SHEET;
 
 			if (t_types != NULL)
-				MCA_ask_file_with_types(ep, p_title, t_prompt, t_type_strings, t_type_count, t_initial, t_options);
+				MCA_ask_file_with_types(ep, p_title, t_prompt, t_type_strings, t_type_count, t_initial_resolved, t_options);
 			else
-				MCA_ask_file(ep, p_title, t_prompt, t_filter, t_initial, t_options);
+				MCA_ask_file(ep, p_title, t_prompt, t_filter, t_initial_resolved, t_options);
 		}
 		else
 		{
@@ -386,12 +399,15 @@ Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 			ep2 . clear();
 			for(uint4 t_type = 0; t_type < t_type_count; ++t_type)
 				ep2 . concatcstring(t_type_strings[t_type], EC_RETURN, t_type == 0);
-			t_error = exec_custom(ep, t_cancelled, MCfsnamestring, mode == AT_FILE ? "file" : "files", 5, p_title, *t_prompt, *t_filter, *t_initial, ep2 . getsvalue() . getstring());
+			t_error = exec_custom(ep, t_cancelled, MCfsnamestring, mode == AT_FILE ? "file" : "files", 5, p_title, *t_prompt, *t_filter, t_initial_resolved, ep2 . getsvalue() . getstring());
 		}
 		
 		if (ep . getsvalue() == MCnullmcstring && t_types == NULL)
 			MCresult -> sets(MCcancelstring);
 	}
+
+	if (t_initial_resolved != nil)
+		MCCStringFree(t_initial_resolved);
 
 	delete[] t_types;
 	delete t_type_strings;

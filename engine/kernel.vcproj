@@ -383,6 +383,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\imageloader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\imageloader.h"
+				>
+			</File>
+			<File
 				RelativePath="src\ipng.cpp"
 				>
 			</File>
@@ -572,6 +580,14 @@
 			</File>
 			<File
 				RelativePath="src\stacklst.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\stacktile.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\stacktile.h"
 				>
 			</File>
 			<File
@@ -1499,6 +1515,13 @@
 			<File
 				RelativePath=".\src\quicktime.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<Filter
 				Name="Platform - Linux"
@@ -5101,6 +5124,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\systhreads.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\sysunxdate.cpp"
 				>
 				<FileConfiguration
@@ -5245,6 +5272,18 @@
 						Name="VCCLCompilerTool"
 						PrecompiledHeaderThrough="w32prefix.h"
 						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\sysw32threads.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="w32prefix.h"
 					/>
 				</FileConfiguration>
 			</File>

@@ -358,6 +358,18 @@ void MCQTStopRecording(void)
 	}
 }
 
+void MCQTRecordPause(void)
+{
+    if (MCrecording)
+        SGPause((SeqGrabComponent)sgSoundComp, seqGrabPause);
+}
+
+void MCQTRecordResume(void)
+{
+    if (MCrecording)
+        SGPause((SeqGrabComponent)sgSoundComp, seqGrabUnpause);
+}
+
 void MCQTRecordSound(char *fname)
 {
 	if (!MCQTInit())

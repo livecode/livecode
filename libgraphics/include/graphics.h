@@ -214,6 +214,30 @@ static inline uint32_t MCGPixelFromNative(MCGPixelFormat p_dst_format, uint32_t 
 	return MCGPixelPack(p_dst_format, r, g, b, a);
 }
 
+//////////
+
+static inline uint32_t __mcgpixel_packed_scale_bounded(uint32_t x, uint8_t a)
+{
+	uint32_t u, v;
+	
+	u = ((x & 0xff00ff) * a) + 0x800080;
+	u = ((u + ((u >> 8) & 0xff00ff)) >> 8) & 0xff00ff;
+	
+	v = (((x >> 8) & 0xff00ff) * a) + 0x800080;
+	v = (v + ((v >> 8) & 0xff00ff)) & 0xff00ff00;
+	
+	return u + v;
+}
+
+// IM-2014-07-23: [[ Bug 12892 ]] Return the premultiplied pixel value assuming native pixel format
+static inline uint32_t MCGPixelPreMultiplyNative(uint32_t p_pixel)
+{
+	uint8_t t_alpha;
+	t_alpha = MCGPixelGetNativeAlpha(p_pixel);
+	
+	return MCGPixelSetNativeAlpha(__mcgpixel_packed_scale_bounded(p_pixel, t_alpha), t_alpha);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef float MCGFloat;
@@ -501,15 +525,14 @@ inline MCGRectangle MCGRectangleTranslate(MCGRectangle p_rect, MCGFloat p_dx, MC
 	return t_rect;
 }
 
-inline MCGRectangle MCGRectangleScale(MCGRectangle p_rect, MCGFloat p_scale)
+inline MCGRectangle MCGRectangleScale(const MCGRectangle &p_rect, MCGFloat p_h_scale, MCGFloat p_v_scale)
 {
-	MCGRectangle t_rect;
-	t_rect.origin.x = p_rect.origin.x * p_scale;
-	t_rect.origin.y = p_rect.origin.y * p_scale;
-	t_rect.size.width = p_rect.size.width * p_scale;
-	t_rect.size.height = p_rect.size.height * p_scale;
-	
-	return t_rect;
+	return MCGRectangleMake(p_rect.origin.x * p_h_scale, p_rect.origin.y * p_v_scale, p_rect.size.width * p_h_scale, p_rect.size.height * p_v_scale);
+}
+
+inline MCGRectangle MCGRectangleScale(const MCGRectangle &p_rect, MCGFloat p_scale)
+{
+	return MCGRectangleScale(p_rect, p_scale, p_scale);
 }
 
 inline bool MCGRectangleIsEmpty(const MCGRectangle &p_rect)

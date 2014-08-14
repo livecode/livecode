@@ -300,6 +300,11 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					         && state & (CS_ARMED | CS_KFOCUSED) && (!getcindex(DI_BACK, i) && !getpindex(DI_BACK,i))
 					         && flags & MENU_ITEM_FLAGS && flags & F_AUTO_ARM)
 					{
+						// FG-2014-07-30: [[ Bugfix 9405 ]]
+						// Clear the previously drawn highlight before drawing GTK highlight
+						setforeground(dc, DI_BACK, False, False);
+						dc->fillrect(shadowrect);
+
 						MCWidgetInfo winfo;
 						winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
 						getwidgetthemeinfo(winfo);
@@ -371,7 +376,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		getlabeltext(slabel, isunicode);
 		Boolean icondrawed = False;
 		
-		if (m_icon_gravity != kMCGravityNone)
+        // SN-2014-08-12: [[ Bug 13155 ]] Don't try to draw the icons if the button has not got any
+		if (icons != NULL && m_icon_gravity != kMCGravityNone)
 		{
 			// MW-2014-06-19: [[ IconGravity ]] Use iconGravity to place the icon.
 			int t_left, t_top, t_right, t_bottom;
@@ -1024,6 +1030,11 @@ void MCButton::drawpulldown(MCDC *dc, MCRectangle &srect)
 	if (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEGTK &&
 	        state & CS_ARMED && !(flags & F_SHOW_BORDER))
 	{
+		// FG-2014-07-30: [[ Bugfix 9405 ]]
+		// Clear the previously drawn highlight before drawing GTK highlight
+		setforeground(dc, DI_BACK, False, False);
+		dc->fillrect(srect);
+
 		MCWidgetInfo winfo;
 		winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
 		getwidgetthemeinfo(winfo);
@@ -1678,7 +1689,18 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
 			if (!(winfo.state & WTHEME_STATE_PRESSED) && winfo.state & WTHEME_STATE_HASDEFAULT && IsMacLFAM() && MCaqua && dc -> gettype() == CONTEXT_TYPE_SCREEN && !(flags & F_DISABLED) && getstyleint(flags) == F_STANDARD)
 			{
 				MCcurtheme->drawwidget(dc, winfo, srect);
-				MCscreen->addtimer(this, MCM_internal, THROB_RATE);
+                
+                // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
+                if (!m_animate_posted)
+                {
+                    MCThreadMutexLock(MCanimationmutex);
+                    if (!m_animate_posted)
+                    {
+                        m_animate_posted = true;
+                        MCscreen->addtimer(this, MCM_internal, THROB_RATE);
+                    }
+                    MCThreadMutexUnlock(MCanimationmutex);
+                }
 			}
 			else
 				MCcurtheme->drawwidget(dc, winfo, srect);

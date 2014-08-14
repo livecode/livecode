@@ -295,7 +295,7 @@ IO_stat MCDispatch::startup(void)
 		t_stream = android_get_mainstack_stream();
 #else
 		char *t_path;
-		MCCStringFormat(t_path, "%.*s/TRiPiLiTE.livecode", strrchr(MCcmd, '/') - MCcmd, MCcmd);
+		MCCStringFormat(t_path, "%.*s/iphone_test.livecode", strrchr(MCcmd, '/') - MCcmd, MCcmd);
 		t_stream = MCS_open(t_path, IO_READ_MODE, False, False, 0);
 		MCCStringFree(t_path);
 #endif
@@ -564,18 +564,6 @@ IO_stat MCDispatch::startup(void)
 //
 //  Implementation of MCStack::mode* hooks for STANDALONE mode.
 //
-
-void MCStack::mode_create(void)
-{
-}
-
-void MCStack::mode_copy(const MCStack& stack)
-{
-}
-
-void MCStack::mode_destroy(void)
-{
-}
 
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
 {

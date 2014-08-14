@@ -1900,9 +1900,9 @@ Parse_stat MCRecord::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
     
-    if (sp.skip_token(SP_PLAY, TT_UNDEFINED, RC_PAUSE) == PS_NORMAL)
+    if (sp.skip_token(SP_RECORD, TT_UNDEFINED, RC_PAUSE) == PS_NORMAL)
 		pause = True;
-	else if (sp.skip_token(SP_PLAY, TT_UNDEFINED, PP_RESUME) == PS_NORMAL)
+	else if (sp.skip_token(SP_RECORD, TT_UNDEFINED, RC_RESUME) == PS_NORMAL)
 		pause = False;
     else
     {
@@ -1943,7 +1943,8 @@ Exec_stat MCRecord::exec(MCExecPoint &ep)
         if (MCrecorder == nil)
             MCPlatformSoundRecorderCreate(MCrecorder);
         
-        MCPlatformSoundRecorderStart(MCrecorder, soundfile);
+        if (MCrecorder != nil)
+            MCPlatformSoundRecorderStart(MCrecorder, soundfile);
 #else
         extern void MCQTRecordSound(char *soundfile);
         MCQTRecordSound(soundfile);
@@ -1960,8 +1961,16 @@ Exec_stat MCRecord::exec(MCExecPoint &ep)
                 MCPlatformSoundRecorderResume(MCrecorder);
         }
 #else
-        MCeerror->add(EE_RECORD_BADFILE, line, pos);
-        return ES_ERROR;
+        if (pause)
+        {
+            extern void MCQTRecordPause(void);
+            MCQTRecordPause();
+        }
+        else
+        {
+            extern void MCQTRecordResume(void);
+            MCQTRecordResume();
+        }
 #endif
     }
 	return ES_NORMAL;

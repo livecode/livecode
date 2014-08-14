@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxgtkthemedrawing.h"
 #include "lnxtheme.h"
 #include "lnximagecache.h"
+#include "systhreads.h"
 
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
@@ -199,12 +200,13 @@ static GtkWidgetState getpartandstate(const MCWidgetInfo &winfo, GtkThemeWidgetT
 		break;
 	case WTHEME_TYPE_SMALLSCROLLBAR:
 		{
+			// FG-2014-07-30: [[ Bugfix 13025 ]] Linux spinboxes were inverted
 			moztype = MOZ_GTK_SPINBUTTON;
-			if(winfo.part == WTHEME_PART_ARROW_INC)
+			if(winfo.part == WTHEME_PART_ARROW_DEC)
 			{
 				flags = GTK_POS_TOP;
 			}
-			else if(winfo.part == WTHEME_PART_ARROW_DEC)
+			else if(winfo.part == WTHEME_PART_ARROW_INC)
 			{
 				flags = GTK_POS_BOTTOM;
 			}
@@ -857,9 +859,10 @@ Widget_Part MCNativeTheme::hittestspinbutton(const MCWidgetInfo &winfo,
 	brect.y = buttonrect.y;
 	brect.width = buttonrect.width;
 
+	// FG-2014-07-30: [[ Bugfix 13025 ]] Spinbox arrows were inverted
 	brect.height = buttonrect.height;
 	if(MCU_point_in_rect(brect, mx, my))
-		wpart = WTHEME_PART_ARROW_INC;
+		wpart = WTHEME_PART_ARROW_DEC;
 	if(wpart == WTHEME_PART_UNDEFINED)
 	{
 		spinbutton_get_rects(GTK_ARROW_DOWN, &rect, buttonrect, arrowrect);
@@ -868,7 +871,7 @@ Widget_Part MCNativeTheme::hittestspinbutton(const MCWidgetInfo &winfo,
 		brect.width = buttonrect.width;
 		brect.height = buttonrect.height;
 		if(MCU_point_in_rect(brect, mx, my))
-			wpart = WTHEME_PART_ARROW_DEC;
+			wpart = WTHEME_PART_ARROW_INC;
 	}
 	return wpart;
 }
@@ -1011,21 +1014,34 @@ int4 MCNativeTheme::getmetric(Widget_Metric wmetric)
 		ret = 0;
 		break;
 	case WTHEME_METRIC_TRACKSIZE:
-		if ( gtktracksize == 0 ) 
-			gtktracksize = getscrollbarmintracksize();
+		if ( gtktracksize == 0 )
+        {
+            MCThreadMutexLock(MCthememutex);
+            if (gtktracksize == 0)
+                gtktracksize = getscrollbarmintracksize();
+            MCThreadMutexUnlock(MCthememutex);
+        }
 		return gtktracksize;
 		break;
 	case WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE:
-		moz_gtk_checkbox_get_metrics(&ret, 0);
+        MCThreadMutexLock(MCthememutex);
+        moz_gtk_checkbox_get_metrics(&ret, 0);
+        MCThreadMutexUnlock(MCthememutex);
 		break;
-	case WTHEME_METRIC_CHECKBUTTON_INDICATORSPACING:
-		moz_gtk_checkbox_get_metrics(0, &ret);
+        case WTHEME_METRIC_CHECKBUTTON_INDICATORSPACING:
+        MCThreadMutexLock(MCthememutex);
+        moz_gtk_checkbox_get_metrics(0, &ret);
+        MCThreadMutexUnlock(MCthememutex);
 		break;
-	case WTHEME_METRIC_RADIOBUTTON_INDICATORSIZE:
-		moz_gtk_radiobutton_get_metrics(&ret, 0);
+        case WTHEME_METRIC_RADIOBUTTON_INDICATORSIZE:
+        MCThreadMutexLock(MCthememutex);
+        moz_gtk_radiobutton_get_metrics(&ret, 0);
+        MCThreadMutexUnlock(MCthememutex);
 		break;
-	case WTHEME_METRIC_RADIOBUTTON_INDICATORSPACING:
-		moz_gtk_radiobutton_get_metrics(0, &ret);
+        case WTHEME_METRIC_RADIOBUTTON_INDICATORSPACING:
+        MCThreadMutexLock(MCthememutex);
+        moz_gtk_radiobutton_get_metrics(0, &ret);
+        MCThreadMutexUnlock(MCthememutex);
 		break;
 	default:
 		break;
@@ -1663,6 +1679,8 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	MCBitmap * t_argb_image ;
 	bool t_cached ;
 	
+    MCThreadMutexLock(MCthememutex);
+    
 	if ( ( p_info -> moztype != MOZ_GTK_CHECKBUTTON ) && ( p_info -> moztype != MOZ_GTK_RADIOBUTTON ) )
 		cache_node = MCimagecache -> find_cached_image ( p_info -> drect.width, p_info -> drect.height, p_info -> moztype, &p_info -> state, p_info -> flags ) ;
 	
@@ -1699,6 +1717,8 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	if (!t_cached)
 		((MCScreenDC*)MCscreen)->destroyimage(t_argb_image);
 	
+    MCThreadMutexUnlock(MCthememutex);
+    
 	return true;
 }
 

@@ -40,11 +40,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define ROW_DIM  0
 #define COL_DIM 1
 
-// OK-2008-12-17: [[Bug 7529]] - Changed the extents from a uint2 to a uint4, that should hold enough keys for now
+// MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
 typedef struct
 {
-	uint4 min;
-	uint4 max;
+	int32_t minimum;
+	int32_t maximum;
 }
 arrayextent;
 
@@ -60,6 +60,9 @@ class MCVariableArray
 	arrayextent *extents;
 
 public:
+    // Initialize the array to empty
+    void clear(void);
+    
 	// Initialize the hash to the given size
 	void presethash(uint4 p_size);
 
