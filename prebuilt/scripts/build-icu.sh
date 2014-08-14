@@ -16,7 +16,11 @@ ICU_SRC="icu-${ICU_VERSION}"
 cd "${BUILDDIR}"
 
 # Needed for cross-compiles
-HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-mac-i386"
+if [ "${PLATFORM}" == "linux" ] ; then
+	HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-linux-i386"
+else
+	HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-mac-i386"
+fi
 
 if [ ! -d "$ICU_SRC" ] ; then
 	if [ ! -e "$ICU_TGZ" ] ; then
@@ -56,6 +60,8 @@ function buildICU {
 				CONFIG_TYPE="Linux"
 				if [ "${ARCH}" == "x86_64" ] ; then
 					CONFIG_TYPE+=" --with-library-bits=64"
+				elif [ "${ARCH}" == "armv6-hf" ] ; then
+					CONFIG_TYPE+=" --host=arm-linux-gnueabihf --with-cross-build=${HOST_ICU_DIR}"
 				else
 					CONFIG_TYPE+=" --with-library-bits=32"
 				fi

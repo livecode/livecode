@@ -16,6 +16,10 @@ endif
 
 include $(shell pwd)/$(dir $(lastword $(MAKEFILE_LIST)))/common.linux.makefile
 
+ifeq ($(RANLIB),)
+    RANLIB=ranlib
+endif
+
 ###############################################################################
 # Customizations
 
@@ -23,7 +27,8 @@ TARGET_PATH=$(BUILD_DIR)/$(NAME).a
 
 $(TARGET_PATH): $(OBJECTS) $(DEPS)
 	mkdir -p $(dir $(TARGET_PATH))
-	ar rc $(TARGET_PATH) $(OBJECTS)
+	$(AR) rc $(TARGET_PATH) $(OBJECTS)
+#	$(RANLIB) $(TARGET_PATH)
 
 .PHONY: $(NAME)
 $(NAME): $(TARGET_PATH)

@@ -51,7 +51,7 @@ pangoxft libpangoxft-1.0.so.0
 	pango_xft_get_context: (pointer, integer) -> (pointer)
 
 pangoft2 libpangoft2-1.0.so.0
-	pango_fc_font_lock_face: (pointer) -> ()
+	pango_fc_font_lock_face: (pointer) -> (pointer)
 	pango_fc_font_unlock_face: (pointer) -> ()
 	pango_fc_font_get_type: (pointer) -> (integer)
 	pango_ft2_render_layout_line: (pointer, pointer, integer, integer) -> ()
@@ -552,7 +552,7 @@ gobject libgobject-2.0.so.0
 	g_malloc: (integer) -> (pointer)
 	g_free: (pointer) -> ()
 	g_object_ref: (pointer) -> (pointer)
-	g_object_unref: (pointer) -> (pointer)
+	g_object_unref: (pointer) -> ()
 	g_type_class_peek: (integer) -> (pointer)
 	g_type_class_ref: (integer) -> (pointer)
 	g_type_class_unref: (pointer) -> ()
