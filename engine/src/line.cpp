@@ -390,7 +390,8 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
         {
             bptr = bptr->next();
             
-            coord_t origin = bptr->getorigin() + sgptr->GetLeftEdge();
+            // SN-2014-08-14: [[ Bug 13106 ]] We want the outside left edge
+            coord_t origin = bptr->getorigin() + sgptr->GetLeft();
             // Different cases, according to the alignment:
             //  right-aligned: the origin belongs to the previous block
             //  others:        the origin belongs to the current block
@@ -447,7 +448,7 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
                 {
                     // We need to find the appropriate block in which the cursor must be rendered
                     coord_t t_limit;
-                    t_limit = (+ sgptr -> GetRightEdge() + sgptr -> next() -> GetLeftEdge() ) / 2;
+                    t_limit = (sgptr -> GetRightEdge() + sgptr -> next() -> GetLeftEdge()) / 2;
                     
                     if (cx < t_limit)
                         bptr = sgptr -> GetLastVisualBlock();

@@ -1158,8 +1158,9 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 
                 // Get the X coordinates for the selection
                 int2 bix, bex;
-                bix = bptr->GetCursorX(si);
-                bex = bptr->GetCursorX(ei);
+                // SN-2014-08-14: [[ Bug 13106 ]] GetCursorX includes the cell padding, which we don't want
+                bix = bptr->GetCursorX(si) - sgptr -> GetPadding();
+                bex = bptr->GetCursorX(ei) - sgptr -> GetPadding();
                 
                 // AL-2014-07-17: [[ Bug 12823 ]] Include segment offset in the block coordinate calculation
                 // Re-ordering will be required if the block is RTL
@@ -3015,7 +3016,9 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 
 	// MW-2012-01-08: [[ ParaStyles ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
-	x -= computelineoffset(lptr);
+    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
+    if (!getvgrid())
+        x -= computelineoffset(lptr);
 
 	focusedindex = lptr->GetCursorIndex(MCU_max(x, 0), False, moving_forward);
 	if (extend)
@@ -3366,8 +3369,10 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 		if (lptr -> next() == lines)
 			drect.height += t_space_below;
 	}
-
-	drect.x += computelineoffset(lptr);
+    
+    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
+    if (!getvgrid())
+        drect.x += computelineoffset(lptr);
 
 	drect.width = cursorwidth;
 
@@ -3434,7 +3439,9 @@ MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool
 			drect.height += t_space_below;
 	}
     
-	drect.x += computelineoffset(lptr);
+    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
+    if (!getvgrid())
+        drect.x += computelineoffset(lptr);
     
 	drect.width = cursorwidth;
     
@@ -3693,7 +3700,9 @@ coord_t MCParagraph::getx(findex_t tindex, MCLine *lptr)
 
 	// MW-2012-01-08: [[ ParaStyles ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Paragraph to Field so +ve)
-	x += computelineoffset(lptr);
+    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
+    if (!getvgrid())
+        x += computelineoffset(lptr);
 
 	return x;
 }
@@ -3850,7 +3859,9 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 
 	// MW-2012-01-08: [[ Paragraph Align ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
-	x -= computelineoffset(lptr);
+    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
+    if (!getvgrid())
+        x -= computelineoffset(lptr);
 
 	si = lptr->GetCursorIndex(x, chunk, true);
 	int4 lwidth = lptr->getwidth();

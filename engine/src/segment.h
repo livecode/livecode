@@ -67,6 +67,9 @@ private:
     // Width of the contents of this segment
     coord_t m_ContentWidth;
     
+    // SN-2014-08-14: [[ Bug 13106 ]] m_Padding member added
+    uint16_t m_Padding;
+    
     // Horizontal and vertical alignment of the text within this segment
     uint8_t m_HAlign;
     uint8_t m_VAlign;
@@ -115,6 +118,13 @@ public:
         m_TopEdge = p_top;
         m_BottomEdge = p_bottom;
     }
+    
+    // SN-2014-08-14: [[ Bug 13106 ]] m_Padding member added to the Segment
+    coord_t GetPadding() const
+    {
+        return m_Padding;
+    }
+    
     int16_t GetLeft() const
     {
         return m_LeftEdge;
@@ -134,6 +144,11 @@ public:
     int16_t GetWidth() const
     {
         return m_RightEdge - m_LeftEdge;
+    }
+    // SN-2014-08-14: [[ Bug 13106 ]] Returns the width inside the cell, padding included
+    int16_t GetInnerWidth() const
+    {
+        return m_RightEdge - m_LeftEdge - 2 * m_Padding;
     }
     int16_t GetHeight() const
     {
