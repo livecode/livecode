@@ -256,44 +256,9 @@ static bool s_lock_responder_change = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// The window tracking thread manages an event tap on mouseUp and mouseDragged
-// events. These are used to update the window frame whilst a window is being
-// moved.
-@interface com_runrev_livecode_MCWindowTrackingThread: NSThread<NSPortDelegate>
-{
-	NSPort *m_termination_port;
-	BOOL m_is_running;
-    
-    MCMacPlatformWindow *m_window;
-    bool m_signalled : 1;
-}
-
-- (id)initWithPlatformWindow: (MCMacPlatformWindow *)window;
-
-- (MCMacPlatformWindow *)platformWindow;
-
-- (void)setSignalled: (bool)p_value;
-
-- (void)main;
-- (void)terminate;
-
-- (void)handlePortMessage: (NSPortMessage *)message;
-
-@end
-
-@compatibility_alias MCWindowTrackingThread com_runrev_livecode_MCWindowTrackingThread;
-
-// This NSWindow addition handles a message 'windowMoved' which is generated
-// by the window tracking thread.
-@interface NSWindow (com_runrev_livecode_MCWindowTrackingAdditions)
-
-- (void)com_runrev_livecode_windowMoved: (MCWindowTrackingThread *)tracker;
-
-@end
-
 @implementation NSWindow (com_runrev_livecode_MCWindowTrackingAdditions)
 
-- (void)com_runrev_livecode_windowMoved: (MCWindowTrackingThread *)tracker
+- (void)com_runrev_livecode_windowMoved: (MCPlatformWindowRef)window
 {
     // The NSWindow's frame isn't updated whilst a window is being moved. However,
     // the window server's bounds *are*. Thus we ask for the updated bounds from
@@ -325,109 +290,13 @@ static bool s_lock_responder_change = false;
         _frame . origin . x = t_rect . origin . x;
         _frame . origin . y = [[NSScreen mainScreen] frame] . size . height - t_rect . origin . y - t_rect . size . height;
         
-        [tracker platformWindow] -> ProcessDidMove();
+        ((MCMacPlatformWindow *)window) -> ProcessDidMove();
     
         _frame . origin = t_origin;
     }
     
     [t_info_array release];
     CFRelease(t_window_id_array);
-    
-    [tracker setSignalled: false];
-}
-
-@end
-
-@implementation com_runrev_livecode_MCWindowTrackingThread
-
-static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_type, CGEventRef p_event, void *p_refcon)
-{
-    MCWindowTrackingThread *t_self;
-    t_self = (MCWindowTrackingThread *)p_refcon;
-
-    // If the event is a MouseUp then terminate the thread. Otherwise if we haven't already
-    // signalled for a windowMoved message, send one.
-    if (p_type == kCGEventLeftMouseUp)
-        [t_self terminate];
-    else if (!t_self -> m_signalled)
-    {
-        t_self -> m_signalled = true;
-        [(NSWindow *)(t_self -> m_window -> GetHandle()) performSelectorOnMainThread: @selector(com_runrev_livecode_windowMoved:) withObject: t_self waitUntilDone: NO];
-    }
-    
-    return p_event;
-}
-
-- (id)initWithPlatformWindow: (MCMacPlatformWindow *)window
-{
-    self = [super init];
-    if (self == nil)
-        return nil;
-    
-    m_window = window;
-    m_signalled = false;
-    
-    return self;
-}
-
-- (MCMacPlatformWindow *)platformWindow
-{
-    return m_window;
-}
-
-- (void)setSignalled:(bool)p_value
-{
-    m_signalled = p_value;
-}
-
-- (void)main
-{
-	NSRunLoop *t_loop;
-	t_loop = [NSRunLoop currentRunLoop];
-	
-	NSData *t_future;
-	t_future = [NSDate distantFuture];
-	
-	m_termination_port = [[NSPort port] retain];
-	[m_termination_port setDelegate: self];
-	[t_loop addPort: m_termination_port forMode: NSDefaultRunLoopMode];
-    
-	ProcessSerialNumber t_psn;
-	GetCurrentProcess(&t_psn);
-	
-	CFMachPortRef t_event_tap_port;
-	t_event_tap_port = CGEventTapCreateForPSN(&t_psn, kCGHeadInsertEventTap, kCGEventTapOptionListenOnly, CGEventMaskBit(kCGEventLeftMouseDragged) | CGEventMaskBit(kCGEventLeftMouseUp), mouse_event_callback, self);
-	
-	CFRunLoopSourceRef t_event_tap_source;
-	t_event_tap_source = CFMachPortCreateRunLoopSource(NULL, t_event_tap_port, 0);
-	CFRunLoopAddSource([t_loop getCFRunLoop], t_event_tap_source, kCFRunLoopDefaultMode);
-	
-	m_is_running = true;
-	while(m_is_running &&
-		  [t_loop runMode: NSDefaultRunLoopMode beforeDate: [NSDate distantFuture]])
-		;
-    
-	CFRunLoopRemoveSource([t_loop getCFRunLoop], t_event_tap_source, kCFRunLoopDefaultMode);
-	CFRelease(t_event_tap_source);
-	CFRelease(t_event_tap_port);
-    
-	[m_termination_port release];
-	m_termination_port = nil;
-}
-
-- (void)terminate
-{
-	NSPortMessage *t_message;
-	t_message = [[NSPortMessage alloc] initWithSendPort: m_termination_port
-											receivePort: m_termination_port
-											 components: nil];
-	[t_message sendBeforeDate: [NSDate distantFuture]];
-	[t_message release];
-}
-
-- (void)handlePortMessage: (NSPortMessage *)message
-{
-	m_is_running = false;
 }
 
 @end
@@ -498,36 +367,29 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (void)windowWillMove:(NSNotification *)notification
 {
-    // The window server will not send continuous updates when moving a window which is
-    // a bad thing. Even worse, it won't even update the frame of the window whilst it
-    // is being dragged. This means that the only way to track window movement during a
-    // move is to track mouse movements on a separate thread, which we do using an
-    // event tap.
-
-    // If the window is 'synchronizing'. i.e. Updating itself from property changes
-    // then *don't* spawn a tracking thread as this movement will be because of script
-    // setting the window frame, rather than a user interaction.
     if (!m_window -> IsSynchronizing())
     {
-        // MW-2014-04-08: [[ Bug 12087 ]] Launch a tracking thread so that we get
-        //   continuous moveStack messages.
-        MCWindowTrackingThread *t_thread;
-        t_thread = [[MCWindowTrackingThread alloc] initWithPlatformWindow: m_window];
-        [t_thread autorelease];
-        [t_thread start];
-        
         // MW-2014-04-23: [[ Bug 12270 ]] The user has started moving the window
         //   so set us as reshape by user.
         m_user_reshape = true;
+        
+        // MW-2014-08-14: [[ Bug 13016 ]] Ask our NSApp to start sending us windowMoved
+        //   messages.
+        [NSApp windowStartedMoving: m_window];
     }
+}
+
+// MW-1024-08-14: [[ Bug 13016 ]] This is invoked by our NSApp for LMouseDragged events
+//   whilst a window is being moved.
+- (void)windowWillMoveFinished: (NSNotification *)notification
+{
+    m_user_reshape = false;
+    
+	m_window -> ProcessDidMove();
 }
 
 - (void)windowDidMove:(NSNotification *)notification
 {
-    // MW-2014-04-23: [[ Bug 12270 ]] The user has stopped moving the window
-    //   so unset us as reshape by user.
-    m_user_reshape = false;
-    
 	m_window -> ProcessDidMove();
 }
 
@@ -1926,7 +1788,9 @@ void MCMacPlatformWindow::DoSynchronize(void)
 			m_shadow_changed = true;
 	}
 	
-	if (m_changes . content_changed)
+    // MW-2014-08-14: [[ Bug 13016 ]] Ignore any changes to the window frame whilst user
+    //   is moving / resizing otherwise bad things happen.
+	if (m_changes . content_changed && ![m_delegate inUserReshape])
 	{
 		NSRect t_cocoa_content;
 		MCMacPlatformMapScreenMCRectangleToNSRect(m_content, t_cocoa_content);
@@ -1960,7 +1824,6 @@ void MCMacPlatformWindow::DoSynchronize(void)
     // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Sync ignoreMouseEvents.
     if (m_changes . ignore_mouse_events_changed)
         [m_window_handle setIgnoresMouseEvents: m_ignore_mouse_events];
-    
     
 	m_synchronizing = false;
 }
