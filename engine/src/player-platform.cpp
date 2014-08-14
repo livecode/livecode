@@ -3165,6 +3165,23 @@ void MCPlayer::handle_mdown(int p_which)
         }
             break;
         case kMCPlayerControllerPartScrubBack:
+            // PM-2014-08-12: [[ Bug 13120 ]] Cmd + click on scrub buttons starts playing in the appropriate direction
+            if (hasfilename() && (MCmodifierstate & MS_CONTROL) != 0)
+            {
+                double t_rate;
+                t_rate = -1.0;
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+                break;
+            }
+            
+            // PM-2014-08-12: [[ Bug 13120 ]] Option (alt) + click on the scrub buttons takes to beginning / end
+            if (hasfilename() && (MCmodifierstate & MS_ALT) != 0)
+            {
+                uint32_t t_zero_time;
+                t_zero_time = 0;
+                setcurtime(t_zero_time, true);
+                break;
+            }
             
             m_scrub_back_is_pressed = true;
             // This is needed for handle_mup
@@ -3182,7 +3199,24 @@ void MCPlayer::handle_mdown(int p_which)
             break;
             
         case kMCPlayerControllerPartScrubForward:
+            // PM-2014-08-12: [[ Bug 13120 ]] Cmd + click on scrub buttons starts playing in the appropriate direction
+            if (hasfilename() && (MCmodifierstate & MS_CONTROL) != 0)
+            {
+                double t_rate;
+                t_rate = 1.0;
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+                break;
+            }
             
+            // PM-2014-08-12: [[ Bug 13120 ]] Option (alt) + click on the scrub buttons takes to beginning / end
+            if (hasfilename() && (MCmodifierstate & MS_ALT) != 0)
+            {
+                uint32_t t_duration;
+                t_duration = getduration();
+                setcurtime(t_duration, true);
+                break;
+            }
+
             m_scrub_forward_is_pressed = true;
             // This is needed for handle_mup
             m_was_paused = ispaused();
