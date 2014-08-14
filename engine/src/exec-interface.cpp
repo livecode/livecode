@@ -455,16 +455,17 @@ void MCInterfaceMakeVisualEffect(MCExecContext& ctxt, MCStringRef name, MCString
 
 void MCInterfaceMakeVisualEffectArgument(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_key, bool p_has_id, MCInterfaceVisualEffectArgument& r_arg)
 {
+    // AL-2014-08-14: [[ Bug 13176 ]] Use p_value for argument value
 	if (p_has_id)
 	{
-		if (!MCStringFormat(r_arg . value, "id %@", p_key))
+		if (!MCStringFormat(r_arg . value, "id %@", p_value))
 		{
 			ctxt . Throw();
 			return;
 		}
 	}
 	else
-		r_arg . key = (MCStringRef)MCValueRetain(p_value);
+		r_arg . value = (MCStringRef)MCValueRetain(p_value);
 
 	r_arg . key = (MCStringRef)MCValueRetain(p_key);
 }
@@ -4259,16 +4260,16 @@ void MCInterfaceExecVisualEffect(MCExecContext& ctxt, MCInterfaceVisualEffect p_
 		effectptr -> sound = MCValueRetain(p_effect . sound);
 	
 	MCEffectArgument *t_arguments = nil;
+    MCInterfaceVisualEffectArgument t_arg;
 	for (uindex_t i = 0; i < p_effect . nargs; i++)
 	{
-		MCInterfaceVisualEffectArgument t_arg = p_effect . arguments[i];
+        t_arg = p_effect . arguments[i];
 		MCEffectArgument *t_kv;
 		t_kv = new MCEffectArgument;
 		t_kv -> next = t_arguments;
 		t_kv -> key = MCValueRetain(t_arg . key);
 		t_kv -> value = MCValueRetain(t_arg . value);
 		t_arguments = t_kv;
-		t_arg = p_effect . arguments[i+1];
 	}
 
 	effectptr -> arguments = t_arguments;
