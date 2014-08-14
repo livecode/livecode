@@ -2143,12 +2143,15 @@ void MCPlayer::currenttimechanged(void)
         setselection(true);
     }
     
+    // FG-2014-08-14: [[ Bug 13099 ]] redrawcontroller () should be called before currenttimechanged message is sent, or else player becomes unresponsive if alwaysbuffer is true
+    redrawcontroller();
+    
     // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
     MCParameter t_param;
     t_param . setn_argument(getmoviecurtime());
     timer(MCM_current_time_changed, &t_param);
     
-    redrawcontroller();
+
 }
 
 void MCPlayer::moviefinished(void)
