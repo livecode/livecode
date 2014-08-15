@@ -431,6 +431,10 @@ MCRectangle MCScreenDC::screentologicalrect(const MCRectangle &p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCResPlatformInitPixelScaling(void)
+{
+}
+
 // IM-2014-01-29: [[ HiDPI ]] Pixel scaling not supported on Linux
 bool MCResPlatformSupportsPixelScaling(void)
 {

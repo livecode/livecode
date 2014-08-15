@@ -66,6 +66,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
 #include "w32dc.h"
+#include "w32compat.h"
+
 #include <process.h>
 
 // MW-2013-04-18: [[ Bug ]] Temporarily undefine 'GetObject' so that the reference
@@ -1543,6 +1545,32 @@ void MCModePreMain(void)
 bool MCPlayer::mode_avi_closewindowonplaystop()
 {
 	return true;
+}
+
+// IM-2014-08-08: [[ Bug 12372 ]] Allow IDE pixel scaling to be enabled / disabled
+// on startup depending on the usePixelScaling registry value
+bool MCModeGetPixelScalingEnabled()
+{
+    MCAutoStringRef t_type, t_error;
+    MCAutoValueRef t_value;
+	MCS_query_registry(MCSTR("HKEY_CURRENT_USER\\Software\\LiveCode\\IDE\\usePixelScaling"), &t_value, &t_type, &t_error);
+
+	if (!MCresult->isempty())
+	{
+		MCresult->clear();
+		return true;
+	}
+
+	// IM-2014-08-14: [[ Bug 12372 ]] PixelScaling is enabled by default.
+	if (MCValueIsEmpty(*t_value))
+        return true;
+    
+    bool t_result;
+    MCExecContext ctxt(nil, nil, nil);
+    if (!ctxt . ConvertToBool(*t_value, t_result))
+        return false;
+    
+    return t_result;
 }
 
 #endif

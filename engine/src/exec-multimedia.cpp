@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "vclip.h"
 
+#include "platform.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, AnswerEffect, 0)
@@ -48,6 +50,8 @@ MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, Movie, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, MCISendString, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Multimedia, Sound, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, Record, 1)
+MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, Pause, 0)
+MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, Resume, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, StartPlayer, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, StopPlaying, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Multimedia, StopPlayingObject, 1)
@@ -122,18 +126,66 @@ void MCMultimediaEvalQTEffects(MCExecContext& ctxt, MCStringRef& r_result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool list_compressors_callback(void *context, unsigned int id, const char *label)
+{
+    MCListRef *t_state = static_cast<MCListRef *>(context);
+    
+    uint32_t t_id;
+    t_id = MCSwapInt32NetworkToHost(id);
+    
+    char t_code[] = "????";
+    memcpy(t_code, (char *)&t_id, 4);
+    
+    MCAutoStringRef t_compressor_info;
+    MCStringFormat(&t_compressor_info, "%s,%s", label, t_code);
+    
+    MCListAppend(*t_state, *t_compressor_info);
+    return true;
+}
+
 // SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_string)
 {
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+    {
+        MCListRef t_state;
+        MCListCreateMutable('\n', t_state);
+        
+        MCPlatformSoundRecorderListCompressors(MCrecorder, list_compressors_callback, &t_state);
+        
+        MCListCopyAsString(t_state, r_string);
+        MCValueRelease(t_state);
+    }
+#else
     extern void MCQTGetRecordCompressionList(MCStringRef &r_string);
     MCQTGetRecordCompressionList(r_string);
+#endif
 }
 
 // SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaEvalRecordLoudness(MCExecContext& ctxt, integer_t& r_loudness)
 {
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    double t_loudness;
+    t_loudness = 0;
+    
+    if (MCrecorder != nil)
+        t_loudness = MCPlatformSoundRecorderGetLoudness(MCrecorder);
+    
+    r_loudness = floor(t_loudness);
+    
+#else
 	extern void MCQTGetRecordLoudness(integer_t &r_loudness);
     MCQTGetRecordLoudness(r_loudness);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -268,8 +320,14 @@ void MCMultimediaExecStopPlayingObject(MCExecContext& ctxt, MCObject *p_object)
 // SN-2014-06-25 [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaExecStopRecording(MCExecContext& ctxt)
 {
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    if (MCrecorder != nil)
+        MCPlatformSoundRecorderStop(MCrecorder);
+#else
     extern void MCQTStopRecording(void);
     MCQTStopRecording();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,8 +341,42 @@ void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 	MCAutoStringRef soundfile;
     MCS_resolvepath(p_filename, &soundfile);
     
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+        MCPlatformSoundRecorderStart(MCrecorder, *soundfile);
+#else
 	extern void MCQTRecordSound(MCStringRef soundfile);
 	MCQTRecordSound(*soundfile);
+#endif
+}
+
+void MCMultimediaExecRecordPause(MCExecContext& ctxt)
+{
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    if (MCrecorder != nil)
+        MCPlatformSoundRecorderPause(MCrecorder);
+#else
+    extern void MCQTRecordPause(void);
+    MCQTRecordPause();
+#endif
+}
+
+void MCMultimediaExecRecordResume(MCExecContext& ctxt)
+{
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    if (MCrecorder != nil)
+        MCPlatformSoundRecorderResume(MCrecorder);
+#else
+    extern void MCQTRecordResume(void);
+    MCQTRecordResume();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -304,9 +396,35 @@ void MCMultimediaExecAnswerEffect(MCExecContext &ctxt)
 void MCMultimediaExecAnswerRecord(MCExecContext &ctxt)
 {
     MCresult -> clear(False);
-    extern void MCQTRecordDialog();
 
+#ifdef FEATURE_PLATFORM_RECORDER
+    
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+    {
+        MCPlatformSoundRecorderBeginConfigurationDialog(MCrecorder);
+        
+        MCPlatformDialogResult t_result;
+        
+        for (;;)
+        {
+            t_result = MCPlatformSoundRecorderEndConfigurationDialog(MCrecorder);
+            if (t_result != kMCPlatformDialogResultContinue)
+                break;
+            
+            MCscreen -> wait(REFRESH_INTERVAL, True, True);
+        }
+
+        if (t_result == kMCPlatformDialogResultCancel)
+            MCresult->sets(MCcancelstring);
+    }
+#else
+    extern void MCQTRecordDialog();
     MCQTRecordDialog();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -673,13 +791,13 @@ void MCMultimediaSetRecordRate(MCExecContext& ctxt, double p_value)
 		else
 			
 			if (p_value <= (11.127 + 22.050) / 2.0)
-				MCrecordrate = 11.127;
+				MCrecordrate = 12.000;
 			else
 				if (p_value <= (22.050 + 22.255) / 2.0)
 					MCrecordrate = 22.050;
 				else
 					if (p_value <= (22.255 + 32.000) / 2.0)
-						MCrecordrate = 22.255;
+						MCrecordrate = 24.000;
 					else
 						if (p_value <= (32.000 + 44.100) / 2.0)
 							MCrecordrate = 32.000;
@@ -692,28 +810,55 @@ void MCMultimediaSetRecordRate(MCExecContext& ctxt, double p_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMultimediaGetPlayDestination(MCExecContext& ctxt, MCStringRef& r_dest)
+void MCMultimediaGetPlayDestination(MCExecContext& ctxt, intenum_t& r_dest)
 {
-	MCtemplateaudio -> getstringprop(ctxt, 0, P_PLAY_DESTINATION, False, r_dest);
-    //TODO-UPDATE
+	MCtemplateaudio -> GetPlayDestination(ctxt, r_dest);
 }
 
-void MCMultimediaSetPlayDestination(MCExecContext& ctxt, MCStringRef p_dest)
+void MCMultimediaSetPlayDestination(MCExecContext& ctxt, intenum_t p_dest)
 {
-	MCtemplateaudio -> setstringprop(ctxt, 0, P_PLAY_DESTINATION, False, p_dest);
-    //TODO-UPDATE
+	MCtemplateaudio -> SetPlayDestination(ctxt, p_dest);
 }
 
 void MCMultimediaGetPlayLoudness(MCExecContext& ctxt, uinteger_t& r_loudness)
 {
-	MCtemplateaudio -> getuintprop(ctxt, 0, P_PLAY_LOUDNESS, False, r_loudness);
-    //TODO-UPDATE
+    // AL-2014-08-12: [[ Bug 13161 ]] Get the global playLoudness rather than templateAudioClip playLoudness
+    uint2 t_loudness = 0;
+    extern bool MCSystemGetPlayLoudness(uint2& r_loudness);
+#ifdef _MOBILE
+    if (MCSystemGetPlayLoudness(t_loudness))
+#else
+        if (false)
+#endif
+            ;
+        else
+            t_loudness = MCS_getplayloudness();
+    
+    r_loudness = t_loudness;
 }
 
 void MCMultimediaSetPlayLoudness(MCExecContext& ctxt, uinteger_t p_loudness)
 {
-	MCtemplateaudio -> setuintprop(ctxt, 0, P_PLAY_LOUDNESS, False, p_loudness);
-    //TODO-UPDATE
+    // AL-2014-08-12: [[ Bug 13161 ]] Setting templateAudioClip playLoudness shouldn't set the global playLoudness
+    p_loudness = MCU_max(MCU_min((uint16_t)p_loudness, 100), 0);
+        
+    extern bool MCSystemSetPlayLoudness(uint2 loudness);
+#ifdef _MOBILE
+    if (MCSystemSetPlayLoudness(p_loudness))
+        return;
+#endif
+    if (MCplayers != NULL)
+    {
+        MCPlayer *tptr = MCplayers;
+        while (tptr != NULL)
+        {
+            tptr->setvolume(p_loudness);
+            tptr = tptr->getnextplayer();
+        }
+    }
+    MCS_setplayloudness(p_loudness);
+
+	MCtemplateaudio -> SetPlayLoudness(ctxt, p_loudness);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -760,7 +905,13 @@ void MCMultimediaSetRecording(MCExecContext& ctxt, bool p_value)
 {
 	if (!p_value)
     {
+#ifdef FEATURE_PLATFORM_RECORDER
+        extern MCPlatformSoundRecorderRef MCrecorder;
+        if (MCrecorder != nil)
+            MCPlatformSoundRecorderStop(MCrecorder);
+#else
         extern void MCQTStopRecording(void);
         MCQTStopRecording();
+#endif
     }
 }

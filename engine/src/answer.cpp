@@ -44,6 +44,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "syntax.h"
+
+#include "platform.h"
 #include "osspec.h"
 
 MCAnswer::~MCAnswer()
@@ -530,8 +532,37 @@ Exec_errors MCAnswer::exec_effect(MCExecPoint& ep, const char *p_title)
 Exec_errors MCAnswer::exec_record(MCExecPoint& ep, const char *p_title)
 {
 	MCresult -> clear(False);
+    
+#ifdef FEATURE_PLATFORM_RECORDER
+
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+    {
+        MCPlatformSoundRecorderBeginConfigurationDialog(MCrecorder);
+        
+        MCPlatformDialogResult t_result;
+        
+        for (;;)
+        {
+            t_result = MCPlatformSoundRecorderEndConfigurationDialog(MCrecorder);
+            if (t_result != kMCPlatformDialogResultContinue)
+                break;
+            
+            MCscreen -> wait(REFRESH_INTERVAL, True, True);
+        }
+        
+        ep.clear();
+        
+        if (t_result == kMCPlatformDialogResultCancel)
+            MCresult->sets(MCcancelstring);
+    }    
+#else
 	extern void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet);
 	MCQTRecordDialog(ep, p_title, sheet);
+#endif
 	return EE_UNDEFINED;
 }
 #endif

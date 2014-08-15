@@ -1201,11 +1201,17 @@ IO_stat MCVariableValue::loadarray(MCObjectInputStream& p_stream, bool p_merge)
 		destroy();
 	
 	set_type(VF_ARRAY);
+    // MW-2014-08-12: [[ Bug 13154 ]] If we aren't merging reset the array.
+    if (!p_merge)
+        array . clear();
 
 	IO_stat t_stat;
 	t_stat = array . load(p_stream, p_merge);
 	if (!p_merge && array . getnfilled() == 0)
 	{
+        // MW-2014-08-14: [[ Bug 13154 ]] Free the hash at this point otherwise we get a memory leak.
+        array . freehash();
+        
 		set_type(VF_UNDEFINED);
 
 		strnum . buffer . data = NULL;

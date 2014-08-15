@@ -60,11 +60,14 @@ class MCVariableArray
 	arrayextent *extents;
 
 public:
+    // Initialize the array to empty
+    void clear(void);
+    
 	// Initialize the hash to the given size
-	void presethash(uint4 p_size);
+	bool presethash(uint4 p_size);
 
 	// Increase the size of the hash to the next power of two
-	void resizehash(uint32_t p_new_size = 0);
+	bool resizehash(uint32_t p_new_size = 0);
 
 	// Free the array's memory
 	void freehash(void);

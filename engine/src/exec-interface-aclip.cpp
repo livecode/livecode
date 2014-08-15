@@ -69,119 +69,8 @@ MCExecEnumTypeInfo *kMCInterfacePlayDestinationTypeInfo = &_kMCInterfacePlayDest
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCAudioClip::GetPlayProp(MCExecContext& ctxt, integer_t& r_loudness)
-{
-    // SN-2014-06-25 [[ PlatformAudio ]]
-    if (this == MCtemplateaudio)
-    {
-        extern bool MCSystemGetPlayLoudness(uint2& r_loudness);
-#ifdef _MOBILE
-        if (MCSystemGetPlayLoudness(loudness))
-#else
-			if (false)
-#endif
-				;
-			else if (!supported)
-				loudness = 0;
-			else
-			{
-#if defined FEATURE_PLATFORM_AUDIO
-                double t_volume;
-                MCPlatformGetSystemProperty(kMCPlatformSystemPropertyVolume, kMCPlatformPropertyTypeDouble, &t_volume);
-                loudness = t_volume * 100.0;
-#elif defined _WINDOWS
-				if (hwaveout == NULL)
-				{
-					WAVEFORMATEX pwfx;
-					pwfx.wFormatTag = WAVE_FORMAT_PCM;
-					pwfx.nChannels = 1;
-					pwfx.nSamplesPerSec = 22050;
-					pwfx.nAvgBytesPerSec = 22050;
-					pwfx.nBlockAlign = 1;
-					pwfx.wBitsPerSample = 8;
-					pwfx.cbSize = 0;
-					if (waveOutOpen(&hwaveout, WAVE_MAPPER, &pwfx, 0, 0, CALLBACK_NULL
-					                | WAVE_ALLOWSYNC) == MMSYSERR_NOERROR)
-					{
-						DWORD v;
-						waveOutGetVolume(hwaveout, &v);
-						loudness = MCU_min((uint2)((v & 0xFFFF) * 100 / 0xFFFF) + 1, 100);
-						waveOutClose(hwaveout);
-						hwaveout = NULL;
-					}
-				}
-#elif defined _MACOSX
-				long volume;
-				GetDefaultOutputVolume(&volume);
-				loudness = (HiWord(volume) + LoWord(volume)) * 50 / 255;
-#elif defined TARGET_PLATFORM_LINUX
-				if ( x11audio != NULL)
-					loudness = x11audio -> getloudness();
-#endif
-			}
-    }
-}
-
-void MCAudioClip::SetPlayProp(MCExecContext& ctxt, uint2 p_loudness)
-{
-    // MERG_2014-06-25 [[ PlatformAudio ]]
-    if (this == MCtemplateaudio)
-    {
-        extern bool MCSystemSetPlayLoudness(uint2 loudness);
-#ifdef _MOBILE
-        if (MCSystemSetPlayLoudness(loudness))
-            return;
-#endif
-        if (MCplayers != NULL)
-        {
-            MCPlayer *tptr = MCplayers;
-            while (tptr != NULL)
-            {
-                tptr->setvolume(loudness);
-                tptr = tptr->getnextplayer();
-            }
-        }
-#if defined FEATURE_PLATFORM_AUDIO
-        double t_volume;
-        t_volume = loudness / 100.0;
-        MCPlatformSetSystemProperty(kMCPlatformSystemPropertyVolume, kMCPlatformPropertyTypeDouble, &t_volume);
-#elif defined _WINDOWS
-        WORD v = loudness * MAXUINT2 / 100;
-        if (hwaveout != NULL)
-            waveOutSetVolume(hwaveout, v | (v << 16));
-        else
-        {
-            WAVEFORMATEX pwfx;
-            pwfx.wFormatTag = WAVE_FORMAT_PCM;
-            pwfx.nChannels = 1;
-            pwfx.nSamplesPerSec = 22050;
-            pwfx.nAvgBytesPerSec = 22050;
-            pwfx.nBlockAlign = 1;
-            pwfx.wBitsPerSample = 8;
-            pwfx.cbSize = 0;
-            if (waveOutOpen(&hwaveout, WAVE_MAPPER, &pwfx, 0, 0,
-                            CALLBACK_NULL | WAVE_ALLOWSYNC) == MMSYSERR_NOERROR)
-            {
-                waveOutSetVolume(hwaveout, v | (v << 16));
-                waveOutClose(hwaveout);
-                hwaveout = NULL;
-            }
-        }
-        
-#elif defined _MACOSX
-        long volume = loudness * 255 / 100;
-        SetDefaultOutputVolume(volume | volume << 16);
-#elif defined TARGET_PLATFORM_LINUX
-        if ( x11audio != NULL)
-            x11audio -> setloudness ( loudness ) ;
-#endif
-    }
-}
-
 void MCAudioClip::GetPlayDestination(MCExecContext& ctxt, intenum_t& r_dest)
 {
-	integer_t t_loudness;
-	GetPlayProp(ctxt, t_loudness);
 	r_dest = (flags & F_EXTERNAL) ? 0 : 1;
 }
 
@@ -191,13 +80,11 @@ void MCAudioClip::SetPlayDestination(MCExecContext& ctxt, intenum_t p_dest)
 		flags |= F_EXTERNAL;
 	else
 		flags &= ~F_EXTERNAL;
-
-	SetPlayProp(ctxt, loudness);
 }
 
 void MCAudioClip::GetPlayLoudness(MCExecContext& ctxt, integer_t& r_value)
 {
-	GetPlayProp(ctxt, r_value);
+	r_value = loudness;
 }
 
 void MCAudioClip::SetPlayLoudness(MCExecContext& ctxt, integer_t p_value)
@@ -207,8 +94,6 @@ void MCAudioClip::SetPlayLoudness(MCExecContext& ctxt, integer_t p_value)
 		flags &= ~F_LOUDNESS;
 	else
 		flags |= F_LOUDNESS;
-
-	SetPlayProp(ctxt, loudness);
 }
 
 void MCAudioClip::GetSize(MCExecContext& ctxt, uinteger_t& r_size)
