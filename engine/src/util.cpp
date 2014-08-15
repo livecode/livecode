@@ -2521,9 +2521,12 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef &r_output)
 			return;
 		}
 		else
-            r_output = MCValueRetain(kMCEmptyString);
-        
-        return;
+        {
+			// MM-2014-08-12: [[ Bug 2902 ]] Make sure we set the result accordingly if the URL is invalid.
+			MCAutoStringRef t_err;
+            MCStringFormat(&t_err, "invalid URL: %@", p_target);
+            MCresult -> setvalueref(*t_err);
+        }
 	}
 	
 	r_output = MCValueRetain(kMCEmptyString);

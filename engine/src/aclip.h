@@ -157,11 +157,6 @@ public:
 		return (MCAudioClip *)MCDLlist::remove((MCDLlist *&)list);
 	}
 
-	////////// PROPERTY SUPPORT METHODS
-
-	void GetPlayProp(MCExecContext& ctxt, integer_t& r_loudness);
-	void SetPlayProp(MCExecContext& ctxt, uint2 p_loudness);
-
 	////////// PROPERTY ACCESSORS
 
 	void GetPlayDestination(MCExecContext& ctxt, intenum_t& r_dest);

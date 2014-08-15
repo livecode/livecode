@@ -3680,6 +3680,7 @@ extern MCExecMethodInfo *kMCEngineGetRecursionLimitMethodInfo;
 extern MCExecMethodInfo *kMCEngineSetRecursionLimitMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetAddressMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetStacksInUseMethodInfo;
+extern MCExecMethodInfo *kMCEngineGetEditionTypeMethodInfo;
 
 void MCEngineEvalVersion(MCExecContext& ctxt, MCNameRef& r_name);
 void MCEngineEvalBuildNumber(MCExecContext& ctxt, integer_t& r_build_number);
@@ -3826,6 +3827,7 @@ void MCEngineEvalRandomUuid(MCExecContext& ctxt, MCStringRef& r_uuid);
 void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
 void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
 
+void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition);
 ///////////
 
 extern MCExecMethodInfo *kMCFilesEvalDirectoriesMethodInfo;
@@ -4051,6 +4053,8 @@ extern MCExecMethodInfo *kMCMultimediaEvalMovieMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalMCISendStringMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalSoundMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecRecordMethodInfo;
+extern MCExecMethodInfo *kMCMultimediaExecRecordResumeMethodInfo;
+extern MCExecMethodInfo *kMCMultimediaExecRecordPauseMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecStartPlayerMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecStopPlayingMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecStopPlayingObjectMethodInfo;
@@ -4099,6 +4103,9 @@ void MCMultimediaEvalMCISendString(MCExecContext& ctxt, MCStringRef p_command, M
 void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound);
 
 void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename);
+void MCMultimediaExecRecordPause(MCExecContext& ctxt);
+void MCMultimediaExecRecordResume(MCExecContext& ctxt);
+
 void MCMultimediaExecStartPlayer(MCExecContext& ctxt, MCPlayer *p_target);
 
 void MCMultimediaExecStopPlaying(MCExecContext& ctxt);
@@ -4126,8 +4133,8 @@ void MCMultimediaSetRecordChannels(MCExecContext& ctxt, uinteger_t p_value);
 void MCMultimediaGetRecordRate(MCExecContext& ctxt, double& r_value);
 void MCMultimediaSetRecordRate(MCExecContext& ctxt, double p_value);
 
-void MCMultimediaGetPlayDestination(MCExecContext& ctxt, MCStringRef& r_dest);
-void MCMultimediaSetPlayDestination(MCExecContext& ctxt, MCStringRef dest);
+void MCMultimediaGetPlayDestination(MCExecContext& ctxt, intenum_t& r_dest);
+void MCMultimediaSetPlayDestination(MCExecContext& ctxt, intenum_t dest);
 void MCMultimediaGetPlayLoudness(MCExecContext& ctxt, uinteger_t& r_loudness);
 void MCMultimediaSetPlayLoudness(MCExecContext& ctxt, uinteger_t loudness);
 

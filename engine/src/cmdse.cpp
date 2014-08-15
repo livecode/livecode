@@ -3152,8 +3152,16 @@ void MCStop::exec_ctxt(MCExecContext &ctxt)
 				MCU_play_stop();
 		break;
 	case SC_RECORDING:
-		extern void MCQTStopRecording(void);	
+#ifdef FEATURE_PLATFORM_RECORDER
+            extern MCPlatformSoundRecorderRef MCrecorder;
+            if (MCrecorder == nil)
+                break;
+            
+            MCPlatformSoundRecorderStop(MCrecorder);
+#else
+		extern void MCQTStopRecording(void);
 		MCQTStopRecording();
+#endif
 		break;
 	case SC_USING:
 		{

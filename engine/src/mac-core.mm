@@ -34,6 +34,10 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 static NSLock *s_callback_lock = nil;
 
+// MW-2014-08-14: [[ Bug 13016 ]] This holds the window that is currently being
+//   moved by the windowserver.
+static MCPlatformWindowRef s_moving_window = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum
@@ -60,7 +64,42 @@ enum
         [event subtype] == kMCMacPlatformMouseSyncEvent)
         MCMacPlatformHandleMouseSync();
     else
+    {
+        // MW-2014-08-14: [[ Bug 13016 ]] Whilst the windowserver moves a window
+        //   we intercept mouseDragged events so we can keep script informed.
+        NSWindow *t_window;
+        t_window = [event window];
+        if (s_moving_window != nil &&
+            [event window] == ((MCMacPlatformWindow *)s_moving_window) -> GetHandle())
+        {
+            if ([event type] == NSLeftMouseDragged)
+                [t_window com_runrev_livecode_windowMoved: s_moving_window];
+            else if ([event type] == NSLeftMouseUp)
+                [self windowStoppedMoving: s_moving_window];
+        }
+        
         [super sendEvent: event];
+    }
+}
+
+- (void)windowStartedMoving: (MCPlatformWindowRef)window
+{
+    if (s_moving_window != nil)
+        [self windowStoppedMoving: window];
+    
+    MCPlatformRetainWindow(window);
+    s_moving_window = window;
+}
+
+- (void)windowStoppedMoving: (MCPlatformWindowRef)window
+{
+    if (s_moving_window == nil)
+        return;
+    
+    [[((MCMacPlatformWindow *)s_moving_window) -> GetHandle() delegate] windowWillMoveFinished: nil];
+    
+    MCPlatformReleaseWindow(s_moving_window);
+    s_moving_window = nil;
 }
 
 @end
@@ -188,6 +227,15 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     
 	AEEventID aeid;
 	AEGetAttributePtr(p_event, keyEventIDAttr, typeType, &rType, &aeid, sizeof(AEEventID), &rSize);
+    
+    // MW-2014-08-12: [[ Bug 13140 ]] Handle the appleEvent to cause a termination otherwise
+    //   we don't quit if the app is in the background (I think this is because we roll our
+    //   own event handling loop and don't use [NSApp run]).
+    if (aeclass == kCoreEventClass && aeid == kAEQuitApplication)
+    {
+        [NSApp terminate: self];
+        return noErr;
+    }
     
     if (aeclass == kCoreEventClass && aeid == kAEAnswer)
         return MCAppleEventHandlerDoAEAnswer(p_event, p_reply, 0);

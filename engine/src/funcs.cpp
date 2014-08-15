@@ -1899,18 +1899,54 @@ Parse_stat MCDrives::parse(MCScriptPoint &sp, Boolean the)
 	return ES_NORMAL;
 #endif /* MCQTEffects */
 
-
 #ifdef /* MCRecordCompressionTypes */ LEGACY_EXEC
+Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
+{
+#ifdef FEATURE_PLATFORM_RECORDER
+    
+    ep . clear();
+    
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+    {
+        MCPlatformSoundRecorderListCompressorsState t_state;
+        t_state . ep = &ep;
+        t_state . first = true;
+        
+        MCPlatformSoundRecorderListCompressors(MCrecorder, list_compressors_callback, &t_state);
+    }
+#else
 	extern void MCQTGetRecordCompressionList(MCExecPoint& ep);
 	MCQTGetRecordCompressionList(ep);
+#endif
+    
 	return ES_NORMAL;
 #endif /* MCRecordCompressionTypes */
 
 
 
 #ifdef /* MCRecordLoudness */ LEGACY_EXEC
+    
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    double t_loudness;
+    t_loudness = 0;
+    
+    if (MCrecorder != nil)
+        t_loudness = MCPlatformSoundRecorderGetLoudness(MCrecorder);
+    
+    ep . setuint(floor(t_loudness));
+        
+#else
 	extern void MCQTGetRecordLoudness(MCExecPoint& ep);
 	MCQTGetRecordLoudness(ep);
+#endif
+    
 	return ES_NORMAL;
 #endif /* MCRecordLoudness */
 

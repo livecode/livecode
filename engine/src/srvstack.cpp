@@ -44,6 +44,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCResPlatformInitPixelScaling(void)
+{
+}
+
 // IM-2014-01-31: [[ HiDPI ]] Pixel scaling not supported on server
 bool MCResPlatformSupportsPixelScaling(void)
 {

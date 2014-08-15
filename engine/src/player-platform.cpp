@@ -817,12 +817,27 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 
 Boolean MCPlayer::doubledown(uint2 which)
 {
-	return MCControl::doubledown(which);
+    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown 
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+        return MCControl::doubledown(which);
+    if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
+    {
+        if ((MCmodifierstate & MS_SHIFT) != 0)
+            handle_shift_mdown(which);
+        else
+            handle_mdown(which);
+    }
+    return True;
 }
 
 Boolean MCPlayer::doubleup(uint2 which)
 {
-	return MCControl::doubleup(which);
+    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubleup on the controller as a single mup
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+        return MCControl::doubleup(which);
+    if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
+        handle_mup(which);
+    return True;
 }
 
 void MCPlayer::setrect(const MCRectangle &nrect)
@@ -1557,8 +1572,11 @@ void MCPlayer::setselection(bool notify)
                 t_et = endtime;
             }
             
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_st);
+            // PM-2014-08-06: [[ Bug 13064 ]] 
+            // If we first set StartTime and FinishTime is not set (= 0), then startTime becomes 0 (Since if StartTime > FinishTime then StartTime = FinishTime)
+            // For this reason, we first set FinishTime 
             MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_et);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_st);
             
             if (notify)
                 selectionchanged();
@@ -2361,13 +2379,11 @@ void MCPlayer::selectionchanged(void)
 
 void MCPlayer::currenttimechanged(void)
 {
-    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
-    MCParameter t_param;
-    t_param . setn_argument(getmoviecurtime());
-    timer(MCM_current_time_changed, &t_param);
-    
     if (m_modify_selection_while_playing)
     {
+        if ((MCmodifierstate & MS_SHIFT) == 0)
+            playpause(True);
+        
         uint32_t t_current_time;
         t_current_time = getmoviecurtime();
         
@@ -2376,13 +2392,18 @@ void MCPlayer::currenttimechanged(void)
         if (t_current_time > endtime)
             endtime = t_current_time;
         
-        if ((MCmodifierstate & MS_SHIFT) == 0)
-            playpause(True);
-        
         setselection(true);
     }
     
+    // FG-2014-08-14: [[ Bug 13099 ]] redrawcontroller () should be called before currenttimechanged message is sent, or else player becomes unresponsive if alwaysbuffer is true
     redrawcontroller();
+    
+    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
+    MCParameter t_param;
+    t_param . setn_argument(getmoviecurtime());
+    timer(MCM_current_time_changed, &t_param);
+    
+
 }
 
 void MCPlayer::moviefinished(void)
@@ -3422,6 +3443,23 @@ void MCPlayer::handle_mdown(int p_which)
         }
             break;
         case kMCPlayerControllerPartScrubBack:
+            // PM-2014-08-12: [[ Bug 13120 ]] Cmd + click on scrub buttons starts playing in the appropriate direction
+            if (hasfilename() && (MCmodifierstate & MS_CONTROL) != 0)
+            {
+                double t_rate;
+                t_rate = -1.0;
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+                break;
+            }
+            
+            // PM-2014-08-12: [[ Bug 13120 ]] Option (alt) + click on the scrub buttons takes to beginning / end
+            if (hasfilename() && (MCmodifierstate & MS_ALT) != 0)
+            {
+                uint32_t t_zero_time;
+                t_zero_time = 0;
+                setcurtime(t_zero_time, true);
+                break;
+            }
             
             m_scrub_back_is_pressed = true;
             // This is needed for handle_mup
@@ -3439,7 +3477,24 @@ void MCPlayer::handle_mdown(int p_which)
             break;
             
         case kMCPlayerControllerPartScrubForward:
+            // PM-2014-08-12: [[ Bug 13120 ]] Cmd + click on scrub buttons starts playing in the appropriate direction
+            if (hasfilename() && (MCmodifierstate & MS_CONTROL) != 0)
+            {
+                double t_rate;
+                t_rate = 1.0;
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+                break;
+            }
             
+            // PM-2014-08-12: [[ Bug 13120 ]] Option (alt) + click on the scrub buttons takes to beginning / end
+            if (hasfilename() && (MCmodifierstate & MS_ALT) != 0)
+            {
+                uint32_t t_duration;
+                t_duration = getduration();
+                setcurtime(t_duration, true);
+                break;
+            }
+
             m_scrub_forward_is_pressed = true;
             // This is needed for handle_mup
             m_was_paused = ispaused();
@@ -3656,7 +3711,6 @@ void MCPlayer::handle_mup(int p_which)
             layer_redrawall();
             break;
          
-        // We want the SelectionChanged message to fire on mup
         case kMCPlayerControllerPartSelectionStart:
         case kMCPlayerControllerPartSelectionFinish:
             setselection(true);
@@ -3752,7 +3806,28 @@ void MCPlayer::handle_shift_mdown(int p_which)
             
         case kMCPlayerControllerPartPlay:
             m_modify_selection_while_playing = true;
-            handle_mdown(p_which);
+            
+            // PM-2014-08-05: [[ Bug 13063 ]] Make sure shift + play sets the starttime to the currenttime if there is previously no selection
+            uint32_t t_old_time;
+            t_old_time = getmoviecurtime();
+            
+            // If there was previously no selection, then take it to be currenttime, currenttime.
+            if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
+                starttime = endtime = t_old_time;
+           
+            
+            if (hasfilename())
+            {
+                bool t_show_selection;
+                t_show_selection = true;
+                setflag(True, F_SHOW_SELECTION);
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+                
+                handle_mdown(p_which);
+                if (ispaused())
+                    endtime = getmoviecurtime();
+                setselection(true);
+            }
             break;
                      
         default:

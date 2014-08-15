@@ -187,6 +187,9 @@ void MCS_geturl(MCObject *p_target, MCStringRef p_url);
 //   enough entropy available to generate them.
 bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer);
 
+extern uint2 MCS_getplayloudness();
+extern void MCS_setplayloudness(uint2 p_loudness);
+
 ///////////////////////////////////////////////////////////////////////////////
 
 extern Boolean MCS_handle_sockets(void);

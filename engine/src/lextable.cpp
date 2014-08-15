@@ -842,6 +842,8 @@ LT factor_table[] =
         {"editbackground", TT_PROPERTY, P_EDIT_BACKGROUND},
         {"editbg", TT_PROPERTY, P_EDIT_BACKGROUND},
         {"editbkgnd", TT_PROPERTY, P_EDIT_BACKGROUND},
+        // MW-2014-08-12: [[ EditionType ]] New read-only property describing the engine's edition.
+        {"editiontype", TT_PROPERTY, P_EDITION_TYPE},
         {"editmenus", TT_PROPERTY, P_EDIT_MENUS},
 		{"editmode", TT_PROPERTY, P_EDIT_MODE},
         {"editscripts", TT_PROPERTY, P_EDIT_SCRIPTS},
@@ -1951,7 +1953,9 @@ static LT record_table[] =
         {"best", TT_UNDEFINED, RC_BEST},
         {"better", TT_UNDEFINED, RC_BETTER},
         {"good", TT_UNDEFINED, RC_GOOD},
+        {"pause", TT_UNDEFINED, RC_PAUSE},
         {"quality", TT_UNDEFINED, RC_QUALITY},
+        {"resume", TT_UNDEFINED, RC_RESUME},
         {"sound", TT_UNDEFINED, RC_SOUND}
     };
 

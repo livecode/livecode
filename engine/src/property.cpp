@@ -202,7 +202,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_PRINT_TEXT_SIZE, Any, Legacy, TextSize)
 	DEFINE_RW_PROPERTY(P_PRINT_TEXT_STYLE, Any, Legacy, TextStyle)
 	
-	DEFINE_RW_PROPERTY(P_PLAY_DESTINATION, String, Multimedia, PlayDestination)
+	DEFINE_RW_ENUM_PROPERTY(P_PLAY_DESTINATION, InterfacePlayDestination, Multimedia, PlayDestination)
 	DEFINE_RW_PROPERTY(P_PLAY_LOUDNESS, UInt16, Multimedia, PlayLoudness)
 	
 	DEFINE_RW_PROPERTY(P_STACK_FILES, String, Legacy, StackFiles)
@@ -379,6 +379,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     // IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScales returns a return-delimited
     // list of the pixel scales of all connected screens
     DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALES, LinesOfDouble, Interface, ScreenPixelScales)
+    
+    // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
+    DEFINE_RO_PROPERTY(P_EDITION_TYPE, String, Engine, EditionType)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
@@ -890,10 +893,12 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	// IM-2014-01-24: [[ HiDPI ]] Add support for global usePixelScaling, screenPixelScale, screenPixelScales properties
 	case P_USE_PIXEL_SCALING:
 	case P_SCREEN_PIXEL_SCALE:
-	case P_SCREEN_PIXEL_SCALES:
-			
-		break;
-
+    case P_SCREEN_PIXEL_SCALES:
+            
+    // MW-2014-08-12: [[ EditionType ]] Add support for global editionType property.
+    case P_EDITION_TYPE:
+        break;
+	        
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only
 	case P_REV_LICENSE_INFO:
 	case P_DRAG_DATA:
@@ -928,7 +933,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		}
 	case P_BRUSH_COLOR:
 	case P_BRUSH_BACK_COLOR:
-
 	case P_BRUSH_PATTERN:
 	case P_PEN_COLOR:
 	case P_PEN_BACK_COLOR:
@@ -2005,13 +2009,13 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			else
 
 				if (MCrecordrate <= (11.127 + 22.050) / 2.0)
-					MCrecordrate = 11.127;
+					MCrecordrate = 12.000;
 				else
 					if (MCrecordrate <= (22.050 + 22.255) / 2.0)
 						MCrecordrate = 22.050;
 					else
 						if (MCrecordrate <= (22.255 + 32.000) / 2.0)
-							MCrecordrate = 22.255;
+							MCrecordrate = 24.000;
 						else
 							if (MCrecordrate <= (32.000 + 44.100) / 2.0)
 								MCrecordrate = 32.000;
@@ -2661,8 +2665,18 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 				return ES_ERROR;
 			if (!trecording)
 			{
+#ifdef FEATURE_PLATFORM_RECORDER
+                bool t_recording;
+                t_recording = false;
+                
+                extern MCPlatformSoundRecorderRef MCrecorder;
+                
+                if (MCrecorder != nil)
+                    t_recording = MCPlatformSoundRecorderIsRecording(MCrecorder);
+#else
 				extern void MCQTStopRecording(void);
 				MCQTStopRecording();
+#endif
 			}
 		}
 		break;
@@ -3099,9 +3113,35 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			case P_NUMBER_FORMAT:
 				ep.setnumberformat();
 				break;
-			case P_PLAY_DESTINATION:
+            // AL-2014-08-12: [[ Bug 13161 ]] Setting templateAudioClip playLoudness shouldn't set the global playLoudness
 			case P_PLAY_LOUDNESS:
-				return MCtemplateaudio->setprop(0, which, ep, False);
+                {
+                    uint2 t_loudness;
+                    if (ep . getuint2(t_loudness, line, pos, EE_ACLIP_LOUDNESSNAN) != ES_NORMAL)
+                        return ES_ERROR;
+                    
+                    t_loudness = MCU_max(MCU_min(t_loudness, 100), 0);
+                    
+                    extern bool MCSystemSetPlayLoudness(uint2 loudness);
+#ifdef _MOBILE
+                    if (MCSystemSetPlayLoudness(t_loudness))
+                        return ES_NORMAL;
+#endif
+                    if (MCplayers != NULL)
+                    {
+                        MCPlayer *tptr = MCplayers;
+                        while (tptr != NULL)
+                        {
+                            tptr->setvolume(t_loudness);
+                            tptr = tptr->getnextplayer();
+                        }
+                    }
+                    MCS_setplayloudness(t_loudness);
+                }
+ 
+                // fall through to set templateAudioClip property
+            case P_PLAY_DESTINATION:
+                return MCtemplateaudio->setprop(0, which, ep, False);
 			case P_LOCK_SCREEN:
 				if (ep.getboolean(newlock, line, pos, EE_PROPERTY_NAB) != ES_NORMAL)
 					return ES_ERROR;
@@ -3966,7 +4006,7 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
             ep.setboolean(MClockmessages);
             break;
         case P_LOCK_MOVES:
-            ep.setboolean(MClockmoves);
+            ep.setboolean(MCscreen->getlockmoves());
             break;
         case P_LOCK_RECENT:
             ep.setboolean(MClockrecent);
@@ -4271,6 +4311,11 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
             break;
         }
             
+            // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
+        case P_EDITION_TYPE:
+            ep . setstaticcstring(MClicenseparameters . license_class == kMCLicenseClassCommunity ? "community" : "commercial");
+            break;
+            
         case P_SHELL_COMMAND:
             ep.setsvalue(MCshellcmd);
             break;
@@ -4427,7 +4472,9 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
 				MCExecPoint ep2(ep);
 				MCexecutioncontexts[i]->getobj()->getprop(0, P_LONG_ID, ep2, False);
 				ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == 0);
-				ep.concatnameref(MCexecutioncontexts[i]->gethandler()->getname(), EC_COMMA, false);
+                // PM-2014-04-14: [[Bug 12125]] Do this check to avoid a crash in LC server
+                if (MCexecutioncontexts[i]->gethandler() != NULL)
+                    ep.concatnameref(MCexecutioncontexts[i]->gethandler()->getname(), EC_COMMA, false);
 				ep.concatuint(MCexecutioncontexts[i]->getline(), EC_COMMA, false);
 				if (MCexecutioncontexts[i] -> getparentscript() != NULL)
 				{
@@ -4657,8 +4704,24 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
                                             ep.getnftrailing(), ep.getnfforce());
                         break;
                     case P_PLAY_DESTINATION:
-                    case P_PLAY_LOUDNESS:
                         return MCtemplateaudio->getprop(0, which, ep, False);
+                        // AL-2014-08-12: [[ Bug 13161 ]] Get the global playLoudness rather than templateAudioClip playLoudness
+                    case P_PLAY_LOUDNESS:
+                    {
+                        uint2 t_loudness;
+                        t_loudness = 0;
+                        extern bool MCSystemGetPlayLoudness(uint2& r_loudness);
+#ifdef _MOBILE
+                        if (MCSystemGetPlayLoudness(t_loudness))
+#else
+                            if (false)
+#endif
+                                ;
+                            else
+                                t_loudness = MCS_getplayloudness();
+                        ep . setuint(t_loudness);
+                    }
+                        break;
                     case P_LOCK_SCREEN:
                         // MW-2011-08-18: [[ Redraw ]] Update to use redraw.
                         ep.setboolean(MCRedrawIsScreenLocked());
@@ -4999,6 +5062,7 @@ Exec_stat MCProperty::eval_function(MCExecPoint& ep)
 			return ctxt . Catch(line, pos);
 		}
 		case F_SCREEN_RECT:
+		if (target == NULL)
 		{
 			MCExecContext ctxt(ep);
 

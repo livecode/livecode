@@ -1950,8 +1950,9 @@ void MCField::ftab(Field_translations function, MCStringRef p_string, KeySym key
 {
 	if (message_with_valueref_args(MCM_tab_key, p_string) == ES_NORMAL)
 		return;
+    // MW-2014-08-12: [[ Bug 13166 ]] If we get a tab key message then we always insert \t
 	if (ntabs != 0 && !(flags & F_LOCK_TEXT))
-		finsertnew(FT_UNDEFINED, p_string, key);
+		finsertnew(FT_UNDEFINED, MCSTR("\t"), key);
 	else
 		if (MCmodifierstate & MS_SHIFT)
 			getcard()->kfocusprev(False);

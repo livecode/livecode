@@ -540,6 +540,8 @@
 		766E3299180EE4ED00CF7FCF /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3295180EE4E000CF7FCF /* imagelist.cpp */; };
 		766E329A180EE4EE00CF7FCF /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3293180EE4E000CF7FCF /* graphicscontext.cpp */; };
 		766E329B180EE4EE00CF7FCF /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3295180EE4E000CF7FCF /* imagelist.cpp */; };
+		76CCAA7C19800BCD00C79271 /* mac-qt-recorder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */; };
+		76CCAA7E1980152A00C79271 /* platform-recorder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */; };
 		76D47DE918030E50006F9102 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */; };
 		76EF3163181E6BD900FAC195 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 766E32A1180EE5BC00CF7FCF /* libgraphics.a */; };
 		76EF3165181E6BF700FAC195 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 766E32A1180EE5BC00CF7FCF /* libgraphics.a */; };
@@ -1712,6 +1714,8 @@
 		768D66A21762087500F203A3 /* mbliphonesensor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonesensor.mm; path = src/mbliphonesensor.mm; sourceTree = "<group>"; };
 		768D66A31762087500F203A3 /* mbliphonestore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonestore.mm; path = src/mbliphonestore.mm; sourceTree = "<group>"; };
 		768D66A41762087500F203A3 /* mbliphonetextmessaging.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextmessaging.mm; path = src/mbliphonetextmessaging.mm; sourceTree = "<group>"; };
+		76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-recorder.mm"; path = "src/mac-qt-recorder.mm"; sourceTree = "<group>"; };
+		76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-recorder.cpp"; path = "src/platform-recorder.cpp"; sourceTree = "<group>"; };
 		76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field-chunk.cpp"; path = "src/exec-interface-field-chunk.cpp"; sourceTree = "<group>"; };
 		76EF3196181E762C00FAC195 /* LiveCode-Community.rsrc */ = {isa = PBXFileReference; lastKnownFileType = archive.rsrc; name = "LiveCode-Community.rsrc"; path = "rsrc/LiveCode-Community.rsrc"; sourceTree = "<group>"; };
 		76EF319F181E79FF00FAC195 /* stackview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackview.cpp; path = src/stackview.cpp; sourceTree = "<group>"; };
@@ -2293,6 +2297,7 @@
 				BEDE3FA019534E290050F19B /* mac-window.mm */,
 				76EF31A5181E7D8000FAC195 /* cgimageutil.cpp */,
 				76EF31A3181E7CCE00FAC195 /* osxcisupport.mm */,
+				76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */,
 				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
 				4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */,
 				4D03C2160BC5803900026EA7 /* osxfiles.cpp */,
@@ -4454,6 +4459,8 @@
 				BEB059521993CE66006AE3FD /* exec-interface-scrollbar.cpp in Sources */,
 				BEB059531993CE69006AE3FD /* exec-interface-stack.cpp in Sources */,
 				BEB059541993CE6B006AE3FD /* exec-interface-vclip.cpp in Sources */,
+				76CCAA7C19800BCD00C79271 /* mac-qt-recorder.mm in Sources */,
+				76CCAA7E1980152A00C79271 /* platform-recorder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

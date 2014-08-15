@@ -175,6 +175,10 @@ MCGFloat MCAndroidGetSystemScale(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCResPlatformInitPixelScaling(void)
+{
+}
+
 // IM-2014-01-31: [[ HiDPI ]] Pixel scaling supported on android
 bool MCResPlatformSupportsPixelScaling(void)
 {

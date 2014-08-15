@@ -152,6 +152,7 @@ MC_EXEC_DEFINE_GET_METHOD(Engine, RecursionLimit, 1)
 MC_EXEC_DEFINE_SET_METHOD(Engine, RecursionLimit, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, Address, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, StacksInUse, 1)
+MC_EXEC_DEFINE_GET_METHOD(Engine, EditionType, 1)
 
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, ValueAsObject, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, OwnerAsObject, 2)
@@ -1922,4 +1923,12 @@ void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStri
 void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid)
 {
     MCEngineDoEvalUuid(ctxt, p_namespace_id, p_name, false, r_uuid);
+}
+
+void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
+{
+    if (MCStringCreateWithCString(MClicenseparameters . license_class == kMCLicenseClassCommunity ? "community" : "commercial", r_edition))
+        return;
+    
+    ctxt . Throw();
 }

@@ -376,8 +376,9 @@ MCVariable *MCurlresult;
 Boolean MCexitall;
 int4 MCretcode;
 Boolean MCrecording;
-
-Boolean MCantialiasedtextworkaround = False;
+#ifdef FEATURE_PLATFORM_RECORDER
+MCPlatformSoundRecorderRef MCrecorder;
+#endif
 
 // AL-2014-18-02: [[ UnicodeFileFormat ]] Make stackfile version 7.0 the default.
 uint4 MCstackfileversion = 7000;
@@ -744,26 +745,18 @@ void X_clear_globals(void)
 	MCexitall = False;
 	MCretcode = 0;
 	MCrecording = False;
-	MCantialiasedtextworkaround = False;
+#ifdef FEATURE_PLATFORM_RECORDER
+    MCrecorder = nil;
+#endif
+    
 	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make 7.0 stackfile version the default.
 	MCstackfileversion = 7000;
-#if defined(_WINDOWS)
-    MClook = LF_WIN95;
-    MCttbgcolor = MCSTR("255,255,231");
-    MCttfont = MCSTR("MS Sans Serif");
-    MCttsize = 12;
-#elif defined(_MACOSX)
-    MClook = LF_MAC;
-    MCttbgcolor = MCSTR("255,255,207");
-    MCttfont = MCSTR("Lucida Grande");
-    MCttsize = 11;
-#else
+
     MClook = LF_MOTIF;
     MCttbgcolor = MCSTR("255,255,207");
     MCttfont = MCSTR("Helvetica");
     MCttsize = 12;
-#endif
-    MCttsize = 12;
+
 	MCtrylock = 0;
 	MCerrorlock = 0;
 	MCwatchcursor = False;
@@ -1000,6 +993,11 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCdispatcher = new MCDispatch;
     MCdispatcher -> add_transient_stack(MCtooltip);
 
+	// IM-2014-08-14: [[ Bug 12372 ]] Pixel scale setup needs to happen before the
+	// creation of MCscreen to ensure screen rects are scaled/unscaled as appropriate.
+	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
+	MCResInitPixelScaling();
+	
 	if (MCnoui)
 		MCscreen = new MCUIDC;
 	else
@@ -1020,6 +1018,8 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
 	MCResInitPixelScaling();
 
+	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
+	//   screen, otherwise we don't have a root fontref!
 	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
 #if defined(TARGET_PLATFORM_WINDOWS)
 	if (MCmajorosversion >= 0x0600)
@@ -1093,11 +1093,19 @@ int X_close(void)
 	MCselected->clear(False);
 
 	MCU_play_stop();
+#ifdef FEATURE_PLATFORM_RECORDER
+    if (MCrecorder != nil)
+    {
+        MCPlatformSoundRecorderStop(MCrecorder);
+        MCPlatformSoundRecorderRelease(MCrecorder);
+    }
+#else
 	if (MCrecording)
 	{
 		extern void MCQTStopRecording(void);
 		MCQTStopRecording();
 	}
+#endif
 	MClockmessages = True;
 	MCS_killall();
 

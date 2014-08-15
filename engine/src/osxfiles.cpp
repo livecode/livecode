@@ -45,6 +45,178 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/utsname.h>
 
 #ifdef /* MCS_loadfile_dsk_mac */ LEGACY_SYSTEM
+#include <mach-o/dyld.h>
+
+#define ENTRIES_CHUNK 1024
+
+#define SERIAL_PORT_BUFFER_SIZE  16384 //set new buffer size for serial input port
+#include <termios.h>
+#define B16600 16600
+
+#include <pwd.h>
+
+#define USE_FSCATALOGINFO
+
+//for setting serial port use
+typedef struct
+{
+	short baudrate;
+	short parity;
+	short stop;
+	short data;
+}
+SerialControl;
+
+//struct
+SerialControl portconfig; //serial port configuration structure
+
+extern "C"
+{
+	extern UInt32 SwapQDTextFlags(UInt32 newFlags);
+	typedef UInt32 (*SwapQDTextFlagsPtr)(UInt32 newFlags);
+}
+
+static void configureSerialPort(int sRefNum);
+static void getResourceInfo(char *&list, uint4 &len, ResType searchType);
+static void parseSerialControlStr(char *set, struct termios *theTermios);
+
+char *path2utf(char *path);
+
+void MCS_setfiletype(const char *newpath);
+
+// PM-2014-08-08: [[ Bug 13132 ]] OSX 10.6 does not contain an implementation for strndup so use our own regardless of the OSX version
+static char *my_strndup(const char *s, uint32_t l)
+{
+	char *r;
+	r = new char[l + 1];
+	strncpy(r, s, l);
+    r[l] = '\0';
+	return r;
+}
+
+/********************************************************************/
+/*                        File Handling                             */
+/********************************************************************/ 
+
+// File opening and closing
+
+IO_handle MCS_open(const char *path, const char *mode,
+									 Boolean map, Boolean driver, uint4 offset)
+{
+	IO_handle handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+		char *oldpath = strclone(path);
+		
+		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
+		char *t_resolved_path;
+		t_resolved_path = MCS_resolvepath(path);
+		if (t_resolved_path == NULL)
+			return NULL;
+		
+		char *newpath = path2utf(t_resolved_path);
+		FILE *fptr;
+
+		if (driver)
+		{
+			fptr = fopen(newpath,  mode );
+			if (fptr != NULL)
+			{
+				int val;
+				val = fcntl(fileno(fptr), F_GETFL, val);
+				val |= O_NONBLOCK |  O_NOCTTY;
+				fcntl(fileno(fptr), F_SETFL, val);
+				configureSerialPort((short)fileno(fptr));
+			}
+		}
+		else
+		{
+			fptr = fopen(newpath, IO_READ_MODE);
+			if (fptr == NULL)
+				fptr = fopen(oldpath, IO_READ_MODE);
+			Boolean created = True;
+			if (fptr != NULL)
+			{
+				created = False;
+				if (mode != IO_READ_MODE)
+				{
+					fclose(fptr);
+					fptr = NULL;
+				}
+			}
+			if (fptr == NULL)
+				fptr = fopen(newpath, mode);
+
+			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
+				fptr = fopen(newpath, IO_CREATE_MODE);
+			if (fptr != NULL && created)
+				MCS_setfiletype(oldpath);
+		}
+
+		delete newpath;
+		delete oldpath;
+		if (fptr != NULL)
+		{
+			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
+			if (offset > 0)
+				fseek(handle->fptr, offset, SEEK_SET);
+
+			if (strequal(mode, IO_APPEND_MODE))
+				handle->flags |= IO_SEEKED;
+		}
+
+	return handle;
+}
+
+IO_handle MCS_fakeopen(const MCString &data)
+{
+	return new IO_header(NULL, 0, 0, 0, (char *)data.getstring(),
+	                     data.getlength(), IO_FAKE);
+}
+
+IO_handle MCS_fakeopenwrite(void)
+{
+	return new IO_header(NULL, 0, 0, 0, NULL, 0, IO_FAKEWRITE);
+}
+
+IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
+{
+	return new IO_header(NULL, 0, 0, 0, (char *)p_state, (uint32_t)p_callbacks, IO_FAKECUSTOM);
+}
+
+IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)
+{
+	if ((stream -> flags & IO_FAKEWRITE) != IO_FAKEWRITE)
+	{
+		r_buffer = NULL;
+		r_length = 0;
+		MCS_close(stream);
+		return IO_ERROR;
+	}
+
+	r_buffer = (char *)realloc(stream -> buffer, stream -> len);
+	r_length = stream -> len;
+
+	MCS_close(stream);
+
+	return IO_NORMAL;
+}
+
+bool MCS_isfake(IO_handle stream)
+{
+	return (stream -> flags & IO_FAKEWRITE) != 0;
+}
+
+uint4 MCS_faketell(IO_handle stream)
+{
+	return stream -> len;
+}
+
+void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size)
+{
+	memcpy(stream -> buffer + p_pos, p_buffer, p_size);
+}
+
 void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -1888,7 +2060,7 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
         {
             extern char *MCcmd;
             char* t_folder;
-            t_folder_path = strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+            t_folder_path = my_strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
             
             t_mac_folder = 0;
             t_found_folder = true;
