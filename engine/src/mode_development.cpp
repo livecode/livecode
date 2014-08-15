@@ -1551,10 +1551,9 @@ bool MCPlayer::mode_avi_closewindowonplaystop()
 // on startup depending on the usePixelScaling registry value
 bool MCModeGetPixelScalingEnabled()
 {
-	MCExecPoint ep;
-	ep.setsvalue("HKEY_CURRENT_USER\\Software\\LiveCode\\IDE\\usePixelScaling");
-
-	MCS_query_registry(ep, nil);
+    MCAutoStringRef t_type, t_error;
+    MCAutoValueRef t_value;
+	MCS_query_registry(MCSTR("HKEY_CURRENT_USER\\Software\\LiveCode\\IDE\\usePixelScaling"), &t_value, &t_type, &t_error);
 
 	if (!MCresult->isempty())
 	{
@@ -1563,7 +1562,15 @@ bool MCModeGetPixelScalingEnabled()
 	}
 
 	// IM-2014-08-14: [[ Bug 12372 ]] PixelScaling is enabled by default.
-	return ep.isempty() || ep.getsvalue() == "true";
+	if (MCValueIsEmpty(*t_value))
+        return true;
+    
+    bool t_result;
+    MCExecContext ctxt(nil, nil, nil);
+    if (!ctxt . ConvertToBool(*t_value, t_result))
+        return false;
+    
+    return t_result;
 }
 
 #endif

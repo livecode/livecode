@@ -16,10 +16,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "foundation.h"
 #include "w32prefix.h"
-
-#include "core.h"
-
 #include "w32compat.h"
 
 // IM-2014-08-08: [[ Bug 12372 ]] Weak-linked QueryActCtxSettingsW function
