@@ -1534,13 +1534,6 @@
 			<File
 				RelativePath=".\src\quicktime.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<Filter
 				Name="Platform - Linux"
@@ -2966,6 +2959,15 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							PrecompiledHeaderThrough="w32prefix.h"
+							PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
 						/>
 					</FileConfiguration>
 				</File>
