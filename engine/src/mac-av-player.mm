@@ -408,6 +408,10 @@ void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
 
 void MCAVFoundationPlayer::SeekToTimeAndWait(uint32_t p_time)
 {
+    // PM-2014-08-15: [[ Bug 13193 ]] Do this check to prevent LC hanging if filename is invalid the very first time you open a stack with a player object
+    if (m_player == nil || m_player.currentItem == nil)
+        return;
+    
     __block bool t_is_finished = false;
     [[m_player currentItem] seekToTime:CMTimeFromLCTime(p_time) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
         t_is_finished = true;
