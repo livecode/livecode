@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <windows.h>
+#include "w32prefix.h"
 
 #include "core.h"
 
