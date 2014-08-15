@@ -51,6 +51,9 @@
 		4C977251193CAF5D00DB2F4A /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C977250193CAF5000DB2F4A /* coretextfonts.cpp */; };
 		4CC1535714E7FB91009FA80E /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
 		4CC1536214E7FE1D009FA80E /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
+		4CF4B864199E05F300E33AEE /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6A00EE10C578C600FA48D2 /* customprinter.cpp */; };
+		4CF4B865199E05F300E33AEE /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6A00EE10C578C600FA48D2 /* customprinter.cpp */; };
+		4CF4B883199E0D9900E33AEE /* coretextlayout.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4CF4B87F199E0C1C00E33AEE /* coretextlayout.mm */; };
 		4D00C6290CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */; };
 		4D00C62A0CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */; };
 		4D01C88E12247B0F00AAD151 /* bsdiff_apply.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D01C88D12247B0F00AAD151 /* bsdiff_apply.cpp */; };
@@ -97,7 +100,6 @@
 		4D1F9D35171C682E0091C6CB /* constant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E360B8096FD00200116 /* constant.cpp */; };
 		4D1F9D37171C682E0091C6CB /* control.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E840B8096FD00200116 /* control.cpp */; };
 		4D1F9D38171C682E0091C6CB /* cpalette.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E4D0B8096FD00200116 /* cpalette.cpp */; };
-		4D1F9D39171C682E0091C6CB /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6A00EE10C578C600FA48D2 /* customprinter.cpp */; };
 		4D1F9D3A171C682E0091C6CB /* date.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E830B8096FD00200116 /* date.cpp */; };
 		4D1F9D3B171C682E0091C6CB /* debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E850B8096FD00200116 /* debug.cpp */; };
 		4D1F9D3C171C682E0091C6CB /* dispatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E2F0B8096FD00200116 /* dispatch.cpp */; };
@@ -322,7 +324,6 @@
 		4D657F9B17143B770086071B /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7989171348B4000BCF78 /* libjpeg.a */; };
 		4D657F9C17143B7A0086071B /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7981171348A6000BCF78 /* libpng.a */; };
 		4D657F9D17143B800086071B /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C797917134897000BCF78 /* libz.a */; };
-		4D6A00F010C578C600FA48D2 /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6A00EE10C578C600FA48D2 /* customprinter.cpp */; };
 		4D6F2AE718981E7F0099947D /* mac-pasteboard.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F2AE618981E7F0099947D /* mac-pasteboard.mm */; };
 		4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
@@ -377,7 +378,6 @@
 		4DC66D8B1045D41700D1CFA3 /* notify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DC66D8A1045D41700D1CFA3 /* notify.cpp */; };
 		4DC6E30518896CFB00FD43C3 /* mac-menu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DC6E30418896CFB00FD43C3 /* mac-menu.mm */; };
 		4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCB65711653B2F700E438E6 /* stackcache.cpp */; };
-		4DCFFD1C10CE8F5800FA2262 /* osxtextlayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD1B10CE8F5800FA2262 /* osxtextlayout.cpp */; };
 		4DCFFD2E10CE927700FA2262 /* iquantize_new.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD2D10CE927700FA2262 /* iquantize_new.cpp */; };
 		4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB666D14139FF500E5C84C /* tilecache.cpp */; };
 		4DDB66721413A02000E5C84C /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
@@ -979,6 +979,7 @@
 		4CC1535614E7FB91009FA80E /* paragrafattr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = paragrafattr.cpp; path = src/paragrafattr.cpp; sourceTree = "<group>"; };
 		4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldstyledtext.cpp; path = src/fieldstyledtext.cpp; sourceTree = "<group>"; };
 		4CC55320180D546000C10387 /* graphics_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
+		4CF4B87F199E0C1C00E33AEE /* coretextlayout.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = coretextlayout.mm; path = src/coretextlayout.mm; sourceTree = "<group>"; };
 		4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
 		4D00CD75103305D4003D3C0D /* bitmapeffectblur.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bitmapeffectblur.cpp; path = src/bitmapeffectblur.cpp; sourceTree = "<group>"; };
 		4D00CD76103305D4003D3C0D /* bitmapeffectblur.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bitmapeffectblur.h; path = src/bitmapeffectblur.h; sourceTree = "<group>"; };
@@ -2106,6 +2107,7 @@
 				76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */,
 				E8AE876B177B3F5C0041B7E0 /* cgimageutil.cpp */,
 				4C977250193CAF5000DB2F4A /* coretextfonts.cpp */,
+				4CF4B87F199E0C1C00E33AEE /* coretextlayout.mm */,
 				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
 				4D5881B90B80C79600200116 /* osxcisupport.mm */,
 				4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */,
@@ -3482,7 +3484,6 @@
 				4D1F9D35171C682E0091C6CB /* constant.cpp in Sources */,
 				4D1F9D37171C682E0091C6CB /* control.cpp in Sources */,
 				4D1F9D38171C682E0091C6CB /* cpalette.cpp in Sources */,
-				4D1F9D39171C682E0091C6CB /* customprinter.cpp in Sources */,
 				4D1F9D3A171C682E0091C6CB /* date.cpp in Sources */,
 				4D1F9D3B171C682E0091C6CB /* debug.cpp in Sources */,
 				4D1F9D3C171C682E0091C6CB /* dispatch.cpp in Sources */,
@@ -3587,6 +3588,7 @@
 				4D1F9D9E171C682E0091C6CB /* objectpropsets.cpp in Sources */,
 				4D1F9D9F171C682E0091C6CB /* name.cpp in Sources */,
 				4D1F9DA0171C682E0091C6CB /* srvmultipart.cpp in Sources */,
+				4CF4B865199E05F300E33AEE /* customprinter.cpp in Sources */,
 				4D1F9DA1171C682E0091C6CB /* srvsession.cpp in Sources */,
 				4D1F9DA2171C682E0091C6CB /* redraw.cpp in Sources */,
 				4D1F9DA3171C682E0091C6CB /* tilecache.cpp in Sources */,
@@ -3724,6 +3726,7 @@
 				4DEE2AB60FDE42710009423C /* gradient.cpp in Sources */,
 				4DEE2AB70FDE42710009423C /* graphic.cpp in Sources */,
 				4DEE2AB80FDE42710009423C /* group.cpp in Sources */,
+				4CF4B864199E05F300E33AEE /* customprinter.cpp in Sources */,
 				4DEE2AB90FDE42710009423C /* handler.cpp in Sources */,
 				4DEE2ABA0FDE42710009423C /* hc.cpp in Sources */,
 				4DEE2ABB0FDE42710009423C /* hndlrlst.cpp in Sources */,
@@ -3802,8 +3805,6 @@
 				4D17F4381042877000C49A3B /* externalv1.cpp in Sources */,
 				4DC66D8B1045D41700D1CFA3 /* notify.cpp in Sources */,
 				3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */,
-				4D6A00F010C578C600FA48D2 /* customprinter.cpp in Sources */,
-				4DCFFD1C10CE8F5800FA2262 /* osxtextlayout.cpp in Sources */,
 				4DCFFD2E10CE927700FA2262 /* iquantize_new.cpp in Sources */,
 				4D81A4C411171F6B008AE3F1 /* objectprops.cpp in Sources */,
 				4D81A4C511171F6B008AE3F1 /* variablevalue.cpp in Sources */,
@@ -3871,6 +3872,7 @@
 				4D79B5D418A9087B00D4974C /* mac-printer.mm in Sources */,
 				4D30E18218AA2FCE0034CDC6 /* mac-abort.mm in Sources */,
 				4D30E40718AA73870034CDC6 /* mac-dialog.mm in Sources */,
+				4CF4B883199E0D9900E33AEE /* coretextlayout.mm in Sources */,
 				4D30E44618AA7C200034CDC6 /* desktop-ans.cpp in Sources */,
 				E82206E1184F810A00117D10 /* resolution.cpp in Sources */,
 				4DAF5C8718C0E76500B9713C /* mac-scripting.mm in Sources */,
