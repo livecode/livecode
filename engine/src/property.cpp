@@ -387,7 +387,10 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
 {
 	for(uindex_t i = 0; i < sizeof(kMCPropertyInfoTable) / sizeof(MCPropertyInfo); i++)
-		if (kMCPropertyInfoTable[i] . property == p_which && kMCPropertyInfoTable[i] . effective == p_effective &&
+        if (kMCPropertyInfoTable[i] . property == p_which &&
+            // SN-2014-08-14: [[ Bug 13204 ]] We want to check for the 'effective property' only if it
+            //  is differs from the 'property'.
+            (!kMCPropertyInfoTable[i] . has_effective || (kMCPropertyInfoTable[i] . effective == p_effective)) &&
             kMCPropertyInfoTable[i] . is_array_prop == p_is_array_prop)
 		{
 			r_info = &kMCPropertyInfoTable[i];
