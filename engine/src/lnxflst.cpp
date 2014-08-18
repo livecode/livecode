@@ -57,7 +57,7 @@ class MCNewFontlist: public MCFontlist
 {
 public:
 	MCNewFontlist();
-	~MCNewFontlist();
+	virtual ~MCNewFontlist();
 
 	virtual bool create(void);
 	virtual void destroy(void);
