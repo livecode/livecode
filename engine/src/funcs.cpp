@@ -192,8 +192,7 @@ Parse_stat MCArrayEncode::parse(MCScriptPoint &sp, Boolean the)
 {
 	if (get1or2params(sp, &source, &version, the) != PS_NORMAL)
 	{
-		MCperror->add
-		(PE_BASECONVERT_BADPARAM, sp);
+		MCperror->add(PE_ARRAYENCODE_BADPARAM, sp);
 		return PS_ERROR;
 	}
 	return PS_NORMAL;
