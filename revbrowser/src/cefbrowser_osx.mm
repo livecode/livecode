@@ -101,6 +101,7 @@ private:
 	int32_t m_left, m_top, m_right, m_bottom;
 };
 
+// IM-2014-08-12: [[ LibCef ]] helper app located in Frameworks folder of main app bundle.
 const char *MCCefPlatformGetSubProcessName(void)
 {
 	static char *s_exe_path = nil;
@@ -108,66 +109,34 @@ const char *MCCefPlatformGetSubProcessName(void)
 	if (s_exe_path == nil)
 	{
 		NSBundle *t_bundle;
-		t_bundle = [NSBundle bundleWithIdentifier:@"com.runrev.revbrowser"];
+		t_bundle = [NSBundle mainBundle];
 		
-		NSString *t_parent_path;
-		t_parent_path = [[t_bundle bundlePath] stringByDeletingLastPathComponent];
+		NSString *t_path;
+		t_path = [[t_bundle bundlePath] stringByAppendingPathComponent:@"Contents/Frameworks/revbrowser-cefprocess.app/Contents/MacOS/revbrowser-cefprocess"];
 		
-		char *t_exe_path;
-		t_exe_path = nil;
-		
-		// IM-2014-03-25: [[ revBrowserCEF ]] Look for subprocess executable in CEF subfolder
-		bool t_success;
-		t_success = MCCStringClone([t_parent_path cStringUsingEncoding:NSUTF8StringEncoding], t_exe_path);
-		if (t_success)
-			t_success = MCCStringAppend(t_exe_path,
-										"/CEF/revbrowser-cefprocess.app/Contents/MacOS/revbrowser-cefprocess");
-		
-		if (t_success)
-			s_exe_path = t_exe_path;
-		else if (t_exe_path != nil)
-			MCCStringFree(t_exe_path);
+		/* UNCHECKED */ MCCStringClone([t_path cStringUsingEncoding:NSUTF8StringEncoding], s_exe_path);
 	}
 	
 	return s_exe_path;
 }
 
-// IM-2014-03-25: [[ revBrowserCEF ]] Return the path to the libcef.dylib library file
-// located in CEF subfolder beside the revbrowser bundle
-const char *MCCefPlatformGetCefLibraryPath(void)
+// IM-2014-08-12: [[ LibCef ]] CEF framework folder located in Frameworks folder of main app bundle.
+const char *MCCefPlatformGetCefFrameworkFolder()
 {
-	static char *s_lib_path = nil;
+	static char *s_path = nil;
 	
-	if (s_lib_path == nil)
+	if (s_path == nil)
 	{
 		NSBundle *t_bundle;
-		t_bundle = [NSBundle bundleWithIdentifier:@"com.runrev.revbrowser"];
+		t_bundle = [NSBundle mainBundle];
 		
-		NSString *t_parent_path;
-		t_parent_path = [[t_bundle bundlePath] stringByDeletingLastPathComponent];
+		NSString *t_cef_path;
+		t_cef_path = [[t_bundle bundlePath] stringByAppendingPathComponent:@"Contents/Frameworks/Chromium Embedded Framework.framework"];
 		
-		char *t_path;
-		t_path = nil;
-		
-		bool t_success;
-		t_success = MCCStringClone([t_parent_path cStringUsingEncoding:NSUTF8StringEncoding], t_path);
-		if (t_success)
-			t_success = MCCStringAppend(t_path,
-										"/CEF/libcef.dylib");
-		
-		if (t_success)
-			s_lib_path = t_path;
-		else if (t_path != nil)
-			MCCStringFree(t_path);
+		/* UNCHECKED */ MCCStringClone([t_cef_path cStringUsingEncoding:NSUTF8StringEncoding], s_path);
 	}
 	
-	return s_lib_path;
-}
-
-// IM-2014-03-25: [[ revBrowserCEF ]] Can't change the locale path on OSX so return nil
-const char *MCCefPlatformGetLocalePath(void)
-{
-	return nil;
+	return s_path;
 }
 
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)

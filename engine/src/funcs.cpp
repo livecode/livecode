@@ -1906,11 +1906,53 @@ Exec_stat MCQTEffects::eval(MCExecPoint &ep)
 #endif /* MCQTEffects */
 }
 
+struct MCPlatformSoundRecorderListCompressorsState
+{
+	bool first;
+	MCExecPoint *ep;
+};
+
+static bool list_compressors_callback(void *context, unsigned int id, const char *label)
+{
+    MCPlatformSoundRecorderListCompressorsState *t_state = static_cast<MCPlatformSoundRecorderListCompressorsState *>(context);
+    t_state -> ep -> concatcstring(label, EC_RETURN, t_state -> first);
+    
+    uint32_t t_id;
+    t_id = MCSwapInt32NetworkToHost(id);
+    
+    char t_code[] = "????";
+    memcpy(t_code, (char *)&t_id, 4);
+    
+    t_state -> ep -> concatcstring(t_code, EC_COMMA, false);
+    t_state -> first = false;
+    return true;
+}
+
 Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
 {
 #ifdef /* MCRecordCompressionTypes */ LEGACY_EXEC
+#ifdef FEATURE_PLATFORM_RECORDER
+    
+    ep . clear();
+    
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    if (MCrecorder == nil)
+        MCPlatformSoundRecorderCreate(MCrecorder);
+    
+    if (MCrecorder != nil)
+    {
+        MCPlatformSoundRecorderListCompressorsState t_state;
+        t_state . ep = &ep;
+        t_state . first = true;
+        
+        MCPlatformSoundRecorderListCompressors(MCrecorder, list_compressors_callback, &t_state);
+    }
+#else
 	extern void MCQTGetRecordCompressionList(MCExecPoint& ep);
 	MCQTGetRecordCompressionList(ep);
+#endif
+    
 	return ES_NORMAL;
 #endif /* MCRecordCompressionTypes */
 }
@@ -1918,8 +1960,23 @@ Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
 Exec_stat MCRecordLoudness::eval(MCExecPoint &ep)
 {
 #ifdef /* MCRecordLoudness */ LEGACY_EXEC
+    
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+    
+    double t_loudness;
+    t_loudness = 0;
+    
+    if (MCrecorder != nil)
+        t_loudness = MCPlatformSoundRecorderGetLoudness(MCrecorder);
+    
+    ep . setuint(floor(t_loudness));
+        
+#else
 	extern void MCQTGetRecordLoudness(MCExecPoint& ep);
 	MCQTGetRecordLoudness(ep);
+#endif
+    
 	return ES_NORMAL;
 #endif /* MCRecordLoudness */
 }

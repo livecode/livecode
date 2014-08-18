@@ -1585,13 +1585,13 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			else
 
 				if (MCrecordrate <= (11.127 + 22.050) / 2.0)
-					MCrecordrate = 11.127;
+					MCrecordrate = 12.000;
 				else
 					if (MCrecordrate <= (22.050 + 22.255) / 2.0)
 						MCrecordrate = 22.050;
 					else
 						if (MCrecordrate <= (22.255 + 32.000) / 2.0)
-							MCrecordrate = 22.255;
+							MCrecordrate = 24.000;
 						else
 							if (MCrecordrate <= (32.000 + 44.100) / 2.0)
 								MCrecordrate = 32.000;
@@ -2241,8 +2241,18 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 				return ES_ERROR;
 			if (!trecording)
 			{
+#ifdef FEATURE_PLATFORM_RECORDER
+                bool t_recording;
+                t_recording = false;
+                
+                extern MCPlatformSoundRecorderRef MCrecorder;
+                
+                if (MCrecorder != nil)
+                    t_recording = MCPlatformSoundRecorderIsRecording(MCrecorder);
+#else
 				extern void MCQTStopRecording(void);
 				MCQTStopRecording();
+#endif
 			}
 		}
 		break;
@@ -2679,9 +2689,35 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			case P_NUMBER_FORMAT:
 				ep.setnumberformat();
 				break;
-			case P_PLAY_DESTINATION:
+            // AL-2014-08-12: [[ Bug 13161 ]] Setting templateAudioClip playLoudness shouldn't set the global playLoudness
 			case P_PLAY_LOUDNESS:
-				return MCtemplateaudio->setprop(0, which, ep, False);
+                {
+                    uint2 t_loudness;
+                    if (ep . getuint2(t_loudness, line, pos, EE_ACLIP_LOUDNESSNAN) != ES_NORMAL)
+                        return ES_ERROR;
+                    
+                    t_loudness = MCU_max(MCU_min(t_loudness, 100), 0);
+                    
+                    extern bool MCSystemSetPlayLoudness(uint2 loudness);
+#ifdef _MOBILE
+                    if (MCSystemSetPlayLoudness(t_loudness))
+                        return ES_NORMAL;
+#endif
+                    if (MCplayers != NULL)
+                    {
+                        MCPlayer *tptr = MCplayers;
+                        while (tptr != NULL)
+                        {
+                            tptr->setvolume(t_loudness);
+                            tptr = tptr->getnextplayer();
+                        }
+                    }
+                    MCS_setplayloudness(t_loudness);
+                }
+ 
+                // fall through to set templateAudioClip property
+            case P_PLAY_DESTINATION:
+                return MCtemplateaudio->setprop(0, which, ep, False);
 			case P_LOCK_SCREEN:
 				if (ep.getboolean(newlock, line, pos, EE_PROPERTY_NAB) != ES_NORMAL)
 					return ES_ERROR;
@@ -4139,8 +4175,24 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 				                    ep.getnftrailing(), ep.getnfforce());
 				break;
 			case P_PLAY_DESTINATION:
+                return MCtemplateaudio->getprop(0, which, ep, False);
+            // AL-2014-08-12: [[ Bug 13161 ]] Get the global playLoudness rather than templateAudioClip playLoudness
 			case P_PLAY_LOUDNESS:
-				return MCtemplateaudio->getprop(0, which, ep, False);
+                {
+                    uint2 t_loudness;
+                    t_loudness = 0;
+                    extern bool MCSystemGetPlayLoudness(uint2& r_loudness);
+#ifdef _MOBILE
+                    if (MCSystemGetPlayLoudness(t_loudness))
+#else
+                        if (false)
+#endif
+                            ;
+                        else
+                            t_loudness = MCS_getplayloudness();
+                    ep . setuint(t_loudness);
+                }
+                break;
 			case P_LOCK_SCREEN:
 				// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
 				ep.setboolean(MCRedrawIsScreenLocked());

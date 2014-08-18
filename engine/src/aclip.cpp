@@ -186,65 +186,15 @@ Exec_stat MCAudioClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, B
 	case P_SIZE:
 		ep.setint(size);
 		break;
+    // AL-2014-08-12: [[ Bug 13161 ]] Get audioclip instance variable rather than global value
 	case P_PLAY_DESTINATION:
+        if (flags & F_EXTERNAL)
+            ep.setstaticcstring("external");
+        else
+            ep.setstaticcstring("internal");
+		break;
 	case P_PLAY_LOUDNESS:
-		if (this == MCtemplateaudio)
-		{
-			extern bool MCSystemGetPlayLoudness(uint2& r_loudness);
-#ifdef _MOBILE
-			if (MCSystemGetPlayLoudness(loudness))
-#else
-			if (false)
-#endif
-				;
-			else if (!supported)
-				loudness = 0;
-			else
-			{
-#if defined FEATURE_PLATFORM_AUDIO
-                double t_volume;
-                MCPlatformGetSystemProperty(kMCPlatformSystemPropertyVolume, kMCPlatformPropertyTypeDouble, &t_volume);
-                loudness = t_volume * 100.0;
-#elif defined _WINDOWS
-				if (hwaveout == NULL)
-				{
-					WAVEFORMATEX pwfx;
-					pwfx.wFormatTag = WAVE_FORMAT_PCM;
-					pwfx.nChannels = 1;
-					pwfx.nSamplesPerSec = 22050;
-					pwfx.nAvgBytesPerSec = 22050;
-					pwfx.nBlockAlign = 1;
-					pwfx.wBitsPerSample = 8;
-					pwfx.cbSize = 0;
-					if (waveOutOpen(&hwaveout, WAVE_MAPPER, &pwfx, 0, 0, CALLBACK_NULL
-					                | WAVE_ALLOWSYNC) == MMSYSERR_NOERROR)
-					{
-						DWORD v;
-						waveOutGetVolume(hwaveout, &v);
-						loudness = MCU_min((uint2)((v & 0xFFFF) * 100 / 0xFFFF) + 1, 100);
-						waveOutClose(hwaveout);
-						hwaveout = NULL;
-					}
-				}
-#elif defined _MACOSX
-				long volume;
-				GetDefaultOutputVolume(&volume);
-				loudness = (HiWord(volume) + LoWord(volume)) * 50 / 255;
-#elif defined TARGET_PLATFORM_LINUX
-				if ( x11audio != NULL)
-					loudness = x11audio -> getloudness();
-#endif
-			}
-		}
-		if (which == P_PLAY_DESTINATION)
-		{
-			if (flags & F_EXTERNAL)
-				ep.setstaticcstring("external");
-			else
-				ep.setstaticcstring("internal");
-		}
-		else
-			ep.setint(loudness);
+        ep.setint(loudness);
 		break;
 #endif /* MCAudioClip::getprop */ 
 	default:
@@ -261,81 +211,24 @@ Exec_stat MCAudioClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 	switch (p)
 	{
 #ifdef /* MCAudioClip::setprop */ LEGACY_EXEC
+    // AL-2014-08-12: [[ Bug 13161 ]] Setting templateAudioClip properties shouldn't set global ones
 	case P_PLAY_DESTINATION:
+        if (data == "external")
+            flags |= F_EXTERNAL;
+        else
+            flags &= ~F_EXTERNAL;
+        return ES_NORMAL;
 	case P_PLAY_LOUDNESS:
-		if (p == P_PLAY_DESTINATION)
-		{
-			if (data == "external")
-				flags |= F_EXTERNAL;
-			else
-				flags &= ~F_EXTERNAL;
-		}
-		else
-		{
-			if (!MCU_stoi2(data, i1))
-			{
-				MCeerror->add
-				(EE_ACLIP_LOUDNESSNAN, 0, 0, data);
-				return ES_ERROR;
-			}
-			loudness = MCU_max(MCU_min(i1, 100), 0);
-			if (loudness == 100)
-				flags &= ~F_LOUDNESS;
-			else
-				flags |= F_LOUDNESS;
-		}
-		if (this == MCtemplateaudio)
-		{
-			extern bool MCSystemSetPlayLoudness(uint2 loudness);
-#ifdef _MOBILE
-			if (MCSystemSetPlayLoudness(loudness))
-				return ES_NORMAL;
-#endif
-			if (MCplayers != NULL)
-			{
-				MCPlayer *tptr = MCplayers;
-				while (tptr != NULL)
-				{
-					tptr->setvolume(loudness);
-					tptr = tptr->getnextplayer();
-				}
-			}
-#if defined FEATURE_PLATFORM_AUDIO
-            double t_volume;
-            t_volume = loudness / 100.0;
-            MCPlatformSetSystemProperty(kMCPlatformSystemPropertyVolume, kMCPlatformPropertyTypeDouble, &t_volume);
-#elif defined _WINDOWS
-			WORD v = loudness * MAXUINT2 / 100;
-			if (hwaveout != NULL)
-				waveOutSetVolume(hwaveout, v | (v << 16));
-			else
-			{
-				WAVEFORMATEX pwfx;
-				pwfx.wFormatTag = WAVE_FORMAT_PCM;
-				pwfx.nChannels = 1;
-				pwfx.nSamplesPerSec = 22050;
-				pwfx.nAvgBytesPerSec = 22050;
-				pwfx.nBlockAlign = 1;
-				pwfx.wBitsPerSample = 8;
-				pwfx.cbSize = 0;
-				if (waveOutOpen(&hwaveout, WAVE_MAPPER, &pwfx, 0, 0,
-								CALLBACK_NULL | WAVE_ALLOWSYNC) == MMSYSERR_NOERROR)
-				{
-					waveOutSetVolume(hwaveout, v | (v << 16));
-					waveOutClose(hwaveout);
-					hwaveout = NULL;
-				}
-			}
-
-#elif defined _MACOSX
-			long volume = loudness * 255 / 100;
-			SetDefaultOutputVolume(volume | volume << 16);
-#elif defined TARGET_PLATFORM_LINUX
-			if ( x11audio != NULL)
-				x11audio -> setloudness ( loudness ) ;
-#endif
-
-		}
+        if (!MCU_stoi2(data, i1))
+        {
+            MCeerror->add(EE_ACLIP_LOUDNESSNAN, 0, 0, data);
+            return ES_ERROR;
+        }
+        loudness = MCU_max(MCU_min(i1, 100), 0);
+        if (loudness == 100)
+            flags &= ~F_LOUDNESS;
+        else
+            flags |= F_LOUDNESS;
 		return ES_NORMAL;
 #endif /* MCAudioClip::setprop */
 	default:
@@ -368,8 +261,8 @@ void MCAudioClip::init()
 #endif
 	if (supported)
 	{
-		MCExecPoint ep;
-		getprop(0, P_PLAY_LOUDNESS, ep, False);
+        // AL-2014-08-12: [[ Bug 13161 ]] Set the initial loudness of templateAudioClip to the system loudness
+        loudness = MCS_getplayloudness();
 	}
 }
 
@@ -1048,4 +941,92 @@ IO_stat MCAudioClip::load(IO_handle stream, const char *version)
 		if ((stat = IO_read_uint2(&loudness, stream)) != IO_NORMAL)
 			return stat;
 	return loadpropsets(stream);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+uint2 MCS_getplayloudness()
+{
+    uint2 t_loudness = 0;
+#if defined FEATURE_PLATFORM_AUDIO
+    double t_volume;
+    MCPlatformGetSystemProperty(kMCPlatformSystemPropertyVolume, kMCPlatformPropertyTypeDouble, &t_volume);
+    t_loudness = t_volume * 100.0;
+#elif defined _WINDOWS
+    if (hwaveout == NULL)
+    {
+        WAVEFORMATEX pwfx;
+        pwfx.wFormatTag = WAVE_FORMAT_PCM;
+        pwfx.nChannels = 1;
+        pwfx.nSamplesPerSec = 22050;
+        pwfx.nAvgBytesPerSec = 22050;
+        pwfx.nBlockAlign = 1;
+        pwfx.wBitsPerSample = 8;
+        pwfx.cbSize = 0;
+        if (waveOutOpen(&hwaveout, WAVE_MAPPER, &pwfx, 0, 0, CALLBACK_NULL
+                        | WAVE_ALLOWSYNC) == MMSYSERR_NOERROR)
+        {
+            DWORD v;
+            waveOutGetVolume(hwaveout, &v);
+            t_loudness = MCU_min((uint2)((v & 0xFFFF) * 100 / 0xFFFF) + 1, 100);
+            waveOutClose(hwaveout);
+            hwaveout = NULL;
+        }
+    }
+#elif defined _MACOSX
+    long volume;
+    GetDefaultOutputVolume(&volume);
+    t_loudness = (HiWord(volume) + LoWord(volume)) * 50 / 255;
+#elif defined TARGET_PLATFORM_LINUX
+    X11Audio *t_x11audio = nil;
+    t_x11audio = new X11Audio ;
+    if ( t_x11audio != nil)
+    {
+        t_loudness = t_x11audio -> getloudness() ;
+        delete t_x11audio;
+    }
+#endif
+    return t_loudness;
+}
+
+void MCS_setplayloudness(uint2 p_loudness)
+{
+#if defined FEATURE_PLATFORM_AUDIO
+    double t_volume;
+    t_volume = p_loudness / 100.0;
+    MCPlatformSetSystemProperty(kMCPlatformSystemPropertyVolume, kMCPlatformPropertyTypeDouble, &t_volume);
+#elif defined _WINDOWS
+    WORD v = p_loudness * MAXUINT2 / 100;
+    if (hwaveout != NULL)
+        waveOutSetVolume(hwaveout, v | (v << 16));
+    else
+    {
+        WAVEFORMATEX pwfx;
+        pwfx.wFormatTag = WAVE_FORMAT_PCM;
+        pwfx.nChannels = 1;
+        pwfx.nSamplesPerSec = 22050;
+        pwfx.nAvgBytesPerSec = 22050;
+        pwfx.nBlockAlign = 1;
+        pwfx.wBitsPerSample = 8;
+        pwfx.cbSize = 0;
+        if (waveOutOpen(&hwaveout, WAVE_MAPPER, &pwfx, 0, 0,
+                        CALLBACK_NULL | WAVE_ALLOWSYNC) == MMSYSERR_NOERROR)
+        {
+            waveOutSetVolume(hwaveout, v | (v << 16));
+            waveOutClose(hwaveout);
+            hwaveout = NULL;
+        }
+    }
+#elif defined _MACOSX
+    long volume = p_loudness * 255 / 100;
+    SetDefaultOutputVolume(volume | volume << 16);
+#elif defined TARGET_PLATFORM_LINUX
+    X11Audio *t_x11audio = nil;
+    t_x11audio = new X11Audio ;
+    if (t_x11audio != nil)
+    {
+        t_x11audio -> setloudness(p_loudness);
+        delete t_x11audio;
+    }
+#endif
 }

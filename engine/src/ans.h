@@ -103,4 +103,6 @@ extern void MCA_getcolordialogcolors(MCExecPoint &ep);
 
 extern void MCA_setcolordialogcolors(MCExecPoint &ep);
 
+extern void MCA_record(MCExecPoint &ep);
+
 #endif

@@ -20,6 +20,8 @@
 
 #include <AppKit/AppKit.h>
 
+#include "cefshared.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCCefCreateApp(CefRefPtr<CefApp> &r_app);
@@ -29,40 +31,36 @@ extern bool MCCefCreateApp(CefRefPtr<CefApp> &r_app);
 extern "C" int initialise_weak_link_cef(void);
 extern "C" int initialise_weak_link_cef_with_path(const char *p_path);
 
+// IM-2014-08-12: [[ LibCef ]] cef Framework folder located in same folder as helper app.
+const char *MCCefPlatformGetCefFrameworkFolder()
+{
+	static char *s_path = nil;
+	
+	if (s_path == nil)
+	{
+		NSBundle *t_bundle;
+		t_bundle = [NSBundle mainBundle];
+		
+		NSString *t_cef_path;
+		t_cef_path = [[[ t_bundle bundlePath] stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"Chromium Embedded Framework.framework"];
+		
+		/* UNCHECKED */ MCCStringClone([t_cef_path cStringUsingEncoding:NSUTF8StringEncoding], s_path);
+	}
+	
+	return s_path;
+}
+
 int main(int argc, char *argv[])
 {
-	// IM-2014-03-21: [[ revBrowserCEF ]] Look for libcef.dylib library in containing bundle
-	// IM-2014-03-25: [[ revBrowserCEF ]] cef library located in same folder as this app bundle
-	NSAutoreleasePool *t_pool;
-	t_pool = [[NSAutoreleasePool alloc] init];
-	
-	NSString *t_bundle_path;
-	t_bundle_path = [[NSBundle mainBundle] bundlePath];
-	
-	// Split path into components
-	NSMutableArray *t_components;
-	t_components = [[t_bundle_path pathComponents] mutableCopy];
-
-	// Remove "revbrowser-cefprocess.app" path component
-	[t_components removeLastObject];
-	
-	// Add library name path component
-	[t_components addObject: @"libcef.dylib"];
-	
-	// Rebuild path
-	NSString *t_lib_path;
-	t_lib_path = [NSString pathWithComponents:t_components];
-	
-	const char *t_c_path;
-	t_c_path = [t_lib_path cStringUsingEncoding:NSUTF8StringEncoding];
+	const char *t_lib_path;
+	t_lib_path = MCCefPlatformGetCefLibraryPath();
 	
 	// IM-2014-03-19: [[ revBrowserCEF ]] Initialise dynamically loaded cef library
-	if (!initialise_weak_link_cef_with_path(t_c_path) && !initialise_weak_link_cef())
+	if (!initialise_weak_link_cef_with_path(t_lib_path) && !initialise_weak_link_cef())
 	{
-		printf("failed to load libcef library: %s", t_c_path);
+		printf("failed to load libcef library: %s", t_lib_path);
 		return -1;
 	}
-	[t_pool release];
 	
 	CefMainArgs t_args(argc, argv);
 	
@@ -70,7 +68,7 @@ int main(int argc, char *argv[])
 	if (!MCCefCreateApp(t_app))
 		return -1;
 	
-	return CefExecuteProcess(t_args, t_app);
+	return CefExecuteProcess(t_args, t_app, nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

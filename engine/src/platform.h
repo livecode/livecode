@@ -1105,6 +1105,104 @@ void MCPlatformSoundGetProperty(MCPlatformSoundRef sound, MCPlatformSoundPropert
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Implementation guidence:
+//
+// This is basic abstraction of the sound recording functionality which the
+// engine currently has.
+//
+// The platform sound recorder opaque type should be a procedural wrapper around
+// a class which implements an abstract interface (just like the PlatformPlayer).
+//
+// Initially we need an implementation using the QT Sequence Grabber which needs
+// to use the SGAudioMediaType (essentially this means that the code in the engine
+// already for this is not usable - its heavily tied to SoundMediaType which
+// crashes on modern Mac's).
+//
+// There is a sample code project 'WhackedTV' which should be useful to base the
+// implementation on. This project goes a bit further than we need though - our
+// dialog only needs to be the QT one provided by SCRequestImageSettings so that
+// should hopefully simplify things.
+//
+// The SoundRecorder object should hold all the necessary system state to operate
+// and whilst recording should ensure that things are idled appropriately using
+// a Cocoa timer rather than requiring the engine to call an idle-proc (which is
+// what is currently required).
+//
+
+typedef struct MCPlatformSoundRecorder *MCPlatformSoundRecorderRef;
+
+enum MCPlatformSoundRecorderProperty
+{
+	kMCPlatformSoundRecorderPropertyInput,
+	kMCPlatformSoundRecorderPropertySampleRate,
+    kMCPlatformSoundRecorderPropertySampleBitCount,
+	kMCPlatformSoundRecorderPropertyChannelCount,
+    kMCPlatformSoundRecorderPropertyCompressionType,
+	kMCPlatformSoundRecorderPropertyExtraInfo,
+};
+
+
+struct MCPlatformSoundRecorderConfiguration
+{
+    // The input to use for sound recording - this should be an id as returned by ListInputs.
+    unsigned int input;
+    // The sample rate for recording.
+    double sample_rate;
+    // The number of bits per sample.
+    unsigned int sample_bit_count;
+    // The number of channels.
+    unsigned int channel_count;
+    // The compressor to use - this should be an id as returned by ListCompressors.
+    unsigned int compression_type;
+    // Any extra info specific to a compressor - this is an opaque sequence of bytes. If nil
+    // when setting configuration, per-compressor defaults should be used.
+    uint8_t *extra_info;
+    size_t extra_info_size;
+};
+
+typedef bool (*MCPlatformSoundRecorderListInputsCallback)(void *context, unsigned int input_id, const char *label);
+typedef bool (*MCPlatformSoundRecorderListCompressorsCallback)(void *context, unsigned int compressor_id, const char *label);
+
+void MCPlatformSoundRecorderCreate(MCPlatformSoundRecorderRef& r_recorder);
+
+void MCPlatformSoundRecorderRetain(MCPlatformSoundRecorderRef recorder);
+void MCPlatformSoundRecorderRelease(MCPlatformSoundRecorderRef recorder);
+
+// Return true if the recorder is recording.
+bool MCPlatformSoundRecorderIsRecording(MCPlatformSoundRecorderRef recorder);
+
+// Return the current volume of the recorded input - if not recording, return 0.
+double MCPlatformSoundRecorderGetLoudness(MCPlatformSoundRecorderRef recorder);
+
+// Start sound recording to the given file. If the sound recorder is already recording then
+// the existing recording should be cancelled (stop and delete output file).
+bool MCPlatformSoundRecorderStart(MCPlatformSoundRecorderRef recorder, const char *filename);
+// Stop the sound recording.
+void MCPlatformSoundRecorderStop(MCPlatformSoundRecorderRef recorder);
+
+void MCPlatformSoundRecorderPause(MCPlatformSoundRecorderRef recorder);
+void MCPlatformSoundRecorderResume(MCPlatformSoundRecorderRef recorder);
+
+// Call callback for each possible input device available - if the callback returns 'false' at any point
+// enumeration is cancelled, and the false will be returned.
+bool MCPlatformSoundRecorderListInputs(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderListInputsCallback callback, void *context);
+// Call callback for each possible compressor available - if the callback returns 'false' at any point
+// enumeration is cancelled, and the false will be returned.
+bool MCPlatformSoundRecorderListCompressors(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderListCompressorsCallback callback, void *context);
+
+// Get the current sound recording configuration. The caller is responsible for freeing 'extra_info'.
+void MCPlatformSoundRecorderGetConfiguration(MCPlatformSoundRecorderRef recorder, MCPlatformSoundRecorderConfiguration& r_config);
+// Set the current sound recording configuration.
+void MCPlatformSoundRecorderSetConfiguration(MCPlatformSoundRecorderRef recorder, const MCPlatformSoundRecorderConfiguration& config);
+
+// Popup a configuration dialog for the compressors. If the dialog is not cancelled the
+// sound recorders config will have been updated.
+void MCPlatformSoundRecorderBeginConfigurationDialog(MCPlatformSoundRecorderRef recorder);
+// End the configuration dialog.
+MCPlatformDialogResult MCPlatformSoundRecorderEndConfigurationDialog(MCPlatformSoundRecorderRef recorder);
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlatformSwitchFocusToView(MCPlatformWindowRef window, uint32_t id);
 
 ////////////////////////////////////////////////////////////////////////////////
