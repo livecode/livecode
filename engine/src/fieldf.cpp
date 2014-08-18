@@ -2381,6 +2381,8 @@ void MCField::stopcomposition(Boolean del,Boolean force)
 		replacecursor(True, True);
 	}
 	composelength = 0;
+    // MW-2014-08-18: [[ Bug 13196 ]] Make sure we reset the compose cursor offset.
+    composecursorindex = 0;
 	composing = False;
 }
 
@@ -2398,6 +2400,9 @@ void MCField::deletecomposition()
 		state |= CS_CHANGED;
 	}
 	composelength = 0;
+    
+    // MW-2014-08-18: [[ Bug 13196 ]] Make sure we reset the compose cursor offset.
+    composecursorindex = 0;
 }
 
 Boolean MCField::getcompositionrect(MCRectangle &r, int2 offset)
