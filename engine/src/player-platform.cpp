@@ -864,32 +864,42 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         state &= ~CS_PAUSED;
         redrawcontroller();
     }
-    else
-        if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
+    else if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
+    {
+        state |= CS_PAUSED;
+        redrawcontroller();
+        
+        m_modify_selection_while_playing = false;
+        
+        if (disposable)
         {
-            state |= CS_PAUSED;
-            redrawcontroller();
-            
-            m_modify_selection_while_playing = false;
-            
-            if (disposable)
-            {
-                playstop();
-                return; //obj is already deleted, do not pass msg up.
-            }
+            playstop();
+            return; //obj is already deleted, do not pass msg up.
         }
-        else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
-		{
-			state |= CS_PAUSED;
-            redrawcontroller();
-            
-            m_modify_selection_while_playing = false;
-		}
-        else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+    }
+    else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
+    {
+        state |= CS_PAUSED;
+        redrawcontroller();
+        
+        m_modify_selection_while_playing = false;
+    }
+    else if (MCNameIsEqualTo(mptr, MCM_current_time_changed, kMCCompareCaseless))
+    {
+        // If params is nil then this did not originate from the player!
+        if (params != nil)
         {
-            handle_mstilldown(Button1);
-            MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
+            // Update the current time in the parameter and make sure we allow another
+            // currentTimeChanged message to be posted.
+            state &= ~CS_CTC_PENDING;
+            params -> setn_argument(getmoviecurtime());
         }
+    }
+    else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+    {
+        handle_mstilldown(Button1);
+        MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
+    }
     MCControl::timer(mptr, params);
 }
 
@@ -2117,7 +2127,15 @@ void MCPlayer::markerchanged(uint32_t p_time)
     // Search for the first marker with the given time, and dispatch the message.
     for(uindex_t i = 0; i < m_callback_count; i++)
         if (p_time == m_callbacks[i] . time)
-            message_with_args(m_callbacks[i] . message, m_callbacks[i] . parameter);
+        {
+            MCExecPoint ep;
+            ep . setnameref_unsafe(m_callbacks[i] . parameter);
+            
+            MCParameter *t_param;
+            t_param = new MCParameter;
+            t_param -> set_argument(ep);
+            MCscreen -> addmessage(this, m_callbacks[i] . message, 0, t_param);
+        }
 }
 
 void MCPlayer::selectionchanged(void)
@@ -2147,11 +2165,15 @@ void MCPlayer::currenttimechanged(void)
     redrawcontroller();
     
     // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
-    MCParameter t_param;
-    t_param . setn_argument(getmoviecurtime());
-    timer(MCM_current_time_changed, &t_param);
-    
-
+    if (!getstate(CS_CTC_PENDING))
+    {
+        state |= CS_CTC_PENDING;
+        
+        MCParameter *t_param;
+        t_param = new MCParameter;
+        t_param -> setn_argument(getmoviecurtime());
+        MCscreen -> addmessage(this, MCM_current_time_changed, 0, t_param);
+    }
 }
 
 void MCPlayer::moviefinished(void)
