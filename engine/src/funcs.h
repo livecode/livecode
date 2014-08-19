@@ -49,11 +49,14 @@ public:
 class MCArrayEncode: public MCFunction
 {
 	MCExpression *source;
+    // AL-2014-08-18: [[ Bug 12547 ]] Added dummy variable to enable addition of
+    //  version parameter for arrayEncode
+    MCExpression *version;
 public:
-	MCArrayEncode()
-	{
-		source = NULL;
-	}
+    MCArrayEncode()
+    {
+        source = version = NULL;
+    }
 	virtual ~MCArrayEncode();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
