@@ -1147,6 +1147,8 @@ LT factor_table[] =
         {"movespeed", TT_PROPERTY, P_MOVE_SPEED},
         {"movie", TT_FUNCTION, F_MOVIE},
         {"moviecontrollerid", TT_PROPERTY, P_MOVIE_CONTROLLER_ID},
+        // PM-2014-08-19 [[ Bug 13121 ]]
+        {"movieloadstate", TT_PROPERTY, P_MOVIE_LOAD_STATE},
         {"movies", TT_FUNCTION, F_MOVIE},
         {"movingcontrols", TT_FUNCTION, F_MOVING_CONTROLS},
         {"multieffect", TT_PROPERTY, P_MULTI_EFFECT},

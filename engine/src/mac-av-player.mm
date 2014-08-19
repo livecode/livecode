@@ -35,6 +35,8 @@
 
 class MCAVFoundationPlayer;
 
+void *kTimeRangesKVO = &kTimeRangesKVO;
+
 @interface com_runrev_livecode_MCAVFoundationPlayerObserver: NSObject
 {
     MCAVFoundationPlayer *m_av_player;
@@ -83,6 +85,7 @@ public:
     void EndTimeChanged(void);
     void MovieFinished(void);
     void TimeJumped(void);
+    void MovieIsLoading(CMTimeRange p_timerange);
     
     AVPlayer *getPlayer(void);
     
@@ -122,6 +125,7 @@ private:
     com_runrev_livecode_MCAVFoundationPlayerView *m_view;
     uint32_t m_selection_start, m_selection_finish;
     uint32_t m_selection_duration;
+    double m_buffered_amount;
     CMTimeScale m_time_scale;
     
     bool m_play_selection_only : 1;
@@ -183,6 +187,18 @@ private:
 {
     if ([keyPath isEqualToString: @"status"])
         MCPlatformBreakWait();
+    else if([keyPath isEqualToString: @"currentItem.loadedTimeRanges"])
+    {
+        //NSLog(@"++++++++++++++++++++++++++Loaded time ranges changed");
+        NSArray *timeRanges = (NSArray *)[change objectForKey:NSKeyValueChangeNewKey];
+        if (timeRanges && [timeRanges count])
+        {
+            CMTimeRange timerange = [[timeRanges objectAtIndex:0] CMTimeRangeValue];
+            //NSLog(@" . . . %.5f -> %.5f", CMTimeGetSeconds(timerange.start), CMTimeGetSeconds(CMTimeAdd(timerange.start, timerange.duration)));
+            m_av_player -> MovieIsLoading(timerange);
+        }
+
+    }
 }
 
 @end
@@ -258,6 +274,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_selection_start = 0;
     m_selection_finish = 0;
     m_stepped = false;
+    m_buffered_amount = 0.0;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -290,6 +307,18 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 void MCAVFoundationPlayer::TimeJumped(void)
 {
     //MCLog("Time Jumped!", nil);
+}
+
+void MCAVFoundationPlayer::MovieIsLoading(CMTimeRange p_timerange)
+{
+    float t_movie_duration, t_loaded_part;
+    t_movie_duration = (float)CMTimeToLCTime(m_player.currentItem.duration);
+    t_loaded_part = (float)CMTimeToLCTime(p_timerange.duration);
+    
+    float t_buffered_amount;
+    t_buffered_amount = t_loaded_part/t_movie_duration;
+    m_buffered_amount = t_buffered_amount;
+    //MCLog("=============Loaded %f / 1.0", t_buffered_amount);
 }
 
 void MCAVFoundationPlayer::MovieFinished(void)
@@ -600,16 +629,21 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     AVPlayer *t_player;
     t_player = [[AVPlayer alloc] initWithURL: t_url];
     
+    // PM-2014-08-19 [[ Bug 13121 ]]
+    [t_player addObserver:m_observer forKeyPath:@"currentItem.loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
+    
     // Block-wait until the status becomes something.
     [t_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
     while([t_player status] == AVPlayerStatusUnknown)
         MCPlatformWaitForEvent(60.0, true);
     [t_player removeObserver: m_observer forKeyPath: @"status"];
+    //[t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
     
     // If we've failed, leave things as they are (dealloc the new player).
     if ([t_player status] == AVPlayerStatusFailed)
     {
         // error obtainable via [t_player error]
+        [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
         [t_player release];
         return;
     }
@@ -620,6 +654,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     */
     if ([t_player currentItem] == nil)
     {
+        [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
         [t_player release];
         return;
     }
@@ -999,6 +1034,29 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
             *(MCPlatformPlayerMediaTypes *)r_value = t_types;
 		}
         break;
+        case kMCPlatformPlayerPropertyMovieLoadState:
+		{
+			MCPlatformPlayerMovieLoadState t_state;
+            
+            if (m_player != nil && m_player.currentItem != nil)
+            {
+                if (m_buffered_amount == 1.0)
+                    t_state = kMCPlatformPlayerMovieLoadStateComplete;
+                else if (m_buffered_amount >= 0.9)
+                    t_state = kMCPlatformPlayerMovieLoadStatePlaythroughOK;
+                else if (m_buffered_amount >= 0.6)
+                    t_state = kMCPlatformPlayerMovieLoadStatePlayable;
+                else if (m_buffered_amount >= 0.5)
+                    t_state = kMCPlatformPlayerMovieLoadStateLoaded;
+                else if (m_buffered_amount >= 0.0)
+                    t_state = kMCPlatformPlayerMovieLoadStateLoading;
+            }
+            else
+                t_state = kMCPlatformPlayerMovieLoadStateError;
+            
+            *(MCPlatformPlayerMovieLoadState *)r_value = t_state;
+		}
+            break;
 		case kMCPlatformPlayerPropertyDuration:
             *(uint32_t *)r_value = CMTimeToLCTime([m_player currentItem] . asset . duration);
 			break;

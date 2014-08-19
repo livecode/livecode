@@ -749,6 +749,30 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			*(MCPlatformPlayerMediaTypes *)r_value = t_types;
 		}
             break;
+        case kMCPlatformPlayerPropertyMovieLoadState:
+		{
+			MCPlatformPlayerMovieLoadState t_state;
+            
+            if (m_movie)
+            {
+                
+                if ()
+                    t_state = kMCPlatformPlayerMovieLoadStateComplete;
+                else if ()
+                    t_state = kMCPlatformPlayerMovieLoadStatePlaythroughOK;
+                else if ()
+                    t_state = kMCPlatformPlayerMovieLoadStatePlayable;
+                else if ()
+                    t_state = kMCPlatformPlayerMovieLoadStateLoaded;
+                else if ()
+                    t_state = kMCPlatformPlayerMovieLoadStateLoading;
+            }
+            else
+                t_state = kMCPlatformPlayerMovieLoadStateError;
+            
+            *(MCPlatformPlayerMovieLoadState *)r_value = t_state;
+		}
+            break;
 		case kMCPlatformPlayerPropertyDuration:
 			*(uint32_t *)r_value = [m_movie duration] . timeValue;
 			break;

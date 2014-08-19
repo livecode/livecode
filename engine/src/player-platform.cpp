@@ -72,6 +72,27 @@ static const char *ppmediastrings[] =
 	"flash"
 };
 
+static MCPlatformPlayerMovieLoadState ppmoviestates[] =
+{
+	kMCPlatformPlayerMovieLoadStateError,
+	kMCPlatformPlayerMovieLoadStateLoading,
+	kMCPlatformPlayerMovieLoadStateLoaded,
+    kMCPlatformPlayerMovieLoadStatePlayable,
+	kMCPlatformPlayerMovieLoadStatePlaythroughOK,
+	kMCPlatformPlayerMovieLoadStateComplete,
+};
+
+static const char *ppmoviestatesstrings[] =
+{
+	"error",
+	"loading",
+	"loaded",
+	"playable",
+	"playthroughOK",
+	"complete"
+};
+
+
 #define CONTROLLER_HEIGHT 26
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 2
 // PM-2014-07-17: [[ Bug 12835 ]] Adjustments to prevent selectedArea and playedArea to be drawn without taking into account the width of the well
@@ -1013,6 +1034,23 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
                         first = false;
                     }
             }
+            break;
+        // PM-2014-08-19 [[ Bug 13121 ]]
+        case P_MOVIE_LOAD_STATE:
+        {
+            ep.clear();
+            if (m_platform_player != nil)
+            {
+                MCPlatformPlayerMovieLoadState t_state;
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieLoadState, kMCPlatformPropertyTypePlayerMovieLoadState, &t_state);
+                
+                for (i = 0 ; i < sizeof(ppmoviestates) / sizeof(ppmoviestates[0]) ; i++)
+                    if (t_state == ppmoviestates[i])
+                    {
+                        ep.setcstring(ppmoviestatesstrings[i]);
+                    }
+            }
+        }
             break;
         case P_CURRENT_NODE:
 			if (m_platform_player != nil)
