@@ -886,7 +886,14 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
     }
     else if (MCNameIsEqualTo(mptr, MCM_current_time_changed, kMCCompareCaseless))
     {
-        state &= ~CS_CTC_PENDING;
+        // If params is nil then this did not originate from the player!
+        if (params != nil)
+        {
+            // Update the current time in the parameter and make sure we allow another
+            // currentTimeChanged message to be posted.
+            state &= ~CS_CTC_PENDING;
+            params -> setn_argument(getmoviecurtime());
+        }
     }
     else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
     {
