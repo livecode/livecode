@@ -212,16 +212,18 @@ Exec_stat MCArrayDecode::eval(MCExecPoint& ep)
 MCArrayEncode::~MCArrayEncode(void)
 {
 	delete source;
+    delete version;
 }
 
 Parse_stat MCArrayEncode::parse(MCScriptPoint& sp, Boolean the)
 {
-	if (get1param(sp, &source, the) != PS_NORMAL)
+    // AL-2014-08-18: [[ Bug 12547 ]] Added dummy variable to enable addition of
+    //  version parameter for arrayEncode
+	if (get1or2params(sp, &source, &version, the) != PS_NORMAL)
 	{
 		MCperror->add(PE_ARRAYENCODE_BADPARAM, sp);
 		return PS_ERROR;
 	}
-
 	return PS_NORMAL;
 }
 
