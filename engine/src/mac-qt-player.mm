@@ -755,16 +755,20 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
             
             if (m_movie)
             {
+                long t_load_state;
                 
-                if ()
+                extern NSString **QTMovieLoadStateAttribute_ptr;
+                t_load_state = [[m_movie attributeForKey:*QTMovieLoadStateAttribute_ptr] longValue];
+                
+                if (t_load_state == QTMovieLoadStateComplete)
                     t_state = kMCPlatformPlayerMovieLoadStateComplete;
-                else if ()
+                else if (t_load_state == QTMovieLoadStatePlaythroughOK)
                     t_state = kMCPlatformPlayerMovieLoadStatePlaythroughOK;
-                else if ()
+                else if (t_load_state == QTMovieLoadStatePlayable)
                     t_state = kMCPlatformPlayerMovieLoadStatePlayable;
-                else if ()
+                else if (t_load_state == QTMovieLoadStateLoaded)
                     t_state = kMCPlatformPlayerMovieLoadStateLoaded;
-                else if ()
+                else if (t_load_state == QTMovieLoadStateLoading)
                     t_state = kMCPlatformPlayerMovieLoadStateLoading;
             }
             else
