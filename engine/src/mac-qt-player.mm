@@ -749,6 +749,7 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			*(MCPlatformPlayerMediaTypes *)r_value = t_types;
 		}
             break;
+        // PM-2014-08-20 [[ Bug 13121 ]]
         case kMCPlatformPlayerPropertyMovieLoadState:
 		{
 			MCPlatformPlayerMovieLoadState t_state;
@@ -761,18 +762,18 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
                 t_load_state = [[m_movie attributeForKey:*QTMovieLoadStateAttribute_ptr] longValue];
                 
                 if (t_load_state == QTMovieLoadStateComplete)
-                    t_state = kMCPlatformPlayerMovieLoadStateComplete;
+                    t_state = kMCPlatformPlayerMovieLoadStateComplete; // the movie has loaded completely
                 else if (t_load_state == QTMovieLoadStatePlaythroughOK)
-                    t_state = kMCPlatformPlayerMovieLoadStatePlaythroughOK;
+                    t_state = kMCPlatformPlayerMovieLoadStatePlaythroughOK; // the movie has loaded enough media data to play through to the end
                 else if (t_load_state == QTMovieLoadStatePlayable)
-                    t_state = kMCPlatformPlayerMovieLoadStatePlayable;
+                    t_state = kMCPlatformPlayerMovieLoadStatePlayable; // the movie has loaded enough media data to begin playing
                 else if (t_load_state == QTMovieLoadStateLoaded)
-                    t_state = kMCPlatformPlayerMovieLoadStateLoaded;
+                    t_state = kMCPlatformPlayerMovieLoadStateLoaded; // the movie atom has loaded; it's safe to query movie properties
                 else if (t_load_state == QTMovieLoadStateLoading)
-                    t_state = kMCPlatformPlayerMovieLoadStateLoading;
+                    t_state = kMCPlatformPlayerMovieLoadStateLoading; // the movie is loading
             }
             else
-                t_state = kMCPlatformPlayerMovieLoadStateError;
+                t_state = kMCPlatformPlayerMovieLoadStateError; // an error occurred while loading the movie
             
             *(MCPlatformPlayerMovieLoadState *)r_value = t_state;
 		}

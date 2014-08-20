@@ -1040,6 +1040,14 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
             
             if (m_player != nil && m_player.currentItem != nil)
             {
+                // TODO: The choice of the bounds is arbitrary.
+                /*
+                These states (loading/loaded/playable/playthroughoOK/complete) are supported in the QTKit player. In the AV one, the available options for deciding about the download progress are the following:
+                
+                1. Observe the AVPlayer's (or AVPlayerItem) status property. This has only 3 available values : ReadyToPlay, Failed, Error.
+                2. Observe the AVPlayerItem's loadTimeRanges property. This is the "currently buffered" amount of video, but there is no correspondence between "buffered amount" and "load state", apart from the obvious {1 = complete} and {0 = loading}
+                */
+                
                 if (m_buffered_amount == 1.0)
                     t_state = kMCPlatformPlayerMovieLoadStateComplete;
                 else if (m_buffered_amount >= 0.9)
