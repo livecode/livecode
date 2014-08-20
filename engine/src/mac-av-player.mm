@@ -123,7 +123,7 @@ private:
     com_runrev_livecode_MCAVFoundationPlayerView *m_view;
     uint32_t m_selection_start, m_selection_finish;
     uint32_t m_selection_duration;
-    double m_buffered_amount;
+    uint32_t m_buffered_time;
     CMTimeScale m_time_scale;
     
     bool m_play_selection_only : 1;
@@ -187,15 +187,12 @@ private:
         MCPlatformBreakWait();
     else if([keyPath isEqualToString: @"currentItem.loadedTimeRanges"])
     {
-        //NSLog(@"++++++++++++++++++++++++++Loaded time ranges changed");
-        NSArray *timeRanges = (NSArray *)[change objectForKey:NSKeyValueChangeNewKey];
-        if (timeRanges && [timeRanges count])
+        NSArray *t_time_ranges = (NSArray *)[change objectForKey:NSKeyValueChangeNewKey];
+        if (t_time_ranges && [t_time_ranges count])
         {
-            CMTimeRange timerange = [[timeRanges objectAtIndex:0] CMTimeRangeValue];
-            //NSLog(@" . . . %.5f -> %.5f", CMTimeGetSeconds(timerange.start), CMTimeGetSeconds(CMTimeAdd(timerange.start, timerange.duration)));
+            CMTimeRange timerange = [[t_time_ranges objectAtIndex:0] CMTimeRangeValue];
             m_av_player -> MovieIsLoading(timerange);
         }
-
     }
 }
 
@@ -272,7 +269,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_selection_start = 0;
     m_selection_finish = 0;
     m_stepped = false;
-    m_buffered_amount = 0.0;
+    m_buffered_time = 0;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -282,7 +279,13 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     
     // First detach the observer from everything we've attached it to.
     [m_player removeTimeObserver:m_time_observer_token];
-    [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
+    @try
+    {
+        [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
+    }
+    @catch (id anException) {
+        //do nothing, obviously it wasn't attached because an exception was thrown
+    }
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     // Now we can release it.
@@ -310,14 +313,18 @@ void MCAVFoundationPlayer::TimeJumped(void)
 
 void MCAVFoundationPlayer::MovieIsLoading(CMTimeRange p_timerange)
 {
+    uint32_t t_buffered_time;
+    t_buffered_time = CMTimeToLCTime(p_timerange.duration);
+    m_buffered_time = t_buffered_time;
+    
+    /*
     float t_movie_duration, t_loaded_part;
     t_movie_duration = (float)CMTimeToLCTime(m_player.currentItem.duration);
     t_loaded_part = (float)CMTimeToLCTime(p_timerange.duration);
-    
-    float t_buffered_amount;
-    t_buffered_amount = t_loaded_part/t_movie_duration;
-    m_buffered_amount = t_buffered_amount;
-    //MCLog("=============Loaded %f / 1.0", t_buffered_amount);
+    MCLog(" Start is %d", CMTimeToLCTime(p_timerange.start));
+    MCLog(" Duration is %d", CMTimeToLCTime(p_timerange.duration));
+    MCLog("=============Loaded %.2f / 1.00", t_loaded_part/t_movie_duration);
+    */
 }
 
 void MCAVFoundationPlayer::MovieFinished(void)
@@ -628,8 +635,9 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     AVPlayer *t_player;
     t_player = [[AVPlayer alloc] initWithURL: t_url];
     
-    // PM-2014-08-19 [[ Bug 13121 ]]
-    [t_player addObserver:m_observer forKeyPath:@"currentItem.loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
+    // PM-2014-08-19 [[ Bug 13121 ]] Added feature for displaying download progress
+    if (p_is_url)
+        [t_player addObserver:m_observer forKeyPath:@"currentItem.loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
     
     // Block-wait until the status becomes something.
     [t_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
@@ -641,7 +649,8 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     if ([t_player status] == AVPlayerStatusFailed)
     {
         // error obtainable via [t_player error]
-        [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
+        if (p_is_url)
+            [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
         [t_player release];
         return;
     }
@@ -652,7 +661,8 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     */
     if ([t_player currentItem] == nil)
     {
-        [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
+        if(p_is_url)
+            [t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
         [t_player release];
         return;
     }
@@ -1034,35 +1044,12 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
         break;
         case kMCPlatformPlayerPropertyMovieLoadState:
 		{
-			MCPlatformPlayerMovieLoadState t_state;
-            
-            if (m_player != nil && m_player.currentItem != nil)
-            {
-                // TODO: The choice of the bounds is arbitrary.
-                /*
-                These states (loading/loaded/playable/playthroughoOK/complete) are supported in the QTKit player. In the AV one, the available options for deciding about the download progress are the following:
-                
-                1. Observe the AVPlayer's (or AVPlayerItem) status property. This has only 3 available values : ReadyToPlay, Failed, Error.
-                2. Observe the AVPlayerItem's loadedTimeRanges property. This is the "currently buffered" amount of video, but there is no correspondence between "buffered amount" and "load state", apart from the obvious {1 = complete} and {0 = loading}
-                */
-                
-                if (m_buffered_amount == 1.0)
-                    t_state = kMCPlatformPlayerMovieLoadStateComplete;
-                else if (m_buffered_amount >= 0.9)
-                    t_state = kMCPlatformPlayerMovieLoadStatePlaythroughOK;
-                else if (m_buffered_amount >= 0.6)
-                    t_state = kMCPlatformPlayerMovieLoadStatePlayable;
-                else if (m_buffered_amount >= 0.5)
-                    t_state = kMCPlatformPlayerMovieLoadStateLoaded;
-                else if (m_buffered_amount >= 0.0)
-                    t_state = kMCPlatformPlayerMovieLoadStateLoading;
-            }
-            else
-                t_state = kMCPlatformPlayerMovieLoadStateError;
-            
-            *(MCPlatformPlayerMovieLoadState *)r_value = t_state;
-		}
+        }
             break;
+            // PM-2014-08-20: [[ Bug 13121 ]] Added property for displaying download progress
+        case kMCPlatformPlayerPropertyLoadedTime:
+			*(uint32_t *)r_value = m_buffered_time;
+			break;
 		case kMCPlatformPlayerPropertyDuration:
             *(uint32_t *)r_value = CMTimeToLCTime([m_player currentItem] . asset . duration);
 			break;

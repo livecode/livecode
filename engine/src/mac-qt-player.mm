@@ -47,6 +47,11 @@
  - (void)selectionChanged: (id)object;
  
  @end
+
+@interface QTMovie(QtExtensions)
+- (NSArray*)loadedRanges;
+- (QTTime)maxTimeLoaded;
+@end
  
 class MCQTKitPlayer: public MCPlatformPlayer
 {
@@ -73,6 +78,7 @@ public:
     
     void MovieFinished(void);
     void CurrentTimeChanged(void);
+    void MovieIsLoading(QTTimeRange p_timerange);
     
 protected:
     virtual void Realize(void);
@@ -93,6 +99,7 @@ private:
     QTMovieView *m_view;
     CVImageBufferRef m_current_frame;
     QTTime m_last_current_time;
+    QTTime m_buffered_time;
     
     com_runrev_livecode_MCQTKitPlayerObserver *m_observer;
     
@@ -179,6 +186,7 @@ MCQTKitPlayer::MCQTKitPlayer(void)
     m_synchronizing = false;
     
     m_last_current_time = do_QTMakeTime(INT64_MAX, 1);
+    m_buffered_time = do_QTMakeTime(0, 1);
 }
 
 MCQTKitPlayer::~MCQTKitPlayer(void)
@@ -197,6 +205,21 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
 	[m_movie release];
     
     MCMemoryDeleteArray(m_markers);
+}
+
+void MCQTKitPlayer::MovieIsLoading(QTTimeRange p_timerange)
+{
+    QTTime t_buffered_time;
+    t_buffered_time = p_timerange.duration;
+    m_buffered_time = t_buffered_time;
+
+    /*
+    float t_movie_duration, t_loaded_part;
+    t_movie_duration = (float)m_movie.duration.timeValue/(float)m_movie.duration.timeScale;
+    t_loaded_part = (float)t_buffered_time.timeValue/(float)t_buffered_time.timeScale;
+    MCLog("=============Loaded %.2f / 1.00", (float)t_loaded_part/(float)t_movie_duration);
+    */
+    
 }
 
 void MCQTKitPlayer::MovieFinished(void)
@@ -462,6 +485,16 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
     {
 		SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)this);
         CacheCurrentFrame();
+    }
+    if (p_is_url && [m_movie respondsToSelector:@selector(loadedRanges)])
+    {
+        NSArray *t_load_ranges = [m_movie loadedRanges];
+        if (t_load_ranges)
+        {
+            QTTimeRange t_time_range;
+            t_time_range = [[t_load_ranges objectAtIndex: 0] QTTimeRangeValue];
+            MovieIsLoading(t_time_range);
+        }
     }
 }
 
@@ -749,35 +782,10 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			*(MCPlatformPlayerMediaTypes *)r_value = t_types;
 		}
             break;
-        // PM-2014-08-20 [[ Bug 13121 ]]
-        case kMCPlatformPlayerPropertyMovieLoadState:
-		{
-			MCPlatformPlayerMovieLoadState t_state;
-            
-            if (m_movie)
-            {
-                long t_load_state;
-                
-                extern NSString **QTMovieLoadStateAttribute_ptr;
-                t_load_state = [[m_movie attributeForKey:*QTMovieLoadStateAttribute_ptr] longValue];
-                
-                if (t_load_state == QTMovieLoadStateComplete)
-                    t_state = kMCPlatformPlayerMovieLoadStateComplete; // the movie has loaded completely
-                else if (t_load_state == QTMovieLoadStatePlaythroughOK)
-                    t_state = kMCPlatformPlayerMovieLoadStatePlaythroughOK; // the movie has loaded enough media data to play through to the end
-                else if (t_load_state == QTMovieLoadStatePlayable)
-                    t_state = kMCPlatformPlayerMovieLoadStatePlayable; // the movie has loaded enough media data to begin playing
-                else if (t_load_state == QTMovieLoadStateLoaded)
-                    t_state = kMCPlatformPlayerMovieLoadStateLoaded; // the movie atom has loaded; it's safe to query movie properties
-                else if (t_load_state == QTMovieLoadStateLoading)
-                    t_state = kMCPlatformPlayerMovieLoadStateLoading; // the movie is loading
-            }
-            else
-                t_state = kMCPlatformPlayerMovieLoadStateError; // an error occurred while loading the movie
-            
-            *(MCPlatformPlayerMovieLoadState *)r_value = t_state;
-		}
-            break;
+        // PM-2014-08-20 [[ Bug 13121 ]] Added property for displaying download progress
+        case kMCPlatformPlayerPropertyLoadedTime:
+			*(uint32_t *)r_value = m_buffered_time . timeValue;
+			break;
 		case kMCPlatformPlayerPropertyDuration:
 			*(uint32_t *)r_value = [m_movie duration] . timeValue;
 			break;

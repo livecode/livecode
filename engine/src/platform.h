@@ -980,6 +980,7 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyVolume,
     kMCPlatformPlayerPropertyMarkers,
     kMCPlatformPlayerPropertyMovieLoadState,
+    kMCPlatformPlayerPropertyLoadedTime,
     
     kMCPlatformPlayerPropertyShowSelection,
 	kMCPlatformPlayerPropertyOnlyPlaySelection,
