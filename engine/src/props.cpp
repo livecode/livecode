@@ -377,6 +377,8 @@ static PropList imageprops[] =
         {"bottomColor", P_BOTTOM_COLOR},
         {"bottomPattern", P_BOTTOM_PATTERN},
         {"cantSelect", P_CANT_SELECT},
+        // AL-2014-07-23: [[ Bug 12894 ]] Add centerRect to image properties list
+        {"centerRect", P_CENTER_RECTANGLE},
         {"colorOverlay", P_BITMAP_EFFECT_COLOR_OVERLAY},
         {"constantMask", P_CONSTANT_MASK},
         {"currentFrame", P_CURRENT_FRAME},
@@ -391,6 +393,8 @@ static PropList imageprops[] =
         {"hiliteColor", P_HILITE_COLOR},
         {"hilitePattern", P_HILITE_PATTERN},
         {"hotSpot", P_HOT_SPOT},
+        // AL-2014-07-23: [[ Bug 12894 ]] Add iconGravity to image properties list
+        {"iconGravity", P_ICON_GRAVITY},
         {"id", P_ID},
         {"ink", P_INK},
         {"innerGlow", P_BITMAP_EFFECT_INNER_GLOW},
@@ -598,6 +602,7 @@ static PropList playerprops[] =
         {"playRate", P_PLAY_RATE},
         {"playSelection", P_PLAY_SELECTION},
         {"rect", P_RECTANGLE},
+        //{"selectedareacolor", P_SELECTED_AREA_COLOR},
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},
         {"shadowOffset", P_SHADOW_OFFSET},

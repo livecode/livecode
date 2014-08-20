@@ -143,6 +143,9 @@ MCChunk::MCChunk(Boolean isforset)
 	marked = False;
 	next = NULL;
     pseudoobject = NULL;
+
+    // MW-2014-05-28: [[ Bug 11928 ]] We assume (at first) we are not a transient text chunk (i.e. one that is evaluated from a var).
+    m_transient_text_chunk = false;
 }
 
 MCChunk::~MCChunk()
@@ -801,6 +804,10 @@ void MCChunk::take_components(MCChunk *tchunk)
 		cline = tchunk->cline;
 		tchunk->cline = NULL;
     }
+    
+    // MW-2014-05-28: [[ Bug 11928 ]] As soon as we take components from a chunk then
+    //   mark us as transient text, so that we don't use the same components next time.
+    m_transient_text_chunk = true;
 }
 
 bool MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, Boolean p_recurse)
@@ -3049,7 +3056,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                     break;
                 default:
                     MCMarkedText t_mark;
-                    MCInterfaceMarkContainer(ctxt, t_object, t_mark);
+                    MCInterfaceMarkContainer(ctxt, t_object, false, t_mark);
                     MCStringsEvalTextChunk(ctxt, t_mark, (MCStringRef&)&t_valueref);
                     MCValueRelease(t_mark . text);
                     break;
@@ -3366,7 +3373,21 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
             if (t_obj_chunk . object -> gettype() == CT_FIELD)
                 MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
             else
-                MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
+            {
+                // AL-2014-08-04: [[ Bug 13081 ]] 'put into <chunk>' is valid for any container type
+                switch (t_obj_chunk . object -> gettype())
+                {
+                    case CT_BUTTON:
+                    case CT_IMAGE:
+                    case CT_AUDIO_CLIP:
+                    case CT_VIDEO_CLIP:
+                        MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
+                        break;
+                    default:
+                        ctxt . LegacyThrow(EE_CHUNK_SETNOTACONTAINER);
+                        break;
+                }
+            }
         }
         MCValueRelease(t_obj_chunk . mark . text);
     }
@@ -3627,7 +3648,12 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
         if (optr == nil)
         {
             if (stack != NULL)
+            {
+                // AL-2014-06-09: [[ Bug 12596 ]] Throw error when the chunk expression
+                //  does not resolve to an object on the specified stack.
+                ctxt . Throw();
                 return;
+            }
             optr = MCdefaultstackptr;
         }
         if (tocount == CT_MARKED)
@@ -3701,16 +3727,8 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
         if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeArray)
             r_count = MCArrayGetCount((MCArrayRef)*t_value);
         else
-        {
-            MCAutoStringRef t_string;
-            if (!ctxt . ConvertToString(*t_value, &t_string))
-            {
-                ctxt.LegacyThrow(EE_CHUNK_BADEXPRESSION);
-                return;
-            }
-            
-            MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
-        }
+            // AL-2014-07-10: [[ Bug 12795 ]] Don't call MCStringsCountChunks with a non-string chunk expression.
+            r_count = 0;
     }
 }
 
@@ -3743,7 +3761,9 @@ Exec_stat MCChunk::fmark(MCField *fptr, int4 &start, int4 &end, Boolean wholechu
 	case F_SELECTED_TEXT:
 		wholeline = False;
 	case F_SELECTED_LINE:
-		if (!fptr->selectedmark(wholeline, start, end, False, wholechunk))
+        // MW-2014-05-28: [[ Bug 11928 ]] 'wholeline' is sufficient to determine whether the
+            //  CR should be included.
+		if (!fptr->selectedmark(wholeline, start, end, False))
 			start = end = 0;
 		break;
 	case F_MOUSE_CHAR_CHUNK:
@@ -4259,8 +4279,10 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         return t_success;
     }
     else
-	{        
-		if (t_obj_chunk . object->gettype() != CT_FIELD)
+	{
+        // AL-2014-07-09: [[ Bug 12733 ]] Buttons are also valid containers wrt text chunk properties.
+		if (t_obj_chunk . object -> gettype() != CT_FIELD &&
+            t_obj_chunk . object -> gettype() != CT_BUTTON)
 		{
 			MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
             MCValueRelease(t_obj_chunk . mark . text);
@@ -4322,7 +4344,9 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
     }
     else
     {
-        if (t_obj_chunk . object -> gettype() != CT_FIELD)
+        // AL-2014-07-09: [[ Bug 12733 ]] Buttons are also valid containers wrt text chunk properties.
+        if (t_obj_chunk . object -> gettype() != CT_FIELD &&
+            t_obj_chunk . object -> gettype() != CT_BUTTON)
         {
             MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
             MCValueRelease(t_obj_chunk . mark . text);
@@ -4338,7 +4362,7 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         if (islinechunk() && t_info == nil)
             t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
         
-        if (t_info == nil || t_info -> getter == nil)
+        if (t_info == nil || t_info -> setter == nil)
         {
             MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
             MCValueRelease(t_obj_chunk . mark . text);
@@ -4480,10 +4504,10 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         return true;
     }
 
-    if (t_function)
+    if (t_function && t_object . object -> gettype() == CT_FIELD)
         MCInterfaceMarkFunction(ctxt, t_object, function, p_whole_chunk, r_chunk . mark);
     else
-        MCInterfaceMarkObject(ctxt, t_object, p_whole_chunk, r_chunk . mark);
+        MCInterfaceMarkContainer(ctxt, t_object, p_whole_chunk, r_chunk . mark);
 
     mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
 
@@ -4758,9 +4782,12 @@ Exec_stat MCChunk::marktextchunk(MCExecPoint& ep, MCField*& r_field, uint4& r_pa
 Exec_stat MCChunk::del(MCExecPoint &ep)
 {
 	int4 start, end;
+    // MW-2014-05-28: [[ Bug 11928 ]] If we are a transient text chunk then the fact that
+    //   (one of) the char chunk refs are non-nil is a red-herring, we must re-evaluate
+    //   destvar as a chunk.
 	if (destvar != NULL
-	        && (cline != NULL || item != NULL || token != NULL
-	            || word != NULL || character != NULL))
+	        && !m_transient_text_chunk &&
+                (cline != NULL || item != NULL || token != NULL || word != NULL || character != NULL))
 	{
 		if (destvar->eval(ep) != ES_NORMAL)
 		{
@@ -5592,7 +5619,8 @@ static bool MCStringsIsAmongTheParagraphsOfRange(MCExecContext& ctxt, MCStringRe
 	if (t_range . offset != 0)
     {
         t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset - 1);
-        if (t_delimiter != '\n' && t_delimiter != 0x2029)
+        // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+        if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
             return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_chunk, p_string, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
     }
     
@@ -5600,7 +5628,8 @@ static bool MCStringsIsAmongTheParagraphsOfRange(MCExecContext& ctxt, MCStringRe
 	if (t_range . offset + t_range . length != MCStringGetLength(p_string))
     {
         t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset + t_range . length);
-        if (t_delimiter != '\n' && t_delimiter != 0x2029)
+        // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+        if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
             return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_chunk, p_string, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
     }
 	return true;
@@ -5648,7 +5677,8 @@ static bool MCStringsFindParagraphInRange(MCExecContext& ctxt, MCStringRef p_str
         if (t_range . offset != 0)
         {
             t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset - 1);
-            if (t_delimiter != '\n' && t_delimiter != 0x2029)
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
                 return MCStringsFindParagraphInRange(ctxt, p_string, p_needle, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
         }
         
@@ -5656,7 +5686,8 @@ static bool MCStringsFindParagraphInRange(MCExecContext& ctxt, MCStringRef p_str
         if (t_range . offset + t_range . length != MCStringGetLength(p_string))
         {
             t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset + t_range . length);
-            if (t_delimiter != '\n' && t_delimiter != 0x2029)
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
                 return MCStringsFindParagraphInRange(ctxt, p_string, p_needle, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
         }
 	}
@@ -5822,7 +5853,8 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             
             t_pg_offset = t_offset;
             t_newline_found = MCStringFirstIndexOfChar(text, '\n', t_offset, kMCCompareExact, t_offset);
-            t_pg_found = MCStringFirstIndexOfChar(text, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            t_pg_found = false; /*MCStringFirstIndexOfChar(text, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);*/
             
             t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
             
@@ -5982,10 +6014,12 @@ uindex_t MCTextChunkIterator::chunkoffset(MCExecContext& ctxt, MCStringRef p_nee
             
             // Count the number of delimiters between the start of the first chunk
             // and the start of the found string.
-            t_chunk_offset += MCStringCount(text, MCRangeMake(range . offset, t_found_offset - range . offset), t_delimiter, t_options);
             
-            if (type == CT_PARAGRAPH)
-                t_chunk_offset += MCStringCountChar(text, MCRangeMake(range . offset, t_found_offset - range . offset), 0x2029, t_options);
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            if (type != CT_PARAGRAPH)
+                t_chunk_offset += MCStringCount(text, MCRangeMake(range . offset, t_found_offset - range . offset), t_delimiter, t_options);
+            else
+                t_chunk_offset += MCStringCountChar(text, MCRangeMake(range . offset, t_found_offset - range . offset), '\n', t_options);
             
             return t_chunk_offset;
         }

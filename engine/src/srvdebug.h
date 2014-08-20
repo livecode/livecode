@@ -45,12 +45,6 @@ extern void MCServerDebugError(MCExecContext &ctxt, uint2 line, uint2 pos, uint2
 // Notify the server-side debugger that the given variable has changed.
 extern void MCServerDebugVariableChanged(MCExecContext &ctxt, MCNameRef name);
 
-// Notify the server-side debugger that the given variable *value* has
-// changed.
-#ifdef TODO
-extern void MCServerDebugVariableValueChanged(MCVariableValue *p_value);
-#endif
-
 ////////////////////////////////////////////////////////////////////////
 //
 // EXTERNAL INTERFACE

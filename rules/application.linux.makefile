@@ -26,7 +26,7 @@ else
 	STATIC_LIBS+=stdc++
 endif
 
-LDFLAGS=$(CUSTOM_LDFLAGS) $(addprefix -L,$(GLOBAL_LIBS)) -Xlinker -no-undefined $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS))))
+LDFLAGS=$(CUSTOM_LDFLAGS) $(addprefix -L,$(GLOBAL_LIBS)) $(addprefix -L,$(CUSTOM_INCLUDES)) -Xlinker -no-undefined $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS))))
 
 TARGET_PATH=$(BUILD_DIR)/$(NAME)
 
@@ -43,9 +43,9 @@ $(TARGET_PATH): $(OBJECTS) $(DEPS)
 			$(addprefix -l,$(DYNAMIC_LIBS))
 ifneq ($(MODE),debug)
 	cd $(BUILD_DIR) && \
-		objcopy --only-keep-debug "$(NAME)" "$(NAME).dbg" && \
-		strip --strip-debug --strip-unneeded "$(NAME)" && \
-		objcopy --add-gnu-debuglink="$(NAME).dbg" "$(NAME)"
+		$(OBJCOPY) --only-keep-debug "$(NAME)" "$(NAME).dbg" && \
+		$(STRIP) --strip-debug --strip-unneeded "$(NAME)" && \
+		$(OBJCOPY) --add-gnu-debuglink="$(NAME).dbg" "$(NAME)"
 endif
 
 .PHONY: $(NAME)

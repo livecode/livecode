@@ -323,15 +323,41 @@ void gdi_do_arc(HDC p_dc, HDC p_mask_dc, bool p_fill, int4 p_left, int4 p_top, i
 	}
 }
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to make theme drawing thread safe, by using TLS to ensure we have seperate DCs for each thread.
+//  This should probably be moved to a central thread library at some point, which will also help with clean up.
+static __declspec( thread ) bool s_initialized_on_thread = false;
+static __declspec( thread ) HDC s_theme_dc = NULL;
+
+static void MCThemeDCIntialize()
+{
+	if (s_initialized_on_thread)
+		return;
+
+	s_initialized_on_thread = true;
+	s_theme_dc = CreateCompatibleDC(NULL);
+}
+
+static void MCThemeDCFinalize()
+{
+	if (!s_initialized_on_thread)
+		return;
+
+	DeleteDC(s_theme_dc);
+	s_initialized_on_thread = false;
+}
+
 typedef void (*MCGDIDrawFunc)(HDC p_hdc, void *p_context);
 
 bool MCGDIDrawAlpha(uint32_t p_width, uint32_t p_height, MCGDIDrawFunc p_draw, void *p_context, MCImageBitmap *&r_bitmap)
 {
 	bool t_success = true;
 
+	MCThemeDCIntialize();
+
 	HDC t_dc;
 	//t_dc = CreateCompatibleDC(NULL);
-	t_dc = ((MCScreenDC*)MCscreen)->getdsthdc();
+	//t_dc = ((MCScreenDC*)MCscreen)->getdsthdc();
+	t_dc = s_theme_dc;
 	t_success = t_dc != nil;
 
 	bool t_alpha = false;
@@ -502,6 +528,20 @@ bool MCImageBitmapSplitHBITMAPWithMask(HDC p_dc, MCImageBitmap *p_bitmap, HBITMA
 		DeleteObject(t_mask);
 
 	return false;
+}
+
+bool MCGImageSplitHBITMAPWithMask(HDC p_dc, MCGImageRef p_image, HBITMAP &r_bitmap, HBITMAP &r_mask)
+{
+	MCGRaster t_raster;
+	if (!MCGImageGetRaster(p_image, t_raster))
+		return false;
+
+	MCImageBitmap t_bitmap;
+	t_bitmap = MCImageBitmapFromMCGRaster(t_raster);
+
+	MCImageBitmapCheckTransparency(&t_bitmap);
+
+	return MCImageBitmapSplitHBITMAPWithMask(p_dc, &t_bitmap, r_bitmap, r_mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -156,7 +156,8 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
         MCAutoValueRef t_value;
 		if (p_parameters != nil)
         {
-			t_success = p_parameters -> eval(ctxt, &t_value);
+            // AL-2014-05-28: [[ Bug 12477 ]] Use eval_argument here otherwise variable references do not get resolved
+			t_success = p_parameters -> eval_argument(ctxt, &t_value);
         }
 		else if (t_now_optional)
 			break;
@@ -1112,12 +1113,22 @@ extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_par
 extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleRequestForProductDetails(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleReceiveProductDetails(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters);
 

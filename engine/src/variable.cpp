@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 #include "objdefs.h"
+#include "mcio.h"
 
 #include "stack.h"
 #include "card.h"
@@ -106,7 +107,133 @@ bool MCVariable::createcopy(MCVariable& p_var, MCVariable*& r_new_var)
 	else
 		delete self;
 
-	return t_success;
+    return t_success;
+}
+
+bool MCVariable::encode(void *&r_buffer, uindex_t r_size)
+{
+    IO_handle t_stream;
+    t_stream = MCS_fakeopenwrite();
+    if (t_stream == NULL)
+        return false;
+
+    IO_stat t_stat;
+    t_stat = IO_NORMAL;
+
+    if (value . type == kMCExecValueTypeArrayRef)
+    {
+        t_stat = IO_write_uint1(kMCEncodedValueTypeLegacyArray, t_stream);
+
+        if (t_stat == IO_NORMAL)
+            t_stat = MCArraySaveToHandleLegacy(value . arrayref_value, t_stream);
+    }
+    else if (value . type == kMCExecValueTypeDataRef)
+    {
+        t_stat = IO_write_uint1(kMCEncodedValueTypeString, t_stream);
+        if (t_stat == IO_NORMAL)
+            t_stat = IO_write(MCDataGetBytePtr(value . dataref_value), 1, MCDataGetLength(value . dataref_value), t_stream);
+    }
+    else if (value . type == kMCExecValueTypeStringRef)
+    {
+        t_stat = IO_write_uint1(kMCEncodedValueTypeString, t_stream);
+        if (t_stat == IO_NORMAL)
+            t_stat = IO_write_stringref_legacy(value . stringref_value, t_stream, false);
+    }
+    else if (value . type == kMCExecValueTypeNone)
+    {
+        t_stat = IO_write_uint1((uint1)kMCEncodedValueTypeEmpty, t_stream);
+    }
+    else if (MCExecTypeIsNumber(value . type))
+    {
+        double t_value;
+        if (value . type == kMCExecValueTypeUInt)
+            t_value = (double)value . uint_value;
+        else if (value . type == kMCExecValueTypeUInt)
+            t_value = (double) value . int_value;
+        else if (value . type == kMCExecValueTypeUInt)
+            t_value = (double) value . float_value;
+        else if (value . type == kMCExecValueTypeUInt)
+            t_value = value . double_value;
+
+        t_stat = IO_write_uint1((uint1)kMCEncodedValueTypeNumber, t_stream);
+
+        if (t_stat == IO_NORMAL)
+            t_stat = IO_write_real8(t_value, t_stream);
+    }
+    else
+        t_stat = IO_ERROR;
+
+    char *t_buffer;
+    size_t t_length;
+    if (t_stat == IO_NORMAL)
+    {
+        t_stat = MCS_closetakingbuffer(t_stream, (void*&)t_buffer, t_length);
+
+        if (t_stat == IO_NORMAL)
+        {
+            r_buffer = t_buffer;
+            r_size = t_length;
+        }
+        else
+            delete t_buffer;
+    }
+
+    return t_stat == IO_NORMAL;
+}
+
+bool MCVariable::decode(void *p_buffer, uindex_t p_size)
+{
+    IO_handle t_stream;
+    t_stream = MCS_fakeopen(p_buffer, p_size);
+    if (t_stream == NULL)
+        return false;
+
+    IO_stat t_stat;
+    t_stat = IO_NORMAL;
+
+    uint8_t t_type;
+    t_stat = IO_read_uint1((uint1*)&t_type, t_stream);
+    if (t_stat == IO_NORMAL)
+    {
+        switch(t_type)
+        {
+        case kMCEncodedValueTypeEmpty:
+            clear();
+        break;
+        case kMCEncodedValueTypeString:
+        {
+            MCAutoStringRef t_value;
+            t_stat = IO_read_stringref_legacy(&t_value, t_stream, false);
+
+            if (t_stat == IO_NORMAL)
+                /* UNCHECKED */ setvalueref(*t_value);
+        }
+        break;
+        case kMCEncodedValueTypeNumber:
+        {
+            real8 t_value;
+            t_stat = IO_read_real8(&t_value, t_stream);
+
+            if (t_stat == IO_NORMAL)
+                setnvalue(t_value);
+        }
+        break;
+        case kMCEncodedValueTypeLegacyArray:
+        {
+            MCAutoArrayRef t_array;
+            t_stat = MCArrayLoadFromHandleLegacy(&t_array, t_stream);
+
+            if (t_stat == IO_NORMAL)
+                /* UNCHECKED */ setvalueref(*t_array);
+        }
+        default:
+            t_stat = IO_ERROR;
+        break;
+        }
+    }
+
+    MCS_close(t_stream);
+    return t_stat == IO_NORMAL;
 }
 
 MCVariable::~MCVariable(void)
@@ -233,6 +360,8 @@ MCValueRef MCVariable::getvalueref(void)
         {
             MCExecContext ctxt(nil, nil, nil);
             /* UNCHECKED */ MCExecTypeConvertAndReleaseAlways(ctxt, value . type, &value, kMCExecValueTypeValueRef, &value);
+            // SN-2014-07-28: [[ Bug 12937 ]] The value stored is now a valueRef
+            value . type = kMCExecValueTypeValueRef;
         }
         
         return value . valueref_value;
@@ -427,6 +556,48 @@ bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSetti
 	return modify(ctxt, p_value, nil, 0, p_setting);
 }
 
+bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
+{    
+	if (p_length == 0)
+	{
+        if (!converttomutabledata(ctxt))
+            return false;
+        
+        bool t_success = false;
+        // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
+        if (p_setting == kMCVariableSetAfter)
+            t_success = MCDataAppend(value . dataref_value, p_data);
+        else if (p_setting == kMCVariableSetBefore)
+            t_success = MCDataPrepend(value . dataref_value, p_data);
+        
+        if (!t_success)
+			return false;
+        
+        synchronize(ctxt, true);
+        
+		return true;
+	}
+    
+	MCValueRef t_current_value;
+	t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+
+    MCDataRef t_value_as_data;
+    t_value_as_data = nil;
+    // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
+	if (MCDataMutableCopy((MCDataRef)t_current_value, t_value_as_data) &&
+		((p_setting == kMCVariableSetAfter && MCDataAppend(t_value_as_data, p_data)) ||
+         (p_setting == kMCVariableSetBefore && MCDataPrepend(t_value_as_data, p_data))) &&
+		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_value_as_data))
+	{
+		MCValueRelease(t_value_as_data);
+        synchronize(ctxt, true);
+		return true;
+	}
+    
+	MCValueRelease(t_value_as_data);
+	return false;
+}
+
 bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
 {    
     MCAutoStringRef t_value;
@@ -482,14 +653,27 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariabl
 
 bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
 {
-    MCAutoStringRef t_value;
-    MCExecValue t_exec_value;
+    if (p_value . type == kMCExecValueTypeDataRef)
+    {
+        if (p_length == 0 && value . type == kMCExecValueTypeDataRef)
+            return modify_data(ctxt, p_value . dataref_value, p_path, p_length, p_setting);
+        
+        MCValueRef t_current_value;
+        t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+        
+        if (MCValueGetTypeCode(t_current_value) == kMCValueTypeCodeData)
+            return modify_data(ctxt, p_value . dataref_value, p_path, p_length, p_setting);
+    }
     
+    MCAutoStringRef t_value;
     MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value));
     
     if (ctxt . HasError())
         return ctxt . IgnoreLastError(), false;
     
+    return modify(ctxt, *t_value, p_path, p_length, p_setting);
+    
+    /*
 	if (p_length == 0)
 	{
         if (!converttomutablestring(ctxt))
@@ -529,7 +713,7 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
 	}
     
 	MCValueRelease(t_current_value_as_string);
-	return false;
+	return false; */
 }
 
 bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range)
@@ -1865,6 +2049,7 @@ bool MCDeferredVariable::createwithname(MCNameRef p_name, MCDeferredVariableComp
 	self -> name = MCValueRetain(p_name);
 
 	self -> value . type = kMCExecValueTypeNone;
+    self -> value . valueref_value = nil;
 	self -> is_msg = false;
 	self -> is_env = false;
 	self -> is_global = false;
@@ -1879,21 +2064,14 @@ bool MCDeferredVariable::createwithname(MCNameRef p_name, MCDeferredVariableComp
 	return true;
 }
 
-Exec_stat MCDeferredVariable::compute(void)
+bool MCDeferredVariable::compute(void)
 {
 	// Compute can only be called once. By setting deferred to false here, any
 	// future access of the variable via an MCDeferredVarref will result in this
 	// not being called.
 	is_deferred = false;
 
-	// Request the variable's value be computed.
-	Exec_stat t_stat;
-	t_stat = m_callback(m_context, this);
-	if (t_stat != ES_NORMAL)
-		return t_stat;
-
-	// We are done.
-	return ES_NORMAL;
+    return m_callback(m_context, this);
 }
 
 #ifdef LEGACY_EXEC

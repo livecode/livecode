@@ -318,7 +318,8 @@ void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value)
 							MCListAppend(*t_context, *t_context_id);
 			}
 			
-			if (t_success)
+            // PM-2014-04-14: [[Bug 12125]] Do this check to avoid a crash in LC server
+            if (t_success && MCexecutioncontexts[i]->GetHandler() != NULL)
 				t_success = MCListAppend(*t_context, MCexecutioncontexts[i]->GetHandler()->getname());
 			
 			if (t_success)

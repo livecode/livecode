@@ -16,7 +16,11 @@ ICU_SRC="icu-${ICU_VERSION}"
 cd "${BUILDDIR}"
 
 # Needed for cross-compiles
-HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-mac-i386"
+if [ "${PLATFORM}" == "linux" ] ; then
+	HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-linux-i386"
+else
+	HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-mac-i386"
+fi
 
 if [ ! -d "$ICU_SRC" ] ; then
 	if [ ! -e "$ICU_TGZ" ] ; then
@@ -56,6 +60,8 @@ function buildICU {
 				CONFIG_TYPE="Linux"
 				if [ "${ARCH}" == "x86_64" ] ; then
 					CONFIG_TYPE+=" --with-library-bits=64"
+				elif [ "${ARCH}" == "armv6-hf" ] ; then
+					CONFIG_TYPE+=" --host=arm-linux-gnueabihf --with-cross-build=${HOST_ICU_DIR}"
 				else
 					CONFIG_TYPE+=" --with-library-bits=32"
 				fi
@@ -136,6 +142,31 @@ function buildICU {
 			echo "Found existing ICU build for ${NAME}"
 		fi
 	
+		# Generate the minimal data library
+		ORIGINAL_DIR=`pwd`
+		if [ ! -e "${ICU_SRC}/custom-data/icudt${ICU_VERSION_MAJOR}l.dat" ] ; then
+			mkdir -p "${ICU_SRC}/custom-data"
+			cd "${ICU_SRC}/custom-data"
+			curl http://downloads.livecode.com/prebuilts/icudata/minimal/icudt${ICU_VERSION_MAJOR}l.dat -o "icudt${ICU_VERSION_MAJOR}l.dat"
+		else
+			cd "${ICU_SRC}/custom-data"
+		fi
+		if [ ! -d "extracted" ] ; then
+			mkdir -p "extracted"
+			"${HOST_ICU_DIR}/bin/icupkg" --list --outlist "icudt${ICU_VERSION_MAJOR}.lst" "icudt${ICU_VERSION_MAJOR}l.dat"
+			"${HOST_ICU_DIR}/bin/icupkg" --extract "icudt${ICU_VERSION_MAJOR}.lst" --destdir "./extracted" "icudt${ICU_VERSION_MAJOR}l.dat"
+		fi
+		if [ ! -d "out-${PLATFORM}-${ARCH}" ] ; then
+			mkdir -p "temp"
+			mkdir -p "out-${PLATFORM}-${ARCH}"
+			"${HOST_ICU_DIR}/bin/pkgdata" --bldopt "../../${ICU_ARCH_SRC}/data/icupkg.inc" --quiet --copyright --sourcedir "./extracted" --destdir "./out-${PLATFORM}-${ARCH}" --entrypoint icudt${ICU_VERSION_MAJOR} --tempdir "./temp" --name "icudt${ICU_VERSION_MAJOR}l" --mode static --revision "${ICU_VERSION}" --libname icudata "icudt${ICU_VERSION_MAJOR}.lst"
+
+			# Copy the data
+			rm -r "${INSTALL_DIR}/${NAME}/lib/libicudata.a"
+			cp -v "out-${PLATFORM}-${ARCH}/libicudata.a" "${INSTALL_DIR}/${NAME}/lib/libicudata.a"
+		fi
+		cd "${ORIGINAL_DIR}"
+
 		for L in data i18n io le lx tu uc ; do
 			if [ -f "${INSTALL_DIR}/${NAME}/lib/libicu${L}.a" ] ; then
 				if [ "${PLATFORM}" == "mac" -o "${PLATFORM}" == "ios" ] ; then

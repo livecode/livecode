@@ -26,8 +26,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "util.h"
 #include "variable.h"
+#include "mcio.h"
 
 #include "exec.h"
+#include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -368,7 +370,14 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
     uindex_t t_offset, t_length;
     t_offset = 0;
     t_length = MCStringGetLength(p_string);
-    while (t_offset < t_length)
+    
+    bool t_success;
+    t_success = true;
+    
+    uindex_t t_row_index;
+    t_row_index = 0;
+    
+    while (t_success && t_offset < t_length)
     {
         // Find the end of this row
         MCRange t_row_found;
@@ -382,14 +391,15 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
         uindex_t t_cell_offset, t_column_index;
         t_cell_offset = t_offset;
         t_column_index = 0;
-        while (t_cell_offset < t_row_found . offset)
+        while (t_success && t_cell_offset <= t_row_found . offset)
         {
             // Find the end of this cell
             MCRange t_cell_found;
             if (!MCStringFind(p_string, MCRangeMake(t_cell_offset, UINDEX_MAX), t_column_delim, ctxt . GetStringComparisonType(), &t_cell_found) || t_cell_found . offset > t_row_found . offset)
             {
                 t_cell_found . offset = t_row_found . offset;
-                t_cell_found . length = 0;
+                // AL-2014-08-04: [[ Bug 13090 ]] Make sure cell offset is incremented eventually when the delimiter is not found
+                t_cell_found . length = 1;
             }
             
             // Check that the output array has a slot for this column
@@ -397,22 +407,26 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
                 t_temp_array.Extend(t_column_index + 1);
             
             // Check that a string has been created to store this column
-            bool t_success;
             MCRange t_range;
             t_range = MCRangeMake(t_cell_offset, t_cell_found . offset - t_cell_offset);
             if (t_temp_array[t_column_index] == nil)
-                t_success = MCStringMutableCopySubstring(p_string, t_range, t_temp_array[t_column_index]);
+            {
+                t_success = MCStringCreateMutable(0, t_temp_array[t_column_index]);
+                
+                // AL-2014-08-04: [[ Bug 13090 ]] If we are creating a new column, make sure we pad with empty cells 'above' this one
+                uindex_t t_rows = t_row_index;
+                while (t_success && t_rows--)
+                    t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
+                
+                if (t_success)
+                    t_success = MCStringAppendSubstring(t_temp_array[t_column_index], p_string, t_range);
+            }
             else
             {
                 t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
+                // AL-2014-06-12: [[ Bug 12610 ]] Range parameter to MCStringFormat must be a pointer to an MCRange
                 if (t_success)
-                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", t_range, p_string);
-            }
-            
-            if (!t_success)
-            {
-                ctxt . Throw();
-                return;
+                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", &t_range, p_string);
             }
             
             // Next cell
@@ -420,22 +434,32 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
             t_cell_offset = t_cell_found . offset + t_cell_found . length;
         }
         
+        // AL-2014-08-04: [[ Bug 13090 ]] Pad the rest of this row with empty cells
+        index_t t_pad_number;
+        t_pad_number = t_temp_array . Size() - t_column_index;
+        if (t_success && t_pad_number > 0)
+        {
+            while (t_success && t_pad_number--)
+                t_success = MCStringAppend(t_temp_array[t_column_index++], t_row_delim);
+        }
+        
         // Next row
+        t_row_index++;
         t_offset = t_row_found . offset + t_row_found . length;
     }
     
     // Convert the temporary array into a "proper" array
-    for (uindex_t i = 0; i < t_temp_array.Size(); i++)
+    for (uindex_t i = 0; i < t_temp_array.Size() && t_success; i++)
     {
-        if (!MCArrayStoreValueAtIndex(*t_array, i + 1, t_temp_array[i]))
-        {
-            ctxt . Throw();
-            return;
-        }
+        t_success = MCArrayStoreValueAtIndex(*t_array, i + 1, t_temp_array[i]);
         MCValueRelease(t_temp_array[i]);
     }
 
-    MCArrayCopy(*t_array, r_array);
+    if (t_success)
+        t_success = MCArrayCopy(*t_array, r_array);
+    
+    if (!t_success)
+        ctxt . Throw();
 }
 
 void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCArrayRef& r_array)
@@ -561,7 +585,7 @@ void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCArrayRef p_dst_array,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCDataRef& r_encoding)
+void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_version, MCDataRef& r_encoding)
 {
 	bool t_success;
 	t_success = true;
@@ -575,28 +599,53 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCDataRef&
 			t_success = false;
 	}
 
-	MCObjectOutputStream *t_stream;
-	t_stream = nil;
-	if (t_success)
-	{
-		t_stream = new MCObjectOutputStream(t_stream_handle);
-		if (t_stream == nil)
-			t_success = false;
-	}
-
-	if (t_success)
-		if (t_stream -> WriteU8(kMCEncodedValueTypeArray) != IO_NORMAL)
-			t_success = false;
+    // AL-2014-05-15: [[ Bug 12203 ]] Add version parameter to arrayEncode, to allow
+    //  version 7.0 variant to preserve unicode. 
+    MCInterfaceStackFileVersion t_version;
+    if (p_version != nil)
+        MCInterfaceStackFileVersionParse(ctxt, p_version, t_version);
+    
+    // AL-2014-05-22: [[ Bug 12203 ]] Make arrayEncode encode in legacy format by default.
+    bool t_legacy;
+    t_legacy = p_version == nil || t_version . version < 7000;
+    
+    if (t_legacy)
+    {
+        MCObjectOutputStream *t_stream;
+        t_stream = nil;
+        if (t_success)
+        {
+            t_stream = new MCObjectOutputStream(t_stream_handle);
+            if (t_stream == nil)
+                t_success = false;
+        }
+        
+        if (t_success)
+        {
+            if (t_stream -> WriteU8(kMCEncodedValueTypeLegacyArray) != IO_NORMAL)
+                t_success = false;
+        }
+        
+        if (t_success)
+            if (MCArraySaveToStreamLegacy(p_array, false, *t_stream) != IO_NORMAL)
+                t_success = false;
+        
+        if (t_success)
+            t_stream -> Flush(true);
+        
+        delete t_stream;
+    }
+    else
+    {
+        if (t_success)
+            if (IO_write_uint1(kMCEncodedValueTypeArray, t_stream_handle) != IO_NORMAL)
+                t_success = false;
+        
+        if (t_success)
+            if (IO_write_valueref_new(p_array, t_stream_handle) != IO_NORMAL)
+                t_success = false;
+    }
 	
-	if (t_success)
-		if (MCArraySaveToStreamLegacy(p_array, false, *t_stream) != IO_NORMAL)
-			t_success = false;
-
-	if (t_success)
-		t_stream -> Flush(true);
-
-	delete t_stream;
-
 	//////////
 
 	void *t_buffer;
@@ -626,42 +675,64 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 	t_stream_handle = nil;
     if (t_success)
     {
-		t_stream_handle = MCS_fakeopen(MCDataGetOldString(p_encoding));
+        t_stream_handle = MCS_fakeopen(MCDataGetBytePtr(p_encoding), MCDataGetLength(p_encoding));
 		if (t_stream_handle == nil)
 			t_success = false;
 	}
 
-	MCObjectInputStream *t_stream;
-	t_stream = nil;
+    uint8_t t_type;
 	if (t_success)
-	{
-		t_stream = new MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding), false);
-		if (t_stream == nil)
+		if (IO_read_uint1(&t_type, t_stream_handle) != IO_NORMAL)
 			t_success = false;
-	}
-
-	uint8_t t_type;
-	if (t_success)
-		if (t_stream -> ReadU8(t_type) != IO_NORMAL)
-			t_success = false;
-    
+        
     // AL-2014-05-01: [[ Bug 11989 ]] If the type is 'empty' then just return the empty array.
-	if (t_type == kMCEncodedValueTypeEmpty)
+	if (t_success && t_type == kMCEncodedValueTypeEmpty)
     {
         r_array = MCValueRetain(kMCEmptyArray);
         return;
     }
+    
+    // AL-2014-05-15: [[ Bug 12203 ]] Check initial byte for version 7.0 encoded array.
+    bool t_legacy;
+    t_legacy = t_type < kMCEncodedValueTypeArray;
     
     MCArrayRef t_array;
 	t_array = nil;
 	if (t_success)
 		t_success = MCArrayCreateMutable(t_array);
 
-	if (t_success)
-		if (MCArrayLoadFromStreamLegacy(t_array, *t_stream) != IO_NORMAL)
-			t_success = false;
-
-	delete t_stream;
+	if (t_legacy)
+    {
+        if (t_success)
+            if (MCS_putback(t_type, t_stream_handle) != IO_NORMAL)
+                t_success = false;
+        
+        MCObjectInputStream *t_stream;
+        t_stream = nil;
+        if (t_success)
+        {
+            t_stream = new MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding), false);
+            if (t_stream == nil)
+                t_success = false;
+        }
+        
+        if (t_success)
+            if (t_stream -> ReadU8(t_type) != IO_NORMAL)
+                t_success = false;
+        
+        if (t_success)
+            if (MCArrayLoadFromStreamLegacy(t_array, *t_stream) != IO_NORMAL)
+                t_success = false;
+        
+        delete t_stream;
+    }
+    else
+    {
+        if (t_success)
+            if (IO_read_valueref_new((MCValueRef &)t_array, t_stream_handle) != IO_NORMAL)
+                t_success = false;
+    }
+    
 	MCS_close(t_stream_handle);
 
 	if (t_success)

@@ -1184,10 +1184,6 @@ bool MCD_convert_to_datetime(MCExecContext &ctxt, MCValueRef p_input, Convert_fo
             
 			t_date_valid = false;
 			t_time_valid = false;
-            
-			MCAutoStringRef t_string;
-			if (!ctxt.ConvertToString(p_input, &t_string))
-				return false;
 			
 			uindex_t t_length;
 			t_length = MCStringGetLength(*t_string);

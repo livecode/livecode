@@ -28,6 +28,7 @@ typedef struct __MCGImage *MCGImageRef;
 typedef struct __MCGMask *MCGMaskRef;
 
 typedef struct __MCGDashes *MCGDashesRef;
+typedef struct __MCGRegion *MCGRegionRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +48,7 @@ typedef struct __MCGDashes *MCGDashesRef;
 typedef uint32_t MCGPixelFormat;
 
 // IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
-#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE)
+#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(_LINUX)
 #define kMCGPixelFormatNative kMCGPixelFormatRGBA
 // IM-2013-11-01: [[ Bug 11198 ]] Set PPC pixel format to ARGB
 #elif defined(__ppc__)
@@ -214,6 +215,30 @@ static inline uint32_t MCGPixelFromNative(MCGPixelFormat p_dst_format, uint32_t 
 	return MCGPixelPack(p_dst_format, r, g, b, a);
 }
 
+//////////
+
+static inline uint32_t __mcgpixel_packed_scale_bounded(uint32_t x, uint8_t a)
+{
+	uint32_t u, v;
+	
+	u = ((x & 0xff00ff) * a) + 0x800080;
+	u = ((u + ((u >> 8) & 0xff00ff)) >> 8) & 0xff00ff;
+	
+	v = (((x >> 8) & 0xff00ff) * a) + 0x800080;
+	v = (v + ((v >> 8) & 0xff00ff)) & 0xff00ff00;
+	
+	return u + v;
+}
+
+// IM-2014-07-23: [[ Bug 12892 ]] Return the premultiplied pixel value assuming native pixel format
+static inline uint32_t MCGPixelPreMultiplyNative(uint32_t p_pixel)
+{
+	uint8_t t_alpha;
+	t_alpha = MCGPixelGetNativeAlpha(p_pixel);
+	
+	return MCGPixelSetNativeAlpha(__mcgpixel_packed_scale_bounded(p_pixel, t_alpha), t_alpha);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef float MCGFloat;
@@ -239,6 +264,24 @@ struct MCGAffineTransform
 {
 	MCGFloat a, b, c, d;
 	MCGFloat tx, ty;
+};
+
+struct MCGIntegerPoint
+{
+	int32_t x;
+	int32_t y;
+};
+
+struct MCGIntegerSize
+{
+	uint32_t width;
+	uint32_t height;
+};
+
+struct MCGIntegerRectangle
+{
+	MCGIntegerPoint origin;
+	MCGIntegerSize size;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,9 +490,33 @@ struct MCGFont
 	uint16_t	fixed_advance;
 	int32_t		ascent;
 	int32_t		descent;
-	uint8_t		style;
 	bool		ideal : 1;
 };
+
+inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, int32_t ascent, int32_t descent, bool ideal)
+{
+    MCGFont t_font;
+    t_font . fid = fid;
+	t_font . size = size;
+	t_font . fixed_advance = fixed_advance;
+	t_font . ascent = ascent;
+	t_font . descent = descent;
+	t_font . ideal = ideal;
+    
+    return t_font;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+inline bool MCGPointIsEqual(const MCGPoint &p_a, const MCGPoint &p_b)
+{
+	return p_a.x == p_b.x && p_a.y == p_b.y;
+}
+
+inline bool MCGSizeIsEqual(const MCGSize &p_a, const MCGSize &p_b)
+{
+	return p_a.width == p_b.width && p_a.height == p_b.height;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -472,20 +539,24 @@ inline MCGRectangle MCGRectangleTranslate(MCGRectangle p_rect, MCGFloat p_dx, MC
 	return t_rect;
 }
 
-inline MCGRectangle MCGRectangleScale(MCGRectangle p_rect, MCGFloat p_scale)
+inline MCGRectangle MCGRectangleScale(const MCGRectangle &p_rect, MCGFloat p_h_scale, MCGFloat p_v_scale)
 {
-	MCGRectangle t_rect;
-	t_rect.origin.x = p_rect.origin.x * p_scale;
-	t_rect.origin.y = p_rect.origin.y * p_scale;
-	t_rect.size.width = p_rect.size.width * p_scale;
-	t_rect.size.height = p_rect.size.height * p_scale;
-	
-	return t_rect;
+	return MCGRectangleMake(p_rect.origin.x * p_h_scale, p_rect.origin.y * p_v_scale, p_rect.size.width * p_h_scale, p_rect.size.height * p_v_scale);
+}
+
+inline MCGRectangle MCGRectangleScale(const MCGRectangle &p_rect, MCGFloat p_scale)
+{
+	return MCGRectangleScale(p_rect, p_scale, p_scale);
 }
 
 inline bool MCGRectangleIsEmpty(const MCGRectangle &p_rect)
 {
 	return p_rect.size.width == 0.0 || p_rect.size.height == 0.0;
+}
+
+inline bool MCGRectangleIsEqual(const MCGRectangle &p_a, const MCGRectangle &p_b)
+{
+	return MCGPointIsEqual(p_a.origin, p_b.origin) && MCGSizeIsEqual(p_a.size, p_b.size);
 }
 
 MCGRectangle MCGRectangleIntersection(const MCGRectangle &rect_1, const MCGRectangle &rect_2);
@@ -505,6 +576,31 @@ inline MCGSize MCGSizeMake(MCGFloat p_w, MCGFloat p_h)
 	t_size . height = p_h;
 	return t_size;
 }
+
+inline MCGIntegerRectangle MCGIntegerRectangleMake(int32_t x, int32_t y, uint32_t width, uint32_t height)
+{
+	MCGIntegerRectangle t_rect;
+	t_rect.origin.x = x;
+	t_rect.origin.y = y;
+	t_rect.size.width = width;
+	t_rect.size.height = height;
+	
+	return t_rect;
+}
+
+inline bool MCGIntegerRectangleIsEmpty(const MCGIntegerRectangle &p_rect)
+{
+	return p_rect.size.width == 0 || p_rect.size.height == 0;
+}
+
+MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &rect_1, const MCGIntegerRectangle &rect_2);
+
+inline MCGRectangle MCGIntegerRectangleToMCGRectangle(const MCGIntegerRectangle &p_rect)
+{
+	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+MCGIntegerRectangle MCGRectangleGetBounds(const MCGRectangle &p_rect);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -527,6 +623,7 @@ bool MCGImageCreateWithData(const void *bytes, uindex_t byte_count, MCGImageRef&
 bool MCGImageCreateWithFilename(const char *filename, MCGImageRef& r_image);
 
 bool MCGImageGetRaster(MCGImageRef image, MCGRaster &r_raster);
+bool MCGImageGetPixel(MCGImageRef image, uint32_t x, uint32_t y, uint32_t &r_pixel);
 
 MCGImageRef MCGImageRetain(MCGImageRef image);
 void MCGImageRelease(MCGImageRef image);
@@ -539,6 +636,7 @@ int32_t MCGImageGetHeight(MCGImageRef image);
 MCGSize MCImageGetSize(MCGImageRef image);
 
 bool MCGImageIsOpaque(MCGImageRef image);
+bool MCGImageHasPartialTransparency(MCGImageRef image);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -629,6 +727,11 @@ void MCGContextSetClipToRect(MCGContextRef context, MCGRectangle rect);
 MCGRectangle MCGContextGetClipBounds(MCGContextRef context);
 MCGRectangle MCGContextGetDeviceClipBounds(MCGContextRef context);
 
+void MCGContextSetClipToDeviceRegion(MCGContextRef self, MCGRegionRef p_region);
+void MCGContextClipToDeviceRegion(MCGContextRef self, MCGRegionRef p_region);
+void MCGContextSetClipToRegion(MCGContextRef self, MCGRegionRef p_region);
+void MCGContextClipToRegion(MCGContextRef self, MCGRegionRef p_region);
+
 // Fill attributes
 void MCGContextSetFillRule(MCGContextRef context, MCGFillRule rule);
 void MCGContextSetFillOpacity(MCGContextRef context, MCGFloat opacity);
@@ -711,6 +814,7 @@ void MCGContextSimplify(MCGContextRef context);
 
 void MCGContextDrawPixels(MCGContextRef context, const MCGRaster& raster, MCGRectangle dst_rect, MCGImageFilter filter);
 void MCGContextDrawImage(MCGContextRef context, MCGImageRef image, MCGRectangle dst_rect, MCGImageFilter filter);
+void MCGContextDrawImageWithCenter(MCGContextRef context, MCGImageRef image, MCGRectangle image_center, MCGRectangle dst_rect, MCGImageFilter filter);
 void MCGContextDrawRectOfImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_src, MCGRectangle p_dst, MCGImageFilter p_filter);
 void MCGContextDrawDeviceMask(MCGContextRef context, MCGMaskRef mask, int32_t tx, int32_t ty);
 
@@ -755,9 +859,34 @@ MCGAffineTransform MCGAffineTransformTranslate(const MCGAffineTransform& transfo
 MCGAffineTransform MCGAffineTransformScale(const MCGAffineTransform& transform, MCGFloat xscale, MCGFloat yscale);
 MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& transform);
 
+// IM-2014-06-11: [[ Bug 12557 ]] Returns transform that would convert rectangle a to rectangle b by scaling + translating
+MCGAffineTransform MCGAffineTransformFromRectangles(const MCGRectangle &p_a, const MCGRectangle &p_b);
+
 MCGPoint MCGPointApplyAffineTransform(const MCGPoint& p_point, const MCGAffineTransform& p_transform);
 MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const MCGAffineTransform& p_transform);
 MCGSize MCGSizeApplyAffineTransform(const MCGSize& p_size, const MCGAffineTransform& p_transform);
+
+static inline bool MCGAffineTransformHasTranslation(const MCGAffineTransform &p_transform)
+{
+	return p_transform.tx != 0.0 || p_transform.ty != 0.0;
+}
+
+static inline bool MCGAffineTransformHasScale(const MCGAffineTransform &p_transform)
+{
+	return p_transform.a != 1.0 || p_transform.d != 1.0;
+}
+
+static inline bool MCGAffineTransformHasSkew(const MCGAffineTransform &p_transform)
+{
+	return p_transform.b != 0.0 || p_transform.c != 0.0;
+}
+
+static inline bool MCGAffineTransformHasTranslationOnly(const MCGAffineTransform &p_transform)
+{
+	return !(MCGAffineTransformHasScale(p_transform) || MCGAffineTransformHasSkew(p_transform));
+}
+
+//////////
 
 static inline bool MCGAffineTransformIsEqual(const MCGAffineTransform &p_left, const MCGAffineTransform &p_right)
 {
@@ -766,13 +895,54 @@ static inline bool MCGAffineTransformIsEqual(const MCGAffineTransform &p_left, c
 
 static inline bool MCGAffineTransformIsRectangular(const MCGAffineTransform &p_transform)
 {
-	return p_transform.b == 0.0 && p_transform.c == 0.0;
+	return !MCGAffineTransformHasSkew(p_transform);
 }
 
 static inline bool MCGAffineTransformIsIdentity(const MCGAffineTransform &p_transform)
 {
 	return p_transform.a == 1.0 && p_transform.b == 0.0 && p_transform.c == 0.0 && p_transform.d == 1.0 && p_transform.tx == 0.0 && p_transform.ty == 0.0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCGIntegerRectangle MCGIntegerRectangleGetTransformedBounds(const MCGIntegerRectangle &p_rect, const MCGAffineTransform &p_transform);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Regions
+
+extern bool MCGRegionCreate(MCGRegionRef &r_region);
+extern void MCGRegionDestroy(MCGRegionRef p_region);
+
+extern bool MCGRegionIsEmpty(MCGRegionRef p_region);
+extern bool MCGRegionIsRect(MCGRegionRef p_region);
+extern bool MCGRegionIsComplex(MCGRegionRef p_region);
+
+extern MCGIntegerRectangle MCGRegionGetBounds(MCGRegionRef p_region);
+
+extern bool MCGRegionSetEmpty(MCGRegionRef p_region);
+extern bool MCGRegionSetRect(MCGRegionRef p_region, const MCGIntegerRectangle &p_rect);
+extern bool MCGRegionSetRegion(MCGRegionRef p_region, MCGRegionRef p_other);
+
+extern bool MCGRegionIntersectsRect(MCGRegionRef p_region, const MCGIntegerRectangle &p_rect);
+extern bool MCGRegionContainsRect(MCGRegionRef p_region, const MCGIntegerRectangle &p_rect);
+
+extern bool MCGRegionIntersectsRegion(MCGRegionRef p_region, MCGRegionRef p_other);
+extern bool MCGRegionContainsRegion(MCGRegionRef p_region, MCGRegionRef p_other);
+
+extern bool MCGRegionAddRect(MCGRegionRef p_region, const MCGIntegerRectangle &p_rect);
+extern bool MCGRegionAddRegion(MCGRegionRef p_region, MCGRegionRef p_other);
+
+extern bool MCGRegionIntersectRect(MCGRegionRef p_region, const MCGIntegerRectangle &p_rect);
+extern bool MCGRegionIntersectRegion(MCGRegionRef p_region, MCGRegionRef p_other);
+
+extern bool MCGRegionTranslate(MCGRegionRef p_region, int32_t p_dx, int32_t p_dy);
+
+typedef bool (*MCGRegionIterateCallback)(void *p_context, const MCGIntegerRectangle &p_rect);
+extern bool MCGRegionIterate(MCGRegionRef p_region, MCGRegionIterateCallback p_callback, void *p_context);
+
+extern bool MCGRegionCopy(MCGRegionRef p_region, MCGRegionRef &r_copy);
+extern bool MCGRegionCopyWithTransform(MCGRegionRef p_region, const MCGAffineTransform &p_transform, MCGRegionRef &r_copy);
 
 ////////////////////////////////////////////////////////////////////////////////
 

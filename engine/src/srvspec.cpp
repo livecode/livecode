@@ -37,6 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "srvdebug.h"
 #include "srvmain.h"
 
+#include "mcssl.h"
+
 #include <signal.h>
 
 #define CURL_STATICLIB
@@ -50,6 +52,7 @@ uint32_t g_current_background_colour = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 extern void MCS_common_init(void);
 
 extern MCSystemInterface *MCServerCreatePosixSystem(void);
@@ -58,7 +61,7 @@ extern MCSystemInterface *MCServerCreateWindowsSystem(void);
 
 extern "C" char *__cxa_demangle(const char *, char *, size_t *, int*);
 
-#ifndef _LINUX_SERVER
+#ifdef _WINDOWS_SERVER
 static char *strndup(const char *s, uint32_t n)
 {
 	char *r;
@@ -221,10 +224,13 @@ void MCS_init(void)
 
 	MCS_common_init();
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef const char *(*MCUrlExecuteCallback)(void *state, CURL *curl_handle);
+
+extern char *strndup(const char *, size_t);
 
 static bool url_build_header_list(const char *p_list, curl_slist*& r_headers)
 {
@@ -281,11 +287,19 @@ static bool url_build_header_list(const char *p_list, curl_slist*& r_headers)
 
 static size_t url_write_callback(void *p_buffer, size_t p_size, size_t p_count, void *p_context)
 {
-	MCString t_string((char *)p_buffer, p_size * p_count);
-	MCExecPoint ep;
-	ep . setsvalue(t_string);
-	MCurlresult -> append(ep);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_buffer, p_size * p_count, &t_string);
+	MCExecContext ctxt;
+	MCurlresult -> set(ctxt, *t_string, kMCVariableSetAfter);
 	return p_count;
+}
+
+// IM-2014-07-28: [[ Bug 12822 ]] Setup CURL ssl certificates using shared loading function.
+static CURLcode _set_ssl_certificates_callback(CURL *p_curl, void *p_ssl_ctx, void *p_context)
+{
+	/* UNCHECKED */ MCSSLContextLoadCertificates((SSL_CTX*)p_ssl_ctx, nil);
+	
+	return CURLE_OK;
 }
 
 static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void *p_state, MCStringRef& r_error)
@@ -334,9 +348,11 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 	
 	if (t_error == NULL && t_is_https)
 	{
+		// IM-2014-07-28: [[ Bug 12822 ]] Override default ssl certificate loading.
 		if (curl_easy_setopt(t_url_handle, CURLOPT_SSL_VERIFYPEER, 1) != CURLE_OK ||
 			curl_easy_setopt(t_url_handle, CURLOPT_SSL_VERIFYHOST, 2) != CURLE_OK ||
-			(MCsslcertificates != NULL && curl_easy_setopt(t_url_handle, CURLOPT_CAINFO, MCsslcertificates) != CURLE_OK))
+-			curl_easy_setopt(t_url_handle, CURLOPT_CAINFO, nil) != CURLE_OK ||
+			curl_easy_setopt(t_url_handle, CURLOPT_SSL_CTX_FUNCTION, _set_ssl_certificates_callback) != CURLE_OK)
 			t_error = "couldn't configure ssl";
 	}
 
@@ -426,7 +442,7 @@ void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(MCStringGetOldString(*t_error));
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
@@ -477,7 +493,7 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(MCStringGetOldString(*t_error));
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
@@ -524,7 +540,7 @@ static const char *url_execute_upload(void *p_state, CURL *p_curl)
 	return t_error;
 }
 
-void MCS_putintourl(MCObject *p_target, const MCString& p_data, MCStringRef p_url)
+void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 {
 	MCAutoStringRef t_error;
 		
@@ -535,16 +551,14 @@ void MCS_putintourl(MCObject *p_target, const MCString& p_data, MCStringRef p_ur
 	}
 	
 	if (MCStringIsEmpty(*t_error))
-	{
-		MCString t_data;
-		t_data = p_data;
-		url_execute(p_url, url_execute_upload, (void *)&t_data, &t_error);
+    {
+        url_execute(p_url, url_execute_upload, (void *)MCDataGetBytePtr(p_data), &t_error);
 	}
 	
 	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(MCStringGetOldString(*t_error));
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
@@ -607,7 +621,7 @@ void MCS_deleteurl(MCObject *p_target, MCStringRef p_url)
 	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(MCStringGetOldString(*t_error));
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
@@ -638,23 +652,23 @@ bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data_ref)
 	case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
 	case kMCSPutAfterMessage:
-		MCServerPutOutput(p_data);
+		MCServerPutOutput(p_data_ref);
 		break;
 			
 	case kMCSPutHeader:
-		MCServerPutHeader(p_data, false);
+		MCServerPutHeader(p_data_ref, false);
 		break;
 
 	case kMCSPutNewHeader:
-		MCServerPutHeader(p_data, true);
+		MCServerPutHeader(p_data_ref, true);
 		break;
 
 	case kMCSPutContent:
-		MCServerPutContent(p_data);
+		MCServerPutContent(p_data_ref);
 		break;
 
 	case kMCSPutMarkup:
-		MCServerPutMarkup(p_data);
+		MCServerPutMarkup(p_data_ref);
 		break;
 			
 	default:
@@ -782,14 +796,13 @@ bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_
 }
 
 // MERG-2013-08-18: Stubs for colorDialogColors.
-void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+void MCA_setcolordialogcolors(MCColor* p_list, uindex_t p_count)
 {
     
 }
 
 void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
 {
-	p_ep.clear();
 }
 
 

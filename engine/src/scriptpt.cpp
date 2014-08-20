@@ -318,6 +318,8 @@ MCNameRef MCScriptPoint::gettoken_nameref(void)
 	if (MCNameIsEmpty(token_nameref))
     {
         MCAutoStringRef t_string_token;
+        if (token_nameref != nil)
+            MCNameDelete(token_nameref);
         /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)token . getstring(), (token . getlength() * 2), kMCStringEncodingUTF16, false, &t_string_token);
 		/* UNCHECKED */ MCNameCreate(*t_string_token, token_nameref);
     }
@@ -412,9 +414,9 @@ codepoint_t MCScriptPoint::getcodepointatindex(uindex_t p_index)
 {
     uindex_t t_index = 0;
     while (p_index--)
-        MCUnicodeCodepointAdvance((curptr + t_index), endptr - curptr - t_index, t_index);
+        MCUnicodeCodepointAdvance(curptr, endptr - curptr - t_index, t_index);
     
-	return MCUnicodeCodepointAdvance((curptr + t_index), endptr - curptr - t_index, t_index);
+    return MCUnicodeCodepointAdvance(curptr, endptr - curptr - t_index, t_index);
 }
 
 void MCScriptPoint::setcurptr(const unichar_t *ptr)

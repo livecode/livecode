@@ -34,17 +34,17 @@ class MCLine : public MCDLlist
 	MCBlock *lastblock;
     MCSegment *firstsegment;
     MCSegment *lastsegment;
-	uint2 width;
+	coord_t width;
 	uint2 ascent;
 	uint2 descent;
-	uint2 dirtywidth;
+	coord_t dirtywidth;
     
     // Offset at which to start drawing segments (for whole-line alignment)
     int16_t m_offset;
     
     // Dirty hack
     friend class MCSegment;
-    
+
 public:
 	MCLine(MCParagraph *paragraph);
 	~MCLine();
@@ -57,6 +57,7 @@ public:
 	uint2 getdirtywidth();
 	void makedirty();
 	void clean();
+	void getindex(uint2 &i, uint2 &l);
 	uint2 getwidth();
 	uint2 getheight();
 	uint2 getascent();
@@ -81,10 +82,10 @@ public:
 	void GetRange(findex_t &r_index, findex_t &r_length);
 	findex_t GetOffset();
 	findex_t GetLength();
-	findex_t GetCursorIndex(int2 x, Boolean chunk, bool forward);
-	uint2 GetCursorXPrimary(findex_t i, bool forward);
-    uint2 GetCursorXSecondary(findex_t i, bool forward);
-    uint2 GetCursorXHelper(findex_t i, bool moving_forward);
+	findex_t GetCursorIndex(coord_t x, Boolean chunk, bool forward);
+	coord_t GetCursorXPrimary(findex_t i, bool forward);
+    coord_t GetCursorXSecondary(findex_t i, bool forward);
+    coord_t GetCursorXHelper(findex_t i, bool moving_forward);
 	
     ////////// Layout
     
@@ -103,6 +104,16 @@ public:
     int16_t GetLineOffset() const
     {
         return m_offset;
+    }
+    
+    MCSegment *GetFirstSegment() const
+    {
+        return firstsegment;
+    }
+    
+    MCSegment *GetLastSegment() const
+    {
+        return lastsegment;
     }
     
 	//////////

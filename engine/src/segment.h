@@ -54,6 +54,10 @@ private:
     MCBlock *m_FirstBlock;
     MCBlock *m_LastBlock;
     
+    // First and last blocks in the visual order
+    MCBlock *m_FirstVisualBlock;
+    MCBlock *m_LastVisualBlock;
+    
     // Boundaries within the line of this segment
     int16_t m_LeftEdge;     // Also serves as x coordinate
     int16_t m_RightEdge;
@@ -61,7 +65,10 @@ private:
     int16_t m_BottomEdge;
     
     // Width of the contents of this segment
-    uint16_t m_ContentWidth;
+    coord_t m_ContentWidth;
+    
+    // SN-2014-08-14: [[ Bug 13106 ]] m_Padding member added
+    uint16_t m_Padding;
     
     // Horizontal and vertical alignment of the text within this segment
     uint8_t m_HAlign;
@@ -85,6 +92,16 @@ public:
     {
         return m_LastBlock;
     }
+    
+    MCBlock* GetFirstVisualBlock() const
+    {
+        return m_FirstVisualBlock;
+    }
+    MCBlock* GetLastVisualBlock() const
+    {
+        return m_LastVisualBlock;
+    }
+    
     void SetParent(MCLine *parent)
     {
         m_Parent = parent;
@@ -101,6 +118,13 @@ public:
         m_TopEdge = p_top;
         m_BottomEdge = p_bottom;
     }
+    
+    // SN-2014-08-14: [[ Bug 13106 ]] m_Padding member added to the Segment
+    coord_t GetPadding() const
+    {
+        return m_Padding;
+    }
+    
     int16_t GetLeft() const
     {
         return m_LeftEdge;
@@ -121,13 +145,18 @@ public:
     {
         return m_RightEdge - m_LeftEdge;
     }
+    // SN-2014-08-14: [[ Bug 13106 ]] Returns the width inside the cell, padding included
+    int16_t GetInnerWidth() const
+    {
+        return m_RightEdge - m_LeftEdge - 2 * m_Padding;
+    }
     int16_t GetHeight() const
     {
         return m_BottomEdge - m_TopEdge;
     }
 
     // Returns the length of the contents (if rendered as a single line)
-    int16_t GetContentLength();
+    coord_t GetContentLength();
     
     // Returns the height of the contents (if rendered as a single line)
     int16_t GetContentHeight() const;
@@ -135,7 +164,7 @@ public:
     // Does block fitting within the segment; using the given width, as many
     // blocks as possible will be retained by the segment and those that do not
     // fit will be returned in a new line. If all fit, NULL is returned.
-    MCLine *Fit(int16_t p_available_width);
+    MCLine *Fit(coord_t p_available_width);
     
     // Horizontal and vertical alignment
     void SetHorizontalAlignment(uint8_t p_halign)
@@ -156,13 +185,15 @@ public:
     }
     
     // Draws the contents of the segment
-    void Draw(MCDC *dc, int16_t line_origin_x, int16_t line_origin_y, findex_t si, findex_t ei, MCStringRef p_text, uint16_t p_style);
+    void Draw(MCDC *dc, coord_t line_origin_x, int16_t line_origin_y, findex_t si, findex_t ei, MCStringRef p_text, uint16_t p_style);
     
     // Arranges the blocks of this segment into visual order for display
     void ResolveDisplayOrder();
     
     // Returns the offset used for cursor positioning within the segment
-    int16_t GetCursorOffset();
+    coord_t GetLeftEdge();
+    // SN-2014-08-11: [[ Bug 13124 ]] Returns the most on the right position within the segment
+    coord_t GetRightEdge();
     
     // Linked list management
     MCSegment *next()

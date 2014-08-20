@@ -1,0 +1,1 @@
+# Stack gets corrupted after removing it from memory

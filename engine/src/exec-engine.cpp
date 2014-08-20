@@ -152,6 +152,7 @@ MC_EXEC_DEFINE_GET_METHOD(Engine, RecursionLimit, 1)
 MC_EXEC_DEFINE_SET_METHOD(Engine, RecursionLimit, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, Address, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, StacksInUse, 1)
+MC_EXEC_DEFINE_GET_METHOD(Engine, EditionType, 1)
 
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, ValueAsObject, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, OwnerAsObject, 2)
@@ -729,12 +730,25 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
         else if (p_where == PT_AFTER)
             p_var . mark . start = p_var . mark . finish;
         
-        if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeString)
+        // AL-2014-06-12: [[ Bug 12195 ]] If either the mark or the value is non-data, then convert to string.
+        //  Otherwise we get data loss for 'put <unicode string> after byte <n> of tVar'
+        if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData &&
+            MCValueGetTypeCode(p_value) == kMCValueTypeCodeData)
         {
-            MCAutoStringRef t_string;
-            if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
-                return;
-            
+            if (p_var . mark . changed)
+            {
+                MCAutoDataRef t_data;
+                if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
+                    return;
+                
+                /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), (MCDataRef)p_value);
+                p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
+            }
+            else
+                p_var . variable -> replace(ctxt, (MCDataRef)p_value, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+        }
+        else
+        {
             MCAutoStringRef t_value_string;
             if (!ctxt . ConvertToString(p_value, &t_value_string))
             {
@@ -742,24 +756,17 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 return;
             }
             
-            /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
-            p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
-        }
-        else
-        {
-            MCAutoDataRef t_data;
-            if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
-                return;
-            
-            MCAutoDataRef t_value_data;
-            if (!ctxt . ConvertToData(p_value, &t_value_data))
+            if (p_var . mark . changed)
             {
-                ctxt . Throw();
-                return;
-            }
+                MCAutoStringRef t_string;
+                if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
+                    return;
             
-            /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_data);
-            p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
+                /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
+                p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
+            }
+            else
+                p_var . variable -> replace(ctxt, *t_value_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
         }
         MCValueRelease(p_var . mark . text);
 	}
@@ -781,50 +788,19 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
 	}
 	else
     {
-        if (p_where == PT_BEFORE)
-            p_var . mark . finish = p_var . mark . start;
-        else if (p_where == PT_AFTER)
-            p_var . mark . start = p_var . mark . finish;
+        if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData &&
+            p_value . type == kMCExecValueTypeDataRef)
+        {
+            MCEngineExecPutIntoVariable(ctxt, p_value . dataref_value, p_where, p_var);
+            return;
+        }
         
-        if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData)
-        {
-            MCAutoDataRef t_value_data;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDataRef, &(&t_value_data));
-            if (ctxt . HasError())
-                return;
-            
-            if (p_var . mark . changed)
-            {            
-                MCAutoDataRef t_data;
-                if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
-                    return;
-            
-                /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_data);
-                p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
-            }
-            else
-                p_var . variable -> replace(ctxt, *t_value_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
-        }
-        else
-        {
-            MCAutoStringRef t_value_string;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value_string));
-            if (ctxt . HasError())
-                return;
-            
-            if (p_var . mark . changed)
-            {
-                MCAutoStringRef t_string;
-                if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
-                    return;
-                
-                /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
-                p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
-            }
-            else
-                p_var . variable -> replace(ctxt, *t_value_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
-        }
-        MCValueRelease(p_var . mark . text);
+        MCAutoStringRef t_value_string;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value_string));
+        if (ctxt . HasError())
+            return;
+        
+        MCEngineExecPutIntoVariable(ctxt, *t_value_string, p_where, p_var);
     }
 }
 
@@ -1286,6 +1262,8 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
         {
             while (t_offset < t_length && MCStringGetCharAtIndex(p_script, ++t_offset) != '"')
                 ;
+            // AL-2014-05-28: [[ Bug 12544 ]] Increment offset past closing quotation mark
+            t_offset++;
         }
         else
             t_offset++;
@@ -1387,8 +1365,14 @@ void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectP
 	default:
 		break;
 	}
-	
-	MCscreen->addmessage(p_target . object, *t_message, MCS_time() + p_delay, t_params);
+    
+    // AL-2014-07-22: [[ Bug 12846 ]] Copy bugfix to refactored code
+    // MW-2014-05-28: [[ Bug 12463 ]] If we cannot add the pending message, then throw an
+    //   error.
+	if (MCscreen->addusermessage(p_target . object, *t_message, MCS_time() + p_delay, t_params))
+        return;
+    
+    ctxt . LegacyThrow(EE_SEND_TOOMANYPENDING, *t_message);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1939,4 +1923,12 @@ void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStri
 void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid)
 {
     MCEngineDoEvalUuid(ctxt, p_namespace_id, p_name, false, r_uuid);
+}
+
+void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
+{
+    if (MCStringCreateWithCString(MClicenseparameters . license_class == kMCLicenseClassCommunity ? "community" : "commercial", r_edition))
+        return;
+    
+    ctxt . Throw();
 }

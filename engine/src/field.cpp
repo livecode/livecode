@@ -42,6 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "context.h"
 #include "redraw.h"
+#include "systhreads.h"
 
 #include "exec.h"
 #include "exec-interface.h"
@@ -121,12 +122,16 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
 	DEFINE_RO_OBJ_PART_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_HILITED_LINES, ItemsOfUInt, MCField, HilitedLines)
-    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFlaggedRanges, MCField, FlaggedRanges)
+    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFieldRanges, MCField, FlaggedRanges)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
     DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
     DEFINE_RO_OBJ_LIST_PROPERTY(P_PAGE_HEIGHTS, LinesOfUInt, MCField, PageHeights)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_PAGE_RANGES, InterfaceFieldRanges, MCField, PageRanges)
 
+    DEFINE_RW_OBJ_NON_EFFECTIVE_OPTIONAL_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCField, TextAlign)
+	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCField, TextAlign)
+    
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_TEXT, String, MCField, Text)
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_UNICODE_TEXT, BinaryString, MCField, UnicodeText)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_PLAIN_TEXT, String, MCField, PlainText)
@@ -141,7 +146,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_CHAR_CHUNK_NON_EFFECTIVE_PROPERTY(P_FORMATTED_STYLED_TEXT, Array, MCField, FormattedStyledText)
 	DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_PROPERTY(P_FORMATTED_STYLED_TEXT, Array, MCField, EffectiveFormattedStyledText)
 
-	DEFINE_RO_OBJ_LINE_CHUNK_PROPERTY(P_CHAR_INDEX, UInt32, MCField, CharIndex)
+    // AL-2014-05-27: [[ Bug 12511 ]] charIndex is a char chunk property
+	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_CHAR_INDEX, UInt32, MCField, CharIndex)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_LINE_INDEX, UInt32, MCField, LineIndex)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_TOP, Int32, MCField, FormattedTop)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_LEFT, Int32, MCField, FormattedLeft)
@@ -155,7 +161,7 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_VISITED, Bool, MCField, Visited)
 	DEFINE_RO_OBJ_CHAR_CHUNK_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
 	DEFINE_RW_OBJ_CHAR_CHUNK_MIXED_PROPERTY(P_FLAGGED, Bool, MCField, Flagged)
-	DEFINE_RW_OBJ_CHAR_CHUNK_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFlaggedRanges, MCField, FlaggedRanges)
+	DEFINE_RW_OBJ_CHAR_CHUNK_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFieldRanges, MCField, FlaggedRanges)
 	DEFINE_RW_OBJ_LINE_CHUNK_MIXED_ENUM_PROPERTY(P_LIST_STYLE, InterfaceListStyle, MCField, ListStyle)
 	DEFINE_RW_OBJ_LINE_CHUNK_MIXED_PROPERTY(P_LIST_DEPTH, OptionalUInt16, MCField, ListDepth)
 	DEFINE_RW_OBJ_LINE_CHUNK_MIXED_PROPERTY(P_LIST_INDENT, OptionalInt16, MCField, ListIndent)
@@ -244,6 +250,9 @@ MCField::MCField()
     cursor_movement = kMCFieldCursorMovementDefault;
     text_direction = kMCTextDirectionAuto;
 	label = MCValueRetain(kMCEmptyString);
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Used to flag if a recompute is required during the next draw.
+    m_recompute = false;
 }
 
 MCField::MCField(const MCField &fref) : MCControl(fref)
@@ -319,6 +328,9 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 	MCValueRetain(fref.label);
 	label = fref.label;
 	state &= ~CS_KFOCUSED;
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Used to flag if a recompute is required during the next draw.
+    m_recompute = false;
 }
 
 MCField::~MCField()
@@ -647,6 +659,10 @@ void MCField::kunfocus()
 				MCactivefield = NULL;
 		}
 	}
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Flag that a recompute is potentially required at the next draw.
+    if (state & CS_SELECTED)
+        m_recompute = false;
 }
 
 Boolean MCField::kdown(MCStringRef p_string, KeySym key)
@@ -740,8 +756,10 @@ Boolean MCField::kdown(MCStringRef p_string, KeySym key)
 		{
 			if (MCStringIsEmpty(p_string))
 				return False;
-
-			getstack()->hidecursor();
+            
+            // MW-2014-04-25: [[ Bug 5545 ]] This method will do the appropriate behavior
+            //   based on platform.
+            MCscreen -> hidecursoruntilmousemoves();
 
 			finsertnew(function, p_string, key);
 		}
@@ -1092,12 +1110,12 @@ Boolean MCField::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCField::mup(uint2 which)
+Boolean MCField::mup(uint2 which, bool p_release)
 {
 	if (!(state & (CS_MFOCUSED | CS_DRAG_TEXT)))
 		return False;
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	state &= ~(CS_MFOCUSED | CS_MOUSEDOWN);
 	if (state & CS_GRAB)
 	{
@@ -1146,7 +1164,9 @@ Boolean MCField::mup(uint2 which)
 			}
 			if (!(state & CS_DRAG_TEXT))
 				if ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL))
-					if (MCU_point_in_rect(rect, mx, my))
+                {
+					if (!p_release && MCU_point_in_rect(rect, mx, my))
+                    {
                         if (flags & F_LIST_BEHAVIOR
                                 && (my - rect.y > (int4)(textheight + topmargin - texty)
                                     || paragraphs == paragraphs->next()
@@ -1155,6 +1175,7 @@ Boolean MCField::mup(uint2 which)
 						else
 						{
 							if (linkstart != NULL)
+                            {
 								if (linkstart->gethilite())
 								{
 									MCBlock *bptr = linkstart;
@@ -1181,14 +1202,18 @@ Boolean MCField::mup(uint2 which)
 								}
 								else
 									linkstart = linkend = NULL;
-							message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
+                            }
+							
+                            message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 						}
+                    }
 					else
 						message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
+                }
 			break;
 		case T_FIELD:
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -1200,27 +1225,27 @@ Boolean MCField::mup(uint2 which)
 	case Button2:
 		if (flags & F_LOCK_TEXT || getstack()->gettool(this) != T_BROWSE)
 		{
-			if (MCU_point_in_rect(rect, mx, my))
+			if (!p_release && MCU_point_in_rect(rect, mx, my))
 				message_with_valueref_args(MCM_mouse_up, MCSTR("2"));
 			else
 				message_with_valueref_args(MCM_mouse_release, MCSTR("2"));
 		}
 		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
 		{
-			MCAutoDataRef t_text;
-			if (MCselectiondata -> Fetch(TRANSFER_TYPE_UNICODE_TEXT, &t_text))
+			MCAutoValueRef t_data;
+			if (MCselectiondata -> Fetch(TRANSFER_TYPE_UNICODE_TEXT, &t_data))
 			{
 				extend = extendwords = False;
 				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
 				setfocus(mx, my);
                 MCAutoStringRef t_text_str;
-                /* UNCHECKED */ MCStringDecode(*t_text, kMCStringEncodingUTF16, false, &t_text_str);
+                /* UNCHECKED */ MCStringDecode((MCDataRef)*t_data, kMCStringEncodingUTF16, false, &t_text_str);
 				typetext(*t_text_str);
 			}
 		}
 		break;
 	case Button3:
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 			message_with_valueref_args(MCM_mouse_up, MCSTR("3"));
 		else
 			message_with_valueref_args(MCM_mouse_release, MCSTR("3"));
@@ -1279,7 +1304,7 @@ Boolean MCField::doubleup(uint2 which)
 		if (sbdoubleup(which, hscrollbar, vscrollbar))
 			return True;
 		if (flags & F_LIST_BEHAVIOR && (flags & F_TOGGLE_HILITE))
-			mup(which);
+			mup(which, false);
 	}
 	return MCControl::doubleup(which);
 }
@@ -1352,6 +1377,10 @@ void MCField::setrect(const MCRectangle &nrect)
     
     if (t_resized)
         do_recompute(true);
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Flag that a recompute is potentially required at the next draw.
+    if (state & CS_SIZE)
+        m_recompute = true;
 }
 
 #ifdef LEGACY_EXEC
@@ -2286,13 +2315,13 @@ void MCField::undo(Ustruct *us)
 		ei = si;
 		if (us->type == UT_DELETE_TEXT)
 		{
-			MCParagraph *pgptr = indextoparagraph(paragraphs, si, ei);
+			pgptr = indextoparagraph(paragraphs, si, ei);
 			pgptr->setselectionindex(si, si, False, False);
 			focusedparagraph = pgptr;
 			if (us->ud.text.data != NULL)
 			{
 				insertparagraph(us->ud.text.data);
-				selectedmark(False, si, ei, False, False);
+				selectedmark(False, si, ei, False);
 				seltext(us->ud.text.index, si, True);
 				us->type = UT_REPLACE_TEXT;
 			}
@@ -2314,7 +2343,7 @@ void MCField::undo(Ustruct *us)
 		}
 		else
 		{
-			MCParagraph *pgptr = us->ud.text.data;
+			pgptr = us->ud.text.data;
 			do
 			{
 				ei += pgptr->gettextlengthcr();
@@ -2503,7 +2532,7 @@ void MCField::resetfontindex(MCStack *oldstack)
 		fdata = tptr;
 		while (fptr != NULL)
 		{
-			MCCdata *tptr = fptr->remove(fptr);
+			tptr = fptr->remove(fptr);
 			delete tptr;
 		}
 	}
@@ -2895,6 +2924,8 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
         si = 0;
         /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
         ++t_cu_range.length; // implicit paragraph break
+        // SN-2014-05-20 [[ Bug 12432 ]] Add the paragraph break to the number of chars
+        ++t_char_range.length; // implicit paragraph break
 
         t_count += t_char_range.length;
         
@@ -3055,19 +3086,32 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	if ((state & CS_SIZE || state & CS_MOVE) && flags & F_SCROLLBAR)
 		setsbrects();
 
-	if (state & CS_SIZE)
-	{
-		resetparagraphs();
-		do_recompute(true);
-	}
-	else if (state & CS_SELECTED && (texty != 0 || textx != 0))
-	{
-		resetparagraphs();
-		do_recompute(false);
-	}
+    // MM-2014-08-11: [[ Bug 13149 ]] Make sure only the first thread calls do_recompute.
+    if (m_recompute)
+    {
+        // MM-2014-08-05: [[ Bug 13012 ]] Put locks around recompute to prevent threading issues.
+        MCThreadMutexLock(MCfieldmutex);
+        if (m_recompute)
+        {
+            if (state & CS_SIZE)
+            {
+                resetparagraphs();
+                do_recompute(true);
+            }
+            else if (state & CS_SELECTED && (texty != 0 || textx != 0))
+            {
+                resetparagraphs();
+                do_recompute(false);
+            }
+            m_recompute = false;
+        }
+        MCThreadMutexUnlock(MCfieldmutex);
+    }
 
 	MCRectangle frect = getfrect();
-	dc->setclip(dirty);
+	
+	dc->save();
+	dc->cliprect(dirty);
 	
 	MCRectangle trect = frect;
 	if (flags & F_SHOW_BORDER && borderwidth)
@@ -3096,7 +3140,8 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		else
 			drawborder(dc, trect, borderwidth);
 	}
-	dc->clearclip();
+	
+	dc->restore();
 
 	// MW-2009-06-14: If the field is opaque, then render the contents with that
 	//   marked.
@@ -3108,11 +3153,9 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		dc -> changeopaque(t_was_opaque);
 
 	frect = getfrect();
-	dc->setclip(dirty);
 	if (flags & F_SHADOW)
 	{
-		MCRectangle trect = rect;
-		drawshadow(dc, trect, shadowoffset);
+		drawshadow(dc, rect, shadowoffset);
 	}
 
 	if (state & CS_KFOCUSED && borderwidth != 0

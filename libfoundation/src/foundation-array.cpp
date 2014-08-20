@@ -46,6 +46,9 @@ static bool __MCArrayRehash(__MCArray *self, index_t by);
 // Returns the number of entries in the key-value table for the array.
 static uindex_t __MCArrayGetTableSize(__MCArray *self);
 
+// Returns the maximum number of entries for a given array size that minimises rehashing.
+static uindex_t __MCArrayGetTableCapacity(__MCArray *self);
+
 // Looks for a key-value slot in the array with the given key. If the key was
 // found 'true' is returned; otherwise 'false'. On return 'slot' will be the
 // slot in which the key is found, could be placed, or UINDEX_MAX if there is
@@ -371,7 +374,8 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 	}
 	else
 	{
-		if (t_slot == UINDEX_MAX)
+        // AL-2014-07-15: [[ Bug 12532 ]] Rehash according to hash table capacities rather than sizes
+		if (t_slot == UINDEX_MAX || self -> key_value_count >= __MCArrayGetTableCapacity(self))
 		{
 			if (!__MCArrayRehash(self, 1))
 				return false;
@@ -636,6 +640,11 @@ static uindex_t __MCArrayGetTableSize(__MCArray *self)
 	return __kMCValueHashTableSizes[self -> flags & kMCArrayFlagCapacityIndexMask];
 }
 
+static uindex_t __MCArrayGetTableCapacity(__MCArray *self)
+{
+	return __kMCValueHashTableCapacities[self -> flags & kMCArrayFlagCapacityIndexMask];
+}
+
 static bool __MCArrayIsIndirect(__MCArray *self)
 {
 	return (self -> flags & kMCArrayFlagIsIndirect) != 0;
@@ -825,6 +834,7 @@ static bool __MCArrayRehash(__MCArray *self, index_t p_by)
 		uindex_t t_new_capacity_req;
 		t_new_capacity_req = self -> key_value_count + p_by;
 		for(t_new_capacity_idx = 0; t_new_capacity_idx < 64; t_new_capacity_idx++)
+            // AL-2014-07-15: [[ Bug 12532 ]] Rehash according to hash table capacities rather than sizes
 			if (t_new_capacity_req <= __kMCValueHashTableCapacities[t_new_capacity_idx])
 				break;
 	}

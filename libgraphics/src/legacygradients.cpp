@@ -1,18 +1,18 @@
 /* Copyright (C) 2003-2013 Runtime Revolution Ltd.
-
-This file is part of LiveCode.
-
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
-
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
-
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphics.h"
 #include "graphics-internal.h"
@@ -775,19 +775,14 @@ template<MCGradientFillKind x_type> static void MCGradientFillBilinearCombine(MC
 
 MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, MCGRectangle &r_clip)
 {
-	static bool s_gradient_affine_combiner_initialised = false;
-	static MCGradientAffineCombiner s_gradient_affine_combiner;
-	
-	if (!s_gradient_affine_combiner_initialised)
-	{
-		s_gradient_affine_combiner.begin = gradient_combiner_begin;
-		s_gradient_affine_combiner.advance = gradient_affine_combiner_advance;
-		s_gradient_affine_combiner.combine = NULL;
-		s_gradient_affine_combiner_initialised = true;
-	}
-	else
-		MCMemoryDeallocate(s_gradient_affine_combiner . ramp);
-	
+    // MM-2014-07-31: [[ ThreadedRendering ]] Removed use of single static combiner to make things thread safe.
+	MCGradientAffineCombiner *t_combiner;
+	t_combiner = new MCGradientAffineCombiner;
+	MCMemoryClear(t_combiner, sizeof(MCGradientAffineCombiner));
+	t_combiner -> begin = gradient_combiner_begin;
+	t_combiner -> advance = gradient_affine_combiner_advance;
+	t_combiner -> combine = NULL;
+    
 	int4 vx = (int4) p_gradient_ref -> transform . a;
 	int4 vy = (int4) p_gradient_ref -> transform . b;
 	int4 wx = (int4) p_gradient_ref -> transform . c;
@@ -837,112 +832,106 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 			else
 				t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);
 		}
-		
-// MM-2013-12-04: [[ Bug 11528 ]] Tweak byte order for Android.
-#if defined(ANDROID)
-		uint8_t t_red, t_green, t_blue, t_alpha;
-        MCGPixelUnpack(kMCGPixelFormatARGB, t_ramp[i] . color, t_red, t_green, t_blue, t_alpha);
-        t_ramp[i] . hw_color = MCGPixelPack(kMCGPixelFormatABGR, t_red, t_green, t_blue, t_alpha);
-#elif defined(TARGET_SUBPLATFORM_IPHONE)
+
+        // AL-2014-07-21: [[ Bug 12867 ]] Ensure RBGA values are always packed in native format
+        // MM-2013-12-04: [[ Bug 11528 ]] Tweak byte order for Android.
         uint8_t t_red, t_green, t_blue, t_alpha;
 		MCGPixelUnpack(kMCGPixelFormatBGRA, t_ramp[i] . color, t_red, t_green, t_blue, t_alpha);
         t_ramp[i] . hw_color = MCGPixelPackNative(t_red, t_green, t_blue, t_alpha);
-#else
-		t_ramp[i] . hw_color = t_ramp[i] . color;
-#endif
-        
 	}
 	
 	// MW-2013-10-26: [[ Bug 11315 ]] Index shuold be i - 1 (otherwise memory overrun occurs!).
 	t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);		
 	
-	s_gradient_affine_combiner . origin . x = (int2) p_gradient_ref -> transform . tx;
-	s_gradient_affine_combiner . origin . y = (int2) p_gradient_ref -> transform . ty;	
-	s_gradient_affine_combiner . ramp = t_ramp;	
-	s_gradient_affine_combiner . ramp_length = p_gradient_ref -> ramp_length;
-	s_gradient_affine_combiner . mirror = p_gradient_ref -> mirror;
-	s_gradient_affine_combiner . repeat = p_gradient_ref -> repeats;
-	s_gradient_affine_combiner . wrap = p_gradient_ref -> wrap;	
+	t_combiner -> origin . x = (int2) p_gradient_ref -> transform . tx;
+	t_combiner -> origin . y = (int2) p_gradient_ref -> transform . ty;	
+	t_combiner -> ramp = t_ramp;	
+	t_combiner -> ramp_length = p_gradient_ref -> ramp_length;
+	t_combiner -> mirror = p_gradient_ref -> mirror;
+	t_combiner -> repeat = p_gradient_ref -> repeats;
+	t_combiner -> wrap = p_gradient_ref -> wrap;	
 	
 	if (d != 0)
 	{
-		s_gradient_affine_combiner.x_coef_a = STOP_INT_MAX * -wy / d;
-		s_gradient_affine_combiner.x_coef_b = STOP_INT_MAX * wx / d;
-		s_gradient_affine_combiner.x_inc = (uint4) (STOP_INT_MAX * (int64_t)(s_gradient_affine_combiner . origin . x * wy + ((int32_t) r_clip . origin .y - s_gradient_affine_combiner . origin . y) * wx) / d);
+		t_combiner -> x_coef_a = STOP_INT_MAX * -wy / d;
+		t_combiner -> x_coef_b = STOP_INT_MAX * wx / d;
+		t_combiner -> x_inc = (uint4) (STOP_INT_MAX * (int64_t)(t_combiner -> origin . x * wy + ((int32_t) r_clip . origin .y - t_combiner -> origin . y) * wx) / d);
 		
-		s_gradient_affine_combiner.y_coef_a = STOP_INT_MAX * vy / d;
-		s_gradient_affine_combiner.y_coef_b = STOP_INT_MAX * -vx / d;
-		s_gradient_affine_combiner.y_inc = (uint4) (STOP_INT_MAX * -(int64_t)(s_gradient_affine_combiner . origin . x * vy + ((int32_t) r_clip . origin .y - s_gradient_affine_combiner . origin . y) * vx) / d);
+		t_combiner -> y_coef_a = STOP_INT_MAX * vy / d;
+		t_combiner -> y_coef_b = STOP_INT_MAX * -vx / d;
+		t_combiner -> y_inc = (uint4) (STOP_INT_MAX * -(int64_t)(t_combiner -> origin . x * vy + ((int32_t) r_clip . origin .y - t_combiner -> origin . y) * vx) / d);
 	}
-
+    
     // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 	switch (p_gradient_ref -> filter)
 	{
 		case kMCGImageFilterNone:
 		{
-			s_gradient_affine_combiner.end = gradient_combiner_end;
-			s_gradient_affine_combiner.x_inc += (s_gradient_affine_combiner.x_coef_a + s_gradient_affine_combiner.x_coef_b) >> 1;
-			s_gradient_affine_combiner.y_inc += (s_gradient_affine_combiner.y_coef_a + s_gradient_affine_combiner.y_coef_b) >> 1;
+			t_combiner -> end = gradient_combiner_end;
+			t_combiner -> x_inc += (t_combiner -> x_coef_a + t_combiner -> x_coef_b) >> 1;
+			t_combiner -> y_inc += (t_combiner -> y_coef_a + t_combiner -> y_coef_b) >> 1;
 			switch (t_kind)
 			{
 				case kMCGradientKindConical:
-					s_gradient_affine_combiner.combine = MCGradientFillCombine<kMCGradientKindConical>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillCombine<kMCGradientKindConical>;
+					return t_combiner;
 				case kMCGradientKindLinear:
-					s_gradient_affine_combiner.combine = MCGradientFillCombine<kMCGradientKindLinear>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillCombine<kMCGradientKindLinear>;
+					return t_combiner;
 				case kMCGradientKindRadial:
-					s_gradient_affine_combiner.combine = MCGradientFillCombine<kMCGradientKindRadial>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillCombine<kMCGradientKindRadial>;
+					return t_combiner;
 				case kMCGradientKindDiamond:
-					s_gradient_affine_combiner.combine = MCGradientFillCombine<kMCGradientKindDiamond>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillCombine<kMCGradientKindDiamond>;
+					return t_combiner;
 				case kMCGradientKindSpiral:
-					s_gradient_affine_combiner.combine = MCGradientFillCombine<kMCGradientKindSpiral>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillCombine<kMCGradientKindSpiral>;
+					return t_combiner;
 				case kMCGradientKindXY:
-					s_gradient_affine_combiner.combine = MCGradientFillCombine<kMCGradientKindXY>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillCombine<kMCGradientKindXY>;
+					return t_combiner;
 				case kMCGradientKindSqrtXY:
-					s_gradient_affine_combiner.combine = MCGradientFillCombine<kMCGradientKindSqrtXY>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillCombine<kMCGradientKindSqrtXY>;
+					return t_combiner;
 			}
 		}
 		case kMCGImageFilterLow:
 		case kMCGImageFilterMedium:
         case kMCGImageFilterHigh:
 		{
-			s_gradient_affine_combiner.end = gradient_bilinear_affine_combiner_end;
-			s_gradient_affine_combiner.buffer_width = GRADIENT_AA_SCALE * (uint32_t) ceilf(r_clip . size . width);
-			s_gradient_affine_combiner.buffer = new uint4[GRADIENT_AA_SCALE * s_gradient_affine_combiner.buffer_width];
+			t_combiner -> end = gradient_bilinear_affine_combiner_end;
+			t_combiner -> buffer_width = GRADIENT_AA_SCALE * (uint32_t) ceilf(r_clip . size . width);
+			t_combiner -> buffer = new uint4[GRADIENT_AA_SCALE * t_combiner -> buffer_width];
 			
-			s_gradient_affine_combiner.x_inc += (s_gradient_affine_combiner.x_coef_a + s_gradient_affine_combiner.x_coef_b) >> 2;
-			s_gradient_affine_combiner.y_inc += (s_gradient_affine_combiner.y_coef_a + s_gradient_affine_combiner.y_coef_b) >> 2;
+			t_combiner -> x_inc += (t_combiner -> x_coef_a + t_combiner -> x_coef_b) >> 2;
+			t_combiner -> y_inc += (t_combiner -> y_coef_a + t_combiner -> y_coef_b) >> 2;
 			switch (t_kind)
 			{
 				case kMCGradientKindConical:
-					s_gradient_affine_combiner.combine = MCGradientFillBilinearCombine<kMCGradientKindConical>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillBilinearCombine<kMCGradientKindConical>;
+					return t_combiner;
 				case kMCGradientKindLinear:
-					s_gradient_affine_combiner.combine = MCGradientFillBilinearCombine<kMCGradientKindLinear>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillBilinearCombine<kMCGradientKindLinear>;
+					return t_combiner;
 				case kMCGradientKindRadial:
-					s_gradient_affine_combiner.combine = MCGradientFillBilinearCombine<kMCGradientKindRadial>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillBilinearCombine<kMCGradientKindRadial>;
+					return t_combiner;
 				case kMCGradientKindDiamond:
-					s_gradient_affine_combiner.combine = MCGradientFillBilinearCombine<kMCGradientKindDiamond>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillBilinearCombine<kMCGradientKindDiamond>;
+					return t_combiner;
 				case kMCGradientKindSpiral:
-					s_gradient_affine_combiner.combine = MCGradientFillBilinearCombine<kMCGradientKindSpiral>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillBilinearCombine<kMCGradientKindSpiral>;
+					return t_combiner;
 				case kMCGradientKindXY:
-					s_gradient_affine_combiner.combine = MCGradientFillBilinearCombine<kMCGradientKindXY>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillBilinearCombine<kMCGradientKindXY>;
+					return t_combiner;
 				case kMCGradientKindSqrtXY:
-					s_gradient_affine_combiner.combine = MCGradientFillBilinearCombine<kMCGradientKindSqrtXY>;
-					return &s_gradient_affine_combiner;
+					t_combiner -> combine = MCGradientFillBilinearCombine<kMCGradientKindSqrtXY>;
+					return t_combiner;
 				default:
-					delete s_gradient_affine_combiner.buffer;
+					delete t_combiner -> buffer;
+					delete t_combiner -> ramp;
+					delete t_combiner;
 					return NULL;
 			}
 		}
@@ -966,6 +955,12 @@ MCGLegacyGradientShader::~MCGLegacyGradientShader()
 {
 	MCGGradientRelease(m_gradient_ref);
 	MCMemoryDeallocate(m_mask);
+    if (m_gradient_combiner != NULL)
+    {
+        delete m_gradient_combiner -> ramp;
+        delete ((MCGradientAffineCombiner *)m_gradient_combiner) -> buffer;
+        delete m_gradient_combiner;
+    }
 }
 
 bool MCGLegacyGradientShader::setContext(const SkBitmap& p_bitmap, const SkPaint& p_paint, const SkMatrix& p_matrix)

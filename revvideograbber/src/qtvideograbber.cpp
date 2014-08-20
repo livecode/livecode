@@ -18,9 +18,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef _UNICODE
 
 #include <stdlib.h>
+#include "core.h"
 
 #ifdef _MACOSX
 #include <CoreFoundation/CoreFoundation.h>
+#include <Cocoa/Cocoa.h>
 #endif
 
 #include <revolution/external.h>
@@ -47,59 +49,59 @@ struct SettingsRecord
 
 RgnHandle getWindowContentRegion(WindowRef window,RgnHandle contentRegion)
 {
-  Rect portBounds;
-  GetWindowBounds(window, kWindowGlobalPortRgn, &portBounds);
-  RectRgn(contentRegion, &portBounds);
-  return contentRegion;
+    Rect portBounds;
+    GetWindowBounds(window, kWindowGlobalPortRgn, &portBounds);
+    RectRgn(contentRegion, &portBounds);
+    return contentRegion;
 }
 
 static pascal long BorderlessWindowProc(short varCode, WindowRef window,
                                         short message, long param)
 {
 #pragma unused( varCode )
-  switch (message) {
-  case kWindowMsgGetFeatures:
-    *(OptionBits*) param = kWindowCanGetWindowRegion
-      | kWindowDefSupportsColorGrafPort;
-    return 1;
-  case kWindowMsgGetRegion:
-    {
-      GetWindowRegionRec* rgnRec  = (GetWindowRegionRec*) param;
-      switch (rgnRec->regionCode) {
-      case kWindowTitleBarRgn:
-      case kWindowTitleTextRgn:
-      case kWindowCloseBoxRgn:
-      case kWindowZoomBoxRgn:
-      case kWindowDragRgn:
-      case kWindowGrowRgn:
-      case kWindowCollapseBoxRgn:
-	SetEmptyRgn(rgnRec->winRgn);
-        break;
-      case kWindowStructureRgn:
-      case kWindowContentRgn:
-	getWindowContentRegion(window, rgnRec->winRgn);
-	break;
-      case kWindowUpdateRgn:
-	break;
-      default:
-	return errWindowRegionCodeInvalid;
-      }
-      return noErr;
+    switch (message) {
+        case kWindowMsgGetFeatures:
+            *(OptionBits*) param = kWindowCanGetWindowRegion
+            | kWindowDefSupportsColorGrafPort;
+            return 1;
+        case kWindowMsgGetRegion:
+        {
+            GetWindowRegionRec* rgnRec  = (GetWindowRegionRec*) param;
+            switch (rgnRec->regionCode) {
+                case kWindowTitleBarRgn:
+                case kWindowTitleTextRgn:
+                case kWindowCloseBoxRgn:
+                case kWindowZoomBoxRgn:
+                case kWindowDragRgn:
+                case kWindowGrowRgn:
+                case kWindowCollapseBoxRgn:
+                    SetEmptyRgn(rgnRec->winRgn);
+                    break;
+                case kWindowStructureRgn:
+                case kWindowContentRgn:
+                    getWindowContentRegion(window, rgnRec->winRgn);
+                    break;
+                case kWindowUpdateRgn:
+                    break;
+                default:
+                    return errWindowRegionCodeInvalid;
+            }
+            return noErr;
+        }
+        case kWindowMsgHitTest:
+            Point hitPoint;
+            static RgnHandle tempRgn = nil;
+            if (!tempRgn)
+                tempRgn = NewRgn();
+            SetPt(&hitPoint, LoWord(param), HiWord(param));//get the point clicked
+            if (PtInRgn(hitPoint, getWindowContentRegion(window, tempRgn)))
+                return wInContent;
+            else
+                return wNoHit;
+        default:
+            break;
     }
-  case kWindowMsgHitTest:
-    Point hitPoint;
-    static RgnHandle tempRgn = nil;
-    if (!tempRgn)
-      tempRgn = NewRgn();
-    SetPt(&hitPoint, LoWord(param), HiWord(param));//get the point clicked
-    if (PtInRgn(hitPoint, getWindowContentRegion(window, tempRgn)))
-      return wInContent;
-    else
-      return wNoHit;
-  default:
-    break;
-  }
-  return 0;
+    return 0;
 }
 #endif
 
@@ -273,31 +275,40 @@ CQTVideoGrabber::CQTVideoGrabber(HWND whichwindow)
 }
 #else
 
-OSStatus ParentEventHandler(EventHandlerCallRef p_call_chain, EventRef p_event, void *p_context)
+// IM-2014-07-24: [[ Bug 12863 ]] Observer class to monitor changes to parent window size
+@interface com_runrev_livecode_MCQTVideoGrabberWindowObserver : NSObject
 {
-	switch(GetEventKind(p_event))
-	{
-		case kEventWindowHidden:
-		case kEventWindowCollapsing:
-			((CQTVideoGrabber *)p_context) -> Synchronize(false);
-		break;
-		
-		case kEventWindowBoundsChanged:
-		case kEventWindowShown:
-		case kEventWindowExpanded:
-			((CQTVideoGrabber *)p_context) -> Synchronize(true);
-		break;
-
-		case kEventWindowClosed:
-		break;
-	}
-	
-	return eventNotHandledErr; //CallNextEventHandler(p_call_chain, p_event);
+	CQTVideoGrabber *m_video_grabber;
 }
 
+- (id)initWithVideoGrabber:(CQTVideoGrabber *)p_grabber;
+- (void)windowDidResize:(NSNotification *)notification;
+@end
+
+@implementation com_runrev_livecode_MCQTVideoGrabberWindowObserver
+
+- (id) initWithVideoGrabber:(CQTVideoGrabber *)p_grabber
+{
+	self = [self init];
+	if (self == nil)
+		return nil;
+	
+	m_video_grabber = p_grabber;
+}
+
+- (void)windowDidResize:(NSNotification *)notification
+{
+	m_video_grabber->Synchronize(true);
+}
+
+@end
+
+@compatibility_alias MCQTVideoGrabberWindowObserver com_runrev_livecode_MCQTVideoGrabberWindowObserver;
+
 CQTVideoGrabber::CQTVideoGrabber(WindowPtr whichwindow)
-{ 
-	parentwindow = whichwindow;
+{
+    parentwindow = [NSApp windowWithWindowNumber: (uint32_t)whichwindow];
+
 	Rect r;
 	r.top = r.left = 0;
     r.right = 160;
@@ -307,23 +318,19 @@ CQTVideoGrabber::CQTVideoGrabber(WindowPtr whichwindow)
 	  = {kWindowDefProcPtr, {NewWindowDefUPP(BorderlessWindowProc)}};
 	CreateCustomWindow(&customWindowDefSpec, kFloatingWindowClass, kWindowNoActivatesAttribute | kWindowNoShadowAttribute,
 			   &r, &videowindow);
-	
-	static EventTypeSpec s_parent_events[] =
-	{
-		{ kEventClassWindow, kEventWindowBoundsChanged },
-		{ kEventClassWindow, kEventWindowShown },
-		{ kEventClassWindow, kEventWindowHidden },
-		{ kEventClassWindow, kEventWindowClosed },
-		{ kEventClassWindow, kEventWindowExpanded },
-		{ kEventClassWindow, kEventWindowCollapsing }
-	};
 
-	InstallEventHandler(GetWindowEventTarget(parentwindow), (EventHandlerUPP)ParentEventHandler, sizeof(s_parent_events) / sizeof(EventTypeSpec), s_parent_events, this, &m_event_handler);
-	
+    videowindow_cocoa = [[NSWindow alloc] initWithWindowRef: videowindow];
+    
 	destvideobuffer = (GWorldPtr)GetWindowPort(videowindow);
 	buffervideo = False;
 	Init();
 	Synchronize(true);
+    [(NSWindow *)parentwindow addChildWindow: (id)videowindow_cocoa ordered: NSWindowAbove];
+	
+	// IM-2014-07-24: [[ Bug 12863 ]] Add observer to reposition video window when parent size changes
+	m_window_observer = [[MCQTVideoGrabberWindowObserver alloc] initWithVideoGrabber:this];
+	[[NSNotificationCenter defaultCenter] addObserver:(id)m_window_observer selector: @selector(windowDidResize:) name:NSWindowDidResizeNotification object:(NSWindow*)parentwindow];
+	
 	ShowWindow(videowindow);
 }
 #endif
@@ -344,24 +351,21 @@ CQTVideoGrabber::CQTVideoGrabber()
 #ifdef _MACOSX
 void CQTVideoGrabber::Synchronize(bool p_visible)
 {
-	Rect t_parent_bounds;
-	GetWindowBounds(parentwindow, kWindowContentRgn, &t_parent_bounds);
-	
+    NSWindow *t_parent_window;
+    t_parent_window = (NSWindow *)parentwindow;
+    
+    NSRect t_content;
+    t_content = [t_parent_window contentRectForFrameRect: [t_parent_window frame]];
+    
+    int t_height;
+    t_height = [[[NSScreen screens] objectAtIndex: 0] frame] . size . height;
+    
 	Rect t_bounds;
-	t_bounds . left = t_parent_bounds . left + destvideorect . left;
-	t_bounds . top = t_parent_bounds . top + destvideorect . top;
-	t_bounds . right = t_parent_bounds . left + destvideorect . right;
-	t_bounds . bottom = t_parent_bounds . top + destvideorect . bottom;
+	t_bounds . left = t_content . origin . x + destvideorect . left;
+	t_bounds . top = t_height - (t_content . origin . y + t_content . size . height) + destvideorect . top;
+	t_bounds . right = t_content . origin . x + destvideorect . right;
+	t_bounds . bottom = t_height - (t_content . origin . y + t_content . size . height) + destvideorect . bottom;
 	SetWindowBounds(videowindow, kWindowContentRgn, &t_bounds);
-
-	bool t_parent_visible;
-	t_parent_visible = IsWindowVisible(parentwindow) && !IsWindowCollapsed(parentwindow) && p_visible;
-
-	if (t_parent_visible)
-		ShowWindow(videowindow);
-	else
-		HideWindow(videowindow);
-
 }
 #endif
 
@@ -393,7 +397,11 @@ void CQTVideoGrabber::Init()
 		AddError("Can't create video channel");
 		return;
 	}
+#ifdef _MACOSX
+	result = SGNewChannel (videograbber, SGAudioMediaType, &soundchannel);
+#else
 	result = SGNewChannel (videograbber, SoundMediaType, &soundchannel);
+#endif
 	if ((soundchannel != nil) && (result == noErr))
 	{
 		if (soundchannel != nil)
@@ -429,9 +437,12 @@ CQTVideoGrabber::~CQTVideoGrabber()
 		DestroyPortAssociation(destvideobuffer);
 		DestroyWindow(videowindow);
 #else
-		if (m_event_handler != NULL)
-			RemoveEventHandler(m_event_handler);
-		DisposeWindow(videowindow);
+        [(NSWindow *)parentwindow removeChildWindow: (id)videowindow_cocoa];
+		[(NSWindow *)videowindow_cocoa release];
+		
+		// IM-2014-07-24: [[ Bug 12863 ]] Remove and release observer class
+		[[NSNotificationCenter defaultCenter] removeObserver:(id)m_window_observer];
+		[(MCQTVideoGrabberWindowObserver*)m_window_observer release];
 #endif
 	}
 	else 
@@ -696,13 +707,6 @@ void CQTVideoGrabber::SetRect(short left, short top, short right, short bottom)
 	{
 		Synchronize(true);
 	}
-	GrafPtr savedPort;
-	GetPort(&savedPort);
-	Point p;
-	p.h = left;
-	p.v = top;
-	MacSetPort((GrafPtr)GetWindowPort(parentwindow));
-	MacSetPort(savedPort);
 	result = SGSetChannelBounds (videochannel, &videochannelrect);
 	result = SGPause(videograbber,False);
 #endif
@@ -751,14 +755,71 @@ void CQTVideoGrabber::AudioDefaultDialog(void)
 {
 	//short	width, height;
 	ComponentResult	err;
-	SGModalFilterUPP	videograbberModalFilterUPP;
 	// Pause
 	if (videograbber == NULL || (soundchannel == NULL && videochannel == NULL))
 		return;
 	err = SGPause (videograbber, True);
+    
+    // AL-2014-08-14: [[ Bug 12966 ]] Replace deprecated quicktime functions for MacOSX
+#ifdef _MACOSX
+    ComponentInstance ci;
+    OpenADefaultComponent(StandardCompressionType, StandardCompressionSubTypeAudio, &ci);
+    
+    AudioStreamBasicDescription t_description;
+    
+    AudioChannelLayoutTag t_layout_tags[] =
+    {
+        kAudioChannelLayoutTag_UseChannelDescriptions,
+        kAudioChannelLayoutTag_Mono,
+        kAudioChannelLayoutTag_Stereo,
+    };
+    
+    QTSetComponentProperty(ci, kQTPropertyClass_SCAudio, kQTSCAudioPropertyID_ClientRestrictedChannelLayoutTagList,sizeof(t_layout_tags), t_layout_tags);
+    
+    if (err == noErr)
+        err = SCRequestImageSettings(ci);
+    
+	if (err == noErr)
+        err = QTGetComponentProperty(ci, kQTPropertyClass_SCAudio,kQTSCAudioPropertyID_BasicDescription,sizeof(t_description), &t_description, NULL);
+    
+    if (err == noErr)
+	{
+        CFArrayRef t_codec_settings = nil;
+        void *t_magic_cookie = nil;
+        UInt32 t_magic_cookie_size = 0;
+        
+        QTGetComponentProperty(ci, kQTPropertyClass_SCAudio,
+                               kQTSCAudioPropertyID_CodecSpecificSettingsArray,
+                               sizeof(t_codec_settings), &t_codec_settings, NULL);
+        
+        if (!t_codec_settings &&
+            (noErr == QTGetComponentPropertyInfo(ci, kQTPropertyClass_SCAudio,
+                                                 kQTSCAudioPropertyID_MagicCookie,
+                                                 NULL, &t_magic_cookie_size, NULL)) && t_magic_cookie_size)
+        {
+            MCMemoryAllocate(t_magic_cookie_size, t_magic_cookie);
+            QTGetComponentProperty(ci, kQTPropertyClass_SCAudio,
+                                   kQTSCAudioPropertyID_MagicCookie,
+                                   t_magic_cookie_size, t_magic_cookie, &t_magic_cookie_size);
+        }
+        
+        if (err == noErr)
+            err = QTSetComponentProperty(soundchannel, kQTPropertyClass_SGAudio, kQTSGAudioPropertyID_StreamFormat, sizeof(t_description), &t_description);
+        
+        // Set any additional settings for this configuration
+        if (t_magic_cookie_size != 0)
+                QTSetComponentProperty(soundchannel, kQTPropertyClass_SCAudio, kQTSCAudioPropertyID_MagicCookie,
+                                       t_magic_cookie_size, t_magic_cookie);
+        else if (t_codec_settings)
+                QTSetComponentProperty(soundchannel, kQTPropertyClass_SCAudio, kQTSCAudioPropertyID_CodecSpecificSettingsArray,
+                                       sizeof(t_codec_settings), t_codec_settings);
+    }
+#else
+	SGModalFilterUPP	videograbberModalFilterUPP;
 	videograbberModalFilterUPP = (SGModalFilterUPP)NewSGModalFilterUPP(videograbberModalFilterProc);
 	err = SGSettingsDialog(videograbber, soundchannel, 0, nil, 0L, videograbberModalFilterUPP, (long)0);
-	DisposeRoutineDescriptor((UniversalProcPtr)videograbberModalFilterUPP);
+    DisposeRoutineDescriptor((UniversalProcPtr)videograbberModalFilterUPP);
+#endif
 	// The pause that refreshes
 	err = SGPause (videograbber, False);	
 }

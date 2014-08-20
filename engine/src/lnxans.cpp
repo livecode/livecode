@@ -90,6 +90,8 @@ void gtk_file_tidy_up ( void )
 	g_free ( G_last_saved_path ) ;
 }
 
+extern void gdk_event_fn(GdkEvent*, gpointer);
+extern void gdk_event_fn_lost(void*);
 
 // Initilize the GTK library, if we have not already done so.
 void gtk_init(void)
@@ -99,7 +101,9 @@ void gtk_init(void)
 	{
 		G_init = True ;
 		
-		gtk_init(NULL, NULL);
+		// If we're not careful, GTK will steal GDK events from us
+        gtk_init(NULL, NULL);
+        gdk_event_handler_set(&gdk_event_fn, MCscreen, &gdk_event_fn_lost);
 		gdk_error_trap_push(); 		// Disable all x-error trapping ...
 		
 		
@@ -270,7 +274,7 @@ char * get_filter_mask ( uint4 p_mask_id, char * p_masks )
 void make_front_widget ( GtkWidget *p_widget)
 {
 	Window t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != DNULL)
+	if (t_window == DNULL && MCtopstackptr != NULL)
 		t_window = MCtopstackptr -> getwindow();
 
 	gtk_widget_realize( GTK_WIDGET( p_widget )) ;
@@ -279,8 +283,8 @@ void make_front_widget ( GtkWidget *p_widget)
 	{
 		GdkWindow * gdk_window = NULL ;
 		gdk_window = GTK_WIDGET ( p_widget ) -> window ;
-		if ( gdk_window != NULL ) 
-			XSetTransientForHint ( ((MCScreenDC*)MCscreen) -> getDisplay(), GDK_WINDOW_XWINDOW (  ( gdk_window ) ),  t_window  ) ;
+		if ( gdk_window != NULL )
+            gdk_window_set_transient_for(gdk_window, t_window);
 		else 
 			gtk_window_set_keep_above ( GTK_WINDOW ( p_widget ) , True ) ;
 	}

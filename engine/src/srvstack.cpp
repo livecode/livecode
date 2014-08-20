@@ -44,6 +44,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCResPlatformInitPixelScaling(void)
+{
+}
+
 // IM-2014-01-31: [[ HiDPI ]] Pixel scaling not supported on server
 bool MCResPlatformSupportsPixelScaling(void)
 {
@@ -100,31 +104,6 @@ MCStack *MCStack::findstackd(Window w)
 }
 
 
-MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
-{
-	Window pwindow = getparentwindow();
-	if (pwindow != DNULL && w == pwindow)
-		if  (++ccount == cindex)
-			return this;
-	if (substacks != NULL)
-	{
-		MCStack *tptr = substacks;
-		do
-		{
-			pwindow = tptr->getparentwindow();
-			if (pwindow != DNULL && w == pwindow)
-			{
-				ccount++;
-				if (ccount == cindex)
-					return tptr;
-			}
-			tptr = (MCStack *)tptr->next();
-		}
-		while (tptr != substacks);
-	}
-	return NULL;
-}
-
 void MCStack::realize(void)
 {
 	start_externals();
@@ -172,6 +151,11 @@ void MCStack::setopacity(unsigned char p_level)
 }
 
 void MCStack::updatemodifiedmark(void)
+{
+}
+
+// MERG-2014-06-02: [[ IgnoreMouseEvents ]] Stub for ignoreMouseEvents.
+void MCStack::updateignoremouseevents(void)
 {
 }
 

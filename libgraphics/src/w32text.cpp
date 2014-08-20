@@ -21,8 +21,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static HDC s_measure_dc = NULL;
-static HDC s_draw_dc = NULL;
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to make text rendering thread safe, by using TLS to ensure we have seperate DC for each thread.
+//  This should probably be moved to a central thread library at some point, which will also help with clean up (we only clean up the main thread at the moment).
+
+static __declspec( thread ) bool s_initialized_on_thread = false;
+static __declspec( thread ) HDC s_measure_dc = NULL;
+static __declspec( thread ) HDC s_draw_dc = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -383,7 +387,8 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 		// MM-2014-04-16: [[ Bug 11964 ]] Use MCGContextMeasurePlatformText to fetch the width of the text.
 		// MM-2014-04-22: [[ Bug 11904 ]] Offset the x value to take into account any underhang of the first char of italic text.
 		MCGRectangle t_float_text_bounds;
-		t_float_text_bounds . origin . x = t_x_offset;
+		// AL-2014-07-16: [[ Bug 12488 ]] Fudge the text bounds back by to prevent clipping text
+		t_float_text_bounds . origin . x = t_x_offset - 1;
 		t_float_text_bounds . origin . y = -t_metrics . tmAscent;
 		t_float_text_bounds . size . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font, t_transform) + t_overhang;
 		t_float_text_bounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
@@ -570,7 +575,9 @@ static void __MCGContextDrawPlatformTextIdeal(MCGContextRef self, const unichar_
 //   using ideal metrics or not.
 void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont& p_font, bool p_rtl)
 {
-    if (p_font . ideal)
+	MCGPlatformInitialize();
+
+	if (p_font . ideal)
 	{
 		__MCGContextDrawPlatformTextIdeal(self, p_text, p_length, p_location, p_font, p_rtl);
 		return;
@@ -670,6 +677,8 @@ MCGFloat __MCGContextMeasurePlatformTextIdeal(MCGContextRef self, const unichar_
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform)
 {
+	MCGPlatformInitialize();
+
 	if (p_font . ideal)
 		return __MCGContextMeasurePlatformTextIdeal(self, p_text, p_length, p_font);
 
@@ -680,6 +689,11 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 
 void MCGPlatformInitialize(void)
 {
+	if (s_initialized_on_thread)
+		return;
+
+	s_initialized_on_thread = true;
+
 	s_measure_dc = CreateCompatibleDC(NULL);
 	SetGraphicsMode(s_measure_dc, GM_ADVANCED);
 
@@ -689,8 +703,12 @@ void MCGPlatformInitialize(void)
 
 void MCGPlatformFinalize(void)
 {
+	if (!s_initialized_on_thread)
+		return;
+
 	DeleteDC(s_draw_dc);
 	DeleteDC(s_measure_dc);
+	s_initialized_on_thread = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

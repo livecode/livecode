@@ -2,6 +2,7 @@
    ld. It has been modified with a rule to place the '.project' section
    after the .bss section to allow easy insertion of the standalone data. */
 
+/* Script for -z combreloc: combine and sort reloc sections */
 OUTPUT_FORMAT("elf64-x86-64", "elf64-x86-64",
 	      "elf64-x86-64")
 OUTPUT_ARCH(i386:x86-64)
@@ -47,8 +48,8 @@ SECTIONS
     }
   .init           :
   {
-    KEEP (*(.init))
-  } =0x90909090
+    KEEP (*(SORT_NONE(.init)))
+  }
   .plt            : { *(.plt) *(.iplt) }
   .text           :
   {
@@ -59,11 +60,11 @@ SECTIONS
     *(.text .stub .text.* .gnu.linkonce.t.*)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
-  } =0x90909090
+  }
   .fini           :
   {
-    KEEP (*(.fini))
-  } =0x90909090
+    KEEP (*(SORT_NONE(.fini)))
+  }
   PROVIDE (__etext = .);
   PROVIDE (_etext = .);
   PROVIDE (etext = .);
@@ -138,10 +139,10 @@ SECTIONS
     KEEP (*(.dtors))
   }
   .jcr            : { KEEP (*(.jcr)) }
-  .data.rel.ro : { *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*) *(.data.rel.ro* .gnu.linkonce.d.rel.ro.*) }
+  .data.rel.ro : { *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*) *(.data.rel.ro .data.rel.ro.* .gnu.linkonce.d.rel.ro.*) }
   .dynamic        : { *(.dynamic) }
   .got            : { *(.got) *(.igot) }
-  . = DATA_SEGMENT_RELRO_END (24, .);
+  . = DATA_SEGMENT_RELRO_END (SIZEOF (.got.plt) >= 24 ? 24 : 0, .);
   .got.plt        : { *(.got.plt)  *(.igot.plt) }
   .data           :
   {
@@ -150,6 +151,7 @@ SECTIONS
   }
   .data1          : { *(.data1) }
   _edata = .; PROVIDE (edata = .);
+  . = .;
   __bss_start = .;
   .bss            :
   {
@@ -180,9 +182,9 @@ SECTIONS
     . = ALIGN(. != 0 ? 64 / 8 : 1);
   }
   . = ALIGN(64 / 8);
-  .project         :
+  .project :
   {
-   *(.project)
+    *(.project)
   }
   . = ALIGN(64 / 8);
   _end = .; PROVIDE (end = .);
@@ -223,6 +225,9 @@ SECTIONS
   /* DWARF 3 */
   .debug_pubtypes 0 : { *(.debug_pubtypes) }
   .debug_ranges   0 : { *(.debug_ranges) }
+  /* DWARF Extension.  */
+  .debug_macro    0 : { *(.debug_macro) }
   .gnu.attributes 0 : { KEEP (*(.gnu.attributes)) }
   /DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) }
 }
+

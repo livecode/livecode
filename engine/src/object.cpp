@@ -690,7 +690,7 @@ Boolean MCObject::mdown(uint2 which)
 }
 
 extern bool MCmenupoppedup;
-Boolean MCObject::mup(uint2 which)
+Boolean MCObject::mup(uint2 which, bool p_release)
 {
 	if (state & CS_MENU_ATTACHED)
 	{
@@ -702,7 +702,7 @@ Boolean MCObject::mup(uint2 which)
 		if (focused != NULL && focused->gettype() == CT_BUTTON
 		        && focused->getmenumode() == WM_CASCADE)
 		{
-			focused->mup(which); // send mup directly to cascade button
+			focused->mup(which, p_release); // send mup directly to cascade button
 			closemenu(True, True);
 		}
 		else
@@ -1925,7 +1925,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
 		Window mywindow = mystack->getw();
 		if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
-		        && (MCtracewindow == DNULL
+		        && (MCtracewindow == NULL
 		            || memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
 		{
 			// PASS STATE FIX
@@ -2064,10 +2064,20 @@ void MCObject::senderror()
 
 void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 {
-	static const char *htypes[] =
-	    {
-	        "undefined", "message", "function", "getprop", "setprop"
-	    };
+	static const char *htypes[] =	{
+		"undefined",
+		"message",
+		"function",
+		"getprop",
+		"setprop",
+		"before",
+		"after",
+		"private"
+	};
+	enum { max_htype = (sizeof(htypes)/sizeof(htypes[0])) - 1 };
+    
+	MCAssert(htype <= max_htype);
+	MCStaticAssert(max_htype == HT_MAX);
     MCmessagemessages = False;
 
     MCExecContext ctxt(this, nil, nil);
@@ -2561,31 +2571,59 @@ void MCObject::positionrel(const MCRectangle &drect,
 // SN-2014-04-03 [[ Bug 12075 ]] Tooltips need to be able to resolve the text direction of their label
 void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font)
 {
-    /*MCAutoArray<uint8_t> t_levels;
+    
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+    // AL-2014-06-24: [[ Bug 12343 ]] Restore splitting of object text into differing directional sections
+    //  when drawing on android; HarfBuzz needs all the directions resolved to display in the correct order.
+    MCAutoArray<uint8_t> t_levels;
     
     MCBidiResolveTextDirection(p_string, MCBidiFirstStrongIsolate(p_string, 0), t_levels . PtrRef(), t_levels . SizeRef());
     
     MCRange t_block_range;
-    for (uindex_t i = 0; i < t_levels . Size(); ++i)
+
+    bool t_initially_ltr;
+    t_initially_ltr = (t_levels[0] & 1) == 0;
+    
+    uindex_t t_length = t_levels . Size();
+    
+    for (uindex_t i = 0; i < t_length; ++i)
     {
+        uint8_t t_cur_level;
         // Check the range of this text direction
-        uint8_t t_cur_level = t_levels[i];
-        
-        t_block_range . offset = i;
-        while (i + 1 < t_levels . Size() && t_cur_level == t_levels[i + 1])
-            ++i;
-        
-        t_block_range . length = i + 1 - t_block_range . offset;
+        if (t_initially_ltr)
+        {
+            t_cur_level = t_levels[i];
+            
+            t_block_range . offset = i;
+            while (i + 1 < t_levels . Size() && t_cur_level == t_levels[i + 1])
+                ++i;
+            
+            t_block_range . length = i + 1 - t_block_range . offset;
+        }
+        else
+        {
+            // If the resolved text direction is rtl, we need to traverse the runs backwards
+            //  for the correct display order.
+            t_cur_level = t_levels[t_length - (i + 1)];
+            
+            uindex_t t_range_end = t_length - i;
+            t_block_range . length = i;
+            while (i + 1 < t_length && t_cur_level == t_levels[t_length - (i + 2)])
+                ++i;
+            
+            t_block_range . offset = t_length - (i + 1);
+            t_block_range . length = t_range_end - t_block_range . offset;
+        }
         
         // RTL when the level is odd
         dc -> drawtext_substring(sx, sy, p_string, t_block_range, font, false, kMCDrawTextNoBreak, (t_cur_level & 1) ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
-        sx += MCFontMeasureTextSubstring(font, p_string, t_block_range);
-    }*/
-    
+        sx += MCFontMeasureTextSubstring(font, p_string, t_block_range, getstack() -> getdevicetransform());
+    }
+#else
     bool t_is_rtl;
-    t_is_rtl = MCBidiFirstStrongIsolate(p_string, 0) == 1;
-    
+    t_is_rtl = !MCStringResolvesLeftToRight(p_string);
     dc -> drawtext(sx, sy, p_string, font, false, kMCDrawTextNoBreak, t_is_rtl ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
+#endif
 }
 
 Exec_stat MCObject::domess(MCStringRef sptr)
@@ -3558,7 +3596,12 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         // in 5.5 format, the length of the string + 1 (for nul char) is written out,
         // whereas in 7.0 we write out the 32-bit length and then the string.
         
-        t_size += 1 + 1 + 4 + MCStringGetLength(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()));
+        // AL-2014-07-31: [[ Bug 13043 ]] It is possible for utf8 string length to be different
+        // here from the char count of the string.
+        MCAutoStringRefAsUTF8String t_utf8_string;
+        t_utf8_string . Lock(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()));
+        
+        t_size += 1 + 1 + 4 + t_utf8_string . Size();
 
         // for < 7.0, add 2 (for the 2 nul terminators). For >= 7.0, add 8 for the 2 uint32s
         if (MCstackfileversion < 7000)

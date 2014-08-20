@@ -66,7 +66,11 @@ void MCParameter::setvalueref_argument(MCValueRef p_value)
 void MCParameter::give_exec_argument(MCExecValue p_value)
 {
     if (MCExecTypeIsValueRef(p_value . type))
+    {
         setvalueref_argument(p_value . valueref_value);
+        // SN-2014-07-09: [[ MemoryLeak ]] give_exec_argument should give the ExecValue, not copy it
+        MCExecTypeRelease(p_value);
+    }
     else
     {
         MCExecTypeRelease(value);

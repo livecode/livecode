@@ -1020,6 +1020,22 @@ bool MCStack::getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object)
 	if (objs == NULL)
 		return false;
 	MCObject *tobj = objs;
+
+    // AL-2014-05-27: [[ Bug 12530 ]] Expression for audio or video clip can be numerical
+    uint2 t_num;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        --t_num;
+        while (t_num--)
+        {
+            tobj = tobj->next();
+            if (tobj == objs)
+                return false;
+        }
+        r_object = tobj;
+        return true;
+    }
+    
 	do
 	{
 		if (MCU_matchname(p_name, type, tobj->getname()))
@@ -1042,7 +1058,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 
 	if (editing != NULL && card != curcard)
 		stopedit();
-	if (!opened || !mode_haswindow())
+	if (!opened || !haswindow())
 	{
 		if (opened)
 		{
@@ -1337,6 +1353,26 @@ MCStack *MCStack::findsubstackid(uint4 fid)
 			tptr = (MCStack *)tptr->next();
 		}
 		while (tptr != sptr->substacks);
+	}
+	return NULL;
+}
+
+MCStack *MCStack::findstackwindowid(uint32_t p_win_id)
+{
+	if (p_win_id == 0)
+		return NULL;
+	if (MCscreen->dtouint4((Drawable)window) == p_win_id)
+		return this;
+	if (substacks != NULL)
+	{
+		MCStack *tptr = substacks;
+		do
+		{
+			if (MCscreen->dtouint4((Drawable)tptr->window) == p_win_id)
+				return tptr;
+			tptr = (MCStack *)tptr->next();
+		}
+		while (tptr != substacks);
 	}
 	return NULL;
 }
@@ -1645,9 +1681,8 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 	// function succeeded but there is no text while the null string indicates
 	// that no menu handled the key event.
 	r_string = nil;
-	// MW-2014-03-12: [[ Bug 11914 ]] Only do internal menu actions if this is an
-	//   engine menu.
-	if (m_is_menu)
+	// IM-2014-08-06: [[ Bug 13059 ]] menumup() can be called on pop-up menu stacks
+	// configured through menuname so remove check for m_is_menu
 	{
         MCControl *focused = curcard->getmfocused();
         if (focused == NULL)
@@ -1689,7 +1724,7 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 				curcard->count(CT_LAYER, CT_UNDEFINED, focused, selline, True);
 		}
 	}
-	curcard->mup(which);
+	curcard->mup(which, false);
 }
 
 
@@ -1847,6 +1882,8 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
                 items[nitems] . dvalue = MCValueRetain(kMCEmptyData);
             else
                 items[nitems] . svalue = MCValueRetain(kMCEmptyString);
+            // AL-2014-05-20: [[ Bug 12457 ]] Increment items when 'default' item is added
+            nitems++;
         }
 		curcard = (MCCard *)curcard->next();
 	}

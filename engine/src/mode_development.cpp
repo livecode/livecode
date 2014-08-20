@@ -66,6 +66,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
 #include "w32dc.h"
+#include "w32compat.h"
+
 #include <process.h>
 
 // MW-2013-04-18: [[ Bug ]] Temporarily undefine 'GetObject' so that the reference
@@ -306,7 +308,7 @@ IO_stat MCDispatch::startup(void)
 	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
 	MCValueRelease(t_compressed);
     
-	IO_handle stream = MCS_fakeopen(MCDataGetOldString(t_decompressed));
+    IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(t_decompressed), MCDataGetLength(t_decompressed));
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{
 		MCS_close(stream);
@@ -406,56 +408,6 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for DEVELOPMENT mode.
 //
 
-static MCStack *s_links = NULL;
-
-struct MCStackModeData
-{
-	MCStack *next;
-	MCStack *previous;
-	MCStack *referrer;
-};
-
-void MCStack::mode_create(void)
-{
-	m_mode_data = new MCStackModeData;
-	m_mode_data -> next = NULL;
-	m_mode_data -> previous = NULL;
-	m_mode_data -> referrer = MCtargetptr != NULL ? MCtargetptr -> getstack() : NULL;
-	s_links = this;
-}
-
-void MCStack::mode_copy(const MCStack& stack)
-{
-	mode_create();
-}
-
-void MCStack::mode_destroy(void)
-{
-	MCStack *t_previous_link;
-	bool t_link_found;
-	t_link_found = false;
-	t_previous_link = NULL;
-	for(MCStack *t_link = s_links; t_link != NULL; t_link = t_link -> m_mode_data -> next)
-	{
-		if (t_link -> m_mode_data -> referrer == this)
-			t_link -> m_mode_data -> referrer = m_mode_data -> referrer;
-			
-		if (!t_link_found)
-		{
-			t_link_found = t_link == this;
-			if (!t_link_found)
-				t_previous_link = t_link;
-		}
-	}
-			
-	if (t_previous_link == NULL)
-		s_links = m_mode_data -> next;
-	else
-		t_previous_link -> m_mode_data -> next = m_mode_data -> next;
-
-	delete m_mode_data;
-}
-
 #ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
@@ -463,10 +415,7 @@ Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, 
 	switch(which)
 	{
 	case P_REFERRING_STACK:
-		if (m_mode_data -> referrer != NULL)
-			return m_mode_data -> referrer -> getprop(0, P_LONG_ID, ep, False);
-		else
-			ep . clear();
+		ep . clear();
 	break;
 
 	case P_UNPLACED_GROUP_IDS:
@@ -601,11 +550,6 @@ void MCStack::mode_closeasmenu(void)
 {
 }
 
-bool MCStack::mode_haswindow(void)
-{
-	return window != DNULL;
-}
-
 void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
@@ -616,13 +560,6 @@ MCSysWindowHandle MCStack::getrealwindow(void)
 	return window->handle.window;
 }
 
-MCSysWindowHandle MCStack::getqtwindow(void)
-{
-	return window->handle.window;
-}
-#endif
-
-#ifdef _MACOSX
 MCSysWindowHandle MCStack::getqtwindow(void)
 {
 	return window->handle.window;
@@ -798,9 +735,13 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 
 		if (!effective)
 		{
-			parsescript(False);
-			if (hlist != NULL)
-				t_first = hlist -> enumerate(ep, t_first);
+            // MW-2014-07-25: [[ Bug 12819 ]] Make sure we don't list handlers of passworded stacks.
+            if (getstack() -> iskeyed())
+            {
+                parsescript(False);
+                if (hlist != NULL)
+                    t_first = hlist -> enumerate(ep, t_first);
+            }
 		}
 		else
 		{
@@ -844,7 +785,8 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 	case P_REV_AVAILABLE_VARIABLES:
 	{
 		ep.clear();
-		if (hlist == NULL)
+        // MW-2014-07-25: [[ Bug 12819 ]] Make sure we don't list variables of passworded stacks.
+		if (hlist == NULL || !getstack() -> iskeyed())
 		{
 			return ES_NORMAL;
 		}
@@ -1414,7 +1356,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr != NULL)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }
@@ -1459,6 +1401,8 @@ void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 {
 	if (!p_enabled)
 		MCscreen -> clearIME(p_stack -> getwindow());
+    else
+        MCscreen -> configureIME(x, y);
 }
 
 void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message)
@@ -1603,6 +1547,32 @@ bool MCPlayer::mode_avi_closewindowonplaystop()
 	return true;
 }
 
+// IM-2014-08-08: [[ Bug 12372 ]] Allow IDE pixel scaling to be enabled / disabled
+// on startup depending on the usePixelScaling registry value
+bool MCModeGetPixelScalingEnabled()
+{
+    MCAutoStringRef t_type, t_error;
+    MCAutoValueRef t_value;
+	MCS_query_registry(MCSTR("HKEY_CURRENT_USER\\Software\\LiveCode\\IDE\\usePixelScaling"), &t_value, &t_type, &t_error);
+
+	if (!MCresult->isempty())
+	{
+		MCresult->clear();
+		return true;
+	}
+
+	// IM-2014-08-14: [[ Bug 12372 ]] PixelScaling is enabled by default.
+	if (MCValueIsEmpty(*t_value))
+        return true;
+    
+    bool t_result;
+    MCExecContext ctxt(nil, nil, nil);
+    if (!ctxt . ConvertToBool(*t_value, t_result))
+        return false;
+    
+    return t_result;
+}
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1643,10 +1613,7 @@ void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
 
 void MCStack::GetReferringStack(MCExecContext& ctxt, MCStringRef& r_id)
 {
-    if (m_mode_data -> referrer != NULL)
-        m_mode_data -> referrer -> GetLongId(ctxt, r_id);
-    else
-        r_id = MCValueRetain(kMCEmptyString);
+    r_id = MCValueRetain(kMCEmptyString);
 }
 
 void MCStack::GetUnplacedGroupIds(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_ids)
@@ -1740,12 +1707,8 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
         t_object_ref = t_object_list;
         do
         {
-            // OK-2008-08-22: [[Check in case the object is itself a frontscript]]
-            if (t_object_ref -> getobject() == this)
-            {
-                t_object_ref = t_object_ref -> next();
-                continue;
-            }
+            // AL-2014-05-23: [[ Bug 12491 ]] The object list checks for uniqueness,
+            //  so no need to check if the object is itself a frontscript.
             
             t_first = true;
             MCHandlerlist *t_handler_list;

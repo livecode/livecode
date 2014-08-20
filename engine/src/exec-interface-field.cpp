@@ -103,7 +103,7 @@ static MCExecEnumTypeInfo _kMCInterfaceTextDirectionTypeInfo =
 
 //////////
 
-static void MCInterfaceFlaggedRangesParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceFlaggedRanges& r_output)
+static void MCInterfaceFieldRangesParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceFieldRanges& r_output)
 {
     uindex_t t_length;
 	t_length = MCStringGetLength(p_input);
@@ -114,7 +114,7 @@ static void MCInterfaceFlaggedRangesParse(MCExecContext& ctxt, MCStringRef p_inp
         return;
     }
     
-	MCAutoArray<MCInterfaceFlaggedRange> t_list;
+	MCAutoArray<MCInterfaceFieldRange> t_list;
     
     bool t_success;
     t_success = true;
@@ -127,7 +127,7 @@ static void MCInterfaceFlaggedRangesParse(MCExecContext& ctxt, MCStringRef p_inp
 	while (t_success && t_old_offset <= t_length)
 	{
 		MCAutoStringRef t_uintx2_string;
-		MCInterfaceFlaggedRange t_range;
+		MCInterfaceFieldRange t_range;
 		
 		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
@@ -156,7 +156,7 @@ static void MCInterfaceFlaggedRangesParse(MCExecContext& ctxt, MCStringRef p_inp
 	ctxt . Throw();
 }
 
-static void MCInterfaceFlaggedRangesFormat(MCExecContext& ctxt, const MCInterfaceFlaggedRanges& p_input, MCStringRef& r_output)
+static void MCInterfaceFieldRangesFormat(MCExecContext& ctxt, const MCInterfaceFieldRanges& p_input, MCStringRef& r_output)
 {
     if (p_input . count == 0)
     {
@@ -185,17 +185,17 @@ static void MCInterfaceFlaggedRangesFormat(MCExecContext& ctxt, const MCInterfac
     ctxt . Throw();
 }
 
-static void MCInterfaceFlaggedRangesFree(MCExecContext& ctxt, MCInterfaceMargins& p_input)
+static void MCInterfaceFieldRangesFree(MCExecContext& ctxt, MCInterfaceFieldRanges& p_input)
 {
 }
 
-static MCExecCustomTypeInfo _kMCInterfaceFlaggedRangesTypeInfo =
+static MCExecCustomTypeInfo _kMCInterfaceFieldRangesTypeInfo =
 {
-	"Interface.FlaggedRanges",
-	sizeof(MCInterfaceFlaggedRanges),
-	(void *)MCInterfaceFlaggedRangesParse,
-	(void *)MCInterfaceFlaggedRangesFormat,
-	(void *)MCInterfaceFlaggedRangesFree
+	"Interface.FieldRanges",
+	sizeof(MCInterfaceFieldRanges),
+	(void *)MCInterfaceFieldRangesParse,
+	(void *)MCInterfaceFieldRangesFormat,
+	(void *)MCInterfaceFieldRangesFree
 };
 
 //////////
@@ -313,7 +313,7 @@ static MCExecCustomTypeInfo _kMCInterfaceFieldTabAlignmentsTypeInfo =
 //////////
 
 MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo = &_kMCInterfaceFieldStyleTypeInfo;
-MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo = &_kMCInterfaceFlaggedRangesTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceFieldRangesTypeInfo = &_kMCInterfaceFieldRangesTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo = &_kMCInterfaceFieldCursorMovementTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceTextDirectionTypeInfo = &_kMCInterfaceTextDirectionTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceFieldTabAlignmentsTypeInfo = &_kMCInterfaceFieldTabAlignmentsTypeInfo;
@@ -806,7 +806,9 @@ void MCField::GetText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
 
 void MCField::SetText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text)
 {
-	settext(part, p_text, False);
+    // SN-2014-07-24: [[ Bug 12948 ]]  Fix for the horrendous slow-down:
+    //  P_TEXT property for a field should call settext, not setpartialtext (avoid text formatting)
+    settext(part, p_text, False);
 }
 
 void MCField::GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_text)
@@ -1024,11 +1026,37 @@ void MCField::GetCursorMovement(MCExecContext& ctxt, intenum_t &r_movement)
 void MCField::SetTextDirection(MCExecContext& ctxt, intenum_t p_direction)
 {
     text_direction = (MCTextDirection)p_direction;
+    
+    // AL-2014-16-07: [[ Bug 12814 ]] Redraw after setting text direction
+    Redraw(true);
 }
 
 void MCField::GetTextDirection(MCExecContext& ctxt, intenum_t &r_direction)
 {
     r_direction = intenum_t(text_direction);
+}
+
+void MCField::GetTextAlign(MCExecContext& ctxt, intenum_t*& r_align)
+{
+	intenum_t align;
+	align = (intenum_t)(flags & F_ALIGNMENT);
+	*r_align = align;
+}
+
+void MCField::SetTextAlign(MCExecContext& ctxt, intenum_t* align)
+{
+	flags &= ~F_ALIGNMENT;
+	if (align == nil)
+		flags |= F_ALIGN_LEFT;
+	else
+		flags |= *align;
+    
+	Redraw(true);
+}
+
+void MCField::GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_align)
+{
+	r_align = (flags & F_ALIGNMENT);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -1068,14 +1096,14 @@ void MCField::SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t*
     MCControl::Redraw();
 }
 
-void MCField::GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFlaggedRanges& r_ranges)
+void MCField::GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFieldRanges& r_ranges)
 {
     if (flags & F_SHARED_TEXT)
 		p_part = 0;
     GetFlaggedRangesOfCharChunk(ctxt, p_part, 0, INDEX_MAX, r_ranges);
 }
 
-void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFlaggedRanges& p_ranges)
+void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFieldRanges& p_ranges)
 {
     // MW-2012-02-08: [[ FlaggedField ]] Special case the 'flaggedRanges' property.
     int4 t_line_index, t_char_index, si, ei;
@@ -1122,13 +1150,17 @@ void MCField::DoSetTabStops(MCExecContext& ctxt, bool is_relative, uindex_t p_co
             return;
         }
 
-        if (is_relative)
+        // AL-2014-06-25: [[ Bug 12697]] If a tabStop is smaller than the preceding one,
+        //  then calculate as relative distance.
+        if (is_relative || p_tabs[i] < t_previous_tab_stop)
         {
             t_new_tabs . Push(p_tabs[i] + t_previous_tab_stop);
             t_previous_tab_stop = t_new_tabs[i];
         }
         else
             t_new_tabs . Push(p_tabs[i]);
+        
+        t_previous_tab_stop = p_tabs[i];
     }
     
     t_new_tabs . Take(t_new, t_new_count);
@@ -1240,6 +1272,54 @@ void MCField::GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*
     t_heights . Take(r_heights, r_count);
 }
 
+void MCField::GetPageRanges(MCExecContext& ctxt, MCInterfaceFieldRanges& r_ranges)
+{
+    MCAutoArray<MCInterfaceFieldRange> t_ranges;
+    if (opened)
+    {
+        MCParagraph *pgptr = paragraphs;
+        uint2 height = getfheight();
+        uint2 theight = height;
+        // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indices.
+        uint4 tstart = 1;
+        uint4 tend = 0;
+        MCLine *lastline = NULL;
+        uint2 j = 0;
+        while (True)
+        {
+            MCInterfaceFieldRange t_range;
+            MCLine *oldlast = lastline;
+            if (!pgptr->pagerange(fixedheight, theight, tend, lastline))
+            {
+                t_range . start = tstart;
+                t_range . end = tend;
+                t_ranges . Push(t_range);
+                tstart = tend + 1;
+                if (theight == height)
+                    lastline = NULL;
+                else
+                {
+                    theight = height;
+                    if (oldlast == NULL || lastline != NULL)
+                        continue;
+                }
+            }
+            else
+                tend += 1;
+            
+            pgptr = pgptr->next();
+            if (pgptr == paragraphs)
+                break;
+        }
+        if (theight != height) {
+            MCInterfaceFieldRange t_range;
+            t_range . start = tstart;
+            t_range . end = tend;
+            t_ranges . Push(t_range);
+        }
+    }
+    t_ranges . Take(r_ranges . ranges, r_ranges . count);
+}
 ////////////////////////////////////////////////////////////////////////////////////////
 
 void MCField::SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow)

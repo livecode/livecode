@@ -78,9 +78,9 @@ void MCStacklist::hidepalettes(Boolean hide)
 	while (tptr != stacks);
 }
 
-void MCLinuxWindowSetTransientFor(Window p_window, Window p_transient_for)
+void MCLinuxWindowSetTransientFor(GdkWindow* p_window, GdkWindow* p_transient_for)
 {
-	XSetTransientForHint(MCdpy, p_window, p_transient_for);
+	gdk_window_set_transient_for(p_window, p_transient_for);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

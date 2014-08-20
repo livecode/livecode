@@ -521,7 +521,7 @@ bool MCPDFPrintingDevice::DrawImage(const MCCustomPrinterImage& image, const MCC
 	return t_success;
 }
 
-bool MCPDFPrintingDevice::DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip)
+bool MCPDFPrintingDevice::DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip)
 {
 	bool t_success = true;
 	cairo_save(m_context);
@@ -574,7 +574,7 @@ bool MCPDFPrintingDevice::DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t 
 	uint32_t t_cluster_count;
 	bool t_reverse_clusters;
 	if (t_success)
-		t_success = custom_printer_clusters_to_cairo_clusters(clusters, MCCStringLength(text), glyph_count, t_clusters, t_cluster_count, t_reverse_clusters);
+		t_success = custom_printer_clusters_to_cairo_clusters(clusters, text_byte_count, glyph_count, t_clusters, t_cluster_count, t_reverse_clusters);
 	
 	if (t_success)
 		t_success = apply_paint(paint);
@@ -584,7 +584,7 @@ bool MCPDFPrintingDevice::DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t 
 		cairo_set_font_face(m_context, t_font);
 		cairo_set_font_size(m_context, font . size);
 
-		cairo_show_text_glyphs(m_context, text, MCCStringLength(text), t_glyphs, glyph_count, t_clusters, t_cluster_count, t_reverse_clusters ? CAIRO_TEXT_CLUSTER_FLAG_BACKWARD : (cairo_text_cluster_flags_t)0);
+		cairo_show_text_glyphs(m_context, text_bytes, text_byte_count, t_glyphs, glyph_count, t_clusters, t_cluster_count, t_reverse_clusters ? CAIRO_TEXT_CLUSTER_FLAG_BACKWARD : (cairo_text_cluster_flags_t)0);
 		cairo_restore(m_context);
 		t_success = (m_status = cairo_status(m_context)) == CAIRO_STATUS_SUCCESS;
 	}
@@ -1098,6 +1098,11 @@ bool MCPDFPrintingDevice::create_surface_from_image(const MCCustomPrinterImage &
 
 	// PNG image data
 	case kMCCustomPrinterImagePNG:
+		t_success = false;
+		break;
+			
+	// [[ Bug 12699 ]] Handle unrecognised image type
+	default:
 		t_success = false;
 		break;
 	}

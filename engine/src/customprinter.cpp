@@ -264,7 +264,8 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 			// Devices have to support unmasked images (otherwise we couldn't
 			// rasterize!).
 			bool t_mask, t_alpha;
-			t_mask = MCImageBitmapHasTransparency(p_mark -> image . descriptor . bitmap, t_alpha);
+			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
+			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
 
 			if (!t_mask)
 				return true;
@@ -494,23 +495,31 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 	}
 
 	uint2 t_img_width, t_img_height;
-	MCImageBitmap *t_img_bitmap = nil;
-	t_img_bitmap = p_mark -> image . descriptor . bitmap;
-	t_img_width = t_img_bitmap -> width;
-	t_img_height = t_img_bitmap -> height;
+	MCGRaster t_raster;
 
 	if (!m_execute_error)
 	{
+		if (!MCGImageGetRaster(p_mark->image.descriptor.image, t_raster))
+			m_execute_error = true;
+	}
+
+	if (!m_execute_error)
+	{
+		t_img_width = t_raster.width;
+		t_img_height = t_raster.height;
+
 		// Fill in the printer image info
 		MCCustomPrinterImage t_image;
 		if (t_image_type == kMCCustomPrinterImageNone)
 		{
 			bool t_mask, t_alpha;
-			t_mask = MCImageBitmapHasTransparency(t_img_bitmap, t_alpha);
+			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
+			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
+			// IM-2014-06-26: [[ Bug 12699 ]] Set image type appropriately.
 			t_image . type = t_alpha ? kMCCustomPrinterImageRawARGB : (t_mask ? kMCCustomPrinterImageRawMRGB : kMCCustomPrinterImageRawXRGB);
-			t_image . id = (uint32_t)(intptr_t)t_img_bitmap;
-			t_image . data = t_img_bitmap -> data;
-			t_image . data_size = t_img_bitmap -> stride * t_img_height;
+			t_image . id = (uint32_t)(intptr_t)p_mark->image.descriptor.image;
+			t_image . data = t_raster.pixels;
+			t_image . data_size = t_raster.stride * t_img_height;
 		}
 		else
 		{
@@ -524,9 +533,10 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 
 		// Compute the transform that is needed - this transform goes from image
 		// space to page space.
+		// IM-2014-06-26: [[ Bug 12699 ]] Rework to ensure transforms are applied in the correct order - page transform -> image offset -> image transform
 		MCGAffineTransform t_transform;
-		t_transform = MCGAffineTransformMakeScale(m_scale_x, m_scale_y);
-		t_transform = MCGAffineTransformTranslate(t_transform, m_translate_x + p_mark -> image . dx - p_mark -> image . sx, m_translate_y + p_mark -> image . dy - p_mark -> image . sy);
+		t_transform = MCGAffineTransformMake(m_scale_x, 0, 0, m_scale_y, m_translate_x, m_translate_y);
+		t_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeTranslation(p_mark -> image . dx - p_mark -> image . sx, p_mark -> image . dy - p_mark -> image . sy));
 		if (p_mark -> image . descriptor . has_transform)
 			t_transform = MCGAffineTransformConcat(t_transform, p_mark -> image . descriptor . transform);
 
@@ -819,9 +829,19 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 		else if (p_mark -> fill -> style == FillTiled)
 		{
 			// Fetch the size of the tile, and its data.
-			MCGRaster t_tile_raster;
-			if (MCGImageGetRaster(p_mark -> fill -> pattern -> image, t_tile_raster))
+			MCGImageRef t_image;
+			t_image = nil;
+			
+			MCGAffineTransform t_transform;
+			
+			// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+			if (MCPatternLockForContextTransform(p_mark->fill->pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform))
 			{
+				MCGRaster t_tile_raster;
+				/* UNCHECKED */ MCGImageGetRaster(t_image, t_tile_raster);
+				
+				t_transform = MCGAffineTransformTranslate(t_transform, p_mark->fill->origin.x, p_mark->fill->origin.y);
+				
 				// Construct the paint pattern.
 				t_paint . type = kMCCustomPrinterPaintPattern;
 				t_paint . pattern . image . type = MCCustomPrinterImageTypeFromMCGRasterFormat(t_tile_raster . format);
@@ -830,12 +850,9 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 				t_paint . pattern . image . height = t_tile_raster . height;
 				t_paint . pattern . image . data = t_tile_raster . pixels;
 				t_paint . pattern . image . data_size = t_tile_raster . stride * t_tile_raster . height;
-				t_paint . pattern . transform . scale_x = 1.0 / p_mark -> fill -> pattern -> scale;
-				t_paint . pattern . transform . scale_y = 1.0 / p_mark -> fill -> pattern -> scale;
-				t_paint . pattern . transform . skew_x = 0.0;
-				t_paint . pattern . transform . skew_y = 0.0;
-				t_paint . pattern . transform . translate_x = p_mark -> fill -> origin . x;
-				t_paint . pattern . transform . translate_y = p_mark -> fill -> origin . y;
+				t_paint . pattern . transform = MCCustomPrinterTransformFromMCGAffineTransform(t_transform);
+				
+				MCPatternUnlock(p_mark->fill->pattern, t_image);
 			}
 			else
 				m_execute_error = true;
@@ -944,7 +961,8 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	context = (dotextmark_callback_state *)p_context;
 	
 	MCAutoStringRef t_string;
-	/* UNCHECKED */ MCStringCreateWithCString((const char *)p_span -> chars, &t_string);
+    // SN-2014-06-17 [[ Bug 12595 ]] Not properly causing the bug, but it never hurts to get to use the right encoding
+    MCStringCreateWithBytes((byte_t*)p_span->chars, p_span->char_count * 2, kMCStringEncodingUTF16, false, &t_string);
 	byte_t *t_bytes;
 	uindex_t t_byte_count;
 	/* UNCHECKED */ MCStringConvertToBytes(*t_string, kMCStringEncodingUTF8, false, t_bytes, t_byte_count);
@@ -1014,7 +1032,7 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	t_font . handle = t_font_handle;
 
 	bool t_success;
-	t_success = context -> device -> DrawText((const MCCustomPrinterGlyph *)p_span -> glyphs, p_span -> glyph_count, (const char *)t_bytes, t_clusters, t_font, context -> paint, context -> transform, context -> clip);
+	t_success = context -> device -> DrawText((const MCCustomPrinterGlyph *)p_span -> glyphs, p_span -> glyph_count, (const char *)t_bytes, t_byte_count, t_clusters, t_font, context -> paint, context -> transform, context -> clip);
 
 	MCMemoryDeleteArray(t_clusters);
 	
@@ -1164,11 +1182,20 @@ static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef
 
 	if (!MCStringConvertToCString(MCNameGetString(p_key), ctxt -> option_keys[ctxt -> index]))
 		return false;
+    
+    // SN-2014-08-11: [[ Bug 13146 ]] Also allow NameRef to be passed as options.
+	MCAutoStringRef t_value;
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName)
+        t_value = MCNameGetString((MCNameRef)p_value);
+    else if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString)
+        t_value = (MCStringRef)p_value;
+    else
+    {
+        ctxt -> option_values[ctxt -> index] = NULL;
+        return false;
+    }
 	
-    if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeString)
-		return false;
-	
-	if (!MCStringConvertToCString((MCStringRef)p_value, ctxt -> option_values[ctxt -> index]))
+	if (!MCStringConvertToCString(*t_value, ctxt -> option_values[ctxt -> index]))
 		return false;
 	
 	ctxt -> index += 1;
@@ -1208,8 +1235,13 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCArrayRef p_o
 		ctxt . index = 0;
 		ctxt . option_keys = t_option_keys;
 		ctxt . option_values = t_option_values;
-		if (!MCArrayApply(p_options, convert_options_array, &ctxt))
-			t_result = PRINTER_RESULT_ERROR;
+        
+        // FG-2014-05-23: [[ Bugfix 12502 ]] Don't try to convert empty options
+        if (p_options != nil && !MCArrayIsEmpty(p_options))
+        {
+            if (!MCArrayApply(p_options, convert_options_array, &ctxt))
+                t_result = PRINTER_RESULT_ERROR;
+        }
 	}
 
 	if (t_result == PRINTER_RESULT_SUCCESS)
@@ -1316,10 +1348,12 @@ MCPrinterResult MCCustomPrinterDevice::Begin(const MCPrinterRectangle& p_src_rec
 		if (!StartPage())
 			return PRINTER_RESULT_ERROR;
 
+    // MW-2014-07-30: [[ Bug 12804 ]] Make sure we get left / top round the right way else clipping
+    //   is wrong.
 	// Calculate the convex integer hull of the source rectangle.
 	MCRectangle t_src_rect_hull;
-	t_src_rect_hull . x = (int2)floor(p_src_rect . top);
-	t_src_rect_hull . y = (int2)floor(p_src_rect . left);
+	t_src_rect_hull . x = (int2)floor(p_src_rect . left);
+	t_src_rect_hull . y = (int2)floor(p_src_rect . top);
 	t_src_rect_hull . width = (uint2)(ceil(p_src_rect . right) - floor(p_src_rect . left));
 	t_src_rect_hull . height = (uint2)(ceil(p_src_rect . bottom) - floor(p_src_rect . top));
 
@@ -1733,9 +1767,9 @@ public:
 		return true;
 	}
 
-	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
+	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
 	{
-		if (!m_target -> DrawText(glyphs, glyph_count, text, clusters, font, paint, transform, p_clip))
+		if (!m_target -> DrawText(glyphs, glyph_count, text_bytes, text_byte_count, clusters, font, paint, transform, p_clip))
 			return Failed("DrawText");
 		return true;
 	}
@@ -1922,9 +1956,9 @@ public:
 		return true;
 	}
 
-	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
+	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
 	{
-		Enter("begin text '%s' with clip (%f, %f)-(%f, %f)", text, 
+		Enter("begin text '%s' with clip (%f, %f)-(%f, %f)", text_bytes, 
 				p_clip . left, p_clip . top, p_clip . right, p_clip . bottom);
 		for(uint32_t i = 0; i < glyph_count; i++)
 			Print("glyph %d at (%f, %f)", glyphs[i] . id, glyphs[i] . x, glyphs[i] . y);

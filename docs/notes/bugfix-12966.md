@@ -1,0 +1,1 @@
+# revVideoGrabber - revVideoGrabDialog "audio" does not bring up dialog

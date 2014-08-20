@@ -108,4 +108,4 @@ REM #
 REM #   BUILD ICU
 REM #
 
-CALL %_TOOLS_DIR%scripts\build-icu.bat
+CALL "%_TOOLS_DIR%scripts\build-icu.bat"

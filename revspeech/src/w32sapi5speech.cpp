@@ -61,6 +61,31 @@ static char *path_to_native(const char *p_path)
 	return t_path;
 }
 
+// MW-2014-08-06: [[ UnicodeSpeech ]] Utility routine to convert UTF8 to UTF16.
+static wchar_t *utf8tow(const char *p_utf8)
+{
+	wchar_t *t_utf16;
+	t_utf16 = new wchar_t[strlen(p_utf8) + 1];
+
+	int t_length;
+	t_length = MultiByteToWideChar(CP_UTF8, 0, p_utf8, strlen(p_utf8), t_utf16, strlen(p_utf8));
+	t_utf16[t_length] = 0;
+
+	return t_utf16;
+}
+
+// MW-2014-08-06: [[ UnicodeSpeech ]] Utility routine to convert Native (1252) to UTF16.
+static wchar_t *nativetow(const char *p_native)
+{
+	wchar_t *t_utf16;
+	t_utf16 = new wchar_t[strlen(p_native) + 1];
+
+	int t_length;
+	t_length = MultiByteToWideChar(1252, MB_PRECOMPOSED, p_native, strlen(p_native), t_utf16, strlen(p_native));
+	t_utf16[t_length] = 0;
+
+	return t_utf16;
+}
 
 INarrator::~INarrator(void)
 {
@@ -155,15 +180,15 @@ bool WindowsSAPI5Narrator::Finalize(void)
 //   containing the text to speak. The string to speak is converted to WCHAR before being rendered.
 //   The voice COM object created in Initialize() is used to speak the text. Sets the instance
 //   variable isspeaking to true if succesful.
-bool WindowsSAPI5Narrator::Start(const char* p_string)
+bool WindowsSAPI5Narrator::Start(const char* p_string, bool p_wants_utf8)
 {
 	if (!bInited)
 		return false;
 
 	HRESULT hr;
-	USES_CONVERSION;
-	
-	const WCHAR* szWTextString;
+
+	// MW-2014-08-06: [[ UnicodeSpeech ]] Reworked to convert p_string based on wants_utf8.
+	WCHAR *t_wchar_string;
 
 	if(!m_bUseDefaultPitch)
 	{
@@ -174,13 +199,28 @@ bool WindowsSAPI5Narrator::Start(const char* p_string)
 		strcpy( pstrTotal, strXMLtag);
 		strcat( pstrTotal, p_string);
 
-		szWTextString = A2W(pstrTotal);	
+		if (p_wants_utf8)
+			t_wchar_string = utf8tow(pstrTotal);
+		else
+			t_wchar_string = nativetow(pstrTotal);
+
+		delete pstrTotal;
 	}
 	else
-		szWTextString = A2W(p_string);
+	{
+		if (p_wants_utf8)
+			t_wchar_string = utf8tow(p_string);
+		else
+			t_wchar_string = nativetow(p_string);
+	}
 
-	hr = m_cpVoice->Speak(szWTextString, SPF_ASYNC | SPF_IS_XML, NULL );
-	
+	if (t_wchar_string != NULL)
+		hr = m_cpVoice->Speak(t_wchar_string, SPF_ASYNC | SPF_IS_XML, NULL );
+	else
+		hr = -1;
+
+	delete t_wchar_string;
+
     if( SUCCEEDED( hr ) )
 	{
 		isspeaking = true;

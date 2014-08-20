@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "font.h"
+#include "stacksecurity.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -247,7 +248,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		}
 		
 		if (MCStringIsEqualToCString(argv[i], "-v", kMCCompareExact)
-			|| MCStringIsEqualToCString(argv[i], "-visualed", kMCCompareExact))
+			|| MCStringIsEqualToCString(argv[i], "-visualid", kMCCompareExact))
 		{
 			uint4 visualid = 0;
 			if (++i >= argc || MCStringGetCharAtIndex(argv[i], 0) == '-' || !MCU_stoui4(argv[i], visualid))
@@ -264,7 +265,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		{
             MCAutoPointer<char> t_MCN_version;
             /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
-			fprintf(stderr, "Revolution %s Copyright 2003-2008 Runtime Revolution Ltd\n\
+			fprintf(stderr, "LiveCode %s Copyright 2003-2014 Runtime Revolution Ltd\n\
 			        Usage: %s [-d[isplay] displayname] \n\
 			        [-f[iles] (disable access to files and processes)\n\
 			        [-g[eometry] ={+-}<xoffset>{+-}<yoffset>]\n\

@@ -66,33 +66,11 @@ MCStack *MCStack::findstackd(Window w)
 }
 
 
-MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
-{
-	Window pwindow = getparentwindow();
-	if (pwindow != DNULL && w == pwindow)
-		if  (++ccount == cindex)
-			return this;
-	if (substacks != NULL)
-	{
-		MCStack *tptr = substacks;
-		do
-		{
-			pwindow = tptr->getparentwindow();
-			if (pwindow != DNULL && w == pwindow)
-			{
-				ccount++;
-				if (ccount == cindex)
-					return tptr;
-			}
-			tptr = (MCStack *)tptr->next();
-		}
-		while (tptr != substacks);
-	}
-	return NULL;
-}
-
 void MCStack::realize(void)
 {
+	// IM-2014-07-21: [[ Bug 12860 ]] Initialize window backing scale to the pixel scale
+	view_setbackingscale(MCResGetPixelScale());
+	
 	start_externals();
 
 	// For now, we just use the MCStack* as the window handle...
@@ -156,6 +134,11 @@ void MCStack::setopacity(unsigned char p_level)
 }
 
 void MCStack::updatemodifiedmark(void)
+{
+}
+
+// MERG-2014-06-02: [[ IgnoreMouseEvents ]] Stub for ignoreMouseEvents.
+void MCStack::updateignoremouseevents(void)
 {
 }
 

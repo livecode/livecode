@@ -39,6 +39,11 @@ MCSegment::MCSegment(MCLine *p_parent)
     
     m_LeftEdge = m_RightEdge = m_TopEdge = m_BottomEdge = 0;
     m_ContentWidth = 0;
+    // SN-2014-08-14: [[ Bug 13106 ]] m_Padding initialisation according to the VGrid property of the field
+    if (p_parent -> getparent() -> getvgrid())
+        m_Padding = p_parent -> getparent() -> gethpadding();
+    else
+        m_Padding = 0.0;
 }
 
 
@@ -52,6 +57,8 @@ MCSegment::MCSegment(const MCSegment *sg)
     
     m_HAlign = sg->m_HAlign;
     m_VAlign = sg->m_VAlign;
+    // SN-2014-08-14: [[ Bug 13106 ]] m_Padding member added to Segment
+    m_Padding = sg->m_Padding;
 }
 
 
@@ -64,9 +71,17 @@ void MCSegment::AddBlockRange(MCBlock *first, MCBlock *last)
 {
     m_FirstBlock = first;
     m_LastBlock = last;
+    
+    MCBlock *bptr = m_FirstBlock;
+    do
+    {
+        bptr -> SetSegment(this);
+        bptr = bptr->next();
+    }
+    while (bptr->prev() != m_LastBlock);
 }
 
-int16_t MCSegment::GetContentLength()
+coord_t MCSegment::GetContentLength()
 {
     if (m_ContentWidth != 0)
         return m_ContentWidth;
@@ -88,12 +103,12 @@ int16_t MCSegment::GetContentHeight() const
     return 0;
 }
 
-MCLine *MCSegment::Fit(int16_t p_max_width)
+MCLine *MCSegment::Fit(coord_t p_max_width)
 {
     MCBlock *t_block;
     t_block = m_FirstBlock;
     
-    uint32_t t_frontier_width;
+    coord_t t_frontier_width;
     t_frontier_width = 0;
     
     MCBlock *t_break_block;
@@ -269,7 +284,7 @@ MCLine *MCSegment::Fit(int16_t p_max_width)
     {
         // A block was broken and therefore the segment possibly needs to be split
         MCSegment *t_split_segment;
-        if (t_need_break_block)
+        if (t_break_block != m_LastBlock)
         {
             // Split this segment
             t_split_segment = new MCSegment(this);
@@ -302,7 +317,7 @@ MCLine *MCSegment::Fit(int16_t p_max_width)
     return t_newline;
 }
 
-void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y, findex_t si, findex_t ei, MCStringRef p_text, uint16_t p_style)
+void MCSegment::Draw(MCDC *dc, coord_t p_line_origin_x, int16_t p_line_origin_y, findex_t si, findex_t ei, MCStringRef p_text, uint16_t p_style)
 {
     MCBlock *bptr = m_FirstBlock;
     
@@ -314,9 +329,9 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
     int32_t t_flagged_sx, t_flagged_ex;
     t_flagged_sx = 0;
     t_flagged_ex = 0;
-    
+
     // Calculate the coordinates for drawing the contents of the segment
-    int16_t x, y;
+    coord_t x, y;
     if (m_HAlign == kMCSegmentTextHAlignLeft)
     {
         // Left-hand edge of the cell
@@ -325,12 +340,14 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
     else if (m_HAlign == kMCSegmentTextHAlignCenter)
     {
         // Centre of the cell minus half the length of the content
-        x = p_line_origin_x + m_LeftEdge + ((m_RightEdge - m_LeftEdge) >> 1) - (GetContentLength() >> 1);
+        // SN-2014-08-14: [[ Bug 13106 ]] Update to GetInnerWidth
+        x = p_line_origin_x + m_LeftEdge + (GetInnerWidth() / 2) - (GetContentLength() / 2);
     }
     else if (m_HAlign == kMCSegmentTextHAlignRight)
     {
         // Right-hand edge of the cell
-        x = p_line_origin_x + m_RightEdge - GetContentLength();
+        // SN-2014-08-14: [[ Bug 13106 ]] Update to GetInnerWidth
+        x = p_line_origin_x + m_LeftEdge + GetInnerWidth() - GetContentLength();
     }
     else    // m_HAlign == kMCSegmentTextHAlignJustify
     {
@@ -389,9 +406,10 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
 		}
         
 		// Pass the computed flags to the block to draw.
-		bptr->draw(dc, x + bptr->getorigin(), bptr->getorigin(), y, si, ei, p_text, p_style, t_flags);
-		
-		uint2 twidth;
+        // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+		bptr->draw(dc, x + bptr->getorigin(), p_line_origin_x + m_LeftEdge, p_line_origin_x + m_RightEdge, y, si, ei, p_text, p_style, t_flags);
+
+		coord_t twidth;
 		twidth = bptr->getwidth(dc);
 		
 		if (bptr -> getflagged())
@@ -399,9 +417,9 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
 			if (!t_is_flagged)
 			{
 				t_is_flagged = true;
-				t_flagged_sx = x;
+				t_flagged_sx = floorf(x);
 			}
-			t_flagged_ex = x + twidth;
+			t_flagged_ex = ceilf(x + twidth);
 		}
 		
 		if (t_is_flagged && (!bptr -> getflagged() || bptr == m_LastBlock))
@@ -523,7 +541,7 @@ void MCSegment::ResolveDisplayOrder()
     // The blocks are now in visual order. Calculate their positions (and also
     // the width of this line). A second pass will be needed to resolve the
     // offsets to be used when calculating tabstops.
-    uint16_t t_width = 0;
+    coord_t t_width = 0;
     for (uindex_t i = 0; i < t_block_count; i++)
     {
         bptr = t_visual_order[i];
@@ -532,23 +550,58 @@ void MCSegment::ResolveDisplayOrder()
         bptr -> SetVisualIndex(i);
         t_width += bptr -> getwidth(NULL);
     }
+    
+    m_FirstVisualBlock = t_visual_order[0];
+    m_LastVisualBlock = t_visual_order[t_block_count - 1];
 }
 
-int16_t MCSegment::GetCursorOffset()
+coord_t MCSegment::GetLeftEdge()
 {
     // The offset depends on the alignment of the segment
+    // SN-2014-08-14: [[ Bug 13106 ]] GetLeftEdge updated to adapt to the VGrid mode
     switch (m_HAlign)
     {
         case kMCSegmentTextHAlignLeft:
         case kMCSegmentTextHAlignJustify:
-            return m_LeftEdge;
-            
+            return m_LeftEdge + m_Padding;
         case kMCSegmentTextHAlignCenter:
-            return m_LeftEdge + ((m_RightEdge - m_LeftEdge) >> 1) - (GetContentLength() >> 1);
-            
+            if (m_Parent -> getparent() -> getvgrid())
+                return MCMax(m_LeftEdge + (GetWidth() - GetContentLength()) / 2,
+                             m_LeftEdge + m_Padding);
+            else
+                return m_LeftEdge + (GetWidth() - GetContentLength()) / 2;
         case kMCSegmentTextHAlignRight:
-            return m_RightEdge - GetContentLength();
-            
+            if (m_Parent -> getparent() -> getvgrid())
+                return MCMax(m_RightEdge - m_Padding - GetContentLength(),
+                             m_LeftEdge + m_Padding);
+            else
+                return m_RightEdge - GetContentLength();
+        default:
+            MCAssert(false);
+            return 0;
+    }
+}
+
+coord_t MCSegment::GetRightEdge()
+{
+    // The right limit depends on the TAB alignment
+    // SN-2014-08-14: [[ Bug 13106 ]] GetRightEdge updated to adapt to the VGrid mode
+    switch(m_HAlign)
+    {
+        case kMCSegmentTextHAlignLeft:   
+            if (m_Parent -> getparent() -> getvgrid())
+                return MCMin(m_LeftEdge + m_Padding + GetContentLength(),
+                             m_RightEdge - m_Padding);
+            else
+                return ((coord_t)m_LeftEdge + m_Padding) + GetContentLength();
+        case kMCSegmentTextHAlignCenter:
+            if (m_Parent -> getparent() -> getvgrid())
+                return MCMin(m_RightEdge - (GetWidth() - GetContentLength()) / 2,
+                             m_RightEdge - m_Padding);
+            else
+                return m_RightEdge - (GetWidth() - GetContentLength()) / 2;
+        case kMCSegmentTextHAlignRight:
+            return m_RightEdge - m_Padding;
         default:
             MCAssert(false);
             return 0;

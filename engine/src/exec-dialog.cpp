@@ -78,7 +78,7 @@ MC_EXEC_DEFINE_SET_METHOD(Dialog, ColorDialogColors, 2)
 void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCStringRef p_title, bool p_as_sheet)
 {
     MCAutoStringRef t_value;
-	bool t_chosen = true;
+	bool t_chosen = false;
 	if (MCsystemCS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_COLOR_DIALOGS))
 	{
 		MCColor t_color;
@@ -128,14 +128,18 @@ void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCSt
 		if (MCStringGetLength(*t_value) == 0)
 			t_chosen = false;
 	}
-
-	if (*t_value != nil)
-		ctxt.SetItToValue(*t_value);
-
+    
+    // SN-2014-08-11: [[ Bug 13144 ]] it should be set to empty if nothing has been made
 	if (t_chosen)
-		ctxt . SetTheResultToEmpty();
+    {
+        ctxt.SetItToValue(*t_value);
+		ctxt.SetTheResultToEmpty();
+    }
 	else
-		ctxt . SetTheResultToValue(MCN_cancel);
+    {
+        ctxt.SetItToEmpty();
+		ctxt.SetTheResultToValue(MCN_cancel);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -197,7 +201,11 @@ void MCDialogExecAnswerFileWithFilter(MCExecContext &ctxt, bool p_plural, MCStri
             ctxt.SetTheResultToEmpty();
     }
 	else
+    {
+        // SN-2014-08-11: [[ Bug 13144 ]] it should be set to empty if nothing has been made
+        ctxt.SetItToEmpty();
 		ctxt.SetTheResultToValue(MCN_cancel);
+    }
 }
 
 bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
@@ -266,7 +274,11 @@ void MCDialogExecAnswerFileWithTypes(MCExecContext &ctxt, bool p_plural, MCStrin
             ctxt.SetTheResultToEmpty();
 	}
 	else
+    {
+        // SN-2014-08-11: [[ Bug 13144 ]] it should be set to empty if nothing has been made
+        ctxt.SetItToEmpty();
 		ctxt.SetTheResultToValue(MCN_cancel);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -324,7 +336,11 @@ void MCDialogExecAnswerFolder(MCExecContext &ctxt, bool p_plural, MCStringRef p_
             ctxt.SetTheResultToEmpty();
 	}
 	else
+    {
+        // SN-2014-08-11: [[ Bug 13144 ]] it should be set to empty if nothing has been made
+        ctxt.SetItToEmpty();
 		ctxt.SetTheResultToValue(MCN_cancel);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -341,11 +357,20 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 		/* UNCHECKED */ MCListAppend(*t_button_list, p_buttons[i]);
 	/* UNCHECKED */ MCListCopyAsString(*t_button_list, &t_buttons_string);
 
-	MCStringRef p_args[3];
-	p_args[0] = p_title;
-	p_args[1] = p_prompt;
-	p_args[2] = *t_buttons_string;
-	MCDialogExecCustomAnswerDialog(ctxt, MCN_answer_dialog, *s_dialog_types[p_type], p_sheet, p_args, 3, &t_value);
+	MCStringRef t_args[4];
+	t_args[0] = p_title;
+	t_args[1] = p_prompt;
+	t_args[2] = *t_buttons_string;
+
+    // AL-2014-05-21: [[ Bug 12074 ]] Pass through directionality of prompt to
+    //  dialogData for appropriate dialog layout.
+    if (!MCStringResolvesLeftToRight(p_prompt))
+        t_args[3] = kMCTrueString;
+    else
+        t_args[3] = kMCFalseString;
+    
+    
+	MCDialogExecCustomAnswerDialog(ctxt, MCN_answer_dialog, *s_dialog_types[p_type], p_sheet, t_args, 4, &t_value);
 
 	if (ctxt.HasError())
 		return;
@@ -356,7 +381,11 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 		ctxt.SetTheResultToEmpty();
 	}
 	else
+    {
+        // SN-2014-08-11: [[ Bug 13144 ]] it should be set to empty if nothing has been made
+        ctxt.SetItToEmpty();
 		ctxt.SetTheResultToValue(MCN_cancel);
+    }
 #else
 	uint32_t t_type;
 	switch(p_type)
@@ -430,14 +459,21 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 void MCDialogExecAskQuestion(MCExecContext& ctxt, int p_type, MCStringRef p_prompt, MCStringRef p_answer, bool p_hint_answer, MCStringRef p_title, bool p_as_sheet)
 {
 #ifndef _MOBILE
-	MCStringRef t_args[3];
+	MCStringRef t_args[4];
 	t_args[0] = p_title;
 	t_args[1] = p_prompt;
 	t_args[2] = p_answer;
 	
+    // AL-2014-05-21: [[ Bug 12074 ]] Pass through directionality of prompt to
+    //  dialogData for appropriate dialog layout.
+    if (!MCStringResolvesLeftToRight(p_prompt))
+        t_args[3] = kMCTrueString;
+    else
+        t_args[3] = kMCFalseString;
+    
 	bool t_cancelled;
 	MCAutoStringRef t_result;
-	MCDialogExecCustomAskDialog(ctxt, MCN_ask_dialog, *s_dialog_types[p_type], p_as_sheet, t_args, 3, t_cancelled, &t_result);
+	MCDialogExecCustomAskDialog(ctxt, MCN_ask_dialog, *s_dialog_types[p_type], p_as_sheet, t_args, 4, t_cancelled, &t_result);
 	if (ctxt . HasError())
 		return;
 	

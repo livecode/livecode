@@ -290,6 +290,7 @@ void MCGroup::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 void MCGroup::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
 	MCValueAssign(label, p_label);
+	flags |= F_LABEL;
 	Redraw();
 }
 
@@ -775,4 +776,17 @@ void MCGroup::SetLockUpdates(MCExecContext& ctxt, bool p_locked)
     // When the lock is turned off, make sure we update the group.
     if (!p_locked)
         computeminrect(True);
+}
+
+
+// MERG-2013-08-12: [[ ClipsToRect ]]
+void MCGroup::SetClipsToRect(MCExecContext& ctxt, bool p_clips_to_rect)
+{
+    m_clips_to_rect = p_clips_to_rect;
+    computeminrect(True);
+}
+
+void MCGroup::GetClipsToRect(MCExecContext& ctxt, bool& r_clips_to_rect)
+{
+    r_clips_to_rect = m_clips_to_rect;
 }

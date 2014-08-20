@@ -85,11 +85,12 @@ static bool bidiDecrementISRIndex(uint8_t *classes, level_run*& x_run, uindex_t&
     if (x_run == nil || x_index == 0)
         return false;
     
-    if (--x_index <= x_run -> start)
+    // AL-2014-06-24: [[ Bug 12343 ]] Runs are 0-indexed.
+    if (--x_index < x_run -> start)
     {
         x_run = x_run -> prev_run;
         if (x_run != nil)
-            x_index = x_run -> start + x_run -> length;
+            x_index = x_run -> start + x_run -> length - 1;
     }
     
     if (x_run == nil)
@@ -447,8 +448,9 @@ static void bidiApplyRuleN1(isolating_run_sequence& irs, uint8_t *classes, uint8
                     bidiIncrementISRIndex(classes, t_before_run, t_before_index);
                 }
             }
-            
-            t_index = t_after_index + 1;
+            // AL-2014-08-14: [[ Bug 13077 ]] Set the index to the index of the strong text found.
+            //  The index is then incremented to the next point of interest by the loop.
+            t_index = t_after_index;
         }
     }
     while (bidiIncrementISRIndex(classes, t_run, t_index));

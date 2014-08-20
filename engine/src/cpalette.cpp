@@ -146,7 +146,7 @@ Boolean MCColors::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCColors::mup(uint2 which)
+Boolean MCColors::mup(uint2 which, bool p_release)
 {
 	if (!(state & CS_MFOCUSED))
 		return False;
@@ -160,7 +160,7 @@ Boolean MCColors::mup(uint2 which)
 			message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			break;
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		default:
 			return False;

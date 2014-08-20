@@ -34,6 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "exec-interface.h"
 
+#include "player.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static void MCMultimediaQTVRConstraintsParse(MCExecContext& ctxt, MCStringRef p_input, MCMultimediaTrackList& r_output)
@@ -93,12 +95,6 @@ static MCExecCustomTypeInfo _kMCMultimediaTrackTypeInfo =
 
 //////////
 
-struct MCMultimediaQTVRNode
-{
-	uint2 id;
-	MCMultimediaQTVRNodeType type;
-};
-
 static void MCMultimediaQTVRNodeFormat(MCExecContext& ctxt, const MCMultimediaQTVRNode& p_input, MCStringRef& r_output)
 {
 	if (MCStringFormat(r_output, "%d,%s", p_input . id, p_input . type == kMCQTVRNodePanoramaType ? "panorama" : "object"))
@@ -125,12 +121,6 @@ static MCExecCustomTypeInfo _kMCMultimediaQTVRNodeTypeInfo =
 };
 
 //////////
-
-struct MCMultimediaQTVRHotSpot
-{
-	uint2 id;
-	MCMultimediaQTVRHotSpotType type;
-};
 
 static void MCMultimediaQTVRHotSpotFormat(MCExecContext& ctxt, const MCMultimediaQTVRHotSpot& p_input, MCStringRef& r_output)
 {
@@ -197,7 +187,7 @@ MCExecCustomTypeInfo *kMCMultimediaQTVRConstraintsTypeInfo = &_kMCMultimediaQTVR
 MCExecCustomTypeInfo *kMCMultimediaQTVRNodeTypeInfo = &_kMCMultimediaQTVRNodeTypeInfo;
 MCExecCustomTypeInfo *kMCMultimediaQTVRHotSpotTypeInfo = &_kMCMultimediaQTVRHotSpotTypeInfo;
 
-static void copy_custom_list_as_string(MCExecContext& ctxt, MCExecCustomTypeInfo *p_type, void *p_elements, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
+void copy_custom_list_as_string_and_release(MCExecContext& ctxt, MCExecCustomTypeInfo *p_type, void *p_elements, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
 	MCAutoListRef t_list;
 	if (!MCListCreateMutable(p_delimiter, &t_list))
@@ -212,6 +202,11 @@ static void copy_custom_list_as_string(MCExecContext& ctxt, MCExecCustomTypeInfo
 
 		if (!MCListAppend(*t_list, *t_element_as_string))
 			goto throw_error;
+
+		((void(*)(MCExecContext&, void *))p_type -> free)(ctxt,(byte_t*)p_elements + p_type -> size * i);
+
+		if (ctxt . HasError())
+			return;
 	}
 
 	if (!MCListCopyAsString(*t_list, r_string))
@@ -280,7 +275,7 @@ void MCPlayer::GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time)
 
 void MCPlayer::SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time)
 {
-	setcurtime(p_time);
+	setcurtime(p_time, false);
 	if (isbuffering())
 		Redraw();
 }
@@ -364,7 +359,7 @@ void MCPlayer::SetStartTime(MCExecContext& ctxt, uinteger_t* p_time)
 				endtime = starttime;
 #endif
 	}
-	setselection();
+	setselection(false);
 }
 
 void MCPlayer::GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time)
@@ -391,7 +386,7 @@ void MCPlayer::SetEndTime(MCExecContext& ctxt, uinteger_t* p_time)
 				starttime = endtime;
 #endif
 	}
-	setselection();
+	setselection(false);
 }
 
 void MCPlayer::GetShowBadge(MCExecContext& ctxt, bool& r_setting)
@@ -455,14 +450,9 @@ void MCPlayer::GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks)
 
 void MCPlayer::SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks)
 {
-#ifdef FEATURE_QUICKTIME
-	deleteUserCallbacks(); //delete all callbacks for this player
-#endif
-		MCValueAssign(userCallbackStr, p_callbacks);
-#ifdef FEATURE_QUICKTIME
-		installUserCallbacks(); //install all callbacks for this player
-#endif
-	
+    // SN-2014-07-03: [[ PlatformPlayer ]]
+    // P_CALLBACKS property refactored in the MCPlayer implementations
+    setcallbacks(p_callbacks);
 }
 
 void MCPlayer::GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale)
@@ -482,18 +472,14 @@ void MCPlayer::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 
 void MCPlayer::GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id)
 {
-#ifndef FEATURE_QUICKTIME
-	r_id = (int)NULL;
-#else
-	r_id = (int4)theMC;
-#endif
+    // SN-2014-07-03: [[ PlatformPlayer ]]
+    // P_MOVIE_CONTROLLER_ID property refactor in the MCPlayer implementations
+    r_id = getmoviecontrollerid();
 }
 
 void MCPlayer::SetMovieControllerId(MCExecContext& ctxt, integer_t p_id)
 {
-#ifdef FEATURE_QUICKTIME
 	setmoviecontrollerid(p_id);
-#endif
 }
 
 void MCPlayer::GetPlayLoudness(MCExecContext& ctxt, uinteger_t& r_loudness)
@@ -563,101 +549,32 @@ void MCPlayer::SetZoom(MCExecContext& ctxt, double p_zoom)
 		Redraw();
 }
 
-void MCPlayer::GetQTTracks(MCExecContext& ctxt, MCStringRef& r_tracks)
-{
-#ifdef FEATURE_QUICKTIME
-	uint2 trackcount = gettrackcount();	
-	MCAutoArray<MCMultimediaTrack> t_track_array;
-
-	for (uindex_t i = 1 ; i <= trackcount ; i++)
-	{
-		MCMultimediaTrack t_track;
-		if (!gettrack(i, t_track . id, t_track . name, t_track . offset, t_track . duration))
-			break;
-		t_track_array . Push(t_track);
-	}
-
-	copy_custom_list_as_string(ctxt, kMCMultimediaTrackTypeInfo, t_track_array . Ptr(), t_track_array . Size(), '\n', r_tracks);
-
-	for (uindex_t i = 0; i < t_track_array . Size(); i++)
-		MCMultimediaTrackFree(ctxt, t_track_array[i]);
-#endif
-}
-
-void MCPlayer::GetAVITracks(MCExecContext& ctxt,  MCStringRef& r_tracks)
-{
-}
-
-void MCPlayer::GetX11Tracks(MCExecContext& ctxt,  MCStringRef& r_tracks)
-{
-}
-
 void MCPlayer::GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks)
 {
-	if (getstate(CS_PREPARED))
-#ifdef FEATURE_QUICKTIME
-		if (qtstate == QT_INITTED)
-			GetQTTracks(ctxt, r_tracks);
-#ifdef TARGET_PLATFORM_WINDOWS
-		else
-			GetAVITracks(ctxt, r_tracks);
-#endif
-#elif defined(X11)
-		GetX11Tracks(ctxt, r_tracks);
-#else
-	0 == 0;
-#endif
+    // SN-2014-07-03: [[ PlatformPlayer ]]
+    // P_TRACKS getter refactored to the MCPlayer implementation
+    gettracks(r_tracks);
 }
 
 void MCPlayer::GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints)
 {
-#ifdef FEATURE_QUICKTIME
-		getqtvrconstraints(1, r_constraints . minpan, r_constraints . maxpan);
-		getqtvrconstraints(2, r_constraints . mintilt, r_constraints . maxtilt);
-		getqtvrconstraints(3, r_constraints . minzoom, r_constraints . maxzoom);
-#endif
+    // SN-2014-07-03: [[ PlatformPlayer ]]
+    // P_CONSTRAITNS getter refactored to the MCPlayer implementations
+    getconstraints(r_constraints);
 }
 
 void MCPlayer::GetNodes(MCExecContext& ctxt, MCStringRef& r_nodes)
 {
-#ifdef FEATURE_QUICKTIME
-	uint2 nodecount = getnodecount();
-	MCAutoArray<MCMultimediaQTVRNode> t_node_array;
-
-	for (uindex_t i = 1 ; i <= nodecount ; i++)
-	{
-		MCMultimediaQTVRNode t_node;
-		if (!getnode(i, t_node . id, t_node . type))
-			break;
-		t_node_array . Push(t_node);
-	}
-
-	copy_custom_list_as_string(ctxt, kMCMultimediaQTVRNodeTypeInfo, t_node_array . Ptr(), t_node_array . Size(), '\n', r_nodes);
-
-	for (uindex_t i = 0; i < t_node_array . Size(); i++)
-		MCMultimediaQTVRNodeFree(ctxt, t_node_array[i]);
-#endif
+    // SN-2014-07-03: [[ PlatformPlayer ]]
+    // P_NODES getter refactored to the MCPlayer implementations
+    getnodes(r_nodes);
 }
 	
 void MCPlayer::GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots)
 {
-#ifdef FEATURE_QUICKTIME
-	uint2 hotspotcount = gethotspotcount();
-	MCAutoArray<MCMultimediaQTVRHotSpot> t_spot_array;
-
-	for (uindex_t i = 1 ; i <= hotspotcount ; i++)
-	{
-		MCMultimediaQTVRHotSpot t_spot;
-		if (!gethotspot(i, t_spot . id, t_spot . type))
-			break;
-		t_spot_array . Push(t_spot);
-	}
-
-	copy_custom_list_as_string(ctxt, kMCMultimediaQTVRHotSpotTypeInfo, t_spot_array . Ptr(), t_spot_array . Size(), '\n', r_spots);
-
-	for (uindex_t i = 0; i < t_spot_array . Size(); i++)
-		MCMultimediaQTVRHotSpotFree(ctxt, t_spot_array[i]);
-#endif
+    // SN-2014-07-03: [[ PlatformPlayer ]]
+    // P_HOTSPOTS getter refactored to the MCPlayer implementations
+    gethotspots(r_spots);
 }
 
 void MCPlayer::SetShowBorder(MCExecContext& ctxt, bool setting)
@@ -678,12 +595,10 @@ void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting,
 {
     uint4 oldflags = flags;
     MCObject::SetVisibility(ctxt, part, setting, visible);
-    if (flags != oldflags && !(flags & F_VISIBLE))
-        playstop();
-#ifdef FEATURE_QUICKTIME
-    if (theMC != NULL)
-        qt_setcontrollervisible();
-#endif
+    
+    // SN-2014-07-03: [[ PlatformPlayer ]]
+    // P_VISIBLE getter refactored to the MCPlayer implementations
+    updatevisibility();
 }
 
 void MCPlayer::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
@@ -699,25 +614,41 @@ void MCPlayer::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
 {
     MCObject::SetTraversalOn(ctxt, setting);
-#ifdef FEATURE_QUICKTIME
-    if (qtstate == QT_INITTED && getstate(CS_PREPARED))
-        qt_enablekeys((flags & F_TRAVERSAL_ON) != 0);
-#endif
+    
+    if (!ctxt . HasError())
+    {
+        // SN-2014-07-03: [[ PlatformPlayer ]]
+        // P_TRAVERSAL_ON needs an update on a QuickTime player 
+        updatetraversal();
+    }
 }
 
 void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks)
 {
-	if (getstate(CS_PREPARED))
-#ifdef FEATURE_QUICKTIME
-		if (qtstate == QT_INITTED)
-			qt_getenabledtracks(r_count, r_tracks);
-#ifdef TARGET_PLATFORM_WINDOWS
-		else
-			avi_getenabledtracks(r_count, r_tracks);
-#endif
-#elif defined(X11)
-    x11_getenabledtracks(r_count, r_tracks);
-#else
-    r_count = 0;
-#endif
+    // SN-2014-07-03: [[ PlatformPlayer ]]
+    // P_ENABLED_TRACKS getter refactored to the MCPlayer implementations
+    getenabledtracks(r_count, r_tracks);
 }
+
+void MCPlayer::GetForeColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
+{
+    getforegrouncolor(r_color);
+}
+
+void MCPlayer::SetForeColor(MCExecContext &ctxt, const MCInterfaceNamedColor &p_color)
+{
+    setforegroundcolor(p_color);
+    Redraw();
+}
+
+void MCPlayer::GetHiliteColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
+{
+    gethilitecolor(r_color);
+}
+
+void MCPlayer::SetHiliteColor(MCExecContext &ctxt, const MCInterfaceNamedColor &p_color)
+{
+    sethilitecolor(p_color);
+    Redraw();
+}
+

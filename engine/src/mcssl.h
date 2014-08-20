@@ -39,6 +39,11 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 
 bool SSL_random_bytes(const void *p_buffer, uindex_t p_count);
 
+
 bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, MCStringRef p_key, 
 					MCStringRef p_passphrase, MCStringRef &r_message_out, MCStringRef &r_result, uint32_t &r_error);
+
+// IM-2014-07-28: [[ Bug 12822 ]] Shared certificate loading function for SSL contexts.
+bool MCSSLContextLoadCertificates(SSL_CTX *p_context, MCStringRef *r_error);
+
 #endif

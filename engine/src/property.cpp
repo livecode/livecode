@@ -202,7 +202,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_PRINT_TEXT_SIZE, Any, Legacy, TextSize)
 	DEFINE_RW_PROPERTY(P_PRINT_TEXT_STYLE, Any, Legacy, TextStyle)
 	
-	DEFINE_RW_PROPERTY(P_PLAY_DESTINATION, String, Multimedia, PlayDestination)
+	DEFINE_RW_ENUM_PROPERTY(P_PLAY_DESTINATION, InterfacePlayDestination, Multimedia, PlayDestination)
 	DEFINE_RW_PROPERTY(P_PLAY_LOUDNESS, UInt16, Multimedia, PlayLoudness)
 	
 	DEFINE_RW_PROPERTY(P_STACK_FILES, String, Legacy, StackFiles)
@@ -239,7 +239,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_SERIAL_CONTROL_STRING, String, Files, SerialControlString)
 	DEFINE_RW_PROPERTY(P_HIDE_CONSOLE_WINDOWS, Bool, Files, HideConsoleWindows)
 
-	DEFINE_RW_PROPERTY(P_RANDOM_SEED, Int16, Math, RandomSeed)
+    // AL-2014-05-23: [[ Bug 12494 ]] Random seed is a 32-bit integer
+	DEFINE_RW_PROPERTY(P_RANDOM_SEED, Int32, Math, RandomSeed)
 
 	DEFINE_RW_PROPERTY(P_LOCK_CURSOR, Bool, Interface, LockCursor)
 	DEFINE_RW_PROPERTY(P_LOCK_ERRORS, Bool, Interface, LockErrors)
@@ -248,7 +249,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_LOCK_MOVES, Bool, Interface, LockMoves)
 	DEFINE_RW_PROPERTY(P_LOCK_RECENT, Bool, Interface, LockRecent)
 	DEFINE_RW_PROPERTY(P_DEFAULT_MENU_BAR, Name, Interface, DefaultMenubar)
-	DEFINE_RW_PROPERTY(P_STACK_FILE_VERSION, String, Interface, StackFileVersion)
+	DEFINE_RW_CUSTOM_PROPERTY(P_STACK_FILE_VERSION, InterfaceStackFileVersion, Interface, StackFileVersion)
 	DEFINE_RW_PROPERTY(P_DEFAULT_STACK, String, Interface, DefaultStack)
 	DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt32, Interface, DefaultCursor)
 	DEFINE_RW_PROPERTY(P_CURSOR, UInt32, Interface, Cursor)
@@ -378,6 +379,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     // IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScales returns a return-delimited
     // list of the pixel scales of all connected screens
     DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALES, LinesOfDouble, Interface, ScreenPixelScales)
+    
+    // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
+    DEFINE_RO_PROPERTY(P_EDITION_TYPE, String, Engine, EditionType)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
@@ -889,10 +893,12 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	// IM-2014-01-24: [[ HiDPI ]] Add support for global usePixelScaling, screenPixelScale, screenPixelScales properties
 	case P_USE_PIXEL_SCALING:
 	case P_SCREEN_PIXEL_SCALE:
-	case P_SCREEN_PIXEL_SCALES:
-			
-		break;
-
+    case P_SCREEN_PIXEL_SCALES:
+            
+    // MW-2014-08-12: [[ EditionType ]] Add support for global editionType property.
+    case P_EDITION_TYPE:
+        break;
+	        
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only
 	case P_REV_LICENSE_INFO:
 	case P_DRAG_DATA:
@@ -927,7 +933,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		}
 	case P_BRUSH_COLOR:
 	case P_BRUSH_BACK_COLOR:
-
 	case P_BRUSH_PATTERN:
 	case P_PEN_COLOR:
 	case P_PEN_BACK_COLOR:
@@ -1213,7 +1218,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	if (which == P_CUSTOM_VAR)
 	{
         MCAutoStringRef t_string;
-        if (!ctxt . EvalExprAsStringRef(destvar, EE_PROPERTY_BADEXPRESSION, &t_string))
+        if (!ctxt  . EvalExprAsStringRef(destvar, EE_PROPERTY_BADEXPRESSION, &t_string))
             return false;
 
         MCScriptPoint sp(*t_string);
@@ -1223,17 +1228,23 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			t_prop = (Properties)te -> which;
 		else
 		{
-            MCAutoStringRef t_icarray;
+            MCAutoStringRef t_icarray, t_property_name;
 			uindex_t t_offset;
+            // SN-2014-08-08: [[ Bug 13135 ]] Targetting a custom var should resolve the index AND suppress
+            //  it from the initial name
             if (MCStringFirstIndexOfChar(*t_string, '[', 0, kMCStringOptionCompareExact, t_offset))
             {
                 MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, MCStringGetLength(*t_string) - t_offset - 2), &t_icarray);
+                MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name);
             }
+            else
+                t_property_name = *t_string;
             
 			// MW-2011-09-02: [[ Bug 9698 ]] Always create a name for the property, otherwise
 			//   if the var contains empty, this function returns a nil name which causes
 			//   customprop to be used incorrectly.
-            /* UNCHECKED */ MCNameCreate(*t_string, t_prop_name);
+            //            
+            /* UNCHECKED */ MCNameCreate(*t_property_name, t_prop_name);
             
 			if (*t_icarray != nil)
             /* UNCHECKED */ MCNameCreate(*t_icarray, t_index_name);
@@ -1459,7 +1470,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 		bool t_error;
 		t_error = false;
 
-		MCRange *t_ranges;
+		MCInterval *t_ranges;
 		int t_range_count;
 		t_ranges = NULL;
 
@@ -1745,13 +1756,24 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 				MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
 				return ES_ERROR;
 			}
+
 			t_type = MCTransferData::StringToType(ep2 . getsvalue());
 		}
 
 		if (t_type != TRANSFER_TYPE_NULL)
 		{
 			MCSharedString *t_data;
-			t_data = MCSharedString::Create(ep . getsvalue());
+			
+			// MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
+			//   convert the array to a styles pickle and store that.
+			if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY)
+			{
+				t_type =  TRANSFER_TYPE_STYLED_TEXT;
+				t_data = MCConvertStyledTextArrayToStyledText(ep . getarray());
+			}
+			else
+				t_data = MCSharedString::Create(ep . getsvalue());
+			
 			if (t_data != NULL)
 			{
 				bool t_success;
@@ -1987,13 +2009,13 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			else
 
 				if (MCrecordrate <= (11.127 + 22.050) / 2.0)
-					MCrecordrate = 11.127;
+					MCrecordrate = 12.000;
 				else
 					if (MCrecordrate <= (22.050 + 22.255) / 2.0)
 						MCrecordrate = 22.050;
 					else
 						if (MCrecordrate <= (22.255 + 32.000) / 2.0)
-							MCrecordrate = 22.255;
+							MCrecordrate = 24.000;
 						else
 							if (MCrecordrate <= (32.000 + 44.100) / 2.0)
 								MCrecordrate = 32.000;
@@ -2404,7 +2426,14 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	case P_LOCK_MESSAGES:
 		return ep.getboolean(MClockmessages, line, pos, EE_PROPERTY_NAB);
 	case P_LOCK_MOVES:
-		return ep.getboolean(MClockmoves, line, pos, EE_PROPERTY_NAB);
+		{
+			Boolean t_new_value;
+			Exec_stat t_stat = ep.getboolean(t_new_value, line, pos, EE_PROPERTY_NAB);
+			if (t_stat == ES_NORMAL) {
+				MCscreen->setlockmoves(t_new_value);
+			}
+			return t_stat;
+		}
 	case P_LOCK_RECENT:
 		return ep.getboolean(MClockrecent, line, pos, EE_PROPERTY_NAB);
 	case P_PRIVATE_COLORS:
@@ -2498,7 +2527,12 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	case P_ACTIVATE_PALETTES:
 		return ep.getboolean(MCactivatepalettes, line, pos, EE_PROPERTY_NAB);
 	case P_HIDE_PALETTES:
-		return ep.getboolean(MChidepalettes, line, pos, EE_PROPERTY_NAB);
+		stat = ep.getboolean(MChidepalettes, line, pos, EE_PROPERTY_NAB);
+#ifdef _MACOSX
+        // MW-2014-04-23: [[ Bug 12080 ]] Make sure we update the hidesOnSuspend of all palettes.
+        MCstacks -> hidepaletteschanged();
+#endif
+        return stat;
 	case P_RAISE_PALETTES:
 		// MW-2004-11-17: On Linux, effect a restack if 'raisepalettes' is changed
 		// MW-2004-11-24: Altered MCStacklst::restack to find right stack if passed NULL
@@ -2630,7 +2664,20 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			if (ep.getboolean(trecording, line, pos, EE_PROPERTY_NAB) != ES_NORMAL)
 				return ES_ERROR;
 			if (!trecording)
-				MCtemplateplayer->stoprecording();
+			{
+#ifdef FEATURE_PLATFORM_RECORDER
+                bool t_recording;
+                t_recording = false;
+                
+                extern MCPlatformSoundRecorderRef MCrecorder;
+                
+                if (MCrecorder != nil)
+                    t_recording = MCPlatformSoundRecorderIsRecording(MCrecorder);
+#else
+				extern void MCQTStopRecording(void);
+				MCQTStopRecording();
+#endif
+			}
 		}
 		break;
 	case P_LZW_KEY:
@@ -2694,9 +2741,9 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 				//   no reason not to use the cache.
 				regexp *t_net_int_regex;
 				t_net_int_regex = MCR_compile("\\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", True /* casesensitive */);
-				int t_net_int_valid;
+				
+                int t_net_int_valid;
 				t_net_int_valid = MCR_exec(t_net_int_regex, ep.getsvalue().getstring(), ep.getsvalue().getlength());
-				MCR_free(t_net_int_regex);			
 				if (t_net_int_valid != 0)
 				{
 					delete MCdefaultnetworkinterface;
@@ -3066,9 +3113,35 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			case P_NUMBER_FORMAT:
 				ep.setnumberformat();
 				break;
-			case P_PLAY_DESTINATION:
+            // AL-2014-08-12: [[ Bug 13161 ]] Setting templateAudioClip playLoudness shouldn't set the global playLoudness
 			case P_PLAY_LOUDNESS:
-				return MCtemplateaudio->setprop(0, which, ep, False);
+                {
+                    uint2 t_loudness;
+                    if (ep . getuint2(t_loudness, line, pos, EE_ACLIP_LOUDNESSNAN) != ES_NORMAL)
+                        return ES_ERROR;
+                    
+                    t_loudness = MCU_max(MCU_min(t_loudness, 100), 0);
+                    
+                    extern bool MCSystemSetPlayLoudness(uint2 loudness);
+#ifdef _MOBILE
+                    if (MCSystemSetPlayLoudness(t_loudness))
+                        return ES_NORMAL;
+#endif
+                    if (MCplayers != NULL)
+                    {
+                        MCPlayer *tptr = MCplayers;
+                        while (tptr != NULL)
+                        {
+                            tptr->setvolume(t_loudness);
+                            tptr = tptr->getnextplayer();
+                        }
+                    }
+                    MCS_setplayloudness(t_loudness);
+                }
+ 
+                // fall through to set templateAudioClip property
+            case P_PLAY_DESTINATION:
+                return MCtemplateaudio->setprop(0, which, ep, False);
 			case P_LOCK_SCREEN:
 				if (ep.getboolean(newlock, line, pos, EE_PROPERTY_NAB) != ES_NORMAL)
 					return ES_ERROR;
@@ -3677,7 +3750,21 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
                     t_type = MCTransferData::StringToType(ep . getsvalue());
                 }
                 
-                if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
+                // MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
+                //   convert the styles data to an array and return that.
+                if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY &&
+                    t_pasteboard -> Contains(TRANSFER_TYPE_STYLED_TEXT, true))
+                {
+                    MCSharedString *t_data;
+                    t_data = t_pasteboard -> Fetch(TRANSFER_TYPE_STYLED_TEXT);
+                    if (t_data != NULL)
+                    {
+                        ep . setarray(MCConvertStyledTextToStyledTextArray(t_data), True);
+                        t_data -> Release();
+                        t_query_success = true;
+                    }
+                }
+                else if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
                 {
                     MCSharedString *t_data;
                     t_data = t_pasteboard -> Fetch(t_type);
@@ -3919,7 +4006,7 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
             ep.setboolean(MClockmessages);
             break;
         case P_LOCK_MOVES:
-            ep.setboolean(MClockmoves);
+            ep.setboolean(MCscreen->getlockmoves());
             break;
         case P_LOCK_RECENT:
             ep.setboolean(MClockrecent);
@@ -4224,6 +4311,11 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
             break;
         }
             
+            // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
+        case P_EDITION_TYPE:
+            ep . setstaticcstring(MClicenseparameters . license_class == kMCLicenseClassCommunity ? "community" : "commercial");
+            break;
+            
         case P_SHELL_COMMAND:
             ep.setsvalue(MCshellcmd);
             break;
@@ -4380,7 +4472,9 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
 				MCExecPoint ep2(ep);
 				MCexecutioncontexts[i]->getobj()->getprop(0, P_LONG_ID, ep2, False);
 				ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == 0);
-				ep.concatnameref(MCexecutioncontexts[i]->gethandler()->getname(), EC_COMMA, false);
+                // PM-2014-04-14: [[Bug 12125]] Do this check to avoid a crash in LC server
+                if (MCexecutioncontexts[i]->gethandler() != NULL)
+                    ep.concatnameref(MCexecutioncontexts[i]->gethandler()->getname(), EC_COMMA, false);
 				ep.concatuint(MCexecutioncontexts[i]->getline(), EC_COMMA, false);
 				if (MCexecutioncontexts[i] -> getparentscript() != NULL)
 				{
@@ -4610,8 +4704,24 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
                                             ep.getnftrailing(), ep.getnfforce());
                         break;
                     case P_PLAY_DESTINATION:
-                    case P_PLAY_LOUDNESS:
                         return MCtemplateaudio->getprop(0, which, ep, False);
+                        // AL-2014-08-12: [[ Bug 13161 ]] Get the global playLoudness rather than templateAudioClip playLoudness
+                    case P_PLAY_LOUDNESS:
+                    {
+                        uint2 t_loudness;
+                        t_loudness = 0;
+                        extern bool MCSystemGetPlayLoudness(uint2& r_loudness);
+#ifdef _MOBILE
+                        if (MCSystemGetPlayLoudness(t_loudness))
+#else
+                            if (false)
+#endif
+                                ;
+                            else
+                                t_loudness = MCS_getplayloudness();
+                        ep . setuint(t_loudness);
+                    }
+                        break;
                     case P_LOCK_SCREEN:
                         // MW-2011-08-18: [[ Redraw ]] Update to use redraw.
                         ep.setboolean(MCRedrawIsScreenLocked());
@@ -4952,6 +5062,7 @@ Exec_stat MCProperty::eval_function(MCExecPoint& ep)
 			return ctxt . Catch(line, pos);
 		}
 		case F_SCREEN_RECT:
+		if (target == NULL)
 		{
 			MCExecContext ctxt(ep);
 

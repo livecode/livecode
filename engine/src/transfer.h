@@ -125,6 +125,7 @@ enum MCTransferType
 	TRANSFER_TYPE_TEXT__FIRST = TRANSFER_TYPE_TEXT,
 	TRANSFER_TYPE_UNICODE_TEXT,
 	TRANSFER_TYPE_STYLED_TEXT,
+	TRANSFER_TYPE_STYLED_TEXT_ARRAY,
 	TRANSFER_TYPE_RTF_TEXT,
 	TRANSFER_TYPE_HTML_TEXT,
 	TRANSFER_TYPE_TEXT__LAST = TRANSFER_TYPE_HTML_TEXT,
@@ -182,7 +183,7 @@ public:
 	//
 	// If the pasteboard could not be queried, false should be returned.
 	//
-	virtual bool Query(MCTransferType*& r_types, unsigned int& r_type_count) = 0;
+	virtual bool Query(MCTransferType*& r_types, size_t& r_type_count) = 0;
 
 	// Fetch the given transfer type from the pasteboard. It is an error
 	// for this method to be called with a transfer type that was not
@@ -235,7 +236,7 @@ public:
 
 	// Query the object for its list of types (see MCPasteboard for
 	// precise semantics).
-	bool Query(MCTransferType*& r_types, unsigned int& r_type_count);
+	bool Query(MCTransferType*& r_types, size_t& r_type_count);
 
 	// Fetch the data of the given data type from the object (see
 	// MCPasteboard for precise semantics).
@@ -334,7 +335,7 @@ public:
 	// Return a list of (non-derived) types present on the clipboard
 	// note this call must be made inside an explicit Lock/Unlock pair
 	// due to the lifetime of the returned arrays.
-	bool Query(MCTransferType*& r_types, uint4& r_type_count);
+	bool Query(MCTransferType*& r_types, size_t& r_type_count);
 
 	// Return true if fetching the given type would succeed. If
 	// <p_with_conversion> is true, it also checks to see if <p_type>
@@ -344,7 +345,7 @@ public:
 	// Return data of the given type, converting as necessary.
 	// The returned string has copy semantics, i.e. the caller must
 	// release it when done with it.
-    bool Fetch(MCTransferType p_type, MCDataRef &r_data);
+    bool Fetch(MCTransferType p_type, MCValueRef &r_data);
 	
 	// Unlock the object.
 	void Unlock(void);
@@ -574,6 +575,10 @@ bool MCConvertTextToStyledText(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertUnicodeToStyledText(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertRTFToStyledText(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output);
+
+// MW-2014-03-12: [[ ClipboardStyledText ]] Converters to and from styledText arrays.
+bool MCConvertStyledTextToStyledTextArray(MCDataRef p_string, MCArrayRef &r_array);
+bool MCConvertStyledTextArrayToStyledText(MCArrayRef p_array, MCDataRef &r_output);
 
 ///////////////////////////////////////////////////////////////////////////////
 

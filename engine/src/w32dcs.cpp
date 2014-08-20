@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 
 #include "w32text.h"
+#include "w32compat.h"
 
 #include "graphicscontext.h"
 #include "graphics_util.h"
@@ -581,8 +582,21 @@ void MCScreenDC::setname(Window w, MCStringRef newname)
 
 	if (IsWindowUnicode((HWND)w -> handle . window))
 	{
-		MCAutoStringRefAsWString t_newname_w;
-		/* UNCHECKED */ t_newname_w . Lock(newname);
+		// If the name begins with an RTL character, force windows to interpret
+        // it as such by pre-pending an RTL embedding (RTL) control.
+        MCAutoStringRef t_newname;
+        if (MCBidiFirstStrongIsolate(newname, 0) != 0)
+        {
+            /* UNCHECKED */ MCStringMutableCopy(newname, &t_newname);
+            /* UNCHECKED */ MCStringPrependChar(*t_newname, 0x202B);
+        }
+        else
+        {
+            t_newname = newname;
+        }
+        
+        MCAutoStringRefAsWString t_newname_w;
+		/* UNCHECKED */ t_newname_w . Lock(*t_newname);
 		SetWindowTextW((HWND)w -> handle . window, *t_newname_w);
 	}
 	else
@@ -837,19 +851,23 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 	for(uint4 t_index = 1; t_index < t_display_count; ++t_index)
 		t_virtual_viewport = MCU_union_rect(t_virtual_viewport, t_displays[t_index] . viewport);
 
+	// IM-2014-04-02: [[ Bug 12109 ]] Convert screenrect to screen coords
+	MCRectangle t_device_viewport;
+	t_device_viewport = logicaltoscreenrect(t_virtual_viewport);
+
 	HWND hwndsnap = CreateWindowExA(WS_EX_TRANSPARENT | WS_EX_TOPMOST,
-	                               MC_SNAPSHOT_WIN_CLASS_NAME,"", WS_POPUP, t_virtual_viewport . x, t_virtual_viewport . y,
-	                               t_virtual_viewport . width, t_virtual_viewport . height, invisiblehwnd,
+	                               MC_SNAPSHOT_WIN_CLASS_NAME,"", WS_POPUP, t_device_viewport . x, t_device_viewport . y,
+	                               t_device_viewport . width, t_device_viewport . height, invisiblehwnd,
 	                               NULL, MChInst, NULL);
 	SetWindowPos(hwndsnap, HWND_TOPMOST,
-	             t_virtual_viewport . x, t_virtual_viewport . y, t_virtual_viewport . width, t_virtual_viewport . height, SWP_NOACTIVATE | SWP_SHOWWINDOW
+	             t_device_viewport . x, t_device_viewport . y, t_device_viewport . width, t_device_viewport . height, SWP_NOACTIVATE | SWP_SHOWWINDOW
 	             | SWP_DEFERERASE | SWP_NOREDRAW);
 
 	if (t_is_composited)
 	{
 		snaphdc = GetDC(NULL);
-		snapoffsetx = t_virtual_viewport . x;
-		snapoffsety = t_virtual_viewport . y;
+		snapoffsetx = t_device_viewport . x;
+		snapoffsety = t_device_viewport . y;
 	}
 	else
 	{
@@ -857,6 +875,9 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 		snapoffsetx = 0;
 		snapoffsety = 0;
 	}
+
+	// IM-2014-04-02: [[ Bug 12109 ]] Calculate snapshot rect in screen coords
+	MCRectangle t_device_snaprect;
 
 	snapdone = False;
 	snapcancelled = False;
@@ -875,24 +896,25 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 			TranslateMessage(&msg);
 			DispatchMessageW(&msg);
 		}
-		r = screentologicalrect(snaprect);
+		t_device_snaprect = snaprect;
 	}
-	
-	int t_width, t_height;
-	HBITMAP newimage = NULL;
-	void *t_bits = nil;
-	if (!snapcancelled)
+	else
 	{
 		if (r.x == -32768)
 			r.x = r.y = 0;
+
+		// IM-2014-04-02: [[ Bug 12109 ]] Convert snapshot rect to screen coords
+		t_device_snaprect = logicaltoscreenrect(r);
+
 		if (window != 0 || r.width == 0 || r.height == 0)
 		{
 			HWND w;
 			if (window == 0)
 			{
 				POINT p;
-				p.x = r.x;
-				p.y = r.y;
+				p.x = t_device_snaprect.x;
+				p.y = t_device_snaprect.y;
+
 				ShowWindow(hwndsnap, SW_HIDE);
 				if ((w = WindowFromPoint(p)) == NULL)
 				{
@@ -910,16 +932,22 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 			p.x = p.y = 0;
 			ClientToScreen(w, &p);
 			if (r.width == 0 || r.height == 0)
-				MCU_set_rect(r, (int2)p.x, (int2)p.y,
-							 (uint2)(cr.right), (uint2)(cr.bottom));
+				t_device_snaprect = MCRectangleMake(p.x, p.y, cr.right - cr.left, cr.bottom - cr.top);
 			else
-			{
-				r.x += (int2)p.x;
-				r.y += (int2)p.y;
-			}
+				t_device_snaprect = MCRectangleOffset(t_device_snaprect, p.x, p.y);
 		}
-		r = MCU_clip_rect(r, t_virtual_viewport . x, t_virtual_viewport . y, t_virtual_viewport . width, t_virtual_viewport . height);
+	}
+	
+	int t_width, t_height;
+	HBITMAP newimage = NULL;
+	void *t_bits = nil;
+	if (!snapcancelled)
+	{
+		t_device_snaprect = MCU_intersect_rect(t_device_snaprect, t_device_viewport);
 		
+		// IM-2014-04-02: [[ Bug 12109 ]] Convert screen coords back to logical
+		r = screentologicalrect(t_device_snaprect);
+
 		if (size != nil)
 		{
 			t_width = size -> x;
@@ -931,8 +959,6 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 			t_height = r . height;
 		}
 		
-		r = logicaltoscreenrect(r);
-
 		if (r.width != 0 && r.height != 0)
 		{
 			if (create_temporary_dib(snapdesthdc, t_width, t_height, newimage, t_bits))
@@ -943,11 +969,11 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 				//   layered windows are included.
 				if (t_is_composited)
 					StretchBlt(snapdesthdc, 0, 0, t_width, t_height,
-								snaphdc, r . x, r . y, r . width, r . height, CAPTUREBLT | SRCCOPY);
+								snaphdc, t_device_snaprect . x, t_device_snaprect . y, t_device_snaprect . width, t_device_snaprect . height, CAPTUREBLT | SRCCOPY);
 				else
 				{
 					StretchBlt(snapdesthdc, 0, 0, t_width, t_height,
-								snaphdc, r.x - t_virtual_viewport . x, r.y - t_virtual_viewport . y, r . width, r . height, CAPTUREBLT | SRCCOPY);
+						snaphdc, t_device_snaprect.x - t_device_viewport . x, t_device_snaprect.y - t_device_viewport . y, t_device_snaprect . width, t_device_snaprect . height, CAPTUREBLT | SRCCOPY);
 				}
 				SelectObject(snapdesthdc, obm);
 			}
@@ -1377,15 +1403,16 @@ void MCScreenDC::redrawbackdrop(void)
 
 		// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		// MM-2014-04-08: [[ Bug 12058 ]] Update back_pattern to be a MCPatternRef.
-		if (backdrop_pattern != nil && backdrop_pattern -> image != nil)
+		if (backdrop_pattern != nil)
 		{
 			MCGImageRef t_image;
-			t_image = backdrop_pattern->image;
-
 			MCGAffineTransform t_pattern_transform;
-			t_pattern_transform = MCGAffineTransformMakeScale(1.0 / backdrop_pattern->scale, 1.0 / backdrop_pattern->scale);
-
-			MCGContextSetFillPattern(t_context, t_image, t_pattern_transform, kMCGImageFilterNone);
+			// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+			if (MCPatternLockForContextTransform(backdrop_pattern, t_transform, t_image, t_pattern_transform))
+			{
+				MCGContextSetFillPattern(t_context, t_image, t_pattern_transform, kMCGImageFilterNone);
+				MCPatternUnlock(backdrop_pattern, t_image);
+			}
 		}
 		else
 			MCGContextSetFillRGBAColor(t_context, backdrop_colour.red / 65535.0, backdrop_colour.green / 65535.0, backdrop_colour.blue / 65535.0, 1.0);
@@ -1401,7 +1428,7 @@ void MCScreenDC::redrawbackdrop(void)
 			{
 				MCRectangle t_rect;
 				t_rect = backdrop_badge -> getrect();
-				backdrop_badge -> drawme(t_gfxcontext, 0, 0, t_rect . width, t_rect . height, 32, m_backdrop_rect.height - 32 - t_rect . height);
+				backdrop_badge -> drawme(t_gfxcontext, 0, 0, t_rect . width, t_rect . height, 32, m_backdrop_rect.height - 32 - t_rect . height, t_rect . width, t_rect . height);
 			}
 
 			delete t_gfxcontext;

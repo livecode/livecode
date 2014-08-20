@@ -91,7 +91,8 @@ bool MCFileSystemListEntries(const char *p_folder, uint32_t p_options, MCFileSys
 		if (t_success)
 		{
 			t_entry . type = (t_find_data . dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0 ? kMCFileSystemEntryFolder : kMCFileSystemEntryFile;
-			t_entry . filename = t_entry_filename;
+			MCStringCreateWithCString(t_entry_filename, t_entry.filename);
+			//t_entry . filename = t_entry_filename;
 
 			t_success = p_callback(p_context, t_entry);
 		}

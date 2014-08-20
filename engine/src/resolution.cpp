@@ -23,7 +23,8 @@
 #include "dispatch.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 
 #include "graphics.h"
 #include "resolution.h"
@@ -65,6 +66,9 @@ void MCResSetPixelScale(MCGFloat p_scale)
 
 void MCResInitPixelScaling(void)
 {
+	// IM-2014-08-14: [[ Bug 12372 ]] Perform platform-specific setup.
+	MCResPlatformInitPixelScaling();
+
 	// If pixel scaling is available then use it by default
 	s_res_use_pixel_scaling = MCResPlatformSupportsPixelScaling();
 	

@@ -804,7 +804,7 @@ void MCStringsEvalMatchText(MCExecContext& ctxt, MCStringRef p_string, MCStringR
     }
     
     bool t_success = true;
-    r_match = 0 != MCR_exec(t_compiled, p_string);
+    r_match = 0 != MCR_exec(t_compiled, p_string, MCRangeMake(0, MCStringGetLength(p_string)));
     uindex_t t_match_index = 1;
     
     for (uindex_t i = 0; t_success && i < p_result_count; i++)
@@ -815,12 +815,14 @@ void MCStringsEvalMatchText(MCExecContext& ctxt, MCStringRef p_string, MCStringR
             t_start = t_compiled->matchinfo[t_match_index].rm_so;
             t_length = t_compiled->matchinfo[t_match_index].rm_eo - t_start;
             t_success = MCStringCopySubstring(p_string, MCRangeMake(t_start, t_length), r_results[i]);
-            
-            if (++t_match_index >= NSUBEXP)
-                t_match_index = 0;
         }
         else
             r_results[i] = MCValueRetain(kMCEmptyString);
+        
+        // SN-02-06-2014 [[ Bug 12574 ]] REGEX : matchText result not as expected
+        // Once a pattern didn't match, the index was stuck on this non-matching index
+        if (++t_match_index >= NSUBEXP)
+            t_match_index = 0;
     }
     
     if (t_success)
@@ -843,7 +845,7 @@ void MCStringsEvalMatchChunk(MCExecContext& ctxt, MCStringRef p_string, MCString
     }
 
     bool t_success = true;
-    r_match = 0 != MCR_exec(t_compiled, p_string);
+    r_match = 0 != MCR_exec(t_compiled, p_string, MCRangeMake(0, MCStringGetLength(p_string)));
     uindex_t t_match_index = 1;
     
     for (uindex_t i = 0; t_success && i + 1 < p_result_count; i += 2)
@@ -899,7 +901,7 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
 	MCStringRef t_substring;
 	t_substring = nil;
     
-    while (t_success && t_source_offset < t_source_length && MCStringCopySubstring(p_string, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset)), t_substring) && MCR_exec(t_compiled, t_substring))
+    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, p_string, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset))))
     {
         uindex_t t_start = t_compiled->matchinfo[0].rm_so;
         uindex_t t_end = t_compiled->matchinfo[0].rm_eo;
@@ -1350,6 +1352,8 @@ bool MCStringsMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_st
 					else
 						ctxt.GetHandlerList()->doscript(t_ctxt, *t_expression);
 					t_value = MCresult->getvalueref();
+                    // SN-2014-08-11: [[ Bug 13139 ]] The result must be emptied after a doscript()
+                    ctxt . SetTheResultToEmpty();
 				}
 				t_valid = !t_ctxt.HasError();
 				MCerrorlock--;
@@ -1410,6 +1414,22 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringR
 	if (MCStringsConcatenate(p_left, p_right, r_result))
 		return;
 
+	ctxt.Throw();
+}
+
+bool MCDataConcatenate(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
+{
+	MCAutoDataRef t_string;
+	return MCDataMutableCopy(p_left, &t_string) &&
+    MCDataAppend(*t_string, p_right) &&
+    MCDataCopy(*t_string, r_result);
+}
+
+void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
+{
+	if (MCDataConcatenate(p_left, p_right, r_result))
+		return;
+    
 	ctxt.Throw();
 }
 
@@ -1681,7 +1701,8 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
 {
 	MCStringOptions t_options = ctxt.GetStringComparisonType();
     uindex_t t_offset;
-	if (!MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
+    // AL-2014-05-27: [[ Bug 12517 ]] Offset should be 0 for an empty input string
+	if (MCStringIsEmpty(p_chunk) || !MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
 		r_result = 0;
 	else
     {
@@ -1713,7 +1734,8 @@ bool MCRegexMatcher::compile(MCStringRef& r_error)
 {
 	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
 	//   no reason not to use the cache.
-	compiled = MCR_compile(pattern, (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
+    // AL-2014-07-11: [[ Bug 12797 ]] Compare options correctly
+	compiled = MCR_compile(pattern, (options == kMCStringOptionCompareExact || options == kMCStringOptionCompareNonliteral));
 	if (compiled == nil)
 	{
         MCR_copyerror(r_error);
@@ -1723,20 +1745,19 @@ bool MCRegexMatcher::compile(MCStringRef& r_error)
 }
 
 bool MCRegexMatcher::match(MCRange p_range)
-{
-    MCStringRef t_string;
-    MCStringCopySubstring(source, p_range, t_string);
-    
+{    
     // if appropriate, normalize the source string.
-    if (options == kMCStringOptionCompareNonliteral || kMCStringOptionCompareCaseless)
+    // AL-2014-07-11: [[ Bug 12797 ]] Compare options correctly and normalize the source, not the pattern
+    if (options == kMCStringOptionCompareNonliteral || options == kMCStringOptionCompareCaseless)
     {
-        MCAutoStringRef normalized_source;
-        MCStringNormalizedCopyNFC(pattern, &normalized_source);
-        MCValueAssign(t_string, *normalized_source);
+        MCAutoStringRef t_string, normalized_source;
+        MCStringCopySubstring(source, p_range, &t_string);
+        MCStringNormalizedCopyNFC(*t_string, &normalized_source);
+        return MCR_exec(compiled, *normalized_source, MCRangeMake(0, MCStringGetLength(*normalized_source)));
     }
     
-	return MCR_exec(compiled, t_string);
-    MCValueRelease(t_string);
+	return MCR_exec(compiled, source, p_range);
+
 }
 
 bool MCWildcardMatcher::compile(MCStringRef& r_error)
@@ -1828,7 +1849,8 @@ static bool MCStringsWildcardMatchNative(const char *s, uindex_t s_length, const
 			--s;
 			--s_index;
 			c = *p;
-			while (*s)
+            // AL-2014-05-23: [[ Bug 12489 ]] Ensure source string does not overrun length
+			while (*s && s_index < s_length)
 				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
 				        && *p != '?' && *p != OPEN_BRACKET)
 				{
@@ -1868,8 +1890,9 @@ bool MCWildcardMatcher::match(MCRange p_source_range)
         const char *t_source = (const char *)MCStringGetNativeCharPtr(source);
         const char *t_pattern = (const char *)MCStringGetNativeCharPtr(pattern);
         
+        // AL-2014-05-23: [[ Bug 12489 ]] Pass through case sensitivity properly
         if (t_source != nil && t_pattern != nil)
-            return MCStringsWildcardMatchNative(t_source + p_source_range . offset, p_source_range . length, t_pattern, MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
+            return MCStringsWildcardMatchNative(t_source + p_source_range . offset, p_source_range . length, t_pattern, MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || options == kMCStringOptionCompareNonliteral));
     }
 
 	return MCStringWildcardMatch(source, p_source_range, pattern, options);
@@ -2143,7 +2166,8 @@ void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems,
             break;
 			
         case ST_NUMERIC:
-            if (t_success && ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
+            // AL-2014-07-21: [[ Bug 12847 ]] If output is empty, don't construe as 0 for sorting purposes
+            if (t_success && !MCValueIsEmpty(*t_output) && ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
                 break;
 			
             /* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);

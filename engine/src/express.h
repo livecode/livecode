@@ -82,24 +82,11 @@ public:
 	
 	//////////
 	
-	// These helper methods simplify evaluating as specific values. They call
-	// 'eval_ctxt' then do a type conversion (which could fail, if there's a
-	// typecheck error) to the requested type if necessary.
-	void eval_valueref(MCExecContext& ctxt, MCValueRef& r_value);
-    void eval_booleanref(MCExecContext& ctxt, MCBooleanRef& r_value);
-    void eval_stringref(MCExecContext& ctxt, MCStringRef& r_value);
-    void eval_dataref(MCExecContext& ctxt, MCDataRef& r_value);
-    void eval_nameref(MCExecContext& ctxt, MCNameRef& r_value);
-	void eval_numberref(MCExecContext& ctxt, MCNumberRef& r_value);
-	void eval_arrayref(MCExecContext& ctxt, MCArrayRef& r_value);
-	void eval_bool(MCExecContext& ctxt, bool& r_value);
-	void eval_int(MCExecContext& ctxt, integer_t& r_value);
-	void eval_uint(MCExecContext& ctxt, uinteger_t& r_value);
-	void eval_double(MCExecContext& ctxt, double& r_value);
-	void eval_char(MCExecContext& ctxt, char_t& r_value);
-	void eval_point(MCExecContext& ctxt, MCPoint& r_value);
-	void eval_rectangle(MCExecContext& ctxt, MCRectangle& r_value);
-	void eval_color(MCExecContext& ctxt, MCColor& r_value);
+	template <typename T>
+	void eval(MCExecContext& ctxt, T& r_value)
+	{
+		eval_typed(ctxt, MCExecValueTraits<T>::type_enum, &r_value);
+    }
 	
 	// This method evaluates the the MCExpression as the specified type. The
 	// value ptr should be a pointer to the appropriate native value to store

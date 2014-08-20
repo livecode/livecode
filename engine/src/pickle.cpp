@@ -127,13 +127,15 @@ void MCObject::stoppickling(MCPickleContext *p_context, MCDataRef& r_string)
 	bool t_success;
 	t_success = true;
 
-	char* t_buffer;
-	uint4 t_size;
+    // FG-2014-08-07: [[ Bugfix 13070 ]]
+    // Don't reinterpret_cast a uint32_t& to a size_t& - it doesn't work on 64-bit
+	void* t_buffer;
+	size_t t_size;
 	t_buffer = NULL;
 	t_size = 0;
 	if (t_success)
 	{
-		if (MCS_closetakingbuffer(p_context -> stream, reinterpret_cast<void*&>(t_buffer), reinterpret_cast<size_t&>(t_size)) != IO_NORMAL)
+		if (MCS_closetakingbuffer(p_context -> stream, t_buffer, t_size) != IO_NORMAL)
 			t_success = false;
 	}
 
@@ -519,7 +521,7 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
         
 		if (t_success)
 		{
-			t_stream = MCS_fakeopen(MCString((const char *)t_buffer, t_chunk_length));
+            t_stream = MCS_fakeopen((const char *)t_buffer, t_chunk_length);
 			if (t_stream == NULL)
 				t_success = false;
 		}

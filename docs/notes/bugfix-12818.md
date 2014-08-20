@@ -1,0 +1,1 @@
+# [[Player]] Selection thumbs should not be visible when selection duration is 0

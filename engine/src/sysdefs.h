@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_TASKBAR_ICON
 #define FEATURE_RELAUNCH_SUPPORT
 #define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
 
 #elif defined(_MAC_DESKTOP)
 
@@ -41,7 +42,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
-#define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
+#define FEATURE_PLATFORM_PLAYER
+#define FEATURE_PLATFORM_RECORDER
+#define FEATURE_PLATFORM_AUDIO
 
 #elif defined(_LINUX_DESKTOP)
 
@@ -155,8 +159,20 @@ typedef struct __MCSysWindowHandle *MCSysWindowHandle;
 typedef struct __MCSysFontHandle *MCSysFontHandle;
 typedef struct __MCSysContextHandle *MCSysContextHandle;
 
+typedef class MCPlatformWindow *MCPlatformWindowRef;
+typedef class MCPlatformSurface *MCPlatformSurfaceRef;
+typedef class MCPlatformCursor *MCPlatformCursorRef;
+typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
+typedef class MCPlatformMenu *MCPlatformMenuRef;
+typedef class MCPlatformPlayer *MCPlatformPlayerRef;
+
 typedef void *MCColorTransformRef;
+
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
+typedef MCPlatformCursorRef MCCursorRef;
+#else
 typedef struct MCCursor *MCCursorRef;
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -216,15 +232,16 @@ class CDropTarget;
 
 typedef uintptr_t MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 typedef struct __MCWinSysHandle *MCWinSysHandle;
 typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
+
+#define PLACEMENT_NEW_DEFINED
+inline void *operator new (size_t size, void *p)
+{
+	return p;
+}
 
 #if defined(_DEBUG)
 
@@ -301,11 +318,6 @@ struct MCMacProcessSerialNumber
 	uint32_t lowLongOfPSN;
 };
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -351,11 +363,6 @@ struct MCFontStruct
 #define SIGBOGUS 100
 
 typedef int MCSocketHandle;
-
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
 
 extern uint1 MClowercasingtable[];
 inline uint1 MCS_tolower(uint1 p_char)
@@ -408,12 +415,13 @@ struct MCFontStruct
 #include <math.h>
 #include <assert.h>
 
-typedef int MCSocketHandle;
-
-inline void *operator new(size_t, void *p)
+struct MCMacProcessSerialNumber
 {
-	return p;
-}
+	uint32_t highLongOfPSN;
+	uint32_t lowLongOfPSN;
+};
+
+typedef int MCSocketHandle;
 
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
@@ -458,11 +466,6 @@ struct MCFontStruct
 
 typedef int MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -489,6 +492,24 @@ struct MCFontStruct
 #define SECONDS_MIN 0.0
 #define SECONDS_MAX 32535244799.0
 
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//
+//  NEW / DELETE REDEFINTIONS
+//
+
+#ifndef PLACEMENT_NEW_DEFINED
+inline void *operator new (size_t size, void *p)
+{
+	return p;
+}
+#endif
+
+// MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
+#ifndef __VISUALC__
+void *operator new (size_t size) throw();
+void *operator new[] (size_t size) throw();
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -618,38 +639,77 @@ struct MCBitmap
 	MCSysBitmapHandle bm;
 };
 #else
-struct MCBitmap
-{
-    int width, height;          /* size of image */
-    int xoffset;                /* number of pixels offset in X direction */
-    int format;                 /* XYBitmap, XYPixmap, ZPixmap */
-    char *data;                 /* pointer to image data */
-    int byte_order;             /* data byte order, LSBFirst, MSBFirst */
-    int bitmap_unit;            /* quant. of scanline 8, 16, 32 */
-    int bitmap_bit_order;       /* LSBFirst, MSBFirst */
-    int bitmap_pad;             /* 8, 16, 32 either XY or ZPixmap */
-    int depth;                  /* depth of image */
-    int bytes_per_line;         /* accelarator to next line */
-    int bits_per_pixel;         /* bits per pixel (ZPixmap) */
-    unsigned long red_mask;     /* bits in z arrangment */
-    unsigned long green_mask;
-    unsigned long blue_mask;
-    void *obdata;            /* hook for the object routines to hang on */
-    struct
-	{
-		void *create_image;
-		void *destroy_image;
-		void *get_pixel;
-		void *put_pixel;
-		void *sub_image;
-		void *add_pixel;
-	} f;
-};
+// FG-2014-05-15: [[ GDK ]] We no longer use an XImage for bitmaps
+typedef struct _GdkPixbuf MCBitmap;
+//struct MCBitmap
+//{
+//    int width, height;          /* size of image */
+//    int xoffset;                /* number of pixels offset in X direction */
+//    int format;                 /* XYBitmap, XYPixmap, ZPixmap */
+//    char *data;                 /* pointer to image data */
+//    int byte_order;             /* data byte order, LSBFirst, MSBFirst */
+//    int bitmap_unit;            /* quant. of scanline 8, 16, 32 */
+//    int bitmap_bit_order;       /* LSBFirst, MSBFirst */
+//    int bitmap_pad;             /* 8, 16, 32 either XY or ZPixmap */
+//    int depth;                  /* depth of image */
+//    int bytes_per_line;         /* accelarator to next line */
+//    int bits_per_pixel;         /* bits per pixel (ZPixmap) */
+//    unsigned long red_mask;     /* bits in z arrangment */
+//    unsigned long green_mask;
+//    unsigned long blue_mask;
+//    void *obdata;            /* hook for the object routines to hang on */
+//    struct
+//	{
+//		void *create_image;
+//		void *destroy_image;
+//		void *get_pixel;
+//		void *put_pixel;
+//		void *sub_image;
+//		void *add_pixel;
+//	} f;
+//};
 #endif
 
 ////////////////////////////////////////
 
-#if !defined(_LINUX_DESKTOP) && !defined(_LINUX_SERVER)
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
+
+typedef MCPlatformWindowRef Window;
+typedef MCSysWindowHandle Drawable;
+
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+
+// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
+/*#ifndef __LP64__
+#   if !defined(Window)
+        typedef unsigned long Window;
+#   endif
+#   if !defined(Pixmap)
+        typedef unsigned long Pixmap;
+#   endif
+#   if !defined(Drawable)
+        typedef unsigned long Drawable;
+#   endif
+#else
+#   if !defined(Window)
+        typedef unsigned long int Window;
+#   endif
+#   if !defined(Pixmap)
+        typedef unsigned long int Pixmap;
+#   endif
+#   if !defined(Drawable)
+        typedef unsigned long int Drawable;
+#   endif
+#endif*/
+
+#include <gdk/gdk.h>
+
+typedef GdkWindow*      Window;
+typedef GdkPixmap*      Pixmap;
+typedef GdkDrawable*    Drawable;
+
+#else
+
 enum
 {
     DC_WINDOW,
@@ -676,30 +736,7 @@ struct _ExtendedDrawable: public _Drawable
 typedef  _Drawable *        Window;
 typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
-#else
 
-// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
-#ifndef __LP64__
-	#if !defined(Window)
-		typedef unsigned long Window;
-	#endif
-	#if !defined(Pixmap)
-		typedef unsigned long Pixmap;
-	#endif
-	#if !defined(Drawable)
-		typedef unsigned long Drawable;
-	#endif
-#else
-	#if !defined(Window)
-		typedef unsigned long int Window;
-	#endif
-	#if !defined(Pixmap)
-		typedef unsigned long int Pixmap;
-	#endif
-	#if !defined(Drawable)
-		typedef unsigned long int Drawable;
-	#endif
-#endif
 
 #endif
 
@@ -713,7 +750,12 @@ typedef  _Drawable *        Drawable;
 #define Button3              3
 
 typedef unsigned long       KeySym;
+
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+typedef GdkAtom             Atom;
+#else
 typedef unsigned long       Atom;
+#endif
 
 ////////////////////////////////////////
 
@@ -1097,6 +1139,7 @@ class MCPlayer;
 class MCImage;
 class MCField;
 class MCObject;
+class MCObjectHandle;
 class MCObjectList;
 class MCMagnify;
 class MCPrinter;
@@ -1357,6 +1400,11 @@ struct MCPseudoObjectChunkPtr
     Chunk_term chunk;
     MCMarkedText mark;
 };
+
+// MM-2014-07-31: [[ ThreadedRendering ]]
+typedef struct __MCThreadCondition *MCThreadConditionRef;
+typedef struct __MCThreadMutex *MCThreadMutexRef;
+
 
 //////////////////////////////////////////////////////////////////////
 

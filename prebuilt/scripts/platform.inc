@@ -31,7 +31,7 @@ fi
 # Which platform are we actually targeting?
 case "${PLATFORM}" in
 	mac)
-		export ARCHS="i386 ppc x86_64"
+		export ARCHS="i386 x86_64"
 		export CC_BASE="${DEVELOPER}/usr/bin/gcc-${OSXGCCVERSION} --sysroot=${DEVELOPER}/SDKs/${SDK} -isysroot ${DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
 		export CXX_BASE="${DEVELOPER}/usr/bin/g++-${OSXGCCVERSION} --sysroot=${DEVELOPER}/SDKs/${SDK} -isysroot ${DEVELOPER}/SDKs/${SDK} -mmacosx-version-min=${OSXMIN}"
 		;;

@@ -779,10 +779,10 @@ extern uint8_t type_table[256];
 
 
 MCIdeScriptColourize::MCIdeScriptColourize(void)
-	: f_target(NULL),
+    :   f_type(CT_UNDEFINED),
 		f_start(0),
-		f_end(0),
-		f_type(CT_UNDEFINED)
+        f_end(0),
+        f_target(NULL)
 {
 }
 
@@ -2262,7 +2262,7 @@ void MCIdeScriptTokenize::exec_ctxt(MCExecContext& ctxt)
     MCAutoStringRef t_script;
     // By default, the result is empty
     ctxt . SetTheResultToEmpty();
-    m_script -> eval_stringref(ctxt, &t_script);
+    m_script -> eval(ctxt, &t_script);
 
     if (!ctxt . HasError())
     {

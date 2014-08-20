@@ -26,6 +26,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 #include "tilecache.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef void (*surface_combiner_t)(void *p_dst, int32_t p_dst_stride, const void *p_src, uint4 p_src_stride, uint4 p_width, uint4 p_height, uint1 p_opacity);
@@ -43,10 +45,8 @@ struct MCTileCacheSoftwareCompositorContext
 	MCRectangle dirty;
 
 	// The raster to render into.
-	void *bits;
-	// The raster's stride
-	uint32_t stride;
-
+    MCGRaster raster;
+    
 	// The clip to apply to tiles
 	MCRectangle clip;
 	// The combiner to use
@@ -80,24 +80,27 @@ void MCTileCacheSoftwareCompositor_DeallocateTile(void *p_context, void *p_tile)
 	MCMemoryDeallocate(p_tile);
 }
 
-bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p_surface, MCRegionRef p_dirty)
+bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p_surface, MCGRegionRef p_dirty)
 {
 	MCTileCacheSoftwareCompositorContext *self;
 	self = (MCTileCacheSoftwareCompositorContext *)p_context;
 	
-	MCGRaster t_raster;
-	if (!p_surface -> LockPixels(p_dirty, t_raster))
-		return false;
+	MCGIntegerRectangle t_dirty;
+	t_dirty = MCGRegionGetBounds(p_dirty);
 	
-	self -> bits = t_raster . pixels;
-	self -> stride = t_raster . stride;
+    // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
+	MCGRaster t_raster;
+	if (!p_surface -> LockPixels(t_dirty, t_raster))
+		return false;
+	    
+    self -> raster = t_raster;
 
 	MCMemoryDeallocate(self -> tile_row);
 	self -> tile_row = nil;
 	self -> tile_row_color = 0;
 	
 	self -> tile_size = MCTileCacheGetTileSize(self -> tilecache);
-	self -> dirty = MCRegionGetBoundingBox(p_dirty);
+	self -> dirty = MCRectangleFromMCGIntegerRectangle(t_dirty);
 	self -> clip = self -> dirty;
 	self -> combiner = s_surface_combiners_nda[GXcopy];
 	self -> opacity = 255;
@@ -107,7 +110,11 @@ bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p
 
 bool MCTileCacheSoftwareCompositor_EndFrame(void *p_context, MCStackSurface *p_surface)
 {
-	p_surface -> UnlockPixels();
+	MCTileCacheSoftwareCompositorContext *self;
+	self = (MCTileCacheSoftwareCompositorContext *)p_context;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
+	p_surface -> UnlockPixels(MCRectangleToMCGIntegerRectangle(self -> dirty), self-> raster);
 	
 	return true;
 }
@@ -152,10 +159,10 @@ bool MCTileCacheSoftwareCompositor_CompositeTile(void *p_context, int32_t p_x, i
 	t_src_rect = MCU_offset_rect(t_dst_rect, -p_x, -p_y);
 
 	void *t_dst_ptr, *t_src_ptr;
-	t_dst_ptr = (uint8_t *)self -> bits + self -> stride * (t_dst_rect . y - self -> dirty . y) + (t_dst_rect . x - self -> dirty . x) * sizeof(uint32_t);
+	t_dst_ptr = (uint8_t *)self -> raster . pixels + self -> raster . stride * (t_dst_rect . y - self -> dirty . y) + (t_dst_rect . x - self -> dirty . x) * sizeof(uint32_t);
 	t_src_ptr = (uint32_t *)p_tile + self -> tile_size * t_src_rect . y + t_src_rect . x;
 
-	self -> combiner(t_dst_ptr, self -> stride, t_src_ptr, self -> tile_size * sizeof(uint32_t), t_src_rect . width, t_src_rect . height, self -> opacity);
+	self -> combiner(t_dst_ptr, self -> raster . stride, t_src_ptr, self -> tile_size * sizeof(uint32_t), t_src_rect . width, t_src_rect . height, self -> opacity);
 
 	return true;
 }
@@ -183,11 +190,12 @@ bool MCTileCacheSoftwareCompositor_CompositeRect(void *p_context, int32_t p_x, i
 	t_dst_rect . height = self -> tile_size;
 	t_dst_rect = MCU_intersect_rect(t_dst_rect, self -> clip);
 
+    // MM-2014-07-31: [[ ThreadedRendering ]] We now wrap the bits in a raster.
 	void *t_dst_ptr;
-	t_dst_ptr = (uint8_t *)self -> bits + self -> stride * (t_dst_rect . y - self -> dirty . y) + (t_dst_rect . x - self -> dirty . x) * sizeof(uint32_t);
+	t_dst_ptr = (uint8_t *)self -> raster . pixels + self -> raster . stride * (t_dst_rect . y - self -> dirty . y) + (t_dst_rect . x - self -> dirty . x) * sizeof(uint32_t);
 	
 	for(uint32_t y = 0; y < t_dst_rect . height; y++)
-		self -> combiner((uint8_t *)t_dst_ptr + y * self -> stride, self -> stride, self -> tile_row, self -> tile_size * sizeof(uint32_t), t_dst_rect . width, 1, self -> opacity); 
+		self -> combiner((uint8_t *)t_dst_ptr + y * self -> raster . stride, self -> raster . stride, self -> tile_row, self -> tile_size * sizeof(uint32_t), t_dst_rect . width, 1, self -> opacity);
 
 	return true;
 }

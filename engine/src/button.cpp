@@ -64,13 +64,6 @@ MCImage *MCButton::macrbhilite = NULL;
 MCImage *MCButton::macrbhilitetrack = NULL;
 uint2 MCButton::focusedtab = MAXUINT2;
 
-// MW-2007-12-11: [[ Bug 5670 ]] This global is set to false before a card issues an
-//   mdown to its focused control. If the mdown resulted in a popup being shown on OS X, then it will be
-//   set to true. This is to work around the problem with the mouse down message being 'cancelled' on a
-//   popup-menu action resulting in the group mdown not returning true, and thus causing the card to
-//   send an errant mdown message to the script.
-
-bool MCosxmenupoppedup = false;
 bool MCmenupoppedup = false;
 
 Keynames MCButton::button_keys[] =
@@ -275,6 +268,8 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_DEFAULT, Bool, MCButton, Default)
 	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCButton, Text)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, BinaryString, MCButton, UnicodeText)
+    // SN-2014-06-25 [[ IconGravity ]]
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_ICON_GRAVITY, InterfaceButtonIconGravity, MCButton, IconGravity)
 	
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ICON, InterfaceButtonIcon, MCButton, Icon)
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ARMED_ICON, InterfaceButtonIcon, MCButton, ArmedIcon)
@@ -288,8 +283,7 @@ MCPropertyInfo MCButton::kProperties[] =
     
     DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_HILITE, Bool, MCButton, Hilite)
     DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_DISABLED, Bool, MCButton, Disabled)
-    DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_ENABLED, Bool, MCButton, Enabled)
-    
+    DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_ENABLED, Bool, MCButton, Enabled)    
 };
 
 MCObjectPropertyTable MCButton::kPropertyTable =
@@ -319,11 +313,7 @@ MCButton::MCButton()
 	menulines = DEFAULT_MENU_LINES;
 	menuhasitemtags = false;
 	menu = NULL; //stack based menu
-
-#ifdef _MAC_DESKTOP
-	bMenuID = 0; //for button/object based menus
-#endif
-
+	m_system_menu = NULL;
 	entry = NULL;
 	tabs = MCValueRetain(kMCEmptyArray);
 	acceltext = MCValueRetain(kMCEmptyString);
@@ -331,6 +321,12 @@ MCButton::MCButton()
 	mnemonic = 0;
 	family = 0;
 	ishovering = False;
+    
+    // MW-2014-06-19: [[ IconGravity ]] By default buttons use legacy behavior.
+    m_icon_gravity = kMCGravityNone;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
+    m_animate_posted = false;
 }
 
 MCButton::MCButton(const MCButton &bref) : MCControl(bref)
@@ -355,6 +351,7 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 	menuhasitemtags = bref.menuhasitemtags;
 	menustring = MCValueRetain(bref.menustring);
 	menu = NULL;
+	m_system_menu = NULL;
 	entry = NULL;
 	tabs = MCValueRetain(kMCEmptyArray);
 	acceltext = MCValueRetain(bref.acceltext);
@@ -362,10 +359,6 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 	accelmods = bref.accelmods;
 	mnemonic = bref.mnemonic;
 	ishovering = False;
-
-#ifdef _MAC_DESKTOP
-	bMenuID = 0;
-#endif
 
 	if (bref.bdata != NULL)
 	{
@@ -379,6 +372,12 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 		while (bptr != bref.bdata);
 	}
 	family = bref.family;
+    
+    // MW-2014-06-19: [[ IconGravity ]] Copy the other buttons gravity
+    m_icon_gravity = kMCGravityNone;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
+    m_animate_posted = false;
 }
 
 MCButton::~MCButton()
@@ -741,6 +740,9 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
 					MCValueAssign(label, *t_pick);
+                    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+                    //  we need to rely on the F_LABEL flag
+                    flags |= F_LABEL;
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
 					Exec_stat es = message_with_valueref_args(MCM_menu_pick, *t_pick);
@@ -903,8 +905,11 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 						menu->close();
 						menudepth--;
 						MCdispatcher->addmenu(bptr);
+                        // MW-2014-06-10: [[ Bug 12590 ]] Make sure we lock screen around the menu update message.
+                        MCRedrawLockScreen();
 						bptr->state |= CS_MFOCUSED;
 						bptr->message_with_args(MCM_mouse_down, menubutton);
+                        MCRedrawUnlockScreen();
 						bptr->findmenu();
 						bptr->openmenu(False);
 						return True;
@@ -1205,6 +1210,7 @@ Boolean MCButton::mdown(uint2 which)
 		return True;
 	}
 	if (which == Button1)
+	{
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
@@ -1254,15 +1260,18 @@ Boolean MCButton::mdown(uint2 which)
 		default:
 			return False;
 		}
+	}
 	else
+	{
 		message_with_args(MCM_mouse_down, which);
+	}
 	return True;
 }
 
-Boolean MCButton::mup(uint2 which)
+Boolean MCButton::mup(uint2 which, bool p_release)
 {
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	MCAutoStringRef t_pick;
 	if (state & CS_SUBMENU
 	        && (which == 0 || menubutton == 0 || (uint1)which == menubutton))
@@ -1283,14 +1292,14 @@ Boolean MCButton::mup(uint2 which)
 		{
 			state &= ~CS_FIELD_GRAB;
 			if (state & CS_SUBMENU)
-				menu->mup(which);
+				menu->mup(which, p_release);
 			else
-				entry->mup(which);
+				entry->mup(which, p_release);
 			return True;
 		}
 		if (menudepth > mymenudepth)
 		{
-			menu->mup(which);
+			menu->mup(which, p_release);
 			if (menudepth > mymenudepth)
 				return True;
 		}
@@ -1337,6 +1346,9 @@ Boolean MCButton::mup(uint2 which)
 				if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
 					MCValueAssign(label, *t_pick);
+                    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+                    //  we need to rely on the F_LABEL flag
+                    flags |= F_LABEL;
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
 				}
@@ -1408,13 +1420,14 @@ Boolean MCButton::mup(uint2 which)
 		return True;
 	}
 	if (which == Button1)
+	{
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
 			if (state & CS_FIELD_GRAB)
 			{
 				state &= ~CS_FIELD_GRAB;
-				entry->mup(which);
+				entry->mup(which, p_release);
 			}
 			else
 			{
@@ -1485,7 +1498,7 @@ Boolean MCButton::mup(uint2 which)
 					if (state & CS_HILITED)
 						radio();
 				}
-				if (MCU_point_in_rect(rect, mx, my))
+				if (!p_release && MCU_point_in_rect(rect, mx, my))
 				{
 					state |= CS_VISITED;
 					message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
@@ -1496,7 +1509,7 @@ Boolean MCButton::mup(uint2 which)
 			break;
 		case T_BUTTON:
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -1505,14 +1518,17 @@ Boolean MCButton::mup(uint2 which)
 		default:
 			return False;
 		}
+	}
 	else
-		if (MCU_point_in_rect(rect, mx, my))
+	{
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 		{
 			state |= CS_VISITED;
 			message_with_args(MCM_mouse_up, which);
 		}
 		else
 			message_with_args(MCM_mouse_release, which);
+	}
 	if (state & CS_ARMED)
 	{
 		state &= ~CS_ARMED;
@@ -1576,6 +1592,8 @@ void MCButton::timer(MCNameRef mptr, MCParameter *params)
 	{
 		if (state & CS_SHOW_DEFAULT)
 		{
+            // MM-2014-07-31: [[ ThreadedRendering ]] Flag that there is no longer a default button animation message pending.
+            m_animate_posted = false;            
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 		}
@@ -1918,6 +1936,11 @@ Exec_stat MCButton::getprop_legacy(uint4 parid, Properties which, MCExecPoint& e
 		// Map the menustring's encoding to the requested encoding.
 		ep.mapunicode(hasunicode(), which == P_UNICODE_TEXT);
 		break;
+            
+    // MW-2014-06-19: [[ IconGravity ]] Getter for iconGravity
+    case P_ICON_GRAVITY:
+        ep.setstaticcstring(MCgravitystrings[m_icon_gravity]);
+        break;
 #endif /* MCButton::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
@@ -2157,6 +2180,11 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	//   'unicodeLabel'.
 	case P_LABEL:
 	case P_UNICODE_LABEL:
+    {
+        // MW-2014-08-01: [[ Bug 12852 ]] Make sure we use the value of EP after conversion.
+        //   (i.e. not data!).
+        MCString t_data;
+        
 		// Make sure the label is up to date.
 		if (entry != NULL)
 			getentrytext();
@@ -2168,17 +2196,19 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 			switchunicode(true);
 		else if (p == P_LABEL && hasunicode())
 			ep.nativetoutf16();
+        
+        t_data = ep . getsvalue();
 
 		// Only do anything if there is a change.
-		if (label == NULL || data.getlength() != labelsize
-		        || memcmp(data.getstring(), label, data.getlength()) != 0)
+		if (label == NULL || t_data.getlength() != labelsize
+		        || memcmp(t_data.getstring(), label, t_data.getlength()) != 0)
 		{
 			delete label;
-			if (data != MCnullmcstring)
+			if (t_data != MCnullmcstring)
 			{
-				labelsize = data.getlength();
+				labelsize = t_data.getlength();
 				label = new char[labelsize];
-				memcpy(label, data.getstring(), labelsize);
+				memcpy(label, t_data.getstring(), labelsize);
 				flags |= F_LABEL;
 			}
 			else
@@ -2199,6 +2229,45 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 
 			clearmnemonic();
 			setupmnemonic();
+			
+			// MW-2014-03-12: [[ Bug 11917 ]] Try and sync the menuhistory with
+			//   the new label - we take the first entry which matches the label
+			//   or leave it unchanged if there is no match.
+			if (menumode == WM_OPTION || menumode == WM_COMBO)
+			{
+				// Break up the list of items.
+				MCString *t_ptrs;
+				t_ptrs = NULL;
+				uint2 t_nptrs;
+				t_nptrs = 0;
+				MCU_break_string(MCString(menustring, menusize), t_ptrs, t_nptrs, hasunicode());
+				
+				// Loop through looking for the new label (taking into account
+				// the caseSensitive property).
+				int t_index;
+				t_index = -1;
+				for(int i = 0; i < t_nptrs; i++)
+					if (ep . getcasesensitive())
+					{
+						if (t_ptrs[i] . equalexactly(data))
+						{
+							t_index = i;
+							break;
+						}
+					}
+					else
+					{
+						if (t_ptrs[i] == data)
+						{
+							t_index = i;
+							break;
+						}
+					}
+				
+				// If we found a matching item, then set the menuhistory.
+				if (t_index != -1)
+					setmenuhistoryprop(t_index + 1);
+			}
 		}
 		else
 		{
@@ -2207,7 +2276,8 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 
 			dirty = False;
 		}
-		break;
+    }
+    break;
 	case P_LABEL_WIDTH:
 		if (!MCU_stoi2(data, i1))
 		{
@@ -2534,6 +2604,15 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 		if (entry != NULL)
 			entry -> setprop(parid, p, ep, effective);
 		return MCControl::setprop(parid, p, ep, effective);
+        
+    // MW-2014-06-19: [[ IconGravity ]] Setter for iconGravity
+    case P_ICON_GRAVITY:
+            for(uindex_t i = 0; MCgravitystrings[i] != nil; i++)
+                if (data == MCgravitystrings[i])
+                    m_icon_gravity = (MCGravity)i;
+            dirty = True;
+        break;
+            
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 #endif /* MCButton::setprop */
@@ -2755,7 +2834,7 @@ void MCButton::resetfontindex(MCStack *oldstack)
 		bdata = tptr;
 		while (bptr != NULL)
 		{
-			MCCdata *tptr = (MCCdata *)bptr->remove(bptr);
+			tptr = (MCCdata *)bptr->remove(bptr);
 			delete tptr;
 		}
 	}
@@ -2774,8 +2853,8 @@ void MCButton::activate(Boolean notify, KeySym p_key)
 		if (menu != NULL)
 			menu->findaccel(p_key, &t_pick, t_disabled);
 #ifdef _MAC_DESKTOP
-		else if (bMenuID != 0)
-			getmacmenuitemtextfromaccelerator(bMenuID, p_key, MCmodifierstate, &t_pick, false);
+		else if (m_system_menu != nil)
+			getmacmenuitemtextfromaccelerator(m_system_menu, p_key, MCmodifierstate, &t_pick, false);
 #endif
 		if (MCStringIsEmpty(*t_pick))
 		{
@@ -2977,6 +3056,10 @@ void MCButton::getentrytext()
     MCAutoStringRef t_label;
     if (entry -> exportasplaintext((uinteger_t)0, 0, INT32_MAX, &t_label))
         MCValueAssign(label, *t_label);
+    
+    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+    //  we need to rely on the F_LABEL flag
+    flags |= F_LABEL;
 }
 
 void MCButton::createentry()
@@ -3361,6 +3444,7 @@ public:
 			if (width > bstack[stackdepth].maxwidth)
 				bstack[stackdepth].maxwidth = width;
 			MCValueAssign(newbutton->label, p_menuitem->label);
+			newbutton -> flags |= F_LABEL;
 		}
 		return false;
 	}
@@ -3526,14 +3610,15 @@ void MCButton::openmenu(Boolean grab)
 												  MCRangeMake(t_offset, t_new_offset - t_offset),
 												  &t_label);
 			MCValueAssign(label, *t_label);
+			flags |= F_LABEL;
 			message_with_valueref_args(MCM_menu_pick, *t_label);
 		}
 		return;
 	}
 #endif
-	MCStack *sptr = menumode == WM_CASCADE ? getstack() : MCmousestackptr;
+	MCStack *cascade_sptr = menumode == WM_CASCADE ? getstack() : MCmousestackptr;
 	if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED)
-	        && sptr->getmode() < WM_PULLDOWN)
+	        && cascade_sptr->getmode() < WM_PULLDOWN)
 	{
 		MCmousestackptr->kfocusset(this);
 		if (menu == NULL && !findmenu())
@@ -3672,10 +3757,10 @@ void MCButton::docascade(MCStringRef p_pick)
 			else
 				t_label = pptr->getlabeltext();
 			
-			if (*t_pick == nil)
+            if (*t_pick == nil)
                 /* UNCHECKED */ MCStringMutableCopy(p_pick, &t_pick);
             
-            /* UNCHECKED */ MCStringPrependChar(*t_pick, '|');
+            /* UNCHECKED */ MCStringPrependNativeChar(*t_pick, '|');
             /* UNCHECKED */ MCStringPrepend(*t_pick, t_label);
 
 			pptr = (MCButton *)pptr->parent->getparent()->getparent();
@@ -3747,7 +3832,9 @@ MCStringRef MCButton::getlabeltext()
 {
 	if (entry != nil)
 		getentrytext();
-	if (!MCStringIsEmpty(label))
+    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+    //  we need to rely on the F_LABEL flag
+	if (flags & F_LABEL)
 		return label;
 	else
 		return MCNameGetString(getname());
@@ -3768,6 +3855,10 @@ bool MCButton::resetlabel()
 				MCValueAssign(label, kMCEmptyString);
 				changed = true;
 			}
+            
+            // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+            //  we need to rely on the F_LABEL flag
+            flags &= ~F_LABEL;
 		}
 		else
 		{
@@ -3783,8 +3874,14 @@ bool MCButton::resetlabel()
 			{
 				/* UNCHECKED */ MCStringCopySubstring(menustring, t_range, &t_label);
 			}
+            
+            // AL-2014-08-04: [[ Bug 13089 ]] Set entry text to new label
 			if (entry != NULL)
-				entry->settext(0, label, False);
+				entry->settext(0, *t_label, False);
+            
+            // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+            //  we need to rely on the F_LABEL flag
+            flags |= F_LABEL;
 
 			if (!MCStringIsEqualTo(label, *t_label, kMCStringOptionCompareExact))
 			{
@@ -3898,10 +3995,18 @@ public:
 		
 		MCStringRef t_tag = nil;
 		
+        // SN-2014-07-29: [[ Bug 12998 ]] has_tag member put back
+        //  as it was in 6.x
 		if (!MCStringIsEmpty(p_menu_item->tag))
-			t_tag = p_menu_item->tag;
+        {
+            p_menu_item -> has_tag = true;
+            t_tag = p_menu_item->tag;
+        }
 		else
-			t_tag = p_menu_item->label;
+        {
+            p_menu_item -> has_tag = false;
+            t_tag = p_menu_item->label;
+        }
 		
 		for(uint32_t i = p_menu_item -> depth; i < m_tag_count; i++)
 			MCValueRelease(m_tags[i]);
@@ -3931,8 +4036,7 @@ public:
 		/* UNCHECKED */ MCStringMutableCopy(m_tags[0], t_string);
 		for(uint32_t i = 1; i < m_tag_count; i++)
 		{
-			MCStringAppendFormat(t_string, "|");
-			MCStringAppend(t_string, m_tags[i]);
+            MCStringAppendFormat(t_string, "|%@", m_tags[i]);
 		}
 		MCStringCopyAndRelease(t_string, r_string);
 	}
@@ -4188,6 +4292,8 @@ void MCButton::trytochangetonative(void)
 //  SAVING AND LOADING
 //
 
+#define BUTTON_EXTRA_ICONGRAVITY (1 << 0)
+
 IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
 	// Extended data area for a button consists of:
@@ -4197,8 +4303,31 @@ IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 
 	IO_stat t_stat;
 	t_stat = p_stream . WriteU32(icons == NULL ? 0 : icons -> iconids[CI_HOVER]);
+    
+    uint4 t_flags;
+    t_flags = 0;
+    
+    uint4 t_length;
+    t_length = 0;
+    
+    // MW-2014-06-20: [[ IconGravity ]] If we have a gravity then we need a gravity block.
+    //   Note: we save as a uint32_t even though it only needs 4-bits; this will allow
+    //         us to use the same field to save similar properties for label and such, the
+    //         defaults being 0 meaning 'legacy behavior'.
+    if (m_icon_gravity != kMCGravityNone)
+    {
+        t_flags |= BUTTON_EXTRA_ICONGRAVITY;
+        t_length += sizeof(uint32_t);
+    }
+    
+    if (t_stat == IO_NORMAL)
+        t_stat = p_stream . WriteTag(t_flags, t_length);
+    
+    if (t_stat == IO_NORMAL && (t_flags & BUTTON_EXTRA_ICONGRAVITY))
+        t_stat = p_stream . WriteU32(m_icon_gravity);
+    
 	if (t_stat == IO_NORMAL)
-		t_stat = defaultextendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part);
 
 	return t_stat;
 }
@@ -4219,11 +4348,36 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 			icons -> iconids[CI_HOVER] = t_hover_icon_id;
 		}
 
-		p_remaining -= 4;
+        if (t_stat == IO_NORMAL)
+            p_remaining -= 4;
 	}
 
-	if (t_stat == IO_NORMAL && p_remaining > 0)
-		t_stat = defaultextendedload(p_stream, p_version, p_remaining);
+    if (p_remaining > 0)
+    {
+		uint4 t_flags, t_length, t_header_length;
+		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+        
+		if (t_stat == IO_NORMAL)
+			t_stat = p_stream . Mark();
+        
+        // MW-2014-06-20: [[ IconGravity ]] Read in the iconGravity property.
+        if (t_stat == IO_NORMAL && (t_flags & BUTTON_EXTRA_ICONGRAVITY) != 0)
+        {
+            uint32_t t_value;
+            t_stat = p_stream . ReadU32(t_value);
+            if (t_stat == IO_NORMAL)
+                m_icon_gravity = (MCGravity)t_value;
+        }
+        
+        if (t_stat == IO_NORMAL)
+            t_stat = p_stream . Skip(t_length);
+        
+        if (t_stat == IO_NORMAL)
+            p_remaining -= t_length + t_header_length;
+    }
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedload(p_stream, p_version, p_remaining);
 
 	return t_stat;
 }
@@ -4231,12 +4385,6 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
 	IO_stat stat;
-
-	// Does the label need to be written out?
-	if (MCStringIsEmpty(label))
-		flags &= ~F_LABEL;
-	else 
-		flags |= F_LABEL;
 	
 	if ((stat = IO_write_uint1(OT_BUTTON, stream)) != IO_NORMAL)
 		return stat;
@@ -4254,6 +4402,11 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	bool t_has_extension;
 	t_has_extension = icons != NULL && icons -> iconids[CI_HOVER] != 0;
+    
+    // MW-2014-06-20: [[ IconGravity ]] Force an extension if non-legacy gravity.
+    if (m_icon_gravity != kMCGravityNone)
+        t_has_extension = true;
+    
 	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
 		return stat;
 
@@ -4266,6 +4419,8 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
+    // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
+    //  we need to rely on the F_LABEL flag
     if (flags & F_LABEL)
 	{
 		if (MCstackfileversion < 7000)

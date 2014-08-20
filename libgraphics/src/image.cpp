@@ -24,7 +24,10 @@ static void MCGImageDestroy(MCGImageRef self)
 	if (self != NULL)
 	{
 		if (self -> bitmap != NULL)
+        {
+            self -> bitmap -> unlockPixels();
 			delete self -> bitmap;
+        }
 		MCMemoryDelete(self);
 	}
 }
@@ -44,6 +47,7 @@ bool MCGImageCreateWithSkBitmap(const SkBitmap &p_bitmap, MCGImageRef &r_image)
 	if (t_success)
 	{
 		t_bitmap = new SkBitmap(p_bitmap);
+        t_bitmap -> lockPixels();
 		t_success = nil != t_bitmap;
 	}
 	
@@ -116,7 +120,8 @@ bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster)
 	// from the bitmap's pixel ref
 	t_image->bitmap->lockPixels();
 	
-	r_raster.format = MCGRasterFormatFromSkBitmapConfig(t_image->bitmap->config());
+	// IM-2014-05-20: [[ GraphicsPerformance ]] Use bitmap opaqueness when setting the raster format.
+	r_raster.format = MCGRasterFormatFromSkBitmapConfig(t_image->bitmap->config(), t_image->bitmap->isOpaque());
 	r_raster.width = t_image->bitmap->width();
 	r_raster.height = t_image->bitmap->height();
 	r_raster.pixels = t_image->bitmap->getPixels();
@@ -124,6 +129,23 @@ bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster)
 
 	t_image->bitmap->unlockPixels();
 	
+	return true;
+}
+
+bool MCGImageGetPixel(MCGImageRef p_image, uint32_t x, uint32_t y, uint32_t &r_pixel)
+{
+	MCGRaster t_raster;
+	if (!MCGImageGetRaster(p_image, t_raster) || x >= t_raster.width || y >= t_raster.height)
+		return false;
+
+	uint8_t* t_row_ptr;
+	t_row_ptr = ((uint8_t*)t_raster.pixels) + y * t_raster.stride;
+
+	if (t_raster.format == kMCGRasterFormat_A)
+		r_pixel = t_row_ptr[x];
+	else
+		r_pixel = ((uint32_t*)t_row_ptr)[x];
+
 	return true;
 }
 
@@ -144,7 +166,7 @@ bool MCGImageCreateWithFilename(const char *p_filename, MCGImageRef& r_image)
 MCGImageRef MCGImageRetain(MCGImageRef self)
 {
 	if (self != NULL)
-		self -> references++;
+        sk_atomic_inc((int32_t *)&self -> references);
 	return self;	
 }
 
@@ -152,8 +174,7 @@ void MCGImageRelease(MCGImageRef self)
 {
 	if (self != NULL)
 	{
-		self -> references--;
-		if (self -> references <= 0)
+        if (sk_atomic_dec((int32_t *)&self -> references) == 1)
 			MCGImageDestroy(self);
 	}	
 }
@@ -196,6 +217,41 @@ MCGSize MCGImageGetSize(MCGImageRef self)
 bool MCGImageIsOpaque(MCGImageRef self)
 {
 	return self != nil && self -> bitmap -> isOpaque();
+}
+
+bool MCGImageHasPartialTransparency(MCGImageRef self)
+{
+	if (self == nil)
+		return false;
+
+	if (self->bitmap->isOpaque())
+		return false;
+
+	MCGRaster t_raster;
+	/* UNCHECKED */ MCGImageGetRaster(self, t_raster);
+
+	if (t_raster.format == kMCGRasterFormat_A)
+		return true;
+
+	uint8_t *t_row_ptr;
+	t_row_ptr = (uint8_t*)t_raster.pixels;
+
+	for (uint32_t y = 0; y < t_raster.height; y++)
+	{
+		uint32_t *t_pixel_ptr;
+		t_pixel_ptr = (uint32_t*)t_row_ptr;
+		for (uint32_t x = 0; x < t_raster.width; x++)
+		{
+			uint8_t t_alpha;
+			t_alpha = MCGPixelGetNativeAlpha(*t_pixel_ptr++);
+			if (t_alpha > 0 && t_alpha < 255)
+				return true;
+		}
+
+		t_row_ptr += t_raster.stride;
+	}
+
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

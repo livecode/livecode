@@ -145,7 +145,13 @@ void MCScrollbar::SetThumbSize(MCExecContext& ctxt, double p_size)
 
 void MCScrollbar::GetThumbPos(MCExecContext& ctxt, double& r_pos)
 {
-	r_pos = thumbpos;
+    // AL-2014-07-22: [[ Bug 12843 ]] Round thumbpos according to scrollbar number format
+    MCAutoStringRef t_formatted_thumbpos;
+    if (MCU_r8tos(thumbpos, nffw, nftrailing, nfforce, &t_formatted_thumbpos) &&
+        MCU_stor8(*t_formatted_thumbpos, r_pos))
+        return;
+    
+    ctxt . Throw();
 }
 
 void MCScrollbar::SetThumbPos(MCExecContext& ctxt, double p_pos)

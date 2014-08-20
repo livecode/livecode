@@ -82,10 +82,7 @@ bool MCImageCreateIcon(MCImageBitmap *p_bitmap, uint32_t p_width, uint32_t p_hei
 	{
 		// draw image onto dib at the given size
 		MCGRaster t_raster;
-		t_raster.width = p_bitmap->width;
-		t_raster.height = p_bitmap->height;
-		t_raster.stride = p_bitmap->stride;
-		t_raster.pixels = p_bitmap->data;
+		t_raster = MCImageBitmapGetMCGRaster(p_bitmap, true);
 		t_raster.format = kMCGRasterFormat_ARGB;
 
 		MCGRectangle t_dst = MCGRectangleMake(0, 0, p_width, p_height);
@@ -334,7 +331,8 @@ static HMENU create_icon_menu(MCStringRef p_menu)
 	{
 		// Scan for the next newline to determine the end of the item
 		uindex_t t_item_end;
-		if (MCStringFirstIndexOfChar(p_menu, '\n', t_offset, kMCStringOptionCompareExact, t_item_end))
+        // AL-2014-07-30: [[ Bug 13029 ]] If there is no return character, then the whole string is one menuitem
+		if (!MCStringFirstIndexOfChar(p_menu, '\n', t_offset, kMCStringOptionCompareExact, t_item_end))
 			t_item_end = t_length;
 
 		// Scan for the tag separator

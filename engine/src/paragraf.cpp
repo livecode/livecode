@@ -722,7 +722,9 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 			t_data = (char *)t_swapped_data;
 		}
 
-		if ((stat = IO_write_string_legacy_full(MCString(t_data, t_data_len), stream, 2, true)) != IO_NORMAL)
+        // AL-2014-07-15: [[ Bug 12672 ]] If the data is larger than MAXUINT2,
+        //  make sure appropriate size is passed to IO_write_string_legacy_full
+		if ((stat = IO_write_string_legacy_full(MCString(t_data, t_data_len), stream, t_data_len > MAXUINT2 ? 4 : 2, true)) != IO_NORMAL)
 			return stat;
 
 		// If the string had to be byte swapped, delete the allocated data
@@ -1109,12 +1111,49 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
         MCBlock *firstblock, *lastblock;
         lptr->getblocks(firstblock, lastblock);
         MCBlock *bptr = firstblock;
+        MCSegment *sgptr = segments;
+        
+        // AL-2014-08-13: [[ Bug 13108 ]] Use left and right of segments for boundaries of fill rect if necessary
+        bool t_segment_front, t_segment_back, t_whole_segment;
+        
         do
         {
+            t_segment_front = false;
+            t_segment_back = false;
+            t_whole_segment = false;
+            
             // Is part of this block selected?
             findex_t bi, bl;
             bptr->GetRange(bi, bl);
-            if (t_show_all || (startindex <= bi + bl && endindex >= bi))
+            
+            // AL-2014-07-29: [[ Bug 12951 ]] Selection rect should include whitespace between tabbed cells
+            // If this is the first block of a segment, check if the selection covers the front of the segment.
+            if (bptr == sgptr -> GetFirstBlock() && endindex > bi && (startindex < bi || (t_show_front && startindex == bi)))
+            {
+                t_segment_front = true;
+                findex_t ei, el;
+                MCBlock *t_seg_last = sgptr -> GetLastBlock();
+                t_seg_last -> GetRange(ei, el);
+                
+                if (endindex > ei + el || (t_show_back && endindex == bi + bl))
+                    t_whole_segment = true;
+            }
+            
+            // If this is the last block of a segment, check if the selection covers the back of the segment.
+            if (!t_whole_segment && bptr == sgptr -> GetLastBlock() && startindex < bi + bl &&
+                ((sgptr -> next() != segments && endindex > bi + bl) || (t_show_back && endindex == bi + bl)))
+                t_segment_back = true;
+
+             // If selection covers the whole segment, we can fill it and skip to the first block of the next segment.           
+            if (t_whole_segment)
+            {
+                srect . x  = x + sgptr -> GetLeft();
+                srect . width = sgptr -> GetWidth();
+                dc->fillrect(srect);
+                
+                bptr = sgptr -> GetLastBlock();
+            }
+            else if (t_show_all || (startindex <= bi + bl && endindex >= bi))
             {
                 findex_t si, ei;
                 if (startindex_draw > bi)
@@ -1128,21 +1167,31 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 
                 // Get the X coordinates for the selection
                 int2 bix, bex;
-                bix = bptr->GetCursorX(si);
-                bex = bptr->GetCursorX(ei);
+                // SN-2014-08-14: [[ Bug 13106 ]] GetCursorX includes the cell padding, which we don't want
+                bix = bptr->GetCursorX(si) - sgptr -> GetPadding();
+                bex = bptr->GetCursorX(ei) - sgptr -> GetPadding();
                 
+                // AL-2014-07-17: [[ Bug 12823 ]] Include segment offset in the block coordinate calculation
                 // Re-ordering will be required if the block is RTL
                 if (bix > bex)
                 {
-                    srect.x = x + bex;
-                    srect.width = bix - bex;
-                }
-                else
-                {
-                    srect.x = x + bix;
-                    srect.width = bex - bix;
+                    int2 t_temp;
+                    t_temp = bix;
+                    bix  = bex;
+                    bex = t_temp;
                 }
 
+                if (t_segment_front)
+                    srect.x = x + sgptr -> GetLeft();
+                else
+                    srect.x = x + sgptr -> GetLeftEdge() + bix;
+                
+                // AL-2014-07-29: [[ Bug 12951 ]] If selection traverses a segment boundary, include the boundary in the fill rect.
+                if (t_segment_back)
+                    srect.width = x + sgptr -> GetRight() - srect . x;
+                else
+                    srect.width = x + sgptr -> GetLeftEdge() + bex - srect . x;
+                
                 // Draw this block
                 dc->fillrect(srect);
             }
@@ -1153,35 +1202,35 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 break;
             
             bptr = bptr->next();
+            
+            // AL-2014-07-17: [[ Bug 12823 ]] Block origin is relative to the segment, so keep track
+            //  of the current segment to get correct selection coordinates.
+            // Advance to the next segment, if necessary
+            if (sgptr->next()->GetFirstBlock() == bptr)
+                sgptr = sgptr->next();
         }
         while (bptr != firstblock);
         
         // Draw the left-hand side, if required
         if (t_show_front || startindex < i)
         {
-            MCBlock *t_first_visual;
-            t_first_visual = firstblock;
-            
-            // TODO: avoid this loop
-            while (t_first_visual->GetPrevBlockVisualOrder() != nil)
-                t_first_visual = t_first_visual->GetPrevBlockVisualOrder();
+            // AL-2014-07-30: [[ Bug 12924 ]] Get first visual block in the line for front selection fill
+            MCBlock *t_first_visual = lptr -> GetFirstSegment() -> GetFirstVisualBlock();
             
             srect.x = sx;
-            srect.width = x + t_first_visual->getorigin() - sx;
+            // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
+            srect.width = x + lptr -> GetFirstSegment() -> GetLeftEdge() + t_first_visual->getorigin() - sx;
             dc->fillrect(srect);
         }
         
         // Draw the right-hand side, if required
         if (t_show_back || endindex > i + l)
         {
-            MCBlock *t_last_visual;
-            t_last_visual = lastblock;
+            // AL-2014-07-30: [[ Bug 12924 ]] Get last visual block in the line for back selection fill
+            MCBlock *t_last_visual = lptr -> GetLastSegment() -> GetLastVisualBlock();
             
-            // TODO: avoid this loop
-            while (t_last_visual->GetNextBlockVisualOrder() != nil)
-                t_last_visual = t_last_visual->GetNextBlockVisualOrder();
-            
-            srect.x = x + t_last_visual->getorigin() + t_last_visual->getwidth();
+            // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
+            srect.x = x + lptr -> GetLastSegment() -> GetLeftEdge() + t_last_visual->getorigin() + t_last_visual->getwidth();
             srect.width = swidth - (srect.x - sx);
             dc->fillrect(srect);
         }
@@ -1311,6 +1360,8 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 	MCRectangle t_clip;
 	t_clip = dc -> getclip();
+	
+	dc->save();
 
 	uint2 ascent, descent;
 	ascent = fixeda;
@@ -1323,7 +1374,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	// MW-2012-03-15: [[ Bug 10001 ]] Compute the selection offset and width. Notice that
 	//   the width is at least the textwidth.
 	int32_t t_select_x, t_select_width;
-	t_select_x = x + t_paragraph_offset;
+	t_select_x = x;
 	t_select_width = MCMax(t_paragraph_width, textwidth);
 
 	// If the field is in listbehavior mode the selection fill also covers the left and
@@ -1467,7 +1518,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	}
 	while (lptr != lines);
 
-	dc -> setclip(t_clip);
+	dc->restore();
 	
 	// MW-2012-01-08: [[ Paragraph Border ]] Render the paragraph's border (if
 	//   any).
@@ -1581,7 +1632,9 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				//   table mode, we are done.
 				// MW-2013-05-20: [[ Bug 10878 ]] Tweaked conditions to work for min two tabStops
 				//   rather than 3.
-				if (ct >= nt - 2 && t[nt - 2] == t[nt - 1])
+                // MW-2015-05-28: [[ Bug 12341 ]] Only stop rendering lines if in 'fixed width table'
+                //   mode - indicated by the last two tabstops being the same.
+				if (nt >= 2 && t[nt - 1] == t[nt - 2] && ct == nt - 1)
 					break;
 			}
 		}
@@ -1639,7 +1692,8 @@ Boolean MCParagraph::getatts(uint2 si, uint2 ei, Properties which, Font_textstyl
 	}
 	
 	do
-    {
+	{
+
         switch (which)
         {
             case P_TEXT_FONT:
@@ -2050,7 +2104,11 @@ MCLine *MCParagraph::indextoline(findex_t tindex)
 	return lines->prev();
 }
 
-void MCParagraph::join()
+// MW-2014-05-28: [[ Bug 12303 ]] Special-case added for when setting 'text' of field chunks. If
+//   'preserve_if_zero' is true, then 'this' paragraph's styles are preserved even if it has no
+//   text. This is used in the case of 'set the text of <chunk>' to ensure that paragraph properties
+//   of the first paragraph the text is set in do not get clobbered.
+void MCParagraph::join(bool p_preserve_zero_length_styles_if_zero)
 {
 	if (blocks == NULL)
 		inittext();
@@ -2061,7 +2119,9 @@ void MCParagraph::join()
 	//   the next paragraphs attrs.
 	// MW-2012-08-31: [[ Bug 10344 ]] If the textsize is 0 then always take the next
 	//   paragraphs attrs.
-	if (gettextlength() == 0)
+	if (!p_preserve_zero_length_styles_if_zero && gettextlength() == 0)
+	// MW-2014-05-28: [[ Bug 12303 ]] If the textsize is 0 and we don't want to preserve the style
+    //   changes, then copy the next paragraph's.
 		copyattrs(*pgptr);
 
 	// MW-2006-04-13: If the total new text size is greater than 65536 - 34 we just delete the next paragraph
@@ -2967,9 +3027,11 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 
 	// MW-2012-01-08: [[ ParaStyles ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
-	x -= computelineoffset(lptr);
+    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
+    if (!getvgrid())
+        x -= computelineoffset(lptr);
 
-	focusedindex = lptr->GetCursorIndex(MCU_max(x, 0), False, moving_left);
+	focusedindex = lptr->GetCursorIndex(MCU_max(x, 0), False, moving_forward);
 	if (extend)
 	{
 		if (originalindex == PARAGRAPH_MAX_LEN)
@@ -3176,8 +3238,10 @@ MCRectangle MCParagraph::getdirty(uint2 fixedheight)
 
 				dirty.y = y;
 				// MW-2012-01-08: [[ ParaStyles ]] If on the first line, adjust for spacing before.
+                // MW-2014-06-10: [[ Bug 11809 ]] Make sure we adjust the top of the dirty rect if on
+                //   the first line and there is space above.
 				if (lptr == lines)
-					dirty.y -= t_space_above;
+					t_dirty_top -= t_space_above;
 			}
 
 			int32_t t_new_dirty_left, t_new_dirty_right;
@@ -3316,8 +3380,10 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 		if (lptr -> next() == lines)
 			drect.height += t_space_below;
 	}
-
-	drect.x += computelineoffset(lptr);
+    
+    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
+    if (!getvgrid())
+        drect.x += computelineoffset(lptr);
 
 	drect.width = cursorwidth;
 
@@ -3384,7 +3450,9 @@ MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool
 			drect.height += t_space_below;
 	}
     
-	drect.x += computelineoffset(lptr);
+    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
+    if (!getvgrid())
+        drect.x += computelineoffset(lptr);
     
 	drect.width = cursorwidth;
     
@@ -3587,7 +3655,7 @@ void MCParagraph::reverseselection()
 		originalindex = startindex;
 }
 
-void MCParagraph::indextoloc(findex_t tindex, uint2 fixedheight, int2 &x, int2 &y)
+void MCParagraph::indextoloc(findex_t tindex, uint2 fixedheight, coord_t &x, coord_t &y)
 {
 	// MW-2012-01-08: [[ ParaStyles ]] Text starts after spacing above.
 	y = computetopmargin();
@@ -3637,18 +3705,20 @@ uint2 MCParagraph::getyextent(findex_t tindex, uint2 fixedheight)
 	return y;
 }
 
-int2 MCParagraph::getx(findex_t tindex, MCLine *lptr)
+coord_t MCParagraph::getx(findex_t tindex, MCLine *lptr)
 {
-	int2 x = lptr->GetCursorXPrimary(tindex, moving_forward);
+	coord_t x = lptr->GetCursorXPrimary(tindex, moving_forward);
 
 	// MW-2012-01-08: [[ ParaStyles ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Paragraph to Field so +ve)
-	x += computelineoffset(lptr);
+    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
+    if (!getvgrid())
+        x += computelineoffset(lptr);
 
 	return x;
 }
 
-void MCParagraph::getxextents(findex_t &si, findex_t &ei, int2 &minx, int2 &maxx)
+void MCParagraph::getxextents(findex_t &si, findex_t &ei, coord_t &minx, coord_t &maxx)
 {
 	if (lines == NULL)
 	{
@@ -3663,7 +3733,7 @@ void MCParagraph::getxextents(findex_t &si, findex_t &ei, int2 &minx, int2 &maxx
 	findex_t i, l;
 	do
 	{
-		int2 newx;
+		coord_t newx;
 		lptr->GetRange(i, l);
 		if (i + l > si)
 		{
@@ -3800,7 +3870,9 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 
 	// MW-2012-01-08: [[ Paragraph Align ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
-	x -= computelineoffset(lptr);
+    // SN-2014-08-14: [[ Bug 13106 ]] Having a Vgrid discards the line offsets
+    if (!getvgrid())
+        x -= computelineoffset(lptr);
 
 	si = lptr->GetCursorIndex(x, chunk, true);
 	int4 lwidth = lptr->getwidth();
@@ -3841,8 +3913,14 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 			ei = si;
 			return;
 		}
-
-		si = findwordbreakbefore(bptr, si);
+        
+        // SN-2014-05-16 [[ Bug 12432 ]]
+        // If si is now a wordbreak, then it was a worbreak boundary beforehand - and nothing should have been done
+        uindex_t t_si;
+		t_si = findwordbreakbefore(bptr, si);
+        if (!TextIsWordBreak(GetCodepointAtIndex(t_si)))
+            si = t_si;
+        
 		ei = si;
 		bptr = indextoblock(ei, False);
 		ei = findwordbreakafter(bptr, ei);
@@ -4064,7 +4142,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in the uinteger_t array, with indices
 // adjusted by the 'delta'.
-void MCParagraph::getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFlaggedRanges& r_ranges)
+void MCParagraph::getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFieldRanges& r_ranges)
 {
 	// If the paragraph is empty, there is nothing to do.
 	if (gettextlength() == 0)
@@ -4088,7 +4166,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei,
 		bptr -> GetRange(i, l);
 	}
     
-    MCAutoArray<MCInterfaceFlaggedRange> t_ranges;
+    MCAutoArray<MCInterfaceFieldRange> t_ranges;
     
 	// Now loop through all the blocks until we reach the end.
 	int32_t t_flagged_start, t_flagged_end;
@@ -4096,7 +4174,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei,
 	t_flagged_end = -1;
 	for(;;)
 	{
-        MCInterfaceFlaggedRange t_range;
+        MCInterfaceFieldRange t_range;
 		// Ignore any blocks of zero width;
 		if (bptr -> GetLength() != 0)
 		{
@@ -4175,7 +4253,7 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 
 // JS-2013-05-15: [[ PageRanges ]] pagerange as variant of pageheight
 // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
-/*Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
+Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
                                uint4 &tend, MCLine *&lptr)
 {
 	if (lptr == NULL)
@@ -4194,7 +4272,7 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 	while (lptr != lines);
 	lptr = NULL;
 	return True;
-}*/
+}
 
 bool MCParagraph::imagechanged(MCImage *p_image, bool p_deleting)
 {
@@ -4209,4 +4287,41 @@ bool MCParagraph::imagechanged(MCImage *p_image, bool p_deleting)
 	while (t_block != blocks);
 
 	return t_used;
+}
+
+void MCParagraph::restricttoline(findex_t& si, findex_t& ei)
+{
+	MCLine *t_line;
+	t_line = lines;
+	do
+	{
+		findex_t i, l;
+		t_line -> GetRange(i, l);
+		if (i >= si && si < (i + l))
+		{
+			si = i;
+			ei = i + l;
+			return;
+		}
+		t_line = t_line -> next();
+	}
+	while(t_line != lines);
+
+	si = ei = 0;
+}
+
+findex_t MCParagraph::heightoflinewithindex(findex_t si, uint2 fixedheight)
+{
+	MCLine *t_line;
+	t_line = lines;
+	do
+	{
+		findex_t i, l;
+		t_line -> GetRange(i, l);
+		if (i >= si && si < (i + l))
+			return fixedheight == 0 ? t_line -> getheight() : fixedheight;
+		t_line = t_line -> next();
+	}
+	while(t_line != lines);
+	return 0;
 }

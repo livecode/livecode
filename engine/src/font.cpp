@@ -343,7 +343,12 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         
         p_callback(p_font, *t_temp, MCRangeMake(0, MCStringGetLength(*t_temp)), p_callback_data);
 #else
-        p_callback(p_font, p_text, t_range, p_callback_data);
+        // Another ugly hack - this time, to avoid incoming strings being coerced
+        // into Unicode strings needlessly (because the drawing code uses unichars).
+        // Do a mutable copy (to ensure an actual copy) before drawing.
+        MCAutoStringRef t_temp;
+        /* UNCHECKED */ MCStringMutableCopySubstring(p_text, t_range, &t_temp);
+        p_callback(p_font, *t_temp, MCRangeMake(0, t_range.length), p_callback_data);
 #endif
         
         // Explicitly show breaking points
@@ -351,7 +356,12 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         
         // Move on to the next chunk
         t_offset += t_break_point;
-        t_length -= t_break_point;
+        // SN-2014-07-23: [[ Bug 12910 ]] Script editor crashes
+        //  Make sure we get 0 as a minimum, not a negative value since t_length is a uindex_t.
+        if (t_length < t_break_point)
+            t_length = 0;
+        else
+            t_length -= t_break_point;
     }
 }
 
@@ -431,7 +441,7 @@ void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef 
 	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font, p_rtl, p_can_break);
 }
 
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
 {
     font_draw_text_context ctxt;
     ctxt.x = x;

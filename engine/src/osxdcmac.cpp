@@ -741,7 +741,8 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
                     else
                         keysym = keysyms[(event.message & keyCodeMask) >> 8];
                 }
-				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, XLOOKUPSTRING_SIZE, &t_string);
+                // AL-2014-07-08: [[ Bug 12721 ]] Only use relevant part of the buffer to create string
+				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, strlen(buffer), &t_string);
 				MCdispatcher->wkup(activewindow, *t_string, keysym);
 				reset = True;
 			}

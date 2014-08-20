@@ -12,7 +12,6 @@
   <classification>
   </classification>
   <references>
-    <function tag="scriptLimits">scriptLimits Function</function>
     <operator tag="&amp;">&amp; Operator</operator>
     <operator tag="&amp;&amp;">&amp;&amp; Operator</operator>
     <keyword tag=";">; Keyword</keyword>

@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCParagraph;
 class MCField;
 class MCLine;
+class MCSegment;
 struct MCFieldCharacterStyle;
 
 typedef struct Blockatts
@@ -61,14 +62,17 @@ protected:
 	uint4 flags;
 	Blockatts *atts;
 	findex_t m_index, m_size;
-	uint2 width;
-    uint2 origin;
+	coord_t width;
+    coord_t origin;
 	uint2 opened;
-    uint2 tabpos;           // Pixel offset to use when calculating tabstops
+    coord_t tabpos;         // Pixel offset to use when calculating tabstops
     uint2 visual_index;     // Visual ordering index from left to right
     uint8_t direction_level;
 
-	// MW-2012-02-14: [[ FontRefs ]] The concrete font to use for the block.
+    // Store pointer to containing segment for convenience
+    MCSegment *segment;
+	
+    // MW-2012-02-14: [[ FontRefs ]] The concrete font to use for the block.
 	//   (only valid when the block is open).
 	MCFontRef m_font;
 public:
@@ -103,13 +107,15 @@ public:
 	//   'flagged' are excluded from the sameness check (used by styledText).
 	Boolean sameatts(MCBlock *bptr, bool p_persistent_only);
 
-	bool fit(int2 x, uint2 width, findex_t& r_break_index, bool& r_break_fits);
+	bool fit(coord_t x, coord_t width, findex_t& r_break_index, bool& r_break_fits);
 	void split(findex_t p_index);
-	void drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style);
+    // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+	void drawstring(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style);
 	
 	// MW-2012-02-27: [[ Bug 2939 ]] The 'flags' parameter indicates whether the left and/or
 	//   right edge of any box or 3d-box should be rendered.
-	void draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, MCStringRef p_text, uint2 pstyle, uint32_t flags);
+    // SN-2014-08-13: [[ Bug 13016 ]] Added a parameter for the left of the cell
+	void draw(MCDC *dc, coord_t x, coord_t p_left_cell, coord_t cx, int2 y, findex_t si, findex_t ei, MCStringRef p_text, uint2 pstyle, uint32_t flags);
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] Returns the effective font attrs of the block.
 	//   If 'base_attrs' is non-nil, it uses that to derive the attrs.
@@ -160,8 +166,8 @@ public:
 		parent = pgptr;
 	}
 
-	uint2 getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l);
-	uint2 getwidth(MCDC *dc, int2 x);
+	coord_t getsubwidth(MCDC *dc, coord_t x, findex_t i, findex_t l);
+	coord_t getwidth(MCDC *dc, coord_t x);
 	void reset();
 	uint2 getascent(void);
 	uint2 getdescent(void);
@@ -259,12 +265,12 @@ public:
     
     ////////// BIDIRECTIONAL SUPPORT
     
-    uint2 getorigin() const
+    coord_t getorigin() const
     {
         return origin;
     }
     
-    void setorigin(uint2 o)
+    void setorigin(coord_t o)
     {
         origin = o;
     }
@@ -295,7 +301,7 @@ public:
         return GetDirectionLevel() & 1;
     }
     
-    uint2 getwidth(MCDC *dc = NULL)
+    coord_t getwidth(MCDC *dc = NULL)
     {
         if (is_rtl())
             return getwidth(dc, origin - width);
@@ -303,7 +309,7 @@ public:
             return getwidth(dc, origin);
     }
     
-    void settabpos(uint2 offset)
+    void settabpos(coord_t offset)
     {
         tabpos = offset;
     }
@@ -312,6 +318,16 @@ public:
     MCBlock *GetNextBlockVisualOrder();
     MCBlock *GetPrevBlockVisualOrder();
 	
+    void SetSegment(MCSegment *p_segment)
+    {
+        segment = p_segment;
+    }
+    
+    MCSegment *GetSegment(void)
+    {
+        return segment;
+    }
+    
 	////////////////////
 	
 	// Returns only the "index" component of the range
@@ -330,10 +346,10 @@ public:
 	void MoveRange(findex_t t_index_offset, findex_t t_length_offset); 
 	
 	// Translates from a pixel position to a cursor index
-	findex_t GetCursorIndex(int2 x, Boolean chunk, Boolean last);
+	findex_t GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool moving_forward);
 	
 	// Returns the x coordinate of the cursor
-	uint2 GetCursorX(findex_t fi);
+	coord_t GetCursorX(findex_t fi);
 	
 	// Moves the index forwards by one codepoint, possibly changing block
 	MCBlock *AdvanceIndex(findex_t &x_index);

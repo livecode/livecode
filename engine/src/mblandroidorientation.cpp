@@ -231,7 +231,9 @@ struct MCOrientationChangedEvent: public MCCustomEvent
 		int t_dev_rotation = android_get_device_rotation();
 		MCAndroidDisplayOrientation t_dev_orientation = android_device_orientation_from_rotation(t_dev_format, t_dev_rotation);
 
-		if ((1 << (int)t_dev_orientation) & s_allowed_orientations)
+        // SN-2014-08-05: [[ Bug 13057 ]] The orientations got from the android_device_orientation_from_rotation
+        //  are [0;3], not [1;4] as in the orientations enum
+		if ((1 << (int)(1 + t_dev_orientation)) & s_allowed_orientations)
 			android_set_display_orientation(t_dev_orientation);
 	}
 };

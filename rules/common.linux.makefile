@@ -1,6 +1,6 @@
 # Common template Makefile for all types
 
-DEFINES=$(CUSTOM_DEFINES) $(TYPE_DEFINES) _LINUX TARGET_PLATFORM_POSIX
+DEFINES=$(CUSTOM_DEFINES) $(TYPE_DEFINES) _LINUX TARGET_PLATFORM_POSIX _FILE_OFFSET_BITS=64
 
 GLOBAL_PACKAGES=\
 	gtk+-2.0 \
@@ -12,6 +12,7 @@ GLOBAL_PACKAGES=\
 GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/engine/include \
 	$(SOLUTION_DIR)/libfoundation/include \
+	$(SOLUTION_DIR)/lcidlc/include \
 	$(SOLUTION_DIR)/libcore/include \
 	$(SOLUTION_DIR)/libexternal/include \
 	$(SOLUTION_DIR)/libgraphics/include \
@@ -40,7 +41,7 @@ GLOBAL_INCLUDES=\
 	
 GLOBAL_LIBS=\
 	$(PREBUILT_LIB_DIR) \
-	$(SOLUTION_DIR)/prebuilt/lib/linux/$(ARCH)
+	$(SOLUTION_DIR)/prebuilt/lib/linux-$(ARCH)
 
 ifeq ($(MODE),debug)
 	DEFINES+=_DEBUG
@@ -57,9 +58,9 @@ FALLBACK_INCLUDES=-I$(SOLUTION_DIR)/thirdparty/headers/linux/include -I$(SOLUTIO
 INCLUDES=$(CUSTOM_INCLUDES) $(TYPE_INCLUDES) $(GLOBAL_INCLUDES)
 
 ifeq ($(MODE),release)
-	CCFLAGS=-m32 $(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O2 -fvisibility=hidden -g
+	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O3 -fvisibility=hidden -g
 else
-	CCFLAGS=-m32 $(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -g -fvisibility=hidden
+	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -g -fvisibility=hidden
 endif
 
 DEPS=$(addprefix $(BUILD_DIR)/, $(CUSTOM_DEPS))

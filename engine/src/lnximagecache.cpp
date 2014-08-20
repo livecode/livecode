@@ -35,12 +35,12 @@ void dump_state ( GtkWidgetState * p_state )
 	if ( p_state -> disabled ) fprintf(stderr, "\tDISABLED");
 }
 
-MCXImageCacheNode::MCXImageCacheNode(MCBitmap *p_bitmap, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags )
+MCXImageCacheNode::MCXImageCacheNode(GdkPixbuf *p_bitmap, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags )
 {
 	isText = False ;
 	
 	cached_image = p_bitmap ;
-	total_pixels = ( p_bitmap -> width * p_bitmap -> height ) ;
+	total_pixels = gdk_pixbuf_get_width(p_bitmap) * gdk_pixbuf_get_height(p_bitmap);
 	moztype = p_moztype ;
 	state = new GtkWidgetState ;
 	memcpy((GtkWidgetState*)state, (GtkWidgetState*)p_state, sizeof ( GtkWidgetState )) ;
@@ -50,7 +50,7 @@ MCXImageCacheNode::MCXImageCacheNode(MCBitmap *p_bitmap, GtkThemeWidgetType p_mo
 }
 
 // Constructor when we are caching rendered text.
-MCXImageCacheNode::MCXImageCacheNode(MCBitmap *p_bitmap, XftFont *p_font, const char *p_string, uint4 p_string_length, uint4 p_fgColor, uint4 p_bgColor ) 
+/*MCXImageCacheNode::MCXImageCacheNode(GdkPixbuf *p_bitmap, XftFont *p_font, const char *p_string, uint4 p_string_length, uint4 p_fgColor, uint4 p_bgColor )
 {
 	isText = True ;
 	cached_image = p_bitmap ;	
@@ -63,7 +63,7 @@ MCXImageCacheNode::MCXImageCacheNode(MCBitmap *p_bitmap, XftFont *p_font, const 
 	bgColor = p_bgColor ;
 
 	next_ptr = prev_ptr = NULL ;
-}
+}*/
 
 
 MCXImageCacheNode::~MCXImageCacheNode()
@@ -72,17 +72,11 @@ MCXImageCacheNode::~MCXImageCacheNode()
 	// Destroy the cached image.
 	if ( cached_image != NULL )
 	{
-		free(cached_image->data);
-		cached_image->data = NULL;
-		XDestroyImage((XImage *)cached_image);
-		cached_image = NULL ;
+		g_object_unref(cached_image);
 	}
 	
 	if ( !isText ) 
 		delete state ;
-	
-	if ( isText ) 
-		delete text_string ;
 	
 	// Remove from the list chain
 	if ( next_ptr != NULL ) 
@@ -104,8 +98,8 @@ void MCXImageCacheNode::add(MCXImageCacheNode *node)
 Boolean MCXImageCacheNode::matches ( uint4 p_width, uint4 p_height, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags ) 
 {
 	return(	( !isText ) &&
-		    ( p_width == cached_image -> width ) &&
-			( p_height == cached_image -> height ) &&
+		    ( p_width == gdk_pixbuf_get_width(cached_image) ) &&
+			( p_height == gdk_pixbuf_get_height(cached_image) ) &&
 			( p_moztype == moztype ) &&
 		    ( p_flags == flags ) &&
 		    ( p_state -> active == state -> active ) &&
@@ -116,18 +110,7 @@ Boolean MCXImageCacheNode::matches ( uint4 p_width, uint4 p_height, GtkThemeWidg
 }
 
 
-Boolean MCXImageCacheNode::matches ( XftFont *p_font, uint4 p_width, uint4 p_height, const char *p_string, uint4 p_string_length, uint4 p_fgColor, uint4 p_bgColor ) 
-{
-	return ( ( isText ) &&
-			 ( p_font == font ) &&
-			 ( p_string_length == text_string_length && memcmp ( text_string, p_string, text_string_length) == 0 ) &&
-			 ( fgColor == p_fgColor ) && 
-			 ( bgColor == p_bgColor ) ) ;
-}
-
-
-
-MCBitmap * MCXImageCacheNode::get_cached_image (void)
+GdkPixbuf* MCXImageCacheNode::get_cached_image (void)
 {
 	return(cached_image);
 }
@@ -160,26 +143,6 @@ MCXImageCacheNode *MCXImageCache::find_cached_image ( uint4 p_width, uint4 p_hei
 }
 
 
-
-
-MCXImageCacheNode *MCXImageCache::find_cached_image ( uint4 p_width, uint4 p_height, XftFont *p_font, const char *p_string, uint4 p_string_length, uint4 p_fgColor, uint4 p_bgColor ) 
-{
-	MCXImageCacheNode *node ;
-	
-	node = cache_head ;
-	while ( node != NULL ) 
-	{
-		if ( node->matches ( p_font, p_width, p_height, p_string, p_string_length, p_fgColor, p_bgColor ) )
-			return (node);
-
-		node = node->prev() ;
-	}
-	return(NULL);
-}
-
-
-
-
 void MCXImageCache::destroy_image_cache (void)
 {
 	
@@ -196,17 +159,18 @@ void MCXImageCache::destroy_image_cache (void)
 	cache_tail = cache_head = NULL ;
 }
 
-bool MCXImageCache::too_big_to_cache ( MCBitmap * p_bitmap ) 
+
+bool MCXImageCache::too_big_to_cache (GdkPixbuf * p_bitmap)
 {
-	return  ( ( p_bitmap -> width * p_bitmap -> height ) > CACHE_WIDGET_PIXEL_LIMIT ) ;
+	return  ( gdk_pixbuf_get_width(p_bitmap) * gdk_pixbuf_get_height(p_bitmap) ) > CACHE_WIDGET_PIXEL_LIMIT;
 }
 
 
-void MCXImageCache::adjust_cache_size (MCBitmap * p_bitmap  )
+void MCXImageCache::adjust_cache_size (GdkPixbuf * p_bitmap)
 {
 	MCXImageCacheNode * cache_node ;
 	// Need to remove some cached images until we are back under our limit.
-	cache_total_pixels += ( p_bitmap -> width * p_bitmap -> height ) ;
+	cache_total_pixels += ( gdk_pixbuf_get_width(p_bitmap) * gdk_pixbuf_get_height(p_bitmap) ) ;
 	while ( cache_total_pixels > CACHE_PIXEL_LIMIT ) 
 	{
 		uint4 node_pixels ;
@@ -220,9 +184,7 @@ void MCXImageCache::adjust_cache_size (MCBitmap * p_bitmap  )
 }
 	
 
-
-
-bool MCXImageCache::add_to_cache (MCBitmap * p_bitmap, MCThemeDrawInfo& p_info )
+bool MCXImageCache::add_to_cache (GdkPixbuf * p_bitmap, MCThemeDrawInfo& p_info)
 {
 	
 	// If a single widget would take up a massive amount of the cache, then don't cache.
@@ -248,40 +210,7 @@ bool MCXImageCache::add_to_cache (MCBitmap * p_bitmap, MCThemeDrawInfo& p_info )
 }
 
 
-
-
-
-bool MCXImageCache::add_to_cache (MCBitmap * p_bitmap, XftFont *p_font, const char *p_string, uint4 p_string_length, uint4 p_fgColor, uint4 p_bgColor   )
-{
-	
-	// If a single widget would take up a massive amount of the cache, then don't cache.
-	if ( too_big_to_cache ( p_bitmap ) )
-	  return false;
-	
-	MCXImageCacheNode * cache_node ;
-	
-	cache_node = new MCXImageCacheNode ( p_bitmap, p_font, p_string, p_string_length, p_fgColor, p_bgColor  ) ;
-	
-	if ( cache_tail == NULL )
-		cache_tail = cache_node ;
-		
-	if (  cache_head != NULL ) 
-		cache_node -> add ( cache_head ) ;
-	
-		
-	cache_head = cache_node ;
-		
-	adjust_cache_size( p_bitmap );
-	return true ;
-	
-	
-}
-
-
-
-
-
-MCBitmap * MCXImageCache::get_from_cache ( MCXImageCacheNode * p_node ) 
+GdkPixbuf* MCXImageCache::get_from_cache ( MCXImageCacheNode * p_node )
 {
 	// When we access a node from the cache list, we want to move that node to the front.
 	if ( cache_head != p_node ) 

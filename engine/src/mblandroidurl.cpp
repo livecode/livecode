@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "system.h"
 #include "mblandroid.h"
 #include "mblandroidutil.h"
+#include "mblandroidjava.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -256,11 +257,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUrlDidReceiveData(JNIEnv
 		// get bytes from byte[] object
 		jbyte *t_bytes = env->GetByteArrayElements(bytes, nil);
 
+        // AL_2014-07-15: [[ Bug 12478 ]] Pass a DataRef to url callbacks
 		MCAutoDataRef t_data;
-		MCDataCreateWithBytes((const byte_t *)t_bytes, length, &t_data);
-		t_info->callback(t_info->context, kMCSystemUrlStatusLoading, MCDataGetBytePtr(*t_data));
-
-		env->ReleaseByteArrayElements(bytes, t_bytes, 0);
+		MCJavaByteArrayToDataRef(env, bytes, &t_data);
+		t_info->callback(t_info->context, kMCSystemUrlStatusLoading, *t_data);
 	}
 }
 
@@ -285,12 +285,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUrlError(JNIEnv *env, jo
 
 	if (getURLInfo(id, t_info))
 	{
-		// TODO - once string conversion functions are implemented, switch to using
-		// GetStringChars() (UTF16) then convert to native, rather than GetStringUTFChars() (UTF-8)
-		const char *t_err_str = nil;
-		t_err_str = env->GetStringUTFChars(error_string, nil);
-		t_info->callback(t_info->context, kMCSystemUrlStatusError, t_err_str);
-		env->ReleaseStringUTFChars(error_string, t_err_str);
+        // AL_2014-07-15: [[ Bug 12478 ]] Error is passed to callback as StringRef
+		MCAutoStringRef t_error;
+        MCJavaStringToStringRef(env, error_string, &t_error);
+		t_info->callback(t_info->context, kMCSystemUrlStatusError, *t_error);
 
 		removeURLInfo(t_info);
 	}

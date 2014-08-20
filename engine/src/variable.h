@@ -40,11 +40,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define ROW_DIM  0
 #define COL_DIM 1
 
-// OK-2008-12-17: [[Bug 7529]] - Changed the extents from a uint2 to a uint4, that should hold enough keys for now
+// MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
 typedef struct
 {
-	uint4 min;
-	uint4 max;
+	int32_t minimum;
+	int32_t maximum;
 }
 arrayextent;
 
@@ -60,11 +60,14 @@ class MCVariableArray
 	arrayextent *extents;
 
 public:
+    // Initialize the array to empty
+    void clear(void);
+    
 	// Initialize the hash to the given size
-	void presethash(uint4 p_size);
+	bool presethash(uint4 p_size);
 
 	// Increase the size of the hash to the next power of two
-	void resizehash(uint32_t p_new_size = 0);
+	bool resizehash(uint32_t p_new_size = 0);
 
 	// Free the array's memory
 	void freehash(void);
@@ -233,7 +236,8 @@ private:
 	void calcextents(void);
 
 	// Get the extent of the given dimension
-	uint2 getextent(uint1 tdimension) const;
+    // MW-2014-05-28: [[ Bug 12479 ]] Make sure extents use 32-bit ints.
+	uint32_t getextent(uint1 tdimension) const;
 
 	// Return True if the extents and number of keys do not match up
 	Boolean ismissingelement(void) const;
@@ -279,7 +283,9 @@ inline uint32_t MCVariableArray::getnfilled(void) const
 #define kMCEncodedValueTypeEmpty 2
 #define kMCEncodedValueTypeString 3
 #define kMCEncodedValueTypeNumber 4
-#define kMCEncodedValueTypeArray 5
+#define kMCEncodedValueTypeLegacyArray 5
+#define kMCEncodedValueTypeArray 6
+
 
 #ifdef LEGACY_EXEC
 class MCVariableValue
@@ -612,6 +618,9 @@ protected:
     
     bool modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting);
     bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting);
+    
+    // Modify the content of the variable - append or prepend (nested key). Target must already be data.
+    bool modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
 public:
 	
 	// Destructor
@@ -817,6 +826,11 @@ public:
 	/* CAN FAIL */ static bool createwithname(MCNameRef name, MCVariable*& r_var);
 
 	/* CAN FAIL */ static bool createcopy(MCVariable& other, MCVariable*& r_var);
+
+    ///////////
+    // Does what MCVariableValue equivalent was doing
+    bool encode(void *&r_buffer, uindex_t r_size);
+    bool decode(void *p_buffer, uindex_t p_size);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -931,6 +945,8 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 #endif
     
+    bool needsContainer(void) const {return dimensions != 0;}
+    
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 #ifdef LEGACY_EXEC
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
@@ -988,7 +1004,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 // This callback is invoked by a deferred variable when its value is needed.
-typedef Exec_stat (*MCDeferredVariableComputeCallback)(void *context, MCVariable *variable);
+typedef bool (*MCDeferredVariableComputeCallback)(void *context, MCVariable *variable);
 
 class MCDeferredVariable: public MCVariable
 {
@@ -999,7 +1015,7 @@ protected:
 public:
 	static bool createwithname(MCNameRef p_name, MCDeferredVariableComputeCallback callback, void *context, MCVariable*& r_var);
 
-	Exec_stat compute(void);
+    bool compute(void);
 };
 
 // A 'deferred' varref works identically to a normal varref except that it

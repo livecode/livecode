@@ -383,7 +383,7 @@ public:
 	// should be considered to map to the text 'in one piece'. The clusters
 	// array maps each byte of the text to the index of the first glyph in
 	// its cluster.
-	virtual bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip) = 0;
+	virtual bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip) = 0;
 
 	// Make an anchor with the given name at the specified position - the name must
 	// not have the form of a URI.

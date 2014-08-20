@@ -100,6 +100,7 @@ public:
 	void convert_slin8toslin16();
 	void convert_slintoulin();
 	void convert_ulintoslin();
+    void convert_tocontainer(void*& r_data, size_t& r_data_size);
 	Boolean isdisposable();
 	Boolean issupported();
 	void setdisposable();
@@ -108,7 +109,6 @@ public:
 	Boolean open_audio();
 	Boolean play();
 	void stop(Boolean abort);
-	void getloudness(uint2& loudness);
 	void setloudness(uint2 p_loudness);
 
 	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
@@ -156,11 +156,6 @@ public:
 	{
 		return (MCAudioClip *)MCDLlist::remove((MCDLlist *&)list);
 	}
-
-	////////// PROPERTY SUPPORT METHODS
-
-	void GetPlayProp(MCExecContext& ctxt, integer_t& r_loudness);
-	void SetPlayProp(MCExecContext& ctxt, uint2 p_loudness);
 
 	////////// PROPERTY ACCESSORS
 

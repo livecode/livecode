@@ -56,13 +56,13 @@ void MCFontBreakText(MCFontRef font, MCStringRef p_text, MCRange p_range, MCFont
 
 // MW-2013-12-19: [[ Bug 11606 ]] This returns the unrounded width of the text as a float - its used by
 //   the field to calculate accumulated width of text in blocks.
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform);
 int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform);
 int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text, const MCGAffineTransform &p_transform);
 
-void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break);
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef font, bool p_rtl, bool p_can_break);
-
+void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break);
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef font, bool p_rtl, bool p_can_break);
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);
 

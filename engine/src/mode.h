@@ -173,7 +173,7 @@ Window MCModeGetParentWindow(void);
 // while security limitations are in effect
 bool MCModeCanAccessDomain(MCStringRef p_name);
 
-#ifdef _LINUX
+#if defined(_LINUX) || defined (_LINUX_SERVER)
 void MCModePreSelectHook(int& maxfd, fd_set& rfds, fd_set& wfds, fd_set& efds);
 void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds);
 #endif
@@ -228,6 +228,10 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& 
 void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_listeners);
 void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time);
 void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_time);
+
 #endif
+
+// IM-2014-08-08: [[ Bug 12372 ]] Check if pixel scaling should be enabled.
+bool MCModeGetPixelScalingEnabled(void);
 
 #endif

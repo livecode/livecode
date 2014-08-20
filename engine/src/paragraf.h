@@ -325,6 +325,12 @@ public:
 	{
 		return lines;
 	}
+    
+    // Return the list of segments in the paragraph, if any.
+	MCSegment *getsegments(void) const
+	{
+		return segments;
+	}
 
 	// Make sure style-runs that are next to each other don't have
 	// the same attributes.
@@ -348,8 +354,9 @@ public:
 	//   MCField::gettextatts (to fetch partial parts of a paragraph)
 	//   MCField::settextatts (to insert partial parts of a paragraph)
 	//   MCField::insertparagraph
-	//   
-	void join();
+	// MW-2014-05-28: [[ Bug 12303 ]] If 'preserve' is true, then the paragraph styles
+    //   of 'this' paragraph are never changed (used when setting 'text' of a chunk).
+	void join(bool p_preserve_styles_if_zero_length = false);
     void split();
     void split(findex_t p_position);
 
@@ -589,7 +596,7 @@ public:
 #ifdef LEGACY_EXEC
 	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t si, findex_t ei, int32_t p_delta);
 #endif
-    void getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFlaggedRanges& r_ranges);
+    void getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFieldRanges& r_ranges);
     
 	// Return true if the paragraph completely fits in theight. Otherwise, return
 	// false and set lastline to the line that would be clipped.
@@ -603,7 +610,7 @@ public:
 	// Called by:
 	//   MCField::getprop
     // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
-    /*Boolean pagerange(uint2 fixedheight, uint2 &theight, uint4 &tend, MCLine *&lastline);*/
+    Boolean pagerange(uint2 fixedheight, uint2 &theight, uint4 &tend, MCLine *&lastline);
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
@@ -775,13 +782,13 @@ public:
 	//   MCField::gettextatts
 	//   MCField::returnloc
 	//   MCField::insertparagraph
-	void indextoloc(findex_t tindex, uint2 fixedheight, int2 &x, int2 &y);
+	void indextoloc(findex_t tindex, uint2 fixedheight, coord_t &x, coord_t &y);
 
 	// Compute the left and right hand side of the range of indices (si..ei)
 	// Called by:
 	//   MCField::getlinkdata
 	//   MCField::gettextatts
-	void getxextents(findex_t &si, findex_t &ei, int2 &minx, int2 &maxx);
+	void getxextents(findex_t &si, findex_t &ei, coord_t &minx, coord_t &maxx);
 
 	// Compute the indices of a click at (x, y).
 	// If x is outside the bounds of the line containing y then:
@@ -818,6 +825,9 @@ public:
 	void setatts(findex_t si, findex_t ei, Properties which, void *value, bool from_html = false);
 #endif
 
+	void restricttoline(findex_t& si, findex_t& ei);
+	findex_t heightoflinewithindex(findex_t si, uint2 fixedheight);
+	
 	uint2 getopened()
 	{
 		return opened;
@@ -879,6 +889,7 @@ public:
     void setDirty() { state |= PS_LINES_NOT_SYNCHED; }
 
     void layoutchanged() { needs_layout = true; }
+    bool getneedslayout() { return needs_layout; }
     
     //////////
 
@@ -1007,7 +1018,7 @@ private:
 
 	MCLine *indextoline(findex_t tindex);
 
-	int2 getx(findex_t tindex, MCLine *lptr);
+	coord_t getx(findex_t tindex, MCLine *lptr);
 
 	// Mark all the lines in the given range as dirty
 	void marklines(findex_t si, findex_t ei);

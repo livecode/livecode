@@ -34,7 +34,6 @@ MCDensityMappedImageRep::MCDensityMappedImageRep(MCStringRef p_filename)
 	m_source_densities = nil;
 	m_source_count = 0;
 	
-	m_last_density = 1.0;
 	m_locked = false;
 	
 	m_filename = MCValueRetain(p_filename);
@@ -59,35 +58,67 @@ MCDensityMappedImageRep::~MCDensityMappedImageRep()
 uindex_t MCDensityMappedImageRep::GetFrameCount()
 {
 	uindex_t t_match;
-	if (!GetBestMatch(m_last_density, t_match))
+	if (!GetBestMatch(1.0, t_match))
 		return 0;
 	
 	return m_sources[t_match]->GetFrameCount();
 }
 
-bool MCDensityMappedImageRep::LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame)
+bool MCDensityMappedImageRep::LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame)
+{
+    uindex_t t_match;
+	if (!GetBestMatch(p_density, t_match))
+    	return false;
+	
+	uint32_t t_width, t_height;
+	if (!GetGeometry(t_width, t_height))
+		return false;
+	
+	if (m_sources[t_match]->LockImageFrame(p_index, p_density, r_frame))
+    {
+		// IM-2014-08-07: [[ Bug 13021 ]] Calculate image x/y scale from logical & actual size
+		r_frame.x_scale = (MCGFloat)MCGImageGetWidth(r_frame.image) / t_width;
+		r_frame.y_scale = (MCGFloat)MCGImageGetHeight(r_frame.image) / t_height;
+        return true;
+    }
+    
+    return false;
+}
+
+void MCDensityMappedImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame)
+{
+    MCGImageRelease(p_frame.image);
+}
+
+bool MCDensityMappedImageRep::LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame)
 {
 	uindex_t t_match;
 	if (!GetBestMatch(p_density, t_match))
 		return false;
 	
-	m_last_density = p_density;
-
-	m_locked = m_sources[t_match]->LockImageFrame(p_index, p_premultiplied, p_density, r_frame);
+	uint32_t t_width, t_height;
+	if (!GetGeometry(t_width, t_height))
+		return false;
+	
+	m_locked = m_sources[t_match]->LockBitmapFrame(p_index, p_density, r_frame);
 	m_locked_source = t_match;
 	
 	if (m_locked)
-		r_frame->density = m_source_densities[t_match];
+	{
+		// IM-2014-08-07: [[ Bug 13021 ]] Calculate image x/y scale from logical & actual size
+		r_frame->x_scale = (MCGFloat)r_frame->image->width / t_width;
+		r_frame->y_scale = (MCGFloat)r_frame->image->height / t_height;
+	}
 	
 	return m_locked;
 }
 
-void MCDensityMappedImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame)
+void MCDensityMappedImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
 {
 	if (!m_locked)
 		return;
 	
-	m_sources[m_locked_source]->UnlockImageFrame(p_index, p_frame);
+	m_sources[m_locked_source]->UnlockBitmapFrame(p_index, p_frame);
 	
 	m_locked = false;
 }
@@ -95,25 +126,23 @@ void MCDensityMappedImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p
 bool MCDensityMappedImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
 {
 	uindex_t t_match;
-	if (!GetBestMatch(m_last_density, t_match))
+	// IM-2014-08-01: [[ Bug 13021 ]] Make the 1.0 density source (or nearest match) the basis for the image geometry
+	if (!GetBestMatch(1.0, t_match))
 		return false;
 	
-	return m_sources[t_match]->GetGeometry(r_width, r_height);
-}
+	if (!m_sources[t_match]->GetGeometry(r_width, r_height))
+		return false;
 
-MCGFloat MCDensityMappedImageRep::GetDensity()
-{
-	uindex_t t_match;
-	if (!GetBestMatch(m_last_density, t_match))
-		return 1.0;
+	r_width /= m_source_densities[t_match];
+	r_height /= m_source_densities[t_match];
 	
-	return m_source_densities[t_match];
+	return true;
 }
 
 uint32_t MCDensityMappedImageRep::GetDataCompression()
 {
 	uindex_t t_match;
-	if (!GetBestMatch(m_last_density, t_match))
+	if (!GetBestMatch(1.0, t_match))
 		return F_RLE;
 	
 	return m_sources[t_match]->GetDataCompression();

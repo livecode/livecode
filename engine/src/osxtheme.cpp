@@ -28,14 +28,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 
 #include "context.h"
-#include "osxdc.h"
 #include "osxtheme.h"
 
 #include "graphics_util.h"
+#include "systhreads.h"
 
 #ifndef _IOS_MOBILE
 #define CGFloat float
 #endif
+
+extern double MCMacGetAnimationStartTime(void);
+extern double MCMacGetAnimationCurrentTime(void);
+
+static inline Rect MCRectToMacRect(const MCRectangle &p_rect)
+{
+	Rect t_rect;
+	t_rect.left = p_rect.x;
+	t_rect.top = p_rect.y;
+	t_rect.right = p_rect.x + p_rect.width;
+	t_rect.bottom = p_rect.y + p_rect.height;
+	
+	return t_rect;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -435,7 +449,7 @@ static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo
 		if (!(widgetinfo.state & (WTHEME_STATE_PRESSED | WTHEME_STATE_SUPPRESSDEFAULT)))
 			bNewInfo.adornment = kThemeAdornmentDefault;
 	}
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	//MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	converttonativerect(trect, macR);
 	
 	if (themebuttonkind == kThemeCheckBox || themebuttonkind == kThemeRadioButton)
@@ -480,8 +494,8 @@ static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRe
 	t_info . button . kind =  getthemebuttonpartandstate(widgetinfo, t_info . button . info, drect, t_info . button . bounds);
 	if (t_info . button . kind == kThemePushButton && t_info . button . info . adornment == kThemeAdornmentDefault)
 	{
-		t_info . button . animation_start = MCScreenDC::s_animation_start_time;
-		t_info . button . animation_current = MCScreenDC::s_animation_current_time;
+		t_info . button . animation_start = MCMacGetAnimationStartTime();
+		t_info . button . animation_current = MCMacGetAnimationCurrentTime();
 	}
 	else
 		t_info . button . animation_start = t_info . button . animation_current = 0;
@@ -642,7 +656,7 @@ static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const M
 		
 		// MW-2012-10-01: [[ Bug 10419 ]] Wrap phase at 256 as more frames on Lion+
 		//   animation than in Snow Leopard.
-		t_info . progress . info . trackInfo . progress . phase = ((int32_t)((MCScreenDC::s_animation_current_time - MCScreenDC::s_animation_start_time) * 1000)) / t_millisecs_per_step % 256;
+		t_info . progress . info . trackInfo . progress . phase = ((int32_t)((MCMacGetAnimationCurrentTime() - MCMacGetAnimationStartTime()) * 1000)) / t_millisecs_per_step % 256;
 		dc -> drawtheme(THEME_DRAW_TYPE_PROGRESS, &t_info);
 	}
 }
@@ -862,7 +876,10 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 				HIThemeDrawTrackTickMarks(&t_info, p_info . slider . count, t_context, kHIThemeOrientationNormal);
 			if (MCmajorosversion >= 0x1050)
 				t_info . bounds . origin . y += 1;
+            
+            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawTrack(&t_info, NULL, t_context, kHIThemeOrientationNormal);
+            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -891,7 +908,9 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
                 t_info . trackInfo . scrollbar . viewsize = 18;
             }
             
+            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawTrack(&t_info, NULL, t_context, kHIThemeOrientationNormal);
+            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -910,7 +929,10 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . enableState = p_info . progress . info . enableState;
 			t_info . filler1 = 0;
 			t_info . trackInfo . progress . phase = p_info . progress . info . trackInfo . progress . phase;
+            
+            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawTrack(&t_info, NULL, t_context, kHIThemeOrientationNormal);
+            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -928,7 +950,10 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . kind = p_info . button . kind;
 			t_info . animation . time . start = p_info . button . animation_start;
 			t_info . animation . time . current = p_info . button . animation_current;
+            
+            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawButton(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal, NULL);
+            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -942,7 +967,10 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . version = 0;
 			t_info . state = p_info . group . state;
 			t_info . kind = p_info . group . is_secondary ? kHIThemeGroupBoxKindSecondary : kHIThemeGroupBoxKindPrimary;
+            
+            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawGroupBox(&t_rect, &t_info, t_context, kHIThemeOrientationNormal);
+            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -957,7 +985,10 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . kind = p_info . frame . is_list ? kHIThemeFrameListBox : kHIThemeFrameTextFieldSquare;
 			t_info . state = p_info . frame . state;
 			t_info . isFocused = false;
+            
+            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawFrame(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal);
+            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -993,7 +1024,10 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 				t_info . adornment = kHIThemeTabAdornmentTrailingSeparator;
 				t_info . position = kHIThemeTabPositionMiddle;
 			}
+            
+            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawTab(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal, NULL);
+            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -1014,7 +1048,10 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . size = kHIThemeTabSizeNormal;
 			t_info . kind = kHIThemeTabKindNormal;
 			t_info . adornment = kHIThemeTabPaneAdornmentNormal;
+            
+            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawTabPane(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal);
+            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -1028,7 +1065,10 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			t_info . version = 0;
 			t_info . state = p_info . background . state;
 			t_info . kind = kThemeBackgroundMetal;
+            
+            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawBackground(&t_bounds, &t_info, t_context, kHIThemeOrientationNormal);
+            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 			
@@ -1037,7 +1077,9 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			HIRect t_bounds;
 			assign(t_bounds, p_info . focus_rect . bounds);
 			
+            MCThreadMutexLock(MCthememutex);
 			HIThemeDrawFocusRect(&t_bounds, p_info . focus_rect . focused, t_context, kHIThemeOrientationNormal);
+            MCThreadMutexUnlock(MCthememutex);
 		}
 			break;
 	}
@@ -1057,7 +1099,7 @@ bool MCNativeTheme::drawfocusborder(MCContext *p_context, const MCRectangle& p_d
 	trect = MCU_reduce_rect(p_rect, 3);
 	MCThemeDrawInfo t_info;
 	t_info.dest = p_rect;
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	//MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	t_info . focus_rect . focused = True;
 	t_info . focus_rect . bounds = MCRectToMacRect(trect);
 	p_context -> drawtheme(THEME_DRAW_TYPE_FOCUS_RECT, &t_info);
@@ -1083,17 +1125,23 @@ bool MCNativeTheme::drawmetalbackground(MCContext *p_context, const MCRectangle&
 	
 	Window t_window;
 	t_window = p_object -> getstack() -> getwindow();
+	// COCOA-TODO: metalbackground drawing
+#ifdef OLD_MAC
 	if (t_window  != nil)
 		p_info . background . state = IsWindowHilited((WindowPtr)t_window -> handle . window) ? kThemeStateActive : kThemeStateInactive;
 	else
+#endif
 		p_info . background . state = kThemeStateActive;
 
 	MCRectangle t_clip;
 	t_clip = p_context -> getclip();
-	p_context -> setclip(MCU_intersect_rect(p_rect, p_dirty));
+	
+	p_context->save();
+	p_context->cliprect(MCU_intersect_rect(p_rect, p_dirty));
 	p_context -> drawtheme(THEME_DRAW_TYPE_BACKGROUND, &p_info);
-	p_context -> setclip(t_clip);
 
+	p_context->restore();
+	
 	return true;
 }
 

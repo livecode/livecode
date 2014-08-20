@@ -219,6 +219,8 @@ void MCMenuItem::assignFrom(MCMenuItem *p_other)
 	mnemonic = p_other->mnemonic;
 	MCValueAssign(tag, p_other->tag);
 	menumode = p_other->menumode;
+    // SN-2014-07-29: [[ Bug 12998 ]] has_tag member put back
+    has_tag = p_other->has_tag;
 }
 
 uint4 MCLookupAcceleratorKeysym(MCStringRef p_name)
@@ -270,6 +272,12 @@ void MCParseMenuString(MCStringRef p_string, IParseMenuCallback *p_callback, uin
 		ParseMenuItemString(t_line, t_new_line, &t_menuitem);
 		MCValueRelease(t_new_line);
 		
+		// MW-2013-12-18: [[ Bug 11605 ]] If the tag is empty, and the label can convert
+		//   to native then take that to be the tag.
+        // SN-2014-06-23: The tag can now have unicode as well
+		if (MCStringIsEmpty(t_menuitem . tag))
+            MCValueAssign(t_menuitem . tag, t_menuitem . label);
+        
 		p_callback->ProcessItem(&t_menuitem);
 
 		if (!MCStringIsEmpty(t_menuitem.tag))

@@ -1336,6 +1336,13 @@ int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
     icu::Collator* t_collator;
     t_collator = icu::Collator::createInstance(MCLocaleGetICULocale(p_locale), t_error);
     
+    // If we couldn't create a collator for the given locale, create a default one
+    if (t_collator == NULL)
+    {
+        t_error = U_ZERO_ERROR;
+        t_collator = icu::Collator::createInstance(t_error);
+    }
+    
     // Set the collation options
     // Note that the enumerated strengths have the same values as the ICU enum
     switch (p_options & kMCUnicodeCollateOptionStrengthMask)
@@ -2329,12 +2336,11 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
                     // if this is a candidate for a match, recurse.
                     if (t_source_cp == t_pattern_cp)
                     {
-                        t_source_filter -> AdvanceCursor();
-                        t_source_filter -> GetNextCodepoint();
-                        t_source_filter -> MarkText();
+                        // AL-2014-06-24: [[ Bug 12644 ]] Can't advance the cursors here because then
+                        //  we're eating the pattern codepoint for free resulting in false positives.
+                        //  Just have to re-match in the recursive call.
                         
-                        t_pattern_filter -> AdvanceCursor();
-                        t_pattern_filter -> GetNextCodepoint();
+                        t_source_filter -> MarkText();
                         t_pattern_filter -> MarkText();
                         
                         t_sindex = t_source_filter -> GetMarkedLength() - 1;

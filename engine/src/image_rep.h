@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_IMAGE_REP_H__
 #define __MC_IMAGE_REP_H__
 
+#include "systhreads.h"
+
 typedef enum
 {
 	kMCImageRepUnknown,
@@ -29,6 +31,20 @@ typedef enum
 	
 	kMCImageRepResampled,
 } MCImageRepType;
+
+struct MCGImageFrame
+{
+	MCGImageRef image;
+	
+	uint32_t duration;
+	
+	// IM-2013-10-30: [[ FullscreenMode ]] add density value to image frames
+	// IM-2014-08-07: [[ Bug 13021 ]] Split density into x / y scale components
+	MCGFloat x_scale;
+	MCGFloat y_scale;
+};
+
+void MCGImageFramesFree(MCGImageFrame *p_frames, uindex_t p_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Image representation interface
@@ -43,12 +59,14 @@ public:
 	virtual uint32_t GetDataCompression() = 0;
 	
 	virtual uindex_t GetFrameCount() = 0;
-	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame) = 0;
-	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame) = 0;
+	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame) = 0;
+	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame) = 0;
+
+	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame) = 0;
+	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame) = 0;
+
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 
-	virtual MCGFloat GetDensity() { return 1.0; };
-	
 	//////////
 
 	MCImageRep *Retain();
@@ -109,9 +127,11 @@ public:
 	MCLoadableImageRep();
 	virtual ~MCLoadableImageRep();
 
-	virtual uindex_t GetFrameCount();
-	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
-	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
+	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
+	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
+	
+	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
+	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 
@@ -124,23 +144,25 @@ protected:
 	virtual bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 	// IM-2013-11-05: [[ RefactorGraphics ]] Add return parameter to indicate whether or not
 	// returned frames are premultiplied
-	virtual bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied) = 0;
+	virtual bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied) = 0;
 
 	bool m_have_geometry;
 	uindex_t m_width, m_height;
 
-	bool m_premultiplied;
 
 private:
-	bool EnsureImageFrames(bool p_premultiplied);
-	void PremultiplyFrames();
-	void UnpremultiplyFrames();
+	bool ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p_frame_count, bool p_premultiplied);
+	bool EnsureMCGImageFrames();
 	
 	uindex_t m_lock_count;
 
-	MCImageFrame *m_frames;
+	MCBitmapFrame *m_locked_frames;
+	MCGImageFrame *m_frames;
 	uindex_t m_frame_count;
 	bool m_frames_premultiplied;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single threrad locks an image frame at a time.
+    MCThreadMutexRef m_frame_lock;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,11 +178,12 @@ public:
 
 	virtual ~MCEncodedImageRep();
 
+	virtual uindex_t GetFrameCount();
 	uint32_t GetDataCompression();
 
 protected:
 	// returns the image frames as decoded from the input stream
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
+	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -171,6 +194,7 @@ protected:
 	//////////
 
 	uint32_t m_compression;
+	uint32_t m_header_frame_count;
 };
 
 //////////
@@ -257,7 +281,7 @@ public:
 	bool Render(MCDC *p_context, bool p_embed, MCRectangle &p_image_rect, MCRectangle &p_clip_rect);
 
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
+	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -287,7 +311,7 @@ public:
 	}
 
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
+	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -296,13 +320,15 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Image representation that will return the given source at the specified scale using
+// Image representation that will return the given source at the specified size using
 // bicubic filter
 
+// IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
+// and explicit flip params instead of scale values.
 class MCResampledImageRep : public MCLoadableImageRep
 {
 public:
-	MCResampledImageRep(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source);
+	MCResampledImageRep(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source);
 	~MCResampledImageRep();
 	
 	MCImageRepType GetType() { return kMCImageRepResampled; }
@@ -311,15 +337,15 @@ public:
 	
 	//////////
 	
-	bool Matches(MCGFloat p_h_scale, MCGFloat p_v_scale, const MCImageRep *p_source);
+	bool Matches(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, const MCImageRep *p_source);
 	
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
+	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 	
 	//////////
 	
-	MCGFloat m_h_scale, m_v_scale;
+	uint32_t m_target_width, m_target_height;
 	bool m_h_flip, m_v_flip;
 	MCImageRep *m_source;
 };
@@ -337,11 +363,13 @@ public:
 	uint32_t GetDataCompression();
 	
 	uindex_t GetFrameCount();
-	bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
-	void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
-	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+	bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
+	void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
 	
-	MCGFloat GetDensity();
+	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
+	void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
+	
+	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	
 	//////////
 
@@ -366,7 +394,6 @@ protected:
 	MCGFloat *m_source_densities;
 	uindex_t m_source_count;
 	
-	MCGFloat m_last_density;
 	bool m_locked;
 	uint32_t m_locked_source;
 	
@@ -383,7 +410,9 @@ bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);
 bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep);
 
-bool MCImageRepGetResampled(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source, MCImageRep *&r_rep);
+// IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
+// and explicit flip params instead of scale values.
+bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source, MCImageRep *&r_rep);
 
 ////////////////////////////////////////////////////////////////////////////////
 

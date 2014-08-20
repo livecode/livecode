@@ -222,7 +222,10 @@ IO_stat IO_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
 IO_stat IO_read_to_eof(IO_handle stream, MCDataRef& r_data)
 {
 	uint4 nread;
-	nread = (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream);
+    // SN-2014-05-02 [[ Bug 12351 ]] Ensure we read the right size from a device.
+    // With some of them - like mouse pointer - no error is triggered, but writing on it moves the file pointer
+    // without increasing the size; that results in nread being 0 - MCS_tell, so a really large unsigned number
+	nread = MCMin((uint4)MCS_fsize(stream), (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream));
 	void *t_stream;
 	/* UNCHECKED */ MCMemoryAllocate(nread, t_stream);
 	/* UNCHECKED */ MCS_readall(t_stream, nread, stream, nread);
@@ -239,7 +242,8 @@ IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream)
 	strtok(ptr, "\n");
 	length = strlen(ptr) + 1;
 	if (length != bytes)
-		if (MCS_seek_cur(stream, length - bytes) != IO_NORMAL)
+		// IM-2014-07-31: [[ ImageLoader ]] Fix unsigned math resulting in huge positive offsets
+		if (MCS_seek_cur(stream, (int64_t)length - (int64_t)bytes) != IO_NORMAL)
 			return IO_ERROR;
 	return IO_NORMAL;
 }
@@ -1087,6 +1091,9 @@ IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle p_stream)
 					MCValueRelease(t_mutable_array);
 			}
 			break;
+            // AL-2014-08-04: [[ Bug 13056 ]] Return IO_ERROR if we don't read a valid type
+            default:
+                return IO_ERROR;
 		}
 	
 	return t_stat;

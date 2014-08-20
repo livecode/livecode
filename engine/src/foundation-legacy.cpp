@@ -83,7 +83,7 @@ bool MCCStringFormat(char*& r_string, const char *p_format, ...)
 	va_start(t_args, p_format);
 	t_count = _vscprintf(p_format, t_args);
 	va_end(t_args);
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER)
 	va_start(t_args, p_format);
 	t_count = vsnprintf(nil, 0, p_format, t_args);
 	va_end(t_args);
@@ -109,7 +109,7 @@ bool MCCStringFormatV(char*& r_string, const char *p_format, va_list p_args)
 	int t_count;
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 	t_count = _vscprintf(p_format, p_args);
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER)
 	t_count = vsnprintf(nil, 0, p_format, p_args);
 #else
 #error "Implement MCCStringFormat"
@@ -134,7 +134,7 @@ bool MCCStringAppendFormat(char*& x_string, const char *p_format, ...)
 	va_start(t_args, p_format);
 	t_count = _vscprintf(p_format, t_args);
 	va_end(t_args);
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_MAC_SERVER) || defined(_LINUX_SERVER)
 	va_start(t_args, p_format);
 	t_count = vsnprintf(nil, 0, p_format, t_args);
 	va_end(t_args);
@@ -353,6 +353,12 @@ bool MCStringConvertLineEndingsToLiveCode(MCStringRef p_input, MCStringRef& r_ou
 	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r\n"), MCSTR("\n\r"), kMCStringOptionCompareExact);
 	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n\r"), MCSTR("\n"), kMCStringOptionCompareExact);
     /* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r"), MCSTR("\n"), kMCStringOptionCompareExact);
+    
+    // AL-2014-07-21: [[ Bug 12162 ]] Convert PS to LF, and LS to VT on text import.
+    /* UNCHECKED */ MCStringFindAndReplaceChar (t_mutable_input, 0x2028, 0x0B, kMCStringOptionCompareExact);
+    /* UNCHECKED */ MCStringFindAndReplaceChar (t_mutable_input, 0x2029, 0x0A, kMCStringOptionCompareExact);
+    
+    
 	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
 	return true;
 }
@@ -898,7 +904,7 @@ bool MCCStringFromNative(const char *p_native, char*& r_cstring)
 
 	return t_success;
 }
-#elif defined(_LINUX)
+#elif defined(_LINUX) || defined (_LINUX_SERVER)
 bool MCCStringFromNativeSubstring(const char *p_string, uint32_t p_length, char*& r_cstring)
 {
 	char *t_native;
@@ -1163,7 +1169,13 @@ bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
 	char *t_end;
 	index_t t_index;
-	t_index = strtol(MCStringGetCString(MCNameGetString(p_name)), &t_end, 10);
+    
+    // AL-2014-05-15: [[ Bug 12203 ]] Don't nativize array name when checking
+    //  for a sequential array.
+    
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(MCNameGetString(p_name));
+	t_index = strtol(*t_cstring, &t_end, 10);
 	if (*t_end == '\0')
 	{
 		r_index = t_index;
@@ -1460,7 +1472,7 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
 		MCAutoStringRef t_key;
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . ReadStringRefNew(&t_key, false);
-
+        
 		MCNewAutoNameRef t_key_name;
 		if (t_stat == IO_NORMAL)
 		{
@@ -1547,6 +1559,9 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
 						MCValueRelease(t_array);
 				}
 				break;
+            // AL-2014-05-23: [[ Bug 12493 ]] Prevent crash cause by bad type data while decoding array
+            default:
+                t_stat = IO_ERROR;
 			}
 		}
 
@@ -1733,14 +1748,19 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		{
 		case VF_UNDEFINED:
 			break;
-		case VF_STRING:
-			t_stat = ctxt -> stream -> WriteU32(MCStringGetLength(t_str_value));
+        case VF_STRING:
+        {
+            // SN-2014-08-05: [[ Bug 13050 ]] VF_STRING is used for binary as well, so that
+            //  we can't use strlen() to get the size of the string.
+            uindex_t t_length;
+            char_t *t_cstring;
+            /* UNCHECKED */ MCStringConvertToNative(t_str_value, t_cstring, t_length);
+			t_stat = ctxt -> stream -> WriteU32(t_length);
 			if (t_stat == IO_NORMAL)
             {
-                MCAutoStringRefAsCString t_cstring;
-                t_cstring . Lock(t_str_value);
-				t_stat = ctxt -> stream -> Write(*t_cstring, strlen(*t_cstring));
+				t_stat = ctxt -> stream -> Write(t_cstring, t_length);
             }
+        }
 			break;
 		case VF_NUMBER:
 			t_stat = ctxt -> stream -> WriteFloat64(MCNumberFetchAsReal((MCNumberRef)p_value));
@@ -1795,6 +1815,13 @@ bool MCListAppendInteger(MCListRef self, integer_t p_value)
 {
 	char_t t_buffer[16];
 	sprintf((char *)t_buffer, "%d", p_value);
+	return MCListAppendNativeChars(self, t_buffer, strlen((char *)t_buffer));
+}
+
+bool MCListAppendUnsignedInteger(MCListRef self, uinteger_t p_value)
+{
+	char_t t_buffer[16];
+	sprintf((char *)t_buffer, "%u", p_value);
 	return MCListAppendNativeChars(self, t_buffer, strlen((char *)t_buffer));
 }
 

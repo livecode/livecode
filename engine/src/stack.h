@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	STACK_H
 #define	STACK_H
 
+#ifdef _LINUX_DESKTOP
+#include <gdk/gdk.h>
+#endif
+
 #ifndef __MC_OBJECT__
 #include "object.h"
 #endif
@@ -91,19 +95,21 @@ extern bool MCStackFullscreenModeFromString(const char *p_string, MCStackFullscr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated the API so you can now lock multiple areas of the surface.
+//  The context and raster for the locked area must now be stored locally rather than directly in the surface.
 class MCStackSurface
 {
 public:
 	// Lock the surface for access with an MCGContextRef
-	virtual bool LockGraphics(MCRegionRef area, MCGContextRef& r_context) = 0;
+	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster) = 0;
 	// Unlock the surface.
-	virtual void UnlockGraphics(void) = 0;
+	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster) = 0;
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
-	virtual bool LockPixels(MCRegionRef area, MCGRaster& r_raster) = 0;
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
 	// Unlock the surface.
-	virtual void UnlockPixels(void) = 0;
+	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster) = 0;
 	
 	// Lock the surface for direct access via the underlying system resource.
 	virtual bool LockTarget(MCStackSurfaceTargetType type, void*& r_context) = 0;
@@ -122,12 +128,15 @@ public:
 
 typedef bool (*MCStackUpdateCallback)(MCStackSurface *p_surface, MCRegionRef p_region, void *p_context);
 
+typedef bool (*MCStackForEachCallback)(MCStack *p_stack, void *p_context);
+
 class MCStack : public MCObject
 {
 	friend class MCHcstak;
 	friend class MCHccard;
 
 protected:
+    
 	Window window;
 	MCCursorRef cursor;
 	MCStack *substacks;
@@ -180,7 +189,8 @@ protected:
 	CDropTarget *droptarget;
 #endif
 
-	Window parentwindow;
+	// IM-2014-07-23: [[ Bug 12930 ]] The stack whose window is parent to this stack
+	MCObjectHandle *m_parent_stack;
 	
 	MCExternalHandlerList *m_externals;
 
@@ -202,6 +212,9 @@ protected:
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
+    MCThreadMutexRef m_id_cache_lock;
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] If true, then updates to this stack should only
 	//   be flushed at the next updateScreen point.
@@ -250,6 +263,9 @@ protected:
 	// MW-2014-03-12: [[ Bug 11914 ]] If this is true then the stack is an engine menu.
 	bool m_is_menu : 1;
 	
+	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
+	bool m_purge_fonts;
+
 public:
 	Boolean menuwindow;
 
@@ -278,7 +294,7 @@ public:
 	virtual void munfocus(void);
 	virtual void mdrag(void);
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
@@ -331,7 +347,7 @@ public:
 	
 	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given surface.
 	// IM-2014-01-24: [[ HiDPI ]] Update region is given in surface coordinates.
-	void view_surface_redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	void view_surface_redrawwindow(MCStackSurface *surface, MCGRegionRef region);
 	
 	//////////
 
@@ -425,6 +441,7 @@ public:
 	
 	// IM-2013-10-10: [[ FullscreenMode ]] Reconfigure view after window rect changes
 	void view_configure(bool p_user);
+	void view_configure_with_rect(bool p_user, MCRectangle rect);
 	
 	// IM-2013-10-10: [[ FullscreenMode ]] Update the on-screen bounds of the view
 	void view_setrect(const MCRectangle &p_new_rect);
@@ -504,7 +521,7 @@ public:
 	MCRectangle getcardrect() const;
 	// IM-2014-01-07: [[ StackScale ]] Update the rect of the current card to fit the stack
 	void updatecardsize();
-	
+    
 	//////////
 	
 	void setgeom();
@@ -560,6 +577,8 @@ public:
 	void setopacity(uint1 p_value);
 	
 	void updatemodifiedmark(void);
+    
+    void updateignoremouseevents(void);
 
     // MW-2008-10-28: [[ ParentScripts ]]
 	// This method is used to resolve any
@@ -578,6 +597,10 @@ public:
 
 	Window getwindow();
 	Window getparentwindow();
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] Set the stack whose window is parent to this stack
+	void setparentstack(MCStack *p_parent);
+	MCStack *getparentstack(void);
 
 	void redrawicon();
 
@@ -593,7 +616,6 @@ public:
 
 	Boolean takewindow(MCStack *sptr);
 	Boolean setwindow(Window w);
-	void setparentwindow(Window w);
 
 	void kfocusset(MCControl *target);
 	MCStack *clone();
@@ -773,20 +795,22 @@ public:
 		return substacks;
 	}
 
-	MCStackModeData *getmodedata(void)
-	{
-		return m_mode_data;
-	}
-
 	void effectrect(const MCRectangle &drect, Boolean &abort);
 	
+	// IM-2014-07-09: [[ Bug 12225 ]] Find the stack by window ID
+	MCStack *findstackwindowid(uint32_t p_win_id);
 	MCStack *findstackd(Window w);
-	MCStack *findchildstackd(Window w,uint2 &ccount, uint2 cindex);
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
+	bool foreachchildstack(MCStackForEachCallback p_callback, void *p_context);
+	
 	void realize();
 	void sethints();
 	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
 	void setsizehints();
+    
 	void destroywindowshape();
+    void updatewindowshape(MCWindowShape *shape);
 
 	// MW-2011-08-17: [[ Redraw ]] Mark the whole content area as needing redrawn.
 	void dirtyall(void);
@@ -861,8 +885,11 @@ public:
 	
 	MCWindowShape *getwindowshape(void) { return m_window_shape; }
 
-#if defined(_WINDOWS_DESKTOP)
+	void constrain(MCPoint p_size, MCPoint& r_out_size);
+	
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	MCSysWindowHandle getrealwindow();
+#ifdef _WINDOWS_DESKTOP
 	MCSysWindowHandle getqtwindow(void);
 
 	// MW-2011-09-14: [[ Redraw ]] The 'onpaint()' method is called when a WM_PAINT
@@ -875,16 +902,8 @@ public:
 	
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
+#endif // _WINDOWS_DESKTOP specific
 #elif defined(_MAC_DESKTOP)
-	MCSysWindowHandle getrealwindow()
-	{
-		return window->handle.window;
-	}
-	MCSysWindowHandle getqtwindow(void);
-	void showmenubar();
-	void getWinstyle(uint32_t &wstyle, uint32_t &wclass);
-
-	void getminmax(MCMacSysRect *winrect);
 #elif defined(_LINUX_DESKTOP)
 	void setmodalhints(void);
 
@@ -910,6 +929,11 @@ public:
 
 	void start_externals();
 	void stop_externals();
+    
+    uint2 getminwidth() const { return minwidth; }
+    uint2 getmaxwidth() const { return maxwidth; }
+    uint2 getminheight() const { return minheight; }
+    uint2 getmaxheight() const { return maxheight; }
 
 	MCStack *next()
 	{
@@ -948,7 +972,7 @@ public:
 	MCRectangle rectfromroot(const MCRectangle& rrect);
 	
 	void enablewindow(bool p_enable);
-	bool mode_haswindow(void);
+	bool haswindow(void);
 
 	void mode_openasmenu(MCStack *grab);
 	void mode_closeasmenu(void);
@@ -1115,6 +1139,10 @@ public:
 	void GetPassword(MCExecContext& ctxt, MCDataRef& r_value);
     void GetKey(MCExecContext& ctxt, bool& r_value);
     
+    // SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter added
+    void SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore);
+    void GetIgnoreMouseEvents(MCExecContext &ctxt, bool &r_ignored);
+    
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);
@@ -1154,13 +1182,6 @@ public:
 private:
 	void loadexternals(void);
 	void unloadexternals(void);
-
-	// Mode-specific hooks, implemented in the various mode* files.
-	MCStackModeData *m_mode_data;
-
-	void mode_create(void);
-	void mode_copy(const MCStack& other);
-	void mode_destroy(void);
 
 	void mode_load(void);
 

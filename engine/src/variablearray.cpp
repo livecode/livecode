@@ -41,14 +41,26 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stacksecurity.h"
 
-void MCVariableArray::presethash(uint4 size)
+void MCVariableArray::clear(void)
 {
+    tablesize = 0;
+    table = NULL;
+    nfilled = keysize =0;
+    dimensions = EXTENT_ALLOCEVAL;
+    extents = NULL;
+}
+
+bool MCVariableArray::presethash(uint4 size)
+{
+	table = new MCHashentry *[size];
+    if (table == NULL)
+        return false;
 	tablesize = size;
-	table = new MCHashentry *[tablesize];
 	memset((char *)table, 0, tablesize * sizeof(MCHashentry *));
 	nfilled = keysize = 0;
 	dimensions = EXTENT_ALLOCEVAL;
 	extents = NULL;
+    return true;
 }
 
 void MCVariableArray::freehash(void)
@@ -71,17 +83,24 @@ void MCVariableArray::freehash(void)
 		delete extents;
 }
 
-void MCVariableArray::resizehash(uint32_t p_new_tablesize)
+bool MCVariableArray::resizehash(uint32_t p_new_tablesize)
 {
 	uint4 oldsize = tablesize;
-
+    uint4 newsize = tablesize;
+    
 	if (p_new_tablesize == 0)
-		tablesize <<= 1;
+		newsize <<= 1;
 	else
-		tablesize = p_new_tablesize;
+		newsize = p_new_tablesize;
 
 	MCHashentry **oldtable = table;
-	table = new MCHashentry *[tablesize];
+    MCHashentry **newtable;
+	newtable = new MCHashentry *[newsize];
+    if (newtable == NULL)
+        return false;
+    
+    table = newtable;
+    tablesize = newsize;
 	memset((char *)table, 0, tablesize * sizeof(MCHashentry *));
 	uint4 i;
 	for (i = 0 ; i < oldsize ; i++)
@@ -100,6 +119,7 @@ void MCVariableArray::resizehash(uint32_t p_new_tablesize)
 		}
 	}
 	delete oldtable;
+    return true;
 }
 
 ////
@@ -191,16 +211,17 @@ void MCVariableArray::extentfromkey(char *skey)
 	}
 	uint1 tdimensions = 0;
 	MCString ts;
-	uint4 num;
+    // MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
+	int32_t num;
 	char *sptr = skey;
 	char *eptr;
 	while ((eptr = strchr(sptr, ',')) != NULL || sptr != NULL)
 	{
 		uint2 length = eptr != NULL ? eptr - sptr : strlen(sptr);
 		ts.set(sptr, length);
-
-		// OK-2008-12-17: [[Bug 7529]] - Changed the extents from a uint2 to a uint4, that should hold enough keys for now
-		if (MCU_stoui4(ts, num) && (tdimensions < dimensions
+        
+        // MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
+		if (MCU_stoi4(ts, num) && (tdimensions < dimensions
 		                            || dimensions == EXTENT_NONNUM))
 		{
 			/*to get here key has to be numeric and new
@@ -211,10 +232,10 @@ void MCVariableArray::extentfromkey(char *skey)
 				MCU_realloc((char **)&extents, tdimensions, tdimensions + 1,
 				            sizeof(arrayextent));
 			// MW-2004-11-26: Switched logic as extents array might be initialised (VG)
-			if (dimensions == EXTENT_NONNUM || num > extents[tdimensions].max)
-				extents[tdimensions].max = num;
-			if (dimensions == EXTENT_NONNUM || num < extents[tdimensions].min)
-				extents[tdimensions].min = num;
+			if (dimensions == EXTENT_NONNUM || num > extents[tdimensions].maximum)
+				extents[tdimensions].maximum = num;
+			if (dimensions == EXTENT_NONNUM || num < extents[tdimensions].minimum)
+				extents[tdimensions].minimum = num;
 			tdimensions++;
 		}
 		else
@@ -358,8 +379,9 @@ void MCVariableArray::getextents(MCExecPoint &ep)
 	if (extents != NULL)
 		for (i = 0 ; i < dimensions ; i++)
 		{
-			char buf[(U4L * 2) + 1];
-			sprintf(buf, "%d,%d", extents[i].min, extents[i].max);
+            // MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
+			char buf[(I4L * 2) + 1];
+			sprintf(buf, "%d,%d", extents[i].minimum, extents[i].maximum);
 			ep.concatcstring(buf, EC_RETURN, i == 0);
 		}
 }
@@ -412,11 +434,13 @@ Exec_stat MCVariableArray::transpose(MCVariableArray& v)
 	v.calcextents();
 	if (v.extents == NULL || v.dimensions != 2 || v.ismissingelement() == True)
 		return ES_ERROR;
-	presethash(v.nfilled);
-	uint2 i, j;
-	char tbuf[(U4L * 2) + 1];
-	for (i = v.extents[COL_DIM].min; i <= v.extents[COL_DIM].max; i++)
-		for (j = v.extents[ROW_DIM].min; j <= v.extents[ROW_DIM].max; j++)
+	if (!presethash(v.nfilled))
+        return ES_ERROR;
+    // MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
+	int32_t i, j;
+	char tbuf[(I4L * 2) + 1];
+	for (i = v.extents[COL_DIM].minimum; i <= v.extents[COL_DIM].maximum; i++)
+		for (j = v.extents[ROW_DIM].minimum; j <= v.extents[ROW_DIM].maximum; j++)
 		{
 			sprintf(tbuf,"%d,%d", j, i);
 			MCHashentry *e = v.lookuphash(tbuf, False, False);
@@ -677,19 +701,21 @@ void MCVariableArray::calcextents(void)
 		}
 }
 
-uint2 MCVariableArray::getextent(uint1 tdimension) const
+// MW-2014-05-28: [[ Bug 12479 ]] Make sure extents use 32-bit ints.
+uint32_t MCVariableArray::getextent(uint1 tdimension) const
 {
 	if (extents == NULL || tdimension > dimensions)
 		return 0;
-	return extents[tdimension].max - extents[tdimension].min + 1;
+	return extents[tdimension].maximum - extents[tdimension].minimum + 1;
 }
 
+// MW-2014-05-28: [[ Bug 12479 ]] Make sure extents use 32-bit ints.
 Boolean MCVariableArray::ismissingelement(void) const
 {
 	if (extents == NULL)
 		return True;
-	uint2 telements = getextent(0);
-	uint2 i;
+	uint32_t telements = getextent(0);
+	uint32_t i;
 	for (i = 1; i < dimensions; i++)
 		telements *= getextent((uint1)i);
 	return !(telements == nfilled);
@@ -705,20 +731,23 @@ Exec_stat MCVariableArray::matrixmultiply(MCExecPoint& ep, MCVariableArray &va, 
 	        !(va.getextent(COL_DIM) == vb.getextent(ROW_DIM)) ||
 	        !(!va.ismissingelement() && !vb.ismissingelement()))
 		return ES_ERROR; //columns does not equal rows
-	presethash(va.getextent(ROW_DIM) * vb.getextent(COL_DIM));
-	uint2 i,j,k;
-	char tbuf[(U4L * 2) + 1];
+	if (!presethash(va.getextent(ROW_DIM) * vb.getextent(COL_DIM)))
+        return ES_ERROR;
+    
+    // MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
+	int32_t i,j,k;
+	char tbuf[(I4L * 2) + 1];
 	MCHashentry *vaptr,*vbptr,*vcptr;
-	for (i = va.extents[ROW_DIM].min; i <= va.extents[ROW_DIM].max; i++)
+	for (i = va.extents[ROW_DIM].minimum; i <= va.extents[ROW_DIM].maximum; i++)
 	{
-		for (j = vb.extents[COL_DIM].min; j <= vb.extents[COL_DIM].max ; j++)
+		for (j = vb.extents[COL_DIM].minimum; j <= vb.extents[COL_DIM].maximum ; j++)
 		{
 			real64_t value;
 
 			sprintf(tbuf,"%d,%d",i,j);
 			vcptr = lookuphash(tbuf, False, True);
 			value = 0.0;
-			for (k = va.extents[COL_DIM].min; k <= va.extents[COL_DIM].max; k++)
+			for (k = va.extents[COL_DIM].minimum; k <= va.extents[COL_DIM].maximum; k++)
 			{
 				sprintf(tbuf,"%d,%d",i,k);
 				vaptr = va.lookuphash(tbuf, False, False);
@@ -752,10 +781,11 @@ MCHashentry *MCVariableArray::getnextelement(uint4 &l, MCHashentry *e, Boolean d
 	MCHashentry *ne = NULL;
 	if (donumeric && dimensions == 1)
 	{ //use numeric
-		char tbuf[U4L];
-		uint32_t i;
-		i = extents[ROW_DIM].min + l;
-		if (i > extents[ROW_DIM].max)
+        // MW-2014-08-06: [[ Bug 13113 ]] Change extents to signed ints so negative indicies work.
+		char tbuf[I4L];
+		int32_t i;
+		i = extents[ROW_DIM].minimum + l;
+		if (i > extents[ROW_DIM].maximum)
 			return NULL;
 		sprintf(tbuf, "%d", i);
 		ne = lookuphash(tbuf, False, False);
@@ -941,13 +971,13 @@ void MCVariableArray::combine_column(MCExecPoint& ep, char p_row_delimiter, char
 		return;
 
 	// We expect columns to have indices [1..32767]
-	if (extents[0] . min < 1 || extents[0] . max > 32767)
+	if (extents[0] . minimum < 1 || extents[0] . maximum > 32767)
 		return;
 
 	// Allocate a temporary array of strings to hold the contents of each column in order
 	// A 'NULL' in any one of these entries means the column should be ignored.
-	uint4 t_column_count;
-	t_column_count = extents[0] . max;
+	uint32_t t_column_count;
+	t_column_count = extents[0] . maximum;
 
 	MCString *t_entries;
 	t_entries = new MCString[t_column_count];
@@ -1766,6 +1796,11 @@ IO_stat MCVariableArray::load(MCObjectInputStream& p_stream, bool p_merge)
 		return t_stat;
 	}
 
+    // MW-2014-07-30: [[ Bug 12844 ]] If the number of entries read is bigger than
+    //   2^32 then its a malformed array record so return error.
+    if (t_nfilled >= 1U<<31)
+        return IO_ERROR;
+    
 	if (t_stat == IO_NORMAL)
 	{
 		uint32_t t_table_size;
@@ -1776,10 +1811,12 @@ IO_stat MCVariableArray::load(MCObjectInputStream& p_stream, bool p_merge)
 		if (p_merge)
 		{
 			if (tablesize < t_table_size)
-				resizehash(t_table_size);
+				if (!resizehash(t_table_size))
+                    return IO_ERROR;
 		}
 		else
-			presethash(t_table_size);
+			if (!presethash(t_table_size))
+                return IO_ERROR;
 	}
 
 	while(t_stat == IO_NORMAL)

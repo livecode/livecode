@@ -14,4 +14,8 @@ CUSTOM_CCFLAGS=\
 	-fmessage-length=0 \
 	$(KERNEL_CCFLAGS)
 
+ifeq ($(ARCH),i386)
+	CUSTOM_CCFLAGS:=$(CUSTOM_CCFLAGS) -march=i486
+endif
+
 include ../rules/archive.linux.makefile

@@ -30,3 +30,16 @@ CACHE_DIR=$(SOLUTION_DIR)/_cache/linux/$(ARCH)/$(MODE)/$(NAME)
 PRODUCT_DIR=$(BUILD_DIR)
 
 PREBUILT_LIB_DIR=$(SOLUTION_DIR)/prebuilt/lib/linux/$(ARCH)
+
+ifeq ($(OBJCOPY),)
+  	OBJCOPY=objcopy
+endif
+
+ifeq ($(STRIP),)
+	STRIP=strip
+endif
+
+ifeq ($(AR),)
+	AR=ar
+endif
+

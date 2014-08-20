@@ -170,8 +170,8 @@ struct MCFieldExportEventData
 //   a run. The callback should return 'false' if it wants to terminate.
 typedef bool (*MCFieldExportCallback)(void *context, MCFieldExportEventType event_type, const MCFieldExportEventData& event_data);
 
-struct MCInterfaceFlaggedRanges;
-struct MCInterfaceFlaggedRange;
+struct MCInterfaceFieldRanges;
+struct MCInterfaceFieldRange;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -210,6 +210,9 @@ class MCField : public MCControl
 	MCStringRef label;
     MCTextDirection text_direction;
     MCInterfaceFieldCursorMovement cursor_movement;
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Used to flag if a recompute is required during the next draw.
+    bool m_recompute : 1;
 	
 	static int2 clickx;
 	static int2 clicky;
@@ -273,7 +276,7 @@ public:
 	virtual void munfocus();
 	virtual void mdrag(void);
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
@@ -390,6 +393,7 @@ public:
 	void stopcomposition(Boolean del, Boolean force);
 	void setcompositioncursoroffset(findex_t coffset);
 	void setcompositionconvertingrange(findex_t si, findex_t ei);
+    bool getcompositionrange(findex_t& si, findex_t& ei);
 	void deletecomposition();
 	Boolean getcompositionrect(MCRectangle &r, findex_t offset);
 	void syncfonttokeyboard();
@@ -397,7 +401,6 @@ public:
 	
 	MCParagraph *verifyindices(MCParagraph *top, findex_t& si, findex_t& ei);
 	
-	void indextorect(MCParagraph *top, findex_t si, findex_t ei, MCRectangle &r);
 	void insertparagraph(MCParagraph *newtext);
 	// MCField selection functions in fields.cc
 	Boolean find(MCExecContext &ctxt, uint4 cardid,
@@ -416,8 +419,8 @@ public:
 	//   the specified 'parid'.
 	MCParagraph *resolveparagraphs(uint4 parid);
 
-    void setparagraphs(MCParagraph *newpgptr, uint4 parid);
-    void setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end);
+    void setparagraphs(MCParagraph *newpgptr, uint4 parid, bool p_preserv_zero_length_styles = false);
+    void setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end, bool p_preserv_zero_length_styles = false);
     // SN-2014-01-17: [[ Unicodification ]] Suppressed old string version of settext and settextindex
     Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
 	Exec_stat settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef s, Boolean undoing);
@@ -454,6 +457,7 @@ public:
 	bool loctext(Boolean click, MCStringRef& r_string);
 	Boolean locmark(Boolean wholeline, Boolean wholeword,
 	                Boolean click, Boolean chunk, Boolean inc_cr, findex_t &si, findex_t &ei);
+    Boolean locmarkpoint(MCPoint p_location, Boolean wholeline, Boolean wholeword, Boolean chunk, Boolean inc_cr, findex_t &si, findex_t &ei);
 
 	bool foundchunk(MCStringRef& r_string);
 	bool foundline(MCStringRef& r_string);
@@ -469,9 +473,9 @@ public:
 #endif
 	bool selectedtext(MCStringRef& r_string);
 	Boolean selectedmark(Boolean wholeline, findex_t &si, findex_t &ei,
-	                     Boolean force, Boolean inc_cr, bool p_char_indices = false);
+	                     Boolean force, bool p_char_indices = false);
 
-	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string);
+	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string, bool p_char_indices = false);
 	bool returnline(findex_t si, findex_t ei, MCStringRef& r_string);
 	bool returnloc(findex_t si, MCStringRef& r_string);
 #ifdef LEGACY_EXEC
@@ -591,6 +595,7 @@ public:
     void exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
 #endif
 	bool exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);
+    bool exportasstyledtext(MCParagraph* p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);\
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
     MCParagraph *importhtmltext(MCValueRef p_data);
@@ -627,6 +632,8 @@ public:
 	void adjustpixmapoffset(MCDC *dc, uint2 index, int4 dy = 0);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
+    
+    MCRectangle firstRectForCharacterRange(int32_t& si, int32_t& ei);
 
     ////////// BIDIRECTIONAL SUPPORT
     
@@ -723,10 +730,14 @@ public:
     void SetTextDirection(MCExecContext&, intenum_t);
     void GetTextDirection(MCExecContext&, intenum_t&);
     
+    void SetTextAlign(MCExecContext&, intenum_t*);
+    void GetTextAlign(MCExecContext&, intenum_t*&);
+    void GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_align);
+    
     void GetHilitedLines(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_lines);
     void SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_lines);
-    void GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFlaggedRanges& r_ranges);
-    void SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFlaggedRanges& p_ranges); 
+    void GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFieldRanges& r_ranges);
+    void SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFieldRanges& p_ranges); 
     void SetTabStops(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
     void GetTabStops(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs);
     void SetTabWidths(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
@@ -734,6 +745,7 @@ public:
     void SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments &t_alignments);
     void GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
     void GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_heights);
+    void GetPageRanges(MCExecContext& ctxt, MCInterfaceFieldRanges& r_ranges);
     
     virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
     virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
@@ -780,7 +792,7 @@ public:
     void GetFormattedStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value);
     void GetEffectiveFormattedStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value);
 	
-    void GetCharIndexOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value);
+    void GetCharIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value);
     void GetLineIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value);
     void GetFormattedTopOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value);
     void GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value);
@@ -800,8 +812,8 @@ public:
 	void GetEncodingOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t& r_encoding);
     void GetFlaggedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value);
     void SetFlaggedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool value);
-    void GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCInterfaceFlaggedRanges& r_value);
-    void SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFlaggedRanges& value);
+    void GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCInterfaceFieldRanges& r_value);
+    void SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFieldRanges& value);
 	void GetListStyleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t& r_value);
     void SetListStyleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t value);
 	void GetListDepthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value);

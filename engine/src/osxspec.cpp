@@ -44,7 +44,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "socket.h"
 #include "osspec.h"
-#include "osxdc.h"
 #include "mcssl.h"
 
 #include "resolution.h"
@@ -110,37 +109,6 @@ OSAcomponent;
 static OSAcomponent *osacomponents = NULL;
 static uint2 osancomponents = 0;
 
-//required apple event handler
-static pascal OSErr DoOpenApp(const AppleEvent *mess, AppleEvent *rep, long refcon);
-static pascal OSErr DoOpenDoc(const AppleEvent *mess, AppleEvent *rep, long refcon);
-static pascal OSErr DoPrintDoc(const AppleEvent *m, AppleEvent *rep, long refcon);
-static pascal OSErr DoQuitApp(const AppleEvent *mess, AppleEvent *rep, long refcon);
-static pascal OSErr DoAppDied(const AppleEvent *mess, AppleEvent *rep, long refcon);
-static pascal OSErr DoAEAnswer(const AppleEvent *m, AppleEvent *rep, long refcon);
-static pascal OSErr DoAppPreferences(const AppleEvent *m, AppleEvent *rep, long refcon);
-
-#define kAEReopenApplication FOUR_CHAR_CODE('rapp')
-static triplets ourkeys[] =
-{
-	/* The following are the four required AppleEvents. */
-	{ kCoreEventClass, kAEReopenApplication, DoOpenApp,  nil },
-  { kCoreEventClass, kAEOpenApplication, DoOpenApp,  nil },
-  { kCoreEventClass, kAEOpenDocuments, DoOpenDoc,  nil },
-  { kCoreEventClass, kAEPrintDocuments, DoPrintDoc, nil },
-  { kCoreEventClass, kAEQuitApplication, DoQuitApp,  nil },
-  { kCoreEventClass, kAEApplicationDied, DoAppDied,  nil },
-
-  { kCoreEventClass, kAEShowPreferences, DoAppPreferences,  nil },
-
-/*if MCS_send() command requires an reply(answer) back from the
- *server app the following handler is used to process the
- *reply(answer) descirption record */
-  { kCoreEventClass, kAEAnswer, DoAEAnswer, nil}
-};
-
-static Boolean hasPPCToolbox = False;
-static Boolean hasAppleEvents = False;
-
 #define MINIMUM_FAKE_PID (1 << 29)
 
 static int4 curpid = MINIMUM_FAKE_PID;
@@ -173,179 +141,7 @@ static OSErr osacompile(MCString &s, ComponentInstance compinstance, OSAID &id);
 static OSErr osaexecute(MCString &s,ComponentInstance compinstance, OSAID id);
 /***************************************************************************/
 
-EventHandlerUPP MCS_weh;
-
-bool WindowIsInControlGroup(WindowRef p_window)
-{
-	WindowGroupRef t_current_group;
-	t_current_group = GetWindowGroup(p_window);
-	if (t_current_group != NULL)
-	{
-		CFStringRef t_group_name;
-		t_group_name = NULL;
-		CopyWindowGroupName(t_current_group, &t_group_name);
-		if (t_group_name != NULL)
-		{
-			if (CFStringCompare(t_group_name, CFSTR("MCCONTROLGROUP"), 0) != 0)
-				t_current_group = NULL;
-			CFRelease(t_group_name);
-		}
-	}
-
-	return t_current_group != NULL;
-}
-
-static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, void *userData)
-{
-  // MW-2005-09-06: userData is now the window handle, so we search for the stack
-	//   the previous method of passing the stack caused problems with takewindow
-	_Drawable t_window;
-	t_window . handle . window = (MCSysWindowHandle)userData;
-	MCStack *sptr = MCdispatcher -> findstackd(&t_window);
-	
-	if (GetEventKind(event) == kEventMouseWheelMoved)
-	{
-		if (MCmousestackptr != NULL)
-		{
-			MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
-			if (mfocused == NULL)
-				mfocused = MCmousestackptr -> getcard();
-			if (mfocused != NULL)
-			{
-				uint2 t_axis;
-				GetEventParameter(event, kEventParamMouseWheelAxis, typeMouseWheelAxis, NULL, sizeof(t_axis), NULL, &t_axis);
-				if (t_axis ==  kEventMouseWheelAxisY)
-				{
-					int4 val;
-					GetEventParameter(event, kEventParamMouseWheelDelta, typeLongInteger, NULL, sizeof(val), NULL, &val);
-					if (val < 0)
-						mfocused->kdown("", XK_WheelUp);
-					else
-						mfocused->kdown("", XK_WheelDown);
-				}
-				else if (t_axis ==  kEventMouseWheelAxisX)
-				{
-					int4 val;
-					GetEventParameter(event, kEventParamMouseWheelDelta, typeLongInteger, NULL, sizeof(val), NULL, &val);
-					if (val < 0)
-						mfocused->kdown("", XK_WheelLeft);
-					else
-						mfocused->kdown("", XK_WheelRight);
-				}	
-			}
-		}
-	}
-	else   if (GetEventClass(event) == kEventClassWindow)
-	{
-		if (GetEventKind(event) == kEventWindowConstrain && sptr != NULL)
-		{
-			if (sptr == MCdispatcher -> gethome())
-			{
-				// IM-2014-01-28: [[ HiDPI ]] Use updatedisplayinfo() method to update & compare display details
-				bool t_changed;
-				t_changed = false;
-
-				MCscreen->updatedisplayinfo(t_changed);
-
-				if (t_changed)
-					MCscreen -> delaymessage(MCdefaultstackptr -> getcurcard(), MCM_desktop_changed);
-			}
-		}
-		else if (GetEventKind(event) == kEventWindowCollapsed && sptr != NULL)
-			sptr->iconify();
-		else if (GetEventKind(event) == kEventWindowExpanded && sptr != NULL)
-			sptr->uniconify();
-		else if (GetEventKind(event) == kEventWindowBoundsChanged && sptr != NULL)
-		{
-			UInt32 attributes;
-			GetEventParameter( event, kEventParamAttributes, typeUInt32, NULL, sizeof( UInt32) , NULL, &attributes);
-			
-			Rect t_rect;
-			GetWindowPortBounds((WindowPtr)t_window . handle . window, &t_rect);
-			
-			// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform
-			t_rect . right -= t_rect . left;
-			t_rect . bottom -= t_rect . top;
-			t_rect . left = 0;
-			t_rect . top = 0;
-			
-			ControlRef t_root_control;
-			GetRootControl((WindowPtr)t_window . handle . window, &t_root_control);
-			
-			ControlRef t_subcontrol;
-			if (GetIndexedSubControl(t_root_control, 1, &t_subcontrol) == noErr)
-				SetControlBounds(t_subcontrol, &t_rect);
-			
-			// MW-2007-08-29: [[ Bug 4846 ]] Ensure a moveStack message is sent whenever the window moves
-			if ((attributes & kWindowBoundsChangeSizeChanged) != 0 || ((attributes & kWindowBoundsChangeUserDrag) != 0 && (attributes & kWindowBoundsChangeOriginChanged) != 0))
-				sptr->view_configure(true);//causes a redraw and recalculation
-		}
-		else if (GetEventKind(event) == kEventWindowInit && sptr != NULL)
-		{
-			UInt32 t_value;
-			t_value = 0;
-			SetEventParameter(event, kEventParamWindowFeatures, typeUInt32, 4, &t_value);
-		}
-		else if (GetEventKind(event) == kEventWindowDrawContent)
-		{
-			EventRecord t_record;
-			t_record . message = (UInt32)userData;
-			((MCScreenDC *)MCscreen) -> doredraw(t_record, true);
-			return noErr;
-		}
-		else if (GetEventKind(event) == kEventWindowUpdate)
-		{
-			EventRecord t_record;
-			t_record . message = (UInt32)userData;
-			((MCScreenDC *)MCscreen) -> doredraw(t_record);
-			return noErr;
-		}
-		else if (GetEventKind(event) == kEventWindowFocusAcquired)
-		{
-			// OK-2009-02-17: [[Bug 3576]]
-			// OK-2009-03-12: Fixed crash where getwindow() could return null.
-			// OK-2009-03-23: Reverted as was causing at least two bugs.
-			// if (sptr != NULL && sptr -> getwindow() != NULL)
-			//	((MCScreenDC *)MCscreen) -> activatewindow(sptr -> getwindow());
-		}
-		else if (GetEventKind(event) == kEventWindowFocusRelinquish)
-		{
-			WindowRef t_window_handle;
-			t_window_handle = (WindowRef)userData;
-			
-			if (sptr != NULL)
-				sptr -> getcurcard() -> kunfocus();
-		}
-		else if (GetEventKind(event) == kEventWindowActivated)
-		{
-			if ( sptr != NULL )
-				if ( sptr -> is_fullscreen() ) 
-					if (!((MCScreenDC*)MCscreen)->getmenubarhidden())
-						SetSystemUIMode(kUIModeAllHidden, kUIOptionAutoShowMenuBar);
-		}
-		else if (GetEventKind(event) == kEventWindowDeactivated)
-		{
-			if ( sptr != NULL)
-				if ( sptr -> is_fullscreen() )
-					if (!((MCScreenDC*)MCscreen)->getmenubarhidden())
-						SetSystemUIMode(kUIModeNormal, NULL);
-		}
-		else if (GetEventKind(event) == kEventWindowClose)
-		{
-			// MW-2008-02-28: [[ Bug 5934 ]] It seems that composited windows don't send WNE type
-			//   events when their close button is clicked in the background, therefore we intercept
-			//   the high-level carbon event.
-			MCdispatcher->wclose(&t_window);
-			return noErr;
-		}
-		else if (GetEventKind(event) == kEventWindowGetRegion)
-		{
-		}
-	}
-	return eventNotHandledErr;
-}
-
-static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refCon)
+OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
 	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
 	//   don't handle the event.
@@ -477,13 +273,7 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 	return err;
 }
 
-//Apple event handlers table is installed in MCS_init() macspec.cpp file
-static pascal OSErr DoOpenApp(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{
-	return errAEEventNotHandled;
-}
-
-static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
+OSErr MCAppleEventHandlerDoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
 	//Apple Event for opening documnets, in our use is to open stacks when user
 	//double clicked on a MC stack icon
@@ -535,95 +325,7 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 	return noErr;
 }
 
-static pascal OSErr DoPrintDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{
-	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
-	//   don't handle the event.
-	if (!MCSecureModeCanAccessAppleScript())
-	if (!MCSecureModeCheckAppleScript())
-		return errAEEventNotHandled;
-
-	errno = errAEEventNotHandled;
-	if (reply != NULL)
-	{
-		short e = errno;
-		AEPutParamPtr(reply, keyReplyErr, typeShortInteger, &e, sizeof(short));
-	}
-	return errno;
-}
-
-static pascal OSErr DoQuitApp(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{
-	// MW-2013-08-07: [[ Bug 10865 ]] Even if AppleScript is disabled we still need
-	//   to handle the 'quit' message.
-	// if (!MCSecureModeCanAccessAppleScript())
-	//	return errAEEventNotHandled;
-
-	errno = errAEEventNotHandled;
-	switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
-	{
-	case ES_PASS:
-	case ES_NOT_HANDLED:
-		MCdefaultstackptr->getcard()->message(MCM_shut_down);
-		MCquit = True; //set MC quit flag, to invoke quitting
-		errno = noErr;
-		break;
-	default:
-		errno = userCanceledErr;
-		break;
-	}
-	if (reply != NULL)
-	{
-		short e = errno;
-		AEPutParamPtr(reply, keyReplyErr, typeShortInteger, &e, sizeof(short));
-	}
-	return errno;
-}
-
-static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{
-	// MW-2013-08-07: [[ Bug 10865 ]] Even if AppleScript is disabled we still need
-	//   to handle the 'preferences' message.
-	//if (!MCSecureModeCanAccessAppleScript())
-	//	return errAEEventNotHandled;
-
-	MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
-	if (mb == NULL)
-		return errAEEventNotHandled;
-    MCButton *bptr = (MCButton *)mb->findname(CT_MENU, MCNAME("Edit"));
-	if (bptr == NULL)
-		return errAEEventNotHandled;
-	if (bptr != NULL)
-	{
-		bptr->message_with_args(MCM_menu_pick, "Preferences");
-	}
-	return noErr;
-}
-
-
-static pascal OSErr DoAppDied(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
-{
-	errno = errAEEventNotHandled;
-	DescType rType;
-	Size rSize;
-	ProcessSerialNumber sn;
-	AEGetParamPtr(theAppleEvent, keyProcessSerialNumber, typeProcessSerialNumber, &rType,	&sn, sizeof(ProcessSerialNumber), &rSize);
-	uint2 i;
-	for (i = 0 ; i < MCnprocesses ; i++)
-	{
-		Boolean result;
-		SameProcess((ProcessSerialNumber *)&MCprocesses[i].sn, &sn, &result);
-		if (result)
-		{
-			MCprocesses[i].pid = 0;
-			IO_cleanprocesses();
-			return noErr;
-		}
-	}
-	return errno;
-}
-
-static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long refCon)
+OSErr MCAppleEventHandlerDoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
 	// MW-2013-08-07: [[ Bug 10865 ]] If AppleScript is disabled (secureMode) then
 	//   don't handle the event.
@@ -850,8 +552,6 @@ void MCS_init()
 	
 	//
 
-	MoreMasters();
-	InitCursor();
 	MCinfinity = HUGE_VAL;
 
 	long response;
@@ -861,19 +561,6 @@ void MCS_init()
 	MCaqua = True;
 	
 	init_utf8_converters();
-
-	CFBundleRef theBundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
-	if (theBundle != NULL)
-	{
-		if (CFBundleLoadExecutable(theBundle))
-		{
-			SwapQDTextFlagsPtr stfptr = (SwapQDTextFlagsPtr)CFBundleGetFunctionPointerForName(theBundle, CFSTR("SwapQDTextFlags"));
-			if (stfptr != NULL)
-				stfptr(kQDSupportedFlags);
-			CFBundleUnloadExecutable(theBundle);
-		}
-		CFRelease(theBundle);
-	}
 	
 	char *dptr = MCS_getcurdir();
 	if (strlen(dptr) <= 1)
@@ -893,47 +580,7 @@ void MCS_init()
 	}
 	delete dptr;
 
-	// MW-2007-12-10: [[ Bug 5667 ]] Small font sizes have the wrong metrics
-	//   Make sure we always use outlines - then everything looks pretty :o)
-	SetOutlinePreferred(TRUE);
-
 	MCS_reset_time();
-	//do toolbox checking
-	long result;
-	hasPPCToolbox = (Gestalt(gestaltPPCToolboxAttr, &result)
-	                 ? False : result != 0);
-	hasAppleEvents = (Gestalt(gestaltAppleEventsAttr, &result)
-	                  ? False : result != 0);
-	uint1 i;
-	if (hasAppleEvents)
-	{ //install required AE event handler
-		for (i = 0; i < (sizeof(ourkeys) / sizeof(triplets)); ++i)
-		{
-			if (!ourkeys[i].theUPP)
-			{
-				ourkeys[i].theUPP = NewAEEventHandlerUPP(ourkeys[i].theHandler);
-				AEInstallEventHandler(ourkeys[i].theEventClass,
-				                      ourkeys[i].theEventID,
-				                      ourkeys[i].theUPP, 0L, False);
-			}
-		}
-	}
-
-// ** MODE CHOICE
-	if (MCModeShouldPreprocessOpeningStacks())
-	{
-		EventRecord event;
-		i = 2;
-		// predispatch any openapp or opendoc events so that stacks[] array
-		// can be properly initialized
-		while (i--)
-			while (WaitNextEvent(highLevelEventMask, &event,
-								 (unsigned long)0, (RgnHandle)NULL))
-				AEProcessAppleEvent(&event);
-	}
-	//install special handler
-	AEEventHandlerUPP specialUPP = NewAEEventHandlerUPP(DoSpecial);
-	AEInstallSpecialHandler(keyPreDispatch, specialUPP, False);
 
 	if (Gestalt('ICAp', &response) == noErr)
 	{
@@ -961,9 +608,6 @@ void MCS_init()
 			ICStop(icinst);
 		}
 	}
-
-
-	MCS_weh = NewEventHandlerUPP(WinEvtHndlr);
 
 	// MW-2005-04-04: [[CoreImage]] Load in CoreImage extension
 	extern void MCCoreImageRegister(void);
@@ -996,9 +640,6 @@ void MCS_shutdown()
 	for (i = 0; i< osancomponents; i++)
 		CloseComponent(osacomponents[i].compinstance);
 	delete osacomponents;
-
-
-	DisposeEventHandlerUPP(MCS_weh);
 }
 
 void MCS_seterrno(int value)
@@ -1779,7 +1420,7 @@ const char *MCS_getsystemversion()
 		Gestalt(gestaltSystemVersionMajor, &t_major);
 		Gestalt(gestaltSystemVersionMinor, &t_minor);
 		Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
-		sprintf(versioninfo, "%d.%d.%d", t_major, t_minor, t_bugfix);
+		sprintf(versioninfo, "%ld.%ld.%ld", t_major, t_minor, t_bugfix);
 		return versioninfo;
 	}
 	else if ((errno = Gestalt(gestaltSystemVersion, &response)) == noErr)
@@ -3477,7 +3118,7 @@ void MCS_startprocess_unix(char *name, char *doc, Open_mode mode, Boolean elevat
 		{
 			char *t_arguments[] =
 			{
-				"-elevated-slave",
+				(char *)"-elevated-slave",
 				nil
 			};
 			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCcmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);

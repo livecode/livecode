@@ -309,7 +309,8 @@ static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
 	{"letterbox", kMCStackFullscreenLetterbox},
 	{"noborder", kMCStackFullscreenNoBorder},
 	{"noscale", kMCStackFullscreenNoScale},
-    
+    // AL-2014-05-27: [[ Bug 12509 ]] showAll not added to refactored fullscreen modes
+    {"showAll", kMCStackFullscreenShowAll},
 	{"", kMCStackFullscreenModeNone, true},
 };
 
@@ -1411,7 +1412,7 @@ void MCStack::SetWmPlace(MCExecContext& ctxt, bool setting)
 
 void MCStack::GetWindowId(MCExecContext& ctxt, uinteger_t& r_id)
 {
-	r_id = MCscreen -> dtouint4(window);
+	r_id = MCscreen -> dtouint4((Drawable)window);
 }
 
 void MCStack::GetPixmapId(MCExecContext& ctxt, uinteger_t& r_id)
@@ -1766,14 +1767,13 @@ void MCStack::SetWindowShape(MCExecContext& ctxt, uinteger_t p_shape)
 				t_image -> open();
 				t_new_mask = t_image -> makewindowshape();
 				t_image -> close();
-				if (t_new_mask != NULL)
-				{
-					destroywindowshape();
-					m_window_shape = t_new_mask;
-					// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
-					dirtyall();
-					return;
-				}
+                // MW-2014-06-11: [[ Bug 12495 ]] Refactored action as different whether using platform API or not.
+                // MW-2014-07-29: [[ Bug 12997 ]] Merge error - refactored code from 6.7 not integrated.
+                if (t_new_mask != NULL)
+                    updatewindowshape(t_new_mask);
+                
+                // Update window mask immediately changes things so no need to reopenwindow.
+                return;
 			}
 		}
 #endif
@@ -1914,7 +1914,7 @@ void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p
             reopenwindow();
         else
         {
-            if (window != DNULL)
+            if (window != NULL)
             {
                 stop_externals();
                 MCscreen->destroywindow(window);
@@ -2162,3 +2162,16 @@ void MCStack::GetKey(MCExecContext& ctxt, bool& r_value)
     //   whether or not the script is available.
     r_value = iskeyed();
 }
+
+// SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter for the P_IGNORE_MOUSE_EVENTS property
+void MCStack::SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore)
+{
+    if (changeextendedstate(p_ignore, ECS_IGNORE_MOUSE_EVENTS) && opened)
+        updateignoremouseevents();
+}
+
+void MCStack::GetIgnoreMouseEvents(MCExecContext &ctxt, bool &r_ignored)
+{
+    r_ignored = getextendedstate(ECS_IGNORE_MOUSE_EVENTS);
+}
+

@@ -994,7 +994,7 @@ MCControl *MCCreate::getobject(MCObject *&parent)
 	case CT_SCROLLBAR:
 		return MCtemplatescrollbar;
 	case CT_PLAYER:
-		return MCtemplateplayer;
+		return (MCControl*)MCtemplateplayer;
 	case CT_IMAGE:
 		return MCtemplateimage;
 	case CT_GRAPHIC:
@@ -2769,14 +2769,21 @@ MCRecord::~MCRecord()
 Parse_stat MCRecord::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	sp.skip_token(SP_RECORD, TT_UNDEFINED, RC_SOUND); //skip for sc compat
-	sp.skip_token(SP_THERE, TT_UNDEFINED, TM_FILE); //always file in mc
-	if (sp.parseexp(False, True, &file) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_RECORD_BADFILEEXP, sp);
-		return PS_ERROR;
-	}
+    
+    if (sp.skip_token(SP_RECORD, TT_UNDEFINED, RC_PAUSE) == PS_NORMAL)
+		pause = True;
+	else if (sp.skip_token(SP_RECORD, TT_UNDEFINED, RC_RESUME) == PS_NORMAL)
+		pause = False;
+    else
+    {
+        sp.skip_token(SP_RECORD, TT_UNDEFINED, RC_SOUND); //skip for sc compat
+        sp.skip_token(SP_THERE, TT_UNDEFINED, TM_FILE); //always file in mc
+        if (sp.parseexp(False, True, &file) != PS_NORMAL)
+        {
+            MCperror->add(PE_RECORD_BADFILEEXP, sp);
+            return PS_ERROR;
+        }
+    }
 	return PS_NORMAL;
 }
 
@@ -2788,21 +2795,72 @@ void MCRecord::exec_ctxt(MCExecContext &ctxt)
 		MCeerror->add(EE_PROCESS_NOPERM, line, pos);
 		return ES_ERROR;
 	}
-	if (file->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_RECORD_BADFILE, line, pos);
-		return ES_ERROR;
-	}
-	char *soundfile = MCS_get_canonical_path(ep.getcstring());
-    MCtemplateplayer->recordsound(soundfile);
+
+#ifdef FEATURE_PLATFORM_RECORDER
+    extern MCPlatformSoundRecorderRef MCrecorder;
+#endif
+    
+    if (file != nil)
+    {
+        if (file->eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_RECORD_BADFILE, line, pos);
+            return ES_ERROR;
+        }
+        char *soundfile = MCS_get_canonical_path(ep.getcstring());
+        
+#ifdef FEATURE_PLATFORM_RECORDER
+        if (MCrecorder == nil)
+            MCPlatformSoundRecorderCreate(MCrecorder);
+        
+        if (MCrecorder != nil)
+            MCPlatformSoundRecorderStart(MCrecorder, soundfile);
+#else
+        extern void MCQTRecordSound(char *soundfile);
+        MCQTRecordSound(soundfile);
+#endif
+    }
+    else
+    {
+#ifdef FEATURE_PLATFORM_RECORDER
+        if (MCrecorder != nil)
+        {
+            if (pause)
+                MCPlatformSoundRecorderPause(MCrecorder);
+            else
+                MCPlatformSoundRecorderResume(MCrecorder);
+        }
+#else
+        if (pause)
+        {
+            extern void MCQTRecordPause(void);
+            MCQTRecordPause();
+        }
+        else
+        {
+            extern void MCQTRecordResume(void);
+            MCQTRecordResume();
+        }
+#endif
+    }
 	return ES_NORMAL;
 #endif /* MCRecord */
 
-    MCAutoStringRef t_filename;
-    if (!ctxt . EvalExprAsStringRef(file, EE_RECORD_BADFILE, &t_filename))
-        return;
+    if (file != nil)
+    {
+        MCAutoStringRef t_filename;
+        if (!ctxt . EvalExprAsStringRef(file, EE_RECORD_BADFILE, &t_filename))
+            return;
     
-    MCMultimediaExecRecord(ctxt, *t_filename);
+        MCMultimediaExecRecord(ctxt, *t_filename);
+    }
+    else
+    {
+        if (pause)
+            MCMultimediaExecRecordPause(ctxt);
+        else
+            MCMultimediaExecRecordResume(ctxt);
+    }
 }
 
 void MCRecord::compile(MCSyntaxFactoryRef ctxt)
@@ -3697,7 +3755,8 @@ void MCSelect::exec_ctxt(MCExecContext& ctxt)
 
 	if (targets == NULL)
 		MCInterfaceExecSelectEmpty(ctxt);
-	else if (text)
+    // AL-2014-08-04: [[ Bug 13079 ]] 'select before/after text' should use chunk variant
+	else if (text && where == PT_AT)
 	{
 		MCObjectPtr t_object;
         if (!targets -> getobj(ctxt, t_object, True))
@@ -3705,9 +3764,18 @@ void MCSelect::exec_ctxt(MCExecContext& ctxt)
             ctxt . LegacyThrow(EE_SELECT_BADTARGET);
             return;
         }
-		MCInterfaceExecSelectAllTextOfField(ctxt, t_object);
+        if (t_object . object -> gettype() == CT_FIELD)
+            MCInterfaceExecSelectAllTextOfField(ctxt, t_object);
+        else if (t_object . object -> gettype() == CT_BUTTON)
+            // AL-2014-08-04: [[ Bug 13079 ]] 'select text of button' is valid
+            MCInterfaceExecSelectAllTextOfButton(ctxt, t_object);
+        else
+        {
+            ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
+            return;
+        }
 	}
-    else if (targets -> next == nil)
+    else if (text || targets -> next == nil)
 	{
 		MCObjectChunkPtr t_chunk;
 		
@@ -3716,8 +3784,7 @@ void MCSelect::exec_ctxt(MCExecContext& ctxt)
             ctxt . LegacyThrow(EE_SELECT_BADTARGET);
             return;
         }
-        
-		
+
 		if (t_chunk . chunk != CT_UNDEFINED || where == PT_BEFORE || where == PT_AFTER)
 		{
 			if (t_chunk . object -> gettype() == CT_FIELD)
@@ -3772,11 +3839,12 @@ void MCSelect::compile(MCSyntaxFactoryRef ctxt)
 
 	if (targets == NULL)
 		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectEmptyMethodInfo);
-	else if (text)
+	else if (text && where == PT_AT)
 	{
 		targets -> compile_object_ptr(ctxt);
 		
 		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectAllTextOfFieldMethodInfo);
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectAllTextOfButtonMethodInfo);
 	}
 	else 
 	{
@@ -3785,12 +3853,15 @@ void MCSelect::compile(MCSyntaxFactoryRef ctxt)
 		uindex_t t_count;
 		t_count = 0;
 
-		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr -> next)
-		{
-			chunkptr -> compile_object_ptr(ctxt);
-			t_count++;
+        if (!text)
+        {
+            for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr = chunkptr -> next)
+            {
+                chunkptr -> compile_object_ptr(ctxt);
+                t_count++;
+            }
 		}
-		
+        
 		if (t_count > 1)
 		{
 			MCSyntaxFactoryEvalList(ctxt, t_count);

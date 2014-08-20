@@ -601,6 +601,8 @@ RTFStatus RTFReader::ParseToken(RTFToken& r_token, int4& r_parameter)
 			t_char = *m_input;
 			m_input++;
 		}
+        else
+            t_char = '\0';
 	
 		m_input_binary_count -= 1;
 		if (m_input_binary_count == 0)

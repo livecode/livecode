@@ -546,6 +546,61 @@ static MCExecCustomTypeInfo _kMCInterfaceBackdropTypeInfo =
 
 //////////
 
+void MCInterfaceStackFileVersionParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceStackFileVersion& r_version)
+{
+	uint4 major = 0, minor = 0, revision = 0, version = 0;
+	uint4 count;
+	// MW-2006-03-24: This should be snscanf - except it doesn't exist on BSD!!
+	char *t_version;
+	/* UNCHECKED */ MCStringConvertToCString(p_input, t_version);
+    count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
+	delete t_version;
+	
+	version = major * 1000 + minor * 100 + revision * 10;
+	
+	// MW-2012-03-04: [[ StackFile5500 ]] Allow versions up to 5500 to be set.
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] Allow versions up to 7000 to be set.
+	if (count < 2 || version < 2400 || version > 7000)
+	{
+		ctxt . LegacyThrow(EE_PROPERTY_STACKFILEBADVERSION);
+		return;
+	}
+    
+    r_version . version = version;
+}
+
+void MCInterfaceStackFileVersionFormat(MCExecContext& ctxt, const MCInterfaceStackFileVersion& p_version, MCStringRef& r_output)
+{
+	if (p_version . version % 100 == 0)
+	{
+		if (MCStringFormat(r_output, "%d.%d", p_version . version / 1000, (p_version . version % 1000) / 100))
+			return;
+	}
+	else
+	{
+		if (MCStringFormat(r_output, "%d.%d.%d", p_version . version / 1000, (p_version . version % 1000) / 100, (p_version . version % 100) / 10))
+			return;
+	}
+    
+	ctxt . Throw();
+}
+
+void MCInterfaceStackFileVersionFree(MCExecContext& ctxt, MCInterfaceStackFileVersion& p_version)
+{
+
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceStackFileVersionTypeInfo =
+{
+	"Interface.StackFileVersion",
+	sizeof(MCInterfaceStackFileVersion),
+	(void *)MCInterfaceStackFileVersionParse,
+	(void *)MCInterfaceStackFileVersionFormat,
+	(void *)MCInterfaceStackFileVersionFree,
+};
+
+//////////
+
 static MCExecEnumTypeElementInfo _kMCInterfaceLookAndFeelElementInfo[] =
 {	
 	{ "Appearance Manager", LF_AM, false },
@@ -616,6 +671,7 @@ MCExecCustomTypeInfo *kMCInterfaceNamedColorTypeInfo = &_kMCInterfaceNamedColorT
 MCExecEnumTypeInfo *kMCInterfacePaintCompressionTypeInfo = &_kMCInterfacePaintCompressionTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceProcessTypeTypeInfo = &_kMCInterfaceProcessTypeTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceSelectionModeTypeInfo = &_kMCInterfaceSelectionModeTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceStackFileVersionTypeInfo = &_kMCInterfaceStackFileVersionTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1282,43 +1338,14 @@ void MCInterfaceSetStackFileType(MCExecContext& ctxt, MCStringRef p_value)
 	MCValueAssign(MCstackfiletype, p_value);
 }
 
-
-void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCStringRef& r_value)
+void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCInterfaceStackFileVersion& r_value)
 {
-	if (MCstackfileversion % 100 == 0) 
-	{
-		if (MCStringFormat(r_value, "%d.%d", MCstackfileversion / 1000, (MCstackfileversion % 1000) / 100))
-			return;
-	}
-	else
-	{
-		if (MCStringFormat(r_value, "%d.%d.%d", MCstackfileversion / 1000, (MCstackfileversion % 1000) / 100, (MCstackfileversion % 100) / 10))
-			return;
-	}
-
-	ctxt . Throw();
+    r_value . version = MCstackfileversion;
 }
 
-void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, MCStringRef p_value)
+void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, const MCInterfaceStackFileVersion& p_version)
 {
-	uint4 major = 0, minor = 0, revision = 0, version = 0;
-	uint4 count;
-	// MW-2006-03-24: This should be snscanf - except it doesn't exist on BSD!!
-	char *t_version;
-	/* UNCHECKED */ MCStringConvertToCString(p_value, t_version);
-    count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
-	delete t_version;
-	
-	version = major * 1000 + minor * 100 + revision * 10;
-	
-	// MW-2012-03-04: [[ StackFile5500 ]] Allow versions up to 5500 to be set.
-	// MW-2013-12-05: [[ UnicodeFileFormat ]] Allow versions up to 7000 to be set.
-	if (count < 2 || version < 2400 || version > 7000)
-	{
-		ctxt . LegacyThrow(EE_PROPERTY_STACKFILEBADVERSION);
-		return;
-	}
-	MCstackfileversion = version;
+	MCstackfileversion = p_version . version;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1559,12 +1586,12 @@ void MCInterfaceSetLockMessages(MCExecContext& ctxt, bool p_value)
 
 void MCInterfaceGetLockMoves(MCExecContext& ctxt, bool& r_value)
 {
-	r_value = MClockmoves == True;
+	r_value = MCscreen->getlockmoves() == True;
 }
 
 void MCInterfaceSetLockMoves(MCExecContext& ctxt, bool p_value)
 {
-	MClockmoves = p_value ? True : False;
+	MCscreen -> setlockmoves(p_value ? True : False);
 }
 
 void MCInterfaceGetLockRecent(MCExecContext& ctxt, bool& r_value)
@@ -1759,6 +1786,10 @@ void MCInterfaceGetHidePalettes(MCExecContext& ctxt, bool& r_value)
 void MCInterfaceSetHidePalettes(MCExecContext& ctxt, bool p_value)
 {
 	MChidepalettes = p_value ? True : False;
+    // MW-2014-04-23: [[ Bug 12080 ]] Make sure we update the hidesOnSuspend of all palettes.
+#ifdef _MACOSX
+    MCstacks->hidepaletteschanged();
+#endif
 }
 
 
@@ -2273,7 +2304,10 @@ static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_bina
     
     if (MCStringFirstIndexOf(p_data, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
     {
-        IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_data));
+        char_t* t_string;
+        uindex_t t_length;
+        /* UNCHECKED */ MCStringConvertToNative(p_data, t_string, t_length);
+        IO_handle stream = MCS_fakeopen(t_string, t_length);
         /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
         MCS_close(stream);
         t_binary_fail = t_stack == nil;
@@ -2438,6 +2472,7 @@ void MCInterfaceEvalAudioClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stac
 void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
+    t_clip = nil;
     
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_AUDIO_CLIP, p_name, t_clip) &&
         (MCacptr != NULL && MCacptr -> hasname(p_name)))
@@ -2486,6 +2521,8 @@ void MCInterfaceEvalVideoClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stac
 void MCInterfaceEvalVideoClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
+    // AL-2014-05-27: [[ Bug 12517 ]] Set t_clip to nil otherwise it causes crash
+    t_clip = nil;
     
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_VIDEO_CLIP, p_name, t_clip))
     {
@@ -3328,16 +3365,17 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
         r_mark . changed = false;
     	return;
     }
-    r_mark . text = nil;
+    // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk
+    r_mark . text = MCValueRetain(kMCEmptyString);
 }
 
-void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMarkedText& r_mark)
+void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, Boolean wholechunk, MCMarkedText& r_mark)
 {
     switch (p_container . object -> gettype())
     {
         case CT_FIELD:
         case CT_BUTTON:
-            MCInterfaceMarkObject(ctxt, p_container, false, r_mark);
+            MCInterfaceMarkObject(ctxt, p_container, wholechunk, r_mark);
             return;
         case CT_IMAGE:
         case CT_AUDIO_CLIP:
@@ -3350,14 +3388,19 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
             break;
     }
     
-    r_mark . text = nil;
+    // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk
+    r_mark . text = MCValueRetain(kMCEmptyString);
     ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
 }
 
 void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Functions p_function, bool p_whole_chunk, MCMarkedText& r_mark)
 {
     if (p_object . object -> gettype() != CT_FIELD)
+    {
+        // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk
+        r_mark . text = MCValueRetain(kMCEmptyString);
         return;
+    }
     
     MCInterfaceMarkObject(ctxt, p_object, p_whole_chunk, r_mark);
     
@@ -3394,7 +3437,7 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
         case F_SELECTED_TEXT:
             wholeline = False;
         case F_SELECTED_LINE:
-            if (!t_field->selectedmark(wholeline, start, end, False, p_whole_chunk))
+            if (!t_field->selectedmark(wholeline, start, end, False))
                 start = end = 0;
             break;
         case F_MOUSE_CHAR_CHUNK:

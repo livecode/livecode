@@ -70,6 +70,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "resolution.h"
 
 #include "date.h"
+#include "systhreads.h"
+#include "stacktile.h"
 
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
@@ -374,8 +376,9 @@ MCVariable *MCurlresult;
 Boolean MCexitall;
 int4 MCretcode;
 Boolean MCrecording;
-
-Boolean MCantialiasedtextworkaround = False;
+#ifdef FEATURE_PLATFORM_RECORDER
+MCPlatformSoundRecorderRef MCrecorder;
+#endif
 
 // AL-2014-18-02: [[ UnicodeFileFormat ]] Make stackfile version 7.0 the default.
 uint4 MCstackfileversion = 7000;
@@ -397,7 +400,6 @@ Boolean MClockcolormap;
 Boolean MClockerrors;
 Boolean MClockmenus;
 Boolean MClockmessages;
-Boolean MClockmoves;
 Boolean MClockrecent;
 Boolean MCtwelvetime = True;
 Boolean MCuseprivatecmap;
@@ -487,6 +489,13 @@ char *MCsysencoding = nil;
 
 MCLocaleRef kMCBasicLocale = nil;
 MCLocaleRef kMCSystemLocale = nil;
+
+// MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
+MCThreadMutexRef MCanimationmutex = NULL;
+MCThreadMutexRef MCpatternmutex = NULL;
+MCThreadMutexRef MCimagerepmutex = NULL;
+MCThreadMutexRef MCfieldmutex = NULL;
+MCThreadMutexRef MCthememutex = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -677,7 +686,7 @@ void X_clear_globals(void)
 	MCscriptfont = MCValueRetain(kMCEmptyString);
 	MCscriptsize = 0;
 	MCscrollbarwidth = DEFAULT_SB_WIDTH;
-	uint2 MCfocuswidth = 2;
+	MCfocuswidth = 2;
 	MCsizewidth = 8;
 	MCminsize = 8;
 	MCcloneoffset = 32;
@@ -736,26 +745,18 @@ void X_clear_globals(void)
 	MCexitall = False;
 	MCretcode = 0;
 	MCrecording = False;
-	MCantialiasedtextworkaround = False;
+#ifdef FEATURE_PLATFORM_RECORDER
+    MCrecorder = nil;
+#endif
+    
 	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make 7.0 stackfile version the default.
 	MCstackfileversion = 7000;
-#if defined(_WINDOWS)
-    MClook = LF_WIN95;
-    MCttbgcolor = MCSTR("255,255,231");
-    MCttfont = MCSTR("MS Sans Serif");
-    MCttsize = 12;
-#elif defined(_MACOSX)
-    MClook = LF_MAC;
-    MCttbgcolor = MCSTR("255,255,207");
-    MCttfont = MCSTR("Lucida Grande");
-    MCttsize = 11;
-#else
+
     MClook = LF_MOTIF;
     MCttbgcolor = MCSTR("255,255,207");
     MCttfont = MCSTR("Helvetica");
     MCttsize = 12;
-#endif
-    MCttsize = 12;
+
 	MCtrylock = 0;
 	MCerrorlock = 0;
 	MCwatchcursor = False;
@@ -769,7 +770,6 @@ void X_clear_globals(void)
 	MClockerrors = False;
 	MClockmenus = False;
 	MClockmessages = False;
-	MClockmoves = False;
 	MClockrecent = False;
 	MCtwelvetime = True;
 	MCuseprivatecmap = False;
@@ -828,6 +828,13 @@ void X_clear_globals(void)
     
 	// MW-2013-03-20: [[ MainStacksChanged ]]
 	MCmainstackschanged = False;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]]
+    MCanimationmutex = NULL;
+    MCpatternmutex = NULL;
+    MCimagerepmutex = NULL;
+    MCfieldmutex = NULL;
+    MCthememutex = NULL;
 
 #ifdef _ANDROID_MOBILE
     extern void MCAndroidMediaPickInitialize();
@@ -872,6 +879,23 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
 	InitialiseSSL();
     
+    // MM-2014-07-31: [[ ThreadedRendering ]]
+    /* UNCHECKED */ MCThreadPoolInitialize();
+    /* UNCHECKED */ MCStackTileInitialize();
+    /* UNCHECKED */ MCThreadMutexCreate(MCanimationmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCpatternmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCimagerepmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCfieldmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCthememutex);
+    
+    ////
+    
+#ifdef _MACOSX
+    // MW-2014-07-21: Make AVFoundation the default on 10.8 and above.
+    if (MCmajorosversion >= 0x1080)
+        MCdontuseQT = True;
+#endif
+    
     ////
     
 	MCpatternlist = new MCImageList();
@@ -881,6 +905,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_each, MCeach);
 
+    // SN-2014-06-12 [[ RefactorServer ]] We don't want to duplicate the environment variables
+    // on server, as they have been copied to $_SERVER
+#ifndef _SERVER
 	if (envp != nil)
 		for (uint32_t i = 0 ; envp[i] != nil ; i++)
 		{
@@ -915,6 +942,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 				tvar->setvalueref(*t_value);
 			}
 		}
+#endif // _SERVER
 
 	/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
 	MCtemplateaudio = new MCAudioClip;
@@ -963,7 +991,13 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCValueAssign(MCserialcontrolsettings, MCSTR("baud=9600 parity=N data=8 stop=1"));
 
 	MCdispatcher = new MCDispatch;
+    MCdispatcher -> add_transient_stack(MCtooltip);
 
+	// IM-2014-08-14: [[ Bug 12372 ]] Pixel scale setup needs to happen before the
+	// creation of MCscreen to ensure screen rects are scaled/unscaled as appropriate.
+	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
+	MCResInitPixelScaling();
+	
 	if (MCnoui)
 		MCscreen = new MCUIDC;
 	else
@@ -984,6 +1018,8 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
 	MCResInitPixelScaling();
 
+	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
+	//   screen, otherwise we don't have a root fontref!
 	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
 #if defined(TARGET_PLATFORM_WINDOWS)
 	if (MCmajorosversion >= 0x0600)
@@ -1057,8 +1093,19 @@ int X_close(void)
 	MCselected->clear(False);
 
 	MCU_play_stop();
+#ifdef FEATURE_PLATFORM_RECORDER
+    if (MCrecorder != nil)
+    {
+        MCPlatformSoundRecorderStop(MCrecorder);
+        MCPlatformSoundRecorderRelease(MCrecorder);
+    }
+#else
 	if (MCrecording)
-		MCtemplateplayer->stoprecording();
+	{
+		extern void MCQTStopRecording(void);
+		MCQTStopRecording();
+	}
+#endif
 	MClockmessages = True;
 	MCS_killall();
 
@@ -1070,6 +1117,7 @@ int X_close(void)
 		delete optr;
 	}
 
+    MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
 	MCtooltip = NULL;
 
@@ -1127,9 +1175,10 @@ int X_close(void)
 	delete MCcstack;
 	delete MCrecent;
 
-	MCS_close(IO_stdin);
-	MCS_close(IO_stdout);
-	MCS_close(IO_stderr);
+	// Temporary workaround for a crash
+    //MCS_close(IO_stdin);
+	//MCS_close(IO_stdout);
+	//MCS_close(IO_stderr);
 
 	delete MCpatternlist;
 	delete MCresult;
@@ -1184,6 +1233,9 @@ int X_close(void)
 	{
 		MCEffectList *veptr = MCcur_effects;
 		MCcur_effects = MCcur_effects->getnext();
+        // AL-2014-08-14: [[ Bug 13176 ]] Release visual effect strings
+        MCValueRelease(veptr -> name);
+        MCValueRelease(veptr -> sound);
 		delete veptr;
 	}
 
@@ -1230,6 +1282,15 @@ int X_close(void)
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]]
+    MCThreadPoolFinalize();
+    MCStackTileFinalize();
+    MCThreadMutexRelease(MCanimationmutex);
+    MCThreadMutexRelease(MCpatternmutex);
+    MCThreadMutexRelease(MCimagerepmutex);
+    MCThreadMutexRelease(MCfieldmutex);
+    MCThreadMutexRelease(MCthememutex);
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions

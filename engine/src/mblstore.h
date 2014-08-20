@@ -135,10 +135,12 @@ void MCStoreExecSet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 
 bool MCPurchaseLookupProperty(MCStringRef p_property, Properties &r_property);
 
-bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase);
 bool MCPurchaseList(MCStringRef& r_string);
+bool MCPurchaseFindByProdId(MCStringRef p_prod_id, MCPurchase *&r_purchase);
+bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase);
 
 bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_purchase);
+void MCPurchaseDelete(MCPurchase *p_purchase);
 
 void MCPurchaseRetain(MCPurchase *p_purchase);
 void MCPurchaseRelease(MCPurchase *p_purchase);
@@ -154,6 +156,12 @@ bool MCStoreEnablePurchaseUpdates();
 bool MCStoreDisablePurchaseUpdates();
 
 bool MCStoreRestorePurchases();
+bool MCStoreMakePurchase(MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload);
+
+bool MCStoreProductSetType(MCStringRef p_product_id, MCStringRef p_type);
+
+bool MCStoreReceiveProductDetails(MCStringRef p_product_id, MCStringRef &r_details);
+bool MCStoreConsumePurchase(MCStringRef p_product_id);
 
 MCPurchase *MCStoreGetPurchases();
 

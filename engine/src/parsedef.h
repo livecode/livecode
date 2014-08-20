@@ -585,7 +585,7 @@ enum Functions {
 };
 
 enum Handler_type {
-    HT_UNDEFINED,
+    HT_UNDEFINED = 0,
     HT_MESSAGE,
     HT_FUNCTION,
     HT_GETPROP,
@@ -596,7 +596,9 @@ enum Handler_type {
 	HT_BEFORE,
 	HT_AFTER,
 
-	HT_PRIVATE
+		HT_PRIVATE,
+
+		HT_MAX = HT_PRIVATE
 };
 
 enum If_format {
@@ -804,7 +806,9 @@ enum Record_params {
     RC_BEST,
     RC_BETTER,
     RC_GOOD,
+    RC_PAUSE,
     RC_QUALITY,
+    RC_RESUME,
     RC_SOUND
 };
 
@@ -900,6 +904,8 @@ enum Properties {
     P_PRIVATE_COLORS,
     P_IDLE_RATE,
     P_IDLE_TICKS,
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Property tag for 'the ignoreMouseEvents' of stacks.
+    P_IGNORE_MOUSE_EVENTS,
     P_BLINK_RATE,
     P_RECURSION_LIMIT,
     P_REPEAT_RATE,
@@ -1567,6 +1573,17 @@ enum Properties {
     P_CURSORMOVEMENT,
     P_TEXTDIRECTION,
     
+    // MW-2014-06-19: [[ ImageCenterRect ]] Tag for the centerRect property.
+    P_CENTER_RECTANGLE,
+    // MW-2014-06-19: [[ IconGravity ]] Tag for the button iconGravity property.
+    P_ICON_GRAVITY,
+    
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    P_CLIPS_TO_RECT,
+
+    // MW-2014-08-12: [[ EditionType ]] Returns whether the engine is commercial or community
+    P_EDITION_TYPE,
+    
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
@@ -1866,6 +1883,9 @@ enum Sugar_constants {
 	SG_FALSE,
 	SG_SUCCESS,
 	SG_FAILURE,
+	
+    // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
+	SG_HOST,
 };
 
 enum Statements {

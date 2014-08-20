@@ -410,6 +410,12 @@ typedef unsigned long size_t;
 
 #else
 
+typedef int32_t integer_t;
+typedef uint32_t uinteger_t;
+
+typedef int32_t intenum_t;
+typedef uint32_t intset_t;
+
 // MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
 #ifndef _UINTPTR_T
 #define _UINTPTR_T
@@ -434,6 +440,11 @@ typedef int32_t intptr_t;
 #define UINTPTR_MIN UINT64_MIN
 #define UINTPTR_MAX UINT64_MAX
 
+#define INTEGER_MIN INT32_MIN
+#define INTEGER_MAX INT32_MAX
+#define UINTEGER_MIN UINT32_MIN
+#define UINTEGER_MAX UINT32_MAX
+
 #endif
 
 #if defined(__SMALL__) || defined(__MEDIUM__)
@@ -450,15 +461,15 @@ typedef int32_t compare_t;
 
 #else
 
-typedef uint64_t uindex_t;
-typedef int64_t index_t;
+typedef uint32_t uindex_t;
+typedef int32_t index_t;
 typedef uint64_t hash_t;
 typedef int64_t compare_t;
 
-#define UINDEX_MIN UINT64_MIN
-#define UINDEX_MAX UINT64_MAX
-#define INDEX_MIN INT64_MIN
-#define INDEX_MAX INT64_MAX
+#define UINDEX_MIN UINT32_MIN
+#define UINDEX_MAX UINT32_MAX
+#define INDEX_MIN INT32_MIN
+#define INDEX_MAX INT32_MAX
 
 #endif
 
@@ -474,6 +485,15 @@ typedef float real32_t;
 
 typedef double float64_t;
 typedef float float32_t;
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//  SN-2014-06-25 [[ FieldCoordinates ]] typedef moved here
+//
+//  COORDINATES
+//
+typedef float32_t coord_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -560,24 +580,26 @@ typedef struct __MCLocale* MCLocaleRef;
 //  MINIMUM FUNCTIONS
 //
 
-inline uint32_t MCMin(uint32_t a, uint32_t b) { return a < b ? a : b; }
-inline int32_t MCMin(int32_t a, int32_t b) { return a < b ? a : b; }
-inline uint64_t MCMin(uint64_t a, uint64_t b) { return a < b ? a : b; }
-inline int64_t MCMin(int64_t a, int64_t b) { return a < b ? a : b; }
-inline double MCMin(double a, double b) { return a < b ? a : b; }
-inline float MCMin(float a, float b) { return a < b ? a : b; }
+//inline uint32_t MCMin(uint32_t a, uint32_t b) { return a < b ? a : b; }
+//inline int32_t MCMin(int32_t a, int32_t b) { return a < b ? a : b; }
+//inline uint64_t MCMin(uint64_t a, uint64_t b) { return a < b ? a : b; }
+//inline int64_t MCMin(int64_t a, int64_t b) { return a < b ? a : b; }
+//inline double MCMin(double a, double b) { return a < b ? a : b; }
+//inline float MCMin(float a, float b) { return a < b ? a : b; }
+template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : b; }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  MAXIMUM FUNCTIONS
 //
 
-inline uint32_t MCMax(uint32_t a, uint32_t b) { return a > b ? a : b; }
-inline int32_t MCMax(int32_t a, int32_t b) { return a > b ? a : b; }
-inline uint64_t MCMax(uint64_t a, uint64_t b) { return a > b ? a : b; }
-inline int64_t MCMax(int64_t a, int64_t b) { return a > b ? a : b; }
-inline double MCMax(double a, double b) { return a > b ? a : b; }
-inline float MCMax(float a, float b) { return a > b ? a : b; }
+//inline uint32_t MCMax(uint32_t a, uint32_t b) { return a > b ? a : b; }
+//inline int32_t MCMax(int32_t a, int32_t b) { return a > b ? a : b; }
+//inline uint64_t MCMax(uint64_t a, uint64_t b) { return a > b ? a : b; }
+//inline int64_t MCMax(int64_t a, int64_t b) { return a > b ? a : b; }
+//inline double MCMax(double a, double b) { return a > b ? a : b; }
+//inline float MCMax(float a, float b) { return a > b ? a : b; }
+template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -812,6 +834,19 @@ extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 
 #endif
 
+#define MC_CONCAT(X,Y) MC_CONCAT_(X,Y)
+#define MC_CONCAT_(X,Y) X ## Y
+
+#if (__cplusplus >= 201103L)
+#define MCStaticAssert(expr) static_assert(expr, #expr)
+#else
+template<bool> struct __MCStaticAssert;
+template<> struct __MCStaticAssert<true> { };
+#define MCStaticAssert(expr)																						\
+enum { MC_CONCAT(__MCSA_,__LINE__) = sizeof(__MCStaticAssert<expr>) }
+#endif
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -915,12 +950,28 @@ void MCMemoryDelete(void *p_record);
 
 //////////
 
+// SN-2014-06-19 [[ Bug 12651 ]] back key can not work, and it crush
+// The placement new is needed in MCMemorytNew
+// to properly allocate the classes in MCMessageEvent::create
+
+#ifdef _DEBUG
+#ifdef new
+#undef new
+#define redef_new
+#endif
+#endif
+
+inline void *operator new (size_t, void *p_block, bool)
+{
+	return p_block;
+}
+
 template<typename T> bool MCMemoryNew(T*& r_record)
 {
 	void *t_record;
 	if (MCMemoryNew(sizeof(T), t_record))
 	{
-		r_record = static_cast<T *>(t_record);
+        r_record = new(t_record, true) T;
 		return true;
 	}
 	return false;
@@ -1735,6 +1786,10 @@ bool MCStringReplace(MCStringRef string, MCRange range, MCStringRef replacement)
 //
 // Note that 'string' must be mutable.
 bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef value);
+
+// Resolves the directionality of the string and returns true if it is left to right.
+// (Uses MCBidiFirstStrongIsolate to determine directionality).
+bool MCStringResolvesLeftToRight(MCStringRef p_string);
 
 // Find and replace all instances of pattern in target with replacement.
 //

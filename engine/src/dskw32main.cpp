@@ -153,6 +153,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	MCModeSetupCrashReporting();
 
+	// SN-2014-08-06: [[ Bug 13027 ]] This line had been removed, thus MChInst was always NULL
+	MChInst = hInstance;
+
 	// Get the command line and convert it into the expected argc/argv form
 	LPCWSTR lpWCmdLine = GetCommandLineW();
 	LPWSTR *lpWargv = CommandLineToArgvW(lpWCmdLine, &argc);

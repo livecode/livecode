@@ -69,6 +69,7 @@
 #include <signal.h>
 #include <io.h> 
 #include <strsafe.h>
+#include <Shlwapi.h>
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -90,26 +91,12 @@ extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStri
 // converting / to \ so these must be done before calling this
 static void legacy_path_to_nt_path(MCStringRef p_legacy, MCStringRef &r_nt)
 {
-	// Don't do anything if it isn't necessary
-	if (MCStringGetLength(p_legacy) < (MAX_PATH - 1))
-	{
-		r_nt = MCValueRetain(p_legacy);
-		return;
-	}
-
-	// Check for serial devices
-	// (these are opened as "COM<n>:" where <n> is an integer)
-	if (MCStringBeginsWithCString(p_legacy, (const char_t*)"COM", kMCStringOptionCompareCaseless) 
-		&& MCStringGetCharAtIndex(p_legacy, MCStringGetLength(p_legacy) - 1) == ':')
-	{
-		// Serial ports live in the NT device namespace (but don't have a ':' suffix)
-		MCStringRef t_temp;
-		/* UNCHECKED */ MCStringCreateMutable(0, t_temp);
-		/* UNCHECKED */ MCStringAppend(t_temp, MCSTR("\\\\.\\"));
-		/* UNCHECKED */ MCStringAppendSubstring(t_temp, p_legacy, MCRangeMake(0, MCStringGetLength(p_legacy) - 1));
-		/* UNCHECKED */ MCStringCopyAndRelease(t_temp, r_nt);
-		return;
-	}
+    // Don't do anything if it isn't necessary
+    if (MCStringGetLength(p_legacy) < (MAX_PATH - 1))
+    {
+        r_nt = MCValueRetain(p_legacy);
+        return;
+    }
 
 	// UNC and local paths are treated differently
 	if (MCStringGetCharAtIndex(p_legacy, 0) == '\\' && MCStringGetCharAtIndex(p_legacy, 1) == '\\')
@@ -158,6 +145,23 @@ static void nt_path_to_legacy_path(MCStringRef p_nt, MCStringRef &r_legacy)
 	}
 }
 
+static bool get_device_path(MCStringRef p_path, MCStringRef &r_device_path)
+{
+	// Device paths are opened as "COM<n>:" where <n> is an integer
+	if (MCStringBeginsWithCString(p_path, (const char_t*)"COM", kMCStringOptionCompareCaseless)
+		&& MCStringGetCharAtIndex(p_path, MCStringGetLength(p_path) - 1) == ':')
+	{
+		// Serial ports live in the NT device namespace (but don't have a ':' suffix)
+		MCStringRef t_temp;
+		return MCStringCreateMutable(0, t_temp)
+                && MCStringAppend(t_temp, MCSTR("\\\\.\\"))
+                && MCStringAppendSubstring(t_temp, p_path, MCRangeMake(0, MCStringGetLength(p_path) - 1))
+                && MCStringCopyAndRelease(t_temp, r_device_path);
+	}
+    else
+        return MCStringCopy(p_path, r_device_path);
+}
+
 //////////////////////////////////////////////////////////////////////////////////
 
 // MW-2005-02-22: Make these global for opensslsocket.cpp
@@ -178,9 +182,11 @@ Boolean wsainit()
 			
 			// OK-2009-02-24: [[Bug 7628]]
 			MCresult -> sets("");
+#ifdef _WINDOWS_DESKTOP
 			if (!MCnoui)
 				sockethwnd = CreateWindowA(MC_WIN_CLASS_NAME, "MCsocket", WS_POPUP, 0, 0,
 										   8, 8, NULL, NULL, MChInst, NULL);
+#endif
 		}
 	}
 	MCS_seterrno(0);
@@ -1214,11 +1220,11 @@ private:
 
 struct MCStdioFileHandle: public MCSystemFileHandle
 {
-	MCStdioFileHandle(MCWinSysHandle p_handle)
+	MCStdioFileHandle(MCWinSysHandle p_handle, bool p_is_pipe = false)
 	{
 		m_handle = p_handle;
 		m_is_eof = false;
-		m_is_pipe = handle_is_pipe(m_handle);
+		m_is_pipe = p_is_pipe;
 		m_putback = -1;
 	}
 
@@ -1519,6 +1525,16 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 					return false;
 				}
 				
+				// SN-2014-08-11: [[ Bug 13145 ]] If ReadFile can't read more, but no error is triggered, we should stop here,
+				//  but return true. The new imageLoader reads buffer by buffer, and doesn't expect and error when reading the
+				//  the last buffer (which might ask for more than remaining in the file).
+				if (nread == 0 && GetLastError() == 0)
+				{
+					r_read = t_offset;
+					m_is_eof = true;
+					return true;
+				}
+
 				t_remaining -= nread;
 			}
 			nread = t_offset;
@@ -1651,7 +1667,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		if (!SetEndOfFile(m_handle))
 			return false;
 
-		return false;
+		return true;
 	}
 
 	virtual bool Sync(void)
@@ -1690,7 +1706,10 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		return IO_ERROR;
 	return IO_NORMAL;
 #endif /* MCS_flush_dsk_w32 */ //flush output buffer
-		if (FlushFileBuffers(m_handle) != NO_ERROR)
+		// SN-2014-06-16 
+		// FileFlushBuffer returns non-zero on success
+		// (which is the opposite of NO_ERROR
+		if (FlushFileBuffers(m_handle) == 0)
 			return false;
 
 		return true;
@@ -1884,6 +1903,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		setlocale(LC_CTYPE, MCnullstring);
 		setlocale(LC_COLLATE, MCnullstring);
+
+#ifdef _WINDOWS_SERVER
+		WORD request = MAKEWORD(1, 1);
+		WSADATA t_data;
+		WSAStartup(request, &t_data);
+
+		return true;
+#endif // _WINDOWS_SERVER
 
 		// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
 		((unsigned short *)_pctype)[160] &= ~_SPACE;
@@ -2676,6 +2703,16 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		//	ep.commit(strlen(buf));
 		//}
         //}
+        // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        {
+            uindex_t t_last_slash;
+            
+            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
+                t_last_slash = MCStringGetLength(MCcmd);
+            
+            return MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), r_folder) ? True : False;
+        }
         else
         {
 			if (MCNumberParseUnicodeChars(MCStringGetCharPtr(MCNameGetString(p_type)), MCStringGetLength(MCNameGetString(p_type)), &t_special_folder) ||
@@ -3151,7 +3188,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		if (t_handle == INVALID_HANDLE_VALUE)
 			return nil;
 
-		t_stdio_handle = new MCStdioFileHandle((MCWinSysHandle)t_handle);
+		// Since we can only have an STD fd, we know we have a pipe.
+		t_stdio_handle = new MCStdioFileHandle((MCWinSysHandle)t_handle, true);
 
 		return t_stdio_handle;
 	}
@@ -3159,7 +3197,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode)
 	{
 		// For Windows, the path is used to determine whether a file or a device is being opened
-		return OpenFile(p_path, p_mode, True);
+        MCAutoStringRef t_device_path;        
+		if (get_device_path(p_path, &t_device_path))
+			return OpenFile(*t_device_path, p_mode, True);
+		else
+			return nil;
 	}
 	
 	// NOTE: 'GetTemporaryFileName' returns a non-native path.
@@ -3899,7 +3941,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         siStartInfo.hStdOutput = hChildStdoutWr;
         
 		MCStringRef t_cmd;
-		/* UNCHECKED */ MCStringFormat(t_cmd, "%@ /C %@", MCshellcmd, p_command);
+        // SN-2014-06-16 [[ Bug 12648 ]] Shell command does not accept spaces despite being quoted (Windows)
+        // Fix for 7
+		/* UNCHECKED */ MCStringFormat(t_cmd, "%@ /C \"%@\"", MCshellcmd, p_command);
 		MCAutoStringRefAsWString t_wcmd;
 		t_wcmd . Lock(t_cmd);
         MCU_realloc((char **)&MCprocesses, MCnprocesses,
@@ -3908,7 +3952,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
         MCprocesses[index].mode = OM_NEITHER;
         MCprocesses[index].ohandle = new MCMemoryFileHandle;
-		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd);
+		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
         if (created)
         {
             HANDLE phandle = GetCurrentProcess();
@@ -4604,12 +4648,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (created)
         {
             if (writing)
-				MCprocesses[MCnprocesses].ohandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdinWr);
+				MCprocesses[MCnprocesses].ohandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdinWr, true);
             else
                 CloseHandle(hChildStdinWr);
 
             if (reading)
-				MCprocesses[MCnprocesses].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd);
+				MCprocesses[MCnprocesses].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
             else
                 CloseHandle(hChildStdoutRd);
         }

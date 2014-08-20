@@ -1027,6 +1027,7 @@ template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNative
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 enum MCPurchaseState
 {
 	kMCPurchaseStateInitialized,
@@ -1035,6 +1036,9 @@ enum MCPurchaseState
 	kMCPurchaseStateComplete,
 	kMCPurchaseStateRestored,
 	kMCPurchaseStateCancelled,
+    //Amazon
+    kMCPurchaseStateInvalidSKU,
+    kMCPurchaseStateAlreadyEntitled,
 	kMCPurchaseStateRefunded,
 	kMCPurchaseStateError,
     kMCPurchaseStateUnverified,
@@ -1044,6 +1048,7 @@ enum MCPurchaseState
 
 typedef struct _mcpurchase_t
 {
+    MCStringRef         prod_id;
 	uint32_t			id;
 	MCPurchaseState		state;
 	uint32_t			ref_count;
@@ -1174,6 +1179,7 @@ public:
         m_nftrailing = 6;
         m_cutoff = 35;
         m_stat = ES_NORMAL;
+        m_numberexpected = False;
     }
 
     ~MCExecContext()
@@ -1319,6 +1325,11 @@ public:
 	{
         return m_nfforce;
 	}
+    
+    Boolean GetNumberExpected() const
+    {
+        return m_numberexpected;
+    }
 	
 	//////////
 
@@ -1382,6 +1393,11 @@ public:
 	void SetRowDelimiter(MCStringRef p_value)
 	{
         MCValueAssign(m_rowdel, p_value);
+    }
+    
+    void SetNumberExpected(Boolean p_value)
+    {
+        m_numberexpected = p_value;
     }
 
     //////////
@@ -1666,6 +1682,10 @@ private:
     Boolean m_usesystemdate;
     Boolean m_useunicode;
     Boolean m_deletearray;
+    // SN-2014-04-08 [[ NumberExpectation ]]
+    // New property allowing to specify, when evaluating a literal number,
+    // that we expect a number over a valueref
+    Boolean m_numberexpected;
     MCStringRef m_itemdel;
     MCStringRef m_columndel;
     MCStringRef m_linedel;
@@ -1751,7 +1771,7 @@ void MCArraysExecUnion(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p
 void MCArraysExecIntersect(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
 void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
 void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
-void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCDataRef& r_encoding);
+void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef version, MCDataRef& r_encoding);
 void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayRef& r_array);
 void MCArraysEvalMatrixMultiply(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result);
 void MCArraysEvalTransposeMatrix(MCExecContext& ctxt, MCArrayRef p_matrix, MCArrayRef& r_result);
@@ -2068,6 +2088,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 void MCStringsEvalMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_string);
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result);
+void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result);
 void MCStringsEvalConcatenateWithSpace(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result);
 void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result);
 
@@ -2217,6 +2238,7 @@ struct MCInterfaceNamedColor;
 struct MCInterfaceImagePaletteSettings;
 struct MCInterfaceVisualEffect;
 struct MCInterfaceVisualEffectArgument;
+struct MCInterfaceStackFileVersion;
 
 extern MCExecCustomTypeInfo *kMCInterfaceNamedColorTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfacePaintCompressionTypeInfo;
@@ -2231,6 +2253,7 @@ extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceStackFileVersionTypeInfo;
 
 extern MCExecMethodInfo *kMCInterfaceMakeCustomImagePaletteSettingsMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceMakeOptimalImagePaletteSettingsMethodInfo;
@@ -2330,6 +2353,7 @@ extern MCExecMethodInfo *kMCInterfaceExecResetTemplateMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecRevertMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectEmptyMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectAllTextOfFieldMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecSelectAllTextOfButtonMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectTextOfFieldMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectTextOfButtonMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectObjectsMethodInfo;
@@ -2839,6 +2863,7 @@ void MCInterfaceExecRevert(MCExecContext& ctxt);
 
 void MCInterfaceExecSelectEmpty(MCExecContext& ctxt);
 void MCInterfaceExecSelectAllTextOfField(MCExecContext& ctxt, MCObjectPtr target);
+void MCInterfaceExecSelectAllTextOfButton(MCExecContext& ctxt, MCObjectPtr target);
 void MCInterfaceExecSelectTextOfField(MCExecContext& ctxt, Preposition_type preposition, MCObjectChunkPtr target);
 void MCInterfaceExecSelectTextOfButton(MCExecContext& ctxt, Preposition_type preposition, MCObjectChunkPtr target);
 void MCInterfaceExecSelectObjects(MCExecContext& ctxt, MCObjectPtr *p_controls, uindex_t p_control_count);
@@ -2941,14 +2966,14 @@ void MCInterfaceExecImportAudioClip(MCExecContext& ctxt, MCStringRef p_filename)
 void MCInterfaceExecImportVideoClip(MCExecContext& ctxt, MCStringRef p_filename);
 void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_mask_filename, MCObject *p_container);
 
-void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
-void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
-void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
-void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
-void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
-void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
-void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
-void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
+void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data);
+void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename);
+void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data);
+void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename);
+void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data);
+void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename);
+void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data);
+void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename);
 
 void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, bool p_ascending, int p_format, MCExpression *p_by, bool p_only_marked);
 void MCInterfaceExecSortField(MCExecContext &ctxt, MCObjectPtr p_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by);
@@ -3050,8 +3075,8 @@ void MCInterfaceGetDragDelta(MCExecContext& ctxt, uinteger_t& r_value);
 void MCInterfaceSetDragDelta(MCExecContext& ctxt, uinteger_t p_value);
 void MCInterfaceGetStackFileType(MCExecContext& ctxt, MCStringRef& r_value);
 void MCInterfaceSetStackFileType(MCExecContext& ctxt, MCStringRef p_value);
-void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCStringRef& r_value);
-void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, MCStringRef p_value);
+void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCInterfaceStackFileVersion& r_value);
+void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, const MCInterfaceStackFileVersion& p_value);
 
 void MCInterfaceGetIconMenu(MCExecContext& ctxt, MCStringRef& r_menu);
 void MCInterfaceSetIconMenu(MCExecContext& ctxt, MCStringRef menu);
@@ -3241,7 +3266,7 @@ void MCInterfaceEvalStackOfObject(MCExecContext& ctxt, MCObjectPtr p_object, MCO
 void MCInterfaceEvalStackWithOptionalBackground(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_object);
 
 void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wholechunk, MCMarkedText& r_mark);
-void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMarkedText& r_mark);
+void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, Boolean wholechunk, MCMarkedText& r_mark);
 void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Functions p_function, bool p_whole_chunk, MCMarkedText& r_mark);
 void MCInterfaceMarkCharsOfField(MCExecContext& ctxt, MCObjectPtr t_field, MCCRef *character, MCMarkedText &x_mark);
 
@@ -3307,6 +3332,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceBitmapEffectFilterTypeInfo;
 
 extern MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceButtonIconGravityTypeInfo;
 extern MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo;
 
 ///////////
@@ -3318,7 +3344,7 @@ struct MCInterfaceFieldTabAlignments
 };
 
 extern MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo;
-extern MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceFieldRangesTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceTextDirectionTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceFieldTabAlignmentsTypeInfo;
@@ -3586,6 +3612,7 @@ extern MCExecMethodInfo *kMCEngineGetRecursionLimitMethodInfo;
 extern MCExecMethodInfo *kMCEngineSetRecursionLimitMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetAddressMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetStacksInUseMethodInfo;
+extern MCExecMethodInfo *kMCEngineGetEditionTypeMethodInfo;
 
 void MCEngineEvalVersion(MCExecContext& ctxt, MCNameRef& r_name);
 void MCEngineEvalBuildNumber(MCExecContext& ctxt, integer_t& r_build_number);
@@ -3732,6 +3759,7 @@ void MCEngineEvalRandomUuid(MCExecContext& ctxt, MCStringRef& r_uuid);
 void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
 void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
 
+void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition);
 ///////////
 
 extern MCExecEnumTypeInfo *kMCFilesOpenModeEnumTypeInfo;
@@ -3959,6 +3987,8 @@ extern MCExecMethodInfo *kMCMultimediaEvalMovieMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalMCISendStringMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaEvalSoundMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecRecordMethodInfo;
+extern MCExecMethodInfo *kMCMultimediaExecRecordResumeMethodInfo;
+extern MCExecMethodInfo *kMCMultimediaExecRecordPauseMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecStartPlayerMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecStopPlayingMethodInfo;
 extern MCExecMethodInfo *kMCMultimediaExecStopPlayingObjectMethodInfo;
@@ -4007,6 +4037,9 @@ void MCMultimediaEvalMCISendString(MCExecContext& ctxt, MCStringRef p_command, M
 void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound);
 
 void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename);
+void MCMultimediaExecRecordPause(MCExecContext& ctxt);
+void MCMultimediaExecRecordResume(MCExecContext& ctxt);
+
 void MCMultimediaExecStartPlayer(MCExecContext& ctxt, MCPlayer *p_target);
 
 void MCMultimediaExecStopPlaying(MCExecContext& ctxt);
@@ -4034,8 +4067,8 @@ void MCMultimediaSetRecordChannels(MCExecContext& ctxt, uinteger_t p_value);
 void MCMultimediaGetRecordRate(MCExecContext& ctxt, double& r_value);
 void MCMultimediaSetRecordRate(MCExecContext& ctxt, double p_value);
 
-void MCMultimediaGetPlayDestination(MCExecContext& ctxt, MCStringRef& r_dest);
-void MCMultimediaSetPlayDestination(MCExecContext& ctxt, MCStringRef dest);
+void MCMultimediaGetPlayDestination(MCExecContext& ctxt, intenum_t& r_dest);
+void MCMultimediaSetPlayDestination(MCExecContext& ctxt, intenum_t dest);
 void MCMultimediaGetPlayLoudness(MCExecContext& ctxt, uinteger_t& r_loudness);
 void MCMultimediaSetPlayLoudness(MCExecContext& ctxt, uinteger_t loudness);
 
@@ -4133,9 +4166,9 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target);
 void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_message);
 void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url);
 
-void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
-void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_with_verification);
-void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
+void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
+void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification);
+void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
 
 void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p_url);
 
@@ -4285,7 +4318,7 @@ void MCSecurityExecBlockDecryptWithKey(MCExecContext& ctxt, MCStringRef p_data, 
 void MCSecurityGetSslCertificates(MCExecContext& ctxt, MCStringRef& r_value);
 void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value);
 
-void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify);
+void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify, MCNameRef p_end_hostname);
 
 ///////////
 
@@ -4890,6 +4923,12 @@ void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id);
 void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id);
 void MCStoreExecRequestProductDetails(MCExecContext& ctxt, MCStringRef p_product_id);
 void MCStoreExecPurchaseVerify(MCExecContext& ctxt, uint32_t p_id, bool p_verified);
+void MCStoreExecConfirmPurchase(MCExecContext& ctxt, MCStringRef p_product_id);
+void MCStoreExecMakePurchase(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload);
+void MCStoreExecReceiveProductDetails(MCExecContext &ctxt, MCStringRef p_product_id, MCStringRef &r_details);
+void MCStoreExecConsumePurchase(MCExecContext &ctxt, MCStringRef p_product_id);
+void MCStoreExecProductSetType(MCExecContext &ctxt, MCStringRef p_product_id, MCStringRef p_product_type);
+
 
 ///////////
 
@@ -5258,16 +5297,16 @@ template<> struct MCExecValueTraits<MCValueRef>
 {
     typedef MCValueRef in_type;
     typedef MCValueRef& out_type;
+	
+	static const MCExecValueType type_enum = kMCExecValueTypeValueRef;
 
     inline static void set(MCExecValue& self, MCValueRef p_value)
     {
         MCExecTypeSetValueRef(self, p_value);
     }
 
-    inline static void release(MCValueRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCValueRef& self) { MCValueRelease(self); }
+    inline static MCValueRef retain(MCValueRef& self) {	return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCValueRef& r_value)
     {
@@ -5279,17 +5318,17 @@ template<> struct MCExecValueTraits<MCBooleanRef>
 {
     typedef MCBooleanRef in_type;
     typedef MCBooleanRef& out_type;
+	
+	static const MCExecValueType type_enum = kMCExecValueTypeBooleanRef;
 
     inline static void set(MCExecValue& self, MCBooleanRef p_value)
     {
-        self . type = kMCExecValueTypeBooleanRef;
+        self . type = type_enum;
         self . booleanref_value = p_value;
     }
 
-    inline static void release(MCBooleanRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCBooleanRef& self) { MCValueRelease(self); }
+    inline static MCBooleanRef retain(MCBooleanRef self) { return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCBooleanRef& r_value)
     {
@@ -5301,17 +5340,17 @@ template<> struct MCExecValueTraits<MCNameRef>
 {
     typedef MCNameRef in_type;
     typedef MCNameRef& out_type;
+	
+	static const MCExecValueType type_enum = kMCExecValueTypeNameRef;
 
     inline static void set(MCExecValue& self, MCNameRef p_value)
     {
-        self . type = kMCExecValueTypeNameRef;
+        self . type = type_enum;
         self . nameref_value = p_value;
     }
 
-    inline static void release(MCNameRef& self)
-    {
-        MCNameDelete(self);
-    }
+    inline static void release(MCNameRef& self) { MCNameDelete(self); }
+    inline static MCNameRef retain(MCNameRef& self) { return MCValueRetain(self); } 
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCNameRef& r_value)
     {
@@ -5323,17 +5362,17 @@ template<> struct MCExecValueTraits<MCDataRef>
 {
     typedef MCDataRef in_type;
     typedef MCDataRef& out_type;
+	
+	static const MCExecValueType type_enum = kMCExecValueTypeDataRef;
 
     inline static void set(MCExecValue& self, MCDataRef p_value)
     {
-        self . type = kMCExecValueTypeDataRef;
+        self . type = type_enum;
         self . dataref_value = p_value;
     }
 
-    inline static void release(MCDataRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCDataRef& self) { MCValueRelease(self); }
+    inline static MCDataRef retain(MCDataRef& self) { return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCDataRef& r_value)
     {
@@ -5346,16 +5385,16 @@ template<> struct MCExecValueTraits<MCArrayRef>
     typedef MCArrayRef in_type;
     typedef MCArrayRef& out_type;
 
+	static const MCExecValueType type_enum = kMCExecValueTypeArrayRef;
+
     inline static void set(MCExecValue& self, MCArrayRef p_value)
     {
-        self . type = kMCExecValueTypeArrayRef;
+        self . type = type_enum;
         self . arrayref_value = p_value;
     }
 
-    inline static void release(MCArrayRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCArrayRef& self) { MCValueRelease(self); }
+    inline static MCArrayRef retain(MCArrayRef& self) { return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCArrayRef& r_value)
     {
@@ -5368,16 +5407,16 @@ template<> struct MCExecValueTraits<MCNumberRef>
     typedef MCNumberRef in_type;
     typedef MCNumberRef& out_type;
 
+	static const MCExecValueType type_enum = kMCExecValueTypeNumberRef;
+
     inline static void set(MCExecValue& self, MCNumberRef p_value)
     {
-        self . type = kMCExecValueTypeNumberRef;
+        self . type = type_enum;
         self . numberref_value = p_value;
     }
 
-    inline static void release(MCNumberRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCNumberRef& self) { MCValueRelease(self); }
+    inline static MCNumberRef retain(MCNumberRef& self) { return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCNumberRef& r_value)
     {
@@ -5390,16 +5429,16 @@ template<> struct MCExecValueTraits<MCStringRef>
     typedef MCStringRef in_type;
     typedef MCStringRef& out_type;
 
-    inline static void set(MCExecValue& self, MCStringRef p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeStringRef;
+
+	inline static void set(MCExecValue& self, MCStringRef p_value)
     {
-        self . type = kMCExecValueTypeStringRef;
+        self . type = type_enum;
         self . stringref_value = p_value;
     }
 
-    inline static void release(MCStringRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCStringRef& self) { MCValueRelease(self); }
+    inline static MCStringRef retain(MCStringRef& self) { return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCStringRef& r_value)
     {
@@ -5412,13 +5451,16 @@ template<> struct MCExecValueTraits<integer_t>
     typedef integer_t in_type;
     typedef integer_t& out_type;
 
+	static const MCExecValueType type_enum = kMCExecValueTypeInt;
+	
     inline static void set(MCExecValue& self, integer_t p_value)
     {
-        self . type = kMCExecValueTypeInt;
+        self . type = type_enum;
         self . int_value = p_value;
     }
 
     inline static void release(integer_t& self){}
+    inline static integer_t retain(integer_t& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, integer_t& r_value)
     {
@@ -5431,13 +5473,16 @@ template<> struct MCExecValueTraits<uinteger_t>
     typedef uinteger_t in_type;
     typedef uinteger_t& out_type;
 
+	static const MCExecValueType type_enum = kMCExecValueTypeUInt;
+	
     inline static void set(MCExecValue& self, uinteger_t p_value)
     {
-        self . type = kMCExecValueTypeUInt;
+        self . type = type_enum;
         self . uint_value = p_value;
     }
 
     inline static void release(uinteger_t& self){}
+    inline static uinteger_t retain(uinteger_t& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, uinteger_t& r_value)
     {
@@ -5450,13 +5495,16 @@ template<> struct MCExecValueTraits<bool>
     typedef bool in_type;
     typedef bool& out_type;
 
+	static const MCExecValueType type_enum = kMCExecValueTypeBool;
+	
     inline static void set(MCExecValue& self, bool p_value)
     {
-        self . type = kMCExecValueTypeBool;
+        self . type = type_enum;
         self . bool_value = p_value;
     }
 
     inline static void release(bool& self){}
+	inline static bool retain(bool& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, bool& r_value)
     {
@@ -5469,14 +5517,17 @@ template<> struct MCExecValueTraits<double>
     typedef double in_type;
     typedef double& out_type;
 
-    inline static void set(MCExecValue& self, double p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeDouble;
+
+	inline static void set(MCExecValue& self, double p_value)
     {
-        self . type = kMCExecValueTypeDouble;
+        self . type = type_enum;
         self . double_value = p_value;
     }
 
     inline static void release(double& self){}
-
+    inline static double retain(double& self) { return self; }
+    
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, double& r_value)
     {
         return ctxt . EvalExprAsDouble(p_expr, p_error, r_value);
@@ -5488,13 +5539,16 @@ template<> struct MCExecValueTraits<char_t>
     typedef char_t in_type;
     typedef char_t& out_type;
 
-    inline static void set(MCExecValue& self, char_t p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeChar;
+
+	inline static void set(MCExecValue& self, char_t p_value)
     {
-        self . type = kMCExecValueTypeChar;
+        self . type = type_enum;
         self . char_value = p_value;
     }
 
     inline static void release(char_t& self){}
+	inline static char_t retain(char_t& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, char_t& r_value)
     {
@@ -5507,13 +5561,16 @@ template<> struct MCExecValueTraits<MCPoint>
     typedef MCPoint in_type;
     typedef MCPoint& out_type;
 
-    inline static void set(MCExecValue& self, MCPoint p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypePoint;
+
+	inline static void set(MCExecValue& self, MCPoint p_value)
     {
-        self . type = kMCExecValueTypePoint;
+        self . type = type_enum;
         self . point_value = p_value;
     }
 
     inline static void release(MCPoint& self){}
+    inline static MCPoint retain(MCPoint& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCPoint& r_value)
     {
@@ -5526,13 +5583,17 @@ template<> struct MCExecValueTraits<MCColor>
     typedef MCColor in_type;
     typedef MCColor& out_type;
 
-    inline static void set(MCExecValue& self, MCColor p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeColor;
+
+	inline static void set(MCExecValue& self, MCColor p_value)
     {
-        self . type = kMCExecValueTypeColor;
+        self . type = type_enum;
         self . color_value = p_value;
     }
 
     inline static void release(MCColor& self){}
+	inline static MCColor retain(MCColor& self) { return self; }
+
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCColor& r_value)
     {
@@ -5545,13 +5606,16 @@ template<> struct MCExecValueTraits<MCRectangle>
     typedef MCRectangle in_type;
     typedef MCRectangle& out_type;
 
-    inline static void set(MCExecValue& self, MCRectangle p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeRectangle;
+
+	inline static void set(MCExecValue& self, MCRectangle p_value)
     {
-        self . type = kMCExecValueTypeRectangle;
+        self . type = type_enum;
         self . rectangle_value = p_value;
     }
 
     inline static void release(MCRectangle& self){}
+	inline static MCRectangle retain(MCRectangle& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCRectangle& r_value)
     {
@@ -5564,13 +5628,17 @@ template<> struct MCExecValueTraits<float>
     typedef float in_type;
     typedef float& out_type;
 
-    inline static void set(MCExecValue& self, float p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeFloat;
+
+	inline static void set(MCExecValue& self, float p_value)
     {
-        self . type = kMCExecValueTypeFloat;
+        self . type = type_enum;
         self . float_value = p_value;
     }
 
     inline static void release(float& self){}
+    inline static float retain(float& self) { return self; }
+
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, float& r_value)
     {

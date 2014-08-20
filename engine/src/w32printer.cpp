@@ -57,12 +57,13 @@ extern bool serialize_data(char *&r_stream, uint32_t &r_stream_size, uint32_t &r
 extern bool deserialize_data(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, void *&r_data, uint32_t &r_size);
 
 extern bool deserialize_data_to_hglobal(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, HGLOBAL &r_hglobal);
-extern bool serialize_printdlg_data(char *&r_buffer, uint32_t &r_size, PRINTDLGEXA &p_data);
-extern bool deserialize_printdlg_data(const char *p_buffer, uint32_t p_size, PRINTDLGEXA *&x_data);
-extern bool serialize_pagedlg_data(char *&r_buffer, uint32_t &r_size, PAGESETUPDLGA &p_data);
-extern bool deserialize_pagedlg_data(const char *p_buffer, uint32_t p_size, PAGESETUPDLGA *&x_data);
+// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+extern bool serialize_printdlg_data(char *&r_buffer, uint32_t &r_size, PRINTDLGEXW &p_data);
+extern bool deserialize_printdlg_data(const char *p_buffer, uint32_t p_size, PRINTDLGEXW *&x_data);
+extern bool serialize_pagedlg_data(char *&r_buffer, uint32_t &r_size, PAGESETUPDLGW &p_data);
+extern bool deserialize_pagedlg_data(const char *p_buffer, uint32_t p_size, PAGESETUPDLGW *&x_data);
 
-extern bool MCImageBitmapSplitHBITMAPWithMask(HDC p_dc, MCImageBitmap *p_bitmap, HBITMAP &r_bitmap, HBITMAP &r_mask);
+extern bool MCGImageSplitHBITMAPWithMask(HDC p_dc, MCGImageRef p_image, HBITMAP &r_bitmap, HBITMAP &r_mask);
 extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -386,10 +387,11 @@ MCRectangle WindowsGetPrinterRectangle(MCStringRef p_name, DEVMODEW *p_devmode)
 	return t_rect;
 }
 
-HRESULT WindowsPrintDlgEx(PRINTDLGEXA *p_dlg)
+// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+HRESULT WindowsPrintDlgEx(PRINTDLGEXW *p_dlg)
 {
-	return PrintDlgExA(p_dlg);
-		}
+	return PrintDlgExW(p_dlg);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -911,11 +913,11 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			int32_t t_src_y = p_mark->image.dy - p_mark->image.sy;
 
 			DWORD t_err;
-			if (p_mark->image.descriptor.bitmap != nil)
+			if (p_mark->image.descriptor.image != nil)
 			{
-				/* UNCHECKED */ MCImageBitmapSplitHBITMAPWithMask(t_src_dc, p_mark->image.descriptor.bitmap, t_src_bitmap, t_src_mask);
-				t_src_width = p_mark->image.descriptor.bitmap->width;
-				t_src_height = p_mark->image.descriptor.bitmap->height;
+				/* UNCHECKED */ MCGImageSplitHBITMAPWithMask(t_src_dc, p_mark->image.descriptor.image, t_src_bitmap, t_src_mask);
+				t_src_width = MCGImageGetWidth(p_mark->image.descriptor.image);
+				t_src_height = MCGImageGetHeight(p_mark->image.descriptor.image);
 			}
 
 			if (!p_mark->image.descriptor.has_transform)
@@ -1005,64 +1007,74 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		RECT t_clip;
 		GetClipBox(t_dc, &t_clip);
 
-		// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
-		MCGFloat t_scale;
-		t_scale = p_mark -> fill -> pattern -> scale;
+		MCGImageRef t_image;
+		MCGAffineTransform t_transform;
 
-		// Now create a suitable pattern by tiling out the selected pattern to be
-		// at least 32x32
-		int32_t t_src_width, t_src_height;
-		t_src_width = MCGImageGetWidth(p_mark -> fill -> pattern -> image) / t_scale;
-		t_src_height = MCGImageGetHeight(p_mark -> fill -> pattern -> image) / t_scale;
+		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+		if (MCPatternLockForContextTransform(p_mark->fill->pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform))
+		{
+			MCGRectangle t_src_rect;
+			t_src_rect = MCGRectangleMake(0, 0,
+				MCGImageGetWidth(t_image), MCGImageGetHeight(t_image));
 
-		int32_t t_width, t_height;
-		t_width = t_src_width;
-		t_height = t_src_height;
-		while(t_width < 32)
-			t_width *= 2;
-		while(t_height < 32)
-			t_height *= 2;
+			MCGRectangle t_dst_rect;
+			t_dst_rect = MCGRectangleApplyAffineTransform(t_src_rect, t_transform);
 
-		HDC t_src_dc;
-		t_src_dc = CreateCompatibleDC(m_dc);
+			// Now create a suitable pattern by tiling out the selected pattern to be
+			// at least 32x32
 
-		// draw the pattern image into a bitmap
-		HBITMAP t_pattern = nil;
-		void *t_bits = nil;
-		/* UNCHECKED */ create_temporary_dib(t_src_dc, t_width, t_height, t_pattern, t_bits);
-		MCGContextRef t_context = nil;
-		/* UNCHECKED */ MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
+			int32_t t_x_tiles, t_y_tiles;
+			t_x_tiles = ceilf(32.0 / t_dst_rect.size.width);
+			t_y_tiles = ceilf(32.0 / t_dst_rect.size.height);
 
-		// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
-		MCGContextSetFillPattern(t_context, p_mark->fill->pattern->image, MCGAffineTransformMakeScale(1.0 / t_scale, 1.0 / t_scale), kMCGImageFilterNone);
-		MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
-		MCGContextFill(t_context);
+			int32_t t_width, t_height;
+			t_width = ceilf(t_x_tiles * t_dst_rect.size.width);
+			t_height = ceilf(t_y_tiles * t_dst_rect.size.height);
 
-		MCGContextRelease(t_context);
-		
-		// Finally adjust the starting position based on origin, and tile the clip.
-		int32_t x, y;
-		x = p_mark -> fill -> origin . x;
-		y = p_mark -> fill -> origin . y;
-		while(x > t_clip . left)
-			x -= t_width;
-		while(x + t_width < t_clip . left)
-			x += t_width;
-		while(y > t_clip . top)
-			y -= t_height;
-		while(y + t_height < t_clip . top)
-			y += t_height;
+			HDC t_src_dc;
+			t_src_dc = CreateCompatibleDC(m_dc);
 
-		SelectObject(t_src_dc, t_pattern);
-		for(; y < t_clip . bottom; y += t_height)
-			for(int32_t tx = x; tx < t_clip . right; tx += t_width)
-				BitBlt(m_dc, tx, y, t_width, t_height, t_src_dc, 0, 0, SRCCOPY);
+			// draw the pattern image into a bitmap
+			HBITMAP t_pattern = nil;
+			void *t_bits = nil;
+			/* UNCHECKED */ create_temporary_dib(t_src_dc, t_width, t_height, t_pattern, t_bits);
+			MCGContextRef t_context = nil;
+			/* UNCHECKED */ MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
 
-		if (t_pattern != nil)
-			DeleteObject(t_pattern);
-		if (t_src_dc != nil)
-			DeleteDC(t_src_dc);
+			// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextSetFillPattern(t_context, t_image, t_transform, kMCGImageFilterNone);
+			MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
+			MCGContextFill(t_context);
+
+			MCGContextRelease(t_context);
+
+			MCPatternUnlock(p_mark->fill->pattern, t_image);
+
+
+			// Finally adjust the starting position based on origin, and tile the clip.
+			int32_t x, y;
+			x = p_mark -> fill -> origin . x;
+			y = p_mark -> fill -> origin . y;
+			while(x > t_clip . left)
+				x -= t_width;
+			while(x + t_width < t_clip . left)
+				x += t_width;
+			while(y > t_clip . top)
+				y -= t_height;
+			while(y + t_height < t_clip . top)
+				y += t_height;
+
+			SelectObject(t_src_dc, t_pattern);
+			for(; y < t_clip . bottom; y += t_height)
+				for(int32_t tx = x; tx < t_clip . right; tx += t_width)
+					BitBlt(m_dc, tx, y, t_width, t_height, t_src_dc, 0, 0, SRCCOPY);
+
+			if (t_pattern != nil)
+				DeleteObject(t_pattern);
+			if (t_src_dc != nil)
+				DeleteDC(t_src_dc);
+		}
 	}
 
 	if (t_old_pen != NULL)
@@ -1339,6 +1351,8 @@ void MCWindowsPrinter::DoFinalize(void)
 	m_dc_locked = false;
 	m_dc_changed = false;
 
+	MCValueRelease(m_name);
+
 	delete m_devmode;
 	m_valid = false;
 }
@@ -1447,9 +1461,10 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
 	t_apply = false;
 	if (MCmajorosversion >= 0x0500)
 	{
-		PRINTDLGEXA t_dlg;
-		memset(&t_dlg, 0, sizeof(PRINTDLGEXA));
-		t_dlg . lStructSize = sizeof(PRINTDLGEXA);
+		// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+		PRINTDLGEXW t_dlg;
+		memset(&t_dlg, 0, sizeof(PRINTDLGEXW));
+		t_dlg . lStructSize = sizeof(PRINTDLGEXW);
 		t_dlg . Flags = PD_USEDEVMODECOPIESANDCOLLATE;
 		t_dlg . nStartPage = START_PAGE_GENERAL;
 		t_dlg . hDevMode = t_devmode_handle;
@@ -1500,7 +1515,8 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
                  /* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_databuffer, t_databuffer_size, &t_databuffer_str);
                 MCRemotePrintSetupDialog(*t_databuffer_str, &t_replydata, t_replyresult);
 
-				PRINTDLGEXA *t_dlg_ptr = &t_dlg;
+				// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+				PRINTDLGEXW *t_dlg_ptr = &t_dlg;
 				deserialize_printdlg_data((const char *)MCDataGetBytePtr(*t_replydata), MCDataGetLength(*t_replydata), t_dlg_ptr);
 				t_dialog_result = (HRESULT)t_replyresult;
 			}
@@ -1544,9 +1560,10 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
 	}
 	else
 	{
-		PRINTDLGA t_dlg;
-		memset(&t_dlg, 0, sizeof(PRINTDLGA));
-		t_dlg . lStructSize = sizeof(PRINTDLGA);
+		// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+		PRINTDLGW t_dlg;
+		memset(&t_dlg, 0, sizeof(PRINTDLGW));
+		t_dlg . lStructSize = sizeof(PRINTDLGW);
 		t_dlg . Flags = PD_USEDEVMODECOPIESANDCOLLATE;
 		t_dlg . hDevMode = t_devmode_handle;
 		t_dlg . hDevNames = t_devnames_handle;
@@ -1577,7 +1594,8 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
 		t_dlg . nMinPage = 0;
 		t_dlg . nMaxPage = 65535;
 
-		if (PrintDlgA(&t_dlg) != 0)
+		// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+		if (PrintDlgW(&t_dlg) != 0)
 			t_result = PRINTER_DIALOG_RESULT_OKAY, t_apply = true;
 		else if (CommDlgExtendedError() == 0)
 			t_result = PRINTER_DIALOG_RESULT_CANCEL;
@@ -1631,10 +1649,11 @@ MCPrinterDialogResult MCWindowsPrinter::DoPageSetup(bool p_window_modal, Window 
 	if (!FetchDialogData(t_devmode_handle, t_devnames_handle))
 		return PRINTER_DIALOG_RESULT_ERROR;
 
+	// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
 	MCPrinterDialogResult t_result;
-	PAGESETUPDLGA t_dlg;
-	memset(&t_dlg, 0, sizeof(PAGESETUPDLGA));
-	t_dlg . lStructSize = sizeof(PAGESETUPDLGA);
+	PAGESETUPDLGW t_dlg;
+	memset(&t_dlg, 0, sizeof(PAGESETUPDLGW));
+	t_dlg . lStructSize = sizeof(PAGESETUPDLGW);
 	t_dlg . Flags = PSD_INTHOUSANDTHSOFINCHES | PSD_MARGINS | PSD_MINMARGINS;
 	t_dlg . hDevMode = t_devmode_handle;
 	t_dlg . hDevNames = t_devnames_handle;
@@ -1662,7 +1681,8 @@ MCPrinterDialogResult MCWindowsPrinter::DoPageSetup(bool p_window_modal, Window 
             /* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_databuffer, t_databuffer_size, &t_databuffer_str);
 			MCRemotePageSetupDialog(*t_databuffer_str, &t_replydata, t_replyresult);
 
-			PAGESETUPDLGA *t_dlg_ptr = &t_dlg;
+			// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+			PAGESETUPDLGW *t_dlg_ptr = &t_dlg;
 			deserialize_pagedlg_data((const char *)MCDataGetBytePtr(*t_replydata), MCDataGetLength(*t_replydata), t_dlg_ptr);
 			t_result = (MCPrinterDialogResult) t_replyresult;
 			if (t_result == PRINTER_DIALOG_RESULT_OKAY)
@@ -1672,7 +1692,8 @@ MCPrinterDialogResult MCWindowsPrinter::DoPageSetup(bool p_window_modal, Window 
 	}
 	else
 	{
-		if (PageSetupDlgA(&t_dlg) != 0)
+		// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+		if (PageSetupDlgW(&t_dlg) != 0)
 			t_result = PRINTER_DIALOG_RESULT_OKAY, t_apply = true;
 		else if (CommDlgExtendedError() == 0)
 			t_result = PRINTER_DIALOG_RESULT_CANCEL;
@@ -1928,20 +1949,24 @@ bool MCWindowsPrinter::FetchDialogData(HGLOBAL& r_devmode_handle, HGLOBAL& r_dev
 	{
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ MCStringFormat(&t_string, "%@\0FILE:\0", m_name);
-		
+
 		int t_devnames_size;
-		t_devnames_size = sizeof(DEVNAMES) + MCStringGetLength(*t_string);
+		// SN-2014-07-24: [[ Bug 12916 ]] Closing the Page Setup dialog causes a crash
+		//  The size is indeed in unichars, not chars
+		//t_devnames_size = sizeof(DEVNAMES) + strlen(t_string) + 7;
+		t_devnames_size = sizeof(DEVNAMES) + sizeof(unichar_t) * MCStringGetLength(*t_string);
 		t_devnames_handle = GlobalAlloc(GMEM_MOVEABLE, t_devnames_size);
 		if (t_devnames_handle != NULL)
 		{
 			DEVNAMES *t_devnames;
 			t_devnames = (DEVNAMES *)GlobalLock(t_devnames_handle);
-
-			t_devnames -> wDriverOffset = t_devnames_size - 1;
+			t_devnames -> wDriverOffset = t_devnames_size -	1;
 			t_devnames -> wOutputOffset = GetDeviceOutputType() == PRINTER_OUTPUT_FILE ? t_devnames_size - 6 : t_devnames_size - 1;
 			t_devnames -> wDeviceOffset = sizeof(DEVNAMES);
 			t_devnames -> wDefault = 0;
-			/* UNCHECKED */ MCStringGetChars(*t_string, MCRangeMake(0, MCStringGetLength(*t_string)), (unichar_t*)(uintptr_t(t_devnames) + sizeof(DEVNAMES)));
+
+			// SN-2014-08-07: [[ Bug 13084 ]] The pointer arithmetic wasn't right
+			MCStringGetChars(*t_string, MCRangeMake(0, MCStringGetLength(*t_string)), (unichar_t*)(t_devnames + 1));
 
 			GlobalUnlock(t_devnames_handle);
 		}
@@ -1978,15 +2003,16 @@ void MCWindowsPrinter::StoreDialogData(HGLOBAL p_devmode_handle, HGLOBAL p_devna
 	{
 		if (p_devnames_handle != NULL)
 		{
+			// SN-2014-07-08: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+			//  and make sure the pointer arithmetic is right
 			DEVNAMES *t_devnames;
 			t_devnames = (DEVNAMES *)GlobalLock(p_devnames_handle);
 
-			const wchar_t *t_chars;
-			t_chars = (const wchar_t*)(uintptr_t(t_devnames) + t_devnames->wDeviceOffset);
+			wchar_t* t_chars;
+			t_chars = (wchar_t *)t_devnames + t_devnames -> wDeviceOffset;
 			/* UNCHECKED */ MCStringCreateWithChars(t_chars, lstrlenW(t_chars), &t_printer_name);
-
-			t_chars = (const wchar_t*)(uintptr_t(t_devnames) + t_devnames->wOutputOffset);
-			if (lstrcmpW(t_chars, L"FILE:") == 0)
+ 
+			if (lstrcmpW((wchar_t *)t_devnames + t_devnames -> wOutputOffset, L"FILE:") == 0)
 				/* UNCHECKED */ t_output_file = kMCEmptyString;
 
 			GlobalUnlock(p_devnames_handle);
@@ -2146,6 +2172,7 @@ void MCWindowsPrinter::ChangeDC(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
 bool deserialize_data_to_hglobal(const char *p_stream, uint32_t p_stream_size, uint32_t &r_offset, HGLOBAL &r_hglobal)
 {
 	bool t_success = true;
@@ -2169,7 +2196,8 @@ bool deserialize_data_to_hglobal(const char *p_stream, uint32_t p_stream_size, u
 	return t_success;
 }
 
-bool serialize_printdlg_data(char *&r_buffer, uint32_t &r_size, PRINTDLGEXA &p_data)
+// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+bool serialize_printdlg_data(char *&r_buffer, uint32_t &r_size, PRINTDLGEXW &p_data)
 {
 	bool t_success = true;
 
@@ -2214,7 +2242,7 @@ bool serialize_printdlg_data(char *&r_buffer, uint32_t &r_size, PRINTDLGEXA &p_d
 	return t_success;
 }
 
-bool deserialize_printdlg_data(const char *p_buffer, uint32_t p_size, PRINTDLGEXA *&x_data)
+bool deserialize_printdlg_data(const char *p_buffer, uint32_t p_size, PRINTDLGEXW *&x_data)
 {
 	bool t_success = true;
 
@@ -2236,13 +2264,15 @@ bool deserialize_printdlg_data(const char *p_buffer, uint32_t p_size, PRINTDLGEX
 		t_devnames = x_data->hDevNames;
 		t_ranges = x_data->lpPageRanges;
 		t_ranges_size = x_data->nMaxPageRanges * sizeof(PRINTPAGERANGE);
-		t_dlg_size = sizeof(PRINTDLGEXA);
+		// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+		t_dlg_size = sizeof(PRINTDLGEXW);
 	}
 
 	// copy dialog data
 	t_ptr = x_data;
 	t_success = deserialize_data(p_buffer, p_size, t_offset, t_ptr, t_dlg_size);
-	x_data = (PRINTDLGEXA*)t_ptr;
+	// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+	x_data = (PRINTDLGEXW*)t_ptr;
 
 	if (t_success)
 		t_success = deserialize_data_to_hglobal(p_buffer, p_size, t_offset, t_devmode);
@@ -2267,7 +2297,8 @@ bool deserialize_printdlg_data(const char *p_buffer, uint32_t p_size, PRINTDLGEX
 	return t_success;
 }
 
-bool serialize_pagedlg_data(char *&r_buffer, uint32_t &r_size, PAGESETUPDLGA &p_data)
+// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+bool serialize_pagedlg_data(char *&r_buffer, uint32_t &r_size, PAGESETUPDLGW &p_data)
 {
 	bool t_success = true;
 
@@ -2308,7 +2339,8 @@ bool serialize_pagedlg_data(char *&r_buffer, uint32_t &r_size, PAGESETUPDLGA &p_
 	return t_success;
 }
 
-bool deserialize_pagedlg_data(const char *p_buffer, uint32_t p_size, PAGESETUPDLGA *&x_data)
+// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+bool deserialize_pagedlg_data(const char *p_buffer, uint32_t p_size, PAGESETUPDLGW *&x_data)
 {
 	bool t_success = true;
 
@@ -2326,13 +2358,15 @@ bool deserialize_pagedlg_data(const char *p_buffer, uint32_t p_size, PAGESETUPDL
 	{
 		t_devmode = x_data->hDevMode;
 		t_devnames = x_data->hDevNames;
-		t_dlg_size = sizeof(PAGESETUPDLGA);
+		// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+		t_dlg_size = sizeof(PAGESETUPDLGW);
 	}
 
 	// copy dialog data
 	t_ptr = x_data;
 	t_success = deserialize_data(p_buffer, p_size, t_offset, t_ptr, t_dlg_size);
-	x_data = (PAGESETUPDLGA*)t_ptr;
+	// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
+	x_data = (PAGESETUPDLGW*)t_ptr;
 
 	if (t_success)
 		t_success = deserialize_data_to_hglobal(p_buffer, p_size, t_offset, t_devmode);

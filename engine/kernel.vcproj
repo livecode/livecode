@@ -384,6 +384,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\imageloader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\imageloader.h"
+				>
+			</File>
+			<File
 				RelativePath="src\ipng.cpp"
 				>
 			</File>
@@ -585,6 +593,14 @@
 			</File>
 			<File
 				RelativePath="src\stacklst.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\stacktile.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\stacktile.h"
 				>
 			</File>
 			<File
@@ -1005,6 +1021,10 @@
 			</File>
 			<File
 				RelativePath=".\src\redraw.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\region.cpp"
 				>
 			</File>
 			<File
@@ -1510,6 +1530,10 @@
 						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\quicktime.cpp"
+				>
 			</File>
 			<Filter
 				Name="Platform - Linux"
@@ -2925,6 +2949,31 @@
 							PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
 						/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\src\w32compat.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							PrecompiledHeaderThrough="w32prefix.h"
+							PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\src\w32compat.h"
+					>
 				</File>
 				<File
 					RelativePath=".\src\w32cursor.cpp"
@@ -6038,6 +6087,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\systhreads.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\system.h"
 				>
 			</File>
@@ -6166,6 +6219,18 @@
 						Name="VCCLCompilerTool"
 						PrecompiledHeaderThrough="w32prefix.h"
 						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+					/>
+				</FileConfiguration>
+			</File>
+            <File
+				RelativePath=".\src\sysw32threads.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+                    Name="VCCLCompilerTool"
+                    PrecompiledHeaderThrough="w32prefix.h"
 					/>
 				</FileConfiguration>
 			</File>

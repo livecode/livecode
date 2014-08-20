@@ -160,6 +160,10 @@ MCTextFilter_DecodeUTF16::~MCTextFilter_DecodeUTF16()
 
 codepoint_t MCTextFilter_DecodeNative::GetNextCodepoint()
 {
+    // Don't read beyond the end of the input if no data remains
+    if (m_ReadIndex >= m_DataLength)
+        return 0;
+    
     if (m_Reverse)
         return MCUnicodeMapFromNative(m_Data[m_DataLength - m_ReadIndex - 1]);
     

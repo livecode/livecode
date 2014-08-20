@@ -181,7 +181,7 @@ struct MCFakeOpenCallbacks
 };
 extern IO_handle MCS_fakeopencustom(struct MCFakeOpenCallbacks *callbacks, void *state);
 
-extern IO_handle MCS_fakeopen(const MCString& data);
+extern IO_handle MCS_fakeopen(const void *p_data, uindex_t p_size);
 extern IO_handle MCS_fakeopenwrite(void);
 ///* LEGACY */ extern IO_stat MCS_fakeclosewrite(IO_handle &stream, char*& r_buffer, uint4& r_length);
 extern IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_length);

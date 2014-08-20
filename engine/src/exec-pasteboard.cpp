@@ -183,7 +183,7 @@ bool MCPasteboardListKeys(MCTransferData *p_data, char_t p_delimiter, MCListRef&
 		return false;
 
 	MCTransferType *t_types;
-	uint32_t t_count;
+	size_t t_count;
 
 	if (!p_data->Lock())
 		return false;
@@ -473,8 +473,9 @@ void MCPasteboardProcessTextToClipboard(MCExecContext &ctxt, MCObjectChunkPtr p_
     t_field = static_cast<MCField *>(p_target . object);
     
     findex_t t_si, t_ei;
+    // AL-2014-07-14: [[ Bug 12777 ]] t_ei is end index, not length of chunk.
     t_si = p_target . mark . start;
-    t_ei = p_target . mark . finish - p_target . mark . start;
+    t_ei = p_target . mark . finish;
     
 	if (p_cut)
 		t_field -> cuttextindex(p_target . part_id, t_si, t_ei);
@@ -593,33 +594,23 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 	{
 		MCTransferType t_type;
 		if (p_index == nil)
-            t_type = TRANSFER_TYPE_UNICODE_TEXT;
+            t_type = TRANSFER_TYPE_TEXT;
 		else
 			t_type = MCTransferData::StringToType(MCNameGetString(p_index));
 
-        // Make sure we are getting unicode input.
-        if (t_type == TRANSFER_TYPE_TEXT)
-            t_type = TRANSFER_TYPE_UNICODE_TEXT;
-
-		if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
-		{
-            MCAutoDataRef t_data;
-            if (t_pasteboard -> Fetch(t_type, &t_data))
-            {
-                if (t_type == TRANSFER_TYPE_UNICODE_TEXT)
-                {
-                    // When the text fetched is in unicode, the data must
-                    // be converted to a stringRef to allow the unicode understanding
-                    MCAutoStringRef t_string;
-                    /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data) / 2, &t_string);
-                    r_data = (MCValueRef)MCValueRetain(*t_string);
-                }
-                else
-                    r_data = MCValueRetain(*t_data);
-            }
+        // MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
+        //   convert the styles data to an array and return that.
+        if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY &&
+            t_pasteboard -> Contains(TRANSFER_TYPE_STYLED_TEXT, true))
+        {
+            MCAutoValueRef t_data;
+            if (t_pasteboard -> Fetch(TRANSFER_TYPE_STYLED_TEXT, &t_data))
+                t_success = MCConvertStyledTextToStyledTextArray((MCDataRef)*t_data, (MCArrayRef&)r_data);
             else
-				t_success = false;
-		}
+                t_success = false;
+        }
+		else if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
+            t_success = t_pasteboard -> Fetch(t_type, r_data);
 		else
 		{
 			r_data = MCValueRetain(kMCEmptyData);
@@ -653,9 +644,25 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 		t_type = MCTransferData::StringToType(MCNameGetString(p_index));
 
 	if (t_type != TRANSFER_TYPE_NULL && p_data != nil)
-	{
-		if (t_pasteboard -> Store(t_type, p_data))
-			return;
+	{    
+        MCAutoValueRef t_data;
+        bool t_success;
+        t_success = true;
+        // MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
+        //   convert the array to a styles pickle and store that.
+        if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY)
+        {
+            t_type =  TRANSFER_TYPE_STYLED_TEXT;
+            t_success = MCConvertStyledTextArrayToStyledText((MCArrayRef)p_data, (MCDataRef&)&(t_data));
+        }
+        else
+            t_data = p_data;
+        
+        if (t_success)
+        {
+            if (t_pasteboard -> Store(t_type, *t_data))
+                return;
+        }
 	}
 	else
 		return;
