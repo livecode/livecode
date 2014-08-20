@@ -867,10 +867,23 @@ public:
 	bool set_real(double real);
 
 	bool set_valueref(MCValueRef value);
+    MCValueRef get_valueref(void);
+    
+    void getpath(MCNameRef*& r_path, uindex_t& r_length)
+    {
+        r_path = m_path;
+        r_length = m_length;
+    }
 
 	static bool createwithvariable(MCVariable *var, MCContainer*& r_container);
 	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer*& r_container);
-
+    static bool copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer*& r_container);
+    
+    MCVariable *getvar()
+    {
+        return m_variable;
+    }
+    
 private:
 	MCVariable *m_variable;
 	MCNameRef *m_path;
@@ -994,11 +1007,14 @@ private:
 	MCVariable *fetchvar(MCExecPoint& ep);
 #endif
     MCVariable *fetchvar(MCExecContext& ctxt);
-
+    MCContainer *fetchcontainer(MCExecContext& ctxt);
+    
 #ifdef LEGACY_EXEC
 	Exec_stat resolve(MCExecPoint& ep, MCContainer*& r_container);
 #endif
     bool resolve(MCExecContext& ctxt, MCContainer*& r_container);
+    
+    void getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_length);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -314,11 +314,13 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 	for (npassedparams = 0 ; tptr != NULL ; npassedparams++)
 		tptr = tptr->getnext();
 	uint2 newnparams = MCU_max(npassedparams, npnames);
-	MCVariable **newparams;
+    
+    // AL-2014-08-20: [[ ArrayElementRefParams ]] All handler params are now containers
+	MCContainer **newparams;
 	if (newnparams == 0)
 		newparams = NULL;
 	else
-		newparams = new MCVariable *[newnparams];
+		newparams = new MCContainer *[newnparams];
     
 	Boolean err = False;
 	for (i = 0 ; i < newnparams ; i++)
@@ -327,7 +329,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		{
 			if (i < npnames && pinfo[i].is_reference)
 			{
-				if ((newparams[i] = plist->eval_argument_var()) == NULL)
+				if ((newparams[i] = plist->eval_argument_container()) == NULL)
 				{
 					err = True;
 					break;
@@ -341,7 +343,11 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 					err = True;
 					break;
 				}
-				/* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, newparams[i]);
+                
+                MCVariable *t_new_var;
+				/* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, t_new_var);
+                /* UNCHECKED */ MCContainer::createwithvariable(t_new_var, newparams[i]);
+                
 				newparams[i]->give_value(ctxt, t_value);
 			}
 			plist = plist->getnext();
@@ -353,7 +359,9 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 				err = True;
 				break;
 			}
-			/* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, newparams[i]);
+            MCVariable *t_new_var;
+            /* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, t_new_var);
+            /* UNCHECKED */ MCContainer::createwithvariable(t_new_var, newparams[i]);
 		}
 	}
 	if (err)
@@ -366,7 +374,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 		return ES_ERROR;
 	}
     
-	MCVariable **oldparams = params;
+	MCContainer **oldparams = params;
 	MCVariable **oldvars = vars;
 	uint2 oldnparams = nparams;
 	uint2 oldnvnames = nvnames;
@@ -724,6 +732,16 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 }
 #endif
 
+MCVariable *MCHandler::getvar(uint2 index, Boolean isparam)
+{
+    return isparam ? nil : vars[index];
+}
+
+MCContainer *MCHandler::getcontainer(uint2 index, Boolean isparam)
+{
+    return isparam ? params[index] : nil;
+}
+
 integer_t MCHandler::getnparams(void)
 {
 	return npassedparams;
@@ -738,7 +756,7 @@ MCValueRef MCHandler::getparam(uindex_t p_index)
     else if (p_index > nparams)
         return kMCEmptyString;
     else
-        return params[p_index - 1]->getvalueref();
+        return params[p_index - 1]->get_valueref();
 }
 
 // MW-2013-11-08: [[ RefactorIt ]] Changed to return the 'm_it' varref we always have now.

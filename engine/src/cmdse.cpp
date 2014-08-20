@@ -1092,12 +1092,11 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 	MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
-		// Get the pointer to the variable this parameter maps to or NULL
-		// if it is an expression.
-		MCVariable* t_var;
-        t_var = tptr -> evalvar(ctxt);
-
-		if (t_var == NULL)
+        // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
+        MCContainer *t_container;
+        if (tptr -> evalcontainer(ctxt, t_container))
+            tptr -> set_argument_container(t_container);
+        else
         {
             MCExecValue t_value;
             tptr -> clear_argument();
@@ -1118,8 +1117,6 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 
             tptr->give_exec_argument(t_value);
 		}
-		else
-			tptr->set_argument_var(t_var);
 
 		tptr = tptr->getnext();
 	}
