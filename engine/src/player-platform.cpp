@@ -72,27 +72,6 @@ static const char *ppmediastrings[] =
 	"flash"
 };
 
-static MCPlatformPlayerMovieLoadState ppmoviestates[] =
-{
-	kMCPlatformPlayerMovieLoadStateError,
-	kMCPlatformPlayerMovieLoadStateLoading,
-	kMCPlatformPlayerMovieLoadStateLoaded,
-    kMCPlatformPlayerMovieLoadStatePlayable,
-	kMCPlatformPlayerMovieLoadStatePlaythroughOK,
-	kMCPlatformPlayerMovieLoadStateComplete,
-};
-
-static const char *ppmoviestatesstrings[] =
-{
-	"error",
-	"loading",
-	"loaded",
-	"playable",
-	"playthroughOK",
-	"complete"
-};
-
-
 #define CONTROLLER_HEIGHT 26
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 2
 // PM-2014-07-17: [[ Bug 12835 ]] Adjustments to prevent selectedArea and playedArea to be drawn without taking into account the width of the well

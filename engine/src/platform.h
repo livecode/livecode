@@ -118,7 +118,6 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeCursorImageSupport,
 	
 	kMCPlatformPropertyTypePlayerMediaTypes,
-    kMCPlatformPropertyTypePlayerMovieLoadState,
 	kMCPlatformPropertyTypePlayerQTVRConstraints,
 	
 	kMCPlatformPropertyTypeCursorRef,
@@ -979,7 +978,6 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyPlayRate,
 	kMCPlatformPlayerPropertyVolume,
     kMCPlatformPlayerPropertyMarkers,
-    kMCPlatformPlayerPropertyMovieLoadState,
     kMCPlatformPlayerPropertyLoadedTime,
     
     kMCPlatformPlayerPropertyShowSelection,
@@ -1003,17 +1001,6 @@ enum MCPlatformPlayerMediaType
 	kMCPlatformPlayerMediaTypeQTVR,
 	kMCPlatformPlayerMediaTypeSprite,
 	kMCPlatformPlayerMediaTypeFlash,
-};
-
-typedef uint32_t MCPlatformPlayerMovieLoadStates;
-enum MCPlatformPlayerMovieLoadState
-{
-	kMCPlatformPlayerMovieLoadStateError,
-	kMCPlatformPlayerMovieLoadStateLoading,
-	kMCPlatformPlayerMovieLoadStateLoaded,
-    kMCPlatformPlayerMovieLoadStatePlayable,
-	kMCPlatformPlayerMovieLoadStatePlaythroughOK,
-	kMCPlatformPlayerMovieLoadStateComplete,
 };
 
 enum MCPlatformPlayerTrackProperty

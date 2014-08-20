@@ -1042,10 +1042,7 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
             *(MCPlatformPlayerMediaTypes *)r_value = t_types;
 		}
         break;
-        case kMCPlatformPlayerPropertyMovieLoadState:
-		{
-        }
-            break;
+    
             // PM-2014-08-20: [[ Bug 13121 ]] Added property for displaying download progress
         case kMCPlatformPlayerPropertyLoadedTime:
 			*(uint32_t *)r_value = m_buffered_time;
