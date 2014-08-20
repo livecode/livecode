@@ -35,8 +35,6 @@
 
 class MCAVFoundationPlayer;
 
-void *kTimeRangesKVO = &kTimeRangesKVO;
-
 @interface com_runrev_livecode_MCAVFoundationPlayerObserver: NSObject
 {
     MCAVFoundationPlayer *m_av_player;
@@ -284,6 +282,7 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     
     // First detach the observer from everything we've attached it to.
     [m_player removeTimeObserver:m_time_observer_token];
+    [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     // Now we can release it.
@@ -637,7 +636,6 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     while([t_player status] == AVPlayerStatusUnknown)
         MCPlatformWaitForEvent(60.0, true);
     [t_player removeObserver: m_observer forKeyPath: @"status"];
-    //[t_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
     
     // If we've failed, leave things as they are (dealloc the new player).
     if ([t_player status] == AVPlayerStatusFailed)
@@ -1045,7 +1043,7 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
                 These states (loading/loaded/playable/playthroughoOK/complete) are supported in the QTKit player. In the AV one, the available options for deciding about the download progress are the following:
                 
                 1. Observe the AVPlayer's (or AVPlayerItem) status property. This has only 3 available values : ReadyToPlay, Failed, Error.
-                2. Observe the AVPlayerItem's loadTimeRanges property. This is the "currently buffered" amount of video, but there is no correspondence between "buffered amount" and "load state", apart from the obvious {1 = complete} and {0 = loading}
+                2. Observe the AVPlayerItem's loadedTimeRanges property. This is the "currently buffered" amount of video, but there is no correspondence between "buffered amount" and "load state", apart from the obvious {1 = complete} and {0 = loading}
                 */
                 
                 if (m_buffered_amount == 1.0)
