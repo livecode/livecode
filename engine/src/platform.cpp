@@ -61,6 +61,7 @@ void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef player);
 void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
 void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef player);
 void MCPlatformHandlePlayerFinished(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef player);
 
 void MCPlatformHandleSoundFinished(MCPlatformSoundRef sound);
 
@@ -393,6 +394,11 @@ void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef p_player)
     MCPlatformHandlePlayerFinished(p_player);
 }
 
+void MCPlatformCallbackSendPlayerBufferUpdated(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> BufferUpdated()", p_player);
+    MCPlatformHandlePlayerBufferUpdated(p_player);
+}
 //////////
 
 void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef p_sound)

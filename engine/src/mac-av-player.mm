@@ -316,7 +316,7 @@ void MCAVFoundationPlayer::MovieIsLoading(CMTimeRange p_timerange)
     uint32_t t_buffered_time;
     t_buffered_time = CMTimeToLCTime(p_timerange.duration);
     m_buffered_time = t_buffered_time;
-    
+    MCPlatformCallbackSendPlayerBufferUpdated(this);
     /*
     float t_movie_duration, t_loaded_part;
     t_movie_duration = (float)CMTimeToLCTime(m_player.currentItem.duration);

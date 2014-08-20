@@ -212,7 +212,7 @@ void MCQTKitPlayer::MovieIsLoading(QTTimeRange p_timerange)
     QTTime t_buffered_time;
     t_buffered_time = p_timerange.duration;
     m_buffered_time = t_buffered_time;
-
+    MCPlatformCallbackSendPlayerBufferUpdated(this);
     /*
     float t_movie_duration, t_loaded_part;
     t_movie_duration = (float)m_movie.duration.timeValue/(float)m_movie.duration.timeScale;
