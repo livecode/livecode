@@ -1,0 +1,1 @@
+#   [[Player]] Crash when repeatedly changing the value of alwaysBuffer property

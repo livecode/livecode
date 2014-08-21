@@ -1108,10 +1108,12 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 return ES_ERROR;
             }
             
+            // PM-2014-08-21 [[ Bug 13242 ]] Call syncbuffering() before the multicore rendering threads are created to prevent a crash when switching value of alwaysBuffer property
+            syncbuffering(nil);
+            
             // The actual buffering state is determined upon redrawing - therefore
             // we trigger a redraw to ensure we don't unbuffer when it is
             // needed.
-            
             if (opened)
                 dirty = True;
             break;
@@ -2312,7 +2314,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	
 	if (m_platform_player != nil && hasfilename())
 	{
-		syncbuffering(dc);
+        // PM-2014-08-21 [[ Bug 13242 ]] Move syncbuffering() call to prevent a crash
 		
 		bool t_offscreen;
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
