@@ -427,9 +427,9 @@ static MCGRegionRef s_redraw_region = nil;
 	}*/
 	
 	// IM-2013-08-23: [[ RefactorGraphics ]] pass scaled surface height to stack surface constructor
-	// IM-2013-09-30: [[ FullscreenMode ]] Use the stack transform to get the device rect
+	// IM-2014-08-18: [[ Bug 13163 ]] The device rect needs to be based on the view rect rather than the stack rect.
 	MCRectangle t_device_rect;
-	t_device_rect = MCRectangleGetTransformedBounds(t_stack->getrect(), t_stack->getdevicetransform());
+	t_device_rect = MCRectangleGetScaledBounds(t_stack->view_getrect(), t_scale);
     
     CGContext *t_cgcontext;
 	t_cgcontext = UIGraphicsGetCurrentContext();

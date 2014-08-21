@@ -216,9 +216,6 @@ Boolean MCScreenDC::open(void)
 {
 	common_open();
 	
-	// IM-2013-07-18: [[ ResIndependence ]] store the device scale in our new static variable
-	s_iphone_device_scale = [[UIScreen mainScreen] scale];
-	
 	return True;
 }
 
@@ -1642,6 +1639,10 @@ static bool MCIPhoneWait(double p_sleep)
 
 void MCResPlatformInitPixelScaling(void)
 {
+	// IM-2014-08-18: [[ Bug 12372 ]] Move platform-specific setup to MCResPlatformInitPixelScaling.
+	
+	// IM-2013-07-18: [[ ResIndependence ]] store the device scale in our new static variable
+	s_iphone_device_scale = [[UIScreen mainScreen] scale];
 }
 
 // IM-2014-01-30: [[ HiDPI ]] Pixel scaling supported on iOS
