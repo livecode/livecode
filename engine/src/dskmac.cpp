@@ -2676,11 +2676,14 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         errno = noErr;
         
         ResType rtype, type;
-        MCAutoStringRefAsCString t_cstring;
-        /* UNCHECKED */ t_cstring . Lock(p_type);
 
         if (p_type != nil)
         { //get the resource info specified by the resource type
+            
+            // AL-2014-08-21: [[ Bug 13179 ]] Locking p_type before checking it is nil can cause crash
+            MCAutoStringRefAsCString t_cstring;
+            /* UNCHECKED */ t_cstring . Lock(p_type);
+            
             // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
             rtype = MCSwapInt32HostToNetwork(*(uint32_t*)*t_cstring);
             t_success = getResourceInfo(*t_list, rtype);
