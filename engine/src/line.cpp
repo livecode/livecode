@@ -521,8 +521,9 @@ void MCLine::SegmentLine()
     {
         // Does this block contain a tab?
         uindex_t t_offset;
-        if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', bptr->GetOffset(), kMCStringOptionCompareExact, t_offset)
-            && t_offset < bptr->GetOffset()+bptr->GetLength())
+        // AL-2014-08-21: [[ Bug 13247 ]] Don't repeatedly search to the end of the paragraph to find tab chars.
+        //  The search should only be in the range of the block.
+        if (MCStringFirstIndexOfCharInRange(parent->GetInternalStringRef(), '\t', MCRangeMake(bptr -> GetOffset(), bptr -> GetLength()), kMCStringOptionCompareExact, t_offset))
         {
             // Split the block at the tab
             // Note that we want to create empty blocks after the tab

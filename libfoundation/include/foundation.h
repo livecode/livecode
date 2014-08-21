@@ -1682,6 +1682,9 @@ bool MCStringFirstIndexOf(MCStringRef string, MCStringRef needle, uindex_t after
 // Find the first offset of needle in string - where needle is a Unicode character
 // (note it is a codepoint, not unichar - i.e. a 20-bit value).
 bool MCStringFirstIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
+// Find the first offset of needle in given range of string - where needle is a Unicode character
+// (note it is a codepoint, not unichar - i.e. a 20-bit value).
+bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
 
 // Find the last offset of needle in string, on or before index 'before',
 // processing as appropriate according to options.

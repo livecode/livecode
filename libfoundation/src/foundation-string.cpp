@@ -2364,12 +2364,16 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
 
 bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_after, MCStringOptions p_options, uindex_t& r_offset)
 {
+    return MCStringFirstIndexOfCharInRange(self, p_needle, MCRangeMake(p_after, self -> char_count - p_after), p_options, r_offset);
+}
+
+bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset)
+{
     if (__MCStringIsIndirect(self))
         self = self -> string;
-
-	// Make sure the after index is in range.
-	p_after = MCMin(p_after, self -> char_count);
-
+    
+    __MCStringClampRange(self, p_range);
+    
     if (MCStringIsNative(self))
     {
         if (p_needle >= 0xFF)
@@ -2380,7 +2384,7 @@ bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p
         if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
             t_char = MCNativeCharFold(t_char);
         
-        for(uindex_t t_offset = p_after; t_offset < self -> char_count; t_offset += 1)
+        for(uindex_t t_offset = p_range . offset; t_offset < p_range . offset + p_range . length; t_offset += 1)
         {
             char_t t_other_char;
             t_other_char = self -> native_chars[t_offset];
@@ -2397,11 +2401,11 @@ bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p
     }
     
     bool t_result;
-    t_result = MCUnicodeFirstIndexOfChar(self -> chars + p_after, self -> char_count - p_after, p_needle, (MCUnicodeCompareOption)p_options, r_offset);
+    t_result = MCUnicodeFirstIndexOfChar(self -> chars + p_range . offset, p_range . length, p_needle, (MCUnicodeCompareOption)p_options, r_offset);
     
     // Correct the output index
     if (t_result == true)
-        r_offset += p_after;
+        r_offset += p_range . offset;
     
     return t_result;
 }
