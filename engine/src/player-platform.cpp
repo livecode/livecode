@@ -1118,7 +1118,18 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
         case P_CALLBACKS:
             delete userCallbackStr;
             if (data.getlength() == 0)
+            {
                 userCallbackStr = NULL;
+                // PM-2014-08-21: [[ Bug 13243 ]] Free the existing callback table.
+                for(uindex_t i = 0; i < m_callback_count; i++)
+                {
+                    MCNameDelete(m_callbacks[i] . message);
+                    MCNameDelete(m_callbacks[i] . parameter);
+                }
+                MCMemoryDeleteArray(m_callbacks);
+                m_callbacks = nil;
+                m_callback_count = 0;
+            }
             else
             {
                 userCallbackStr = data.clone();
