@@ -505,6 +505,7 @@ MCThreadMutexRef MCpatternmutex = NULL;
 MCThreadMutexRef MCimagerepmutex = NULL;
 MCThreadMutexRef MCfieldmutex = NULL;
 MCThreadMutexRef MCthememutex = NULL;
+MCThreadMutexRef MCgraphicmutex = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -838,6 +839,7 @@ void X_clear_globals(void)
     MCimagerepmutex = NULL;
     MCfieldmutex = NULL;
     MCthememutex = NULL;
+    MCgraphicmutex = NULL;
 
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -880,6 +882,7 @@ bool X_open(int argc, char *argv[], char *envp[])
     /* UNCHECKED */ MCThreadMutexCreate(MCimagerepmutex);
     /* UNCHECKED */ MCThreadMutexCreate(MCfieldmutex);
     /* UNCHECKED */ MCThreadMutexCreate(MCthememutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCgraphicmutex);
     
     ////
     
@@ -1255,6 +1258,7 @@ int X_close(void)
     MCThreadMutexRelease(MCimagerepmutex);
     MCThreadMutexRelease(MCfieldmutex);
     MCThreadMutexRelease(MCthememutex);
+    MCThreadMutexRelease(MCgraphicmutex);
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions
