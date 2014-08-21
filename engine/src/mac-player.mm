@@ -36,7 +36,13 @@ MCPlatformPlayer::MCPlatformPlayer(void)
 
 MCPlatformPlayer::~MCPlatformPlayer(void)
 {
-	// PM-2014-08-11: [[ Bug 13109 ]] Moved code to MCPlatformPlayer::Release
+    if (m_window != nil)
+        Detach();
+    
+    // PM-2014-08-11: [[ Bug 13109 ]] Fixes issue of abort due to a pure virtual call
+    // PM-2014-08-21: [[ Bug 13242 ]] 
+    if (m_references == 0)
+        delete this;
 }
 
 void MCPlatformPlayer::Retain(void)
@@ -46,14 +52,9 @@ void MCPlatformPlayer::Retain(void)
 
 void MCPlatformPlayer::Release(void)
 {
-	m_references -= 1;
-	if (m_references == 0)
-    {
-        // PM-2014-08-11: [[ Bug 13109 ]] Fixes issue of abort due to a pure virtual call
-        if (m_window != nil)
-            Detach();
-		delete this;
-    }
+    // PM-2014-08-21: [[ Bug 13242 ]] Moved code to ~MCPlatformPlayer
+	if (m_references > 0)
+        m_references -= 1;
 }
 
 void MCPlatformPlayer::Attach(MCPlatformWindowRef p_window)
