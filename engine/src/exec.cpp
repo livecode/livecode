@@ -813,20 +813,20 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
 {
     MCAssert(p_param != nil);
 	
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
+    t_can_debug = true;
     
-    do
+    // AL-2014-08-22: [[ Bug 13255 ]] Ensure error is thrown when param evaluation fails first time
+    //  and t_can_debug is false.
+    while (t_can_debug && (t_failure = !p_param -> eval_ctxt(*this, r_result)) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        if (p_param -> eval_ctxt(*this, r_result))
-            t_success = true;
-        else
-            t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+	
     
-	if (t_success)
+	if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
