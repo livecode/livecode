@@ -24,7 +24,8 @@ CUSTOM_CCFLAGS=\
 	-fmessage-length=0 \
 	$(MODE_CCFLAGS)
 
-CUSTOM_LDFLAGS=-static-libgcc \
-	$(MODE_LDFLAGS) -Wl,-rpath,\$$ORIGIN
+CUSTOM_LDFLAGS=$(MODE_LDFLAGS)
+CUSTOM_LDFLAGS_LTO=$(MODE_LDFLAGS_LTO) -static-libgcc -Wl,-rpath,\$$ORIGIN
+CUSTOM_LDFLAGS_FINAL=$(MODE_LDFLAGS_FINAL) -rpath \$$ORIGIN
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/../rules/application.linux.makefile

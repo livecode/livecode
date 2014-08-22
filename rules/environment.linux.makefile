@@ -25,6 +25,11 @@ ifeq ($(CC),)
 	CC:=gcc
 endif
 
+ifeq ($(origin LD), default)
+	LD:=$(CC)
+	LD_IS_CC:=1
+endif
+
 BUILD_DIR=$(SOLUTION_DIR)/_build/linux/$(ARCH)/$(MODE)
 CACHE_DIR=$(SOLUTION_DIR)/_cache/linux/$(ARCH)/$(MODE)/$(NAME)
 PRODUCT_DIR=$(BUILD_DIR)
