@@ -19,6 +19,7 @@ encryptedobjectstream.h
 encryptedstack.cpp
 encryptedstack.h
 stacksecurity_encrypted.cpp
+util/perfect/perfect.linux-*
 
 # Compiled source #
 ###################
