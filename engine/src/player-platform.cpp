@@ -2854,9 +2854,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             if (m_platform_player == nil)
                 return MCRectangleMake(0, 0, 0, 0);
             
-            uint32_t t_current_time, t_duration;
-            t_current_time = getmoviecurtime();
-            t_duration = getduration();
+            float t_current_time, t_duration;
+            t_current_time = (float)getmoviecurtime();
+            t_duration = (float)getduration();
             
             if (t_current_time >= t_duration)
                 t_current_time = t_duration;
@@ -2870,7 +2870,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             
             int t_thumb_left = 0;
             if (t_duration != 0)
-                t_thumb_left = t_active_well_width * t_current_time / t_duration;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_thumb_left will not overflow
+                t_thumb_left = t_active_well_width * (t_current_time / t_duration);
             
             return MCRectangleMake(t_well_rect . x + t_thumb_left + CONTROLLER_HEIGHT / 8 - 1, t_well_rect . y, CONTROLLER_HEIGHT / 2, t_well_rect . height);
         }
@@ -2906,9 +2907,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             
         case kMCPlayerControllerPartSelectionStart:
         {
-            uint32_t t_start_time, t_duration;
-            t_start_time = getstarttime();
-            t_duration = getduration();
+            float t_start_time, t_duration;
+            t_start_time = (float)getstarttime();
+            t_duration = (float)getduration();
             
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
@@ -2919,16 +2920,17 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             
             int t_selection_start_left = 0;
             if (t_duration != 0)
-                t_selection_start_left = t_active_well_width * t_start_time / t_duration;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_selection_start_left will not overflow
+                t_selection_start_left = t_active_well_width * (t_start_time / t_duration);
             
             return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, SELECTION_RECT_WIDTH, t_well_rect . height);
         }
             
         case kMCPlayerControllerPartSelectionFinish:
         {
-            uint32_t t_finish_time, t_duration;
-            t_finish_time = getendtime();
-            t_duration = getduration();
+            float t_finish_time, t_duration;
+            t_finish_time = (float)getendtime();
+            t_duration = (float)getduration();
             
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
@@ -2939,7 +2941,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             
             int t_selection_finish_left = t_active_well_width;
             if (t_duration != 0)
-                t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_selection_finish_left will not overflow
+                t_selection_finish_left = t_active_well_width * (t_finish_time / t_duration);
             
             // PM-2014-07-09: [[ Bug 12750 ]] Make sure progress thumb and selectionFinish handle light up
             return MCRectangleMake(t_well_rect . x + t_selection_finish_left, t_well_rect . y , SELECTION_RECT_WIDTH, t_well_rect . height);
@@ -2964,10 +2967,10 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             break;
         case kMCPlayerControllerPartSelectedArea:
         {
-            uint32_t t_start_time, t_finish_time, t_duration;
-            t_start_time = getstarttime();
-            t_finish_time = getendtime();
-            t_duration = getduration();
+            float t_start_time, t_finish_time, t_duration;
+            t_start_time = (float)getstarttime();
+            t_finish_time = (float)getendtime();
+            t_duration = (float)getduration();
             
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
@@ -2984,8 +2987,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             }
             else
             {
-                t_selection_start_left = t_active_well_width * t_start_time / t_duration;
-                t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure vars will not overflow
+                t_selection_start_left = t_active_well_width * (t_start_time / t_duration);
+                t_selection_finish_left = t_active_well_width * (t_finish_time / t_duration);
             }
             
             return MCRectangleMake(t_well_rect . x + t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . y, t_selection_finish_left - t_selection_start_left, t_well_rect . height);
@@ -3008,14 +3012,14 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             
         case kMCPlayerControllerPartPlayedArea:
         {
-            uint32_t t_start_time, t_current_time, t_finish_time, t_duration;
-            t_duration = getduration();
+            float t_start_time, t_current_time, t_finish_time, t_duration;
+            t_duration = (float)getduration();
             
             // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
             if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
             {
-                t_start_time = getstarttime();
-                t_finish_time = getendtime();
+                t_start_time = (float)getstarttime();
+                t_finish_time = (float)getendtime();
             }
             else
             {
@@ -3047,8 +3051,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             }
             else
             {
-                t_selection_start_left = t_active_well_width * t_start_time / t_duration;
-                t_current_time_left = t_active_well_width * t_current_time / t_duration;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure vars will not overflow
+                t_selection_start_left = t_active_well_width * (t_start_time / t_duration);
+                t_current_time_left = t_active_well_width * (t_current_time / t_duration);
             }
             
             return MCRectangleMake(t_well_rect . x + t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . y, t_current_time_left - t_selection_start_left, t_well_rect . height);
@@ -3177,7 +3182,8 @@ void MCPlayer::handle_mdown(int p_which)
             uint32_t t_new_time, t_duration;
             t_duration = getduration();
             
-            t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+            // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
+            t_new_time = (mx - t_part_well_rect . x) * (float(t_duration) / t_part_well_rect . width);
             
             // PM-2014-07-09: [[ Bug 12753 ]] If video is playing and we click before the starttime, don't allow video to be played outside the selection
             if (!ispaused() && t_new_time < starttime && getflag(F_PLAY_SELECTION))
@@ -3307,7 +3313,8 @@ void MCPlayer::handle_mfocus(int x, int y)
                 int32_t t_new_time, t_duration;
                 t_duration = getduration();
                 
-                t_new_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
+                t_new_time = (x - t_part_well_rect . x) * (float(t_duration) / t_part_well_rect . width);
                 
                 if (t_new_time < 0)
                     t_new_time = 0;
@@ -3329,7 +3336,8 @@ void MCPlayer::handle_mfocus(int x, int y)
                 if (x <= t_part_well_rect . x)
                     x = t_part_well_rect . x;
                 
-                t_new_start_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_start_time will not overflow
+                t_new_start_time = (x - t_part_well_rect . x) * (float(t_duration) / t_part_well_rect . width);
                 
                 if (t_new_start_time >= endtime)
                     t_new_start_time = endtime;
@@ -3353,7 +3361,8 @@ void MCPlayer::handle_mfocus(int x, int y)
                 uint32_t t_new_finish_time, t_duration;
                 t_duration = getduration();
                 
-                t_new_finish_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_finish_time will not overflow
+                t_new_finish_time = (x - t_part_well_rect . x) * (float(t_duration) / t_part_well_rect . width);
                 
                 if (t_new_finish_time <= starttime)
                     t_new_finish_time = starttime;
@@ -3508,7 +3517,8 @@ void MCPlayer::handle_shift_mdown(int p_which)
             t_old_start = getstarttime();
             t_old_end = getendtime();
             
-            t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+            // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
+            t_new_time = (mx - t_part_well_rect . x) * (float(t_duration) / t_part_well_rect . width);
             
             // If click before current starttime, adjust that.
             // If click after current endtime, adjust that.
