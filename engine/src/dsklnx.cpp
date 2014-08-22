@@ -2803,6 +2803,9 @@ public:
                 if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
                 {
                     MCAutoStringRefAsSysString t_name_sys;
+                    // SN-2014-08-22: [[ Bug 12903 ]] t_doc_sys was only defined in the
+                    //  bock it locks the document string.
+                    MCAutoStringRefAsSysString t_doc_sys;
                     /* UNCHECKED */ t_name_sys.Lock(MCNameGetString(p_name));
 
                     char **argv = NULL;
@@ -2834,7 +2837,6 @@ public:
                     }
                     else
                     {
-                        MCAutoStringRefAsSysString t_doc_sys;
                         /* UNCHECKED */ t_doc_sys.Lock(p_doc);
 
                         argv = new char *[3];
