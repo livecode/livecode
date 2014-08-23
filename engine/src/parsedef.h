@@ -423,6 +423,8 @@ enum Functions {
     F_EXTENTS,
     F_FILES,
     F_FLUSH_EVENTS,
+	// MDW-2014-08-23 : [[ feature_floor ]]
+	F_FLOOR,
     F_FOCUSED_OBJECT,
     F_FONT_LANGUAGE,
     F_FONT_NAMES,

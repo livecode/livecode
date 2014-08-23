@@ -761,6 +761,9 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCTranspose;
 	case F_TRUNC:
 		return new MCTrunc;
+		// MDW-2014-08-23 : [[ feature_floor ]]
+	case F_FLOOR:
+		return new MCFloor;
 	case F_VALUE:
 		return new MCValue;
 	case F_VARIABLES:

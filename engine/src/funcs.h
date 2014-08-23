@@ -2346,6 +2346,20 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+// MDW-2014-08-23 : [[ feature_floor ]]
+class MCMathOperator : public MCFunction
+{
+	MCExpression *source;
+public:
+	MCMathOperator()
+	{
+		source = NULL;
+	}
+	virtual ~MCMathOperator();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCTrunc : public MCFunction
 {
 	MCExpression *source;
@@ -2355,6 +2369,20 @@ public:
 		source = NULL;
 	}
 	virtual ~MCTrunc();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+// MDW-2014-08-23 : [[ feature_floor ]]
+class MCFloor : public MCFunction
+{
+	MCExpression *source;
+public:
+	MCFloor()
+	{
+		source = NULL;
+	}
+	virtual ~MCFloor();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 };

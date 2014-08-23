@@ -837,6 +837,8 @@ LT factor_table[] =
         {"fld", TT_CHUNK, CT_FIELD},
         {"flds", TT_CLASS, CT_FIELD},
         {"flushevents", TT_FUNCTION, F_FLUSH_EVENTS},
+		// MDW-2014-08-23 : [[ feature_floor ]]
+        {"floor", TT_FUNCTION, F_FLOOR},
         {"focuscolor", TT_PROPERTY, P_FOCUS_COLOR},
         {"focusedobject", TT_FUNCTION, F_FOCUSED_OBJECT},
         {"focuspattern", TT_PROPERTY, P_FOCUS_PATTERN},

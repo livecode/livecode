@@ -1793,3 +1793,38 @@ Exec_stat MCTrunc::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCTrunc */
 }
+
+MCFloor::~MCFloor()
+{
+	delete source;
+}
+
+Parse_stat MCFloor::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+
+	if (get1param(sp, &source, the) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_TRUNC_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCFloor::eval(MCExecPoint &ep)
+{
+#ifdef /* MCFloor */ LEGACY_EXEC
+	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_TRUNC_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+//	if (ep.getnvalue() < 0.0)
+//		ep.setnvalue(ceil(ep.getnvalue()));
+//	else
+		ep.setnvalue(floor(ep.getnvalue()));
+	return ES_NORMAL;
+#endif /* MCFloor */
+}
