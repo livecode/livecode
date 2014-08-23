@@ -1,0 +1,63 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>floor</name>
+	<type>function</type>
+
+	<syntax>
+		<example>the floor of <i>number</i></example>
+		<example>floor(<i>number</i>)</example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary><glossary tag="return">Returns</glossary> the greatest integer less than or equal to number.</summary>
+
+	<examples>
+<example>floor(33.567) -- result is 33</example>
+<example>floor(-6.3) -- result is -7</example>
+	</examples>
+
+	<history>
+		<introduced version="6.7">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+		<ios/>
+		<android/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Math, Logic, &amp; Dates</category>
+	</classification>
+
+	<references>
+		<function tag="abs">abs Function</function>
+		<function tag="trunc">trunc Function</function>
+		<function tag="ceil">ceil Function</function>
+	</references>
+
+	<description>Use the <b>floor</b> <control_st tag="function">function</control_st> to return the greatest integer less than or equal to a number.<p></p><p><b>Parameters:</b></p><p>The <i>number</i> is any number, or <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a number.</p><p></p><p><b>Value:</b></p><p>The <b>floor</b> <control_st tag="function">function</control_st> <glossary tag="return">returns</glossary> an <keyword tag="integer">integer</keyword>.</p><p></p><p><b>Comments:</b></p><p>The <b>floor</b> <control_st tag="function">function</control_st> is different from <function tag="round">round</function> in that floor completely ignores the fractional part of the number. For example, floor(5.1) <glossary tag="return">returns</glossary> 5, but  floor(4.99) <glossary tag="return">returns</glossary> 4. This means that the <b>floor</b> function does not always <constant tag="return">return</constant> the <keyword tag="integer">integer</keyword> closest to the <i>number</i>.</p></description>
+</doc>
