@@ -2336,31 +2336,48 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCTranspose : public MCFunction
+// MDW-2014-08-23 : [[ feature_floor ]]
+class MCMathOperator : public MCFunction
 {
+protected:
 	MCExpression *source;
 public:
-	MCTranspose()
+	MCMathOperator()
 	{
 		source = NULL;
 	}
-	virtual ~MCTranspose();
+	~MCMathOperator(){delete source;}
+	Parse_stat parse(MCScriptPoint &, Boolean the, int err_msg);
+};
+
+class MCTranspose : public MCMathOperator
+{
+public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCTrunc : public MCFunction
+class MCTrunc : public MCMathOperator
 {
-	MCExpression *source;
 public:
-	MCTrunc()
-	{
-		source = NULL;
-	}
-	virtual ~MCTrunc();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 };
+
+class MCFloor : public MCMathOperator
+{
+public:
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+class MCCeil : public MCMathOperator
+{
+public:
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+// MDW-2014-08-23 : [[ feature_floor ]]
 
 class MCHTTPProxyForURL: public MCFunction
 {

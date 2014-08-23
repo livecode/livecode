@@ -620,6 +620,8 @@ LT factor_table[] =
         {"casesensitive", TT_PROPERTY, P_CASE_SENSITIVE},
         {"cd", TT_CHUNK, CT_CARD},
         {"cds", TT_CLASS, CT_CARD},
+		// MDW-2014-08-23 : [[ feature_floor ]]
+        {"ceil", TT_FUNCTION, F_CEIL},
         {"centered", TT_PROPERTY, P_CENTERED},
         {"centerrect", TT_PROPERTY, P_CENTER_RECTANGLE},
         {"centerrectangle", TT_PROPERTY, P_CENTER_RECTANGLE},
@@ -836,6 +838,8 @@ LT factor_table[] =
         {"fld", TT_CHUNK, CT_FIELD},
         {"flds", TT_CLASS, CT_FIELD},
         {"flushevents", TT_FUNCTION, F_FLUSH_EVENTS},
+		// MDW-2014-08-23 : [[ feature_floor ]]
+        {"floor", TT_FUNCTION, F_FLOOR},
         {"focuscolor", TT_PROPERTY, P_FOCUS_COLOR},
         {"focusedobject", TT_FUNCTION, F_FOCUSED_OBJECT},
         {"focuspattern", TT_PROPERTY, P_FOCUS_PATTERN},

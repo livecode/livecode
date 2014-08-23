@@ -1702,20 +1702,9 @@ Exec_stat MCTan::eval(MCExecPoint &ep)
 #endif /* MCTan */
 }
 
-MCTranspose::~MCTranspose()
-{
-	delete source;
-}
-
 Parse_stat MCTranspose::parse(MCScriptPoint &sp, Boolean the)
 {
-	initpoint(sp);
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add(PE_TRANSPOSE_BADPARAM, sp);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
+	return MCMathOperator::parse(sp, the, PE_TRANSPOSE_BADPARAM);
 }
 
 Exec_stat MCTranspose::eval(MCExecPoint &ep)
@@ -1759,22 +1748,9 @@ Exec_stat MCTranspose::eval(MCExecPoint &ep)
 #endif /* MCTranspose */
 }
 
-MCTrunc::~MCTrunc()
-{
-	delete source;
-}
-
 Parse_stat MCTrunc::parse(MCScriptPoint &sp, Boolean the)
 {
-	initpoint(sp);
-
-	if (get1param(sp, &source, the) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_TRUNC_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
+	return MCMathOperator::parse(sp, the, PE_TRUNC_BADPARAM);
 }
 
 Exec_stat MCTrunc::eval(MCExecPoint &ep)
@@ -1792,4 +1768,55 @@ Exec_stat MCTrunc::eval(MCExecPoint &ep)
 		ep.setnvalue(floor(ep.getnvalue()));
 	return ES_NORMAL;
 #endif /* MCTrunc */
+}
+
+Parse_stat MCFloor::parse(MCScriptPoint &sp, Boolean the)
+{
+	return MCMathOperator::parse(sp, the, PE_FLOOR_BADPARAM);
+}
+
+Exec_stat MCFloor::eval(MCExecPoint &ep)
+{
+#ifdef /* MCFloor */ LEGACY_EXEC
+	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_FLOOR_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	ep.setnvalue(floor(ep.getnvalue()));
+	return ES_NORMAL;
+#endif /* MCFloor */
+}
+
+Parse_stat MCMathOperator::parse(MCScriptPoint &sp, Boolean the, int err_msg)
+{
+	initpoint(sp);
+
+	if (get1param(sp, &source, the) != PS_NORMAL)
+	{
+		MCperror->add
+		(err_msg, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Parse_stat MCCeil::parse(MCScriptPoint &sp, Boolean the)
+{
+	return MCMathOperator::parse(sp, the, PE_CEIL_BADPARAM);
+}
+
+Exec_stat MCCeil::eval(MCExecPoint &ep)
+{
+#ifdef /* MCCeil */ LEGACY_EXEC
+	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_CEIL_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	ep.setnvalue(ceil(ep.getnvalue()));
+	return ES_NORMAL;
+#endif /* MCCeil */
 }

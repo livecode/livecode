@@ -2334,6 +2334,7 @@ enum Exec_errors
 	EE_RELAYER_NOTARGET,
 
 	// {EE-0769} relayer: couldn't resolve source control
+
 	EE_RELAYER_NOSOURCE,
 
 	// {EE-0770} relayer: source not a control
@@ -2467,7 +2468,13 @@ enum Exec_errors
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
 	// {EE-0809} open: error in host name expression
-	EE_OPEN_BADHOST,	
+	EE_OPEN_BADHOST,
+	
+	EE_FLOOR_BADSOURCE,
+	
+	EE_CEIL_BADSOURCE,
+
+	
 };
 
 extern const char *MCexecutionerrors;
