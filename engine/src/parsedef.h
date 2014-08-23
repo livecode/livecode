@@ -379,6 +379,8 @@ enum Functions {
     F_CACHED_URLS,
     F_CAPS_LOCK_KEY,
 	F_BYTE_TO_NUM,
+	// MDW-2014-08-23 : [[ feature_floor ]]
+	F_CEIL,
     F_CHAR_TO_NUM,
     F_CIPHER_NAMES,
     F_CLICK_CHAR,

@@ -2333,59 +2333,48 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCTranspose : public MCFunction
-{
-	MCExpression *source;
-public:
-	MCTranspose()
-	{
-		source = NULL;
-	}
-	virtual ~MCTranspose();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-};
-
 // MDW-2014-08-23 : [[ feature_floor ]]
 class MCMathOperator : public MCFunction
 {
+protected:
 	MCExpression *source;
 public:
 	MCMathOperator()
 	{
 		source = NULL;
 	}
-	virtual ~MCMathOperator();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	~MCMathOperator(){delete source;}
+	Parse_stat parse(MCScriptPoint &, Boolean the, int err_msg);
 };
 
-class MCTrunc : public MCFunction
+class MCTranspose : public MCMathOperator
 {
-	MCExpression *source;
 public:
-	MCTrunc()
-	{
-		source = NULL;
-	}
-	virtual ~MCTrunc();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCTrunc : public MCMathOperator
+{
+public:
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+class MCFloor : public MCMathOperator
+{
+public:
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+class MCCeil : public MCMathOperator
+{
+public:
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
 // MDW-2014-08-23 : [[ feature_floor ]]
-class MCFloor : public MCFunction
-{
-	MCExpression *source;
-public:
-	MCFloor()
-	{
-		source = NULL;
-	}
-	virtual ~MCFloor();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-};
 
 class MCHTTPProxyForURL: public MCFunction
 {

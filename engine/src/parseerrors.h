@@ -1673,7 +1673,13 @@ enum Parse_errors
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
 	// {PE-0545} open: expected 'host'
-	PE_OPEN_NOHOST,	
+	PE_OPEN_NOHOST,
+	
+	// MDW-2014-08-23: [[ feature_floor ]] floor: error in source expression
+	PE_FLOOR_BADPARAM,
+	
+	// MDW-2014-08-23: [[ feature_floor ]] ceil: error in source expression
+	PE_CEIL_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

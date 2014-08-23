@@ -620,6 +620,8 @@ LT factor_table[] =
         {"casesensitive", TT_PROPERTY, P_CASE_SENSITIVE},
         {"cd", TT_CHUNK, CT_CARD},
         {"cds", TT_CLASS, CT_CARD},
+		// MDW-2014-08-23 : [[ feature_floor ]]
+        {"ceil", TT_FUNCTION, F_CEIL},
         {"centered", TT_PROPERTY, P_CENTERED},
         {"centerrect", TT_PROPERTY, P_CENTER_RECTANGLE},
         {"centerrectangle", TT_PROPERTY, P_CENTER_RECTANGLE},
