@@ -2135,6 +2135,9 @@ void MCPlayer::markerchanged(uint32_t p_time)
             t_param = new MCParameter;
             t_param -> set_argument(ep);
             MCscreen -> addmessage(this, m_callbacks[i] . message, 0, t_param);
+            
+            // MW-2014-08-25: [[ Bug 13267 ]] Make sure we terminate the current wait so updates and messages get sent.
+            MCPlatformBreakWait();
         }
 }
 
@@ -2173,6 +2176,9 @@ void MCPlayer::currenttimechanged(void)
         t_param = new MCParameter;
         t_param -> setn_argument(getmoviecurtime());
         MCscreen -> addmessage(this, MCM_current_time_changed, 0, t_param);
+        
+        // MW-2014-08-25: [[ Bug 13267 ]] Make sure we terminate the current wait so updates and messages get sent.
+        MCPlatformBreakWait();
     }
 }
 
