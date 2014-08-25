@@ -47,16 +47,17 @@ ifeq ($(LD_IS_CC),1)
 			$(addprefix -l,$(DYNAMIC_LIBS))
 	LINK_STEP2:=
 else
-	LINK_STEP1:=$(CC) -Wl,-relocatable -fvisibility=hidden -o$(TARGET_PATH).rel $(LDFLAGS_LTO) $(OBJECTS) $(CUSTOM_OBJECTS) \
+	LINK_STEP1:=$(CC) -Wl,-relocatable -nodefaultlibs -fvisibility=hidden -o$(TARGET_PATH).rel $(LDFLAGS_LTO) $(OBJECTS) $(CUSTOM_OBJECTS) \
 			-Wl,-Bstatic \
 			-Wl,--start-group \
 				$(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) \
 				$(addprefix -l,$(STATIC_LIBS)) \
+				-lgcc -lgcc_eh \
 			-Wl,--end-group
 	LINK_STEP2:=$(LD) -o$(TARGET_PATH) $(LDFLAGS_FINAL) $(TARGET_PATH).rel \
 			-Bdynamic \
 			$(addsuffix .so,$(addprefix $(PRODUCT_DIR)/,$(SHARED_LIBS))) \
-			$(addprefix -l,$(DYNAMIC_LIBS))
+			$(addprefix -l,$(DYNAMIC_LIBS)) -lc
 endif
 
 
