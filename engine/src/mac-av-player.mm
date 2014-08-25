@@ -644,6 +644,13 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
 
     [m_player release];
     
+    // PM-2014-08-25: [[ Bug 13268 ]] Make sure we release the frame of the old movie before loading a new one
+    if (m_current_frame != nil)
+    {
+        CFRelease(m_current_frame);
+        m_current_frame = nil;
+    }
+    
     // We want this player.
     m_player = t_player;
     
