@@ -1334,7 +1334,8 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 			MCAutoStringRef t_std_path;
 			MCAutoStringRef t_native_path;
 
-			/* UNCHECKED */ MCStringCreateWithChars(t_buffer.Ptr(), t_buffer.Size(), &t_std_path);
+			// SN-2014-08-25: [[ Bug 13258 ]] We don't want to put the last, NULL char in the output string
+			/* UNCHECKED */ MCStringCreateWithChars(t_buffer.Ptr(), t_size, &t_std_path);
 			/* UNCHECKED */ MCS_pathtonative(*t_std_path, &t_native_path);
 			
 			/* UNCHECKED */ MCListAppend(t_output, *t_native_path);
