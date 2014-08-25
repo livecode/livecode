@@ -455,14 +455,9 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
     
     // Frame updates don't need to happen at 'safe points' (unlike currentTimeChanged events) so
     // we pass false as the second argument to the notify.
-    //if (t_need_update)
-    //    MCNotifyPush(DoUpdateCurrentFrame, t_self, false, false);
     
     if (t_need_update)
         [t_self -> m_observer performSelectorOnMainThread: @selector(updateCurrentFrame) withObject: nil waitUntilDone: NO];
-    
-    //if (t_self -> IsPlaying())
-    //    MCNotifyPush(DoUpdateCurrentTime, t_self, false, true);
     
     return kCVReturnSuccess;
     
