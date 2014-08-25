@@ -2913,8 +2913,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         case kMCPlayerControllerPartSelectionStart:
         {
             uint32_t t_start_time, t_duration;
-            t_start_time = (float)getstarttime();
-            t_duration = (float)getduration();
+            t_start_time = getstarttime();
+            t_duration = getduration();
             
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
