@@ -3188,7 +3188,10 @@ MCRectangle MCParagraph::getdirty(uint2 fixedheight)
 
 	dirty.x = 0;
 	dirty.y = 0;
-	dirty.width = dirty.height = 0;
+    // SN-2014-08-25: [[ Bug 13263 ]] We want to have a height, even if the line is empty - that ensures
+    //  that a line is redrawn when the last remaining char is deleted
+	dirty.width = 0;
+    dirty.height = fixedheight;
 
 	// MW-2012-01-08: [[ ParaStyles ]] Compute spacing top and bottom.
 	int32_t t_space_above, t_space_below;
