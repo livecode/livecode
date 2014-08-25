@@ -2766,7 +2766,7 @@ void MCPlayer::drawControllerBufferedAreaButton(MCGContextRef p_gcontext)
     t_drawn_buffered_area . x--;
     
     
-    MCGContextSetFillRGBAColor(p_gcontext, 152 / 257.0, 152 / 257.0, 152 / 257.0, 1.0f); // LIGHT GREY
+    MCGContextSetFillRGBAColor(p_gcontext, 62 / 257.0, 62 / 257.0, 62 / 257.0, 1.0f); // Some DARK GREY
     
     MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_drawn_buffered_area);
     MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
