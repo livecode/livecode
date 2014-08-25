@@ -1,0 +1,1 @@
+#   [[Player]] Player object retains callbacks even though callbacks set to empty
