@@ -49,6 +49,8 @@ class MCAVFoundationPlayer;
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context;
 
+- (void)updateCurrentFrame;
+
 @end
 
 @interface com_runrev_livecode_MCAVFoundationPlayerView : NSView
@@ -86,6 +88,8 @@ public:
     
     AVPlayer *getPlayer(void);
     
+    static void DoUpdateCurrentFrame(void *ctxt);
+    
 protected:
 	virtual void Realize(void);
 	virtual void Unrealize(void);
@@ -111,7 +115,6 @@ private:
                                     void *displayLinkContext);
     
 	static void DoSwitch(void *context);
-    static void DoUpdateCurrentFrame(void *ctxt);
     static void DoUpdateCurrentTime(void *ctxt);
     
     NSLock *m_lock;
@@ -183,6 +186,11 @@ private:
 {
     if ([keyPath isEqualToString: @"status"])
         MCPlatformBreakWait();
+}
+
+- (void)updateCurrentFrame
+{
+    m_av_player -> DoUpdateCurrentFrame(m_av_player);
 }
 
 @end
@@ -447,11 +455,9 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
     
     // Frame updates don't need to happen at 'safe points' (unlike currentTimeChanged events) so
     // we pass false as the second argument to the notify.
-    if (t_need_update)
-        MCNotifyPush(DoUpdateCurrentFrame, t_self, false, false);
     
-    if (t_self -> IsPlaying())
-        MCNotifyPush(DoUpdateCurrentTime, t_self, true, false);
+    if (t_need_update)
+        [t_self -> m_observer performSelectorOnMainThread: @selector(updateCurrentFrame) withObject: nil waitUntilDone: NO];
     
     return kCVReturnSuccess;
     
@@ -489,6 +495,9 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
     // Now video is loaded
     t_player -> m_loaded = true;
 	MCPlatformCallbackSendPlayerFrameChanged(t_player);
+    
+    if (t_player -> IsPlaying())
+        t_player -> HandleCurrentTimeChanged();
     
 }
 
@@ -643,6 +652,13 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     [m_player removeTimeObserver:m_time_observer_token];
 
     [m_player release];
+    
+    // PM-2014-08-25: [[ Bug 13268 ]] Make sure we release the frame of the old movie before loading a new one
+    if (m_current_frame != nil)
+    {
+        CFRelease(m_current_frame);
+        m_current_frame = nil;
+    }
     
     // We want this player.
     m_player = t_player;
