@@ -185,7 +185,7 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 MCArrayEncode::~MCArrayEncode()
 {
 	delete source;
-	delete version;
+    delete version;
 }
 
 Parse_stat MCArrayEncode::parse(MCScriptPoint &sp, Boolean the)

@@ -407,6 +407,10 @@ void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
 
 void MCAVFoundationPlayer::SeekToTimeAndWait(uint32_t p_time)
 {
+    // PM-2014-08-15: [[ Bug 13193 ]] Do this check to prevent LC hanging if filename is invalid the very first time you open a stack with a player object
+    if (m_player == nil || m_player.currentItem == nil)
+        return;
+    
     __block bool t_is_finished = false;
     [[m_player currentItem] seekToTime:CMTimeFromLCTime(p_time) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
         t_is_finished = true;
@@ -635,7 +639,14 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     [m_player removeTimeObserver:m_time_observer_token];
 
     [m_player release];
-
+    
+    // PM-2014-08-25: [[ Bug 13268 ]] Make sure we release the frame of the old movie before loading a new one
+    if (m_current_frame != nil)
+    {
+        CFRelease(m_current_frame);
+        m_current_frame = nil;
+    }
+    
     // We want this player.
     m_player = t_player;
 
