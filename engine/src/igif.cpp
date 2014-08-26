@@ -220,6 +220,8 @@ public:
 	
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatGIF; }
 	
+	virtual bool GetFrameCount(uint32_t &r_count);
+	
 protected:
 	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
@@ -243,6 +245,16 @@ MCGIFImageLoader::~MCGIFImageLoader()
 			MCMemoryDeallocate(m_gif);
 		m_gif = nil;
 	}
+}
+
+// IM-2014-08-25: [[ Bug 13273 ]] We don't have the frame count until the image is fully
+// loaded, so override this method to call EnsureFrames() to force frame loading.
+bool MCGIFImageLoader::GetFrameCount(uint32_t &r_count)
+{
+	if (!EnsureFrames())
+		return false;
+	
+	return MCImageLoader::GetFrameCount(r_count);
 }
 
 bool MCGIFImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
