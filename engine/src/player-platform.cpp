@@ -3150,7 +3150,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             }
             else
             {
-                t_loaded_time_left = t_active_well_width * t_loaded_time / t_duration;
+                t_loaded_time_left = _muludiv64(t_active_well_width, t_loaded_time, t_duration);
             }
             
             return MCRectangleMake(t_well_rect . x + t_thumb_rect . width / 2, t_well_rect . y, t_loaded_time_left, t_well_rect . height);
