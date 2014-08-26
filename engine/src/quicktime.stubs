@@ -103,4 +103,5 @@ QTKit none /System/Library/Frameworks/QTKit.framework/QTKit none
 	@ QTMoviePlaysSelectionOnlyAttribute
 	@ QTMovieURLAttribute
 	@ QTTimeCompare
+	@ QTMovieLoadStateAttribute
 
