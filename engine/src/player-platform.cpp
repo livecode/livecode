@@ -2334,8 +2334,9 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	
 	if (m_platform_player != nil && hasfilename())
 	{
-		syncbuffering(dc);
-		
+        // SN-2014-08-25: [[ Bug 13187 ]] syncbuffering relocated
+        //syncbuffering(dc);
+        
 		bool t_offscreen;
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
 		
@@ -2352,7 +2353,12 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCPlatformLockPlayerBitmap(m_platform_player, t_bitmap);
             
 			MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
-			MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
+            
+            // SN-2014-08-25: [[ Bug 13187 ]] We need to copy the raster
+            if (dc -> gettype() == CONTEXT_TYPE_PRINTER)
+                MCGImageCreateWithRaster(t_raster, t_image.image);
+            else
+                MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
 			if (t_image . image != nil)
 				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
 			MCGImageRelease(t_image.image);
@@ -2394,11 +2400,17 @@ void MCPlayer::drawcontroller(MCDC *dc)
     t_rect . width ++;
     t_rect . height ++;
     
-    dc -> setforeground(controllerbackcolor);  // DARKGRAY
-    dc -> fillrect(t_rect, true);
+    // SN-2014-08-25: [[ Bug 13187 ]] We need to clip to the size of the controller
+    dc -> save();
+    dc -> cliprect(t_rect);
     
     MCGContextRef t_gcontext = nil;
     dc -> lockgcontext(t_gcontext);
+    
+    // SN-2014-08-25: [[ Bug 13187 ]] Fill up the controller background color after clipping
+    MCGContextAddRectangle(t_gcontext, MCRectangleToMCGRectangle(t_rect));
+    MCGContextSetFillRGBAColor(t_gcontext, (controllerbackcolor . red / 255.0) / 257.0, (controllerbackcolor . green / 255.0) / 257.0, (controllerbackcolor . blue / 255.0) / 257.0, 1.0f);
+    MCGContextFill(t_gcontext);
     
     drawControllerVolumeButton(t_gcontext);
     
@@ -2426,6 +2438,9 @@ void MCPlayer::drawcontroller(MCDC *dc)
     drawControllerThumbButton(t_gcontext);
     
     dc -> unlockgcontext(t_gcontext);
+    
+    // SN-2014-08-25: [[ Bug 13187 ]] Restore the context to its previous state
+    dc -> restore();
 }
 
 void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
