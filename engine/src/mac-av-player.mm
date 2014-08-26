@@ -694,6 +694,13 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     [m_view setPlayer: nil];
     [m_player removeTimeObserver:m_time_observer_token];
 
+    @try
+    {
+        [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
+    }
+    @catch (id anException) {
+        //do nothing, obviously it wasn't attached because an exception was thrown
+    }
     [m_player release];
     
     // PM-2014-08-25: [[ Bug 13268 ]] Make sure we release the frame of the old movie before loading a new one
