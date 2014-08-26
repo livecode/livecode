@@ -104,6 +104,9 @@ public:
 	virtual bool GetBorder(void);
 	virtual void SetBorder(bool p_border);
 
+	bool GetOverflowHidden(void);
+	void SetOverflowHidden(bool p_hidden);
+	
 	virtual bool GetScrollbars(void);
 	virtual void SetScrollbars(bool p_scrollbars);
 
