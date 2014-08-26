@@ -11,17 +11,25 @@ The engine supports the following Windows OSes:
 * **Note:** On 64-bit platforms the engine still runs as a 32-bit application through the WoW layer.*
 ## Linux
 The linux engine requires the following:
-*32-bit installation, or a 64-bit linux distribution that has a 32-bit compatibility layer
-*2.4.x or later kernel
-*X11R5 capable Xserver running locally on a 24-bit display
-*glibc 2.3.2 or later
-*gtk/gdk/glib (optional – required for native theme support)
-*pango/xft
-*lcms (optional – required for color profile support in JPEGs and PNGs)
-*gksu (optional – required for elevate process support)
-* **Note:** The optional requirements (except for gksu and lcms) are also required by Firefox and Chrome, so if your linux distribution runs one of those, it will run the engine.*
+*Supported architectures:
+	*32-bit or 64-bit Intel/AMD or compatible processor
+	*32-bit ARMv6 with hardware floating-point (e.g. RaspberryPi)
+*Common requirements for GUI functionality:
+	*GTK/GDK/Glib 2.24 or later
+	*Pango with Xft support
+	* *(optional)* esd - required for audio output
+	* *(optional)* mplayer - required for media player functionality
+	* *(optional)* lcms - required for color profile support in images
+	* *(optional)* gksu - required for privilege elevation support
+*Requirements for 32-bit Intel/AMD:
+	*glibc 2.3.6 or later
+*Requirements for 64-bit Intel/AMD:
+	*glibc 2.15 or later
+*Requirements for ARMv6:
+	*glibc 2.7 or later
+* **Note:** The GUI requirements are also required by Firefox and Chrome, so if your Linux distritution runes one of those, it will run the engine.*
 * **Note:** If the optional requirements are not present then the engine will still run but the specified features will be disabled.*
-* **Note:** LiveCode and standalones it builds may work on remote Xservers and in other bit-depths, however this mode of operation is not currently supported.*
+* **Note:** It may be possible to compile and run LiveCode Community on other architectures but this is not officially supported.*
 ## Mac
 The Mac engine supports:
 *10.6.x (Snow Leopard) on Intel
