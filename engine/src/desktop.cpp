@@ -1157,7 +1157,19 @@ void MCPlatformHandlePlayerFinished(MCPlatformPlayerRef p_player)
         return;
     
     t_player -> layer_redrawall();
-    t_player -> moviefinished();;
+    t_player -> moviefinished();
+}
+
+void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    // Make sure download progress is updated 
+    MCPlatformBreakWait();
+    t_player -> redrawcontroller();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

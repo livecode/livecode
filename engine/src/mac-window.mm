@@ -711,6 +711,14 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
         
         if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], r_unmapped))
             r_unmapped = 0xffffffffU;
+        
+        // MW-2014-08-26: [[ Bug 13279 ]] If Ctrl is used, then Space onwards gets mapped to 0 onwards,
+        //   so undo this.
+        if (([event modifierFlags] & NSControlKeyMask) != 0 &&
+            r_mapped < 32)
+        {
+            r_mapped = r_unmapped;
+        }
     }
     else
     {

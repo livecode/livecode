@@ -1021,6 +1021,10 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
                     }
             }
             break;
+        // PM-2014-08-19 [[ Bug 13121 ]] Property for the download progress of the movie
+        case P_MOVIE_LOADED_TIME:
+            ep.setint(getmovieloadedtime());
+            break;
         case P_CURRENT_NODE:
 			if (m_platform_player != nil)
 				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &i);
@@ -1536,6 +1540,15 @@ void MCPlayer::freetmp()
 		MCS_unlink(filename);
 		MCValueAssign(filename, kMCEmptyString);
 	}
+}
+uint4 MCPlayer::getmovieloadedtime()
+{
+    uint4 loadedtime;
+	if (m_platform_player != nil && hasfilename())
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoadedTime, kMCPlatformPropertyTypeUInt32, &loadedtime);
+	else
+		loadedtime = 0;
+	return loadedtime;
 }
 
 uint4 MCPlayer::getduration() //get movie duration/length
@@ -2609,8 +2622,9 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	
 	if (m_platform_player != nil && hasfilename())
 	{
-		syncbuffering(dc);
-		
+        // SN-2014-08-25: [[ Bug 13187 ]] syncbuffering relocated
+        //syncbuffering(dc);
+        
 		bool t_offscreen;
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
 		
@@ -2627,7 +2641,12 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCPlatformLockPlayerBitmap(m_platform_player, t_bitmap);
             
 			MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
-			MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
+            
+            // SN-2014-08-25: [[ Bug 13187 ]] We need to copy the raster
+            if (dc -> gettype() == CONTEXT_TYPE_PRINTER)
+                MCGImageCreateWithRaster(t_raster, t_image.image);
+            else
+                MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
 			if (t_image . image != nil)
 				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
 			MCGImageRelease(t_image.image);
@@ -2669,16 +2688,23 @@ void MCPlayer::drawcontroller(MCDC *dc)
     t_rect . width ++;
     t_rect . height ++;
     
-    dc -> setforeground(controllerbackcolor);  // DARKGRAY
-    dc -> fillrect(t_rect, true);
+    // SN-2014-08-25: [[ Bug 13187 ]] We need to clip to the size of the controller
+    dc -> save();
+    dc -> cliprect(t_rect);
     
     MCGContextRef t_gcontext = nil;
     dc -> lockgcontext(t_gcontext);
+    
+    // SN-2014-08-25: [[ Bug 13187 ]] Fill up the controller background color after clipping
+    MCGContextAddRectangle(t_gcontext, MCRectangleToMCGRectangle(t_rect));
+    MCGContextSetFillRGBAColor(t_gcontext, (controllerbackcolor . red / 255.0) / 257.0, (controllerbackcolor . green / 255.0) / 257.0, (controllerbackcolor . blue / 255.0) / 257.0, 1.0f);
+    MCGContextFill(t_gcontext);
     
     drawControllerVolumeButton(t_gcontext);
     
     drawControllerPlayPauseButton(t_gcontext);
     drawControllerWellButton(t_gcontext);
+    drawControllerBufferedAreaButton(t_gcontext);
     
     // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then selection handles are invisible
     if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
@@ -2701,6 +2727,9 @@ void MCPlayer::drawcontroller(MCDC *dc)
     drawControllerThumbButton(t_gcontext);
     
     dc -> unlockgcontext(t_gcontext);
+    
+    // SN-2014-08-25: [[ Bug 13187 ]] Restore the context to its previous state
+    dc -> restore();
 }
 
 void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
@@ -3039,6 +3068,24 @@ void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
     MCGContextFill(p_gcontext);
 }
 
+void MCPlayer::drawControllerBufferedAreaButton(MCGContextRef p_gcontext)
+{
+    MCRectangle t_drawn_buffered_area;
+    t_drawn_buffered_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartBuffer);
+    // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartWell and kMCPlayerControllerPartSelectedArea
+    t_drawn_buffered_area . y = t_drawn_buffered_area . y + 3 * CONTROLLER_HEIGHT / 7;
+    t_drawn_buffered_area . height = CONTROLLER_HEIGHT / 7;
+    t_drawn_buffered_area . x--;
+    
+    
+    MCGContextSetFillRGBAColor(p_gcontext, 62 / 257.0, 62 / 257.0, 62 / 257.0, 1.0f); // Some DARK GREY
+    
+    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_drawn_buffered_area);
+    MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+    MCGContextFill(p_gcontext);
+}
+
+
 int MCPlayer::hittestcontroller(int x, int y)
 {
     MCRectangle t_rect;
@@ -3184,7 +3231,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT, p_rect . y, p_rect . width - 2 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
             
             return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y , p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT );
-            
+        
         case kMCPlayerControllerPartScrubBack:
             // PM-2014-07-08: [[ Bug 12763 ]] Make sure controller elememts are not broken when player width becomes too small
             if (p_rect . width < PLAYER_MIN_WIDTH)
@@ -3354,6 +3401,34 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             return MCRectangleMake(t_well_rect . x + t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . y, t_current_time_left - t_selection_start_left, t_well_rect . height);
         }
             break;
+            
+        case kMCPlayerControllerPartBuffer:
+        {
+            uint32_t t_loaded_time, t_duration;
+            t_duration = getduration();
+            t_loaded_time = getmovieloadedtime();
+            
+            MCRectangle t_well_rect, t_thumb_rect;
+            t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
+            t_thumb_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartThumb);
+            
+            int t_active_well_width;
+            t_active_well_width = t_well_rect . width - t_thumb_rect . width;
+            
+            int t_loaded_time_left;
+            if (t_duration == 0)
+            {
+                t_loaded_time_left = 0;
+            }
+            else
+            {
+                t_loaded_time_left = _muludiv64(t_active_well_width, t_loaded_time, t_duration);
+            }
+            
+            return MCRectangleMake(t_well_rect . x + t_thumb_rect . width / 2, t_well_rect . y, t_loaded_time_left, t_well_rect . height);
+        }
+            break;
+            
         case kMCPlayerControllerPartVolumeWell:
         {
             MCRectangle t_volume_bar_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar);
