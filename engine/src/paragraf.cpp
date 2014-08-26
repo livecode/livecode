@@ -1128,7 +1128,8 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             
             // AL-2014-07-29: [[ Bug 12951 ]] Selection rect should include whitespace between tabbed cells
             // If this is the first block of a segment, check if the selection covers the front of the segment.
-            if (bptr == sgptr -> GetFirstBlock() && endindex > bi && (startindex < bi || (t_show_front && startindex == bi)))
+            // SN-2014-08-22: [[ Bug 13249 ]] startindex and endindex are not set when hiliting the whole line of a field.
+            if (bptr == sgptr -> GetFirstBlock() && endindex > bi && (startindex < bi || (t_show_front && (startindex == bi || startindex == INT32_MAX))))
             {
                 t_segment_front = true;
                 findex_t ei, el;
@@ -1140,8 +1141,9 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             }
             
             // If this is the last block of a segment, check if the selection covers the back of the segment.
+            // SN-2014-08-22: [[ Bug 13249 ]] startindex and endindex are not set when hiliting the whole line of a field.
             if (!t_whole_segment && bptr == sgptr -> GetLastBlock() && startindex < bi + bl &&
-                ((sgptr -> next() != segments && endindex > bi + bl) || (t_show_back && endindex == bi + bl)))
+                ((sgptr -> next() != segments && endindex > bi + bl) || (t_show_back && (endindex == bi + bl || endindex == INT32_MAX))))
                 t_segment_back = true;
 
              // If selection covers the whole segment, we can fill it and skip to the first block of the next segment.           
