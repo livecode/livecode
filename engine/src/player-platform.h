@@ -41,6 +41,7 @@ enum
     kMCPlayerControllerPartSelectedArea,
     kMCPlayerControllerPartVolumeArea,
     kMCPlayerControllerPartPlayedArea,
+    kMCPlayerControllerPartBuffer,
     
 };
 
@@ -131,9 +132,10 @@ public:
     
 	void getversion(MCExecPoint &ep);
 	void freetmp();
-	uint4 getduration();    //get movie duration/length
-	uint4 gettimescale();  //get movie time scale
-	uint4 getmoviecurtime();//get movie current time
+	uint4 getduration();        //get movie duration/length
+	uint4 gettimescale();       //get movie time scale
+    uint4 getmovieloadedtime(); //get movie loaded time
+	uint4 getmoviecurtime();    //get movie current time
 	void getminwait(real8 &wait);
 	void setcurtime(uint4 curtime, bool notify);
 	void setselection(bool notify);                  //set movie selection
@@ -241,6 +243,7 @@ public:
     void drawControllerSelectionFinishButton(MCGContextRef p_gcontext);
     void drawControllerSelectedAreaButton(MCGContextRef p_gcontext);
     void drawControllerPlayedAreaButton(MCGContextRef p_gcontext);
+    void drawControllerBufferedAreaButton(MCGContextRef p_gcontext);
     
     void drawcontrollerbutton(MCDC *dc, const MCRectangle& rect);
     void redrawcontroller(void);
