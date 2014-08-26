@@ -3555,7 +3555,7 @@ void MCPlayer::handle_mdown(int p_which)
             t_duration = getduration();
             
             // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
-            t_new_time = _muludiv64(mx - t_part_well_rect . x, t_duration, t_part_well_rect . width);
+            t_new_time = _muludiv64(t_duration, mx - t_part_well_rect . x, t_part_well_rect . width);
             
             // PM-2014-07-09: [[ Bug 12753 ]] If video is playing and we click before the starttime, don't allow video to be played outside the selection
             if (!ispaused() && t_new_time < starttime && getflag(F_PLAY_SELECTION))
@@ -3685,8 +3685,11 @@ void MCPlayer::handle_mfocus(int x, int y)
                 int32_t t_new_time, t_duration;
                 t_duration = getduration();
                 
+                if (x < t_part_well_rect . x)
+                    x = t_part_well_rect . x;
+                
                 // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
-                t_new_time = _muludiv64(x - t_part_well_rect . x, t_duration, t_part_well_rect . width);
+                t_new_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
                 
                 if (t_new_time < 0)
                     t_new_time = 0;
@@ -3709,7 +3712,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                     x = t_part_well_rect . x;
                 
                 // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_start_time will not overflow
-                t_new_start_time = _muludiv64(x - t_part_well_rect . x, t_duration, t_part_well_rect . width);
+                t_new_start_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
                 
                 if (t_new_start_time >= endtime)
                     t_new_start_time = endtime;
@@ -3734,7 +3737,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 t_duration = getduration();
                 
                 // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_finish_time will not overflow
-                t_new_finish_time = _muludiv64(x - t_part_well_rect . x, t_duration, t_part_well_rect . width);
+                t_new_finish_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
                 
                 if (t_new_finish_time <= starttime)
                     t_new_finish_time = starttime;
@@ -3890,7 +3893,7 @@ void MCPlayer::handle_shift_mdown(int p_which)
             t_old_end = getendtime();
             
             // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
-            t_new_time = _muludiv64(mx - t_part_well_rect . x, t_duration, t_part_well_rect . width);
+            t_new_time = _muludiv64(t_duration, mx - t_part_well_rect . x, t_part_well_rect . width);
 
             // If click before current starttime, adjust that.
             // If click after current endtime, adjust that.

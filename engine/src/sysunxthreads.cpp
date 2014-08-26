@@ -358,7 +358,13 @@ uint32_t MCThreadGetNumberOfCores()
 {
     //return 2;
     //return (uint32_t) sysconf(_SC_NPROCESSORS_CONF);
+    
+    // SN-2014-08-26: [[ Bug 13264 ]] Android multi-core won't draw images without a bit of rework
+#ifdef _ANDROID_MOBILE
+    return 1;
+#else
     return (uint32_t) sysconf(_SC_NPROCESSORS_ONLN);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
