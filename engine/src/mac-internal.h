@@ -366,7 +366,7 @@ public:
 	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster);
 	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster);
 	
-	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster);
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area);
 	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster);
 	
 	virtual bool LockSystemContext(void*& r_context);
