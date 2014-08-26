@@ -153,20 +153,19 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
-		MCVariable* t_var;
-		t_var = tptr -> evalvar(ctxt);
-        
-		if (t_var == NULL)
-		{
-			tptr -> clear_argument();
+        // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
+        MCContainer *t_container;
+        if (tptr -> evalcontainer(ctxt, t_container))
+            tptr -> set_argument_container(t_container);
+        else
+        {
+            tptr -> clear_argument();
             MCExecValue t_value;
             //HERE
-			if (!ctxt . TryToEvaluateParameter(tptr, line, pos, is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM, t_value))
+            if (!ctxt . TryToEvaluateParameter(tptr, line, pos, is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM, t_value))
                 return;
-			tptr->give_exec_argument(t_value);
-		}
-		else
-			tptr->set_argument_var(t_var);
+            tptr->give_exec_argument(t_value);
+        }
         
         tptr = tptr->getnext();
     }

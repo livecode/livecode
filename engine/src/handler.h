@@ -45,7 +45,7 @@ class MCHandler
 	MCStatement *statements;
 	MCVariable **vars;
 	MCVariable **globals;
-	MCVariable **params;
+	MCContainer **params;
 	MCParameter *paramlist;
 	MCHandlerVarInfo *vinfo;
 	MCHandlerParamInfo *pinfo;
@@ -101,10 +101,9 @@ public:
     Exec_stat exec(MCExecContext &, MCParameter *);
 	void compile(MCSyntaxFactoryRef factory);
 	
-	MCVariable *getvar(uint2 index, Boolean isparam)
-	{
-		return isparam ? params[index] : vars[index];
-	}
+    MCVariable *getvar(uint2 index, Boolean isparam);
+    MCContainer *getcontainer(uint2 index, Boolean isparam);
+    
 	integer_t getnparams(void);
     MCValueRef getparam(uindex_t p_index);
 	Parse_stat findvar(MCNameRef name, MCVarref **);
@@ -169,7 +168,7 @@ public:
 		r_var_count = nvnames;
 	}
 	
-	void getparamlist(MCVariable**& r_vars, uint32_t& r_param_count)
+	void getparamlist(MCContainer**& r_vars, uint32_t& r_param_count)
 	{
 		r_vars = params;
 		r_param_count = npnames;
