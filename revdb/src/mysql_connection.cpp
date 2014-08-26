@@ -36,6 +36,21 @@ bool load_ssl_library()
 }
 #endif
 
+#ifdef TARGET_SUBPLATFORM_IPHONE
+#ifdef __i386__
+#include <dlfcn.h>
+extern "C" void *IOS_LoadModule(const char *mod)
+{
+    return dlopen(mod, RTLD_NOW);
+}
+
+extern "C" void *IOS_ResolveSymbol(void *mod, const char *sym)
+{
+    return dlsym(mod, sym);
+}
+#endif
+#endif
+
 #if defined(_WINDOWS)
 #define strcasecmp stricmp
 #endif
