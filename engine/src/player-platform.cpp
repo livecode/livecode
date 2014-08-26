@@ -1709,12 +1709,9 @@ Boolean MCPlayer::prepare(MCStringRef options)
         return True;
     
     // Fixes the issue of invisible player being created by script
-    if (MCStringIsEmpty(filename) && state & CS_PREPARED)
-    {
-        if (m_platform_player != nil)
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
+    // SN-2014-08-19: [[ Bug 13214 ]] An empty name should have the function stopping here
+    if (MCStringIsEmpty(filename))
         return True;
-    }
     
 	if (!opened)
 		return False;
