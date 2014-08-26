@@ -452,7 +452,13 @@ void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, int32_t y, MCS
     if (p_can_break)
         MCFontBreakText(p_font, p_text, p_range, (MCFontBreakTextCallback)MCFontDrawTextCallback, &ctxt, p_rtl);
     else
-        MCFontDrawTextCallback(p_font, p_text, p_range, &ctxt);
+    {
+        // AL-2014-08-20: [[ Bug 13186 ]] Ensure strings which skip go through the breaking algorithm
+        //  don't get permanently converted to UTF-16 when drawn
+        MCAutoStringRef t_temp;
+        /* UNCHECKED */ MCStringMutableCopy(p_text, &t_temp);
+        MCFontDrawTextCallback(p_font, *t_temp, p_range, &ctxt);
+    }
 }
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 p_text_style)
