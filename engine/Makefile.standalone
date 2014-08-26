@@ -10,7 +10,6 @@ MODE_DEPS=libkernel-standalone.a
 
 MODE_LIBS=kernel-standalone
 
-MODE_LDFLAGS=\
-	-Wl,--script=standalone-$(ARCH).link
+MODE_LDFLAGS_FINAL=--script=standalone-$(ARCH).link
 
 include Makefile.common
