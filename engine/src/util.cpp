@@ -1180,17 +1180,19 @@ Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
 }
 
 // MM-2014-08-01: [[ Bug ]] Pulled name table initialisation out of MCU_matchname to prevent crah on Linux.
-static const char *nametable[] =
+// IM-2014-08-20: [[ Bug ]] Cannot guarantee that the globals have been initialized before nametable,
+// so use pointers to the globals rather than their value and dereference later.
+static const char **nametable[] =
 {
-    MCstackstring, MCaudiostring,
-    MCvideostring, MCbackgroundstring,
-    MCcardstring, MCnullstring,
-    MCgroupstring, MCnullstring,
-    MCbuttonstring, MCnullstring,
-    MCnullstring, MCscrollbarstring,
-    MCimagestring, MCgraphicstring,
-    MCepsstring, MCmagnifierstring,
-    MCcolorstring, MCfieldstring
+    &MCstackstring, &MCaudiostring,
+    &MCvideostring, &MCbackgroundstring,
+    &MCcardstring, &MCnullstring,
+    &MCgroupstring, &MCnullstring,
+    &MCbuttonstring, &MCnullstring,
+    &MCnullstring, &MCscrollbarstring,
+    &MCimagestring, &MCgraphicstring,
+    &MCepsstring, &MCmagnifierstring,
+    &MCcolorstring, &MCfieldstring
 };
 
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
@@ -1209,9 +1211,9 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 	        && l > tname.getlength() + 1
 	        && sptr[tname.getlength() + 1] == '"'
 	        && !MCU_strncasecmp(sptr + 1, tname.getstring(), tname.getlength())
-	        && sptr - test.getstring() >= (int)strlen(nametable[type - CT_STACK])
-	        && !MCU_strncasecmp(test.getstring(), nametable[type - CT_STACK],
-	                            strlen(nametable[type - CT_STACK])))
+	        && sptr - test.getstring() >= (int)strlen(*nametable[type - CT_STACK])
+	        && !MCU_strncasecmp(test.getstring(), *nametable[type - CT_STACK],
+	                            strlen(*nametable[type - CT_STACK])))
 		match = True;
 
 	return match;
