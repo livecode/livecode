@@ -11,6 +11,6 @@ We have added two new properties to the player object enabling you to customise 
 
 We have also added support for getting information about the download progress of a remote multimedia file:
 
-- The **loadedtime** of a player is the time up to which the movie can be played. The download progress is also displayed on the controller well. For local multimedia files, the loadedtime is equal to the duration of the resource. 
+- The **loadedtime** of a player is the time up to which the movie can be played. The download progress is also displayed on the controller well.
 
 Note AVFoundation player is supported in OSX 10.8 and above. On systems running OSX 10.6 and 10.7, LiveCode continues to provide player functionality using the QTKit API.
