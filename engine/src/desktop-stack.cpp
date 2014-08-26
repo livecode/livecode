@@ -393,9 +393,9 @@ public:
 	}
 	
     // MM-2014-07-31: [[ ThreadedRendering ]] Updated to wrap new platform surface API.
-	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
+	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area)
 	{
-		return MCPlatformSurfaceLockPixels(m_surface, p_area, r_raster);
+		return MCPlatformSurfaceLockPixels(m_surface, p_area, r_raster, r_locked_area);
 	}
 	
     // MM-2014-07-31: [[ ThreadedRendering ]] Updated to wrap new platform surface API.
