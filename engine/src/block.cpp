@@ -2241,7 +2241,9 @@ bool MCBlock::GetFirstLineBreak(findex_t& r_index)
 	t_index = m_index;
 
 	uindex_t t_offset;
-    if (!MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\v', t_index, kMCStringOptionCompareExact, t_offset))
+    // AL-2014-08-21: [[ Bug 13247 ]] Don't repeatedly search to the end of the paragraph to find line break.
+    //  The search should only be in the range of the block.
+    if (!MCStringFirstIndexOfCharInRange(parent->GetInternalStringRef(), '\v', MCRangeMake(m_index, m_size), kMCStringOptionCompareExact, t_offset))
         return false;
     
     // SN-2014-03-20: [[ bug 11947 ]] ensure the index is incremented to avoid an infinite loop...
