@@ -48,6 +48,18 @@ extern "C" void *IOS_ResolveSymbol(void *mod, const char *sym)
 {
     return dlsym(mod, sym);
 }
+#else
+extern "C" void *load_module(const char *);
+extern "C" void *resolve_symbol(void *, const char *);
+extern "C" void *IOS_LoadModule(const char *mod)
+{
+    return load_module(mod);
+}
+
+extern "C" void *IOS_ResolveSymbol(void *mod, const char *sym)
+{
+    return resolve_symbol(mod, sym);
+}
 #endif
 #endif
 
