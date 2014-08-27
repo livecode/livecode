@@ -1345,17 +1345,19 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 #endif
 
 // MM-2014-08-01: [[ Bug ]] Pulled name table initialisation out of MCU_matchname to prevent crah on Linux.
-static const char *nametable[] =
+// IM-2014-08-20: [[ Bug ]] Cannot guarantee that the globals have been initialized before nametable,
+// so use pointers to the globals rather than their value and dereference later.
+static const char **nametable[] =
 {
-    MCstackstring, MCaudiostring,
-    MCvideostring, MCbackgroundstring,
-    MCcardstring, MCnullstring,
-    MCgroupstring, MCnullstring,
-    MCbuttonstring, MCnullstring,
-    MCnullstring, MCscrollbarstring,
-    MCimagestring, MCgraphicstring,
-    MCepsstring, MCmagnifierstring,
-    MCcolorstring, MCfieldstring
+    &MCstackstring, &MCaudiostring,
+    &MCvideostring, &MCbackgroundstring,
+    &MCcardstring, &MCnullstring,
+    &MCgroupstring, &MCnullstring,
+    &MCbuttonstring, &MCnullstring,
+    &MCnullstring, &MCscrollbarstring,
+    &MCimagestring, &MCgraphicstring,
+    &MCepsstring, &MCmagnifierstring,
+    &MCcolorstring, &MCfieldstring
 };
 
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
@@ -1378,8 +1380,8 @@ bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
         MCStringGetLength(t_test) - t_offset > t_name_length + 1 &&
         MCStringGetNativeCharAtIndex(t_test, t_offset + t_name_length + 1) == '"' &&
         MCStringSubstringIsEqualTo(t_test, MCRangeMake(t_offset + 1, t_name_length), t_name, kMCCompareCaseless) &&
-        t_offset >= (int)strlen(nametable[type - CT_STACK]) &&
-        MCStringSubstringIsEqualTo(t_test, MCRangeMake(0, strlen(nametable[type - CT_STACK])), MCSTR(nametable[type - CT_STACK]), kMCCompareCaseless))
+        t_offset >= (int)strlen(*nametable[type - CT_STACK]) &&
+        MCStringSubstringIsEqualTo(t_test, MCRangeMake(0, strlen(*nametable[type - CT_STACK])), MCSTR(*nametable[type - CT_STACK]), kMCCompareCaseless))
             match = True;
 
 	return match;

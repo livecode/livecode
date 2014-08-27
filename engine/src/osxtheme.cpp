@@ -211,7 +211,12 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 			if (winfo.part == WTHEME_PART_THUMB)
 			{
 				HIShapeRef t_shape;
+                
+                // MM-2014-08-21: [[ Bug 13250 ]] HIThemeGetTrackThumbShape is not thread safe.
+                MCThreadMutexLock(MCthememutex);
 				HIThemeGetTrackThumbShape(&drawInfo, &t_shape);
+                MCThreadMutexUnlock(MCthememutex);
+                
 				CGRect t_rect;
                 HIShapeGetBounds(t_shape, &t_rect);
                 CFRelease(t_shape);
@@ -221,7 +226,12 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 			else if (winfo.part == WTHEME_PART_TRACK_INC)
 			{
 				CGRect t_rect;
+                
+                // MM-2014-08-21: [[ Bug 13250 ]] HIThemeGetTrackBounds is not thread safe.
+                MCThreadMutexLock(MCthememutex);
 				HIThemeGetTrackBounds(&drawInfo, &t_rect);
+                MCThreadMutexUnlock(MCthememutex);
+                
 				convertcgtomcrect(t_rect,drect);
 				return;
 			}
@@ -240,7 +250,12 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 					ThemeButtonDrawInfo bNewInfo;
 					Rect macR,maccontentbounds;
 					ThemeButtonKind themebuttonkind = getthemebuttonpartandstate(winfo, bNewInfo,srect,macR);
+                    
+                    // MM-2014-08-21: [[ Bug 13250 ]] GetThemeButtonBackgroundBounds is not thread safe.
+                    MCThreadMutexLock(MCthememutex);
 					GetThemeButtonBackgroundBounds (&macR,themebuttonkind,&bNewInfo,&maccontentbounds);
+                    MCThreadMutexUnlock(MCthememutex);
+                    
 					drect = srect;
 					drect.height = maccontentbounds.bottom - maccontentbounds.top - 1;
 					drect = MCU_reduce_rect(drect,2);

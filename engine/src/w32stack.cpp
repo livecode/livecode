@@ -829,17 +829,18 @@ public:
     bool LockGraphics(MCGIntegerRectangle p_area, MCGContextRef &r_context, MCGRaster &r_raster)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(p_area, t_raster))
+		MCGIntegerRectangle t_locked_area;
+		if (LockPixels(p_area, t_raster, t_locked_area))
 		{
             MCGContextRef t_context;
             if (MCGContextCreateWithRaster(t_raster, t_context))
 			{
 				// Set origin
-                MCGContextTranslateCTM(t_context, -p_area . origin . x, -p_area . origin . y);
+                MCGContextTranslateCTM(t_context, -t_locked_area . origin . x, -t_locked_area . origin . y);
                 
 				// Set clipping rect
 				MCGContextClipToRegion(t_context, m_region);
-				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(p_area));
+				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(t_locked_area));
 				
 				r_context = t_context;
                 r_raster = t_raster;
@@ -847,7 +848,7 @@ public:
 				return true;
 			}
 			
-			UnlockPixels(p_area, t_raster);
+			UnlockPixels(t_locked_area, t_raster);
 		}
 		
 		return false;
@@ -862,7 +863,7 @@ public:
 		UnlockPixels(p_area, p_raster);
 	}
 
-    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
+    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area)
     {
 		if (m_bitmap == nil)
 			return false;
@@ -883,6 +884,9 @@ public:
         r_raster . stride = m_raster . stride;
         r_raster . format = kMCGRasterFormat_ARGB;
 		r_raster . pixels = (uint8_t*)m_raster . pixels + (t_actual_area . origin . y - t_bounds . origin.y) * m_raster . stride + (t_actual_area . origin . x - t_bounds . origin . x) * sizeof(uint32_t);
+
+		r_locked_area = t_actual_area;
+
         return true;
 	}
 
@@ -986,16 +990,17 @@ public:
     bool LockGraphics(MCGIntegerRectangle p_area, MCGContextRef &r_context, MCGRaster &r_raster)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(p_area, t_raster))
+		MCGIntegerRectangle t_locked_area;
+		if (LockPixels(p_area, t_raster, t_locked_area))
 		{
             MCGContextRef t_context;
             if (MCGContextCreateWithRaster(t_raster, t_context))
 			{
 				// Set origin
-                MCGContextTranslateCTM(t_context, -p_area . origin . x, -p_area . origin . y);
+                MCGContextTranslateCTM(t_context, -t_locked_area . origin . x, -t_locked_area . origin . y);
                 
 				// Set clipping rect
-				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(p_area));
+				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(t_locked_area));
 				
 				r_context = t_context;
                 r_raster = t_raster;
@@ -1003,7 +1008,7 @@ public:
 				return true;
 			}
 			
-			UnlockPixels(p_area, t_raster);
+			UnlockPixels(t_locked_area, t_raster);
 		}
 		
 		return false;
@@ -1018,7 +1023,7 @@ public:
 		UnlockPixels(p_area, p_raster);
 	}
 	
-    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
+    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area)
     {
 		if (m_raster . pixels == nil)
 			return false;
@@ -1036,6 +1041,8 @@ public:
         r_raster . stride = m_raster . stride;
         r_raster . format = kMCGRasterFormat_ARGB;
 		r_raster . pixels = (uint8_t*) m_raster . pixels + t_actual_area . origin . y * m_raster . stride + t_actual_area . origin . x * sizeof(uint32_t);
+
+		r_locked_area = t_actual_area;
 
         return true;
 	}

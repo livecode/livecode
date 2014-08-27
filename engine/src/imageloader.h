@@ -50,7 +50,7 @@ public:
 	// Returns the image name or nil if not specified
 	bool GetName(MCStringRef &r_name);
 	// Returns the number of frames in the image
-	bool GetFrameCount(uint32_t &r_frame_count);
+	virtual bool GetFrameCount(uint32_t &r_frame_count);
 	// Returns the decoded image bitmap frames
 	bool GetFrames(MCBitmapFrame *&r_frames, uint32_t &r_frame_count);
 	
@@ -75,10 +75,10 @@ protected:
 	// Used by subclasses to get the data stream
 	IO_handle GetStream();
 	
-private:
-	
 	bool EnsureHeader();
 	bool EnsureFrames();
+	
+private:
 	
 	bool m_header_loaded;
 	bool m_frames_loaded;

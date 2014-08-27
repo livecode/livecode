@@ -415,10 +415,15 @@ void MCButton::macopenmenu(void)
 				/* UNCHECKED */ MCStringCopy(*t_label, label);
 				flags |= F_LABEL;
 				
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, s_popup_menupick);
-				
-				MCValueRelease(s_popup_menupick);
+                // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,
+                //  in case some menus are nested
+                MCStringRef t_menupick;
+                t_menupick = s_popup_menupick;
                 s_popup_menupick = nil;
+                
+				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
+                
+				MCValueRelease(t_menupick);
 				
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
@@ -435,11 +440,16 @@ void MCButton::macopenmenu(void)
 			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), UINDEX_MAX))
 			{
 				setmenuhistoryprop(s_popup_menuitem + 1);
-				
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, s_popup_menupick);
-				
-				MCValueRelease(s_popup_menupick);
-                s_popup_menupick = NULL;
+
+                // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,
+                //  in case some menus are nested
+                MCStringRef t_menupick;
+                t_menupick = s_popup_menupick;
+                s_popup_menupick = nil;
+                
+				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
+                
+				MCValueRelease(t_menupick);
 				
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);

@@ -216,6 +216,7 @@ public:
     {
         source = version = NULL;
     }
+
     virtual ~MCArrayEncode();
     virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual void eval_ctxt(MCExecContext &, MCExecValue &);

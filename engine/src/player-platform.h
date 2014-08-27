@@ -45,6 +45,7 @@ enum
     kMCPlayerControllerPartSelectedArea,
     kMCPlayerControllerPartVolumeArea,
     kMCPlayerControllerPartPlayedArea,
+    kMCPlayerControllerPartBuffer,
     
 };
 
@@ -133,7 +134,6 @@ public:
 	MCRectangle getactiverect(void);
     // End MCObjet functions
     
-
     ////////////////////////////////////////////////////////////////////////////////
     // virtual MCPlayerInterface functions
     //
@@ -152,6 +152,8 @@ public:
 	virtual void playselection(Boolean play);     //play the selected part of QT moive only
 	virtual Boolean ispaused();
 
+    uint4 getmovieloadedtime();
+    
     virtual void gettracks(MCStringRef& r_tracks);
     
     virtual Boolean setenabledtracks(MCStringRef s);
@@ -374,6 +376,7 @@ public:
     void drawControllerSelectionFinishButton(MCGContextRef p_gcontext);
     void drawControllerSelectedAreaButton(MCGContextRef p_gcontext);
     void drawControllerPlayedAreaButton(MCGContextRef p_gcontext);
+    void drawControllerBufferedAreaButton(MCGContextRef p_gcontext);
     
     void drawcontrollerbutton(MCDC *dc, const MCRectangle& rect);
     void redrawcontroller(void);

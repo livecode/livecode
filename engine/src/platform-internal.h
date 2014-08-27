@@ -30,7 +30,7 @@ public:
 	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster) = 0;
 	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster) = 0;
 	
-	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area) = 0;
 	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster) = 0;
 	
 	virtual bool LockSystemContext(void*& r_context) = 0;
@@ -328,6 +328,7 @@ void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
 void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerBufferUpdated(MCPlatformPlayerRef player);
 
 void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef sound);
 

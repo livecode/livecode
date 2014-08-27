@@ -48,9 +48,9 @@ void MCPlatformSurfaceUnlockGraphics(MCPlatformSurfaceRef p_surface, MCGIntegerR
 }
 
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use new platform surface API.
-bool MCPlatformSurfaceLockPixels(MCPlatformSurfaceRef p_surface, MCGIntegerRectangle p_region, MCGRaster& r_raster)
+bool MCPlatformSurfaceLockPixels(MCPlatformSurfaceRef p_surface, MCGIntegerRectangle p_region, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area)
 {
-	return p_surface -> LockPixels(p_region, r_raster);
+	return p_surface -> LockPixels(p_region, r_raster, r_locked_area);
 }
 
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use new platform surface API.

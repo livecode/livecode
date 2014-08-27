@@ -25,6 +25,7 @@
 		4D37B22017144D7000F54219 /* mysql_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D004BB60BCF765200A70446 /* mysql_connection.cpp */; };
 		4D51507B0BCF90F800F73C6E /* libexternal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B55AFA1E0BCE905300E1F7F0 /* libexternal.a */; };
 		4D51507E0BCF910700F73C6E /* database.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D004BA30BCF765200A70446 /* database.cpp */; };
+		4D72496419AC83AC000573EB /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D72496119AC838C000573EB /* libopenssl.a */; };
 		4D9B699117144A9F001349F2 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9BF5181714484E00B32D29 /* CoreServices.framework */; };
 		4D9B6A2217144AA2001349F2 /* libpq.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9D1F0F17142DD400BE4F14 /* libpq.a */; };
 		4D9B6A2317144AA2001349F2 /* libexternal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B55AFA1E0BCE905300E1F7F0 /* libexternal.a */; };
@@ -63,8 +64,6 @@
 		4D9D1F3C1714313F00BE4F14 /* libexternal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B55AFA1E0BCE905300E1F7F0 /* libexternal.a */; };
 		4D9D1FFD1714315E00BE4F14 /* libmysql.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9D1F1D17142DE800BE4F14 /* libmysql.a */; };
 		4D9D1FFE1714316000BE4F14 /* libexternal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B55AFA1E0BCE905300E1F7F0 /* libexternal.a */; };
-		4D9D2013171431BA00BE4F14 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9D2012171431BA00BE4F14 /* libssl.dylib */; };
-		4D9D2017171431CD00BE4F14 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9D2016171431CD00BE4F14 /* libcrypto.dylib */; };
 		4D9D201A171431D600BE4F14 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9D1F1417142DDD00BE4F14 /* libz.a */; };
 		4D9D201F1714325B00BE4F14 /* libpq.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9D1F0F17142DD400BE4F14 /* libpq.a */; };
 		4D9D20201714326100BE4F14 /* libexternal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B55AFA1E0BCE905300E1F7F0 /* libexternal.a */; };
@@ -97,6 +96,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4D72496019AC838C000573EB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D72495B19AC838C000573EB /* libopenssl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2AAC046055464E500DB518D;
+			remoteInfo = openssl;
+		};
+		4D72496219AC838C000573EB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D72495B19AC838C000573EB /* libopenssl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DBF57C11801A14C009CAB2E;
+			remoteInfo = revsecurity;
+		};
 		4D9B6A3B17144B3D001349F2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D6758CF0A79F96300FA96D2 /* Project object */;
@@ -319,6 +332,7 @@
 		4D6758E00A79F97300FA96D2 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		4D6758E30A79F97300FA96D2 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		4D6758FE0A79F9A400FA96D2 /* revdb.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = revdb.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D72495B19AC838C000573EB /* libopenssl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libopenssl.xcodeproj; path = ../thirdparty/libopenssl/libopenssl.xcodeproj; sourceTree = "<group>"; };
 		4D9B68CE171449D2001349F2 /* server-dbpostgresql.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "server-dbpostgresql.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D9BF4D61714479600B32D29 /* server-revdb.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "server-revdb.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D9BF4DD171447A000B32D29 /* server-dbsqlite.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "server-dbsqlite.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -431,8 +445,7 @@
 				4D9D1FFD1714315E00BE4F14 /* libmysql.a in Frameworks */,
 				4D9D1FFE1714316000BE4F14 /* libexternal.a in Frameworks */,
 				4D9D201A171431D600BE4F14 /* libz.a in Frameworks */,
-				4D9D2013171431BA00BE4F14 /* libssl.dylib in Frameworks */,
-				4D9D2017171431CD00BE4F14 /* libcrypto.dylib in Frameworks */,
+				4D72496419AC83AC000573EB /* libopenssl.a in Frameworks */,
 				4D37B17B17144D6100F54219 /* CoreServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -487,6 +500,7 @@
 		4D6758E40A79F97700FA96D2 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				4D72495B19AC838C000573EB /* libopenssl.xcodeproj */,
 				4DE672500C43F3470084FE0B /* libiodbc.xcodeproj */,
 				4DE66E940C43BAC30084FE0B /* libpq.xcodeproj */,
 				4DE66B360C4393D70084FE0B /* libz.xcodeproj */,
@@ -565,6 +579,15 @@
 				A7FEE48B0C0F196600B49320 /* w32support.h */,
 			);
 			name = Sources;
+			sourceTree = "<group>";
+		};
+		4D72495C19AC838C000573EB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D72496119AC838C000573EB /* libopenssl.a */,
+				4D72496319AC838C000573EB /* revsecurity.dylib */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		4D9D1F0317142DCB00BE4F14 /* Products */ = {
@@ -881,6 +904,10 @@
 					ProjectRef = 4DE66ABA0C438EAD0084FE0B /* libmysql.xcodeproj */;
 				},
 				{
+					ProductGroup = 4D72495C19AC838C000573EB /* Products */;
+					ProjectRef = 4D72495B19AC838C000573EB /* libopenssl.xcodeproj */;
+				},
+				{
 					ProductGroup = 4D9D1F0B17142DD400BE4F14 /* Products */;
 					ProjectRef = 4DE66E940C43BAC30084FE0B /* libpq.xcodeproj */;
 				},
@@ -910,6 +937,20 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		4D72496119AC838C000573EB /* libopenssl.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libopenssl.a;
+			remoteRef = 4D72496019AC838C000573EB /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D72496319AC838C000573EB /* revsecurity.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = revsecurity.dylib;
+			remoteRef = 4D72496219AC838C000573EB /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		4D9D1F0717142DCB00BE4F14 /* libiodbc.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
