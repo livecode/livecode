@@ -1636,6 +1636,19 @@ void MCMacPlatformHandleMouseAfterWindowHidden(void)
 	MCMacPlatformHandleMouseMove(s_mouse_screen_position);
 }
 
+// MW-2014-06-27: [[ Bug 13284 ]] When live resizing starts, leave the window, and enter it again when it finishes.
+void MCMacPlatformHandleMouseForResizeStart(void)
+{
+    if (s_mouse_window != nil)
+        MCPlatformCallbackSendMouseLeave(s_mouse_window);
+}
+
+void MCMacPlatformHandleMouseForResizeEnd(void)
+{
+    if (s_mouse_window != nil)
+        MCPlatformCallbackSendMouseEnter(s_mouse_window);
+}
+
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 {
 	// First compute the window that should be active now.

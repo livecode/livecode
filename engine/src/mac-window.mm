@@ -398,10 +398,16 @@ static bool s_lock_responder_change = false;
     // MW-2014-04-23: [[ Bug 12270 ]] The user has started sizing the window
     //   so set us as reshape by user.
     m_user_reshape = true;
+    
+    // MW-2014-06-27: [[ Bug 13284 ]] Make sure the mouse temporarily leaves the window.
+    MCMacPlatformHandleMouseForResizeStart();
 }
 
 - (void)windowDidEndLiveResize:(NSNotification *)notification
 {
+    // MW-2014-06-27: [[ Bug 13284 ]] Make sure the mouse returns to the window.
+    MCMacPlatformHandleMouseForResizeEnd();
+    
     // MW-2014-04-23: [[ Bug 12270 ]] The user has stopped sizing the window
     //   so unset us as reshape by user.
     m_user_reshape = false;

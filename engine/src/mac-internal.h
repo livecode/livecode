@@ -506,6 +506,9 @@ void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy);
 void MCMacPlatformHandleMouseSync(void);
 void MCMacPlatformHandleMouseAfterWindowHidden(void);
 
+void MCMacPlatformHandleMouseForResizeStart(void);
+void MCMacPlatformHandleMouseForResizeEnd(void);
+
 void MCMacPlatformSyncMouseBeforeDragging(void);
 void MCMacPlatformSyncMouseAfterTracking(void);
 
