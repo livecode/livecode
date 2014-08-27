@@ -1149,8 +1149,10 @@ Boolean MCButton::mdown(uint2 which)
 	state |= CS_MFOCUSED;
 	if (state & CS_SUBMENU && (menubutton == 0 || (uint1)which == menubutton))
 	{
-		if (state & CS_SCROLLBAR && mx > rect.x + rect.width - MCscrollbarwidth
-		        && mx < rect.x + rect.width)
+        // SN-2014-08-26: [[ Bug 13201 ]] mx/my are now related to the button's rectangle,
+        //  not the stack's rectangle anymore.
+		if (state & CS_SCROLLBAR && mx > rect.width - MCscrollbarwidth
+		        && mx < rect.width)
 		{
 			menu->mdown(which);
 			state |= CS_FIELD_GRAB;

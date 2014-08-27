@@ -60,9 +60,11 @@ into tFile</p><p>  put revBrowserOpenCef(the windowId of this stack,
 command</command>
 		<command tag="revBrowserSet">revBrowserSet command</command>
 		<command tag="revBrowserClose">revBrowserClose command</command>
-		<command tag="revBrowserAddJavaScriptHandler">revBrowserAddJavaScriptHandler
+		<command
+tag="revBrowserAddJavaScriptHandler">revBrowserAddJavaScriptHandler
 command</command>
-		<command tag="revBrowserRemoveJavaScriptHandler">revBrowserRemoveJavaScriptHandler
+		<command
+tag="revBrowserRemoveJavaScriptHandler">revBrowserRemoveJavaScriptHandler
 command</command>
 		<message tag="browserOver">browserOver message</message>
 		<message tag="browserNewInstance">browserNewInstance message</message>
