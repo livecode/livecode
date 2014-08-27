@@ -1162,6 +1162,8 @@ void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef p_player)
     if (t_player == nil)
         return;
     
+    // Make sure download progress is updated 
+    MCPlatformBreakWait();
     t_player -> redrawcontroller();
 }
 

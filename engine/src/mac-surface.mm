@@ -88,7 +88,8 @@ MCMacPlatformSurface::~MCMacPlatformSurface(void)
 bool MCMacPlatformSurface::LockGraphics(MCGIntegerRectangle p_region, MCGContextRef& r_context, MCGRaster &r_raster)
 {
 	MCGRaster t_raster;
-	if (LockPixels(p_region, t_raster))
+	MCGIntegerRectangle t_locked_area;
+	if (LockPixels(p_region, t_raster, t_locked_area))
 	{
         MCGContextRef t_gcontext;
 		if (MCGContextCreateWithRaster(t_raster, t_gcontext))
@@ -100,10 +101,7 @@ bool MCMacPlatformSurface::LockGraphics(MCGIntegerRectangle p_region, MCGContext
 			MCGContextScaleCTM(t_gcontext, t_scale, t_scale);
 			
 			// Set origin
-            MCGIntegerRectangle t_bounds;
-            t_bounds = MCGRegionGetBounds(m_update_rgn);
-            
-			MCGContextTranslateCTM(t_gcontext, -p_region . origin . x, -p_region . origin . y);
+			MCGContextTranslateCTM(t_gcontext, -t_locked_area . origin . x, -t_locked_area . origin . y);
 			
 			// Set clipping rect
             MCGContextClipToRegion(t_gcontext, m_update_rgn);
@@ -114,6 +112,8 @@ bool MCMacPlatformSurface::LockGraphics(MCGIntegerRectangle p_region, MCGContext
 			
 			return true;
 		}
+		
+		UnlockPixels(t_locked_area, t_raster);
 	}
     return false;
 }
@@ -131,7 +131,7 @@ void MCMacPlatformSurface::UnlockGraphics(MCGIntegerRectangle p_region, MCGConte
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new platform surface API.
 //  We create a single backing buffer for the entire surface (created the first time lock pixels is called)
 //  and return a raster that points to the desired region of the backing buffer.
-bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r_raster)
+bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area)
 {
     MCGIntegerRectangle t_bounds;
     t_bounds = MCGRegionGetBounds(m_update_rgn);
@@ -165,6 +165,8 @@ bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r
     r_raster . format = kMCGRasterFormat_xRGB;
     r_raster . pixels = (uint8_t*)m_raster . pixels + (int32_t)((t_actual_area . origin . y - t_bounds . origin.y) * t_scale * m_raster . stride + (t_actual_area . origin . x - t_bounds . origin . x) * t_scale * sizeof(uint32_t));
     
+	r_locked_area = t_actual_area;
+	
     return true;
 }
 
