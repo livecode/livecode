@@ -376,7 +376,9 @@ static HMENU create_icon_menu(MCStringRef p_menu)
 		t_item -> submenu = NULL;
 		t_item -> id = t_id++;
 		
-		t_offset = t_item_end;
+		// SN-2014-08-27: [[ Bug 13289 ]] The new offset starts *after* the last item
+		//  (infinite loop otherwise)
+		t_offset = t_item_end + 1;
 	}
 	
 	if (t_items != NULL)
