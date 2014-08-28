@@ -27,7 +27,7 @@ CUSTOM_CCFLAGS=\
 	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -fno-exceptions -fno-rtti -fno-strict-aliasing \
 	-fmessage-length=0 
 
-CUSTOM_LDFLAGS=-export-dynamic -Wl,-x
+CUSTOM_LDFLAGS_LTO=-export-dynamic -Wl,-x
 
 include ../rules/application.linux.makefile
 
