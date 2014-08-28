@@ -1398,8 +1398,30 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 			}
 			else
 			{
+                // AL-2014-08-28: [[ ArrayElementRefParams ]] Evaluate container if necessary
+                MCAutoValueRef t_value;
+                MCContainer *t_container;
+                t_container = p_parameters -> eval_argument_container();
+                
+                if (t_container != nil)
+                {
+                    MCNameRef *t_path;
+                    uindex_t t_length;
+                    t_container -> getpath(t_path, t_length);
+                    
+                    MCExecContext ctxt(p_context, nil, nil);
+                    
+                    if (t_length == 0)
+                        t_parameter_vars[i] = new MCReferenceExternalVariable(t_container -> getvar());
+                    else
+                        t_container -> eval(ctxt, &t_value);
+                }
+                else
+                    t_value = p_parameters -> getvalueref_argument();
+                
 				// MW-2014-01-22: [[ CompatV1 ]] Create a temporary value var.
-				t_parameter_vars[i] = new MCTransientExternalVariable(p_parameters -> getvalueref_argument());
+                if (*t_value != nil)
+                    t_parameter_vars[i] = new MCTransientExternalVariable(*t_value);
 			}
 		}
 
