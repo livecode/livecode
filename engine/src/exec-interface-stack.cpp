@@ -950,7 +950,8 @@ void MCStack::SetIconic(MCExecContext& ctxt, bool setting)
 {
 	uint4 newstate = state;
 	
-	if (setting != ((newstate & CS_ICONIC) == True))
+	// SN-2014-08-28: [[ Bug 13289 ]] Actually set the flags to the new iconic state
+	if (changestate(setting, CS_ICONIC))
 	{
 		if (setting)
 			newstate |= CS_ICONIC;
