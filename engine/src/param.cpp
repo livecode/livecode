@@ -193,6 +193,10 @@ bool MCParameter::eval_argument(MCExecContext &ctxt, MCValueRef &r_value)
     if (var != NULL)
         return var -> eval(ctxt, r_value);
 
+    // AL-2014-08-28: [[ ArrayElementRefParams ]] MCParameter argument can now be a container
+    if (container != nil)
+        return container -> eval(ctxt, r_value);
+    
     if (value . type == kMCExecValueTypeNone)
         return r_value = MCValueRetain(kMCEmptyString), true;
 
