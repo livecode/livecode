@@ -5410,6 +5410,9 @@ void MCProperty::eval_global_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
     t_is_array_prop = (*t_index != nil && !MCNameIsEmpty(*t_index));
     
 	const MCPropertyInfo *t_info;
+    // AL-2014-09-01: [[ Bug 13312 ]] Initialise t_info to nil to prevent crashes
+    t_info = nil;
+    
 	if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
         t_info = lookup_mode_property(getmodepropertytable(), which, effective, t_is_array_prop);
         
@@ -5514,7 +5517,10 @@ void MCProperty::set_global_property(MCExecContext& ctxt, MCExecValue p_value)
     t_is_array_prop = (*t_index != nil && !MCNameIsEmpty(*t_index));
     
 	const MCPropertyInfo *t_info;
-	if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
+    // AL-2014-09-01: [[ Bug 13312 ]] Initialise t_info to nil to prevent crashes
+    t_info = nil;
+    
+    if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
         t_info = lookup_mode_property(getmodepropertytable(), which, effective, t_is_array_prop);
     
     if (t_info != nil)
