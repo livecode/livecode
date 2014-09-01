@@ -80,6 +80,10 @@ static const char *ppmediastrings[] =
 #define PURPLE 2
 #define SOMEGRAY 3
 #define DARKGRAY 4
+#define MIN_RATE -3
+#define MAX_RATE 3
+
+
 
 
 static MCColor controllercolors[] = {
@@ -334,7 +338,6 @@ public:
             case kMCPlayerControllerPartVolumeSelector:
             {
                 MCRectangle t_volume_well_rect = getVolumeBarPartRect(p_volume_bar_rect, kMCPlayerControllerPartVolumeWell);
-                MCRectangle t_volume_bar_rect = getVolumeBarPartRect(p_volume_bar_rect, kMCPlayerControllerPartVolumeBar);
                 
                 // The width and height of the volumeselector are p_volume_bar_rect . width / 2
                 int32_t t_actual_height = t_volume_well_rect . height - p_volume_bar_rect . width / 2;
@@ -493,6 +496,321 @@ private:
 static MCPlayerVolumePopup *s_volume_popup = nil;
 
 //////////////////////////////////////////////////////////////////////
+
+
+
+class MCPlayerRatePopup: public MCStack
+{
+public:
+    MCPlayerRatePopup(void)
+    {
+        setname_cstring("Player Rate");
+        state |= CS_NO_MESSAGES;
+        
+        cards = NULL;
+        cards = MCtemplatecard->clone(False, False);
+        cards->setparent(this);
+        cards->setstate(True, CS_NO_MESSAGES);
+        
+        parent = nil;
+        
+        m_font = nil;
+        
+        m_player = nil;
+    }
+    
+    ~MCPlayerRatePopup(void)
+    {
+    }
+    
+    // This will be called when the stack is closed, either directly
+    // or indirectly if the popup is cancelled by clicking outside
+    // or pressing escape.
+    void close(void)
+    {
+        MCStack::close();
+        MCdispatcher -> removemenu();
+        // TODO: This popup_closed is for the volume, not the rate
+        if (m_player != nil)
+            m_player -> popup_closed();
+    }
+    
+    // This is called to render the stack.
+    void render(MCContext *dc, const MCRectangle& dirty)
+    {
+        // draw the rate control content here.
+        MCGContextRef t_gcontext = nil;
+        dc -> lockgcontext(t_gcontext);
+        
+        drawControllerRateBarButton(t_gcontext, dirty);
+        drawControllerRateWellButton(t_gcontext, dirty);
+        drawControllerRateSelectorButton(t_gcontext, dirty);
+        dc -> unlockgcontext(t_gcontext);
+    }
+    void drawControllerRateBarButton(MCGContextRef p_gcontext, const MCRectangle& dirty)
+    {
+        MCRectangle t_rate_bar_rect = dirty;
+        MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_rate_bar_rect));
+        MCGContextSetFillRGBAColor(p_gcontext, (m_player -> getcontrollermaincolor() . red / 255.0) / 257.0, (m_player -> getcontrollermaincolor() . green / 255.0) / 257.0, (m_player -> getcontrollermaincolor() . blue / 255.0) / 257.0, 1.0f);
+        MCGContextFill(p_gcontext);
+    }
+    
+    void drawControllerRateWellButton(MCGContextRef p_gcontext, const MCRectangle& dirty)
+    {
+        MCRectangle t_rate_bar_rect = dirty;
+        MCRectangle t_rate_well;
+        t_rate_well = getRateBarPartRect(dirty, kMCPlayerControllerPartRateWell);
+        
+        MCGBitmapEffects t_effects;
+        t_effects . has_drop_shadow = false;
+        t_effects . has_outer_glow = false;
+        t_effects . has_inner_glow = false;
+        t_effects . has_inner_shadow = true;
+        t_effects . has_color_overlay = false;
+        
+        MCGShadowEffect t_inner_shadow;
+        t_inner_shadow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 56.0 / 255.0);
+        t_inner_shadow . blend_mode = kMCGBlendModeClear;
+        t_inner_shadow . size = 0;
+        t_inner_shadow . spread = 0;
+        
+        MCGFloat t_x_offset, t_y_offset;
+        int t_distance = t_rate_well . width / 5;
+        // Make sure we always have an inner shadow
+        if (t_distance == 0)
+            t_distance = 1;
+        
+        MCGraphicsContextAngleAndDistanceToXYOffset(235, t_distance, t_x_offset, t_y_offset);
+        t_inner_shadow . x_offset = t_x_offset;
+        t_inner_shadow . y_offset = t_y_offset;
+        t_inner_shadow . knockout = false;
+        
+        t_effects . inner_shadow = t_inner_shadow;
+        
+        MCGContextSetFillRGBAColor(p_gcontext, 0.0f, 0.0f, 0.0f, 1.0f);
+        MCGContextSetShouldAntialias(p_gcontext, true);
+        
+        MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_rate_well);
+        
+        MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+        MCGContextBeginWithEffects(p_gcontext, t_rounded_rect, t_effects);
+        MCGContextFill(p_gcontext);
+        
+        /////////////////////////////////////////
+        /* TODO: Update this ugly way of adding the inner shadow 'manually' */
+        MCRectangle t_shadow = MCRectangleMake(t_rate_well . x + 1, t_rate_well . y + t_rate_well . height  - 2 , t_rate_well . width - 2, 2);
+        
+        MCGContextSetShouldAntialias(p_gcontext, true);
+        
+        MCGContextSetFillRGBAColor(p_gcontext, 56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0, 1.0f); // GRAY
+        MCGRectangle t_shadow_rect = MCRectangleToMCGRectangle(t_shadow);
+        
+        MCGContextAddRoundedRectangle(p_gcontext, t_shadow_rect, MCGSizeMake(10, 10));
+        
+        MCGContextFill(p_gcontext);
+        ////////////////////////////////////////
+        
+        MCGContextEnd(p_gcontext);
+    }
+    
+
+    void drawControllerRateSelectorButton(MCGContextRef p_gcontext, const MCRectangle& dirty)
+    {
+        MCRectangle t_rate_selector_rect = getRateBarPartRect(dirty, kMCPlayerControllerPartRateSelector);
+        
+        MCAutoPointer<MCGColor> t_colors;
+        MCAutoPointer<MCGFloat> t_stops;
+        setRamp(&t_colors, &t_stops);
+        
+        MCGAffineTransform t_transform;
+        float origin_x = t_rate_selector_rect.x + t_rate_selector_rect.width / 2.0;
+        float origin_y = t_rate_selector_rect.y + t_rate_selector_rect.height;
+        float primary_x = t_rate_selector_rect.x + t_rate_selector_rect.width / 2.0;
+        float primary_y = t_rate_selector_rect.y;
+        float secondary_x = t_rate_selector_rect.x - t_rate_selector_rect.width / 2.0;
+        float secondary_y = t_rate_selector_rect.y + t_rate_selector_rect.height;
+        
+        setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
+        
+        MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, *t_stops, *t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
+        
+        MCGContextSetShouldAntialias(p_gcontext, true);
+        MCGContextAddArc(p_gcontext, MCRectangleScalePoints(t_rate_selector_rect, 0.5, 0.5), MCGSizeMake(0.7 * t_rate_selector_rect . width, 0.7 * t_rate_selector_rect . height), 0, 0, 360);
+        
+        MCGContextFill(p_gcontext);
+    }
+    
+    
+    MCRectangle getRateBarPartRect(const MCRectangle& p_rate_bar_rect, int p_part)
+    {
+        switch (p_part)
+        {
+                
+            case kMCPlayerControllerPartRateWell:
+            {
+                int32_t t_height = 2 * CONTROLLER_HEIGHT / 5;
+                
+                int32_t t_x_offset = (p_rate_bar_rect . width - t_height) / 2;
+                
+                return MCRectangleMake(p_rate_bar_rect . x + 5, p_rate_bar_rect . y + t_height, p_rate_bar_rect . width - 2 * 5, p_rate_bar_rect . height - 2 * t_height);
+            }
+                break;
+                
+            case kMCPlayerControllerPartRateSelector:
+            {
+                MCRectangle t_rate_well_rect = getRateBarPartRect(p_rate_bar_rect, kMCPlayerControllerPartRateWell);
+                
+                // The width and height of the rateselector are p_rate_bar_rect . height / 2
+                int32_t t_rate_selector_width = p_rate_bar_rect . height / 2;
+                
+                int32_t t_y_offset = p_rate_bar_rect . height / 4;
+                
+                return MCRectangleMake(t_rate_well_rect . x + t_rate_well_rect . width / 2 - t_rate_selector_width / 2 + float((t_rate_well_rect . width / 2 - t_rate_selector_width / 4) * m_player -> getplayrate()) / MAX_RATE, t_y_offset, t_rate_selector_width, t_rate_selector_width);
+            }
+                break;
+        }
+        
+        return MCRectangleMake(0, 0, 0, 0);
+    }
+    
+    int getraterectpart(int x, int y)
+    {
+        
+        if (MCU_point_in_rect(getRateBarPartRect(m_rate_rect, kMCPlayerControllerPartRateSelector), x, y))
+            return kMCPlayerControllerPartRateSelector;
+        
+        else if (MCU_point_in_rect(getRateBarPartRect(m_rate_rect, kMCPlayerControllerPartRateWell), x, y))
+            return kMCPlayerControllerPartRateWell;
+        
+        else if (MCU_point_in_rect(m_rate_rect, x, y))
+            return kMCPlayerControllerPartRateBar;
+        
+        else
+            return kMCPlayerControllerPartUnknown;
+    }
+    
+    // Mouse handling methods are similar to the control ones.
+    
+    Boolean mdown(uint2 which)
+    {
+        int t_part;
+        t_part = getraterectpart(MCmousex, MCmousey);
+        
+        switch(t_part)
+        {
+            case kMCPlayerControllerPartRateSelector:
+            {
+                m_grabbed_part = t_part;
+            }
+                break;
+                
+            case kMCPlayerControllerPartRateWell:
+            case kMCPlayerControllerPartRateBar:
+            {
+            
+                MCRectangle t_part_rate_selector_rect = getRateBarPartRect(m_rate_rect, kMCPlayerControllerPartRateSelector);
+                MCRectangle t_part_rate_well_rect = getRateBarPartRect(m_rate_rect, kMCPlayerControllerPartRateWell);
+                real8 t_new_rate;
+                int32_t t_width;
+                
+                t_width = t_part_rate_well_rect . width;
+        
+                t_new_rate = MAX_RATE * float((MCmousex - (t_part_rate_well_rect . x + t_part_rate_well_rect . width / 2 ) ) )/ (t_width / 2);
+                
+                m_player -> updateplayrate(t_new_rate);
+                m_player -> setplayrate();
+                m_player -> layer_redrawall();
+                dirtyall();
+                
+            }
+                break;
+                
+            default:
+                break;
+        }
+        return True;
+    }
+    
+    Boolean mup(uint2 which, bool release)
+    {
+        m_grabbed_part = kMCPlayerControllerPartUnknown;
+        return True;
+    }
+    
+    Boolean mfocus(int2 x, int2 y)
+    {
+        MCmousex = x;
+        MCmousey = y;
+        switch(m_grabbed_part)
+        {
+            case kMCPlayerControllerPartRateSelector:
+            {
+                MCRectangle t_part_rate_selector_rect = getRateBarPartRect(m_rate_rect, kMCPlayerControllerPartRateSelector);
+                MCRectangle t_part_rate_well_rect = getRateBarPartRect(m_rate_rect, kMCPlayerControllerPartRateWell);
+                real8 t_new_rate;
+                int32_t t_width;
+                
+                t_width = t_part_rate_well_rect . width;
+                
+                t_new_rate = MAX_RATE * float((MCmousex - (t_part_rate_well_rect . x + t_part_rate_well_rect . width / 2 ) ) )/ (t_width / 2);
+                
+                m_player -> updateplayrate(t_new_rate);
+                m_player -> setplayrate();
+                m_player -> layer_redrawall();
+                dirtyall();
+            }
+                break;
+                
+            default:
+                break;
+        }
+        
+        
+        return True;
+    }
+    
+    Boolean kdown(const char *string, KeySym key)
+    {
+        if (key == XK_Escape)
+        {
+            close();
+            return True;
+        }
+        return False;
+    }
+    
+    //////////
+    
+    void openpopup(MCPlayer *p_player)
+    {
+        MCRectangle t_player_rect;
+        t_player_rect = p_player -> getactiverect();
+        
+        // Compute the rect in screen coords.
+        MCRectangle t_rect;
+        
+        MCU_set_rect(t_rect, t_player_rect . x + t_player_rect . width - 2 * CONTROLLER_HEIGHT, t_player_rect . y + t_player_rect . height - CONTROLLER_HEIGHT, 2 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
+        t_rect = MCU_recttoroot(p_player -> getstack(), t_rect);
+        
+        m_player = p_player;
+        m_rate_rect = t_rect;
+        m_rate_rect . x = m_rate_rect . y = 0;
+        
+        MCdispatcher -> addmenu(this);
+        
+        openrect(t_rect, WM_POPUP, NULL, WP_ASRECT, OP_NONE);
+    }
+    
+private:
+    MCPlayer *m_player;
+    MCRectangle m_rate_rect;
+    int m_grabbed_part;
+};
+
+static MCPlayerRatePopup *s_rate_popup = nil;
+
+//////////////////////////////////////////////////////////////////////
+
 
 //-----------------------------------------------------------------------------
 // Control Implementation
@@ -1622,6 +1940,25 @@ void MCPlayer::setlooping(Boolean loop)
 	}
 }
 
+real8 MCPlayer::getplayrate()
+{
+    if (rate < MIN_RATE)
+        return MIN_RATE;
+    else if (rate > MAX_RATE)
+        return MAX_RATE;
+    else
+        return rate;
+}
+
+void MCPlayer::updateplayrate(real8 p_rate)
+{
+    if (p_rate < MIN_RATE)
+        rate = MIN_RATE;
+    else if (p_rate > MAX_RATE)
+        rate = MAX_RATE;
+    else
+        rate = p_rate;
+}
 void MCPlayer::setplayrate()
 {
 	if (m_platform_player != nil && hasfilename())
@@ -3686,6 +4023,25 @@ void MCPlayer::handle_shift_mdown(int p_which)
                     endtime = getmoviecurtime();
                 setselection(true);
             }
+            break;
+            
+        case kMCPlayerControllerPartScrubBack:
+        case kMCPlayerControllerPartScrubForward:
+        {
+            
+            if (s_rate_popup == nil)
+            {
+                s_rate_popup = new MCPlayerRatePopup;
+                s_rate_popup -> setparent(MCdispatcher);
+                MCdispatcher -> add_transient_stack(s_rate_popup);
+            }
+            
+            s_rate_popup -> openpopup(this);
+            
+            
+            layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartRateBar));
+            layer_redrawall();
+        }
             break;
                      
         default:
