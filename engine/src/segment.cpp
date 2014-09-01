@@ -414,12 +414,13 @@ void MCSegment::Draw(MCDC *dc, coord_t p_line_origin_x, int16_t p_line_origin_y,
 		
 		if (bptr -> getflagged())
 		{
+			// AL-2014-09-01: [[ Bug 13311 ]] Take block origin into account when drawing flagged range
 			if (!t_is_flagged)
 			{
 				t_is_flagged = true;
-				t_flagged_sx = floorf(x);
+				t_flagged_sx = floorf(x + bptr -> getorigin());
 			}
-			t_flagged_ex = ceilf(x + twidth);
+			t_flagged_ex = ceilf(x + bptr -> getorigin() + twidth);
 		}
 		
 		if (t_is_flagged && (!bptr -> getflagged() || bptr == m_LastBlock))
