@@ -1811,7 +1811,10 @@ void MCLogicEvalIsNotABoolean(MCExecContext& ctxt, MCValueRef p_value, bool& r_r
 extern MCExecMethodInfo *kMCArraysEvalKeysMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalExtentsMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecCombineMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecCombineByRowOrColumnMethodInfo;
+// SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
+// different from combining by row
+extern MCExecMethodInfo *kMCArraysExecCombineByRowMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecCombineByColumnMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecCombineAsSetMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecSplitMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecSplitByColumnMethodInfo;
@@ -1830,7 +1833,10 @@ extern MCExecMethodInfo *kMCArraysEvalIsNotAmongTheKeysOfMethodInfo;
 void MCArraysEvalKeys(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysEvalExtents(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCStringRef& r_string);
-void MCArraysExecCombineByRowOrColumn(MCExecContext& ctxt, MCArrayRef p_array, bool p_is_row, MCStringRef &r_string);
+// SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
+// different from combining by row
+void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef &r_string);
+void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_element_delimiter, MCStringRef& r_string);
 void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCArrayRef& r_array);
 void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArrayRef& r_array);
