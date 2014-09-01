@@ -206,7 +206,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_PLAY_LOUDNESS, UInt16, Multimedia, PlayLoudness)
 	
 	DEFINE_RW_PROPERTY(P_STACK_FILES, String, Legacy, StackFiles)
-	DEFINE_RO_PROPERTY(P_MENU_BAR, String, Legacy, MenuBar)
+    // SN-2014-09-01: [[ Bug 13300 ]] Updated 'set the menubar' to have a (useless) setter at the global scope 
+	DEFINE_RW_PROPERTY(P_MENU_BAR, String, Legacy, MenuBar)
 	DEFINE_RW_PROPERTY(P_EDIT_MENUS, Bool, Legacy, EditMenus)
 	DEFINE_RW_PROPERTY(P_BUFFER_MODE, String, Legacy, BufferMode)
 	DEFINE_RW_PROPERTY(P_MULTI_EFFECT, Bool, Legacy, MultiEffect)
