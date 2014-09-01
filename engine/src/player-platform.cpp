@@ -497,7 +497,7 @@ static MCPlayerVolumePopup *s_volume_popup = nil;
 
 //////////////////////////////////////////////////////////////////////
 
-
+// PM-2014-09-01: [[ Bug 13119 ]] Added support for setting the playrate property using a scrollbar. The scrollbar appears on a popup window that opens when shift + clicking on the scrubBack/scrubForward buttons. Just as the volume popup window, it closes when clicking anywhere outside this window, or if pressing Esc key
 
 class MCPlayerRatePopup: public MCStack
 {
@@ -721,7 +721,6 @@ public:
                 m_player -> setplayrate();
                 m_player -> layer_redrawall();
                 dirtyall();
-                
             }
                 break;
                 
@@ -4024,7 +4023,8 @@ void MCPlayer::handle_shift_mdown(int p_which)
                 setselection(true);
             }
             break;
-            
+          
+        // PM-2014-09-01: [[ Bug 13119 ]] Shift + click on scrub buttons creates a playrate scrollbar
         case kMCPlayerControllerPartScrubBack:
         case kMCPlayerControllerPartScrubForward:
         {
