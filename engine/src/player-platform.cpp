@@ -938,6 +938,17 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
         case P_ALWAYS_BUFFER:
             ep.setboolean(getflag(F_ALWAYS_BUFFER));
             break;
+            // PM-2014-09-02: [[ Bug 13092 ]] Added status property
+        case P_STATUS:
+        {
+            if(getmovieloadedtime() != 0 && getmovieloadedtime() < getduration())
+                ep.setcstring("loading");
+            else if (!ispaused())
+                ep.setcstring("playing");
+            else if (ispaused())
+                ep.setcstring("paused");
+        }
+            break;
         case P_PLAY_RATE:
             ep.setr8(rate, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
             return ES_NORMAL;
