@@ -700,7 +700,6 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     }
     @catch (id anException) {
         //do nothing, obviously it wasn't attached because an exception was thrown
-        MCLog("===============Exception caught!!",nil);
     }
     [m_player release];
     
