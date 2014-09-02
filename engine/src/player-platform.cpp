@@ -1316,6 +1316,8 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             loudness = MCU_max(0, loudness);
             loudness = MCU_min(loudness, 100);
             setloudness();
+            // PM-2014-09-02: [[ Bug 13309 ]] Make sure the volume icon of the controller will be redrawn
+            dirty = True;
             break;
         case P_ENABLED_TRACKS:
             if (!setenabledtracks(data))
