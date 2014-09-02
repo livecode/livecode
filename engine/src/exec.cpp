@@ -3299,10 +3299,25 @@ bool MCExecTypeIsNumber(MCExecValueType p_type)
     return p_type > kMCExecValueTypeNumberRef && p_type < kMCExecValueTypeChar && p_type != kMCExecValueTypeBool;
 }
 
-void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_start, int32_t& x_finish, uint32_t p_start, uint32_t p_count)
+
+// SN-2014-09-02: [[ Bug 13314 ]] Resolving the chars of a field should also take in account the changes brought
+// to the marked text (chiefly being chunk delimiters added).
+void MCExecResolveCharsOfField(MCExecContext& ctxt, MCField *p_field, uint32_t p_part, MCMarkedText p_mark, int32_t& r_start, int32_t& r_finish)
 {
-    x_start = p_start;
-    x_finish = p_start + p_count;
+    r_start = p_mark . start;
+    r_finish = p_mark . finish;
+    
+    // MCMarkedText::changed is only accessed by Interface / Variable-setting function.
+    // Putting the replacement of the field content should not interleave with another
+    if (p_mark.changed)
+    {
+        MCAutoStringRef t_mark_as_string;
+        if (!ctxt . ConvertToString(p_mark . text, &t_mark_as_string))
+            ctxt . Throw();
+        else
+            p_field -> settext(p_part, *t_mark_as_string, false);
+    }
+    
     /*
     findex_t t_start = x_start;
     findex_t t_finish = x_finish;

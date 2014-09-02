@@ -290,7 +290,8 @@ struct MCPropertyInfo
     MCPropertyInfoChunkType chunk_type;
 };
 
-void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_start, int32_t& x_finish, uint32_t p_start, uint32_t p_count);
+// SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+void MCExecResolveCharsOfField(MCExecContext& ctxt, MCField *p_field, uint32_t p_part, MCMarkedText p_mark, int32_t& r_start, int32_t& r_finish);
 
 template<typename O, typename A, void (O::*Method)(MCExecContext&, A)> inline void MCPropertyObjectThunk(MCExecContext& ctxt, MCObjectPtr *obj, A arg)
 {
@@ -320,7 +321,8 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, uint32_t, int
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -339,7 +341,8 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, u
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -358,7 +361,8 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, u
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -377,7 +381,8 @@ template<typename O, typename A, typename B, typename C, void (O::*Method)(MCExe
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -396,7 +401,8 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, M
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -415,7 +421,8 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, ui
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
