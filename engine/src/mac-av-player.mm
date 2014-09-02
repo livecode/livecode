@@ -700,6 +700,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     }
     @catch (id anException) {
         //do nothing, obviously it wasn't attached because an exception was thrown
+        MCLog("===============Exception caught!!",nil);
     }
     [m_player release];
     
@@ -709,6 +710,9 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         CFRelease(m_current_frame);
         m_current_frame = nil;
     }
+    
+    // PM-2014-09-02: [[ Bug 13306 ]] Make sure we reset the previous value of loadedtime when loading a new movie 
+    m_buffered_time = 0;
     
     // We want this player.
     m_player = t_player;

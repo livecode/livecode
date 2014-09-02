@@ -1021,6 +1021,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
             break;
         // PM-2014-08-19 [[ Bug 13121 ]] Property for the download progress of the movie
         case P_MOVIE_LOADED_TIME:
+            ep.clear();
             ep.setint(getmovieloadedtime());
             break;
         case P_CURRENT_NODE:
