@@ -287,7 +287,9 @@ bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
     MCAutoStringRefAsSysString t_path;
     /* UNCHECKED */ t_path.Lock(p_path);
     if (lstat64(*t_path, &t_stat) == -1 ||
-        !t_buffer.New(t_stat.st_size))
+        // SN-2014-09-02: [[ Bug 13323 ]] The size needs be 1 bigger to allow
+        // a final NIL-byte.
+        !t_buffer.New(t_stat.st_size + 1))
         return false;
 
     t_size = readlink(*t_path, (char*)t_buffer.Ptr(), t_stat.st_size);
