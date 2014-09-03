@@ -151,6 +151,19 @@ extern void __MCLogWithTrace(const char *file, uint32_t line, const char *format
 #define MCLogWithTrace(m_format, ...)
 #endif
 
+#define MC_CONCAT(X,Y) MC_CONCAT_(X,Y)
+#define MC_CONCAT_(X,Y) X ## Y
+
+#if (__cplusplus >= 201103L)
+#define MCStaticAssert(expr) static_assert(expr, #expr)
+#else
+template<bool> struct __MCStaticAssert;
+template<> struct __MCStaticAssert<true> { };
+#define MCStaticAssert(expr)																						\
+	enum { MC_CONCAT(__MCSA_,__LINE__) = sizeof(__MCStaticAssert<expr>) }
+#endif
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM. 2011-01-18 blocked out currently unused error codes which conflict with libexternal

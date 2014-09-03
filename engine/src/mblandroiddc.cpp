@@ -177,6 +177,10 @@ MCGFloat MCAndroidGetSystemScale(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCResPlatformInitPixelScaling(void)
+{
+}
+
 // IM-2014-01-31: [[ HiDPI ]] Pixel scaling supported on android
 bool MCResPlatformSupportsPixelScaling(void)
 {
@@ -667,17 +671,18 @@ public:
     bool LockGraphics(MCGIntegerRectangle p_area, MCGContextRef &r_context, MCGRaster &r_raster)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(p_area, t_raster))
+		MCGIntegerRectangle t_locked_area;
+		if (LockPixels(p_area, t_raster, t_locked_area))
 		{
             MCGContextRef t_context;
             if (MCGContextCreateWithRaster(t_raster, t_context))
 			{
 				// Set origin
-                MCGContextTranslateCTM(t_context, -p_area . origin . x, -p_area . origin . y);
+                MCGContextTranslateCTM(t_context, -t_locked_area . origin . x, -t_locked_area . origin . y);
                 
 				// Set clipping rect
                 MCGContextClipToRegion(t_context, m_region);
-				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(p_area));
+				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(t_locked_area));
 				
 				r_context = t_context;
                 r_raster = t_raster;
@@ -685,7 +690,7 @@ public:
 				return true;
 			}
 			
-			UnlockPixels(p_area, t_raster, false);
+			UnlockPixels(t_locked_area, t_raster, false);
 		}
 		
 		return false;
@@ -703,7 +708,7 @@ public:
 		MCGRegionAddRegion(s_android_bitmap_dirty_region, m_region);
 	}
     
-    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
+    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area)
     {
         MCGIntegerRectangle t_actual_area;
         t_actual_area = MCGIntegerRectangleIntersection(p_area, MCGRegionGetBounds(m_region));
@@ -716,6 +721,9 @@ public:
         r_raster . stride = s_android_bitmap_stride;
         r_raster . format = kMCGRasterFormat_xRGB;
 		r_raster.pixels = (uint8_t*)m_pixels + t_actual_area . origin . y * s_android_bitmap_stride + t_actual_area . origin . x * sizeof(uint32_t);
+
+		r_locked_area = t_actual_area;
+
         return true;
     }
 
@@ -814,7 +822,8 @@ public:
     bool LockGraphics(MCGIntegerRectangle p_area, MCGContextRef &r_context, MCGRaster &r_raster)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(p_area, t_raster))
+		MCGIntegerRectangle t_locked_area;
+		if (LockPixels(p_area, t_raster, t_locked_area))
 		{
             MCGContextRef t_context;
             if (MCGContextCreateWithRaster(t_raster, t_context))
@@ -822,7 +831,7 @@ public:
                 r_raster = t_raster;
 				return true;
 			}
-			UnlockPixels(p_area, t_raster, false);
+			UnlockPixels(t_locked_area, t_raster, false);
 		}
 		return false;
 	}
@@ -836,7 +845,7 @@ public:
 		UnlockPixels(p_area, p_raster);
 	}
 
-    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster &r_raster)
+    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster &r_raster, MCGIntegerRectangle &r_locked_area)
 	{
 		if (m_locked)
 			return false;
@@ -847,6 +856,8 @@ public:
 		r_raster.pixels = m_buffer_pixels;
 		r_raster.format = kMCGRasterFormat_xRGB;
         
+		r_locked_area = p_area;
+
 		m_locked = true;
         
 		return true;
@@ -1096,8 +1107,9 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 	if (t_surface . Lock())
 	{
 		MCGRaster t_raster;
+		MCGIntegerRectangle t_locked_area;
 		// Lock the whole surface of the bitmap.
-		if (t_surface . LockPixels(t_rect, t_raster))
+		if (t_surface . LockPixels(t_rect, t_raster, t_locked_area))
 		{
 			// We need the contents of the last presented framebuffer. To ensure
 			// we get that, force an (OpenGL) update before reading the pixels.

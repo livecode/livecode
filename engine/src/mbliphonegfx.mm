@@ -127,17 +127,18 @@ public:
 	bool LockGraphics(MCGIntegerRectangle p_area, MCGContextRef &r_context, MCGRaster &r_raster)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(p_area, t_raster))
+		MCGIntegerRectangle t_locked_area;
+		if (LockPixels(p_area, t_raster, t_locked_area))
 		{
             MCGContextRef t_context;
             if (MCGContextCreateWithRaster(t_raster, t_context))
 			{
 				// Set origin
-                MCGContextTranslateCTM(t_context, -p_area . origin . x, -p_area . origin . y);
+                MCGContextTranslateCTM(t_context, -t_locked_area . origin . x, -t_locked_area . origin . y);
                 
 				// Set clipping rect
                 MCGContextClipToRegion(t_context, m_region);
-				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(p_area));
+				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(t_locked_area));
 				
 				r_context = t_context;
                 r_raster = t_raster;
@@ -145,7 +146,7 @@ public:
 				return true;
 			}
 			
-			UnlockPixels(p_area, t_raster, false);
+			UnlockPixels(t_locked_area, t_raster, false);
 		}
 		
 		return false;
@@ -160,7 +161,7 @@ public:
 		UnlockPixels(p_area, p_raster, true);
 	}
 	
-    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
+    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area)
     {
         MCGIntegerRectangle t_actual_area;
         t_actual_area = MCGIntegerRectangleIntersection(p_area, MCGRegionGetBounds(m_region));
@@ -177,6 +178,9 @@ public:
             r_raster . stride = r_raster . width * sizeof(uint32_t);
             r_raster . format = kMCGRasterFormat_xRGB;
             r_raster . pixels = t_bits;
+
+			r_locked_area = t_actual_area;
+
             return true;
         }
         
@@ -428,9 +432,9 @@ static MCGRegionRef s_redraw_region = nil;
 	}*/
 	
 	// IM-2013-08-23: [[ RefactorGraphics ]] pass scaled surface height to stack surface constructor
-	// IM-2013-09-30: [[ FullscreenMode ]] Use the stack transform to get the device rect
+	// IM-2014-08-18: [[ Bug 13163 ]] The device rect needs to be based on the view rect rather than the stack rect.
 	MCRectangle t_device_rect;
-	t_device_rect = MCRectangleGetTransformedBounds(t_stack->getrect(), t_stack->getdevicetransform());
+	t_device_rect = MCRectangleGetScaledBounds(t_stack->view_getrect(), t_scale);
     
     CGContext *t_cgcontext;
 	t_cgcontext = UIGraphicsGetCurrentContext();

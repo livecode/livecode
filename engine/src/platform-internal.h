@@ -30,7 +30,7 @@ public:
 	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster) = 0;
 	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster) = 0;
 	
-	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area) = 0;
 	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster) = 0;
 	
 	virtual bool LockSystemContext(void*& r_context) = 0;
@@ -223,6 +223,48 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCPlatformSoundRecorder
+{
+public:
+	MCPlatformSoundRecorder(void);
+	virtual ~MCPlatformSoundRecorder(void);
+    
+	void Retain(void);
+	void Release(void);
+    
+	virtual bool IsRecording(void);
+    
+    virtual void SetProperty(MCPlatformSoundRecorderProperty property, MCPlatformPropertyType type, void *value);
+    virtual void GetProperty(MCPlatformSoundRecorderProperty property, MCPlatformPropertyType type, void *value);
+    
+    virtual void GetConfiguration(MCPlatformSoundRecorderConfiguration &r_config);
+    virtual void SetConfiguration(const MCPlatformSoundRecorderConfiguration p_config);
+    
+    virtual void BeginDialog(void) = 0;
+    virtual MCPlatformDialogResult EndDialog(void) = 0;
+    virtual bool StartRecording(const char *filename) = 0;
+    virtual void StopRecording(void) = 0;
+    virtual void PauseRecording(void) = 0;
+    virtual void ResumeRecording(void) = 0;
+    virtual double GetLoudness(void) = 0;
+    
+    virtual bool ListInputs(MCPlatformSoundRecorderListInputsCallback callback, void *context) = 0;
+    virtual bool ListCompressors(MCPlatformSoundRecorderListCompressorsCallback callback, void *context) = 0;
+    
+protected:
+
+    bool m_recording;;
+    char *m_filename;
+    
+    // The recorder's current configuration settings.
+     MCPlatformSoundRecorderConfiguration m_configuration;
+    
+    // The recorder's reference count.
+	uint32_t m_references;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlatformWindowDeathGrip(MCPlatformWindowRef window);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -286,6 +328,7 @@ void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
 void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerBufferUpdated(MCPlatformPlayerRef player);
 
 void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef sound);
 

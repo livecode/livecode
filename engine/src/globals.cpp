@@ -371,6 +371,9 @@ MCVariable *MCurlresult;
 Boolean MCexitall;
 int4 MCretcode;
 Boolean MCrecording;
+#ifdef FEATURE_PLATFORM_RECORDER
+MCPlatformSoundRecorderRef MCrecorder;
+#endif
 
 // MW-2012-03-08: [[ StackFile5500 ]] Make stackfile version 5.5 the default.
 uint4 MCstackfileversion = 5500;
@@ -500,6 +503,9 @@ Boolean MCallowdatagrambroadcasts = False;
 MCThreadMutexRef MCanimationmutex = NULL;
 MCThreadMutexRef MCpatternmutex = NULL;
 MCThreadMutexRef MCimagerepmutex = NULL;
+MCThreadMutexRef MCfieldmutex = NULL;
+MCThreadMutexRef MCthememutex = NULL;
+MCThreadMutexRef MCgraphicmutex = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -746,6 +752,9 @@ void X_clear_globals(void)
 	MCexitall = False;
 	MCretcode = 0;
 	MCrecording = False;
+#ifdef FEATURE_PLATFORM_RECORDER
+    MCrecorder = nil;
+#endif
 	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
 	MCstackfileversion = 5500;
 	MClook = LF_MOTIF;
@@ -828,6 +837,9 @@ void X_clear_globals(void)
     MCanimationmutex = NULL;
     MCpatternmutex = NULL;
     MCimagerepmutex = NULL;
+    MCfieldmutex = NULL;
+    MCthememutex = NULL;
+    MCgraphicmutex = NULL;
 
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
@@ -863,11 +875,14 @@ bool X_open(int argc, char *argv[], char *envp[])
 	InitialiseSSL();
     
     // MM-2014-07-31: [[ ThreadedRendering ]]
-    MCThreadPoolInitialize();
-    MCStackTileInitialize();
-    MCThreadMutexCreate(MCanimationmutex);
-    MCThreadMutexCreate(MCpatternmutex);
-    MCThreadMutexCreate(MCimagerepmutex);
+    /* UNCHECKED */ MCThreadPoolInitialize();
+    /* UNCHECKED */ MCStackTileInitialize();
+    /* UNCHECKED */ MCThreadMutexCreate(MCanimationmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCpatternmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCimagerepmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCfieldmutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCthememutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCgraphicmutex);
     
     ////
     
@@ -959,6 +974,11 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCdispatcher = new MCDispatch;
     MCdispatcher -> add_transient_stack(MCtooltip);
 
+	// IM-2014-08-14: [[ Bug 12372 ]] Pixel scale setup needs to happen before the
+	// creation of MCscreen to ensure screen rects are scaled/unscaled as appropriate.
+	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
+	MCResInitPixelScaling();
+	
 	if (MCnoui)
 		MCscreen = new MCUIDC;
 	else
@@ -972,9 +992,6 @@ bool X_open(int argc, char *argv[], char *envp[])
 		MCscreen->alloccolor(MClinkatts.hilitecolor);
 		MCscreen->alloccolor(MClinkatts.visitedcolor);
 	}
-	
-	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
-	MCResInitPixelScaling();
 	
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
@@ -1045,11 +1062,19 @@ int X_close(void)
 	MCselected->clear(False);
 
 	MCU_play_stop();
+#ifdef FEATURE_PLATFORM_RECORDER
+    if (MCrecorder != nil)
+    {
+        MCPlatformSoundRecorderStop(MCrecorder);
+        MCPlatformSoundRecorderRelease(MCrecorder);
+    }
+#else
 	if (MCrecording)
 	{
 		extern void MCQTStopRecording(void);
 		MCQTStopRecording();
 	}
+#endif
 	MClockmessages = True;
 	MCS_killall();
 
@@ -1231,6 +1256,9 @@ int X_close(void)
     MCThreadMutexRelease(MCanimationmutex);
     MCThreadMutexRelease(MCpatternmutex);
     MCThreadMutexRelease(MCimagerepmutex);
+    MCThreadMutexRelease(MCfieldmutex);
+    MCThreadMutexRelease(MCthememutex);
+    MCThreadMutexRelease(MCgraphicmutex);
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions

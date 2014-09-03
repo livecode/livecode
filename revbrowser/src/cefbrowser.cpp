@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "cefbrowser.h"
 #include "cefbrowser_msg.h"
+#include "cefshared.h"
 
 #include <include/cef_app.h>
 
@@ -179,10 +180,10 @@ bool MCCefInitialise(void)
 	CefRefPtr<CefApp> t_app = nil;
 
 	if (t_success)
-		t_success = -1 == CefExecuteProcess(t_args, t_app);
+		t_success = -1 == CefExecuteProcess(t_args, t_app, nil);
 
 	if (t_success)
-		t_success = CefInitialize(t_args, t_settings, t_app);
+		t_success = CefInitialize(t_args, t_settings, t_app, nil);
 
 	s_cef_initialised = t_success;
 	
@@ -558,9 +559,6 @@ public:
 		// We handle browser closing here to stop CEF sending WM_CLOSE to the stack window
 		if (p_browser->GetIdentifier() == m_browser_id)
 		{
-			// Inform the browser that it's window will close
-			p_browser->GetHost()->ParentWindowWillClose();
-
 			// Close the browser window
 			MCCefPlatformCloseBrowserWindow(p_browser);
 
@@ -1208,15 +1206,55 @@ void MCCefBrowserBase::SetBorder(bool p_border)
 	/* TODO - IMPLEMENT */
 }
 
+// IM-2014-08-25: [[ Bug 13272 ]] Implement CEF browser scrollbar property.
+bool MCCefBrowserBase::GetOverflowHidden()
+{
+	// property available through JavaScript
+	bool t_success;
+	t_success = true;
+	
+	CefString t_value;
+	
+	t_success = EvalJavaScript("document.body.style.overflow", t_value);
+	
+	// assume scrollbars are visible if property fetch fails
+	if (!t_success)
+		return true;
+	
+	return t_value == L"hidden";
+}
+
+// IM-2014-08-25: [[ Bug 13272 ]] Implement CEF browser scrollbar property.
+void MCCefBrowserBase::SetOverflowHidden(bool p_hidden)
+{
+	// property available through JavaScript
+	
+	bool t_success;
+	t_success = true;
+	
+	char *t_overflow_script;
+	t_overflow_script = nil;
+	
+	t_success = MCCStringFormat(t_overflow_script, "document.body.style.overflow = \"%s\"", p_hidden ? "hidden" : "");
+	
+	CefString t_return_value;
+	
+	if (t_success)
+		t_success = EvalJavaScript(t_overflow_script, t_return_value);
+	
+	MCCStringFree(t_overflow_script);
+}
+
 bool MCCefBrowserBase::GetScrollbars(void)
 {
-	/* TODO - IMPLEMENT */
-	return false;
+	// IM-2014-08-25: [[ Bug 13272 ]] Show / hide scrollbars by setting the overflow style to empty / "hidden".
+	return !GetOverflowHidden();
 }
 
 void MCCefBrowserBase::SetScrollbars(bool p_scrollbars)
 {
-	/* TODO - IMPLEMENT */
+	// IM-2014-08-25: [[ Bug 13272 ]] Show / hide scrollbars by setting the overflow style to empty / "hidden".
+	/* UNCHECKED */ SetOverflowHidden(!p_scrollbars);
 }
 
 void MCCefBrowserBase::GetRect(int& r_left, int& r_top, int& r_right, int& r_bottom)

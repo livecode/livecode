@@ -835,6 +835,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		else if (!done && eventtime > curtime)
 			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
 		
+#ifndef FEATURE_PLATFORM_RECORDER
 #ifdef FEATURE_QUICKTIME_EFFECTS
 		// If we are recording, then poke QT (if enabled) and reduce sleep.
 		if (MCrecording)
@@ -843,6 +844,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			MCQTHandleRecord();
 			t_sleep = MCMin(0.1, t_sleep);
 		}
+#endif
 #endif
 		
 		// IM-2014-06-25: [[ Bug 12671 ]] If there are runloop actions then set a timeout instead of waiting for the next event
@@ -1441,6 +1443,10 @@ void MCMacBreakWait(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCResPlatformInitPixelScaling(void)
+{
+}
 
 bool MCResPlatformSupportsPixelScaling(void)
 {

@@ -415,6 +415,9 @@ extern Boolean MCallowdatagrambroadcasts;
 extern MCThreadMutexRef MCanimationmutex;
 extern MCThreadMutexRef MCpatternmutex;
 extern MCThreadMutexRef MCimagerepmutex;
+extern MCThreadMutexRef MCfieldmutex;
+extern MCThreadMutexRef MCthememutex;
+extern MCThreadMutexRef MCgraphicmutex;
 
 
 ///////////////////////////////////////////////////////////////////////////////

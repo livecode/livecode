@@ -142,6 +142,11 @@ inline MCGPoint MCRectangleScalePoints(MCRectangle p_rect, MCGFloat p_x, MCGFloa
     return MCGPointMake(p_rect . x + p_x * p_rect . width, p_rect . y + p_y * p_rect . height);
 }
 
+inline uint32_t _muludiv64(uint32_t p_multiplier, uint32_t p_numerator, uint32_t p_denominator)
+{
+    return (uint32_t)((((uint64_t)p_multiplier) * p_numerator) / p_denominator);
+}
+
 //////////////////////////////////////////////////////////////////////
 
 class MCPlayerVolumePopup: public MCStack
@@ -816,12 +821,27 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 
 Boolean MCPlayer::doubledown(uint2 which)
 {
-	return MCControl::doubledown(which);
+    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown 
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+        return MCControl::doubledown(which);
+    if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
+    {
+        if ((MCmodifierstate & MS_SHIFT) != 0)
+            handle_shift_mdown(which);
+        else
+            handle_mdown(which);
+    }
+    return True;
 }
 
 Boolean MCPlayer::doubleup(uint2 which)
 {
-	return MCControl::doubleup(which);
+    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubleup on the controller as a single mup
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+        return MCControl::doubleup(which);
+    if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
+        handle_mup(which);
+    return True;
 }
 
 void MCPlayer::setrect(const MCRectangle &nrect)
@@ -849,32 +869,42 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         state &= ~CS_PAUSED;
         redrawcontroller();
     }
-    else
-        if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
+    else if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
+    {
+        state |= CS_PAUSED;
+        redrawcontroller();
+        
+        m_modify_selection_while_playing = false;
+        
+        if (disposable)
         {
-            state |= CS_PAUSED;
-            redrawcontroller();
-            
-            m_modify_selection_while_playing = false;
-            
-            if (disposable)
-            {
-                playstop();
-                return; //obj is already deleted, do not pass msg up.
-            }
+            playstop();
+            return; //obj is already deleted, do not pass msg up.
         }
-        else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
-		{
-			state |= CS_PAUSED;
-            redrawcontroller();
-            
-            m_modify_selection_while_playing = false;
-		}
-        else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+    }
+    else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
+    {
+        state |= CS_PAUSED;
+        redrawcontroller();
+        
+        m_modify_selection_while_playing = false;
+    }
+    else if (MCNameIsEqualTo(mptr, MCM_current_time_changed, kMCCompareCaseless))
+    {
+        // If params is nil then this did not originate from the player!
+        if (params != nil)
         {
-            handle_mstilldown(Button1);
-            MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
+            // Update the current time in the parameter and make sure we allow another
+            // currentTimeChanged message to be posted.
+            state &= ~CS_CTC_PENDING;
+            params -> setn_argument(getmoviecurtime());
         }
+    }
+    else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+    {
+        handle_mstilldown(Button1);
+        MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
+    }
     MCControl::timer(mptr, params);
 }
 
@@ -989,6 +1019,10 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
                     }
             }
             break;
+        // PM-2014-08-19 [[ Bug 13121 ]] Property for the download progress of the movie
+        case P_MOVIE_LOADED_TIME:
+            ep.setint(getmovieloadedtime());
+            break;
         case P_CURRENT_NODE:
 			if (m_platform_player != nil)
 				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &i);
@@ -1093,7 +1127,18 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
         case P_CALLBACKS:
             delete userCallbackStr;
             if (data.getlength() == 0)
+            {
                 userCallbackStr = NULL;
+                // PM-2014-08-21: [[ Bug 13243 ]] Free the existing callback table.
+                for(uindex_t i = 0; i < m_callback_count; i++)
+                {
+                    MCNameDelete(m_callbacks[i] . message);
+                    MCNameDelete(m_callbacks[i] . parameter);
+                }
+                MCMemoryDeleteArray(m_callbacks);
+                m_callbacks = nil;
+                m_callback_count = 0;
+            }
             else
             {
                 userCallbackStr = data.clone();
@@ -1478,6 +1523,15 @@ void MCPlayer::freetmp()
 		filename = NULL;
 	}
 }
+uint4 MCPlayer::getmovieloadedtime()
+{
+    uint4 loadedtime;
+	if (m_platform_player != nil && hasfilename())
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoadedTime, kMCPlatformPropertyTypeUInt32, &loadedtime);
+	else
+		loadedtime = 0;
+	return loadedtime;
+}
 
 uint4 MCPlayer::getduration() //get movie duration/length
 {
@@ -1539,8 +1593,11 @@ void MCPlayer::setselection(bool notify)
                 t_et = endtime;
             }
             
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_st);
+            // PM-2014-08-06: [[ Bug 13064 ]] 
+            // If we first set StartTime and FinishTime is not set (= 0), then startTime becomes 0 (Since if StartTime > FinishTime then StartTime = FinishTime)
+            // For this reason, we first set FinishTime 
             MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_et);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_st);
             
             if (notify)
                 selectionchanged();
@@ -1713,6 +1770,9 @@ Boolean MCPlayer::prepare(const char *options)
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
     
+    // PM-2014-08-06: [[ Bug 13104 ]] When new movie is opened then playRate should be set to 0
+    rate = 0.0;
+    
 	setselection(false);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
 	SynchronizeUserCallbacks();
@@ -1767,11 +1827,15 @@ Boolean MCPlayer::playpause(Boolean on)
 		if (!on)
         {
             playselection(getflag(F_PLAY_SELECTION) && !m_modify_selection_while_playing);
+            // PM-2014-08-06: [[ Bug 13104 ]] Force playRate to 1.0 (needed when starting player by pressing space/enter keys 
+            rate = 1.0;
 			MCPlatformStartPlayer(m_platform_player, rate);
 		}
         else
         {
 			MCPlatformStopPlayer(m_platform_player);
+            // PM-2014-08-06: [[ Bug 13104 ]] Make sure playRate is zero when player is paused
+            rate = 0.0;
         }
 		ok = True;
 	}
@@ -2092,7 +2156,18 @@ void MCPlayer::markerchanged(uint32_t p_time)
     // Search for the first marker with the given time, and dispatch the message.
     for(uindex_t i = 0; i < m_callback_count; i++)
         if (p_time == m_callbacks[i] . time)
-            message_with_args(m_callbacks[i] . message, m_callbacks[i] . parameter);
+        {
+            MCExecPoint ep;
+            ep . setnameref_unsafe(m_callbacks[i] . parameter);
+            
+            MCParameter *t_param;
+            t_param = new MCParameter;
+            t_param -> set_argument(ep);
+            MCscreen -> addmessage(this, m_callbacks[i] . message, 0, t_param);
+            
+            // MW-2014-08-25: [[ Bug 13267 ]] Make sure we terminate the current wait so updates and messages get sent.
+            MCPlatformBreakWait();
+        }
 }
 
 void MCPlayer::selectionchanged(void)
@@ -2102,13 +2177,11 @@ void MCPlayer::selectionchanged(void)
 
 void MCPlayer::currenttimechanged(void)
 {
-    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
-    MCParameter t_param;
-    t_param . setn_argument(getmoviecurtime());
-    timer(MCM_current_time_changed, &t_param);
-    
     if (m_modify_selection_while_playing)
     {
+        if ((MCmodifierstate & MS_SHIFT) == 0)
+            playpause(True);
+        
         uint32_t t_current_time;
         t_current_time = getmoviecurtime();
         
@@ -2117,17 +2190,31 @@ void MCPlayer::currenttimechanged(void)
         if (t_current_time > endtime)
             endtime = t_current_time;
         
-        if ((MCmodifierstate & MS_SHIFT) == 0)
-            playpause(True);
-        
         setselection(true);
     }
     
+    // FG-2014-08-14: [[ Bug 13099 ]] redrawcontroller () should be called before currenttimechanged message is sent, or else player becomes unresponsive if alwaysbuffer is true
     redrawcontroller();
+    
+    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
+    if (!getstate(CS_CTC_PENDING))
+    {
+        state |= CS_CTC_PENDING;
+        
+        MCParameter *t_param;
+        t_param = new MCParameter;
+        t_param -> setn_argument(getmoviecurtime());
+        MCscreen -> addmessage(this, MCM_current_time_changed, 0, t_param);
+        
+        // MW-2014-08-25: [[ Bug 13267 ]] Make sure we terminate the current wait so updates and messages get sent.
+        MCPlatformBreakWait();
+    }
 }
 
 void MCPlayer::moviefinished(void)
 {
+    // PM-2014-08-06: [[ Bug 13104 ]] Set rate to zero when movie finish
+    rate = 0.0;
     timer(MCM_play_stopped, nil);
 }
 
@@ -2260,8 +2347,9 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	
 	if (m_platform_player != nil && hasfilename())
 	{
-		syncbuffering(dc);
-		
+        // SN-2014-08-25: [[ Bug 13187 ]] syncbuffering relocated
+        //syncbuffering(dc);
+        
 		bool t_offscreen;
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
 		
@@ -2278,7 +2366,12 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCPlatformLockPlayerBitmap(m_platform_player, t_bitmap);
             
 			MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
-			MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
+            
+            // SN-2014-08-25: [[ Bug 13187 ]] We need to copy the raster
+            if (dc -> gettype() == CONTEXT_TYPE_PRINTER)
+                MCGImageCreateWithRaster(t_raster, t_image.image);
+            else
+                MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
 			if (t_image . image != nil)
 				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
 			MCGImageRelease(t_image.image);
@@ -2320,16 +2413,23 @@ void MCPlayer::drawcontroller(MCDC *dc)
     t_rect . width ++;
     t_rect . height ++;
     
-    dc -> setforeground(controllerbackcolor);  // DARKGRAY
-    dc -> fillrect(t_rect, true);
+    // SN-2014-08-25: [[ Bug 13187 ]] We need to clip to the size of the controller
+    dc -> save();
+    dc -> cliprect(t_rect);
     
     MCGContextRef t_gcontext = nil;
     dc -> lockgcontext(t_gcontext);
+    
+    // SN-2014-08-25: [[ Bug 13187 ]] Fill up the controller background color after clipping
+    MCGContextAddRectangle(t_gcontext, MCRectangleToMCGRectangle(t_rect));
+    MCGContextSetFillRGBAColor(t_gcontext, (controllerbackcolor . red / 255.0) / 257.0, (controllerbackcolor . green / 255.0) / 257.0, (controllerbackcolor . blue / 255.0) / 257.0, 1.0f);
+    MCGContextFill(t_gcontext);
     
     drawControllerVolumeButton(t_gcontext);
     
     drawControllerPlayPauseButton(t_gcontext);
     drawControllerWellButton(t_gcontext);
+    drawControllerBufferedAreaButton(t_gcontext);
     
     // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then selection handles are invisible
     if (getflag(F_SHOW_SELECTION) && endtime - starttime != 0)
@@ -2352,6 +2452,9 @@ void MCPlayer::drawcontroller(MCDC *dc)
     drawControllerThumbButton(t_gcontext);
     
     dc -> unlockgcontext(t_gcontext);
+    
+    // SN-2014-08-25: [[ Bug 13187 ]] Restore the context to its previous state
+    dc -> restore();
 }
 
 void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
@@ -2690,6 +2793,24 @@ void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
     MCGContextFill(p_gcontext);
 }
 
+void MCPlayer::drawControllerBufferedAreaButton(MCGContextRef p_gcontext)
+{
+    MCRectangle t_drawn_buffered_area;
+    t_drawn_buffered_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartBuffer);
+    // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartWell and kMCPlayerControllerPartSelectedArea
+    t_drawn_buffered_area . y = t_drawn_buffered_area . y + 3 * CONTROLLER_HEIGHT / 7;
+    t_drawn_buffered_area . height = CONTROLLER_HEIGHT / 7;
+    t_drawn_buffered_area . x--;
+    
+    
+    MCGContextSetFillRGBAColor(p_gcontext, 62 / 257.0, 62 / 257.0, 62 / 257.0, 1.0f); // Some DARK GREY
+    
+    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_drawn_buffered_area);
+    MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+    MCGContextFill(p_gcontext);
+}
+
+
 int MCPlayer::hittestcontroller(int x, int y)
 {
     MCRectangle t_rect;
@@ -2818,7 +2939,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             
             int t_thumb_left = 0;
             if (t_duration != 0)
-                t_thumb_left = t_active_well_width * t_current_time / t_duration;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_thumb_left will not overflow
+                t_thumb_left = _muludiv64(t_active_well_width, t_current_time, t_duration);
             
             return MCRectangleMake(t_well_rect . x + t_thumb_left + CONTROLLER_HEIGHT / 8 - 1, t_well_rect . y, CONTROLLER_HEIGHT / 2, t_well_rect . height);
         }
@@ -2868,7 +2990,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             
             int t_selection_start_left = 0;
             if (t_duration != 0)
-                t_selection_start_left = t_active_well_width * t_start_time / t_duration;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_selection_start_left will not overflow
+                t_selection_start_left = _muludiv64(t_active_well_width, t_start_time, t_duration);
             
             return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, SELECTION_RECT_WIDTH, t_well_rect . height);
         }
@@ -2888,7 +3011,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             
             int t_selection_finish_left = t_active_well_width;
             if (t_duration != 0)
-                t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_selection_finish_left will not overflow
+                t_selection_finish_left = _muludiv64(t_active_well_width, t_finish_time, t_duration);
+            
             
             // PM-2014-07-09: [[ Bug 12750 ]] Make sure progress thumb and selectionFinish handle light up
             return MCRectangleMake(t_well_rect . x + t_selection_finish_left, t_well_rect . y , SELECTION_RECT_WIDTH, t_well_rect . height);
@@ -2933,8 +3058,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             }
             else
             {
-                t_selection_start_left = t_active_well_width * t_start_time / t_duration;
-                t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure vars will not overflow
+                t_selection_start_left = _muludiv64(t_active_well_width, t_start_time, t_duration);
+                t_selection_finish_left = _muludiv64(t_active_well_width, t_finish_time, t_duration);
             }
             
             return MCRectangleMake(t_well_rect . x + t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . y, t_selection_finish_left - t_selection_start_left, t_well_rect . height);
@@ -2996,13 +3122,42 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             }
             else
             {
-                t_selection_start_left = t_active_well_width * t_start_time / t_duration;
-                t_current_time_left = t_active_well_width * t_current_time / t_duration;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure vars will not overflow
+                t_selection_start_left = _muludiv64(t_active_well_width, t_start_time, t_duration);
+                t_current_time_left = _muludiv64(t_active_well_width, t_current_time, t_duration);
             }
             
             return MCRectangleMake(t_well_rect . x + t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . y, t_current_time_left - t_selection_start_left, t_well_rect . height);
         }
             break;
+            
+        case kMCPlayerControllerPartBuffer:
+        {
+            uint32_t t_loaded_time, t_duration;
+            t_duration = getduration();
+            t_loaded_time = getmovieloadedtime();
+            
+            MCRectangle t_well_rect, t_thumb_rect;
+            t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
+            t_thumb_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartThumb);
+            
+            int t_active_well_width;
+            t_active_well_width = t_well_rect . width - t_thumb_rect . width;
+            
+            int t_loaded_time_left;
+            if (t_duration == 0)
+            {
+                t_loaded_time_left = 0;
+            }
+            else
+            {
+                t_loaded_time_left = _muludiv64(t_active_well_width, t_loaded_time, t_duration);
+            }
+            
+            return MCRectangleMake(t_well_rect . x + t_thumb_rect . width / 2, t_well_rect . y, t_loaded_time_left, t_well_rect . height);
+        }
+            break;
+            
         case kMCPlayerControllerPartVolumeWell:
         {
             MCRectangle t_volume_bar_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar);
@@ -3126,7 +3281,8 @@ void MCPlayer::handle_mdown(int p_which)
             uint32_t t_new_time, t_duration;
             t_duration = getduration();
             
-            t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+            // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
+            t_new_time = _muludiv64(t_duration, mx - t_part_well_rect . x, t_part_well_rect . width);
             
             // PM-2014-07-09: [[ Bug 12753 ]] If video is playing and we click before the starttime, don't allow video to be played outside the selection
             if (!ispaused() && t_new_time < starttime && getflag(F_PLAY_SELECTION))
@@ -3139,6 +3295,23 @@ void MCPlayer::handle_mdown(int p_which)
         }
             break;
         case kMCPlayerControllerPartScrubBack:
+            // PM-2014-08-12: [[ Bug 13120 ]] Cmd + click on scrub buttons starts playing in the appropriate direction
+            if (hasfilename() && (MCmodifierstate & MS_CONTROL) != 0)
+            {
+                double t_rate;
+                t_rate = -1.0;
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+                break;
+            }
+            
+            // PM-2014-08-12: [[ Bug 13120 ]] Option (alt) + click on the scrub buttons takes to beginning / end
+            if (hasfilename() && (MCmodifierstate & MS_ALT) != 0)
+            {
+                uint32_t t_zero_time;
+                t_zero_time = 0;
+                setcurtime(t_zero_time, true);
+                break;
+            }
             
             m_scrub_back_is_pressed = true;
             // This is needed for handle_mup
@@ -3156,7 +3329,24 @@ void MCPlayer::handle_mdown(int p_which)
             break;
             
         case kMCPlayerControllerPartScrubForward:
+            // PM-2014-08-12: [[ Bug 13120 ]] Cmd + click on scrub buttons starts playing in the appropriate direction
+            if (hasfilename() && (MCmodifierstate & MS_CONTROL) != 0)
+            {
+                double t_rate;
+                t_rate = 1.0;
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_rate);
+                break;
+            }
             
+            // PM-2014-08-12: [[ Bug 13120 ]] Option (alt) + click on the scrub buttons takes to beginning / end
+            if (hasfilename() && (MCmodifierstate & MS_ALT) != 0)
+            {
+                uint32_t t_duration;
+                t_duration = getduration();
+                setcurtime(t_duration, true);
+                break;
+            }
+
             m_scrub_forward_is_pressed = true;
             // This is needed for handle_mup
             m_was_paused = ispaused();
@@ -3222,7 +3412,11 @@ void MCPlayer::handle_mfocus(int x, int y)
                 int32_t t_new_time, t_duration;
                 t_duration = getduration();
                 
-                t_new_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                if (x < t_part_well_rect . x)
+                    x = t_part_well_rect . x;
+                
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
+                t_new_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
                 
                 if (t_new_time < 0)
                     t_new_time = 0;
@@ -3244,7 +3438,8 @@ void MCPlayer::handle_mfocus(int x, int y)
                 if (x <= t_part_well_rect . x)
                     x = t_part_well_rect . x;
                 
-                t_new_start_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_start_time will not overflow
+                t_new_start_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
                 
                 if (t_new_start_time >= endtime)
                     t_new_start_time = endtime;
@@ -3268,7 +3463,8 @@ void MCPlayer::handle_mfocus(int x, int y)
                 uint32_t t_new_finish_time, t_duration;
                 t_duration = getduration();
                 
-                t_new_finish_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_finish_time will not overflow
+                t_new_finish_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
                 
                 if (t_new_finish_time <= starttime)
                     t_new_finish_time = starttime;
@@ -3373,7 +3569,6 @@ void MCPlayer::handle_mup(int p_which)
             layer_redrawall();
             break;
          
-        // We want the SelectionChanged message to fire on mup
         case kMCPlayerControllerPartSelectionStart:
         case kMCPlayerControllerPartSelectionFinish:
             setselection(true);
@@ -3418,25 +3613,38 @@ void MCPlayer::handle_shift_mdown(int p_which)
             t_duration = getduration();
             
             // If there was previously no selection, then take it to be currenttime, currenttime.
-            if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
+            if (starttime == MAXUINT4 || endtime == MAXUINT4)
                 starttime = endtime = t_old_time;
             
             t_old_start = getstarttime();
             t_old_end = getendtime();
             
-            t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
-            
+            // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
+            t_new_time = _muludiv64(t_duration, mx - t_part_well_rect . x, t_part_well_rect . width);
+
             // If click before current starttime, adjust that.
             // If click after current endtime, adjust that.
             // If click first half of current selection, adjust start.
             // If click last half of current selection, adjust end.
             if (t_new_time <= (t_old_end + t_old_start) / 2)
             {
+                // PM-2014-08-05: [[ Bug 13065 ]] If there was previously no selection, then
+                // endTime is set as currentTime when mouse is clicked
+                // startTime is set to currentTime and then updated as thumb dragged to the left
+                if (starttime == endtime)
+                    endtime = t_old_time;
+        
                 starttime = t_new_time;
                 m_grabbed_part = kMCPlayerControllerPartSelectionStart;
             }
             else
             {
+                // PM-2014-08-05: [[ Bug 13065 ]] If there was previously no selection, then
+                // startTime is set as currentTime when mouse is clicked
+                // endTime is set to currentTime and then updated as thumb dragged to the right
+                if (starttime == endtime)
+                    starttime = t_old_time;
+                
                 endtime = t_new_time;
                 m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
             }
@@ -3457,7 +3665,28 @@ void MCPlayer::handle_shift_mdown(int p_which)
             
         case kMCPlayerControllerPartPlay:
             m_modify_selection_while_playing = true;
-            handle_mdown(p_which);
+            
+            // PM-2014-08-05: [[ Bug 13063 ]] Make sure shift + play sets the starttime to the currenttime if there is previously no selection
+            uint32_t t_old_time;
+            t_old_time = getmoviecurtime();
+            
+            // If there was previously no selection, then take it to be currenttime, currenttime.
+            if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
+                starttime = endtime = t_old_time;
+           
+            
+            if (hasfilename())
+            {
+                bool t_show_selection;
+                t_show_selection = true;
+                setflag(True, F_SHOW_SELECTION);
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+                
+                handle_mdown(p_which);
+                if (ispaused())
+                    endtime = getmoviecurtime();
+                setselection(true);
+            }
             break;
                      
         default:

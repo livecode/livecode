@@ -213,4 +213,7 @@ bool MCModeCollectEntropy(void);
 // home stacks, standalones and installers do not.
 bool MCModeHasHomeStack(void);
 
+// IM-2014-08-08: [[ Bug 12372 ]] Check if pixel scaling should be enabled.
+bool MCModeGetPixelScalingEnabled(void);
+
 #endif

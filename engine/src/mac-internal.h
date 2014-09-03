@@ -8,6 +8,20 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@interface com_runrev_livecode_MCPendingAppleEvent: NSObject
+{
+    AppleEvent m_event;
+    AppleEvent m_reply;
+}
+
+- (id)initWithEvent: (const AppleEvent *)event andReply: (AppleEvent *)reply;
+- (void)dealloc;
+
+- (OSErr)process;
+@end
+
+@compatibility_alias MCPendingAppleEvent com_runrev_livecode_MCPendingAppleEvent;
+
 @interface com_runrev_livecode_MCApplicationDelegate: NSObject<NSApplicationDelegate>
 {
 	int m_argc;
@@ -15,6 +29,9 @@ class MCMacPlatformSurface;
 	char **m_envp;
     
     bool m_explicit_quit : 1;
+    bool m_running : 1;
+    
+    NSMutableArray *m_pending_apple_events;
 }
 
 // Platform init / finit.
@@ -349,7 +366,7 @@ public:
 	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster);
 	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster);
 	
-	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster);
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area);
 	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster);
 	
 	virtual bool LockSystemContext(void*& r_context);
@@ -402,7 +419,7 @@ public:
     // Changed parameters order to follow *KeyDown functions consistency
 	void ProcessKeyDown(MCPlatformKeyCode key_code, codepoint_t mapped_char, codepoint_t unmapped_char);
 	void ProcessKeyUp(MCPlatformKeyCode key_code, codepoint_t mapped_char, codepoint_t unmapped_char);
-	
+    
 	void MapMCPointToNSPoint(MCPoint location, NSPoint& r_ns_location);
 	void MapNSPointToMCPoint(NSPoint location, MCPoint& r_mc_location);
 	
@@ -488,6 +505,9 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
 void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy);
 void MCMacPlatformHandleMouseSync(void);
 void MCMacPlatformHandleMouseAfterWindowHidden(void);
+
+void MCMacPlatformHandleMouseForResizeStart(void);
+void MCMacPlatformHandleMouseForResizeEnd(void);
 
 void MCMacPlatformSyncMouseBeforeDragging(void);
 void MCMacPlatformSyncMouseAfterTracking(void);

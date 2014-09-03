@@ -38,7 +38,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (!MCCefCreateApp(t_app))
 		return -1;
 	
-	return CefExecuteProcess(t_args, t_app);
+	return CefExecuteProcess(t_args, t_app, NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

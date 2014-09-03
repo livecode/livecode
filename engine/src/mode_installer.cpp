@@ -1678,6 +1678,12 @@ bool MCModeHasHomeStack(void)
 	return false;
 }
 
+// IM-2014-08-08: [[ Bug 12372 ]] Pixel scaling is enabled for the installer
+bool MCModeGetPixelScalingEnabled(void)
+{
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of remote dialog methods

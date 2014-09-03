@@ -1926,8 +1926,9 @@ void MCField::ftab(Field_translations function,
 {
 	if (message_with_args(MCM_tab_key, string) == ES_NORMAL)
 		return;
+    // MW-2014-08-12: [[ Bug 13166 ]] If we get a tab key message then we always insert \t
 	if (ntabs != 0 && !(flags & F_LOCK_TEXT))
-		finsertnew(FT_UNDEFINED, string, key, false);
+		finsertnew(FT_UNDEFINED, "\t", key, false);
 	else
 		if (MCmodifierstate & MS_SHIFT)
 			getcard()->kfocusprev(False);
@@ -2380,6 +2381,8 @@ void MCField::stopcomposition(Boolean del,Boolean force)
 		replacecursor(True, True);
 	}
 	composelength = 0;
+    // MW-2014-08-18: [[ Bug 13196 ]] Make sure we reset the compose cursor offset.
+    composecursorindex = 0;
 	composing = False;
 }
 
@@ -2397,6 +2400,9 @@ void MCField::deletecomposition()
 		state |= CS_CHANGED;
 	}
 	composelength = 0;
+    
+    // MW-2014-08-18: [[ Bug 13196 ]] Make sure we reset the compose cursor offset.
+    composecursorindex = 0;
 }
 
 Boolean MCField::getcompositionrect(MCRectangle &r, int2 offset)

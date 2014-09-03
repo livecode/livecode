@@ -35,6 +35,10 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 static NSLock *s_callback_lock = nil;
 
+// MW-2014-08-14: [[ Bug 13016 ]] This holds the window that is currently being
+//   moved by the windowserver.
+static MCPlatformWindowRef s_moving_window = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum
@@ -61,7 +65,82 @@ enum
         [event subtype] == kMCMacPlatformMouseSyncEvent)
         MCMacPlatformHandleMouseSync();
     else
+    {
+        // MW-2014-08-14: [[ Bug 13016 ]] Whilst the windowserver moves a window
+        //   we intercept mouseDragged events so we can keep script informed.
+        NSWindow *t_window;
+        t_window = [event window];
+        if (s_moving_window != nil &&
+            [event window] == ((MCMacPlatformWindow *)s_moving_window) -> GetHandle())
+        {
+            if ([event type] == NSLeftMouseDragged)
+                [t_window com_runrev_livecode_windowMoved: s_moving_window];
+            else if ([event type] == NSLeftMouseUp)
+                [self windowStoppedMoving: s_moving_window];
+        }
+        
         [super sendEvent: event];
+    }
+}
+
+- (void)windowStartedMoving: (MCPlatformWindowRef)window
+{
+    if (s_moving_window != nil)
+        [self windowStoppedMoving: window];
+    
+    MCPlatformRetainWindow(window);
+    s_moving_window = window;
+}
+
+- (void)windowStoppedMoving: (MCPlatformWindowRef)window
+{
+    if (s_moving_window == nil)
+        return;
+    
+    [[((MCMacPlatformWindow *)s_moving_window) -> GetHandle() delegate] windowWillMoveFinished: nil];
+    
+    MCPlatformReleaseWindow(s_moving_window);
+    s_moving_window = nil;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
+@implementation com_runrev_livecode_MCPendingAppleEvent
+
+- (id)initWithEvent: (const AppleEvent *)event andReply: (AppleEvent *)reply
+{
+    self = [super init];
+    if (self == nil)
+        return nil;
+    
+    AEDuplicateDesc(event, &m_event);
+    AEDuplicateDesc(reply, &m_reply);
+    
+    return self;
+}
+
+- (void)dealloc
+{
+    AEDisposeDesc(&m_event);
+    AEDisposeDesc(&m_reply);
+    [super dealloc];
+}
+
+- (OSErr)process
+{
+    return AEResumeTheCurrentEvent(&m_event, &m_reply, (AEEventHandlerUPP)kAEUseStandardDispatch, 0);
+}
+
+- (AppleEvent *)getEvent
+{
+    return &m_event;
+}
+
+- (AppleEvent *)getReply
+{
+    return &m_reply;
 }
 
 @end
@@ -83,6 +162,10 @@ enum
 	m_envp = envp;
 	
     m_explicit_quit = false;
+    
+    m_running = false;
+    
+    m_pending_apple_events = [[NSMutableArray alloc] initWithCapacity: 0];
     
 	return self;
 }
@@ -118,8 +201,60 @@ enum
 
 //////////
 
+static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_reply, long p_context)
+{
+    return [[NSApp delegate] preDispatchAppleEvent: p_event withReply: p_reply];
+}
+
+- (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply
+{
+    extern OSErr MCAppleEventHandlerDoAEAnswer(const AppleEvent *event, AppleEvent *reply, long refcon);
+    extern OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *event, AppleEvent *reply, long refcon);
+    extern OSErr MCAppleEventHandlerDoOpenDoc(const AppleEvent *event, AppleEvent *reply, long refcon);
+    
+    if (!m_running)
+    {
+        MCPendingAppleEvent *t_event;
+        t_event = [[MCPendingAppleEvent alloc] initWithEvent: p_event andReply: p_reply];
+        [m_pending_apple_events addObject: t_event];
+        AESuspendTheCurrentEvent(p_event);
+        return noErr;
+    }
+    
+	DescType rType;
+	Size rSize;
+	AEEventClass aeclass;
+	AEGetAttributePtr(p_event, keyEventClassAttr, typeType, &rType, &aeclass, sizeof(AEEventClass), &rSize);
+    
+	AEEventID aeid;
+	AEGetAttributePtr(p_event, keyEventIDAttr, typeType, &rType, &aeid, sizeof(AEEventID), &rSize);
+    
+    // MW-2014-08-12: [[ Bug 13140 ]] Handle the appleEvent to cause a termination otherwise
+    //   we don't quit if the app is in the background (I think this is because we roll our
+    //   own event handling loop and don't use [NSApp run]).
+    if (aeclass == kCoreEventClass && aeid == kAEQuitApplication)
+    {
+        [NSApp terminate: self];
+        return noErr;
+    }
+    
+    if (aeclass == kCoreEventClass && aeid == kAEAnswer)
+        return MCAppleEventHandlerDoAEAnswer(p_event, p_reply, 0);
+
+    OSErr t_err;
+    t_err = MCAppleEventHandlerDoSpecial(p_event, p_reply, 0);
+    if (t_err != errAEEventNotHandled)
+        return t_err;
+    
+    if (aeclass == kCoreEventClass && aeid == kAEOpenDocuments)
+        return MCAppleEventHandlerDoOpenDoc(p_event, p_reply, 0);
+    
+    return errAEEventNotHandled;
+}
+
 - (void)applicationWillFinishLaunching: (NSNotification *)notification
 {
+    AEInstallSpecialHandler(keyPreDispatch, preDispatchAppleEvent, False);
 }
 
 - (void)applicationDidFinishLaunching: (NSNotification *)notification
@@ -160,7 +295,24 @@ enum
 		// Now exit the application with the appropriate code.
 		exit(t_error_code);
 	}
+    
+    m_running = true;
 
+    // Dispatch pending apple events
+    while([m_pending_apple_events count] > 0)
+    {
+        MCPendingAppleEvent *t_event;
+        t_event = [m_pending_apple_events objectAtIndex: 0];
+        [m_pending_apple_events removeObjectAtIndex: 0];
+        
+        [self preDispatchAppleEvent: [t_event getEvent] withReply: [t_event getReply]];
+        AEResumeTheCurrentEvent([t_event getEvent], [t_event getReply], (AEEventHandlerUPP)kAENoDispatch, 0);
+        
+        //[t_event process];
+        
+        [t_event release];
+    }
+    
 	// We started up successfully, so queue the root runloop invocation
 	// message.
 	[self performSelector: @selector(runMainLoop) withObject: nil afterDelay: 0];
@@ -1482,6 +1634,19 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
 void MCMacPlatformHandleMouseAfterWindowHidden(void)
 {
 	MCMacPlatformHandleMouseMove(s_mouse_screen_position);
+}
+
+// MW-2014-06-27: [[ Bug 13284 ]] When live resizing starts, leave the window, and enter it again when it finishes.
+void MCMacPlatformHandleMouseForResizeStart(void)
+{
+    if (s_mouse_window != nil)
+        MCPlatformCallbackSendMouseLeave(s_mouse_window);
+}
+
+void MCMacPlatformHandleMouseForResizeEnd(void)
+{
+    if (s_mouse_window != nil)
+        MCPlatformCallbackSendMouseEnter(s_mouse_window);
 }
 
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)

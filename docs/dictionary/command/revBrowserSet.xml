@@ -18,9 +18,9 @@
 
 	<examples>
 <example>revBrowserSet tBrowserId, "url", "http://www.runrev.com"</example>
-<example><p>answer file "Please choose a file to display"</p><p>if the
-result is not "cancel" then</p><p>  put it into tFile</p><p>  put
-revBrowserSet tBrowserID,"url","file://" &amp; tFile     </p><p>end
+<example><p>answer file "Please choose a file to display"</p><p>if theresult
+is not "cancel" then</p><p>  put it into tFile</p><p>  put revBrowserSet
+tBrowserID,"url","file://" &amp; tFile     </p><p>end
 if</p></example>
 	</examples>
 
@@ -191,8 +191,7 @@ value will cycle through each occurrence of the value. Setting the selected
 to empty or to a string not present in the current document  will reset the
 selected text, ie subsequently setting the selected to any string will
 select the first occurrence again. This behavior is similar to that of the
-<command tag="find">find
-command</command>.</note><p></p><p></p><change>There is a long standing
+<command tag="find">find command</command>.</note><p></p><p></p><change>There is a long standing
 issue with revBrowser that causes browser instances to be lost whenever the
 stack it is attached to has its window re-created. Previously, cases where
 this would occur had to be avoided when a browser was present on a

@@ -101,7 +101,8 @@ public:
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
-	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
+	// IM-2014-08-26: [[ Bug 13261 ]] Return the actual locked area covered by the pixels
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area) = 0;
 	// Unlock the surface.
 	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster) = 0;
 	

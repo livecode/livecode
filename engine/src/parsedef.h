@@ -628,7 +628,7 @@ enum Functions {
 };
 
 enum Handler_type {
-    HT_UNDEFINED,
+    HT_UNDEFINED = 0,
     HT_MESSAGE,
     HT_FUNCTION,
     HT_GETPROP,
@@ -639,7 +639,9 @@ enum Handler_type {
 	HT_BEFORE,
 	HT_AFTER,
 
-	HT_PRIVATE
+		HT_PRIVATE,
+
+		HT_MAX = HT_PRIVATE
 };
 
 enum If_format {
@@ -847,7 +849,9 @@ enum Record_params {
     RC_BEST,
     RC_BETTER,
     RC_GOOD,
+    RC_PAUSE,
     RC_QUALITY,
+    RC_RESUME,
     RC_SOUND
 };
 
@@ -1348,6 +1352,7 @@ enum Properties {
     P_SHOW_SELECTION,
     P_PAUSED,
     P_MOVIE_CONTROLLER_ID,
+    P_MOVIE_LOADED_TIME,
     P_TRACK_COUNT,
     P_TRACKS,
     P_ENABLED_TRACKS,
@@ -1615,6 +1620,9 @@ enum Properties {
     // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
     P_CLIPS_TO_RECT,
 
+    // MW-2014-08-12: [[ EditionType ]] Returns whether the engine is commercial or community
+    P_EDITION_TYPE,
+    
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,

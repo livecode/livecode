@@ -23,7 +23,9 @@
 		E8589AF018C9F82200958234 /* cefbrowser_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = E8589AEF18C9F82200958234 /* cefbrowser_osx.mm */; };
 		E8589D9B18CA20CF00958234 /* libcef_dll_wrapper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AA04C018C9E72A00AE8663 /* libcef_dll_wrapper.a */; };
 		E858A20E18CDD1FB00958234 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E858A20D18CDD1FB00958234 /* AppKit.framework */; };
-		E897315018D07D2A005FFFBE /* Resources in CopyFiles */ = {isa = PBXBuildFile; fileRef = E897308018D07D1D005FFFBE /* Resources */; };
+		E8C36969199901F4005241FB /* cefshared_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C36967199901F4005241FB /* cefshared_osx.cpp */; };
+		E8C3698B199903B8005241FB /* cefshared_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C36967199901F4005241FB /* cefshared_osx.cpp */; };
+		E8C369D3199A2E0D005241FB /* Chromium Embedded Framework.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = E8C369CB199A2B3B005241FB /* Chromium Embedded Framework.framework */; };
 		E8D3736118CDDA5A005C1182 /* cefprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8D3736018CDDA5A005C1182 /* cefprocess.cpp */; };
 		E8D3736A18CDDBEE005C1182 /* cefprocess_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = E8D3736918CDDBEE005C1182 /* cefprocess_osx.mm */; };
 		E8D373BF18CDE872005C1182 /* libcef_dll_wrapper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AA04C018C9E72A00AE8663 /* libcef_dll_wrapper.a */; };
@@ -119,13 +121,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		E8D3787718CF44C0005C1182 /* CopyFiles */ = {
+		E8C369D2199A2DFB005241FB /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "revbrowser-cefprocess.app/Contents/Frameworks/Chromium Embedded Framework.framework";
+			dstPath = Frameworks;
 			dstSubfolderSpec = 16;
 			files = (
-				E897315018D07D2A005FFFBE /* Resources in CopyFiles */,
+				E8C369D3199A2E0D005241FB /* Chromium Embedded Framework.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,10 +160,11 @@
 		E8589AD918C9F77800958234 /* cefbrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cefbrowser.h; path = src/cefbrowser.h; sourceTree = "<group>"; };
 		E8589AEF18C9F82200958234 /* cefbrowser_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = cefbrowser_osx.mm; path = src/cefbrowser_osx.mm; sourceTree = "<group>"; };
 		E8589AF118C9F84000958234 /* cefprocess_w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefprocess_w32.cpp; path = src/cefprocess_w32.cpp; sourceTree = "<group>"; };
-		E858A19D18CA29F800958234 /* libcef.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcef.dylib; path = ../prebuilt/lib/libcef/mac/libcef.dylib; sourceTree = SOURCE_ROOT; };
 		E858A20D18CDD1FB00958234 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
-		E897308018D07D1D005FFFBE /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Resources; path = ../prebuilt/lib/libcef/mac/Resources; sourceTree = SOURCE_ROOT; };
 		E8AA049B18C9E6DD00AE8663 /* libcef_dll_wrapper.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcef_dll_wrapper.xcodeproj; path = ../thirdparty/libcef/libcef_dll_wrapper.xcodeproj; sourceTree = SOURCE_ROOT; };
+		E8C36967199901F4005241FB /* cefshared_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefshared_osx.cpp; path = src/cefshared_osx.cpp; sourceTree = "<group>"; };
+		E8C36968199901F4005241FB /* cefshared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cefshared.h; path = src/cefshared.h; sourceTree = "<group>"; };
+		E8C369CB199A2B3B005241FB /* Chromium Embedded Framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Chromium Embedded Framework.framework"; path = "../prebuilt/lib/libcef/mac/Chromium Embedded Framework.framework"; sourceTree = "<group>"; };
 		E8D371CC18CDD2D7005C1182 /* libcore.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcore.xcodeproj; path = ../libcore/libcore.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E8D3735718CDDA3F005C1182 /* revbrowser-cefprocess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "revbrowser-cefprocess.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E8D3735918CDDA40005C1182 /* revbrowser-cefprocess-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "revbrowser-cefprocess-Info.plist"; sourceTree = "<group>"; };
@@ -205,14 +208,13 @@
 			isa = PBXGroup;
 			children = (
 				E858A20D18CDD1FB00958234 /* AppKit.framework */,
-				E858A19D18CA29F800958234 /* libcef.dylib */,
 				769568ED1823D0E700779255 /* libcore.a */,
+				E8C369CB199A2B3B005241FB /* Chromium Embedded Framework.framework */,
 				4D03BCBB0BC2785100026EA7 /* WebKit.framework */,
 				4D03BCB40BC2783300026EA7 /* Cocoa.framework */,
 				4D03BCAC0BC2781B00026EA7 /* Carbon.framework */,
 				4D03BCA40BC2780100026EA7 /* Foundation.framework */,
 				4DF42AD90B04899A003F2D95 /* References */,
-				E8589F2418CA22D200958234 /* Resources */,
 				4DF42AAF0B0488D7003F2D95 /* Source */,
 				4DF42AA30B0488B6003F2D95 /* Configurations */,
 				4DF42AA90B0488CE003F2D95 /* Products */,
@@ -281,14 +283,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		E8589F2418CA22D200958234 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				E897308018D07D1D005FFFBE /* Resources */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-		};
 		E8AA04B718C9E72A00AE8663 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -319,6 +313,8 @@
 				E8589AD818C9F77800958234 /* cefbrowser.cpp */,
 				E8589AEF18C9F82200958234 /* cefbrowser_osx.mm */,
 				E8D3736418CDDA9B005C1182 /* cefbrowser_w32.cpp */,
+				E8C36967199901F4005241FB /* cefshared_osx.cpp */,
+				E8C36968199901F4005241FB /* cefshared.h */,
 			);
 			name = CEF;
 			sourceTree = "<group>";
@@ -355,8 +351,9 @@
 				E8D3735318CDDA3F005C1182 /* Resources */,
 				E8D3735418CDDA3F005C1182 /* Sources */,
 				E8D3735518CDDA3F005C1182 /* Frameworks */,
-				E8D3787718CF44C0005C1182 /* CopyFiles */,
 				E812E09E196AFE3A001F6EC4 /* ShellScript */,
+				E8C369D2199A2DFB005241FB /* CopyFiles */,
+				E8C369D5199A2E7F005241FB /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -375,6 +372,8 @@
 /* Begin PBXProject section */
 		4DF42A990B0488B2003F2D95 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4DF42A9A0B0488B2003F2D95 /* Build configuration list for PBXProject "revbrowser" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -477,6 +476,19 @@
 			shellPath = /bin/sh;
 			shellScript = "exec tools/make_more_helpers.sh";
 		};
+		E8C369D5199A2E7F005241FB /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "FRAMEWORKS_DIR=${CONFIGURATION_BUILD_DIR}/Frameworks\n\ncp -r \"${CONFIGURATION_BUILD_DIR}/${PRODUCT_NAME}.app\" \"${FRAMEWORKS_DIR}\"\ncp -r \"${CONFIGURATION_BUILD_DIR}/${PRODUCT_NAME} EH.app\" \"${FRAMEWORKS_DIR}\"\ncp -r \"${CONFIGURATION_BUILD_DIR}/${PRODUCT_NAME} NP.app\" \"${FRAMEWORKS_DIR}\"\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -488,6 +500,7 @@
 				E8589ADA18C9F77800958234 /* cefbrowser.cpp in Sources */,
 				E8589AF018C9F82200958234 /* cefbrowser_osx.mm in Sources */,
 				E832B1B618D9C3C100083DF8 /* osxbrowser.cpp in Sources */,
+				E8C36969199901F4005241FB /* cefshared_osx.cpp in Sources */,
 				E857DDAB19081FAA002714D6 /* WebAuthenticationPanel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -497,6 +510,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E8D3736118CDDA5A005C1182 /* cefprocess.cpp in Sources */,
+				E8C3698B199903B8005241FB /* cefshared_osx.cpp in Sources */,
 				E8D3736A18CDDBEE005C1182 /* cefprocess_osx.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

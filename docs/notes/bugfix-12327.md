@@ -1,0 +1,1 @@
+# Toggle usePixelScale property

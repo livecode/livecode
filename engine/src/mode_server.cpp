@@ -358,6 +358,12 @@ bool MCModeHasHomeStack(void)
 	return true;
 }
 
+// IM-2014-08-08: [[ Bug 12372 ]] Pixel scaling is disabled on the server.
+bool MCModeGetPixelScalingEnabled(void)
+{
+	return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of remote dialog methods

@@ -41,9 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#ifdef MCSSL
-#include <openssl/rand.h>
-#endif
 
 // MDW-2014-07-06: [[ oval_points ]]
 #define QA_NPOINTS 90
@@ -1183,17 +1180,19 @@ Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
 }
 
 // MM-2014-08-01: [[ Bug ]] Pulled name table initialisation out of MCU_matchname to prevent crah on Linux.
-static const char *nametable[] =
+// IM-2014-08-20: [[ Bug ]] Cannot guarantee that the globals have been initialized before nametable,
+// so use pointers to the globals rather than their value and dereference later.
+static const char **nametable[] =
 {
-    MCstackstring, MCaudiostring,
-    MCvideostring, MCbackgroundstring,
-    MCcardstring, MCnullstring,
-    MCgroupstring, MCnullstring,
-    MCbuttonstring, MCnullstring,
-    MCnullstring, MCscrollbarstring,
-    MCimagestring, MCgraphicstring,
-    MCepsstring, MCmagnifierstring,
-    MCcolorstring, MCfieldstring
+    &MCstackstring, &MCaudiostring,
+    &MCvideostring, &MCbackgroundstring,
+    &MCcardstring, &MCnullstring,
+    &MCgroupstring, &MCnullstring,
+    &MCbuttonstring, &MCnullstring,
+    &MCnullstring, &MCscrollbarstring,
+    &MCimagestring, &MCgraphicstring,
+    &MCepsstring, &MCmagnifierstring,
+    &MCcolorstring, &MCfieldstring
 };
 
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
@@ -1212,9 +1211,9 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 	        && l > tname.getlength() + 1
 	        && sptr[tname.getlength() + 1] == '"'
 	        && !MCU_strncasecmp(sptr + 1, tname.getstring(), tname.getlength())
-	        && sptr - test.getstring() >= (int)strlen(nametable[type - CT_STACK])
-	        && !MCU_strncasecmp(test.getstring(), nametable[type - CT_STACK],
-	                            strlen(nametable[type - CT_STACK])))
+	        && sptr - test.getstring() >= (int)strlen(*nametable[type - CT_STACK])
+	        && !MCU_strncasecmp(test.getstring(), *nametable[type - CT_STACK],
+	                            strlen(*nametable[type - CT_STACK])))
 		match = True;
 
 	return match;
@@ -2419,7 +2418,14 @@ void MCU_geturl(MCExecPoint &ep)
 			MCurlresult->fetch(ep);
 		}
 		else
+        {
+			// MM-2014-08-12: [[ Bug 2902 ]] Make sure we set the result accordingly if the URL is invalid.
+			char *t_err;
+            MCCStringFormat(t_err, "invalid URL: %s", ep . getcstring());
 			ep . clear();
+            MCresult -> sets(t_err);
+            MCCStringFree(t_err);
+        }
 	}
 }
 
@@ -2907,29 +2913,18 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes
-//   which uses OpenSSL if available, otherwise falls back on system support.
+// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes.
 bool MCU_random_bytes(size_t p_count, void *p_buffer)
 {
-#ifdef MCSSL
-	// If SSL is available, then use that.
-	static bool s_donotuse_ssl = false;
-	if (!s_donotuse_ssl)
-	{
-		if (InitSSLCrypt())
-			return RAND_bytes((unsigned char *)p_buffer, p_count) == 1;
-		
-		s_donotuse_ssl = true;
-	}
-#endif
-
-	// Otherwise use the system provided CPRNG.
+	// IM-2014-08-06: [[ Bug 13038 ]] Use system implementation directly instead of SSL
 	return MCS_random_bytes(p_count, p_buffer);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef _DEBUG_MEMORY
+
+#ifdef __VISUALC__
 void *operator new (size_t size)
 {
     return malloc(size);
@@ -2949,4 +2944,27 @@ void operator delete[] (void *p)
 {
     free(p);
 }
+#else
+void *operator new (size_t size) throw()
+{
+    return malloc(size);
+}
+
+void operator delete (void *p) throw()
+{
+    free(p);
+}
+
+void *operator new[] (size_t size) throw()
+{
+    return malloc(size);
+}
+
+void operator delete[] (void *p) throw()
+{
+    free(p);
+}
 #endif
+
+#endif
+

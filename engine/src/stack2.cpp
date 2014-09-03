@@ -2556,6 +2556,11 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
 	MCTileCacheRef t_tilecache;
 	t_tilecache = view_gettilecache();
 	
+    // SN-2014-08-25: [[ Bug 13187 ]] MCplayers's syncbuffering relocated
+    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+        if (t_player -> getstack() == this)
+            t_player -> syncbuffering(nil);
+    
 	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{
         MCGIntegerRectangle t_bounds;

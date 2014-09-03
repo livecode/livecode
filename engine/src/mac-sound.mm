@@ -152,6 +152,25 @@ static AudioDeviceID get_default_audio_device_id(void)
     return t_id;
 }
 
+static bool get_device_mute(AudioDeviceID p_device, bool& r_mute)
+{
+    AudioObjectPropertyAddress t_addr;
+    t_addr . mElement = kAudioObjectPropertyElementMaster;
+    t_addr . mScope = kAudioDevicePropertyScopeOutput;
+    t_addr . mSelector = kAudioDevicePropertyMute;
+    if (!AudioHardwareServiceHasProperty(p_device, &t_addr))
+        return false;
+    
+    UInt32 t_prop_size;
+    UInt32 t_mute;
+    t_prop_size = sizeof(UInt32);
+    if (AudioHardwareServiceGetPropertyData(p_device, &t_addr, 0, NULL, &t_prop_size, &t_mute) != noErr)
+        return false;
+    
+    r_mute = (t_mute == 1);
+    return true;
+}
+
 void MCMacPlatformGetGlobalVolume(double& r_volume)
 {
     AudioObjectPropertyAddress t_addr;
@@ -165,15 +184,19 @@ void MCMacPlatformGetGlobalVolume(double& r_volume)
     Float32 t_volume;
     UInt32 t_prop_size;
     t_prop_size = sizeof(Float32);
+    
+    // AL-2014-08-12: [[ Bug 13160 ]] If the system audio is muted, return 0
+    bool t_mute;
     if (t_device_id == kAudioObjectUnknown ||
         !AudioHardwareServiceHasProperty(t_device_id, &t_addr) ||
-        AudioHardwareServiceGetPropertyData(t_device_id, &t_addr, 0, NULL, &t_prop_size, &t_volume) != noErr)
+        AudioHardwareServiceGetPropertyData(t_device_id, &t_addr, 0, NULL, &t_prop_size, &t_volume) != noErr ||
+        !get_device_mute(t_device_id, t_mute))
     {
         r_volume = 1.0;
         return;
     }
     
-    r_volume = fmin(fmax(t_volume, 0.0), 1.0);
+    r_volume = t_mute ? 0 : fmin(fmax(t_volume, 0.0), 1.0);
 }
 
 static bool set_device_mute(AudioDeviceID p_device, bool p_mute)

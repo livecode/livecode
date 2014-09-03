@@ -728,6 +728,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	
 	if (!p_mark)
 	{
+        // MW-2014-08-05: [[ Bug 13098 ]] If we have been compositing, then don't synthesise a
+        //   keyDown / keyUp.
+        bool t_was_compositing;
 		int4 si, ei;
 		if (MCactivefield -> getcompositionrange(si, ei))
 		{
@@ -737,7 +740,11 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 				t_r_ei -= MCMin(t_r_ei - si, ei - si);
 			
 			MCactivefield -> stopcomposition(True, False);
+            
+            t_was_compositing = true;
 		}
+        else
+            t_was_compositing = false;
 		
 		// If the char count is 1 and the replacement range matches the current selection,
 		// the char is native and the requested selection is after the char, then synthesis a
@@ -746,7 +753,8 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         // MW-2014-06-25: [[ Bug 12370 ]] If the char is ascii then map appropriately so we get
         //   the keycodes the engine expects.
 		uint8_t t_char[2];
-		if (p_char_count == 1 &&
+		if (!t_was_compositing &&
+            p_char_count == 1 &&
 			MCUnicodeMapToNative(p_chars, 1, t_char[0]) &&
 			p_selection_range . offset == p_replace_range . offset + 1 &&
 			p_selection_range . length == 0)
@@ -1144,7 +1152,19 @@ void MCPlatformHandlePlayerFinished(MCPlatformPlayerRef p_player)
         return;
     
     t_player -> layer_redrawall();
-    t_player -> moviefinished();;
+    t_player -> moviefinished();
+}
+
+void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    // Make sure download progress is updated 
+    MCPlatformBreakWait();
+    t_player -> redrawcontroller();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
