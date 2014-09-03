@@ -3362,7 +3362,8 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
         
         r_mark . start = 0;
         r_mark . finish = MCStringGetLength((MCStringRef)r_mark . text);
-        r_mark . changed = false;
+        // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+        r_mark . changed = 0;
     	return;
     }
     // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk

@@ -3309,13 +3309,21 @@ void MCExecResolveCharsOfField(MCExecContext& ctxt, MCField *p_field, uint32_t p
     
     // MCMarkedText::changed is only accessed by Interface / Variable-setting function.
     // Putting the replacement of the field content should not interleave with another
-    if (p_mark.changed)
+    if (p_mark.changed != 0)
     {
         MCAutoStringRef t_mark_as_string;
         if (!ctxt . ConvertToString(p_mark . text, &t_mark_as_string))
             ctxt . Throw();
         else
-            p_field -> settext(p_part, *t_mark_as_string, false);
+        {
+            // We only want to append the forced delimiters added, not to reset the whole field's string
+            // which leads to a loss of all the blocks.
+            MCAutoStringRef t_forced_delimiters;
+            /* UNCHECKED */ MCStringCopySubstring(*t_mark_as_string, MCRangeMake(MCStringGetLength(*t_mark_as_string) - p_mark . changed, p_mark . changed), &t_forced_delimiters);
+            
+            // INT32_MAX is PARAGRAPH_MAX_LEN (asking settextindex to append to the field)
+            p_field -> settextindex(p_part, INT32_MAX, INT32_MAX, *t_forced_delimiters, false);
+        }
     }
     
     /*

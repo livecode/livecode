@@ -1326,8 +1326,8 @@ struct MCMarkedText
 {
     MCValueRef text;
     uint32_t start, finish;
-    // flag if the contents of the string have changed due to forcing additional delimiters
-    bool changed;
+    // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+    uindex_t changed;
 };
 
 struct MCObjectChunkPtr

@@ -735,7 +735,8 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
         if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData &&
             MCValueGetTypeCode(p_value) == kMCValueTypeCodeData)
         {
-            if (p_var . mark . changed)
+            // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+            if (p_var . mark . changed != 0)
             {
                 MCAutoDataRef t_data;
                 if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
@@ -756,7 +757,8 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 return;
             }
             
-            if (p_var . mark . changed)
+            // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+            if (p_var . mark . changed != 0)
             {
                 MCAutoStringRef t_string;
                 if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
