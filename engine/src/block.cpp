@@ -627,8 +627,9 @@ static bool MCUnicodeCanBreakBetween(uint2 x, uint2 y)
 	//   where the space follows the char. This is because a break will consume all space
 	//   chars after it thus we want to measure up to but not including the spaces.
 	bool t_x_isspace, t_y_isspace;
+    // AL-2014-09-03: [[ Bug 13332 ]] Don't break before a non-breaking space
     t_x_isspace = MCUnicodeIsWhitespace(x);
-    t_y_isspace = MCUnicodeIsWhitespace(y);
+    t_y_isspace = y != 0x00A0 && MCUnicodeIsWhitespace(y);
 
 	if (t_x_isspace && t_y_isspace)
 		return false;
