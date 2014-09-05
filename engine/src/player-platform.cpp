@@ -3681,7 +3681,7 @@ Boolean MCPlayer::handle_kdown(const char *string, KeySym key)
 }
 
 // PM-2014-09-05: [[ Bug 13342 ]] Shift and spacebar creates selection
-void MCPlayer::handle_shift_kdown(const char *string, KeySym key)
+Boolean MCPlayer::handle_shift_kdown(const char *string, KeySym key)
 {
     if (state & CS_PREPARED)
     {
@@ -3697,6 +3697,8 @@ void MCPlayer::handle_shift_kdown(const char *string, KeySym key)
         // PM-2014-07-14: [[ Bug 12810 ]] Make sure we redraw the controller after using keyboard shortcuts to control playback
         layer_redrawrect(getcontrollerrect());
     }
+    
+    return True;
 }
 
 void MCPlayer::shift_play()
