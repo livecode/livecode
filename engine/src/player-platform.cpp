@@ -657,49 +657,10 @@ void MCPlayer::close()
 
 Boolean MCPlayer::kdown(const char *string, KeySym key)
 {
-    if (state & CS_PREPARED)
-    {
-        switch (key)
-        {
-            case XK_Return:
-                playpause(!ispaused());
-                break;
-            case XK_space:
-                playpause(!ispaused());
-                break;
-            case XK_Right:
-            {
-                if(ispaused())
-                    playstepforward();
-                else
-                {
-                    playstepforward();
-                    playpause(!ispaused());
-                }
-            }
-                break;
-            case XK_Left:
-            {
-                if(ispaused())
-                    playstepback();
-                else
-                {
-                    playstepback();
-                    playpause(!ispaused());
-                }
-            }
-                break;
-            default:
-                break;
-        }
-        // PM-2014-07-14: [[ Bug 12810 ]] Make sure we redraw the controller after using keyboard shortcuts to control playback
-        layer_redrawrect(getcontrollerrect());
-    }
-	if (!(state & CS_NO_MESSAGES))
-		if (MCObject::kdown(string, key))
-			return True;
-    
-	return False;
+    if ((MCmodifierstate & MS_SHIFT) != 0)
+        handle_shift_kdown(string, key);
+    else
+        handle_kdown(string, key);
 }
 
 Boolean MCPlayer::kup(const char *string, KeySym key)
@@ -3663,33 +3624,118 @@ void MCPlayer::handle_shift_mdown(int p_which)
             break;
             
         case kMCPlayerControllerPartPlay:
-            m_modify_selection_while_playing = true;
-            
-            // PM-2014-08-05: [[ Bug 13063 ]] Make sure shift + play sets the starttime to the currenttime if there is previously no selection
-            uint32_t t_old_time;
-            t_old_time = getmoviecurtime();
-            
-            // If there was previously no selection, then take it to be currenttime, currenttime.
-            if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
-                starttime = endtime = t_old_time;
-           
-            
-            if (hasfilename())
-            {
-                bool t_show_selection;
-                t_show_selection = true;
-                setflag(True, F_SHOW_SELECTION);
-                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-                
-                handle_mdown(p_which);
-                if (ispaused())
-                    endtime = getmoviecurtime();
-                setselection(true);
-            }
+            shift_play();
             break;
                      
         default:
             break;
+    }
+
+}
+
+Boolean MCPlayer::handle_kdown(const char *string, KeySym key)
+{
+    if (state & CS_PREPARED)
+    {
+        switch (key)
+        {
+            case XK_Return:
+                playpause(!ispaused());
+                break;
+            case XK_space:
+                playpause(!ispaused());
+                break;
+            case XK_Right:
+            {
+                if(ispaused())
+                    playstepforward();
+                else
+                {
+                    playstepforward();
+                    playpause(!ispaused());
+                }
+            }
+                break;
+            case XK_Left:
+            {
+                if(ispaused())
+                    playstepback();
+                else
+                {
+                    playstepback();
+                    playpause(!ispaused());
+                }
+            }
+                break;
+            default:
+                break;
+        }
+        // PM-2014-07-14: [[ Bug 12810 ]] Make sure we redraw the controller after using keyboard shortcuts to control playback
+        layer_redrawrect(getcontrollerrect());
+    }
+	if (!(state & CS_NO_MESSAGES))
+		if (MCObject::kdown(string, key))
+			return True;
+    
+	return False;
+}
+
+// PM-2014-09-05: [[ Bug 13342 ]] Shift and spacebar creates selection
+void MCPlayer::handle_shift_kdown(const char *string, KeySym key)
+{
+    if (state & CS_PREPARED)
+    {
+        switch (key)
+        {
+            case XK_space:
+                shift_play();
+                break;
+            
+            default:
+                break;
+        }
+        // PM-2014-07-14: [[ Bug 12810 ]] Make sure we redraw the controller after using keyboard shortcuts to control playback
+        layer_redrawrect(getcontrollerrect());
+    }
+}
+
+void MCPlayer::shift_play()
+{
+    m_modify_selection_while_playing = true;
+    
+    // PM-2014-08-05: [[ Bug 13063 ]] Make sure shift + play sets the starttime to the currenttime if there is previously no selection
+    uint32_t t_old_time;
+    t_old_time = getmoviecurtime();
+    
+    // If there was previously no selection, then take it to be currenttime, currenttime.
+    if (starttime == endtime || starttime == MAXUINT4 || endtime == MAXUINT4)
+        starttime = endtime = t_old_time;
+    
+    
+    if (hasfilename())
+    {
+        bool t_show_selection;
+        t_show_selection = true;
+        setflag(True, F_SHOW_SELECTION);
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+        
+        // MW-2014-07-18: [[ Bug 12825 ]] When play button clicked, previous behavior was to
+        //   force rate to 1.0.
+        if (!getstate(CS_PREPARED) || ispaused())
+            rate = 1.0;
+        if (getstate(CS_PREPARED))
+        {
+            playpause(!ispaused());
+        }
+        else
+        {
+            playstart(nil);
+        }
+        layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlay));
+        
+        if (ispaused())
+            endtime = getmoviecurtime();
+        setselection(true);
     }
 
 }
