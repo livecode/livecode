@@ -789,20 +789,15 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     {
         for (uindex_t i = 0; i < t_result_count; i++)
         {
-            MCVariable *t_var = t_params->evalvar(ctxt);
-            if (t_var == nil)
+            // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
+            MCContainer *t_container;
+            if (!t_params->evalcontainer(ctxt, t_container))
             {
-				ctxt . LegacyThrow(EE_BINARYD_BADDEST);
+                ctxt . LegacyThrow(EE_BINARYD_BADDEST);
                 return;
             }
-			if (t_results[i] != nil)
-            {
-                // SN-2014-01-07: need to specify the variable is no longer a UQL,
-                //  otherwise the variable name is used instead of its value
-                t_var -> clearuql();
-                
-	            /* UNCHECKED */ t_var->setvalueref(t_results[i]);
-            }
+            
+            /* UNCHECKED */ t_container->set_valueref(t_results[i]);
             
             t_params = t_params->getnext();
         }
@@ -3431,19 +3426,15 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     {
         for (uindex_t i = 0; i < t_result_count; i++)
         {
-            MCVariable *t_var = t_result_params->evalvar(ctxt);
-            if (t_var == nil)
+            // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
+            MCContainer *t_container;
+            if (!t_result_params->evalcontainer(ctxt, t_container))
             {
                 ctxt . LegacyThrow(EE_MATCH_BADDEST);
                 return;
             }
             
-            // SN-2014-01-07: Matching texts are not considered as text variables
-            //  and their name is used in the Livecode script instead or their content,
-            //  if the regex catches them but leaves them as UQL
-            t_var -> clearuql();
-            
-            /* UNCHECKED */ t_var->setvalueref(t_results[i]);
+            /* UNCHECKED */ t_container->set_valueref(t_results[i]);
             
             t_result_params = t_result_params->getnext();
         }
