@@ -45,6 +45,9 @@ public:
 	// Lookup the file index for the given filename. If <p_add> is true then
 	// add new entry and return its index.
 	uint4 FindFileIndex(MCStringRef p_filename, bool p_add);
+    
+    // SN-2014-09-05: [[ Bug 13378 ]] Added forgotten function GetIt
+    MCVarref* GetIt();
 	
 private:
 	// A File record stores information about an included file.

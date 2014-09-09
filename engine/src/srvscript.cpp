@@ -124,6 +124,12 @@ uint4 MCServerScript::FindFileIndex(MCStringRef p_filename, bool p_add)
 	return t_file -> index;
 }
 
+// SN-2014-09-05: [[ Bug 13378 ]] Added forgotten function GetIt
+MCVarref* MCServerScript::GetIt()
+{
+    return m_it;
+}
+
 MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_add)
 {
 	// First resolve the filename.
