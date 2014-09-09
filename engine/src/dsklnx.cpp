@@ -1037,10 +1037,14 @@ public:
         return "x86";
 #endif
 #endif /* MCS_getprocessor_dsk_lnx */
-#ifdef __LP64__
+#if   defined(__X86_64__)
         return MCN_x86_64;
-#else
+#elif defined(__ARM__)
+        return MCN_arm;
+#elif defined(__I386__)
         return MCN_x86;
+#else
+#  error "One of __X86_64__, __ARM__ or __I386__ must be defined"
 #endif
     }
 
