@@ -988,7 +988,8 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyOnlyPlaySelection,
 	
 	kMCPlatformPlayerPropertyLoop,
-	
+    kMCPlatformPlayerPropertyMirrored,
+    	
 	kMCPlatformPlayerPropertyQTVRNode,
 	kMCPlatformPlayerPropertyQTVRPan,
 	kMCPlatformPlayerPropertyQTVRTilt,

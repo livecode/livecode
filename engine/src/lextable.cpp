@@ -1126,6 +1126,7 @@ LT factor_table[] =
         {"minheight", TT_PROPERTY, P_MIN_HEIGHT},
         {"minimizebox", TT_PROPERTY, P_MINIMIZE_BOX},
         {"minwidth", TT_PROPERTY, P_MIN_WIDTH},
+        {"mirrored", TT_PROPERTY, P_MIRRORED},
 		{"miterlimit", TT_PROPERTY, P_MITER_LIMIT},
         {"mnemonic", TT_PROPERTY, P_MNEMONIC},
         {"mod", TT_BINOP, O_MOD},
