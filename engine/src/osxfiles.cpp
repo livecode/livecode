@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -25,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "util.h"
 
@@ -45,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+#ifdef /* MCS_loadfile_dsk_mac */ LEGACY_SYSTEM
 #include <mach-o/dyld.h>
 
 #define ENTRIES_CHUNK 1024
@@ -280,7 +280,9 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
     if (fptr != nil)
         fclose(fptr);
 }
+#endif /* MCS_loadfile_dsk_mac */
 
+#ifdef /* MCS_savefile_dsk_mac */ LEGACY_SYSTEM
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -324,7 +326,9 @@ void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 	delete tpath;
 	delete newpath;
 }
+#endif /* MCS_savefile_dsk_mac */
 
+#ifdef LEGACY_SYSTEM
 IO_stat MCS_close(IO_handle &stream)
 {
 	IO_stat stat = IO_NORMAL;
@@ -2412,3 +2416,4 @@ Boolean MCS_getdrives(MCExecPoint &ep)
 	
 	return True;
 }
+#endif 

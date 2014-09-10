@@ -1,0 +1,6 @@
+setup
+test the seconds is an integer
+put the seconds into tVar
+wait 1 second
+test the seconds > tVar
+teardown

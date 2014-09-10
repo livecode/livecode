@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-#include "core.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -29,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <langinfo.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,9 +38,7 @@ static bool make_tmp_fifo_pair(char*& r_name)
 	t_success = true;
 
 	char *t_name;
-	t_name = nil;
-	if (t_success)
-		t_success = MCCStringFormat(t_name, "/tmp/revtalk-XXXXXX");
+	t_name = strclone("/tmp/revtalk-XXXXXX");
 
 	if (t_success &&
 		mkdtemp(t_name) == nil)
@@ -190,23 +188,28 @@ static bool read_int32_from_fd(int fd, int32_t& r_value)
 // This method attempts to launch the given process with the permissions of an
 // administrator. At the moment we require libgksu, but should be able to extend
 // this to any platform with a suitably configured 'sudo' in the future.
-bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t& r_input_fd, int32_t& r_output_fd)
+bool MCSystemOpenElevatedProcess(MCStringRef p_command, int32_t& r_pid, int32_t& r_input_fd, int32_t& r_output_fd)
 {
 	bool t_success;
 	t_success = true;
 
+	// Convert the command string into the system encoding so that we can pass
+	// Unicode unscathed (hopefully)
+	MCAutoPointer<char> t_command;
+	/* UNCHECKED */ MCStringConvertToSysString(p_command, (const char*&)&t_command);
+	
 	// First split the command args into the argc/argv array we need.
 	char **t_argv;
 	uint32_t t_argc;
 	t_argv = nil;
 	t_argc = 0;
 	if (t_success)
-		t_success = MCCStringTokenize(p_command, t_argv, t_argc);
+		t_success = MCCStringTokenize(*t_command, t_argv, t_argc);
 
-	char *t_fifo_name;
+	MCAutoPointer<char> t_fifo_name;
 	t_fifo_name = nil;
 	if (t_success)
-		t_success = make_tmp_fifo_pair(t_fifo_name);
+		t_success = make_tmp_fifo_pair(&t_fifo_name);
 		
 	// Next we fork so that we can run gksu in a separate process thus allowing
 	// us to process things side-by-side.
@@ -223,31 +226,38 @@ bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t&
 	if (t_pid == 0)
 	{
 		// We must escape MCcmd to make gksu plays nice.
-		char *t_escaped_cmd;
-		t_escaped_cmd = nil;
+        MCAutoPointer<const char> t_unescaped_cmd;
+        MCAutoArray<char> t_escaped_cmd;
+		uindex_t t_unescaped_len;
+		uindex_t t_escaped_len = 0;
+		
 		if (t_success)
-			t_success = MCMemoryNewArray(MCCStringLength(MCcmd) * 2 + 1, t_escaped_cmd);
+			t_success = MCStringConvertToSysString(MCcmd, &t_unescaped_cmd);
+        
+        if (t_success)
+            t_unescaped_len = strlen(*t_unescaped_cmd);
+		
+		// The escaping can potentially double the length of the command
+		if (t_success)
+			t_success = t_escaped_cmd.New(2 * t_unescaped_len + 1);
 
 		if (t_success)
 		{
-			char *t_ptr;
-			t_ptr = t_escaped_cmd;
-			for(uint32_t i = 0; MCcmd[i] != '\0'; i++)
-				if (MCcmd[i] == ' ')
+			for (uindex_t i = 0; i < t_unescaped_len; i++)
+				if ((*t_unescaped_cmd)[i] == ' ')
 				{
-					*t_ptr++ = '\\';
-					*t_ptr++ = ' ';
+					t_escaped_cmd[t_escaped_len++] = '\\';
+					t_escaped_cmd[t_escaped_len++] = ' ';
 				}
 				else
-					*t_ptr++ = MCcmd[i];
-			*t_ptr = '\0';
+					t_escaped_cmd[t_escaped_len++] = (*t_unescaped_cmd)[i];
+			t_escaped_cmd[t_escaped_len] = '\0';
 		}
 
 		// Construct the command line for the bootstrap.
-		char *t_command_line;
-		t_command_line = nil;
+		MCAutoPointer<char> t_command_line;
 		if (t_success)
-			t_success = MCCStringFormat(t_command_line, "%s -elevated-slave \"%s\"", t_escaped_cmd, t_fifo_name);
+			t_success = MCCStringFormat(&t_command_line, "%s -elevated-slave \"%s\"", t_escaped_cmd.Ptr(), *t_fifo_name);
 
 		// We exec to gksu with appropriate parameters.
 		// This causes the child to request password from the user and then
@@ -255,9 +265,10 @@ bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t&
 		char *t_argv[4];
 		t_argv[0] = "gksu";
 		t_argv[1] = "--preserve-env";
-		t_argv[2] = t_command_line;
+		t_argv[2] = *t_command_line;
 		t_argv[3] = nil;
 
+		// Shouldn't return.
 		execvp(t_argv[0], t_argv);
 
 		// If we get here an error occured. We just exit with '-1' since the parent
@@ -271,7 +282,7 @@ bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t&
 	t_input_fd = -1;
 	t_output_fd = -1;
 	if (t_success)
-		t_success = open_tmp_fifo_pair(t_fifo_name, t_pid, t_input_fd, t_output_fd);
+		t_success = open_tmp_fifo_pair(*t_fifo_name, t_pid, t_input_fd, t_output_fd);
 
 	// The child will have hopefully forked and set back its pid. If not, it
 	// will have sent back -1.
@@ -304,7 +315,6 @@ bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t&
 				t_param += 1;
 			}
 
-			fprintf(stderr, "param = %s\n", t_param);
 			t_success = write_cstring_to_fd(t_output_fd, t_param);
 		}
 	}
@@ -327,10 +337,9 @@ bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t&
 	}
 
 	// If tmp fifo pair was created, we can now unlink their files regardless
-	if (t_fifo_name != nil)
-		unlink_tmp_fifo_pair(t_fifo_name);
+	if (*t_fifo_name != nil)
+		unlink_tmp_fifo_pair(*t_fifo_name);
 
-	MCCStringFree(t_fifo_name);
 	MCCStringArrayFree(t_argv, t_argc);
 
 	return t_success;
@@ -366,8 +375,12 @@ static bool read_cstring_from_fd(int fd, char*& r_cstring)
 	return true;
 }
 
-int MCSystemElevatedMain(int argc, char *argv[], char *envp[])
+int MCSystemElevatedMain(int argc, char* argv[])
 {
+	// NOTE: the real arguments are passed through the temporary FIFOs so there
+	// is no point asking for the StringRef argv array; it would just have to
+	// be converted back to the system encoding...
+	
 	char *t_fifo_name;
 	t_fifo_name = argv[2];
 
@@ -401,6 +414,7 @@ int MCSystemElevatedMain(int argc, char *argv[], char *envp[])
 	uint32_t t_arg_count;
 	read_uint32_from_fd(fileno(stdin), t_arg_count);
 
+	// The arguments read from the FIFO are encoded in the system encoding
 	char **t_args;
 	t_args = (char **)malloc(sizeof(char *) * (t_arg_count + 1));
 	memset(t_args, 0, (t_arg_count + 1) * sizeof(char *));

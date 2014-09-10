@@ -16,10 +16,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "foundation.h"
 #include "w32prefix.h"
-
-#include "core.h"
-
 #include "w32compat.h"
 
 // IM-2014-08-08: [[ Bug 12372 ]] Weak-linked QueryActCtxSettingsW function
@@ -43,7 +41,7 @@ bool MCWin32QueryActCtxSettingsW(BOOL &r_result, DWORD p_flags, HANDLE p_act_ctx
 		s_init = false;
 	}
 
-	if (s_QueryActCtxSettingsW == nil)
+	if (s_QueryActCtxSettingsW == NULL)
 		return false;
 
 	r_result = s_QueryActCtxSettingsW(p_flags, p_act_ctx, p_settings_namespace,
@@ -67,7 +65,7 @@ bool MCWin32SetProcessDPIAware(BOOL &r_result)
 		s_init = false;
 	}
 
-	if (s_SetProcessDPIAware == nil)
+	if (s_SetProcessDPIAware == NULL)
 		return false;
 
 	r_result = s_SetProcessDPIAware();
@@ -90,7 +88,7 @@ bool MCWin32IsProcessDPIAware(BOOL &r_result)
 		s_init = false;
 	}
 
-	if (s_IsProcessDPIAware == nil)
+	if (s_IsProcessDPIAware == NULL)
 		return false;
 
 	r_result = s_IsProcessDPIAware();
@@ -115,7 +113,7 @@ bool MCWin32GetProcessDPIAwareness(HRESULT &r_result, HANDLE p_hprocess,
 		s_init = false;
 	}
 
-	if (s_GetProcessDPIAwareness == nil)
+	if (s_GetProcessDPIAwareness == NULL)
 		return false;
 
 	r_result = s_GetProcessDPIAwareness(NULL, r_awareness);
@@ -142,7 +140,7 @@ bool MCWin32GetDPIForMonitor(HRESULT &r_result, HMONITOR p_monitor,
 		s_init = false;
 	}
 
-	if (s_GetDPIForMonitor == nil)
+	if (s_GetDPIForMonitor == NULL)
 		return false;
 
 	r_result = s_GetDPIForMonitor(p_monitor, p_dpi_type, r_dpi_x, r_dpi_y);
@@ -161,12 +159,12 @@ bool MCWin32QueryActCtxSettings(const unichar_t *p_settings_name, unichar_t *&r_
 	SIZE_T t_size;
 
 	unichar_t *t_buffer;
-	t_buffer = nil;
+	t_buffer = NULL;
 
 	uint32_t t_buffer_size;
 	t_buffer_size = 0;
 
-	t_success = MCWin32QueryActCtxSettingsW(t_result, 0, nil, nil, p_settings_name, nil, 0, &t_size);
+	t_success = MCWin32QueryActCtxSettingsW(t_result, 0, NULL, NULL, p_settings_name, NULL, 0, &t_size);
 
 	if (t_success)
 	{
@@ -183,7 +181,7 @@ bool MCWin32QueryActCtxSettings(const unichar_t *p_settings_name, unichar_t *&r_
 	}
 
 	if (t_success)
-		t_success = MCWin32QueryActCtxSettingsW(t_result, 0, nil, nil, p_settings_name, t_buffer, t_buffer_size, &t_size);
+		t_success = MCWin32QueryActCtxSettingsW(t_result, 0, NULL, NULL, p_settings_name, t_buffer, t_buffer_size, &t_size);
 
 	if (t_success)
 		t_success = t_result != FALSE;

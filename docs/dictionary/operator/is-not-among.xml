@@ -1,47 +1,68 @@
 <doc>
-  <legacy_id>1540</legacy_id>
-  <name>is not among</name>
-  <type>operator</type>
-  <syntax>
-    <example><i>valueToFind</i> is not among the {words | items | lines} of <i>stringToSearch</i></example>
-  </syntax>
-  <library></library>
-  <objects>
-  </objects>
-  <synonyms>
-  </synonyms>
-  <classification>
-    <category>Text and Data Processing</category>
-  </classification>
-  <references>
-    <operator tag="contains">contains Operator</operator>
-    <keyword tag="characters">characters Keyword</keyword>
-    <operator tag="is among">is among Operator</operator>
-    <operator tag="is among the keys of">is among the keys of Operator</operator>
-  </references>
-  <history>
-    <introduced version="1.0">Added.</introduced>
-  </history>
-  <platforms>
-    <mac/>
-    <windows/>
-    <linux/>
-    <ios/>
-    <android/>
-  </platforms>
-  <classes>
-    <desktop/>
-    <server/>
-    <web/>
-    <mobile/>
-  </classes>
-  <security>
-  </security>
-  <summary><glossary tag="evaluate">Evaluates</glossary> to true if a <glossary tag="chunk">chunk</glossary> is not equal to any of the <glossary tag="chunk">chunks</glossary> in a <keyword tag="string">string</keyword>, false otherwise.</summary>
-  <examples>
-    <example>"a" is not among the words of "human" <code><i>-- evaluates to true</i></code></example>
-  </examples>
-  <description>
-    <p>Use the <b>is not among</b> <glossary tag="operator">operator</glossary> to find out whether a <keyword tag="string">string</keyword> exists as an entire <keyword tag="word">word</keyword>, <keyword tag="item">item</keyword>, or <keyword tag="line">line</keyword> of another <keyword tag="string">string</keyword>.</p><p/><p><b>Parameters:</b></p><p>The <i>valueToFind</i> is a <keyword tag="string">string</keyword> or an <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <keyword tag="string">string</keyword>.</p><p/><p>The <i>stringToSearch</i> is a <keyword tag="string">string</keyword> is an <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <keyword tag="string">string</keyword>.</p><p/><p><b>Comments:</b></p><p>The <i>valueToFind</i> must be a single <keyword tag="word">word</keyword>, <keyword tag="item">item</keyword>, or <keyword tag="line">line</keyword> (whichever <glossary tag="chunk">chunk</glossary> type you have specified). If you specify a <keyword tag="string">string</keyword> containing more than one <glossary tag="chunk">chunk</glossary>, the <b>is not among</b> <glossary tag="operator">operator</glossary> <glossary tag="evaluate">evaluates</glossary> to true, even if all the <glossary tag="chunk">chunks</glossary> are in the <i>stringToSearch</i>.</p><p/><p>The <b>is not among</b> <glossary tag="operator">operator</glossary> is the logical inverse of the <operator tag="is among">is among</operator> <glossary tag="operator">operator</glossary>. When one is true, the other is false.</p>
-  </description>
+	<legacy_id>1540</legacy_id>
+	<name>is not among</name>
+	<type>operator</type>
+
+	<syntax>
+		<example>valueToFind is not among the {paragraphs | sentences | lines | items | words | segments | trueWords | tokens | codePoints | codeUnits | bytes} of stringToSearch</example>
+		<example></example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Evaluates to true if a chunk is not equal to any of the chunks in a string, false otherwise.</summary>
+
+	<examples>
+<example><p>"a" is not among the words of "human" -- evaluates to true</p></example>
+<example><p></p></example>
+<example><p></p></example>
+<example><p></p></example>
+<example><p></p></example>
+	</examples>
+
+	<history>
+		<introduced version="1.0">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+		<ios/>
+		<android/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Text and Data Processing</category>
+		<category></category>
+	</classification>
+
+	<references>
+		<operator tag="contains">contains operator</operator>
+		<operator tag="is among">is among operator</operator>
+		<operator tag="is among the keys of">is among the keys of operator</operator>
+		<keyword tag="characters">characters keyword</keyword>
+	</references>
+
+	<description><p>Use the <b>is not among</b> operator to find out whether a string exists as an entire word, item, or line of another string.</p><p></p><p><b>Parameters:</b></p><p>The <i>valueToFind</i> is a string or an expression that evaluates to a string.</p><p></p><p>The <i>stringToSearch</i> is a string is an expression that evaluates to a string.</p><p></p><p><b>Comments:</b></p><p>The <i>valueToFind</i> must be a single word, item, or line (whichever chunk type you have specified). If you specify a string containing more than one chunk, the <b>is not among</b> operator evaluates to true, even if all the chunks are in the <i>stringToSearch</i>.</p><p></p><p>The <b>is not among</b> operator is the logical inverse of the is among operator. When one is true, the other is false.</p></description>
 </doc>

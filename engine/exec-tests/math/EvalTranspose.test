@@ -1,0 +1,42 @@
+setup
+
+local tA1, tA2, tA3
+
+local tVal = 1
+repeat with r = 0 to 2
+	repeat with c = 0 to 4
+		put tVal into tA1[r,c]
+		add 1 to tVal
+	end repeat
+end repeat
+
+put transpose(tA1) into tA2
+test the extents of tA2 is ("0,4" & return & "0,2")
+
+repeat with r = 0 to 2
+	repeat with c = 0 to 4
+		test tA1[r,c] is tA2[c,r]
+	end repeat
+end repeat
+
+teardown
+
+setup "errors"
+
+local tA1
+put empty into tA1
+
+test-error transpose(tA1)
+
+put 1 into tA1[1,2]
+put "a" into tA1[a]
+
+test-error transpose(tA1)
+
+put empty into tA1
+put 1 into tA1[1,1]
+put 2 into tA1[1,3]
+
+test-error transpose(tA1)
+
+teardown

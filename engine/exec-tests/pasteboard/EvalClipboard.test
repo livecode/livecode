@@ -1,0 +1,9 @@
+setup
+
+set the clipboarddata["text"] to "some text"
+test the clipboard is "text"
+
+set the clipboarddata["private"] to "some private data"
+test the clipboard is "private"
+
+teardown

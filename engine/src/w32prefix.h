@@ -55,3 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //
 extern HINSTANCE MChInst;
+
+#undef GetCurrentTime
+// Undef GetObject because GetObjectW was called instead of MCExecContext::GetObject()
+#undef GetObject

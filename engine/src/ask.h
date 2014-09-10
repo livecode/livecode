@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __COMMANDS_ASK_H
 
 #ifndef __EXECUTION_POINT_H
-#include "execpt.h"
+//#include "execpt.h"
 #endif
 
 #ifndef __VARIABLE_H
@@ -36,7 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCAsk : public MCStatement
 {
 	Ask_type mode;
-	MCVarref *it;
 	MCExpression *title;
 	Boolean sheet;
 
@@ -72,24 +71,18 @@ public:
 		file . types = NULL;
 		file . type_count = 0;
 		mode = AT_UNDEFINED;
-		it = NULL;
 		sheet = False;
 	}
 	virtual ~MCAsk(void);
 
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
+	virtual void compile(MCSyntaxFactoryRef);
 
 private:
 	Parse_errors parse_question(MCScriptPoint& sp);
 	Parse_errors parse_password(MCScriptPoint& sp);
 	Parse_errors parse_file(MCScriptPoint& sp);
-
-	Exec_errors exec_question(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_password(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_file(MCExecPoint& ep, const char *p_title);
-
-	Exec_errors exec_custom(MCExecPoint& sp, bool& p_cancelled, const MCString& p_name, const char *p_type, unsigned int t_count, ...);
 };
 
 #endif

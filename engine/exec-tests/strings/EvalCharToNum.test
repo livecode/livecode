@@ -1,0 +1,18 @@
+setup "useUnicode is false"
+test charToNum("a") is 97
+test charToNum("ab") is 97
+test charToNum("") is ""
+teardown
+
+setup "useUnicode is true"
+set the useUnicode to true
+if the processor is not "ppc" then
+	test charToNum("ab") is 25185
+	test charToNum("aba") is 25185
+else
+	test charToNum("ba") is 25185
+	test charToNum("baa") is 25185
+end if
+test charToNum("a") is ""
+test charToNum("") is ""
+teardown

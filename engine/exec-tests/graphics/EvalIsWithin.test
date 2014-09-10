@@ -1,0 +1,20 @@
+setup " <a> is within <b> "
+
+test "0,0" is within "-5,-10,5,10"
+test "-5,-10" is within "-5,-10,5,10"
+test "4,9" is within "-5,-10,5,10"
+test not ("-6,-11" is within "-5,-10,5,10")
+test not ("5,10" is within "-5,-10,5,10")
+
+teardown
+
+
+setup " <a> is not within <b> "
+
+test not ("0,0" is not within "-5,-10,5,10")
+test not ("-5,-10" is not within "-5,-10,5,10")
+test not ("4,9" is not within "-5,-10,5,10")
+test "-6,-11" is not within "-5,-10,5,10"
+test "5,10" is not within "-5,-10,5,10"
+
+teardown

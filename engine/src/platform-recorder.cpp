@@ -30,6 +30,7 @@
 #include "platform-internal.h"
 
 #include "mac-player.h"
+#include "variable.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -199,7 +200,7 @@ double MCPlatformSoundRecorderGetLoudness(MCPlatformSoundRecorderRef p_recorder)
     return p_recorder -> GetLoudness();
 }
 
-bool MCPlatformSoundRecorderStart(MCPlatformSoundRecorderRef p_recorder, const char *p_filename)
+bool MCPlatformSoundRecorderStart(MCPlatformSoundRecorderRef p_recorder, MCStringRef p_filename)
 {
     return p_recorder -> StartRecording(p_filename);
 }

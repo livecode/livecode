@@ -127,26 +127,6 @@ moz_gtk_container_paint(GdkDrawable * drawable, GdkRectangle * rect,
 
 
 
-
-bool moz_gtk_handle_event(const XEvent &ev)
-{
-	bool ret = true;
-	
-	GdkEvent *gev = gdk_event_get();
-	if (gev && gev->type == GDK_SETTING)
-	{
-		gtk_main_do_event(gev);
-	}
-	else
-	{
-		ret = false;
-	}
-
-	return ret;
-}
-
-
-
 gint moz_gtk_enable_style_props(style_prop_t styleGetProp)
 {
 	style_prop_func = styleGetProp;

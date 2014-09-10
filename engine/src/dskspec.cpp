@@ -21,60 +21,70 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "object.h"
 #include "globals.h"
 #include "param.h"
 #include "osspec.h"
 
-void MCS_deleteurl(MCObject *p_target, const char *p_url)
+void MCS_deleteurl(MCObject *p_target, MCStringRef p_url)
 {
 	Boolean oldlock = MClockmessages;
 	MClockmessages = False;
-	MCParameter p1(p_url);
+	MCParameter p1;
+	p1 . setvalueref_argument(p_url);
 	p_target -> message(MCM_delete_url, &p1, False, True);
 	MClockmessages = oldlock;
 }
 
-void MCS_loadurl(MCObject *p_target, const char *p_url, const char *p_message)
+void MCS_loadurl(MCObject *p_target, MCStringRef p_url, MCNameRef p_message)
 {
-	MCParameter p1(p_url);
-	MCParameter p2(p_message);
+	MCParameter p1;
+	p1 . setvalueref_argument(p_url);
+	MCParameter p2;
+	p2 . setvalueref_argument(p_message);
 	p1.setnext(&p2);
 	// MW-2006-03-03: I've changed this from False, True to True, True to ensure 'target' is returned correctly for libURL.
 	p_target -> message(MCM_load_url, &p1, True, True);
 }
 
-void MCS_unloadurl(MCObject *p_target, const char *p_url)
+void MCS_unloadurl(MCObject *p_target, MCStringRef p_url)
 {
-	MCParameter p1(p_url);
+	MCParameter p1;
+	p1 . setvalueref_argument(p_url);
 	p_target -> message(MCM_unload_url, &p1, False, True);
 }
 
-void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url)
+void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 {
-	MCParameter p1(p_data);
-	MCParameter p2(p_url);
+	MCParameter p1;
+	p1 . setvalueref_argument(p_data);
+	MCParameter p2;
+	p2 . setvalueref_argument(p_url);
 	p1.setnext(&p2);
 	p_target -> message(MCM_post_url, &p1, False, True);
 }
 
-void MCS_putintourl(MCObject *p_target, const MCString& p_data, const char *p_url)
+void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 {
 	Boolean oldlock = MClockmessages;
 	MClockmessages = False;
-	MCParameter p1(p_data);
-	MCParameter p2(p_url);
+	MCParameter p1;
+	p1 . setvalueref_argument(p_data);
+	MCParameter p2;
+	p2 . setvalueref_argument(p_url);
 	p1.setnext(&p2);
 	p_target -> message(MCM_put_url, &p1, False, True);
 	MClockmessages = oldlock;
 }
 
-void MCS_geturl(MCObject *p_target, const char *p_url)
+void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 {
 	Boolean oldlock = MClockmessages;
 	MClockmessages = False;
-	MCParameter p1(p_url);
+	MCParameter p1;
+	p1 . setvalueref_argument(p_url);
 	p_target -> message(MCM_get_url, &p1, True, True);
 	MClockmessages = oldlock;
 }
@@ -88,26 +98,35 @@ MCSErrorMode MCS_get_errormode(void)
 	return kMCSErrorModeNone;
 }
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
+bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {
-	ep . setsvalue(p_data);
-
-	switch(p_kind)
+    bool t_success;
+    switch (p_kind)
 	{
-	case kMCSPutOutput:
-	case kMCSPutBeforeMessage:
+    case kMCSPutOutput:
+    case kMCSPutUnicodeOutput:
+    case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
-		return MCmb -> store(ep, False) == ES_NORMAL;
-	case kMCSPutAfterMessage:
-		return MCmb -> append(ep, False) == ES_NORMAL;
-
+		t_success = MCmb -> set(ctxt, p_data);
+        break;
+    case kMCSPutAfterMessage:
+        // SN-2014-04-11 [[ FasterVariable ]] parameter updated to use the new 'set' operation on variables
+        t_success = MCmb -> set(ctxt, p_data, kMCVariableSetAfter);
+        break;
 	default:
+        t_success = false;
 		break;
 	}
-
-	// MW-2012-02-23: [[ PutUnicode ]] If we don't understand the king
+    
+	// MW-2012-02-23: [[ PutUnicode ]] If we don't understand the kind
 	//   then return false (caller can then throw an error).
-	return false;
+	return t_success;
+}
+
+// Missing implementation. What to write here? Panos.
+bool MCS_put_binary(MCExecContext& ctxt, MCSPutKind p_kind, MCDataRef p_data)
+{
+    return false;
 }
 
 void MCS_set_outputtextencoding(MCSOutputTextEncoding encoding)
@@ -128,14 +147,15 @@ MCSOutputLineEndings MCS_get_outputlineendings(void)
 	return kMCSOutputLineEndingsNative;
 }
 
-bool MCS_set_session_save_path(const char *p_path)
+bool MCS_set_session_save_path(MCStringRef p_path)
 {
 	return true;
 }
 
-const char *MCS_get_session_save_path(void)
+bool MCS_get_session_save_path(MCStringRef& r_path)
 {
-	return "";
+	r_path = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 bool MCS_set_session_lifetime(uint32_t p_lifetime)
@@ -148,22 +168,25 @@ uint32_t MCS_get_session_lifetime(void)
 	return 0;
 }
 
-bool MCS_set_session_name(const char *p_name)
+bool MCS_set_session_name(MCStringRef p_name)
 {
 	return true;
 }
 
-const char *MCS_get_session_name(void)
+bool MCS_get_session_name(MCStringRef &r_name)
 {
-	return "";
+	r_name = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-bool MCS_set_session_id(const char *p_id)
+
+bool MCS_set_session_id(MCStringRef p_id)
 {
 	return true;
 }
 
-const char *MCS_get_session_id(void)
+bool MCS_get_session_id(MCStringRef &r_id)
 {
-	return "";
+	r_id = MCValueRetain(kMCEmptyString);
+	return true;
 }

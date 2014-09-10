@@ -17,10 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_BSDIFF__
 #define __MC_BSDIFF__
 
-#ifndef __MC_CORE__
-#include "core.h"
-#endif
-
 struct MCBsDiffInputStream
 {
 	virtual bool Measure(uint32_t& r_size) = 0;

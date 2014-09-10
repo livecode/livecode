@@ -1,0 +1,9 @@
+setup
+
+use "revLibURL"
+
+post "data=something" to URL "http://www.michael.on-rev.com/post_test.lc" 
+
+test it contains "something"
+
+teardown

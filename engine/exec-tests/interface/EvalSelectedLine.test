@@ -1,0 +1,12 @@
+setup
+create field
+
+set the text of the last field to "abc" & return & "def"
+
+select char 1 to -1 of the last field
+test the selectedLine is "line 1 to 2 of field 1"
+
+select empty
+test the selectedLine is empty
+
+teardown

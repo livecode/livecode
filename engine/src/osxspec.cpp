@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "util.h"
 #include "globals.h"
@@ -42,7 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "license.h"
 #include "mode.h"
-#include "core.h"
 #include "socket.h"
 #include "osspec.h"
 #include "mcssl.h"

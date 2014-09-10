@@ -16,7 +16,6 @@
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -29,7 +28,7 @@
 
 // MW-2013-05-21: [[ RandomBytes ]] System function for random bytes on Unix
 //   systems (Linux and Android).
-bool MCS_random_bytes(size_t p_count, void *p_buffer)
+bool MCS_random_bytes(size_t p_count, MCDataRef& r_bytes)
 {
 	// Open the random device.
 	int t_fd;
@@ -38,14 +37,15 @@ bool MCS_random_bytes(size_t p_count, void *p_buffer)
 		return false;
 	
 	// Loop until we've read enough bytes (or an error occurs)
-	uint8_t *t_bytes;
+    MCAutoByteArray t_bytes;
+    t_bytes . New(p_count);
+    
 	size_t t_bytes_read;
 	t_bytes_read = 0;
-	t_bytes = (uint8_t *)p_buffer;
 	while(t_bytes_read < p_count)
 	{
 		int t_read_count;
-		t_read_count = read(t_fd, t_bytes, p_count - t_bytes_read);
+		t_read_count = read(t_fd, t_bytes . Bytes(), p_count - t_bytes_read);
 		
 		// If we read nothing, give up.
 		if (t_read_count == 0)
@@ -55,8 +55,7 @@ bool MCS_random_bytes(size_t p_count, void *p_buffer)
 		if (t_read_count < 0 && errno != EINTR)
 			break;
 		
-		// Otherwise advance pointers, adjust counts.
-		t_bytes += t_read_count;
+		// Otherwise adjust count.
 		t_bytes_read += t_read_count;
 	}
 	
@@ -64,7 +63,7 @@ bool MCS_random_bytes(size_t p_count, void *p_buffer)
 	close(t_fd);
 	
 	// If we read the correct number of bytes, then we are done.
-	return t_bytes_read == p_count;
+	return t_bytes_read == p_count && t_bytes . CreateData(r_bytes);
 	
 }
 

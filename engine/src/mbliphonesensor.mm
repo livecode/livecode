@@ -16,13 +16,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 
 #include "exec.h"
@@ -112,9 +111,17 @@ static int32_t s_location_calibration_timeout = 0;
 - (void)locationManager: (CLLocationManager *)manager didFailWithError: (NSError *)error
 {
 	if (s_location_enabled)
-		MCSensorPostErrorMessage(kMCSensorTypeLocation, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	{
+		MCAutoStringRef t_error;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		MCSensorPostErrorMessage(kMCSensorTypeLocation, *t_error);
+	}
 	else if (s_heading_enabled)
-        MCSensorPostErrorMessage(kMCSensorTypeHeading, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	{
+        MCAutoStringRef t_error;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		MCSensorPostErrorMessage(kMCSensorTypeHeading, *t_error);
+	}
 }
 
 - (void)locationManager: (CLLocationManager *)manager didUpdateToLocation: (CLLocation *)newLocation fromLocation: (CLLocation *)oldLocation
@@ -230,7 +237,7 @@ double MCSystemGetSensorDispatchThreshold(MCSensorType p_sensor)
 // LOCATION SENSEOR
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool start_tracking_location(bool p_loosely)
+bool MCSystemStartTrackingLocation(bool p_loosely)
 {
     if ([CLLocationManager locationServicesEnabled] == YES)
     {
@@ -249,7 +256,7 @@ static bool start_tracking_location(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_location()
+bool MCSystemStopTrackingLocation()
 {
     if (s_location_enabled)
     {
@@ -314,7 +321,7 @@ bool MCSystemGetLocationCalibrationTimeout(int32_t& r_timeout)
 // HEADING SENSEOR
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool start_tracking_heading(bool p_loosely)
+bool MCSystemStartTrackingHeading(bool p_loosely)
 {
     if ([CLLocationManager headingAvailable] == YES)
     {
@@ -335,7 +342,7 @@ static bool start_tracking_heading(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_heading()
+bool MCSystemStopTrackingHeading()
 {
     if (s_heading_enabled)
     {
@@ -390,11 +397,15 @@ static void (^acceleration_update)(CMAccelerometerData *, NSError *) = ^(CMAccel
 		if (error == nil)
 			MCSensorPostChangeMessage(kMCSensorTypeAcceleration);
 		else
-			MCSensorPostErrorMessage(kMCSensorTypeAcceleration, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);		
+		{
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			MCSensorPostErrorMessage(kMCSensorTypeAcceleration, *t_error);
+		}
 	}
 };
 
-static bool start_tracking_acceleration(bool p_loosely)
+bool MCSystemStartTrackingAcceleration(bool p_loosely)
 {    
     initialize_core_motion();
     if ([s_motion_manager isAccelerometerAvailable] == YES)
@@ -410,7 +421,7 @@ static bool start_tracking_acceleration(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_acceleration()
+bool MCSystemStopTrackingAcceleration()
 {
     if (s_acceleration_enabled)
     {
@@ -452,11 +463,15 @@ static void (^rotation_rate_update)(CMGyroData *, NSError *) = ^(CMGyroData *gyr
 		if (error == nil)
             MCSensorPostChangeMessage(kMCSensorTypeRotationRate);
 		else
-			MCSensorPostErrorMessage(kMCSensorTypeRotationRate, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+		{
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			MCSensorPostErrorMessage(kMCSensorTypeRotationRate, *t_error);
+		}
 	}
 };
 
-static bool start_tracking_rotation_rate(bool p_loosely)
+bool MCSystemStartTrackingRotationRate(bool p_loosely)
 {    
     initialize_core_motion();
     if ([s_motion_manager isGyroAvailable] == YES)
@@ -472,7 +487,7 @@ static bool start_tracking_rotation_rate(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_rotation_rate()
+bool MCSystemStopTrackingRotationRate()
 {
     if (s_rotation_rate_enabled)
     {
@@ -504,7 +519,7 @@ bool MCSystemGetRotationRateReading(MCSensorRotationRateReading &r_reading, bool
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 bool MCSystemStartTrackingSensor(MCSensorType p_sensor, bool p_loosely)
 {
     switch (p_sensor)
@@ -536,5 +551,5 @@ bool MCSystemStopTrackingSensor(MCSensorType p_sensor)
     }
     return false;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////

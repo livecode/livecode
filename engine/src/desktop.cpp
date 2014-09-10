@@ -16,7 +16,6 @@
 
 #include "platform.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -25,7 +24,7 @@
 #include "objdefs.h"
 #include "unicode.h"
 
-#include "execpt.h"
+#include "exec.h"
 #include "scriptpt.h"
 #include "mcerror.h"
 #include "globals.h"
@@ -47,7 +46,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_init(int argc, char *argv[], char *envp[]);
+bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
 void X_main_loop_iteration();
 int X_close();
 
@@ -59,7 +58,7 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformHandleApplicationStartup(int p_argc, char **p_argv, char **p_envp, int& r_error_code, char*& r_error_message)
+void MCPlatformHandleApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
 {
 	if (X_init(p_argc, p_argv, p_envp))
 	{
@@ -69,7 +68,8 @@ void MCPlatformHandleApplicationStartup(int p_argc, char **p_argv, char **p_envp
 	}
 	
 	r_error_code = -1;
-	r_error_message = MCresult -> getvalue() . get_string() . clone();
+    if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+        r_error_message = (MCStringRef)MCValueRetain(MCresult->getvalueref());
 }
 
 void MCPlatformHandleApplicationShutdown(int& r_exit_code)
@@ -229,9 +229,10 @@ void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_
 	else
 	{
 		MCControl *t_control;
-		char t_id[U4L];
-		sprintf(t_id, "%d", p_view_id);
-		t_control = t_stack -> getcard() -> getchild(CT_ID, t_id, CT_LAYER, CT_UNDEFINED);
+        MCAutoStringRef t_id;
+        /* UNCHECKED */ MCStringFormat(&t_id, "%d", p_view_id);
+        
+		t_control = t_stack -> getcard() -> getchild(CT_ID, *t_id, CT_LAYER, CT_UNDEFINED);
 		if (t_control != nil)
 			t_stack -> kfocusset(t_control);
 		else
@@ -477,7 +478,7 @@ void MCPlatformHandleMouseScroll(MCPlatformWindowRef p_window, int p_dx, int p_d
 		mfocused = MCmousestackptr;
 	
 	if (p_dy != 0)
-		mfocused -> kdown("", p_dy < 0 ? XK_WheelUp : XK_WheelDown);
+		mfocused -> kdown(kMCEmptyString, p_dy < 0 ? XK_WheelUp : XK_WheelDown);
 	
 	mfocused = MCmousestackptr->getcard()->getmfocused();
 	if (mfocused == NULL)
@@ -486,7 +487,7 @@ void MCPlatformHandleMouseScroll(MCPlatformWindowRef p_window, int p_dx, int p_d
 		mfocused = MCmousestackptr;
 	
 	if (p_dx != 0)
-		mfocused -> kdown("", p_dx < 0 ? XK_WheelLeft : XK_WheelRight);
+		mfocused -> kdown(kMCEmptyString, p_dx < 0 ? XK_WheelLeft : XK_WheelRight);
 }
 
 //////////
@@ -550,22 +551,26 @@ static codepoint_t s_last_unmapped_codepoint = 0;
 // MW-2014-06-25: [[ Bug 12370 ]] Map an input keyCode and mapped codepoint to
 //   engine keysym and char. The engine expects keyCode to be the mapped key
 //   if an ascii character and the raw keycode if not.
-static void map_key_to_engine(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint, MCPlatformKeyCode& r_key_code, uint8_t *r_native_char)
+static void map_key_to_engine(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint, MCPlatformKeyCode& r_key_code, MCStringRef &r_native_char)
 {
     if (p_mapped_codepoint <= 0xffff)
 	{
-		uint16_t t_unicode_char;
-		t_unicode_char = p_mapped_codepoint & 0xffff;
+        uint16_t t_unicode_char;
+        char_t t_native_char;
+
+        // MW-2014-08-05: [[ Bug 13042 ]] This was a mis-merge from an updated fix to bug 12747
+        //   (the code previously was using unmapped codepoint).
+        t_unicode_char = p_mapped_codepoint & 0xffff;
 		
-		if (MCUnicodeMapToNative(&t_unicode_char, 1, r_native_char[0]))
+		if (MCUnicodeMapToNative(&t_unicode_char, 1, t_native_char))
 		{
-			r_native_char[1] = '\0';
+            /* UNCHECKED */ MCStringCreateWithNativeChars(&t_native_char, 1, r_native_char);
             
             // MW-2014-06-25: [[ Bug 12370 ]] The engine expects keyCode to be the mapped key whenever
             //   the mapped key is ASCII. If the mapped key is not ASCII then the keyCode reflects
             //   the raw (US English) keycode.
-            if (isascii(r_native_char[0]))
-                r_key_code = r_native_char[0];
+            if (isascii(t_native_char))
+                r_key_code = t_native_char;
             else
                 r_key_code = p_key_code;
             
@@ -573,7 +578,7 @@ static void map_key_to_engine(MCPlatformKeyCode p_key_code, codepoint_t p_mapped
         }
     }
     
-    r_native_char[0] = '\0';
+    r_native_char = MCValueRetain(kMCEmptyString);
     r_key_code = p_key_code;
 }
 
@@ -605,19 +610,19 @@ void MCPlatformHandleRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode 
 void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
 {
     MCPlatformKeyCode t_mapped_key_code;
-    uint8_t t_mapped_char[2];
-    map_key_to_engine(p_key_code, p_mapped_codepoint, p_unmapped_codepoint, t_mapped_key_code, t_mapped_char);
+    MCAutoStringRef t_mapped_char;
+    map_key_to_engine(p_key_code, p_mapped_codepoint, p_unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
     
-    MCdispatcher -> wkdown(p_window, (const char *)t_mapped_char, t_mapped_key_code);
+    MCdispatcher -> wkdown(p_window, *t_mapped_char, t_mapped_key_code);
 }
 
 void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
 {
     MCPlatformKeyCode t_mapped_key_code;
-    uint8_t t_mapped_char[2];
-    map_key_to_engine(p_key_code, p_mapped_codepoint, p_unmapped_codepoint, t_mapped_key_code, t_mapped_char);
+    MCAutoStringRef t_mapped_char;
+    map_key_to_engine(p_key_code, p_mapped_codepoint, p_unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
     
-    MCdispatcher -> wkup(p_window, (const char *)t_mapped_char, t_mapped_key_code);
+    MCdispatcher -> wkup(p_window, *t_mapped_char, t_mapped_key_code);
 }
 
 void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRange& r_marked_range, MCRange& r_selected_range)
@@ -700,17 +705,16 @@ void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_
     }
     
 	int32_t t_si, t_ei;
+    MCAutoStringRef t_text;
 	t_si = 0;
 	t_ei = INT32_MAX;
 	MCactivefield -> resolvechars(0, t_si, t_ei, p_range . offset, p_range . length);
     
-    MCExecPoint ep;
-    MCactivefield -> exportastext(0, ep, t_si, t_ei, true);
+    MCactivefield -> exportastext(0, t_si, t_ei, &t_text);
     
 	MCactivefield -> unresolvechars(0, t_si, t_ei);
     
-    r_chars = (unichar_t *)ep . getsvalue() . clone();
-    r_char_count = ep . getsvalue() . getlength() / 2;
+    /* UNCHECKED */ MCStringConvertToUnicode(*t_text, r_chars, r_char_count);
     r_actual_range = MCRangeMake(t_si, t_ei - t_si);
 }
 
@@ -748,14 +752,14 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 		
 		// If the char count is 1 and the replacement range matches the current selection,
 		// the char is native and the requested selection is after the char, then synthesis a
-		// keydown/up pair.
-        
+		// keydown/up pair.        
         // MW-2014-06-25: [[ Bug 12370 ]] If the char is ascii then map appropriately so we get
         //   the keycodes the engine expects.
-		uint8_t t_char[2];
+		char_t t_char;
+
 		if (!t_was_compositing &&
             p_char_count == 1 &&
-			MCUnicodeMapToNative(p_chars, 1, t_char[0]) &&
+			MCUnicodeMapToNative(p_chars, 1, t_char) &&
 			p_selection_range . offset == p_replace_range . offset + 1 &&
 			p_selection_range . length == 0)
 		{
@@ -766,12 +770,12 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 			{
                 // MW-2014-04-15: [[ Bug 12086 ]] Pass the keycode from the last event that was
                 //   passed to the IME.
+				MCAutoStringRef t_mapped_char;
                 MCPlatformKeyCode t_mapped_key_code;
-                uint8_t t_mapped_char[2];
-                map_key_to_engine(s_last_key_code, s_last_mapped_codepoint, s_last_unmapped_codepoint, t_mapped_key_code, t_mapped_char);
+                map_key_to_engine(s_last_key_code, s_last_mapped_codepoint, s_last_unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
 				
-                MCdispatcher -> wkdown(p_window, (const char *)t_mapped_char, t_mapped_key_code);
-				MCdispatcher -> wkup(p_window, (const char *)t_mapped_char, t_mapped_key_code);
+                MCdispatcher -> wkdown(p_window, *t_mapped_char, t_mapped_key_code);
+				MCdispatcher -> wkup(p_window, *t_mapped_char, t_mapped_key_code);
 				return;
 			}
 		}
@@ -801,7 +805,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	if (p_mark)
 		MCactivefield -> startcomposition();
 	
-	MCactivefield -> finsertnew(FT_IMEINSERT, MCString((char *)p_chars, p_char_count * 2), True, true);
+    MCAutoStringRef t_string;
+    MCStringCreateWithChars(p_chars, p_char_count, &t_string);
+	MCactivefield -> finsertnew(FT_IMEINSERT, *t_string, True);
 	
 	// And update the selection range.
 	int32_t t_s_si, t_s_ei;
@@ -816,11 +822,10 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 
 static void synthesize_key_press(MCPlatformWindowRef p_window, char p_char, KeySym p_sym)
 {
-	char t_string[2];
-	t_string[0] = p_char;
-	t_string[1] = '\0';
-	MCdispatcher -> wkdown(p_window, t_string, p_sym);
-	MCdispatcher -> wkup(p_window, t_string, p_sym);
+    MCAutoStringRef t_key;
+    /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)&p_char, 1, &t_key);
+	MCdispatcher -> wkdown(p_window, *t_key, p_sym);
+	MCdispatcher -> wkup(p_window, *t_key, p_sym);
 }
 
 static void synthesize_move_with_shift(MCField *p_field, Field_translations p_action)

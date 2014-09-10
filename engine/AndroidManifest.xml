@@ -39,12 +39,13 @@
         <data android:scheme="runrev" />
       </intent-filter>
     </activity>
-    <provider 
-	android:name="com.runrev.android.AttachmentProvider"
+    <provider
+        android:name="com.runrev.android.AppProvider"
         android:authorities="com.runrev.android.attachmentprovider"
         android:exported="true"
-        android:grantUriPermissions="true" >
+        android:grantUriPermissions="true">
     </provider>
+      
     <activity android:name="com.inneractive.api.ads.InneractiveFullScreenView"></activity>
     
     <service android:name="AppService" />

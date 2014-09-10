@@ -21,7 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "image.h"
@@ -40,7 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "resource.h"
 #include "meta.h"
 #include "mode.h"
-#include "core.h"
 
 #include "w32text.h"
 #include "w32compat.h"
@@ -72,7 +72,7 @@ static MCColor vgapalette[16] =
         {14, 0x0000, 0xFFFF, 0xFFFF, 0, 0}, {15, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0},
     };
 
-void MCScreenDC::setstatus(const char *status)
+void MCScreenDC::setstatus(MCStringRef status)
 { //No action
 }
 
@@ -189,22 +189,21 @@ Boolean MCScreenDC::open()
 	MChilitecolor.red = MChilitecolor.green = 0x0000;
 	MChilitecolor.blue = 0x8080;
 
-	MCExecPoint ep;
-	ep.setstaticcstring("HKEY_CURRENT_USER\\Control Panel\\Colors\\Hilight");
-	MCS_query_registry(ep, NULL);
-	if (ep.getsvalue().getlength())
+    MCExecContext ctxt(nil, nil, nil);
+    MCStringRef t_key;
+    t_key = MCSTR("HKEY_CURRENT_USER\\Control Panel\\Colors\\Hilight");
+    MCAutoValueRef t_value;
+    MCAutoStringRef t_type, t_error;
+    /* UNCHECKED */ MCS_query_registry(t_key, &t_value, &t_type, &t_error);
+
+	if (!MCValueIsEmpty(*t_value))
 	{
-		char *name = NULL;
-		char *cstring = ep.getsvalue().clone();
-		char *sptr = cstring;
-		do
-		{
-			if (*sptr == ' ')
-				*sptr = ',';
-		}
-		while (*++sptr);
-		parsecolor(cstring, &MChilitecolor, &name);
-		delete cstring;
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+		MCAutoStringRef t_string_mutable;
+		MCStringMutableCopy(*t_string, &t_string_mutable);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
+		/* UNCHECKED */ parsecolor(*t_string_mutable, MChilitecolor);
 	}
 	alloccolor(MChilitecolor);
 	
@@ -212,26 +211,25 @@ Boolean MCScreenDC::open()
 	alloccolor(MCaccentcolor);
 	
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xC0C0;
+    MCStringRef t_key2;
 
 	if (MCmajorosversion > 400)
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Control Panel\\Colors\\MenuBar");
+		t_key2 = MCSTR("HKEY_CURRENT_USER\\Control Panel\\Colors\\MenuBar");
 	else
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Control Panel\\Colors\\Menu");
+		t_key2 = MCSTR("HKEY_CURRENT_USER\\Control Panel\\Colors\\Menu");
 
-	MCS_query_registry(ep, NULL);
-	if (ep.getsvalue().getlength())
+	MCAutoValueRef t_value2;
+    MCAutoStringRef t_type2, t_error2;
+    /* UNCHECKED */ MCS_query_registry(t_key2, &t_value2, &t_type2, &t_error2);
+
+	if (!MCValueIsEmpty(*t_value2))
 	{
-		char *name = NULL;
-		char *cstring = ep.getsvalue().clone();
-		char *sptr = cstring;
-		do
-		{
-			if (*sptr == ' ')
-				*sptr = ',';
-		}
-		while (*++sptr);
-		parsecolor(cstring, &background_pixel, &name);
-		delete cstring;
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ ctxt . ConvertToString(*t_value2, &t_string);
+		MCAutoStringRef t_string_mutable;
+		MCStringMutableCopy(*t_string, &t_string_mutable);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
+		/* UNCHECKED */ parsecolor(*t_string_mutable, background_pixel);
 	}
 	alloccolor(background_pixel);
 
@@ -329,9 +327,9 @@ Boolean MCScreenDC::close(Boolean force)
 	return True;
 }
 
-const char *MCScreenDC::getdisplayname()
+MCNameRef MCScreenDC::getdisplayname()
 {
-	return "local Win32";
+	return MCN_local_win32;
 }
 
 void MCScreenDC::grabpointer(Window w)
@@ -576,7 +574,7 @@ void MCScreenDC::uniconifywindow(Window w)
 //   logic doesn't work :o(. Therefore I'm removing this for now and have instead
 //   added a bit to 'revRuntimeBehaviour' which allows turning off creation of
 //   unicode windows.
-void MCScreenDC::setname(Window w, const char *newname)
+void MCScreenDC::setname(Window w, MCStringRef newname)
 {
 	// MW-2009-11-01: Do nothing if there is no window
 	if (w == NULL)
@@ -584,17 +582,28 @@ void MCScreenDC::setname(Window w, const char *newname)
 
 	if (IsWindowUnicode((HWND)w -> handle . window))
 	{
-		LPWSTR t_unicode_name;
-		t_unicode_name = convertutf8towide(newname);
-		SetWindowTextW((HWND)w -> handle . window, t_unicode_name);
-		delete t_unicode_name;
+		// If the name begins with an RTL character, force windows to interpret
+        // it as such by pre-pending an RTL embedding (RTL) control.
+        MCAutoStringRef t_newname;
+        if (MCBidiFirstStrongIsolate(newname, 0) != 0)
+        {
+            /* UNCHECKED */ MCStringMutableCopy(newname, &t_newname);
+            /* UNCHECKED */ MCStringPrependChar(*t_newname, 0x202B);
+        }
+        else
+        {
+            t_newname = newname;
+        }
+        
+        MCAutoStringRefAsWString t_newname_w;
+		/* UNCHECKED */ t_newname_w . Lock(*t_newname);
+		SetWindowTextW((HWND)w -> handle . window, *t_newname_w);
 	}
 	else
 	{
-		LPCSTR t_ansi_name;
-		t_ansi_name = convertutf8toansi(newname);
-		SetWindowTextA((HWND)w->handle.window, t_ansi_name);
-		delete t_ansi_name;
+		MCAutoStringRefAsCString t_newname_a;
+		/* UNCHECKED */ t_newname_a . Lock(newname);
+		SetWindowTextA((HWND)w->handle.window, *t_newname_a);
 	}
 }
 
@@ -725,18 +734,18 @@ Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
 	return True;
 }
 
-void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
+void MCScreenDC::getbeep(uint4 property, int4& r_value)
 {
-	switch (which)
+	switch (property)
 	{
 	case P_BEEP_LOUDNESS:
-		ep.setint(100);
+		r_value = 100;
 		break;
 	case P_BEEP_PITCH:
-		ep.setint(beeppitch);
+		r_value = beeppitch;
 		break;
 	case P_BEEP_DURATION:
-		ep.setint(beepduration);
+		r_value = beepduration;
 		break;
 	}
 }
@@ -762,9 +771,9 @@ void MCScreenDC::setbeep(uint4 which, int4 beep)
 	}
 }
 
-void MCScreenDC::getvendorstring(MCExecPoint &ep)
+MCNameRef MCScreenDC::getvendorname(void)
 {
-	ep.setstaticcstring("Win32");
+	return MCN_win32;
 }
 
 uint2 MCScreenDC::getpad()
@@ -824,7 +833,8 @@ static bool WindowsIsCompositionEnabled(void)
 
 // MW-2014-02-20: [[ Bug 11811 ]] Updated to scale snapshot to requested size.
 bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
+
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size)
 {
 	bool t_is_composited;
 	t_is_composited = WindowsIsCompositionEnabled();
@@ -881,10 +891,10 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *di
 		SetROP2(snaphdc, R2_NOT);
 		SelectObject(snaphdc, GetStockObject(HOLLOW_BRUSH));
 		MSG msg;
-		while (!snapdone && GetMessageA(&msg, NULL, 0, 0))
+		while (!snapdone && GetMessageW(&msg, NULL, 0, 0))
 		{
 			TranslateMessage(&msg);
-			DispatchMessageA(&msg);
+			DispatchMessageW(&msg);
 		}
 		t_device_snaprect = snaprect;
 	}

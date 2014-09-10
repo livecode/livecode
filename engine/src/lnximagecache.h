@@ -17,8 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef XIMAGECACHE_H
 #define XIMAGECACHE_H
 
-#include <X11/Xft/Xft.h>
-
 #include "typedefs.h"
 #include "lnxgtkthemedrawing.h"
 
@@ -27,42 +25,29 @@ class MCXImageCacheNode
 {
 private:
 		
-	MCBitmap	*cached_image ;
+	GdkPixbuf	*cached_image ;
 	Boolean		isText ;
-
 		
 	// Elements that make a rendered image "unique"
 	GtkThemeWidgetType 	moztype ;
 	GtkWidgetState		*state ;	// We only compare _some_ of the state flags.
 	uint4				flags ;
-	
-	
-	// Elements that make a text "Image" unique
-	XftFont 	* font ;
-	char 		* text_string ;
-	uint4		text_string_length;
-	uint4		fgColor ;			// Just storing the pixel value from the XftColor structure.
-	uint4		bgColor ;
-	
 		
 public:
+    
 	uint4  		total_pixels ;
 
 	MCXImageCacheNode 	* next_ptr ;
 	MCXImageCacheNode 	* prev_ptr ;
-	
 
-	MCXImageCacheNode(MCBitmap *p_bitmap, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags );
-	MCXImageCacheNode(MCBitmap *p_bitmap, XftFont *p_font, const char *p_string, uint4 p_string_length, uint4 p_fgColor, uint4 p_bgColor ) ;
+	MCXImageCacheNode(GdkPixbuf *p_bitmap, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags);
 	~MCXImageCacheNode();
 	
 	Boolean matches ( uint4 p_width, uint4 p_height, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags ) ;
-	Boolean matches ( XftFont *p_font, uint4 p_width, uint4 p_height, const char *p_string, uint4 p_string_length, uint4 p_fgColor, uint4 p_bgColor ) ;
 
-	MCBitmap * get_cached_image (void);
+	GdkPixbuf* get_cached_image (void);
 
 	void add(MCXImageCacheNode *node) ;
-	
 	
 	MCXImageCacheNode *next()
 	{
@@ -90,20 +75,18 @@ public:
 	MCXImageCache() ;
 	~MCXImageCache() ;
 	
-	MCBitmap 		* get_from_cache ( MCXImageCacheNode * p_node )  ;
-	void 			destroy_image_cache (void);
-	void			adjust_cache_size (MCBitmap * p_bitmap );
-	bool 			too_big_to_cache ( MCBitmap * p_bitmap ) ;
+	GdkPixbuf* 		get_from_cache(MCXImageCacheNode * p_node);
+	void 			destroy_image_cache(void);
+	void			adjust_cache_size(GdkPixbuf* p_bitmap);
+	bool 			too_big_to_cache(GdkPixbuf* p_bitmap);
 
 
 	// These need to be overridden for each type of object we want to cache.
-	bool 				add_to_cache (MCBitmap * p_bitmap, XftFont *p_font, const char *p_string, uint4 p_string_length, uint4 p_fgColor, uint4 p_bgColor   );
-	bool 				add_to_cache (MCBitmap * p_bitmap, MCThemeDrawInfo& p_info );
-	MCXImageCacheNode 	*find_cached_image ( uint4 p_width, uint4 p_height, XftFont *p_font, const char *p_string, uint4 p_string_length, uint4 p_fgColor, uint4 p_bgColor ) ;
-	MCXImageCacheNode 	*find_cached_image ( uint4 p_width, uint4 p_height, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags ) ;
+	bool 				add_to_cache(GdkPixbuf * p_bitmap, MCThemeDrawInfo& p_info);
+	MCXImageCacheNode 	*find_cached_image(uint4 p_width, uint4 p_height, GtkThemeWidgetType p_moztype, GtkWidgetState *p_state, uint4 p_flags);
 	
 	void				cache_size(void);
-} ;
+};
 
 
 

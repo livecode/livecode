@@ -16,7 +16,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-#include "core.h"
 #include "globdefs.h"
 #include "uidc.h"
 
@@ -130,7 +129,7 @@ static void byte_swap_bitmap_data(MCImageBitmap *p_bitmap)
 		uint32_t *t_src_pixel = (uint32_t*)t_src_row;
 		for (uindex_t x = 0; x < p_bitmap->width; x++)
 		{
-			*t_src_pixel = MCByteSwappedFromHost32(*t_src_pixel);
+			*t_src_pixel = MCSwapInt32HostToNetwork(*t_src_pixel);
 			t_src_pixel++;
 		}
 		t_src_row += p_bitmap->stride;

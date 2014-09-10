@@ -23,7 +23,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "image.h"
 
-#include "core.h"
 #include "graphics.h"
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -23,7 +23,7 @@ struct Breakpoint
 {
 	MCObject *object;
 	uint4 line;
-	char *info;
+	MCStringRef info;
 };
 
 // set the breakpoints to "button 1, 3"
@@ -33,14 +33,14 @@ struct Watchvar
 	MCObject *object;
 	MCNameRef handlername;
 	MCNameRef varname;
-	char *expression;
+	MCStringRef expression;
 };
 
 // set the watchedvariables to "button 1, somehandler, somevar, someexp"
 
 #define MAX_CONTEXTS 100
 
-extern MCExecPoint *MCEPptr;
+extern MCExecContext *MCECptr;
 extern MCStack *MCtracestackptr;
 extern Window MCtracewindow;
 extern Boolean MCtrace;
@@ -57,24 +57,33 @@ extern Breakpoint *MCbreakpoints;
 extern uint2 MCnwatchedvars;
 extern Watchvar *MCwatchedvars;
 
-extern MCExecPoint *MCexecutioncontexts[MAX_CONTEXTS];
+extern MCExecContext *MCexecutioncontexts[MAX_CONTEXTS];
 extern uint2 MCnexecutioncontexts;
 extern uint2 MCdebugcontext;
 extern Boolean MCmessagemessages;
 
-extern void MCB_setmsg(MCExecPoint &ep);
-extern void MCB_message(MCExecPoint &ep, MCNameRef message, MCParameter *p);
-extern void MCB_prepmessage(MCExecPoint &ep, MCNameRef message, uint2 line, uint2 pos, uint2 id, const char *info = NULL);
-extern void MCB_break(MCExecPoint &ep, uint2 line, uint2 pos);
-extern void MCB_trace(MCExecPoint &ep, uint2 line, uint2 pos);
-extern bool MCB_error(MCExecPoint &ep, uint2 line, uint2 pos, uint2 id);
-extern void MCB_done(MCExecPoint &ep);
-extern void MCB_setvar(MCExecPoint &ep, MCNameRef name);
+struct MCExecValue;
 
+extern void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string);
+extern void MCB_message(MCExecContext &ctxt, MCNameRef message, MCParameter *p);
+extern void MCB_prepmessage(MCExecContext &ctxt, MCNameRef message, uint2 line, uint2 pos, uint2 id, MCStringRef p_info = kMCEmptyString);
+extern void MCB_break(MCExecContext &ctxt, uint2 line, uint2 pos);
+extern void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos);
+extern bool MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id);
+extern void MCB_done(MCExecContext &ctxt);
+extern void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name);
+extern void MCB_setvalue(MCExecContext &ctxt, MCExecValue p_value, MCNameRef name);
+
+extern void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input);
+#ifdef LEGACY_EXEC
 extern void MCB_parsebreaks(MCExecPoint& breaks);
+#endif
+extern bool MCB_unparsebreaks(MCStringRef& r_value);
+#ifdef LEGACY_EXEC
 extern void MCB_unparsebreaks(MCExecPoint& breaks);
+#endif
 extern void MCB_clearbreaks(MCObject *object);
 
-extern Exec_stat MCB_parsewatches(MCExecPoint& watches);
-extern void MCB_unparsewatches(MCExecPoint& watches);
+extern void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input);
+extern bool MCB_unparsewatches(MCStringRef &r_watches);
 extern void MCB_clearwatches(void);

@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "undolst.h"
 #include "sellst.h"

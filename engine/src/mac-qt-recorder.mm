@@ -31,6 +31,8 @@
 #include "platform.h"
 #include "platform-internal.h"
 
+#include "variable.h"
+
 #include <Cocoa/Cocoa.h>
 #include <QTKit/QTKit.h>
 #include <QuickTime/QuickTime.h>
@@ -66,7 +68,7 @@ public:
     virtual void BeginDialog(void);
     virtual MCPlatformDialogResult EndDialog(void);
     
-    virtual bool StartRecording(const char *filename);
+    virtual bool StartRecording(MCStringRef filename);
     virtual void StopRecording(void);
     virtual void PauseRecording(void);
     virtual void ResumeRecording(void);
@@ -100,7 +102,7 @@ protected:
     bool m_has_magic_cookie;
     
 private:
-    char *m_temp_file;
+    MCStringRef m_temp_file;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,11 +189,11 @@ static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 	return aDesc;
 }
 
-static bool path_to_dataref(const char *p_path, DataReferenceRecord& r_rec)
+static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 {
 	bool t_success = true;
 	CFStringRef t_cf_path = NULL;
-	t_cf_path = CFStringCreateWithCString(NULL, p_path, kCFStringEncodingWindowsLatin1);
+	t_cf_path = CFStringCreateWithCString(NULL, MCStringGetCString(p_path), kCFStringEncodingWindowsLatin1);
 	t_success = (t_cf_path != NULL);
 	if (t_success)
 	{
@@ -203,18 +205,20 @@ static bool path_to_dataref(const char *p_path, DataReferenceRecord& r_rec)
 	return t_success;
 }
 
-static void exportToSoundFile(const char *sourcefile, const char *destfile)
+static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 {
 	bool t_success = true;
 	SoundDescriptionHandle myDesc = NULL;
 	ComponentResult result = 0;
 	Movie tmovie = nil;
 	
-	char *t_src_resolved = NULL;
-	char *t_dst_resolved = NULL;
-	t_src_resolved = MCS_resolvepath(sourcefile);
-	t_dst_resolved = MCS_resolvepath(destfile);
-	t_success = (t_src_resolved != NULL && t_dst_resolved != NULL);
+    MCAutoStringRef t_src_resolved;
+	MCAutoStringRef t_dst_resolved;
+    
+    t_success = MCS_resolvepath(sourcefile, &t_src_resolved)
+    && MCS_resolvepath(destfile, &t_src_resolved);
+    
+	t_success = (*t_src_resolved != NULL && *t_dst_resolved != NULL);
 	
 	DataReferenceRecord t_src_rec, t_dst_rec;
 	t_src_rec.dataRef = NULL;
@@ -222,12 +226,9 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 	
 	if (t_success)
 	{
-		t_success = path_to_dataref(t_src_resolved, t_src_rec) &&
-		path_to_dataref(t_dst_resolved, t_dst_rec);
+		t_success = path_to_dataref(*t_src_resolved, t_src_rec)
+        && path_to_dataref(*t_dst_resolved, t_dst_rec);
 	}
-	
-	free(t_src_resolved);
-	free(t_dst_resolved);
 	
 	Boolean isActive = true;
 	QTVisualContextRef aVisualContext = NULL;
@@ -274,7 +275,8 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 		(**myDesc).sampleRate = (uint32_t)(MCrecordrate * 1000 * 65536);
 		exporter = nil;
 		exporter = OpenComponent(c);
-		result = MovieExportSetSampleDescription(exporter, (SampleDescriptionHandle)myDesc, SGAudioMediaType);
+		result = MovieExportSetSampleDescription(exporter, (SampleDescriptionHandle)myDesc,
+												 SoundMediaType);
 		errno = ConvertMovieToDataRef(tmovie, 0, t_dst_rec . dataRef, t_dst_rec . dataRefType, cd.componentSubType,
 									  0, 0, exporter);
 		// try showUserSettingsDialog | movieToFileOnlyExport | movieFileSpecValid
@@ -283,9 +285,9 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 			CloseComponent(exporter);
 		if (errno != noErr)
 		{
-			char buffer[26 + U4L];
-			sprintf(buffer, "error %d exporting recording", errno);
-			MCresult->copysvalue(buffer);
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringFormat(&t_error, "error %d exporting recording", errno);
+			MCresult->setvalueref(*t_error);
 		}
 	}
 	
@@ -304,8 +306,8 @@ MCQTSoundRecorder::MCQTSoundRecorder(void)
     m_dialog_result = kMCPlatformDialogResultContinue;
     m_seq_grab = nil;
     m_channel = nil;
-    m_temp_file = nil;
-    m_filename = nil;
+    m_temp_file = MCValueRetain(kMCEmptyString);
+    m_filename = MCValueRetain(kMCEmptyString);
     m_has_magic_cookie = false;
     
     m_observer = [[com_runrev_livecode_MCQTSoundRecorderObserver alloc] initWithRecorder: this];
@@ -606,7 +608,7 @@ MCPlatformDialogResult MCQTSoundRecorder::EndDialog()
     return m_dialog_result;
 }
 
-bool MCQTSoundRecorder::StartRecording(const char *p_filename)
+bool MCQTSoundRecorder::StartRecording(MCStringRef p_filename)
 {
     // Stop recording in case currently recording already
     StopRecording();
@@ -652,22 +654,24 @@ bool MCQTSoundRecorder::StartRecording(const char *p_filename)
     t_success = t_error == noErr;
     
     if (t_success)
-        t_success = MCCStringClone(MCS_tmpnam(), m_temp_file);
+        t_success = MCS_tmpnam(m_temp_file);
     
-    if (t_success)
-        t_success = MCCStringClone(p_filename, m_filename);
+    m_filename = MCValueRetain(p_filename);
     
     if (t_success)
     {
         // MW-2008-03-15: [[ Bug 6076 ]] Make sure we create the file before we start recording to it
         //   otherwise no recording happens.
         FILE *t_file;
-        t_file = fopen(m_temp_file, "w");
+        MCAutoStringRefAsUTF8String t_utf8_tempfile;
+        /* UNCHECKED */ t_utf8_tempfile . Lock(m_temp_file);
+        t_file = fopen(*t_utf8_tempfile, "w");
+        
         if (t_file != NULL)
             fclose(t_file);
         
         NSString *t_capture_path;
-        t_capture_path = [NSString stringWithCString:m_temp_file encoding:NSMacOSRomanStringEncoding];
+        t_capture_path = [NSString stringWithMCStringRef:m_temp_file];
         
         OSStatus err = noErr;
         Handle t_data_ref = nil;

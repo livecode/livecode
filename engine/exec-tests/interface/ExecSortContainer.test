@@ -1,0 +1,11 @@
+setup 
+
+local tContainer
+
+put "b,d,f,g,c,h,e,a" into tContainer
+
+sort items of tContainer
+
+test tContainer is "a,b,c,d,e,f,g,h" 
+
+teardown

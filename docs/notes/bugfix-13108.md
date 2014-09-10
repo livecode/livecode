@@ -1,0 +1,1 @@
+# text selection in columnar data incorrect 

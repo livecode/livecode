@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"

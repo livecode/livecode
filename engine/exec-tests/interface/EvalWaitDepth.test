@@ -1,0 +1,17 @@
+setup
+
+test the waitdepth is an integer
+
+global gWaitDepthTestResult
+create button
+set the script of button 1 to "on waitDepthTest" & cr & \
+"global gWaitDepthTestResult" & cr & \
+"put the waitdepth into gWaitDepthTestResult" & cr & \
+"end waitDepthTest"
+
+send "waitDepthTest" to button 1 in 0 seconds
+wait 0 seconds with messages
+
+test gWaitDepthTestResult is (1 + the waitdepth)
+
+teardown

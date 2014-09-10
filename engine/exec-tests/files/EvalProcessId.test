@@ -1,0 +1,3 @@
+setup
+test the processId is an integer
+teardown

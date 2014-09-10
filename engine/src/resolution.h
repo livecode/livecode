@@ -41,8 +41,8 @@ bool MCResGetUsePixelScaling(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM-2014-01-27: [[ HiDPI ]] Return the pixel scales of the main screen (or all screens)
-// as a return-delimited list
-void MCResListScreenPixelScales(MCExecPoint &ep, bool p_plural);
+// as an array
+void MCResListScreenPixelScales(bool p_plural, uindex_t& r_count, double *&r_list);
 
 ////////////////////////////////////////////////////////////////////////////////
 

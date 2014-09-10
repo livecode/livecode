@@ -1,0 +1,25 @@
+setup
+
+create button
+
+set the loc of button 1 to "0,0"
+
+global tVar
+
+put false into tVar
+
+set the script of button 1 to "on mouseDown;global tVar;put true into tVar;end mouseDown"
+
+choose poi tool
+
+click at "0,0"
+
+test the selectedObject is button 1
+
+choose bro tool
+
+click at "0,0"
+
+test tVar
+
+teardown

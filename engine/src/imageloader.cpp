@@ -41,6 +41,7 @@ MCImageLoader::MCImageLoader(IO_handle p_stream)
 MCImageLoader::~MCImageLoader()
 {
 	MCImageFreeFrames(m_frames, m_frame_count);
+    MCValueRelease(m_name);
 }
 
 bool MCImageLoader::GetGeometry(uint32_t &r_width, uint32_t &r_height)
@@ -65,23 +66,12 @@ bool MCImageLoader::GetHotSpot(uint32_t &r_x, uint32_t &r_y)
 	return true;
 }
 
-bool MCImageLoader::GetName(const char *&r_name)
+bool MCImageLoader::GetName(MCStringRef &r_name)
 {
 	if (!EnsureHeader())
 		return false;
 	
 	r_name = m_name;
-	
-	return true;
-}
-
-bool MCImageLoader::TakeName(char *&r_name)
-{
-	if (!EnsureHeader())
-		return false;
-	
-	r_name = m_name;
-	m_name = nil;
 	
 	return true;
 }
@@ -170,7 +160,7 @@ bool MCImageLoader::IdentifyFormat(IO_handle p_stream, MCImageLoaderFormat &r_fo
 	MCImageLoaderFormat t_format;
 	
 	if (t_success)
-		t_success = MCS_read(t_head, sizeof(uint8_t), t_size, p_stream) == IO_NORMAL &&
+		t_success = MCS_readfixed(t_head, t_size, p_stream) == IO_NORMAL &&
 		t_size == 8 && MCS_seek_cur(p_stream, -8) == IO_NORMAL;
 	
 	if (t_success)

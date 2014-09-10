@@ -39,7 +39,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProgramFiles)\Microsoft Speech SDK\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libcore\include&quot;;&quot;$(ProgramFiles)\Microsoft Speech SDK\Include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;REVSPEECH_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -113,7 +113,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProgramFiles)\Microsoft Speech SDK\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libcore\include&quot;;&quot;$(ProgramFiles)\Microsoft Speech SDK\Include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;REVSPEECH_EXPORTS"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"
@@ -207,6 +207,14 @@
 			<File
 				RelativePath=".\src\w32sapi4speech.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\w32sapi5speech.cpp"

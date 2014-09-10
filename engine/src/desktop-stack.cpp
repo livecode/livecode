@@ -16,7 +16,6 @@
 
 #include "platform.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -24,7 +23,7 @@
 #include "parsedef.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+#include "exec.h"
 #include "scriptpt.h"
 #include "mcerror.h"
 #include "globals.h"

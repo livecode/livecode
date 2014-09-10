@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCTooltip : public MCStack
 {
-	const char *tooltip;
+	MCStringRef tip;
 	int2 mx;
 	int2 my;
 	MCCard *card;
@@ -41,10 +41,11 @@ public:
 	void clearmatch(MCCard *c);
 	void opentip();
 	void closetip();
-	void settip(const char *tip);
-	const char *gettip()
+	void cleartip();
+	void settip(MCStringRef p_tip);
+	MCStringRef gettip()
 	{
-		return tooltip;
+		return tip;
 	}
 };
 #endif

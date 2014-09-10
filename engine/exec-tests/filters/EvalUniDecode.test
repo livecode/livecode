@@ -1,0 +1,40 @@
+setup
+
+// assume little-endian for now
+// first 128 chars are the same on all platforms & map directly to unicode chars
+repeat with i = 0 to 127
+	test uniDecode(numToByte(i) & numToByte(0)) is numToChar(i)
+end repeat
+
+if the platform is "win32" then
+
+	// Windows-1252
+
+	// test char 128 (euro symbol) mapping to unicode codepoint 20AC
+	test uniDecode(binaryEncode("H4", "AC20")) is numToChar(128)
+
+	// chars 160 to 255 map directly to unicode
+	repeat with i = 160 to 255
+		test uniDecode(numToByte(i) & numToByte(0)) is numToChar(i)
+	end repeat
+
+else if the platform is "MacOS" then
+
+	// test char 219 (euro symbol) mapping to unicode codepoint 20AC
+	test uniDecode(binaryEncode("H4", "AC20")) is numToChar(219)
+	
+else if the platform is "Linux" then
+
+	// ISO 8859-1 - maps directly to first 256 Unicode chars
+	repeat with i = 128 to 255
+		test uniDecode(numToByte(i) & numToByte(0)) is numToChar(i)
+	end repeat
+
+else
+
+	// TODO - add this platform :)
+	test false
+
+end if
+
+teardown

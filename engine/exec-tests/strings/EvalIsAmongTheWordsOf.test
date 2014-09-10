@@ -1,0 +1,25 @@
+setup " <a> is among the words of <b> "
+
+test "abc," is among the words of ("abc, 123 def." && quote & "quoted string" & quote)
+test "def." is among the words of ("abc, 123 def." && quote & "quoted string" & quote)
+test 123 is among the words of ("abc, 123 def." && quote & "quoted string" & quote)
+test quote & "quoted string" & quote is among the words of ("abc, 123 def." && quote & "quoted string" & quote)
+
+test not ("x" is among the words of ("abc, 123 def." && quote & "quoted string" & quote))
+test not (space is among the words of ("abc, 123 def." && quote & "quoted string" & quote))
+
+teardown
+
+
+setup " <a> is not among the words of <b> "
+
+test not ("abc," is not among the words of ("abc, 123 def." && quote & "quoted string" & quote))
+test not ("def." is not among the words of ("abc, 123 def." && quote & "quoted string" & quote))
+test not (123 is not among the words of ("abc, 123 def." && quote & "quoted string" & quote))
+test not (quote & "quoted string" & quote is not among the words of ("abc, 123 def." && quote & "quoted string" & quote))
+
+test "x" is not among the words of ("abc, 123 def." && quote & "quoted string" & quote)
+test space is not among the words of ("abc, 123 def." && quote & "quoted string" & quote)
+
+teardown
+

@@ -1,0 +1,1 @@
+# Setting text of a combobox does not set the label

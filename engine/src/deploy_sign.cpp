@@ -16,13 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -430,10 +430,22 @@ template<typename T> static bool i2d(int (*p_i2d)(T *, unsigned char **), T *p_o
 
 // This method loads a X.509v3 certificate stored in an empty PKCS#7 SignedData
 // structure.
-static bool MCDeployCertificateLoad(const char *p_passphrase, const char *p_certificate, PKCS7*& r_chain)
+static bool MCDeployCertificateLoad(MCStringRef p_passphrase, MCStringRef p_certificate, PKCS7*& r_chain)
 {
+    // SN-2014-01-10: The certificate filename can be in unicode.
+    // As a char* is required, the conversion must be done.
+    // On Mac, UTF8 suits the filesystem encoding requirements
+    // On Windows, BIO_new_file expects a UFT-8 path
+    // On Linux, a SysString is used
+#ifdef _LINUX
+    MCAutoStringRefAsSysString t_certificate;
+#else
+    MCAutoStringRefAsUTF8String t_certificate;
+#endif
+    t_certificate . Lock(p_certificate);
+
 	BIO *t_file;
-	t_file = BIO_new_file(p_certificate, "rb");
+    t_file = BIO_new_file(*t_certificate, "rb");
 	if (t_file == nil)
 		return MCDeployThrowOpenSSL(kMCDeployErrorNoCertificate);
 
@@ -460,14 +472,14 @@ static bool MCDeployCertificateLoad(const char *p_passphrase, const char *p_cert
 
 // This method loads a private key stored in either PKCS#8 format, or in a the
 // Microsoft PVK format.
-static bool MCDeploySignLoadPVK(const char *, const char *, EVP_PKEY*&);
-static bool MCDeployPrivateKeyLoad(const char *p_passphrase, const char *p_privatekey, EVP_PKEY*& r_private_key)
+static bool MCDeploySignLoadPVK(MCStringRef, MCStringRef, EVP_PKEY*&);
+static bool MCDeployPrivateKeyLoad(MCStringRef p_passphrase, MCStringRef p_privatekey, EVP_PKEY*& r_private_key)
 {
 	return MCDeploySignLoadPVK(p_privatekey, p_passphrase, r_private_key);
 }
 
 // This method loads a PKCS#12 privatekey/certificate pair.
-static bool MCDeployCertStoreLoad(const char *p_passphrase, const char *p_store, PKCS7*& r_certificate, EVP_PKEY*& r_private_key)
+static bool MCDeployCertStoreLoad(MCStringRef p_passphrase, MCStringRef p_store, PKCS7*& r_certificate, EVP_PKEY*& r_private_key)
 {
 	return false;
 }
@@ -683,7 +695,7 @@ static bool MCDeploySignCopyFileAt(BIO *p_output, MCDeployFileRef p_input, uint3
 	bool t_success;
 	t_success = true;
 
-	if (!MCDeployFileSeek(p_input, p_offset, SEEK_SET))
+	if (!MCDeployFileSeekSet(p_input, p_offset))
 		return MCDeployThrow(kMCDeployErrorBadRead);
 
 	while(p_amount > 0)
@@ -796,14 +808,18 @@ static bool MCDeploySignWindowsAddOpusInfo(const MCDeploySignParameters& p_param
 	}
 
 	if (t_success && p_params . description != nil)
-		t_success = MCDeployBuildSpcString(p_params . description, false, t_opus -> description);
+    {
+        MCAutoStringRefAsUTF8String t_utf8_string;
+        t_success = t_utf8_string . Lock(p_params . description)
+                && MCDeployBuildSpcString(*t_utf8_string, false, t_opus -> description);
+    }
 	
 	if (t_success && p_params . url != nil)
 	{
 		t_opus -> url = SpcLink_new();
 		if (t_opus -> url != nil)
 		{
-			if (ASN1_mbstring_copy(&t_opus -> url -> d . url, (const unsigned char *)p_params . url, strlen(p_params . url), MBSTRING_UTF8, B_ASN1_IA5STRING))
+			if (ASN1_mbstring_copy(&t_opus -> url -> d . url, MCStringGetNativeCharPtr(p_params.url), MCStringGetLength(p_params.url), MBSTRING_UTF8, B_ASN1_IA5STRING))
 				t_opus -> url -> type = 0;
 			else
 				t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadString);
@@ -894,21 +910,16 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 		t_success = i2d(i2d_SpcTimeStampRequest, t_request, t_request_data, t_request_length);
 
 	// Convert the request to base64
-	extern MCExecPoint *MCEPptr;
-	MCExecPoint ep(*MCEPptr);
-	if (t_success)
-	{
-		ep . setstaticbytes(t_request_data, t_request_length);
-		MCU_base64encode(ep);
-		ep . appendnewline();
-	}
-
+    MCAutoDataRef t_req_dataref;
+    MCAutoStringRef t_req_base64;
+    /* UNCHECKED */ MCDataCreateWithBytes(t_request_data, t_request_length, &t_req_dataref);
+    MCU_base64encode(*t_req_dataref, &t_req_base64);
+    
 	// Request the timestamp from the tsa
 	if (t_success)
 	{
 		// Set the HTTP headers appropriately to make sure no unpleasant caching goes on.
-		delete MChttpheaders;
-		MChttpheaders = strdup("Content-Type: application/octet-stream\nAccept: application/octet-stream\nUser-Agent: Transport\nCache-Control: no-cache");
+		MCValueAssign(MChttpheaders, MCSTR("Content-Type: application/octet-stream\nAccept: application/octet-stream\nUser-Agent: Transport\nCache-Control: no-cache"));
 
 		// Use libURL to do the post - we attempt this 5 times with increasing sleep
 		// periods. This is because it looks like the timestamping service is a little
@@ -922,11 +933,14 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 		while(t_retry_count > 0)
 		{
 			MCParameter t_data, t_url;
-			t_data . sets_argument(ep . getsvalue());
+			t_data . setvalueref_argument(*t_req_base64);
 			t_data . setnext(&t_url);
-			t_url . sets_argument(p_params . timestamper);
-			if (ep . getobj() -> message(MCM_post_url, &t_data, False, True) == ES_NORMAL &&
-				MCresult -> isempty())
+			t_url . setvalueref_argument(p_params . timestamper);
+            extern MCExecContext *MCECptr;
+            // SN-2014-05-09 [[ ClearResult ]]
+            // isempty is different from isclear - 'isempty' returns false for a cleared result
+			if (MCECptr->GetObject() -> message(MCM_post_url, &t_data, False, True) == ES_NORMAL &&
+				MCresult -> isclear())
 			{
 				t_failed = false;
 				break;
@@ -944,11 +958,19 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	}
 
 	// Now convert the reply to binary.
-	if (t_success)
-	{
-		MCurlresult -> fetch(ep);
-		MCU_base64decode(ep);
-	}
+    MCAutoValueRef t_result_value;
+    MCAutoStringRef t_result_base64;
+    MCAutoDataRef t_result_data;
+    extern MCExecContext *MCECptr;
+	
+    if (t_success)
+    {
+		MCurlresult -> copyasvalueref(&t_result_value);
+        t_success = MCECptr->ConvertToString(*t_result_value, &t_result_base64);
+    }
+    
+    if (t_success)
+        MCU_base64decode(*t_result_base64, &t_result_data);
 
 	// Decode the PKCS7 structure
 	PKCS7 *t_counter_sig;
@@ -956,10 +978,9 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	if (t_success)
 	{
 		const unsigned char *t_data;
-		t_data = (const unsigned char *)ep . getsvalue() . getstring();
-
+		t_data = (const unsigned char *)MCDataGetBytePtr(*t_result_data);
 		int t_length;
-		t_length = ep . getsvalue() . getlength();
+		t_length = MCDataGetLength(*t_result_data);
 		t_counter_sig = d2i_PKCS7(&t_counter_sig, &t_data, t_length);
 		if (t_counter_sig == nil)
 			t_success = MCDeployThrow(kMCDeployErrorBadTimestamp);
@@ -1031,14 +1052,16 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	// First open input and output executable files
 	MCDeployFileRef t_input;
 	t_input = nil;
-	if (t_success && !MCDeployFileOpen(p_params . input, "rb", t_input))
+	if (t_success && !MCDeployFileOpen(p_params . input, kMCOpenFileModeRead, t_input))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 
 	BIO *t_output;
 	t_output = nil;
 	if (t_success)
 	{
-		t_output = BIO_new_file(p_params . output, "wb");
+        MCAutoStringRefAsUTF8String t_params_output_utf8;
+        /* UNCHECKED */ t_params_output_utf8 . Lock(p_params . output);
+		t_output = BIO_new_file(*t_params_output_utf8, "wb");
 		if (t_output == nil)
 			t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 	}
@@ -1050,11 +1073,17 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	t_cert_chain = nil;
 	t_privatekey = nil;
 	if (t_success && p_params . certstore != nil)
-		t_success = MCDeployCertStoreLoad(p_params . passphrase, p_params . certstore, t_cert_chain, t_privatekey);
+        t_success = MCDeployCertStoreLoad(p_params . passphrase,
+                                          p_params . certstore,
+										  t_cert_chain, t_privatekey);
 	else if (t_success)
 		t_success =
-			MCDeployCertificateLoad(p_params . passphrase, p_params . certificate, t_cert_chain) &&
-			MCDeployPrivateKeyLoad(p_params . passphrase, p_params . privatekey, t_privatekey);
+            MCDeployCertificateLoad(p_params . passphrase,
+                                    p_params . certificate,
+									t_cert_chain) &&
+            MCDeployPrivateKeyLoad(p_params . passphrase,
+                                   p_params . privatekey,
+                                   t_privatekey);
 
 	// Next we check the input file, and compute the hash, writing out the new
 	// version of the executable as we go.
@@ -1359,17 +1388,29 @@ static bool read_le_bignum(uint8_t*& x_data, uint32_t p_bytes, BIGNUM*& r_bignum
 	return true;
 }
 
-bool MCDeploySignLoadPVK(const char *p_filename, const char *p_passphrase, EVP_PKEY*& r_key)
+bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_PKEY*& r_key)
 {
 	bool t_success;
 	t_success = true;
+
+    // SN-2014-01-10: The private key filename can be in unicode.
+    // As a char* is required, the conversion must be done.
+    // On Mac, UTF8 suits the filesystem encoding requirements
+    // On Windows, BIO_new_file expects a UFT-8 path
+    // On Linux, a SysString is used
+#ifdef _LINUX
+    MCAutoStringRefAsSysString t_private_key;
+#else
+    MCAutoStringRefAsUTF8String t_private_key;
+#endif
+    t_success = t_private_key . Lock(p_filename);
 
 	// First try and open the input file
 	BIO *t_input;
 	t_input = nil;
 	if (t_success)
 	{
-		t_input = BIO_new_file(p_filename, "rb");
+        t_input = BIO_new_file(*t_private_key, "rb");
 		if (t_input == nil)
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorNoPrivateKey);
 	}
@@ -1443,11 +1484,14 @@ bool MCDeploySignLoadPVK(const char *p_filename, const char *p_passphrase, EVP_P
 		// Compute the passkey. This is done by taking the first 16 bytes
 		// of SHA1(salt & passphrase).
 		uint8_t t_passkey[EVP_MAX_KEY_LENGTH];
-		EVP_MD_CTX t_md;
+        EVP_MD_CTX t_md;
 		if (t_success && EVP_DigestInit(&t_md, EVP_sha1()))
-		{
+        {
+            MCAutoStringRefAsCString t_passphrase;
+            t_success = t_passphrase . Lock(p_passphrase);
+
 			EVP_DigestUpdate(&t_md, t_salt, t_header . salt_length);
-			EVP_DigestUpdate(&t_md, p_passphrase, strlen(p_passphrase));
+            EVP_DigestUpdate(&t_md, *t_passphrase, strlen(*t_passphrase));
 			EVP_DigestFinal(&t_md, t_passkey, NULL);
 		}
 

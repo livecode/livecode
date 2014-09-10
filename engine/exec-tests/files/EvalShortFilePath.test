@@ -1,0 +1,28 @@
+setup
+
+if the platform is "win32" then
+	local tShortFolder, tLongFolder
+	
+	put the shortfilepath of the defaultFolder into tShortFolder
+	put the longfilepath of the defaultFolder into tLongFolder
+
+	// check path components are in 8.3 format
+	set the itemdelimiter to "/"
+	repeat for each item tPart in tShortFolder
+		local tLength, tOffset
+		put the number of chars in tPart into tLength
+		put offset(".", tPart) into tOffset
+		if tOffset is 0 then
+			test tLength <= 8
+		else
+			test (tOffset <= 9) and (tLength - tOffset <= 3)
+		end if
+	end repeat
+	
+	test (the longfilepath of tShortFolder) is tLongFolder
+
+else
+	test (the shortfilepath of the defaultFolder) is (the defaultFolder)
+end if
+
+teardown

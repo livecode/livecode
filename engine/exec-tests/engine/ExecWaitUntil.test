@@ -1,0 +1,11 @@
+setup
+
+local tTime
+
+put the millisecs + 2 into tTime
+
+wait until the millisecs = tTime
+
+test the millisecs >= tTime
+
+teardown

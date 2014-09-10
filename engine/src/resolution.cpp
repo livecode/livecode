@@ -23,7 +23,8 @@
 #include "dispatch.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 
 #include "graphics.h"
 #include "resolution.h"
@@ -101,7 +102,7 @@ bool MCResGetUsePixelScaling(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCResListScreenPixelScales(MCExecPoint &ep, bool p_plural)
+void MCResListScreenPixelScales(bool p_plural, uindex_t& r_count, double *&r_list)
 {
 	const MCDisplay *t_displays;
 	t_displays = nil;
@@ -112,9 +113,11 @@ void MCResListScreenPixelScales(MCExecPoint &ep, bool p_plural)
 	uint32_t t_limit;
 	t_limit = p_plural ? t_display_count : 1;
 	
-	ep.clear();
+    MCAutoArray<double> t_list;
 	for (uint32_t i = 0; i < t_limit; i++)
-		ep.concatreal(t_displays[i].pixel_scale, EC_RETURN, i == 0);
+		t_list . Push(t_displays[i].pixel_scale);
+    
+    t_list . Take(r_list, r_count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

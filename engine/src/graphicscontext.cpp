@@ -1,6 +1,5 @@
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -12,7 +11,7 @@
 #include "objectstream.h"
 #include "bitmapeffect.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "paint.h"
 
 #include "graphicscontext.h"
@@ -43,9 +42,9 @@ static inline MCGBlendMode MCBitmapEffectBlendModeToMCGBlendMode(MCBitmapEffectB
 		case kMCBitmapEffectBlendModeColorDodge:
 			return kMCGBlendModeColorDodge;
 		case kMCBitmapEffectBlendModeColorBurn:
-			kMCGBlendModeColorBurn;
+			return kMCGBlendModeColorBurn;
 		case kMCBitmapEffectBlendModeHardLight:
-			kMCGBlendModeHardLight;
+			return kMCGBlendModeHardLight;
 		case kMCBitmapEffectBlendModeSoftLight:
 			return kMCGBlendModeSoftLight;
 		case kMCBitmapEffectBlendModeDifference:
@@ -184,7 +183,7 @@ MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, bool p
 MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, uint32_t p_stride, void *p_pixels, bool p_alpha)
 {
 	MCGContextRef t_context;
-	/* UNCHECKED */ MCGContextCreateWithPixels(p_width, p_height, p_stride, p_pixels, p_alpha, m_gcontext);
+	/* UNCHECKED */ MCGContextCreateWithPixels(p_width, p_height, p_stride, p_pixels, p_alpha, t_context);
 
 	init(t_context);
 	MCGContextRelease(t_context);
@@ -1085,7 +1084,7 @@ void MCGraphicsContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 
 	MCGContextStroke(m_gcontext);
 }
 
-void MCGraphicsContext::drawsegments(MCSegment *segments, uint2 nsegs)
+void MCGraphicsContext::drawsegments(MCLineSegment *segments, uint2 nsegs)
 {
 	MCGContextBeginPath(m_gcontext);
 	for (uint32_t i = 0; i < nsegs; i++)
@@ -1438,20 +1437,26 @@ void MCGraphicsContext::applywindowshape(MCWindowShape *p_mask, uint4 p_u_width,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGraphicsContext::drawlink(const char *link, const MCRectangle& region)
+void MCGraphicsContext::drawlink(MCStringRef link, const MCRectangle& region)
 {
 }
 
-
-void MCGraphicsContext::drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
+void MCGraphicsContext::drawtext(coord_t x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextBreaking p_breaking, MCDrawTextDirection p_direction)
 {
-	// MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
+    MCRange t_range;
+    t_range = MCRangeMake(0, MCStringGetLength(p_string));
+    drawtext_substring(x, y, p_string, t_range, p_font, image, p_breaking, p_direction);
+}	
+
+void MCGraphicsContext::drawtext_substring(coord_t x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean p_image, MCDrawTextBreaking p_break, MCDrawTextDirection p_direction)
+{
+    // MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
 	//   rect.
-	if (image)
+	if (p_image)
 	{
 		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the context to make sure we measure the width of scaled text correctly.
-		float t_widthf;
-		t_widthf = MCFontMeasureTextFloat(p_font, s, length, p_is_unicode, MCGContextGetDeviceTransform(m_gcontext));
+		coord_t t_widthf;
+        t_widthf = MCFontMeasureTextSubstring(p_font, p_string, p_range, MCGContextGetDeviceTransform(m_gcontext));
         
         int32_t t_width = int32_t(ceilf(t_widthf));
 		
@@ -1460,9 +1465,9 @@ void MCGraphicsContext::drawtext(coord_t x, int2 y, const char *s, uint2 length,
 		fillrect(MCU_make_rect(x, y - MCFontGetAscent(p_font), t_width, MCFontGetAscent(p_font) + MCFontGetDescent(p_font)), false);
 		MCGContextRestore(m_gcontext);
 	}
-		
-	MCFontDrawText(m_gcontext, x, y, s, length, p_font, p_is_unicode);
-}	
+    
+	MCFontDrawTextSubstring(m_gcontext, x, y, p_string, p_range, p_font, p_direction == kMCDrawTextDirectionRTL, p_break == kMCDrawTextBreak);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

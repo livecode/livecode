@@ -33,7 +33,7 @@ public:
 	MCCdata(uint4 newid);
 	MCCdata(const MCCdata &fref);
 	~MCCdata();
-	IO_stat load(IO_handle stream, MCObject *parent, const char *version);
+	IO_stat load(IO_handle stream, MCObject *parent, uint32_t version);
 	IO_stat save(IO_handle stream, Object_type type, uint4 p_part);
 	uint4 getid();
 	void setid(uint4 newid);

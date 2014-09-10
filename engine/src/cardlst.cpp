@@ -21,12 +21,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
 #include "cardlst.h"
 #include "util.h"
+#include "exec.h"
 
 #include "globals.h"
 
@@ -63,6 +64,47 @@ void MCCardlist::trim()
 	}
 }
 
+bool MCCardlist::GetRecent(MCExecContext& ctxt, MCStack *stack, Properties which, MCStringRef& r_props)
+{
+	// Get list of recent card short names or long ids
+	trim();
+	MCCardnode *tmp = cards;
+
+	MCAutoListRef t_prop_list;
+
+	bool t_success;
+	t_success = true; 
+
+	if (t_success)
+		t_success = MCListCreateMutable('\n', &t_prop_list);
+	
+	if (t_success && tmp != NULL)
+	{
+		do
+		{
+			if (stack == NULL || tmp->card->getstack() == stack)
+			{
+				MCAutoStringRef t_property;
+				if (which == P_SHORT_NAME)
+					tmp -> card -> GetShortName(ctxt, &t_property);
+				else
+					tmp -> card -> GetLongId(ctxt, &t_property);
+					
+				t_success = !ctxt . HasError();
+				if (t_success)
+					t_success = MCListAppend(*t_prop_list, *t_property);
+			}
+			tmp = tmp->next();
+		}
+		while (tmp != cards && t_success);
+	}
+
+	if (t_success)
+		t_success = MCListCopyAsString(*t_prop_list, r_props);
+
+	return t_success;
+}
+#ifdef LEGACY_EXEC
 void MCCardlist::getprop(Properties prop, MCStack *stack, MCExecPoint &ep)
 {
 	trim();
@@ -95,6 +137,7 @@ void MCCardlist::getlongids(MCStack *stack, MCExecPoint &ep)
 {
 	getprop(P_LONG_ID, stack, ep);
 }
+#endif
 
 void MCCardlist::addcard(MCCard *card)
 {

@@ -559,6 +559,7 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 				// IM-2014-07-23: [[ Bug 12892 ]] Use MCGPixel function to premultiply native format pixels
 				for (uint32_t x = 0; x < p_raster . width; x++)
 					*t_dst_pxl++ = MCGPixelPreMultiplyNative(*t_pixel++);
+
 				t_row_ptr += p_raster . stride;
 			}
 		}

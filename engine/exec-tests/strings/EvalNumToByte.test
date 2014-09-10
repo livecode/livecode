@@ -1,0 +1,3 @@
+setup
+test numToByte(97) is "a"
+teardown

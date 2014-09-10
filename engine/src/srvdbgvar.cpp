@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 #include "debug.h"
 #include "mcerror.h"
@@ -564,7 +564,7 @@ void MCDebugNotifyValueDeleted(MCVariableValue *p_value)
 
 ////////
 
-void MCVariableViewEnter(MCExecPoint* p_context)
+void MCVariableViewEnter(MCExecContext &ctxt)
 {
 	// Allocate a change buffer, if there is none.
 	if (s_variable_deletions == NULL)
@@ -581,7 +581,7 @@ void MCVariableViewEnter(MCExecPoint* p_context)
 	
 	// First list the handler locals and parameters (if any)
 	MCHandler *t_handler;
-	t_handler = p_context -> gethandler();
+	t_handler = ctxt.GetHandler();
 	if (t_handler != NULL)
 	{
 		MCVariable **t_vars;
@@ -605,7 +605,7 @@ void MCVariableViewEnter(MCExecPoint* p_context)
 	
 	// Script locals
 	MCHandlerlist *t_hlist;
-	t_hlist = p_context -> gethlist();
+	t_hlist = ctxt.GetEP().gethlist();
 	for(MCVariable *t_var = t_hlist -> getvars(); t_var != NULL; t_var = t_var -> getnext())
 		MCVariableViewWatch(s_variable_view, kMCVariableScopeScript, t_var);
 	
@@ -660,6 +660,7 @@ bool MCServerDebugListVariables(uint32_t p_start, uint32_t p_count, MCServerDebu
 		MCVariableViewLookupEntry(s_variable_view, i, t_owner, t_element);
 		
 		const char *t_name_ptr;
+        MCAutoPointer<char> temp_name;
 		uint32_t t_name_length;
 		MCVariableValue *t_value;
 		if (t_element == NULL)
@@ -673,8 +674,9 @@ bool MCServerDebugListVariables(uint32_t p_start, uint32_t p_count, MCServerDebu
 			else
 			{
 				t_value = &t_owner -> variable -> getvalue();
-				t_name_ptr = MCNameGetOldString(t_owner -> variable -> getname()) . getstring();
-				t_name_length = MCNameGetOldString(t_owner -> variable -> getname()) . getlength();
+                /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(t_owner -> variable -> getname()), &temp_name);
+				t_name_ptr = *temp_name;
+				t_name_length = MCStringGetLength(MCNameGetString(t_owner -> variable -> getname());
 			}
 		}
 		else

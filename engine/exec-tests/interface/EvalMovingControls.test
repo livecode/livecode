@@ -1,0 +1,7 @@
+setup
+test the movingControls is empty
+create button
+move button 1 relative 50,50 in 1 second without waiting
+test the long id of button 1 is among the lines of the movingControls
+wait 1 second
+teardown

@@ -1,0 +1,10 @@
+setup
+
+set the clipboarddata["unicode"] to uniencode("some text")
+test "text" is among the lines of the keys of the clipboarddata
+test "unicode" is among the lines of the keys of the clipboarddata
+
+set the clipboarddata["private"] to "some private data"
+test the keys of the clipboarddata is "private"
+
+teardown

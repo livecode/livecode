@@ -27,10 +27,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "date.h"
 #include "param.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "vclip.h"
 #include "globals.h"
-#include "core.h"
 #include "notify.h"
 #include "osspec.h"
 
@@ -41,6 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "meta.h"
 
+#include <strsafe.h>
 #include "resolution.h"
 
 // Used to be in w32defs.h, but only used by MCScreenDC::boundrect.
@@ -228,8 +228,8 @@ void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mod
 void MCScreenDC::expose()
 {
 	MSG msg;
-	while (PeekMessageA(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
-		DispatchMessageA(&msg);
+	while (PeekMessageW(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
+		DispatchMessageW(&msg);
 }
 
 Boolean MCScreenDC::abortkey()
@@ -649,22 +649,20 @@ void MCScreenDC::flushevents(uint2 e)
 
 // MW-2006-03-21: Bug 3408 - fix memory leak due to unused memory allocation
 // MW-2006-03-24: Bug 3408 - fix resource leak due to non-deletion of font
-uint1 MCScreenDC::fontnametocharset(const char *oldfontname)
+uint1 MCScreenDC::fontnametocharset(MCStringRef p_font)
 {
-
 	HDC hdc = f_src_dc;
-	LOGFONTA logfont;
-	memset(&logfont, 0, sizeof(LOGFONTA));
-	uint4 maxlength = MCU_min(LF_FACESIZE - 1U, strlen(oldfontname));
-	strncpy(logfont.lfFaceName, oldfontname, maxlength);
-	logfont.lfFaceName[maxlength] = '\0';
-	//parse font and encoding
-	char *sptr = logfont.lfFaceName;
-	if (sptr = strchr(logfont.lfFaceName, ','))
-		*sptr = '\0';
+	LOGFONTW logfont;
+	memset(&logfont, 0, sizeof(LOGFONTW));
+
+	MCAutoStringRefAsWString t_font_wstr;
+	/* UNCHECKED */ t_font_wstr.Lock(p_font);
+
+	/* UNCHECKED */ StringCchCopy(logfont.lfFaceName, LF_FACESIZE, *t_font_wstr);
+
 	//parse font and encoding
 	logfont.lfCharSet = DEFAULT_CHARSET;
-	HFONT newfont = CreateFontIndirectA(&logfont);
+	HFONT newfont = CreateFontIndirectW(&logfont);
 	HFONT oldfont = (HFONT)SelectObject(hdc, newfont);
 	uint1 charset = MCU_wincharsettocharset(GetTextCharset(hdc));
 	SelectObject(hdc, oldfont);
@@ -672,6 +670,7 @@ uint1 MCScreenDC::fontnametocharset(const char *oldfontname)
 	return charset;
 }
 
+/*
 char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 {
 
@@ -706,6 +705,7 @@ char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 	SelectObject(hdc, oldfont);
 	return fontname;
 }
+*/
 
 void MCScreenDC::openIME()
 {}

@@ -1,0 +1,31 @@
+setup
+
+-- 'beep' should produce 1 beep and take a certain amout of time
+local tBeepTime
+put the millisecs into tBeepTime
+beep
+put the millisecs - tBeepTime into tBeepTime
+
+-- 'beep 0' should take less than beep
+
+local tTime
+put the millisecs into tTime
+beep 0
+put the millisecs - tTime into tTime
+test tTime <= tBeepTime / 2.0
+
+-- 'beep 1' should take about the same time as beep
+
+put the millisecs into tTime
+beep 1
+put the millisecs - tTime into tTime
+test abs(tTime - tBeepTime) < 0.1
+
+-- 'beep 2' should take about twice the time of beep + 0.5
+
+put the millisecs into tTime
+beep 2
+put the millisecs - tTime into tTime
+test abs((tTime - tBeepTime) - (2 * tBeepTime + 0.5)) < 0.1 
+
+teardown

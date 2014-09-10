@@ -20,7 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "uidc.h"
-#include "core.h"
 
 #include "imagebitmap.h"
 #include "iquantization.h"

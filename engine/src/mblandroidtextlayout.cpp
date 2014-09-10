@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "unicode.h"
 #include "textlayout.h"
 
 bool MCTextLayoutInitialize(void)

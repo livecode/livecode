@@ -15,7 +15,7 @@ export ANDROID_SDK=$TRUNK/sdks/android-sdk
 export SRCROOT=$TRUNK
 export JAVA_SDK=`/usr/libexec/java_home`
 export JCOUNT=20
-export PREBUILT_LIB_DIR=$SRCROOT/prebuilt/lib/android
+export PREBUILT_LIB_DIR=$SRCROOT/prebuilt/lib/android/armv6
 
 # Path variables
 export CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar"
@@ -35,7 +35,10 @@ export AIDL=$ANDROID_SDK/platform-tools/aidl
 ##########
 
 # Update version info
-$TRUNK/prebuilt/bin/Revolution.osx -ui $TRUNK/engine/encode_version.rev $TRUNK/engine
+#$TRUNK/prebuilt/bin/Revolution.osx -ui $TRUNK/engine/encode_version.rev $TRUNK/engine
+cd $TRUNK/engine
+$TRUNK/util/encode_version.pl $TRUNK/engine
+cd $TRUNK
 
 # Build the native code components
 export NDK_PROJECT_PATH=$DSTROOT

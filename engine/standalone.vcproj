@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="src;$(SolutionDir)libcore/src"
+				AdditionalIncludeDirectories="src"
 				PreprocessorDefinitions="MODE_STANDALONE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -57,9 +57,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib iphlpapi.lib QTMLClient.lib QTVR.lib"
+				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib iphlpapi.lib psapi.lib QTMLClient.lib QTVR.lib shlwapi.lib sicuio.lib sicule.lib siculx.lib sicutu.lib sicuin.lib sicuuc.lib sicudt.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(ProgramFiles)\QuickTime SDK\Libraries&quot;"
+				AdditionalLibraryDirectories="&quot;$(ProgramFiles)\QuickTime SDK\Libraries&quot;;&quot;$(SolutionDir)prebuilt\lib\win32\i386&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 			/>
@@ -130,9 +130,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib iphlpapi.lib QTMLClient.lib QTVR.lib"
+				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib iphlpapi.lib psapi.lib QTMLClient.lib QTVR.lib shlwapi.lib sicuio.lib sicule.lib siculx.lib sicutu.lib sicuin.lib sicuuc.lib sicudt.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(ProgramFiles)\QuickTime SDK\Libraries&quot;"
+				AdditionalLibraryDirectories="&quot;$(ProgramFiles)\QuickTime SDK\Libraries&quot;;&quot;$(SolutionDir)prebuilt\lib\win32\i386&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -196,7 +196,6 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{6899CD7E-BE16-44CE-A28B-27304F42E127}"
-			RelativePathToProject=".\libcore\libcore.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{09751ABE-310B-4324-BACE-F7FFDA2299DE}"

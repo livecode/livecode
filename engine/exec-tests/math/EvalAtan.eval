@@ -1,0 +1,7 @@
+setup
+
+test atan(-1) is -pi / 4
+test atan(0) is 0
+test atan(1) is pi / 4
+
+teardown

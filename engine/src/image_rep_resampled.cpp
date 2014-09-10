@@ -20,8 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "core.h"
-
 #include "image.h"
 #include "imagebitmap.h"
 #include "image_rep.h"

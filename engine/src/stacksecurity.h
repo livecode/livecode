@@ -25,14 +25,14 @@ void MCStackSecurityInit(void);
 
 //////////
 
-bool MCStackSecurityEncryptString(const char *p_string, uint32_t p_length, char *&r_enc);
+bool MCStackSecurityEncryptString(MCStringRef p_string, MCStringRef &r_enc);
 
 //////////
 
 bool MCStackSecurityCreateStack(MCStack *&r_stack);
 bool MCStackSecurityCopyStack(const MCStack *p_stack, MCStack *&r_copy);
 
-bool MCStackSecurityCreateObjectInputStream(IO_handle p_stream, uint32_t p_length, MCObjectInputStream *&r_object_stream);
+bool MCStackSecurityCreateObjectInputStream(IO_handle p_stream, uint32_t p_length, bool p_new_format, MCObjectInputStream *&r_object_stream);
 bool MCStackSecurityCreateObjectOutputStream(IO_handle p_stream, MCObjectOutputStream *&r_object_stream);
 
 //////////

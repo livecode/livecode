@@ -1,0 +1,11 @@
+setup
+	set the useSystemDate to true
+	test the monthnames is the system monthnames
+	set the useSystemDate to false
+	test the monthnames is the english monthnames
+	
+	local tNames = "January,February,March,April,May,June,July,August,September,October,November,December"
+	replace comma with return in tNames
+	test the monthnames is tNames
+	
+teardown

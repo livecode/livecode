@@ -1,0 +1,14 @@
+setup
+create field
+
+set the rect of the last field to 100,100,200,200
+set the text of the last field to "a"
+get the formattedRect of char 1 of field 1
+
+click at (item 1 of it + item 3 of it) div 2, (item 2 of it + item 4 of it) div 2
+test the clickCharChunk is "char 1 to 1 of field 1"
+
+click at 0,0
+test the clickCharChunk is empty
+
+teardown

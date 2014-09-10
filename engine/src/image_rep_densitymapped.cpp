@@ -28,7 +28,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCDensityMappedImageRep::MCDensityMappedImageRep(const char *p_filename)
+MCDensityMappedImageRep::MCDensityMappedImageRep(MCStringRef p_filename)
 {
 	m_sources = nil;
 	m_source_densities = nil;
@@ -36,8 +36,7 @@ MCDensityMappedImageRep::MCDensityMappedImageRep(const char *p_filename)
 	
 	m_locked = false;
 	
-	m_filename = nil;
-	/* UNCHECKED */ MCCStringClone(p_filename, m_filename);
+	m_filename = MCValueRetain(p_filename);
 }
 
 MCDensityMappedImageRep::~MCDensityMappedImageRep()
@@ -48,7 +47,7 @@ MCDensityMappedImageRep::~MCDensityMappedImageRep()
 	MCMemoryDeleteArray(m_sources);
 	MCMemoryDeleteArray(m_source_densities);
 	
-	MCCStringFree(m_filename);
+	MCValueRelease(m_filename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +255,7 @@ static MCImageScaleLabel s_image_scale_labels[] = {
 
 //////////
 
-bool MCImageGetScaleForLabel(const char *p_label, uint32_t p_length, MCGFloat &r_scale)
+bool MCImageGetScaleForLabel(MCStringRef p_label, MCGFloat &r_scale)
 {
 	MCImageScaleLabel *t_scale_label;
 	t_scale_label = s_image_scale_labels;
@@ -266,7 +265,7 @@ bool MCImageGetScaleForLabel(const char *p_label, uint32_t p_length, MCGFloat &r
 		const char **t_label = t_scale_label->labels;
 		while (*t_label != nil)
 		{
-			if (MCCStringEqualSubstring(p_label, *t_label, p_length))
+			if (MCStringIsEqualToCString(p_label, *t_label, kMCStringOptionCompareExact))
 			{
 				r_scale = t_scale_label->scale;
 				return true;
@@ -299,9 +298,9 @@ bool MCImageGetLabelsForScale(MCGFloat p_scale, const char **&r_labels)
 
 //////////
 
-bool MCImageSplitScaledFilename(const char *p_filename, char *&r_base, char *&r_extension, bool &r_has_scale, MCGFloat &r_scale)
+bool MCImageSplitScaledFilename(MCStringRef p_filename, MCStringRef &r_base, MCStringRef &r_extension, bool &r_has_scale, MCGFloat &r_scale)
 {
-	if (p_filename == nil)
+	if (MCStringIsEmpty(p_filename))
 		return false;
 	
 	bool t_success;
@@ -311,40 +310,43 @@ bool MCImageSplitScaledFilename(const char *p_filename, char *&r_base, char *&r_
 	bool t_has_scale = false;
 	
 	uint32_t t_length;
-	t_length = MCCStringLength(p_filename);
+	t_length = MCStringGetLength(p_filename);
 	
 	uint32_t t_index, t_name_start, t_label_start, t_label_search_start, t_ext_start;
 	
-	if (MCCStringLastIndexOf(p_filename, '/', t_index))
+    if (MCStringLastIndexOfChar(p_filename, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_index))
 		t_name_start = t_index + 1;
 	else
 		t_name_start = 0;
 	
-	if (MCCStringLastIndexOf(p_filename + t_name_start, '.', t_index))
-		t_ext_start = t_name_start + t_index;
+    if (MCStringFirstIndexOfChar(p_filename, '.', t_name_start, kMCStringOptionCompareExact, t_index))
+		t_ext_start = t_index;
 	else
 		t_ext_start = t_length;
 	
 	// find first '@' char before the extension part
 	t_label_start = t_label_search_start = t_name_start;
-	while (MCCStringFirstIndexOf(p_filename + t_label_search_start, '@', t_index))
+    while (MCStringFirstIndexOfChar(p_filename, '@', t_label_search_start, kMCStringOptionCompareExact, t_index))
 	{
-		if (t_label_start + t_index > t_ext_start)
+		if (t_index > t_ext_start)
 			break;
 		
-		t_label_start += t_index;
+		t_label_start = t_index;
 		t_label_search_start = t_label_start + 1;
 	}
 	
 	// check label begins with '@'
-	if (p_filename[t_label_start] != '@')
+    if (MCStringGetCharAtIndex(p_filename, t_label_start) != '@')
 	{
 		// no scale label
 		t_label_start = t_ext_start;
 	}
 	else
 	{
-		t_has_scale = MCImageGetScaleForLabel(p_filename + t_label_start, t_ext_start - t_label_start, t_scale);
+		MCAutoStringRef t_label;
+        /* UNCHECKED */ MCStringCopySubstring(p_filename, MCRangeMake(t_label_start, t_ext_start - t_label_start), &t_label);
+        
+        t_has_scale = MCImageGetScaleForLabel(*t_label, t_scale);
 		
 		if (!t_has_scale)
 		{
@@ -353,30 +355,24 @@ bool MCImageSplitScaledFilename(const char *p_filename, char *&r_base, char *&r_
 		}
 	}
 	
-	char *t_base, *t_extension;
-	t_base = t_extension = nil;
-	
-	t_success = MCCStringCloneSubstring(p_filename, t_label_start, t_base) && MCCStringCloneSubstring(p_filename + t_ext_start, t_length - t_ext_start, t_extension);
+	MCAutoStringRef t_base, t_extension;
+    t_success = MCStringCopySubstring(p_filename, MCRangeMake(0, t_label_start), &t_base)
+    && MCStringCopySubstring(p_filename, MCRangeMake(t_ext_start, t_length - t_ext_start), &t_extension);
 	
 	if (t_success)
 	{
-		r_base = t_base;
-		r_extension = t_extension;
+		r_base = MCValueRetain(*t_base);
+		r_extension = MCValueRetain(*t_extension);
 		r_has_scale = t_has_scale;
 		r_scale = t_has_scale ? t_scale : 1.0;
 	}
-	else
-	{
-		MCCStringFree(t_base);
-		MCCStringFree(t_extension);
-	}
-	
+
 	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCImageRepGetReferencedWithScale(const char *p_base, const char *p_extension, MCGFloat p_scale, MCImageRep *&r_rep)
+bool MCImageRepGetReferencedWithScale(MCStringRef p_base, MCStringRef p_extension, MCGFloat p_scale, MCImageRep *&r_rep)
 {
 	bool t_success;
 	t_success = true;
@@ -384,48 +380,40 @@ bool MCImageRepGetReferencedWithScale(const char *p_base, const char *p_extensio
 	MCImageRep *t_rep;
 	t_rep = nil;
 	
-	char *t_default_path;
-	t_default_path = nil;
-	
 	const char **t_labels;
 	t_labels = nil;
 	
 	if (t_success)
 		t_success = MCImageGetLabelsForScale(p_scale, t_labels);
 	
+    MCAutoStringRef t_default_path;
 	// construct default path as base path with first tag for the given scale
 	if (t_success)
-		t_success = MCCStringFormat(t_default_path, "%s%s%s", p_base, t_labels[0], p_extension);
+		t_success = MCStringFormat(&t_default_path, "%@%s%@", p_base, t_labels[0], p_extension);
 	
 	if (t_success)
 	{
 		MCCachedImageRep *t_cached_rep;
 		t_cached_rep = nil;
 		
-		if (MCCachedImageRep::FindWithKey(t_default_path, t_cached_rep))
+		if (MCCachedImageRep::FindWithKey(*t_default_path, t_cached_rep))
 			t_rep = t_cached_rep->Retain();
 		// not in cache, so see if default path exists.
-		else if (MCS_exists(t_default_path, True))
-			t_success = MCImageRepCreateReferencedWithSearchKey(t_default_path, t_default_path, t_rep);
+		else if (MCS_exists(*t_default_path, True))
+			t_success = MCImageRepCreateReferencedWithSearchKey(*t_default_path, *t_default_path, t_rep);
 		// else loop through remaining labels and check for matching files
 		else
 		{
 			for (uint32_t i = 1; t_success && t_rep == nil && t_labels[i] != nil; i++)
 			{
-				char *t_scaled_path;
-				t_scaled_path = nil;
+				MCAutoStringRef t_scaled_path;
+				t_success = MCStringFormat(&t_scaled_path, "%@%s%@", p_base, t_labels[i], p_extension);
 				
-				t_success = MCCStringFormat(t_scaled_path, "%s%s%s", p_base, t_labels[i], p_extension);
-				
-				if (t_success && MCS_exists(t_scaled_path, True))
-					t_success = MCImageRepCreateReferencedWithSearchKey(t_scaled_path, t_default_path, t_rep);
-				
-				MCCStringFree(t_scaled_path);
+				if (t_success && MCS_exists(*t_scaled_path, True))
+					t_success = MCImageRepCreateReferencedWithSearchKey(*t_scaled_path, *t_default_path, t_rep);
 			}
 		}
 	}
-	
-	MCCStringFree(t_default_path);
 	
 	if (t_success)
 		r_rep = t_rep;
@@ -456,7 +444,7 @@ void MCImageFreeScaledRepList(MCImageScaledRep *p_list, uint32_t p_count)
 
 // IM-2013-07-30: [[ ResIndependence ]] support for retrieving the density-mapped file list
 // IM-2013-10-30: [[ FullscreenMode ]] Modified to return a list of density-mapped image reps
-bool MCImageGetScaledFiles(const char *p_base, const char *p_extension, MCImageScaledRep *&r_list, uint32_t &r_count)
+bool MCImageGetScaledFiles(MCStringRef p_base, MCStringRef p_extension, MCImageScaledRep *&r_list, uint32_t &r_count)
 {
 	bool t_success;
 	t_success = true;
@@ -509,7 +497,7 @@ bool MCImageGetScaledFiles(const char *p_base, const char *p_extension, MCImageS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCImageRepCreateDensityMapped(const char *p_filename, const MCImageScaledRep *p_list, uindex_t p_count, MCImageRep *&r_rep)
+bool MCImageRepCreateDensityMapped(MCStringRef p_filename, const MCImageScaledRep *p_list, uindex_t p_count, MCImageRep *&r_rep)
 {
 	bool t_success;
 	t_success = true;
@@ -534,7 +522,7 @@ bool MCImageRepCreateDensityMapped(const char *p_filename, const MCImageScaledRe
 	return t_success;
 }
 
-bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep)
+bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep)
 {
 	// try to resolve files in the following way:
 	// if it has a density tag then
@@ -546,22 +534,21 @@ bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep)
 	bool t_success = true;
 	
 	MCImageRep *t_rep = nil;
-	
-	char *t_base, *t_extension;
-	t_base = t_extension = nil;
 
+    MCAutoStringRef t_base, t_extension;
+	
 	MCGFloat t_density;
 	
 	bool t_has_tag;
 	
-	t_success = MCImageSplitScaledFilename(p_filename, t_base, t_extension, t_has_tag, t_density);
+    t_success = MCImageSplitScaledFilename(p_filename, &t_base, &t_extension, t_has_tag, t_density);
 	
 	if (!t_success)
 		return false;
 	
 	// check filename for density tag
 	if (t_has_tag)
-		t_success = MCImageRepGetReferencedWithScale(t_base, t_extension, t_density, t_rep);
+        t_success = MCImageRepGetReferencedWithScale(*t_base, *t_extension, t_density, t_rep);
 	else
 	{
 		MCCachedImageRep *t_cached_rep;
@@ -569,7 +556,7 @@ bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep)
 		
 		if (MCCachedImageRep::FindWithKey(p_filename, t_cached_rep))
 		{
-			MCLog("image rep cache hit for file %s", p_filename);
+			MCLog("image rep cache hit for file %@", p_filename);
 			t_rep = t_cached_rep->Retain();
 		}
 		else
@@ -580,7 +567,7 @@ bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep)
 			uint32_t t_count;
 			t_count = 0;
 			
-			t_success = MCImageGetScaledFiles(t_base, t_extension, t_list, t_count);
+            t_success = MCImageGetScaledFiles(*t_base, *t_extension, t_list, t_count);
 			if (t_success && t_count > 0)
 				t_success = MCImageRepCreateDensityMapped(p_filename, t_list, t_count, t_rep);
 			
@@ -592,9 +579,6 @@ bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep)
 	{
 		r_rep = t_rep;
 	}
-
-	MCCStringFree(t_base);
-	MCCStringFree(t_extension);
 	
 	return t_success;
 }

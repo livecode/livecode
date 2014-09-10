@@ -147,14 +147,6 @@
 		<Filter
 			Name="Core - Foundation"
 			>
-			<File
-				RelativePath=".\src\name.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\name.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Core - Graphics"
@@ -412,14 +404,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\execpt.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\execpt.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\express.cpp"
 				>
 			</File>
@@ -557,14 +541,6 @@
 			</File>
 			<File
 				RelativePath=".\src\variable_impl.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\variablearray.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\variablevalue.cpp"
 				>
 			</File>
 			<File
@@ -738,22 +714,6 @@
 			<File
 				RelativePath=".\src\opensslsocket.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\osspec.h"
@@ -886,22 +846,6 @@
 			<File
 				RelativePath=".\src\socket_resolve.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\stacktile.cpp"
@@ -1433,6 +1377,14 @@
 			>
 			<File
 				RelativePath=".\src\quicktime.cpp"
+                                >
+                        </File>
+                        <File
+				RelativePath=".\src\dskw32.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\sysdefs.h"
 				>
 			</File>
 			<File
@@ -1494,6 +1446,22 @@
 			<File
 				RelativePath=".\src\srvdbgvar.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\srvdbgvar.h"
@@ -1620,6 +1588,422 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Exec"
+			>
+			<File
+				RelativePath=".\src\exec-ad.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\exec-addressbook.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\exec-array.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-busyindicator.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\exec-calendar.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\exec-datetime.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-debugging.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-dialog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-engine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-files.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-filters.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-graphics.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-ide.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-idletimer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-aclip.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-button.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-card.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-control.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-field-chunk.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-field.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-graphic.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-group.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-image.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-object.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-player.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-scrollbar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-stack.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface-vclip.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-interface2.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-keywords.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-legacy.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-logic.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-mail.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-math.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-misc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-multimedia.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-nativecontrol.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\exec-network.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-notification.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\exec-orientation.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\exec-pasteboard.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-pick.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-printing.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-scripting.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-security.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-sensor.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\exec-server.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-sound.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-store.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\exec-strings-chunk.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-strings.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-text.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-textmessaging.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\exec.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-legacy.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-legacy.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\legacy_spec.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\segment.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\syntax.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\syntax.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\encode_errors.rev"
 			>
@@ -1629,7 +2013,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding error strings"
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
+					CommandLine="&quot;perl&quot; &quot;$(SolutionDir)\util\encode_errors.pl&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
 					Outputs="$(InputDir)src\encodederrors.cpp"
 				/>
@@ -1640,7 +2024,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding error strings"
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
+					CommandLine="&quot;perl&quot; &quot;$(SolutionDir)\util\encode_errors.pl&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
 					Outputs="$(InputDir)src\encodederrors.cpp"
 				/>

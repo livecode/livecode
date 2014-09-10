@@ -1,0 +1,1 @@
+# "Go to Definition" doesn't work in script editor 

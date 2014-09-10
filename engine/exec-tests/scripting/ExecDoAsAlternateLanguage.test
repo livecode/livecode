@@ -1,0 +1,10 @@
+setup
+
+if the platform is "win32" then
+	do "result = 1+1" as "jscript"
+	test the result is 2
+else
+	test false
+end if
+
+teardown

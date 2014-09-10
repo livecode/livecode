@@ -1,0 +1,14 @@
+setup
+
+set the defaultFolder to specialFolderPath("temporary")
+
+local tFileName
+put "openFilesTest.txt" into tFileName
+
+open file tFileName for write
+
+test tFileName is among the lines of the openFiles
+
+close file tFileName
+
+teardown
