@@ -1063,23 +1063,27 @@ void MCStringsMarkCodeunitsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ord
 
 void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
 {
-    // The incoming indices are for codeunits
-    MCRange t_cu_range;
-    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
-    
-    // So cut the string down, and then convert to data.
-    MCAutoStringRef t_string;
-    MCStringCopySubstring((MCStringRef)x_mark . text, t_cu_range, &t_string);
-    
-    MCAutoDataRef t_data;
-    ctxt . ConvertToData(*t_string, &t_data);
-    
-    MCValueRelease(x_mark . text);
-    x_mark . text = MCValueRetain(*t_data);
+    // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
+    // Cut the string down, and then convert to data if it is not already data
+    if (MCValueGetTypeCode(x_mark . text) != kMCValueTypeCodeData)
+    {
+        // The incoming indices are for codeunits
+        MCRange t_cu_range;
+        t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+        
+        MCAutoStringRef t_string;
+        MCStringCopySubstring((MCStringRef)x_mark . text, t_cu_range, &t_string);
+        
+        MCAutoDataRef t_data;
+        ctxt . ConvertToData(*t_string, &t_data);
+        
+        MCValueRelease(x_mark . text);
+        x_mark . text = MCValueRetain(*t_data);
+    }
     
     int4 t_first;
     int4 t_chunk_count;
-    MCStringsGetExtentsByRange(ctxt, CT_BYTE, p_first, p_last, *t_data, t_first, t_chunk_count);
+    MCStringsGetExtentsByRange(ctxt, CT_BYTE, p_first, p_last, x_mark . text, t_first, t_chunk_count);
     
     // convert codeunit indices to byte indices
     x_mark . start = x_mark . start + t_first;
@@ -1088,23 +1092,26 @@ void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, int
 
 void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
 {
-    // The incoming indices are for codeunits
-    MCRange t_cu_range;
-    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
-    
-    // So cut the string down, and then convert to data.
-    MCAutoStringRef t_string;
-    MCStringCopySubstring((MCStringRef)x_mark . text, t_cu_range, &t_string);
-    
-    MCAutoDataRef t_data;
-    ctxt . ConvertToData(*t_string, &t_data);
-    
-    MCValueRelease(x_mark . text);
-    x_mark . text = MCValueRetain(*t_data);
-    
+    // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
+    // Cut the string down, and then convert to data if it is not already data
+    if (MCValueGetTypeCode(x_mark . text) != kMCValueTypeCodeData)
+    {
+        // The incoming indices are for codeunits
+        MCRange t_cu_range;
+        t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+        
+        MCAutoStringRef t_string;
+        MCStringCopySubstring((MCStringRef)x_mark . text, t_cu_range, &t_string);
+        
+        MCAutoDataRef t_data;
+        ctxt . ConvertToData(*t_string, &t_data);
+        
+        MCValueRelease(x_mark . text);
+        x_mark . text = MCValueRetain(*t_data);
+    }
     int4 t_first;
     int4 t_chunk_count;
-    MCStringsGetExtentsByOrdinal(ctxt, CT_BYTE, p_ordinal_type, *t_data, t_first, t_chunk_count);
+    MCStringsGetExtentsByOrdinal(ctxt, CT_BYTE, p_ordinal_type, x_mark . text, t_first, t_chunk_count);
     
     x_mark . start = x_mark . start + t_first;
     x_mark . finish = x_mark . start + t_chunk_count;

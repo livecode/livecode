@@ -3821,7 +3821,7 @@ void MCEngineSetRecursionLimit(MCExecContext& ctxt, uinteger_t p_value);
 void MCEngineGetAddress(MCExecContext& ctxt, MCStringRef &r_value);
 void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value);
 
-void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedText& r_mark);
+void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, bool p_data, MCMarkedText& r_mark);
 
 void MCEngineEvalRandomUuid(MCExecContext& ctxt, MCStringRef& r_uuid);
 void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
