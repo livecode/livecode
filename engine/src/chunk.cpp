@@ -3298,7 +3298,7 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
     {
         MCUrlChunkPtr t_url_chunk;
         t_url_chunk . url = nil;
-        if (!evalurlchunk(ctxt, false, true, t_url_chunk))
+        if (!evalurlchunk(ctxt, false, true, p_type, t_url_chunk))
             return false;
 
         MCNetworkExecPutIntoUrl(ctxt, p_value, p_type, t_url_chunk);
@@ -3384,7 +3384,7 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCExecValue p_va
         MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_valueref));
         MCUrlChunkPtr t_url_chunk;
         t_url_chunk . url = nil;
-        if (!evalurlchunk(ctxt, false, true, t_url_chunk))
+        if (!evalurlchunk(ctxt, false, true, p_type, t_url_chunk))
             return false;
         
         MCNetworkExecPutIntoUrl(ctxt, *t_valueref, p_type, t_url_chunk);
@@ -4355,16 +4355,21 @@ bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force
     return true;
 }
 
-bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr &r_chunk)
+bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, int p_type, MCUrlChunkPtr &r_chunk)
 {
     MCAutoStringRef t_url;
 
     if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADEXPRESSION, &t_url))
         return false;
-
-    MCNetworkMarkUrl(ctxt, *t_url, r_chunk . mark);
-
-    mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
+    
+    // AL-2014-09-10: Don't fetch the url if this is a simple 'put into url...'
+    if (p_type != PT_INTO || getlastchunktype() != CT_UNDEFINED)
+    {
+        MCNetworkMarkUrl(ctxt, *t_url, r_chunk . mark);
+        mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
+    }
+    else
+        r_chunk . mark . text = nil;
 
     if (ctxt . HasError())
     {
