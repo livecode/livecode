@@ -385,14 +385,48 @@ void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url)
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p_url)
+// SJT-2014-09-11: [[ URLMessages ]] Send "postURL" messages on all platforms.
 {
-	MCS_posttourl(ctxt . GetObject(), p_data, p_url);
-	ctxt . SetItToValue(MCurlresult -> getvalueref());
+	if (MCU_couldbeurl(MCStringGetOldString(p_url)))
+	{
+		// Send "postURL" message.
+		MCParameter p1;
+		p1 . setvalueref_argument(p_data);
+		MCParameter p2;
+		p2 . setvalueref_argument(p_url);
+		p1.setnext(&p2);
+		Exec_stat t_stat = ctxt . GetObject() -> message(MCM_post_url, &p1, False, True);
+
+		switch (t_stat)
+		{
+		case ES_NOT_HANDLED:
+		case ES_PASS:
+			// Either there was no message handler, or the handler passed the message,
+			// so process the URL in the engine.
+			MCS_posttourl(ctxt . GetObject(), p_data, p_url);
+			// don't break!
+
+		default:
+			ctxt . SetItToValue(MCurlresult -> getvalueref());
+			break;
+
+		case ES_ERROR:
+			ctxt . Throw();
+			break;
+		}
+	}
+	else
+	{
+		MCAutoStringRef t_err;
+		MCStringFormat(&t_err, "invalid URL: %@", p_url);
+		MCresult -> setvalueref(*t_err);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
+// SJT-2014-09-11: [[ URLMessages ]] Send "deleteURL" messages on all platforms.
 {
 	MCAutoStringRef t_filename;
 	if ((MCStringGetLength(p_target) > 5 &&
@@ -413,16 +447,44 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 		else
 			ctxt . SetTheResultToEmpty();
 	}
-	else 
+	else if (MCStringGetLength(p_target) > 8 &&
+		MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		if (MCStringGetLength(p_target) > 8 &&
-			MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
+		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
+		MCS_saveresfile(*t_filename, kMCEmptyData);
+	}
+	else if (MCU_couldbeurl(MCStringGetOldString(p_target)))
+	{
+		// Send "deleteURL" message
+		Boolean oldlock = MClockmessages;
+		MClockmessages = False;
+		MCParameter p1;
+		p1 . setvalueref_argument(p_target);
+		Exec_stat t_stat = ctxt . GetObject() -> message(MCM_delete_url, &p1, False, True);
+		MClockmessages = oldlock;
+
+		switch (t_stat)
 		{
-			MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-			MCS_saveresfile(*t_filename, kMCEmptyData);
+		case ES_NOT_HANDLED:
+		case ES_PASS:
+			// Either there was no message handler, or the handler passed the message,
+			// so process the URL in the engine.
+			MCS_deleteurl(ctxt.GetObject(), p_target);
+			break;
+
+		case ES_ERROR:
+			ctxt . Throw();
+			break;
+
+		default:
+			break;
 		}
-		else
-			MCS_deleteurl(ctxt . GetObject(), p_target);
+	}
+	else
+	{
+		MCAutoStringRef t_err;
+		MCStringFormat(&t_err, "invalid URL: %@", p_target);
+		MCresult -> setvalueref(*t_err);
 	}
 }
 
