@@ -3365,12 +3365,12 @@ bool MCStringReplaceNativeChars(MCStringRef self, MCRange p_range, const char_t 
 {
     MCAssert(MCStringIsMutable(self));
     
-    __MCStringClampRange(self, p_range);
-    
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
             return false;
+    
+    __MCStringClampRange(self, p_range);
     
     // Work out the new size of the string.
     uindex_t t_new_char_count;
@@ -3411,12 +3411,12 @@ bool MCStringReplaceChars(MCStringRef self, MCRange p_range, const unichar_t *p_
 {
     MCAssert(MCStringIsMutable(self));
     
-    __MCStringClampRange(self, p_range);
-    
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
             return false;
+    
+    __MCStringClampRange(self, p_range);
     
     // Work out the new size of the string.
     uindex_t t_new_char_count;
