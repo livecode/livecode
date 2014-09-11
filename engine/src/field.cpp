@@ -2921,6 +2921,8 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
         // with a non-zero si valus is the first paragraph.
         MCRange t_cu_range, t_char_range;
         t_cu_range = MCRangeMake(si, t_pg->gettextlength() - si);
+        // SN-2014-09-11: [[ Bug 13361 ]] We need to remove the codeunits we skipped in the paragraph before counting.
+        ei -= si;
         si = 0;
         /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
         ++t_cu_range.length; // implicit paragraph break
