@@ -1582,8 +1582,9 @@ void MCInterfaceEvalControlAtScreenLoc(MCExecContext& ctxt, MCPoint p_location, 
 	}
 
     // We now have a stack and a location in card co-ords so let's do the hittest.
+    // AL-2014-09-11: [[ Bug 13404 ]] Ensure we use the recomputed stack loc rather than passed in global loc
 	MCObject *t_object;
-	t_object = MCInterfaceEvalControlAtLocInStack(t_stack, p_location);
+	t_object = MCInterfaceEvalControlAtLocInStack(t_stack, t_location);
 
 	MCAutoValueRef t_control;
 	if (t_object -> names(P_LONG_ID, &t_control))
