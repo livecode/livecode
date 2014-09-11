@@ -1232,7 +1232,8 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             MCBlock *t_last_visual = lptr -> GetLastSegment() -> GetLastVisualBlock();
             
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
-            srect.x = x + lptr -> GetLastSegment() -> GetLeftEdge() + t_last_visual->getorigin() + t_last_visual->getwidth();
+            // SN-2014-09-11: [[ Bug 13407 ]] Include the part not drawn in case of text overflow
+            srect.x = x + lptr -> GetLastSegment() -> GetRightEdge();
             srect.width = swidth - (srect.x - sx);
             dc->fillrect(srect);
         }
