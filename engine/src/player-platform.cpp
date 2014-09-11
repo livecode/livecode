@@ -1265,6 +1265,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			if (t_colorname != NULL)
 				delete t_colorname;
             selectedareacolor = t_color;
+            setflag(True, F_HAS_SELECTION_COLOR);
             dirty = True;
         }
             break;
@@ -1456,6 +1457,12 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if ((stat = IO_write_string(filename, stream)) != IO_NORMAL)
 			return stat;
+        // PM-2014-09-11: [[ Bug 13390 ]] Save the forecolor property
+        if (flags & F_HAS_SELECTION_COLOR)
+        {
+            if ((stat = IO_write_mccolor(selectedareacolor, stream)) != IO_NORMAL)
+                return stat;
+        }
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(endtime, stream)) != IO_NORMAL)
@@ -1477,6 +1484,12 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 		return stat;
 	if ((stat = IO_read_string(filename, stream)) != IO_NORMAL)
 		return stat;
+    // PM-2014-09-11: [[ Bug 13390 ]] Load the forecolor property
+    if (flags & F_HAS_SELECTION_COLOR)
+    {
+        if ((stat = IO_read_mccolor(selectedareacolor, stream)) != IO_NORMAL)
+            return stat;
+    }
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_uint4(&endtime, stream)) != IO_NORMAL)
