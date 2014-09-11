@@ -628,7 +628,11 @@ void MCButton::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 	MCValueAssign(label, p_label);
     // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
     //  we need to rely on the F_LABEL flag
-    flags |= F_LABEL;
+    // AL-2014-09-10: [[ Bug 13401 ]] If label is empty, the flag should reflect the lack of label
+    if (MCStringIsEmpty(label))
+        flags &= ~F_LABEL;
+    else
+        flags |= F_LABEL;
 
 	if (entry != NULL)
 		entry->settext(0, label, False);
