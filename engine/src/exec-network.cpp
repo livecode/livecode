@@ -373,13 +373,59 @@ void MCNetworkEvalHTTPProxyForURLWithPAC(MCExecContext& ctxt, MCStringRef p_url,
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_message)
+// SJT-2014-09-11: [[ URLMessages ]] Send "loadURL" messages on all platforms.
 {
-	MCS_loadurl(ctxt . GetObject(), p_url, p_message);
+  // Send "loadURL" message.
+	MCParameter p1;
+	p1 . setvalueref_argument(p_url);
+	MCParameter p2;
+	p2 . setvalueref_argument(p_message);
+	p1.setnext(&p2);
+	// MW-2006-03-03: I've changed this from False, True to True, True to ensure 'target' is returned correctly for libURL.
+  Exec_stat t_stat = ctxt . GetObject() -> message(MCM_load_url, &p1, True, True);
+	
+	switch (t_stat)
+	{
+  case ES_NOT_HANDLED:
+  case ES_PASS:
+    // Either there was no message handler, or the handler passed the message,
+    // so process the URL in the engine.
+    MCS_loadurl(ctxt . GetObject(), p_url, p_message);
+    break;
+
+  case ES_ERROR:
+    ctxt . Throw();
+    break;
+    
+  default:
+    break;
+  }
 }
 
 void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url)
+// SJT-2014-09-11: [[ URLMessages ]] Send "unloadURL" messages on all platforms.
 {
-	MCS_unloadurl(ctxt . GetObject(), p_url);
+  // Send "unloadURL" message.
+	MCParameter p1;
+	p1 . setvalueref_argument(p_url);
+  Exec_stat t_stat = ctxt . GetObject() -> message(MCM_unload_url, &p1, False, True);
+	
+	switch (t_stat)
+	{
+  case ES_NOT_HANDLED:
+  case ES_PASS:
+    // Either there was no message handler, or the handler passed the message,
+    // so process the URL in the engine.
+    MCS_unloadurl(ctxt . GetObject(), p_url);
+    break;
+
+  case ES_ERROR:
+    ctxt . Throw();
+    break;
+    
+  default:
+    break;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
