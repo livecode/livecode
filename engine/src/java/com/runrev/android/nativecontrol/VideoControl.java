@@ -83,6 +83,14 @@ public class VideoControl extends NativeControl
             }
         });
         
+        m_video_view.setOnMovieTouchedListener(new ExtVideoView.OnMovieTouchedListener() {
+            @Override
+            public void onMovieTouched()
+            {
+                doMovieTouched();
+            }
+        });
+        
         m_container = new FrameLayout(context) {
             @Override
             public boolean onTouchEvent(MotionEvent ev)
@@ -236,26 +244,28 @@ public class VideoControl extends NativeControl
 ////////////////////////////////////////////////////////////////////////////////
 	
 	public interface OnMovieTouchedListener
-	{
-		void onMovieTouched();
-	}
-	
-	protected OnMovieTouchedListener m_on_movie_touched_listener;
-	
-	public void setOnMovieTouchedListener(OnMovieTouchedListener p_listener)
-	{
-		m_on_movie_touched_listener = p_listener;
-	}
-	
-	protected void dispatchMovieTouched()
-	{
-		if (m_on_movie_touched_listener != null)
-			m_on_movie_touched_listener.onMovieTouched();
-	}
-	
+        {
+            void onMovieTouched();
+        }
+    
+    protected OnMovieTouchedListener m_on_movie_touched_listener;
+    
+    public void setOnMovieTouchedListener(OnMovieTouchedListener p_listener)
+    {
+        m_on_movie_touched_listener = p_listener;
+    }
+    
+    protected void dispatchMovieTouched()
+    {
+        if (m_on_movie_touched_listener != null)
+            m_on_movie_touched_listener.onMovieTouched();
+    }
+
+    	
 ////////////////////////////////////////////////////////////////////////////////
 	
     public native void doPlayerFinished();
     public native void doPlayerError();
     public native void doPropertyAvailable(int property);
+    public native void doMovieTouched();
 }
