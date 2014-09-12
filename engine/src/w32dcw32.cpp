@@ -667,6 +667,9 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		{
 			if (wParam >= 128)
 			{
+				// SN-2014-09-12: [[ Bug 13423 ]] A Unicode char is created when a
+				// valid char follows a dead char (we want the keyDown message to be sent)
+				deadcharfollower = False;
 				bool t_is_unicode;
 				WCHAR t_wide[1];
 			
@@ -701,6 +704,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		{
 			WCHAR t_unicode_char;
 			MultiByteToWideChar((((MCScreenDC *)MCscreen) -> input_codepage), 0, &t_input_char, 1, &t_unicode_char, 1);
+
+			// SN-2014-09-12: [[ Bug 13423 ]] A Unicode char is created when a
+			// valid char follows a dead char (we want the keyDown message to be sent)
+			deadcharfollower = False;
 
 			bool t_is_unicode;
 			t_is_unicode = (WideCharToMultiByte((((MCScreenDC *)MCscreen) -> system_codepage), 0, &t_unicode_char, 1, &t_input_char, 1, NULL, NULL) == 0);
@@ -738,11 +745,18 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 		if (msg == WM_CHAR || msg == WM_SYSCHAR)
 			buffer[0] = lastchar = wParam;
+		// SN-2014-09-12: [[ Bug 13423 ]] We don't want to fire again KeyDown with the last invalid
+		// char following a dead, if a dead char is typed again (in a sequence '´', 't', '´' for instance)
+		else
+			lastchar = 0;
 
 		// MW-2010-11-17: [[ Bug 3892 ]] Ctrl+Alt can be the same as AltGr.
 		//   If we are a CHAR message *and* have a non-control character *and* have Ctrl+Alt set, we discard the modifiers
 		if ((msg == WM_CHAR || msg == WM_SYSCHAR) && wParam >= 32 && (MCmodifierstate & (MS_CONTROL | MS_ALT)) == (MS_CONTROL | MS_ALT))
 			MCmodifierstate = 0;
+
+		// SN-2014-09-12: [[ Bug 13423 ]] We don't want to send a KeyDown message
+		bool t_no_kdown = false;
 
 		if (curinfo->keysym == 0) // event came from some other dispatch
 			// SN-2014-09-12: [[ Bug 13423 ]] If we are following a dead char, no conversion needed:
@@ -756,7 +770,13 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			else
 				keysym = pms->getkeysym(wParam, lParam);
 		else
+		{
+			// SN-2014-09-12: [[ Bug 13423 ]] No keyDown send: we are the dead char since curinfo->keysym
+			// is not empty
+			if (deadcharfollower)
+				t_no_kdown = true;
 			keysym = curinfo->keysym;
+		}
 
 		lastkeysym = keysym;
 		if (MCmodifierstate & MS_CONTROL)
@@ -777,8 +797,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				uint2 count = LOWORD(lParam);
 				while (count--)
 				{
-					if (!MCdispatcher->wkdown(dw, buffer, keysym)
-					        && (msg == WM_SYSKEYDOWN || msg == WM_SYSCHAR))
+					// SN-2014-09-12: [[ Bug 13423 ]] keyDown must not be send if we are a dead char
+					// not combined.
+					if (!t_no_kdown && !MCdispatcher->wkdown(dw, buffer, keysym)
+							&& (msg == WM_SYSKEYDOWN || msg == WM_SYSCHAR))
 						return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 					if (count || lParam & 0x40000000)
 						MCdispatcher->wkup(dw, buffer, keysym);
