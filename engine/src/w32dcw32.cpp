@@ -312,6 +312,8 @@ static Boolean doubledown;
 static char lastchar;
 static WPARAM lastwParam;
 static KeySym lastkeysym;
+// SN-2014-09-12: [[ Bug 13423 ]] Keeps whether a the next char follows a dead char
+static Boolean deadcharfollower = False;
 static Boolean doubleclick;
 Boolean tripleclick;
 static uint4 clicktime;
@@ -645,6 +647,11 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		break;
 
+	// SN-2014-09-12: [[ Bug 13423 ]] The next character typed will follow a dead char. Sets the flag.
+	case WM_DEADCHAR:
+		deadcharfollower = True;
+		break;
+
 	case WM_SYSKEYDOWN:
 	case WM_SYSCHAR:
 	case WM_CHAR:
@@ -722,6 +729,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 		if (msg == WM_CHAR || msg == WM_SYSCHAR)
 			wParam = t_input_char;
+		// SN-2014-09-12: [[ Bug 13423 ]] Something else than a character has been typed:
+		// we discard the dead char flag
+		else
+			deadcharfollower = False;
 
 		buffer[0] = buffer[1] = 0;
 
@@ -734,9 +745,19 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			MCmodifierstate = 0;
 
 		if (curinfo->keysym == 0) // event came from some other dispatch
-			keysym = pms->getkeysym(wParam, lParam);
+			// SN-2014-09-12: [[ Bug 13423 ]] If we are following a dead char, no conversion needed:
+			// the message is fired without passing by MCScreenDC::handle, that's why
+			// curinfo->keysym hasn't been set, and the typed char is in wParam
+			if (deadcharfollower)
+			{
+				deadcharfollower = False;
+				keysym = wParam;
+			}
+			else
+				keysym = pms->getkeysym(wParam, lParam);
 		else
 			keysym = curinfo->keysym;
+
 		lastkeysym = keysym;
 		if (MCmodifierstate & MS_CONTROL)
 			if (wParam == VK_CANCEL || keysym == '.')
