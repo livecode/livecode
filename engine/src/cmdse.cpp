@@ -2255,8 +2255,13 @@ void MCMM::exec_ctxt(MCExecContext &ctxt)
 			else
 				MCMultimediaExecPlayLastVideoOperation(ctxt, PP_UNDEFINED);
 		}
+        // AL-2014-09-12: [[ Bug 13428 ]] The only valid audio action without a clip is stop
+        else if (audio)
+        {
+            MCMultimediaExecStopPlaying(ctxt);
+        }
 	}
-	else 
+	else
 	{
 		MCObject *optr = nil;
 		if (stack != NULL)
