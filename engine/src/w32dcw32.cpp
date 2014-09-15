@@ -270,12 +270,14 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 				TranslateMessage(&msg);
 
 				bool t_char_found;
+				// SN0-2014-09-15: [[ Bug 13423 ]] Uniformisation of the dead char behaviour on
+				// all platforms (we want to intercept the DEADCHAR messages).
 				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
-					t_char_found = PeekMessageW(&tmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
-				                 PeekMessageW(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
+					t_char_found = PeekMessageW(&tmsg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE) ||
+				                 PeekMessageW(&tmsg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
 				else
-					t_char_found = PeekMessageA(&tmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
-				                 PeekMessageA(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
+					t_char_found = PeekMessageA(&tmsg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE) ||
+				                 PeekMessageA(&tmsg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
 				if (t_char_found)
 				{
 					if (MCdispatcher->findstackwindowid((uint32_t)msg.hwnd) == NULL)
@@ -648,7 +650,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		break;
 
 	// SN-2014-09-12: [[ Bug 13423 ]] The next character typed will follow a dead char. Sets the flag.
+	// Stores this dead char typed in case it fails to combine.
 	case WM_DEADCHAR:
+	case WM_SYSDEADCHAR:
+		lastkeysym = wParam;
 		deadcharfollower = True;
 		break;
 
@@ -755,9 +760,6 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		if ((msg == WM_CHAR || msg == WM_SYSCHAR) && wParam >= 32 && (MCmodifierstate & (MS_CONTROL | MS_ALT)) == (MS_CONTROL | MS_ALT))
 			MCmodifierstate = 0;
 
-		// SN-2014-09-12: [[ Bug 13423 ]] We don't want to send a KeyDown message
-		bool t_no_kdown = false;
-
 		if (curinfo->keysym == 0) // event came from some other dispatch
 			// SN-2014-09-12: [[ Bug 13423 ]] If we are following a dead char, no conversion needed:
 			// the message is fired without passing by MCScreenDC::handle, that's why
@@ -771,11 +773,13 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				keysym = pms->getkeysym(wParam, lParam);
 		else
 		{
-			// SN-2014-09-12: [[ Bug 13423 ]] No keyDown send: we are the dead char since curinfo->keysym
-			// is not empty
+			// SN-2014-09-15: [[ Bug 13423 ]] If following a DEADCHAR and arriving here, the 
+			// combination failed: we want to [RAW]KEYDOWN this dead key, which has been stored in
+			// the last keysym.
 			if (deadcharfollower)
-				t_no_kdown = true;
-			keysym = curinfo->keysym;
+				keysym = lastkeysym;
+			else
+				keysym = curinfo->keysym;
 		}
 
 		lastkeysym = keysym;
@@ -799,10 +803,11 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				{
 					// SN-2014-09-12: [[ Bug 13423 ]] keyDown must not be send if we are a dead char
 					// not combined.
-					if (!t_no_kdown && !MCdispatcher->wkdown(dw, buffer, keysym)
+					if (!MCdispatcher->wkdown(dw, buffer, keysym)
 							&& (msg == WM_SYSKEYDOWN || msg == WM_SYSCHAR))
 						return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
-					if (count || lParam & 0x40000000)
+					// SN-2014-09-15: [[ Bug 13423 ]] We want to send a KEYUP for the dead char, if it failed to combine	
+					if (count || lParam & 0x40000000 || deadcharfollower)
 						MCdispatcher->wkup(dw, buffer, keysym);
 				}
 				curinfo->handled = curinfo->reset = True;
@@ -821,8 +826,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	{	
 		if (curinfo->keysym == 0) // event came from some other dispatch
 			keysym = pms->getkeysym(wParam, lParam);
-		else
+		// SN-2014-09-15: [[ Bug 13423 ]] We don't regard the event if we are following a dead char WITH a
+		// keysym: that's the dead char itself.
+		else if (!deadcharfollower)
 			keysym = curinfo->keysym;
+		else
+			 break;
 		if (keysym == lastkeysym)
 			buffer[0] = lastchar;
 		else
