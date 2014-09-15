@@ -868,6 +868,8 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	{
 		[self handleKeyPress: m_input_method_event isDown: YES];
 		[self handleKeyPress: m_input_method_event isDown: NO];
+        // PM-2014-09-15: [[ Bug 13442 ]] Set m_input_method_event to nil to prevent rawKeyDown from firing twice when altKey is down
+        m_input_method_event = nil;
 	}
 	else
 	{
