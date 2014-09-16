@@ -322,10 +322,22 @@ void MCMacPlatformUnlockMenuSelect(void)
 	t_key_equiv = [super performKeyEquivalent: event];
 	MCMacPlatformUnlockMenuSelect();
 	
+    BOOL t_is_tab;
+    t_is_tab = NO;
+
+    // AL-2014-09-16: [[ Bug 13372 ]]  Make sure tab + modifier key combinations
+    //  that are reserved by Cocoa trigger keypress events for the engine to handle.
+    if (!t_key_equiv)
+    {
+        MCPlatformKeyCode t_keycode;
+        MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], t_keycode);
+        t_is_tab = t_keycode == kMCPlatformKeyCodeTab;
+    }
+    
     // MW-2014-04-10: [[ Bug 12047 ]] If it was found as a key equivalent dispatch
     //   a keypress so the engine can handle it. Otherwise we return NO and the
     //   event is handled normally.
-    if (t_key_equiv)
+    if (t_key_equiv || t_is_tab)
     {
         MCMacPlatformWindow *t_window = [(MCWindowDelegate *)[[event window] delegate] platformWindow];
         
