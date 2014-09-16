@@ -250,9 +250,13 @@ public:
     
     int hittestcontroller(int x, int y);
     
+    Boolean handle_kdown(const char *string, KeySym key);
+    Boolean handle_shift_kdown(const char *string, KeySym key);
     void handle_mdown(int which);
     void handle_mstilldown(int which);
     void handle_shift_mdown(int which);
+    void shift_play(void);
+    
     void handle_mup(int which);
     void handle_mfocus(int x, int y);
     
