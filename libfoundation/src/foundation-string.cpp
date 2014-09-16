@@ -2353,7 +2353,8 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
     else
         self_chars = self -> chars + p_after;
     
-    t_result = MCUnicodeFirstIndexOf(self_chars, self -> char_count, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
+    // AL-2014-09-05: [[ Bug 13352 ]] Crash due to not taking into account p_after by adjusting length of string.
+    t_result = MCUnicodeFirstIndexOf(self_chars, self -> char_count - p_after, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
     
     // Correct the output index
     if (t_result == true)
