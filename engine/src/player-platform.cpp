@@ -3606,13 +3606,14 @@ void MCPlayer::handle_shift_mdown(int p_which)
         case kMCPlayerControllerPartWell:
         {
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
+            MCRectangle t_part_thumb_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb);
             
             uint32_t t_new_time, t_old_time, t_duration, t_old_start, t_old_end;;
             t_old_time = getmoviecurtime();
             t_duration = getduration();
             
             // If there was previously no selection, then take it to be currenttime, currenttime.
-            if (starttime == MAXUINT4 || endtime == MAXUINT4)
+            if (starttime == MAXUINT4 || endtime == MAXUINT4 || starttime == endtime)
                 starttime = endtime = t_old_time;
             
             t_old_start = getstarttime();
@@ -3621,31 +3622,57 @@ void MCPlayer::handle_shift_mdown(int p_which)
             // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
             t_new_time = _muludiv64(t_duration, mx - t_part_well_rect . x, t_part_well_rect . width);
 
-            // If click before current starttime, adjust that.
-            // If click after current endtime, adjust that.
-            // If click first half of current selection, adjust start.
-            // If click last half of current selection, adjust end.
-            if (t_new_time <= (t_old_end + t_old_start) / 2)
+
+            // PM-2014-09-10: [[ Bug 13389 ]]
+            // If click on the left half of the thumb, adjust starttime
+            // If click on the right half of the thumb, adjust endtime
+            if (t_part == kMCPlayerControllerPartThumb)
             {
-                // PM-2014-08-05: [[ Bug 13065 ]] If there was previously no selection, then
-                // endTime is set as currentTime when mouse is clicked
-                // startTime is set to currentTime and then updated as thumb dragged to the left
-                if (starttime == endtime)
-                    endtime = t_old_time;
-        
-                starttime = t_new_time;
-                m_grabbed_part = kMCPlayerControllerPartSelectionStart;
+                if (mx < t_part_thumb_rect.x + t_part_thumb_rect . width / 2)
+                {
+                    if (starttime == endtime)
+                        endtime = t_old_time;
+                    
+                    m_grabbed_part = kMCPlayerControllerPartSelectionStart;
+
+                }
+                else
+                {
+                    if (starttime == endtime)
+                        starttime = t_old_time;
+                    
+                    m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
+                }
             }
-            else
+
+            else if (t_part == kMCPlayerControllerPartWell)
             {
-                // PM-2014-08-05: [[ Bug 13065 ]] If there was previously no selection, then
-                // startTime is set as currentTime when mouse is clicked
-                // endTime is set to currentTime and then updated as thumb dragged to the right
-                if (starttime == endtime)
-                    starttime = t_old_time;
-                
-                endtime = t_new_time;
-                m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
+                // If click before current starttime, adjust that.
+                // If click after current endtime, adjust that.
+                // If click first half of current selection, adjust start.
+                // If click last half of current selection, adjust end.
+                if (t_new_time <= (t_old_end + t_old_start) / 2)
+                {
+                    // PM-2014-08-05: [[ Bug 13065 ]] If there was previously no selection, then
+                    // endTime is set as currentTime when mouse is clicked
+                    // startTime is set to currentTime and then updated as thumb dragged to the left
+                    if (starttime == endtime)
+                        endtime = t_old_time;
+                    
+                    starttime = t_new_time;
+                    m_grabbed_part = kMCPlayerControllerPartSelectionStart;
+                }
+                else
+                {
+                    // PM-2014-08-05: [[ Bug 13065 ]] If there was previously no selection, then
+                    // startTime is set as currentTime when mouse is clicked
+                    // endTime is set to currentTime and then updated as thumb dragged to the right
+                    if (starttime == endtime)
+                        starttime = t_old_time;
+                    
+                    endtime = t_new_time;
+                    m_grabbed_part = kMCPlayerControllerPartSelectionFinish;
+                }
             }
             
             if (hasfilename())
