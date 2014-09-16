@@ -785,7 +785,8 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					
 					MCImageBitmap *t_bitmap = nil;
 					
-					t_success = copybitmap(1.0, false, t_bitmap);
+					// IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
+					t_success = lockbitmap(t_bitmap, false);
 					if (t_success)
 					{
 						MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
@@ -798,8 +799,8 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 							*t_data_ptr++ = MCGPixelPack(kMCGPixelFormatARGB, t_r, t_g, t_b, t_a);
 						}
 #endif
+						unlockbitmap(t_bitmap);
 					}
-					MCImageFreeBitmap(t_bitmap);
 					
                     if (t_tmp_locked)
                         setflag(false, F_LOCK_LOCATION);
@@ -845,7 +846,8 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					
 					MCImageBitmap *t_bitmap = nil;
 					
-					t_success = copybitmap(1.0, true, t_bitmap);
+					// IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
+					t_success = lockbitmap(t_bitmap, true);
 					if (t_success)
 					{
 						uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data;
@@ -854,7 +856,8 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 							uint32_t *t_src_row = (uint32_t*)t_src_ptr;
 							for (uindex_t x = 0; x < t_bitmap->width; x++)
 							{
-								uint8_t t_alpha = *t_src_row++ >> 24;
+								uint8_t t_alpha;
+								t_alpha = MCGPixelGetNativeAlpha(*t_src_row++);
 								if (which == P_MASK_DATA && t_alpha > 0)
 									*t_data_ptr++ = 0xFF;
 								else
@@ -862,8 +865,8 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 							}
 							t_src_ptr += t_bitmap->stride;
 						}
+						unlockbitmap(t_bitmap);
 					}
-					MCImageFreeBitmap(t_bitmap);
 					
                     if (t_tmp_locked)
                         setflag(false, F_LOCK_LOCATION);
@@ -1161,7 +1164,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				t_success = copybitmap(1.0, false, t_copy);
+				t_success = copybitmap(false, t_copy);
 			}
 			else
 			{
@@ -1211,7 +1214,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				t_success = copybitmap(1.0, false, t_copy);
+				t_success = copybitmap(false, t_copy);
 			}
 			else
 			{
@@ -1240,7 +1243,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				t_success = copybitmap(1.0, false, t_copy);
+				t_success = copybitmap(false, t_copy);
 			}
 			else
 			{
@@ -2504,7 +2507,8 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 
 // IM-2013-11-06: [[ RefactorGraphics ]] Return a copy of the bitmap with the given transform applied
 // IM-2014-05-12: [[ ImageRepUpdate ]] Modify function to take MCGImage parameter
-bool MCImageBitmapCreateWithTransformedMCGImage(MCGImageRef p_src, MCGAffineTransform p_transform, MCGImageFilter p_quality, MCImageBitmap *&r_bitmap)
+// IM-2014-09-02: [[ Bug 13295 ]] Add optional target size param.
+bool MCImageBitmapCreateWithTransformedMCGImage(MCGImageRef p_src, MCGAffineTransform p_transform, MCGImageFilter p_quality, const MCGIntegerSize *p_target_size, MCImageBitmap *&r_bitmap)
 {
 	if (p_src == nil)
 		return false;
@@ -2522,6 +2526,14 @@ bool MCImageBitmapCreateWithTransformedMCGImage(MCGImageRef p_src, MCGAffineTran
 	uint32_t t_trans_width = ceilf(t_trans_rect.size.width);
 	uint32_t t_trans_height = ceilf(t_trans_rect.size.height);
 	
+	if (p_target_size != nil)
+	{
+		// IM-2014-09-02: [[ Bug 13295 ]] Adjust transform to fit transformed image within target size
+		p_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(p_target_size->width / t_trans_rect.size.width, p_target_size->height / t_trans_rect.size.height), p_transform);
+		t_trans_width = p_target_size->width;
+		t_trans_height = p_target_size->height;
+	}
+
 	MCImageBitmap *t_bitmap;
 	t_bitmap = nil;
 	
@@ -2555,9 +2567,10 @@ bool MCImageBitmapCreateWithTransformedMCGImage(MCGImageRef p_src, MCGAffineTran
 }
 
 // IM-2014-05-12: [[ ImageRepUpdate ]] Refactor code common to lockbitmap/copybitmap to this method
-// IM-2013-07-26: [[ ResIndependence ]] render the image at the requested scale,
+// IM-2013-07-26: [[ ResIndependence ]] render the image at the requested size,
 // with any transformations (scale, angle) applied
-bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat p_scale, MCImageBitmap *&r_bitmap)
+// IM-2024-09-02: [[ Bug 13295 ]] Replace scale param with optional target size.
+bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, const MCGIntegerSize *p_size, MCImageBitmap *&r_bitmap)
 {
 	bool t_success;
 	t_success = true;
@@ -2587,12 +2600,23 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat
 	if (t_success)
 		t_success = t_rep->GetGeometry(t_width, t_height);
 	
+	MCGIntegerSize t_size;
+	if (p_size == nil)
+		t_size = MCGIntegerSizeMake(rect.width, rect.height);
+	else
+		t_size = *p_size;
+
 	if (t_success)
 	{
 		if (!t_has_transform)
 			t_transform = MCGAffineTransformMakeIdentity();
 		
-		t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(p_scale, p_scale), t_transform);
+		// IM-2014-09-02: [[ Bug 13295 ]] Adjust transform to fit transformed image within target size
+		MCGFloat t_x_scale, t_y_scale;
+		t_x_scale = (MCGFloat)t_size.width / (MCGFloat)rect.width;
+		t_y_scale = (MCGFloat)t_size.height / (MCGFloat)rect.height;
+
+		t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(t_x_scale, t_y_scale), t_transform);
 		
 		t_transform_scale = MCGAffineTransformGetEffectiveScale(t_transform);
 		t_success = t_rep->LockImageFrame(currentframe, t_transform_scale, t_frame);
@@ -2647,7 +2671,7 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat
 			MCGImageFilter t_filter;
 			t_filter = getimagefilter();
 			
-			t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame.image, t_transform, t_filter, m_locked_bitmap);
+			t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame.image, t_transform, t_filter, &t_size, m_locked_bitmap);
 			
 			if (t_success && !p_premultiplied)
 				MCImageBitmapUnpremultiply(m_locked_bitmap);
@@ -2664,9 +2688,9 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat
 
 // IM-2014-05-12: [[ ImageRepUpdate ]] Reimplement by locking the bitmap and taking
 // ownership of the produced bitmap (if the result of transforming the source) or copying it otherwise.
-// IM-2013-07-26: [[ ResIndependence ]] render the image at the requested scale,
-// with any transformations (scale, angle) applied
-bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *&r_bitmap)
+// IM-2013-07-26: [[ ResIndependence ]] render the image with any transformations (scale, angle) applied
+// IM-2014-09-02: [[ Bug 13295 ]] Remove unused scale param.
+bool MCImage::copybitmap(bool p_premultiplied, MCImageBitmap *&r_bitmap)
 {
 	bool t_success;
 	t_success = true;
@@ -2674,7 +2698,7 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 	MCImageBitmap *t_bitmap;
 	t_bitmap = nil;
 
-	t_success = lockbitmap(p_premultiplied, true, p_scale, t_bitmap);
+	t_success = lockbitmap(t_bitmap, true);
 
 	if (t_success)
 	{
@@ -2695,7 +2719,7 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 
 bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform)
 {
-	return lockbitmap(p_premultiplied, p_update_transform, 1.0, r_bitmap);
+	return lockbitmap(p_premultiplied, p_update_transform, nil, r_bitmap);
 }
 
 void MCImage::unlockbitmap(MCImageBitmap *p_bitmap)
