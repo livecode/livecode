@@ -4575,6 +4575,8 @@ void MCLegacyGetStackFiles(MCExecContext& ctxt, MCStringRef& r_value);
 void MCLegacySetStackFiles(MCExecContext& ctxt, MCStringRef value);
 
 void MCLegacyGetMenuBar(MCExecContext& ctxt, MCStringRef& r_value);
+// SN-2014-09-01: [[ Bug 13300 ]] Updated 'set the menubar' to have a (useless) setter at the global scope
+void MCLegacySetMenuBar(MCExecContext& ctxt, MCStringRef p_value);
 
 void MCLegacyGetEditMenus(MCExecContext& ctxt, bool& r_value);
 void MCLegacySetEditMenus(MCExecContext& ctxt, bool value);
