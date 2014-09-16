@@ -412,7 +412,7 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
 
 void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 {
-	NSError *t_error;
+    NSError *t_error;
 	t_error = nil;
 	
     if (p_filename == nil)
@@ -451,6 +451,9 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
     MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
     SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
 	[m_movie release];
+    
+    // PM-2014-09-02: [[ Bug 13306 ]] Make sure we reset the previous value of loadedtime when loading a new movie
+    m_buffered_time = do_QTMakeTime(0, 1);
     
 	m_movie = t_new_movie;
     
