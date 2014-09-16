@@ -2269,6 +2269,11 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
         p_needle = p_needle -> string;
     
 	__MCStringClampRange(self, p_range);
+    
+    // SN-2014-09-05: [[ Bug 13346 ]] Empty is *never* contained in a string. In the loop, a commong string of length 0
+    // will be found, which unfortunaly matches the length of the empty needle.
+    if (MCStringIsEmpty(p_needle))
+        return false;
 
     bool self_native = MCStringIsNative(self);
     if (self_native)

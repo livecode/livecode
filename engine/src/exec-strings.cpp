@@ -1689,6 +1689,11 @@ void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p
     uindex_t t_offset;
     r_result = 0;
     
+    // SN-2014-09-05: [[ Bug 13346 ]] byteOffset is 0 if the byte is not found, and 'empty'
+    // is by definition not found; getting in the loop ensures at least 1 is returned.
+    if (t_chunk_byte_count == 0)
+        return;
+    
     for (t_offset = p_start_offset; t_offset < t_byte_count - t_chunk_byte_count + 1; t_offset++)
         if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
         {
