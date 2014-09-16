@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "redraw.h"
 #include "systhreads.h"
+#include "objectstream.h"
 
 #include "exec.h"
 #include "exec-interface.h"
@@ -3180,14 +3181,66 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 //  SAVING AND LOADING
 //
 
+#define FIELD_EXTRA_TEXTDIRECTION (1 << 0)
+
 IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
-	return defaultextendedsave(p_stream, p_part);
+	uint32_t t_size, t_flags;
+	t_size = 0;
+	t_flags = 0;
+    
+    // MW-2014-06-20: [[ Bug 13315 ]] Save the textDirection of the field
+    if (text_direction != kMCTextDirectionAuto)
+    {
+        t_flags |= FIELD_EXTRA_TEXTDIRECTION;
+        t_size += sizeof(uint8_t);
+    }
+    
+	IO_stat t_stat;
+	t_stat = p_stream . WriteTag(t_flags, t_size);
+
+    if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TEXTDIRECTION))
+        t_stat = p_stream . WriteU8(text_direction);
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedsave(p_stream, p_part);
+    
+	return t_stat;
 }
 
 IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
-	return defaultextendedload(p_stream, p_version, p_length);
+    IO_stat t_stat;
+	t_stat = IO_NORMAL;
+    
+    if (p_length > 0)
+    {
+		uint4 t_flags, t_length, t_header_length;
+		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+        
+		if (t_stat == IO_NORMAL)
+			t_stat = p_stream . Mark();
+        
+        // MW-2014-06-20: [[ 13315 ]] Load the textDirection of the field.
+        if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TEXTDIRECTION) != 0)
+        {
+            uint8_t t_value;
+            t_stat = p_stream . ReadU8(t_value);
+            if (t_stat == IO_NORMAL)
+                text_direction = (MCTextDirection)t_value;
+        }
+        
+        if (t_stat == IO_NORMAL)
+            t_stat = p_stream . Skip(t_length);
+        
+        if (t_stat == IO_NORMAL)
+            p_length -= t_length + t_header_length;
+    }
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedload(p_stream, p_version, p_length);
+    
+	return t_stat;
 }
 
 IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
@@ -3199,7 +3252,11 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint1(OT_FIELD, stream)) != IO_NORMAL)
 		return stat;
 
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+    // AL-2014-09-12: [[ Bug 13315 ]] Force an extension if field has explicit textDirection.
+    bool t_has_extension;
+	t_has_extension = text_direction != kMCTextDirectionAuto;
+    
+	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
 		return stat;
 
 	if ((stat = IO_write_int2(leftmargin, stream)) != IO_NORMAL)
