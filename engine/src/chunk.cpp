@@ -5839,6 +5839,11 @@ bool MCTextChunkIterator::isamong(MCExecContext& ctxt, MCStringRef p_needle)
         if (MCStringSubstringIsEqualTo(text, range, p_needle, ctxt . GetStringComparisonType()))
             return true;
     
+    // AL-2014-09-10: [[ Bug 13356 ]] If we were not 'exhausted', then there was a trailing delimiter
+    //  which means empty is considered to be among the chunks.
+    if (MCStringIsEmpty(p_needle) && !exhausted)
+        return true;
+    
     return false;
 }
 
