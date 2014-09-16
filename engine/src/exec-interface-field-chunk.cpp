@@ -786,9 +786,10 @@ template<typename T> void GetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
 
 template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, void (MCParagraph::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value)
 {
+    // AL-2014-09-01: [[ Bug 13316 ]] Setting of line chunk props should cycle through paragraphs
     MCParagraph *t_paragraph;
     t_paragraph = p_field -> resolveparagraphs(p_part_id);
-
+    
     // MW-2013-03-20: [[ Bug 10764 ]] We only need to layout if the paragraphs
     //   are attached to the current card.
     bool t_need_layout;
@@ -796,22 +797,31 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
         t_need_layout = t_paragraph == p_field -> getparagraphs();
     else
         t_need_layout = false;
-
+    
     p_field -> verifyindex(t_paragraph, si, false);
     p_field -> verifyindex(t_paragraph, ei, true);
-
+    
     findex_t t_line_index;
     MCParagraph *sptr = p_field -> indextoparagraph(t_paragraph, si, ei, &t_line_index);
-
+    
     sptr -> defrag();
-
+    
     MCRectangle drect = p_field -> getrect();
     findex_t ssi, sei;
     p_field -> selectedmark(false, ssi, sei, false);
     int4 savex = p_field -> textx;
     int4 savey = p_field -> texty;
-
-    T::setter(ctxt, sptr, p_setter, p_value);
+    
+    do
+    {
+        T::setter(ctxt, sptr, p_setter, p_value);
+        if (ctxt . HasError())
+            return;
+        
+        ei -= sptr->gettextlengthcr();
+        sptr = sptr->next();
+    }
+    while(ei > 0);
 
     if (t_need_layout)
     {
