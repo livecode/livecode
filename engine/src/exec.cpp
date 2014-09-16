@@ -38,6 +38,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "param.h"
 
+// SN-2014-09-05: [[ Bug 13378 ]] Include the definition of MCServerScript
+#ifdef _SERVER
+#include "srvscript.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::ForceToString(MCValueRef p_value, MCStringRef& r_string)
@@ -1089,10 +1094,11 @@ MCVarref* MCExecContext::GetIt() const
     if (m_curhandler != nil)
         return m_curhandler -> getit();
 
-#ifdef MODE_SERVER
+    // SN-2014-09-05: [[ Bug 13378 ]] Changed the #ifdef to be _SERVER, and updated the member name
+#ifdef _SERVER
     // If we are here it means we must be in global scope, executing in a
     // MCServerScript object.
-    return static_cast<MCServerScript *>(m_curobj) -> getit();
+    return static_cast<MCServerScript *>(m_object) -> GetIt();
 #else
     // We should never get here as execution only occurs within handlers unless
     // in server mode.
