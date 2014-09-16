@@ -523,7 +523,8 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 			if (ctxt . effective || t_style . has_text_align)
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " align=\"%s\"", MCtextalignstrings[t_style.text_align]);
 			if (!t_style . has_list_indent && (t_style . has_first_indent || ctxt . effective))
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " firstindent=\"%s\"", t_style.first_indent);
+                // AL-2014-09-09: [[ Bug 13353 ]] firstindent parameter is integer not string
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " firstindent=\"%d\"", t_style.first_indent);
 			else if (t_style . has_list_indent)
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " listindent=\"%d\"", t_style.list_indent);
 			if (ctxt . effective || t_style . has_left_indent)
