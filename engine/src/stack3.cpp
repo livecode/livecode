@@ -1785,16 +1785,18 @@ void MCStack::findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled)
 				bptr->getmenu()->findaccel(key, t_accel, r_disabled);
 				if (!MCStringIsEmpty(t_accel))
 				{
-					MCStringRef t_label = nil;
-					/* UNCHECKED */ MCStringCreateMutable(0, t_label);
+					MCAutoStringRef t_label;
+					/* UNCHECKED */ MCStringCreateMutable(0, &t_label);
 					if (t_menuhastags)
-						/* UNCHECKED */ MCStringAppend(t_label, MCNameGetString(bptr->getname()));
+						/* UNCHECKED */ MCStringAppend(*t_label, MCNameGetString(bptr->getname()));
 					else
-						/* UNCHECKED */ MCStringAppend(t_label, bptr->getlabeltext());
+						/* UNCHECKED */ MCStringAppend(*t_label, bptr->getlabeltext());
 					
-					/* UNCHECKED */ MCStringAppendFormat(t_label, "|%@", t_accel);
+					/* UNCHECKED */ MCStringAppendFormat(*t_label, "|%@", t_accel);
 
-					r_pick = t_accel;
+                    // SN-2014-09-11: [[ Bug 13405 ]] The string we just built should be returned.
+                    // Changed to a stringCopy, to avoid returning a mutable string.
+					MCStringCopy(*t_label, r_pick);
 					return;
 				}
 			}
