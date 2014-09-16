@@ -1511,6 +1511,12 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
+    
+    // FG-2014-09-16: [[ Bugfix 13278 ]] Clear the mouse focus if this is not
+    // an auto-arming button (e.g. a button within a menu).
+    if (!(flags & F_AUTO_ARM))
+        state &= ~CS_MFOCUSED;
+    
 	return True;
 }
 
