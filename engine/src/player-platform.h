@@ -140,6 +140,7 @@ public:
 	void setcurtime(uint4 curtime, bool notify);
 	void setselection(bool notify);                  //set movie selection
 	void setlooping(Boolean loop);        //to loop or not to loop a movie
+    void setmirror(Boolean mirrored);      //flip player horizontally
 	void setplayrate();                   //set the movie playing rate
 	Boolean setInterestingTimeCB();       //True, if set, False, if not
 	void showbadge(Boolean show);         //show & hide the movie's badge
