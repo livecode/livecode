@@ -3193,8 +3193,9 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
     MCField *t_field;
     t_field = static_cast<MCField *>(p_chunk . object);
     
-    // if we forced new delimiters, then reset the text of the field
-    if (p_chunk . mark . changed)
+    // If we forced new delimiters, then reset the text of the field
+    // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+    if (p_chunk . mark . changed != 0)
     {
         MCAutoStringRef t_string;
         if (!MCStringMutableCopy((MCStringRef)p_chunk . mark . text, &t_string))

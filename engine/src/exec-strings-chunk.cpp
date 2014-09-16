@@ -870,11 +870,13 @@ void MCStringsAddChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, uindex_t p
     
     /* UNCHECKED */ MCStringCopy(*t_string, (MCStringRef&)x_text . text);
     
-    x_text . start += p_to_add;
-    x_text . finish += p_to_add;
+    // SN-2014-09-03: [[ Bug 13314 ]] The line delimiter might be more than 1 character-long
+    x_text . start += MCStringGetLength(t_delimiter) * p_to_add;
+    x_text . finish += MCStringGetLength(t_delimiter) * p_to_add;
     
     // the text has changed
-    x_text . changed = true;
+    // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+    x_text . changed = p_to_add * MCStringGetLength(t_delimiter);
 }
 
 void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCStringRef& r_string)

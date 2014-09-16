@@ -2259,7 +2259,8 @@ static void skip_word(const char *&sptr, const char *&eptr)
 void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedText& x_mark, bool includechars)
 {
     int4 t_first, t_last;
-    x_mark . changed = false;
+    // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+    x_mark . changed = 0;
     bool t_further_chunks = false;
     
     if (cline != nil)
@@ -4407,7 +4408,8 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         MCMarkedText t_mark;
         t_mark . finish = INDEX_MAX;
         t_mark . start = 0;
-        t_mark . changed = false;
+        // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+        t_mark . changed = 0;
         t_mark . text = nil;
         r_chunk . object = t_object.object;
         r_chunk . part_id = t_object.part_id;
