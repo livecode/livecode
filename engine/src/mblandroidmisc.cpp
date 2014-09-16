@@ -719,7 +719,10 @@ bool MCSystemVibrate (int32_t p_number_of_vibrates)
 
 bool MCSystemGetPixelDensity(real64_t& r_density)
 {
-    MCAndroidEngineRemoteCall("getPixelDensity", "f", &r_density);
+    // SN-2014-09-04: [[ Bug 13336 ]] 'f' is the signature for a 'float' pointer
+    float t_density;
+    MCAndroidEngineRemoteCall("getPixelDensity", "f", &t_density);
+    r_density = t_density;
     return true;
 }
 
