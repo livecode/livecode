@@ -566,18 +566,6 @@ void MCMobileCreateImageFromData(const char *p_bytes, uint32_t p_length)
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCMobilePickPhoto(const char *p_source, int32_t p_max_width, int32_t p_max_height)
-{
-#ifdef /* MCMobilePickPhoto */ LEGACY_EXEC
-	MCAndroidEngineCall("showPhotoPicker", "vs", nil, p_source);
-#endif /* MCMobilePickPhoto */
-}
-
-static char *s_pick_photo_data = nil;
-static uint32_t s_pick_photo_size = 0;
-static char *s_pick_photo_err = nil;
-static bool s_pick_photo_returned = false;
-
 #ifdef /* MCHandlePickPhotoAndroid */ LEGACY_EXEC
 static Exec_stat MCHandlePickPhoto(void *context, MCParameter *p_parameters)
 {
