@@ -221,7 +221,8 @@ static void clear_menu(HMENU p_menu)
 		GetMenuItemInfoW(p_menu, t_index, TRUE, &t_info);
 
 		if (t_info . dwItemData != 0)
-			delete (char *)t_info . dwItemData;
+			// SN-2014-08-28: [[ Bug 13289 ]] dwItemData is a unichar_t pointer
+			delete (unichar_t *)t_info . dwItemData;
 	}
 }
 
@@ -236,7 +237,8 @@ static HMENU create_menu(MenuItemDescriptor *p_items)
 	for(MenuItemDescriptor *t_item = p_items; t_item != NULL; t_item = t_item -> next)
 	{
 		MENUITEMINFOW t_info;
-		MCAutoStringRefAsWString t_text_wstr, t_tag_wstr;
+		// SN-2014-08-28: [[ Bug 13289 ]] We need to copy the string in the structure
+		LPWSTR t_tag;
 
 		t_info . cbSize = sizeof(MENUITEMINFOW);
 		t_info . fMask = MIIM_DATA | MIIM_ID | MIIM_SUBMENU | MIIM_TYPE | MIIM_STATE;
@@ -251,25 +253,22 @@ static HMENU create_menu(MenuItemDescriptor *p_items)
 		}
 		else
 		{
-			/* UNCHECKED */ t_text_wstr.Lock(t_item -> m_name);
 			t_info . fType = MFT_STRING;
-			t_info . dwTypeData = *t_text_wstr;
-			t_info . cch = MCStringGetLength(t_item -> m_name);
+			// SN-2014-08-28: [[ Bug 13289 ]] We need to copy the string in the structure
+			/* UNCHECKED */ MCStringConvertToWString(t_item -> m_name, t_info . dwTypeData);
+			t_info . cch = lstrlenW(t_info . dwTypeData);
 		}
 
+		// SN-2014-08-28: [[ Bug 13289 ]] We need to copy the string in the structure
 		if (!MCStringIsEmpty(t_item -> m_tag))
-		{
-			/* UNCHECKED */ t_tag_wstr.Lock(t_item -> m_tag);
-		}
+			/* UNCHECKED */ MCStringConvertToWString(t_item -> m_tag, t_tag);
 		else
-		{
-			/* UNCHECKED */ t_tag_wstr.Lock(t_item -> m_name);
-		}
+			/* UNCHECKED */ MCStringConvertToWString(t_item -> m_name, t_tag);
 
 		if (t_item -> disabled)
 			t_info . fState |= MFS_DISABLED;
 		
-		t_info . dwItemData = (DWORD)*t_tag_wstr;
+		t_info . dwItemData = (DWORD)t_tag;
 		
 		if (t_item -> submenu != NULL)
 			t_info . hSubMenu = create_menu(t_item -> submenu);
@@ -376,7 +375,9 @@ static HMENU create_icon_menu(MCStringRef p_menu)
 		t_item -> submenu = NULL;
 		t_item -> id = t_id++;
 		
-		t_offset = t_item_end;
+		// SN-2014-08-28: [[ Bug 13289 ]] The new offset starts *after* the last item
+		//  (infinite loop otherwise)
+		t_offset = t_item_end + 1;
 	}
 	
 	if (t_items != NULL)
@@ -472,7 +473,8 @@ bool build_pick_string(HMENU p_menu, UINT32 p_command, MCStringRef x_mutable)
 		
 		if (t_success)
 		{
-			/* UNCHECKED */ MCStringAppendChars(x_mutable, t_info . dwTypeData, lstrlenW(t_info . dwTypeData));
+			// SN-2014-80-28: [[ Bug 13289 ]] dwItemData contains what has been selected (the tag, if not the name).
+			/* UNCHECKED */ MCStringAppendChars(x_mutable, (unichar_t*)t_info . dwItemData, lstrlenW((unichar_t*)t_info . dwItemData));
 			return true;
 		}
 	}
