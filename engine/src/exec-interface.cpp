@@ -3257,8 +3257,14 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
 		else /* PT_BEFORE */
 			t_start = t_finish = p_chunk . mark . start;
 		
-        MCAutoStringRef t_string;
-        if (!MCStringMutableCopy((MCStringRef)p_chunk . mark . text, &t_string))
+        // AL-2014-09-10: [[ Bug 13388 ]] If the chunk type is undefined, we need to get the text of the object here.
+        MCAutoStringRef t_string, t_text;
+        if (p_chunk . chunk == CT_UNDEFINED)
+            p_chunk . object -> getstringprop(ctxt, p_chunk . part_id, P_TEXT, False, &t_text);
+        else
+            t_text = (MCStringRef)p_chunk . mark . text;
+
+        if (ctxt . HasError() || !MCStringMutableCopy(*t_text, &t_string))
             return;
         
         /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(t_start, t_finish - t_start), p_string);
@@ -3283,8 +3289,15 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCExecValue p_value, int 
 		else /* PT_BEFORE */
 			t_start = t_finish = p_chunk . mark . start;
 		
-        MCAutoStringRef t_string;
-        if (!MCStringMutableCopy((MCStringRef)p_chunk . mark . text, &t_string))
+
+        // AL-2014-09-10: [[ Bug 13388 ]] If the chunk type is undefined, we need to get the text of the object here.
+        MCAutoStringRef t_string, t_text;
+        if (p_chunk . chunk == CT_UNDEFINED)
+            p_chunk . object -> getstringprop(ctxt, p_chunk . part_id, P_TEXT, False, &t_text);
+        else
+            t_text = (MCStringRef)p_chunk . mark . text;
+        
+        if (ctxt . HasError() || !MCStringMutableCopy(*t_text, &t_string))
             return;
         
         MCAutoStringRef t_string_value;
