@@ -109,9 +109,10 @@ void MCPlatformHandleApplicationResume(void)
 	MCdefaultstackptr -> getcard() -> message(MCM_resume);
 }
 
-void MCPlatformHandleApplicationRun(void)
+void MCPlatformHandleApplicationRun(bool& r_continue)
 {
-	X_main_loop();
+	X_main_loop_iteration();
+    r_continue = !MCquit;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1271,34 +1272,5 @@ void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
     if (MCacptr != nil)
         MCscreen -> addtimer(MCacptr, MCM_internal, 0);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-#if 0
-void MCPlatformProcess(MCPlatformCallback& p_callback)
-{
-	switch(p_callback . type)
-	{
-		case kMCPlatformCallbackApplicationStartup:
-			MCPlatformHandleApplicationStartup(p_callb
-			ack . application . startup . argc,
-											   p_callback . application . startup . argv,
-											   p_callback . application . startup . envp,
-											   p_callback . application . startup . error_code,
-											   p_callback . application . startup . error_message);
-			break;
-		case kMCPlatformCallbackApplicationShutdown:
-			MCPlatformHandleApplicationShutdown(p_callback . application . shutdown . exit_code);
-			break;
-		case kMCPlatformCallbackApplicationShutdownRequest:
-			MCPlatformHandleApplicationShutdownRequest(p_callback . application . shutdown_request . terminate);
-			break;
-		case kMCPlatformCallbackApplicationRun:
-			MCPlatformHandleApplicationRun();
-		default:
-			break;
-	}
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
