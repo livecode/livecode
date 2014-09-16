@@ -2358,7 +2358,8 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
     else
         self_chars = self -> chars + p_after;
     
-    t_result = MCUnicodeFirstIndexOf(self_chars, self -> char_count, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
+    // AL-2014-09-05: [[ Bug 13352 ]] Crash due to not taking into account p_after by adjusting length of string.
+    t_result = MCUnicodeFirstIndexOf(self_chars, self -> char_count - p_after, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
     
     // Correct the output index
     if (t_result == true)
@@ -3370,12 +3371,12 @@ bool MCStringReplaceNativeChars(MCStringRef self, MCRange p_range, const char_t 
 {
     MCAssert(MCStringIsMutable(self));
     
-    __MCStringClampRange(self, p_range);
-    
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
             return false;
+    
+    __MCStringClampRange(self, p_range);
     
     // Work out the new size of the string.
     uindex_t t_new_char_count;
@@ -3416,12 +3417,12 @@ bool MCStringReplaceChars(MCStringRef self, MCRange p_range, const unichar_t *p_
 {
     MCAssert(MCStringIsMutable(self));
     
-    __MCStringClampRange(self, p_range);
-    
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
             return false;
+    
+    __MCStringClampRange(self, p_range);
     
     // Work out the new size of the string.
     uindex_t t_new_char_count;

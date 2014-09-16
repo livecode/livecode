@@ -3037,7 +3037,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 
     if (*t_valueref != nil || t_exec_expr)
     {
-        if (isstringchunk() || byte != nil)
+        if (isstringchunk() || isdatachunk())
         {
             MCMarkedText t_new_mark;
             t_new_mark . text = nil;
@@ -3046,9 +3046,10 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             
             bool t_success = true;
             
+            // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
             if (isstringchunk())
             {
-                // Must be a string ref
+                // Need a string ref, at least initially
                 MCAutoStringRef t_text_str;
                 if (t_exec_expr)
                 {
@@ -3064,9 +3065,28 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                     return;
                 }
                 t_new_mark . text = MCValueRetain(*t_text_str);
-                mark(ctxt, false, false, t_new_mark);
-                
             }
+            else
+            {
+                // Must be data
+                MCAutoDataRef t_data;
+                if (t_exec_expr)
+                {
+                    MCExecTypeConvertAndReleaseAlways(ctxt, t_text . type, &t_text, kMCExecValueTypeDataRef, &(&t_data));
+                    t_success = !ctxt . HasError();
+                }
+                else
+                    t_success = ctxt . ConvertToData(*t_valueref, &t_data);
+                
+                if (!t_success)
+                {
+                    ctxt.Throw();
+                    return;
+                }
+                t_new_mark . text = MCValueRetain(*t_data);
+            }
+            
+            mark(ctxt, false, false, t_new_mark);
             
             if (!isdatachunk())
                 MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;
@@ -4340,7 +4360,7 @@ Chunk_term MCChunk::getlastchunktype(void)
 bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
 {
     if (isstringchunk() || isdatachunk())
-        MCEngineMarkVariable(ctxt, destvar, r_chunk . mark);
+        MCEngineMarkVariable(ctxt, destvar, isdatachunk(), r_chunk . mark);
 
     mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
 
@@ -4610,7 +4630,7 @@ bool MCChunk::issubstringchunk(void) const
 bool MCChunk::isstringchunk(void) const
 {
     if (cline != nil || paragraph != nil || sentence != nil || item != nil || token != nil || trueword != nil
-        || word != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil)
+        || word != nil || character != nil || codepoint != nil || codeunit != nil)
 		return true;
     
     return false;
@@ -5825,6 +5845,11 @@ bool MCTextChunkIterator::isamong(MCExecContext& ctxt, MCStringRef p_needle)
     while (next(ctxt))
         if (MCStringSubstringIsEqualTo(text, range, p_needle, ctxt . GetStringComparisonType()))
             return true;
+    
+    // AL-2014-09-10: [[ Bug 13356 ]] If we were not 'exhausted', then there was a trailing delimiter
+    //  which means empty is considered to be among the chunks.
+    if (MCStringIsEmpty(p_needle) && !exhausted)
+        return true;
     
     return false;
 }

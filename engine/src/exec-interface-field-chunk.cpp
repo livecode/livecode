@@ -2708,41 +2708,19 @@ void MCParagraph::SetSpaceBelow(MCExecContext& ctxt, uinteger_t *p_space)
 
 void MCParagraph::DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, const vector_t<uinteger_t>& p_tabs)
 {
-    MCAutoArray<uint2> t_new_tabs;
-
-    uint2 *t_new = nil;
+    uint2 *t_new_tabs = nil;
     uindex_t t_new_count = 0;
-
-    uint2 t_previous_tab_stop;
-    t_previous_tab_stop = 0;
-
-    for (uindex_t i = 0; i < p_tabs . count; i++)
-    {
-        if (p_tabs . elements[i] > 65535)
-        {
-            ctxt . LegacyThrow(EE_PROPERTY_NAN);
-            return;
-        }
-
-        if (p_is_relative)
-        {
-            t_new_tabs . Push(p_tabs . elements[i] + t_previous_tab_stop);
-            t_previous_tab_stop = t_new_tabs[i];
-        }
-        else
-            t_new_tabs . Push(p_tabs . elements[i]);
-    }
-
-    t_new_tabs . Take(t_new, t_new_count);
+    
+    MCInterfaceTabStopsParse(ctxt, p_is_relative, p_tabs . elements, p_tabs . count, t_new_tabs, t_new_count);
 
     if (attrs == nil)
         attrs = new MCParagraphAttrs;
     else
         delete attrs -> tabs;
 
-    if (t_new != nil)
+    if (t_new_tabs != nil)
     {
-        attrs -> tabs = t_new;
+        attrs -> tabs = t_new_tabs;
         attrs -> tab_count = t_new_count;
         attrs -> flags |= PA_HAS_TABS;
     }

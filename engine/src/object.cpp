@@ -614,7 +614,11 @@ Boolean MCObject::kup(MCStringRef p_string, KeySym key)
 	// OK-2010-04-01: [[Bug 6215]] - Need to also check for arrow keys here using the KeySym
 	//   as they don't have an ascii code.
 	// TODO: filter out the C1 control codes too
-	if (key >= 32 && key != 127 && key != XK_Left && key != XK_Right && key != XK_Up && key != XK_Down)
+	// SN-2014-09-10: [[ Bug 13348 ]] We need to take in consideration what is in the string, not the
+	// key typed
+	unichar_t t_char;
+	t_char = MCStringGetCharAtIndex(p_string, 0);
+	if (t_char >= 32 && t_char != 127 && key != XK_Left && key != XK_Right && key != XK_Up && key != XK_Down)
 		if (message_with_valueref_args(MCM_key_up, p_string) == ES_NORMAL)
 			return True;
 	return False;

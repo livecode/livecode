@@ -601,6 +601,42 @@ static MCExecCustomTypeInfo _kMCInterfaceStackFileVersionTypeInfo =
 
 //////////
 
+void MCInterfaceTabStopsParse(MCExecContext& ctxt, bool p_is_relative, uinteger_t* p_tabs, uindex_t p_tab_count, uint2*& r_new_stops, uindex_t& r_new_stop_count)
+{
+    MCAutoArray<uint2> t_new_tabs;
+    
+    uint2 t_previous_tab_stop;
+    t_previous_tab_stop = 0;
+    
+    for (uindex_t i = 0; i < p_tab_count; i++)
+    {
+        if (p_tabs[i] > 65535)
+        {
+            ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            return;
+        }
+        
+        // AL-2014-06-25: [[ Bug 12697 ]] If a tabStop is smaller than the preceding one,
+        //  then calculate as relative distance.
+        if (p_is_relative || p_tabs[i] < t_previous_tab_stop)
+        {
+            t_new_tabs . Push(p_tabs[i] + t_previous_tab_stop);
+            t_previous_tab_stop = t_new_tabs[i];
+        }
+        else
+        {
+            t_new_tabs . Push(p_tabs[i]);
+            // AL-2014-09-10: [[ Bug 13375 ]] Only reset the previous tab stop if this 
+            //  non-relative tab stop was successfully placed at the specified location
+            t_previous_tab_stop = p_tabs[i];
+        }
+    }
+    
+    t_new_tabs . Take(r_new_stops, r_new_stop_count);
+}
+
+//////////
+
 static MCExecEnumTypeElementInfo _kMCInterfaceLookAndFeelElementInfo[] =
 {	
 	{ "Appearance Manager", LF_AM, false },

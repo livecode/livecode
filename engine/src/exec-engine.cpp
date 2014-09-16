@@ -1840,31 +1840,28 @@ void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
-void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedText& r_mark)
+void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, bool p_data, MCMarkedText& r_mark)
 {
     if (p_variable == nil)
 	{
 		ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
 		return;
 	}
-
-//    MCVariable *t_resolved_var;
-//    t_resolved_var = p_variable -> evalvar(ctxt);
-//    
-//    if (t_resolved_var == NULL)
-//    {
-//        ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
-//        return;
-//    }    
-    // Ensure to convert the inner variable into a string ref
-//    t_resolved_var -> converttomutablestring(ctxt);
-//    r_mark . text = (MCStringRef)t_resolved_var -> getvalueref();
-    
-    if (!ctxt . EvalExprAsStringRef(p_variable, EE_CHUNK_SETCANTGETDEST, (MCStringRef&)r_mark . text))
-        return;
-    
-    r_mark . start = 0;
-    r_mark . finish = MCStringGetLength((MCStringRef)r_mark . text);
+    // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
+    if (p_data)
+    {
+        if (!ctxt . EvalExprAsDataRef(p_variable, EE_CHUNK_SETCANTGETDEST, (MCDataRef&)r_mark . text))
+            return;
+        r_mark . start = 0;
+        r_mark . finish = MCDataGetLength((MCDataRef)r_mark . text);
+    }
+    else
+    {
+        if (!ctxt . EvalExprAsStringRef(p_variable, EE_CHUNK_SETCANTGETDEST, (MCStringRef&)r_mark . text))
+            return;
+        r_mark . start = 0;
+        r_mark . finish = MCStringGetLength((MCStringRef)r_mark . text);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
