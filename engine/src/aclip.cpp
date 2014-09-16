@@ -951,7 +951,8 @@ uint2 MCS_getplayloudness()
 #if defined FEATURE_PLATFORM_AUDIO
     double t_volume;
     MCPlatformGetSystemProperty(kMCPlatformSystemPropertyVolume, kMCPlatformPropertyTypeDouble, &t_volume);
-    t_loudness = t_volume * 100.0;
+    // AL-2014-09-10: [[ Bug 13393 ]] Add 0.5 so that loudness is rounded to nearest integer
+    t_loudness = 100.0 * t_volume + 0.5;
 #elif defined _WINDOWS
     if (hwaveout == NULL)
     {
