@@ -30,6 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "hndlrlst.h"
 #include "osspec.h"
 
+#include "unicode.h"
+
 void MCExecPoint::clear()
 {
 	format = VF_STRING;
@@ -617,6 +619,17 @@ Parse_stat MCExecPoint::findvar(MCNameRef p_name, MCVarref** r_var)
 extern int UnicodeToUTF8(const uint2 *p_source_str, int p_source, char *p_dest_str, int p_dest);
 extern int UTF8ToUnicode(const char *p_source_str, int p_source, uint2 *p_dest_str, int p_dest);
 
+static int NativeToUnicode(const char *p_source_str, int p_source, uint2 *p_dest_str, int p_dest)
+{
+    if (p_dest_str == NULL)
+        return p_source * 2;
+    
+    for(int i = 0; i < p_source; i++)
+        p_dest_str[i] = MCUnicodeMapFromNative(p_source_str[i]);
+    
+    return p_source * 2;
+}
+
 void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
 {
 	const char *t_input;
@@ -629,7 +642,7 @@ void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
 	if (p_reverse)
 	{
 		if (p_native)
-			MCS_multibytetounicode(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
+			t_output_length = NativeToUnicode(t_input, t_input_length, NULL, 0);
 		else
 			t_output_length = UTF8ToUnicode(t_input, t_input_length, NULL, 0);
 	}
@@ -649,7 +662,7 @@ void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
 	if (p_reverse)
 	{
 		if (p_native)
-			MCS_multibytetounicode(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
+			t_output_length = NativeToUnicode(t_input, t_input_length, (uint2 *)t_buffer, t_output_length);
 		else
 			t_output_length = UTF8ToUnicode(t_input, t_input_length, (uint2 *)t_buffer, t_output_length);
 	}
