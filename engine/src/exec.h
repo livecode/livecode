@@ -3448,6 +3448,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceImagePaintCompressionTypeInfo;
 
 ///////////
 
+extern MCExecEnumTypeInfo *kMCInterfacePlayerStatusTypeInfo;
 extern MCExecSetTypeInfo *kMCInterfaceMediaTypesTypeInfo;
 extern MCExecCustomTypeInfo *kMCMultimediaTrackTypeInfo;
 extern MCExecCustomTypeInfo *kMCMultimediaQTVRConstraintsTypeInfo;

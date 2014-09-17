@@ -181,6 +181,24 @@ static MCExecSetTypeInfo _kMCInterfaceMediaTypesTypeInfo =
 
 //////////
 
+static MCExecEnumTypeElementInfo _kMCInterfacePlayerStatusElementInfo[] =
+{
+    { "", kMCInterfacePlayerStatusNone, true },
+	{ "loading", kMCInterfacePlayerStatusLoading, true },
+	{ "playing", kMCInterfacePlayerStatusPlaying, true },
+	{ "paused", kMCInterfacePlayerStatusPaused, true },
+};
+
+static MCExecEnumTypeInfo _kMCInterfacePlayerStatusTypeInfo =
+{
+	"Interface.PlayerStatus",
+	sizeof(_kMCInterfacePlayerStatusElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfacePlayerStatusElementInfo
+};
+
+//////////
+
+MCExecEnumTypeInfo *kMCInterfacePlayerStatusTypeInfo = &_kMCInterfacePlayerStatusTypeInfo;
 MCExecSetTypeInfo *kMCInterfaceMediaTypesTypeInfo = &_kMCInterfaceMediaTypesTypeInfo;
 MCExecCustomTypeInfo *kMCMultimediaTrackTypeInfo = &_kMCMultimediaTrackTypeInfo;
 MCExecCustomTypeInfo *kMCMultimediaQTVRConstraintsTypeInfo = &_kMCMultimediaQTVRConstraintsTypeInfo;
@@ -652,3 +670,17 @@ void MCPlayer::SetHiliteColor(MCExecContext &ctxt, const MCInterfaceNamedColor &
     Redraw();
 }
 
+#ifdef FEATURE_PLATFORM_PLAYER
+void MCPlayer::GetStatus(MCExecContext& ctxt, intenum_t& r_status)
+{
+    if(getmovieloadedtime() != 0 && getmovieloadedtime() < getduration())
+        r_status = kMCInterfacePlayerStatusLoading;
+    else if (!ispaused())
+        r_status = kMCInterfacePlayerStatusPlaying;
+    else if (ispaused())
+        r_status = kMCInterfacePlayerStatusPaused;
+    else
+        r_status = kMCInterfacePlayerStatusNone;
+    
+}
+#endif

@@ -288,11 +288,10 @@
 		4D657F9D17143B800086071B /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C797917134897000BCF78 /* libz.a */; };
 		4D67BB24164A76090092CF4C /* exec-ide.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D67BB23164A76090092CF4C /* exec-ide.cpp */; };
 		4D67BBB9164AB2C50092CF4C /* exec-printing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D67BBB8164AB2C50092CF4C /* exec-printing.cpp */; };
-		4D6A00F010C578C600FA48D2 /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6A00EE10C578C600FA48D2 /* customprinter.cpp */; };
 		4D6C27FD1647D942007C96B7 /* exec-graphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FB1647D942007C96B7 /* exec-graphics.cpp */; };
 		4D6C27FE1647D942007C96B7 /* exec-security.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FC1647D942007C96B7 /* exec-security.cpp */; };
 		4D6C28B61647DC4F007C96B7 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
-		4D6F2AE718981E7F0099947D /* mac-pasteboard.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F2AE618981E7F0099947D /* mac-pasteboard.mm */; };
+		4D6F2AE718981E7F0099947D /* (null) in Sources */ = {isa = PBXBuildFile; };
 		4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D77F1DD183F8298002EEBB4 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */; };
@@ -1070,7 +1069,6 @@
 		4C8B5BBD19733D230014058F /* stacktile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = stacktile.h; path = src/stacktile.h; sourceTree = "<group>"; };
 		4CC1535614E7FB91009FA80E /* paragrafattr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = paragrafattr.cpp; path = src/paragrafattr.cpp; sourceTree = "<group>"; };
 		4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldstyledtext.cpp; path = src/fieldstyledtext.cpp; sourceTree = "<group>"; };
-		4CC55320180D546000C10387 /* graphics_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
 		4CF4B87F199E0C1C00E33AEE /* coretextlayout.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = coretextlayout.mm; path = src/coretextlayout.mm; sourceTree = "<group>"; };
 		4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
 		4D00CD75103305D4003D3C0D /* bitmapeffectblur.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bitmapeffectblur.cpp; path = src/bitmapeffectblur.cpp; sourceTree = "<group>"; };
@@ -2302,8 +2300,6 @@
 				76EF31A5181E7D8000FAC195 /* cgimageutil.cpp */,
 				76EF31A3181E7CCE00FAC195 /* osxcisupport.mm */,
 				76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */,
-				E8AE876B177B3F5C0041B7E0 /* cgimageutil.cpp */,
-				4C977250193CAF5000DB2F4A /* coretextfonts.cpp */,
 				4CF4B87F199E0C1C00E33AEE /* coretextlayout.mm */,
 				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
 				4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */,
@@ -4410,40 +4406,8 @@
 				7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */,
 				4D77F1DD183F8298002EEBB4 /* exec-keywords.cpp in Sources */,
 				763FF4EA18522CC100B45FBA /* image_rep_resampled.cpp in Sources */,
-				4DB32404174BEE3300046FFE /* sysosxrandom.cpp in Sources */,
-				4C10D85416BFB1DC00D25197 /* graphicscontext.cpp in Sources */,
-				E8B5BB1416DF77DF00CA02FB /* imagelist.cpp in Sources */,
-				E8687A941987F5A80093C756 /* imageloader.cpp in Sources */,
-				E8AF465B174CF247000B2F9E /* surface.cpp in Sources */,
-				E8AE876C177B3F5C0041B7E0 /* cgimageutil.cpp in Sources */,
-				E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */,
-				4D1AA1E5181556180075FC5E /* bitmapeffect.cpp in Sources */,
-				E85130F4180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */,
-				4DECC93C18856C7500463D52 /* mac-core.mm in Sources */,
-				4DECC93F18856CB100463D52 /* desktop.cpp in Sources */,
-				4DECC9E71885803D00463D52 /* desktop-dc.cpp in Sources */,
-				4DECC9E91885808100463D52 /* desktop-stack.cpp in Sources */,
-				4DECCA511885958300463D52 /* osxstack.cpp in Sources */,
-				4DECCA5B188595F500463D52 /* desktop-menu.cpp in Sources */,
-				4DECD0C81886E4FD00463D52 /* mac-window.mm in Sources */,
-				4DECD1351886F0FF00463D52 /* mac-surface.mm in Sources */,
-				4DECD1FD1887F24E00463D52 /* platform-window.cpp in Sources */,
-				4DECD26E188807E400463D52 /* platform-surface.cpp in Sources */,
-				4DC6E30518896CFB00FD43C3 /* mac-menu.mm in Sources */,
-				4D444FB5188DCB4400C7B349 /* mac-cursor.mm in Sources */,
-				4D6F2AE718981E7F0099947D /* mac-pasteboard.mm in Sources */,
-				4D30C37118995E840034CDC6 /* desktop-pasteboard.cpp in Sources */,
-				4D30CAF6189AC1720034CDC6 /* mac-snapshot.mm in Sources */,
-				4C529CAE1973CBF6007C5F7C /* player-platform.cpp in Sources */,
-				4D30CB27189AC40C0034CDC6 /* mac-font.mm in Sources */,
-				4D30D1F018A152700034CDC6 /* mac-player.mm in Sources */,
-				4D30D5D218A394250034CDC6 /* desktop-image.cpp in Sources */,
-				4D79B4E118A8D9FD00D4974C /* mac-color.mm in Sources */,
-				4D79B5D418A9087B00D4974C /* mac-printer.mm in Sources */,
-				4D30E18218AA2FCE0034CDC6 /* mac-abort.mm in Sources */,
-				4D30E40718AA73870034CDC6 /* mac-dialog.mm in Sources */,
+				4D6F2AE718981E7F0099947D /* (null) in Sources */,
 				4CF4B883199E0D9900E33AEE /* coretextlayout.mm in Sources */,
-				4D30E44618AA7C200034CDC6 /* desktop-ans.cpp in Sources */,
 				E82206E1184F810A00117D10 /* resolution.cpp in Sources */,
 				72C28AFA1911300D007F2AA0 /* segment.cpp in Sources */,
 				BEBC51DA195350C300215C85 /* coretextfonts.cpp in Sources */,

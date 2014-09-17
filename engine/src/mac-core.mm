@@ -320,7 +320,20 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 
 - (void)runMainLoop
 {
-	MCPlatformCallbackSendApplicationRun();
+    for(;;)
+    {
+        bool t_continue;
+    
+        NSAutoreleasePool *t_pool;
+        t_pool = [[NSAutoreleasePool alloc] init];
+    
+        MCPlatformCallbackSendApplicationRun(t_continue);
+        
+        [t_pool release];
+        
+        if (!t_continue)
+            break;
+    }
     
     // If we get here then it was due to an exit from the main runloop caused
     // by an explicit quit. In this case, then we set a flag so that termination

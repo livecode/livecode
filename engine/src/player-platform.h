@@ -154,8 +154,6 @@ public:
 	virtual void editmovie(Boolean edit);
 	virtual void playselection(Boolean play);     //play the selected part of QT moive only
 	virtual Boolean ispaused();
-
-    uint4 getmovieloadedtime();
     
     virtual void gettracks(MCStringRef& r_tracks);
     
@@ -195,7 +193,11 @@ public:
         layer_redrawrect(getcontrollerrect());
 	}
 	
-	Boolean isdisposable()
+    real8 getplayrate();
+    void updateplayrate(real8 p_rate);
+    uint4 getmovieloadedtime();
+	
+    Boolean isdisposable()
 	{
 		return disposable;
 	}
@@ -336,7 +338,9 @@ public:
     virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
     virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
     virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
-        
+    
+    void GetStatus(MCExecContext& ctxt, intenum_t& r_status);
+    
     ////////////////////////////////////////////////////////////////////////////////
     // MCPlayer specific implementation for the platform player
     
