@@ -2144,6 +2144,8 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
     char *t_path;
     t_path = MCS_getcurdir();
     
+	p_context . clear();
+    
     // MW-2014-09-17: [[ Bug 13455 ]] First list in the usual path.
     MCS_getentries_for_folder(p_context, t_path, p_files, p_detailed);
     
@@ -2160,8 +2162,6 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 static void MCS_getentries_for_folder(MCExecPoint& p_context, const char *p_path, bool p_files, bool p_detailed)
 {
 	OSStatus t_os_status;
-
-	p_context . clear();
 	
 	Boolean t_is_folder;
 	FSRef t_current_fsref;
