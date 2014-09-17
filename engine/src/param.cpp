@@ -96,6 +96,10 @@ void MCParameter::setn_argument(real8 p_number)
 
 void MCParameter::clear_argument(void)
 {
+    // AL-2014-09-17: [[ Bug 13465 ]] Delete container when clearing a parameter
+    delete container;
+    container = nil;
+    var  = nil;
 	MCExecTypeRelease(value);
 }
 

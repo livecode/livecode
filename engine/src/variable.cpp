@@ -1227,9 +1227,7 @@ MCVarref *MCVariable::newvarref(void)
 
 MCContainer::~MCContainer(void)
 {
-	if (m_length == 0)
-		return;
-
+    // AL-2014-09-17: [[ Bug 13465 ]] Delete path array regardless of length
 	for(uindex_t i = 0; i < m_length; i++)
 		MCValueRelease(m_path[i]);
 	MCMemoryDeleteArray(m_path);
@@ -1341,6 +1339,7 @@ bool MCContainer::createwithvariable(MCVariable *p_var, MCContainer*& r_containe
 	r_container = new MCContainer;
 	r_container -> m_variable = p_var;
 	r_container -> m_length = 0;
+    r_container -> m_path = nil;
 	r_container -> m_case_sensitive = false;
 	return true;
 }

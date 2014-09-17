@@ -39,6 +39,8 @@ public:
 	~MCParameter(void)
 	{
 		delete exp;
+        // AL-2014-09-17: [[ Bug 13465 ]] Delete container when parameter is deleted
+        delete container;
 		MCExecTypeRelease(value);
 	}
 
