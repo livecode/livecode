@@ -943,9 +943,15 @@ void MCPrintingSetPrintJobColor(MCExecContext& ctxt, bool p_value)
 	MCprinter -> SetJobColor(p_value);
 }
 
-void MCPrintingGetPrintJobPage(MCExecContext& ctxt, integer_t &r_value)
+// SN-2014-09-17: [[ Bug 13467 ]] When -1 is returned by the printer, we should get empty instead
+void MCPrintingGetPrintJobPage(MCExecContext& ctxt, MCStringRef &r_value)
 {
-	r_value = MCprinter -> GetJobPageNumber();
+    integer_t t_value;
+	t_value = MCprinter -> GetJobPageNumber();
+    if (t_value == -1)
+        r_value = MCValueRetain(kMCEmptyString);
+    else
+        /* UNCHECKED */ MCStringFormat(r_value, "%d", t_value);
 }
 
 void MCPrintingGetPrintJobDuplex(MCExecContext& ctxt, intenum_t &r_value)

@@ -95,7 +95,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_PRINT_JOB_COLLATE, Bool, Printing, PrintJobCollate)
 	DEFINE_RW_PROPERTY(P_PRINT_JOB_COLOR, Bool, Printing, PrintJobColor)
 	DEFINE_RW_ENUM_PROPERTY(P_PRINT_JOB_DUPLEX, PrintingPrintJobDuplex, Printing, PrintJobDuplex)
-	DEFINE_RO_PROPERTY(P_PRINT_JOB_PAGE, Int32, Printing, PrintJobPage)
+    // SN-2014-09-17: [[ Bug 13467 ]] PrintPageNumber may return empty
+	DEFINE_RO_PROPERTY(P_PRINT_JOB_PAGE, String, Printing, PrintJobPage)
 	DEFINE_RO_PROPERTY(P_PRINT_DEVICE_RECTANGLE, Rectangle, Printing, PrintDeviceRectangle)
 	DEFINE_RW_PROPERTY(P_PRINT_DEVICE_SETTINGS, BinaryString, Printing, PrintDeviceSettings)
 	DEFINE_RW_PROPERTY(P_PRINT_DEVICE_NAME, String, Printing, PrintDeviceName)
