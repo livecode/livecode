@@ -1286,9 +1286,9 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	{
 		MCImage *t_img = static_cast<MCImage*>(optr);
 		
-		// IM-2014-08-01: [[ Bug 13021 ]] Provide required scale to lockbitmap(),
-		// which will then copy if necessary.
-		/* UNCHECKED */ t_img->lockbitmap(false, true, 1.0, t_bitmap);
+		// IM-2014-09-02: [[ Bug 13295 ]] Call shorthand version of lockbitmap(),
+		// which will copy if necessary.
+		/* UNCHECKED */ t_img->lockbitmap(t_bitmap, false, true);
 		t_image_locked = true;
 		t_dither = !t_img->getflag(F_DONT_DITHER);
 	}

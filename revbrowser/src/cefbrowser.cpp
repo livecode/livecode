@@ -571,6 +571,9 @@ public:
 
 	virtual void OnBeforeClose(CefRefPtr<CefBrowser> p_browser) OVERRIDE
 	{
+		if (m_owner != nil)
+			m_owner->OnCefBrowserClosed(p_browser);
+		
 		MCCefDecrementInstanceCount();
 	}
 
@@ -884,6 +887,10 @@ void MCCefBrowserBase::OnCefBrowserCreated(CefRefPtr<CefBrowser> p_browser)
 {
 	if (m_browser == nil)
 		m_browser = p_browser;
+}
+
+void MCCefBrowserBase::OnCefBrowserClosed(CefRefPtr<CefBrowser> p_browser)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -551,8 +551,11 @@ Boolean MCImage::magmfocus(int2 x, int2 y)
 	mx = x / MCmagnification + magrect.x + rect.x;
 	my = y / MCmagnification + magrect.y + rect.y;
 
-	static_cast<MCMutableImageRep *>(m_rep)->image_mfocus(mx, my);
-
+	// IM-2014-09-15: [[ Bug 13429 ]] Make sure we're editing before calling mfocus on the
+	// mutable image
+	if (isediting())
+		static_cast<MCMutableImageRep *>(m_rep)->image_mfocus(mx, my);
+		
 	return True;
 }
 

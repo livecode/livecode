@@ -306,6 +306,7 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 				if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN
 				        || msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
 					curinfo->keysym = getkeysym(msg.wParam, msg.lParam);
+<<<<<<< HEAD
 				
 				// SN-2014-09-10: [[ Bug 13348 ]] Set the key move appropriately
 				if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
@@ -323,6 +324,34 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 					t_cleaned_queue = PeekMessageW(&msg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
 
 				DispatchMessageW(&msg);
+=======
+				TranslateMessage(&msg);
+
+				bool t_char_found;
+				// SN0-2014-09-15: [[ Bug 13423 ]] Uniformisation of the dead char behaviour on
+				// all platforms (we want to intercept the DEADCHAR messages).
+				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
+					t_char_found = PeekMessageW(&tmsg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE) ||
+				                 PeekMessageW(&tmsg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
+				else
+					t_char_found = PeekMessageA(&tmsg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE) ||
+				                 PeekMessageA(&tmsg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
+				if (t_char_found)
+				{
+					if (MCdispatcher->findstackwindowid((uint32_t)msg.hwnd) == NULL)
+					{
+						if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
+							DispatchMessageW(&msg);
+						else
+							DispatchMessageA(&msg);
+					}
+					memcpy(&msg, &tmsg, sizeof(MSG));
+				}
+				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
+					DispatchMessageW(&msg);
+				else
+					DispatchMessageA(&msg);
+>>>>>>> upstream/develop
 			}
 		}
 	}
@@ -345,6 +374,8 @@ static Boolean doubledown;
 // not the last char
 static uint32_t lastcodepoint;
 static KeySym lastkeysym;
+// SN-2014-09-12: [[ Bug 13423 ]] Keeps whether a the next char follows a dead char
+static Boolean deadcharfollower = False;
 static Boolean doubleclick;
 Boolean tripleclick;
 static uint4 clicktime;
@@ -678,6 +709,19 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		break;
 
+<<<<<<< HEAD
+=======
+	// SN-2014-09-12: [[ Bug 13423 ]] The next character typed will follow a dead char. Sets the flag.
+	// Stores this dead char typed in case it fails to combine.
+	case WM_DEADCHAR:
+	case WM_SYSDEADCHAR:
+		lastkeysym = wParam;
+		deadcharfollower = True;
+		break;
+
+	case WM_SYSKEYDOWN:
+	case WM_SYSCHAR:
+>>>>>>> upstream/develop
 	case WM_CHAR:
 	case WM_SYSCHAR:
 	case WM_IME_CHAR:
@@ -712,6 +756,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 		if (IsWindowUnicode(hwnd))
 		{
+<<<<<<< HEAD
 			// Window is Unicode; received characters are UTF-16
 			/* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)&t_char, 1, &t_input);
 		}
@@ -737,6 +782,34 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			MultiByteToWideChar(pms->input_codepage, 0, (const char *)&t_char, 1, &t_utf16, 1);
 			/* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)&t_utf16, 1, &t_input);
 		}
+=======
+			if (wParam >= 128)
+			{
+				// SN-2014-09-12: [[ Bug 13423 ]] A Unicode char is created when a
+				// valid char follows a dead char (we want the keyDown message to be sent)
+				deadcharfollower = False;
+				bool t_is_unicode;
+				WCHAR t_wide[1];
+			
+				// MW-2012-07-25: [[ Bug 9200 ]] Make sure we roundtrip the input character
+				//   through 1252 *not* the active code page (which could be anything).
+				t_wide[0] = (WCHAR)wParam;
+				t_is_unicode = (WideCharToMultiByte(1252, 0, t_wide, 1, &t_input_char, 1, NULL, NULL) == 0);
+				if (!t_is_unicode)
+				{
+					WCHAR t_reverse_wide[1];
+					t_is_unicode = MultiByteToWideChar(1252, 0, &t_input_char, 1, t_reverse_wide, 1) == 0;
+					if (!t_is_unicode)
+						t_is_unicode = t_reverse_wide[0] != t_wide[0];
+				}
+
+				if (t_is_unicode && (msg == WM_CHAR || msg == WM_SYSCHAR))
+				{
+					if (MCactivefield)
+					{
+						MCString t_unicode_string;
+						t_unicode_string . set((char *)t_wide, 2);
+>>>>>>> upstream/develop
 
 		// Translate the input character into its corresponding keysym
 		// TODO: surrogate pairs?
@@ -763,10 +836,26 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			t_keysym = t_codepoint;
 		}
 
+<<<<<<< HEAD
 		if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
 		{
 			// Submit the character as both text and a key stroke
 			uint16_t count = LOWORD(lParam);
+=======
+			// SN-2014-09-12: [[ Bug 13423 ]] A Unicode char is created when a
+			// valid char follows a dead char (we want the keyDown message to be sent)
+			deadcharfollower = False;
+
+			bool t_is_unicode;
+			t_is_unicode = (WideCharToMultiByte((((MCScreenDC *)MCscreen) -> system_codepage), 0, &t_unicode_char, 1, &t_input_char, 1, NULL, NULL) == 0);
+			if (!t_is_unicode)
+			{
+				WCHAR t_reverse_unicode_char;
+				t_is_unicode = MultiByteToWideChar((((MCScreenDC *)MCscreen) -> system_codepage), 0, &t_input_char, 1, &t_reverse_unicode_char, 1) == 0;
+				if (!t_is_unicode)
+					t_is_unicode = t_reverse_unicode_char != t_unicode_char;
+			}
+>>>>>>> upstream/develop
 
 			while (count--)
 			{
@@ -776,11 +865,31 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				else // curinfo->eventtype == ET_KEY_UP
   					MCdispatcher->wkup(dw, *t_input, t_keysym);
 			}
+<<<<<<< HEAD
 
 			curinfo->handled = curinfo->reset = true;
 		}
 		break;
 	}
+=======
+		}
+
+		if (msg == WM_CHAR || msg == WM_SYSCHAR)
+			wParam = t_input_char;
+		// SN-2014-09-12: [[ Bug 13423 ]] Something else than a character has been typed:
+		// we discard the dead char flag
+		else
+			deadcharfollower = False;
+
+		buffer[0] = buffer[1] = 0;
+
+		if (msg == WM_CHAR || msg == WM_SYSCHAR)
+			buffer[0] = lastchar = wParam;
+		// SN-2014-09-12: [[ Bug 13423 ]] We don't want to fire again KeyDown with the last invalid
+		// char following a dead, if a dead char is typed again (in a sequence '´', 't', '´' for instance)
+		else
+			lastchar = 0;
+>>>>>>> upstream/develop
 
 	case WM_KEYDOWN:
 	case WM_SYSKEYDOWN:
@@ -790,9 +899,30 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 		// Did the event come via MCScreenDC::handle?
 		if (curinfo->keysym == 0) // event came from some other dispatch
-			keysym = pms->getkeysym(wParam, lParam);
+			// SN-2014-09-12: [[ Bug 13423 ]] If we are following a dead char, no conversion needed:
+			// the message is fired without passing by MCScreenDC::handle, that's why
+			// curinfo->keysym hasn't been set, and the typed char is in wParam
+			if (deadcharfollower)
+			{
+				deadcharfollower = False;
+				keysym = wParam;
+			}
+			else
+				keysym = pms->getkeysym(wParam, lParam);
 		else
+<<<<<<< HEAD
 			keysym = curinfo->keysym;
+=======
+		{
+			// SN-2014-09-15: [[ Bug 13423 ]] If following a DEADCHAR and arriving here, the 
+			// combination failed: we want to [RAW]KEYDOWN this dead key, which has been stored in
+			// the last keysym.
+			if (deadcharfollower)
+				keysym = lastkeysym;
+			else
+				keysym = curinfo->keysym;
+		}
+>>>>>>> upstream/develop
 
 		lastkeysym = keysym;
 
@@ -813,6 +943,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				uint2 count = LOWORD(lParam);
 				while (count--)
 				{
+<<<<<<< HEAD
 					// This is (effectively) equivalent to TranslateAccerator. If the key gets
 					// handled at this stage, nothing further happens with it. Otherwise, it
 					// gets re-dispatched as a character input message.
@@ -829,6 +960,16 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					// If the repeat count was >1, simulate the corresponding key up messages
 					if (count || lParam & 0x40000000)
 						MCdispatcher->wkup(dw, kMCEmptyString, keysym);
+=======
+					// SN-2014-09-12: [[ Bug 13423 ]] keyDown must not be send if we are a dead char
+					// not combined.
+					if (!MCdispatcher->wkdown(dw, buffer, keysym)
+							&& (msg == WM_SYSKEYDOWN || msg == WM_SYSCHAR))
+						return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
+					// SN-2014-09-15: [[ Bug 13423 ]] We want to send a KEYUP for the dead char, if it failed to combine	
+					if (count || lParam & 0x40000000 || deadcharfollower)
+						MCdispatcher->wkup(dw, buffer, keysym);
+>>>>>>> upstream/develop
 				}
 				curinfo->handled = curinfo->reset = True;
 			}
@@ -848,8 +989,11 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	{	
 		if (curinfo->keysym == 0) // event came from some other dispatch
 			keysym = pms->getkeysym(wParam, lParam);
-		else
+		// SN-2014-09-15: [[ Bug 13423 ]] We don't regard the event if we are following a dead char WITH a
+		// keysym: that's the dead char itself.
+		else if (!deadcharfollower)
 			keysym = curinfo->keysym;
+<<<<<<< HEAD
 
 		// SN-2014-09-10: [[ Bug 13348 ]] We want to get the last codepoint translated, if any,
 		// since the KEYUP events are not translated (but when keeping pressed a key)
@@ -863,6 +1007,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			t_char_count = MCStringCodepointToSurrogates(lastcodepoint, t_pair);
 			/* UNCHECKED */ MCStringCreateWithChars(t_pair, t_char_count, &t_string);
 		}
+=======
+		else
+			 break;
+		if (keysym == lastkeysym)
+			buffer[0] = lastchar;
+>>>>>>> upstream/develop
 		else
 		{
 			lastkeysym = keysym;

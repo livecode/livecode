@@ -577,6 +577,24 @@ inline MCGSize MCGSizeMake(MCGFloat p_w, MCGFloat p_h)
 	return t_size;
 }
 
+inline MCGIntegerPoint MCGIntegerPointMake(int32_t x, int32_t y)
+{
+	MCGIntegerPoint t_point;
+	t_point.x = x;
+	t_point.y = y;
+
+	return t_point;
+}
+
+inline MCGIntegerSize MCGIntegerSizeMake(uint32_t width, uint32_t height)
+{
+	MCGIntegerSize t_size;
+	t_size.width = width;
+	t_size.height = height;
+
+	return t_size;
+}
+
 inline MCGIntegerRectangle MCGIntegerRectangleMake(int32_t x, int32_t y, uint32_t width, uint32_t height)
 {
 	MCGIntegerRectangle t_rect;
