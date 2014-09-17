@@ -100,14 +100,33 @@ static char *my_strndup(const char *s, uint32_t l)
 
 // File opening and closing
 
+// This function checks that a file really does exist at the given location.
+// The path is expected to have been resolved but in native encoding.
+static bool MCS_file_exists_at_path(const char *path)
+{
+	char *newpath = path2utf(strdup(path));
+    
+    bool t_found;
+    
+	struct stat buf;
+	t_found = (stat(newpath, (struct stat *)&buf) == 0);
+	if (t_found)
+        if ((buf . st_mode & S_IFDIR) != 0)
+            t_found = false;
+    
+    delete newpath;
+    
+    return t_found;
+}
+
 // MW-2014-09-17: [[ Bug 13455 ]] Attempt to redirect path. If p_is_file is false,
 //   the path is taken to be a directory and is always redirected if is within
 //   Contents/MacOS. If p_is_file is true, then the file is only redirected if
 //   the original doesn't exist, and the redirection does.
-bool MCS_apply_redirect(char*& x_path, bool p_is_file)
+static bool MCS_apply_redirect(char*& x_path, bool p_is_file)
 {
     // If the original file exists, do nothing.
-    if (p_is_file && MCS_exists(x_path, p_is_file))
+    if (p_is_file && MCS_file_exists_at_path(x_path))
         return false;
 
     int t_engine_path_length;
@@ -133,7 +152,7 @@ bool MCS_apply_redirect(char*& x_path, bool p_is_file)
     char *t_new_path;
     /* UNCHECKED */ MCCStringFormat(t_new_path, "%.*s/Resources/_MacOS/%s", t_engine_path_length - 6, MCcmd, x_path + t_engine_path_length);
     
-    if (p_is_file && !MCS_exists(x_path, p_is_file))
+    if (p_is_file && !MCS_file_exists_at_path(t_new_path))
     {
         free(t_new_path);
         return false;
@@ -683,8 +702,10 @@ Boolean MCS_exists(const char *path, Boolean file)
 	if (t_resolved_path == NULL)
 		return False;
 	
+    if (file)
+        MCS_apply_redirect(t_resolved_path, file);
+    
 	char *newpath = path2utf(t_resolved_path);
-
 
 	struct stat buf;
 	found = stat(newpath, (struct stat *)&buf) == 0;
