@@ -367,7 +367,14 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 	if (err)
 	{
 		while (i--)
-            delete newparams[i];
+        {
+            // AL-2014-09-16: [[ Bug 13454 ]] Delete created variables before deleting containers to prevent memory leak
+            if (i >= npnames || !pinfo[i].is_reference)
+            {
+				delete newparams[i] -> getvar();
+                delete newparams[i];
+            }
+        }
 		delete newparams;
 		MCeerror->add(EE_HANDLER_BADPARAM, firstline - 1, 1, name);
 		return ES_ERROR;
@@ -495,7 +502,14 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
         // AL-2014-08-20: [[ ArrayElementRefParams ]] A container is always created for each parameter,
         //  so delete them all when the handler has finished executing
 		while (i--)
-            delete params[i];
+        {
+            // AL-2014-09-16: [[ Bug 13454 ]] Delete created variables before deleting containers to prevent memory leak
+            if (i >= npnames || !pinfo[i].is_reference)
+            {
+				delete params[i] -> getvar();
+                delete params[i];
+            }
+        }
 		delete params;
 	}
 	if (vars != NULL)

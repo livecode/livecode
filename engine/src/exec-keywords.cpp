@@ -111,7 +111,7 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
 }
 
 void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool platform_message, bool is_function)
-{
+{    
 	if (MCscreen->abortkey())
 	{
 		ctxt . LegacyThrow(EE_HANDLER_ABORT);
@@ -265,6 +265,14 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
         ctxt . SetExecStat(stat);
     else
         ctxt . SetExecStat(ES_NORMAL);
+
+    // AL-2014-09-17: [[ Bug 13465 ]] Clear parameters after executing command/function
+    tptr = params;
+    while (tptr != NULL)
+	{
+        tptr -> clear_argument();
+        tptr = tptr->getnext();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -825,6 +833,8 @@ void MCKeywordsExecExit(MCExecContext& ctxt, Exec_stat stat)
 	{
 		MCexitall = True;
 		ctxt . SetExecStat(ES_NORMAL);
+        // SN-2014-09-17: [[ Bug 13430 ]] Missing return.
+        return;
 	}
 	ctxt . SetExecStat(stat);
 }

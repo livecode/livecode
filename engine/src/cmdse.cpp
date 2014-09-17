@@ -1123,6 +1123,14 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 
     ctxt . SetLineAndPos(line, pos);
     MCEngineExecDispatch(ctxt, is_function ? HT_FUNCTION : HT_MESSAGE, *t_message, t_target_ptr, params);
+    
+    // AL-2014-09-17: [[ Bug 13465 ]] Clear parameters after executing dispatch
+    tptr = params;
+    while (tptr != NULL)
+	{
+        tptr -> clear_argument();
+        tptr = tptr->getnext();
+    }
 }
 
 MCMessage::~MCMessage()
