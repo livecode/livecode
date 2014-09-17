@@ -1023,14 +1023,18 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 		{
 			setforeground(dc, DI_BORDER, False);
 			
-			int32_t cy;
-			cy = y + pgheight;
-			while(cy < grect . y + grect . height)
-			{
-				if (y >= grect . y)
-					dc -> drawline(grect . x, cy, grect . x + grect . width, cy);
-				cy += pgheight;
-			}
+            // SN-2014-09-10: [[ Bug 13374 ]] If the last line is hidden, the we take the field's lineheight.
+            if (pgheight == 0)
+                pgheight = fixedheight;
+            
+            int32_t cy;
+            cy = y + pgheight;
+            while(cy < grect . y + grect . height)
+            {
+                if (y >= grect . y)
+                    dc -> drawline(grect . x, cy, grect . x + grect . width, cy);
+                cy += pgheight;
+            }
 		}
 		
 		// MW-2012-03-15: [[ Bug 10069 ]] If we have vGrid set on the field, then render grid lines
