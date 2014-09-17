@@ -370,8 +370,10 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
         {
             // AL-2014-09-16: [[ Bug 13454 ]] Delete created variables before deleting containers to prevent memory leak
             if (i >= npnames || !pinfo[i].is_reference)
+            {
 				delete newparams[i] -> getvar();
-            delete newparams[i];
+                delete newparams[i];
+            }
         }
 		delete newparams;
 		MCeerror->add(EE_HANDLER_BADPARAM, firstline - 1, 1, name);
@@ -503,8 +505,10 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
         {
             // AL-2014-09-16: [[ Bug 13454 ]] Delete created variables before deleting containers to prevent memory leak
             if (i >= npnames || !pinfo[i].is_reference)
+            {
 				delete params[i] -> getvar();
-            delete params[i];
+                delete params[i];
+            }
         }
 		delete params;
 	}
