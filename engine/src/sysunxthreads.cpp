@@ -363,7 +363,7 @@ uint32_t MCThreadGetNumberOfCores()
 #ifdef _ANDROID_MOBILE
     return 1;
 #else
-    return (uint32_t) sysconf(_SC_NPROCESSORS_ONLN);
+    return 1;//(uint32_t) sysconf(_SC_NPROCESSORS_ONLN);
 #endif
 }
 
