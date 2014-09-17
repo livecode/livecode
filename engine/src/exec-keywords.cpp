@@ -825,6 +825,8 @@ void MCKeywordsExecExit(MCExecContext& ctxt, Exec_stat stat)
 	{
 		MCexitall = True;
 		ctxt . SetExecStat(ES_NORMAL);
+        // SN-2014-09-17: [[ Bug 13430 ]] Missing return.
+        return;
 	}
 	ctxt . SetExecStat(stat);
 }
