@@ -4824,7 +4824,8 @@ void MCPrintingGetPrintJobCollate(MCExecContext& ctxt, bool &r_value);
 void MCPrintingSetPrintJobCollate(MCExecContext& ctxt, bool p_value);
 void MCPrintingGetPrintJobColor(MCExecContext& ctxt, bool &r_value);
 void MCPrintingSetPrintJobColor(MCExecContext& ctxt, bool p_value);
-void MCPrintingGetPrintJobPage(MCExecContext& ctxt, integer_t &r_value);
+// SN-2014-09-17: [[ Bug 13467 ]] PrintPageNumber may return empty
+void MCPrintingGetPrintJobPage(MCExecContext& ctxt, integer_t *&r_value);
 
 void MCPrintingGetPrintCardBorders(MCExecContext& ctxt, bool &r_card_borders);
 void MCPrintingSetPrintCardBorders(MCExecContext& ctxt, bool p_card_borders);
