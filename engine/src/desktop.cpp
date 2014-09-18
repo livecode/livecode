@@ -109,9 +109,10 @@ void MCPlatformHandleApplicationResume(void)
 	MCdefaultstackptr -> getcard() -> message(MCM_resume);
 }
 
-void MCPlatformHandleApplicationRun(void)
+void MCPlatformHandleApplicationRun(bool& r_continue)
 {
-	X_main_loop();
+	X_main_loop_iteration();
+    r_continue = !MCquit;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -544,9 +545,66 @@ void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCPlatformKeyCode s_last_key_code = 0;
-static codepoint_t s_last_mapped_codepoint = 0;
-static codepoint_t s_last_unmapped_codepoint = 0;
+// SN-2014-09-15: [[ Bug 13423 ]] Added new static variable to keep the last keys pressed
+struct MCKeyMessage
+{
+    MCPlatformKeyCode key_code;
+    codepoint_t mapped_codepoint;
+    codepoint_t unmapped_codepoint;
+    struct MCKeyMessage* next;
+};
+
+typedef MCKeyMessage MCKeyMessage;
+
+static MCKeyMessage* s_last_keys = nil;
+
+void MCKeyMessageClear()
+{
+    MCKeyMessage *t_next;
+    t_next = s_last_keys;
+    while (t_next != nil)
+    {
+        s_last_keys = s_last_keys -> next;
+        delete t_next;
+        t_next = s_last_keys;
+    }
+    s_last_keys = nil;
+}
+
+void MCKeyMessageAppend(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+{
+    MCKeyMessage *t_new;
+    t_new = new MCKeyMessage;
+    
+    t_new -> key_code = p_key_code;
+    t_new -> mapped_codepoint = p_mapped_codepoint;
+    t_new -> unmapped_codepoint = p_unmapped_codepoint;
+    t_new -> next = nil;
+    
+    if (s_last_keys != nil)
+    {
+        MCKeyMessage *t_ptr;
+        t_ptr = s_last_keys;
+        
+        while (t_ptr -> next != nil)
+            t_ptr = t_ptr -> next;
+        
+        t_ptr -> next = t_new;
+    }
+    else
+        s_last_keys = t_new;
+}
+
+void MCKeyMessageNext()
+{
+    if (s_last_keys)
+    {
+        MCKeyMessage *t_old;
+        t_old = s_last_keys;
+        s_last_keys = s_last_keys -> next;
+        delete t_old;
+    }
+}
 
 // MW-2014-06-25: [[ Bug 12370 ]] Map an input keyCode and mapped codepoint to
 //   engine keysym and char. The engine expects keyCode to be the mapped key
@@ -602,9 +660,14 @@ void MCPlatformHandleModifiersChanged(MCPlatformModifiers p_modifiers)
 //   a keydown / keyup pair if a single character is produced.
 void MCPlatformHandleRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
 {
-    s_last_key_code = p_key_code;
-    s_last_mapped_codepoint = p_mapped_codepoint;
-    s_last_unmapped_codepoint = p_unmapped_codepoint;
+    int32_t si, ei;
+    
+    // SN-2014-09-15: [[ Bug 13423 ]] Clear the key sequence if needed, then append
+    // the new key typed.
+    if (!MCactivefield -> getcompositionrange(si, ei))
+        MCKeyMessageClear();
+    
+    MCKeyMessageAppend(p_key_code, p_mapped_codepoint, p_unmapped_codepoint);   
 }
 
 void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
@@ -730,11 +793,13 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	t_r_ei = INT32_MAX;
 	MCactivefield -> resolvechars(0, t_r_si, t_r_ei, p_replace_range . offset, p_replace_range . length);
 	
+    // SN-2014-09-15: [[ Bug 13423 ]] t_was_compositing now used further in the function
+    bool t_was_compositing;
+    t_was_compositing = false;
 	if (!p_mark)
 	{
         // MW-2014-08-05: [[ Bug 13098 ]] If we have been compositing, then don't synthesise a
         //   keyDown / keyUp.
-        bool t_was_compositing;
 		int4 si, ei;
 		if (MCactivefield -> getcompositionrange(si, ei))
 		{
@@ -768,14 +833,21 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 			if (t_s_si == t_r_si &&
 				t_s_ei == t_r_ei)
 			{
-                // MW-2014-04-15: [[ Bug 12086 ]] Pass the keycode from the last event that was
-                //   passed to the IME.
-				MCAutoStringRef t_mapped_char;
-                MCPlatformKeyCode t_mapped_key_code;
-                map_key_to_engine(s_last_key_code, s_last_mapped_codepoint, s_last_unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
-				
-                MCdispatcher -> wkdown(p_window, *t_mapped_char, t_mapped_key_code);
-				MCdispatcher -> wkup(p_window, *t_mapped_char, t_mapped_key_code);
+
+                // SN-2014-09-15: [[ Bug 13423 ]] Send the messages for all the characters typed
+                while (s_last_keys != nil)
+                {
+                    // MW-2014-04-15: [[ Bug 12086 ]] Pass the keycode from the last event that was
+                    //   passed to the IME.
+                    MCAutoStringRef t_mapped_char;
+                    MCPlatformKeyCode t_mapped_key_code;
+                    map_key_to_engine(s_last_keys -> key_code, s_last_keys -> mapped_codepoint, s_last_keys -> unmapped_codepoint,t_mapped_key_code, &t_mapped_char);
+                    
+                    MCdispatcher -> wkdown(p_window, *t_mapped_char, t_mapped_key_code);
+                    MCdispatcher -> wkup(p_window, *t_mapped_char, t_mapped_key_code);
+                    
+                    MCKeyMessageNext();
+                }
 				return;
 			}
 		}
@@ -799,15 +871,46 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 		}
 	}
 	
-	// Set the text.
+    // SN-2014-09-14: [[ Bug 13423 ]] MCPlatformHandleRawKeyDown gets the US mac layout key, without any modifier included.
+    // We need to update the elements:
+    // if the key pressed leads to an actual char:
+    //    this wrong key is replaced by this new 'combined' char
+    // if the key pressed fails to generate a char:
+    //    this wrong key is replaced by the dead-key char
+    if (t_was_compositing)
+    {
+        s_last_keys -> key_code = (uint1)*p_chars;
+        s_last_keys -> mapped_codepoint = (uint1)*p_chars;
+        s_last_keys -> unmapped_codepoint = (uint1)*p_chars;
+    }
+    
+	// Set the text.	
 	MCactivefield -> seltext(t_r_si, t_r_ei, False);
 	
 	if (p_mark)
 		MCactivefield -> startcomposition();
-	
+    
+    // SN-2014-09-15: [[ Bug 13423 ]] If the character typed is not Unicode and follows a dead key character, then we send
+    // [Raw]KeyDown/Up and remove the first character from the sequence of keys typed.
+    // If the character successfully combined with the dead char before it in a native char, we don't use finsert
+    // Otherwise, we have the dead char in p_chars, we need to remove the one stored first in the sequence
+    uint1 t_char[2];
+    t_char[1] = 0;
+    
     MCAutoStringRef t_string;
-    MCStringCreateWithChars(p_chars, p_char_count, &t_string);
-	MCactivefield -> finsertnew(FT_IMEINSERT, *t_string, True);
+    if (s_last_keys -> next && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
+    {
+        MCStringCreateWithNativeChars((const char_t *)t_char, 1, &t_string);
+        MCdispatcher -> wkdown(p_window, *t_string, *t_char);
+        MCdispatcher -> wkup(p_window, *t_string, *t_char);
+        
+        MCKeyMessageNext();
+    }
+    else
+    {
+        MCStringCreateWithChars(p_chars, p_char_count, &t_string);
+        MCactivefield -> finsertnew(FT_IMEINSERT, *t_string, True);
+    }
 	
 	// And update the selection range.
 	int32_t t_s_si, t_s_ei;
@@ -1179,34 +1282,5 @@ void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
     if (MCacptr != nil)
         MCscreen -> addtimer(MCacptr, MCM_internal, 0);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-#if 0
-void MCPlatformProcess(MCPlatformCallback& p_callback)
-{
-	switch(p_callback . type)
-	{
-		case kMCPlatformCallbackApplicationStartup:
-			MCPlatformHandleApplicationStartup(p_callb
-			ack . application . startup . argc,
-											   p_callback . application . startup . argv,
-											   p_callback . application . startup . envp,
-											   p_callback . application . startup . error_code,
-											   p_callback . application . startup . error_message);
-			break;
-		case kMCPlatformCallbackApplicationShutdown:
-			MCPlatformHandleApplicationShutdown(p_callback . application . shutdown . exit_code);
-			break;
-		case kMCPlatformCallbackApplicationShutdownRequest:
-			MCPlatformHandleApplicationShutdownRequest(p_callback . application . shutdown_request . terminate);
-			break;
-		case kMCPlatformCallbackApplicationRun:
-			MCPlatformHandleApplicationRun();
-		default:
-			break;
-	}
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////

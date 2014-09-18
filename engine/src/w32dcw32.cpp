@@ -345,6 +345,8 @@ static Boolean doubledown;
 // not the last char
 static uint32_t lastcodepoint;
 static KeySym lastkeysym;
+// SN-2014-09-12: [[ Bug 13423 ]] Keeps whether a the next char follows a dead char
+static Boolean deadcharfollower = False;
 static Boolean doubleclick;
 Boolean tripleclick;
 static uint4 clicktime;
@@ -678,6 +680,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		break;
 
+	// SN-2014-09-12: [[ Bug 13423 ]] The next character typed will follow a dead char. Sets the flag.
+	case WM_DEADCHAR:
+	case WM_SYSDEADCHAR:
+		deadcharfollower = true;
+		break;
+
 	case WM_CHAR:
 	case WM_SYSCHAR:
 	case WM_IME_CHAR:
@@ -693,7 +701,13 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 		// SN-2014-09-10: [[ Bug 13348 ]] The keysym is got as for the WM_KEYDOWN case
 		if (curinfo->keysym == 0) // event came from some other dispatch
-			keysym = pms->getkeysym(wParam, lParam);
+			// SN-2014-09-12: [[ Bug 13423 ]] If we are following a dead char, no conversion needed:
+			// the message is fired without passing by MCScreenDC::handle, that's why
+			// curinfo->keysym hasn't been set, and the typed char is in wParam
+			if (deadcharfollower)
+				keysym = wParam;
+			else
+				keysym = pms->getkeysym(wParam, lParam);
 		else
 			keysym = curinfo->keysym;
 
@@ -752,7 +766,8 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		// No need to send control characters as text
 		if (iswcntrl(t_char))
 			t_keysym = keysym;
-		else if (t_codepoint > 0x7F)
+		// SN-2014-09-18: [[ MERGE-6_7_RC_2 ]] We accept the whole extended ASCII table
+		else if (t_codepoint > 0xFF)
 		{
 			// This is a non-ASCII codepoint
 			t_keysym = t_codepoint | XK_Class_codepoint;
@@ -771,9 +786,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			while (count--)
 			{
 				// SN-2014-09-05: [[ Bug 13348 ]] Call the appropriate message
-				if (curinfo->keymove == KM_KEY_DOWN)
+				//	 [[ MERGE-6_7_RC_2 ]] and add the KeyDown/Up in case we follow
+				//   a dead-key started sequence
+				if (curinfo->keymove == KM_KEY_DOWN || deadcharfollower)
 					MCdispatcher->wkdown(dw, *t_input, t_keysym);
-				else // curinfo->eventtype == ET_KEY_UP
+				
+				if (curinfo->keymove == KM_KEY_UP || deadcharfollower)
   					MCdispatcher->wkup(dw, *t_input, t_keysym);
 			}
 
@@ -794,7 +812,11 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		else
 			keysym = curinfo->keysym;
 
+		// SN-2014-09-18: [[ MERGE-6_7_RC_2 ]] Reaching here means that any
+		// dead-key sequence is aborted. Reset the flag and the codepoint
+		deadcharfollower = False;
 		lastkeysym = keysym;
+		lastcodepoint = 0;
 
 		if (MCmodifierstate & MS_CONTROL)
 			if (wParam == VK_CANCEL || keysym == '.')
@@ -827,7 +849,8 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 						return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 					
 					// If the repeat count was >1, simulate the corresponding key up messages
-					if (count || lParam & 0x40000000)
+					// SN-2014-09-15: [[ Bug 13423 ]] We want to send a KEYUP for the dead char, if it failed to combine
+					if (count || lParam & 0x40000000 || deadcharfollower)
 						MCdispatcher->wkup(dw, kMCEmptyString, keysym);
 				}
 				curinfo->handled = curinfo->reset = True;
@@ -848,14 +871,20 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	{	
 		if (curinfo->keysym == 0) // event came from some other dispatch
 			keysym = pms->getkeysym(wParam, lParam);
-		else
+		// SN-2014-09-15: [[ Bug 13423 ]] We don't regard the event if we are following a dead char WITH a
+		// keysym: that's the dead char itself.
+		// SN-2014-09-18: [[ MERGE-6_7_RC_2 ]] SYSKEYUP shall pass
+		else if (!deadcharfollower || msg == WM_SYSKEYUP)
 			keysym = curinfo->keysym;
+		else
+			break;
 
 		// SN-2014-09-10: [[ Bug 13348 ]] We want to get the last codepoint translated, if any,
 		// since the KEYUP events are not translated (but when keeping pressed a key)
 		MCAutoStringRef t_string;
 
-		if (lastkeysym == keysym)
+		// SN-2014-09-18: [[ MERGE-6_7_RC_2 ]] Only build a string if there is a codepoint
+		if (lastkeysym == keysym && lastcodepoint)
 		{
 			unichar_t t_pair[2];
 			uindex_t t_char_count;

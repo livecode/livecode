@@ -48,6 +48,14 @@ enum QTVRstate {
 };
 #endif
 
+enum MCInterfacePlayerStatus
+{
+    kMCInterfacePlayerStatusNone,
+    kMCInterfacePlayerStatusLoading,
+    kMCInterfacePlayerStatusPlaying,
+    kMCInterfacePlayerStatusPaused,
+};
+
 // SN-2014-07-03: [[ PlatformPlayer ]] Player constraints must be the same for
 // new platform or old player
 struct MCMultimediaQTVRConstraints;

@@ -534,11 +534,12 @@ void MCSellist::continuemove(int2 x, int2 y)
 		}
 		if (cptr->moveable())
 		{
-			MCRectangle t_old_rect;
-			t_old_rect = cptr -> getrect();
-			cptr->setrect(trect);
-			if (!cptr->resizeparent())
-				cptr -> layer_rectchanged(t_old_rect, false);
+			// IM-2014-09-09: [[ Bug 13222 ]] Use the layer_setrect method to ensure the old
+			// effectiverect is appropriately dirtied when edittools are displayed for a graphic
+			if (cptr->resizeparent())
+				cptr->setrect(trect);
+			else
+				cptr->layer_setrect(trect, false);
 		}
 		tptr = tptr->next();
 	}

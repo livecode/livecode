@@ -13,4 +13,9 @@ We have also added support for getting information about the download progress o
 
 - The **loadedtime** of a player is the time up to which the movie can be played. The download progress is also displayed on the controller well.
 
+You can also query the **status** property of the player. This property can take either of the values:
+- **loading** (for remote multimedia files)
+- **playing**
+- **paused**
+
 Note AVFoundation player is supported in OSX 10.8 and above. On systems running OSX 10.6 and 10.7, LiveCode continues to provide player functionality using the QTKit API.

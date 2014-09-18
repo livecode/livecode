@@ -1612,6 +1612,8 @@ LT factor_table[] =
         {"startupiconic", TT_PROPERTY, P_START_UP_ICONIC},
         {"startvalue", TT_PROPERTY, P_START_VALUE},
         {"statround", TT_FUNCTION, F_STAT_ROUND},
+        // PM-2014-09-02: [[ Bug 13092 ]] Added status property to the player object
+        {"status", TT_PROPERTY, P_STATUS},
 		{"statusicon", TT_PROPERTY, P_STATUS_ICON},
 		{"statusiconmenu", TT_PROPERTY, P_STATUS_ICON_MENU},
 		{"statusicontooltip", TT_PROPERTY, P_STATUS_ICON_TOOLTIP},

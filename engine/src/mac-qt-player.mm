@@ -196,7 +196,7 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
     // MW-2014-07-16: [[ Bug 12506 ]] Make sure we unhook the callbacks before releasing (it
     //   seems it takes a while for QTKit to actually release the objects!).
     MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
-    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallAlways, nil, nil);
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     [m_observer release];
@@ -258,9 +258,11 @@ OSErr MCQTKitPlayer::MovieDrawingComplete(Movie p_movie, long p_ref)
 	t_self = (MCQTKitPlayer *)p_ref;
     
     t_self -> CacheCurrentFrame();
-	
-	MCPlatformCallbackSendPlayerFrameChanged(t_self);
-    t_self -> CurrentTimeChanged();
+    MCPlatformCallbackSendPlayerFrameChanged(t_self);
+    
+    // PM-2104-08-28: [[ Bug 12830 ]] Make sure frames are updated only when movie is playing
+    if (t_self -> IsPlaying())
+        t_self -> CurrentTimeChanged();
 	
 	return noErr;
 }
@@ -301,7 +303,8 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
 
-		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
+        // PM-2104-08-28: [[ Bug 12830 ]] The movieDrawingCallAlways flag indicates that we want QuickTime to call MovieDrawingComplete every time the movie is tasked (that is, every time our application calls MoviesTask, either directly or indirectly).
+		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallAlways, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
         
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 	}
@@ -313,7 +316,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 			t_player -> m_current_frame = nil;
 		}
 
-		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
+		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallAlways, nil, nil);
         
 		// Switching to non-offscreen
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
@@ -411,7 +414,7 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
 
 void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
 {
-	NSError *t_error;
+    NSError *t_error;
 	t_error = nil;
     
     MCStringRef t_filename;
@@ -451,8 +454,11 @@ void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
 	
     // MW-2014-07-18: [[ Bug ]] Clean up callbacks before we release.
     MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
-    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallAlways, nil, nil);
 	[m_movie release];
+    
+    // PM-2014-09-02: [[ Bug 13306 ]] Make sure we reset the previous value of loadedtime when loading a new movie
+    m_buffered_time = do_QTMakeTime(0, 1);
     
 	m_movie = t_new_movie;
     
@@ -485,7 +491,7 @@ void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
     //   if we are already offscreen.
     if (m_offscreen)
     {
-		SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)this);
+		SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallAlways, MCQTKitPlayer::MovieDrawingComplete, (long int)this);
         CacheCurrentFrame();
     }
     if (p_is_url && [m_movie respondsToSelector:@selector(loadedRanges)])

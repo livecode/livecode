@@ -272,7 +272,7 @@ void MCPlatformWindowDeathGrip(MCPlatformWindowRef window);
 void MCPlatformCallbackSendApplicationStartup(int argc, MCStringRef *argv, MCStringRef *envp, int& r_error_code, MCStringRef& r_error_message);
 void MCPlatformCallbackSendApplicationShutdown(int& r_exit_code);
 void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate);
-void MCPlatformCallbackSendApplicationRun(void);
+void MCPlatformCallbackSendApplicationRun(bool& r_continue);
 void MCPlatformCallbackSendApplicationSuspend(void);
 void MCPlatformCallbackSendApplicationResume(void);
 

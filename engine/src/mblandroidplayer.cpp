@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "image.h"
 #include "player.h"
+//#include "mblevent.h"
 #include "param.h"
 #include "eventqueue.h"
 #include "osspec.h"
@@ -503,6 +504,7 @@ private:
 	const char *m_property;
 };
 
+
 void MCAndroidPlayerControl::HandlePropertyAvailableEvent(const char *p_property)
 {
 	MCObject *t_target;
@@ -567,4 +569,16 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doProp
         t_event = new MCNativePlayerPropertyAvailableEvent(t_player, t_prop_name);
         MCEventQueuePostCustom(t_event);
     }
+}
+
+// PM-2014-09-11: [[ Bug 13048 ]] Send movieTouched msg when touching the video screen
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doMovieTouched(JNIEnv *env, jobject object) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_VideoControl_doMovieTouched(JNIEnv *env, jobject object)
+{
+    MCLog("doMovieTouched", nil);
+    MCAndroidControl *t_control = nil;
+    
+    if (MCAndroidControl::FindByView(object, t_control))
+        t_control->PostNotifyEvent(MCM_movie_touched);
+    
 }

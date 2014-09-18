@@ -1538,6 +1538,12 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
+    
+    // FG-2014-09-16: [[ Bugfix 13278 ]] Clear the mouse focus if this is not
+    // an auto-arming button (e.g. a button within a menu).
+    if (!(flags & F_AUTO_ARM))
+        state &= ~CS_MFOCUSED;
+    
 	return True;
 }
 
@@ -4095,7 +4101,12 @@ void MCButton::setmenuhistory(int2 newline)
 		t_ntabs = MCArrayGetCount(tabs);
 		uint2 oldline = menuhistory;
 		setmenuhistoryprop(MCU_max(MCU_min(newline, (int2)t_ntabs), 1));
-		if (menuhistory != oldline && !(state & CS_MFOCUSED) && t_ntabs > 0)
+		
+        // SN-2014-09-03: [[ Bug 13328 ]] menupick should no be sent if there is a
+        // menuname: the oldline belongs to the panel stack, and certainly doesn't match
+        // the menustring of this button. At least, it would set a bad label, at worst,
+        // it gives garbage (and crashes in 7.0)
+        if (MCNameIsEmpty(menuname) && menuhistory != oldline && !(state & CS_MFOCUSED) && t_ntabs > 0)
 		{
 			MCValueRef t_menuhistory = nil;
 			MCValueRef t_oldline = nil;
@@ -4103,6 +4114,7 @@ void MCButton::setmenuhistory(int2 newline)
 			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, oldline, t_oldline);
 			message_with_valueref_args(MCM_menu_pick, t_menuhistory, t_oldline);
 		}
+
 		resetlabel();
 		if (!(getstyleint(flags) == F_MENU && menumode == WM_TOP_LEVEL) || !opened)
 		{

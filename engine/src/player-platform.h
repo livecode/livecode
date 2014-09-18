@@ -35,6 +35,9 @@ enum
     kMCPlayerControllerPartVolumeBar,
     kMCPlayerControllerPartVolumeWell,
     kMCPlayerControllerPartVolumeSelector,
+    kMCPlayerControllerPartRateWell,
+    kMCPlayerControllerPartRateBar,
+    kMCPlayerControllerPartRateSelector,
     kMCPlayerControllerPartPlay,
     kMCPlayerControllerPartScrubBack,
     kMCPlayerControllerPartScrubForward,
@@ -151,8 +154,6 @@ public:
 	virtual void editmovie(Boolean edit);
 	virtual void playselection(Boolean play);     //play the selected part of QT moive only
 	virtual Boolean ispaused();
-
-    uint4 getmovieloadedtime();
     
     virtual void gettracks(MCStringRef& r_tracks);
     
@@ -192,7 +193,11 @@ public:
         layer_redrawrect(getcontrollerrect());
 	}
 	
-	Boolean isdisposable()
+    real8 getplayrate();
+    void updateplayrate(real8 p_rate);
+    uint4 getmovieloadedtime();
+	
+    Boolean isdisposable()
 	{
 		return disposable;
 	}
@@ -333,7 +338,9 @@ public:
     virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
     virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
     virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
-        
+    
+    void GetStatus(MCExecContext& ctxt, intenum_t& r_status);
+    
     ////////////////////////////////////////////////////////////////////////////////
     // MCPlayer specific implementation for the platform player
     
@@ -383,9 +390,13 @@ public:
     
     int hittestcontroller(int x, int y);
     
+    Boolean handle_kdown(MCStringRef p_string, KeySym key);
+    Boolean handle_shift_kdown(MCStringRef p_string, KeySym key);
     void handle_mdown(int which);
     void handle_mstilldown(int which);
     void handle_shift_mdown(int which);
+    void shift_play(void);
+    
     void handle_mup(int which);
     void handle_mfocus(int x, int y);
     

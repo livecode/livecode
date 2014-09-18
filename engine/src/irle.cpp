@@ -239,11 +239,16 @@ bool rle_plane_decode(uint1 *sptr, uint4 ssize, uindex_t p_stride, uindex_t p_he
 
 ////////////////////////////////////////////////////////////////////////////////
 
+uint32_t MCImagePlaneStride(uint32_t p_width)
+{
+	// pad plane masks to 4byte alignment to avoid re-alignment by rle_plane_encode
+	return (((p_width + 7) / 8) + 3) & ~0x3;
+}
+
 // split color indexes into a series of 'mask' planes for each color
 bool rle_split_planes(MCImageIndexedBitmap *p_src, uindex_t t_first_plane, uindex_t p_plane_count, uint8_t *&r_planes, uindex_t &r_plane_stride)
 {
-	// pad plane masks to 4byte alignment to avoid re-alignment by rle_plane_encode
-	r_plane_stride = (((p_src->width + 7) / 8) + 3) & ~0x3;
+	r_plane_stride = MCImagePlaneStride(p_src->width);
 	uindex_t t_plane_size = r_plane_stride * p_src->height;
 
 	if (!MCMemoryNewArray(t_plane_size * p_plane_count, r_planes))
@@ -308,7 +313,43 @@ bool MCImageCompressRLE(MCImageIndexedBitmap *p_indexed, MCImageCompressedBitmap
 		t_compressed->height = p_indexed->height;
 		t_compressed->depth = 8;
 
-		if (t_colors <= MAX_PLANES)
+		// IM-2014-09-10: [[ Bug 10703 ]] Special case handling of blank (fully transparent) images
+		if (t_has_transparency && t_colors == 0)
+		{
+			// if the image is completely blank (has no color planes) then we need to create
+			// a single blank color plane
+			uint8_t *t_plane;
+			t_plane = nil;
+			
+			uint32_t t_plane_stride, t_plane_size;
+			t_plane_stride = MCImagePlaneStride(p_indexed->width);
+			t_plane_size = t_plane_stride * p_indexed->height;
+			
+			// create blank mask plane
+			if (t_success)
+				t_success = MCMemoryNewArray(t_plane_size, t_plane);
+			
+			if (t_success)
+				t_success = MCMemoryNewArray(1, t_compressed->planes) &&
+				MCMemoryNewArray(1, t_compressed->plane_sizes);
+			
+			// encode mask plane
+			if (t_success)
+				t_success = rle_plane_encode(t_plane, t_plane_stride, p_indexed->height, t_compressed->mask, t_compressed->mask_size);
+			
+			// copy encoded mask plane to 1st color plane
+			if (t_success)
+				t_success = MCMemoryAllocateCopy(t_compressed->mask, t_compressed->mask_size, t_compressed->planes[0]);
+			
+			if (t_success)
+			{
+				t_compressed->plane_sizes[0] = t_compressed->mask_size;
+				t_colors = 1;
+			}
+			
+			MCMemoryDeleteArray(t_plane);
+		}
+		else if (t_colors <= MAX_PLANES)
 		{
 			// separate color planes
 			uint8_t *t_planes = nil;
@@ -421,15 +462,21 @@ bool MCImageCompressRLE(MCImageIndexedBitmap *p_indexed, MCImageCompressedBitmap
 		}
 	}
 
+	// IM-2014-09-10: [[ Bug 10703 ]] Copy all palette colors (including transparent color)
 	if (t_success)
-		t_success = MCMemoryAllocateCopy(p_indexed->palette, sizeof(MCColor) * t_colors, t_compressed->colors);
+		t_success = MCMemoryAllocateCopy(p_indexed->palette, sizeof(MCColor) * p_indexed->palette_size, t_compressed->colors);
 
 	if (t_success)
 	{
 		t_compressed->color_count = t_colors;
 		if (t_has_transparency && t_colors != p_indexed->transparent_index)
-			// remove transparent color, replace with end color
-			t_compressed->colors[p_indexed->transparent_index] = p_indexed->palette[t_colors];
+		{
+			// IM-2014-09-10: [[ Bug 10703 ]] swap transparent color with the end color
+			MCColor t_color;
+			t_color = t_compressed->colors[p_indexed->transparent_index];
+			t_compressed->colors[p_indexed->transparent_index] = p_indexed->palette[p_indexed->palette_size - 1];
+			t_compressed->colors[p_indexed->palette_size - 1] = t_color;
+		}
 	}
 
 	if (t_success)
