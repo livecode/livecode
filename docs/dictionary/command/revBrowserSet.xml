@@ -183,10 +183,9 @@ stack</description>
 
 	<value>The <b>revBrowserSet</b> command puts empty into the result if
 successful. </value>
-	<comments><note> The "advanced" callback messages are: <message
-tag="browserClick">browserClick</message>, <message
-tag="browserOut">browserOut</message> and <message
-tag="browserOver">browserOver</message>. These messages are only sent when
+	<comments><note> The "advanced" callback messages are: <message tag="browserClick">browserClick</message>
+, <message tag="browserOut">browserOut</message> and <message tag="browserOver">browserOver</message>
+. These messages are only sent when
 the "messages" property is set to true. The other callback messages are
 always sent.<p></note><p></p><note> Setting the selected property selects
 the first instance of that text. Setting the property repeatedly to the same
@@ -226,8 +225,7 @@ false</p><p>end browserDisableScrollbars</p><p></p><p>on
 browserToggleScrollbars</p><p>  revBrowserSet sBrowserId, scrollbars,
 (not(revBrowserGet(sBrowserId, scrollbars)))</p><p>end
 browserToggleScrollbars</p><p></p><p></p><p></p><note> For general
-information on using the browser library, see the notes in the <function
-tag="revBrowserOpen">revBrowserOpen function</function>
+information on using the browser library, see the notes in the <function tag="revBrowserOpen">revBrowserOpen function</function>
 reference.</note><p>&#9;</p></comments>
 	</description>
 </doc>
