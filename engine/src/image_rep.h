@@ -66,7 +66,7 @@ public:
 	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame) = 0;
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
-
+    
 	//////////
 
 	MCImageRep *Retain();
@@ -106,6 +106,9 @@ public:
 
 	static void FlushCache();
 	static void FlushCacheToLimit();
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    virtual bool GetMetadata(MCImageMetadata& r_metadata) = 0;
 	
 protected:
 	MCCachedImageRep *m_next;
@@ -139,7 +142,10 @@ public:
 
 	virtual uint32_t GetFrameByteCount();
 	virtual void ReleaseFrames();
-	
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    bool GetMetadata(MCImageMetadata& r_metadata);
+    
 protected:
 	virtual bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 	// IM-2013-11-05: [[ RefactorGraphics ]] Add return parameter to indicate whether or not
@@ -149,6 +155,8 @@ protected:
 	bool m_have_geometry;
 	uindex_t m_width, m_height;
 
+    // MERG-2014-09-16: [[ ImageMetadata ]] used to old the metadata from the loaded image
+    MCImageMetadata m_metadata;
 
 private:
 	bool ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p_frame_count, bool p_premultiplied);
@@ -163,6 +171,7 @@ private:
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single threrad locks an image frame at a time.
     MCThreadMutexRef m_frame_lock;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,19 +183,19 @@ public:
 	MCEncodedImageRep()
 	{
 		m_compression = F_RLE;
-	}
+    }
 
 	virtual ~MCEncodedImageRep();
 
 	virtual uindex_t GetFrameCount();
 	uint32_t GetDataCompression();
-
+    
 protected:
 	// returns the image frames as decoded from the input stream
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
-	//////////
+    //////////
 
 	// return the input stream from which the image data will be read
 	virtual bool GetDataStream(IO_handle &r_stream) = 0;
@@ -195,6 +204,7 @@ protected:
 
 	uint32_t m_compression;
 	uint32_t m_header_frame_count;
+    
 };
 
 //////////
@@ -309,7 +319,7 @@ public:
 	{
 		return m_compressed;
 	}
-
+    
 protected:
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
@@ -371,6 +381,9 @@ public:
 	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    bool GetMetadata(MCImageMetadata& r_metadata);
+    
 	//////////
 
 	const char *GetSearchKey() { return m_filename; }

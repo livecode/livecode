@@ -264,8 +264,8 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 			t_frames = nil;
 			
 			uint32_t t_count;
-			
-			if (t_success)
+            
+            if (t_success)
 				t_success = t_loader->GetHotSpot(t_xhot, t_yhot);
 			
 			if (t_success)
@@ -273,8 +273,8 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 			
 			if (t_success)
 				t_success = t_loader->TakeFrames(t_frames, t_count);
-			
-			if (t_success && p_mask_stream != nil && t_loader->GetFormat() == kMCImageFormatNetPBM)
+            
+            if (t_success && p_mask_stream != nil && t_loader->GetFormat() == kMCImageFormatNetPBM)
 				{
 					MCImageBitmap *t_mask = nil;
 					t_success = MCImageDecodeNetPBM(p_mask_stream, t_mask) &&
@@ -289,7 +289,7 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 				r_name = t_name;
 				r_bitmap = t_frames[0].image;
 				t_frames[0].image = nil;
-			}
+            }
 			else
 				MCCStringFree(t_name);
 			
@@ -311,7 +311,7 @@ IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream
 	MCImageBitmap *t_bitmap = nil;
 	char *t_name = nil;
 	MCPoint t_hotspot = {1, 1};
-
+    
 	t_success = MCImageImport(stream, mstream, t_hotspot, t_name, t_compressed, t_bitmap);
 
 	if (t_success)
@@ -361,8 +361,8 @@ IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream
 				tname = newname;
 			setname_cstring(tname);
 		}
-
-	}
+        
+    }
 
 	MCCStringFree(t_name);
 

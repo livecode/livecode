@@ -69,6 +69,8 @@ MCLoadableImageRep::MCLoadableImageRep()
 	m_frames_premultiplied = false;
 	
 	m_next = m_prev = nil;
+    
+    MCMemoryClear(&m_metadata, sizeof(m_metadata));
 }
 
 MCLoadableImageRep::~MCLoadableImageRep()
@@ -330,6 +332,18 @@ void MCLoadableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_fr
 	Release();
 
 	MoveRepToHead(this);
+}
+
+// MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+bool MCLoadableImageRep::GetMetadata(MCImageMetadata& r_metadata)
+{
+    uint32_t t_width, t_height;
+	if (!m_have_geometry)
+        GetGeometry(t_width, t_height);
+    
+    r_metadata = m_metadata;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -49,6 +49,23 @@ bool MCImageParseMetadata(MCExecPoint& ep, MCVariableValue& p_array, MCImageMeta
     return true;
 }
 
+// MERG-2014-09-18: [[ ImageMetadata ]] Convert image metadata scruct to array
+bool MCImageGetMetadata(MCExecPoint& ep, MCImageMetadata& p_metadata)
+{
+    MCVariableValue *v = new MCVariableValue;
+	v -> assign_new_array(1);
+    
+    if (p_metadata.has_density)
+    {
+        ep . setnvalue(p_metadata.density);
+        v -> store_element(ep, "density");
+    }
+    
+	ep.setarray(v, True);
+    
+    return true;
+}
+
 //////////////////////////////////////////////////////////////////////
 
 bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBitmap *&r_compressed)

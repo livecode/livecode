@@ -104,6 +104,7 @@ MCImage::MCImage()
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the image animate message is only posted from a single thread.
     m_animate_posted = false;
+    
 }
 
 MCImage::MCImage(const MCImage &iref) : MCControl(iref)
@@ -916,6 +917,17 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
             else
                 ep . clear();
         break;
+        // MERG-2014-09-18: [[ ImageMetadata ]] return the image metadata as an array
+    case P_METADATA:
+        if (m_rep != nil)
+        {
+            MCImageMetadata t_metadata;
+            (static_cast<MCLoadableImageRep *>(m_rep))->GetMetadata(t_metadata);
+            MCImageGetMetadata(ep, t_metadata);
+        }
+        else
+            ep . clear();
+        break;
 #endif /* MCImage::getprop */
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
@@ -1115,6 +1127,8 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCPoint t_hotspot;
 			char *t_name = nil;
 			IO_handle t_stream = nil;
+            MCImageMetadata t_metadata;
+            MCMemoryClear(&t_metadata, sizeof(t_metadata));
 
 			if (data.getlength() == 0)
 			{
@@ -1140,7 +1154,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 						t_success = setcompressedbitmap(t_compressed);
 					else if (t_bitmap != nil)
 						t_success = setbitmap(t_bitmap, 1.0);
-				}
+                }
 
 				MCImageFreeBitmap(t_bitmap);
 				MCImageFreeCompressedBitmap(t_compressed);
@@ -1198,7 +1212,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 				}
 
 				setbitmap(t_copy, 1.0);
-			}
+            }
 
 			MCImageFreeBitmap(t_copy);
 
@@ -1264,7 +1278,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			dirty = True;
 		}
 		break;
-	case P_RESIZE_QUALITY:
+    case P_RESIZE_QUALITY:
 		if (data == "best")
 			resizequality = INTERPOLATION_BICUBIC;
 		else if (data == "good")

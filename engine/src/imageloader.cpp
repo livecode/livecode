@@ -96,6 +96,19 @@ bool MCImageLoader::GetFrameCount(uint32_t &r_frame_count)
 	return true;
 }
 
+
+// MERG 2014-09-12 [[ ImageMetadata ]] get metadata from loader
+bool MCImageLoader::GetMetadata(MCImageMetadata &r_metadata)
+{
+	if (!EnsureHeader())
+		return false;
+	
+	r_metadata = m_metadata;
+	
+	return true;
+    
+}
+
 bool MCImageLoader::GetFrames(MCBitmapFrame *&r_frames, uint32_t &r_frame_count)
 {
 	if (!EnsureFrames())
@@ -138,7 +151,7 @@ bool MCImageLoader::EnsureHeader()
 	if (!m_valid)
 		return false;
 	
-	m_valid = m_header_loaded = LoadHeader(m_width, m_height, m_xhot, m_yhot, m_name, m_frame_count);
+	m_valid = m_header_loaded = LoadHeader(m_width, m_height, m_xhot, m_yhot, m_name, m_frame_count, m_metadata);
 	
 	return m_valid;
 }

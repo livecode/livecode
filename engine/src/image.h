@@ -80,6 +80,8 @@ bool MCImageDecodeNetPBM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
 void MCImageBitmapSetAlphaValue(MCImageBitmap *p_bitmap, uint8_t p_alpha);
 
 bool MCImageParseMetadata(MCExecPoint& ep, MCVariableValue& p_array, MCImageMetadata& r_metadata);
+// MERG-2014-09-18: [[ ImageMetadata ]] Convert image metadata scruct to array
+bool MCImageGetMetadata(MCExecPoint& ep, MCImageMetadata& p_metadata);
 
 ////////////////////////////////////////////////////////////////////////////////
 

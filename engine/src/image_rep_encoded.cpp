@@ -108,6 +108,7 @@ uindex_t MCEncodedImageRep::GetFrameCount()
 	return 0;
 }
 
+
 // IM-2014-07-31: [[ ImageLoader ]] Use image loader class to read image geometry from stream header
 bool MCEncodedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 {
@@ -131,6 +132,11 @@ bool MCEncodedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 		/* UNCHECKED */ MCImageLoaderFormatToCompression(t_loader->GetFormat(), m_compression);
 		t_success = t_loader->GetGeometry(r_width, r_height) && t_loader->GetFrameCount(m_header_frame_count);
 	}
+    
+    if (t_success)
+    {
+        t_success = t_loader->GetMetadata(m_metadata);
+    }
 	
 	if (t_loader != nil)
 		delete t_loader;
