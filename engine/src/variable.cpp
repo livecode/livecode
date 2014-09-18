@@ -507,7 +507,8 @@ bool MCVariable::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariable
         value = p_value;
     }
     
-    synchronize(ctxt);
+    // SN-2014-09-18 [[ Bug 13453 ]] give_value should notify the debugger about it
+    synchronize(ctxt, true);
     return true;
 }
 
