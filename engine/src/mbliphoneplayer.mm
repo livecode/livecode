@@ -38,7 +38,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIKit.h>
 
 #include "mbldc.h"
-#include "mblevent.h"
 #include "mbliphonecontrol.h"
 
 #import <MediaPlayer/MPMoviePlayerController.h>
@@ -79,7 +78,6 @@ class MCNativePlayerControl;
 - (void)playerPlaybackDidFinish: (NSNotification *)notification;
 - (void)playerPlaybackStateDidChange: (NSNotification *)notification;
 - (void)playerScalingModeDidChange: (NSNotification *)notification;
-//- (void)movieWindowTouched: (UIControl*) p_sender;
 - (void)playerWindowTouched: (UIControl*) p_sender;
 - (UIControl*)getOverlay;
 - (void)setOverlay: (UIControl*) p_overlay;
