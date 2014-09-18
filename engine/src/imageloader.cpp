@@ -71,7 +71,8 @@ bool MCImageLoader::GetName(MCStringRef &r_name)
 	if (!EnsureHeader())
 		return false;
 	
-	r_name = m_name;
+    // AL-2014-09-18: [[ Bug 13473 ]] Retain name, as it is released by the caller
+	r_name = MCValueRetain(m_name);
 	
 	return true;
 }
