@@ -360,6 +360,9 @@ bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data);
 bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description);
 bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value);
 
+bool __MCNumberInitialize(void);
+void __MCNumberFinalize(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 hash_t MCNativeCharsHash(const char_t *chars, uindex_t char_count, MCStringOptions p_options);

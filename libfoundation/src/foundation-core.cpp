@@ -34,6 +34,9 @@ bool MCInitialize(void)
     
     if (!__MCValueInitialize())
 		return false;
+    
+    if (!__MCNumberInitialize())
+        return false;
 
 	if (!__MCStringInitialize())
 		return false;
@@ -68,6 +71,7 @@ void MCFinalize(void)
 	__MCNameFinalize();
 	__MCStringFinalize();
     __MCDataFinalize();
+    __MCNumberFinalize();
 	__MCValueFinalize();
     __MCUnicodeFinalize();
 }
@@ -180,6 +184,11 @@ void MCMemoryDeleteArray(void *p_array)
 hash_t MCHashInteger(integer_t i)
 {
 	return ((i > 0) ? (hash_t)i : (hash_t)(-i)) * HASHFACTOR;
+}
+
+hash_t MCHashPointer(void *p)
+{
+    return MCHashInteger((integer_t)p);
 }
 
 hash_t MCHashDouble(double d)

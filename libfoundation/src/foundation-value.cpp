@@ -49,6 +49,25 @@ MCValueTypeCode MCValueGetTypeCode(MCValueRef p_value)
 	return __MCValueGetTypeCode(self);
 }
 
+uindex_t MCValueGetRetainCount(MCValueRef p_value)
+{
+	__MCValue *self = (__MCValue *)p_value;
+    
+	MCAssert(self != nil);
+    
+    return self -> references;
+}
+
+const MCValueCustomCallbacks *MCValueGetCallbacks(MCValueRef p_value)
+{
+	__MCValue *self = (__MCValue *)p_value;
+    
+    if (__MCValueGetTypeCode(self) != kMCValueTypeCodeCustom)
+        return nil;
+    
+    return ((__MCCustomValue *)self) -> callbacks;
+}
+
 MCValueRef MCValueRetain(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
@@ -224,6 +243,38 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 	return false;
 }
 
+//////////
+
+bool MCValueIsMutable(MCValueRef p_value)
+{
+	__MCValue *self = (__MCValue *)p_value;
+    
+    if (__MCValueGetTypeCode(self) != kMCValueTypeCodeCustom)
+        return false;
+    
+    return ((__MCCustomValue *)self) -> callbacks -> is_mutable(p_value);
+}
+
+bool MCValueMutableCopy(MCValueRef p_value, MCValueRef& r_mutable_copy)
+{
+	__MCValue *self = (__MCValue *)p_value;
+    
+    if (__MCValueGetTypeCode(self) != kMCValueTypeCodeCustom)
+        return false;
+    
+    return ((__MCCustomValue *)self) -> callbacks -> mutable_copy(p_value, false, r_mutable_copy);
+}
+
+bool MCValueMutableCopyAndRelease(MCValueRef p_value, MCValueRef& r_mutable_copy)
+{
+	__MCValue *self = (__MCValue *)p_value;
+    
+    if (__MCValueGetTypeCode(self) != kMCValueTypeCodeCustom)
+        return false;
+    
+    return ((__MCCustomValue *)self) -> callbacks -> mutable_copy(p_value, true, r_mutable_copy);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCValueIsUnique(MCValueRef p_value)
@@ -308,7 +359,7 @@ bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_v
 
 	self -> references = 1;
 	self -> flags = (p_type_code << 28);
-
+    
 	r_value = self;
 
 	return true;
@@ -666,10 +717,16 @@ static bool __MCValueInter(__MCValue *self, bool p_release, MCValueRef& r_unique
 	if (s_unique_values[t_target_slot] . value != UINTPTR_MIN &&
 		s_unique_values[t_target_slot] . value != UINTPTR_MAX)
 	{
-		if (p_release)
-			MCValueRelease(self);
-
-		r_unique_self = MCValueRetain((MCValueRef)s_unique_values[t_target_slot] . value);
+		if (p_release && (MCValueRef)s_unique_values[t_target_slot] . value == self)
+			r_unique_self = self;
+        else
+        {
+            r_unique_self = MCValueRetain((MCValueRef)s_unique_values[t_target_slot] . value);
+            
+            if (p_release)
+                MCValueRelease(self);
+        }
+        
 		return true;
 	}
 
