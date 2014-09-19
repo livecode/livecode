@@ -94,6 +94,13 @@ void MCParameter::setn_argument(real8 p_number)
     value . double_value = p_number;
 }
 
+void MCParameter::setrect_argument(MCRectangle p_rect)
+{
+    MCExecTypeRelease(value);
+    value . type  = kMCExecValueTypeRectangle;
+    value . rectangle_value = p_rect;
+}
+
 void MCParameter::clear_argument(void)
 {
     // AL-2014-09-17: [[ Bug 13465 ]] Delete container when clearing a parameter

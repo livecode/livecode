@@ -1766,6 +1766,9 @@ void MCEngineEvalTemplateAsObject(MCExecContext& ctxt, uinteger_t p_template_typ
         case DT_EPS:
             t_object = (MCObject *)MCtemplateeps;
             break;
+        case DT_WIDGET:
+            t_object = (MCObject *)MCtemplatewidget;
+            break;
         default:
             break;
     }
@@ -1931,3 +1934,15 @@ void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
     
     ctxt . Throw();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef filename)
+{
+}
+
+void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef filename)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////

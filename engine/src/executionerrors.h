@@ -2603,7 +2603,7 @@ enum Exec_errors
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
 	// {EE-0841} open: error in host name expression
-	EE_OPEN_BADHOST,	
+	EE_OPEN_BADHOST,
 };
 
 extern const char *MCexecutionerrors;

@@ -71,6 +71,7 @@ public:
 	void setvalueref_argument(MCValueRef name);
 	void give_exec_argument(MCExecValue name);
 	void setn_argument(real8 n);
+    void setrect_argument(MCRectangle rect);
 	void clear_argument(void);
 	
 	// MW-2014-01-22: [[ CompatV1 ]] Used by the V1 interface to get the arg value.

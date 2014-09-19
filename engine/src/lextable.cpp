@@ -1072,6 +1072,7 @@ LT factor_table[] =
         {"jpegquality", TT_PROPERTY, P_JPEG_QUALITY},
         {"keys", TT_FUNCTION, F_KEYS},
         {"keysdown", TT_FUNCTION, F_KEYS_DOWN},
+        {"kind", TT_PROPERTY, P_KIND},
         {"label", TT_PROPERTY, P_LABEL},
         {"labelwidth", TT_PROPERTY, P_LABEL_WIDTH},
         {"last", TT_CHUNK, CT_LAST},
@@ -1655,6 +1656,7 @@ LT factor_table[] =
         {"templatescrollbar", TT_FUNCTION, F_TEMPLATE_SCROLLBAR},
         {"templatestack", TT_FUNCTION, F_TEMPLATE_STACK},
         {"templatevideoclip", TT_FUNCTION, F_TEMPLATE_VIDEO_CLIP},
+        {"templatewidget", TT_FUNCTION, F_TEMPLATE_WIDGET},
         {"tempname", TT_FUNCTION, F_TEMP_NAME},
 		// MW-2011-11-24: [[ Nice Folders ]] The adjective for 'the temporary folder'.
 		{"temporary", TT_PROPERTY, P_TEMPORARY_FOLDER},
@@ -1781,6 +1783,8 @@ LT factor_table[] =
         {"weekdaynames", TT_FUNCTION, F_WEEK_DAY_NAMES},
         {"wholematches", TT_PROPERTY, P_WHOLE_MATCHES},
         {"widemargins", TT_PROPERTY, P_WIDE_MARGINS},
+        {"widget", TT_CHUNK, CT_WIDGET},
+        {"widgets", TT_CLASS, CT_WIDGET},
         {"width", TT_PROPERTY, P_WIDTH},
         {"window", TT_CHUNK, CT_STACK},
         {"windowboundingrect", TT_PROPERTY, P_WINDOW_BOUNDING_RECT},
@@ -1989,7 +1993,8 @@ static LT reset_table[] =
         {"templateplayer", TT_UNDEFINED, RT_TEMPLATE_PLAYER},
         {"templatescrollbar", TT_UNDEFINED, RT_TEMPLATE_SCROLLBAR},
         {"templatestack", TT_UNDEFINED, RT_TEMPLATE_STACK},
-        {"templatevideoclip", TT_UNDEFINED, RT_TEMPLATE_VIDEO_CLIP}
+        {"templatewidget", TT_UNDEFINED, RT_TEMPLATE_WIDGET},
+        {"templatevideoclip", TT_UNDEFINED, RT_TEMPLATE_VIDEO_CLIP},
     };
 
 static LT show_table[] =
@@ -2070,6 +2075,7 @@ static LT sugar_table[] =
 		{"effects", TT_UNDEFINED, SG_EFFECTS},
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
+        {"extension", TT_UNDEFINED, SG_EXTENSION},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'failure'
 		{"failure", TT_UNDEFINED, SG_FAILURE},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'false'
