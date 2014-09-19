@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -e
+set -x
+
+GENTLE=../../gentle/gentle
+GRTS=../../gentle/grts.o
+REFLEX=../../reflex/reflex
+LIB=../../lib
+LEX=lex
+YACC=yacc
+CC=cc
+
+$GENTLE micro.g
+$REFLEX
+$LEX gen.l
+$YACC gen.y
+
+$CC -c y.tab.c
+$CC -c lex.yy.c
+$CC -c micro.c
+$CC -c regalloc.c
+
+$CC -o micro \
+   micro.o regalloc.o y.tab.o lex.yy.o \
+   $LIB/idents.o $LIB/errmsg.o $LIB/output.o $LIB/main.o \
+   $GRTS
+
+micro testfile
+
+cat out.s
