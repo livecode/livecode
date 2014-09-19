@@ -1,3 +1,5 @@
+/* --PATCH-- */ #include <stdlib.h>
+/* --PATCH-- */ #include <stdio.h>
 /*
    GENTLE 97 CAMPUS EDITION
 

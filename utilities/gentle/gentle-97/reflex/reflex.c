@@ -1,3 +1,5 @@
+/* --PATCH-- */ #include <stdlib.h>
+/* --PATCH-- */ #include <string.h>
 #include <stdio.h>
 
 /* ( 1) %{ */

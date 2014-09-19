@@ -1,3 +1,5 @@
+/* --PATCH-- */ #include <stdlib.h>
+/* --PATCH-- */ #include <string.h>
 /*
    GENTLE 97 CAMPUS EDITION
 
@@ -483,7 +485,7 @@ again:
 	 ScanError("invalid character after '<'");
       }
 
-   /* "/", "/*" */
+/* --PATCH-- */   /* "/", "/ *" */
    case '/' :
       NEXTCH;
       if (CH == '*') { /* comment */

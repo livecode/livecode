@@ -1,3 +1,5 @@
+/* --PATCH-- */ #include <stdlib.h>
+/* --PATCH-- */ #include <stdio.h>
 /*
    GENTLE 97 CAMPUS EDITION
 
@@ -149,25 +151,25 @@ yyAbort (Code, FileName, Line)
 yyPrintOpaque (i)
    long i;
 {
-   printf("<<%d>>", i);
+/* --PATCH-- */   printf("<<%ld>>", i);
 }
 
 yyPrintIndex (i)
    long i;
 {
-   printf("#%d", i);
+/* --PATCH-- */   printf("#%ld", i);
 }
 
 yyPrint_INT (i)
    long i;
 {
-   printf("%d", i);
+/* --PATCH-- */   printf("%ld", i);
 }
 
 yyPrint_POS (i)
    long i;
 {
-   printf("%d", i);
+/* --PATCH-- */   printf("%ld", i);
 }
 
 #define STRINGLENGTH 40
@@ -226,8 +228,9 @@ static yyIndent()
 }
 
 yyTerm(f)
+/* --PATCH-- */ long f;
 {
-   printf("%s", f);
+/* --PATCH-- */   printf("%s", (const char *)f);
 }
 
 yyFirstArg()
