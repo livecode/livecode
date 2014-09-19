@@ -97,6 +97,8 @@ struct info {
 
 struct info *info_list = 0;
 
+/* --PATCH-- */ static int SUBDIR = 0;
+
 /*----------------------------------------------------------------------------*/
 
 FILE * OPEN(name)
@@ -138,6 +140,12 @@ args(argc, argv)
    struct info *new;
 
    for (i = 1; i < argc; i++) {
+/* --PATCH-- */    if (strcmp(argv[i], "-subdir") == 0)
+/* --PATCH-- */    {
+/* --PATCH-- */        SUBDIR = 1;
+/* --PATCH-- */        continue;
+/* --PATCH-- */    }
+       
       int len, j, eq, dot;
       len = strlen(argv[i]);
 
@@ -184,7 +192,7 @@ main(argc, argv)
 {
    args(argc, argv);
 
-   OUTFILE = fopen("gen.l", "w");
+/* --PATCH-- */    OUTFILE = fopen(SUBDIR ? "_G_/gen.l" : "gen.l", "w");
    if (OUTFILE == NULL) {
       printf("cannot open gen.l\n");
       exit(1);
@@ -208,7 +216,7 @@ main(argc, argv)
    {
       FILE *F;
 
-      F = OPEN("gen.lit");
+/* --PATCH-- */       F = OPEN(SUBDIR ? "_G_/gen.lit" : "gen.lit");
       if (F == NULL) {
 	 printf("cannot open gen.lit\n");
 	 exit(1);
@@ -295,7 +303,7 @@ filelist()
    FILE *LISTFILE;
    FILE *INFILE;
 
-   LISTFILE = OPEN("gen.tkn");
+/* --PATCH-- */   LISTFILE = OPEN(SUBDIR ? "_G_/gen.tkn" : "gen.tkn");
    if (LISTFILE == NULL) {
       printf("cannot open gen.tkn\n");
       exit(1);

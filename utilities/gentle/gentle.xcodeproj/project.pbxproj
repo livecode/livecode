@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4D3AA09219CC480D00886BE7 /* grts.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F06D919CC2E7B00DDC6E0 /* grts.c */; };
 		4D6F06E019CC2E7B00DDC6E0 /* cyfront.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F06D719CC2E7B00DDC6E0 /* cyfront.c */; };
 		4D6F06E119CC2E7B00DDC6E0 /* grts.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F06D919CC2E7B00DDC6E0 /* grts.c */; };
 		4D6F06E219CC2E7B00DDC6E0 /* input.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F06DA19CC2E7B00DDC6E0 /* input.c */; };
@@ -40,6 +41,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4D3AA08E19CC47F900886BE7 /* libgrts.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgrts.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D6F06CC19CC2DFA00DDC6E0 /* gentle */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = gentle; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D6F06D719CC2E7B00DDC6E0 /* cyfront.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cyfront.c; path = "gentle-97/gentle/cyfront.c"; sourceTree = "<group>"; };
 		4D6F06D819CC2E7B00DDC6E0 /* gen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gen.h; path = "gentle-97/gentle/gen.h"; sourceTree = "<group>"; };
@@ -60,6 +62,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4D3AA08B19CC47F900886BE7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4D6F06C919CC2DFA00DDC6E0 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -90,6 +99,7 @@
 			children = (
 				4D6F06CC19CC2DFA00DDC6E0 /* gentle */,
 				4D6F06F619CC2F6800DDC6E0 /* reflex */,
+				4D3AA08E19CC47F900886BE7 /* libgrts.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -142,7 +152,34 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		4D3AA08C19CC47F900886BE7 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
+		4D3AA08D19CC47F900886BE7 /* grts */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4D3AA09119CC47F900886BE7 /* Build configuration list for PBXNativeTarget "grts" */;
+			buildPhases = (
+				4D3AA08A19CC47F900886BE7 /* Sources */,
+				4D3AA08B19CC47F900886BE7 /* Frameworks */,
+				4D3AA08C19CC47F900886BE7 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = grts;
+			productName = grts;
+			productReference = 4D3AA08E19CC47F900886BE7 /* libgrts.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		4D6F06CB19CC2DFA00DDC6E0 /* gentle */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4D6F06D519CC2DFA00DDC6E0 /* Build configuration list for PBXNativeTarget "gentle" */;
@@ -199,11 +236,20 @@
 			targets = (
 				4D6F06CB19CC2DFA00DDC6E0 /* gentle */,
 				4D6F06F519CC2F6800DDC6E0 /* reflex */,
+				4D3AA08D19CC47F900886BE7 /* grts */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4D3AA08A19CC47F900886BE7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D3AA09219CC480D00886BE7 /* grts.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4D6F06C819CC2DFA00DDC6E0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -230,6 +276,34 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		4D3AA08F19CC47F900886BE7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				EXECUTABLE_PREFIX = lib;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		4D3AA09019CC47F900886BE7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		4D6F06C619CC2D7800DDC6E0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -305,6 +379,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4D3AA09119CC47F900886BE7 /* Build configuration list for PBXNativeTarget "grts" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4D3AA08F19CC47F900886BE7 /* Debug */,
+				4D3AA09019CC47F900886BE7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		4D6F06C519CC2D7800DDC6E0 /* Build configuration list for PBXProject "gentle" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -321,6 +403,7 @@
 				4D6F06D419CC2DFA00DDC6E0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		4D6F06FC19CC2F6800DDC6E0 /* Build configuration list for PBXNativeTarget "reflex" */ = {
 			isa = XCConfigurationList;
@@ -329,6 +412,7 @@
 				4D6F06FE19CC2F6800DDC6E0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

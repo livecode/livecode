@@ -8579,7 +8579,7 @@ yy yy_7_1;
 yy yy_9_1;
 yy_0_1 = yyin_1;
 yyv_Id = yy_0_1;
-yy_1_1 = ((yy)"yyeq_");
+/* --PATCH-- */ yy_1_1 = ((yy)"int yyeq_");
 s(yy_1_1);
 yy_2_1 = yyv_Id;
 id(yy_2_1);
@@ -8613,7 +8613,7 @@ yy yy_7_1;
 yy yy_9_1;
 yy_0_1 = yyin_1;
 yyv_Id = yy_0_1;
-yy_1_1 = ((yy)"yyPrint_");
+/* --PATCH-- */ yy_1_1 = ((yy)"void yyPrint_");
 s(yy_1_1);
 yy_2_1 = yyv_Id;
 id(yy_2_1);
@@ -8665,7 +8665,7 @@ yy_0_3 = yyin_3;
 yyv_Id = yy_0_1;
 yyv_Kind = yy_0_2;
 yyv_SpecList = yy_0_3;
-yy_1_1 = ((yy)"yyeq_");
+/* --PATCH-- */ yy_1_1 = ((yy)"int yyeq_");
 s(yy_1_1);
 yy_2_1 = yyv_Id;
 id(yy_2_1);
@@ -8711,7 +8711,7 @@ goto yysl_239_1_7;
 yysl_239_1_7 : ;
 yyb = yysb;
 }
-yy_8_1 = ((yy)"}");
+/* --PATCH-- */ yy_8_1 = ((yy)"return 0;\n}");
 s(yy_8_1);
 nl();
 return;
@@ -8750,7 +8750,7 @@ yy_0_3 = yyin_3;
 yyv_Id = yy_0_1;
 yyv_Kind = yy_0_2;
 yyv_SpecList = yy_0_3;
-yy_1_1 = ((yy)"yyPrint_");
+/* --PATCH-- */ yy_1_1 = ((yy)"void yyPrint_");
 s(yy_1_1);
 yy_2_1 = yyv_Id;
 id(yy_2_1);
@@ -8842,7 +8842,7 @@ yy_0_3 = yyin_3;
 yyv_Id = yy_0_1;
 yyv_Kind = yy_0_2;
 yyv_SpecList = yy_0_3;
-yy_1_1 = ((yy)"yybroadcast_");
+/* --PATCH-- */ yy_1_1 = ((yy)"void yybroadcast_");
 s(yy_1_1);
 yy_2_1 = yyv_Id;
 id(yy_2_1);
@@ -10458,7 +10458,7 @@ yyv_M = yy_0_1_2;
 yy_1_1 = ((yy)"int yyparse_rc = 0;");
 s(yy_1_1);
 nl();
-yy_3_1 = ((yy)"ROOT()");
+/* --PATCH-- */ yy_3_1 = ((yy)"void ROOT()");
 s(yy_3_1);
 nl();
 yy_5_1 = ((yy)"{");
@@ -12197,8 +12197,11 @@ yy yyin_1;
 {
 yy yyb;
 yy yy_0_1;
+/* --PATCH-- */ yy yy_1_1;
 yy_0_1 = yyin_1;
 if (yy_0_1[0] != 1) goto yyfl_275_1;
+/* --PATCH-- */ yy_1_1 = ((yy)"void ");
+/* --PATCH-- */ s(yy_1_1);
 return;
 yyfl_275_1 : ;
 }
@@ -22337,7 +22340,18 @@ yy yy_16_1;
 yy yy_17_1;
 yy yy_18_1;
 yy yy_20_1;
-yy_1_1 = ((yy)"typedef long * yy;");
+/* --PATCH-- */ yy_1_1 = ((yy)
+/* --PATCH-- */             "#include <stdio.h>\n"
+/* --PATCH-- */             "#include <string.h>\n"
+/* --PATCH-- */             "#include <stdlib.h>\n"
+/* --PATCH-- */             "extern void yyAbort(long, const char *, long);\n"
+/* --PATCH-- */             "extern void yyExtend(void);\n"
+/* --PATCH-- */             "extern void yyTerm(const char *);\n"
+/* --PATCH-- */             "extern void yyNoArgs(void);\n"
+/* --PATCH-- */             "extern int yyparse(void);\n"
+/* --PATCH-- */             "extern int yylex(void);\n"
+/* --PATCH-- */             "extern void yyerror(const char *);\n"
+/* --PATCH-- */             "typedef long * yy;");
 s(yy_1_1);
 nl();
 yy_3_1 = ((yy)"#define yyu (-2147483647L)");
@@ -22354,13 +22368,13 @@ s(yy_9_1);
 nl();
 GetSourceName(&yy_11_1);
 yyv_F = yy_11_1;
-yy_12_1 = ((yy)"static yyErr(n,l)");
+/* --PATCH-- */ yy_12_1 = ((yy)"static void yyErr(n,l)");
 s(yy_12_1);
 nl();
 yy_14_1 = ((yy)"{");
 s(yy_14_1);
 nl();
-yy_16_1 = ((yy)"yyAbort(n,");
+/* --PATCH-- */ yy_16_1 = ((yy)"yyAbort(n,");
 s(yy_16_1);
 yy_17_1 = yyv_F;
 qu_s(yy_17_1);
