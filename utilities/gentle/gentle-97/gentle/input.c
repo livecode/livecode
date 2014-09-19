@@ -110,12 +110,17 @@ static open_next_file ()
 define_file (path)
    char * path;
 {
-   if (! is_defined(path)) {
+/* --PATCH-- */    char cwd[4096];
+/* --PATCH-- */    getcwd(cwd, 4096);
+/* --PATCH-- */    char fullpath[4096];
+/* --PATCH-- */    sprintf(fullpath, "%s/%s", cwd, path);
+    
+/* --PATCH-- */   if (! is_defined(fullpath)) {
       filecount++;
       if (filecount >= MAXPATH) {
 	 Fatal("pathtable overflow\n");
       }
-      PATH[filecount] = path;
+/* --PATCH-- */      PATH[filecount] = strdup(fullpath);
    }
 }
 

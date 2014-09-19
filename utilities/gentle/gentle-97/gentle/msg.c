@@ -23,7 +23,7 @@ static printpos (pos)
       extern char *GetFileName();
       extern long GetLine();
       extern long GetCol();
-      printf("\"%s.g\", line %ld, col %ld: ", 
+/* --PATCH-- */      printf("%s.g:%ld:%ld: ",
          GetFileName(pos), GetLine(pos), GetCol(pos));
    }      
 }

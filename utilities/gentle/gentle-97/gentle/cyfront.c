@@ -8579,7 +8579,7 @@ yy yy_7_1;
 yy yy_9_1;
 yy_0_1 = yyin_1;
 yyv_Id = yy_0_1;
-/* --PATCH-- */ yy_1_1 = ((yy)"int yyeq_");
+yy_1_1 = ((yy)"yyeq_");
 s(yy_1_1);
 yy_2_1 = yyv_Id;
 id(yy_2_1);
@@ -8613,7 +8613,7 @@ yy yy_7_1;
 yy yy_9_1;
 yy_0_1 = yyin_1;
 yyv_Id = yy_0_1;
-/* --PATCH-- */ yy_1_1 = ((yy)"void yyPrint_");
+yy_1_1 = ((yy)"yyPrint_");
 s(yy_1_1);
 yy_2_1 = yyv_Id;
 id(yy_2_1);
@@ -8626,7 +8626,7 @@ nl();
 yy_7_1 = ((yy)"yyPrintIndex(t);");
 s(yy_7_1);
 nl();
-yy_9_1 = ((yy)"}");
+/* --PATCH-- */ yy_9_1 = ((yy)"return 0;\n}");
 s(yy_9_1);
 nl();
 return;
@@ -8665,7 +8665,7 @@ yy_0_3 = yyin_3;
 yyv_Id = yy_0_1;
 yyv_Kind = yy_0_2;
 yyv_SpecList = yy_0_3;
-/* --PATCH-- */ yy_1_1 = ((yy)"int yyeq_");
+yy_1_1 = ((yy)"yyeq_");
 s(yy_1_1);
 yy_2_1 = yyv_Id;
 id(yy_2_1);
@@ -8750,7 +8750,7 @@ yy_0_3 = yyin_3;
 yyv_Id = yy_0_1;
 yyv_Kind = yy_0_2;
 yyv_SpecList = yy_0_3;
-/* --PATCH-- */ yy_1_1 = ((yy)"void yyPrint_");
+yy_1_1 = ((yy)"yyPrint_");
 s(yy_1_1);
 yy_2_1 = yyv_Id;
 id(yy_2_1);
@@ -8796,7 +8796,7 @@ goto yysl_240_1_7;
 yysl_240_1_7 : ;
 yyb = yysb;
 }
-yy_8_1 = ((yy)"}");
+/* --PATCH-- */ yy_8_1 = ((yy)"return 0;\n}");
 s(yy_8_1);
 nl();
 return;
@@ -8842,7 +8842,7 @@ yy_0_3 = yyin_3;
 yyv_Id = yy_0_1;
 yyv_Kind = yy_0_2;
 yyv_SpecList = yy_0_3;
-/* --PATCH-- */ yy_1_1 = ((yy)"void yybroadcast_");
+yy_1_1 = ((yy)"yybroadcast_");
 s(yy_1_1);
 yy_2_1 = yyv_Id;
 id(yy_2_1);
@@ -8906,7 +8906,7 @@ yyb = yysb;
 yy_18_1 = ((yy)"}");
 s(yy_18_1);
 nl();
-yy_20_1 = ((yy)"}");
+/* --PATCH-- */yy_20_1 = ((yy)"return 0;\n}");
 s(yy_20_1);
 nl();
 return;
@@ -22344,13 +22344,8 @@ yy yy_20_1;
 /* --PATCH-- */             "#include <stdio.h>\n"
 /* --PATCH-- */             "#include <string.h>\n"
 /* --PATCH-- */             "#include <stdlib.h>\n"
-/* --PATCH-- */             "extern void yyAbort(long, const char *, long);\n"
-/* --PATCH-- */             "extern void yyExtend(void);\n"
-/* --PATCH-- */             "extern void yyTerm(const char *);\n"
-/* --PATCH-- */             "extern void yyNoArgs(void);\n"
-/* --PATCH-- */             "extern int yyparse(void);\n"
-/* --PATCH-- */             "extern int yylex(void);\n"
-/* --PATCH-- */             "extern void yyerror(const char *);\n"
+/* --PATCH-- */             "#pragma clang diagnostic ignored \"-Wimplicit-int\"\n"
+/* --PATCH-- */             "#pragma clang diagnostic ignored \"-Wimplicit-function-declaration\"\n"
 /* --PATCH-- */             "typedef long * yy;");
 s(yy_1_1);
 nl();
