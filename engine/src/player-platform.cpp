@@ -1815,14 +1815,9 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 //   currently in use.
 bool MCPlayer::getversion(MCStringRef& r_string)
 {
-#if 0
     extern void MCQTGetVersion(MCStringRef &r_version);
     MCQTGetVersion(r_string);
     return true;
-#else
-    r_string = MCValueRetain(kMCEmptyString);
-    return true;
-#endif
 }
 
 void MCPlayer::freetmp()
