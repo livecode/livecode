@@ -787,7 +787,7 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
     if (!ctxt.HasError())
     {
-        for (uindex_t i = 0; i < t_result_count; i++)
+        for (uindex_t i = 0; i < t_result_count && i < r_value . int_value; i++)
         {
             // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
             // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
