@@ -1081,6 +1081,9 @@ struct MCValueCustomCallbacks
 	bool (*equal)(MCValueRef value, MCValueRef other_value);
 	hash_t (*hash)(MCValueRef value);
 	bool (*describe)(MCValueRef value, MCStringRef& r_desc);
+    
+    bool (*is_mutable)(MCValueRef value);
+    bool (*mutable_copy)(MCValueRef, bool release, MCValueRef& r_value);
 };
 
 // Create a custom value with the given callbacks.
@@ -1091,6 +1094,15 @@ MCValueTypeCode MCValueGetTypeCode(MCValueRef value);
 
 // Fetch the typeinfo of the given value.
 MCTypeInfoRef MCValueGetTypeInfo(MCValueRef value);
+
+// Fetch the retain count.
+uindex_t MCValueGetRetainCount(MCValueRef value);
+
+// Fetch the custom typecode (the callback ptr!).
+const MCValueCustomCallbacks *MCValueGetCallbacks(MCValueRef value);
+
+// This only works for custom valuerefs at the moment!
+bool MCValueIsMutable(MCValueRef value);
 
 bool MCValueIsEmpty(MCValueRef value);
 bool MCValueIsArray(MCValueRef value);
@@ -1107,6 +1119,10 @@ MCValueRef MCValueRetain(MCValueRef value);
 // why it can fail).
 bool MCValueCopy(MCValueRef value, MCValueRef& r_immutable_copy);
 bool MCValueCopyAndRelease(MCValueRef value, MCValueRef& r_immutable_copy);
+
+// Copies the given value as a mutable value - only works for custom valuerefs at the moment.
+bool MCValueMutableCopy(MCValueRef value, MCValueRef& r_immutable_copy);
+bool MCValueMutableCopyAndRelease(MCValueRef value, MCValueRef& r_immutable_copy);
 
 // Compares the two values in an exact fashion and returns true if they are
 // equal. If the values are of different types, then they are not equal;
@@ -1381,6 +1397,9 @@ bool MCNameIsEqualTo(MCNameRef left, MCNameRef right);
 
 // The empty name object;
 extern MCNameRef kMCEmptyName;
+
+extern MCNameRef kMCTrueName;
+extern MCNameRef kMCFalseName;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
