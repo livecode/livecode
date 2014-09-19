@@ -1534,7 +1534,7 @@ public:
         t_found = stat64(*t_path_sys, &buf) == 0;
 
         if (t_found)
-            t_found = ((buf.st_mode & S_IFMT) == S_IFDIR);
+            t_found = S_ISDIR(buf.st_mode);
 
         return t_found;
     }
@@ -1556,7 +1556,7 @@ public:
         struct stat64 buf;
         if (stat64(*t_path_sys, &buf))
             return False;
-        if (buf.st_mode & S_IFDIR)
+        if (S_ISDIR(buf.st_mode))
             return True;
         if (!(buf.st_mode & S_IWUSR))
             return True;

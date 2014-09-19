@@ -111,7 +111,7 @@ static bool MCS_file_exists_at_path(const char *path)
 	struct stat buf;
 	t_found = (stat(newpath, (struct stat *)&buf) == 0);
 	if (t_found)
-        if ((buf . st_mode & S_IFDIR) != 0)
+        if (S_ISDIR(buf.st_mode))
             t_found = false;
     
     delete newpath;
@@ -716,11 +716,11 @@ Boolean MCS_exists(const char *path, Boolean file)
 	if (found)
 		if (file)
 		{
-			if (buf.st_mode & S_IFDIR)
+			if (S_ISDIR(buf.st_mode))
 				found = False;
 		}
 		else
-			if (!(buf.st_mode & S_IFDIR))
+			if (!S_ISDIR(buf.st_mode))
 				found = False;
 	delete newpath;
 	return found;

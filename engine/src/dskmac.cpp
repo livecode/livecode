@@ -874,7 +874,7 @@ static bool MCS_file_exists_at_path(MCStringRef p_path)
 	struct stat buf;
 	t_found = (stat(*t_new_path, (struct stat *)&buf) == 0);
 	if (t_found)
-        if ((buf . st_mode & S_IFDIR) != 0)
+        if (S_ISDIR(buf . st_mode))
             t_found = false;
     
     return t_found;
@@ -5619,7 +5619,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         t_found = stat(*t_utf8_path, (struct stat *)&buf) == 0;
         if (t_found)
-            t_found = ((buf.st_mode & S_IFDIR) == 0);
+            t_found = !S_ISDIR(buf.st_mode);
         
         if (!t_found)
             return False;
@@ -5640,7 +5640,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         t_found = stat(*t_utf8_path, (struct stat *)&buf) == 0;
         if (t_found)
-            t_found = (buf.st_mode & S_IFDIR) != 0;
+            t_found = S_ISDIR(buf.st_mode);
         
         if (!t_found)
             return False;
