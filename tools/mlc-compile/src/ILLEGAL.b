@@ -1,0 +1,1 @@
+. { yysetpos(); yyerror("illegal token"); }
