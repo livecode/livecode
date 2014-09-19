@@ -535,6 +535,10 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 		{
 			if (*t_format_ptr == '%')
 			{
+                // AL-2014-09-19: Flush chars between format strings
+                if (t_format_ptr != t_format_start_ptr)
+                    break;
+                
 				t_format_ptr++;
 				
 				if (*t_format_ptr == '@')

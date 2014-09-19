@@ -912,7 +912,12 @@ static bool MCS_apply_redirect(MCStringRef p_path, bool p_is_file, MCStringRef& 
     
     // Construct the new path from the path after MacOS/ inside Resources/_macos.
     MCAutoStringRef t_new_path;
-    /* UNCHECKED */ MCStringFormat(&t_new_path, "%.*@/Resources/_MacOS/%.*@", MCRangeMake(0, t_engine_path_length - 6), MCcmd, MCRangeMake(t_engine_path_length, UINDEX_MAX), p_path);
+    MCRange t_cmd_range, t_path_range;
+    t_cmd_range = MCRangeMake(0, t_engine_path_length - 6);
+    t_path_range = MCRangeMake(t_engine_path_length + 1, UINDEX_MAX);
+    
+    // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
+    /* UNCHECKED */ MCStringFormat(&t_new_path, "%*@/Resources/_MacOS/%*@", &t_cmd_range, MCcmd, &t_path_range, p_path);
     
     if (p_is_file && !MCS_file_exists_at_path(*t_new_path))
         return false;

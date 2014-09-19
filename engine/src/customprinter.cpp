@@ -2104,13 +2104,17 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 			uindex_t t_engine_dir_end;
             /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_engine_dir_end);
 			MCAutoStringRef t_module_path;
-			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*@/revpdfprinter.so", MCRangeMake(0, t_engine_dir_end), MCcmd);
+            MCRange t_range = MCRangeMake(0, t_engine_dir_end);
+            // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
+			/* UNCHECKED */ MCStringFormat(&t_module_path, "%*@/revpdfprinter.so", &t_range, MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 			uindex_t t_engine_dir_end;
             /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_engine_dir_end);
-			MCAutoStringRef t_module_path;            
-			MCStringFormat(&t_module_path, "%.*@/revpdfprinter.dylib", MCRangeMake(0, t_engine_dir_end), MCcmd);
+			MCAutoStringRef t_module_path;
+            MCRange t_range = MCRangeMake(0, t_engine_dir_end);
+            // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
+			MCStringFormat(&t_module_path, "%*@/revpdfprinter.dylib", &t_range, MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(_SERVER)
 			
