@@ -592,7 +592,9 @@ public:
 	void adjustrectsfortable(MCRectangle& x_inner_rect, MCRectangle& x_outer_rect);
 
 	// Force the paragraph to re-flow itself depending on its setting of dontWrap.
-	void layout(bool p_force);
+    // AL-2014-09-22: [[ Bug 11817 ]] If p_check_redraw is true, returns true if the number of lines changes under this new layout
+	bool layout(bool p_force, bool p_check_redraw = false);
+    uindex_t countlines();
 	
 	// MW-2012-01-27: [[ UnicodeChunks ]] Returns the content of the field in a native
 	//   form such that indices match that of the original content. If ASCII-only is
