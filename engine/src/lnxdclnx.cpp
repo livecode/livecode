@@ -568,6 +568,13 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 MCPoint t_clickloc;
                 t_clickloc = MCPointMake(t_event->button.x / t_scale, t_event->button.y / t_scale);
                 
+                MCStack *t_mousestack;
+                t_mousestack = MCdispatcher->findstackd(t_event->motion.window);
+                
+                // IM-2013-10-09: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
+                // FG-2014-09-22: [[ Bugfix 13225 ]] Update the mouse position before the click
+                MCscreen->setmouseloc(t_mousestack, t_clickloc);
+                
                 MCStack *t_old_clickstack;
                 MCPoint  t_old_clickloc;
                 MCscreen->getclickloc(t_old_clickstack, t_old_clickloc);
