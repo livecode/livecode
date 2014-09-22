@@ -451,12 +451,17 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     NSString *t_to_log = [NSString stringWithFormat:@"%s%@%s", "Application: push notification device token (", p_device_token, ")"];
     NSString *t_registration_text = [NSString stringWithFormat:@"%@", p_device_token];
     
-    // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
-    queue_notification_event(kMCPendingNotificationEventTypeDidRegisterForRemoteNotification,t_registration_text);
+    if (t_registration_text != nil)
+    {
+        m_device_token = strdup([t_registration_text cStringUsingEncoding:NSMacOSRomanStringEncoding]);
     
-    // If we are already active, dispatch.
-    if (m_did_become_active)
-        dispatch_notification_events();
+        // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
+        queue_notification_event(kMCPendingNotificationEventTypeDidRegisterForRemoteNotification,t_registration_text);
+    
+        // If we are already active, dispatch.
+        if (m_did_become_active)
+            dispatch_notification_events();
+    }
     
 /*    if (t_registration_text != nil)
     {
