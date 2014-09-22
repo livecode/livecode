@@ -55,18 +55,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// AL-2014-09-22: [[ Bug 13426 ]] Don't use bit-shifted values for orientation state enum
 MCOrientation get_orientation(UIInterfaceOrientation p_orientation)
 {
 	switch (p_orientation)
 	{
 	case UIInterfaceOrientationPortrait:
-		return ORIENTATION_PORTRAIT;
+		return ORIENTATION_PORTRAIT_BIT;
 	case UIInterfaceOrientationPortraitUpsideDown:
-		return ORIENTATION_PORTRAIT_UPSIDE_DOWN;
+		return ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT;
 	case UIInterfaceOrientationLandscapeLeft:
-		return ORIENTATION_LANDSCAPE_LEFT;
+		return ORIENTATION_LANDSCAPE_LEFT_BIT;
 	case UIInterfaceOrientationLandscapeRight:
-		return ORIENTATION_LANDSCAPE_RIGHT;
+		return ORIENTATION_LANDSCAPE_RIGHT_BIT;
+    case UIDeviceOrientationUnknown:
+    default:
+        return ORIENTATION_UNKNOWN_BIT;
     }
 }
 
@@ -89,13 +93,13 @@ uint32_t get_orientation_set(uint32_t p_orientations)
 uint32_t get_iphone_orientations(uint32_t p_orientations)
 {
 	uint32_t t_orientations = 0;
-	if (p_orientations & (1 << ORIENTATION_PORTRAIT_BIT))
+	if (p_orientations & ORIENTATION_PORTRAIT)
 		t_orientations |= 1 << UIInterfaceOrientationPortrait;
-	if (p_orientations & (1 << ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT))
+	if (p_orientations & ORIENTATION_PORTRAIT_UPSIDE_DOWN)
 		t_orientations |= 1 << UIInterfaceOrientationPortraitUpsideDown;
-	if (p_orientations & (1 << ORIENTATION_LANDSCAPE_RIGHT_BIT))
+	if (p_orientations & ORIENTATION_LANDSCAPE_RIGHT)
 		t_orientations |= 1 << UIInterfaceOrientationLandscapeRight;
-	if (p_orientations & (1 << ORIENTATION_LANDSCAPE_LEFT_BIT))
+	if (p_orientations & ORIENTATION_LANDSCAPE_LEFT)
 		t_orientations |= 1 << UIInterfaceOrientationLandscapeLeft;
 
 	return t_orientations;
