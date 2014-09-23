@@ -988,20 +988,21 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		}
 		sp.backup();
 	default:
-		if (which >= P_FIRST_ARRAY_PROP)
-		{
-			if (sp.next(type) == PS_NORMAL && type == ST_LB)
-			{
-				if (sp.parseexp(False, True, &customindex) != PS_NORMAL
-				        || sp.next(type) != PS_NORMAL || type != ST_RB)
-				{
-					MCperror->add(PE_PROPERTY_BADINDEX, sp);
-					return PS_ERROR;
-				}
-			}
-			else
-				sp.backup();
-		}
+        if (sp.next(type) == PS_NORMAL)
+        {
+            if (type == ST_LB)
+            {
+                if (sp.parseexp(False, True, &customindex) != PS_NORMAL
+                        || sp.next(type) != PS_NORMAL || type != ST_RB)
+                {
+                    MCperror->add(PE_PROPERTY_BADINDEX, sp);
+                    return PS_ERROR;
+                }
+            }
+            else
+                sp.backup();
+        }
+
 		if (sp.skip_token(SP_FACTOR, TT_LPAREN) == PS_NORMAL)
 			lp = True;
 		else
@@ -5460,10 +5461,7 @@ void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 		// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
 		//   a nil index translates to the empty name (the array[empty] <=> the array).
 		MCNameRef t_derived_index_name;
-		if (t_prop < P_FIRST_ARRAY_PROP)
-			t_derived_index_name = nil;
-		else
-			t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
+        t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
 		
         if (t_success)
             t_success = target -> getprop(ctxt, t_prop, t_derived_index_name, effective, r_value);
@@ -5571,10 +5569,7 @@ void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)
 		// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
 		//   a nil index translates to the empty name (the array[empty] <=> the array).
 		MCNameRef t_derived_index_name;
-		if (t_prop < P_FIRST_ARRAY_PROP)
-			t_derived_index_name = nil;
-		else
-			t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
+        t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
 		
 		t_success = target -> setprop(ctxt, t_prop, t_derived_index_name, effective, p_value);
 	}
