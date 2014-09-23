@@ -5,7 +5,7 @@
 'export'
     MODULE
     IMPORT
-    DEFINITION SIGNATURE
+    DEFINITION SIGNATURE ACCESS
     TYPE
     PARAMETER MODE PARAMETERLIST
     STATEMENT
@@ -25,17 +25,23 @@
     
 'type' DEFINITION
     sequence(Left: DEFINITION, Right: DEFINITION)
-    type(Position: POS, Name: ID, Type: TYPE)
-    constant(Position: POS, Name: ID, Value: EXPRESSION)
-    variable(Position: POS, Name: ID, Type: TYPE)
-    handler(Position: POS, Name: ID, Signature: SIGNATURE, Body: STATEMENT)
-    foreignhandler(Position: POS, Name: ID, Signature: SIGNATURE, Binding: STRING)
-    property(Position: POS)
-    event(Position: POS)
+    type(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
+    constant(Position: POS, Access: ACCESS, Name: ID, Value: EXPRESSION)
+    variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
+    handler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
+    foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
+    property(Position: POS, Access: ACCESS)
+    event(Position: POS, Access: ACCESS)
     nil
 
 'type' SIGNATURE
     signature(Parameters: PARAMETERLIST, ReturnType: TYPE)
+
+'type' ACCESS
+    inferred
+    public
+    protected
+    private
 
 'type' TYPE
     named(Position: POS, Name: ID)

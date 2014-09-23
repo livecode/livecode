@@ -91,15 +91,26 @@
 
 'nonterm' ConstantDefinition(-> DEFINITION)
 
-    'rule' ConstantDefinition(-> constant(Position, Name, Value)):
-        "constant" @(-> Position) Identifier(-> Name) "is" Expression(-> Value)
+    'rule' ConstantDefinition(-> constant(Position, Access, Name, Value)):
+        Access(-> Access) "constant" @(-> Position) Identifier(-> Name) "is" Expression(-> Value)
+
+'nonterm' Access(-> ACCESS)
+
+    'rule' Access(-> public):
+        "public"
         
+    'rule' Access(-> protected):
+        "protected"
+        
+    'rule' Access(-> private):
+        "private"
+
 ---------- Variable
 
 'nonterm' VariableDefinition(-> DEFINITION)
 
-    'rule' VariableDefinition(-> variable(Position, Name, Type)):
-        "variable" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
+    'rule' VariableDefinition(-> variable(Position, Access, Name, Type)):
+        Access(-> Access) "variable" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
         
 'nonterm' OptionalTypeClause(-> TYPE)
 
@@ -113,20 +124,27 @@
 
 'nonterm' TypeDefinition(-> DEFINITION)
 
-    'rule' TypeDefinition(-> type(Position, Name, Type)):
-        "type" @(-> Position) Identifier(-> Name) "is" Type(-> Type)
+    'rule' TypeDefinition(-> type(Position, Access, Name, Type)):
+        Access(-> Access) "type" @(-> Position) Identifier(-> Name) "is" Type(-> Type)
 
 ---------- Handler
 
 'nonterm' HandlerDefinition(-> DEFINITION)
 
-    'rule' HandlerDefinition(-> handler(Position, Name, Signature, Body)):
-        "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) SEPARATOR
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
+        Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) SEPARATOR
             Statements(-> Body)
         "end" "handler"
         
-    'rule' HandlerDefinition(-> foreignhandler(Position, Name, Signature, Binding)):
-        "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" STRING_LITERAL(-> Binding)
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
+        Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) SEPARATOR
+            Definitions(-> Definitions)
+        "begin"
+            Statements(-> Body)
+        "end" "handler"    
+        
+    'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
+        Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" STRING_LITERAL(-> Binding)
 
 'nonterm' Signature(-> SIGNATURE)
 
@@ -178,14 +196,14 @@
 
 'nonterm' PropertyDefinition(-> DEFINITION)
 
-    'rule' PropertyDefinition(-> property(Position)):
+    'rule' PropertyDefinition(-> property(Position, public)):
         "property" @(-> Position)
         
 ---------- Event
 
 'nonterm' EventDefinition(-> DEFINITION)
 
-    'rule' EventDefinition(-> event(Position)):
+    'rule' EventDefinition(-> event(Position, public)):
         "event" @(-> Position)
 
 --------------------------------------------------------------------------------
@@ -204,7 +222,7 @@
 'nonterm' Statements(-> STATEMENT)
 
     'rule' Statements(-> sequence(Left, Right)):
-        Statement(-> Left)
+        Statement(-> Left) SEPARATOR
         Statements(-> Right)
         
     'rule' Statements(-> nil):
