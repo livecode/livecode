@@ -856,6 +856,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, GetEffective##tag), nil, true, false, kMCPropertyInfoChunkTypeNone },
 
+#define DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), true, false, kMCPropertyInfoChunkTypeNone },
+
 #define DEFINE_WO_OBJ_CHUNK_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfCharChunk), false, false, true },
 
