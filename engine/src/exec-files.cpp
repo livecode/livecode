@@ -882,6 +882,9 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
 			t_encoding = (Encoding_type)kMCFileEncodingNative;
 		}
     }
+    // FG-2014-09-23: [[ Bugfix 12545 ]] "text" is not valid when performing I/O
+    else if (p_encoding == kMCFileEncodingText && p_is_driver)
+        t_encoding = (Encoding_type)kMCFileEncodingNative;
     else
         t_encoding = (Encoding_type)p_encoding;
 
