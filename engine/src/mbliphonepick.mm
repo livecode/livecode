@@ -40,6 +40,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 // MM-2013-09-23: [[ iOS7 Support ]] Added missing delegates implemented in order to appease llvm 5.0.
 @interface MCIPhonePickWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate, UIPopoverControllerDelegate, UITableViewDataSource>
+//@interface MCIPhonePickWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UITableViewDelegate, UIPopoverControllerDelegate, UITableViewDataSource>
 {
 	bool iSiPad;
 	bool m_running;
@@ -55,7 +56,8 @@ UIViewController *MCIPhoneGetViewController(void);
 	NSArray *viewArray;
 	UIPickerView *pickerView;
 	UITableView *tableView;
-	UIActionSheet *actionSheet;
+	//UIActionSheet *actionSheet;
+    UIAlertController *actionSheet;
 	UIPopoverController* popoverController;
 }
 
@@ -395,7 +397,11 @@ return 1;
 				[t_toolbar_items addObject: [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target: self action: @selector(dismissPickWheel:)]];
 			[t_toolbar setItems: t_toolbar_items animated: NO];
 		}
+        
+        
+        
 		// create the action sheet that can contain the "Cancel" and "Done" buttons and date pick wheel
+        /*
 		actionSheet = [[UIActionSheet alloc] initWithTitle:nil //[pickerArray objectAtIndex:0]
 												  delegate:self
 										 cancelButtonTitle:nil //@"Done"
@@ -415,7 +421,24 @@ return 1;
 			[actionSheet addSubview: t_toolbar];
 			[t_toolbar release];
 		}	
-		// set up the bounding box of the popover 
+        */
+        
+        actionSheet = [UIAlertController alertControllerWithTitle:@"" message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
+        
+        // add the subviews to the action sheet
+        if (m_use_table_view)
+            [actionSheet.view addSubview: tableView];
+        else
+            [actionSheet.view addSubview: pickerView];
+        if (p_use_done || p_use_cancel)
+        {
+            [actionSheet.view addSubview: t_toolbar];
+            [t_toolbar release];
+        }	
+
+        //[MCIPhoneGetViewController() presentViewController:actionSheet animated:YES completion:nil];
+        
+		// set up the bounding box of the popover
 		// the height depends on whether or not we are displaying buttons
 		if (m_use_table_view)
 		{
@@ -440,7 +463,10 @@ return 1;
 		
 		// need to make self as delegate otherwise overridden delegates are not called
 		popoverController.delegate = self;
-		[popoverController setContentViewController:self];	
+		[popoverController setContentViewController:self];
+        
+        [MCIPhoneGetViewController() presentViewController:actionSheet animated:YES completion:nil];
+
 	}
 	else
 	{
@@ -485,7 +511,10 @@ return 1;
 		[t_toolbar_items addObject: [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target: self action: @selector(dismissPickWheel:)]];
 		
 		[t_toolbar setItems: t_toolbar_items animated: NO];
-		
+        
+        
+        
+		/*
 		// create the action sheet that contains the "Done" button and pick wheel
 		actionSheet = [[UIActionSheet alloc] initWithTitle:nil
 												  delegate:self
@@ -507,6 +536,27 @@ return 1;
 			[actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
 		else
 			[actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
+            */
+        
+        
+        
+        
+        actionSheet=[UIAlertController alertControllerWithTitle:@"" message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
+        
+        
+        // add the subviews to the action sheet
+        [actionSheet.view addSubview: t_toolbar];
+        [actionSheet.view addSubview: pickerView];
+        [t_toolbar release];
+        
+        [MCIPhoneGetViewController() presentViewController:actionSheet animated:YES completion:nil];
+        
+        // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
+        if (!t_is_landscape)
+            [actionSheet.view setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
+        else
+            [actionSheet.view setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
+
 	}
 }
 
@@ -567,7 +617,9 @@ return 1;
 		for (t_i = 0; t_i < [m_selected_index count]; t_i++)
 			[m_selected_index replaceObjectAtIndex:t_i withObject: [NSNumber numberWithInt:-1]];
 	}
-	[actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+    //[actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+    
+    [MCIPhoneGetViewController().presentedViewController dismissViewControllerAnimated:YES completion:nil];
 	[popoverController dismissPopoverAnimated:YES];
 }
 
@@ -577,7 +629,9 @@ return 1;
 	m_selection_made = false;
 	for (t_i = 0; t_i < [m_selected_index count]; t_i++)
 		[m_selected_index replaceObjectAtIndex:t_i withObject:[NSNumber numberWithInt:-1]];
-	[actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+	//[actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+    
+    [MCIPhoneGetViewController().presentedViewController dismissViewControllerAnimated:YES completion:nil];
 	[popoverController dismissPopoverAnimated:YES];
 }
 
@@ -606,7 +660,9 @@ return 1;
 	if (iSiPad)
 	{
 		// HC-2011-09-28 [[ Picker Buttons ]] We are now using an actionSheet on the iPad.
-		self.view = actionSheet;
+        //self.view = actionSheet;
+		self.view = actionSheet.view;
+        
 	}
 	else
 		self.view = pickerView;
