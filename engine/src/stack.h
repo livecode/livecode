@@ -229,6 +229,9 @@ protected:
 	// IM-2013-10-14: [[ FullscreenMode ]] Indicates whether the view needs to be redrawn
 	bool m_view_need_redraw;
 	
+	// IM-2014-09-23: [[ Bug 13349 ]] Indicates whether the view window needs to be resized
+	bool m_view_need_resize;
+	
 	MCGAffineTransform m_view_transform;
 
 	// MW-2011-08-26: [[ TileCache ]] The stack's tilecache renderer - if any.
@@ -458,6 +461,9 @@ public:
 	// IM-2014-01-24: [[ HiDPI ]] Set the view window rect in logical coords
 	MCRectangle view_setgeom(const MCRectangle &p_rect);
 	
+	// IM-2014-09-23: [[ Bug 13349 ]] Perform any deferred view window resizing needed
+	void view_update_geometry(void);
+	
 	// IM-2014-01-24: [[ HiDPI ]] Return the scale factor from logical to pixel coords for the surface onto which the view is drawn
 	MCGFloat view_getbackingscale(void) const;
 
@@ -647,7 +653,11 @@ public:
 	void installaccels(MCStack *stack);
 	void removeaccels(MCStack *stack);
 	void setwindowname();
+	
 	void openwindow(Boolean override);
+	// IM-2014-09-23: [[ Bug 13349 ]] Platform-specific openwindow method
+	void platform_openwindow(Boolean override);
+	
 	void reopenwindow();
 	Exec_stat openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentwindow,
 	                   Window_position wpos,  Object_pos walign);
