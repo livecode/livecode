@@ -1559,8 +1559,8 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				setforeground(dc, DI_BACK, False, True);
 			else
 				setforeground(dc, DI_FORE, False);
-        
-        dc -> drawtext(textx, cury + yoffset, t_tab, m_font, false, kMCDrawTextNoBreak);
+        // AL-2014-09-24: [[ Bug 13528 ]] Don't draw character indicating button is disabled
+        dc -> drawtext_substring(textx, cury + yoffset, t_tab, t_range, m_font, false, kMCDrawTextNoBreak);
 		if ((disabled || flags & F_DISABLED) && MClook == LF_MOTIF)
 			dc->setfillstyle(FillSolid, nil, 0 , 0);
 		curx += twidth;
