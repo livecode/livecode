@@ -614,6 +614,10 @@ public:
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
+    
+    // Clear attrs if they are not needed
+	void cleanattrs(void);
+    
 	// Sets the given paragraph attribute to the value in ep.
 #ifdef LEGACY_EXEC
 	Exec_stat setparagraphattr(Properties which, MCExecPoint& ep);

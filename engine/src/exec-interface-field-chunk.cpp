@@ -804,19 +804,66 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
     findex_t t_line_index;
     MCParagraph *sptr = p_field -> indextoparagraph(t_paragraph, si, ei, &t_line_index);
     
-    sptr -> defrag();
-    
     MCRectangle drect = p_field -> getrect();
     findex_t ssi, sei;
     p_field -> selectedmark(false, ssi, sei, false);
     int4 savex = p_field -> textx;
     int4 savey = p_field -> texty;
     
+    bool t_redraw_field;
+    t_redraw_field = false;
+    
+    // MW-2008-07-09: [[ Bug 6353 ]] Improvements in 2.9 meant that the field was
+    //   more careful about not doing anything if it wasn't the MCactivefield.
+    //   However, the unselection/reselection code here breaks text input if the
+    //   active field sets text properties of another field. Therefore we only
+    //   get and then reset the selection if we are the active field.
+    if (t_need_layout)
+    {
+        if (all)
+        {
+            // Same as this?
+            if (MCactivefield == p_field)
+            {
+                p_field -> selectedmark(False, ssi, sei, False);
+                p_field -> unselect(False, True);
+            }
+            p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;
+            p_field -> firstparagraph = p_field -> lastparagraph = NULL;
+            p_field -> cury = p_field -> focusedy = p_field -> topmargin;
+            p_field -> textx = p_field -> texty = 0;
+            //            p_field -> resetparagraphs();
+        }
+        else
+        {
+            // MW-2012-02-27: [[ Bug ]] Update rect slightly off, shows itself when
+            //   setting the box style of the top line of a field.
+            drect = p_field -> getfrect();
+            drect.y = p_field -> getcontenty() + p_field -> paragraphtoy(t_paragraph);
+            drect.height = 0;
+        }
+    }
+    
     do
     {
+        // AL-2014-09-24: [[ Bug 13529 ] Ensure all necessary cleanups are applied to each paragraph
+        //  affected by the property change
+        sptr -> defrag();
+        
         T::setter(ctxt, sptr, p_setter, p_value);
         if (ctxt . HasError())
             return;
+        
+        sptr -> cleanattrs();
+        
+        // SN-2014-06-02 [[ Bug 12562 ]] Changing the back color of a line which contains a tab makes LC crash
+        // Make sure that the segments and the lines are recomputed in case defrag() changed them.
+        if (sptr -> getneedslayout() && !all && sptr->getopened())
+        {
+            // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
+            sptr -> layout(false);
+            drect.height += sptr->getheight(p_field -> fixedheight);
+        }
         
         ei -= sptr->gettextlengthcr();
         sptr = sptr->next();
@@ -824,14 +871,11 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
     while(ei > 0);
 
     if (t_need_layout)
-    {
-        // SN-2014-06-02 [[ Bug 12562 ]] Changing the back color of a line which contains a tab makes LC crash
-        // Make sure that the segments and the lines are recomputed in case defrag() changed them
-        sptr -> layout(false);
-        
+    {        
         if (all)
         {
-            p_field -> recompute();
+            // AL-2014-09-24: [[ Bug 13529 ] Force recompute if 'all' is true
+            p_field -> do_recompute(true);
             p_field -> hscroll(savex - p_field -> textx, False);
             p_field -> vscroll(savey - p_field -> texty, False);
             p_field -> resetscrollbars(True);
@@ -839,7 +883,12 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
                 p_field -> seltext(ssi, sei, False);
         }
         else
+        {
             p_field -> removecursor();
+            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
+            if (t_redraw_field)
+                drect = p_field -> getrect();
+        }
         
         // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
         p_field -> layer_redrawrect(drect);

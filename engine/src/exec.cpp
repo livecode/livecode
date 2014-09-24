@@ -2247,7 +2247,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             }
         }
             break;
-           
+        
         case kMCPropertyTypeMixedItemsOfString:
         {
             bool t_mixed;
@@ -2266,7 +2266,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 else
                 {
                     char_t t_delimiter;
-                    t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
+                    t_delimiter = ',';
                     if (MCPropertyFormatStringList(t_value, t_count, t_delimiter, r_value . stringref_value))
                     {
                         r_value . type = kMCExecValueTypeStringRef;
@@ -2299,7 +2299,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 else
                 {
                     char_t t_delimiter;
-                    t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
+                    t_delimiter = prop -> type == kMCPropertyTypeMixedLinesOfUInt ? '\n' : ',';
                     if (MCPropertyFormatUIntList(t_value, t_count, t_delimiter, r_value . stringref_value))
                     {
                         r_value . type = kMCExecValueTypeStringRef;
@@ -2776,6 +2776,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                       
         case kMCPropertyTypeLinesOfUInt:
         case kMCPropertyTypeItemsOfUInt:
+        // AL-2014-09-24: [[ Bug 13529 ]] Handle mixed items of uint case
+        case kMCPropertyTypeMixedItemsOfUInt:
         {
             MCAutoStringRef t_input;
             uinteger_t* t_value;
