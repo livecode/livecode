@@ -1,16 +1,48 @@
 module com.livecode.binary
 
+foreign handler ExecPutBytesBefore(in Source as DataRef, inout Target as DataRef) as undefined binds to "<builtin>"
+foreign handler ExecPutBytesAfter(in Source as DataRef, inout Target as DataRef) as undefined binds to "<builtin>"
+
+foreign handler ExecJoinBytesWithBytes(in Left as DataRef, in Right as DataRef, out Result as DataRef) as undefined binds to "<builtin>"
+
 foreign handler EvalNumberOfBytesIn(in Target as DataRef, out Count as Int) as undefined binds to "<builtin>"
+
 foreign handler FetchByteOf(in Index as Int, in Target as DataRef, out Value as DataRef)  as undefined binds to "<builtin>"
 foreign handler StoreByteOf(in Value as DataRef, in Index as Int, inout Target as DataRef) as undefined binds to "<builtin>"
 foreign handler FetchByteRangeOf(in Start as Int, in Finish as Int, in Target as DataRef, out Value as DataRef) as undefined binds to "<builtin>"
 foreign handler StoreByteRangeOf(in Value as DataRef, in Start as Int, in Finish as Int, inout Target as DataRef) as undefined binds to "<builtin>"
+
+--
+
+syntax PutBytesBefore is statement
+    "put" <Source: Expression> "before" <Target: Expression>
+begin
+    ExecPutBytesBefore(Source, Target)
+end syntax
+
+syntax PutBytesAfter is statement
+    "put" <Source: Expression> "after" <Target: Expression>
+begin
+    ExecPutBytesAfter(Source, Target)
+end syntax
+
+--
+
+syntax JoinBytes is left binary operator with precedence 2
+    <Left: Expression> "&" <Right: Expression>
+begin
+    EvalJoinBytesWithBytes(Left, Right, output)
+end syntax
+
+--
 
 syntax CountByteOf is left unary operator with precedence 1
 	"the" "number" "of" "bytes" "in" <Target: Expression>
 begin
 	EvalNumberOfBytesIn(Target, output)
 end syntax
+
+--
 
 syntax SingletonByteOf is left unary operator with precedence 1
 	"byte" <Index: Expression> "of" <Target: Expression>
@@ -25,5 +57,7 @@ begin
 	FetchByteRangeOf(Start, Finish, Target, output)
 	StoreByteRangeOf(input, Start, Finish, Target)
 end syntax
+
+--
 
 end module
