@@ -37,6 +37,46 @@ float MCIPhoneGetNativeControlScale(void);
 UIViewController *MCIPhoneGetViewController(void);
 
 ////////////////////////////////////////////////////////////////////////////////
+@interface MyAlertController : UIAlertController
+{
+    UIView *firstView;
+    UIView *secondView;
+}
+
+- (void)loadView;
+- (void)setFirstView:(UIView *)p_firstView;
+- (void)setSecondView:(UIView *)p_secondView;
+
+@end
+
+@implementation MyAlertController
+
+- (void)loadView
+{
+    CGRect t_app_frame = MCIPhoneGetViewBounds();
+
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake (0, 0, t_app_frame.size.width, t_app_frame.size.height)];
+
+    //UIView *view = [[UIView alloc] initWithFrame: [[UIScreen mainScreen] applicationFrame]];
+    //UIView *view = [[UIView alloc] init];
+    
+    [view addSubview:firstView];
+    [view addSubview:secondView];
+
+    [self setView :view ];
+    [view release];
+}
+
+- (void)setFirstView:(UIView *)p_firstView
+{
+    firstView = p_firstView;
+}
+
+- (void)setSecondView:(UIView *)p_secondView
+{
+    secondView = p_secondView;
+}
+@end
 
 // MM-2013-09-23: [[ iOS7 Support ]] Added missing delegates implemented in order to appease llvm 5.0.
 @interface MCIPhonePickWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate, UIPopoverControllerDelegate, UITableViewDataSource>
@@ -57,7 +97,7 @@ UIViewController *MCIPhoneGetViewController(void);
 	UIPickerView *pickerView;
 	UITableView *tableView;
 	//UIActionSheet *actionSheet;
-    UIAlertController *actionSheet;
+    MyAlertController *actionSheet;
 	UIPopoverController* popoverController;
 }
 
@@ -423,7 +463,7 @@ return 1;
 		}	
         */
         
-        actionSheet = [UIAlertController alertControllerWithTitle:@"" message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
+        actionSheet = [MyAlertController alertControllerWithTitle:@"" message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
         
         // add the subviews to the action sheet
         if (m_use_table_view)
@@ -541,12 +581,13 @@ return 1;
         
         
         
-        actionSheet=[UIAlertController alertControllerWithTitle:@"" message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
-        
+        actionSheet=[MyAlertController alertControllerWithTitle:@"" message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
         
         // add the subviews to the action sheet
-        [actionSheet.view addSubview: t_toolbar];
-        [actionSheet.view addSubview: pickerView];
+        //[actionSheet.view addSubview: t_toolbar];
+       // [actionSheet.view addSubview: pickerView];
+        [actionSheet setFirstView:t_toolbar];
+        [actionSheet setSecondView:pickerView];
         [t_toolbar release];
         
         [MCIPhoneGetViewController() presentViewController:actionSheet animated:YES completion:nil];
