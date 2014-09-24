@@ -5976,15 +5976,15 @@ void MCMCISendString::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 #endif /* MCMCISendString */
     
     MCAutoStringRef t_string;
-    MCStringRef t_result;
+    MCAutoStringRef t_result;
 
     if (!MCExecValueTraits<MCStringRef>::eval(ctxt, string, EE_MCISENDSTRING_BADSOURCE, &t_string))
         return;
     
-    MCMultimediaEvalMCISendString(ctxt, *t_string, t_result);
+    MCMultimediaEvalMCISendString(ctxt, *t_string, &t_result);
     
     if (!ctxt . HasError())
-        MCExecValueTraits<MCStringRef>::set(r_value, t_result);
+        MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(*t_result));
 }
 
 void MCMCISendString::compile(MCSyntaxFactoryRef ctxt)
@@ -7296,19 +7296,19 @@ void MCUuidFunc::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	}
 
 	// Generate the uuid.
-    MCStringRef t_uuid;
+    MCAutoStringRef t_uuid;
 	switch(t_type)
 	{
         case kMCUuidTypeRandom:
-            MCEngineEvalRandomUuid(ctxt, t_uuid);
+            MCEngineEvalRandomUuid(ctxt, &t_uuid);
             break;
             
         case kMCUuidTypeMD5:
-            MCEngineEvalMD5Uuid(ctxt, *t_namespace_id, *t_name, t_uuid);
+            MCEngineEvalMD5Uuid(ctxt, *t_namespace_id, *t_name, &t_uuid);
             break;
             
         case kMCUuidTypeSHA1:
-            MCEngineEvalSHA1Uuid(ctxt, *t_namespace_id, *t_name, t_uuid);
+            MCEngineEvalSHA1Uuid(ctxt, *t_namespace_id, *t_name, &t_uuid);
             break;
             
         default:
@@ -7317,7 +7317,7 @@ void MCUuidFunc::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	}
 	
     if (!ctxt . HasError())
-        MCExecValueTraits<MCStringRef>::set(r_value, t_uuid);
+        MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(*t_uuid));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
