@@ -1028,6 +1028,9 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                     
                     T::setter(ctxt, bptr, p_setter, p_value);
                     
+                    // AL-2014-09-23 [[ Bug 13509 ]] Delete the atts struct if this block has no atts
+                    bptr -> cleanatts();
+                    
                     // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
                     //   fontref so it can compute its.
                     if (pgptr -> getopened())
@@ -1200,6 +1203,9 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
                     }
                     
                     T::setter(ctxt, bptr, p_index, p_setter, p_value);
+                    
+                    // AL-2014-09-23 [[ Bug 13509 ]] Delete the atts struct if this block has no atts
+                    bptr -> cleanatts();
                     
                     // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
                     //   fontref so it can compute its.
@@ -3375,10 +3381,12 @@ void MCBlock::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p
     if (MCF_parsetextstyle(MCNameGetString(p_index), t_text_style) == ES_NORMAL)
     {
         if (atts == NULL)
-        {
-            atts = new Blockatts;;
+            atts = new Blockatts;
+        
+        // AL-2014-09-23 [[ Bug 13509 ]] Check F_HAS_FSTYLE when adding block attribute
+        if (!getflag(F_HAS_FSTYLE))
             atts -> fontstyle = parent -> getparent() -> gettextstyle();
-        }
+        
         flags |= F_HAS_FSTYLE;
         MCF_changetextstyle(atts -> fontstyle, t_text_style, p_setting);
         return;
