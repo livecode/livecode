@@ -215,7 +215,7 @@ void MCStoreExecSet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 	if (t_info != nil)
 	{
 		MCExecValue t_value;
-		MCExecValueTraits<MCValueRef>::set(t_value, p_value);
+		MCExecValueTraits<MCValueRef>::set(t_value, MCValueRetain(p_value));
         MCExecStoreProperty(ctxt, t_info, t_purchase, t_value);
         return;
 	}
