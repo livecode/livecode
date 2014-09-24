@@ -155,13 +155,7 @@
 'nonterm' Signature(-> SIGNATURE)
 
     'rule' Signature(-> signature(Parameters, Result)):
-        "(" OptionalParameterList(-> Parameters) ")" "returns" Type(-> Result)
-
-    'rule' Signature(-> signature(Parameters, void(Position))):
-        "(" OptionalParameterList(-> Parameters) ")" "returns" "nothing" @(-> Position)
-        
-    'rule' Signature(-> signature(Parameters, nil)):
-        "(" OptionalParameterList(-> Parameters) ")"
+        "(" OptionalParameterList(-> Parameters) ")" OptionalTypeClause(-> Result)
 
 'nonterm' OptionalParameterList(-> PARAMETERLIST)
 
@@ -273,6 +267,9 @@
 
     'rule' Type(-> named(Position, Name)):
         Identifier(-> Name) @(-> Position)
+        
+    'rule' Type(-> undefined(Position)):
+        "undefined" @(-> Position)
 
 --------------------------------------------------------------------------------
 -- Statement Syntax

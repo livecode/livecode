@@ -1,10 +1,10 @@
 module com.livecode.binary
 
-foreign handler EvalNumberOfBytesIn(in Target as DataRef, out Count as Int) returns nothing binds to "<builtin>"
-foreign handler FetchByteOf(in Index as Int, in Target as DataRef, out Value as DataRef) returns nothing binds to "<builtin>"
-foreign handler StoreByteOf(in Value as DataRef, in Index as Int, inout Target as DataRef) returns nothing binds to "<builtin>"
-foreign handler FetchByteRangeOf(in Start as Int, in Finish as Int, in Target as DataRef, out Value as DataRef) returns nothing binds to "<builtin>"
-foreign handler StoreByteRangeOf(in Value as DataRef, in Start as Int, in Finish as Int, inout Target as DataRef) returns nothing binds to "<builtin>"
+foreign handler EvalNumberOfBytesIn(in Target as DataRef, out Count as Int) as undefined binds to "<builtin>"
+foreign handler FetchByteOf(in Index as Int, in Target as DataRef, out Value as DataRef)  as undefined binds to "<builtin>"
+foreign handler StoreByteOf(in Value as DataRef, in Index as Int, inout Target as DataRef) as undefined binds to "<builtin>"
+foreign handler FetchByteRangeOf(in Start as Int, in Finish as Int, in Target as DataRef, out Value as DataRef) as undefined binds to "<builtin>"
+foreign handler StoreByteRangeOf(in Value as DataRef, in Start as Int, in Finish as Int, inout Target as DataRef) as undefined binds to "<builtin>"
 
 syntax CountByteOf is left unary operator with precedence 1
 	"the" "number" "of" "bytes" "in" <Target: Expression>

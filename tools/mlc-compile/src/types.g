@@ -47,7 +47,7 @@
 
 'type' TYPE
     named(Position: POS, Name: ID)
-    void(Position: POS)
+    undefined(Position: POS)
     nil
 
 'type' PARAMETERLIST
