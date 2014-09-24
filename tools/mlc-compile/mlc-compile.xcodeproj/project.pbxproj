@@ -95,6 +95,7 @@
 		4D3AA0B319CC594800886BE7 /* NEXT_UNIT.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = NEXT_UNIT.t; path = src/NEXT_UNIT.t; sourceTree = SOURCE_ROOT; };
 		4D3AA0B419CC594800886BE7 /* STRING_LITERAL.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = STRING_LITERAL.t; path = src/STRING_LITERAL.t; sourceTree = SOURCE_ROOT; };
 		4D3AA0B519CC597300886BE7 /* SEPARATOR.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = SEPARATOR.t; path = src/SEPARATOR.t; sourceTree = SOURCE_ROOT; };
+		4D3AA12819D311D700886BE7 /* binary.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = binary.mlc; path = ../../library/binary.mlc; sourceTree = "<group>"; };
 		4D6F070B19CC36DD00DDC6E0 /* mlc-compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mlc-compile"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = gentle.xcodeproj; path = ../../utilities/gentle/gentle.xcodeproj; sourceTree = "<group>"; };
 		4D6F072719CC386B00DDC6E0 /* grammar.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = grammar.g; path = src/grammar.g; sourceTree = SOURCE_ROOT; };
@@ -127,9 +128,18 @@
 			name = "Derived Sources";
 			sourceTree = "<group>";
 		};
+		4D3AA12719D311C900886BE7 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				4D3AA12819D311D700886BE7 /* binary.mlc */,
+			);
+			name = Library;
+			sourceTree = "<group>";
+		};
 		4D6F070019CC36B700DDC6E0 = {
 			isa = PBXGroup;
 			children = (
+				4D3AA12719D311C900886BE7 /* Library */,
 				4D6F071819CC37A200DDC6E0 /* References */,
 				4D3AA07719CC397600886BE7 /* Derived Sources */,
 				4D6F070D19CC36DD00DDC6E0 /* Sources */,
@@ -399,6 +409,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
+					"YYDEBUG=1",
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;

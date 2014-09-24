@@ -99,6 +99,9 @@
 
 'nonterm' Access(-> ACCESS)
 
+    'rule' Access(-> inferred):
+        -- empty
+
     'rule' Access(-> public):
         "public"
         
@@ -152,13 +155,13 @@
 'nonterm' Signature(-> SIGNATURE)
 
     'rule' Signature(-> signature(Parameters, Result)):
-        OptionalParameterList(-> Parameters) "returns" Type(-> Result)
+        "(" OptionalParameterList(-> Parameters) ")" "returns" Type(-> Result)
 
     'rule' Signature(-> signature(Parameters, void(Position))):
-        OptionalParameterList(-> Parameters) "returns" "nothing" @(-> Position)
+        "(" OptionalParameterList(-> Parameters) ")" "returns" "nothing" @(-> Position)
         
     'rule' Signature(-> signature(Parameters, nil)):
-        OptionalParameterList(-> Parameters)
+        "(" OptionalParameterList(-> Parameters) ")"
 
 'nonterm' OptionalParameterList(-> PARAMETERLIST)
 
@@ -223,16 +226,16 @@
 'nonterm' SyntaxClass(-> SYNTAXCLASS)
 
     'rule' SyntaxClass(-> statement):
-        "for" "statement"
+        "is" "statement"
 
     'rule' SyntaxClass(-> expression):
-        "for" "expression"
+        "is" "expression"
 
     'rule' SyntaxClass(-> unary(Assoc, Precedence)):
-        "for" SyntaxAssoc(-> Assoc) "unary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+        "is" SyntaxAssoc(-> Assoc) "unary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
 
     'rule' SyntaxClass(-> binary(Assoc, Precedence)):
-        "for" SyntaxAssoc(-> Assoc) "binary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+        "is" SyntaxAssoc(-> Assoc) "binary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
 
     'rule' SyntaxClass(-> phrase):
         -- empty
@@ -334,7 +337,7 @@
 'nonterm' ConcatenateSyntax(-> SYNTAX)
 
     'rule' ConcatenateSyntax(-> concatenate(Position, Left, Right)):
-        ConcatenateSyntax(-> Left) "|" @(-> Position) AtomicSyntax(-> Right)
+        ConcatenateSyntax(-> Left) @(-> Position) AtomicSyntax(-> Right)
 
     'rule' ConcatenateSyntax(-> Syntax)
         AtomicSyntax(-> Syntax)
