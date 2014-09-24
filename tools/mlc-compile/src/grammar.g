@@ -86,6 +86,9 @@
 
     'rule' Definition(-> Event):
         EventDefinition(-> Event)
+        
+    'rule' Definition(-> Syntax)
+        SyntaxDefinition(-> Syntax)
 
 ---------- Constant
 
@@ -206,6 +209,59 @@
     'rule' EventDefinition(-> event(Position, public)):
         "event" @(-> Position)
 
+---------- Syntax
+
+'nonterm' SyntaxDefinition(-> DEFINITION)
+
+    'rule' SyntaxDefinition(-> syntax(Position, public, Name, Class, Syntax, Methods)):
+        "syntax" @(-> Position) Identifier(-> Name) SyntaxClass(-> Class) SEPARATOR
+            Syntax(-> Syntax) SEPARATOR
+        "begin" SEPARATOR
+            SyntaxMethods(-> Methods)
+        "end" "syntax"
+        
+'nonterm' SyntaxClass(-> SYNTAXCLASS)
+
+    'rule' SyntaxClass(-> statement):
+        "for" "statement"
+
+    'rule' SyntaxClass(-> expression):
+        "for" "expression"
+
+    'rule' SyntaxClass(-> unary(Assoc, Precedence)):
+        "for" SyntaxAssoc(-> Assoc) "unary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+
+    'rule' SyntaxClass(-> binary(Assoc, Precedence)):
+        "for" SyntaxAssoc(-> Assoc) "binary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+
+    'rule' SyntaxClass(-> phrase):
+        -- empty
+
+'nonterm' SyntaxAssoc(-> SYNTAXASSOC)
+
+    'rule' SyntaxAssoc(-> neutral):
+        "neutral"
+        
+    'rule' SyntaxAssoc(-> left):
+        "left"
+        
+    'rule' SyntaxAssoc(-> right):
+        "right"
+
+'nonterm' SyntaxMethods(-> METHODLIST)
+
+    'rule' SyntaxMethods(-> methodlist(Head, Tail)):
+        SyntaxMethod(-> Head) SEPARATOR
+        SyntaxMethods(-> Tail)
+        
+    'rule' SyntaxMethods(-> nil):
+        -- empty
+
+'nonterm' SyntaxMethod(-> METHOD)
+
+    'rule' SyntaxMethod(-> method(Position, Name, Arguments)):
+        Identifier(-> Name) @(-> Position) "(" OptionalConstantList(-> Arguments) ")"
+
 --------------------------------------------------------------------------------
 -- Type Syntax
 --------------------------------------------------------------------------------
@@ -257,6 +313,93 @@
         
     'rule' ExpressionList(-> expressionlist(Expression, nil)):
         Expression(-> Expression)
+
+--------------------------------------------------------------------------------
+-- Syntax Syntax
+--------------------------------------------------------------------------------
+
+'nonterm' Syntax(-> SYNTAX)
+
+    'rule' Syntax(-> Syntax):
+        AlternateSyntax(-> Syntax)
+
+'nonterm' AlternateSyntax(-> SYNTAX)
+
+    'rule' AlternateSyntax(-> alternate(Position, Left, Right)):
+        AlternateSyntax(-> Left) "|" @(-> Position) ConcatenateSyntax(-> Right)
+
+    'rule' AlternateSyntax(-> Syntax)
+        ConcatenateSyntax(-> Syntax)
+        
+'nonterm' ConcatenateSyntax(-> SYNTAX)
+
+    'rule' ConcatenateSyntax(-> concatenate(Position, Left, Right)):
+        ConcatenateSyntax(-> Left) "|" @(-> Position) AtomicSyntax(-> Right)
+
+    'rule' ConcatenateSyntax(-> Syntax)
+        AtomicSyntax(-> Syntax)
+        
+'nonterm' AtomicSyntax(-> SYNTAX)
+
+    'rule' AtomicSyntax(-> repeat(Position, Element)):
+        "{" @(-> Position) Syntax(-> Element) "}"
+
+    'rule' AtomicSyntax(-> list(Position, Element, Delimiter)):
+        "{" @(-> Position) Syntax(-> Element) "," Syntax(-> Delimiter) "}"
+        
+    'rule' AtomicSyntax(-> optional(Position, Operand)):
+        "[" @(-> Position) Syntax(-> Operand) "]"
+        
+    'rule' AtomicSyntax(-> keyword(Position, Value)):
+        STRING_LITERAL(-> Value) @(-> Position)
+        
+    'rule' AtomicSyntax(-> rule(Position, Name)):
+        "<" @(-> Position) Identifier(-> Name) ">"
+        
+    'rule' AtomicSyntax(-> markedrule(Position, Variable, Name)):
+        "<" @(-> Position) Identifier(-> Variable) ":" Identifier(-> Name) ">"
+        
+    'rule' AtomicSyntax(-> mark(Position, Variable, Value)):
+        "<" @(-> Position) Identifier(-> Variable) "=" Constant(-> Value) ">"
+        
+    'rule' AtomicSyntax(-> Syntax):
+        "(" Syntax(-> Syntax) ")"
+
+'nonterm' OptionalConstantList(-> CONSTANTLIST)
+
+    'rule' OptionalConstantList(-> List):
+        ConstantList(-> List)
+        
+    'rule' OptionalConstantList(-> nil):
+        -- empty
+
+'nonterm' ConstantList(-> CONSTANTLIST)
+
+    'rule' ConstantList(-> constantlist(Head, Tail)):
+        Constant(-> Head) "," ConstantList(-> Tail)
+
+    'rule' ConstantList(-> constantlist(Head, nil)):
+        Constant(-> Head)
+
+'nonterm' Constant(-> CONSTANT)
+
+    'rule' Constant(-> undefined(Position)):
+        "undefined" @(-> Position)
+        
+    'rule' Constant(-> true(Position)):
+        "true" @(-> Position)
+        
+    'rule' Constant(-> false(Position)):
+        "false" @(-> Position)
+        
+    'rule' Constant(-> integer(Position, Value)):
+        INTEGER_LITERAL(-> Value) @(-> Position)
+
+    'rule' Constant(-> string(Position, Value)):
+        STRING_LITERAL(-> Value) @(-> Position)
+
+    'rule' Constant(-> name(Position, Value)):
+        Identifier(-> Value) @(-> Position)
 
 --------------------------------------------------------------------------------
 -- Identifier Syntax

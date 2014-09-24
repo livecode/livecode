@@ -10,6 +10,7 @@
     PARAMETER MODE PARAMETERLIST
     STATEMENT
     EXPRESSION EXPRESSIONLIST
+    SYNTAX SYNTAXCLASS SYNTAXASSOC CONSTANT CONSTANTLIST METHOD METHODLIST
     ID IDLIST
     NAME DOUBLE
 
@@ -32,6 +33,7 @@
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
     property(Position: POS, Access: ACCESS)
     event(Position: POS, Access: ACCESS)
+    syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: METHODLIST)
     nil
 
 'type' SIGNATURE
@@ -72,6 +74,48 @@
 'type' EXPRESSION
     integer(Position: POS, Value: INT)
     nil
+
+'type' METHODLIST
+    methodlist(Head: METHOD, Tail: METHODLIST)
+    nil
+    
+'type' METHOD
+    method(Position: POS, Name: ID, Arguments: CONSTANTLIST)
+
+'type' SYNTAX
+    concatenate(Position: POS, Left: SYNTAX, Right: SYNTAX)
+    alternate(Position: POS, Left: SYNTAX, Right: SYNTAX)
+    repeat(Position: POS, Element: SYNTAX)
+    list(Position: POS, Element: SYNTAX, Delimiter: SYNTAX)
+    optional(Position: POS, Operand: SYNTAX)
+    keyword(Position: POS, Value: STRING)
+    markedrule(Position: POS, Variable: ID, Name: ID)
+    rule(Position: POS, Name: ID)
+    mark(Position: POS, Variable: ID, Value: CONSTANT)
+
+'type' SYNTAXCLASS
+    phrase
+    statement
+    expression
+    unary(Assoc: SYNTAXASSOC, Precedence: INT)
+    binary(Assoc: SYNTAXASSOC, Precedence: INT)
+
+'type' SYNTAXASSOC
+    left
+    right
+    neutral
+
+'type' CONSTANTLIST
+    constantlist(Head: CONSTANT, Tail: CONSTANTLIST)
+    nil
+
+'type' CONSTANT
+    undefined(Position: POS)
+    true(Position: POS)
+    false(Position: POS)
+    integer(Position: POS, Value: INT)
+    string(Position: POS, Value: STRING)
+    name(Position: POS, Value: ID)
 
 'type' IDLIST
     idlist(Head: ID, Tail: IDLIST)
