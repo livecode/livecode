@@ -30,6 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIKit.h>
 #include "mbliphoneapp.h"
 
+#define SYSTEM_VERSION_LESS_THAN(v)       ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedAscending)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 UIView *MCIPhoneGetView(void);
@@ -82,7 +84,6 @@ UIViewController *MCIPhoneGetViewController(void);
 
 // MM-2013-09-23: [[ iOS7 Support ]] Added missing delegates implemented in order to appease llvm 5.0.
 @interface MCIPhonePickWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate, UIPopoverControllerDelegate, UITableViewDataSource>
-//@interface MCIPhonePickWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UITableViewDelegate, UIPopoverControllerDelegate, UITableViewDataSource>
 {
 	bool iSiPad;
 	bool m_running;
@@ -102,6 +103,7 @@ UIViewController *MCIPhoneGetViewController(void);
     //UIAlertController *actionSheet;
 	UIPopoverController* popoverController;
     UIView *m_action_sheet_view;
+    UIControl *m_blocking_view;
 }
 
 - (id)init;
@@ -130,6 +132,7 @@ UIViewController *MCIPhoneGetViewController(void);
 	pickerView = nil;
 	tableView = nil;
     m_action_sheet_view = nil;
+    m_blocking_view = nil;
 	return self;
 }
 
@@ -521,9 +524,7 @@ return 1;
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
 										 animated:YES];
-                                         
         
-        //[t_view release];
 		
         // The following line creates problem on iOS 8 - Remove it
 		//[popoverController setContentViewController:self];
@@ -574,61 +575,84 @@ return 1;
 		[t_toolbar setItems: t_toolbar_items animated: NO];
         
         
-        
-        //////// USE OF UIVIEW INSTEAD OF UIACTIONSHEET STARTS //////////////////////////
-        
-        CGRect t_rect;
-        CGFloat height = [[UIScreen mainScreen] bounds] . size . height;
-        if (!t_is_landscape)
-           t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2, [[UIScreen mainScreen] bounds] . size . width, 496);
-        else
-            t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . width / 2, [[UIScreen mainScreen] bounds] . size . height, 365);
-        
-        m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
-        
-        [m_action_sheet_view addSubview: t_toolbar];
-        [m_action_sheet_view addSubview: pickerView];
-        [t_toolbar release];
-        
-        if (!t_is_landscape)
-            [m_action_sheet_view setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
-        else
-            [m_action_sheet_view setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
-        
-        
-        [MCIPhoneGetView() addSubview:m_action_sheet_view];
-        
-        //////// USE OF UIVIEW INSTEAD OF UIACTIONSHEET ENDS //////////////////////////
-        
-        
-        
-		/*
-        //////// ORIGINAL CODE STARTS /////////////////
-        
-		// create the action sheet that contains the "Done" button and pick wheel
-		actionSheet = [[UIActionSheet alloc] initWithTitle:nil
-												  delegate:self
-										 cancelButtonTitle:nil
-									destructiveButtonTitle:nil
-										 otherButtonTitles:nil];
-		// set the style of the acionsheet
-		[actionSheet setActionSheetStyle:UIActionSheetStyleBlackTranslucent];
-		// add the subviews to the action sheet
-		[actionSheet addSubview: t_toolbar];
-		[actionSheet addSubview: pickerView];
-		[t_toolbar release];
-		
-		// initialize the pick wheel, this also calls viewDidLoad and populates pickerArray
-		[actionSheet showInView: MCIPhoneGetView()];
-		// set up the bounding box of the action sheet
-        // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
-		if (!t_is_landscape)
-			[actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
-		else
-			[actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
+        if (SYSTEM_VERSION_LESS_THAN(@"8.0"))
+        {
+            // create the action sheet that contains the "Done" button and pick wheel
+            actionSheet = [[UIActionSheet alloc] initWithTitle:nil
+                                                      delegate:self
+                                             cancelButtonTitle:nil
+                                        destructiveButtonTitle:nil
+                                             otherButtonTitles:nil];
+            // set the style of the acionsheet
+            [actionSheet setActionSheetStyle:UIActionSheetStyleBlackTranslucent];
+            // add the subviews to the action sheet
+            [actionSheet addSubview: t_toolbar];
+            [actionSheet addSubview: pickerView];
+            [t_toolbar release];
             
-        //////// ORIGINAL CODE ENDS /////////////////
-        */
+            // initialize the pick wheel, this also calls viewDidLoad and populates pickerArray
+            [actionSheet showInView: MCIPhoneGetView()];
+            // set up the bounding box of the action sheet
+            // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
+            if (!t_is_landscape)
+                [actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, 496)];
+            else
+                [actionSheet setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
+            
+        }
+        
+        
+        else
+        {
+            // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+            
+            CGRect t_rect;
+            
+            if (!t_is_landscape)
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2);
+            else
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . width / 2, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width / 2);
+            
+            m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
+            
+            [m_action_sheet_view addSubview: t_toolbar];
+            [m_action_sheet_view addSubview: pickerView];
+            m_action_sheet_view.backgroundColor = [UIColor whiteColor];
+            [t_toolbar release];
+            
+            [MCIPhoneGetView() addSubview:m_action_sheet_view];
+            
+            // This is offscreen
+            m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height , t_rect . size . width, t_rect. size . height);
+            
+            // Add animation to simulate old behaviour (slide from bottom)
+            [UIView animateWithDuration:0.2 animations:^{m_action_sheet_view.frame = t_rect;}];
+            
+            
+            // Add m_blocking_view to block any touch events in MCIPhoneGetView()
+            CGRect t_blocking_rect;
+            
+            if (!t_is_landscape)
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2);
+            else
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width / 2);
+            
+            m_blocking_view = [[UIControl alloc] initWithFrame:t_blocking_rect];
+            
+            // Add effects and animation to simulate old behaviour
+            m_blocking_view.backgroundColor = [UIColor blackColor];
+            m_blocking_view.alpha = 0.4;
+            m_blocking_view.userInteractionEnabled = YES;
+            
+            
+            CATransition *applicationLoadViewIn =[CATransition animation];
+            [applicationLoadViewIn setDuration:0.7];
+            [applicationLoadViewIn setType:kCATransitionReveal];
+            [applicationLoadViewIn setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn]];
+            [[m_blocking_view layer]addAnimation:applicationLoadViewIn forKey:kCATransitionFromTop];
+            
+            [MCIPhoneGetView() addSubview:m_blocking_view];
+        }
         
         
     }
@@ -699,16 +723,30 @@ return 1;
     }
     else
     {
-        [pickerView removeFromSuperview];
-        [m_action_sheet_view removeFromSuperview];
-        [m_action_sheet_view release];
-        m_running = false;
+        // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+        if (!SYSTEM_VERSION_LESS_THAN(@"8.0"))
+        {
+            [pickerView removeFromSuperview];
         
-        // MW-2011-08-16: [[ Wait ]] Tell the wait to exit (our wait has anyevent == True).
-        MCscreen -> pingwait();
+            [UIView animateWithDuration:0.5
+                             animations:^{
+                                 m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height);//move it out of screen
+                             } completion:^(BOOL finished) {
+                                 [m_action_sheet_view removeFromSuperview];
+                             }];
+            
+
+            [m_action_sheet_view release];
+            
+            [m_blocking_view removeFromSuperview];
+            [m_blocking_view release];
+            
+            m_running = false;
+            MCscreen -> pingwait();
+        }
+        else
+            [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
     }
-    
-	
 }
 
 - (void)cancelPickWheel: (NSObject *)sender
@@ -726,16 +764,30 @@ return 1;
     
     else
     {
-        [pickerView removeFromSuperview];
-        [m_action_sheet_view removeFromSuperview];
-        [m_action_sheet_view release];
-        m_running = false;
-        
-        // MW-2011-08-16: [[ Wait ]] Tell the wait to exit (our wait has anyevent == True).
-        MCscreen -> pingwait();
+        // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
+        if (!SYSTEM_VERSION_LESS_THAN(@"8.0"))
+        {
+            [pickerView removeFromSuperview];
+            
+            [UIView animateWithDuration:0.5
+                             animations:^{
+                                 m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height);//move it out of screen
+                             } completion:^(BOOL finished) {
+                                 [m_action_sheet_view removeFromSuperview];
+                             }];
+            
+            
+            [m_action_sheet_view release];
+            
+            [m_blocking_view removeFromSuperview];
+            [m_blocking_view release];
+            
+            m_running = false;
+            MCscreen -> pingwait();
+        }
+        else
+            [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
     }
-    
-	
 }
 
 // MW-2010-12-20: [[ Bug 9254 ]] Stop running the action sheet here, after the animation
