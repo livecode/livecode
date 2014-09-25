@@ -1,19 +1,19 @@
 module com.livecode.string
 
-foreign handler ExecPutStringBefore(in Source as StringRef, inout Target as StringRef) as undefined binds to "<builtin>"
-foreign handler ExecPutStringAfter(in Source as StringRef, inout Target as StringRef) as undefined binds to "<builtin>"
+foreign handler ExecPutStringBefore(in Source as string, inout Target as string) as undefined binds to "<builtin>"
+foreign handler ExecPutStringAfter(in Source as string, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler ExecReplace(in Pattern as StringRef, in Replacement as StringRef, inout Target as StringRef) as undefined binds to "<builtin>"
+foreign handler ExecReplace(in Pattern as string, in Replacement as string, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler EvalConcatenate(in Left as StringRef, in Right as StringRef, out Result as StringRef) as undefined binds to "<builtin>"
-foreign handler EvalConcatenateWithSpace(in Left as StringRef, in Right as StringRef, out Result as StringRef) as undefined binds to "<builtin>"
+foreign handler EvalConcatenate(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
+foreign handler EvalConcatenateWithSpace(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
 
-foreign handler EvalBeginsWith(in Source as StringRef, in Prefix as StringRef, out Result as Bool) as undefined binds to "<builtin>"
-foreign handler EvalEndsWith(in Source as StringRef, in Suffix as StringRef, out Result as Bool) as undefined binds to "<builtin>"
-foreign handler EvalContains(in Source as StringRef, in Needle as StringRef, out Result as Bool) as undefined binds to "<builtin>"
+foreign handler EvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalContains(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
 
-foreign handler EvalToLower(in Source as StringRef, out Result as StringRef)
-foreign handler EvalToUpper(in Source as StringRef, out Result as StringRef)
+foreign handler EvalToLower(in Source as string, out Result as string)
+foreign handler EvalToUpper(in Source as string, out Result as string)
 
 --
 
