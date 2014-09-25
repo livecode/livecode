@@ -487,32 +487,6 @@ return 1;
 				self.contentSizeForViewInPopover = CGSizeMake(t_horizontal, 216);
 		}
         
-        
-        
-        
-        
-        /////////////////////////////////////////////////////////////////////
-        /*
-        UIView *t_view = [[UIView alloc] initWithFrame:MCUserRectToLogicalCGRect(p_button_rect)];
-        //UIView *t_view = [[UIView alloc] initWithFrame: CGRectMake(0, 0, self.contentSizeForViewInPopover.width, self.contentSizeForViewInPopover.height)];
-        
-        if (m_use_table_view)
-            [t_view addSubview: tableView];
-        else
-            [t_view addSubview: pickerView];
-        if (p_use_done || p_use_cancel)
-        {
-            [t_view addSubview: t_toolbar];
-            [t_toolbar release];
-        }
-        
-        self.view = t_view;
-        */
-        /////////////////////////////////////////////////////////////////////
-        
-        
-      
-        
 		// create the popover controller
 		popoverController = [[t_popover alloc] initWithContentViewController:self];
         
