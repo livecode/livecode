@@ -549,9 +549,9 @@ static bool options_get_convert_octals(MCExternalValueOptions p_options)
 
 static MCExternalError string_to_boolean(MCStringRef p_string, MCExternalValueOptions p_options, void *r_value)
 {
-	if (p_string == kMCTrueString)
+	if (MCStringIsEqualTo(p_string, kMCTrueString, kMCStringOptionCompareCaseless))
 		*(bool *)r_value = true;
-	else if (p_string == kMCFalseString)
+	else if (MCStringIsEqualTo(p_string, kMCFalseString, kMCStringOptionCompareCaseless))
 		*(bool *)r_value = false;
 	else
 		return kMCExternalErrorNotABoolean;
