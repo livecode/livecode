@@ -443,8 +443,6 @@ return 1;
 		}
         
         
-        
-        
 		// create the action sheet that can contain the "Cancel" and "Done" buttons and date pick wheel
         
         
@@ -489,9 +487,9 @@ return 1;
         
         
         
-        /*
-        /////////////////////////////////////////////////////////////////////
         
+        /////////////////////////////////////////////////////////////////////
+        /*
         UIView *t_view = [[UIView alloc] initWithFrame:MCUserRectToLogicalCGRect(p_button_rect)];
         //UIView *t_view = [[UIView alloc] initWithFrame: CGRectMake(0, 0, self.contentSizeForViewInPopover.width, self.contentSizeForViewInPopover.height)];
         
@@ -506,11 +504,11 @@ return 1;
         }
         
         self.view = t_view;
-        
+        */
         /////////////////////////////////////////////////////////////////////
-         */
         
         
+      
         
 		// create the popover controller
 		popoverController = [[t_popover alloc] initWithContentViewController:self];
@@ -523,6 +521,8 @@ return 1;
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
 										 animated:YES];
+                                         
+        
         //[t_view release];
 		
         // The following line creates problem on iOS 8 - Remove it
@@ -575,7 +575,7 @@ return 1;
         
         
         
-        //////// USE UIVIEW INSTEAD OF UIACTIONSHEET //////////////////////////
+        //////// USE OF UIVIEW INSTEAD OF UIACTIONSHEET STARTS //////////////////////////
         
         CGRect t_rect;
         CGFloat height = [[UIScreen mainScreen] bounds] . size . height;
@@ -595,9 +595,10 @@ return 1;
         else
             [m_action_sheet_view setBounds:CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, 365)];
         
+        
         [MCIPhoneGetView() addSubview:m_action_sheet_view];
-       
-        //////// USE UIVIEW INSTEAD OF UIACTIONSHEET //////////////////////////
+        
+        //////// USE OF UIVIEW INSTEAD OF UIACTIONSHEET ENDS //////////////////////////
         
         
         
@@ -692,15 +693,22 @@ return 1;
 	}
     
     if (iSiPad)
+    {
         [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+        [popoverController dismissPopoverAnimated:YES];
+    }
     else
     {
         [pickerView removeFromSuperview];
         [m_action_sheet_view removeFromSuperview];
         [m_action_sheet_view release];
+        m_running = false;
+        
+        // MW-2011-08-16: [[ Wait ]] Tell the wait to exit (our wait has anyevent == True).
+        MCscreen -> pingwait();
     }
     
-	[popoverController dismissPopoverAnimated:YES];
+	
 }
 
 - (void)cancelPickWheel: (NSObject *)sender
@@ -711,15 +719,23 @@ return 1;
 		[m_selected_index replaceObjectAtIndex:t_i withObject:[NSNumber numberWithInt:-1]];
     
     if (iSiPad)
+    {
         [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+        [popoverController dismissPopoverAnimated:YES];
+    }
+    
     else
     {
         [pickerView removeFromSuperview];
         [m_action_sheet_view removeFromSuperview];
         [m_action_sheet_view release];
+        m_running = false;
+        
+        // MW-2011-08-16: [[ Wait ]] Tell the wait to exit (our wait has anyevent == True).
+        MCscreen -> pingwait();
     }
     
-	[popoverController dismissPopoverAnimated:YES];
+	
 }
 
 // MW-2010-12-20: [[ Bug 9254 ]] Stop running the action sheet here, after the animation
