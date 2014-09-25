@@ -188,7 +188,7 @@ bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
             MCImageMetadata t_metadata;
             MCMemoryClear(&t_metadata, sizeof(t_metadata));
             t_metadata.has_density = true;
-            t_metadata.density = t_X * 0.0254;
+            t_metadata.density = floor(t_X * 0.0254 + 0.5);
             
             r_metadata = t_metadata;
         }

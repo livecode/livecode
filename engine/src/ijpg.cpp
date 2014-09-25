@@ -666,7 +666,7 @@ bool MCJPEGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32
             if (m_jpeg.density_unit == 1)
                 t_metadata.density = m_jpeg.X_density;
             else
-                t_metadata.density = m_jpeg.X_density * 2.54;
+                t_metadata.density = floor(m_jpeg.X_density * 2.54 + 0.5);
          
             r_metadata = t_metadata;
         }
