@@ -15,6 +15,9 @@ foreign handler EvalContains(in Source as string, in Needle as string, out Resul
 foreign handler EvalToLower(in Source as string, out Result as string)
 foreign handler EvalToUpper(in Source as string, out Result as string)
 
+foreign handler EvalOffset(in Needle as string, in Source as string, out Result as index)
+foreign handler EvalOffsetAfter(in Needle as string, in After as index, in Source as string, out Result as index)
+
 --
 
 syntax PutStringBefore is statement

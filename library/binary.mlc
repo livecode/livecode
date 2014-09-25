@@ -7,6 +7,11 @@ foreign handler EvalConcatenateBytes(in Left as data, in Right as data, out Resu
 
 foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
 
+foreign handler EvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalIsNotAmongTheBytesOf(in Needle as data, in Target as data, out Result as bool) as undefined binds to "<builtin>"
+
+foreign handler EvalOffsetOfBytesIn(in Needle as data, in Target as data, out Offset as index) as undefined binds to "<builtin>"
+
 foreign handler FetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
 foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
 foreign handler FetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
@@ -40,6 +45,28 @@ syntax CountBytesOf is left unary operator with precedence 1
 	"the" "number" "of" "bytes" "in" <Target: Expression>
 begin
 	EvalNumberOfBytesIn(Target, output)
+end syntax
+
+--
+
+syntax AmongBytesOf is left unary operator with precedence 1
+	<Needle: Expression> "is" "among" "the" "bytes" "of" <Target: Expression>
+begin
+	EvalIsAmongTheBytesOf(Needle, Target, output)
+end syntax
+
+syntax NotAmongBytesOf is left unary operator with precedence 1
+	<Needle: Expression> "is" "not" "among" "the" "bytes" "of" <Target: Expression>
+begin
+	EvalIsNotAmongTheBytesOf(Needle, Target, output)
+end syntax
+
+--
+
+syntax ByteOffset is left unary operator with precedence 1
+	"the" "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
+begin
+	EvalOffsetOfBytesIn(Needle, Target, output)
 end syntax
 
 --
