@@ -1,16 +1,16 @@
 module com.livecode.binary
 
-foreign handler ExecPutBytesBefore(in Source as DataRef, inout Target as DataRef) as undefined binds to "<builtin>"
-foreign handler ExecPutBytesAfter(in Source as DataRef, inout Target as DataRef) as undefined binds to "<builtin>"
+foreign handler ExecPutBytesBefore(in Source as data, inout Target as data) as undefined binds to "<builtin>"
+foreign handler ExecPutBytesAfter(in Source as data, inout Target as data) as undefined binds to "<builtin>"
 
-foreign handler ExecJoinBytesWithBytes(in Left as DataRef, in Right as DataRef, out Result as DataRef) as undefined binds to "<builtin>"
+foreign handler EvalConcatenateBytes(in Left as data, in Right as data, out Result as data) as undefined binds to "<builtin>"
 
-foreign handler EvalNumberOfBytesIn(in Target as DataRef, out Count as Int) as undefined binds to "<builtin>"
+foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
 
-foreign handler FetchByteOf(in Index as Int, in Target as DataRef, out Value as DataRef)  as undefined binds to "<builtin>"
-foreign handler StoreByteOf(in Value as DataRef, in Index as Int, inout Target as DataRef) as undefined binds to "<builtin>"
-foreign handler FetchByteRangeOf(in Start as Int, in Finish as Int, in Target as DataRef, out Value as DataRef) as undefined binds to "<builtin>"
-foreign handler StoreByteRangeOf(in Value as DataRef, in Start as Int, in Finish as Int, inout Target as DataRef) as undefined binds to "<builtin>"
+foreign handler FetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
+foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
+foreign handler FetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
+foreign handler StoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
 
 --
 
@@ -28,15 +28,15 @@ end syntax
 
 --
 
-syntax JoinBytes is left binary operator with precedence 2
+syntax ConcatenateBytes is left binary operator with precedence 2
     <Left: Expression> "&" <Right: Expression>
 begin
-    EvalJoinBytesWithBytes(Left, Right, output)
+    EvalConcatenateBytes(Left, Right, output)
 end syntax
 
 --
 
-syntax CountByteOf is left unary operator with precedence 1
+syntax CountBytesOf is left unary operator with precedence 1
 	"the" "number" "of" "bytes" "in" <Target: Expression>
 begin
 	EvalNumberOfBytesIn(Target, output)
