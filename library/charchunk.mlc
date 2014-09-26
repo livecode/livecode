@@ -1,0 +1,34 @@
+module com.livecode.charchunk
+
+foreign handler FetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
+foreign handler StoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+foreign handler FetchCharRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"
+foreign handler StoreCharRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+
+foreign handler EvalNumberOfCharsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
+
+--
+
+syntax SingletonCharOf is left unary operator with precedence 1
+	"char" <Index: Expression> "of" <Target: Expression>
+begin
+	FetchCharOf(Index, Target, output)
+	StoreCharOf(input, Index, Target)
+end syntax
+
+syntax RangeCharOf is left unary operator with precedence 1
+	"char" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	FetchCharRangeOf(Start, Finish, Target, output)
+	StoreCharRangeOf(input, Start, Finish, Target)
+end syntax
+
+syntax CountCharsOf is left unary operator with precedence 1
+	"the" "number" "of" "chars" "in" <Target: Expression>
+begin
+	EvalNumberOfCharsIn(Target, output)
+end syntax
+
+--
+
+end module
