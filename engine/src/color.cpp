@@ -16,6 +16,8 @@
 
 // IM-2014-09-24: [[ Bug 13208 ]] Shared code to convert from Linear RGB color space to CIE 1931 XYZ
 
+#include "prefix.h"
+
 #include "core.h"
 #include "graphics.h"
 #include "color.h"
