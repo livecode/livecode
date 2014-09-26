@@ -30,8 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIKit.h>
 #include "mbliphoneapp.h"
 
-#define SYSTEM_VERSION_LESS_THAN(v)       ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedAscending)
-
 ////////////////////////////////////////////////////////////////////////////////
 
 UIView *MCIPhoneGetView(void);
@@ -39,48 +37,6 @@ float MCIPhoneGetNativeControlScale(void);
 UIViewController *MCIPhoneGetViewController(void);
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface MyAlertController : UIAlertController
-{
-    UIView *firstView;
-    UIView *secondView;
-}
-
-- (void)loadView;
-- (void)setFirstView:(UIView *)p_firstView;
-- (void)setSecondView:(UIView *)p_secondView;
-
-@end
-
-@implementation MyAlertController
-
-- (void)loadView
-{
-    CGRect t_app_frame = MCIPhoneGetViewBounds();
-
-    UIView *view = [[UIView alloc] initWithFrame:CGRectMake (0, 0, t_app_frame.size.width, t_app_frame.size.height)];
-
-    //UIView *view = [[UIView alloc] initWithFrame: [[UIScreen mainScreen] applicationFrame]];
-    //UIView *view = [[UIView alloc] init];
-    
-    [view addSubview:firstView];
-    [view addSubview:secondView];
-
-    [self setView :view ];
-    [view release];
-}
-
-- (void)setFirstView:(UIView *)p_firstView
-{
-    firstView = p_firstView;
-    [firstView retain];
-}
-
-- (void)setSecondView:(UIView *)p_secondView
-{
-    secondView = p_secondView;
-    [secondView retain];
-}
-@end
 
 // MM-2013-09-23: [[ iOS7 Support ]] Added missing delegates implemented in order to appease llvm 5.0.
 @interface MCIPhonePickWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate, UIPopoverControllerDelegate, UITableViewDataSource>
@@ -548,8 +504,7 @@ return 1;
 		
 		[t_toolbar setItems: t_toolbar_items animated: NO];
         
-        
-        if (SYSTEM_VERSION_LESS_THAN(@"8.0"))
+        if (MCmajorosversion < 800)
         {
             // create the action sheet that contains the "Done" button and pick wheel
             actionSheet = [[UIActionSheet alloc] initWithTitle:nil
@@ -581,11 +536,13 @@ return 1;
             // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
             
             CGRect t_rect;
+            uint2 t_offset;
+            t_offset = 28;
             
             if (!t_is_landscape)
-                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2);
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
             else
-                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . width / 2, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width / 2);
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
             
             m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
             
@@ -596,8 +553,11 @@ return 1;
             
             [MCIPhoneGetView() addSubview:m_action_sheet_view];
             
-            // This is offscreen
-            m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height , t_rect . size . width, t_rect. size . height);
+           // This is offscreen
+            if (!t_is_landscape)
+                m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height , t_rect . size . width, t_rect. size . height);
+            else
+                m_action_sheet_view.frame = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . width , t_rect . size . width, t_rect. size . height);
             
             // Add animation to simulate old behaviour (slide from bottom)
             [UIView animateWithDuration:0.2 animations:^{m_action_sheet_view.frame = t_rect;}];
@@ -607,9 +567,9 @@ return 1;
             CGRect t_blocking_rect;
             
             if (!t_is_landscape)
-                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2);
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
             else
-                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width / 2);
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
             
             m_blocking_view = [[UIControl alloc] initWithFrame:t_blocking_rect];
             
@@ -698,7 +658,7 @@ return 1;
     else
     {
         // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
-        if (!SYSTEM_VERSION_LESS_THAN(@"8.0"))
+        if (MCmajorosversion >= 800)
         {
             [pickerView removeFromSuperview];
         
@@ -739,7 +699,7 @@ return 1;
     else
     {
         // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
-        if (!SYSTEM_VERSION_LESS_THAN(@"8.0"))
+        if (MCmajorosversion >= 800)
         {
             [pickerView removeFromSuperview];
             

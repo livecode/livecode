@@ -32,8 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIKit.h>
 #include "mbliphoneapp.h"
 
-#define SYSTEM_VERSION_LESS_THAN(v)       ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedAscending)
-
 ////////////////////////////////////////////////////////////////////////////////
 
 UIView *MCIPhoneGetView(void);
@@ -286,8 +284,7 @@ UIViewController *MCIPhoneGetViewController(void);
 		
 		[t_toolbar setItems: t_toolbar_items animated: NO];
 		
-        
-        if (SYSTEM_VERSION_LESS_THAN(@"8.0"))
+        if (MCmajorosversion < 800)
         {
             // create the action sheet that contains the "Done" button and date pick wheel
             actionSheet = [[UIActionSheet alloc] initWithTitle:nil
@@ -320,11 +317,13 @@ UIViewController *MCIPhoneGetViewController(void);
             // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working correctly
             
             CGRect t_rect;
+            uint2 t_offset;
+            t_offset = 28;
             
             if (!t_is_landscape)
-                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2);
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
             else
-                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . width / 2, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width / 2);
+                t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
             
             m_action_sheet_view = [[UIView alloc] initWithFrame:t_rect];
             
@@ -346,9 +345,9 @@ UIViewController *MCIPhoneGetViewController(void);
             CGRect t_blocking_rect;
             
             if (!t_is_landscape)
-                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2);
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 + t_offset);
             else
-                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, [[UIScreen mainScreen] bounds] . size . width / 2);
+                t_blocking_rect = CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, [[UIScreen mainScreen] bounds] . size . height / 2 - t_offset);
             
             m_blocking_view = [[UIControl alloc] initWithFrame:t_blocking_rect];
             
@@ -409,7 +408,7 @@ UIViewController *MCIPhoneGetViewController(void);
     else
     {
         // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
-        if (!SYSTEM_VERSION_LESS_THAN(@"8.0"))
+        if (MCmajorosversion >= 800)
         {
             [datePicker removeFromSuperview];
             
@@ -448,7 +447,7 @@ UIViewController *MCIPhoneGetViewController(void);
     else
     {
         // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
-        if (!SYSTEM_VERSION_LESS_THAN(@"8.0"))
+        if (MCmajorosversion >= 800)
         {
             [datePicker removeFromSuperview];
             
