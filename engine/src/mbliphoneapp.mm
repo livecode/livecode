@@ -246,15 +246,6 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 		m_allowed_orientations =
 				(1 << UIInterfaceOrientationPortrait) | (1 << UIInterfaceOrientationLandscapeLeft) | 
 				(1 << UIInterfaceOrientationLandscapeRight) | (1 << UIInterfaceOrientationPortraitUpsideDown);
-	
-	// Tell the device we want orientation notifications.
-	[[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
-	
-	// Register for device orientation change notifications.
-	[[NSNotificationCenter defaultCenter] addObserver: self
-											 selector: @selector(orientationChanged:)
-												 name: UIDeviceOrientationDidChangeNotification
-											   object: nil];
 
 	// We begin in 'startup' mode.
 	m_status = kMCIPhoneApplicationStatusStartup;
@@ -383,6 +374,16 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 		//   avoid app-store warnings.
 		objc_msgSend([UIApplication sharedApplication], sel_getUid("registerForRemoteNotificationTypes:"), t_allowed_notifications);
     }
+    
+    // MM-2014-09-26: [[ iOS 8 Support ]] Move the registration for orientation updates to here from init. Was causing issues with iOS 8.
+    // Tell the device we want orientation notifications.
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+    
+    // Register for device orientation change notifications.
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(orientationChanged:)
+                                                 name: UIDeviceOrientationDidChangeNotification
+                                               object: nil];
 }
 
 - (void)application:(UIApplication *)p_application didReceiveLocalNotification:(UILocalNotification *)p_notification
@@ -778,7 +779,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 {
 	CGRect t_viewport;
 	t_viewport = [[UIScreen mainScreen] bounds];
-	
+
 	// MW-2011-10-24: [[ Bug ]] The status bar only clips the display if actually
 	//   hidden, or on iPhone with black translucent style.
     // MM-2013-09-25: [[ iOS7Support ]] The status bar is always overlaid ontop of the view, irrespective of its style.
@@ -788,7 +789,8 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	else
 		t_status_bar_size = 20.0f;
 	
-	if (UIInterfaceOrientationIsLandscape([self fetchOrientation]))
+    // MM-2014-09-26: [[ iOS 8 Support ]] iOS 8 already takes into account orientation when returning the bounds.
+	if (MCmajorosversion < 800 && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
 		return CGRectMake(0.0f, t_status_bar_size, t_viewport . size . height, t_viewport . size . width - t_status_bar_size);
 	
 	return CGRectMake(0.0f, t_status_bar_size, t_viewport . size . width, t_viewport . size . height - t_status_bar_size);
