@@ -38,6 +38,78 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-09-22: [[ Bug 13446 ]] iOS8 sends notification related messages before
+//   'didBecomeActive' so we queue these, and then post to the event queue after
+//   the LiveCode side of the app has been initialized in didBecomeActive.
+
+enum MCPendingNotificationEventType
+{
+    kMCPendingNotificationEventTypeDidReceiveLocalNotification,
+    kMCPendingNotificationEventTypeDidReceiveRemoteNotification,
+    kMCPendingNotificationEventTypeDidRegisterForRemoteNotification,
+    kMCPendingNotificationEventTypeDidFailToRegisterForRemoteNotification,
+};
+
+struct MCPendingNotificationEvent
+{
+    MCPendingNotificationEvent *next;
+    MCPendingNotificationEventType type;
+    NSString *text;
+};
+
+static MCPendingNotificationEvent *s_notification_events = nil;
+
+static void queue_notification_event(MCPendingNotificationEventType p_event_type, NSString *p_string)
+{
+    MCPendingNotificationEvent *t_event;
+    t_event = new MCPendingNotificationEvent;
+    t_event -> next = nil;
+    t_event -> type = p_event_type;
+    t_event -> text = [p_string retain];
+    if (s_notification_events == nil)
+        s_notification_events = t_event;
+    else
+        for(MCPendingNotificationEvent *t_last = s_notification_events; 1; t_last = t_last -> next)
+            if (t_last -> next == nil)
+            {
+                t_last -> next = t_event;
+                break;
+            }
+}
+
+static void dispatch_notification_events(void)
+{
+    while(s_notification_events != nil)
+    {
+        MCPendingNotificationEvent *t_event;
+        t_event = s_notification_events;
+        s_notification_events = s_notification_events -> next;
+        
+        MCString t_mc_text;
+        t_mc_text.set ([t_event -> text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_event -> text length]);
+
+        switch(t_event -> type)
+        {
+            case kMCPendingNotificationEventTypeDidReceiveLocalNotification:
+                MCNotificationPostLocalNotificationEvent (t_mc_text);
+                break;
+            case kMCPendingNotificationEventTypeDidReceiveRemoteNotification:
+                MCNotificationPostPushNotificationEvent(t_mc_text);
+                break;
+            case kMCPendingNotificationEventTypeDidRegisterForRemoteNotification:
+                MCNotificationPostPushRegistered(t_mc_text);
+                break;
+            case kMCPendingNotificationEventTypeDidFailToRegisterForRemoteNotification:MCNotificationPostPushRegistrationError(t_mc_text);
+                break;
+        }
+        
+        [t_event -> text release];
+        delete t_event;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static MCIPhoneApplication *s_application = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,7 +391,15 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     UIApplicationState t_state = [p_application applicationState];
     MCString t_mc_reminder_text;
     NSString *t_reminder_text = [p_notification.userInfo objectForKey:@"payload"];
-    t_mc_reminder_text.set ([t_reminder_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_reminder_text length]);
+    
+    // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
+    queue_notification_event(kMCPendingNotificationEventTypeDidReceiveLocalNotification, t_reminder_text);
+    
+    // If we are already active, dispatch.
+    if (m_did_become_active)
+        dispatch_notification_events();
+    
+/*    t_mc_reminder_text.set ([t_reminder_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_reminder_text length]);
     if (m_did_become_active)
     {
         if (t_state == UIApplicationStateInactive)
@@ -332,7 +412,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
             // Send a message to indicate that we have received a Local Notification. Include the reminder text.
             MCNotificationPostLocalNotificationEvent (t_mc_reminder_text);
         }
-    }
+    }*/
 }
 
 - (void)application:(UIApplication *)p_application didReceiveRemoteNotification:(NSDictionary *)p_dictionary
@@ -341,7 +421,15 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     UIApplicationState t_state = [p_application applicationState];
     MCString t_mc_push_notification_text;
     NSString *t_reminder_text = [p_dictionary objectForKey:@"payload"];
-    if (t_reminder_text != nil)
+    
+    // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
+    queue_notification_event(kMCPendingNotificationEventTypeDidReceiveRemoteNotification, t_reminder_text);
+    
+    // If we are already active, dispatch.
+    if (m_did_become_active)
+        dispatch_notification_events();
+    
+/*    if (t_reminder_text != nil)
         t_mc_push_notification_text.set ([t_reminder_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_reminder_text length]);
     if (m_did_become_active)
     {
@@ -355,34 +443,55 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
             // Send a message to indicate that we have received a Local Notification. Include the reminder text.
             MCNotificationPostPushNotificationEvent (t_mc_push_notification_text);
         }
-    }
+    }*/
 }
 
 - (void)application:(UIApplication*)p_application didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)p_device_token
 {
     NSString *t_to_log = [NSString stringWithFormat:@"%s%@%s", "Application: push notification device token (", p_device_token, ")"];
     NSString *t_registration_text = [NSString stringWithFormat:@"%@", p_device_token];
+    
     if (t_registration_text != nil)
+    {
+        m_device_token = strdup([t_registration_text cStringUsingEncoding:NSMacOSRomanStringEncoding]);
+    
+        // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
+        queue_notification_event(kMCPendingNotificationEventTypeDidRegisterForRemoteNotification,t_registration_text);
+    
+        // If we are already active, dispatch.
+        if (m_did_become_active)
+            dispatch_notification_events();
+    }
+    
+/*    if (t_registration_text != nil)
     {
         MCString t_device_token;
         t_device_token.set ([t_registration_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_registration_text length]);
         m_device_token = t_device_token.clone();
         MCLog("%s\n", [t_to_log cStringUsingEncoding: NSMacOSRomanStringEncoding]);
         MCNotificationPostPushRegistered(m_device_token);
-    }
+    }*/
 }
 
 - (void)application:(UIApplication*)p_application didFailToRegisterForRemoteNotificationsWithError:(NSError*)p_error
 {
     NSString *t_to_log = [NSString stringWithFormat:@"%s%@%s", "Application: push notification device token error (", p_error, ")"];
     NSString *t_error_text = [NSString stringWithFormat:@"%@", p_error];
-    if (t_error_text != nil)
+    
+    // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
+    queue_notification_event(kMCPendingNotificationEventTypeDidFailToRegisterForRemoteNotification, t_error_text);
+    
+    // If we are already active, dispatch.
+    if (m_did_become_active)
+        dispatch_notification_events();
+    
+/*    if (t_error_text != nil)
     {
         MCString t_mc_error_text;
         t_mc_error_text.set ([t_error_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_error_text length]);
         MCLog("%s\n", [t_to_log cStringUsingEncoding: NSMacOSRomanStringEncoding]);
         MCNotificationPostPushRegistrationError(t_mc_error_text);
-    }
+    }*/
 }
 
 // Check if we have received a custom URL
@@ -415,6 +524,9 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     	
     // Custom URLs can arrive before we are active. Need to know this so we don't send a message too early.
     m_did_become_active = true;
+    
+    // Queue the pending notification events (if any)
+    dispatch_notification_events();
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
