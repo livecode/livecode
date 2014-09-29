@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -350,7 +351,7 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_
 					t_height = p_parameters -> entries[t_index] . value . image . height;
 					t_data = p_parameters -> entries[t_index] . value . image . data;
 					CGColorSpaceRef t_color_space;
-					t_color_space = CGColorSpaceCreateDeviceRGB();
+					/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_color_space);
 					t_value = [CIImage imageWithBitmapData: [NSData dataWithBytesNoCopy: t_data length: t_width * t_height * 4] bytesPerRow: t_width * 4 size: CGSizeMake(t_width, t_height) format: kCIFormatARGB8 colorSpace: t_color_space];
 					CGColorSpaceRelease(t_color_space);
 				}

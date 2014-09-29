@@ -25,9 +25,11 @@
 
 #include "color.h"
 
-#include "mac-internal.h"
-
 // IM-2014-09-24: [[ Bug 13208 ]] Update color transform to use CoreGraphics API
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -185,7 +187,7 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef p_transform, MCIm
 	t_dst_colorspace = nil;
 	
 	if (t_success)
-		t_success = nil != (t_dst_colorspace = CGColorSpaceCreateDeviceRGB());
+		t_success = MCImageGetCGColorSpace(t_dst_colorspace);
 	
 	CGContextRef t_context;
 	t_context = nil;

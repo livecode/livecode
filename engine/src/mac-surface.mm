@@ -395,8 +395,7 @@ static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGIm
 static void MCMacRenderRasterToCG(CGContextRef p_target, CGRect p_area, const MCGRaster &p_raster)
 {
 	CGColorSpaceRef t_colorspace;
-	t_colorspace = CGColorSpaceCreateDeviceRGB();
-	if (t_colorspace != nil)
+	if (MCMacPlatformGetImageColorSpace(t_colorspace))
 	{
 		CGImageRef t_image;
 		t_image = nil;
@@ -482,5 +481,11 @@ static void MCMacClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_re
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
+bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace)
+{
+	return MCImageGetCGColorSpace(r_colorspace);
+}
 
+////////////////////////////////////////////////////////////////////////////////
 
