@@ -408,8 +408,13 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             {
                 while (r_end < t_length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_end)))
                     r_end++;
-                while (r_start > 0 && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
-                    r_start--;
+                // AL-2014-09-29: [[ Bug 13550 ]] Only delete preceding whitespace if wholechunks is true
+                //  and word chunk range goes to the end of the string. 
+                if (r_end == t_length)
+                {
+                    while (r_start > 0 && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
+                        r_start--;
+                }
                 return;
             }
             
