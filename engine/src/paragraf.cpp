@@ -535,34 +535,51 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 
                     // Some stacks seem to be saved with invalid blocks that
                     // exceed the length of the paragraph character data
-                    if (len > t_length)
-                        len = t_length;
+                    // SN-2014-09-29: [[ Bug 13552 ]] Clamp the length appropriately
+                    if (len + index > t_length)
+                        len = t_length - index;
                     
                     uindex_t t_index;
                     t_index = MCStringGetLength(m_text);
 
 					if (newblock->IsSavedAsUnicode())
 					{
-						len >>= 1;
+						//len >>= 1;
 						if (len && t_length > 0)
 						{
 							uint2 *dptr = (uint2*)(*t_text_data + index);
-							
+                            
 							// Byte swap, if required
-							uindex_t t_len = len;
-                            while (len--)
+                            // SN-2014-09-29: [[ Bug 13552 ]] Make sure to take in account odd number of bytes
+                            // for unicode, as it may occur
+							uindex_t t_len = 0;
+                            while (len >= 2)
+                            {
 								swap_uint2(dptr++);
+                                len -= 2;
+                                t_len += 1;
+                            }
 
                             // Append to the paragraph text
                             if (!MCStringAppendChars(m_text, (const unichar_t*)dptr - t_len, t_len))
                                 return IO_ERROR;
 							
+                            if (len > 0)
+                            {
+                                if (!MCStringAppendChar(m_text, (unichar_t)*(const uint8_t *)dptr))
+                                    return IO_ERROR;
+                                t_len += 1;
+                            }
+                            
 							// The indices used by the block are incorrect and need
 							// to be updated (offsets into the stored string and
 							// the string held by the paragraph will differ if any
 							// portion of the stored string was non-UTF-16)
                             newblock->SetRange(t_index, t_len);
 						}
+                        // SN-2014-09-29: [[ Bug 13552 ]] Update the block range, even if its length is 0
+                        else
+                            newblock->SetRange(t_index, 0);
 					}
 					else
 					{
