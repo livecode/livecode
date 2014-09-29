@@ -167,7 +167,8 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef p_transform, MCIm
 	t_image = nil;
 	
 	CGBitmapInfo t_dst_bm_info;
-	t_dst_bm_info = kCGBitmapByteOrder32Host | (MCImageBitmapHasTransparency(p_image) ? kCGImageAlphaFirst : kCGImageAlphaNoneSkipFirst);
+	// IM-2014-09-29: [[ Bug 13208 ]] Ignore image alpha when transforming image colors
+	t_dst_bm_info = kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst;
 	
 	if (t_success)
 	{
