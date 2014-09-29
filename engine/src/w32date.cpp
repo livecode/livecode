@@ -297,7 +297,7 @@ static MCStringRef windows_convert_time_format(MCStringRef p_format)
 						if (t_count == 1)
 							MCStringAppendFormat(t_output, "%%#H");
 						else if (t_count == 2)
-							MCStringAppendFormat(t_output, "%%h");
+							MCStringAppendFormat(t_output, "%%H");
 						break;
 						
 					case 'm':
