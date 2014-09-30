@@ -1987,7 +1987,8 @@ void MCField::ffocus(Field_translations function, MCStringRef p_string, KeySym k
 
 void MCField::freturn(Field_translations function, MCStringRef p_string, KeySym key)
 {
-	if (flags & F_AUTO_TAB && cursorrectp.y + (cursorrectp.height << 1) > rect.y + getfheight())
+    // FG-2014-09-30: [[ Bugfix 13548 ]] Use total height of cursor in calculation
+    if (flags & F_AUTO_TAB && cursorrectp.y + ((cursorrects.height + cursorrectp.height) << 1) > rect.y + getfheight())
 		getcard()->kfocusnext(False);
 	else
 	{
