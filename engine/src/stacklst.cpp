@@ -329,9 +329,9 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 					if (key == (KeySym)accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 					{
 						MCmodifierstate &= t_mod_mask;
-                        // TKD-2014-09-26 : Unlock the screen prior to triggering menu item. If code outside of
-                        // the engine updates the window size the window isn't redrawn (e.g. [NSWindow toggleFullScreen:nil]).
-                        MCRedrawUnlockScreen();
+                        			// TKD-2014-09-26: [[ Bug 13560 ]] Unlock the screen prior to triggering menu item. If code outside of
+                        			//   the engine updates the window size the window isn't redrawn (e.g. [NSWindow toggleFullScreen:nil]).
+                        			MCRedrawUnlockScreen();
 						accelerators[i] . button -> activate(True, (uint2)key);
 						return True;
 					}
