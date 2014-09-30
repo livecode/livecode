@@ -599,7 +599,7 @@ void MCStack::setgeom()
 	 unloadexternals();
 }
  
-void MCStack::openwindow(Boolean override)
+void MCStack::platform_openwindow(Boolean override)
 {
 	if (MCModeMakeLocalWindows())
 	{
