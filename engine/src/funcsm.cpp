@@ -1045,7 +1045,6 @@ void MCStatRound::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCTan */
 
-
 #ifdef /* MCTranspose */ LEGACY_EXEC
 	// ARRAYEVAL
 	if (source -> eval(ep) != ES_NORMAL)
@@ -1083,12 +1082,38 @@ void MCStatRound::compile(MCSyntaxFactoryRef ctxt)
     
 	return ES_NORMAL;
 #endif /* MCTranspose */
+//<<<<<<< HEAD
 
 
+//#ifdef /* MCTrunc */ LEGACY_EXEC
+//	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+//	{
+//		MCeerror->add(EE_TRUNC_BADSOURCE, line, pos);
+//=======
+//#endif /* MCTrunc */
+
+}
+
+Parse_stat MCTrunc::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+
+	if (get1param(sp, &source, &digit, the) != PS_NORMAL)
+	{
+		MCperror->add(PE_TRUNC_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+//	return MCMathOperator::parse(sp, the, PE_TRUNC_BADPARAM);
+}
+
+Exec_stat MCTrunc::eval(MCExecPoint &ep)
+{
 #ifdef /* MCTrunc */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
-		MCeerror->add(EE_TRUNC_BADSOURCE, line, pos);
+		MCeerror->add
+		(EE_TRUNC_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	if (ep.getnvalue() < 0.0)
@@ -1097,3 +1122,131 @@ void MCStatRound::compile(MCSyntaxFactoryRef ctxt)
 		ep.setnvalue(floor(ep.getnvalue()));
 	return ES_NORMAL;
 #endif /* MCTrunc */
+}
+
+MCFloor::~MCFloor()
+{
+	delete source;
+	delete digit;
+}
+
+Parse_stat MCFloor::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+
+	if (get1param(sp, &source, &digit, the) != PS_NORMAL)
+	{
+		MCperror->add(PE_FLOOR_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+//	return MCMathOperator::parse(sp, the, PE_FLOOR_BADPARAM);
+}
+
+void MCFloor::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+	{
+		MCeerror->add(EE_FLOOR_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	real8 value = ep.getnvalue();
+	ep.setnvalue(floor(value));
+	return ES_NORMAL;
+}
+
+Exec_stat MCFloor::eval(MCExecPoint &ep)
+{
+#ifdef /* MCFloor */ LEGACY_EXEC
+	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_FLOOR_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	ep.setnvalue(floor(ep.getnvalue()));
+	return ES_NORMAL;
+#endif /* MCFloor */
+}
+
+Parse_stat MCMathOperator::parse(MCScriptPoint &sp, Boolean the, int err_msg)
+{
+	initpoint(sp);
+
+	if (get1param(sp, &source, the) != PS_NORMAL)
+	{
+		MCperror->add
+		(err_msg, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+MCCeil::~MCCeil()
+{
+	delete source;
+	delete digit;
+}
+
+Parse_stat MCCeil::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+
+	if (get1param(sp, &source, &digit, the) != PS_NORMAL)
+	{
+		MCperror->add(PE_CEIL_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+//	return MCMathOperator::parse(sp, the, PE_CEIL_BADPARAM);
+}
+
+void MCCeil::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+#ifdef /* MCRound */ LEGACY_EXEC
+	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+	{
+		MCeerror->add(EE_CEIL_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	real8 value = ep.getnvalue();
+	ep.setnvalue(ceil(value));
+	return ES_NORMAL;
+#endif /* MCRound */
+
+/*
+    real64_t t_source;
+    if (!ctxt . EvalExprAsDouble(source, EE_RANDOM_BADSOURCE, t_source))
+        return;
+
+    real64_t t_digit;
+    if (!ctxt . EvalOptionalExprAsDouble(digit, nil, EE_RANDOM_BADSOURCE, t_digit))
+        return;
+
+	if (digit != nil)
+		MCMathEvalRoundToPrecision(ctxt, t_source, t_digit, r_value . double_value);
+	else
+		MCMathEvalRound(ctxt, t_source, r_value . double_value);
+    r_value . type = kMCExecValueTypeDouble;
+*/
+}
+
+void MCCeil::compile(MCSyntaxFactoryRef ctxt)
+{
+	compile_with_args(ctxt, kMCMathEvalCeilMethodInfo, source);
+}
+
+Exec_stat MCCeil::eval(MCExecPoint &ep)
+{
+#ifdef /* MCCeil */ LEGACY_EXEC
+	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_CEIL_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	ep.setnvalue(ceil(ep.getnvalue()));
+	return ES_NORMAL;
+#endif /* MCCeil */
+}
+
