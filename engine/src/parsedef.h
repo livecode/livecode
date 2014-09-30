@@ -1818,6 +1818,9 @@ enum Sugar_constants {
 	SG_FALSE,
 	SG_SUCCESS,
 	SG_FAILURE,
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Tag for 'only' keyword in create command.
+    SG_ONLY,
 };
 
 enum Statements {

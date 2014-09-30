@@ -239,8 +239,12 @@ protected:
 	// IM-2014-01-23: [[ HiDPI ]] The backing scale of the surface onto which this view is drawn
     
 	MCGFloat m_view_backing_scale;
+    
 	// MW-2014-03-12: [[ Bug 11914 ]] If this is true then the stack is an engine menu.
 	bool m_is_menu : 1;
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] If true, the stack is a script-only-stack.
+    bool m_is_script_only : 1;
 	
 public:
 	Boolean menuwindow;
@@ -799,6 +803,11 @@ public:
 	//   metrics.
 	bool getuseideallayout(void);
 
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Set the stack as a 'script stack'. The script for
+    //   the stack is taken from ep.
+    bool isscriptonly(void) const { return m_is_script_only; }
+    void setasscriptonly(MCExecPoint& ep);
+    
 	inline bool getextendedstate(uint4 flag) const
 	{
 		return (f_extended_state & flag) != 0;
