@@ -485,10 +485,14 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		uint32_t t_length;
 		MCAutoPointer<char> t_text_data;
-		// This string can contain a mixture of Unicode and native...
-		if ((stat = IO_read_string_legacy_full(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
+        
+		// This string can contain a mixture of Unicode and native - t_length is the number
+        // of bytes.
+        if ((stat = IO_read_string_legacy_full(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
 			return stat;
 
+        MCLog("Read paragraph text of length %d", t_length);
+        
         if (!MCStringCreateMutable(0, m_text))
 			return IO_ERROR;
 
@@ -531,13 +535,20 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					// using the correct encoding and get fixed up below.
 					findex_t index, len;
 					newblock->GetRange(index, len);
-					t_last_added = index+len;
+                    t_last_added = index+len;
 
+                    MCLog(" Read block is_unicode=%d, index=%d, len=%d", newblock -> IsSavedAsUnicode(), index, len);
+                    
                     // Some stacks seem to be saved with invalid blocks that
                     // exceed the length of the paragraph character data
                     // SN-2014-09-29: [[ Bug 13552 ]] Clamp the length appropriately
                     if (len + index > t_length)
-                        len = t_length - index;
+                    {
+                        // MW-2014-09-29: [[ Bug 13552 ]] Make sure we only recalculate if the length
+                        //   is not 0.
+                        if (len != 0)
+                            len = t_length - index;
+                    }
                     
                     uindex_t t_index;
                     t_index = MCStringGetLength(m_text);
