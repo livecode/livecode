@@ -1175,6 +1175,7 @@ MCTheme *MCThemeCreateNative(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+extern bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
 
 // IM-2014-01-24: [[ HiDPI ]] Factor out creation of CGBitmapContext for MCImageBitmap
 bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context)
@@ -1185,7 +1186,7 @@ bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_cont
 	CGContextRef t_cgcontext = nil;
 	CGColorSpaceRef t_colorspace = nil;
 	
-	t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
+	t_success = MCMacPlatformGetImageColorSpace(t_colorspace);
 	
 	if (t_success)
 	{
