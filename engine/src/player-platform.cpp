@@ -756,7 +756,7 @@ public:
                 t_width = t_part_rate_well_rect . width;
                 
                 t_new_rate = MAX_RATE * float((MCmousex - (t_part_rate_well_rect . x + t_part_rate_well_rect . width / 2 ) ) )/ (t_width / 2);
-                MCLog("New rate is %f", t_new_rate);
+                
                 m_player -> updateplayrate(t_new_rate);
                 m_player -> setplayrate();
                 m_player -> layer_redrawall();
