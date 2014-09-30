@@ -505,27 +505,81 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		[t_session_config setSimulatedApplicationLaunchEnvironment: [NSDictionary dictionary]];
 		[t_session_config setLocalizedClientName: @"LiveCode"];
 		
+		bool t_is_ipad;
+		t_is_ipad = strcasecmp(t_family, "ipad") == 0;
+		
 		if ([t_session_config respondsToSelector: @selector(setSimulatedDeviceFamily:)])
 		{
 			int32_t t_family_int;
-			if (strcasecmp(t_family, "ipad") == 0)
+			if (t_is_ipad)
 				t_family_int = 2;
 			else
 				t_family_int = 1;
 			[t_session_config setSimulatedDeviceFamily: [NSNumber numberWithInt: t_family_int]];
 		}
-		
-		// MM-2014-03-18: [[ iOS 7.1 Support ]] Device name is required by the DVT framework.
-		if ([t_session_config respondsToSelector: @selector(setSimulatedDeviceInfoName:)])
+
+		// MM-2014-09-30: [[ iOS 8 Support ]] For iOS 8, we must choose a device from the set the simulator offers
+		//  in order to launch successfully.
+		NSArray *t_devices;
+		t_devices = [s_simulator_proxy getSimDeviceSet];
+		if (t_devices != nil)
 		{
-            // MW-2014-03-20: [[ Bug 11946 ]] Fetch the current device preference from the simulator
-            //   and if it matches the requested family, then use that string for the device. This
-            //   ensures the last set device in the simulator gets used rather than falling back to
-            //   just iPad or iPhone.
-            NSString *t_current;
-            t_current = (NSString *)CFPreferencesCopyAppValue((CFStringRef)@"SimulateDevice", (CFStringRef)@"com.apple.iphonesimulator");
+			SimDevice *t_device;
+			t_device = nil;
+			
+			bool t_found_device;
+			t_found_device = false;
+			
+			// Choose the last run device if it is of the desired type.
+			// Each device has a plist with a state entry. A state of 3 appears to suggest it's the last run.
+			for (t_device in t_devices)
+			{
+				if (!(t_is_ipad && [[t_device name] hasPrefix: @"iPad"] || !t_is_ipad && [[t_device name] hasPrefix: @"iPhone"]))
+					continue;
+				
+				NSString *t_dev_plist_path;
+				t_dev_plist_path = [[t_device devicePath] stringByAppendingPathComponent: @"device.plist"];
+				if ([[NSFileManager defaultManager] fileExistsAtPath: t_dev_plist_path])
+				{					
+					NSDictionary *t_dev_plist;
+					t_dev_plist= [NSDictionary dictionaryWithContentsOfFile: t_dev_plist_path];					
+					if (t_dev_plist != nil)
+					{
+						NSNumber *t_state;
+						t_state = [t_dev_plist objectForKey: @"state"];		
+						if (t_state != nil && [t_state intValue] == 3)
+						{
+							t_found_device = true;
+							break;
+						}
+					}
+				}				
+			}
+			
+			// If the last run device is not suitable or not found, then just choose the first device in the list of the desired type.
+			if (!t_found_device)
+				for (t_device in t_devices)
+					if (t_is_ipad && [[t_device name] hasPrefix: @"iPad"] || !t_is_ipad && [[t_device name] hasPrefix: @"iPhone"])
+					{
+						t_found_device = true;
+						break;
+					}
+			
+			if (t_found_device)
+				t_session_config . device = t_device;
+		}
+		else if ([t_session_config respondsToSelector: @selector(setSimulatedDeviceInfoName:)])
+		{
+			// MM-2014-03-18: [[ iOS 7.1 Support ]] Device name is required by the DVT framework.
+			
+			// MW-2014-03-20: [[ Bug 11946 ]] Fetch the current device preference from the simulator
+			//   and if it matches the requested family, then use that string for the device. This
+			//   ensures the last set device in the simulator gets used rather than falling back to
+			//   just iPad or iPhone.
+			NSString *t_current;
+			t_current = (NSString *)CFPreferencesCopyAppValue((CFStringRef)@"SimulateDevice", (CFStringRef)@"com.apple.iphonesimulator");			
             
-			if (strcasecmp(t_family, "ipad") == 0)
+			if (t_is_ipad)
             {
                 if ([t_current hasPrefix: @"iPad"])
                     [t_session_config setSimulatedDeviceInfoName: t_current];
@@ -545,7 +599,7 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		s_simulator_session = [s_simulator_proxy newSession];
 		[s_simulator_session setDelegate: t_delegate];
 	
-		// MM-2014-03-18: [[ iOS 7.1 Support ]] For the DVT framework, the application PIS is an int rather than a NSNumber.
+		// MM-2014-03-18: [[ iOS 7.1 Support ]] For the DVT framework, the application PID is an int rather than a NSNumber.
 		//  Check to see which type the session accepts.
 		if ([s_simulator_session respondsToSelector: @selector(setSimulatedApplicationPID:)])
 		{

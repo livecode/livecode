@@ -342,6 +342,9 @@ struct load_command {
 #define LC_DYLD_INFO_ONLY 0x80000022
 #define LC_SOURCE_VERSION 0x2A
 
+// MM-2014-09-30: [[ iOS 8 Support ]] Used by iOS 8 simulator builds.
+#define LC_MAIN (0x28|LC_REQ_DYLD) /* replacement for LC_UNIXTHREAD */
+
 /*
  * A variable length string in a load command is represented by an lc_str
  * union.  The strings are stored just after the load command structure and
@@ -886,6 +889,7 @@ static void swap_load_command(bool p_to_network, uint32_t p_type, load_command* 
 		case LC_THREAD:
 		case LC_UNIXTHREAD:
 		case LC_LOAD_DYLINKER:
+		case LC_MAIN:
 			swap_load_command_hdr(p_to_network, *x);
 			break;
 
@@ -1263,6 +1267,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 			case LC_VERSION_MIN_MACOSX:
 			case LC_VERSION_MIN_IPHONEOS:
 			case LC_SOURCE_VERSION:
+			case LC_MAIN:
 				break;
 
 			// Any others that are present are an error since we don't know
