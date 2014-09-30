@@ -2428,12 +2428,14 @@ public:
 	virtual ~MCTranspose(){}
 };
 
-class MCMathOperator : public MCUnaryFunctionCtxt<double, double, MCExecValueTraits PARSE_METHOD, Exec_errors EE_MSG, Parse_errors PE_MSG, MCExecMethodInfo EXEC_METHOD>
+/*
+class MCMathOperator : public MCUnaryFunctionCtxt<double, double, MCExecValueTraits, Exec_errors, Parse_errors, MCExecMethodInfo>
 {
 public:
     MCMathOperator(){}
     virtual ~MCMathOperator(){}
 };
+*/
 
 class MCTrunc : public MCUnaryFunctionCtxt<double, double, MCMathEvalTrunc, EE_TRUNC_BADSOURCE, PE_TRUNC_BADPARAM, kMCMathEvalTruncMethodInfo>
 {
@@ -2443,7 +2445,7 @@ public:
 };
 
 // MDW-2014-08-23 : [[ feature_floor ]]
-class MCFloor : public MCUnaryFunctionCtxt<double, double, MCMathEvalFloor, EE_FLOOR_BADSOURCE, PE_FLOOR_BADPARAM, kMCMathEvalCeilMethodInfo>
+class MCFloor : public MCUnaryFunctionCtxt<double, double, MCMathEvalFloor, EE_FLOOR_BADSOURCE, PE_FLOOR_BADPARAM, kMCMathEvalFloorMethodInfo>
 {
 public:
 	MCFloor(){}
