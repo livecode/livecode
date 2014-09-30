@@ -517,6 +517,7 @@ public:
         m_font = nil;
         
         m_player = nil;
+        m_grabbed_part = -1;
     }
     
     ~MCPlayerRatePopup(void)
@@ -732,6 +733,9 @@ public:
     
     Boolean mup(uint2 which, bool release)
     {
+        // PM-2014-09-30: [[ Bug 13119 ]] Make sure a playRateChanged message is sent when the mouse is up/released, but not when creating the ratepopup
+        if (m_grabbed_part != -1)
+            m_player -> timer(MCM_play_rate_changed,nil);
         m_grabbed_part = kMCPlayerControllerPartUnknown;
         return True;
     }
@@ -752,7 +756,7 @@ public:
                 t_width = t_part_rate_well_rect . width;
                 
                 t_new_rate = MAX_RATE * float((MCmousex - (t_part_rate_well_rect . x + t_part_rate_well_rect . width / 2 ) ) )/ (t_width / 2);
-                
+                MCLog("New rate is %f", t_new_rate);
                 m_player -> updateplayrate(t_new_rate);
                 m_player -> setplayrate();
                 m_player -> layer_redrawall();
