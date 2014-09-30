@@ -1013,7 +1013,7 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCString& fname)
     MCS_close(stream);
     
     // Set the filename.
-	sptr->setfilename(*linkname);
+	sptr->setfilename(strclone(*linkname));
     
     return IO_NORMAL;
 }
