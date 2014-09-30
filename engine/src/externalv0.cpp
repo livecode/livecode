@@ -309,7 +309,11 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
         if (t_wants_utf8)
             MCStringConvertToUTF8String(*t_string, args[nargs++]);
         else
+        {
+            // AL-2014-09-30: [[ Bug 13530 ]] Nativize string before conversion for legacy behavior
+            MCStringNativize(*t_string);
             MCStringConvertToCString(*t_string, args[nargs++]);
+        }
         p_parameters = p_parameters -> getnext();
     }
     
