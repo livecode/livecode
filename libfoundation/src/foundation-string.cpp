@@ -1700,6 +1700,15 @@ bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r
 	return true;
 }
 
+bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count)
+{
+    MCAutoStringRef t_normalized;
+    if (!MCStringNormalizedCopyNFC(string, &t_normalized))
+        return false;
+    
+    return MCStringConvertToNative(*t_normalized, r_chars, r_char_count);
+}
+
 bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_char_count)
 {
 	// Allocate an array of chars one byte bigger than needed. As the allocated array
@@ -1713,6 +1722,14 @@ bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_cha
 	return true;
 }
 
+bool MCStringNormalizeAndConvertToCString(MCStringRef string, char*& r_cstring)
+{
+    MCAutoStringRef t_normalized;
+    if (!MCStringNormalizedCopyNFC(string, &t_normalized))
+        return false;
+    
+    return MCStringConvertToCString(*t_normalized, r_cstring);
+}
 
 bool MCStringConvertToCString(MCStringRef p_string, char*& r_cstring)
 {
