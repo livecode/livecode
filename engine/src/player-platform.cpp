@@ -205,7 +205,7 @@ public:
     {
         MCRectangle t_volume_bar_rect = dirty;
         MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_volume_bar_rect));
-        MCGContextSetFillRGBAColor(p_gcontext, (m_player -> getcontrollerbackcolor() . red / 255.0) / 257.0, (m_player -> getcontrollerbackcolor() . green / 255.0) / 257.0, (m_player -> getcontrollerbackcolor() . blue / 255.0) / 257.0, 1.0f);
+        MCGContextSetFillRGBAColor(p_gcontext, (m_player -> getcontrollerfontcolor() . red / 255.0) / 257.0, (m_player -> getcontrollerfontcolor() . green / 255.0) / 257.0, (m_player -> getcontrollerfontcolor() . blue / 255.0) / 257.0, 1.0f);
         MCGContextFill(p_gcontext);
     }
     
@@ -830,10 +830,16 @@ MCPlayer::MCPlayer()
 	lasttime = 0;
 	starttime = endtime = MAXUINT4;
     
-    // Default controller back area color (darkgray)
-    controllerbackcolor . red = 34 * 257;
-    controllerbackcolor . green = 34 * 257;
-    controllerbackcolor . blue = 34 * 257;
+    // Default controller font color (darkgray)
+    controllerfontcolor . red = 34 * 257;
+    controllerfontcolor . green = 34 * 257;
+    controllerfontcolor . blue = 34 * 257;
+    
+    // PM-2014-09-04: [[  Bug 12834 ]]  Added option of changing the controller icons color
+    // Default controller icons color (white)
+    controllericonscolor . red = 255 * 257;
+    controllericonscolor . green = 255 * 257;
+    controllericonscolor . blue = 255 * 257;
     
     // Default controller played area color (purple)
     controllermaincolor . red = 168 * 257;
@@ -878,7 +884,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	rate = sref.rate;
 	lasttime = sref.lasttime;
 	starttime = sref.starttime;
-    controllerbackcolor = sref.controllerbackcolor;
+    controllerfontcolor = sref.controllerfontcolor;
+    controllericonscolor = sref.controllericonscolor;
     controllermaincolor = sref.controllermaincolor;
     selectedareacolor = sref.selectedareacolor;
 	endtime = sref.endtime;
@@ -1254,6 +1261,10 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
         case P_HILITE_COLOR:
             ep.setcolor(controllermaincolor);
             break;
+        // PM-2014-09-04: [[  Bug 12834 ]]  Added option of changing the controller icons color
+        case P_BACK_COLOR:
+            ep.setcolor(controllericonscolor);
+            break;
         case P_FORE_COLOR:
             ep.setcolor(selectedareacolor);
             break;
@@ -1576,6 +1587,24 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
         }
             break;
    
+        // PM-2014-09-04: [[  Bug 12834 ]]  Added option of changing the controller icons color
+        case P_BACK_COLOR:
+        {
+            MCColor t_color;
+			char *t_colorname = NULL;
+			if (!MCscreen->parsecolor(data, &t_color, &t_colorname))
+			{
+				MCeerror->add
+				(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
+				return ES_ERROR;
+			}
+			if (t_colorname != NULL)
+				delete t_colorname;
+            controllericonscolor = t_color;
+            dirty = True;
+        }
+            break;
+            
         case P_SHOW_SELECTION: //means make movie editable
             if (!MCU_matchflags(data, flags, F_SHOW_SELECTION, dirty))
             {
@@ -2280,9 +2309,14 @@ uint2 MCPlayer::getloudness()
 	return loudness;
 }
 
-MCColor MCPlayer::getcontrollerbackcolor()
+MCColor MCPlayer::getcontrollerfontcolor()
 {
-    return controllerbackcolor;
+    return controllerfontcolor;
+}
+
+MCColor MCPlayer::getcontrollericonscolor()
+{
+    return controllericonscolor;
 }
 
 MCColor MCPlayer::getcontrollermaincolor()
@@ -2733,7 +2767,7 @@ void MCPlayer::drawcontroller(MCDC *dc)
     
     // SN-2014-08-25: [[ Bug 13187 ]] Fill up the controller background color after clipping
     MCGContextAddRectangle(t_gcontext, MCRectangleToMCGRectangle(t_rect));
-    MCGContextSetFillRGBAColor(t_gcontext, (controllerbackcolor . red / 255.0) / 257.0, (controllerbackcolor . green / 255.0) / 257.0, (controllerbackcolor . blue / 255.0) / 257.0, 1.0f);
+    MCGContextSetFillRGBAColor(t_gcontext, (controllerfontcolor . red / 255.0) / 257.0, (controllerfontcolor . green / 255.0) / 257.0, (controllerfontcolor . blue / 255.0) / 257.0, 1.0f);
     MCGContextFill(t_gcontext);
     
     drawControllerVolumeButton(t_gcontext);
@@ -2781,7 +2815,7 @@ void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
         MCGContextFill(p_gcontext);
     }
     
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetFillRGBAColor(p_gcontext, (controllericonscolor . red / 255.0) / 257.0, (controllericonscolor . green / 255.0) / 257.0, (controllericonscolor . blue / 255.0) / 257.0, 1.0f);
 
     MCGContextSetShouldAntialias(p_gcontext, true);
     
@@ -2813,7 +2847,7 @@ void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
         MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.8 , 0.7));
     }
     
-    MCGContextSetStrokeRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetStrokeRGBAColor(p_gcontext, (controllericonscolor . red / 255.0) / 257.0, (controllericonscolor . green / 255.0) / 257.0, (controllericonscolor . blue / 255.0) / 257.0, 1.0f);
     MCGContextSetStrokeWidth(p_gcontext, t_volume_rect . width / 20.0 );
     MCGContextStroke(p_gcontext);
 }
@@ -2844,8 +2878,7 @@ void MCPlayer::drawControllerPlayPauseButton(MCGContextRef p_gcontext)
         MCGContextAddRectangle(p_gcontext, t_grect2);
         
     }
-    
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetFillRGBAColor(p_gcontext, (controllericonscolor . red / 255.0) / 257.0, (controllericonscolor . green / 255.0) / 257.0, (controllericonscolor . blue / 255.0) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -2981,8 +3014,7 @@ void MCPlayer::drawControllerSelectionStartButton(MCGContextRef p_gcontext)
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_start_rect, 0.3, 0.88));
     MCGContextCloseSubpath(p_gcontext);
 
-    
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetFillRGBAColor(p_gcontext, (controllericonscolor . red / 255.0) / 257.0, (controllericonscolor . green / 255.0) / 257.0, (controllericonscolor . blue / 255.0) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3011,9 +3043,8 @@ void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_drawn_selection_finish_rect, 0.3, 0.88));
     MCGContextCloseSubpath(p_gcontext);
     
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetFillRGBAColor(p_gcontext, (controllericonscolor . red / 255.0) / 257.0, (controllericonscolor . green / 255.0) / 257.0, (controllericonscolor . blue / 255.0) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
-
 }
 
 void MCPlayer::drawControllerScrubForwardButton(MCGContextRef p_gcontext)
@@ -3040,8 +3071,8 @@ void MCPlayer::drawControllerScrubForwardButton(MCGContextRef p_gcontext)
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.55, 0.7));
     MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.75, 0.5));
     MCGContextCloseSubpath(p_gcontext);
-     
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    
+    MCGContextSetFillRGBAColor(p_gcontext, (controllericonscolor . red / 255.0) / 257.0, (controllericonscolor . green / 255.0) / 257.0, (controllericonscolor . blue / 255.0) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
@@ -3070,7 +3101,7 @@ void MCPlayer::drawControllerScrubBackButton(MCGContextRef p_gcontext)
     MCGContextAddRectangle(p_gcontext, t_grect);
     MCGContextCloseSubpath(p_gcontext);
     
-    MCGContextSetFillRGBAColor(p_gcontext, 257 / 257.0, 257 / 257.0, 257 / 257.0, 1.0f); // WHITE
+    MCGContextSetFillRGBAColor(p_gcontext, (controllericonscolor . red / 255.0) / 257.0, (controllericonscolor . green / 255.0) / 257.0, (controllericonscolor . blue / 255.0) / 257.0, 1.0f);
     MCGContextFill(p_gcontext);
 }
 
