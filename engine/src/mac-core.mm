@@ -86,7 +86,7 @@ enum
 - (void)windowStartedMoving: (MCPlatformWindowRef)window
 {
     if (s_moving_window != nil)
-        [self windowStoppedMoving: window];
+        [self windowStoppedMoving: s_moving_window];
     
     MCPlatformRetainWindow(window);
     s_moving_window = window;
@@ -97,8 +97,9 @@ enum
     if (s_moving_window == nil)
         return;
     
-    [[((MCMacPlatformWindow *)s_moving_window) -> GetHandle() delegate] windowWillMoveFinished: nil];
-    
+    // IM-2014-10-01: [[ Bug 13526 ]] Don't call windowWillMoveFinish here as the reported
+    //   window frame will be wrong. The windowDidMove message received by the window
+    //   delegate is sufficient to signal the end of window dragging.
     MCPlatformReleaseWindow(s_moving_window);
     s_moving_window = nil;
 }
