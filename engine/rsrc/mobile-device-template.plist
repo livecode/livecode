@@ -34,6 +34,10 @@
 	<array>
 		${BUNDLE_ICONS}
 	</array>
+	<key>UILaunchImages</key>
+	<array>
+		${SPLASHSCREENS}
+	</array>
 	<key>DTCompiler</key>
 	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>DTPlatformBuild</key>

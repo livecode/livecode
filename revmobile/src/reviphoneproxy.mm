@@ -28,6 +28,7 @@ static id s_DTiPhoneSimulatorSystemRoot_class = nil;
 static id s_DTiPhoneSimulatorApplicationSpecifier_class = nil;
 static id s_DTiPhoneSimulatorSessionConfig_class = nil;
 static id s_DTiPhoneSimulatorSession_class = nil;
+static id s_SimDeviceSet_class = nil;
 
 @interface RevIPhoneProxy: NSObject
 
@@ -98,6 +99,16 @@ static id s_DTiPhoneSimulatorSession_class = nil;
 		s_keep_running = NO;
 	else
 		[self performSelector: @selector(checkForParent) withObject: nil afterDelay: 0.1];
+}
+
+// MM-2014-09-30: [[ iOS 8 Support ]] Return the array of devices the simulator offers.
+//   A device type must be choosen when launching the iOS 8 simulator.
+- (id)getSimDeviceSet
+{
+	//NSLog(@"received getSimDeviceSet");
+	if (s_SimDeviceSet_class != nil)
+		return [[s_SimDeviceSet_class defaultSet] availableDevices];
+	return nil;
 }
 
 @end
@@ -184,14 +195,34 @@ int main(int argc, char *argv[])
 				//NSLog(@"DVTPlatform %d", t_success);
 			}
 			
+			// MM-2014-09-30: [[ iOS 8 Support ]] Load the new CoreSimulator bundle if found. Allows us to query the available devices.
+			NSBundle *t_core_sim_bundle;
 			if (t_success)
 			{
+				NSString *t_core_sim_path;
+				t_core_sim_path = [NSString stringWithFormat: @"%s/Library/PrivateFrameworks/CoreSimulator.framework",  argv[1]];
+
+				if ([[NSFileManager defaultManager] fileExistsAtPath: t_core_sim_path])
+				{
+					t_core_sim_bundle = [NSBundle bundleWithPath: t_core_sim_path];
+					t_success = [t_core_sim_bundle load];
+					
+					//NSLog(@"CoreSimBundle %d", t_success);					
+				}
+			}
+			
+			if (t_success)
+			{
+				// MM-2014-09-30: [[ iOS 8 Support ]] DVTiPhoneSimulatorRemoteClient has moved in Xcode 6.
 				t_sim_bundle_path = [NSString stringWithFormat: @"%s/Platforms/iPhoneSimulator.platform/Developer/Library/PrivateFrameworks/DVTiPhoneSimulatorRemoteClient.framework",  argv[1]];
+				if (![[NSFileManager defaultManager] fileExistsAtPath: t_sim_bundle_path])
+					t_sim_bundle_path = [NSString stringWithFormat: @"%s/../SharedFrameworks/DVTiPhoneSimulatorRemoteClient.framework",  argv[1]];
+
 				s_simulator_bundle = [NSBundle bundleWithPath: t_sim_bundle_path];
 				t_success = [s_simulator_bundle load];
 				
 				//NSLog(@"SimBundle %d", t_success);
-			}			
+			}
 		}		 
 	}
 			
@@ -201,6 +232,9 @@ int main(int argc, char *argv[])
 		s_DTiPhoneSimulatorApplicationSpecifier_class = [s_simulator_bundle classNamed: @"DTiPhoneSimulatorApplicationSpecifier"];
 		s_DTiPhoneSimulatorSessionConfig_class = [s_simulator_bundle classNamed: @"DTiPhoneSimulatorSessionConfig"];
 		s_DTiPhoneSimulatorSession_class = [s_simulator_bundle classNamed: @"DTiPhoneSimulatorSession"];
+		
+		// MM-2014-09-30: [[ iOS 8 Support ]] Fetch the device set allowing us to query the available devices.
+		s_SimDeviceSet_class = NSClassFromString(@"SimDeviceSet");
 		
 		s_keep_running = YES;
 		while(s_keep_running && 
