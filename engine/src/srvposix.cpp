@@ -359,7 +359,7 @@ struct MCPosixSystem: public MCSystemInterface
 		
 		bool t_found;
 		t_found = stat64(p_path, &t_info) == 0;
-		if (t_found && (t_info.st_mode & S_IFDIR) == 0)
+		if (t_found && !S_ISDIR(t_info.st_mode))
 			return true;
 		
 		return false;
@@ -371,7 +371,7 @@ struct MCPosixSystem: public MCSystemInterface
 		
 		bool t_found;
 		t_found = stat64(p_path, &t_info) == 0;
-		if (t_found && (t_info.st_mode & S_IFDIR) != 0)
+		if (t_found && S_ISDIR(t_info.st_mode))
 			return true;
 		
 		return false;
@@ -383,7 +383,7 @@ struct MCPosixSystem: public MCSystemInterface
 		if (stat64(MCStringGetCString(p_path), &t_info) != 0)
 			return false;
 		
-		if ((t_info . st_mode & S_IFDIR) != 0)
+		if (S_ISDIR(t_info . st_mode))
 			return true;
 		
 		if ((t_info . st_mode & S_IWUSR) == 0)
@@ -574,7 +574,7 @@ struct MCPosixSystem: public MCSystemInterface
 			t_entry . user_id = t_stat . st_uid;
 			t_entry . group_id = t_stat . st_gid;
 			t_entry . permissions = t_stat . st_mode & 0777;
-			t_entry . is_folder = (t_stat . st_mode & S_IFDIR) != 0;
+			t_entry . is_folder = S_ISDIR(t_stat . st_mode);
 			
 			t_success = p_callback(p_context, &t_entry);
 		}

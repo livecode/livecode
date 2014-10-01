@@ -52,8 +52,8 @@ bool MCFileSystemPathExists(const char *p_path, bool p_folder, bool& r_exists)
 	if (stat(t_resolved_path, &t_stat) == 0)
 	{
 		r_exists =
-			(p_folder && (t_stat . st_mode & S_IFDIR) != 0) ||
-			(!p_folder && (t_stat . st_mode & S_IFDIR) == 0);
+			(p_folder && S_ISDIR(t_stat . st_mode)) ||
+			(!p_folder && !S_ISDIR(t_stat . st_mode));
 	}
 	else
 		r_exists = false;

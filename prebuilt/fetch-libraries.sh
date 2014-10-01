@@ -17,7 +17,7 @@ LIBS_mac=( OpenSSL ICU )
 LIBS_ios=( OpenSSL ICU )
 LIBS_win32=( OpenSSL Curl ICU )
 LIBS_linux=( OpenSSL Curl ICU )
-SUBPLATFORMS_ios=( iPhoneSimulator4.3 iPhoneSimulator5.0 iPhoneSimulator5.1 iPhoneSimulator6.0 iPhoneSimulator6.1 iPhoneSimulator7.0 iPhoneSimulator7.1 iPhoneOS6.1 iPhoneOS7.0 iPhoneOS7.1 )
+SUBPLATFORMS_ios=( iPhoneSimulator5.0 iPhoneSimulator6.1 iPhoneSimulator7.1 iPhoneOS5.0 iPhoneOS6.1 iPhoneOS7.1 )
 
 # Fetch settings
 FETCH_DIR=`pwd`/fetched

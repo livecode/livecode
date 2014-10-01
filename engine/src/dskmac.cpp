@@ -874,7 +874,7 @@ static bool MCS_file_exists_at_path(MCStringRef p_path)
 	struct stat buf;
 	t_found = (stat(*t_new_path, (struct stat *)&buf) == 0);
 	if (t_found)
-        if ((buf . st_mode & S_IFDIR) != 0)
+        if (S_ISDIR(buf . st_mode))
             t_found = false;
     
     return t_found;
@@ -912,7 +912,12 @@ static bool MCS_apply_redirect(MCStringRef p_path, bool p_is_file, MCStringRef& 
     
     // Construct the new path from the path after MacOS/ inside Resources/_macos.
     MCAutoStringRef t_new_path;
-    /* UNCHECKED */ MCStringFormat(&t_new_path, "%.*@/Resources/_MacOS/%.*@", MCRangeMake(0, t_engine_path_length - 6), MCcmd, MCRangeMake(t_engine_path_length, UINDEX_MAX), p_path);
+    MCRange t_cmd_range, t_path_range;
+    t_cmd_range = MCRangeMake(0, t_engine_path_length - 6);
+    t_path_range = MCRangeMake(t_engine_path_length + 1, UINDEX_MAX);
+    
+    // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
+    /* UNCHECKED */ MCStringFormat(&t_new_path, "%*@/Resources/_MacOS/%*@", &t_cmd_range, MCcmd, &t_path_range, p_path);
     
     if (p_is_file && !MCS_file_exists_at_path(*t_new_path))
         return false;
@@ -5614,7 +5619,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         t_found = stat(*t_utf8_path, (struct stat *)&buf) == 0;
         if (t_found)
-            t_found = ((buf.st_mode & S_IFDIR) == 0);
+            t_found = !S_ISDIR(buf.st_mode);
         
         if (!t_found)
             return False;
@@ -5635,7 +5640,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         t_found = stat(*t_utf8_path, (struct stat *)&buf) == 0;
         if (t_found)
-            t_found = (buf.st_mode & S_IFDIR) != 0;
+            t_found = S_ISDIR(buf.st_mode);
         
         if (!t_found)
             return False;
@@ -5910,9 +5915,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         bool *t_files = (bool *)x_context;
         // MW-2014-09-17: [[ Bug 13455 ]] If we are fetching files, and the path is inside MacOS, then
         //   merge the list with files from the corresponding path in Resources/_MacOS.
+        // NOTE: the overall operation should still succeed if the redirect doesn't exist
         if (t_success && *t_files &&
             MCS_apply_redirect(*t_curdir, false, &t_redirect))
-            t_success = MCS_getentries_for_folder(*t_redirect, p_callback, x_context);
+            t_success = MCS_getentries_for_folder(*t_redirect, p_callback, x_context) || t_success;
         
         return t_success;
     }
