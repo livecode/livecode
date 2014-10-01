@@ -578,12 +578,13 @@ return 1;
             m_blocking_view.alpha = 0.4;
             m_blocking_view.userInteractionEnabled = YES;
             
-            
+#ifdef __IPHONE_8_0
             CATransition *applicationLoadViewIn =[CATransition animation];
             [applicationLoadViewIn setDuration:0.7];
             [applicationLoadViewIn setType:kCATransitionReveal];
             [applicationLoadViewIn setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn]];
             [[m_blocking_view layer]addAnimation:applicationLoadViewIn forKey:kCATransitionFromTop];
+#endif
             
             [MCIPhoneGetView() addSubview:m_blocking_view];
         }
