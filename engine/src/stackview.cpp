@@ -857,6 +857,11 @@ void MCStack::view_apply_updates()
 	// Ensure the content is up to date.
 	if (m_view_need_redraw)
 	{
+		// IM-2014-09-30: [[ Bug 13501 ]] Unset need_redraw flag here to prevent further updates while drawing
+
+		// We no longer need to redraw.
+		m_view_need_redraw = false;
+		
 		// MW-2012-04-20: [[ Bug 10185 ]] Only update if there is a window to update.
 		//   (we can get here if a stack has its window taken over due to go in window).
 		if (window != nil)
@@ -879,9 +884,6 @@ void MCStack::view_apply_updates()
 			// Clear the update region.
 			MCRegionSetEmpty(m_view_update_region);
 		}
-		
-		// We no longer need to redraw.
-		m_view_need_redraw = false;
 	}
 }
 

@@ -1473,8 +1473,11 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
     CGContextSaveGState(t_graphics);
 
 	{
+		// IM-2014-09-30: [[ Bug 13501 ]] Prevent system event checking which can cause re-entrant calls to drawRect
+		MCMacPlatformDisableEventChecking();
         MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
         t_window -> HandleRedraw(&t_surface, t_update_region);
+		MCMacPlatformEnableEventChecking();
     }
     
     // Restore the context state
