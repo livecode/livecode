@@ -1375,14 +1375,6 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	char *args[1];
 	args[0] = (char *)[[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0] cString];
 	
-	// Setup the value of the major OS version global.
-	NSString *t_sys_version;
-	t_sys_version = [[UIDevice currentDevice] systemVersion];
-	MCmajorosversion = ([t_sys_version characterAtIndex: 0] - '0') * 100;
-	MCmajorosversion += ([t_sys_version characterAtIndex: 2] - '0') * 10;
-	if ([t_sys_version length] == 5)
-		MCmajorosversion += [t_sys_version characterAtIndex: 4] - '0';
-	
 	// Initialize the engine.
 	Bool t_init_success;
 	t_init_success = X_init(1, args, env);

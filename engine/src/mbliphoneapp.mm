@@ -249,7 +249,17 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 
 	// We begin in 'startup' mode.
 	m_status = kMCIPhoneApplicationStatusStartup;
-	
+    
+    // MW-2014-10-02: [[ iOS 8 Support ]] We need this global initialized as early as
+    //   possible.
+    // Setup the value of the major OS version global.
+    NSString *t_sys_version;
+    t_sys_version = [[UIDevice currentDevice] systemVersion];
+    MCmajorosversion = ([t_sys_version characterAtIndex: 0] - '0') * 100;
+    MCmajorosversion += ([t_sys_version characterAtIndex: 2] - '0') * 10;
+    if ([t_sys_version length] == 5)
+        MCmajorosversion += [t_sys_version characterAtIndex: 4] - '0';
+    
 	// We are done (successfully) so return ourselves.
 	return self;
 }
@@ -805,7 +815,8 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	CGRect t_viewport;
 	t_viewport = [[UIScreen mainScreen] bounds];
 	
-	if (UIInterfaceOrientationIsLandscape([self fetchOrientation]))
+    // MW-2014-10-02: [[ iOS 8 Support ]] iOS 8 already takes into account orientation when returning the bounds.
+	if (MCmajorosversion < 800 && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
 		return CGRectMake(0.0f, 0.0f, t_viewport . size . height, t_viewport . size . width);
 	
 	return t_viewport;
@@ -1408,7 +1419,9 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 		// On iPhone there is only ever a 'Default' image, which we must
 		// rotate appropriately since the screen could be in any orientation.
         // MM-2012-10-08: [[ Bug 10448 ]] Make sure the startup view uses the 568px tall splash screen for 4 inch devices.
-		if ([[UIScreen mainScreen] bounds] . size . height == 568)
+        // MW-2014-10-02: [[ iOS 8 Support ]] Check height and width for 568, as mainScreen bounds are rotated
+        //   on iOS 8.
+		if ([[UIScreen mainScreen] bounds] . size . height == 568 || [[UIScreen mainScreen] bounds] . size . width == 568)
         {
             t_image_names[0] = @"Default-568h@2x.png";
             t_image_names[1] = nil;
@@ -1465,7 +1478,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	t_screen_bounds = [[MCIPhoneApplication sharedApplication] fetchScreenBounds];
 	
 	// Center the image in the screen.
-	[m_image_view setCenter: CGPointMake(t_screen_bounds . size . width / 2.0f, t_screen_bounds . size . height / 2.0f)];
+    [m_image_view setCenter: CGPointMake(t_screen_bounds . size . width / 2.0f, t_screen_bounds . size . height / 2.0f)];
 	
 	// Insert the image view into our view.
 	[[self view] addSubview: m_image_view];
