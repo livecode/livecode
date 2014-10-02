@@ -226,16 +226,52 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 		}
             break;
 #if !defined(__LINUX__) && !defined(__ANDROID__)
+        // MW-2014-10-02: [[ Bug 12205 ]] Make ISO8859-1 encoding work on all platforms.
         case kMCStringEncodingISO8859_1:
-            break;
+        {
+            unichar_t *t_buffer;
+            uindex_t t_length = p_byte_count;
+            if (!MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer))
+                return false;
+            
+            for(uindex_t i = 0; i < p_byte_count; i++)
+                t_buffer[i] = MCUnicodeMapFromNative_ISO8859_1(p_bytes[i]);
+            
+            return MCStringCreateWithChars(t_buffer, t_length, r_string);
+        }
+        break;
 #endif
 #ifndef __WINDOWS__
+        // MW-2014-10-02: [[ Bug 12205 ]] Make Windows-1252 encoding work on all platforms.
         case kMCStringEncodingWindows1252:
-            break;
+        {
+            unichar_t *t_buffer;
+            uindex_t t_length = p_byte_count;
+            if (!MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer))
+                return false;
+            
+            for(uindex_t i = 0; i < p_byte_count; i++)
+                t_buffer[i] = MCUnicodeMapFromNative_Windows1252(p_bytes[i]);
+            
+            return MCStringCreateWithChars(t_buffer, t_length, r_string);
+        }
+        break;
 #endif
 #if !defined(__MAC__) && !defined(__IOS__)
+        // MW-2014-10-02: [[ Bug 12205 ]] Make MacRoman encoding work on all platforms.
         case kMCStringEncodingMacRoman:
-            break;
+        {
+            unichar_t *t_buffer;
+            uindex_t t_length = p_byte_count;
+            if (!MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer))
+                return false;
+            
+            for(uindex_t i = 0; i < p_byte_count; i++)
+                t_buffer[i] = MCUnicodeMapFromNative_MacRoman(p_bytes[i]);
+            
+            return MCStringCreateWithChars(t_buffer, t_length, r_string);
+        }
+        break;
 #endif
     }
     
