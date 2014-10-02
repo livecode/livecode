@@ -1372,7 +1372,13 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 		[m_image_view release];
 		m_image_view = nil;
 	}
-	
+    
+    // MM-2014-10-02: [[ Bug ]] If we are a retina device, attempt to use retina splash screens.
+    bool t_is_retina;
+    t_is_retina = [[UIScreen mainScreen] respondsToSelector:@selector(scale)] == YES && [[UIScreen mainScreen] scale] > 1.0;
+    uint32_t t_img_cnt;
+    t_img_cnt = 0;
+    
 	// Compute the list of image names (and rotations) to try in order.
 	NSString *t_image_names[5];
 	CGFloat t_image_angles[5];
@@ -1385,71 +1391,123 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 		{
 			default:
 			case UIInterfaceOrientationPortrait:
-				t_image_names[0] = @"Default-Portrait.png";
-				t_image_angles[0] = 0.0f;
-				t_image_names[1] = @"Default.png";
-				t_image_angles[1] = 0.0f;
-				t_image_names[2] = nil;
+                if (t_is_retina)
+                {
+                    t_image_names[t_img_cnt] = @"Default-Portrait@2x.png";
+                    t_image_angles[t_img_cnt++] = 0.0f;
+                }
+				t_image_names[t_img_cnt] = @"Default-Portrait.png";
+				t_image_angles[t_img_cnt++] = 0.0f;
+				t_image_names[t_img_cnt] = @"Default.png";
+				t_image_angles[t_img_cnt++] = 0.0f;
+				t_image_names[t_img_cnt] = nil;
 				break;
 			case UIInterfaceOrientationPortraitUpsideDown:
-				t_image_names[0] = @"Default-Portrait.png";
-				t_image_angles[0] = 0.0f;
-				t_image_names[1] = @"Default.png";
-				t_image_angles[1] = 0.0f;
-				t_image_names[2] = nil;
-				break;
+                if (t_is_retina)
+                {
+                    t_image_names[t_img_cnt] = @"Default-Portrait@2x.png";
+                    t_image_angles[t_img_cnt++] = 0.0f;
+                }
+                t_image_names[t_img_cnt] = @"Default-Portrait.png";
+                t_image_angles[t_img_cnt++] = 0.0f;
+                t_image_names[t_img_cnt] = @"Default.png";
+                t_image_angles[t_img_cnt++] = 0.0f;
+                t_image_names[t_img_cnt] = nil;
+                break;
 			case UIInterfaceOrientationLandscapeLeft:
-				t_image_names[0] = @"Default-Landscape.png";
-				t_image_angles[0] = 0.0f;
-				t_image_names[1] = @"Default.png";
-				t_image_angles[1] = -90.0f;
-				t_image_names[2] = nil;
-				break;
-			case UIInterfaceOrientationLandscapeRight:
-				t_image_names[0] = @"Default-Landscape.png";
-				t_image_angles[0] = 0.0f;
-				t_image_names[1] = @"Default.png";
-				t_image_angles[1] = -90.0f;
-				t_image_names[2] = nil;
-				break;
+                if (t_is_retina)
+                {
+                    t_image_names[t_img_cnt] = @"Default-Landscape@2x.png";
+                    t_image_angles[t_img_cnt++] = 0.0f;
+                }
+                t_image_names[t_img_cnt] = @"Default-Landscape.png";
+                t_image_angles[t_img_cnt++] = 0.0f;
+                t_image_names[t_img_cnt] = @"Default.png";
+                t_image_angles[t_img_cnt++] = -90.0f;
+                t_image_names[t_img_cnt] = nil;
+                break;
+            case UIInterfaceOrientationLandscapeRight:
+                if (t_is_retina)
+                {
+                    t_image_names[t_img_cnt] = @"Default-Landscape@2x.png";
+                    t_image_angles[t_img_cnt++] = 0.0f;
+                }
+                t_image_names[t_img_cnt] = @"Default-Landscape.png";
+                t_image_angles[t_img_cnt++] = 0.0f;
+                t_image_names[t_img_cnt] = @"Default.png";
+                t_image_angles[t_img_cnt++] = -90.0f;
+                t_image_names[t_img_cnt] = nil;
+                break;
 		}
 	}
 	else
 	{
-		// On iPhone there is only ever a 'Default' image, which we must
-		// rotate appropriately since the screen could be in any orientation.
-        // MM-2012-10-08: [[ Bug 10448 ]] Make sure the startup view uses the 568px tall splash screen for 4 inch devices.
-        // MW-2014-10-02: [[ iOS 8 Support ]] Check height and width for 568, as mainScreen bounds are rotated
-        //   on iOS 8.
-		if ([[UIScreen mainScreen] bounds] . size . height == 568 || [[UIScreen mainScreen] bounds] . size . width == 568)
+        // MM-2014-10-02: [[ iOS 8 Support ]] Like the iPad, the iPhone 6 Plus allows for portrait and landscape splash screens.
+        if ([[UIScreen mainScreen] bounds] . size . height == 736 || [[UIScreen mainScreen] bounds] . size . width == 736)
         {
-            t_image_names[0] = @"Default-568h@2x.png";
+            switch(p_new_orientation)
+            {
+                default:
+                case UIInterfaceOrientationPortrait:
+                case UIInterfaceOrientationPortraitUpsideDown:
+                    t_image_names[0] = @"Default-736h@3x.png";
+                    t_image_angles[0] = 0.0f;
+                case UIInterfaceOrientationLandscapeLeft:
+                case UIInterfaceOrientationLandscapeRight:
+                    t_image_names[0] = @"Default-414h@3x.png";
+                    t_image_angles[0] = 0.0f;
+                    break;
+            }
             t_image_names[1] = nil;
         }
         else
         {
-            t_image_names[0] = @"Default.png";
-            t_image_names[1] = nil;
+            // On iPhone there is only ever a 'Default' image, which we must
+            // rotate appropriately since the screen could be in any orientation.
+            // MM-2012-10-08: [[ Bug 10448 ]] Make sure the startup view uses the 568px tall splash screen for 4 inch devices.
+            // MW-2014-10-02: [[ iOS 8 Support ]] Check height and width for 568, as mainScreen bounds are rotated
+            //   on iOS 8.
+            // MM-2014-10-02: [[ iOS 8 Support ]] Take into account new iPhone 6 splash screens.
+            if ([[UIScreen mainScreen] bounds] . size . height == 667 || [[UIScreen mainScreen] bounds] . size . width == 667)
+            {
+                t_image_names[0] = @"Default-667h@2x.png";
+                t_image_names[1] = nil;
+            }
+            if ([[UIScreen mainScreen] bounds] . size . height == 568 || [[UIScreen mainScreen] bounds] . size . width == 568)
+            {
+                t_image_names[0] = @"Default-568h@2x.png";
+                t_image_names[1] = nil;
+            }
+            else
+            {
+                if (t_is_retina)
+                    t_image_names[t_img_cnt++] = @"Default@2x.png";
+                t_image_names[t_img_cnt++] = @"Default.png";
+                t_image_names[t_img_cnt] = nil;
+            }
+            
+            CGFloat t_angle;
+            t_angle = 0.0f;
+            switch(p_new_orientation)
+            {
+                default:
+                case UIInterfaceOrientationPortrait:
+                    t_angle = 0.0f;
+                    break;
+                case UIInterfaceOrientationPortraitUpsideDown:
+                    t_angle = 180.0f;
+                    break;
+                case UIInterfaceOrientationLandscapeLeft:
+                    t_angle = 90.0f;
+                    break;
+                case UIInterfaceOrientationLandscapeRight:
+                    t_angle = 270.0f;
+                    break;
+            }
+            for(uint32_t i = 0; t_image_names[i] != nil; i++)
+                t_image_angles[i] = t_angle;
         }
-        
-		switch(p_new_orientation)
-		{
-			default:
-			case UIInterfaceOrientationPortrait:
-				t_image_angles[0] = 0.0f;
-				break;
-			case UIInterfaceOrientationPortraitUpsideDown:
-				t_image_angles[0] = 180.0f;
-				break;
-			case UIInterfaceOrientationLandscapeLeft:
-				t_image_angles[0] = 90.0f;
-				break;
-			case UIInterfaceOrientationLandscapeRight:
-				t_image_angles[0] = 270.0f;
-				break;
-		}
 	}
-	
 	
 	// Loop through the image names until we succeed.
 	UIImage *t_image;
