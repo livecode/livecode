@@ -379,12 +379,17 @@ public:
 private:
     void Lock(void);
 	void Unlock(void);
+	
+	// IM-2014-10-03: [[ Bug 13432 ]] Convenience method to clear context and clip to the window mask
+	void ApplyMaskToCGContext(void);
     
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
 	MCGRegionRef m_update_rgn;
     
     MCGRaster m_raster;
+	
+	bool m_cg_context_first_lock;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -572,6 +577,17 @@ void MCPlatformFinalizeColorTransform(void);
 
 // IM-2014-09-29: [[ Bug 13451 ]] Return the standard colorspace for images on OSX
 bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-10-03: [[ Bug 13432 ]] Store both alpha data and derived cg image in the mask.
+struct MCMacPlatformWindowMask
+{
+	MCGRaster mask;
+	CGImageRef cg_mask;
+	
+	uint32_t references;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
