@@ -1,0 +1,90 @@
+module com.livecode.binary
+
+foreign handler ExecPutBytesBefore(in Source as data, inout Target as data) as undefined binds to "<builtin>"
+foreign handler ExecPutBytesAfter(in Source as data, inout Target as data) as undefined binds to "<builtin>"
+
+foreign handler EvalConcatenateBytes(in Left as data, in Right as data, out Result as data) as undefined binds to "<builtin>"
+
+foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
+
+foreign handler EvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalIsNotAmongTheBytesOf(in Needle as data, in Target as data, out Result as bool) as undefined binds to "<builtin>"
+
+foreign handler EvalOffsetOfBytesIn(in Needle as data, in Target as data, out Offset as index) as undefined binds to "<builtin>"
+
+foreign handler FetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
+foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
+foreign handler FetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
+foreign handler StoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
+
+--
+
+syntax PutBytesBefore is statement
+    "put" <Source: Expression> "before" <Target: Expression>
+begin
+    ExecPutBytesBefore(Source, Target)
+end syntax
+
+syntax PutBytesAfter is statement
+    "put" <Source: Expression> "after" <Target: Expression>
+begin
+    ExecPutBytesAfter(Source, Target)
+end syntax
+
+--
+
+syntax ConcatenateBytes is left binary operator with precedence 2
+    <Left: Expression> "&" <Right: Expression>
+begin
+    EvalConcatenateBytes(Left, Right, output)
+end syntax
+
+--
+
+syntax CountBytesOf is left unary operator with precedence 1
+	"the" "number" "of" "bytes" "in" <Target: Expression>
+begin
+	EvalNumberOfBytesIn(Target, output)
+end syntax
+
+--
+
+syntax AmongBytesOf is left unary operator with precedence 1
+	<Needle: Expression> "is" "among" "the" "bytes" "of" <Target: Expression>
+begin
+	EvalIsAmongTheBytesOf(Needle, Target, output)
+end syntax
+
+syntax NotAmongBytesOf is left unary operator with precedence 1
+	<Needle: Expression> "is" "not" "among" "the" "bytes" "of" <Target: Expression>
+begin
+	EvalIsNotAmongTheBytesOf(Needle, Target, output)
+end syntax
+
+--
+
+syntax ByteOffset is left unary operator with precedence 1
+	"the" "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
+begin
+	EvalOffsetOfBytesIn(Needle, Target, output)
+end syntax
+
+--
+
+syntax SingletonByteOf is left unary operator with precedence 1
+	"byte" <Index: Expression> "of" <Target: Expression>
+begin
+	FetchByteOf(Index, Target, output)
+	StoreByteOf(input, Index, Target)
+end syntax
+
+syntax RangeByteOf is left unary operator with precedence 1
+	"byte" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	FetchByteRangeOf(Start, Finish, Target, output)
+	StoreByteRangeOf(input, Start, Finish, Target)
+end syntax
+
+--
+
+end module

@@ -1,0 +1,13 @@
+declare ten = 10
+write ten
+write twenty
+declare twenty = 20
+begin
+   declare a = 5
+   write a
+   begin
+      declare a = 6
+      write a
+   end
+   write a
+end

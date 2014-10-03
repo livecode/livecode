@@ -1,0 +1,93 @@
+module com.livecode.string
+
+foreign handler ExecPutStringBefore(in Source as string, inout Target as string) as undefined binds to "<builtin>"
+foreign handler ExecPutStringAfter(in Source as string, inout Target as string) as undefined binds to "<builtin>"
+
+foreign handler ExecReplace(in Pattern as string, in Replacement as string, inout Target as string) as undefined binds to "<builtin>"
+
+foreign handler EvalConcatenate(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
+foreign handler EvalConcatenateWithSpace(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
+
+foreign handler EvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalContains(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
+
+foreign handler EvalToLower(in Source as string, out Result as string)
+foreign handler EvalToUpper(in Source as string, out Result as string)
+
+foreign handler EvalOffset(in Needle as string, in Source as string, out Result as index)
+foreign handler EvalOffsetAfter(in Needle as string, in After as index, in Source as string, out Result as index)
+
+--
+
+syntax PutStringBefore is statement
+    "put" <Source: Expression> "before" <Target: Expression>
+begin
+    ExecPutStringBefore(Source, Target)
+end syntax
+
+syntax PutStringAfter is statement
+    "put" <Source: Expression> "after" <Target: Expression>
+begin
+    ExecPutStringAfter(Source, Target)
+end syntax
+
+--
+
+syntax ReplaceString is statement
+    "replace" <Pattern: Expression> "with" <Replacement: Expression> "in" <Target: Expression>
+begin
+    ExecReplace(Pattern, Replacement, Target)
+end syntax
+
+--
+
+syntax ConcatenateStrings is left binary operator with precedence 2
+    <Left: Expression> "&" <Right: Expression>
+begin
+    EvalConcatenate(Left, Right, output)
+end syntax
+
+syntax ConcatenateStringsWithSpace is left binary operator with precedence 2
+    <Left: Expression> "&&" <Right: Expression>
+begin
+    EvalConcatenateWithSpace(Left, Right, output)
+end syntax
+
+--
+
+syntax BeginsWithString is left unary operator with precedence 1
+    <Source: Expression> "begins" "with" <Prefix: Expression>
+begin
+    EvalBeginsWith(Source, Prefix, output)
+end syntax
+
+syntax EndsWithString is left unary operator with precedence 1
+    <Source: Expression> "ends" "with" <Suffix: Expression>
+begin
+    EvalEndsWith(Source, Suffix, output)
+end syntax
+
+syntax Contains is left unary operator with precedence 1
+    <Source: Expression> "contains" <Needle: Expression>
+begin
+    EvalContains(Source, Needle, output)
+end syntax
+
+--
+
+syntax UpperCaseString is left unary operator with precedence 1
+    "the" "upper" "of" <Source: Expression>
+begin
+    EvalToUpper(Source, output)
+end syntax
+
+syntax LowerCaseString is left unary operator with precedence 1
+    "the" "lower" "of" <Source: Expression>
+begin
+    EvalToLower(Source, output)
+end syntax
+
+--
+
+end module
