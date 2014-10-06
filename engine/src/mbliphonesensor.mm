@@ -28,8 +28,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "mblsyntax.h"
 #include "mblsensor.h"
+#include "mbliphoneapp.h"
 
 #include <Foundation/NSOperation.h>
+#include <UIKit/UIAlertController.h>
 
 #import <CoreLocation/CoreLocation.h>
 #import <CoreMotion/CoreMotion.h>
@@ -160,6 +162,46 @@ static int32_t s_location_calibration_timeout = 0;
 	[m_calibration_timer release];
 	m_calibration_timer = nil;
 }
+
+static void requestAlwaysAuthorization(void)
+{
+    CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
+    
+    // If the status is denied or only granted for when in use, display an alert
+    if (t_status == kCLAuthorizationStatusAuthorizedWhenInUse || t_status == kCLAuthorizationStatusDenied)
+    {
+        NSString *t_title;
+        t_title = (t_status == kCLAuthorizationStatusDenied) ? @"Location services are off" :   @"Background location is not enabled";
+        NSString *t_message = @"To use background location you must turn on 'Always' in the Location Services Settings";
+        
+        UIAlertController *t_alert_controller = [UIAlertController alertControllerWithTitle:t_title message:t_message preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction *t_cancel_action;
+        UIAlertAction *t_go_to_settings_action;
+        
+        t_cancel_action = [UIAlertAction actionWithTitle:@"Cancel"
+                                                 style:UIAlertActionStyleCancel
+                                               handler:^(UIAlertAction *action) {
+                                                   // do nothing
+                                               }];
+        t_go_to_settings_action = [UIAlertAction actionWithTitle:@"Settings"
+                                               style:UIAlertActionStyleDefault
+                                             handler:^(UIAlertAction *action) {
+                                                 // go to settings
+                                                 NSURL *t_settings_url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+                                                 [[UIApplication sharedApplication] openURL:t_settings_url];
+                                             }];
+        
+        [t_alert_controller addAction:t_cancel_action];
+        [t_alert_controller addAction:t_go_to_settings_action];
+        [MCIPhoneGetViewController() presentViewController:t_alert_controller animated:YES completion:nil];
+        
+    }
+    // The user has not enabled any location services. Request background authorization.
+    else if (t_status == kCLAuthorizationStatusNotDetermined)
+        [s_location_manager requestAlwaysAuthorization];
+}
+
 @end
 
 static void initialize_core_location(void)
@@ -237,6 +279,11 @@ static bool start_tracking_location(bool p_loosely)
         if (!s_location_enabled)
         {
             initialize_core_location();
+            
+            // PM-2014-10-06: [[ Bug 13590 ]] Make sure on iOS 8 we explicitly request permission to use location services
+            if (MCmajorosversion >= 800)
+                requestAlwaysAuthorization();
+            
             [s_location_manager startUpdatingLocation];
             s_location_enabled = true;
         }
