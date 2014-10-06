@@ -52,6 +52,44 @@ MCStringRef MCScriptGetErrorDescription(MCScriptErrorRef error);
 // Packages can be unloaded from memory, however they are not completely removed
 // until it is possible to do so - i.e. until there are no instances of any module
 // within the package in use.
+//
+// Packages are a zip archive with the following structure:
+//   <root>/
+//     manifest.xml
+//     modules/
+//       <compiled module files>
+//     symbols/
+//       <compiled module debug info>
+//     resources/
+//       <shared resources>
+//     code/
+//       <compiled foriegn code>
+//     source/
+//       <original source code>
+//     docs/
+//       <docs tree>
+//
+// The manifest file describes the contents of the package along with any other
+// metadata. Most of the information is inferable from the rest of the archive,
+// however it is repeated in the manifest to make it easier for simple introspection.
+//
+// The module files are compiled bytecode for both the principal and child modules
+// within the package. These files contain no debug information, instead all debug
+// infomation is present in separate files in a separate folder of the archive. This
+// makes it easy to strip such information out of the packages.
+//
+// The resources folder is the tree of file-based resources described in the package.
+// It is constructed directly from the referenced files in the structure specified
+// at the time of creation.
+//
+// The code folder contains the collection of foreign code resources required by the
+// modules within the package.
+//
+// The source folder contains the original source for the compiled module. This is
+// removed when a commercial module is built, but is required for an open-source
+// module.
+//
+// The docs folder contains a tree of documentation resources.
 
 // PONDERINGS:
 //   Q: packages are zip files containing resources, if they are changed or 'go away'
@@ -108,14 +146,111 @@ bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef prope
 // Set a property of an instance.
 bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef value);
 // Call a handler of an instance.
-bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef instance, MCNameREf handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// The bytecode represents a simple register machine. It has a stack of activation
+// frames, with each frame containing an array of registers. Each register can hold
+// a single boxed value.
+//
+// The array of registers is referenced directly in instructions with a 0-based
+// index.
+//
+// Parameters and globals are accessed indirectly - they must be copied into a
+// register before use; and copied back upon update. Both parameters and globals
+// are referenced with a 0-based index.
+//
+// Each instruction is represented by a single byte, with arguments being encoded
+// sequentially as multi-byte (signed) integers.
+// 
+
 enum MCScriptBytecodeOp
 {
-    
+    kMCScriptBytecodeOpNone,
+	
+	// Unconditional jump:
+	//  X: jump <Y-X>
+	// Location is encoded as relative position to jump instruction.
+	kMCScriptBytecodeOpJump,
+	
+	// Conditional jumps:
+	//  X: jump* <register>, <Y - X>
+	// Location is encoded as relative position to jump instruction.
+	// Register is used for test.
+	kMCScriptBytecodeOpJumpIfUndefined,
+	kMCScriptBytecodeOpJumpIfDefined,
+	kMCScriptBytecodeOpJumpIfTrue,
+	kMCScriptBytecodeOpJumpIfFalse,
+	
+	// Register assignment:
+	//   assign <dst>, <src>
+	// Dst and Src are registers. The value in dst is freed, and src copied
+	// into it.
+	kMCScriptBytecodeOpAssign,
+	
+	// Enter a handler:
+	//   enter <regcount>
+	// Begin a call, and <regcount> is the number of registers required for it.
+	kMCScriptBytecodeEnter,
+	// Leave a handler
+	//   leave
+	// End a call, returning control to the next instruction after the invoke.
+	kMCScriptBytecodeLeave,
+	
+	// Direct handler invocation:
+	//   invoke <index>, <arg_1>, ..., <arg_n>
+	// Handler with index <index> is invoked with the given registers as arguments.
+	kMCScriptBytecodeOpInvoke,
+	// Indirect handler invocation:
+	//   invoke *<handler>, <arg_1>, ..., <arg_n>
+	// The handler reference in register <handler> is invoked with the given registers
+	// as arguments.
+	kMCScriptBytecodeOpInvokeIndirect,
+	
+	// Global fetch:
+	//   fetch-global <dst>, <glob-index>
+	// Assigns the current value of <glob-index> to register <dst>.
+	kMCScriptBytecodeOpFetchGlobal,
+	// Global store:
+	//   store-global: <src>, <glob-index>
+	// Assigns the current value of register <src> to <glob-index>.
+	kMCScriptBytecodeOpStoreGlobal,
+	
+	// Parameter fetch:
+	//   fetch-param <dst>, <param-index>
+	// Assigns the current value of <param-index> to register <dst>.
+	kMCScriptBytecodeOpFetchParameter,
+	// Parameter store:
+	//   store-param <src>, <param-index>
+	// Assigns the current value of register <src> to <param-index>
+	kMCScriptBytecodeOpStoreParameter,
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Compiled modules are serialized to disk in the following format:
+//
+//   char       magic[0] = 'L'
+//   char       magic[1] = 'C'
+//   uint8_t	version
+//   uint8_t	kind
+//   int        value_count
+//   value      values[value_count]
+//   int        name
+//   int        dependency_count
+//   int        dependencies[dependency_count]
+//   int        definition_count
+//   definition definitions[definition_count]
+//   int        symbol_count
+//   symbol     symbols[symbol_count]
+//   int        bytecode_count
+//   uint8_t    bytecode
+//   
+//  value:
+//
+//  definition:
+//
 
 ////////////////////////////////////////////////////////////////////////////////
 

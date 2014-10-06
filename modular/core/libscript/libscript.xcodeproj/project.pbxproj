@@ -11,7 +11,18 @@
 		4D322F2219DD95A4008476D3 /* core.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D322F2119DD95A4008476D3 /* core.cpp */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		4D05715619E321DA0080F97B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D05714F19E321DA0080F97B /* libfoundation.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DF42A430B048617003F2D95 /* libfoundation.a */;
+			remoteInfo = foundation;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		4D05714F19E321DA0080F97B /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../../../libfoundation/libfoundation.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D21B5A819DDA9F400B64BEF /* script.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = script.h; path = include/script.h; sourceTree = "<group>"; };
 		4D21B5A919DDAA0C00B64BEF /* script-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "script-private.h"; path = "src/script-private.h"; sourceTree = "<group>"; };
 		4D322F1619DD945E008476D3 /* libscript.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libscript.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -29,9 +40,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4D05714B19E321C00080F97B /* References */ = {
+			isa = PBXGroup;
+			children = (
+				4D05714F19E321DA0080F97B /* libfoundation.xcodeproj */,
+			);
+			name = References;
+			sourceTree = "<group>";
+		};
+		4D05715019E321DA0080F97B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D05715719E321DA0080F97B /* libfoundation.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		4D322F0D19DD945E008476D3 = {
 			isa = PBXGroup;
 			children = (
+				4D05714B19E321C00080F97B /* References */,
 				4D322F1D19DD955F008476D3 /* Headers */,
 				4D322F1E19DD9565008476D3 /* Source */,
 				4D322F1719DD945E008476D3 /* Products */,
@@ -113,12 +141,28 @@
 			mainGroup = 4D322F0D19DD945E008476D3;
 			productRefGroup = 4D322F1719DD945E008476D3 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 4D05715019E321DA0080F97B /* Products */;
+					ProjectRef = 4D05714F19E321DA0080F97B /* libfoundation.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				4D322F1519DD945E008476D3 /* script */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		4D05715719E321DA0080F97B /* libfoundation.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libfoundation.a;
+			remoteRef = 4D05715619E321DA0080F97B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4D322F1219DD945E008476D3 /* Sources */ = {

@@ -1,6 +1,8 @@
 #ifndef __MC_SCRIPT_PRIVATE__
 #define __MC_SCRIPT_PRIVATE__
 
+////////////////////////////////////////////////////////////////////////////////
+
 enum MCScriptObjectKind
 {
     kMCScriptObjectKindNone,
@@ -16,11 +18,24 @@ struct MCScriptObject
     MCScriptObjectKind kind;
 };
 
+bool MCScriptCreateObject(MCScriptObjectKind kind, size_t size, MCScriptObject*& r_object);
+void MCScriptDestroyObject(MCScriptObject *object);
+
+void MCScriptRetainObject(MCScriptObject *object);
+void MCScriptReleaseObject(MCScriptObject *object);
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct MCScriptError: public MCScriptObject
 {
     MCScriptErrorCode code;
     MCStringRef description;
 };
+
+bool MCScriptCreateError(MCScriptErrorCode code, MCStringRef description, MCScriptErrorRef& r_result);
+void MCScriptDestroyError(MCScriptErrorRef error);
+
+////////////////////////////////////////////////////////////////////////////////
 
 struct MCScriptPackage: public MCScriptObject
 {
@@ -35,6 +50,10 @@ struct MCScriptPackage: public MCScriptObject
     MCScriptModuleRef *modules;
     uindex_t module_count;
 };
+
+void MCScriptDestroyPackage(MCScriptPackageRef package);
+
+////////////////////////////////////////////////////////////////////////////////
 
 enum MCScriptModuleKind
 {
@@ -52,11 +71,53 @@ struct MCScriptSymbol
 
 enum MCScriptDefinitionKind
 {
+	kMCScriptDefinitionKindNone,
+	kMCScriptDefinitionKindType,
+	kMCScriptDefinitionKindConstant,
+	kMCScriptDefinitionKindVariable,
+	kMCScriptDefinitionKindHandler,
+	kMCScriptDefinitionKindForeignHandler,
+	kMCScriptDefinitionKindProperty,
+	kMCScriptDefinitionKindEvent,
 };
 
 struct MCScriptDefinition
 {
     MCScriptDefinitionKind kind;
+	uindex_t module;
+};
+
+struct MCScriptTypeDefinition: public MCScriptDefinition
+{
+	MCTypeRef type;
+};
+
+struct MCScriptConstantDefinition: public MCScriptDefinition
+{
+	MCValueRef value;
+};
+
+struct MCScriptVariableDefinition: public MCScriptDefinition
+{
+	MCTypeRef type;
+	uindex_t slot;
+};
+
+struct MCScriptHandlerDefinition: public MCScriptDefinition
+{
+	MCTypeRef signature;
+	uindex_t address;
+};
+
+struct MCScriptPropertyDefinition: public MCScriptDefinition
+{
+	MCScriptDefinition *getter;
+	MCScriptDefinition *setter;
+};
+
+struct MCScriptEventDefinition: public MCScriptDefinition
+{
+	MCTypeRef signature;
 };
 
 struct MCScriptModule: public MCScriptModule
@@ -67,10 +128,10 @@ struct MCScriptModule: public MCScriptModule
     // The type of module.
     MCScriptModuleKind kind;
     
-    // The name of the module.
+    // The name of the module (value_pool)
     MCNameRef name;
     
-    // The list of dependencies.
+    // The list of dependencies (value_pool)
     MCNameRef *dependencies;
     uindex_t dependency_count;
     
@@ -96,5 +157,9 @@ struct MCScriptModule: public MCScriptModule
     // The number of slots needed by an instance of the module.
     uindex_t slot_count;
 };
+
+void MCScriptDestroyModule(MCScriptModuleRef module);
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif

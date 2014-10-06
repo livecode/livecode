@@ -550,6 +550,7 @@ struct MCRange
 //
 
 typedef void *MCValueRef;
+typedef struct __MCType *MCTypeRef;
 typedef struct __MCNull *MCNullRef;
 typedef struct __MCBoolean *MCBooleanRef;
 typedef struct __MCNumber *MCNumberRef;
@@ -557,6 +558,8 @@ typedef struct __MCString *MCStringRef;
 typedef struct __MCName *MCNameRef;
 typedef struct __MCData *MCDataRef;
 typedef struct __MCArray *MCArrayRef;
+typedef struct __MCEnum *MCEnumRef;
+typedef struct __MCRecord *MCRecordRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCStream *MCStreamRef;
@@ -1088,6 +1091,9 @@ enum
 	kMCValueTypeCodeSet,
 	kMCValueTypeCodePoint,
 	KMCValueTypeCodeRectangle,
+	kMCValueTypeCodeEnum,
+	kMCValueTypeCodeRecord,
+	kMCValueTypeCodeType,
 	kMCValueTypeCodeCustom,
 };
 
@@ -1233,6 +1239,58 @@ template<typename T> inline bool MCValueCreateCustom(const MCValueCustomCallback
 		return r_value = (T)t_value, true;
 	return false;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  TYPE (META) DEFINITIONS
+//
+
+extern MCTypeRef kMCNullType;
+extern MCTypeRef kMCBooleanType;
+extern MCTypeRef kMCIntegerType;
+extern MCTypeRef kMCNumberType;
+extern MCTypeRef kMCStringType;
+extern MCTypeRef kMCDataType;
+extern MCTypeRef kMCArrayType;
+
+// Return the typecode of a value of the give type.
+MCValueTypeCode MCTypeGetTypeCode(MCTypeRef type);
+
+bool MCTypeCreateIntegerRange(integer_t minimum, integer_t maximum, MCTypeRef& r_type);
+bool MCTypeCreateUnsignedIntegerRange(uinteger_t minimum, uinteger_t maximum, MCTypeRef& r_type);
+
+struct MCTypeEnumFieldInfo
+{
+	MCNameRef name;
+	int value;
+};
+
+bool MCTypeCreateEnum(const MCTypeEnumFieldInfo *fields, uindex_t field_count, MCTypeRef& r_type);
+
+struct MCTypeRecordFieldInfo
+{
+	MCNameRef name;
+	MCTypeRef type;
+	unsigned int width;
+};
+
+bool MCTypeCreateRecord(const MCTypeRecordFieldInfo *fields, uindex_t field_count, MCTypeRef& r_type);
+
+enum MCTypeHandlerFieldMode
+{
+	kMCTypeHandlerFieldModeIn,
+	kMCTypeHandlerFieldModeOut,
+	kMCTypeHandlerFieldModeInOut,
+};
+
+struct MCTypeHandlerFieldInfo
+{
+	MCNameRef name;
+	MCTypeRef type;
+	MCTypeHandlerFieldMode mode;
+};
+
+bool MCTypeCreateHandler(const MCTypeHandlerFieldInfo *fields, uindex_t field_count, MCTypeRef return_type, MCTypeRef& r_type):
 
 ////////////////////////////////////////////////////////////////////////////////
 //
