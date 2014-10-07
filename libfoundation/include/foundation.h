@@ -1256,41 +1256,40 @@ extern MCTypeRef kMCArrayType;
 // Return the typecode of a value of the give type.
 MCValueTypeCode MCTypeGetTypeCode(MCTypeRef type);
 
-bool MCTypeCreateIntegerRange(integer_t minimum, integer_t maximum, MCTypeRef& r_type);
-bool MCTypeCreateUnsignedIntegerRange(uinteger_t minimum, uinteger_t maximum, MCTypeRef& r_type);
+bool MCIntegerRangeTypeCreate(integer_t minimum, integer_t maximum, MCTypeRef& r_type);
+bool MCUnsignedIntegerRangeTypeCreate(uinteger_t minimum, uinteger_t maximum, MCTypeRef& r_type);
 
-struct MCTypeEnumFieldInfo
+struct MCEnumTypeFieldInfo
 {
 	MCNameRef name;
-	int value;
 };
 
-bool MCTypeCreateEnum(const MCTypeEnumFieldInfo *fields, uindex_t field_count, MCTypeRef& r_type);
+bool MCEnumTypeCreate(const MCEnumTypeFieldInfo *fields, uindex_t field_count, MCTypeRef& r_type);
 
-struct MCTypeRecordFieldInfo
+struct MCRecordTypeFieldInfo
 {
 	MCNameRef name;
 	MCTypeRef type;
 	unsigned int width;
 };
 
-bool MCTypeCreateRecord(const MCTypeRecordFieldInfo *fields, uindex_t field_count, MCTypeRef& r_type);
+bool MCRecordTypeCreate(const MCRecordTypeFieldInfo *fields, uindex_t field_count, MCTypeRef& r_type);
 
-enum MCTypeHandlerFieldMode
+enum MCHandlerTypeFieldMode
 {
-	kMCTypeHandlerFieldModeIn,
-	kMCTypeHandlerFieldModeOut,
-	kMCTypeHandlerFieldModeInOut,
+	kMCHandlerTypeFieldModeIn,
+	kMCHandlerTypeFieldModeOut,
+	kMCHandlerTypeFieldModeInOut,
 };
 
-struct MCTypeHandlerFieldInfo
+struct MCHandlerTypeFieldInfo
 {
 	MCNameRef name;
 	MCTypeRef type;
-	MCTypeHandlerFieldMode mode;
+	MCHandlerTypeFieldMode mode;
 };
 
-bool MCTypeCreateHandler(const MCTypeHandlerFieldInfo *fields, uindex_t field_count, MCTypeRef return_type, MCTypeRef& r_type):
+bool MCHandlerTypeCreate(const MCHandlerTypeFieldInfo *fields, uindex_t field_count, MCTypeRef return_type, MCTypeRef& r_type);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2305,6 +2304,98 @@ bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set);
 // Variant valueref functions - these tag the data with the type, allowing
 // easy encoding/decoding of any value type (that supports serialization).
 bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value);
+
+////////////////////////////////////////////////////////////////////////////////
+
+enum MCPickleFieldType
+{
+    kMCPickleFieldTypeNone,
+    kMCPickleFieldTypeByte,
+    kMCPickleFieldTypeUIndex,
+    kMCPickleFieldTypeIntEnum,
+    kMCPickleFieldTypeValueRef,
+    kMCPickleFieldTypeStringRef,
+    kMCPickleFieldTypeNameRef,
+    kMCPickleFieldTypeTypeRef,
+    kMCPickleFieldTypeArrayOfByte,
+    kMCPickleFieldTypeArrayOfNameRef,
+    kMCPickleFieldTypeArrayOfRecord,
+    kMCPickleFieldTypeArrayOfVariant,
+    kMCPickleFieldTypeCallback,
+};
+
+struct MCPickleRecordFieldInfo
+{
+    MCPickleFieldType kind;
+    const char *tag;
+    size_t field_offset;
+    size_t aux_field_offset;
+    void *extra;
+};
+
+struct MCPickleRecordInfo
+{
+    MCPickleRecordFieldInfo *fields;
+};
+
+struct MCPickleVariantCaseInfo
+{
+    int kind;
+    MCPickleRecordInfo *record;
+};
+
+struct MCPickleVariantInfo
+{
+    size_t kind_offset;
+    MCPickleVariantCaseInfo *cases;
+};
+
+#define MC_PICKLE_BEGIN_RECORD(Type) \
+    struct __##Type##_PickleImp { \
+        typedef Type __struct; \
+        static MCPickleRecordFieldInfo __fields[]; \
+        static MCPickleRecordInfo __info; \
+    }; \
+    MCPickleRecordInfo __##Type##_PickleImp::__info = { __##Type##_PickleImp::__fields }; \
+    MCPickleRecordInfo *k##Type##PickleInfo = &__##Type##_PickleImp::__info; \
+    MCPickleRecordFieldInfo __##Type##_PickleImp::__fields[] = {
+#define MC_PICKLE_END_RECORD() \
+        { kMCPickleFieldTypeNone, nil, 0 } \
+    };
+
+#define MC_PICKLE_BEGIN_VARIANT(Type, Kind) \
+    struct __##Type##_PickleImp { \
+        typedef Type __struct; \
+        static MCPickleVariantCaseInfo __cases[]; \
+        static MCPickleVariantInfo __info; \
+    }; \
+    MCPickleVariantInfo __##Type##_PickleImp::__info = { offsetof(Type, Kind), __##Type##_PickleImp::__cases }; \
+    MCPickleVariantInfo *k##Type##PickleInfo = &__##Type##_PickleImp::__info; \
+    MCPickleVariantCaseInfo __##Type##_PickleImp::__cases[] = {
+#define MC_PICKLE_END_VARIANT() \
+        { -1, nil } \
+    };
+#define MC_PICKLE_VARIANT_CASE(KindValue, Pickle) \
+    { (int)KindValue, k##Pickle##PickleInfo },
+
+#define MC_PICKLE_FIELD(FType, FField, FExtra) \
+    { kMCPickleFieldType##FType, #FField, offsetof(__struct, FField), 0, (void *)FExtra },
+#define MC_PICKLE_FIELD_AUX(FType, FField, FAuxField, FExtra) \
+    { kMCPickleFieldType##FType, #FField, offsetof(__struct, FField), offsetof(__struct, FAuxField), (void *)FExtra },
+
+#define MC_PICKLE_UINDEX(Field) MC_PICKLE_FIELD(UIndex, Field, 0)
+#define MC_PICKLE_VALUEREF(Field) MC_PICKLE_FIELD(ValueRef, Field, 0)
+#define MC_PICKLE_STRINGREF(Field) MC_PICKLE_FIELD(StringRef, Field, 0)
+#define MC_PICKLE_NAMEREF(Field) MC_PICKLE_FIELD(NameRef, Field, 0)
+#define MC_PICKLE_TYPEREF(Field) MC_PICKLE_FIELD(TypeRef, Field, 0)
+#define MC_PICKLE_CALLBACK(Field, CCallback) MC_PICKLE_FIELD(Callback, Field, CCallback)
+
+#define MC_PICKLE_INTENUM(EType, EField) MC_PICKLE_FIELD(IntEnum, EField, k##EType##__Last)
+
+#define MC_PICKLE_ARRAY_OF_BYTE(Field, CountField) MC_PICKLE_FIELD_AUX(Byte, Field, CountField, 0)
+#define MC_PICKLE_ARRAY_OF_NAMEREF(Field, CountField) MC_PICKLE_FIELD_AUX(NameRef, Field, CountField, 0)
+#define MC_PICKLE_ARRAY_OF_RECORD(Record, Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfRecord, Field, CountField, k##Record##PickleInfo)
+#define MC_PICKLE_ARRAY_OF_VARIANT(Variant, Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfVariant, Field, CountField, k##Variant##PickleInfo)
 
 ////////////////////////////////////////////////////////////////////////////////
 

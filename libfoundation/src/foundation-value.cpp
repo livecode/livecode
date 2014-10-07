@@ -522,7 +522,7 @@ static uindex_t __MCValueFindUniqueValueBucket(__MCValue *p_value, hash_t p_hash
 			// If the slot has a value and it is equal to the one we are looking
 			// for, we are done.
 			if (p_value == (__MCValue *)t_bucket -> value ||
-				p_hash == t_bucket -> hash && MCValueIsEqualTo(p_value, (__MCValue *)t_bucket -> value))
+				(p_hash == t_bucket -> hash && MCValueIsEqualTo(p_value, (__MCValue *)t_bucket -> value)))
 				return t_probe;
 		}
 
@@ -859,7 +859,7 @@ bool __MCValueInitialize(void)
 
 void __MCValueFinalize(void)
 {
-    for(uindex_t i = 0; i < sizeof(s_value_pools) / sizeof(s_value_pools[0]); i++)
+    for(uindex_t i = 0; i < kMCValueTypeCodeList + 1; i++)
         while(s_value_pools[i] . count > 0)
         {
             __MCValue *t_value;
