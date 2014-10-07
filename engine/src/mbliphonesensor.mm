@@ -122,6 +122,7 @@ static int32_t s_location_calibration_timeout = 0;
 {
     return m_ready;
 }
+
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
 {
     if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorized)
@@ -206,7 +207,6 @@ static void requestAlwaysAuthorization(void)
                                                handler:^(UIAlertAction *action) {
                                                    // do nothing
                                                    t_in_modal = false;
-                                                   MCscreen -> pingwait();
                                                    [t_alert_controller dismissViewControllerAnimated:YES completion:nil];
                                                }];
         t_go_to_settings_action = [UIAlertAction actionWithTitle:@"Settings"
@@ -214,7 +214,6 @@ static void requestAlwaysAuthorization(void)
                                              handler:^(UIAlertAction *action) {
                                                  // go to settings
                                                  t_in_modal = false;
-                                                 MCscreen -> pingwait();
                                                  NSURL *t_settings_url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
                                                  [[UIApplication sharedApplication] openURL:t_settings_url];
                                              }];
@@ -231,6 +230,7 @@ static void requestAlwaysAuthorization(void)
     else if (t_status == kCLAuthorizationStatusNotDetermined)
     {
         [s_location_manager requestAlwaysAuthorization];
+        
         while (![s_location_delegate isReady])
             MCscreen -> wait(1.0, False, True);
     }
@@ -243,7 +243,8 @@ static void initialize_core_location(void)
 	if (s_location_manager != nil)
 		return;
 	
-	s_location_manager = [[CLLocationManager alloc] init];
+    // PM-2014-10-07: [[ Bug 13590 ]] Configuration of the location manager object must always occur on a thread with an active run loop
+    MCIPhoneRunBlockOnMainFiber(^(void) {s_location_manager = [[CLLocationManager alloc] init];});
 	s_location_delegate = [[MCIPhoneLocationDelegate alloc] init];
     [s_location_delegate setReady: False];
 	[s_location_manager setDelegate: s_location_delegate];

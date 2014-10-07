@@ -1606,19 +1606,25 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
     {false, "mobilePixelDensity", MCHandleDeviceScale, nil},
 	
-    {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
-    {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
+    // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingSensor and StopTrackingSensor must run on the script thread
+    {true, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
+    {true, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
     {false, "mobileSensorReading", MCHandleSensorReading, nil},
     {false, "mobileSensorAvailable", MCHandleSensorAvailable, nil},	
     
     // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
 	/* DEPRECATED */ {false, "iphoneCanTrackLocation", MCHandleCanTrackLocation, nil},
-	/* DEPRECATED */ {false, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
-	/* DEPRECATED */ {false, "iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+    
+    // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingLocation and StopTrackingLocation must run on the script thread
+	/* DEPRECATED */ {true, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+	/* DEPRECATED */ {true, "iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+    
 	/* DEPRECATED */ {false, "iphoneCurrentLocation", MCHandleCurrentLocation, nil},
     /* DEPRECATED */ {false, "mobileCanTrackLocation", MCHandleCanTrackLocation, nil},
-    /* DEPRECATED */ {false, "mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
-	/* DEPRECATED */ {false, "mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+    
+    // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingLocation and StopTrackingLocation must run on the script thread
+    /* DEPRECATED */ {true, "mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+	/* DEPRECATED */ {true, "mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
 	/* DEPRECATED */ {false, "mobileCurrentLocation", MCHandleCurrentLocation, nil},
 	
 	/* DEPRECATED */ {false, "iphoneCanTrackHeading", MCHandleCanTrackHeading, nil},
