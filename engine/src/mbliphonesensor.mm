@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <CoreLocation/CoreLocation.h>
 #import <CoreMotion/CoreMotion.h>
 
+#include "mbldc.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2012-03-13: Added intialize and finalize calls to sensor module.
@@ -87,6 +89,7 @@ static void initialize_core_motion(void)
 @interface MCIPhoneLocationDelegate : NSObject <CLLocationManagerDelegate>
 {
 	NSTimer *m_calibration_timer;
+    bool m_ready;
 }
 @end
 
@@ -108,6 +111,24 @@ static int32_t s_location_calibration_timeout = 0;
 	}
 	
 	[super dealloc];
+}
+
+- (void)setReady:(BOOL)ready
+{
+    m_ready = ready;
+}
+
+- (BOOL)isReady
+{
+    return m_ready;
+}
+- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
+{
+    if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorized)
+    {
+        [s_location_delegate setReady:True];
+        MCscreen -> pingwait();
+    }
 }
 
 // TODO: Determine difference between location and heading error properly
@@ -179,15 +200,21 @@ static void requestAlwaysAuthorization(void)
         UIAlertAction *t_cancel_action;
         UIAlertAction *t_go_to_settings_action;
         
+        __block bool t_in_modal = true;
         t_cancel_action = [UIAlertAction actionWithTitle:@"Cancel"
                                                  style:UIAlertActionStyleCancel
                                                handler:^(UIAlertAction *action) {
                                                    // do nothing
+                                                   t_in_modal = false;
+                                                   MCscreen -> pingwait();
+                                                   [t_alert_controller dismissViewControllerAnimated:YES completion:nil];
                                                }];
         t_go_to_settings_action = [UIAlertAction actionWithTitle:@"Settings"
                                                style:UIAlertActionStyleDefault
                                              handler:^(UIAlertAction *action) {
                                                  // go to settings
+                                                 t_in_modal = false;
+                                                 MCscreen -> pingwait();
                                                  NSURL *t_settings_url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
                                                  [[UIApplication sharedApplication] openURL:t_settings_url];
                                              }];
@@ -196,10 +223,17 @@ static void requestAlwaysAuthorization(void)
         [t_alert_controller addAction:t_go_to_settings_action];
         [MCIPhoneGetViewController() presentViewController:t_alert_controller animated:YES completion:nil];
         
+        while(t_in_modal)
+            MCscreen -> wait(1.0, False, True);
+        
     }
     // The user has not enabled any location services. Request background authorization.
     else if (t_status == kCLAuthorizationStatusNotDetermined)
+    {
         [s_location_manager requestAlwaysAuthorization];
+        while (![s_location_delegate isReady])
+            MCscreen -> wait(1.0, False, True);
+    }
 }
 
 @end
@@ -211,6 +245,7 @@ static void initialize_core_location(void)
 	
 	s_location_manager = [[CLLocationManager alloc] init];
 	s_location_delegate = [[MCIPhoneLocationDelegate alloc] init];
+    [s_location_delegate setReady: False];
 	[s_location_manager setDelegate: s_location_delegate];
 	
 	s_location_enabled = false;
