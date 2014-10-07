@@ -55,6 +55,10 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This application requires access to Location Services when in use</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This application requires access to Location Services always</string>
 	<key>UIStatusBarHidden</key>
 		${STATUS_BAR_HIDDEN}
 	<key>UIStatusBarHidden~ipad</key>
