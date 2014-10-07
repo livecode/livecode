@@ -10,6 +10,8 @@ class MCWidgetEventManager
 {
 public:
     
+    MCWidgetEventManager();
+    
     // MCWidget re-directs all events to these functions
     void event_open(MCWidget*);
     void event_close(MCWidget*);
@@ -61,9 +63,6 @@ private:
     bool mouseUp(MCWidget*, uinteger_t p_which);
     void mouseClick(MCWidget*, uinteger_t p_which);
     bool mouseRelease(MCWidget*, uinteger_t p_which);
-    
-    // Returns whether the given widget is operating in run (browse) mode or not
-    bool inRunMode(MCWidget*);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__

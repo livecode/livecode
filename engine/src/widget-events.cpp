@@ -35,6 +35,25 @@ MCWidgetEventManager* MCwidgeteventmanager = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCWidgetEventManager::MCWidgetEventManager() :
+  m_mouse_x(0), m_mouse_y(0),
+  m_click_x(0), m_click_y(0),
+  m_click_time(0),
+  m_click_count(0),
+  m_click_button(0),
+  m_mouse_buttons(0),
+  m_keycode(0),
+  m_modifiers(0),
+  m_keystring(nil),
+  m_mouse_focus(nil),
+  m_keyboard_focus(nil),
+  m_doubleclick_time(MCdoubletime),
+  m_doubleclick_distance(MCdoubledelta)
+{
+    
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCWidgetEventManager::event_open(MCWidget* p_widget)
 {

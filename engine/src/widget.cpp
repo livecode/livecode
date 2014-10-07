@@ -615,11 +615,13 @@ void MCWidget::OnVisibilityChanged(bool p_visible)
 void MCWidget::OnHitTest(const MCRectangle& p_intersect, bool& r_hit)
 {
     fprintf(stderr, "MCWidget::OnHitTest\n");
+    r_hit = maskrect(p_intersect);
 }
 
 void MCWidget::OnBoundsTest(const MCRectangle& p_intersect, bool& r_hit)
 {
     fprintf(stderr, "MCWidget::OnBoundsTest\n");
+    r_hit = maskrect(p_intersect);
 }
 
 void MCWidget::OnSave(class MCWidgetSerializer& p_stream)
