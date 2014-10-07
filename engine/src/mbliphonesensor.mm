@@ -31,7 +31,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphoneapp.h"
 
 #include <Foundation/NSOperation.h>
+
+#ifdef __IPHONE_8_0
 #include <UIKit/UIAlertController.h>
+#endif
 
 #import <CoreLocation/CoreLocation.h>
 #import <CoreMotion/CoreMotion.h>
@@ -123,6 +126,7 @@ static int32_t s_location_calibration_timeout = 0;
     return m_ready;
 }
 
+#ifdef __IPHONE_8_0
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
 {
     if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorized)
@@ -131,6 +135,7 @@ static int32_t s_location_calibration_timeout = 0;
         MCscreen -> pingwait();
     }
 }
+#endif
 
 // TODO: Determine difference between location and heading error properly
 - (void)locationManager: (CLLocationManager *)manager didFailWithError: (NSError *)error
@@ -187,6 +192,7 @@ static int32_t s_location_calibration_timeout = 0;
 
 static void requestAlwaysAuthorization(void)
 {
+#ifdef __IPHONE_8_0
     CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
     
     // If the status is denied or only granted for when in use, display an alert
@@ -234,6 +240,7 @@ static void requestAlwaysAuthorization(void)
         while (![s_location_delegate isReady])
             MCscreen -> wait(1.0, False, True);
     }
+#endif
 }
 
 @end
@@ -305,47 +312,52 @@ double MCSystemGetSensorDispatchThreshold(MCSensorType p_sensor)
 }
 
 const char* MCIPhoneGetLocationAuthorizationStatus(void)
-{
-    CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
-    
+{    
     const char *t_status_string;
     t_status_string = "";
-    switch (t_status)
-    {
-        case kCLAuthorizationStatusNotDetermined:
-            t_status_string = "notDetermined";
-            break;
-            
-            // This application is not authorized to use location services.  Due
-            // to active restrictions on location services, the user cannot change
-            // this status, and may not have personally denied authorization
-        case kCLAuthorizationStatusRestricted:
-            t_status_string = "restricted";
-            break;
-            
-            // User has explicitly denied authorization for this application, or
-            // location services are disabled in Settings.
-        case kCLAuthorizationStatusDenied:
-            t_status_string = "denied";
-            break;
-            
-            // User has granted authorization to use their location at any time,
-            // including monitoring for regions, visits, or significant location changes.
-        case kCLAuthorizationStatusAuthorizedAlways:
-            t_status_string = "authorizedAlways";
-            break;
-            
-            // User has granted authorization to use their location only when your app
-            // is visible to them (it will be made visible to them if you continue to
-            // receive location updates while in the background).  Authorization to use
-            // launch APIs has not been granted.
-        case kCLAuthorizationStatusAuthorizedWhenInUse:
-            t_status_string = "authorizedWhenInUse";
-            break;
-            
-        default:
-            break;
-    }
+	
+#ifdef __IPHONE_8_0
+	if (MCmajorosversion >= 800)
+	{
+		CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
+		switch (t_status)
+		{
+			case kCLAuthorizationStatusNotDetermined:
+				t_status_string = "notDetermined";
+				break;
+				
+				// This application is not authorized to use location services.  Due
+				// to active restrictions on location services, the user cannot change
+				// this status, and may not have personally denied authorization
+			case kCLAuthorizationStatusRestricted:
+				t_status_string = "restricted";
+				break;
+				
+				// User has explicitly denied authorization for this application, or
+				// location services are disabled in Settings.
+			case kCLAuthorizationStatusDenied:
+				t_status_string = "denied";
+				break;
+				
+				// User has granted authorization to use their location at any time,
+				// including monitoring for regions, visits, or significant location changes.
+			case kCLAuthorizationStatusAuthorizedAlways:
+				t_status_string = "authorizedAlways";
+				break;
+				
+				// User has granted authorization to use their location only when your app
+				// is visible to them (it will be made visible to them if you continue to
+				// receive location updates while in the background).  Authorization to use
+				// launch APIs has not been granted.
+			case kCLAuthorizationStatusAuthorizedWhenInUse:
+				t_status_string = "authorizedWhenInUse";
+				break;
+				
+			default:
+				break;
+		}
+	}
+#endif
     
     return t_status_string;
 }
