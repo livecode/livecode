@@ -29,6 +29,7 @@ static id s_DTiPhoneSimulatorApplicationSpecifier_class = nil;
 static id s_DTiPhoneSimulatorSessionConfig_class = nil;
 static id s_DTiPhoneSimulatorSession_class = nil;
 static id s_SimDeviceSet_class = nil;
+static id s_SimRuntime_class = nil;
 
 @interface RevIPhoneProxy: NSObject
 
@@ -109,6 +110,22 @@ static id s_SimDeviceSet_class = nil;
 	if (s_SimDeviceSet_class != nil)
 		return [[s_SimDeviceSet_class defaultSet] availableDevices];
 	return nil;
+}
+
+// MM-2014-10-07: [[ Bug 13584 ]] Return the set of runtimes that the current sim supports.
+- (id)getSimRuntimes
+{
+	//NSLog(@"received getSimRuntimes");
+	if (s_SimRuntime_class != nil)
+		return [s_SimRuntime_class supportedRuntimes];
+	return nil;
+}
+
+// MM-2014-10-07: [[ Bug 13584 ]] Return the DTiPhoneSimulatorSystemRoot for the current SimRuntime.
+- (id)getRootWithSimRuntime: (id)runtime
+{
+	//NSLog(@"received getRootWithSimRuntime");
+	return [s_DTiPhoneSimulatorSystemRoot_class rootWithSimRuntime: runtime];
 }
 
 @end
@@ -235,6 +252,10 @@ int main(int argc, char *argv[])
 		
 		// MM-2014-09-30: [[ iOS 8 Support ]] Fetch the device set allowing us to query the available devices.
 		s_SimDeviceSet_class = NSClassFromString(@"SimDeviceSet");
+		
+		// MM-2014-10-07: [[ Bug 13584 ]] Fetch the SimRuntime class, required to return the set of runtime environments the current sim supports.
+		//   e.g. iOS7 sim, iOS 8 sim etc.
+		s_SimRuntime_class = NSClassFromString(@"SimRuntime");
 		
 		s_keep_running = YES;
 		while(s_keep_running && 
