@@ -34,6 +34,8 @@ public:
 	virtual Boolean doubledown(uint2 p_which);
 	virtual Boolean doubleup(uint2 p_which);
 	
+    virtual MCObject* hittest(int32_t x, int32_t y);
+    
 	virtual void timer(MCNameRef p_message, MCParameter *p_parameters);
 
 	virtual void setrect(const MCRectangle& p_rectangle);

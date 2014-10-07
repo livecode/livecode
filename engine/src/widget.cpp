@@ -222,6 +222,22 @@ Boolean MCWidget::doubleup(uint2 p_which)
     return MCwidgeteventmanager->event_doubleup(this, p_which);
 }
 
+MCObject* MCWidget::hittest(int32_t x, int32_t y)
+{
+    bool t_inside = false;
+    MCRectangle t_rect;
+    t_rect = MCU_make_rect(x, y, 1, 1);
+    
+    // Start with a basic (fast-path) bounds test
+    OnBoundsTest(t_rect, t_inside);
+    
+    // If within bounds, do a more thorough hit test
+    if (t_inside)
+        OnHitTest(t_rect, t_inside);
+    
+    return t_inside ? this : nil;
+}
+
 void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
     MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
