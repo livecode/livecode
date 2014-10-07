@@ -95,6 +95,25 @@ void MCWidgetEventManager::event_kunfocus(MCWidget* p_widget)
 
 Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text, KeySym p_key)
 {
+    // Mouse scroll events are sent as key events
+    switch (p_key)
+    {
+        case XK_WheelUp:
+            return mouseScroll(p_widget, 0.0, +1.0);
+            
+        case XK_WheelDown:
+            return mouseScroll(p_widget, 0.0, -1.0);
+            
+        case XK_WheelLeft:
+            return mouseScroll(p_widget, +1.0, 0.0);
+            
+        case XK_WheelRight:
+            return mouseScroll(p_widget, -1.0, 0.0);
+            
+        default:
+            break;
+    }
+    
     return keyDown(p_widget, p_text, p_key);
 }
 
@@ -373,6 +392,13 @@ bool MCWidgetEventManager::mouseRelease(MCWidget* p_widget, uinteger_t p_which)
     }
     
     return t_accepted;
+}
+
+bool MCWidgetEventManager::mouseScroll(MCWidget* p_widget, real32_t p_delta_x, real32_t p_delta_y)
+{
+    // TODO: this should probably be conditional on handing the event
+    p_widget->OnMouseScroll(p_delta_x, p_delta_y);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

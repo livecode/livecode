@@ -72,6 +72,7 @@ private:
     bool mouseUp(MCWidget*, uinteger_t p_which);
     void mouseClick(MCWidget*, uinteger_t p_which);
     bool mouseRelease(MCWidget*, uinteger_t p_which);
+    bool mouseScroll(MCWidget*, real32_t p_delta_x, real32_t p_delta_y);
     
     // Common functions for keyboard gesture processing
     bool keyDown(MCWidget*, MCStringRef, KeySym);
