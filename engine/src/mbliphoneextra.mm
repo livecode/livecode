@@ -170,6 +170,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 
 void MCIPhoneUseDeviceResolution(bool p_use_dev_res, bool p_use_control_device_res);
 float MCIPhoneGetDeviceScale(void);
+char* MCIPhoneGetLocationAuthorizationStatus(void);
 UIViewController *MCIPhoneGetViewController(void);
 UIView *MCIPhoneGetView(void);
 UITextView *MCIPhoneGetTextView(void);
@@ -720,6 +721,16 @@ static Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters)
 	return ES_NORMAL;
 #endif /* MCHandleDeviceScale */
 }
+
+static Exec_stat MCHandleLocationAuthorizationStatus(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleLocationAuthorizationStatus */ LEGACY_EXEC
+    MCresult -> sets(MCIPhoneGetLocationAuthorizationStatus());
+    
+    return ES_NORMAL;
+#endif /* MCHandleLocationAuthorizationStatus */
+}
+
 
 #ifdef /* MCHandleDeviceOrientationIphone */ LEGACY_EXEC
 static Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
@@ -1605,6 +1616,9 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
 	{false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
     {false, "mobilePixelDensity", MCHandleDeviceScale, nil},
+    
+    {false, "iphoneLocationAuthorizationStatus", MCHandleLocationAuthorizationStatus, nil},
+    {false, "mobileLocationAuthorizationStatus", MCHandleLocationAuthorizationStatus, nil},
 	
     // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingSensor and StopTrackingSensor must run on the script thread
     {true, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},

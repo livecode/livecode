@@ -304,6 +304,52 @@ double MCSystemGetSensorDispatchThreshold(MCSensorType p_sensor)
     return 0.0;
 }
 
+const char* MCIPhoneGetLocationAuthorizationStatus(void)
+{
+    CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
+    
+    const char *t_status_string;
+    t_status_string = "";
+    switch (t_status)
+    {
+        case kCLAuthorizationStatusNotDetermined:
+            t_status_string = "notDetermined";
+            break;
+            
+            // This application is not authorized to use location services.  Due
+            // to active restrictions on location services, the user cannot change
+            // this status, and may not have personally denied authorization
+        case kCLAuthorizationStatusRestricted:
+            t_status_string = "restricted";
+            break;
+            
+            // User has explicitly denied authorization for this application, or
+            // location services are disabled in Settings.
+        case kCLAuthorizationStatusDenied:
+            t_status_string = "denied";
+            break;
+            
+            // User has granted authorization to use their location at any time,
+            // including monitoring for regions, visits, or significant location changes.
+        case kCLAuthorizationStatusAuthorizedAlways:
+            t_status_string = "authorizedAlways";
+            break;
+            
+            // User has granted authorization to use their location only when your app
+            // is visible to them (it will be made visible to them if you continue to
+            // receive location updates while in the background).  Authorization to use
+            // launch APIs has not been granted.
+        case kCLAuthorizationStatusAuthorizedWhenInUse:
+            t_status_string = "authorizedWhenInUse";
+            break;
+            
+        default:
+            break;
+    }
+    
+    return t_status_string;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // LOCATION SENSEOR
 ////////////////////////////////////////////////////////////////////////////////
