@@ -187,6 +187,28 @@ void MCWidgetEventManager::event_draw(MCDC* p_dc, const MCRectangle& p_dirty, bo
     
 }
 
+void MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEventTouchPhase p_phase, int2 p_x, int2 p_y)
+{
+    switch (p_phase)
+    {
+        case kMCEventTouchPhaseBegan:
+            touchBegin(p_widget, p_id, p_x, p_y);
+            break;
+            
+        case kMCEventTouchPhaseMoved:
+            touchMove(p_widget, p_id, p_x, p_y);
+            break;
+            
+        case kMCEventTouchPhaseEnded:
+            touchEnd(p_widget, p_id, p_x, p_y);
+            break;
+            
+        case kMCEventTouchPhaseCancelled:
+            touchCancel(p_widget, p_id, p_x, p_y);
+            break;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uinteger_t MCWidgetEventManager::GetMouseButtonState() const
@@ -384,4 +406,26 @@ bool MCWidgetEventManager::keyUp(MCWidget* p_widget, MCStringRef p_string, KeySy
     // If the widget handles key press events, treat this as handled (even
     // though we don't send another message to say the key has been released)
     return p_widget->handlesKeyPress();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCWidgetEventManager::touchBegin(MCWidget* p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
+{
+    
+}
+
+void MCWidgetEventManager::touchMove(MCWidget* p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
+{
+    
+}
+
+void MCWidgetEventManager::touchEnd(MCWidget* p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
+{
+    
+}
+
+void MCWidgetEventManager::touchCancel(MCWidget* p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
+{
+    
 }

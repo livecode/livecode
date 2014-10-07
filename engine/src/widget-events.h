@@ -2,6 +2,7 @@
 #define __MC_WIDGET_EVENTS__
 
 #include "widget.h"
+#include "eventqueue.h"
 
 class MCWidgetEventManager;
 extern MCWidgetEventManager* MCwidgeteventmanager;
@@ -29,6 +30,9 @@ public:
     void event_setrect(MCWidget*, const MCRectangle& p_rectangle);
     void event_recompute(MCWidget*);
     void event_draw(MCDC *p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite);
+    
+    // Non-MCControl event for handling touches
+    void event_touch(MCWidget*, uint32_t p_id, MCEventTouchPhase, int2 p_x, int2 p_y);
     
     // Returns a bitmask of the mouse buttons that are pressed
     uinteger_t GetMouseButtonState() const;
@@ -68,6 +72,12 @@ private:
     // Common functions for keyboard gesture processing
     bool keyDown(MCWidget*, MCStringRef, KeySym);
     bool keyUp(MCWidget*, MCStringRef, KeySym);
+    
+    // Common functions for touch gesture processing
+    void touchBegin(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
+    void touchMove(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
+    void touchEnd(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
+    void touchCancel(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__
