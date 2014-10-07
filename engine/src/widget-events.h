@@ -65,7 +65,7 @@ private:
     
     
     // Common functions for mouse gesture processing
-    void mouseMove(MCWidget*);
+    void mouseMove(MCWidget*, coord_t p_x, coord_t p_y);
     void mouseEnter(MCWidget*);
     void mouseLeave(MCWidget*);
     bool mouseDown(MCWidget*, uinteger_t p_which);

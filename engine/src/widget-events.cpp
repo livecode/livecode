@@ -147,7 +147,7 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
     else
     {
         // Mouse has moved within this widget
-        mouseMove(p_widget);
+        mouseMove(p_widget, p_x, p_y);
     }
     
     // This event was handled
@@ -234,19 +234,23 @@ MCWidget* MCWidgetEventManager::GetMouseWidget() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCWidgetEventManager::mouseMove(MCWidget* p_widget)
+void MCWidgetEventManager::mouseMove(MCWidget* p_widget, coord_t p_x, coord_t p_y)
 {
+    // Update the mouse coordinates
+    m_mouse_x = p_x;
+    m_mouse_y = p_y;
     
+    p_widget->OnMouseMove(p_x, p_y);
 }
 
 void MCWidgetEventManager::mouseEnter(MCWidget* p_widget)
 {
-    
+    p_widget->OnMouseEnter();
 }
 
 void MCWidgetEventManager::mouseLeave(MCWidget* p_widget)
 {
-    
+    p_widget->OnMouseLeave();
 }
 
 bool MCWidgetEventManager::mouseDown(MCWidget* p_widget, uinteger_t p_which)
@@ -441,6 +445,11 @@ void MCWidgetEventManager::touchBegin(MCWidget* p_widget, uinteger_t p_id, coord
     // Send an event to the widget
     if (p_widget->handlesTouches())
         p_widget->OnTouchStart(p_id, p_x, p_y, 0.0, 0.0);
+    else if (p_id == 1)
+    {
+        mouseMove(p_widget, p_x, p_y);
+        mouseDown(p_widget, 1);
+    }
 }
 
 void MCWidgetEventManager::touchMove(MCWidget* p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
@@ -471,6 +480,10 @@ void MCWidgetEventManager::touchMove(MCWidget* p_widget, uinteger_t p_id, coord_
         // Send a move event
         if (p_widget->handlesTouches())
             p_widget->OnTouchMove(p_id, p_x, p_y, 0, 0);
+        else if (p_id == 1)
+        {
+            mouseMove(p_widget, p_x, p_y);
+        }
     }
 }
 
@@ -488,6 +501,11 @@ void MCWidgetEventManager::touchEnd(MCWidget* p_widget, uinteger_t p_id, coord_t
     // Send a touch finish event
     if (p_widget->handlesTouches())
         p_widget->OnTouchFinish(p_id, p_x, p_y);
+    else if (p_id == 1)
+    {
+        mouseMove(p_widget, p_x, p_y);
+        mouseUp(p_widget, 1);
+    }
     
     // Delete the event
     freeTouchSlot(t_slot);
@@ -507,6 +525,11 @@ void MCWidgetEventManager::touchCancel(MCWidget* p_widget, uinteger_t p_id, coor
     // Send a touch cancel event
     if (p_widget->handlesTouches())
         p_widget->OnTouchCancel(p_id);
+    else if (p_id == 1)
+    {
+        mouseMove(p_widget, p_x, p_y);
+        mouseRelease(p_widget, 1);
+    }
     
     // Delete the event
     freeTouchSlot(t_slot);
@@ -516,12 +539,20 @@ void MCWidgetEventManager::touchEnter(MCWidget* p_widget, uinteger_t p_id)
 {
     if (p_widget->handlesTouches())
         p_widget->OnTouchEnter(p_id);
+    else if (p_id == 1)
+    {
+        mouseEnter(p_widget);
+    }
 }
 
 void MCWidgetEventManager::touchLeave(MCWidget* p_widget, uinteger_t p_id)
 {
     if (p_widget->handlesTouches())
         p_widget->OnTouchLeave(p_id);
+    else if (p_id == 1)
+    {
+        mouseLeave(p_widget);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
