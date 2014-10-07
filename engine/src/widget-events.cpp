@@ -35,6 +35,16 @@ MCWidgetEventManager* MCwidgeteventmanager = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCWidgetEventManager::MCWidgetTouchEvent
+{
+    uinteger_t  m_id;
+    MCWidget*   m_widget;
+    coord_t     m_x;
+    coord_t     m_y;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCWidgetEventManager::MCWidgetEventManager() :
   m_mouse_x(0), m_mouse_y(0),
   m_click_x(0), m_click_y(0),
@@ -48,7 +58,8 @@ MCWidgetEventManager::MCWidgetEventManager() :
   m_mouse_focus(nil),
   m_keyboard_focus(nil),
   m_doubleclick_time(MCdoubletime),
-  m_doubleclick_distance(MCdoubledelta)
+  m_doubleclick_distance(MCdoubledelta),
+  m_touches()
 {
     
 }
@@ -412,20 +423,144 @@ bool MCWidgetEventManager::keyUp(MCWidget* p_widget, MCStringRef p_string, KeySy
 
 void MCWidgetEventManager::touchBegin(MCWidget* p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
 {
+    // Check whether this touch already exists within our touch event list
+    uinteger_t t_slot;
+    if (findTouchSlot(p_id, t_slot))
+    {
+        // Already exists. This ought not to happen... ignore the event.
+        return;
+    }
     
+    // Allocate a slot to store the event details
+    t_slot = allocateTouchSlot();
+    m_touches[t_slot].m_id = p_id;
+    m_touches[t_slot].m_widget = p_widget;
+    m_touches[t_slot].m_x = p_x;
+    m_touches[t_slot].m_y = p_y;
+    
+    // Send an event to the widget
+    if (p_widget->handlesTouches())
+        p_widget->OnTouchStart(p_id, p_x, p_y, 0.0, 0.0);
 }
 
 void MCWidgetEventManager::touchMove(MCWidget* p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
 {
-    
+    // Does this touch event exist in the list yet? If not, create it. (This
+    // might happen if a touch starts on a non-widget MCControl and later moves
+    // onto a widget).
+    uinteger_t t_slot;
+    if (!findTouchSlot(p_id, t_slot))
+    {
+        touchBegin(p_widget, p_id, p_x, p_y);
+        /* UNCHECKED */ findTouchSlot(p_id, t_slot);
+    }
+    else
+    {
+        // Pre-existing touch. Check for enter/leave events.
+        if (m_touches[t_slot].m_widget != p_widget)
+        {
+            touchLeave(m_touches[t_slot].m_widget, p_id);
+            m_touches[t_slot].m_widget = p_widget;
+            touchEnter(p_widget, p_id);
+        }
+        
+        // Update the touch status
+        m_touches[t_slot].m_x = p_x;
+        m_touches[t_slot].m_y = p_y;
+        
+        // Send a move event
+        if (p_widget->handlesTouches())
+            p_widget->OnTouchMove(p_id, p_x, p_y, 0, 0);
+    }
 }
 
 void MCWidgetEventManager::touchEnd(MCWidget* p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
 {
+    // Ignore the event if this touch has not been registered
+    uinteger_t t_slot;
+    if (!findTouchSlot(p_id, t_slot))
+        return;
     
+    // Update touch status
+    m_touches[t_slot].m_x = p_x;
+    m_touches[t_slot].m_y = p_y;
+    
+    // Send a touch finish event
+    if (p_widget->handlesTouches())
+        p_widget->OnTouchFinish(p_id, p_x, p_y);
+    
+    // Delete the event
+    freeTouchSlot(t_slot);
 }
 
 void MCWidgetEventManager::touchCancel(MCWidget* p_widget, uinteger_t p_id, coord_t p_x, coord_t p_y)
 {
+    // Ignore the event if this touch has not been registered
+    uinteger_t t_slot;
+    if (!findTouchSlot(p_id, t_slot))
+        return;
     
+    // Update touch status
+    m_touches[t_slot].m_x = p_x;
+    m_touches[t_slot].m_y = p_y;
+    
+    // Send a touch cancel event
+    if (p_widget->handlesTouches())
+        p_widget->OnTouchCancel(p_id);
+    
+    // Delete the event
+    freeTouchSlot(t_slot);
+}
+
+void MCWidgetEventManager::touchEnter(MCWidget* p_widget, uinteger_t p_id)
+{
+    if (p_widget->handlesTouches())
+        p_widget->OnTouchEnter(p_id);
+}
+
+void MCWidgetEventManager::touchLeave(MCWidget* p_widget, uinteger_t p_id)
+{
+    if (p_widget->handlesTouches())
+        p_widget->OnTouchLeave(p_id);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uinteger_t MCWidgetEventManager::allocateTouchSlot()
+{
+    // Search the list for an empty slot
+    for (uinteger_t i = 0; i < m_touches.Size(); i++)
+    {
+        // Look for a slot with no widget
+        if (m_touches[i].m_widget == nil)
+        {
+            return i;
+        }
+    }
+    
+    // No empty slots found. Extend the array.
+    /* UNCHECKED */ m_touches.Extend(m_touches.Size() + 1);
+    return m_touches.Size() - 1;
+}
+
+bool MCWidgetEventManager::findTouchSlot(uinteger_t p_id, uinteger_t& r_which)
+{
+    // Search the list for a touch event with the given ID
+    for (uinteger_t i = 0; i < m_touches.Size(); i++)
+    {
+        if (m_touches[i].m_id == p_id)
+        {
+            r_which = i;
+            return true;
+        }
+    }
+    
+    // Could not find any touch event with that ID
+    return false;
+}
+
+void MCWidgetEventManager::freeTouchSlot(uinteger_t p_which)
+{
+    // Mark as free by clearing the widget pointer for the event
+    m_touches[p_which].m_widget = nil;
 }

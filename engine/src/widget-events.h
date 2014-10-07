@@ -59,6 +59,10 @@ private:
     real64_t    m_doubleclick_time;
     coord_t     m_doubleclick_distance;
     
+    // State for touch events
+    struct MCWidgetTouchEvent;
+    MCAutoArray<MCWidgetTouchEvent> m_touches;
+    
     
     // Common functions for mouse gesture processing
     void mouseMove(MCWidget*);
@@ -78,6 +82,13 @@ private:
     void touchMove(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
     void touchEnd(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
     void touchCancel(MCWidget*, uinteger_t p_id, coord_t p_x, coord_t p_y);
+    void touchEnter(MCWidget*, uinteger_t p_id);
+    void touchLeave(MCWidget*, uinteger_t p_id);
+    
+    // Utility functions for managing touch events
+    uinteger_t allocateTouchSlot();
+    bool findTouchSlot(uinteger_t p_id, uinteger_t& r_which);
+    void freeTouchSlot(uinteger_t p_which);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__

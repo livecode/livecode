@@ -586,6 +586,11 @@ bool MCWidget::handlesKeyPress() const
     return true;
 }
 
+bool MCWidget::handlesTouches() const
+{
+    return false;
+}
+
 bool MCWidget::wantsClicks() const
 {
     return true;
@@ -723,6 +728,36 @@ void MCWidget::OnMouseStillHover(coord_t p_x, coord_t p_y, real32_t p_duration)
 void MCWidget::OnMouseCancelHover(real32_t p_duration)
 {
     fprintf(stderr, "MCWidget::OnMouseCancelHover\n");
+}
+
+void MCWidget::OnTouchStart(uinteger_t p_id, coord_t p_x, coord_t p_y, real32_t p_pressure, real32_t p_radius)
+{
+    fprintf(stderr, "MCWidget::OnTouchStart\n");
+}
+
+void MCWidget::OnTouchMove(uinteger_t p_id, coord_t p_x, coord_t p_y, real32_t p_pressure, real32_t p_radius)
+{
+    fprintf(stderr, "MCWidget::OnTouchMove\n");
+}
+
+void MCWidget::OnTouchEnter(uinteger_t p_id)
+{
+    fprintf(stderr, "MCWidget::OnTouchEnter\n");
+}
+
+void MCWidget::OnTouchLeave(uinteger_t p_id)
+{
+    fprintf(stderr, "MCWidget::OnTouchLeave\n");
+}
+
+void MCWidget::OnTouchFinish(uinteger_t p_id, coord_t p_x, coord_t p_y)
+{
+    fprintf(stderr, "MCWidget::OnTouchFinish\n");
+}
+
+void MCWidget::OnTouchCancel(uinteger_t p_id)
+{
+    fprintf(stderr, "MCWidget::OnTouchCancel\n");
 }
 
 void MCWidget::OnFocusEnter()
