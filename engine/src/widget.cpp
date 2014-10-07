@@ -565,6 +565,11 @@ bool MCWidget::handlesMouseRelease() const
     return true;
 }
 
+bool MCWidget::handlesKeyPress() const
+{
+    return true;
+}
+
 bool MCWidget::wantsClicks() const
 {
     return true;

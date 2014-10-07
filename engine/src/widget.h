@@ -62,6 +62,8 @@ public:
     bool handlesMouseDown() const;
     bool handlesMouseUp() const;
     bool handlesMouseRelease() const;
+    bool handlesKeyPress() const;
+    bool handlesActionKeyPress() const;
     
     ////////// Functions used by the event manager for gesture processing
     bool wantsClicks() const;       // Does this widget want click events?

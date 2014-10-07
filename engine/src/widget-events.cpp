@@ -84,12 +84,12 @@ void MCWidgetEventManager::event_kunfocus(MCWidget* p_widget)
 
 Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text, KeySym p_key)
 {
-    
+    return keyDown(p_widget, p_text, p_key);
 }
 
 Boolean MCWidgetEventManager::event_kup(MCWidget* p_widget, MCStringRef p_text, KeySym p_key)
 {
-    
+    return keyUp(p_widget, p_text, p_key);
 }
 
 Boolean MCWidgetEventManager::event_mdown(MCWidget* p_widget, uint2 p_which)
@@ -338,3 +338,50 @@ bool MCWidgetEventManager::mouseRelease(MCWidget* p_widget, uinteger_t p_which)
     return t_accepted;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCWidgetEventManager::keyDown(MCWidget* p_widget, MCStringRef p_string, KeySym p_key)
+{
+    // Todo: key gesture (shortcuts, accelerators, etc) processing
+
+    // Has there been a change of modifiers?
+    if (MCmodifierstate != m_modifiers)
+    {
+        m_modifiers = MCmodifierstate;
+        p_widget->OnModifiersChanged(m_modifiers);
+    }
+    
+    // Ignore if send to the wrong widget
+    if (p_widget != m_keyboard_focus)
+        return false;
+    
+    // Does the widget want key press events?
+    bool t_handled = false;
+    if (p_widget->handlesKeyPress() && !MCStringIsEmpty(p_string))
+    {
+        p_widget->OnKeyPress(p_string);
+        t_handled = true;
+    }
+    
+    return t_handled;
+}
+
+bool MCWidgetEventManager::keyUp(MCWidget* p_widget, MCStringRef p_string, KeySym p_key)
+{
+    // Todo: key gesture (shortcuts, accelerators, etc) processing
+    
+    // Has there been a change of modifiers?
+    if (MCmodifierstate != m_modifiers)
+    {
+        m_modifiers = MCmodifierstate;
+        p_widget->OnModifiersChanged(m_modifiers);
+    }
+    
+    // Ignore if send to the wrong widget
+    if (p_widget != m_keyboard_focus)
+        return false;
+    
+    // If the widget handles key press events, treat this as handled (even
+    // though we don't send another message to say the key has been released)
+    return p_widget->handlesKeyPress();
+}

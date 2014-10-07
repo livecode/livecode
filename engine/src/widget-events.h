@@ -56,6 +56,7 @@ private:
     coord_t     m_doubleclick_distance;
     
     
+    // Common functions for mouse gesture processing
     void mouseMove(MCWidget*);
     void mouseEnter(MCWidget*);
     void mouseLeave(MCWidget*);
@@ -63,6 +64,10 @@ private:
     bool mouseUp(MCWidget*, uinteger_t p_which);
     void mouseClick(MCWidget*, uinteger_t p_which);
     bool mouseRelease(MCWidget*, uinteger_t p_which);
+    
+    // Common functions for keyboard gesture processing
+    bool keyDown(MCWidget*, MCStringRef, KeySym);
+    bool keyUp(MCWidget*, MCStringRef, KeySym);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__
