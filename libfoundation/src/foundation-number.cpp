@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation.h>
 #include <foundation-stdlib.h>
 
+#include <errno.h>
+
 #include "foundation-private.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +147,7 @@ bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_co
         
         // AL-2014-07-31: [[ Bug 12936 ]] Check the right number of chars has been consumed
         // SN-2014-10-06: [[ Bug 13594 ]] Also check that no error was encountered
-        if (t_uinteger != UINT32_MAX && t_end - t_chars == char_count)
+        if (errno != ERANGE && t_end - t_chars == char_count)
             t_success = MCNumberCreateWithUnsignedInteger(t_uinteger, r_number);
         else
         {
@@ -185,7 +187,8 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 		integer_t t_integer;
 		t_integer = strtoul(t_native_chars, &t_end, 10);
 
-		if (*t_end == '\0')
+        // SN-2014-10-07: [[ Bug 13594 ]] Check that strtoul did not fail.
+		if (errno != ERANGE && *t_end == '\0')
 			t_success = MCNumberCreateWithInteger(t_integer, r_number);
 		else
 		{
