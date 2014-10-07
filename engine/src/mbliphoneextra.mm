@@ -170,7 +170,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 
 void MCIPhoneUseDeviceResolution(bool p_use_dev_res, bool p_use_control_device_res);
 float MCIPhoneGetDeviceScale(void);
-char* MCIPhoneGetLocationAuthorizationStatus(void);
+const char* MCIPhoneGetLocationAuthorizationStatus(void);
 UIViewController *MCIPhoneGetViewController(void);
 UIView *MCIPhoneGetView(void);
 UITextView *MCIPhoneGetTextView(void);
