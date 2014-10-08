@@ -578,7 +578,7 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 
 @interface MCIPhoneContactDelegate : NSObject
 {
-	bool m_running, m_finished, m_success, m_has_permission;
+	bool m_running, m_finished, m_success;
 	UINavigationController *m_navigation;
 	ABRecordID m_selected_person;
 }
@@ -604,10 +604,7 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 
 		// Returned values.
 		m_selected_person = kABRecordInvalidID;
-        
-        // Permission to access contacts
-        m_has_permission = false;
-	}
+    }
     
 	return self;
 }
