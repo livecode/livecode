@@ -12197,11 +12197,11 @@ yy yyin_1;
 {
 yy yyb;
 yy yy_0_1;
-/* --PATCH-- */ yy yy_1_1;
+///* --PATCH-- */ yy yy_1_1;
 yy_0_1 = yyin_1;
 if (yy_0_1[0] != 1) goto yyfl_275_1;
-/* --PATCH-- */ yy_1_1 = ((yy)"void ");
-/* --PATCH-- */ s(yy_1_1);
+///* --PATCH-- */ yy_1_1 = ((yy)"void ");
+///* --PATCH-- */ s(yy_1_1);
 return;
 yyfl_275_1 : ;
 }

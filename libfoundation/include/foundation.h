@@ -769,6 +769,7 @@ void MCFinalize(void);
 //  ERROR HANDLING
 //
 
+#ifdef __OLD_ERROR__
 typedef uint32_t MCErrorCode;
 enum
 {
@@ -793,6 +794,7 @@ MCErrorCode MCErrorPeek(void);
 
 // Sets the error handler - called whenever MCErrorThrow is called.
 void MCErrorSetHandler(MCErrorHandler handler);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -2396,6 +2398,21 @@ struct MCPickleVariantInfo
 #define MC_PICKLE_ARRAY_OF_NAMEREF(Field, CountField) MC_PICKLE_FIELD_AUX(NameRef, Field, CountField, 0)
 #define MC_PICKLE_ARRAY_OF_RECORD(Record, Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfRecord, Field, CountField, k##Record##PickleInfo)
 #define MC_PICKLE_ARRAY_OF_VARIANT(Variant, Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfVariant, Field, CountField, k##Variant##PickleInfo)
+
+// Read in the stream in the format conforming to the specified pickle info.
+// All refs which are deserialized are returned in the value_pool array, only
+// these need to be released to release all the refs used by the record.
+// Any C arrays allocated within the record should be freed with 'free()'.
+// Any variants or records allocated within the record should be freed with 'free()'.
+// The only exception is an array of record, where each record will be inline and
+// thus not require freeing.
+bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *info, MCValueRef*& r_value_pool, uindex_t& r_value_pool_size, void*& r_record);
+
+// Write the given record to the stream in the format conforming to the specified
+// pickle info.
+// The value pool for the pickle is initialized to be value_pool with any further
+// values being added to it as necessary.
+bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *info, MCValueRef *value_pool, uindex_t value_pool_size, void* record);
 
 ////////////////////////////////////////////////////////////////////////////////
 

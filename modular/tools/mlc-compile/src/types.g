@@ -1,20 +1,26 @@
 'module' types
 
 'use'
+    support
 
 'export'
-    MODULE
+    MODULE MODULELIST
     IMPORT
     DEFINITION SIGNATURE ACCESS
     TYPE
     PARAMETER MODE PARAMETERLIST
     STATEMENT
     EXPRESSION EXPRESSIONLIST
-    SYNTAX SYNTAXCLASS SYNTAXASSOC CONSTANT CONSTANTLIST METHOD METHODLIST
+    SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST
     ID IDLIST
+    MEANING
     NAME DOUBLE
 
 --------------------------------------------------------------------------------
+
+'type' MODULELIST
+    modulelist(Head: MODULE, Tail: MODULELIST)
+    nil
 
 'type' MODULE
     module(Position: POS, Name: ID, Imports: IMPORT, Definitions: DEFINITION)
@@ -31,9 +37,9 @@
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     handler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
-    property(Position: POS, Access: ACCESS)
-    event(Position: POS, Access: ACCESS)
-    syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: METHODLIST)
+    property(Position: POS, Access: ACCESS, Name: ID)
+    event(Position: POS, Access: ACCESS, Name: ID)
+    syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST)
     nil
 
 'type' SIGNATURE
@@ -47,6 +53,17 @@
 
 'type' TYPE
     named(Position: POS, Name: ID)
+    bool(Position: POS)
+    int(Position: POS)
+    uint(Position: POS)
+    float(Position: POS)
+    double(Position: POS)
+    boolean(Position: POS)
+    integer(Position: POS)
+    number(Position: POS)
+    string(Position: POS)
+    data(Position: POS)
+    array(Position: POS)
     undefined(Position: POS)
     nil
 
@@ -75,12 +92,12 @@
     integer(Position: POS, Value: INT)
     nil
 
-'type' METHODLIST
-    methodlist(Head: METHOD, Tail: METHODLIST)
+'type' SYNTAXMETHODLIST
+    methodlist(Head: SYNTAXMETHOD, Tail: SYNTAXMETHODLIST)
     nil
     
-'type' METHOD
-    method(Position: POS, Name: ID, Arguments: CONSTANTLIST)
+'type' SYNTAXMETHOD
+    method(Position: POS, Name: ID, Arguments: SYNTAXCONSTANTLIST)
 
 'type' SYNTAX
     concatenate(Position: POS, Left: SYNTAX, Right: SYNTAX)
@@ -91,7 +108,7 @@
     keyword(Position: POS, Value: STRING)
     markedrule(Position: POS, Variable: ID, Name: ID)
     rule(Position: POS, Name: ID)
-    mark(Position: POS, Variable: ID, Value: CONSTANT)
+    mark(Position: POS, Variable: ID, Value: SYNTAXCONSTANT)
 
 'type' SYNTAXCLASS
     phrase
@@ -105,11 +122,11 @@
     right
     neutral
 
-'type' CONSTANTLIST
-    constantlist(Head: CONSTANT, Tail: CONSTANTLIST)
+'type' SYNTAXCONSTANTLIST
+    constantlist(Head: SYNTAXCONSTANT, Tail: SYNTAXCONSTANTLIST)
     nil
 
-'type' CONSTANT
+'type' SYNTAXCONSTANT
     undefined(Position: POS)
     true(Position: POS)
     false(Position: POS)
@@ -121,7 +138,16 @@
     idlist(Head: ID, Tail: IDLIST)
     nil
 
-'table' ID(Position: POS, Name: NAME)
+'type' MEANING
+    definingid(Id: ID)
+    syntaxmark(Index: INT)
+    syntaxoutputmark,
+    syntaxinputmark,
+    nil
+
+'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
+
+--------------------------------------------------------------------------------
 
 'type' NAME
 'type' DOUBLE

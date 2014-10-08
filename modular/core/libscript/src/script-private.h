@@ -3,17 +3,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct MCScriptStream *MCScriptStreamRef;
-
-bool MCScriptReadByteFromStream(MCScriptStreamRef stream, byte_t& r_byte);
-bool MCScriptReadBytesFromStream(MCScriptStreamRef stream, size_t count, byte_t* r_bytes);
-bool MCScriptReadMaxInt32FromStream(MCScriptStreamRef stream, int32_t& r_int);
-bool MCScriptReadMaxUInt32FromStream(MCScriptStreamRef stream, uint32_t& r_int);
-bool MCScriptReadMaxInt64FromStream(MCScriptStreamRef stream, int32_t& r_int);
-bool MCScriptReadMaxUInt64FromStream(MCScriptStreamRef stream, uint32_t& r_int);
-
-////////////////////////////////////////////////////////////////////////////////
-
 enum MCScriptObjectKind
 {
     kMCScriptObjectKindNone,
@@ -86,16 +75,6 @@ void MCScriptDestroyPackage(MCScriptPackageRef package);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-enum MCScriptModuleKind
-{
-    kMCScriptModuleKindNone,
-    kMCScriptModuleKindApplication,
-    kMCScriptModuleKindLibrary,
-    kMCScriptModuleKindWidget,
-    
-    kMCScriptModuleKind__Last,
-};
-
 struct MCScriptExportedDefinition
 {
     MCNameRef name;
@@ -106,21 +85,6 @@ struct MCScriptDependency
 {
     MCNameRef name;
     uindex_t version;
-};
-
-enum MCScriptDefinitionKind
-{
-	kMCScriptDefinitionKindNone,
-    kMCScriptDefinitionKindExternal,
-	kMCScriptDefinitionKindType,
-	kMCScriptDefinitionKindConstant,
-	kMCScriptDefinitionKindVariable,
-	kMCScriptDefinitionKindHandler,
-	kMCScriptDefinitionKindForeignHandler,
-	kMCScriptDefinitionKindProperty,
-	kMCScriptDefinitionKindEvent,
-    
-	kMCScriptDefinitionKind__Last,
 };
 
 struct MCScriptImportedDefinition
@@ -154,6 +118,8 @@ struct MCScriptConstantDefinition: public MCScriptDefinition
 struct MCScriptVariableDefinition: public MCScriptDefinition
 {
 	MCTypeRef type;
+    
+    // (computed) The index of the variable in an instance's slot table.
 	uindex_t slot;
 };
 
@@ -218,6 +184,9 @@ struct MCScriptModule: public MCScriptObject
     // The bytecode used by the module.
     uint8_t *bytecode;
     uindex_t bytecode_count;
+    
+    // (computed) The number of slots needed by an instance.
+    uindex_t slot_count;
 };
 
 void MCScriptDestroyModule(MCScriptModuleRef module);
@@ -226,6 +195,11 @@ void MCScriptDestroyModule(MCScriptModuleRef module);
 
 struct MCScriptInstance: public MCScriptObject
 {
+    // The module defining the instance.
+    MCScriptModuleRef module;
+    
+    // The module's array of slots (module -> slot_count in length).
+    MCValueRef *slots;
 };
 
 void MCScriptDestroyInstance(MCScriptInstanceRef instance);

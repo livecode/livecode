@@ -1,6 +1,6 @@
 [0-9]+ {
-   yylval.attr[1] = atol (yytext);
-   yysetpos();
+  MakeIntegerLiteral(yytext, &yylval.attr[1]);
+  yysetpos();
    return INTEGER_LITERAL;
 }
 

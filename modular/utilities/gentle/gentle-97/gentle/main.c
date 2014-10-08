@@ -56,7 +56,7 @@ static scanargs (argc, argv)
 
    i = 1;
    while (i < argc) {
-      if (strcmp (argv[i], "-subdir") == 0) SetOption_SUBDIR();
+      /* -- PATCH -- */ if (strcmp (argv[i], "-subdir") == 0) { if (argv[i+1] == NULL) { printf("Invalid option: parameter expected for -subdir"); exit(1); } SetOption_SUBDIR(argv[++i]); }
       else if (strcmp (argv[i], "-alert") == 0) SetOption_ALERT();
       else if (strcmp (argv[i], "-if") == 0) SymbolFileFlag = 1;
       else if (strcmp (argv[i], "-trace") == 0) TraceFlag = 1;

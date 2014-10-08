@@ -5,7 +5,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 MC_PICKLE_BEGIN_RECORD(MCScriptExportedDefinition)
     MC_PICKLE_NAMEREF(name)
     MC_PICKLE_UINDEX(index)
@@ -104,9 +103,6 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *info, MCValueRef*& r_value_pool, uindex_t& r_value_pool_size, void*& r_record);
-bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *info, MCValueRef *value_pool, uindex_t value_pool_size, void* record);
 
 #if 0
 static bool MCScriptReadModuleHeaderFromStream(MCScriptStreamRef stream, uint32_t& r_version, MCScriptModuleKind& r_kind)

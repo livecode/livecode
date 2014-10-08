@@ -1,23 +1,72 @@
 'module' grammar
 
 'use'
+    support
     types
+    bind
+    syntax
 
 --------------------------------------------------------------------------------
 
 'root'
-    Parse(-> Module)
+    Parse(-> Modules)
+    (|
+        IsBootstrapCompile()
+        BootstrapCompile(Modules)
+    ||
+        -- Compile(Modules)
+    |)
+
+---------
+
+'action' BootstrapCompile(MODULELIST)
+
+    'rule' BootstrapCompile(Modules):
+        BindModules(Modules)
+        GenerateSyntaxForModules(Modules)
+
+'action' BindModules(MODULELIST)
+
+    'rule' BindModules(modulelist(Head, Tail)):
+        InitializeBind
+        
+        Bind(Head)
+        BindModules(Tail)
+        
+    'rule' BindModules(nil):
+        -- empty
+
+'action' GenerateSyntaxForModules(MODULELIST)
+
+    'rule' GenerateSyntaxForModules(modulelist(Head, Tail)):
+        InitializeSyntax
+        
+        GenerateSyntax(Head)
+        GenerateSyntaxForModules(Tail)
+
+    'rule' GenerateSyntaxForModules(nil):
+        -- empty
 
 --------------------------------------------------------------------------------
 
-'nonterm' Parse(-> MODULE)
+'nonterm' Parse(-> MODULELIST)
 
-    'rule' Parse(-> Module):
-        Module(-> Module)
+    'rule' Parse(-> Modules):
+        ModuleList(-> Modules)
 
 --------------------------------------------------------------------------------
 -- Module Syntax
 --------------------------------------------------------------------------------
+
+'nonterm' ModuleList(-> MODULELIST)
+
+    'rule' ModuleList(-> modulelist(Head, Tail)):
+        Module(-> Head)
+        NEXT_UNIT
+        ModuleList(-> Tail)
+        
+    'rule' ModuleList(-> modulelist(Head, nil)):
+        Module(-> Head)
 
 'nonterm' Module(-> MODULE)
 
@@ -26,6 +75,7 @@
         Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "module"
+        END_OF_UNIT
 
 --------------------------------------------------------------------------------
 -- Import Syntax
@@ -196,15 +246,15 @@
 
 'nonterm' PropertyDefinition(-> DEFINITION)
 
-    'rule' PropertyDefinition(-> property(Position, public)):
-        "property" @(-> Position)
+    'rule' PropertyDefinition(-> property(Position, public, Name)):
+        "property" @(-> Position) Identifier(-> Name)
         
 ---------- Event
 
 'nonterm' EventDefinition(-> DEFINITION)
 
-    'rule' EventDefinition(-> event(Position, public)):
-        "event" @(-> Position)
+    'rule' EventDefinition(-> event(Position, public, Name)):
+        "event" @(-> Position) Identifier(-> Name)
 
 ---------- Syntax
 
@@ -245,7 +295,7 @@
     'rule' SyntaxAssoc(-> right):
         "right"
 
-'nonterm' SyntaxMethods(-> METHODLIST)
+'nonterm' SyntaxMethods(-> SYNTAXMETHODLIST)
 
     'rule' SyntaxMethods(-> methodlist(Head, Tail)):
         SyntaxMethod(-> Head) SEPARATOR
@@ -254,7 +304,7 @@
     'rule' SyntaxMethods(-> nil):
         -- empty
 
-'nonterm' SyntaxMethod(-> METHOD)
+'nonterm' SyntaxMethod(-> SYNTAXMETHOD)
 
     'rule' SyntaxMethod(-> method(Position, Name, Arguments)):
         Identifier(-> Name) @(-> Position) "(" OptionalConstantList(-> Arguments) ")"
@@ -268,6 +318,47 @@
     'rule' Type(-> named(Position, Name)):
         Identifier(-> Name) @(-> Position)
         
+    'rule' Type(-> bool(Position)):
+        "bool" @(-> Position)
+
+    'rule' Type(-> int(Position)):
+        "int" @(-> Position)
+    
+    'rule' Type(-> uint(Position)):
+        "uint" @(-> Position)
+
+    'rule' Type(-> int(Position)):
+        "index" @(-> Position)
+    
+    'rule' Type(-> uint(Position)):
+        "uindex" @(-> Position)
+
+    'rule' Type(-> double(Position)):
+        "float" @(-> Position)
+
+    'rule' Type(-> double(Position)):
+        "double" @(-> Position)
+
+    --
+
+    'rule' Type(-> boolean(Position)):
+        "boolean" @(-> Position)
+
+    'rule' Type(-> integer(Position)):
+        "integer" @(-> Position)
+        
+    'rule' Type(-> number(Position)):
+        "number" @(-> Position)
+
+    'rule' Type(-> string(Position)):
+        "string" @(-> Position)
+
+    'rule' Type(-> data(Position)):
+        "data" @(-> Position)
+
+    'rule' Type(-> array(Position)):
+        "array" @(-> Position)
+
     'rule' Type(-> undefined(Position)):
         "undefined" @(-> Position)
 
@@ -365,7 +456,7 @@
     'rule' AtomicSyntax(-> Syntax):
         "(" Syntax(-> Syntax) ")"
 
-'nonterm' OptionalConstantList(-> CONSTANTLIST)
+'nonterm' OptionalConstantList(-> SYNTAXCONSTANTLIST)
 
     'rule' OptionalConstantList(-> List):
         ConstantList(-> List)
@@ -373,7 +464,7 @@
     'rule' OptionalConstantList(-> nil):
         -- empty
 
-'nonterm' ConstantList(-> CONSTANTLIST)
+'nonterm' ConstantList(-> SYNTAXCONSTANTLIST)
 
     'rule' ConstantList(-> constantlist(Head, Tail)):
         Constant(-> Head) "," ConstantList(-> Tail)
@@ -381,7 +472,7 @@
     'rule' ConstantList(-> constantlist(Head, nil)):
         Constant(-> Head)
 
-'nonterm' Constant(-> CONSTANT)
+'nonterm' Constant(-> SYNTAXCONSTANT)
 
     'rule' Constant(-> undefined(Position)):
         "undefined" @(-> Position)
@@ -432,3 +523,5 @@
 
 'token' SEPARATOR
 
+'token' END_OF_UNIT
+'token' NEXT_UNIT

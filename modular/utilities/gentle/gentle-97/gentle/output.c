@@ -132,13 +132,13 @@ nl()
 
 /*----------------------------------------------------------------------------*/
 
-static long SUBDIR = 0;
+/* --PATCH-- */ static const char *SUBDIR = NULL;
 
 /*----------------------------------------------------------------------------*/
 
-SetOption_SUBDIR()
+/* --PATCH-- */SetOption_SUBDIR(const char *v)
 {
-   SUBDIR = 1;
+/* --PATCH-- */    SUBDIR = v;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -148,8 +148,8 @@ TellFile(Name)
 {
    char buf[200];
 
-   if (SUBDIR)
-      sprintf(buf, "_G_/%s", Name);
+/* --PATCH-- */   if (SUBDIR != NULL)
+/* --PATCH-- */      sprintf(buf, "%s/%s", SUBDIR, Name);
    else
       sprintf(buf, "%s", Name);
    Tell(buf);

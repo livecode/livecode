@@ -1,4 +1,4 @@
-\  { yypos += 1; }
+\  { AdvanceCurrentPosition(1); }
 \t {  }
-\r { yypos += 1; }
-\n { /*yyPosToNextLine();*/ }
+\r { AdvanceCurrentPosition(1); }
+\n { AdvanceCurrentPositionToNextRow(); }

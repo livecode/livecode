@@ -97,7 +97,24 @@ struct info {
 
 struct info *info_list = 0;
 
-/* --PATCH-- */ static int SUBDIR = 0;
+/* --PATCH-- */ static const char *SUBDIR = NULL;
+
+/*----------------------------------------------------------------------------*/
+
+/* --PATCH--BEGIN-- */
+char *modify_file(const char *in)
+{
+    if (SUBDIR == NULL)
+        return strdup(in);
+    
+    char *s;
+    s = (char *)malloc(strlen(SUBDIR) + strlen(in) + 2);
+    strcpy(s, SUBDIR);
+    strcat(s, "/");
+    strcat(s, in);
+    return s;
+}
+/* --PATCH--END-- */
 
 /*----------------------------------------------------------------------------*/
 
@@ -142,7 +159,10 @@ args(argc, argv)
    for (i = 1; i < argc; i++) {
 /* --PATCH-- */    if (strcmp(argv[i], "-subdir") == 0)
 /* --PATCH-- */    {
-/* --PATCH-- */        SUBDIR = 1;
+/* --PATCH-- */        if (i + 1 == argc)
+/* --PATCH-- */          err("missing parameter to subdir option","");
+/* --PATCH-- */        SUBDIR=argv[i+1];
+/* --PATCH-- */        i++;
 /* --PATCH-- */        continue;
 /* --PATCH-- */    }
        
@@ -192,7 +212,7 @@ main(argc, argv)
 {
    args(argc, argv);
 
-/* --PATCH-- */    OUTFILE = fopen(SUBDIR ? "_G_/gen.l" : "gen.l", "w");
+/* --PATCH-- */    OUTFILE = fopen(modify_file("gen.l"), "w");
    if (OUTFILE == NULL) {
       printf("cannot open gen.l\n");
       exit(1);
@@ -216,7 +236,7 @@ main(argc, argv)
    {
       FILE *F;
 
-/* --PATCH-- */       F = OPEN(SUBDIR ? "_G_/gen.lit" : "gen.lit");
+/* --PATCH-- */       F = OPEN(modify_file("gen.lit"));
       if (F == NULL) {
 	 printf("cannot open gen.lit\n");
 	 exit(1);
@@ -303,7 +323,7 @@ filelist()
    FILE *LISTFILE;
    FILE *INFILE;
 
-/* --PATCH-- */   LISTFILE = OPEN(SUBDIR ? "_G_/gen.tkn" : "gen.tkn");
+/* --PATCH-- */   LISTFILE = OPEN(modify_file("gen.tkn"));
    if (LISTFILE == NULL) {
       printf("cannot open gen.tkn\n");
       exit(1);
