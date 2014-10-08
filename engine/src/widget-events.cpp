@@ -23,6 +23,7 @@
 #include "font.h"
 #include "chunk.h"
 #include "graphicscontext.h"
+#include "dispatch.h"
 
 #include "globals.h"
 #include "context.h"
@@ -189,6 +190,20 @@ void MCWidgetEventManager::event_munfocus(MCWidget* p_widget)
     m_mouse_focus = nil;
 }
 
+void MCWidgetEventManager::event_mdrag(MCWidget* p_widget)
+{
+    // If this widget is not a drag source, reject the drag attempt
+    bool t_drag_accepted;
+    t_drag_accepted = p_widget->isDragSource();
+    if (t_drag_accepted)
+        p_widget->OnDragStart(t_drag_accepted);
+    
+    if (t_drag_accepted)
+        MCdragtargetptr = p_widget;
+    else
+        MCdragtargetptr = nil;
+}
+
 Boolean MCWidgetEventManager::event_doubledown(MCWidget* p_widget, uint2 p_which)
 {
     // Because we do gesture recognition ourselves, treat this as a normal click
@@ -272,6 +287,16 @@ void MCWidgetEventManager::event_gesture_swipe(MCWidget* p_widget, real32_t p_de
     // Not implemented
 }
 
+void MCWidgetEventManager::event_dnd_drop(MCWidget* p_widget)
+{
+    p_widget->OnDragDrop();
+}
+
+void MCWidgetEventManager::event_dnd_end(MCWidget* p_widget)
+{
+    p_widget->OnDragFinish();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uinteger_t MCWidgetEventManager::GetMouseButtonState() const
@@ -292,17 +317,39 @@ void MCWidgetEventManager::mouseMove(MCWidget* p_widget, coord_t p_x, coord_t p_
     m_mouse_x = p_x;
     m_mouse_y = p_y;
     
-    p_widget->OnMouseMove(p_x, p_y);
+    if (MCdispatcher->isdragtarget())
+        p_widget->OnDragMove(p_x, p_y);
+    else
+        p_widget->OnMouseMove(p_x, p_y);
 }
 
 void MCWidgetEventManager::mouseEnter(MCWidget* p_widget)
 {
-    p_widget->OnMouseEnter();
+    if (MCdispatcher->isdragtarget())
+    {
+        // Set this widget as the drag target if it would accept the drop
+        bool t_accepted;
+        MCdragaction = DRAG_ACTION_NONE;
+        p_widget->OnDragEnter(t_accepted);
+        if (t_accepted)
+            MCdragdest = p_widget;
+        else
+            MCdragdest = nil;
+    }
+    else
+        p_widget->OnMouseEnter();
 }
 
 void MCWidgetEventManager::mouseLeave(MCWidget* p_widget)
 {
-    p_widget->OnMouseLeave();
+    if (MCdispatcher->isdragtarget())
+    {
+        p_widget->OnDragLeave();
+        MCdragdest = nil;
+        MCdragaction = DRAG_ACTION_NONE;
+    }
+    else
+        p_widget->OnMouseLeave();
 }
 
 bool MCWidgetEventManager::mouseDown(MCWidget* p_widget, uinteger_t p_which)

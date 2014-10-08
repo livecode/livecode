@@ -54,6 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 #include "font.h"
 #include "stacksecurity.h"
+#include "widget-events.h"
 
 #include "exec.h"
 #include "exec-interface.h"
@@ -1939,7 +1940,10 @@ void MCDispatch::dodrop(bool p_source)
 	{
 		// We are only the source
 		m_drag_end_sent = true;
-		MCdragsource -> message(MCM_drag_end);
+        if (MCdragsource->gettype() == CT_WIDGET)
+            MCwidgeteventmanager->event_dnd_end(reinterpret_cast<MCWidget*>(MCdragsource));
+        else
+            MCdragsource -> message(MCM_drag_end);
 
 		// OK-2008-10-21 : [[Bug 7316]] - Cursor in script editor follows mouse after dragging to non-Revolution target.
 		// I have no idea why this apparently only happens in the script editor, but this seems to fix it and doesn't seem too risky :)
@@ -2056,7 +2060,19 @@ void MCDispatch::dodrop(bool p_source)
 		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False);
 
 	bool t_auto_drop;
-	t_auto_drop = MCdragdest != NULL && MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;
+    t_auto_drop = MCdragdest != NULL;
+    if (t_auto_drop)
+    {
+        if (MCdragdest->gettype() == CT_WIDGET)
+        {
+            MCwidgeteventmanager->event_dnd_drop(reinterpret_cast<MCWidget*>(MCdragdest));
+            t_auto_drop = false;
+        }
+        else
+        {
+            t_auto_drop = MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;
+        }
+    }
 
 	if (t_auto_dest && t_auto_drop && MCdragdata != NULL && MCdropfield != NULL)
 	{
@@ -2097,7 +2113,15 @@ void MCDispatch::dodrop(bool p_source)
 	if (MCdragsource != NULL)
 	{
 		m_drag_end_sent = true;
-		t_auto_end = MCdragsource -> message(MCM_drag_end) != ES_NORMAL;
+        if (MCdragsource->gettype() == CT_WIDGET)
+        {
+            MCwidgeteventmanager->event_dnd_end(reinterpret_cast<MCWidget*>(MCdragsource));
+            t_auto_end = false;
+        }
+        else
+        {
+            t_auto_end = MCdragsource -> message(MCM_drag_end) != ES_NORMAL;
+        }
 	}
 	else
 		t_auto_end = false;

@@ -212,6 +212,11 @@ void MCWidget::munfocus(void)
     MCwidgeteventmanager->event_munfocus(this);
 }
 
+void MCWidget::mdrag(void)
+{
+    MCwidgeteventmanager->event_mdrag(this);
+}
+
 Boolean MCWidget::doubledown(uint2 p_which)
 {
     return MCwidgeteventmanager->event_doubledown(this, p_which);
@@ -611,6 +616,11 @@ bool MCWidget::waitForDoubleClick() const
     return false;
 }
 
+bool MCWidget::isDragSource() const
+{
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCWidget::OnOpen()
@@ -783,6 +793,38 @@ void MCWidget::OnModifiersChanged(uinteger_t p_modifier_mask)
 void MCWidget::OnActionKeyPress(MCStringRef p_keyname)
 {
     fprintf(stderr, "MCWidget::OnActionKeyPress\n");
+}
+
+void MCWidget::OnDragEnter(bool& r_accept)
+{
+    fprintf(stderr, "MCWidget::OnDragEnter\n");
+    r_accept = true;
+}
+
+void MCWidget::OnDragLeave()
+{
+    fprintf(stderr, "MCWidget::OnDragLeave\n");
+}
+
+void MCWidget::OnDragMove(coord_t p_x, coord_t p_y)
+{
+    fprintf(stderr, "MCWidget::OnDragMove\n");
+}
+
+void MCWidget::OnDragDrop()
+{
+    fprintf(stderr, "MCWidget::OnDragDrop\n");
+}
+
+void MCWidget::OnDragStart(bool& r_accept)
+{
+    fprintf(stderr, "MCWidget::OnDragStart\n");
+    r_accept = true;
+}
+
+void MCWidget::OnDragFinish()
+{
+    fprintf(stderr, "MCWidget::OnDragFinish\n");
 }
 
 void MCWidget::OnClick(coord_t p_x, coord_t p_y, uinteger_t p_button, uinteger_t p_count)

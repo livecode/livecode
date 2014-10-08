@@ -31,6 +31,8 @@ public:
 	virtual Boolean mfocus(int2 p_x, int2 p_y);
 	virtual void munfocus(void);
 
+    virtual void mdrag(void);
+    
 	virtual Boolean doubledown(uint2 p_which);
 	virtual Boolean doubleup(uint2 p_which);
 	
@@ -73,6 +75,7 @@ public:
     bool wantsTouches() const;      // Does this widget want touch events?
     bool wantsDoubleClicks() const; // Does this widget want double-clicks?
     bool waitForDoubleClick() const;// Don't send click straight away
+    bool isDragSource() const;      // Widget is source for drag-drop operations
     
 protected:
 	static MCPropertyInfo kProperties[];
@@ -148,12 +151,12 @@ private:
     //
     // Note: widget script should also have a way of triggering a drag and drop
     // operation itself, if desired; e.g. startDrag(in pTouchID as integer)
-    void OnDragEnter(class MCDragContext& p_drag);
-    void OnDragLeave(class MCDragContext& p_drag);
-    void OnDragMove(class MCDragContext& p_drag, coord_t p_x, coord_t p_y);
-    void OnDragDrop(class MCDragContext& p_drag);
-    void OnDragStart(class MCDragContext& p_drag);
-    void OnDragFinish(class MCDragContext& p_drag);
+    void OnDragEnter(bool& r_accept);
+    void OnDragLeave();
+    void OnDragMove(coord_t p_x, coord_t p_y);
+    void OnDragDrop();
+    void OnDragStart(bool& r_accept);
+    void OnDragFinish();
     
     ////////// Gestures
     

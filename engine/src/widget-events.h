@@ -30,6 +30,7 @@ public:
     void event_setrect(MCWidget*, const MCRectangle& p_rectangle);
     void event_recompute(MCWidget*);
     void event_draw(MCDC *p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite);
+    void event_mdrag(MCWidget*);
     
     // Non-MCControl event for handling touches
     void event_touch(MCWidget*, uint32_t p_id, MCEventTouchPhase, int2 p_x, int2 p_y);
@@ -40,6 +41,10 @@ public:
     void event_gesture_magnify(MCWidget*, real32_t p_factor);
     void event_gesture_swipe(MCWidget*, real32_t p_delta_x, real32_t p_delta_y);
     void event_gesture_rotate(MCWidget*, real32_t p_radians);
+    
+    // Non-MCControl events for drag-and-drop handling
+    void event_dnd_end(MCWidget*);
+    void event_dnd_drop(MCWidget*);
     
     // Returns a bitmask of the mouse buttons that are pressed
     uinteger_t GetMouseButtonState() const;
