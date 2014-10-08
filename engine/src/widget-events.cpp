@@ -147,14 +147,22 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
     p_rect = MCU_make_rect(p_x, p_y, 1, 1);
     bool t_within_bounds;
     p_widget->OnBoundsTest(p_rect, t_within_bounds);
-    if (!t_within_bounds)
-        return False;
+    if (t_within_bounds)
+        p_widget->OnHitTest(p_rect, t_within_bounds);
 
-    // Do a more thorough hit test
-    bool t_hit;
-    p_widget->OnHitTest(p_rect, t_hit);
-    if (!t_hit)
+    // If the hit test was failed, the widget doesn't get a move event
+    if (!t_within_bounds)
+    {
+        // If this was previously the focused widget, send a leave message
+        if (p_widget == m_mouse_focus)
+        {
+            m_mouse_focus = nil;
+            mouseLeave(p_widget);
+        }
+        
+        // This is not the widget you were looking for
         return False;
+    }
     
     // Has the focus state for this widget changed?
     if (p_widget != m_mouse_focus)
