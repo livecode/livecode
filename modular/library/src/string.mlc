@@ -1,3 +1,7 @@
+/*  
+This module specifies the syntax definitions and bindings for operations on binary data in modular LiveCode.
+*/
+
 module com.livecode.string
 
 foreign handler ExecPutStringBefore(in Source as string, inout Target as string) as undefined binds to "<builtin>"
@@ -18,13 +22,34 @@ foreign handler EvalToUpper(in Source as string, out Result as string) as undefi
 foreign handler EvalOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
 foreign handler EvalOffsetAfter(in Needle as string, in After as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
 
+foreign handler EvalLastOffset(in Needle as string, in Source as string, out Result as index)
+foreign handler EvalLastOffsetBefore(in Needle as string, in Before as index, in Source as string, out Result as index)
+
 --
+
+/*
+Summary:            Prepends <Source> to <Target>.
+
+Source: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string container.
+
+Example: 			put tPrefix before tString
+*/
 
 syntax PutStringBefore is statement
     "put" <Source: Expression> "before" <Target: Expression>
 begin
     ExecPutStringBefore(Source, Target)
 end syntax
+
+/*
+Summary:            Appends <Source> to <Target>.
+
+Source: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string container.
+
+Example: 			put tSuffix after tString
+*/
 
 syntax PutStringAfter is statement
     "put" <Source: Expression> "after" <Target: Expression>
@@ -34,6 +59,16 @@ end syntax
 
 --
 
+/*
+Summary:            Replaces occurrences of <Pattern> within <Target> in <Replacement>
+
+Source: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string container.
+Replacement: 		An expression which evaluates to a string.
+
+Example: 			replace " " with "_" in tString
+*/
+
 syntax ReplaceString is statement
     "replace" <Pattern: Expression> "with" <Replacement: Expression> "in" <Target: Expression>
 begin
@@ -42,11 +77,31 @@ end syntax
 
 --
 
+/*
+Summary:            Concatenates <Left> and <Right>.
+
+Left: 				An expression which evaluates to a string.
+Right: 				An expression which evaluates to a string.
+output: 			String consisting of the value of the left hand expression with the value of the right hand expression appended to the end.
+
+Example: 			put tLeft & tRight into tConcatenated
+*/
+
 syntax ConcatenateStrings is left binary operator with precedence 2
     <Left: Expression> "&" <Right: Expression>
 begin
     EvalConcatenate(Left, Right, output)
 end syntax
+
+/*
+Summary:            Concatenates <Left> and <Right> with a space between.
+
+Left: 				An expression which evaluates to a string.
+Right: 				An expression which evaluates to a string.
+output: 			String consisting of the value of the left hand expression with the value of the right hand expression appended to the end, and a space character inserted between them
+
+Example: 			put tLeft && tRight into tConcatSpace
+*/
 
 syntax ConcatenateStringsWithSpace is left binary operator with precedence 2
     <Left: Expression> "&&" <Right: Expression>
@@ -86,6 +141,32 @@ syntax LowerCaseString is left unary operator with precedence 1
     "the" "lower" "of" <Source: Expression>
 begin
     EvalToLower(Source, output)
+end syntax
+
+--
+
+syntax OffsetOfString is left unary operator with precedence 1
+    "the" "offset" "of" <Needle: Expression> "in" <Source: Expression>
+begin
+    EvalOffset(Needle, Source, output)
+end syntax
+
+syntax OffsetOfStringAfter is left unary operator with precedence 1
+    "the" "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Source: Expression>
+begin
+    EvalOffsetAfter(Needle, After, Source, output)
+end syntax
+
+syntax LastOffsetOfString is left unary operator with precedence 1
+    "the" "last" "offset" "of" <Needle: Expression> "in" <Source: Expression>
+begin
+    EvalLastOffset(Needle, Source, output)
+end syntax
+
+syntax LastOffsetOfStringBefore is left unary operator with precedence 1
+    "the" "last" "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Source: Expression>
+begin
+    EvalLastOffsetBefore(Needle, After, Source, output)
 end syntax
 
 --

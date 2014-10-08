@@ -1,3 +1,7 @@
+/*  
+This module specifies the syntax definitions and bindings for operations on binary data in modular LiveCode.
+*/
+
 module com.livecode.binary
 
 foreign handler ExecPutBytesBefore(in Source as data, inout Target as data) as undefined binds to "<builtin>"
@@ -7,10 +11,10 @@ foreign handler EvalConcatenateBytes(in Left as data, in Right as data, out Resu
 
 foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
 
-foreign handler EvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Result as bool) as undefined binds to "<builtin>"
-foreign handler EvalIsNotAmongTheBytesOf(in Needle as data, in Target as data, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalIsAmongTheBytesOf(in Needle as data, in Target as data, in IsNot as bool, out Result as bool) as undefined binds to "<builtin>"
 
 foreign handler EvalOffsetOfBytesIn(in Needle as data, in Target as data, out Offset as index) as undefined binds to "<builtin>"
+foreign handler EvalOffsetOfBytesAfterIndexIn(in Needle as data, in After as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
 
 foreign handler FetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
 foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
@@ -19,11 +23,31 @@ foreign handler StoreByteRangeOf(in Value as data, in Start as index, in Finish 
 
 --
 
+/*
+Summary:            Prepends <Source> bytes to <Target> bytes.
+
+Source: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to a binary container.
+
+Example: 			put tPrefixData before tData
+*/
+
 syntax PutBytesBefore is statement
     "put" <Source: Expression> "before" <Target: Expression>
 begin
     ExecPutBytesBefore(Source, Target)
 end syntax
+
+/*
+Summary:            Appends <Source> bytes to <Target> bytes.
+
+Source: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to a binary container.
+
+Example: 			put tSuffixData after tData
+
+Related: 			PutBytesAfter
+*/
 
 syntax PutBytesAfter is statement
     "put" <Source: Expression> "after" <Target: Expression>
@@ -33,6 +57,16 @@ end syntax
 
 --
 
+/*
+Summary:            Concatenates <Left> and <Right>.
+
+Left: 				An expression which evaluates to binary data.
+Right: 				An expression which evaluates to binary data.
+output: 			Binary data consisting of the value of the left hand expression with the value of the right hand expression appended to the end.
+
+Example: 			put tLeft & tRight into tConcatenated
+*/
+
 syntax ConcatenateBytes is left binary operator with precedence 2
     <Left: Expression> "&" <Right: Expression>
 begin
@@ -40,6 +74,18 @@ begin
 end syntax
 
 --
+
+/*
+Summary:            Counts the number of bytes in <Target>.
+
+Target: 			An expression which evaluates to binary data.
+
+Example: 			
+
+	repeat with x = 1 to the number of bytes in tData
+		// do something
+	end repeat
+*/
 
 syntax CountBytesOf is left unary operator with precedence 1
 	"the" "number" "of" "bytes" "in" <Target: Expression>
@@ -49,19 +95,39 @@ end syntax
 
 --
 
-syntax AmongBytesOf is left unary operator with precedence 1
-	<Needle: Expression> "is" "among" "the" "bytes" "of" <Target: Expression>
-begin
-	EvalIsAmongTheBytesOf(Needle, Target, output)
-end syntax
+/*
+Summary:            Determines whether <Needle> can be found within <Target>.
 
-syntax NotAmongBytesOf is left unary operator with precedence 1
-	<Needle: Expression> "is" "not" "among" "the" "bytes" "of" <Target: Expression>
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+output: 			Evaluates to true if the value of the expression <Needle> can be found within that of <Target>.
+                    Evaluates to false otherwise.
+
+Example: 	
+		
+	if tNeedle is among the bytes of tData then
+		put true into tIsAmong
+	end if
+*/
+
+syntax AmongBytesOf is left unary operator with precedence 1
+	<Needle: Expression> "is" ["not" <IsNot=true>] "among" "the" "bytes" "of" <Target: Expression>
 begin
-	EvalIsNotAmongTheBytesOf(Needle, Target, output)
+	EvalIsAmongTheBytesOf(Needle, Target, IsNot, output)
 end syntax
 
 --
+
+/*
+
+Summary:            Finds the first occurrence of <Needle> within <Target>
+
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+output:             Returns the number of bytes between the first byte of <Target> and the first occurrence of <Needle>	within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target>.
+
+*/
 
 syntax ByteOffset is left unary operator with precedence 1
 	"the" "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
@@ -69,7 +135,38 @@ begin
 	EvalOffsetOfBytesIn(Needle, Target, output)
 end syntax
 
+/*
+
+Summary:            Finds the first occurrence of <Needle> within <Target> after index <After>
+
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+After:              An expression which evaluates to a valid integral index of <Target>.
+output:             Returns the number of bytes between the first byte of <Target> and the first occurrence of <Needle>	within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target>.
+
+*/
+
+syntax ByteOffsetAfter is left unary operator with precedence 1
+	"the" "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+begin
+	EvalOffsetOfBytesAfterIndexIn(Needle, After, Target, output)
+end syntax
+
 --
+
+/*
+
+Summary:            Designates the byte of data at index <Index> in <Target>.
+Index: 				An expression which evaluates to a valid integral index of <Target>.
+Target:				An expression which evaluates to binary data.
+output:             Either locates the byte of data at the given index either for use as the target container of another operation, 
+                    or evaluates the byte of data at the given index as the source of another operation.
+
+Example: 			delete byte 5 of tData // Locates byte 5 and removes it from tData
+Example: 			get byte 5 of tData // Evaluates byte 5
+
+*/
 
 syntax SingletonByteOf is left unary operator with precedence 1
 	"byte" <Index: Expression> "of" <Target: Expression>
@@ -77,6 +174,21 @@ begin
 	FetchByteOf(Index, Target, output)
 	StoreByteOf(input, Index, Target)
 end syntax
+
+/*
+
+Summary:            Designates the bytes of data between indices <Start> and <Finish> in <Target>.
+
+Start:              An expression which evaluates to a valid integral index of <Target>.
+Finish:             An expression which evaluates to a valid integral index of <Target>.
+Target:             An expression which evaluates to binary data.
+output:             Either locates the bytes of data between the given indices either for use as the target container of another operation, 
+                    or evaluates the bytes of data at the given indices as the source of another operation.
+                    
+Example: 			put tBytes into byte 5 to 10 of tData // Locates bytes 5 to 10 and replace them with tBytes
+Example: 			get byte 5 to 10 of tData // Evaluates bytes 5 to 10
+
+*/
 
 syntax RangeByteOf is left unary operator with precedence 1
 	"byte" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
