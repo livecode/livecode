@@ -34,6 +34,13 @@ public:
     // Non-MCControl event for handling touches
     void event_touch(MCWidget*, uint32_t p_id, MCEventTouchPhase, int2 p_x, int2 p_y);
     
+    // Non-MCControl events called by platform-specific gesture recognition
+    void event_gesture_begin(MCWidget*);    // Suppress touch events until end
+    void event_gesture_end(MCWidget*);      // Unlock touch events
+    void event_gesture_magnify(MCWidget*, real32_t p_factor);
+    void event_gesture_swipe(MCWidget*, real32_t p_delta_x, real32_t p_delta_y);
+    void event_gesture_rotate(MCWidget*, real32_t p_radians);
+    
     // Returns a bitmask of the mouse buttons that are pressed
     uinteger_t GetMouseButtonState() const;
     

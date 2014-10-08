@@ -239,6 +239,31 @@ void MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEven
     }
 }
 
+void MCWidgetEventManager::event_gesture_begin(MCWidget* p_widget)
+{
+    // Not implemented
+}
+
+void MCWidgetEventManager::event_gesture_end(MCWidget* p_widget)
+{
+    // Not implemented
+}
+
+void MCWidgetEventManager::event_gesture_magnify(MCWidget* p_widget, real32_t p_factor)
+{
+    // Not implemented
+}
+
+void MCWidgetEventManager::event_gesture_rotate(MCWidget* p_widget, real32_t p_radians)
+{
+    // Not implemented
+}
+
+void MCWidgetEventManager::event_gesture_swipe(MCWidget* p_widget, real32_t p_delta_x, real32_t p_delta_y)
+{
+    // Not implemented
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uinteger_t MCWidgetEventManager::GetMouseButtonState() const
