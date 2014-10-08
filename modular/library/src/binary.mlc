@@ -11,8 +11,6 @@ foreign handler EvalConcatenateBytes(in Left as data, in Right as data, out Resu
 
 foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
 
-foreign handler EvalIsAmongTheBytesOf(in Needle as data, in Target as data, in IsNot as bool, out Result as bool) as undefined binds to "<builtin>"
-
 foreign handler EvalOffsetOfBytesIn(in Needle as data, in Target as data, out Offset as index) as undefined binds to "<builtin>"
 foreign handler EvalOffsetOfBytesAfterIndexIn(in Needle as data, in After as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
 
@@ -91,29 +89,6 @@ syntax CountBytesOf is left unary operator with precedence 1
 	"the" "number" "of" "bytes" "in" <Target: Expression>
 begin
 	EvalNumberOfBytesIn(Target, output)
-end syntax
-
---
-
-/*
-Summary:            Determines whether <Needle> can be found within <Target>.
-
-Needle: 			An expression which evaluates to binary data.
-Target: 			An expression which evaluates to binary data.
-output: 			Evaluates to true if the value of the expression <Needle> can be found within that of <Target>.
-                    Evaluates to false otherwise.
-
-Example: 	
-		
-	if tNeedle is among the bytes of tData then
-		put true into tIsAmong
-	end if
-*/
-
-syntax AmongBytesOf is left unary operator with precedence 1
-	<Needle: Expression> "is" ["not" <IsNot=true>] "among" "the" "bytes" "of" <Target: Expression>
-begin
-	EvalIsAmongTheBytesOf(Needle, Target, IsNot, output)
 end syntax
 
 --
