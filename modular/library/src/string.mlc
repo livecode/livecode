@@ -14,10 +14,9 @@ foreign handler EvalConcatenateWithSpace(in Left as string, in Right as string, 
 
 foreign handler EvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
 foreign handler EvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
-foreign handler EvalContains(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
 
-foreign handler EvalToLower(in Source as string, out Result as string) as undefined binds to "<builtin>"
-foreign handler EvalToUpper(in Source as string, out Result as string) as undefined binds to "<builtin>"
+foreign handler EvalLowercaseOf(in Source as string, out Result as string)
+foreign handler EvalUppercaseOf(in Source as string, out Result as string)
 
 foreign handler EvalOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
 foreign handler EvalOffsetAfter(in Needle as string, in After as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
@@ -111,11 +110,28 @@ end syntax
 
 --
 
+/*
+Summary:            Determines whether <Source> begins with <Prefix>
+Prefix: 			An expression which evaluates to a string.
+Source: 			An expression which evaluates to a string.
+output:             Returns true if the characters in <Prefix> occur at the start of <Source>, 
+                    modulo the contextual string options of the current handler.
+*/
+
 syntax BeginsWithString is left unary operator with precedence 1
     <Source: Expression> "begins" "with" <Prefix: Expression>
 begin
     EvalBeginsWith(Source, Prefix, output)
 end syntax
+
+/*
+Summary:            Determines whether <Source> ends with <Prefix>
+Prefix: 			An expression which evaluates to a string.
+Source: 			An expression which evaluates to a string.
+output:             Returns true if the characters in <Prefix> occur at the end of <Source>, 
+                    modulo the contextual string options of the current handler.
+*/
+
 
 syntax EndsWithString is left unary operator with precedence 1
     <Source: Expression> "ends" "with" <Suffix: Expression>
@@ -123,27 +139,47 @@ begin
     EvalEndsWith(Source, Suffix, output)
 end syntax
 
-syntax Contains is left unary operator with precedence 1
-    <Source: Expression> "contains" <Needle: Expression>
-begin
-    EvalContains(Source, Needle, output)
-end syntax
-
 --
 
-syntax UpperCaseString is left unary operator with precedence 1
+/*
+Summary:            Uppercases <Source>.
+Source: 			An expression which evaluates to a string.
+output:             
+*/
+
+
+syntax UppercaseString is left unary operator with precedence 1
     "the" "upper" "of" <Source: Expression>
 begin
-    EvalToUpper(Source, output)
+    EvalUppercaseOf(Source, output)
 end syntax
 
-syntax LowerCaseString is left unary operator with precedence 1
+/*
+Summary:            Lowercases <Source>.
+Source: 			An expression which evaluates to a string.
+output:             
+*/
+
+
+syntax LowercaseString is left unary operator with precedence 1
     "the" "lower" "of" <Source: Expression>
 begin
-    EvalToLower(Source, output)
+    EvalLowercaseOf(Source, output)
 end syntax
 
 --
+
+/*
+
+Summary:            Finds the first occurrence of <Needle> within <Target>.
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+output:             Returns the number of chars between the first char of <Target> 
+                    and the first char of the first occurrence of <Needle> within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target>.
+
+*/
 
 syntax OffsetOfString is left unary operator with precedence 1
     "the" "offset" "of" <Needle: Expression> "in" <Source: Expression>
@@ -151,17 +187,55 @@ begin
     EvalOffset(Needle, Source, output)
 end syntax
 
+/*
+
+Summary:            Finds the first occurrence of <Needle> within <Target> after index <After>.
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+After:              An expression which evaluates to a valid integer index of <Target>.
+output:             Returns the number of chars between the first char of <Target> 
+                    and the first char of the first occurrence of <Needle> within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target> after index <After>.
+                    
+*/
+
 syntax OffsetOfStringAfter is left unary operator with precedence 1
     "the" "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Source: Expression>
 begin
     EvalOffsetAfter(Needle, After, Source, output)
 end syntax
 
+/*
+
+Summary:            Finds the last occurrence of <Needle> within <Target>
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+output:             Returns the number of chars between the first char of <Target> 
+                    and the first char of the last occurrence of <Needle> within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target>.
+
+*/
+
 syntax LastOffsetOfString is left unary operator with precedence 1
     "the" "last" "offset" "of" <Needle: Expression> "in" <Source: Expression>
 begin
     EvalLastOffset(Needle, Source, output)
 end syntax
+
+/*
+
+Summary:            Finds the last occurrence of <Needle> within <Target> before index <Before>.
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+Before:             An expression which evaluates to a valid integer index of <Target>.
+output:             Returns the number of chars between the first char of <Target> 
+                    and the first char of the last occurrence of <Needle> within <Target> before <Before>.
+                    Returns 0 if <Needle> does not occur within <Target>.
+
+*/
 
 syntax LastOffsetOfStringBefore is left unary operator with precedence 1
     "the" "last" "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Source: Expression>

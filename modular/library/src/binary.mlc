@@ -116,9 +116,9 @@ Summary:            Finds the first occurrence of <Needle> within <Target> after
 
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
-After:              An expression which evaluates to a valid integral index of <Target>.
+After:              An expression which evaluates to a valid integer index of <Target>.
 output:             Returns the number of bytes between the first byte of <Target> and the first occurrence of <Needle>	within <Target>.
-                    Returns 0 if <Needle> does not occur within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target> after index <After>.
 
 */
 
@@ -133,7 +133,7 @@ end syntax
 /*
 
 Summary:            Designates the byte of data at index <Index> in <Target>.
-Index: 				An expression which evaluates to a valid integral index of <Target>.
+Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to binary data.
 output:             Either locates the byte of data at the given index either for use as the target container of another operation, 
                     or evaluates the byte of data at the given index as the source of another operation.
@@ -154,8 +154,8 @@ end syntax
 
 Summary:            Designates the bytes of data between indices <Start> and <Finish> in <Target>.
 
-Start:              An expression which evaluates to a valid integral index of <Target>.
-Finish:             An expression which evaluates to a valid integral index of <Target>.
+Start:              An expression which evaluates to a valid integer index of <Target>.
+Finish:             An expression which evaluates to a valid integer index of <Target>.
 Target:             An expression which evaluates to binary data.
 output:             Either locates the bytes of data between the given indices either for use as the target container of another operation, 
                     or evaluates the bytes of data at the given indices as the source of another operation.
