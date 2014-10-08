@@ -1684,6 +1684,8 @@ struct MCKeyboardActivatedEvent: public MCCustomEvent
 	void Dispatch(void)
 	{
 		s_current_keyboard_height = m_height;
+        // MM-2014-10-08: [[ Bug 12464 ]] Clear the display info cache on keyboard activation/deactivation ensuring the effective screenrect returns the correct data.
+        MCscreen -> cleardisplayinfocache();
 		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_activated);
 	}
 	
@@ -1701,6 +1703,8 @@ struct MCKeyboardDeactivatedEvent: public MCCustomEvent
 	void Dispatch(void)
 	{
 		s_current_keyboard_height = 0.0;
+        // MM-2014-10-08: [[ Bug 12464 ]] Clear the display info cache on keyboard activation/deactivation ensuring the effective screenrect returns the correct data.
+        MCscreen -> cleardisplayinfocache();
 		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_deactivated);
 	}
 };
