@@ -3921,6 +3921,14 @@ void MCPlayer::handle_shift_mdown(int p_which)
         case kMCPlayerControllerPartThumb:
         case kMCPlayerControllerPartWell:
         {
+            // PM-2014-09-30: [[ Bug 13540 ]] shift+clicking on controller well/thumb/play button does something only if showSelection is true
+            if (!getflag(F_SHOW_SELECTION))
+            {
+                handle_mdown(p_which);
+                return;
+            }
+                
+            
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             MCRectangle t_part_thumb_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb);
             
@@ -3992,20 +4000,20 @@ void MCPlayer::handle_shift_mdown(int p_which)
             }
             
             if (hasfilename())
-            {
-                bool t_show_selection;
-                t_show_selection = true;
-                setflag(True, F_SHOW_SELECTION);
-                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-                
                 setselection(true);
-            }
-            
+
             layer_redrawrect(getcontrollerrect());
         }
             break;
             
         case kMCPlayerControllerPartPlay:
+            // PM-2014-09-30: [[ Bug 13540 ]] shift+clicking on controller well/thumb/play button does something only if showSelection is true
+            if (!getflag(F_SHOW_SELECTION))
+            {
+                handle_mdown(p_which);
+                return;
+            }
+            
             shift_play();
             break;
           
@@ -4118,11 +4126,6 @@ void MCPlayer::shift_play()
     
     if (hasfilename())
     {
-        bool t_show_selection;
-        t_show_selection = true;
-        setflag(True, F_SHOW_SELECTION);
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-        
         // MW-2014-07-18: [[ Bug 12825 ]] When play button clicked, previous behavior was to
         //   force rate to 1.0.
         if (!getstate(CS_PREPARED) || ispaused())
