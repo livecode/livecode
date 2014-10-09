@@ -185,6 +185,7 @@
 		4DEB640319E592B6009DF2EA /* support.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = support.c; path = src/_GG_/support.c; sourceTree = "<group>"; };
 		4DEB640419E592B7009DF2EA /* syntax.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = syntax.c; path = src/_GG_/syntax.c; sourceTree = "<group>"; };
 		4DEB640919E6822E009DF2EA /* syntax-gen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "syntax-gen.c"; path = "src/syntax-gen.c"; sourceTree = SOURCE_ROOT; };
+		4DEB640E19E69E50009DF2EA /* COMMENTS.b */ = {isa = PBXFileReference; lastKnownFileType = text; name = COMMENTS.b; path = src/COMMENTS.b; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -258,6 +259,7 @@
 				4DA53A2F19E448C50089FBDC /* bind.g */,
 				4DEB640219E59227009DF2EA /* syntax.g */,
 				4D3AA09D19CC49D000886BE7 /* ILLEGAL.b */,
+				4DEB640E19E69E50009DF2EA /* COMMENTS.b */,
 				4D3AA09E19CC49D000886BE7 /* LAYOUT.b */,
 				4D3AA09F19CC49D000886BE7 /* LEXDEF.b */,
 				4D3AA0A019CC49D000886BE7 /* LEXFUNC.b */,
@@ -492,6 +494,7 @@
 				"$(SRCROOT)/src/SEPARATOR.t",
 				"$(SRCROOT)/src/NEXT_UNIT.t",
 				"$(SRCROOT)/src/END_OF_UNIT.t",
+				"$(SRCROOT)/src/COMMENTS.b",
 			);
 			name = Reflex;
 			outputPaths = (
@@ -524,6 +527,7 @@
 				"$(SRCROOT)/src/SEPARATOR.t",
 				"$(SRCROOT)/src/NEXT_UNIT.t",
 				"$(SRCROOT)/src/END_OF_UNIT.t",
+				"$(SRCROOT)/src/COMMENTS.b",
 			);
 			name = Reflex;
 			outputPaths = (

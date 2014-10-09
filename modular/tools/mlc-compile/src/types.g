@@ -140,11 +140,18 @@
 
 'type' MEANING
     definingid(Id: ID)
+    type
+    constant
+    variable
+    handler
+    property
+    event
+    parameter
+    syntaxrule(Class: SYNTAXCLASS)
     syntaxmark(Index: INT)
-    syntaxrule,
-    syntaxoutputmark,
-    syntaxinputmark,
-    syntaxcontextmark,
+    syntaxoutputmark
+    syntaxinputmark
+    syntaxcontextmark
     nil
 
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)

@@ -23,7 +23,11 @@
 
     'rule' BootstrapCompile(Modules):
         BindModules(Modules)
-        GenerateSyntaxForModules(Modules)
+        (|
+            ErrorsDidOccur()
+        ||
+            GenerateSyntaxForModules(Modules)
+        |)
 
 'action' BindModules(MODULELIST)
 
@@ -71,7 +75,8 @@
 'nonterm' Module(-> MODULE)
 
     'rule' Module(-> module(Position, Name, Imports, Definitions)):
-        "module" @(-> Position) Identifier(-> Name) SEPARATOR
+        OptionalSeparator
+        "module" @(-> Position) Identifier(-> Name) Separator
         Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "module"
@@ -84,7 +89,7 @@
 'nonterm' Imports(-> IMPORT)
 
     'rule' Imports(-> sequence(Head, Tail)):
-        Import(-> Head) SEPARATOR
+        Import(-> Head) Separator
         Imports(-> Tail)
         
     'rule' Imports(-> nil):
@@ -111,7 +116,7 @@
 'nonterm' Definitions(-> DEFINITION)
 
     'rule' Definitions(-> sequence(Head, Tail)):
-        Definition(-> Head) SEPARATOR
+        Definition(-> Head) Separator
         Definitions(-> Tail)
         
     'rule' Definitions(-> nil):
@@ -188,12 +193,12 @@
 'nonterm' HandlerDefinition(-> DEFINITION)
 
     'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
-        Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) SEPARATOR
+        Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
             Statements(-> Body)
         "end" "handler"
         
     'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
-        Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) SEPARATOR
+        Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
             Definitions(-> Definitions)
         "begin"
             Statements(-> Body)
@@ -261,9 +266,9 @@
 'nonterm' SyntaxDefinition(-> DEFINITION)
 
     'rule' SyntaxDefinition(-> syntax(Position, public, Name, Class, Syntax, Methods)):
-        "syntax" @(-> Position) Identifier(-> Name) SyntaxClass(-> Class) SEPARATOR
-            Syntax(-> Syntax) SEPARATOR
-        "begin" SEPARATOR
+        "syntax" @(-> Position) Identifier(-> Name) SyntaxClass(-> Class) Separator
+            Syntax(-> Syntax) Separator
+        "begin" Separator
             SyntaxMethods(-> Methods)
         "end" "syntax"
         
@@ -298,7 +303,7 @@
 'nonterm' SyntaxMethods(-> SYNTAXMETHODLIST)
 
     'rule' SyntaxMethods(-> methodlist(Head, Tail)):
-        SyntaxMethod(-> Head) SEPARATOR
+        SyntaxMethod(-> Head) Separator
         SyntaxMethods(-> Tail)
         
     'rule' SyntaxMethods(-> nil):
@@ -369,7 +374,7 @@
 'nonterm' Statements(-> STATEMENT)
 
     'rule' Statements(-> sequence(Left, Right)):
-        Statement(-> Left) SEPARATOR
+        Statement(-> Left) Separator
         Statements(-> Right)
         
     'rule' Statements(-> nil):
@@ -511,6 +516,26 @@
         
     'rule' IdentifierList(-> idlist(Id, nil)):
         Identifier(-> Id)
+
+--------------------------------------------------------------------------------
+-- Separator
+--------------------------------------------------------------------------------
+
+'nonterm' OptionalSeparator
+
+    'rule' OptionalSeparator:
+        Separator
+        
+    'rule' OptionalSeparator:
+        -- empty
+        
+'nonterm' Separator
+
+    'rule' Separator:
+        SEPARATOR Separator
+        
+    'rule' Separator:
+        SEPARATOR
 
 --------------------------------------------------------------------------------
 -- Tokens

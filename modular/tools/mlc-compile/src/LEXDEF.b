@@ -1,1 +1,2 @@
 %s SPECIAL
+%s COMMENT

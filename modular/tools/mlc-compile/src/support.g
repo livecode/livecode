@@ -69,6 +69,7 @@
     PushStringArgumentSyntaxMapping
     PushMarkArgumentSyntaxMapping
 
+    ErrorsDidOccur
     Fatal_OutOfMemory
     Fatal_InternalInconsistency
     Error_MalformedToken
@@ -167,6 +168,8 @@
 'action' PushMarkArgumentSyntaxMapping(Index: INT)
 
 --------------------------------------------------------------------------------
+
+'condition' ErrorsDidOccur()
 
 'action' Fatal_OutOfMemory()
 'action' Fatal_InternalInconsistency(Message: STRING)

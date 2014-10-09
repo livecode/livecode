@@ -10,6 +10,9 @@
 
 --------------------------------------------------------------------------------
 
+-- The purpose of the 'Bind' phase is to ensure every Id is assigned either a
+-- reference to the definingid() for its meaning, or the actual meaning if it is
+-- the defining id.
 'action' Bind(MODULE)
 
     'rule' Bind(module(Position, Name, Imports, Definitions)):
@@ -25,6 +28,7 @@
         LeaveScope
         
         -- Step 2: Ensure all definitions have their appropriate meaning
+        Define(Definitions)
 
 --------------------------------------------------------------------------------
 
@@ -57,6 +61,9 @@
     'rule' Declare(property(Position, _, Name)):
         DeclareId(Name)
     
+    'rule' Declare(event(Position, _, Name)):
+        DeclareId(Name)
+
     'rule' Declare(syntax(Position, _, Name, _, _, _)):
         DeclareId(Name)
     
@@ -70,6 +77,53 @@
         DeclareParameters(Tail)
         
     'rule' DeclareParameters(nil):
+        -- do nothing
+
+--------------------------------------------------------------------------------
+
+-- The 'Define' phase associates meanings with the definining ids.
+--
+'action' Define(DEFINITION)
+
+    'rule' Define(sequence(Left, Right)):
+        Define(Left)
+        Define(Right)
+        
+    'rule' Define(type(Position, _, Name, _)):
+        DefineId(Name, type)
+    
+    'rule' Define(constant(Position, _, Name, _)):
+        DefineId(Name, constant)
+    
+    'rule' Define(variable(Position, _, Name, _)):
+        DefineId(Name, variable)
+    
+    'rule' Define(handler(Position, _, Name, signature(Parameters, _), _, _)):
+        DefineId(Name, handler)
+        DefineParameters(Parameters)
+    
+    'rule' Define(foreignhandler(Position, _, Name, _, _)):
+        DefineId(Name, handler)
+
+    'rule' Define(property(Position, _, Name)):
+        DefineId(Name, property)
+
+    'rule' Define(event(Position, _, Name)):
+        DefineId(Name, event)
+    
+    'rule' Define(syntax(Position, _, Name, Class, _, _)):
+        DefineId(Name, syntaxrule(Class))
+    
+    'rule' Define(nil):
+        -- do nothing
+
+'action' DefineParameters(PARAMETERLIST)
+
+    'rule' DefineParameters(parameterlist(parameter(_, _, Name, _), Tail)):
+        DefineId(Name, parameter)
+        DefineParameters(Tail)
+        
+    'rule' DefineParameters(nil):
         -- do nothing
 
 --------------------------------------------------------------------------------
@@ -277,6 +331,11 @@
         Id'Name -> Name
         Error_InvalidNameForSyntaxMarkVariable(Position, Name)
 
+'action' DefineId(ID, MEANING)
+
+    'rule' DefineId(Id, Meaning)
+        Id'Meaning <- Meaning
+
 --------------------------------------------------------------------------------
 
 'var' OutputSyntaxMarkIdVar : ID
@@ -294,7 +353,7 @@
         InputSyntaxMarkIdVar <- Id2
         MakePredefinedId("context", syntaxcontextmark -> Id3)
         ContextSyntaxMarkIdVar <- Id3
-        MakePredefinedId("Expression", syntaxrule -> Id4)
+        MakePredefinedId("Expression", syntaxrule(expression) -> Id4)
         ExpressionSyntaxRuleIdVar <- Id4
 
 'action' DeclarePredefinedIds
