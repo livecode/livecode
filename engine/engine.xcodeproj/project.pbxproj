@@ -538,6 +538,8 @@
 		E8252264174E2BF500055329 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
 		E85130F4180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */; };
 		E85130F5180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */; };
+		E861167119D45AF50047E1BC /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E861167019D45AF50047E1BC /* color.cpp */; };
+		E861167219D45AF50047E1BC /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E861167019D45AF50047E1BC /* color.cpp */; };
 		E8687A941987F5A80093C756 /* imageloader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8687A931987F5A80093C756 /* imageloader.cpp */; };
 		E87FAFEC1924F25000ED338B /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E87FAFEB1924F24300ED338B /* region.cpp */; };
 		E88869AC180D63FC0026BFDA /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8988A8917FDD5B700F640F4 /* stackview.cpp */; };
@@ -1559,6 +1561,8 @@
 		BE4D6171189A5495002DA467 /* AttachmentProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AttachmentProvider.java; sourceTree = "<group>"; };
 		E82206E0184F810A00117D10 /* resolution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resolution.cpp; path = src/resolution.cpp; sourceTree = "<group>"; };
 		E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
+		E861167019D45AF50047E1BC /* color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = color.cpp; path = src/color.cpp; sourceTree = "<group>"; };
+		E861167319D45D810047E1BC /* color.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = color.h; path = src/color.h; sourceTree = "<group>"; };
 		E8687A921987F24A0093C756 /* imageloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imageloader.h; path = src/imageloader.h; sourceTree = "<group>"; };
 		E8687A931987F5A80093C756 /* imageloader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imageloader.cpp; path = src/imageloader.cpp; sourceTree = "<group>"; };
 		E86A04F6142A49EF005ECD82 /* srvsession.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvsession.cpp; path = src/srvsession.cpp; sourceTree = "<group>"; };
@@ -2104,12 +2108,31 @@
 		4D6F92ED12AA5C7800026A72 /* Desktop - Mac */ = {
 			isa = PBXGroup;
 			children = (
-				76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */,
 				E8AE876B177B3F5C0041B7E0 /* cgimageutil.cpp */,
 				4C977250193CAF5000DB2F4A /* coretextfonts.cpp */,
 				4CF4B87F199E0C1C00E33AEE /* coretextlayout.mm */,
-				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
+				4D30E18118AA2FCE0034CDC6 /* mac-abort.mm */,
+				1DDE08D21945DD43000E3705 /* mac-av-player.mm */,
+				4D79B4E018A8D9FD00D4974C /* mac-color.mm */,
+				4DECC93B18856C7500463D52 /* mac-core.mm */,
+				4D444FB4188DCB4400C7B349 /* mac-cursor.mm */,
+				4D30E40618AA73870034CDC6 /* mac-dialog.mm */,
+				4D30CB26189AC40C0034CDC6 /* mac-font.mm */,
+				4DECC94218856FE000463D52 /* mac-internal.h */,
+				4DC6E30418896CFB00FD43C3 /* mac-menu.mm */,
+				4D6F2AE618981E7F0099947D /* mac-pasteboard.mm */,
+				1DDE08CF1945DCFD000E3705 /* mac-player.h */,
+				4D30D1EF18A152700034CDC6 /* mac-player.mm */,
+				4D79B5D318A9087B00D4974C /* mac-printer.mm */,
+				1DDE08D01945DD31000E3705 /* mac-qt-player.mm */,
+				76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */,
+				4DAF5C8618C0E76500B9713C /* mac-scripting.mm */,
+				4D30CAF5189AC1720034CDC6 /* mac-snapshot.mm */,
+				4DA028F518F54B5D000CFCF8 /* mac-sound.mm */,
+				4DECD1341886F0FF00463D52 /* mac-surface.mm */,
+				4DECD0C71886E4FD00463D52 /* mac-window.mm */,
 				4D5881B90B80C79600200116 /* osxcisupport.mm */,
+				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
 				4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */,
 				4D03C2160BC5803900026EA7 /* osxfiles.cpp */,
 				4D5880160B80A4F800200116 /* osxflst.cpp */,
@@ -2120,29 +2143,10 @@
 				4D2192420C63871D0027A96D /* osxprinter.cpp */,
 				4D2192430C63871D0027A96D /* osxprinter.h */,
 				4D58801C0B80A4F800200116 /* osxspec.cpp */,
+				4D58801B0B80A4F800200116 /* osxstack.cpp */,
 				4DCFFD1B10CE8F5800FA2262 /* osxtextlayout.cpp */,
 				4D5880180B80A4F800200116 /* osxtheme.cpp */,
 				4D4F9E4D13CDF6EA00B9B15D /* osxtheme.h */,
-				4D58801B0B80A4F800200116 /* osxstack.cpp */,
-				4DECC94218856FE000463D52 /* mac-internal.h */,
-				4DECC93B18856C7500463D52 /* mac-core.mm */,
-				4DECD0C71886E4FD00463D52 /* mac-window.mm */,
-				4DECD1341886F0FF00463D52 /* mac-surface.mm */,
-				4DC6E30418896CFB00FD43C3 /* mac-menu.mm */,
-				4D444FB4188DCB4400C7B349 /* mac-cursor.mm */,
-				4D6F2AE618981E7F0099947D /* mac-pasteboard.mm */,
-				4D30CAF5189AC1720034CDC6 /* mac-snapshot.mm */,
-				4D30CB26189AC40C0034CDC6 /* mac-font.mm */,
-				4D30D1EF18A152700034CDC6 /* mac-player.mm */,
-				4D79B4E018A8D9FD00D4974C /* mac-color.mm */,
-				4D79B5D318A9087B00D4974C /* mac-printer.mm */,
-				4D30E18118AA2FCE0034CDC6 /* mac-abort.mm */,
-				4D30E40618AA73870034CDC6 /* mac-dialog.mm */,
-				4DAF5C8618C0E76500B9713C /* mac-scripting.mm */,
-				4DA028F518F54B5D000CFCF8 /* mac-sound.mm */,
-				1DDE08CF1945DCFD000E3705 /* mac-player.h */,
-				1DDE08D01945DD31000E3705 /* mac-qt-player.mm */,
-				1DDE08D21945DD43000E3705 /* mac-av-player.mm */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -2528,6 +2532,8 @@
 				4DAB7B360FE120060009F91E /* bitmapeffect.h */,
 				4D00CD75103305D4003D3C0D /* bitmapeffectblur.cpp */,
 				4D00CD76103305D4003D3C0D /* bitmapeffectblur.h */,
+				E861167019D45AF50047E1BC /* color.cpp */,
+				E861167319D45D810047E1BC /* color.h */,
 				4D587E740B8096FD00200116 /* combiners.cpp */,
 				4D587E1A0B8096E600200116 /* context.h */,
 				4D6A00EE10C578C600FA48D2 /* customprinter.cpp */,
@@ -3455,6 +3461,7 @@
 				4D1F9D19171C682E0091C6CB /* srvcgi.cpp in Sources */,
 				4D1F9D1A171C682E0091C6CB /* srvdebug.cpp in Sources */,
 				4D1F9D1C171C682E0091C6CB /* srvmain.cpp in Sources */,
+				E861167219D45AF50047E1BC /* color.cpp in Sources */,
 				4D1F9D1D171C682E0091C6CB /* srvscript.cpp in Sources */,
 				4D1F9D1E171C682E0091C6CB /* srvspec.cpp in Sources */,
 				4D1F9D1F171C682E0091C6CB /* srvstack.cpp in Sources */,
@@ -3835,6 +3842,7 @@
 				4D83871E1678B2C9003BEC7C /* ibmp.cpp in Sources */,
 				4D83871F1678B2C9003BEC7C /* image_rep_encoded.cpp in Sources */,
 				4D8387201678B2C9003BEC7C /* image_rep_mutable.cpp in Sources */,
+				E861167119D45AF50047E1BC /* color.cpp in Sources */,
 				4D8387211678B2C9003BEC7C /* imagebitmap.cpp in Sources */,
 				4D8387221678B2C9003BEC7C /* irle.cpp in Sources */,
 				E8DDE5DF16C2B1A7007367E4 /* image_rep_resampled.cpp in Sources */,

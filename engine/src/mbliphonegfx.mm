@@ -50,7 +50,8 @@ extern UIView *MCIPhoneGetView(void);
 extern float MCIPhoneGetResolutionScale(void);
 extern float MCIPhoneGetDeviceScale(void);
 
-bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -350,7 +351,8 @@ protected:
 		// CGContext will be flipped. Instead, we draw the image at an offset from the bottom
 		
 		CGColorSpaceRef t_colorspace;
-		t_colorspace = CGColorSpaceCreateDeviceRGB();
+		t_colorspace = nil;
+		/* UNCHECKED */ MCImageGetCGColorSpace(t_colorspace);
 		
 		CGImageRef t_image;
 		t_image = nil;

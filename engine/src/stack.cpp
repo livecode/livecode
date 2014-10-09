@@ -3147,4 +3147,14 @@ bool MCStack::haswindow(void)
 	return window != NULL;
 }
 
+void MCStack::openwindow(Boolean p_override)
+{
+	if (MCModeMakeLocalWindows() && window != NULL)
+	{
+		// IM-2014-09-23: [[ Bug 13349 ]] Sync geometry to window before opening.
+		view_update_geometry();
+		platform_openwindow(p_override);
+	}
+}
+
 //////////

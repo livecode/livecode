@@ -67,6 +67,7 @@ extern void setup_simulator_hooks(void);
 @class com_runrev_livecode_MCIPhoneBreakWaitHelper;
 
 extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -481,10 +482,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		uint8_t *t_pixel_buffer = nil;
 		
 		if (t_success)
-		{
-			t_colorspace = CGColorSpaceCreateDeviceRGB();
-			t_success = t_colorspace != nil;
-		}
+			t_success = MCImageGetCGColorSpace(t_colorspace);
 		
 		if (t_success)
 			t_success = MCImageBitmapCreate(t_bitmap_width, t_bitmap_height, t_bitmap);
