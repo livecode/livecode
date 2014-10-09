@@ -1,7 +1,7 @@
 
 #include "foundation.h"
 
-void MCStringExecPutStringBefore(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRef& x_target)
+void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(x_target, &t_string))
@@ -14,7 +14,7 @@ void MCStringExecPutStringBefore(MCHandlerContext& ctxt, MCStringRef p_source, M
         return;
 }
 
-void MCStringExecPutStringAfter(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRef& x_target)
+void MCStringExecPutStringAfter(MCStringRef p_source, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(x_target, &t_string))
@@ -27,13 +27,13 @@ void MCStringExecPutStringAfter(MCHandlerContext& ctxt, MCStringRef p_source, MC
         return;
 }
 
-void MCStringEvalConcatenate(MCHandlerContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
+void MCStringEvalConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
 {
     if (!MCStringFormat(r_output, "%@%@", p_left, p_right))
         return;
 }
 
-void MCStringEvalConcatenateWithSpace(MCHandlerContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
+void MCStringEvalConcatenateWithSpace(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
 {
     if (!MCStringFormat(r_output, "%@ %@", p_left, p_right))
         return;
@@ -49,7 +49,7 @@ void MCStringEvalEndsWith(MCHandlerContext& ctxt, MCStringRef p_source, MCString
     r_result = MCStringBeginsWith(p_source, p_prefix, ctxt . GetStringComparisonOptions());
 }
 
-void MCStringEvalLowercaseOf(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRef& r_output)
+void MCStringEvalLowercaseOf(MCStringRef p_source, MCStringRef& r_output)
 {
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(p_source, &t_string))
@@ -62,7 +62,7 @@ void MCStringEvalLowercaseOf(MCHandlerContext& ctxt, MCStringRef p_source, MCStr
         return;
 }
 
-void MCStringEvalUppercaseOf(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRef& r_output)
+void MCStringEvalUppercaseOf(MCStringRef p_source, MCStringRef& r_output)
 {
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(p_source, &t_string))

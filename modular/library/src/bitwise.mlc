@@ -1,10 +1,18 @@
 module com.livecode.bitwise
 
+foreign handler EvalBitAnd(in Left as integer, in Right as integer, out Value as integer)
+foreign handler EvalBitOr(in Left as integer, in Right as integer, out Value as integer)
+foreign handler EvalBitNot(in Operand as integer, out Value as integer)
+foreign handler EvalBitXor(in Left as integer, in Right as integer, out Value as integer)
 
-
+foreign handler EvalBitShift(in Left as integer, in Right as integer, out Value as integer)
 --
 
-
+syntax BitwiseAnd is left binary operator with precedence 1
+    <Left: Expression> "bit" "and" <Right: Expression>
+begin
+    EvalBitAnd(Left, Right, output)
+end syntax
 
 --
 

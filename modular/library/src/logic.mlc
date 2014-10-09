@@ -1,6 +1,7 @@
 module com.livecode.logic
 
 foreign handler EvalAnd(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalOr(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
 foreign handler EvalNot(in Operand as bool, out Value as bool) as undefined binds to "<builtin>"
 
 --
@@ -11,6 +12,22 @@ Summary:    Returns the boolean-logical value of the expression '<Left> and <Rig
 Left:       An expression that evaluates to a boolean value
 Right:      An expression that evaluates to a boolean value
 output:     If the left hand expression evaluates to false, the value of the expression is false.
+            Otherwise, the operator evaluates to the value of the right hand expression.
+            Note that the right hand expression is only evaluated if the left hand expression is true.
+*/
+
+syntax LogicOr is a left binary operator of precedence 2
+    <Left: Expression> "or" <Right: Expression>
+begin
+    EvalOr(Left, Right, output)
+end syntax
+
+/*
+Summary:    Returns the boolean-logical value of the expression '<Left> or <Right>'
+
+Left:       An expression that evaluates to a boolean value
+Right:      An expression that evaluates to a boolean value
+output:     If the left hand expression evaluates to true, the value of the expression is true.
             Otherwise, the operator evaluates to the value of the right hand expression.
             Note that the right hand expression is only evaluated if the left hand expression is false.
 */

@@ -1,6 +1,8 @@
-/* This module specifies the syntax for the basic type conversion available in Modular LiveCode */
+/* 
+This module specifies the syntax for the basic type operations available in modular LiveCode 
+*/
 
-module com.livecode.typeconversion
+module com.livecode.type
 
 foreign handler EvalBoolAsString(in Target as bool, out Value as string) as undefined binds to "<builtin>"
 foreign handler EvalRealAsString(in Target as real, out Value as string) as undefined binds to "<builtin>"

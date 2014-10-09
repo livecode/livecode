@@ -1,7 +1,7 @@
 
 #include "foundation.h"
 
-void MCBinaryExecPutBytesBefore(MCHandlerContext& ctxt, MCDataRef p_source, MCDataRef& x_target)
+void MCBinaryExecPutBytesBefore(MCDataRef p_source, MCDataRef& x_target)
 {
     MCAutoDataRef t_data;
     if (!MCDataMutableCopy(x_target, &t_data))
@@ -14,20 +14,15 @@ void MCBinaryExecPutBytesBefore(MCHandlerContext& ctxt, MCDataRef p_source, MCDa
         return;
 }
 
-void MCBinaryExecPutBytesAfter(MCHandlerContext& ctxt, MCDataRef p_source, MCDataRef& x_target)
+void MCBinaryExecPutBytesAfter(MCDataRef p_source, MCDataRef& x_target)
 {
     MCAutoDataRef t_data;
-    if (!MCDataMutableCopy(x_target, &t_data))
-        return;
+    MCBinaryEvalConcatenateBytes(ctxt, p_source, &t_data);
     
-    if (!MCDataAppend(*t_data, p_source))
-        return;
-    
-    if (!MCDataCopy(*t_data, x_target))
-        return;
+    MCValueAssign(x_target, *t_data)
 }
 
-void MCBinaryEvalConcatenateBytes(MCHandlerContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_output)
+void MCBinaryEvalConcatenateBytes(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_output)
 {
     MCAutoDataRef t_data;
     if (!MCDataMutableCopy(p_left, &t_data))
@@ -40,12 +35,12 @@ void MCBinaryEvalConcatenateBytes(MCHandlerContext& ctxt, MCDataRef p_left, MCDa
         return;
 }
 
-void MCBinaryEvalNumberOfBytesIn(MCHandlerContext& ctxt, MCDataRef p_source, uindex_t& r_output)
+void MCBinaryEvalNumberOfBytesIn(MCDataRef p_source, uindex_t& r_output)
 {
     r_output = MCDataGetLength(p_source);
 }
 
-void MCBinaryEvalIsAmongTheBytesOf(MCHandlerContext& ctxt, MCDataRef p_needle, MCDataRef p_target, bool p_is_not, bool& r_output)
+void MCBinaryEvalIsAmongTheBytesOf(MCDataRef p_needle, MCDataRef p_target, bool p_is_not, bool& r_output)
 {
     bool t_found = MCDataContains(p_target, p_needle);
     
@@ -55,32 +50,32 @@ void MCBinaryEvalIsAmongTheBytesOf(MCHandlerContext& ctxt, MCDataRef p_needle, M
     r_output = t_found;
 }
 
-void MCBinaryEvalOffsetOfBytesIn(MCHandlerContext& ctxt, MCDataRef p_needle, MCDataRef p_target, uindex_t& r_output)
+void MCBinaryEvalOffsetOfBytesIn(MCDataRef p_needle, MCDataRef p_target, uindex_t& r_output)
 {
     r_output = MCDataFirstIndexOf(p_target, p_needle, 0);
 }
 
-void MCBinaryEvalOffsetOfBytesAfterIndexIn(MCHandlerContext& ctxt, MCDataRef p_needle, MCDataRef p_target, uindex_t p_after, uindex_t& r_output)
+void MCBinaryEvalOffsetOfBytesAfterIndexIn(MCDataRef p_needle, MCDataRef p_target, uindex_t p_after, uindex_t& r_output)
 {
     r_output = MCDataFirstIndexOf(p_target, p_needle, p_after);
 }
 
-void MCBinaryFetchByteOf(MCHandlerContext& ctxt, uindex_t p_index, MCDataRef p_target, MCDataRef& r_output)
+void MCBinaryFetchByteOf(uindex_t p_index, MCDataRef p_target, MCDataRef& r_output)
 {
     
 }
 
-void MCBinaryStoreByteOf(MCHandlerContext& ctxt, MCDataRef p_value, uindex_t p_index, MCDataRef& x_target)
+void MCBinaryStoreByteOf(MCDataRef p_value, uindex_t p_index, MCDataRef& x_target)
 {
     
 }
 
-void MCBinaryFetchByteRangeOf(MCHandlerContext& ctxt, uindex_t p_start, uindex_t p_finish, MCDataRef p_target, MCDataRef& r_output)
+void MCBinaryFetchByteRangeOf(uindex_t p_start, uindex_t p_finish, MCDataRef p_target, MCDataRef& r_output)
 {
     
 }
 
-void MCBinaryStoreByteRangeOf(MCHandlerContext& ctxt, MCDataRef p_value, uindex_t p_start, uindex_t p_finish, MCDataRef& x_target)
+void MCBinaryStoreByteRangeOf(MCDataRef p_value, uindex_t p_start, uindex_t p_finish, MCDataRef& x_target)
 {
     
 }

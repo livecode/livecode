@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		769729C819E437210022F060 /* module-binary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 769729C619E437210022F060 /* module-binary.cpp */; };
 		76972A4019E44C190022F060 /* module-string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76972A3F19E44C190022F060 /* module-string.cpp */; };
+		76972AA519E53A9E0022F060 /* module-type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76972AA419E53A9E0022F060 /* module-type.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,13 +38,14 @@
 		4D21B5F819DEECD800B64BEF /* linechunk.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = linechunk.mlc; path = src/linechunk.mlc; sourceTree = "<group>"; };
 		4D21B5F919DEECD800B64BEF /* segmentchunk.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = segmentchunk.mlc; path = src/segmentchunk.mlc; sourceTree = "<group>"; };
 		4D21B5FA19DEECD800B64BEF /* string.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = string.mlc; path = src/string.mlc; sourceTree = "<group>"; };
-		7697298F19E3E12D0022F060 /* typeconversion.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = typeconversion.mlc; path = src/typeconversion.mlc; sourceTree = "<group>"; };
 		7697299119E3ED290022F060 /* math-foundation.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = "math-foundation.mlc"; path = "src/math-foundation.mlc"; sourceTree = "<group>"; };
 		7697299219E3ED5C0022F060 /* arithmetic.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = arithmetic.mlc; path = src/arithmetic.mlc; sourceTree = "<group>"; };
 		7697299319E3FBC60022F060 /* bitwise.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = bitwise.mlc; path = src/bitwise.mlc; sourceTree = "<group>"; };
 		7697299419E3FBC60022F060 /* logic.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = logic.mlc; path = src/logic.mlc; sourceTree = "<group>"; };
 		769729C619E437210022F060 /* module-binary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-binary.cpp"; path = "src/module-binary.cpp"; sourceTree = "<group>"; };
 		76972A3F19E44C190022F060 /* module-string.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-string.cpp"; path = "src/module-string.cpp"; sourceTree = "<group>"; };
+		76972AA319E53A700022F060 /* type.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = type.mlc; path = src/type.mlc; sourceTree = "<group>"; };
+		76972AA419E53A9E0022F060 /* module-type.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-type.cpp"; path = "src/module-type.cpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,11 +95,11 @@
 		4D21B5F419DEECCB00B64BEF /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				76972AA319E53A700022F060 /* type.mlc */,
 				7697299319E3FBC60022F060 /* bitwise.mlc */,
 				7697299419E3FBC60022F060 /* logic.mlc */,
 				7697299219E3ED5C0022F060 /* arithmetic.mlc */,
 				7697299119E3ED290022F060 /* math-foundation.mlc */,
-				7697298F19E3E12D0022F060 /* typeconversion.mlc */,
 				4D21B5F519DEECD800B64BEF /* binary.mlc */,
 				4D21B5F619DEECD800B64BEF /* charchunk.mlc */,
 				4D21B5F719DEECD800B64BEF /* itemchunk.mlc */,
@@ -106,6 +108,7 @@
 				4D21B5FA19DEECD800B64BEF /* string.mlc */,
 				769729C619E437210022F060 /* module-binary.cpp */,
 				76972A3F19E44C190022F060 /* module-string.cpp */,
+				76972AA419E53A9E0022F060 /* module-type.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -190,6 +193,7 @@
 			files = (
 				769729C819E437210022F060 /* module-binary.cpp in Sources */,
 				76972A4019E44C190022F060 /* module-string.cpp in Sources */,
+				76972AA519E53A9E0022F060 /* module-type.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
