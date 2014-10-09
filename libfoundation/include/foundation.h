@@ -1972,6 +1972,9 @@ bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
 
 bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
+bool MCDataContains(MCDataRef p_data, MCDataRef p_needle);
+uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, uindex_t p_start_offset);
+
 // convert the given data to CFDataRef
 #if defined(__MAC__) || defined (__IOS__)
 bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);

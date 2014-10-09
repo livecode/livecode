@@ -1,3 +1,7 @@
+/*  
+This module specifies the syntax definitions and bindings for operations on binary data in modular LiveCode.
+*/
+
 module com.livecode.string
 
 foreign handler ExecPutStringBefore(in Source as string, inout Target as string) as undefined binds to "<builtin>"
@@ -10,21 +14,41 @@ foreign handler EvalConcatenateWithSpace(in Left as string, in Right as string, 
 
 foreign handler EvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
 foreign handler EvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
-foreign handler EvalContains(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
 
-foreign handler EvalToLower(in Source as string, out Result as string) as undefined binds to "<builtin>"
-foreign handler EvalToUpper(in Source as string, out Result as string) as undefined binds to "<builtin>"
+foreign handler EvalLowercaseOf(in Source as string, out Result as string)
+foreign handler EvalUppercaseOf(in Source as string, out Result as string)
 
 foreign handler EvalOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
 foreign handler EvalOffsetAfter(in Needle as string, in After as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
 
+foreign handler EvalLastOffset(in Needle as string, in Source as string, out Result as index)
+foreign handler EvalLastOffsetBefore(in Needle as string, in Before as index, in Source as string, out Result as index)
+
 --
+
+/*
+Summary:            Prepends <Source> to <Target>.
+
+Source: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string container.
+
+Example: 			put tPrefix before tString
+*/
 
 syntax PutStringBefore is statement
     "put" <Source: Expression> "before" <Target: Expression>
 begin
     ExecPutStringBefore(Source, Target)
 end syntax
+
+/*
+Summary:            Appends <Source> to <Target>.
+
+Source: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string container.
+
+Example: 			put tSuffix after tString
+*/
 
 syntax PutStringAfter is statement
     "put" <Source: Expression> "after" <Target: Expression>
@@ -34,6 +58,16 @@ end syntax
 
 --
 
+/*
+Summary:            Replaces occurrences of <Pattern> within <Target> in <Replacement>
+
+Source: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string container.
+Replacement: 		An expression which evaluates to a string.
+
+Example: 			replace " " with "_" in tString
+*/
+
 syntax ReplaceString is statement
     "replace" <Pattern: Expression> "with" <Replacement: Expression> "in" <Target: Expression>
 begin
@@ -42,11 +76,31 @@ end syntax
 
 --
 
+/*
+Summary:            Concatenates <Left> and <Right>.
+
+Left: 				An expression which evaluates to a string.
+Right: 				An expression which evaluates to a string.
+output: 			String consisting of the value of the left hand expression with the value of the right hand expression appended to the end.
+
+Example: 			put tLeft & tRight into tConcatenated
+*/
+
 syntax ConcatenateStrings is left binary operator with precedence 2
     <Left: Expression> "&" <Right: Expression>
 begin
     EvalConcatenate(Left, Right, output)
 end syntax
+
+/*
+Summary:            Concatenates <Left> and <Right> with a space between.
+
+Left: 				An expression which evaluates to a string.
+Right: 				An expression which evaluates to a string.
+output: 			String consisting of the value of the left hand expression with the value of the right hand expression appended to the end, and a space character inserted between them
+
+Example: 			put tLeft && tRight into tConcatSpace
+*/
 
 syntax ConcatenateStringsWithSpace is left binary operator with precedence 2
     <Left: Expression> "&&" <Right: Expression>
@@ -56,11 +110,28 @@ end syntax
 
 --
 
+/*
+Summary:            Determines whether <Source> begins with <Prefix>
+Prefix: 			An expression which evaluates to a string.
+Source: 			An expression which evaluates to a string.
+output:             Returns true if the characters in <Prefix> occur at the start of <Source>, 
+                    modulo the contextual string options of the current handler.
+*/
+
 syntax BeginsWithString is left unary operator with precedence 1
     <Source: Expression> "begins" "with" <Prefix: Expression>
 begin
     EvalBeginsWith(Source, Prefix, output)
 end syntax
+
+/*
+Summary:            Determines whether <Source> ends with <Prefix>
+Prefix: 			An expression which evaluates to a string.
+Source: 			An expression which evaluates to a string.
+output:             Returns true if the characters in <Prefix> occur at the end of <Source>, 
+                    modulo the contextual string options of the current handler.
+*/
+
 
 syntax EndsWithString is left unary operator with precedence 1
     <Source: Expression> "ends" "with" <Suffix: Expression>
@@ -68,24 +139,108 @@ begin
     EvalEndsWith(Source, Suffix, output)
 end syntax
 
-syntax Contains is left unary operator with precedence 1
-    <Source: Expression> "contains" <Needle: Expression>
+--
+
+/*
+Summary:            Uppercases <Source>.
+Source: 			An expression which evaluates to a string.
+output:             
+*/
+
+
+syntax UppercaseString is left unary operator with precedence 1
+    "the" "upper" "of" <Source: Expression>
 begin
-    EvalContains(Source, Needle, output)
+    EvalUppercaseOf(Source, output)
+end syntax
+
+/*
+Summary:            Lowercases <Source>.
+Source: 			An expression which evaluates to a string.
+output:             
+*/
+
+
+syntax LowercaseString is left unary operator with precedence 1
+    "the" "lower" "of" <Source: Expression>
+begin
+    EvalLowercaseOf(Source, output)
 end syntax
 
 --
 
-syntax UpperCaseString is left unary operator with precedence 1
-    "the" "upper" "of" <Source: Expression>
+/*
+
+Summary:            Finds the first occurrence of <Needle> within <Target>.
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+output:             Returns the number of chars between the first char of <Target> 
+                    and the first char of the first occurrence of <Needle> within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target>.
+
+*/
+
+syntax OffsetOfString is left unary operator with precedence 1
+    "the" "offset" "of" <Needle: Expression> "in" <Source: Expression>
 begin
-    EvalToUpper(Source, output)
+    EvalOffset(Needle, Source, output)
 end syntax
 
-syntax LowerCaseString is left unary operator with precedence 1
-    "the" "lower" "of" <Source: Expression>
+/*
+
+Summary:            Finds the first occurrence of <Needle> within <Target> after index <After>.
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+After:              An expression which evaluates to a valid integer index of <Target>.
+output:             Returns the number of chars between the first char of <Target> 
+                    and the first char of the first occurrence of <Needle> within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target> after index <After>.
+                    
+*/
+
+syntax OffsetOfStringAfter is left unary operator with precedence 1
+    "the" "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Source: Expression>
 begin
-    EvalToLower(Source, output)
+    EvalOffsetAfter(Needle, After, Source, output)
+end syntax
+
+/*
+
+Summary:            Finds the last occurrence of <Needle> within <Target>
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+output:             Returns the number of chars between the first char of <Target> 
+                    and the first char of the last occurrence of <Needle> within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target>.
+
+*/
+
+syntax LastOffsetOfString is left unary operator with precedence 1
+    "the" "last" "offset" "of" <Needle: Expression> "in" <Source: Expression>
+begin
+    EvalLastOffset(Needle, Source, output)
+end syntax
+
+/*
+
+Summary:            Finds the last occurrence of <Needle> within <Target> before index <Before>.
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+Before:             An expression which evaluates to a valid integer index of <Target>.
+output:             Returns the number of chars between the first char of <Target> 
+                    and the first char of the last occurrence of <Needle> within <Target> before <Before>.
+                    Returns 0 if <Needle> does not occur within <Target>.
+
+*/
+
+syntax LastOffsetOfStringBefore is left unary operator with precedence 1
+    "the" "last" "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Source: Expression>
+begin
+    EvalLastOffsetBefore(Needle, After, Source, output)
 end syntax
 
 --

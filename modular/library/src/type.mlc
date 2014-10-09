@@ -1,0 +1,137 @@
+/* 
+This module specifies the syntax for the basic type operations available in modular LiveCode 
+*/
+
+module com.livecode.type
+
+foreign handler EvalBoolAsString(in Target as bool, out Value as string) as undefined binds to "<builtin>"
+foreign handler EvalRealAsString(in Target as real, out Value as string) as undefined binds to "<builtin>"
+foreign handler EvalIntAsString(in Target as int, out Value as string) as undefined binds to "<builtin>"
+foreign handler EvalIntAsReal(in Target as int, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalStringAsBool(in Target as string, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalStringAsReal(in Target as string, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalStringAsInt(in Target as string, out Value as int) as undefined binds to "<builtin>"
+
+foreign handler EvalIsEmpty(in Target as any, in IsNot as bool, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalIsDefined(in Target as any, in IsNot as bool, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalIsEqualTo(in Left as any, in Right as any, in IsNot as bool, out Value as bool) as undefined binds to "<builtin>"
+
+--
+
+/*
+Summary:    Converts <Target> to a string.
+Target:     An expression that evaluates to a bool, real, or integer
+output:     Returns the converted value if there is a valid conversion from the type of <Target> to a string.
+            Bools, ints and reals all have valid string conversions.
+
+Example:    put true as string into tVar // tVar contains the string "true"
+*/
+
+syntax AsString is left unary operator with precedence 1
+	<Target: Expression> "as" "string"
+begin
+	EvalBoolAsString(Target, output)
+	EvalIntAsString(Target, output)
+	EvalRealAsString(Target, output)
+end syntax
+
+/*
+Summary:    Converts <Target> to a real.
+
+Target:     An expression that evaluates to an integer, or a string
+
+Example:    put "8.0" as real into tVar // tVar contains the real number 8.0
+*/
+
+syntax AsReal is left unary operator with precedence 1
+	<Target: Expression> "as" "real"
+begin
+	EvalIntAsReal(Target, output)
+	EvalStringAsReal(Target, output)
+end syntax
+
+/*
+Summary:    Converts <Target> to an integer.
+
+Target:     An expression that evaluates to a string.
+
+Example:    put "8" as integer into tVar // tVar contains the integer 8
+*/
+
+syntax AsInt is left unary operator with precedence 1
+	<Target: Expression> "as" "int"
+begin
+	EvalStringAsInt(Target, output)
+end syntax
+
+/*
+Summary:    Converts <Target> to a bool, if there is a valid conversion.
+
+Target:     An expression that evaluates to a string.
+
+Example:    put "true" as bool into tVar // tVar contains the boolean value true
+*/
+
+syntax AsBool is left unary operator with precedence 1
+	<Target: Expression> "as" "bool"
+begin
+	EvalStringAsBool(Target, output)
+end syntax
+
+--
+
+/*
+Summary:    Determines whether <Target> is empty or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> evaluates to the empty value of that type, or false if not.
+            Returns the opposite if the 'is not' variant is used.
+
+*/
+
+syntax IsEmpty is left unary operator with precedence 1
+	<Target: Expression> "is" ["not" <IsNot=true>] "empty"
+begin
+	EvalIsEmpty(Target, IsNot)
+end syntax
+
+--
+
+/*
+Summary:    Determines whether <Target> is defined or not.
+
+Target:     Any expression
+output:     Returns true if the given expression <Target> is defined.
+            Returns the opposite if the 'is not' variant is used.
+
+*/
+
+syntax IsDefined is left unary operator with precedence 1
+	<Target: Expression> "is" ["not" <IsNot=true>] "defined"
+begin
+	EvalIsDefined(Target, IsNot)
+end syntax
+
+--
+
+/*
+Summary:    Determines whether <Left> and <Right> are equal or not.
+
+Left:       Any expression
+Right:      Any expression
+
+output:     Returns true if the result of evaluating <Left> is the same as that of <Right>. 
+            In particular, if <Left> and <Right> are of different types then false is returned.
+            Returns the opposite if the 'is not' variant is used.
+
+*/
+
+syntax IsEqualTo is left unary operator with precedence 1
+	<Left: Expression> "is" ["not" <IsNot=true>] <Right: Expression>
+begin
+	EvalIsEqualTo(Left, Right, IsNot)
+end syntax
+
+--
+
+end module
