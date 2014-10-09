@@ -37,6 +37,7 @@
     IncludeIndexInSet
     ExcludeIndexFromSet
 
+    DumpSyntaxRules
     BeginStatementSyntaxRule
     BeginExpressionSyntaxRule
     BeginLeftUnaryOperatorSyntaxRule
@@ -130,6 +131,8 @@
 'condition' IsIndexInSet(Index: INT)
 
 --------------------------------------------------------------------------------
+
+'action' DumpSyntaxRules()
 
 'action' BeginStatementSyntaxRule(NAME)
 'action' BeginExpressionSyntaxRule(NAME)

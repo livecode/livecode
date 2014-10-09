@@ -27,6 +27,7 @@
             ErrorsDidOccur()
         ||
             GenerateSyntaxForModules(Modules)
+            DumpSyntaxRules()
         |)
 
 'action' BindModules(MODULELIST)
