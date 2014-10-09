@@ -60,17 +60,8 @@ static bool s_lock_responder_change = false;
         return nil;
     
     m_can_become_key = false;
-    m_is_popup = false;
-    m_monitor = nil;
     
     return self;
-}
-
-- (void)dealloc
-{
-    if (m_monitor != nil)
-        [NSEvent removeMonitor: m_monitor];
-    [super dealloc];
 }
 
 - (void)setCanBecomeKeyWindow: (BOOL)p_value
@@ -128,6 +119,14 @@ static bool s_lock_responder_change = false;
     return frameRect;
 }
 
+@end
+
+@implementation com_runrev_livecode_MCPanel
+
+// SN-2014-10-01: [[ Bug 13522 ]] Popup menus changed to inherit NSPanel instead of NSWindow,
+//   allowing us to set the workWhenModal to true.
+//   All the popup-specific code has been moved from com_runrev_livecode_MCWindow to com_runrev_livecode_MCPanel
+
 // MW-2014-06-11: [[ Bug 12451 ]] When we 'popup' a window we install a monitor to catch
 //   other mouse events outside the host window. This allows us to close them and still
 //   continue to process the event as normal.
@@ -137,6 +136,81 @@ static bool s_lock_responder_change = false;
 - (bool)isPopupWindow
 {
     return m_is_popup;
+}
+
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
+{
+    self = [super initWithContentRect: contentRect styleMask: windowStyle backing: bufferingType defer: deferCreation];
+    if (self == nil)
+        return nil;
+    
+    m_can_become_key = false;
+    m_is_popup = false;
+    m_monitor = nil;
+    
+    return self;
+}
+
+- (void)dealloc
+{
+    if (m_monitor != nil)
+        [NSEvent removeMonitor: m_monitor];
+    [super dealloc];
+}
+
+- (void)setCanBecomeKeyWindow: (BOOL)p_value
+{
+	m_can_become_key = p_value;
+}
+
+// The default implementation doesn't allow borderless windows to become key.
+- (BOOL)canBecomeKeyWindow
+{
+	return m_can_become_key;
+}
+
+- (BOOL)makeFirstResponder: (NSResponder *)p_responder
+{
+	NSResponder *t_previous;
+	t_previous = [self firstResponder];
+
+	if (![super makeFirstResponder: p_responder])
+		return NO;
+	
+	if (s_lock_responder_change)
+		return YES;
+	
+	if ([p_responder isKindOfClass: [NSView class]])
+	{
+		NSView *t_view;
+		t_view = (NSView *)p_responder;
+		while(t_view != nil)
+		{
+			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
+			{
+				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uint32_t)[t_view com_runrev_livecode_nativeViewId]];
+				return YES;
+			}
+			
+			t_view = [t_view superview];
+		}
+	}
+	
+	[(MCWindowDelegate *)[self delegate] viewFocusSwitched: 0];
+	
+	return YES;
+}
+
+// MW-2014-04-23: [[ Bug 12270 ]] If user reshaping then apply standard
+//   constrain, otherwise don't constrain.
+- (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen
+{
+    MCWindowDelegate *t_delegate;
+    t_delegate = (MCWindowDelegate *)[self delegate];
+    if ([t_delegate inUserReshape])
+        return [super constrainFrameRect: frameRect toScreen: screen];
+    
+    return frameRect;
 }
 
 - (void)popupWindowClosed: (NSNotification *)notification
@@ -149,7 +223,7 @@ static bool s_lock_responder_change = false;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:self];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSApplicationDidResignActiveNotification object:nil];
-
+    
     m_is_popup = false;
 }
 
@@ -181,7 +255,7 @@ static bool s_lock_responder_change = false;
                  {
                      NSEvent *result = incomingEvent;
                      NSWindow *targetWindowForEvent = [incomingEvent window];
-
+                     
                      if (![targetWindowForEvent respondsToSelector: @selector(isPopupWindow)] ||
                          ![targetWindowForEvent isPopupWindow])
                      {
@@ -191,65 +265,6 @@ static bool s_lock_responder_change = false;
                      
                      return result;
                  }];
-}
-
-@end
-
-@implementation com_runrev_livecode_MCPanel
-
-- (void)setCanBecomeKeyWindow: (BOOL)p_value
-{
-	m_can_become_key = p_value;
-}
-
-// The default implementation doesn't allow borderless windows to become key.
-- (BOOL)canBecomeKeyWindow
-{
-	return m_can_become_key;
-}
-
-- (BOOL)makeFirstResponder: (NSResponder *)p_responder
-{
-	NSResponder *t_previous;
-	t_previous = [self firstResponder];
-
-	if (![super makeFirstResponder: p_responder])
-		return NO;
-	
-	if (s_lock_responder_change)
-		return YES;
-	
-	if ([p_responder isKindOfClass: [NSView class]])
-	{
-		NSView *t_view;
-		t_view = (NSView *)p_responder;
-		while(t_view != nil)
-		{
-			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
-			{
-				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uint32_t)[t_view com_runrev_livecode_nativeViewId]];
-				return YES;
-			}
-			
-			t_view = [t_view superview];
-		}
-	}
-	
-	[(MCWindowDelegate *)[self delegate] viewFocusSwitched: 0];
-	
-	return YES;
-}
-
-// MW-2014-04-23: [[ Bug 12270 ]] If user reshaping then apply standard
-//   constrain, otherwise don't constrain.
-- (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen
-{
-    MCWindowDelegate *t_delegate;
-    t_delegate = (MCWindowDelegate *)[self delegate];
-    if ([t_delegate inUserReshape])
-        return [super constrainFrameRect: frameRect toScreen: screen];
-    
-    return frameRect;
 }
 
 @end
@@ -1729,10 +1744,16 @@ void MCMacPlatformWindow::DoRealize(void)
 	// For floating window levels, we use a panel, otherwise a normal window will do.
 	// (Note that NSPanel is a subclass of NSWindow)
     // MW-2014-04-30: [[ Bug 12328 ]] Don't defer window creation, otherwise we don't have a windowId.
-	if (t_window_level != kCGFloatingWindowLevel)
-		m_window_handle = [[com_runrev_livecode_MCWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: NO];
-	else
+	if (t_window_level == kCGFloatingWindowLevel)
 		m_panel_handle = [[com_runrev_livecode_MCPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: NO];
+    // SN-2014-10-01: [[ Bug 13522 ]] We want all the pulldown menus to work, even when there is a modal window.
+    else if (t_window_level == kCGPopUpMenuWindowLevel)
+    {
+		m_panel_handle = [[com_runrev_livecode_MCPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: NO];
+        [m_panel_handle setWorksWhenModal: YES];
+    }
+	else
+		m_window_handle = [[com_runrev_livecode_MCWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: NO];
     
     // AL-2014-07-23: [[ Bug 12131 ]] Explicitly set frame, since initWithContentRect
     //  assumes content is on primary screen.
