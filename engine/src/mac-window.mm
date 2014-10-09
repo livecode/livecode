@@ -394,18 +394,15 @@ static bool s_lock_responder_change = false;
     }
 }
 
-// MW-1024-08-14: [[ Bug 13016 ]] This is invoked by our NSApp for LMouseDragged events
-//   whilst a window is being moved.
-- (void)windowWillMoveFinished: (NSNotification *)notification
-{
-    m_user_reshape = false;
-    
-	m_window -> ProcessDidMove();
-}
+// IM-2014-10-01: [[ Bug 13526 ]] Remove unnecessary windowWillMoveFinish method.
+/* CODE REMOVED */
 
 - (void)windowDidMove:(NSNotification *)notification
 {
 	m_window -> ProcessDidMove();
+
+	// IM-2014-10-01: [[ Bug 13526 ]] This call signals the end of user dragging, so clear the m_user_reshape flag.
+    m_user_reshape = false;
 }
 
 - (void)windowWillStartLiveResize:(NSNotification *)notification
