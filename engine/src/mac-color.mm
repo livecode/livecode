@@ -156,8 +156,15 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef p_transform, MCIm
 	CFDataRef t_data;
 	t_data = nil;
 	
+	uint8_t *t_buffer;
+	t_buffer = nil;
+	
+	// IM-2014-10-01: [[ Bug 13208 ]] draw output to temporary buffer
 	if (t_success)
-		t_success = nil != (t_data = CFDataCreate(kCFAllocatorDefault, (UInt8*)p_image->data, p_image->stride * p_image->height));
+		t_success = MCMemoryAllocate(p_image->stride * p_image->height, t_buffer);
+	
+	if (t_success)
+		t_success = nil != (t_data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (UInt8*)p_image->data, p_image->stride * p_image->height, kCFAllocatorNull));
 	
 	CGDataProviderRef t_provider;
 	t_provider = nil;
@@ -193,7 +200,7 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef p_transform, MCIm
 	t_context = nil;
 	
 	if (t_success)
-		t_success = nil != (t_context = CGBitmapContextCreate(p_image->data, p_image->width, p_image->height, 8, p_image->stride, t_dst_colorspace, t_dst_bm_info));
+		t_success = nil != (t_context = CGBitmapContextCreate(t_buffer, p_image->width, p_image->height, 8, p_image->stride, t_dst_colorspace, t_dst_bm_info));
 	
 	if (t_success)
 	{
@@ -215,6 +222,36 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef p_transform, MCIm
 	
 	if (t_data != nil)
 		CFRelease(t_data);
+	
+	// IM-2014-10-01: [[ Bug 13208 ]] apply the color from the output buffer to the image, preserving the alpha channel
+	if (t_success)
+	{
+		const uint8_t *t_src_bytes;
+		t_src_bytes = t_buffer;
+		
+		uint8_t *t_dst_bytes;
+		t_dst_bytes = (uint8_t*)p_image->data;
+		
+		for (uint32_t y = 0; y < p_image->height; y++)
+		{
+			const uint32_t *t_src_pixels;
+			t_src_pixels = (const uint32_t*) t_src_bytes;
+			uint32_t *t_dst_pixels;
+			t_dst_pixels = (uint32_t*) t_dst_bytes;
+			
+			for (uint32_t x = 0; x < p_image->width; x++)
+			{
+				*t_dst_pixels = MCGPixelSetNativeAlpha(*t_src_pixels++, MCGPixelGetNativeAlpha(*t_dst_pixels));
+				t_dst_pixels++;
+			}
+			
+			t_src_bytes += p_image->stride;
+			t_dst_bytes += p_image->stride;
+		}
+	}
+	
+	if (t_buffer != nil)
+		MCMemoryDeallocate(t_buffer);
 	
 	return t_success;
 }
