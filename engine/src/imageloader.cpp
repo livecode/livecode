@@ -36,6 +36,8 @@ MCImageLoader::MCImageLoader(IO_handle p_stream)
 	m_header_loaded = m_frames_loaded = false;
 	
 	m_frames = nil;
+    
+    MCMemoryClear(&m_metadata, sizeof(m_metadata));
 }
 
 MCImageLoader::~MCImageLoader()

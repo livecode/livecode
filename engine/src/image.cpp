@@ -1127,9 +1127,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCPoint t_hotspot;
 			char *t_name = nil;
 			IO_handle t_stream = nil;
-            MCImageMetadata t_metadata;
-            MCMemoryClear(&t_metadata, sizeof(t_metadata));
-
+            
 			if (data.getlength() == 0)
 			{
 				// MERG-2013-06-24: [[ Bug 10977 ]] If we have a filename then setting the
