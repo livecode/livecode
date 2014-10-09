@@ -21,14 +21,15 @@ enum SyntaxNodeKind
     kSyntaxNodeKindStringMark,
 };
 
+typedef struct SyntaxNode *SyntaxNodeRef;
 struct SyntaxNodeMark
 {
     long index;
     SyntaxNodeKind kind;
     int used;
+    SyntaxNodeRef value;
 };
 
-typedef struct SyntaxNode *SyntaxNodeRef;
 struct SyntaxNode
 {
     SyntaxNodeKind kind;
@@ -83,6 +84,7 @@ struct SyntaxMethod
 typedef enum SyntaxRuleKind SyntaxRuleKind;
 enum SyntaxRuleKind
 {
+    kSyntaxRuleKindFragment,
     kSyntaxRuleKindStatement,
     kSyntaxRuleKindExpression,
     kSyntaxRuleKindLeftUnaryOperator,
@@ -817,11 +819,15 @@ static void MergeSyntaxRule(SyntaxRuleRef p_rule, SyntaxRuleRef p_other_rule)
     free(t_mark_mapping);
 }
 
-static void SetSyntaxNodeMarkAsUsed(struct SyntaxNodeMark *p_marks, int p_mark_count, long p_index)
+static void SetSyntaxNodeMarkAsUsed(struct SyntaxNodeMark *p_marks, int p_mark_count, long p_index, SyntaxNodeRef p_value)
 {
     for(int i = 0; i < p_mark_count; i++)
         if (p_marks[i] . index == p_index)
+        {
             p_marks[i] . used = 1;
+            p_marks[i] . value = p_value;
+            break;
+        }
 }
 
 static void SetAllSyntaxNodeMarksAsUnused(struct SyntaxNodeMark *p_marks, int p_mark_count)
@@ -851,15 +857,18 @@ static void GenerateSyntaxRuleTerm(SyntaxNodeRef p_node, struct SyntaxNodeMark *
                 if (p_node -> descent . index != -1)
                 {
                     fprintf(stderr, "(-> Mark%ld)", p_node -> descent . index);
-                    SetSyntaxNodeMarkAsUsed(p_marks, p_mark_count, p_node -> descent . index);
+                    SetSyntaxNodeMarkAsUsed(p_marks, p_mark_count, p_node -> descent . index, NULL);
                 }
             }
             break;
         case kSyntaxNodeKindBooleanMark:
+            SetSyntaxNodeMarkAsUsed(p_marks, p_mark_count, p_node -> descent . index, p_node);
             break;
         case kSyntaxNodeKindIntegerMark:
+            SetSyntaxNodeMarkAsUsed(p_marks, p_mark_count, p_node -> descent . index, p_node);
             break;
         case kSyntaxNodeKindStringMark:
+            SetSyntaxNodeMarkAsUsed(p_marks, p_mark_count, p_node -> descent . index, p_node);
             break;
         case kSyntaxNodeKindConcatenate:
         case kSyntaxNodeKindAlternate:
@@ -870,7 +879,7 @@ static void GenerateSyntaxRuleTerm(SyntaxNodeRef p_node, struct SyntaxNodeMark *
                 if (i != 0)
                     fprintf(stderr, ", ");
                 fprintf(stderr, "Mark%ld", p_node -> marks[i] . index);
-                SetSyntaxNodeMarkAsUsed(p_marks, p_mark_count, p_node -> marks[i] . index);
+                SetSyntaxNodeMarkAsUsed(p_marks, p_mark_count, p_node -> marks[i] . index, NULL);
             }
             fprintf(stderr, ")");
             break;
@@ -916,40 +925,73 @@ static void GenerateSyntaxRuleMarks(SyntaxNodeRef p_node, struct SyntaxNodeMark 
     }
 }
 
-static void GenerateSyntaxRuleSubHeader(SyntaxNodeRef p_node)
+static void GenerateSyntaxRuleSubHeader(SyntaxNodeRef p_node, SyntaxRuleKind p_kind)
 {
     fprintf(stderr, "  'rule' CustomRule%d(-> ", p_node -> concrete_rule);
-    for(int i = 0; i < p_node -> mark_count; i++)
+    if (p_kind == kSyntaxRuleKindFragment)
     {
-        if (i != 0)
-            fprintf(stderr, ", ");
-        fprintf(stderr, "Mark%ld", p_node -> marks[i] . index);
+        for(int i = 0; i < p_node -> mark_count; i++)
+        {
+            if (i != 0)
+                fprintf(stderr, ", ");
+            fprintf(stderr, "Mark%ld", p_node -> marks[i] . index);
+        }
+    }
+    else
+    {
+        fprintf(stderr, "invoke(0, ");
+        for(int i = 0; i < p_node -> mark_count; i++)
+            fprintf(stderr, "expressionlist(Mark%ld, ", p_node -> marks[i] . index);
+        fprintf(stderr, "nil");
+        for(int i = 0; i < p_node -> mark_count; i++)
+            fprintf(stderr, ")");
+        fprintf(stderr, ")");
     }
     fprintf(stderr, "):\n");
 }
 
-static void GenerateSyntaxRuleUnusedMarks(SyntaxNodeRef p_node)
+static void GenerateSyntaxRuleExplicitAndUnusedMarks(SyntaxNodeRef p_node)
 {
+    int t_has_pos;
+    t_has_pos = 0;
     for(int i = 0; i < p_node -> mark_count; i++)
     {
-        if (p_node -> marks[i] . used == 1)
-            continue;
-        
-        fprintf(stderr, "    where(");
-        switch(p_node -> marks[i] . kind)
+        if (p_node -> marks[i] . used == 0)
+            fprintf(stderr, "    where(nil -> Mark%ld)\n", p_node -> marks[i] . index);
+        else if (p_node -> marks[i] . value != NULL)
         {
-            case kSyntaxNodeKindDescent: fprintf(stderr, "nil"); break;
-            case kSyntaxNodeKindBooleanMark: fprintf(stderr, "false"); break;
-            case kSyntaxNodeKindIntegerMark: fprintf(stderr, "0"); break;
-            case kSyntaxNodeKindStringMark: fprintf(stderr, "\"\""); break;
-            default:
-                assert(0);
+            if (t_has_pos == 0)
+            {
+                fprintf(stderr, "    GetUndefinedPosition(-> Position)\n");
+                t_has_pos = 1;
+            }
+            fprintf(stderr, "    where(");
+            switch(p_node -> marks[i] . value -> kind)
+            {
+                case kSyntaxNodeKindBooleanMark:
+                    fprintf(stderr, "%s(Position)", p_node -> marks[i] . value -> boolean_mark . value == 0 ? "false" : "true");
+                    break;
+                case kSyntaxNodeKindIntegerMark:
+                    fprintf(stderr, "integer(Position, %ld)", p_node -> marks[i] . value -> integer_mark . value);
+                    break;
+                case kSyntaxNodeKindStringMark:
+                    {
+                        const char *t_string;
+                        GetStringOfNameLiteral(p_node -> marks[i] . value -> string_mark . value, &t_string);
+                        fprintf(stderr, "string(Position, \"%s\")", t_string);
+                    }
+                    break;
+                default:
+                    assert(0);
+                    break;
+            }
+            fprintf(stderr, " -> Mark%ld)\n", p_node -> marks[i] . index);
         }
-        fprintf(stderr, " -> Mark%ld)\n", p_node -> marks[i] . index);
+            
     }
 }
 
-static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node)
+static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKind p_kind)
 {
     assert(p_node -> kind == kSyntaxNodeKindConcatenate ||
            p_node -> kind == kSyntaxNodeKindAlternate ||
@@ -960,19 +1002,19 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node)
         for(int i = 0; i < p_node -> alternate . operand_count; i++)
             if (p_node -> alternate . operands[i] -> kind == kSyntaxNodeKindAlternate ||
                 p_node -> alternate . operands[i] -> kind == kSyntaxNodeKindRepeat)
-                GenerateSyntaxRule(x_index, p_node -> alternate . operands[i]);
+                GenerateSyntaxRule(x_index, p_node -> alternate . operands[i], kSyntaxRuleKindFragment);
     }
     else if (p_node -> kind == kSyntaxNodeKindAlternate)
     {
         for(int i = 0; i < p_node -> alternate . operand_count; i++)
             if (p_node -> alternate . operands[i] -> kind == kSyntaxNodeKindRepeat)
-                GenerateSyntaxRule(x_index, p_node -> alternate . operands[i]);
+                GenerateSyntaxRule(x_index, p_node -> alternate . operands[i], kSyntaxRuleKindFragment);
     }
     else if (p_node -> kind == kSyntaxNodeKindRepeat)
     {
-        GenerateSyntaxRule(x_index, p_node -> repeat . element);
+        GenerateSyntaxRule(x_index, p_node -> repeat . element, kSyntaxRuleKindFragment);
         if (p_node -> repeat . delimiter != NULL)
-            GenerateSyntaxRule(x_index, p_node -> repeat . delimiter);
+            GenerateSyntaxRule(x_index, p_node -> repeat . delimiter, kSyntaxRuleKindFragment);
     }
     
     // Now generate this rule.
@@ -986,27 +1028,25 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node)
     
     p_node -> concrete_rule = t_index;
     
-    fprintf(stderr, "'nonterm' CustomRule%d(-> ", t_index);
-    for(int i = 0; i < p_node -> mark_count; i++)
+    if (p_kind == kSyntaxRuleKindFragment)
     {
-        if (i != 0)
-            fprintf(stderr, ", ");
-        switch(p_node -> marks[i] . kind)
+        fprintf(stderr, "'nonterm' CustomRule%d(-> ", t_index);
+        for(int i = 0; i < p_node -> mark_count; i++)
         {
-            case kSyntaxNodeKindDescent: fprintf(stderr, "EXPRESSION"); break;
-            case kSyntaxNodeKindBooleanMark: fprintf(stderr, "BOOLEAN"); break;
-            case kSyntaxNodeKindIntegerMark: fprintf(stderr, "INT"); break;
-            case kSyntaxNodeKindStringMark: fprintf(stderr, "STRING"); break;
-            default:
-                assert(0);
+            if (i != 0)
+                fprintf(stderr, ", ");
+            fprintf(stderr, "EXPRESSION");
         }
+        fprintf(stderr, ")\n");
     }
-    fprintf(stderr, ")\n");
+    else
+        fprintf(stderr, "'nonterm' CustomRule%d(-> %s)\n", t_index, p_kind == kSyntaxRuleKindStatement ? "STATEMENT" : "EXPRESSION");
+    
     if (p_node -> kind == kSyntaxNodeKindConcatenate)
     {
         SetAllSyntaxNodeMarksAsUnused(p_node -> marks, p_node -> mark_count);
         
-        GenerateSyntaxRuleSubHeader(p_node);
+        GenerateSyntaxRuleSubHeader(p_node, p_kind);
         fprintf(stderr, "    ");
         for(int i = 0; i < p_node -> concatenate . operand_count; i++)
         {
@@ -1015,7 +1055,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node)
             GenerateSyntaxRuleTerm(p_node -> concatenate . operands[i], p_node -> marks, p_node -> mark_count);
         }
         fprintf(stderr, "\n");
-        GenerateSyntaxRuleUnusedMarks(p_node);
+        GenerateSyntaxRuleExplicitAndUnusedMarks(p_node);
     }
     else if (p_node -> kind == kSyntaxNodeKindAlternate)
     {
@@ -1023,7 +1063,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node)
         {
             SetAllSyntaxNodeMarksAsUnused(p_node -> marks, p_node -> mark_count);
             
-            GenerateSyntaxRuleSubHeader(p_node);
+            GenerateSyntaxRuleSubHeader(p_node, p_kind);
             fprintf(stderr, "    ");
             if (p_node -> alternate . operands[i] -> kind == kSyntaxNodeKindRepeat)
                 GenerateSyntaxRuleTerm(p_node -> alternate . operands[i], p_node -> marks, p_node -> mark_count);
@@ -1037,13 +1077,13 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node)
                 }
             }
             fprintf(stderr, "\n");
-            GenerateSyntaxRuleUnusedMarks(p_node);
+            GenerateSyntaxRuleExplicitAndUnusedMarks(p_node);
         }
         if (p_node -> alternate . is_nullable)
         {
             SetAllSyntaxNodeMarksAsUnused(p_node -> marks, p_node -> mark_count);
-            GenerateSyntaxRuleSubHeader(p_node);
-            GenerateSyntaxRuleUnusedMarks(p_node);
+            GenerateSyntaxRuleSubHeader(p_node, p_kind);
+            GenerateSyntaxRuleExplicitAndUnusedMarks(p_node);
         }
     }
     else if (p_node -> kind == kSyntaxNodeKindRepeat)
@@ -1066,7 +1106,7 @@ void GenerateSyntaxRules(void)
         PrintSyntaxNode(t_rule -> expr);
         printf("\n");
 
-        GenerateSyntaxRule(&t_index, t_rule -> expr);
+        GenerateSyntaxRule(&t_index, t_rule -> expr, t_rule -> kind);
     }
 }
 
