@@ -517,6 +517,7 @@ public:
         m_font = nil;
         
         m_player = nil;
+        m_grabbed_part = -1;
     }
     
     ~MCPlayerRatePopup(void)
@@ -732,6 +733,9 @@ public:
     
     Boolean mup(uint2 which, bool release)
     {
+        // PM-2014-09-30: [[ Bug 13119 ]] Make sure a playRateChanged message is sent when the mouse is up/released, but not when creating the ratepopup
+        if (m_grabbed_part != -1)
+            m_player -> timer(MCM_play_rate_changed,nil);
         m_grabbed_part = kMCPlayerControllerPartUnknown;
         return True;
     }
