@@ -1791,9 +1791,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {true, "mobileGetContactData", MCHandleGetContactData, nil}, // ABNewPersonViewController
     {true, "mobileUpdateContact", MCHandleUpdateContact, nil},   // ABUnknownPersonViewController
     {true, "mobileCreateContact", MCHandleCreateContact, nil},
-    {false, "mobileAddContact", MCHandleAddContact, nil},
-    {false, "mobileFindContact", MCHandleFindContact, nil},
-    {false, "mobileRemoveContact", MCHandleRemoveContact, nil},
+    // PM-2014-10-08: [[ Bug 13621 ]] Add/Find/Remove contact must run on the script thread
+    {true, "mobileAddContact", MCHandleAddContact, nil},
+    {true, "mobileFindContact", MCHandleFindContact, nil},
+    {true, "mobileRemoveContact", MCHandleRemoveContact, nil},
     
     {false, "iphoneSetDoNotBackupFile", MCHandleFileSetDoNotBackup, nil},
     {false, "iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},
