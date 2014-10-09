@@ -547,6 +547,64 @@ static void PrintSyntaxNode(SyntaxNodeRef p_node)
     }
 }
 
+static void RemoveFirstTermFromSyntaxNode(SyntaxNodeRef p_node)
+{
+    if (p_node -> kind == kSyntaxNodeKindAlternate)
+    {
+        for(int i = 0; i < p_node -> alternate . operand_count; i++)
+            RemoveFirstTermFromSyntaxNode(p_node -> alternate . operands[i]);
+    }
+    else if (p_node -> kind == kSyntaxNodeKindConcatenate)
+    {
+        FreeSyntaxNode(p_node -> concatenate . operands[0]);
+        for(int i = 1; i < p_node -> concatenate . operand_count; i++)
+            p_node -> concatenate . operands[i - 1] = p_node -> concatenate . operands[i];
+        p_node -> concatenate . operand_count -= 1;
+    }
+    else
+        assert(0);
+}
+
+static void RemoveLastTermFromSyntaxNode(SyntaxNodeRef p_node)
+{
+    if (p_node -> kind == kSyntaxNodeKindAlternate)
+    {
+        for(int i = 0; i < p_node -> alternate . operand_count; i++)
+            RemoveLastTermFromSyntaxNode(p_node -> alternate . operands[i]);
+    }
+    else if (p_node -> kind == kSyntaxNodeKindConcatenate)
+    {
+        FreeSyntaxNode(p_node -> concatenate . operands[p_node -> concatenate . operand_count - 1]);
+        p_node -> concatenate . operand_count -= 1;
+    }
+    else
+        assert(0);
+}
+
+static void TrimSyntaxNodeForOperator(SyntaxNodeRef p_node, SyntaxRuleKind p_kind)
+{
+    int t_remove_left;
+    t_remove_left = 0;
+    if (p_kind == kSyntaxRuleKindLeftBinaryOperator ||
+        p_kind == kSyntaxRuleKindRightBinaryOperator ||
+        p_kind == kSyntaxRuleKindNeutralBinaryOperator ||
+        p_kind == kSyntaxRuleKindLeftUnaryOperator)
+        t_remove_left = 1;
+    
+    int t_remove_right;
+    t_remove_right = 0;
+    if (p_kind == kSyntaxRuleKindLeftBinaryOperator ||
+        p_kind == kSyntaxRuleKindRightBinaryOperator ||
+        p_kind == kSyntaxRuleKindNeutralBinaryOperator ||
+        p_kind == kSyntaxRuleKindRightUnaryOperator)
+        t_remove_right = 1;
+    
+    if (t_remove_left)
+        RemoveFirstTermFromSyntaxNode(p_node);
+    if (t_remove_right)
+        RemoveLastTermFromSyntaxNode(p_node);
+}
+
 void BeginSyntaxGrammar(void)
 {
     assert(s_rule != NULL);
@@ -558,6 +616,9 @@ void EndSyntaxGrammar(void)
     assert(s_rule != NULL);
     assert(s_stack_index == 1);
 
+    if (s_rule -> kind >= kSyntaxRuleKindLeftUnaryOperator)
+        TrimSyntaxNodeForOperator(s_stack[0], s_rule -> kind);
+    
     s_rule -> expr = s_stack[0];
     s_stack_index = 0;
 }

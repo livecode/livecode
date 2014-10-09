@@ -126,7 +126,7 @@ output:     Returns true if the result of evaluating <Left> is the same as that 
 
 */
 
-syntax IsEqualTo is left unary operator with precedence 1
+syntax IsEqualTo is left binary operator with precedence 1
 	<Left: Expression> "is" ["not" <IsNot=true>] <Right: Expression>
 begin
 	EvalIsEqualTo(Left, Right, IsNot)

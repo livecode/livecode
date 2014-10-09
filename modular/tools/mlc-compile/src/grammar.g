@@ -4,6 +4,7 @@
     support
     types
     bind
+    check
     syntax
 
 --------------------------------------------------------------------------------
@@ -23,6 +24,7 @@
 
     'rule' BootstrapCompile(Modules):
         BindModules(Modules)
+        CheckModules(Modules)
         (|
             ErrorsDidOccur()
         ||
@@ -41,6 +43,15 @@
     'rule' BindModules(nil):
         -- empty
 
+'action' CheckModules(MODULELIST)
+
+    'rule' CheckModules(modulelist(Head, Tail)):
+        Check(Head)
+        CheckModules(Tail)
+        
+    'rule' CheckModules(nil):
+        -- empty
+        
 'action' GenerateSyntaxForModules(MODULELIST)
 
     'rule' GenerateSyntaxForModules(modulelist(Head, Tail)):

@@ -13,6 +13,7 @@
 		4D3AA08819CC3EEF00886BE7 /* gen.y in Sources */ = {isa = PBXBuildFile; fileRef = 4D3AA08719CC3EEF00886BE7 /* gen.y */; };
 		4D3AA09919CC486200886BE7 /* libgrts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D3AA09819CC485A00886BE7 /* libgrts.a */; };
 		4D3AA09C19CC499100886BE7 /* gen.l in Sources */ = {isa = PBXBuildFile; fileRef = 4D3AA09B19CC499100886BE7 /* gen.l */; };
+		4D6E0E7B19E71592001AE5CC /* check.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6E0E7919E7158C001AE5CC /* check.c */; };
 		4D6F072919CC388F00DDC6E0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F072819CC388F00DDC6E0 /* main.c */; };
 		4DA53A2719E4435D0089FBDC /* gen.l in Sources */ = {isa = PBXBuildFile; fileRef = 4DA53A2119E4435D0089FBDC /* gen.l */; };
 		4DA53A2819E4435D0089FBDC /* gen.y in Sources */ = {isa = PBXBuildFile; fileRef = 4DA53A2419E4435D0089FBDC /* gen.y */; };
@@ -158,6 +159,8 @@
 		4D3AA0B319CC594800886BE7 /* NEXT_UNIT.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = NEXT_UNIT.t; path = src/NEXT_UNIT.t; sourceTree = SOURCE_ROOT; };
 		4D3AA0B419CC594800886BE7 /* STRING_LITERAL.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = STRING_LITERAL.t; path = src/STRING_LITERAL.t; sourceTree = SOURCE_ROOT; };
 		4D3AA0B519CC597300886BE7 /* SEPARATOR.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = SEPARATOR.t; path = src/SEPARATOR.t; sourceTree = SOURCE_ROOT; };
+		4D6E0E7119E710BE001AE5CC /* check.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = check.g; path = src/check.g; sourceTree = SOURCE_ROOT; };
+		4D6E0E7919E7158C001AE5CC /* check.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = check.c; path = src/_GG_/check.c; sourceTree = "<group>"; };
 		4D6F070B19CC36DD00DDC6E0 /* mlc-compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mlc-compile"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = gentle.xcodeproj; path = ../../utilities/gentle/gentle.xcodeproj; sourceTree = "<group>"; };
 		4D6F072719CC386B00DDC6E0 /* grammar.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = grammar.g; path = src/grammar.g; sourceTree = SOURCE_ROOT; };
@@ -268,6 +271,7 @@
 				4D6F072719CC386B00DDC6E0 /* grammar.g */,
 				4DA53A2F19E448C50089FBDC /* bind.g */,
 				4DEB640219E59227009DF2EA /* syntax.g */,
+				4D6E0E7119E710BE001AE5CC /* check.g */,
 				4D3AA09D19CC49D000886BE7 /* ILLEGAL.b */,
 				4DEB640E19E69E50009DF2EA /* COMMENTS.b */,
 				4D3AA09E19CC49D000886BE7 /* LAYOUT.b */,
@@ -318,6 +322,7 @@
 		4DA53A1F19E443430089FBDC /* Bootstrap */ = {
 			isa = PBXGroup;
 			children = (
+				4D6E0E7919E7158C001AE5CC /* check.c */,
 				4DEB640319E592B6009DF2EA /* support.c */,
 				4DEB640419E592B7009DF2EA /* syntax.c */,
 				4DA53A2019E4435D0089FBDC /* gen.h */,
@@ -464,6 +469,7 @@
 				"$(SRCROOT)/src/bind.g",
 				"$(SRCROOT)/src/support.g",
 				"$(SRCROOT)/src/syntax.g",
+				"$(SRCROOT)/src/check.g",
 			);
 			name = Gentle;
 			outputPaths = (
@@ -476,10 +482,11 @@
 				"$(SRCROOT)/src/_GG_/bind.c",
 				"$(SRCROOT)/src/_GG_/support.c",
 				"$(SRCROOT)/src/_GG_/syntax.c",
+				"$(SRCROOT)/src/_GG_/check.c",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\nmkdir -p \"_GG_\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" support.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" grammar.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" types.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" bind.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" syntax.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "cd src\nmkdir -p \"_GG_\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" support.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" grammar.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" types.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" bind.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" check.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" syntax.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
 		4D21B65E19E43BE100B64BEF /* Reflex */ = {
@@ -611,6 +618,7 @@
 				4DA53A3119E449990089FBDC /* bind.c in Sources */,
 				4DA53A2719E4435D0089FBDC /* gen.l in Sources */,
 				4DEB63F019E525F2009DF2EA /* literal.c in Sources */,
+				4D6E0E7B19E71592001AE5CC /* check.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
