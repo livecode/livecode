@@ -2064,7 +2064,7 @@ void MCMacPlatformWindow::ComputeCocoaStyle(NSUInteger& r_cocoa_style)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCAlphaToCGImage(uindex_t p_width, uindex_t p_height, uint8_t* p_data, uindex_t p_stride, CGImageRef &r_image)
+static bool MCAlphaToCGImageNoCopy(const MCGRaster &p_alpha, CGImageRef &r_image)
 {
 	bool t_success = true;
 	
@@ -2074,7 +2074,7 @@ static bool MCAlphaToCGImage(uindex_t p_width, uindex_t p_height, uint8_t* p_dat
 	CGDataProviderRef t_dp = nil;
 	
 	if (t_success)
-		t_success = nil != (t_data = CFDataCreate(kCFAllocatorDefault, (uint8_t*)p_data, p_stride * p_height));
+		t_success = nil != (t_data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (UInt8*)p_alpha.pixels, p_alpha.stride *  p_alpha.height, kCFAllocatorNull));
 	
 	if (t_success)
 		t_success = nil != (t_dp = CGDataProviderCreateWithCFData(t_data));
@@ -2083,7 +2083,7 @@ static bool MCAlphaToCGImage(uindex_t p_width, uindex_t p_height, uint8_t* p_dat
 		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceGray());
 	
 	if (t_success)
-		t_success = nil != (t_image = CGImageCreate(p_width, p_height, 8, 8, p_stride, t_colorspace, kCGImageAlphaNone, t_dp, nil, false, kCGRenderingIntentDefault));
+		t_success = nil != (t_image = CGImageCreate(p_alpha.width, p_alpha.height, 8, 8, p_alpha.stride, t_colorspace, kCGImageAlphaNone, t_dp, nil, false, kCGRenderingIntentDefault));
 	
 	CGColorSpaceRelease(t_colorspace);
 	CGDataProviderRelease(t_dp);
@@ -2095,26 +2095,65 @@ static bool MCAlphaToCGImage(uindex_t p_width, uindex_t p_height, uint8_t* p_dat
 	return t_success;
 }
 
-void MCPlatformWindowMaskCreate(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits, MCPlatformWindowMaskRef& r_mask)
+void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits, MCPlatformWindowMaskRef& r_mask)
 {
-	CGImageRef t_mask;
+	MCMacPlatformWindowMask *t_mask;
 	t_mask = nil;
-	MCAlphaToCGImage(p_width, p_height, (uint8_t *)p_bits, p_stride, t_mask);
-	r_mask = (MCPlatformWindowMaskRef)t_mask;
+	
+	bool t_success;
+	t_success = MCMemoryNew(t_mask);
+	
+	if (t_success)
+	{
+		t_mask->references = 1;
+		
+		t_mask->mask.pixels = p_bits;
+		t_mask->mask.stride = p_stride;
+		t_mask->mask.width = p_width;
+		t_mask->mask.height = p_height;
+		t_mask->mask.format = kMCGRasterFormat_A;
+		
+		t_success = MCAlphaToCGImageNoCopy(t_mask->mask, t_mask->cg_mask);
+	}
+	
+	if (t_success)
+		r_mask = (MCPlatformWindowMaskRef)t_mask;
+	else
+	{
+		MCPlatformWindowMaskRelease((MCPlatformWindowMaskRef)t_mask);
+		r_mask = nil;
+	}
 }
 
 void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef p_mask)
 {
-	CGImageRef t_mask;
-	t_mask = (CGImageRef)p_mask;
-	CGImageRetain(t_mask);
+	if (p_mask == nil)
+		return;
+	
+	MCMacPlatformWindowMask *t_mask;
+	t_mask = (MCMacPlatformWindowMask*)p_mask;
+	
+	t_mask->references++;
 }
 
 void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
 {
-	CGImageRef t_mask;
-	t_mask = (CGImageRef)p_mask;
-	CGImageRelease(t_mask);
+	if (p_mask == nil)
+		return;
+
+	MCMacPlatformWindowMask *t_mask;
+	t_mask = (MCMacPlatformWindowMask*)p_mask;
+	
+	if (t_mask->references > 1)
+	{
+		t_mask->references++;
+		return;
+	}
+	
+	CGImageRelease(t_mask->cg_mask);
+	MCMemoryDeallocate(t_mask->mask.pixels);
+	
+	MCMemoryDelete(t_mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
