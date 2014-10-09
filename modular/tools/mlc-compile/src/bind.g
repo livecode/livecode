@@ -16,6 +16,8 @@
         -- Step 1: Ensure all id's referencing definitions point to the definition.
         --         and no duplicate definitions have been attempted.
         EnterScope
+        -- Declare the predefined ids
+        DeclarePredefinedIds
         -- Assign the defining id to all top-level names.
         Declare(Definitions)
         -- Resolve all references to id's.
@@ -121,15 +123,15 @@
         -- Mark variables have their own local scope
         EnterScope
         
-        -- Process the mark variables in the syntax (definiton side).
-        -- all variables with the same name get the same index and we
-        -- check no reserved mark variables are specified ('input' and
-        -- 'output').
-        Apply(Syntax)
-
         -- Define appropriate meaning for 'input' and 'output' before we
         -- bind the use of the ids in the methods.
-        DeclarePredefinedSyntaxMarks
+        DeclarePredefinedMarkVariables
+
+        -- Process the mark variables in the syntax (definiton side).
+        -- all variables with the same name get the same index.
+        Apply(Syntax)
+
+        -- Now bind the mark variables to the arguments in the methods.
         Apply(Methods)
 
         LeaveScope
@@ -139,18 +141,22 @@
         PushEmptySet()
         CheckSyntaxMarkDefinitions(Syntax)
 
-    'rule' Apply(SYNTAX'markedrule(_, Variable, _)):
+    'rule' Apply(SYNTAX'markedrule(_, Variable, Rule)):
         ApplySyntaxMarkId(Variable)
+        ApplyId(Rule)
 
     'rule' Apply(SYNTAX'mark(_, Variable, _)):
         ApplySyntaxMarkId(Variable)
+        
+    'rule' Apply(SYNTAX'rule(_, Rule)):
+        ApplyId(Rule)
 
     'rule' Apply(SYNTAXMETHOD'method(_, Name, Arguments)):
         ApplyId(Name)
         Apply(Arguments)
         
     'rule' Apply(SYNTAXCONSTANT'name(_, Value)):
-        ApplyLocalId(Value)
+        ApplyId(Value)
 
 -- Mark variables can only be defined once for each possible path through a
 -- syntax rule. For example:
@@ -255,9 +261,9 @@
 
     'rule' ApplySyntaxMarkId(Id):
         Id'Name -> Name
-        IsValidNameForSyntaxMark(Name)
         (|
             HasLocalMeaning(Name -> Meaning)
+            where(Meaning -> syntaxmark(_))
         ||
             LastSyntaxMarkIndexVar -> Index
             where(syntaxmark(Index) -> Meaning)
@@ -273,38 +279,46 @@
 
 --------------------------------------------------------------------------------
 
-'var' OutputNameLiteralVar : NAME
-'var' InputNameLiteralVar : NAME
-'var' OutputSyntaxMarkMeaningVar : MEANING
-'var' InputSyntaxMarkMeaningVar : MEANING
+'var' OutputSyntaxMarkIdVar : ID
+'var' InputSyntaxMarkIdVar : ID
+'var' ContextSyntaxMarkIdVar : ID
+
+'var' ExpressionSyntaxRuleIdVar : ID
 
 'action' InitializeBind
 
     'rule' InitializeBind:
-        MakeNameLiteral("output" -> Name)
-        OutputNameLiteralVar <- Name
-        OutputSyntaxMarkMeaningVar <- syntaxoutputmark
+        MakePredefinedId("output", syntaxoutputmark -> Id1)
+        OutputSyntaxMarkIdVar <- Id1
+        MakePredefinedId("input", syntaxinputmark -> Id2)
+        InputSyntaxMarkIdVar <- Id2
+        MakePredefinedId("context", syntaxcontextmark -> Id3)
+        ContextSyntaxMarkIdVar <- Id3
+        MakePredefinedId("Expression", syntaxrule -> Id4)
+        ExpressionSyntaxRuleIdVar <- Id4
 
-        MakeNameLiteral("input" -> Name2)
-        InputNameLiteralVar <- Name2
-        InputSyntaxMarkMeaningVar <- syntaxinputmark
+'action' DeclarePredefinedIds
 
-'action' DeclarePredefinedSyntaxMarks
+    'rule' DeclarePredefinedIds:
+        ExpressionSyntaxRuleIdVar -> Id1
+        DeclareId(Id1)
 
-    'rule' DeclarePredefinedSyntaxMarks:
-        OutputNameLiteralVar -> Name1
-        OutputSyntaxMarkMeaningVar -> Meaning1
-        DefineMeaning(Name1, Meaning1)
-        InputNameLiteralVar -> Name2
-        InputSyntaxMarkMeaningVar -> Meaning2
-        DefineMeaning(Name2, Meaning2)
+'action' DeclarePredefinedMarkVariables
 
-'condition' IsValidNameForSyntaxMark(NAME)
+    'rule' DeclarePredefinedMarkVariables:
+        OutputSyntaxMarkIdVar -> Id1
+        DeclareId(Id1)
+        InputSyntaxMarkIdVar -> Id2
+        DeclareId(Id2)
+        ContextSyntaxMarkIdVar -> Id3
+        DeclareId(Id3)
 
-    'rule' IsValidNameForSyntaxMark(Name):
-        OutputNameLiteralVar -> OtherName
-        ne(Name, OtherName)
-        InputNameLiteralVar -> OtherName2
-        ne(Name, OtherName2)
+'action' MakePredefinedId(STRING, MEANING -> ID)
+
+    'rule' MakePredefinedId(String, Meaning -> Id)
+        Id::ID
+        MakeNameLiteral(String -> Name)
+        Id'Name <- Name
+        Id'Meaning <- Meaning
 
 --------------------------------------------------------------------------------

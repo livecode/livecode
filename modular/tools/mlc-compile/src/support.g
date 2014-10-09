@@ -45,21 +45,29 @@
     BeginRightBinaryOperatorSyntaxRule
     BeginNeutralBinaryOperatorSyntaxRule
     EndSyntaxRule
-    BeginSyntaxRuleGrammar
-    EndSyntaxRuleGrammar
-    ConcatenateSyntaxRule
-    AlternateSyntaxRule
-    RepeatSyntaxRule
-    PushEmptySyntaxRule
-    PushKeywordSyntaxRule
-    PushMarkedDescentSyntaxRule
-    PushDescentSyntaxRule
-    PushMarkedTrueSyntaxRule
-    PushMarkedFalseSyntaxRule
-    PushMarkedIntegerSyntaxRule
-    PushMarkedStringSyntaxRule
-    BeginSyntaxRuleMappings
-    EndSyntaxRuleMappings
+    BeginSyntaxGrammar
+    EndSyntaxGrammar
+    ConcatenateSyntaxGrammar
+    AlternateSyntaxGrammar
+    RepeatSyntaxGrammar
+    PushEmptySyntaxGrammar
+    PushKeywordSyntaxGrammar
+    PushMarkedDescentSyntaxGrammar
+    PushDescentSyntaxGrammar
+    PushMarkedTrueSyntaxGrammar
+    PushMarkedFalseSyntaxGrammar
+    PushMarkedIntegerSyntaxGrammar
+    PushMarkedStringSyntaxGrammar
+    BeginSyntaxMappings
+    EndSyntaxMappings
+    BeginMethodSyntaxMapping
+    EndMethodSyntaxMapping
+    PushUndefinedArgumentSyntaxMapping
+    PushTrueArgumentSyntaxMapping
+    PushFalseArgumentSyntaxMapping
+    PushIntegerArgumentSyntaxMapping
+    PushStringArgumentSyntaxMapping
+    PushMarkArgumentSyntaxMapping
 
     Fatal_OutOfMemory
     Fatal_InternalInconsistency
@@ -131,23 +139,32 @@
 'action' BeginNeutralBinaryOperatorSyntaxRule(NAME, INT)
 'action' EndSyntaxRule()
 
-'action' BeginSyntaxRuleGrammar()
-'action' EndSyntaxRuleGrammar()
+'action' BeginSyntaxGrammar()
+'action' EndSyntaxGrammar()
 
-'action' ConcatenateSyntaxRule()
-'action' AlternateSyntaxRule()
-'action' RepeatSyntaxRule()
-'action' PushEmptySyntaxRule()
-'action' PushKeywordSyntaxRule(STRING)
-'action' PushMarkedDescentSyntaxRule(INT, NAME)
-'action' PushDescentSyntaxRule(NAME)
-'action' PushMarkedTrueSyntaxRule(INT)
-'action' PushMarkedFalseSyntaxRule(INT)
-'action' PushMarkedIntegerSyntaxRule(INT, INT)
-'action' PushMarkedStringSyntaxRule(INT, STRING)
+'action' ConcatenateSyntaxGrammar()
+'action' AlternateSyntaxGrammar()
+'action' RepeatSyntaxGrammar()
+'action' PushEmptySyntaxGrammar()
+'action' PushKeywordSyntaxGrammar(Token: STRING)
+'action' PushMarkedDescentSyntaxGrammar(Index: INT, Rule: NAME)
+'action' PushDescentSyntaxGrammar(Rule: NAME)
+'action' PushMarkedTrueSyntaxGrammar(Index: INT)
+'action' PushMarkedFalseSyntaxGrammar(Index: INT)
+'action' PushMarkedIntegerSyntaxGrammar(Index: INT, Value: INT)
+'action' PushMarkedStringSyntaxGrammar(Index: INT, Value: STRING)
 
-'action' BeginSyntaxRuleMappings()
-'action' EndSyntaxRuleMappings()
+'action' BeginSyntaxMappings()
+'action' EndSyntaxMappings()
+
+'action' BeginMethodSyntaxMapping(Name: NAME)
+'action' EndMethodSyntaxMapping()
+'action' PushUndefinedArgumentSyntaxMapping()
+'action' PushTrueArgumentSyntaxMapping()
+'action' PushFalseArgumentSyntaxMapping()
+'action' PushIntegerArgumentSyntaxMapping(Value: INT)
+'action' PushStringArgumentSyntaxMapping(Value: STRING)
+'action' PushMarkArgumentSyntaxMapping(Index: INT)
 
 --------------------------------------------------------------------------------
 

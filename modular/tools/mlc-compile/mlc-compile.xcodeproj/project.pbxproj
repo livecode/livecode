@@ -31,6 +31,8 @@
 		4DEB640119E58CBB009DF2EA /* set.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB63FF19E58CBB009DF2EA /* set.c */; };
 		4DEB640619E592B7009DF2EA /* support.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB640319E592B6009DF2EA /* support.c */; };
 		4DEB640819E592B7009DF2EA /* syntax.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB640419E592B7009DF2EA /* syntax.c */; };
+		4DEB640A19E6822E009DF2EA /* syntax-gen.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB640919E6822E009DF2EA /* syntax-gen.c */; };
+		4DEB640B19E6822E009DF2EA /* syntax-gen.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB640919E6822E009DF2EA /* syntax-gen.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -182,6 +184,7 @@
 		4DEB640219E59227009DF2EA /* syntax.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = syntax.g; path = src/syntax.g; sourceTree = SOURCE_ROOT; };
 		4DEB640319E592B6009DF2EA /* support.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = support.c; path = src/_GG_/support.c; sourceTree = "<group>"; };
 		4DEB640419E592B7009DF2EA /* syntax.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = syntax.c; path = src/_GG_/syntax.c; sourceTree = "<group>"; };
+		4DEB640919E6822E009DF2EA /* syntax-gen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "syntax-gen.c"; path = "src/syntax-gen.c"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -276,6 +279,7 @@
 				4DEB63F119E52842009DF2EA /* report.c */,
 				4DEB63ED19E5220E009DF2EA /* report.h */,
 				4DEB63FF19E58CBB009DF2EA /* set.c */,
+				4DEB640919E6822E009DF2EA /* syntax-gen.c */,
 			);
 			name = Sources;
 			path = "mlc-compile";
@@ -588,6 +592,7 @@
 				4DA53A3619E51C690089FBDC /* position.c in Sources */,
 				4DEB640119E58CBB009DF2EA /* set.c in Sources */,
 				4D21B66119E43BE100B64BEF /* main.c in Sources */,
+				4DEB640B19E6822E009DF2EA /* syntax-gen.c in Sources */,
 				4DA53A2A19E4435D0089FBDC /* types.c in Sources */,
 				4DA53A3119E449990089FBDC /* bind.c in Sources */,
 				4DA53A2719E4435D0089FBDC /* gen.l in Sources */,
@@ -609,6 +614,7 @@
 				4DA53A3319E449DD0089FBDC /* bind.c in Sources */,
 				4D3AA09C19CC499100886BE7 /* gen.l in Sources */,
 				4DEB63EF19E525F2009DF2EA /* literal.c in Sources */,
+				4DEB640A19E6822E009DF2EA /* syntax-gen.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

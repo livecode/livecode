@@ -1,6 +1,8 @@
 #ifndef __LITERAL__
 #define __LITERAL__
 
+typedef struct Name *NameRef;
+
 void InitializeLiterals(void);
 void FinalizeLiterals(void);
 
