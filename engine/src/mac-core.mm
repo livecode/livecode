@@ -688,20 +688,17 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
     // MW-2014-07-24: [[ Bug 12939 ]] If we are running a modal session, then don't then wait
     //   for events - event handling happens inside the modal session.
     NSEvent *t_event;
+    
+    // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
+    //   WebViews from working.    
+    // SN-2014-10-02: [[ Bug 13555 ]] We want the event to be sent in case it passes through
+    //   the modal session.
+    t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
+                                 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
+                                    inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
+                                   dequeue: YES];
 	if (t_modal)
-    {
 		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
-        t_event = nil;
-    }
-	else
-    {
-        // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
-        //   WebViews from working.
-        t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
-                                     untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
-                                        inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
-                                       dequeue: YES];
-    }
     
 	s_in_blocking_wait = false;
 
