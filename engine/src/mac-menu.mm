@@ -319,7 +319,14 @@ void MCMacPlatformUnlockMenuSelect(void)
 	// Otherwise, we lock menuSelect firing, and propagate a keydown/keyup.
 	BOOL t_key_equiv;
 	MCMacPlatformLockMenuSelect();
-	t_key_equiv = [super performKeyEquivalent: event];
+    
+    // SN-2014-09-30: [[ Bug 13510 ]] We don't want to fire the Cmd+Q key equivalent, which
+    // would call applicationShouldTerminate.
+    if ([[event characters] compare:@"q" options:NSCaseInsensitiveSearch] != NSOrderedSame)
+        t_key_equiv = [super performKeyEquivalent: event];
+    else
+        t_key_equiv = YES;
+    
 	MCMacPlatformUnlockMenuSelect();
 	
     BOOL t_force_keypress;
