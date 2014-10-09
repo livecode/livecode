@@ -346,12 +346,18 @@
 
     --
 
+    'rule' Type(-> any(Position)):
+        "any" @(-> Position)
+
     'rule' Type(-> boolean(Position)):
         "boolean" @(-> Position)
 
     'rule' Type(-> integer(Position)):
         "integer" @(-> Position)
-        
+
+    'rule' Type(-> real(Position)):
+        "real" @(-> Position)
+
     'rule' Type(-> number(Position)):
         "number" @(-> Position)
 

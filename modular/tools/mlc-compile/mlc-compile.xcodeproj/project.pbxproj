@@ -186,6 +186,11 @@
 		4DEB640419E592B7009DF2EA /* syntax.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = syntax.c; path = src/_GG_/syntax.c; sourceTree = "<group>"; };
 		4DEB640919E6822E009DF2EA /* syntax-gen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "syntax-gen.c"; path = "src/syntax-gen.c"; sourceTree = SOURCE_ROOT; };
 		4DEB640E19E69E50009DF2EA /* COMMENTS.b */ = {isa = PBXFileReference; lastKnownFileType = text; name = COMMENTS.b; path = src/COMMENTS.b; sourceTree = SOURCE_ROOT; };
+		4DEB641919E6C74B009DF2EA /* arithmetic.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = arithmetic.mlc; path = ../../library/src/arithmetic.mlc; sourceTree = "<group>"; };
+		4DEB641A19E6C74B009DF2EA /* bitwise.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = bitwise.mlc; path = ../../library/src/bitwise.mlc; sourceTree = "<group>"; };
+		4DEB641B19E6C74B009DF2EA /* logic.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = logic.mlc; path = ../../library/src/logic.mlc; sourceTree = "<group>"; };
+		4DEB641C19E6C74B009DF2EA /* math-foundation.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "math-foundation.mlc"; path = "../../library/src/math-foundation.mlc"; sourceTree = "<group>"; };
+		4DEB641D19E6C74B009DF2EA /* type.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = type.mlc; path = ../../library/src/type.mlc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +225,11 @@
 		4D3AA12719D311C900886BE7 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				4DEB641919E6C74B009DF2EA /* arithmetic.mlc */,
+				4DEB641A19E6C74B009DF2EA /* bitwise.mlc */,
+				4DEB641B19E6C74B009DF2EA /* logic.mlc */,
+				4DEB641C19E6C74B009DF2EA /* math-foundation.mlc */,
+				4DEB641D19E6C74B009DF2EA /* type.mlc */,
 				4D21B64119E4354C00B64BEF /* linechunk.mlc */,
 				4D21B64219E4354C00B64BEF /* binary.mlc */,
 				4D21B64319E4354C00B64BEF /* charchunk.mlc */,

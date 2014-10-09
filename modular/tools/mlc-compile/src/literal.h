@@ -9,9 +9,9 @@ void FinalizeLiterals(void);
 void MakeIntegerLiteral(const char *token, long *r_literal);
 void MakeDoubleLiteral(const char *token, long *r_literal);
 void MakeStringLiteral(const char *token, long *r_literal);
-void MakeNameLiteral(const char *token, long *r_literal);
+void MakeNameLiteral(const char *token, NameRef *r_literal);
 
-void GetStringOfNameLiteral(long literal, const char** r_string);
+void GetStringOfNameLiteral(NameRef literal, const char** r_string);
 
 void InitializeScopes(void);
 void FinalizeScopes(void);
@@ -19,9 +19,9 @@ void FinalizeScopes(void);
 void EnterScope(void);
 void LeaveScope(void);
 
-void DefineMeaning(long name, long meaning);
-void UndefineMeaning(long name);
-int HasLocalMeaning(long name, long *r_meaning);
-int HasMeaning(long name, long *r_meaning);
+void DefineMeaning(NameRef name, long meaning);
+void UndefineMeaning(NameRef name);
+int HasLocalMeaning(NameRef name, long *r_meaning);
+int HasMeaning(NameRef name, long *r_meaning);
 
 #endif

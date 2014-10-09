@@ -71,7 +71,7 @@ void MakeStringLiteral(const char *p_token, long *r_literal)
     *r_literal = (long)t_value;
 }
 
-void MakeNameLiteral(const char *p_token, long *r_literal)
+void MakeNameLiteral(const char *p_token, NameRef *r_literal)
 {
     NameRef t_name;
     for(t_name = s_names; t_name != NULL; t_name = t_name -> next)
@@ -92,10 +92,10 @@ void MakeNameLiteral(const char *p_token, long *r_literal)
         s_names = t_name;
     }
     
-    *r_literal = (long)t_name;
+    *r_literal = t_name;
 }
 
-void GetStringOfNameLiteral(long p_literal, const char **r_string)
+void GetStringOfNameLiteral(NameRef p_literal, const char **r_string)
 {
     *r_string = ((NameRef)p_literal) -> token;
 }
@@ -160,7 +160,7 @@ void LeaveScope(void)
     FreeScope(t_scope);
 }
 
-void DefineMeaning(long p_name, long p_meaning)
+void DefineMeaning(NameRef p_name, long p_meaning)
 {
     if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
@@ -182,7 +182,7 @@ void DefineMeaning(long p_name, long p_meaning)
     t_binding -> has_meaning = 1;
 }
 
-void UndefineMeaning(long p_name)
+void UndefineMeaning(NameRef p_name)
 {
     if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
@@ -195,7 +195,7 @@ void UndefineMeaning(long p_name)
     }
 }
 
-int HasLocalMeaning(long p_name, long *r_meaning)
+int HasLocalMeaning(NameRef p_name, long *r_meaning)
 {
     if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
@@ -211,7 +211,7 @@ int HasLocalMeaning(long p_name, long *r_meaning)
     return 0;
 }
 
-int HasMeaning(long p_name, long *r_meaning)
+int HasMeaning(NameRef p_name, long *r_meaning)
 {
     if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when checking for meaning");

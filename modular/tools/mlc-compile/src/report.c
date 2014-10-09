@@ -59,7 +59,7 @@ void Error_MalformedSyntax(long p_position)
     s_error_count += 1;
 }
 
-void Error_IdentifierPreviouslyDeclared(long p_position, long p_name, long p_previous_position)
+void Error_IdentifierPreviouslyDeclared(long p_position, NameRef p_name, long p_previous_position)
 {
     long t_row, t_column;
     GetColumnOfPosition(p_position, &t_column);
@@ -69,7 +69,7 @@ void Error_IdentifierPreviouslyDeclared(long p_position, long p_name, long p_pre
     s_error_count += 1;
 }
 
-void Error_IdentifierNotDeclared(long p_position, long p_name)
+void Error_IdentifierNotDeclared(long p_position, NameRef p_name)
 {
     long t_row, t_column;
     GetColumnOfPosition(p_position, &t_column);
@@ -81,7 +81,7 @@ void Error_IdentifierNotDeclared(long p_position, long p_name)
     s_error_count += 1;
 }
 
-void Error_InvalidNameForSyntaxMarkVariable(long p_position, long p_name)
+void Error_InvalidNameForSyntaxMarkVariable(long p_position, NameRef p_name)
 {
     long t_row, t_column;
     GetColumnOfPosition(p_position, &t_column);
@@ -103,7 +103,7 @@ void Error_SyntaxMarkVariableNotAllowedInDelimiter(long p_position)
     s_error_count += 1;
 }
 
-void Error_SyntaxMarkVariableAlreadyDefined(long p_position, long p_name)
+void Error_SyntaxMarkVariableAlreadyDefined(long p_position, NameRef p_name)
 {
     long t_row, t_column;
     GetColumnOfPosition(p_position, &t_column);
