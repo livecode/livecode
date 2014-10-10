@@ -1,17 +1,105 @@
+/*  
+This module specifies the syntax definitions and bindings for bitwise operations on integers in modular LiveCode.
+*/
+
 module com.livecode.bitwise
 
-foreign handler EvalBitAnd(in Left as integer, in Right as integer, out Value as integer)
-foreign handler EvalBitOr(in Left as integer, in Right as integer, out Value as integer)
-foreign handler EvalBitNot(in Operand as integer, out Value as integer)
-foreign handler EvalBitXor(in Left as integer, in Right as integer, out Value as integer)
+foreign handler EvalBitwiseAnd(in Left as integer, in Right as integer, out Value as integer)
+foreign handler EvalBitwiseOr(in Left as integer, in Right as integer, out Value as integer)
+foreign handler EvalBitwiseNot(in Operand as integer, out Value as integer)
+foreign handler EvalBitwiseXor(in Left as integer, in Right as integer, out Value as integer)
 
-foreign handler EvalBitShift(in Left as integer, in Right as integer, out Value as integer)
+foreign handler EvalBitwiseShift(in Target as integer, in Shift as uint, in IsRight as bool, out Value as integer)
+
 --
 
-syntax BitwiseAnd is left binary operator with precedence 1
-    <Left: Expression> "bit" "and" <Right: Expression>
+/*
+Summary:        Performs a bitwise AND operation on the binary representations of <Left> and <Right>.
+
+Left:           An expression which evaluates to an integer.
+Right:          An expression which evaluates to an integer.
+output:         The integer whose binary representation is the result of the bitwise AND operation
+                on the binary representations of <Left> and <Right> - i.e each bit of the result is 
+                1 if and only if the corresponding bit of <Left> and of <Right> is 1. Otherwise it is 0.
+
+*/
+
+syntax BitwiseAnd is neutral binary operator with precedence 2
+    <Left: Expression> "bitwise" "and" <Right: Expression>
 begin
-    EvalBitAnd(Left, Right, output)
+    EvalBitwiseAnd(Left, Right, output)
+end syntax
+
+/*
+Summary:        Performs a bitwise OR operation on the binary representations of <Left> and <Right>.
+
+Left:           An expression which evaluates to an integer.
+Right:          An expression which evaluates to an integer.
+output:         The integer whose binary representation is the result of the bitwise OR operation
+                on the binary representations of <Left> and <Right> - i.e each bit of the result is 
+                0 if and only if the corresponding bit of <Left> and of <Right> is 0. Otherwise it is 1.
+
+*/
+
+syntax BitwiseOr is neutral binary operator with precedence 4
+    <Left: Expression> "bitwise" "or" <Right: Expression>
+begin
+    EvalBitwiseOr(Left, Right, output)
+end syntax
+
+/*
+Summary:        Performs a bitwise XOR operation on the binary representations of <Left> and <Right>.
+
+Left:           An expression which evaluates to an integer.
+Right:          An expression which evaluates to an integer.
+output:         The integer whose binary representation is the result of the bitwise XOR operation
+                on the binary representations of <Left> and <Right> - i.e each bit of the result is 
+                1 if and only if exactly one of the corresponding bits of <Left> and <Right> is 1. Otherwise 
+                it is 0.
+
+*/
+
+syntax BitwiseXor is neutral binary operator with precedence 3
+    <Left: Expression> "bitwise" "xor" <Right: Expression>
+begin
+    EvalBitwiseXor(Left, Right, output)
+end syntax
+
+/*
+Summary:        Performs a bitwise NOT operation on the binary representation of <Operand>.
+
+Operand:        An expression which evaluates to an integer.
+output:         The integer whose binary representation is the result of the bitwise NOT operation
+                on the binary representation of <Operand> - i.e each bit of the result is 0 if and 
+                only if the corresponding bit of <Operand> is 1. Otherwise it is 1.
+
+*/
+
+syntax BitwiseNot is prefix operator with precedence 1
+    "bitwise" "not" <Operand: Expression>
+begin
+    EvalBitwiseNot(Operand, output)
+end syntax
+
+--
+
+/*
+Summmary:       Shifts the bits of <Operand> left or right.
+
+Operand:        An expression which evaluates to an integer.
+Shift:          An expression which evaluates to an integer.
+output:         The integer whose binary representation is the result of shifting the bits of the 
+                binary representation of <Operand> by <Shift> places left or right.
+
+*/
+
+// Do we want right shifting? Could turn integer to real.
+// Likewise left shifting might produce something too big for an integer.
+
+syntax BitwiseShift is postfix operator with precedence 1
+    <Operand: Expression> "shifted" ["left" <IsRight=false> | "right" <IsRight=true>] "by" <Shift: Expression>
+begin
+    EvalBitwiseShift(Operand, Shift, IsRight, output)
 end syntax
 
 --

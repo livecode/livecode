@@ -1,5 +1,5 @@
 
-#include "foundation.h"
+#include <foundation.h>
 
 void MCTypeEvalBoolAsString(bool p_target, MCStringRef& r_output)
 {
