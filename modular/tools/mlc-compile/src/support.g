@@ -78,8 +78,24 @@
     Error_IdentifierPreviouslyDeclared
     Error_IdentifierNotDeclared
     Error_InvalidNameForSyntaxMarkVariable
-    Error_SyntaxMarkVariableNotAllowedInDelimiter
     Error_SyntaxMarkVariableAlreadyDefined
+    Error_ExpressionSyntaxCannotStartWithExpression
+    Error_ExpressionSyntaxCannotFinishWithExpression
+    Error_PrefixSyntaxCannotStartWithExpression
+    Error_PrefixSyntaxMustFinishWithExpression
+    Error_PostfixSyntaxMustStartWithExpression
+    Error_PostfixSyntaxCannotFinishWithExpression
+    Error_BinarySyntaxMustStartWithExpression
+    Error_BinarySyntaxMustFinishWithExpression
+    Error_ElementSyntaxCannotBeNullable
+    Error_OnlyKeywordsAllowedInDelimiterSyntax
+    Error_OptionalSyntaxCannotContainOnlyMarks
+    Error_SyntaxMarksMustBeConstant
+    Error_NotBoundToAType
+    Error_NotBoundToAPhrase
+    Error_NotBoundToASyntaxRule
+    Error_NotBoundToASyntaxMark
+    Error_NotBoundToAHandler
 
 --------------------------------------------------------------------------------
 
@@ -181,7 +197,25 @@
 'action' Error_IdentifierPreviouslyDeclared(Position: POS, Identifier: NAME, PreviousPosition: POS)
 'action' Error_IdentifierNotDeclared(Position: POS, Identifier: NAME)
 'action' Error_InvalidNameForSyntaxMarkVariable(Position: POS, Name: NAME)
-'action' Error_SyntaxMarkVariableNotAllowedInDelimiter(Position: POS)
 'action' Error_SyntaxMarkVariableAlreadyDefined(Position: POS, Name: NAME)
+
+'action' Error_ExpressionSyntaxCannotStartWithExpression(Position: POS)
+'action' Error_ExpressionSyntaxCannotFinishWithExpression(Position: POS)
+'action' Error_PrefixSyntaxCannotStartWithExpression(Position: POS)
+'action' Error_PrefixSyntaxMustFinishWithExpression(Position: POS)
+'action' Error_PostfixSyntaxMustStartWithExpression(Position: POS)
+'action' Error_PostfixSyntaxCannotFinishWithExpression(Position: POS)
+'action' Error_BinarySyntaxMustStartWithExpression(Position: POS)
+'action' Error_BinarySyntaxMustFinishWithExpression(Position: POS)
+'action' Error_ElementSyntaxCannotBeNullable(Position: POS)
+'action' Error_OnlyKeywordsAllowedInDelimiterSyntax(Position: POS)
+'action' Error_OptionalSyntaxCannotContainOnlyMarks(Position: POS)
+'action' Error_SyntaxMarksMustBeConstant(Position: POS)
+
+'action' Error_NotBoundToAType(Position: POS, Name: NAME)
+'action' Error_NotBoundToAPhrase(Position: POS, Name: NAME)
+'action' Error_NotBoundToASyntaxRule(Position: POS, Name: NAME)
+'action' Error_NotBoundToASyntaxMark(Position: POS, Name: NAME)
+'action' Error_NotBoundToAHandler(Position:  POS, Name: NAME)
 
 --------------------------------------------------------------------------------

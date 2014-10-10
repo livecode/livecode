@@ -11,7 +11,7 @@
     PARAMETER MODE PARAMETERLIST
     STATEMENT
     EXPRESSION EXPRESSIONLIST
-    SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST
+    SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST SYNTAXTERM
     ID IDLIST
     MEANING
     NAME DOUBLE
@@ -137,6 +137,13 @@
     string(Position: POS, Value: STRING)
     name(Position: POS, Value: ID)
 
+'type' SYNTAXTERM
+    error
+    mark
+    expression
+    keyword
+    mixed
+
 'type' IDLIST
     idlist(Head: ID, Tail: IDLIST)
     nil
@@ -150,11 +157,13 @@
     property
     event
     parameter
-    syntaxrule(Class: SYNTAXCLASS)
+    syntaxrule(Class: SYNTAXCLASS, Syntax: SYNTAX)
     syntaxmark(Index: INT)
+    syntaxexpressionrule
     syntaxoutputmark
     syntaxinputmark
     syntaxcontextmark
+    error
     nil
 
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)

@@ -111,8 +111,8 @@
     'rule' Define(event(Position, _, Name)):
         DefineId(Name, event)
     
-    'rule' Define(syntax(Position, _, Name, Class, _, _)):
-        DefineId(Name, syntaxrule(Class))
+    'rule' Define(syntax(Position, _, Name, Class, Syntax, _)):
+        DefineId(Name, syntaxrule(Class, Syntax))
     
     'rule' Define(nil):
         -- do nothing
@@ -233,6 +233,7 @@
         Id'Name -> Name
         Id'Position -> Position
         Error_IdentifierNotDeclared(Position, Name)
+        Id'Meaning <- error
 
 'action' ApplyLocalId(ID)
 
@@ -245,6 +246,7 @@
         Id'Name -> Name
         Id'Position -> Position
         Error_IdentifierNotDeclared(Position, Name)
+        Id'Meaning <- error
 
 'action' ApplySyntaxMarkId(ID)
 
@@ -288,7 +290,7 @@
         InputSyntaxMarkIdVar <- Id2
         MakePredefinedId("context", syntaxcontextmark -> Id3)
         ContextSyntaxMarkIdVar <- Id3
-        MakePredefinedId("Expression", syntaxrule(expression) -> Id4)
+        MakePredefinedId("Expression", syntaxexpressionrule -> Id4)
         ExpressionSyntaxRuleIdVar <- Id4
 
 'action' DeclarePredefinedIds
