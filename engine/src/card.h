@@ -87,6 +87,8 @@ public:
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 	virtual void recompute();
 	
+    virtual void toolchanged(Tool p_new_tool);
+    
 	// MW-2011-09-20: [[ Collision ]] Compute shape of card.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);

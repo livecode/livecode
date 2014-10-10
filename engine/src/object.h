@@ -335,6 +335,9 @@ public:
 	virtual void closemenu(Boolean kfocus, Boolean disarm);
 	virtual void recompute();
 	
+    // FG-2014-10-10: [[ Native Widgets ]] Informs the object that the selected tool has changed
+    virtual void toolchanged(Tool p_new_tool);
+    
 	// MW-2011-09-20: [[ Collision ]] Compute the shape of the object's mask.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);

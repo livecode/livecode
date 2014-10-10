@@ -1114,6 +1114,10 @@ void MCObject::recompute()
 {
 }
 
+void MCObject::toolchanged(Tool)
+{
+}
+
 const MCRectangle& MCObject::getrect(void) const
 {
 	return rect;

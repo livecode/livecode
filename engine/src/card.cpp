@@ -1484,6 +1484,20 @@ void MCCard::recompute()
 	}
 }
 
+void MCCard::toolchanged(Tool p_new_tool)
+{
+    if (objptrs != NULL)
+    {
+        MCObjptr *optr = objptrs;
+        do
+        {
+            optr->getref()->toolchanged(p_new_tool);
+            optr = optr->next();
+        }
+        while (optr != objptrs);
+    }
+}
+
 void MCCard::kfocusset(MCControl *target)
 {
 	if (objptrs != NULL)
