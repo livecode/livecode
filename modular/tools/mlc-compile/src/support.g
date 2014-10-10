@@ -40,8 +40,8 @@
     DumpSyntaxRules
     BeginStatementSyntaxRule
     BeginExpressionSyntaxRule
-    BeginLeftUnaryOperatorSyntaxRule
-    BeginRightUnaryOperatorSyntaxRule
+    BeginPrefixOperatorSyntaxRule
+    BeginPostfixOperatorSyntaxRule
     BeginLeftBinaryOperatorSyntaxRule
     BeginRightBinaryOperatorSyntaxRule
     BeginNeutralBinaryOperatorSyntaxRule
@@ -136,8 +136,8 @@
 
 'action' BeginStatementSyntaxRule(NAME)
 'action' BeginExpressionSyntaxRule(NAME)
-'action' BeginLeftUnaryOperatorSyntaxRule(NAME, INT)
-'action' BeginRightUnaryOperatorSyntaxRule(NAME, INT)
+'action' BeginPrefixOperatorSyntaxRule(NAME, INT)
+'action' BeginPostfixOperatorSyntaxRule(NAME, INT)
 'action' BeginLeftBinaryOperatorSyntaxRule(NAME, INT)
 'action' BeginRightBinaryOperatorSyntaxRule(NAME, INT)
 'action' BeginNeutralBinaryOperatorSyntaxRule(NAME, INT)

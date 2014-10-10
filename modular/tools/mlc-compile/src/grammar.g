@@ -292,8 +292,11 @@
     'rule' SyntaxClass(-> expression):
         "is" "expression"
 
-    'rule' SyntaxClass(-> unary(Assoc, Precedence)):
-        "is" SyntaxAssoc(-> Assoc) "unary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+    'rule' SyntaxClass(-> prefix(Precedence)):
+        "is" "prefix" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+
+    'rule' SyntaxClass(-> postfix(Precedence)):
+        "is" "postfix" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
 
     'rule' SyntaxClass(-> binary(Assoc, Precedence)):
         "is" SyntaxAssoc(-> Assoc) "binary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)

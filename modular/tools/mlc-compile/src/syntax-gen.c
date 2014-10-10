@@ -87,8 +87,8 @@ enum SyntaxRuleKind
     kSyntaxRuleKindFragment,
     kSyntaxRuleKindStatement,
     kSyntaxRuleKindExpression,
-    kSyntaxRuleKindLeftUnaryOperator,
-    kSyntaxRuleKindRightUnaryOperator,
+    kSyntaxRuleKindPrefixOperator,
+    kSyntaxRuleKindPostfixOperator,
     kSyntaxRuleKindLeftBinaryOperator,
     kSyntaxRuleKindRightBinaryOperator,
     kSyntaxRuleKindNeutralBinaryOperator,
@@ -165,14 +165,14 @@ void BeginExpressionSyntaxRule(NameRef p_name)
     BeginSyntaxRule(p_name, kSyntaxRuleKindExpression, 0);
 }
 
-void BeginLeftUnaryOperatorSyntaxRule(NameRef p_name, long p_precedence)
+void BeginPrefixOperatorSyntaxRule(NameRef p_name, long p_precedence)
 {
-    BeginSyntaxRule(p_name, kSyntaxRuleKindLeftUnaryOperator, p_precedence);
+    BeginSyntaxRule(p_name, kSyntaxRuleKindPrefixOperator, p_precedence);
 }
 
-void BeginRightUnaryOperatorSyntaxRule(NameRef p_name, long p_precedence)
+void BeginPostfixOperatorSyntaxRule(NameRef p_name, long p_precedence)
 {
-    BeginSyntaxRule(p_name, kSyntaxRuleKindRightUnaryOperator, p_precedence);
+    BeginSyntaxRule(p_name, kSyntaxRuleKindPostfixOperator, p_precedence);
 }
 
 void BeginLeftBinaryOperatorSyntaxRule(NameRef p_name, long p_precedence)
@@ -588,7 +588,7 @@ static void TrimSyntaxNodeForOperator(SyntaxNodeRef p_node, SyntaxRuleKind p_kin
     if (p_kind == kSyntaxRuleKindLeftBinaryOperator ||
         p_kind == kSyntaxRuleKindRightBinaryOperator ||
         p_kind == kSyntaxRuleKindNeutralBinaryOperator ||
-        p_kind == kSyntaxRuleKindLeftUnaryOperator)
+        p_kind == kSyntaxRuleKindPostfixOperator)
         t_remove_left = 1;
     
     int t_remove_right;
@@ -596,7 +596,7 @@ static void TrimSyntaxNodeForOperator(SyntaxNodeRef p_node, SyntaxRuleKind p_kin
     if (p_kind == kSyntaxRuleKindLeftBinaryOperator ||
         p_kind == kSyntaxRuleKindRightBinaryOperator ||
         p_kind == kSyntaxRuleKindNeutralBinaryOperator ||
-        p_kind == kSyntaxRuleKindRightUnaryOperator)
+        p_kind == kSyntaxRuleKindPrefixOperator)
         t_remove_right = 1;
     
     if (t_remove_left)
@@ -616,7 +616,7 @@ void EndSyntaxGrammar(void)
     assert(s_rule != NULL);
     assert(s_stack_index == 1);
 
-    if (s_rule -> kind >= kSyntaxRuleKindLeftUnaryOperator)
+    if (s_rule -> kind >= kSyntaxRuleKindPrefixOperator)
         TrimSyntaxNodeForOperator(s_stack[0], s_rule -> kind);
     
     s_rule -> expr = s_stack[0];
@@ -1190,7 +1190,8 @@ void GenerateSyntaxRules(void)
     GenerateUmbrellaSyntaxRule("CustomTerms", kSyntaxRuleKindExpression, kSyntaxRuleKindExpression);
     GenerateUmbrellaSyntaxRule("CustomStatements", kSyntaxRuleKindStatement, kSyntaxRuleKindStatement);
     GenerateUmbrellaSyntaxRule("CustomBinaryOperators", kSyntaxRuleKindLeftBinaryOperator, kSyntaxRuleKindNeutralBinaryOperator);
-    GenerateUmbrellaSyntaxRule("CustomUnaryOperators", kSyntaxRuleKindLeftUnaryOperator, kSyntaxRuleKindRightUnaryOperator);
+    GenerateUmbrellaSyntaxRule("CustomPrefixOperators", kSyntaxRuleKindPrefixOperator, kSyntaxRuleKindPrefixOperator);
+    GenerateUmbrellaSyntaxRule("CustomPostfixOperators", kSyntaxRuleKindPostfixOperator, kSyntaxRuleKindPostfixOperator);
 }
 
 void DumpSyntaxRules(void)

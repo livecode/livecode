@@ -27,7 +27,7 @@ output:     Returns the converted value if there is a valid conversion from the 
 Example:    put true as string into tVar // tVar contains the string "true"
 */
 
-syntax AsString is left unary operator with precedence 1
+syntax AsString is postfix operator with precedence 1
 	<Target: Expression> "as" "string"
 begin
 	EvalBoolAsString(Target, output)
@@ -43,7 +43,7 @@ Target:     An expression that evaluates to an integer, or a string
 Example:    put "8.0" as real into tVar // tVar contains the real number 8.0
 */
 
-syntax AsReal is left unary operator with precedence 1
+syntax AsReal is postfix operator with precedence 1
 	<Target: Expression> "as" "real"
 begin
 	EvalIntAsReal(Target, output)
@@ -58,7 +58,7 @@ Target:     An expression that evaluates to a string.
 Example:    put "8" as integer into tVar // tVar contains the integer 8
 */
 
-syntax AsInt is left unary operator with precedence 1
+syntax AsInt is postfix operator with precedence 1
 	<Target: Expression> "as" "int"
 begin
 	EvalStringAsInt(Target, output)
@@ -72,7 +72,7 @@ Target:     An expression that evaluates to a string.
 Example:    put "true" as bool into tVar // tVar contains the boolean value true
 */
 
-syntax AsBool is left unary operator with precedence 1
+syntax AsBool is postfix operator with precedence 1
 	<Target: Expression> "as" "bool"
 begin
 	EvalStringAsBool(Target, output)
@@ -89,7 +89,7 @@ output:     Returns true if the given expression <Target> evaluates to the empty
 
 */
 
-syntax IsEmpty is left unary operator with precedence 1
+syntax IsEmpty is postfix operator with precedence 1
 	<Target: Expression> "is" ["not" <IsNot=true>] "empty"
 begin
 	EvalIsEmpty(Target, IsNot)
@@ -106,7 +106,7 @@ output:     Returns true if the given expression <Target> is defined.
 
 */
 
-syntax IsDefined is left unary operator with precedence 1
+syntax IsDefined is postfix operator with precedence 1
 	<Target: Expression> "is" ["not" <IsNot=true>] "defined"
 begin
 	EvalIsDefined(Target, IsNot)
@@ -126,7 +126,7 @@ output:     Returns true if the result of evaluating <Left> is the same as that 
 
 */
 
-syntax IsEqualTo is left binary operator with precedence 1
+syntax IsEqualTo is neutral binary operator with precedence 1
 	<Left: Expression> "is" ["not" <IsNot=true>] <Right: Expression>
 begin
 	EvalIsEqualTo(Left, Right, IsNot)

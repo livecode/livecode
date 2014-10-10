@@ -16,6 +16,18 @@
 
 --------------------------------------------------------------------------------
 
+-- The syntax clauses have the following rules:
+--   1) Mark variables can be used only once on any concrete path through the
+--      syntax.
+--   2) Mark variables cannot have the name 'output', 'input', 'context' or
+--      'error'.
+--   4) The methods referenced in the mapping section must exist.
+--   5) A signature of a method referenced must match the derived signature
+--      of the parameters specified for it.
+--   6) A binary operator must start with an Expression and end with an
+--      Expression.
+--   7) A left unary operator
+
 'sweep' CheckSyntax(ANY)
 
     'rule' CheckSyntax(DEFINITION'syntax(_, _, _, _, Syntax, Methods)):

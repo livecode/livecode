@@ -27,11 +27,11 @@
             where(Class -> expression)
             BeginExpressionSyntaxRule(Name)
         ||
-            where(Class -> unary(left, Precedence))
-            BeginLeftUnaryOperatorSyntaxRule(Name, Precedence)
+            where(Class -> prefix(Precedence))
+            BeginPrefixOperatorSyntaxRule(Name, Precedence)
         ||
-            where(Class -> unary(right, Precedence))
-            BeginRightUnaryOperatorSyntaxRule(Name, Precedence)
+            where(Class -> postfix(Precedence))
+            BeginPostfixOperatorSyntaxRule(Name, Precedence)
         ||
             where(Class -> binary(left, Precedence))
             BeginLeftBinaryOperatorSyntaxRule(Name, Precedence)

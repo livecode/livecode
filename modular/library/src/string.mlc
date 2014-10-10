@@ -118,7 +118,7 @@ output:             Returns true if the characters in <Prefix> occur at the star
                     modulo the contextual string options of the current handler.
 */
 
-syntax BeginsWithString is left unary operator with precedence 1
+syntax BeginsWithString is left binary operator with precedence 1
     <Source: Expression> "begins" "with" <Prefix: Expression>
 begin
     EvalBeginsWith(Source, Prefix, output)
@@ -133,7 +133,7 @@ output:             Returns true if the characters in <Prefix> occur at the end 
 */
 
 
-syntax EndsWithString is left unary operator with precedence 1
+syntax EndsWithString is left binary operator with precedence 1
     <Source: Expression> "ends" "with" <Suffix: Expression>
 begin
     EvalEndsWith(Source, Suffix, output)
@@ -148,7 +148,7 @@ output:
 */
 
 
-syntax UppercaseString is left unary operator with precedence 1
+syntax UppercaseString is prefix operator with precedence 1
     "the" "upper" "of" <Source: Expression>
 begin
     EvalUppercaseOf(Source, output)
@@ -161,7 +161,7 @@ output:
 */
 
 
-syntax LowercaseString is left unary operator with precedence 1
+syntax LowercaseString is prefix operator with precedence 1
     "the" "lower" "of" <Source: Expression>
 begin
     EvalLowercaseOf(Source, output)
@@ -181,7 +181,7 @@ output:             Returns the number of chars between the first char of <Targe
 
 */
 
-syntax OffsetOfString is left unary operator with precedence 1
+syntax OffsetOfString is prefix operator with precedence 1
     "the" "offset" "of" <Needle: Expression> "in" <Source: Expression>
 begin
     EvalOffset(Needle, Source, output)
@@ -200,7 +200,7 @@ output:             Returns the number of chars between the first char of <Targe
                     
 */
 
-syntax OffsetOfStringAfter is left unary operator with precedence 1
+syntax OffsetOfStringAfter is prefix operator with precedence 1
     "the" "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Source: Expression>
 begin
     EvalOffsetAfter(Needle, After, Source, output)
@@ -218,7 +218,7 @@ output:             Returns the number of chars between the first char of <Targe
 
 */
 
-syntax LastOffsetOfString is left unary operator with precedence 1
+syntax LastOffsetOfString is prefix operator with precedence 1
     "the" "last" "offset" "of" <Needle: Expression> "in" <Source: Expression>
 begin
     EvalLastOffset(Needle, Source, output)
@@ -237,7 +237,7 @@ output:             Returns the number of chars between the first char of <Targe
 
 */
 
-syntax LastOffsetOfStringBefore is left unary operator with precedence 1
+syntax LastOffsetOfStringBefore is prefix operator with precedence 1
     "the" "last" "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Source: Expression>
 begin
     EvalLastOffsetBefore(Needle, Before, Source, output)

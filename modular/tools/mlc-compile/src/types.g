@@ -116,7 +116,8 @@
     phrase
     statement
     expression
-    unary(Assoc: SYNTAXASSOC, Precedence: INT)
+    prefix(Precedence: INT)
+    postfix(Precedence: INT)
     binary(Assoc: SYNTAXASSOC, Precedence: INT)
 
 'type' SYNTAXASSOC
