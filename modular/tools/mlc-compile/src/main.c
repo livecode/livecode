@@ -27,7 +27,14 @@ void bootstrap_main(int argc, char *argv[])
     s_is_bootstrap = 1;
     
     for(int i = 0; i < argc; i++)
-        AddFile(argv[i]);
+    {
+        if (strcmp(argv[i], "-template") == 0 && i + 1 < argc)
+           SetTemplateFile(argv[++i]);
+        else if (strcmp(argv[i], "-output") == 0 && i + 1 < argc)
+            SetOutputFile(argv[++i]);
+        else
+            AddFile(argv[i]);
+    }
     
     if (MoveToNextFile())
         ROOT();

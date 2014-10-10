@@ -11,6 +11,7 @@
     AdvanceCurrentPosition
     AdvanceCurrentPositionToNextLine
     GetColumnOfCurrentPosition
+    GetUndefinedPosition
 
     InitializeLiterals
     FinalizeLiterals
@@ -37,6 +38,7 @@
     IncludeIndexInSet
     ExcludeIndexFromSet
 
+    GenerateSyntaxRules
     DumpSyntaxRules
     BeginStatementSyntaxRule
     BeginExpressionSyntaxRule
@@ -111,6 +113,8 @@
 
 'action' GetColumnOfCurrentPosition(Position: POS -> Column: INT)
 
+'action' GetUndefinedPosition(-> Position: POS)
+
 --------------------------------------------------------------------------------
 
 'action' InitializeLiterals()
@@ -149,6 +153,8 @@
 --------------------------------------------------------------------------------
 
 'action' DumpSyntaxRules()
+
+'action' GenerateSyntaxRules()
 
 'action' BeginStatementSyntaxRule(NAME)
 'action' BeginExpressionSyntaxRule(NAME)

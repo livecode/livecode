@@ -34,6 +34,8 @@
 		4DEB640819E592B7009DF2EA /* syntax.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB640419E592B7009DF2EA /* syntax.c */; };
 		4DEB640A19E6822E009DF2EA /* syntax-gen.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB640919E6822E009DF2EA /* syntax-gen.c */; };
 		4DEB640B19E6822E009DF2EA /* syntax-gen.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB640919E6822E009DF2EA /* syntax-gen.c */; };
+		4DEB642819E81D95009DF2EA /* operator.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB642719E81D95009DF2EA /* operator.c */; };
+		4DEB642919E81D95009DF2EA /* operator.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DEB642719E81D95009DF2EA /* operator.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -194,6 +196,7 @@
 		4DEB641B19E6C74B009DF2EA /* logic.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = logic.mlc; path = ../../library/src/logic.mlc; sourceTree = "<group>"; };
 		4DEB641C19E6C74B009DF2EA /* math-foundation.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "math-foundation.mlc"; path = "../../library/src/math-foundation.mlc"; sourceTree = "<group>"; };
 		4DEB641D19E6C74B009DF2EA /* type.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = type.mlc; path = ../../library/src/type.mlc; sourceTree = "<group>"; };
+		4DEB642719E81D95009DF2EA /* operator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = operator.c; path = src/operator.c; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -296,6 +299,7 @@
 				4DEB63ED19E5220E009DF2EA /* report.h */,
 				4DEB63FF19E58CBB009DF2EA /* set.c */,
 				4DEB640919E6822E009DF2EA /* syntax-gen.c */,
+				4DEB642719E81D95009DF2EA /* operator.c */,
 			);
 			name = Sources;
 			path = "mlc-compile";
@@ -615,6 +619,7 @@
 				4D21B66119E43BE100B64BEF /* main.c in Sources */,
 				4DEB640B19E6822E009DF2EA /* syntax-gen.c in Sources */,
 				4DA53A2A19E4435D0089FBDC /* types.c in Sources */,
+				4DEB642919E81D95009DF2EA /* operator.c in Sources */,
 				4DA53A3119E449990089FBDC /* bind.c in Sources */,
 				4DA53A2719E4435D0089FBDC /* gen.l in Sources */,
 				4DEB63F019E525F2009DF2EA /* literal.c in Sources */,
@@ -633,6 +638,7 @@
 				4DEB640019E58CBB009DF2EA /* set.c in Sources */,
 				4DA53A2E19E446580089FBDC /* grammar_full.c in Sources */,
 				4D3AA08819CC3EEF00886BE7 /* gen.y in Sources */,
+				4DEB642819E81D95009DF2EA /* operator.c in Sources */,
 				4DA53A3319E449DD0089FBDC /* bind.c in Sources */,
 				4D3AA09C19CC499100886BE7 /* gen.l in Sources */,
 				4DEB63EF19E525F2009DF2EA /* literal.c in Sources */,

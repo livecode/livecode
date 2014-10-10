@@ -71,6 +71,11 @@ void GetCurrentPosition(long *r_result)
     *r_result = s_current_position;
 }
 
+void GetUndefinedPosition(long *r_result)
+{
+    *r_result = -1;
+}
+
 void yyGetPos(long *r_result)
 {
     GetCurrentPosition(r_result);
@@ -90,6 +95,8 @@ struct File
 static FileRef s_files;
 static FileRef s_current_file;
 static unsigned int s_next_file_index;
+static const char *s_template_file = NULL;
+static const char *s_output_file = NULL;
 
 void InitializeFiles(void)
 {
@@ -193,6 +200,26 @@ int GetCurrentFile(FileRef *r_file)
     *r_file = s_current_file;
 
     return 1;
+}
+
+void SetOutputFile(const char *p_output)
+{
+    s_output_file = p_output;
+}
+
+void SetTemplateFile(const char *p_output)
+{
+    s_template_file = p_output;
+}
+
+FILE *OpenOutputFile(void)
+{
+    return fopen(s_output_file, "w");
+}
+
+FILE *OpenTemplateFile(void)
+{
+    return fopen(s_template_file, "r");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

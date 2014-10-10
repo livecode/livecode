@@ -29,7 +29,7 @@
             ErrorsDidOccur()
         ||
             GenerateSyntaxForModules(Modules)
-            DumpSyntaxRules()
+            GenerateSyntaxRules()
         |)
 
 'action' BindModules(MODULELIST)
@@ -405,15 +405,119 @@
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) ExpressionList(-> Arguments)
+        
+    'rule' Statement(-> Statement):
+        CustomStatements(-> Statement)
 
 --------------------------------------------------------------------------------
 -- Expression Syntax
 --------------------------------------------------------------------------------
 
+'action' ReorderOperatorExpression
+'condition' PopOperatorExpression(-> Position: POS, Method: INT, Arity: INT)
+'action' PopOperatorExpressionArgument(-> EXPRESSION)
+
+'action' PushOperatorExpressionPrefix(Position: POS, Precedence: INT, Method: INT)
+'action' PushOperatorExpressionPostfix(Position: POS, Precedence: INT, Method: INT)
+'action' PushOperatorExpressionLeftBinary(Position: POS, Precedence: INT, Method: INT)
+'action' PushOperatorExpressionRightBinary(Position: POS, Precedence: INT, Method: INT)
+'action' PushOperatorExpressionNeutralBinary(Position: POS, Precedence: INT, Method: INT)
+'action' PushOperatorExpressionArgument(Operand: EXPRESSION)
+'action' PushOperatorExpressionOperand(Argument: EXPRESSION)
+
+'action' ProcessOperatorExpression(-> EXPRESSION)
+
+    'rule' ProcessOperatorExpression(-> invoke(Position, Method, Arguments)):
+        PopOperatorExpression(-> Position, Method, Arity)
+        ProcessOperatorExpressionChildren(Arity -> Arguments)
+
+    'rule' ProcessOperatorExpression(-> Expr):
+        PopOperatorExpressionArgument(-> Expr)
+        
+'action' ProcessOperatorExpressionChildren(INT -> EXPRESSIONLIST)
+
+    'rule' ProcessOperatorExpressionChildren(Arity -> nil):
+        eq(Arity, 0)
+
+    'rule' ProcessOperatorExpressionChildren(Arity -> expressionlist(Head, Tail)):
+        ProcessOperatorExpression(-> Head)
+        ProcessOperatorExpressionChildren(Arity - 1 -> Tail)
+
 'nonterm' Expression(-> EXPRESSION)
 
-    'rule' Expression(-> integer(Position, Value)):
+    'rule' Expression(-> Result):
+        FlatExpression
+        ReorderOperatorExpression
+        ProcessOperatorExpression(-> Result)
+
+----------
+
+'nonterm' FlatExpression
+
+    'rule' FlatExpression:
+        FlatExpressionTerm FlatExpressionBinaryOperator FlatExpression
+        
+    'rule' FlatExpression:
+        FlatExpressionTerm
+        
+'nonterm' FlatExpressionTerm
+
+    'rule' FlatExpressionTerm:
+        FlatExpressionPrefixOperators FlatExpressionOperand FlatExpressionPostfixOperators
+        
+'nonterm' FlatExpressionPrefixOperators
+
+    'rule' FlatExpressionPrefixOperators:
+        FlatExpressionPrefixOperator FlatExpressionPrefixOperators
+        
+    'rule' FlatExpressionPrefixOperators:
+        -- nothing
+
+'nonterm' FlatExpressionPostfixOperators
+
+    'rule' FlatExpressionPostfixOperators:
+        FlatExpressionPostfixOperator FlatExpressionPostfixOperators
+        
+    'rule' FlatExpressionPostfixOperators:
+        -- nothing
+        
+'nonterm' FlatExpressionPrefixOperator
+
+    'rule' FlatExpressionPrefixOperator:
+        "+" @(-> Position)
+        PushOperatorExpressionPrefix(Position, 1, 1)
+        
+    'rule' FlatExpressionPrefixOperator:
+        CustomPrefixOperators
+
+'nonterm' FlatExpressionPostfixOperator
+
+    'rule' FlatExpressionPostfixOperator:
+        "is" @(-> Position) "foo"
+        PushOperatorExpressionPrefix(Position, 1, 2)
+
+    'rule' FlatExpressionPostfixOperator:
+        CustomPostfixOperators
+
+'nonterm' FlatExpressionBinaryOperator
+
+    'rule' FlatExpressionBinaryOperator:
+        "*" @(-> Position)
+        PushOperatorExpressionLeftBinary(Position, 1, 3)
+        
+    'rule' FlatExpressionBinaryOperator:
+        CustomBinaryOperators
+
+'nonterm' FlatExpressionOperand
+
+    'rule' FlatExpressionOperand:
         INTEGER_LITERAL(-> Value) @(-> Position)
+        PushOperatorExpressionOperand(integer(Position, Value))
+        
+    'rule' FlatExpressionOperand:
+        CustomOperands
+
+----------
 
 'nonterm' OptionalExpressionList(-> EXPRESSIONLIST)
 
@@ -571,3 +675,23 @@
 
 'token' END_OF_UNIT
 'token' NEXT_UNIT
+
+--*--*--*--*--*--*--*--
+
+'nonterm' CustomStatements(-> STATEMENT)
+    'rule' CustomStatements(-> nil):
+        "THISCANNEVERHAPPEN"
+'nonterm' CustomPostfixOperators
+    'rule' CustomPostfixOperators:
+        "THISCANNEVERHAPPEN"
+'nonterm' CustomPrefixOperators
+    'rule' CustomPrefixOperators:
+        "THISCANNEVERHAPPEN"
+'nonterm' CustomBinaryOperators
+    'rule' CustomBinaryOperators:
+        "THISCANNEVERHAPPEN"
+'nonterm' CustomOperands
+    'rule' CustomOperands:
+        "THISCANNEVERHAPPEN"
+
+

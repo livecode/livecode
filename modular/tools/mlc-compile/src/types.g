@@ -84,6 +84,7 @@
 'type' STATEMENT
     sequence(Left: STATEMENT, Right: STATEMENT)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
+    invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
     nil
     
 'type' EXPRESSIONLIST
@@ -91,7 +92,10 @@
     nil
     
 'type' EXPRESSION
+    true(Position: POS)
+    false(Position: POS)
     integer(Position: POS, Value: INT)
+    invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
     nil
 
 'type' SYNTAXMETHODLIST

@@ -1,6 +1,8 @@
 #ifndef __POSITION__
 #define __POSITION__
 
+#include <stdio.h>
+
 typedef long PositionRef;
 typedef struct File *FileRef;
 
@@ -28,5 +30,10 @@ void GetFileName(FileRef file, const char **r_name);
 void GetFileIndex(FileRef file, long *r_index);
 int GetFileWithIndex(long index, FileRef *r_file);
 int GetCurrentFile(FileRef *r_file);
+
+void SetOutputFile(const char *filename);
+void SetTemplateFile(const char *filename);
+FILE *OpenOutputFile(void);
+FILE *OpenTemplateFile(void);
 
 #endif
