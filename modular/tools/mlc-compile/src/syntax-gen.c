@@ -1152,6 +1152,23 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
     }
 }
 
+static void GenerateUmbrellaSyntaxRule(const char *p_name, SyntaxRuleKind p_first, SyntaxRuleKind p_last)
+{
+    fprintf(stderr, "'nonterm' %s(-> %s)\n", p_name, p_first == kSyntaxRuleKindStatement ? "STATEMENT" : "EXPRESSION");
+    
+    for(SyntaxRuleGroupRef t_group = s_groups; t_group != NULL; t_group = t_group -> next)
+    {
+        SyntaxRuleRef t_rule;
+        t_rule = t_group -> rules;
+
+        if (t_rule -> kind >= p_first && t_rule -> kind <= p_last)
+        {
+            fprintf(stderr, "  'rule' %s(-> Node):\n", p_name);
+            fprintf(stderr, "    CustomRule%d(-> Node)\n", t_rule -> expr -> concrete_rule);
+        }
+    }
+}
+
 void GenerateSyntaxRules(void)
 {
     int t_index;
@@ -1169,6 +1186,11 @@ void GenerateSyntaxRules(void)
 
         GenerateSyntaxRule(&t_index, t_rule -> expr, t_rule -> kind);
     }
+    
+    GenerateUmbrellaSyntaxRule("CustomTerms", kSyntaxRuleKindExpression, kSyntaxRuleKindExpression);
+    GenerateUmbrellaSyntaxRule("CustomStatements", kSyntaxRuleKindStatement, kSyntaxRuleKindStatement);
+    GenerateUmbrellaSyntaxRule("CustomBinaryOperators", kSyntaxRuleKindLeftBinaryOperator, kSyntaxRuleKindNeutralBinaryOperator);
+    GenerateUmbrellaSyntaxRule("CustomUnaryOperators", kSyntaxRuleKindLeftUnaryOperator, kSyntaxRuleKindRightUnaryOperator);
 }
 
 void DumpSyntaxRules(void)
