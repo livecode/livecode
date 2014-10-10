@@ -619,7 +619,9 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 - (void)doDismissController
 {
 	if (MCmajorosversion >= 500)
+    {
 		[MCIPhoneGetViewController() dismissViewControllerAnimated:YES completion:^(){m_finished = true;}];
+    }
 	else
         [MCIPhoneGetViewController() dismissModalViewControllerAnimated:YES];
 }
@@ -682,7 +684,9 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 	m_success = true;
 	
     if (m_pick_contact == nil)
+    {
         m_success = nil != (m_pick_contact = [[ABPeoplePickerNavigationController alloc] init]);
+    }
 	
     if (m_success)
 	{
@@ -695,7 +699,12 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 		// Show the picker
 		m_running = true;
 		
-		[MCIPhoneGetViewController() presentModalViewController:m_pick_contact animated:YES];
+        if (MCmajorosversion >= 500)
+        {
+            [MCIPhoneGetViewController() presentViewController:m_pick_contact animated:YES completion:nil];
+        }
+        else
+            [MCIPhoneGetViewController() presentModalViewController:m_pick_contact animated:YES];
 	}
 }
 
@@ -706,7 +715,9 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
     while (m_running)
 		MCscreen -> wait(1.0, False, True);
 	
-	[self dismissController];
+    // PM-2014-10-10: [[ Bug 13639 ]] On iOS 8, the ABPeoplePickerNavigationController is dismissed in peoplePickerNavigationController:didSelectPerson. If [self dismissController] is called, then the completion block of dismissViewControllerAnimated:completion:^(){} in doDismissController is never called. So m_finish never becomes true and the app freezes
+    if (MCmajorosversion < 800)
+        [self dismissController];
 	
     // Return the result
     if (m_selected_person == kABRecordInvalidID)
@@ -715,6 +726,25 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
         r_chosen = m_selected_person;
 	
 	return m_success;
+}
+
+// PM-2014-10-10: [[ Bug 13639 ]] In iOS 8, this is the replacement for peoplePickerNavigationController:shouldContinueAfterSelectingPerson
+// Called after a person has been selected by the user. It seems that it is also dismissing the ABPeoplePickerNavigationController (m_pick_contact), so we should not call [self dismissController] in showPickContact.
+- (void)peoplePickerNavigationController:(ABPeoplePickerNavigationController*)peoplePicker didSelectPerson:(ABRecordRef)person;
+{
+    if (person != NULL)
+        m_selected_person = ABRecordGetRecordID(person);
+    m_running = false;
+    return;
+}
+
+
+- (void)peoplePickerNavigationController:(ABPeoplePickerNavigationController *)peoplePicker didSelectPerson:(ABRecordRef)person property:(ABPropertyID)property identifier:(ABMultiValueIdentifier)identifier
+{
+    if (person != NULL)
+        m_selected_person = ABRecordGetRecordID(person);
+    m_running = false;
+    return;
 }
 
 - (BOOL)peoplePickerNavigationController:(ABPeoplePickerNavigationController *)peoplePicker shouldContinueAfterSelectingPerson:(ABRecordRef)person
@@ -1134,7 +1164,21 @@ bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCVaria
 	bool t_success = true;
 	
     ABAddressBookRef t_address_book = nil;
-	t_success = nil != (t_address_book = ABAddressBookCreate());
+    
+    // PM-2014-10-08: [[ Bug 13621 ]] ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
+    if (MCmajorosversion < 600)
+    {
+        // Fetch the address book
+        t_address_book = ABAddressBookCreate();
+    }
+    else
+    {
+        // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
+        t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
+        requestAuthorization(t_address_book);
+    }
+
+	t_success = (nil != t_address_book);
 	
     ABRecordRef t_person = nil;
 	if (t_success)
