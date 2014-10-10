@@ -619,9 +619,7 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 - (void)doDismissController
 {
 	if (MCmajorosversion >= 500)
-    {
 		[MCIPhoneGetViewController() dismissViewControllerAnimated:YES completion:^(){m_finished = true;}];
-    }
 	else
         [MCIPhoneGetViewController() dismissModalViewControllerAnimated:YES];
 }
@@ -684,9 +682,7 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 	m_success = true;
 	
     if (m_pick_contact == nil)
-    {
         m_success = nil != (m_pick_contact = [[ABPeoplePickerNavigationController alloc] init]);
-    }
 	
     if (m_success)
 	{
