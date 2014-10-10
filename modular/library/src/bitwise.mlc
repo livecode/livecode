@@ -9,7 +9,7 @@ foreign handler EvalBitwiseOr(in Left as integer, in Right as integer, out Value
 foreign handler EvalBitwiseNot(in Operand as integer, out Value as integer)
 foreign handler EvalBitwiseXor(in Left as integer, in Right as integer, out Value as integer)
 
-foreign handler EvalBitwiseShift(inout Target as integer, in Shift as uint, in IsRight as bool)
+foreign handler EvalBitwiseShift(in Target as integer, in Shift as uint, in IsRight as bool, out Value as integer)
 
 --
 
