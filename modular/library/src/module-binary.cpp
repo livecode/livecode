@@ -1,25 +1,21 @@
 
-#include "foundation.h"
+#include <foundation.h>
+#include <foundation-auto.h>
 
 void MCBinaryExecPutBytesBefore(MCDataRef p_source, MCDataRef& x_target)
 {
     MCAutoDataRef t_data;
-    if (!MCDataMutableCopy(x_target, &t_data))
-        return;
+    MCBinaryEvalConcatenateBytes(p_source, x_target, &t_data);
     
-    if (!MCDataPrepend(*t_data, p_source))
-        return;
-    
-    if (!MCDataCopy(*t_data, x_target))
-        return;
+    MCValueAssign(x_target, *t_data);
 }
 
 void MCBinaryExecPutBytesAfter(MCDataRef p_source, MCDataRef& x_target)
 {
     MCAutoDataRef t_data;
-    MCBinaryEvalConcatenateBytes(ctxt, p_source, &t_data);
+    MCBinaryEvalConcatenateBytes(x_target, p_source, &t_data);
     
-    MCValueAssign(x_target, *t_data)
+    MCValueAssign(x_target, *t_data);
 }
 
 void MCBinaryEvalConcatenateBytes(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_output)
@@ -62,7 +58,8 @@ void MCBinaryEvalOffsetOfBytesAfterIndexIn(MCDataRef p_needle, MCDataRef p_targe
 
 void MCBinaryFetchByteOf(uindex_t p_index, MCDataRef p_target, MCDataRef& r_output)
 {
-    
+    if (!MCDataCreateWithBytes(MCDataGetBytePtr(p_target) + (p_index - 1), 1, r_output))
+        return;
 }
 
 void MCBinaryStoreByteOf(MCDataRef p_value, uindex_t p_index, MCDataRef& x_target)
@@ -72,7 +69,8 @@ void MCBinaryStoreByteOf(MCDataRef p_value, uindex_t p_index, MCDataRef& x_targe
 
 void MCBinaryFetchByteRangeOf(uindex_t p_start, uindex_t p_finish, MCDataRef p_target, MCDataRef& r_output)
 {
-    
+    if (!MCDataCreateWithBytes(MCDataGetBytePtr(p_target) + (p_start - 1), p_finish - p_start, r_output))
+        return;
 }
 
 void MCBinaryStoreByteRangeOf(MCDataRef p_value, uindex_t p_start, uindex_t p_finish, MCDataRef& x_target)

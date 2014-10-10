@@ -1,30 +1,21 @@
 
-#include "foundation.h"
+#include <foundation.h>
+#include <foundation-auto.h>
 
 void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
-    if (!MCStringMutableCopy(x_target, &t_string))
-        return;
+    MCStringEvalConcatenate(p_source, x_target, &t_string);
     
-    if (!MCStringPrepend(*t_string, p_source))
-        return;
-    
-    if (!MCStringCopy(*t_string, x_target))
-        return;
+    MCValueAssign(x_target, *t_string);
 }
 
 void MCStringExecPutStringAfter(MCStringRef p_source, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
-    if (!MCStringMutableCopy(x_target, &t_string))
-        return;
+    MCStringEvalConcatenate(x_target, p_source, &t_string);
     
-    if (!MCStringAppend(*t_string, p_source))
-        return;
-    
-    if (!MCStringCopy(*t_string, x_target))
-        return;
+    MCValueAssign(x_target, *t_string);
 }
 
 void MCStringEvalConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)

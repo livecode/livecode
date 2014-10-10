@@ -12,11 +12,12 @@ foreign handler ExecReplace(in Pattern as string, in Replacement as string, inou
 foreign handler EvalConcatenate(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
 foreign handler EvalConcatenateWithSpace(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
 
-foreign handler EvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
-foreign handler EvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
-
 foreign handler EvalLowercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
 foreign handler EvalUppercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
+
+// The following all need some notion of context 
+foreign handler EvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
 
 foreign handler EvalOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
 foreign handler EvalOffsetAfter(in Needle as string, in After as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
