@@ -62,6 +62,9 @@ public:
     void SetKind(MCExecContext& ctxt, MCNameRef p_kind);
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
     
+    // Returns true if the widget is in edit mode
+    bool inEditMode();
+    
     ////////// Functions used by the event manager for event processing
     bool handlesMouseDown() const;
     bool handlesMouseUp() const;
@@ -78,8 +81,15 @@ public:
     bool isDragSource() const;      // Widget is source for drag-drop operations
     
 protected:
+    
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+    
+    // Hooks for native widgets. They do nothing if the widget is non-native.
+    virtual bool isNative() const;
+    virtual void nativePaint(MCDC*, const MCRectangle&);
+    virtual void nativeGeometryChanged(const MCRectangle& p_old_rect);
+    virtual void nativeVisibilityChanged(bool p_visible);
 	
 private:
 
@@ -92,7 +102,7 @@ private:
     
     void OnOpen();
     void OnClose();
-    void OnPaint(class MCPaintContext& p_context);
+    void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
     void OnGeometryChanged(const MCRectangle& p_old_rect);
     void OnVisibilityChanged(bool p_visible);
     void OnHitTest(const MCRectangle& p_intersect, bool& r_inside);

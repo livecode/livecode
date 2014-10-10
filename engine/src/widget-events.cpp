@@ -233,11 +233,11 @@ void MCWidgetEventManager::event_recompute(MCWidget* p_widget)
     p_widget->OnParentPropChanged();
 }
 
-void MCWidgetEventManager::event_draw(MCDC* p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite)
+void MCWidgetEventManager::event_draw(MCWidget* p_widget, MCDC* p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite)
 {
     // Ignored parameter: p_isolated
     // Ignored parameter: p_sprite
-    
+    p_widget->OnPaint(p_dc, p_dirty);
 }
 
 void MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEventTouchPhase p_phase, int2 p_x, int2 p_y)

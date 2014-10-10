@@ -546,7 +546,7 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	MCGContextSave(MCwidgetcontext);
 	MCGContextSetShouldAntialias(MCwidgetcontext, true);
 	MCGContextTranslateCTM(MCwidgetcontext, rect . x, rect . y);
-    MCwidgeteventmanager->event_draw(dc, dirty, p_isolated, p_sprite);
+    MCwidgeteventmanager->event_draw(this, dc, dirty, p_isolated, p_sprite);
 	MCGContextRestore(MCwidgetcontext);
 	MCwidgetcontext = nil;
 	
@@ -567,6 +567,14 @@ Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 	MCRectangle drect = MCU_intersect_rect(p_rect, rect);
 
 	return drect.width != 0 && drect.height != 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCWidget::inEditMode()
+{
+    Tool t_tool = getstack()->gettool(this);
+    return t_tool != T_BROWSE && t_tool != T_HELP;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -623,6 +631,28 @@ bool MCWidget::isDragSource() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCWidget::isNative() const
+{
+    return false;
+}
+
+void MCWidget::nativePaint(MCDC* p_dc, const MCRectangle& p_dirty)
+{
+    // Not native. Do nothing.
+}
+
+void MCWidget::nativeGeometryChanged(const MCRectangle& p_old_rect)
+{
+    // Not native. Do nothing.
+}
+
+void MCWidget::nativeVisibilityChanged(bool p_visible)
+{
+    // Not native. Do nothing.
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCWidget::OnOpen()
 {
     fprintf(stderr, "MCWidget::OnOpen\n");
@@ -633,18 +663,27 @@ void MCWidget::OnClose()
     fprintf(stderr, "MCWidget::OnClose\n");
 }
 
-void MCWidget::OnPaint(class MCPaintContext& p_context)
+void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
 {
+    if (isNative())
+        nativePaint(p_dc, p_rect);
+    
     fprintf(stderr, "MCWidget::OnPaint\n");
 }
 
 void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
 {
+    if (isNative())
+        nativeGeometryChanged(p_old_rect);
+    
     fprintf(stderr, "MCWidget::OnGeometryChanged\n");
 }
 
 void MCWidget::OnVisibilityChanged(bool p_visible)
 {
+    if (isNative())
+        nativeVisibilityChanged(p_visible);
+    
     fprintf(stderr, "MCWidget::OnVisibilityChanged\n");
 }
 

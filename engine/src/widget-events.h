@@ -29,7 +29,7 @@ public:
     void event_timer(MCWidget*, MCNameRef p_message, MCParameter *p_parameters);
     void event_setrect(MCWidget*, const MCRectangle& p_rectangle);
     void event_recompute(MCWidget*);
-    void event_draw(MCDC *p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite);
+    void event_draw(MCWidget*, MCDC *p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite);
     void event_mdrag(MCWidget*);
     
     // Non-MCControl event for handling touches
