@@ -119,7 +119,7 @@ output:             Returns true if the characters in <Prefix> occur at the star
                     modulo the contextual string options of the current handler.
 */
 
-syntax BeginsWithString is left binary operator with precedence 1
+syntax BeginsWithString is neutral binary operator with precedence 1
     <Source: Expression> "begins" "with" <Prefix: Expression>
 begin
     EvalBeginsWith(Source, Prefix, output)
@@ -134,7 +134,7 @@ output:             Returns true if the characters in <Prefix> occur at the end 
 */
 
 
-syntax EndsWithString is left binary operator with precedence 1
+syntax EndsWithString is neutral binary operator with precedence 1
     <Source: Expression> "ends" "with" <Suffix: Expression>
 begin
     EvalEndsWith(Source, Suffix, output)

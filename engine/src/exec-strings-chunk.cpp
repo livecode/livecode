@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
+#include "foundation-chunk.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -48,6 +49,23 @@ MC_EXEC_DEFINE_EVAL_METHOD(Strings, TokensOfTextByOrdinal, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharsOfTextByRange, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharsOfTextByExpression, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharsOfTextByOrdinal, 3)
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCChunkCountState
+{
+    MCStringRef string;
+    Chunk_term chunk;
+    MCExecContext *ctxt;
+};
+
+uinteger_t MCStringsCountChunkCallback(void *context)
+{
+    MCChunkCountState *t_state = static_cast<MCChunkCountState *>(context);
+    uinteger_t t_count;
+    MCStringsCountChunks(*t_state -> ctxt, t_state -> chunk, t_state -> string, t_count);
+    return t_count;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -160,62 +178,34 @@ void MCStringsGetExtentsByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, 
 
 void MCStringsGetExtentsByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCValueRef p_string, integer_t& r_first, integer_t& r_chunk_count)
 {
-    int4 t_chunk_count;
-    
-    if (p_first < 0 || p_last < 0)
-    {
-        uinteger_t t_count;
-        if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
-            t_count = MCDataGetLength((MCDataRef)p_string);
-        else
-            MCStringsCountChunks(ctxt, p_chunk_type, (MCStringRef)p_string, t_count);
-        
-        if (p_first < 0)
-            p_first += t_count;
-        else
-            p_first--;
-        
-        if (p_last < 0)
-            p_last += t_count + 1;
-    }
+    if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
+        MCChunkGetExtentsOfByteChunkByRange((MCDataRef)p_string, p_first, p_last, r_first, r_chunk_count);
+    else if (p_chunk_type == CT_CODEPOINT)
+        MCChunkGetExtentsOfCodepointChunkByRange((MCStringRef)p_string, p_first, p_last, r_first, r_chunk_count);
     else
-        p_first--;
-    
-    t_chunk_count = p_last - p_first;
-    
-    if (p_first < 0)
     {
-        t_chunk_count += p_first;
-        p_first = 0;
+        MCChunkCountState t_state;
+        t_state . string = (MCStringRef)p_string;
+        t_state . chunk = p_chunk_type;
+        t_state . ctxt = &ctxt;
+        MCChunkGetExtentsByRange(p_first, p_last, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
     }
-    
-    if (t_chunk_count < 0)
-        t_chunk_count = 0;
-    
-    r_chunk_count = t_chunk_count;
-    r_first = p_first;
 }
 
-void MCStringsGetExtentsByExpression(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, MCStringRef p_string, integer_t& r_first, integer_t& r_chunk_count)
+void MCStringsGetExtentsByExpression(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, MCValueRef p_string, integer_t& r_first, integer_t& r_chunk_count)
 {
-    r_chunk_count = 1;
-    
-    if (p_first < 0)
-    {
-        uinteger_t t_count;
-        MCStringsCountChunks(ctxt, p_chunk_type, p_string, t_count);
-        p_first += t_count;
-    }
+    if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
+        MCChunkGetExtentsOfByteChunkByExpression((MCDataRef)p_string, p_first, r_first, r_chunk_count);
+    else if (p_chunk_type == CT_CODEPOINT)
+        MCChunkGetExtentsOfCodepointChunkByExpression((MCStringRef)p_string, p_first, r_first, r_chunk_count);
     else
-        p_first--;
-    
-    if (p_first < 0)
     {
-        r_chunk_count = 0;
-        p_first = 0;
+        MCChunkCountState t_state;
+        t_state . string = (MCStringRef)p_string;
+        t_state . chunk = p_chunk_type;
+        t_state . ctxt = &ctxt;
+        MCChunkGetExtentsByExpression(p_first, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
     }
-    
-    r_first = p_first;
 }
 
 void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, integer_t p_first, integer_t p_count, integer_t& r_start, integer_t& r_end, bool p_whole_chunk, bool p_further_chunks, bool p_include_chars, integer_t& r_add)
