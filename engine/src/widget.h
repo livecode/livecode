@@ -87,6 +87,8 @@ protected:
     
     // Hooks for native widgets. They do nothing if the widget is non-native.
     virtual bool isNative() const;
+    virtual void nativeOpen();
+    virtual void nativeClose();
     virtual void nativePaint(MCDC*, const MCRectangle&);
     virtual void nativeGeometryChanged(const MCRectangle& p_old_rect);
     virtual void nativeVisibilityChanged(bool p_visible);

@@ -636,6 +636,16 @@ bool MCWidget::isNative() const
     return false;
 }
 
+void MCWidget::nativeOpen()
+{
+    // Not native. Do nothing.
+}
+
+void MCWidget::nativeClose()
+{
+    // Not native. Do nothing.
+}
+
 void MCWidget::nativePaint(MCDC* p_dc, const MCRectangle& p_dirty)
 {
     // Not native. Do nothing.
@@ -655,11 +665,17 @@ void MCWidget::nativeVisibilityChanged(bool p_visible)
 
 void MCWidget::OnOpen()
 {
+    if (isNative())
+        nativeOpen();
+    
     fprintf(stderr, "MCWidget::OnOpen\n");
 }
 
 void MCWidget::OnClose()
 {
+    if (isNative())
+        nativeClose();
+    
     fprintf(stderr, "MCWidget::OnClose\n");
 }
 
