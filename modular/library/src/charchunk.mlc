@@ -9,21 +9,21 @@ foreign handler EvalNumberOfCharsIn(in Target as string, out Count as index) as 
 
 --
 
-syntax SingletonCharOf is left unary operator with precedence 1
+syntax SingletonCharOf is prefix operator with precedence 1
 	"char" <Index: Expression> "of" <Target: Expression>
 begin
 	FetchCharOf(Index, Target, output)
 	StoreCharOf(input, Index, Target)
 end syntax
 
-syntax RangeCharOf is left unary operator with precedence 1
+syntax RangeCharOf is prefix operator with precedence 1
 	"char" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
 	FetchCharRangeOf(Start, Finish, Target, output)
 	StoreCharRangeOf(input, Start, Finish, Target)
 end syntax
 
-syntax CountCharsOf is left unary operator with precedence 1
+syntax CountCharsOf is prefix operator with precedence 1
 	"the" "number" "of" "chars" "in" <Target: Expression>
 begin
 	EvalNumberOfCharsIn(Target, output)
