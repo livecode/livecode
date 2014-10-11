@@ -20,6 +20,17 @@
 
 ---------
 
+'action' Compile(MODULELIST)
+
+    'rule' Compile(Modules):
+        BindModules(Modules)
+        CheckModules(Modules)
+        (|
+            ErrorsDidOccur()
+        ||
+            -- do something!
+        |)
+
 'action' BootstrapCompile(MODULELIST)
 
     'rule' BootstrapCompile(Modules):

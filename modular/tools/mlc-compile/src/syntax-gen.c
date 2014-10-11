@@ -1200,7 +1200,7 @@ static void GenerateUmbrellaSyntaxRule(const char *p_name, SyntaxRuleKind p_firs
             }
         }
         if (t_made == 0)
-            fprintf(stderr, "  'rule' %s(-> nil):\n    \"THISCANNEVERHAPPENHOPEFULLY\"\n", p_name);
+            fprintf(stderr, "  'rule' %s(-> nil):\n    \"THISCANNEVERHAPPEN\"\n", p_name);
     }
     else
     {
@@ -1219,7 +1219,7 @@ static void GenerateUmbrellaSyntaxRule(const char *p_name, SyntaxRuleKind p_firs
             }
         }
         if (t_made == 0)
-            fprintf(stderr, "  'rule' %s:\n    \"THISCANNEVERHAPPENHOPEFULLY\"\n", p_name);
+            fprintf(stderr, "  'rule' %s:\n    \"THISCANNEVERHAPPEN\"\n", p_name);
     }
 }
 
