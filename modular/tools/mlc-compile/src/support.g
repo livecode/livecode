@@ -38,6 +38,17 @@
     IncludeIndexInSet
     ExcludeIndexFromSet
 
+    ReorderOperatorExpression
+    PopOperatorExpression
+    PopOperatorExpressionArgument
+    PushOperatorExpressionPrefix
+    PushOperatorExpressionPostfix
+    PushOperatorExpressionLeftBinary
+    PushOperatorExpressionRightBinary
+    PushOperatorExpressionNeutralBinary
+    PushOperatorExpressionArgument
+    PushOperatorExpressionOperand
+
     GenerateSyntaxRules
     DumpSyntaxRules
     BeginStatementSyntaxRule
@@ -124,6 +135,20 @@
 'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
+
+--------------------------------------------------------------------------------
+
+'action' ReorderOperatorExpression
+'condition' PopOperatorExpression(-> Position: POS, Method: INT, Arity: INT)
+'action' PopOperatorExpressionArgument(-> EXPRESSION)
+
+'action' PushOperatorExpressionPrefix(Position: POS, Precedence: INT, Method: INT)
+'action' PushOperatorExpressionPostfix(Position: POS, Precedence: INT, Method: INT)
+'action' PushOperatorExpressionLeftBinary(Position: POS, Precedence: INT, Method: INT)
+'action' PushOperatorExpressionRightBinary(Position: POS, Precedence: INT, Method: INT)
+'action' PushOperatorExpressionNeutralBinary(Position: POS, Precedence: INT, Method: INT)
+'action' PushOperatorExpressionArgument(Operand: EXPRESSION)
+'action' PushOperatorExpressionOperand(Argument: EXPRESSION)
 
 --------------------------------------------------------------------------------
 

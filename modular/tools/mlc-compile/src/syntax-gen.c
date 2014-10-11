@@ -1247,7 +1247,10 @@ void GenerateSyntaxRules(void)
             size_t t_length;
             t_line = fgetln(t_template, &t_length);
             
-            fprintf(t_output, "%.*s", (int)t_length, t_line);
+            if (t_length > 8 && strncmp(t_line, "'module'", 8) == 0)
+                fprintf(t_output, "'module' grammar_full\n");
+            else
+                fprintf(t_output, "%.*s", (int)t_length, t_line);
             
             if (t_length > 5 && strncmp(t_line, "--*--", 5) == 0)
                 break;
