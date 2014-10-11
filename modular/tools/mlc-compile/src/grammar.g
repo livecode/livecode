@@ -102,7 +102,7 @@
         "module" @(-> Position) Identifier(-> Name) Separator
         Imports(-> Imports)
         Definitions(-> Definitions)
-        "end" "module"
+        "end" "module" OptionalSeparator
         END_OF_UNIT
 
 --------------------------------------------------------------------------------
