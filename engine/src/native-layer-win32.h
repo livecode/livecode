@@ -1,38 +1,38 @@
 #ifndef __MC_WIDGET_NATIVE__
 #define __MC_WIDGET_NATIVE__
 
-#include "widget.h"
+#include "native-layer.h"
 
 #include <windows.h>
 
-class MCNativeWidgetWin32 : public MCWidget
+class MCNativeLayerWin32 : public MCNativeLayer
 {
 public:
     
-    MCNativeWidgetWin32();
-    MCNativeWidgetWin32(const MCNativeWidgetWin32&);
-    ~MCNativeWidgetWin32();
-    virtual MCWidget *clone(Boolean p_attach, Object_pos p_position, bool invisible);
+    virtual void OnOpen();
+    virtual void OnClose();
+    virtual void OnAttach();
+    virtual void OnDetach();
+    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
+    virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
+    virtual void OnVisibilityChanged(bool p_visible);
+    virtual void OnToolChanged(Tool p_new_tool);
     
-    // Native widgets need to be hidden when edit mode is entered
-    virtual void toolchanged(Tool p_new_tool);
-    
-protected:
-    
-    virtual bool isNative() const;
-    virtual void nativeOpen();
-    virtual void nativeClose();
-    virtual void nativePaint(MCDC* p_dc, const MCRectangle& p_dirty);
-    virtual void nativeGeometryChanged(const MCRectangle& p_old_rect);
-    virtual void nativeVisibilityChanged(bool p_visible);
+    MCNativeLayerWin32(MCWidget*);
+    ~MCNativeLayerWin32();
     
 private:
     
+    MCWidget* m_widget;
     HWND m_hwnd;
     HBITMAP m_cached;
     
     // Returns the HWND for the stack containing this widget
     HWND getStackWindow();
+    
+    // Performs the attach/detach operations
+    void doAttach();
+    void doDetach();
 };
 
 #endif // ifndef __MC_WIDGET_NATIVE__

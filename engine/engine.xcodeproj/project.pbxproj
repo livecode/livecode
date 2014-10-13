@@ -515,6 +515,8 @@
 		721CAACB18351E7400858545 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC518351E7400858545 /* libiculx.a */; };
 		721CAACC18351E7400858545 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
 		721CAACD18351E7400858545 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
+		723BDBEC19DD9148007365F3 /* widget-events.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 723BDBEB19DD9148007365F3 /* widget-events.cpp */; };
+		723BDBFF19E6C34E007365F3 /* native-layer-mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 723BDBFE19E6C34E007365F3 /* native-layer-mac.mm */; };
 		7278F63A1843A2B100E35A65 /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC218351E7400858545 /* libicudata.a */; };
 		7278F63B1843A2B100E35A65 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC018351E1800858545 /* libicui18n.a */; };
 		7278F63C1843A2B100E35A65 /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC318351E7400858545 /* libicuio.a */; };
@@ -532,6 +534,7 @@
 		72D6032818476FC90022379C /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC518351E7400858545 /* libiculx.a */; };
 		72D6032918476FC90022379C /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
 		72D6032A18476FC90022379C /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
+		72DDBF7A19EC011300361E88 /* native-layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72DDBF7919EC011300361E88 /* native-layer.cpp */; };
 		7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		7635171E182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		763FF4E918522CBE00B45FBA /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */; };
@@ -1639,6 +1642,11 @@
 		721CAAC618351E7400858545 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
 		721CAAC718351E7400858545 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
 		7238DF4E1848B189007EA049 /* MCBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MCBlock.h; path = src/MCBlock.h; sourceTree = "<group>"; };
+		723BDBEA19DD5DCB007365F3 /* widget-events.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "widget-events.h"; path = "src/widget-events.h"; sourceTree = "<group>"; };
+		723BDBEB19DD9148007365F3 /* widget-events.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "widget-events.cpp"; path = "src/widget-events.cpp"; sourceTree = "<group>"; };
+		723BDBFD19E6C25D007365F3 /* native-layer-mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "native-layer-mac.h"; path = "src/native-layer-mac.h"; sourceTree = "<group>"; };
+		723BDBFE19E6C34E007365F3 /* native-layer-mac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "native-layer-mac.mm"; path = "src/native-layer-mac.mm"; sourceTree = "<group>"; };
+		723BDC0019E6D4D6007365F3 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		72C22E951945E48E00B18E8D /* syslnxfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxfs.cpp; path = src/syslnxfs.cpp; sourceTree = "<group>"; };
 		72C22E961945E48E00B18E8D /* syslnxregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxregion.cpp; path = src/syslnxregion.cpp; sourceTree = "<group>"; };
 		72C22E971945E48E00B18E8D /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
@@ -1646,6 +1654,10 @@
 		72C22E991945E48E00B18E8D /* sysw32random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32random.cpp; path = src/sysw32random.cpp; sourceTree = "<group>"; };
 		72C28AF819112FDE007F2AA0 /* segment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = segment.h; path = src/segment.h; sourceTree = "<group>"; };
 		72C28AF91911300D007F2AA0 /* segment.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = segment.cpp; path = src/segment.cpp; sourceTree = "<group>"; };
+		72DDBF7619E8256500361E88 /* native-layer-win32.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "native-layer-win32.h"; path = "src/native-layer-win32.h"; sourceTree = "<group>"; };
+		72DDBF7719E825D800361E88 /* native-layer-win32.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "native-layer-win32.cpp"; path = "src/native-layer-win32.cpp"; sourceTree = "<group>"; };
+		72DDBF7819EC000300361E88 /* native-layer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "native-layer.h"; path = "src/native-layer.h"; sourceTree = "<group>"; };
+		72DDBF7919EC011300361E88 /* native-layer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "native-layer.cpp"; path = "src/native-layer.cpp"; sourceTree = "<group>"; };
 		7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_resampled.cpp; path = src/image_rep_resampled.cpp; sourceTree = "<group>"; };
 		766E3292180EE4E000CF7FCF /* graphics_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
@@ -2161,6 +2173,7 @@
 		4D5880AA0B80BDFE00200116 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				723BDC0019E6D4D6007365F3 /* MapKit.framework */,
 				BE6444461965B8A700C2092C /* AudioToolbox.framework */,
 				1DDE08EA1945F10A000E3705 /* QTKit.framework */,
 				1DDE08E81945F0DE000E3705 /* CoreMedia.framework */,
@@ -3141,6 +3154,14 @@
 		E8A49109170F192000769C7A /* Core - Objects */ = {
 			isa = PBXGroup;
 			children = (
+				72DDBF7919EC011300361E88 /* native-layer.cpp */,
+				72DDBF7819EC000300361E88 /* native-layer.h */,
+				72DDBF7719E825D800361E88 /* native-layer-win32.cpp */,
+				72DDBF7619E8256500361E88 /* native-layer-win32.h */,
+				723BDBFE19E6C34E007365F3 /* native-layer-mac.mm */,
+				723BDBFD19E6C25D007365F3 /* native-layer-mac.h */,
+				723BDBEB19DD9148007365F3 /* widget-events.cpp */,
+				723BDBEA19DD5DCB007365F3 /* widget-events.h */,
 				4D6F06AA19CC1D0F00DDC6E0 /* widget.cpp */,
 				4D6F06AB19CC1D0F00DDC6E0 /* widget.h */,
 				4D587E870B8096FD00200116 /* aclip.cpp */,
@@ -4262,6 +4283,7 @@
 				4DEE2AB60FDE42710009423C /* gradient.cpp in Sources */,
 				4DEE2AB70FDE42710009423C /* graphic.cpp in Sources */,
 				4DEE2AB80FDE42710009423C /* group.cpp in Sources */,
+				723BDBEC19DD9148007365F3 /* widget-events.cpp in Sources */,
 				4CF4B864199E05F300E33AEE /* customprinter.cpp in Sources */,
 				4DEE2AB90FDE42710009423C /* handler.cpp in Sources */,
 				4DEE2ABA0FDE42710009423C /* hc.cpp in Sources */,
@@ -4312,12 +4334,14 @@
 				4DEE2AF90FDE42710009423C /* rtfsupport.cpp in Sources */,
 				4DEE2AFA0FDE42710009423C /* scriptpt.cpp in Sources */,
 				4DEE2AFB0FDE42710009423C /* scrolbar.cpp in Sources */,
+				723BDBFF19E6C34E007365F3 /* native-layer-mac.mm in Sources */,
 				4DEE2AFC0FDE42710009423C /* scrollbardraw.cpp in Sources */,
 				4DEE2AFD0FDE42710009423C /* sellst.cpp in Sources */,
 				4DEE2AFE0FDE42710009423C /* stack.cpp in Sources */,
 				4DEE2AFF0FDE42710009423C /* stack2.cpp in Sources */,
 				4DEE2B000FDE42710009423C /* stack3.cpp in Sources */,
 				4DEE2B010FDE42710009423C /* stacke.cpp in Sources */,
+				72DDBF7A19EC011300361E88 /* native-layer.cpp in Sources */,
 				4DEE2B020FDE42710009423C /* stacklst.cpp in Sources */,
 				4DEE2B030FDE42710009423C /* statemnt.cpp in Sources */,
 				4DEE2B040FDE42710009423C /* styledtext.cpp in Sources */,

@@ -27,10 +27,9 @@
 #include "globals.h"
 #include "context.h"
 
-#include "widget-native-mac.h"
+#include "native-layer-mac.h"
 
 #import <AppKit/NSWindow.h>
-#import <AppKit/NSButton.h>
 #import <AppKit/NSPanel.h>
 #import <AppKit/NSMenu.h>
 #import <AppKit/NSTextInputClient.h>
@@ -39,83 +38,112 @@
 #include "platform-internal.h"
 #include "mac-internal.h"
 
-#import <AppKit/NSSegmentedControl.h>
 
-MCNativeWidgetMac::MCNativeWidgetMac() :
+MCNativeLayerMac::MCNativeLayerMac(MCWidget* p_widget) :
+  m_widget(p_widget),
   m_view(nil),
   m_cached(nil)
 {
-    
+    ;
 }
 
-MCNativeWidgetMac::MCNativeWidgetMac(const MCNativeWidgetMac& p_clone) :
-  MCWidget(p_clone),
-  m_view(nil),
-  m_cached(nil)
-{
-    
-}
-
-MCNativeWidgetMac::~MCNativeWidgetMac()
+MCNativeLayerMac::~MCNativeLayerMac()
 {
     if (m_view != nil)
     {
-        [m_view removeFromSuperview];
+        doDetach();
         [m_view release];
     }
     if (m_cached != nil)
+    {
         [m_cached release];
+    }
 }
 
-MCWidget *MCNativeWidgetMac::clone(Boolean p_attach, Object_pos p_position, bool invisible)
-{
-    MCWidget *t_new_widget;
-    t_new_widget = new MCNativeWidgetMac(*this);
-    if (p_attach)
-        t_new_widget -> attach(p_position, invisible);
-    return t_new_widget;
-}
-
-void MCNativeWidgetMac::toolchanged(Tool p_new_tool)
+void MCNativeLayerMac::OnToolChanged(Tool p_new_tool)
 {
     if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
     {
-        // In run mode. Make visible if requested and our card is current.
-        if ((flags & F_VISIBLE) && getcard() == getstack()->getcurcard())
+        // In run mode. Make visible if requested
+        if (m_widget->getflags() & F_VISIBLE)
             [m_view setHidden:NO];
-        Redraw();
+        m_widget->Redraw();
     }
     else
     {
         // In edit mode
         [m_view setHidden:YES];
-        Redraw();
+        m_widget->Redraw();
     }
 }
 
-bool MCNativeWidgetMac::isNative() const
-{
-    return true;
-}
-
-void MCNativeWidgetMac::nativeOpen()
+void MCNativeLayerMac::OnOpen()
 {
     // Unhide the widget, if required
-    if (flags & F_VISIBLE && !inEditMode())
-        [m_view setHidden:NO];
+    if (isAttached())
+        doAttach();
 }
 
-void MCNativeWidgetMac::nativeClose()
+void MCNativeLayerMac::OnClose()
 {
-    [m_view setHidden:YES];
+    if (isAttached())
+        doDetach();
 }
 
-void MCNativeWidgetMac::nativePaint(MCDC* p_dc, const MCRectangle& p_dirty)
+#import <AppKit/NSButton.h>
+
+void MCNativeLayerMac::OnAttach()
 {
-    realise();
+    m_attached = true;
+    doAttach();
+}
+
+void MCNativeLayerMac::doAttach()
+{
+    if (m_view == nil)
+    {
+        NSRect t_nsrect;
+        MCRectangle t_rect, t_cardrect;
+        t_rect = m_widget->getrect();
+        t_cardrect = m_widget->getcard()->getrect();
+        t_nsrect = NSMakeRect(t_rect.x, t_cardrect.height-t_rect.y-t_rect.height-1, t_rect.width, t_rect.height);
+        
+        NSButton *t_button;
+        t_button = [[NSButton alloc] initWithFrame:t_nsrect];
+        [t_button setTitle:@"Native button"];
+        [t_button setButtonType:NSMomentaryPushInButton];
+        [t_button setBezelStyle:NSRoundedBezelStyle];
+        [t_button setHidden:YES];
+        m_view = t_button;
+    }
     
+    // Add the view to the stack's content view
+    [[getStackWindow() contentView] addSubview:m_view];
+    
+    // Restore the visibility state of the widget (in case it changed due to a
+    // tool change while on another card - we don't get a message then)
+    if ((m_widget->getflags() & F_VISIBLE) && !m_widget->inEditMode())
+        [m_view setHidden:NO];
+    else
+        [m_view setHidden:YES];
+}
+
+void MCNativeLayerMac::OnDetach()
+{
+    m_attached = false;
+    doDetach();
+}
+
+void MCNativeLayerMac::doDetach()
+{
+    // Remove the view from the stack's content view
+    [m_view removeFromSuperview];
+}
+
+void MCNativeLayerMac::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
+{
     // If the widget is not in edit mode, we trust it to paint itself
-    if (!inEditMode())
+    if (!m_widget->inEditMode())
         return;
 
     // Get an image rep suitable for storing the cached bitmap
@@ -148,61 +176,32 @@ void MCNativeWidgetMac::nativePaint(MCDC* p_dc, const MCRectangle& p_dirty)
     MCGImageRelease(t_gimage);
 }
 
-void MCNativeWidgetMac::nativeGeometryChanged(const MCRectangle& p_rect)
+void MCNativeLayerMac::OnGeometryChanged(const MCRectangle& p_old_rect)
 {
-    realise();
-    
     NSRect t_nsrect;
-    MCRectangle t_cardrect;
-    t_cardrect = getcard()->getrect();
-    t_nsrect = NSMakeRect(rect.x, t_cardrect.height-rect.y-rect.height-1, rect.width, rect.height);
+    MCRectangle t_rect, t_cardrect;
+    t_rect = m_widget->getrect();
+    t_cardrect = m_widget->getcard()->getrect();
+    t_nsrect = NSMakeRect(t_rect.x, t_cardrect.height-t_rect.y-t_rect.height-1, t_rect.width, t_rect.height);
     [m_view setFrame:t_nsrect];
     [m_view setNeedsDisplay:YES];
     [m_cached release];
     m_cached = nil;
 }
 
-void MCNativeWidgetMac::nativeVisibilityChanged(bool p_visible)
+void MCNativeLayerMac::OnVisibilityChanged(bool p_visible)
 {
-    realise();
-    
     [m_view setHidden:!p_visible];
 }
 
-void MCNativeWidgetMac::realise()
+NSWindow* MCNativeLayerMac::getStackWindow()
 {
-    if (m_view != nil)
-        return;
-    
-    NSRect t_nsrect;
-    MCRectangle t_cardrect;
-    t_cardrect = getcard()->getrect();
-    t_nsrect = NSMakeRect(rect.x, t_cardrect.height-rect.y-rect.height-1, rect.width, rect.height);
-    
-    NSButton *t_button;
-    t_button = [[NSButton alloc] initWithFrame:t_nsrect];
-    [t_button setTitle:@"Native button"];
-    [t_button setButtonType:NSMomentaryPushInButton];
-    [t_button setBezelStyle:NSRoundedBezelStyle];
-    //[t_button setEnabled:NO];
-    [t_button setHidden:YES];
-    m_view = t_button;
-    
-    /*NSSegmentedControl *t_control;
-    t_control = [[NSSegmentedControl alloc] initWithFrame:t_nsrect];
-    [t_control setSegmentStyle:NSSegmentStyleRounded];
-    [t_control setSegmentCount:4];
-    [t_control setLabel:@"Foo" forSegment:0];
-    [t_control setLabel:@"Bar" forSegment:1];
-    [t_control setLabel:@"Baz" forSegment:2];
-    [t_control setLabel:@"Quux" forSegment:3];
-    m_view = t_control;*/
-    
-    NSWindow *t_window = getStackWindow();
-    [[t_window contentView] addSubview:m_view];
+    return ((MCMacPlatformWindow*)(m_widget->getstack()->getwindow()))->GetHandle();
 }
 
-NSWindow* MCNativeWidgetMac::getStackWindow()
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeLayer* MCWidget::createNativeLayer()
 {
-    return ((MCMacPlatformWindow*)(getstack()->getwindow()))->GetHandle();
+    return new MCNativeLayerMac(this);
 }

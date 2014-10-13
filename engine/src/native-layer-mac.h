@@ -1,41 +1,56 @@
-#ifndef __MC_WIDGET_NATIVE__
-#define __MC_WIDGET_NATIVE__
+/* Copyright (C) 2014 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "widget.h"
+
+#ifndef __MC_NATIVE_LAYER_MAC__
+#define __MC_NATIVE_LAYER_MAC__
+
+#include "native-layer.h"
 
 #import <AppKit/NSView.h>
 #import <AppKit/NSImageView.h>
 
-class MCNativeWidgetMac : public MCWidget
+class MCNativeLayerMac : public MCNativeLayer
 {
 public:
     
-    MCNativeWidgetMac();
-    MCNativeWidgetMac(const MCNativeWidgetMac&);
-    ~MCNativeWidgetMac();
-    virtual MCWidget *clone(Boolean p_attach, Object_pos p_position, bool invisible);
-
-    // Native widgets need to be hidden when edit mode is entered
-    virtual void toolchanged(Tool p_new_tool);
+    virtual void OnOpen();
+    virtual void OnClose();
+    virtual void OnAttach();
+    virtual void OnDetach();
+    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
+    virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
+    virtual void OnVisibilityChanged(bool p_visible);
+    virtual void OnToolChanged(Tool p_new_tool);
     
-protected:
-    
-    virtual bool isNative() const;
-    virtual void nativeOpen();
-    virtual void nativeClose();
-    virtual void nativePaint(MCDC* p_dc, const MCRectangle& p_dirty);
-    virtual void nativeGeometryChanged(const MCRectangle& p_old_rect);
-    virtual void nativeVisibilityChanged(bool p_visible);
+    MCNativeLayerMac(MCWidget*);
+    ~MCNativeLayerMac();
     
 private:
     
+    MCWidget* m_widget;
     NSView* m_view;
     NSBitmapImageRep *m_cached;
-    
-    void realise();
-    
+
     // Returns the NSWindow* for the stack containing this widget
     NSWindow* getStackWindow();
+    
+    // Performs the attach/detach operations
+    void doAttach();
+    void doDetach();
 };
 
-#endif // ifndef __MC_WIDGET_NATIVE__
+#endif // ifndef __MC_NATIVE_LAYER_MAC__
