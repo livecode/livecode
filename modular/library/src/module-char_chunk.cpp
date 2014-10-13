@@ -23,7 +23,7 @@ void MCCharChunkEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_output)
     r_output = MCStringGetLength(p_target);
 }
 
-void MCCharChunkFetchByteRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
+void MCCharChunkFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     integer_t t_start, t_count;
     MCChunkGetExtentsOfCodepointChunkByRange(p_target, p_start, p_finish, t_start, t_count);
@@ -31,7 +31,7 @@ void MCCharChunkFetchByteRangeOf(index_t p_start, index_t p_finish, MCStringRef 
         return;
 }
 
-void MCCharChunkStoreByteRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
+void MCCharChunkStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
     integer_t t_start, t_count;
     MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_start, p_finish, t_start, t_count);
@@ -48,12 +48,12 @@ void MCCharChunkStoreByteRangeOf(MCStringRef p_value, index_t p_start, index_t p
         return;
 }
 
-void MCCharChunkFetchByteOf(index_t p_index, MCStringRef p_target, MCStringRef& r_output)
+void MCCharChunkFetchCharOf(index_t p_index, MCStringRef p_target, MCStringRef& r_output)
 {
-    MCCharChunkFetchByteRangeOf(p_index, p_index, p_target, r_output);
+    MCCharChunkFetchCharRangeOf(p_index, p_index, p_target, r_output);
 }
 
-void MCCharChunkStoreByteOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
+void MCCharChunkStoreCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
-    MCCharChunkStoreByteRangeOf(p_value, p_index, p_index, x_target);
+    MCCharChunkStoreCharRangeOf(p_value, p_index, p_index, x_target);
 }
