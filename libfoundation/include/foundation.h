@@ -355,7 +355,7 @@ typedef signed long int int64_t;
 #define UINT16_MIN (0U)
 #define UINT16_MAX (65535U)
 #define INT16_MIN (-32768)
-#define INT16_MAX (32767U)
+#define INT16_MAX (32767)
 
 #define UINT32_MIN (0U)
 #define UINT32_MAX (4294967295U)
