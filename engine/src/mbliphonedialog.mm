@@ -117,22 +117,65 @@ static void dopopupanswerdialog_prewait(void *p_context)
 	t_title = [NSString stringWithCString: ctxt -> title == nil ? "" : ctxt -> title encoding: NSMacOSRomanStringEncoding];
 	NSString *t_prompt;
 	t_prompt = [NSString stringWithCString: ctxt -> message == nil ? "" : ctxt -> message encoding: NSMacOSRomanStringEncoding];
-	
-	ctxt -> delegate = [[ModalDelegate alloc] init];
-	ctxt -> alert_view = [[UIAlertView alloc] initWithTitle:t_title message:t_prompt delegate:ctxt -> delegate cancelButtonTitle:nil otherButtonTitles:nil];
-	
-	if (ctxt -> button_count == 0)
-	{
-		[ctxt -> delegate setIndex: 0];
-		[ctxt -> alert_view addButtonWithTitle: @"OK"];
-	}
-	else
-	{
-		[ctxt -> delegate setIndex: ctxt -> button_count - 1];
-		for(uint32_t i = 0; i < ctxt -> button_count; i++)
-			[ctxt -> alert_view addButtonWithTitle: [ NSString stringWithCString: ctxt -> buttons[i] encoding: NSMacOSRomanStringEncoding ]];
-	}
-	[ctxt -> alert_view show];
+
+    if (MCmajorosversion < 800)
+    {
+        ctxt -> delegate = [[ModalDelegate alloc] init];
+        ctxt -> alert_view = [[UIAlertView alloc] initWithTitle:t_title message:t_prompt delegate:ctxt -> delegate cancelButtonTitle:nil otherButtonTitles:nil];
+        
+        if (ctxt -> button_count == 0)
+        {
+            [ctxt -> delegate setIndex: 0];
+            [ctxt -> alert_view addButtonWithTitle: @"OK"];
+        }
+        else
+        {
+            [ctxt -> delegate setIndex: ctxt -> button_count - 1];
+            for(uint32_t i = 0; i < ctxt -> button_count; i++)
+                [ctxt -> alert_view addButtonWithTitle: [ NSString stringWithCString: ctxt -> buttons[i] encoding: NSMacOSRomanStringEncoding ]];
+        }
+        [ctxt -> alert_view show];
+    }
+    else
+    {
+#ifdef __IPHONE_8_0
+        // MM-2014-10-13: [[ Bug 13656 ]] Use new UIAlertController for iOS 8. Solves rotation issues.
+        UIAlertController *t_alert_controller;
+        t_alert_controller = [UIAlertController alertControllerWithTitle: t_title
+                                                                 message: t_prompt
+                                                          preferredStyle: UIAlertControllerStyleAlert];
+        
+        if (ctxt -> button_count == 0)
+        {
+            UIAlertAction *t_action;
+            t_action = [UIAlertAction actionWithTitle: @"OK"
+                                                style: UIAlertActionStyleDefault
+                                              handler: ^(UIAlertAction *action)
+                        {
+                            ctxt -> result = 0;
+                            s_in_modal = false;
+                        }];
+            [t_alert_controller addAction: t_action];
+        }
+        else
+        {
+            for(uint32_t i = 0; i < ctxt -> button_count; i++)
+            {
+                UIAlertAction *t_action;
+                t_action = [UIAlertAction actionWithTitle: [NSString stringWithCString: ctxt -> buttons[i] encoding: NSMacOSRomanStringEncoding]
+                                                    style: UIAlertActionStyleDefault
+                                                  handler: ^(UIAlertAction *action)
+                            {
+                                ctxt -> result = i;
+                                s_in_modal = false;
+                            }];
+                [t_alert_controller addAction: t_action];
+            }
+        }
+        
+        [MCIPhoneGetViewController() presentViewController: t_alert_controller animated: YES completion: nil];
+#endif
+    }
 	
 }
 
@@ -141,11 +184,14 @@ static void dopopupanswerdialog_postwait(void *p_context)
 	popupanswerdialog_t *ctxt;
 	ctxt = (popupanswerdialog_t *)p_context;
 	
-	int32_t t_result;
-	ctxt -> result = [ctxt -> delegate index];
-	
-	[ctxt -> delegate release];
-	[ctxt -> alert_view release];
+    if (MCmajorosversion < 800)
+    {
+        int32_t t_result;
+        ctxt -> result = [ctxt -> delegate index];
+        
+        [ctxt -> delegate release];
+        [ctxt -> alert_view release];
+    }
 }
 
 int32_t MCScreenDC::popupanswerdialog(const char *p_buttons[], uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message)
@@ -381,60 +427,122 @@ static void dopopupaskdialog_prewait(void *p_context)
 	NSString *t_initial;
 	t_initial = [NSString stringWithCString: (ctxt -> initial == nil ? "" : ctxt -> initial) encoding: NSMacOSRomanStringEncoding];
     
-	ctxt -> delegate = [[ModalDelegate alloc] init];
-		
-	UITextField *t_text_field;
-	UIAlertView *t_alert;
-    if (MCmajorosversion < 500)
-    {        
-        ctxt-> alert = [[TextAlertView alloc] initWithTitle:t_title 
-                                                              message:t_message
-                                                             delegate:ctxt -> delegate
-                                                                 type:ctxt -> type
-                                                    cancelButtonTitle:@"Cancel"
-                                                    otherButtonTitles:@"OK", nil];
-
-		t_text_field = [ctxt -> alert textField];
-		t_alert = ctxt -> alert;
-	}
-	else
-	{
-#ifdef __IPHONE_5_0
-        ctxt -> alert_view = [[UIAlertView alloc] initWithTitle:t_title 
-                                                  message:t_message
-                                                 delegate:ctxt -> delegate
-                                        cancelButtonTitle:nil
-                                        otherButtonTitles:nil];
-        if (ctxt -> type == AT_PASSWORD)
-            [ctxt -> alert_view setAlertViewStyle:UIAlertViewStyleSecureTextInput];
-        else
-            [ctxt -> alert_view setAlertViewStyle:UIAlertViewStylePlainTextInput];
-        [ctxt -> alert_view addButtonWithTitle:@"Cancel"];
-        [ctxt -> alert_view addButtonWithTitle:@"OK"];
+    if (MCmajorosversion < 800)
+    {
+        ctxt -> delegate = [[ModalDelegate alloc] init];
         
-        ctxt -> text_field = [ctxt -> alert_view textFieldAtIndex:0];
-		
-		t_text_field = ctxt -> text_field;        
-		t_alert = ctxt -> alert_view;
-#endif		
-	}
-	
-	// MW-2012-10-12: [[ Bug 10175 ]] Refactored textField manipulations.
-	if (t_text_field != nil)
-	{
-		[ctxt -> delegate setView: t_alert];
-		
-		[t_text_field setAutocorrectionType:UITextAutocorrectionTypeNo];
-		[t_text_field setKeyboardType:MCIPhoneGetKeyboardType()];
-		// MW-2012-10-12: [[ Bug 10377 ]] If we want a hint, set placeholder not text.
-		if (ctxt -> hint)
-			[t_text_field setPlaceholder:t_initial];
-		else
-			[t_text_field setText:t_initial];
-		[t_text_field setDelegate: ctxt -> delegate];
-	}
-
-	[t_alert show];
+        UITextField *t_text_field;
+        UIAlertView *t_alert;
+        if (MCmajorosversion < 500)
+        {
+            ctxt-> alert = [[TextAlertView alloc] initWithTitle:t_title
+                                                        message:t_message
+                                                       delegate:ctxt -> delegate
+                                                           type:ctxt -> type
+                                              cancelButtonTitle:@"Cancel"
+                                              otherButtonTitles:@"OK", nil];
+            
+            t_text_field = [ctxt -> alert textField];
+            t_alert = ctxt -> alert;
+        }
+        else
+        {
+#ifdef __IPHONE_5_0
+            ctxt -> alert_view = [[UIAlertView alloc] initWithTitle:t_title
+                                                            message:t_message
+                                                           delegate:ctxt -> delegate
+                                                  cancelButtonTitle:nil
+                                                  otherButtonTitles:nil];
+            if (ctxt -> type == AT_PASSWORD)
+                [ctxt -> alert_view setAlertViewStyle:UIAlertViewStyleSecureTextInput];
+            else
+                [ctxt -> alert_view setAlertViewStyle:UIAlertViewStylePlainTextInput];
+            [ctxt -> alert_view addButtonWithTitle:@"Cancel"];
+            [ctxt -> alert_view addButtonWithTitle:@"OK"];
+            
+            ctxt -> text_field = [ctxt -> alert_view textFieldAtIndex:0];
+            
+            t_text_field = ctxt -> text_field;
+            t_alert = ctxt -> alert_view;
+#endif
+        }
+        
+        // MW-2012-10-12: [[ Bug 10175 ]] Refactored textField manipulations.
+        if (t_text_field != nil)
+        {
+            [ctxt -> delegate setView: t_alert];
+            
+            [t_text_field setAutocorrectionType:UITextAutocorrectionTypeNo];
+            [t_text_field setKeyboardType:MCIPhoneGetKeyboardType()];
+            // MW-2012-10-12: [[ Bug 10377 ]] If we want a hint, set placeholder not text.
+            if (ctxt -> hint)
+                [t_text_field setPlaceholder:t_initial];
+            else
+                [t_text_field setText:t_initial];
+            [t_text_field setDelegate: ctxt -> delegate];
+        }
+        
+        [t_alert show];
+    }
+    else
+    {
+#ifdef __IPHONE_8_0
+        // MM-2014-10-13: [[ Bug 13656 ]] Use new UIAlertController for iOS 8. Solves rotation issues.
+        UIAlertController *t_alert_controller;
+        t_alert_controller = [UIAlertController alertControllerWithTitle: t_title
+                                                                 message: t_message
+                                                          preferredStyle: UIAlertControllerStyleAlert];
+        
+        [t_alert_controller addTextFieldWithConfigurationHandler: ^(UITextField *p_text_field)
+         {
+             [p_text_field setAlpha: 0.75];
+             //[p_text_field setBorderStyle: UITextBorderStyleBezel];
+             [p_text_field setBackgroundColor: [UIColor whiteColor]];
+             
+             if (ctxt -> type == AT_PASSWORD)
+                 [p_text_field setSecureTextEntry: YES];
+             else
+                 [p_text_field setSecureTextEntry: NO];
+             
+             [p_text_field setAutocorrectionType: UITextAutocorrectionTypeNo];
+             [p_text_field setKeyboardType: MCIPhoneGetKeyboardType()];
+             if (ctxt -> hint)
+                 [p_text_field setPlaceholder: t_initial];
+             else
+                 [p_text_field setText: t_initial];
+         }];
+        
+        UIAlertAction *t_cancel_action;
+        t_cancel_action = [UIAlertAction actionWithTitle: @"Cancel"
+                                                   style: UIAlertActionStyleCancel
+                                                 handler: ^(UIAlertAction *action)
+                           {
+                               s_in_modal = false;
+                               ctxt -> result = nil;
+                           }];
+        [t_alert_controller addAction: t_cancel_action];
+        
+        UIAlertAction *t_ok_action;
+        t_ok_action = [UIAlertAction actionWithTitle: @"OK"
+                                               style: UIAlertActionStyleDefault
+                                             handler: ^(UIAlertAction *action)
+                       {
+                           s_in_modal = false;
+                           
+                           UITextField *t_text_field;
+                           t_text_field = [[t_alert_controller textFields] firstObject];
+                           
+                           const char *t_message_text;
+                           t_message_text = [[t_text_field text] cStringUsingEncoding: NSMacOSRomanStringEncoding];
+                           
+                           MCMemoryAllocate(MCCStringLength(t_message_text) + 1, ctxt -> result);
+                           MCCStringClone(t_message_text, ctxt -> result);
+                       }];
+        [t_alert_controller addAction: t_ok_action];
+        
+        [MCIPhoneGetViewController() presentViewController: t_alert_controller animated: YES completion: nil];
+#endif
+    }
 }
 
 static void dopopupaskdialog_postwait(void *p_context)
@@ -459,7 +567,7 @@ static void dopopupaskdialog_postwait(void *p_context)
         
         [ctxt -> alert release];
 	}
-	else
+	else if (MCmajorosversion < 800)
 	{
 #ifdef __IPHONE_5_0
         const char* t_message_text;
