@@ -1,10 +1,167 @@
 module com.livecode.arithmetic
 
+--
 
+foreign handler ExecAddIntegerToInteger(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecAddRealToReal(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecAddNumberToNumber(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecSubtractIntegerFromInteger(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecSubtractRealFromReal(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecSubtractNumberFromNumber(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecMultiplyIntegerByInteger(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecMultiplyRealByReal(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecMultiplyNumberByNumber(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecDivideIntegerByInteger(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecDivideRealByReal(Value, Target) as undefined binds to "<builtin>"
+foreign handler ExecDivideNumberByNumber(Value, Target) as undefined binds to "<builtin>"
+foreign handler EvalIntegerPlusInteger(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalRealPlusReal(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalNumberPlusNumber(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalIntegerMinusInteger(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalRealMinusReal(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalNumberPlusNumber(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalIntegerTimesInteger(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalRealTimesReal(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalNumberTimesNumber(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalIntegerOverInteger(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalRealOverReal(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalNumberOverNumber(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalIntegerModInteger(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalRealModReal(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalNumberModNumber(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalIntegerWrapInteger(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalRealWrapReal(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalNumberWrapNumber(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalIntegerIsGreaterThanInteger(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalRealIsGreaterThanReal(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalNumberIsGreaterThanNumber(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalIntegerIsGreaterThanOrEqualToInteger(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalRealIsGreaterThanOrEqualToReal(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalIntegerIsLessThanInteger(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalRealIsLessThanReal(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalNumberIsLessThanNumber(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalIntegerIsLessThanOrEqualToInteger(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalRealIsLessThanOrEqualToReal(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler EvalNumberIsLessThanOrEqualToNumber(Left, Right, output) as undefined binds to "<builtin>"
 
 --
 
+syntax AddNumberTo is statement
+    "add" <Value: Expression> "to" <Target: Expression>
+begin
+    ExecAddIntegerToInteger(Value, Target)
+    ExecAddRealToReal(Value, Target)
+    ExecAddNumberToNumber(Value, Target)
+end syntax
 
+syntax SubtractNumberFrom is statement
+    "subtract" <Value: Expression> "from" <Target: Expression>
+begin
+    ExecSubtractIntegerFromInteger(Value, Target)
+    ExecSubtractRealFromReal(Value, Target)
+    ExecSubtractNumberFromNumber(Value, Target)
+end syntax
+
+syntax MultiplyNumberBy is statement
+    "multiply" <Value: Expression> "by" <Target: Expression>
+begin
+    ExecMultiplyIntegerByInteger(Value, Target)
+    ExecMultiplyRealByReal(Value, Target)
+    ExecMultiplyNumberByNumber(Value, Target)
+end syntax
+
+syntax DivideNumberBy is statement
+    "divide" <Value: Expression> "by" <Target: Expression>
+begin
+    ExecDivideIntegerByInteger(Value, Target)
+    ExecDivideRealByReal(Value, Target)
+    ExecDivideNumberByNumber(Value, Target)
+end syntax
+
+--
+
+syntax PlusOperator is left binary operator of precedence 2
+    <Left: Expression> "+" <Right: Expression>
+begin
+    EvalIntegerPlusInteger(Left, Right, output)
+    EvalRealPlusReal(Left, Right, output)
+    EvalNumberPlusNumber(Left, Right, output)
+end syntax
+
+syntax MinusOperator is left binary operator of precedence 2
+    <Left: Expression> "-" <Right: Expression>
+begin
+    EvalIntegerMinusInteger(Left, Right, output)
+    EvalRealMinusReal(Left, Right, output)
+    EvalNumberPlusNumber(Left, Right, output)
+end syntax
+
+syntax TimesOperator is left binary operator of precedence 1
+    <Left: Expression> "*" <Right: Expression>
+begin
+    EvalIntegerTimesInteger(Left, Right, output)
+    EvalRealTimesReal(Left, Right, output)
+    EvalNumberTimesNumber(Left, Right, output)
+end syntax
+
+syntax OverOperator is left binary operator of precedence 1
+    <Left: Expression> "/" <Right: Expression>
+begin
+    EvalIntegerOverInteger(Left, Right, output)
+    EvalRealOverReal(Left, Right, output)
+    EvalNumberOverNumber(Left, Right, output)
+end syntax
+
+--
+
+syntax ModOperator is neutral binary operator of precedence 1
+    <Left: Expression> "mod" <Right: Expression>
+begin
+    EvalIntegerModInteger(Left, Right, output)
+    EvalRealModReal(Left, Right, output)
+    EvalNumberModNumber(Left, Right, output)
+
+syntax WrapOperator is neutral binary operator of precedence 1
+    <Left: Expression> "wrap" <Right: Expression>
+begin
+    EvalIntegerWrapInteger(Left, Right, output)
+    EvalRealWrapReal(Left, Right, output)
+    EvalNumberWrapNumber(Left, Right, output)
+
+--
+
+syntax IsGreaterThan is neutral binary operator of precedence 1
+    <Left: Expression> ">" <Right: Expression>
+begin
+    EvalIntegerIsGreaterThanInteger(Left, Right, output)
+    EvalRealIsGreaterThanReal(Left, Right, output)
+    EvalNumberIsGreaterThanNumber(Left, Right, output)
+end syntax
+
+syntax IsGreaterThanOrEqualTo is neutral binary operator of precedence 1
+    <Left: Expression> ">=" <Right: Expression>
+begin
+    EvalIntegerIsGreaterThanOrEqualToInteger(Left, Right, output)
+    EvalRealIsGreaterThanOrEqualToReal(Left, Right, output)
+    EvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output)
+end syntax
+
+syntax IsLessThan is neutral binary operator of precedence 1
+    <Left: Expression> "<" <Right: Expression>
+begin
+    EvalIntegerIsLessThanInteger(Left, Right, output)
+    EvalRealIsLessThanReal(Left, Right, output)
+    EvalNumberIsLessThanNumber(Left, Right, output)
+end syntax
+
+syntax IsLessThanOrEqualTo is neutral binary operator of precedence 1
+    <Left: Expression> "<=" <Right: Expression>
+begin
+    EvalIntegerIsLessThanOrEqualToInteger(Left, Right, output)
+    EvalRealIsLessThanOrEqualToReal(Left, Right, output)
+    EvalNumberIsLessThanOrEqualToNumber(Left, Right, output)
+end syntax
 
 --
 
