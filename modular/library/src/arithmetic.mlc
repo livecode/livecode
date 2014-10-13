@@ -81,7 +81,7 @@ end syntax
 
 --
 
-syntax PlusOperator is left binary operator of precedence 2
+syntax PlusOperator is left binary operator with precedence 2
     <Left: Expression> "+" <Right: Expression>
 begin
     EvalIntegerPlusInteger(Left, Right, output)
@@ -89,7 +89,7 @@ begin
     EvalNumberPlusNumber(Left, Right, output)
 end syntax
 
-syntax MinusOperator is left binary operator of precedence 2
+syntax MinusOperator is left binary operator with precedence 2
     <Left: Expression> "-" <Right: Expression>
 begin
     EvalIntegerMinusInteger(Left, Right, output)
@@ -97,7 +97,7 @@ begin
     EvalNumberPlusNumber(Left, Right, output)
 end syntax
 
-syntax TimesOperator is left binary operator of precedence 1
+syntax TimesOperator is left binary operator with precedence 1
     <Left: Expression> "*" <Right: Expression>
 begin
     EvalIntegerTimesInteger(Left, Right, output)
@@ -105,7 +105,7 @@ begin
     EvalNumberTimesNumber(Left, Right, output)
 end syntax
 
-syntax OverOperator is left binary operator of precedence 1
+syntax OverOperator is left binary operator with precedence 1
     <Left: Expression> "/" <Right: Expression>
 begin
     EvalIntegerOverInteger(Left, Right, output)
@@ -115,14 +115,14 @@ end syntax
 
 --
 
-syntax ModOperator is neutral binary operator of precedence 1
+syntax ModOperator is neutral binary operator with precedence 1
     <Left: Expression> "mod" <Right: Expression>
 begin
     EvalIntegerModInteger(Left, Right, output)
     EvalRealModReal(Left, Right, output)
     EvalNumberModNumber(Left, Right, output)
 
-syntax WrapOperator is neutral binary operator of precedence 1
+syntax WrapOperator is neutral binary operator with precedence 1
     <Left: Expression> "wrap" <Right: Expression>
 begin
     EvalIntegerWrapInteger(Left, Right, output)
@@ -131,7 +131,7 @@ begin
 
 --
 
-syntax IsGreaterThan is neutral binary operator of precedence 1
+syntax IsGreaterThan is neutral binary operator with precedence 3
     <Left: Expression> ">" <Right: Expression>
 begin
     EvalIntegerIsGreaterThanInteger(Left, Right, output)
@@ -139,7 +139,7 @@ begin
     EvalNumberIsGreaterThanNumber(Left, Right, output)
 end syntax
 
-syntax IsGreaterThanOrEqualTo is neutral binary operator of precedence 1
+syntax IsGreaterThanOrEqualTo is neutral binary operator with precedence 3
     <Left: Expression> ">=" <Right: Expression>
 begin
     EvalIntegerIsGreaterThanOrEqualToInteger(Left, Right, output)
@@ -147,7 +147,7 @@ begin
     EvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output)
 end syntax
 
-syntax IsLessThan is neutral binary operator of precedence 1
+syntax IsLessThan is neutral binary operator with precedence 3
     <Left: Expression> "<" <Right: Expression>
 begin
     EvalIntegerIsLessThanInteger(Left, Right, output)
@@ -155,7 +155,7 @@ begin
     EvalNumberIsLessThanNumber(Left, Right, output)
 end syntax
 
-syntax IsLessThanOrEqualTo is neutral binary operator of precedence 1
+syntax IsLessThanOrEqualTo is neutral binary operator with precedence 3
     <Left: Expression> "<=" <Right: Expression>
 begin
     EvalIntegerIsLessThanOrEqualToInteger(Left, Right, output)
