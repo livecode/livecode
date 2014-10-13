@@ -801,7 +801,7 @@ struct MCInterfaceShadow
 
 static void MCInterfaceShadowParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceShadow& r_output)
 {
-	if (MCU_stob(p_input, r_output . flag))
+	if (MCTypeConvertStringToBool(p_input, r_output . flag))
 		r_output . is_flag = true;
 	else if (MCU_stoi2(p_input, r_output . shadow))
 		r_output . is_flag = false;
@@ -921,7 +921,7 @@ void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterf
         r_output . type = kMCInterfaceTriStateMixed;
     }
     
-    if (MCU_stob(p_input, r_output . state))
+    if (MCTypeConvertStringToBool(p_input, r_output . state))
     {
         r_output . type = kMCInterfaceTriStateBoolean;
         return;

@@ -178,7 +178,7 @@ void MCLegacyEvalStackSpace(MCExecContext& ctxt, integer_t& r_bytes)
 void MCLegacyEvalIsNumber(MCExecContext& ctxt, MCStringRef p_string, bool& r_bool)
 {
 	real64_t t_real;
-	r_bool = MCU_stor8(p_string, t_real);
+	r_bool = MCTypeConvertStringToReal(p_string, t_real);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

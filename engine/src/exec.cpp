@@ -126,7 +126,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0 &&
                     !MCStringGetNumericValue(MCNameGetString((MCNameRef)p_value), t_number))
             {
-                if (!MCU_stor8(MCNameGetString((MCNameRef)p_value), t_number, m_convertoctals))
+                if (!MCTypeConvertStringToReal(MCNameGetString((MCNameRef)p_value), t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -144,7 +144,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             // Fetches the numeric value in case it exists, or stores the one therefore computed otherwise
             if (MCStringGetLength((MCStringRef)p_value) != 0 && !MCStringGetNumericValue((MCStringRef)p_value, t_number))
             {
-                if (!MCU_stor8((MCStringRef)p_value, t_number, m_convertoctals))
+                if (!MCTypeConvertStringToReal((MCStringRef)p_value, t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -1401,7 +1401,7 @@ static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, u
             t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
 		
 		if (t_success)
-			t_success = MCU_stor8(*t_double_string, t_d);
+			t_success = MCTypeConvertStringToReal(*t_double_string, t_d);
 		
 		if (t_success)
 			t_success = t_list . Push(t_d);

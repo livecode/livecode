@@ -148,7 +148,7 @@ void MCScrollbar::GetThumbPos(MCExecContext& ctxt, double& r_pos)
     // AL-2014-07-22: [[ Bug 12843 ]] Round thumbpos according to scrollbar number format
     MCAutoStringRef t_formatted_thumbpos;
     if (MCU_r8tos(thumbpos, nffw, nftrailing, nfforce, &t_formatted_thumbpos) &&
-        MCU_stor8(*t_formatted_thumbpos, r_pos))
+        MCTypeConvertStringToReal(*t_formatted_thumbpos, r_pos))
         return;
     
     ctxt . Throw();
@@ -236,7 +236,7 @@ void MCScrollbar::SetStartValue(MCExecContext& ctxt, MCStringRef p_value)
 		return;
 	}
 
-	if (!MCU_stor8(p_value, startvalue))
+	if (!MCTypeConvertStringToReal(p_value, startvalue))
 	{
 		ctxt . LegacyThrow(EE_OBJECT_NAN);
 		return;
@@ -268,7 +268,7 @@ void MCScrollbar::SetEndValue(MCExecContext& ctxt, MCStringRef p_value)
 		return;
 	}
 	
-	if (!MCU_stor8(p_value, endvalue))
+	if (!MCTypeConvertStringToReal(p_value, endvalue))
 	{
 		ctxt . LegacyThrow(EE_OBJECT_NAN);
 		return;

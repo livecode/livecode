@@ -2418,5 +2418,12 @@ bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *info, MCValueRef*& r_v
 bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *info, MCValueRef *value_pool, uindex_t value_pool_size, void* record);
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+//  TYPE CONVERSION
+//
+
+bool MCTypeConvertStringToLongInteger(MCStringRef p_string, integer_t& r_converted);
+bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool p_convert_octals = false);
+bool MCTypeConvertStringToBool(MCStringRef p_string, bool& r_converted);
 
 #endif

@@ -2215,7 +2215,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 				MCAutoStringRef s;
 				/* UNCHECKED */ MCStringCopySubstring(p_data, MCRangeMake(t_start_pos, t_data_pos - t_start_pos), &s); 
 				real8 n;
-				if (!MCU_stor8(*s, n))
+				if (!MCTypeConvertStringToReal(*s, n))
 				{
 					ctxt . LegacyThrow(EE_FUNCTION_NAN);
 					r_stat = IO_ERROR;

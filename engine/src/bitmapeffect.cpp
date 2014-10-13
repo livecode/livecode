@@ -289,7 +289,7 @@ static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, MCStringRef p_
 static Exec_stat MCBitmapEffectSetBooleanProperty(MCStringRef p_data, bool p_current_value, bool& r_new_value, Boolean& r_dirty)
 {
 	bool t_value;
-	if (!MCU_stob(p_data, t_value))
+	if (!MCTypeConvertStringToBool(p_data, t_value))
 	{
 		MCeerror -> add(EE_BITMAPEFFECT_BADBOOLEAN, 0, 0, p_data);
 		return ES_ERROR;
