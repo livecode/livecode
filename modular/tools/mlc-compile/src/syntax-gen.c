@@ -105,7 +105,7 @@ struct SyntaxRule
     long precedence;
     SyntaxNodeRef expr;
     SyntaxMethodRef methods;
-    long multimethod;
+    long *mapping;
 };
 
 typedef struct SyntaxRuleGroup *SyntaxRuleGroupRef;
@@ -127,7 +127,7 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right);
 static void *Allocate(size_t p_size)
 {
     void *t_ptr;
-    t_ptr = malloc(p_size);
+    t_ptr = calloc(1, p_size);
     if (t_ptr == NULL)
         Fatal_OutOfMemory();
     return t_ptr;
@@ -156,6 +156,7 @@ static void BeginSyntaxRule(NameRef p_name, SyntaxRuleKind p_kind, long p_preced
     s_rule -> precedence = p_precedence;
     s_rule -> expr = NULL;
     s_rule -> methods = NULL;
+    s_rule -> mapping = NULL;
 }
 
 void BeginStatementSyntaxRule(NameRef p_name)
@@ -365,6 +366,7 @@ static void FreeSyntaxNode(SyntaxNodeRef p_node)
             FreeSyntaxNode(p_node -> repeat . delimiter);
             break;
     }
+    free(p_node -> marks);
     free(p_node);
 }
 
@@ -880,7 +882,7 @@ static void MergeSyntaxRule(SyntaxRuleRef p_rule, SyntaxRuleRef p_other_rule)
     MergeSyntaxNodes(p_rule -> expr, p_other_rule -> expr, &t_rule_mark_count, t_mark_mapping);
     
     // Need to process this against the method mappings.
-    free(t_mark_mapping);
+    p_other_rule -> mapping = t_mark_mapping;
 }
 
 static void SetSyntaxNodeMarkAsUsed(struct SyntaxNodeMark *p_marks, int p_mark_count, long p_index, SyntaxNodeRef p_value)
@@ -1007,7 +1009,7 @@ static void GenerateSyntaxRuleSubHeader(SyntaxNodeRef p_node, SyntaxRuleKind p_k
         }
         else
         {
-            fprintf(stderr, "invoke(Position, 0, ");
+            fprintf(stderr, "invoke(Position, %d, ", p_node -> concrete_rule);
             for(int i = 0; i < p_node -> mark_count; i++)
                 fprintf(stderr, "expressionlist(Mark%ld, ", p_node -> marks[i] . index);
             fprintf(stderr, "nil");
@@ -1064,7 +1066,7 @@ static void GenerateSyntaxRuleConstructor(SyntaxNodeRef p_node, SyntaxRuleRef p_
 {
     static const char *s_calls[] = { "PushOperatorExpressionPrefix", "PushOperatorExpressionPostfix", "PushOperatorExpressionLeftBinary", "PushOperatorExpressionRightBinary", "PushOperatorExpressionNeutralBinary" };
     fprintf(stderr, "    %s(Position, %ld, %ld)\n", s_calls[p_rule -> kind - kSyntaxRuleKindPrefixOperator],
-            p_rule -> precedence, p_rule -> multimethod);
+            p_rule -> precedence, p_node -> concrete_rule);
     for(int i = 0; i < p_node -> mark_count; i++)
         fprintf(stderr, "    PushOperatorExpressionOperand(Mark%ld)\n", p_node -> marks[i] . index);
 }
@@ -1260,14 +1262,10 @@ void GenerateSyntaxRules(void)
     int t_index;
     t_index = 0;
     
-    int t_gindex;
-    t_gindex = 1;
-    
     for(SyntaxRuleGroupRef t_group = s_groups; t_group != NULL; t_group = t_group -> next)
     {
         SyntaxRuleRef t_rule;
         t_rule = t_group -> rules;
-        t_rule -> multimethod = t_gindex++;
         for(SyntaxRuleRef t_other_rule = t_group -> rules -> next; t_other_rule != NULL; t_other_rule = t_other_rule -> next)
             MergeSyntaxRule(t_rule, t_other_rule);
 
