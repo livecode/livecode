@@ -1578,6 +1578,8 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 
 - (void)dealloc
 {
+    // PM-2014-10-13: [[ Bug 13659 ]] Remove the observer
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 	[m_root_view release];
 	
 	[super dealloc];
@@ -1613,6 +1615,12 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 - (void)viewDidLoad;
 {
 	MCLog("MainViewController: viewDidLoad\n");
+    
+    // PM-2014-10-13: [[ Bug 13659 ]] Make sure we can interact with the LC app when Voice Over is enabled/disabled while our view is already onscreen
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(voiceOverStatusChanged)
+                                                 name:UIAccessibilityVoiceOverStatusChanged
+                                               object:nil];
 }
 
 - (void)viewDidUnload;
@@ -1704,6 +1712,24 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
     m_current_orientation = m_pending_orientation;
 }
 
+// PM-2014-10-13: [[ Bug 13659 ]] Make sure we can interact with the LC app when Voice Over is enabled/disabled while our view is already onscreen
+- (void)voiceOverStatusChanged
+{
+    UIView *t_main_view;
+    t_main_view = [[MCIPhoneApplication sharedApplication] fetchMainView];
+    
+    if (UIAccessibilityIsVoiceOverRunning())
+    {
+        t_main_view.isAccessibilityElement = YES;
+        [t_main_view setAccessibilityTraits:UIAccessibilityTraitAllowsDirectInteraction];
+    }
+    else
+    {
+        [t_main_view setAccessibilityTraits:UIAccessibilityTraitNone];
+        t_main_view.isAccessibilityElement = NO;
+    }
+}
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1715,7 +1741,20 @@ MCIPhoneApplication *MCIPhoneGetApplication(void)
 
 UIView *MCIPhoneGetView(void)
 {
-	return [[MCIPhoneApplication sharedApplication] fetchMainView];
+    // PM-2014-10-13: [[ Bug 13659 ]] Make sure we can interact with the LC app when Voice Over is turned on
+    // This only takes care of situations where VoiceOver is in use when our view loads.
+    // In case Voice Over is activated or disabled when our view is already onscreen,
+    // we need to register an observer for the notification in the viewDidLoad method
+    UIView *t_main_view;
+    t_main_view = [[MCIPhoneApplication sharedApplication] fetchMainView];
+    
+    if (UIAccessibilityIsVoiceOverRunning())
+    {
+        t_main_view.isAccessibilityElement = YES;
+        [t_main_view setAccessibilityTraits:UIAccessibilityTraitAllowsDirectInteraction];
+    }
+    
+    return t_main_view;
 }
 
 UIView *MCIPhoneGetRootView(void)
