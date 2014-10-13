@@ -2,48 +2,48 @@ module com.livecode.arithmetic
 
 --
 
-foreign handler ExecAddIntegerToInteger(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecAddRealToReal(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecAddNumberToNumber(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecSubtractIntegerFromInteger(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecSubtractRealFromReal(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecSubtractNumberFromNumber(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecMultiplyIntegerByInteger(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecMultiplyRealByReal(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecMultiplyNumberByNumber(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecDivideIntegerByInteger(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecDivideRealByReal(Value, Target) as undefined binds to "<builtin>"
-foreign handler ExecDivideNumberByNumber(Value, Target) as undefined binds to "<builtin>"
-foreign handler EvalIntegerPlusInteger(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalRealPlusReal(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalNumberPlusNumber(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalIntegerMinusInteger(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalRealMinusReal(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalNumberPlusNumber(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalIntegerTimesInteger(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalRealTimesReal(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalNumberTimesNumber(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalIntegerOverInteger(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalRealOverReal(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalNumberOverNumber(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalIntegerModInteger(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalRealModReal(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalNumberModNumber(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalIntegerWrapInteger(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalRealWrapReal(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalNumberWrapNumber(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalIntegerIsGreaterThanInteger(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalRealIsGreaterThanReal(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalNumberIsGreaterThanNumber(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalIntegerIsGreaterThanOrEqualToInteger(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalRealIsGreaterThanOrEqualToReal(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalIntegerIsLessThanInteger(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalRealIsLessThanReal(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalNumberIsLessThanNumber(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalIntegerIsLessThanOrEqualToInteger(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalRealIsLessThanOrEqualToReal(Left, Right, output) as undefined binds to "<builtin>"
-foreign handler EvalNumberIsLessThanOrEqualToNumber(Left, Right, output) as undefined binds to "<builtin>"
+foreign handler ExecAddIntegerToInteger(in Value, inout Target) as undefined binds to "<builtin>"
+foreign handler ExecAddRealToReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
+foreign handler ExecAddNumberToNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+foreign handler ExecSubtractIntegerFromInteger(in Value as integer, inout Target as integer) as undefined binds to "<builtin>"
+foreign handler ExecSubtractRealFromReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
+foreign handler ExecSubtractNumberFromNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+foreign handler ExecMultiplyIntegerByInteger(in Value as integer, inout Target as integer) as undefined binds to "<builtin>"
+foreign handler ExecMultiplyRealByReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
+foreign handler ExecMultiplyNumberByNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+foreign handler ExecDivideIntegerByInteger(in Value as integer, inout Target as integer) as undefined binds to "<builtin>"
+foreign handler ExecDivideRealByReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
+foreign handler ExecDivideNumberByNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+foreign handler EvalIntegerPlusInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalRealPlusReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalNumberPlusNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler EvalIntegerMinusInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalRealMinusReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalNumberMinusNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler EvalIntegerTimesInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalRealTimesReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalNumberTimesNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler EvalIntegerOverInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalRealOverReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalNumberOverNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler EvalIntegerModInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalRealModReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalNumberModNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler EvalIntegerWrapInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalRealWrapReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalNumberWrapNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler EvalIntegerIsGreaterThanInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalRealIsGreaterThanReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalNumberIsGreaterThanNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalIntegerIsGreaterThanOrEqualToInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalRealIsGreaterThanOrEqualToReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalNumberIsGreaterThanOrEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalIntegerIsLessThanInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalRealIsLessThanReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalNumberIsLessThanNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalIntegerIsLessThanOrEqualToInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalRealIsLessThanOrEqualToReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalNumberIsLessThanOrEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
 
 --
 
@@ -121,6 +121,7 @@ begin
     EvalIntegerModInteger(Left, Right, output)
     EvalRealModReal(Left, Right, output)
     EvalNumberModNumber(Left, Right, output)
+end syntax
 
 syntax WrapOperator is neutral binary operator with precedence 1
     <Left: Expression> "wrap" <Right: Expression>
@@ -128,6 +129,7 @@ begin
     EvalIntegerWrapInteger(Left, Right, output)
     EvalRealWrapReal(Left, Right, output)
     EvalNumberWrapNumber(Left, Right, output)
+end syntax
 
 --
 
