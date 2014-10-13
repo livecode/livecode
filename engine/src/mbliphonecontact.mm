@@ -410,6 +410,7 @@ bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &
 
 static void requestAuthorization(ABAddressBookRef &x_address_book)
 {
+#ifdef __IPHONE_6_0
     ABAuthorizationStatus t_status = ABAddressBookGetAuthorizationStatus();
     
     // ABAddressBookGetAuthorizationStatus() returns kABAuthorizationStatusNotDetermined *only* the first time the app is installed. The user will only be prompted the first time access is requested; any subsequent calls will use the existing permissions.
@@ -427,6 +428,7 @@ static void requestAuthorization(ABAddressBookRef &x_address_book)
         while (t_blocking)
             MCscreen -> wait(1.0, False, True);
     }
+#endif
 }
 
 bool MCContactAddContact(MCVariableValue *p_contact, int32_t& r_chosen)
@@ -444,9 +446,11 @@ bool MCContactAddContact(MCVariableValue *p_contact, int32_t& r_chosen)
     }
     else
     {
+#ifdef __IPHONE_6_0
         // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
         t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
         requestAuthorization(t_address_book);
+#endif
     }
 
 	if (t_success)
@@ -494,9 +498,11 @@ bool MCContactDeleteContact(int32_t p_person_id)
     }
     else
     {
+#ifdef __IPHONE_6_0
         // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
         t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
         requestAuthorization(t_address_book);
+#endif
     }
     
     ABRecordRef t_contact = ABAddressBookGetPersonWithRecordID (t_address_book, p_person_id);
@@ -532,9 +538,11 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
     }
     else
     {
+#ifdef __IPHONE_6_0
         // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
         t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
         requestAuthorization(t_address_book);
+#endif
     }
     
 	t_success = t_address_book != nil;
@@ -1169,9 +1177,11 @@ bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCVaria
     }
     else
     {
+#ifdef __IPHONE_6_0
         // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
         t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
         requestAuthorization(t_address_book);
+#endif
     }
 
 	t_success = (nil != t_address_book);

@@ -1721,7 +1721,9 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
     if (UIAccessibilityIsVoiceOverRunning())
     {
         t_main_view.isAccessibilityElement = YES;
+#ifdef __IPHONE_5_0
         [t_main_view setAccessibilityTraits:UIAccessibilityTraitAllowsDirectInteraction];
+#endif
     }
     else
     {
@@ -1751,7 +1753,9 @@ UIView *MCIPhoneGetView(void)
     if (UIAccessibilityIsVoiceOverRunning())
     {
         t_main_view.isAccessibilityElement = YES;
+#ifdef __IPHONE_5_0
         [t_main_view setAccessibilityTraits:UIAccessibilityTraitAllowsDirectInteraction];
+#endif
     }
     
     return t_main_view;
