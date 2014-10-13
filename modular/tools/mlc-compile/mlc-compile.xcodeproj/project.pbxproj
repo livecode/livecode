@@ -174,6 +174,7 @@
 		4D78D29919E9485D00DDEF0B /* YYSTYPE.b */ = {isa = PBXFileReference; lastKnownFileType = text; name = YYSTYPE.b; path = src/YYSTYPE.b; sourceTree = SOURCE_ROOT; };
 		4D78D29A19E9493700DDEF0B /* gen-bootstrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "gen-bootstrap.h"; path = "src/_GG_/gen-bootstrap.h"; sourceTree = "<group>"; };
 		4D78D29B19E9499000DDEF0B /* gen-full.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "gen-full.h"; path = "src/_G_/gen-full.h"; sourceTree = "<group>"; };
+		4D78D29C19E9586400DDEF0B /* grammar_full.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = grammar_full.g; path = src/grammar_full.g; sourceTree = SOURCE_ROOT; };
 		4DA53A2119E4435D0089FBDC /* gen.l */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.lex; name = gen.l; path = src/_GG_/gen.l; sourceTree = "<group>"; };
 		4DA53A2219E4435D0089FBDC /* gen.lit */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = gen.lit; path = src/_GG_/gen.lit; sourceTree = "<group>"; };
 		4DA53A2319E4435D0089FBDC /* gen.tkn */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = gen.tkn; path = src/_GG_/gen.tkn; sourceTree = "<group>"; };
@@ -279,6 +280,7 @@
 				4DEB63F419E52EEB009DF2EA /* support.g */,
 				4D3AA08219CC3EA600886BE7 /* types.g */,
 				4D6F072719CC386B00DDC6E0 /* grammar.g */,
+				4D78D29C19E9586400DDEF0B /* grammar_full.g */,
 				4DA53A2F19E448C50089FBDC /* bind.g */,
 				4DEB640219E59227009DF2EA /* syntax.g */,
 				4D6E0E7119E710BE001AE5CC /* check.g */,
