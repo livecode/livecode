@@ -530,20 +530,35 @@ static void MCScreenDCDoSnapshot(void *p_env)
 					t_is_rotated = false;
 					break;
 				case UIInterfaceOrientationPortraitUpsideDown:
-					t_angle = M_PI;
+                    // PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
+                    if (MCmajorosversion >=800)
+                        t_angle = 0.0;
+                    else
+                        t_angle = M_PI;
+
 					t_offset = CGSizeMake(t_screen_rect . width / 2, t_screen_rect . height / 2);
 					t_is_rotated = false;
 					break;
 				case UIInterfaceOrientationLandscapeLeft:
 					// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
-					t_angle = M_PI / 2.0;
+                    // PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
+                    if (MCmajorosversion >=800)
+                        t_angle = 0.0;
+                    else
+                        t_angle = M_PI / 2;
+
 					t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
 					t_is_rotated = true;
 					break;
 				case UIInterfaceOrientationLandscapeRight:
 					// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
-					t_angle = -M_PI / 2.0;
-					t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
+                    // PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
+                    if (MCmajorosversion >=800)
+                        t_angle = 0.0;
+                    else
+                        t_angle = -M_PI / 2;
+                    
+                    t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
 					t_is_rotated = true;
 					break;
 			}
