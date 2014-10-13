@@ -61,7 +61,7 @@ inline bool MCStringToUInt16(MCStringRef string, uint16_t& r_integer)
 	integer_t t_integer;
 	if (!MCStringToInteger(string, t_integer))
 		return false;
-	if (t_integer < UINT16_MIN || t_integer > UINT16_MAX)
+	if (t_integer < (integer_t) UINT16_MIN || t_integer > (integer_t) UINT16_MAX)
 		return false;
 	r_integer = (uint16_t)t_integer;
 	return true;
