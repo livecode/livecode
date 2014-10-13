@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 #define PATH_MAX 260
-#elif !defined(_ANDROID_MOBILE)
+#elif !defined(PATH_MAX)
 #define PATH_MAX 1024
 #endif
 
