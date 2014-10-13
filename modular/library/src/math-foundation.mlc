@@ -1,9 +1,99 @@
-module com.livecode.math
-
-
+module com.livecode.mathfoundation
 
 --
 
+foreign handler ExecRoundRealToNearest(Target) as undefined binds to "<builtin>"
+foreign handler ExecRoundNumberToNearest(Target) as undefined binds to "<builtin>"
+foreign handler ExecRoundRealDown(Target) as undefined binds to "<builtin>"
+foreign handler ExecRoundNumberDown(Target) as undefined binds to "<builtin>"
+foreign handler ExecRoundRealUp(Target) as undefined binds to "<builtin>"
+foreign handler ExecRoundNumberUp(Target) as undefined binds to "<builtin>"
+foreign handler EvalFloorOfReal(Target, output) as undefined binds to "<builtin>"
+foreign handler EvalFloorOfNumber(Target, output) as undefined binds to "<builtin>"
+foreign handler EvalCeilOfReal(Target, output) as undefined binds to "<builtin>"
+foreign handler EvalCeilOfNumber(Target, output) as undefined binds to "<builtin>"
+
 --
+
+public constant pi = 3.14159265358979323846
+
+--
+
+/* 
+Summary:    Rounds <Target> to the nearest integer, i.e. the greatest integer less than 
+            or equal to <Target>, or the least integer greater than or equal to <Target> 
+            depending on which is closest.
+            If <Target> is exactly halfway between two integers, rounds to the one with greatest
+            absolute value.
+
+Target:     An expression that evaluates to a number.
+
+*/
+
+syntax RoundToNearest is statement
+    "round" <Target: Expression>
+begin 
+    ExecRoundRealToNearest(Target)
+    ExecRoundNumberToNearest(Target)
+end syntax
+
+/* 
+Summary:    Rounds <Target> to the greatest integer less than or equal to <Target>.
+
+Target:     An expression that evaluates to a number.
+
+*/
+
+syntax RoundDown is statement
+    "round" <Target: Expression>
+begin 
+    ExecRoundRealDown(Target)
+    ExecRoundNumberDown(Target)
+end syntax
+
+/* 
+Summary:    Rounds <Target> to the least integer greater than or equal to <Target>.
+
+Target:     An expression that evaluates to a number.
+
+*/
+
+syntax RoundUp is statement
+    "round" <Target: Expression>
+begin 
+    ExecRoundRealUp(Target)
+    ExecRoundNumberUp(Target)
+end syntax
+
+--
+
+/* 
+Summary:    Returns the floor of <Target>.
+Target:     An expression that evaluates to a number.
+output:     The greatest integer less than or equal to <Target>.
+
+*/
+
+
+syntax FloorOperator is prefix operator with precedence 1
+    "the" "floor" "of" <Target: Expression>
+begin
+    EvalFloorOfReal(Target, output)
+    EvalFloorOfNumber(Target, output)
+end syntax
+
+/* 
+Summary:    Returns the ceiling of <Target>.
+Target:     An expression that evaluates to a number.
+output:     The least integer greater than or equal to <Target>.
+
+*/
+
+syntax CeilOperator is prefix operator with precedence 1
+    "the" "ceil" "of" <Target: Expression>
+begin
+    EvalCeilOfReal(Target, output)
+    EvalCeilOfNumber(Target, output)
+end syntax
 
 end module
