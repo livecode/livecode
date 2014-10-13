@@ -29,6 +29,7 @@
 
 #include "widget-events.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCGContextRef MCwidgetcontext;
@@ -50,15 +51,18 @@ MCObjectPropertyTable MCWidget::kPropertyTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWidget::MCWidget(void)
+MCWidget::MCWidget(void) :
+  m_native_layer(nil)
 {
 
 }
 
-MCWidget::MCWidget(const MCWidget& p_other)
-	: MCControl(p_other)
+MCWidget::MCWidget(const MCWidget& p_other) :
+  MCControl(p_other),
+  m_native_layer(nil)
 {
-
+    m_native_layer = createNativeLayer();
+    m_native_layer->OnAttach();
 }
 
 MCWidget::~MCWidget(void)
@@ -494,6 +498,11 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
     // Not handled for now.
     return false;
 }
+
+void MCWidget::toolchanged(Tool p_new_tool)
+{
+    OnToolChanged(p_new_tool);
+}
 	
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)
 {
@@ -631,74 +640,58 @@ bool MCWidget::isDragSource() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCWidget::isNative() const
-{
-    return false;
-}
-
-void MCWidget::nativeOpen()
-{
-    // Not native. Do nothing.
-}
-
-void MCWidget::nativeClose()
-{
-    // Not native. Do nothing.
-}
-
-void MCWidget::nativePaint(MCDC* p_dc, const MCRectangle& p_dirty)
-{
-    // Not native. Do nothing.
-}
-
-void MCWidget::nativeGeometryChanged(const MCRectangle& p_old_rect)
-{
-    // Not native. Do nothing.
-}
-
-void MCWidget::nativeVisibilityChanged(bool p_visible)
-{
-    // Not native. Do nothing.
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCWidget::OnOpen()
 {
-    if (isNative())
-        nativeOpen();
+    if (m_native_layer)
+        m_native_layer->OnOpen();
     
     fprintf(stderr, "MCWidget::OnOpen\n");
 }
 
 void MCWidget::OnClose()
 {
-    if (isNative())
-        nativeClose();
+    if (m_native_layer)
+        m_native_layer->OnClose();
     
     fprintf(stderr, "MCWidget::OnClose\n");
 }
 
+void MCWidget::OnAttach()
+{
+    if (m_native_layer)
+        m_native_layer->OnAttach();
+    
+    fprintf(stderr, "MCWidget::OnAttach\n");
+}
+
+void MCWidget::OnDetach()
+{
+    if (m_native_layer)
+        m_native_layer->OnDetach();
+    
+    fprintf(stderr, "MCWidget::OnDetach\n");
+}
+
 void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
 {
-    if (isNative())
-        nativePaint(p_dc, p_rect);
+    if (m_native_layer)
+        m_native_layer->OnPaint(p_dc, p_rect);
     
     fprintf(stderr, "MCWidget::OnPaint\n");
 }
 
 void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
 {
-    if (isNative())
-        nativeGeometryChanged(p_old_rect);
+    if (m_native_layer)
+        m_native_layer->OnGeometryChanged(p_old_rect);
     
     fprintf(stderr, "MCWidget::OnGeometryChanged\n");
 }
 
 void MCWidget::OnVisibilityChanged(bool p_visible)
 {
-    if (isNative())
-        nativeVisibilityChanged(p_visible);
+    if (m_native_layer)
+        m_native_layer->OnVisibilityChanged(p_visible);
     
     fprintf(stderr, "MCWidget::OnVisibilityChanged\n");
 }
@@ -738,6 +731,14 @@ void MCWidget::OnDestroy()
 void MCWidget::OnParentPropChanged()
 {
     fprintf(stderr, "MCWidget::OnParentPropChanged\n");
+}
+
+void MCWidget::OnToolChanged(Tool p_new_tool)
+{
+    if (m_native_layer)
+        m_native_layer->OnToolChanged(p_new_tool);
+    
+    fprintf(stderr, "MCWidget::OnToolChanged\n");
 }
 
 void MCWidget::OnMouseEnter()

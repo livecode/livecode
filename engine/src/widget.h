@@ -1,9 +1,8 @@
 #ifndef __MC_WIDGET__
 #define __MC_WIDGET__
 
-#ifndef __MC_CONTROL__
 #include "control.h"
-#endif
+#include "native-layer.h"
 
 
 class MCWidget: public MCControl
@@ -58,6 +57,8 @@ public:
     virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
 	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
     
+    virtual void toolchanged(Tool p_new_tool);
+    
     
     void SetKind(MCExecContext& ctxt, MCNameRef p_kind);
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
@@ -85,14 +86,6 @@ protected:
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
     
-    // Hooks for native widgets. They do nothing if the widget is non-native.
-    virtual bool isNative() const;
-    virtual void nativeOpen();
-    virtual void nativeClose();
-    virtual void nativePaint(MCDC*, const MCRectangle&);
-    virtual void nativeGeometryChanged(const MCRectangle& p_old_rect);
-    virtual void nativeVisibilityChanged(bool p_visible);
-	
 private:
 
     //////////
@@ -104,6 +97,8 @@ private:
     
     void OnOpen();
     void OnClose();
+    void OnAttach();
+    void OnDetach();
     void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
     void OnGeometryChanged(const MCRectangle& p_old_rect);
     void OnVisibilityChanged(bool p_visible);
@@ -114,6 +109,7 @@ private:
     void OnCreate();
     void OnDestroy();
     void OnParentPropChanged();
+    void OnToolChanged(Tool p_new_tool);
     
     ////////// Basic mouse events
     
@@ -187,6 +183,12 @@ private:
 	bool CallHandler(MCNameRef p_name, MCParameter *parameters);
 	bool CallGetProp(MCNameRef p_property_name, MCNameRef p_key, MCValueRef& r_value);
 	bool CallSetProp(MCNameRef p_property_name, MCNameRef p_key, MCValueRef value);
+    
+    // The native layer(s) belonging to this widget
+    MCNativeLayer* m_native_layer;
+    
+    // Implemented by the platform-specific native layers: creates a new layer
+    MCNativeLayer* createNativeLayer();
 };
 
 #endif
