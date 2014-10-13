@@ -2,16 +2,16 @@ module com.livecode.mathfoundation
 
 --
 
-foreign handler ExecRoundRealToNearest(Target) as undefined binds to "<builtin>"
-foreign handler ExecRoundNumberToNearest(Target) as undefined binds to "<builtin>"
-foreign handler ExecRoundRealDown(Target) as undefined binds to "<builtin>"
-foreign handler ExecRoundNumberDown(Target) as undefined binds to "<builtin>"
-foreign handler ExecRoundRealUp(Target) as undefined binds to "<builtin>"
-foreign handler ExecRoundNumberUp(Target) as undefined binds to "<builtin>"
-foreign handler EvalFloorOfReal(Target, output) as undefined binds to "<builtin>"
-foreign handler EvalFloorOfNumber(Target, output) as undefined binds to "<builtin>"
-foreign handler EvalCeilOfReal(Target, output) as undefined binds to "<builtin>"
-foreign handler EvalCeilOfNumber(Target, output) as undefined binds to "<builtin>"
+foreign handler ExecRoundRealToNearest(inout Target as real) as undefined binds to "<builtin>"
+foreign handler ExecRoundNumberToNearest(inout Target as number) as undefined binds to "<builtin>"
+foreign handler ExecRoundRealDown(inout Target as real) as undefined binds to "<builtin>"
+foreign handler ExecRoundNumberDown(inout Target as number) as undefined binds to "<builtin>"
+foreign handler ExecRoundRealUp(inout Target as real) as undefined binds to "<builtin>"
+foreign handler ExecRoundNumberUp(inout Target as number) as undefined binds to "<builtin>"
+foreign handler EvalFloorOfReal(in Target as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalFloorOfNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler EvalCeilOfReal(in Target as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalCeilOfNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
 
 --
 
