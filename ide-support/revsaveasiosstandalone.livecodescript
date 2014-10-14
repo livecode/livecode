@@ -1,4 +1,4 @@
-﻿script "revSaveAsIOSStandalone"
+script "revSaveAsIOSStandalone"
 -- Each stackfile has:
 --   moveSubstacks
 --   renameGeneric
@@ -43,6 +43,7 @@ command revSaveAsMobileStandalone pStack, pAppBundle, pTarget
    
    -- SN-2014-01-31: [[ Bug 11124 ]] No warning when an external file is missing
    if revStandaloneGetWarnings() is not empty then
+   if revStandaloneGetWarnings() is not empty and pTarget contains "Simulator" then
       set the cWarnings of stack "revBuildResults" to revStandaloneGetWarnings()
    end if
 end revSaveAsMobileStandalone
@@ -52,7 +53,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       throw "not supported on this platform"
    end if
    
-   start using stack "revSBLibrary"
+   start using stack "revSBLibrary" of stack "revStandaloneSettings"
    revStandaloneResetWarnings
    
    local tSettings
@@ -76,7 +77,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    put "Arm v7" into tSettings["ios,build type"]
    
    local tSDKs
-   if pTarget is "Device" then      
+   if pTarget is "Device" then
       // AL-2014-09-12: [[ Bug 13417 ]] Use utility function to determine if we are earlier than a given version
       if macVersionLessThan(the systemVersion, "10.7") then
          
@@ -86,6 +87,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") then
             throw "performing iOS device builds requires the iOS 5.0 SDK platform to be installed (available with XCode 4.2)"
          end if
+
          if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
             put it into tSDKs["armv7"]["root path"]
             put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["armv7"]["sdk path"]
@@ -108,10 +110,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
          end if
          
-      else
+      else if macVersionLessThan(the systemVersion, "10.9") then
          
-         -- MM-2013-09-23: [[ iOS7 Support ]] Use iOS 7.1 SDK for armv7 builds on 10.8.
-         --  
+         -- MM-2013-09-23: [[ iOS7 Support ]] Use iOS 7 SDK for armv7 builds on 10.8.
+         --
          if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
             get revIDEDeployIOSGetDeviceSDK("7.1")           
             if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk") then
@@ -123,7 +125,23 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             put "7_1" into tSDKs["armv7"]["suffix"]
             put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
          end if
+      
+      else
          
+         -- MM-2014-09-23: [[ iOS8 Support ]] Use iOS 8 SDK for armv7 builds on 10.9.
+         --  
+         if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
+            get revIDEDeployIOSGetDeviceSDK("8.0")           
+            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk") then
+               throw "performing iOS device builds requires the iOS 8.0 SDK platform to be installed (available with XCode 6.0)"
+            end if                  
+            put it into tSDKs["armv7"]["root path"]
+            put it & "/usr/bin" into tSDKs["armv7"]["tools path"]
+            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk") into tSDKs["armv7"]["sdk path"]
+            put "8_0" into tSDKs["armv7"]["suffix"]
+            put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
+         end if
+
       end if
    else
       
@@ -144,6 +162,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          put "7_0" into tSDKs["sim"]["suffix"]
       else if pTarget contains "7.1" then
          put "7_1" into tSDKs["sim"]["suffix"]
+      else if pTarget contains "8.0" then
+         put "8_0" into tSDKs["sim"]["suffix"]
       end if
       put revMobileRuntimeFolder(pTarget, tSDKs["sim"]["suffix"]) into tSDKs["sim"]["runtime path"]
       
@@ -189,7 +209,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    -- Compute the stackfiles list
    local tStackFiles
    lock messages
-   put revRelativeStackFilesList(pStack) into tStackfiles
+   put revIDEDeployRelativeStackFilesList(pStack) into tStackfiles
    unlock messages
    
    -- Make sure the app-bundle isn't already there
@@ -465,7 +485,28 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    delete the last char of tDeploy["externals"]
    
    -- Put the redirects if any
-   put tRedirects into tDeploy["redirects"]
+
+   -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redircts, we use symlinks with the iOS 8 sim.
+   if char 1 of tSDKs["sim"]["suffix"] < 8 then
+      put tRedirects into tDeploy["redirects"]
+   else
+      put empty into tDeploy["redirects"]
+      repeat for each line tRedirect in tRedirects
+         get offset("//", tRedirect)
+         if it is not 0 then
+            --symlinkRedirect char (it + 2) to -1 of tRedirect, pAppBundle & slash & char 1 to (it - 1) of tRedirect
+            local tSource, tTarget
+            put char (it + 2) to -1 of tRedirect into tSource
+            put pAppBundle into tTarget
+            if there is a file tSource then
+               put slash & char 1 to (it - 1) of tRedirect after tTarget
+            else if there is a folder (tTarget & slash & char 1 to (it - 1) of tRedirect) then
+               revDeleteFolder tTarget & slash & char 1 to (it - 1) of tRedirect
+            end if
+            get shell("ln -s" && quote & tSource & quote && quote & tTarget & quote)
+         end if
+      end repeat
+   end if
    
    -- Output file to create
    put pAppBundle & slash & tName into tDeploy["output"]
@@ -619,8 +660,8 @@ end revSaveAsMobileDeployer
 ################################################################################
 
 private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle   
-   revStandaloneProgress "Copying icons..."    
-   repeat for each line tType in ("iphone icon" & return & "retina icon,-114" & return & "iOS 7 retina icon,-120" & return & \
+   revStandaloneProgress "Copying icons..."
+   repeat for each line tType in ("iphone icon" & return & "retina icon,-114" & return & "iOS 7 retina icon,-120" & return & "iphone 6 plus icon,-180" & return & \
          "ipad icon,-72" & return & "ipad retina icon,-144" & return & "iOS 7 ipad icon,-76" & return & "iOS 7 ipad retina icon,-152")
       get pSettings["ios," & item 1 of tType]
       if not (it begins with "/") then
@@ -645,7 +686,8 @@ private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle
    
    repeat for each line tType in ("iphone splash" & return & "retina splash,@2x" & return & "ipad portrait splash,-Portrait" & \
          return & "ipad landscape splash,-Landscape" & return & "ipad retina portrait splash,-Portrait@2x" & return & "ipad retina landscape splash,-Landscape@2x" & \
-         return & "iphone 4inch splash,-568h@2x")
+         return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-iPhone6" & \
+         return & "iphone 6 plus portrait splash,-iPhone6PlusPortrait" & return & "iphone 6 plus landscape splash,-iPhone6PlusLandsacpe")
       get pSettings["ios," & item 1 of tType]
       if not (it begins with "/") then
          put pBaseFolder & slash before it
@@ -1220,13 +1262,55 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    
    -- MM-2013-10-08: [[ Bug 11257 ]] Make sure we include the new iOS 7 icons in the plist.
    get empty
-   repeat for each item tItem in ",-72,-114,-144,-120,-76,-152"
+   repeat for each item tItem in ",-72,-114,-144,-120,-180,-76,-152"
       if there is a file (pAppBundle & slash & "Icon" & tItem & ".png") then
          put "<string>" & "Icon" & tItem & ".png</string>" after it
       end if
    end repeat
    replace "${BUNDLE_ICONS}" with it in tPlist
-      
+
+   -- MM-2014-09-30: [[ iOS8 Support ]] Added new iOS 7 style entries for the splash screens
+   -- MM-2014-10-06: [[ Bug 13512 ]] Splash screen sizes are in points and should omit the @2x @3x suffix, iOS is smart enough to figure that out.
+   local tSplashScreens   
+   if 1 is among the items of tDeviceFamily then
+      put "Default|Default|{320, 480}|Portrait" & return after tSplashScreens
+      put "Default-568h@2x|Default|{320, 568}|Portrait" & return after tSplashScreens      
+      put "Default-iPhone6|Default-iPhone6|{375, 667}|Portrait" & return after tSplashScreens
+      if tIPhoneOrientation contains "Portrait" then
+         put "Default-iPhone6PlusPortrait|Default-iPhone6PlusPortrait|{414, 736}|Portrait" & return after tSplashScreens
+      else
+         put "Default-iPhone6PlusLandscape|Default-iPhone6PlusLandscape|{414, 736}|Landscape" & return after tSplashScreens
+      end if      
+   end if   
+   if 2 is among the items of tDeviceFamily then      
+      if tIPadOrientations contains "Portrait" then
+         put "Default-Portrait|Default-Portrait|{768, 1024}|Portrait" & return after tSplashScreens
+      end if
+      if tIPadOrientations contains "Landscape" then
+         put "Default-Landscape|Default-Landscape|{768, 1024}|Landscape" & return after tSplashScreens
+      end if
+   end if
+   
+   local tSplashTemplate, tSplashData
+   put URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "SplashscreenSettings.plist")) into tSplashTemplate 
+   
+   set the itemDel to "|"
+   repeat for each line tSplashScreen in tSplashScreens
+      if there is a file (pAppBundle & slash & item 1 of tSplashScreen & ".png") or \
+            there is a file (pAppBundle & slash & item 1 of tSplashScreen & "@2x.png") or \
+            there is a file (pAppBundle & slash & item 1 of tSplashScreen & "@3x.png")
+      then
+         get tSplashTemplate 
+         replace "${NAME}" with item 2 of tSplashScreen in it
+         replace "${SIZE}" with item 3 of tSplashScreen in it
+         replace "${ORIENTATION}" with item 4 of tSplashScreen in it
+         put it & return after tSplashData
+      end if
+   end repeat
+   set the itemDel to comma
+   
+   replace "${SPLASHSCREENS}" with tSplashData in tPlist
+   
    ----------
    -- MM-2012-02-12: Added support for push notificaitons and custom URL schemes
    
@@ -1319,8 +1403,7 @@ function revMobileRuntimeFolder pTarget, pVersion
    local tStub
    if pTarget is "Device" then
       if pVersion is empty then
-         put "7_1" into pVersion
-      end if
+         put "8_0" into pVersion
       put "Device-" & pVersion into tStub
    else if pTarget contains "4.2" then
       put "Simulator-4_2" into tStub
@@ -1338,6 +1421,8 @@ function revMobileRuntimeFolder pTarget, pVersion
       put "Simulator-7_0" into tStub
    else if pTarget contains "7.1" then
       put "Simulator-7_1" into tStub
+   else if pTarget contains "8.0" then
+      put "Simulator-8_0" into tStub
    end if
    
    local tUserPath, tOverridePath
@@ -1412,6 +1497,9 @@ function mapFilePath pPath
       case "URLSchemeSettings.plist"
          put tRepo & slash & "engine/rsrc/mobile-url-scheme-template.plist" into tPath
          break
+      case "SplashscreenSettings.plist"
+         put tRepo & slash & "engine/rsrc/mobile-splashscreen-template.plist" into tPath
+         break
       case "Standalone"
          if tIsDevice then
             put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-lib-[[tSuffix]].lcext") into tPath
@@ -1441,3 +1529,25 @@ function mapFilePath pPath
 end mapFilePath
 
 ################################################################################
+
+private command symlinkRedirect pSource, pTarget
+   if there is a file pSource then
+      get shell("ln -s" && quote & pSource & quote && quote & pTarget & quote)
+   else if there is a folder pSource then
+      local tOldFolder
+      put the folder into tOldFolder
+      set the folder to pSource      
+      set the itemDel to slash
+      local tFiles
+      put the files & return & the folders into tFiles
+      repeat for each line tFile in tFiles
+         if tFile is not empty and not (tFile begins with ".") then
+            symlinkRedirect pSource & slash & tFile, pTarget & slash & tFile
+         end if
+      end repeat  
+      set the folder to tOldFolder
+   end if   
+end symlinkRedirect
+
+################################################################################
+

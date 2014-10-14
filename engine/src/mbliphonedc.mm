@@ -525,20 +525,35 @@ static void MCScreenDCDoSnapshot(void *p_env)
 					t_is_rotated = false;
 					break;
 				case UIInterfaceOrientationPortraitUpsideDown:
-					t_angle = M_PI;
+                    // PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
+                    if (MCmajorosversion >=800)
+                        t_angle = 0.0;
+                    else
+                        t_angle = M_PI;
+
 					t_offset = CGSizeMake(t_screen_rect . width / 2, t_screen_rect . height / 2);
 					t_is_rotated = false;
 					break;
 				case UIInterfaceOrientationLandscapeLeft:
 					// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
-					t_angle = M_PI / 2.0;
+                    // PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
+                    if (MCmajorosversion >=800)
+                        t_angle = 0.0;
+                    else
+                        t_angle = M_PI / 2;
+
 					t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
 					t_is_rotated = true;
 					break;
 				case UIInterfaceOrientationLandscapeRight:
 					// MW-2011-10-17: [[ Bug 9816 ]] Angle caused upside-down image so inverted.
-					t_angle = -M_PI / 2.0;
-					t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
+                    // PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
+                    if (MCmajorosversion >=800)
+                        t_angle = 0.0;
+                    else
+                        t_angle = -M_PI / 2;
+                    
+                    t_offset = CGSizeMake(t_screen_rect . height / 2, t_screen_rect . width / 2);
 					t_is_rotated = true;
 					break;
 			}
@@ -1174,14 +1189,6 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	char *args[1];
 	args[0] = (char *)[[[[NSProcessInfo processInfo] arguments] objectAtIndex: 0] cString];
 	
-	// Setup the value of the major OS version global.
-	NSString *t_sys_version;
-	t_sys_version = [[UIDevice currentDevice] systemVersion];
-	MCmajorosversion = ([t_sys_version characterAtIndex: 0] - '0') * 100;
-	MCmajorosversion += ([t_sys_version characterAtIndex: 2] - '0') * 10;
-	if ([t_sys_version length] == 5)
-		MCmajorosversion += [t_sys_version characterAtIndex: 4] - '0';
-	
 	// Initialize the engine.
 	Bool t_init_success;
 	t_init_success = X_init(1, args, env);
@@ -1483,6 +1490,8 @@ struct MCKeyboardActivatedEvent: public MCCustomEvent
 	void Dispatch(void)
 	{
 		s_current_keyboard_height = m_height;
+        // MM-2014-10-08: [[ Bug 12464 ]] Clear the display info cache on keyboard activation/deactivation ensuring the effective screenrect returns the correct data.
+        MCscreen -> cleardisplayinfocache();
 		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_activated);
 	}
 	
@@ -1500,6 +1509,8 @@ struct MCKeyboardDeactivatedEvent: public MCCustomEvent
 	void Dispatch(void)
 	{
 		s_current_keyboard_height = 0.0;
+        // MM-2014-10-08: [[ Bug 12464 ]] Clear the display info cache on keyboard activation/deactivation ensuring the effective screenrect returns the correct data.
+        MCscreen -> cleardisplayinfocache();
 		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_deactivated);
 	}
 };

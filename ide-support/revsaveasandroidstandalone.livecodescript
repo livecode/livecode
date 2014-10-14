@@ -1,4 +1,4 @@
-﻿script "revSaveAsAndroidStandalone"
+script "revSaveAsAndroidStandalone"
 ################################################################################
 
 local sJavaRoot

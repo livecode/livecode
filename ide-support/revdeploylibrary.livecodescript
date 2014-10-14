@@ -1,4 +1,4 @@
-﻿script "revDeployLibrary"
+script "revDeployLibrary"
 ////////////////////////////////////////////////////////////////////////////////
 
 -- A stack can be configured to be deployable to any number of different platforms.
@@ -54,8 +54,8 @@ command revIDEDeployAction
    
    -- Invoke the action in the appropriate platform-specific library
    local tError
-   if there is a button tPlatform of me then
-      dispatch "deployDo" to button tPlatform of me with tStack, tTarget
+   if there is a stack ("revDeployLibrary" & tPlatform)  then
+      dispatch "deployDo" to stack ("revDeployLibrary" & tPlatform)  with tStack, tTarget
       put the result into tError
    else
       put "Unknown deployment platform - " & tPlatform into tError
@@ -81,7 +81,7 @@ command revIDEDeployBuild pPlatform, pTargetStack, pOutputFolder
    put the mainStack of stack pTargetStack into pTargetStack
    
    -- Dispatch the action to the platform-specific library
-   dispatch "deployBuild" to button pPlatform of me with pTargetStack, pOutputFolder
+   dispatch "deployBuild" to stack ("revDeployLibrary" & pPlatform) with pTargetStack, pOutputFolder
 end revIDEDeployBuild
 
 -- This method is invoked by the menu bar to construct the current list of targets.
@@ -90,7 +90,7 @@ end revIDEDeployBuild
 function revIDEDeployListTargets
    local tTargets
    repeat for each word tPlatform in kSupportedPlatforms
-      dispatch function "deployListTargets" to button tPlatform of me
+      dispatch function "deployListTargets" to stack ("revDeployLibrary" & tPlatform) 
       if it is "handled" and the result is not empty then
          put the result into tTargets[tPlatform]
       end if
@@ -149,7 +149,7 @@ end revIDEDeployUpdate
 -- attempting to auto-configure any SDKs and such if necessary.
 command revIDEDeployInitialize
    repeat for each word tPlatform in kSupportedPlatforms
-      dispatch command "deployInitialize" to button tPlatform of me
+      dispatch command "deployInitialize" to stack ("revDeployLibrary" & tPlatform) 
    end repeat
    
    local tDeployPlatforms, tDeployTargets
@@ -167,7 +167,7 @@ end revIDEDeployInitialize
 on revIDEDeployTargetsChanged
    put empty into sDeployTargetPlatforms
    repeat for each word tPlatform in kSupportedPlatforms
-      dispatch function "deployListTargets" to button tPlatform of me
+      dispatch function "deployListTargets" to stack ("revDeployLibrary" & tPlatform) 
       if it is "handled" and the result is not empty then
          repeat for each line tTarget in the result
             put tPlatform into sDeployTargetPlatforms[tTarget]
@@ -178,37 +178,89 @@ end revIDEDeployTargetsChanged
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  Utility functions used by mobile save as standalone implementations.
+//
+
+local sStackFiles
+
+function revIDEDeployRelativeStackFilesList pStack
+  local tLine,tChars,tStackFiles,tMainStackPath
+  put revIDEDeployGetStackFilesList(pStack) into tStackFiles["full"]
+  set the itemDel to "/"
+  put item 1 to -2 of line 1 of tStackFiles["full"] & "/" into tMainStackPath
+  put the number of chars of tMainStackPath into tChars
+  repeat for each line tLine in tStackFiles["full"]
+    if char 1 to tChars of tLine = tMainStackPath then delete char 1 to tChars of tLine
+    put tLine & cr after tStackFiles["relative"]
+  end repeat
+  delete char -1 of tStackFiles["relative"]
+  return tStackFiles
+end revIDEDeployRelativeStackFilesList
+
+private function revIDEDeployGetStackFilesList pStack
+  put "" into sStackFiles
+  put the effective fileName of stack pStack into sStackFiles
+  revIDEDeployRecursiveStackFileList pStack
+  return sStackFiles
+end revIDEDeployGetStackFilesList
+
+private command revIDEDeployRecursiveStackFileList pStack
+  local tLine,tFileName
+  set the itemDel to "/"
+  put item 1 to -2 of the fileName of stack pStack&"/" into tFileName
+  set the itemDel to ","
+  repeat for each line tLine in the stackFiles of stack pStack
+    if there is not a stack item 2 of tLine then put tFileName before item 2 of tLine
+    if there is a stack item 2 of tLine then
+      if the effective fileName of stack item 2 of tLine is not among the lines of sStackFiles then 
+        put cr& the effective fileName of stack item 2 of tLine after sStackFiles
+        revIDEDeployRecursiveStackFileList item 2 of tLine
+      end if
+    end if
+  end repeat
+  repeat for each line tLine in the substacks of stack pStack
+    revIDEDeployRecursiveStackFileList tLine
+  end repeat
+end revIDEDeployRecursiveStackFileList
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  Preferences require access to various specific aspects of deployment config, so these
 //  calls provide this in a sane manner.
 //
 
 function revIDEDeployIOSIsValidSDK pVersion, pPath
-   dispatch function "deployIsValidSDK" to button "iOS" of me with pVersion, pPath
+   dispatch function "deployIsValidSDK" to stack "revDeployLibraryiOS" with pVersion, pPath
    return the result
 end revIDEDeployIOSIsValidSDK
 
 function revIDEDeployIOSGetSimulatorVersions
-   dispatch function "deployGetSimulatorVersions" to button "iOS" of me
+   dispatch function "deployGetSimulatorVersions" to stack "revDeployLibraryiOS"
    return the result
 end revIDEDeployIOSGetSimulatorVersions
 
 function revIDEDeployIOSGetSDKVersions
-   dispatch function "deployGetSDKVersions" to button "iOS" of me
+   dispatch function "deployGetSDKVersions" to stack "revDeployLibraryiOS"
    return the result
 end revIDEDeployIOSGetSDKVersions
 
 command revIDEDeployIOSUpdateSimulators
-   dispatch "deployUpdateSimulators" to button "iOS" of me
+   dispatch "deployUpdateSimulators" to stack "revDeployLibraryiOS"
 end revIDEDeployIOSUpdateSimulators
 
 command revIDEDeployIOSUpdateSDKs
-   dispatch "deployUpdateSDKs" to button "iOS" of me
+   dispatch "deployUpdateSDKs" to stack "revDeployLibraryiOS"
 end revIDEDeployIOSUpdateSDKs
 
 function revIDEDeployIOSGetDeviceSDK pVersion
-   dispatch function "deployGetDeviceSDK" to button "iOS" of me with pVersion
+   dispatch function "deployGetDeviceSDK" to stack "revDeployLibraryiOS" with pVersion
    return the result
 end revIDEDeployIOSGetDeviceSDK
+
+function revIDEDeployIOSSanatizeSystemVersion
+   dispatch function "deploySanatizeSystemVersion" to stack "revDeployLibraryiOS"
+   return the result
+end revIDEDeployIOSSanatizeSystemVersion
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -217,22 +269,22 @@ end revIDEDeployIOSGetDeviceSDK
 //
 
 function revIDEDeployAndroidIsValidSDK pPath
-   dispatch function "deployIsValidSDK" to button "Android" of me with pPath
+   dispatch function "deployIsValidSDK" to stack "revDeployLibraryAndroid" with pPath
    return the result
 end revIDEDeployAndroidIsValidSDK
 
 function revIDEDeployAndroidIsValidJDK pPath
-   dispatch function "deployIsValidJDK" to button "Android" of me with pPath
+   dispatch function "deployIsValidJDK" to stack "revDeployLibraryAndroid" with pPath
    return the result
 end revIDEDeployAndroidIsValidJDK
 
 function revIDEDeployAndroidGetJDK
-   dispatch function "deployGetJDK" to button "Android" of me
+   dispatch function "deployGetJDK" to stack "revDeployLibraryAndroid"
    return the result
 end revIDEDeployAndroidGetJDK
 
 command revIDEDeployAndroidInitialize
-   dispatch "deployInitialize" to button "Android" of me
+   dispatch "deployInitialize" to stack "revDeployLibraryAndroid"
 end revIDEDeployAndroidInitialize
 
 ////////////////////////////////////////////////////////////////////////////////

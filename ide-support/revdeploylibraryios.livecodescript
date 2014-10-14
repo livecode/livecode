@@ -1,3 +1,4 @@
+﻿script "revDeployLibraryIOS"
 ////////////////////////////////////////////////////////////////////////////////
 
 local sDeploySimulators
@@ -190,8 +191,8 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       
       --MM-2011-09-28: The simulator appears to time out in Lion if not at front.
       --
-      get "tell application" && quote & "iPhone Simulator" & quote & "to activate"
-      do it as "applescript"
+      --get "tell application" && quote & "iPhone Simulator" & quote & "to activate"
+      --do it as "applescript"
       
       local tRunawayTimer
       put the millisecs + 10000 into tRunawayTimer
@@ -224,9 +225,9 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       if sDeploySimulationStatus is "started" then
          put true into sDeploySimulatorIsRunning
          -- Make sure we bring the simulator to front
-         do "tell application" && quote & "iPhone SImulator" & quote & return & \
-               "activate" & return & \
-               "end tell" as "applescript" 
+         --do "tell application" && quote & "iPhone SImulator" & quote & return & \
+               --"activate" & return & \
+               --"end tell" as "applescript" 
       else if sDeploySimulationStatus begins with "error:" then
          put "Unable to start simulation:" && word 2 to -1 of sDeploySimulationStatus into tError
       end if
@@ -299,7 +300,7 @@ command deployUpdateSDKs
          -- Include each simulator that isn't < 4.0 in the array, and ignore any
          -- above 5.0 as that's the upper limit on supported versions for the
          -- current release.
-         repeat for each line tSim in the folders
+         repeat for each line tSim in (the folders & return & the files)
             get char 16 to -5 of tSim
             
             -- MM-2012-09-18: We no no longer support simulators before 4.3.
@@ -308,7 +309,7 @@ command deployUpdateSDKs
             end if
             
             -- MW-2012-03-21: Allow anything up to and including 5.1 support.
-            if it > "7.1" then
+            if it > "8.0" then
                next repeat
             end if
             
@@ -324,9 +325,9 @@ command deployUpdateSDKs
       --
       set the folder to tSDK & "/Platforms/iPhoneOS.platform/Developer/SDKs"
       if the result is empty then
-         repeat for each line tDevSDK in the folders
+         repeat for each line tDevSDK in (the folders & return & the files)
             get char 9 to -5 of tDevSDK
-            if it is not among the words of "5.0 5.1 6.0 6.1 7.0 7.1" then
+            if it is not among the words of "5.0 5.1 6.0 6.1 7.0 7.1 8.0" then
                next repeat
             end if
             if tDeviceSDKs[it] is not empty then
@@ -466,6 +467,9 @@ function deployIsValidSDK pSDK
    end if   
    if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator7.1.sdk") then
       return true
+   end if
+   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk") then
+      return true
    end if   
    
    -- Otherwise it must be invalid
@@ -473,3 +477,23 @@ function deployIsValidSDK pSDK
 end deployIsValidSDK
 
 ////////////////////////////////////////////////////////////////////////////////
+
+function deploySanatizeSystemVersion
+   set the itemDel to "."
+   get the systemVersion   
+   if the length of item 2 of it is 0 then
+      put 00 before item 2 of it
+   else if the length of item 2 of it is 1 then
+      put 0 before item 2 of it
+   end if
+   if the length of item 3 of it is 0 then
+      put 00 before item 3 of it
+   else if the length of item 3 of it is 1 then
+      put 0 before item 3 of it
+   end if   
+   replace "." with empty in it
+   return it
+end deploySanatizeSystemVersion
+
+////////////////////////////////////////////////////////////////////////////////
+
