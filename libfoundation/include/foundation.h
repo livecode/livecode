@@ -563,6 +563,7 @@ typedef struct __MCRecord *MCRecordRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCStream *MCStreamRef;
+typedef struct __MCProperList *MCProperListRef;
 
 // Forward declaration
 typedef struct __MCLocale* MCLocaleRef;
@@ -2309,6 +2310,34 @@ bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set);
 // Variant valueref functions - these tag the data with the type, allowing
 // easy encoding/decoding of any value type (that supports serialization).
 bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  PROPER LIST DEFINITIONS
+//
+
+// The type describing options for list sorting.
+typedef uint32_t MCProperListSortType;
+enum
+{
+	// Sort using a codepoint by codepoint comparison.
+	kMCProperListSortTypeText = 0,
+	// Sort using a byte by byte comparison.
+	kMCProperListSortTypeBinary = 1,
+    // Sort by collation according to the system locale.
+	kMCProperListSortTypeInternational = 2,
+	// Sorts numerically
+	kMCProperListSortTypeNumeric = 3,
+    // Sorts chronologically by date / time
+	kMCProperListSortTypeDateTime = 4,
+};
+
+/////////
+
+bool MCProperListSplitStringByDelimiter(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCProperListRef& r_list);
+bool MCProperListCombineWithDelimiter(MCProperListRef list, MCStringRef p_delimiter, MCStringRef& r_list);
+
+bool MCProperListSort(MCProperListRef list, bool p_ascending, MCProperListSortType p_sort_type);
 
 ////////////////////////////////////////////////////////////////////////////////
 
