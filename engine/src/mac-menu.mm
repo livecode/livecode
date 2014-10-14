@@ -715,6 +715,10 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 	//
 	NSString *t_app_name;
 	t_app_name = (NSString *)[[[NSBundle mainBundle] infoDictionary] objectForKey: (NSString *)kCFBundleNameKey];
+    
+    // SN-2014-10-14: [[ Bug 13662 ]] We use the process name if the app is not in a bundle
+    if (t_app_name == nil)
+        t_app_name = [[NSProcessInfo processInfo] processName];
 	
 	NSMenu *t_services_menu;
 	t_services_menu = [[NSMenu alloc] initWithTitle: NSLocalizedString(@"Services", nil)];
