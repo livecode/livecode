@@ -241,16 +241,20 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     
     if (aeclass == kCoreEventClass && aeid == kAEAnswer)
         return MCAppleEventHandlerDoAEAnswer(p_event, p_reply, 0);
-
+    
+    // SN-2014-10-13: [[ Bug 13644 ]] Break the wait loop after we handled the Apple Event
     OSErr t_err;
     t_err = MCAppleEventHandlerDoSpecial(p_event, p_reply, 0);
+    if (t_err == errAEEventNotHandled)
+    {
+        if (aeclass == kCoreEventClass && aeid == kAEOpenDocuments)
+            t_err = MCAppleEventHandlerDoOpenDoc(p_event, p_reply, 0);
+    }
+    
     if (t_err != errAEEventNotHandled)
-        return t_err;
+        MCPlatformBreakWait();
     
-    if (aeclass == kCoreEventClass && aeid == kAEOpenDocuments)
-        return MCAppleEventHandlerDoOpenDoc(p_event, p_reply, 0);
-    
-    return errAEEventNotHandled;
+    return t_err;
 }
 
 - (void)applicationWillFinishLaunching: (NSNotification *)notification
