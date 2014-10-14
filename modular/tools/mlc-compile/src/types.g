@@ -164,6 +164,7 @@
     syntaxrule(Class: SYNTAXCLASS, Syntax: SYNTAX)
     syntaxmark(Index: INT)
     syntaxexpressionrule
+    syntaxexpressionlistrule
     syntaxoutputmark
     syntaxinputmark
     syntaxcontextmark

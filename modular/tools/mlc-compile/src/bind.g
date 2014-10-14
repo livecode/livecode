@@ -280,6 +280,7 @@
 'var' ContextSyntaxMarkIdVar : ID
 
 'var' ExpressionSyntaxRuleIdVar : ID
+'var' ExpressionListSyntaxRuleIdVar : ID
 
 'action' InitializeBind
 
@@ -292,12 +293,16 @@
         ContextSyntaxMarkIdVar <- Id3
         MakePredefinedId("Expression", syntaxexpressionrule -> Id4)
         ExpressionSyntaxRuleIdVar <- Id4
+        MakePredefinedId("ExpressionList", syntaxexpressionlistrule -> Id5)
+        ExpressionListSyntaxRuleIdVar <- Id5
 
 'action' DeclarePredefinedIds
 
     'rule' DeclarePredefinedIds:
         ExpressionSyntaxRuleIdVar -> Id1
         DeclareId(Id1)
+        ExpressionListSyntaxRuleIdVar -> Id2
+        DeclareId(Id2)
 
 'action' DeclarePredefinedMarkVariables
 

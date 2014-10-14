@@ -77,6 +77,9 @@
 
     'rule' CheckBindingOfSyntaxRule(Id):
         QueryId(Id -> syntaxexpressionrule)
+
+    'rule' CheckBindingOfSyntaxRule(Id):
+        QueryId(Id -> syntaxexpressionlistrule)
         
     'rule' CheckBindingOfSyntaxRule(Id):
         QueryId(Id -> syntaxrule(phrase, _))
@@ -478,7 +481,11 @@
     'rule' ComputeSyntaxPrefixAndSuffixOfRule(Name -> Prefix, Suffix)
         QueryId(Name -> Meaning)
         (|
-            where(Meaning -> syntaxexpressionrule)
+            (|
+                where(Meaning -> syntaxexpressionrule)
+            ||
+                where(Meaning -> syntaxexpressionlistrule)
+            |)
             where(SYNTAXTERM'expression -> Prefix)
             where(SYNTAXTERM'expression -> Suffix)
         ||
