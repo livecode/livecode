@@ -26,11 +26,10 @@ void AdvanceCurrentPosition(long p_delta)
 {
     long t_column, t_row;
     GetColumnOfPosition(s_current_position, &t_column);
-    GetRowOfPosition(s_current_position, &t_row);
     t_column += p_delta;
     if (t_column > COLUMNS_PER_ROW)
-        t_column= COLUMNS_PER_ROW;
-    s_current_position = (t_row - 1) * COLUMNS_PER_ROW + (t_column - 1);
+        t_column = COLUMNS_PER_ROW;
+    s_current_position = (s_current_position / COLUMNS_PER_ROW) * COLUMNS_PER_ROW + (t_column - 1);
 }
 
 void AdvanceCurrentPositionToNextRow(void)
@@ -38,7 +37,9 @@ void AdvanceCurrentPositionToNextRow(void)
     long t_row;
     GetRowOfPosition(s_current_position, &t_row);
     t_row += 1;
-    s_current_position = (t_row - 1) * COLUMNS_PER_ROW;
+    if (t_row > ROWS_PER_FILE)
+        t_row = ROWS_PER_FILE;
+    s_current_position = (s_current_position / COLUMNS_PER_FILE) * COLUMNS_PER_FILE + (t_row - 1) * COLUMNS_PER_ROW;
 }
 
 void AdvanceCurrentPositionToFile(FileRef p_file)

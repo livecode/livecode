@@ -39,108 +39,47 @@ void Fatal_InternalInconsistency(const char *p_message)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Error_MalformedToken(long p_position, const char *p_token)
-{
-    long t_row, t_column;
-    GetColumnOfPosition(p_position, &t_column);
-    GetRowOfPosition(p_position, &t_row);
-    fprintf(stderr, "row %ld, col %ld: Illegal token '%s'\n", t_row, t_column, p_token);
-    
-    s_error_count += 1;
-}
-
-void Error_MalformedSyntax(long p_position)
-{
-    long t_row, t_column;
-    GetColumnOfPosition(p_position, &t_column);
-    GetRowOfPosition(p_position, &t_row);
-    fprintf(stderr, "row %ld, col %ld: Syntax error\n", t_row, t_column);
-    
-    s_error_count += 1;
-}
-
-void Error_IdentifierPreviouslyDeclared(long p_position, NameRef p_name, long p_previous_position)
-{
-    long t_row, t_column;
-    GetColumnOfPosition(p_position, &t_column);
-    GetRowOfPosition(p_position, &t_row);
-    fprintf(stderr, "row %ld, col %ld: Identifier already declared\n", t_row, t_column);
-    
-    s_error_count += 1;
-}
-
-void Error_IdentifierNotDeclared(long p_position, NameRef p_name)
-{
-    long t_row, t_column;
-    GetColumnOfPosition(p_position, &t_column);
-    GetRowOfPosition(p_position, &t_row);
-    const char *t_string;
-    GetStringOfNameLiteral(p_name, &t_string);
-    fprintf(stderr, "row %ld, col %ld: Identifier '%s' not declared\n", t_row, t_column, t_string);
-    
-    s_error_count += 1;
-}
-
-void Error_InvalidNameForSyntaxMarkVariable(long p_position, NameRef p_name)
-{
-    long t_row, t_column;
-    GetColumnOfPosition(p_position, &t_column);
-    GetRowOfPosition(p_position, &t_row);
-    const char *t_string;
-    GetStringOfNameLiteral(p_name, &t_string);
-    fprintf(stderr, "row %ld, col %ld: '%s' is not a valid name for a mark variable\n", t_row, t_column, t_string);
-    
-    s_error_count += 1;
-}
-
-void Error_SyntaxMarkVariableNotAllowedInDelimiter(long p_position)
-{
-    long t_row, t_column;
-    GetColumnOfPosition(p_position, &t_column);
-    GetRowOfPosition(p_position, &t_row);
-    fprintf(stderr, "row %ld, col %ld: Mark variables are not allowed in delimiter clauses\n", t_row, t_column);
-    
-    s_error_count += 1;
-}
-
-void Error_SyntaxMarkVariableAlreadyDefined(long p_position, NameRef p_name)
-{
-    long t_row, t_column;
-    GetColumnOfPosition(p_position, &t_column);
-    GetRowOfPosition(p_position, &t_row);
-    const char *t_string;
-    GetStringOfNameLiteral(p_name, &t_string);
-    fprintf(stderr, "row %ld, col %ld: Mark variable '%s' has previously been assigned\n", t_row, t_column, t_string);
-    
-    s_error_count += 1;
-}
-
 void Error_CouldNotOpenInputFile(const char *p_file)
 {
     fprintf(stderr, "Could not open input file '%s'\n", p_file);
     s_error_count += 1;
 }
 
+static void _PrintPosition(long p_position)
+{
+    long t_row, t_column;
+    FileRef t_file;
+    const char *t_path;
+    GetColumnOfPosition(p_position, &t_column);
+    GetRowOfPosition(p_position, &t_row);
+    GetFileOfPosition(p_position, &t_file);
+    GetFilePath(t_file, &t_path);
+    fprintf(stderr, "%s:%ld:%ld: ", t_path, t_row, t_column);
+}
+
 static void _Error(long p_position, const char *p_message)
+{
+    _PrintPosition(p_position);
+    fprintf(stderr, "%s\n", p_message);
+    s_error_count += 1;
+}
+
+static void _ErrorS(long p_position, const char *p_message, const char *p_string)
 {
     long t_row, t_column;
     GetColumnOfPosition(p_position, &t_column);
     GetRowOfPosition(p_position, &t_row);
-    fprintf(stderr, "row %ld, col %ld: %s\n", t_row, t_column, p_message);
+    _PrintPosition(p_position);
+    fprintf(stderr, p_message, p_string);
+    fprintf(stderr, "\n");
     s_error_count += 1;
 }
 
 static void _ErrorI(long p_position, const char *p_message, NameRef p_name)
 {
-    long t_row, t_column;
-    GetColumnOfPosition(p_position, &t_column);
-    GetRowOfPosition(p_position, &t_row);
     const char *t_string;
     GetStringOfNameLiteral(p_name, &t_string);
-    fprintf(stderr, "row %ld, col %ld:", t_row, t_column);
-    fprintf(stderr, p_message, t_string);
-    fprintf(stderr, "\n");
-    s_error_count += 1;
+    _ErrorS(p_position, p_message, t_string);
 }
 
 #define DEFINE_ERROR(Name, Message) \
@@ -148,6 +87,17 @@ static void _ErrorI(long p_position, const char *p_message, NameRef p_name)
 
 #define DEFINE_ERROR_I(Name, Message) \
     void Error_##Name(long p_position, NameRef p_id) { _ErrorI(p_position, Message, p_id); }
+
+#define DEFINE_ERROR_S(Name, Message) \
+void Error_##Name(long p_position, const char *p_string) { _ErrorS(p_position, Message, p_string); }
+
+DEFINE_ERROR_S(MalformedToken, "Illegal token '%s'");
+DEFINE_ERROR(MalformedSyntax, "Syntax error");
+DEFINE_ERROR_I(IdentifierPreviouslyDeclared, "Identifier '%s' already declared");
+DEFINE_ERROR_I(IdentifierNotDeclared, "Identifier '%s' not declared");
+DEFINE_ERROR_I(InvalidNameForSyntaxMarkVariable, "'%s' is not a valid name for a mark variable");
+DEFINE_ERROR(SyntaxMarkVariableNotAllowedInDelimiter, "Mark variables are not allowed in delimiter clauses");
+DEFINE_ERROR_I(SyntaxMarkVariableAlreadyDefined, "Mark variable '%s' has previously been assigned");
 
 DEFINE_ERROR(ExpressionSyntaxCannotStartWithExpression, "Expression syntax cannot start with an expression");
 DEFINE_ERROR(ExpressionSyntaxCannotFinishWithExpression, "Expression syntax cannot finish with an expression");

@@ -1065,7 +1065,7 @@ static void GenerateSyntaxRuleExplicitAndUnusedMarks(SyntaxNodeRef p_node)
 static void GenerateSyntaxRuleConstructor(SyntaxNodeRef p_node, SyntaxRuleRef p_rule)
 {
     static const char *s_calls[] = { "PushOperatorExpressionPrefix", "PushOperatorExpressionPostfix", "PushOperatorExpressionLeftBinary", "PushOperatorExpressionRightBinary", "PushOperatorExpressionNeutralBinary" };
-    fprintf(stderr, "    %s(Position, %ld, %ld)\n", s_calls[p_rule -> kind - kSyntaxRuleKindPrefixOperator],
+    fprintf(stderr, "    %s(Position, %ld, %d)\n", s_calls[p_rule -> kind - kSyntaxRuleKindPrefixOperator],
             p_rule -> precedence, p_node -> concrete_rule);
     for(int i = 0; i < p_node -> mark_count; i++)
         fprintf(stderr, "    PushOperatorExpressionOperand(Mark%ld)\n", p_node -> marks[i] . index);
