@@ -121,7 +121,7 @@ Summary:        Returns the number of elements in <Target>
 Target:         An expression which evaluates to a list.
 */
 
-syntax CountElementsOf is neutral binary operator with precedence 1
+syntax CountElementsOf is prefix operator with precedence 1
     "the" "number" "of" "elements" "in" <Target: Expression>
 begin
     EvalNumberOfElementsIn(Target, output)
