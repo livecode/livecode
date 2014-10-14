@@ -1,4 +1,4 @@
-script "revSaveAsAndroidStandalone"
+﻿script "revSaveAsAndroidStandalone"
 ################################################################################
 
 local sJavaRoot
@@ -53,7 +53,8 @@ private command buildAPK pUnalignedApkFile, pUnsignedParam, pAssetArchive, pClas
 end buildAPK
 
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
-   start using stack "revSBLibrary"
+   start using stack "revSBLibrary" of stack "revStandaloneSettings"
+   
    dispatch "revIDEDeployAndroidInitialize" to stack "revDeployLibrary"
    
    local tSettings

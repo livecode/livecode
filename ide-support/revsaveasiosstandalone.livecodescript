@@ -1,4 +1,4 @@
-script "revSaveAsIOSStandalone"
+﻿script "revSaveAsIOSStandalone"
 -- Each stackfile has:
 --   moveSubstacks
 --   renameGeneric
@@ -42,7 +42,6 @@ command revSaveAsMobileStandalone pStack, pAppBundle, pTarget
    end if
    
    -- SN-2014-01-31: [[ Bug 11124 ]] No warning when an external file is missing
-   if revStandaloneGetWarnings() is not empty then
    if revStandaloneGetWarnings() is not empty and pTarget contains "Simulator" then
       set the cWarnings of stack "revBuildResults" to revStandaloneGetWarnings()
    end if
@@ -1404,6 +1403,7 @@ function revMobileRuntimeFolder pTarget, pVersion
    if pTarget is "Device" then
       if pVersion is empty then
          put "8_0" into pVersion
+      end if
       put "Device-" & pVersion into tStub
    else if pTarget contains "4.2" then
       put "Simulator-4_2" into tStub
