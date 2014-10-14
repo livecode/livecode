@@ -1138,8 +1138,10 @@ bool ConvertStyled_Text_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataR
 bool ConvertFile_rev_to_MIME ( MCDataRef p_input, MCTransferType p_type, MCDataRef& r_output )  
 {
 
-	MCAutoStringRef t_input_files;
-	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingMacRoman, false, &t_input_files);
+    MCAutoStringRef t_input_files;
+    // SN-2014-10-14: [[ Bug 13660 ]] If the decoding fails, returns false
+    if (!MCStringDecode(p_input, kMCStringEncodingNative, false, &t_input_files))
+        return false;
 
 	// First break the string into chunks using return as the delimiter. This
 	// gives us an array of ranges of the pieces between delimiters.
