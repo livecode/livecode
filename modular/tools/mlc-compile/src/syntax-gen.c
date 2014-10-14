@@ -277,7 +277,7 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
                 else
                     t_right_child = NULL;
                 
-                if (t_left_child != NULL && t_left_child != NULL)
+                if (t_left_child != NULL && t_right_child != NULL)
                 {
                     if (!IsSyntaxNodeEqualTo(t_left_child, t_right_child))
                         return 0;
