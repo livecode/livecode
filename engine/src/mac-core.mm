@@ -650,8 +650,28 @@ static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity ac
 		MCPlatformBreakWait();
 }
 
+static bool s_event_checking_enabled = true;
+
+void MCMacPlatformEnableEventChecking(void)
+{
+	s_event_checking_enabled = true;
+}
+
+void MCMacPlatformDisableEventChecking(void)
+{
+	s_event_checking_enabled = false;
+}
+
+bool MCMacPlatformIsEventCheckingEnabled(void)
+{
+	return s_event_checking_enabled;
+}
+
 bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 {
+	if (!MCMacPlatformIsEventCheckingEnabled())
+		return false;
+	
 	// Handle all the pending callbacks.
     MCCallback *t_callbacks;
     uindex_t t_callback_count;

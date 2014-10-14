@@ -589,6 +589,11 @@ struct MCMacPlatformWindowMask
 	uint32_t references;
 };
 
+// IM-2014-09-30: [[ Bug 13501 ]] Allow system event checking to be enabled/disabled
+void MCMacPlatformEnableEventChecking(void);
+void MCMacPlatformDisableEventChecking(void);
+bool MCMacPlatformIsEventCheckingEnabled(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif
