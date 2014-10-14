@@ -2109,7 +2109,6 @@ Boolean MCPlayer::prepare(const char *options)
 	t_visible = getflag(F_VISIBLE);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
-    //attachplayer();
     m_is_attached = false;
 	
 	layer_redrawall();
