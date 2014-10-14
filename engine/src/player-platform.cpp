@@ -871,6 +871,10 @@ MCPlayer::MCPlayer()
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
+    
+    // PM-2104-10-14: [[ Bug 13569 ]] Make sure changes to player in preOpenCard are not visible
+    m_is_attached = false;
+    m_should_attach = false;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -960,6 +964,8 @@ void MCPlayer::open()
 {
 	MCControl::open();
 	prepare(MCnullstring);
+    MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+    m_is_attached = true;;
 }
 
 void MCPlayer::close()
@@ -974,6 +980,9 @@ void MCPlayer::close()
     
     if (s_volume_popup != nil)
         s_volume_popup -> close();
+    
+    MCPlatformDetachPlayer(m_platform_player);
+    m_is_attached = false;
 }
 
 Boolean MCPlayer::kdown(const char *string, KeySym key)
@@ -2100,7 +2109,7 @@ Boolean MCPlayer::prepare(const char *options)
 	t_visible = getflag(F_VISIBLE);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
-	MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+    m_is_attached = false;
 	
 	layer_redrawall();
 	
@@ -2116,6 +2125,35 @@ Boolean MCPlayer::prepare(const char *options)
 	}
     
 	return ok;
+}
+
+// PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
+void MCPlayer::attachplayer()
+{
+    if (m_platform_player == nil)
+        return;
+    
+    // Make sure we attach the player only if it was previously detached by detachplayer().
+    if (!m_is_attached && m_should_attach)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+        m_should_attach = false;
+    }
+}
+
+// PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
+void MCPlayer::detachplayer()
+{
+    if (m_platform_player == nil)
+        return;
+    
+    if (m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+        m_should_attach = true;
+    }
 }
 
 Boolean MCPlayer::playstart(const char *options)
@@ -2208,6 +2246,7 @@ Boolean MCPlayer::playstop()
 		needmessage = getduration() > getmoviecurtime();
 		
 		MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
 	}
     
     redrawcontroller();
