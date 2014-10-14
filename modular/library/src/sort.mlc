@@ -1,15 +1,15 @@
 module com.livecode.sort
 
-foreign handler MCSortExecSortListAscendingText(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListAscendingBinary(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-// foreign handler MCSortExecSortStringListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListAscendingDateTime(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListDescendingText(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListDescendingBinary(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-// foreign handler MCSortExecSortStringListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListDescendingDateTime(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListAscendingText(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListAscendingBinary(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+// foreign handler ExecSortStringListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListAscendingDateTime(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListDescendingText(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListDescendingBinary(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+// foreign handler ExecSortStringListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListDescendingDateTime(inout Target as list) as undefined binds to "<builtin>"
 
 --
 
@@ -23,7 +23,7 @@ Target:         An expression that evaluates to a list of strings.
 syntax SortListAscendingText is statement
     "sort" <Target: Expression> "in" "ascending" "text" "order"
 begin 
-    MCSortExecSortListAscendingText(Target)
+    ExecSortListAscendingText(Target)
 end syntax
 
 /* 
@@ -36,7 +36,7 @@ Target:         An expression that evaluates to a list of strings.
 syntax SortListDescendingText is statement
     "sort" <Target: Expression> "in" "descending" "text" "order"
 begin 
-    MCSortExecSortListDescendingText(Target)
+    ExecSortListDescendingText(Target)
 end syntax
 
 --
@@ -51,7 +51,7 @@ Target:         An expression that evaluates to a list of binary data.
 syntax SortListAscendingBinary is statement
     "sort" <Target: Expression> "in" "ascending" "byte" "order"
 begin 
-    MCSortExecSortListAscendingBinary(Target)
+    ExecSortListAscendingBinary(Target)
 end syntax
 
 /* 
@@ -64,7 +64,7 @@ Target:         An expression that evaluates to a list of binary data.
 syntax SortListDescendingBinary is statement
     "sort" <Target: Expression> "in" "descending" "byte" "order"
 begin 
-    MCSortExecSortListDescendingBinary(Target)
+    ExecSortListDescendingBinary(Target)
 end syntax
 
 --
@@ -83,8 +83,8 @@ Target:         An expression that evaluates to a list of numbers, or strings.
 syntax SortListAscendingNumeric is statement
     "sort" <Target: Expression> "in" "ascending" "numeric" "order"
 begin 
-    MCSortExecSortListAscendingNumeric(Target)
-//    MCSortExecSortStringListAscendingNumeric(Target)
+    ExecSortListAscendingNumeric(Target)
+//    ExecSortStringListAscendingNumeric(Target)
 end syntax
 
 /* 
@@ -101,8 +101,8 @@ Target:         An expression that evaluates to a list of numbers, or strings.
 syntax SortListDescendingNumeric is statement
     "sort" <Target: Expression> "in" "descending" "numeric" "order"
 begin 
-    MCSortExecSortListDescendingNumeric(Target)
-//    MCSortExecSortStringListDescendingNumeric(Target)
+    ExecSortListDescendingNumeric(Target)
+//    ExecSortStringListDescendingNumeric(Target)
 end syntax
 
 --
@@ -117,7 +117,7 @@ Target:         An expression that evaluates to a list of datetime elements.
 syntax SortListAscendingDateTime is statement
     "sort" <Target: Expression> "in" "ascending" "chronological" "order"
 begin 
-    MCSortExecSortListAscendingDateTime(Target)
+    ExecSortListAscendingDateTime(Target)
 end syntax
 
 /* 
@@ -131,7 +131,7 @@ Target:         An expression that evaluates to a list of datetime elements.
 syntax SortListDescendingDateTime is statement
     "sort" <Target: Expression> "in" "descending" "chronological" "order"
 begin 
-    MCSortExecSortListDescendingDateTime(Target)
+    ExecSortListDescendingDateTime(Target)
 end syntax
 
 --
@@ -142,19 +142,19 @@ end syntax
 syntax SortListAscending is statement
     "sort" <Target: Expression> ["in" "ascending" "order"]
 begin     
-    MCSortExecSortListAscendingText(Target)
-//    MCSortExecSortListAscendingBinary(Target)
-//    MCSortExecSortListAscendingNumeric(Target)
-//    MCSortExecSortListAscendingDateTime(Target)
+    ExecSortListAscendingText(Target)
+//    ExecSortListAscendingBinary(Target)
+//    ExecSortListAscendingNumeric(Target)
+//    ExecSortListAscendingDateTime(Target)
 end syntax
 
 syntax SortListDescending is statement
     "sort" <Target: Expression> "in" "descending" "order"
 begin 
-    MCSortExecSortListDescendingText(Target)
-//    MCSortExecSortListDescendingBinary(Target)
-//    MCSortExecSortListDescendingNumeric(Target)
-//    MCSortExecSortListDescendingDateTime(Target)
+    ExecSortListDescendingText(Target)
+//    ExecSortListDescendingBinary(Target)
+//    ExecSortListDescendingNumeric(Target)
+//    ExecSortListDescendingDateTime(Target)
 end syntax
 
 --
