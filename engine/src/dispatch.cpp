@@ -991,8 +991,10 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCString& fname)
     ep . appendcstring(sptr -> getscript());
     // Convert to UTF-8.
     ep . nativetoutf8();
-    // Convert line endings.
+    // Convert line endings - but only if the native line ending isn't CR!
+#ifndef __CR__
     ep . binarytotext();
+#endif
     
     // Open the output stream.
 	IO_handle stream;

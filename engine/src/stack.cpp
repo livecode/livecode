@@ -3171,4 +3171,11 @@ void MCStack::setasscriptonly(MCExecPoint& ep)
     setscriptprop(ep);
     
     m_is_script_only = true;
+    
+    // Make sure we have at least one card.
+    if (cards == NULL)
+    {
+        curcard = cards = MCtemplatecard->clone(False, False);
+        cards->setparent(this);
+    }
 }
