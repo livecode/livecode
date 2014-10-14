@@ -105,7 +105,7 @@ output:     Returns false if the given expression <Target> evaluates to the empt
 
 */
 
-syntax IsEmpty is postfix operator with precedence 1
+syntax IsNotEmpty is postfix operator with precedence 1
 	<Target: Expression> "is" "not" "empty"
 begin
 	EvalIsNotEmpty(Target, output)
@@ -135,10 +135,10 @@ output:     Returns false if the given expression <Target> is defined, and true 
 
 */
 
-syntax IsDefined is postfix operator with precedence 1
+syntax IsNotDefined is postfix operator with precedence 1
 	<Target: Expression> "is" "not" "defined"
 begin
-	EvalIsDefined(Target, output)
+	EvalIsNotDefined(Target, output)
 end syntax
 
 --
@@ -171,10 +171,10 @@ output:     Returns false if the result of evaluating <Left> is the same as that
 
 */
 
-syntax IsEqualTo is neutral binary operator with precedence 1
+syntax IsNotEqualTo is neutral binary operator with precedence 1
 	<Left: Expression> "is" "not" <Right: Expression>
 begin
-	EvalIsEqualTo(Left, Right, output)
+	EvalIsNotEqualTo(Left, Right, output)
 end syntax
 
 --

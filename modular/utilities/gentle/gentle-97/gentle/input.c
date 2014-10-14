@@ -28,8 +28,8 @@ static FillBuf ();
 #define MAXPATH            500
 
 static FILE   *InFile;
-static char   InFileName[100];
-static char   CurFileName[100];
+/* --PATCH-- */ static char   InFileName[1024];
+/* --PATCH-- */ static char   CurFileName[1024];
 static long   filecount = 0;
 static long   CurFile = 0;
 static char * PATH[MAXPATH];

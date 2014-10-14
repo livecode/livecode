@@ -1,0 +1,162 @@
+module com.livecode.sort
+
+foreign handler ExecSortListAscendingText(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListAscendingBinary(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+// foreign handler ExecSortStringListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListAscendingDateTime(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListDescendingText(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListDescendingBinary(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+// foreign handler ExecSortStringListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecSortListDescendingDateTime(inout Target as list) as undefined binds to "<builtin>"
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending order by comparing its elements on a codepoint by codepoint basis.
+Target:         An expression that evaluates to a list of strings.
+
+*/
+
+syntax SortListAscendingText is statement
+    "sort" <Target: Expression> "in" "ascending" "text" "order"
+begin 
+    ExecSortListAscendingText(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending order by comparing its elements on a codepoint by codepoint basis.
+Target:         An expression that evaluates to a list of strings.
+
+*/
+
+syntax SortListDescendingText is statement
+    "sort" <Target: Expression> "in" "descending" "text" "order"
+begin 
+    ExecSortListDescendingText(Target)
+end syntax
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending order by comparing its elements on a byte by byte basis.
+Target:         An expression that evaluates to a list of binary data.
+
+*/
+
+syntax SortListAscendingBinary is statement
+    "sort" <Target: Expression> "in" "ascending" "byte" "order"
+begin 
+    ExecSortListAscendingBinary(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending order by comparing its elements on a byte by byte basis.
+Target:         An expression that evaluates to a list of binary data.
+
+*/
+
+syntax SortListDescendingBinary is statement
+    "sort" <Target: Expression> "in" "descending" "byte" "order"
+begin 
+    ExecSortListDescendingBinary(Target)
+end syntax
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending order according to the cardinality of its elements.
+                If <Target> is a list of strings, the elements are ordered according to the number 
+                represented by the largest initial segment of the string that constitutes a decimal number.
+                If there is no such initial segment, the element is defined to have the minimum value with 
+                respect to the ordering.
+Target:         An expression that evaluates to a list of numbers, or strings.
+
+*/
+
+syntax SortListAscendingNumeric is statement
+    "sort" <Target: Expression> "in" "ascending" "numeric" "order"
+begin 
+    ExecSortListAscendingNumeric(Target)
+//    ExecSortStringListAscendingNumeric(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending order according to the standard total ordering on real numbers.
+                If <Target> is a list of strings, the elements are ordered according to the number 
+                represented by the largest initial segment of the string that constitutes a decimal number.
+                If there is no such initial segment, the element is defined to have the minimum value with 
+                respect to the ordering.
+Target:         An expression that evaluates to a list of numbers, or strings.
+
+*/
+
+syntax SortListDescendingNumeric is statement
+    "sort" <Target: Expression> "in" "descending" "numeric" "order"
+begin 
+    ExecSortListDescendingNumeric(Target)
+//    ExecSortStringListDescendingNumeric(Target)
+end syntax
+
+--
+
+/* 
+
+Summary:        Sorts <Target> in ascending chronological order.
+Target:         An expression that evaluates to a list of datetime elements.
+
+*/
+
+syntax SortListAscendingDateTime is statement
+    "sort" <Target: Expression> "in" "ascending" "chronological" "order"
+begin 
+    ExecSortListAscendingDateTime(Target)
+end syntax
+
+/* 
+
+Summary:        Sorts <Target> in descending chronological order.
+Target:         An expression that evaluates to a list of datetime elements.
+
+*/
+
+
+syntax SortListDescendingDateTime is statement
+    "sort" <Target: Expression> "in" "descending" "chronological" "order"
+begin 
+    ExecSortListDescendingDateTime(Target)
+end syntax
+
+--
+
+// When we have paramaterised list type, this can select based on runtime type.
+// For now, default is text.
+
+syntax SortListAscending is statement
+    "sort" <Target: Expression> ["in" "ascending" "order"]
+begin     
+    ExecSortListAscendingText(Target)
+//    ExecSortListAscendingBinary(Target)
+//    ExecSortListAscendingNumeric(Target)
+//    ExecSortListAscendingDateTime(Target)
+end syntax
+
+syntax SortListDescending is statement
+    "sort" <Target: Expression> "in" "descending" "order"
+begin 
+    ExecSortListDescendingText(Target)
+//    ExecSortListDescendingBinary(Target)
+//    ExecSortListDescendingNumeric(Target)
+//    ExecSortListDescendingDateTime(Target)
+end syntax
+
+--
+
+end module
