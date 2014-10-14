@@ -277,7 +277,7 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
                 else
                     t_right_child = NULL;
                 
-                if (t_left_child != NULL && t_left_child != NULL)
+                if (t_left_child != NULL && t_right_child != NULL)
                 {
                     if (!IsSyntaxNodeEqualTo(t_left_child, t_right_child))
                         return 0;
@@ -1202,7 +1202,7 @@ static void GenerateUmbrellaSyntaxRule(const char *p_name, SyntaxRuleKind p_firs
             }
         }
         if (t_made == 0)
-            fprintf(stderr, "  'rule' %s(-> nil):\n    \"THISCANNEVERHAPPEN\"\n", p_name);
+            fprintf(stderr, "  'rule' %s(-> nil):\n    \"__%s\"\n", p_name, p_name);
     }
     else
     {
@@ -1221,7 +1221,7 @@ static void GenerateUmbrellaSyntaxRule(const char *p_name, SyntaxRuleKind p_firs
             }
         }
         if (t_made == 0)
-            fprintf(stderr, "  'rule' %s:\n    \"THISCANNEVERHAPPEN\"\n", p_name);
+            fprintf(stderr, "  'rule' %s:\n    \"__%s\"\n", p_name, p_name);
     }
 }
 
