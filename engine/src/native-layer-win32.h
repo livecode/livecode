@@ -16,7 +16,8 @@ public:
     virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
     virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
     virtual void OnVisibilityChanged(bool p_visible);
-    virtual void OnToolChanged(Tool p_new_tool);
+	virtual void OnToolChanged(Tool p_new_tool);
+	virtual void OnLayerChanged();
     
     MCNativeLayerWin32(MCWidget*);
     ~MCNativeLayerWin32();
@@ -33,6 +34,9 @@ private:
     // Performs the attach/detach operations
     void doAttach();
     void doDetach();
+
+	// Performs a relayering operation
+	void doRelayer();
 };
 
 #endif // ifndef __MC_WIDGET_NATIVE__

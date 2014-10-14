@@ -203,24 +203,9 @@ void MCNativeLayerMac::OnLayerChanged()
 
 void MCNativeLayerMac::doRelayer()
 {
-    // Find which native layer this should be inserted after
-    MCWidget *t_before;
-    MCControl *t_control;
-    t_before = nil;
-    t_control = m_widget->next();
-    while (t_control != m_widget && t_control != m_widget->getcard()->getobjptrs()->getref())
-    {
-        // We are only looking for widgets that have a native layer
-        if (t_control->gettype() == CT_WIDGET && reinterpret_cast<MCWidget*>(t_control)->getNativeLayer() != nil)
-        {
-            // Found what we are looking for
-            t_before = reinterpret_cast<MCWidget*>(t_control);
-            break;
-        }
-        
-        // Next control
-        t_control = t_control->next();
-    }
+    // Find which native layer this should be inserted below
+    MCWidget* t_before;
+    t_before = findNextLayerAbove(m_widget);
     
     // Insert the widget in the correct place (but only if the card is current)
     if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())

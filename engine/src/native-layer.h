@@ -43,6 +43,11 @@ protected:
     bool m_attached;
     
     MCNativeLayer();
+    
+    // Utility function for subclasses: given a widget, finds the native layer
+    // immediately below or above it. If none exist, returns nil.
+    static MCWidget* findNextLayerBelow(MCWidget*);
+    static MCWidget* findNextLayerAbove(MCWidget*);
 };
 
 

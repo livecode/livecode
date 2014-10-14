@@ -66,13 +66,13 @@ void MCNativeLayerWin32::OnToolChanged(Tool p_new_tool)
 void MCNativeLayerWin32::OnOpen()
 {
 	// Unhide the widget, if required
-	if (isAttached())
+	if (isAttached() && m_widget->getopened() == 1)
         doAttach();
 }
 
 void MCNativeLayerWin32::OnClose()
 {
-	if (isAttached())
+	if (isAttached() && m_widget->getopened() == 0)
         doDetach();
 }
 
@@ -91,7 +91,7 @@ void MCNativeLayerWin32::doAttach()
         (
          L"BUTTON",
          L"Native Button",
-         WS_TABSTOP|WS_CHILD|BS_DEFPUSHBUTTON,
+         WS_TABSTOP|WS_CHILD|WS_CLIPSIBLINGS|BS_DEFPUSHBUTTON,
          rect.x,
          rect.y,
          rect.width,
@@ -233,6 +233,37 @@ void MCNativeLayerWin32::OnGeometryChanged(const MCRectangle& p_old_rect)
 void MCNativeLayerWin32::OnVisibilityChanged(bool p_visible)
 {
 	ShowWindow(m_hwnd, p_visible ? SW_SHOWNOACTIVATE : SW_HIDE);
+}
+
+void MCNativeLayerWin32::OnLayerChanged()
+{
+	doRelayer();
+}
+
+void MCNativeLayerWin32::doRelayer()
+{
+	// Find which native layer this should be inserted after
+	MCWidget* t_before;
+	t_before = findNextLayerBelow(m_widget);
+
+	// Insert the widget in the correct place (but only if the card is current)
+	if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+	{
+		HWND t_insert_after;
+		if (t_before != NULL)
+		{
+			MCNativeLayerWin32 *t_before_layer;
+			t_before_layer = reinterpret_cast<MCNativeLayerWin32*>(t_before->getNativeLayer());
+			t_insert_after = t_before_layer->m_hwnd;
+		}
+		else
+		{
+			t_insert_after = HWND_BOTTOM;
+		}
+
+		// Only the window Z order needs to be adjusted
+		SetWindowPos(m_hwnd, t_insert_after, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+	}	
 }
 
 HWND MCNativeLayerWin32::getStackWindow()
