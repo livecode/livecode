@@ -54,6 +54,7 @@
 
 /* Begin PBXFileReference section */
 		3CE9FF2A113D4DA9002F594F /* iPhoneSimulatorRemoteClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = iPhoneSimulatorRemoteClient.h; path = src/iPhoneSimulatorRemoteClient.h; sourceTree = "<group>"; };
+		4C30FE2B19D99B3B00DAFF52 /* CoreSimulator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CoreSimulator.h; path = src/CoreSimulator.h; sourceTree = "<group>"; };
 		4CAA4CEA18D3400400EFEC4B /* DVTiPhoneSimulatorRemoteClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DVTiPhoneSimulatorRemoteClient.h; path = src/DVTiPhoneSimulatorRemoteClient.h; sourceTree = "<group>"; };
 		4D8C22191212A2F800DA8A58 /* reviphoneproxy.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = reviphoneproxy.mm; path = src/reviphoneproxy.mm; sourceTree = "<group>"; };
 		4D8C22211212A72200DA8A58 /* reviphoneproxy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = reviphoneproxy; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -122,6 +123,7 @@
 		4D8F6A78113D13F80056ED41 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				4C30FE2B19D99B3B00DAFF52 /* CoreSimulator.h */,
 				4CAA4CEA18D3400400EFEC4B /* DVTiPhoneSimulatorRemoteClient.h */,
 				3CE9FF2A113D4DA9002F594F /* iPhoneSimulatorRemoteClient.h */,
 				4D8F6A80113D141F0056ED41 /* reviphone.mm */,
@@ -198,8 +200,6 @@
 /* Begin PBXProject section */
 		4D8F6A0C113D13140056ED41 /* Project object */ = {
 			isa = PBXProject;
-			attributes = {
-			};
 			buildConfigurationList = 4D8F6A0F113D13140056ED41 /* Build configuration list for PBXProject "reviphone" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;

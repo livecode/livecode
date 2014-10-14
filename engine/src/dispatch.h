@@ -231,5 +231,7 @@ private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a save stack. This
 	//   is wrapped by savestack to handle logical font table.
 	IO_stat dosavestack(MCStack *sptr, const MCString &);
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Save a stack if it is marked as script-only.
+	IO_stat dosavescriptonlystack(MCStack *sptr, const MCString &);
 };
 #endif
