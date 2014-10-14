@@ -139,7 +139,7 @@ output:         Returns true if <Needle> can be found among the elements of <Tar
 */
                 
 syntax AmongElementsOf is neutral binary operator with precedence 1
-    <Needle: Expression> "is" ["not" <IsNot=true>] "among" "the" "elements" "of" <Target: List>
+    <Needle: Expression> "is" ["not" <IsNot=true>] "among" "the" "elements" "of" <Target: Expression>
 begin
     EvalIsAmongTheElementsOf(Needle, IsNot, Target, output)
 end syntax
