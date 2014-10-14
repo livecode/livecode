@@ -2172,9 +2172,40 @@ void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems,
 			
         case ST_NUMERIC:
             // AL-2014-07-21: [[ Bug 12847 ]] If output is empty, don't construe as 0 for sorting purposes
-            if (t_success && !MCValueIsEmpty(*t_output) && ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
-                break;
-			
+            if (t_success && !MCValueIsEmpty(*t_output))
+            {
+                if (ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
+                    break;
+                
+                // AL-2014-10-14: [[ Bug 13664 ]] Try to parse numeric initial segment of string
+                MCAutoStringRef t_string;
+                if (ctxt . ConvertToString(*t_output, &t_string))
+                {
+                    uindex_t t_start, t_end, t_length;
+                    t_length = MCStringGetLength(*t_string);
+                    t_start = 0;
+                    // if there are consecutive spaces at the beginning, skip them
+                    while (t_start < t_length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(*t_string, t_start)))
+                        t_start++;
+                    
+                    t_end = t_start;
+                    while (t_end < t_length)
+                    {
+                        char_t t_char = MCStringGetNativeCharAtIndex(*t_string, t_end);
+                        if (!isdigit((uint1)t_char) && t_char != '.' && t_char != '-' && t_char != '+')
+                            break;
+                        
+                        t_end++;
+                    }
+                    
+                    MCAutoStringRef t_numeric_part;
+                    if (t_end != t_start &&
+                        MCStringCopySubstring(*t_string, MCRangeMake(t_start, t_end - t_start), &t_numeric_part) &&
+                        ctxt . ConvertToNumber(*t_numeric_part, items[nitems].nvalue))
+                        break;
+                }
+                
+			}
             /* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
             break;
         case ST_BINARY:
