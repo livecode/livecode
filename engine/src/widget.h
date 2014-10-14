@@ -59,6 +59,7 @@ public:
     
     virtual void toolchanged(Tool p_new_tool);
     
+    virtual void layerchanged();
     
     void SetKind(MCExecContext& ctxt, MCNameRef p_kind);
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
@@ -80,6 +81,9 @@ public:
     bool wantsDoubleClicks() const; // Does this widget want double-clicks?
     bool waitForDoubleClick() const;// Don't send click straight away
     bool isDragSource() const;      // Widget is source for drag-drop operations
+    
+    // Needed by the native layer code
+    MCNativeLayer* getNativeLayer() const;
     
 protected:
     
@@ -110,6 +114,7 @@ private:
     void OnDestroy();
     void OnParentPropChanged();
     void OnToolChanged(Tool p_new_tool);
+    void OnLayerChanged();
     
     ////////// Basic mouse events
     

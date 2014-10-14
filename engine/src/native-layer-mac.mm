@@ -23,6 +23,7 @@
 #include "font.h"
 #include "chunk.h"
 #include "graphicscontext.h"
+#include "objptr.h"
 
 #include "globals.h"
 #include "context.h"
@@ -80,13 +81,13 @@ void MCNativeLayerMac::OnToolChanged(Tool p_new_tool)
 void MCNativeLayerMac::OnOpen()
 {
     // Unhide the widget, if required
-    if (isAttached())
+    if (isAttached() && m_widget->getopened() == 1)
         doAttach();
 }
 
 void MCNativeLayerMac::OnClose()
 {
-    if (isAttached())
+    if (isAttached() && m_widget->getopened() == 0)
         doDetach();
 }
 
@@ -117,8 +118,9 @@ void MCNativeLayerMac::doAttach()
         m_view = t_button;
     }
     
-    // Add the view to the stack's content view
-    [[getStackWindow() contentView] addSubview:m_view];
+    // Act as if there was a re-layer to put the widget in the right place
+    // *** Can we assume open happens in back-to-front order? ***
+    doRelayer();
     
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
@@ -192,6 +194,52 @@ void MCNativeLayerMac::OnGeometryChanged(const MCRectangle& p_old_rect)
 void MCNativeLayerMac::OnVisibilityChanged(bool p_visible)
 {
     [m_view setHidden:!p_visible];
+}
+
+void MCNativeLayerMac::OnLayerChanged()
+{
+    doRelayer();
+}
+
+void MCNativeLayerMac::doRelayer()
+{
+    // Find which native layer this should be inserted after
+    MCWidget *t_before;
+    MCControl *t_control;
+    t_before = nil;
+    t_control = m_widget->next();
+    while (t_control != m_widget && t_control != m_widget->getcard()->getobjptrs()->getref())
+    {
+        // We are only looking for widgets that have a native layer
+        if (t_control->gettype() == CT_WIDGET && reinterpret_cast<MCWidget*>(t_control)->getNativeLayer() != nil)
+        {
+            // Found what we are looking for
+            t_before = reinterpret_cast<MCWidget*>(t_control);
+            break;
+        }
+        
+        // Next control
+        t_control = t_control->next();
+    }
+    
+    // Insert the widget in the correct place (but only if the card is current)
+    if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+    {
+        [m_view removeFromSuperview];
+        if (t_before != nil)
+        {
+            // There is another native layer above this one
+            MCNativeLayerMac *t_before_layer;
+            t_before_layer = reinterpret_cast<MCNativeLayerMac*>(t_before->getNativeLayer());
+            [[getStackWindow() contentView] addSubview:m_view positioned:NSWindowBelow relativeTo:t_before_layer->m_view];
+        }
+        else
+        {
+            // This is the top-most native layer
+            [[getStackWindow() contentView] addSubview:m_view];
+        }
+        [[getStackWindow() contentView] setNeedsDisplay:YES];
+    }
 }
 
 NSWindow* MCNativeLayerMac::getStackWindow()

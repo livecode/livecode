@@ -31,6 +31,7 @@ public:
     virtual void OnGeometryChanged(const MCRectangle& p_old_rect) = 0;
     virtual void OnVisibilityChanged(bool p_visible) = 0;
     virtual void OnToolChanged(Tool p_new_tool) = 0;
+    virtual void OnLayerChanged() = 0;
     
     virtual ~MCNativeLayer() = 0;
     

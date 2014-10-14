@@ -1118,6 +1118,10 @@ void MCObject::toolchanged(Tool)
 {
 }
 
+void MCObject::layerchanged()
+{
+}
+
 const MCRectangle& MCObject::getrect(void) const
 {
 	return rect;

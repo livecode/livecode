@@ -1941,6 +1941,8 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 		gptr->clearfocus(optr);
 	}
 
+    optr->layerchanged();
+    
 	if (getstack() == MCmousestackptr
 	        && MCU_point_in_rect(optr->getrect(), MCmousex, MCmousey))
 		mfocus(MCmousex, MCmousey);

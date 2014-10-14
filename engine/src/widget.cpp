@@ -503,6 +503,11 @@ void MCWidget::toolchanged(Tool p_new_tool)
 {
     OnToolChanged(p_new_tool);
 }
+
+void MCWidget::layerchanged()
+{
+    OnLayerChanged();
+}
 	
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)
 {
@@ -640,6 +645,13 @@ bool MCWidget::isDragSource() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCNativeLayer* MCWidget::getNativeLayer() const
+{
+    return m_native_layer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCWidget::OnOpen()
 {
     if (m_native_layer)
@@ -739,6 +751,14 @@ void MCWidget::OnToolChanged(Tool p_new_tool)
         m_native_layer->OnToolChanged(p_new_tool);
     
     fprintf(stderr, "MCWidget::OnToolChanged\n");
+}
+
+void MCWidget::OnLayerChanged()
+{
+    if (m_native_layer)
+        m_native_layer->OnLayerChanged();
+    
+    fprintf(stderr, "MCWidget::OnLayerChanged\n");
 }
 
 void MCWidget::OnMouseEnter()

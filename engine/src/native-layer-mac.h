@@ -35,6 +35,7 @@ public:
     virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
     virtual void OnVisibilityChanged(bool p_visible);
     virtual void OnToolChanged(Tool p_new_tool);
+    virtual void OnLayerChanged();
     
     MCNativeLayerMac(MCWidget*);
     ~MCNativeLayerMac();
@@ -51,6 +52,9 @@ private:
     // Performs the attach/detach operations
     void doAttach();
     void doDetach();
+    
+    // Performs a relayering operation
+    void doRelayer();
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_MAC__
