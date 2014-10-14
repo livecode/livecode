@@ -619,6 +619,9 @@
         STRING_LITERAL(-> Value) @(-> Position)
 
     'rule' Constant(-> name(Position, Value)):
+        Identifier(-> Value) "[" INTEGER_LITERAL(-> Index) "]" @(-> Position)
+
+    'rule' Constant(-> name(Position, Value)):
         Identifier(-> Value) @(-> Position)
 
 --------------------------------------------------------------------------------
