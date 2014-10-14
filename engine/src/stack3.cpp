@@ -1007,7 +1007,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 	// MW-2011-09-14: [[ Redraw ]] We lock the screen between before closeCard and until
 	//   after preOpenCard.
 	MCRedrawLockScreen();
-
+    
 	MCCard *oldcard = curcard;
 	Boolean oldlock = MClockmessages;
 	if (card != oldcard)
@@ -1077,29 +1077,23 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 
         if (!t_error)
         {
-            // PM-2014-10-13: [[ Bug 13569 ]] Hide player to avoid redraw issue on preOpenCard
+            // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
             for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
                 if (t_player -> getstack() == curcard -> getstack())
-                {
-                    MCExecPoint ep(nil,nil,nil);
-                    ep.setboolean(False);
-                    t_player -> setprop(0, P_VISIBLE, ep, False);
-                }
-            
+                    t_player -> detachplayer();
+                
             t_error = curcard->message(MCM_preopen_card) == ES_ERROR || curcard != card || !opened;
-            
-            // PM-2014-10-13: [[ Bug 13569 ]] when preOpenCard handler finish, show the player
-            for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-                if (t_player -> getstack() == curcard -> getstack())
-                {
-                    MCExecPoint ep(nil,nil,nil);
-                    ep.setboolean(True);
-                    t_player -> setprop(0, P_VISIBLE, ep, False);
-                }
         }
         
         if (!t_error)
+        {
             t_error = curcard -> opencontrols(true) == ES_ERROR || curcard != card || !opened;
+            
+            // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
+             for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+                 if (t_player -> getstack() == curcard -> getstack())
+                    t_player -> attachplayer();
+        }
         
         if (t_error)
 		{
