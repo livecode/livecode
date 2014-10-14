@@ -719,11 +719,13 @@ protected:
 	//   font attrs after the font table loads.
 	void loadfontattrs(uint2 index);
 	
+    // MW-2014-09-30: [[ ScriptStack ]] Used by MCStack::setasscriptonly.
+	Exec_stat setscriptprop(MCExecPoint& ep);
+    
 private:
 	Exec_stat getrectprop(Properties which, MCExecPoint& ep, Boolean effective);
 
 	Exec_stat setrectprop(Properties which, MCExecPoint& ep, Boolean effective);
-	Exec_stat setscriptprop(MCExecPoint& ep);
 	Exec_stat setparentscriptprop(MCExecPoint& ep);
 	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
 	Exec_stat setshowfocusborderprop(MCExecPoint& ep);

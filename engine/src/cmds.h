@@ -505,9 +505,11 @@ class MCCreate : public MCStatement
 	MCExpression *file;
 	MCChunk *container;
 	MCVarref *it;
-	Boolean directory;
-	Boolean visible;
-	Boolean alias;
+	Boolean directory : 1;
+	Boolean visible : 1;
+	Boolean alias : 1;
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] For 'create script only stack ...' form.
+    Boolean script_only_stack : 1;
 public:
 	MCCreate()
 	{
@@ -519,6 +521,8 @@ public:
 		directory = False;
 		alias = False;
 		visible = True;
+        // MW-2014-09-30: [[ ScriptOnlyStack ]] Initial value.
+        script_only_stack = False;
 	}
 	virtual ~MCCreate();
 	virtual Parse_stat parse(MCScriptPoint &);

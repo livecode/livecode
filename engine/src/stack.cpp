@@ -146,6 +146,9 @@ MCStack::MCStack()
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks are not script-only by default.
+    m_is_script_only = false;
+    
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
 
@@ -341,6 +344,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks copy the source script-onlyness.
+    m_is_script_only = sref.m_is_script_only;
+    
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
 
@@ -3158,3 +3164,11 @@ void MCStack::openwindow(Boolean p_override)
 }
 
 //////////
+
+// MW-2014-09-30: [[ ScriptOnlyStack ]] Sets the stack as script only with the given script.
+void MCStack::setasscriptonly(MCExecPoint& ep)
+{
+    setscriptprop(ep);
+    
+    m_is_script_only = true;
+}
