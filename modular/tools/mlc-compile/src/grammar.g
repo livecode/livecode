@@ -29,6 +29,7 @@
             ErrorsDidOccur()
         ||
             -- do something!
+            print(Modules)
         |)
 
 'action' BootstrapCompile(MODULELIST)
@@ -379,6 +380,9 @@
     'rule' SyntaxClass(-> expression):
         "is" "expression"
 
+    'rule' SyntaxClass(-> iterator):
+        "is" "iterator"
+
     'rule' SyntaxClass(-> prefix(Precedence)):
         "is" "prefix" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
 
@@ -496,6 +500,9 @@
         
 'nonterm' Statement(-> STATEMENT)
 
+    'rule' Statement(-> variable(Position, Name, Type)):
+        "variable" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
+
     'rule' Statement(-> if(Position, Condition, Consequent, Alternate)):
         "if" @(-> Position) Expression(-> Condition) "then" Separator
             Statements(-> Consequent)
@@ -531,6 +538,21 @@
         "repeat" @(-> Position) "with" Identifier(-> Slot) "from" Expression(-> Start) "down" "to" Expression(-> Finish) RepeatStatementOptionalBy(-> Step) Separator
             Statements(-> Body)
         "end" "repeat"
+        
+    'rule' Statement(-> repeatforeach(Position, Iterator, Slot, Container, Body)):
+        "repeat" @(-> Position) "for" "each" CustomIterator(-> Iterator) Identifier(-> Slot) "in" Expression(-> Container) Separator
+            Statements(-> Body)
+        "end" "repeat"
+
+    /*'rule' Statement(-> try(Position, Body, Catches, Finally)):
+        "try" @(-> Position) Separator
+            Statements(-> Body)
+        TryStatementCatches(-> Catches)
+        TryStatementFinally(-> Finally)
+        "end" "try"
+        
+    'rule' Statement(-> throw(Position, Value)):
+        "throw" @(-> Position) Expression(-> Value)*/
 
     'rule' Statement(-> nextrepeat(Position)):
         "next" @(-> Position) "repeat"
@@ -571,6 +593,12 @@
         
     'rule' RepeatStatementOptionalBy(-> nil):
         -- nothing
+
+/*'nonterm' TryStatementCatches(-> STATEMENT)
+
+    'rule' TryStatementCatches(-> catch(Position, Type, Body)):
+        "catch" Type(-> Type) Separator
+            Statements(-> Body)*/
 
 --------------------------------------------------------------------------------
 -- Expression Syntax
@@ -633,10 +661,6 @@
         -- nothing
         
 'nonterm' FlatExpressionPrefixOperator
-
-    'rule' FlatExpressionPrefixOperator:
-        "+" @(-> Position)
-        PushOperatorExpressionPrefix(Position, 1, 1)
         
     'rule' FlatExpressionPrefixOperator:
         CustomPrefixOperators
@@ -644,17 +668,9 @@
 'nonterm' FlatExpressionPostfixOperator
 
     'rule' FlatExpressionPostfixOperator:
-        "is" @(-> Position) "foo"
-        PushOperatorExpressionPrefix(Position, 1, 2)
-
-    'rule' FlatExpressionPostfixOperator:
         CustomPostfixOperators
 
 'nonterm' FlatExpressionBinaryOperator
-
-    'rule' FlatExpressionBinaryOperator:
-        "*" @(-> Position)
-        PushOperatorExpressionLeftBinary(Position, 1, 3)
         
     'rule' FlatExpressionBinaryOperator:
         CustomBinaryOperators
@@ -693,8 +709,15 @@
     'rule' TermExpression(-> slot(Position, Name)):
         Identifier(-> Name) @(-> Position)
 
+    'rule' TermExpression(-> as(Position, Value, Type)):
+        TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
+
     'rule' TermExpression(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
+
+    'rule' TermExpression(-> Expression):
+        "(" Expression(-> Expression) ")"
+
 
 ----------
 
@@ -791,18 +814,18 @@
         
     'rule' Constant(-> false(Position)):
         "false" @(-> Position)
-        
+
     'rule' Constant(-> integer(Position, Value)):
         INTEGER_LITERAL(-> Value) @(-> Position)
 
     'rule' Constant(-> string(Position, Value)):
         STRING_LITERAL(-> Value) @(-> Position)
 
-    'rule' Constant(-> name(Position, Value)):
-        Identifier(-> Value) "[" INTEGER_LITERAL(-> Index) "]" @(-> Position)
-
-    'rule' Constant(-> name(Position, Value)):
+    'rule' Constant(-> variable(Position, Value)):
         Identifier(-> Value) @(-> Position)
+
+    'rule' Constant(-> indexedvariable(Position, Value, Index)):
+        Identifier(-> Value) @(-> Position) "[" INTEGER_LITERAL(-> Index) "]"
 
 --------------------------------------------------------------------------------
 -- Identifier Syntax
@@ -812,6 +835,13 @@
 
     'rule' Identifier(-> Id):
         NAME_LITERAL(-> Identifier) @(-> Position)
+        Id::ID
+        Id'Position <- Position
+        Id'Name <- Identifier
+        
+    'rule' Identifier(-> Id):
+        "iterator" @(-> Position)
+        MakeNameLiteral("iterator" -> Identifier)
         Id::ID
         Id'Position <- Position
         Id'Name <- Identifier
@@ -858,6 +888,10 @@
 'token' END_OF_UNIT
 'token' NEXT_UNIT
 
+'nonterm' CustomIterator(-> EXPRESSION)
+    'rule' CustomIterator(-> nil):
+        "THISCANNEVERHAPPEN"
+        
 --*--*--*--*--*--*--*--
 
 'nonterm' CustomStatements(-> STATEMENT)
@@ -875,5 +909,6 @@
 'nonterm' CustomOperands
     'rule' CustomOperands:
         "THISCANNEVERHAPPEN"
+
 
 

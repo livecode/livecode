@@ -207,7 +207,10 @@
         ApplyId(Name)
         Apply(Arguments)
         
-    'rule' Apply(SYNTAXCONSTANT'name(_, Value)):
+    'rule' Apply(SYNTAXCONSTANT'variable(_, Value)):
+        ApplyId(Value)
+
+    'rule' Apply(SYNTAXCONSTANT'indexedvariable(_, Value, _)):
         ApplyId(Value)
 
 --------------------------------------------------------------------------------
@@ -281,6 +284,8 @@
 'var' OutputSyntaxMarkIdVar : ID
 'var' InputSyntaxMarkIdVar : ID
 'var' ContextSyntaxMarkIdVar : ID
+'var' IteratorSyntaxMarkIdVar : ID
+'var' ContainerSyntaxMarkIdVar : ID
 
 'var' ExpressionSyntaxRuleIdVar : ID
 'var' ExpressionListSyntaxRuleIdVar : ID
@@ -294,10 +299,14 @@
         InputSyntaxMarkIdVar <- Id2
         MakePredefinedId("context", syntaxcontextmark -> Id3)
         ContextSyntaxMarkIdVar <- Id3
-        MakePredefinedId("Expression", syntaxexpressionrule -> Id4)
-        ExpressionSyntaxRuleIdVar <- Id4
-        MakePredefinedId("ExpressionList", syntaxexpressionlistrule -> Id5)
-        ExpressionListSyntaxRuleIdVar <- Id5
+        MakePredefinedId("iterator", syntaxiteratormark -> Id4)
+        IteratorSyntaxMarkIdVar <- Id4
+        MakePredefinedId("container", syntaxcontainermark -> Id5)
+        ContainerSyntaxMarkIdVar <- Id5
+        MakePredefinedId("Expression", syntaxexpressionrule -> Id6)
+        ExpressionSyntaxRuleIdVar <- Id6
+        MakePredefinedId("ExpressionList", syntaxexpressionlistrule -> Id7)
+        ExpressionListSyntaxRuleIdVar <- Id7
 
 'action' DeclarePredefinedIds
 
@@ -316,6 +325,10 @@
         DeclareId(Id2)
         ContextSyntaxMarkIdVar -> Id3
         DeclareId(Id3)
+        IteratorSyntaxMarkIdVar -> Id4
+        DeclareId(Id4)
+        ContainerSyntaxMarkIdVar -> Id5
+        DeclareId(Id5)
 
 'action' MakePredefinedId(STRING, MEANING -> ID)
 

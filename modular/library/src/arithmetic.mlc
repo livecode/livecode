@@ -14,6 +14,14 @@ foreign handler ExecMultiplyNumberByNumber(in Value as number, inout Target as n
 foreign handler ExecDivideIntegerByInteger(in Value as integer, inout Target as integer) as undefined binds to "<builtin>"
 foreign handler ExecDivideRealByReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
 foreign handler ExecDivideNumberByNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+
+foreign handler EvalPlusInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalPlusReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalPlusNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler EvalMinusInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalMinusReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalMinusNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
 foreign handler EvalIntegerPlusInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
 foreign handler EvalRealPlusReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
 foreign handler EvalNumberPlusNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
@@ -26,12 +34,14 @@ foreign handler EvalNumberTimesNumber(in Left as number, in Right as number, out
 foreign handler EvalIntegerOverInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
 foreign handler EvalRealOverReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
 foreign handler EvalNumberOverNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+
 foreign handler EvalIntegerModInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
 foreign handler EvalRealModReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
 foreign handler EvalNumberModNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 foreign handler EvalIntegerWrapInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
 foreign handler EvalRealWrapReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
 foreign handler EvalNumberWrapNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+
 foreign handler EvalIntegerIsGreaterThanInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
 foreign handler EvalRealIsGreaterThanReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
 foreign handler EvalNumberIsGreaterThanNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
@@ -77,6 +87,24 @@ begin
     ExecDivideIntegerByInteger(Value, Target)
     ExecDivideRealByReal(Value, Target)
     ExecDivideNumberByNumber(Value, Target)
+end syntax
+
+--
+
+syntax PlusUnaryOperator is prefix operator with precedence 1
+    "+" <Operand: Expression>
+begin
+    EvalPlusInteger(Operand, output)
+    EvalPlusReal(Operand, output)
+    EvalPlusNumber(Operand, output)
+end syntax
+
+syntax MinusUnaryOperator is prefix operator with precedence 1
+    "-" <Operand: Expression>
+begin
+    EvalMinusInteger(Operand, output)
+    EvalMinusReal(Operand, output)
+    EvalMinusNumber(Operand, output)
 end syntax
 
 --

@@ -434,3 +434,36 @@ void MCArithmeticEvalNumberIsLessThanOrEqualToNumber(MCNumberRef p_left, MCNumbe
 {
     r_output = (MCNumberFetchAsReal(p_left) <= MCNumberFetchAsReal(p_right));
 }
+
+void MCArithmeticEvalPlusInteger(integer_t p_operand, integer_t& r_output)
+{
+    r_output = p_operand;
+}
+
+void MCArithmeticEvalPlusReal(double p_operand, double& r_output)
+{
+    r_output = p_operand;
+}
+
+void MCArithmeticEvalPlusNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    r_output = MCValueRetain(p_operand);
+}
+
+void MCArithmeticEvalMinusInteger(integer_t p_operand, integer_t& r_output)
+{
+    r_output = -p_operand;
+}
+
+void MCArithmeticEvalMinusReal(double p_operand, double& r_output)
+{
+    r_output = -p_operand;
+}
+
+void MCArithmeticEvalMinusNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    if (MCNumberIsInteger(p_operand))
+        MCNumberCreateWithInteger(-MCNumberFetchAsInteger(p_operand), r_output);
+    else
+        MCNumberCreateWithInteger(-MCNumberFetchAsReal(p_operand), r_output);
+}

@@ -133,7 +133,11 @@
     'rule' GenerateSyntax(SYNTAXCONSTANT'string(_, Value)):
         PushStringArgumentSyntaxMapping(Value)
 
-    'rule' GenerateSyntax(SYNTAXCONSTANT'name(_, Value)):
+    'rule' GenerateSyntax(SYNTAXCONSTANT'variable(_, Value)):
+        Value'Meaning -> syntaxmark(Index)
+        PushMarkArgumentSyntaxMapping(Index)
+
+    'rule' GenerateSyntax(SYNTAXCONSTANT'indexedvariable(_, Value, _)):
         Value'Meaning -> syntaxmark(Index)
         PushMarkArgumentSyntaxMapping(Index)
 

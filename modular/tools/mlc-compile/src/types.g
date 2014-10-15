@@ -99,6 +99,7 @@
 
 'type' STATEMENT
     sequence(Left: STATEMENT, Right: STATEMENT)
+    variable(Position: POS, Name: ID, Type: TYPE)
     if(Position: POS, Condition: EXPRESSION, Consequent: STATEMENT, Alternate: STATEMENT)
     repeatforever(Position: POS, Body: STATEMENT)
     repeatcounted(Position: POS, Count: EXPRESSION, Body: STATEMENT)
@@ -106,6 +107,7 @@
     repeatuntil(Position: POS, Condition: EXPRESSION, Body: STATEMENT)
     repeatupto(Position: POS, Slot: ID, Start: EXPRESSION, Finish: EXPRESSION, Step: EXPRESSION, Body: STATEMENT)
     repeatdownto(Position: POS, Slot: ID, Start: EXPRESSION, Finish: EXPRESSION, Step: EXPRESSION, Body: STATEMENT)
+    repeatforeach(Position: POS, Iterator: EXPRESSION, Slot: ID, Container: EXPRESSION, Body: STATEMENT)
     nextrepeat(Position: POS)
     exitrepeat(Position: POS)
     return(Position: POS, Value: EXPRESSION)
@@ -125,6 +127,7 @@
     real(Position: POS, Value: DOUBLE)
     string(Position: POS, Value: STRING)
     slot(Position: POS, Name: ID)
+    as(Position: POS, Value: EXPRESSION, Type: TYPE)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
     nil
@@ -150,6 +153,7 @@
 'type' SYNTAXCLASS
     phrase
     statement
+    iterator
     expression
     prefix(Precedence: INT)
     postfix(Precedence: INT)
@@ -170,7 +174,8 @@
     false(Position: POS)
     integer(Position: POS, Value: INT)
     string(Position: POS, Value: STRING)
-    name(Position: POS, Value: ID)
+    variable(Position: POS, Name: ID)
+    indexedvariable(Position: POS, Name: ID, Index: INT)
 
 'type' SYNTAXTERM
     error
@@ -199,6 +204,8 @@
     syntaxoutputmark
     syntaxinputmark
     syntaxcontextmark
+    syntaxcontainermark
+    syntaxiteratormark
     error
     nil
 
