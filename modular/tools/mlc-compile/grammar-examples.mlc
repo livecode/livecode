@@ -233,19 +233,23 @@ handler MyStatementHandler(pParam)
     
     repeat forever
         MyStatementHandler(pParam)
+        exit repeat
     end repeat
     
     repeat 100 times
         MyStatementHandler(pParam)
+        next repeat
     end repeat
     
     repeat with tMyVar from 0 up to 100 by 10
         MyStatementHandler(pParam)
     end repeat
 
-    repeat with tMyVar from 100 down to 0 by -10
+    repeat with tMyVar from 100 down to 0 by 10
         MyStatementHandler(pParam)
     end repeat
+    
+    return 100
 end handler
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -263,6 +267,36 @@ syntax MyExpressionSyntax is expression
     "evaluate" <Value: Expression> "specially"
 begin
     MyForeignExpressionHandler(Value, output)
+end syntax
+
+syntax MyPrefixExpressionSyntax is prefix operator with precedence 1
+    "something" "after" "me" <Value: Expression>
+begin
+    MyForeignExpressionHandler(Value, output)
+end syntax
+
+syntax MyPostfixExpressionSyntax is postfix operator with precedence 1
+    <Value: Expression> "something" "before" "me"
+begin
+    MyForeignExpressionHandler(Value, output)
+end syntax
+
+syntax MyLeftBinaryExpressionSyntax is left binary operator with precedence 1
+    <LeftValue: Expression> "something" "before" "and" "after" "me" <RightValue: Expression>
+begin
+    MyForeignExpressionHandler(LeftValue, RightValue, output)
+end syntax
+
+syntax MyRightBinaryExpressionSyntax is right binary operator with precedence 1
+    <LeftValue: Expression> "something" "before" "and" "after" "me" <RightValue: Expression>
+begin
+    MyForeignExpressionHandler(LeftValue, RightValue, output)
+end syntax
+
+syntax MyNeutralBinaryExpressionSyntax is neutral binary operator with precedence 1
+    <LeftValue: Expression> "something" "before" "and" "after" "me" <RightValue: Expression>
+begin
+    MyForeignExpressionHandler(LeftValue, RightValue, output)
 end syntax
 
 end module
