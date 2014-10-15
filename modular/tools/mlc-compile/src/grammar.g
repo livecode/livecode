@@ -532,6 +532,18 @@
             Statements(-> Body)
         "end" "repeat"
 
+    'rule' Statement(-> nextrepeat(Position)):
+        "next" @(-> Position) "repeat"
+
+    'rule' Statement(-> exitrepeat(Position)):
+        "exit" @(-> Position) "repeat"
+        
+    'rule' Statement(-> return(Position, nil)):
+        "return" @(-> Position)
+        
+    'rule' Statement(-> return(Position, Value)):
+        "return" @(-> Position) Expression(-> Value)
+
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
         

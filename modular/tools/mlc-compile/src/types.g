@@ -106,6 +106,9 @@
     repeatuntil(Position: POS, Condition: EXPRESSION, Body: STATEMENT)
     repeatupto(Position: POS, Slot: ID, Start: EXPRESSION, Finish: EXPRESSION, Step: EXPRESSION, Body: STATEMENT)
     repeatdownto(Position: POS, Slot: ID, Start: EXPRESSION, Finish: EXPRESSION, Step: EXPRESSION, Body: STATEMENT)
+    nextrepeat(Position: POS)
+    exitrepeat(Position: POS)
+    return(Position: POS, Value: EXPRESSION)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
     nil
