@@ -1,0 +1,1 @@
+# Parentheses appear in disabled tab menu items
