@@ -174,7 +174,8 @@
     false(Position: POS)
     integer(Position: POS, Value: INT)
     string(Position: POS, Value: STRING)
-    name(Position: POS, Value: ID)
+    variable(Position: POS, Name: ID)
+    indexedvariable(Position: POS, Name: ID, Index: INT)
 
 'type' SYNTAXTERM
     error
@@ -203,6 +204,8 @@
     syntaxoutputmark
     syntaxinputmark
     syntaxcontextmark
+    syntaxcontainermark
+    syntaxiteratormark
     error
     nil
 

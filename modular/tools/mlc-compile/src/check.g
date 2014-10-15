@@ -137,6 +137,12 @@
         QueryId(Id -> syntaxcontextmark)
         
     'rule' CheckBindingOfSyntaxMarkUse(Id):
+        QueryId(Id -> syntaxcontainermark)
+
+    'rule' CheckBindingOfSyntaxMarkUse(Id):
+        QueryId(Id -> syntaxiteratormark)
+
+    'rule' CheckBindingOfSyntaxMarkUse(Id):
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToASyntaxMark(Position, Name)
@@ -427,7 +433,11 @@
 
     'rule' CheckSyntaxMarks(mark(Position, Variable, Value)):
         [|
-            where(Value -> name(_, _))
+            (|
+                where(Value -> variable(_, _))
+            ||
+                where(Value -> indexedvariable(_, _, _))
+            |)
             Error_SyntaxMarksMustBeConstant(Position)
         |]
         

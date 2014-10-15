@@ -215,7 +215,8 @@
 'action' PushFalseArgumentSyntaxMapping()
 'action' PushIntegerArgumentSyntaxMapping(Value: INT)
 'action' PushStringArgumentSyntaxMapping(Value: STRING)
-'action' PushMarkArgumentSyntaxMapping(Index: INT)
+'action' PushMarkArgumentSyntaxMapping(MarkIndex: INT)
+'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
 
 --------------------------------------------------------------------------------
 

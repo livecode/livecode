@@ -814,18 +814,18 @@
         
     'rule' Constant(-> false(Position)):
         "false" @(-> Position)
-        
+
     'rule' Constant(-> integer(Position, Value)):
         INTEGER_LITERAL(-> Value) @(-> Position)
 
     'rule' Constant(-> string(Position, Value)):
         STRING_LITERAL(-> Value) @(-> Position)
 
-    'rule' Constant(-> name(Position, Value)):
-        Identifier(-> Value) "[" INTEGER_LITERAL(-> Index) "]" @(-> Position)
-
-    'rule' Constant(-> name(Position, Value)):
+    'rule' Constant(-> variable(Position, Value)):
         Identifier(-> Value) @(-> Position)
+
+    'rule' Constant(-> indexedvariable(Position, Value, Index)):
+        Identifier(-> Value) @(-> Position) "[" INTEGER_LITERAL(-> Index) "]"
 
 --------------------------------------------------------------------------------
 -- Identifier Syntax
@@ -835,6 +835,13 @@
 
     'rule' Identifier(-> Id):
         NAME_LITERAL(-> Identifier) @(-> Position)
+        Id::ID
+        Id'Position <- Position
+        Id'Name <- Identifier
+        
+    'rule' Identifier(-> Id):
+        "iterator" @(-> Position)
+        MakeNameLiteral("iterator" -> Identifier)
         Id::ID
         Id'Position <- Position
         Id'Name <- Identifier

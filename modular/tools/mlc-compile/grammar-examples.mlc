@@ -206,6 +206,7 @@ variable mMyPointerOpaqueTypeVariable as MyPointerOpaqueType
 
 foreign handler MyForeignStatementHandler(in pArg1 as int) binds to "MyBinding"
 foreign handler MyForeignExpressionHandler(in pArg1 as integer, in pArg2 as string, in pArg3 as MyHandlerType) binds to "MyBinding"
+foreign handler MyForeignIteratorHandler() binds to "MyBinding"
 
 handler MyHandler(in pArg1 as integer, in pArg2 as string, in pArg3 as MyHandlerType) as boolean
 end handler
@@ -317,7 +318,7 @@ end syntax
 syntax MyChunkIteratorSyntax is iterator
     "char"
 begin
-    MyForeignChunkIterator(Iterator, container, output)
+    MyForeignIteratorHandler(iterator, container, output)
 end syntax
 
 end module
