@@ -5730,8 +5730,8 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             else
             {
                 range . length = t_found_range . offset - range . offset;
-                // keep track of matched delimiter length.
-                //delimiter_length = t_found_range . length;
+                // AL-2014-10-15: [[ Bug 13671 ]] Keep track of matched delimiter length to increment offset correctly
+                delimiter_length = t_found_range . length;
             }
             
         }
