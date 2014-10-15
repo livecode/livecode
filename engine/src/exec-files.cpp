@@ -158,7 +158,8 @@ void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string)
 	if (MCS_getentries(false, false, &t_list) && MCListCopyAsString(*t_list, r_string))
 		return;
 
-	ctxt . Throw();
+    // SN-2014-10-07: [[ Bug 13619 ]] 'the folders' should return empty, in case of an error
+    r_string = MCValueRetain(kMCEmptyString);
 }
 
 void MCFilesEvalFiles(MCExecContext& ctxt, MCStringRef& r_string)
@@ -172,7 +173,8 @@ void MCFilesEvalFiles(MCExecContext& ctxt, MCStringRef& r_string)
 	if (MCS_getentries(true, false, &t_list) && MCListCopyAsString(*t_list, r_string))
 		return;
 
-	ctxt . Throw();
+    // SN-2014-10-07: [[ Bug 13619 ]] 'the files' should return empty, in case of an error
+    r_string = MCValueRetain(kMCEmptyString);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
