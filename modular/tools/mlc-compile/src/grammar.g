@@ -497,7 +497,7 @@
 'nonterm' Statement(-> STATEMENT)
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
-        Identifier(-> Handler) @(-> Position) "(" ExpressionList(-> Arguments) ")"
+        Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
         
     'rule' Statement(-> Statement):
         CustomStatements(-> Statement)
@@ -590,34 +590,6 @@
         CustomBinaryOperators
 
 'nonterm' FlatExpressionOperand
-
-    /*'rule' FlatExpressionOperand:
-        "null" @(-> Position)
-        PushOperatorExpressionOperand(null(Position))
-
-    'rule' FlatExpressionOperand:
-        "true" @(-> Position)
-        PushOperatorExpressionOperand(true(Position))
-
-    'rule' FlatExpressionOperand:
-        "false" @(-> Position)
-        PushOperatorExpressionOperand(false(Position))
-
-    'rule' FlatExpressionOperand:
-        INTEGER_LITERAL(-> Value) @(-> Position)
-        PushOperatorExpressionOperand(integer(Position, Value))
-
-    'rule' FlatExpressionOperand:
-        DOUBLE_LITERAL(-> Value) @(-> Position)
-        PushOperatorExpressionOperand(real(Position, Value))
-
-    'rule' FlatExpressionOperand:
-        STRING_LITERAL(-> Value) @(-> Position)
-        PushOperatorExpressionOperand(string(Position, Value))
-
-    'rule' FlatExpressionOperand:
-        Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
-        PushOperatorExpressionOperand(call(Position, Handler, Arguments))*/
         
     'rule' FlatExpressionOperand:
         TermExpression(-> Term)
