@@ -29,6 +29,7 @@
             ErrorsDidOccur()
         ||
             -- do something!
+            print(Modules)
         |)
 
 'action' BootstrapCompile(MODULELIST)
@@ -531,6 +532,16 @@
         "repeat" @(-> Position) "with" Identifier(-> Slot) "from" Expression(-> Start) "down" "to" Expression(-> Finish) RepeatStatementOptionalBy(-> Step) Separator
             Statements(-> Body)
         "end" "repeat"
+        
+    /*'rule' Statement(-> try(Position, Body, Catches, Finally)):
+        "try" @(-> Position) Separator
+            Statements(-> Body)
+        TryStatementCatches(-> Catches)
+        TryStatementFinally(-> Finally)
+        "end" "try"
+        
+    'rule' Statement(-> throw(Position, Value)):
+        "throw" @(-> Position) Expression(-> Value)*/
 
     'rule' Statement(-> nextrepeat(Position)):
         "next" @(-> Position) "repeat"
@@ -571,6 +582,12 @@
         
     'rule' RepeatStatementOptionalBy(-> nil):
         -- nothing
+
+/*'nonterm' TryStatementCatches(-> STATEMENT)
+
+    'rule' TryStatementCatches(-> catch(Position, Type, Body)):
+        "catch" Type(-> Type) Separator
+            Statements(-> Body)*/
 
 --------------------------------------------------------------------------------
 -- Expression Syntax
@@ -633,10 +650,6 @@
         -- nothing
         
 'nonterm' FlatExpressionPrefixOperator
-
-    'rule' FlatExpressionPrefixOperator:
-        "+" @(-> Position)
-        PushOperatorExpressionPrefix(Position, 1, 1)
         
     'rule' FlatExpressionPrefixOperator:
         CustomPrefixOperators
@@ -644,17 +657,9 @@
 'nonterm' FlatExpressionPostfixOperator
 
     'rule' FlatExpressionPostfixOperator:
-        "is" @(-> Position) "foo"
-        PushOperatorExpressionPrefix(Position, 1, 2)
-
-    'rule' FlatExpressionPostfixOperator:
         CustomPostfixOperators
 
 'nonterm' FlatExpressionBinaryOperator
-
-    'rule' FlatExpressionBinaryOperator:
-        "*" @(-> Position)
-        PushOperatorExpressionLeftBinary(Position, 1, 3)
         
     'rule' FlatExpressionBinaryOperator:
         CustomBinaryOperators
@@ -693,8 +698,15 @@
     'rule' TermExpression(-> slot(Position, Name)):
         Identifier(-> Name) @(-> Position)
 
+    'rule' TermExpression(-> as(Position, Value, Type)):
+        TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
+
     'rule' TermExpression(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
+
+    'rule' TermExpression(-> Expression):
+        "(" Expression(-> Expression) ")"
+
 
 ----------
 

@@ -67,6 +67,12 @@ opaque type MyOpaqueType
     // used on the contents.
     hash is MyOpaqueType_Hash
     
+    // The 'convert' methods are called to satisfy an 'as <type>' request. There
+    // can be as many convert methods as desired as long as the output types are
+    // all distinct.
+    convert is MyOpaqueType_ConvertToString
+    convert is MyOpaqueType_ConvertToInteger
+
     // The 'encode' method (if present) will allow the type to be serializable.
     // For this to be possible, the encoded type can be any high-level type.
     encode is MyOpaqueType_Encode
@@ -86,6 +92,8 @@ foreign handler MyOpaqueType_Move(in pOldContents as pointer, in pNewContents as
 foreign handler MyOpaqueType_Copy(in pOldContents as pointer, in pNewContents as pointer) as undefined binds to "<undefined>"
 foreign handler MyOpaqueType_Equal(in pLeftContents as pointer, in pRightContents as pointer) as bool binds to "<undefined>"
 foreign handler MyOpaqueType_Hash(in pContents as pointer) as uint binds to "<undefined>"
+foreign handler MyOpaqueType_ConvertToString(in pContents as pointer, out pConversion as string) as undefined binds to "<undefined>"
+foreign handler MyOpaqueType_ConvertToInteger(in pContents as pointer, out pConversion as integer) as undefined binds to "<undefined>"
 foreign handler MyOpaqueType_Encode(in pContents as pointer, out pEncodedType as array) as undefined binds to "<undefined>"
 foreign handler MyOpaqueType_Decode(in pEncodedContents as array, in pContents as pointer) as undefined binds to "<undefined>"
 
@@ -214,6 +222,7 @@ handler MyExpressionHandler(pParam)
     MyExpressionHandler(100)
     MyExpressionHandler(3.14159)
     MyExpressionHandler("The quick brown fox jumped over the lazy dog")
+    MyExpressionHandler(MyHandler(100, "Hello World", MyHandler) as integer)
     MyExpressionHandler(MyHandler(100, "Hello World", MyHandler))
 end handler
 
@@ -245,7 +254,7 @@ handler MyStatementHandler(pParam)
         MyStatementHandler(pParam)
     end repeat
 
-    repeat with tMyVar from 100 down to 0 by 10
+    repeat with tMyVar from 100 down to 0 by -10
         MyStatementHandler(pParam)
     end repeat
     
