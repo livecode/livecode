@@ -106,6 +106,7 @@
     repeatuntil(Position: POS, Condition: EXPRESSION, Body: STATEMENT)
     repeatupto(Position: POS, Slot: ID, Start: EXPRESSION, Finish: EXPRESSION, Step: EXPRESSION, Body: STATEMENT)
     repeatdownto(Position: POS, Slot: ID, Start: EXPRESSION, Finish: EXPRESSION, Step: EXPRESSION, Body: STATEMENT)
+    repeatforeach(Position: POS, Iterator: EXPRESSION, Slot: ID, Container: EXPRESSION, Body: STATEMENT)
     nextrepeat(Position: POS)
     exitrepeat(Position: POS)
     return(Position: POS, Value: EXPRESSION)
@@ -151,6 +152,7 @@
 'type' SYNTAXCLASS
     phrase
     statement
+    iterator
     expression
     prefix(Precedence: INT)
     postfix(Precedence: INT)

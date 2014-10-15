@@ -308,5 +308,11 @@ begin
     MyForeignExpressionHandler(LeftValue, RightValue, output)
 end syntax
 
+syntax MyChunkIteratorSyntax is iterator
+    "char"
+begin
+    MyForeignChunkIterator(Iterator, container, output)
+end syntax
+
 end module
 

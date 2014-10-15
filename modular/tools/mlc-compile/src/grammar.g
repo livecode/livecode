@@ -380,6 +380,9 @@
     'rule' SyntaxClass(-> expression):
         "is" "expression"
 
+    'rule' SyntaxClass(-> iterator):
+        "is" "iterator"
+
     'rule' SyntaxClass(-> prefix(Precedence)):
         "is" "prefix" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
 
@@ -533,6 +536,11 @@
             Statements(-> Body)
         "end" "repeat"
         
+    'rule' Statement(-> repeatforeach(Position, Iterator, Slot, Container, Body)):
+        "repeat" @(-> Position) "for" "each" CustomIterator(-> Iterator) Identifier(-> Slot) "in" Expression(-> Container) Separator
+            Statements(-> Body)
+        "end" "repeat"
+
     /*'rule' Statement(-> try(Position, Body, Catches, Finally)):
         "try" @(-> Position) Separator
             Statements(-> Body)
@@ -870,6 +878,10 @@
 'token' END_OF_UNIT
 'token' NEXT_UNIT
 
+'nonterm' CustomIterator(-> EXPRESSION)
+    'rule' CustomIterator(-> nil):
+        "THISCANNEVERHAPPEN"
+        
 --*--*--*--*--*--*--*--
 
 'nonterm' CustomStatements(-> STATEMENT)
@@ -887,5 +899,6 @@
 'nonterm' CustomOperands
     'rule' CustomOperands:
         "THISCANNEVERHAPPEN"
+
 
 
