@@ -964,8 +964,12 @@ void MCPlayer::open()
 {
 	MCControl::open();
 	prepare(MCnullstring);
-    MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-    m_is_attached = true;;
+    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
+    if (m_platform_player != nil)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+    }
 }
 
 void MCPlayer::close()
@@ -981,8 +985,12 @@ void MCPlayer::close()
     if (s_volume_popup != nil)
         s_volume_popup -> close();
     
-    MCPlatformDetachPlayer(m_platform_player);
-    m_is_attached = false;
+    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
+    if (m_platform_player != nil)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+    }
 }
 
 Boolean MCPlayer::kdown(const char *string, KeySym key)
