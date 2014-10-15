@@ -112,6 +112,8 @@ enum MCIPhoneApplicationStatus
 	bool m_keyboard_activation_pending : 1;
 	// An orientation changed request was received, but not yet acted on.
 	bool m_orientation_changed_pending : 1;
+    
+    bool m_keyboard_is_visible : 1;
 
     // We store the payload from a pending local notification here until the stack has become active and is ready to receive the message with the data.
     NSString *m_pending_local_notification;
@@ -160,6 +162,8 @@ enum MCIPhoneApplicationStatus
 - (void)orientationChanged:(NSNotification *)notification;
 - (void)keyboardWillActivate:(NSNotification *)notification;
 - (void)keyboardWillDeactivate:(NSNotification *)notification;
+- (void)keyboardDidActivate:(NSNotification *)notification;
+- (void)keyboardDidDeactivate:(NSNotification *)notification;
 
 //////////
 
@@ -374,6 +378,7 @@ CGRect MCIPhoneGetViewBounds(void);
 CGRect MCIPhoneGetScreenBounds(void);
 void MCIPhoneActivateKeyboard(void);
 void MCIPhoneDeactivateKeyboard(void);
+bool MCIPhoneIsKeyboardVisible(void);
 void MCIPhoneConfigureContentScale(int32_t scale);
 void MCIPhoneSwitchViewToUIKit(void);
 void MCIPhoneSwitchViewToOpenGL(void);
