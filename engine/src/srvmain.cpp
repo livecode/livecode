@@ -377,6 +377,15 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCLogicalFontTableInitialize();
 	
 	////
+    
+    // Create the basic locale and the system locale
+    if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
+        return false;
+    kMCSystemLocale = MCS_getsystemlocale();
+    if (kMCSystemLocale == nil)
+        return false;
+    
+    ////
 
 	MCAutoStringRef t_native_command_string;
 	MCsystem -> ResolvePath(argv[0], &t_native_command_string);
