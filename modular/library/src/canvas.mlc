@@ -1,0 +1,223 @@
+/*  
+This module specifies the syntax definitions and bindings for canvas drawing operations in modular LiveCode.
+*/
+
+module com.livecode.canvas
+
+////////////////////////////////////////////////////////////////////////////////
+// Color
+
+/* TODO - Type declaration */
+
+// Constructors
+
+foreign handler MCCanvasColorMakeRGB(in pRed as real, in pGreen as real, in pBlue as real, out rColor as Color) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorMakeRGBA(in pRed as real, in pGreen as real, in pBlue as real, in pAlpha as real, out rColor as Color) as undefined binds to "<builtin>"
+//foreign handler MCCanvasColorMakeWithString(in pList as string, out rColor as Color)
+
+syntax MakeColor is prefix operator with precedence 4
+	"color" <mVal: ExpressionList>
+begin
+//	MCCanvasColorMakeWithString(mVal[0], output)
+//	MCCanvasColorMakeWithList(mVal[0], output)
+	MCCanvasColorMakeRGB(mVal[0], mVal[1], mVal[2], output)
+	MCCanvasColorMakeRGBA(mVal[0], mVal[1], mVal[2], mVal[3], output)
+end syntax
+
+//////////
+
+// Properties
+
+foreign handler MCCanvasColorGetRed(in pColor as Color, out rRed as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorSetRed(inout xColor as Color, in pRed as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorGetGreen(in pColor as Color, out rGreen as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorSetGreen(inout xColor as Color, in pGreen as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorGetBlue(in pColor as Color, out rBlue as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorSetBlue(inout xColor as Color, in pBlue as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorGetAlpha(in pColor as Color, out rAlpha as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorSetAlpha(inout Color as color, in pAlpha as real) as undefined binds to "<builtin>"
+
+syntax RedColorProperty is prefix operator with precedence 4
+	"the" "red" "of" <mColor: Expression>
+begin
+	MCCanvasColorGetRed(mColor, output)
+	MCCanvasColorSetRed(mColor, input)
+end syntax
+
+syntax GreenColorProperty is prefix operator with precedence 4
+	"the" "green" "of" <mColor: Expression>
+begin
+	MCCanvasColorGetGreen(mColor, output)
+	MCCanvasColorSetGreen(mColor, input)
+end syntax
+
+syntax BlueColorProperty is prefix operator with precedence 4
+	"the" "blue" "of" <mColor: Expression>
+begin
+	MCCanvasColorGetBlue(mColor, output)
+	MCCanvasColorSetBlue(mColor, input)
+end syntax
+
+syntax AlphaColorProperty is prefix operator with precedence 4
+	"the" "alpha" "of" <mColor: Expression>
+begin
+	MCCanvasColorGetAlpha(mColor, output)
+	MCCanvasColorSetAlpha(mColor, input)
+end syntax
+
+////////////////////////////////////////////////////////////////////////////////
+// Transform
+
+/* TODO - type declaration */
+
+// Constructors
+
+foreign handler MCCanvasTransformMakeIdentity(out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeScale(in pScaleX as real, in pScaleY as real, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeRotationInRadians(in pRadians as real, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeRotationInDegrees(in pDegrees as real, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeTranslation(in pX as real, in pY as Real, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeWithMatrix(in pA as real, in pB as real, in pC as real, in pD as real, in pTX as real, in pTY as real, out rTransform as Transform) as undefined binds to "<builtin>"
+
+syntax MakeIdentityTransform is expression
+	"the" "identity" "transform"
+begin
+	MCCanvasTransformMakeIdentity(output)
+end syntax
+
+syntax MakeScaleTransform is prefix operator with precedence 4
+	"transform" "with" "scale" <mScale: ExpressionList>
+begin
+	MCCanvasTransformMakeScale(mScale[0], mScale[0], output)
+	MCCanvasTransformMakeScale(mScale[0], mScale[1], output)
+end syntax
+
+syntax MakeRotationTranform is prefix operator with precedence 4
+	"transform" "with" "rotation" "by" (<mDegrees: Expression> "degrees" | <mRadians: Expression> "radians")
+begin
+	MCCanvasTransformMakeRotationInDegrees(mDegrees, output)
+	MCCanvasTransformMakeRotationInRadians(mRadians, output)
+end syntax
+
+syntax MakeTranslationTransform is prefix operator with precedence 4
+	"transform" "with" "translation" <mTranslation: ExpressionList>
+begin
+	MCCanvasTransformMakeTranslation(mTranslation[0], mTranslation[1], output)
+end syntax
+
+//////////
+
+// Properties
+
+foreign handler MCCanvasTransformGetScale(in pTransform as Transform, out rScaleXY as list) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformGetRotationInRadians(in pTransform as Transform, out rRotation as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformGetRotationInDegrees(in pTransform as Transform, out rRotation as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformGetSkew(in pTransform as Transform, out rSkewXY as list) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformGetTranslation(in pTransform as Transform, out rTransXY as list) as undefined binds to "<builtin>"
+
+foreign handler MCCanvasTransformGetMatrix(in pTransform as Transform, out rMatrix as list) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformSetMatrix(inout xTransform as Transform, in pMatrix as list) as undefined binds to "<builtin>"
+
+syntax ScaleTransformProperty is prefix operator with precedence 4
+	"the" "scale" "of" <mTransform: Expression>
+begin
+	MCCanvasTransformGetScale(mTransform, output)
+end syntax
+
+syntax RadiansRotationTransformProperty is prefix operator with precedence 4
+	"the" "rotation" "of" <mTransform: Expression> "in" "radians"
+begin
+	MCCanvasTransformGetRotationInRadians(mTransform, output)
+end syntax
+
+syntax DegreeRotationTransformProperty is prefix operator with precedence 4
+	"the" "rotation" "of" <mTransform: Expression> "in" "degrees"
+begin
+	MCCanvasTransformGetRotationInDegrees(mTransform, output)
+end syntax
+
+syntax SkewTransformProperty is prefix operator with precedence 4
+	"the" "skew" "of" <mTransform: Expression>
+begin
+	MCCanvasTransformGetSkew(mTransform, output)
+end syntax
+
+syntax TranslationTransformProperty is prefix operator with precedence 4
+	"the" "translation" "of" <mTransform: Expression>
+begin
+	MCCanvasTransformGetTranslation(mTransform, output)
+end syntax
+
+
+syntax MatrixTransformProperty is prefix operator with precedence 4
+	"the" "matrix" "of" <mTransform: Expression>
+begin
+	MCCanvasTransformGetMatrix(mTransform, output)
+	MCCanvasTransformSetMatrix(mTransform, input)
+end syntax
+
+//////////
+
+// Operations
+
+// MCCanvasTransformConcat
+// MCCanvasTransformScale
+// MCCanvasTransformRotate
+// MCCanvasTransformTranslate
+
+////////////////////////////////////////////////////////////////////////////////
+// Pattern Constructors
+// MCCanvasPatternMakeWithImage
+// MCCanvasPatternMakeWithTransformedImage
+// MCCanvasPatternMakeWithScaledImage
+// MCCanvasPatternMakeWithRotatedImage
+// MCCanvasPatternMakeWithTranslatedImage
+
+// Pattern Properties
+// MCCanvasPatternGetImage
+// MCCanvasPatternSetImage
+// MCCanvasPatternGetTransform
+// MCCanvasPatternSetTransform
+
+// Pattern Operations
+// MCCanvasPatternTransform
+// MCCanvasPatternScale
+// MCCanvasPatternRotate
+// MCCanvasPatternTranslate
+////////////////////////////////////////////////////////////////////////////////
+
+foreign handler MCCanvasRoundedRectangleMake(in pRect as Rect, in pRadiusX as real, in pRadiusY as real)
+
+foreign handler MCCanvasMakeRectWithLTRB
+foreign handler MCCanvasMakeRectWithList
+
+foreign handler MCCanvasRoundedRectangleMake(in pLeft as real, pTop as real, pRight as real, pBottom as real, in pRadiusX as real, in pRadiusY as real)
+
+//syntax Rectangle is phrase
+//	"rectangle" <mVal: Expression[]>
+//begin
+//	MCCanvasRectangleMakeWithList(mVal, output)
+//	MCCanvasRectangleMakeWithLTRB(mVal[0], mVal[1], mVal[2], mVal[3], output)
+//end syntax
+
+syntax RoundedRectanglePrimitive is phrase
+	"rounded" <Rect: Expression[]> "with" ( "radius" <Radius: Expression> | "radii" <Radii: Expression[]> )
+//	"rounded" <Rect: Rectangle> "with" ( "radius" <Radius: Expression> | "radii" <Radii: Expression[]> )
+begin
+	MCCanvasRoundedRectanglePrimitiveMake(Rect[0], Rect[1], Rect[2], Rect[3], Radius, Radius)
+	MCCanvasRoundedRectanglePrimitiveMake(Rect[0], Rect[1], Rect[2], Rect[3], Radii[0], Radii[1])
+
+//	MCCanvasRoundedRectangleMake(mVal[0], mVal[1], mVal[2], mVal[3], Radius, Radius)
+//	MCCanvasRoundedRectangleMake(mVal[0], mVal[1], mVal[2], mVal[3], Radii[0], Radii[1])
+
+//	MCCanvasRoundedRectangleMakeWithList(mVal[0], Radius, Radius)
+//	MCCanvasRoundedRectangleMakeWithList(mVal[0], Radii[0], Radii[1])
+//	MCCanvasRoundedRectangleMakeWithLTRB(mVal[0], mVal[1], mVal[2], mVal[3], Radius, Radius)
+//	MCCanvasRoundedRectangleMakeWithLTRB(mVal[0], mVal[1], mVal[2], mVal[3], Radii[0], Radii[1])
+end syntax
+
+syntax RectanglePrimitive
+	<Rect: Rectangle>
+
+
+end module
