@@ -5671,7 +5671,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #ifdef /* MCS_umask_dsk_mac */ LEGACY_SYSTEM
 	return 0;
 #endif /* MCS_umask_dsk_mac */
-        return 0;
+        return umask(p_mask);
     }
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
