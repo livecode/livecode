@@ -1369,14 +1369,16 @@ template<typename T, int Min, int Max> static void setparagraphattr_int(MCParagr
     }
 }
 
+// AL-2014-09-30: [[ Bug 13559 ]] Make sure these functions use the correct type for the template
+//  otherwise dereferencing and setting can overwrite other parapraph attrs.
 static void setparagraphattr_uint8(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, uinteger_t *p_value)
 {
-    setparagraphattr_int<uinteger_t, 0, 255>(attrs, p_flag, p_field_offset, p_value);
+    setparagraphattr_int<uint8_t, 0, 255>(attrs, p_flag, p_field_offset, (uint8_t *)p_value);
 }
 
 static void setparagraphattr_int16(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, integer_t *p_value)
 {
-    setparagraphattr_int<integer_t, INT16_MIN, INT16_MAX>(attrs, p_flag, p_field_offset, p_value);
+    setparagraphattr_int<int16_t, INT16_MIN, INT16_MAX>(attrs, p_flag, p_field_offset, (int16_t *)p_value);
 }
 
 static void setparagraphattr_color(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, const MCInterfaceNamedColor& p_color)
