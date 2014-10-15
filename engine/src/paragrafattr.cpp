@@ -68,6 +68,12 @@ bool MCParagraph::hasattrs(void)
 	return attrs != nil;
 }
 
+void MCParagraph::cleanattrs(void)
+{
+	if (attrs != nil && attrs -> flags == 0)
+        clearattrs();
+}
+
 #ifdef LEGACY_EXEC
 void MCParagraph::storeattrs(MCArrayRef dst)
 {
