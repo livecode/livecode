@@ -99,6 +99,7 @@
 
 'type' STATEMENT
     sequence(Left: STATEMENT, Right: STATEMENT)
+    variable(Position: POS, Name: ID, Type: TYPE)
     if(Position: POS, Condition: EXPRESSION, Consequent: STATEMENT, Alternate: STATEMENT)
     repeatforever(Position: POS, Body: STATEMENT)
     repeatcounted(Position: POS, Count: EXPRESSION, Body: STATEMENT)

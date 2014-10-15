@@ -500,6 +500,9 @@
         
 'nonterm' Statement(-> STATEMENT)
 
+    'rule' Statement(-> variable(Position, Name, Type)):
+        "variable" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
+
     'rule' Statement(-> if(Position, Condition, Consequent, Alternate)):
         "if" @(-> Position) Expression(-> Condition) "then" Separator
             Statements(-> Consequent)

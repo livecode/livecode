@@ -250,6 +250,8 @@ handler MyStatementHandler(pParam)
         next repeat
     end repeat
     
+    variable tMyVar
+
     repeat with tMyVar from 0 up to 100 by 10
         MyStatementHandler(pParam)
     end repeat
@@ -257,6 +259,10 @@ handler MyStatementHandler(pParam)
     repeat with tMyVar from 100 down to 0 by -10
         MyStatementHandler(pParam)
     end repeat
+    
+    //repeat for each char tMyVar in pParam
+    //    MyStatementHandler(pParam)
+    //end repeat
     
     return 100
 end handler
