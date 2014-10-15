@@ -981,6 +981,9 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
     MCParagraph *t_first_pgptr;
     t_first_pgptr = pgptr;
 
+    bool t_redraw_field;
+    t_redraw_field = false;
+    
     do
     {
         findex_t t_pg_length = pgptr->gettextlengthcr();
@@ -1055,8 +1058,12 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             if (pgptr -> getneedslayout() && !all && pgptr->getopened())
             {
                 // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-                pgptr -> layout(false);
-                drect.height += pgptr->getheight(p_field -> fixedheight);
+                // AL-2014-09-22: [[ Bug 11817 ]] If we changed the amount of lines of this paragraph
+                //  then redraw the whole field.
+				if (pgptr -> layout(all, true))
+                    t_redraw_field = true;
+                else
+                    drect.height += pgptr->getheight(p_field -> fixedheight);
             }
         }
 
@@ -1084,7 +1091,12 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                 p_field -> seltext(ssi, sei, False);
         }
         else
+        {
             p_field -> removecursor();
+            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
+            if (t_redraw_field)
+                drect = p_field -> getrect();
+        }
         // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
         p_field -> layer_redrawrect(drect);
         if (!all)
@@ -1153,6 +1165,9 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
     
     MCParagraph *t_first_pgptr;
     t_first_pgptr = pgptr;
+    
+    bool t_redraw_field;
+    t_redraw_field = false;
     
     do
     {
@@ -1228,8 +1243,12 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             if (pgptr -> getneedslayout() && !all && pgptr->getopened())
             {
                 // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-                pgptr -> layout(false);
-                drect.height += pgptr->getheight(p_field -> fixedheight);
+                // AL-2014-09-22: [[ Bug 11817 ]] If we changed the amount of lines of this paragraph
+                //  then redraw the whole field.
+				if (pgptr -> layout(all, true))
+                    t_redraw_field = true;
+                else
+                    drect.height += pgptr->getheight(p_field -> fixedheight);
             }
         }
         
@@ -1257,7 +1276,12 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
                 p_field -> seltext(ssi, sei, False);
         }
         else
+        {
             p_field -> removecursor();
+            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
+            if (t_redraw_field)
+                drect = p_field -> getrect();
+        }
         // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
         p_field -> layer_redrawrect(drect);
         if (!all)
@@ -2416,8 +2440,8 @@ void MCField::GetEffectiveTextStyleOfCharChunk(MCExecContext& ctxt, uint32_t p_p
 
 void MCField::SetTextStyleOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceTextStyle& p_value)
 {
-    // AL-2014-07-30: [[ Bug 12923 ]] TextStyle setting can affect whole field layout
-    SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceTextStyle> >(ctxt, this, true, p_part_id, si, ei, &MCBlock::SetTextStyle, p_value);
+    // AL-2014-09-22: [[ Bug 11817 ]] Don't necessarily recompute the whole field when changing text styles
+    SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceTextStyle> >(ctxt, this, false, p_part_id, si, ei, &MCBlock::SetTextStyle, p_value);
 }
 
 void MCField::GetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value)
@@ -2465,8 +2489,8 @@ void MCField::SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_in
     else
         t_value = *p_value;
     
-    // AL-2014-07-30: [[ Bug 12923 ]] TextStyle setting can affect whole field layout
-    SetArrayCharPropOfCharChunk< PodFieldArrayPropType<bool> >(ctxt, this, true, p_part_id, si, ei, p_index, &MCBlock::SetTextStyleElement, t_value);
+    // AL-2014-09-22: [[ Bug 11817 ]] Don't necessarily recompute the whole field when changing text styles
+    SetArrayCharPropOfCharChunk< PodFieldArrayPropType<bool> >(ctxt, this, false, p_part_id, si, ei, p_index, &MCBlock::SetTextStyleElement, t_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
