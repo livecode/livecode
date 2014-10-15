@@ -836,7 +836,7 @@ static MCExternalError convert_stringref_to_mcstring(MCStringRef p_string, MCStr
 {
 	char_t *t_chars;
 	uindex_t t_char_count;
-	if (!MCStringConvertToNative(p_string, t_chars, t_char_count))
+	if (!MCStringNormalizeAndConvertToNative(p_string, t_chars, t_char_count))
 		return kMCExternalErrorOutOfMemory;
 	
 	r_mcstring . set((char *)t_chars, t_char_count);
@@ -1166,7 +1166,7 @@ MCExternalError MCExternalVariable::GetCData(MCExternalValueOptions p_options, v
     if (m_string_conversion != nil)
         MCMemoryDeleteArray(m_string_conversion);
 	
-    if (!MCStringConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
+    if (!MCStringNormalizeAndConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
         return kMCExternalErrorOutOfMemory;
 	
 	t_string . set(m_string_conversion, t_length);
@@ -1187,7 +1187,7 @@ MCExternalError MCExternalVariable::GetCString(MCExternalValueOptions p_options,
     if (m_string_conversion != nil)
         MCMemoryDeleteArray(m_string_conversion);
 	
-    if (!MCStringConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
+    if (!MCStringNormalizeAndConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
         return kMCExternalErrorOutOfMemory;
 	
 	if (memchr(m_string_conversion, '\0', t_length) != nil)
