@@ -108,9 +108,13 @@
     nil
     
 'type' EXPRESSION
+    null(Position: POS)
     true(Position: POS)
     false(Position: POS)
     integer(Position: POS, Value: INT)
+    real(Position: POS, Value: DOUBLE)
+    string(Position: POS, Value: STRING)
+    call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
     nil
 

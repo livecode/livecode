@@ -66,6 +66,14 @@ opaque type MyOpaqueType
     // If this method is not supplied, an unspecified byte-hash function will be
     // used on the contents.
     hash is MyOpaqueType_Hash
+    
+    // The 'encode' method (if present) will allow the type to be serializable.
+    // For this to be possible, the encoded type can be any high-level type.
+    encode is MyOpaqueType_Encode
+    
+    // The 'decode' method (if present) will allow the type to be unserializable.
+    // The encoded type must be the same as specified by encode.
+    decode is MyOpaqueType_Decode
 
 end type
 
@@ -78,6 +86,8 @@ foreign handler MyOpaqueType_Move(in pOldContents as pointer, in pNewContents as
 foreign handler MyOpaqueType_Copy(in pOldContents as pointer, in pNewContents as pointer) as undefined binds to "<undefined>"
 foreign handler MyOpaqueType_Equal(in pLeftContents as pointer, in pRightContents as pointer) as bool binds to "<undefined>"
 foreign handler MyOpaqueType_Hash(in pContents as pointer) as uint binds to "<undefined>"
+foreign handler MyOpaqueType_Encode(in pContents as pointer, out pEncodedType as array) as undefined binds to "<undefined>"
+foreign handler MyOpaqueType_Decode(in pEncodedContents as array, in pContents as pointer) as undefined binds to "<undefined>"
 
 // An opaque type can also be based on the pointer type. In this case, the parameters
 // to the type's methods are the value of the pointer rather than a pointer to the
