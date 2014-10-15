@@ -4,10 +4,61 @@ This module specifies the syntax definitions and bindings for canvas drawing ope
 
 module com.livecode.canvas
 
+// TODO - type declarations
+// Color
+record type Color
+	Red as real
+	Green as real
+	Blue as real
+	Alpha as real
+end type
+
+// Transform
+record type Transform
+	a as real
+	b as real
+	c as real
+	d as real
+	tx as real
+	ty as real
+end type
+
+// Pattern
+foreign handler MCCanvasPatternType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+opaque type Pattern
+	measure is MCCanvasPatternType_Measure
+end type
+
+// Gradient
+
+// Image
+foreign handler MCCanvasImageType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+opaque type Image
+	measure is MCCanvasImageType_Measure
+end type
+
+// Path
+foreign handler MCCanvasPathType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+opaque type Path
+	measure is MCCanvasPathType_Measure
+end type
+
+// Effect
+
+// Canvas
+
+////////////////////////////////////////////////////////////////////////////////
+
+foreign handler MCCanvasConvertDegreesToRadians(in pDegrees as real, out rRadians as real) as undefined binds to "<builtin>"
+
+syntax ValueInDegrees is phrase
+	<mDegrees: Expression> "degrees"
+begin
+	MCCanvasConvertDegreesToRadians(mDegrees, output)
+end
+
 ////////////////////////////////////////////////////////////////////////////////
 // Color
-
-/* TODO - Type declaration */
 
 // Constructors
 
@@ -35,7 +86,7 @@ foreign handler MCCanvasColorSetGreen(inout xColor as Color, in pGreen as real) 
 foreign handler MCCanvasColorGetBlue(in pColor as Color, out rBlue as real) as undefined binds to "<builtin>"
 foreign handler MCCanvasColorSetBlue(inout xColor as Color, in pBlue as real) as undefined binds to "<builtin>"
 foreign handler MCCanvasColorGetAlpha(in pColor as Color, out rAlpha as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasColorSetAlpha(inout Color as color, in pAlpha as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorSetAlpha(inout xColor as Color, in pAlpha as real) as undefined binds to "<builtin>"
 
 syntax RedColorProperty is prefix operator with precedence 4
 	"the" "red" "of" <mColor: Expression>
@@ -68,15 +119,12 @@ end syntax
 ////////////////////////////////////////////////////////////////////////////////
 // Transform
 
-/* TODO - type declaration */
-
 // Constructors
 
 foreign handler MCCanvasTransformMakeIdentity(out rTransform as Transform) as undefined binds to "<builtin>"
 foreign handler MCCanvasTransformMakeScale(in pScaleX as real, in pScaleY as real, out rTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformMakeRotationInRadians(in pRadians as real, out rTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformMakeRotationInDegrees(in pDegrees as real, out rTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformMakeTranslation(in pX as real, in pY as Real, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeRotation(in pRadians as real, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeTranslation(in pX as real, in pY as real, out rTransform as Transform) as undefined binds to "<builtin>"
 foreign handler MCCanvasTransformMakeWithMatrix(in pA as real, in pB as real, in pC as real, in pD as real, in pTX as real, in pTY as real, out rTransform as Transform) as undefined binds to "<builtin>"
 
 syntax MakeIdentityTransform is expression
@@ -92,11 +140,10 @@ begin
 	MCCanvasTransformMakeScale(mScale[0], mScale[1], output)
 end syntax
 
-syntax MakeRotationTranform is prefix operator with precedence 4
-	"transform" "with" "rotation" "by" (<mDegrees: Expression> "degrees" | <mRadians: Expression> "radians")
+syntax MakeRotationTranform is expression
+	"transform" "with" "rotation" "by" (<mRadians: ValueInDegrees> | <mRadians: Expression> "radians")
 begin
-	MCCanvasTransformMakeRotationInDegrees(mDegrees, output)
-	MCCanvasTransformMakeRotationInRadians(mRadians, output)
+	MCCanvasTransformMakeRotation(mRadians, output)
 end syntax
 
 syntax MakeTranslationTransform is prefix operator with precedence 4
@@ -124,13 +171,13 @@ begin
 	MCCanvasTransformGetScale(mTransform, output)
 end syntax
 
-syntax RadiansRotationTransformProperty is prefix operator with precedence 4
+syntax RadiansRotationTransformProperty is expression
 	"the" "rotation" "of" <mTransform: Expression> "in" "radians"
 begin
 	MCCanvasTransformGetRotationInRadians(mTransform, output)
 end syntax
 
-syntax DegreeRotationTransformProperty is prefix operator with precedence 4
+syntax DegreeRotationTransformProperty is expression
 	"the" "rotation" "of" <mTransform: Expression> "in" "degrees"
 begin
 	MCCanvasTransformGetRotationInDegrees(mTransform, output)
@@ -160,64 +207,342 @@ end syntax
 
 // Operations
 
-// MCCanvasTransformConcat
-// MCCanvasTransformScale
-// MCCanvasTransformRotate
-// MCCanvasTransformTranslate
+foreign handler MCCanvasTransformConcat(inout xTransformA as Transform, in pTransformB as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformScale(inout xTransform as Transform, in pScaleX as real, in pScaleY as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformRotate(inout xTransform as Transform, in pRadians as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformTranslate(inout xTransform as Transform, in pX as real, in pY as real) as undefined binds to "<builtin>"
 
-////////////////////////////////////////////////////////////////////////////////
-// Pattern Constructors
-// MCCanvasPatternMakeWithImage
-// MCCanvasPatternMakeWithTransformedImage
-// MCCanvasPatternMakeWithScaledImage
-// MCCanvasPatternMakeWithRotatedImage
-// MCCanvasPatternMakeWithTranslatedImage
-
-// Pattern Properties
-// MCCanvasPatternGetImage
-// MCCanvasPatternSetImage
-// MCCanvasPatternGetTransform
-// MCCanvasPatternSetTransform
-
-// Pattern Operations
-// MCCanvasPatternTransform
-// MCCanvasPatternScale
-// MCCanvasPatternRotate
-// MCCanvasPatternTranslate
-////////////////////////////////////////////////////////////////////////////////
-
-foreign handler MCCanvasRoundedRectangleMake(in pRect as Rect, in pRadiusX as real, in pRadiusY as real)
-
-foreign handler MCCanvasMakeRectWithLTRB
-foreign handler MCCanvasMakeRectWithList
-
-foreign handler MCCanvasRoundedRectangleMake(in pLeft as real, pTop as real, pRight as real, pBottom as real, in pRadiusX as real, in pRadiusY as real)
-
-//syntax Rectangle is phrase
-//	"rectangle" <mVal: Expression[]>
-//begin
-//	MCCanvasRectangleMakeWithList(mVal, output)
-//	MCCanvasRectangleMakeWithLTRB(mVal[0], mVal[1], mVal[2], mVal[3], output)
-//end syntax
-
-syntax RoundedRectanglePrimitive is phrase
-	"rounded" <Rect: Expression[]> "with" ( "radius" <Radius: Expression> | "radii" <Radii: Expression[]> )
-//	"rounded" <Rect: Rectangle> "with" ( "radius" <Radius: Expression> | "radii" <Radii: Expression[]> )
+syntax ConcatTransform is statement
+	"concat" "transform" <mTransformA: Expression> "with" <mTransformB: Expression>
 begin
-	MCCanvasRoundedRectanglePrimitiveMake(Rect[0], Rect[1], Rect[2], Rect[3], Radius, Radius)
-	MCCanvasRoundedRectanglePrimitiveMake(Rect[0], Rect[1], Rect[2], Rect[3], Radii[0], Radii[1])
-
-//	MCCanvasRoundedRectangleMake(mVal[0], mVal[1], mVal[2], mVal[3], Radius, Radius)
-//	MCCanvasRoundedRectangleMake(mVal[0], mVal[1], mVal[2], mVal[3], Radii[0], Radii[1])
-
-//	MCCanvasRoundedRectangleMakeWithList(mVal[0], Radius, Radius)
-//	MCCanvasRoundedRectangleMakeWithList(mVal[0], Radii[0], Radii[1])
-//	MCCanvasRoundedRectangleMakeWithLTRB(mVal[0], mVal[1], mVal[2], mVal[3], Radius, Radius)
-//	MCCanvasRoundedRectangleMakeWithLTRB(mVal[0], mVal[1], mVal[2], mVal[3], Radii[0], Radii[1])
+	MCCanvasTransformConcat(mTransformA, mTransformB)
 end syntax
 
-syntax RectanglePrimitive
-	<Rect: Rectangle>
+syntax ScaleTransform is statement
+	"scale" "transform" <mTransform: Expression> "by" <mScale: ExpressionList>
+begin
+	MCCanvasTransformScale(mTransform, mScale[0], mScale[1])
+	MCCanvasTransformScale(mTransform, mScale[0], mScale[0])
+end syntax
 
+syntax RotateTransform is statement
+	"rotate" "transform" <mTransform: Expression> "by" ( <mRadians: ValueInDegrees> | <mRadians: Expression> "radians" )
+begin
+	MCCanvasTransformRotate(mTransform, mRadians)
+end syntax
+
+syntax TranslateTransform is statement
+	"translate" "transform" <mTransform: Expression> "by" <mTranslate: ExpressionList>
+begin
+	MCCanvasTransformTranslate(mTransform, mTranslate[0], mTranslate[1])
+end syntax
+
+////////////////////////////////////////////////////////////////////////////////
+// Pattern
+
+// Constructors
+
+foreign handler MCCanvasPatternMakeWithImage(in pImage as Image, out rPattern as Pattern) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternMakeWithTransformedImage(in pImage as Image, in pTransform as Transform, out rPattern as Pattern) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternMakeWithScaledImage(in pImage as Image, in pScaleX as real, in pScaleY as real, out rPattern as Pattern) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternMakeWithRotatedImage(in pImage as Image, in pRadians as real, out rPattern as Pattern) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternMakeWithTranslatedImage(in pImage as Image, in pX as real, in pY as real, out rPattern as Pattern) as undefined binds to "<builtin>"
+
+syntax MakePattern is prefix operator with precedence 4
+	"pattern" "with" <mImage: Expression>
+begin
+	MCCanvasPatternMakeWithImage(mImage, output)
+end syntax
+
+syntax MakeTransformedPattern is prefix operator with precedence 4
+	"pattern" "with" <mImage: Expression> ( "transformed" "by" <mTransform: Expression> | "scaled" "by" <mScale: ExpressionList> | "translated" "by" <mTranslation: Expression> )
+begin
+	MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
+	MCCanvasPatternMakeWithScaledImage(mImage, mScale[0], mScale[0], output)
+	MCCanvasPatternMakeWithScaledImage(mImage, mScale[0], mScale[1], output)
+	MCCanvasPatternMakeWithTranslatedImage(mImage, mTranslation[0], mTranslation[1], output)
+end syntax
+
+syntax MakeRotatedPattern is expression
+	"pattern" "with" <mImage: Expression> "rotated" "by" ( <mRadians: ValueInDegrees> | <mRadians: Expression> "radians" )
+begin
+	MCCanvasPatternMakeWithRotatedImage(mImage, mRadians, output)
+end syntax
+
+//////////
+
+// Properties
+
+foreign handler MCCanvasPatternGetImage(in pPattern as Pattern, out rImage as Image) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternSetImage(inout xPattern as Pattern, in pImage as Image) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternGetTransform(in pPattern as Pattern, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternSetTransform(inout xPattern as Pattern, in pTransform as Transform) as undefined binds to "<builtin>"
+
+syntax PatternImageProperty is prefix operator with precedence 4
+	"the" "image" "of" <mPattern: Expression>
+begin
+	MCCanvasPatternGetImage(mPattern, output)
+	MCCanvasPatternSetImage(mPattern, input)
+end syntax
+
+syntax PatternTransformProperty is prefix operator with precedence 4
+	"the" "transform" "of" <mPattern: Expression>
+begin
+	MCCanvasPatternGetTransform(mPattern, output)
+	MCCanvasPatternSetTransform(mPattern, input)
+end syntax
+
+//////////
+
+// Operations
+
+foreign handler MCCanvasPatternTransform(inout xPattern as Pattern, in pTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternScale(inout xPattern as Pattern, in pScaleX as real, in pScaleY as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternRotate(inout xPattern as Pattern, in pRadians as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternTranslate(inout xPattern as Pattern, in pX as real, in pY as real) as undefined binds to "<builtin>"
+
+syntax TransformPattern is statement
+	"transform" "pattern" <mPattern: Expression> "by" <mTransform: Expression>
+begin
+	MCCanvasPatternTransform(mPattern, mTransform)
+end syntax
+
+syntax ScalePattern is statement
+	"scale" "pattern" <mPattern: Expression> "by" <mScale: ExpressionList>
+begin
+	MCCanvasPatternScale(mPattern, mScale[0], mScale[0])
+	MCCanvasPatternScale(mPattern, mScale[0], mScale[1])
+end syntax
+
+syntax RotatePattern is statement
+	"rotate" "pattern" <mPattern: Expression> "by" ( <mRadians: ValueInDegrees> | <mRadians: Expression> "radians" )
+begin
+	MCCanvasPatternRotate(mPattern, mRadians)
+end syntax
+
+syntax TranslatePattern is statement
+	"translate" "pattern" <mPattern: Expression> "by" <mTranslation: ExpressionList>
+begin
+	MCCanvasPatternTranslate(mPattern, mTranslation[0], mTranslation[1])
+end syntax
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Gradient - TODO
+
+// MCCanvasGradientMake
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Image
+
+// Constructors
+
+foreign handler MCCanvasImageMakeWithPath(in pPath as string, out rImage as Image) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageMakeWithData(in pData as data, out rImage as Image) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageMakeWithPixels(in pWidth as integer, in pHeight as integer, in pPixels as data, out rImage as Image) as undefined binds to "<builtin>"
+
+syntax MakeImage is prefix operator with precedence 4
+	"image" "from" ( "file" <mPath: Expression> | "data" <mData: Expression> )
+begin
+	MCCanvasImageMakeWithPath(mPath, output)
+	MCCanvasImageMakeWithData(mData, output)
+end syntax
+
+syntax MakeImageWithPixels is prefix operator with precedence 4
+	"image" "of" "size" <mSize: ExpressionList> "with" "pixels" <mPixels: Expression>
+begin
+	MCCanvasImageMakeWithPixels(mSize[0], mSize[1], mPixels, output)
+end syntax
+
+//////////
+
+// Properties
+
+foreign handler MCCanvasImageGetWidth(in pImage as Image, out rWidth as integer) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as integer) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as array) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as data) as undefined binds to "<builtin>"
+
+syntax ImageWidthProperty is prefix operator with precedence 4
+	"the" "width" "of" <mImage: Expression>
+begin
+	MCCanvasImageGetWidth(mImage, output)
+end syntax
+
+syntax ImageHeightProperty is prefix operator with precedence 4
+	"the" "height" "of" <mImage: Expression>
+begin
+	MCCanvasImageGetHeight(mImage, output)
+end syntax
+
+syntax ImageMetadataProperty is prefix operator with precedence 4
+	"the" "metadata" "of" <mImage: Expression>
+begin
+	MCCanvasImageGetMetadata(mImage, output)
+end syntax
+
+syntax ImagePixelsProperty is prefix operator with precedence 4
+	"the" "pixels" "of" <mImage: Expression>
+begin
+	MCCanvasImageGetPixels(mImage, output)
+end syntax
+
+//////////
+
+// Operations
+
+foreign handler MCCanvasImageTransform(inout xImage as Image, in pTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageScale(inout xImage as Image, in pScaleX as real, in pScaleY as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageRotate(inout xImage as Image, in pRadians as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageCrop(inout xImage as Image, in pLeft as integer, in pTop as integer, in pRight as integer, in pBottom as integer) as undefined binds to "<builtin>"
+
+syntax TransformImage is statement
+	"transform" "image" <mImage: Expression> "by" <mTransform: Expression>
+begin
+	MCCanvasImageTransform(mImage, mTransform)
+end syntax
+
+syntax ScaleImage is statement
+	"scale" "image" <mImage: Expression> "by" <mScale: ExpressionList>
+begin
+	MCCanvasImageScale(mImage, mScale[0], mScale[0])
+	MCCanvasImageScale(mImage, mScale[0], mScale[1])
+end syntax
+
+syntax RotateImage is statement
+	"rotate" "image" <mImage: Expression> "by" ( <mRadians: ValueInDegrees> | <mRadians: Expression> "radians" )
+begin
+	MCCanvasImageRotate(mImage, mRadians)
+end syntax
+
+syntax CropImage is statement
+	"crop" "image" <mImage: Expression> "to" <mRect: ExpressionList>
+begin
+	MCCanvasImageCrop(mImage, mRect[0], mRect[1], mRect[2], mRect[3])
+end syntax
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Path
+
+// Constructors
+
+foreign handler MCCanvasPathMakeWithString(in pString as string, out rPath as Path) as undefined binds to "<builtin>"
+
+syntax MakePath is prefix operator with precedence 4
+	"path" <mString: Expression>
+begin
+	MCCanvasPathMakeWithString(mString, output)
+end syntax
+
+// Primitive Constructors
+
+foreign handler MCCanvasPathMakeWithRoundedRectangle(in pLeft as real, in pTop as real, in pRight as real, in pBottom as real, in pRadiusX as real, in pRadiusY as real, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithRectangle(in pLeft as real, in pTop as real, in pRight as real, in pBottom as real, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithCircle(in pX as real, in pY as real, in pRadius as real, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithEllipse(in pX as real, in pY as real, in pRadiusX as real, in pRadiusY as real, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithLine(in pStartX as real, in pStartY as real, in pEndX as real, in pEndY as real, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithPoints(in pPoints as list, in pClose as boolean, out rPath as Path) as undefined binds to "<builtin>"
+
+syntax MakePathWithRoundedRectangle is prefix operator with precedence 4
+	"rounded" "rectangle" <mRect: ExpressionList> "with" ( "radius" <mRadius: Expression> | "radii" <mRadii: ExpressionList> )
+begin
+	MCCanvasPathMakeWithRoundedRectangle(mRect[0], mRect[1], mRect[2], mRect[3], mRadius, mRadius)
+	MCCanvasPathMakeWithRoundedRectangle(mRect[0], mRect[1], mRect[2], mRect[3], mRadii[0], mRadii[1])
+end syntax
+
+//////////
+
+// Properties
+
+foreign handler MCCanvasPathGetSubpaths(in pPath as Path, in pStart as integer, in pEnd as integer, out rSubpaths as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathGetPoints(in pPath as Path, in pStart as integer, in pEnd as integer, out rPoints as list) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathGetBoundingBox(in pPath as Path, out rRect as list) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathGetInstructions(in pPath as Path, in pStart as integer, in pEnd as integer, out rInstructions as list) as undefined binds to "<builtin>"
+
+syntax PathSubpathProperty is prefix operator with precedence 4
+	"subpath" ( <mStart: Expression> "to" <mEnd: Expression> | <mIndex: Expression> ) "of" <mPath: Expression>
+begin
+	MCCanvasPathGetSubpaths(mPath, mStart, mEnd, output)
+	MCCanvasPathGetSubpaths(mPath, mIndex, mIndex, output)
+end syntax
+
+syntax PathPointsProperty is prefix operator with precedence 4
+	"point" ( <mStart: Expression> "to" <mEnd: Expression> | <mIndex: Expression> ) "of" <mPath: Expression>
+begin
+	MCCanvasPathGetPoints(mPath, mStart, mEnd, output)
+	MCCanvasPathGetPoints(mPath, mIndex, mIndex, output)
+end syntax
+
+syntax PathBoundingBoxProperty is prefix operator with precedence 4
+	"bounding" "box" "of" <mPath: Expression>
+begin
+	MCCanvasPathGetBoundingBox(mPath, output)
+end syntax
+
+syntax PathInstructionProperty is prefix operator with precedence 4
+	"instruction" ( <mStart: Expression> "to" <mEnd: Expression> | <mIndex: Expression> ) "of" <mPath: Expression>
+begin
+	MCCanvasPathGetInstructions(mPath, mStart, mEnd, output)
+	MCCanvasPathGetInstructions(mPath, mIndex, mIndex, output)
+end syntax
+
+//////////
+
+// Operations
+
+foreign handler MCCanvasPathTransform(inout xPath as Path, in pTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathScale(inout xPath as Path, in pScaleX as real, in pScaleY as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathRotate(inout xPath as Path, in pRadians as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathTranslate(inout xPath as Path, in pX as real, in pY as real) as undefined binds to "<builtin>"
+
+foreign handler MCCanvasPathAddPath(inout xPathA as Path, in pPathB as Path) as undefined binds to "<builtin>"
+
+syntax TransformPath is statement
+	"transform" "path" <mPath: Expression> "by" <mTransform: Expression>
+begin
+	MCCanvasPathTransform(mPath, mTransform)
+end syntax
+
+syntax ScalePath is statement
+	"scale" "path" <mPath: Expression> "by" <mScale: ExpressionList>
+begin
+	MCCanvasPathScale(mPath, mScale[0], mScale[0])
+	MCCanvasPathScale(mPath, mScale[0], mScale[1])
+end syntax
+
+syntax RotatePath is statement
+	"rotate" "path" <mPath: Expression> "by" ( <mRadians: ValueInDegrees> | <mRadians: Expression> "radians" )
+begin
+	MCCanvasPathRotate(mPath, mRadians)
+end syntax
+
+syntax TranslatePath is statement
+	"translate" "path" <mPath: Expression> "by" <mTranslation: ExpressionList>
+begin
+	MCCanvasPathTranslate(mPath, mTranslation[0], mTranslation[1])
+end syntax
+
+syntax AddPath is statement
+	"add" <mPathB: Expression> "to" "path" <mPathA: Expression>
+begin
+	MCCanvasPathAddPath(mPathA, mPathB)
+end syntax
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Graphic Effect - TODO
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Canvas - TODO
+
+// Properties
+
+// MCCanvasGetPaint
+
+////////////////////////////////////////////////////////////////////////////////
 
 end module
