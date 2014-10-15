@@ -163,7 +163,10 @@
 
     'rule' Apply(TYPE'named(_, Name)):
         ApplyId(Name)
-        
+    
+    'rule' Apply(FIELD'action(_, _, Handler)):
+        ApplyId(Handler)
+
     'rule' Apply(STATEMENT'call(_, Handler, Arguments)):
         ApplyId(Handler)
         Apply(Arguments)

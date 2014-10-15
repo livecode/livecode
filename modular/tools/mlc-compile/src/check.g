@@ -61,6 +61,10 @@
 'action' CheckBindingOfNamedTypeId(ID)
 
     'rule' CheckBindingOfNamedTypeId(Id):
+        -- Do nothing if the meaning is error.
+        QueryId(Id -> error)
+
+    'rule' CheckBindingOfNamedTypeId(Id):
         QueryId(Id -> type)
         
     'rule' CheckBindingOfNamedTypeId(Id):
@@ -73,6 +77,7 @@
 'action' CheckBindingOfSyntaxRule(ID)
 
     'rule' CheckBindingOfSyntaxRule(Id):
+        -- Do nothing if the meaning is error.
         QueryId(Id -> error)
 
     'rule' CheckBindingOfSyntaxRule(Id):

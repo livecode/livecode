@@ -1,4 +1,4 @@
-(\-\-[^\n\r]*|[\n\t\r ])+ {
+[\n\r]+ {
     GetCurrentPosition(&yylval.attr[0]);
     for(int i = 0; i < yyleng; i++)
     {

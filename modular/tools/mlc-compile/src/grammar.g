@@ -15,7 +15,7 @@
         IsBootstrapCompile()
         BootstrapCompile(Modules)
     ||
-        -- Compile(Modules)
+        Compile(Modules)
     |)
 
 ---------
@@ -210,6 +210,82 @@
 
     'rule' TypeDefinition(-> type(Position, Access, Name, Type)):
         Access(-> Access) "type" @(-> Position) Identifier(-> Name) "is" Type(-> Type)
+        
+    'rule' TypeDefinition(-> type(Position, Access, Name, opaque(Position, Base, Fields))):
+        Access(-> Access) "opaque" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
+            TypeFields(-> Fields)
+        "end" "type"
+        
+    'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
+        Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
+            RecordFields(-> Fields)
+        "end" "type"
+        
+    'rule' TypeDefinition(-> type(Position, Access, Name, enum(Position, Base, Fields))):
+        Access(-> Access) "enum" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
+            EnumFields(-> Fields)
+        "end" "type"
+        
+    'rule' TypeDefinition(-> type(Position, Access, Name, handler(Position, Signature))):
+        Access(-> Access) "handler" @(-> Position) "type" Identifier(-> Name) Signature(-> Signature)
+
+--
+
+'nonterm' OptionalBaseType(-> TYPE)
+
+    'rule' OptionalBaseType(-> BaseType):
+        "based" "on" Type(-> BaseType)
+        
+    'rule' OptionalBaseType(-> nil):
+        -- nothing
+
+--
+
+'nonterm' TypeFields(-> FIELDLIST)
+
+    'rule' TypeFields(-> fieldlist(Head, Rest)):
+        TypeField(-> Head) Separator
+        TypeFields(-> Rest)
+        
+    'rule' TypeFields(-> nil):
+        -- nothing
+
+'nonterm' TypeField(-> FIELD)
+
+    'rule' TypeField(-> action(Position, Name, Handler)):
+        Identifier(-> Name) @(-> Position) "is" Identifier(-> Handler)
+
+--
+
+'nonterm' RecordFields(-> FIELDLIST)
+
+    'rule' RecordFields(-> fieldlist(Head, Rest)):
+        RecordField(-> Head) Separator
+        RecordFields(-> Rest)
+        
+    'rule' RecordFields(-> nil):
+        -- nothing
+
+'nonterm' RecordField(-> FIELD)
+
+    'rule' RecordField(-> slot(Position, Name, Type)):
+        Identifier(-> Name) @(-> Position) OptionalTypeClause(-> Type)
+
+--
+
+'nonterm' EnumFields(-> FIELDLIST)
+
+    'rule' EnumFields(-> fieldlist(Head, Rest)):
+        EnumField(-> Head) Separator
+        EnumFields(-> Rest)
+        
+    'rule' EnumFields(-> nil):
+        -- nothing
+
+'nonterm' EnumField(-> FIELD)
+
+    'rule' EnumField(-> element(Position, Name)):
+        Identifier(-> Name) @(-> Position)
 
 ---------- Handler
 
@@ -349,6 +425,9 @@
     'rule' Type(-> named(Position, Name)):
         Identifier(-> Name) @(-> Position)
         
+    'rule' Type(-> pointer(Position)):
+        "pointer" @(-> Position)
+
     'rule' Type(-> bool(Position)):
         "bool" @(-> Position)
 
@@ -395,6 +474,9 @@
 
     'rule' Type(-> array(Position)):
         "array" @(-> Position)
+
+    'rule' Type(-> list(Position)):
+        "list" @(-> Position)
 
     'rule' Type(-> undefined(Position)):
         "undefined" @(-> Position)

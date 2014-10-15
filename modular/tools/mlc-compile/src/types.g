@@ -7,7 +7,7 @@
     MODULE MODULELIST
     IMPORT
     DEFINITION SIGNATURE ACCESS
-    TYPE
+    TYPE FIELD FIELDLIST
     PARAMETER MODE PARAMETERLIST
     STATEMENT
     EXPRESSION EXPRESSIONLIST
@@ -53,6 +53,11 @@
 
 'type' TYPE
     named(Position: POS, Name: ID)
+    opaque(Position: POS, Base: TYPE, Fields: FIELDLIST)
+    record(Position: POS, Base: TYPE, Fields: FIELDLIST)
+    enum(Position: POS, Base: TYPE, Fields: FIELDLIST)
+    handler(Position: POS, Signature: SIGNATURE)
+    pointer(Position: POS)
     bool(Position: POS)
     int(Position: POS)
     uint(Position: POS)
@@ -66,7 +71,18 @@
     string(Position: POS)
     data(Position: POS)
     array(Position: POS)
+    list(Position: POS)
     undefined(Position: POS)
+    nil
+
+'type' FIELDLIST
+    fieldlist(Head: FIELD, Tail: FIELDLIST)
+    nil
+    
+'type' FIELD
+    action(Position: POS, Name: ID, Handler: ID)
+    slot(Position: POS, Name: ID, Type: TYPE)
+    element(Position: POS, Name: ID)
     nil
 
 'type' PARAMETERLIST
