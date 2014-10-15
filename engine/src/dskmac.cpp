@@ -155,7 +155,8 @@ static void getosacomponents();
 static OSErr osacompile(MCStringRef s, ComponentInstance compinstance, OSAID &id);
 static OSErr osaexecute(MCStringRef& r_string,ComponentInstance compinstance, OSAID id);
 
-static bool fetch_ae_as_fsref_list(char*& string, uint4& length);
+// SN-2014-10-07: [[ Bug 13587 ]] Update to return an MCList
+static bool fetch_ae_as_fsref_list(MCListRef &r_list);
 
 /***************************************************************************/
 
@@ -3817,11 +3818,12 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     // we get a bad URL!
                     if (MCmajorosversion >= 0x1060)
                     {
-                        char *string = nil;
-                        uint4 length = 0;
-                        if (fetch_ae_as_fsref_list(string, length))
+                        // SN-2014-10-07: [[ Bug 13587 ]] fetch_as_as_fsref_list updated to return an MCList
+                        MCAutoListRef t_list;
+                        
+                        if (fetch_ae_as_fsref_list(&t_list))
                         {
-                            /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)string, r_value);
+                            /* UNCHECKED */ MCListCopyAsString(*t_list, r_value);
                             return;
                         }
                     }
@@ -3834,10 +3836,10 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     }
                     else
                     {
-                        char *string = nil;
-                        uint4 length = 0;
-                        if (fetch_ae_as_fsref_list(string, length))
-                            /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)string, r_value);
+                        // SN-2014-10-07: [[ Bug 13587 ]] fetch_ae_as_frsef_list updated to return an MCList
+                        MCAutoListRef t_list;
+                        if (fetch_ae_as_fsref_list(&t_list))
+                            /* UNCHECKED */ MCListCopyAsString(*t_list, r_value);
                         else
                             /* UNCHECKED */ MCStringCreateWithCString("file list error", r_value);
                     }
@@ -7978,7 +7980,8 @@ MCSystemInterface *MCDesktopCreateMacSystem(void)
  *****************************************************************************/
 
 
-static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
+// SN-2014-10-07: [[ Bug 13587 ]] Using a MCList allows us to preserve unicode chars
+static bool fetch_ae_as_fsref_list(MCListRef &r_list)
 {
 	AEDescList docList; //get a list of alias records for the documents
 	long count;
@@ -7994,6 +7997,10 @@ static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
 		Size rSize;      //returned size, atual size of the docName
 		long item;
 		// get a FSSpec record, starts from count==1
+        // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
+        MCAutoListRef t_list;
+        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
+        
 		for (item = 1; item <= count; item++)
 		{
 			if (AEGetNthPtr(&docList, item, typeFSRef, &rKeyword, &rType,
@@ -8003,20 +8010,14 @@ static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
 				return false;
 			}
             
+            // SN-2014-10-07: [[ Bug 13587 ]] Append directly the string, instead of converting to a CString
             MCAutoStringRef t_fullpathname;
-			/* UNCHECKED */ MCS_mac_fsref_to_path(t_doc_fsref, &t_fullpathname);
-			uint2 newlength = MCStringGetLength(*t_fullpathname) + 1;
-			MCU_realloc(&string, length, length + newlength, 1);
-			if (length)
-				string[length - 1] = '\n';
-            char *t_fullpathname_cstring;
-            /* UNCHECKED */ MCStringConvertToCString(*t_fullpathname, t_fullpathname_cstring);
-			memcpy(&string[length], t_fullpathname_cstring, newlength);
-			length += newlength;
-            delete t_fullpathname_cstring;
+            if (MCS_mac_fsref_to_path(t_doc_fsref, &t_fullpathname))
+                MCListAppend(*t_list, *t_fullpathname);
 		}
-		string[length - 1] = '\0';
 		AEDisposeDesc(&docList);
+        
+        return MCListCopy(*t_list, r_list);
 	}
 	return true;
 }
