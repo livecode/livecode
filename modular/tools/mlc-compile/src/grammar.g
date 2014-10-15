@@ -501,6 +501,36 @@
             Statements(-> Consequent)
         IfStatementElseIfs(-> Alternate)
         "end" "if"
+        
+    'rule' Statement(-> repeatforever(Position, Body)):
+        "repeat" @(-> Position) "forever" Separator
+            Statements(-> Body)
+        "end" "repeat"
+
+    'rule' Statement(-> repeatcounted(Position, Count, Body)):
+        "repeat" @(-> Position) Expression(-> Count) "times" Separator
+            Statements(-> Body)
+        "end" "repeat"
+
+    'rule' Statement(-> repeatwhile(Position, Condition, Body)):
+        "repeat" @(-> Position) "while" Expression(-> Condition) Separator
+            Statements(-> Body)
+        "end" "repeat"
+
+    'rule' Statement(-> repeatuntil(Position, Condition, Body)):
+        "repeat" @(-> Position) "until" Expression(-> Condition) Separator
+            Statements(-> Body)
+        "end" "repeat"
+
+    'rule' Statement(-> repeatupto(Position, Slot, Start, Finish, Step, Body)):
+        "repeat" @(-> Position) "with" Identifier(-> Slot) "from" Expression(-> Start) "up" "to" Expression(-> Finish) RepeatStatementOptionalBy(-> Step) Separator
+            Statements(-> Body)
+        "end" "repeat"
+
+    'rule' Statement(-> repeatdownto(Position, Slot, Start, Finish, Step, Body)):
+        "repeat" @(-> Position) "with" Identifier(-> Slot) "from" Expression(-> Start) "down" "to" Expression(-> Finish) RepeatStatementOptionalBy(-> Step) Separator
+            Statements(-> Body)
+        "end" "repeat"
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
@@ -522,6 +552,13 @@
     'rule' IfStatementElseIfs(-> nil):
         -- nothing
 
+'nonterm' RepeatStatementOptionalBy(-> EXPRESSION)
+
+    'rule' RepeatStatementOptionalBy(-> By):
+        "by" Expression(-> By)
+        
+    'rule' RepeatStatementOptionalBy(-> nil):
+        -- nothing
 
 --------------------------------------------------------------------------------
 -- Expression Syntax

@@ -230,6 +230,22 @@ handler MyStatementHandler(pParam)
     else
         MyStatementHandler(pParam)
     end if
+    
+    repeat forever
+        MyStatementHandler(pParam)
+    end repeat
+    
+    repeat 100 times
+        MyStatementHandler(pParam)
+    end repeat
+    
+    repeat with tMyVar from 0 up to 100 by 10
+        MyStatementHandler(pParam)
+    end repeat
+
+    repeat with tMyVar from 100 down to 0 by -10
+        MyStatementHandler(pParam)
+    end repeat
 end handler
 
 ////////////////////////////////////////////////////////////////////////////////

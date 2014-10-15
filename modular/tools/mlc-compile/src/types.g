@@ -100,6 +100,12 @@
 'type' STATEMENT
     sequence(Left: STATEMENT, Right: STATEMENT)
     if(Position: POS, Condition: EXPRESSION, Consequent: STATEMENT, Alternate: STATEMENT)
+    repeatforever(Position: POS, Body: STATEMENT)
+    repeatcounted(Position: POS, Count: EXPRESSION, Body: STATEMENT)
+    repeatwhile(Position: POS, Condition: EXPRESSION, Body: STATEMENT)
+    repeatuntil(Position: POS, Condition: EXPRESSION, Body: STATEMENT)
+    repeatupto(Position: POS, Slot: ID, Start: EXPRESSION, Finish: EXPRESSION, Step: EXPRESSION, Body: STATEMENT)
+    repeatdownto(Position: POS, Slot: ID, Start: EXPRESSION, Finish: EXPRESSION, Step: EXPRESSION, Body: STATEMENT)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
     nil
