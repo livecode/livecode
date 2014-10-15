@@ -496,11 +496,32 @@
         
 'nonterm' Statement(-> STATEMENT)
 
+    'rule' Statement(-> if(Position, Condition, Consequent, Alternate)):
+        "if" @(-> Position) Expression(-> Condition) "then" Separator
+            Statements(-> Consequent)
+        IfStatementElseIfs(-> Alternate)
+        "end" "if"
+
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
         
     'rule' Statement(-> Statement):
         CustomStatements(-> Statement)
+        
+'nonterm' IfStatementElseIfs(-> STATEMENT)
+
+    'rule' IfStatementElseIfs(-> if(Position, Condition, Consequent, Alternate)):
+        "else" @(-> Position) "if" Expression(-> Condition) "then" Separator
+            Statements(-> Consequent)
+        IfStatementElseIfs(-> Alternate)
+        
+    'rule' IfStatementElseIfs(-> Else):
+        "else" @(-> Position) Separator
+            Statements(-> Else)
+            
+    'rule' IfStatementElseIfs(-> nil):
+        -- nothing
+
 
 --------------------------------------------------------------------------------
 -- Expression Syntax
@@ -619,6 +640,9 @@
 
     'rule' TermExpression(-> string(Position, Value)):
         STRING_LITERAL(-> Value) @(-> Position)
+
+    'rule' TermExpression(-> slot(Position, Name)):
+        Identifier(-> Name) @(-> Position)
 
     'rule' TermExpression(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"

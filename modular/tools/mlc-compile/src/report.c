@@ -125,11 +125,8 @@ void yyerror(const char *p_text)
     long t_position;
     GetCurrentPosition(&t_position);
     
-    long t_row, t_column;
-    GetColumnOfPosition(t_position, &t_column);
-    GetRowOfPosition(t_position, &t_row);
-    
-    fprintf(stderr, "row %ld, col %ld: Parsing error - %s\n", t_row, t_column, p_text);
+    _PrintPosition(t_position);
+    fprintf(stderr, "Parsing error - %s\n", p_text);
     
     s_error_count += 1;
 }

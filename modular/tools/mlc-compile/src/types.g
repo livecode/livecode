@@ -99,6 +99,7 @@
 
 'type' STATEMENT
     sequence(Left: STATEMENT, Right: STATEMENT)
+    if(Position: POS, Condition: EXPRESSION, Consequent: STATEMENT, Alternate: STATEMENT)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
     nil
@@ -114,6 +115,7 @@
     integer(Position: POS, Value: INT)
     real(Position: POS, Value: DOUBLE)
     string(Position: POS, Value: STRING)
+    slot(Position: POS, Name: ID)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
     nil

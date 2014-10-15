@@ -197,9 +197,39 @@ variable mMyPointerOpaqueTypeVariable as MyPointerOpaqueType
 //
 
 foreign handler MyForeignStatementHandler(in pArg1 as int) binds to "MyBinding"
-foreign handler MyForeignExpressionHandler(in pArg1 as int, out rReturn1 as bool) binds to "MyBinding"
+foreign handler MyForeignExpressionHandler(in pArg1 as integer, in pArg2 as string, in pArg3 as MyHandlerType) binds to "MyBinding"
 
 handler MyHandler(in pArg1 as integer, in pArg2 as string, in pArg3 as MyHandlerType) as boolean
+end handler
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Expressions
+//
+
+handler MyExpressionHandler(pParam)
+    MyExpressionHandler(null)
+    MyExpressionHandler(true)
+    MyExpressionHandler(false)
+    MyExpressionHandler(100)
+    MyExpressionHandler(3.14159)
+    MyExpressionHandler("The quick brown fox jumped over the lazy dog")
+    MyExpressionHandler(MyHandler(100, "Hello World", MyHandler))
+end handler
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Statements
+//
+
+handler MyStatementHandler(pParam)
+    if pParam then
+        MyStatementHandler(pParam)
+    else if pParam then
+        MyStatementHandler(pParam)
+    else
+        MyStatementHandler(pParam)
+    end if
 end handler
 
 ////////////////////////////////////////////////////////////////////////////////
