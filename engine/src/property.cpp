@@ -150,7 +150,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 
 	DEFINE_RW_ENUM_PROPERTY(P_DRAG_ACTION, PasteboardDragAction, Pasteboard, DragAction)
 	DEFINE_RW_PROPERTY(P_ACCEPT_DROP, Bool, Pasteboard, AcceptDrop)
-	DEFINE_RW_PROPERTY(P_DRAG_IMAGE, UInt16, Pasteboard, DragImage)
+    // SN-2014-10-07: [[ Bug 13610 ]] The id passed to MCPasteBoardSet/GetDragImage is a uint32_t
+	DEFINE_RW_PROPERTY(P_DRAG_IMAGE, UInt32, Pasteboard, DragImage)
 	DEFINE_RW_PROPERTY(P_DRAG_IMAGE_OFFSET, OptionalPoint, Pasteboard, DragImageOffset)
 	DEFINE_RW_SET_PROPERTY(P_ALLOWABLE_DRAG_ACTIONS, PasteboardAllowableDragActions, Pasteboard, AllowableDragActions)
 	DEFINE_RW_PROPERTY(P_ALLOW_INLINE_INPUT, Bool, Interface, AllowInlineInput)
