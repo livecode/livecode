@@ -393,7 +393,7 @@
         "is" SyntaxAssoc(-> Assoc) "binary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
 
     'rule' SyntaxClass(-> phrase):
-        -- empty
+        "is" "phrase"
 
 'nonterm' SyntaxAssoc(-> SYNTAXASSOC)
 
