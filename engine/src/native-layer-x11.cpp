@@ -55,7 +55,10 @@
 
 MCNativeLayerX11::MCNativeLayerX11(MCWidget* p_widget) :
   m_widget(p_widget),
-  m_socket(NULL)
+  m_child_window(NULL),
+  m_input_shape(NULL),
+  m_socket(NULL),
+  m_widget_xid(0)
 {
     
 }
@@ -72,13 +75,13 @@ void MCNativeLayerX11::OnToolChanged(Tool p_new_tool)
 {
     if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
     {
-        // In run mode. Hide the overlay window
-        gdk_window_hide(m_overlay);
+        // In run mode. Unset the input event mask
+        gdk_window_input_shape_combine_region(gtk_widget_get_window(GTK_WIDGET(m_child_window)), NULL, 0, 0);
     }
     else
     {
-        // In edit mode. Put a transparent overlay over the main window
-        gdk_window_show(m_overlay);
+        // In edit mode. Mask out all input events
+        gdk_window_input_shape_combine_region(gtk_widget_get_window(GTK_WIDGET(m_child_window)), m_input_shape, 0, 0);
     }
 }
 
@@ -126,22 +129,8 @@ void MCNativeLayerX11::doAttach()
         // Show the socket (we'll control visibility at the window level)
         gtk_widget_show(GTK_WIDGET(m_socket));
         
-        // Create an overlay window to intercept events in edit mode
-        MCScreenDC* t_screen = (MCScreenDC*)MCscreen;
-        GdkWindowAttr gdkwa;
-        guint gdk_valid_wa;
-        gdk_valid_wa = GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL;
-        gdkwa.x = t_rect.x;
-        gdkwa.y = t_rect.y;
-        gdkwa.width = t_rect.width;
-        gdkwa.height = t_rect.height;
-        gdkwa.wclass = GDK_INPUT_ONLY;
-        gdkwa.window_type = GDK_WINDOW_CHILD;
-        gdkwa.visual = t_screen->getvisual();
-        gdkwa.colormap = t_screen->getcmap();
-        gdkwa.event_mask = 0; // Don't care about any events
-        m_overlay = gdk_window_new(getStackGdkWindow(), &gdkwa, gdk_valid_wa);
-        gdk_window_show(m_overlay);
+        // Create an empty region to act as an input mask while in edit mode
+        m_input_shape = gdk_region_new();
         
         // TESTING
         
@@ -157,17 +146,17 @@ void MCNativeLayerX11::doAttach()
     // Attach the X11 window to this socket
     if (gtk_socket_get_plug_window(m_socket) == NULL)
         gtk_socket_add_id(m_socket, m_widget_xid);
-    //fprintf(stderr, "XID: %#u\n", gtk_socket_get_id(m_socket));
+    //fprintf(stderr, "XID: %u\n", gtk_socket_get_id(m_socket));
     
     // Act as if there were a re-layer to put the widget in the right place
     doRelayer();
     
     // Restore the visibility state of the widget (in case it changed due to a
-    // tool change while on aother card - we don't get a message then)
+    // tool change while on another card - we don't get a message then)
     if ((m_widget->getflags() & F_VISIBLE) && !m_widget->inEditMode())
-        gtk_widget_hide(GTK_WIDGET(m_socket));
+        gtk_widget_hide(GTK_WIDGET(m_child_window));
     else
-        gtk_widget_show(GTK_WIDGET(m_socket));
+        gtk_widget_show(GTK_WIDGET(m_child_window));
 }
 
 void MCNativeLayerX11::OnDetach()
@@ -179,13 +168,12 @@ void MCNativeLayerX11::OnDetach()
 void MCNativeLayerX11::doDetach()
 {
     // We don't really detach; just stop showing the socket
-    gtk_widget_hide(GTK_WIDGET(m_socket));
+    gtk_widget_hide(GTK_WIDGET(m_child_window));
 }
 
 void MCNativeLayerX11::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
 {
-    // We can't do paint on demand for X11 windows; just let the windowing
-    // system deal with it the normal way.
+    // Do nothing. Painting is handled entirely by X11.
 }
 
 void MCNativeLayerX11::OnGeometryChanged(const MCRectangle& p_old_rect)
@@ -193,13 +181,22 @@ void MCNativeLayerX11::OnGeometryChanged(const MCRectangle& p_old_rect)
     // Move the overlay window first, to ensure events don't get stolen
     MCRectangle t_rect;
     t_rect = m_widget->getrect();
-    gdk_window_move_resize(m_overlay, t_rect.x, t_rect.y, t_rect.width, t_rect.height);
+
+    // Clear any minimum size parameters for the GTK widgets
+    gtk_widget_set_size_request(GTK_WIDGET(m_socket), -1, -1);
+    gtk_widget_set_size_request(GTK_WIDGET(m_child_window), -1, -1);
     
     // Resize by adjusting the widget's containing GtkWindow
     gdk_window_move_resize(gtk_widget_get_window(GTK_WIDGET(m_child_window)), t_rect.x, t_rect.y, t_rect.width, t_rect.height);
     
     // Resize the socket
     gdk_window_move_resize(gtk_widget_get_window(GTK_WIDGET(m_socket)), 0, 0, t_rect.width, t_rect.height);
+    
+    // We need to set the requested minimum size in order to get in-process GTK
+    // widgets to re-size automatically. Unfortunately, that is the only widget
+    // category that this works for... others need to do it themselves.
+    gtk_widget_set_size_request(GTK_WIDGET(m_child_window), t_rect.width, t_rect.height);
+    gtk_widget_set_size_request(GTK_WIDGET(m_socket), t_rect.width, t_rect.height);
     
     // Update the contained window too
     GdkWindow* t_remote;
