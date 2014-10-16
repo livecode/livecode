@@ -127,6 +127,7 @@ KeySym MCScreenDC::translatekeysym(KeySym sym, uint4 keycode)
 	case XK_osfDelete:
 	case XK_hpDeleteChar:
 		return XK_Delete;
+	case XK_ISO_Left_Tab: /* X11 shift-tab keysym */
 	case 0x1000FF74: // HP shift-tab keysysm
 		return XK_Tab;
 	}
