@@ -87,7 +87,8 @@
 
     'rule' GenerateSyntax(SYNTAX'markedrule(_, Variable, Id)):
         Id'Name -> Name
-        Variable'Meaning -> syntaxmark(Index)
+        Variable'Meaning -> syntaxmark(Info)
+        Info'Index -> Index
         PushMarkedDescentSyntaxGrammar(Index, Name)
         
     'rule' GenerateSyntax(SYNTAX'rule(_, Id)):
@@ -95,7 +96,8 @@
         PushDescentSyntaxGrammar(Name)
         
     'rule' GenerateSyntax(SYNTAX'mark(_, Variable, Value)):
-        Variable'Meaning -> syntaxmark(Index)
+        Variable'Meaning -> syntaxmark(Info)
+        Info'Index -> Index
         (|
             where(Value -> true(_))
             PushMarkedTrueSyntaxGrammar(Index)
@@ -135,11 +137,13 @@
         PushStringArgumentSyntaxMapping(Value)
 
     'rule' GenerateSyntax(SYNTAXCONSTANT'variable(_, Value)):
-        Value'Meaning -> syntaxmark(Index)
+        Value'Meaning -> syntaxmark(Info)
+        Info'Index -> Index
         PushMarkArgumentSyntaxMapping(Index)
 
     'rule' GenerateSyntax(SYNTAXCONSTANT'indexedvariable(_, Value, _)):
-        Value'Meaning -> syntaxmark(Index)
+        Value'Meaning -> syntaxmark(Info)
+        Info'Index -> Index
         PushMarkArgumentSyntaxMapping(Index)
 
 --------------------------------------------------------------------------------

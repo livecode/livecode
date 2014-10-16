@@ -109,8 +109,12 @@
         Define(Left)
         Define(Right)
         
-    'rule' Define(type(Position, _, Name, _)):
+    'rule' Define(type(Position, _, Name, Type)):
         DefineId(Name, type)
+        [|
+            where(Type -> handler(_, signature(Parameters, _)))
+            DefineParameters(Parameters)
+        |]
     
     'rule' Define(constant(Position, _, Name, _)):
         DefineId(Name, constant)
@@ -118,12 +122,12 @@
     'rule' Define(variable(Position, _, Name, _)):
         DefineId(Name, variable)
     
-    'rule' Define(handler(Position, _, Name, signature(Parameters, _), _, _)):
-        DefineId(Name, handler)
+    'rule' Define(handler(Position, _, Name, Signature:signature(Parameters, _), _, _)):
+        DefineId(Name, handler(Signature))
         DefineParameters(Parameters)
     
-    'rule' Define(foreignhandler(Position, _, Name, signature(Parameters, _), _)):
-        DefineId(Name, handler)
+    'rule' Define(foreignhandler(Position, _, Name, Signature:signature(Parameters, _), _)):
+        DefineId(Name, handler(Signature))
         DefineParameters(Parameters)
 
     'rule' Define(property(Position, _, Name)):
@@ -409,16 +413,18 @@
             where(Meaning -> syntaxmark(_))
         ||
             LastSyntaxMarkIndexVar -> Index
-            where(syntaxmark(Index) -> Meaning)
+            MarkInfo::SYNTAXMARKINFO
+            MarkInfo'Index <- Index
+            where(syntaxmark(MarkInfo) -> Meaning)
             DefineMeaning(Name, Meaning)
             LastSyntaxMarkIndexVar <- Index + 1
         |)
         Id'Meaning <- Meaning
         
-    'rule' ApplySyntaxMarkId(Id):
-        Id'Position -> Position
-        Id'Name -> Name
-        Error_InvalidNameForSyntaxMarkVariable(Position, Name)
+    --'rule' ApplySyntaxMarkId(Id):
+    --    Id'Position -> Position
+    --    Id'Name -> Name
+    --    Error_InvalidNameForSyntaxMarkVariable(Position, Name)
 
 'action' DefineId(ID, MEANING)
 
@@ -591,7 +597,8 @@
         Id'Position -> Position
         Id'Name -> Name
         print(Tag)
-
+        GetStringOfNameLiteral(Name -> NameString)
+        print(NameString)
         Id'Meaning -> Meaning
         print(Meaning)
 

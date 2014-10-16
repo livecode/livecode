@@ -19,6 +19,7 @@
     MakeDoubleLiteral
     MakeStringLiteral
     MakeNameLiteral
+    GetStringOfNameLiteral
 
     InitializeScopes
     FinalizeScopes
@@ -110,6 +111,12 @@
     Error_NotBoundToASyntaxRule
     Error_NotBoundToASyntaxMark
     Error_NotBoundToAHandler
+    Error_NotBoundToAVariable
+    Error_NotBoundToAConstantSyntaxValue
+    Error_NotBoundToAVariableOrHandler
+    Error_TooManyArgumentsPassedToHandler
+    Error_TooFewArgumentsPassedToHandler
+    Error_HandlersBoundToSyntaxMustNotReturnAValue
 
 --------------------------------------------------------------------------------
 
@@ -136,6 +143,8 @@
 'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
+
+'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
 
 --------------------------------------------------------------------------------
 
@@ -250,6 +259,13 @@
 'action' Error_NotBoundToAPhrase(Position: POS, Name: NAME)
 'action' Error_NotBoundToASyntaxRule(Position: POS, Name: NAME)
 'action' Error_NotBoundToASyntaxMark(Position: POS, Name: NAME)
-'action' Error_NotBoundToAHandler(Position:  POS, Name: NAME)
+'action' Error_NotBoundToAConstantSyntaxValue(Position: POS, Name: NAME)
+'action' Error_NotBoundToAHandler(Position: POS, Name: NAME)
+'action' Error_NotBoundToAVariable(Position: POS, Name: NAME)
+'action' Error_NotBoundToAVariableOrHandler(Position: POS, Name: NAME)
+
+'action' Error_TooManyArgumentsPassedToHandler(Position: POS)
+'action' Error_TooFewArgumentsPassedToHandler(Position: POS)
+'action' Error_HandlersBoundToSyntaxMustNotReturnAValue(Position: POS)
 
 --------------------------------------------------------------------------------

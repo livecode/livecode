@@ -113,10 +113,17 @@ DEFINE_ERROR(SyntaxMarksMustBeConstant, "Syntax marks must be constant");
 DEFINE_ERROR(OptionalSyntaxCannotContainOnlyMarks, "Optional syntax cannot just contain marks");
 
 DEFINE_ERROR_I(NotBoundToAHandler, "'%s' is not a handler")
+DEFINE_ERROR_I(NotBoundToAVariable, "'%s' is not a variable")
+DEFINE_ERROR_I(NotBoundToAVariableOrHandler, "'%s' is not a variable or handler")
 DEFINE_ERROR_I(NotBoundToAPhrase, "'%s' is not a syntax phrase")
 DEFINE_ERROR_I(NotBoundToASyntaxMark, "'%s' is not a mark variable")
 DEFINE_ERROR_I(NotBoundToASyntaxRule, "'%s' is not a syntax rule")
 DEFINE_ERROR_I(NotBoundToAType, "'%s' is not a type")
+DEFINE_ERROR_I(NotBoundToAConstantSyntaxValue, "'%s' must be assigned a constant value")
+
+DEFINE_ERROR(TooManyArgumentsPassedToHandler, "Too many arguments for specified handler")
+DEFINE_ERROR(TooFewArgumentsPassedToHandler, "Too few arguments for specified handler")
+DEFINE_ERROR(HandlersBoundToSyntaxMustNotReturnAValue, "Handlers bound to syntax must not return a value")
 
 ////////////////////////////////////////////////////////////////////////////////
 

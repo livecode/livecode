@@ -24,72 +24,198 @@
 -- At this point all identifiers either have a defined meaning, or are defined
 -- to be a pointer to the definingid. The next step is to check that bindings
 -- are appropriate to each id:
---   B1) The id in TYPE'named() must refer to a type id.
---   B2) The id's in DEFINITION'constant(Value) must all refer to constants (non-recursively)
---   B3) The id's in SYNTAX'rule(Name) and SYNTAX'markedrule(Name) must either be Expression or a phrase definition.
---   B4) The id's in SYNTAX'mark(Variable) and SYNTAX'markedrule(Variable) must be a syntaxmark
---   B5) The id in SYNTAXMETHOD'method(name) must be a handler
---   B6) The id's in SYNTAXMETHOD'method(Arguments) must be a syntaxmark, syntaxoutputmark, syntaxinputmark or syntaxcontextmark.
+--   BD1) DEFINITION'constant(Value) - all id's in Value must be constant.
+--
+--   BT1) TYPE'named(Id) - Id must be bound to a type.
+--   BT2) TYPE'opaque(FIELD'action(Handler)) - Handler must be bound to a handler.
+--
+--   BS1) STATEMENT'repeatupto(Slot) - Slot must be bound to a variable
+--   BS2) STATEMENT'repeatdownto(Slot) - Slot must be bound to a variable
+--   BS3) STATEMENT'repeatforeach(Slot) - Slot must be bound to a variable
+--   BS4) STATEMENT'call(Handler) - Handler must be bound to a callable id
+--
+--   BE1) EXPRESSION'slot(Name) - Name must be bound to a fetachable id
+--   BE2) EXPRESSION'call(Handler) - Handler must be bound to a callable id
+
+--   BX1) SYNTAX'markedrule(Name) - Name must be bound to an expression-returning syntax rule
+--   BX2) SYNTAX'markedrule(Variable) - Variable must be bound to a syntax mark
+--   BX3) SYNTAX'rule(Name) - Name must be bound to an expression-returning syntax rule
+--   BX4) SYNTAX'mark(Variable) - Variable must be bound to a syntax mark
+--   BX5) SYNTAX'mark(Value) - Value must be bound to a non-mark constant
+--   BX6) SYNTAXMETHOD'method(Name) - Name must be bound to a handler
+--   BX7) SYNTAXCONSTANT'variable(Name) - Name must be bound to a syntax mark
+--   BX8) SYNTAXCONSTANT'indexedvariable(Name) - Name must be bound to a syntax mark.
 
 'sweep' CheckBindings(ANY)
+    
+    --
 
-    'rule' CheckBindings(DEFINITION'constant(Position, Name, _, Value)):
-        /* B2 */ CheckBindingOfConstantExpressionIds(Value)
+    'rule' CheckBindings(DEFINITION'constant(Position, _, _, Value)):
+        /* BD1 */ CheckBindingsOfConstantExpression(Value)
+
+    --
 
     'rule' CheckBindings(TYPE'named(Position, Name)):
-        /* B1 */ CheckBindingOfNamedTypeId(Name)
+        /* BT1 */ CheckBindingIsTypeId(Name)
+
+    'rule' CheckBindings(FIELD'action(_, _, Handler)):
+        /* BT2 */ CheckBindingIsHandlerId(Handler)
+
+    --
+    
+    'rule' CheckBindings(STATEMENT'repeatupto(_, Slot, Start, Finish, Step, Body)):
+        /* BS1 */ CheckBindingIsVariableId(Slot)
+        CheckBindings(Start)
+        CheckBindings(Finish)
+        CheckBindings(Step)
+        CheckBindings(Body)
+
+    'rule' CheckBindings(STATEMENT'repeatdownto(_, Slot, Start, Finish, Step, Body)):
+        /* BS2 */ CheckBindingIsVariableId(Slot)
+        CheckBindings(Start)
+        CheckBindings(Finish)
+        CheckBindings(Step)
+        CheckBindings(Body)
+
+    'rule' CheckBindings(STATEMENT'repeatforeach(_, Iterator, Slot, Container, Body)):
+        /* BS3 */ CheckBindingIsVariableId(Slot)
+        CheckBindings(Iterator)
+        CheckBindings(Container)
+        CheckBindings(Body)
+
+    'rule' CheckBindings(STATEMENT'call(_, Handler, Arguments)):
+        /* B4 */ CheckBindingIsVariableOrHandlerId(Handler)
+        CheckBindings(Arguments)
+
+    --
+
+    'rule' CheckBindings(EXPRESSION'slot(_, Name)):
+        print("check slot")
+        /* BE1 */ CheckBindingIsVariableOrHandlerId(Name)
+
+    'rule' CheckBindings(EXPRESSION'call(_, Handler, Arguments)):
+        /* BE2 */ CheckBindingIsVariableOrHandlerId(Handler)
+        CheckBindings(Arguments)
+        
+    --
+    
+    'rule' CheckBindings(SYNTAX'markedrule(_, Variable, Name)):
+        /* BX1 */ CheckBindingIsSyntaxRuleOfExpressionType(Name)
+        /* BX2 */ CheckBindingIsSyntaxMark(Variable)
 
     'rule' CheckBindings(SYNTAX'rule(_, Name)):
-        /* B3 */ CheckBindingOfSyntaxRule(Name)
-
-    'rule' CheckBindings(SYNTAX'markedrule(_, Variable, Name)):
-        /* B4 */ CheckBindingOfSyntaxMark(Variable)
-        /* B3 */ CheckBindingOfSyntaxRule(Name)
+        /* BX3 */ CheckBindingIsSyntaxRuleOfExpressionType(Name)
         
-    'rule' CheckBindings(SYNTAX'mark(_, Variable, Value)):
-        /* B4 */ CheckBindingOfSyntaxMark(Variable)
+    'rule' CheckBindings(SYNTAX'mark(Position, Variable, Value)):
+        /* BX4 */ CheckBindingIsSyntaxMark(Variable)
+        /* BX5 */ CheckBindingIsConstantSyntaxValue(Variable, Value)
     
     'rule' CheckBindings(SYNTAXMETHOD'method(_, Name, Arguments)):
-        /* B5 */ CheckBindingOfSyntaxMethod(Name)
-        /* B6 */ CheckBindings(Arguments)
+        /* BX6 */ CheckBindingIsHandlerId(Name)
+        CheckBindings(Arguments)
         
-'sweep' CheckBindingOfConstantExpressionIds(ANY)
+    'rule' CheckBindings(SYNTAXCONSTANT'variable(_, Name)):
+        /* BX7 */ CheckBindingIsSyntaxMarkUse(Name)
 
-    'rule' CheckBindingOfConstantExpressionIds(EXPRESSION'nil):
+    'rule' CheckBindings(SYNTAXCONSTANT'indexedvariable(_, Name, _)):
+        /* BX7 */ CheckBindingIsSyntaxMarkUse(Name)
+        
+---------
+
+'sweep' CheckBindingsOfConstantExpression(ANY)
+
+    'rule' CheckBindingsOfConstantExpression(EXPRESSION'nil):
         -- TODO
-        
-'action' CheckBindingOfNamedTypeId(ID)
 
-    'rule' CheckBindingOfNamedTypeId(Id):
+'action' CheckBindingIsTypeId(ID)
+
+    'rule' CheckBindingIsTypeId(Id):
         -- Do nothing if the meaning is error.
         QueryId(Id -> error)
 
-    'rule' CheckBindingOfNamedTypeId(Id):
+    'rule' CheckBindingIsTypeId(Id):
         QueryId(Id -> type)
         
-    'rule' CheckBindingOfNamedTypeId(Id):
+    'rule' CheckBindingIsTypeId(Id):
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToAType(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
         
-'action' CheckBindingOfSyntaxRule(ID)
+'action' CheckBindingIsHandlerId(ID)
 
-    'rule' CheckBindingOfSyntaxRule(Id):
+    'rule' CheckBindingIsHandlerId(Id):
         -- Do nothing if the meaning is error.
         QueryId(Id -> error)
 
-    'rule' CheckBindingOfSyntaxRule(Id):
+    'rule' CheckBindingIsHandlerId(Id):
+        QueryId(Id -> handler)
+        
+    'rule' CheckBindingIsHandlerId(Id):
+        Id'Name -> Name
+        Id'Position -> Position
+        Error_NotBoundToAHandler(Position, Name)
+        -- Mark this id as being in error.
+        Id'Meaning <- error
+
+'action' CheckBindingIsVariableId(ID)
+
+    'rule' CheckBindingIsVariableId(Id):
+        -- Do nothing if the meaning is error.
+        QueryId(Id -> error)
+
+    'rule' CheckBindingIsVariableId(Id):
+        QueryId(Id -> variable)
+        
+    'rule' CheckBindingIsVariableId(Id):
+        QueryId(Id -> parameter)
+
+    'rule' CheckBindingIsVariableId(Id):
+        Id'Name -> Name
+        Id'Position -> Position
+        Error_NotBoundToAVariable(Position, Name)
+        -- Mark this id as being in error.
+        Id'Meaning <- error
+
+'action' CheckBindingIsVariableOrHandlerId(ID)
+
+    'rule' CheckBindingIsVariableOrHandlerId(Id):
+        -- Do nothing if the meaning is error.
+        QueryId(Id -> error)
+
+    'rule' CheckBindingIsVariableOrHandlerId(Id):
+        QueryId(Id -> variable)
+        
+    'rule' CheckBindingIsVariableOrHandlerId(Id):
+        QueryId(Id -> parameter)
+
+    'rule' CheckBindingIsVariableOrHandlerId(Id):
+        QueryId(Id -> handler)
+
+    'rule' CheckBindingIsVariableOrHandlerId(Id):
+        Id'Name -> Name
+        Id'Position -> Position
+        Error_NotBoundToAVariableOrHandler(Position, Name)
+        -- Mark this id as being in error.
+        Id'Meaning <- error
+
+'action' CheckBindingIsSyntaxRuleOfExpressionType(ID)
+
+    'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
+        -- Do nothing if the meaning is error.
+        QueryId(Id -> error)
+
+    'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
         QueryId(Id -> syntaxexpressionrule)
 
-    'rule' CheckBindingOfSyntaxRule(Id):
+    'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
         QueryId(Id -> syntaxexpressionlistrule)
         
-    'rule' CheckBindingOfSyntaxRule(Id):
+    'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
         QueryId(Id -> syntaxrule(phrase, _))
         
-    'rule' CheckBindingOfSyntaxRule(Id):
+    'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
         QueryId(Id -> syntaxrule(_, _))
         Id'Name -> Name
         Id'Position -> Position
@@ -97,70 +223,72 @@
         -- Mark this id as being in error.
         Id'Meaning <- error
         
-    'rule' CheckBindingOfSyntaxRule(Id):
+    'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToASyntaxRule(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
 
-'action' CheckBindingOfSyntaxMark(ID)
+'action' CheckBindingIsSyntaxMark(ID)
 
-    'rule' CheckBindingOfSyntaxMark(Id):
+    'rule' CheckBindingIsSyntaxMark(Id):
         QueryId(Id -> error)
 
-    'rule' CheckBindingOfSyntaxMark(Id):
+    'rule' CheckBindingIsSyntaxMark(Id):
         QueryId(Id -> syntaxmark(_))
         
-    'rule' CheckBindingOfSyntaxMark(Id):
+    'rule' CheckBindingIsSyntaxMark(Id):
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToASyntaxMark(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
 
-'action' CheckBindingOfSyntaxMarkUse(ID)
+'action' CheckBindingIsConstantSyntaxValue(ID, SYNTAXCONSTANT)
 
-    'rule' CheckBindingOfSyntaxMarkUse(Id):
+    'rule' CheckBindingIsConstantSyntaxValue(_, undefined(_)):
+
+    'rule' CheckBindingIsConstantSyntaxValue(_, true(_)):
+
+    'rule' CheckBindingIsConstantSyntaxValue(_, false(_)):
+
+    'rule' CheckBindingIsConstantSyntaxValue(_, integer(_, _)):
+
+    'rule' CheckBindingIsConstantSyntaxValue(_, string(_, _)):
+
+    'rule' CheckBindingIsConstantSyntaxValue(Id, _):
+        Id'Name -> Name
+        Id'Position -> Position
+        Error_NotBoundToAConstantSyntaxValue(Position, Name)
+
+'action' CheckBindingIsSyntaxMarkUse(ID)
+
+    'rule' CheckBindingIsSyntaxMarkUse(Id):
         QueryId(Id -> error)
 
-    'rule' CheckBindingOfSyntaxMarkUse(Id):
+    'rule' CheckBindingIsSyntaxMarkUse(Id):
         QueryId(Id -> syntaxmark(_))
 
-    'rule' CheckBindingOfSyntaxMarkUse(Id):
+    'rule' CheckBindingIsSyntaxMarkUse(Id):
         QueryId(Id -> syntaxoutputmark)
 
-    'rule' CheckBindingOfSyntaxMarkUse(Id):
+    'rule' CheckBindingIsSyntaxMarkUse(Id):
         QueryId(Id -> syntaxinputmark)
 
-    'rule' CheckBindingOfSyntaxMarkUse(Id):
+    'rule' CheckBindingIsSyntaxMarkUse(Id):
         QueryId(Id -> syntaxcontextmark)
         
-    'rule' CheckBindingOfSyntaxMarkUse(Id):
+    'rule' CheckBindingIsSyntaxMarkUse(Id):
         QueryId(Id -> syntaxcontainermark)
 
-    'rule' CheckBindingOfSyntaxMarkUse(Id):
+    'rule' CheckBindingIsSyntaxMarkUse(Id):
         QueryId(Id -> syntaxiteratormark)
 
-    'rule' CheckBindingOfSyntaxMarkUse(Id):
+    'rule' CheckBindingIsSyntaxMarkUse(Id):
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToASyntaxMark(Position, Name)
-        -- Mark this id as being in error.
-        Id'Meaning <- error
-        
-'action' CheckBindingOfSyntaxMethod(ID)
-
-    'rule' CheckBindingOfSyntaxMethod(Id):
-        QueryId(Id -> error)
-
-    'rule' CheckBindingOfSyntaxMethod(Id):
-        QueryId(Id -> handler)
-        
-    'rule' CheckBindingOfSyntaxMethod(Id):
-        Id'Name -> Name
-        Id'Position -> Position
-        Error_NotBoundToAHandler(Position, Name)
         -- Mark this id as being in error.
         Id'Meaning <- error
 
@@ -169,19 +297,27 @@
 -- The syntax clauses have the following rules:
 --   S1) Mark variables can be used only once on any concrete path through the
 --      syntax. (DONE)
---   S2) Mark variables cannot have the name 'output', 'input', 'context' or
---      'error'. (DONE - in Bind)
+--   S2) Mark variables cannot have the name 'output', 'input', 'context', 'iterator'
+--       'container' or 'error'. (DONE - in Bind)
 --   S3) A signature of a method referenced must match the derived signature
 --      of the parameters specified for it.
 --   S4) A binary operator must start with an Expression and end with an
 --      Expression. (DONE)
 --   S5) A prefix operator must end with an Expression. (DONE)
 --   S6) A postfix operator must start with an Expression. (DONE)
---   S7) Expression syntax methods must either use 'output' or 'input' as one
---      parameter, but not both.
+--   S7) Method conformance:
+--       a) An expression class rule must have one parameter bound to input, or output but not both.
+--       d) A method can bind at most one parameter to context.
+--       *g) A method must have the same number of parameters as arguments.
+--       e) A parameter bound to a constant mark must be of 'in' mode.
+--       f) A parameter bound to a phrase (descent) mark must be of 'in' mode.
+--       h) A parameter bound to context must be of 'in' mode.
+--       b) A parameter bound to input must be of 'in' mode.
+--       c) A parameter bound to output must be of 'out' mode.
+--       *i) A method bound to syntax must return nothing.
 --   S8) Only terminals are allowed in the delimiter section of a repetition. (DONE)
 --   S9) The element section of a repetition must not be nullable. (DONE)
---   S10) Rules must either be 'Expression' or the name of a phrase definition. (DONE - CheckBindings)
+--   S10) Rules must be of expression type. (DONE - CheckBindings)
 --   S11) Values of marks must be constant. (DONE)
 --   S12) Optional elements must contain a terminal (DONE)
 
@@ -203,6 +339,10 @@
         
         -- Check that values of marks are constant
         /* S11 */ CheckSyntaxMarks(Syntax)
+        
+        -- Check method conformance for the class.
+        /* S7 */ CheckSyntaxMethods(Class, Methods)
+
         
 -- Mark variables can only be defined once for each possible path through a
 -- syntax rule. For example:
@@ -243,7 +383,8 @@
 'action' CheckSyntaxMarkVariableNotDefined(ID)
 
     'rule' CheckSyntaxMarkVariableNotDefined(Variable):
-        Variable'Meaning -> syntaxmark(Index)
+        Variable'Meaning -> syntaxmark(Info)
+        Info'Index -> Index
         (|
             IsIndexInSet(Index)
             Variable'Position -> Position
@@ -446,6 +587,81 @@
 
 ----------
 
+'action' CheckSyntaxMethods(SYNTAXCLASS, SYNTAXMETHODLIST)
+
+    'rule' CheckSyntaxMethods(Class, methodlist(Head, Tail)):
+        CheckSyntaxMethod(Class, Head)
+        CheckSyntaxMethods(Class, Tail)
+        
+    'rule' CheckSyntaxMethods(_, nil):
+        -- nothing
+        
+'action' CheckSyntaxMethod(SYNTAXCLASS, SYNTAXMETHOD)
+
+    'rule' CheckSyntaxMethod(Class, method(Position, Name, Arguments)):
+        QueryMethodIdSignature(Name -> signature(Parameters, ReturnType))
+        CheckSyntaxMethodReturnType(Position, ReturnType)
+        CheckSyntaxMethodArguments(Position, Parameters, Arguments)
+
+'action' CheckSyntaxMethodReturnType(POS, TYPE)
+
+    'rule' CheckSyntaxMethodReturnType(_, undefined(_)):
+        -- no type is fine
+        
+    'rule' CheckSyntaxMethodReturnType(Position, _):
+        Error_HandlersBoundToSyntaxMustNotReturnAValue(Position)
+
+'action' CheckSyntaxMethodArguments(POS, PARAMETERLIST, SYNTAXCONSTANTLIST)
+
+    'rule' CheckSyntaxMethodArguments(_, nil, nil):
+        -- done
+        
+    'rule' CheckSyntaxMethodArguments(Position, nil, _):
+        Error_TooManyArgumentsPassedToHandler(Position)
+        
+    'rule' CheckSyntaxMethodArguments(Position, _, nil):
+        Error_TooFewArgumentsPassedToHandler(Position)
+        
+    'rule' CheckSyntaxMethodArguments(Position, parameterlist(Param, ParamRest), constantlist(Arg, ArgRest)):
+        CheckSyntaxMethodArgument(Position, Param, Arg)
+        CheckSyntaxMethodArguments(Position, ParamRest, ArgRest)
+        
+'action' CheckSyntaxMethodArgument(POS, PARAMETER, SYNTAXCONSTANT)
+
+    'rule' CheckSyntaxMethodArgument(_, parameter(_, Mode, Name, Type), Argument):
+        --
+
+/*'action' CheckSyntaxMethodArgumentMode(ID, MODE, SYNTAXCONSTANT)
+
+    'rule' CheckSyntaxMethodArgumentMode(_, in, undefined(_)):
+        -- fine
+
+    'rule' CheckSyntaxMethodArgumentMode(_, in, true(_)):
+        -- fine
+
+    'rule' CheckSyntaxMethodArgumentMode(_, in, false(_)):
+        -- fine
+
+    'rule' CheckSyntaxMethodArgumentMode(_, in, integer(_, _)):
+        -- fine
+
+    'rule' CheckSyntaxMethodArgumentMode(_, in, string(_, _)):
+        -- fine
+
+    'rule' CheckSyntaxMethodArgumentMode(_, in, variable(_, Name)):
+        QueryId(Name -> syntaxinputmark)
+
+    'rule' CheckSyntaxMethodArgumentMode(_, in, variable(_, Name)):
+        QueryId(Name -> syntaxcontextmark)
+
+    'rule' CheckSyntaxMethodArgumentMode(_, out, variable(_, Name)):
+        QueryId(Name -> syntaxoutputmark)
+        
+    'rule' CheckSyntaxMethodArgumentMode(_, in, variable(_, Name)):
+        --QueryId(Name -> syntaxrule(_))*/
+
+----------
+
 'action' ComputeSyntaxPrefixAndSuffix(SYNTAX -> SYNTAXTERM, SYNTAXTERM)
 
     'rule' ComputeSyntaxPrefixAndSuffix(concatenate(_, Left, Right) -> Prefix, Suffix):
@@ -550,6 +766,11 @@
         -- marks are nullable
 
 --------------------------------------------------------------------------------
+
+'action' QueryMethodIdSignature(ID -> SIGNATURE)
+
+    'rule' QueryMethodIdSignature(Id -> Signature)
+        QueryId(Id -> handler(Signature))
 
 'action' QueryId(ID -> MEANING)
 

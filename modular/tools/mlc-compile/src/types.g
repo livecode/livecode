@@ -14,6 +14,7 @@
     SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST SYNTAXTERM
     ID IDLIST
     MEANING
+    SYNTAXMARKINFO SYNTAXMARKTYPE
     NAME DOUBLE
 
 --------------------------------------------------------------------------------
@@ -133,13 +134,6 @@
     invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
     nil
 
-'type' SYNTAXMETHODLIST
-    methodlist(Head: SYNTAXMETHOD, Tail: SYNTAXMETHODLIST)
-    nil
-    
-'type' SYNTAXMETHOD
-    method(Position: POS, Name: ID, Arguments: SYNTAXCONSTANTLIST)
-
 'type' SYNTAX
     concatenate(Position: POS, Left: SYNTAX, Right: SYNTAX)
     alternate(Position: POS, Left: SYNTAX, Right: SYNTAX)
@@ -178,6 +172,13 @@
     variable(Position: POS, Name: ID)
     indexedvariable(Position: POS, Name: ID, Index: INT)
 
+'type' SYNTAXMETHODLIST
+    methodlist(Head: SYNTAXMETHOD, Tail: SYNTAXMETHODLIST)
+    nil
+    
+'type' SYNTAXMETHOD
+    method(Position: POS, Name: ID, Arguments: SYNTAXCONSTANTLIST)
+
 'type' SYNTAXTERM
     error
     mark
@@ -195,12 +196,12 @@
     type
     constant
     variable
-    handler
+    handler(Signature: SIGNATURE)
     property
     event
     parameter
     syntaxrule(Class: SYNTAXCLASS, Syntax: SYNTAX)
-    syntaxmark(Index: INT)
+    syntaxmark(Info: SYNTAXMARKINFO)
     syntaxexpressionrule
     syntaxexpressionlistrule
     syntaxoutputmark
@@ -211,7 +212,18 @@
     error
     nil
 
+'type' SYNTAXMARKTYPE
+    error
+    boolean
+    integer
+    string
+    phrase
+    expression
+
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
+
+'table' SYNTAXMARKINFO(Index: INT, Type: SYNTAXMARKTYPE)
+
 'table' TYPEID(Position: POS)
 'table' SYNTAXID(Position: POS)
 
