@@ -383,7 +383,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          -- MM-2013-09-23: [[ iOS7 Support ]] This causes warnings whn using XCode 5. Further investigation needed.
          --
          if tInstSet is not "armv6" and tSDKs[tInstSet]["suffix"] is not "7_1" then
-            put "-pie" & return after tLinkCommand
+         // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] '-pie' option removed
+            -- put "-pie" & return after tLinkCommand
          end if
          
          -- Add reference to the partially linked standalone engine

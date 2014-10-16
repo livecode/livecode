@@ -151,7 +151,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    -- Compute the stackfiles list
    local tStackFiles
    lock messages
-   put revRelativeStackFilesList(pStack) into tStackfiles
+   // SN-2014-10-16: [[ ScriptifiedStack ]] revRelativeStackFilesList is no longer in the messagePath
+   put "revRelativeStackFilesList(" & quote & pStack & quote & ")" into tFunction
+   put value(tFunction, stack "revStandaloneSettings") into tStackFiles
    unlock messages
    
    -- Make sure the app-bundle isn't already there
@@ -1018,47 +1020,56 @@ end doShellCommand
 ################################################################################
 
 private function pathToRootClasses pRoot
-   dispatch function "pathToRootClasses" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToRootClasses" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToRootClasses
 
 private function pathToSDKClasses pRoot
-   dispatch function "pathToSDKClasses" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToSDKClasses" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToSDKClasses
 
 private function pathToAapt pRoot
-   dispatch function "pathToAapt" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToAapt" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToAapt
 
 private function pathToAdb pRoot
-   dispatch function "pathToAdb" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToAdb" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToAdb
 
 private function pathToZipAlign pRoot
-   dispatch function "pathToZipAlign" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToZipAlign" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToZipAlign
 
 private function pathToDex pRoot
-   dispatch function "pathToDex" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToDex" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToDex
 
 private function pathToJavaC pRoot
-   dispatch function "pathToJavaC" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToJavaC" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToJavaC
 
 private function pathToJava pRoot
-   dispatch function "pathToJava" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToJava" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToJava
 
 private function pathToJarSigner pRoot
-   dispatch function "pathToJarSigner" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToJarSigner" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToJarSigner
 
