@@ -49,6 +49,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/dir.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <sys/statvfs.h>
 #include <dlfcn.h>
 #include <termios.h>
 //#include <langinfo.h>
@@ -1456,7 +1457,27 @@ public:
 #ifdef /* MCS_getfreediskspace_dsk_lnx */ LEGACY_SYSTEM
         return 1.0;
 #endif /* MCS_getfreediskspace_dsk_lnx */
-        return 1.0;
+
+		/* GetFreeDiskSpace should return the number of bytes free on
+		 * the current filesystem that contains the current working
+		 * directory. */
+		struct statvfs t_fsstat;
+
+		if (-1 == statvfs (".", &t_fsstat))
+		{
+			return 0;
+		}
+
+		/* There are two ways to get a measure of free diskspace: one
+		 * which measures how much free space there is, and one that
+		 * measures how much free space is available to use.  Here, we
+		 * choose the latter.  See also comments on bug 13674. */
+
+		real8 t_space;
+		t_space = t_fsstat.f_bavail;
+		// t_space = (real8) t_fsstat.f_bfree;
+		t_space *= t_fsstat.f_bsize;
+		return t_space;
     }
 
     virtual Boolean GetDevices(MCStringRef& r_devices)
