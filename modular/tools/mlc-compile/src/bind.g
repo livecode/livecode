@@ -15,7 +15,9 @@
 -- the defining id.
 'action' Bind(MODULE)
 
-    'rule' Bind(module(Position, Name, Imports, Definitions)):
+    'rule' Bind(Module:module(Position, Name, Imports, Definitions)):
+        DefineId(Name, module)
+
         -- Step 1: Ensure all id's referencing definitions point to the definition.
         --         and no duplicate definitions have been attempted.
         EnterScope
@@ -29,6 +31,8 @@
         
         -- Step 2: Ensure all definitions have their appropriate meaning
         Define(Definitions)
+        
+        DumpBindings(Module)
 
 --------------------------------------------------------------------------------
 
@@ -118,8 +122,9 @@
         DefineId(Name, handler)
         DefineParameters(Parameters)
     
-    'rule' Define(foreignhandler(Position, _, Name, _, _)):
+    'rule' Define(foreignhandler(Position, _, Name, signature(Parameters, _), _)):
         DefineId(Name, handler)
+        DefineParameters(Parameters)
 
     'rule' Define(property(Position, _, Name)):
         DefineId(Name, property)
@@ -478,5 +483,116 @@
         MakeNameLiteral(String -> Name)
         Id'Name <- Name
         Id'Meaning <- Meaning
+
+--------------------------------------------------------------------------------
+
+'sweep' DumpBindings(ANY)
+
+    'rule' DumpBindings(MODULE'module(_, Name, Imports, Definitions)):
+        DumpId("module", Name)
+        DumpBindings(Imports)
+        DumpBindings(Definitions)
+        
+    'rule' DumpBindings(IMPORT'import(_, Name)):
+        DumpId("import", Name)
+        
+    'rule' DumpBindings(DEFINITION'type(_, _, Name, Type)):
+        DumpId("type", Name)
+        DumpBindings(Type)
+    'rule' DumpBindings(DEFINITION'constant(_, _, Name, Value)):
+        DumpId("constant", Name)
+        DumpBindings(Value)
+    'rule' DumpBindings(DEFINITION'variable(_, _, Name, Type)):
+        DumpId("variable", Name)
+        DumpBindings(Type)
+    'rule' DumpBindings(DEFINITION'handler(_, _, Name, Signature, Definitions, Body)):
+        DumpId("handler", Name)
+        DumpBindings(Signature)
+        DumpBindings(Definitions)
+        DumpBindings(Body)
+    'rule' DumpBindings(DEFINITION'foreignhandler(_, _, Name, Signature, _)):
+        DumpId("foreign handler", Name)
+        DumpBindings(Signature)
+    'rule' DumpBindings(DEFINITION'property(_, _, Name)):
+        DumpId("property", Name)
+    'rule' DumpBindings(DEFINITION'event(_, _, Name)):
+        DumpId("event", Name)
+    'rule' DumpBindings(DEFINITION'syntax(_, _, Name, _, Syntax, Methods)):
+        DumpId("syntax", Name)
+        DumpBindings(Syntax)
+        DumpBindings(Methods)
+    
+    'rule' DumpBindings(TYPE'named(_, Name)):
+        DumpId("named type", Name)
+        
+    'rule' DumpBindings(FIELD'action(_, Name, Handler)):
+        DumpId("action field", Name)
+        DumpId("action field handler", Handler)
+    'rule' DumpBindings(FIELD'slot(_, Name, Type)):
+        DumpId("slot field", Name)
+        DumpBindings(Type)
+    'rule' DumpBindings(FIELD'element(_, Name)):
+        DumpId("element field", Name)
+        
+    'rule' DumpBindings(PARAMETER'parameter(_, _, Name, Type)):
+        DumpId("parameter", Name)
+        DumpBindings(Type)
+        
+    'rule' DumpBindings(STATEMENT'variable(_, Name, Type)):
+        DumpId("local variable", Name)
+        DumpBindings(Type)
+    'rule' DumpBindings(STATEMENT'repeatupto(_, Slot, Start, Finish, Step, Body)):
+        DumpId("repeat upto slot", Slot)
+        DumpBindings(Start)
+        DumpBindings(Finish)
+        DumpBindings(Step)
+        DumpBindings(Body)
+    'rule' DumpBindings(STATEMENT'repeatdownto(_, Slot, Start, Finish, Step, Body)):
+        DumpId("repeat downto slot", Slot)
+        DumpBindings(Start)
+        DumpBindings(Finish)
+        DumpBindings(Step)
+        DumpBindings(Body)
+    'rule' DumpBindings(STATEMENT'repeatforeach(_, Iterator, Slot, Container, Body)):
+        DumpId("repeat foreach slot", Slot)
+        DumpBindings(Iterator)
+        DumpBindings(Container)
+        DumpBindings(Body)
+    'rule' DumpBindings(STATEMENT'call(_, Handler, Arguments)):
+        DumpId("statement call handler", Handler)
+        DumpBindings(Arguments)
+
+    'rule' DumpBindings(EXPRESSION'slot(_, Name)):
+        DumpId("slot", Name)
+    'rule' DumpBindings(EXPRESSION'call(_, Handler, Arguments)):
+        DumpId("expression call handler", Handler)
+        DumpBindings(Arguments)
+
+    'rule' DumpBindings(SYNTAXMETHOD'method(_, Name, Arguments)):
+        DumpId("syntax method", Name)
+        DumpBindings(Arguments)
+        
+    'rule' DumpBindings(SYNTAX'markedrule(_, Id, Name)):
+        DumpId("syntax mark", Id)
+        DumpId("syntax rule", Name)
+    'rule' DumpBindings(SYNTAX'mark(_, Id, Value)):
+        DumpId("syntax mark", Id)
+        DumpBindings(Value)
+        
+    'rule' DumpBindings(SYNTAXCONSTANT'variable(_, Name)):
+        DumpId("syntax slot", Name)
+    'rule' DumpBindings(SYNTAXCONSTANT'indexedvariable(_, Name, _)):
+        DumpId("indexed syntax slot", Name)
+
+
+'action' DumpId(STRING, ID)
+
+    'rule' DumpId(Tag, Id):
+        Id'Position -> Position
+        Id'Name -> Name
+        print(Tag)
+
+        Id'Meaning -> Meaning
+        print(Meaning)
 
 --------------------------------------------------------------------------------

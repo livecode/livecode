@@ -191,6 +191,7 @@
 
 'type' MEANING
     definingid(Id: ID)
+    module
     type
     constant
     variable
@@ -211,6 +212,8 @@
     nil
 
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
+'table' TYPEID(Position: POS)
+'table' SYNTAXID(Position: POS)
 
 --------------------------------------------------------------------------------
 
