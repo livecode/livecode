@@ -297,12 +297,12 @@
             Statements(-> Body)
         "end" "handler"
         
-    'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
-        Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
-            Definitions(-> Definitions)
-        "begin"
-            Statements(-> Body)
-        "end" "handler"    
+    --'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
+    --    Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
+    --        Definitions(-> Definitions)
+    --    "begin"
+    --        Statements(-> Body)
+    --    "end" "handler"
         
     'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
         Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" STRING_LITERAL(-> Binding)

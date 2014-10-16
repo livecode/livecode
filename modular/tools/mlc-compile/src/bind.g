@@ -79,6 +79,22 @@
     'rule' DeclareParameters(nil):
         -- do nothing
 
+'action' DeclareFields(FIELDLIST)
+
+    'rule' DeclareFields(fieldlist(Field, Tail)):
+        (|
+            where(Field -> action(_, Name, _))
+        ||
+            where(Field -> slot(_, Name, _))
+        ||
+            where(Field -> element(_, Name))
+        |)
+        DeclareId(Name)
+        DeclareFields(Tail)
+        
+    'rule' DeclareFields(nil):
+        -- do nothing
+
 --------------------------------------------------------------------------------
 
 -- The 'Define' phase associates meanings with the definining ids.
@@ -126,11 +142,30 @@
     'rule' DefineParameters(nil):
         -- do nothing
 
+'action' DefineFields(FIELDLIST)
+
+    'rule' DefineFields(fieldlist(Field, Tail)):
+        (|
+            where(Field -> action(_, Name, _))
+            --DefineId(Name, fieldaction)
+        ||
+            where(Field -> slot(_, Name, _))
+            --DefineId(Name, fieldslot)
+        ||
+            where(Field -> element(_, Name))
+            --DefineId(Name, fieldelement)
+        |)
+        
+    'rule' DefineFields(nil):
+        -- do nothing
+
 --------------------------------------------------------------------------------
 
 'var' LastSyntaxMarkIndexVar : INT
 
 'sweep' Apply(ANY)
+
+    ----------
 
     'rule' Apply(DEFINITION'handler(_, _, _, signature(Parameters, Type), _, Body)):
         -- The type of the handler is resolved in the current scope
@@ -161,13 +196,119 @@
         Apply(Parameters)
         LeaveScope
 
+    ----------
+
     'rule' Apply(TYPE'named(_, Name)):
         ApplyId(Name)
+        
+    'rule' Apply(TYPE'opaque(_, BaseType, Fields)):
+        -- Apply the base type
+        Apply(BaseType)
+        
+        -- Enter a new scope for fields
+        EnterScope
+        
+        -- Declare the fields first
+        DeclareFields(Fields)
+        
+        -- Now apply all id's in the fields
+        Apply(Fields)
+        
+        -- Leave the fields scope
+        LeaveScope
     
-    'rule' Apply(FIELD'action(_, _, Handler)):
+    'rule' Apply(TYPE'record(_, BaseType, Fields)):
+        -- Apply the base type
+        Apply(BaseType)
+        
+        -- Enter a new scope for fields
+        EnterScope
+        
+        -- Declare the fields first
+        DeclareFields(Fields)
+        
+        -- Now apply all id's in the fields
+        Apply(Fields)
+        
+        -- Leave the fields scope
+        LeaveScope
+        
+    'rule' Apply(TYPE'enum(_, BaseType, Fields)):
+        -- Apply the base type
+        Apply(BaseType)
+        
+        -- Enter a new scope for fields
+        EnterScope
+        
+        -- Declare the fields first
+        DeclareFields(Fields)
+        
+        -- Now apply all id's in the fields
+        Apply(Fields)
+        
+        -- Leave the fields scope
+        LeaveScope
+        
+    'rule' Apply(TYPE'handler(_, signature(Parameters, Type))):
+        -- The return type of the handler is resolved in the current scope.
+        Apply(Type)
+        
+        -- Enter a new scope to check parameters.
+        EnterScope
+        DeclareParameters(Parameters)
+        Apply(Parameters)
+        LeaveScope
+        
+    ----------
+
+    'rule' Apply(FIELD'action(_, Id, Handler)):
+        ApplyId(Id)
         ApplyId(Handler)
 
+    'rule' Apply(FIELD'slot(_, Id, Type)):
+        ApplyId(Id)
+        Apply(Type)
+
+    'rule' Apply(FIELD'element(_, Id)):
+        ApplyId(Id)
+
+    ----------
+
+    'rule' Apply(STATEMENT'variable(_, Name, Type)):
+        DeclareId(Name)
+        DefineId(Name, variable)
+        Apply(Type)
+        
+    'rule' Apply(STATEMENT'repeatupto(_, Slot, Start, Finish, Step, Body)):
+        ApplyId(Slot)
+        Apply(Start)
+        Apply(Finish)
+        Apply(Step)
+        Apply(Body)
+
+    'rule' Apply(STATEMENT'repeatdownto(_, Slot, Start, Finish, Step, Body)):
+        ApplyId(Slot)
+        Apply(Start)
+        Apply(Finish)
+        Apply(Step)
+        Apply(Body)
+
+    'rule' Apply(STATEMENT'repeatforeach(_, Iterator, Slot, Container, Body)):
+        ApplyId(Slot)
+        Apply(Iterator)
+        Apply(Container)
+        Apply(Body)
+
     'rule' Apply(STATEMENT'call(_, Handler, Arguments)):
+        ApplyId(Handler)
+        Apply(Arguments)
+
+    ---------
+    
+    'rule' Apply(EXPRESSION'slot(_, Name)):
+        ApplyId(Name)
+
+    'rule' Apply(EXPRESSION'call(_, Handler, Arguments)):
         ApplyId(Handler)
         Apply(Arguments)
 
