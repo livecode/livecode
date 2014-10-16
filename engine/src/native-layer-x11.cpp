@@ -69,20 +69,29 @@ MCNativeLayerX11::~MCNativeLayerX11()
     {
         g_object_unref(m_socket);
     }
+    if (m_child_window != NULL)
+    {
+        g_object_unref(m_child_window);
+    }
+    if (m_input_shape != NULL)
+    {
+        gdk_region_destroy(m_input_shape);
+    }
 }
 
 void MCNativeLayerX11::OnToolChanged(Tool p_new_tool)
 {
-    if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
-    {
-        // In run mode. Unset the input event mask
-        gdk_window_input_shape_combine_region(gtk_widget_get_window(GTK_WIDGET(m_child_window)), NULL, 0, 0);
-    }
-    else
-    {
+    updateInputShape();
+}
+
+void MCNativeLayerX11::updateInputShape()
+{
+    if (m_widget->inEditMode())
         // In edit mode. Mask out all input events
         gdk_window_input_shape_combine_region(gtk_widget_get_window(GTK_WIDGET(m_child_window)), m_input_shape, 0, 0);
-    }
+    else
+        // In run mode. Unset the input event mask
+        gdk_window_input_shape_combine_region(gtk_widget_get_window(GTK_WIDGET(m_child_window)), NULL, 0, 0);
 }
 
 void MCNativeLayerX11::OnOpen()
@@ -220,7 +229,35 @@ void MCNativeLayerX11::OnLayerChanged()
 
 void MCNativeLayerX11::doRelayer()
 {
-    gtk_widget_show(GTK_WIDGET(m_child_window));
+    // Ensure that the input mask for the widget is up to date
+    updateInputShape();
+    
+    // Find which native layer this should be inserted below
+    MCWidget* t_before;
+    t_before = findNextLayerAbove(m_widget);
+    
+    // Insert the widget in the correct place (but only if the card is current)
+    if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+    {
+        // If t_before_window == NULL, this will put the widget on the bottom layer
+        MCNativeLayerX11 *t_before_layer;
+        GdkWindow* t_before_window;
+        if (t_before != NULL)
+        {
+            t_before_layer = reinterpret_cast<MCNativeLayerX11*>(t_before->getNativeLayer());
+            t_before_window = gtk_widget_get_window(GTK_WIDGET(t_before_layer->m_child_window));
+        }
+        else
+        {
+            t_before_layer = NULL;
+            t_before_window = NULL;
+        }
+        gdk_window_restack(gtk_widget_get_window(GTK_WIDGET(m_child_window)), t_before_window, FALSE);
+    }
+    
+    // Make the widget visible, if appropriate
+    if ((m_widget->getflags() & F_VISIBLE) && m_widget->getstack()->getcurcard() != m_widget->getstack()->getcard())
+        gdk_window_show_unraised(gtk_widget_get_window(GTK_WIDGET(m_child_window)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
