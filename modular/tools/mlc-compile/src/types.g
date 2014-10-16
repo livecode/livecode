@@ -215,6 +215,7 @@
     nil
 
 'type' SYNTAXMARKTYPE
+    undefined
     error
     boolean
     integer

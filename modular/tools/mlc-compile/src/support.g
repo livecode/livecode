@@ -117,6 +117,7 @@
     Error_TooManyArgumentsPassedToHandler
     Error_TooFewArgumentsPassedToHandler
     Error_HandlersBoundToSyntaxMustNotReturnAValue
+    Error_SyntaxMarkVariableAlreadyDefinedWithDifferentType
 
 --------------------------------------------------------------------------------
 
@@ -267,5 +268,6 @@
 'action' Error_TooManyArgumentsPassedToHandler(Position: POS)
 'action' Error_TooFewArgumentsPassedToHandler(Position: POS)
 'action' Error_HandlersBoundToSyntaxMustNotReturnAValue(Position: POS)
+'action' Error_SyntaxMarkVariableAlreadyDefinedWithDifferentType(Position: POS, Name: NAME)
 
 --------------------------------------------------------------------------------

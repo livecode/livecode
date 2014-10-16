@@ -111,6 +111,7 @@ DEFINE_ERROR(ElementSyntaxCannotBeNullable, "Element clause in repetition cannot
 DEFINE_ERROR(OnlyKeywordsAllowedInDelimiterSyntax, "Delimiter clause in repetition must only contain keywords");
 DEFINE_ERROR(SyntaxMarksMustBeConstant, "Syntax marks must be constant");
 DEFINE_ERROR(OptionalSyntaxCannotContainOnlyMarks, "Optional syntax cannot just contain marks");
+DEFINE_ERROR_I(SyntaxMarkVariableAlreadyDefinedWithDifferentType, "Mark variable '%s' has previously been assigned with different type");
 
 DEFINE_ERROR_I(NotBoundToAHandler, "'%s' is not a handler")
 DEFINE_ERROR_I(NotBoundToAVariable, "'%s' is not a variable")

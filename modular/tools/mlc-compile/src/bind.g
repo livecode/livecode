@@ -32,7 +32,7 @@
         -- Step 2: Ensure all definitions have their appropriate meaning
         Define(Definitions)
         
-        DumpBindings(Module)
+        --DumpBindings(Module)
 
 --------------------------------------------------------------------------------
 
@@ -420,6 +420,7 @@
             LastSyntaxMarkIndexVar -> Index
             MarkInfo::SYNTAXMARKINFO
             MarkInfo'Index <- Index
+            MarkInfo'Type <- undefined
             where(syntaxmark(MarkInfo) -> Meaning)
             DefineMeaning(Name, Meaning)
             LastSyntaxMarkIndexVar <- Index + 1

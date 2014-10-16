@@ -372,11 +372,15 @@
     'rule' CheckSyntaxMarkDefinitions(optional(_, Operand)):
         CheckSyntaxMarkDefinitions(Operand)
 
-    'rule' CheckSyntaxMarkDefinitions(markedrule(_, Variable, _)):
+    'rule' CheckSyntaxMarkDefinitions(markedrule(_, Variable, Rule)):
         CheckSyntaxMarkVariableNotDefined(Variable)
+        ComputeSyntaxRuleType(Rule -> Type)
+        CheckSyntaxMarkVariableType(Variable, Type)
 
-    'rule' CheckSyntaxMarkDefinitions(mark(_, Variable, _)):
+    'rule' CheckSyntaxMarkDefinitions(mark(_, Variable, Constant)):
         CheckSyntaxMarkVariableNotDefined(Variable)
+        ComputeSyntaxConstantType(Constant -> Type)
+        CheckSyntaxMarkVariableType(Variable, Type)
 
     'rule' CheckSyntaxMarkDefinitions(_):
         -- do nothing
@@ -397,6 +401,73 @@
         
     'rule' CheckSyntaxMarkVariableNotDefined(Variable):
         Variable'Meaning -> error
+
+'action' CheckSyntaxMarkVariableType(ID, SYNTAXMARKTYPE)
+
+    'rule' CheckSyntaxMarkVariableType(Variable, Type):
+        Variable'Meaning -> syntaxmark(Info)
+        Info'Type -> MarkType
+        (|
+            where(MarkType -> undefined)
+            Info'Type <- Type
+        ||
+            eq(MarkType, Type)
+            -- This is fine
+        ||
+            eq(MarkType, phrase)
+            eq(Type, expression)
+        ||
+            eq(MarkType, expression)
+            eq(Type, phrase)
+        ||
+            eq(Type, error)
+            -- This is fine
+        ||
+            Variable'Position -> Position
+            Variable'Name -> Name
+            Error_SyntaxMarkVariableAlreadyDefinedWithDifferentType(Position, Name)
+        |)
+        
+'action' ComputeSyntaxRuleType(ID -> SYNTAXMARKTYPE)
+
+    'rule' ComputeSyntaxRuleType(Id -> error):
+        QueryId(Id -> error)
+
+    'rule' ComputeSyntaxRuleType(Id -> error):
+        QueryId(Id -> syntaxexpressionrule)
+
+    'rule' ComputeSyntaxRuleType(Id -> error):
+        QueryId(Id -> syntaxexpressionlistrule)
+        
+    'rule' ComputeSyntaxRuleType(Id -> phrase):
+        QueryId(Id -> syntaxrule(Info))
+        Info'Class -> phrase
+        
+    'rule' ComputeSyntaxRuleType(Id -> expression):
+        QueryId(Id -> syntaxrule(Info))
+        Info'Class -> expression
+        
+    'rule' ComputeSyntaxRuleType(Id -> error):
+        QueryId(Id -> Meaning)
+        Fatal_InternalInconsistency("Referenced syntax rule bound to non-expression")
+
+'action' ComputeSyntaxConstantType(SYNTAXCONSTANT -> SYNTAXMARKTYPE)
+
+    'rule' ComputeSyntaxConstantType(true(_) -> boolean):
+        --
+
+    'rule' ComputeSyntaxConstantType(false(_) -> boolean):
+        --
+
+    'rule' ComputeSyntaxConstantType(integer(_, _) -> integer):
+        --
+        
+    'rule' ComputeSyntaxConstantType(string(_, _) -> string):
+        --
+
+    'rule' ComputeSyntaxConstantType(Foo -> error):
+        print(Foo)
+        Fatal_InternalInconsistency("Non-constant syntax value present in constant context")
 
 --
 
