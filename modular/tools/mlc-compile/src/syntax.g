@@ -21,6 +21,9 @@
     'rule' GenerateSyntax(DEFINITION'syntax(_, _, Id, Class, Syntax, Methods)):
         Id'Name -> Name
         (|
+            where(Class -> phrase)
+            BeginPhraseSyntaxRule(Name)
+        ||
             where(Class -> statement)
             BeginStatementSyntaxRule(Name)
         ||
@@ -41,8 +44,6 @@
         ||
             where(Class -> binary(neutral, Precedence))
             BeginNeutralBinaryOperatorSyntaxRule(Name, Precedence)
-        ||
-            Fatal_InternalInconsistency("'phrase' syntax rules not implemented")
         |)
 
         BeginSyntaxGrammar()

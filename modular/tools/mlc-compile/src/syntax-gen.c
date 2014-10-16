@@ -87,6 +87,7 @@ typedef enum SyntaxRuleKind SyntaxRuleKind;
 enum SyntaxRuleKind
 {
     kSyntaxRuleKindFragment,
+    kSyntaxRuleKindPhrase,
     kSyntaxRuleKindStatement,
     kSyntaxRuleKindExpression,
     kSyntaxRuleKindPrefixOperator,
@@ -159,6 +160,11 @@ static void BeginSyntaxRule(NameRef p_name, SyntaxRuleKind p_kind, long p_preced
     s_rule -> mapping = NULL;
 }
 
+void BeginPhraseSyntaxRule(NameRef p_name)
+{
+    BeginSyntaxRule(p_name, kSyntaxRuleKindPhrase, 0);
+}
+
 void BeginStatementSyntaxRule(NameRef p_name)
 {
     BeginSyntaxRule(p_name, kSyntaxRuleKindStatement, 0);
@@ -201,7 +207,8 @@ void EndSyntaxRule(void)
     SyntaxRuleGroupRef t_group;
     for(t_group = s_groups; t_group != NULL; t_group = t_group -> next)
     {
-        if (IsSyntaxNodeEqualTo(s_rule -> expr, t_group -> rules -> expr) &&
+        if (s_rule -> kind != kSyntaxRuleKindPhrase &&
+            IsSyntaxNodeEqualTo(s_rule -> expr, t_group -> rules -> expr) &&
             s_rule -> kind == t_group -> rules -> kind &&
             s_rule -> precedence == t_group -> rules -> precedence)
             break;
@@ -919,7 +926,13 @@ static void GenerateSyntaxRuleTerm(SyntaxNodeRef p_node, struct SyntaxNodeMark *
             {
                 const char *t_string;
                 GetStringOfNameLiteral(p_node -> descent . rule, &t_string);
-                fprintf(stderr, "%s", t_string);
+                if (strcmp(t_string, "Expression") != 0 &&
+                    strcmp(t_string, "ExpressionList") != 0)
+                    fprintf(stderr, "Custom_");
+                if (strcmp(t_string, "ExpressionList") == 0)
+                    fprintf(stderr, "ExpressionListAsExpression");
+                else
+                    fprintf(stderr, "%s", t_string);
                 if (p_node -> descent . index != -1)
                 {
                     fprintf(stderr, "(-> Mark%ld)", p_node -> descent . index);
@@ -954,6 +967,10 @@ static void GenerateSyntaxRuleTerm(SyntaxNodeRef p_node, struct SyntaxNodeMark *
 
 static void AddSyntaxNodeMark(struct SyntaxNodeMark **x_marks, int *x_mark_count, long p_index, SyntaxNodeKind p_kind)
 {
+    for(int i = 0; i < *x_mark_count; i++)
+        if ((*x_marks)[i] . index == p_index)
+            return;
+    
     *x_marks = (struct SyntaxNodeMark *)Reallocate(*x_marks, (*x_mark_count + 1) * sizeof(struct SyntaxNodeMark));
     (*x_marks)[*x_mark_count] . index = p_index;
     (*x_marks)[*x_mark_count] . kind = p_kind;
@@ -993,7 +1010,7 @@ static void GenerateSyntaxRuleMarks(SyntaxNodeRef p_node, struct SyntaxNodeMark 
 
 static void GenerateSyntaxRuleSubHeader(SyntaxNodeRef p_node, SyntaxRuleKind p_kind)
 {
-    if (p_kind >= kSyntaxRuleKindExpression)
+    if (p_kind >= kSyntaxRuleKindPrefixOperator)
         fprintf(stderr, "  'rule' CustomRule%d:\n", p_node -> concrete_rule);
     else
     {
@@ -1064,11 +1081,18 @@ static void GenerateSyntaxRuleExplicitAndUnusedMarks(SyntaxNodeRef p_node)
 
 static void GenerateSyntaxRuleConstructor(SyntaxNodeRef p_node, SyntaxRuleRef p_rule)
 {
-    static const char *s_calls[] = { "PushOperatorExpressionPrefix", "PushOperatorExpressionPostfix", "PushOperatorExpressionLeftBinary", "PushOperatorExpressionRightBinary", "PushOperatorExpressionNeutralBinary" };
-    fprintf(stderr, "    %s(Position, %ld, %d)\n", s_calls[p_rule -> kind - kSyntaxRuleKindPrefixOperator],
-            p_rule -> precedence, p_node -> concrete_rule);
-    for(int i = 0; i < p_node -> mark_count; i++)
-        fprintf(stderr, "    PushOperatorExpressionOperand(Mark%ld)\n", p_node -> marks[i] . index);
+    if (p_rule -> kind >= kSyntaxRuleKindPrefixOperator)
+    {
+        static const char *s_calls[] = { "PushOperatorExpressionPrefix", "PushOperatorExpressionPostfix", "PushOperatorExpressionLeftBinary", "PushOperatorExpressionRightBinary", "PushOperatorExpressionNeutralBinary" };
+        fprintf(stderr, "    %s(Position, %ld, %d)\n", s_calls[p_rule -> kind - kSyntaxRuleKindPrefixOperator],
+                p_rule -> precedence, p_node -> concrete_rule);
+        for(int i = 0; i < p_node -> mark_count; i++)
+            fprintf(stderr, "    PushOperatorExpressionOperand(Mark%ld)\n", p_node -> marks[i] . index);
+    }
+    else
+    {
+        assert(0);
+    }
 }
 
 static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKind p_kind, SyntaxRuleRef p_rule)
@@ -1119,7 +1143,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
         }
         fprintf(stderr, ")\n");
     }
-    else if (p_kind >= kSyntaxRuleKindExpression)
+    else if (p_kind >= kSyntaxRuleKindPrefixOperator)
         fprintf(stderr, "'nonterm' CustomRule%d\n", t_index);
     else
         fprintf(stderr, "'nonterm' CustomRule%d(-> %s)\n", t_index, p_kind == kSyntaxRuleKindStatement ? "STATEMENT" : "EXPRESSION");
@@ -1140,7 +1164,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
         }
         fprintf(stderr, "\n");
         GenerateSyntaxRuleExplicitAndUnusedMarks(p_node);
-        if (p_kind >= kSyntaxRuleKindExpression)
+        if (p_kind >= kSyntaxRuleKindPrefixOperator)
             GenerateSyntaxRuleConstructor(p_node, p_rule);
     }
     else if (p_node -> kind == kSyntaxNodeKindAlternate)
@@ -1151,7 +1175,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
             
             GenerateSyntaxRuleSubHeader(p_node, p_kind);
             fprintf(stderr, "    ");
-            if (p_node -> alternate . operands[i] -> kind == kSyntaxNodeKindRepeat)
+            if (p_node -> alternate . operands[i] -> kind != kSyntaxNodeKindConcatenate)
                 GenerateSyntaxRuleTerm(p_node -> alternate . operands[i], p_node -> marks, p_node -> mark_count);
             else
             {
@@ -1172,7 +1196,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
             SetAllSyntaxNodeMarksAsUnused(p_node -> marks, p_node -> mark_count);
             GenerateSyntaxRuleSubHeader(p_node, p_kind);
             GenerateSyntaxRuleExplicitAndUnusedMarks(p_node);
-            if (p_kind >= kSyntaxRuleKindExpression)
+            if (p_kind >= kSyntaxRuleKindPrefixOperator)
                 GenerateSyntaxRuleConstructor(p_node, p_rule);
         }
     }
@@ -1185,7 +1209,7 @@ static void GenerateUmbrellaSyntaxRule(const char *p_name, SyntaxRuleKind p_firs
 {
     int t_made;
     t_made = 0;
-    if (p_first < kSyntaxRuleKindExpression)
+    if (p_first <= kSyntaxRuleKindExpression)
     {
         fprintf(stderr, "'nonterm' %s(-> %s)\n", p_name, p_first == kSyntaxRuleKindStatement ? "STATEMENT" : "EXPRESSION");
         
@@ -1268,17 +1292,32 @@ void GenerateSyntaxRules(void)
         t_rule = t_group -> rules;
         for(SyntaxRuleRef t_other_rule = t_group -> rules -> next; t_other_rule != NULL; t_other_rule = t_other_rule -> next)
             MergeSyntaxRule(t_rule, t_other_rule);
-
+        
+        if (t_rule -> kind == kSyntaxRuleKindPhrase)
+            t_rule = t_rule;
+            
         GenerateSyntaxRule(&t_index, t_rule -> expr, t_rule -> kind, t_rule);
+        
+        if (t_rule -> kind == kSyntaxRuleKindPhrase)
+        {
+            const char *t_name_string;
+            GetStringOfNameLiteral(t_rule -> name, &t_name_string);
+            fprintf(stderr, "'nonterm' Custom_%s(-> EXPRESSION)\n", t_name_string);
+            fprintf(stderr, "  'rule' Custom_%s(-> Expr):\n", t_name_string);
+            fprintf(stderr, "    CustomRule%d(-> Expr)\n", t_rule -> expr -> concrete_rule);
+        }
     }
     
     GenerateUmbrellaSyntaxRule("CustomStatements", kSyntaxRuleKindStatement, kSyntaxRuleKindStatement);
-    GenerateUmbrellaSyntaxRule("CustomOperands", kSyntaxRuleKindExpression, kSyntaxRuleKindExpression);
+    GenerateUmbrellaSyntaxRule("CustomTerms", kSyntaxRuleKindExpression, kSyntaxRuleKindExpression);
     GenerateUmbrellaSyntaxRule("CustomBinaryOperators", kSyntaxRuleKindLeftBinaryOperator, kSyntaxRuleKindNeutralBinaryOperator);
     GenerateUmbrellaSyntaxRule("CustomPrefixOperators", kSyntaxRuleKindPrefixOperator, kSyntaxRuleKindPrefixOperator);
     GenerateUmbrellaSyntaxRule("CustomPostfixOperators", kSyntaxRuleKindPostfixOperator, kSyntaxRuleKindPostfixOperator);
     
     stderr = t_old_stderr;
+    
+    extern void DumpSyntaxRules(void);
+    DumpSyntaxRules();
 }
 
 void DumpSyntaxRules(void)

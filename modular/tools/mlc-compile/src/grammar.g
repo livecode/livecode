@@ -682,7 +682,8 @@
         PushOperatorExpressionOperand(Term)
         
     'rule' FlatExpressionOperand:
-        CustomOperands
+        CustomTerms(-> Term)
+        PushOperatorExpressionOperand(Term)
 
 ----------
 
@@ -736,6 +737,11 @@
         
     'rule' ExpressionList(-> expressionlist(Expression, nil)):
         Expression(-> Expression)
+
+'nonterm' ExpressionListAsExpression(-> EXPRESSION)
+
+    'rule' ExpressionListAsExpression(-> list(Position, List)):
+        ExpressionList(-> List) @(-> Position)
 
 --------------------------------------------------------------------------------
 -- Syntax Syntax
@@ -906,8 +912,8 @@
 'nonterm' CustomBinaryOperators
     'rule' CustomBinaryOperators:
         "THISCANNEVERHAPPEN"
-'nonterm' CustomOperands
-    'rule' CustomOperands:
+'nonterm' CustomTerms(-> EXPRESSION)
+    'rule' CustomTerms(-> nil):
         "THISCANNEVERHAPPEN"
 
 

@@ -51,6 +51,7 @@
 
     GenerateSyntaxRules
     DumpSyntaxRules
+    BeginPhraseSyntaxRule
     BeginStatementSyntaxRule
     BeginExpressionSyntaxRule
     BeginPrefixOperatorSyntaxRule
@@ -181,6 +182,7 @@
 
 'action' GenerateSyntaxRules()
 
+'action' BeginPhraseSyntaxRule(NAME)
 'action' BeginStatementSyntaxRule(NAME)
 'action' BeginExpressionSyntaxRule(NAME)
 'action' BeginPrefixOperatorSyntaxRule(NAME, INT)
