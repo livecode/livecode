@@ -544,20 +544,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
-<<<<<<< HEAD
-				4D82FCDB171485DF00C48403 /* Default-568h@2x.png in Copy Files */,
-				4D82FCF01714877A00C48403 /* mobile-device-template.plist in Copy Files */,
-				4D82FCDC171485E200C48403 /* mobile-template.plist in Copy Files */,
-				4D82FCDD171485E400C48403 /* mobile-remote-notification-template.plist in Copy Files */,
-				4D82FCDE171485E600C48403 /* mobile-url-scheme-template.plist in Copy Files */,
-				4D82FD00171487AE00C48403 /* template-store-entitlements.xcent in Copy Files */,
-				4D82FCEC1714876C00C48403 /* template-entitlements.xcent in Copy Files */,
-				4D82FCED1714876C00C48403 /* template-remote-notification-entitlements.xcent in Copy Files */,
-				4D82FCEE1714876C00C48403 /* template-remote-notification-store-entitlements.xcent in Copy Files */,
-				4D82FCEF1714876F00C48403 /* template-ResourceRules.plist in Copy Files */,
-			);
 			name = "Copy Files";
-=======
 				4CF72F8219DBFEE100B1E89B /* mobile-splashscreen-template.plist in CopyFiles */,
 				4D82FCDB171485DF00C48403 /* Default-568h@2x.png in CopyFiles */,
 				4D82FCF01714877A00C48403 /* mobile-device-template.plist in CopyFiles */,
@@ -570,7 +557,6 @@
 				4D82FCEE1714876C00C48403 /* template-remote-notification-store-entitlements.xcent in CopyFiles */,
 				4D82FCEF1714876F00C48403 /* template-ResourceRules.plist in CopyFiles */,
 			);
->>>>>>> develop
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -1444,11 +1430,7 @@
 				4D82FCD8171485CA00C48403 /* mobile-template.plist */,
 				4D82FCD9171485D000C48403 /* mobile-remote-notification-template.plist */,
 				4D82FCDA171485D600C48403 /* mobile-url-scheme-template.plist */,
-<<<<<<< HEAD
-=======
 				4CCD60C219DB0535002DFCE5 /* mobile-splashscreen-template.plist */,
-				4DB322B0174BD4D100046FFE /* Security.framework */,
->>>>>>> develop
 			);
 			sourceTree = "<group>";
 		};

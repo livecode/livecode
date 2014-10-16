@@ -678,34 +678,7 @@
 		E8189EB615D17E8000194F25 /* exec-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8189EB515D17E8000194F25 /* exec-logic.cpp */; };
 		E82206E1184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E82206E2184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
-<<<<<<< HEAD
 		E864B42115BDAB5200F5361C /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */; };
-=======
-		E8252264174E2BF500055329 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
-		E85130F4180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */; };
-		E85130F5180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */; };
-		E861167119D45AF50047E1BC /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E861167019D45AF50047E1BC /* color.cpp */; };
-		E861167219D45AF50047E1BC /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E861167019D45AF50047E1BC /* color.cpp */; };
-		E8687A941987F5A80093C756 /* imageloader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8687A931987F5A80093C756 /* imageloader.cpp */; };
-		E87FAFEC1924F25000ED338B /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E87FAFEB1924F24300ED338B /* region.cpp */; };
-		E88869AC180D63FC0026BFDA /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8988A8917FDD5B700F640F4 /* stackview.cpp */; };
-		E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8988A8917FDD5B700F640F4 /* stackview.cpp */; };
-		E89DBC4F198A6E2D0009651B /* imageloader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8687A931987F5A80093C756 /* imageloader.cpp */; };
-		E8A554B11785A70600DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
-		E8A554B21785A70600DABC1A /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
-		E8A554B51785A7C600DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
-		E8A554B61785A7C600DABC1A /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
-		E8A554B71785A83A00DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
-		E8A554B81785A83A00DABC1A /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
-		E8AE876C177B3F5C0041B7E0 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AE876B177B3F5C0041B7E0 /* cgimageutil.cpp */; };
-		E8AF465B174CF247000B2F9E /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9DFA13CDE63000B9B15D /* surface.cpp */; };
-		E8B5BB1416DF77DF00CA02FB /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */; };
-		E8D1ECDD1992395A00984EFE /* sysosxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB32230174BD08E00046FFE /* sysosxrandom.cpp */; };
-		E8D7F8321785A88200EC051A /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */; };
-		E8D7F8391785A8AC00EC051A /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */; };
-		E8D7F8471785A99900EC051A /* srvtheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8D7F8461785A99900EC051A /* srvtheme.cpp */; };
-		E8DDE5DF16C2B1A7007367E4 /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DD16C2B1A7007367E4 /* image_rep_resampled.cpp */; };
->>>>>>> develop
 		E8DDE5E016C2B1A7007367E4 /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */; };
 /* End PBXBuildFile section */
 
@@ -1854,13 +1827,7 @@
 		BEFE81D317B2B32800C9D14F /* dskmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmac.cpp; path = src/dskmac.cpp; sourceTree = "<group>"; };
 		E8189EB515D17E8000194F25 /* exec-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-logic.cpp"; path = "src/exec-logic.cpp"; sourceTree = "<group>"; };
 		E82206E0184F810A00117D10 /* resolution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resolution.cpp; path = src/resolution.cpp; sourceTree = "<group>"; };
-<<<<<<< HEAD
 		E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacy_spec.cpp; path = src/legacy_spec.cpp; sourceTree = "<group>"; };
-=======
-		E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
-		E861167019D45AF50047E1BC /* color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = color.cpp; path = src/color.cpp; sourceTree = "<group>"; };
-		E861167319D45D810047E1BC /* color.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = color.h; path = src/color.h; sourceTree = "<group>"; };
->>>>>>> develop
 		E8687A921987F24A0093C756 /* imageloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imageloader.h; path = src/imageloader.h; sourceTree = "<group>"; };
 		E8687A931987F5A80093C756 /* imageloader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imageloader.cpp; path = src/imageloader.cpp; sourceTree = "<group>"; };
 		E86A04F6142A49EF005ECD82 /* srvsession.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvsession.cpp; path = src/srvsession.cpp; sourceTree = "<group>"; };
@@ -2310,7 +2277,6 @@
 		4D6F92ED12AA5C7800026A72 /* Desktop - Mac */ = {
 			isa = PBXGroup;
 			children = (
-<<<<<<< HEAD
 				BEEC4C64196C0DF3000DA7F5 /* mac-av-player.mm */,
 				BEEC4C65196C0DF3000DA7F5 /* mac-player.h */,
 				BEEC4C66196C0DF3000DA7F5 /* mac-qt-player.mm */,
@@ -2335,32 +2301,6 @@
 				76EF31A3181E7CCE00FAC195 /* osxcisupport.mm */,
 				76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */,
 				4CF4B87F199E0C1C00E33AEE /* coretextlayout.mm */,
-=======
-				E8AE876B177B3F5C0041B7E0 /* cgimageutil.cpp */,
-				4C977250193CAF5000DB2F4A /* coretextfonts.cpp */,
-				4CF4B87F199E0C1C00E33AEE /* coretextlayout.mm */,
-				4D30E18118AA2FCE0034CDC6 /* mac-abort.mm */,
-				1DDE08D21945DD43000E3705 /* mac-av-player.mm */,
-				4D79B4E018A8D9FD00D4974C /* mac-color.mm */,
-				4DECC93B18856C7500463D52 /* mac-core.mm */,
-				4D444FB4188DCB4400C7B349 /* mac-cursor.mm */,
-				4D30E40618AA73870034CDC6 /* mac-dialog.mm */,
-				4D30CB26189AC40C0034CDC6 /* mac-font.mm */,
-				4DECC94218856FE000463D52 /* mac-internal.h */,
-				4DC6E30418896CFB00FD43C3 /* mac-menu.mm */,
-				4D6F2AE618981E7F0099947D /* mac-pasteboard.mm */,
-				1DDE08CF1945DCFD000E3705 /* mac-player.h */,
-				4D30D1EF18A152700034CDC6 /* mac-player.mm */,
-				4D79B5D318A9087B00D4974C /* mac-printer.mm */,
-				1DDE08D01945DD31000E3705 /* mac-qt-player.mm */,
-				76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */,
-				4DAF5C8618C0E76500B9713C /* mac-scripting.mm */,
-				4D30CAF5189AC1720034CDC6 /* mac-snapshot.mm */,
-				4DA028F518F54B5D000CFCF8 /* mac-sound.mm */,
-				4DECD1341886F0FF00463D52 /* mac-surface.mm */,
-				4DECD0C71886E4FD00463D52 /* mac-window.mm */,
-				4D5881B90B80C79600200116 /* osxcisupport.mm */,
->>>>>>> develop
 				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
 				4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */,
 				4D03C2160BC5803900026EA7 /* osxfiles.cpp */,
