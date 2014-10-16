@@ -5,14 +5,6 @@ This module specifies the syntax definitions and bindings for canvas drawing ope
 module com.livecode.canvas
 
 // TODO - type declarations
-// Color
-record type Color
-	Red as real
-	Green as real
-	Blue as real
-	Alpha as real
-end type
-
 // Transform
 record type Transform
 	a as real
@@ -24,16 +16,32 @@ record type Transform
 end type
 
 // Paint (supertype of pattern, gradient, color?)
+foreign handler MCCanvasPaintType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+opaque type Paint
+end type
+
+// Color
+foreign handler MCCanvasColorType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+opaque type Color based on Paint
+	measure is MCCanvasColorType_Measure
+end type
+
+//record type Color
+//	Red as real
+//	Green as real
+//	Blue as real
+//	Alpha as real
+//end type
 
 // Pattern
 foreign handler MCCanvasPatternType_Measure(out r_size as integer) as undefined binds to "<builtin>"
-opaque type Pattern
+opaque type Pattern based on Paint
 	measure is MCCanvasPatternType_Measure
 end type
 
 // Gradient
 foreign handler MCCanvasGradientType_Measure(out r_size as integer) as undefined binds to "<builtin>"
-opaque type Gradient
+opaque type Gradient based on Paint
 	measure is MCCanvasGradientType_Measure
 end type
 
@@ -626,8 +634,8 @@ foreign handler MCCanvasPathMakeWithPoints(in pPoints as list, in pClose as bool
 syntax MakePathWithRoundedRectangle is prefix operator with precedence 4
 	"rounded" "rectangle" <mRect: ExpressionList> "with" ( "radius" <mRadius: Expression> | "radii" <mRadii: ExpressionList> )
 begin
-	MCCanvasPathMakeWithRoundedRectangle(mRect[0], mRect[1], mRect[2], mRect[3], mRadius, mRadius)
-	MCCanvasPathMakeWithRoundedRectangle(mRect[0], mRect[1], mRect[2], mRect[3], mRadii[0], mRadii[1])
+	MCCanvasPathMakeWithRoundedRectangle(mRect[0], mRect[1], mRect[2], mRect[3], mRadius, mRadius, output)
+	MCCanvasPathMakeWithRoundedRectangle(mRect[0], mRect[1], mRect[2], mRect[3], mRadii[0], mRadii[1], output)
 end syntax
 
 //////////
@@ -726,7 +734,7 @@ end syntax
 syntax MakeGraphicEffectWithProperties is prefix operator with precedence 4
 	<mType: GraphicEffectType> <mProperties: Expression>
 begin
-	MCCanvasGraphicEffectMakeWithPropertyArray(mType, mProperties)
+	MCCanvasGraphicEffectMakeWithPropertyArray(mType, mProperties, output)
 end syntax
 
 //////////
