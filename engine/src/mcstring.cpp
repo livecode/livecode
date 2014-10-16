@@ -442,6 +442,7 @@ MCNameRef MCM_open_stack;
 MCNameRef MCM_option_key_down;
 MCNameRef MCM_paste_key;
 MCNameRef MCM_play_paused;
+MCNameRef MCM_play_rate_changed;
 MCNameRef MCM_play_started;
 MCNameRef MCM_play_stopped;
 MCNameRef MCM_post_url;
@@ -876,6 +877,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("optionKeyDown", MCM_option_key_down);
 	/* UNCHECKED */ MCNameCreateWithCString("pasteKey", MCM_paste_key);
 	/* UNCHECKED */ MCNameCreateWithCString("playPaused", MCM_play_paused);
+    /* UNCHECKED */ MCNameCreateWithCString("playRateChanged", MCM_play_rate_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("playStarted", MCM_play_started);
 	/* UNCHECKED */ MCNameCreateWithCString("playStopped", MCM_play_stopped);
 	/* UNCHECKED */ MCNameCreateWithCString("postURL", MCM_post_url);
@@ -1309,6 +1311,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_option_key_down);
 	MCNameDelete(MCM_paste_key);
 	MCNameDelete(MCM_play_paused);
+    MCNameDelete(MCM_play_rate_changed);
 	MCNameDelete(MCM_play_started);
 	MCNameDelete(MCM_play_stopped);
 	MCNameDelete(MCM_post_url);

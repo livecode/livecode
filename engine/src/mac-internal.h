@@ -84,12 +84,9 @@ class MCMacPlatformSurface;
 @interface com_runrev_livecode_MCWindow: NSWindow
 {
 	bool m_can_become_key : 1;
-    bool m_is_popup : 1;
-    id m_monitor;
 }
 
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
-- (void)dealloc;
 
 - (void)setCanBecomeKeyWindow: (BOOL)value;
 
@@ -99,22 +96,25 @@ class MCMacPlatformSurface;
 // MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
 - (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
 
-- (void)popupAndMonitor;
 
 @end
 
 @interface com_runrev_livecode_MCPanel: NSPanel
 {
 	bool m_can_become_key : 1;
+    bool m_is_popup : 1;
+    id m_monitor;
 }
 
 - (void)setCanBecomeKeyWindow: (BOOL)value;
+- (void)dealloc;
 
 - (BOOL)canBecomeKeyWindow;
 - (BOOL)makeFirstResponder: (NSResponder *)responder;
 
 // MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
 - (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
+- (void)popupAndMonitor;
 
 @end
 
@@ -379,12 +379,17 @@ public:
 private:
     void Lock(void);
 	void Unlock(void);
+	
+	// IM-2014-10-03: [[ Bug 13432 ]] Convenience method to clear context and clip to the window mask
+	void ApplyMaskToCGContext(void);
     
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
 	MCGRegionRef m_update_rgn;
     
     MCGRaster m_raster;
+	
+	bool m_cg_context_first_lock;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -567,6 +572,27 @@ void MCPlatformFinalizeAbortKey(void);
 
 bool MCPlatformInitializeColorTransform(void);
 void MCPlatformFinalizeColorTransform(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-09-29: [[ Bug 13451 ]] Return the standard colorspace for images on OSX
+bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-10-03: [[ Bug 13432 ]] Store both alpha data and derived cg image in the mask.
+struct MCMacPlatformWindowMask
+{
+	MCGRaster mask;
+	CGImageRef cg_mask;
+	
+	uint32_t references;
+};
+
+// IM-2014-09-30: [[ Bug 13501 ]] Allow system event checking to be enabled/disabled
+void MCMacPlatformEnableEventChecking(void);
+void MCMacPlatformDisableEventChecking(void);
+bool MCMacPlatformIsEventCheckingEnabled(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

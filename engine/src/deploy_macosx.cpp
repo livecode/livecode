@@ -337,6 +337,9 @@ struct load_command {
 #define LC_DYLD_INFO_ONLY 0x80000022
 #define LC_SOURCE_VERSION 0x2A
 
+// MM-2014-09-30: [[ iOS 8 Support ]] Used by iOS 8 simulator builds.
+#define LC_MAIN (0x28|LC_REQ_DYLD) /* replacement for LC_UNIXTHREAD */
+
 /*
  * A variable length string in a load command is represented by an lc_str
  * union.  The strings are stored just after the load command structure and
@@ -881,6 +884,7 @@ static void swap_load_command(bool p_to_network, uint32_t p_type, load_command* 
 		case LC_THREAD:
 		case LC_UNIXTHREAD:
 		case LC_LOAD_DYLINKER:
+		case LC_MAIN:
 			swap_load_command_hdr(p_to_network, *x);
 			break;
 
@@ -962,6 +966,15 @@ static void relocate_function_starts_command(linkedit_data_command *x, int32_t p
 /*static void relocate_encryption_info_command(encryption_info_command *x, int32_t p_file_data, int32_t p_address_delta)
 {
 }*/
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MW-2014-10-02: [[ Bug 13536 ]] iOS Segment alignment has to be 16k now - this
+//   should be made a parameter at some point. Additionally, for FAT binary
+//   generation, the existing alignment in the header should be followed for
+//   binary concatenation.
+#define MACHO_ALIGNMENT 16384
+#define MACHO_ALIGN(x) ((x + MACHO_ALIGNMENT - 1) & ~(MACHO_ALIGNMENT - 1))
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1171,8 +1184,9 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 		t_payload_offset = x_offset + t_output_offset;
 		if (!MCStringIsEmpty(p_params . payload))
 			t_success = MCDeployWritePayload(p_params, p_big_endian, p_output, t_payload_offset, t_payload_size);
+        // MW-2014-10-02: [[ Bug 13536 ]] Use macro to align to required alignment.
 		if (t_success)
-			t_output_offset += (t_payload_size + 4095) & ~4095;
+			t_output_offset += MACHO_ALIGN(t_payload_size);
 	}
 
 	// Write out the project info struct
@@ -1189,7 +1203,8 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 	uint32_t t_old_linkedit_offset, t_old_project_offset, t_old_payload_offset;
 	if (t_success)
 	{
-		t_project_size = (t_project_size + 4095) & ~4095;
+        // MW-2014-10-02: [[ Bug 13536 ]] Use macro to align to required alignment.
+		t_project_size = MACHO_ALIGN(t_project_size);
 		t_old_project_offset = t_project_segment -> fileoff;
 		t_project_segment -> filesize = t_project_size;
 		t_project_segment -> vmsize = t_project_size;
@@ -1197,7 +1212,8 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 
 		if (t_payload_segment != nil)
 		{
-			t_payload_size = (t_payload_size + 4095) & ~4095;
+            // MW-2014-10-02: [[ Bug 13536 ]] Use macro to align to required alignment.
+			t_payload_size = MACHO_ALIGN(t_payload_size);
 			t_old_payload_offset = t_payload_segment -> fileoff;
 			t_payload_segment -> filesize = t_payload_size;
 			t_payload_segment -> vmsize = t_payload_size;
@@ -1258,6 +1274,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 			case LC_VERSION_MIN_MACOSX:
 			case LC_VERSION_MIN_IPHONEOS:
 			case LC_SOURCE_VERSION:
+			case LC_MAIN:
 				break;
 
 			// Any others that are present are an error since we don't know
@@ -1411,7 +1428,8 @@ static bool MCDeployToMacOSXEmbedded(const MCDeployParameters& p_params, bool p_
 	{
 		t_old_project_end_offset = t_project_section -> offset + t_project_section -> size;
 		
-		t_project_size = (t_project_size + 4095) & ~4095;
+        // MW-2014-10-02: [[ Bug 13536 ]] Use macro to align to required alignment.
+		t_project_size = MACHO_ALIGN(t_project_size);
 			
 		int32_t t_file_delta, t_address_delta;
 		t_file_delta = t_project_size - t_project_section -> size;
@@ -1836,88 +1854,7 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 	// Generate the binary.
 	if (t_success)
 		t_success = MCDeployToMacOSXFat(p_params, p_embedded, t_engine, t_output, MCDeployValidateIOSEngine);
-	
-#if 0
-	// Next read in the fat header.
-	fat_header t_fat_header;
-	if (t_success && !MCDeployFileReadAt(t_engine, &t_fat_header, sizeof(fat_header), 0))
-		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoHeader);
-	
-	// Swap the header - note that the 'fat_*' structures are always in network
-	// byte-order.
-	if (t_success)
-		swap_fat_header(true, t_fat_header);
-	
-	// If this isn't a fat binary, then we assume its just a single arch binary.
-	if (t_success && t_fat_header . magic != FAT_MAGIC)
-	{
-		uint32_t t_output_offset;
-		t_output_offset = 0;
-		if (!p_embedded)
-		t_success = MCDeployToMacOSXMain(p_params, false, t_engine, 0, 0, t_output_offset, t_output, MCDeployValidateIOSEngine);
-		else
-			t_success = MCDeployToMacOSXEmbedded(p_params, false, t_engine, 0, 0, t_output_offset, t_output);
-	}
-	else
-	{
-		// The output offset starts at 4096 - the fat header is updated as we go.
-		uint32_t t_output_offset;
-		t_output_offset = 4096;
-		
-		// The fat_arch structures follow the fat header directly
-		uint32_t t_header_offset;
-		t_header_offset = sizeof(fat_header);
-		
-		// Loop through all the fat headers.
-		for(uint32_t i = 0; i < t_fat_header . nfat_arch && t_success; i++)
-		{
-			fat_arch t_fat_arch;
-			if (!MCDeployFileReadAt(t_engine, &t_fat_arch, sizeof(fat_arch), t_header_offset))
-				t_success = MCDeployThrow(kMCDeployErrorMacOSXBadHeader);
-			
-			uint32_t t_last_output_offset;
-			if (t_success)
-			{
-				swap_fat_arch(true, t_fat_arch);
-				
-				// Round the end of the last engine up to the nearest page boundary.
-				t_output_offset = (t_output_offset + 4095) & ~4095;
-				
-				// Record the end of the last engine.
-				t_last_output_offset = t_output_offset;
 
-				// Write out this arch's portion.
-				if (!p_embedded)
-				t_success = MCDeployToMacOSXMain(p_params, false, t_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, t_output, MCDeployValidateIOSEngine);
-				else
-					t_success = MCDeployToMacOSXEmbedded(p_params, false, t_engine, 0, 0, t_output_offset, t_output);
-			}
-			
-			if (t_success)
-			{
-				// Update the fat header.
-				t_fat_arch . offset = t_last_output_offset;
-				t_fat_arch . size = t_output_offset - t_last_output_offset;
-				
-				// Put it back to network byte order.
-				swap_fat_arch(true, t_fat_arch);
-				
-				// Write out the header.
-				t_success = MCDeployFileWriteAt(t_output, &t_fat_arch, sizeof(t_fat_arch), t_header_offset);
-			}
-			
-			t_header_offset += sizeof(fat_arch);
-		}
-		
-		// Final step is to update the fat header.
-		if (t_success)
-		{
-			swap_fat_header(true, t_fat_header);
-			t_success = MCDeployFileWriteAt(t_output, &t_fat_header, sizeof(t_fat_header), 0);
-		}
-	}
-#endif
-	
 	MCDeployFileClose(t_output);
 	MCDeployFileClose(t_engine);
 	

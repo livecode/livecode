@@ -59,8 +59,8 @@ MCWindowShape *MCImage::makewindowshape(void)
 	if (t_success)
 	{
 		surface_extract_alpha(t_bitmap->data, t_bitmap->stride, t_alpha, t_alpha_stride, t_width, t_height);
-		MCPlatformWindowMaskCreate(t_width, t_height, t_alpha_stride, t_alpha, t_mask_image);
-		MCMemoryDeallocate(t_alpha);
+		// IM-2014-10-03: [[ Bug 13432 ]] Pass ownership of alpha buffer to the new mask
+		MCPlatformWindowMaskCreateWithAlphaAndRelease(t_width, t_height, t_alpha_stride, t_alpha, t_mask_image);
 	}
 	
 	if (t_success)

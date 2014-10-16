@@ -140,6 +140,11 @@ enum MCIPhoneApplicationStatus
 
 //////////
 
+// MM-2014-09-30: [[ iOS 8 Support ]] Method called after successully registering (push) notification settings.
+#ifdef __IPHONE_8_0
+- (void)application: (UIApplication *)application didRegisterUserNotificationSettings: (UIUserNotificationSettings *)notificationSettings;
+#endif
+
 //- (void)applicationDidFinishLaunching:(UIApplication *)application;
 - (BOOL)application:(UIApplication *)p_application didFinishLaunchingWithOptions:(NSDictionary *)p_launchOptions;
 - (void)application:(UIApplication *)p_application didReceiveLocalNotification:(UILocalNotification *)p_notification;

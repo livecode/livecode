@@ -90,7 +90,7 @@ MCStack *MCStack::findstackd(Window w)
 	return findstackwindowid(MCscreen->dtouint4((Drawable)w));
 }
 
-void MCStack::openwindow(Boolean p_override)
+void MCStack::platform_openwindow(Boolean p_override)
 {
 	if (MCModeMakeLocalWindows())
 		MCscreen -> openwindow(window, p_override);
