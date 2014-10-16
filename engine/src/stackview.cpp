@@ -127,6 +127,10 @@ void MCStack::view_copy(const MCStack &p_view)
 
 	// IM-2014-01: [[ HiDPI ]] Initialize the view backing surface scale
 	m_view_backing_scale = p_view.m_view_backing_scale;
+
+    // SN-2014-14-10: [[ ViewRect ]] Ensure that the view rect is copied (uninitialised m_view_rect
+    //  might lead to a crash)
+    m_view_rect = p_view.m_view_rect;
 }
 
 void MCStack::view_destroy(void)
