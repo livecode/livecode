@@ -200,6 +200,8 @@ enum MCIPhoneApplicationStatus
 - (MCIPhoneDisplayView *)fetchDisplayView;
 // Returns the main view controller.
 - (UIViewController *)fetchMainViewController;
+// MM-2014-10-15: [[ Bug 13665 ]] Returns the currently active view controller.
+- (UIViewController *)fetchCurrentViewController;
 // Returns the device token that is used for push notificaiton.
 - (const char *)fetchDeviceToken;
 // Returns the URL from which the device was launched.

@@ -896,6 +896,15 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	return m_main_controller;
 }
 
+// MM-2014-10-15: [[ Bug 13665 ]] Returns the currently active view controller.
+- (UIViewController *)fetchCurrentViewController
+{
+    if (m_status == kMCIPhoneApplicationStatusStartup || m_status == kMCIPhoneApplicationStatusPrepare)
+        return m_startup_controller;
+    else
+        return m_main_controller;
+}
+
 - (const char *)fetchDeviceToken
 {
     return m_device_token.getstring ();
@@ -1794,9 +1803,11 @@ UIView *MCIPhoneGetDisplayView(void)
 	return [MCIPhoneGetRootView() displayView];
 }
 
+// MM-2014-10-15: [[ Bug 13665 ]] Return the topmost view controller. This is not necessarily always the main view controller,
+//   could be the startup view controller. Was causing issues when presenting dialogs on startup.
 UIViewController *MCIPhoneGetViewController(void)
 {
-	return [[MCIPhoneApplication sharedApplication] fetchMainViewController];
+    return [[MCIPhoneApplication sharedApplication] fetchCurrentViewController];
 }
 
 void MCIPhoneSetKeyboardType(UIKeyboardType p_type)
