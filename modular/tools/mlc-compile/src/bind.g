@@ -137,7 +137,12 @@
         DefineId(Name, event)
     
     'rule' Define(syntax(Position, _, Name, Class, Syntax, _)):
-        DefineId(Name, syntaxrule(Class, Syntax))
+        Info::SYNTAXRULEINFO
+        Info'Class <- Class
+        Info'Syntax <- Syntax
+        Info'Prefix <- undefined
+        Info'Suffix <- undefined
+        DefineId(Name, syntaxrule(Info))
     
     'rule' Define(nil):
         -- do nothing

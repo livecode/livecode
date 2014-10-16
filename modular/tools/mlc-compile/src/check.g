@@ -213,10 +213,11 @@
         QueryId(Id -> syntaxexpressionlistrule)
         
     'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
-        QueryId(Id -> syntaxrule(phrase, _))
+        QueryId(Id -> syntaxrule(Info))
+        Info'Class -> phrase
         
     'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
-        QueryId(Id -> syntaxrule(_, _))
+        QueryId(Id -> syntaxrule(_))
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToAPhrase(Position, Name)
@@ -720,8 +721,17 @@
             where(SYNTAXTERM'expression -> Prefix)
             where(SYNTAXTERM'expression -> Suffix)
         ||
-            where(Meaning -> syntaxrule(_, Syntax))
-            ComputeSyntaxPrefixAndSuffix(Syntax -> Prefix, Suffix)
+            where(Meaning -> syntaxrule(Info))
+            (|
+                Info'Prefix -> undefined
+                Info'Syntax -> Syntax
+                ComputeSyntaxPrefixAndSuffix(Syntax -> Prefix, Suffix)
+                Info'Prefix <- Prefix
+                Info'Suffix <- Suffix
+            ||
+                Info'Prefix -> Prefix
+                Info'Suffix -> Suffix
+            |)
         ||
             where(SYNTAXTERM'error -> Prefix)
             where(SYNTAXTERM'error -> Suffix)
@@ -755,11 +765,13 @@
         -- optionals are nullable
 
     'rule' SyntaxIsNullable(rule(_, Name)):
-        QueryId(Name -> syntaxrule(_, Syntax))
+        QueryId(Name -> syntaxrule(Info))
+        Info'Syntax -> Syntax
         SyntaxIsNullable(Syntax)
         
     'rule' SyntaxIsNullable(markedrule(_, _, Name)):
-        QueryId(Name -> syntaxrule(_, Syntax))
+        QueryId(Name -> syntaxrule(Info))
+        Info'Syntax -> Syntax
         SyntaxIsNullable(Syntax)
 
     'rule' SyntaxIsNullable(mark(_, _, _)):

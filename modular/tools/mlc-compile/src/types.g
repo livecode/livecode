@@ -15,6 +15,7 @@
     ID IDLIST
     MEANING
     SYNTAXMARKINFO SYNTAXMARKTYPE
+    SYNTAXRULEINFO
     NAME DOUBLE
 
 --------------------------------------------------------------------------------
@@ -180,6 +181,7 @@
     method(Position: POS, Name: ID, Arguments: SYNTAXCONSTANTLIST)
 
 'type' SYNTAXTERM
+    undefined
     error
     mark
     expression
@@ -200,7 +202,7 @@
     property
     event
     parameter
-    syntaxrule(Class: SYNTAXCLASS, Syntax: SYNTAX)
+    syntaxrule(Info: SYNTAXRULEINFO)
     syntaxmark(Info: SYNTAXMARKINFO)
     syntaxexpressionrule
     syntaxexpressionlistrule
@@ -223,9 +225,9 @@
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
 
 'table' SYNTAXMARKINFO(Index: INT, Type: SYNTAXMARKTYPE)
+'table' SYNTAXRULEINFO(Class: SYNTAXCLASS, Syntax: SYNTAX, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
 
-'table' TYPEID(Position: POS)
-'table' SYNTAXID(Position: POS)
+'table' TYPEINFO(Position: POS)
 
 --------------------------------------------------------------------------------
 
