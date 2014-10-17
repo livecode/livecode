@@ -997,10 +997,60 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParamete
 	}
     
     // Find where in the list to insert the pending message.
-    uint32_t t_index;
-    for(t_index = 0; t_index < nmessages; t_index++)
-        if (messages[t_index] . time > time)
-            break;
+    uint32_t t_index, t_rev_index;
+	if (isfinite (time))
+	{
+		/* Normal messages are inserted sorted by delay time.  Search
+		 * from the start of the message list. */
+		for(t_index = 0; t_index < nmessages; t_index++)
+			if (messages[t_index] . time > time)
+				break;
+	}
+	else
+	{
+		/* Idle priority messages have an infinite time value, and are
+		 * inserted at the end of the message list. However, it's not
+		 * permitted to queue the same idle message twice, so it's
+		 * necessary to search (backwards, from the end of the message
+		 * list) to see if the same idle message is already queued. */
+		for (t_rev_index = 0; t_rev_index < nmessages; t_rev_index++)
+		{
+			MCMessageList t_message;
+			t_index = nmessages - t_rev_index - 1;
+
+			/* If we've found a normal message, there was no match, so
+			 * insert the idle message at the end of the message
+			 * queue. */
+			t_message = messages[t_index];
+			if (isfinite (t_message . time))
+			{
+				t_index = nmessages;
+				break;
+			}
+
+			/* Check if the current message name and target object
+			 * matches the one we're trying to add.  If it is, stop
+			 * adding the message.  Instead, replace the parameters of
+			 * the current message with the new parameters, and then
+			 * return the ID of the current message. */
+			if (optr == t_message . object &&
+				MCNameIsEqualTo (mptr, t_message . message))
+			{
+				/* Replace the message parameters */
+				while (t_message . params != NULL)
+				{
+					MCParameter *tmp = t_message.params;
+					t_message.params = t_message.params->getnext();
+					delete tmp;
+				}
+				t_message . params = params;
+
+				/* Return the message id */
+				*r_id = t_message.id;
+				return;
+			}
+		}
+	}
     
     // Move all messages in the range [t_index, nmessages) up one.
     MCMemoryMove(&messages[t_index + 1], &messages[t_index], (nmessages - t_index) * sizeof(MCMessageList));
