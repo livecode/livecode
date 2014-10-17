@@ -394,6 +394,7 @@ enum Functions {
     F_HATON,
     F_HN,
     F_HNTOA,
+	F_IDLE,
     F_INTERRUPT,
     F_INTERSECT,
     F_IS_NUMBER,
@@ -834,6 +835,7 @@ enum Preposition_type {
 	PT_MARKUP,
 	PT_BINARY,
 	PT_COOKIE,
+	PT_WHEN,
 };
 
 enum Print_mode {

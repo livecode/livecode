@@ -1694,6 +1694,9 @@ enum Parse_errors
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
 	// {PE-0551} open: expected 'host'
 	PE_OPEN_NOHOST,
+
+	// {PE-0552} Commands: bad 'when' expression
+	PE_SEND_BADWHEN,
 };
 
 extern const char *MCparsingerrors;

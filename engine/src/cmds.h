@@ -1069,6 +1069,9 @@ class MCMessage : public MCStatement
 	Functions units;
 	Boolean program;
 	Boolean reply;
+	/* when_idle: When true, message should only be dispatched when no
+	 * other messages are awaiting dispatch. */
+	Boolean when_idle;
 protected:
 	Boolean send;
 public:
@@ -1079,6 +1082,7 @@ public:
 		in = NULL;
 		program = False;
 		reply = True;
+		when_idle = False;
 	}
 	virtual ~MCMessage();
 	virtual Parse_stat parse(MCScriptPoint &);

@@ -1183,7 +1183,26 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 			MCperror->add(PE_SEND_BADTARGET, sp);
 			return PS_ERROR;
 		}
-		return gettime(sp, &in, units);
+
+		/* Check for and parse a time clause ("in x units" or "when
+		 * idle") */
+		Parse_stat t_stat;
+		t_stat = sp.skip_token (SP_FACTOR, TT_IN, PT_WHEN);
+		if (t_stat == PS_EOL || t_stat == PS_EOF)
+			return PS_NORMAL;
+		if (t_stat == PS_NORMAL)
+		{
+			/* Found "when", so the next token is required to be
+			 * "idle". */
+			if (sp.skip_token (SP_FACTOR, TT_FUNCTION, F_IDLE) != PS_NORMAL)
+			{
+				MCperror->add (PE_SEND_BADWHEN, sp);
+				return PS_ERROR;
+			}
+			when_idle = True;
+			return PS_NORMAL;
+		}
+		return gettime (sp, &in, units);
 	}
 	return PS_NORMAL;
 }
