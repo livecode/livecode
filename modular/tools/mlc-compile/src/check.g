@@ -255,6 +255,8 @@
 
     'rule' CheckBindingIsConstantSyntaxValue(_, integer(_, _)):
 
+    'rule' CheckBindingIsConstantSyntaxValue(_, real(_, _)):
+
     'rule' CheckBindingIsConstantSyntaxValue(_, string(_, _)):
 
     'rule' CheckBindingIsConstantSyntaxValue(Id, _):
@@ -460,6 +462,8 @@
     'rule' ComputeSyntaxArgumentType(false(_) -> boolean):
 
     'rule' ComputeSyntaxArgumentType(integer(_, _) -> integer):
+
+    'rule' ComputeSyntaxArgumentType(real(_, _) -> real):
         
     'rule' ComputeSyntaxArgumentType(string(_, _) -> string):
 
@@ -734,6 +738,8 @@
             where(Type -> boolean)
         ||
             where(Type -> integer)
+        ||
+            where(Type -> real)
         ||
             where(Type -> string)
         |)

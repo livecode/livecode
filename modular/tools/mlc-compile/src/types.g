@@ -169,6 +169,7 @@
     true(Position: POS)
     false(Position: POS)
     integer(Position: POS, Value: INT)
+    real(Position: POS, Value: DOUBLE)
     string(Position: POS, Value: STRING)
     variable(Position: POS, Name: ID)
     indexedvariable(Position: POS, Name: ID, Index: INT)
@@ -220,6 +221,7 @@
     error
     boolean
     integer
+    real
     string
     phrase
     expression

@@ -6,6 +6,8 @@
 'export'
     IsBootstrapCompile
 
+    NegateReal
+
     InitializePosition
     FinalizePosition
     AdvanceCurrentPosition
@@ -73,6 +75,7 @@
     PushMarkedTrueSyntaxGrammar
     PushMarkedFalseSyntaxGrammar
     PushMarkedIntegerSyntaxGrammar
+    PushMarkedRealSyntaxGrammar
     PushMarkedStringSyntaxGrammar
     BeginSyntaxMappings
     EndSyntaxMappings
@@ -82,6 +85,7 @@
     PushTrueArgumentSyntaxMapping
     PushFalseArgumentSyntaxMapping
     PushIntegerArgumentSyntaxMapping
+    PushRealArgumentSyntaxMapping
     PushStringArgumentSyntaxMapping
     PushMarkArgumentSyntaxMapping
 
@@ -127,6 +131,10 @@
 --------------------------------------------------------------------------------
 
 'condition' IsBootstrapCompile()
+
+--------------------------------------------------------------------------------
+
+'action' NegateReal(DOUBLE -> DOUBLE)
 
 --------------------------------------------------------------------------------
 
@@ -220,6 +228,7 @@
 'action' PushMarkedTrueSyntaxGrammar(Index: INT)
 'action' PushMarkedFalseSyntaxGrammar(Index: INT)
 'action' PushMarkedIntegerSyntaxGrammar(Index: INT, Value: INT)
+'action' PushMarkedRealSyntaxGrammar(Index: INT, Value: DOUBLE)
 'action' PushMarkedStringSyntaxGrammar(Index: INT, Value: STRING)
 
 'action' BeginSyntaxMappings()
@@ -231,6 +240,7 @@
 'action' PushTrueArgumentSyntaxMapping()
 'action' PushFalseArgumentSyntaxMapping()
 'action' PushIntegerArgumentSyntaxMapping(Value: INT)
+'action' PushRealArgumentSyntaxMapping(Value: DOUBLE)
 'action' PushStringArgumentSyntaxMapping(Value: STRING)
 'action' PushMarkArgumentSyntaxMapping(MarkIndex: INT)
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)

@@ -108,6 +108,9 @@
             where(Value -> integer(_, IntValue))
             PushMarkedIntegerSyntaxGrammar(Index, IntValue)
         ||
+            where(Value -> real(_, RealValue))
+            PushMarkedRealSyntaxGrammar(Index, RealValue)
+        ||
             where(Value -> string(_, StringValue))
             PushMarkedStringSyntaxGrammar(Index, StringValue)
         ||
@@ -132,6 +135,9 @@
 
     'rule' GenerateSyntax(SYNTAXCONSTANT'integer(_, Value)):
         PushIntegerArgumentSyntaxMapping(Value)
+
+    'rule' GenerateSyntax(SYNTAXCONSTANT'real(_, Value)):
+        PushRealArgumentSyntaxMapping(Value)
 
     'rule' GenerateSyntax(SYNTAXCONSTANT'string(_, Value)):
         PushStringArgumentSyntaxMapping(Value)

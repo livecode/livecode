@@ -827,6 +827,19 @@
     'rule' Constant(-> integer(Position, Value)):
         "-" INTEGER_LITERAL(-> Value) @(-> Position)
 
+    'rule' Constant(-> integer(Position, Value)):
+        "+" INTEGER_LITERAL(-> Value) @(-> Position)
+
+    'rule' Constant(-> real(Position, Value)):
+        DOUBLE_LITERAL(-> Value) @(-> Position)
+
+    'rule' Constant(-> real(Position, PosValue)):
+        "-" DOUBLE_LITERAL(-> Value) @(-> Position)
+        NegateReal(Value -> PosValue)
+
+    'rule' Constant(-> real(Position, Value)):
+        "+" DOUBLE_LITERAL(-> Value) @(-> Position)
+
     'rule' Constant(-> string(Position, Value)):
         STRING_LITERAL(-> Value) @(-> Position)
 

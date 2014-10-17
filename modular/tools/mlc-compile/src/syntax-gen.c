@@ -20,6 +20,7 @@ enum SyntaxNodeKind
     kSyntaxNodeKindDescent,
     kSyntaxNodeKindBooleanMark,
     kSyntaxNodeKindIntegerMark,
+    kSyntaxNodeKindRealMark,
     kSyntaxNodeKindStringMark,
 };
 
@@ -62,6 +63,11 @@ struct SyntaxNode
             long index;
             long value;
         } boolean_mark, integer_mark;
+        struct
+        {
+            long index;
+            double value;
+        } real_mark;
         struct
         {
             long index;
@@ -269,6 +275,7 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
             
         case kSyntaxNodeKindBooleanMark:
         case kSyntaxNodeKindIntegerMark:
+        case kSyntaxNodeKindRealMark:
         case kSyntaxNodeKindStringMark:
             break;
         case kSyntaxNodeKindConcatenate:
@@ -360,6 +367,7 @@ static void FreeSyntaxNode(SyntaxNodeRef p_node)
         case kSyntaxNodeKindDescent:
         case kSyntaxNodeKindBooleanMark:
         case kSyntaxNodeKindIntegerMark:
+        case kSyntaxNodeKindRealMark:
         case kSyntaxNodeKindStringMark:
             break;
         case kSyntaxNodeKindConcatenate:
@@ -469,6 +477,7 @@ static long CountSyntaxNodeMarks(SyntaxNodeRef p_node)
             break;
         case kSyntaxNodeKindBooleanMark:
         case kSyntaxNodeKindIntegerMark:
+        case kSyntaxNodeKindRealMark:
         case kSyntaxNodeKindStringMark:
             t_index = p_node -> boolean_mark . index;
             break;
@@ -520,6 +529,11 @@ static void PrintSyntaxNode(SyntaxNodeRef p_node)
         case kSyntaxNodeKindIntegerMark:
         {
             printf("<%ld=%ld>", p_node -> boolean_mark . index, p_node -> integer_mark . value);
+        }
+        break;
+        case kSyntaxNodeKindRealMark:
+        {
+            printf("<%ld=%lf>", p_node -> boolean_mark . index, p_node -> real_mark . value);
         }
         break;
         case kSyntaxNodeKindStringMark:
@@ -768,13 +782,23 @@ void PushMarkedIntegerSyntaxGrammar(long p_mark, long p_value)
     PushSyntaxNode(t_node);
 }
 
+void PushMarkedRealSyntaxGrammar(long p_mark, long p_value)
+{
+    SyntaxNodeRef t_node;
+    MakeSyntaxNode(&t_node);
+    t_node -> kind = kSyntaxNodeKindRealMark;
+    t_node -> real_mark . index = p_mark;
+    t_node -> real_mark . value = *(double *)p_value;
+    PushSyntaxNode(t_node);
+}
+
 void PushMarkedStringSyntaxGrammar(long p_mark, const char *p_value)
 {
     NameRef t_name;
     MakeNameLiteral(p_value, &t_name);
     SyntaxNodeRef t_node;
     MakeSyntaxNode(&t_node);
-    t_node -> kind = kSyntaxNodeKindIntegerMark;
+    t_node -> kind = kSyntaxNodeKindStringMark;
     t_node -> string_mark . index = p_mark;
     t_node -> string_mark . value = t_name;
     PushSyntaxNode(t_node);
@@ -812,6 +836,10 @@ void PushFalseArgumentSyntaxMapping(void)
 }
 
 void PushIntegerArgumentSyntaxMapping(long p_value)
+{
+}
+
+void PushRealArgumentSyntaxMapping(double *p_value)
 {
 }
 
@@ -941,12 +969,9 @@ static void GenerateSyntaxRuleTerm(SyntaxNodeRef p_node, struct SyntaxNodeMark *
             }
             break;
         case kSyntaxNodeKindBooleanMark:
-            SetSyntaxNodeMarkAsUsed(p_marks, p_mark_count, p_node -> descent . index, p_node);
-            break;
         case kSyntaxNodeKindIntegerMark:
-            SetSyntaxNodeMarkAsUsed(p_marks, p_mark_count, p_node -> descent . index, p_node);
-            break;
         case kSyntaxNodeKindStringMark:
+        case kSyntaxNodeKindRealMark:
             SetSyntaxNodeMarkAsUsed(p_marks, p_mark_count, p_node -> descent . index, p_node);
             break;
         case kSyntaxNodeKindConcatenate:
@@ -994,6 +1019,9 @@ static void GenerateSyntaxRuleMarks(SyntaxNodeRef p_node, struct SyntaxNodeMark 
             break;
         case kSyntaxNodeKindIntegerMark:
             AddSyntaxNodeMark(x_marks, x_mark_count, p_node -> integer_mark . index, kSyntaxNodeKindIntegerMark);
+            break;
+        case kSyntaxNodeKindRealMark:
+            AddSyntaxNodeMark(x_marks, x_mark_count, p_node -> real_mark . index, kSyntaxNodeKindRealMark);
             break;
         case kSyntaxNodeKindStringMark:
             AddSyntaxNodeMark(x_marks, x_mark_count, p_node -> string_mark . index, kSyntaxNodeKindStringMark);
@@ -1053,6 +1081,10 @@ static void GenerateSyntaxRuleExplicitAndUnusedMarks(SyntaxNodeRef p_node)
                 fprintf(stderr, "    GetUndefinedPosition(-> UndefinedPosition)\n");
                 t_has_pos = 1;
             }
+            if (p_node -> marks[i] . value -> kind == kSyntaxNodeKindRealMark)
+            {
+                fprintf(stderr, "    MakeDoubleLiteral(\"%.18lf\" -> Mark%ldValue)\n", p_node -> marks[i] . value -> real_mark . value, p_node -> marks[i] . index);
+            }
             fprintf(stderr, "    where(");
             switch(p_node -> marks[i] . value -> kind)
             {
@@ -1061,6 +1093,9 @@ static void GenerateSyntaxRuleExplicitAndUnusedMarks(SyntaxNodeRef p_node)
                     break;
                 case kSyntaxNodeKindIntegerMark:
                     fprintf(stderr, "EXPRESSION'integer(UndefinedPosition, %ld)", p_node -> marks[i] . value -> integer_mark . value);
+                    break;
+                case kSyntaxNodeKindRealMark:
+                    fprintf(stderr, "EXPRESSION'real(UndefinedPosition, Mark%ldValue)", p_node -> marks[i] . index);
                     break;
                 case kSyntaxNodeKindStringMark:
                     {

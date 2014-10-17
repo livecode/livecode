@@ -100,6 +100,16 @@ void GetStringOfNameLiteral(NameRef p_literal, const char **r_string)
     *r_string = ((NameRef)p_literal) -> token;
 }
 
+void NegateReal(long p_real, long *r_real)
+{
+    double *t_value;
+    t_value = (double *)malloc(sizeof(double));
+    if (t_value == NULL)
+        Fatal_OutOfMemory();
+    *t_value = -*(double *)p_real;
+    *r_real = (long)t_value;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static void FreeScope(ScopeRef p_scope)
