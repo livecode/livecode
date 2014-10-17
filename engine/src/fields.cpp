@@ -796,7 +796,9 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
         
         // SN-2014-05-12 [[ Bug 12365 ]]
         // Redraw the cursor after the update
-        replacecursor(True, True);
+        // SN-2014-10-17: [[ Bug 13493 ]] Don't replace the cursor - unnecessary and causes
+        //  unwanted scrolling
+//        replacecursor(True, True);
 	}
 
 	return ES_NORMAL;
