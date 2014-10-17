@@ -314,6 +314,8 @@ enum Functions {
     F_BASE_CONVERT,
     F_BASE64_DECODE,
     F_BASE64_ENCODE,
+    // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+    F_BIDI_DIRECTION,
     F_BINARY_DECODE,
     F_BINARY_ENCODE,
     F_BUILD_NUMBER,

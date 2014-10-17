@@ -254,6 +254,14 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
+// AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+class MCBidiDirection : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCStringsEvalBidiDirection, EE_BIDIDIRECTION_BADSOURCE, PE_BIDIDIRECTION_BADPARAM, kMCStringsEvalBidiDirectionMethodInfo>
+{
+public:
+    MCBidiDirection(){}
+    virtual ~MCBidiDirection(){}
+};
+
 class MCBinaryEncode : public MCFunction
 {
 	MCParameter *params;
