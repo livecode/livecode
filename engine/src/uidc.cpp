@@ -984,9 +984,10 @@ void MCUIDC::updatemenubar(Boolean force)
 // MW-2014-04-16: [[ Bug 11690 ]] Pending message list is now sorted by time, all
 //   pending message generation functions use 'doaddmessage()' to insert the
 //   message in the right place.
-void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, MCParameter *params)
+void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params, uint4 *r_id)
 {
     // MW-2014-05-14: [[ Bug 12294 ]] Rejigged to correct flaws.
+	uint4 t_id;
     
     // If we are at capacity, then extend the message list.
 	if (nmessages == maxmessages)
@@ -1004,10 +1005,14 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
     // Move all messages in the range [t_index, nmessages) up one.
     MCMemoryMove(&messages[t_index + 1], &messages[t_index], (nmessages - t_index) * sizeof(MCMessageList));
     
+	/* Allocate and return the next message ID. */
+	t_id = ++messageid;
+	if (r_id != NULL) *r_id = t_id;
+
 	messages[t_index].object = optr;
 	/* UNCHECKED */ MCNameClone(mptr, messages[t_index].message);
 	messages[t_index].time = time;
-	messages[t_index].id = id;
+	messages[t_index].id = t_id;
 	messages[t_index].params = params;
     
     nmessages += 1;
@@ -1057,14 +1062,13 @@ void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStri
 		}
 	}
     
-    doaddmessage(optr, mptr, MCS_time(), ++messageid, params);
+    doaddmessage(optr, mptr, MCS_time(), params, NULL);
 }
 
 void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
 {
     uint4 t_id;
-    t_id = ++messageid;
-    doaddmessage(optr, mptr, time, t_id, params);
+    doaddmessage(optr, mptr, time, params, &t_id);
     
     // MW-2014-05-28: [[ Bug 12463 ]] Previously the result would have been set here which is
     //   incorrect as engine pending messages should not set the result.
@@ -1075,7 +1079,7 @@ void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
     // Remove existing message from the queue.
     cancelmessageobject(optr, mptr);
     
-    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, NULL);
+    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, NULL, NULL);
 }
 
 void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)

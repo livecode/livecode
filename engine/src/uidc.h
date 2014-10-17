@@ -619,7 +619,7 @@ public:
 	void cancelmessageid(uint4 id);
 	void cancelmessageobject(MCObject *optr, MCNameRef name);
     bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
-    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params);
+    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params, uint4 *r_id);
     int doshiftmessage(int index, real8 newtime);
     
     // MW-2014-05-28: [[ Bug 12463 ]] This is used by 'send in time' - separating user sent messages from
