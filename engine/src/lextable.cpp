@@ -632,6 +632,8 @@ LT factor_table[] =
         {"bg", TT_CHUNK, CT_BACKGROUND},
         {"bgbehavior", TT_PROPERTY, P_BACKGROUND_BEHAVIOR},
         {"bgs", TT_CLASS, CT_BACKGROUND},
+        // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+        {"bididirection", TT_FUNCTION, F_BIDI_DIRECTION},
         {"binarydecode", TT_FUNCTION, F_BINARY_DECODE},
         {"binaryencode", TT_FUNCTION, F_BINARY_ENCODE},
         {"bitand", TT_BINOP, O_AND_BITS},
