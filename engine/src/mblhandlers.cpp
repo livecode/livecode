@@ -4337,6 +4337,7 @@ Exec_stat MCHandlePixelDensity(void* context, MCParameter* p_parameters)
 static Exec_stat MCHandleLocationAuthorizationStatus(void *context, MCParameter *p_parameters)
 {
     MCAutoStringRef t_status;
+    MCExecContext ctxt(nil, nil,nil);
 
     MCSensorGetLocationAuthorizationStatus(ctxt, &t_status);
 

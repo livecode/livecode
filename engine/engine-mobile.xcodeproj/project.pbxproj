@@ -544,7 +544,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
-			name = "Copy Files";
 				4CF72F8219DBFEE100B1E89B /* mobile-splashscreen-template.plist in CopyFiles */,
 				4D82FCDB171485DF00C48403 /* Default-568h@2x.png in CopyFiles */,
 				4D82FCF01714877A00C48403 /* mobile-device-template.plist in CopyFiles */,
