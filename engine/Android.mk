@@ -84,7 +84,8 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	exec-interface-vclip.cpp exec-legacy.cpp exec-dialog.cpp exec-keywords.cpp \
 	syntax.cpp \
 	foundation-legacy.cpp legacy_spec.cpp \
-	stacktile.cpp sysunxthreads.cpp)
+	stacktile.cpp sysunxthreads.cpp \
+	widget.cpp widget-events.cpp native-layer.cpp native-layer-android.cpp)
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \

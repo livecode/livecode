@@ -928,6 +928,33 @@ public class Engine extends View implements EngineApi
         m_native_control_module.removeControl(p_control);
     }
 
+    void addNativeView(Object p_view)
+    {
+        View t_view = (View)p_view;
+        
+        FrameLayout t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
+        t_main_view.addView(t_view, new RelativeLayout.LayoutParams(0, 0));
+        t_main_view.bringChildToFront(t_view);
+    }
+
+    void removeNativeView(Object p_view)
+    {
+        View t_view = (View)p_view;
+        
+        ((LiveCodeActivity)getContext()).s_main_layout.removeView(t_view);
+    }
+    
+    void setNativeViewRect(Object p_view, int left, int top, int width, int height)
+    {
+        FrameLayout.LayoutParams t_layout = new FrameLayout.LayoutParams(width, height);
+        t_layout.leftMargin = left;
+        t_layout.topMargin = top;
+
+        View t_view = (View)p_view;
+        
+        t_view.setLayoutParams(t_layout);
+    }
+
     Object createBrowserControl()
     {
         return m_native_control_module.createBrowser();
