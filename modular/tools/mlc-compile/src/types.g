@@ -215,6 +215,7 @@
     nil
 
 'type' SYNTAXMARKTYPE
+    uncomputed
     undefined
     error
     boolean
@@ -222,6 +223,9 @@
     string
     phrase
     expression
+    input
+    output
+    context
 
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
 

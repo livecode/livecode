@@ -125,6 +125,11 @@ DEFINE_ERROR_I(NotBoundToAConstantSyntaxValue, "'%s' must be assigned a constant
 DEFINE_ERROR(TooManyArgumentsPassedToHandler, "Too many arguments for specified handler")
 DEFINE_ERROR(TooFewArgumentsPassedToHandler, "Too few arguments for specified handler")
 DEFINE_ERROR(HandlersBoundToSyntaxMustNotReturnAValue, "Handlers bound to syntax must not return a value")
+DEFINE_ERROR(ConstantSyntaxArgumentMustBindToInParameter, "Constant syntax arguments must bind to in parameter")
+DEFINE_ERROR(ContextSyntaxArgumentMustBindToInParameter, "'context' syntax argument must bind to in parameter")
+DEFINE_ERROR(InputSyntaxArgumentMustBindToInParameter, "'input' syntax argument must bind to in parameter")
+DEFINE_ERROR(OutputSyntaxArgumentMustBindToOutParameter, "'output' syntax argument must bind to out parameter")
+DEFINE_ERROR(PhraseBoundMarkSyntaxArgumentMustBindToInParameter, "Syntax mark argument which is of phrase type must bind to in parameter")
 
 ////////////////////////////////////////////////////////////////////////////////
 

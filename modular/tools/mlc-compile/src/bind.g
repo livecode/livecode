@@ -420,7 +420,7 @@
             LastSyntaxMarkIndexVar -> Index
             MarkInfo::SYNTAXMARKINFO
             MarkInfo'Index <- Index
-            MarkInfo'Type <- undefined
+            MarkInfo'Type <- uncomputed
             where(syntaxmark(MarkInfo) -> Meaning)
             DefineMeaning(Name, Meaning)
             LastSyntaxMarkIndexVar <- Index + 1

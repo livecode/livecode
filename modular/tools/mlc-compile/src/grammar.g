@@ -824,7 +824,7 @@
     'rule' Constant(-> integer(Position, Value)):
         INTEGER_LITERAL(-> Value) @(-> Position)
 
-    'rule' Constant(-> integer(Position, -Value)):
+    'rule' Constant(-> integer(Position, Value)):
         "-" INTEGER_LITERAL(-> Value) @(-> Position)
 
     'rule' Constant(-> string(Position, Value)):

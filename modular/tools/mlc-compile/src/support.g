@@ -118,6 +118,11 @@
     Error_TooFewArgumentsPassedToHandler
     Error_HandlersBoundToSyntaxMustNotReturnAValue
     Error_SyntaxMarkVariableAlreadyDefinedWithDifferentType
+    Error_ConstantSyntaxArgumentMustBindToInParameter
+    Error_ContextSyntaxArgumentMustBindToInParameter
+    Error_InputSyntaxArgumentMustBindToInParameter
+    Error_OutputSyntaxArgumentMustBindToOutParameter
+    Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter
 
 --------------------------------------------------------------------------------
 
@@ -269,5 +274,10 @@
 'action' Error_TooFewArgumentsPassedToHandler(Position: POS)
 'action' Error_HandlersBoundToSyntaxMustNotReturnAValue(Position: POS)
 'action' Error_SyntaxMarkVariableAlreadyDefinedWithDifferentType(Position: POS, Name: NAME)
+'action' Error_ConstantSyntaxArgumentMustBindToInParameter(Position: POS)
+'action' Error_ContextSyntaxArgumentMustBindToInParameter(Position: POS)
+'action' Error_InputSyntaxArgumentMustBindToInParameter(Position: POS)
+'action' Error_OutputSyntaxArgumentMustBindToOutParameter(Position: POS)
+'action' Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter(Position: POS)
 
 --------------------------------------------------------------------------------

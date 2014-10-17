@@ -90,7 +90,6 @@
     --
 
     'rule' CheckBindings(EXPRESSION'slot(_, Name)):
-        print("check slot")
         /* BE1 */ CheckBindingIsVariableOrHandlerId(Name)
 
     'rule' CheckBindings(EXPRESSION'call(_, Handler, Arguments)):
@@ -310,12 +309,13 @@
 --       a) An expression class rule must have one parameter bound to input, or output but not both.
 --       d) A method can bind at most one parameter to context.
 --       *g) A method must have the same number of parameters as arguments.
---       e) A parameter bound to a constant mark must be of 'in' mode.
---       f) A parameter bound to a phrase (descent) mark must be of 'in' mode.
---       h) A parameter bound to context must be of 'in' mode.
---       b) A parameter bound to input must be of 'in' mode.
---       c) A parameter bound to output must be of 'out' mode.
+--       *e) A parameter bound to a constant mark must be of 'in' mode.
+--       *f) A parameter bound to a phrase (descent) mark must be of 'in' mode.
+--       *h) A parameter bound to context must be of 'in' mode.
+--       *b) A parameter bound to input must be of 'in' mode.
+--       *c) A parameter bound to output must be of 'out' mode.
 --       *i) A method bound to syntax must return nothing.
+--       j) Indexed syntax arguments must bind to expressionlist.
 --   S8) Only terminals are allowed in the delimiter section of a repetition. (DONE)
 --   S9) The element section of a repetition must not be nullable. (DONE)
 --   S10) Rules must be of expression type. (DONE - CheckBindings)
@@ -379,7 +379,7 @@
 
     'rule' CheckSyntaxMarkDefinitions(mark(_, Variable, Constant)):
         CheckSyntaxMarkVariableNotDefined(Variable)
-        ComputeSyntaxConstantType(Constant -> Type)
+        ComputeSyntaxArgumentType(Constant -> Type)
         CheckSyntaxMarkVariableType(Variable, Type)
 
     'rule' CheckSyntaxMarkDefinitions(_):
@@ -408,7 +408,7 @@
         Variable'Meaning -> syntaxmark(Info)
         Info'Type -> MarkType
         (|
-            where(MarkType -> undefined)
+            where(MarkType -> uncomputed)
             Info'Type <- Type
         ||
             eq(MarkType, Type)
@@ -433,10 +433,10 @@
     'rule' ComputeSyntaxRuleType(Id -> error):
         QueryId(Id -> error)
 
-    'rule' ComputeSyntaxRuleType(Id -> error):
+    'rule' ComputeSyntaxRuleType(Id -> expression):
         QueryId(Id -> syntaxexpressionrule)
 
-    'rule' ComputeSyntaxRuleType(Id -> error):
+    'rule' ComputeSyntaxRuleType(Id -> expression):
         QueryId(Id -> syntaxexpressionlistrule)
         
     'rule' ComputeSyntaxRuleType(Id -> phrase):
@@ -451,23 +451,37 @@
         QueryId(Id -> Meaning)
         Fatal_InternalInconsistency("Referenced syntax rule bound to non-expression")
 
-'action' ComputeSyntaxConstantType(SYNTAXCONSTANT -> SYNTAXMARKTYPE)
+'action' ComputeSyntaxArgumentType(SYNTAXCONSTANT -> SYNTAXMARKTYPE)
 
-    'rule' ComputeSyntaxConstantType(true(_) -> boolean):
-        --
+    'rule' ComputeSyntaxArgumentType(undefined(_) -> undefined):
 
-    'rule' ComputeSyntaxConstantType(false(_) -> boolean):
-        --
+    'rule' ComputeSyntaxArgumentType(true(_) -> boolean):
 
-    'rule' ComputeSyntaxConstantType(integer(_, _) -> integer):
-        --
+    'rule' ComputeSyntaxArgumentType(false(_) -> boolean):
+
+    'rule' ComputeSyntaxArgumentType(integer(_, _) -> integer):
         
-    'rule' ComputeSyntaxConstantType(string(_, _) -> string):
-        --
+    'rule' ComputeSyntaxArgumentType(string(_, _) -> string):
 
-    'rule' ComputeSyntaxConstantType(Foo -> error):
-        print(Foo)
-        Fatal_InternalInconsistency("Non-constant syntax value present in constant context")
+    'rule' ComputeSyntaxArgumentType(variable(_, Name) -> output):
+        QueryId(Name -> syntaxoutputmark)
+
+    'rule' ComputeSyntaxArgumentType(variable(_, Name) -> input):
+        QueryId(Name -> syntaxinputmark)
+
+    'rule' ComputeSyntaxArgumentType(variable(_, Name) -> context):
+        QueryId(Name -> syntaxcontextmark)
+
+    'rule' ComputeSyntaxArgumentType(variable(_, Name) -> Type):
+        QueryId(Name -> syntaxmark(Info))
+        Info'Type -> Type
+
+    'rule' ComputeSyntaxArgumentType(indexedvariable(_, Name, _) -> Type):
+        QueryId(Name -> syntaxmark(Info))
+        Info'Type -> Type
+        
+    'rule' ComputeSyntaxArgumentType(_ -> error):
+        --
 
 --
 
@@ -700,37 +714,60 @@
         
 'action' CheckSyntaxMethodArgument(POS, PARAMETER, SYNTAXCONSTANT)
 
-    'rule' CheckSyntaxMethodArgument(_, parameter(_, Mode, Name, Type), Argument):
-        --
+    'rule' CheckSyntaxMethodArgument(_, parameter(_, Mode, Name, _), Argument):
+        ComputeSyntaxArgumentType(Argument -> ArgType)
+        Argument'Position -> Position
+        CheckSyntaxMethodArgumentMode(Position, ArgType, Mode)
 
-/*'action' CheckSyntaxMethodArgumentMode(ID, MODE, SYNTAXCONSTANT)
+'action' CheckSyntaxMethodArgumentMode(POS, SYNTAXMARKTYPE, MODE)
 
-    'rule' CheckSyntaxMethodArgumentMode(_, in, undefined(_)):
-        -- fine
+    'rule' CheckSyntaxMethodArgumentMode(Position, error, Mode):
+        -- do nothing
 
-    'rule' CheckSyntaxMethodArgumentMode(_, in, true(_)):
-        -- fine
+    'rule' CheckSyntaxMethodArgumentMode(Position, expression, Mode):
+        -- do nothing
 
-    'rule' CheckSyntaxMethodArgumentMode(_, in, false(_)):
-        -- fine
+    'rule' CheckSyntaxMethodArgumentMode(Position, Type, Mode):
+        (|
+            where(Type -> undefined)
+        ||
+            where(Type -> boolean)
+        ||
+            where(Type -> integer)
+        ||
+            where(Type -> string)
+        |)
+        [|
+            ne(Mode, in)
+            Error_ConstantSyntaxArgumentMustBindToInParameter(Position)
+        |]
+    
+    'rule' CheckSyntaxMethodArgumentMode(Position, context, Mode):
+        [|
+            ne(Mode, in)
+            Error_ContextSyntaxArgumentMustBindToInParameter(Position)
+        |]
 
-    'rule' CheckSyntaxMethodArgumentMode(_, in, integer(_, _)):
-        -- fine
+    'rule' CheckSyntaxMethodArgumentMode(Position, input, Mode):
+        [|
+            ne(Mode, in)
+            Error_InputSyntaxArgumentMustBindToInParameter(Position)
+        |]
 
-    'rule' CheckSyntaxMethodArgumentMode(_, in, string(_, _)):
-        -- fine
-
-    'rule' CheckSyntaxMethodArgumentMode(_, in, variable(_, Name)):
-        QueryId(Name -> syntaxinputmark)
-
-    'rule' CheckSyntaxMethodArgumentMode(_, in, variable(_, Name)):
-        QueryId(Name -> syntaxcontextmark)
-
-    'rule' CheckSyntaxMethodArgumentMode(_, out, variable(_, Name)):
-        QueryId(Name -> syntaxoutputmark)
+    'rule' CheckSyntaxMethodArgumentMode(Position, output, Mode):
+        [|
+            ne(Mode, out)
+            Error_OutputSyntaxArgumentMustBindToOutParameter(Position)
+        |]
         
-    'rule' CheckSyntaxMethodArgumentMode(_, in, variable(_, Name)):
-        --QueryId(Name -> syntaxrule(_))*/
+    'rule' CheckSyntaxMethodArgumentMode(Position, phrase, Mode):
+        [|
+            ne(Mode, in)
+            Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter(Position)
+        |]
+
+    'rule' CheckSyntaxMethodArgumentMode(Position, Type, Mode):
+        print(Type)
 
 ----------
 
