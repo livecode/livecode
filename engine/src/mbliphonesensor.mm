@@ -129,7 +129,8 @@ static int32_t s_location_calibration_timeout = 0;
 #ifdef __IPHONE_8_0
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
 {
-    if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorized)
+    // PM-2014-10-17: Make sure we break the wait condition in case user denies access to Location Services
+    if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorized || status == kCLAuthorizationStatusDenied)
     {
         [s_location_delegate setReady:True];
         MCscreen -> pingwait();
