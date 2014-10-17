@@ -1573,8 +1573,14 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 				if (pgptr == paragraphs)
 					break;
 			}
+            // SN-2014-09-17: [[ Bug 13462 ]] If no break has been found, we return the height of the field
 			if (theight != height)
-				ep.concatuint(height - theight, EC_RETURN, j++ == 0);
+            {
+                if (j)
+                    ep.concatuint(height - theight, EC_RETURN, false);
+                else
+                    ep.concatuint(height, EC_RETURN, true);
+            }
 		}
 		break;
     // JS-2013-05-15: [[ PageRanges ]] Return the pageRanges of the whole field.

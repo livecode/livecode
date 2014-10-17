@@ -189,11 +189,16 @@ private:
         MCPlatformBreakWait();
     else if([keyPath isEqualToString: @"currentItem.loadedTimeRanges"])
     {
-        NSArray *t_time_ranges = (NSArray *)[change objectForKey:NSKeyValueChangeNewKey];
-        if (t_time_ranges && [t_time_ranges count])
+        // PM-2014-10-14: [[ Bug 13650 ]] Do this check to prevent a crash
+        if([change objectForKey:NSKeyValueChangeNewKey] != [NSNull null])
         {
-            CMTimeRange timerange = [[t_time_ranges objectAtIndex:0] CMTimeRangeValue];
-            m_av_player -> MovieIsLoading(timerange);
+            NSArray *t_time_ranges = (NSArray *)[change objectForKey:NSKeyValueChangeNewKey];
+            
+            if (t_time_ranges && [t_time_ranges count])
+            {
+                CMTimeRange timerange = [[t_time_ranges objectAtIndex:0] CMTimeRangeValue];
+                m_av_player -> MovieIsLoading(timerange);
+            }
         }
     }
 }
@@ -876,7 +881,7 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
         
 		CGColorSpaceRef t_colorspace;
-		t_colorspace = CGColorSpaceCreateDeviceRGB();
+		/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_colorspace);
         
 		CGContextRef t_cg_context;
 		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));

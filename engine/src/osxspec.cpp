@@ -554,9 +554,24 @@ void MCS_init()
 
 	MCinfinity = HUGE_VAL;
 
-	long response;
-	if (Gestalt(gestaltSystemVersion, &response) == noErr)
-		MCmajorosversion = response;
+    long response;
+    // SN-2014-10-08: [[ YosemiteUpdate ]] gestaltSystemVersion stops to 9 after any Minor/Bugfix >= 10
+    //  We want to keep the same way the os version is built, which is 0xMMmb
+    //     - MM reads the decimal major version number
+    //     - m  reads the hexadecimal minor version number
+    //     - b  reads the hexadecimal bugfix number.
+	long t_major, t_minor, t_bugfix;
+    if (Gestalt(gestaltSystemVersionMajor, &t_major) == noErr &&
+        Gestalt(gestaltSystemVersionMinor, &t_minor) == noErr &&
+        Gestalt(gestaltSystemVersionBugFix, &t_bugfix) == noErr)
+    {
+        if (t_major < 10)
+            MCmajorosversion = t_major * 0x100;
+        else
+            MCmajorosversion = (t_major / 10) * 0x1000 + (t_major - 10) * 0x100;
+        MCmajorosversion += t_minor * 0x10;
+        MCmajorosversion += t_bugfix * 0x1;
+    }
 		
 	MCaqua = True;
 	

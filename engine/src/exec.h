@@ -5154,6 +5154,8 @@ extern MCExecMethodInfo *kMCSensorGetDetailedRotationRateOfDeviceMethodInfo;
 extern MCExecMethodInfo *kMCSensorGetRotationRateOfDeviceMethodInfo;
 extern MCExecMethodInfo *kMCSensorGetLocationCalibrationMethodInfo;
 extern MCExecMethodInfo *kMCSensorSetLocationCalibrationMethodInfo;
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+extern MCExecMethodInfo *kMCSensorSetLocationAuthorizationStatusMethodInfo;
 
 void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely);
 void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor);
@@ -5168,6 +5170,8 @@ void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_
 void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotation_rate);
 void MCSensorSetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t p_timeout);
 void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeout);
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+void MCSensorGetLocationAuthorizationStatus(MCExecContext& ctxt, MCStringRef &r_status);
 
 //////////
 

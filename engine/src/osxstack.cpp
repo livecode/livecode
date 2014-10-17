@@ -167,7 +167,7 @@ void MCStack::clearscroll(void)
 	syncscroll();
 }
 
-void MCStack::openwindow(Boolean p_override)
+void MCStack::platform_openwindow(Boolean p_override)
 {
 	if (MCModeMakeLocalWindows() && window != NULL)
 		MCscreen -> openwindow(window, p_override);

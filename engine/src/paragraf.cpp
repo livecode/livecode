@@ -4296,6 +4296,11 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 {
 	if (lptr == NULL)
 		lptr = lines;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph
+    if (attrs != nil)
+        theight -= attrs -> space_above;
+    
 	do
 	{
 		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
@@ -4306,6 +4311,12 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 	}
 	while (lptr != lines);
 	lptr = NULL;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph.
+    // There is no failure for this paragraph if only the space below does not fit in the field
+    if (attrs != nil)
+        theight = MCU_max(((int32_t)theight) - attrs -> space_below, 0);
+    
 	return True;
 }
 

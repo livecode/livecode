@@ -576,8 +576,10 @@ Boolean MCStack::takewindow(MCStack *sptr)
 #ifdef _MOBILE
     // MW-2014-03-14: [[ Bug 11813 ]] Make sure we tell MCScreenDC that the top window
     //   has changed, and mark our stack as its own window.
-    MCscreen -> openwindow((Window)this, False);
+	// IM-2014-09-23: [[ Bug 13349 ]] Reset mobile window back to this stack, then call openwindow()
+	//   to perform any shared window initialisation.
     window = (Window)this;
+	openwindow(False);
 #endif
     
 	return True;
@@ -2376,18 +2378,23 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	
 	MCCard *startcard = curcard;
 
-	// MW-2011-08-19: [[ Redraw ]] Reset the update region.
-	view_reset_updates();
-	setstate(False, CS_NEED_REDRAW);
-
+	// IM-2014-09-23: [[ Bug 13349 ]] Store the lockscreen state to restore once the rest of the state is saved.
+	uint16_t t_lock_screen;
+	MCRedrawSaveLockScreen(t_lock_screen);
+	
 	// MW-2011-08-18: [[ Redraw ]] Make sure we don't save our lock.
 	MCRedrawUnlockScreen();
 	MCSaveprops sp;
 	MCU_saveprops(sp);
-	MCRedrawLockScreen();
+	
+	MCRedrawRestoreLockScreen(t_lock_screen);
 
 	if (mode >= WM_MODELESS)
+	{
+		// IM-2014-09-23: [[ Bug 13349 ]] Restore lockscreen with other props.
 		MCU_resetprops(True);
+		MCRedrawRestoreLockScreen(t_lock_screen);
+	}
 	trect = rect;
 	
 	// "bind" the stack's rect... Or in other words, make sure its within the 
@@ -2655,7 +2662,12 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		t_restore_props = mode >= WM_MODELESS;
 	}
 	if (t_restore_props)
+	{
+		// IM-2014-09-23: [[ Bug 13349 ]] Restore lockscreen with other props.
 		MCU_restoreprops(sp);
+		MCRedrawRestoreLockScreen(t_lock_screen);
+		MCRedrawUnlockScreen();
+	}
 	if (reopening)
 		MClockmessages = oldlock;
 	return ES_NORMAL;

@@ -534,6 +534,7 @@ static sysfolders sysfolderlist[] = {
     // MW-2007-09-11: Added for uniformity across platforms
     {&MCN_documents, 'docs', kUserDomain, 'docs'},
     // MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
+    // FG-2014-09-26: [[ Bug 13523 ]] This entry must not match a request for "asup"
     {&MCN_support, 0, kUserDomain, 'asup'},
 };
 
@@ -5474,31 +5475,42 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             t_found_folder = false;
             
             uint4 t_mac_folder;
+            t_mac_folder = 0;
             if (p_context . getsvalue() . getlength() == 4)
             {
                 memcpy(&t_mac_folder, p_context . getsvalue() . getstring(), 4);
                 t_mac_folder = MCSwapInt32NetworkToHost(t_mac_folder);
             }
-            else
+            else if (p_context . getsvalue() == "engine")
+            {
+                extern char *MCcmd;
+                char* t_folder;
+                t_folder_path = my_strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+
                 t_mac_folder = 0;
+                t_found_folder = true;
+            }
 			
             OSErr t_os_error;
             uint2 t_i;
-            for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
-                if (p_context . getsvalue() == sysfolderlist[t_i] . token || t_mac_folder == sysfolderlist[t_i] . macfolder)
-                {
-                    Boolean t_create_folder;
-                    t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
-                    
-                    // MW-2012-10-10: [[ Bug 10453 ]] Use the 'mactag' field for the folder id as macfolder can be
-                    //   zero.
-                    t_os_error = FSFindFolder(sysfolderlist[t_i] . domain, sysfolderlist[t_i] . mactag, t_create_folder, &t_folder_ref);
-                    if (t_os_error == noErr)
+            if (!t_found_folder)
+            {
+                for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
+                    if (p_context . getsvalue() == sysfolderlist[t_i] . token || t_mac_folder == sysfolderlist[t_i] . macfolder)
                     {
-                        t_found_folder = true;
-                        break;
+                        Boolean t_create_folder;
+                        t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
+
+                        // MW-2012-10-10: [[ Bug 10453 ]] Use the 'mactag' field for the folder id as macfolder can be
+                        //   zero.
+                        t_os_error = FSFindFolder(sysfolderlist[t_i] . domain, sysfolderlist[t_i] . mactag, t_create_folder, &t_folder_ref);
+                        if (t_os_error == noErr)
+                        {
+                            t_found_folder = true;
+                            break;
+                        }
                     }
-                }
+            }
             
             if (!t_found_folder && p_context . getsvalue() . getlength() == 4)
             {
@@ -5511,16 +5523,16 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             if (!t_found_folder)
                 t_error = "folder not found";
         }
-		
-        char *t_folder_path;
-        t_folder_path = NULL;
-        if (t_error == NULL)
+
+
+        // SN-2014-07-30: [[ Bug 13026 ]] If the engine was asked, the folder path is directly set
+        if (t_error == NULL && t_folder_path == NULL)
         {
             t_folder_path = MCS_fsref_to_path(t_folder_ref);
             if (t_folder_path == NULL)
                 t_error = "folder not found";
         }
-        
+
         if (t_error == NULL)
             p_context . copysvalue(t_folder_path, strlen(t_folder_path));
         else
@@ -5528,7 +5540,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             p_context . clear();
             MCresult -> sets(t_error);
         }
-        
+
         delete t_folder_path;
 #endif /* MCS_getspecialfolder_dsk_mac */
         uint32_t t_mac_folder = 0;

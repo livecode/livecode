@@ -1,0 +1,1 @@
+# Manifest file not needed in standalone bundle

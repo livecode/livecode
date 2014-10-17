@@ -318,7 +318,14 @@ void MCMacPlatformUnlockMenuSelect(void)
 	// Otherwise, we lock menuSelect firing, and propagate a keydown/keyup.
 	BOOL t_key_equiv;
 	MCMacPlatformLockMenuSelect();
-	t_key_equiv = [super performKeyEquivalent: event];
+    
+    // SN-2014-09-30: [[ Bug 13510 ]] We don't want to fire the Cmd+Q key equivalent, which
+    // would call applicationShouldTerminate.
+    if ([[event characters] compare:@"q" options:NSCaseInsensitiveSearch] != NSOrderedSame)
+        t_key_equiv = [super performKeyEquivalent: event];
+    else
+        t_key_equiv = YES;
+    
 	MCMacPlatformUnlockMenuSelect();
 	
     BOOL t_force_keypress;
@@ -713,6 +720,10 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 	//
 	NSString *t_app_name;
 	t_app_name = (NSString *)[[[NSBundle mainBundle] infoDictionary] objectForKey: (NSString *)kCFBundleNameKey];
+    
+    // SN-2014-10-14: [[ Bug 13662 ]] We use the process name if the app is not in a bundle
+    if (t_app_name == nil)
+        t_app_name = [[NSProcessInfo processInfo] processName];
 	
 	NSMenu *t_services_menu;
 	t_services_menu = [[NSMenu alloc] initWithTitle: NSLocalizedString(@"Services", nil)];

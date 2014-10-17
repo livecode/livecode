@@ -1310,7 +1310,9 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 			        && MCeventtime - clicktime < OPTION_TIME)
 				return True;
 			else
-				if (menumode == WM_PULLDOWN && MCU_point_in_rect(rect, mx, my))
+                // SN-2014-10-02: [[ Bug 13539 ]] Only consider the mouse location if we are
+                //   sure that the coordinates are related to the stack, not the pulldown menu
+				if (menumode == WM_PULLDOWN && MCmousestackptr == getstack() && MCU_point_in_rect(rect, mx, my))
 				{
 					if (state & CS_MOUSE_UP_MENU)
 					{

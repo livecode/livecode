@@ -924,6 +924,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\color.cpp"
+				>
+			</File>
+			<File
 				RelativePath="src\combiners.cpp"
 				>
 			</File>
