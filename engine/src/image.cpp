@@ -1675,7 +1675,22 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		t_length += s_control_color_count * 3 * sizeof(uint16_t);
 		for (uint16_t i = 0; i < s_control_color_count; i++)
 			if (s_control_color_names[i] != nil)
-				t_length += MCStringGetLength(s_control_color_names[i]) + 1;
+            {
+                // FG-2014-10-17: [[ Bugfix 13706 ]]
+                // Calculate the correct size for 7.0+ style strings
+                if (MCstackfileversion < 7000)
+                    // Pre-7.0, strings are written as nul-terminated byte sequence
+                    t_length += MCStringGetLength(s_control_color_names[i]) + 1;
+                else
+                {
+                    // In 7.0, strings are written as 32-bit length value followed
+                    // by UTF-8 encoded string data. This is inefficient but is
+                    // necessary for getting the length correct.
+                    MCAutoStringRefAsUTF8String t_as_utf8;
+                    t_as_utf8.Lock(s_control_color_names[i]);
+                    t_length += t_as_utf8.Size() + 4;
+                }
+            }
 			else
 				t_length += 1;
 	
@@ -1733,7 +1748,7 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
-
+    
 	if (p_remaining >= 1)
 	{
 		t_stat = p_stream . ReadU8(resizequality);
@@ -1746,7 +1761,7 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	{
 		uint4 t_flags, t_length, t_header_length;
 		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
-
+        
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . Mark();
 		
