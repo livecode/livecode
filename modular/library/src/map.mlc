@@ -118,7 +118,7 @@ end syntax
 /*
 
 Summary:            Designates the element with key <Key> in <Target>.
-Index: 				An expression which evaluates to an integer, string, or list of integers.
+Key: 				An expression which evaluates to an integer, string, or list of integers.
 Target:				An expression which evaluates to a map.
 output:             Either locates the element container with the given key for use as the target 
                     container of another operation, or evaluates the element with the given key 
