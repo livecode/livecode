@@ -101,6 +101,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcard, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegex, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcardIntoIt, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegexIntoIt, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, BidiDirection, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2276,3 +2277,19 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
     
     t_sorted . Take(r_sorted_array, r_sorted_count);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+void MCStringsEvalBidiDirection(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_result)
+{
+    bool t_ltr;
+    t_ltr = MCStringResolvesLeftToRight(p_string);
+    
+    if (MCStringCreateWithCString(t_ltr ? "ltr" : "rtl", r_result))
+        return;
+    
+    ctxt . Throw();
+}
+
+////////////////////////////////////////////////////////////////////////////////

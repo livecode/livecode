@@ -2126,6 +2126,7 @@ extern MCExecMethodInfo *kMCStringsExecFilterWildcardMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterRegexMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterWildcardIntoItMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterRegexIntoItMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalBidiDirectionMethodInfo;
 
 extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByRangeMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByExpressionMethodInfo;
@@ -2227,6 +2228,8 @@ void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_string, bool& r_resu
 void MCStringsEvalIsNotAscii(MCExecContext& ctxt, MCValueRef p_string, bool& r_result);
 
 void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count);
+
+void MCStringsEvalBidiDirection(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_result);
 
 void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_eval_mutable, MCStringRef& x_string);
 void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, bool p_eval_mutable, MCStringRef &x_string);

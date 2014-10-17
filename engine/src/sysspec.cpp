@@ -1737,7 +1737,7 @@ void MCS_unloadmodule(MCSysModuleHandle p_module)
 }
 
 // TODO: move somewhere better
-#ifdef _LINUX_DESKTOP
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
 MCLocaleRef MCS_getsystemlocale()
 {
     // TODO: implement properly
