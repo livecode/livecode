@@ -57,6 +57,13 @@ foreign handler EvalNumberIsLessThanOrEqualToNumber(in Left as number, in Right 
 
 --
 
+/*
+Summary:    Adds <Value> to <Target>.
+Target:     An expression that evaluates to a numeric container.
+Value:      An expression that evaluates to a number.   
+
+*/
+
 syntax AddNumberTo is statement
     "add" <Value: Expression> "to" <Target: Expression>
 begin
@@ -64,6 +71,14 @@ begin
     ExecAddRealToReal(Value, Target)
     ExecAddNumberToNumber(Value, Target)
 end syntax
+
+
+/*
+Summary:    Subtracts <Value> from <Target>.
+Target:     An expression that evaluates to a numeric container.
+Value:      An expression that evaluates to a number.   
+
+*/
 
 syntax SubtractNumberFrom is statement
     "subtract" <Value: Expression> "from" <Target: Expression>
@@ -73,6 +88,13 @@ begin
     ExecSubtractNumberFromNumber(Value, Target)
 end syntax
 
+/*
+Summary:    Multiplies <Target> by <Value>.
+Target:     An expression that evaluates to a numeric container.
+Value:      An expression that evaluates to a number.   
+
+*/
+
 syntax MultiplyNumberBy is statement
     "multiply" <Value: Expression> "by" <Target: Expression>
 begin
@@ -80,6 +102,13 @@ begin
     ExecMultiplyRealByReal(Value, Target)
     ExecMultiplyNumberByNumber(Value, Target)
 end syntax
+
+/*
+Summary:    Divides <Target> by <Value>.
+Target:     An expression that evaluates to a numeric container.
+Value:      An expression that evaluates to a number.   
+
+*/
 
 syntax DivideNumberBy is statement
     "divide" <Value: Expression> "by" <Target: Expression>
@@ -91,6 +120,13 @@ end syntax
 
 --
 
+/*
+Summary:    Unary plus operator.
+Operand:    An expression that evaluates to a number.
+output:     The result of evaluating <Operand>.
+
+*/
+
 syntax PlusUnaryOperator is prefix operator with precedence 1
     "+" <Operand: Expression>
 begin
@@ -98,6 +134,13 @@ begin
     EvalPlusReal(Operand, output)
     EvalPlusNumber(Operand, output)
 end syntax
+
+/*
+Summary:    Unary minus operator.
+Operand:    An expression that evaluates to a number.
+output:     The negated result of evaluating <Operand>.
+
+*/
 
 syntax MinusUnaryOperator is prefix operator with precedence 1
     "-" <Operand: Expression>
@@ -109,6 +152,13 @@ end syntax
 
 --
 
+/*
+Summary:    Binary plus operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     The result of adding the numbers <Left> and <Right>.
+*/
+
 syntax PlusOperator is left binary operator with precedence 2
     <Left: Expression> "+" <Right: Expression>
 begin
@@ -116,6 +166,13 @@ begin
     EvalRealPlusReal(Left, Right, output)
     EvalNumberPlusNumber(Left, Right, output)
 end syntax
+
+/*
+Summary:    Binary minus operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     The result of subtracting the number <Right> from <Left>.
+*/
 
 syntax MinusOperator is left binary operator with precedence 2
     <Left: Expression> "-" <Right: Expression>
@@ -125,6 +182,13 @@ begin
     EvalNumberPlusNumber(Left, Right, output)
 end syntax
 
+/*
+Summary:    Binary multiplication operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     The result of multiplying the numbers <Left> and <Right>.
+*/
+
 syntax TimesOperator is left binary operator with precedence 1
     <Left: Expression> "*" <Right: Expression>
 begin
@@ -132,6 +196,13 @@ begin
     EvalRealTimesReal(Left, Right, output)
     EvalNumberTimesNumber(Left, Right, output)
 end syntax
+
+/*
+Summary:    Binary division operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     The result of dividing the number <Left> by <Right>.
+*/
 
 syntax OverOperator is left binary operator with precedence 1
     <Left: Expression> "/" <Right: Expression>
@@ -143,6 +214,13 @@ end syntax
 
 --
 
+/*
+Summary:    Mod operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     The remainder on dividing <Left> by <Right>.
+*/
+
 syntax ModOperator is neutral binary operator with precedence 1
     <Left: Expression> "mod" <Right: Expression>
 begin
@@ -150,6 +228,12 @@ begin
     EvalRealModReal(Left, Right, output)
     EvalNumberModNumber(Left, Right, output)
 end syntax
+
+/*
+Summary:    Wrap operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+*/
 
 syntax WrapOperator is neutral binary operator with precedence 1
     <Left: Expression> "wrap" <Right: Expression>
@@ -161,6 +245,13 @@ end syntax
 
 --
 
+/*
+Summary:    Greater than relation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     True if <Left> is greater than <Right>, and false otherwise.
+*/
+
 syntax IsGreaterThan is neutral binary operator with precedence 3
     <Left: Expression> ">" <Right: Expression>
 begin
@@ -168,6 +259,13 @@ begin
     EvalRealIsGreaterThanReal(Left, Right, output)
     EvalNumberIsGreaterThanNumber(Left, Right, output)
 end syntax
+
+/*
+Summary:    Greater than or equal to relation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     True if <Left> is greater than or equal to <Right>, and false otherwise.
+*/
 
 syntax IsGreaterThanOrEqualTo is neutral binary operator with precedence 3
     <Left: Expression> ">=" <Right: Expression>
@@ -177,6 +275,13 @@ begin
     EvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output)
 end syntax
 
+/*
+Summary:    Less than relation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     True if <Left> is less than <Right>, and false otherwise.
+*/
+
 syntax IsLessThan is neutral binary operator with precedence 3
     <Left: Expression> "<" <Right: Expression>
 begin
@@ -184,6 +289,14 @@ begin
     EvalRealIsLessThanReal(Left, Right, output)
     EvalNumberIsLessThanNumber(Left, Right, output)
 end syntax
+
+/*
+Summary:    Less than or equal to relation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     True if <Left> is less than or equal to <Right>, and false otherwise.
+*/
+
 
 syntax IsLessThanOrEqualTo is neutral binary operator with precedence 3
     <Left: Expression> "<=" <Right: Expression>
