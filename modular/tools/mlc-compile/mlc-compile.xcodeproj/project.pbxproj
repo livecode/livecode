@@ -191,6 +191,7 @@
 		4DE027CF19EE9702004485C9 /* char-chunk.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "char-chunk.mlc"; path = "../../library/src/char-chunk.mlc"; sourceTree = "<group>"; };
 		4DE027D019EE9702004485C9 /* list.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = list.mlc; path = ../../library/src/list.mlc; sourceTree = "<group>"; };
 		4DE027D119EE9A89004485C9 /* grammar-examples.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "grammar-examples.mlc"; sourceTree = "<group>"; };
+		4DE027DF19F104FB004485C9 /* generate.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = generate.g; path = src/generate.g; sourceTree = SOURCE_ROOT; };
 		4DEB63ED19E5220E009DF2EA /* report.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = report.h; path = src/report.h; sourceTree = SOURCE_ROOT; };
 		4DEB63EE19E525F2009DF2EA /* literal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = literal.c; path = src/literal.c; sourceTree = SOURCE_ROOT; };
 		4DEB63F119E52842009DF2EA /* report.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = report.c; path = src/report.c; sourceTree = SOURCE_ROOT; };
@@ -282,6 +283,7 @@
 		4D6F070D19CC36DD00DDC6E0 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				4DE027DF19F104FB004485C9 /* generate.g */,
 				4DEB63F419E52EEB009DF2EA /* support.g */,
 				4D3AA08219CC3EA600886BE7 /* types.g */,
 				4D6F072719CC386B00DDC6E0 /* grammar.g */,
@@ -500,6 +502,7 @@
 				"$(SRCROOT)/src/support.g",
 				"$(SRCROOT)/src/syntax.g",
 				"$(SRCROOT)/src/check.g",
+				"$(SRCROOT)/src/generate.g",
 			);
 			name = Gentle;
 			outputPaths = (
@@ -513,10 +516,11 @@
 				"$(SRCROOT)/src/_GG_/support.c",
 				"$(SRCROOT)/src/_GG_/syntax.c",
 				"$(SRCROOT)/src/_GG_/check.c",
+				"$(SRCROOT)/src/_GG_/generate.c",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\nmkdir -p \"_GG_\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" support.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" grammar.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\nmv \"_GG_/gen.h\" \"_GG_/gen-bootstrap.h\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" types.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" bind.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" check.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" syntax.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "cd src\nmkdir -p \"_GG_\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" support.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" grammar.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\nmv \"_GG_/gen.h\" \"_GG_/gen-bootstrap.h\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" types.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" bind.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" check.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" syntax.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" generate.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
 		4D21B65E19E43BE100B64BEF /* Reflex */ = {
@@ -598,6 +602,7 @@
 				"$(SRCROOT)/src/bind.g",
 				"$(SRCROOT)/src/check.g",
 				"$(SRCROOT)/src/syntax.g",
+				"$(SRCROOT)/src/generate.g",
 			);
 			name = Gentle;
 			outputPaths = (
@@ -610,10 +615,11 @@
 				"$(SRCROOT)/src/_G_/bind.c",
 				"$(SRCROOT)/src/_G_/check.c",
 				"$(SRCROOT)/src/_G_/syntax.c",
+				"$(SRCROOT)/src/_G_/generate.c",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" grammar_full.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\nmv \"_G_/gen.h\" \"_G_/gen-full.h\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" types.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" bind.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" check.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" syntax.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" grammar_full.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\nmv \"_G_/gen.h\" \"_G_/gen-full.h\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" types.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" bind.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" check.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" syntax.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" generate.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
 		4DA53A1E19E43CD70089FBDC /* Bootstrap */ = {
@@ -631,7 +637,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/mlc-bootstrap-compile\" -bootstrap -template \"${SRCROOT}/src/grammar.g\" -output \"${SRCROOT}/src/grammar_full.g\" \"${SRCROOT}/../../library/src/string.mlc\" \"${SRCROOT}/../../library/src/binary.mlc\" \"${SRCROOT}/../../library/src/type.mlc\" \"${SRCROOT}/../../library/src/arithmetic.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/mlc-bootstrap-compile\" -bootstrap -template \"${SRCROOT}/src/grammar.g\" -output \"${SRCROOT}/src/grammar_full.g\" \"${SRCROOT}/../../library/src/string.mlc\" \"${SRCROOT}/../../library/src/binary.mlc\" \"${SRCROOT}/../../library/src/type.mlc\" \"${SRCROOT}/../../library/src/arithmetic.mlc\" \"${SRCROOT}/../../library/src/canvas.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

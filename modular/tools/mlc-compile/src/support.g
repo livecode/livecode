@@ -89,6 +89,37 @@
     PushStringArgumentSyntaxMapping
     PushMarkArgumentSyntaxMapping
 
+    EmitBeginModule
+    EmitEndModule
+    EmitDeclaration
+    EmitModuleDependency
+    EmitImportedType
+    EmitImportedConstant
+    EmitImportedVariable
+    EmitImportedHandler
+    EmitTypeDefinition
+    EmitVariableDefinition
+    EmitBeginHandlerDefinition
+    EmitEndHandlerDefinition
+    EmitForeignHandlerDefinition
+    EmitNamedType
+    EmitPointerType
+    EmitBoolType
+    EmitIntType
+    EmitUIntType
+    EmitFloatType
+    EmitDoubleType
+    EmitAnyType
+    EmitBooleanType
+    EmitIntegerType
+    EmitRealType
+    EmitNumberType
+    EmitStringType
+    EmitDataType
+    EmitArrayType
+    EmitListType
+    EmitUndefinedType
+
     ErrorsDidOccur
     Fatal_OutOfMemory
     Fatal_InternalInconsistency
@@ -244,6 +275,44 @@
 'action' PushStringArgumentSyntaxMapping(Value: STRING)
 'action' PushMarkArgumentSyntaxMapping(MarkIndex: INT)
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
+
+--------------------------------------------------------------------------------
+
+'action' EmitBeginModule(Name: NAME -> Index: INT)
+'action' EmitEndModule()
+
+'action' EmitModuleDependency(Name: NAME -> Index: INT)
+
+'action' EmitImportedType(Name: NAME, TypeIndex: INT -> Index: INT)
+'action' EmitImportedConstant(Name: NAME, TypeIndex: INT -> Index: INT)
+'action' EmitImportedVariable(Name: NAME, TypeIndex: INT -> Index: INT)
+'action' EmitImportedHandler(Name: NAME, TypeIndex: INT -> Index: INT)
+
+'action' EmitDeclaration(-> Index: INT)
+
+'action' EmitTypeDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
+'action' EmitVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
+'action' EmitBeginHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
+'action' EmitEndHandlerDefinition()
+'action' EmitForeignHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, Binding: STRING)
+
+'action' EmitNamedType(INT -> INT)
+'action' EmitPointerType(-> INT)
+'action' EmitBoolType(-> INT)
+'action' EmitIntType(-> INT)
+'action' EmitUIntType(-> INT)
+'action' EmitFloatType(-> INT)
+'action' EmitDoubleType(-> INT)
+'action' EmitAnyType(-> INT)
+'action' EmitBooleanType(-> INT)
+'action' EmitIntegerType(-> INT)
+'action' EmitRealType(-> INT)
+'action' EmitNumberType(-> INT)
+'action' EmitStringType(-> INT)
+'action' EmitDataType(-> INT)
+'action' EmitArrayType(-> INT)
+'action' EmitListType(-> INT)
+'action' EmitUndefinedType(-> INT)
 
 --------------------------------------------------------------------------------
 
