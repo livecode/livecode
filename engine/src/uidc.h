@@ -456,7 +456,7 @@ public:
 	virtual uint2 querymods();
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
     virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
-    virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
+    virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params, uint4 *r_id = NULL);
     virtual void delaymessage(MCObject *optr, MCNameRef name, MCStringRef p1 = nil, MCStringRef p2 = nil);
 	
 	// Wait for at most 'duration' seconds. If 'dispatch' is true then event

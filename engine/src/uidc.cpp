@@ -1065,10 +1065,9 @@ void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStri
     doaddmessage(optr, mptr, MCS_time(), params, NULL);
 }
 
-void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
+void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params, uint4 *r_id)
 {
-    uint4 t_id;
-    doaddmessage(optr, mptr, time, params, &t_id);
+    doaddmessage(optr, mptr, time, params, r_id);
     
     // MW-2014-05-28: [[ Bug 12463 ]] Previously the result would have been set here which is
     //   incorrect as engine pending messages should not set the result.
@@ -1165,14 +1164,16 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 //   limit as they definitely do not have a double-propagation problem that could cause engine lock-up.
 bool MCUIDC::addusermessage(MCObject* optr, MCNameRef name, real8 time, MCParameter *params)
 {
+	uint4 t_id;
+
     if (nmessages >= 65536)
         return false;
     
-    addmessage(optr, name, time, params);
+    addmessage(optr, name, time, params, &t_id);
     
     // MW-2014-05-28: [[ Bug 12463 ]] Set the result to the pending message id.
 	char buffer[U4L];
-	sprintf(buffer, "%u", messageid);
+	sprintf(buffer, "%u", t_id);
 	MCresult->copysvalue(buffer);
     
     return true;

@@ -489,10 +489,10 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 	return value;
 }
 
-void MCScreenDC::addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params)
+void MCScreenDC::addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params, uint4 *r_id)
 {
 	WaitForSingleObject(mutex, 1000);
-	MCUIDC::addmessage(optr, name, time, params);
+	MCUIDC::addmessage(optr, name, time, params, r_id);
 	ReleaseMutex(mutex);
 	PostMessageA(invisiblehwnd, WM_USER, 0, 0);
 }
