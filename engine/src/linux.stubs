@@ -297,8 +297,11 @@ gdk libgdk-x11-2.0.so.0
 	gdk_window_set_skip_pager_hint: (pointer, integer) -> ()
 	gdk_window_constrain_size: (pointer, integer, integer, integer, pointer, pointer) -> ()
 	gdk_window_unmaximize: (pointer) -> ()
-	
+	gdk_window_restack: (pointer, pointer, integer) -> ()	
 	gdk_window_reparent: (pointer, pointer, integer, integer) -> ()
+	gdk_window_is_viewable: (pointer) -> (integer)
+	gdk_cairo_set_source_window: (pointer, pointer, double, double) -> ()
+	gdk_window_input_shape_combine_region: (pointer, pointer, integer, integer) -> ()
 
 gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_get_pixels: (pointer) -> (pointer)
@@ -479,6 +482,9 @@ gtk libgtk-x11-2.0.so.0
 	gtk_widget_set_parent_window: (pointer, pointer) -> ()
 	gtk_widget_get_window: (pointer) -> (pointer)
 	gtk_socket_get_id: (pointer) -> (integer)
+	gtk_offscreen_window_new: () -> (pointer)
+	gtk_offscreen_window_get_pixbuf: (pointer) -> (pointer)
+	gtk_offscreen_window_get_type: () -> (integer)
 
 	gtk_plug_new: (integer) -> (pointer)
 	gtk_plug_get_type: () -> (integer)

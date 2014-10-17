@@ -47,7 +47,7 @@ private:
     
     MCWidget* m_widget;
     GtkWindow* m_child_window;
-    GdkWindow* m_overlay;
+    GdkRegion* m_input_shape;
     GtkSocket* m_socket;
     x11::Window m_widget_xid;
     
@@ -64,6 +64,9 @@ private:
     
     // Performs a relayering operation
     void doRelayer();
+    
+    // Updates the input mask for the widget (used to implement edit mode)
+    void updateInputShape();
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_X11__
