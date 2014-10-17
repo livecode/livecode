@@ -3648,6 +3648,7 @@ extern MCExecMethodInfo *kMCEngineExecStopUsingStackByNameMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecDispatchMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecSendMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecSendInTimeMethodInfo;
+extern MCExecMethodInfo *kMCEngineExecSendWhenIdleMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecCallMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecLockErrorsMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecLockMessagesMethodInfo;
@@ -3777,6 +3778,7 @@ void MCEngineExecStopUsingStackByName(MCExecContext& ctxt, MCStringRef p_name);
 void MCEngineExecDispatch(MCExecContext& ctxt, int handler_type, MCNameRef message, MCObjectPtr *target, MCParameter *params);
 void MCEngineExecSend(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target);
 void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef script, MCObjectPtr target, double p_delay, int p_units);
+void MCEngineExecSendWhenIdle(MCExecContext& ctxt, MCStringRef script, MCObjectPtr target);
 void MCEngineExecCall(MCExecContext& ctxt, MCStringRef script, MCObjectPtr *target);
 
 void MCEngineExecLockErrors(MCExecContext& ctxt);
