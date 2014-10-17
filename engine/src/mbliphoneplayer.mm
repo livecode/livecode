@@ -60,7 +60,7 @@ class MCiOSPlayerControl;
 
 @interface MCiOSPlayerDelegate : NSObject
 {
-	MCNativePlayerControl *m_instance;
+	MCiOSPlayerControl *m_instance;
     UIControl *m_overlay;
 }
 
@@ -1255,7 +1255,7 @@ static struct { NSString* const* name; SEL selector; } s_player_notifications[] 
 
 - (void)playerWindowTouched: (UIControl*) p_sender
 {
-    MCEventQueuePostCustom(new MCNativePlayerNotifyEvent(m_instance, MCM_movie_touched));
+    MCEventQueuePostCustom(new MCiOSPlayerNotifyEvent(m_instance, MCM_movie_touched));
 }
 
 - (UIControl*)getOverlay

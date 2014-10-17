@@ -532,7 +532,7 @@ static void dopopupaskdialog_prewait(void *p_context)
                            UITextField *t_text_field;
                            t_text_field = [[t_alert_controller textFields] firstObject];
                            
-                           MCStringCreateWithCFString([t_text_field text], ctxt -> result);
+                           /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_text_field text], ctxt -> result);
                        }];
         [t_alert_controller addAction: t_ok_action];
         
