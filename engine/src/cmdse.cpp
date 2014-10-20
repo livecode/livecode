@@ -1183,7 +1183,26 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 			MCperror->add(PE_SEND_BADTARGET, sp);
 			return PS_ERROR;
 		}
-		return gettime(sp, &in, units);
+
+		/* Check for and parse a time clause ("in x units" or "when
+		 * idle") */
+		Parse_stat t_stat;
+		t_stat = sp.skip_token (SP_FACTOR, TT_IN, PT_WHEN);
+		if (t_stat == PS_EOL || t_stat == PS_EOF)
+			return PS_NORMAL;
+		if (t_stat == PS_NORMAL)
+		{
+			/* Found "when", so the next token is required to be
+			 * "idle". */
+			if (sp.skip_token (SP_FACTOR, TT_FUNCTION, F_IDLE) != PS_NORMAL)
+			{
+				MCperror->add (PE_SEND_BADWHEN, sp);
+				return PS_ERROR;
+			}
+			when_idle = True;
+			return PS_NORMAL;
+		}
+		return gettime (sp, &in, units);
 	}
 	return PS_NORMAL;
 }
@@ -1322,7 +1341,7 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 	MCAutoNameRef t_mptr_as_name;
 	/* UNCHECKED */ t_mptr_as_name . CreateWithCString(mptr);
 
-	if (in == NULL)
+	if (in == NULL && !when_idle)
 	{
 		Boolean oldlock = MClockmessages;
 		MClockmessages = False;
@@ -1376,7 +1395,19 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 	else
 	{
 		delete mptr;
-        
+
+		/* Compute the time at which the message should be dispatched.
+		 * If the message is supposed to be dispatched with idle
+		 * priority, set the dispatch time to +Inf; otherwise, compute
+		 * relative to current time. */
+		real8 dispatch_time;
+		if (when_idle)
+			dispatch_time = (double) INFINITY;
+		else
+			dispatch_time = MCS_time() + delay;
+
+		MCLog ("Dispatch time: %lf\n", dispatch_time);
+
         // MW-2014-05-28: [[ Bug 12463 ]] If we cannot add the pending message, then throw an
         //   error.
 		if (!MCscreen->addusermessage(optr, t_mptr_as_name, MCS_time() + delay, params))
@@ -1432,6 +1463,10 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
                 return;
 
             MCEngineExecSendInTime(ctxt, *t_message, t_target, t_delay, units);
+		}
+		else if (when_idle)
+		{
+			MCEngineExecSendWhenIdle(ctxt, *t_message, t_target);
 		}
         else
         {

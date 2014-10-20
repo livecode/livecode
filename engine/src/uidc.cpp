@@ -984,9 +984,10 @@ void MCUIDC::updatemenubar(Boolean force)
 // MW-2014-04-16: [[ Bug 11690 ]] Pending message list is now sorted by time, all
 //   pending message generation functions use 'doaddmessage()' to insert the
 //   message in the right place.
-void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, MCParameter *params)
+void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params, uint4 *r_id)
 {
     // MW-2014-05-14: [[ Bug 12294 ]] Rejigged to correct flaws.
+	uint4 t_id;
     
     // If we are at capacity, then extend the message list.
 	if (nmessages == maxmessages)
@@ -996,18 +997,72 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
 	}
     
     // Find where in the list to insert the pending message.
-    uint32_t t_index;
-    for(t_index = 0; t_index < nmessages; t_index++)
-        if (messages[t_index] . time > time)
-            break;
+    uint32_t t_index, t_rev_index;
+	if (isfinite (time))
+	{
+		/* Normal messages are inserted sorted by delay time.  Search
+		 * from the start of the message list. */
+		for(t_index = 0; t_index < nmessages; t_index++)
+			if (messages[t_index] . time > time)
+				break;
+	}
+	else
+	{
+		/* Idle priority messages have an infinite time value, and are
+		 * inserted at the end of the message list. However, it's not
+		 * permitted to queue the same idle message twice, so it's
+		 * necessary to search (backwards, from the end of the message
+		 * list) to see if the same idle message is already queued. */
+		for (t_rev_index = 0; t_rev_index < nmessages; t_rev_index++)
+		{
+			MCMessageList t_message;
+			t_index = nmessages - t_rev_index - 1;
+
+			/* If we've found a normal message, there was no match, so
+			 * insert the idle message at the end of the message
+			 * queue. */
+			t_message = messages[t_index];
+			if (isfinite (t_message . time))
+			{
+				t_index = nmessages;
+				break;
+			}
+
+			/* Check if the current message name and target object
+			 * matches the one we're trying to add.  If it is, stop
+			 * adding the message.  Instead, replace the parameters of
+			 * the current message with the new parameters, and then
+			 * return the ID of the current message. */
+			if (optr == t_message . object &&
+				MCNameIsEqualTo (mptr, t_message . message))
+			{
+				/* Replace the message parameters */
+				while (t_message . params != NULL)
+				{
+					MCParameter *tmp = t_message.params;
+					t_message.params = t_message.params->getnext();
+					delete tmp;
+				}
+				t_message . params = params;
+
+				/* Return the message id */
+				*r_id = t_message.id;
+				return;
+			}
+		}
+	}
     
     // Move all messages in the range [t_index, nmessages) up one.
     MCMemoryMove(&messages[t_index + 1], &messages[t_index], (nmessages - t_index) * sizeof(MCMessageList));
     
+	/* Allocate and return the next message ID. */
+	t_id = ++messageid;
+	if (r_id != NULL) *r_id = t_id;
+
 	messages[t_index].object = optr;
 	/* UNCHECKED */ MCNameClone(mptr, messages[t_index].message);
 	messages[t_index].time = time;
-	messages[t_index].id = id;
+	messages[t_index].id = t_id;
 	messages[t_index].params = params;
     
     nmessages += 1;
@@ -1057,14 +1112,12 @@ void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStri
 		}
 	}
     
-    doaddmessage(optr, mptr, MCS_time(), ++messageid, params);
+    doaddmessage(optr, mptr, MCS_time(), params, NULL);
 }
 
-void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
+void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params, uint4 *r_id)
 {
-    uint4 t_id;
-    t_id = ++messageid;
-    doaddmessage(optr, mptr, time, t_id, params);
+    doaddmessage(optr, mptr, time, params, r_id);
     
     // MW-2014-05-28: [[ Bug 12463 ]] Previously the result would have been set here which is
     //   incorrect as engine pending messages should not set the result.
@@ -1075,7 +1128,7 @@ void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
     // Remove existing message from the queue.
     cancelmessageobject(optr, mptr);
     
-    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, NULL);
+    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, NULL, NULL);
 }
 
 void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
@@ -1161,14 +1214,16 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 //   limit as they definitely do not have a double-propagation problem that could cause engine lock-up.
 bool MCUIDC::addusermessage(MCObject* optr, MCNameRef name, real8 time, MCParameter *params)
 {
+	uint4 t_id;
+
     if (nmessages >= 65536)
         return false;
     
-    addmessage(optr, name, time, params);
+    addmessage(optr, name, time, params, &t_id);
     
     // MW-2014-05-28: [[ Bug 12463 ]] Set the result to the pending message id.
 	char buffer[U4L];
-	sprintf(buffer, "%u", messageid);
+	sprintf(buffer, "%u", t_id);
 	MCresult->copysvalue(buffer);
     
     return true;
@@ -1180,12 +1235,30 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
 {
     Boolean t_handled;
     t_handled = False;
+
+	/* Only allow idle messages to be handled if there is a non-zero
+	 * difference between curtime and eventtime, i.e. it's not
+	 * essential for handlepending to complete as quickly as
+	 * possible. */
+	Boolean t_allow_idle = eventtime > curtime;
+
     for(uindex_t i = 0; i < nmessages; i++)
     {
-        // If the next message is later than curtime, we've not processed a message.
-        if (messages[i] . time > curtime)
-            break;
+		/* Decide if the next message is dispatchable.  If we aren't
+		 * allowed to handle idle messages, then there's no point in
+		 * iterating through looking for them. */
+		real8 t_msg_time = messages[i] . time;
+        if (isfinite (t_msg_time) && t_msg_time > curtime)
+		{
+            if (t_allow_idle)
+				continue;
+			else
+				break;
+		}
         
+		/* In addition to messages with idle scheduling priority
+		 * (which have an infinite message dispatch time) there's also
+		 * the special "idle" message. */
         if (!dispatch && messages[i] . id == 0 && MCNameIsEqualTo(messages[i] . message, MCM_idle, kMCCompareCaseless))
         {
             doshiftmessage(i, curtime + MCidleRate / 1000.0);

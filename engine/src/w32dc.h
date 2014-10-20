@@ -273,7 +273,7 @@ public:
 	virtual bool getkeysdown(MCListRef& r_list);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
-	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
+	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params, uint4 *r_id = NULL);
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
 	virtual void flushevents(uint2 e);
 	virtual Boolean istripleclick();

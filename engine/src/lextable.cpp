@@ -1039,6 +1039,7 @@ LT factor_table[] =
         {"iconic", TT_PROPERTY, P_ICONIC},
 		{"iconmenu", TT_PROPERTY, P_ICON_MENU},
         {"id", TT_PROPERTY, P_ID},
+		{"idle", TT_FUNCTION, F_IDLE},
         {"idlerate", TT_PROPERTY, P_IDLE_RATE},
         {"idleticks", TT_PROPERTY, P_IDLE_TICKS},
         // MERG-2014-06-02: [[ IgnoreMouseEvents ]] ignoreMouseEvents stack property
@@ -1781,6 +1782,7 @@ LT factor_table[] =
         {"watchedvariables", TT_PROPERTY, P_WATCHED_VARIABLES},
         {"wd", TT_CHUNK, CT_STACK},
         {"weekdaynames", TT_FUNCTION, F_WEEK_DAY_NAMES},
+		{"when", TT_IN, PT_WHEN},
         {"wholematches", TT_PROPERTY, P_WHOLE_MATCHES},
         {"widemargins", TT_PROPERTY, P_WIDE_MARGINS},
         {"width", TT_PROPERTY, P_WIDTH},

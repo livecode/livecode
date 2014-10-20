@@ -1377,6 +1377,14 @@ void MCEngineExecSendInTime(MCExecContext& ctxt, MCStringRef p_script, MCObjectP
     ctxt . LegacyThrow(EE_SEND_TOOMANYPENDING, *t_message);
 }
 
+void
+MCEngineExecSendWhenIdle (MCExecContext & ctxt, MCStringRef p_script, MCObjectPtr p_target)
+{
+	/* If a message is to have idle scheduling priority, add it with
+	 * an infinite delay. */
+	MCEngineExecSendInTime (ctxt, p_script, p_target, (double) INFINITY, -1);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCEngineExecLockErrors(MCExecContext& ctxt)
