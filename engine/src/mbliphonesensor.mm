@@ -93,6 +93,8 @@ static void initialize_core_motion(void)
 {
 	NSTimer *m_calibration_timer;
     bool m_ready;
+    bool m_access_location_always;
+    bool m_access_location_when_in_use;
 }
 @end
 
@@ -126,10 +128,30 @@ static int32_t s_location_calibration_timeout = 0;
     return m_ready;
 }
 
+- (void)setAccessLocationAlways:(BOOL)always
+{
+    m_access_location_always = always;
+}
+
+- (BOOL)isAccessLocationAlways
+{
+    return m_access_location_always;
+}
+
+- (void)setAccessLocationWhenInUse:(BOOL)whenInUse
+{
+    m_access_location_when_in_use = whenInUse;
+}
+
+- (BOOL)isAccessLocationWhenInUse
+{
+    return m_access_location_when_in_use;
+}
+
 #ifdef __IPHONE_8_0
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
 {
-    if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorized)
+    if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorizedWhenInUse || status == kCLAuthorizationStatusDenied)
     {
         [s_location_delegate setReady:True];
         MCscreen -> pingwait();
@@ -194,7 +216,7 @@ static void requestAlwaysAuthorization(void)
 {
 #ifdef __IPHONE_8_0
     CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
-    
+    /*
     // If the status is denied or only granted for when in use, display an alert
     if (t_status == kCLAuthorizationStatusAuthorizedWhenInUse || t_status == kCLAuthorizationStatusDenied)
     {
@@ -232,6 +254,7 @@ static void requestAlwaysAuthorization(void)
             MCscreen -> wait(1.0, False, True);
         
     }
+    
     // The user has not enabled any location services. Request background authorization.
     else if (t_status == kCLAuthorizationStatusNotDetermined)
     {
@@ -240,6 +263,26 @@ static void requestAlwaysAuthorization(void)
         while (![s_location_delegate isReady])
             MCscreen -> wait(1.0, False, True);
     }
+    */
+    if (t_status == kCLAuthorizationStatusNotDetermined)
+    {
+        if ([s_location_delegate isAccessLocationWhenInUse])
+        {
+            [s_location_manager requestWhenInUseAuthorization];
+        }
+        else if ([s_location_delegate isAccessLocationAlways])
+        {
+            [s_location_manager requestAlwaysAuthorization];
+        }
+        else
+            return;
+        
+        while (![s_location_delegate isReady])
+            MCscreen -> wait(1.0, False, True);
+    }
+
+    
+    
 #endif
 }
 
@@ -254,6 +297,11 @@ static void initialize_core_location(void)
     MCIPhoneRunBlockOnMainFiber(^(void) {s_location_manager = [[CLLocationManager alloc] init];});
 	s_location_delegate = [[MCIPhoneLocationDelegate alloc] init];
     [s_location_delegate setReady: False];
+    
+    // TODO: Fetch these values from the Standalone Builder Settings
+    [s_location_delegate setAccessLocationAlways:False];
+    [s_location_delegate setAccessLocationWhenInUse:True];
+    
 	[s_location_manager setDelegate: s_location_delegate];
 	
 	s_location_enabled = false;
