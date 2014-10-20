@@ -63,7 +63,7 @@ public:
     ~AndroidView();
     
     void setRect(const MCRectangle& p_rect);
-    void addToMainView();
+    void placeViewBelow(AndroidView* p_other_view);
     void removeFromMainView();
     
 private:
@@ -105,10 +105,9 @@ void MCNativeLayerAndroid::AndroidView::setRect(const MCRectangle& p_rect)
     MCAndroidEngineRemoteCall("setNativeViewRect", "voiiii", nil, m_java_object, i1, i2, i3, i4);
 }
 
-void MCNativeLayerAndroid::AndroidView::addToMainView()
+void MCNativeLayerAndroid::AndroidView::placeViewBelow(AndroidView* p_other_view)
 {
-    if (!m_in_view)
-        MCAndroidEngineRemoteCall("addNativeView", "vo", nil, m_java_object);
+    MCAndroidEngineRemoteCall("placeNativeViewBelow", "voo", nil, m_java_object, p_other_view ? p_other_view->m_java_object : NULL);
     m_in_view = true;
     MCAndroidObjectRemoteCall(m_java_object, "setVisibility", "vi", nil, 0);
 }
@@ -177,9 +176,6 @@ void MCNativeLayerAndroid::doAttach()
 {
     if (m_view == nil)
         return;
-    
-    // Act as if there was a re-layer to put the widget in the right place
-    doRelayer();
     
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
@@ -255,20 +251,21 @@ void MCNativeLayerAndroid::doRelayer()
     // Insert the widget in the correct place (but only if the card is current)
     if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
     {
-        // TODO: implement
-        addToMainView();
+        if (t_before != NULL)
+        {
+            MCNativeLayerAndroid* t_android_layer;
+            t_android_layer = reinterpret_cast<MCNativeLayerAndroid*>(t_before->getNativeLayer());
+            m_view->placeViewBelow(t_android_layer->m_view);
+        }
+        else
+            m_view->placeViewBelow(NULL);
+        m_view->setRect(m_widget->getrect());
     }
 }
 
 void MCNativeLayerAndroid::addToMainView()
 {
-    if (m_view == NULL)
-        return;
-    
-    MCRectangle t_rect;
-    t_rect = m_widget->getrect();
-    m_view->addToMainView();
-    m_view->setRect(t_rect);
+    doRelayer();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

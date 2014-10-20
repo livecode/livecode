@@ -106,6 +106,7 @@ public class Engine extends View implements EngineApi
     private NativeControlModule m_native_control_module;
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
+    private FrameLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
     
@@ -154,6 +155,7 @@ public class Engine extends View implements EngineApi
         m_native_control_module = new NativeControlModule(this, ((LiveCodeActivity)getContext()).s_main_layout);
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
+        m_view_layout = null;
         
         // MM-2012-08-03: [[ Bug 10316 ]] Initialise the wake lock object.
         PowerManager t_power_manager = (PowerManager) p_context.getSystemService(p_context.POWER_SERVICE);
@@ -928,20 +930,40 @@ public class Engine extends View implements EngineApi
         m_native_control_module.removeControl(p_control);
     }
 
-    void addNativeView(Object p_view)
-    {
-        View t_view = (View)p_view;
-        
-        FrameLayout t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
-        t_main_view.addView(t_view, new RelativeLayout.LayoutParams(0, 0));
-        t_main_view.bringChildToFront(t_view);
-    }
-
     void removeNativeView(Object p_view)
     {
         View t_view = (View)p_view;
         
-        ((LiveCodeActivity)getContext()).s_main_layout.removeView(t_view);
+        if (m_view_layout != null)
+            m_view_layout.removeView(t_view);
+    }
+    
+    void placeNativeViewBelow(Object p_view, Object p_superior)
+    {
+        // Remove from any existing parent
+        removeNativeView(p_view);
+        
+        // The main view
+        FrameLayout t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
+        
+        // Create the layout for native layers if not already done
+        if (m_view_layout == null)
+        {
+            m_view_layout = new FrameLayout((LiveCodeActivity)getContext());
+            t_main_view.addView(m_view_layout);
+            t_main_view.bringChildToFront(m_view_layout);
+        }
+        
+        View t_view = (View)p_view;
+        int t_index = m_view_layout.getChildCount();
+        
+        if (p_superior != null)
+        {
+            View t_superior = (View)p_superior;
+            t_index = m_view_layout.indexOfChild(t_superior);
+        }
+        
+        m_view_layout.addView(t_view, t_index, new RelativeLayout.LayoutParams(0, 0));
     }
     
     void setNativeViewRect(Object p_view, int left, int top, int width, int height)
