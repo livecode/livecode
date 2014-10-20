@@ -71,7 +71,12 @@ void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
     r_output = MCProperListGetCount(p_target);
 }
 
-void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, bool p_is_not, MCProperListRef p_target, bool& r_output)
+void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, MCProperListRef p_target, bool& r_output)
+{
+    
+}
+
+void MCListEvalContains(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
 {
     
 }

@@ -179,7 +179,7 @@ syntax MinusOperator is left binary operator with precedence 2
 begin
     EvalIntegerMinusInteger(Left, Right, output)
     EvalRealMinusReal(Left, Right, output)
-    EvalNumberPlusNumber(Left, Right, output)
+    EvalNumberMinusNumber(Left, Right, output)
 end syntax
 
 /*

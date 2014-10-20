@@ -23,6 +23,20 @@ void MCCharChunkEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_output)
     r_output = MCStringGetLength(p_target);
 }
 
+void MCCharChunkEvalIsAmongTheCharsOf(MCHandlerContext& ctxt, MCStringRef p_needle, MCStringRef p_target, bool& r_output)
+{
+    bool t_output;
+    t_output = false;
+    
+    if (MCStringGetLength(p_needle) == 1)
+    {
+        uindex_t t_dummy;
+        t_output = MCStringFirstIndexOfChar(p_target, MCStringGetCodepointAtIndex(p_needle, 0), 0, ctxt . GetStringComparisonOptions(), t_dummy);
+    }
+    
+    r_output = t_output;
+}
+
 void MCCharChunkFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     integer_t t_start, t_count;

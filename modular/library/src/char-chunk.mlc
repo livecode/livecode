@@ -7,6 +7,8 @@ foreign handler StoreCharRangeOf(in Value as string, in Start as index, in Finis
 
 foreign handler EvalNumberOfCharsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
 
+foreign handler EvalIsAmongTheCharsOf(in Needle as string, in Source as string, out Value as bool) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -69,6 +71,21 @@ syntax RangeCharOf is prefix operator with precedence 1
 begin
 	FetchCharRangeOf(Start, Finish, Target, output)
 	StoreCharRangeOf(input, Start, Finish, Target)
+end syntax
+
+--
+
+/*
+Summary:            Determines whether <Needle> is in <Source>.
+Needle: 			An expression which evaluates to a char.
+Target: 			An expression which evaluates to a string.
+output:             True if <Needle> is among the chars of <Target>, and false otherwise.
+*/
+
+syntax CharIsIn is neutral binary operator with precedence 1
+    <Needle: Expression> "is" "in" <Source: Expression>
+begin
+    EvalIsAmongTheCharsOf(Needle, Source, output)
 end syntax
 
 --
