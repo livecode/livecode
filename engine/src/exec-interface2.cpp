@@ -2493,7 +2493,14 @@ void MCInterfaceEvalAudioClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p
 void MCInterfaceEvalAudioClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
-    t_clip = static_cast<MCStack *>(p_stack . object) -> getAVid(CT_AUDIO_CLIP, p_id);
+    MCStack *t_stack;
+    
+    t_stack = static_cast<MCStack *>(p_stack . object);
+    t_clip = t_stack -> getAVid(CT_AUDIO_CLIP, p_id);
+    
+    // AL-2014-10-21: [[ Bug 13738 ]] Search for audio clip by id if it wasn't attached to the current stack
+    if (t_clip == nil)
+        t_clip = t_stack -> getobjid(CT_AUDIO_CLIP, p_id);
     
     if (t_clip != nil)
     {
@@ -2501,6 +2508,8 @@ void MCInterfaceEvalAudioClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stac
         r_clip . part_id = p_stack . part_id;
         return;
     }
+    
+    
     
     ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
 }
@@ -2542,7 +2551,14 @@ void MCInterfaceEvalVideoClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p
 void MCInterfaceEvalVideoClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
-    t_clip = static_cast<MCStack *>(p_stack . object) -> getAVid(CT_VIDEO_CLIP, p_id);
+    MCStack *t_stack;
+    
+    t_stack = static_cast<MCStack *>(p_stack . object);
+    t_clip = t_stack -> getAVid(CT_VIDEO_CLIP, p_id);
+    
+    // AL-2014-10-21: [[ Bug 13738 ]] Search for video clip by id if it wasn't attached to the current stack
+    if (t_clip == nil)
+        t_clip = t_stack -> getobjid(CT_VIDEO_CLIP, p_id);
     
     if (t_clip != nil)
     {
