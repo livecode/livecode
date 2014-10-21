@@ -1651,7 +1651,8 @@ void MCStack::GetLinkHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_c
 	else
 	{
 		Linkatts *la = getlinkatts();
-		get_interface_color(la->color, la->colorname, r_color);
+        // AL-2014-10-21: [[ Bug 13717 ]] Get the correct link attribute
+		get_interface_color(la->hilitecolor, la->hilitecolorname, r_color);
 	}
 }
 
@@ -1663,7 +1664,8 @@ void MCStack::SetLinkHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColo
 void MCStack::GetEffectiveLinkHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
 {
 	Linkatts *la = getlinkatts();
-	get_interface_color(la->color, la->colorname, r_color);
+    // AL-2014-10-21: [[ Bug 13717 ]] Get the correct link attribute
+	get_interface_color(la->hilitecolor, la->hilitecolorname, r_color);
 }
 
 void MCStack::GetLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
@@ -1673,19 +1675,22 @@ void MCStack::GetLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_
 	else
 	{
 		Linkatts *la = getlinkatts();
-		get_interface_color(la->color, la->colorname, r_color);
+        // AL-2014-10-21: [[ Bug 13717 ]] Get the correct link attribute
+		get_interface_color(la->visitedcolor, la->visitedcolorname, r_color);
 	}
 }
 
 void MCStack::SetLinkVisitedColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
 {
-	SetLinkAtt(ctxt, P_LINK_HILITE_COLOR, p_color);
+    // AL-2014-10-21: [[ Bug 13717 ]] Set the correct link attribute
+	SetLinkAtt(ctxt, P_LINK_VISITED_COLOR, p_color);
 }
 
 void MCStack::GetEffectiveLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
 {
 	Linkatts *la = getlinkatts();
-	get_interface_color(la->color, la->colorname, r_color);
+    // AL-2014-10-21: [[ Bug 13717 ]] Get the correct link attribute
+	get_interface_color(la->visitedcolor, la->visitedcolorname, r_color);
 }
 
 void MCStack::GetUnderlineLinks(MCExecContext& ctxt, bool*& r_value)
