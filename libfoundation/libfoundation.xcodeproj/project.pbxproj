@@ -25,6 +25,8 @@
 		721CAAA81834D10D00858545 /* foundation-locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 721CAAA61834D10D00858545 /* foundation-locale.cpp */; };
 		721CAAA91834D10D00858545 /* foundation-unicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 721CAAA71834D10D00858545 /* foundation-unicode.cpp */; };
 		7237187918E42F580006C484 /* foundation-text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7237187718E42F580006C484 /* foundation-text.cpp */; };
+		761D53EC19EBC70B00DBF726 /* foundation-typeconvert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 761D53EB19EBC70B00DBF726 /* foundation-typeconvert.cpp */; };
+		7653455919F656650032E6E2 /* foundation-proper-list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7653455819F656640032E6E2 /* foundation-proper-list.cpp */; };
 		7696676D19E81D92008B0972 /* foundation-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7696676C19E81D92008B0972 /* foundation-chunk.cpp */; };
 		76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */; };
 		BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE19F5D718FE92600001B410 /* foundation-bidi.cpp */; };
@@ -76,6 +78,8 @@
 		721CAAAC18350B0E00858545 /* foundation-unicode-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode-private.h"; path = "src/foundation-unicode-private.h"; sourceTree = "<group>"; };
 		7237187618E3210B0006C484 /* foundation-text.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-text.h"; path = "include/foundation-text.h"; sourceTree = "<group>"; };
 		7237187718E42F580006C484 /* foundation-text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-text.cpp"; path = "src/foundation-text.cpp"; sourceTree = "<group>"; };
+		761D53EB19EBC70B00DBF726 /* foundation-typeconvert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-typeconvert.cpp"; path = "src/foundation-typeconvert.cpp"; sourceTree = "<group>"; };
+		7653455819F656640032E6E2 /* foundation-proper-list.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-proper-list.cpp"; path = "src/foundation-proper-list.cpp"; sourceTree = "<group>"; };
 		7696676B19E81D88008B0972 /* foundation-chunk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-chunk.h"; path = "include/foundation-chunk.h"; sourceTree = "<group>"; };
 		7696676C19E81D92008B0972 /* foundation-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-chunk.cpp"; path = "src/foundation-chunk.cpp"; sourceTree = "<group>"; };
 		BE19F5D718FE92600001B410 /* foundation-bidi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-bidi.cpp"; path = "src/foundation-bidi.cpp"; sourceTree = "<group>"; };
@@ -141,6 +145,7 @@
 		4DF42A570B048683003F2D95 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				761D53EB19EBC70B00DBF726 /* foundation-typeconvert.cpp */,
 				1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */,
 				7696676C19E81D92008B0972 /* foundation-chunk.cpp */,
 				4D7FA78F1594E09500EEF440 /* foundation-array.cpp */,
@@ -152,6 +157,7 @@
 				4D7FA7951594E09500EEF440 /* foundation-nativechars.cpp */,
 				4D7FA7961594E09500EEF440 /* foundation-number.cpp */,
 				4D7FA7971594E09500EEF440 /* foundation-private.h */,
+				7653455819F656640032E6E2 /* foundation-proper-list.cpp */,
 				4D7FA7981594E09500EEF440 /* foundation-set.cpp */,
 				4D7FA7991594E09500EEF440 /* foundation-stream.cpp */,
 				4DB3EBE316A5C00800E90D30 /* foundation-string-cf.cpp */,
@@ -218,6 +224,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				761D53EC19EBC70B00DBF726 /* foundation-typeconvert.cpp in Sources */,
 				4D7FA79D1594E09500EEF440 /* foundation-array.cpp in Sources */,
 				4D7FA79E1594E09500EEF440 /* foundation-core.cpp in Sources */,
 				4D7FA79F1594E09500EEF440 /* foundation-debug.cpp in Sources */,
@@ -239,6 +246,7 @@
 				BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */,
 				7237187918E42F580006C484 /* foundation-text.cpp in Sources */,
 				7696676D19E81D92008B0972 /* foundation-chunk.cpp in Sources */,
+				7653455919F656650032E6E2 /* foundation-proper-list.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

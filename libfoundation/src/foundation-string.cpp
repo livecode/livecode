@@ -3985,6 +3985,147 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 	return true;
 }
 
+bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list)
+{
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    // SN-2014-03-24: [[ SplitWithStrings ]] No longer checks whether the delimiter is actually 1-char long.
+	if (self -> char_count == 0)
+	{
+		r_list = MCValueRetain(kMCEmptyProperList);
+		return true;
+	}
+    
+    if (MCStringIsNative(self))
+    {
+        if (MCStringIsNative(p_elem_del))
+            return MCStringSplitByDelimiterNative(self, p_elem_del, p_options, r_list);
+    }
+    
+    MCAutoArray<MCValueRef> t_strings;
+    
+    if (__MCStringIsIndirect(p_elem_del))
+        p_elem_del = p_elem_del -> string;
+    
+	const void *t_echar, *t_kchar;
+    bool del_native;
+    del_native = MCStringIsNative(p_elem_del);
+	t_echar = p_elem_del -> chars;
+    
+    
+	const void *t_sptr;
+    bool self_native = MCStringIsNative(self);
+    
+    uindex_t t_del_length = MCStringGetLength(p_elem_del);
+    
+    if (self_native)
+        t_sptr = self -> native_chars;
+    else
+        t_sptr = self -> chars;
+    
+    uindex_t t_offset, t_to_end;
+    t_to_end = self -> char_count;
+    t_offset = 0;
+
+    bool t_success;
+    t_success = true;
+    
+    for(;;)
+    {
+        uindex_t t_found_del_length, t_end_offset;
+        
+        split_find_end_of_element(t_sptr, t_to_end, self_native, t_echar, t_del_length, del_native, p_options, t_end_offset, t_found_del_length);
+        
+        MCStringRef t_string;
+        t_string = nil;
+        
+        if (t_success)
+            t_success = MCStringCopySubstring(self, MCRangeMake(t_offset, t_end_offset), t_string);
+        
+        if (t_success)
+            t_success = t_strings . Push(t_string);
+        
+        if (!t_success)
+            break;
+        
+        if (t_end_offset + t_found_del_length >= t_to_end)
+            break;
+        
+        t_offset += t_end_offset + t_found_del_length;
+        t_sptr = (const char *)t_sptr + (self_native ? t_end_offset + t_found_del_length : 2 * (t_end_offset + t_found_del_length));
+        t_to_end -= (t_end_offset + t_found_del_length);
+    }
+
+    if (t_success)
+        t_success = MCProperListCreate(t_strings . Ptr(), t_strings .Size(), r_list);
+
+    if (!t_success)
+    {
+        for (uindex_t i = 0; i < t_strings . Size(); i++)
+            MCValueRelease(t_strings[i]);
+        
+        return false;
+    }
+    
+	return true;
+}
+
+bool MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list)
+{
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    if (__MCStringIsIndirect(p_elem_del))
+        p_elem_del = p_elem_del -> string;
+    
+    MCAutoArray<MCValueRef> t_strings;
+    
+    const char_t *t_sptr;
+    const char_t *t_eptr;
+    t_sptr = self -> native_chars;
+    t_eptr = self -> native_chars + self -> char_count;
+    
+    bool t_success;
+    t_success = true;
+    
+    for(;;)
+    {
+        const char_t *t_element_end;
+        split_find_end_of_element_native(t_sptr, t_eptr, p_elem_del -> native_chars, p_elem_del -> char_count, t_element_end, p_options);
+        
+        MCStringRef t_string;
+        t_string = nil;
+        
+        if (t_success)
+            t_success = MCStringCreateWithNativeChars(t_sptr, t_element_end - t_sptr, t_string);
+        
+        if (t_success)
+            t_success = t_strings . Push(t_string);
+        
+        if (t_element_end + p_elem_del -> char_count >= t_eptr)
+            break;
+        
+        if (!t_success)
+            break;
+        
+        t_sptr = t_element_end + p_elem_del -> char_count;
+    }
+    
+    if (t_success)
+        t_success = MCProperListCreate(t_strings . Ptr(), t_strings .Size(), r_list);
+    
+    if (!t_success)
+    {
+        for (uindex_t i = 0; i < t_strings . Size(); i++)
+            MCValueRelease(t_strings[i]);
+        
+        return false;
+    }
+    
+	return true;
+}
+
 bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoint_t p_replacement, MCStringOptions p_options)
 {
     // Ensure the string is not indirect.

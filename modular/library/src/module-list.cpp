@@ -36,7 +36,7 @@ void MCListExecPushSingleElementOnto(MCValueRef p_value, MCProperListRef& x_targ
 
 void MCListExecPushMultipleElementsOnto(MCProperListRef p_value, MCProperListRef& x_target)
 {
-    if (MCProperListPushElements(x_target, p_value))
+    if (MCProperListAppendList(x_target, p_value))
         return;
     
 //    ctxt . Throw();
@@ -60,7 +60,7 @@ void MCListExecInsertSingleElementIntoListAt(MCValueRef p_value, MCProperListRef
 
 void MCListExecInsertMultipleElementsIntoListAt(MCProperListRef p_value, MCProperListRef& x_target, index_t p_index)
 {
-    if (MCProperListInsertElements(x_target, p_value, p_index))
+    if (MCProperListInsertList(x_target, p_value, p_index))
         return;
     
     //    ctxt . Throw();
@@ -68,35 +68,37 @@ void MCListExecInsertMultipleElementsIntoListAt(MCProperListRef p_value, MCPrope
 
 void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
 {
-    r_output = MCProperListGetCount(p_target);
+    r_output = MCProperListGetLength(p_target);
 }
 
 void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, MCProperListRef p_target, bool& r_output)
 {
-    
+    uindex_t t_dummy;
+    r_output = MCProperListFirstIndexOfElement(p_target, p_needle, 0, t_dummy);
 }
 
 void MCListEvalContains(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
 {
-    
+    uindex_t t_dummy;
+    r_output = MCProperListFirstIndexOfList(p_target, p_needle, 0, t_dummy);
 }
 
 void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
 {
-    
+    r_output = MCValueRetain(MCProperListFetchElementAtIndex(p_target, p_index));
 }
 
 void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
-    
+    MCProperListInsertElement(x_target, p_value, p_index);
 }
 
 void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef p_target, MCProperListRef& r_output)
 {
-    
+    MCProperListCopySublist(p_target, p_start, p_finish, r_output);
 }
 
 void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
-    
+    // PUT INTO AMBIGUITY
 }
