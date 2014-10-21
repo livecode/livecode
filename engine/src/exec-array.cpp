@@ -1159,12 +1159,16 @@ void MCArraysEvalTransposeMatrix(MCExecContext& ctxt, MCArrayRef p_matrix, MCArr
 
 void MCArraysEvalIsAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
-	r_result = MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray;
+    // FG-2014-10-21: [[ Bugfix 13737 ]] An array is only an array if it has at
+    // least one key (i.e the empty array is not an array...)
+    r_result = MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray
+        && MCArrayGetCount((MCArrayRef)p_value) > 0;
 }
 
 void MCArraysEvalIsNotAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
-	r_result = MCValueGetTypeCode(p_value) != kMCValueTypeCodeArray;
+    MCArraysEvalIsAnArray(ctxt, p_value, r_result);
+    r_result = !r_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
