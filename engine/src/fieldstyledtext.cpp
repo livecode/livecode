@@ -434,20 +434,11 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
         
         MCValueRef t_value;
         MCNameRef t_key;
-        t_key = ctxt . last_run_unicode ? MCNAME("unicodeText") : MCNAME("text");
+        t_key = MCNAME("text");
         MCAutoStringRef t_new_string;
         MCArrayFetchValue(ctxt . last_run, true, t_key, t_value);
         
-		if (ctxt . last_run_unicode)
-		{
-			uint16_t t_vtab;
-			t_vtab = 11;
-            MCAutoStringRef t_string;
-            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)&t_vtab, 2, kMCStringEncodingUTF16, false, &t_string);
-            MCStringFormat(&t_new_string, "%@%@", (MCStringRef)t_value, *t_string);
-		}
-		else
-            MCStringFormat(&t_new_string, "%@\x0b", (MCStringRef)t_value);
+        MCStringFormat(&t_new_string, "%@\x0b", (MCStringRef)t_value);
         
         /* UNCHECKED */ MCArrayStoreValue(ctxt . last_run, true, t_key, *t_new_string);
 	}
