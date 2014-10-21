@@ -965,6 +965,7 @@ void MCPlayer::open()
 	MCControl::open();
 	prepare(MCnullstring);
     // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
+    // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
     if (m_platform_player != nil && !m_is_attached)
     {
         MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
@@ -986,6 +987,7 @@ void MCPlayer::close()
         s_volume_popup -> close();
     
     // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
+    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
     if (m_platform_player != nil && m_is_attached)
     {
         MCPlatformDetachPlayer(m_platform_player);
@@ -1413,6 +1415,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 prepare(MCnullstring);
                 
                 // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
+                // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
                 if (m_platform_player != nil && !m_is_attached)
                 {
                     MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
@@ -2180,7 +2183,8 @@ Boolean MCPlayer::playstart(const char *options)
 {
 	if (!prepare(options))
 		return False;
-        
+    
+    // PM-2014-10-21: [[ Bug 13710 ]] Attach the player if not already attached
     if (m_platform_player != nil && !m_is_attached)
     {
         MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
@@ -2265,6 +2269,7 @@ Boolean MCPlayer::playstop()
     
     m_modify_selection_while_playing = false;
 	
+    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
 	if (m_platform_player != nil && m_is_attached)
 	{
 		MCPlatformStopPlayer(m_platform_player);
