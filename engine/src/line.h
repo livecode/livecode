@@ -38,7 +38,7 @@ public:
 	MCLine(MCParagraph *paragraph);
 	~MCLine();
 	void takebreaks(MCLine *lptr);
-	MCBlock *fitblocks(MCBlock *p_first, MCBlock *p_sentinal, uint2 maxwidth);
+	MCBlock *fitblocks(MCBlock *p_first, MCBlock *p_sentinal, coord_t maxwidth);
 	void appendall(MCBlock *bptr);
 	void draw(MCDC *dc, int2 x, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle);
 	void setscents(MCBlock *bptr);
