@@ -830,7 +830,9 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
         
         // SN-2014-05-12 [[ Bug 12365 ]]
         // Redraw the cursor after the update
-        replacecursor(True, True);
+        // SN-2014-10-17: [[ Bug 13493 ]] Don't replace the cursor - unnecessary and causes
+        //  unwanted scrolling
+//        replacecursor(True, True);
 	}
 
 	return ES_NORMAL;
