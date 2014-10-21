@@ -187,7 +187,20 @@ bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
     }
     
 	if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeArray)
+    {
+        // FG-2014-10-21: [[ Bugfix 13724 ]] The legacy behavior requires that
+        // anything that can be converted to a string will convert to an empty
+        // array (for example, 'the extents of "foo"' should return empty
+        // rather than throwing an error).
+        MCAutoStringRef t_ignored;
+        if (ConvertToString(p_value, &t_ignored))
+        {
+            r_array = MCValueRetain(kMCEmptyArray);
+            return true;
+        }
+        
         return false;
+    }
     
     r_array = MCValueRetain((MCArrayRef)p_value);
 	return true;
