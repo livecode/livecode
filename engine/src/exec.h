@@ -2153,7 +2153,7 @@ void MCStringsEvalNumToUnicodeChar(MCExecContext& ctxt, uinteger_t codepoint, MC
 void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef character, MCValueRef& r_codepoint);
 void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
 void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
-void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_byte);
+void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCDataRef& r_byte);
 void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef byte, integer_t& r_codepoint);
 
 void MCStringsEvalTextDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCDataRef p_encoded_text, MCStringRef& r_decoded_text);

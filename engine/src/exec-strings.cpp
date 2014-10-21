@@ -347,11 +347,12 @@ void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef p_character,
     ctxt.Throw();
 }
 
-void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t p_byte, MCStringRef& r_byte)
+// AL-2014-10-21: [[ Bug 13740 ]] numToByte should return a DataRef
+void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t p_byte, MCDataRef& r_byte)
 {
-	char_t t_byte_as_char;
-	t_byte_as_char = (char_t)p_byte;
-	if (MCStringCreateWithNativeChars(&t_byte_as_char, 1, r_byte))
+	byte_t t_byte_as_char;
+	t_byte_as_char = (byte_t)p_byte;
+	if (MCDataCreateWithBytes(&t_byte_as_char, 1, r_byte))
 		return;
 
 	ctxt . Throw();
