@@ -267,15 +267,15 @@ void MCStringsEvalNumToUnicodeChar(MCExecContext &ctxt, uinteger_t p_codepoint, 
     ctxt . Throw();
 }
 
-void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef p_character, uinteger_t& r_codepoint)
+void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef p_character, MCValueRef& r_codepoint)
 {
 	// This function has to be backwards compatible and do the broken stuff...
     MCAutoDataRef t_data;
     ctxt.ConvertToData(p_character, &t_data);
-    // In case of empty string as input, the result must be 0
+    // In case of empty string as input, the result must be empty
     if (MCDataIsEmpty(*t_data))
     {
-        r_codepoint = 0;
+        r_codepoint = MCValueRetain(kMCEmptyString);
         return;
     }
     else if (ctxt.GetUseUnicode())
@@ -284,17 +284,17 @@ void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef p_character, uintege
         {
             const uint16_t *t_val;
             t_val = (const uint16_t*)MCDataGetBytePtr(*t_data);
-            r_codepoint = *t_val;
+            /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(*t_val, (MCNumberRef&)r_codepoint);
             return;
         }
     }
     else
     {
-        r_codepoint = MCDataGetByteAtIndex(*t_data, 0);
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(MCDataGetByteAtIndex(*t_data, 0), (MCNumberRef&)r_codepoint);
         return;
     }
     
-    r_codepoint = ~0;
+    /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(~0, (MCNumberRef&)r_codepoint);
 }
 
 void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef p_character, uinteger_t& r_codepoint)

@@ -2150,7 +2150,7 @@ void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef
 void MCStringsEvalNumToChar(MCExecContext& ctxt, uinteger_t codepoint, MCValueRef& r_character);
 void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);
 void MCStringsEvalNumToUnicodeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);
-void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef character, uinteger_t& r_codepoint);
+void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef character, MCValueRef& r_codepoint);
 void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
 void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
 void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_byte);
