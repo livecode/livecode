@@ -1411,6 +1411,14 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 if (data != MCnullmcstring)
                     filename = data.clone();
                 prepare(MCnullstring);
+                
+                // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
+                if (m_platform_player != nil)
+                {
+                    MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+                    m_is_attached = true;
+                }
+
                 dirty = wholecard = True;
             }
             break;
