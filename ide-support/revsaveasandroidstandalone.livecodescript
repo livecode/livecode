@@ -1,4 +1,5 @@
 ﻿script "revSaveAsAndroidStandalone"
+script "revSaveAsAndroidStandalone"
 ################################################################################
 
 local sJavaRoot
@@ -53,7 +54,8 @@ private command buildAPK pUnalignedApkFile, pUnsignedParam, pAssetArchive, pClas
 end buildAPK
 
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
-   start using stack "revSBLibrary"
+   start using stack "revSBLibrary" of stack "revStandaloneSettings"
+   
    dispatch "revIDEDeployAndroidInitialize" to stack "revDeployLibrary"
    
    local tSettings
@@ -150,7 +152,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    -- Compute the stackfiles list
    local tStackFiles
    lock messages
-   put revRelativeStackFilesList(pStack) into tStackfiles
+   // SN-2014-10-16: [[ ScriptifiedStack ]] revRelativeStackFilesList is no longer in the messagePath
+   local tFunction
+   put "revRelativeStackFilesList(" & quote & pStack & quote & ")" into tFunction
+   put value(tFunction, stack "revStandaloneSettings") into tStackFiles
    unlock messages
    
    -- Make sure the app-bundle isn't already there
@@ -220,7 +225,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       replace "${ORIENTATION}" with tSettings["android,initial orientation"] in tManifest
       replace "${MIN_SDK_VERSION}" with tSettings["android,minimum version"] in tManifest
       
-      local tUsesFeature, tUsesPermission, tFeatures, tPermissions, tBilling, tAd
+      local tUsesFeature, tUsesPermission, tFeatures, tPermissions, tAd
       repeat for each line tFeature in the keys of tSettings["android,device capabilities"]
          put "  <uses-feature android:name="&quote&"android."&tFeature&quote&" android:required="&quote&"${REQUIRED}"&quote&" />" into tUsesFeature
          replace "${REQUIRED}" with tSettings["android,device capabilities"][tFeature] in tUsesFeature
@@ -231,11 +236,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          put tUsesPermission & return after tPermissions
       end repeat
       repeat for each line tPermission in the keys of tSettings["android,application permissions"]
-         if tPermission is "BILLING" then
-            -- BILLING permission is not defined in the standard permission package
-            put true into tBilling
-            put "  <uses-permission android:name="&quote&"com.android.vending.BILLING"&quote&" />" into tUsesPermission
-         else if tPermission is "AD" then
+         if tPermission is "AD" then
             put true into tAd
             put "  <uses-permission android:name="&quote&"android.permission.ACCESS_NETWORK_STATE"&quote&"/>" & return into tUsesPermission
             put "  <uses-permission android:name="&quote&"android.permission.READ_PHONE_STATE"&quote&" />" after tUsesPermission
@@ -246,26 +247,48 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       end repeat
       
       replace "${USES_FEATURE}" with tFeatures in tManifest
-      replace "${USES_PERMISSION}" with tPermissions in tManifest
+      --replace "${USES_PERMISSION}" with tPermissions in tManifest
       
       local tService, tReceiver
       -- IM-2012-02-28: need barebones receiver for local notifications
       put "<receiver android:name="&quote&"AppReceiver"&quote&">" into tReceiver
-      if tBilling then
-         -- create service & receiver sections for billing support
-         put "<service android:name="&quote&"AppService"&quote&" />" into tService
-         put "<intent-filter>" & return after tReceiver
-         repeat for each item tMsgName in "IN_APP_NOTIFY,RESPONSE_CODE,PURCHASE_STATE_CHANGED"
-            put "<action android:name="&quote&"com.android.vending.billing."&tMsgName&quote&" />" & return after tReceiver
-         end repeat
-         put "</intent-filter>" after tReceiver
-      else
-         put empty into tService
-      end if
+      --      if tBilling then
+      --         -- create service & receiver sections for billing support
+      --         put "<service android:name="&quote&"AppService"&quote&" />" into tService
+      --         put "<intent-filter>" & return after tReceiver
+      --         repeat for each item tMsgName in "IN_APP_NOTIFY,RESPONSE_CODE,PURCHASE_STATE_CHANGED"
+      --            put "<action android:name="&quote&"com.android.vending.billing."&tMsgName&quote&" />" & return after tReceiver
+      --         end repeat
+      --         put "</intent-filter>" after tReceiver
+      --      else
+      --         put empty into tService
+      --      end if
       put "</receiver>" after tReceiver
+      
+      -- PM-2014-03-17: [[ In App Purchasing Updates ]] Include new store setting in manifest.
+      if tSettings["android,inAppPurchasing"] then
+         get tSettings["android,billingProvider"]
+         if it is "Google" then
+            put "  <uses-permission android:name="&quote&"com.android.vending.BILLING"&quote&" />" & return after tPermissions
+         end if
+         if it is "Samsung" then
+            put "  <uses-permission android:name="&quote&"com.sec.android.iap.permission.BILLING"&quote&" />" & return after tPermissions
+         end if
+         if it is "Amazon" and revLicenseType() is "commercial" then
+            local tAmazonReceiver
+            put "<receiver android:name="&quote&"com.amazon.inapp.purchasing.ResponseReceiver"&quote&">" into tAmazonReceiver
+            put "<intent-filter>" & return after tAmazonReceiver
+            put "<action android:name="&quote&"com.amazon.inapp.purchasing.NOTIFY"&quote&" " & return after tAmazonReceiver
+            put "android:permission ="&quote&"com.amazon.inapp.purchasing.Permission.NOTIFY"&quote&"  />" & return after tAmazonReceiver
+            put "</intent-filter>" after tAmazonReceiver
+            put "</receiver>" after tAmazonReceiver
+            put tAmazonReceiver after tReceiver
+         end if
+      end if
       
       replace "${SERVICE}" with tService in tManifest
       replace "${RECEIVER}" with tReceiver in tManifest
+      replace "${USES_PERMISSION}" with tPermissions in tManifest
       
       if tAd is true then
          replace "${AD_ACTIVITY}" with "<activity android:name=" & quote & "com.inneractive.api.ads.InneractiveFullScreenView" & quote & "></activity>" in tManifest
@@ -433,26 +456,26 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/AppReceiver.class" & return after tBuiltClassFiles
       
       -- IM-2011-10-26: Generate and compile billing service & receiver classes
-      if tBilling then
-         local tBillingClass, tBillingClassFile
-         
-         // build service class
-         put tBuildFolder & slash & "classes_app/AppService.java" into tBillingClassFile
-         put "package" && tSettings["android,identifier"] & ";" & return into tBillingClass
-         put "import com.runrev.android.billing.BillingService;" & return after tBillingClass
-         put "public class AppService extends BillingService {}" & return after tBillingClass
-         put tBillingClass into url ("binfile:" & tBillingClassFile)
-         if the result is not empty then
-            throw "could not create billing support class"
-         end if
-         put tBillingClassFile & return after tBuiltClassFiles
-         
-         executeShellCommand pathToJavaC(), "-target 1.5 -source 1.5 -Xlint:none -d", tClassesBuildFolder, "-cp", tClassPath, tBillingClassFile
-         if the result is not empty then
-            throw "could not compile billing support class"
-         end if
-         put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/AppService.class" & return after tBuiltClassFiles
-      end if
+      --      if tBilling then
+      --         local tBillingClass, tBillingClassFile
+      
+      --         // build service class
+      --         put tBuildFolder & slash & "classes_app/AppService.java" into tBillingClassFile
+      --         put "package" && tSettings["android,identifier"] & ";" & return into tBillingClass
+      --         put "import com.runrev.android.billing.BillingService;" & return after tBillingClass
+      --         put "public class AppService extends BillingService {}" & return after tBillingClass
+      --         put tBillingClass into url ("binfile:" & tBillingClassFile)
+      --         if the result is not empty then
+      --            throw "could not create billing support class"
+      --         end if
+      --         put tBillingClassFile & return after tBuiltClassFiles
+      
+      --         executeShellCommand pathToJavaC(), "-target 1.5 -source 1.5 -Xlint:none -d", tClassesBuildFolder, "-cp", tClassPath, tBillingClassFile
+      --         if the result is not empty then
+      --            throw "could not compile billing support class"
+      --         end if
+      --         put tBuildFolder & slash & "classes_app/" & tCompiledClassFilePath & "/AppService.class" & return after tBuiltClassFiles
+      --      end if
       
       // IM-2012-02-24: Generate push notification listener class
       if tSettings["android,pushSenderID"] is not empty then
@@ -696,7 +719,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          end if
          put it into tPrivateKeyPassword
          
-         executeShellCommand pathToJarSigner(), "-keystore", tKey, "-storepass", tKeystorePassword, "-keypass", tPrivateKeyPassword, tUnalignedApkFile, tKeystoreAlias
+         // IM-2014-09-04: [[ Bug 13343 ]] Specify SHA1 when signing APK as specified in android signing docs.
+         executeShellCommand pathToJarSigner(), "-sigalg", "SHA1withRSA", "-digestalg", "SHA1", "-keystore", tKey, "-storepass", tKeystorePassword, "-keypass", tPrivateKeyPassword, tUnalignedApkFile, tKeystoreAlias
          if the result begins with "jarsigner error" then
             throw "signing failed -" && word 4 to -1 of the result
          else if the result begins with "jarsigner: Certificate chain not found" then
@@ -998,47 +1022,56 @@ end doShellCommand
 ################################################################################
 
 private function pathToRootClasses pRoot
-   dispatch function "pathToRootClasses" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToRootClasses" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToRootClasses
 
 private function pathToSDKClasses pRoot
-   dispatch function "pathToSDKClasses" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToSDKClasses" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToSDKClasses
 
 private function pathToAapt pRoot
-   dispatch function "pathToAapt" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToAapt" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToAapt
 
 private function pathToAdb pRoot
-   dispatch function "pathToAdb" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToAdb" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToAdb
 
 private function pathToZipAlign pRoot
-   dispatch function "pathToZipAlign" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToZipAlign" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToZipAlign
 
 private function pathToDex pRoot
-   dispatch function "pathToDex" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToDex" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToDex
 
 private function pathToJavaC pRoot
-   dispatch function "pathToJavaC" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToJavaC" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToJavaC
 
 private function pathToJava pRoot
-   dispatch function "pathToJava" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToJava" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToJava
 
 private function pathToJarSigner pRoot
-   dispatch function "pathToJarSigner" to button "Android" of stack "revDeployLibrary" with pRoot
+   // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
+   dispatch function "pathToJarSigner" to stack "revDeployLibraryAndroid" with pRoot
    return the result
 end pathToJarSigner
 
