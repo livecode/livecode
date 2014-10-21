@@ -2125,7 +2125,6 @@ Boolean MCPlayer::prepare(const char *options)
 	t_visible = getflag(F_VISIBLE);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
-    //m_is_attached = false;
     if (m_is_attached)
     {
         MCPlatformDetachPlayer(m_platform_player);
