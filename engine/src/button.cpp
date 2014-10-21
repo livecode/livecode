@@ -1151,8 +1151,17 @@ Boolean MCButton::mdown(uint2 which)
 	{
         // SN-2014-08-26: [[ Bug 13201 ]] mx/my are now related to the button's rectangle,
         //  not the stack's rectangle anymore.
-		if (state & CS_SCROLLBAR && mx > rect.width - MCscrollbarwidth
-		        && mx < rect.width)
+        // SN-2014-10-17: [[ Bug 13675 ]] mx/my refer to the button's rectangle on Mac only
+        int2 t_right_limit, t_left_limit;
+#ifdef _MACOSX
+        t_left_limit = rect.width - MCscrollbarwidth;
+        t_right_limit = rect.width;
+#else
+        t_left_limit = rect.x + rect.width - MCscrollbarwidth;
+        t_right_limit = rect.x + rect.width;
+#endif
+        if (state & CS_SCROLLBAR && mx > t_left_limit
+                && mx < t_right_limit)
 		{
 			menu->mdown(which);
 			state |= CS_FIELD_GRAB;
@@ -4741,4 +4750,4 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		}
 	}
 	return IO_NORMAL;
-}	
+}
