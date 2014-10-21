@@ -1147,7 +1147,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    put pSettings["ios,display name"] into tDisplayName
    put pSettings["ios,minimum version"] into tMinimumOS
    put pSettings["ios,device family"] into tDeviceFamily
-   put pSettings["ios,required capabilities"] into tRequiredCapabilities
+   put pSettings["ios,device capabilities"] into tRequiredCapabilities
    put pSettings["ios,persistent wifi"] into tPersistentWifi
    -- MW-2011-03-10: Force this to true for now, until we can fix the engine
    --put pSettings["ios,exits on suspend"] into tExitsOnSuspend
@@ -1365,6 +1365,25 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    else
       replace "${URL_TYPES}" with empty in tPlist
    end if
+   
+   ----------
+   -- PM-2014-10-20: [[ Bug 13590]] Set the location authorization type and description
+   
+   if tRequiredCapabilities["gps"] or tRequiredCapabilities["location-services"] then
+      local tLocationAuthType
+      put pSettings["ios,location auth type"] into tLocationAuthType
+      if tLocationAuthType is empty then
+         put "always" into tLocationAuthType
+      end if
+      if tLocationAuthType is "always" then
+         get "<key>NSLocationAlwaysUsageDescription</key><string>This application requires access to Location Services always</string>"
+      else
+         get "<key>NSLocationWhenInUseUsageDescription</key><string>This application requires access to Location Services when in use</string>"
+      end if
+   else
+      get empty
+   end if
+   replace "${LOCATION_AUTH_TYPE}" with it in tPlist
    
    ----------   
    
