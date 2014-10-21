@@ -965,7 +965,7 @@ void MCPlayer::open()
 	MCControl::open();
 	prepare(MCnullstring);
     // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
-    if (m_platform_player != nil)
+    if (m_platform_player != nil && !m_is_attached)
     {
         MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
         m_is_attached = true;
@@ -986,7 +986,7 @@ void MCPlayer::close()
         s_volume_popup -> close();
     
     // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
-    if (m_platform_player != nil)
+    if (m_platform_player != nil && m_is_attached)
     {
         MCPlatformDetachPlayer(m_platform_player);
         m_is_attached = false;
@@ -1413,7 +1413,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 prepare(MCnullstring);
                 
                 // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
-                if (m_platform_player != nil)
+                if (m_platform_player != nil && !m_is_attached)
                 {
                     MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
                     m_is_attached = true;
@@ -2125,7 +2125,12 @@ Boolean MCPlayer::prepare(const char *options)
 	t_visible = getflag(F_VISIBLE);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
-    m_is_attached = false;
+    //m_is_attached = false;
+    if (m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+    }
 	
 	layer_redrawall();
 	
@@ -2176,6 +2181,12 @@ Boolean MCPlayer::playstart(const char *options)
 {
 	if (!prepare(options))
 		return False;
+        
+    if (m_platform_player != nil && !m_is_attached)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+    }
 	playpause(False);
 	return True;
 }
@@ -2255,7 +2266,7 @@ Boolean MCPlayer::playstop()
     
     m_modify_selection_while_playing = false;
 	
-	if (m_platform_player != nil)
+	if (m_platform_player != nil && m_is_attached)
 	{
 		MCPlatformStopPlayer(m_platform_player);
 
