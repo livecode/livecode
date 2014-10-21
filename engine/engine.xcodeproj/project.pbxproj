@@ -546,21 +546,21 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E /* revsecurity */;
+			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E;
 			remoteInfo = revsecurity;
 		};
 		4C13881718A12E9900EFF7B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E /* revsecurity */;
+			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E;
 			remoteInfo = revsecurity;
 		};
 		4C13881B18A12EB400EFF7B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E /* revsecurity */;
+			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E;
 			remoteInfo = revsecurity;
 		};
 		4D055BB41079F6E7007F6E13 /* PBXContainerItemProxy */ = {
