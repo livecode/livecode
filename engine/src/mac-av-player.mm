@@ -818,14 +818,20 @@ void MCAVFoundationPlayer::Start(double rate)
     //   pause at the endtime.
     if (m_play_selection_only)
     {
-        CMTime t_end_time;
+        // MW-2014-10-22: [[ Bug 13267 ]] Boundary time observers often go 'past' the requested time by a small amount
+        //   so we set the boundary to be one timescale unit before the actual end time, and then adjust when we hit
+        //   that time.
+        CMTime t_end_time, t_original_end_time;
         if (m_selection_duration != 0)
             t_end_time = CMTimeFromLCTime(m_selection_finish);
         else
             t_end_time = [m_player currentItem] . asset . duration;
+        t_original_end_time = t_end_time;
+        t_end_time . value -= 1;
         m_endtime_observer_token = [m_player addBoundaryTimeObserverForTimes: [NSArray arrayWithObject: [NSValue valueWithCMTime: t_end_time]]
                                                                        queue: nil usingBlock: ^(void) {
                                                                            [m_player pause];
+                                                                           [m_player seekToTime: t_original_end_time toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
                                                                        }];
     }
     

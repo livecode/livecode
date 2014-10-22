@@ -681,6 +681,7 @@
 		E82206E1184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E82206E2184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E864B42115BDAB5200F5361C /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */; };
+		E8AF7D2319F7E3BF000F68E9 /* graphics_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AF7D2219F7E3BF000F68E9 /* graphics_util.cpp */; };
 		E8DDE5E016C2B1A7007367E4 /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */; };
 /* End PBXBuildFile section */
 
@@ -1858,6 +1859,7 @@
 		E8A7EF0016FC98A200C39491 /* stacksecurity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stacksecurity.cpp; path = src/stacksecurity.cpp; sourceTree = "<group>"; };
 		E8AE103215D90DE700A517E8 /* exec-scripting.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-scripting.cpp"; path = "src/exec-scripting.cpp"; sourceTree = "<group>"; };
 		E8AF4890174D5563000B2F9E /* libskia.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libskia.xcodeproj; path = ../thirdparty/libskia/libskia.xcodeproj; sourceTree = SOURCE_ROOT; };
+		E8AF7D2219F7E3BF000F68E9 /* graphics_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphics_util.cpp; path = src/graphics_util.cpp; sourceTree = "<group>"; };
 		E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep.cpp; path = src/image_rep.cpp; sourceTree = "<group>"; };
 		E8EBC31D13E04C29003F6AA3 /* srvmultipart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvmultipart.h; path = src/srvmultipart.h; sourceTree = "<group>"; };
 		E8EBC31E13E04C29003F6AA3 /* srvmultipart.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvmultipart.cpp; path = src/srvmultipart.cpp; sourceTree = "<group>"; };
@@ -3048,6 +3050,7 @@
 				4D592DEA14EED23600EADBB6 /* fonttable.cpp */,
 				4DB902510DAA5C980014A170 /* gradient.cpp */,
 				4DB902520DAA5C980014A170 /* gradient.h */,
+				E8AF7D2219F7E3BF000F68E9 /* graphics_util.cpp */,
 				4D587E370B8096FD00200116 /* mctheme.cpp */,
 				4D587DD90B8096E600200116 /* mctheme.h */,
 				4D587E7D0B8096FD00200116 /* metacontext.cpp */,
@@ -3998,6 +4001,7 @@
 				4D1F9D53171C682E0091C6CB /* hndlrlst.cpp in Sources */,
 				4D1F9D54171C682E0091C6CB /* idraw.cpp in Sources */,
 				4D1F9D55171C682E0091C6CB /* ifile.cpp in Sources */,
+				E8AF7D2419F7E3BF000F68E9 /* graphics_util.cpp in Sources */,
 				4D1F9D56171C682E0091C6CB /* igif.cpp in Sources */,
 				4D1F9D57171C682E0091C6CB /* iimport.cpp in Sources */,
 				4D1F9D58171C682E0091C6CB /* ijpg.cpp in Sources */,
@@ -4414,7 +4418,7 @@
 				7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */,
 				4D77F1DD183F8298002EEBB4 /* exec-keywords.cpp in Sources */,
 				763FF4EA18522CC100B45FBA /* image_rep_resampled.cpp in Sources */,
-				4D6F2AE718981E7F0099947D /* (null) in Sources */,
+				E8AF7D2319F7E3BF000F68E9 /* graphics_util.cpp in Sources */,
 				4CF4B883199E0D9900E33AEE /* coretextlayout.mm in Sources */,
 				E82206E1184F810A00117D10 /* resolution.cpp in Sources */,
 				72C28AFA1911300D007F2AA0 /* segment.cpp in Sources */,
