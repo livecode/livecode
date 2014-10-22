@@ -261,7 +261,18 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
             //      Avoids excessive processing for rows of non-zero pixels
             x = dnext;
             next = next + 1;
-            while (next < width && sptr[next + 1] != 0)
+            
+            // MW-2014-06-24: [[ Bug ]] Only loop up to (width - 1), otherwise we get
+            //   an access overflow.
+            while (next < (width - 1) && sptr[next + 1] != 0)
+            {
+                xdptr[x] = 0;
+                x++, next++;
+            }
+            
+            // MW-2014-08-27: [[ Bug 13221 ]] If we reached the edge of the source, then we
+            //   assume the next pixel is clear.
+            if (next == width - 1)
             {
                 xdptr[x] = 0;
                 x++, next++;

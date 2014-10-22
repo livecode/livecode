@@ -25,6 +25,10 @@
 		${BUNDLE_DISPLAY_NAME_SUPPORT}
 	<key>MinimumOSVersion</key>
 		${MINIMUM_OS_SUPPORT}
+	<key>UILaunchImages</key>
+	<array>
+		${SPLASHSCREENS}
+	</array>
 	<key>UIDeviceFamily</key>
 	<array>
 		${DEVICE_SUPPORT}
@@ -51,6 +55,10 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This application requires access to Location Services when in use</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This application requires access to Location Services always</string>
 	<key>UIStatusBarHidden</key>
 		${STATUS_BAR_HIDDEN}
 	<key>UIStatusBarHidden~ipad</key>

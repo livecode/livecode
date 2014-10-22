@@ -28,11 +28,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "mblsyntax.h"
 #include "mblsensor.h"
+#include "mbliphoneapp.h"
 
 #include <Foundation/NSOperation.h>
 
+#ifdef __IPHONE_8_0
+#include <UIKit/UIAlertController.h>
+#endif
+
 #import <CoreLocation/CoreLocation.h>
 #import <CoreMotion/CoreMotion.h>
+
+#include "mbldc.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,6 +92,7 @@ static void initialize_core_motion(void)
 @interface MCIPhoneLocationDelegate : NSObject <CLLocationManagerDelegate>
 {
 	NSTimer *m_calibration_timer;
+    bool m_ready;
 }
 @end
 
@@ -107,6 +115,27 @@ static int32_t s_location_calibration_timeout = 0;
 	
 	[super dealloc];
 }
+
+- (void)setReady:(BOOL)ready
+{
+    m_ready = ready;
+}
+
+- (BOOL)isReady
+{
+    return m_ready;
+}
+
+#ifdef __IPHONE_8_0
+- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
+{
+    if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorized)
+    {
+        [s_location_delegate setReady:True];
+        MCscreen -> pingwait();
+    }
+}
+#endif
 
 // TODO: Determine difference between location and heading error properly
 - (void)locationManager: (CLLocationManager *)manager didFailWithError: (NSError *)error
@@ -160,6 +189,60 @@ static int32_t s_location_calibration_timeout = 0;
 	[m_calibration_timer release];
 	m_calibration_timer = nil;
 }
+
+static void requestAlwaysAuthorization(void)
+{
+#ifdef __IPHONE_8_0
+    CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
+    
+    // If the status is denied or only granted for when in use, display an alert
+    if (t_status == kCLAuthorizationStatusAuthorizedWhenInUse || t_status == kCLAuthorizationStatusDenied)
+    {
+        NSString *t_title;
+        t_title = (t_status == kCLAuthorizationStatusDenied) ? @"Location services are off" :   @"Background location is not enabled";
+        NSString *t_message = @"To use background location you must turn on 'Always' in the Location Services Settings";
+        
+        UIAlertController *t_alert_controller = [UIAlertController alertControllerWithTitle:t_title message:t_message preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction *t_cancel_action;
+        UIAlertAction *t_go_to_settings_action;
+        
+        __block bool t_in_modal = true;
+        t_cancel_action = [UIAlertAction actionWithTitle:@"Cancel"
+                                                 style:UIAlertActionStyleCancel
+                                               handler:^(UIAlertAction *action) {
+                                                   // do nothing
+                                                   t_in_modal = false;
+                                                   [t_alert_controller dismissViewControllerAnimated:YES completion:nil];
+                                               }];
+        t_go_to_settings_action = [UIAlertAction actionWithTitle:@"Settings"
+                                               style:UIAlertActionStyleDefault
+                                             handler:^(UIAlertAction *action) {
+                                                 // go to settings
+                                                 t_in_modal = false;
+                                                 NSURL *t_settings_url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+                                                 [[UIApplication sharedApplication] openURL:t_settings_url];
+                                             }];
+        
+        [t_alert_controller addAction:t_cancel_action];
+        [t_alert_controller addAction:t_go_to_settings_action];
+        [MCIPhoneGetViewController() presentViewController:t_alert_controller animated:YES completion:nil];
+        
+        while(t_in_modal)
+            MCscreen -> wait(1.0, False, True);
+        
+    }
+    // The user has not enabled any location services. Request background authorization.
+    else if (t_status == kCLAuthorizationStatusNotDetermined)
+    {
+        [s_location_manager requestAlwaysAuthorization];
+        
+        while (![s_location_delegate isReady])
+            MCscreen -> wait(1.0, False, True);
+    }
+#endif
+}
+
 @end
 
 static void initialize_core_location(void)
@@ -167,8 +250,10 @@ static void initialize_core_location(void)
 	if (s_location_manager != nil)
 		return;
 	
-	s_location_manager = [[CLLocationManager alloc] init];
+    // PM-2014-10-07: [[ Bug 13590 ]] Configuration of the location manager object must always occur on a thread with an active run loop
+    MCIPhoneRunBlockOnMainFiber(^(void) {s_location_manager = [[CLLocationManager alloc] init];});
 	s_location_delegate = [[MCIPhoneLocationDelegate alloc] init];
+    [s_location_delegate setReady: False];
 	[s_location_manager setDelegate: s_location_delegate];
 	
 	s_location_enabled = false;
@@ -226,6 +311,57 @@ double MCSystemGetSensorDispatchThreshold(MCSensorType p_sensor)
     return 0.0;
 }
 
+const char* MCIPhoneGetLocationAuthorizationStatus(void)
+{    
+    const char *t_status_string;
+    t_status_string = "";
+	
+#ifdef __IPHONE_8_0
+	if (MCmajorosversion >= 800)
+	{
+		CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
+		switch (t_status)
+		{
+			case kCLAuthorizationStatusNotDetermined:
+				t_status_string = "notDetermined";
+				break;
+				
+				// This application is not authorized to use location services.  Due
+				// to active restrictions on location services, the user cannot change
+				// this status, and may not have personally denied authorization
+			case kCLAuthorizationStatusRestricted:
+				t_status_string = "restricted";
+				break;
+				
+				// User has explicitly denied authorization for this application, or
+				// location services are disabled in Settings.
+			case kCLAuthorizationStatusDenied:
+				t_status_string = "denied";
+				break;
+				
+				// User has granted authorization to use their location at any time,
+				// including monitoring for regions, visits, or significant location changes.
+			case kCLAuthorizationStatusAuthorizedAlways:
+				t_status_string = "authorizedAlways";
+				break;
+				
+				// User has granted authorization to use their location only when your app
+				// is visible to them (it will be made visible to them if you continue to
+				// receive location updates while in the background).  Authorization to use
+				// launch APIs has not been granted.
+			case kCLAuthorizationStatusAuthorizedWhenInUse:
+				t_status_string = "authorizedWhenInUse";
+				break;
+				
+			default:
+				break;
+		}
+	}
+#endif
+    
+    return t_status_string;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // LOCATION SENSEOR
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,6 +373,11 @@ static bool start_tracking_location(bool p_loosely)
         if (!s_location_enabled)
         {
             initialize_core_location();
+            
+            // PM-2014-10-06: [[ Bug 13590 ]] Make sure on iOS 8 we explicitly request permission to use location services
+            if (MCmajorosversion >= 800)
+                requestAlwaysAuthorization();
+            
             [s_location_manager startUpdatingLocation];
             s_location_enabled = true;
         }
