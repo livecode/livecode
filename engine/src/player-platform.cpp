@@ -966,11 +966,15 @@ void MCPlayer::open()
     MCControl::open();
     prepare(kMCEmptyString);
     // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
-    if (m_platform_player != nil)
+    // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
+    
+    if (m_platform_player != nil && !m_is_attached && m_should_attach)
     {
         MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
         m_is_attached = true;
+        m_should_attach = false;
     }
+    
 }
 
 void MCPlayer::close()
@@ -987,7 +991,8 @@ void MCPlayer::close()
         s_volume_popup -> close();
     
     // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
-    if (m_platform_player != nil)
+    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
+    if (m_platform_player != nil && m_is_attached)
     {
         MCPlatformDetachPlayer(m_platform_player);
         m_is_attached = false;
@@ -1121,8 +1126,9 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 
 Boolean MCPlayer::doubledown(uint2 which)
 {
-    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown 
-    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown
+    // PM-2014-10-22: [[ Bug 13752 ]] If on edit mode, treat a doubledown on the controller as a MCControl::doubledown
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown || (which == Button1 && getstack() -> gettool(this) == T_POINTER))
         return MCControl::doubledown(which);
     if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
     {
@@ -1137,7 +1143,8 @@ Boolean MCPlayer::doubledown(uint2 which)
 Boolean MCPlayer::doubleup(uint2 which)
 {
     // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubleup on the controller as a single mup
-    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+    // PM-2014-10-22: [[ Bug 13752 ]] If on edit mode, treat a doubledown on the controller as a MCControl::doubledown
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown || (which == Button1 && getstack() -> gettool(this) == T_POINTER))
         return MCControl::doubleup(which);
     if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
         handle_mup(which);
@@ -1417,10 +1424,12 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 prepare(MCnullstring);
                 
                 // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
-                if (m_platform_player != nil)
+                // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
+                if (m_platform_player != nil && !m_is_attached && m_should_attach)
                 {
                     MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
                     m_is_attached = true;
+                    m_should_attach = false;
                 }
 
                 dirty = wholecard = True;
@@ -2078,6 +2087,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
     }
 
 	Boolean ok = False;
+    m_should_attach = false;
     
     if (state & CS_PREPARED)
         return True;
@@ -2144,8 +2154,15 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	t_visible = getflag(F_VISIBLE);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
-    m_is_attached = false;
-	
+    if (m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+        m_should_attach = true;
+    }
+    else
+        m_should_attach = true;
+    	
 	layer_redrawall();
 	
 	setloudness();
@@ -2195,6 +2212,13 @@ Boolean MCPlayer::playstart(MCStringRef options)
 {
 	if (!prepare(options))
 		return False;
+    
+    // PM-2014-10-21: [[ Bug 13710 ]] Attach the player if not already attached
+    if (m_platform_player != nil && !m_is_attached)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+    }
 	playpause(False);
 	return True;
 }
@@ -2274,7 +2298,8 @@ Boolean MCPlayer::playstop()
     
     m_modify_selection_while_playing = false;
 	
-	if (m_platform_player != nil)
+    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
+	if (m_platform_player != nil && m_is_attached)
 	{
 		MCPlatformStopPlayer(m_platform_player);
 
