@@ -966,11 +966,14 @@ void MCPlayer::open()
 	prepare(MCnullstring);
     // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
     // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
-    if (m_platform_player != nil && !m_is_attached)
+    
+    if (m_platform_player != nil && !m_is_attached && m_should_attach)
     {
         MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
         m_is_attached = true;
+        m_should_attach = false;
     }
+    
 }
 
 void MCPlayer::close()
@@ -1416,10 +1419,11 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 
                 // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
                 // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
-                if (m_platform_player != nil && !m_is_attached)
+                if (m_platform_player != nil && !m_is_attached && m_should_attach)
                 {
                     MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
                     m_is_attached = true;
+                    m_should_attach = false;
                 }
 
                 dirty = wholecard = True;
@@ -2068,6 +2072,7 @@ Boolean MCPlayer::prepare(const char *options)
     }
 
 	Boolean ok = False;
+    m_should_attach = false;
     
 	if (state & CS_PREPARED)
 		return True;
@@ -2132,8 +2137,11 @@ Boolean MCPlayer::prepare(const char *options)
     {
         MCPlatformDetachPlayer(m_platform_player);
         m_is_attached = false;
+        m_should_attach = true;
     }
-	
+    else
+        m_should_attach = true;
+    	
 	layer_redrawall();
 	
 	setloudness();

@@ -1146,13 +1146,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		if (card != oldcard)
 		{
 			MClockmessages = oldlock;
-            
-#ifdef FEATURE_PLATFORM_PLAYER
-            // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
-            for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-                if (t_player -> getstack() == curcard -> getstack())
-                    t_player -> detachplayer();
-#endif
+ 
 			// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
 			if (curcard -> openbackgrounds(false, oldcard) == ES_ERROR
 			        || curcard != card
@@ -1166,14 +1160,8 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 				else
 					return ES_ERROR;
 			}
-            
-#ifdef FEATURE_PLATFORM_PLAYER
-            // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
-            for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-                if (t_player -> getstack() == curcard -> getstack())
-                    t_player -> attachplayer();
-#endif
-			if (wasfocused)
+ 
+            if (wasfocused)
 				curcard->kfocus();
 			if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
 				curcard->message(MCM_mouse_enter);
@@ -1186,13 +1174,6 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 	MClockmessages = oldlock;
 	if (oldcard != NULL && oldcard != curcard)
 	{
-#ifdef FEATURE_PLATFORM_PLAYER
-        // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
-        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-            if (t_player -> getstack() == curcard -> getstack())
-                t_player -> detachplayer();
-#endif
-
 		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
 		if (abort
 				|| curcard -> openbackgrounds(false, oldcard) == ES_ERROR
@@ -1207,14 +1188,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 			else
 				return ES_ERROR;
 		}
-        
-#ifdef FEATURE_PLATFORM_PLAYER
-        // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
-        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-            if (t_player -> getstack() == curcard -> getstack())
-                t_player -> attachplayer();
-#endif
-		
+   		
 		if (wasfocused)
 			kfocus();
 		if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))

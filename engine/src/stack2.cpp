@@ -2180,12 +2180,6 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			view_configure(window != NULL ? False : True);
 		}
 
-#ifdef FEATURE_PLATFORM_PLAYER
-        // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
-        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-            if (t_player -> getstack() == curcard -> getstack())
-                t_player -> detachplayer();
-#endif
 		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
 		if (curcard->message(MCM_open_stack) == ES_ERROR
 		        || curcard != startcard
@@ -2200,13 +2194,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				state &= ~CS_NO_FOCUS;
 				return ES_ERROR;
 			}
-			
-#ifdef FEATURE_PLATFORM_PLAYER
-        // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
-        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-            if (t_player -> getstack() == curcard -> getstack())
-                t_player -> attachplayer();
-#endif
+
 		state &= ~CS_NO_FOCUS;
 		int2 x, y;
 		MCscreen->querymouse(x, y);
@@ -2243,13 +2231,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	}
 	else
 	{
-#ifdef FEATURE_PLATFORM_PLAYER
-        // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
-        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-            if (t_player -> getstack() == curcard -> getstack())
-                t_player -> detachplayer();
-#endif
-		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
+ 		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
 		if (curcard->message(MCM_open_stack) == ES_ERROR
 		        || curcard != startcard
 				|| curcard -> openbackgrounds(false, NULL) == ES_ERROR
@@ -2263,15 +2245,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			if (curcard == startcard)
 				return ES_ERROR;
 		}
-        
-#ifdef FEATURE_PLATFORM_PLAYER
-        // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
-        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-            if (t_player -> getstack() == curcard -> getstack())
-                t_player -> attachplayer();
-#endif
-
-		state &= ~CS_NO_FOCUS;
+ 		state &= ~CS_NO_FOCUS;
 
 		t_restore_props = mode >= WM_MODELESS;
 	}
