@@ -474,7 +474,8 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
 
 uint2 MCLine::getwidth()
 {
-	return width;
+    // AL-2014-10-21: [[ Bug 13403 ]] Returned line width as integer needs to be rounded up
+	return ceil(width);
 }
 
 uint2 MCLine::getheight()

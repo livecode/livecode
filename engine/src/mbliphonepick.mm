@@ -54,10 +54,10 @@ UIViewController *MCIPhoneGetViewController(void);
 	UIPickerView *pickerView;
 	UITableView *tableView;
 	UIActionSheet *actionSheet;
-    //UIAlertController *actionSheet;
 	UIPopoverController* popoverController;
     UIView *m_action_sheet_view;
     UIControl *m_blocking_view;
+    bool m_should_show_keyboard;
 }
 
 - (id)init;
@@ -87,6 +87,7 @@ UIViewController *MCIPhoneGetViewController(void);
 	tableView = nil;
     m_action_sheet_view = nil;
     m_blocking_view = nil;
+    m_should_show_keyboard = false;
 	return self;
 }
 
@@ -583,7 +584,12 @@ return 1;
             [applicationLoadViewIn setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn]];
             [[m_blocking_view layer]addAnimation:applicationLoadViewIn forKey:kCATransitionFromTop];
 #endif
-            
+            // PM-2014-10-15: [[ Bug 13677 ]] If the keyboard is activated, hide it and show the picker. We should reactivate the keyboard once the picker hides
+            if (MCIPhoneIsKeyboardVisible())
+            {
+                MCIPhoneDeactivateKeyboard();
+                m_should_show_keyboard = true;
+            }
             [MCIPhoneGetView() addSubview:m_blocking_view];
         }
         
@@ -676,6 +682,14 @@ return 1;
             
             m_running = false;
             MCscreen -> pingwait();
+            
+            // PM-2014-10-15: [[ Bug 13677 ]] Make sure we re-activate the keyboard if it was previously deactivated because of the picker
+            if (m_should_show_keyboard)
+            {
+                // show the keyboard as in iOS 7
+                [UIView animateWithDuration:0.9 animations:^{ MCIPhoneActivateKeyboard(); } completion:nil];
+                m_should_show_keyboard = false;
+            }
         }
         else
             [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
@@ -717,6 +731,14 @@ return 1;
             
             m_running = false;
             MCscreen -> pingwait();
+            
+            // PM-2014-10-15: [[ Bug 13677 ]] Make sure we re-activate the keyboard if it was previously deactivated because of the picker
+            if (m_should_show_keyboard)
+            {
+                // show the keyboard as in iOS 7
+                [UIView animateWithDuration:0.9 animations:^{ MCIPhoneActivateKeyboard(); } completion:nil];
+                m_should_show_keyboard = false;
+            }
         }
         else
             [actionSheet dismissWithClickedButtonIndex:0 animated:YES];

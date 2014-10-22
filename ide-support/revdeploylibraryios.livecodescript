@@ -309,7 +309,7 @@ command deployUpdateSDKs
             end if
             
             -- MW-2012-03-21: Allow anything up to and including 5.1 support.
-            if it > "8.0" then
+            if it > "8.1" then
                next repeat
             end if
             
@@ -327,7 +327,7 @@ command deployUpdateSDKs
       if the result is empty then
          repeat for each line tDevSDK in (the folders & return & the files)
             get char 9 to -5 of tDevSDK
-            if it is not among the words of "5.0 5.1 6.0 6.1 7.0 7.1 8.0" then
+            if it is not among the words of "5.0 5.1 6.0 6.1 7.0 7.1 8.0 8.1" then
                next repeat
             end if
             if tDeviceSDKs[it] is not empty then
@@ -469,6 +469,9 @@ function deployIsValidSDK pSDK
       return true
    end if
    if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk") then
+      return true
+   end if   
+   if there is a folder (pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.1.sdk") then
       return true
    end if   
    

@@ -593,7 +593,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 		t_menu_button = (MCButton *)newMenuGroup -> findnum(CT_MENU, t_menu_button_index_i);
 		if (t_menu_button == NULL)
 			break;
-		
+        
 		// Remove any menu shortcuts for the current button.
 		MCstacks -> deleteaccelerator(t_menu_button, t_menu_button -> getstack());
 		
