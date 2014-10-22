@@ -204,6 +204,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	m_in_orientation_changed = false;
 	
 	m_keyboard_activation_pending = false;
+    m_keyboard_is_visible = false;
 	
     m_pending_push_notification = nil;
     m_pending_local_notification = nil;
@@ -678,6 +679,14 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(keyboardWillDeactivate:)
 												 name: UIKeyboardWillHideNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardDidActivate:)
+                                                 name: UIKeyboardDidShowNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardDidDeactivate:)
+                                                 name: UIKeyboardDidHideNotification object:nil];
 	
 	// Swap over the controllers.
 	[m_window setRootViewController: m_main_controller];
@@ -790,6 +799,20 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	MCIPhoneHandleKeyboardWillDeactivate();
 }
 
+- (void)keyboardDidActivate:(NSNotification *)notification
+{
+    m_keyboard_is_visible = true;
+}
+
+- (void)keyboardDidDeactivate:(NSNotification *)notification
+{
+    m_keyboard_is_visible = false;
+}
+
+- (BOOL)isKeyboardVisible
+{
+    return m_keyboard_is_visible;
+}
 //////////
 
 - (void)switchToStatusBarStyle: (UIStatusBarStyle)p_new_style
@@ -871,6 +894,15 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 - (UIViewController *)fetchMainViewController
 {
 	return m_main_controller;
+}
+
+// MM-2014-10-15: [[ Bug 13665 ]] Returns the currently active view controller.
+- (UIViewController *)fetchCurrentViewController
+{
+    if (m_status == kMCIPhoneApplicationStatusStartup || m_status == kMCIPhoneApplicationStatusPrepare)
+        return m_startup_controller;
+    else
+        return m_main_controller;
 }
 
 - (const char *)fetchDeviceToken
@@ -1771,9 +1803,11 @@ UIView *MCIPhoneGetDisplayView(void)
 	return [MCIPhoneGetRootView() displayView];
 }
 
+// MM-2014-10-15: [[ Bug 13665 ]] Return the topmost view controller. This is not necessarily always the main view controller,
+//   could be the startup view controller. Was causing issues when presenting dialogs on startup.
 UIViewController *MCIPhoneGetViewController(void)
 {
-	return [[MCIPhoneApplication sharedApplication] fetchMainViewController];
+    return [[MCIPhoneApplication sharedApplication] fetchCurrentViewController];
 }
 
 void MCIPhoneSetKeyboardType(UIKeyboardType p_type)
@@ -1799,6 +1833,12 @@ void MCIPhoneActivateKeyboard(void)
 void MCIPhoneDeactivateKeyboard(void)
 {
 	[[MCIPhoneApplication sharedApplication] deactivateKeyboard];
+}
+
+// PM-2014-10-15: [[ Bug 13677 ]] Utility for checking if keyboard is currently on screen
+bool MCIPhoneIsKeyboardVisible(void)
+{
+    return [[MCIPhoneApplication sharedApplication] isKeyboardVisible];
 }
 
 UIInterfaceOrientation MCIPhoneGetOrientation(void)
