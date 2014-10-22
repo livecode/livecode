@@ -2512,22 +2512,9 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				// MW-2004-04-27: [[Deep Masks]] If a window already has a mask, replace it now to avoid flicker
 				if (m_window_shape != NULL)
 				{
-					MCImage *t_image;
-					// MW-2009-02-02: [[ Improved image search ]] Search for the appropriate image object using the standard method.
-					t_image = resolveimageid(windowshapeid);
-					if (t_image != NULL)
-					{
-						MCWindowShape *t_new_mask;
-						setextendedstate(True, ECS_MASK_CHANGED);
-						t_image -> setflag(True, F_I_ALWAYS_BUFFER);
-						t_image -> open();
-						t_new_mask = t_image -> makewindowshape();
-						t_image -> close();
-                        // MW-2014-06-11: [[ Bug 12495 ]] Refactored action as different whether using platform API or not.
-						if (t_new_mask != NULL)
-                            updatewindowshape(t_new_mask);
-                        break;
-					}
+					// IM-2014-10-22: [[ Bug 13746 ]] use common loadwindowshape() method
+					loadwindowshape();
+					break;
 				}
 #endif
 			}
