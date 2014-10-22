@@ -88,6 +88,22 @@ bool MCArrayCreateMutable(MCArrayRef& r_array)
 	return true;
 }	
 
+bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive)
+{
+	if (!__MCValueCreate(kMCValueTypeCodeArray, r_array))
+		return false;
+    
+    r_array -> flags |= kMCArrayFlagIsMutable;
+    
+    if (p_case_sensitive)
+        r_array -> flags |= kMCArrayFlagIsCaseSensitive;
+
+    if (p_case_sensitive)
+        r_array -> flags |= kMCArrayFlagIsFormSensitive;
+    
+	return true;
+}
+
 bool MCArrayCopy(MCArrayRef self, MCArrayRef& r_new_array)
 {
 	// If we aren't mutable, then we can just copy directly.
@@ -274,6 +290,16 @@ uindex_t MCArrayGetCount(MCArrayRef self)
 	if (!__MCArrayIsIndirect(self))
 		return self -> key_value_count;
 	return self -> contents -> key_value_count;
+}
+
+bool MCArrayIsCaseSensitive(MCArrayRef self)
+{
+    return (self -> flags & kMCArrayFlagIsCaseSensitive) != 0;
+}
+
+bool MCArrayIsFormSensitive(MCArrayRef self)
+{
+    return (self -> flags & kMCArrayFlagIsFormSensitive) != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

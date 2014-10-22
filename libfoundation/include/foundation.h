@@ -2019,6 +2019,11 @@ bool MCArrayIsMutable(MCArrayRef array);
 // Returns the number of elements in the array.
 uindex_t MCArrayGetCount(MCArrayRef array);
 
+// Returns whether the keys of the array have been predesignated case sensitive or not.
+bool MCArrayIsCaseSensitive(MCArrayRef array);
+// Returns whether the keys of the array have been predesignated form sensitive or not.
+bool MCArrayIsFormSensitive(MCArrayRef array);
+
 // Fetch the value from the array with the given key. The returned value is
 // not retained. If being stored elsewhere ValueCopy should be used to make an
 // immutable copy first. If 'false' is returned it means the key was not found
