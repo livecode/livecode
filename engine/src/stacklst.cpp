@@ -321,7 +321,9 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 		{
 			if (key == (KeySym)accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 			{
-				t_menubar -> message_with_args(MCM_mouse_down, "");
+                // MW-2014-10-22: [[ Bug 13510 ]] Make sure we send the update message to the menu of menubar - not
+                //   the menubar group.
+				accelerators[i] . button -> message_with_args(MCM_mouse_down, "");
 
 				// We now need to re-search for the accelerator, since it could have gone/been deleted in the mouseDown
 				for(uint2 i = 0; i < naccelerators; i++)
