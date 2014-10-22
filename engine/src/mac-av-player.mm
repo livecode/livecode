@@ -831,7 +831,7 @@ void MCAVFoundationPlayer::Start(double rate)
         m_endtime_observer_token = [m_player addBoundaryTimeObserverForTimes: [NSArray arrayWithObject: [NSValue valueWithCMTime: t_end_time]]
                                                                        queue: nil usingBlock: ^(void) {
                                                                            [m_player pause];
-                                                                           [m_player seekToTime: t_original_end_time];
+                                                                           [m_player seekToTime: t_original_end_time toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
                                                                        }];
     }
     
