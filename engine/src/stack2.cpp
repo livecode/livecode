@@ -2356,20 +2356,28 @@ void MCStack::loadwindowshape()
 		destroywindowshape(); //just in case
 		
 #if defined(_DESKTOP)
-		// MW-2009-02-02: [[ Improved image search ]]
-		// Search for the appropriate image object using the standard method.
-		MCImage *iptr;
-		iptr = resolveimageid(windowshapeid);
-		if (iptr != NULL)
+		MCImage *t_image;
+		// MW-2009-02-02: [[ Improved image search ]] Search for the appropriate image object using the standard method.
+		t_image = resolveimageid(windowshapeid);
+		if (t_image != NULL)
 		{
-			iptr->setflag(True, F_I_ALWAYS_BUFFER);
-			iptr->open();
+			MCWindowShape *t_new_mask;
+			t_image->setflag(True, F_I_ALWAYS_BUFFER);
+			t_image->open();
 
-			m_window_shape = iptr -> makewindowshape();
-			if (m_window_shape != nil)
-				setextendedstate(True, ECS_MASK_CHANGED);
-
-			iptr->close();
+			// IM-2014-10-22: [[ Bug 13746 ]] Scale window shape to both stack scale and backing buffer scale
+			MCGFloat t_scale;
+			t_scale = view_getbackingscale();
+			t_scale *= view_get_content_scale();
+			
+			uint32_t t_width, t_height;
+			t_image->getgeometry(t_width, t_height);
+			
+			t_new_mask = t_image -> makewindowshape(MCGIntegerSizeMake(t_width * t_scale, t_height * t_scale));
+			t_image->close();
+			// MW-2014-06-11: [[ Bug 12495 ]] Refactored action as different whether using platform API or not.
+			if (t_new_mask != NULL)
+				updatewindowshape(t_new_mask);
 		}
 #endif
 

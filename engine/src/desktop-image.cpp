@@ -32,7 +32,7 @@ extern void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWindowShape *MCImage::makewindowshape(void)
+MCWindowShape *MCImage::makewindowshape(const MCGIntegerSize &p_size)
 {
 	bool t_success = true;
 	
@@ -43,7 +43,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 	uindex_t t_alpha_stride = 0;
 	uindex_t t_width, t_height;
 	
-	t_success = lockbitmap(t_bitmap, true);
+	t_success = lockbitmap(true, true, &p_size, t_bitmap);
 	
 	if (t_success)
 		t_success = MCImageBitmapHasTransparency(t_bitmap);
