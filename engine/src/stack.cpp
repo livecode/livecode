@@ -140,6 +140,9 @@ MCStack::MCStack()
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks are not script-only by default.
+    m_is_script_only = false;
+    
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
@@ -328,6 +331,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks copy the source script-onlyness.
+    m_is_script_only = sref.m_is_script_only;
+    
 	view_copy(sref);
 
 	mode_copy(sref);
@@ -3074,3 +3080,18 @@ MCRectangle MCStack::getwindowrect(void) const
 }
 
 //////////
+
+// MW-2014-09-30: [[ ScriptOnlyStack ]] Sets the stack as script only with the given script.
+void MCStack::setasscriptonly(MCExecPoint& ep)
+{
+    setscriptprop(ep);
+    
+    m_is_script_only = true;
+    
+    // Make sure we have at least one card.
+    if (cards == NULL)
+    {
+        curcard = cards = MCtemplatecard->clone(False, False);
+        cards->setparent(this);
+    }
+}
