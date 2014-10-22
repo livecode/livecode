@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphone.h"
 #include "mbliphonecontrol.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPropertyInfo MCiOSControl::kProperties[] =
@@ -271,11 +273,14 @@ bool MCiOSControl::FormatRange(MCExecPoint &ep, NSRange r_range)
 
 void MCiOSControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
 {
-    float t_scale;
-    t_scale = MCIPhoneGetNativeControlScale();
+	// IM-2014-10-21: [[ Bug 13450 ]] Merge previous bugfix into refactor branch.
+	// MM-2013-11-26: [[ Bug 11485 ]] The rect of the control is passed in user space. Convert to device space when setting on view.
+	MCGRectangle t_rect;
+	t_rect = MCNativeControlUserRectToDeviceRect(MCRectangleToMCGRectangle(p_rect));
+	
     
     if (m_view != nil)
-        [m_view setFrame: CGRectMake((float)p_rect . x / t_scale, (float)p_rect . y / t_scale, (float)p_rect . width / t_scale, (float)p_rect . height / t_scale)];
+        [m_view setFrame: CGRectMake(t_rect.origin.x, t_rect.origin.y, t_rect.size.width, t_rect.size.height)];
 }
 
 void MCiOSControl::SetVisible(MCExecContext& ctxt, bool p_visible)

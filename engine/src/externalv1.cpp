@@ -1061,7 +1061,7 @@ MCExternalError MCExternalVariable::GetInteger(MCExternalValueOptions p_options,
 	MCValueRef t_value;
 	t_value = GetValueRef();
 	if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
-		return number_to_integer(p_options, MCNumberFetchAsReal((MCNumberRef)t_value), &r_value);
+		return number_to_integer(MCNumberFetchAsReal((MCNumberRef)t_value), p_options, &r_value);
 	
 	MCExternalError t_error;
 	MCAutoStringRef t_string_value;

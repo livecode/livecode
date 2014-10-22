@@ -75,7 +75,7 @@ MCLine::~MCLine()
 	MCBlock *t_block;
 	t_block = p_first;
 	
-	int4 t_frontier_width;
+	coord_t t_frontier_width;
 	t_frontier_width = 0;
 
 	MCBlock *t_break_block;

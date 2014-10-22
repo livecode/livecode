@@ -311,7 +311,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalCapsLockKeyMethodInfo; }
 };
 
-class MCCharToNum : public MCUnaryFunctionCtxt<MCValueRef, uinteger_t, MCStringsEvalCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo>
+class MCCharToNum : public MCUnaryFunctionCtxt<MCValueRef, MCValueRef, MCStringsEvalCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo>
 {
 public:
     MCCharToNum(){}
