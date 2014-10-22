@@ -2981,6 +2981,23 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	ctxt . SetItToValue(*t_id);
 }
 
+void MCInterfaceExecCreateScriptOnlyStack(MCExecContext& ctxt, MCStringRef p_new_name)
+{
+    MCStack *t_new_stack;
+    MCStackSecurityCreateStack(t_new_stack);
+    MCdispatcher -> appendstack(t_new_stack);
+    t_new_stack -> setparent(MCdispatcher -> gethome());
+    t_new_stack -> message(MCM_new_stack);
+    t_new_stack -> setflag(False, F_VISIBLE);
+    t_new_stack -> setasscriptonly(kMCEmptyString);
+    
+	if (p_new_name != nil)
+		t_new_stack -> setstringprop(ctxt, 0, P_NAME, False, p_new_name);
+	
+	MCAutoValueRef t_id;
+	t_new_stack -> names(P_LONG_ID, &t_id);
+	ctxt . SetItToValue(*t_id);
+}
 
 void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCStack *p_owner, MCStringRef p_new_name, bool p_force_invisible)
 {

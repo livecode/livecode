@@ -1235,17 +1235,7 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
 
         MCObject *optr;
         if (script_only_stack)
-        {
-            MCStack *t_new_stack;
-            MCStackSecurityCreateStack(t_new_stack);
-            MCdispatcher -> appendstack(t_new_stack);
-            t_new_stack -> setparent(MCdispatcher -> gethome());
-            t_new_stack -> message(MCM_new_stack);
-            t_new_stack -> setflag(False, F_VISIBLE);
-            // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Set an empty string as script
-            t_new_stack -> setasscriptonly(kMCEmptyString);
-            optr = t_new_stack;
-        }
+            MCInterfaceExecCreateScriptOnlyStack(ctxt, *t_new_name);
         else
         {
             switch (otype)
