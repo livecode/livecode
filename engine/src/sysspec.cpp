@@ -1643,16 +1643,19 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
     MCAutoStringRef t_data_string;
     // MW-2013-08-07: [[ Bug 11089 ]] The MCSystem::Shell() call returns binary data,
 	//   so since uses of MCS_runcmd() expect text, we need to do EOL conversion.
-    // SN-2014-10-14: [[ Bug 13658 ]] Get the behaviour back to what it was - no line-ending conversion for desktop
     if (!MCStringCreateWithNativeChars((char_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_data_string))
-    {
-#ifdef _SERVER
-        if (!MCStringConvertLineEndingsToLiveCode(*t_data_string, r_output))
-#endif
-            r_output = MCValueRetain(kMCEmptyString);
-    }
+        r_output = MCValueRetain(kMCEmptyString);
     else
+    {
+        // SN-2014-10-14: [[ Bug 13658 ]] Get the behaviour back to what it was in 6.x:
+        //  line-ending conversion for servers and Windows only
+#if defined(_SERVER) || defined(_WINDOWS)
+        if (!MCStringConvertLineEndingsToLiveCode(*t_data_string, r_output))
+            r_output = MCValueRetain(kMCEmptyString);
+#else
         r_output = MCValueRetain(*t_data_string);
+#endif
+    }
     
     return IO_NORMAL;
 }
