@@ -1146,7 +1146,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		if (card != oldcard)
 		{
 			MClockmessages = oldlock;
-
+ 
 			// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
 			if (curcard -> openbackgrounds(false, oldcard) == ES_ERROR
 			        || curcard != card
@@ -1160,7 +1160,8 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 				else
 					return ES_ERROR;
 			}
-			if (wasfocused)
+ 
+            if (wasfocused)
 				curcard->kfocus();
 			if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
 				curcard->message(MCM_mouse_enter);
@@ -1187,7 +1188,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 			else
 				return ES_ERROR;
 		}
-		
+   		
 		if (wasfocused)
 			kfocus();
 		if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))

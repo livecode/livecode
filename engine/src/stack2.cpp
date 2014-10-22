@@ -1981,6 +1981,13 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	state |= CS_NO_FOCUS;
 	if (flags & F_DYNAMIC_PATHS)
 		MCdynamiccard = curcard;
+    
+#ifdef FEATURE_PLATFORM_PLAYER
+    // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
+    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+        if (t_player -> getstack() == curcard -> getstack())
+            t_player -> detachplayer();
+#endif
 		
 	// MW-2008-10-31: [[ ParentScripts ]] Send preOpenControl appropriately
 	if (curcard->message(MCM_preopen_stack) == ES_ERROR
@@ -2002,6 +2009,12 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			return ES_ERROR;
 		}
 
+#ifdef FEATURE_PLATFORM_PLAYER
+    // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
+    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+        if (t_player -> getstack() == curcard -> getstack())
+            t_player -> attachplayer();
+#endif
 	if (mode == WM_PULLDOWN || mode == WM_POPUP || mode == WM_CASCADE || (mode == WM_OPTION && MClook != LF_WIN95))
 	{
 		// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
@@ -2181,7 +2194,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				state &= ~CS_NO_FOCUS;
 				return ES_ERROR;
 			}
-			
+
 		state &= ~CS_NO_FOCUS;
 		int2 x, y;
 		MCscreen->querymouse(x, y);
@@ -2218,7 +2231,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	}
 	else
 	{
-		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
+ 		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
 		if (curcard->message(MCM_open_stack) == ES_ERROR
 		        || curcard != startcard
 				|| curcard -> openbackgrounds(false, NULL) == ES_ERROR
@@ -2232,7 +2245,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			if (curcard == startcard)
 				return ES_ERROR;
 		}
-		state &= ~CS_NO_FOCUS;
+ 		state &= ~CS_NO_FOCUS;
 
 		t_restore_props = mode >= WM_MODELESS;
 	}
@@ -2343,20 +2356,28 @@ void MCStack::loadwindowshape()
 		destroywindowshape(); //just in case
 		
 #if defined(_DESKTOP)
-		// MW-2009-02-02: [[ Improved image search ]]
-		// Search for the appropriate image object using the standard method.
-		MCImage *iptr;
-		iptr = resolveimageid(windowshapeid);
-		if (iptr != NULL)
+		MCImage *t_image;
+		// MW-2009-02-02: [[ Improved image search ]] Search for the appropriate image object using the standard method.
+		t_image = resolveimageid(windowshapeid);
+		if (t_image != NULL)
 		{
-			iptr->setflag(True, F_I_ALWAYS_BUFFER);
-			iptr->open();
+			MCWindowShape *t_new_mask;
+			t_image->setflag(True, F_I_ALWAYS_BUFFER);
+			t_image->open();
 
-			m_window_shape = iptr -> makewindowshape();
-			if (m_window_shape != nil)
-				setextendedstate(True, ECS_MASK_CHANGED);
-
-			iptr->close();
+			// IM-2014-10-22: [[ Bug 13746 ]] Scale window shape to both stack scale and backing buffer scale
+			MCGFloat t_scale;
+			t_scale = view_getbackingscale();
+			t_scale *= view_get_content_scale();
+			
+			uint32_t t_width, t_height;
+			t_image->getgeometry(t_width, t_height);
+			
+			t_new_mask = t_image -> makewindowshape(MCGIntegerSizeMake(t_width * t_scale, t_height * t_scale));
+			t_image->close();
+			// MW-2014-06-11: [[ Bug 12495 ]] Refactored action as different whether using platform API or not.
+			if (t_new_mask != NULL)
+				updatewindowshape(t_new_mask);
 		}
 #endif
 
