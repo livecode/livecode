@@ -41,19 +41,19 @@
 	<key>DTCompiler</key>
 	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>DTPlatformBuild</key>
-	<string>12A365</string>
+	<string>12B411</string>
 	<key>DTPlatformName</key>
 	<string>iphoneos</string>
 	<key>DTPlatformVersion</key>
-	<string>8.0</string>
+	<string>8.1</string>
 	<key>DTSDKBuild</key>
-	<string>12A365</string>
+	<string>12B411</string>
 	<key>DTSDKName</key>
-	<string>iphoneos8.0</string>
+	<string>iphoneos8.1</string>
 	<key>DTXcode</key>
-	<string>0600</string>
+	<string>0610</string>
 	<key>DTXcodeBuild</key>
-	<string>6A317</string>
+	<string>6A1052c</string>
 	<key>CFBundleDisplayName</key>
 		${BUNDLE_DISPLAY_NAME_SUPPORT}
 	<key>MinimumOSVersion</key>
@@ -84,10 +84,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This application requires access to Location Services when in use</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>This application requires access to Location Services always</string>
+	${LOCATION_AUTH_TYPE}
 	<key>UIStatusBarHidden</key>
 		${STATUS_BAR_HIDDEN}
 	<key>UIStatusBarHidden~ipad</key>

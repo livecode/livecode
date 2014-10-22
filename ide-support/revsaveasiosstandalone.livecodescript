@@ -76,17 +76,21 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    put "Arm v7" into tSettings["ios,build type"]
    
    local tSDKs
-   if pTarget is "Device" then
-      // AL-2014-09-12: [[ Bug 13417 ]] Use utility function to determine if we are earlier than a given version
-      if macVersionLessThan(the systemVersion, "10.7") then
+   if pTarget is "Device" then      
+      if revIDEDeployIOSSanatizeSystemVersion() < 100700 then   
          
          -- MM-2012-09-18: For Snow Leopard, all device builds (both armv6 and armv6 components) are built using the iOS 5.0 SDK.
          --
          get revIDEDeployIOSGetDeviceSDK("5.0")
          if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") then
             throw "performing iOS device builds requires the iOS 5.0 SDK platform to be installed (available with XCode 4.2)"
-         end if
-
+         end if                  
+         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
+            put it into tSDKs["armv6"]["root path"]
+            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["armv6"]["sdk path"]
+            put "5_0" into tSDKs["armv6"]["suffix"]
+            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
+         end if         
          if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
             put it into tSDKs["armv7"]["root path"]
             put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk") into tSDKs["armv7"]["sdk path"]
@@ -94,9 +98,22 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]                                             
          end if  
          
-      else if macVersionLessThan(the systemVersion, "10.8") then
+      else if revIDEDeployIOSSanatizeSystemVersion() < 100800 then
          
-         -- MM-2012-09-18: Armv7 builds are created with the iOS 6.1 SDK.
+         -- MM-2012-09-18: For Lion and later, armv6 device builds are built using the iOS 5.1 SDK (armv7 builds are no longer supported in the 6.0 SDK).
+         --
+         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
+            get revIDEDeployIOSGetDeviceSDK("5.1")           
+            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") then
+               throw "performing iOS arvm v6 (or universal) device builds requires the iOS 5.1 SDK platform to be installed (available with XCode 4.4)"
+            end if                  
+            put it into tSDKs["armv6"]["root path"]
+            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") into tSDKs["armv6"]["sdk path"]
+            put "5_1" into tSDKs["armv6"]["suffix"]
+            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
+         end if
+         
+         -- MM-2012-09-18: Armv7 builds are created with the iOS 6.0 SDK.
          --  
          if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
             get revIDEDeployIOSGetDeviceSDK("6.1")           
@@ -109,10 +126,20 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
          end if
          
-      else if macVersionLessThan(the systemVersion, "10.9") then
+      else if revIDEDeployIOSSanatizeSystemVersion() < 100900 then
          
          -- MM-2013-09-23: [[ iOS7 Support ]] Use iOS 7 SDK for armv7 builds on 10.8.
          --
+         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
+            get revIDEDeployIOSGetDeviceSDK("5.1")           
+            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") then
+               throw "performing iOS arvm v6 (or universal) device builds requires the iOS 5.1 SDK platform to be installed (available with XCode 4.4)"
+            end if                  
+            put it into tSDKs["armv6"]["root path"]
+            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") into tSDKs["armv6"]["sdk path"]
+            put "5_1" into tSDKs["armv6"]["suffix"]
+            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
+         end if         
          if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
             get revIDEDeployIOSGetDeviceSDK("7.1")           
             if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk") then
@@ -124,23 +151,34 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             put "7_1" into tSDKs["armv7"]["suffix"]
             put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
          end if
-      
+         
       else
          
-         -- MM-2014-09-23: [[ iOS8 Support ]] Use iOS 8 SDK for armv7 builds on 10.9.
-         --  
+         -- MM-2014-10-21: [[ iOS 8.1 Support ]] Use iOS 8.1 SDK for armv7 builds on 10.9.
+         --
+         if tSettings["ios,build type"] is among the items of ",Universal,Arm v6" then
+            get revIDEDeployIOSGetDeviceSDK("5.1")           
+            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") then
+               throw "performing iOS arvm v6 (or universal) device builds requires the iOS 5.1 SDK platform to be installed (available with XCode 4.4)"
+            end if                  
+            put it into tSDKs["armv6"]["root path"]
+            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk") into tSDKs["armv6"]["sdk path"]
+            put "5_1" into tSDKs["armv6"]["suffix"]
+            put revMobileRuntimeFolder(pTarget, tSDKs["armv6"]["suffix"]) into tSDKs["armv6"]["runtime path"]                  
+         end if         
          if tSettings["ios,build type"] is among the items of ",Universal,Arm v7" then
-            get revIDEDeployIOSGetDeviceSDK("8.0")           
-            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk") then
-               throw "performing iOS device builds requires the iOS 8.0 SDK platform to be installed (available with XCode 6.0)"
+            get revIDEDeployIOSGetDeviceSDK("8.1")           
+            if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") then
+               throw "performing iOS device builds requires the iOS 8.1 SDK platform to be installed (available with XCode 6.1)"
             end if                  
             put it into tSDKs["armv7"]["root path"]
             put it & "/usr/bin" into tSDKs["armv7"]["tools path"]
-            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk") into tSDKs["armv7"]["sdk path"]
-            put "8_0" into tSDKs["armv7"]["suffix"]
+            put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") into tSDKs["armv7"]["sdk path"]
+            put "8_1" into tSDKs["armv7"]["suffix"]
             put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
          end if
-
+         
+         
       end if
    else
       
@@ -162,11 +200,14 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       else if pTarget contains "7.1" then
          put "7_1" into tSDKs["sim"]["suffix"]
       else if pTarget contains "8.0" then
-         put "8_0" into tSDKs["sim"]["suffix"]
+         put "8_0" into tSDKs["sim"]["suffix"]         
+      else if pTarget contains "8.1" then
+         put "8_1" into tSDKs["sim"]["suffix"]
       end if
       put revMobileRuntimeFolder(pTarget, tSDKs["sim"]["suffix"]) into tSDKs["sim"]["runtime path"]
       
    end if
+   
    
    -- Compute the base folder
    local tBaseFolder
@@ -252,7 +293,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    -- MM-2012-09-25: A 4 inch splash screen is required for iphone apps to take up the whole iphone 5 screen space.
    --
    if tSettings["ios,iphone 4inch splash"] is empty then
-      put revMobileRuntimeFolder(pTarget) & "/Default4InchSplash.png" into tSettings["ios,iphone 4inch splash"]
+      put mapFilePath(revMobileRuntimeFolder(pTarget) & "/Default4InchSplash.png") into tSettings["ios,iphone 4inch splash"]
    end if
    
    -- MM-2011-09-28: If we have splash screens and icons  specifed in the old format, copy accross using the old format.
@@ -382,9 +423,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          -- MW-2013-06-25: [[ PIE ]] Add the flag for 'PIE' executables, but only if not on ARMv6
          -- MM-2013-09-23: [[ iOS7 Support ]] This causes warnings whn using XCode 5. Further investigation needed.
          --
-         if tInstSet is not "armv6" and tSDKs[tInstSet]["suffix"] is not "7_1" then
-         // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] '-pie' option removed
-            -- put "-pie" & return after tLinkCommand
+         if tInstSet is not "armv6" then
+            --put "-pie" & return after tLinkCommand
          end if
          
          -- Add reference to the partially linked standalone engine
@@ -485,7 +525,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    delete the last char of tDeploy["externals"]
    
    -- Put the redirects if any
-
    -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redircts, we use symlinks with the iOS 8 sim.
    if char 1 of tSDKs["sim"]["suffix"] < 8 then
       put tRedirects into tDeploy["redirects"]
@@ -660,7 +699,7 @@ end revSaveAsMobileDeployer
 ################################################################################
 
 private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle   
-   revStandaloneProgress "Copying icons..."
+   revStandaloneProgress "Copying icons..."    
    repeat for each line tType in ("iphone icon" & return & "retina icon,-114" & return & "iOS 7 retina icon,-120" & return & "iphone 6 plus icon,-180" & return & \
          "ipad icon,-72" & return & "ipad retina icon,-144" & return & "iOS 7 ipad icon,-76" & return & "iOS 7 ipad retina icon,-152")
       get pSettings["ios," & item 1 of tType]
@@ -1110,7 +1149,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    put pSettings["ios,display name"] into tDisplayName
    put pSettings["ios,minimum version"] into tMinimumOS
    put pSettings["ios,device family"] into tDeviceFamily
-   put pSettings["ios,required capabilities"] into tRequiredCapabilities
+   put pSettings["ios,device capabilities"] into tRequiredCapabilities
    put pSettings["ios,persistent wifi"] into tPersistentWifi
    -- MW-2011-03-10: Force this to true for now, until we can fix the engine
    --put pSettings["ios,exits on suspend"] into tExitsOnSuspend
@@ -1268,7 +1307,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
       end if
    end repeat
    replace "${BUNDLE_ICONS}" with it in tPlist
-
+   
    -- MM-2014-09-30: [[ iOS8 Support ]] Added new iOS 7 style entries for the splash screens
    -- MM-2014-10-06: [[ Bug 13512 ]] Splash screen sizes are in points and should omit the @2x @3x suffix, iOS is smart enough to figure that out.
    local tSplashScreens   
@@ -1329,6 +1368,25 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
       replace "${URL_TYPES}" with empty in tPlist
    end if
    
+   ----------
+   -- PM-2014-10-20: [[ Bug 13590]] Set the location authorization type and description
+   
+   if tRequiredCapabilities["gps"] or tRequiredCapabilities["location-services"] then
+      local tLocationAuthType
+      put pSettings["ios,location auth type"] into tLocationAuthType
+      if tLocationAuthType is empty then
+         put "always" into tLocationAuthType
+      end if
+      if tLocationAuthType is "always" then
+         get "<key>NSLocationAlwaysUsageDescription</key><string>This application requires access to Location Services always</string>"
+      else
+         get "<key>NSLocationWhenInUseUsageDescription</key><string>This application requires access to Location Services when in use</string>"
+      end if
+   else
+      get empty
+   end if
+   replace "${LOCATION_AUTH_TYPE}" with it in tPlist
+   
    ----------   
    
    put tPlist into url ("binfile:" & pAppBundle & slash & "Info.plist")   
@@ -1350,7 +1408,6 @@ private function revGetMobileProfileInfo pProfileId
    local tCertIndex, tCerts
    get line it + 2 to it + (lineOffset("</array>", tContents, it) - 1) of tContents
    repeat for each line tLine in it
-      -- MM-2014-08-15: [[ Bug 13190 ]] Developer identities can now appear in a single line
       if tLine contains "<data>" and tLine contains "</data>" then
          add 1 to tCertIndex
          put char (offset("<data>", tLine) + 6) to  offset("</data>", tLine) of tLine into tCerts[tCertIndex]
@@ -1403,7 +1460,7 @@ function revMobileRuntimeFolder pTarget, pVersion
    local tStub
    if pTarget is "Device" then
       if pVersion is empty then
-         put "8_0" into pVersion
+         put "8_1" into pVersion
       end if
       put "Device-" & pVersion into tStub
    else if pTarget contains "4.2" then
@@ -1424,6 +1481,8 @@ function revMobileRuntimeFolder pTarget, pVersion
       put "Simulator-7_1" into tStub
    else if pTarget contains "8.0" then
       put "Simulator-8_0" into tStub
+   else if pTarget contains "8.1" then
+      put "Simulator-8_1" into tStub
    end if
    
    local tUserPath, tOverridePath
@@ -1520,6 +1579,9 @@ function mapFilePath pPath
          else
             put tRepo & merge("/_build/ios/[[tBuild]]/[[the last item of pPath]].dylib") into tPath
          end if
+         break
+      case "Default4InchSplash.png"
+         put tRepo & slash & "engine/rsrc/Default-568h@2x.png" into tPath
          break
       default
          put pPath into tPath
