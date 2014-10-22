@@ -536,8 +536,14 @@ void X_clear_globals(void)
 	MCraisemenus = True;
 	MCraisepalettes = True;
 	MCsystemmodals = True;
-	MCactivatepalettes = True;
-	MChidepalettes = False;
+    MCactivatepalettes = True;
+    // SN-2014-10-2-: [[ Bug 13684 ]] Bugfix brought in 7.0 initialisation
+    // MW-2007-07-05: [[ Bug 2288 ]] Default for hidePalettes is not system-standard
+#ifdef _MACOSX
+	MChidepalettes = True;
+#else
+    MChidepalettes = False;
+#endif
 	MCdontuseNS = False;
 	MCdontuseQT = False;
 	MCdontuseQTeffects = False;
