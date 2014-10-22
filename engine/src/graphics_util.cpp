@@ -16,8 +16,6 @@
 
 #include "graphics.h"
 
-#include "graphics_util.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM-2014-10-22: [[ Bug 13746 ]] Set the given rect of the raster to transparent black
