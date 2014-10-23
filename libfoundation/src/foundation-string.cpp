@@ -1284,7 +1284,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         MCRange t_input, t_out;
         t_input . offset = 0;
         t_input . length = self -> char_count;
-        MCStringUnmapCodepointIndices(self, t_input, t_out);
+        MCStringMapCodepointIndices(self, t_input, t_out);
     }
     
     // Quick-n-dirty workaround
@@ -1294,8 +1294,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         r_out_range = p_in_range;
         return true;
     }
-    
-    
+
     return MCStringMapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
 }
 
