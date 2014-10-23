@@ -200,7 +200,7 @@ void MCServerExecPutBinaryOutput(MCExecContext& ctxt, MCDataRef p_value)
 
 void MCServerExecPutContent(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (!MCS_put(ctxt, MCStringIsNative(p_value) ? kMCSPutContent : kMCSPutUnicodeContent, p_value))
+	if (!MCS_put(ctxt, kMCSPutContent, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
@@ -208,13 +208,13 @@ void MCServerExecPutContentUnicode(MCExecContext& ctxt, MCDataRef p_value)
 {
 	MCAutoStringRef t_string;
 	if (!MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(p_value), MCDataGetLength(p_value)/sizeof(unichar_t), &t_string)
-		|| !MCS_put(ctxt, kMCSPutUnicodeContent, *t_string))
+		|| !MCS_put(ctxt, kMCSPutContent, *t_string))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
 void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (!MCS_put(ctxt, MCStringIsNative(p_value) ? kMCSPutMarkup : kMCSPutUnicodeMarkup, p_value))
+	if (!MCS_put(ctxt, kMCSPutMarkup, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
@@ -222,7 +222,7 @@ void MCServerExecPutMarkupUnicode(MCExecContext& ctxt, MCDataRef p_value)
 {
 	MCAutoStringRef t_string;
 	if (!MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(p_value), MCDataGetLength(p_value)/sizeof(unichar_t), &t_string)
-		|| !MCS_put(ctxt, kMCSPutUnicodeMarkup, *t_string))
+		|| !MCS_put(ctxt, kMCSPutMarkup, *t_string))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
