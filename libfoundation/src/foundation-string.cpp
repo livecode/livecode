@@ -577,10 +577,13 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					}
 				}
 				
+				// MW-2014-10-23: [[ Bug 13757 ]] Make sure we process the VS specific 'I64d' format
+				//   as 64-bit.
 				if (strncmp(t_format_ptr, "lld", 3) == 0 ||
 					strncmp(t_format_ptr, "llu", 3) == 0 ||
 					strncmp(t_format_ptr, "lf", 2) == 0 ||
-					strncmp(t_format_ptr, "f", 1) == 0)
+					strncmp(t_format_ptr, "f", 1) == 0 ||
+					strncmp(t_format_ptr, "I64d", 4) == 0)
 					t_arg_count += FORMAT_ARG_64_BIT;
 				else
 					t_arg_count += FORMAT_ARG_32_BIT;
