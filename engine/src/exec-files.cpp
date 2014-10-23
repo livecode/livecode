@@ -2123,6 +2123,15 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
     t_encoding = MCprocesses[t_index].encoding;
 	MCAutoValueRef t_output;
 
+    // SN-2014-10-14: [[ Bug 13658 ]] In case we want to read everything (EOF, end, empty) from a binary process,
+    //  the sentinel must be empty, not Ctrl-D (0x04, which might appear in a binary data output.
+    MCAutoStringRef t_sentinel;
+    if (MCprocesses[t_index] . encoding == kMCFileEncodingBinary &&
+            MCStringGetLength(p_sentinel) == 1 && MCStringGetCharAtIndex(p_sentinel, 0) == 0x4)
+        t_sentinel = kMCEmptyString;
+    else
+        t_sentinel = p_sentinel;
+
 	switch (p_repeat_form)
 	{
 	case RF_FOR:
@@ -2130,12 +2139,13 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
 		break;
 	case RF_UNTIL:
     {
-        MCFilesExecReadUntil(ctxt, t_stream, t_index, p_sentinel, p_max_wait, p_time_units, t_encoding, &t_output, t_stat);
+        MCFilesExecReadUntil(ctxt, t_stream, t_index, *t_sentinel, p_max_wait, p_time_units, t_encoding, &t_output, t_stat);
 		break;
 	}
 	default:  
 		break;
 	}
+
     MCFilesReadComplete(ctxt, *t_output, t_stat, t_encoding != kMCFileEncodingBinary);
 }
 
