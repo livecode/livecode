@@ -1456,7 +1456,27 @@ void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, 
 void MCStringsEvalContains(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
 	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
-	r_result = MCStringContains(p_whole, p_part, t_compare_option);
+    
+    bool t_found;
+    MCRange t_range;
+    t_found = MCStringFind(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, &t_range);
+    if (!t_found)
+    {
+        r_result = false;
+        return;
+    }
+    
+    MCRange t_grapheme_range;
+    MCStringUnmapGraphemeIndices(p_whole, kMCBasicLocale, t_range, t_grapheme_range);
+    
+    MCRange t_grapheme_range_r;
+    MCStringMapGraphemeIndices(p_whole, kMCBasicLocale, t_grapheme_range, t_grapheme_range_r);
+    
+    if (t_grapheme_range_r . offset == t_range . offset &&
+        t_grapheme_range_r . length == t_range . length)
+        r_result = true;
+    else
+        r_result = false;
 }
 
 void MCStringsEvalDoesNotContain(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
