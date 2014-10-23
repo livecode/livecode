@@ -2974,16 +2974,7 @@ MCU_environmentarray (MCStringEncoding p_encoding, char **&r_env, uindex_t &r_en
 	MCRange t_truncate_range = MCRangeMake(1, -1);
 	for (t_var = MCglobals; t_var != NULL; t_var = t_var->getnext())
 	{
-		if (t_var->isclear()) continue;
-
-		/* Verify that the name starts with "$".  Because
-		 * MCVariable::is_env is protected, this is the only way to
-		 * check if we're supposed to treat the variable as an
-		 * environment variable. */
-		if (!MCStringBeginsWithCString (MCNameGetString (t_var->getname()),
-										(const char_t *) "$",
-										kMCStringOptionCompareExact))
-			continue;
+		if (!t_var->isenv() || t_var->isclear()) continue;
 
 		switch (MCValueGetTypeCode (t_var->getvalueref()))
 		{
