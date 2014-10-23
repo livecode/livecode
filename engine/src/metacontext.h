@@ -126,6 +126,8 @@ private:
 	}
 };
 
+struct MCMarkImage;
+
 class MCMetaContext: public MCContext
 {
 public:
@@ -142,6 +144,11 @@ public:
 	bool changeopaque(bool p_new_value);
 	void setprintmode(void);
 
+	void save();
+	void restore();
+	
+	void cliprect(const MCRectangle &p_rect);
+	
 	void setclip(const MCRectangle& rect);
 	MCRectangle getclip(void) const;
 	void clearclip(void);
@@ -168,7 +175,7 @@ public:
 	void drawline(int2 x1, int2 y1, int2 x2, int2 y2);
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
 	void drawsegments(MCSegment *segments, uint2 nsegs);
-	void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override = false);
+	void drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override = false);
 	void drawrect(const MCRectangle& rect, bool inside);
 	void fillrect(const MCRectangle& rect, bool inside);
 	void fillrects(MCRectangle *rects, uint2 nrects);
@@ -191,6 +198,9 @@ public:
 	void applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height);
 
 	void drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_parameters);
+
+	bool lockgcontext(MCGContextRef& r_ctxt);
+	void unlockgcontext(MCGContextRef ctxt);
 
 	void clear(const MCRectangle *rect);
 	MCRegionRef computemaskregion(void);
@@ -232,11 +242,18 @@ private:
 	MCMarkStroke *f_stroke;
 	MCMarkFill *f_fill_foreground;
 	MCMarkFill *f_fill_background;
+    // SN-2014-08-25: [[ Bug 13187 ]] MarkImage added to save the image to be drawn
+    MCMarkImage *f_image;
 	bool f_stroke_used;
 	bool f_fill_foreground_used;
 	bool f_fill_background_used;
 	
 	MCMarkState *f_state_stack;
+	
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Minimal implementation of save() & restore()
+	MCRectangle *m_clip_stack;
+	uint32_t m_clip_stack_size;
+	uint32_t m_clip_stack_index;
 	
 	heap_t f_heap;
 
@@ -321,6 +338,9 @@ struct MCMarkImage
 
 	// The place to render the top-left of the src rect
 	int2 dx, dy;
+    
+    // SN-2014-08-25: [[ Bug 13187 ]] Added to allow listing of MarkImages
+    MCMarkImage *previous;
 };
 
 struct MCMarkMetafile

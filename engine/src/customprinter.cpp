@@ -264,7 +264,8 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 			// Devices have to support unmasked images (otherwise we couldn't
 			// rasterize!).
 			bool t_mask, t_alpha;
-			t_mask = MCImageBitmapHasTransparency(p_mark -> image . descriptor . bitmap, t_alpha);
+			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
+			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
 
 			if (!t_mask)
 				return true;
@@ -357,12 +358,14 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		{
             // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
             // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-			if (!(p_mark -> rectangle . inset % 2))
+            // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
+            if (p_mark -> rectangle . inset && !(p_mark -> rectangle . inset % 2))
 				p_mark -> rectangle . inset ++;
+            // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
 			p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2,
 														   p_mark -> rectangle . bounds . y + p_mark -> rectangle . inset / 2, 
-														   p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset, 
-														   p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset);
+                                                           MCMin(p_mark -> rectangle . bounds . width, p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset),
+                                                           MCMin(p_mark -> rectangle . bounds . height, p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset));
 			
 			MCPath *t_path;
 			if (p_mark -> stroke != nil && p_mark -> rectangle . bounds . height == 1)
@@ -384,12 +387,14 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		{
             // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
             // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+            // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
 			if (!(p_mark -> round_rectangle . inset % 2))
 				p_mark -> round_rectangle . inset ++;
+            // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
 			p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2,
 														   p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . inset / 2, 
-														   p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset, 
-														   p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset);
+                                                           MCMin(p_mark -> round_rectangle . bounds . width, p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset),
+                                                           MCMin(p_mark -> round_rectangle . bounds . height, p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset));
 			
 			MCPath *t_path;
 			t_path = MCPath::create_rounded_rectangle(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius / 2, p_mark -> stroke != nil);
@@ -406,12 +411,14 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		{
             // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
             // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+            // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
 			if (!(p_mark -> arc . inset % 2))
 				p_mark -> arc . inset ++;
+            // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
 			p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2,
 														   p_mark -> arc . bounds . y + p_mark -> arc . inset / 2, 
-														   p_mark -> arc . bounds . width - p_mark -> arc . inset, 
-														   p_mark -> arc . bounds . height - p_mark -> arc . inset);
+                                                           MCMin(p_mark -> arc . bounds . width, p_mark -> arc . bounds . width - p_mark -> arc . inset),
+                                                           MCMin(p_mark -> arc . bounds . height, p_mark -> arc . bounds . height - p_mark -> arc . inset));
 			
 			MCPath *t_path;
 			if (p_mark -> arc . complete)
@@ -494,23 +501,31 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 	}
 
 	uint2 t_img_width, t_img_height;
-	MCImageBitmap *t_img_bitmap = nil;
-	t_img_bitmap = p_mark -> image . descriptor . bitmap;
-	t_img_width = t_img_bitmap -> width;
-	t_img_height = t_img_bitmap -> height;
+	MCGRaster t_raster;
 
 	if (!m_execute_error)
 	{
+		if (!MCGImageGetRaster(p_mark->image.descriptor.image, t_raster))
+			m_execute_error = true;
+	}
+
+	if (!m_execute_error)
+	{
+		t_img_width = t_raster.width;
+		t_img_height = t_raster.height;
+
 		// Fill in the printer image info
 		MCCustomPrinterImage t_image;
 		if (t_image_type == kMCCustomPrinterImageNone)
 		{
 			bool t_mask, t_alpha;
-			t_mask = MCImageBitmapHasTransparency(t_img_bitmap, t_alpha);
+			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
+			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
+			// IM-2014-06-26: [[ Bug 12699 ]] Set image type appropriately.
 			t_image . type = t_alpha ? kMCCustomPrinterImageRawARGB : (t_mask ? kMCCustomPrinterImageRawMRGB : kMCCustomPrinterImageRawXRGB);
-			t_image . id = (uint32_t)(intptr_t)t_img_bitmap;
-			t_image . data = t_img_bitmap -> data;
-			t_image . data_size = t_img_bitmap -> stride * t_img_height;
+			t_image . id = (uint32_t)(intptr_t)p_mark->image.descriptor.image;
+			t_image . data = t_raster.pixels;
+			t_image . data_size = t_raster.stride * t_img_height;
 		}
 		else
 		{
@@ -524,9 +539,10 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 
 		// Compute the transform that is needed - this transform goes from image
 		// space to page space.
+		// IM-2014-06-26: [[ Bug 12699 ]] Rework to ensure transforms are applied in the correct order - page transform -> image offset -> image transform
 		MCGAffineTransform t_transform;
-		t_transform = MCGAffineTransformMakeScale(m_scale_x, m_scale_y);
-		t_transform = MCGAffineTransformTranslate(t_transform, m_translate_x + p_mark -> image . dx - p_mark -> image . sx, m_translate_y + p_mark -> image . dy - p_mark -> image . sy);
+		t_transform = MCGAffineTransformMake(m_scale_x, 0, 0, m_scale_y, m_translate_x, m_translate_y);
+		t_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeTranslation(p_mark -> image . dx - p_mark -> image . sx, p_mark -> image . dy - p_mark -> image . sy));
 		if (p_mark -> image . descriptor . has_transform)
 			t_transform = MCGAffineTransformConcat(t_transform, p_mark -> image . descriptor . transform);
 
@@ -819,9 +835,19 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 		else if (p_mark -> fill -> style == FillTiled)
 		{
 			// Fetch the size of the tile, and its data.
-			MCGRaster t_tile_raster;
-			if (MCGImageGetRaster(p_mark -> fill -> pattern -> image, t_tile_raster))
+			MCGImageRef t_image;
+			t_image = nil;
+			
+			MCGAffineTransform t_transform;
+			
+			// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+			if (MCPatternLockForContextTransform(p_mark->fill->pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform))
 			{
+				MCGRaster t_tile_raster;
+				/* UNCHECKED */ MCGImageGetRaster(t_image, t_tile_raster);
+				
+				t_transform = MCGAffineTransformTranslate(t_transform, p_mark->fill->origin.x, p_mark->fill->origin.y);
+				
 				// Construct the paint pattern.
 				t_paint . type = kMCCustomPrinterPaintPattern;
 				t_paint . pattern . image . type = MCCustomPrinterImageTypeFromMCGRasterFormat(t_tile_raster . format);
@@ -830,12 +856,9 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 				t_paint . pattern . image . height = t_tile_raster . height;
 				t_paint . pattern . image . data = t_tile_raster . pixels;
 				t_paint . pattern . image . data_size = t_tile_raster . stride * t_tile_raster . height;
-				t_paint . pattern . transform . scale_x = 1.0 / p_mark -> fill -> pattern -> scale;
-				t_paint . pattern . transform . scale_y = 1.0 / p_mark -> fill -> pattern -> scale;
-				t_paint . pattern . transform . skew_x = 0.0;
-				t_paint . pattern . transform . skew_y = 0.0;
-				t_paint . pattern . transform . translate_x = p_mark -> fill -> origin . x;
-				t_paint . pattern . transform . translate_y = p_mark -> fill -> origin . y;
+				t_paint . pattern . transform = MCCustomPrinterTransformFromMCGAffineTransform(t_transform);
+				
+				MCPatternUnlock(p_mark->fill->pattern, t_image);
 			}
 			else
 				m_execute_error = true;
@@ -1020,7 +1043,7 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	t_font . handle = t_font_handle;
 
 	bool t_success;
-	t_success = context -> device -> DrawText((const MCCustomPrinterGlyph *)p_span -> glyphs, p_span -> glyph_count, (const char *)t_bytes, t_clusters, t_font, context -> paint, context -> transform, context -> clip);
+	t_success = context -> device -> DrawText((const MCCustomPrinterGlyph *)p_span -> glyphs, p_span -> glyph_count, (const char *)t_bytes, t_byte_count, t_clusters, t_font, context -> paint, context -> transform, context -> clip);
 
 	MCMemoryDeleteArray(t_clusters);
 	
@@ -1302,10 +1325,12 @@ MCPrinterResult MCCustomPrinterDevice::Begin(const MCPrinterRectangle& p_src_rec
 		if (!StartPage())
 			return PRINTER_RESULT_ERROR;
 
+    // MW-2014-07-30: [[ Bug 12804 ]] Make sure we get left / top round the right way else clipping
+    //   is wrong.
 	// Calculate the convex integer hull of the source rectangle.
 	MCRectangle t_src_rect_hull;
-	t_src_rect_hull . x = (int2)floor(p_src_rect . top);
-	t_src_rect_hull . y = (int2)floor(p_src_rect . left);
+	t_src_rect_hull . x = (int2)floor(p_src_rect . left);
+	t_src_rect_hull . y = (int2)floor(p_src_rect . top);
 	t_src_rect_hull . width = (uint2)(ceil(p_src_rect . right) - floor(p_src_rect . left));
 	t_src_rect_hull . height = (uint2)(ceil(p_src_rect . bottom) - floor(p_src_rect . top));
 
@@ -1710,9 +1735,9 @@ public:
 		return true;
 	}
 
-	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
+	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
 	{
-		if (!m_target -> DrawText(glyphs, glyph_count, text, clusters, font, paint, transform, p_clip))
+		if (!m_target -> DrawText(glyphs, glyph_count, text_bytes, text_byte_count, clusters, font, paint, transform, p_clip))
 			return Failed("DrawText");
 		return true;
 	}
@@ -1899,9 +1924,9 @@ public:
 		return true;
 	}
 
-	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
+	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& p_clip)
 	{
-		Enter("begin text '%s' with clip (%f, %f)-(%f, %f)", text, 
+		Enter("begin text '%s' with clip (%f, %f)-(%f, %f)", text_bytes, 
 				p_clip . left, p_clip . top, p_clip . right, p_clip . bottom);
 		for(uint32_t i = 0; i < glyph_count; i++)
 			Print("glyph %d at (%f, %f)", glyphs[i] . id, glyphs[i] . x, glyphs[i] . y);

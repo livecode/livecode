@@ -91,18 +91,6 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for SERVER mode.
 //
 
-void MCStack::mode_create(void)
-{
-}
-
-void MCStack::mode_copy(const MCStack& stack)
-{
-}
-
-void MCStack::mode_destroy(void)
-{
-}
-
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
@@ -163,11 +151,6 @@ void MCStack::mode_openasmenu(MCStack *grab)
 
 void MCStack::mode_closeasmenu(void)
 {
-}
-
-bool MCStack::mode_haswindow(void)
-{
-	return window != DNULL;
 }
 
 void MCStack::mode_constrain(MCRectangle& rect)
@@ -373,6 +356,12 @@ bool MCModeCollectEntropy(void)
 bool MCModeHasHomeStack(void)
 {
 	return true;
+}
+
+// IM-2014-08-08: [[ Bug 12372 ]] Pixel scaling is disabled on the server.
+bool MCModeGetPixelScalingEnabled(void)
+{
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

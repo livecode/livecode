@@ -59,18 +59,14 @@ void MCImageFlipBitmapInPlace(MCImageBitmap *p_bitmap, bool p_horizontal, bool p
 // Image format encode / decode function
 bool MCImageEncodeGIF(MCImageBitmap *p_image, IO_handle p_stream, bool p_dither, uindex_t &r_bytes_written);
 bool MCImageEncodeGIF(MCImageIndexedBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
-bool MCImageDecodeGIF(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_frame_count);
 
-bool MCImageEncodeJPEG(MCImageBitmap *p_image, IO_handle p_stream, uindex_t &r_bytes_written);
-bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image);
+bool MCImageEncodeJPEG(MCImageBitmap *p_image, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written);
 
-bool MCImageEncodePNG(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
-bool MCImageEncodePNG(MCImageIndexedBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
-bool MCImageDecodePNG(IO_handle p_stream, MCImageBitmap *&r_bitmap);
+bool MCImageEncodePNG(MCImageBitmap *p_bitmap, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written);
+bool MCImageEncodePNG(MCImageIndexedBitmap *p_bitmap, MCImageMetadata *p_metadata, IO_handle p_stream, uindex_t &r_bytes_written);
 
 bool MCImageEncodeBMP(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
 bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *&r_bitmap);
-bool MCImageDecodeBMP(IO_handle p_stream, MCPoint &r_hotspot, MCImageBitmap *&r_bitmap);
 
 bool MCImageEncodeRawTrueColor(MCImageBitmap *p_bitmap, IO_handle p_stream, Export_format p_format, uindex_t &r_bytes_written);
 bool MCImageEncodeRawIndexed(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
@@ -80,12 +76,10 @@ bool MCImageEncodePBM(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 bool MCImageEncodePPM(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
 bool MCImageDecodeNetPBM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
 
-bool MCImageDecodeXBM(IO_handle p_stream, MCPoint &r_hotspot, char *&r_name, MCImageBitmap *&r_bitmap);
-bool MCImageDecodeXPM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
-bool MCImageDecodeXWD(IO_handle stream, char *&r_name, MCImageBitmap *&r_bitmap);
-
 // Legacy Functions
 void MCImageBitmapSetAlphaValue(MCImageBitmap *p_bitmap, uint8_t p_alpha);
+
+bool MCImageParseMetadata(MCExecPoint& ep, MCVariableValue& p_array, MCImageMetadata& r_metadata);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -115,14 +109,13 @@ bool MCImageCompressRLE(MCImageIndexedBitmap *p_indexed, MCImageCompressedBitmap
 bool MCImageDecompressRLE(MCImageCompressedBitmap *p_compressed, MCImageBitmap *&r_bitmap);
 
 bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBitmap *&r_compressed);
-bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_frames, uindex_t &r_frame_count);
 
 bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t &r_height);
 bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotspot, char *&r_name, MCImageCompressedBitmap *&r_compressed, MCImageBitmap *&r_bitmap);
-bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePaletteSettings *p_palette_settings, bool p_dither, IO_handle p_stream, IO_handle p_mask_stream);
+bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePaletteSettings *p_palette_settings, bool p_dither, MCImageMetadata *metadata, IO_handle p_stream, IO_handle p_mask_stream);
 
-bool MCImageDecode(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_frame_count);
-bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCImageFrame *&r_frames, uindex_t &r_frame_count);
+bool MCImageDecode(IO_handle p_stream, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
+bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
 
 bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data);
 
@@ -154,8 +147,13 @@ public:
 	// Image Rep interface
 	MCImageRepType GetType() { return kMCImageRepMutable; }
 	uindex_t GetFrameCount();
-	bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
-	void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
+	
+	bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
+	void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
+	
+	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
+	void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
+	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	
 	uint32_t GetDataCompression();
@@ -244,7 +242,8 @@ public:
 
 private:
 	MCImage *m_owner;
-	MCImageFrame m_frame;
+	MCGImageFrame m_gframe;
+	MCBitmapFrame m_frame;
 
 	MCImageBitmap *m_bitmap;
 	MCImageBitmap *m_unpre_bitmap;
@@ -298,14 +297,20 @@ class MCImage : public MCControl
 	// IM-2013-11-05: [[ RefactorGraphics ]] Resampled image rep used to store cached
 	// best-quality scaled image
 	MCResampledImageRep *m_resampled_rep;
+
+	// IM-2014-05-12: [[ ImageRepUpdate ]] The possible sources of the currently locked bitmap
 	MCImageRep *m_locked_rep;
-	MCImageFrame *m_locked_frame;
-	MCImageBitmap *m_transformed_bitmap;
+	MCBitmapFrame *m_locked_bitmap_frame;
+	MCGImageRef m_locked_image;
+	MCImageBitmap *m_locked_bitmap;
+
 	uint32_t m_image_opened;
 
 	bool m_has_transform;
 	MCGAffineTransform m_transform;
 	
+    MCRectangle m_center_rect;
+    
 	// MW-2013-10-25: [[ Bug 11300 ]] These control whether a horz/vert flip is
 	//   applied to the transform on referenced images (set by the flip cmd).
 	bool m_flip_x : 1;
@@ -336,6 +341,9 @@ class MCImage : public MCControl
 	static MCCursorRef cursor;
 	static MCCursorRef defaultcursor;
 	static uint2 cmasks[8];
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the image animate message is only posted from a single thread.
+    bool m_animate_posted : 1;
 	
 public:
 	// replace the current image data with the new bitmap
@@ -353,6 +361,9 @@ public:
 	static MCPatternInfo *s_control_pixmapids;
 	static uint16_t s_control_color_flags;
 	
+	// IM-2014-05-21: [[ HiResPatterns ]] Convert image resize quality to MCGImageFilter
+	static MCGImageFilter resizequalitytoimagefilter(uint8_t p_quality);
+
 private:
 	void setrep(MCImageRep *p_rep);
 	
@@ -373,7 +384,7 @@ public:
 	virtual void close();
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
@@ -429,17 +440,29 @@ public:
 		return resizequality;
 	}
 
+	// IM-2014-05-21: [[ HiResPatterns ]] Return the image filter used when transforming this image
+	MCGImageFilter getimagefilter()
+	{
+		return resizequalitytoimagefilter(resizequality);
+	}
+
 	void setframe(int32_t p_newframe);
 	void advanceframe();
 
 	uint32_t getcompression();
 
+	// IM-2014-05-12: [[ ImageRepUpdate ]] Returns a bitmap version of the image at the requested size.
+	// IM-2024-09-02: [[ Bug 13295 ]] Replace scale param with optional target size.
+	// Release the bitmap with unlockbitmap() once done with it.
+	bool lockbitmap(bool p_premultiplied, bool p_update_transform, const MCGIntegerSize *p_size, MCImageBitmap *&r_bitmap);
+
 	// get the current (transformed) image data
 	bool lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform = true);
 	void unlockbitmap(MCImageBitmap *p_bitmap);
 	
-	// IM-2013-07-26: [[ ResIndependence ]] create bitmap copy of transformed image at the given scale
-	bool copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *&r_bitmap);
+	// IM-2013-07-26: [[ ResIndependence ]] create bitmap copy of transformed image.
+	// IM-2014-09-02: [[ Bug 13295 ]] Remove unused scale param.
+	bool copybitmap(bool p_premultiplied, MCImageBitmap *&r_bitmap);
 
 	// IM-2013-07-19: [[ ResIndependence ]] get image source size (in points)
 	bool getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
@@ -447,8 +470,6 @@ public:
 
 	// IM-2013-11-06: [[ RefactorGraphics ]] get the image rep & transform used to render the image
 	bool get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform);
-	
-	MCGFloat getscalefactor(void);
 	
 	// IM-2013-10-30: [[ FullscreenMode ]] Returns the stack device scale or 1.0 if image object not attached
 	MCGFloat getdevicescale(void);
@@ -458,9 +479,11 @@ public:
 	void endsel();
 
 	// in idraw.cc
-	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
+	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
 	void drawcentered(MCDC *dc, int2 x, int2 y, Boolean reverse);
-    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy);
+    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
+
+    void drawwithgravity(MCDC *dc, MCRectangle rect, MCGravity gravity);
 
 	void canceldraw(void);
 	void startmag(int2 x, int2 y);
@@ -515,7 +538,8 @@ public:
 	MCSharedString *getclipboardtext(void);
 
 	// MW-2011-09-13: [[ Masks ]] Updated to return a 'MCWindowMask'
-	MCWindowShape *makewindowshape(void);
+	// IM-2014-10-22: [[ Bug 13746 ]] Add size parameter to allow scaled window shapes
+	MCWindowShape *makewindowshape(const MCGIntegerSize &p_size);
 	
 #if defined(_MAC_DESKTOP)
 	CGImageRef makeicon(uint4 p_width, uint4 p_height);

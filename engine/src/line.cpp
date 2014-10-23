@@ -66,12 +66,12 @@ void MCLine::takebreaks(MCLine *lptr)
 	lptr->width = 0;
 }
 
-MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_width)
+MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, coord_t p_max_width)
 {
 	MCBlock *t_block;
 	t_block = p_first;
 	
-	int4 t_frontier_width;
+	coord_t t_frontier_width;
 	t_frontier_width = 0;
 
 	MCBlock *t_break_block;
@@ -253,7 +253,7 @@ void MCLine::appendall(MCBlock *bptr)
 {
 	firstblock = bptr;
 	lastblock = (MCBlock *)bptr->prev();
-	uint2 oldwidth = width;
+	coord_t oldwidth = width;
 	width = 0;
 	bptr = lastblock;
 	ascent = descent = 0;
@@ -267,9 +267,10 @@ void MCLine::appendall(MCBlock *bptr)
 	dirtywidth = MCU_max(width, oldwidth);
 }
 
-void MCLine::draw(MCDC *dc, int2 x, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle)
+void MCLine::draw(MCDC *dc, int2 p_x, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle)
 {
-	int2 cx = 0;
+	coord_t x = p_x;
+    coord_t cx = 0;
 	MCBlock *bptr = (MCBlock *)firstblock->prev();
 	
 	uint32_t t_flags;
@@ -277,7 +278,7 @@ void MCLine::draw(MCDC *dc, int2 x, int2 y, uint2 si, uint2 ei, const char *tptr
 	
 	bool t_is_flagged;
 	t_is_flagged = false;
-	int32_t t_flagged_sx, t_flagged_ex;
+	coord_t t_flagged_sx, t_flagged_ex;
 	t_flagged_sx = 0;
 	t_flagged_ex = 0;
 	do
@@ -333,7 +334,7 @@ void MCLine::draw(MCDC *dc, int2 x, int2 y, uint2 si, uint2 ei, const char *tptr
 		// Pass the computed flags to the block to draw.
 		bptr->draw(dc, x, cx, y, si, ei, tptr, pstyle, t_flags);
 		
-		uint2 twidth;
+		coord_t twidth;
 		twidth = bptr->getwidth(dc, cx);
 		
 		if (bptr -> getflagged())
@@ -393,7 +394,7 @@ void MCLine::clean()
 
 void MCLine::makedirty()
 {
-	dirtywidth = MCU_max(width, 1);
+	dirtywidth = MCU_max(width, 1.0f);
 }
 
 void MCLine::getindex(uint2 &i, uint2 &l)
@@ -404,9 +405,9 @@ void MCLine::getindex(uint2 &i, uint2 &l)
 	l = j + l - i;
 }
 
-uint2 MCLine::getcursorx(uint2 fi)
+coord_t MCLine::getcursorx(uint2 fi)
 {
-	uint2 x = 0;
+	coord_t x = 0;
 	MCBlock *bptr = (MCBlock *)firstblock;
 	uint2 i, l;
 	bptr->getindex(i, l);
@@ -419,11 +420,11 @@ uint2 MCLine::getcursorx(uint2 fi)
 	return x + bptr->getcursorx(x, fi);
 }
 
-uint2 MCLine::getcursorindex(int2 cx, Boolean chunk)
+uint2 MCLine::getcursorindex(coord_t cx, Boolean chunk)
 {
-	uint2 x = 0;
+	coord_t x = 0;
 	MCBlock *bptr = firstblock;
-	int2 bwidth = bptr->getwidth(NULL, x);
+	coord_t bwidth = bptr->getwidth(NULL, x);
 	while (cx > bwidth && bptr != lastblock)
 	{
 		cx -= bwidth;
@@ -436,7 +437,8 @@ uint2 MCLine::getcursorindex(int2 cx, Boolean chunk)
 
 uint2 MCLine::getwidth()
 {
-	return width;
+    // AL-2014-10-21: [[ Bug 13403 ]] Returned line width as integer needs to be rounded up
+	return ceil(width);
 }
 
 uint2 MCLine::getheight()

@@ -65,6 +65,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
 #include "w32dc.h"
+#include "w32compat.h"
+
 #include <process.h>
 
 // MW-2013-04-18: [[ Bug ]] Temporarily undefine 'GetObject' so that the reference
@@ -392,65 +394,12 @@ bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_le
 //  Implementation of MCStack::mode* hooks for DEVELOPMENT mode.
 //
 
-static MCStack *s_links = NULL;
-
-struct MCStackModeData
-{
-	MCStack *next;
-	MCStack *previous;
-	MCStack *referrer;
-};
-
-void MCStack::mode_create(void)
-{
-	m_mode_data = new MCStackModeData;
-	m_mode_data -> next = NULL;
-	m_mode_data -> previous = NULL;
-	m_mode_data -> referrer = MCtargetptr != NULL ? MCtargetptr -> getstack() : NULL;
-	s_links = this;
-}
-
-void MCStack::mode_copy(const MCStack& stack)
-{
-	mode_create();
-}
-
-void MCStack::mode_destroy(void)
-{
-	MCStack *t_previous_link;
-	bool t_link_found;
-	t_link_found = false;
-	t_previous_link = NULL;
-	for(MCStack *t_link = s_links; t_link != NULL; t_link = t_link -> m_mode_data -> next)
-	{
-		if (t_link -> m_mode_data -> referrer == this)
-			t_link -> m_mode_data -> referrer = m_mode_data -> referrer;
-			
-		if (!t_link_found)
-		{
-			t_link_found = t_link == this;
-			if (!t_link_found)
-				t_previous_link = t_link;
-		}
-	}
-			
-	if (t_previous_link == NULL)
-		s_links = m_mode_data -> next;
-	else
-		t_previous_link -> m_mode_data -> next = m_mode_data -> next;
-
-	delete m_mode_data;
-}
-
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
 {
 	switch(which)
 	{
 	case P_REFERRING_STACK:
-		if (m_mode_data -> referrer != NULL)
-			return m_mode_data -> referrer -> getprop(0, P_LONG_ID, ep, False);
-		else
-			ep . clear();
+		ep . clear();
 	break;
 
 	case P_UNPLACED_GROUP_IDS:
@@ -579,11 +528,6 @@ void MCStack::mode_closeasmenu(void)
 {
 }
 
-bool MCStack::mode_haswindow(void)
-{
-	return window != DNULL;
-}
-
 void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
@@ -594,13 +538,6 @@ MCSysWindowHandle MCStack::getrealwindow(void)
 	return window->handle.window;
 }
 
-MCSysWindowHandle MCStack::getqtwindow(void)
-{
-	return window->handle.window;
-}
-#endif
-
-#ifdef _MACOSX
 MCSysWindowHandle MCStack::getqtwindow(void)
 {
 	return window->handle.window;
@@ -770,9 +707,13 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 
 		if (!effective)
 		{
-			parsescript(False);
-			if (hlist != NULL)
-				t_first = hlist -> enumerate(ep, t_first);
+            // MW-2014-07-25: [[ Bug 12819 ]] Make sure we don't list handlers of passworded stacks.
+            if (getstack() -> iskeyed())
+            {
+                parsescript(False);
+                if (hlist != NULL)
+                    t_first = hlist -> enumerate(ep, t_first);
+            }
 		}
 		else
 		{
@@ -816,7 +757,8 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 	case P_REV_AVAILABLE_VARIABLES:
 	{
 		ep.clear();
-		if (hlist == NULL)
+        // MW-2014-07-25: [[ Bug 12819 ]] Make sure we don't list variables of passworded stacks.
+		if (hlist == NULL || !getstack() -> iskeyed())
 		{
 			return ES_NORMAL;
 		}
@@ -1394,7 +1336,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr != NULL)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }
@@ -1581,6 +1523,25 @@ void MCModePreMain(void)
 bool MCPlayer::mode_avi_closewindowonplaystop()
 {
 	return true;
+}
+
+// IM-2014-08-08: [[ Bug 12372 ]] Allow IDE pixel scaling to be enabled / disabled
+// on startup depending on the usePixelScaling registry value
+bool MCModeGetPixelScalingEnabled()
+{
+	MCExecPoint ep;
+	ep.setsvalue("HKEY_CURRENT_USER\\Software\\LiveCode\\IDE\\usePixelScaling");
+
+	MCS_query_registry(ep, nil);
+
+	if (!MCresult->isempty())
+	{
+		MCresult->clear();
+		return true;
+	}
+
+	// IM-2014-08-14: [[ Bug 12372 ]] PixelScaling is enabled by default.
+	return ep.isempty() || ep.getsvalue() == "true";
 }
 
 #endif

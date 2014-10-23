@@ -58,7 +58,7 @@ void MCFontBreakText(MCFontRef font, const char *chars, uint32_t char_count, boo
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat MCFontMeasureTextFloat(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, const MCGAffineTransform &p_transform);
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, const MCGAffineTransform &p_transform);
-void MCFontDrawText(MCGContextRef ctxt, int32_t x, int32_t y, const char *p_chars, uint32_t p_char_count, MCFontRef p_font, bool is_unicode);
+void MCFontDrawText(MCGContextRef ctxt, coord_t x, int32_t y, const char *p_chars, uint32_t p_char_count, MCFontRef p_font, bool is_unicode);
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);

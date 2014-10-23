@@ -27,6 +27,28 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-09-29: [[ Bug 13451 ]] return the sRGB colorspace (as a CGColorSpaceRef).
+bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace)
+{
+	CGColorSpaceRef t_colorspace;
+	
+#if defined(TARGET_PLATFORM_MACOS_X)
+	// on OSX request sRGB by name.
+	t_colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+#elif defined(TARGET_SUBPLATFORM_IPHONE)
+	// on iOS this isn't supported so we use the deviceRGB colorspace (which is sRGB anyway).
+	t_colorspace = CGColorSpaceCreateDeviceRGB();
+#endif
+	
+	if (t_colorspace == nil)
+		return false;
+	
+	r_colorspace = t_colorspace;
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __CGDataProviderDeallocate(void *info, const void *data, size_t size)
 {
 	MCMemoryDeallocate(const_cast<void*>(data));
@@ -137,9 +159,13 @@ bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGCo
 		
 	}
 	
+	// IM-2014-05-20: [[ GraphicsPerformance ]] Opaque rasters should indicate no alpha in the bitmap info
+	bool t_alpha;
+	t_alpha = p_raster.format != kMCGRasterFormat_xRGB;
+	
 	// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
 	CGBitmapInfo t_bm_info;
-	t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true);
+	t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, t_alpha);
 	
 	if (t_success)
 		t_success = nil != (t_image = CGImageCreate(t_width, t_height, 8, 32, t_dst_stride, p_colorspace, t_bm_info, t_data_provider, nil, true, kCGRenderingIntentDefault));
@@ -171,7 +197,7 @@ bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, 
 	/* OVERHAUL - REVISIT: for a grayscale image this should be CGColorSpaceCreateDeviceGray() */
 	CGColorSpaceRef t_colorspace = nil;
 	if (t_success)
-		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
+		t_success = MCImageGetCGColorSpace(t_colorspace);
 	
 	if (t_success)
 		t_success = MCGImageToCGImage(p_src, p_src_rect, t_colorspace, p_copy, p_invert, r_image);
@@ -189,11 +215,7 @@ bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, CGColorSpaceRef p_colorspac
 	t_mask = MCImageBitmapHasTransparency(p_bitmap);
 	
 	MCGRaster t_raster;
-	t_raster.width = p_bitmap->width;
-	t_raster.height = p_bitmap->height;
-	t_raster.pixels = p_bitmap->data;
-	t_raster.stride = p_bitmap->stride;
-	t_raster.format = t_mask ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
+	t_raster = MCImageBitmapGetMCGRaster(p_bitmap, true);
 	
 	return MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, p_bitmap->width, p_bitmap->height), p_colorspace, p_copy, p_invert, r_image);
 }
@@ -204,7 +226,7 @@ bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert,
 	
 	CGColorSpaceRef t_colorspace = nil;
 	if (t_success)
-		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
+		t_success = MCImageGetCGColorSpace(t_colorspace);
 	
 	if (t_success)
 		t_success = MCImageBitmapToCGImage(p_bitmap, t_colorspace, p_copy, p_invert, r_image);

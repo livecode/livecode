@@ -1,0 +1,78 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>editionType</name>
+	<type>property</type>
+
+	<syntax>
+		<example>get the editionType</example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Returns the edition type of the running engine.</summary>
+
+	<examples>
+<example><p>if the edtionType is "community" then</p><p>   displayMessage
+"Built with LiveCode Community"</p><p>end if</p></example>
+	</examples>
+
+	<history>
+		<introduced version="6.7">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		<changed version=""></changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+		<global/>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+		<ios/>
+		<android/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+	</classification>
+
+	<references>
+		<function tag="revLicenseType">revLicenseType function</function>
+		<function tag="version">version function</function>
+	</references>
+
+	<description>
+	<overview>Use the <b>editionType</b> global property to determine what
+edition of the engine is currently running.</overview>
+
+		<parameters>
+		</parameters>
+
+	<value>The <b>editionType </b>property returns community or
+commercial.<p></p><p>This property is read-only and cannot be
+set.</p></value>
+	<comments>The global property the<b> editionType</b> can be used to
+determine what edition of the engine is currently running.<p></p><p>The
+<b>editionType </b>returns "community" if the currently running engine is
+the LiveCode Community IDE or a standalone built with LiveCode
+Community.</p><p></p><p>The <b>editionType </b>returns "commercial" if the
+currently running engine is the LiveCode Commercial IDE or a standalone
+built with LiveCode Commercial.</p></comments>
+	</description>
+</doc>

@@ -1009,6 +1009,10 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 	siStartInfo.hStdInput = hChildStdinRd;
 	siStartInfo.hStdOutput = hChildStdoutWr;
 
+	// SN-2014-06-16 [[ Bug 12648 ]] Shell command does not accept spaces despite being quoted (Windows)
+	// Quotes surrounding the command call are needed to preserve the quotes of the command and command arguments
+	ep.insert("\"", 0, 0);
+	ep.appendchar('\"');
 	ep.insert(" /C ", 0, 0);
 	ep.insert(MCshellcmd, 0, 0);
 	char *pname = ep.getsvalue().clone();
@@ -1827,6 +1831,19 @@ void MCS_getspecialfolder(MCExecPoint &ep)
 		{
 			if (GetWindowsDirectoryA(ep.getbuffer(PATH_MAX), PATH_MAX))
 				wasfound = True;
+		}
+		// SN-2014-07-30: [[ Bug 13026 ]] specialFolderPath("engine") added for Windows
+		else if (ep.getsvalue() == "engine")
+		{
+            extern char *MCcmd;
+            uindex_t t_length = strrchr(MCcmd, '/') - MCcmd;
+			char *t_folder_path;
+			t_folder_path = strdup(MCcmd);
+			t_folder_path[t_length] = '\0';
+            ep.setbuffer(t_folder_path, t_length);
+			// We expect the buffer to be a native path
+			MCU_path2std(ep.getbuffer(0));
+            wasfound = true;
 		}
 		else
 		{

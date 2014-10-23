@@ -44,6 +44,14 @@ typedef struct _ExternalArray
   char **keys;
 } ExternalArray;
 
+typedef struct _MCRectangle32
+{
+	int x;
+	int y;
+	unsigned int width;
+	unsigned int height;
+} MCRectangle32;
+
 // Function:
 //   SendCardMessage
 // Parameters:
@@ -424,6 +432,23 @@ extern void ShowImageByName(const char *p_group, const char *p_name, int *r_succ
 extern void ShowImageByNum(const char *p_group, int p_index, int *r_success);
 extern void ShowImageById(const char *p_group, unsigned long p_id, int *r_success);
 extern void ShowImageByLongId(const char *p_long_id, int *r_success);
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Definition of runloop action callback & action ref
+typedef void (*MCRunloopActionCallback)(void *context);
+typedef void *MCRunloopActionRef;
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Register the callback to run during the engine's run loop
+extern void AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef *r_action, int *r_success);
+// IM-2014-03-06: [[ revBrowserCEF ]] Remove the runloop action from the run loop
+extern void RemoveRunloopAction(MCRunloopActionRef p_action, int *r_success);
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Run the engine runloop
+extern void RunloopWait(int *r_success);
+
+// IM-2014-07-09: [[ Bug 12225 ]] Convert stack coords to logical window coords
+extern void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success);
+// IM-2014-07-09: [[ Bug 12225 ]] Convert logical window coords to stack coords
+extern void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success);
 
 //
 extern Bool SecurityCanAccessFile(const char *p_file);

@@ -13,19 +13,24 @@ SOURCES=\
 	graphicscontext.cpp \
 	group.cpp \
 	handler.cpp hc.cpp hndlrlst.cpp ibmp.cpp idraw.cpp ifile.cpp \
-	igif.cpp iimport.cpp ijpg.cpp image.cpp \
+	igif.cpp iimport.cpp ijpg.cpp \
+	image.cpp \
 	image_rep.cpp \
 	image_rep_encoded.cpp \
 	image_rep_mutable.cpp \
 	image_rep_densitymapped.cpp \
 	image_rep_resampled.cpp \
-	imagebitmap.cpp ipng.cpp imagelist.cpp \
+	imagebitmap.cpp \
+	imagelist.cpp \
+	imageloader.cpp \
+	ipng.cpp \
 	iquantization.cpp iquantize_new.cpp irle.cpp iutil.cpp \
 	itransform.cpp keywords.cpp line.cpp literal.cpp magnify.cpp mcerror.cpp \
 	mcio.cpp mcstring.cpp mctheme.cpp newobj.cpp \
 	object.cpp objptr.cpp operator.cpp paragraf.cpp param.cpp \
 	property.cpp pickle.cpp \
 	regex.cpp \
+	region.cpp \
 	resolution.cpp \
 	scriptpt.cpp \
 	scrolbar.cpp \
@@ -60,7 +65,8 @@ SOURCES=\
 	linuxstubs.cpp notify.cpp eventqueue.cpp \
 	objectprops.cpp objectpropsets.cpp variablevalue.cpp internal.cpp mcutility.cpp name.cpp \
 	redraw.cpp tilecache.cpp tilecachesw.cpp syslnxregion.cpp fieldstyledtext.cpp paragrafattr.cpp \
-	fonttable.cpp fieldrtf.cpp fieldhtml.cpp stackcache.cpp
+	fonttable.cpp fieldrtf.cpp fieldhtml.cpp stackcache.cpp quicktime.cpp \
+	sysunxthreads.cpp, stacktile.cpp
 
 linuxstubs.cpp: src/linux.stubs
 	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp

@@ -45,6 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+#include <mach-o/dyld.h>
+
 #define ENTRIES_CHUNK 1024
 
 #define SERIAL_PORT_BUFFER_SIZE  16384 //set new buffer size for serial input port
@@ -82,6 +84,15 @@ char *path2utf(char *path);
 
 void MCS_setfiletype(const char *newpath);
 
+// PM-2014-08-08: [[ Bug 13132 ]] OSX 10.6 does not contain an implementation for strndup so use our own regardless of the OSX version
+static char *my_strndup(const char *s, uint32_t l)
+{
+	char *r;
+	r = new char[l + 1];
+	strncpy(r, s, l);
+    r[l] = '\0';
+	return r;
+}
 
 /********************************************************************/
 /*                        File Handling                             */
@@ -306,7 +317,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 	struct stat buf;
 	if (fptr == NULL || fstat(fileno(fptr), (struct stat *)&buf))
 		MCresult->sets("can't open file");
-	else
+	else if (buf.st_size > 0)
 	{
 		char *buffer = ep.getbuffer(buf.st_size);
 		if (buffer == NULL)
@@ -329,9 +340,16 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 					ep.texttobinary();
 				MCresult->clear(False);
 			}
-			fclose(fptr);
 		}
 	}
+    else
+    {
+        MCresult -> clear(False);
+    }
+    // MW-2014-06-20: [[ Bug 12668 ]] Always close the filehandle if it
+    //   was successfully opened.
+    if (fptr != nil)
+        fclose(fptr);
 }
 
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
@@ -445,7 +463,8 @@ IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 			nread = size * n;
 			if (nread > stream->len - (stream->ioptr - stream->buffer))
 			{
-				n = stream->len - (stream->ioptr - stream->buffer) / size;
+				// IM-2014-05-21: [[ Bug 12458 ]] Fix incorrect calculation of remaining blocks
+				n = (stream->len - (stream->ioptr - stream->buffer)) / size;
 				nread = size * n;
 				stat = IO_EOF;
 			}
@@ -2075,7 +2094,8 @@ static sysfolders sysfolderlist[] = {
 									    {"Home", 'cusr', kUserDomain, 'cusr'},
 										// MW-2007-09-11: Added for uniformity across platforms
 										{"Documents", 'docs', kUserDomain, 'docs'},
-										// MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
+										// MW-2007-10-08: [[ Bug 10277 ]] Add support for the 'application support' at user level.
+                                        // FG-2014-09-26: [[ Bug 13523 ]] This entry must not match a request for "asup"
 										{"Support", 0, kUserDomain, 'asup'},
                                     };
 
@@ -2087,6 +2107,10 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 {
 	const char *t_error;
 	t_error = NULL;
+    
+    // SN-2014-07-30: [[ 13026 ]] We can get the engine folder on desktop as well
+	char *t_folder_path;
+	t_folder_path = NULL;
 	
 	FSRef t_folder_ref;
 	if (t_error == NULL)
@@ -2095,31 +2119,42 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 		t_found_folder = false;
 	
 		uint4 t_mac_folder;
+        t_mac_folder = 0;
 		if (p_context . getsvalue() . getlength() == 4)
 		{
 			memcpy(&t_mac_folder, p_context . getsvalue() . getstring(), 4);
 			t_mac_folder = MCSwapInt32NetworkToHost(t_mac_folder);
 		}
-		else
-			t_mac_folder = 0;
+		else if (p_context . getsvalue() == "engine")
+        {
+            extern char *MCcmd;
+            char* t_folder;
+            t_folder_path = my_strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+            
+            t_mac_folder = 0;
+            t_found_folder = true;
+        }
 			
 		OSErr t_os_error;
 		uint2 t_i;
-		for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
-			if (p_context . getsvalue() == sysfolderlist[t_i] . token || t_mac_folder == sysfolderlist[t_i] . macfolder)
-			{
-				Boolean t_create_folder;
-				t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
-				
-				// MW-2012-10-10: [[ Bug 10453 ]] Use the 'mactag' field for the folder id as macfolder can be
-				//   zero.
-				t_os_error = FSFindFolder(sysfolderlist[t_i] . domain, sysfolderlist[t_i] . mactag, t_create_folder, &t_folder_ref);
-				if (t_os_error == noErr)
-				{
-					t_found_folder = true;
-					break;
-				}
-			}
+        if (!t_found_folder)
+        {
+            for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
+                if (p_context . getsvalue() == sysfolderlist[t_i] . token || (t_mac_folder != 0 && t_mac_folder == sysfolderlist[t_i] . macfolder))
+                {
+                    Boolean t_create_folder;
+                    t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
+                    
+                    // MW-2012-10-10: [[ Bug 10453 ]] Use the 'mactag' field for the folder id as macfolder can be
+                    //   zero.
+                    t_os_error = FSFindFolder(sysfolderlist[t_i] . domain, sysfolderlist[t_i] . mactag, t_create_folder, &t_folder_ref);
+                    if (t_os_error == noErr)
+                    {
+                        t_found_folder = true;
+                        break;
+                    }
+                }
+        }
 
 		if (!t_found_folder && p_context . getsvalue() . getlength() == 4)
 		{
@@ -2133,9 +2168,8 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 			t_error = "folder not found";
 	}
 		
-	char *t_folder_path;
-	t_folder_path = NULL;
-	if (t_error == NULL)
+    // SN-2014-07-30: [[ Bug 13026 ]] If the engine was asked, the folder path is directly set
+	if (t_error == NULL && t_folder_path == NULL)
 	{
 		t_folder_path = MCS_fsref_to_path(t_folder_ref);
 		if (t_folder_path == NULL)

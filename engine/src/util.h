@@ -107,8 +107,9 @@ extern const char *MCU_ktos(Boolean condition);
 extern Boolean MCU_matchflags(const MCString &, uint4 &, uint4, Boolean &);
 extern Boolean MCU_matchname(const MCString &, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
-extern void MCU_roundrect(MCPoint *&, uint2 &npoints,
-	                          const MCRectangle &, uint2 radius);
+// MDW-2014-07-06: [[ oval_points ]]
+extern void MCU_roundrect(MCPoint *&points, uint2 &npoints,
+                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle);
 extern void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &);
 extern Boolean MCU_parsepoints(MCPoint *&oldpoints, uint2 &n, const MCString &);
 extern Boolean MCU_parsepoint(MCPoint &r_point, const MCString &);
@@ -180,14 +181,14 @@ extern bool MCU_random_bytes(size_t count, void *buffer);
 
 // 
 
-struct MCRange
+struct MCInterval
 {
 	int from;
 	int to;
 };
 
-extern bool MCU_disjointrangeinclude(MCRange*& p_ranges, int& p_count, int p_from, int p_to);
-extern bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_element);
+extern bool MCU_disjointrangeinclude(MCInterval*& p_ranges, int& p_count, int p_from, int p_to);
+extern bool MCU_disjointrangecontains(MCInterval* p_ranges, int p_count, int p_element);
 
 //
 

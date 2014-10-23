@@ -59,7 +59,7 @@ public:
 	bool FillPath(const MCCustomPrinterPath& path, MCCustomPrinterFillRule rule, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip);
 	bool StrokePath(const MCCustomPrinterPath& path, const MCCustomPrinterStroke& stroke, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip);
 	bool DrawImage(const MCCustomPrinterImage& image, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip);
-	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip);
+	bool DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip);
 
 	bool MakeAnchor(const MCCustomPrinterPoint& position, const char *name);
 	bool MakeLink(const MCCustomPrinterRectangle& area, const char *link, MCCustomPrinterLinkType type);

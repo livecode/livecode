@@ -1,5 +1,4 @@
 ﻿script "revSaveAsAndroidStandalone"
-script "revSaveAsAndroidStandalone"
 ################################################################################
 
 local sJavaRoot
@@ -153,7 +152,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    local tStackFiles
    lock messages
    // SN-2014-10-16: [[ ScriptifiedStack ]] revRelativeStackFilesList is no longer in the messagePath
-   local tFunction
    put "revRelativeStackFilesList(" & quote & pStack & quote & ")" into tFunction
    put value(tFunction, stack "revStandaloneSettings") into tStackFiles
    unlock messages

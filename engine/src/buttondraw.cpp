@@ -300,6 +300,11 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					         && state & (CS_ARMED | CS_KFOCUSED) && (!getcindex(DI_BACK, i) && !getpindex(DI_BACK,i))
 					         && flags & MENU_ITEM_FLAGS && flags & F_AUTO_ARM)
 					{
+						// FG-2014-07-30: [[ Bugfix 9405 ]]
+						// Clear the previously drawn highlight before drawing GTK highlight
+						setforeground(dc, DI_BACK, False, False);
+						dc->fillrect(shadowrect);
+
 						MCWidgetInfo winfo;
 						winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
 						getwidgetthemeinfo(winfo);
@@ -370,6 +375,31 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		bool isunicode;
 		getlabeltext(slabel, isunicode);
 		Boolean icondrawed = False;
+		
+        // SN-2014-08-12: [[ Bug 13155 ]] Don't try to draw the icons if the button has not got any
+		if (icons != NULL && m_icon_gravity != kMCGravityNone)
+		{
+			// MW-2014-06-19: [[ IconGravity ]] Use iconGravity to place the icon.
+			int t_left, t_top, t_right, t_bottom;
+			t_left = rect . x + leftmargin + borderwidth;
+			t_top = rect . y + topmargin + borderwidth;
+			t_right = rect . x + rect . width - rightmargin - borderwidth;
+			t_bottom = rect . y + rect . height - bottommargin - borderwidth;
+			
+			MCRectangle t_rect;
+			if (t_left < t_right)
+				t_rect . x = t_left, t_rect . width = t_right - t_left;
+			else
+				t_rect . x = (t_left + t_right) / 2, t_rect . width = 0;
+			if (t_top < t_bottom)
+				t_rect . y = t_top, t_rect . height = t_bottom - t_top;
+			else
+				t_rect . y = (t_top + t_bottom) / 2, t_rect . height = 0;
+			icons -> curicon -> drawwithgravity(dc, t_rect, m_icon_gravity);
+			
+			icondrawed = True;
+		}
+		
 		if (flags & F_SHOW_NAME && slabel.getlength() && menucontrol != MENUCONTROL_SEPARATOR)
 		{
 			MCString *lines = NULL;
@@ -386,7 +416,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			int2 sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
 			int2 sy = centery - (nlines * fheight >> 1) + fascent + fdescent - 2;
 			uint2 theight = nlines == 1 ? fascent : nlines * fheight;
-			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL)
+            
+            // MW-2014-06-19: [[ IconGravity ]] Use old method of calculating icon location if gravity is none.
+			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL && m_icon_gravity == kMCGravityNone)
 			{
 				switch (flags & F_ALIGNMENT)
 				{
@@ -406,10 +438,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					break;
 				}
 			}
-			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL)
+			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL && m_icon_gravity == kMCGravityNone)
 			{
-				icons->curicon->drawcentered(dc, centerx + loff, centery + loff,
-				                             (state & CS_HILITED) != 0);
+				icons->curicon->drawcentered(dc, centerx + loff, centery + loff, (state & CS_HILITED) != 0);
 				icondrawed = True;
 			}
 
@@ -417,7 +448,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			uint2 i;
 			uint2 twidth = 0;
 			
-			dc -> setclip(MCU_intersect_rect(dirty, t_content_rect));
+			dc->save();
+			dc->cliprect(t_content_rect);
 			
 			for (i = 0 ; i < nlines ; i++)
 			{
@@ -486,7 +518,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				sy += fheight;
 			}
 
-			dc -> setclip(dirty);
+			dc->restore();
 
 			delete lines;
 			if (labelwidth != 0 && !isunnamed())
@@ -998,6 +1030,11 @@ void MCButton::drawpulldown(MCDC *dc, MCRectangle &srect)
 	if (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEGTK &&
 	        state & CS_ARMED && !(flags & F_SHOW_BORDER))
 	{
+		// FG-2014-07-30: [[ Bugfix 9405 ]]
+		// Clear the previously drawn highlight before drawing GTK highlight
+		setforeground(dc, DI_BACK, False, False);
+		dc->fillrect(srect);
+
 		MCWidgetInfo winfo;
 		winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
 		getwidgetthemeinfo(winfo);
@@ -1652,7 +1689,18 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
 			if (!(winfo.state & WTHEME_STATE_PRESSED) && winfo.state & WTHEME_STATE_HASDEFAULT && IsMacLFAM() && MCaqua && dc -> gettype() == CONTEXT_TYPE_SCREEN && !(flags & F_DISABLED) && getstyleint(flags) == F_STANDARD)
 			{
 				MCcurtheme->drawwidget(dc, winfo, srect);
-				MCscreen->addtimer(this, MCM_internal, THROB_RATE);
+                
+                // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
+                if (!m_animate_posted)
+                {
+                    MCThreadMutexLock(MCanimationmutex);
+                    if (!m_animate_posted)
+                    {
+                        m_animate_posted = true;
+                        MCscreen->addtimer(this, MCM_internal, THROB_RATE);
+                    }
+                    MCThreadMutexUnlock(MCanimationmutex);
+                }
 			}
 			else
 				MCcurtheme->drawwidget(dc, winfo, srect);

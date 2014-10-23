@@ -1247,7 +1247,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 			t_success = nil != (t_stream = MCS_fakeopenwrite());
 
 		if (t_success)
-			t_success = MCImageEncodePNG(t_bitmap, t_stream, t_byte_count);
+			t_success = MCImageEncodePNG(t_bitmap, NULL, t_stream, t_byte_count);
 
 		if (t_success)
 			t_success = IO_NORMAL == MCS_fakeclosewrite(t_stream, t_buffer, t_length);
@@ -1298,7 +1298,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 		if (t_success)
 		{
 			MCImageBitmapUnpremultiply(t_bitmap);
-			t_success = MCImageEncodePNG(t_bitmap, t_stream, t_byte_count);
+			t_success = MCImageEncodePNG(t_bitmap, NULL, t_stream, t_byte_count);
 		}
 
 		if (t_success)
@@ -1499,7 +1499,7 @@ bool MCConvertImageToWindowsBitmap(MCSharedString *p_input, STGMEDIUM& r_storage
 	bool t_success = true;
 
 	MCWinSysHandle t_handle = nil;
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 0;
 
 	t_success = MCImageDecode((const uint8_t*)p_input->GetBuffer(), p_input->GetLength(), t_frames, t_frame_count) &&
@@ -1521,7 +1521,7 @@ bool MCConvertImageToWindowsV5Bitmap(MCSharedString *p_input, STGMEDIUM& r_stora
 	bool t_success = true;
 
 	MCWinSysHandle t_handle = nil;
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 0;
 
 	t_success = MCImageDecode((const uint8_t*)p_input->GetBuffer(), p_input->GetLength(), t_frames, t_frame_count) &&
@@ -1543,7 +1543,7 @@ bool MCConvertImageToWindowsEnhancedMetafile(MCSharedString* p_input, STGMEDIUM&
 	bool t_success = true;
 
 	MCWinSysEnhMetafileHandle t_handle = nil;
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 0;
 
 	t_success = MCImageDecode((const uint8_t*)p_input->GetBuffer(), p_input->GetLength(), t_frames, t_frame_count) &&
@@ -1565,7 +1565,7 @@ bool MCConvertImageToWindowsMetafile(MCSharedString* p_input, STGMEDIUM& r_stora
 	bool t_success = true;
 
 	MCWinSysMetafileHandle t_handle = nil;
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 0;
 
 	t_success = MCImageDecode((const uint8_t*)p_input->GetBuffer(), p_input->GetLength(), t_frames, t_frame_count) &&

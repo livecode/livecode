@@ -488,7 +488,9 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 		// for non-premultiplied bitmaps, allocate the space then set pixels one by one
 		// for premultiplied bitmaps, just set the pixels in the target directly
 		// if the copy pixels flag is set, allocate space and copy the pixels from the raster first, then set in target
-		if (p_raster . format == kMCGRasterFormat_U_ARGB)
+
+		// IM-2014-09-16: [[ Bug 13458 ]] Don't copy if we're taking ownership. instead we'll premultiply in place below
+		if (p_raster . format == kMCGRasterFormat_U_ARGB && p_ownership != kMCGPixelOwnershipTypeTake)
 			p_ownership = kMCGPixelOwnershipTypeCopy;
 		
 		switch (p_ownership)
@@ -545,47 +547,51 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 	{
 		if (p_raster . format == kMCGRasterFormat_U_ARGB)
 		{
+			r_bitmap.lockPixels();
+			
 			// for non-premultiplied bitmaps, loop through the source bitmap pixel by pixel
 			// premultiplying each pixel before writing to destination bitmap
-			uint8_t *t_row_ptr;
-			t_row_ptr = (uint8_t*) p_raster . pixels;
+			uint8_t *t_dst_ptr;
+			t_dst_ptr = (uint8_t*)r_bitmap.getPixels();
+			uint32_t t_dst_stride;
+			t_dst_stride = r_bitmap.rowBytes();
+			
+			uint8_t *t_src_ptr;
+			uint32_t t_src_stride;
+			// IM-2014-09-16: [[ Bug 13458 ]] If we're taking ownership then the bitmap pixels are
+			//     both source and destination
+			if (p_ownership == kMCGPixelOwnershipTypeTake)
+			{
+				t_src_ptr = t_dst_ptr;
+				t_src_stride = t_dst_stride;
+			}
+			else
+			{
+				t_src_ptr = (uint8_t*)p_raster.pixels;
+				t_src_stride = p_raster.stride;
+			}
+			
 			for (uint32_t y = 0; y < p_raster . height; y++)
 			{
-				uint32_t *t_pixel;
-				t_pixel = (uint32_t*) t_row_ptr;
+				uint32_t *t_src_pixel;
+				t_src_pixel = (uint32_t*)t_src_ptr;
+				uint32_t *t_dst_pixel;
+				t_dst_pixel = (uint32_t*)t_dst_ptr;
+				
+				// IM-2014-07-23: [[ Bug 12892 ]] Use MCGPixel function to premultiply native format pixels
 				for (uint32_t x = 0; x < p_raster . width; x++)
-				{
-					uint32_t *t_dst_pxl;
-					t_dst_pxl = r_bitmap . getAddr32(x, y);
-					*t_dst_pxl = SkPreMultiplyColor(*t_pixel);
-					t_pixel++;
-				}
-				t_row_ptr += p_raster . stride;
+					*t_dst_pixel++ = MCGPixelPreMultiplyNative(*t_src_pixel++);
+				t_dst_ptr += t_dst_stride;
+				t_src_ptr += t_src_stride;
 			}
+			
+			r_bitmap.unlockPixels();
 		}
 		else if (p_ownership == kMCGPixelOwnershipTypeCopy)
 			MCMemoryCopy(r_bitmap . getPixels(), p_raster . pixels, p_raster . height * p_raster . stride);
 	}
 	
 	return t_success;	
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MCGRectangle MCGRectangleIntersection(const MCGRectangle &p_rect_1, const MCGRectangle &p_rect_2)
-{
-	MCGRectangle t_intersection;
-	t_intersection . origin . x = MCMax(p_rect_1 . origin . x, p_rect_2 . origin . x);
-	t_intersection . origin . y = MCMax(p_rect_1 . origin . y, p_rect_2 . origin . y);
-	
-	MCGFloat t_right, t_bottom;
-	t_right = MCMin(p_rect_1 . origin . x + p_rect_1 . size . width, p_rect_2 . origin . x + p_rect_2 . size . width);
-	t_bottom = MCMin(p_rect_1 . origin . y + p_rect_1 . size . height, p_rect_2 . origin . y + p_rect_2 . size . height);
-	
-	t_intersection . size . width = MCMax(0.0f, t_right - t_intersection . origin . x);
-	t_intersection . size . height = MCMax(0.0f, t_bottom - t_intersection . origin . y);
-	
-	return t_intersection;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -658,6 +664,71 @@ MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const 
 	}
 	return t_transformed_rect;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCGRectangle MCGRectangleIntersection(const MCGRectangle &p_rect_1, const MCGRectangle &p_rect_2)
+{
+	MCGRectangle t_intersection;
+	t_intersection . origin . x = MCMax(p_rect_1 . origin . x, p_rect_2 . origin . x);
+	t_intersection . origin . y = MCMax(p_rect_1 . origin . y, p_rect_2 . origin . y);
+	
+	MCGFloat t_right, t_bottom;
+	t_right = MCMin(p_rect_1 . origin . x + p_rect_1 . size . width, p_rect_2 . origin . x + p_rect_2 . size . width);
+	t_bottom = MCMin(p_rect_1 . origin . y + p_rect_1 . size . height, p_rect_2 . origin . y + p_rect_2 . size . height);
+	
+	t_intersection . size . width = MCMax(0.0f, t_right - t_intersection . origin . x);
+	t_intersection . size . height = MCMax(0.0f, t_bottom - t_intersection . origin . y);
+	
+	return t_intersection;
+}
+
+MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &p_rect_1, const MCGIntegerRectangle &p_rect_2)
+{
+	int32_t t_left, t_top;
+	t_left = MCMax(p_rect_1.origin.x, p_rect_2.origin.x);
+	t_top = MCMax(p_rect_1.origin.y, p_rect_2.origin.y);
+	
+	// IM-2014-10-22: [[ Bug 13746 ]] Cast to signed ints to fix unsigned arithmetic overflow
+	int32_t t_right, t_bottom;
+	t_right = MCMin(p_rect_1.origin.x + (int32_t)p_rect_1.size.width, p_rect_2.origin.x + (int32_t)p_rect_2.size.width);
+	t_bottom = MCMin(p_rect_1.origin.y + (int32_t)p_rect_1.size.height, p_rect_2.origin.y + (int32_t)p_rect_2.size.height);
+	
+	t_right = MCMax(t_left, t_right);
+	t_bottom = MCMax(t_top, t_bottom);
+	
+	return MCGIntegerRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+}
+
+MCGIntegerRectangle MCGRectangleGetBounds(const MCGRectangle &p_rect)
+{
+	int32_t t_left, t_right, t_top, t_bottom;
+	t_left = floor(p_rect.origin.x);
+	t_top = floor(p_rect.origin.y);
+	t_right = ceil(p_rect.origin.x + p_rect.size.width);
+	t_bottom = ceil(p_rect.origin.y + p_rect.size.height);
+	
+	int32_t t_width, t_height;
+	t_width = t_right - t_left;
+	t_height = t_bottom - t_top;
+	
+	// [[ Bug 11349 ]] Out of bounds content displayed since getting integer
+	//   bounds of an empty rect is not empty.
+	if (p_rect . size . width == 0.0f || p_rect . size . height == 0.0f)
+	{
+		t_width = 0;
+		t_height = 0;
+	}
+	
+	return MCGIntegerRectangleMake(t_left, t_top, t_width, t_height);
+}
+
+MCGIntegerRectangle MCGIntegerRectangleGetTransformedBounds(const MCGIntegerRectangle &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetBounds(MCGRectangleApplyAffineTransform(MCGIntegerRectangleToMCGRectangle(p_rect), p_transform));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCGAffineTransformToSkMatrix(const MCGAffineTransform &p_transform, SkMatrix &r_matrix)
 {
@@ -784,6 +855,21 @@ MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& p_transfor
 	t_result.tx = t_c * p_transform.ty - p_transform.tx * t_d;
 	t_result.ty = p_transform.tx * t_b - t_a * p_transform.ty;
 	return t_result;
+}
+
+//////////
+
+MCGAffineTransform MCGAffineTransformFromRectangles(const MCGRectangle &p_a, const MCGRectangle &p_b)
+{
+	MCGFloat t_x_scale, t_y_scale;
+	t_x_scale = p_b.size.width / p_a.size.width;
+	t_y_scale = p_b.size.height / p_a.size.height;
+	
+	MCGFloat t_dx, t_dy;
+	t_dx = p_b.origin.x - (p_a.origin.x * t_x_scale);
+	t_dy = p_b.origin.y - (p_a.origin.y * t_y_scale);
+	
+	return MCGAffineTransformMake(t_x_scale, 0, 0, t_y_scale, t_dx, t_dy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

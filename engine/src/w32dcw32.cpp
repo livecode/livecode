@@ -270,19 +270,17 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 				TranslateMessage(&msg);
 
 				bool t_char_found;
+				// SN0-2014-09-15: [[ Bug 13423 ]] Uniformisation of the dead char behaviour on
+				// all platforms (we want to intercept the DEADCHAR messages).
 				if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
-					t_char_found = PeekMessageW(&tmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
-				                 PeekMessageW(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
+					t_char_found = PeekMessageW(&tmsg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE) ||
+				                 PeekMessageW(&tmsg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
 				else
-					t_char_found = PeekMessageA(&tmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
-				                 PeekMessageA(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
+					t_char_found = PeekMessageA(&tmsg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE) ||
+				                 PeekMessageA(&tmsg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
 				if (t_char_found)
 				{
-					_Drawable _dw;
-					Drawable dw = &_dw;
-					dw->type = DC_WINDOW;
-					dw->handle.window = (MCSysWindowHandle)msg.hwnd;
-					if (MCdispatcher->findstackd(dw) == NULL)
+					if (MCdispatcher->findstackwindowid((uint32_t)msg.hwnd) == NULL)
 					{
 						if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
 							DispatchMessageW(&msg);
@@ -298,8 +296,9 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 			}
 		}
 	}
-	if (MCrecording)
-		MCtemplateplayer->handlerecord();
+	
+	extern void MCQTHandleRecord(void);
+	MCQTHandleRecord();
 
 	abort = curinfo->abort;
 	reset = curinfo->reset;
@@ -315,6 +314,8 @@ static Boolean doubledown;
 static char lastchar;
 static WPARAM lastwParam;
 static KeySym lastkeysym;
+// SN-2014-09-12: [[ Bug 13423 ]] Keeps whether a the next char follows a dead char
+static Boolean deadcharfollower = False;
 static Boolean doubleclick;
 Boolean tripleclick;
 static uint4 clicktime;
@@ -329,12 +330,9 @@ void MCScreenDC::restackwindows(HWND p_window, UINT p_message, WPARAM p_wparam, 
 {
 	WINDOWPOS *t_info;
 	MCStack *t_stack;
-	_Drawable t_drawable;
-	t_drawable . handle . window = (MCSysWindowHandle)p_window;
-	t_drawable . type = DC_WINDOW;
 
 	t_info = (WINDOWPOS *)p_lparam;
-	t_stack = MCdispatcher -> findstackd(&t_drawable);
+	t_stack = MCdispatcher -> findstackwindowid((uint32_t)p_window);
 
 	if (t_stack != NULL && t_stack -> getflag(F_DECORATIONS) && (t_stack -> getdecorations() & WD_UTILITY) != 0)
 		return;
@@ -476,7 +474,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	t_mouseloc = MCPointMake(LOWORD(lParam), HIWORD(lParam));
 
 	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
-	t_mouseloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(t_mouseloc);
+	t_mouseloc = MCscreen->screentologicalpoint(t_mouseloc);
 
 	// MW-2005-02-20: Seed the SSL random number generator
 #ifdef MCSSL
@@ -651,6 +649,14 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		break;
 
+	// SN-2014-09-12: [[ Bug 13423 ]] The next character typed will follow a dead char. Sets the flag.
+	// Stores this dead char typed in case it fails to combine.
+	case WM_DEADCHAR:
+	case WM_SYSDEADCHAR:
+		lastkeysym = wParam;
+		deadcharfollower = True;
+		break;
+
 	case WM_SYSKEYDOWN:
 	case WM_SYSCHAR:
 	case WM_CHAR:
@@ -666,6 +672,9 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		{
 			if (wParam >= 128)
 			{
+				// SN-2014-09-12: [[ Bug 13423 ]] A Unicode char is created when a
+				// valid char follows a dead char (we want the keyDown message to be sent)
+				deadcharfollower = False;
 				bool t_is_unicode;
 				WCHAR t_wide[1];
 			
@@ -701,6 +710,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			WCHAR t_unicode_char;
 			MultiByteToWideChar((((MCScreenDC *)MCscreen) -> input_codepage), 0, &t_input_char, 1, &t_unicode_char, 1);
 
+			// SN-2014-09-12: [[ Bug 13423 ]] A Unicode char is created when a
+			// valid char follows a dead char (we want the keyDown message to be sent)
+			deadcharfollower = False;
+
 			bool t_is_unicode;
 			t_is_unicode = (WideCharToMultiByte((((MCScreenDC *)MCscreen) -> system_codepage), 0, &t_unicode_char, 1, &t_input_char, 1, NULL, NULL) == 0);
 			if (!t_is_unicode)
@@ -728,11 +741,19 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 		if (msg == WM_CHAR || msg == WM_SYSCHAR)
 			wParam = t_input_char;
+		// SN-2014-09-12: [[ Bug 13423 ]] Something else than a character has been typed:
+		// we discard the dead char flag
+		else
+			deadcharfollower = False;
 
 		buffer[0] = buffer[1] = 0;
 
 		if (msg == WM_CHAR || msg == WM_SYSCHAR)
 			buffer[0] = lastchar = wParam;
+		// SN-2014-09-12: [[ Bug 13423 ]] We don't want to fire again KeyDown with the last invalid
+		// char following a dead, if a dead char is typed again (in a sequence '´', 't', '´' for instance)
+		else
+			lastchar = 0;
 
 		// MW-2010-11-17: [[ Bug 3892 ]] Ctrl+Alt can be the same as AltGr.
 		//   If we are a CHAR message *and* have a non-control character *and* have Ctrl+Alt set, we discard the modifiers
@@ -740,9 +761,27 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			MCmodifierstate = 0;
 
 		if (curinfo->keysym == 0) // event came from some other dispatch
-			keysym = pms->getkeysym(wParam, lParam);
+			// SN-2014-09-12: [[ Bug 13423 ]] If we are following a dead char, no conversion needed:
+			// the message is fired without passing by MCScreenDC::handle, that's why
+			// curinfo->keysym hasn't been set, and the typed char is in wParam
+			if (deadcharfollower)
+			{
+				deadcharfollower = False;
+				keysym = wParam;
+			}
+			else
+				keysym = pms->getkeysym(wParam, lParam);
 		else
-			keysym = curinfo->keysym;
+		{
+			// SN-2014-09-15: [[ Bug 13423 ]] If following a DEADCHAR and arriving here, the 
+			// combination failed: we want to [RAW]KEYDOWN this dead key, which has been stored in
+			// the last keysym.
+			if (deadcharfollower)
+				keysym = lastkeysym;
+			else
+				keysym = curinfo->keysym;
+		}
+
 		lastkeysym = keysym;
 		if (MCmodifierstate & MS_CONTROL)
 			if (wParam == VK_CANCEL || keysym == '.')
@@ -762,10 +801,13 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				uint2 count = LOWORD(lParam);
 				while (count--)
 				{
+					// SN-2014-09-12: [[ Bug 13423 ]] keyDown must not be send if we are a dead char
+					// not combined.
 					if (!MCdispatcher->wkdown(dw, buffer, keysym)
-					        && (msg == WM_SYSKEYDOWN || msg == WM_SYSCHAR))
+							&& (msg == WM_SYSKEYDOWN || msg == WM_SYSCHAR))
 						return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
-					if (count || lParam & 0x40000000)
+					// SN-2014-09-15: [[ Bug 13423 ]] We want to send a KEYUP for the dead char, if it failed to combine	
+					if (count || lParam & 0x40000000 || deadcharfollower)
 						MCdispatcher->wkup(dw, buffer, keysym);
 				}
 				curinfo->handled = curinfo->reset = True;
@@ -784,8 +826,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	{	
 		if (curinfo->keysym == 0) // event came from some other dispatch
 			keysym = pms->getkeysym(wParam, lParam);
-		else
+		// SN-2014-09-15: [[ Bug 13423 ]] We don't regard the event if we are following a dead char WITH a
+		// keysym: that's the dead char itself.
+		else if (!deadcharfollower)
 			keysym = curinfo->keysym;
+		else
+			 break;
 		if (keysym == lastkeysym)
 			buffer[0] = lastchar;
 		else
@@ -954,7 +1000,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				if (sptr != NULL)
 				{
 					if (lastdown != 0)
-						sptr->mup(lastdown);
+						sptr->mup(lastdown, false);
 					buffer[0] = 0x1B; // escape
 					buffer[1] = '\0';
 					Boolean oldlock = MClockmessages;
@@ -1020,8 +1066,9 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		if (MCmousestackptr != NULL && MCdispatcher->getmenu() == NULL)
 		{
 			// IM-2014-04-17: [[ Bug 12227 ]] Convert logical stack rect to screen coords when testing for mouse intersection
+			// IM-2014-08-01: [[ Bug 13058 ]] Use stack view rect to get logical window rect
 			MCRectangle t_rect;
-			t_rect = pms->logicaltoscreenrect(MCmousestackptr->getrect());
+			t_rect = pms->logicaltoscreenrect(MCmousestackptr->view_getrect());
 
 			POINT p;
 			if (!GetCursorPos(&p)

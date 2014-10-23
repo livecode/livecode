@@ -586,6 +586,8 @@ MCExport::~MCExport()
 	delete palette_color_count;
 	delete palette_color_list;
 	delete size;
+    // MERG-2014-07-11: metadata array
+    delete metadata;
 }
 
 Parse_stat MCExport::parse(MCScriptPoint &sp)
@@ -600,7 +602,11 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 	if (sp.lookup(SP_EXPORT, te) == PS_NORMAL)
+    {
 		sformat = (Export_format)te->which;
+        // MERG-2014-07-17: Bugfix because export JPEG etc was failing to set the format
+        format = sformat;
+    }
 	else
 	{
 		sp.backup();
@@ -674,14 +680,23 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 					if (t_need_effects &&
 						sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EFFECTS) != PS_NORMAL)
 					{
-						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-						return PS_ERROR;
+                        // MERG-2014-07-11: [[ ImageMetadata ]] Allow metadata without having to specify effects
+                        if (with_effects && sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) == PS_NORMAL)
+                        {
+                            sp . backup();
+                            sp . backup();
+                        }
+                        else
+                        {
+                            MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+                            return PS_ERROR;
+                        }
 					}
 				}
 			}
 		}
-		
-		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+        
+        if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
 		{
 			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
 				sp . parseexp(False, True, &size) != PS_NORMAL)
@@ -691,6 +706,17 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 			}
 		}
 	}
+    
+    // MERG-2014-07-11: [[ ImageMetadata ]] metadata array
+    if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL || sp . skip_token(SP_FACTOR, TT_BINOP, O_AND) == PS_NORMAL )
+    {
+        if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_METADATA) != PS_NORMAL ||
+            sp . parseexp(False, True, &metadata) != PS_NORMAL)
+        {
+            MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+            return PS_ERROR;
+        }
+    }
 
 	if (sp.skip_token(SP_FACTOR, TT_TO) != PS_NORMAL)
 	{
@@ -833,8 +859,8 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 	}
-	
-	// MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+    
+    // MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
 	//   bitmap, which needs to be processed before compression. This flag
 	//   indicates to do this processing later on in the method.
 	bool t_needs_unpremultiply;
@@ -889,8 +915,8 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 		}
-
-		MCRectangle r;
+        
+        MCRectangle r;
 		r.x = r.y = -32768;
 		r.width = r.height = 0;
 		if (srect != NULL)
@@ -972,6 +998,27 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 	}
+    
+    // MERG-2014-07-11: metadata array
+    // MW-2014-07-17: [[ ImageMetadata ]] Parse out the contents of the metadata array here
+    //   (saves copying as further use of ep might clobber it).
+    MCImageMetadata t_metadata;
+    MCMemoryClear(&t_metadata, sizeof(t_metadata));
+    if (metadata != NULL)
+    {
+        if (metadata -> eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
+            return ES_ERROR;
+        }
+        
+        if (ep . getformat() == VF_ARRAY)
+        {
+            // Make a copy of the array in ep so the parsing function can use the ep to eval.
+            MCVariableValue t_metadata_array(*ep . getarray());
+            MCImageParseMetadata(ep, t_metadata_array, t_metadata);
+        }
+    }
 
 	IO_handle stream = NULL;
 	char *name = NULL;
@@ -1024,17 +1071,10 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	{
 		MCImage *t_img = static_cast<MCImage*>(optr);
 		
-		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
-		// so if the image has a scale factor we need to get a 1:1 copy
-		if (t_img->getscalefactor() == 1.0)
-		{
-			/* UNCHECKED */ t_img->lockbitmap(t_bitmap, false);
-			t_image_locked = true;
-		}
-		else
-		{
-			/* UNCHECKED */ t_img->copybitmap(1.0, false, t_bitmap);
-		}
+		// IM-2014-09-02: [[ Bug 13295 ]] Call shorthand version of lockbitmap(),
+		// which will copy if necessary.
+		/* UNCHECKED */ t_img->lockbitmap(t_bitmap, false, true);
+		t_image_locked = true;
 		t_dither = !t_img->getflag(F_DONT_DITHER);
 	}
 	else
@@ -1098,7 +1138,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 		if (t_status == ES_NORMAL)
 		{
-			if (!MCImageExport(t_bitmap, format, &t_palette_settings, t_dither, t_out_stream, mstream))
+			if (!MCImageExport(t_bitmap, format, &t_palette_settings, t_dither, &t_metadata, t_out_stream, mstream))
 			{
 				t_delete_file_on_error = true;
 				MCeerror->add(EE_EXPORT_CANTWRITE, line, pos, name);
@@ -2158,6 +2198,7 @@ MCOpen::~MCOpen()
 	delete go;
 	delete destination;
 	delete certificate;
+	delete verifyhostname;
 }
 
 Parse_stat MCOpen::parse(MCScriptPoint &sp)
@@ -2286,11 +2327,28 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 		}
 	}
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+	{
 		if (sp.skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) != PS_NORMAL)
 		{
 			MCperror->add
 			(PE_OPEN_BADMESSAGE, sp);
 		}
+		
+		// MM-2014-06-13: [[ Bug 12567 ]] Added new "with verification for <host>" variant.
+		if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_FOR) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_HOST) != PS_NORMAL)
+			{
+				MCperror -> add(PE_OPEN_NOHOST, sp);
+				return PS_ERROR;
+			}			
+			if (sp . parseexp(False, True, &verifyhostname) != PS_NORMAL)
+			{
+				MCperror -> add(PE_OPEN_BADHOST, sp);
+				return PS_ERROR;
+			}
+		}	
+	}
 
 	if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
 		if (sp.skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
@@ -2466,9 +2524,24 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 				}
 				/* UNCHECKED */ ep . copyasnameref(t_message_name);
 			}
+			
+			// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+			char *t_verify_host_name;
+			t_verify_host_name = NULL;
+			if (verifyhostname != NULL)
+			{
+				if (verifyhostname -> eval(ep) != ES_NORMAL)
+				{
+					MCeerror -> add(EE_OPEN_BADHOST, line, pos);
+					return ES_ERROR;
+				}
+				
+				t_verify_host_name = ep . getsvalue() . clone();
+			}		
+			
 			// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 			MCresult -> clear(True);
-			MCSocket *s = MCS_open_socket(name, datagram, ep.getobj(), t_message_name, secure, secureverify, NULL);
+			MCSocket *s = MCS_open_socket(name, datagram, ep.getobj(), t_message_name, secure, secureverify, NULL, t_verify_host_name);
 			if (s != NULL)
 			{
 				MCU_realloc((char **)&MCsockets, MCnsockets, MCnsockets + 1, sizeof(MCSocket *));
@@ -3207,7 +3280,13 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 				if (arg == OA_FILE)
 					t_is_text = MCfiles[index] . textmode != 0;
 				else if (arg == OA_PROCESS)
+                {
 					t_is_text = MCprocesses[index] . textmode != 0;
+                    // SN-2014-10-14: [[ Bug 13658 ]] Ensure that we read all we can from a binary process, not
+                    //  until 0x4 (which might be read before the end, when outputting binary data)
+                    if (!t_is_text && *sptr == 0x4)
+                        ep.setsvalue("");
+                }
 				else
 					t_is_text = true;
 				if (!t_is_text)
@@ -3674,7 +3753,8 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MM-2014-02-12: [[ SecureSocket ]] 
+// MM-2014-02-12: [[ SecureSocket ]]
+// MM-2014-06-13: [[ Bug 12567 ]] Added new "with verification for <host>" variant.
 //  New secure socket command, used to ensure all future communications over the given socket are encrypted.
 //
 //  After securing:
@@ -3687,10 +3767,12 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 //    secure socket <socket>
 //    secure socket <socket> with verification
 //    secure socket <socket> without verification
+//    secure socket <socket> with verification for host <host>
 //
 MCSecure::~MCSecure()
 {
 	delete m_sock_name;
+	delete m_verify_host_name;
 }
 
 Parse_stat MCSecure::parse(MCScriptPoint &sp)
@@ -3727,13 +3809,28 @@ Parse_stat MCSecure::parse(MCScriptPoint &sp)
 	
 	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 	{
-		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
-			secureverify = True;
-		else
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) != PS_NORMAL)
 		{
 			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
 			return PS_ERROR;
 		}
+		
+		secureverify = True;
+			
+		// MM-2014-06-13: [[ Bug 12567 ]] Added new "with verification for <host>" variant.
+		if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_FOR) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_HOST) != PS_NORMAL)
+			{
+				MCperror -> add(PE_SECURE_NOHOST, sp);
+				return PS_ERROR;
+			}			
+			if (sp . parseexp(False, True, &m_verify_host_name) != PS_NORMAL)
+			{
+				MCperror -> add(PE_SECURE_BADHOST, sp);
+				return PS_ERROR;
+			}
+		}	
 	}
 	
 	if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
@@ -3763,10 +3860,24 @@ Exec_stat MCSecure::exec(MCExecPoint &ep)
 	char *t_sock_name;
 	t_sock_name = ep . getsvalue() . clone();
 	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+	char *t_host_name;
+	t_host_name = NULL;
+	if (m_verify_host_name != NULL)
+	{
+		if (m_verify_host_name -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_SECURE_BADHOST, line, pos);
+			return ES_ERROR;
+		}
+		
+		t_host_name = ep . getsvalue() . clone();
+	}
+	
 	uint2 t_index;
 	if (IO_findsocket(t_sock_name, t_index))
 	{
-		MCS_secure_socket(MCsockets[t_index], secureverify);
+		MCS_secure_socket(MCsockets[t_index], secureverify, t_host_name);
 		MCresult->clear(False);
 	}
 	else

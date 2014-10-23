@@ -212,6 +212,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define F_LOOPING               (1UL << 19)
 #define F_PLAY_SELECTION        (1UL << 20)
 #define F_SHOW_SELECTION        (1UL << 21)
+#define F_SHOW_VOLUME           (1UL << 22)
 // MCVideoClip attributes, scale is for backward compatibility
 #define F_SCALE_FACTOR          (1UL << 15)
 // MCEPS attributes
@@ -447,6 +448,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define CS_PAUSED               (1UL << 15)
 #define CS_CLOSING              (1UL << 16)
 #define CS_EXTERNAL_CONTROLLER	(1UL << 17)
+#define CS_CTC_PENDING          (1UL << 18)
 // MCGroup state
 #define CS_NEED_UPDATE          (1UL << 13)
 // Uses CS_HSCROLL 14
@@ -501,6 +503,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // If this is set then this stack needs parentScripts resolve
 #define ECS_USES_PARENTSCRIPTS	(1UL << 18)
+
+// MERG-2014-06-02: [[ IgnoreMouseEvents ]] If this is set then the stack is transparent to mouse events
+#define ECS_IGNORE_MOUSE_EVENTS (1UL << 17)
 
 // Has handlers
 #define HH_IDLE                 (1UL << 0)
@@ -777,5 +782,30 @@ typedef struct _MCImagePaletteSettings
 	MCColor *colors;
 	uint32_t ncolors;
 } MCImagePaletteSettings;
+
+// MW-2014-07-17: [[ ImageMetadata ]] Struct representing image metadata contents - at
+//   some point (post-7.0) this would be better as an opaque type, but this will do for now.
+struct MCImageMetadata
+{
+    bool has_density : 1;
+    double density;
+};
+
+enum MCGravity
+{
+    kMCGravityNone,
+    kMCGravityLeft,
+    kMCGravityTop,
+    kMCGravityRight,
+    kMCGravityBottom,
+    kMCGravityTopLeft,
+    kMCGravityTopRight,
+    kMCGravityBottomLeft,
+    kMCGravityBottomRight,
+    kMCGravityCenter,
+    kMCGravityResize,
+    kMCGravityResizeAspect,
+    kMCGravityResizeAspectFill,
+};
 
 #endif

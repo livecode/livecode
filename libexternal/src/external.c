@@ -34,7 +34,17 @@ enum
 	OPERATION_GET_VARIABLE_EX,
 	OPERATION_SET_VARIABLE_EX,
 	OPERATION_GET_ARRAY,
-	OPERATION_SET_ARRAY
+	OPERATION_SET_ARRAY,
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] Add externals extensions for V1
+	// V1
+	OPERATION_ADD_RUNLOOP_ACTION,
+	OPERATION_REMOVE_RUNLOOP_ACTION,
+	OPERATION_RUNLOOP_WAIT,
+
+	// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
+	OPERATION_STACK_TO_WINDOW_RECT,
+	OPERATION_WINDOW_TO_STACK_RECT,
 };
 
 enum
@@ -52,6 +62,9 @@ typedef Bool (*ExternalSecurityHandler)(const char *p_op);
 extern const char *g_external_name;
 extern ExternalDeclaration g_external_table[];
 
+// IM-2014-03-06: [[ revBrowserCEF ]] Initialise externals interface version to V0
+static unsigned int s_external_interface_version = 0;
+
 static ExternalOperationCallback *s_operations = NULL;
 static ExternalDeleteCallback s_delete = NULL;
 
@@ -60,7 +73,14 @@ static ExternalSecurityHandler *s_security_handlers = NULL;
 #if defined(_LINUX) || defined(__MACOSX) || defined(TARGET_SUBPLATFORM_ANDROID)
 void getXtable(ExternalOperationCallback p_operations[], ExternalDeleteCallback p_delete, const char **r_name, ExternalDeclaration **r_table, ExternalDeleteCallback *r_external_delete) __attribute__((visibility("default")));
 void configureSecurity(ExternalSecurityHandler *p_handlers) __attribute__((visibility("default")));
+void setExternalInterfaceVersion(unsigned int p_version) __attribute__((visibility("default")));
 #endif
+
+// IM-2014-03-06: [[ revBrowserCEF ]] The engine may call this to notify the external of the availability of extended engine callbacks
+void LIBRARY_EXPORT setExternalInterfaceVersion(unsigned int p_version)
+{
+	s_external_interface_version = p_version;
+}
 
 void LIBRARY_EXPORT getXtable(ExternalOperationCallback p_operations[],
 															ExternalDeleteCallback p_delete,
@@ -305,6 +325,87 @@ Bool SecurityCanAccessLibrary(const char *p_library)
 		return s_security_handlers[SECURITY_CHECK_LIBRARY](p_library);
 	return True;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// IM-2014-03-06: [[ revBrowserCEF ]] Add external interface V1 functions
+void AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef *r_action, int *r_success)
+{
+	char *t_result;
+
+	if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+
+	t_result = (s_operations[OPERATION_ADD_RUNLOOP_ACTION])(p_callback, p_context, r_action, r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void RemoveRunloopAction(MCRunloopActionRef p_action, int *r_success)
+{
+	char *t_result;
+
+	if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+
+	t_result = (s_operations[OPERATION_REMOVE_RUNLOOP_ACTION])(p_action, NULL, NULL, r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void RunloopWait(int *r_success)
+{
+	char *t_result;
+
+	if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+
+	t_result = (s_operations[OPERATION_RUNLOOP_WAIT])(NULL, NULL, NULL, &r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
+void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+{
+	char *t_result;
+
+	if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+
+	t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])(p_win_id, x_rect, NULL, &r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+{
+	char *t_result;
+
+	if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+
+	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])(p_win_id, x_rect, NULL, &r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 #ifdef TARGET_SUBPLATFORM_IPHONE
 struct LibExport

@@ -81,52 +81,6 @@ bool MCStackFullscreenModeFromString(const char *p_string, MCStackFullscreenMode
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCRegionTransformContext
-{
-	MCRegionRef region;
-	MCGAffineTransform transform;
-};
-
-bool MCRegionTransformCallback(void *p_context, const MCRectangle &p_rect)
-{
-	MCRegionTransformContext *t_context;
-	t_context = static_cast<MCRegionTransformContext*>(p_context);
-
-	MCRectangle t_transformed_rect;
-	t_transformed_rect = MCRectangleGetTransformedBounds(p_rect, t_context->transform);
-
-	return MCRegionIncludeRect(t_context->region, t_transformed_rect);
-}
-
-bool MCRegionTransform(MCRegionRef p_region, const MCGAffineTransform &p_transform, MCRegionRef &r_transformed_region)
-{
-	bool t_success;
-	t_success = true;
-
-	MCRegionRef t_new_region;
-	t_new_region = nil;
-
-	t_success = MCRegionCreate(t_new_region);
-
-	if (t_success)
-	{
-		MCRegionTransformContext t_context;
-		t_context.region = t_new_region;
-		t_context.transform = p_transform;
-
-		t_success = MCRegionForEachRect(p_region, MCRegionTransformCallback, &t_context);
-	}
-
-	if (t_success)
-		r_transformed_region = t_new_region;
-	else
-		MCRegionDestroy(t_new_region);
-
-	return t_success;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCStack::view_init(void)
 {
 	m_view_fullscreen = false;
@@ -173,6 +127,10 @@ void MCStack::view_copy(const MCStack &p_view)
 
 	// IM-2014-01: [[ HiDPI ]] Initialize the view backing surface scale
 	m_view_backing_scale = p_view.m_view_backing_scale;
+
+    // SN-2014-14-10: [[ ViewRect ]] Ensure that the view rect is copied (uninitialised m_view_rect
+    //  might lead to a crash)
+    m_view_rect = p_view.m_view_rect;
 }
 
 void MCStack::view_destroy(void)
@@ -189,15 +147,23 @@ void MCStack::view_setfullscreen(bool p_fullscreen)
 {
 	bool t_fullscreen = view_getfullscreen();
 	
+	// IM-2014-02-12: [[ Bug 11783 ]] We may also need to reset the fonts on Windows when
+	//   fullscreen is changed
+	bool t_ideal_layout;
+	t_ideal_layout = getuseideallayout();
+
 	m_view_fullscreen = p_fullscreen;
 	
 	// IM-2014-01-16: [[ StackScale ]] Reopen the window after changing fullscreen
 	if (t_fullscreen != view_getfullscreen())
 	{
+		// IM-2014-05-27: [[ Bug 12321 ]] Work out here whether or not we need to purge fonts
+		if ((t_ideal_layout != getuseideallayout()) && opened)
+			m_purge_fonts = true;
+
 		reopenwindow();
 		
-		// IM-2014-01-16: [[ StackScale ]] Update view transform after changing view property
-		view_update_transform();
+		// IM-2014-05-27: [[ Bug 12321 ]] Move view transform update to reopenwindow() to allow stack rect to be reset correctly before reopening
 	}
 }
 
@@ -239,10 +205,15 @@ MCRectangle MCStack::view_getrect(void) const
 
 void MCStack::view_set_content_scale(MCGFloat p_scale)
 {
+	if (m_view_content_scale == p_scale)
+		return;
+	
 	m_view_content_scale = p_scale;
 	
 	// IM-2014-01-16: [[ StackScale ]] Update view transform after changing view property
 	view_update_transform();
+	// IM-2014-10-22: [[ Bug 13746 ]] Update window mask when stack scale changes
+	loadwindowshape();
 }
 
 MCGFloat MCStack::view_get_content_scale(void) const
@@ -493,6 +464,11 @@ void MCStack::view_configure(bool p_user)
 {
 	MCRectangle t_view_rect;
 	mode_getrealrect(t_view_rect);
+
+	// IM-2014-09-23: [[ Bug 13349 ]] If window geometry change occurs while there's a pending resize
+	//    then use the requested rect rather than the new one.
+	if (m_view_need_resize)
+		t_view_rect = m_view_rect;
 	
 	if (!MCU_equal_rect(t_view_rect, m_view_rect))
 	{
@@ -501,6 +477,7 @@ void MCStack::view_configure(bool p_user)
 		t_resize = t_view_rect.width != m_view_rect.width || t_view_rect.height != m_view_rect.height;
 		
 		m_view_rect = t_view_rect;
+		
 		view_on_rect_changed();
 		
 		if (view_getfullscreen())
@@ -879,9 +856,21 @@ bool MCStack::view_snapshottilecache(const MCRectangle &p_stack_rect, MCGImageRe
 // IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
 void MCStack::view_apply_updates()
 {
+	// IM-2014-09-23: [[ Bug 13349 ]] Sync window geometry before any redraw updates.
+	if (m_view_need_resize)
+	{
+		view_update_geometry();
+		m_view_need_redraw = true;
+	}
+	
 	// Ensure the content is up to date.
 	if (m_view_need_redraw)
 	{
+		// IM-2014-09-30: [[ Bug 13501 ]] Unset need_redraw flag here to prevent further updates while drawing
+
+		// We no longer need to redraw.
+		m_view_need_redraw = false;
+		
 		// MW-2012-04-20: [[ Bug 10185 ]] Only update if there is a window to update.
 		//   (we can get here if a stack has its window taken over due to go in window).
 		if (window != nil)
@@ -904,9 +893,6 @@ void MCStack::view_apply_updates()
 			// Clear the update region.
 			MCRegionSetEmpty(m_view_update_region);
 		}
-		
-		// We no longer need to redraw.
-		m_view_need_redraw = false;
 	}
 }
 
@@ -916,6 +902,9 @@ void MCStack::view_reset_updates()
 	MCRegionDestroy(m_view_update_region);
 	m_view_update_region = nil;
 	m_view_need_redraw = false;
+	
+	// IM-2014-09-23: [[ Bug 13349 ]] reset geometry update flag
+	m_view_need_resize = false;
 }
 
 // IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
@@ -959,7 +948,24 @@ MCRectangle MCStack::view_getwindowrect(void) const
 
 MCRectangle MCStack::view_setgeom(const MCRectangle &p_rect)
 {
+	// IM-2014-09-23: [[ Bug 13349 ]] Defer window resizing if the screen is locked.
+	if ((MCRedrawIsScreenLocked() || !MCRedrawIsScreenUpdateEnabled()) && (opened && getflag(F_VISIBLE)))
+	{
+		m_view_need_resize = true;
+		MCRedrawScheduleUpdateForStack(this);
+		
+		return p_rect;
+	}
+	
 	return view_platform_setgeom(p_rect);
+}
+
+void MCStack::view_update_geometry()
+{
+	if (m_view_need_resize)
+		view_platform_setgeom(m_view_rect);
+	
+	m_view_need_resize = false;
 }
 
 MCGFloat MCStack::view_getbackingscale(void) const
@@ -974,9 +980,14 @@ void MCStack::view_setbackingscale(MCGFloat p_scale)
 	
 	m_view_backing_scale = p_scale;
 
-	// reset tilecache if the backing scale has changed
+	// IM-2014-06-30: [[ Bug 12715 ]] backing scale changes occur when redrawing the whole stack,
+	// so we need to update the tilecache here before continuing to draw.
+	
+	view_flushtilecache();
 	view_updatetilecacheviewport();
-	view_dirty_all();
+	view_updatetilecache();
+	// IM-2014-10-22: [[ Bug 13746 ]] Update window mask when backing scale changes
+	loadwindowshape();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

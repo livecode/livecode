@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <cairo-pdf.h>
 #include <stdio.h>
+#include <float.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -521,7 +522,7 @@ bool MCPDFPrintingDevice::DrawImage(const MCCustomPrinterImage& image, const MCC
 	return t_success;
 }
 
-bool MCPDFPrintingDevice::DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip)
+bool MCPDFPrintingDevice::DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t glyph_count, const char *text_bytes, uint32_t text_byte_count, const uint32_t *clusters, const MCCustomPrinterFont& font, const MCCustomPrinterPaint& paint, const MCCustomPrinterTransform& transform, const MCCustomPrinterRectangle& clip)
 {
 	bool t_success = true;
 	cairo_save(m_context);
@@ -574,7 +575,7 @@ bool MCPDFPrintingDevice::DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t 
 	uint32_t t_cluster_count;
 	bool t_reverse_clusters;
 	if (t_success)
-		t_success = custom_printer_clusters_to_cairo_clusters(clusters, MCCStringLength(text), glyph_count, t_clusters, t_cluster_count, t_reverse_clusters);
+		t_success = custom_printer_clusters_to_cairo_clusters(clusters, text_byte_count, glyph_count, t_clusters, t_cluster_count, t_reverse_clusters);
 	
 	if (t_success)
 		t_success = apply_paint(paint);
@@ -584,7 +585,7 @@ bool MCPDFPrintingDevice::DrawText(const MCCustomPrinterGlyph *glyphs, uint32_t 
 		cairo_set_font_face(m_context, t_font);
 		cairo_set_font_size(m_context, font . size);
 
-		cairo_show_text_glyphs(m_context, text, MCCStringLength(text), t_glyphs, glyph_count, t_clusters, t_cluster_count, t_reverse_clusters ? CAIRO_TEXT_CLUSTER_FLAG_BACKWARD : (cairo_text_cluster_flags_t)0);
+		cairo_show_text_glyphs(m_context, text_bytes, text_byte_count, t_glyphs, glyph_count, t_clusters, t_cluster_count, t_reverse_clusters ? CAIRO_TEXT_CLUSTER_FLAG_BACKWARD : (cairo_text_cluster_flags_t)0);
 		cairo_restore(m_context);
 		t_success = (m_status = cairo_status(m_context)) == CAIRO_STATUS_SUCCESS;
 	}
@@ -750,6 +751,10 @@ void transform_point(double &x, double &y, const MCCustomPrinterTransform &p_tra
 	x = t_x;
 }
 
+// MW-2014-08-19: [[ Bug 13220 ]] It seems Cairo doesn't like (M p) (L _)* (L p) (C)
+//   as it ends up treating it is as a degenerate point. Therefore we clean up this
+//   case - if there is a lineTo which returns to the original moveTo then a close
+//   it ignores the final lineTo.
 bool MCPDFPrintingDevice::draw_path(const MCCustomPrinterPath &p_path)
 {
 	bool t_success = true;
@@ -757,6 +762,12 @@ bool MCPDFPrintingDevice::draw_path(const MCCustomPrinterPath &p_path)
 	MCCustomPrinterPathCommand *t_commands = p_path.commands;
 	MCCustomPrinterPoint *t_points = p_path.coords;
 
+    double t_first_x, t_first_y;
+    t_first_x = t_first_y = DBL_MAX;
+    
+    double t_last_x, t_last_y;
+    t_last_x = t_last_y = DBL_MAX;
+    
 	while (t_success && *t_commands != kMCCustomPrinterPathEnd)
 	{
 		switch (*t_commands++)
@@ -764,12 +775,23 @@ bool MCPDFPrintingDevice::draw_path(const MCCustomPrinterPath &p_path)
 		case kMCCustomPrinterPathMoveTo:
 			{
 				cairo_move_to(m_context, t_points->x, t_points->y);
+                t_first_x = t_points -> x;
+                t_first_y = t_points -> y;
 				t_points++;
 			}
 			break;
 		case kMCCustomPrinterPathLineTo:
 			{
-				cairo_line_to(m_context, t_points->x, t_points->y);
+                if (t_last_x != t_points -> x || t_last_y != t_points -> y)
+                {
+                    if (*t_commands != kMCCustomPrinterPathClose ||
+                        (t_first_x != t_points -> x || t_first_y != t_points -> y))
+                    {
+                        cairo_line_to(m_context, t_points->x, t_points->y);
+                        t_last_x = t_points -> x;
+                        t_last_y = t_points -> y;
+                    }
+                }
 				t_points++;
 			}
 			break;
@@ -1098,6 +1120,11 @@ bool MCPDFPrintingDevice::create_surface_from_image(const MCCustomPrinterImage &
 
 	// PNG image data
 	case kMCCustomPrinterImagePNG:
+		t_success = false;
+		break;
+			
+	// [[ Bug 12699 ]] Handle unrecognised image type
+	default:
 		t_success = false;
 		break;
 	}

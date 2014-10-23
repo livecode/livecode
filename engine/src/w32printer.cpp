@@ -52,7 +52,7 @@ extern void Windows_RenderMetaFile(HDC p_color_dc, HDC p_mask_dc, uint1 *p_data,
 extern void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
 extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
 
-extern bool MCImageBitmapSplitHBITMAPWithMask(HDC p_dc, MCImageBitmap *p_bitmap, HBITMAP &r_bitmap, HBITMAP &r_mask);
+extern bool MCGImageSplitHBITMAPWithMask(HDC p_dc, MCGImageRef p_image, HBITMAP &r_bitmap, HBITMAP &r_mask);
 extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -893,11 +893,11 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			int32_t t_src_y = p_mark->image.dy - p_mark->image.sy;
 
 			DWORD t_err;
-			if (p_mark->image.descriptor.bitmap != nil)
+			if (p_mark->image.descriptor.image != nil)
 			{
-				/* UNCHECKED */ MCImageBitmapSplitHBITMAPWithMask(t_src_dc, p_mark->image.descriptor.bitmap, t_src_bitmap, t_src_mask);
-				t_src_width = p_mark->image.descriptor.bitmap->width;
-				t_src_height = p_mark->image.descriptor.bitmap->height;
+				/* UNCHECKED */ MCGImageSplitHBITMAPWithMask(t_src_dc, p_mark->image.descriptor.image, t_src_bitmap, t_src_mask);
+				t_src_width = MCGImageGetWidth(p_mark->image.descriptor.image);
+				t_src_height = MCGImageGetHeight(p_mark->image.descriptor.image);
 			}
 
 			if (!p_mark->image.descriptor.has_transform)
@@ -987,64 +987,74 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		RECT t_clip;
 		GetClipBox(t_dc, &t_clip);
 
-		// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
-		MCGFloat t_scale;
-		t_scale = p_mark -> fill -> pattern -> scale;
+		MCGImageRef t_image;
+		MCGAffineTransform t_transform;
 
-		// Now create a suitable pattern by tiling out the selected pattern to be
-		// at least 32x32
-		int32_t t_src_width, t_src_height;
-		t_src_width = MCGImageGetWidth(p_mark -> fill -> pattern -> image) / t_scale;
-		t_src_height = MCGImageGetHeight(p_mark -> fill -> pattern -> image) / t_scale;
+		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+		if (MCPatternLockForContextTransform(p_mark->fill->pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform))
+		{
+			MCGRectangle t_src_rect;
+			t_src_rect = MCGRectangleMake(0, 0,
+				MCGImageGetWidth(t_image), MCGImageGetHeight(t_image));
 
-		int32_t t_width, t_height;
-		t_width = t_src_width;
-		t_height = t_src_height;
-		while(t_width < 32)
-			t_width *= 2;
-		while(t_height < 32)
-			t_height *= 2;
+			MCGRectangle t_dst_rect;
+			t_dst_rect = MCGRectangleApplyAffineTransform(t_src_rect, t_transform);
 
-		HDC t_src_dc;
-		t_src_dc = CreateCompatibleDC(m_dc);
+			// Now create a suitable pattern by tiling out the selected pattern to be
+			// at least 32x32
 
-		// draw the pattern image into a bitmap
-		HBITMAP t_pattern = nil;
-		void *t_bits = nil;
-		/* UNCHECKED */ create_temporary_dib(t_src_dc, t_width, t_height, t_pattern, t_bits);
-		MCGContextRef t_context = nil;
-		/* UNCHECKED */ MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
+			int32_t t_x_tiles, t_y_tiles;
+			t_x_tiles = ceilf(32.0 / t_dst_rect.size.width);
+			t_y_tiles = ceilf(32.0 / t_dst_rect.size.height);
 
-		// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
-		MCGContextSetFillPattern(t_context, p_mark->fill->pattern->image, MCGAffineTransformMakeScale(1.0 / t_scale, 1.0 / t_scale), kMCGImageFilterNone);
-		MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
-		MCGContextFill(t_context);
+			int32_t t_width, t_height;
+			t_width = ceilf(t_x_tiles * t_dst_rect.size.width);
+			t_height = ceilf(t_y_tiles * t_dst_rect.size.height);
 
-		MCGContextRelease(t_context);
-		
-		// Finally adjust the starting position based on origin, and tile the clip.
-		int32_t x, y;
-		x = p_mark -> fill -> origin . x;
-		y = p_mark -> fill -> origin . y;
-		while(x > t_clip . left)
-			x -= t_width;
-		while(x + t_width < t_clip . left)
-			x += t_width;
-		while(y > t_clip . top)
-			y -= t_height;
-		while(y + t_height < t_clip . top)
-			y += t_height;
+			HDC t_src_dc;
+			t_src_dc = CreateCompatibleDC(m_dc);
 
-		SelectObject(t_src_dc, t_pattern);
-		for(; y < t_clip . bottom; y += t_height)
-			for(int32_t tx = x; tx < t_clip . right; tx += t_width)
-				BitBlt(m_dc, tx, y, t_width, t_height, t_src_dc, 0, 0, SRCCOPY);
+			// draw the pattern image into a bitmap
+			HBITMAP t_pattern = nil;
+			void *t_bits = nil;
+			/* UNCHECKED */ create_temporary_dib(t_src_dc, t_width, t_height, t_pattern, t_bits);
+			MCGContextRef t_context = nil;
+			/* UNCHECKED */ MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
 
-		if (t_pattern != nil)
-			DeleteObject(t_pattern);
-		if (t_src_dc != nil)
-			DeleteDC(t_src_dc);
+			// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextSetFillPattern(t_context, t_image, t_transform, kMCGImageFilterNone);
+			MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
+			MCGContextFill(t_context);
+
+			MCGContextRelease(t_context);
+
+			MCPatternUnlock(p_mark->fill->pattern, t_image);
+
+
+			// Finally adjust the starting position based on origin, and tile the clip.
+			int32_t x, y;
+			x = p_mark -> fill -> origin . x;
+			y = p_mark -> fill -> origin . y;
+			while(x > t_clip . left)
+				x -= t_width;
+			while(x + t_width < t_clip . left)
+				x += t_width;
+			while(y > t_clip . top)
+				y -= t_height;
+			while(y + t_height < t_clip . top)
+				y += t_height;
+
+			SelectObject(t_src_dc, t_pattern);
+			for(; y < t_clip . bottom; y += t_height)
+				for(int32_t tx = x; tx < t_clip . right; tx += t_width)
+					BitBlt(m_dc, tx, y, t_width, t_height, t_src_dc, 0, 0, SRCCOPY);
+
+			if (t_pattern != nil)
+				DeleteObject(t_pattern);
+			if (t_src_dc != nil)
+				DeleteDC(t_src_dc);
+		}
 	}
 
 	if (t_old_pen != NULL)
@@ -1577,7 +1587,7 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
 
 	if (t_apply)
 	{
-		MCRange *t_page_ranges;
+		MCInterval *t_page_ranges;
 		t_page_ranges = NULL;
 		int t_page_range_count;
 		t_page_range_count = 0;

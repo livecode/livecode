@@ -11,19 +11,24 @@ SOURCES=\
 	execpt.cpp express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp group.cpp \
 	handler.cpp hc.cpp hndlrlst.cpp ibmp.cpp idraw.cpp ifile.cpp \
-	igif.cpp iimport.cpp ijpg.cpp image.cpp imagelist.cpp \
+	igif.cpp iimport.cpp ijpg.cpp \
+	image.cpp \
 	image_rep.cpp \
 	image_rep_encoded.cpp \
 	image_rep_mutable.cpp \
 	image_rep_densitymapped.cpp \
 	image_rep_resampled.cpp \
-	imagebitmap.cpp ipng.cpp \
+	imagebitmap.cpp \
+	imagelist.cpp \
+	imageloader.cpp \
+	ipng.cpp \
 	iquantization.cpp iquantize_new.cpp irle.cpp iutil.cpp \
 	itransform.cpp keywords.cpp line.cpp literal.cpp magnify.cpp mcerror.cpp \
 	mcio.cpp mcstring.cpp mctheme.cpp newobj.cpp \
 	object.cpp objptr.cpp operator.cpp paragraf.cpp param.cpp \
 	property.cpp pickle.cpp \
 	regex.cpp \
+	region.cpp \
 	resolution.cpp \
 	scriptpt.cpp \
 	scrolbar.cpp \
@@ -51,9 +56,10 @@ SOURCES=\
 	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	srvmain.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvposix.cpp srvdebug.cpp \
 	srvscript.cpp srvcgi.cpp srvoutput.cpp srvmultipart.cpp srvtheme.cpp \
-	eventqueue.cpp encodederrors.cpp name.cpp redraw.cpp sysregion.cpp tilecache.cpp tilecachesw.cpp \
+	eventqueue.cpp encodederrors.cpp name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
 	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
-	graphicscontext.cpp lnxflst.cpp lnxflstold.cpp
+	graphicscontext.cpp lnxflst.cpp lnxflstold.cpp quicktime.cpp \
+	sysunxthreads.cpp, stacktile.cpp
 	
 SOURCE_DIRS=
 
@@ -67,7 +73,7 @@ CUSTOM_INCLUDES=\
 
 CUSTOM_CCFLAGS=\
 	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -fno-exceptions -fno-rtti -fno-strict-aliasing \
-	-fmessage-length=0 
+	-fmessage-length=0 -march=i486
 
 include/revbuild.h: include/revbuild.h.in ../version
 	../prebuilt/bin/Revolution.lnx "./encode_version.rev" "./"

@@ -124,6 +124,23 @@ static MCGPathRef MCGPathFromMCPath(MCPath *p_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCGFloatIsInteger(MCGFloat p_float)
+{
+	return floorf(p_float) == p_float;
+}
+
+bool MCGAffineTransformIsInteger(const MCGAffineTransform &p_transform)
+{
+	return MCGFloatIsInteger(p_transform.a) &&
+		MCGFloatIsInteger(p_transform.b) &&
+		MCGFloatIsInteger(p_transform.c) &&
+		MCGFloatIsInteger(p_transform.d) &&
+		MCGFloatIsInteger(p_transform.tx) &&
+		MCGFloatIsInteger(p_transform.ty);
+}
+
+//////////
+
 void MCGraphicsContext::init(MCGContextRef p_context)
 {
 	m_gcontext = MCGContextRetain(p_context);
@@ -142,6 +159,11 @@ void MCGraphicsContext::init(MCGContextRef p_context)
 	m_dash_lengths = nil;
 	m_dash_count = 0;
 	
+	// IM-2014-06-19: [[ Bug 12557 ]] Force antialiasing if the underlying context has a non-integer transform set
+	m_force_antialiasing = !MCGAffineTransformIsInteger(MCGContextGetDeviceTransform(p_context));
+	if (m_force_antialiasing)
+		MCGContextSetShouldAntialias(p_context, true);
+
 	MCGContextSetFlatness(p_context, 1 / 16.0f);
 }
 
@@ -288,12 +310,45 @@ bool MCGraphicsContext::changeopaque(bool p_value)
 	return true;
 }
 
+void MCGraphicsContext::save()
+{
+	MCGContextSave(m_gcontext);
+}
+
+void MCGraphicsContext::restore()
+{
+	MCGContextRestore(m_gcontext);
+}
+
+void MCGraphicsContext::cliprect(const MCRectangle &p_rect)
+{
+	MCGContextClipToRect(m_gcontext, MCRectangleToMCGRectangle(p_rect));
+}
+
 void MCGraphicsContext::setclip(const MCRectangle& p_clip)
 {
-	//m_clip = p_clip;
 	// IM-2013-09-03: [[ RefactorGraphics ]] use MCGContextSetClipToRect to replace current
 	// clipping rect with p_clip (consistent with old MCContext::setclip functionality)
-	MCGContextSetClipToRect(m_gcontext, MCRectangleToMCGRectangle(p_clip));
+    // MW-2014-06-19: [[ Bug 12557 ]] Round clip up to device pixel boundaries to stop compositing error accumulation on fringes.
+    MCGRectangle t_rect;
+    t_rect = MCRectangleToMCGRectangle(p_clip);
+    
+    MCGAffineTransform t_device_transform;
+    t_device_transform = MCGContextGetDeviceTransform(m_gcontext);
+    
+    MCGRectangle t_device_rect;
+    t_device_rect = MCGRectangleApplyAffineTransform(t_rect, t_device_transform);
+    
+    MCGRectangle t_pixel_device_rect;
+    t_pixel_device_rect . origin . x = floorf(t_device_rect . origin . x);
+    t_pixel_device_rect . origin . y = floorf(t_device_rect . origin . y);
+    t_pixel_device_rect . size . width = ceilf(t_device_rect . origin . x + t_device_rect . size . width) - t_pixel_device_rect . origin . x;
+    t_pixel_device_rect . size . height = ceilf(t_device_rect . origin . y + t_device_rect . size . height) - t_pixel_device_rect . origin . y;
+    
+    MCGRectangle t_pixel_rect;
+    t_pixel_rect = MCGRectangleApplyAffineTransform(t_pixel_device_rect, MCGAffineTransformInvert(t_device_transform));
+    
+	MCGContextSetClipToRect(m_gcontext, t_pixel_rect);
 }
 
 MCRectangle MCGraphicsContext::getclip(void) const
@@ -317,7 +372,8 @@ void MCGraphicsContext::clearorigin(void)
 
 void MCGraphicsContext::setquality(uint1 p_quality)
 {
-	MCGContextSetShouldAntialias(m_gcontext, p_quality == QUALITY_SMOOTH);
+	if (!m_force_antialiasing)
+		MCGContextSetShouldAntialias(m_gcontext, p_quality == QUALITY_SMOOTH);
 }
 
 void MCGraphicsContext::setfunction(uint1 p_function)
@@ -541,17 +597,24 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 	// MW-2014-03-11: [[ Bug 11704 ]] Make sure we set both fill and stroke paints.
 	if (style == FillTiled && p != NULL)
 	{
-		// IM-2013-08-14: [[ ResIndependence ]] apply pattern image scale to transform
-		MCGFloat t_scale;
-		t_scale = 1.0 / p->scale;
-		
+		MCGImageRef t_image;
 		MCGAffineTransform t_transform;
-		t_transform = MCGAffineTransformMakeScale(t_scale, t_scale);
-		t_transform = MCGAffineTransformTranslate(t_transform, x, y);
-
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was bilinear).
-		MCGContextSetFillPattern(m_gcontext, p->image, t_transform, kMCGImageFilterMedium);
-		MCGContextSetStrokePattern(m_gcontext, p->image, t_transform, kMCGImageFilterMedium);
+		
+		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+		if (MCPatternLockForContextTransform(p, MCGContextGetDeviceTransform(m_gcontext), t_image, t_transform))
+		{
+			t_transform = MCGAffineTransformTranslate(t_transform, x, y);
+			// IM-2014-05-21: [[ HiResPatterns ]] Use the pattern filter value
+			MCGImageFilter t_filter;
+			/* UNCHECKED */ MCPatternGetFilter(p, t_filter);
+			
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextSetFillPattern(m_gcontext, t_image, t_transform, t_filter);
+			MCGContextSetStrokePattern(m_gcontext, t_image, t_transform, t_filter);
+			
+			MCPatternUnlock(p, t_image);
+		}
+		
 		m_pattern = MCPatternRetain(p);
 		m_pattern_x = x;
 		m_pattern_y = y;
@@ -1155,51 +1218,197 @@ void MCGraphicsContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, re
 {
 }
 
+// We have a matrix (a, b, c, d). This can be decomposed as:
+//    (cos t, -sin t, sin t, cos t) * (1, m, 0, 1) * (x, 0, 0, y)
+//
+// Which results in:
+//     t = atan(a / c)
+//     x = sqrt(a^2 + b^2)
+//     m = (cb-ad)/(ba-cd)
+//     y = d / (m.sin(t) - cos(t))
+
+static void decompose_matrix(float a, float b, float c, float d, float& t, float& m, float& x, float& y)
+{
+    /*t = atan2f(a, c);
+    x = sqrtf(a * a + b * b);
+    m = (c * b - a * d) / (b * a - c * d);
+    y = d / (m * sinf(t) - cosf(t));*/
+    
+    t = atan2f(c, a);
+    x = sqrtf(a * a + b * b);
+    m = (a * b - c * d) / (b * c - a * d);
+    y = d / (m * sinf(t) - cosf(t));
+}
+
+static MCGRectangle get_rect_pixel_exterior(MCGRectangle r)
+{
+    MCGRectangle rr;
+    rr . origin . x = floorf(r . origin . x);
+    rr . origin . y = floorf(r . origin . y);
+    rr . size . width = ceilf(r . origin . x + r . size . width) - rr . origin . x;
+    rr . size . height = ceilf(r . origin . y + r . size . height) - rr . origin . y;
+    return rr;
+}
+
+static MCGRectangle MCGRectangleMakeLTRB(MCGFloat l, MCGFloat t, MCGFloat r, MCGFloat b)
+{
+    return MCGRectangleMake(l, t, r - l, b - t);
+}
+
 void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy)
 {
-	MCImageBitmap *t_bits = p_image.bitmap;
-
-	MCGRaster t_raster;
-	t_raster . width = t_bits -> width;
-	t_raster . height = t_bits -> height;
-	t_raster . stride = t_bits -> stride;
-	t_raster . pixels = t_bits -> data;
-	t_raster . format = t_bits -> has_transparency ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
-
-	MCGRectangle t_clip;
-	t_clip . origin . x = dx;
-	t_clip . origin . y = dy;
-	t_clip . size . width = sw;
-	t_clip . size . height = sh;
-
-	MCGRectangle t_dest;
-	t_dest.origin.x = dx - sx;
-	t_dest.origin.y = dy - sy;
-	t_dest.size.width = t_raster.width;
-	t_dest.size.height = t_raster.height;
-
-	MCGContextSave(m_gcontext);
-	MCGContextClipToRect(m_gcontext, t_clip);
+	// IM-2014-08-01: [[ Bug 13021 ]] Set scale values to 1.0 if not set
+	MCGFloat t_x_scale, t_y_scale;
+	t_x_scale = (p_image.x_scale == 0.0) ? 1.0 : p_image.x_scale;
+	t_y_scale = (p_image.y_scale == 0.0) ? 1.0 : p_image.y_scale;
 	
-	// MM-2013-10-03: [[ Bug ]] Make sure we apply the images transform before taking into account it's scale factor.
-	if (p_image.has_transform)
+    if (!p_image . has_center || (p_image . transform . b != 0.0f || p_image . transform . c != 0.0f))
+    {
+        MCGRectangle t_clip;
+        t_clip . origin . x = dx;
+        t_clip . origin . y = dy;
+        t_clip . size . width = sw;
+        t_clip . size . height = sh;
+        
+        MCGRectangle t_dest;
+        t_dest.origin.x = dx - sx;
+        t_dest.origin.y = dy - sy;
+        t_dest.size.width = MCGImageGetWidth(p_image.image);
+        t_dest.size.height = MCGImageGetHeight(p_image.image);
+
+        MCGContextSave(m_gcontext);
+        
+        // MW-2014-06-19: [[ IconGravity ]] Only clip if we are drawing a partial image (we need to double-check, but I don't think sx/sy are ever non-zero).
+        if (sx != 0 || sy != 0)
+            MCGContextClipToRect(m_gcontext, t_clip);
+        
+        // MM-2013-10-03: [[ Bug ]] Make sure we apply the images transform before taking into account it's scale factor.
+        if (p_image.has_transform)
+        {
+            MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
+            t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
+            t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
+            
+            MCGContextConcatCTM(m_gcontext, t_transform);
+        }
+        
+        // IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
+        if (t_x_scale != 1.0 || t_y_scale != 1.0)
+        {
+            MCGContextTranslateCTM(m_gcontext, t_dest.origin.x, t_dest.origin.y);
+            MCGContextScaleCTM(m_gcontext, 1.0 / t_x_scale, 1.0 / t_y_scale);
+            MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
+        }
+        
+        MCGContextDrawImage(m_gcontext, p_image.image, t_dest, p_image.filter);
+        
+        MCGContextRestore(m_gcontext);
+        
+        return;
+    }
+
+    // We compute src and dest centers then align to the pixel grid. This ensures
+    // no 'fringing' occurs when using a filter, or the transforms result in sub-pixel
+    // coverage. The trade-off is a slight non-linearity in rendering nine-way bitmaps.
+    
+	MCGContextSave(m_gcontext);
+	
+    MCGRectangle t_src_center, t_src_rect;
+    t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(p_image . image), MCGImageGetHeight(p_image . image));
+	t_src_center = p_image.center;
+    
+	// IM-2014-07-10: [[ Bug 12794 ]] Transform the context if the image has a scale factor so we don't need to account for it later
+	if (t_x_scale != 1.0 || t_y_scale != 1.0)
 	{
-		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
-		t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
-		t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
+		int32_t t_dx, t_dy;
+		t_dx = dx - sx;
+		t_dy = dy - sy;
 		
-		MCGContextConcatCTM(m_gcontext, t_transform);
-	}	
-
-	// IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
-	if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
-	{
-		MCGContextTranslateCTM(m_gcontext, t_dest.origin.x, t_dest.origin.y);
-		MCGContextScaleCTM(m_gcontext, 1.0 / p_image.scale_factor, 1.0 / p_image.scale_factor);
-		MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
+		MCGContextTranslateCTM(m_gcontext, t_dx, t_dy);
+		MCGContextScaleCTM(m_gcontext, 1.0 / t_x_scale, 1.0 / t_y_scale);
+		MCGContextTranslateCTM(m_gcontext, -t_dx, -t_dy);
+		
+		// IM-2014-07-10: [[ Bug 12794 ]] Scale the center rect to match the image scale
+		t_src_center = MCGRectangleScale(t_src_center, t_x_scale, t_y_scale);
 	}
+	
+    // Align the source center to the pixel grid.
+    t_src_center = get_rect_pixel_exterior(t_src_center);
+    
+    MCGAffineTransform t_device, t_inv_device;
+    t_device = MCGContextGetDeviceTransform(m_gcontext);
+    t_inv_device = MCGAffineTransformInvert(t_device);
+    
+    MCGFloat t_scale_x, t_scale_y;
+    if (p_image . has_transform)
+    {
+        t_scale_x = p_image . transform . a;
+        t_scale_y = p_image . transform . d;
+    }
+    else
+        t_scale_x = t_scale_y = 1.0;
+    
+    MCGFloat t_stop, t_sleft, t_sright, t_sbottom;
+    t_sleft = t_src_center . origin . x;
+    t_stop = t_src_center . origin . y;
+    t_sright = t_src_center . origin . x + t_src_center . size . width;
+    t_sbottom = t_src_center . origin . y + t_src_center . size . height;
+    
+    MCGFloat t_top, t_left, t_right, t_bottom;
+    t_left = MCMax(0.0f, t_src_center . origin . x);
+    t_top = MCMax(0.0f, t_src_center . origin . y);
+    t_right = MCMax(0.0f, t_src_rect . size . width - (t_src_center . origin . x + t_src_center . size . width));
+    t_bottom = MCMax(0.0f, t_src_rect . size . height - (t_src_center . origin . y + t_src_center . size . height));
+    
+    MCGRectangle t_dst_rect, t_dst_center;
+    t_dst_rect = MCGRectangleMake(dx - sx, dy - sy, MCGImageGetWidth(p_image . image) * t_scale_x, MCGImageGetHeight(p_image . image) * t_scale_y);
+    t_dst_center . origin . x = t_dst_rect . origin . x + t_left;
+    t_dst_center . origin . y = t_dst_rect . origin . y + t_top;
+    t_dst_center . size . width = t_dst_rect . size . width - t_left - t_right;
+    t_dst_center . size . height = t_dst_rect . size . height - t_bottom - t_top;
+    
+    // Align the destination center to the pixel grid.
+    t_dst_center = MCGRectangleApplyAffineTransform(get_rect_pixel_exterior(MCGRectangleApplyAffineTransform(t_dst_center, t_device)), t_inv_device);
 
-	MCGContextDrawPixels(m_gcontext, t_raster, t_dest, p_image.filter);
+    MCGContextDrawRectOfImage(m_gcontext, p_image . image,
+                              MCGRectangleMakeLTRB(t_src_rect . origin . x, t_src_rect . origin . y, t_src_center . origin . x, t_src_center . origin . y),
+                              MCGRectangleMakeLTRB(t_dst_rect . origin . x, t_dst_rect . origin . y, t_dst_center . origin . x, t_dst_center . origin . y),
+                              p_image . filter);
+    MCGContextDrawRectOfImage(m_gcontext, p_image . image,
+                              MCGRectangleMakeLTRB(t_src_center . origin . x, t_src_rect . origin . y, t_src_center . origin . x + t_src_center . size . width, t_src_center . origin . y),
+                              MCGRectangleMakeLTRB(t_dst_center . origin . x, t_dst_rect . origin . y, t_dst_center . origin . x + t_dst_center . size . width, t_dst_center . origin . y),
+                              p_image . filter);
+    MCGContextDrawRectOfImage(m_gcontext, p_image . image,
+                              MCGRectangleMakeLTRB(t_src_center . origin . x + t_src_center . size . width, t_src_rect . origin . y, t_src_rect . origin . x + t_src_rect . size . width, t_src_center . origin . y),
+                              MCGRectangleMakeLTRB(t_dst_center . origin . x + t_dst_center . size . width, t_dst_rect . origin . y, t_dst_rect . origin . x + t_dst_rect . size . width, t_dst_center . origin . y),
+                              p_image . filter);
+    
+    MCGContextDrawRectOfImage(m_gcontext, p_image . image,
+                              MCGRectangleMakeLTRB(t_src_rect . origin . x, t_src_center . origin . y, t_src_center . origin . x, t_src_center . origin . y + t_src_center . size . height),
+                              MCGRectangleMakeLTRB(t_dst_rect . origin . x, t_dst_center . origin . y, t_dst_center . origin . x, t_dst_center . origin . y + t_dst_center . size . height),
+                              p_image . filter);
+    MCGContextDrawRectOfImage(m_gcontext, p_image . image,
+                              t_src_center,
+                              t_dst_center,
+                              p_image . filter);
+    MCGContextDrawRectOfImage(m_gcontext, p_image . image,
+                              MCGRectangleMakeLTRB(t_src_center . origin . x + t_src_center . size . width, t_src_center . origin . y, t_src_rect . origin . x + t_src_rect . size . width, t_src_center . origin . y + t_src_center . size . height),
+                              MCGRectangleMakeLTRB(t_dst_center . origin . x + t_dst_center . size . width, t_dst_center . origin . y, t_dst_rect . origin . x + t_dst_rect . size . width, t_dst_center . origin . y + t_dst_center . size . height),
+                              p_image . filter);
+    
+    MCGContextDrawRectOfImage(m_gcontext, p_image . image,
+                              MCGRectangleMakeLTRB(t_src_rect . origin . x, t_src_center . origin . y + t_src_center . size . height, t_src_center . origin . x, t_src_rect . origin . y + t_src_rect . size . height),
+                              MCGRectangleMakeLTRB(t_dst_rect . origin . x, t_dst_center . origin . y + t_dst_center . size . height, t_dst_center . origin . x, t_dst_rect . origin . y + t_dst_rect . size . height),
+                              p_image . filter);
+    MCGContextDrawRectOfImage(m_gcontext, p_image . image,
+                              MCGRectangleMakeLTRB(t_src_center . origin . x, t_src_center . origin . y + t_src_center . size . height, t_src_center . origin . x + t_src_center . size . width, t_src_rect . origin . y + t_src_rect . size . height),
+                              MCGRectangleMakeLTRB(t_dst_center . origin . x, t_dst_center . origin . y + t_dst_center . size . height, t_dst_center . origin . x + t_dst_center . size . width, t_dst_rect . origin . y + t_dst_rect . size . height),
+                              p_image . filter);
+    MCGContextDrawRectOfImage(m_gcontext, p_image . image,
+                              MCGRectangleMakeLTRB(t_src_center . origin . x + t_src_center . size . width, t_src_center . origin . y + t_src_center . size . height, t_src_rect . origin . x + t_src_rect . size . width, t_src_rect . origin . y + t_src_rect . size . height),
+                              MCGRectangleMakeLTRB(t_dst_center . origin . x + t_dst_center . size . width, t_dst_center . origin . y + t_dst_center . size . height, t_dst_rect . origin . x + t_dst_rect . size . width, t_dst_rect . origin . y + t_dst_rect . size . height),
+                              p_image . filter);
+	
 	MCGContextRestore(m_gcontext);
 }
 
@@ -1234,15 +1443,17 @@ void MCGraphicsContext::drawlink(const char *link, const MCRectangle& region)
 }
 
 
-void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
+void MCGraphicsContext::drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
 {
 	// MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
 	//   rect.
 	if (image)
 	{
 		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the context to make sure we measure the width of scaled text correctly.
-		int32_t t_width;
-		t_width = MCFontMeasureText(p_font, s, length, p_is_unicode, MCGContextGetDeviceTransform(m_gcontext));
+		float t_widthf;
+		t_widthf = MCFontMeasureTextFloat(p_font, s, length, p_is_unicode, MCGContextGetDeviceTransform(m_gcontext));
+        
+        int32_t t_width = int32_t(ceilf(t_widthf));
 		
 		MCGContextSave(m_gcontext);
 		setforeground(m_background);
@@ -1252,6 +1463,20 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 		
 	MCFontDrawText(m_gcontext, x, y, s, length, p_font, p_is_unicode);
 }	
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCGraphicsContext::lockgcontext(MCGContextRef& r_gcontext)
+{
+	MCGContextSave(m_gcontext);
+	r_gcontext = m_gcontext;
+	return true;
+}
+
+void MCGraphicsContext::unlockgcontext(MCGContextRef p_gcontext)
+{
+	MCGContextRestore(p_gcontext);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

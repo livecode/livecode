@@ -72,15 +72,21 @@ enum MCImageDataType
 
 struct MCImageDescriptor
 {
-	bool has_transform;
+	bool has_transform : 1;
+    bool has_center : 1;
+    
 	MCGAffineTransform transform;
-	MCGImageFilter filter;
+	MCGRectangle center;
+    
+    MCGImageFilter filter;
 	
 	// IM-2013-07-19: [[ ResIndependence ]] add scale factor field for scaled images
-	MCGFloat scale_factor;
+	// IM-2014-08-07: [[ Bug 13021 ]] Split scale into x / y components
+	MCGFloat x_scale;
+	MCGFloat y_scale;
 
-	// The image bitmap
-	MCImageBitmap *bitmap;
+	// IM-2014-06-12: [[ ImageRepUpdate ]] Update image to be an MCGImage
+	MCGImageRef image;
 
 	// The image source data
 	MCImageDataType data_type;
@@ -132,6 +138,14 @@ public:
 
 	virtual void setprintmode(void) = 0;
 
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Save the current state of the graphics context
+	virtual void save() = 0;
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Restore the previously saved graphics context state
+	virtual void restore() = 0;
+	
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Reduce the clipping region by intersecting with the given rect
+	virtual void cliprect(const MCRectangle &p_rect) = 0;
+	
 	virtual void setclip(const MCRectangle& rect) = 0;
 	virtual MCRectangle getclip(void) const = 0;
 	virtual void clearclip(void) = 0;
@@ -158,7 +172,7 @@ public:
 	virtual void drawline(int2 x1, int2 y1, int2 x2, int2 y2) = 0;
 	virtual void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false) = 0;
 	virtual void drawsegments(MCSegment *segments, uint2 nsegs) = 0;
-	virtual void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override) = 0;
+	virtual void drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override) = 0;
 	virtual void drawrect(const MCRectangle& rect, bool inside = false) = 0;
 	virtual void fillrect(const MCRectangle& rect, bool inside = false) = 0;
 	virtual void fillrects(MCRectangle *rects, uint2 nrects) = 0;
@@ -184,7 +198,9 @@ public:
 	virtual void applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height) = 0;
 
 	virtual void drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters) = 0;
-
+	
+	virtual bool lockgcontext(MCGContextRef& r_ctxt) = 0;
+	virtual void unlockgcontext(MCGContextRef ctxt) = 0;
 	
 	virtual MCRegionRef computemaskregion(void) = 0;
 	virtual void clear(const MCRectangle* rect) = 0;

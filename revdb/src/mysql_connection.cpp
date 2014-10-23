@@ -17,7 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dbmysql.h"
 static bool s_ssl_loaded = false;
 
-#if (defined(_WINDOWS) || defined(_LINUX)) && !defined(_SERVER)
+#if !defined(_SERVER)
 extern "C" int initialise_weak_link_crypto(void);
 extern "C" int initialise_weak_link_ssl(void);
 bool load_ssl_library()
@@ -29,11 +29,38 @@ bool load_ssl_library()
 
 	return s_ssl_loaded;
 }
-#elif defined(_MACOSX) || defined(_SERVER)
+#elif defined(_SERVER)
 bool load_ssl_library()
 {
 	return true;
 }
+#endif
+
+#ifdef TARGET_SUBPLATFORM_IPHONE
+#ifdef __i386__
+#include <dlfcn.h>
+extern "C" void *IOS_LoadModule(const char *mod)
+{
+    return dlopen(mod, RTLD_NOW);
+}
+
+extern "C" void *IOS_ResolveSymbol(void *mod, const char *sym)
+{
+    return dlsym(mod, sym);
+}
+#else
+extern "C" void *load_module(const char *);
+extern "C" void *resolve_symbol(void *, const char *);
+extern "C" void *IOS_LoadModule(const char *mod)
+{
+    return load_module(mod);
+}
+
+extern "C" void *IOS_ResolveSymbol(void *mod, const char *sym)
+{
+    return resolve_symbol(mod, sym);
+}
+#endif
 #endif
 
 #if defined(_WINDOWS)
@@ -96,13 +123,11 @@ Bool DBConnection_MYSQL::connect(char **args, int numargs)
 	else
 		t_use_ssl = 0;
 		
-#ifndef _MOBILE
 	if (t_use_ssl && !load_ssl_library())
 	{
 		errorMessageSet("Unable to load SSL library");
 		return false;
 	}
-#endif
 	
 	//initialize mysql data structure for connection
 	if (!mysql_init(getMySQL()))

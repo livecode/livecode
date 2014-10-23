@@ -27,12 +27,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "mcerror.h"
 #include "util.h"
+#include "player.h"
 
 #include "context.h"
 
 #include "printer.h"
 
 #include "mode.h"
+
+// SN-2014-08-25: [[ Bug 13187 ]] Added for the MCplayers' syncbuffering call
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+#endif
 
 extern char *strndup(const char *p_string, unsigned int p_length);
 
@@ -321,7 +327,7 @@ void MCPrinter::SetJobColor(bool p_color)
 	m_job_color = p_color;
 }
 
-void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCRange *p_ranges)
+void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCInterval *p_ranges)
 {
 	// MW-2008-02-28: [[ Bug 5623 ]] Intermittant crash when using printing commands is caused
 	//   by this being deleted, but not set to NULL to prevent it being deleted in future.
@@ -331,8 +337,8 @@ void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCRange *p_r
 	m_job_range_count = p_count;
 	if (p_count > 0)
 	{
-		m_job_ranges = new MCRange[p_count];
-		memcpy(m_job_ranges, p_ranges, sizeof(MCRange) * p_count);
+		m_job_ranges = new MCInterval[p_count];
+		memcpy(m_job_ranges, p_ranges, sizeof(MCInterval) * p_count);
 	}
 }
 
@@ -701,7 +707,15 @@ void MCPrinter::DoPrint(MCCard *p_card, const MCRectangle& p_src, const MCRectan
 		t_dst_printer_rect . bottom = p_dst . y + p_dst . height;
 
 		SetStatusFromResult(m_device -> Begin(t_src_printer_rect, t_dst_printer_rect, t_context));
-
+        
+        // SN-2014-08-25: [[ Bug 13187 ]] MCplayers' syncbuffering relocated
+        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+            if (t_player -> getstack() == p_card -> getstack())
+                t_player -> syncbuffering(t_context);
+#ifdef FEATURE_PLATFORM_PLAYER
+        MCPlatformWaitForEvent(0.0, true);
+#endif
+        
 		// Draw the card into the context.
 		if (m_loop_status == STATUS_READY)
 		{

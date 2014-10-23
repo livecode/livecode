@@ -70,6 +70,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Copy standalone manifest template files to build folder"
+				CommandLine="copy &quot;$(InputDir)rsrc\w32-manifest-template*.xml&quot; &quot;$(OutDir)"
 			/>
 		</Configuration>
 		<Configuration
@@ -126,6 +128,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Copy standalone manifest template files to build folder"
+				CommandLine="copy &quot;$(InputDir)rsrc\w32-manifest-template*.xml&quot; &quot;$(OutDir)"
 			/>
 		</Configuration>
 	</Configurations>

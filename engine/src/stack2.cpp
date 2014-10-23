@@ -57,6 +57,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "resolution.h"
 
+#include "stacktile.h"
+
 void MCStack::external_idle()
 {
 	if (idlefunc != NULL)
@@ -114,7 +116,7 @@ void MCStack::checkdestroy()
 				MCtodestroy->add(this);
 			}
 	}
-	else
+	else if (!MCdispatcher -> is_transient_stack(this))
 	{
 		MCStack *sptr = (MCStack *)parent;
 		sptr->checkdestroy();
@@ -153,13 +155,20 @@ void MCStack::resize(uint2 oldw, uint2 oldh)
 	MCRedrawUpdateScreen();
 }
 
+static bool _MCStackConfigureCallback(MCStack *p_stack, void *p_context)
+{
+	p_stack->configure(True);
+	
+	return true;
+}
+
 // MW-2007-07-03: [[ Bug 2332 ]] - It makes more sense for resize to be issue before move.
 //   Not doing so results in the stack's rect property being incorrect size-wise during execution
 //   of moveStack.
 void MCStack::configure(Boolean user)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
-	if (MCRedrawIsScreenLocked() || state & CS_NO_CONFIG || !mode_haswindow() || !opened)
+	if (MCRedrawIsScreenLocked() || state & CS_NO_CONFIG || !haswindow() || !opened)
 		return;
 #ifdef TARGET_PLATFORM_LINUX
  	if (!getflag(F_VISIBLE))
@@ -198,18 +207,7 @@ void MCStack::configure(Boolean user)
 		}
 	}
 	if (beenchanged)
-	{
-		MCStack *cstack = NULL;
-		uint2 ccount = 1;
-		while (True)
-		{
-			cstack = MCdispatcher->findchildstackd(window, ccount);
-			if (cstack == NULL)
-				break;
-			ccount++;
-			cstack->configure(True); //update children
-		}
-	}
+		foreachchildstack(_MCStackConfigureCallback, nil);
 }
 
 void MCStack::iconify()
@@ -306,7 +304,7 @@ void MCStack::hidecursor()
 
 void MCStack::setcursor(MCCursorRef newcursor, Boolean force)
 {
-	if (window == DNULL && MCModeMakeLocalWindows())
+	if (window == NULL && MCModeMakeLocalWindows())
 		return;
 	
 	if (MCwatchcursor)
@@ -456,62 +454,68 @@ Window MCStack::getwindow()
 	if (!opened || state & CS_ICONIC)
 #endif
 
-		return DNULL;
+		return NULL;
 	else
 		return window;
 }
 
+// IM-2014-07-23: [[ Bug 12930 ]] Reimplement to return the window of the parent stack
 Window MCStack::getparentwindow()
 {
-#if defined(_MACOSX) || defined(_WINDOWS)
-	if (parentwindow != DNULL)
-	{
-		if (MCdispatcher->findstackd(parentwindow) == NULL)
-		{
-			delete parentwindow;
-			parentwindow = DNULL;
-		}
-		return parentwindow;
-	}
-	return DNULL;
-#else
-	if (parentwindow != DNULL &&
-		MCdispatcher -> findstackd(parentwindow) == NULL)
-		parentwindow = DNULL;
-	return parentwindow;
-#endif
+	MCStack *t_parent;
+	t_parent = getparentstack();
+	
+	if (t_parent == nil)
+		return nil;
+	
+	return t_parent->getwindow();
 }
 
-void MCStack::setparentwindow(Window w)
+void MCStack::setparentstack(MCStack *p_parent)
 {
-#if defined(_MACOSX) || defined(_WINDOWS)
-	if (w != DNULL && w->handle.window != 0)
+	MCStack *t_parent;
+	t_parent = getparentstack();
+	
+	if (t_parent == p_parent)
+		return;
+	
+	if (m_parent_stack != nil)
 	{
-		if (parentwindow == DNULL)
-		{
-			parentwindow = new _Drawable;
-			parentwindow->type = DC_WINDOW;
-		}
-		parentwindow->handle.window = w->handle.window;
+		m_parent_stack->Release();
+		m_parent_stack = nil;
 	}
-	else
-		if (parentwindow != DNULL)
-		{
-			delete parentwindow;
-			parentwindow = DNULL;
-		}
-#else
-	if (parentwindow == window)
-		parentwindow = None;
-	parentwindow = w;
-#endif
+	
+	if (p_parent != nil)
+		m_parent_stack = p_parent->gethandle();
+}
+
+MCStack *MCStack::getparentstack()
+{
+	if (m_parent_stack == nil)
+		return nil;
+	
+	if (!m_parent_stack->Exists())
+	{
+		m_parent_stack->Release();
+		m_parent_stack = nil;
+		return nil;
+	}
+	
+	return (MCStack*)m_parent_stack->Get();
+}
+
+static bool _MCStackTakeWindowCallback(MCStack *p_stack, void *p_context)
+{
+	p_stack->setparentstack((MCStack*)p_context);
+	
+	return true;
 }
 
 Boolean MCStack::takewindow(MCStack *sptr)
 {
 	// If there is no window ptr and we 'have' a window (i.e. plugin)
 	// we can't take another one's window.
-	if (window == DNULL && mode_haswindow())
+	if (window == NULL && haswindow())
 		return False;
 
 	// MW-2008-10-31: [[ ParentScripts ]] Send closeControl messages appropriately
@@ -521,7 +525,7 @@ Boolean MCStack::takewindow(MCStack *sptr)
 		sptr -> curcard -> closebackgrounds(NULL) == ES_ERROR ||
 		sptr->curcard->message(MCM_close_stack) == ES_ERROR)
 		return False;
-	if (window != DNULL)
+	if (window != NULL)
 	{
 		stop_externals();
 		MCscreen->destroywindow(window);
@@ -534,7 +538,10 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	window = sptr->window;
 	iconid = sptr->iconid;
 	sptr->stop_externals();
-	sptr->window = DNULL;
+	sptr->window = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] Update the child stacks of sptr to be child stacks of this.
+	MCdispatcher->foreachchildstack(sptr, _MCStackTakeWindowCallback, this);
 	
 	state = sptr->state;
 	state &= ~(CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK);
@@ -572,8 +579,10 @@ Boolean MCStack::takewindow(MCStack *sptr)
 #ifdef _MOBILE
     // MW-2014-03-14: [[ Bug 11813 ]] Make sure we tell MCScreenDC that the top window
     //   has changed, and mark our stack as its own window.
-    MCscreen -> openwindow((Window)this, False);
+	// IM-2014-09-23: [[ Bug 13349 ]] Reset mobile window back to this stack, then call openwindow()
+	//   to perform any shared window initialisation.
     window = (Window)this;
+	openwindow(False);
 #endif
     
 	return True;
@@ -1561,7 +1570,7 @@ void MCStack::removeaccels(MCStack *stack)
 
 void MCStack::setwindowname()
 {
-	if (!opened || isunnamed() || window == DNULL)
+	if (!opened || isunnamed() || window == NULL)
 		return;
 
 	char *t_utf8_name;
@@ -1647,6 +1656,17 @@ void MCStack::reopenwindow()
 	titlestring = NULL;
 	if (getstyleint(flags) != 0)
 		mode = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
+
+	// IM-2014-05-27: [[ Bug 12321 ]] Updating the view transform here after changing the fullscreen
+	// allows the stack rect to be correctly restored in sync with the window reopening
+	view_update_transform();
+
+	// IM-2014-05-27: [[ Bug 12321 ]] Move font purging here to avoid second redraw after fullscreen change
+	if (m_purge_fonts)
+	{
+		purgefonts();
+		m_purge_fonts = false;
+	}
 
 	// MW-2011-08-18: [[ Redraw ]] Use global screen lock
 	MCRedrawLockScreen();
@@ -1750,16 +1770,16 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			else if (MCtopstackptr -> getwindow() != NULL)
 				parentptr = MCtopstackptr;
 		}
-		
-		extern bool MCMacIsWindowVisible(Window window);
-		if (parentptr == NULL || parentptr -> getwindow() == NULL || !MCMacIsWindowVisible(parentptr -> getwindow()))
+
+		extern bool MCPlatformIsWindowVisible(MCPlatformWindowRef window);
+		if (parentptr == NULL || parentptr -> getwindow() == NULL || !MCPlatformIsWindowVisible(parentptr -> getwindow()))
 			wm = WM_MODAL;
 	}
 #endif
 
 	if (state & CS_FOREIGN_WINDOW)
 		mode = wm;
-	if ((wm != mode || parentptr != NULL) && window != DNULL)
+	if ((wm != mode || parentptr != NULL) && window != NULL)
 	{
 		stop_externals();
 		MCscreen->destroywindow(window);
@@ -1769,18 +1789,16 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	mode = wm;
 	wposition = wpos;
 	walignment = walign;
+	// IM-2014-07-23: [[ Bug 12930 ]] We can now get & set the parent stack directly
 	if (parentptr == NULL)
-	{
-		if (parentwindow != DNULL)
-			parentptr = MCdispatcher->findstackd(parentwindow);
-	}
+		parentptr = getparentstack();
 	else
-		setparentwindow(parentptr->getw());
+		setparentstack(parentptr);
 	
 	// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
 	view_setstackviewport(rect);
 	
-	if (window == DNULL)
+	if (window == NULL)
 		realize();
 
 	if (substacks != NULL)
@@ -1876,20 +1894,27 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	}
 	break;
 	case WM_POPUP:
-		if (MCmousestackptr == NULL)
-			MCscreen->querymouse(trect.x, trect.y);
-		else
-		{
-			//WEBREV
-			// IM-2013-10-09: [[ FullscreenMode ]] Reimplement using MCStack::stacktogloballoc
-			MCPoint t_globalloc;
-			t_globalloc = MCmousestackptr->stacktogloballoc(MCPointMake(MCmousex, MCmousey));
+        if (wpos == WP_ASRECT)
+        {
+            rect = rel;
+        }
+        else
+        {
+            if (MCmousestackptr == NULL)
+                MCscreen->querymouse(trect.x, trect.y);
+            else
+            {
+                //WEBREV
+                // IM-2013-10-09: [[ FullscreenMode ]] Reimplement using MCStack::stacktogloballoc
+                MCPoint t_globalloc;
+                t_globalloc = MCmousestackptr->stacktogloballoc(MCPointMake(MCmousex, MCmousey));
 
-			trect.x = t_globalloc.x;
-			trect.y = t_globalloc.y;
-		}
-		trect.width = trect.height = 1;
-		positionrel(trect, OP_ALIGN_LEFT, OP_ALIGN_TOP);
+                trect.x = t_globalloc.x;
+                trect.y = t_globalloc.y;
+            }
+            trect.width = trect.height = 1;
+            positionrel(trect, OP_ALIGN_LEFT, OP_ALIGN_TOP);
+        }
 		break;
 	case WM_CASCADE:
 		trect = rel;
@@ -1929,18 +1954,23 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	
 	MCCard *startcard = curcard;
 
-	// MW-2011-08-19: [[ Redraw ]] Reset the update region.
-	view_reset_updates();
-	setstate(False, CS_NEED_REDRAW);
-
+	// IM-2014-09-23: [[ Bug 13349 ]] Store the lockscreen state to restore once the rest of the state is saved.
+	uint16_t t_lock_screen;
+	MCRedrawSaveLockScreen(t_lock_screen);
+	
 	// MW-2011-08-18: [[ Redraw ]] Make sure we don't save our lock.
 	MCRedrawUnlockScreen();
 	MCSaveprops sp;
 	MCU_saveprops(sp);
-	MCRedrawLockScreen();
+	
+	MCRedrawRestoreLockScreen(t_lock_screen);
 
 	if (mode >= WM_MODELESS)
+	{
+		// IM-2014-09-23: [[ Bug 13349 ]] Restore lockscreen with other props.
 		MCU_resetprops(True);
+		MCRedrawRestoreLockScreen(t_lock_screen);
+	}
 	trect = rect;
 	
 	// "bind" the stack's rect... Or in other words, make sure its within the 
@@ -1951,6 +1981,13 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	state |= CS_NO_FOCUS;
 	if (flags & F_DYNAMIC_PATHS)
 		MCdynamiccard = curcard;
+    
+#ifdef FEATURE_PLATFORM_PLAYER
+    // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
+    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+        if (t_player -> getstack() == curcard -> getstack())
+            t_player -> detachplayer();
+#endif
 		
 	// MW-2008-10-31: [[ ParentScripts ]] Send preOpenControl appropriately
 	if (curcard->message(MCM_preopen_stack) == ES_ERROR
@@ -1972,6 +2009,12 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			return ES_ERROR;
 		}
 
+#ifdef FEATURE_PLATFORM_PLAYER
+    // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
+    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+        if (t_player -> getstack() == curcard -> getstack())
+            t_player -> attachplayer();
+#endif
 	if (mode == WM_PULLDOWN || mode == WM_POPUP || mode == WM_CASCADE || (mode == WM_OPTION && MClook != LF_WIN95))
 	{
 		// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
@@ -2134,7 +2177,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 			// MW-2009-09-09: If this is a plugin window, then we need to send a resizeStack
 			//   as we have no control over the size of the window...
-			view_configure(window != DNULL ? False : True);
+			view_configure(window != NULL ? False : True);
 		}
 
 		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
@@ -2151,7 +2194,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				state &= ~CS_NO_FOCUS;
 				return ES_ERROR;
 			}
-			
+
 		state &= ~CS_NO_FOCUS;
 		int2 x, y;
 		MCscreen->querymouse(x, y);
@@ -2188,7 +2231,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	}
 	else
 	{
-		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
+ 		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
 		if (curcard->message(MCM_open_stack) == ES_ERROR
 		        || curcard != startcard
 				|| curcard -> openbackgrounds(false, NULL) == ES_ERROR
@@ -2202,12 +2245,17 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			if (curcard == startcard)
 				return ES_ERROR;
 		}
-		state &= ~CS_NO_FOCUS;
+ 		state &= ~CS_NO_FOCUS;
 
 		t_restore_props = mode >= WM_MODELESS;
 	}
 	if (t_restore_props)
+	{
+		// IM-2014-09-23: [[ Bug 13349 ]] Restore lockscreen with other props.
 		MCU_restoreprops(sp);
+		MCRedrawRestoreLockScreen(t_lock_screen);
+		MCRedrawUnlockScreen();
+	}
 	if (reopening)
 		MClockmessages = oldlock;
 	return ES_NORMAL;
@@ -2308,20 +2356,29 @@ void MCStack::loadwindowshape()
 		destroywindowshape(); //just in case
 		
 #if defined(_DESKTOP)
-		// MW-2009-02-02: [[ Improved image search ]]
-		// Search for the appropriate image object using the standard method.
-		MCImage *iptr;
-		iptr = resolveimageid(windowshapeid);
-		if (iptr != NULL)
+		MCImage *t_image;
+		// MW-2009-02-02: [[ Improved image search ]] Search for the appropriate image object using the standard method.
+		t_image = resolveimageid(windowshapeid);
+		if (t_image != NULL)
 		{
-			iptr->setflag(True, F_I_ALWAYS_BUFFER);
-			iptr->open();
+			MCWindowShape *t_new_mask;
+			t_image->setflag(True, F_I_ALWAYS_BUFFER);
+			t_image->open();
 
-			m_window_shape = iptr -> makewindowshape();
-			if (m_window_shape != nil)
-				setextendedstate(True, ECS_MASK_CHANGED);
-
-			iptr->close();
+			// IM-2014-10-22: [[ Bug 13746 ]] Scale window shape to both stack scale and backing buffer scale
+			MCGFloat t_scale;
+			t_scale = view_getbackingscale();
+			t_scale *= view_get_content_scale();
+			
+			uint32_t t_width, t_height;
+			t_width = t_image->getrect().width;
+			t_height = t_image->getrect().height;
+			
+			t_new_mask = t_image -> makewindowshape(MCGIntegerSizeMake(t_width * t_scale, t_height * t_scale));
+			t_image->close();
+			// MW-2014-06-11: [[ Bug 12495 ]] Refactored action as different whether using platform API or not.
+			if (t_new_mask != NULL)
+				updatewindowshape(t_new_mask);
 		}
 #endif
 
@@ -2471,40 +2528,149 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 	delete t_old_context;
 }
 
-void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
+////////////////////////////////////////////////////////////////////////////////
+
+// MM-2014-07-31: [[ ThreadedRendering ]] MCStackTile wraps a MCStackSurface and allows for the locking and rendring of the given region.
+//  This way we can easily split the stack surface into multiple regions and render each on a separate thread.
+class MCGContextStackTile: public MCStackTile
+{
+public:
+    MCGContextStackTile(MCStack *p_stack, MCStackSurface *p_surface, const MCGIntegerRectangle &p_region)
+    {
+        m_stack = p_stack;
+        m_surface = p_surface;
+        m_region = p_region;
+        m_context = NULL;
+    }
+    
+    ~MCGContextStackTile()
+    {
+    }
+    
+    bool Lock(void)
+    {
+        return m_surface -> LockGraphics(m_region, m_context, m_raster);
+    }
+    
+	void Unlock(void)
+    {
+        m_surface -> UnlockGraphics(m_region, m_context, m_raster);
+    }
+    
+    void Render(void)
+    {
+#ifndef _MAC_DESKTOP
+        // IM-2014-01-24: [[ HiDPI ]] Use view backing scale to transform surface -> logical coords
+        MCGFloat t_backing_scale;
+        t_backing_scale = m_stack -> view_getbackingscale();
+        
+        // p_region is in surface coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
+        MCRectangle t_rect;
+        t_rect = MCRectangleGetScaledBounds(MCRectangleFromMCGIntegerRectangle(m_region), 1 / t_backing_scale);
+        
+        // scale user -> surface space
+        MCGContextScaleCTM(m_context, t_backing_scale, t_backing_scale);
+        
+        m_stack -> view_render(m_context, t_rect);
+#else
+        m_stack -> view_render(m_context, MCRectangleFromMCGIntegerRectangle(m_region));
+#endif
+    }
+    
+private:
+    MCStack             *m_stack;
+    MCStackSurface      *m_surface;
+    MCGIntegerRectangle m_region;
+    MCGContextRef       m_context;
+    MCGRaster           m_raster;
+};
+
+void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef p_region)
 {
 	MCTileCacheRef t_tilecache;
 	t_tilecache = view_gettilecache();
 	
+    // SN-2014-08-25: [[ Bug 13187 ]] MCplayers's syncbuffering relocated
+    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+        if (t_player -> getstack() == this)
+            t_player -> syncbuffering(nil);
+    
 	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{
-		// If there is no tilecache, or the tilecache is invalid then fetch an
-		// MCGContext for the surface and render.
-		MCGContextRef t_context = nil;
-		if (p_surface -> LockGraphics(p_region, t_context))
-		{
-			// IM-2014-01-24: [[ HiDPI ]] Use view backing scale to transform surface -> logical coords
-			MCGFloat t_backing_scale;
-			t_backing_scale = view_getbackingscale();
-			
-			// p_region is in surface coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
-			MCRectangle t_rect;
-			t_rect = MCRectangleGetScaledBounds(MCRegionGetBoundingBox(p_region), 1 / t_backing_scale);
-			
-			// scale user -> surface space
-			MCGContextScaleCTM(t_context, t_backing_scale, t_backing_scale);
-			
-			view_render(t_context, t_rect);
-			
-			p_surface -> UnlockGraphics();
-		}
+        MCGIntegerRectangle t_bounds;
+        t_bounds = MCGRegionGetBounds(p_region);
+        
+        uint32_t t_cores;
+        t_cores = MCThreadGetNumberOfCores();
+        
+        // MM-2014-07-31: [[ ThreadedRendering ]] If the region is suitably large and the machine supports simultaneous execution,
+        //  split the stack surface into multiple regions and render each in an individual thread. The collect all function waits until all pending tiles have been rendered.
+        //  For dual core machines, we just split things into top and bottom half.
+        //  For machines with 4 or more cores, we split into 4 tiles -  top left, top right, bottom left, bottom right.
+        if (t_cores > 1 && t_bounds . size . width > 32 && t_bounds . size . height > 32)
+        {
+            if (t_cores >= 4)
+            {
+                MCGContextStackTile t_tile1(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x,
+                                                                    t_bounds . origin . y,
+                                                                    t_bounds . size . width / 2,
+                                                                    t_bounds . size . height / 2));
+                MCGContextStackTile t_tile2(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x + t_bounds . size . width / 2,
+                                                                    t_bounds . origin . y,
+                                                                    t_bounds . size . width - t_bounds . size . width / 2,
+                                                                    t_bounds . size . height / 2));
+                MCGContextStackTile t_tile3(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x,
+                                                                    t_bounds . origin . y + t_bounds . size . height / 2,
+                                                                    t_bounds . size . width / 2,
+                                                                    t_bounds . size . height - t_bounds . size . height / 2));
+                MCGContextStackTile t_tile4(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x + t_bounds . size . width / 2,
+                                                                    t_bounds . origin . y + t_bounds . size . height / 2,
+                                                                    t_bounds . size . width - t_bounds . size . width / 2,
+                                                                    t_bounds . size . height - t_bounds . size . height / 2));
+                MCStackTilePush(&t_tile1);
+                MCStackTilePush(&t_tile2);
+                MCStackTilePush(&t_tile3);
+                MCStackTilePush(&t_tile4);
+                MCStackTileCollectAll();
+            }
+            else
+            {
+                MCGContextStackTile t_tile1(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x,
+                                                                    t_bounds . origin . y,
+                                                                    t_bounds . size . width,
+                                                                    t_bounds . size . height / 2));
+                MCGContextStackTile t_tile2(this, p_surface,
+                                            MCGIntegerRectangleMake(t_bounds . origin . x,
+                                                                    t_bounds . origin . y + t_bounds . size . height / 2,
+                                                                    t_bounds . size . width,
+                                                                    t_bounds . size . height - t_bounds . size . height / 2));
+                MCStackTilePush(&t_tile1);
+                MCStackTilePush(&t_tile2);
+                MCStackTileCollectAll();
+            }
+        }
+        else
+        {
+            MCGContextStackTile t_tile(this, p_surface, t_bounds);
+            if (t_tile . Lock())
+            {
+                t_tile . Render();
+                t_tile . Unlock();
+            }
+        }
 	}
 	else
-	{
 		// We have a valid tilecache, so get it to composite.
 		MCTileCacheComposite(t_tilecache, p_surface, p_region);
-	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 void MCStack::takewindowsnapshot(MCStack *p_other_stack)
 {
@@ -2561,7 +2727,7 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 		t_user_rect = MCRectangleGetTransformedBounds(t_surface_rect, MCGAffineTransformInvert(t_transform));
 		
 		if (t_success)
-			t_success = MCGContextCreate(t_surface_rect.width, t_surface_rect.height, true, t_context);
+			t_success = MCGContextCreate(t_surface_rect.width, t_surface_rect.height, false, t_context);
 
 		if (t_success)
 		{
@@ -2742,3 +2908,25 @@ MCRectangle MCStack::getvisiblerect(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCStack::foreachchildstack(MCStackForEachCallback p_callback, void *p_context)
+{
+	bool t_continue;
+	t_continue = true;
+	
+	if (substacks != NULL)
+	{
+		MCStack *t_stack = substacks;
+		do
+		{
+			if (t_stack->getparentstack() == this)
+				t_continue = p_callback(t_stack, p_context);
+
+			t_stack = (MCStack *)t_stack->next();
+		}
+		while (t_continue && t_stack != substacks);
+	}
+	
+	return t_continue;
+}
+

@@ -555,6 +555,7 @@ bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_looku
 		// MW-2010-06-01: If there was no callback specified, then we don't want to keep the
 		//   string that is returned here. This is because our callback clones it.
 		char *t_string;
+        t_string = NULL;
 		t_success = sockaddr_to_string(p_addr, p_addrlen, false, t_string);
 		t_callback(t_context, t_success, t_string);
 		if (t_info == nil)

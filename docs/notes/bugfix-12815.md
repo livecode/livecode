@@ -1,0 +1,1 @@
+# [[ Player ]] Selection indicator does not align with the selection thumbs

@@ -42,6 +42,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "context.h"
 #include "bitmapeffect.h"
+#include "graphicscontext.h"
+#include "graphics_util.h"
 
 MCControl *MCControl::focused;
 int2 MCControl::defaultmargin = 4;
@@ -321,7 +323,7 @@ Boolean MCControl::doubleup(uint2 which)
 		case T_GRAPHIC:
 		case T_POINTER:
 			// MW-2010-10-15: [[ Bug 9055 ]] Pass false here to prevent 'mouseUp' being sent.
-			end(false);
+			end(false, false);
 		case T_BROWSE:
 			message_with_args(MCM_mouse_double_up, "1");
 			break;
@@ -1002,6 +1004,17 @@ void MCControl::attach(Object_pos p, bool invisible)
 	newmessage();
 }
 
+inline MCRectangle MCGRectangleGetPixelRect(const MCGRectangle &p_rect)
+{
+	int32_t t_left, t_right, t_top, t_bottom;
+	t_left = floorf(p_rect.origin.x);
+	t_top = floorf(p_rect.origin.y);
+	t_right = floorf(p_rect.origin.x + p_rect.size.width);
+	t_bottom = floorf(p_rect.origin.y + p_rect.size.height);
+	
+	return MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+}
+
 void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 {
 	if (!opened || !(isvisible() || MCshowinvisibles))
@@ -1012,12 +1025,17 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 	MCRectangle trect = MCU_intersect_rect(dirty, geteffectiverect());
 	if (trect.width != 0 && trect.height != 0)
 	{
+		dc->save();
+		
 		dc -> setopacity(255);
 		dc -> setfunction(GXcopy);
-		dc -> setclip(trect);
+		dc->cliprect(trect);
+        
 		// MW-2011-09-06: [[ Redraw ] Make sure we draw the control normally (not
 		//   as a sprite).
 		draw(dc, trect, false, false);
+		
+		dc->restore();
 	}
 }
 
@@ -1435,7 +1453,7 @@ void MCControl::start(Boolean canclone)
 	MCexitall = False;
 	getstack()->kfocusset(NULL);
 	kunfocus();
-
+	
 	state |= sizehandles();
 	if (!(state & CS_SELECTED))
 	{
@@ -1485,7 +1503,7 @@ void MCControl::start(Boolean canclone)
 
 // MW-2010-10-15: [[ Bug 9055 ]] 'end' is invoked in cases where we don't want to send
 //   mouseUp, the new parameter controls this (default 'true').
-void MCControl::end(bool p_send_mouse_up)
+void MCControl::end(bool p_send_mouse_up, bool p_release)
 {
 	uint4 oldstate = state;
 	state &= ~(CS_MOVE | CS_SIZE | CS_CREATE);
@@ -1503,7 +1521,10 @@ void MCControl::end(bool p_send_mouse_up)
 	layer_redrawall();
 	
 	if (p_send_mouse_up)
-		message_with_args(MCM_mouse_up, "1");
+		if (p_release)
+            message_with_args(MCM_mouse_release, "1");
+        else
+            message_with_args(MCM_mouse_up, "1");
 	
 	// MM-2012-11-06: [[ Property Listener ]]
 	if (oldstate & CS_SIZE)
@@ -1683,7 +1704,7 @@ Boolean MCControl::sbup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb)
 	{
 		state &= ~CS_HSCROLL;
 		if (hsb != NULL)
-			hsb->mup(which);
+			hsb->mup(which, false);
 		readscrollbars();
 		return True;
 	}
@@ -1691,7 +1712,7 @@ Boolean MCControl::sbup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb)
 	{
 		state &= ~CS_VSCROLL;
 		if (vsb != NULL)
-			vsb->mup(which);
+			vsb->mup(which, false);
 		readscrollbars();
 		return True;
 	}

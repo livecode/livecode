@@ -341,7 +341,6 @@
 					Carbon,
 				);
 				PRODUCT_NAME = reviphone;
-				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Debug;
@@ -354,7 +353,6 @@
 				GENERATE_PKGINFO_FILE = YES;
 				INFOPLIST_FILE = "reviphone-Info.plist";
 				PRODUCT_NAME = reviphone;
-				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Release;

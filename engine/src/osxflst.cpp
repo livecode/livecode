@@ -30,8 +30,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "osspec.h"
 
-#include "osxdc.h"
+#include "osspec.h"
 #include "osxflst.h"
+
+extern void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic);
+extern void coretext_font_destroy(void *p_font);
+extern void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
+extern void coretext_get_font_names(MCExecPoint &ep);
+extern void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint &ep);
 
 #define MAX_XFONT2MACFONT    11
 
@@ -56,90 +62,49 @@ static X2MacFontTable XMfonts[MAX_XFONT2MACFONT] = { // X to Mac font table
             { "terminal", "Courier" }
         };
 
-MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
+MCFontnode::MCFontnode(const MCString& fname, uint2& size, uint2 style)
 {
-	reqname = fname.clone();
+	reqname = fname . clone();
 	reqsize = size;
 	reqstyle = style;
-	char *tmpname;
-	font = new MCFontStruct; //create MCFont structure
 	
-	// MW-2005-05-10: Update this to FM type
-	FMFontFamily ffamilyid;		    //font family ID
+	font = new MCFontStruct;
+	font -> size = size;
 	
-	tmpname = strclone(reqname);//make a copy of the font name
-
-	char *sptr = tmpname;
-	if ((sptr = strchr(tmpname, ',')) != NULL)
+	char *t_comma;
+	t_comma = strchr(reqname, ',');
+	if (t_comma != nil)
+		*t_comma = '\0';
+	
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+    font -> fid = (MCSysFontHandle)coretext_font_create_with_name_size_and_style(reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+	
+    // if font does not exist then find MAC equivalent of X font name
+    if (font -> fid == NULL)
 	{
-		*sptr = '\0';
-		sptr++;
-	}
-	StringPtr reqnamePascal = c2pstr(tmpname);
-	
-	// MW-2005-05-10: Update this call to FM rountines
-	ffamilyid = FMGetFontFamilyFromName(reqnamePascal);
-	delete tmpname;
-	
-	if (ffamilyid == 0)
-	{ //font does not exist
-		uint2 i;     // check the font mapping table
-		for (i = 0 ; i < MAX_XFONT2MACFONT ; i++)
-			if (fname == XMfonts[i].Xfontname)
-			{ //find MAC equivalent of X font name
-				tmpname = strclone(XMfonts[i].Macfontname);
-				reqnamePascal = c2pstr(tmpname);
-				// MW-2005-05-10: Update this call to FM rountines
-				ffamilyid = FMGetFontFamilyFromName(reqnamePascal);
-				delete tmpname;
+		for (uint2 i = 0 ; i < MAX_XFONT2MACFONT ; i++)
+			if (fname == XMfonts[i] . Xfontname)
+			{
+                // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+                font -> fid = (MCSysFontHandle)coretext_font_create_with_name_size_and_style(XMfonts[i] . Macfontname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 				break;
 			}
 	}
-
-	CGrafPtr oldport;
-	GDHandle olddevice;
-	GetGWorld(&oldport, &olddevice);
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	SetGWorld(GetWindowPort(pms->getinvisiblewin()), GetMainDevice());
-	TextFont(ffamilyid);
-
-	Style tstyle = 0;
-	if ((style & FA_ITALIC) || (style & FA_OBLIQUE))
-		tstyle |= italic;
-	if ((style & FA_WEIGHT) > 0x05)
-		tstyle |= bold;
-	if ((style & FA_EXPAND) > 0x50)
-		tstyle |= extend;
-	if ((style & FA_EXPAND) < 0x50)
-		tstyle |= condense;
-
-	TextFace(tstyle);
-	TextSize(size);  //set text size
-
-	font->fid = (MCSysFontHandle)ffamilyid;
-	font->size = size;
-	font->style = tstyle;
+    
+	font -> ascent = size - 1;
+	font -> descent = size * 2 / 14 + 1;
 	
-	font->ascent = size - 1;
-	font->descent = size * 2 / 14 + 1;
-
-	// potentially some problem here:
-	// finding 16-bit fonts may cause problems with 8/16 string drawing
-	uint2 i;
-	char t[256];
-	FillParseTable(t, smCurrentScript);
-	
-	FontInfo finfo;
-	GetFontInfo(&finfo);     //get font info
-	
-	if (finfo.ascent + finfo.descent > size)
-		font->ascent++;
-
-	SetGWorld(oldport, olddevice);
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+	float ascent, descent;
+	coretext_font_get_metrics(font -> fid,  ascent, descent);
+	if (ceilf(ascent) + ceilf(descent) > size)
+		font -> ascent++;
 }
 
 MCFontnode::~MCFontnode()
 {
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+	coretext_font_destroy(font -> fid);
 	delete reqname;
 	delete font;
 }
@@ -189,77 +154,22 @@ MCFontStruct *MCFontlist::getfont(const MCString &fname, uint2 &size,
 }
 
 void MCFontlist::getfontnames(MCExecPoint &ep, char *type)
-{ //get a list of all the available font in the system
-	ep.clear();
-	short i = 1;
-	unsigned char fname[255]; //hold family font name
-	
-	FMFontFamilyIterator            fontFamilyIterator;
-	FMFontFamily                    fontFamily;
-	OSStatus  			    status;
-
-	// Create an iterator to enumerate the font families.
-	status = FMCreateFontFamilyIterator(NULL, NULL, kFMDefaultOptions,
-										&fontFamilyIterator);
-	while ((status = FMGetNextFontFamily(&fontFamilyIterator, &fontFamily)) == noErr)
-	{
-		if (FMGetFontFamilyName(fontFamily, fname) == noErr)
-		{
-			p2cstr(fname);
-			if (fname[0] != '%' && fname[0] != '.')          //exclude printer fonts
-				ep.concatcstring((char *)fname, EC_RETURN, i++ == 1);
-		}
-	}
-	
-	FMDisposeFontFamilyIterator (&fontFamilyIterator);
+{
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
+    coretext_get_font_names(ep);
 }
 
 void MCFontlist::getfontsizes(const char *fname, MCExecPoint &ep)
 {
-	ep.clear();
-	short i;
-	char sizeBuf[U2L];
-	FMFontFamily ffamilyID;
-	char *tmpname = strclone(fname);
-	StringPtr reqnamePascal = c2pstr((char *)tmpname);
-	// MW-2005-05-10: Update this call to FM rountines
-	ffamilyID = FMGetFontFamilyFromName(reqnamePascal);
-	if (ffamilyID == 0)
-	{
-		ep.clear();
-		return;
-	}
-	
-	// MW-2013-03-14: [[ Bug 10744 ]] Make sure we return 0 for scalable fonts. I'm
-	//   not sure we need do this anymore - I think all fonts are scalable on Mac these
-	//   days. I'm also assuming that true-type and postscript fonts are always outline
-	//   (which from memory they are - although they can have device-size specific
-	//    bitmaps embedded).
-	FMFont t_font;
-	FourCharCode t_type;
-	if (FMGetFontFromFontFamilyInstance(ffamilyID, 0, &t_font, NULL) == noErr &&
-		FMGetFontFormat(t_font, &t_type) == noErr &&
-		(t_type == kFMTrueTypeFontTechnology || t_type == kFMPostScriptFontTechnology))
-		ep . setuint(0);
-	else
-	{
-		//loop from size 6 to 72 point, query if the size is available
-		bool first = true;
-		for (i = 6 ; i <= 72; i++)
-		{
-			if (RealFont(ffamilyID, i) == True)
-			{
-				ep.concatuint(i, EC_RETURN, first);
-				first = false;
-			}
-		}
-	}
-	delete tmpname;
+    // MM-2014-06-02: [[ CoreText ]] Assume all core text fonts are scaleable.
+	ep . clear();
+	ep . concatuint(0, EC_RETURN, true);
 }
 
 void MCFontlist::getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep)
 {
-	ep.setstaticcstring("plain\nbold\nitalic\nbold-italic");
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
+    core_text_get_font_styles(fname, fsize, ep);
 }
 
 bool MCFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
@@ -278,4 +188,3 @@ bool MCFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_
 	}
 	return false;
 }
-

@@ -65,10 +65,6 @@ int2 MCCard::startx;
 int2 MCCard::starty;
 MCObjptr *MCCard::removedcontrol;
 
-#ifdef _MAC_DESKTOP
-extern bool MCosxmenupoppedup;
-#endif
-
 MCCard::MCCard()
 {
 	objptrs = NULL;
@@ -236,6 +232,9 @@ void MCCard::kfocus()
 	if (oldkfocused != NULL && kfocused == NULL)
 	{
 		kfocused = oldkfocused;
+        // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
+        //   (otherwise the engine state can change due to script).
+        MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 		kfocused->getref()->kfocus();
 	}
 	if (kfocused == NULL)
@@ -272,6 +271,9 @@ Boolean MCCard::kfocusnext(Boolean top)
 					if (oldkfocused->getref() == MCactivefield
 					        && !MCactivefield->getflag(F_LIST_BEHAVIOR))
 						MCactivefield->unselect(False, True);
+                    // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
+                    //   (otherwise the engine state can change due to script).
+					MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
 					oldkfocused->getref()->kunfocus();
 					if (oldkfocused == NULL)
 						return False;
@@ -279,6 +281,9 @@ Boolean MCCard::kfocusnext(Boolean top)
 				if (kfocused == NULL)
 					kfocused = tptr;
 			}
+            // MW-2014-07-29: [[ Bug 13001 ]] Sync the view focus before the engine state
+            //   (otherwise the engine state can change due to script).
+			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 			kfocused->getref()->kfocus();
 			done = True;
 			break;
@@ -325,6 +330,9 @@ Boolean MCCard::kfocusprev(Boolean bottom)
 					if (oldkfocused->getref() == MCactivefield
 					        && !MCactivefield->getflag(F_LIST_BEHAVIOR))
 						MCactivefield->unselect(False, True);
+                    // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
+                    //   (otherwise the engine state can change due to script).
+					MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
 					oldkfocused->getref()->kunfocus();
 					if (oldkfocused == NULL)
 						return False;
@@ -332,6 +340,9 @@ Boolean MCCard::kfocusprev(Boolean bottom)
 				if (kfocused == NULL)
 					kfocused = tptr;
 			}
+            // MW-2014-07-29: [[ Bug 13001 ]] Sync the view focus before the engine state
+            //   (otherwise the engine state can change due to script).
+			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 			kfocused->getref()->kfocus();
 			done = True;
 			break;
@@ -352,6 +363,9 @@ void MCCard::kunfocus()
 	{
 		oldkfocused = kfocused;
 		kfocused = NULL;
+        // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
+        //   (otherwise the engine state can change due to script).
+        MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
 		oldkfocused->getref()->kunfocus();
 	}
 	else
@@ -587,27 +601,23 @@ Boolean MCCard::mdown(uint2 which)
 		MCControl *oldfocused = mfocused->getref();
         
         // AL-2013-01-14: [[ Bug 11343 ]] Add timer if the object handles mouseStillDown in the behavior chain.
-        if (oldfocused -> handlesmessage(MCM_mouse_still_down))
-            MCscreen->addtimer(oldfocused, MCM_idle, MCidleRate);
-        
-		// MW-2007-12-11: [[ Bug 5670 ]] Reset our notification var so we can check it after
-#ifdef _MACOSX
-		MCosxmenupoppedup = false;
-#endif
+        // MW-2014-07-29: [[ Bug 13010 ]] Make sure we use the deepest mfocused child.
+        MCControl *t_child_oldfocused = getmfocused();
+        if (t_child_oldfocused != NULL &&
+            t_child_oldfocused -> handlesmessage(MCM_mouse_still_down))
+            MCscreen->addtimer(t_child_oldfocused, MCM_idle, MCidleRate);
+
 		if (!mfocused->getref()->mdown(which)
 		        && getstack()->gettool(this) == T_BROWSE)
 		{
-#ifdef _MACOSX
-			if (!MCosxmenupoppedup)
-#endif
 				message_with_args(MCM_mouse_down, "1");
 		}
 		if (!(MCbuttonstate & (0x1L << (which - 1))))
 		{
 			Boolean oldstate = MClockmessages;
 			MClockmessages = True;
-			if (!mup(which))
-				oldfocused->mup(which);
+			if (!mup(which, false))
+				oldfocused->mup(which, false);
 			MClockmessages = oldstate;
 		}
 		return True;
@@ -639,7 +649,7 @@ Boolean MCCard::mdown(uint2 which)
 				{
 					Boolean oldstate = MClockmessages;
 					MClockmessages = True;
-					mup(which);
+					mup(which, false);
 					MClockmessages = oldstate;
 				}
 				break;
@@ -735,14 +745,14 @@ Boolean MCCard::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCCard::mup(uint2 which)
+Boolean MCCard::mup(uint2 which, bool p_release)
 {
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	if (mfocused != NULL)
 	{
 		mgrabbed = False;
-		return mfocused->getref()->mup(which);
+		return mfocused->getref()->mup(which, p_release);
 	}
 	else
 	{
@@ -769,7 +779,10 @@ Boolean MCCard::mup(uint2 which)
 				case T_POINTER:
 				case T_BROWSE:
 					// MW-2010-10-15: [[ Bug 9055 ]] Mouse message consistency improvement
-					message_with_args(MCM_mouse_up, "1");
+                    if (p_release)
+                        message_with_args(MCM_mouse_release, "1");
+                    else
+                        message_with_args(MCM_mouse_up, "1");
 					break;
 				case T_HELP:
 					help();
@@ -780,7 +793,11 @@ Boolean MCCard::mup(uint2 which)
 				break;
 			case Button2:
 			case Button3:
-				message_with_args(MCM_mouse_up, which);
+                // MW-2014-07-24: [[ Bug 12882 ]] Make sure we pass through correct button number.
+                if (p_release)
+                    message_with_args(MCM_mouse_release, which);
+                else
+                    message_with_args(MCM_mouse_up, which);
 				break;
 			}
 			mgrabbed = False;
@@ -1383,6 +1400,9 @@ void MCCard::kfocusset(MCControl *target)
 		if (tkfocused != NULL && tkfocused->getref() != target)
 		{
 			kfocused = NULL;
+            // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
+            //   (otherwise the engine state can change due to script).
+            MCscreen -> controllostfocus(getstack(), tkfocused -> getid());
 			tkfocused->getref()->kunfocus();
 		}
 		if (kfocused != NULL)
@@ -1393,6 +1413,9 @@ void MCCard::kfocusset(MCControl *target)
 		{
 			if (kfocused->getref()->kfocusset(target))
 			{
+                // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
+                //   (otherwise the engine state can change due to script).
+                MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 				kfocused->getref()->kfocus();
 
 				// OK-2009-04-29: [[Bug 8013]] - Its possible that kfocus() can set kfocused to NULL if the 
@@ -2613,40 +2636,42 @@ void MCCard::drawcardborder(MCDC *dc, const MCRectangle &dirty)
 	            || dirty.x + dirty.width >= rect.width - bwidth
 	            || dirty.y + dirty.height >= rect.height - bwidth))
 	{
-		dc->setclip(dirty);
+		dc->save();
+		dc->cliprect(dirty);
+		
 		if (flags & F_3D)
 			draw3d(dc, rect, ETCH_RAISED, borderwidth);
+		else if (bwidth == 3)
+		{
+			rect.width--;
+			rect.height--;
+			drawborder(dc, rect, borderwidth);
+			rect.width++;
+			rect.height++;
+			MCPoint p[3];
+			p[0].x = p[1].x = 1;
+			p[2].x = rect.width - 3;
+			p[0].y = rect.height - 3;
+			p[1].y = p[2].y = 1;
+			dc->setforeground(dc->getwhite());
+			dc->drawlines(p, 3);
+			p[0].x = 2;
+			p[1].x = p[2].x = rect.width - 3;
+			p[0].y = p[1].y = rect.height - 3;
+			p[2].y = 2;
+			dc->setforeground(dc->getgray());
+			dc->drawlines(p, 3);
+			p[0].x = 2;
+			p[1].x = p[2].x = rect.width - 1;
+			p[0].y = p[1].y = rect.height - 1;
+			p[2].y = 2;
+			dc->setforeground(maccolors[MAC_SHADOW]);
+			dc->drawlines(p, 3);
+		}
 		else
-			if (bwidth == 3)
-			{
-				rect.width--;
-				rect.height--;
-				drawborder(dc, rect, borderwidth);
-				rect.width++;
-				rect.height++;
-				MCPoint p[3];
-				p[0].x = p[1].x = 1;
-				p[2].x = rect.width - 3;
-				p[0].y = rect.height - 3;
-				p[1].y = p[2].y = 1;
-				dc->setforeground(dc->getwhite());
-				dc->drawlines(p, 3);
-				p[0].x = 2;
-				p[1].x = p[2].x = rect.width - 3;
-				p[0].y = p[1].y = rect.height - 3;
-				p[2].y = 2;
-				dc->setforeground(dc->getgray());
-				dc->drawlines(p, 3);
-				p[0].x = 2;
-				p[1].x = p[2].x = rect.width - 1;
-				p[0].y = p[1].y = rect.height - 1;
-				p[2].y = 2;
-				dc->setforeground(maccolors[MAC_SHADOW]);
-				dc->drawlines(p, 3);
-			}
-			else
-				drawborder(dc, rect, borderwidth);
-		dc->clearclip();
+			drawborder(dc, rect, borderwidth);
+		
+		dc->restore();
 	}
 }
 
@@ -2750,7 +2775,6 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
-	dc -> setclip(dirty);
 
 	if (t_draw_cardborder)
 		drawcardborder(dc, dirty);

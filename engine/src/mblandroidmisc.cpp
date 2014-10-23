@@ -1000,12 +1000,22 @@ extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_par
 extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleRequestForProductDetails(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleReceiveProductDetails(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters);
 
@@ -1213,8 +1223,27 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{"mobilePurchaseGet", MCHandlePurchaseGet, nil},
 	{"mobilePurchaseSet", MCHandlePurchaseSet, nil},
 	{"mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
-	{"mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
+    {"mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
     {"mobilePurchaseVerify", MCHandlePurchaseVerify, nil},
+    
+    {"mobileStoreCanMakePurchase", MCHandleCanMakePurchase, nil},
+	{"mobileStoreEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+	{"mobileStoreDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+	{"mobileStoreRestorePurchases", MCHandleRestorePurchases, nil},
+    {"mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},
+    {"mobileStoreSetProductType", MCHandleProductSetType, nil},
+    {"mobileStorePurchasedProducts", MCHandleGetPurchases, nil},
+    {"mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
+    //{"mobileSetPurchaseProperty", MCHandleSetPurchaseProperty, nil},
+    //{"mobileRequestForProductDetails", MCHandleRequestForProductDetails, nil},
+    //{"mobileReceiveProductDetails", MCHandleReceiveProductDetails, nil},
+    {"mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
+    {"mobileStoreMakePurchase", MCHandleMakePurchase, nil},
+    {"mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
+    {"mobileStorePurchaseError", MCHandlePurchaseError, nil},
+    {"mobileStoreVerifyPurchase", MCHandlePurchaseVerify, nil},
+    
+	
     
 	{"mobileControlCreate", MCHandleControlCreate, nil},
 	{"mobileControlDelete", MCHandleControlDelete, nil},

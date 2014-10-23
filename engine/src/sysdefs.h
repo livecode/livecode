@@ -40,6 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_TASKBAR_ICON
 #define FEATURE_RELAUNCH_SUPPORT
 #define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
 
 #elif defined(_MAC_DESKTOP)
 
@@ -49,7 +50,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
-#define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
+#define FEATURE_PLATFORM_PLAYER
+#define FEATURE_PLATFORM_RECORDER
+#define FEATURE_PLATFORM_AUDIO
 
 #elif defined(_LINUX_DESKTOP)
 
@@ -201,8 +205,20 @@ typedef struct __MCSysWindowHandle *MCSysWindowHandle;
 typedef struct __MCSysFontHandle *MCSysFontHandle;
 typedef struct __MCSysContextHandle *MCSysContextHandle;
 
+typedef class MCPlatformWindow *MCPlatformWindowRef;
+typedef class MCPlatformSurface *MCPlatformSurfaceRef;
+typedef class MCPlatformCursor *MCPlatformCursorRef;
+typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
+typedef class MCPlatformMenu *MCPlatformMenuRef;
+typedef class MCPlatformPlayer *MCPlatformPlayerRef;
+
 typedef void *MCColorTransformRef;
+
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
+typedef MCPlatformCursorRef MCCursorRef;
+#else
 typedef struct MCCursor *MCCursorRef;
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -262,15 +278,16 @@ class CDropTarget;
 
 typedef uintptr_t MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 typedef struct __MCWinSysHandle *MCWinSysHandle;
 typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
+
+#define PLACEMENT_NEW_DEFINED
+inline void *operator new (size_t size, void *p)
+{
+	return p;
+}
 
 #if defined(_DEBUG)
 
@@ -342,11 +359,6 @@ struct MCMacProcessSerialNumber
 	uint32_t lowLongOfPSN;
 };
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -392,11 +404,6 @@ struct MCFontStruct
 #define SIGBOGUS 100
 
 typedef int MCSocketHandle;
-
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
 
 extern uint1 MClowercasingtable[];
 inline uint1 MCS_tolower(uint1 p_char)
@@ -451,11 +458,6 @@ struct MCFontStruct
 
 typedef int MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -499,11 +501,6 @@ struct MCFontStruct
 
 typedef int MCSocketHandle;
 
-inline void *operator new(size_t, void *p)
-{
-	return p;
-}
-
 extern uint1 *MClowercasingtable;
 inline uint1 MCS_tolower(uint1 p_char)
 {
@@ -530,6 +527,24 @@ struct MCFontStruct
 #define SECONDS_MIN 0.0
 #define SECONDS_MAX 32535244799.0
 
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//
+//  NEW / DELETE REDEFINTIONS
+//
+
+#ifndef PLACEMENT_NEW_DEFINED
+inline void *operator new (size_t size, void *p)
+{
+	return p;
+}
+#endif
+
+// MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
+#ifndef __VISUALC__
+void *operator new (size_t size) throw();
+void *operator new[] (size_t size) throw();
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -569,6 +584,20 @@ struct MCFontStruct
 
 #define BAD_NUMERIC DBL_MAX
 #define MC_EPSILON  (DBL_EPSILON * 10.0)
+
+struct MCRange
+{
+	uindex_t offset;
+	uindex_t length;
+};
+
+inline MCRange MCRangeMake(uindex_t offset, uindex_t length)
+{
+	MCRange r;
+	r . offset = offset;
+	r . length = length;
+	return r;
+}
 
 //////////////////////////////////////////////////////////////////////
 
@@ -690,7 +719,38 @@ struct MCBitmap
 
 ////////////////////////////////////////
 
-#if !defined(_LINUX_DESKTOP) && !defined(_LINUX_SERVER)
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
+
+typedef MCPlatformWindowRef Window;
+typedef MCSysWindowHandle Drawable;
+
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+
+// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
+#ifndef __LP64__
+#   if !defined(Window)
+        typedef unsigned long Window;
+#   endif
+#   if !defined(Pixmap)
+        typedef unsigned long Pixmap;
+#   endif
+#   if !defined(Drawable)
+        typedef unsigned long Drawable;
+#   endif
+#else
+#   if !defined(Window)
+        typedef unsigned long int Window;
+#   endif
+#   if !defined(Pixmap)
+        typedef unsigned long int Pixmap;
+#   endif
+#   if !defined(Drawable)
+        typedef unsigned long int Drawable;
+#   endif
+#endif
+
+#else
+
 enum
 {
     DC_WINDOW,
@@ -717,30 +777,6 @@ struct _ExtendedDrawable: public _Drawable
 typedef  _Drawable *        Window;
 typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
-#else
-
-// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
-#ifndef __LP64__
-	#if !defined(Window)
-		typedef unsigned long Window;
-	#endif
-	#if !defined(Pixmap)
-		typedef unsigned long Pixmap;
-	#endif
-	#if !defined(Drawable)
-		typedef unsigned long Drawable;
-	#endif
-#else
-	#if !defined(Window)
-		typedef unsigned long int Window;
-	#endif
-	#if !defined(Pixmap)
-		typedef unsigned long int Pixmap;
-	#endif
-	#if !defined(Drawable)
-		typedef unsigned long int Drawable;
-	#endif
-#endif
 
 #endif
 
@@ -1120,7 +1156,7 @@ public:
 
 	T*& operator & (void)
 	{
-		MCAssert(m_ptr == nil);
+		assert(m_ptr == nil);
 		return m_ptr;
 	}
 
@@ -1141,6 +1177,11 @@ public:
 		m_ptr = nil;
 	}
 
+	T*& PtrRef(void)
+	{
+		return m_ptr;
+	}
+	
 private:
 	T *m_ptr;
 };
@@ -1185,6 +1226,7 @@ class MCPlayer;
 class MCImage;
 class MCField;
 class MCObject;
+class MCObjectHandle;
 class MCObjectList;
 class MCMagnify;
 class MCPrinter;
@@ -1267,6 +1309,10 @@ class MCError;
 class MCStyledText;
 
 typedef struct MCFont *MCFontRef;
+
+// MM-2014-07-31: [[ ThreadedRendering ]]
+typedef struct __MCThreadCondition *MCThreadConditionRef;
+typedef struct __MCThreadMutex *MCThreadMutexRef;
 
 //////////////////////////////////////////////////////////////////////
 

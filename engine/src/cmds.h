@@ -774,10 +774,12 @@ public:
 class MCRecord : public MCStatement
 {
 	MCExpression *file;
+    Boolean pause;
 public:
 	MCRecord()
 	{
 		file = NULL;
+        pause = False;
 	}
 	virtual ~MCRecord();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1303,6 +1305,8 @@ class MCExport : public MCStatement
 	MCChunk *dest;
 	MCExpression *size;
 	bool with_effects : 1;
+    // MERG-2014-07-11: metadata array
+    MCExpression *metadata;
 public:
 	MCExport()
 	{
@@ -1320,6 +1324,8 @@ public:
 		palette_color_count = NULL;
 		with_effects = false;
 		size = NULL;
+        // MERG-2014-07-11: metadata array
+        metadata = NULL;
 	}
 	virtual ~MCExport();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1516,6 +1522,9 @@ class MCOpen : public MCStatement
 	// MW-2010-05-09: Indicates that the process should be opened with elevated
 	//   (admin) permissions
 	Boolean elevated : 1;
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added new "open socket <socket> with verification for <host>" variant.
+	MCExpression *verifyhostname;
 public:
 	MCOpen()
 	{
@@ -1528,7 +1537,8 @@ public:
 		secure = False;
 		secureverify = True;
 		destination = NULL;
-		elevated = False;
+		elevated = False;		
+		verifyhostname = NULL;
 	}
 	virtual ~MCOpen();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -2137,6 +2147,7 @@ public:
 	MCSecure(void)
 	{
 		m_sock_name = NULL;
+		m_verify_host_name = NULL;
 		secureverify = True;
 	}
 	
@@ -2147,6 +2158,9 @@ public:
 private:
 	MCExpression *m_sock_name;
 	Boolean secureverify : 1;
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added new host name variant for use with verification.
+	MCExpression *m_verify_host_name;
 };
 
 #endif

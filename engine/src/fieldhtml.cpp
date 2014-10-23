@@ -821,6 +821,8 @@ static struct { const char *attr; import_html_attr_type_t type; } s_import_html_
 	{ "metadata", kImportHtmlAttrMetadata },
 	{ "align", kImportHtmlAttrAlign },
 	{ "firstindent", kImportHtmlAttrFirstIndent },
+    // MW-2014-06-10: [[ Bug 12578 ]] Make sure listIndent attribute is processed on import.
+	{ "listindent", kImportHtmlAttrListIndent },
 	{ "leftindent", kImportHtmlAttrLeftIndent },
 	{ "rightindent", kImportHtmlAttrRightIndent },
 	{ "spaceabove", kImportHtmlAttrSpaceAbove},
@@ -1497,8 +1499,10 @@ static void import_html_append_utf8_chars(import_html_t& ctxt, const char *p_cha
 
 static void import_html_push_tag(import_html_t& ctxt, import_html_tag_type_t p_tag, MCFieldCharacterStyle& p_style)
 {
+    // MW-2014-08-26: [[ Bug 13256 ]] 'styles' has an implicit bottom element, so we need to ensure
+    //   capacity is at least 1 greater than index.
 	// Ensure there is room in the stack for a new entry.
-	if (ctxt . style_index + 1 > ctxt . style_capacity)
+	if (ctxt . style_index + 2 > ctxt . style_capacity)
 		if (!MCMemoryResizeArray(ctxt . style_capacity * 2, ctxt . styles, ctxt . style_capacity))
 			return;
 			

@@ -37,14 +37,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "mcssl.h"
+#include "player.h"
 
 #include "globals.h"
 
-#ifdef MCSSL
-#include <openssl/rand.h>
-#endif
 
-#define QA_NPOINTS 10
+// MDW-2014-07-06: [[ oval_points ]]
+#define QA_NPOINTS 90
 
 static MCPoint qa_points[QA_NPOINTS];
 
@@ -86,7 +85,8 @@ void MCU_init()
 	real8 increment = (M_PI / 2.0) / (real8)QA_NPOINTS;
 	real8 angle = 0.0;
 
-	for (i = 0 ; i < QA_NPOINTS ; i++)
+	// MDW 2014-07-26: [[ oval_points ]] bumped by one to fix
+	for (i = 0 ; i < QA_NPOINTS+1 ; i++)
 	{
 		qa_points[i].x = (short)(sin(angle) * (real8)MAXINT2);
 		qa_points[i].y = MAXINT2 - (short)(cos(angle) * (real8)MAXINT2);
@@ -148,7 +148,8 @@ void MCU_resetprops(Boolean update)
 		}
 	}
 	MCerrorlock = 0;
-	MClockerrors = MClockmessages = MClockmoves = MClockrecent = False;
+	MClockerrors = MClockmessages = MClockrecent = False;
+	MCscreen->setlockmoves(False);
 	MCerrorlockptr = NULL;
 	MCinterrupt = False;
 	MCdragspeed = 0;
@@ -167,7 +168,7 @@ void MCU_saveprops(MCSaveprops &sp)
 	sp.errorlockptr = MCerrorlockptr;
 	sp.lockerrors = MClockerrors;
 	sp.lockmessages = MClockmessages;
-	sp.lockmoves = MClockmoves;
+	sp.lockmoves = MCscreen->getlockmoves();
 	sp.lockrecent = MClockrecent;
 	sp.interrupt = MCinterrupt;
 	sp.dragspeed = MCdragspeed;
@@ -189,7 +190,7 @@ void MCU_restoreprops(MCSaveprops &sp)
 	MCerrorlockptr = sp.errorlockptr;
 	MClockerrors = sp.lockerrors;
 	MClockmessages = sp.lockmessages;
-	MClockmoves = sp.lockmoves;
+	MCscreen->setlockmoves(sp.lockmoves);
 	MClockrecent = sp.lockrecent;
 	MCinterrupt = sp.interrupt;
 	MCdragspeed = sp.dragspeed;
@@ -1178,6 +1179,22 @@ Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
 	return False;
 }
 
+// MM-2014-08-01: [[ Bug ]] Pulled name table initialisation out of MCU_matchname to prevent crah on Linux.
+// IM-2014-08-20: [[ Bug ]] Cannot guarantee that the globals have been initialized before nametable,
+// so use pointers to the globals rather than their value and dereference later.
+static const char **nametable[] =
+{
+    &MCstackstring, &MCaudiostring,
+    &MCvideostring, &MCbackgroundstring,
+    &MCcardstring, &MCnullstring,
+    &MCgroupstring, &MCnullstring,
+    &MCbuttonstring, &MCnullstring,
+    &MCnullstring, &MCscrollbarstring,
+    &MCimagestring, &MCgraphicstring,
+    &MCepsstring, &MCmagnifierstring,
+    &MCcolorstring, &MCfieldstring
+};
+
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 {
 	if (name == nil || MCNameIsEmpty(name) || test == MCnullmcstring)
@@ -1188,27 +1205,15 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 
 	Boolean match = False;
 	MCString tname = MCNameGetOldString(name);
-	static const char *nametable[] =
-	    {
-	        MCstackstring, MCaudiostring,
-	        MCvideostring, MCbackgroundstring,
-	        MCcardstring, MCnullstring,
-	        MCgroupstring, MCnullstring,
-	        MCbuttonstring, MCnullstring,
-	        MCnullstring, MCscrollbarstring,
-	        MCimagestring, MCgraphicstring,
-	        MCepsstring, MCmagnifierstring,
-	        MCcolorstring, MCfieldstring
-	    };
 	const char *sptr = test.getstring();
 	uint4 l = test.getlength();
 	if (MCU_strchr(sptr, l, '"')
 	        && l > tname.getlength() + 1
 	        && sptr[tname.getlength() + 1] == '"'
 	        && !MCU_strncasecmp(sptr + 1, tname.getstring(), tname.getlength())
-	        && sptr - test.getstring() >= (int)strlen(nametable[type - CT_STACK])
-	        && !MCU_strncasecmp(test.getstring(), nametable[type - CT_STACK],
-	                            strlen(nametable[type - CT_STACK])))
+	        && sptr - test.getstring() >= (int)strlen(*nametable[type - CT_STACK])
+	        && !MCU_strncasecmp(test.getstring(), *nametable[type - CT_STACK],
+	                            strlen(*nametable[type - CT_STACK])))
 		match = True;
 
 	return match;
@@ -1221,21 +1226,23 @@ void MCU_snap(int2 &p)
 	p = (p + (MCgridsize >> 1)) / MCgridsize * MCgridsize;
 }
 
+// MDW-2014-07-09: [[ oval_points ]] need to factor in startAngle and arcAngle
+// this is now used for both roundrects and ovals
 void MCU_roundrect(MCPoint *&points, uint2 &npoints,
-                   const MCRectangle &rect, uint2 radius)
+                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle)
 {
-	uint2 i, j;
+	uint2 i, j, k, count;
+	uint2 x, y;
 
 	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
 	{
 		delete points;
 		points = new MCPoint[4 * QA_NPOINTS + 1];
-		npoints = 4 * QA_NPOINTS + 1;
 	}
 
 	MCRectangle tr = rect;
-	tr.width--;
-	tr.height--;
+	tr . width--;
+	tr . height--;
 
 	uint2 rr_width, rr_height;
 	if (radius < tr.width >> 1)
@@ -1246,44 +1253,70 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 		rr_height = radius;
 	else
 		rr_height = tr.height >> 1;
+	
+	uint2 origin_horiz, origin_vert;
+	int2 arc, arclength;
+	origin_horiz = tr.x + rr_width;
+	origin_vert = tr.y + rr_height;
 
+	// pre-compute for speed if we're dealing with an oval
+	if (arcAngle > 0)
+	{
+		arc = 360 - arcAngle;	// length of arc in degrees
+		arclength = startAngle - arc;
+	}
+
+	j = QA_NPOINTS; // iterator for quadrants 1 and 3
+	k = 1;			// iterator for quadrants 2 and 4
 	i = 0;
-	for (j = 0 ; j < QA_NPOINTS ; j++)
+	// each time through the loop: the quadrant table is prebuilt.
+	// check for startAngle/arcAngle interaction
+	for (count = 0; count < (QA_NPOINTS*4); count++)
 	{
-		points[i].x = tr.x + tr.width - rr_width
-		              + (qa_points[j].x * rr_width / MAXINT2);
-		points[i].y = tr.y + (qa_points[j].y * rr_height / MAXINT2);
-		i++;
-	}
-	j = QA_NPOINTS;
-	do
-	{
+		// open wedge segment
+		if ((count < startAngle && arclength > 0 && count > arclength) || 
+			(arclength < 0 && count < startAngle) ||
+			(arclength < 0 && count > arcAngle+startAngle) )
+		{
+			x = origin_horiz;
+			y = origin_vert;
+		}
+		else if (count < 90) // quadrant 1
+		{
+			x = tr . x + tr . width - rr_width + (qa_points[j] . x * rr_width / MAXINT2);
+			y = tr . y                         + (qa_points[j] . y * rr_height / MAXINT2);
+		}
+		else if (count < 180) // quadrant 2
+		{
+			x = origin_horiz - (qa_points[k] . x * rr_width / MAXINT2);
+			y = tr . y       + (qa_points[k] . y * rr_height / MAXINT2);
+		}
+		else if (count < 270) // quadrant 3
+		{
+			x = origin_horiz         - (qa_points[j] . x * rr_width / MAXINT2);
+			y = tr . y + tr . height - (qa_points[j] . y * rr_height / MAXINT2);
+		}
+		else // quadrant 4
+		{
+			x = tr . x + tr . width - rr_width + (qa_points[k] . x * rr_width / MAXINT2);
+			y = tr . y + tr . height           - (qa_points[k] . y * rr_height / MAXINT2);
+		}
+
+		if (x != points[i-1] . x || y != points[i-1] . y)
+		{
+			points[i] . x = x;
+			points[i] . y = y;
+			i++;
+		}
+
 		j--;
-		points[i].x = tr.x + tr.width - rr_width
-		              + (qa_points[j].x * rr_width / MAXINT2);
-		points[i].y = tr.y + tr.height
-		              - (qa_points[j].y * rr_height / MAXINT2);
-		i++;
+		if (j == 0)
+			j = QA_NPOINTS;
+		k++;
+		if (k > QA_NPOINTS)
+			k = 1;
 	}
-	while (j);
-	for (j = 0 ; j < QA_NPOINTS ; j++)
-	{
-		points[i].x = tr.x + rr_width - (qa_points[j].x * rr_width / MAXINT2);
-		points[i].y = tr.y + tr.height
-		              -(qa_points[j].y * rr_height / MAXINT2);
-		i++;
-	}
-	j = QA_NPOINTS;
-	do
-	{
-		j--;
-		points[i].x = tr.x + rr_width
-		              - (qa_points[j].x * rr_width / MAXINT2);
-		points[i].y = tr.y + (qa_points[j].y * rr_height / MAXINT2);
-		i++;
-	}
-	while (j);
-	points[i] = points[0];
+	npoints = i;
 }
 
 void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
@@ -1817,6 +1850,11 @@ Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
+    
+    // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
+    for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
+        t_player -> syncbuffering(nil);
+    
 	ep.getobj()->message_with_args(MCM_new_tool, ep.getsvalue());
 	return ES_NORMAL;
 }
@@ -2380,7 +2418,14 @@ void MCU_geturl(MCExecPoint &ep)
 			MCurlresult->fetch(ep);
 		}
 		else
+        {
+			// MM-2014-08-12: [[ Bug 2902 ]] Make sure we set the result accordingly if the URL is invalid.
+			char *t_err;
+            MCCStringFormat(t_err, "invalid URL: %s", ep . getcstring());
 			ep . clear();
+            MCresult -> sets(t_err);
+            MCCStringFree(t_err);
+        }
 	}
 }
 
@@ -2549,10 +2594,10 @@ void MCU_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCU_disjointrangeinclude(MCRange*& x_ranges, int& x_count, int p_from, int p_to)
+bool MCU_disjointrangeinclude(MCInterval*& x_ranges, int& x_count, int p_from, int p_to)
 {
-	MCRange *t_new_ranges;
-	t_new_ranges = (MCRange *)malloc(sizeof(MCRange) * (x_count + 1));
+	MCInterval *t_new_ranges;
+	t_new_ranges = (MCInterval *)malloc(sizeof(MCInterval) * (x_count + 1));
 	if (t_new_ranges == NULL)
 		return false;
 	
@@ -2593,7 +2638,7 @@ bool MCU_disjointrangeinclude(MCRange*& x_ranges, int& x_count, int p_from, int 
 	return true;
 }
 
-bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_element)
+bool MCU_disjointrangecontains(MCInterval* p_ranges, int p_count, int p_element)
 {
 	if (p_count == 0)
 		return false;
@@ -2868,22 +2913,58 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes
-//   which uses OpenSSL if available, otherwise falls back on system support.
+// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes.
 bool MCU_random_bytes(size_t p_count, void *p_buffer)
 {
-#ifdef MCSSL
-	// If SSL is available, then use that.
-	static bool s_donotuse_ssl = false;
-	if (!s_donotuse_ssl)
-	{
-		if (InitSSLCrypt())
-			return RAND_bytes((unsigned char *)p_buffer, p_count) == 1;
-		
-		s_donotuse_ssl = true;
-	}
-#endif
-
-	// Otherwise use the system provided CPRNG.
+	// IM-2014-08-06: [[ Bug 13038 ]] Use system implementation directly instead of SSL
 	return MCS_random_bytes(p_count, p_buffer);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef _DEBUG_MEMORY
+
+#ifdef __VISUALC__
+void *operator new (size_t size)
+{
+    return malloc(size);
+}
+
+void operator delete (void *p)
+{
+    free(p);
+}
+
+void *operator new[] (size_t size)
+{
+    return malloc(size);
+}
+
+void operator delete[] (void *p)
+{
+    free(p);
+}
+#else
+void *operator new (size_t size) throw()
+{
+    return malloc(size);
+}
+
+void operator delete (void *p) throw()
+{
+    free(p);
+}
+
+void *operator new[] (size_t size) throw()
+{
+    return malloc(size);
+}
+
+void operator delete[] (void *p) throw()
+{
+    free(p);
+}
+#endif
+
+#endif
+

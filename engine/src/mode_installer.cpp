@@ -1365,18 +1365,6 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for STANDALONE mode.
 //
 
-void MCStack::mode_create(void)
-{
-}
-
-void MCStack::mode_copy(const MCStack& stack)
-{
-}
-
-void MCStack::mode_destroy(void)
-{
-}
-
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
@@ -1441,11 +1429,6 @@ void MCStack::mode_closeasmenu(void)
 {
 }
 
-bool MCStack::mode_haswindow(void)
-{
-	return window != DNULL;
-}
-
 void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
@@ -1461,13 +1444,6 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 	return window->handle.window;
 }
 
-#endif
-
-#ifdef _MACOSX
-MCSysWindowHandle MCStack::getqtwindow(void)
-{
-	return window -> handle . window;
-}
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1641,7 +1617,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr != NULL)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }
@@ -1700,6 +1676,12 @@ bool MCModeCollectEntropy(void)
 bool MCModeHasHomeStack(void)
 {
 	return false;
+}
+
+// IM-2014-08-08: [[ Bug 12372 ]] Pixel scaling is enabled for the installer
+bool MCModeGetPixelScalingEnabled(void)
+{
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,1 @@
+#   [[ Player ]] LC hangs when you open a stack with a player with filename that does not exist

@@ -383,6 +383,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\imageloader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\imageloader.h"
+				>
+			</File>
+			<File
 				RelativePath="src\ipng.cpp"
 				>
 			</File>
@@ -572,6 +580,14 @@
 			</File>
 			<File
 				RelativePath="src\stacklst.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\stacktile.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\stacktile.h"
 				>
 			</File>
 			<File
@@ -911,6 +927,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\color.cpp"
+				>
+			</File>
+			<File
 				RelativePath="src\combiners.cpp"
 				>
 			</File>
@@ -945,6 +965,26 @@
 			<File
 				RelativePath="src\gradient.h"
 				>
+			</File>
+			<File
+				RelativePath=".\src\graphics_util.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\graphics_util.h"
@@ -1008,6 +1048,10 @@
 			</File>
 			<File
 				RelativePath=".\src\redraw.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\region.cpp"
 				>
 			</File>
 			<File
@@ -1491,6 +1535,10 @@
 						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\quicktime.cpp"
+				>
 			</File>
 			<Filter
 				Name="Platform - Linux"
@@ -2906,6 +2954,31 @@
 							PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
 						/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\src\w32compat.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							PrecompiledHeaderThrough="w32prefix.h"
+							PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\src\w32compat.h"
+					>
 				</File>
 				<File
 					RelativePath=".\src\w32cursor.cpp"
@@ -5069,46 +5142,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\sysosxregion.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\sysregion.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\src\sysspec.cpp"
 				>
 				<FileConfiguration
@@ -5130,6 +5163,10 @@
 			</File>
 			<File
 				RelativePath=".\src\system.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\systhreads.h"
 				>
 			</File>
 			<File
@@ -5277,6 +5314,18 @@
 						Name="VCCLCompilerTool"
 						PrecompiledHeaderThrough="w32prefix.h"
 						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\sysw32threads.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="w32prefix.h"
 					/>
 				</FileConfiguration>
 			</File>

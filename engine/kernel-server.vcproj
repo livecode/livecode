@@ -284,6 +284,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\region.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\region.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\resolution.cpp"
 				>
 			</File>
@@ -896,6 +904,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\stacktile.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\text.cpp"
 				>
 			</File>
@@ -1156,6 +1168,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\imageloader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\imageloader.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\ipng.cpp"
 				>
 			</File>
@@ -1412,11 +1432,11 @@
 			Name="System"
 			>
 			<File
-				RelativePath=".\src\sysdefs.h"
+				RelativePath=".\src\quicktime.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\sysregion.cpp"
+				RelativePath=".\src\sysdefs.h"
 				>
 			</File>
 			<File
@@ -1425,6 +1445,10 @@
 			</File>
 			<File
 				RelativePath=".\src\system.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\systhreads.h"
 				>
 			</File>
 			<File
@@ -1437,6 +1461,10 @@
 			</File>
 			<File
 				RelativePath=".\src\sysw32registry.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\sysw32threads.cpp"
 				>
 			</File>
 			<File

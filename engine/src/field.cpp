@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "context.h"
 #include "redraw.h"
+#include "systhreads.h"
 
 int2 MCField::clickx;
 int2 MCField::clicky;
@@ -89,6 +90,9 @@ MCField::MCField()
 	tabs = NULL;
 	ntabs = 0;
 	label = NULL;
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Used to flag if a recompute is required during the next draw.
+    m_recompute = false;
 }
 
 MCField::MCField(const MCField &fref) : MCControl(fref)
@@ -151,6 +155,9 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 	}
 	label = strclone(fref.label);
 	state &= ~CS_KFOCUSED;
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Used to flag if a recompute is required during the next draw.
+    m_recompute = false;
 }
 
 MCField::~MCField()
@@ -479,6 +486,10 @@ void MCField::kunfocus()
 				MCactivefield = NULL;
 		}
 	}
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Flag that a recompute is potentially required at the next draw.
+    if (state & CS_SELECTED)
+        m_recompute = false;
 }
 
 Boolean MCField::kdown(const char *string, KeySym key)
@@ -571,8 +582,10 @@ Boolean MCField::kdown(const char *string, KeySym key)
 		{
 			if (MCnullmcstring == string)
 				return False;
-
-			getstack()->hidecursor();
+            
+            // MW-2014-04-25: [[ Bug 5545 ]] This method will do the appropriate behavior
+            //   based on platform.
+            MCscreen -> hidecursoruntilmousemoves();
 
 			// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
 			//   native mode.
@@ -925,12 +938,12 @@ Boolean MCField::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCField::mup(uint2 which)
+Boolean MCField::mup(uint2 which, bool p_release)
 {
 	if (!(state & (CS_MFOCUSED | CS_DRAG_TEXT)))
 		return False;
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	state &= ~(CS_MFOCUSED | CS_MOUSEDOWN);
 	if (state & CS_GRAB)
 	{
@@ -979,7 +992,7 @@ Boolean MCField::mup(uint2 which)
 			}
 			if (!(state & CS_DRAG_TEXT))
 				if ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL))
-					if (MCU_point_in_rect(rect, mx, my))
+					if (!p_release && MCU_point_in_rect(rect, mx, my))
 						if (flags & F_LIST_BEHAVIOR
 						        && (my - rect.y > (int4)(textheight + topmargin - texty)
 						            || paragraphs == paragraphs->next()
@@ -1018,7 +1031,7 @@ Boolean MCField::mup(uint2 which)
 			break;
 		case T_FIELD:
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -1030,7 +1043,7 @@ Boolean MCField::mup(uint2 which)
 	case Button2:
 		if (flags & F_LOCK_TEXT || getstack()->gettool(this) != T_BROWSE)
 		{
-			if (MCU_point_in_rect(rect, mx, my))
+			if (!p_release && MCU_point_in_rect(rect, mx, my))
 				message_with_args(MCM_mouse_up, "2");
 			else
 				message_with_args(MCM_mouse_release, "2");
@@ -1049,7 +1062,7 @@ Boolean MCField::mup(uint2 which)
 		}
 		break;
 	case Button3:
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 			message_with_args(MCM_mouse_up, "3");
 		else
 			message_with_args(MCM_mouse_release, "3");
@@ -1108,7 +1121,7 @@ Boolean MCField::doubleup(uint2 which)
 		if (sbdoubleup(which, hscrollbar, vscrollbar))
 			return True;
 		if (flags & F_LIST_BEHAVIOR && (flags & F_TOGGLE_HILITE))
-			mup(which);
+			mup(which, false);
 	}
 	return MCControl::doubleup(which);
 }
@@ -1181,6 +1194,10 @@ void MCField::setrect(const MCRectangle &nrect)
     
     if (t_resized)
         do_recompute(true);
+    
+    // MM-2014-08-11: [[ Bug 13149 ]] Flag that a recompute is potentially required at the next draw.
+    if (state & CS_SIZE)
+        m_recompute = true;
 }
 
 Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
@@ -1371,8 +1388,14 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 				if (pgptr == paragraphs)
 					break;
 			}
+            // SN-2014-09-17: [[ Bug 13462 ]] If no break has been found, we return the height of the field
 			if (theight != height)
-				ep.concatuint(height - theight, EC_RETURN, j++ == 0);
+            {
+                if (j)
+                    ep.concatuint(height - theight, EC_RETURN, false);
+                else
+                    ep.concatuint(height, EC_RETURN, true);
+            }
 		}
 		break;
     // JS-2013-05-15: [[ PageRanges ]] Return the pageRanges of the whole field.
@@ -2108,7 +2131,7 @@ void MCField::undo(Ustruct *us)
 			if (us->ud.text.data != NULL)
 			{
 				insertparagraph(us->ud.text.data);
-				selectedmark(False, si, ei, False, False);
+				selectedmark(False, si, ei, False);
 				seltext(us->ud.text.index, si, True);
 				us->type = UT_REPLACE_TEXT;
 			}
@@ -2888,19 +2911,32 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	if ((state & CS_SIZE || state & CS_MOVE) && flags & F_SCROLLBAR)
 		setsbrects();
 
-	if (state & CS_SIZE)
-	{
-		resetparagraphs();
-		do_recompute(true);
-	}
-	else if (state & CS_SELECTED && (texty != 0 || textx != 0))
-	{
-		resetparagraphs();
-		do_recompute(false);
-	}
+    // MM-2014-08-11: [[ Bug 13149 ]] Make sure only the first thread calls do_recompute.
+    if (m_recompute)
+    {
+        // MM-2014-08-05: [[ Bug 13012 ]] Put locks around recompute to prevent threading issues.
+        MCThreadMutexLock(MCfieldmutex);
+        if (m_recompute)
+        {
+            if (state & CS_SIZE)
+            {
+                resetparagraphs();
+                do_recompute(true);
+            }
+            else if (state & CS_SELECTED && (texty != 0 || textx != 0))
+            {
+                resetparagraphs();
+                do_recompute(false);
+            }
+            m_recompute = false;
+        }
+        MCThreadMutexUnlock(MCfieldmutex);
+    }
 
 	MCRectangle frect = getfrect();
-	dc->setclip(dirty);
+	
+	dc->save();
+	dc->cliprect(dirty);
 	
 	MCRectangle trect = frect;
 	if (flags & F_SHOW_BORDER && borderwidth)
@@ -2929,7 +2965,8 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		else
 			drawborder(dc, trect, borderwidth);
 	}
-	dc->clearclip();
+	
+	dc->restore();
 
 	// MW-2009-06-14: If the field is opaque, then render the contents with that
 	//   marked.
@@ -2941,7 +2978,6 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		dc -> changeopaque(t_was_opaque);
 
 	frect = getfrect();
-	dc->setclip(dirty);
 	if (flags & F_SHADOW)
 	{
 		MCRectangle trect = rect;

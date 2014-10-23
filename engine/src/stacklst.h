@@ -161,6 +161,8 @@ public:
     
    // MW-2014-04-10: [[ Bug 12175 ]] Moved from MCDispatcher - method for reopening all windows.
     void reopenallstackwindows(void);
+    
+    void hidepaletteschanged(void);
 };
 
 #endif

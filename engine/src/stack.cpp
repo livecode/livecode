@@ -72,8 +72,11 @@ MCStack::MCStack()
 {
 	obj_id = START_ID;
 	flags = F_VISIBLE | F_RESIZABLE | F_OPAQUE;
-	window = DNULL;
-	parentwindow = DNULL;
+	window = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] No parent window to start with
+	m_parent_stack = nil;
+	
 	cursor = None;
 	substacks = NULL;
 	cards = curcard = savecards = NULL;
@@ -136,6 +139,9 @@ MCStack::MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
+    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
 
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
@@ -143,12 +149,13 @@ MCStack::MCStack()
     // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks are not script-only by default.
     m_is_script_only = false;
     
+	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
+	m_purge_fonts = false;
+
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
 	view_init();
-
-	mode_create();
 }
 
 MCStack::MCStack(const MCStack &sref) : MCObject(sref)
@@ -176,8 +183,11 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 			s_last_stack_index = 2;
 		}
 	}
-	window = DNULL;
-	parentwindow = DNULL;
+	window = NULL;
+	
+	// IM-2014-07-23: [[ Bug 12930 ]] No parent window to start with
+	m_parent_stack = nil;
+	
 	cursor = None;
 	substacks = NULL;
 	cards = curcard = savecards = NULL;
@@ -207,6 +217,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
 	
+    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
+    /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
+    
 	mnemonics = NULL;
 	nfuncs = 0;
 	nmnemonics = 0;
@@ -334,15 +347,14 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
     // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks copy the source script-onlyness.
     m_is_script_only = sref.m_is_script_only;
     
-	view_copy(sref);
+	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
+	m_purge_fonts = false;
 
-	mode_copy(sref);
+	view_copy(sref);
 }
 
 MCStack::~MCStack()
 {
-	mode_destroy();
-
 	flags &= ~F_DESTROY_STACK;
 	state |= CS_DELETE_STACK;
 	while (opened)
@@ -367,13 +379,15 @@ MCStack::~MCStack()
 		opened++;
 		MCObject::close();
 	}
-	if (parentwindow != DNULL)
-		setparentwindow(DNULL);
+	
+	if (m_parent_stack != nil)
+		setparentstack(nil);
+
 	delete mnemonics;
 	delete title;
 	delete titlestring;
 
-	if (window != DNULL && !(state & CS_FOREIGN_WINDOW))
+	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
 	{
 		stop_externals();
 		MCscreen->destroywindow(window);
@@ -447,14 +461,20 @@ MCStack::~MCStack()
 
 	unloadexternals();
 
+	// COCOA-TODO: Remove dependence on ifdef
+#if !defined(_MAC_DESKTOP)
 	MCEventQueueFlush(this);
-
+#endif
+	
 	// MW-2011-09-13: [[ Redraw ]] If there is snapshot, get rid of it.
 	MCGImageRelease(m_snapshot);
 	m_snapshot = nil;
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
+    
+    // MM-2014-07-31: [[ ThreadedRendering ]] Release cache mutex.
+    MCThreadMutexRelease(m_id_cache_lock);
 	
 	view_destroy();
 }
@@ -516,6 +536,10 @@ void MCStack::close()
 {
 	if (!opened)
 		return;
+	
+	// MW-2014-02-25: [[ Platform ]] Make sure we lock the screen when closing
+	//   so nothing is seen.
+	MCRedrawLockScreen();
 				
 	// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
 	//   if this is an engine menu.
@@ -572,7 +596,7 @@ void MCStack::close()
 		MCfocusedstackptr = NULL;
 	if (!(state & CS_ICONIC))
 		MCstacks->remove(this);
-	if (window != DNULL && !(state & CS_FOREIGN_WINDOW))
+	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
 	{
 		MCscreen->closewindow(window);
 		if (mode == WM_MODAL || mode == WM_SHEET)
@@ -590,7 +614,7 @@ void MCStack::close()
 		{
 			stop_externals();
 			MCscreen->destroywindow(window);
-			window = DNULL;
+			window = NULL;
 			cursor = None;
 			delete titlestring;
 			titlestring = NULL;
@@ -607,6 +631,8 @@ void MCStack::close()
 	m_snapshot = nil;
 	
 	state &= ~(CS_IGNORE_CLOSE | CS_KFOCUSED | CS_ISOPENING);
+	
+	MCRedrawUnlockScreen();
 }
 
 void MCStack::kfocus()
@@ -624,8 +650,15 @@ void MCStack::kfocus()
 	if (state & CS_SUSPENDED)
 	{
 		curcard->message(MCM_resume_stack);
+        
+        // We have just invoked script, so it is entirely possible that focus is now
+        // 'elsewhere' - if the focused stack is not us, then do nothing.
+        if (MCfocusedstackptr != this)
+            return;
+
 		state &= ~CS_SUSPENDED;
 	}
+    
 	if (!(state & CS_KFOCUSED))
 	{
 		state |= CS_KFOCUSED;
@@ -676,6 +709,12 @@ void MCStack::kunfocus()
 	if (!opened)
 		return;
 	curcard->message(MCM_suspend_stack);
+    
+    // We have just invoked script, so we might be the focused stack again. So
+    // if focused stack is us, then do nothing.
+    if (MCfocusedstackptr == this)
+        return;
+    
 	state |= CS_SUSPENDED;
 	curcard->kunfocus();
 }
@@ -939,11 +978,11 @@ Boolean MCStack::mdown(uint2 which)
 	return curcard->mdown(which);
 }
 
-Boolean MCStack::mup(uint2 which)
+Boolean MCStack::mup(uint2 which, bool p_release)
 {
 	if (!opened || state & CS_IGNORE_CLOSE)
 		return False;
-	Boolean handled = curcard->mup(which);
+	Boolean handled = curcard->mup(which, p_release);
 	// MW-2010-07-06: [[ Bug ]] We should probably only mfocus the card if this
 	//   stack is still the mouse stack.
 	if (opened && mode < WM_PULLDOWN && MCmousestackptr == this)
@@ -1039,7 +1078,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 	old_rect = rect = t_new_rect;
 	
 	menuy = menuheight = 0;
-	if (opened && mode_haswindow())
+	if (opened && haswindow())
 	{
 		mode_constrain(rect);
 		
@@ -1423,7 +1462,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		ep.setboolean(getflag(F_WM_PLACE));
 		break;
 	case P_WINDOW_ID:
-		ep.setint(MCscreen->dtouint4(window));
+		ep.setint(MCscreen->dtouint4((Drawable)window));
 		break;
 	case P_PIXMAP_ID:
 		ep.setint(0);
@@ -1576,6 +1615,10 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_DEFER_SCREEN_UPDATES:
 		ep . setboolean(effective ? m_defer_updates && view_getacceleratedrendering() : m_defer_updates);
 		break;
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Get the ignoreMouseEvents property
+    case P_IGNORE_MOUSE_EVENTS:
+        ep.setboolean(getextendedstate(ECS_IGNORE_MOUSE_EVENTS));
+        break;
 #endif /* MCStack::getprop */
 	default:
 	{
@@ -1623,16 +1666,10 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				if (t_bval)
 					old_rect = rect;
 				
-				// IM-2014-02-12: [[ Bug 11783 ]] We may also need to reset the fonts on Windows when
-				//   fullscreen is changed
-				bool t_ideal_layout;
-				t_ideal_layout = getuseideallayout();
+				// IM-2014-05-27: [[ Bug 12321 ]] Move font purging to reopenstack() to avoid multiple redraws.
 
 				setextendedstate(t_bval, ECS_FULLSCREEN);
 				view_setfullscreen(t_bval);
-
-				if ((t_ideal_layout != getuseideallayout()) && opened)
-					purgefonts();
 			}
 		}
 	break;
@@ -2163,7 +2200,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 					reopenwindow();
 				else
 				{
-					if (window != DNULL)
+					if (window != NULL)
 					{
 						stop_externals();
 						MCscreen->destroywindow(window);
@@ -2475,26 +2512,9 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				// MW-2004-04-27: [[Deep Masks]] If a window already has a mask, replace it now to avoid flicker
 				if (m_window_shape != NULL)
 				{
-					MCImage *t_image;
-					// MW-2009-02-02: [[ Improved image search ]] Search for the appropriate image object using the standard method.
-					t_image = resolveimageid(windowshapeid);
-					if (t_image != NULL)
-					{
-						MCWindowShape *t_new_mask;
-						setextendedstate(True, ECS_MASK_CHANGED);
-						t_image -> setflag(True, F_I_ALWAYS_BUFFER);
-						t_image -> open();
-						t_new_mask = t_image -> makewindowshape();
-						t_image -> close();
-						if (t_new_mask != NULL)
-						{
-							destroywindowshape();
-							m_window_shape = t_new_mask;
-							// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
-							dirtyall();
-							break;
-						}
-					}
+					// IM-2014-10-22: [[ Bug 13746 ]] use common loadwindowshape() method
+					loadwindowshape();
+					break;
 				}
 #endif
 			}
@@ -2637,7 +2657,21 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		m_defer_updates = (t_defer_updates == True);
 	}
 	break;
-#endif /* MCStack::setprop */	
+    
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Set the ignoreMouseEvents property
+    case P_IGNORE_MOUSE_EVENTS:
+    {
+        if (!MCU_matchflags(data, f_extended_state, ECS_IGNORE_MOUSE_EVENTS, dirty))
+        {
+            MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
+            return ES_ERROR;
+        }
+        if (dirty && opened)
+            updateignoremouseevents();
+    }
+    break;
+   
+#endif /* MCStack::setprop */
 	default:
 	{
 		Exec_stat t_stat;
@@ -2747,7 +2781,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 {
 	if (!opened)
 	{
-		if (window == DNULL && !MCNameIsEqualTo(message, MCM_start_up, kMCCompareCaseless)
+		if (window == NULL && !MCNameIsEqualTo(message, MCM_start_up, kMCCompareCaseless)
 #ifdef _MACOSX
 		        && !(state & CS_DELETE_STACK))
 #else
@@ -3065,6 +3099,17 @@ bool MCStack::getuseideallayout(void)
 #endif
 }
 
+#ifndef _MAC_DESKTOP
+// MW-2014-06-11: [[ Bug 12495 ]] Non-platform API version of updating windowshape.
+void MCStack::updatewindowshape(MCWindowShape *p_shape)
+{
+    destroywindowshape();
+    m_window_shape = p_shape;
+    // MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
+    dirtyall();
+}
+#endif
+
 //////////
 
 MCRectangle MCStack::getwindowrect(void) const
@@ -3076,7 +3121,33 @@ MCRectangle MCStack::getwindowrect(void) const
 	t_rect = view_getwindowrect();
 	
 	// IM-2014-01-23: [[ HiDPI ]] Use inverse view transform to get stack coords
-	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(getviewtransform()));
+	// IM-2014-07-14: [[ Bug 12765 ]] Don't use the stack transform as this should be in view coords.
+	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(view_getviewtransform()));
+}
+
+//////////
+
+void MCStack::constrain(MCPoint p_size, MCPoint& r_new_size)
+{
+	r_new_size . x = MCMax(minwidth, MCMin(maxwidth, p_size . x));
+	r_new_size . y = MCMax(minheight, MCMin(maxheight, p_size . y));
+}
+
+//////////
+
+bool MCStack::haswindow(void)
+{
+	return window != NULL;
+}
+
+void MCStack::openwindow(Boolean p_override)
+{
+	if (MCModeMakeLocalWindows() && window != NULL)
+	{
+		// IM-2014-09-23: [[ Bug 13349 ]] Sync geometry to window before opening.
+		view_update_geometry();
+		platform_openwindow(p_override);
+	}
 }
 
 //////////

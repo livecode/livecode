@@ -1,4 +1,4 @@
-﻿script "revDeployLibrary"
+script "revDeployLibrary"
 ////////////////////////////////////////////////////////////////////////////////
 
 -- A stack can be configured to be deployable to any number of different platforms.

@@ -53,6 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <GLES/gl.h>
 #include <unistd.h>
 
+#include "stacktile.cpp"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Various globals depended on by other parts of the engine.
@@ -115,6 +117,7 @@ static int s_android_bitmap_stride = 0;
 static pthread_mutex_t s_android_bitmap_mutex;
 
 // The dirty region of the bitmap
+static MCGRegionRef s_android_bitmap_dirty_region = nil;
 static MCRectangle s_android_bitmap_dirty;
 
 // If non-nil, then we are in opengl mode.
@@ -174,6 +177,10 @@ MCGFloat MCAndroidGetSystemScale(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCResPlatformInitPixelScaling(void)
+{
+}
+
 // IM-2014-01-31: [[ HiDPI ]] Pixel scaling supported on android
 bool MCResPlatformSupportsPixelScaling(void)
 {
@@ -218,6 +225,29 @@ void MCResPlatformHandleScaleChange(void)
 {
 	// IM-2014-01-31: [[ HiDPI ]] Update the main stack geometry
 	static_cast<MCScreenDC *>(MCscreen) -> do_fit_window(false, true);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCAndroidInvalidateBitmapRect(const MCGIntegerRectangle &p_rect)
+{
+	s_android_ui_env -> CallVoidMethod(s_android_view, s_invalidate_method,
+									   p_rect.origin.x, p_rect.origin.y,
+									   p_rect.origin.x + p_rect.size.width,
+									   p_rect.origin.y + p_rect.size.height);
+}
+
+bool MCAndroidInvalidateBitmapCallback(void *p_context, const MCGIntegerRectangle &p_rect)
+{
+	MCAndroidInvalidateBitmapRect(p_rect);
+
+	return true;
+}
+
+// IM-2014-06-11: [[ GraphicsPerformance ]] Call invalidate method on Java bitmap view
+void MCAndroidInvalidateBitmapRegion(MCGRegionRef p_region)
+{
+	MCGRegionIterate(p_region, MCAndroidInvalidateBitmapCallback, nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -445,6 +475,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 	do
 	{
+		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
+		DoRunloopActions();
+
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch))
 		{
@@ -599,28 +632,21 @@ static MCRectangle android_view_get_bounds(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
 class MCAndroidStackSurface: public MCStackSurface
 {
-	MCRegionRef m_region;
+	MCGRegionRef m_region;
 	void *m_pixels;
-	
-	MCGContextRef m_locked_context;
-	MCRectangle m_locked_area;
-	bool m_locked;
 
 public:
-	MCAndroidStackSurface(MCRegionRef p_region)
+	MCAndroidStackSurface(MCGRegionRef p_region)
 	{
 		m_region = p_region;
 		m_pixels = nil;
-		
-		m_locked_context = nil;
-		m_locked = false;
-	}
+    }
 
 	bool Lock(void)
 	{
-		MCRectangle t_rect = MCRegionGetBoundingBox(m_region);
 		if (s_android_bitmap == nil)
 			return false;
 
@@ -641,125 +667,123 @@ public:
 		AndroidBitmap_unlockPixels(s_java_env, s_android_bitmap);
 		m_pixels = nil;
 	}
-	
-	bool LockGraphics(MCRegionRef p_area, MCGContextRef &r_context)
+    
+    bool LockGraphics(MCGIntegerRectangle p_area, MCGContextRef &r_context, MCGRaster &r_raster)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(p_area, t_raster))
+		MCGIntegerRectangle t_locked_area;
+		if (LockPixels(p_area, t_raster, t_locked_area))
 		{
-			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
+            MCGContextRef t_context;
+            if (MCGContextCreateWithRaster(t_raster, t_context))
 			{
 				// Set origin
-				MCGContextTranslateCTM(m_locked_context, -m_locked_area.x, -m_locked_area.y);
+                MCGContextTranslateCTM(t_context, -t_locked_area . origin . x, -t_locked_area . origin . y);
+                
 				// Set clipping rect
-				MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
+                MCGContextClipToRegion(t_context, m_region);
+				MCGContextClipToRect(t_context, MCGIntegerRectangleToMCGRectangle(t_locked_area));
 				
-				r_context = m_locked_context;
-
-		return true;
-	}
-
-			UnlockPixels(false);
+				r_context = t_context;
+                r_raster = t_raster;
+				
+				return true;
+			}
+			
+			UnlockPixels(t_locked_area, t_raster, false);
 		}
 		
 		return false;
 	}
 
-	void UnlockGraphics(void)
+	void UnlockGraphics(MCGIntegerRectangle p_area, MCGContextRef p_context, MCGRaster &p_raster)
 	{
-		if (m_locked_context == nil)
+		if (p_context == nil)
 			return;
-
-		MCGContextRelease(m_locked_context);
-		m_locked_context = nil;
 		
-		UnlockPixels();
-	}
-
-	bool LockPixels(MCRegionRef p_area, MCGRaster &r_raster)
-	{
-		if (m_locked)
-			return false;
+		MCGContextRelease(p_context);
+		UnlockPixels(p_area, p_raster, false);
 		
-		MCRectangle t_area;
-		t_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), MCRegionGetBoundingBox(m_region));
-
-		m_locked_area = t_area;
-
-		r_raster.width = t_area.width;
-		r_raster.height = t_area.height;
-		r_raster.stride = s_android_bitmap_stride;
-		r_raster.pixels = (uint8_t*)m_pixels + t_area.y * s_android_bitmap_stride + t_area.x * sizeof(uint32_t);
-		r_raster.format = kMCGRasterFormat_ARGB;
-
-		m_locked = true;
-
-		return true;
+		// IM-2014-06-11: [[ Graphics Performance ]] Mark the locked region for redraw
+		MCGRegionAddRegion(s_android_bitmap_dirty_region, m_region);
 	}
+    
+    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area)
+    {
+        MCGIntegerRectangle t_actual_area;
+        t_actual_area = MCGIntegerRectangleIntersection(p_area, MCGRegionGetBounds(m_region));
+        
+        if (MCGIntegerRectangleIsEmpty(t_actual_area))
+            return false;
+        
+        r_raster . width = t_actual_area . size . width ;
+        r_raster . height = t_actual_area . size . height;
+        r_raster . stride = s_android_bitmap_stride;
+        r_raster . format = kMCGRasterFormat_xRGB;
+		r_raster.pixels = (uint8_t*)m_pixels + t_actual_area . origin . y * s_android_bitmap_stride + t_actual_area . origin . x * sizeof(uint32_t);
 
-	void UnlockPixels(void)
+		r_locked_area = t_actual_area;
+
+        return true;
+    }
+
+	void UnlockPixels(MCGIntegerRectangle p_area, MCGRaster& p_raster)
 	{
-		UnlockPixels(true);
+		UnlockPixels(p_area, p_raster, true);
 	}
 	
-	void UnlockPixels(bool p_update)
+	void UnlockPixels(MCGIntegerRectangle p_area, MCGRaster& p_raster, bool p_update)
 	{
-		if (!m_locked)
+		if (p_raster . pixels == nil)
 			return;
-		
+        
 		if (p_update)
-			s_android_bitmap_dirty = MCU_union_rect(s_android_bitmap_dirty, m_locked_area);
-		
-		m_locked = false;
+			MCGRegionAddRect(s_android_bitmap_dirty_region, p_area);
 	}
 
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_target)
 	{
-			return false;
+        return false;
 	}
 
 	void UnlockTarget(void)
 	{
 	}
 
-	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+    bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 	{
 		bool t_success = true;
-
-		MCGContextRef t_context = nil;
-		MCRegionRef t_region = nil;
-
-		t_success = MCRegionCreate(t_region);
-
-		if (t_success)
-			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
-
-		if (t_success)
-			t_success = LockGraphics(t_region, t_context);
-
+        
+        MCGIntegerRectangle t_bounds;
+        MCGContextRef t_context = nil;
+        MCGRaster t_raster;
 		if (t_success)
         {
-			MCGContextSetBlendMode(t_context, p_blend);
+            t_bounds = MCGRectangleGetBounds(p_dst_rect);
+            t_success = LockGraphics(t_bounds, t_context, t_raster);
+        }
+		
+		if (t_success)
+		{
+            MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
+
             // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNone);
 		}
-
-		UnlockGraphics();
-
-		MCRegionDestroy(t_region);
+		
+		UnlockGraphics(t_bounds, t_context, t_raster);
 		
 		return t_success;
 	}
 };
 
+// MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
 class MCOpenGLStackSurface: public MCStackSurface
 {
 	void *m_buffer_pixels;
 	uint32_t m_buffer_stride;
 	
-	MCGContextRef m_locked_context;
-	MCRectangle m_locked_area;
 	bool m_locked;
 	bool m_update;
 
@@ -767,7 +791,6 @@ public:
 	MCOpenGLStackSurface(void)
 	{
 		m_buffer_pixels = nil;
-		m_locked_context = nil;
 		m_locked = false;
 		m_update = false;
 	}
@@ -795,54 +818,57 @@ public:
 		MCMemoryDeallocate(m_buffer_pixels);
 		m_buffer_pixels = nil;
 	}
-	
-	bool LockGraphics(MCRegionRef p_area, MCGContextRef &r_context)
+    
+    bool LockGraphics(MCGIntegerRectangle p_area, MCGContextRef &r_context, MCGRaster &r_raster)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(p_area, t_raster))
+		MCGIntegerRectangle t_locked_area;
+		if (LockPixels(p_area, t_raster, t_locked_area))
 		{
-			if (MCGContextCreateWithRaster(t_raster, r_context))
+            MCGContextRef t_context;
+            if (MCGContextCreateWithRaster(t_raster, t_context))
+			{
+                r_raster = t_raster;
 				return true;
-			
-			UnlockPixels(false);
+			}
+			UnlockPixels(t_locked_area, t_raster, false);
 		}
-		
 		return false;
 	}
-
-	void UnlockGraphics(void)
+    
+	void UnlockGraphics(MCGIntegerRectangle p_area, MCGContextRef p_context, MCGRaster &p_raster)
 	{
-		if (m_locked_context == nil)
+		if (p_context == nil)
 			return;
-
-		MCGContextRelease(m_locked_context);
-		m_locked_context = nil;
-
-		UnlockPixels();
+		
+		MCGContextRelease(p_context);
+		UnlockPixels(p_area, p_raster);
 	}
 
-	bool LockPixels(MCRegionRef p_area, MCGRaster &r_raster)
+    bool LockPixels(MCGIntegerRectangle p_area, MCGRaster &r_raster, MCGIntegerRectangle &r_locked_area)
 	{
 		if (m_locked)
 			return false;
-
+        
 		r_raster.width = s_android_bitmap_width;
 		r_raster.height = s_android_bitmap_height;
 		r_raster.stride = m_buffer_stride;
 		r_raster.pixels = m_buffer_pixels;
-		r_raster.format = kMCGRasterFormat_ARGB;
+		r_raster.format = kMCGRasterFormat_xRGB;
+        
+		r_locked_area = p_area;
 
 		m_locked = true;
-
+        
 		return true;
 	}
-
-	void UnlockPixels(void)
+    
+	void UnlockPixels(MCGIntegerRectangle p_area, MCGRaster& p_raster)
 	{
-		UnlockPixels(true);
+		UnlockPixels(p_area, p_raster, true);
 	}
 
-	void UnlockPixels(bool p_update)
+	void UnlockPixels(MCGIntegerRectangle p_area, MCGRaster& p_raster, bool p_update)
 	{
 		if (!m_locked)
 			return;
@@ -852,7 +878,7 @@ public:
 		
 		m_locked = false;
 	}
-
+    
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_context)
 	{
 		if (p_type != kMCStackSurfaceTargetEAGLContext)
@@ -864,37 +890,34 @@ public:
 	void UnlockTarget(void)
 	{
 	}
-
-	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+    
+    bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 	{
 		bool t_success = true;
-		
-		MCGContextRef t_context = nil;
-		MCRegionRef t_region = nil;
-		
-		t_success = MCRegionCreate(t_region);
-		
+        
+        MCGIntegerRectangle t_bounds;
+        MCGContextRef t_context = nil;
+        MCGRaster t_raster;
 		if (t_success)
-			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
-		
-		if (t_success)
-			t_success = LockGraphics(t_region, t_context);
+        {
+            t_bounds = MCGRectangleGetBounds(p_dst_rect);
+            t_success = LockGraphics(t_bounds, t_context, t_raster);
+        }
 		
 		if (t_success)
 		{
-			MCGContextSetBlendMode(t_context, p_blend);
+            MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
+            
             // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNone);
 		}
 		
-		UnlockGraphics();
-		
-		MCRegionDestroy(t_region);
+		UnlockGraphics(t_bounds, t_context, t_raster);
 		
 		return t_success;
 	}
-	
+
 protected:
 	static void FlushBits(void *p_bits, uint32_t p_stride)
 	{
@@ -969,28 +992,23 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 		//   occur prior to 'configure()' being called for the first time will
 		//   result in an update region being too big. Thus we must restrict.
 
-		// Note that as android regions are just rects at the moment, we cheat.
-		MCRectangle t_rect;
-		t_rect = MCRegionGetBoundingBox(p_region);
+		MCGRegionRef t_region;
+		t_region = (MCGRegionRef)p_region;
+		
+		MCGRegionIntersectRect(t_region, MCGIntegerRectangleMake(0, 0, s_android_bitmap_width, s_android_bitmap_height));
 
-		MCRegionRef t_actual_region;
-		MCRegionCreate(t_actual_region);
-		MCRegionSetRect(t_actual_region, MCU_intersect_rect(t_rect, MCU_make_rect(0, 0, s_android_bitmap_width, s_android_bitmap_height)));
-
-		MCAndroidStackSurface t_surface(t_actual_region);
-		if (t_surface.Lock())
-		{
-			// IM-2014-01-31: [[ HiDPI ]] If a callback is given then use it to render to the surface
-			if (s_updatewindow_callback != nil)
-				s_updatewindow_callback(&t_surface, t_actual_region, s_updatewindow_context);
-			else
-				view_surface_redrawwindow(&t_surface, t_actual_region);
-			
-			t_surface.Unlock();
-		}
-
-		MCRegionDestroy(t_actual_region);
-
+        MCAndroidStackSurface t_surface(t_region);
+        if (t_surface.Lock())
+        {
+            // IM-2014-01-31: [[ HiDPI ]] If a callback is given then use it to render to the surface
+            if (s_updatewindow_callback != nil)
+                s_updatewindow_callback(&t_surface, (MCRegionRef)t_region, s_updatewindow_context);
+            else
+                view_surface_redrawwindow(&t_surface, t_region);
+            
+            t_surface.Unlock();
+        }
+        
 		// MW-2012-09-04: [[ Bug 10333 ]] Make sure we cause a screen flush.
 		co_yield_to_android_and_wait(0.0, true);
 	}
@@ -1013,9 +1031,9 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-		MCRegionRef t_dirty_rgn;
-		MCRegionCreate(t_dirty_rgn);
-		MCRegionSetRect(t_dirty_rgn, MCU_make_rect(0, 0, s_android_bitmap_width, s_android_bitmap_height));
+		MCGRegionRef t_dirty_rgn;
+		MCGRegionCreate(t_dirty_rgn);
+		MCGRegionSetRect(t_dirty_rgn, MCGIntegerRectangleMake(0, 0, s_android_bitmap_width, s_android_bitmap_height));
 		
 		if (t_surface.Lock())
 		{
@@ -1024,7 +1042,7 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 		}
 		
 		s_java_env -> CallVoidMethod(s_android_opengl_view, s_openglview_swap_method, nil);
-		MCRegionDestroy(t_dirty_rgn);
+		MCGRegionDestroy(t_dirty_rgn);
 
 		// If the OpenGL view is not visible, then hide the bitmap view
 		// to reveal it.
@@ -1077,40 +1095,44 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 	if (t_device_rect . width == s_android_bitmap_width && t_device_rect . height == s_android_bitmap_height)
 		return;
 
-	MCRegionRef t_actual_region;
-	MCRegionCreate(t_actual_region);
-	MCRegionSetRect(t_actual_region, MCU_make_rect(0, 0, s_android_bitmap_width, s_android_bitmap_height));
+	MCGIntegerRectangle t_rect;
+	t_rect = MCGIntegerRectangleMake(0, 0, s_android_bitmap_width, s_android_bitmap_height);
+	
+	MCGRegionRef t_actual_region;
+	MCGRegionCreate(t_actual_region);
+	MCGRegionSetRect(t_actual_region, t_rect);
 
 	MCAndroidStackSurface t_surface(t_actual_region);
 
 	if (t_surface . Lock())
 	{
 		MCGRaster t_raster;
-	// Lock the whole surface of the bitmap.
-		if (t_surface . LockPixels(t_actual_region, t_raster))
-	{
-		// We need the contents of the last presented framebuffer. To ensure
-		// we get that, force an (OpenGL) update before reading the pixels.
-			view_device_updatewindow(t_actual_region);
+		MCGIntegerRectangle t_locked_area;
+		// Lock the whole surface of the bitmap.
+		if (t_surface . LockPixels(t_rect, t_raster, t_locked_area))
+		{
+			// We need the contents of the last presented framebuffer. To ensure
+			// we get that, force an (OpenGL) update before reading the pixels.
+			view_device_updatewindow((MCRegionRef)t_actual_region);
 
-		// Fetch the contents of the framebuffer.
+			// Fetch the contents of the framebuffer.
 			glReadPixels(0, 0, s_android_bitmap_width, s_android_bitmap_height, GL_RGBA, GL_UNSIGNED_BYTE, t_raster . pixels);
 
-		// glReadPixels gives us the bitmap the wrong way up, so swap it round.
-		void *t_scanline;
+			// glReadPixels gives us the bitmap the wrong way up, so swap it round.
+			void *t_scanline;
 			/* UNCHECKED */ t_scanline = malloc(t_raster . stride);
-		for(int y = 0; y < s_android_bitmap_height / 2; y++)
-		{
+			for(int y = 0; y < s_android_bitmap_height / 2; y++)
+			{
 				memcpy(t_scanline, (char *)t_raster . pixels + y * t_raster . stride, t_raster . stride);
 				memcpy((char *)t_raster . pixels + y * t_raster . stride, (char *)t_raster . pixels + (s_android_bitmap_height - y - 1) * t_raster . stride, t_raster . stride);
 				memcpy((char *)t_raster . pixels + (s_android_bitmap_height - y - 1) * t_raster . stride, t_scanline, t_raster . stride);
+			}
+			free(t_scanline);
 		}
-		free(t_scanline);
-	}
 		t_surface . Unlock();
 	}
 
-	MCRegionDestroy(t_actual_region);
+	MCGRegionDestroy(t_actual_region);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1166,6 +1188,10 @@ static void *mobile_main(void *arg)
 	int i;
 	MCstackbottom = (char *)&i;
 
+	// IM-2014-06-11: [[ GraphicsPerformance ]] Create initially empty redraw region
+	s_android_bitmap_dirty_region = nil;
+	/* UNCHECKED */ MCGRegionCreate(s_android_bitmap_dirty_region);
+	
 	// Make sure when a 'SIGINT' is sent to this thread, it causes any system
 	// calls to be interrupted (this thread will spend much of its time in a
 	// 'select' loop).
@@ -1323,13 +1349,10 @@ static void co_yield_to_engine(void)
 	}
 
 	// If the screen needs updating, post an invalidate event.
-	if (!MCU_empty_rect(s_android_bitmap_dirty))
+	if (!MCGRegionIsEmpty(s_android_bitmap_dirty_region))
 	{
-		s_android_ui_env -> CallVoidMethod(s_android_view, s_invalidate_method,
-										   s_android_bitmap_dirty . x, s_android_bitmap_dirty . y,
-										   s_android_bitmap_dirty . x + s_android_bitmap_dirty . width,
-										   s_android_bitmap_dirty . y + s_android_bitmap_dirty . height);
-		MCU_set_rect(s_android_bitmap_dirty, 0, 0, 0, 0);
+		MCAndroidInvalidateBitmapRegion(s_android_bitmap_dirty_region);
+		MCGRegionSetEmpty(s_android_bitmap_dirty_region);
 	}
 }
 
@@ -1957,7 +1980,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTouch(JNIEnv *env, jobje
 	t_loc = MCPointMake(x, y);
 	
 	// IM-2014-01-31: [[ HiDPI ]] Convert screen to logical coords
-	t_loc = MCScreenDC::screentologicalpoint(t_loc);
+	t_loc = MCscreen -> screentologicalpoint(t_loc);
 	
 	// MW-2014-01-06: [[ Bug 11641 ]] Make sure we use 'id + 1' for the id as it needs to be non-zero
 	//   (non-nil) for 'getmouse()'. (Android touch ids are 0 based).

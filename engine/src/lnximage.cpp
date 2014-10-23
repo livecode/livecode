@@ -27,6 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "imagebitmap.h"
 
+#include "graphics.h"
+
 // Linux image conversion functions
 
 bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap)
@@ -131,21 +133,9 @@ bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap)
 	bool t_success;
 	t_success = true;
 	
-	MCGImageRef t_image;
-	t_image = p_pattern->image;
-	
-	MCGAffineTransform t_transform;
-	t_transform = MCGAffineTransformMakeScale(p_pattern->scale, p_pattern->scale);
-	
-	MCGRectangle t_src_rect;
-	t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(t_image), MCGImageGetHeight(t_image));
-	
-	MCGRectangle t_dst_rect;
-	t_dst_rect = MCGRectangleApplyAffineTransform(t_src_rect, t_transform);
-	
 	uint32_t t_width, t_height;
-	t_width = ceilf(t_dst_rect.size.width);
-	t_height = ceilf(t_dst_rect.size.height);
+	t_success = MCPatternGetGeometry(p_pattern, t_width, t_height);
+	
 	
 	MCBitmap *t_bitmap;
 	t_bitmap = nil;
@@ -159,16 +149,30 @@ bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap)
 	if (t_success)
 		t_success = MCGContextCreateWithPixels(t_width, t_height, t_bitmap->bytes_per_line, t_bitmap->data, false, t_context);
 		
+	MCGImageRef t_image;
+	t_image = nil;
+
+	MCGAffineTransform t_transform;
+	
+	// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+	if (t_success)
+		t_success = MCPatternLockForContextTransform(p_pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform);
+
 	if (t_success)
 	{
 		// Fill background with black
 		MCGContextSetFillRGBAColor(t_context, 0.0, 0.0, 0.0, 1.0);
-		MCGContextAddRectangle(t_context, t_dst_rect);
+		MCGContextAddRectangle(t_context, MCGRectangleMake(0.0, 0.0, t_width, t_height));
 		MCGContextFill(t_context);
+		
+		MCGRectangle t_src_rect;
+		t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(t_image), MCGImageGetHeight(t_image));
 		
 		// draw transformed pattern image
 		MCGContextConcatCTM(t_context, t_transform);
 		MCGContextDrawImage(t_context, t_image, t_src_rect, kMCGImageFilterHigh);
+		
+		MCPatternUnlock(p_pattern, t_image);
 	}
 	
 	if (t_context != nil)
@@ -184,7 +188,7 @@ bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap)
 }
 
 void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-MCWindowShape *MCImage::makewindowshape(void)
+MCWindowShape *MCImage::makewindowshape(const MCGIntegerSize &p_size)
 {
 	bool t_success;
 	t_success = true;
@@ -193,15 +197,17 @@ MCWindowShape *MCImage::makewindowshape(void)
 	if (!MCMemoryNew(t_mask))
 		return nil;
 	
-	// Get the width / height.
-	t_mask -> width = rect . width;
-	t_mask -> height = rect . height;
-
 	MCImageBitmap *t_bitmap = nil;
 	bool t_has_mask = false, t_has_alpha = false;
-	t_success = lockbitmap(t_bitmap, true);
+
+	t_success = lockbitmap(true, true, &p_size, t_bitmap);
+
 	if (t_success)
 	{
+		// Get the width / height.
+		t_mask -> width = t_bitmap->width;
+		t_mask -> height = t_bitmap->height;
+		
 		t_has_mask = MCImageBitmapHasTransparency(t_bitmap, t_has_alpha);
 #ifdef LIBGRAPHICS_BROKEN
 		if (t_has_alpha)

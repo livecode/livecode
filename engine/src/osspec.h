@@ -153,6 +153,9 @@ void MCS_getnetworkinterfaces(MCExecPoint& ep);
 //   enough entropy available to generate them.
 bool MCS_random_bytes(size_t p_count, void *p_buffer);
 
+extern uint2 MCS_getplayloudness();
+extern void MCS_setplayloudness(uint2 p_loudness);
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCS_deleteurl(MCObject *p_target, const char *p_url);

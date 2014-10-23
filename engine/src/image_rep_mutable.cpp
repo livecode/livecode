@@ -88,38 +88,62 @@ uint2 MCMutableImageRep::polypoints;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame)
+bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCGImageFrame& r_frame)
 {
 	if (p_frame > 0)
 		return false;
 
-	if (p_premultiplied)
-		m_frame.image = m_bitmap;
-	else
-	{
-		if (!MCImageCopyBitmap(m_bitmap, m_unpre_bitmap))
-			return false;
-		MCImageBitmapUnpremultiply(m_unpre_bitmap);
-		m_frame.image = m_unpre_bitmap;
-	}
+	MCGRaster t_raster;
+	t_raster = MCImageBitmapGetMCGRaster(m_bitmap, true);
+	
+    MCGImageFrame t_frame;
+    t_frame.x_scale = t_frame.y_scale = 1.0;
+    t_frame.duration = 0.0;
+    
+	if (!MCGImageCreateWithRasterNoCopy(t_raster, t_frame.image))
+		return false;
 
 	Retain();
 
-	r_frame = &m_frame;
+    r_frame = t_frame;
 
 	return true;
 }
 
-void MCMutableImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame)
+void MCMutableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame)
+{
+	if (p_index > 0)
+		return;
+
+	MCGImageRelease(p_frame.image);
+
+	Release();
+}
+
+bool MCMutableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, MCBitmapFrame *&r_frame)
+{
+	if (p_frame > 0)
+		return false;
+	
+	if (!MCImageCopyBitmap(m_bitmap, m_frame.image))
+		return false;
+	MCImageBitmapUnpremultiply(m_frame.image);
+	
+	Retain();
+	
+	r_frame = &m_frame;
+	
+	return true;
+}
+
+void MCMutableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
 {
 	if (p_index > 0 || p_frame != &m_frame)
 		return;
-
+	
+	MCImageFreeBitmap(m_frame.image);
 	m_frame.image = nil;
-
-	MCImageFreeBitmap(m_unpre_bitmap);
-	m_unpre_bitmap = nil;
-
+	
 	Release();
 }
 
@@ -149,7 +173,6 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	rect = m_owner->getrect();
 
 	/* UNCHECKED */ MCImageCopyBitmap(p_bitmap, m_bitmap);
-	m_unpre_bitmap = nil;
 	m_selection_image = nil;
 	m_undo_image = nil;
 	m_rub_image = nil;
@@ -160,19 +183,24 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	state = 0;
 
 	m_frame.image = nil;
-	m_frame.duration = 0;
-	m_frame.density = 1.0;
+	m_gframe.image = nil;
+	
+	m_frame.duration = m_gframe.duration = 0;
+	m_frame.x_scale = m_frame.y_scale = 1.0;
+	m_gframe.x_scale = m_gframe.y_scale = 1.0;
 }
 
 MCMutableImageRep::~MCMutableImageRep()
 {
 	MCImageFreeBitmap(m_bitmap);
-	MCImageFreeBitmap(m_unpre_bitmap);
 	MCImageFreeBitmap(m_selection_image);
 	MCImageFreeBitmap(m_undo_image);
 	MCImageFreeBitmap(m_rub_image);
 
 	MCImageFreeMask(m_draw_mask);
+
+	MCImageFreeBitmap(m_frame.image);
+	MCGImageRelease(m_gframe.image);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,8 +346,20 @@ void MCMutableImageRep::drawsel(MCDC *dc)
 		{
 			MCImageDescriptor t_image;
 			memset(&t_image, 0, sizeof(MCImageDescriptor));
-			t_image . bitmap = m_selection_image;
+
+			MCGRaster t_raster;
+			t_raster = MCImageBitmapGetMCGRaster(m_selection_image, true);
+			
+			MCGImageRef t_gimage;
+			t_gimage = nil;
+			
+			/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(t_raster, t_gimage);
+			
+			t_image . image = t_gimage;
+			
 			dc -> drawimage(t_image, 0, 0, selrect . width, selrect . height, selrect . x + rect . x, selrect . y + rect . y);
+			
+			MCGImageRelease(t_gimage);
 		}
 		drawselrect(dc);
 	}
@@ -1193,8 +1233,19 @@ void MCMutableImageRep::apply_fill_paint(MCGContextRef p_context, MCPatternRef p
 	else if (p_pattern == nil)
 		MCGContextSetFillRGBAColor(p_context, p_color.red / 65535.0, p_color.green / 65535.0, p_color.blue / 65535.0, 1.0);
 	else
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
-		MCGContextSetFillPattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNone);
+	{
+		MCGImageRef t_image;
+		MCGAffineTransform t_transform;
+		
+		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+		if (MCPatternLockForContextTransform(p_pattern, MCGContextGetDeviceTransform(p_context), t_image, t_transform))
+		{
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextSetFillPattern(p_context, t_image, t_transform, kMCGImageFilterNone);
+			
+			MCPatternUnlock(p_pattern, t_image);
+		}
+	}
 }
 
 void MCMutableImageRep::apply_stroke_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color)
@@ -1204,8 +1255,19 @@ void MCMutableImageRep::apply_stroke_paint(MCGContextRef p_context, MCPatternRef
 	else if (p_pattern == nil)
 		MCGContextSetStrokeRGBAColor(p_context, p_color.red / 65535.0, p_color.green / 65535.0, p_color.blue / 65535.0, 1.0);
 	else
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
-		MCGContextSetStrokePattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNone);
+	{
+		MCGImageRef t_image;
+		MCGAffineTransform t_transform;
+		
+		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+		if (MCPatternLockForContextTransform(p_pattern, MCGContextGetDeviceTransform(p_context), t_image, t_transform))
+		{
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextSetStrokePattern(p_context, t_image, t_transform, kMCGImageFilterNone);
+			
+			MCPatternUnlock(p_pattern, t_image);
+		}
+	}
 }
 
 void MCMutableImageRep::fill_path(MCGPathRef p_path)
@@ -1881,13 +1943,19 @@ void MCMutableImageRep::image_undo(Ustruct *us)
 {
 	if (state & CS_DRAW)
 		return;
+    
+    // PM-2014-10-01: [[ Bug 13568 ]] Make sure that pressing undo (cmd+z) twice when using paint tools, the second undo undoes the first one.
+    MCImageBitmap *t_old_bitmap;
+    MCImageCopyBitmap(m_bitmap, t_old_bitmap);
 
-	MCImageFreeBitmap(m_bitmap);
-	m_bitmap = m_undo_image;
-	m_undo_image = nil;
-
-	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-	m_owner->invalidate_rep(rect);
+    MCImageFreeBitmap(m_bitmap);
+    m_bitmap = m_undo_image;
+    m_undo_image = nil;
+    /* UNCHECKED */ MCImageCopyBitmap(t_old_bitmap, m_undo_image);
+    
+    // MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
+    m_owner->invalidate_rep(rect);
+   
 }
 
 void MCMutableImageRep::image_freeundo(Ustruct *us)

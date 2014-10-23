@@ -411,7 +411,7 @@ static void MCFontDrawTextCallback(MCFontRef p_font, const char *p_text, uint32_
     ctxt -> x += MCGContextMeasurePlatformText(NULL, (unichar_t*)ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_font, MCGContextGetDeviceTransform(ctxt->m_gcontext));
 }
 
-void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, const char *p_text, uint32_t p_length, MCFontRef p_font, bool p_is_unicode)
+void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, int32_t y, const char *p_text, uint32_t p_length, MCFontRef p_font, bool p_is_unicode)
 {
     font_draw_text_context ctxt;
     ctxt.x = x;

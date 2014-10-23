@@ -21,6 +21,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	ijpg.cpp \
 	image.cpp \
 	imagelist.cpp \
+	imageloader.cpp \
 	image_rep.cpp \
 	image_rep_encoded.cpp \
 	image_rep_mutable.cpp \
@@ -32,6 +33,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	object.cpp objectpropsets.cpp objptr.cpp operator.cpp paragraf.cpp paragrafattr.cpp param.cpp \
 	property.cpp pickle.cpp \
 	regex.cpp \
+	region.cpp \
 	resolution.cpp \
 	scriptpt.cpp \
 	scrolbar.cpp scrollbardraw.cpp sellst.cpp \
@@ -53,8 +55,9 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp \
 	mode_standalone.cpp lextable.cpp eventqueue.cpp sha1.cpp stacke.cpp \
-	name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp sysregion.cpp \
+	name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp \
 	sysunxdate.cpp sysunxrandom.cpp sysspec.cpp stackcache.cpp uuid.cpp \
+	quicktime.cpp \
 	mblad.cpp mblalert.cpp mblbusyindicator.cpp mblcalendar.cpp mblcontact.cpp mblcontrol.cpp \
 	mbldc.cpp mbldialog.cpp mblflst.cpp mblmain.cpp mblnotification.cpp mblsensor.cpp \
 	mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp \
@@ -68,7 +71,8 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	mblandroidprocess.cpp mblandroidscroller.cpp mblandroidsensor.cpp mblandroidstore.cpp mblandroidsound.cpp \
 	mblandroidtextlayout.cpp mblandroidtextmessaging.cpp \
 	mblandroidtypeface.cpp \
-	mblandroidurl.cpp )
+	mblandroidurl.cpp \
+	stacktile.cpp sysunxthreads.cpp)
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \

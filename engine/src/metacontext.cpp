@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "path.h"
 
 #include "graphics.h"
+#include "graphics_util.h"
 #include "graphicscontext.h"
 
 inline bool operator != (const MCColor& a, const MCColor& b)
@@ -53,10 +54,17 @@ MCMetaContext::MCMetaContext(const MCRectangle& p_page)
 	f_stroke = NULL;
 	f_fill_foreground = NULL;
 	f_fill_background = NULL;
+    // SN-2014-08-25: [[ Bug 13187 ]] Image marks added
+    f_image = NULL;
 	f_stroke_used = false;
 	f_fill_foreground_used = false;
 	f_fill_background_used = false;
 	f_state_stack = NULL;
+	
+	m_clip_stack = nil;
+	m_clip_stack_size = 0;
+	m_clip_stack_index = 0;
+    
 	begin(true);
 }
 
@@ -76,6 +84,15 @@ MCMetaContext::~MCMetaContext(void)
 		MCPatternRelease(f_fill_background -> pattern);
 		f_fill_background = f_fill_background -> previous;
 	}
+    
+    // SN-2014-08-25: [[ Bug 13187 ]] Image marks added
+    while(f_image != nil)
+    {
+        MCGImageRelease(f_image -> descriptor . image);
+        f_image = f_image -> previous;
+    }
+	
+	MCMemoryDeleteArray(m_clip_stack);
 }
 
 
@@ -176,6 +193,24 @@ bool MCMetaContext::changeopaque(bool p_new_value)
 
 void MCMetaContext::setprintmode(void)
 {
+}
+
+void MCMetaContext::save()
+{
+	if (m_clip_stack_index + 1 > m_clip_stack_size)
+		/* UNCHECKED */ MCMemoryResizeArray(m_clip_stack_size + 1, m_clip_stack, m_clip_stack_size);
+	m_clip_stack[m_clip_stack_index++] = f_clip;
+}
+
+void MCMetaContext::restore()
+{
+	if (m_clip_stack_index > 0)
+		f_clip = m_clip_stack[--m_clip_stack_index];
+}
+
+void MCMetaContext::cliprect(const MCRectangle &p_rect)
+{
+	f_clip = MCU_intersect_rect(f_clip, p_rect);
 }
 
 void MCMetaContext::setclip(const MCRectangle& rect)
@@ -396,7 +431,7 @@ void MCMetaContext::drawsegments(MCSegment *segments, uint2 nsegs)
 		drawline(segments[t_segment] . x1, segments[t_segment] . y1, segments[t_segment] . x2, segments[t_segment] . y2);
 }
 
-void MCMetaContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override)
+void MCMetaContext::drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override)
 {
 	// MW-2009-12-22: Make sure we don't generate 0 length text mark records
 	if (length == 0)
@@ -523,7 +558,7 @@ void MCMetaContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy
 	MCMark *t_mark;
 	bool t_need_group;
 
-	t_need_group = (MCImageBitmapHasTransparency(p_image . bitmap) || f_function != GXcopy || f_opacity != 255);
+	t_need_group = (!MCGImageIsOpaque(p_image.image) || f_function != GXcopy || f_opacity != 255);
 
 	MCRectangle t_old_clip;
 	t_old_clip = getclip();
@@ -539,13 +574,18 @@ void MCMetaContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy
 	t_mark = new_mark(MARK_TYPE_IMAGE, false, false);
 	if (t_mark != NULL)
 	{
+        // SN-2014-08-25: [[ Bug 13187 ]] Image marks added
 		t_mark -> image . descriptor = p_image;
+        MCGImageRetain(t_mark -> image . descriptor . image);
 		t_mark -> image . sx = sx;
 		t_mark -> image . sy = sy;
 		t_mark -> image . sw = sw;
 		t_mark -> image . sh = sh;
 		t_mark -> image . dx = dx;
 		t_mark -> image . dy = dy;
+        
+        t_mark -> image . previous = f_image;
+        f_image = &t_mark -> image;
 	}
 	
 	if (t_need_group)
@@ -629,6 +669,53 @@ const MCColor& MCMetaContext::getbg(void) const
 		return MCscreen -> background_pixel;
 	
 	return MCscreen -> white_pixel;
+}
+
+bool MCMetaContext::lockgcontext(MCGContextRef& r_ctxt)
+{
+    // SN-2014-08-25: [[ Bug 13187 ]] Implementation of MCMetaContext::lockgcontext needed
+    //  by the printers.    
+    bool t_success;
+    MCGContextRef t_context;
+    
+    save();
+
+    t_success = MCGContextCreate(f_clip.width, f_clip.height, true, t_context);
+    
+    if (t_success)
+    {
+        // Set the origin appropriately
+        MCGContextTranslateCTM(t_context, -1.0 * f_clip.x, -1.0*f_clip.y);
+        r_ctxt = t_context;
+    }
+    
+    return t_success;
+}
+
+void MCMetaContext::unlockgcontext(MCGContextRef ctxt)
+{
+    // SN-2014-08-25: [[ Bug 13187 ]] Implementation of MCMetaContext::unlockgcontext needed
+    //  by the printers.
+    MCGImageRef t_image;
+    
+    restore();
+    
+    // Get the image we want to get drawn
+    MCGContextCopyImage(ctxt, t_image);
+    MCGContextRelease(ctxt);
+    
+    MCImageDescriptor t_desc;
+    t_desc . has_transform = false;
+    t_desc . has_center = false;
+    t_desc . filter = kMCGImageFilterNone;
+    t_desc . x_scale = t_desc . y_scale = 1.0f;
+    t_desc . image = t_image;
+    t_desc . data_type = kMCImageDataNone;
+    
+    // Add the image in the MetaContext drawing queue.
+    drawimage(t_desc, 0, 0, f_clip . width, f_clip . height, f_clip . x, f_clip . y);
+    
+    MCGImageRelease(t_image);
 }
 
 static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_mark, const MCRectangle& p_clip)
@@ -1002,7 +1089,8 @@ void MCMetaContext::rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle
 	{
 		t_mark -> rectangle . bounds = rect;
         // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
-		t_mark -> rectangle . inset = (inside) ? f_stroke -> width : 0 ;
+        // SN-2014-08-25: [[ Bug 13187 ]] Makes sure that there is an f_stroke for this context
+		t_mark -> rectangle . inset = (inside && f_stroke) ? f_stroke -> width : 0 ;
 	}
 }
 
@@ -1015,7 +1103,8 @@ void MCMetaContext::round_rectangle_mark(bool p_stroke, bool p_fill, const MCRec
 		t_mark -> round_rectangle . bounds = rect;
 		t_mark -> round_rectangle . radius = radius;
         // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
-		t_mark -> round_rectangle . inset = (inside) ? f_stroke -> width : 0 ;
+        // SN-2014-08-25: [[ Bug 13187 ]] Makes sure that there is an f_stroke for this context
+		t_mark -> round_rectangle . inset = (inside && f_stroke) ? f_stroke -> width : 0 ;
 	}
 }
 
@@ -1046,7 +1135,8 @@ void MCMetaContext::arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bo
 		t_mark -> arc . angle = p_angle;
 		t_mark -> arc . complete = p_complete;
         // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
-		t_mark -> arc . inset = (inside) ? f_stroke -> width : 0 ;
+        // SN-2014-08-25: [[ Bug 13187 ]] Makes sure that there is an f_stroke for this context
+		t_mark -> arc . inset = (inside && f_stroke) ? f_stroke -> width : 0 ;
 	}
 }
 

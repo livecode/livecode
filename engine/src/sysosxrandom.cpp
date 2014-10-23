@@ -21,8 +21,16 @@
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
+#include "globals.h"
 
-#include "mcssl.h"
+#include <Carbon/Carbon.h>
+
+typedef const struct __SecRandom * SecRandomRef;
+#define kSecRandomDefault (NULL)
+
+typedef int (*SecRandomCopyBytesPtr)(SecRandomRef p_rnd, size_t p_count, uint8_t *p_bytes);
+
+static SecRandomCopyBytesPtr s_sec_random_copy_bytes = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -30,17 +38,9 @@
 //   Mac (Desktop and Server).
 bool MCS_random_bytes(size_t p_count, void *p_buffer)
 {
-	// On Mac (both Server and Desktop) OpenSSL is always available so we will
-	// never get here.
-	return false;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// This is alternative code which doesn't rely on OpenSSL (not needed now, but
-// maybe in the future).
-#if 0
-{
+	// IM-2014-08-06: [[ Bug 13038 ]] Enable this implementation on OSX + server
+	// so we can remove the reliance on SSL from MCU_random_bytes
+	
 	// Now, on Lion and above SecRandomCopyBytes is available, so use that if
 	// possible. ( Note that as we can't link against the 10.7 SDK, we have to
 	// weak-link manually :( ).
@@ -49,17 +49,18 @@ bool MCS_random_bytes(size_t p_count, void *p_buffer)
 		if (s_sec_random_copy_bytes == nil)
 		{
 			CFBundleRef t_security_bundle;
-			t_security_bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Security"));
+			t_security_bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.security"));
 			if (t_security_bundle != nil)
 			{
-				s_sec_random_copy_bytes = (SecRandomCopyBytesPtr)CFBundleGetFunctionPointerForName(t_security_bundle, CFSTR("SetRandomCopyBytes"));
+				s_sec_random_copy_bytes = (SecRandomCopyBytesPtr)CFBundleGetFunctionPointerForName(t_security_bundle, CFSTR("SecRandomCopyBytes"));
 				CFRelease(t_security_bundle);
 			}
 		}
 		
 		if (s_sec_random_copy_bytes != nil)
-			return s_sec_random_copy_bytes(NULL, p_count, (uint8_t *)p_buffer);
-			}
+			// IM-2014-04-16: [[ Bug 11860 ]] SecRandomCopyBytes returns 0 on success
+			return 0 == s_sec_random_copy_bytes(NULL, p_count, (uint8_t *)p_buffer);
+	}
 	
 	// Otherwise attempt to use /dev/urandom
 	int t_fd;
@@ -96,6 +97,5 @@ bool MCS_random_bytes(size_t p_count, void *p_buffer)
 	// If we read the correct number of bytes, then we are done.
 	return t_bytes_read == p_count;
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////

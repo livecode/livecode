@@ -100,16 +100,14 @@ protected:
 	  HWND parentwindow;
 	  HWND videowindow;
 	  #else
-	  WindowPtr parentwindow;
+	  void *parentwindow;
 	  WindowPtr videowindow;
+    void *videowindow_cocoa;
+	void *m_window_observer;
 	  #endif
 	  Bool buffervideo;
 	  Rect destvideorect;
 	  Rect srcvideorect;
-	  
-#ifdef _MACOSX
-	  EventHandlerRef m_event_handler;
-#endif
 };
 
 #endif

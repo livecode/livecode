@@ -315,7 +315,6 @@ extern Boolean MClockcolormap;
 extern Boolean MClockerrors;
 extern Boolean MClockmenus;
 extern Boolean MClockmessages;
-extern Boolean MClockmoves;
 extern Boolean MClockrecent;
 extern Boolean MCtwelvetime;
 extern Boolean MCuseprivatecmap;
@@ -360,7 +359,6 @@ extern char *MCsslcertificates;
 extern char *MCdefaultnetworkinterface;
 extern uint4 MCstackfileversion;
 extern uint4 MCmajorosversion;
-extern Boolean MCantialiasedtextworkaround;
 extern uint4 MCqtidlerate;
 
 extern uint4 MCiconid;
@@ -412,6 +410,15 @@ extern MCPoint MCgroupedobjectoffset;
 // MW-2012-11-14: [[ Bug 10516 ]] When true, sending packets to broadcast
 //   addresses will work.
 extern Boolean MCallowdatagrambroadcasts;
+
+// MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
+extern MCThreadMutexRef MCanimationmutex;
+extern MCThreadMutexRef MCpatternmutex;
+extern MCThreadMutexRef MCimagerepmutex;
+extern MCThreadMutexRef MCfieldmutex;
+extern MCThreadMutexRef MCthememutex;
+extern MCThreadMutexRef MCgraphicmutex;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 

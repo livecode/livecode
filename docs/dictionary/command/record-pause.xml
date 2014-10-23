@@ -1,0 +1,66 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>record pause</name>
+	<type>command</type>
+
+	<syntax>
+		<example>record pause</example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Pauses the current sound recording.</summary>
+
+	<examples>
+<example><p>if the hilite of button "pause" then</p><p>   record pause</p><p>end if</p></example>
+	</examples>
+
+	<history>
+		<introduced version="6.7">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Images &amp; Multimedia</category>
+	</classification>
+
+	<references>
+		<command tag="record sound">record sound command</command>
+		<command tag="stop recording">stop recording command</command>
+		<command tag="record resume">record resume command</command>
+		<property tag="recording">recording property</property>
+	</references>
+
+	<description>
+	<overview>Use the <b>record pause</b> command to pause a recording being made. </overview>
+
+		<parameters>
+		</parameters>
+
+	<value></value>
+	<comments>The <b>record pause</b> command pauses a recording started with the <command tag="record sound">record sound</command> command.<p></p><p>The <property tag="recording">recording</property> property remains true while a recording is paused.</p></comments>
+	</description>
+</doc>
