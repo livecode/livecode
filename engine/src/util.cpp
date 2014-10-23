@@ -2976,18 +2976,6 @@ MCU_environmentarray (MCStringEncoding p_encoding, char **&r_env, uindex_t &r_en
 	{
 		if (!t_var->isenv() || t_var->isclear()) continue;
 
-		switch (MCValueGetTypeCode (t_var->getvalueref()))
-		{
-		case kMCValueTypeCodeString:
-		case kMCValueTypeCodeName:
-		case kMCValueTypeCodeNumber:
-			break;
-		default:
-			MCLog ("Skipped env var '%@ with type code %i",
-				   t_var->getname(), t_var->getvalueref());
-			continue;
-		}
-
 		MCAutoStringRef t_env_desc;
 		/* UNCHECKED */ MCStringFormat (&t_env_desc, "%*@=%@", &t_truncate_range,
 										t_var->getname(), t_var->getvalueref());
