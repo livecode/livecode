@@ -690,9 +690,10 @@ MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &p
 	t_left = MCMax(p_rect_1.origin.x, p_rect_2.origin.x);
 	t_top = MCMax(p_rect_1.origin.y, p_rect_2.origin.y);
 	
+	// IM-2014-10-22: [[ Bug 13746 ]] Cast to signed ints to fix unsigned arithmetic overflow
 	int32_t t_right, t_bottom;
-	t_right = MCMin(p_rect_1.origin.x + p_rect_1.size.width, p_rect_2.origin.x + p_rect_2.size.width);
-	t_bottom = MCMin(p_rect_1.origin.y + p_rect_1.size.height, p_rect_2.origin.y + p_rect_2.size.height);
+	t_right = MCMin(p_rect_1.origin.x + (int32_t)p_rect_1.size.width, p_rect_2.origin.x + (int32_t)p_rect_2.size.width);
+	t_bottom = MCMin(p_rect_1.origin.y + (int32_t)p_rect_1.size.height, p_rect_2.origin.y + (int32_t)p_rect_2.size.height);
 	
 	t_right = MCMax(t_left, t_right);
 	t_bottom = MCMax(t_top, t_bottom);

@@ -1494,7 +1494,14 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
 #if defined(_DESKTOP)
 	// MW-2013-06-25: [[ DesktopPingWait ]] Pass the correct parameters through
 	//   to MCNotifyPush so that LCObjectPost works.
-	if (!MCNotifyPush((MCExternalThreadOptionalCallback)p_callback, p_callback_state, (p_options & kMCExternalRunOnMainThreadPost) == 0, (p_options & kMCExternalRunOnMainThreadSafe) != 0))
+    // MW-2014-10-23: [[ Bug 13721 ]] Correctly compute the notify flags to pass - in particular
+    //   compute the 'required' flag and pass that as that determines the signature of the
+    //   callback.
+    bool t_block, t_safe, t_required;
+    t_block = (p_options & kMCExternalRunOnMainThreadPost) == kMCExternalRunOnMainThreadSend;
+    t_safe = (p_options & kMCExternalRunOnMainThreadUnsafe) == kMCExternalRunOnMainThreadSafe;
+    t_required = (p_options & kMCExternalRunOnMainThreadRequired) == kMCExternalRunOnMainThreadRequired;
+	if (!MCNotifyPush((MCExternalThreadOptionalCallback)p_callback, p_callback_state, t_block, t_safe, t_required))
 		return kMCExternalErrorOutOfMemory;
 
 	return kMCExternalErrorNone;

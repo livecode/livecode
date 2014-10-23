@@ -281,62 +281,6 @@ void MCMacPlatformSurface::Lock(void)
 	CGContextSaveGState(m_cg_context);
 }
 
-// IM-2014-10-03: [[ Bug 13432 ]] Set the alpha values of the opaque image from the alpha raster, premultiplying the pixels
-void MCGRasterApplyAlpha(MCGRaster &x_raster, const MCGRaster &p_alpha, const MCGIntegerPoint &p_offset)
-{
-	MCAssert(p_alpha.format == kMCGRasterFormat_A);
-	MCAssert(x_raster.format == kMCGRasterFormat_xRGB);
-	
-	MCGIntegerRectangle t_coverage;
-	t_coverage = MCGIntegerRectangleIntersection(MCGIntegerRectangleMake(0, 0, x_raster.width, x_raster.height),
-												 MCGIntegerRectangleMake(p_offset.x, p_offset.y, p_alpha.width, p_alpha.height));
-	
-	if (MCGIntegerRectangleIsEmpty(t_coverage))
-		return;
-	
-	uint8_t *t_alpha_ptr;
-	t_alpha_ptr = (uint8_t*)p_alpha.pixels;
-	
-	if (p_offset.y < 0)
-		t_alpha_ptr += p_alpha.stride * (-p_offset.y);
-	if (p_offset.x < 0)
-		t_alpha_ptr += (-p_offset.x);
-	
-	uint8_t *t_pixel_ptr;
-	t_pixel_ptr = (uint8_t*)x_raster.pixels;
-	
-	if (t_coverage.origin.y > 0)
-		t_pixel_ptr += x_raster.stride * t_coverage.origin.y;
-	if (t_coverage.origin.x > 0)
-		t_pixel_ptr += t_coverage.origin.x * sizeof(uint32_t);
-	
-	for (uint32_t y = 0; y < t_coverage.size.height; y++)
-	{
-		uint8_t *t_alpha_row;
-		t_alpha_row = t_alpha_ptr;
-		
-		uint32_t *t_pixel_row;
-		t_pixel_row = (uint32_t*)t_pixel_ptr;
-		
-		for (uint32_t x = 0; x < t_coverage.size.width; x++)
-		{
-			uint32_t t_pixel;
-			t_pixel = *t_pixel_row;
-			
-			uint8_t t_alpha;
-			t_alpha = *t_alpha_row++;
-			
-			*t_pixel_row++ = MCGPixelPreMultiplyNative(MCGPixelSetNativeAlpha(t_pixel, t_alpha));
-		}
-		//
-		
-		t_alpha_ptr += p_alpha.stride;
-		t_pixel_ptr += x_raster.stride;
-	}
-	
-	x_raster.format = kMCGRasterFormat_ARGB;
-}
-
 void MCMacPlatformSurface::Unlock(void)
 {
     // MM-2014-07-31: [[ ThreadedRendering ]] Moved the drawing to the system context to unlock from unlock pixels.
@@ -355,10 +299,14 @@ void MCMacPlatformSurface::Unlock(void)
         
 		if (m_window->m_mask != nil)
 		{
+			// IM-2014-10-22: [[ Bug 13746 ]] Apply the backing scale to the mask offset
+			MCGFloat t_scale;
+			t_scale = GetBackingScaleFactor();
+			
 			// IM-2014-10-03: [[ Bug 13432 ]] Set the buffer alpha directly from the mask raster.
 			MCMacPlatformWindowMask *t_mask;
 			t_mask = (MCMacPlatformWindowMask*)m_window->m_mask;
-			MCGRasterApplyAlpha(m_raster, t_mask->mask, MCGIntegerPointMake(-t_bounds.origin.x, -t_bounds.origin.y));
+			MCGRasterApplyAlpha(m_raster, t_mask->mask, MCGIntegerPointMake(-t_bounds.origin.x * t_scale, -t_bounds.origin.y * t_scale));
 		}
 			
         MCMacClipCGContextToRegion(m_cg_context, m_update_rgn, t_surface_height);

@@ -208,10 +208,15 @@ MCRectangle MCStack::view_getrect(void) const
 
 void MCStack::view_set_content_scale(MCGFloat p_scale)
 {
+	if (m_view_content_scale == p_scale)
+		return;
+	
 	m_view_content_scale = p_scale;
 	
 	// IM-2014-01-16: [[ StackScale ]] Update view transform after changing view property
 	view_update_transform();
+	// IM-2014-10-22: [[ Bug 13746 ]] Update window mask when stack scale changes
+	loadwindowshape();
 }
 
 MCGFloat MCStack::view_get_content_scale(void) const
@@ -984,6 +989,8 @@ void MCStack::view_setbackingscale(MCGFloat p_scale)
 	view_flushtilecache();
 	view_updatetilecacheviewport();
 	view_updatetilecache();
+	// IM-2014-10-22: [[ Bug 13746 ]] Update window mask when backing scale changes
+	loadwindowshape();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
