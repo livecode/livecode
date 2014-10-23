@@ -1286,7 +1286,8 @@ public:
     virtual ~MCNumToUnicodeChar(){}
 };
 
-class MCNumToByte: public MCUnaryFunctionCtxt<integer_t, MCStringRef, MCStringsEvalNumToByte, EE_NUMTOBYTE_BADSOURCE, PE_NUMTOBYTE_BADPARAM, kMCStringsEvalNumToByteMethodInfo>
+// AL-2014-10-21: [[ Bug 13740 ]] numToByte should return a DataRef
+class MCNumToByte: public MCUnaryFunctionCtxt<integer_t, MCDataRef, MCStringsEvalNumToByte, EE_NUMTOBYTE_BADSOURCE, PE_NUMTOBYTE_BADPARAM, kMCStringsEvalNumToByteMethodInfo>
 {
 public:
     MCNumToByte(void){}
