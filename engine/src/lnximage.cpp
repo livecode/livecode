@@ -200,9 +200,7 @@ MCWindowShape *MCImage::makewindowshape(const MCGIntegerSize &p_size)
 	MCImageBitmap *t_bitmap = nil;
 	bool t_has_mask = false, t_has_alpha = false;
 
-	//t_success = lockbitmap(true, true, &p_size, t_bitmap);
-	// IM-2014-10-22: [[ Bug 13746 ]] Disable mask scaling on linux until a more correct fix can be applied
-	t_success = lockbitmap(true, true, nil, t_bitmap);
+	t_success = lockbitmap(true, true, &p_size, t_bitmap);
 
 	if (t_success)
 	{
