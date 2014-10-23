@@ -372,6 +372,30 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 }
 
 /* ================================================================
+ * Version information
+ * ================================================================ */
+
+static bool
+MCStackdirIOSaveVersion (MCStackdirIORef op)
+{
+	MCAutoStringRef t_version_path;
+	/* UNCHECKED */ MCStringFormat (&t_version_path, "%@/%@",
+									op->m_save_build_dir,
+									kMCStackdirVersionFile);
+
+	MCAutoDataRef t_version_data;
+	/* UNCHECKED */ MCStringEncode (kMCStackdirMagicString,
+									kMCStringEncodingUTF8,
+									false, &t_version_data);
+
+	if (!MCS_savebinaryfile (*t_version_path, *t_version_data))
+		/* FIXME record proper error information */
+		return false;
+
+	return true;
+}
+
+/* ================================================================
  * High-level entry points
  * ================================================================ */
 
