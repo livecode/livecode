@@ -1997,9 +1997,13 @@ extern MCArrayRef kMCEmptyArray;
 
 // Create an immutable array containing the given keys and values.
 bool MCArrayCreate(bool case_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
+// Create an immutable array containing the given keys and values with the requested string comparison options.
+bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
 
 // Create an empty mutable array.
 bool MCArrayCreateMutable(MCArrayRef& r_array);
+// Create an empty mutable array with the requested string comparison options.
+bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive);
 
 // Make an immutable copy of the given array. If the 'copy and release' form is
 // used then the original array is released (has its reference count reduced by
@@ -2386,7 +2390,7 @@ MCValueRef MCProperListFetchHead(MCProperListRef list);
 // Fetch the last element of the list. The returned value is not retained.
 MCValueRef MCProperListFetchTail(MCProperListRef list);
 // Fetch the element of the list at the specified index. The returned value is not retained.
-MCValueRef MCProperListFetchElementAtIndex(MCProperListRef list, index_t p_index);
+MCValueRef MCProperListFetchElementAtIndex(MCProperListRef list, uindex_t p_index);
 
 // Copy the elements at the specified range as a list.
 bool MCProperListCopySublist(MCProperListRef list, MCRange p_range, MCProperListRef& r_elements);

@@ -15,6 +15,8 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
+#include <foundation-chunk.h>
 
 void MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
 {
@@ -85,20 +87,28 @@ void MCListEvalContains(MCProperListRef p_target, MCProperListRef p_needle, bool
 
 void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
 {
-    r_output = MCValueRetain(MCProperListFetchElementAtIndex(p_target, p_index));
+    uindex_t t_start, t_count;
+    MCChunkGetExtentsOfElementChunkByExpression(p_target, p_index, t_start, t_count);
+    r_output = MCValueRetain(MCProperListFetchElementAtIndex(p_target, t_start));
 }
 
 void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
-    MCProperListInsertElement(x_target, p_value, p_index);
+    uindex_t t_start, t_count;
+    MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    MCProperListInsertElement(x_target, p_value, t_start);
 }
 
 void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef p_target, MCProperListRef& r_output)
 {
-    MCProperListCopySublist(p_target, p_start, p_finish, r_output);
+    uindex_t t_start, t_count;
+    MCChunkGetExtentsOfElementChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    MCProperListCopySublist(p_target, MCRangeMake(p_start, p_finish - p_start + 1), r_output);
 }
 
 void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
+    uindex_t t_start, t_count;
+    MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     // PUT INTO AMBIGUITY
 }

@@ -78,6 +78,27 @@ bool MCArrayCreate(bool p_case_sensitive, const MCNameRef *p_keys, const MCValue
 	return false;
 }
 
+bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *p_keys, const MCValueRef *p_values, uindex_t p_length, MCArrayRef& r_array)
+{
+	bool t_success;
+	t_success = true;
+    
+	MCArrayRef t_array;
+	t_array = nil;
+	if (t_success)
+		t_success = MCArrayCreateMutableWithOptions(t_array, p_case_sensitive, p_form_sensitive);
+    
+	if (t_success)
+		for(uindex_t i = 0; i < p_length && t_success; i++)
+			t_success = MCArrayStoreValue(t_array, p_case_sensitive, p_keys[i], p_values[i]);
+    
+	if (t_success)
+		return MCArrayCopyAndRelease(t_array, r_array);
+    
+	MCValueRelease(t_array);
+	return false;
+}
+
 bool MCArrayCreateMutable(MCArrayRef& r_array)
 {
 	if (!__MCValueCreate(kMCValueTypeCodeArray, r_array))

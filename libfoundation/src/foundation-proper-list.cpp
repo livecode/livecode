@@ -468,9 +468,33 @@ bool MCProperListCombineWithDelimiter(MCProperListRef self, MCStringRef p_delimi
     return MCStringCopy(*t_list_string, r_list);
 }
 
-bool MCProperListSort(MCProperListRef list, bool p_ascending, MCProperListSortType p_sort_type)
+static bool MCProperListDoSort(MCValueRef *list, uindex_t p_item_count, MCValueRef *p_temp, MCProperListSortType p_type, bool p_ascending)
 {
-    MCAssert(false);
+    return false;
+}
+
+bool MCProperListSort(MCProperListRef self, bool p_ascending, MCProperListSortType p_sort_type)
+{
+    // TODO - implement sorting.
+    uindex_t t_item_count;
+    t_item_count = MCProperListGetLength(self);
+    
+    if (t_item_count < 2)
+        return true;
+    
+    MCAssert(MCProperListIsMutable(self));
+    
+    if (__MCProperListIsIndirect(self))
+        if (!__MCProperListResolveIndirect(self))
+            return false;
+    
+    MCValueRef *t_temp_array = new MCValueRef[t_item_count];
+    
+    bool t_success;
+    t_success = MCProperListDoSort(self -> list, t_item_count, t_temp_array, p_sort_type, p_ascending);
+    
+    delete[] t_temp_array;
+    
     return false;
 }
 

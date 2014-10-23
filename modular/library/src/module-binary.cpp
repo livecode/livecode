@@ -74,7 +74,7 @@ void MCBinaryEvalOffsetOfBytesAfterIndexIn(MCDataRef p_needle, MCDataRef p_targe
 
 void MCBinaryFetchByteRangeOf(index_t p_start, index_t p_finish, MCDataRef p_target, MCDataRef& r_output)
 {
-    integer_t t_start, t_count;
+    uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByRange(p_target, p_start, p_finish, t_start, t_count);
     if (!MCDataCopyRange(p_target, MCRangeMake(t_start, t_count), r_output))
         return;
@@ -82,7 +82,7 @@ void MCBinaryFetchByteRangeOf(index_t p_start, index_t p_finish, MCDataRef p_tar
 
 void MCBinaryStoreByteRangeOf(MCDataRef p_value, index_t p_start, index_t p_finish, MCDataRef& x_target)
 {
-    integer_t t_start, t_count;
+    uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
     MCAutoDataRef t_data;
