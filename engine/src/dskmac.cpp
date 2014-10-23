@@ -7208,7 +7208,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     
                     char **t_env = { NULL };
                     uindex_t t_envc = 0;
-                    /* UNCHECKED */ MCU_environmentarray(kMCStringEncodingNative, t_env, t_envc);
+                    /* UNCHECKED */ MCU_environmentarray(kMCStringEncodingUTF8, t_env, t_envc);
                     
                     execle(*t_shellcmd, *t_shellcmd, "-s", NULL, t_env);
                     _exit(-1);
