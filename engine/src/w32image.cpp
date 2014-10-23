@@ -46,8 +46,8 @@ MCWindowShape *MCImage::makewindowshape(const MCGIntegerSize &p_size)
 	if (t_success)
 	{
 		// Get the width / height.
-		t_mask -> width = rect . width;
-		t_mask -> height = rect . height;
+		t_mask -> width = t_bitmap -> width;
+		t_mask -> height = t_bitmap -> height;
 		
 		t_has_mask = MCImageBitmapHasTransparency(t_bitmap, t_has_alpha);
 		if (t_has_alpha)

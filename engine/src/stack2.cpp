@@ -2847,7 +2847,8 @@ void MCStack::loadwindowshape()
 			t_scale *= view_get_content_scale();
 			
 			uint32_t t_width, t_height;
-			t_image->getgeometry(t_width, t_height);
+			t_width = t_image->getrect().width;
+			t_height = t_image->getrect().height;
 			
 			t_new_mask = t_image -> makewindowshape(MCGIntegerSizeMake(t_width * t_scale, t_height * t_scale));
 			t_image->close();
