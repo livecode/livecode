@@ -1453,6 +1453,21 @@ void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCStringsCheckGraphemeBoundaries(MCStringRef p_string, MCRange p_range)
+{
+    MCRange t_grapheme_range;
+    MCStringUnmapGraphemeIndices(p_string, kMCBasicLocale, p_range, t_grapheme_range);
+    
+    MCRange t_grapheme_range_r;
+    MCStringMapGraphemeIndices(p_string, kMCBasicLocale, t_grapheme_range, t_grapheme_range_r);
+    
+    if (t_grapheme_range_r . offset == p_range . offset &&
+        t_grapheme_range_r . length == p_range . length)
+        return true;
+    
+    return false;
+}
+
 void MCStringsEvalContains(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
 	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
@@ -1466,35 +1481,52 @@ void MCStringsEvalContains(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef
         return;
     }
     
-    MCRange t_grapheme_range;
-    MCStringUnmapGraphemeIndices(p_whole, kMCBasicLocale, t_range, t_grapheme_range);
-    
-    MCRange t_grapheme_range_r;
-    MCStringMapGraphemeIndices(p_whole, kMCBasicLocale, t_grapheme_range, t_grapheme_range_r);
-    
-    if (t_grapheme_range_r . offset == t_range . offset &&
-        t_grapheme_range_r . length == t_range . length)
-        r_result = true;
-    else
-        r_result = false;
+    r_result = MCStringsCheckGraphemeBoundaries(p_whole, t_range);
 }
 
 void MCStringsEvalDoesNotContain(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
-	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
-	r_result = !MCStringContains(p_whole, p_part, t_compare_option);
+    bool t_result;
+    MCStringsEvalContains(ctxt, p_whole, p_part, t_result);
+    r_result = !t_result;
 }
 
 void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
 	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
-	r_result = MCStringBeginsWith(p_whole, p_part, t_compare_option);
+    
+    bool t_found;
+    uindex_t t_self_length;
+    t_found = MCStringSharedPrefix(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, t_self_length);
+    if (!t_found)
+    {
+        r_result = false;
+        return;
+    }
+    
+    MCRange t_range;
+    t_range = MCRangeMake(0, t_self_length);
+    
+    r_result = MCStringsCheckGraphemeBoundaries(p_whole, t_range);
 }
 
 void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
-    MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
-    r_result = MCStringEndsWith(p_whole, p_part, t_compare_option);
+	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
+    
+    bool t_found;
+    uindex_t t_self_length;
+    t_found = MCStringSharedSuffix(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, t_self_length);
+    if (!t_found)
+    {
+        r_result = false;
+        return;
+    }
+    
+    MCRange t_range;
+    t_range = MCRangeMake(0, t_self_length);
+    
+    r_result = MCStringsCheckGraphemeBoundaries(p_whole, t_range);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
