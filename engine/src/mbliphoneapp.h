@@ -371,6 +371,7 @@ void MCIPhoneHandlePerformRedraw(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 MCIPhoneApplication *MCIPhoneGetApplication(void);
+NSString* MCIPhoneGetDeviceModelName(void);
 
 UIViewController *MCIPhoneGetViewController(void);
 UIView *MCIPhoneGetView(void);
