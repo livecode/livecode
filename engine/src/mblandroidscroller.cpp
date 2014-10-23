@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -33,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "eventqueue.h"
 #include "osspec.h"
+#include "exec.h"
 
 
 #include <jni.h>
@@ -50,14 +50,41 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 class MCAndroidScrollerControl: public MCAndroidControl
 {
+protected:
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
+    
 public:
     MCAndroidScrollerControl(void);
     
 	virtual MCNativeControlType GetType(void);
-    
+#ifdef LEGACY_EXEC    
     virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
+#endif
+    
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
+    void SetContentRect(MCExecContext& ctxt, integer_t p_rect[4]);
+    void GetContentRect(MCExecContext& ctxt, integer_t r_rect[4]);
+  
+    void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
+    void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
+    void SetVScroll(MCExecContext& ctxt, integer_t p_scroll);
+    void GetVScroll(MCExecContext& ctxt, integer_t& r_scroll);
+    void SetScrollingEnabled(MCExecContext& ctxt, bool p_value);
+    void GetScrollingEnabled(MCExecContext& ctxt, bool& r_value);
+    void SetShowHorizontalIndicator(MCExecContext& ctxt, bool p_value);
+    void GetShowHorizontalIndicator(MCExecContext& ctxt, bool& r_value);
+    void SetShowVerticalIndicator(MCExecContext& ctxt, bool p_value);
+    void GetShowVerticalIndicator(MCExecContext& ctxt, bool& r_value);
+    
+    void GetTracking(MCExecContext& ctxt, bool& r_value);
+    void GetDragging(MCExecContext& ctxt, bool& r_value);
     
     void HandleScrollEvent(void);
     void HandleEvent(MCNameRef p_message);
@@ -75,6 +102,39 @@ private:
     bool m_post_scroll_event;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCAndroidScrollerControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(P_CONTENT_RECT, Int32X4, MCAndroidScrollerControl, ContentRect)
+    DEFINE_RW_CTRL_PROPERTY(P_HSCROLL, Int32, MCAndroidScrollerControl, HScroll)
+    DEFINE_RW_CTRL_PROPERTY(P_VSCROLL, Int32, MCAndroidScrollerControl, VScroll)
+    DEFINE_RW_CTRL_PROPERTY(P_SCROLLING_ENABLED, Bool, MCAndroidScrollerControl, ScrollingEnabled)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_HORIZONTAL_INDICATOR, Bool, MCAndroidScrollerControl, ShowHorizontalIndicator)
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_VERTICAL_INDICATOR, Bool, MCAndroidScrollerControl, ShowVerticalIndicator)
+    DEFINE_RO_CTRL_PROPERTY(P_TRACKING, Bool, MCAndroidScrollerControl, Tracking)
+    DEFINE_RO_CTRL_PROPERTY(P_DRAGGING, Bool, MCAndroidScrollerControl, Dragging)
+};
+
+MCObjectPropertyTable MCAndroidScrollerControl::kPropertyTable =
+{
+	&MCAndroidControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCAndroidScrollerControl::kActions[] =
+{
+};
+
+MCNativeControlActionTable MCAndroidScrollerControl::kActionTable =
+{
+    &MCAndroidControl::kActionTable,
+    0,
+    nil,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,6 +155,145 @@ MCNativeControlType MCAndroidScrollerControl::GetType(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCAndroidScrollerControl::SetContentRect(MCExecContext& ctxt, integer_t p_rect[4])
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setContentSize", "vii", nil, p_rect[2] - p_rect[0], p_rect[3] - p_rect[1]);
+}
+
+void MCAndroidScrollerControl::GetContentRect(MCExecContext& ctxt, integer_t r_rect[4])
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        r_rect[0] = m_content_rect . x;
+        r_rect[1] = m_content_rect . y;
+        r_rect[2] = m_content_rect . x + m_content_rect . width;
+        r_rect[3] = m_content_rect . y + m_content_rect . height;
+    }
+}
+
+void MCAndroidScrollerControl::SetHScroll(MCExecContext& ctxt, integer_t p_scroll)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "setHScroll", "vi", nil, p_scroll);
+}
+
+void MCAndroidScrollerControl::GetHScroll(MCExecContext& ctxt, integer_t& r_scroll)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "getHScroll", "i", &r_scroll);
+    else
+        r_scroll = 0;
+}
+
+void MCAndroidScrollerControl::SetVScroll(MCExecContext& ctxt, integer_t p_scroll)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "setVScroll", "vi", nil, p_scroll);
+}
+
+void MCAndroidScrollerControl::GetVScroll(MCExecContext& ctxt, integer_t& r_scroll)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "getVScroll", "i", &r_scroll);
+    else
+        r_scroll = 0;
+}
+
+void MCAndroidScrollerControl::SetScrollingEnabled(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "setScrollingEnabled", "vb", nil, p_value);
+}
+
+void MCAndroidScrollerControl::GetScrollingEnabled(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "getScrollingEnabled", "b", &r_value);
+}
+
+void MCAndroidScrollerControl::SetShowHorizontalIndicator(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "setHorizontalIndicator", "vb", nil, p_value);
+}
+
+void MCAndroidScrollerControl::GetShowHorizontalIndicator(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "getHorizontalIndicator", "b", &r_value);
+    else
+        r_value = false;
+}
+
+void MCAndroidScrollerControl::SetShowVerticalIndicator(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "setVerticalIndicator", "vb", nil, p_value);
+}
+
+void MCAndroidScrollerControl::GetShowVerticalIndicator(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "getVerticalIndicator", "b", &r_value);
+    else
+        r_value = false;
+}
+
+void MCAndroidScrollerControl::GetTracking(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "isTracking", "b", &r_value);
+}
+
+void MCAndroidScrollerControl::GetDragging(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "isDragging", "b", &r_value);
+}
 
 bool MCScrollViewGetHScroll(jobject p_view, int32_t &r_hscroll)
 {
@@ -223,6 +422,7 @@ bool MCScrollViewIsDragging(jobject p_view, bool &r_dragging)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 Exec_stat scroller_set_property(jobject p_view, MCRectangle32 &x_content_rect, MCNativeControlProperty p_property, MCExecPoint&ep)
 {
 	Boolean t_bool;
@@ -293,7 +493,9 @@ Exec_stat scroller_set_property(jobject p_view, MCRectangle32 &x_content_rect, M
 	}
 	return ES_NOT_HANDLED;
 }
+#endif
 
+#ifdef /* MCAndroidScrollerControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidScrollerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     jobject t_view;
@@ -308,7 +510,9 @@ Exec_stat MCAndroidScrollerControl::Set(MCNativeControlProperty p_property, MCEx
 		return t_state;
 
 }
+#endif /* MCAndroidScrollerControl::Set */
 
+#ifdef LEGACY_EXEC
 Exec_stat scroller_get_property(jobject p_view, const MCRectangle32 &p_content_rect, MCNativeControlProperty p_property, MCExecPoint &ep)
 {
 	switch (p_property)
@@ -394,7 +598,9 @@ Exec_stat scroller_get_property(jobject p_view, const MCRectangle32 &p_content_r
 	}
 	return ES_NOT_HANDLED;
 }
+#endif
 
+#ifdef /* MCAndroidScrollerControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidScrollerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     jobject t_view;
@@ -408,7 +614,9 @@ Exec_stat MCAndroidScrollerControl::Get(MCNativeControlProperty p_property, MCEx
 	else
 		return t_state;
 }
+#endif /* MCAndroidScrollerControl::Get */
 
+#ifdef /* MCAndroidScrollerControl::Do */ LEGACY_EXEC
 Exec_stat MCAndroidScrollerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
     jobject t_view;
@@ -422,6 +630,7 @@ Exec_stat MCAndroidScrollerControl::Do(MCNativeControlAction p_action, MCParamet
     
     return MCAndroidControl::Do(p_action, p_parameters);
 }
+#endif /* MCAndroidScrollerControl::Do */
 
 ////////////////////////////////////////////////////////////////////////////////
 

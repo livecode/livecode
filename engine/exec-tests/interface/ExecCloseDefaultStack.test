@@ -1,0 +1,17 @@
+setup
+
+global tClosed
+
+put false into tClosed
+
+create stack "TestStack"
+
+set the script of stack "TestStack" to "global tClosed;on closeStack;put true into tClosed; end closeStack"
+
+set the defaultStack to "TestStack"
+
+close the defaultStack
+
+test tClosed
+
+teardown

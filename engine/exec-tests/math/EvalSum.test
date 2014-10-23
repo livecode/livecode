@@ -1,0 +1,16 @@
+setup
+
+test-error sum("string", 1)
+
+test sum() is 0
+test sum(1.23) is 1.23
+test sum("1, 2, 3, 4, 5") is 15
+test sum(3, 1, 5, 2, 4) is 15
+
+local tArray
+repeat with i = 1 to 5
+	put 6 - i into tArray[i]
+end repeat
+test sum(tArray) is 15
+
+teardown

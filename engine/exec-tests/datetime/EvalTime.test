@@ -1,0 +1,25 @@
+setup
+
+test (the time) is (the english time)
+set the useSystemDate to true
+test (the time) is (the system time)
+set the useSystemDate to false
+
+local tVar, tTime
+
+put word 2 of the time into tVar
+test tVar is "AM" or tVar is "PM"
+
+put word 1 of the time into tTime
+set the itemDelimiter to ":"
+test the number of items in tTime is 2
+
+put item 1 of tTime into tVar
+test tVar is an integer
+test tVar >= 1 and tVar <= 12
+
+put item 2 of tTime into tVar
+test tVar is an integer
+test tVar >= 0 and tVar <= 59
+
+teardown

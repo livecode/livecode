@@ -1,0 +1,27 @@
+setup
+   
+set the defaultFolder to specialFolderPath("Desktop")
+
+open file "test.txt" for write
+
+close file "test.txt"
+
+local taskList
+
+put shell("tasklist /V") into taskList
+
+if taskList contains "notepad.exe" then
+	get shell("taskkill /IM notepad.exe")
+end if
+
+launch "test.txt" with "notepad"
+
+put shell("tasklist /V") into taskList
+
+test taskList contains "notepad.exe"
+
+get shell("taskkill /IM notepad.exe")
+
+delete file "test.txt"
+
+teardown

@@ -1,0 +1,17 @@
+setup
+
+create card
+
+create field
+
+put the long id of the current card into field 1
+
+push card
+
+create card
+
+pop card
+
+test (the long id of the current card is field 1)
+
+teardown

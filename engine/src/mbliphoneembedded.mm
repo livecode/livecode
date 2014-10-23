@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "param.h"
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "osspec.h"
 #include "globals.h"
 #include "stack.h"
@@ -41,7 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 extern "C" UIView *LiveCodeGetView(void);
 
-xtern MCExecPoint *MCEPptr;
+extern MCExecPoint *MCEPptr;
 
 ////////////////////
 
@@ -460,20 +460,29 @@ public:
 		
 		if (m_completion != nil)
 		{
-			MCExecPoint ep(nil, nil, nil);
-			MCresult -> fetch(ep);
+            MCAutoValueRef t_value;
+            MCresult->copyasvalueref(&t_value);
 			
 			id t_result;
-			if (ep . isempty())
-			t_result = nil;
-			else if (ep . getformat() == VF_ARRAY)
+            if (MCValueIsEmpty(*t_value))
+				t_result = nil;
+
+            else if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeArray)
 			{
 				t_result = nil;
 			}
-			else if (ep . getformat() == VF_NUMBER || ep . getformat() == VF_BOTH)
-				t_result = [NSNumber numberWithDouble: ep . getnvalue()];
-			else
-				t_result = [NSString stringWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding];
+            else if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeNumber)
+                t_result = [NSNumber numberWithDouble: MCNumberFetchAsReal((MCNumberRef)*t_value)];
+            else if (MCValueGetTypeCode((*t_value) == kMCValueTypeCodeString))
+                t_result = [NSString stringWithMCStringRef: (MCStringRef)*t_value];
+            else if (MCValueGetTypeCode((*t_value) == kMCValueTypeCodeName))
+                t_result = [NSString stringWithMCNameRef: (MCNameRef)*t_value)];
+            else if (MCValueGeTypeCode((*t_value) == kMCValueTypeCodeData))
+            {
+                MCAutoStringRef t_string;
+                MCStringDecode((MCDataRef)*t_value, kMCStringEncodingNative, false, &t_string);
+                t_result = [NSString stringWithMCStringRef: *t_string];
+            }
 				
 			m_completion(t_result);
 		}

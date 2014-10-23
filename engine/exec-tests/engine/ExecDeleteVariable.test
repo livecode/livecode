@@ -1,0 +1,11 @@
+setup
+
+local tArray
+
+put "foo" into tArray[1]
+
+delete variable tArray[1]
+
+test 1 is not among the keys of tArray
+
+teardown

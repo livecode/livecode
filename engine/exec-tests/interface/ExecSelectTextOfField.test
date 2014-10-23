@@ -1,0 +1,11 @@
+setup
+
+create field
+
+put "foo bar" into field 1
+
+select word 1 of field 1
+
+test the selection is "foo"
+
+teardown

@@ -22,8 +22,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 
-#include "core.h"
-
 #include "image.h"
 
 #include "imagebitmap.h"
@@ -808,13 +806,13 @@ void MCImageBitmapExtractMask(MCImageBitmap *p_bitmap, void *p_mask, uint32_t p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCImageDataIsJPEG(const MCString& data)
+bool MCImageDataIsJPEG(MCDataRef p_input)
 {
-	const unsigned char *t_data;
-	t_data = (const unsigned char *)data . getstring();
+	const byte_t *t_data;
+	t_data = MCDataGetBytePtr(p_input);
     
 	uint4 t_length;
-	t_length = data . getlength();
+	t_length = MCDataGetLength(p_input);
     
 	if (t_length < 9)
 		return false;
@@ -828,13 +826,13 @@ bool MCImageDataIsJPEG(const MCString& data)
 	return true;
 }
 
-bool MCImageDataIsPNG(const MCString& data)
+bool MCImageDataIsPNG(MCDataRef p_input)
 {
-	const unsigned char *t_data;
-	t_data = (const unsigned char *)data . getstring();
-    
+	const byte_t *t_data;
+	t_data = MCDataGetBytePtr(p_input);
+	
 	uint4 t_length;
-	t_length = data . getlength();
+	t_length = MCDataGetLength(p_input);
     
 	if (t_length < 8)
 		return false;
@@ -842,13 +840,13 @@ bool MCImageDataIsPNG(const MCString& data)
 	return memcmp(t_data, "\x89PNG\x0d\x0a\x1a\x0a", 8) == 0;
 }
 
-bool MCImageDataIsGIF(const MCString& data)
+bool MCImageDataIsGIF(MCDataRef p_input)
 {
-	const unsigned char *t_data;
-	t_data = (const unsigned char *)data . getstring();
-    
+    const byte_t *t_data;
+	t_data = MCDataGetBytePtr(p_input);
+	
 	uint4 t_length;
-	t_length = data . getlength();
+	t_length = MCDataGetLength(p_input);
     
 	if (t_length < 6)
 		return false;

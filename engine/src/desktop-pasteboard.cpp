@@ -16,7 +16,6 @@
 
 #include "platform.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -24,7 +23,8 @@
 #include "parsedef.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 
 #include "desktop-dc.h"
 
@@ -54,7 +54,7 @@ MCSystemPasteboard::~MCSystemPasteboard(void)
 	
 	for(uindex_t i = 0; i < m_entry_count; i++)
 		if (m_entries[i] . data != nil)
-			m_entries[i] . data -> Release();
+			MCValueRelease(m_entries[i] . data);
 	MCMemoryDeleteArray(m_entries);
 	
 	MCPlatformPasteboardRelease(m_pasteboard);
@@ -200,7 +200,7 @@ void MCSystemPasteboard::AddEntry(MCTransferType p_type, MCPlatformPasteboardFla
 	m_entries[m_entry_count - 1] . data = nil;
 }
 
-bool MCSystemPasteboard::Query(MCTransferType*& r_types, unsigned int& r_type_count)
+bool MCSystemPasteboard::Query(MCTransferType*& r_types, size_t& r_type_count)
 {
 	if (!IsValid())
 		return false;
@@ -222,7 +222,7 @@ bool MCSystemPasteboard::Query(MCTransferType*& r_types, unsigned int& r_type_co
 	return false;
 }
 
-bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
+bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 {
 	if (!IsValid())
 		return false;
@@ -237,8 +237,7 @@ bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 	
 	if (m_entries[t_entry] . data != nil)
 	{
-		m_entries[t_entry] . data -> Retain();
-		r_data = m_entries[t_entry] . data;
+		r_data = MCValueRetain(m_entries[t_entry] . data);
 		return true;
 	}
 	
@@ -247,38 +246,39 @@ bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 	if (!MCPlatformPasteboardFetch(m_pasteboard, m_entries[t_entry] . flavor, t_in_data_bytes, t_in_data_byte_count))
 		return false;
 	
-	MCSharedString *t_in_data;
-	t_in_data = MCSharedString::CreateNoCopy(t_in_data_bytes, t_in_data_byte_count);
+	MCAutoDataRef t_in_data;
+	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t*)t_in_data_bytes, t_in_data_byte_count, &t_in_data);
 	
-	MCSharedString *t_out_data;
-	t_out_data = nil;
+	MCAutoDataRef t_out_data;
 	switch(m_entries[t_entry] . flavor)
 	{
 		case kMCPlatformPasteboardFlavorUTF8:
 		{
-			MCExecPoint ep;
-			ep . setsvalue(t_in_data -> Get());
-			ep . texttobinary();
-			ep . utf8toutf16();
-			t_out_data = MCSharedString::Create(ep . getsvalue());
+            // AL-2014-07-11: [[ Bug 12792 ]] Always convert unicode pasteboard data to UTF16
+            MCAutoStringRef t_input_mac;
+            /* UNCHECKED */ MCStringDecode(*t_in_data, kMCStringEncodingUTF8, false, &t_input_mac);
+            MCAutoStringRef t_output;
+            /* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input_mac, &t_output);
+            /* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingUTF16, false, &t_out_data);
 		}
 		break;
 			
 		case kMCPlatformPasteboardFlavorFiles:
 		{
-			MCExecPoint ep;
-			ep . setsvalue(t_in_data -> Get());
-			ep . utf8tonative();
-			t_out_data = MCSharedString::Create(ep . getsvalue());
+            MCAutoStringRef t_input_mac;
+            /* UNCHECKED */ MCStringDecode(*t_in_data, kMCStringEncodingUTF8, false, &t_input_mac);
+            MCAutoStringRef t_output;
+            /* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input_mac, &t_output);
+            /* UNCHECKED */ MCStringEncode(*t_output, kMCStringEncodingMacRoman, false, &t_out_data);
 		}
 		break;
 			
 		case kMCPlatformPasteboardFlavorRTF:
-			t_out_data = MCConvertRTFToStyledText(t_in_data);
+			MCConvertRTFToStyledText(*t_in_data, &t_out_data);
 			break;
 			
 		case kMCPlatformPasteboardFlavorHTML:
-			t_out_data = MCConvertHTMLToStyledText(t_in_data);
+			MCConvertHTMLToStyledText(*t_in_data, &t_out_data);
 			break;
 			
 		case kMCPlatformPasteboardFlavorPNG:
@@ -286,8 +286,7 @@ bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 		case kMCPlatformPasteboardFlavorGIF:
 		case kMCPlatformPasteboardFlavorObjects:
 		case kMCPlatformPasteboardFlavorStyledText:
-			t_in_data -> Retain();
-			t_out_data = t_in_data;
+			t_out_data = *t_in_data;
 			break;
 			
 		default:
@@ -296,15 +295,11 @@ bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 			break;
 	}
 	
-	t_in_data -> Release();
-	
-	if (t_out_data == nil)
+	if (*t_out_data == nil)
 		return false;
 	
-	m_entries[t_entry] . data = t_out_data;
-	t_out_data -> Retain();
-	
-	r_data = t_out_data;
+	m_entries[t_entry] . data = MCValueRetain(*t_out_data);	
+	r_data = MCValueRetain(m_entries[t_entry] . data);
 	
 	return true;
 }

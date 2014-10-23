@@ -35,6 +35,7 @@
 		4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Debug Mobile.xcconfig"; path = "../rules/Debug Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../rules/Release Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4DD3E06B1040BC4700CAC7EF /* libgraphicsmobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgraphicsmobile.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		7603734219DC363700248C15 /* hb-sk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "hb-sk.cpp"; path = "src/hb-sk.cpp"; sourceTree = "<group>"; };
 		E8A554921782E96100DABC1A /* graphics-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "graphics-internal.h"; path = "src/graphics-internal.h"; sourceTree = "<group>"; };
 		E8A554951782E97E00DABC1A /* graphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphics.h; path = include/graphics.h; sourceTree = "<group>"; };
 		E8C22BC7177AEC9A003785D3 /* context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = context.cpp; path = src/context.cpp; sourceTree = "<group>"; };
@@ -85,6 +86,7 @@
 				4C92703217D63F3000F97382 /* legacyblendmodes.cpp */,
 				4C313BD9180C545D004232E1 /* legacygradients.cpp */,
 				4C077911187DA31E001E297E /* mblandroidtext.cpp */,
+				7603734219DC363700248C15 /* hb-sk.cpp */,
 				4C053DCF17C4C9B30036E151 /* mbliphonetext.mm */,
 				E8C22BC9177AEC9A003785D3 /* path.cpp */,
 				E8F7443B193F6FC800DCCE28 /* region.cpp */,

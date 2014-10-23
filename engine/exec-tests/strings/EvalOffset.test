@@ -1,0 +1,17 @@
+setup
+
+test offset("g", "abc, def, ghi") is 11
+test offset(" def", "abc, def, ghi") is 5
+test offset("x", "abc, def, ghi") is 0
+test offset("ABC", "abc, def, ghi") is 1
+
+test offset("abc", "1,2,abc,4,5,abc", 1) is 4
+test offset("abc", "1,2,abc,4,5,abc", 5) is 8
+test offset("abc", "1,2,abc,4,5,abc", 13) is 0
+
+set the caseSensitive to true
+
+test offset("ab", "abc, def, ghi") is 1
+test offset("AB", "abc, def, ghi") is 0
+
+teardown

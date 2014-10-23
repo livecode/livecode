@@ -110,6 +110,18 @@ enum MCThemeDrawType
 	THEME_DRAW_TYPE_GTK
 };
 
+enum MCDrawTextDirection
+{
+    kMCDrawTextDirectionLTR = 0,
+    kMCDrawTextDirectionRTL
+};
+
+enum MCDrawTextBreaking
+{
+    kMCDrawTextNoBreak = 0,
+    kMCDrawTextBreak
+};
+
 bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info_ptr);
 
 class MCContext
@@ -171,8 +183,9 @@ public:
 
 	virtual void drawline(int2 x1, int2 y1, int2 x2, int2 y2) = 0;
 	virtual void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false) = 0;
-	virtual void drawsegments(MCSegment *segments, uint2 nsegs) = 0;
-	virtual void drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override) = 0;
+	virtual void drawsegments(MCLineSegment *segments, uint2 nsegs) = 0;
+	virtual void drawtext(coord_t x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextBreaking = kMCDrawTextBreak, MCDrawTextDirection = kMCDrawTextDirectionLTR) = 0;
+    virtual void drawtext_substring(coord_t x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, MCDrawTextBreaking = kMCDrawTextBreak, MCDrawTextDirection = kMCDrawTextDirectionLTR) = 0;
 	virtual void drawrect(const MCRectangle& rect, bool inside = false) = 0;
 	virtual void fillrect(const MCRectangle& rect, bool inside = false) = 0;
 	virtual void fillrects(MCRectangle *rects, uint2 nrects) = 0;
@@ -193,7 +206,7 @@ public:
 	
 	virtual void drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy) = 0;
 
-	virtual void drawlink(const char *link, const MCRectangle& region) = 0;
+	virtual void drawlink(MCStringRef link, const MCRectangle& region) = 0;
 
 	virtual void applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height) = 0;
 

@@ -24,11 +24,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCConstant : public MCExpression
 {
-	const MCString svalue;
+	const MCValueRef svalue;
 	const real8 nvalue;
 public:
-	MCConstant(const MCString &s, const real8 &n) : svalue(s), nvalue(n)
+	MCConstant(MCValueRef s, const real8 &n) : svalue(MCValueRetain(s)), nvalue(n)
 	{ }
-	virtual Exec_stat eval(MCExecPoint &ep);
+	
+	virtual ~MCConstant()
+	{
+		MCValueRelease(svalue);	
+	}
+
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+	
+	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 #endif

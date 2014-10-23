@@ -16,6 +16,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef __MC_MOBILE_CONTROL__
 #define __MC_MOBILE_CONTROL__
+                                                          
+////////////////////////////////////////////////////////////////////////////////
 
 enum MCNativeControlType
 {
@@ -130,6 +132,7 @@ enum MCNativeControlProperty
     kMCNativeControlPropertyMultiLine,
 };
 
+ 
 enum MCNativeControlAction
 {
 	kMCNativeControlActionUnknown,
@@ -173,8 +176,236 @@ struct MCNativeControlEnumEntry
 	int32_t value;
 };
 
+struct MCNativeControlColor
+{
+    uint16_t r;
+    uint16_t g;
+    uint16_t b;
+    uint16_t a;
+};
+
+void MCNativeControlColorParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlColor& r_output);
+void MCNativeControlColorFormat(MCExecContext& ctxt, const MCNativeControlColor& p_input, MCStringRef& r_output);
+void MCNativeControlColorFree(MCExecContext& ctxt, MCNativeControlColor& p_input);
+
+enum MCNativeControlDecelerationRateType
+{
+    kMCNativeControlDecelerationRateNormal,
+    kMCNativeControlDecelerationRateFast,
+    kMCNativeControlDecelerationRateCustom
+};
+
+struct MCNativeControlDecelerationRate
+{
+    MCNativeControlDecelerationRateType type;
+    double rate;
+};
+
+
+void MCNativeControlDecelerationRateParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlDecelerationRate& r_output);
+void MCNativeControlDecelerationRateFormat(MCExecContext& ctxt, const MCNativeControlDecelerationRate& p_input, MCStringRef& r_output);
+void MCNativeControlDecelerationRateFree(MCExecContext& ctxt, MCNativeControlDecelerationRate& p_input);
+
+struct MCNativeControlIndicatorInsets
+{
+    bool has_insets;
+    int16_t top;
+    int16_t left;
+    int16_t right;
+    int16_t bottom;
+};
+
+void MCNativeControlIndicatorInsetsParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlIndicatorInsets& r_output);
+void MCNativeControlIndicatorInsetsFormat(MCExecContext& ctxt, const MCNativeControlIndicatorInsets& p_input, MCStringRef& r_output);
+void MCNativeControlIndicatorInsetsFree(MCExecContext& ctxt, MCNativeControlIndicatorInsets& p_input);
+
+struct MCNativeControlRange
+{
+    uint32_t start;
+    uint32_t length;
+};
+
+void MCNativeControlRangeParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlRange& r_output);
+void MCNativeControlRangeFormat(MCExecContext& ctxt, const MCNativeControlRange& p_input, MCStringRef& r_output);
+void MCNativeControlRangeFree(MCExecContext& ctxt, MCNativeControlRange& p_input);
+
+enum MCNativeControlIndicatorStyle
+{
+    kMCNativeControlIndicatorStyleEmpty = 0,
+    kMCNativeControlIndicatorStyleDefault,
+    kMCNativeControlIndicatorStyleWhite,
+    kMCNativeControlIndicatorStyleBlack
+};
+
+enum MCNativeControlLoadState
+{
+    kMCNativeControlLoadStateNoneBit,
+    kMCNativeControlLoadStatePlayableBit,
+    kMCNativeControlLoadStatePlaythroughOKBit,
+    kMCNativeControlLoadStateStalledBit,
+	
+    kMCNativeControlLoadStateNone = 1 << kMCNativeControlLoadStateNoneBit,
+    kMCNativeControlLoadStatePlayable = 1 << kMCNativeControlLoadStatePlayableBit,
+    kMCNativeControlLoadStatePlaythroughOK = 1 << kMCNativeControlLoadStatePlaythroughOKBit,
+    kMCNativeControlLoadStateStalled = 1 << kMCNativeControlLoadStateStalledBit
+};
+
+enum MCNativeControlPlaybackState
+{
+    kMCNativeControlPlaybackStateNone,
+    kMCNativeControlPlaybackStateStopped,
+    kMCNativeControlPlaybackStatePlaying,
+    kMCNativeControlPlaybackStatePaused,
+    kMCNativeControlPlaybackStateInterrupted,
+    kMCNativeControlPlaybackStateSeekingForward,
+    kMCNativeControlPlaybackStateSeekingBackward
+};
+
+enum MCNativeControlInputCapitalizationType
+{
+    kMCNativeControlInputCapitalizeNone,
+    kMCNativeControlInputCapitalizeCharacters,
+    kMCNativeControlInputCapitalizeWords,
+    kMCNativeControlInputCapitalizeSentences
+};
+
+enum MCNativeControlInputAutocorrectionType
+{
+    kMCNativeControlInputAutocorrectionDefault,
+    kMCNativeControlInputAutocorrectionNo,
+    kMCNativeControlInputAutocorrectionYes
+};
+
+enum MCNativeControlInputKeyboardType
+{
+    kMCNativeControlInputKeyboardTypeDefault,
+    kMCNativeControlInputKeyboardTypeAlphabet,
+    kMCNativeControlInputKeyboardTypeNumeric,
+    kMCNativeControlInputKeyboardTypeURL,
+    kMCNativeControlInputKeyboardTypeNumber,
+    kMCNativeControlInputKeyboardTypePhone,
+    kMCNativeControlInputKeyboardTypeContact,
+    kMCNativeControlInputKeyboardTypeEmail,
+    kMCNativeControlInputKeyboardTypeDecimal,
+};
+
+enum MCNativeControlInputKeyboardStyle
+{
+    kMCNativeControlInputKeyboardStyleDefault,
+    kMCNativeControlInputKeyboardStyleAlert
+};
+
+enum MCNativeControlInputReturnKeyType
+{
+    kMCNativeControlInputReturnKeyTypeDefault,
+    kMCNativeControlInputReturnKeyTypeGo,
+    kMCNativeControlInputReturnKeyTypeGoogle,
+    kMCNativeControlInputReturnKeyTypeJoin,
+    kMCNativeControlInputReturnKeyTypeNext,
+    kMCNativeControlInputReturnKeyTypeRoute,
+    kMCNativeControlInputReturnKeyTypeSearch,
+    kMCNativeControlInputReturnKeyTypeSend,
+    kMCNativeControlInputReturnKeyTypeYahoo,
+    kMCNativeControlInputReturnKeyTypeDone,
+    kMCNativeControlInputReturnKeyTypeEmergencyCall
+};
+
+enum MCNativeControlInputContentType
+{
+    kMCNativeControlInputContentTypePlain,
+    kMCNativeControlInputContentTypePassword
+};
+
+enum MCNativeControlInputDataDetectorType
+{
+    kMCNativeControlInputDataDetectorTypeNone = 0,
+    kMCNativeControlInputDataDetectorTypeWebUrlBit,
+    kMCNativeControlInputDataDetectorTypeEmailAddressBit,
+    kMCNativeControlInputDataDetectorTypePhoneNumberBit,
+    kMCNativeControlInputDataDetectorTypeMapAddressBit,
+    kMCNativeControlInputDataDetectorTypeCalendarEventBit,
+    kMCNativeControlInputDataDetectorTypeAllBit,
+	
+    kMCNativeControlInputDataDetectorTypeWebUrl = 1 << kMCNativeControlInputDataDetectorTypeWebUrlBit,
+    kMCNativeControlInputDataDetectorTypeEmailAddress = 1 << kMCNativeControlInputDataDetectorTypeEmailAddressBit,
+    kMCNativeControlInputDataDetectorTypePhoneNumber = 1 << kMCNativeControlInputDataDetectorTypePhoneNumberBit,
+    kMCNativeControlInputDataDetectorTypeMapAddress = 1 << kMCNativeControlInputDataDetectorTypeMapAddressBit,
+    kMCNativeControlInputDataDetectorTypeCalendarEvent = 1 << kMCNativeControlInputDataDetectorTypeCalendarEventBit,
+    kMCNativeControlInputDataDetectorTypeAll = 1 << kMCNativeControlInputDataDetectorTypeAllBit
+};
+
+enum MCNativeControlInputTextAlign
+{
+    kMCNativeControlInputTextAlignCenter,
+    kMCNativeControlInputTextAlignLeft,
+    kMCNativeControlInputTextAlignRight,
+};
+
+enum MCNativeControlClearButtonMode
+{
+    kMCNativeControlClearButtonModeNever,
+    kMCNativeControlClearButtonModeWhileEditing,
+    kMCNativeControlClearButtonModeUnlessEditing,
+    kMCNativeControlClearButtonModeAlways,
+};
+
+enum MCNativeControlBorderStyle
+{
+    kMCNativeControlBorderStyleNone,
+    kMCNativeControlBorderStyleLine,
+    kMCNativeControlBorderStyleBezel,
+    kMCNativeControlBorderStyleRoundedRect
+};
+
+enum MCNativeControlInputVerticalAlign
+{
+    kMCNativeControlInputVerticalAlignCenter,
+    kMCNativeControlInputVerticalAlignTop,
+    kMCNativeControlInputVerticalAlignBottom,
+};
+
+struct MCNativeControlActionInfo
+{
+    MCNativeControlAction action;
+    void *exec_method;
+};
+
+struct MCNativeControlActionTable
+{
+	MCNativeControlActionTable *parent;
+	uindex_t size;
+	MCNativeControlActionInfo *table;
+};
+
+enum MCNativeControlIdentifierType
+{
+    kMCNativeControlIdentifierName,
+    kMCNativeControlIdentifierId,
+};
+
+struct MCNativeControlIdentifier
+{
+    MCNativeControlIdentifierType type;
+    union
+    {
+        MCStringRef name;
+        uint32_t id;
+    };
+};
+
+void MCNativeControlIdentifierParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlIdentifier& r_output);
+void MCNativeControlIdentifierFormat(MCExecContext& ctxt, const MCNativeControlIdentifier& p_input, MCStringRef& r_output);
+void MCNativeControlIdentifierFree(MCExecContext& ctxt, MCNativeControlIdentifier& p_input);
+
 class MCNativeControl
 {
+protected:
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
+    
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
+
 public:
 	// Increment/decrement reference count. This count is used to control the
 	// lifetime of the MCNativeControl instance. This prevents an instance
@@ -195,44 +426,55 @@ public:
 	uint32_t GetId(void);
 	
 	// Get the native control's name (if any)
-	const char *GetName(void);
+	void GetName(MCStringRef &r_name);
 	
 	// Set the native control's name
-	bool SetName(const char *name);
+	bool SetName(MCStringRef name);
 	
 	// Get the owning object of the instance
 	MCObject *GetOwner(void);
 	
 	// Set the owning object of the instance
 	void SetOwner(MCObject *owner);
-	
+#ifdef LEGACY_EXEC	
 	// Set property/get property/do verb.
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep) = 0;
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep) = 0;	
-	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters) = 0;
+    virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters) = 0;
+#endif
+
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
+    
+    void GetId(MCExecContext& ctxt, uinteger_t& r_id);
+    void GetName(MCExecContext& ctxt, MCStringRef& r_name);
+    void SetName(MCExecContext& ctxt, MCStringRef p_name);
+    
     
 	// The current target of any message that has been dispatched
 	static MCNativeControl *ChangeTarget(MCNativeControl *target);
 	static MCNativeControl *CurrentTarget(void);
 	
 	// Tokenization methods
-	static bool LookupProperty(const char *property, MCNativeControlProperty& r_property);
-	static bool LookupAction(const char *action, MCNativeControlAction& r_action);
-	static bool LookupType(const char *type, MCNativeControlType& r_type);
+	static bool LookupProperty(MCStringRef p_property, Properties& r_property);
+	static bool LookupAction(MCStringRef p_action, MCNativeControlAction& r_action);
+	static bool LookupType(MCStringRef p_type, MCNativeControlType& r_type);
 	
 	// Look for an instance either by name or id
-	static bool FindByNameOrId(const char *name_or_id, MCNativeControl*& r_control);
+	static bool FindByNameOrId(MCStringRef p_name_or_id, MCNativeControl*& r_control);
 	// Look for an instance with a given id
 	static bool FindById(uint32_t p_id, MCNativeControl*& r_control);
 	
 	// Iterate through all controls
 	static bool List(MCNativeControlListCallback callback, void *context);
-	
+    static bool GetControlList(MCStringRef &r_list);
+    
 	// Create an instance with the given type
 	static bool CreateWithType(MCNativeControlType p_type, MCNativeControl*& r_control);
 
 
 	// Various helper functions
+#ifdef LEGACY_EXEC
 	static bool ParseColor(MCExecPoint& ep, uint16_t &r_red, uint16_t &r_green, uint16_t &r_blue, uint16_t &r_alpha);
 	static bool FormatColor(MCExecPoint& ep, uint16_t p_red, uint16_t p_green, uint16_t p_blue, uint16_t p_alpha);
     
@@ -259,8 +501,8 @@ public:
     
     static bool ParseRange(MCExecPoint &ep, uint32_t &r_start, uint32_t &r_length);
     static bool FormatRange(MCExecPoint &ep, uint32_t p_start, uint32_t p_length);
-
-    // MM-2012-02-22: Clean up all ads
+#endif
+    // MM-2012-02-22: Clean up all controls
     static void Finalize(void);
 
 protected:
@@ -280,7 +522,7 @@ private:
 	// The id of the instance
 	uint32_t m_id;
 	// The name of the instance
-	char *m_name;
+	MCStringRef m_name;
 	// The instance's owning object (handle)
 	MCObjectHandle *m_object;    
 };
@@ -288,7 +530,9 @@ private:
 void MCNativeControlInitialize(void);
 void MCNativeControlFinalize(void);
 
+#ifdef LEGACY_EXEC
 bool MCExecPointSetRect(MCExecPoint &ep, int2 p_left, int2 p_top, int2 p_right, int2 p_bottom);
+#endif
 
 // MM-2013-11-26: [[ Bug 11485 ]] Added functions for converting between user and device space.
 MCGAffineTransform MCNativeControlUserToDeviceTransform();

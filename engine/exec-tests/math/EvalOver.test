@@ -1,0 +1,83 @@
+setup "number / number"
+
+test (7 / 2) is 3.5
+test (8 / 2) is 4
+test (9 / 2) is 4.5
+
+test (-7 / 2) is -3.5
+test (-8 / 2) is -4
+test (-9 / 2) is -4.5
+
+test (7 / -2) is -3.5
+test (8 / -2) is -4
+test (9 / -2) is -4.5
+
+test (-7 / -2) is 3.5
+test (-8 / -2) is 4
+test (-9 / -2) is 4.5
+
+teardown
+
+
+setup "array / number"
+
+local tA1, tA2
+
+repeat with i = 1 to 10
+	put i into tA1[i]
+end repeat
+
+put tA1 / 3 into tA2
+
+repeat with i = 1 to 10
+	test tA2[i] is (tA1[i] / 3)
+end repeat
+
+// empty array entry is 0
+put empty into tA1
+put empty into tA1[0]
+put tA1 / 3 into tA2
+test tA2[0] is 0
+
+teardown
+
+
+setup "array / array"
+
+local tA1, tA2, tA3
+
+repeat with i = 1 to 10
+	put i into tA1[i]
+	put (11 - i) into tA2[i]
+end repeat
+
+put tA1 / tA2 into tA3
+
+repeat with i = 1 to 10
+	test tA3[i] is (tA1[i] / tA2[i])
+end repeat
+
+teardown
+
+
+setup "/ errors"
+
+local tA1, tA2
+// div by zero
+test-error 5 / 0
+put 5 into tA1[0]
+put 0 into tA2[0]
+test-error tA1 / 0
+test-error tA1 / tA2
+
+// missing array entries
+put 6 into tA1[1]
+put 1 into tA2[0]
+test-error tA1 / tA2
+
+// non-number array entries
+put "abc" into tA2[1]
+test-error tA1 / tA2
+test-error tA2 / tA1
+
+teardown

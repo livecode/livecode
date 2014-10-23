@@ -16,8 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
-
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -30,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern char *MCcmd;
+extern MCStringRef MCcmd;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +54,15 @@ void add_simulator_redirect(const char *p_redirect_def)
 		return;
 	
 	if (s_redirect_base == nil)
-		MCCStringCloneSubstring(MCcmd, strrchr(MCcmd, '/') - MCcmd, s_redirect_base);
+    {
+        MCAutoStringRef t_substring;
+        uindex_t t_index;
+        t_index = MCStringGetLength(MCcmd);
+        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', t_index, kMCCompareExact, t_index);
+        /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_index), &t_substring);
+        /* UNCHECKED */ MCStringConvertToCString(*t_substring, s_redirect_base);
+    }
+
 	
 	MCCStringCloneSubstring(p_redirect_def, t_dst_offset - p_redirect_def, s_redirects[s_redirect_count - 1] . src);
 	

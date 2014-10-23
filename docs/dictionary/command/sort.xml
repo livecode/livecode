@@ -1,1 +1,130 @@
-<doc>	<legacy_id>2104</legacy_id>	<name>sort</name>	<type>command</type>	<syntax>		<example>sort [marked] cards [of <i>stack</i>] [<i>direction</i>] [<i>sortType</i>] by <i>sortKey</i></example>	</syntax>	<synonyms>	</synonyms>	<summary><glossary tag="sort">Sorts</glossary> the <glossary tag="card">cards</glossary> of a <object tag="stack">stack</object> into a new order.</summary>	<examples><example>sort cards by field "name"</example><example>sort cards of this stack by random(the number of cards)</example><example><p>sort marked cards of stack "project1" numeric by the number of buttons</p></example><example>sort cards numeric by the short ID of this card</example><example>sort cards of stack "Manson" descending dateTime by item 1 of field "Date"</example>	</examples>	<history>		<introduced version="1.0">Added.</introduced>		<deprecated version=""></deprecated>		<removed version=""></removed>				<experimental version=""></experimental>		<nonexperimental version=""></nonexperimental>	</history>	<objects>	</objects>	<platforms>		<mac/>		<windows/>		<linux/>		<ios/>		<android/>	</platforms>	<classes>		<desktop/>		<server/>		<web/>		<mobile/>	</classes>	<security>	</security>	<classification>		<category>Database Operations</category>	</classification>	<references>		<command tag="sort container">sort container Command</command>		<command tag="find">find Command</command>		<command tag="filter">filter Command</command>		<property tag="mark">mark Property</property>		<keyword tag="text">text Keyword</keyword>		<keyword tag="dateTime">dateTime Keyword</keyword>		<keyword tag="numeric">numeric Keyword</keyword>	</references>	<description>Use the <b>sort</b> <glossary tag="command">command</glossary> to shuffle the <glossary tag="card">cards</glossary> in a stack into a new order, or to shuffle a subset of the <glossary tag="card">cards</glossary> in a <object tag="stack">stack</object>.<p></p><p><b>Parameters:</b></p><p>The <i>stack</i> is a reference to any open <object tag="stack">stack</object>. If you don't specify a <i>stack</i>, the <glossary tag="card">cards</glossary> of the <glossary tag="current stack">current stack</glossary> are sorted.</p><p></p><p>The <i>direction</i> is eitheror. If you don't specify a <i>direction</i>, the <command tag="sort">sort</command> is.</p><p></p><p>The <i>sortType</i> is one of, ,, or. If you don't specify a <i>sortType</i>, the <command tag="sort">sort</command> is by.</p><p></p><p>The <i>sortKey</i> is an <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <function tag="value">value</function> for each <keyword tag="card">card</keyword> in the <object tag="stack">stack</object>. Any object references within the <i>sortKey</i> are treated as pertaining to each <keyword tag="card">card</keyword> being <glossary tag="evaluate">evaluated</glossary>, so for example, a reference to a <keyword tag="field">field</keyword> is <glossary tag="evaluate">evaluated</glossary> according to that <glossary tag="field">field's</glossary> contents on each <keyword tag="card">card</keyword>.</p><p></p><p><b>Comments:</b></p><p>Theform sorts by the ASCII value of each character.</p><p></p><p>Theform is like, except that it sorts accented characters together with their unaccented counterparts. For example, "&Egrave;" sorts between "e" and "f", rather than at the end of the alphabet as it would using theform.</p><p></p><p>The form sorts by number. (Use this form if the <i>sortKey</i> consists of numbers.)</p><p></p><p>Theform treats the <i>sortKey</i> as a date and/or time.</p><p></p><p>The <b>sort</b> <glossary tag="command">command</glossary> is a stable <command tag="sort">sort</command>. This means that if the <i>sortKey</i> for two <glossary tag="card">cards</glossary> is the same, <glossary tag="sort">sorting</glossary> does not change their order, so you can do two successive <glossary tag="sort">sorts</glossary> to create subcategories within the major <command tag="sort">sort</command> categories. For example, to <command tag="sort">sort</command> the <glossary tag="card">cards</glossary> of a stack by ZIP code and <command tag="sort">sort</command> within each ZIP code by last names, use these two <glossary tag="statement">statements</glossary>:</p></description></doc>
+<doc>
+	<legacy_id>2104</legacy_id>
+	<name>sort</name>
+	<type>command</type>
+
+	<syntax>
+		<example>sort [marked] cards [of stack] [direction] [sortType] by sortKey</example>
+		<example></example>
+		<example></example>
+		<example></example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Sorts the cards of a stack into a new order.</summary>
+
+	<examples>
+<example><p>sort cards by field "name"</p></example>
+<example><p>sort cards of this stack by random(the number of cards)</p></example>
+<example><p>sort marked cards of stack "project1" numeric by the number of buttons</p></example>
+<example><p>sort cards numeric by the short ID of this card</p></example>
+<example><p>sort cards of stack "Manson" descending dateTime by item 1 of field "Date"</p></example>
+	</examples>
+
+	<history>
+		<introduced version="1.0">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+		<ios/>
+		<android/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Database Operations</category>
+		<category></category>
+		<category></category>
+		<category></category>
+	</classification>
+
+	<references>
+		<command tag="sort container">sort container command</command>
+		<command tag="find">find command</command>
+		<command tag="filter">filter command</command>
+		<property tag="mark">mark property</property>
+		<keyword tag="text">text keyword</keyword>
+		<keyword tag="dateTime">dateTime keyword</keyword>
+		<keyword tag="numeric">numeric keyword</keyword>
+	</references>
+
+	<description>
+	<overview>Use the sort command to shuffle the cards in a stack into a new order, or to shuffle a subset of the cards in a stack.</overview>
+
+		<parameters>
+  <parameter>
+    <name>stack</name>
+    <description>Is a reference to any open stack. If you don't specify a stack, the cards of the current stack are sorted.</description>
+  </parameter>
+  <parameter>
+    <name>direction</name>
+    <description>Is one of the following options. If you don't specify a direction, the sort is 'ascending'.</description>
+    <options title="">
+      <option>
+        <item>ascending</item>
+        <description>sorts in ascending order</description>
+      </option>
+      <option>
+        <item>descending</item>
+        <description>sorts in descending order</description>
+      </option>
+    </options>
+  </parameter>
+  <parameter>
+    <name>sortType</name>
+    <description>Is one of the following options. If you don't specify a sortType, the sortType is 'text'.</description>
+    <options title="">
+      <option>
+        <item>text</item>
+        <description>sorts using a codepoint by codepoint comparison</description>
+      </option>
+      <option>
+        <item>binary</item>
+        <description>sorts using a byte by byte comparison</description>
+      </option>
+      <option>
+        <item>international</item>
+        <description>sorts by collation according to the system locale</description>
+      </option>
+      <option>
+        <item>numeric</item>
+        <description>sorts by number. (Use this form if the sortKey consists of numbers)</description>
+      </option>
+      <option>
+        <item>datetime</item>
+        <description>treats the sortKey as a date and/or time</description>
+      </option>
+    </options>
+  </parameter>
+  <parameter>
+    <name>sortKey</name>
+    <description>is an expression that evaluates to a value for each card in the stack. Any object references within the sortKey are treated as pertaining to each card being evaluated, so for example, a reference to a field is evaluated according to that field's contents on each card.</description>
+  </parameter>		</parameters>
+
+	<value></value>
+	<comments><p>The sort command is a stable sort. This means that if the sortKey for two cards is the same, sorting does not change their order, so you can do two successive sorts to create subcategories within the major sort categories. For example, to sort the cards of a stack by ZIP code and sort within each ZIP code by last names, use these two statements:</p><p></p><p>sort cards by field "Last Name"</p><p>sort cards numeric by field "ZIP code"</p><p></p><p>The 'text' and 'international' forms are affected by the caseSensitive and formSensitive properties.</p></comments>
+	</description>
+</doc>

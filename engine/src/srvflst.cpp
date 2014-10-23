@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "font.h"
 #include "util.h"
 #include "globals.h"
@@ -49,27 +49,30 @@ MCFontlist::~MCFontlist()
 {
 }
 
-MCFontStruct *MCFontlist::getfont(const MCString &fname, uint2 &size, uint2 style, Boolean printer)
+MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 	return NULL;
 }
 
-void MCFontlist::getfontnames(MCExecPoint &ep, char *type)
+bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 {
-	ep . clear();
+	r_names = MCValueRetain(kMCEmptyList);
+	return true;
 }
 
-void MCFontlist::getfontsizes(const char *fname, MCExecPoint &ep)
+bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 {
-	ep . clear();
+	r_sizes = MCValueRetain(kMCEmptyList);
+	return true;
 }
 
-void MCFontlist::getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep)
+bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles)
 {
-	ep . clear();
+	r_styles = MCValueRetain(kMCEmptyList);
+	return true;
 }
 
-bool MCFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
+bool MCFontlist::getfontstructinfo(MCNameRef& r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
 {
 	return false;
 }

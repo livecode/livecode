@@ -1,0 +1,11 @@
+setup
+
+create field
+
+set the script of this card to "on editScript pId;set the cEditScript of this stack to pId;end editScript"
+
+edit script of field 1
+
+test the cEditScript of this stack is the long id of field 1
+
+teardown

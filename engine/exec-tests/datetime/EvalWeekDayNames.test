@@ -1,0 +1,11 @@
+setup
+	set the useSystemDate to true
+	test the weekdaynames is the system weekdaynames
+	set the useSystemDate to false
+	test the weekdaynames is the english weekdaynames
+	
+	local tNames = "Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday"
+	replace comma with return in tNames
+	test the weekdaynames is tNames
+	
+teardown

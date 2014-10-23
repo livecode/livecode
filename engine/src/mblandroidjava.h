@@ -42,6 +42,7 @@ typedef enum
     kMCJavaTypeCString,
     kMCJavaTypeMCString,
     kMCJavaTypeMCStringUnicode,
+	kMCJavaTypeMCStringRef,
     kMCJavaTypeByteArray,
     kMCJavaTypeList,
     kMCJavaTypeMap, // MM-2012-02-22: Added ability to create Java maps
@@ -65,24 +66,31 @@ bool MCJavaStringFromNative(JNIEnv *env, const MCString *p_string, jstring &r_ja
 bool MCJavaStringFromUnicode(JNIEnv *env, const MCString *p_string, jstring &r_java_string);
 bool MCJavaStringToUnicode(JNIEnv *env, jstring p_java_string, unichar_t *&r_unicode, uint32_t &r_length);
 bool MCJavaStringToNative(JNIEnv *env, jstring p_java_string, char *&r_native);
-bool MCJavaByteArrayFromData(JNIEnv *env, const MCString *p_data, jbyteArray &r_byte_array);
-bool MCJavaByteArrayToData(JNIEnv *env, jbyteArray p_byte_array, void *&r_data, uint32_t &r_length);
+bool MCJavaStringToStringRef(JNIEnv *env, jstring p_java_string, MCStringRef& r_stringref);
+bool MCJavaStringFromStringRef(JNIEnv *env, MCStringRef p_string, jstring &r_java_string);
+bool MCJavaByteArrayFromDataRef(JNIEnv *env, MCDataRef p_data, jbyteArray &r_byte_array);
+bool MCJavaByteArrayToDataRef(JNIEnv *env, jbyteArray p_byte_array, MCDataRef& r_data);
 
 bool MCJavaInitList(JNIEnv *env, jobject&);
 bool MCJavaFreeList(JNIEnv *env, jobject);
 bool MCJavaListAppendObject(JNIEnv *env, jobject, jobject);
-bool MCJavaListAppendString(JNIEnv *env, jobject p_list, const MCString *p_string);
+//bool MCJavaListAppendString(JNIEnv *env, jobject p_list, const MCString *p_string);
+bool MCJavaListAppendStringRef(JNIEnv *env, jobject p_list, MCStringRef p_string);
 bool MCJavaListAppendInt(JNIEnv *env, jobject p_list, jint p_int);
 
 bool MCJavaInitMap(JNIEnv *env, jobject &r_map);
 bool MCJavaFreeMap(JNIEnv *env, jobject p_map);
 bool MCJavaMapPutObjectToObject(JNIEnv *env, jobject p_map, jobject p_key, jobject p_value);
-bool MCJavaMapPutStringToObject(JNIEnv *env, jobject p_map, const char *p_key, jobject p_value);
-bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, const char *p_key, const char *p_value);
+bool MCJavaMapPutStringToObject(JNIEnv *env, jobject p_map, MCStringRef p_key, jobject p_value);
+bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, MCStringRef p_key, MCStringRef p_value);
+/*
 bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_array, jobject &r_object);
 bool MCJavaMapToArray(JNIEnv *p_env, MCExecPoint &p_ep, jobject p_map, MCVariableValue *&r_array);
+ */
+bool MCJavaMapFromArray(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object);
+bool MCJavaMapToArray(JNIEnv *p_env, jobject p_map, MCArrayRef &r_array);
 
-typedef bool (*MCJavaMapCallback)(JNIEnv *env, const char *p_key, jobject p_value, void *p_context);
+typedef bool (*MCJavaMapCallback)(JNIEnv *env, MCNameRef p_key, jobject p_value, void *p_context);
 bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, void *p_context);
 
 bool MCJavaObjectGetField(JNIEnv *env, jobject p_object, const char *p_fieldname, MCJavaType p_fieldtype, void *r_value);

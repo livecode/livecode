@@ -17,7 +17,6 @@
 #include <Cocoa/Cocoa.h>
 #include <AVFoundation/AVFoundation.h>
 
-#include "core.h"
 #include "globdefs.h"
 #include "imagebitmap.h"
 #include "region.h"
@@ -95,7 +94,7 @@ protected:
 	virtual void Unrealize(void);
     
 private:
-	void Load(const char *filename, bool is_url);
+	void Load(MCStringRef filename, bool is_url);
 	void Synchronize(void);
 	void Switch(bool new_offscreen);
     
@@ -376,7 +375,7 @@ void MCAVFoundationPlayer::MovieFinished(void)
         
         if (m_offscreen)
             CVDisplayLinkStart(m_display_link);
-        
+
         [m_player play];
         m_playing = true;
         m_finished = false;
@@ -534,14 +533,13 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
     
     if (t_player -> IsPlaying())
         t_player -> HandleCurrentTimeChanged();
-    
 }
+
 
 void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 {
 	MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
-    
 	t_player -> m_switch_scheduled = false;
     
 	if (t_player -> m_pending_offscreen == t_player -> m_offscreen)
@@ -549,7 +547,7 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 		// Do nothing if there is no state change.
 	}
 	else if (t_player -> m_pending_offscreen)
-	{
+    {
         // PM-2014-07-08: [[ Bug 12722 ]] Player should stop playing when switching from run to edit mode
         if (t_player -> IsPlaying())
             t_player -> Stop();
@@ -624,10 +622,10 @@ void MCAVFoundationPlayer::Unrealize(void)
 	}
 }
 
-void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
+void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 {
-    // Ensure that removing the video source from the property inspector results immediately in empty player with the controller thumb in the beginning  
-    if (p_filename_or_url == nil)
+    // Ensure that removing the video source from the property inspector results immediately in empty player with the controller thumb in the beginning
+    if (MCStringIsEmpty(p_filename_or_url))
     {
         m_player_item_video_output = nil;
         [m_view setPlayer: nil];
@@ -635,16 +633,16 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         SetProperty(kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_zero_time);
         return;
     }
-    
+
     id t_url;
     if (!p_is_url)
-        t_url = [NSURL fileURLWithPath: [NSString stringWithCString: p_filename_or_url encoding: NSMacOSRomanStringEncoding]];
+        t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: p_filename_or_url]];
     else
-        t_url = [NSURL URLWithString: [NSString stringWithCString: p_filename_or_url encoding: NSMacOSRomanStringEncoding]];
-    
+        t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: p_filename_or_url]];
+
     AVPlayer *t_player;
     t_player = [[AVPlayer alloc] initWithURL: t_url];
-    
+
     // PM-2014-08-19 [[ Bug 13121 ]] Added feature for displaying download progress
     if (p_is_url)
         [t_player addObserver:m_observer forKeyPath:@"currentItem.loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
@@ -653,8 +651,9 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     [t_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
     while([t_player status] == AVPlayerStatusUnknown)
         MCPlatformWaitForEvent(60.0, true);
+
     [t_player removeObserver: m_observer forKeyPath: @"status"];
-    
+
     // If we've failed, leave things as they are (dealloc the new player).
     if ([t_player status] == AVPlayerStatusFailed)
     {
@@ -664,9 +663,9 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         [t_player release];
         return;
     }
-    
+
     /*
-        PM-2014-07-07: [[Bugs 12758 and 12760]] When the filename is set to a URL or to a local file 
+        PM-2014-07-07: [[Bugs 12758 and 12760]] When the filename is set to a URL or to a local file
         that is not a video, or does not exist, then currentItem is nil. Do this chack to prevent a crash
     */
     if ([t_player currentItem] == nil)
@@ -676,10 +675,10 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         [t_player release];
         return;
     }
-    
+
     // Reset this to false when loading a new movie, so as the first frame of the new movie to be displayed
     m_loaded = false;
-    
+
     CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
     //CVDisplayLinkStop(m_display_link);
 
@@ -690,7 +689,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     AVPlayerItem* t_player_item = [t_player currentItem];
     [t_player_item addOutput:m_player_item_video_output];
     [t_player replaceCurrentItemWithPlayerItem:t_player_item];
-    
+
     // Release the old player (if any).
     [m_view setPlayer: nil];
     if (m_time_observer_token != nil)
@@ -727,14 +726,14 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
     // We want this player.
     m_player = t_player;
-    
+
     // Now set the player of the view.
     [m_view setPlayer: m_player];
-    
+
     m_last_marker = UINT32_MAX;
-    
+
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: AVPlayerItemDidPlayToEndTimeNotification object: [m_player currentItem]];
     
     // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
@@ -742,6 +741,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
     m_time_scale = [m_player currentItem] . asset . duration . timescale;
 }
+
 
 void MCAVFoundationPlayer::Synchronize(void)
 {
@@ -893,7 +893,6 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
     memset(t_bitmap -> data, 0,t_bitmap -> stride * t_bitmap -> height);
 	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;
     
-    
     // If we remove the video source from the property inspector
     if (m_player_item_video_output == nil)
     {
@@ -948,11 +947,11 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 	switch(p_property)
 	{
 		case kMCPlatformPlayerPropertyURL:
-			Load(*(const char **)p_value, true);
+			Load(*(MCStringRef*)p_value, true);
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyFilename:
-			Load(*(const char **)p_value, false);
+			Load(*(MCStringRef*)p_value, false);
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyOffscreen:
@@ -1187,7 +1186,7 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		{
             NSString *t_mediaType;
             t_mediaType = [t_asset_track mediaType];
-            *(char **)r_value = strdup([t_mediaType cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+            MCStringCreateWithCFString((CFStringRef)t_mediaType, *(MCStringRef*)r_value);
 		}
             break;
 		case kMCPlatformPlayerTrackPropertyOffset:

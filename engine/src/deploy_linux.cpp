@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -31,10 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_LINUX) || defined(_MACOSX)
 #include <sys/stat.h>
-#endif
-
-#if defined(_MACOSX)
-#include "core.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -663,9 +659,9 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	// First thing we do is open the files.
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . engine, "rb", t_engine))
+	if (t_success && !MCDeployFileOpen(p_params . engine, kMCOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// Now read in the main ELF header
@@ -708,7 +704,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	if (t_success && t_project_section == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorLinuxNoProjectSection);
 
-	if (t_success && p_params . payload != NULL && t_payload_section == NULL)
+	if (t_success && (!MCStringIsEmpty(p_params . payload)) && t_payload_section == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorLinuxNoPayloadSection);
 
 	// Next check that there are no sections after the project section.
@@ -874,23 +870,17 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	MCDeployFileClose(t_output);
 
 	// OK-2010-02-22: [[Bug 8624]] - Standalones not being made executable if they contain accented chars in path.
-	char *t_path;
-	t_path = nil;
-#if defined(_MACOSX)
-	if (t_success)
-		t_success = MCCStringFromNative(p_params . output, t_path);
-#else
-	t_path = p_params . output;
-#endif
+	MCStringRef t_path;
+	t_path = p_params.output;
 	
 	// If on Mac OS X or Linux, make the file executable
 #if defined(_MACOSX) || defined(_LINUX)
 	if (t_success)
-		chmod(t_path, 0755);
-#endif
-	
-#if defined(_MACOSX)
-	MCCStringFree(t_path);
+    {
+        MCAutoStringRefAsUTF8String t_utf8_path;
+        /* UNCHECKED */ t_utf8_path . Lock(t_path);
+        chmod(*t_utf8_path, 0755);
+        }
 #endif
 	
 	return t_success ? ES_NORMAL : ES_ERROR;
@@ -910,7 +900,7 @@ Exec_stat MCDeployToLinux(const MCDeployParameters& p_params)
 	
 	MCDeployFileRef t_engine;
 	t_engine = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . engine, "rb", t_engine))
+	if (t_success && !MCDeployFileOpen(p_params . engine, kMCOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 		
 	char t_ident[EI_NIDENT];

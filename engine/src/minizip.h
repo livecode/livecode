@@ -50,7 +50,7 @@ const char *MCMiniZipErrorToString(MCMiniZipError p_error);
 
 typedef struct MCMiniZip *MCMiniZipRef;
 
-typedef bool (*MCMiniZipListItemsCallback)(void *context, const char *name);
+typedef bool (*MCMiniZipListItemsCallback)(void *r_list, MCStringRef name);
 typedef bool (*MCMiniZipExtractItemCallback)(void *context, const void *data, uint32_t data_length, uint32_t data_offset, uint32_t data_total);
 
 struct MCMiniZipItemInfo
@@ -65,9 +65,9 @@ bool MCMiniZipOpen(const void *p_data, uint32_t p_data_length, MCMiniZipRef& r_m
 void MCMiniZipClose(MCMiniZipRef self);
 
 bool MCMiniZipListItems(MCMiniZipRef self, MCMiniZipListItemsCallback callback, void *context);
-bool MCMiniZipDescribeItem(MCMiniZipRef self, const char *item, MCMiniZipItemInfo& r_infO);
-bool MCMiniZipExtractItem(MCMiniZipRef self, const char *item, MCMiniZipExtractItemCallback callback, void *context);
-bool MCMiniZipExtractItemToMemory(MCMiniZipRef self, const char *item, void*& r_bytes, uint32_t& r_byte_count);
+bool MCMiniZipDescribeItem(MCMiniZipRef self, MCStringRef p_item, MCMiniZipItemInfo& r_infO);
+bool MCMiniZipExtractItem(MCMiniZipRef self, MCStringRef p_item, MCMiniZipExtractItemCallback callback, void *context);
+bool MCMiniZipExtractItemToMemory(MCMiniZipRef self, MCStringRef p_item, void*& r_bytes, uint32_t& r_byte_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 

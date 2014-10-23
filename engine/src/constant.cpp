@@ -20,14 +20,45 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "constant.h"
 
+#include "syntax.h"
+
+#ifdef /* MCConstant::eval */ LEGACY_EXEC
 Exec_stat MCConstant::eval(MCExecPoint &ep)
 {
 	if (nvalue == BAD_NUMERIC)
-		ep.setsvalue(svalue);
+        MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(svalue));
 	else
-		ep.setboth(svalue, nvalue);
-	return ES_NORMAL;
+        MCExecValueTraits<double>::set(r_value, nvalue);
+}
+#endif /* MCConstant::eval */
+
+void MCConstant::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+	if (nvalue == BAD_NUMERIC)
+	{
+		r_value . type = kMCExecValueTypeValueRef;
+		r_value . valueref_value = MCValueRetain(svalue);
+	}
+	else
+	{
+		r_value . type = kMCExecValueTypeDouble;
+		r_value . double_value = nvalue;
+	}
+}
+
+void MCConstant::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	
+	if (nvalue == BAD_NUMERIC)
+		MCSyntaxFactoryEvalConstant(ctxt, svalue);
+	else
+		MCSyntaxFactoryEvalConstantDouble(ctxt, nvalue);
+	
+	MCSyntaxFactoryEvalResult(ctxt);
+	
+	MCSyntaxFactoryEndExpression(ctxt);
 }

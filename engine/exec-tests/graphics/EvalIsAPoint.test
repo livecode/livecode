@@ -1,0 +1,18 @@
+setup
+
+test 123,456 is a point
+test not (123,456 is not a point)
+
+test 123 is not a point
+test 1.5 is not a point
+test "abc" is not a point
+
+test 0,0,0 is not a point
+
+test 0,"abc" is not a point
+test 0,1.23 is not a point
+
+test empty is not a point
+
+teardown
+

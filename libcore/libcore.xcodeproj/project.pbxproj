@@ -42,6 +42,8 @@
 		4DF42A520B04862E003F2D95 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42A530B04862E003F2D95 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42A560B04862E003F2D95 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
+		72CC350418A947AC00BEC655 /* filesystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = filesystem.h; path = include/filesystem.h; sourceTree = "<group>"; };
+		72CC350518A947BD00BEC655 /* module.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = module.h; path = include/module.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +60,8 @@
 		4DCA07BB11E8D720005CF640 /* Headers */ = {
 			isa = PBXGroup;
 			children = (
+				72CC350518A947BD00BEC655 /* module.h */,
+				72CC350418A947AC00BEC655 /* filesystem.h */,
 				4DCA07C111E8D749005CF640 /* core.h */,
 				4DCA07C211E8D749005CF640 /* sserialize.h */,
 				4DCA07C311E8D749005CF640 /* sserialize_osx.h */,
@@ -132,6 +136,8 @@
 /* Begin PBXProject section */
 		4DF42A350B04860B003F2D95 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4DF42A360B04860B003F2D95 /* Build configuration list for PBXProject "libcore" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -186,8 +192,11 @@
 		4DF42A460B048617003F2D95 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_VERSION = "";
 				PRODUCT_NAME = core;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -196,6 +205,7 @@
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = core;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};

@@ -1,3 +1,4 @@
+
 /* Copyright (C) 2003-2013 Runtime Revolution Ltd.
 
 This file is part of LiveCode.
@@ -16,7 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "parsedef.h"
 #include "filedefs.h"
 #include "globals.h"
@@ -85,22 +85,22 @@ static void dispatch_notification_events(void)
         MCPendingNotificationEvent *t_event;
         t_event = s_notification_events;
         s_notification_events = s_notification_events -> next;
-        
-        MCString t_mc_text;
-        t_mc_text.set ([t_event -> text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_event -> text length]);
+
+        MCAutoStringRef t_text;
+        /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_event -> text, &t_text);
 
         switch(t_event -> type)
         {
             case kMCPendingNotificationEventTypeDidReceiveLocalNotification:
-                MCNotificationPostLocalNotificationEvent (t_mc_text);
+                MCNotificationPostLocalNotificationEvent(*t_text);
                 break;
             case kMCPendingNotificationEventTypeDidReceiveRemoteNotification:
-                MCNotificationPostPushNotificationEvent(t_mc_text);
+                MCNotificationPostPushNotificationEvent(*t_text);
                 break;
             case kMCPendingNotificationEventTypeDidRegisterForRemoteNotification:
-                MCNotificationPostPushRegistered(t_mc_text);
+                MCNotificationPostPushRegistered(*t_text);
                 break;
-            case kMCPendingNotificationEventTypeDidFailToRegisterForRemoteNotification:MCNotificationPostPushRegistrationError(t_mc_text);
+            case kMCPendingNotificationEventTypeDidFailToRegisterForRemoteNotification:MCNotificationPostPushRegistrationError(*t_text);
                 break;
         }
         
@@ -209,8 +209,8 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	
     m_pending_push_notification = nil;
     m_pending_local_notification = nil;
-    m_device_token.set("", 1);
-    m_launch_url.set("", 1);
+    m_device_token = MCValueRetain(kMCEmptyString);
+    m_launch_url = MCValueRetain(kMCEmptyString);
     m_pending_launch_url = false;
     m_did_become_active = false;
    
@@ -343,9 +343,10 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     NSURL *t_launch_url = [p_launchOptions objectForKey: UIApplicationLaunchOptionsURLKey];
     if (t_launch_url)
     {    
-        MCString t_url_text;
-        t_url_text.set ([[t_launch_url absoluteString] cStringUsingEncoding:NSMacOSRomanStringEncoding], [[t_launch_url absoluteString] length]);
-        m_launch_url = t_url_text.clone();
+        MCAutoStringRef t_url_text;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_launch_url absoluteString], &t_url_text);
+        MCValueAssign(m_launch_url, *t_url_text);
+		
         // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
         m_pending_launch_url = true;
     }    
@@ -438,8 +439,13 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 {
     MCLog("application:didReceiveLocalNotification:");
     UIApplicationState t_state = [p_application applicationState];
-    MCString t_mc_reminder_text;
+    MCAutoStringRef t_mc_reminder_text;
     NSString *t_reminder_text = [p_notification.userInfo objectForKey:@"payload"];
+	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_reminder_text);
+    if (m_did_become_active)
+    {
+		MCNotificationPostLocalNotificationEvent(*t_mc_reminder_text);
+    }
     
     // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
     queue_notification_event(kMCPendingNotificationEventTypeDidReceiveLocalNotification, t_reminder_text);
@@ -468,8 +474,13 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 {
     MCLog("application:didReceiveRemoteNotification:");
     UIApplicationState t_state = [p_application applicationState];
-    MCString t_mc_push_notification_text;
+    MCAutoStringRef t_mc_push_notification_text;
     NSString *t_reminder_text = [p_dictionary objectForKey:@"payload"];
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_reminder_text, &t_mc_push_notification_text);
+    if (m_did_become_active)
+    {
+		MCNotificationPostPushNotificationEvent(*t_mc_push_notification_text);
+    }
     
     // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
     queue_notification_event(kMCPendingNotificationEventTypeDidReceiveRemoteNotification, t_reminder_text);
@@ -502,7 +513,9 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     
     if (t_registration_text != nil)
     {
-        m_device_token = strdup([t_registration_text cStringUsingEncoding:NSMacOSRomanStringEncoding]);
+        MCAutoStringRef t_device_token;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_registration_text, &t_device_token);
+        MCValueAssign(m_device_token, *t_device_token);
     
         // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
         queue_notification_event(kMCPendingNotificationEventTypeDidRegisterForRemoteNotification,t_registration_text);
@@ -534,13 +547,13 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     if (m_did_become_active)
         dispatch_notification_events();
     
-/*    if (t_error_text != nil)
-    {
-        MCString t_mc_error_text;
-        t_mc_error_text.set ([t_error_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_error_text length]);
-        MCLog("%s\n", [t_to_log cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-        MCNotificationPostPushRegistrationError(t_mc_error_text);
-    }*/
+//    if (t_error_text != nil)
+//    {
+//        MCAutoStringRef t_mc_error_text;
+//		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_error_text, &t_mc_error_text);
+//        MCLog("%s\n", [t_to_log cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+//        MCNotificationPostPushRegistrationError(*t_mc_error_text);
+//    }
 }
 
 // Check if we have received a custom URL
@@ -550,9 +563,9 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     BOOL t_result = NO;
     if (p_url != nil)
     {
-        MCString t_url_text;
-        t_url_text.set ([[p_url absoluteString] cStringUsingEncoding:NSMacOSRomanStringEncoding], [[p_url absoluteString] length]);
-        m_launch_url = t_url_text.clone();
+        MCAutoStringRef t_url_text;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[p_url absoluteString], &t_url_text);
+		MCValueAssign(m_launch_url, *t_url_text);
         if (m_did_become_active)
             MCNotificationPostUrlWakeUp(m_launch_url);
         t_result = YES;
@@ -633,23 +646,25 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	//   notifications.
     if (m_pending_local_notification != nil)
     {
-        MCString t_mc_reminder_text = nil;
-        t_mc_reminder_text.set ([m_pending_local_notification cStringUsingEncoding:NSMacOSRomanStringEncoding], [m_pending_local_notification length]);
-        MCNotificationPostLocalNotificationEvent(t_mc_reminder_text);
-        // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
+        MCAutoStringRef t_mc_reminder_text;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)m_pending_local_notification, &t_mc_reminder_text);
+		MCNotificationPostLocalNotificationEvent(*t_mc_reminder_text);
+		
+		// HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
         [m_pending_local_notification release];
         m_pending_local_notification = nil;
     }
     if (m_pending_push_notification != nil)
     {
-        MCString t_mc_reminder_text = nil;
-        t_mc_reminder_text.set ([m_pending_push_notification cStringUsingEncoding:NSMacOSRomanStringEncoding], [m_pending_push_notification length]);
-        MCNotificationPostPushNotificationEvent(t_mc_reminder_text);
-        // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
+        MCAutoStringRef t_mc_reminder_text;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)m_pending_push_notification, &t_mc_reminder_text);
+        MCNotificationPostPushNotificationEvent(*t_mc_reminder_text);
+       
+		// HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
         [m_pending_push_notification release];
         m_pending_push_notification = nil;
     }
-    if (m_pending_launch_url == true && m_launch_url.getlength() > 1)
+    if (m_pending_launch_url == true && !MCStringIsEmpty(m_launch_url))
     {
         MCNotificationPostUrlWakeUp(m_launch_url);
         // HSC-2012-03-13 [[ Bug 10076 ]] Prevent Push Notification crashing when applicationDidBecomeActive is called multiple times
@@ -906,14 +921,14 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
         return m_main_controller;
 }
 
-- (const char *)fetchDeviceToken
+- (MCStringRef)fetchDeviceToken
 {
-    return m_device_token.getstring ();
+    return m_device_token;
 }
 
-- (const char *)fetchLaunchUrl
+- (MCStringRef)fetchLaunchUrl
 {
-	return m_launch_url.getstring ();
+	return m_launch_url;
 }
 
 - (void)activateKeyboard
@@ -1978,6 +1993,9 @@ int main(int argc, char *argv[], char *envp[])
 	}
 #endif
 	
+    if (!MCInitialize())
+        return -1;
+    
 	int t_exit_code;
     
     // MW-2012-09-26: [[ Bug ]] Make sure we set a valid current folder on

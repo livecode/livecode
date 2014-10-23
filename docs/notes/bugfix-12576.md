@@ -1,0 +1,1 @@
+# drawing_bug_when_rotating_graphic

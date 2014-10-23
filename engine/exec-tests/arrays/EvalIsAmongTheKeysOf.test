@@ -1,0 +1,24 @@
+setup " <a> is among the keys of <b> "
+local tArray
+
+test not ("abc" is among the keys of tArray)
+
+put "foo" into tArray["bar"]
+
+test "bar" is among the keys of tArray
+test not ("baz" is among the keys of tArray)
+
+teardown
+
+
+setup " <a> is not among the keys of <b> "
+local tArray
+
+test "abc" is not among the keys of tArray
+
+put "foo" into tArray["bar"]
+
+test not ("bar" is not among the keys of tArray)
+test "baz" is not among the keys of tArray
+
+teardown

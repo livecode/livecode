@@ -21,12 +21,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "scriptpt.h"
 #include "visual.h"
 #include "mcerror.h"
 #include "globals.h"
 #include "util.h"
+#include "syntax.h"
+#include "exec.h"
+#include "exec-interface.h"
+#include "variable.h"
 
 MCEffectList::~MCEffectList()
 {
@@ -34,13 +38,13 @@ MCEffectList::~MCEffectList()
 	{
 		MCEffectArgument *t_kv = arguments;
 		arguments = t_kv -> next;
-		delete[] t_kv -> key;
-		delete[] t_kv -> value;
+		MCValueRelease(t_kv -> key);
+		MCValueRelease(t_kv -> value);
 		delete t_kv;
 	}
 	
-	delete name;
-	delete sound;
+	MCValueRelease(name);
+	MCValueRelease(sound);
 }
 
 MCVisualEffect::~MCVisualEffect()
@@ -165,23 +169,24 @@ Parse_stat MCVisualEffect::parse(MCScriptPoint &sp)
 	}
 		
 	do
-	{
-		char *t_key = NULL;
+    {
+        char* t_key;
 		MCExpression *t_value = NULL;
 		bool t_has_id = false;
+        t_key = nil;
 	
-		if (sp . next(type) == PS_NORMAL && type == ST_ID)
-			t_key = sp . gettoken() . clone();
+        if (sp . next(type) == PS_NORMAL && type == ST_ID)
+            MCStringConvertToCString(sp . gettoken_stringref(), t_key);
 		
 		if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_ID) == PS_NORMAL)
 			t_has_id = true;
 		
-		if (t_key != NULL && sp . parseexp(True, False, &t_value) == PS_NORMAL)
+        if (t_key != NULL && sp . parseexp(True, False, &t_value) == PS_NORMAL)
 		{
 			KeyValue *t_kv;
 			t_kv = new KeyValue;
-			t_kv -> next = parameters;
-			t_kv -> key = t_key;
+            t_kv -> next = parameters;
+            t_kv -> key = t_key;
 			t_kv -> value = t_value;
 			t_kv -> has_id = t_has_id;
 			parameters = t_kv;
@@ -197,8 +202,9 @@ Parse_stat MCVisualEffect::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
+void MCVisualEffect::exec_ctxt(MCExecContext &ctxt)
 {
+#ifdef /* MCVisualEffect */ LEGACY_EXEC
 	MCEffectList *effectptr = MCcur_effects;
 
 	if (nameexp -> eval(ep) != ES_NORMAL)
@@ -292,4 +298,106 @@ Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
 	effectptr -> arguments = t_arguments;
 	
 	return ES_NORMAL;
+#endif /* MCVisualEffect */
+
+	MCAutoStringRef t_name;
+    if (!ctxt . EvalExprAsStringRef(nameexp, EE_VISUAL_BADEXP, &t_name))
+        return;
+
+    MCAutoStringRef t_sound;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(soundexp, EE_VISUAL_BADEXP, &t_sound))
+        return;
+
+    // Was previously setting the ScriptPoint to the content of EP after having evaluated nameexp
+    MCScriptPoint spt(ctxt . GetObject(), ctxt . GetHandlerList(), *t_name);
+	MCerrorlock++;
+
+	// reset values so expression parsing can proceed
+	MCExpression *oldnameexp = nameexp;
+	nameexp = NULL;
+	Visual_effects olddirection = direction;
+	direction = VE_UNDEFINED;
+	Visual_effects oldspeed = speed;
+	speed = VE_NORMAL;
+
+	parse(spt); // get values from variable, don't worry about errors
+	
+	// restore values if not set in expression
+	delete nameexp;
+	nameexp = oldnameexp;
+	if (direction == VE_UNDEFINED)
+		direction = olddirection;
+	if (speed == VE_NORMAL)
+		speed = oldspeed;
+	
+    MCerrorlock--;
+
+	MCAutoArray<MCInterfaceVisualEffectArgument> t_args_array;
+
+	for(KeyValue *t_parameter = parameters; t_parameter != nil; t_parameter = t_parameter -> next)
+	{
+		MCInterfaceVisualEffectArgument t_argument;
+		MCAutoStringRef t_value;
+        if (!ctxt . EvalExprAsStringRef(t_parameter -> value, EE_VISUAL_BADEXP, &t_value))
+            return;
+
+		MCAutoStringRef t_key;
+		/* UNCHECKED */ MCStringCreateWithCString(t_parameter -> key, &t_key);
+
+		MCInterfaceMakeVisualEffectArgument(ctxt, *t_value, *t_key, t_parameter -> has_id, t_argument);
+
+		/* UNCHECKED */ t_args_array . Push(t_argument);
+	}
+
+    // AL-2014-08-14: [[ Bug 13176 ]] Pass in array Ptr rather than PtrRef
+	MCInterfaceVisualEffect t_effect;
+	MCInterfaceMakeVisualEffect(ctxt, *t_name, *t_sound, t_args_array . Ptr(), t_args_array . Size(), effect, direction, speed, image, t_effect);
+
+	for (uindex_t i = 0; i < t_args_array . Size(); i++)
+		MCInterfaceVisualEffectArgumentFree(ctxt, t_args_array[i]);
+
+	MCInterfaceExecVisualEffect(ctxt, t_effect);
+
+    MCInterfaceVisualEffectFree(ctxt, t_effect);
+}
+
+void MCVisualEffect::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+	
+	compile_effect(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecVisualEffectMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
+}
+
+void MCVisualEffect::compile_effect(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+
+	nameexp -> compile(ctxt);
+	soundexp -> compile(ctxt);
+
+	uindex_t t_count = 0;
+	for(KeyValue *t_parameter = parameters; t_parameter != nil; t_parameter = t_parameter -> next)
+	{
+		MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+		t_parameter -> value -> compile(ctxt);
+		MCSyntaxFactoryEvalConstantOldString(ctxt, t_parameter -> key);
+		MCSyntaxFactoryEvalConstantBool(ctxt, t_parameter -> has_id);
+		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeVisualEffectArgumentMethodInfo);
+		MCSyntaxFactoryEndExpression(ctxt);
+		t_count++;
+	}
+	MCSyntaxFactoryEvalList(ctxt, t_count);
+
+	MCSyntaxFactoryEvalConstantInt(ctxt, effect);
+	MCSyntaxFactoryEvalConstantInt(ctxt, direction);
+	MCSyntaxFactoryEvalConstantInt(ctxt, speed);
+	MCSyntaxFactoryEvalConstantInt(ctxt, image);
+
+	MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeVisualEffectMethodInfo);
+
+	MCSyntaxFactoryEndExpression(ctxt);
 }

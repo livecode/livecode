@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "param.h"
 #include "handler.h"
 #include "util.h"
@@ -37,6 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <sys/stat.h>
 #include <sys/wait.h>
+
+#include <unistd.h>
 
 #define C_PLAYER_CMD "/usr/bin/mplayer"
 #define C_PLAYER_ARG "/usr/bin/mplayer -vo x11 -slave -wid %d" 
@@ -105,7 +107,7 @@ bool MPlayer::shutdown(void)
 {
 	if ( m_window != DNULL)
 	{
-		XDestroyWindow( MCdpy, m_window ) ;
+		gdk_window_destroy(m_window);
 		m_window = DNULL;
 		MClastvideowindow = DNULL ;
 	}
@@ -123,15 +125,15 @@ bool MPlayer::shutdown(void)
 }	
 	
 
-
-static IO_handle open_fd(int4 fd, const char *mode)
-{
-	IO_handle handle = NULL;
-	FILE *fptr = fdopen(fd, mode);
-	if (fptr != NULL)
-		handle = new IO_header(fptr, NULL, 0, fd, 0);
-	return handle;
-}
+//// Never referenced
+//static IO_handle open_fd(int4 fd, const char *mode)
+//{
+//	IO_handle handle = NULL;
+//	FILE *fptr = fdopen(fd, mode);
+//	if (fptr != NULL)
+//		handle = new IO_header(fptr, NULL, 0, fd, 0);
+//	return handle;
+//}
 
 
 
@@ -153,7 +155,8 @@ bool MPlayer::launch_player(void)
 	
 	// Install a signal handler to let us know if the the child process exits...
 	//signal(SIGCHLD, handler);
-	
+    
+    x11::Window t_xid = x11::gdk_x11_drawable_get_xid(m_window);
 
 	m_cpid = fork() ;
 	if ( m_cpid == -1 )
@@ -184,13 +187,12 @@ bool MPlayer::launch_player(void)
 		dup(m_pfd_read[WRITE]);
 		close(m_pfd_read[WRITE]);
 		
-		
 		char t_widbuf[20];
-		sprintf(t_widbuf, "%d", m_window);
+		sprintf(t_widbuf, "%lu", t_xid);
 		
 		// TS-2007-12-17 : Added in the ability to drop down to use the native X11 video driver if Xv is not present (i.e. no hardware
 		// 					video support.
-		if ( !MCXVideo ) 
+		if ( !MCXVideo )
 			execl(C_PLAYER_CMD, C_PLAYER_CMD, "-vo", "x11","-sws","3","-zoom", "-nokeepaspect", "-osdlevel","0","-noconsolecontrols", "-msglevel", "all=4", "-nomouseinput", "-quiet", "-slave", "-wid", t_widbuf, (char*)m_filename, (char*)NULL);
 		else 
 			execl(C_PLAYER_CMD, C_PLAYER_CMD, "-osdlevel","0","-noconsolecontrols", "-msglevel", "all=4", "-nomouseinput", "-quiet", "-slave", "-wid", t_widbuf, (char*)m_filename, (char*)NULL);
@@ -209,54 +211,44 @@ bool MPlayer::launch_player(void)
 
 
 
-bool MPlayer::init( char * p_filename, MCStack *p_stack, MCRectangle p_rect )
+bool MPlayer::init(const char * p_filename, MCStack *p_stack, MCRectangle p_rect )
 {
 	
 	// Are we already running a movie? If we are, then stop.
 	if ( m_window != DNULL && m_filename != NULL )
 		quit();
 	
-	Window w ;
+	GdkWindow* w ;
 	if ( p_stack == NULL )
 		return false ;
 	
 	// Locate the window for the stack
-	Window stack_window = p_stack->getwindow();
+	GdkWindow* stack_window = p_stack->getwindow();
 	if ( stack_window == DNULL)
 		return false ;
 	
-	
-	// Create a new window
-	XSetWindowAttributes xswa;
-	unsigned long xswamask = CWBorderPixel | CWColormap;
-	xswa.border_pixel = 0;
-	xswa.colormap = ((MCScreenDC *)MCscreen) -> getcmapnative() ; 
-
-	w = XCreateWindow(MCdpy, stack_window, 
-					  p_rect . x,
-					  p_rect . y,
-					  p_rect . width,
-					  p_rect . height ,
-					  0, ((MCScreenDC *)MCscreen)->getrealdepth(), InputOutput,
-					  ((MCScreenDC *)MCscreen)-> getvisnative() ->visual,
-	                  xswamask, &xswa);
+    GdkWindowAttr t_wa;
+    t_wa.colormap = ((MCScreenDC*)MCscreen)->getcmapnative();
+    t_wa.x = p_rect.x;
+    t_wa.y = p_rect.y;
+    t_wa.width = p_rect.width;
+    t_wa.height = p_rect.height;
+    t_wa.event_mask = 0;
+    t_wa.wclass = GDK_INPUT_OUTPUT;
+    t_wa.visual = ((MCScreenDC*)MCscreen)->getvisual();
+    t_wa.window_type = GDK_WINDOW_CHILD;
+    
+    w = gdk_window_new(stack_window, &t_wa, GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL);
 	
 	if ( w == DNULL )
 		return False;
 	
-	
 	// Set-up our hints so that we have NO window decorations.
-	MwmHints mwmhints;
-	mwmhints.flags	= MWM_HINTS_DECORATIONS ;
-	mwmhints.decorations = 0 ;
-	XChangeProperty(MCdpy, w, MCmwmhintsatom, MCmwmhintsatom, 32,
-	                PropModeReplace, (unsigned char *)&mwmhints,
-	                sizeof(mwmhints) / 4);
-
+    gdk_window_set_decorations(w, GdkWMDecoration(0));
 	
-	// Ensure the newly created window stays above the stack window & map ( show ) 
-	XSetTransientForHint(MCdpy, w, stack_window);
-	XMapWindow(MCdpy, w);
+	// Ensure the newly created window stays above the stack window & map ( show )
+    gdk_window_set_transient_for(w, stack_window);
+    gdk_window_show_unraised(w);
 	
 	m_window = w ;
 	MClastvideowindow = w ;
@@ -268,8 +260,8 @@ bool MPlayer::init( char * p_filename, MCStack *p_stack, MCRectangle p_rect )
 
 	if ( !launch_player() )
 	{
-		XUnmapWindow (MCdpy, m_window);
-		XDestroyWindow (MCdpy, m_window);
+		gdk_window_hide(m_window);
+        gdk_window_destroy(m_window);
 		m_window = DNULL;
 		MClastvideowindow = DNULL ;
 		return false;
@@ -290,18 +282,8 @@ void MPlayer::resize( MCRectangle p_rect)
 	if ( m_window == DNULL)
 		return ;
 	
-	XWindowChanges t_changes ;
-	uint4 t_mask ;
-	
-	t_mask = (CWX | CWY | CWWidth | CWHeight ) ;
-	t_changes . x = p_rect . x ;
-	t_changes . y = p_rect . y ;
-	t_changes . width = p_rect . width ;
-	t_changes . height = p_rect . height ;
-	
-	XConfigureWindow ( MCdpy, m_window, t_mask, &t_changes);
+    gdk_window_move_resize(m_window, p_rect.x, p_rect.y, p_rect.width, p_rect.height);
 	m_player_rect = p_rect ;
-
 }
 
 

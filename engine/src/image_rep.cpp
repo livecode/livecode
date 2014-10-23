@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -138,6 +137,7 @@ bool MCLoadableImageRep::EnsureMCGImageFrames()
 	t_frames = nil;
 	
 	uint32_t t_frame_count;
+    t_frame_count = 0;
 	
 	bool t_premultiplied;
 	
@@ -445,13 +445,13 @@ void MCCachedImageRep::init()
 	s_cache_limit = DEFAULT_IMAGE_REP_CACHE_SIZE;
 }
 
-bool MCCachedImageRep::FindWithKey(const char *p_key, MCCachedImageRep *&r_rep)
+bool MCCachedImageRep::FindWithKey(MCStringRef p_key, MCCachedImageRep *&r_rep)
 {
 	for (MCCachedImageRep *t_rep = s_head; t_rep != nil; t_rep = t_rep->m_next)
 	{
-		const char *t_key;
+		MCStringRef t_key;
 		t_key = t_rep->GetSearchKey();
-		if (t_key != nil && MCCStringEqual(t_key, p_key))
+		if (t_key != nil && MCStringIsEqualTo(t_key, p_key, kMCStringOptionCompareExact))
 		{
 			r_rep = t_rep;
 			return true;
@@ -498,7 +498,7 @@ void MCCachedImageRep::MoveRepToHead(MCCachedImageRep *p_rep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCImageRepCreateReferencedWithSearchKey(const char *p_filename, const char *p_searchkey, MCImageRep *&r_rep)
+bool MCImageRepCreateReferencedWithSearchKey(MCStringRef p_filename, MCStringRef p_searchkey, MCImageRep *&r_rep)
 {
 	bool t_success;
 	t_success = true;
@@ -518,7 +518,7 @@ bool MCImageRepCreateReferencedWithSearchKey(const char *p_filename, const char 
 	return t_success;
 }
 
-bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep)
+bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
@@ -526,7 +526,7 @@ bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep)
 	
 	if (MCCachedImageRep::FindWithKey(p_filename, t_rep))
 	{
-		MCLog("image rep cache hit for file %s", p_filename);
+		MCLog("image rep cache hit for file %@", p_filename);
 		r_rep = t_rep->Retain();
 		return true;
 	}

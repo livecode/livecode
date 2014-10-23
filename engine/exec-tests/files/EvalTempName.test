@@ -1,0 +1,10 @@
+setup
+
+local tPath
+put tempname() into tPath
+
+test tempname() is not tPath
+test tPath is not empty
+test there is not a file tPath
+
+teardown

@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -55,41 +54,54 @@ typedef enum
     kMCAndroidCalendarEventCanceled,
 } MCAndroidCalendarEventStatus;
 
+
 static MCAndroidCalendarEventStatus s_calendar_event_status = kMCAndroidCalendarEventWaiting; 
-static MCString s_calendar_event_selected = "";
-static MCString s_calendar_events_selected = "";
+static MCStringRef s_calendar_event_selected;
+static MCStringRef s_calendar_events_selected;
 static MCCalendar s_calendar_event_data;
 
-bool MCSystemShowEvent(const char* p_calendar_event_id, char*& r_result)
+bool MCAndroidCalendarInitialize(void)
+{
+	s_calendar_event_selected = MCValueRetain(kMCEmptyString);
+	s_calendar_events_selected = MCValueRetain(kMCEmptyString);
+}
+
+void MCAndroidCalendarFinalize(void)
+{
+	MCValueRelease(s_calendar_event_selected);
+	MCValueRelease(s_calendar_events_selected);
+}
+
+bool MCSystemShowEvent(MCStringRef p_calendar_event_id, MCStringRef& r_result)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
     MCLog("MCSystemShowCalendarEvent", NULL);
-    MCAndroidEngineRemoteCall("showCalendarEvent", "vs", nil, p_calendar_event_id);
+    MCAndroidEngineRemoteCall("showCalendarEvent", "vx", nil, p_calendar_event_id);
     s_calendar_event_status = kMCAndroidCalendarEventWaiting;
     while (s_calendar_event_status == kMCAndroidCalendarEventWaiting)
         MCscreen->wait(60.0, False, True);
-    r_result = s_calendar_event_selected.clone();
+	r_result = MCValueRetain(s_calendar_event_selected);
     MCLog("MCSystemShowCalendarEvent - finished", NULL);
     return true;
 }
 
-void MCAndroidShowCalendarEventDone(const char* p_calendar_event_id)
+void MCAndroidShowCalendarEventDone(MCStringRef p_calendar_event_id)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
-    s_calendar_event_selected = p_calendar_event_id;
-    MCLog("MCAndroidShowCalendarEventDone() called %s", p_calendar_event_id);
+    s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
+    MCLog("MCAndroidShowCalendarEventDone() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventDone;
 }
 
-void MCAndroidShowCalendarEventCanceled(const char* p_calendar_event_id)
+void MCAndroidShowCalendarEventCanceled(MCStringRef p_calendar_event_id)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
-    s_calendar_event_selected = p_calendar_event_id;
-    MCLog("MCAndroidShowCalendarEventCanceled() called %s", p_calendar_event_id);
+    s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
+    MCLog("MCAndroidShowCalendarEventCanceled() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventCanceled;
 }
 
-bool MCSystemCreateEvent(char*& r_result)
+bool MCSystemCreateEvent(MCStringRef& r_result)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
     MCLog("MCSystemCreateCalendarEvent", NULL);
@@ -101,96 +113,100 @@ bool MCSystemCreateEvent(char*& r_result)
     return true;
 }
 
-void MCAndroidCreateCalendarEventDone(const char* p_calendar_event_id)
+void MCAndroidCreateCalendarEventDone(MCStringRef p_calendar_event_id)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
-    s_calendar_event_selected = p_calendar_event_id;
-    MCLog("MCAndroidCreateCalendarEventDone() called %s", p_calendar_event_id);
+    s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
+    MCLog("MCAndroidCreateCalendarEventDone() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventDone;
 }
 
-void MCAndroidCreateCalendarEventCanceled(const char* p_calendar_event_id)
+void MCAndroidCreateCalendarEventCanceled(MCStringRef p_calendar_event_id)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
-    s_calendar_event_selected = p_calendar_event_id;
-    MCLog("MCAndroidCreateCalendarEventCanceled() called %s", p_calendar_event_id);
+    s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
+    MCLog("MCAndroidCreateCalendarEventCanceled() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventCanceled;
 }
 
-bool MCSystemUpdateEvent(const char* p_new_calendar_event_data, char*& r_result)
+bool MCSystemUpdateEvent(MCStringRef p_new_calendar_event_data, MCStringRef& r_result)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
     MCLog("MCSystemUpdateCalendarEvent", NULL);
-    MCAndroidEngineRemoteCall("updateCalendarEvent", "vs", nil, p_new_calendar_event_data);
+    MCAndroidEngineRemoteCall("updateCalendarEvent", "vx", nil, p_new_calendar_event_data);
     s_calendar_event_status = kMCAndroidCalendarEventWaiting;
     while (s_calendar_event_status == kMCAndroidCalendarEventWaiting)
         MCscreen->wait(60.0, False, True);
-    r_result = s_calendar_event_selected.clone();
+    
+	r_result = MCValueRetain(s_calendar_event_selected);
     MCLog("MCSystemUpdateCalendarEvent - finished", NULL);
+
     return true;
 }
 
-void MCAndroidUpdateCalendarEventDone(const char* p_calendar_event_id)
+void MCAndroidUpdateCalendarEventDone(MCStringRef p_calendar_event_id)
 {
 // STILL TO BE IMPLEMENTED IPA LEVEL 14
-    s_calendar_event_selected = p_calendar_event_id;
-    MCLog("MCAndroidUpdateCalendarEventDone() called %s", p_calendar_event_id);
+    s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
+    MCLog("MCAndroidUpdateCalendarEventDone() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventDone;
 }
 
-void MCAndroidUpdateCalendarEventCanceled(const char* p_calendar_event_id)
+void MCAndroidUpdateCalendarEventCanceled(MCStringRef p_calendar_event_id)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
-    s_calendar_event_selected = p_calendar_event_id;
-    MCLog("MCAndroidUpdateCalendarEventCanceled() called %s", p_calendar_event_id);
+    s_calendar_event_selected = MCValueRetain(p_calendar_event_id);
+    MCLog("MCAndroidUpdateCalendarEventCanceled() called %@", p_calendar_event_id);
 	s_calendar_event_status = kMCAndroidCalendarEventCanceled;
 }
 
-bool MCSystemGetEventData(MCExecContext &r_ctxt, const char* p_calendar_event_id, MCVariableValue *&r_calendar_event_data)
+bool MCSystemGetEventData(MCExecContext &r_ctxt, MCStringRef p_calendar_event_id, MCArrayRef &r_calendar_event_data)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
-    MCLog("MCSystemGetEventData: %s", p_calendar_event_id);
-    MCAndroidEngineRemoteCall("getCalendarEventData", "vs", nil, p_calendar_event_id);
+    MCLog("MCSystemGetEventData: %@", p_calendar_event_id);
+    MCAndroidEngineRemoteCall("getCalendarEventData", "vx", nil, p_calendar_event_id);
     MCCalendarToArrayData (r_ctxt, s_calendar_event_data, r_calendar_event_data); 
     return true;
 }
 
-bool MCSystemRemoveEvent(const char* p_calendar_event_id, bool p_reoccurring, char*& r_calendar_event_id_deleted)
+bool MCSystemRemoveEvent(MCStringRef p_calendar_event_id, bool p_reoccurring, MCStringRef& r_calendar_event_id_deleted)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
-    MCLog("MCSystemRemoveCalendarEvent: %s", p_calendar_event_id);
-    MCAndroidEngineRemoteCall("removeCalendarEvent", "ss", &r_calendar_event_id_deleted, p_calendar_event_id);
-    r_calendar_event_id_deleted = s_calendar_event_selected.clone();
+    MCLog("MCSystemRemoveCalendarEvent: %@", p_calendar_event_id);
+    MCAndroidEngineRemoteCall("removeCalendarEvent", "xx", r_calendar_event_id_deleted, p_calendar_event_id);
+    
+	r_calendar_event_id_deleted = MCValueRetain(s_calendar_event_selected);
     return true;
 }
 
-bool MCSystemAddEvent(MCCalendar p_new_calendar_event_data, char*& r_result)
+bool MCSystemAddEvent(MCCalendar p_new_calendar_event_data, MCStringRef& r_result)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
     MCLog("MCSystemAddCalendarEvent", NULL);
-    MCAndroidEngineRemoteCall("addCalendarEvent", "issssbbbbiisiis", &r_result,
-                              p_new_calendar_event_data.mceventid.getstring(), p_new_calendar_event_data.mctitle.getstring(),
-                              p_new_calendar_event_data.mcnote.getstring(), p_new_calendar_event_data.mclocation.getstring(),
+    MCAndroidEngineRemoteCall("addCalendarEvent", "xxxxxbbbbiixiix", &r_result,
+                              p_new_calendar_event_data.mceventid, p_new_calendar_event_data.mctitle,
+                              p_new_calendar_event_data.mcnote, p_new_calendar_event_data.mclocation,
                               p_new_calendar_event_data.mcalldayset, p_new_calendar_event_data.mcallday,
                               p_new_calendar_event_data.mcstartdateset,
                               p_new_calendar_event_data.mcenddateset,
                               p_new_calendar_event_data.mcalert1, p_new_calendar_event_data.mcalert2, 
-                              p_new_calendar_event_data.mcfrequency.getstring(), p_new_calendar_event_data.mcfrequencycount,
-                              p_new_calendar_event_data.mcfrequencyinterval, p_new_calendar_event_data.mccalendar.getstring());    
-    r_result = s_calendar_event_selected.clone();
+                              p_new_calendar_event_data.mcfrequency, p_new_calendar_event_data.mcfrequencycount,
+                              p_new_calendar_event_data.mcfrequencyinterval, p_new_calendar_event_data.mccalendar);  
+
+	r_result = MCValueRetain(s_calendar_event_selected);
     return true;
+    
 }
 
-bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, char *& r_result)
+bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, MCStringRef& r_result)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
-    char *t_result;
-    r_result = s_calendar_events_selected.clone();
-    MCLog("MCSystemFindCalendarEvent result: %s", r_result);
+	r_result = MCValueRetain(s_calendar_events_selected);
+    MCLog("MCSystemFindCalendarEvent result: %@", r_result);
     return true;
 }
 
-bool MCSystemGetCalendarsEvent(char *& r_result)
+bool MCSystemGetCalendarsEvent(MCStringRef& r_result)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
 }
@@ -226,85 +242,84 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doGetCalendarEventData(JNI
                                                                              jstring p_frequency, jint p_frequencycount,
                                                                              jint p_frequencyinterval, jstring p_calendar)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_eventid, t_temp_string);
-    s_calendar_event_data.mceventid = t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_title, t_temp_string);
-    s_calendar_event_data.mctitle = t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_note, t_temp_string);
-    s_calendar_event_data.mcnote = t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_location, t_temp_string);
-    s_calendar_event_data.mclocation = t_temp_string;
+    MCValueRelease(s_calendar_event_data.mceventid);
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_eventid, s_calendar_event_data.mceventid);
+    
+    MCValueRelease(s_calendar_event_data.mctitle);
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_title, s_calendar_event_data.mctitle);
+    
+    MCValueRelease(s_calendar_event_data.mcnote);
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_note, s_calendar_event_data.mcnote);
+	
+    MCValueRelease(s_calendar_event_data.mclocation);
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_location, s_calendar_event_data.mclocation);
     
     s_calendar_event_data.mcalert1 = p_alert1;
-    s_calendar_event_data.mcalert2 = p_alert2; 
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_frequency, t_temp_string);
-    s_calendar_event_data.mcfrequency = t_temp_string;
+    s_calendar_event_data.mcalert2 = p_alert2;
+    
+    MCValueRelease(s_calendar_event_data.mcfrequency);
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_frequency, s_calendar_event_data.mcfrequency);
+      
     s_calendar_event_data.mcfrequencycount = p_frequencycount;
     s_calendar_event_data.mcfrequencyinterval = p_frequencyinterval;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar, t_temp_string);
-    s_calendar_event_data.mccalendar = t_temp_string;
+    
+    MCValueRelease(s_calendar_event_data.mccalendar);
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar, s_calendar_event_data.mccalendar);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUpdateCalendarEventDone(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
-    MCAndroidUpdateCalendarEventDone (t_temp_string);
+    MCAutoStringRef t_mcstring;
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidUpdateCalendarEventDone(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUpdateCalendarEventCanceled(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
-    MCAndroidUpdateCalendarEventCanceled (t_temp_string);
+    MCAutoStringRef t_mcstring;
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidUpdateCalendarEventCanceled(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreateCalendarEventDone(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
-    MCAndroidCreateCalendarEventDone (t_temp_string);
+    MCAutoStringRef t_mcstring;
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidCreateCalendarEventDone(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreateCalendarEventCanceled(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
-    MCAndroidCreateCalendarEventCanceled (t_temp_string);
+    MCAutoStringRef t_mcstring;
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidCreateCalendarEventCanceled(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doShowCalendarEventDone(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
-    MCAndroidShowCalendarEventDone (t_temp_string);
+    MCAutoStringRef t_mcstring;
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidShowCalendarEventDone(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doShowCalendarEventCanceled(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
-    MCAndroidShowCalendarEventCanceled (t_temp_string);
+    MCAutoStringRef t_mcstring;
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidShowCalendarEventCanceled(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAddCalendarEvent(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
-    s_calendar_event_selected = t_temp_string;
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, s_calendar_event_selected);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doFindCalendarEvent(JNIEnv *env, jobject object, jstring p_calendar_events_found)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_events_found, t_temp_string);
-    s_calendar_events_selected = t_temp_string;
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_events_found, s_calendar_events_selected);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRemoveCalendarEvent(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
-    s_calendar_event_selected = t_temp_string;
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, s_calendar_event_selected);
 }

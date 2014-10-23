@@ -1,0 +1,14 @@
+setup
+
+test (false and false) is false
+test (false and true) is false
+test (true and false) is false
+test (true and true) is true
+
+repeat for each item tbool1 in "true,false"
+	repeat for each item tbool2 in "true,false"
+		test (tbool1 and tbool2) is (tbool2 and tbool1)
+	end repeat
+end repeat
+
+teardown

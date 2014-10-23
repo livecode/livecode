@@ -7,9 +7,9 @@ SOURCES=revpdfprinter.cpp revpdfprinter_lnx.cpp
 
 CUSTOM_DEFINES=
 
-CUSTOM_INCLUDES=./src ../thirdparty/libcairo/src
+CUSTOM_INCLUDES=./src ../libcore/include ../thirdparty/libcairo/src
 
-CUSTOM_LIBS=cairopdf core z
+CUSTOM_LIBS=core cairopdf foundation z
 CUSTOM_DYNAMIC_LIBS=dl freetype fontconfig pango-1.0 pangoft2-1.0 gobject-2.0 m
 
 CUSTOM_CCFLAGS=\

@@ -63,12 +63,22 @@ class MCWindowsPrinter: public MCPrinter
 public:
 	HDC GetDC(bool p_synchronize = false);
 
+	MCWindowsPrinter()
+	{
+		m_name = MCValueRetain(kMCEmptyString);
+	}
+
+	~MCWindowsPrinter()
+	{
+		MCValueRelease(m_name);
+	}
+
 protected:
 	void DoInitialize(void);
 	void DoFinalize(void);
 
-	bool DoReset(const char *p_name);
-	bool DoResetSettings(const MCString& p_settings);
+	bool DoReset(MCStringRef p_name);
+	bool DoResetSettings(MCDataRef p_settings);
 
 	void DoFetchSettings(void*& r_buffer, uint4& r_length);
 	const char *DoFetchName(void);
@@ -78,26 +88,26 @@ protected:
 	MCPrinterDialogResult DoPrinterSetup(bool p_window_modal, Window p_owner);
 	MCPrinterDialogResult DoPageSetup(bool p_window_modal, Window p_owner);
 
-	MCPrinterResult DoBeginPrint(const char *p_document_name, MCPrinterDevice*& r_device);
+	MCPrinterResult DoBeginPrint(MCStringRef p_document_name, MCPrinterDevice*& r_device);
 	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device);
 
 private:
 	void Synchronize(void);
-	void Reset(char *p_name, DEVMODEA *p_devmode);
+	void Reset(MCStringRef p_name, DEVMODEW *p_devmode);
 	
 	bool FetchDialogData(HGLOBAL& r_devmode_handle, HGLOBAL& r_devnames_handle);
 	void StoreDialogData(HGLOBAL p_devmode_handle, HGLOBAL p_devnames_handle);
 
-	bool DecodeSettings(const MCString& p_settings, char*& r_name, DEVMODEA*& r_devmode);
-	void EncodeSettings(char *p_name, DEVMODEA* p_devmode, void*& r_buffer, uint4& r_length);
+	bool DecodeSettings(MCDataRef p_settings, MCStringRef &r_name, DEVMODEW* &r_devmode);
+	void EncodeSettings(MCStringRef p_name, DEVMODEW* p_devmode, MCDataRef &r_buffer);
 
 	HDC LockDC(void);
 	void UnlockDC(void);
 	void ChangeDC(void);
 
 	bool m_valid;
-	char *m_name;
-	DEVMODEA *m_devmode;
+	MCStringRef m_name;
+	DEVMODEW *m_devmode;
 
 	HDC m_dc;
 	bool m_dc_locked;

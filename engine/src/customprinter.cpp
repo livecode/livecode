@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-#include "core.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -26,7 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "mcerror.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "metacontext.h"
 #include "printer.h"
 #include "customprinter.h"
@@ -966,17 +966,12 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	dotextmark_callback_state *context;
 	context = (dotextmark_callback_state *)p_context;
 	
-	// Note we can use 'setstaticbytes' here because the execpoint is immediately
-	// modified.
-	MCExecPoint ep(nil, nil, nil);
-	ep . setstaticbytes((const char *)p_span -> chars, p_span -> char_count * 2);
-	ep . utf16toutf8();
-	
-	// Get the UTF-8 string pointer and length
-	const uint8_t *t_bytes;
-	uint32_t t_byte_count;
-	t_bytes = (const uint8_t *)ep . getcstring();
-	t_byte_count = ep . getsvalue() . getlength();
+	MCAutoStringRef t_string;
+    // SN-2014-06-17 [[ Bug 12595 ]] Not properly causing the bug, but it never hurts to get to use the right encoding
+    MCStringCreateWithBytes((byte_t*)p_span->chars, p_span->char_count * 2, kMCStringEncodingUTF16, false, &t_string);
+	byte_t *t_bytes;
+	uindex_t t_byte_count;
+	/* UNCHECKED */ MCStringConvertToBytes(*t_string, kMCStringEncodingUTF8, false, t_bytes, t_byte_count);
 	
 	// Allocate a cluster index for every UTF-8 byte
 	uint32_t *t_clusters;
@@ -1052,19 +1047,21 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 
 void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 {
-	// Note we can use 'setstaticbytes' here because the ep is just being used
-	// for conversion.
-	MCExecPoint ep(nil, nil, nil);
     MCFontStruct *f = MCFontGetFontStruct(p_mark -> text . font);
-	ep . setstaticbytes(p_mark -> text . data, p_mark -> text . length);
-	if (!p_mark -> text . unicode_override)
-		ep . nativetoutf16();
+    
+	bool t_is_unicode;
+	t_is_unicode = p_mark -> text . unicode_override;
 
-	const unichar_t *t_chars;
-	uint32_t t_char_count;
-	t_chars = (const unichar_t *)ep . getsvalue() . getstring();
-	t_char_count = ep . getsvalue() . getlength() / 2;
+	MCAutoStringRef t_text_str;
+    if (p_mark -> text . unicode_override)
+        /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)p_mark -> text . data, p_mark -> text . length, &t_text_str);
+    else
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)p_mark -> text . data, p_mark -> text . length, &t_text_str);
 
+	unichar_t *t_chars;
+	uindex_t t_char_count;
+	/* UNCHECKED */ MCStringConvertToUnicode(*t_text_str, t_chars, t_char_count);
+	
 	dotextmark_callback_state t_state;
 	t_state . device = m_device;
 
@@ -1084,7 +1081,7 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	t_state . font_size = f -> size;
 #elif defined(_LINUX)
 	extern MCFontlist *MCFontlistGetCurrent(void);
-	const char *t_name;
+	MCNameRef t_name;
 	uint2 t_size, t_style;
     MCFontlistGetCurrent() -> getfontreqs(f, t_name, t_size, t_style);
 	t_state . font_size = t_size;
@@ -1132,7 +1129,7 @@ public:
 
 	const char *Error(void) const;
 
-	MCPrinterResult Start(const char *p_title, MCVariableValue *p_options);
+	MCPrinterResult Start(const char *p_title, MCArrayRef p_options);
 	MCPrinterResult Finish(void);
 
 	MCPrinterResult Cancel(void);
@@ -1177,7 +1174,41 @@ const char *MCCustomPrinterDevice::Error(void) const
 	return m_device -> GetError();
 }
 
-MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCVariableValue *p_options)
+struct convert_options_array_t
+{
+	uindex_t index;
+	char **option_keys;
+	char **option_values;
+};
+
+static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
+{
+	convert_options_array_t *ctxt;
+	ctxt = (convert_options_array_t *)p_context;
+
+	if (!MCStringConvertToCString(MCNameGetString(p_key), ctxt -> option_keys[ctxt -> index]))
+		return false;
+    
+    // SN-2014-08-11: [[ Bug 13146 ]] Also allow NameRef to be passed as options.
+	MCAutoStringRef t_value;
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName)
+        t_value = MCNameGetString((MCNameRef)p_value);
+    else if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString)
+        t_value = (MCStringRef)p_value;
+    else
+    {
+        ctxt -> option_values[ctxt -> index] = NULL;
+        return false;
+    }
+	
+	if (!MCStringConvertToCString(*t_value, ctxt -> option_values[ctxt -> index]))
+		return false;
+	
+	ctxt -> index += 1;
+	return true;
+}
+
+MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCArrayRef p_options)
 {
 	MCPrinterResult t_result;
 	t_result = PRINTER_RESULT_SUCCESS;
@@ -1198,7 +1229,7 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCVariableValu
 	t_option_count = 0;
 	if (t_result == PRINTER_RESULT_SUCCESS && p_options != nil)
 	{
-		t_option_count = p_options -> get_array() -> getnfilled();
+		t_option_count = MCArrayGetCount(p_options);
 		if (!MCMemoryNewArray(t_option_count, t_option_keys) ||
 			!MCMemoryNewArray(t_option_count, t_option_values))
 			t_result = PRINTER_RESULT_ERROR;
@@ -1206,22 +1237,17 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCVariableValu
 	
 	if (t_result == PRINTER_RESULT_SUCCESS)
 	{
-		MCHashentry *t_option;
-		t_option = nil;
-		for(uint32_t i = 0; i < t_option_count; i++)
-		{
-			MCExecPoint ep(nil, nil, nil);
-
-			t_option = p_options -> get_array() -> getnextkey(t_option);
-			t_option -> value . fetch(ep);
-
-			t_option_keys[i] = t_option -> string;
-			if (!MCCStringClone(ep . getcstring(), t_option_values[i]))
-			{
-				t_result = PRINTER_RESULT_ERROR;
-				break;
-			}
-		}
+		convert_options_array_t ctxt;
+		ctxt . index = 0;
+		ctxt . option_keys = t_option_keys;
+		ctxt . option_values = t_option_values;
+        
+        // FG-2014-05-23: [[ Bugfix 12502 ]] Don't try to convert empty options
+        if (p_options != nil && !MCArrayIsEmpty(p_options))
+        {
+            if (!MCArrayApply(p_options, convert_options_array, &ctxt))
+                t_result = PRINTER_RESULT_ERROR;
+        }
 	}
 
 	if (t_result == PRINTER_RESULT_SUCCESS)
@@ -1235,7 +1261,10 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCVariableValu
 
 	if (t_option_values != nil)
 		for(uint32_t i = 0; i < t_document . option_count; i++)
-			MCCStringFree(t_option_values[i]);
+		{
+			delete(t_option_keys[i]);
+			delete(t_option_values[i]);
+		}
 
 	MCMemoryDeleteArray(t_option_values);
 	MCMemoryDeleteArray(t_option_keys);
@@ -1493,17 +1522,17 @@ bool MCCustomPrinterDevice::StartPage(void)
 class MCCustomPrinter: public MCPrinter
 {
 public:
-	MCCustomPrinter(const char *p_name, MCCustomPrintingDevice *p_device);
+	MCCustomPrinter(MCStringRef p_name, MCCustomPrintingDevice *p_device);
 	~MCCustomPrinter(void);
 
-	void SetDeviceOptions(MCVariableValue *p_options);
+	void SetDeviceOptions(MCArrayRef p_options);
 
 protected:
 	void DoInitialize(void);
 	void DoFinalize(void);
 
-	bool DoReset(const char *p_name);
-	bool DoResetSettings(const MCString& p_settings);
+	bool DoReset(MCStringRef p_name);
+	bool DoResetSettings(MCDataRef p_settings);
 
 	const char *DoFetchName(void);
 	void DoFetchSettings(void*& r_bufer, uint4& r_length);
@@ -1513,19 +1542,19 @@ protected:
 	MCPrinterDialogResult DoPrinterSetup(bool p_window_modal, Window p_owner);
 	MCPrinterDialogResult DoPageSetup(bool p_window_modal, Window p_owner);
 
-	MCPrinterResult DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device);
+	MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device);
 	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device);
 
 private:
-	char *m_device_name;
+	MCStringRef m_device_name;
 	MCCustomPrintingDevice *m_device;
-	MCVariableValue *m_device_options;
+	MCArrayRef m_device_options;
 };
 
-MCCustomPrinter::MCCustomPrinter(const char *p_name, MCCustomPrintingDevice *p_device)
+MCCustomPrinter::MCCustomPrinter(MCStringRef p_name, MCCustomPrintingDevice *p_device)
 {
 	m_device_options = nil;
-	m_device_name = strdup(p_name);
+	m_device_name = MCValueRetain(p_name);
 	m_device = p_device;
 }
 
@@ -1537,14 +1566,17 @@ MCCustomPrinter::~MCCustomPrinter(void)
 	// scope of a single print loop.
 	Finalize();
 
-	delete m_device_name;
-	delete m_device_options;
+	MCValueRelease(m_device_name);
+	MCValueRelease(m_device_options);
 }
 
-void MCCustomPrinter::SetDeviceOptions(MCVariableValue *p_options)
+void MCCustomPrinter::SetDeviceOptions(MCArrayRef p_options)
 {
+	MCValueRelease(m_device_options);
+	m_device_options = nil;
+
 	if (p_options != nil)
-		m_device_options = new MCVariableValue(*p_options);
+		/* UNCHECKED */ MCArrayCopy(p_options, m_device_options);
 }
 
 void MCCustomPrinter::DoInitialize(void)
@@ -1555,19 +1587,21 @@ void MCCustomPrinter::DoFinalize(void)
 {
 }
 
-bool MCCustomPrinter::DoReset(const char *p_name)
+bool MCCustomPrinter::DoReset(MCStringRef p_name)
 {
-	return MCCStringEqualCaseless(p_name, m_device_name);
+	return MCStringIsEqualTo(p_name, m_device_name, kMCStringOptionCompareCaseless);
 }
 
-bool MCCustomPrinter::DoResetSettings(const MCString& p_settings)
+bool MCCustomPrinter::DoResetSettings(MCDataRef p_settings)
 {
-	return p_settings . getlength() == 0;
+	return MCDataIsEmpty(p_settings);
 }
 
 const char *MCCustomPrinter::DoFetchName(void)
 {
-	return m_device_name;
+    char *t_device_name;
+    /* UNCHECKED */ MCStringConvertToCString(m_device_name, t_device_name);
+    return t_device_name;
 }
 
 void MCCustomPrinter::DoResync(void)
@@ -1590,7 +1624,7 @@ MCPrinterDialogResult MCCustomPrinter::DoPageSetup(bool p_window_modal, Window p
 	return PRINTER_DIALOG_RESULT_ERROR;
 }
 
-MCPrinterResult MCCustomPrinter::DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device)
+MCPrinterResult MCCustomPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device)
 {
 	MCPrinterResult t_result;
 	t_result = PRINTER_RESULT_SUCCESS;
@@ -1605,7 +1639,11 @@ MCPrinterResult MCCustomPrinter::DoBeginPrint(const char *p_document, MCPrinterD
 	}
 	
 	if (t_result == PRINTER_RESULT_SUCCESS)
-		t_result = t_printer_device -> Start(p_document, m_device_options);
+    {
+        MCAutoPointer<char> t_doc;
+        /* UNCHECKED */ MCStringConvertToCString(p_document, &t_doc);
+        t_result = t_printer_device -> Start(*t_doc, m_device_options);
+    }
 
 	if (t_result == PRINTER_RESULT_SUCCESS)
 		r_device = t_printer_device;
@@ -2040,11 +2078,11 @@ private:
 
 typedef MCCustomPrintingDevice *(*MCCustomPrinterCreateProc)(void);
 
-Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filename, MCVariableValue *p_options, MCPrinter*& r_printer)
+Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCPrinter*& r_printer)
 {
 	MCCustomPrintingDevice *t_device;
 	t_device = nil;
-	if (MCCStringEqualCaseless(p_destination, "pdf"))
+	if (MCStringIsEqualToCString(p_destination, "pdf", kMCCompareCaseless))
 	{
 		// To generalize/improve in the future if we open up the custom printing
 		// device interface :o)
@@ -2054,43 +2092,44 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 		{
 			MCSysModuleHandle t_module;
 #if defined(_WINDOWS)
-			t_module = MCS_loadmodule("revpdfprinter.dll");
+			t_module = MCS_loadmodule(MCSTR("revpdfprinter.dll"));
 #elif defined(_MACOSX)
-			char *t_module_path;
-			
-			t_module_path = nil;
-			MCCStringFormat(t_module_path, "%s/../revpdfprinter.bundle", MCcmd);
-			t_module = MCS_loadmodule(t_module_path);
-			MCCStringFree(t_module_path);
+            MCAutoStringRef t_module_path_str1;
+
+			/* UNCHECKED */ MCStringFormat(&t_module_path_str1, "%@/../revpdfprinter.bundle", MCcmd);
+			t_module = MCS_loadmodule(*t_module_path_str1);
 			
 			if (t_module == nil)
 			{
-				t_module_path = nil;
-				MCCStringFormat(t_module_path, "%s/../../../../revpdfprinter.bundle", MCcmd);
-				t_module = MCS_loadmodule(t_module_path);
-				MCCStringFree(t_module_path);
+                MCAutoStringRef t_module_path_str2;
+				/* UNCHECKED */ MCStringFormat(&t_module_path_str2, "%@/../../../../revpdfprinter.bundle", MCcmd);
+				t_module = MCS_loadmodule(*t_module_path_str2);
 			}
 #elif defined(_LINUX)
-			const char *t_engine_dir_end;
-			t_engine_dir_end = strrchr(MCcmd, '/');
-			char *t_module_path;
-			t_module_path = nil;
-			MCCStringFormat(t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCcmd, MCcmd);
-			t_module = MCS_loadmodule(t_module_path);
-			MCCStringFree(t_module_path);
+            
+			uindex_t t_engine_dir_end;
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_engine_dir_end);
+			MCAutoStringRef t_module_path;
+            MCRange t_range = MCRangeMake(0, t_engine_dir_end);
+            // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
+			/* UNCHECKED */ MCStringFormat(&t_module_path, "%*@/revpdfprinter.so", &t_range, MCcmd);
+			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
-			const char *t_engine_dir_end;
-			t_engine_dir_end = strrchr(MCcmd, '/');
-			char *t_module_path;
-			t_module_path = nil;
-			MCCStringFormat(t_module_path, "%.*s/revpdfprinter.dylib", t_engine_dir_end - MCcmd, MCcmd);
-			t_module = MCS_loadmodule(t_module_path);
-			MCCStringFree(t_module_path);
+			uindex_t t_engine_dir_end;
+            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_engine_dir_end);
+			MCAutoStringRef t_module_path;
+            MCRange t_range = MCRangeMake(0, t_engine_dir_end);
+            // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
+			MCStringFormat(&t_module_path, "%*@/revpdfprinter.dylib", &t_range, MCcmd);
+			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(_SERVER)
+			
 			t_module = nil;
 #endif
 			if (t_module != nil)
-				s_revpdfprinter_create = (MCCustomPrinterCreateProc)MCS_resolvemodulesymbol(t_module, "MCCustomPrinterCreate");
+			{
+				s_revpdfprinter_create = (MCCustomPrinterCreateProc)MCS_resolvemodulesymbol(t_module, MCSTR("MCCustomPrinterCreate"));
+			}
 			s_revpdfprinter_loaded = true;
 		}
 
@@ -2100,7 +2139,7 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 			t_device = nil;
 	}
 #ifdef _DEBUG
-	else if (MCCStringEqualCaseless(p_destination, "debug"))
+	else if (MCStringIsEqualToCString(p_destination, "debug", kMCCompareCaseless))
 		t_device = new MCDebugPrintingDevice;
 #endif
 
@@ -2115,19 +2154,15 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 		return ES_ERROR;
 	}
 
-	char *t_filename = nil;
+	MCAutoStringRef t_native_path;
 	if (p_filename != nil)
-	{
-		// TODO error checking
-		MCCStringClone(p_filename, t_filename);
-		MCU_path2native(t_filename);
-	}
+		/* UNCHECKED */ MCS_pathtonative(p_filename, &t_native_path);
 
 	MCCustomPrinter *t_printer;
 	t_printer = new MCCustomPrinter(p_destination, t_device);
 	t_printer -> Initialize();
 	t_printer -> SetDeviceName(p_destination);
-	t_printer -> SetDeviceOutput(PRINTER_OUTPUT_FILE, t_filename);
+	t_printer -> SetDeviceOutput(PRINTER_OUTPUT_FILE, *t_native_path);
 	t_printer -> SetDeviceOptions(p_options);
 	t_printer -> SetPageSize(MCprinter -> GetPageWidth(), MCprinter -> GetPageHeight());
 	t_printer -> SetPageOrientation(MCprinter -> GetPageOrientation());
@@ -2142,8 +2177,6 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 	t_printer -> SetDeviceRectangle(t_printer -> GetPageRectangle());
 
 	r_printer = t_printer;
-
-	MCCStringFree(t_filename);
 
 	return ES_NORMAL;
 }

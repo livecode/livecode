@@ -36,7 +36,7 @@ void MCStackSecurityInit(void)
 
 ///////////
 
-bool MCStackSecurityEncryptString(const char *p_string, uint32_t p_length, char *&r_enc)
+bool MCStackSecurityEncryptString(MCStringRef p_string, MCStringRef &r_enc)
 {
 	return false;
 }
@@ -57,9 +57,9 @@ bool MCStackSecurityCopyStack(const MCStack *p_stack, MCStack *&r_copy)
 
 ///////////
 
-bool MCStackSecurityCreateObjectInputStream(IO_handle p_stream, uint32_t p_length, MCObjectInputStream *&r_object_stream)
+bool MCStackSecurityCreateObjectInputStream(IO_handle p_stream, uint32_t p_length, bool p_new_format, MCObjectInputStream *&r_object_stream)
 {
-	r_object_stream = new MCObjectInputStream(p_stream, p_length);
+	r_object_stream = new MCObjectInputStream(p_stream, p_length, p_new_format);
 	return r_object_stream != nil;
 }
 
@@ -98,7 +98,7 @@ IO_stat MCStackSecurityWrite(const char *p_string, uint32_t p_length, IO_handle 
 IO_stat MCStackSecurityRead(char *r_string, uint32_t p_length, IO_handle p_stream)
 {
 	IO_stat t_stat;
-	t_stat = MCS_read(r_string, sizeof(char), p_length, p_stream);
+	t_stat = MCS_readfixed(r_string, p_length, p_stream);
 	
 	return t_stat;
 }

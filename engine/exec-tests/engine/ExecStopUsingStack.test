@@ -1,0 +1,13 @@
+setup
+
+set the script of this stack to "global tVar;on releaseStack;put true into tVar;end releaseStack"
+
+global tVar
+
+start using this stack
+
+stop using this stack
+
+test tVar
+
+teardown

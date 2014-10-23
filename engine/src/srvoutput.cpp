@@ -16,17 +16,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 
-#include "unicode.h"
 #include "srvmain.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,17 +99,17 @@ static inline bool MCServerOutputMapUnicodeCluster(const unichar_t *p_chars, uin
 	switch(MCserveroutputtextencoding)
 	{
 		case kMCSOutputTextEncodingWindows1252:
-			if (MCUnicodeMapToNative_Windows1252((const uint2 *)p_chars, p_char_count, r_char))
+			if (MCUnicodeMapToNative_Windows1252(p_chars, p_char_count, r_char))
 				return true;
 			break;
 			
 		case kMCSOutputTextEncodingMacRoman:
-			if (MCUnicodeMapToNative_MacRoman((const uint2 *)p_chars, p_char_count, r_char))
+			if (MCUnicodeMapToNative_MacRoman(p_chars, p_char_count, r_char))
 				return true;
 			break;
 			
 		case kMCSOutputTextEncodingISO8859_1:
-			if (!MCUnicodeMapToNative_ISO8859_1((const uint2 *)p_chars, p_char_count, r_char))
+			if (!MCUnicodeMapToNative_ISO8859_1(p_chars, p_char_count, r_char))
 				return true;
 			break;
 		default:
@@ -275,14 +273,14 @@ static void MCServerOutputNativeMarkup(const char *p_chars, uint32_t p_char_coun
 static void MCServerOutputAdvanceUnicodeCluster(const unichar_t *p_chars, uint32_t p_char_count, uint32_t& x_index)
 {
 	uint32_t t_codepoint;
-	t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, x_index);
+	t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, x_index);
 	
 	while(x_index < p_char_count)
 	{
 		uint4 t_old_index;
 		t_old_index = x_index;
 		
-		t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, x_index);
+		t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, x_index);
 		
 		if (MCUnicodeCodepointIsBase(t_codepoint))
 		{
@@ -318,7 +316,7 @@ static void MCServerOutputUnicodeChars(const unichar_t *p_chars, uint32_t p_char
 		else if (MCserveroutputtextencoding == kMCSOutputTextEncodingUTF8)
 		{
 			uint32_t t_codepoint;
-			t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, t_index);
+			t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, t_index);
 			MCServerOutputUnicodeCharAsUTF8(t_codepoint, t_output, t_output_count);
 		}
 		else
@@ -368,7 +366,7 @@ static void MCServerOutputUnicodeMarkup(const unichar_t *p_chars, uint32_t p_cha
 		else if (MCserveroutputtextencoding == kMCSOutputTextEncodingUTF8)
 		{
 			uint32_t t_codepoint;
-			t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, t_index);
+			t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, t_index);
 			MCServerOutputUnicodeCharAsUTF8(t_codepoint, t_output, t_output_count);
 		}
 		else
@@ -400,37 +398,45 @@ static void MCServerOutputUnicodeMarkup(const unichar_t *p_chars, uint32_t p_cha
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCServerPutBinaryOutput(const MCString& s)
+void MCServerPutBinaryOutput(MCDataRef s)
 {
 	// Binary data so output verbatim.
-	MCS_write(s . getstring(), 1, s . getlength(), IO_stdout);
+	MCS_write((const void*) MCDataGetBytePtr(s), 1, MCDataGetLength(s), IO_stdout);
 }
 
-// TODO: This should throw an error if output encoding is binary.
-void MCServerPutUnicodeOutput(const MCString& s)
+void MCServerPutOutput(MCStringRef s)
 {
-	// UTF-16 encoded data, so convert to output encoding.
-	MCServerOutputUnicodeChars((unichar_t *)s . getstring(), s . getlength() / 2);
-}
-
-void MCServerPutOutput(const MCString& s)
-{	
-	if (MCserveroutputtextencoding == kMCSOutputTextEncodingNative && MCserveroutputlineendings == kMCSOutputLineEndingsLF)
-	{
-		MCS_write(s . getstring(), 1, s . getlength(), IO_stdout);
-		return;
-	}
+    if (MCStringIsNative(s))
+    {
+        const char *t_chars;
+        uindex_t t_length;
+        t_chars = (const char *)MCStringGetNativeCharPtr(s);
+        t_length = MCStringGetLength(s);
+        if (MCserveroutputtextencoding == kMCSOutputTextEncodingNative && MCserveroutputlineendings == kMCSOutputLineEndingsLF)
+        {
+            MCS_write(t_chars, 1, t_length, IO_stdout);
+            return;
+        }
 	
-	MCServerOutputNativeChars(s . getstring(), s . getlength());
+        MCServerOutputNativeChars(t_chars, t_length);
+    }
+    else
+    {
+        const unichar_t *t_chars;
+        uindex_t t_length;
+        t_chars = MCStringGetCharPtr(s);
+        t_length = MCStringGetLength(s);
+        MCServerOutputUnicodeChars(t_chars, t_length);
+    }
 }
 
-void MCServerPutHeader(const MCString& s, bool p_new)
+void MCServerPutHeader(MCStringRef s, bool p_new)
 {
 	// Find where the ':' is
 	const char *t_loc;
-	t_loc = s . getstring();
+	t_loc = MCStringGetCString(s);
 	uint4 t_loc_len;
-	t_loc_len = s . getlength();
+	t_loc_len = MCStringGetLength(s);
 	if (!MCU_strchr(t_loc, t_loc_len, ':', False))
 		return;
 	
@@ -441,7 +447,7 @@ void MCServerPutHeader(const MCString& s, bool p_new)
 	else
 		for(i = MCservercgiheadercount; i > 0; i--)
 		{
-			if (MCU_strncasecmp(s . getstring(), MCservercgiheaders[i - 1], t_loc - s . getstring()) == 0)
+			if (MCU_strncasecmp(MCStringGetCString(s), MCservercgiheaders[i - 1], t_loc - MCStringGetCString(s)) == 0)
 				break;
 		}
 	
@@ -454,76 +460,47 @@ void MCServerPutHeader(const MCString& s, bool p_new)
 	else
 		free(MCservercgiheaders[i - 1]);
 	
-	MCCStringCloneSubstring(s . getstring(), s . getlength(), MCservercgiheaders[i - 1]);
+	MCservercgiheaders[i - 1] = strdup(MCStringGetCString(s));
 }
 
-void MCServerPutContent(const MCString& s)
+void MCServerPutContent(MCStringRef s)
 {
-	MCServerOutputNativeMarkup(s . getstring(), s . getlength(), true);
+    if (MCStringIsNative(s))
+        MCServerOutputNativeMarkup((const char *)MCStringGetNativeCharPtr(s), MCStringGetLength(s), true);
+    else
+        MCServerOutputUnicodeMarkup(MCStringGetCharPtr(s), MCStringGetLength(s), true);
 }
 
-void MCServerPutUnicodeContent(const MCString& s)
+void MCServerPutMarkup(MCStringRef s)
 {
-	MCServerOutputUnicodeMarkup((const unichar_t *)s . getstring(), s . getlength() / 2, true);
-}
-
-void MCServerPutMarkup(const MCString& s)
-{
-	MCServerOutputNativeMarkup(s . getstring(), s . getlength(), false);
-}
-
-void MCServerPutUnicodeMarkup(const MCString& s)
-{
-	MCServerOutputUnicodeMarkup((const unichar_t *)s . getstring(), s . getlength() / 2, false);
+    if (MCStringIsNative(s))
+        MCServerOutputNativeMarkup((const char *)MCStringGetNativeCharPtr(s), MCStringGetLength(s), false);
+    else
+        MCServerOutputUnicodeMarkup(MCStringGetCharPtr(s), MCStringGetLength(s), false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool MCSafeCStringEqual(const char *a, const char *b)
-{
-	if (a == NULL && b == NULL)
-		return true;
-	else if (a == NULL || b == NULL)
-		return false;
-	else
-		return MCCStringEqual(a, b);
-}
 
-bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only)
+bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_secure, bool p_http_only)
 {
 	bool t_success = true;
-	char *t_name = NULL;
-	char *t_value = NULL;
-	char *t_path = NULL;
-	char *t_domain = NULL;
-	
 	uint32_t t_index = 0;
 	
-	if (t_success && p_name.getlength() != 0)
-		t_success = MCCStringCloneSubstring(p_name.getstring(), p_name.getlength(), t_name);
-		
-	if (t_success && p_value.getlength() != 0)
-	{
-		// urlencode cookie value
-		MCExecPoint ep;
-		ep.setsvalue(p_value);
-		MCU_urlencode(ep);
-		MCString t_encoded = ep.getsvalue();
-		t_success = MCCStringCloneSubstring(t_encoded.getstring(), t_encoded.getlength(), t_value);
-	}	
-	if (t_success && p_path.getlength() != 0)
-		t_success = MCCStringCloneSubstring(p_path.getstring(), p_path.getlength(), t_path);
-
-	if (t_success && p_domain.getlength() != 0)
-		t_success = MCCStringCloneSubstring(p_domain.getstring(), p_domain.getlength(), t_domain);
+	if (t_success && !MCStringIsEmpty(p_name) && !MCStringIsEmpty(p_path) && !MCStringIsEmpty(p_domain))
+		t_success = true;
+	
+	MCAutoStringRef t_encoded;
+	if (t_success && !MCStringIsEmpty(p_value))
+		MCU_urlencode(p_value, &t_encoded);
 	
 	if (t_success)
 	{
 		// try to find matching cookie (name, path, domain)
 		for (; t_index < MCservercgicookiecount; t_index++)
 		{
-			if (MCSafeCStringEqual(t_name, MCservercgicookies[t_index].name) &&
-				MCSafeCStringEqual(t_path, MCservercgicookies[t_index].path) &&
-				MCSafeCStringEqual(t_domain, MCservercgicookies[t_index].domain))
+			if (MCStringIsEqualToCString(p_name, MCservercgicookies[t_index].name, kMCCompareExact) &&
+                (!MCStringIsEmpty(p_path) && MCStringIsEqualToCString(p_path, MCservercgicookies[t_index].path, kMCCompareExact)) &&
+                !(MCStringIsEmpty(p_domain) && MCStringIsEqualToCString(p_domain, MCservercgicookies[t_index].domain, kMCCompareExact)))
 				break;
 		}
 		if (t_index == MCservercgicookiecount)
@@ -532,21 +509,14 @@ bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t
 	
 	if (t_success)
 	{
-		MCservercgicookies[t_index].name = t_name;
-		MCservercgicookies[t_index].value = t_value;
-		MCservercgicookies[t_index].path = t_path;
-		MCservercgicookies[t_index].domain = t_domain;
+        MCservercgicookies[t_index].name = MCStringIsEmpty(p_name) ? strdup("") : strdup(MCStringGetCString(p_name));
+		MCservercgicookies[t_index].value = strdup(MCStringGetCString(*t_encoded));
+        MCservercgicookies[t_index].path = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_path));
+        MCservercgicookies[t_index].domain = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_domain));
 
 		MCservercgicookies[t_index].expires = p_expires;
 		MCservercgicookies[t_index].secure = p_secure;
 		MCservercgicookies[t_index].http_only = p_http_only;
-	}
-	else
-	{
-		MCCStringFree(t_name);
-		MCCStringFree(t_value);
-		MCCStringFree(t_path);
-		MCCStringFree(t_domain);
 	}
 	
 	return t_success;

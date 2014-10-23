@@ -1,0 +1,11 @@
+setup
+if the platform is "win32" then
+-- on windows, fontstyles is always fixed
+   put "plain,bold,italic,bold-italic" into tStyles
+   replace comma with return in tStyles
+   test the fontstyles("System", 0) is tStyles 
+else
+   -- TODO - test font sizes on other platforms
+   test false
+end if
+teardown

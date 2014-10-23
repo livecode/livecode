@@ -40,10 +40,6 @@ uint2 MCTheme::getthemefamilyid()
 {
 	return 0;
 }
-const char *MCTheme::getname()
-{
-	return NULL;
-}
 int4 MCTheme::getmetric(Widget_Metric wmetric)
 {
 	return 0;
@@ -63,23 +59,23 @@ void MCTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetric, co
 }
 
 Boolean MCTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &d)
-	{
+{
 	return False;
-	}
+}
 
 Widget_Part MCTheme::hittest(const MCWidgetInfo &winfo, int2 mx, int2 my, const MCRectangle &drect)
-	{
+{
 	return WTHEME_PART_UNDEFINED;
 }
 
 Boolean MCTheme::getthemepropbool(Widget_ThemeProps themeprop)
-		{
-	return False;
-		}
-char *MCTheme::getthemecolor(const MCWidgetInfo &winfo,Widget_Color ctype,char *colorbuf)
 {
-	return NULL;
-	}
+	return False;
+}
+void MCTheme::getthemecolor(const MCWidgetInfo &winfo,Widget_Color ctype, MCStringRef &r_themecolor )
+{
+	r_themecolor = MCValueRetain(kMCEmptyString);
+}
 
 void MCTheme::unload()
 {

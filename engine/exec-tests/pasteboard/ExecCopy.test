@@ -1,0 +1,15 @@
+setup
+
+set the failed of this stack to false
+
+create button
+
+select button 1
+
+copy
+
+paste
+
+test there is a button 1 and there is a button 2
+
+teardown

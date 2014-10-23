@@ -13,6 +13,7 @@ MODE_DEPS=libkernel-development.a
 MODE_LIBS=kernel-development
 
 startupstack.cpp: src/Environment.rev
-	../prebuilt/bin/Revolution.lnx "./compress_data.rev"  "./src/Environment.rev" "./src/startupstack.cpp" "MCstartupstack"
+#	../prebuilt/bin/Revolution.lnx "./compress_data.rev"  "./src/Environment.rev" "./src/startupstack.cpp" "MCstartupstack"
+	../util/compress_data.pl ./src/Environment.rev ./src/startupstack.cpp MCstartupstack
 
 include Makefile.common

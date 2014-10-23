@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
+
 #include "fiber.h"
 
 #include <pthread.h>

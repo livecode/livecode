@@ -16,13 +16,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "scriptpt.h"
 #include "variable.h"
@@ -32,10 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_LINUX) || defined(_MACOSX)
 #include <sys/stat.h>
-#endif
-
-#if defined(_MACOSX)
-#include "core.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1135,7 +1130,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoLinkEditSegment);
 	if (t_success && t_project_segment == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoProjectSegment);
-	if (t_success && p_params . payload != NULL && t_payload_segment == NULL)
+	if (t_success && !(MCStringIsEmpty(p_params . payload)) && t_payload_segment == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoPayloadSegment);
 	
 	// MW-2013-05-04: [[ iOSDeployMisc ]] If 'misc' segment is present but not between
@@ -1187,7 +1182,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 	if (t_success && t_payload_segment != NULL)
 	{
 		t_payload_offset = x_offset + t_output_offset;
-		if (p_params . payload != nil)
+		if (!MCStringIsEmpty(p_params . payload))
 			t_success = MCDeployWritePayload(p_params, p_big_endian, p_output, t_payload_offset, t_payload_size);
         // MW-2014-10-02: [[ Bug 13536 ]] Use macro to align to required alignment.
 		if (t_success)
@@ -1696,24 +1691,24 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 
 	// MW-2013-06-13: First check that we either have 'engine' or (ppc and/or x86).
 	if (t_success &&
-		(p_params . engine != NULL && (p_params . engine_ppc != NULL || p_params . engine_x86 != NULL)))
+		(!MCStringIsEmpty(p_params . engine) && (!MCStringIsEmpty(p_params . engine_ppc) || !MCStringIsEmpty(p_params . engine_x86))))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// MW-2013-06-13: Next check that we have at least one engine.
 	if (t_success &&
-		(p_params . engine == NULL && p_params . engine_ppc == NULL && p_params . engine_x86 == NULL))
+		(MCStringIsEmpty(p_params . engine) && MCStringIsEmpty(p_params . engine_ppc) && MCStringIsEmpty(p_params . engine_x86)))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Now open the files.
 	MCDeployFileRef t_engine, t_engine_ppc, t_engine_x86, t_output;
 	t_engine = t_engine_ppc = t_engine_x86 = t_output = NULL;
 	if (t_success &&
-		(p_params . engine != NULL && !MCDeployFileOpen(p_params . engine, "rb", t_engine) ||
-		 p_params . engine_ppc != NULL && !MCDeployFileOpen(p_params . engine_ppc, "rb", t_engine_ppc) ||
-		 p_params . engine_x86 != NULL && !MCDeployFileOpen(p_params . engine_x86, "rb", t_engine_x86)))
+		((!MCStringIsEmpty(p_params . engine) && !MCDeployFileOpen(p_params . engine, kMCOpenFileModeRead, t_engine)) ||
+		 (!MCStringIsEmpty(p_params . engine_ppc) && !MCDeployFileOpen(p_params . engine_ppc, kMCOpenFileModeRead, t_engine_ppc)) ||
+		 (!MCStringIsEmpty(p_params . engine_x86) && !MCDeployFileOpen(p_params . engine_x86, kMCOpenFileModeRead, t_engine_x86))))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// MW-2013-06-13:  If we have a single engine, process that in the appropriate
@@ -1791,25 +1786,19 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 	MCDeployFileClose(t_engine_ppc);
 	
 	// OK-2010-02-22: [[Bug 8624]] - Standalones not being made executable if they contain accented chars in path.
-	char *t_path;
-	t_path = nil;
-#if defined(_MACOSX)
-	if (t_success)
-		t_success = MCCStringFromNative(p_params . output, t_path);
-#else
-	t_path = p_params . output;
-#endif
+	MCStringRef t_path;
+	t_path = p_params.output;
 	
 	// If on Mac OS X or Linux, make the file executable
 #if defined(_MACOSX) || defined(_LINUX)
 	if (t_success)
-		chmod(t_path, 0755);
+    {
+        MCAutoStringRefAsUTF8String t_utf8_path;
+        /* UNCHECKED */ t_utf8_path . Lock(t_path);
+		chmod(*t_utf8_path, 0755);
+    }
 #endif
-	
-#if defined(_MACOSX)
-	MCCStringFree(t_path);
-#endif
-	
+
 	return t_success ? ES_NORMAL : ES_ERROR;
 }
 
@@ -1855,38 +1844,32 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
 	if (t_success &&
-		(p_params . engine == NULL || !MCDeployFileOpen(p_params . engine, "rb", t_engine)))
+		((MCStringIsEmpty(p_params . engine)) || !MCDeployFileOpen(p_params . engine, kMCOpenFileModeRead, t_engine)))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Make sure we can open the output file.
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 	
 	// Generate the binary.
 	if (t_success)
 		t_success = MCDeployToMacOSXFat(p_params, p_embedded, t_engine, t_output, MCDeployValidateIOSEngine);
-	
+
 	MCDeployFileClose(t_output);
 	MCDeployFileClose(t_engine);
 	
 	// OK-2010-02-22: [[Bug 8624]] - Standalones not being made executable if they contain accented chars in path.
-	char *t_path;
-#if defined(_MACOSX)
-	t_path = nil;
-	if (t_success)
-		t_success = MCCStringFromNative(p_params . output, t_path);
-#else
-	t_path = p_params . output;
-#endif
+	MCStringRef t_path;
+	t_path = p_params.output;
 	
 	// If on Mac OS X or Linux, make the file executable
 #if defined(_MACOSX) || defined(_LINUX)
 	if (t_success)
-		chmod(t_path, 0755);
-#endif
-	
-#if defined(_MACOSX)
-	MCCStringFree(t_path);
+    {
+		MCAutoStringRefAsUTF8String t_utf8_path;
+        /* UNCHECKED */ t_utf8_path . Lock(t_path);
+		chmod(*t_utf8_path, 0755);
+    }
 #endif
 	
 	return t_success ? ES_NORMAL : ES_ERROR;
@@ -2389,10 +2372,10 @@ Exec_stat MCDeployDietMacOSX(const MCDeployDietParameters& p_params)
 	// First thing we do is open the files.
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . input, "rb", t_engine))
+	if (t_success && !MCDeployFileOpen(p_params . input, kMCOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCOpenFileModeWrite, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// Next we count the number of architectures that we will be including in
@@ -2523,7 +2506,7 @@ static bool MCDeployExtractArchCallback(void *p_context, MCDeployFileRef p_exe, 
 
 // This method extracts a segment from a Mach-O file - if the file is a fat
 // binary, it uses the first image in the file.
-Exec_stat MCDeployExtractMacOSX(const char *p_filename, const char *p_segment, const char *p_section, void*& r_data, uint32_t& r_data_size)
+Exec_stat MCDeployExtractMacOSX(MCStringRef p_filename, MCStringRef p_segment, MCStringRef p_section, void*& r_data, uint32_t& r_data_size)
 {
 	bool t_success;
 	t_success = true;
@@ -2531,16 +2514,22 @@ Exec_stat MCDeployExtractMacOSX(const char *p_filename, const char *p_segment, c
 	// First thing we do is open the input file.
 	MCDeployFileRef t_input;
 	t_input = NULL;
-	if (t_success && !MCDeployFileOpen(p_filename, "rb", t_input))
+	if (t_success && !MCDeployFileOpen(p_filename, kMCOpenFileModeRead, t_input))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Next just run the callback to get the offset of the section within the
 	// file.
 	MCDeployExtractContext t_context;
+    MCAutoStringRefAsCString t_section;
+    MCAutoStringRefAsCString t_segment;
+    
 	if (t_success)
-	{
-		t_context . section = p_section;
-		t_context . segment = p_segment;
+        t_success = t_section . Lock(p_section) && t_segment . Lock(p_segment);
+    
+    if (t_success)
+    {
+        t_context . section = (const char*) *t_section;
+		t_context . segment = (const char*) *t_segment;
 		t_context . offset = 0;
 		t_context . size = 0;
 		t_context . error = false;

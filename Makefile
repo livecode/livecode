@@ -1,12 +1,15 @@
 ###############################################################################
 # Engine Targets
 
-.PHONY: libopenssl liburlcache libstubs
-.PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore libgraphics libskia
+.PHONY: libopenssl liburlcache libstubs libfoundation libcore
+.PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libgraphics libskia
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
 .PHONY: kernel-standalone kernel-development kernel-server
 .PHONY: libireviam onrev-server
+
+libcore:
+	$(MAKE) -C ./libcore libcore
 
 libexternal:
 	$(MAKE) -C ./libexternal libexternal
@@ -35,8 +38,8 @@ libopenssl:
 libskia:
 	$(MAKE) -C ./thirdparty/libskia libskia
 
-libcore:
-	$(MAKE) -C ./libcore libcore
+libfoundation:
+	$(MAKE) -C ./libfoundation libfoundation
 
 revsecurity:
 	$(MAKE) -C ./thirdparty/libopenssl -f Makefile.revsecurity revsecurity
@@ -44,28 +47,30 @@ revsecurity:
 libgraphics: libskia
 	$(MAKE) -C ./libgraphics libgraphics
 
-kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics
-	$(MAKE) -C ./engine -f Makefile.kernel libkernel
+kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libgraphics
 
+	$(MAKE) -C ./engine -f Makefile.kernel libkernel
+	
 kernel-standalone: kernel
 	$(MAKE) -C ./engine -f Makefile.kernel-standalone libkernel-standalone
 
 kernel-development: kernel
 	$(MAKE) -C ./engine -f Makefile.kernel-development libkernel-development
 
-kernel-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics
+kernel-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libgraphics
 	$(MAKE) -C ./engine -f Makefile.kernel-server libkernel-server
 
-development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-development revsecurity
+development: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel kernel-development revsecurity
 	$(MAKE) -C ./engine -f Makefile.development engine-community
 
-standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone revsecurity
+standalone: libz libgif libjpeg libpcre libpng libopenssl libfoundation kernel revsecurity kernel-standalone revsecurity
 	$(MAKE) -C ./engine -f Makefile.standalone standalone-community
 
-installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel revsecurity
+installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel revsecurity
+
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics kernel-server revsecurity
+server: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libgraphics kernel-server revsecurity
 	$(MAKE) -C ./engine -f Makefile.server server-community
 
 ###############################################################################
@@ -181,10 +186,10 @@ revandroid: libexternalv1
 
 all: revzip server-revzip
 all: revxml server-revxml
-all: revpdfprinter revandroid
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
+all: revpdfprinter revandroid
 
 clean:
 	@rm -r _build/linux _cache/linux

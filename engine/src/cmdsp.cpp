@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "cmds.h"
 #include "chunk.h"
 #include "mcerror.h"
@@ -33,6 +33,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "globals.h"
 #include "securemode.h"
+#include "exec.h"
+
+#include "syntax.h"
+#include "graphics_util.h"
 
 MCPrint::MCPrint()
 {
@@ -284,7 +288,22 @@ Parse_stat MCPrint::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPrint::exec(MCExecPoint &ep)
+bool MCPrint::evaluate_src_rect(MCExecContext& ctxt, MCPoint& r_from, MCPoint& r_to)
+{
+    MCPoint t_from, t_to;
+    if (!ctxt . EvalExprAsPoint(from, EE_PRINT_CANTGETCOORD, t_from))
+        return false;
+
+    if (!ctxt . EvalExprAsPoint(to, EE_PRINT_CANTGETCOORD, t_to))
+        return false;
+
+    r_from = t_from;
+    r_to = t_to;
+
+    return true;
+}
+
+void MCPrint::exec_ctxt(MCExecContext &ctxt)
 {
 #ifdef /* MCPrint */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_PRINT)
@@ -624,4 +643,330 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 	
 	return t_exec_stat;
 #endif /* MCPrint */
+
+	if (mode == PM_ANCHOR)
+    {
+        MCAutoStringRef t_name;
+        if (!ctxt . EvalExprAsStringRef(from, EE_DO_BADEXP, &t_name))
+            return;
+		
+		MCPoint t_location;
+        if (!ctxt . EvalExprAsPoint(rect, EE_PRINTANCHOR_BADLOCATION, t_location))
+            return;
+
+		MCPrintingExecPrintAnchor(ctxt, *t_name, t_location);
+	}
+	else if (mode == PM_LINK || mode == PM_LINK_ANCHOR || mode == PM_LINK_URL)
+	{
+		MCPrinterLinkType t_type;
+		if (mode == PM_LINK_ANCHOR)
+			t_type = kMCPrinterLinkAnchor;
+		else if (mode == PM_LINK_URL)
+			t_type = kMCPrinterLinkURI;
+		else
+            t_type = kMCPrinterLinkUnspecified;
+
+		MCAutoStringRef t_target;
+        if (!ctxt . EvalExprAsStringRef(to, EE_PRINTLINK_BADDEST, &t_target))
+            return;
+
+		MCRectangle t_area;
+        if (!ctxt . EvalExprAsRectangle(rect, EE_PRINTLINK_BADAREA, t_area))
+            return;
+
+		MCPrintingExecPrintLink(ctxt, (int)t_type, *t_target, t_area);
+	}
+	else if (mode == PM_BOOKMARK || mode == PM_UNICODE_BOOKMARK)
+    {
+		MCAutoValueRef t_title;
+        if (mode != PM_UNICODE_BOOKMARK)
+        {
+            if (!ctxt . EvalExprAsStringRef(from, EE_PRINTBOOKMARK_BADTITLE, (MCStringRef&)&t_title))
+                return;
+        }
+        else
+        {
+            if (!ctxt . EvalExprAsDataRef(from, EE_PRINTBOOKMARK_BADTITLE, (MCDataRef&)&t_title))
+                return;
+        }
+
+		uint32_t t_level;
+        if (!ctxt . EvalOptionalExprAsUInt(to, 0, EE_PRINTBOOKMARK_BADLEVEL, t_level))
+            return;
+
+		MCPoint t_location;
+        t_location . x = t_location . y = 0;
+
+        MCPoint *t_location_ptr;
+        t_location_ptr = &t_location;
+        if (!ctxt . EvalOptionalExprAsPoint(rect, t_location_ptr, EE_PRINTBOOKMARK_BADAT, t_location_ptr))
+            return;
+
+		bool t_initially_closed;
+		t_initially_closed = false;
+		if (initial_state != nil)
+		{
+            MCAutoStringRef t_state;
+            if (!ctxt . EvalExprAsStringRef(initial_state, EE_PRINTBOOKMARK_BADINITIAL, &t_state))
+                return;
+
+            if (MCStringIsEqualToCString(*t_state, "closed", kMCCompareExact))
+				t_initially_closed = true;
+            else if (MCStringIsEqualToCString(*t_state, "open", kMCCompareExact))
+				t_initially_closed = false;
+			else
+			{
+                ctxt . LegacyThrow(EE_PRINTBOOKMARK_BADINITIAL);
+                return;
+			}
+		}
+		else
+			t_initially_closed = bookmark_closed;
+
+
+		if (mode != PM_UNICODE_BOOKMARK)
+            MCPrintingExecPrintBookmark(ctxt, (MCStringRef)*t_title, t_location, t_level, t_initially_closed);
+		else
+            MCPrintingExecPrintUnicodeBookmark(ctxt, (MCDataRef)*t_title, t_location, t_level, t_initially_closed);
+	}
+	else if (mode == PM_BREAK)
+	{
+		MCPrintingExecPrintBreak(ctxt);
+	}
+	else if (mode == PM_MARKED || mode == PM_ALL)
+	{
+		MCStack *t_stack;
+		t_stack = nil;
+		if (target != nil)
+		{
+			MCObject *optr;
+			uint32_t parid;
+            if (!target -> getobj(ctxt, optr, parid, True)
+                    || optr -> gettype() != CT_STACK)
+			{
+                ctxt . LegacyThrow(EE_PRINT_NOTARGET);
+                return;
+			}
+
+			t_stack = (MCStack *)optr;
+		}
+
+		MCPoint t_area_from, t_area_to;
+		if (from != nil &&
+                !evaluate_src_rect(ctxt, t_area_from, t_area_to))
+            return;
+
+		if (from == nil)
+			MCPrintingExecPrintAllCards(ctxt, t_stack, mode == PM_MARKED);
+		else
+			MCPrintingExecPrintRectOfAllCards(ctxt, t_stack, mode == PM_MARKED, t_area_from, t_area_to);
+	}
+	else if (mode == PM_CARD)
+	{
+		MCObject *t_object;
+		if (target != NULL)
+		{
+			uint32_t parid;
+            if (!target -> getobj(ctxt, t_object, parid, True))
+			{
+                ctxt . LegacyThrow(EE_PRINT_NOTARGET);
+                return;
+			}
+			if (t_object -> gettype() != CT_CARD && t_object -> gettype() != CT_STACK)
+			{
+                ctxt . LegacyThrow(EE_PRINT_NOTACARD);
+                return;
+			}
+		}
+		else
+			t_object = MCdefaultstackptr -> getcurcard();
+
+		MCPoint t_from, t_to;
+		if (from != nil &&
+                !evaluate_src_rect(ctxt, t_from, t_to))
+            return;
+
+		if (t_object -> gettype() == CT_STACK)
+		{
+			if (from == nil)
+				MCPrintingExecPrintAllCards(ctxt, (MCStack *)t_object, mode == PM_MARKED);
+			else
+				MCPrintingExecPrintRectOfAllCards(ctxt, (MCStack *)t_object, mode == PM_MARKED, t_from, t_to);
+		}
+		else if (rect == nil)
+		{
+			if (from == nil)
+				MCPrintingExecPrintCard(ctxt, (MCCard *)t_object);
+			else
+				MCPrintingExecPrintRectOfCard(ctxt, (MCCard *)t_object, t_from, t_to);
+		}
+		else
+		{
+            MCRectangle t_dst_area;
+            if (!ctxt . EvalExprAsRectangle(rect, EE_PRINT_CANTGETRECT, t_dst_area))
+                return;
+
+			if (from == nil)
+				MCPrintingExecPrintCardIntoRect(ctxt, (MCCard *)t_object, t_dst_area);
+			else
+				MCPrintingExecPrintRectOfCardIntoRect(ctxt, (MCCard *)t_object, t_from, t_to, t_dst_area);
+		}
+	}
+	else if (mode == PM_SOME)
+	{
+        integer_t t_count;
+        if (!ctxt . EvalExprAsInt(target, EE_PRINT_CANTGETCOUNT, t_count))
+            return;
+
+		MCPoint t_from, t_to;
+		if (from != nil &&
+            !evaluate_src_rect(ctxt, t_from, t_to))
+            return;
+
+		if (from == nil)
+			MCPrintingExecPrintSomeCards(ctxt, t_count);
+		else
+			MCPrintingExecPrintRectOfSomeCards(ctxt, t_count, t_from, t_to);
+    }
+}
+
+void MCPrint::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+	
+	if (mode == PM_ANCHOR)
+	{		
+		from -> compile(ctxt); // anchor name (string)
+		rect -> compile(ctxt); // anchor location (point)
+		
+		MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintAnchorMethodInfo);
+	}
+	else if (mode == PM_LINK || mode == PM_LINK_ANCHOR || mode == PM_LINK_URL)
+	{
+		MCPrinterLinkType t_type;
+		if (mode == PM_LINK_ANCHOR)
+			t_type = kMCPrinterLinkAnchor;
+		else if (mode == PM_LINK_URL)
+			t_type = kMCPrinterLinkURI;
+		else
+			t_type = kMCPrinterLinkUnspecified;
+		
+		MCSyntaxFactoryEvalConstantEnum(ctxt, kMCPrintingPrinterLinkTypeInfo, (int)t_type); // link type (MCPrinterLinkType)
+		
+		to -> compile(ctxt); // link target (string)
+		
+		rect -> compile(ctxt); // link area (rectangle)
+		
+		MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintLinkMethodInfo);
+	}
+	else if (mode == PM_BOOKMARK || mode == PM_UNICODE_BOOKMARK)
+	{
+		from -> compile(ctxt); // bookmark title (string)
+		
+		if (rect != nil)
+			rect -> compile(ctxt); // bookmark location (point)
+		else
+			MCSyntaxFactoryEvalConstantLegacyPoint(ctxt, MCPointMake(0, 0)); // bookmark location (point - 0,0)
+		
+		if (to != nil)
+			to -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantUInt(ctxt, 0);
+		
+		if (initial_state != nil)
+			initial_state -> compile(ctxt); // bookmark initial state (MCPrinterBookmarkInitialState)
+		else
+			MCSyntaxFactoryEvalConstantEnum(ctxt, kMCPrintingPrinterBookmarkInitialStateTypeInfo, bookmark_closed ? 1 : 0); // bookmark initial state 
+		
+		MCSyntaxFactoryExecMethod(ctxt, mode != PM_UNICODE_BOOKMARK ? kMCPrintingExecPrintNativeBookmarkMethodInfo : kMCPrintingExecPrintUnicodeBookmarkMethodInfo);
+	}
+	else if (mode == PM_BREAK)
+	{
+		MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintBreakMethodInfo);
+	}
+	else if (mode == PM_MARKED || mode == PM_ALL)
+	{
+		if (target != nil)
+			target -> compile_object_ptr(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+		
+		MCSyntaxFactoryEvalConstantBool(ctxt, mode == PM_MARKED);
+		
+		if (from != nil)
+		{
+			from -> compile(ctxt);
+			to -> compile(ctxt);
+			MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintRectOfAllCardsMethodInfo);
+		}
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintAllCardsMethodInfo);
+	}
+	else if (mode == PM_CARD)
+	{
+		if (target != nil)
+			target -> compile_object_ptr(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+		
+		if (rect == nil)
+		{
+			if (from != nil)
+			{
+				MCSyntaxFactoryEvalConstantBool(ctxt, mode == PM_MARKED);
+				from -> compile(ctxt);
+				to -> compile(ctxt);
+				
+				if (mode == PM_MARKED)
+					MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintRectOfAllCardsMethodInfo);
+				else
+				{
+					MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintRectOfAllCardsMethodInfo);
+					MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCPrintingExecPrintRectOfCardMethodInfo, 0, 2, 3);
+				}
+			}
+			else
+			{
+				MCSyntaxFactoryEvalConstantBool(ctxt, mode == PM_MARKED);
+				
+				if (mode == PM_MARKED)
+					MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintAllCardsMethodInfo);
+				else
+				{
+					MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintAllCardsMethodInfo);
+					MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCPrintingExecPrintCardMethodInfo, 0);
+				}
+			}
+		}
+		else
+		{
+			if (from != nil)
+			{
+				from -> compile(ctxt);
+				to -> compile(ctxt);
+			}
+			
+			rect -> compile(ctxt);
+			
+			if (from != nil)
+				MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintCardIntoRectMethodInfo);
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintRectOfCardIntoRectMethodInfo);
+		}
+	}
+	else if (mode == PM_SOME)
+	{
+		target -> compile(ctxt);
+		if (from != nil)
+		{
+			from -> compile(ctxt);
+			to -> compile(ctxt);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintRectOfSomeCardsMethodInfo);
+		}
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCPrintingExecPrintSomeCardsMethodInfo);
+	}
+	
+	MCSyntaxFactoryEndStatement(ctxt);
 }

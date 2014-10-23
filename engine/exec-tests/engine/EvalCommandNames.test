@@ -1,0 +1,5 @@
+setup
+test the commandNames is not empty
+test "ask" is among the lines of the commandNames
+test "put" is among the lines of the commandNames
+teardown

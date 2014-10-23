@@ -1,0 +1,11 @@
+setup
+   
+open file "test.tmp" for write
+
+close file "test.tmp"
+
+test there is a file "test.tmp"
+
+delete file "test.tmp"
+
+teardown

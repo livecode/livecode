@@ -1,0 +1,35 @@
+setup
+
+local tUrl = "http://ian.on-rev.com/logo.png"
+local tUrlstatus
+
+unload url tUrl
+
+local tCurrentTime
+put the seconds into tCurrentTime
+
+create field
+set the name of the last field to "log"
+put tUrl & return into field "log"
+
+load url tUrl
+repeat until urlStatus(tUrl) is among the items of "cached,error,timeout"
+	put urlStatus(tUrl) & return before field "log"
+	wait 1 second with messages
+	if the seconds > (tCurrentTime + 10) then
+		exit repeat
+	end if
+end repeat
+
+// test for timeout
+test (the seconds) < (tCurrentTime + 10)
+
+put the urlstatus of tUrl into tUrlstatus
+if tUrlstatus is "cached" then
+	test tUrl is among the lines of the cachedUrls
+end if
+
+unload url tUrl
+test tUrl is not among the lines of the cachedUrls
+
+teardown

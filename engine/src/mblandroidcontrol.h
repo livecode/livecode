@@ -21,15 +21,36 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCAndroidControl : public MCNativeControl
 {
+protected:
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
+
 public:
     MCAndroidControl(void);
     
     // overridden methods
     virtual bool Create(void);
     virtual void Delete(void);
+#ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty p_property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty p_property, MCExecPoint &ep);
-    virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters); 
+    virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters);
+#endif
+
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
+    
+    void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
+    void SetVisible(MCExecContext& ctxt, bool p_visible);
+    void SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha);
+    void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
+    
+    void GetRect(MCExecContext& ctxt, MCRectangle& r_rect);
+    void GetVisible(MCExecContext& ctxt, bool& r_visible);
+    void GetAlpha(MCExecContext& ctxt, uinteger_t& r_alpha);
+    void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
     
     // standard event handling methods
     void PostNotifyEvent(MCNameRef p_message);

@@ -1,0 +1,5 @@
+setup
+
+test toLower("aBcD") is "abcd"
+
+teardown

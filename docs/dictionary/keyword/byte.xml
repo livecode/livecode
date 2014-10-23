@@ -22,7 +22,9 @@
 		<introduced version="4.0">Added.</introduced>
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
-		
+		<changed version="7.0">7.0</changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
 	</history>
 
 	<objects>
@@ -32,16 +34,16 @@
 		<mac/>
 		<windows/>
 		<linux/>
-	  <ios/>
-    <android/>
-  </platforms>
+		<ios/>
+		<android/>
+	</platforms>
 
 	<classes>
 		<desktop/>
 		<server/>
 		<web/>
-	  <mobile/>
-  </classes>
+		<mobile/>
+	</classes>
 
 	<security>
 	</security>
@@ -55,6 +57,10 @@
 		<keyword tag="character">character Keyword</keyword>
 		<keyword tag="characters">characters Keyword</keyword>
 		<keyword tag="bytes">bytes Keyword</keyword>
+		<keyword tag="codepoint">codepoint Keyword</keyword>
+		<keyword tag="codepoints">codepoints Keyword</keyword>
+		<keyword tag="codeunit">codeunit Keyword</keyword>
+		<keyword tag="codeunits">codeunits Keyword</keyword>
 	</references>
 
 	<description>
@@ -64,6 +70,6 @@
 		</parameters>
 
 	<value></value>
-	<comments>A byte is a single letter, digit, punctuation mark, or control character. Spaces, tabs, and returns are all characters.<p></p><p></p><note>At present the <b>byte</b> chunk is identical in functionality to the <keyword tag="character">character</keyword> chunk. However, it should be used when strings containing binary data are being manipulated to ensure future efficiency: the expression <code><i>byte &lt;index&gt; of &lt;expr&gt;</i></code> will continue to remain constant time assuming &lt;expr&gt; is a binary string in the future (the same cannot be said of the 'char' chunk).</note></p></comments>
+	<comments>A byte is an 8-bit unit and can only be reliably used with binary data.<p></p><p>The hierarchy of the new and altered chunk types is as follows:</p><p></p><p>byte w of codeunit x of codepoint y of char z of word ...</p><p></p><p><note> In versions prior to 7.0 the byte chunk was identical in functionality to the character chunk. For backwards compatibility the byte chunk returns the corresponding native character from Unicode text, or a "?" if nor reperesentable, but this behavior is deprecated and should not be used in new code.</note></comments>
 	</description>
 </doc>

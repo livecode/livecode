@@ -1,0 +1,1 @@
+# Export snaphot crashes LiveCode when it should return empty rect error 

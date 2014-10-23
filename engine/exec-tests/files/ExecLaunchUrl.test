@@ -1,0 +1,24 @@
+setup
+   
+local tUrl
+
+put specialFolderPath("Desktop") & "test.txt" into tUrl
+
+open file tUrl for write
+close file tUrl
+
+if taskList contains "notepad.exe" then
+	get shell("taskkill /IM notepad.exe")
+end if
+
+launch url "file:" & tUrl
+
+put shell("tasklist /V") into taskList
+
+test taskList contains "notepad.exe"
+
+get shell("taskkill /IM notepad.exe")
+
+delete file tUrl
+
+teardown

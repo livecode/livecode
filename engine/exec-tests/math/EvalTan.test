@@ -1,0 +1,11 @@
+setup
+
+test tan(pi / 4) is 1
+test tan(0) is 0
+test tan(-pi / 4) is -1
+
+//repeat with i = -44 to 44
+//	test atan(tan(i / (2*pi))) is i / (2*pi)
+//end repeat
+
+teardown

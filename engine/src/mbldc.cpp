@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "notify.h"
 
 #include "mbldc.h"
-#include "core.h"
 
 #include "resolution.h"
 
@@ -410,7 +409,7 @@ void MCScreenDC::raisewindow(Window p_window)
 	open_window(p_window);
 }
 
-void MCScreenDC::setname(Window p_window, const char *p_new_name)
+void MCScreenDC::setname(Window p_window, MCStringRef p_new_name)
 {
 }
 
@@ -790,17 +789,20 @@ Boolean MCScreenDC::istripleclick()
 	return False;
 }
 
-void MCScreenDC::getkeysdown(MCExecPoint &ep)
+bool MCScreenDC::getkeysdown(MCListRef& r_list)
 {
+	r_list = MCValueRetain(kMCEmptyList);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint1 MCScreenDC::fontnametocharset(const char *oldfontname)
+uint1 MCScreenDC::fontnametocharset(MCStringRef p_fontname)
 {
 	return 0;
 }
 
+/*
 char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 {
 	const char *t_charset;
@@ -814,6 +816,7 @@ char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 	}
 	return strclone(oldfontname);
 }
+*/
 
 void MCScreenDC::clearIME(Window w)
 {
@@ -837,8 +840,8 @@ protected:
 	void DoInitialize(void) { }
 	void DoFinalize(void) { }
 	
-	bool DoReset(const char *name) { return false; }
-	bool DoResetSettings(const MCString& settings) { return false; }
+	bool DoReset(MCStringRef name) { return false; }
+	bool DoResetSettings(MCDataRef settings) { return false; }
 	void DoResync(void) {}
 	
 	const char *DoFetchName(void) { return NULL; }
@@ -846,7 +849,7 @@ protected:
 	
 	MCPrinterDialogResult DoPrinterSetup(bool p_window_modal, Window p_owner)  { return PRINTER_DIALOG_RESULT_ERROR; }
 	MCPrinterDialogResult DoPageSetup(bool p_window_modal, Window p_owner) { return PRINTER_DIALOG_RESULT_ERROR; }
-	MCPrinterResult DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device) { return PRINTER_RESULT_ERROR; }
+	MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device) { return PRINTER_RESULT_ERROR; }
 	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device) { return PRINTER_RESULT_ERROR; }
 };
 
@@ -855,9 +858,11 @@ MCPrinter *MCScreenDC::createprinter(void)
 	return new MCDummyPrinter;
 }
 
+#ifdef LEGACY_EXEC
 void MCScreenDC::listprinters(MCExecPoint& ep)
 {
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -907,7 +912,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
+MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 {
 	return NULL;
 }

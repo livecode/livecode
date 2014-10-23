@@ -1,0 +1,19 @@
+setup
+local tProc
+if the platform is "win32" then
+	put "cmd.exe /C dir" into tProc
+else
+	put "ls -l" into tProc
+end if
+
+open process tProc
+
+test the openProcessIds is not empty
+
+repeat for each line tProcId in the openProcessIds
+	test tProcId is a number
+end repeat
+
+close process tProc
+
+teardown

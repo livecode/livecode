@@ -498,9 +498,11 @@ static void effectrect_phase_3(void *p_context)
 	}
 	
 	// MW-2011-01-05: Add support for 'sound'.
-	extern bool MCSystemPlaySound(const char *, bool);
+	extern bool MCSystemPlaySound(MCStringRef, bool);
 	if (ctxt -> effect -> sound != nil)
-		MCSystemPlaySound(ctxt -> effect -> sound, false);
+	{
+		MCSystemPlaySound(ctxt->effect->sound, false);
+	}
 }
 
 static void effectrect_phase_4(void *p_context)

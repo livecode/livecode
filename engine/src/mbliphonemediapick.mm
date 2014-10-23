@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 
 #import <UIKit/UIKit.h>
@@ -139,35 +138,33 @@ bool MCIPhonePickMedia(bool p_allow_multiple_items, MPMediaType p_media_types, N
 	return ES_NORMAL;
 }
 
-bool MCSystemPickMedia(MCMediaType *p_media_type, const char *&r_result, bool p_multiple)
+bool MCSystemPickMedia(MCMediaType p_media_type, bool p_multiple, MCStringRef& r_result)
 {
-	bool t_success;
 	char *t_option_list;
 	MPMediaType t_media_types;
 	NSString *r_return_media_types;
 	
-	t_success = true;
 	t_media_types = 0;
 	
 	t_option_list = nil;
 	
 	// Get the options list.
-    if (*p_media_type == kMCsongs) // music
+    if (p_media_type & kMCMediaTypeSongs) // music
         t_media_types += MPMediaTypeMusic;
-    if (*p_media_type == kMCpodcasts) // podCast
+    if (p_media_type & kMCMediaTypePodcasts) // podCast
 		t_media_types += MPMediaTypePodcast;
-	if (*p_media_type == kMCaudiobooks) // audioBook
+	if (p_media_type & kMCMediaTypeAudiobooks) // audioBook
 		t_media_types += MPMediaTypeAudioBook;
 #ifdef __IPHONE_5_0
 	if (MCmajorosversion >= 500)
 	{
-		if (*p_media_type == kMCmovies) // movie
+		if (p_media_type & kMCMediaTypeMovies) // movie
 			t_media_types += MPMediaTypeMovie;
-		if (*p_media_type == kMCtv) // tv
+		if (p_media_type & kMCMediaTypeTv) // tv
 			t_media_types += MPMediaTypeTVShow;
-		if (*p_media_type == kMCvideopodcasts) // videoPodcast
+		if (p_media_type & kMCMediaTypeVideoPodcasts) // videoPodcast
 			t_media_types += MPMediaTypeVideoPodcast;
-		if (*p_media_type == kMCmusicvideos) // musicVideo videoITunesU
+		if (p_media_type & kMCMediaTypeMusicVideos) // musicVideo videoITunesU
         {
             t_media_types += MPMediaTypeMusicVideo;
 			t_media_types += MPMediaTypeVideoITunesU;
@@ -183,13 +180,10 @@ bool MCSystemPickMedia(MCMediaType *p_media_type, const char *&r_result, bool p_
 #endif		
 	}
 	// Call MCIPhonePickMedia to process the media pick selection. 
-	t_success = MCIPhonePickMedia(p_multiple, t_media_types, r_return_media_types);
-	
-	if (t_success && r_return_media_types != nil)
-		r_result = [r_return_media_types cStringUsingEncoding:NSMacOSRomanStringEncoding];
-    else
-        r_result = nil;
-	return t_success;
+	if (MCIPhonePickMedia(p_multiple, t_media_types, r_return_media_types) && r_return_media_types != nil)
+		return MCStringCreateWithCFString((CFStringRef)r_return_media_types, r_result);
+
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 
 #include "date.h"
@@ -220,7 +219,7 @@ UIViewController *MCIPhoneGetViewController(void);
 		[popoverController presentPopoverFromRect:MCUserRectToLogicalCGRect(p_button_rect)
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
-										 animated:YES];
+                                         animated:YES];
 	}
 	else
 	{
@@ -579,7 +578,7 @@ static void pickdate_postwait(void *p_context)
 
 bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(nil, nil, nil);
     
     // Get the display style
     NSString *t_style;
@@ -591,9 +590,12 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         r_current = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_current))
+        MCAutoValueRef t_date;
+		if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_date))
             return false;
-        r_current = ep.getnvalue();
+		
+		if (!ctxt.ConvertToInteger(*t_date, r_current))
+			return false;
     }
 
     // Convert the min datatime to seconds
@@ -602,9 +604,12 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         t_min = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_min))
+        MCAutoValueRef t_min_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
             return false;
-        t_min = ep.getnvalue();
+		
+		if (!ctxt.ConvertToInteger(*t_min_val, t_min))
+			return false;
     }
     
     // Convert the max datatime to seconds
@@ -613,37 +618,43 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         t_max = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_max))
+		MCAutoValueRef t_max_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
             return false;
-        t_max = ep.getnvalue();
+        
+		if (!ctxt.ConvertToInteger(*t_max_val, t_max))
+			return false;
     } 
 
-	datepicker_t ctxt;
-	ctxt . style = t_style;
-	ctxt . current = r_current;
-	ctxt . min = t_min;
-	ctxt . max = t_max;
-	ctxt . step = 0;
-	ctxt . use_cancel = p_use_cancel;
-	ctxt . use_done = p_use_done;
-	ctxt . button_rect = p_button_rect;
+	datepicker_t date_ctxt;
+	date_ctxt . style = t_style;
+	date_ctxt . current = r_current;
+	date_ctxt . min = t_min;
+	date_ctxt . max = t_max;
+	date_ctxt . step = 0;
+	date_ctxt . use_cancel = p_use_cancel;
+	date_ctxt . use_done = p_use_done;
+	date_ctxt . button_rect = p_button_rect;
 	
 	// call the date picker with the label and options list
-	MCIPhoneRunOnMainFiber(pickdate_prewait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_prewait, &date_ctxt);
 	
 	// block until actionSheet releases the date pick wheel
-	while([ctxt . picker running])
+	while([date_ctxt . picker running])
 		MCscreen -> wait(60.0, False, True);
 	
-	MCIPhoneRunOnMainFiber(pickdate_postwait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_postwait, &date_ctxt);
 	
     // MM-2012-10-24: [[ Bug 10494 ]] Make sure we check to see if the picker has been cancelled.
-    r_canceled = ctxt . cancelled;
+    r_canceled = date_ctxt . cancelled;
     if (!r_canceled)
     {
         // Convert the seconds to date time
-        ep.setnvalue(ctxt . current);
-        if (!MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, *r_result))
+		MCAutoNumberRef t_secs;
+		if (!MCNumberCreateWithInteger(date_ctxt.current, &t_secs))
+			return false;
+        
+        if (!MCD_convert_to_datetime(ctxt, *t_secs, CF_SECONDS, CF_SECONDS, *r_result))
             return false;
     }
     return true;
@@ -651,7 +662,7 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
 
 bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(nil, nil, nil);
 
     NSString *t_style;
     t_style = [NSString stringWithCString: "time" encoding: NSMacOSRomanStringEncoding];
@@ -662,9 +673,12 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         r_current = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_current))
+        MCAutoValueRef t_current;
+		if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_current))
             return false;
-        r_current = ep.getnvalue();
+        
+		if (!ctxt.ConvertToInteger(*t_current, r_current))
+			return false;
     }
     
     // Convert the min datatime to seconds
@@ -673,9 +687,12 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         t_min = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_min))
-            return false;
-        t_min = ep.getnvalue();
+        MCAutoValueRef t_min_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
+			return false;
+		
+		if (!ctxt.ConvertToInteger(*t_min_val, t_min))
+			return false;
     }
     
     // Convert the max datatime to seconds
@@ -684,45 +701,51 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
         t_max = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_max))
-            return false;
-        t_max = ep.getnvalue();
+        MCAutoValueRef t_max_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
+			return false;
+		
+		if (!ctxt.ConvertToInteger(*t_max_val, t_max))
+			return false;
     } 
     
-	datepicker_t ctxt;
-	ctxt . style = t_style;
-	ctxt . current = r_current;
-	ctxt . min = t_min;
-	ctxt . max = t_max;
-	ctxt . step = p_step;
-	ctxt . use_cancel = p_use_cancel;
-	ctxt . use_done = p_use_done;
-	ctxt . button_rect = p_button_rect;
+	datepicker_t date_ctxt;
+	date_ctxt . style = t_style;
+	date_ctxt . current = r_current;
+	date_ctxt . min = t_min;
+	date_ctxt . max = t_max;
+	date_ctxt . step = p_step;
+	date_ctxt . use_cancel = p_use_cancel;
+	date_ctxt . use_done = p_use_done;
+	date_ctxt . button_rect = p_button_rect;
 	
 	// call the date picker with the label and options list
-	MCIPhoneRunOnMainFiber(pickdate_prewait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_prewait, &date_ctxt);
 	
 	// block until actionSheet releases the date pick wheel
-	while([ctxt . picker running])
+	while([date_ctxt . picker running])
 		MCscreen -> wait(60.0, False, True);
 	
-	MCIPhoneRunOnMainFiber(pickdate_postwait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_postwait, &date_ctxt);
 	
     // MM-2012-10-24: [[ Bug 10494 ]] Make sure we check to see if the picker has been cancelled.
-    r_canceled = ctxt . cancelled;    
+    r_canceled = date_ctxt . cancelled;    
     if (!r_canceled)
     {
         // Convert the seconds to date time
-        ep.setnvalue(ctxt . current);
-        if (!MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, *r_result))
-            return false;
+		MCAutoNumberRef t_number;
+		if (!MCNumberCreateWithInteger(date_ctxt.current, &t_number))
+			return false;
+		
+		if (!MCD_convert_to_datetime(ctxt, *t_number, CF_SECONDS, CF_SECONDS, *r_result))
+			return false;
     }
 	return true;
 }
 
 bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect)
 {
-	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(nil, nil, nil);
 
     NSString *t_style;
     t_style = [NSString stringWithCString: "dateTime" encoding: NSMacOSRomanStringEncoding];
@@ -733,9 +756,12 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
         r_current = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_current))
+        MCAutoValueRef t_current;
+		if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_current))
             return false;
-        r_current = ep.getnvalue();
+        
+		if (!ctxt.ConvertToInteger(*t_current, r_current))
+			return false;
     }
     
     // Convert the min datatime to seconds
@@ -744,9 +770,12 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
         t_min = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_min))
-            return false;
-        t_min = ep.getnvalue();
+        MCAutoValueRef t_min_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
+			return false;
+		
+		if (!ctxt.ConvertToInteger(*t_min_val, t_min))
+			return false;
     }
     
     // Convert the max datatime to seconds
@@ -755,38 +784,44 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
         t_max = 0;
     else
     {
-        if (!MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, *p_max))
-            return false;
-        t_max = ep.getnvalue();
+        MCAutoValueRef t_max_val;
+		if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
+			return false;
+		
+		if (!ctxt.ConvertToInteger(*t_max_val, t_max))
+			return false;
     } 
     
-	datepicker_t ctxt;
-	ctxt . style = t_style;
-	ctxt . current = r_current;
-	ctxt . min = t_min;
-	ctxt . max = t_max;
-	ctxt . step = p_step;
-	ctxt . use_cancel = p_use_cancel;
-	ctxt . use_done = p_use_done;
-	ctxt . button_rect = p_button_rect;
+	datepicker_t date_ctxt;
+	date_ctxt . style = t_style;
+	date_ctxt . current = r_current;
+	date_ctxt . min = t_min;
+	date_ctxt . max = t_max;
+	date_ctxt . step = p_step;
+	date_ctxt . use_cancel = p_use_cancel;
+	date_ctxt . use_done = p_use_done;
+	date_ctxt . button_rect = p_button_rect;
 	
 	// call the date picker with the label and options list
-	MCIPhoneRunOnMainFiber(pickdate_prewait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_prewait, &date_ctxt);
 	
 	// block until actionSheet releases the date pick wheel
-	while([ctxt . picker running])
+	while([date_ctxt . picker running])
 		MCscreen -> wait(60.0, False, True);
 	
-	MCIPhoneRunOnMainFiber(pickdate_postwait, &ctxt);
+	MCIPhoneRunOnMainFiber(pickdate_postwait, &date_ctxt);
 	
     // MM-2012-10-24: [[ Bug 10494 ]] Make sure we check to see if the picker has been cancelled.
-    r_canceled = ctxt . cancelled;
+    r_canceled = date_ctxt . cancelled;
     if (!r_canceled)
     {
         // Convert the seconds to date time
-        ep.setnvalue(ctxt . current);
-        if (!MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, *r_result))
-            return false;
+		MCAutoNumberRef t_number;
+		if (!MCNumberCreateWithInteger(date_ctxt.current, &t_number))
+			return false;
+		
+		if (!MCD_convert_to_datetime(ctxt, *t_number, CF_SECONDS, CF_SECONDS, *r_result))
+			return false;
     }
 	return true;
 }

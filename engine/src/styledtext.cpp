@@ -23,11 +23,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "stack.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "line.h"
 #include "field.h"
 #include "paragraf.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "styledtext.h"
 
@@ -121,7 +121,7 @@ IO_stat MCStyledText::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCStyledText::load(IO_handle p_stream, const char *p_version)
+IO_stat MCStyledText::load(IO_handle p_stream, uint32_t p_version)
 {
 	IO_stat stat;
 	MCParagraph *paragraphs = NULL;

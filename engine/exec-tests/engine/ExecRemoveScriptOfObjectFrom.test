@@ -1,0 +1,31 @@
+setup
+
+set the failed of this stack to false
+
+create button
+
+set the script of button 1 to "command foo;set the failed of this stack to false;end foo"
+
+create button
+
+set the script of button 2 to "command foo;set the failed of this stack to true;end foo"
+
+insert the script of button 1 into back
+
+insert the script of button 1 into front 
+ 
+insert the script of button 2 into back
+
+insert the script of button 2 into back
+
+foo
+
+remove the script of button 2 from back
+
+remove the script of button 2 from front
+
+foo
+
+test (not the failed of this stack) 
+
+teardown
