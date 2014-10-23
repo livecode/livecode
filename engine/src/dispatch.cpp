@@ -786,15 +786,20 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
                 t_stat = sp . next(t_type);
                 if (t_stat == PS_EOL || t_stat == PS_EOF)
                 {
+                    // MW-2014-10-23: [[ Bug ]] Make sure we trim the correct number of lines.
                     // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
                     // Now trim the ep down to the remainder of the script.
                     // Trim the header.
-                    uint32_t t_lines = MCMin(0, (uint32_t)sp.getline() - 1);
+                    uint32_t t_lines = sp.getline();
                     uint32_t t_index = 0;
 
                     // Jump over the possible lines before the string token
-                    while (t_lines-- && MCStringFirstIndexOfChar(*t_LC_script_string, '\n', t_index, kMCStringOptionCompareExact, t_index))
-                        ;
+                    while (MCStringFirstIndexOfChar(*t_LC_script_string, '\n', t_index, kMCStringOptionCompareExact, t_index) &&
+                           t_lines > 0)
+                        t_lines -= 1;
+                    
+                    // Add one to the index so we include the LF
+                    t_index += 1;
 
                     // t_line now has the last LineFeed of the token
                     MCAutoStringRef t_LC_script_body;
@@ -1051,12 +1056,13 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
     MCAutoStringRef linkname;
     if (!MCStringIsEmpty(p_fname))
         linkname = p_fname;
-	else
-        if (!MCStringCopy(p_fname, &linkname))
-		{
-			MCresult->sets("stack does not have a filename");
-			return IO_ERROR;
-		}
+	else if (!MCStringIsEmpty(sptr -> getfilename()))
+		linkname = sptr -> getfilename();
+    else
+    {
+        MCresult->sets("stack does not have a filename");
+        return IO_ERROR;
+    }
 
     if (*linkname == NULL)
 	{
@@ -1076,10 +1082,11 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
     MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
 
     // Convert line endings - but only if the native line ending isn't CR!
-#ifndef __CR__
     MCAutoStringRef t_converted;
+#ifndef __CR__
     MCStringConvertLineEndingsToLiveCodeAndRelease(*t_script_body, &t_converted);
-    t_script_body = *t_converted;
+#else
+    t_converted = *t_script_body;
 #endif
     
     // Open the output stream.
@@ -1092,7 +1099,7 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
 
     // Convert the output string to UTF-8
     MCAutoStringRefAsUTF8String t_utf8_script;
-    t_utf8_script .Lock(*t_script_body);
+    t_utf8_script .Lock(*t_converted);
 
     // Write out the byte-order mark, followed by the script body.
     if (IO_write("\xEF\xBB\xBF", 1, 3, stream) != IO_NORMAL ||
