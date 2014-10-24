@@ -396,5 +396,7 @@ void MCR_clearcache()
 	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
 	{
 		MCR_free(MCregexcache[i]);
+        // PM-2014-10-02: [[ Bug 11647 ]] Make sure we clear old data to prevent a crash when restarting the app
+        MCregexcache[i] = nil;
 	}
 }
