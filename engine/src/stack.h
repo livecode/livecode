@@ -545,6 +545,8 @@ public:
 	void loadwindowshape();
 	void setidlefunc(void (*newfunc)());
 	Boolean setscript(MCStringRef newscript);
+    // MW-2014-10-24: [[ Bug 13796 ]] Separate script setting from commandline from other cases.
+	Boolean setscript_from_commandline(MCStringRef newscript);
 	void checkdestroy();
 	IO_stat print(Print_mode mode, uint2 num, MCCard *card,
 	              const MCRectangle *srect, const MCRectangle *drect);
