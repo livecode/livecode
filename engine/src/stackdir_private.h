@@ -52,14 +52,22 @@ struct _MCStackdirIO
 
 	/* Path of the root of the expanded stack directory tree */
 	MCStringRef m_path;
+
+	/* ---- Save only members */
 	/* Root of the root of the save transaction directory tree */
-	MCStringRef m_save_path;
-
-	/* Stack state arrays */
+	MCStringRef m_save_build_dir;
+	/* Temporary directory for backup during transaction end */
+	MCStringRef m_save_backup_dir;
+	/* Location of original data during transaction end */
+	MCStringRef m_save_backup_path;
+	/* Stack state array */
 	MCArrayRef m_save_state;
-	MCArrayRef m_load_state;
-	MCArrayRef m_load_state_theirs;
 
+	/* ---- Load only members */
+	/* Stack state */
+	MCArrayRef m_load_state;
+	/* Alternative stack state in case of VCS conflict */
+	MCArrayRef m_load_state_theirs;
 	/* Source location information from load operation */
 	MCArrayRef m_source_info;
 };
@@ -81,7 +89,7 @@ bool MCStackdirIONew (MCStackdirIORef &op);
 /* Contents of version file */
 /* FIXME Version info should be separated out.  Also, this should
  * probably be an MCStringRef. */
-#define kMCStackdirMagicString MCSTR("Expanded LiveCode Stackfile 1.0.0")
+#define kMCStackdirMagicString MCSTR("Expanded LiveCode Stackfile 1.0.0\n")
 
 /* ----------------------------------------------------------------
  * [Private] Indirect implementations of public functions
