@@ -200,6 +200,23 @@ MCStackdirIODestroy (MCStackdirIORef & op)
 }
 
 /* ----------------------------------------------------------------
+ * [Public] Set and restore target path
+ * ---------------------------------------------------------------- */
+
+bool
+MCStackdirIOSetPath (MCStackdirIORef op, MCStringRef p_path)
+{
+	MCAssert (op != nil);
+	return MCStringCopy (p_path, op->m_path);
+}
+
+void
+MCStackdirIOGetPath (MCStackdirIORef op, MCStringRef & r_path)
+{
+	r_path = MCValueRetain (op->m_path);
+}
+
+/* ----------------------------------------------------------------
  * [Public] Run IO operation
  * ---------------------------------------------------------------- */
 

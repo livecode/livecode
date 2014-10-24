@@ -56,7 +56,7 @@ typedef MCStackdirIO *MCStackdirIORef;
  *
  * p_path must be an standard (non-native) path.
  */
-void MCStackdirIOSetPath (MCStackdirIORef op, MCStringRef p_path);
+bool MCStackdirIOSetPath (MCStackdirIORef op, MCStringRef p_path);
 
 /* Retrieve the path of the expanded stackfile.
  *
