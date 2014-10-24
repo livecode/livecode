@@ -1076,18 +1076,24 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
 	}
     
     // Compute the body of the script file.
-    MCAutoStringRef t_script_body;
+	MCAutoStringRef t_converted;
 
-    // Write out the standard script stack header, and then the script itself
-    MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+	// MW-2014-10-24: [[ Bug 13791 ]] We need to post-process the generated string on some
+	//   platforms for line-ending conversion so temporarily need a stringref - hence we
+	//   put the processing in its own block.
+	{
+		MCAutoStringRef t_script_body;
 
-    // Convert line endings - but only if the native line ending isn't CR!
-    MCAutoStringRef t_converted;
+		// Write out the standard script stack header, and then the script itself
+		MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+
+		// Convert line endings - but only if the native line ending isn't CR!
 #ifndef __CR__
-    MCStringConvertLineEndingsToLiveCodeAndRelease(*t_script_body, &t_converted);
+		MCStringConvertLineEndingsToLiveCode(*t_script_body, &t_converted);
 #else
-    t_converted = *t_script_body;
+		t_converted = *t_script_body;
 #endif
+	}
     
     // Open the output stream.
 	IO_handle stream;
