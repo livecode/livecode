@@ -1523,8 +1523,9 @@ void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef
         return;
     }
     
+    // MW-2014-10-24: [[ Bug 13787 ]] Make sure we calculate the correct range.
     MCRange t_range;
-    t_range = MCRangeMake(0, t_self_length);
+    t_range = MCRangeMake(MCStringGetLength(p_whole) - t_self_length, t_self_length);
     
     r_result = MCStringsCheckGraphemeBoundaries(p_whole, t_range);
 }
