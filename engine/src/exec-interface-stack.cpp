@@ -1767,18 +1767,8 @@ void MCStack::SetWindowShape(MCExecContext& ctxt, uinteger_t p_shape)
 			t_image = resolveimageid(windowshapeid);
 			if (t_image != NULL)
 			{
-				MCWindowShape *t_new_mask;
-				setextendedstate(True, ECS_MASK_CHANGED);
-				t_image -> setflag(True, F_I_ALWAYS_BUFFER);
-				t_image -> open();
-				t_new_mask = t_image -> makewindowshape();
-				t_image -> close();
-                // MW-2014-06-11: [[ Bug 12495 ]] Refactored action as different whether using platform API or not.
-                // MW-2014-07-29: [[ Bug 12997 ]] Merge error - refactored code from 6.7 not integrated.
-                if (t_new_mask != NULL)
-                    updatewindowshape(t_new_mask);
-                
-                // Update window mask immediately changes things so no need to reopenwindow.
+                // IM-2014-10-22: [[ Bug 13746 ]] use common loadwindowshape() method
+                loadwindowshape();
                 return;
 			}
 		}

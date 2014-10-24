@@ -601,7 +601,7 @@ Boolean MCS_unlink(MCStringRef p_path)
     if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
         return False;
 	
-	return MCsystem -> DeleteFile(*t_resolved_path);
+	return MCsystem -> DeleteFile(*t_native_path);
 }
 
 Boolean MCS_backup(MCStringRef p_old_name, MCStringRef p_new_name)

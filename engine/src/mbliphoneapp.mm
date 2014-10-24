@@ -28,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphoneview.h"
 
 #include "mblnotification.h"
+#import <sys/utsname.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -204,6 +205,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	m_in_orientation_changed = false;
 	
 	m_keyboard_activation_pending = false;
+    m_keyboard_is_visible = false;
 	
     m_pending_push_notification = nil;
     m_pending_local_notification = nil;
@@ -693,6 +695,14 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(keyboardWillDeactivate:)
 												 name: UIKeyboardWillHideNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardDidActivate:)
+                                                 name: UIKeyboardDidShowNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardDidDeactivate:)
+                                                 name: UIKeyboardDidHideNotification object:nil];
 	
 	// Swap over the controllers.
 	[m_window setRootViewController: m_main_controller];
@@ -805,6 +815,20 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	MCIPhoneHandleKeyboardWillDeactivate();
 }
 
+- (void)keyboardDidActivate:(NSNotification *)notification
+{
+    m_keyboard_is_visible = true;
+}
+
+- (void)keyboardDidDeactivate:(NSNotification *)notification
+{
+    m_keyboard_is_visible = false;
+}
+
+- (BOOL)isKeyboardVisible
+{
+    return m_keyboard_is_visible;
+}
 //////////
 
 - (void)switchToStatusBarStyle: (UIStatusBarStyle)p_new_style
@@ -886,6 +910,15 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 - (UIViewController *)fetchMainViewController
 {
 	return m_main_controller;
+}
+
+// MM-2014-10-15: [[ Bug 13665 ]] Returns the currently active view controller.
+- (UIViewController *)fetchCurrentViewController
+{
+    if (m_status == kMCIPhoneApplicationStatusStartup || m_status == kMCIPhoneApplicationStatusPrepare)
+        return m_startup_controller;
+    else
+        return m_main_controller;
 }
 
 - (MCStringRef)fetchDeviceToken
@@ -1751,6 +1784,75 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// PM-2014-10-22: [[ Bug 13750 ]] Utility method to determine the exact device model. If on simulator, it returns "i386" or "x86_64"
+NSString* MCIPhoneGetDeviceModelName(void)
+{
+    struct utsname t_system_info;
+    uname(&t_system_info);
+    
+    NSString *t_machine_name = [NSString stringWithCString:t_system_info.machine encoding:NSUTF8StringEncoding];
+    
+    // MARK: We can just return t_machine_name. Following is for convenience
+    // Full list at http://theiphonewiki.com/wiki/Models
+    
+	NSDictionary *commonNamesDictionary = [NSDictionary dictionaryWithObjectsAndKeys:
+										   @"iPhone",       @"iPhone1,1",
+										   @"iPhone 3G",    @"iPhone1,2",
+										   @"iPhone 3GS",   @"iPhone2,1",
+                                           @"iPhone 4",     @"iPhone3,1",
+										   
+										   @"iPhone 4(Rev A)",      @"iPhone3,2",
+										   @"iPhone 4(CDMA)",       @"iPhone3,3",
+										   @"iPhone 4S",            @"iPhone4,1",
+										   @"iPhone 5(GSM)",        @"iPhone5,1",
+										   @"iPhone 5(GSM+CDMA)",   @"iPhone5,2",
+										   @"iPhone 5c(GSM)",       @"iPhone5,3",
+										   @"iPhone 5c(GSM+CDMA)",  @"iPhone5,4",
+										   @"iPhone 5s(GSM)",       @"iPhone6,1",
+                                           @"iPhone 5s(GSM+CDMA)",  @"iPhone6,2",
+										   
+										   @"iPhone 6+ (GSM+CDMA)", @"iPhone7,1",
+                                           @"iPhone 6 (GSM+CDMA)",  @"iPhone7,2",
+										   
+                                           @"iPad",                     @"iPad1,1",
+                                           @"iPad 2(WiFi)",             @"iPad2,1",
+                                           @"iPad 2(GSM)",              @"iPad2,2",
+										   @"iPad 2(CDMA)",             @"iPad2,3",
+										   @"iPad 2(WiFi Rev A)",       @"iPad2,4",
+										   @"iPad Mini 1G (WiFi)",      @"iPad2,5",
+										   @"iPad Mini 1G (GSM)",       @"iPad2,6",
+										   @"iPad Mini 1G (GSM+CDMA)",  @"iPad2,7",
+                                           @"iPad 3(WiFi)",             @"iPad3,1",
+										   @"iPad 3(GSM+CDMA)",         @"iPad3,2",
+										   @"iPad 3(GSM)",              @"iPad3,3",
+										   @"iPad 4(WiFi)",             @"iPad3,4",
+                                           @"iPad 4(GSM)",              @"iPad3,5",
+										   @"iPad 4(GSM+CDMA)",         @"iPad3,6",
+                                        
+                                           @"iPad Air(WiFi)",        @"iPad4,1",
+                                           @"iPad Air(GSM)",         @"iPad4,2",
+                                           @"iPad Air(GSM+CDMA)",    @"iPad4,3",
+										   
+                                           @"iPad Mini 2G (WiFi)",       @"iPad4,4",
+                                           @"iPad Mini 2G (GSM)",        @"iPad4,5",
+                                           @"iPad Mini 2G (GSM+CDMA)",   @"iPad4,6",
+										   
+                                           @"iPod 1st Gen",         @"iPod1,1",
+                                           @"iPod 2nd Gen",         @"iPod2,1",
+                                           @"iPod 3rd Gen",         @"iPod3,1",
+										   @"iPod 4th Gen",         @"iPod4,1",
+                                           @"iPod 5th Gen",         @"iPod5,1",
+                                           nil];
+										   
+	
+	NSString *t_device_name = [commonNamesDictionary objectForKey: t_machine_name];
+    
+    if (t_device_name == nil)
+        t_device_name = t_machine_name;
+    
+    return t_device_name;
+}
+
 MCIPhoneApplication *MCIPhoneGetApplication(void)
 {
 	return [MCIPhoneApplication sharedApplication];
@@ -1786,9 +1888,11 @@ UIView *MCIPhoneGetDisplayView(void)
 	return [MCIPhoneGetRootView() displayView];
 }
 
+// MM-2014-10-15: [[ Bug 13665 ]] Return the topmost view controller. This is not necessarily always the main view controller,
+//   could be the startup view controller. Was causing issues when presenting dialogs on startup.
 UIViewController *MCIPhoneGetViewController(void)
 {
-	return [[MCIPhoneApplication sharedApplication] fetchMainViewController];
+    return [[MCIPhoneApplication sharedApplication] fetchCurrentViewController];
 }
 
 void MCIPhoneSetKeyboardType(UIKeyboardType p_type)
@@ -1814,6 +1918,12 @@ void MCIPhoneActivateKeyboard(void)
 void MCIPhoneDeactivateKeyboard(void)
 {
 	[[MCIPhoneApplication sharedApplication] deactivateKeyboard];
+}
+
+// PM-2014-10-15: [[ Bug 13677 ]] Utility for checking if keyboard is currently on screen
+bool MCIPhoneIsKeyboardVisible(void)
+{
+    return [[MCIPhoneApplication sharedApplication] isKeyboardVisible];
 }
 
 UIInterfaceOrientation MCIPhoneGetOrientation(void)
