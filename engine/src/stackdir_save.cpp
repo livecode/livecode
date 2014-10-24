@@ -119,7 +119,8 @@ MCStackdirIORemoveFolderRecursive_Callback (void *p_context,
 	else
 	{
 		if (!MCS_unlink (p_entry->name))
-			return false; /* FIXME record proper error information */
+			return MCStackdirIOErrorIO (t_op, p_entry->name,
+										MCSTR ("Failed to delete file"));
 	}
 	return true;
 }
@@ -133,16 +134,19 @@ MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path)
 	/* Change to the target directory. */
 	MCS_getcurdir (&t_save_cwd);
 	if (!MCS_setcurdir (p_path))
-		return false; /* FIXME record proper error information */
+		return MCStackdirIOErrorIO (op, p_path,
+									MCSTR ("Failed to change directory"));
 
 	/* Recurse */
 	t_success = MCsystem->ListFolderEntries (MCStackdirIORemoveFolderRecursive_Callback, op);
 
 	/* Restore working directory and remove target directory */
 	if (!MCS_setcurdir (*t_save_cwd))
-		return false; /* FIXME record proper error information */
+		return MCStackdirIOErrorIO (op, *t_save_cwd,
+									MCSTR ("Failed to change directory"));
 	if (t_success && !MCS_rmdir (p_path))
-		return false; /* FIXME record proper error information */
+		return MCStackdirIOErrorIO (op, p_path,
+									MCSTR ("Failed to delete directory"));
 
 	return t_success;
 }
@@ -166,7 +170,8 @@ MCStackdirIOSaveTransactionCreateDir (MCStackdirIORef op, MCStringRef &r_temp_pa
 	MCAutoStringRef t_resolved_path, t_base_path, t_temp_path;
 
 	if (!MCS_resolvepath (op->m_path, &t_resolved_path))
-		return false; /* FIXME record proper error information */
+		return MCStackdirIOErrorIO (op, op->m_path,
+									MCSTR ("Failed to resolve path"));
 
 	/* If the target path ends in a "/", remove it */
 	if (MCStringEndsWithCString (*t_resolved_path, (const char_t *) "/",
@@ -190,9 +195,8 @@ MCStackdirIOSaveTransactionCreateDir (MCStackdirIORef op, MCStringRef &r_temp_pa
 		MCAutoStringRef t_suffix, t_native_path;
 
 		/* Create a random string */
-		if (!MCU_random_bytes (s_suffix_bytes, &t_suffix_data))
-			return false; /* FIXME record proper error information */
-		MCU_base64encode(*t_suffix_data, &t_suffix);
+		/* UNCHECKED */ MCU_random_bytes (s_suffix_bytes, &t_suffix_data);
+		/* UNCHECKED */ MCU_base64encode(*t_suffix_data, &t_suffix);
 
 		/* Generate directory path */
 		/* UNCHECKED */ MCStringFormat (&t_temp_path, "%@.temp%@",
@@ -206,10 +210,11 @@ MCStackdirIOSaveTransactionCreateDir (MCStackdirIORef op, MCStringRef &r_temp_pa
 		 * exist, there must be some other IO error. */
 		if (!(MCS_exists (*t_temp_path, true) ||
 			  MCS_exists (*t_temp_path, false)))
-			return false; /* FIXME record proper error information */
+			return MCStackdirIOErrorIO (op, *t_temp_path,
+										MCSTR ("Failed to create temporary directory"));
 	}
 
-	MCStringCopyAndRelease (*t_temp_path, r_temp_path);
+	r_temp_path = MCValueRetain (*t_temp_path);
 	return true;
 }
 
@@ -229,7 +234,6 @@ static bool
 MCStackdirIOSaveTransactionStart (MCStackdirIORef op)
 {
 	/* Check that a path has been provided */
-	/* FIXME return a bad path error */
 	MCAssert (op->m_path);
 
 	return MCStackdirIOSaveTransactionCreateDir (op, op->m_save_build_dir);
@@ -257,9 +261,12 @@ MCStackdirIOSaveTransactionCancel (MCStackdirIORef op)
 			 * everything rather than cancelling the transaction as
 			 * normal in the hope that the user can straighten things
 			 * up. */
-			MCLog ("MCStackdirIOCommit(): Save failed; original data moved to '%@'.",
+			MCLog ("MCStackdirIOCommit(): CRITICAL: Save failed; "
+				   "original data moved to '%@'.",
 				   op->m_save_backup_path);
-			t_success = false; /* FIXME record proper error information */
+			MCStackdirIOErrorIO (op, op->m_path,
+								 MCSTR ("Failed to restore original stackdir"));
+			t_success = false;
 		}
 	}
 
@@ -269,7 +276,9 @@ MCStackdirIOSaveTransactionCancel (MCStackdirIORef op)
 	 * it and failed to put it back. */
 	if (op->m_save_backup_dir != nil &&
 		!MCS_rmdir (op->m_save_build_dir))
-		t_success = false; /* FIXME record proper error information */
+		MCStackdirIOErrorIO (op, op->m_save_build_dir,
+							 MCSTR ("Failed to remove temporary backup directory"));
+		t_success = false;
 
 	/* If the build directory was successfully created, delete it. */
 	if (op->m_save_build_dir != nil &&
@@ -307,7 +316,7 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 			 MCS_exists (op->m_path, false))
 	{
 		MCStackdirIOSaveTransactionCancel (op);
-		return false; /* FIXME record proper error information */
+		return MCStackdirIOErrorBadPath (op, MCSTR ("Target exists and is not a stackdir"));
 	}
 
 	/* If overwriting, create an additional temporary directory, and
@@ -317,7 +326,6 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 	{
 		if (!MCStackdirIOSaveTransactionCreateDir (op, &t_backup_dir))
 		{
-			/* FIXME record proper error information */
 			MCStackdirIOSaveTransactionCancel (op);
 			return false;
 		}
@@ -328,9 +336,9 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 
 		if (!MCS_rename (op->m_path, *t_backup_path))
 		{
-			/* FIXME record proper error information */
 			MCStackdirIOSaveTransactionCancel (op);
-			return false;
+			return MCStackdirIOErrorIO (op, op->m_path,
+										MCSTR ("Failed to rename original stackdir"));
 		}
 		op->m_save_backup_path = MCValueRetain (*t_backup_path);
 	}
@@ -338,10 +346,11 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 	/* Move the newly-written bundle into place */
 	if (!MCS_rename (op->m_save_build_dir, op->m_path))
 	{
-		/* Oops! That should have worked! Try to put the original data
-		 * back! */
-		/* FIXME record proper error information */
+		/* Oops! That should have worked!  During cancellation, we'll
+		 * try to put the original data back. */
 		MCStackdirIOSaveTransactionCancel (op);
+		return MCStackdirIOErrorIO (op, op->m_path,
+									MCSTR ("Failed to move new stackdir into place"));
 		return false;
 	}
 
@@ -376,7 +385,6 @@ MCStackdirIOCommitSave_ObjectCallback (void *context, MCArrayRef p_array,
 	MCStackdirIORef t_op = (MCStackdirIORef) context;
 
 	/* The object state should always be an array! */
-	/* FIXME return a bad state error */
 	MCAssert (MCValueIsArray (p_value));
 	MCArrayRef t_state = (MCArrayRef) p_value;
 
@@ -389,7 +397,6 @@ MCStackdirIOCommitSave (MCStackdirIORef op)
 	MCStackdirIOAssertSave(op);
 
 	/* Sanity check the state that we're supposed to be saving. */
-	/* FIXME set a bad state error */
 	MCAssert (op->m_save_state);
 
 	if (!MCStackdirIOSaveTransactionStart (op)) return;
