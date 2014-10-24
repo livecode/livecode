@@ -8896,6 +8896,16 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				else // not writing, so close stdin
 					close(0);
                 
+                /* Construct the environment for the new process */
+                char **t_env = { NULL };
+                uindex_t t_envc = 0;
+                /* UNCHECKED */ MCU_environmentarray(kMCStringEncodingUTF8, t_env, t_envc);
+                /* Ideally, we'd pass the environment using execvpe().
+                 * Unfortunately, OS X doesn't have execvpe().  So just nuke
+                 * environ instead. */
+                extern char **environ;
+                environ = t_env;
+                
 				// Execute a new process in a new process image.
 				execvp(argv[0], argv);
 				
