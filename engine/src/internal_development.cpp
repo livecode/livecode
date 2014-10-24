@@ -72,6 +72,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 #include "hndlrlst.h"
 #include "osspec.h"
+#include "stackdir.h"
 
 #include "debug.h"
 
@@ -917,6 +918,58 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* _internal stackdir save <state> to <path> */
+class MCInternalStackdirSave : public MCStatement
+{
+protected:
+	MCExpression *m_path, *m_state_array;
+
+public:
+	MCInternalStackdirSave (void)
+	: m_path (nil), m_state_array (nil)
+	{ }
+
+	virtual ~MCInternalStackdirSave (void)
+	{
+		delete m_path;
+		delete m_state_array;
+	}
+
+	Parse_stat parse (MCScriptPoint & sp)
+	{
+		initpoint (sp);
+
+		if (sp.parseexp(False, True, &m_state_array) != PS_NORMAL ||
+			sp.skip_token (SP_FACTOR, TT_TO) != PS_NORMAL ||
+			sp.parseexp(False, True, &m_path) != PS_NORMAL)
+		{
+			MCperror->add (PE_INTERNAL_BADNOUN, sp);
+			return PS_ERROR;
+		}
+
+		return PS_NORMAL;
+	}
+
+	void exec_ctxt (MCExecContext & ctxt)
+	{
+		MCAutoStringRef t_path;
+		if (!ctxt.EvalExprAsStringRef (m_path,
+									   EE_INTERNAL_STACKDIR_BADPATH,
+									   &t_path))
+			return;
+
+		MCAutoArrayRef t_state_array;
+		if (!ctxt.EvalExprAsArrayRef (m_state_array,
+									  EE_INTERNAL_STACKDIR_BADSTATE,
+									  &t_state_array))
+			return;
+
+		MCStackdirExecInternalSave (ctxt, *t_path, *t_state_array);
+	}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 template<class T> inline MCStatement *class_factory(void)
 {
 	return new T;
@@ -950,6 +1003,7 @@ MCInternalVerbInfo MCinternalverbs[] =
 	{ "syntax", "recognize", class_factory<MCIdeSyntaxRecognize> },
 	{ "syntax", "compile", class_factory<MCIdeSyntaxCompile> },
 	{ "filter", "controls", class_factory<MCIdeFilterControls> },
+	{ "stackdir", "save", class_factory<MCInternalStackdirSave> },
 	{ nil, nil, nil }
 };
 

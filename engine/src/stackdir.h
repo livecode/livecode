@@ -128,4 +128,10 @@ bool MCStackdirIOHasConflict (MCStackdirIORef op);
 bool MCStackdirIOGetState (MCArrayRef *r_state, MCArrayRef *r_source_info,
 						   MCStackdirResult mode = kMCStackdirResultDefault);
 
+/* ----------------------------------------------------------------
+ * Internal debugging commands
+ * ---------------------------------------------------------------- */
+
+void MCStackdirExecInternalSave (MCExecContext & ctxt, MCStringRef p_path, MCArrayRef p_state_array);
+
 #endif /* ! _MC_STACKDIR_H_ */

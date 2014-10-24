@@ -2608,6 +2608,12 @@ enum Exec_errors
 	// AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
     // {EE-0842} bidiDirection: error in source expression
 	EE_BIDIDIRECTION_BADSOURCE,
+
+	/* {EE-0843} stackdir: bad path */
+	EE_INTERNAL_STACKDIR_BADPATH,
+
+	/* {EE-0844} stackdir: bad state */
+	EE_INTERNAL_STACKDIR_BADSTATE,
 };
 
 extern const char *MCexecutionerrors;

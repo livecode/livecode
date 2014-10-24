@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 #include "sysdefs.h"
+#include "exec.h"
 
 #include "util.h"
 #include "system.h"
@@ -433,4 +434,39 @@ MCStackdirIONewSave (MCStackdirIORef & op)
 	if (!MCStackdirIONew (op)) return false;
 	op->m_type = kMCStackdirIOTypeSave;
 	return true;
+}
+
+/* ----------------------------------------------------------------
+ * [Public] Internal debugging commands
+ * ---------------------------------------------------------------- */
+
+/* _internal stackdir save <state> to <path> */
+
+void
+MCStackdirExecInternalSave (MCExecContext & ctxt, MCStringRef p_path,
+							MCArrayRef p_state_array)
+{
+	/* Run save transaction */
+	MCStackdirIORef t_op;
+	/* UNCHECKED */ MCStackdirIONewSave (t_op);
+	MCStackdirIOSetPath (t_op, p_path);
+	MCStackdirIOSetState (t_op, p_state_array);
+
+	MCStackdirIOCommit (t_op);
+
+	MCArrayRef t_error_info = nil;
+	MCStackdirStatus t_status;
+	t_status = MCStackdirIOGetStatus (t_op, &t_error_info);
+
+	if (t_status == kMCStackdirStatusSuccess)
+	{
+		ctxt.SetTheResultToBool(true);
+	}
+	else
+	{
+		ctxt.SetTheResultToValue (t_error_info);
+		MCValueRelease (t_error_info);
+	}
+
+	MCStackdirIODestroy (t_op);
 }
