@@ -217,7 +217,7 @@ MCStackdirIOGetPath (MCStackdirIORef op, MCStringRef & r_path)
 }
 
 /* ----------------------------------------------------------------
- * [Public] Run IO operation
+ * [Public] Run IO operation and get results
  * ---------------------------------------------------------------- */
 
 void
@@ -239,3 +239,11 @@ MCStackdirIOCommit (MCStackdirIORef op)
 	}
 }
 
+MCStackdirStatus
+MCStackdirIOGetStatus (MCStackdirIORef op, MCArrayRef *r_error_info)
+{
+	if (r_error_info != nil)
+		*r_error_info = MCValueRetain (op->m_error_info);
+
+	return op->m_status;
+}
