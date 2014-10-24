@@ -419,6 +419,14 @@ MCStackdirIOCommitSave (MCStackdirIORef op)
  * [Public] High-level operations
  * ---------------------------------------------------------------- */
 
+void
+MCStackdirIOSetState (MCStackdirIORef op, MCArrayRef p_state)
+{
+	MCStackdirIOAssertSave (op);
+	MCValueRelease (op->m_save_state);
+	op->m_save_state = MCValueRetain (p_state);
+}
+
 bool
 MCStackdirIONewSave (MCStackdirIORef & op)
 {
