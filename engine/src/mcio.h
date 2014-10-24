@@ -54,9 +54,6 @@ enum MCOpenFileMode
     kMCOpenFileModeUpdate,
     kMCOpenFileModeAppend,
     kMCOpenFileModeCreate,
-    // [[ Bug 12192 ]] Need a specific mode for Linux, to enable the creation
-    // of an executable file from MCS_save(text|binary)file instead of 0664 permission
-    kMCOpenFileModeExecutableWrite
 };
 
 enum MCFileEncodingType
