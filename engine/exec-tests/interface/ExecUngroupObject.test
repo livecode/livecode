@@ -1,0 +1,15 @@
+setup
+
+create button
+
+create button
+
+select button 1 and button 2
+
+group
+
+ungroup group 1
+
+test (there is not a group 1 on the current card)
+
+teardown

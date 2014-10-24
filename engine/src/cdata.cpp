@@ -83,7 +83,7 @@ MCCdata::~MCCdata()
 	}
 }
 
-IO_stat MCCdata::load(IO_handle stream, MCObject *parent, const char *version)
+IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 {
 	IO_stat stat;
 
@@ -100,8 +100,10 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, const char *version)
 	{
 		if (id & COMPACT_PARAGRAPHS)
 		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] This flag is never set by newer engines
+			//   so is just legacy.
 			char *string;
-			if ((stat = IO_read_string(string, stream, sizeof(uint1))) != IO_NORMAL)
+			if ((stat = IO_read_cstring_legacy(string, stream, sizeof(uint1))) != IO_NORMAL)
 				return stat;
 			data = string;
 		}
@@ -164,7 +166,11 @@ IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part)
 	}
 	else
 		if (id & COMPACT_PARAGRAPHS)
-			return IO_write_string((char *)data, stream, sizeof(uint1));
+		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] This flag is never set by newer engines
+			//   so is just legacy. (Indeed, this codepath should never be hit!).
+			return IO_write_cstring_legacy((char *)data, stream, sizeof(uint1));
+		}
 		else
 		{
 			MCParagraph *tptr = (MCParagraph *)data;
@@ -204,7 +210,9 @@ MCParagraph *MCCdata::getparagraphs()
 			uint2 l = strlen(eptr) + 1;
 			char *sptr = new char[l];
 			memcpy(sptr, eptr, l);
-			tpgptr->settext(sptr, l, false);
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)sptr, l, &t_string);
+			tpgptr->settext(*t_string);
 			eptr = NULL;
 		}
 		delete (char *)data;

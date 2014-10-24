@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
+#include "w32dsk-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -23,12 +24,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "param.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "date.h"
 #include "osspec.h"
 
 #include "globals.h"
+
+#include "foundation-locale.h"
 
 #if !defined(LOCALE_SSHORTTIME)
 #define LOCALE_SSHORTTIME             0x00000079   // Returns the preferred short time format (ie: no seconds, just h:mm)
@@ -147,249 +150,210 @@ bool MCS_secondstodatetime(double p_seconds, MCDateTime& r_datetime)
 
 static MCDateTimeLocale *s_datetime_locale = NULL;
 
-static char *string_prepend(const char *trunk, const char *prefix)
+static MCStringRef string_prepend(MCStringRef p_string, unichar_t p_prefix)
 {
-	char *t_new_string;
-	t_new_string = new char[strlen(trunk) + strlen(prefix) + 1];
-	strcpy(t_new_string, prefix);
-	strcat(t_new_string, trunk);
-	delete trunk;
-	return t_new_string;
+	MCStringRef t_new;
+	MCStringFormat(t_new, "%lc%@", p_prefix, p_string);
+	return t_new;
 }
 
-static char *windows_query_locale(uint4 t_index)
+static MCStringRef windows_query_locale(uint4 t_index)
 {
-	char t_buffer[80];
-	if (GetLocaleInfoA(LOCALE_USER_DEFAULT, t_index, t_buffer, 80) == 0)
-		t_buffer[0] = '\0';
-
-	return strdup(t_buffer);
+	// Allocate a buffer for the locale information
+	int t_buf_size;
+	t_buf_size = GetLocaleInfoW(LOCALE_USER_DEFAULT, t_index, NULL, 0);
+	wchar_t* t_buffer = new wchar_t[t_buf_size];
+	
+	// Get the locale information and create a StringRef from it
+	if (GetLocaleInfoW(LOCALE_USER_DEFAULT, t_index, t_buffer, t_buf_size) == 0)
+		return MCValueRetain(kMCEmptyString);
+	MCStringRef t_string;
+	MCStringCreateWithChars(t_buffer, MCU_max(0, t_buf_size - 1), t_string);
+	delete[] t_buffer;
+	
+	return t_string;
 }
 
-static void windows_convert_date_format(const char *winstring, char *ansistring)
+static MCStringRef windows_convert_date_format(MCStringRef p_format)
 {
-	const char *sptr = winstring;
-	char *dptr = ansistring;
-	while (*sptr)
+	MCStringRef t_output;
+	MCStringCreateMutable(0, t_output);
+	uindex_t t_offset = 0;
+	
+	while (t_offset < MCStringGetLength(p_format))
 	{
-		if (*sptr == '\'')
+		unichar_t t_char;
+		t_char = MCStringGetCharAtIndex(p_format, t_offset++);
+		
+		if (t_char == '\'')
 		{
-			while (*++sptr && *sptr != '\'')
-				*dptr++ = *sptr;
-			if (*sptr)
-				sptr++;
+			// Copy quoted strings to the output with no conversion
+			while ((t_char = MCStringGetCharAtIndex(p_format, t_offset++)) != '\'')
+				   MCStringAppendChar(t_output, t_char);
 		}
 		else
-			if (*sptr == 'd' || *sptr == 'M' || *sptr == 'y')
+		{
+			// Is this a day/month/year specifier?
+			if (t_char == 'd' || t_char == 'M' || t_char == 'y')
 			{
-				char t = *sptr;
-				*dptr++ = '%';
-				uint2 ntimes = 0;
-				while (*sptr == t)
-				{
-					ntimes++;
-					sptr++;
-				}
-				switch (t)
+				// Count the number of consecutive identical characters
+				unichar_t t_want = t_char;
+				int t_count = 1;
+				while (MCStringGetCharAtIndex(p_format, t_offset) == t_want)
+                {
+					t_count++;
+                    t_offset++;
+                }
+				
+				// Append the correct formatting instruction
+				switch (t_char)
 				{
 				case 'd':
-					{
-						switch (ntimes)
-						{
-						case 1:
-							*dptr++ = '#'; //1
-						case 2:
-							*dptr++ = 'd'; //01
-							break;
-						case 3:
-							*dptr++ = 'a'; //abbrev weekday
-							break;
-						case 4:
-							*dptr++ = 'A'; //full weekday
-							break;
-						}
-						break;
-					}
-				case 'M':
-					{
-						switch (ntimes)
-						{
-						case 1:
-							*dptr++ = '#'; //1
-						case 2:
-							*dptr++ = 'm'; //01
-							break;
-						case 3:
-							*dptr++ = 'b'; //abbrev month
-							break;
-						case 4:
-							*dptr++ = 'B'; //full month
-							break;
-						}
-					}
+					if (t_count == 1)
+						MCStringAppendFormat(t_output, "%%#d");
+					else if (t_count == 2)
+						MCStringAppendFormat(t_output, "%%d");
+					else if (t_count == 3)
+						MCStringAppendFormat(t_output, "%%a");
+					else if (t_count == 4)
+						MCStringAppendFormat(t_output, "%%A");
 					break;
+						
+				case 'M':
+					if (t_count == 1)
+						MCStringAppendFormat(t_output, "%%#m");
+					else if (t_count == 2)
+						MCStringAppendFormat(t_output, "%%m");
+					else if (t_count == 3)
+						MCStringAppendFormat(t_output, "%%b");
+					else if (t_count == 4)
+						MCStringAppendFormat(t_output, "%%B");
+					break;
+						
 				case 'y':
-					{
-						switch (ntimes)
-						{
-						case 1:
-							*dptr++ = '#'; //1
-						case 2:
-							*dptr++ = 'y'; //abbrev month
-							break;
-						case 4:
-							*dptr++ = 'Y'; //full month
-							break;
-						}
-					}
+					if (t_count == 1)
+						MCStringAppendFormat(t_output, "%%#y");
+					else if (t_count == 2)
+						MCStringAppendFormat(t_output, "%%y");
+					else if (t_count == 4)
+						MCStringAppendFormat(t_output, "%%Y");
 					break;
 				}
 			}
 			else
-				*dptr++ = *sptr++;
+			{
+				// Unknown character, copy it to the output
+				MCStringAppendChar(t_output, t_char);
+			}
+		}
 	}
-	*dptr = '\0';
+	
+	MCValueRelease(p_format);
+	return t_output;
 }
 
-static void windows_convert_time_format(const char *winstring, char *ansistring)
+static MCStringRef windows_convert_time_format(MCStringRef p_format)
 {
-	const char *sptr = winstring;
-	char *dptr = ansistring;
-	while (*sptr)
+	MCStringRef t_output;
+	MCStringCreateMutable(0, t_output);
+	uindex_t t_offset = 0;
+	
+	while (t_offset < MCStringGetLength(p_format))
 	{
-		if (*sptr == '\'')
+		unichar_t t_char;
+		t_char = MCStringGetCharAtIndex(p_format, t_offset++);
+		
+		if (t_char == '\'')
 		{
-			while (*++sptr && *sptr != '\'')
-				*dptr++ = *sptr;
-			if (*sptr)
-				sptr++;
+			// Copy quoted strings to the output with no conversion
+			while ((t_char = MCStringGetCharAtIndex(p_format, t_offset++)) != '\'')
+				MCStringAppendChar(t_output, t_char);
 		}
 		else
-			if (*sptr == 'h' || *sptr == 'H' || *sptr == 'm' || *sptr == 's' || *sptr == 't')
+		{
+			// Is this a day/month/year specifier?
+			if (t_char == 'h' || t_char == 'H' || t_char == 'm' || t_char == 's' || t_char == 't')
 			{
-				char t = *sptr;
-				*dptr++ = '%';
-				uint2 ntimes = 0;
-				while (*sptr == t)
+				// Count the number of consecutive identical characters
+				unichar_t t_want = t_char;
+				int t_count = 1;
+				while ((t_char = MCStringGetCharAtIndex(p_format, t_offset)) == t_want)
+                {
+                    t_count++;
+                    t_offset++;
+                }
+				
+				// Append the correct formatting instruction
+				switch (t_want)
 				{
-					ntimes++;
-					sptr++;
-				}
-				switch (t)
-				{
-				case 'h':
-					{
-						switch(ntimes)
-						{
-						case 1:
-							*dptr++ = '#';
-						case 2:
-							*dptr++ = 'I';
-							break;
-						}
-					}
-				break;
-				case 'H':
-					{
-						switch(ntimes)
-						{
-						case 1:
-							*dptr++ = '#';
-						case 2:
-							*dptr++ = 'H';
-							break;
-						}
-					}
-				break;
-				case 'm':
-					{
-						switch(ntimes)
-						{
-						case 1:
-							*dptr++ = '#';
-						case 2:
-							*dptr++ = 'M';
-							break;
-						}
-					}
-				break;
-				case 's':
-					{
-						switch(ntimes)
-						{
-						case 1:
-							*dptr++ = '#';
-						case 2:
-							*dptr++ = 'S';
-							break;
-						}
-					}
-				break;
-				case 't':
-					*dptr++ = 'p';
-				break;
+					case 'h':
+						if (t_count == 1)
+							MCStringAppendFormat(t_output, "%%#I");
+						else if (t_count == 2)
+							MCStringAppendFormat(t_output, "%%I");
+						break;
+						
+					case 'H':
+						if (t_count == 1)
+							MCStringAppendFormat(t_output, "%%#H");
+						else if (t_count == 2)
+							MCStringAppendFormat(t_output, "%%H");
+						break;
+						
+					case 'm':
+						if (t_count == 1)
+							MCStringAppendFormat(t_output, "%%#M");
+						else if (t_count == 2)
+							MCStringAppendFormat(t_output, "%%M");
+						break;
+						
+					case 's':
+						if (t_count == 1)
+							MCStringAppendFormat(t_output, "%%#S");
+						else if (t_count == 2)
+							MCStringAppendFormat(t_output, "%%S");
+						break;
+						
+					case 't':
+						MCStringAppendFormat(t_output, "%%p");
 				}
 			}
 			else
-				*dptr++ = *sptr++;
-	}
-	*dptr = '\0';
-}
-
-static void windows_abbreviate_format(char *sptr)
-{
-	while (*sptr)
-	{
-		if (*sptr == '%')
-		{
-			if (*++sptr == '#')
-				sptr++; //skip
-			if (*sptr == 'A' || *sptr == 'B')
-				*sptr = MCS_tolower(*sptr);
+			{
+				// Unknown character, copy it to the output
+				MCStringAppendChar(t_output, t_char);
+			}
 		}
-		sptr++;
 	}
+	
+	MCValueRelease(p_format);
+	return t_output;
 }
 
-static char *windows_query_date_format(uint4 p_index, bool p_abbreviate)
+static MCStringRef windows_abbreviate_format(MCStringRef p_format)
 {
-	char t_buffer[80];
-	if (GetLocaleInfoA(LOCALE_USER_DEFAULT, p_index, t_buffer, 80) == 0)
-		t_buffer[0] = '\0';
+	MCStringRef t_new;
+	/* UNCHECKED */ MCStringMutableCopyAndRelease(p_format, t_new);
+	/* UNCHECKED */ MCStringFindAndReplaceChar(t_new, 'A', 'a', kMCStringOptionCompareExact);
+	/* UNCHECKED */ MCStringFindAndReplaceChar(t_new, 'B', 'b', kMCStringOptionCompareExact);
+	return t_new;
+}
 
-	char t_converted_buffer[128];
-	windows_convert_date_format(t_buffer, t_converted_buffer);
+static MCStringRef windows_query_date_format(uint4 p_index, bool p_abbreviate)
+{
+	MCStringRef t_win_format = windows_query_locale(p_index);
+	MCStringRef t_format = windows_convert_date_format(t_win_format);
+	
 	if (p_abbreviate)
-		windows_abbreviate_format(t_converted_buffer);
-
-	return strdup(t_converted_buffer);
+		return windows_abbreviate_format(t_format);
+	
+	return t_format;
 }
 
-static char *windows_query_time_format(uint4 p_index)
+static MCStringRef windows_query_time_format(uint4 p_index)
 {
-	char t_buffer[80];
-	if (MCmajorosversion >= 0x0601)
-	{
-		// some windows 7 properties only accessible through unicode version of GetLocaleInfo()
-		WCHAR t_wbuffer[80];
-		DWORD t_length;
-		if ((t_length = GetLocaleInfoW(LOCALE_USER_DEFAULT, p_index, t_wbuffer, 80)) == 0)
-			t_wbuffer[0] = '\0';
-
-		// convert unicode to ansi
-		uint32_t t_out_bytes = 0;
-		MCS_unicodetomultibyte((char*)t_wbuffer, t_length * sizeof(WCHAR), t_buffer, 80, t_out_bytes, LCH_ENGLISH);
-	}
-	else
-	{
-		if (GetLocaleInfoA(LOCALE_USER_DEFAULT, p_index, t_buffer, 80) == 0)
-			t_buffer[0] = '\0';
-	}
-
-	char t_converted_buffer[128];
-	windows_convert_time_format(t_buffer, t_converted_buffer);
-
-	return strdup(t_converted_buffer);
+	MCStringRef t_win_format = windows_query_locale(p_index);
+	return windows_convert_time_format(t_win_format);
 }
 
 static void windows_cache_locale(void)
@@ -415,20 +379,20 @@ static void windows_cache_locale(void)
 		s_datetime_locale -> abbrev_month_names[t_index] = windows_query_locale(LOCALE_SABBREVMONTHNAME1 + t_index);
 	}
 
-	s_datetime_locale -> date_formats[0] = string_prepend(windows_query_date_format(LOCALE_SSHORTDATE, false), "^");
+	s_datetime_locale -> date_formats[0] = string_prepend(windows_query_date_format(LOCALE_SSHORTDATE, false), '^');
 	s_datetime_locale -> date_formats[1] = windows_query_date_format(LOCALE_SLONGDATE, true);
 	s_datetime_locale -> date_formats[2] = windows_query_date_format(LOCALE_SLONGDATE, false);
 
 	// AL-2013-02-08: [[ Bug 9942 ]] Allow appropriate versions of Windows to retrieve the short time format.
 	if (MCmajorosversion >= 0x0601)
-		s_datetime_locale -> time_formats[0] = string_prepend(windows_query_time_format(LOCALE_SSHORTTIME), "!");
+		s_datetime_locale -> time_formats[0] = string_prepend(windows_query_time_format(LOCALE_SSHORTTIME), '!');
 	else
-		s_datetime_locale -> time_formats[0] = string_prepend(windows_query_time_format(LOCALE_STIMEFORMAT), "!");
+		s_datetime_locale -> time_formats[0] = string_prepend(windows_query_time_format(LOCALE_STIMEFORMAT), '!');
 
-	s_datetime_locale -> time_formats[1] = string_prepend(windows_query_time_format(LOCALE_STIMEFORMAT), "!");
+	s_datetime_locale -> time_formats[1] = string_prepend(windows_query_time_format(LOCALE_STIMEFORMAT), '!');
 
-	s_datetime_locale -> time24_formats[0] = string_prepend(windows_query_time_format(LOCALE_STIMEFORMAT), "!");
-	s_datetime_locale -> time24_formats[1] = string_prepend(windows_query_time_format(LOCALE_STIMEFORMAT), "!");
+	s_datetime_locale -> time24_formats[0] = string_prepend(windows_query_time_format(LOCALE_STIMEFORMAT), '!');
+	s_datetime_locale -> time24_formats[1] = string_prepend(windows_query_time_format(LOCALE_STIMEFORMAT), '!');
 	
 	// AL-2013-02-08: [[ Bug 9945 ]] Retrieve locale-specific AM & PM designators.
 	s_datetime_locale -> time_morning_suffix = windows_query_locale(LOCALE_S1159);
@@ -439,6 +403,18 @@ const MCDateTimeLocale *MCS_getdatetimelocale(void)
 {
 	windows_cache_locale();
 	return s_datetime_locale;
+}
+
+MCLocaleRef MCS_getsystemlocale()
+{
+	// Get the identifier for the system locale
+	LCID t_system_lcid;
+	t_system_lcid = GetUserDefaultLCID();
+
+	// Create a locale object
+	MCLocaleRef t_locale;
+	/* UNCHECKED */ MCLocaleCreateWithLCID(t_system_lcid, t_locale);
+	return t_locale;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

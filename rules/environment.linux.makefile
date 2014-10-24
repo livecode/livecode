@@ -25,8 +25,26 @@ ifeq ($(CC),)
 	CC:=gcc
 endif
 
+ifeq ($(origin LD), default)
+	LD:=$(CC)
+	LD_IS_CC:=1
+endif
+
 BUILD_DIR=$(SOLUTION_DIR)/_build/linux/$(ARCH)/$(MODE)
 CACHE_DIR=$(SOLUTION_DIR)/_cache/linux/$(ARCH)/$(MODE)/$(NAME)
 PRODUCT_DIR=$(BUILD_DIR)
 
-PREBUILT_LIB_DIR=$(SOLUTION_DIR)/prebuilt/lib/linux-$(ARCH)
+PREBUILT_LIB_DIR=$(SOLUTION_DIR)/prebuilt/lib/linux/$(ARCH)
+
+ifeq ($(OBJCOPY),)
+  	OBJCOPY=objcopy
+endif
+
+ifeq ($(STRIP),)
+	STRIP=strip
+endif
+
+ifeq ($(AR),)
+	AR=ar
+endif
+

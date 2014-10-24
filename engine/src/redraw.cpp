@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -814,6 +813,7 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		}
 
 		// Remove the scenery.
+
 		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
 		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
 		MCRectangle32 t_device_rect;
@@ -877,11 +877,11 @@ void MCCard::layer_setviewport(int32_t p_x, int32_t p_y, int32_t p_width, int32_
 	//   rect to the update region; otherwise just add the exposed rects.
 	if (!getflag(F_SHOW_BORDER))
 	{
-		if (p_width > t_old_rect.width)
-			layer_dirtyrect(MCU_make_rect(t_old_rect.width, 0, p_width - t_old_rect.width, p_height));
-		if (p_height > t_old_rect.height)
-			layer_dirtyrect(MCU_make_rect(0, t_old_rect.height, p_width, p_height - t_old_rect.height));
-	}
+	if (p_width > t_old_rect.width)
+		layer_dirtyrect(MCU_make_rect(t_old_rect.width, 0, p_width - t_old_rect.width, p_height));
+	if (p_height > t_old_rect.height)
+		layer_dirtyrect(MCU_make_rect(0, t_old_rect.height, p_width, p_height - t_old_rect.height));
+}
 	else
 		layer_dirtyrect(rect);
 }

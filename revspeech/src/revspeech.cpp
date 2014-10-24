@@ -225,11 +225,31 @@ void revSpeechSpeak(char *args[], int nargs, char **retstring,
 	{
 		NarratorLoad();
 
-		s_narrator -> Start(args[0]);
+		s_narrator -> Start(args[0], false);
 	}
 	else
 		*error = True;
 
+	*retstring = result != NULL ? result : strdup("");
+}
+
+void revSpeechSpeakUTF8(char *args[], int nargs, char **retstring,
+                    Bool *pass, Bool *error)
+{
+	char *result = NULL;
+    
+	*pass = False;
+	*error = False;
+    
+	if (nargs == 1)
+	{
+		NarratorLoad();
+        
+		s_narrator -> Start(args[0], true);
+	}
+	else
+		*error = True;
+    
 	*retstring = result != NULL ? result : strdup("");
 }
 
@@ -465,7 +485,8 @@ EXTERNAL_BEGIN_DECLARATIONS("revSpeech")
 	EXTERNAL_DECLARE_COMMAND("revSetSpeechPitch", revSpeechPitch)
 	EXTERNAL_DECLARE_COMMAND("revSetSpeechVolume", revSpeechSetVolume)
 	EXTERNAL_DECLARE_FUNCTION("revGetSpeechVolume", revSpeechGetVolume)
-	EXTERNAL_DECLARE_COMMAND("revSpeak", revSpeechSpeak)
+    EXTERNAL_DECLARE_COMMAND("revSpeak", revSpeechSpeak)
+    EXTERNAL_DECLARE_COMMAND_UTF8("revSpeak", revSpeechSpeakUTF8)
 	EXTERNAL_DECLARE_COMMAND("revStopSpeech", revSpeechStop)
 	EXTERNAL_DECLARE_FUNCTION("revIsSpeaking", revSpeechBusy)
 	EXTERNAL_DECLARE_FUNCTION("revSpeechVoices", revSpeechVoices)

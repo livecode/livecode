@@ -1,0 +1,1 @@
+# Filtering unicode text with wildcard can result in false positives

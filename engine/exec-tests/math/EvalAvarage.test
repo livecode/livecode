@@ -1,0 +1,16 @@
+setup
+
+test-error average("string", 1)
+
+test average() is 0
+test average(1.23) is 1.23
+test average("1, 2, 3, 4, 5") is 3
+test average(1, 2, 3, 4, 5) is 3
+
+local tArray
+repeat with i = 1 to 5
+	put i into tArray[i]
+end repeat
+test average(tArray) is 3
+
+teardown

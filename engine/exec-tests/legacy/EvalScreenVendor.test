@@ -1,0 +1,12 @@
+setup
+
+test the screenvendor is not empty
+
+if the platform is "win32" then
+	test the screenvendor is "win32"
+else
+	// TODO - add tests for other platforms
+	test false
+end if
+
+teardown

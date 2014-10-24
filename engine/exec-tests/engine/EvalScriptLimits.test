@@ -1,0 +1,10 @@
+setup
+
+local tLimits
+put the scriptlimits into tLimits
+test the number of items in tLimits is 4
+repeat for each item tLimit in tLimits
+	test tLimit is an integer
+end repeat
+
+teardown

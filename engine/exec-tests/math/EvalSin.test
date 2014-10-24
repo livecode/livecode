@@ -1,0 +1,13 @@
+setup
+
+test sin(pi / 2) is 1
+test sin(pi / 6) is 0.5
+test sin(0) is 0
+test sin(-pi / 6) is -0.5
+test sin(-pi / 2) is -1
+
+//repeat with i = -45 to 45
+//	test asin(sin(i / (2*pi))) is i / (2*pi)
+//end repeat
+
+teardown

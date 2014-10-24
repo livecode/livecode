@@ -1,0 +1,32 @@
+setup
+
+local tFolder, tHome
+put specialFolderPath("Temporary") into tFolder
+test tFolder is not empty
+test there is a folder tFolder
+
+// windows numeric folder codes
+if the platform is "win32" then
+	put specialFolderPath("home") into tHome
+
+	// user app data
+	put specialFolderPath("0x1a") into tFolder
+	test tFolder is not empty
+	test there is a folder tFolder
+	
+	test (tHome is not empty) and (tFolder is not tHome) and (tFolder begins with tHome)
+end if
+
+// mac 4-letter codes
+if the platform is "macos" then
+	put specialFolderPath("home") into tHome
+
+	// user public folder
+	put specialFolderPath("pubb") into tFolder
+	test tFolder is not empty
+	test there is a folder tFolder
+	
+	test (tHome is not empty) and (tFolder is not tHome) and (tFolder begins with tHome)
+end if
+
+teardown

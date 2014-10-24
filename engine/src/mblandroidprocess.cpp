@@ -16,8 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "system.h"
+#include "globdefs.h"
+#include "filedefs.h"
+#include "objdefs.h"
+#include "parsedef.h"
+#include "globals.h"
+
 #include "mblandroid.h"
 #include "mblandroidutil.h"
 
@@ -30,49 +35,49 @@ uint32_t MCAndroidSystem::GetProcessId(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCAndroidSystem::GetVersion(void)
+bool MCAndroidSystem::GetVersion(MCStringRef& r_string)
 {
-	char *t_system_version = NULL;
-	MCAndroidEngineCall("getSystemVersion", "s", &t_system_version);
-	
-	return t_system_version;
+	MCAndroidEngineCall("getSystemVersion", "x", &r_string);
+	return true;
 }
 
-char *MCAndroidSystem::GetMachine(void)
+bool MCAndroidSystem::GetMachine(MCStringRef& r_string)
 {
-	char *t_machine = NULL;
-	MCAndroidEngineCall("getMachine", "s", &t_machine);
-	
-	return t_machine;
+	MCAndroidEngineCall("getMachine", "x", &r_string);
+	return true;
 }
 
-char *MCAndroidSystem::GetProcessor(void)
+MCNameRef MCAndroidSystem::GetProcessor(void)
 {
 #ifdef __i386__
-	return strclone("i386");
+    return MCN_i386;
 #else
-	return strclone("ARM");
+    return MCN_arm;
 #endif
 }
 
-char *MCAndroidSystem::GetAddress(void)
+bool MCAndroidSystem::GetAddress(MCStringRef& r_address)
 {
-	extern char *MCcmd;
-	char *t_address;
-	t_address = new char[strlen(MCcmd) + strlen("android:") + 1];
-	sprintf(t_address, "android:%s", MCcmd);
-	return t_address;
+	extern MCStringRef MCcmd;
+    MCAutoStringRef t_address;
+    bool t_success;
+    t_success = MCStringFormat(&t_address, "android:%@", MCcmd);
+    if (t_success)
+        r_address = MCValueRetain(*t_address);
+    
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCAndroidSystem::SetEnv(const char *name, const char *value)
+void MCAndroidSystem::SetEnv(MCStringRef p_name, MCStringRef p_value)
 {
 }
 
-char *MCAndroidSystem::GetEnv(const char *name)
+bool MCAndroidSystem::GetEnv(MCStringRef p_name, MCStringRef& r_value)
 {
-	return "";
+    r_value = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,9 +99,26 @@ void MCAndroidSystem::Sleep(real64_t p_when)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidSystem::Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_data, uint32_t& r_data_length, int& r_retcode)
+bool MCAndroidSystem::Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode)
 {
 	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int MCAndroidSystem::GetErrno(void)
+{
+    return errno;
+}
+
+void MCAndroidSystem::SetErrno(int p_errno)
+{
+    errno = p_errno;
+}
+
+uint32_t MCAndroidSystem::GetSystemError(void)
+{
+    return errno;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

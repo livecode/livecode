@@ -1,0 +1,17 @@
+setup
+
+test-error median("string", 1)
+
+test median() is 0
+test median(1.23) is 1.23
+test median("1, 2, 3, 4, 5") is 3
+test median(1, 5, 2, 4, 3) is 3
+test median(1, 5, 2, 4, 3, 6) is 3.5
+
+local tArray
+repeat with i = 1 to 5
+	put (( i + 3 ) mod 5) + 1 into tArray[i]
+end repeat
+test median(tArray) is 3
+
+teardown

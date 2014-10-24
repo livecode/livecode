@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -27,12 +26,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "paragraf.h"
 #include "cdata.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "util.h"
-#include "block.h"
+#include "MCBlock.h"
 
 #include "globals.h"
-#include "unicode.h"
 
 #include "text.h"
 

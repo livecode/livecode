@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -32,14 +31,46 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "param.h"
 #include "eventqueue.h"
+#include "exec.h"
 
 #include <jni.h>
 
 #include "mblandroidcontrol.h"
 #include "mblandroidutil.h"
 #include "mblandroidjava.h"
-
 #include "resolution.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCAndroidControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(P_RECTANGLE, Rectangle, MCAndroidControl, Rect)
+    DEFINE_RW_CTRL_PROPERTY(P_VISIBLE, Bool, MCAndroidControl, Visible)
+    DEFINE_RW_CTRL_PROPERTY(P_ALPHA, UInt16, MCAndroidControl, Alpha)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(P_BACKGROUND_COLOR, NativeControlColor, MCAndroidControl, BackgroundColor)
+};
+
+MCObjectPropertyTable MCAndroidControl::kPropertyTable =
+{
+	&MCNativeControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCAndroidControl::kActions[] =
+{
+};
+
+MCNativeControlActionTable MCAndroidControl::kActionTable =
+{
+    &MCNativeControl::kActionTable,
+    0,
+    nil,
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCAndroidControl::MCAndroidControl(void)
 {
@@ -111,6 +142,78 @@ bool MCAndroidControl::GetViewBackgroundColor(jobject p_view, uint16_t &r_red, u
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCAndroidControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
+{
+    int16_t i1, i2, i3, i4;
+
+    // MM-2013-11-26: [[ Bug 11485 ]] The rect of the control is passed in user space. Convert to device space when setting on view.
+    // AL-2014-06-16: [[ Bug 12588 ]] Actually use the passed in rect parameter
+    MCGRectangle t_rect;
+    t_rect = MCNativeControlUserRectToDeviceRect(MCRectangleToMCGRectangle(p_rect));
+    i1 = (int16_t) roundf(t_rect . origin . x);
+    i2 = (int16_t) roundf(t_rect . origin . y);
+    i3 = (int16_t) roundf(t_rect . size . width) + i1;
+    i4 = (int16_t) roundf(t_rect . size . height) + i2;
+    
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, i1, i2, i3, i4);
+}
+
+void MCAndroidControl::SetVisible(MCExecContext& ctxt, bool p_visible)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setVisible", "vb", nil, p_visible);
+}
+
+void MCAndroidControl::SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setAlpha", "vi", nil, p_alpha);
+}
+
+void MCAndroidControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setBackgroundColor", "viiii", nil, p_color . r >> 8, p_color . g >> 8, p_color . b >> 8, p_color . a >> 8);
+}
+
+void MCAndroidControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
+{
+    if (m_view != nil)
+    {
+        int16_t i1, i2, i3, i4;
+        GetViewRect(m_view, i1, i2, i3, i4);
+        
+        r_rect . x = i1;
+        r_rect . y = i2;
+        r_rect . width = i3 - i1;
+        r_rect . height = i4 - i2;
+    }
+}
+
+void MCAndroidControl::GetVisible(MCExecContext& ctxt, bool& r_visible)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "getVisible", "b", &r_visible);
+    else
+        r_visible = false;
+}
+
+void MCAndroidControl::GetAlpha(MCExecContext& ctxt, uinteger_t& r_alpha)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "getAlpha", "i", &r_alpha);
+    else
+        r_alpha = 0;
+}
+
+void MCAndroidControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& p_color)
+{
+    if (m_view != nil)
+        GetViewBackgroundColor(m_view, p_color . r, p_color . g, p_color . b, p_color . a);
+}
+
+#ifdef /* MCAndroidControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     switch (p_property)
@@ -193,7 +296,9 @@ Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint 
     
     return ES_NOT_HANDLED;
 }
+#endif /* MCAndroidControl::Set */
 
+#ifdef /* MCAndroidControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     switch (p_property)
@@ -256,11 +361,7 @@ Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint 
     
     return ES_ERROR;
 }
-
-Exec_stat MCAndroidControl::Do(MCNativeControlAction p_action, MCParameter *p_params)
-{
-    return ES_ERROR;
-}
+#endif /* MCAndroidControl::Get */
 
 ////////////////////////////////////////////////////////////////////////////////
 

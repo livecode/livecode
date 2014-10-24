@@ -1,0 +1,61 @@
+setup "arrays"
+
+-- Equal case
+local tLeftArray, tRightArray
+put 10 into tLeftArray["1"]
+put "foo" into tLeftArray["bar"]
+put 10 into tRightArray["1"]
+put "foo" into tRightArray["bar"]
+test tLeftArray is tRightArray
+test tLeftArray = tRightArray
+
+-- Left bigger than right
+put true into tLeftArray["baz"]
+test not (tLeftArray is tRightArray)
+test not (tLeftArray = tRightArray)
+
+-- Right bigger than left
+delete variable tLeftArray["baz"]
+put true into tRightArray["baz"]
+test not (tLeftArray is tRightArray)
+test not (tLeftArray = tRightArray)
+
+-- Unequal case
+delete variable tRightArray["baz"]
+put 100 into tRightArray["1"]
+test not (tLeftArray is tRightArray)
+test not (tLeftArray = tRightArray)
+
+teardown
+
+setup "numbers"
+test 100 is "  100"
+test 100 = "  100"
+test not (100 is "  1001")
+test not (100 = "  1001")
+test "abc" is "abc"
+test "abc" = "abc"
+test not ("abc" is "abcd")
+test not ("abc" = "abcd")
+test 100 is 100
+test 100 = 100
+test not (100 is 1000)
+test not (100 = 1000)
+teardown
+
+setup "booleans"
+test (0 is 0) is (1 is 1)
+test (0 is 0) = (1 is 1)
+test not ((0 is 0) is (1 is 2))
+test not ((0 is 0) = (1 is 2))
+teardown
+
+setup "misc"
+local tArray
+put 100 into tLeft[1]
+test tLeft is empty
+test tLeft = empty
+test empty is tLeft
+test empty = tLeft
+teardown
+

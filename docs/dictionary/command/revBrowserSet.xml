@@ -183,7 +183,9 @@ stack</description>
 
 	<value>The <b>revBrowserSet</b> command puts empty into the result if
 successful. </value>
-	<comments><note> The "advanced" callback messages are: <message tag="browserClick">browserClick</message>, <message tag="browserOut">browserOut</message> and <message tag="browserOver">browserOver</message>. These messages are only sent when
+	<comments><note> The "advanced" callback messages are: <message tag="browserClick">browserClick</message>
+, <message tag="browserOut">browserOut</message> and <message tag="browserOver">browserOver</message>
+. These messages are only sent when
 the "messages" property is set to true. The other callback messages are
 always sent.<p></note><p></p><note> Setting the selected property selects
 the first instance of that text. Setting the property repeatedly to the same
@@ -191,7 +193,8 @@ value will cycle through each occurrence of the value. Setting the selected
 to empty or to a string not present in the current document  will reset the
 selected text, ie subsequently setting the selected to any string will
 select the first occurrence again. This behavior is similar to that of the
-<command tag="find">find command</command>.</note><p></p><p></p><change>There is a long standing
+<command tag="find">find
+command</command>.</note><p></p><p></p><change>There is a long standing
 issue with revBrowser that causes browser instances to be lost whenever the
 stack it is attached to has its window re-created. Previously, cases where
 this would occur had to be avoided when a browser was present on a

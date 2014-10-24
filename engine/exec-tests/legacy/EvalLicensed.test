@@ -1,0 +1,13 @@
+setup
+switch the environment
+case "development"
+   test licensed() is true
+   break
+case "standalone application"
+   test licensed() is false
+   break
+default
+   # undefined?
+   test false
+end switch
+teardown

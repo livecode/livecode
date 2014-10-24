@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "font.h"
 #include "sellst.h"
@@ -812,17 +812,16 @@ void MCScrollbar::drawvalue(MCDC *dc, MCRectangle &thumb)
 	fdescent = MCFontGetDescent(m_font);
 	if (rect.height - thumb.height > fascent)
 	{
-		char *data = NULL;
-		uint4 length = 0;
-		length = MCU_r8tos(data, length, thumbpos, nffw, nftrailing, nfforce);
-		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-		uint2 tw = MCFontMeasureText(m_font, data, length, false, getstack() -> getdevicetransform());
+		MCAutoStringRef t_data;
+		/* UNCHECKED */ MCU_r8tos(thumbpos, nffw, nftrailing, nfforce, &t_data);
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+        uint2 tw = MCFontMeasureText(m_font, *t_data, getstack() -> getdevicetransform());
 		if (getstyleint(flags) == F_VERTICAL)
 		{
 			uint2 sx = thumb.x + thumb.width + ((rect.width - thumb.width - tw) >> 1);
 			uint2 sy = thumb.y + ((thumb.height + fascent) >> 1);
 			setforeground(dc, DI_FORE, False);
-            dc -> drawtext(sx, sy, data, length, m_font, false, false);
+            dc -> drawtext(sx, sy, *t_data, m_font, false, kMCDrawTextNoBreak);
 		}
 		else
 		{
@@ -837,9 +836,8 @@ void MCScrollbar::drawvalue(MCDC *dc, MCRectangle &thumb)
 			else
 				sy = rect.y + rect.height - fdescent;
 			setforeground(dc, DI_FORE, False);
-            dc -> drawtext(sx, sy, data, length, m_font, false, false);
+            dc -> drawtext(sx, sy, *t_data, m_font, false, kMCDrawTextNoBreak);
 		}
-		delete data;
 	}
 }
 
@@ -888,7 +886,7 @@ void MCScrollbar::drawmacthumb(MCDC *dc, MCRectangle &thumb)
 	uint2 shift = state & CS_SCROLL ? 1 : 0;
 
 	MCPoint p[3];
-	MCSegment grid[5];
+	MCLineSegment grid[5];
 	uint2 gridpoints;
 	if (getstyleint(flags) == F_VERTICAL)
 	{

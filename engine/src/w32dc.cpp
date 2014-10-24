@@ -27,9 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "util.h"
 #include "stacklst.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
-#include "core.h"
 #include "notify.h"
 
 #include "w32dc.h"
@@ -106,7 +105,7 @@ MCScreenDC::~MCScreenDC()
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			if (colornames[i] != NULL)
-				delete colornames[i];
+				MCValueRelease(colornames[i]);
 		}
 		delete colors;
 		delete colornames;
@@ -145,7 +144,7 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 // TD-2013-07-01 [[ DynamicFonts ]]
-bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
+bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle)
 {
 	bool t_success = true;
     DWORD t_private = NULL;
@@ -154,10 +153,14 @@ bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_f
         t_private = FR_PRIVATE;
     
 	if (t_success)
-		t_success = (MCS_exists(p_path, True) == True);
+		t_success = (MCS_exists(p_path, true) == True);
 	
+    MCAutoStringRefAsWString t_wide_path;
+    if (t_success)
+        t_success = t_wide_path . Lock(p_path);
+    
 	if (t_success)
-		t_success = (AddFontResourceExA(p_path, t_private, 0) != 0);
+		t_success = (AddFontResourceExW(*t_wide_path, t_private, 0) != 0);
     
 	if (t_success && p_globally)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
@@ -166,7 +169,7 @@ bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_f
 }
 
 
-bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
+bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle)
 {
     bool t_success = true;
     DWORD t_private = NULL;
@@ -174,8 +177,12 @@ bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_
     if (p_globally)
         t_private = FR_PRIVATE;
     
+    MCAutoStringRefAsWString t_wide_path;
     if (t_success)
-		t_success = (RemoveFontResourceExA(p_path, t_private, 0) != 0);
+        t_success = t_wide_path . Lock(p_path);
+    
+    if (t_success)
+		t_success = (RemoveFontResourceExW(*t_wide_path, t_private, 0) != 0);
     
 	if (t_success && p_globally)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
@@ -184,8 +191,6 @@ bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-extern int UTF8ToUnicode(const char *p_source_str, int p_source, uint2 *p_dest_str, int p_dest);
 
 LPWSTR MCScreenDC::convertutf8towide(const char *p_utf8_string)
 {
@@ -225,9 +230,11 @@ MCPrinter *MCScreenDC::createprinter(void)
 	return new MCWindowsPrinter;
 }
 
-void MCScreenDC::listprinters(MCExecPoint& ep)
+bool MCScreenDC::listprinters(MCStringRef& r_printers)
 {
-	ep . clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 
 	DWORD t_flags;
 	DWORD t_level;
@@ -238,22 +245,26 @@ void MCScreenDC::listprinters(MCExecPoint& ep)
 	DWORD t_bytes_needed;
 	t_printer_count = 0;
 	t_bytes_needed = 0;
-	if (EnumPrintersA(t_flags, NULL, t_level, NULL, 0, &t_bytes_needed, &t_printer_count) == 0 && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-		return;
-
-	char *t_printers;
-	t_printers = new char[t_bytes_needed];
-	if (EnumPrintersA(t_flags, NULL, t_level, (LPBYTE)t_printers, t_bytes_needed, &t_bytes_needed, &t_printer_count) != 0)
+	if (EnumPrintersW(t_flags, NULL, t_level, NULL, 0, &t_bytes_needed, &t_printer_count) != 0 || GetLastError() == ERROR_INSUFFICIENT_BUFFER)
 	{
-		for(uint4 i = 0; i < t_printer_count; ++i)
+		MCAutoPointer<byte_t> t_printers;
+		if (!MCMemoryNewArray(t_bytes_needed, &t_printers))
+			return false;
+
+		if (EnumPrintersW(t_flags, NULL, t_level, (LPBYTE)*t_printers, t_bytes_needed, &t_bytes_needed, &t_printer_count) != 0)
 		{
-			const char *t_printer_name;
-			t_printer_name = ((PRINTER_INFO_4A *)t_printers)[i] . pPrinterName;
-			ep . concatcstring(t_printer_name, EC_RETURN, i == 0);
+			for(uint4 i = 0; i < t_printer_count; ++i)
+			{
+				MCAutoStringRef t_printer_name;
+				if (!MCStringCreateWithWString(((PRINTER_INFO_4W *)*t_printers)[i] . pPrinterName, &t_printer_name))
+					return false;
+				if (!MCListAppend(*t_list, *t_printer_name))
+					return false;
+			}
 		}
 	}
 
-	delete t_printers;
+	return MCListCopyAsString(*t_list, r_printers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

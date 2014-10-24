@@ -3,7 +3,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformHandleApplicationStartup(int p_argc, char **p_argv, char **p_envp, int& r_error_code, char*& r_error_message);
+void MCPlatformHandleApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef& r_error_message);
 void MCPlatformHandleApplicationShutdown(int& r_exit_code);
 void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate);
 void MCPlatformHandleApplicationSuspend(void);
@@ -67,7 +67,7 @@ void MCPlatformHandleSoundFinished(MCPlatformSoundRef sound);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformCallbackSendApplicationStartup(int p_argc, char **p_argv, char **p_envp, int& r_error_code, char*& r_error_message)
+void MCPlatformCallbackSendApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
 {
 	MCPlatformHandleApplicationStartup(p_argc, p_argv, p_envp, r_error_code, r_error_message);
 }

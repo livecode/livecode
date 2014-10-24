@@ -17,12 +17,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_HANDLER__
 #define	__MC_HANDLER__
 
+struct MCExecValue;
+
 // A single variable definition. If 'init' is nil then it means the var should
 // be created as a uql.
 struct MCHandlerVarInfo
 {
 	MCNameRef name;
-	MCNameRef init;
+	MCValueRef init;
 };
 
 struct MCHandlerParamInfo
@@ -34,7 +36,7 @@ struct MCHandlerParamInfo
 struct MCHandlerConstantInfo
 {
 	MCNameRef name;
-	MCNameRef value;
+	MCValueRef value;
 };
 
 class MCHandler
@@ -43,7 +45,7 @@ class MCHandler
 	MCStatement *statements;
 	MCVariable **vars;
 	MCVariable **globals;
-	MCVariable **params;
+	MCContainer **params;
 	MCParameter *paramlist;
 	MCHandlerVarInfo *vinfo;
 	MCHandlerParamInfo *pinfo;
@@ -65,6 +67,11 @@ class MCHandler
 	Boolean array;
 	Boolean is_private;
 	uint1 type;
+	
+	// MW-2013-11-08: [[ RefactorIt ]] The 'it' variable is now always defined
+	//   and this varref is used by things that want to set it.
+	MCVarref *m_it;
+	
 	static Boolean gotpass;
 public:
 	MCHandler(uint1 htype, bool p_is_private = false);
@@ -77,7 +84,9 @@ public:
 	
 	const char *getname_cstring(void)
 	{
-		return MCNameGetCString(name);
+        char *t_name;
+        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(name), t_name);
+		return t_name;
 	}
 	
 	bool hasname(MCNameRef other_name)
@@ -86,27 +95,39 @@ public:
 	}
 
 	Parse_stat parse(MCScriptPoint &sp, Boolean isprop);
+#ifdef LEGACY_EXEC
 	Exec_stat exec(MCExecPoint &, MCParameter *);
-	MCVariable *getvar(uint2 index, Boolean isparam)
-	{
-		return isparam ? params[index] : vars[index];
-	}
-	Exec_stat getnparams(uint2 &);
-	Exec_stat getparam(uint2 index,  MCExecPoint &);
+#endif
+    Exec_stat exec(MCExecContext &, MCParameter *);
+	void compile(MCSyntaxFactoryRef factory);
+	
+    MCVariable *getvar(uint2 index, Boolean isparam);
+    MCContainer *getcontainer(uint2 index, Boolean isparam);
+    
+	integer_t getnparams(void);
+    MCValueRef getparam(uindex_t p_index);
 	Parse_stat findvar(MCNameRef name, MCVarref **);
-	Parse_stat newvar(MCNameRef name, MCNameRef init, MCVarref **);
+	Parse_stat newvar(MCNameRef name, MCValueRef init, MCVarref **);
 	Parse_stat findconstant(MCNameRef name, MCExpression **);
-	Parse_stat newconstant(MCNameRef name, MCNameRef value);
+	Parse_stat newconstant(MCNameRef name, MCValueRef value);
 	void newglobal(MCNameRef name);
+	bool getparamnames(MCListRef& r_list);
+	bool getvariablenames(MCListRef& r_list);
+	bool getglobalnames(MCListRef& r_list);
+	bool getvarnames(bool p_all, MCListRef& r_list);
+#ifdef LEGACY_EXEC
 	Exec_stat getvarnames(MCExecPoint &, Boolean all);
-	Exec_stat eval(MCExecPoint &);
+#endif
+	void eval_ctxt(MCExecContext& ctxt, MCStringRef p_expression, MCExecValue& r_value);
+	void eval(MCExecContext& ctxt, MCStringRef p_expression, MCValueRef& r_value);
+	//Exec_stat eval(MCExecPoint &);
 	uint4 linecount();
 	void deletestatements(MCStatement *statements);
-	Exec_stat doscript(MCExecPoint &ep, uint2 line, uint2 pos);
+	void doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line = 0, uinteger_t p_pos = 0);
 
 	// Used by the externals API, this method returns the current incarnation of
 	// the 'it' variable in this handler - if any.
-	MCVariable *getit(void);
+	MCVarref *getit(void);
 
 	void clearpass()
 	{
@@ -147,7 +168,7 @@ public:
 		r_var_count = nvnames;
 	}
 	
-	void getparamlist(MCVariable**& r_vars, uint32_t& r_param_count)
+	void getparamlist(MCContainer**& r_vars, uint32_t& r_param_count)
 	{
 		r_vars = params;
 		r_param_count = npnames;

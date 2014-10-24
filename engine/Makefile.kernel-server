@@ -8,7 +8,7 @@ SOURCES=\
 	cdata.cpp chunk.cpp cmds.cpp cmdsc.cpp cmdse.cpp cmdsf.cpp \
 	cmdsm.cpp cmdsp.cpp cmdss.cpp constant.cpp control.cpp cpalette.cpp \
 	date.cpp debug.cpp dispatch.cpp dllst.cpp \
-	execpt.cpp express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
+	express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp group.cpp \
 	handler.cpp hc.cpp hndlrlst.cpp ibmp.cpp idraw.cpp ifile.cpp \
 	igif.cpp iimport.cpp ijpg.cpp \
@@ -33,6 +33,7 @@ SOURCES=\
 	scriptpt.cpp \
 	scrolbar.cpp \
 	scrollbardraw.cpp \
+	segment.cpp \
 	sellst.cpp \
 	stack.cpp \
 	stack2.cpp \
@@ -40,25 +41,38 @@ SOURCES=\
 	stackcache.cpp \
 	stacklst.cpp \
 	stackview.cpp \
+	stacksecurity.cpp \
 	statemnt.cpp styledtext.cpp tooltip.cpp \
 	transfer.cpp uidc.cpp gradient.cpp edittool.cpp \
 	undolst.cpp util.cpp variable.cpp vclip.cpp visual.cpp \
-	eps.cpp mcssl.cpp \
+	eps.cpp mcssl.cpp opensslsocket.cpp socket_resolve.cpp \
 	answer.cpp ask.cpp external.cpp player.cpp surface.cpp \
 	combiners.cpp path.cpp metacontext.cpp \
 	printer.cpp unicode.cpp rtf.cpp rtfsupport.cpp text.cpp pathgray.cpp \
 	pathprocess.cpp \
-	variablearray.cpp objectstream.cpp \
+	objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp lextable.cpp uuid.cpp \
-	objectprops.cpp objectpropsets.cpp variablevalue.cpp mcutility.cpp notify.cpp customprinter.cpp \
+	objectprops.cpp objectpropsets.cpp mcutility.cpp notify.cpp customprinter.cpp \
 	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
-	srvmain.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvposix.cpp srvdebug.cpp \
-	srvscript.cpp srvcgi.cpp srvoutput.cpp srvmultipart.cpp srvtheme.cpp \
-	eventqueue.cpp encodederrors.cpp name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
+	srvmain.cpp dsklnx.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvdebug.cpp \
+	srvscript.cpp srvoutput.cpp srvtheme.cpp \
+    eventqueue.cpp encodederrors.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
 	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
-	graphicscontext.cpp lnxflst.cpp lnxflstold.cpp quicktime.cpp \
+    graphicscontext.cpp lnxflst.cpp lnxflstold.cpp lnxelevate.cpp \
+	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
+	exec-logic exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting \
+	exec-strings.cpp exec-strings-chunk.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \
+	exec-ide.cpp exec-server.cpp exec-interface2.cpp exec.cpp \
+	exec-interface-aclip.cpp exec-interface-button.cpp exec-interface-card.cpp exec-interface-control.cpp \
+	exec-interface-field.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \
+	exec-interface-object.cpp exec-interface-field-chunk.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
+	exec-interface-vclip.cpp exec-keywords.cpp exec-legacy.cpp exec-dialog.cpp exec-strings-chunk.cpp \
+    syntax.cpp quicktime.cpp \
+	foundation-legacy.cpp legacy_spec.cpp \
+	srvposix.cpp \
+    srvcgi.cpp srvmultipart.cpp \
 	sysunxthreads.cpp, stacktile.cpp
 	
 SOURCE_DIRS=
@@ -73,16 +87,21 @@ CUSTOM_INCLUDES=\
 
 CUSTOM_CCFLAGS=\
 	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -fno-exceptions -fno-rtti -fno-strict-aliasing \
-	-fmessage-length=0 -march=i486
+	-fmessage-length=0
 
-include/revbuild.h: include/revbuild.h.in ../version
-	../prebuilt/bin/Revolution.lnx "./encode_version.rev" "./"
+ifeq ($(ARCH),i386)
+	CUSTOM_CCFLAGS:=$(CUSTOM_CCFLAGS) -march=i486
+endif
 
-linuxstubs.cpp: src/linux.stubs
-	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.rev" <./src/linux.stubs >./src/linuxstubs.cpp
+include/revbuild.h: include/revbuild.h.in ../version ../util/encode_version.pl
+	../util/encode_version.pl
+
+linuxstubs.cpp: src/linux.stubs ../util/weak_stub_maker.pl
+#	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp
+	../util/weak_stub_maker.pl <./src/linux.stubs >./src/linuxstubs.cpp
 
 encodederrors.cpp: src/executionerrors.h src/parseerrors.h
-	../prebuilt/bin/Revolution.lnx "./encode_errors.rev"  "./src" "./src/encodederrors.cpp"
+	../util/encode_errors.pl ./src ./src/encodederrors.cpp
 
 $(CACHE_DIR)/mcstring.o: include/revbuild.h
 

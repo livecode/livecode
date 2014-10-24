@@ -17,7 +17,6 @@
 #include <Cocoa/Cocoa.h>
 #include <CoreVideo/CVDisplayLink.h>
 
-#include "core.h"
 #include "globdefs.h"
 #include "parsedef.h"
 #include "globals.h"

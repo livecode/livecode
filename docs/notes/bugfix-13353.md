@@ -1,0 +1,1 @@
+# Getting htmltext when there is firstindent results in LiveCode crashing

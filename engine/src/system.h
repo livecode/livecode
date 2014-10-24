@@ -17,14 +17,30 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_SYSTEM__
 #define __MC_SYSTEM__
 
+#include "mcio.h"
+#include "osspec.h"
+
+#if !defined(_WINDOWS_SERVER) && !defined(_WINDOWS_DESKTOP)
+#include <sys/mman.h>
+#include <unistd.h>
+
+#if defined(_MAC_SERVER) || defined(_MAC_DESKTOP)
+#define ftello64(a) ftello(a)
+#define fseeko64(a, b, c) fseeko(a, b, c)
+
+#define opendir64(a) opendir(a)
+#define readdir64(a) readdir(a)
+#define closedir64(a) closedir(a)
+#define DIR64 DIR
+#endif
+
+#endif // Mac and Linux-specific includes for file mapping
+
 enum
 {
-	kMCSystemFileModeRead = 0,
-	kMCSystemFileModeWrite = 1,
-	kMCSystemFileModeUpdate = 2,
-	kMCSystemFileModeAppend = 3,
-	
-	kMCSystemFileModeNulTerminate = 1 << 16
+    kMCSystemFileSeekSet = 1,
+    kMCSystemFileSeekCurrent = 0,
+    kMCSystemFileSeekEnd = -1,
 };
 
 struct MCDateTime;
@@ -32,7 +48,7 @@ struct MCDateTimeLocale;
 
 struct MCSystemFolderEntry
 {
-	const char *name;
+	MCStringRef name;
 	int64_t data_size;
 	int64_t resource_size;
 	uint32_t creation_time;
@@ -43,19 +59,25 @@ struct MCSystemFolderEntry
 	uint32_t group_id;
 	uint32_t permissions;
 	uint32_t file_creator;
-	uint32_t file_type;
+	char* file_type;
 	bool is_folder;
 };
 
 typedef bool (*MCSystemListFolderEntriesCallback)(void *p_context, const MCSystemFolderEntry *p_entry);
-typedef bool (*MCSystemHostResolveCallback)(void *p_context, const char *p_host);
+typedef bool (*MCSystemHostResolveCallback)(void *p_context, MCStringRef p_host);
 
 struct MCSystemFileHandle
 {
-	virtual void Close(void) = 0;
-	
-	virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written) = 0;
+    virtual void Close(void) = 0;
+
+    // Returns true if an attempt has been made to read past the end of the
+    // stream.
+    virtual bool IsExhausted(void) = 0;
+    
+    virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
+    
+	virtual bool Write(const void *p_buffer, uint32_t p_length) = 0;
+    
 	virtual bool Seek(int64_t offset, int p_dir) = 0;
 	
 	virtual bool Truncate(void) = 0;
@@ -68,86 +90,455 @@ struct MCSystemFileHandle
 	
 	virtual void *GetFilePointer(void) = 0;
 	virtual int64_t GetFileSize(void) = 0;
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length) = 0;
+
+    // Polymorphic - needs virtual destructor
+    virtual ~MCSystemFileHandle()
+    {
+        ;
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMemoryFileHandle: public MCSystemFileHandle
+{
+public:
+	MCMemoryFileHandle(void)
+	{
+		m_buffer = NULL;
+		m_pointer = 0;
+		m_length = 0;
+		m_capacity = 0;
+	}
+	
+	MCMemoryFileHandle(const void *p_data, size_t p_length)
+	{
+		m_buffer = (char *)p_data;
+		m_pointer = 0;
+		m_length = p_length;
+		m_capacity = 0;
+	}
+	
+	bool TakeBuffer(void*& r_buffer, size_t& r_length)
+	{
+		r_buffer = (char *)realloc(m_buffer, m_length);
+		r_length = (size_t)m_length;
+        
+		m_buffer = NULL;
+		m_length = 0;
+		m_capacity = 0;
+		m_pointer = 0;
+        
+        return (r_buffer != nil);
+	}
+	
+	void Close(void)
+	{
+		if (m_capacity != 0)
+			free(m_buffer);
+		delete this;
+	}
+    
+    virtual bool IsExhausted(void)
+    {
+        return m_pointer == m_length;
+    }
+    
+    bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+    {
+        r_read = MCU_min(p_length, m_length - m_pointer);
+        
+        memcpy(p_buffer, m_buffer + m_pointer, r_read);
+        m_pointer += r_read;
+        return true;
+    }
+	
+	bool Write(const void *p_buffer, uint32_t p_length)
+	{
+		// If we aren't writable then its an error (writable buffers start off with
+		// nil buffer pointer, and 0 capacity).
+		if (m_buffer != NULL && m_capacity == 0)
+			return false;
+		
+		// If there isn't enough room, extend
+		if (m_pointer + p_length > m_capacity)
+		{
+			uint32_t t_new_capacity;
+			t_new_capacity = (m_pointer + p_length + 4096) & ~4095;
+			
+			void *t_new_buffer;
+			t_new_buffer = realloc(m_buffer, t_new_capacity);
+			if (t_new_buffer == NULL)
+				return false;
+			
+			m_buffer = static_cast<char *>(t_new_buffer);
+			m_capacity = t_new_capacity;
+		}
+		
+		memcpy(m_buffer + m_pointer, p_buffer, p_length);
+		m_pointer += p_length;
+		m_length = MCU_max(m_pointer, m_length);
+        
+		return true;
+	}
+	
+	bool Seek(int64_t p_offset, int p_dir)
+	{
+		int64_t t_base;
+		if (p_dir == 0)
+			t_base = m_pointer;
+		else if (p_dir < 0)
+			t_base = m_length;
+		else
+			t_base = 0;
+		
+		int64_t t_new_offset;
+		t_new_offset = p_offset + t_base;
+		if (t_new_offset < 0 || t_new_offset > m_length)
+			return false;
+		
+		m_pointer = (uint32_t)t_new_offset;
+		return true;
+	}
+	
+	bool PutBack(char c)
+	{
+		if (m_pointer == 0)
+			return false;
+		
+		m_pointer -= 1;
+		return true;
+	}
+	
+	int64_t Tell(void)
+	{
+		return m_pointer;
+	}
+	
+	int64_t GetFileSize(void)
+	{
+		return m_length;
+	}
+	
+	void *GetFilePointer(void)
+	{
+		return m_buffer;
+	}
+	
+	bool Truncate(void)
+	{
+		if (m_capacity != 0)
+		{
+			m_length = m_pointer;
+			return true;
+		}
+        
+		return false;
+	}
+	
+	bool Sync(void)
+	{
+		return true;
+	}
+	
+	bool Flush(void)
+	{
+		return true;
+	}
+	
+protected:
+	char *m_buffer;
+	uint32_t m_pointer;
+	uint32_t m_length;
+	uint32_t m_capacity;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if !defined(_WINDOWS_SERVER) && !defined(_WINDOWS_DESKTOP)
+class MCMemoryMappedFileHandle: public MCMemoryFileHandle
+{
+public:
+    MCMemoryMappedFileHandle(int p_fd, void *p_buffer, uint32_t p_length)
+    : MCMemoryFileHandle(p_buffer, p_length)
+    {
+        m_fd = p_fd;
+        m_buffer = p_buffer;
+        m_length = p_length;
+    }
+    
+    void Close(void)
+    {
+        munmap((char *)m_buffer, m_length);
+        close(m_fd);
+        MCMemoryFileHandle::Close();
+    }
+    
+private:
+    int m_fd;
+    void *m_buffer;
+    uint32_t m_length;
+};
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCCustomFileHandle: public MCSystemFileHandle
+{
+public:
+	MCCustomFileHandle(MCFakeOpenCallbacks *p_callbacks, void *p_state)
+	{
+		m_state = p_state;
+		m_callbacks = p_callbacks;
+	}
+	
+	void Close(void)
+	{
+		// MW-2011-06-12: Fix memory leak - Close() should delete the handle.
+		delete this;
+	}
+    
+    virtual bool IsExhausted(void)
+    {
+        return m_is_eof;
+    }
+	
+	bool Read(void *p_buffer, uint32_t p_blocksize, uint32_t& r_read)
+	{
+		if (m_callbacks -> read == nil)
+			return false;
+        
+        IO_stat t_stat;
+        
+        t_stat = m_callbacks -> read(m_state, p_buffer, p_blocksize, r_read);
+        
+        if (t_stat == IO_EOF)
+        {
+            m_is_eof = true;
+            return false;
+        }
+        
+        m_is_eof = false;
+        
+		if (!t_stat == IO_NORMAL)
+            return false;
+        
+        return true;
+	}
+	
+	bool Write(const void *p_buffer, uint32_t p_length)
+	{
+		return false;
+	}
+	
+	bool Seek(int64_t p_offset, int p_dir)
+	{
+		if (p_dir == 0)
+			return m_callbacks -> seek_cur(m_state, p_offset) == IO_NORMAL;
+		else if (p_dir > 0)
+			return m_callbacks -> seek_set(m_state, p_offset) == IO_NORMAL;
+		return false;
+	}
+    
+    bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        return false;
+    }
+	
+	bool PutBack(char c)
+	{
+		return false;
+	}
+	
+	int64_t Tell(void)
+	{
+		return m_callbacks -> tell(m_state);
+	}
+	
+	int64_t GetFileSize(void)
+	{
+		return 0;
+	}
+	
+	void *GetFilePointer(void)
+	{
+		return nil;
+	}
+	
+	bool Truncate(void)
+	{
+		return false;
+	}
+	
+	bool Sync(void)
+	{
+		return true;
+	}
+	
+	bool Flush(void)
+	{
+		return true;
+	}
+	
+private:
+	void *m_state;
+	MCFakeOpenCallbacks *m_callbacks;
+    bool m_is_eof;
+};
+
+enum MCServiceType
+{
+    kMCServiceTypeMacSystem,
+    kMCServiceTypeWindowsSystem,
+    kMCServiceTypeLinuxSystem,
+};
+
+struct MCServiceInterface
+{
+};
+
+struct MCMacSystemServiceInterface: public MCServiceInterface
+{
+    virtual bool SetResource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name, MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error) = 0;    
+    virtual bool GetResource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error) = 0;    
+    virtual bool GetResources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error) = 0;    
+    virtual bool CopyResource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type, MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error) = 0;
+    virtual bool DeleteResource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error) = 0;
+    virtual void CopyResourceFork(MCStringRef p_source, MCStringRef p_destination) = 0;
+    virtual void LoadResFile(MCStringRef p_filename, MCStringRef& r_data) = 0;
+    virtual void SaveResFile(MCStringRef p_path, MCDataRef p_data) = 0;
+    
+    virtual bool ProcessTypeIsForeground(void) = 0;
+    virtual bool ChangeProcessType(bool p_to_foreground) = 0;
+    
+    virtual void Send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean p_reply) = 0;
+    virtual void Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error) = 0;
+    virtual void RequestAE(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value) = 0;
+    virtual bool RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result) = 0;
+};
+
+struct MCWindowsSystemServiceInterface: public MCServiceInterface
+{
+    virtual bool MCISendString(MCStringRef p_command, MCStringRef& r_result, bool& r_error) = 0;
+    
+    virtual bool QueryRegistry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_type, MCStringRef& r_error) = 0;
+    virtual bool SetRegistry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error) = 0;
+    virtual bool DeleteRegistry(MCStringRef p_key, MCStringRef& r_error) = 0;
+    virtual bool ListRegistry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error) = 0;
+    
+    virtual void ResetTime() = 0;
 };
 
 struct MCSystemInterface
 {
+    virtual MCServiceInterface *QueryService(MCServiceType type) = 0;
+    
 	virtual bool Initialize(void) = 0;
 	virtual void Finalize(void) = 0;
 	
-	virtual void Debug(const char *p_string) = 0;
+	virtual void Debug(MCStringRef p_string) = 0;
 
 	virtual real64_t GetCurrentTime(void) = 0;
 
-	virtual char *GetVersion(void) = 0;
-	virtual char *GetMachine(void) = 0;
-	virtual char *GetProcessor(void) = 0;
-	virtual char *GetAddress(void) = 0;
+	virtual bool GetVersion(MCStringRef& r_string) = 0;
+	virtual bool GetMachine(MCStringRef& r_string) = 0;
+	virtual MCNameRef GetProcessor(void) = 0;
+	virtual bool GetAddress(MCStringRef& r_address) = 0;
 
 	virtual uint32_t GetProcessId(void) = 0;
 	
 	virtual void Alarm(real64_t p_when) = 0;
 	virtual void Sleep(real64_t p_when) = 0;
 	
-	virtual void SetEnv(const char *name, const char *value) = 0;
-	virtual char *GetEnv(const char *name) = 0;
+	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value) = 0;
+	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value) = 0;
 	
-	virtual bool CreateFolder(const char *p_path) = 0;
-	virtual bool DeleteFolder(const char *p_path) = 0;
+	virtual Boolean CreateFolder(MCStringRef p_path) = 0;
+	virtual Boolean DeleteFolder(MCStringRef p_path) = 0;
 	
-	virtual bool DeleteFile(const char *p_path) = 0;
+	virtual Boolean DeleteFile(MCStringRef p_path) = 0;
 	
-	virtual bool RenameFileOrFolder(const char *p_old_name, const char *p_new_name) = 0;
+	virtual Boolean RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name) = 0;
 	
-	virtual bool BackupFile(const char *p_old_name, const char *p_new_name) = 0;
-	virtual bool UnbackupFile(const char *p_old_name, const char *p_new_name) = 0;
+	virtual Boolean BackupFile(MCStringRef p_old_name, MCStringRef p_new_name) = 0;
+	virtual Boolean UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name) = 0;
 	
-	virtual bool CreateAlias(const char *p_target, const char *p_alias) = 0;
+	virtual Boolean CreateAlias(MCStringRef p_target, MCStringRef p_alias) = 0;
 	// NOTE: 'ResolveAlias' returns a standard (not native) path.
-	virtual char *ResolveAlias(const char *p_target) = 0;
+	virtual Boolean ResolveAlias(MCStringRef p_target, MCStringRef& r_dest) = 0;
 	
-	virtual char *GetCurrentFolder(void) = 0;
-	virtual bool SetCurrentFolder(const char *p_path) = 0;
+	virtual bool GetCurrentFolder(MCStringRef& r_path) = 0;
+	///* LEGACY */ char *GetCurrentFolder(void);
+	virtual Boolean SetCurrentFolder(MCStringRef p_path) = 0;
 	
 	// NOTE: 'GetStandardFolder' returns a standard (not native) path.
-	virtual char *GetStandardFolder(const char *p_folder) = 0;
+	virtual Boolean GetStandardFolder(MCNameRef p_type, MCStringRef& r_folder) = 0;
 	
-	virtual bool FileExists(const char *p_path) = 0;
-	virtual bool FolderExists(const char *p_path) = 0;
-	virtual bool FileNotAccessible(const char *p_path) = 0;
+    virtual real8 GetFreeDiskSpace() = 0;    
+    virtual Boolean GetDevices(MCStringRef& r_devices) = 0;
+    virtual Boolean GetDrives(MCStringRef& r_drives) = 0;
+
+	virtual Boolean FileExists(MCStringRef p_path) = 0;
+	virtual Boolean FolderExists(MCStringRef p_path) = 0;
+	virtual Boolean FileNotAccessible(MCStringRef p_path) = 0;
 	
-	virtual bool ChangePermissions(const char *p_path, uint2 p_mask) = 0;
+	virtual Boolean ChangePermissions(MCStringRef p_path, uint2 p_mask) = 0;
 	virtual uint2 UMask(uint2 p_mask) = 0;
 	
-	virtual MCSystemFileHandle *OpenFile(const char *p_path, uint32_t p_mode, bool p_map) = 0;
-	virtual MCSystemFileHandle *OpenStdFile(uint32_t i) = 0;
-	virtual MCSystemFileHandle *OpenDevice(const char *p_path, uint32_t p_mode, const char *p_control_string) = 0;
+    virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
+    {
+        return OpenFile(p_path, p_mode, False);
+    }
+    
+	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map) = 0;
+	virtual IO_handle OpenFd(uint32_t fd, intenum_t p_mode) = 0;
+    virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode) = 0;
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
-	virtual char *GetTemporaryFileName(void) = 0;
+	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name) = 0;
 	
-	virtual void *LoadModule(const char *p_path) = 0;
-	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol) = 0;
-	virtual void UnloadModule(void *p_module) = 0;
+	virtual MCSysModuleHandle LoadModule(MCStringRef p_path) = 0;
+	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol) = 0;
+	virtual void UnloadModule(MCSysModuleHandle p_module) = 0;
 	
-	virtual char *LongFilePath(const char *p_path) = 0;
-	virtual char *ShortFilePath(const char *p_path) = 0;
+	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context) = 0;
+    
+	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native) = 0;
+	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path) = 0;
+	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
+	
+	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path) = 0;
+	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path) = 0;
 
-	virtual char *PathToNative(const char *p_rev_path) = 0;
-	virtual char *PathFromNative(const char *p_rev_path) = 0;
-	virtual char *ResolvePath(const char *p_rev_path) = 0;
-	virtual char *ResolveNativePath(const char *p_rev_path) = 0;
-	
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context) = 0;
-	
-	virtual bool Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_data, uint32_t& r_data_length, int& r_retcode) = 0;
+	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode) = 0;
 
-	virtual char *GetHostName(void) = 0;
-	virtual bool HostNameToAddress(const char *p_hostname, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
-	virtual bool AddressToHostName(const char *p_address, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
-
-	virtual uint32_t TextConvert(const void *string, uint32_t string_length, void *buffer, uint32_t buffer_length, uint32_t from_charset, uint32_t to_charset) = 0;
-	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used) = 0;
+	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset) = 0;
+	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used) = 0;
+    
+    virtual void CheckProcesses(void) = 0;
+    
+    virtual uint32_t GetSystemError(void) = 0;
+    
+    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated) = 0;
+    virtual void CloseProcess(uint2 p_index) = 0;
+    virtual void Kill(int4 p_pid, int4 p_sig) = 0;
+    virtual void KillAll(void) = 0;
+    virtual Boolean Poll(real8 p_delay, int p_fd) = 0;
+    
+    virtual Boolean IsInteractiveConsole(int p_fd) = 0;
+    
+    virtual int GetErrno(void) = 0;
+    virtual void SetErrno(int p_errno) = 0;
+    
+    virtual void LaunchDocument(MCStringRef p_document) = 0;
+    virtual void LaunchUrl(MCStringRef p_document) = 0;
+    
+    virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language) = 0;
+    virtual bool AlternateLanguages(MCListRef& r_list) = 0;
+    
+    virtual bool GetDNSservers(MCListRef& r_list) = 0;
 };
 
 extern MCSystemInterface *MCsystem;
@@ -173,10 +564,10 @@ enum MCSystemUrlOperation
 	kMCSystemUrlOperationStrip = (1 << 0), // remove whitespace from the beginning / end of url string
 };
 
-bool MCSystemProcessUrl(const char *p_url, MCSystemUrlOperation p_operations, char *&r_processed_url);
-bool MCSystemLoadUrl(const char *p_url, MCSystemUrlCallback p_callback, void *p_context);
-bool MCSystemPostUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
-bool MCSystemPutUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
+bool MCSystemProcessUrl(MCStringRef p_url, MCSystemUrlOperation p_operations, MCStringRef &r_processed_url);
+bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_context);
+bool MCSystemPostUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
+bool MCSystemPutUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
 void MCSystemSetUrlSSLVerification(bool enabled);
 
 //////////

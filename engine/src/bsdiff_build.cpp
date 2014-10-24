@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "core.h"
+#include "foundation.h"
 #include "bsdiff.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +56,9 @@ bool MCBsDiffBuild(MCBsDiffInputStream *p_old_stream, MCBsDiffInputStream *p_new
 
 #define MIN(x,y) (((x)<(y)) ? (x) : (y))
 
+#if !defined(__LINUX__) && !defined(_OFF_T)
 typedef int32_t off_t;
+#endif
 typedef uint8_t u_char;
 
 static void split(off_t *I,off_t *V,off_t start,off_t len,off_t h)

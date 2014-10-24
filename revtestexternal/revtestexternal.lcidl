@@ -1,0 +1,98 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+// The name of the external (note external name must be all lowercase!)
+external com.runrev.revtestexternal
+
+// This external uses C++ name mangling (by virtue of the fact the source file is obj-c++)
+use c++-naming
+// This external uses obj-c objects and autorelease pools.
+use objc-objects
+
+// Declare the startup/shutdown routines (these are optional)
+on startup call revTestExternalStartup
+on shutdown call revTestExternalShutdown
+
+use c on linux,windows,android
+use objc on mac,ios
+
+command revTestExternalTestWait
+
+command revTestExternalTestArrays
+
+use c on linux,windows,mac,ios
+use java on android
+
+function revTestExternalTestNativeString
+    in string as c-string
+    return c-string
+
+function revTestExternalTestUTF8String
+    in string as utf8-c-string
+    return utf8-c-string
+    
+function revTestExternalTestUTF16String
+    in string as utf16-c-string
+    return utf16-c-string
+    
+function revTestExternalTestNativeData
+    in data as c-data
+    return c-data
+    
+function revTestExternalTestUTF8Data
+    in data as utf8-c-data
+    return utf8-c-data
+    
+function revTestExternalTestUTF16Data
+    in data as utf16-c-data
+    return utf16-c-data
+
+use java on android
+use none on linux,mac,windows,ios
+command revTestExternalTestPostAndSend
+
+use none on linux, windows, android
+use objc on mac, ios
+
+function revTestExternalTestObjcArrays
+	in array as objc-array
+	return objc-array
+
+function revTestExternalTestObjcDictionaries
+	in dict as objc-dictionary
+	return objc-dictionary
+    
+function revTestExternalTestObjcNumber
+    in number as objc-number
+    return objc-number
+    
+function revTestExternalTestObjcData
+    in data as objc-data
+    return objc-data
+    
+function revTestExternalTestObjcString
+    in data as objc-string
+    return objc-string
+
+use none on mac, linux, windows, android, ios
+use java on android
+
+tail command revTestExternalAndroidButtonCreate
+tail command revTestExternalAndroidButtonDestroy
+
+function revTestExternalRunActivity return c-string
+
+command revTestExternalRunOnSystemThread

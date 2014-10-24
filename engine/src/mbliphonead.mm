@@ -19,14 +19,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -84,7 +83,7 @@ class MCiOSInneractiveAd;
 class MCiOSInneractiveAd : public MCAd
 {
 public:
-    MCiOSInneractiveAd(MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, NSMutableDictionary *p_meta_data);
+    MCiOSInneractiveAd(MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, NSMutableDictionary *p_meta_data);
     
     // overridden methods
     bool Create(void);
@@ -247,7 +246,7 @@ static void initialize_ad_delegate(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCiOSInneractiveAd::MCiOSInneractiveAd(MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, NSMutableDictionary *p_meta_data)
+MCiOSInneractiveAd::MCiOSInneractiveAd(MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, NSMutableDictionary *p_meta_data)
 {
     m_view = nil;
     m_delegate = nil;
@@ -255,8 +254,12 @@ MCiOSInneractiveAd::MCiOSInneractiveAd(MCAdType p_type, MCAdTopLeft p_top_left, 
     m_timeout = p_timeout;
     m_meta_data = p_meta_data;
     if (m_type != kMCAdTypeFullscreen)
-        m_top_left = p_top_left;
-    else {
+    {
+        m_top_left.x = p_top_left_x;
+        m_top_left.y = p_top_left_y;
+    }
+    else
+    {
         m_top_left.x = 0;
         m_top_left.y = 0;
     }
@@ -276,7 +279,7 @@ static void do_display_ad(void *p_context)
     display_ad_context_t *ctxt;
     ctxt = (display_ad_context_t *)p_context;
     
-    ctxt -> result = [InneractiveAd DisplayAd:[NSString stringWithCString: MCAdGetInneractiveKey() encoding: NSMacOSRomanStringEncoding] 
+    ctxt -> result = [InneractiveAd DisplayAd:[NSString stringWithMCStringRef: MCAdGetInneractiveKey()]
                                      withType:ctxt -> type 
                                      withRoot:ctxt -> view
                                    withReload:ctxt -> timeout
@@ -427,32 +430,71 @@ void MCSystemInneractiveAdInit()
 {
 }
 
-bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data)
+bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, MCArrayRef p_meta_data)
 {    
+    bool t_success;
+    t_success = true;
+    
     NSMutableDictionary *t_meta_data;
-    t_meta_data = [[NSMutableDictionary alloc] init];    
+    t_meta_data = [[NSMutableDictionary alloc] init];
     if (p_meta_data != nil)
     {
-        if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "age", false))
-            [t_meta_data setObject:[NSString stringWithCString: ctxt.GetEP().getcstring() encoding: NSMacOSRomanStringEncoding] forKey:[NSNumber numberWithInt:Key_Age]];
-        if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "distribution id", false))
-            [t_meta_data setObject:[NSString stringWithCString: ctxt.GetEP().getcstring() encoding: NSMacOSRomanStringEncoding] forKey:[NSNumber numberWithInt:Key_Distribution_Id]];
-        /*if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "external id", false))
-            [t_meta_data setObject:[NSString stringWithCString: ctxt.GetEP().getcstring() encoding: NSMacOSRomanStringEncoding] forKey:[NSNumber numberWithInt:Key_External_Id]];*/
-        if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "gender", false))
-            [t_meta_data setObject:[NSString stringWithCString: ctxt.GetEP().getcstring() encoding: NSMacOSRomanStringEncoding] forKey:[NSNumber numberWithInt:Key_Gender]];
-        if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "coordinates", false))
-            [t_meta_data setObject:[NSString stringWithCString: ctxt.GetEP().getcstring() encoding: NSMacOSRomanStringEncoding] forKey:[NSNumber numberWithInt:Key_Gps_Coordinates]];
-        if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "keywords", false))
-            [t_meta_data setObject:[NSString stringWithCString: ctxt.GetEP().getcstring() encoding: NSMacOSRomanStringEncoding] forKey:[NSNumber numberWithInt:Key_Keywords]];
-        if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "location", false))
-            [t_meta_data setObject:[NSString stringWithCString: ctxt.GetEP().getcstring() encoding: NSMacOSRomanStringEncoding] forKey:[NSNumber numberWithInt:Key_Location]];
-        if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "phone number", false))
-            [t_meta_data setObject:[NSString stringWithCString: ctxt.GetEP().getcstring() encoding: NSMacOSRomanStringEncoding] forKey:[NSNumber numberWithInt:Key_Msisdn]];        
+        MCValueRef t_value;
+        
+        MCNewAutoNameRef t_age_key;
+        if (t_success)
+            t_success = MCNameCreateWithCString("age", &t_age_key);
+        if (t_success)
+            if (MCArrayFetchValue(p_meta_data, false, *t_age_key, t_value))
+                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Age]];
+
+        MCNewAutoNameRef t_dist_id_key;
+        if (t_success)
+            t_success = MCNameCreateWithCString("distribution id", &t_dist_id_key);
+        if (t_success)
+            if (MCArrayFetchValue(p_meta_data, false, *t_dist_id_key, t_value))
+                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Distribution_Id]];
+        
+        MCNewAutoNameRef t_gender_key;
+        if (t_success)
+            t_success = MCNameCreateWithCString("gender", &t_gender_key);
+        if (t_success)
+            if (MCArrayFetchValue(p_meta_data, false, *t_gender_key, t_value))
+                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Gender]];
+        
+        MCNewAutoNameRef t_coordinates_key;
+        if (t_success)
+            t_success = MCNameCreateWithCString("coordinates", &t_coordinates_key);
+        if (t_success)
+            if (MCArrayFetchValue(p_meta_data, false, *t_coordinates_key, t_value))
+                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Gps_Coordinates]];
+
+        MCNewAutoNameRef t_keywords_key;
+        if (t_success)
+            t_success = MCNameCreateWithCString("keywords", &t_keywords_key);
+        if (t_success)
+            if (MCArrayFetchValue(p_meta_data, false, *t_keywords_key, t_value))
+                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Keywords]];
+        
+        MCNewAutoNameRef t_location_key;
+        if (t_success)
+            t_success = MCNameCreateWithCString("location", &t_location_key);
+        if (t_success)
+            if (MCArrayFetchValue(p_meta_data, false, *t_location_key, t_value))
+                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Location]];
+        
+        MCNewAutoNameRef t_phone_key;
+        if (t_success)
+            t_success = MCNameCreateWithCString("phone number", &t_phone_key);
+        if (t_success)
+            if (MCArrayFetchValue(p_meta_data, false, *t_phone_key, t_value))
+                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Msisdn]];
     }
     
-	r_ad = new MCiOSInneractiveAd(p_type, p_top_left, p_timeout, t_meta_data);
-	return true;
+    if (t_success)
+        r_ad = new MCiOSInneractiveAd(p_type, p_top_left_x, p_top_left_y, p_timeout, t_meta_data);
+    
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -463,7 +505,7 @@ void MCSystemInneractiveAdInit()
 {
 }
 
-bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data)
+bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, MCArrayRef p_meta_data)
 {
 	return false;
 }

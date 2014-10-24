@@ -1,0 +1,7 @@
+setup "source a single byte"
+test-error byteToNum("ab")
+teardown
+
+setup
+test byteToNum("a") is 97
+teardown

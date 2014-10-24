@@ -1,0 +1,11 @@
+setup
+create field
+
+set the text of the last field to "abcd" & return & "efgh"
+find "efgh" in the last field
+test the foundLine is "line 2 of field 1"
+
+find characters "x" in the last field
+test the foundLine is empty
+
+teardown

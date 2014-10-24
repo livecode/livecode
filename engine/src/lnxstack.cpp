@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -51,6 +51,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "resolution.h"
 #include "stacktile.h"
 #include "graphics.h"
+
+#include "license.h"
+#include "revbuild.h"
 
 static uint2 calldepth;
 static uint2 nwait;
@@ -87,10 +90,6 @@ MCStack *MCStack::findstackd(Window w)
 	return NULL;
 }
 
-
-//XDND
-void xdnd_make_window_aware ( Window w ) ;
-
 void MCStack::realize()
 {
 	if (MCnoui)
@@ -102,10 +101,6 @@ void MCStack::realize()
 	if (MCModeMakeLocalWindows())
 	{
 		MCScreenDC *screen = (MCScreenDC *)MCscreen;
-		XSetWindowAttributes xswa;
-		unsigned long xswamask = CWBorderPixel | CWColormap;
-		xswa.border_pixel = 0;
-		xswa.colormap = screen->getcmap();
 
 		// IM-2013-10-08: [[ FullscreenMode ]] Don't change stack rect if fullscreen
 		/* CODE DELETED */
@@ -119,61 +114,57 @@ void MCStack::realize()
 		if (t_rect.height == 0)
 			t_rect.height = MCminsize << 3;
 		
-		window = XCreateWindow(MCdpy, screen->getroot(), t_rect.x, t_rect.y,
-							   t_rect.width, t_rect.height,
-							   0, screen->getrealdepth(), InputOutput,
-							   screen->getvisual(), xswamask, &xswa);
-		
-		//XDND
-		xdnd_make_window_aware ( window ) ;
-		if ( screen -> get_backdrop() != DNULL)
-			XSetTransientForHint(MCdpy, window, screen-> get_backdrop());
-
-		
-		XSelectInput(MCdpy, window,  ButtonPressMask | ButtonReleaseMask
-					 | EnterWindowMask | LeaveWindowMask | PointerMotionMask
-					 | KeyPressMask | KeyReleaseMask | ExposureMask
-					 | FocusChangeMask | StructureNotifyMask | PropertyChangeMask);
+        GdkWindowAttr gdkwa;
+        guint gdk_valid_wa;
+        gdk_valid_wa = GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL;
+        gdkwa.x = t_rect.x;
+        gdkwa.y = t_rect.y;
+        gdkwa.width = t_rect.width;
+        gdkwa.height = t_rect.height;
+        gdkwa.wclass = GDK_INPUT_OUTPUT;
+        gdkwa.window_type = GDK_WINDOW_TOPLEVEL;
+        gdkwa.visual = screen->getvisual();
+        gdkwa.colormap = screen->getcmap();
+        gdkwa.event_mask = GDK_ALL_EVENTS_MASK & ~GDK_POINTER_MOTION_HINT_MASK;
+        
+        window = gdk_window_new(screen->getroot(), &gdkwa, gdk_valid_wa);
+        
+        // FG-2014-07-30: [[ Bugfix 12905 ]]
+        // This is necessary otherwise the window manager might ignore the
+        // position that we have specified for the new window
+        view_platform_setgeom(t_rect);
+        
+		// This is necessary to be able to receive drag-and-drop events
+        gdk_window_register_dnd(window);
+        
+		if (screen -> get_backdrop() != DNULL)
+            gdk_window_set_transient_for(window, screen->get_backdrop());
+        
 		loadwindowshape();
 		if (m_window_shape != nil && m_window_shape -> is_sharp)
-			XShapeCombineMask(MCdpy,window, ShapeBounding, 0, 0, (Pixmap)m_window_shape -> handle, ShapeSet);
+            gdk_window_shape_combine_mask(window, (GdkPixmap*)m_window_shape->handle, 0, 0);
+        
+        // At least one window has been created so startup is complete
+        gdk_notify_startup_complete();
+        
+        // DEBUGGING
+        //gdk_window_set_debug_updates(TRUE);
+        //gdk_window_invalidate_rect(window, NULL, TRUE);
+        //gdk_window_process_all_updates();
 
-		XSync(MCdpy, False);
+		gdk_display_sync(MCdpy);
 	}
 
 	start_externals();
-}
-
-static void wmspec_change_state(Window p_window, Atom p_first_atom, Atom p_second_atom, bool p_add)
-{
-	XClientMessageEvent xclient;
-	
-#define _NET_WM_STATE_REMOVE        0    /* remove/unset property */
-#define _NET_WM_STATE_ADD           1    /* add/set property */
-#define _NET_WM_STATE_TOGGLE        2    /* toggle property  */  
-	
-	memset (&xclient, 0, sizeof (xclient));
-	xclient.type = ClientMessage;
-	xclient.window = p_window;
-	xclient.message_type = XInternAtom(MCdpy, "_NET_WM_STATE", True);
-	xclient.format = 32;
-	xclient.data.l[0] = p_add ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
-	xclient.data.l[1] = p_first_atom;
-	xclient.data.l[2] = p_second_atom;
-	xclient.data.l[3] = 0;
-	xclient.data.l[4] = 0;
-	
-	XSendEvent (MCdpy, MCscreen -> getroot(), False,
-				SubstructureRedirectMask | SubstructureNotifyMask,
-				(XEvent *)&xclient);
 }
 
 void MCStack::setmodalhints()
 {
 	if (mode == WM_MODAL || mode == WM_SHEET)
 	{
-		wmspec_change_state(window, XInternAtom(MCdpy, "_NET_WM_STATE_MODAL", True), None, true);
-		XSetTransientForHint(MCdpy, window, mode == WM_SHEET ? getparentwindow() : None);
+		if (mode == WM_SHEET)
+            gdk_window_set_transient_for(window, (mode == WM_SHEET) ? getparentwindow() : NULL);
+        gdk_window_set_modal_hint(window, TRUE);
 	}
 }
 
@@ -186,8 +177,9 @@ void MCStack::setsizehints(void)
 	if (opened)
 	{
 		// IM-2013-08-12: [[ ResIndependence ]] Use device coordinates when setting WM hints
-		XSizeHints hints;
-		if (flags & F_RESIZABLE )
+		GdkGeometry t_geo;
+        gint t_flags = 0;
+		if (flags & F_RESIZABLE)
 		{
 			// IM-2013-10-18: [[ FullscreenMode ]] Assume min/max sizes in view coords
 			// for resizable stacks - transform to device coords
@@ -199,10 +191,11 @@ void MCStack::setsizehints(void)
 			t_minrect = MCscreen->logicaltoscreenrect(t_minrect);
 			t_maxrect = MCscreen->logicaltoscreenrect(t_maxrect);
 			
-			hints.min_width = t_minrect.width;
-			hints.min_height = t_minrect.height;
-			hints.max_width = t_maxrect.width;
-			hints.max_height = t_maxrect.height;
+            t_geo.min_width = t_minrect.width;
+            t_geo.max_width = t_maxrect.width;
+            t_geo.min_height = t_minrect.height;
+            t_geo.max_height = t_maxrect.height;
+            t_flags |= GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE;
 		}
 		else
 		{
@@ -210,27 +203,21 @@ void MCStack::setsizehints(void)
 			MCRectangle t_device_rect;
 			t_device_rect = MCscreen->logicaltoscreenrect(view_getrect());
 			
-			hints.min_width = hints.max_width = t_device_rect.width;
-			hints.min_height = hints.max_height = t_device_rect.height;
+			t_geo.min_width = t_geo.max_width = t_device_rect.width;
+            t_geo.min_height = t_geo.max_height = t_device_rect.height;
+            t_flags |= GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE;
 		}
-		hints.width_inc = hints.height_inc = 1;
-		hints.win_gravity = StaticGravity;
-		hints.flags = PMaxSize | PMinSize | PResizeInc | PWinGravity;
-		XSetWMNormalHints(MCdpy, window, &hints);
+		
+        t_geo.win_gravity = GDK_GRAVITY_STATIC;
+        t_flags |= GDK_HINT_WIN_GRAVITY;
+        
+        gdk_window_set_geometry_hints(window, &t_geo, GdkWindowHints(t_flags));
 	}
 	
 	// Use the window manager to set to full screen.
-	if ( getextendedstate(ECS_FULLSCREEN) )
+	if (getextendedstate(ECS_FULLSCREEN))
 	{
-		Atom t_type;
-		t_type = XInternAtom ( MCdpy, "_NET_WM_STATE_FULLSCREEN", false );
-
-		Atom t_control;
-		t_control = XInternAtom(MCdpy, "_NET_WM_STATE", false);
-		
-		XChangeProperty(MCdpy, window, t_control, XA_ATOM, 32, PropModeReplace, (unsigned char*)&t_type, 1);
-		XUnmapWindow(MCdpy, window );
-		XMapWindow(MCdpy, window );
+        gdk_window_fullscreen(window);
 	}
 }
 
@@ -239,196 +226,199 @@ void MCStack::sethints()
 	if (!opened || MCnoui || window == DNULL)
 		return;
 		
-	XSetWindowAttributes xswa;
-	unsigned long xswamask = CWOverrideRedirect | CWSaveUnder;
-	xswa.override_redirect = xswa.save_under = mode >= WM_PULLDOWN && mode <= WM_LICENSE;
-	XChangeWindowAttributes(MCdpy, window, xswamask, &xswa);
+    // Choose the appropriate type fint for the window
+    GdkWindowTypeHint t_type_hint = GDK_WINDOW_TYPE_HINT_NORMAL;
+    switch (mode)
+    {
+        case WM_CLOSED:
+        case WM_TOP_LEVEL:
+        case WM_TOP_LEVEL_LOCKED:
+        case WM_MODELESS:
+            break;
+            
+        case WM_PALETTE:
+            t_type_hint = GDK_WINDOW_TYPE_HINT_UTILITY;
+            break;
+            
+        case WM_MODAL:
+        case WM_SHEET:
+            t_type_hint = GDK_WINDOW_TYPE_HINT_DIALOG;
+            break;
+            
+        case WM_PULLDOWN:
+            t_type_hint = GDK_WINDOW_TYPE_HINT_DROPDOWN_MENU;
+            break;
+            
+        case WM_POPUP:
+        case WM_OPTION:
+        case WM_CASCADE:
+            t_type_hint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
+            break;
+            
+        case WM_COMBO:
+            t_type_hint = GDK_WINDOW_TYPE_HINT_COMBO;
+            break;
+            
+        case WM_ICONIC:
+            break;
+            
+        case WM_DRAWER:
+            t_type_hint = GDK_WINDOW_TYPE_HINT_DIALOG;
+            break;
+            
+        case WM_TOOLTIP:
+            t_type_hint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
+            break;
+    }
+    
+    gdk_window_set_type_hint(window, t_type_hint);
+    
+    if (mode >= WM_PULLDOWN && mode <= WM_LICENSE)
+    {
+        gdk_window_set_override_redirect(window, TRUE);
+    }
+    else
+    {
+        gdk_window_set_override_redirect(window, FALSE);
+    }
+    
+    // TODO: initial input focus and initial window state
+	//whints.input = MCpointerfocus;
+	//whints.initial_state = flags & F_START_UP_ICONIC ? IconicState:NormalState;
 
-	XWMHints whints;
-	memset(&whints, 0, sizeof(XWMHints));
-	whints.flags = InputHint | StateHint;
-	whints.input = MCpointerfocus;
-	whints.initial_state = flags & F_START_UP_ICONIC ? IconicState:NormalState;
-	whints.flags |= WindowGroupHint;
-	whints.window_group = ((MCScreenDC *)MCscreen) -> GetNullWindow();
-	
-	XSetWMHints(MCdpy, window, &whints);
-
-	XClassHint chints;
+    gdk_window_set_group(window, ((MCScreenDC*)MCscreen)->GetNullWindow());
+    
+    // GDK does not provide an easy way to change the WM class properties after
+    // window creation time. As a result, we have to do it manually.
+    x11::XClassHint chints;
 	chints.res_name = (char *)getname_cstring();
 
-	chints.res_class = (char *)MCapplicationstring;
-	XSetClassHint(MCdpy, window, &chints);
+    // Build the class name
+    MCAutoStringRef t_class_name;
+    MCAutoStringRefAsCString t_class_name_cstr;
+    bool t_community;
+    t_community = MClicenseparameters.license_class == kMCLicenseClassCommunity;
+    
+    /* UNCHECKED */ MCStringCreateMutable(0, &t_class_name);
+    /* UNCHECKED */ MCStringAppendFormat(*t_class_name, "%s%s_%s", MCapplicationstring, t_community ? "community" : "", MC_BUILD_ENGINE_SHORT_VERSION);
+    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '.', '_', kMCStringOptionCompareExact);
+    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '-', '_', kMCStringOptionCompareExact);
+    /* UNCHECKED */ t_class_name_cstr.Lock(*t_class_name);
+    
+	chints.res_class = (char*)*t_class_name_cstr;
+    x11::XSetClassHint(x11::gdk_x11_display_get_xdisplay(MCdpy), x11::gdk_x11_drawable_get_xid(window), &chints);
 
-	Atom protocols[3];
-	protocols[0] = MCdeletewindowatom;
-	if (MCpointerfocus)
-		XChangeProperty(MCdpy, window, MCprotocolatom, XA_ATOM, 32,
-		                PropModeReplace, (unsigned char *)protocols, 1);
+    // TODO: is this just another way of ensuring on-top-ness?
+	//if (mode >= WM_PALETTE)
+	//{
+	//	uint4 data = 5;
+	//	XChangeProperty(MCdpy, window, MClayeratom, XA_CARDINAL, 32,
+	//	                PropModeReplace, (unsigned char *)&data, 1);
+	//}
+	
+    // What decorations and modifications should the window have?
+    gint t_decorations = 0;
+    gint t_functions = 0;
+	if (flags & F_RESIZABLE) // && mode != WM_PALETTE)
+	{
+        t_decorations = GDK_DECOR_RESIZEH | GDK_DECOR_MAXIMIZE | GDK_DECOR_TITLE;
+        t_functions = GDK_FUNC_RESIZE | GDK_FUNC_MOVE | GDK_FUNC_MAXIMIZE | GDK_FUNC_CLOSE;
+	}
 	else
 	{
-		protocols[1] = MCmwmmessageatom;
-		protocols[2] = MCtakefocusatom;
-		XChangeProperty(MCdpy, window, MCprotocolatom, XA_ATOM, 32,
-		                PropModeReplace, (unsigned char *)protocols, 3);
-	}
-	if (mode >= WM_PALETTE)
-	{
-		uint4 data = 5;
-		XChangeProperty(MCdpy, window, MClayeratom, XA_CARDINAL, 32,
-		                PropModeReplace, (unsigned char *)&data, 1);
-	}
-	
-	
-	MwmHints mwmhints;
-	Atom OLAhints[3];
-	Atom OLDhints[3];
-	uint2 nOLAhints = 0;
-	uint2 nOLDhints = 0;
-	mwmhints.flags = MWM_HINTS_FUNCTIONS | MWM_HINTS_DECORATIONS | MWM_HINTS_INPUT_MODE; 
-	if (flags & F_RESIZABLE ) // && mode != WM_PALETTE)
-	{
-		mwmhints.decorations
-		= MWM_DECOR_TITLE | MWM_DECOR_RESIZEH | MWM_DECOR_MAXIMIZE;
-		mwmhints.functions = MWM_FUNC_RESIZE | MWM_FUNC_MOVE
-		                     | MWM_FUNC_MAXIMIZE | MWM_FUNC_CLOSE;
-		OLAhints[nOLAhints++] = MColresizeatom;
+		t_decorations = GDK_DECOR_TITLE | GDK_DECOR_BORDER;
+        t_functions = GDK_FUNC_MOVE | GDK_FUNC_MINIMIZE | GDK_FUNC_CLOSE;
 	}
 
-	else
-	{
-		mwmhints.decorations =  MWM_DECOR_TITLE | MWM_DECOR_BORDER;
-		mwmhints.functions = MWM_FUNC_MOVE | MWM_FUNC_MINIMIZE | MWM_FUNC_CLOSE;
-		OLDhints[nOLDhints++] = MColresizeatom;
-	}
-
+    // TODO: input modality hints
+    // (According to the GDK documentation, most WMs ignore the Motif hints anyway)
 	switch (mode)
 	{
-	case WM_TOP_LEVEL:
-	case WM_TOP_LEVEL_LOCKED:
-	case WM_MODELESS:
-	case WM_PALETTE:
-	case WM_DRAWER:
-		mwmhints.decorations |= MWM_DECOR_MENU;
-		if (mode != WM_PALETTE && view_getrect().width > DECORATION_MINIMIZE_WIDTH)
-		//if (rect.width > DECORATION_MINIMIZE_WIDTH)
-		{
-			mwmhints.decorations |= MWM_DECOR_MINIMIZE;
-			mwmhints.functions |= MWM_FUNC_MINIMIZE;
-		}
-		mwmhints.input_mode = MWM_INPUT_MODELESS;
-		OLAhints[nOLAhints++] = MColheaderatom;
-		OLAhints[nOLAhints++] = MColcloseatom;
-		break;
-	case WM_LICENSE:
-		mwmhints.flags = MWM_HINTS_DECORATIONS | MWM_HINTS_INPUT_MODE;
-		mwmhints.input_mode = MWM_INPUT_SYSTEM_MODAL;
-		OLDhints[nOLDhints++] = MColheaderatom;
-		OLDhints[nOLDhints++] = MColcloseatom;
-		break;
-	default:
-		OLAhints[nOLAhints++] = MColheaderatom;
-		OLDhints[nOLDhints++] = MColcloseatom;
-		mwmhints.input_mode = MWM_INPUT_FULL_APPLICATION_MODAL;
-		break;
+        case WM_TOP_LEVEL:
+        case WM_TOP_LEVEL_LOCKED:
+        case WM_MODELESS:
+        case WM_PALETTE:
+        case WM_DRAWER:
+            t_decorations |= GDK_DECOR_MENU;
+            if (mode != WM_PALETTE && view_getrect().width > DECORATION_MINIMIZE_WIDTH)
+            {
+                t_decorations |= GDK_DECOR_MINIMIZE;
+                t_functions |= GDK_FUNC_MINIMIZE;
+            }
+
+            //mwmhints.input_mode = MWM_INPUT_MODELESS;
+            break;
+        case WM_LICENSE:
+            t_functions = 0;
+            //mwmhints.input_mode = MWM_INPUT_SYSTEM_MODAL;
+            break;
+        default:
+            //mwmhints.input_mode = MWM_INPUT_FULL_APPLICATION_MODAL;
+            break;
 	}
+    
 	if (flags & F_DECORATIONS)
 	{
-		
-		nOLAhints = 0;
-		nOLDhints = 0;
-		mwmhints.decorations = 0;
-		mwmhints.functions = 0 ;
+        // Set all of the decorations manually
+        t_decorations = 0;
+        t_functions = 0;
 		
 		if ( ( decorations & ( WD_TITLE | WD_MENU | WD_MINIMIZE | WD_MAXIMIZE | WD_CLOSE ) )  && flags & F_RESIZABLE ) //&& mode != WM_PALETTE)
 		{
-			mwmhints.decorations |= MWM_DECOR_RESIZEH;
-			//TS-2007-08-20 changed to |= from = so that we ALWAYS have the MOVE functionality
-			mwmhints.functions |= MWM_FUNC_RESIZE;
-			OLAhints[nOLAhints++] = MColresizeatom;
+			t_decorations |= GDK_DECOR_RESIZEH;
+            t_functions |= GDK_FUNC_RESIZE;
 		}
-		else
-			OLDhints[nOLDhints++] = MColresizeatom;
+
 		if (decorations & WD_TITLE)
 		{
-			mwmhints.decorations |= MWM_DECOR_TITLE | MWM_DECOR_BORDER;
-			OLAhints[nOLAhints++] = MColheaderatom;
+			t_decorations |= GDK_DECOR_TITLE | GDK_DECOR_BORDER;
 		}
-		else
-			OLDhints[nOLDhints++] = MColheaderatom;
+
 		if (decorations & WD_MENU)
 		{
-			mwmhints.decorations |= MWM_DECOR_MENU;
-			OLAhints[nOLAhints++] = MColcloseatom;
+			t_decorations |= GDK_DECOR_MENU;
 		}
-		else
-			OLDhints[nOLDhints++] = MColcloseatom;
+
 		if (decorations & WD_MINIMIZE)
 		{
-			mwmhints.decorations |= MWM_DECOR_MINIMIZE;
-			mwmhints.functions |= MWM_FUNC_MINIMIZE;
+			t_decorations |= GDK_DECOR_MINIMIZE;
+            t_functions |= GDK_FUNC_MINIMIZE;
 		}
+        
 		if (decorations & WD_MAXIMIZE)
 		{
-			mwmhints.decorations |= MWM_DECOR_MAXIMIZE;
-			mwmhints.functions |= MWM_FUNC_MAXIMIZE;
+			t_decorations |= GDK_DECOR_MAXIMIZE;
+            t_functions |= GDK_FUNC_MAXIMIZE;
 		}
 		
 		//TS-2007-08-20 Added handler for WD_CLOSE
 		if (decorations & WD_CLOSE)
 		{
-			mwmhints.functions |= MWM_FUNC_CLOSE;
+			t_functions |= GDK_FUNC_CLOSE;
 		}
 		
-		
 		if ( decorations != 0 ) 
-			mwmhints.functions |= MWM_FUNC_MOVE ;
+			t_functions |= GDK_FUNC_MOVE;
 
-		
 		//TS 
 		if ( decorations & WD_SHAPE )
 		{
-			mwmhints.decorations = 0 ;
+			t_decorations = 0;
 		}
 		
 	}
+    
+    // TODO: test if this comment is still true
 	// Gnome gets confused with these set
-	if (flags & F_DECORATIONS)
-		XChangeProperty(MCdpy, window, MCmwmhintsatom, MCmwmhintsatom, 32,
-		                PropModeReplace, (unsigned char *)&mwmhints,
-		                sizeof(mwmhints) / 4);
-	
-	Atom t_type, t_control ;
-	t_control = XInternAtom(MCdpy, "_NET_WM_STATE", false);
+	//if (flags & F_DECORATIONS)
+    gdk_window_set_decorations(window, GdkWMDecoration(t_decorations));
+    gdk_window_set_functions(window, GdkWMFunction(t_functions));
 	
 	//TS 2007-11-08 : Adding in additional hint _NET_WM_STATE == _NET_WM_STATE_ABOVE if we have set WD_UTILITY (i.e. systemwindow == true)
-	if ( decorations & WD_UTILITY)
+	if (decorations & WD_UTILITY)
 	{
-		t_type = 	XInternAtom(MCdpy, "_NET_WM_STATE_ABOVE", false);	
-		XChangeProperty(MCdpy, window, t_control, XA_ATOM, 32, PropModeReplace, (unsigned char*)&t_type, 1);
+		gdk_window_set_keep_above(window, TRUE);
 	}
-	
-	if (mode == WM_SHEET || mode == WM_MODAL)
-	{
-		Atom t_type;
-		t_type = XInternAtom(MCdpy, "_NET_WM_WINDOW_TYPE_DIALOG", True);
-		XChangeProperty(MCdpy, window, XInternAtom(MCdpy, "_NET_WM_WINDOW_TYPE", True), XA_ATOM, 32, PropModeReplace, (unsigned char*)&t_type, 1);
-	}
-
-	
-#ifdef OLWM
-
-	if (mode != WM_MODAL && mode != WM_SHEET)
-		XChangeProperty(MCdpy, window, MColwinatom, XA_ATOM,
-		                32, PropModeReplace, (unsigned char*)&MColwtotheratom, 1);
-	else
-		XChangeProperty(MCdpy, window, MColwinatom, XA_ATOM,
-		                32, PropModeReplace, (unsigned char*)&MColwtpropatom, 1);
-	XChangeProperty(MCdpy, window, MColddecoratom, XA_ATOM,
-	                32, PropModeReplace, (unsigned char*)OLDhints, nOLDhints);
-	XChangeProperty(MCdpy, window, MColadecoratom, XA_ATOM,
-	                32, PropModeReplace, (unsigned char*)OLAhints, nOLAhints);
-#endif
 }
 
 void MCStack::destroywindowshape()
@@ -443,8 +433,8 @@ void MCStack::destroywindowshape()
 	// shape. Otherwise it is nil.
 	if (m_window_shape -> is_sharp)
 	{
-		Pixmap t_pixmap;
-		t_pixmap = (Pixmap)m_window_shape -> handle;
+		GdkPixmap *t_pixmap;
+		t_pixmap = (GdkPixmap*)m_window_shape -> handle;
 		if (t_pixmap != nil)
 			((MCScreenDC*)MCscreen) -> freepixmap(t_pixmap);
 	}
@@ -461,24 +451,29 @@ MCRectangle MCStack::view_platform_getwindowrect(void) const
 
 MCRectangle MCStack::view_device_getwindowrect(void) const
 {
-	Window t_root, t_child, t_parent;
-	Window *t_children;
+    x11::Window t_root, t_child, t_parent;
+    x11::Window *t_children;
 	int32_t t_win_x, t_win_y, t_x_offset, t_y_offset;
 	uint32_t t_width, t_height, t_border_width, t_depth, t_child_count;
 
-	Window t_window = window;
+    x11::Window t_window = x11::gdk_x11_drawable_get_xid(window);
+    
+    x11::Display *t_display = x11::gdk_x11_display_get_xdisplay(MCdpy);
 
-	XQueryTree(MCdpy, t_window, &t_root, &t_parent, &t_children, &t_child_count);
-	XFree(t_children);
+    // We query for the top-level parent using the X11 functions because the GDK
+    // equivalents do not account for re-parenting window managers and will not
+    // return the re-parented parent.
+    x11::XQueryTree(t_display, t_window, &t_root, &t_parent, &t_children, &t_child_count);
+    x11::XFree(t_children);
 	while (t_parent != t_root)
 	{
 		t_window = t_parent;
-		XQueryTree(MCdpy, t_window, &t_root, &t_parent, &t_children, &t_child_count);
-		XFree(t_children);
+        x11::XQueryTree(t_display, t_window, &t_root, &t_parent, &t_children, &t_child_count);
+        x11::XFree(t_children);
 	}
 
-	XGetGeometry(MCdpy, t_window, &t_root, &t_win_x, &t_win_y, &t_width, &t_height, &t_border_width, &t_depth);
-	XTranslateCoordinates(MCdpy, t_window, t_root, 0, 0, &t_win_x, &t_win_y, &t_child);
+    x11::XGetGeometry(t_display, t_window, &t_root, &t_win_x, &t_win_y, &t_width, &t_height, &t_border_width, &t_depth);
+    x11::XTranslateCoordinates(t_display, t_window, t_root, 0, 0, &t_win_x, &t_win_y, &t_child);
 
 	MCRectangle t_rect;
 	t_rect.x = t_win_x - t_border_width;
@@ -502,57 +497,62 @@ MCRectangle MCStack::view_device_setgeom(const MCRectangle &p_rect,
 	uint32_t p_minwidth, uint32_t p_minheight,
 	uint32_t p_maxwidth, uint32_t p_maxheight)
 {
-	Window t_root, t_child;
-	int t_win_x, t_win_y;
-	unsigned int t_width, t_height, t_border_width, t_depth;
-	
-	XGetGeometry(MCdpy, window, &t_root, &t_win_x, &t_win_y, &t_width, &t_height, &t_border_width, &t_depth);
+	// Get the position of the window in root coordinates
+    gint t_root_x, t_root_y;
+    gdk_window_get_origin(window, &t_root_x, &t_root_y);
+    
+    // Get the dimensions of the window
+    gint t_width, t_height;
+    t_width = gdk_window_get_width(window);
+    t_height = gdk_window_get_height(window);
+    
+    MCRectangle t_old_rect;
+    t_old_rect = MCU_make_rect(t_root_x, t_root_y, t_width, t_height);
+    
+    if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
+    {
+        GdkGeometry t_geom;
+        t_geom.win_gravity = GDK_GRAVITY_STATIC;
+        
+        gint t_hints = GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE|GDK_HINT_WIN_GRAVITY;
+        
+        if (flags & F_RESIZABLE)
+        {
+            t_geom.min_width = p_minwidth;
+            t_geom.max_width = p_maxwidth;
+            t_geom.min_height = p_minheight;
+            t_geom.max_height = p_maxheight;
+        }
+        else
+        {
+            t_geom.min_width = t_geom.max_width = p_rect.width;
+            t_geom.min_height = t_geom.max_height = p_rect.height;
+        }
+        
+        // By setting these "user" flags, we tell the window manager that we
+        // know best and it should not attempt to remove or resize the window
+        // according to its preferences.
+        if (!(flags & F_WM_PLACE) || (state & CS_BEEN_MOVED))
+            t_hints |= GDK_HINT_USER_POS;
+        t_hints |= GDK_HINT_USER_SIZE;
+        
+        gdk_window_set_geometry_hints(window, &t_geom, GdkWindowHints(t_hints));
+        //gdk_window_move_resize(window, p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+    }
+    
+    if ((!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED) && (t_root_x != p_rect.x || t_root_y != p_rect.y))
+    {
+        if (t_width != p_rect.width || t_height != p_rect.height)
+            gdk_window_move_resize(window, p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+        else
+            gdk_window_move(window, p_rect.x, p_rect.y);
+    }
+    else
+    {
+        if (t_width != p_rect.width || t_height != p_rect.height)
+            gdk_window_resize(window, p_rect.width, p_rect.height);
+    }
 
-	XTranslateCoordinates(MCdpy, window, t_root, 0, 0, &t_win_x, &t_win_y, &t_child);
-	
-	MCRectangle t_old_rect;
-	t_old_rect = MCU_make_rect(t_win_x, t_win_y, t_width, t_height);
-	
-	if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
-	{
-		XSizeHints hints;
-		hints.x = p_rect.x;
-		hints.y = p_rect.y;
-		hints.width = p_rect.width;
-		hints.height = p_rect.height;
-		if (flags & F_RESIZABLE)
-		{
-			hints.min_width = p_minwidth;
-			hints.min_height = p_minheight;
-			hints.max_width = p_maxwidth;
-			hints.max_height = p_maxheight;
-		}
-		else
-		{
-			hints.min_width = hints.max_width = p_rect.width;
-			hints.min_height = hints.max_height = p_rect.height;
-		}
-		hints.width_inc = hints.height_inc = 1;
-		hints.win_gravity = StaticGravity;
-		hints.flags = USSize | PMaxSize | PMinSize | PResizeInc | PWinGravity;
-		if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
-			hints.flags |= USPosition;
-		XSetWMNormalHints(MCdpy, window, &hints);
-	}
-	
-	if ((!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED) && (t_win_x != p_rect.x || t_win_y != p_rect.y))
-	{
-		if (t_width != p_rect.width || t_height != p_rect.height)
-			XMoveResizeWindow(MCdpy, window, p_rect.x, p_rect.y, p_rect.width, p_rect.height);
-		else
-			XMoveWindow(MCdpy, window, p_rect.x, p_rect.y);
-	}
-	else
-	{
-		if (t_width != p_rect.width || t_height != p_rect.height)
-			XResizeWindow(MCdpy, window, p_rect.width, p_rect.height);
-	}
-	
 	return t_old_rect;
 }
 
@@ -588,15 +588,15 @@ void MCStack::setgeom()
 	state &= ~CS_ISOPENING;
 }
 
- void MCStack::start_externals()
- {
-		loadexternals();
- }
+void MCStack::start_externals()
+{
+    loadexternals();
+}
 
- void MCStack::stop_externals()
- {
-	 destroywindowshape();
-	 unloadexternals();
+void MCStack::stop_externals()
+{
+    destroywindowshape();
+    unloadexternals();
 }
  
 void MCStack::platform_openwindow(Boolean override)
@@ -619,13 +619,13 @@ void MCStack::setopacity(unsigned char p_level)
 	if (!MCModeMakeLocalWindows())
 		return;
 
-	double op ;
-	op = (double)p_level / 255 ;
-	uint4 cardinal;
-	cardinal = op * 0xffffffff ;
+	gdouble t_opacity;
+	t_opacity = gdouble(p_level) / 255.0;
 
-	Atom t_atom = XInternAtom ( MCdpy, "_NET_WM_WINDOW_OPACITY", False );
-	XChangeProperty (MCdpy, window, t_atom, XA_CARDINAL, 32, PropModeReplace, ( unsigned char*) &cardinal, 1);
+    if (p_level == 255)
+        gdk_window_set_opacity(window, 1.0);
+    else
+        gdk_window_set_opacity(window, t_opacity);
 }
 
 void MCStack::updatemodifiedmark(void)
@@ -643,16 +643,18 @@ void MCStack::redrawicon(void)
 
 void MCStack::enablewindow(bool p_enable)
 {
-	long t_event_mask;
-	if (p_enable)
-		t_event_mask = ButtonPressMask | ButtonReleaseMask
-		| EnterWindowMask | LeaveWindowMask | PointerMotionMask
-		| KeyPressMask | KeyReleaseMask | ExposureMask
-		| FocusChangeMask | StructureNotifyMask | PropertyChangeMask;
-	else
-		t_event_mask = ExposureMask | StructureNotifyMask | PropertyChangeMask;
-	
-	XSelectInput(MCdpy, window, t_event_mask);
+	gint t_event_mask;
+    
+    if (p_enable)
+    {
+        t_event_mask = GDK_ALL_EVENTS_MASK & ~GDK_POINTER_MOTION_HINT_MASK;
+    }
+    else
+    {
+        t_event_mask = GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK;
+    }
+    
+	gdk_window_set_events(window, GdkEventMask(t_event_mask));
 }
 
 void MCStack::applyscroll(void)
@@ -667,12 +669,12 @@ void MCStack::clearscroll(void)
 
 void MCBitmapClearRegion(MCBitmap *p_image, int32_t p_x, int32_t p_y, uint32_t p_width, uint32_t p_height)
 {
-	uint8_t *t_dst_row = (uint8_t*)p_image->data + p_y * p_image->bytes_per_line + p_x * sizeof(uint32_t);
-	for (uint32_t y = 0; y < p_height; y++)
-	{
-		MCMemoryClear(t_dst_row, p_width * sizeof(uint32_t));
-		t_dst_row += p_image->bytes_per_line;
-	}
+	uint8_t *t_dst_row = (uint8_t*)gdk_pixbuf_get_pixels(p_image) + p_y * gdk_pixbuf_get_rowstride(p_image) + p_x * sizeof(uint32_t);
+    for (uint32_t y = 0; y < p_height; y++)
+    {
+        MCMemoryClear(t_dst_row, p_width * sizeof(uint32_t));
+        t_dst_row += gdk_pixbuf_get_rowstride(p_image);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -684,27 +686,30 @@ static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCX11PutImage(Display *p_dpy, Drawable d, Region p_clip_region, XImage *source, int2 sx, int2 sy,
+void MCX11PutImage(GdkDisplay *p_dpy, GdkDrawable* d, GdkRegion* p_clip_region, GdkPixbuf *source, int2 sx, int2 sy,
                           int2 dx, int2 dy, uint2 w, uint2 h)
 {
 	if (d == nil)
 		return;
 
-	GC t_gc;
+	GdkGC *t_gc;
 
-	t_gc = XCreateGC(p_dpy, d, 0, NULL );
+	t_gc = gdk_gc_new(d);
 
-	XRectangle t_rect;
-	t_rect.x = t_rect.y = t_rect.width = t_rect.height = 0;
-	XClipBox(p_clip_region, &t_rect);
-	
-	XSetRegion(p_dpy, t_gc, p_clip_region);
-	XPutImage(p_dpy, d, t_gc , source, sx, sy, dx, dy, w, h);
-	XFreeGC(p_dpy, t_gc);
+    // If we use gdk_draw_pixbuf, the pixbuf gets blended with the existing
+    // contents of the window - something that we definitely do not want. We
+    // need to use Cairo directly to do the drawing to the window surface.
+    cairo_t *t_cr = gdk_cairo_create(d);
+    cairo_set_operator(t_cr, CAIRO_OPERATOR_SOURCE);
+    gdk_cairo_region(t_cr, p_clip_region);
+    cairo_clip(t_cr);
+    gdk_cairo_set_source_pixbuf(t_cr, source, dx-sx, dy-sy);
+    cairo_paint(t_cr);
+    cairo_destroy(t_cr);
 }
 
-bool MCLinuxMCGRegionToRegion(MCGRegionRef p_region, Region &r_region);
-void MCLinuxRegionDestroy(Region p_region);
+bool MCLinuxMCGRegionToRegion(MCGRegionRef p_region, GdkRegion* &r_region);
+void MCLinuxRegionDestroy(GdkRegion* p_region);
 
 //////////
 
@@ -736,19 +741,20 @@ public:
 		if (MCGIntegerRectangleIsEmpty(t_actual_area))
 			return false;
 
+        //fprintf(stderr, "MCLinuxStackSurface::lock(): %d,%d,%d,%d\n", t_actual_area.x, t_actual_area.y, t_actual_area.width, t_actual_area.height);
+        
 		bool t_success = true;
 
 		if (t_success)
-			t_success = nil != (m_bitmap = ((MCScreenDC*)MCscreen)->createimage(32, t_actual_area.size.width, t_actual_area.size.height, False, 0x0, False, False));
+			t_success = nil != (m_bitmap = ((MCScreenDC*)MCscreen)->createimage(32, t_actual_area.size.width, t_actual_area.size.height, false, 0x00));
 
 		if (t_success)
 		{
-			m_raster . format = kMCGRasterFormat_xRGB;
+			m_raster . format = kMCGRasterFormat_ARGB;
 			m_raster . width = t_actual_area.size.width;
 			m_raster . height = t_actual_area.size.height;
-			m_raster . stride = t_actual_area.size.width * sizeof(uint32_t);
-			m_raster . pixels = m_bitmap->data;
-
+			m_raster . stride = gdk_pixbuf_get_rowstride(m_bitmap);
+			m_raster . pixels = gdk_pixbuf_get_pixels(m_bitmap);
 			m_area = t_actual_area;
 
 			return true;
@@ -794,16 +800,16 @@ public:
 				surface_merge_with_alpha(m_raster.pixels, m_raster.stride, t_src_ptr, t_mask -> stride, t_width, t_height);
 			}
 
-			Region t_region;
+			GdkRegion* t_region;
 			t_region = nil;
 			
 			/* UNCHECKED */ MCLinuxMCGRegionToRegion(m_region, t_region);
 			
-			MCX11PutImage(((MCScreenDC*)MCscreen)->getDisplay(), m_stack->getwindow(), t_region, (XImage*)m_bitmap, 0, 0, m_area.origin.x, m_area.origin.y, m_area.size.width, m_area.size.height);
+			MCX11PutImage(((MCScreenDC*)MCscreen)->getDisplay(), m_stack->getwindow(), t_region, m_bitmap, 0, 0, m_area.origin.x, m_area.origin.y, m_area.size.width, m_area.size.height);
 			
 			MCLinuxRegionDestroy(t_region);
 		}
-		
+
 		((MCScreenDC*)MCscreen)->destroyimage(m_bitmap);
 		m_bitmap = nil;
 	}
@@ -921,23 +927,25 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 	view_device_updatewindow(p_region);
 }
 
+static bool filter_expose(GdkEvent *p_event, void *p_window)
+{
+    return p_event->any.window == p_window && (p_event->type == GDK_EXPOSE || p_event->type == GDK_DAMAGE);
+}
+
 void MCStack::view_device_updatewindow(MCRegionRef p_region)
 {
 	MCRegionRef t_update_region;
 	t_update_region = nil;
 
-	XEvent t_event;
-	while(XCheckTypedWindowEvent(MCdpy, window, Expose, &t_event))
-	{
-		XExposeEvent *t_eevent;
-		t_eevent = (XExposeEvent *)&t_event;
-		
-		if (t_update_region == nil)
-			MCRegionCreate(t_update_region);
-
-		MCRegionIncludeRect(t_update_region,  MCU_make_rect(t_eevent->x, t_eevent->y, t_eevent->width, t_eevent->height));
-	}
-
+    GdkEvent *t_event;
+    while (((MCScreenDC*)MCscreen)->GetFilteredEvent(filter_expose, t_event, window))
+    {
+        if (t_update_region == nil)
+            MCRegionCreate(t_update_region);
+        
+        MCRegionIncludeRect(t_update_region, MCU_make_rect(t_event->expose.area.x, t_event->expose.area.y, t_event->expose.area.width, t_event->expose.area.height));
+    }
+    
 	if (t_update_region != nil)
 		MCRegionAddRegion(t_update_region, p_region);
 	else

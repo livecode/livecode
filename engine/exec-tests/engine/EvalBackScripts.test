@@ -1,0 +1,17 @@
+setup
+create button
+put the long id of button 1 into tButton
+set the script of tButton to "on evalBackScriptsTest" & return & \
+		"end evalBackScriptsTest" & return
+
+test tButton is not among the lines of the backscripts
+
+insert the script of tButton into back
+
+test tButton is among the lines of the backscripts
+
+remove the script of tButton from back
+
+test tButton is not among the lines of the backscripts
+
+teardown

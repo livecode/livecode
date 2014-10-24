@@ -1,0 +1,19 @@
+setup
+
+test 12,34,56,78 is a rectangle
+test not (12,34,56,78 is not a rectangle)
+
+test 123 is not a rectangle
+test 1.5 is not a rectangle
+test "abc" is not a rectangle
+
+test 0,0,0 is not a rectangle
+test 0,0,0,0,0 is not a rectangle
+
+test 0,0,0,"abc" is not a rectangle
+test 0,0,0,1.23 is not a rectangle
+
+test empty is not a rectangle
+
+teardown
+

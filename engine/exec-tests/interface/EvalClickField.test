@@ -1,0 +1,18 @@
+setup
+
+create field
+set the rect of the last field to 100,100,200,200
+
+create field
+set the rect of the last field to 200,200,300,300
+
+click at the loc of field 1
+test the clickField is "field 1"
+
+click at the loc of field 2
+test the clickField is "field 2"
+
+click at 0,0
+test the clickField is empty
+
+teardown

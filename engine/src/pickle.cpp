@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "aclip.h"
 #include "cpalette.h"
 #include "vclip.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "cdata.h"
 #include "styledtext.h"
 #include "globals.h"
@@ -54,10 +54,10 @@ struct MCPickleContext
 {
 	IO_handle stream;
 	bool error;
-	
-	// MW-2012-03-04: [[ StackFile5500 ]] If 'include_2700' is true then both
-	//   2.7 and 5.5 versions will be pickled.
-	bool include_2700;
+    
+    // AL-2014-02-14: [[ UnicodeFileFormat ]] If 'include_legacy' is true then
+	// 2.7, 5.5 and 7.0 versions will be pickled.
+	bool include_legacy;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,11 +66,12 @@ struct MCPickleContext
 //  can be used successively by calls to continuepickling to serialize a
 //  sequence of objects.
 //
-//  If 'include_2700' is true then each object will be serialized as first a
-//  2.7 version, then a 5.5 version. This works with older versions of the
-//  engine which will only read as far as the 2.7 version.
+//  If 'include_legacy' is true then each object will be serialized as first a
+//  2.7 version, then a 5.5 version, then a 7.0 version. This works with older
+//  versions of the engine which will only read as far as the correct version.
 //
-MCPickleContext *MCObject::startpickling(bool p_include_2700)
+
+MCPickleContext *MCObject::startpickling(bool p_include_legacy)
 {
 	bool t_success;
 	t_success = true;
@@ -98,9 +99,9 @@ MCPickleContext *MCObject::startpickling(bool p_include_2700)
 		t_context -> stream = t_stream;
 		t_context -> error = false;
 		
-		// MW-2012-03-04: [[ StackFile5500 ]] Pass the 'include_2700' flag
+		// MW-2012-03-04: [[ UnicodeFileFormat ]] Pass the 'include_legacy' flag
 		//   through.
-		t_context -> include_2700 = p_include_2700;
+		t_context -> include_legacy = p_include_legacy;
 	}
 	else
 	{
@@ -116,40 +117,78 @@ MCPickleContext *MCObject::startpickling(bool p_include_2700)
 //  stoppickling is used to end a sequence of pickling operations. It returns
 //  an MCSharedString containing the serialized object data.
 //
-MCSharedString *MCObject::stoppickling(MCPickleContext *p_context)
+void MCObject::stoppickling(MCPickleContext *p_context, MCDataRef& r_string)
 {
 	// Since we can use the start, continue and stop pickling methods without
 	// checking for errors, exit if the context is NULL.
 	if (p_context == NULL)
-		return NULL;
+		return;
 
 	bool t_success;
 	t_success = true;
 
-	char* t_buffer;
-	uint4 t_size;
+    // FG-2014-08-07: [[ Bugfix 13070 ]]
+    // Don't reinterpret_cast a uint32_t& to a size_t& - it doesn't work on 64-bit
+	void* t_buffer;
+	size_t t_size;
 	t_buffer = NULL;
 	t_size = 0;
 	if (t_success)
 	{
-		MCS_fakeclosewrite(p_context -> stream, t_buffer, t_size);
-		if (t_buffer == NULL)
+		if (MCS_closetakingbuffer(p_context -> stream, t_buffer, t_size) != IO_NORMAL)
 			t_success = false;
 	}
 
-	MCSharedString *t_result;
-	t_result = NULL;
 	if (t_success)
-		t_result = MCSharedString::CreateNoCopy(MCString(t_buffer, t_size));
-	else
+		t_success = MCDataCreateWithBytesAndRelease((char_t *)t_buffer, t_size, r_string);
+
+	if (!t_success)
 	{
 		if (t_buffer != NULL)
 			free(t_buffer);
 	}
 
 	delete p_context;
+}
 
-	return t_result;
+// AL-2014-02-14: [[ UnicodeFileFormat ]] Write an object to the given stream
+static IO_stat pickle_object_to_stream(IO_handle p_stream, uint32_t p_version, MCObject* p_object, uint4 p_part)
+{
+    uint32_t t_old_version = MCstackfileversion;
+    MCstackfileversion = p_version;
+    
+    IO_stat t_stat;
+    t_stat = IO_NORMAL;
+    
+	// Write out the charset byte
+	if (t_stat == IO_NORMAL)
+		t_stat = IO_write_uint1(CHARSET, p_stream);
+    
+	// MW-2012-02-17: [[ LogFonts ]] Build the logical font table for the
+	//   object and its children and serialize it.
+	if (t_stat == IO_NORMAL)
+	{
+		// Build the logical font table for the object.
+		MCLogicalFontTableBuild(p_object, p_part);
+        
+		// Write out the font table to the stream.
+		MCLogicalFontTableSave(p_stream, MCstackfileversion);
+	}
+    
+	// Write the object
+	if (t_stat == IO_NORMAL)
+		t_stat = p_object -> save(p_stream, p_part, false);
+    
+	// If the object is a card, pickle all the objects it references
+	// immediately after the main object.
+	if (t_stat == IO_NORMAL && p_object -> gettype() == CT_CARD)
+		t_stat = static_cast<MCCard *>(p_object) -> saveobjects(p_stream, p_part);
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = IO_write_uint1(OT_END, p_stream);
+    
+    MCstackfileversion = t_old_version;
+    return t_stat;
 }
 
 // Convert the given object to a byte-stream that can be read at a later date
@@ -185,15 +224,6 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 
 	IO_handle t_stream;
 	t_stream = p_context -> stream;
-
-	// MW-2012-03-04: [[ StackFile5500 ]] If the 2.7 version isn't needed (for, example
-	//   styled text objects which are internal) then output as 5.5.
-	uint4 t_old_stackfileversion;
-	t_old_stackfileversion = MCstackfileversion;
-	if (p_context -> include_2700)
-		MCstackfileversion = 2700;
-	else
-		MCstackfileversion = 5500;
 	
 	// MW-2012-02-22; [[ NoScrollSave ]] Initialize the grouped object offset
 	//   to zero.
@@ -202,7 +232,7 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 	
 	// Write the version header - either 2.7 or 5.5 depending on the setting of include_2700.
 	if (t_stat == IO_NORMAL)
-		t_stat = IO_write(p_context -> include_2700 ? "REVO2700" : "REVO5500", 8, 1, t_stream);
+		t_stat = IO_write(p_context -> include_legacy ? "REVO2700" : "REVO7000", 8, 1, t_stream);
 
 	// Write the space for the chunk size field
 	if (t_stat == IO_NORMAL)
@@ -211,77 +241,28 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 	// Record where we are now in the stream
 	uint4 t_chunk_start;
 	if (t_stat == IO_NORMAL)
-		t_chunk_start = MCS_faketell(t_stream);
+		t_chunk_start = MCS_tell(t_stream);
 
-	// Write out the charset byte
-	if (t_stat == IO_NORMAL)
-		t_stat = IO_write_uint1(CHARSET, t_stream);
+    if (t_stat == IO_NORMAL)
+        t_stat = pickle_object_to_stream(t_stream, p_context -> include_legacy ? 2700 : 7000, p_object, p_part);
 
-	// MW-2012-02-17: [[ LogFonts ]] Build the logical font table for the
-	//   object and its children and serialize it.
-	if (t_stat == IO_NORMAL)
+	// MW-2012-03-04: [[ UnicodeFileFormat ]] If we are including 2.7, 5.5 and 7.0, now write
+	//   out the 5.5 and 7.0 versions.
+	if (t_stat == IO_NORMAL && p_context -> include_legacy)
 	{
-		// Build the logical font table for the object.
-		MCLogicalFontTableBuild(p_object, p_part);
-
-		// Write out the font table to the stream.
-		MCLogicalFontTableSave(t_stream);
-	}
-
-	// Write the object
-	if (t_stat == IO_NORMAL)
-		t_stat = p_object -> save(t_stream, p_part, false);
-
-	// If the object is a card, pickle all the objects it references
-	// immediately after the main object.
-	if (t_stat == IO_NORMAL && p_object -> gettype() == CT_CARD)
-		t_stat = static_cast<MCCard *>(p_object) -> saveobjects(t_stream, p_part);
-
-	if (t_stat == IO_NORMAL)
-		t_stat = IO_write_uint1(OT_END, t_stream);
-
-	// MW-2012-03-04: [[ StackFile5500 ]] If we are including 2.7 and 5.5, now write
-	//   out the 5.5 version.
-	if (t_stat == IO_NORMAL && p_context -> include_2700)
-	{
-		// Set the stackfileversion to 5.5
-		MCstackfileversion = 5500;
-	
-		// Write out the charset byte
-		if (t_stat == IO_NORMAL)
-			t_stat = IO_write_uint1(CHARSET, t_stream);
-
-		// MW-2012-02-17: [[ LogFonts ]] Build the logical font table for the
-		//   object and its children and serialize it.
-		if (t_stat == IO_NORMAL)
-		{
-			// Build the logical font table for the object.
-			MCLogicalFontTableBuild(p_object, p_part);
-
-			// Write out the font table to the stream.
-			MCLogicalFontTableSave(t_stream);
-		}
-
-		// Write the object
-		if (t_stat == IO_NORMAL)
-			t_stat = p_object -> save(t_stream, p_part, false);
-
-		// If the object is a card, pickle all the objects it references
-		// immediately after the main object.
-		if (t_stat == IO_NORMAL && p_object -> gettype() == CT_CARD)
-			t_stat = static_cast<MCCard *>(p_object) -> saveobjects(t_stream, p_part);
-
-		if (t_stat == IO_NORMAL)
-			t_stat = IO_write_uint1(OT_END, t_stream);
+        t_stat = pickle_object_to_stream(t_stream, 5500, p_object, p_part);
+        
+        if (t_stat == IO_NORMAL)
+            pickle_object_to_stream(t_stream, 7000, p_object, p_part);
 	}
 
 	// Write back the length of the chunk at the recorded position
 	if (t_stat == IO_NORMAL)
 	{
 		uint4 t_chunk_size;
-		t_chunk_size = MCS_faketell(t_stream) - t_chunk_start;
+		t_chunk_size = MCS_tell(t_stream) - t_chunk_start;
 		swap_uint4(&t_chunk_size);
-		MCS_fakewriteat(t_stream, t_chunk_start - 4, &t_chunk_size, 4);
+		MCS_writeat(&t_chunk_size, 4, t_chunk_start - 4, t_stream);
 	}
 
 	if (t_stat != IO_NORMAL)
@@ -289,20 +270,18 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 
 	// MW-2012-02-17: [[ LogFonts ]] Clean up the font table.
 	MCLogicalFontTableFinish();
-
-	MCstackfileversion = t_old_stackfileversion;
 }
 
 // Do a start/continue/stop pickling call all in one.
-MCSharedString *MCObject::pickle(MCObject *p_object, uint4 p_part)
+void MCObject::pickle(MCObject *p_object, uint4 p_part, MCDataRef& r_data)
 {
 	MCPickleContext *t_context;
-	// MW-2012-03-04: [[ StackFile5500 ]] The pickle method is only used for
-	//   internal purposes, and we don't want to include 2.7 versions in this
-	//   case - so pass 'false' for include_2700.
+	// AL-2014-02-14: [[ UnicodeFileFormat ]] The pickle method is only used for
+	//   internal purposes, and we don't want to include 2.7 or 5.5 versions in this
+	//   case - so pass 'false' for include_legacy.
 	t_context = startpickling(false);
 	continuepickling(t_context, p_object, p_part);
-	return stoppickling(t_context);
+	stoppickling(t_context, r_data);
 }
 
 // This visitor iterates over all objects and does the follows:
@@ -346,7 +325,7 @@ struct UnpickleVisitor: public MCObjectVisitor
 
 // MW-2012-03-04: [[ StackFile5500 ]] Read in an object from the given stream - it
 //   will be prepared to be attached to the given stack.
-static bool unpickle_object_from_stream(IO_handle p_stream, const char *p_version, MCStack *p_stack, MCObject*& r_object)
+static bool unpickle_object_from_stream(IO_handle p_stream, uint32_t p_version, MCStack *p_stack, MCObject*& r_object)
 {
 	bool t_success;
 	t_success = true;
@@ -364,7 +343,7 @@ static bool unpickle_object_from_stream(IO_handle p_stream, const char *p_versio
 	// MW-2012-02-17: [[ LogFonts ]] Load the font table for the object.
 	if (t_success)
 	{
-		if (MCLogicalFontTableLoad(p_stream) != IO_NORMAL)
+		if (MCLogicalFontTableLoad(p_stream, p_version) != IO_NORMAL)
 			t_success = false;
 	}
 
@@ -487,22 +466,24 @@ static bool unpickle_object_from_stream(IO_handle p_stream, const char *p_versio
 
 // Unpickle a byte-stream into a linked-list of objects.
 //
-MCObject *MCObject::unpickle(MCSharedString *p_data, MCStack *p_stack)
+MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 {
 	bool t_success;
 	t_success = true;
 
 	const char *t_buffer;
 	uint4 t_length;
-	t_buffer = p_data -> Get() . getstring();
-	t_length = p_data -> Get() . getlength();
+	t_buffer = (const char *)MCDataGetBytePtr(p_data);
+	t_length = MCDataGetLength(p_data);
 
 	MCObject *t_result;
 	t_result = NULL;
 
 	while(t_length > 0 && t_success)
 	{
-		bool t_5500_only;
+		bool t_7000_only;
+		t_7000_only = false;
+        bool t_5500_only;
 		t_5500_only = false;
 		
 		if (t_success)
@@ -510,9 +491,11 @@ MCObject *MCObject::unpickle(MCSharedString *p_data, MCStack *p_stack)
 
 		if (t_success)
 		{
-			// MW-2012-03-04: [[ StackFile5500 ]] If the header is 5.5, then there
+            // AL-2014-02-14: [[ UnicodeFileFormat ]] If the header is 7.0, then there
 			//   won't be a 2.7 version before it.
-			if (memcmp(t_buffer, "REVO5500", 8) == 0)
+			if (memcmp(t_buffer, "REVO7000", 8) == 0)
+				t_7000_only = true;
+            else if (memcmp(t_buffer, "REVO5500", 8) == 0)
 				t_5500_only = true;
 			else if (memcmp(t_buffer, "REVO2700", 8) != 0)
 				t_success = false;
@@ -535,31 +518,43 @@ MCObject *MCObject::unpickle(MCSharedString *p_data, MCStack *p_stack)
 
 		IO_handle t_stream;
 		t_stream = NULL;
+        
 		if (t_success)
 		{
-			t_stream = MCS_fakeopen(MCString(t_buffer, t_chunk_length));
+            t_stream = MCS_fakeopen((const char *)t_buffer, t_chunk_length);
 			if (t_stream == NULL)
 				t_success = false;
 		}
 
-		// MW-2012-03-04: [[ StackFile5500 ]] Unpickle the first version in the chunk.
-		//   If there is no 2.7, then the version will be 5.5; otherwise it is the
-		//   2.7 version preceeding the 5.5 one.
+        // AL-2014-02-14: [[ UnicodeFileFormat ]] Unpickle the first version in the chunk.
+		//   If there is no 2.7, then the version will be 7.0; otherwise it is the
+		//   2.7 version preceeding the 5.5 and 7.0 ones.
 		MCObject *t_object;
 		t_object = nil;
 		if (t_success)
-			t_success = unpickle_object_from_stream(t_stream, t_5500_only ? "5.5" : "2.7", p_stack, t_object);
+        {
+            if (t_7000_only)
+                t_success = unpickle_object_from_stream(t_stream, 7000, p_stack, t_object);
+            else
+                t_success = unpickle_object_from_stream(t_stream, t_5500_only ? 5500 : 2700, p_stack, t_object);
+        }
 			
-		// MW-2012-03-04: [[ StackFile5500 ]] If the header was 2.7, then there could
-		//   be a 5.5 version following it. So attempt to unpickle a second version, and
-		//   use that if present.
-		if (t_success && !t_5500_only)
+        // AL-2014-02-14: [[ UnicodeFileFormat ]] If the header was 2.7, then there could
+		//   be 5.5 and 7.0 versions following it. So attempt to unpickle second and third
+		//   versions, and use them if present.
+		if (t_success && !t_7000_only && !t_5500_only)
 		{
-			MCObject *t_other_object;
-			if (unpickle_object_from_stream(t_stream, "5.5", p_stack, t_other_object))
+			MCObject *t_5500_object;
+			if (unpickle_object_from_stream(t_stream, 5500, p_stack, t_5500_object))
 			{
 				delete t_object;
-				t_object = t_other_object;
+				t_object = t_5500_object;
+			}
+            MCObject *t_7000_object;
+			if (unpickle_object_from_stream(t_stream, 7000, p_stack, t_7000_object))
+			{
+				delete t_object;
+				t_object = t_7000_object;
 			}
 		}
 

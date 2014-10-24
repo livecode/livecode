@@ -1,0 +1,1 @@
+# mobileDeviceOrientation() not working in LC 7.0.0(rc1)

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -30,12 +29,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef bool (*MCSystemListProcessesCallback)(void *context, uint32_t id, const char *path, const char *description);
-typedef bool (*MCSystemListProcessModulesCallback)(void *context, const char *path);
+typedef bool (*MCSystemListProcessesCallback)(void *context, uint32_t id, MCStringRef path, MCStringRef description);
+typedef bool (*MCSystemListProcessModulesCallback)(void *context, MCStringRef path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool WindowsGetModuleFileNameEx(HANDLE p_process, HMODULE p_module, char*& r_path)
+static bool WindowsGetModuleFileNameEx(HANDLE p_process, HMODULE p_module, MCStringRef& r_path)
 {
 	bool t_success;
 	t_success = true;
@@ -43,7 +42,7 @@ static bool WindowsGetModuleFileNameEx(HANDLE p_process, HMODULE p_module, char*
 	// For some unfathomable reason, it is not possible find out how big a
 	// buffer you might need for a module file name. Instead we loop until
 	// we are sure we have the whole thing.
-	char *t_path;
+	WCHAR *t_path;
 	uint32_t t_path_length;
 	t_path_length = 0;
 	t_path = nil;
@@ -61,7 +60,7 @@ static bool WindowsGetModuleFileNameEx(HANDLE p_process, HMODULE p_module, char*
 		{
 			// If the buffer is too small, the result will equal the input
 			// buffer size.
-			t_result = GetModuleFileNameExA(p_process, p_module, t_path, t_path_length);
+			t_result = GetModuleFileNameExW(p_process, p_module, t_path, t_path_length);
 			if (t_result == 0)
 				t_success = false;
 			else if (t_result == t_path_length)
@@ -73,23 +72,26 @@ static bool WindowsGetModuleFileNameEx(HANDLE p_process, HMODULE p_module, char*
 	}
 
 	if (t_success)
-		r_path = t_path;
-	else
-		MCMemoryDeleteArray(t_path);
+		t_success = MCStringCreateWithWString(t_path, r_path);
+	
+	MCMemoryDeleteArray(t_path);
 
 	return t_success;
 }
 
-static bool WindowsGetModuleDescription(const char *p_path, char*& r_description)
+static bool WindowsGetModuleDescription(MCStringRef p_path, MCStringRef& r_description)
 {
 	bool t_success;
 	t_success = true;
 
+    MCAutoStringRefAsWString t_path;
+    /* UNCHECKED */ t_path.Lock(p_path);
+    
 	DWORD t_size;
 	t_size = 0;
 	if (t_success)
 	{
-		t_size = GetFileVersionInfoSizeA(p_path, nil);
+		t_size = GetFileVersionInfoSizeW(*t_path, nil);
 		if (t_size == 0)
 			t_success = false;
 	}
@@ -100,22 +102,26 @@ static bool WindowsGetModuleDescription(const char *p_path, char*& r_description
 		t_success = MCMemoryAllocate(t_size, t_data);
 
 	if (t_success &&
-		!GetFileVersionInfoA(p_path, 0, t_size, t_data))
+		!GetFileVersionInfoW(*t_path, 0, t_size, t_data))
 		t_success = false;
 
 	UINT t_desc_length;
-	char *t_desc;
+	WCHAR *t_desc;
 	t_desc_length = 0;
 	t_desc = nil;
 	if (t_success &&
-		!VerQueryValueA(t_data, "\\StringFileInfo\\040904b0\\FileDescription", (void **)&t_desc, &t_desc_length))
+		!VerQueryValueW(t_data, L"\\StringFileInfo\\040904b0\\FileDescription", (void **)&t_desc, &t_desc_length))
 		t_success = false;
 
-	if (t_success)
-		t_success = MCCStringCloneSubstring(t_desc, t_desc_length, r_description);
-
+    if (t_success)
+        t_success = MCStringCreateWithWString(t_desc, r_description);
+    
 	MCMemoryDeallocate(t_data);
 	
+    // Make sure a description gets set
+    if (!t_success)
+        r_description = MCValueRetain(kMCEmptyString);
+    
 	return t_success;
 }
 
@@ -157,18 +163,14 @@ bool MCSystemListProcesses(MCSystemListProcessesCallback p_callback, void* p_con
 			DWORD t_bytes_used;
 			if (EnumProcessModules(t_process, &t_module, sizeof(HMODULE), &t_bytes_used))
 			{
-				char *t_process_path;
-				t_process_path = nil;
-				if (WindowsGetModuleFileNameEx(t_process, t_module, t_process_path))
+				MCAutoStringRef t_process_path;
+				if (WindowsGetModuleFileNameEx(t_process, t_module, &t_process_path))
 				{
-					char *t_process_description;
-					t_process_description = nil;
-					WindowsGetModuleDescription(t_process_path, t_process_description);
+					MCAutoStringRef t_process_description;
+					WindowsGetModuleDescription(*t_process_path, &t_process_description);
 
-					t_success = p_callback(p_context, t_process_ids[i], t_process_path, t_process_description);
+					t_success = p_callback(p_context, t_process_ids[i], *t_process_path, *t_process_description);
 
-					MCCStringFree(t_process_description);
-					MCCStringFree(t_process_path);
 				}
 			}
 			CloseHandle(t_process);
@@ -219,12 +221,10 @@ bool MCSystemListProcessModules(uint32_t p_process_id, MCSystemListProcessModule
 
 	for(uint32_t i = 0; i < t_module_count && t_success; i++)
 	{
-		char *t_module_path;
-		t_module_path = nil;
-		if (WindowsGetModuleFileNameEx(t_process, t_modules[i], t_module_path))
+		MCAutoStringRef t_module_path;
+		if (WindowsGetModuleFileNameEx(t_process, t_modules[i], &t_module_path))
 		{
-			t_success = p_callback(p_context, t_module_path);
-			MCCStringFree(t_module_path);
+			t_success = p_callback(p_context, *t_module_path);
 		}
 	}
 
@@ -238,14 +238,14 @@ bool MCSystemListProcessModules(uint32_t p_process_id, MCSystemListProcessModule
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemCanDeleteKey(const char *p_key)
+bool MCSystemCanDeleteKey(MCStringRef p_key)
 {
 	HKEY t_key;
-	if (MCCStringBeginsWith(p_key, "HKCU\\"))
+	if (MCStringBeginsWithCString(p_key, (const char_t*)"HKCU\\", kMCCompareCaseless))
 		t_key = HKEY_CURRENT_USER;
-	else if (MCCStringBeginsWith(p_key, "HKCR\\"))
+	else if (MCStringBeginsWithCString(p_key, (const char_t*)"HKCR\\", kMCCompareCaseless))
 		t_key = HKEY_CLASSES_ROOT;
-	else if (MCCStringBeginsWith(p_key, "HKLM\\"))
+	else if (MCStringBeginsWithCString(p_key, (const char_t*)"HKLM\\", kMCCompareCaseless))
 		t_key = HKEY_LOCAL_MACHINE;
 	else
 		return false;
@@ -253,8 +253,11 @@ bool MCSystemCanDeleteKey(const char *p_key)
 	HKEY t_subkey;
 	t_subkey = nil;
 
+    MCAutoStringRefAsWString t_key_wstr;
+    /* UNCHECKED */ t_key_wstr.Lock(p_key);
+    
 	LONG t_result;
-	t_result = RegOpenKeyExA(t_key, p_key + 5, 0, DELETE, &t_subkey);
+	t_result = RegOpenKeyExW(t_key, *t_key_wstr + 5, 0, DELETE, &t_subkey);
 
 	if (t_result == ERROR_FILE_NOT_FOUND || t_subkey != nil)
 	{
@@ -265,10 +268,13 @@ bool MCSystemCanDeleteKey(const char *p_key)
 	return false;
 }
 
-bool MCSystemCanDeleteFile(const char *p_file)
+bool MCSystemCanDeleteFile(MCStringRef p_file)
 {
-	HANDLE t_file;
-	t_file = CreateFileA(p_file, DELETE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	MCAutoStringRefAsWString t_file_wstr;
+    /* UNCHECKED */ t_file_wstr.Lock(p_file);
+    
+    HANDLE t_file;
+	t_file = CreateFileW(*t_file_wstr, DELETE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (t_file != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle(t_file);
@@ -291,33 +297,33 @@ void MCSystemCancelRequestUserAttention(void)
 
 // MM-2011-03-24: Extended the standard NOTIFYICONDATAA struct to include 
 // extra fields for balloon title, icon and message.  These are (currently) ifdeffed out.
-typedef struct _NOTIFYICONDATA500A {
+typedef struct _NOTIFYICONDATA500W {
     DWORD cbSize;
     HWND hWnd;
     UINT uID;
     UINT uFlags;
     UINT uCallbackMessage;
     HICON hIcon;
-    CHAR   szTip[128];
+    WCHAR szTip[64];
     DWORD dwState;
     DWORD dwStateMask;
-    CHAR   szInfo[256];
+    WCHAR   szInfo[256];
     union {
         UINT  uTimeout;
         UINT  uVersion;  // used with NIM_SETVERSION, values 0, 3 and 4
     } DUMMYUNIONNAME;
-    CHAR   szInfoTitle[64];
+    WCHAR   szInfoTitle[64];
     DWORD dwInfoFlags;
-} NOTIFYICONDATA500A, *PNOTIFYICONDATA500A;
+} NOTIFYICONDATA500W, *PNOTIFYICONDATA500W;
 
 // MM-2011-03-24: Added.  Displays a balloon popup above the taskbar icon containing the given message and title.
-void MCSystemBalloonNotification(const char *p_title, const char *p_message)
+void MCSystemBalloonNotification(MCStringRef p_title, MCStringRef p_message)
 {
 	// Shell_NotifyIconA uses the cbSize of the struct passed to determine what fields have been set
 	// allowing us to use the extended NOTIFYICONDATA500A struct with the extra fields for balloons.
-	NOTIFYICONDATA500A t_nidata;
-	MCMemoryClear(&t_nidata, sizeof(NOTIFYICONDATA500A));
-	t_nidata . cbSize = sizeof(NOTIFYICONDATA500A);
+	NOTIFYICONDATA500W t_nidata;
+	MCMemoryClear(&t_nidata, sizeof(NOTIFYICONDATA500W));
+	t_nidata . cbSize = sizeof(NOTIFYICONDATA500W);
 
 	// Fecth the window handle that we have bound the taskbar icon to.
 	// Only one task bar icon has been created within this window hanlde, with ID 1.
@@ -329,18 +335,26 @@ void MCSystemBalloonNotification(const char *p_title, const char *p_message)
 	t_nidata . uFlags = NIF_INFO;
 	t_nidata . dwInfoFlags = NIIF_INFO;
 
+    MCAutoStringRefAsWString t_title, t_message;
+    
 	// We can specify the title (appears in bold next to the icon) and the body of the balloon.
 	if (p_title != nil)
-		MCMemoryCopy(t_nidata . szInfoTitle, p_title, 63);
+    {
+        t_title . Lock(p_title);
+		MCMemoryCopy(t_nidata . szInfoTitle, *t_title, 63 * sizeof(WCHAR));
+    }
 	else
 		t_nidata . szInfoTitle[0] = '\0';
 	if (p_message != nil)
-		MCMemoryCopy(t_nidata . szInfo, p_message, 255);
+    {
+        t_message . Lock(p_message);
+		MCMemoryCopy(t_nidata . szInfo, *t_message, 255 * sizeof(WCHAR));
+    }
 	else
 		t_nidata . szInfo[0] = '\0';
 
 	// Call with NIM_MODIFY to flag that we want to update an existing taskbar icon.
-	Shell_NotifyIconA(NIM_MODIFY, (PNOTIFYICONDATAA) &t_nidata);
+	Shell_NotifyIconW(NIM_MODIFY, (PNOTIFYICONDATAW) &t_nidata);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,5 @@
+setup
+test localloc(the topleft of this stack) is (0,0)
+
+test-error localloc("not a point")
+teardown

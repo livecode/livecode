@@ -18,7 +18,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "globals.h"
 
-#include "core.h"
 #include "uidc.h"
 #include "objdefs.h"
 
@@ -359,54 +358,37 @@ int32_t int_cmp(const void *a, const void *b)
 	return *(uint32_t*)a - *(uint32_t*)b;
 }
 
-bool MCImageParseColourList(const MCString &p_input, uint32_t &r_ncolours, MCColor *&r_colours)
+bool MCImageParseColourList(MCStringRef p_input, uint32_t &r_ncolours, MCColor *&r_colours)
 {
 	bool t_success = true;
 
-	char *t_list = p_input.clone();
-	char *t_currentstring = t_list;
-
-	t_success = (t_list != NULL);
+	t_success = !MCStringIsEmpty(p_input);
 
 	MCColor *t_colours = NULL;
 	uint32_t t_ncolours = 0;
+	
 	if (t_success)
 	{
-		// count lines
-		while (*t_currentstring != '\0')
-		{
-			t_ncolours++;
-			char *t_nextstring = strchr(t_currentstring, '\n');
-			if (t_nextstring)
-				t_currentstring = t_nextstring + 1;
-			else
-				t_currentstring += strlen(t_currentstring);
-		}
-
-		t_success = MCMemoryNewArray<MCColor>(t_ncolours, t_colours);
-	}
-	if (t_success && t_ncolours > 0)
-	{
-		t_currentstring = t_list;
-		uint32_t t_colourindex = 0;
-		while (t_success && t_colourindex < t_ncolours)
-		{
-			char *t_nextstring = strchr(t_currentstring, '\n');
-			if (t_nextstring)
-				*t_nextstring++ = '\0';
-			else
-				t_nextstring = t_currentstring + strlen(t_currentstring);
-
-			if (!MCscreen->parsecolor(MCString(t_currentstring), &t_colours[t_colourindex], NULL))
+		MCAutoArrayRef t_lines;
+        uindex_t t_nlines = 0;
+        /* UNCHECKED */ MCStringSplit(p_input, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_lines);
+        t_nlines = MCArrayGetCount(*t_lines);
+        t_success = MCMemoryNewArray<MCColor>(t_nlines, t_colours);
+        
+        for (uindex_t i = 0; i < t_nlines; i++)
+        {
+            MCValueRef t_line = nil;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_lines, i + 1, t_line);
+            MCStringRef t_color;
+            t_color = (MCStringRef)t_line;
+                            
+            if (!MCscreen->parsecolor(t_color, t_colours[i], NULL))
 			{
 				t_success = false;
 				break;
 			}
-			t_colourindex++;
-			t_currentstring = t_nextstring;
 		}
 	}
-	MCMemoryDeallocate(t_list);
 
 	if (t_success)
 	{

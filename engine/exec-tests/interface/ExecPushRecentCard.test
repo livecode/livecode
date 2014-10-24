@@ -1,0 +1,17 @@
+setup
+
+local idHolder
+
+create card
+
+put the long id of the current card into idHolder
+
+create card
+
+push recent card
+
+pop card
+
+test the long id of the current card is idHolder
+
+teardown

@@ -1,0 +1,12 @@
+setup
+
+create field
+
+focus on field 1
+
+-- For some reason focusing doesn't happen until events are processed...
+wait 0 seconds with messages
+
+test the focusedObject is the long id of field 1
+
+teardown

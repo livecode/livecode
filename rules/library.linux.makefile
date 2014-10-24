@@ -37,9 +37,9 @@ $(TARGET_PATH): $(OBJECTS) $(DEPS)
 	mkdir -p $(dir $(TARGET_PATH))
 	$(CC) -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS) $(OBJECTS) $(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) -Wl,-Bstatic $(addprefix -l,$(STATIC_LIBS)) -Wl,-Bdynamic $(addprefix -l,$(DYNAMIC_LIBS))
 	cd $(BUILD_DIR) && \
-		objcopy --only-keep-debug "$(NAME).so" "$(NAME).so.dbg" && \
-		strip --strip-debug --strip-unneeded "$(NAME).so" && \
-		objcopy --add-gnu-debuglink="$(NAME).so.dbg" "$(NAME).so"
+		$(OBJCOPY) --only-keep-debug "$(NAME).so" "$(NAME).so.dbg" && \
+		$(STRIP) --strip-debug --strip-unneeded "$(NAME).so" && \
+		$(OBJCOPY) --add-gnu-debuglink="$(NAME).so.dbg" "$(NAME).so"
 		
 .PHONY: $(NAME)
 $(NAME): $(TARGET_PATH)

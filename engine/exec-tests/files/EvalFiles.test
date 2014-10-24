@@ -1,0 +1,16 @@
+setup
+
+set the defaultFolder to specialFolderPath("temporary")
+
+put "evalfilestest.txt" into ttestfile
+put "some text" into url ("binfile:" & ttestfile)
+test ttestfile is among the lines of the files
+delete file ttestfile
+test ttestfile is not among the lines of the files
+
+repeat for each line tLine in the files
+	test there is a file tLine
+	test there is not a folder tLine
+end repeat
+
+teardown

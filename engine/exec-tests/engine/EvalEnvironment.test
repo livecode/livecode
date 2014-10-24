@@ -1,0 +1,4 @@
+setup
+test the environment is not empty
+test the environment is among the items of "development,standalone application,helper application,browser,mobile,command line,server"
+teardown

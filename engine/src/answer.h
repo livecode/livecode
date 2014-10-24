@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __COMMANDS_ANSWER_H
 
 #ifndef __EXECUTION_POINT_H
-#include "execpt.h"
+//#include "execpt.h"
 #endif
 
 #ifndef __VARIABLE_H
@@ -36,7 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCAnswer : public MCStatement
 {
 	Ask_type mode;
-	MCVarref *it;
 	MCExpression *title;
 	Boolean sheet;
 	
@@ -71,7 +70,6 @@ public:
 	MCAnswer()
 	{
 		mode = AT_UNDEFINED;
-		it = NULL;
 		sheet = False;
 		title = NULL;
 		notify . prompt = NULL;
@@ -81,7 +79,8 @@ public:
 	virtual ~MCAnswer();
 	
 	virtual Parse_stat parse(MCScriptPoint &);
-	virtual Exec_stat exec(MCExecPoint &);
+	virtual void exec_ctxt(MCExecContext &);
+	virtual void compile(MCSyntaxFactoryRef);
 	
 private:
 	Parse_errors parse_pagesetup(MCScriptPoint& sp);
@@ -92,17 +91,6 @@ private:
 	Parse_errors parse_file(MCScriptPoint& sp);
 	Parse_errors parse_folder(MCScriptPoint& sp);
 	Parse_errors parse_notify(MCScriptPoint& sp);
-	
-	Exec_errors exec_pagesetup(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_printer(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_effect(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_record(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_colour(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_file(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_folder(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_notify(MCExecPoint& ep, const char *p_title);
-
-	Exec_errors exec_custom(MCExecPoint& sp, const MCString& p_name, const char *p_type, unsigned int t_count, ...);
 };
 
 #endif

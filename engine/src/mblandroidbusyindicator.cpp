@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -49,9 +48,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // MM-2013-02-04: [[ Bug 10642 ]] Added new optional opacity parameter to busy indicator.
 //   Not implemented on Android.
-bool MCSystemBusyIndicatorStart (MCBusyIndicatorType p_indicator, const char *p_label, int32_t p_opacity)
+bool MCSystemBusyIndicatorStart (intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity)
 {
-    MCAndroidEngineRemoteCall("showBusyIndicator", "vs", nil, p_label);
+    MCAndroidEngineRemoteCall("showBusyIndicator", "vx", nil, p_label);
     return true;
 }
 
@@ -59,4 +58,16 @@ bool MCSystemBusyIndicatorStop ()
 {
     MCAndroidEngineRemoteCall("hideBusyIndicator", "v", nil);
     return true;
+}
+
+bool MCSystemActivityIndicatorStart (intenum_t p_indicator, integer_t p_location_x, integer_t p_location_y)
+{
+    // UNIMPLEMENTED
+    return false;
+}
+
+bool MCSystemActivityIndicatorStop ()
+{
+    // UNIMPLEMENTED
+    return false;
 }

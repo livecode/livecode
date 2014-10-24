@@ -21,9 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
-#include "core.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "hndlrlst.h"
 #include "sellst.h"
@@ -51,15 +50,70 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "context.h"
+#include "exec.h"
 
 uint2 MCGroup::labeloffset = 6;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCGroup::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_DELETE, Bool, MCGroup, CantDelete)
+	DEFINE_RW_OBJ_PROPERTY(P_DONT_SEARCH, Bool, MCGroup, DontSearch)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_PICT, Bool, MCGroup, ShowPict)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_RADIO_BEHAVIOR, Bool, MCGroup, RadioBehavior)
+	DEFINE_RW_OBJ_PROPERTY(P_TAB_GROUP_BEHAVIOR, Bool, MCGroup, TabGroupBehavior)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_HILITED_BUTTON, Int16, MCGroup, HilitedButton)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_HILITED_BUTTON_ID, Int16, MCGroup, HilitedButtonId)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_HILITED_BUTTON_NAME, String, MCGroup, HilitedButtonName)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_NAME, Bool, MCGroup, ShowName)
+	DEFINE_RW_OBJ_PROPERTY(P_LABEL, String, MCGroup, Label)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_LABEL, BinaryString, MCGroup, UnicodeLabel)
+	DEFINE_RW_OBJ_PROPERTY(P_HSCROLL, Int32, MCGroup, HScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_VSCROLL, Int32, MCGroup, VScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_UNBOUNDED_HSCROLL, Bool, MCGroup, UnboundedHScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_UNBOUNDED_VSCROLL, Bool, MCGroup, UnboundedVScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_HSCROLLBAR, Bool, MCGroup, HScrollbar)
+	DEFINE_RW_OBJ_PROPERTY(P_VSCROLLBAR, Bool, MCGroup, VScrollbar)
+	DEFINE_RW_OBJ_PROPERTY(P_SCROLLBAR_WIDTH, Int16, MCGroup, ScrollbarWidth)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_LEFT, Int16, MCGroup, FormattedLeft)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int16, MCGroup, FormattedHeight)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_TOP, Int16, MCGroup, FormattedTop)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, Int16, MCGroup, FormattedWidth)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_RECT, Rectangle, MCGroup, FormattedRect)
+	DEFINE_RW_OBJ_PROPERTY(P_BACKGROUND_BEHAVIOR, Bool, MCGroup, BackgroundBehavior)
+	DEFINE_RW_OBJ_PROPERTY(P_SHARED_BEHAVIOR, Bool, MCGroup, SharedBehavior)
+	DEFINE_RW_OBJ_PROPERTY(P_BOUNDING_RECT, OptionalRectangle, MCGroup, BoundingRect)
+	DEFINE_RW_OBJ_PROPERTY(P_BACK_SIZE, Point, MCGroup, BackSize)
+	DEFINE_RW_OBJ_PROPERTY(P_SELECT_GROUPED_CONTROLS, Bool, MCGroup, SelectGroupedControls)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_NAMES, LinesOfString, MCGroup, CardNames)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfUInt, MCGroup, CardIds)
+    // MERG-2013-05-01: [[ ChildControlProps ]] Add ability to list both
+    //   immediate and all descendent controls of a group.
+    DEFINE_RO_OBJ_PART_PROPERTY(P_CONTROL_IDS, String, MCGroup, ControlIds)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_CONTROL_NAMES, String, MCGroup, ControlNames)
+    DEFINE_RO_OBJ_PROPERTY(P_CHILD_CONTROL_IDS, String, MCGroup, ChildControlIds)
+	DEFINE_RO_OBJ_PROPERTY(P_CHILD_CONTROL_NAMES, String, MCGroup, ChildControlNames)
+    // MERG-2013-06-02: [[ GrpLckUpdates ]] Handle setting of the lockUpdates property.
+    DEFINE_RW_OBJ_PROPERTY(P_LOCK_UPDATES, Bool, MCGroup, LockUpdates)
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    DEFINE_RW_OBJ_PROPERTY(P_CLIPS_TO_RECT, Bool, MCGroup, ClipsToRect)
+};
+
+MCObjectPropertyTable MCGroup::kPropertyTable =
+{
+	&MCControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCGroup::MCGroup()
 {
 	flags |= F_TRAVERSAL_ON | F_RADIO_BEHAVIOR | F_GROUP_ONLY;
 	flags &= ~(F_SHOW_BORDER | F_OPAQUE);
-	label = NULL;
-	labelsize = 0;
+	label = MCValueRetain(kMCEmptyString);
 	controls = NULL;
 	kfocused = mfocused = NULL;
 	newkfocused = oldkfocused = NULL;
@@ -85,14 +139,7 @@ MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
 
 MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 {
-	label = NULL;
-	labelsize = 0;
-	if (gref.label)
-	{
-		labelsize = gref.labelsize;
-		label = new char[labelsize];
-		memcpy(label, gref.label, labelsize);
-	}
+	label = MCValueRetain(gref.label);
 	controls = NULL;
 	if (gref.controls != NULL)
 	{
@@ -157,7 +204,7 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 
 MCGroup::~MCGroup()
 {
-	delete label;
+	MCValueRelease(label);
 	while (controls != NULL)
 	{
 		MCControl *cptr = controls->remove
@@ -406,7 +453,7 @@ void MCGroup::kunfocus()
 	state &= ~CS_KFOCUSED;
 }
 
-Boolean MCGroup::kdown(const char *string, KeySym key)
+Boolean MCGroup::kdown(MCStringRef p_string, KeySym key)
 {
 	if (kfocused == NULL)
 		kfocused = oldkfocused;
@@ -438,7 +485,7 @@ Boolean MCGroup::kdown(const char *string, KeySym key)
 		default:
 			newkfocused = kfocused;
 			MCControl *oldfocused = kfocused;
-			if (kfocused->kdown(string, key))
+			if (kfocused->kdown(p_string, key))
 			{
 				radio(0, oldfocused);
 				newkfocused = NULL;
@@ -447,14 +494,14 @@ Boolean MCGroup::kdown(const char *string, KeySym key)
 			newkfocused = NULL;
 			return False;
 		}
-	return kfocused->kdown(string, key);
+	return kfocused->kdown(p_string, key);
 }
 
-Boolean MCGroup::kup(const char *string, KeySym key)
+Boolean MCGroup::kup(MCStringRef p_string, KeySym key)
 {
 	if (kfocused == NULL)
 		return False;
-	return kfocused->kup(string, key);
+	return kfocused->kup(p_string, key);
 }
 
 void MCGroup::mdrag(void)
@@ -808,7 +855,8 @@ void MCGroup::setrect(const MCRectangle &nrect)
 	}
 }
 
-Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -993,12 +1041,14 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
         break;
 #endif
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
+#endif
 
-Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
 	int2 i1, i2, i3, i4;
@@ -1372,7 +1422,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
     break;
 #endif /* MCGroup::setprop */
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{
@@ -1381,6 +1431,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	}
 	return ES_NORMAL;
 }
+#endif
 
 Boolean MCGroup::del()
 {
@@ -1508,10 +1559,10 @@ MCControl *MCGroup::findnum(Chunk_term type, uint2 &num)
 	return NULL;
 }
 
-MCControl *MCGroup::findname(Chunk_term type, const MCString &inname)
+MCControl *MCGroup::findname(Chunk_term type, MCNameRef p_name)
 {
 	if (type == CT_GROUP || type == CT_LAYER)
-		if (MCU_matchname(inname, CT_GROUP, getname()))
+		if (MCU_matchname(p_name, CT_GROUP, getname()))
 			return this;
 	if (controls != NULL)
 	{
@@ -1519,7 +1570,7 @@ MCControl *MCGroup::findname(Chunk_term type, const MCString &inname)
 		do
 		{
 			MCControl *foundobj;
-			if ((foundobj = cptr->findname(type, inname)) != NULL)
+			if ((foundobj = cptr->findname(type, p_name)) != NULL)
 				return foundobj;
 			cptr = cptr->next();
 		}
@@ -1868,7 +1919,7 @@ void MCGroup::setsbrects()
 		//   calculate the label height.
 		// MW-2013-08-22: [[ MeasureText ]] Update to use new object method.
 		MCRectangle t_font_metrics;
-		t_font_metrics = measuretext(MCnullmcstring, false);
+		t_font_metrics = measuretext(kMCEmptyString, false);
 		
 		int32_t fheight;
 		fheight = t_font_metrics . height;
@@ -1896,6 +1947,100 @@ void MCGroup::setsbrects()
 	resetscrollbars(False);
 }
 
+MCControl *MCGroup::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term otype, Chunk_term ptype)
+{
+	if (otype < CT_GROUP || controls == NULL)
+		return NULL;
+
+	MCControl *cptr = controls;
+	uint2 num = 0;
+
+	switch (etype)
+	{
+	case CT_FIRST:
+	case CT_SECOND:
+	case CT_THIRD:
+	case CT_FOURTH:
+	case CT_FIFTH:
+	case CT_SIXTH:
+	case CT_SEVENTH:
+	case CT_EIGHTH:
+	case CT_NINTH:
+	case CT_TENTH:
+		num = etype - CT_FIRST;
+		break;
+	case CT_LAST:
+	case CT_MIDDLE:
+	case CT_ANY:
+		count(otype, NULL, num);
+		// MW-2007-08-30: [[ Bug 4152 ]] If we're counting groups, we get one too many as it
+		//   includes the owner - thus we adjust (this means you can do 'the last group of group ...')
+		if (otype == CT_GROUP)
+			num--;
+		switch (etype)
+		{
+		case CT_LAST:
+			num--;
+			break;
+		case CT_MIDDLE:
+			num >>= 1;
+			break;
+		case CT_ANY:
+			num = MCU_any(num);
+			break;
+		default:
+			break;
+		}
+		break;
+	case CT_ID:
+		uint4 tofindid;
+		if (MCU_stoui4(p_expression, tofindid))
+			do
+			{
+				MCControl *foundobj;
+				if ((foundobj = cptr->findid(otype, tofindid, True)) != NULL)
+					return foundobj;
+				cptr = cptr->next();
+			}
+			while (cptr != controls);
+		return NULL;
+	case CT_EXPRESSION:
+		if (MCU_stoui2(p_expression, num))
+		{
+			if (num < 1)
+				return NULL;
+			num--;
+		}
+		else
+		{
+			do
+			{
+				MCControl *foundobj;
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCNameCreate(p_expression, &t_name);
+				if ((foundobj = cptr->findname(otype, *t_name)) != NULL)
+					return foundobj;
+				cptr = cptr->next();
+			}
+			while (cptr != controls);
+			return NULL;
+		}
+		break;
+	default:
+		//    fprintf(stderr, "MCGroup: didn't have child type %d\n", etype);
+		return NULL;
+	}
+	do
+	{
+		MCControl *foundobj;
+		if ((foundobj = cptr->findnum(otype, num)) != NULL)
+			return foundobj;
+		cptr = cptr->next();
+	}
+	while (cptr != controls);
+	return NULL;
+}
+#ifdef OLD_EXEC
 MCControl *MCGroup::getchild(Chunk_term etype, const MCString &expression,
                              Chunk_term otype, Chunk_term ptype)
 {
@@ -1986,6 +2131,117 @@ MCControl *MCGroup::getchild(Chunk_term etype, const MCString &expression,
 	}
 	while (cptr != controls);
 	return NULL;
+}
+#endif
+
+MCControl *MCGroup::getchildbyordinal(Chunk_term p_ordinal_type, Chunk_term p_object_type)
+{
+    MCControl *cptr = controls;
+    if (cptr == nil)
+        return nil;
+    
+	uint2 num = 0;
+    
+	switch (p_ordinal_type)
+	{
+        case CT_FIRST:
+        case CT_SECOND:
+        case CT_THIRD:
+        case CT_FOURTH:
+        case CT_FIFTH:
+        case CT_SIXTH:
+        case CT_SEVENTH:
+        case CT_EIGHTH:
+        case CT_NINTH:
+        case CT_TENTH:
+            num = p_ordinal_type - CT_FIRST;
+            break;
+        case CT_LAST:
+        case CT_MIDDLE:
+        case CT_ANY:
+            count(p_object_type, NULL, num);
+            // MW-2007-08-30: [[ Bug 4152 ]] If we're counting groups, we get one too many as it
+            //   includes the owner - thus we adjust (this means you can do 'the last group of group ...')
+            if (p_object_type == CT_GROUP)
+                num--;
+            switch (p_ordinal_type)
+		{
+            case CT_LAST:
+                num--;
+                break;
+            case CT_MIDDLE:
+                num >>= 1;
+                break;
+            case CT_ANY:
+                num = MCU_any(num);
+                break;
+            default:
+                break;
+		}
+            break;
+        default:
+            return nil;
+    }
+	do
+	{
+		MCControl *foundobj;
+		if ((foundobj = cptr->findnum(p_object_type, num)) != NULL)
+			return foundobj;
+		cptr = cptr->next();
+	}
+	while (cptr != controls);
+	return nil;
+}
+
+MCControl *MCGroup::getchildbyid(uinteger_t p_id, Chunk_term p_object_type)
+{
+    MCControl *cptr = controls;
+    if (cptr == nil)
+        return nil;
+    do
+    {
+        MCControl *foundobj;
+        if ((foundobj = cptr->findid(p_object_type, p_id, True)) != nil)
+            return foundobj;
+        cptr = cptr->next();
+    }
+    while (cptr != controls);
+    return nil;
+}
+
+MCControl *MCGroup::getchildbyname(MCNameRef p_name, Chunk_term p_object_type)
+{
+    MCControl *cptr = controls;
+    if (cptr == nil)
+        return nil;
+    
+    uint2 t_num = 0;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        if (t_num < 1)
+            return nil;
+        t_num--;
+        
+        do
+        {
+            MCControl *foundobj;
+            if ((foundobj = cptr->findnum(p_object_type, t_num)) != nil)
+                return foundobj;
+            cptr = cptr->next();
+        }
+        while (cptr != controls);
+        return nil;
+    }
+    
+    do
+    {
+        MCControl *foundobj;
+        if ((foundobj = cptr->findname(p_object_type, p_name)) != NULL)
+            return foundobj;
+        cptr = cptr->next();
+    }
+    while (cptr != controls);
+    return nil;
 }
 
 void MCGroup::makegroup(MCControl *newcontrols, MCObject *newparent)
@@ -2133,6 +2389,7 @@ void MCGroup::radio(uint4 parid, MCControl *focused)
 	}
 }
 
+#ifdef OLD_EXEC
 uint2 MCGroup::gethilited(uint4 parid)
 {
 	if (controls != NULL)
@@ -2155,7 +2412,7 @@ uint2 MCGroup::gethilited(uint4 parid)
 	}
 	return 0;
 }
-
+#endif
 
 MCButton *MCGroup::gethilitedbutton(uint4 parid)
 {
@@ -2178,6 +2435,7 @@ MCButton *MCGroup::gethilitedbutton(uint4 parid)
 	return NULL;
 }
 
+#ifdef OLD_EXEC
 uint4 MCGroup::gethilitedid(uint4 parid)
 {
 	MCButton *bptr = gethilitedbutton(parid);
@@ -2250,7 +2508,6 @@ void MCGroup::sethilitedname(uint4 parid, MCNameRef bname)
 	}
 }
 
-
 void MCGroup::setchildprops(uint4 parid, Properties p, MCExecPoint &ep)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
@@ -2286,6 +2543,7 @@ void MCGroup::setchildprops(uint4 parid, Properties p, MCExecPoint &ep)
 	}
 	MCRedrawUnlockScreen();
 }
+#endif
 
 MCRectangle MCGroup::getgrect()
 {
@@ -2299,7 +2557,7 @@ MCRectangle MCGroup::getgrect()
 		// MW-2013-08-23: [[ MeasureText ]] Update to use measuretext() method for
 		//   better encapsulation.
 		MCRectangle t_font_metrics;
-		t_font_metrics = measuretext(MCnullmcstring, false);
+		t_font_metrics = measuretext(kMCEmptyString, false);
 		
 		int32_t fascent;
 		fascent = -t_font_metrics . y;
@@ -2337,7 +2595,7 @@ void MCGroup::computecrect()
 	}
 }
 
-Boolean MCGroup::computeminrect(Boolean scrolling)
+bool MCGroup::computeminrect(Boolean scrolling)
 {
 	MCRectangle oldrect = rect;
 	MCRectangle oldmin = minrect;
@@ -2380,7 +2638,7 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 			//   calculate the label height.
 			// MW-2013-08-22: [[ MeasureText ]] Update to use new object method.
 			MCRectangle t_font_metrics;
-			t_font_metrics = measuretext(MCnullmcstring, false);
+			t_font_metrics = measuretext(kMCEmptyString, false);
 			
 			int32_t fheight;
 			fheight = t_font_metrics . height;
@@ -2406,7 +2664,7 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 	if (oldrect.x != rect.x || oldrect.y != rect.y
 	        || oldrect.width != rect.width || oldrect.height != rect.height)
 	{
-		Bool t_all;
+		bool t_all;
 
 		uint4 oldstate = state;
 		if (scrolling)
@@ -2417,7 +2675,7 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 			if (!layer_isscrolling())
 			{
 				layer_rectchanged(oldrect, true);
-				t_all = True;
+				t_all = true;
 			}
 			else
 			{
@@ -2439,11 +2697,11 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 					layer_dirtycontentrect(MCU_make_rect(t_outer_rect . x, t_inner_rect . y + t_inner_rect . height, t_outer_rect . width, (t_outer_rect . y + t_outer_rect . height) - (t_inner_rect . y + t_inner_rect . height)), false);
 				
 				layer_rectchanged(oldrect, false);
-				t_all = False;
+				t_all = false;
 			}
 		}
 		else
-			t_all = True;
+			t_all = true;
 		state = oldstate;
 		return t_all;
 	}
@@ -2455,7 +2713,7 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
-	return False;
+	return false;
 }
 
 void MCGroup::boundcontrols()
@@ -2638,9 +2896,9 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 	        flags & F_SHOW_BORDER && borderwidth && flags & F_3D &&
 	        MCcurtheme->iswidgetsupported(WTHEME_TYPE_GROUP_FRAME))
 	{
-		Boolean showtextlabel = flags & F_SHOW_NAME && (!isunnamed() || label != NULL);
+		Boolean showtextlabel = flags & F_SHOW_NAME && (!isunnamed() || !MCStringIsEmpty(label));
 		MCRectangle textrect;
-		MCString slabel;
+		MCStringRef t_label;
 		bool isunicode;
 		MCWidgetInfo winfo;
 		int32_t fascent;
@@ -2652,12 +2910,12 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 			textrect.x = rect.x + labeloffset + borderwidth;
 			textrect.y = rect.y + (borderwidth >> 1) - 2;
 			textrect.height = fascent + MCFontGetDescent(m_font);
-			if (label != NULL)
-				slabel.set(label,labelsize), isunicode = hasunicode();
+			if (!MCStringIsEmpty(label))
+				t_label = label;
 			else
-				slabel = getname_oldstring(), isunicode = false;
-			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode, getstack() -> getdevicetransform()) + 4;
+				t_label = MCNameGetString(getname());
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            textrect.width = MCFontMeasureText(m_font, t_label, getstack() -> getdevicetransform()) + 4;
 			//exclude text area from widget drawing region for those themes that draw text on top of frame.
 			winfo.datatype = WTHEME_DATA_RECT;
 			winfo.data = &textrect;
@@ -2673,7 +2931,7 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 		if (showtextlabel && drawframe)
 		{
 			setforeground(dc, DI_FORE, False);
-            dc -> drawtext(textrect.x + 2, textrect.y + fascent, slabel.getstring(), slabel.getlength(), m_font, false, isunicode);
+            dc -> drawtext(textrect.x + 2, textrect.y + fascent, t_label, m_font, false, kMCDrawTextNoBreak);
 		}
 	}
 }
@@ -2703,14 +2961,13 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 			textrect.y = rect.y + (borderwidth >> 1) - 2;
 			textrect.height = fascent + fdescent;
 
-			MCString slabel;
-			bool isunicode;
-			if (label != NULL)
-				slabel.set(label,labelsize), isunicode = hasunicode();
+			MCStringRef t_label;
+			if (!MCStringIsEmpty(label))
+				t_label = label;
 			else
-				slabel = getname_oldstring(), isunicode = false;
-			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode, getstack() -> getdevicetransform()) + 4;
+				t_label = MCNameGetString(getname());
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            textrect.width = MCFontMeasureText(m_font, t_label, getstack() -> getdevicetransform()) + 4;
 
 			if (flags & F_SHOW_BORDER)
 			{
@@ -2764,7 +3021,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 					}
 					if (flags & F_3D)
 						setforeground(dc, DI_BOTTOM, True);
-					MCSegment s[5];
+					MCLineSegment s[5];
 					s[0].x1 = textrect.x;
 					s[0].x2 = s[1].x1 = s[1].x2 = trect.x + halfwidth;
 					s[0].y1 = s[0].y2 = s[1].y1 = s[4].y1 = s[4].y2= trect.y + halfwidth;
@@ -2794,7 +3051,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 				}
 			}
 			setforeground(dc, DI_FORE, False);
-            dc -> drawtext(textrect.x + 2, textrect.y + fascent, slabel.getstring(), slabel.getlength(), m_font, false, isunicode);
+            dc -> drawtext(textrect.x + 2, textrect.y + fascent, t_label, m_font, false, kMCDrawTextNoBreak);
 		}
 		else
 		{
@@ -2836,7 +3093,7 @@ IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return t_stat;
 }
 
-IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -2870,7 +3127,7 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
 	IO_stat stat;
-
+	
 	if ((stat = IO_write_uint1(OT_GROUP, stream)) != IO_NORMAL)
 		return stat;
     
@@ -2883,9 +3140,23 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
 		return stat;
-	if (flags & F_LABEL)
-		if ((stat = IO_write_string(label, labelsize, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
+    if (flags & F_LABEL)
+	{
+		if (MCstackfileversion < 7000)
+		{
+			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_write_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+	}
+
 	if (flags & F_MARGINS)
 	{
 		if ((stat = IO_write_int2(leftmargin, stream)) != IO_NORMAL)
@@ -2948,7 +3219,7 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCGroup::load(IO_handle stream, const char *version)
+IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
@@ -2958,18 +3229,27 @@ IO_stat MCGroup::load(IO_handle stream, const char *version)
 	//   if it is a background.
 	if (isbackground())
 		setflag(True, F_GROUP_SHARED);
-
+	
 	// MW-2012-02-17: [[ IntrinsicUnicode ]] If the unicode tag is set, then we are unicode.
 	if ((m_font_flags & FF_HAS_UNICODE_TAG) != 0)
 		m_font_flags |= FF_HAS_UNICODE;
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
 	if (flags & F_LABEL)
 	{
-		uint4 tlabelsize;
-		if ((stat = IO_read_string(label, tlabelsize, stream, hasunicode())) != IO_NORMAL)
-			return stat;
-		labelsize = tlabelsize;
+		if (version < 7000)
+		{
+			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
 	}
+	
 	if (flags & F_MARGINS)
 	{
 		if ((stat = IO_read_int2(&leftmargin, stream)) != IO_NORMAL)
@@ -2997,7 +3277,7 @@ IO_stat MCGroup::load(IO_handle stream, const char *version)
 		if ((stat = IO_read_uint2(&minrect.height, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = loadpropsets(stream)) != IO_NORMAL)
+	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
 		return stat;
 	while (True)
 	{
@@ -3150,7 +3430,7 @@ IO_stat MCGroup::load(IO_handle stream, const char *version)
 			}
 			break;
 		case OT_GROUPEND:
-			if (strncmp(version, "1.0", 3) == 0)
+			if (version == 1000)
 			{
 				computecrect();
 				if (rect.x == minrect.x && rect.y == minrect.y
@@ -3291,7 +3571,7 @@ bool MCGroup::recomputefonts(MCFontRef p_parent_font)
 	// The group's font only has an effect in isolation if the group is
 	// showing a label.
 	bool t_changed;
-	t_changed = (flags & F_SHOW_NAME && (!isunnamed() || label != NULL));
+	t_changed = (flags & F_SHOW_NAME && (!isunnamed() || !MCStringIsEmpty(label)));
 
 	// Now loop through all controls owned by the group and update
 	// those.

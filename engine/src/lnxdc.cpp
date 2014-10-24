@@ -25,12 +25,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "dispatch.h"
 #include "image.h"
 #include "stack.h"
 #include "util.h"
+#include "variable.h"
 
 #include "globals.h"
 
@@ -44,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "notify.h"
 
-#include <X11/extensions/Xinerama.h>
+//#include <X11/extensions/Xinerama.h>
 
 #include "graphics_util.h"
 
@@ -72,14 +73,18 @@ MCScreenDC::MCScreenDC()
 	pendingevents = NULL;
 	backdrop = DNULL;
 	backdropcolor.pixel = 0;
+
 	m_backdrop_pixmap = nil;
 	
-	Xinerama_available = false ;
-	getdisplays_init = false ;
+	//Xinerama_available = false ;
+	//getdisplays_init = false ;
+
 	m_application_has_focus = true ; // The application start's up having focus, one assumes.
 	
 	backdrop_hard = false;
 	backdrop_active = false;
+    
+    m_im_context = NULL;
 
 	MCNotifyInitialize();
 }
@@ -95,8 +100,8 @@ MCScreenDC::~MCScreenDC()
 		int2 i;
 		for (i = 0 ; i < ncolors ; i++)
 		{
-			if (colornames[i] != NULL)
-				delete colornames[i];
+            if (colornames[i] != NULL)
+                MCValueRelease(colornames[i]);
 		}
 		delete colors;
 		delete colornames;
@@ -159,23 +164,22 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-
-GC MCScreenDC::getgc(void)
-{
-	return ( destdepth == 1 ? gc1 : gc );
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCX11GetWindowWorkarea(Display *p_display, Window p_window, MCRectangle &r_workarea)
+bool MCX11GetWindowWorkarea(GdkDisplay *p_display, Window p_window, MCRectangle &r_workarea)
 {
-	Atom t_ret;
+    x11::Atom t_ret;
 	int t_format, t_status;
 	unsigned long t_count, t_after;
 	unsigned long *t_workarea = nil;
 
-	t_status = XGetWindowProperty(p_display, p_window, MCworkareaatom, 0, 4, False, XA_CARDINAL,
-		&t_ret, &t_format, &t_count, &t_after, (unsigned char**)&t_workarea);
+    x11::Atom XA_CARDINAL = x11::gdk_x11_atom_to_xatom_for_display(p_display, gdk_atom_intern_static_string("CARDINAL"));
+    
+    t_status = x11::XGetWindowProperty(x11::gdk_x11_display_get_xdisplay(p_display),
+                                       x11::gdk_x11_drawable_get_xid(p_window),
+                                       x11::gdk_x11_atom_to_xatom_for_display(p_display, MCworkareaatom),
+                                       0, 4, False, XA_CARDINAL, &t_ret, &t_format, &t_count, &t_after,
+                                       (unsigned char**)&t_workarea);
 	
 	bool t_success;
 	t_success = t_status == Success && t_ret == XA_CARDINAL && t_format == 32 && t_count == 4;
@@ -184,7 +188,7 @@ bool MCX11GetWindowWorkarea(Display *p_display, Window p_window, MCRectangle &r_
 		r_workarea = MCRectangleMake(t_workarea[0], t_workarea[1], t_workarea[2], t_workarea[3]);
 		
 	if (t_workarea != nil)
-		XFree(t_workarea);
+		x11::XFree(t_workarea);
 	
 	return t_success;
 }
@@ -215,14 +219,20 @@ bool MCScreenDC::apply_partial_struts(MCDisplay *p_displays, uint32_t p_display_
 	
 	bool t_success = true;
 	
-	Atom t_ret;
+    x11::Atom t_ret;
 	int t_format, t_status;
-	Window *t_clients = nil;
+    x11::Window *t_clients = nil;
 	unsigned long t_client_count, t_after;
 	
-	t_status = XGetWindowProperty(dpy, getroot(), MCclientlistatom, 0, -1, False, XA_WINDOW,
-		&t_ret, &t_format, &t_client_count, &t_after, (unsigned char**)&t_clients);
-	
+    x11::Atom XA_WINDOW = x11::gdk_x11_atom_to_xatom_for_display(dpy, gdk_atom_intern_static_string("WINDOW"));
+    x11::Atom XA_CARDINAL = x11::gdk_x11_atom_to_xatom_for_display(dpy, gdk_atom_intern_static_string("CARDINAL"));
+    
+    t_status = x11::XGetWindowProperty(x11::gdk_x11_display_get_xdisplay(dpy),
+                                       x11::gdk_x11_drawable_get_xid(getroot()),
+                                       x11::gdk_x11_atom_to_xatom_for_display(dpy, MCclientlistatom),
+                                       0, -1, False,XA_WINDOW, &t_ret, &t_format, &t_client_count, &t_after,
+                                       (unsigned char **)&t_clients);
+    
 	t_success = t_status == Success && t_ret == XA_WINDOW && t_format == 32;
 	
 	if (t_success)
@@ -235,9 +245,12 @@ bool MCScreenDC::apply_partial_struts(MCDisplay *p_displays, uint32_t p_display_
 			unsigned long t_strut_count;
 			unsigned long *t_struts = nil;
 			
-			t_status = XGetWindowProperty(dpy, t_clients[i], MCstrutpartialatom, 0, 12, False, XA_CARDINAL,
-				&t_ret, &t_format, &t_strut_count, &t_after, (unsigned char**)&t_struts);
-			
+            t_status = x11::XGetWindowProperty(x11::gdk_x11_display_get_xdisplay(dpy),
+                                               t_clients[i],
+                                               x11::gdk_x11_atom_to_xatom_for_display(dpy, MCstrutpartialatom),
+                                               0, 12, False, XA_CARDINAL, &t_ret, &t_format, &t_strut_count, &t_after,
+                                               (unsigned char **)&t_struts);
+
 			if (t_status == Success && t_ret == XA_CARDINAL && t_format == 32 && t_strut_count == 12)
 			{
 				MCRectangle t_strut_rect = {0,0,0,0};
@@ -304,12 +317,12 @@ bool MCScreenDC::apply_partial_struts(MCDisplay *p_displays, uint32_t p_display_
 				}
 			}
 			if (t_struts != nil)
-				XFree(t_struts);
+				x11::XFree(t_struts);
 		}
 	}
 	
 	if (t_clients != nil)
-		XFree(t_clients);
+		x11::XFree(t_clients);
 		
 	return t_success;
 }
@@ -323,95 +336,45 @@ bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, 
 // IM-2014-01-29: [[ HiDPI ]] Refactored to handle display info caching in MCUIDC superclass
 bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay * &r_displays, uint32_t &r_display_count)
 {
-	bool t_success;
-	t_success = true;
-	
-	MCDisplay *t_displays;
-	t_displays = nil;
-	
-	uint32_t t_display_count;
-	t_display_count = 0;
-
-	// MW-2010-12-14: [[ Bug 9242 ]] The extension name was spelt wrongly! Making this
-	//   'XINERAMA' causes screenRects and all things that use it work right.
-	if ( !getdisplays_init )
-	{
-		Xinerama_available = initialise_weak_link_Xinerama();
-		if ( Xinerama_available )
-		{
-			int4 foo ;
-			Xinerama_available = XQueryExtension(dpy, "XINERAMA", &foo,&foo,&foo);
-		}
-		
-		getdisplays_init = true ;
-	}
-	
-	if (Xinerama_available && XineramaIsActive ( dpy ) )
-	{
-		int32_t t_monitor_count;
-		
-		XineramaScreenInfo *t_monitors;
-		t_monitors = XineramaQueryScreens (dpy , &t_monitor_count);
-		
-		t_success = t_monitors != nil;
-		
-		if (t_success)
-		{
-			t_display_count = t_monitor_count;
-			t_success = MCMemoryNewArray(t_display_count, t_displays);
-		}
-		
-		if (t_success)
-		{
-			for (uint32_t i = 0; i < t_display_count; i++)
-			{
-				MCRectangle t_viewport;
-				t_viewport = MCRectangleMake(t_monitors[i].x_org, t_monitors[i].y_org, t_monitors[i].width, t_monitors[i].height);
-				
-				t_displays[i].index = i;
-				t_displays[i].pixel_scale = 1.0;
-				t_displays[i].viewport = t_displays[i].workarea = t_viewport;
-			}
-		}
-		
-		if (t_monitors != nil)
-			XFree(t_monitors);
-	}
-	
-	if (t_displays == nil || !t_success)
-	{
-		MCMemoryDeleteArray(t_displays);
-		t_displays = nil;
-		
-		t_success = MCMemoryNewArray(1, t_displays);
-		if (t_success)
-		{
-			t_display_count = 1;
-			
-			t_displays->index = 0 ;
-			t_displays->pixel_scale = 1.0;
-			t_displays->viewport = t_displays->workarea = MCRectangleMake(0, 0, getwidth(), getheight());
-		}
-	}
-	
-	if (t_success)
-	{
-		if (t_display_count == 1)
-		{
-			apply_workarea(t_displays, t_display_count) || apply_partial_struts(t_displays, t_display_count);
-		}
-		else if (t_display_count > 1)
-		{
-			apply_partial_struts(t_displays, t_display_count);
-		}
-		
-		r_displays = t_displays;
-		r_display_count = t_display_count;
-	}
-	else
-		MCMemoryDeleteArray(t_displays);
-
-	return t_success;
+	// NOTE: this code assumes that there is only one GdkScreen!
+    GdkScreen *t_screen;
+    t_screen = gdk_display_get_default_screen(dpy);
+    
+    // Get the number of monitors attached to this screen
+    gint t_monitor_count;
+    t_monitor_count = gdk_screen_get_n_monitors(t_screen);
+    
+    // Allocate the list of monitors
+    MCDisplay *t_displays;
+    MCMemoryNewArray(t_monitor_count, t_displays);
+    
+    // Get the geometry of each monitor
+    for (gint i = 0; i < t_monitor_count; i++)
+    {
+        GdkRectangle t_rect;
+        gdk_screen_get_monitor_geometry(t_screen, i, &t_rect);
+        
+        MCRectangle t_mc_rect;
+        t_mc_rect = MCRectangleMake(t_rect.x, t_rect.y, t_rect.width, t_rect.height);
+        
+        t_displays[i].index = i;
+        t_displays[i].pixel_scale = 1.0;
+        t_displays[i].viewport = t_displays[i].workarea = t_mc_rect;
+    }
+    
+    if (t_monitor_count == 1)
+    {
+        apply_workarea(t_displays, t_monitor_count) || apply_partial_struts(t_displays, t_monitor_count);
+    }
+    else
+    {
+        apply_partial_struts(t_displays, t_monitor_count);
+    }
+    
+    // All done
+    r_displays = t_displays;
+    r_display_count = t_monitor_count;
+    return true;
 }
 
 
@@ -425,12 +388,11 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay * &r_displays, u
 
 
 
-void MCScreenDC::listprinters(MCExecPoint& ep)
+bool MCScreenDC::listprinters(MCStringRef& r_printers)
 {
-	ep . clear();
-	MCresult->store(ep, False);
-	MCdefaultstackptr->domess(LIST_PRINTER_SCRIPT);
-	MCresult->fetch(ep);
+	MCdefaultstackptr->domess(MCSTR(LIST_PRINTER_SCRIPT));
+    MCresult->copyasvalueref((MCValueRef&)r_printers);
+	return true;
 }
 
 

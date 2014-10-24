@@ -1,52 +1,153 @@
 <doc>
-  <legacy_id>1182</legacy_id>
-  <name>uniDecode</name>
-  <type>function</type>
-  <syntax>
-    <example>the uniDecode of <i>stringToDecode</i></example>
-    <example>uniDecode(<i>stringToDecode</i>[,<i>language</i>])</example>
-  </syntax>
-  <library></library>
-  <objects>
-  </objects>
-  <synonyms>
-  </synonyms>
-  <classification>
-    <category>Text and Data Processing</category>
-  </classification>
-  <references>
-    <function tag="numToChar">numToChar Function</function>
-    <function tag="charToNum">charToNum Function</function>
-    <function tag="fontLanguage">fontLanguage Function</function>
-    <function tag="ISOToMac">ISOToMac Function</function>
-    <function tag="macToISO">macToISO Function</function>
-  </references>
-  <history>
-    <introduced version="1.0">Added.</introduced>
-    <changed version="2.1.1"></changed>
-  </history>
-  <platforms>
-    <mac/>
-    <windows/>
-    <linux/>
-    <ios/>
-    <android/>
-  </platforms>
-  <classes>
-    <desktop/>
-    <server/>
-    <web/>
-    <mobile/>
-  </classes>
-  <security>
-  </security>
-  <summary>Converts a string from <glossary tag="Unicode">Unicode</glossary> to <href tag="../glossary/singledashbyte_character.xml">single-byte</href> text.</summary>
-  <examples>
-    <example>uniDecode("A" &amp; numToChar(zero)) <i>-- returns "A" (on PPC)</i></example>
-    <example>uniDecode("ABCDE") <i>-- returns "BD" (on Intel)</i></example>
-    <example>uniDecode(field "JIS Input","Japanese") <i>-- converts to JIS</i></example>
-  </examples>
-  <description>
-    <p>Use the <b>uniDecode</b> <control_st tag="function">function</control_st> to convert <href tag="../glossary/doubledashbyte_character.xml">double-byte characters</href> to <href tag="../glossary/singledashbyte_character.xml">single-byte characters</href>.</p><p/><p><b>Parameters:</b></p><p>The <i>stringToDecode</i> is any <keyword tag="string">string</keyword>, or <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <keyword tag="string">string</keyword>.</p><p/><p>The <i>language</i> is one of the following:</p><p>* ANSI (synonym for "English")</p><p>* Arabic</p><p>* Bulgarian</p><p>* Chinese</p><p>* English</p><p>* Greek</p><p>* Hebrew</p><p>* Japanese (Shift-JIS)</p><p>* Korean</p><p>* Polish</p><p>* Roman</p><p>* Russian (Cyrillic)</p><p>* Thai</p><p>* Turkish</p><p>* SimpleChinese (Simplified Chinese)</p><p>* Ukrainian</p><p>* Unicode (UTF-16)</p><p>* UTF8</p><p>* w (synonym for "Unicode")</p><p/><p><b>Value:</b></p><p>If you don't specify a <i>language</i>, the <b>uniDecode</b> <control_st tag="function">function</control_st> <glossary tag="return">returns</glossary> the <i>stringToDecode</i>, with every second <glossary tag="byte">byte</glossary> removed.</p><p/><p>If a <i>language</i> is specified, the <b>uniDecode</b> <control_st tag="function">function</control_st> encodes the <i>stringToDecode</i> into <href tag="../glossary/singledashbyte_character.xml">single-byte</href> text, using the appropriate method for the specified <i>language</i>.</p><p/><p><b>Comments:</b></p><p>The <b>uniDecode</b> function is the <keyword tag="inverse">inverse</keyword> of the <function tag="uniEncode">uniEncode</function> function and removes the <constant tag="null">null</constant> <glossary tag="byte">bytes</glossary> inserted for <glossary tag="Unicode">Unicode</glossary> compatibility. In other words, it turns <href tag="../glossary/doubledashbyte_character.xml">double-byte</href> <keyword tag="characters">characters</keyword> into their closest <href tag="../glossary/singledashbyte_character.xml">single-byte</href> equivalent.</p><p/><p>If the <i>stringToDecode</i> contains an odd number of <glossary tag="byte">bytes</glossary>, the last <glossary tag="byte">byte</glossary> is ignored.</p><p/><p><b>Note:</b> You can use the UTF8 encoding only with the <function tag="uniDecode">uniDecode</function> and <b>uniEncode</b> <glossary tag="function">functions</glossary>. You cannot set an <glossary tag="object">object's</glossary> <property tag="textFont">textFont</property> <glossary tag="property">property</glossary> to use UTF-8. To display Unicode text in an <glossary tag="object">object</glossary>, use either "Unicode" or a language name as the second item of the <glossary tag="object">object's</glossary> <property tag="textFont">textFont</property>.</p><p/><p><img src="202653"/> <b>Important!</b> The <function tag="format">format</function> expected by the <b>uniDecode</b> <control_st tag="function">function</control_st> is processor-dependent. On "little-endian" processors, where the first <glossary tag="byte">byte</glossary> is least significant (such as Intel and Alpha processors), the <b>uniDecode</b> <control_st tag="function">function</control_st> removes the second byte of each <keyword tag="character">character</keyword>. On "big-endian" processors, where the last <glossary tag="byte">byte</glossary> is least significant (such as PowerPC processors), the <b>uniDecode</b> <control_st tag="function">function</control_st> removes the first <glossary tag="byte">byte</glossary> of each <keyword tag="character">character</keyword>.</p><p/><p><b>Changes:</b></p><p>The ability to encode text in Polish was added in version 2.1.1.</p><p/><p>The ability to handle double-byte characters on "little-endian" processors was added in version 2.0. In previous versions, the <b>uniDecode</b> <control_st tag="function">function</control_st> always removed the second <glossary tag="byte">byte</glossary> of each pair of <glossary tag="byte">bytes</glossary>, regardless of <function tag="platform">platform</function>.</p><p/><p>The ability to convert Unicode text into language-specific encodings was added in version 2.0. In previous versions, the <b>uniDecode</b> <control_st tag="function">function</control_st> simply removed every other <glossary tag="byte">byte</glossary>.</p>
-  </description>
+	<legacy_id>1182</legacy_id>
+	<name>uniDecode</name>
+	<type>function</type>
+
+	<syntax>
+		<example>the uniDecode of <i>stringToDecode</i></example>
+		<example>uniDecode(<i>stringToDecode</i>[,<i>language</i>])</example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Converts a string from <glossary tag="Unicode">Unicode</glossary> to single-byte text.</summary>
+
+	<examples>
+<example>uniDecode("A" &amp; numToChar(zero)) <i>-- returns "A" (on PPC)</i></example>
+<example>uniDecode("ABCDE") <i>-- returns "BD" (on Intel)</i></example>
+<example><p>uniDecode(field "JIS Input","Japanese") <i>-- converts to JIS</i></p></example>
+	</examples>
+
+	<history>
+		<introduced version="1.0">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		<changed version="7.0">Deprecated</changed>
+<changed version="2.1.1">2.1.1</changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+		<ios/>
+		<android/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Text and Data Processing</category>
+	</classification>
+
+	<references>
+		<function tag="uniEncode">uniEncode function</function>
+		<property tag="unicodeText">unicodeText property</property>
+	</references>
+
+	<description>
+	<overview>Use the <b>uniDecode</b> <control_st tag="function">function</control_st> to convert double-byte characters to single-byte characters.</overview>
+
+		<parameters>
+<parameter>
+<name>stringToDecode</name>
+<description> any string, or expression that evaluates to a string.</description>
+</parameter>
+<parameter>
+<name>language</name>
+<description>one of the following</description>
+<options title="">
+<option>
+<item>ANSI(synonym for "English"</item>
+<description></description>
+</option>
+<option>
+<item>Arabic</item>
+<description></description>
+</option>
+<option>
+<item>Bulgarian</item>
+<description></description>
+</option>
+<option>
+<item>Chinese</item>
+<description></description>
+</option>
+<option>
+<item>English</item>
+<description></description>
+</option>
+<option>
+<item>Greek</item>
+<description></description>
+</option>
+<option>
+<item>Hebrew</item>
+<description></description>
+</option>
+<option>
+<item>Japanese (Shift-JIS)</item>
+<description></description>
+</option>
+<option>
+<item>Korean</item>
+<description></description>
+</option>
+<option>
+<item>Polish</item>
+<description></description>
+</option>
+<option>
+<item>Roman</item>
+<description></description>
+</option>
+<option>
+<item>Russian (Cyrillic)</item>
+<description></description>
+</option>
+<option>
+<item>Thai</item>
+<description></description>
+</option>
+<option>
+<item>Turkish</item>
+<description></description>
+</option>
+<option>
+<item>SimplifiedChinese</item>
+<description></description>
+</option>
+<option>
+<item>Unicode (UTF-16)</item>
+<description></description>
+</option>
+<option>
+<item>UTF8</item>
+<description></description>
+</option>
+<option>
+<item>w (synonym for "Unicode"</item>
+<description></description>
+</option>
+</options>
+</parameter>		</parameters>
+
+	<value>If you don't specify a <i>language</i>, the <b>uniDecode</b> <control_st tag="function">function</control_st> <glossary tag="return">returns</glossary> the <i>stringToDecode</i>, with every second <glossary tag="byte">byte</glossary> removed.<p></p><p>If a <i>language</i> is specified, the <b>uniDecode</b> <control_st tag="function">function</control_st> encodes the <i>stringToDecode</i> into single-byte text, using the appropriate method for the specified <i>language</i>.</p></value>
+	<comments><important><p>As of LiveCode 7.0 the uniDecode function has been deprecated. It will continue to work as in previous versions but should not be used in new code as the existing behaviour is incompatible with the new, transparent Unicode handling (the resulting value will be treated as binary data rather than text). This functions is only useful in combination with the also-deprecated uniEncode function and unicodeText field property.</important><p></p><p>The <b>uniDecode</b> function is the <keyword tag="inverse">inverse</keyword> of the <function tag="uniEncode">uniEncode</function> function and removes the <constant tag="null">null</constant> <glossary tag="byte">bytes</glossary> inserted for <glossary tag="Unicode">Unicode</glossary> compatibility. In other words, it turns double-byte <keyword tag="characters">characters</keyword> into their closest single-byte equivalent.</p><p></p><p>If the <i>stringToDecode</i> contains an odd number of <glossary tag="byte">bytes</glossary>, the last <glossary tag="byte">byte</glossary> is ignored.</p><p></p><p></p><note>You can use the UTF8 encoding only with the <function tag="uniDecode">uniDecode</function> and <b>uniEncode</b> <glossary tag="function">functions</glossary>. You cannot set an <glossary tag="object">object's</glossary> <property tag="textFont">textFont</property> <glossary tag="property">property</glossary> to use UTF-8. To display Unicode text in an <glossary tag="object">object</glossary>, use either "Unicode" or a language name as the second item of the <glossary tag="object">object's</glossary> <property tag="textFont">textFont</property>.</note><p></p><p></p><important>The <function tag="format">format</function> expected by the <b>uniDecode</b> <control_st tag="function">function</control_st> is processor-dependent. On "little-endian" processors, where the first <glossary tag="byte">byte</glossary> is least significant (such as Intel and Alpha processors), the <b>uniDecode</b> <control_st tag="function">function</control_st> removes the second byte of each <keyword tag="character">character</keyword>. On "big-endian" processors, where the last <glossary tag="byte">byte</glossary> is least significant (such as PowerPC processors), the <b>uniDecode</b> <control_st tag="function">function</control_st> removes the first <glossary tag="byte">byte</glossary> of each <keyword tag="character">character</keyword>.</important><p></p><p></p><change><p>The ability to encode text in Polish was added in version 2.1.1.</change><p></p><p>The ability to handle double-byte characters on "little-endian" processors was added in version 2.0. In previous versions, the <b>uniDecode</b> <control_st tag="function">function</control_st> always removed the second <glossary tag="byte">byte</glossary> of each pair of <glossary tag="byte">bytes</glossary>, regardless of <function tag="platform">platform</function>.</p><p></p><p>The ability to convert Unicode text into language-specific encodings was added in version 2.0. In previous versions, the <b>uniDecode</b> <control_st tag="function">function</control_st> simply removed every other <glossary tag="byte">byte</glossary>.</p></comments>
+	</description>
 </doc>

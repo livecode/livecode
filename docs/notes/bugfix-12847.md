@@ -1,0 +1,1 @@
+# Property inspector's selection menu is broken

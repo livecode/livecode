@@ -1,0 +1,11 @@
+setup
+
+create button
+
+set the disabled of button 1 to true
+
+enable button 1
+
+test not the disabled of button 1
+
+teardown

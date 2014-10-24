@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -541,12 +540,12 @@ bool MCTileCacheOpenGLCompositor_BeginLayer(void *p_context, const MCRectangle& 
 			glScissor(p_clip . x + self -> origin_x, p_clip . y + self -> origin_y, p_clip . width, p_clip . height);
 	}
 	
-	if (!self -> is_blending)
-	{
-		self -> is_blending = true;
-		glEnable(GL_BLEND);
-	}
-			
+    if (!self -> is_blending)
+    {
+        self -> is_blending = true;
+        glEnable(GL_BLEND);
+    }
+		
 	self -> current_opacity = p_opacity;
 	
 	return true;

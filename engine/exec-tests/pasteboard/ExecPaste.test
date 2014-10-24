@@ -1,0 +1,23 @@
+setup
+
+create field
+
+select field 1
+
+copy
+
+delete field 1
+
+paste
+
+put "foo" into field 1
+
+select text of field 1
+
+cut
+
+paste
+
+test field 1 is "foo"
+
+teardown

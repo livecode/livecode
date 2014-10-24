@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "sellst.h"
 #include "stack.h"
@@ -129,7 +129,7 @@ Boolean MCColors::mdown(uint2 which)
 			selectedcolor = color.pixel;
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
-			message_with_args(MCM_mouse_down, "1");
+			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 			break;
 		case T_POINTER:
 			start(True);
@@ -157,7 +157,7 @@ Boolean MCColors::mup(uint2 which, bool p_release)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
-			message_with_args(MCM_mouse_up, "1");
+			message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			break;
 		case T_POINTER:
 			end(true, p_release);
@@ -174,7 +174,8 @@ Boolean MCColors::mup(uint2 which, bool p_release)
 	return True;
 }
 
-Exec_stat MCColors::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -187,12 +188,12 @@ Exec_stat MCColors::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 		break;
 #endif /* MCColors::getprop */ 
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCColors::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	MCString data = ep.getsvalue();
@@ -201,24 +202,24 @@ Exec_stat MCColors::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	{
 #ifdef /* MCColors::setprop */ LEGACY_EXEC
 	case P_SELECTED_COLOR:
+	{
+		MCColor color;
+		char *colorname = NULL;
+		if (!MCscreen->parsecolor(data, &color, &colorname))
 		{
-			MCColor color;
-			char *colorname = NULL;
-			if (!MCscreen->parsecolor(data, &color, &colorname))
-			{
-				MCeerror->add
-				(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
-				return ES_ERROR;
-			}
-			if (colorname != NULL)
-				delete colorname;
-			MCscreen->alloccolor(color);
-			selectedcolor = color.pixel;
+			MCeerror->add
+			(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
+			return ES_ERROR;
 		}
-		break;
+		if (colorname != NULL)
+			delete colorname;
+		MCscreen->alloccolor(color);
+		selectedcolor = color.pixel;
+	}
+        break;
 #endif /* MCColors::setprop */
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{
@@ -227,6 +228,7 @@ Exec_stat MCColors::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	}
 	return ES_NORMAL;
 }
+#endif
 
 Boolean MCColors::count(Chunk_term type, MCObject *stop, uint2 &num)
 {
@@ -292,7 +294,7 @@ IO_stat MCColors::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return MCObject::defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCColors::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCColors::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return MCObject::defaultextendedload(p_stream, p_version, p_length);
 }
@@ -308,10 +310,10 @@ IO_stat MCColors::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCColors::load(IO_handle stream, const char *version)
+IO_stat MCColors::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return stat;
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }

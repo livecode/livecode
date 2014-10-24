@@ -1,0 +1,17 @@
+setup 
+
+local tId
+
+put the long id of the current card into tId
+
+create field
+
+put "foo" into field 1
+
+create card
+
+find "foo"
+
+test the long id of the current card is tId
+
+teardown

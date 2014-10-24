@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -29,10 +28,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 
 
-bool MCLinuxRegionCreate(Region &r_region)
+bool MCLinuxRegionCreate(GdkRegion* &r_region)
 {
-	Region t_rgn;
-	t_rgn = XCreateRegion();
+	GdkRegion *t_rgn;
+	t_rgn = gdk_region_new();
 	if (t_rgn == nil)
 		return false;
 
@@ -40,36 +39,36 @@ bool MCLinuxRegionCreate(Region &r_region)
 	return true;
 }
 
-void MCLinuxRegionDestroy(Region p_region)
+void MCLinuxRegionDestroy(GdkRegion* p_region)
 {
 	if (p_region == nil)
 		return;
-
-	XDestroyRegion(p_region);
+    
+	gdk_region_destroy((GdkRegion*)p_region);
 }
 
-bool MCLinuxRegionIncludeRect(Region p_region, const MCGIntegerRectangle& p_rect)
+bool MCLinuxRegionIncludeRect(GdkRegion* p_region, const MCGIntegerRectangle& p_rect)
 {
-	XRectangle t_rect;
+	GdkRectangle t_rect;
 	t_rect . x = p_rect.origin.x;
 	t_rect . y = p_rect.origin.y;
 	t_rect . width = p_rect.size.width;
 	t_rect . height = p_rect.size.height;
-	XUnionRectWithRegion(&t_rect, (Region)p_region, (Region)p_region);
+    gdk_region_union_with_rect(p_region, &t_rect);
 	return true;
 }
 
 static bool MCLinuxMCGRegionToRegionCallback(void *p_context, const MCGIntegerRectangle &p_rect)
 {
-	return MCLinuxRegionIncludeRect(*static_cast<Region*>(p_context), p_rect);
+	return MCLinuxRegionIncludeRect(*static_cast<GdkRegion**>(p_context), p_rect);
 }
 
-bool MCLinuxMCGRegionToRegion(MCGRegionRef p_region, Region &r_region)
+bool MCLinuxMCGRegionToRegion(MCGRegionRef p_region, GdkRegion* &r_region)
 {
 	bool t_success;
 	t_success = true;
 	
-	Region t_region;
+	GdkRegion* t_region;
 	t_region = nil;
 	
 	t_success = MCLinuxRegionCreate(t_region);
@@ -88,49 +87,82 @@ bool MCLinuxMCGRegionToRegion(MCGRegionRef p_region, Region &r_region)
 	return false;
 }
 
+bool MCLinuxRegionToMCGRegion(GdkRegion *p_region, MCGRegionRef &r_region)
+{
+    MCGRegionCreate(r_region);
+    
+    GdkRectangle *t_rects;
+    gint t_nrects;
+	gdk_region_get_rectangles(p_region, &t_rects, &t_nrects);
+    for (gint i = 0; i < t_nrects; i++)
+    {
+        MCGIntegerRectangle t_rect;
+        t_rect.origin.x = t_rects[i].x;
+        t_rect.origin.y = t_rects[i].y;
+        t_rect.size.width = t_rects[i].width;
+        t_rect.size.height = t_rects[i].height;
+        MCGRegionAddRect(r_region, t_rect);
+    }
+    
+    g_free(t_rects);
+    return true;
+}
+
 #if 0
 
 bool MCRegionIsRect(MCRegionRef p_region)
 {
-	XRectangle t_box;
-	XClipBox((Region)p_region, &t_box);
-	return XRectInRegion((Region)p_region, t_box . x, t_box . y, t_box . width, t_box . height);
+	GdkRectangle t_bounds;
+    gdk_region_get_clipbox((GdkRegion*)p_region, &t_bounds);
+	return gdk_region_rect_equal((GdkRegion*)p_region, &t_bounds);
 }
 
 MCRectangle MCRegionGetBoundingBox(MCRegionRef p_region)
 {
-	XRectangle t_box;
-	XClipBox((Region)p_region, &t_box);
+	GdkRectangle t_box;
+    gdk_region_get_clipbox((GdkRegion*)p_region, &t_box);
 	return MCU_make_rect(t_box . x, t_box . y, t_box . width, t_box . height);
 }
 
 bool MCRegionSetEmpty(MCRegionRef p_region)
 {
-	XSubtractRegion((Region)p_region, (Region)p_region, (Region)p_region);
-	return true;
+    gdk_region_subtract((GdkRegion*)p_region, (GdkRegion*)p_region);
+    return true;
 }
 
 bool MCRegionSetRect(MCRegionRef p_region, const MCRectangle& p_rect)
 {
-	XRectangle t_rect;
+	GdkRectangle t_rect;
 	t_rect . x = p_rect . x;
 	t_rect . y = p_rect . y;
 	t_rect . width = p_rect . width;
 	t_rect . height = p_rect . height;
-	XSubtractRegion((Region)p_region, (Region)p_region, (Region)p_region);
-	XUnionRectWithRegion(&t_rect, (Region)p_region, (Region)p_region);
+    MCRegionSetEmpty(p_region);
+    gdk_region_union_with_rect((GdkRegion*)p_region, &t_rect);
 	return true;
 }
 
 bool MCRegionOffset(MCRegionRef p_region, int32_t p_dx, int32_t p_dy)
 {
-	XOffsetRegion((Region)p_region, p_dx, p_dy);
+	gdk_region_offset((GdkRegion*)p_region, p_dx, p_dy);
+	return true;
+}
+
+bool MCRegionIncludeRect(MCRegionRef p_region, const MCRectangle& p_rect)
+{
+	GdkRectangle t_rect;
+	t_rect . x = p_rect . x;
+	t_rect . y = p_rect . y;
+	t_rect . width = p_rect . width;
+	t_rect . height = p_rect . height;
+	gdk_region_union_with_rect((GdkRegion*)p_region, &t_rect);
 	return true;
 }
 
 bool MCRegionUnion(MCRegionRef p_dst, MCRegionRef p_left, MCRegionRef p_right)
 {
-	XUnionRegion((Region)p_left, (Region)p_right, (Region)p_dst);
+	p_dst = (MCRegionRef)gdk_region_copy((GdkRegion*)p_left);
+    gdk_region_union((GdkRegion*)p_dst, (GdkRegion*)p_right);
 	return true;
 }
 
@@ -143,14 +175,22 @@ bool MCRegionCalculateMask(MCRegionRef p_region, int32_t p_width, int32_t p_heig
 #endif
 
 // IM-2013-10-04: [[ FullscreenMode ]] Implement Linux version of MCRegionForEachRect()
-// Note: There is no X11 function for getting the components of a region, so for now
-// just use the bounding box
 bool MCRegionForEachRect(MCRegionRef region, MCRegionForEachRectCallback callback, void *context)
 {
 	if (callback == nil)
 		return false;
 	
-	return callback(context, MCRegionGetBoundingBox(region));
+    GdkRectangle *t_rects;
+    gint t_nrects;
+	gdk_region_get_rectangles((GdkRegion*)region, &t_rects, &t_nrects);
+    for (gint i = 0; i < t_nrects; i++)
+    {
+        MCRectangle t_rect;
+        t_rect = MCU_make_rect(t_rects[i].x, t_rects[i].y, t_rects[i].width, t_rects[i].height);
+        callback(context, t_rect);
+    }
+    
+    g_free(t_rects);
 }
 
 #endif

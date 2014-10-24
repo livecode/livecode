@@ -1,0 +1,19 @@
+setup
+local tProc
+if the platform is "win32" then
+	put "cmd.exe /C dir" into tProc
+else
+	put "ls -l" into tProc
+end if
+
+open process tProc
+test tProc is among the lines of the openProcesses
+close process tProc
+
+test tProc is not among the lines of the openProcesses
+
+repeat for each line tLine in the openProcesses
+	test there is a process tLine
+end repeat
+
+teardown

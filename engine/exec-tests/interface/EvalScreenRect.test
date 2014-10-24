@@ -1,0 +1,9 @@
+setup
+
+test the screenrect is a rect
+
+repeat for each line trect in the screenrects
+	test trect is a rect
+end repeat
+
+teardown

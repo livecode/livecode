@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "property.h"
 #include "osspec.h"
 
+#include "system.h"
 #include "globals.h"
 #include "license.h"
 #include "mode.h"
@@ -86,17 +87,17 @@ struct MCCapsuleInfo
 
 #if defined(_WINDOWS)
 #pragma section(".project", read, discard)
-__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = { 0 };
+__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(_LINUX)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(_MACOSX)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_PLATFORM_MOBILE)
-MCCapsuleInfo MCcapsule = { 0 };
+MCCapsuleInfo MCcapsule = {0};
 #endif
 
 MCLicenseParameters MClicenseparameters =
@@ -110,6 +111,31 @@ MCLicenseParameters MClicenseparameters =
 // We don't include error string in this mode
 const char *MCparsingerrors = "";
 const char *MCexecutionerrors = "";
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Property tables specific to STANDALONE mode
+//
+
+MCObjectPropertyTable MCObject::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCObjectPropertyTable MCStack::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyTable MCProperty::kModePropertyTable =
+{
+	0,
+	nil,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -152,7 +178,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypePrologue:
 	{
 		MCCapsulePrologueSection t_prologue;
-		if (IO_read_bytes(&t_prologue, sizeof(t_prologue), p_stream) != IO_NORMAL)
+		if (IO_read(&t_prologue, sizeof(t_prologue), p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone prologue");
 			return false;
@@ -164,7 +190,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_redirect;
 		t_redirect = new char[p_length];
-		if (IO_read_bytes(t_redirect, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_redirect, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read redirect ref");
 			return false;
@@ -194,13 +220,15 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_external;
 		t_external = new char[p_length];
-		if (IO_read_bytes(t_external, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_external, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read external ref");
 			return false;
 		}
 		
-		if (!MCdispatcher -> loadexternal(t_external))
+		MCAutoStringRef t_external_str;
+		/* UNCHECKED */ MCStringCreateWithCString(t_external, &t_external_str);
+		if (!MCdispatcher -> loadexternal(*t_external_str))
 		{
 			delete t_external;
 			MCresult -> sets("failed to load external");
@@ -210,12 +238,12 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		delete t_external;
 	}
 	break;
-	
+			
 	case kMCCapsuleSectionTypeStartupScript:
 	{
 		char *t_script;
 		t_script = new char[p_length];
-		if (IO_read_bytes(t_script, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read startup script");
 			return false;
@@ -223,7 +251,9 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 
 		// Execute the startup script at this point since we have loaded
 		// all stacks.
-		self -> stack -> domess(t_script);
+        MCAutoStringRef t_script_str;
+        /* UNCHECKED */ MCStringCreateWithCString(t_script, &t_script_str);
+		self -> stack -> domess(*t_script_str);
 		
 		delete t_script;
 	}
@@ -242,7 +272,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 
 	case kMCCapsuleSectionTypeDigest:
 		uint8_t t_read_digest[16];
-		if (IO_read_bytes(t_read_digest, 16, p_stream) != IO_NORMAL)
+		if (IO_read(t_read_digest, 16, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone checksum");
 			return false;
@@ -272,13 +302,12 @@ extern void MCAndroidEngineRemoteCall(const char *, const char *, void *, ...);
 IO_stat MCDispatch::startup(void)
 {
 	startdir = MCS_getcurdir();
-	enginedir = strclone(MCcmd);
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, enginedir);
 	char *eptr = strrchr(enginedir, PATH_SEPARATOR);
 	if (eptr != NULL)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = MCcmd; //point to MCcmd string
 
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
@@ -292,13 +321,18 @@ IO_stat MCDispatch::startup(void)
 	
 		// In debug mode, we (for now) load a fixed stack
 #if defined(TARGET_SUBPLATFORM_ANDROID)
-		extern IO_handle android_get_mainstack_stream();
-		t_stream = android_get_mainstack_stream();
+        extern IO_handle android_get_mainstack_stream();
+        t_stream = android_get_mainstack_stream();
 #else
-		char *t_path;
-		MCCStringFormat(t_path, "%.*s/iphone_test.livecode", strrchr(MCcmd, '/') - MCcmd, MCcmd);
-		t_stream = MCS_open(t_path, IO_READ_MODE, False, False, 0);
-		MCCStringFree(t_path);
+        MCAutoStringRef t_path;
+        uindex_t t_last_slash;
+        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_last_slash);
+        // temporary fix until ranged formats for stringrefs is working
+        MCAutoStringRef t_dir;
+        /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_dir);
+        /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.livecode", *t_dir);
+
+        t_stream = MCS_open(*t_path, kMCOpenFileModeRead, False, False, 0);
 #endif
 		
 		if (t_stream == NULL)
@@ -310,7 +344,6 @@ IO_stat MCDispatch::startup(void)
 		
 		MCS_close(t_stream);
 		
-		MCcmd = openpath;
 		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
 		
 		t_stack -> extraopen(false);
@@ -323,14 +356,14 @@ IO_stat MCDispatch::startup(void)
 		MCImage::init();
 		
 #ifdef TARGET_SUBPLATFORM_ANDROID
-		MCdispatcher -> loadexternal("revzip");
-		MCdispatcher -> loadexternal("revdb");
-		MCdispatcher -> loadexternal("revxml");
-		MCdispatcher -> loadexternal("dbsqlite");
-		MCdispatcher -> loadexternal("dbmysql");
+        MCdispatcher -> loadexternal(MCSTR("revzip"));
+        MCdispatcher -> loadexternal(MCSTR("revdb"));
+        MCdispatcher -> loadexternal(MCSTR("revxml"));
+        MCdispatcher -> loadexternal(MCSTR("dbsqlite"));
+        MCdispatcher -> loadexternal(MCSTR("dbmysql"));
 #else
-		MCdispatcher -> loadexternal("revzip.dylib");
-		MCdispatcher -> loadexternal("revdb.dylib");
+        MCdispatcher -> loadexternal(MCSTR("revzip.dylib"));
+        MCdispatcher -> loadexternal(MCSTR("revdb.dylib"));
 #endif
 		
 		// MW-2010-12-18: Startup message / stack init now down in 'main'
@@ -363,18 +396,15 @@ IO_stat MCDispatch::startup(void)
 		//   0..2044 from project section
 		//   spill file
 		//   rest from project section
-		char *t_spill;
-		t_spill = (char *)malloc(strlen(openpath) + 5);
-		sprintf(t_spill, "%s.dat", openpath);
+		MCAutoStringRef t_spill;
+        /* UNCHECKED */ MCStringFormat(&t_spill, "%@.dat", MCcmd);
 		if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, 2044, false) ||
-			!MCCapsuleFillFromFile(t_capsule, t_spill, 0, false) ||
+			!MCCapsuleFillFromFile(t_capsule, *t_spill, 0, false) ||
 			!MCCapsuleFillNoCopy(t_capsule, (const uint8_t *)&MCcapsule . data + 2044, 2048, true))
 		{
-			free(t_spill);
 			MCCapsuleClose(t_capsule);
 			return IO_ERROR;
 		}
-		free(t_spill);
 	}
 	
 	// Process the capsule
@@ -384,7 +414,6 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 	}
 
-	MCcmd = openpath;
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
 
@@ -401,7 +430,7 @@ IO_stat MCDispatch::startup(void)
 	}
 	
 	// MW-2010-12-18: Startup message / stack init now down in 'main'
-
+    
 	return IO_NORMAL;
 }
 
@@ -409,14 +438,16 @@ IO_stat MCDispatch::startup(void)
 
 IO_stat MCDispatch::startup(void)
 {
+    char *t_mccmd;
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
 	startdir = MCS_getcurdir();
-	enginedir = strclone(MCcmd);
+	enginedir = t_mccmd;
 	char *eptr = strrchr(enginedir, PATH_SEPARATOR);
 	if (eptr != NULL)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = MCcmd; //point to MCcmd string
+	char *openpath = t_mccmd; //point to MCcmd string
 
 #ifdef _DEBUG
 	// MW-2013-06-13: [[ CloneAndRun ]] When compiling in DEBUG mode, first check
@@ -432,20 +463,20 @@ IO_stat MCDispatch::startup(void)
 	DebugBreak();*/
 #endif
 
-	if (getenv("TEST_STACK") != nil)
-	{
-		MCStack *t_stack;
-		IO_handle t_stream;
-		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
-		if (t_stream == nil ||
-			MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
+    MCAutoStringRef t_env;
+    if (MCS_getenv(MCSTR("TEST_STACK"), &t_env) && !MCStringIsEmpty(*t_env))
+    {
+        MCStack *t_stack;
+        IO_handle t_stream;
+        t_stream = MCS_open(*t_env, kMCOpenFileModeRead, False, False, 0);
+
+		if (t_stream == nil || MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone stack");
 			return IO_ERROR;
 		}
 		MCS_close(t_stream);
 		
-		MCcmd = openpath;
 		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
 		
 		t_stack -> extraopen(false);
@@ -455,94 +486,60 @@ IO_stat MCDispatch::startup(void)
 		send_startup_message();
 		if (!MCquit)
 			t_stack -> open();
-		
+
 		return IO_NORMAL;
 	}
 #endif
-	
-	// MW-2013-11-07: [[ CmdLineStack ]] If there is a capsule, load the mainstack
-	//   from that. Otherwise, if there is at least one argument, load that as the
-	//   stack. Otherwise it's an error.
-	MCStack *t_mainstack;
-	t_mainstack = nil;
-	if (MCcapsule . size != 0)
+
+	// The info structure that will be filled in while parsing the capsule.
+	MCStandaloneCapsuleInfo t_info;
+	memset(&t_info, 0, sizeof(MCStandaloneCapsuleInfo));
+
+	// Create a capsule and fill with the standalone data
+	MCCapsuleRef t_capsule;
+	t_capsule = nil;
+	if (!MCCapsuleOpen(MCStandaloneCapsuleCallback, &t_info, t_capsule))
+		return IO_ERROR;
+
+	if (((MCcapsule . size) & (1U << 31)) == 0)
 	{
-		// The info structure that will be filled in while parsing the capsule.
-		MCStandaloneCapsuleInfo t_info;
-		memset(&t_info, 0, sizeof(MCStandaloneCapsuleInfo));
-
-		// Create a capsule and fill with the standalone data
-		MCCapsuleRef t_capsule;
-		t_capsule = nil;
-		if (!MCCapsuleOpen(MCStandaloneCapsuleCallback, &t_info, t_capsule))
-			return IO_ERROR;
-
-		if (((MCcapsule . size) & (1U << 31)) == 0)
-		{
-			// Capsule is not spilled - just use the project section.
-			// MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
-			if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
-			{
-				MCCapsuleClose(t_capsule);
-				return IO_ERROR;
-			}
-		}
-		else
-		{
-			// Capsule is spilled fill from:
-			//   0..2044 from project section
-			//   spill file
-			//   rest from project section
-			char *t_spill;
-			t_spill = (char *)malloc(strlen(openpath) + 5);
-			sprintf(t_spill, "%s.dat", openpath);
-			if (!MCCapsuleFillFromFile(t_capsule, t_spill, 0, true))
-			{
-				free(t_spill);
-				MCCapsuleClose(t_capsule);
-				return IO_ERROR;
-			}
-			free(t_spill);
-		}
-
-		// Process the capsule
-		if (!MCCapsuleProcess(t_capsule))
-		{
-			// Capsule is not spilled - just use the project section.
-			// MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
-			if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
-			{
-				MCCapsuleClose(t_capsule);
-				return IO_ERROR;
-			}
-		}
-		
-		MCCapsuleClose(t_capsule);
-		
-		t_mainstack = t_info . stack;
-	}
-	else if (MCnstacks > 1 && MClicenseparameters . license_class == kMCLicenseClassCommunity)
-	{
-		MCStack *sptr;
-		if (MCdispatcher -> loadfile(MCstacknames[1], sptr) != IO_NORMAL)
-		{
-			MCresult -> sets("failed to read stackfile");
-			return IO_ERROR;
-		}
-		
-		t_mainstack = sptr;
-		
-		MCMemoryMove(MCstacknames, MCstacknames + 1, sizeof(MCStack *) * (MCnstacks - 1));
-		MCnstacks -= 1;
+		if (MCcapsule . size != 0)
+        {
+            // Capsule is not spilled - just use the project section.
+            // MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
+            if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
+            {
+                MCCapsuleClose(t_capsule);
+                return IO_ERROR;
+            }
+        }
+        else
+            return IO_ERROR;
 	}
 	else
 	{
-		MCresult -> sets("no stackfile to run");
+		// Capsule is spilled fill from:
+		//   0..2044 from project section
+		//   spill file
+		//   rest from project section
+		MCAutoStringRef t_spill;
+        /* UNCHECKED */ MCStringFormat(&t_spill, "%@.dat", MCcmd);
+		if (!MCCapsuleFillFromFile(t_capsule, *t_spill, 0, true))
+		{
+			MCCapsuleClose(t_capsule);
+			return IO_ERROR;
+		}
+	}
+
+	// Process the capsule
+	if (!MCCapsuleProcess(t_capsule))
+	{
+		MCCapsuleClose(t_capsule);
 		return IO_ERROR;
 	}
 
-	MCdefaultstackptr = MCstaticdefaultstackptr = t_mainstack;
-	MCcmd = openpath;
+	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
+	MCCapsuleClose(t_capsule);
 
 	// Initialization required.
 	MCModeResetCursors();
@@ -552,10 +549,10 @@ IO_stat MCDispatch::startup(void)
 	MCallowinterrupts = False;
 
 	// Now open the main stack.
-	t_mainstack-> extraopen(false);
+	t_info . stack -> extraopen(false);
 	send_startup_message();
 	if (!MCquit)
-		t_mainstack -> open();
+		t_info . stack -> open();
 
 	return IO_NORMAL;
 }
@@ -566,15 +563,17 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for STANDALONE mode.
 //
 
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
 
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &cprop, const MCString &carray, Boolean effective)
+Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -592,11 +591,6 @@ void MCStack::mode_takewindow(MCStack *other)
 void MCStack::mode_takefocus(void)
 {
 	MCscreen->setinputfocus(window);
-}
-
-char *MCStack::mode_resolve_filename(const char *filename)
-{
-	return NULL;
 }
 
 bool MCStack::mode_needstoopen(void)
@@ -651,16 +645,17 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 //  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
 //
 
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
+#ifdef LEGACY_EXEC
+Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCProperty::mode_eval/mode_set for STANDALONE mode.
 //
-
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
@@ -670,7 +665,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of mode hooks for STANDALONE mode.
@@ -678,7 +673,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 
 // In standalone mode, the standalone stack built into the engine cannot
 // be saved.
-IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
+IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef p_filename)
 {
 	if (sptr == MCdispatcher -> getstacks())
 	{
@@ -691,19 +686,19 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
 
 // In standalone mode, the environment depends on various command-line/runtime
 // globals.
-const char *MCModeGetEnvironment(void)
+MCNameRef MCModeGetEnvironment(void)
 {
 #ifdef _MOBILE
-	return "mobile";
+	return MCN_mobile;
 #else
 	// MW-2011-09-19: [[ Bug 9734 ]] If in '-ui' mode, return 'command line'.
 	if (MCnoui)
-		return "command line";
+		return MCN_command_line;
 
 	if (MCnofiles)
-		return "helper application";
+		return MCN_helper_application;
 
-	return "standalone application";
+	return MCN_standalone_application;
 #endif
 }
 
@@ -734,13 +729,13 @@ bool MCModeShouldLoadStacksOnStartup(void)
 }
 
 // In standalone mode, we try to work out what went wrong...
-void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
+void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text)
 {
-	r_caption = "Initialization Error";
-	if (MCresult -> getvalue() . is_string())
-		r_text = MCresult -> getvalue() . get_string() . clone();
+	r_caption = MCSTR("Initialization Error");
+	if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+		r_text = MCValueRetain((MCStringRef)MCresult -> getvalueref());
 	else
-		r_text = "unknown reason";
+		r_text = MCSTR("unknown reason");
 }
 
 // In standalone mode, we can only set an object's script if has non-zero id.
@@ -756,23 +751,18 @@ bool MCModeShouldCheckCantStandalone(void)
 }
 
 // The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
+bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_msg)
 {
 	return false;
 }
 
 // The standalone mode causes a relaunch message.
-bool MCModeHandleRelaunch(const char *& r_id)
+bool MCModeHandleRelaunch(MCStringRef &r_id)
 {
 #ifdef _WINDOWS
 	bool t_do_relaunch;
-	const char *t_id;
-
 	t_do_relaunch = MCdefaultstackptr -> hashandler(HT_MESSAGE, MCM_relaunch) == True;
-	t_id = MCdefaultstackptr -> getname_cstring();
-
-	r_id = t_id;
-
+	/* UNCHECKED */ MCStringCopy(MCNameGetString(MCdefaultstackptr -> getname()), r_id);
 	return t_do_relaunch;
 #else
 	return false;
@@ -828,7 +818,7 @@ Window MCModeGetParentWindow(void)
 	return t_window;
 }
 
-bool MCModeCanAccessDomain(const char *p_name)
+bool MCModeCanAccessDomain(MCStringRef p_name)
 {
 	return false;
 }
@@ -837,7 +827,7 @@ void MCModeQueueEvents(void)
 {
 }
 
-Exec_stat MCModeExecuteScriptInBrowser(const MCString& script)
+Exec_stat MCModeExecuteScriptInBrowser(MCStringRef p_script)
 {
 	MCeerror -> add(EE_ENVDO_NOTSUPPORTED, 0, 0);
 	return ES_ERROR;
@@ -857,9 +847,11 @@ void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 {
 	if (!p_enabled)
 		MCscreen -> clearIME(p_stack -> getwindow());
+    else
+        MCscreen -> configureIME(x, y);
 }
 
-void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, const char *text_font, const char *message)
+void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message)
 {
 }
 
@@ -889,23 +881,23 @@ bool MCModeHasHomeStack(void)
 //  Implementation of remote dialog methods
 //
 
-void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files)
+void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value)
 {
 }
 
-void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue)
+void MCRemoteColorDialog(MCStringRef p_title, uint32_t p_r, uint32_t p_g, uint32_t p_b, bool &r_chosen, MCColor &r_chosen_color)
 {
 }
 
-void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial)
+void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value)
 {
 }
 
-void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 
-void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 

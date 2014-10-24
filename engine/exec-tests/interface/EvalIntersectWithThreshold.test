@@ -1,0 +1,80 @@
+setup "invalid input"
+	create image
+	create image
+	
+	test-error intersect("not an image", image 2, 0)
+	test-error intersect(image 1, image 2, "invalid threshold")
+teardown
+
+
+
+setup
+
+local tZeroAlpha, tHalfAlpha, tFullAlpha, tBlackImage
+
+repeat with i = 1 to 100
+	put numToByte(0) after tZeroAlpha
+	put numToByte(127) after tHalfAlpha
+	put numToByte(255) after tFullAlpha
+	
+	put numToByte(0)&numToByte(0)&numToByte(0)&numToByte(0) after tBlackImage
+end repeat
+
+
+local tImage1, tImage2
+create image
+put the long id of the last image into tImage1
+create image
+put the long id of the last image into tImage2
+
+set the rect of tImage1 to 0,0,10,10
+set the rect of tImage2 to 0,0,10,10
+
+set the imagedata of tImage1 to tBlackImage
+set the imagedata of tImage2 to tBlackImage
+
+
+set the alphadata of tImage1 to tZeroAlpha
+set the alphadata of tImage2 to tZeroAlpha
+test intersect(tImage1, tImage2, "bounds")
+test not intersect(tImage1, tImage2, "pixels")
+test not intersect(tImage1, tImage2, "opaque pixels")
+
+set the alphadata of tImage2 to tHalfAlpha
+test intersect(tImage1, tImage2, "bounds")
+test not intersect(tImage1, tImage2, "pixels")
+test not intersect(tImage1, tImage2, "opaque pixels")
+
+set the alphadata of tImage2 to tFullAlpha
+test intersect(tImage1, tImage2, "bounds")
+test not intersect(tImage1, tImage2, "pixels")
+test not intersect(tImage1, tImage2, "opaque pixels")
+
+set the alphadata of tImage1 to tHalfAlpha
+set the alphadata of tImage2 to tHalfAlpha
+test intersect(tImage1, tImage2, "bounds")
+test intersect(tImage1, tImage2, "pixels")
+test not intersect(tImage1, tImage2, "opaque pixels")
+
+set the alphadata of tImage2 to tFullAlpha
+test intersect(tImage1, tImage2, "bounds")
+test intersect(tImage1, tImage2, "pixels")
+test not intersect(tImage1, tImage2, "opaque pixels")
+
+set the alphadata of tImage1 to tFullAlpha
+set the alphadata of tImage2 to tFullAlpha
+test intersect(tImage1, tImage2, "bounds")
+test intersect(tImage1, tImage2, "pixels")
+test intersect(tImage1, tImage2, "opaque pixels")
+
+
+set the alphadata of tImage1 to tHalfAlpha
+set the alphadata of tImage2 to tHalfAlpha
+test intersect(tImage1, tImage2, 127)
+test not intersect(tImage1, tImage2, 128)
+
+
+set the topleft of tImage2 to the topright of tImage1
+test not intersect(tImage1, tImage2, "bounds")
+
+teardown

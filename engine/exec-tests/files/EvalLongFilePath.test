@@ -1,0 +1,14 @@
+setup
+
+if the platform is "win32" then
+	local tFolder, tShortFolder
+	put the longfilepath of the defaultFolder into tFolder
+	put the shortfilepath of tFolder into tShortFolder
+	
+	test (the longfilepath of tShortFolder) is tFolder
+
+else
+	test (the longfilepath of the defaultFolder) is (the defaultFolder)
+end if
+
+teardown

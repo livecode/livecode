@@ -1,0 +1,21 @@
+setup
+
+test "abc" begins with "a"
+test "abc" begins with "A"
+
+test not ("abc" begins with "b")
+test not ("abc" begins with "c")
+
+test "123abc" begins with 123
+test "0.5 abc" begins with (1 / 2)
+
+teardown
+
+setup "case sensitive"
+
+set the caseSensitive to true
+
+test "abc" begins with "a"
+test not ("abc" begins with "A")
+
+teardown

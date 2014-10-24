@@ -289,11 +289,6 @@ uint2 MCNativeTheme::getthemefamilyid()
 	return LF_MAC;
 }
 
-const char  *MCNativeTheme::getname()
-{
-	return MClnfamstring;
-}
-
 Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect)
 {
 	MCRectangle trect = drect;
@@ -728,7 +723,7 @@ static void getscrollbarpressedstate(const MCWidgetInfo &winfo, HIThemeTrackDraw
 						// MW-2012-09-20: [[ Bug ]] Arrow not highlighting when pressed as
 						//   wrong constant was used.
 						ps = kThemeLeftInsideArrowPressed;
-					}
+				}
 				}
 				break;
 			case WTHEME_PART_ARROW_INC:

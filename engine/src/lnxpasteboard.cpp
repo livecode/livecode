@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "transfer.h"
-#include "execpt.h" 
+//#include "execpt.h" 
 #include "dispatch.h"
 #include "image.h" 
 #include "globals.h"
@@ -31,63 +31,43 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxpasteboard.h"
 
 
-
-MCXPasteboard::MCXPasteboard ( Atom p_public_atom, Atom p_private_atom, MCXTransferStore * p_transfer_store ) 
+MCGdkPasteboard::MCGdkPasteboard(GdkAtom p_atom, MCGdkTransferStore *p_transfer_store)
+: m_atom(p_atom), m_source_window(NULL), m_target_window(NULL), m_lock_time(0),
+    m_references(1), m_type_count(0), m_types(NULL), m_valid(false),
+    m_transfer_store(p_transfer_store)
 {
-	m_references = 1 ;
-	m_private_atom = p_private_atom ;
-	m_public_atom = p_public_atom ;
-	m_lock_time = LastEventTime ;
-	m_transfer_store = p_transfer_store ;
+    ;
 }
 
-void MCXPasteboard::SetWindows ( Window p_source_window, Window p_target_window ) 
+void MCGdkPasteboard::SetWindows(GdkWindow *p_source, GdkWindow *p_target)
 {
-	m_source_window = p_source_window ;
-	m_target_window = p_target_window ;
+    m_source_window = p_source;
+    m_target_window = p_target;
 }
 
-
-void MCXPasteboard::Retain(void)
+void MCGdkPasteboard::Retain()
 {
-	m_references += 1;
+    m_references++;
 }
 
-
-void MCXPasteboard::Release(void)
+void MCGdkPasteboard::Release()
 {
-	m_references -= 1;
-	if (m_references == 0)
-		delete this;
+    if (--m_references == 0)
+        delete this;
 }
 
-
-
-bool MCXPasteboard::Query(MCTransferType*& r_types, unsigned int& r_type_count)
+bool MCGdkPasteboard::Query(MCTransferType* &r_types, size_t &r_type_count)
 {
-
-	return ( m_transfer_store -> Query ( r_types, r_type_count ) ) ;
-  	
+    return m_transfer_store->Query(r_types, r_type_count);
 }
 
-
-bool MCXPasteboard::Fetch_MIME(MCMIMEtype *p_type, MCSharedString*& r_data)
+bool MCGdkPasteboard::Fetch_MIME(MCMIMEtype *p_type, MCDataRef &r_data)
 {
-	bool t_success ;
-	r_data = NULL ;
-	t_success = m_transfer_store -> Fetch ( p_type, r_data, m_public_atom, m_private_atom, m_source_window, m_target_window, m_lock_time ) ;
-	if ( t_success )
-		r_data -> Retain() ;
-	return ( t_success ) ;
+    return m_transfer_store->Fetch(p_type, r_data, m_atom, m_source_window, m_target_window, m_lock_time);
 }
 
-
-bool MCXPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
+bool MCGdkPasteboard::Fetch(MCTransferType p_type, MCDataRef &r_data)
 {
-	bool t_success ;
-	r_data = NULL ;
-	t_success = m_transfer_store -> Fetch ( p_type, r_data, m_public_atom, m_private_atom, m_source_window, m_target_window, m_lock_time ) ;
-	if ( t_success )
-		r_data -> Retain() ;
-	return ( t_success ) ;
+    return m_transfer_store->Fetch(p_type, r_data, m_atom, m_source_window, m_target_window, m_lock_time);
 }
+

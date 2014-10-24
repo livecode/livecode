@@ -1,0 +1,11 @@
+setup
+
+create field
+
+put foo into field 1
+
+select text of field 1 
+
+test the selection is "foo"
+
+teardown

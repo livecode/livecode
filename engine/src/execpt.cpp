@@ -22,15 +22,1533 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 
 #include "object.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "mcerror.h"
 #include "util.h"
 #include "globals.h"
 #include "handler.h"
 #include "hndlrlst.h"
 #include "osspec.h"
+#include "uidc.h"
 
-#include "unicode.h"
+#include "osxprefix-legacy.h"
+
+#ifdef MODE_SERVER
+#include "srvscript.h"
+#endif
+
+//////////
+
+#ifdef LEGACY_EXEC
+
+bool MCExecPoint::isempty(void) const
+{
+	if (value == kMCEmptyName)
+		return true;
+
+	if (value == kMCEmptyArray)
+		return true;
+
+	if (MCValueGetTypeCode(value) == kMCValueTypeCodeString &&
+		MCStringGetLength((MCStringRef)value) == 0)
+		return true;
+
+	return false;
+}
+
+bool MCExecPoint::isarray(void) const
+{
+	return MCValueGetTypeCode(value) == kMCValueTypeCodeArray;
+}
+
+bool MCExecPoint::isstring(void) const
+{
+	return MCValueGetTypeCode(value) == kMCValueTypeCodeString || MCValueGetTypeCode(value) == kMCValueTypeCodeName;
+}
+
+bool MCExecPoint::isnumber(void) const
+{
+	return MCValueGetTypeCode(value) == kMCValueTypeCodeNumber;
+}
+
+bool MCExecPoint::converttostring(void)
+{
+	if (MCValueGetTypeCode(value) == kMCValueTypeCodeString)
+		return true;
+
+	MCStringRef t_string;
+	if (!convertvaluereftostring(value, t_string))
+		return false;
+
+	MCValueRelease(value);
+	value = t_string;
+
+	return true;
+}
+
+bool MCExecPoint::converttomutablestring(void)
+{
+	if (MCValueGetTypeCode(value) == kMCValueTypeCodeString &&
+		MCStringIsMutable((MCStringRef)value))
+		return true;
+
+	converttostring();
+	
+	if (!MCStringIsMutable((MCStringRef)value))
+	{
+		MCStringRef t_new_value;
+		if (!MCStringMutableCopyAndRelease((MCStringRef)value, t_new_value))
+			return false;
+		value = t_new_value;
+	}
+
+	return true;
+}
+
+bool MCExecPoint::converttonumber(void)
+{
+	if (MCValueGetTypeCode(value) == kMCValueTypeCodeNumber)
+		return true;
+
+	MCNumberRef t_number;
+	if (!convertvaluereftonumber(value, t_number))
+		return false;
+
+	MCValueRelease(value);
+	value = t_number;
+
+	return true;
+}
+
+bool MCExecPoint::converttoboolean(void)
+{
+	if (MCValueGetTypeCode(value) == kMCValueTypeCodeBoolean)
+		return true;
+
+	MCBooleanRef t_boolean;
+	if (!convertvaluereftoboolean(value, t_boolean))
+		return false;
+
+	MCValueRelease(value);
+	value = t_boolean;
+
+	return true;
+}
+
+bool MCExecPoint::converttoarray(void)
+{
+	if (MCValueGetTypeCode(value) == kMCValueTypeCodeArray)
+		return true;
+
+	MCValueRelease(value);
+	value = MCValueRetain(kMCEmptyArray);
+
+	return true;
+}
+
+bool MCExecPoint::converttomutablearray(void)
+{
+	MCArrayRef t_mutable_array;
+	if (MCValueGetTypeCode(value) == kMCValueTypeCodeArray)
+	{
+		if (MCArrayMutableCopyAndRelease((MCArrayRef)value, t_mutable_array))
+		{
+			MCValueRelease(value);
+			value = t_mutable_array;
+			return true;
+		}
+
+		return false;
+	}
+
+	if (MCArrayCreateMutable(t_mutable_array))
+	{
+		MCValueRelease(value);
+		value = t_mutable_array;
+		return true;
+	}
+
+	return false;
+}
+
+//////////
+
+void MCExecPoint::clear(void)
+{
+	if (value == kMCEmptyString)
+		return;
+
+	MCValueRelease(value);
+	value = MCValueRetain(kMCEmptyString);
+}
+
+void MCExecPoint::setsvalue(const MCString& p_string)
+{
+	MCStringRef t_string;
+	if (!MCStringCreateWithNativeChars((const char_t *)p_string . getstring(), p_string . getlength(), t_string))
+		return;
+
+	MCValueRelease(value);
+	value = t_string;
+}
+
+void MCExecPoint::copysvalue(const MCString& p_string)
+{
+	setsvalue(p_string);
+}
+
+void MCExecPoint::copysvalue(const char *p_string, uindex_t p_length)
+{
+	setsvalue(MCString(p_string, p_length));
+}
+
+void MCExecPoint::setnvalue(real8 p_number)
+{
+	MCNumberRef t_number;
+	if (!MCNumberCreateWithReal(p_number, t_number))
+		return;
+
+	MCValueRelease(value);
+	value = t_number;
+}
+
+void MCExecPoint::setnvalue(integer_t p_integer)
+{
+	MCNumberRef t_number;
+	if (!MCNumberCreateWithInteger(p_integer, t_number))
+		return;
+
+	MCValueRelease(value);
+	value = t_number;
+}
+
+void MCExecPoint::setnvalue(uinteger_t p_integer)
+{
+	if (p_integer <= INTEGER_MAX)
+	{
+		setnvalue((integer_t)p_integer);
+		return;
+	}
+	setnvalue((real8)p_integer);
+}
+
+void MCExecPoint::grabbuffer(char *p_buffer, uindex_t p_length)
+{
+	copysvalue(p_buffer, p_length);
+	delete p_buffer;
+}
+
+bool MCExecPoint::reserve(uindex_t p_capacity, char*& r_buffer)
+{
+	MCDataRef t_string;
+	if (!MCDataCreateMutable(p_capacity, t_string))
+		return false;
+
+	MCDataPad(t_string, 0, p_capacity);
+	
+	MCValueRelease(value);
+	value = t_string;
+	r_buffer = (char *)MCDataGetBytePtr(t_string);
+	return true;
+}
+
+void MCExecPoint::commit(uindex_t p_size)
+{
+	MCDataRemove((MCDataRef)value, MCRangeMake(p_size, UINDEX_MAX));
+}
+
+/*bool MCExecPoint::modify(char*& r_buffer, uindex_t& r_length)
+{
+	converttostring();
+	
+	MCDataRef t_data;
+	MCDataCreateWithBytes(MCStringGetNativeCharPtr((MCStringRef)value), MCStringGetLength((MCStringRef)value), t_data);
+
+	MCValueRelease(value);
+	MCDataMutableCopyAndRelease(t_data, (MCDataRef&)value);
+	
+	r_buffer = (char *)MCDataGetBytePtr((MCDataRef)value);
+	r_length = MCDataGetLength((MCDataRef)value);
+
+	return true;
+}
+
+void MCExecPoint::resize(uindex_t p_size)
+{
+	MCDataRemove((MCDataRef)value, MCRangeMake(p_size, UINDEX_MAX));
+}*/
+
+//////////
+
+const char *MCExecPoint::getcstring(void)
+{
+	return getsvalue() . getstring();
+}
+
+MCString MCExecPoint::getsvalue0(void)
+{
+	return getsvalue();
+}
+
+MCString MCExecPoint::getsvalue(void)
+{
+	converttostring();
+
+	return MCStringGetOldString((MCStringRef)value);
+}
+
+real8 MCExecPoint::getnvalue(void)
+{
+	if (!converttonumber())
+		return 0.0;
+
+	return MCNumberFetchAsReal((MCNumberRef)value);
+}
+
+///////////
+
+Exec_stat MCExecPoint::tos()
+{
+	if (isarray())
+		return ES_ERROR;
+
+	if (!converttostring())
+		return ES_ERROR;
+
+	return ES_NORMAL;
+}
+
+Exec_stat MCExecPoint::ton()
+{
+	if (isarray())
+		return ES_ERROR;
+
+	if (!converttonumber())
+		return ES_ERROR;
+
+	return ES_NORMAL;
+}
+
+Exec_stat MCExecPoint::tona(void)
+{
+	if (!isarray() &&
+		!converttonumber())
+		return ES_ERROR;
+
+	return ES_NORMAL;
+}
+
+uint4 MCExecPoint::getuint4()
+{
+	if (!converttonumber())
+		return 0;
+	return MCNumberFetchAsUnsignedInteger((MCNumberRef)value);
+}
+
+uint2 MCExecPoint::getuint2()
+{
+	if (!converttonumber())
+		return 0;
+	return MCNumberFetchAsInteger((MCNumberRef)value);
+}
+
+int4 MCExecPoint::getint4()
+{
+	if (!converttonumber())
+		return 0;
+	return MCNumberFetchAsInteger((MCNumberRef)value);
+}
+
+Exec_stat MCExecPoint::getreal8(real8& d, uint2 l, uint2 p, Exec_errors e)
+{
+	if (!converttonumber())
+	{
+		MCeerror->add(EE_VARIABLE_NAN, l, p, value);
+		MCeerror->add(e, l, p, value);
+		return ES_ERROR;
+	}
+	d = MCNumberFetchAsReal((MCNumberRef)value);
+	return ES_NORMAL;
+}
+
+Exec_stat MCExecPoint::getuint2(uint2& d, uint2 l, uint2 p, Exec_errors e)
+{
+	if (!converttonumber())
+	{
+		MCeerror->add(EE_VARIABLE_NAN, l, p, value);
+		MCeerror->add(e, l, p, value);
+		return ES_ERROR;
+	}
+	d = MCNumberFetchAsInteger((MCNumberRef)value);
+	return ES_NORMAL;
+}
+
+Exec_stat MCExecPoint::getint4(int4& d, uint2 l, uint2 p, Exec_errors e)
+{
+	if (!converttonumber())
+	{
+		MCeerror->add(EE_VARIABLE_NAN, l, p, value);
+		MCeerror->add(e, l, p, value);
+		return ES_ERROR;
+	}
+	d = MCNumberFetchAsInteger((MCNumberRef)value);
+	return ES_NORMAL;
+}
+
+Exec_stat MCExecPoint::getuint4(uint4& d, uint2 l, uint2 p, Exec_errors e)
+{
+	if (!converttonumber())
+	{
+		MCeerror->add(EE_VARIABLE_NAN, l, p, value);
+		MCeerror->add(e, l, p, value);
+		return ES_ERROR;
+	}
+	d = MCNumberFetchAsUnsignedInteger((MCNumberRef)value);
+	return ES_NORMAL;
+}
+
+Exec_stat MCExecPoint::getboolean(Boolean& d, uint2 l, uint2 p, Exec_errors e)
+{
+	if (!converttoboolean())
+	{
+		MCeerror -> add(e, l, p, value);
+		return ES_ERROR;
+	}
+
+	d = (value == kMCTrue ? True : False);
+	return ES_NORMAL;
+}
+
+void MCExecPoint::setint(int4 i)
+{
+	setnvalue(i);
+}
+
+void MCExecPoint::setuint(uint4 i)
+{
+	setnvalue(i);
+}
+
+void MCExecPoint::setint64(int64_t i)
+{
+	if (i >= INTEGER_MIN && i <= INTEGER_MAX)
+	{
+		setnvalue((integer_t)i);
+		return;
+	}
+	setnvalue((real8)i);
+}
+
+void MCExecPoint::setuint64(uint64_t i)
+{
+	if (i < INTEGER_MAX)
+	{
+		setnvalue((integer_t)i);
+		return;
+	}
+	setnvalue((real8)i);
+}
+
+void MCExecPoint::setr8(real8 n, uint2 fw, uint2 trailing, uint2 force)
+{
+	setnvalue(n);
+}
+
+//////////
+
+Exec_stat MCExecPoint::ntos(void)
+{
+	if (!converttostring())
+		return ES_ERROR;
+	return ES_NORMAL;
+}
+
+Exec_stat MCExecPoint::ston(void)
+{
+	if (!converttonumber())
+		return ES_ERROR;
+	return ES_NORMAL;
+}
+
+
+// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
+Exec_stat MCExecPoint::setitemdel(uint2 l, uint2 p)
+{
+	if (tos() != ES_NORMAL || MCStringGetLength((MCStringRef)value) != 1)
+	{
+		MCeerror->add
+		(EE_VARIABLE_NAC, l, p, value);
+		return ES_ERROR;
+	}
+	itemdel = MCStringGetNativeCharAtIndex((MCStringRef)value, 0);
+	return ES_NORMAL;
+}
+
+// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
+Exec_stat MCExecPoint::setcolumndel(uint2 l, uint2 p)
+{
+	if (tos() != ES_NORMAL || MCStringGetLength((MCStringRef)value) != 1)
+	{
+		MCeerror->add(EE_VARIABLE_NAC, l, p, value);
+		return ES_ERROR;
+	}
+	columndel = MCStringGetNativeCharAtIndex((MCStringRef)value, 0);
+	return ES_NORMAL;
+}
+
+// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
+Exec_stat MCExecPoint::setrowdel(uint2 l, uint2 p)
+{
+	if (tos() != ES_NORMAL || MCStringGetLength((MCStringRef)value) != 1)
+	{
+		MCeerror->add(EE_VARIABLE_NAC, l, p, value);
+		return ES_ERROR;
+	}
+	rowdel = MCStringGetNativeCharAtIndex((MCStringRef)value, 0);
+	return ES_NORMAL;
+}
+
+// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
+Exec_stat MCExecPoint::setlinedel(uint2 l, uint2 p)
+{
+	if (tos() != ES_NORMAL || MCStringGetLength((MCStringRef)value) != 1)
+	{
+		MCeerror->add(EE_VARIABLE_NAC, l, p, value);
+		return ES_ERROR;
+	}
+	linedel = MCStringGetNativeCharAtIndex((MCStringRef)value, 0);
+	return ES_NORMAL;
+}
+
+void MCExecPoint::setnumberformat()
+{
+    MCAutoStringRef t_value;
+    copyasstringref(&t_value);
+	MCU_setnumberformat(*t_value, nffw, nftrailing, nfforce);
+}
+
+//////////
+
+void MCExecPoint::insert(const MCString& p_string, uint32_t p_start, uint32_t p_finish)
+{
+	converttomutablestring();
+
+	MCAutoStringRef t_string;
+	MCStringCreateWithNativeChars((const char_t *)p_string . getstring(), p_string . getlength(), &t_string);
+	MCStringReplace((MCStringRef)value, MCRangeMake(p_start, p_finish - p_start), *t_string);
+}
+
+uint1 *MCExecPoint::pad(char p_value, uint32_t p_count)
+{
+	converttomutablestring();
+
+	uindex_t t_length;
+	t_length = MCStringGetLength((MCStringRef)value);
+
+	MCAutoStringRef t_string;
+	MCStringCreateWithNativeChars((const char_t *)&p_value, 1, &t_string);
+	MCStringPad((MCStringRef)value, MCStringGetLength((MCStringRef)value), p_count, *t_string);
+
+	return (uint1 *)MCStringGetNativeCharPtr((MCStringRef)value) + t_length;
+}
+
+void MCExecPoint::substring(uint32_t p_start, uint32_t p_finish)
+{
+	converttostring();
+
+	MCStringRef t_new_string;
+	if (!MCStringCopySubstringAndRelease((MCStringRef)value, MCRangeMake(p_start, p_finish - p_start), t_new_string))
+		return;
+	value = t_new_string;
+}
+
+void MCExecPoint::tail(uint32_t p_count)
+{
+	converttostring();
+
+	uindex_t t_length;
+	t_length = MCStringGetLength((MCStringRef)value);
+
+	substring(p_count, t_length);
+}
+
+void MCExecPoint::fill(uint32_t p_start, char p_char, uint32_t p_count)
+{
+	converttomutablestring();
+
+	uindex_t t_length;
+	t_length = MCStringGetLength((MCStringRef)value);
+
+	MCAutoStringRef t_string;
+	MCStringCreateWithNativeChars((const char_t *)&p_char, 1, &t_string);
+	MCStringPad((MCStringRef)value, p_start, p_count, *t_string);
+}
+
+void MCExecPoint::concat(const MCString &two, Exec_concat ec, Boolean first)
+{
+	converttomutablestring();
+
+	if (first || ec == EC_NONE)
+		MCStringAppendNativeChars((MCStringRef)value, (const char_t *)two . getstring(), two . getlength());
+	else
+	{	
+		char_t t_del;
+		switch (ec)
+		{
+		case EC_SPACE:
+			t_del = ' ';
+			break;
+		case EC_COMMA:
+			t_del = ',';
+			break;
+		case EC_NULL:
+			t_del = '\0';
+			break;
+		case EC_RETURN:
+			t_del = '\n';
+			break;
+
+		// MW-2009-06-17: Can now concatenate with tab into an EP.
+		case EC_TAB:
+			t_del = '\t';
+			break;
+		}
+		MCStringAppendNativeChars((MCStringRef)value, &t_del, 1);
+		MCStringAppendNativeChars((MCStringRef)value, (const char_t *)two . getstring(), two . getlength());
+	}
+}
+
+void MCExecPoint::concat(uint4 n, Exec_concat ec, Boolean first)
+{
+	char buffer[U4L];
+	sprintf(buffer, "%u", n);
+	concat(buffer, ec, first);
+}
+
+void MCExecPoint::concat(int4 n, Exec_concat ec, Boolean first)
+{
+	char buffer[I4L];
+	sprintf(buffer, "%d", n);
+	concat(buffer, ec, first);
+}
+
+void MCExecPoint::texttobinary(void)
+{
+	MCDataRef t_data;
+	copyasdataref(t_data);
+	
+	MCDataMutableCopyAndRelease(t_data, t_data);
+	
+	char *s;
+	uint32_t l;
+	s = (char *)MCDataGetBytePtr(t_data);
+	l = MCDataGetLength(t_data);
+
+	char *sptr, *dptr, *eptr;
+	sptr = s;
+	dptr = s;
+	eptr = s + l;
+
+	while (sptr < eptr)
+	{
+		if (*sptr == '\r')
+		{
+			if (sptr < eptr - 1 &&  *(sptr + 1) == '\n')
+				l--;
+			else
+				*dptr++ = '\n';
+			sptr++;
+		}
+		else
+			if (!*sptr)
+			{
+				*dptr++ = ' ';
+				sptr++;
+			}
+			else
+				*dptr++ = *sptr++;
+	}
+
+	MCDataRemove(t_data, MCRangeMake(l, UINDEX_MAX));
+	
+	setvalueref(t_data);
+}
+
+void MCExecPoint::binarytotext(void)
+{
+#ifdef __CRLF__
+	MCDataRef t_data;
+	copyasdataref(t_data);
+	
+	MCDataMutableCopyAndRelease(t_data, t_data);
+
+	char *sptr;
+	uint32_t l;
+	sptr = (char*)MCDataGetBytePtr(t_data);
+	l = MCDataGetLength(t_data);
+
+	uint32_t pad;
+	pad = 0;
+	for(uint32_t i = 0; i < l; i++)
+		if (*sptr++ == '\n')
+			pad++;
+
+	if (pad != 0)
+	{
+		uint4 newsize;
+		MCStringPad((MCStringRef)value, MCStringGetLength((MCStringRef)value), pad, nil);
+		newsize = MCDataGetLength(t_data);
+
+		char *newbuffer = sptr;
+		sptr += l;
+		char *dptr = newbuffer + newsize;
+		while (dptr > sptr)
+		{
+			*--dptr = *--sptr;
+			if (*sptr == '\n')
+				*--dptr = '\r';
+		}
+	}
+	setvalueref(t_data);
+	MCValueRelease(t_data);
+
+#elif defined(__CR__)
+	MCDataRef t_data;
+	copyasdataref(t_data);
+	
+	MCDataMutableCopyAndRelease(t_data, t_data);
+	
+	char *sptr;
+	uint32_t l;
+	sptr = (char *)MCDataGetBytePtr(t_data);
+	l = MCDataGetLength(t_data);
+	for (uint32_t i = 0 ; i < l ; i++)
+	{
+		if (*sptr == '\n')
+			*sptr = '\r';
+		sptr++;
+	}
+	setvalueref(t_data);
+#endif
+}
+
+// MW-2011-06-22: [[ SERVER ]] Provides augmented functionality for finding
+//   variables if there is no handler (i.e. global server scope).
+Parse_stat MCExecPoint::findvar(MCNameRef p_name, MCVarref** r_var)
+{
+	Parse_stat t_stat;
+	t_stat = PS_ERROR;
+	
+	if (curhandler != NULL)
+		t_stat = curhandler -> findvar(p_name, r_var);
+	else if (curhlist != NULL)
+	{
+		// MW-2011-08-23: [[ UQL ]] We are searching in global context, so do include UQLs.
+		t_stat = curhlist -> findvar(p_name, false, r_var);
+	}
+	
+	return t_stat;
+}
+
+// MW-2013-11-08: [[ RefactorIt ]] Returns the it var for the current context.
+MCVarref *MCExecPoint::getit(void)
+{
+	// If we have a handler, then get it from there.
+	if (curhandler != nil)
+		return curhandler -> getit();
+	
+#ifdef MODE_SERVER
+	// If we are here it means we must be in global scope, executing in a
+	// MCServerScript object.
+	return static_cast<MCServerScript *>(curobj) -> getit();
+#else
+	// We should never get here as execution only occurs within handlers unless
+	// in server mode.
+	assert(false);
+	return nil;
+#endif
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
+{
+	const char *t_input;
+	t_input = getsvalue() . getstring();
+
+	uint4 t_input_length;
+	t_input_length = getsvalue() . getlength();
+
+	uint4 t_output_length;
+	if (p_reverse)
+	{
+		if (p_native)
+            MCU_multibytetounicode(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
+		else
+			t_output_length = UTF8ToUnicode(t_input, t_input_length, NULL, 0);
+	}
+	else
+	{
+		if (p_native)
+            MCU_unicodetomultibyte(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
+		else
+			t_output_length = UnicodeToUTF8((uint2 *)t_input, t_input_length, NULL, 0);
+	}
+
+	char *t_buffer;
+	uint4 t_buffer_length;
+	t_buffer_length = (t_output_length + EP_PAD) & EP_MASK;
+	t_buffer = new char[t_buffer_length];
+
+	if (p_reverse)
+	{
+		if (p_native)
+            MCU_multibytetounicode(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
+		else
+			t_output_length = UTF8ToUnicode(t_input, t_input_length, (uint2 *)t_buffer, t_output_length);
+	}
+	else
+	{
+		if (p_native)
+            MCU_unicodetomultibyte(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
+		else
+			t_output_length = UnicodeToUTF8((uint2 *)t_input, t_input_length, t_buffer, t_output_length);
+	}
+
+	grabbuffer(t_buffer, t_output_length);
+}
+
+// MW-2012-02-16: [[ IntrinsicUnicode ]] Switches the encoding of the ep to
+//   unicode if 'to_unicode' is true, native otherwise. If the current encoding
+//   matches (is_unicode) then nothing happens.
+void MCExecPoint::mapunicode(bool p_is_unicode, bool p_to_unicode)
+{
+	if (p_is_unicode == p_to_unicode)
+		return;
+
+	if (p_to_unicode)
+		nativetoutf16();
+	else
+		utf16tonative();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void MCExecPoint::setempty(void)
+{
+	clear();
+}
+
+/////////
+
+void MCExecPoint::setstaticcstring(const char *p_string)
+{
+	setsvalue(p_string);
+}
+
+void MCExecPoint::setstaticbytes(const void *p_bytes, uindex_t p_length)
+{
+	setsvalue(MCString((const char *)p_bytes, p_length));
+}
+
+void MCExecPoint::setstaticmcstring(const MCString& p_mcstring)
+{
+	setsvalue(p_mcstring);
+}
+
+
+/////////
+
+void MCExecPoint::setcstring(const char *p_cstring)
+{
+	copysvalue(p_cstring, strlen(p_cstring));
+}
+
+void MCExecPoint::setmcstring(const MCString& p_mcstring)
+{
+	copysvalue(p_mcstring . getstring(), p_mcstring . getlength());
+}
+
+void MCExecPoint::setchars(const char *p_cstring, uindex_t p_length)
+{
+	copysvalue(p_cstring, p_length);
+}
+
+void MCExecPoint::setchar(char p_char)
+{
+	copysvalue(&p_char, 1);
+}
+
+void MCExecPoint::setstringf(const char *p_spec, ...)
+{
+	MCStringRef t_string;
+	
+	va_list t_args;
+	va_start(t_args, p_spec);
+	MCStringFormatV(t_string, p_spec, t_args);
+	va_end(t_args);
+
+	MCValueRelease(value);
+	value = t_string;
+}
+
+/////////
+
+void MCExecPoint::setbool(bool p_value)
+{
+	setboolean(p_value);
+}
+
+void MCExecPoint::setboolean(Boolean p_value)
+{
+	MCValueRelease(value);
+	value = MCValueRetain(p_value == True ? kMCTrue : kMCFalse);
+	//setsvalue(p_value ? MCtruemcstring : MCfalsemcstring);
+}
+
+void MCExecPoint::setpoint(int16_t x, int16_t y)
+{
+	setstringf("%d,%d", x, y);
+}
+
+void MCExecPoint::setpoint(MCPoint p_point)
+{
+	setpoint(p_point . x, p_point . y);
+}
+
+void MCExecPoint::setrectangle(const MCRectangle& p_rect)
+{
+	setstringf("%d,%d,%d,%d", p_rect . x, p_rect . y, p_rect . x + p_rect . width, p_rect . y + p_rect . height);
+}
+
+void MCExecPoint::setrectangle(const MCRectangle32& p_rect)
+{
+	setstringf("%d,%d,%d,%d", p_rect . x, p_rect . y, p_rect . x + p_rect . width, p_rect . y + p_rect . height);
+}
+
+void MCExecPoint::setrectangle(int32_t p_left, int32_t p_top, int32_t p_right, int32_t p_bottom)
+{
+	setstringf("%d,%d,%d,%d", p_left, p_top, p_right, p_bottom);
+}
+
+void MCExecPoint::setcolor(const MCColor& p_color, const char *p_color_name)
+{
+	if (p_color_name != nil)
+		copysvalue(p_color_name);
+	else
+		setcolor(p_color);
+}
+
+void MCExecPoint::setcolor(const MCColor& p_color)
+{
+	setcolor(p_color . red >> 8, p_color . green >> 8, p_color . blue >> 8);
+}
+
+void MCExecPoint::setcolor(uint32_t r, uint32_t g, uint32_t b)
+{
+	setstringf("%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+}
+
+void MCExecPoint::setpixel(uint32_t p_pixel)
+{
+	setcolor((p_pixel >> 16) & 0xFF, (p_pixel >> 8) & 0xFF, (p_pixel >> 0) & 0xFF);
+}
+
+////////
+
+void MCExecPoint::appendcstring(const char *p_string)
+{
+	concat(p_string, EC_NONE, True);
+}
+
+void MCExecPoint::appendmcstring(const MCString& p_string)
+{
+	concat(p_string, EC_NONE, True);
+}
+
+void MCExecPoint::appendstringf(const char *p_spec, ...)
+{
+	converttomutablestring();
+
+	va_list t_args;
+	va_start(t_args, p_spec);
+	MCStringAppendFormatV((MCStringRef)value, p_spec, t_args);
+	va_end(t_args);
+}
+
+void MCExecPoint::appendchars(const char *p_chars, uindex_t p_count)
+{
+	concat(MCString(p_chars, p_count), EC_NONE, True);
+}
+
+void MCExecPoint::appendchar(char p_char)
+{
+	appendchars(&p_char, 1);
+}
+
+void MCExecPoint::appendbytes(const void *p_bytes, uindex_t p_count)
+{
+	concat(MCString((const char *)p_bytes, p_count), EC_NONE, True);
+}
+
+void MCExecPoint::appendbyte(uint8_t p_byte)
+{
+	appendbytes(&p_byte, 1);
+}
+
+void MCExecPoint::appenduint(uint32_t p_integer)
+{
+	concat(p_integer, EC_NONE, True);
+}
+
+void MCExecPoint::appendint(int32_t p_integer)
+{
+	concat(p_integer, EC_NONE, True);
+}
+
+void MCExecPoint::appendnewline(void)
+{
+	appendchar('\n');
+}
+
+/////////
+
+void MCExecPoint::appendnewline(bool unicode)
+{
+	if (!unicode)
+		appendchar('\n');
+	else
+	{
+		uint2 t_char;
+		t_char = 10;
+		appendbytes(&t_char, 2);
+	}
+}
+
+/////////
+
+void MCExecPoint::concatcstring(const char *p_string, Exec_concat p_sep, bool p_first)
+{
+	if (p_string == nil)
+		p_string = "";
+
+	concat(MCString(p_string, strlen(p_string)), p_sep, p_first);
+}
+
+void MCExecPoint::concatchars(const char *p_chars, uindex_t p_count, Exec_concat p_sep, bool p_first)
+{
+	concat(MCString(p_chars, p_count), p_sep, p_first);
+}
+
+void MCExecPoint::concatmcstring(const MCString& p_string, Exec_concat p_sep, bool p_first)
+{
+	concat(p_string, p_sep, p_first);
+}
+
+void MCExecPoint::concatuint(uint32_t p_value, Exec_concat p_sep, bool p_first)
+{
+	concat(p_value, p_sep, p_first);
+}
+
+void MCExecPoint::concatint(int32_t p_value, Exec_concat p_sep, bool p_first)
+{
+	concat(p_value, p_sep, p_first);
+}
+
+void MCExecPoint::concatreal(double p_value, Exec_concat p_sep, bool p_first)
+{
+	char *t_buffer;
+	uint32_t t_buffer_size;
+	t_buffer = nil;
+	t_buffer_size = 0;
+
+	uint32_t t_length;
+	t_length = MCU_r8tos(t_buffer, t_buffer_size, p_value, nffw, nftrailing, nfforce);
+	concat(MCString(t_buffer, t_length), p_sep, p_first);
+
+	delete[] t_buffer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCExecPoint::copyasbool(bool& r_value)
+{
+	if (!converttoboolean())
+		return false;
+
+	r_value = (value == kMCTrue);
+	return true;
+}
+
+bool MCExecPoint::copyasint(integer_t& r_value)
+{
+	if (!converttonumber())
+		return false;
+
+	r_value = MCNumberFetchAsInteger((MCNumberRef)value);
+	return true;
+}
+
+bool MCExecPoint::copyasuint(uinteger_t& r_value)
+{
+	if (!converttonumber())
+		return false;
+
+	r_value = MCNumberFetchAsUnsignedInteger((MCNumberRef)value);
+	return true;
+}
+
+bool MCExecPoint::copyasdouble(double& r_value)
+{
+	if (!converttonumber())
+		return false;
+
+	r_value = MCNumberFetchAsReal((MCNumberRef)value);
+	return true;
+}
+
+bool MCExecPoint::copyaschar(char_t& r_value)
+{
+	if (!converttostring())
+		return false;
+	
+	if (MCStringGetLength((MCStringRef)value) != 1)
+		return false;
+	
+	r_value = MCStringGetNativeCharAtIndex((MCStringRef)value, 0);
+	return true;
+}
+
+bool MCExecPoint::copyasnumber(MCNumberRef& r_value)
+{
+	if (!converttonumber())
+		return false;
+
+	r_value = MCValueRetain((MCNumberRef)value);
+	return true;
+}
+
+bool MCExecPoint::copyasstring(MCStringRef& r_value)
+{
+	if (!converttostring())
+		return false;
+
+	return MCStringCopy((MCStringRef)value, r_value);
+}
+
+bool MCExecPoint::copyasarray(MCArrayRef& r_value)
+{
+	if (!converttoarray())
+		return false;
+
+	return MCArrayCopy((MCArrayRef)value, r_value);
+}
+
+bool MCExecPoint::copyasvariant(MCValueRef& r_value)
+{
+	return MCValueCopy(value, r_value);
+}
+
+bool MCExecPoint::copyaspoint(MCPoint& r_value)
+{
+	if (!converttostring())
+		return false;
+
+	return MCU_stoi2x2((MCStringRef)value, r_value . x, r_value . y) == True;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCExecPoint::concatnameref(MCNameRef p_name, Exec_concat p_sep, bool p_first)
+{
+	concatstringref(MCNameGetString(p_name), p_sep, p_first);
+}
+
+bool MCExecPoint::copyasnameref(MCNameRef& r_name)
+{
+	MCStringRef t_string;
+	if (!convertvaluereftostring(value, t_string))
+		return false;
+	return MCNameCreateAndRelease(t_string, r_name);
+}
+
+void MCExecPoint::concatstringref(MCStringRef p_string, Exec_concat p_sep, bool p_first)
+{
+	concatmcstring(MCStringGetOldString(p_string), p_sep, p_first);
+}
+
+bool MCExecPoint::copyasstringref(MCStringRef& r_string)
+{
+	return convertvaluereftostring(value, r_string);
+}
+
+bool MCExecPoint::copyasmutablestringref(MCStringRef& r_string)
+{
+	if (!converttostring())
+		return false;
+
+	return MCStringMutableCopy((MCStringRef)value, r_string);
+}
+
+bool MCExecPoint::copyasdataref(MCDataRef& r_data)
+{
+	MCAutoStringRef t_string;
+	if (!copyasstringref(&t_string))
+		return false;
+    
+	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
+}
+#endif
+
+MCValueRef MCExecPoint::getvalueref(void)
+{
+	return value;
+}
+
+bool MCExecPoint::setvalueref(MCValueRef p_value)
+{
+	MCValueRef t_new_value;
+	if (!MCValueCopy(p_value, t_new_value))
+		return false;
+	MCValueRelease(value);
+	value = t_new_value;
+	return true;
+}
+
+bool MCExecPoint::setvalueref_nullable(MCValueRef p_value)
+{
+	if (p_value == nil)
+    {
+        setvalueref(kMCEmptyString);
+		return true;
+	}
+	return setvalueref(p_value);
+}
+
+bool MCExecPoint::copyasvalueref(MCValueRef& r_value)
+{
+	return MCValueCopy(value, r_value);
+}
+
+#ifdef LEGACY_EXEC
+bool MCExecPoint::convertvaluereftostring(MCValueRef p_value, MCStringRef& r_string)
+{
+    return m_ec . ConvertToString(p_value, r_string);
+}
+
+bool MCExecPoint::convertvaluereftonumber(MCValueRef p_value, MCNumberRef& r_number)
+{
+    return m_ec . ConvertToNumber(p_value, r_number);
+}
+
+bool MCExecPoint::convertvaluereftobool(MCValueRef p_value, bool& r_bool)
+{
+    if ((MCBooleanRef)p_value == kMCTrue)
+    {
+        r_bool = true;
+        return true;
+    }
+    
+    MCAutoBooleanRef t_boolean;
+    if (convertvaluereftoboolean(p_value, &t_boolean))
+    {
+        r_bool = *t_boolean == kMCTrue;
+        return true;
+    }
+    
+    return false;
+}
+
+bool MCExecPoint::convertvaluereftouint(MCValueRef p_value, uinteger_t& r_uinteger)
+{
+	MCAutoNumberRef t_number;
+	if (!convertvaluereftonumber(p_value, &t_number))
+		return false;
+
+	r_uinteger = MCNumberFetchAsUnsignedInteger(*t_number);
+
+	return true;
+}
+
+bool MCExecPoint::convertvaluereftoint(MCValueRef p_value, integer_t& r_integer)
+{
+	MCAutoNumberRef t_number;
+	if (!convertvaluereftonumber(p_value, &t_number))
+		return false;
+
+	r_integer = MCNumberFetchAsInteger(*t_number);
+
+	return true;
+}
+
+bool MCExecPoint::convertvaluereftoreal(MCValueRef p_value, real64_t& r_real)
+{
+	switch(MCValueGetTypeCode(p_value))
+	{
+	case kMCValueTypeCodeNull:
+		{
+			r_real = 0.0;
+			return true;
+		}
+	case kMCValueTypeCodeBoolean:
+	case kMCValueTypeCodeArray:
+		break;
+	case kMCValueTypeCodeNumber:
+		{
+			r_real = MCNumberFetchAsReal((MCNumberRef)p_value);
+			return true;
+		}
+	case kMCValueTypeCodeName:
+		{
+			double t_number;
+			t_number = 0.0;
+			if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0)
+				if (!MCU_stor8(MCStringGetOldString(MCNameGetString((MCNameRef)p_value)), t_number, convertoctals))
+					break;
+			r_real = t_number;
+			return true;
+		}
+	case kMCValueTypeCodeString:
+		{
+			double t_number;
+			t_number = 0.0;
+			if (MCStringGetLength((MCStringRef)p_value) != 0)
+				if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, convertoctals))
+					break;
+			r_real = t_number;
+			return true;
+		}
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool MCExecPoint::convertvaluereftoboolean(MCValueRef p_value, MCBooleanRef& r_boolean)
+{
+    return m_ec . ConvertToBoolean(p_value, r_boolean);
+}
+
+//////////
+
+MCArrayRef MCExecPoint::getarrayref(void)
+{
+	return (MCArrayRef)value;
+}
+
+bool MCExecPoint::copyasarrayref(MCArrayRef& r_array)
+{
+	if (!converttoarray())
+		return false;
+
+	return MCArrayCopy((MCArrayRef)value, r_array);
+}
+
+bool MCExecPoint::copyasmutablearrayref(MCArrayRef& r_array)
+{
+	if (!converttoarray())
+		return false;
+
+	return MCArrayMutableCopy((MCArrayRef)value, r_array);
+}
+
+
+bool MCExecPoint::listarraykeys(MCArrayRef p_array, char p_delimiter)
+{
+	MCStringRef t_string;
+	if (!MCArrayListKeys(p_array, p_delimiter, t_string))
+		return false;
+
+	MCValueRelease(value);
+	value = t_string;
+	return true;
+}
+
+// MW-2012-07-26: This should only return 'false' if copying the value failed.
+//   Otherwise, it should just set the ep to empty.
+bool MCExecPoint::fetcharrayelement(MCArrayRef p_array, MCNameRef p_key)
+{
+	MCValueRef t_value;
+	if (!MCArrayFetchValue(p_array, getcasesensitive() == True, p_key, t_value))
+	{
+		clear();
+		return true;
+	}
+
+	if (MCValueCopy(t_value, t_value))
+	{
+		MCValueRelease(value);
+		value = t_value;
+		return true;
+	}
+
+	return false;
+}
+
+bool MCExecPoint::storearrayelement(MCArrayRef p_array, MCNameRef p_key)
+{
+	MCAutoValueRef t_value;
+	if (!MCValueCopy(value, &t_value))
+		return false;
+	return MCArrayStoreValue(p_array, getcasesensitive() == True, p_key, *t_value);
+}
+
+bool MCExecPoint::appendarrayelement(MCArrayRef p_array, MCNameRef p_key)
+{
+	MCValueRef t_value;
+	if (!MCArrayFetchValue(p_array, getcasesensitive() == True, p_key, t_value))
+		return false;
+
+	MCAutoStringRef t_suffix;
+	if (!convertvaluereftostring(value, &t_suffix))
+		return false;
+
+	MCStringRef t_current_value;
+	if (!convertvaluereftostring(t_value, t_current_value))
+		return false;
+	
+	bool t_success;
+	t_success = MCStringMutableCopyAndRelease(t_current_value, t_current_value) &&
+					MCStringAppend(t_current_value, *t_suffix) &&
+						MCArrayStoreValue(p_array, getcasesensitive() == True, p_key, t_current_value);
+
+	MCValueRelease(t_current_value);
+
+	return t_success;
+}
+
+// MW-2012-07-26: This should only return 'false' if copying the value failed.
+//   Otherwise, it should just set the ep to empty.
+bool MCExecPoint::fetcharrayindex(MCArrayRef p_array, index_t p_index)
+{
+	MCValueRef t_value;
+	t_value = nil;
+	if (!MCArrayFetchValueAtIndex(p_array, p_index, t_value))
+	{
+		clear();
+		return true;
+	}
+	
+	if (MCValueCopy(t_value, t_value))
+	{
+		MCValueRelease(value);
+		value = t_value;
+		return true;
+	}
+
+	return false;
+}
+
+bool MCExecPoint::storearrayindex(MCArrayRef p_array, index_t p_index)
+{
+	MCAutoValueRef t_value;
+	if (!MCValueCopy(value, &t_value))
+		return false;
+	return MCArrayStoreValueAtIndex(p_array, p_index, *t_value);
+}
+
+bool MCExecPoint::fetcharrayelement_cstring(MCArrayRef p_array, const char *p_key)
+{
+	return fetcharrayelement_oldstring(p_array, p_key);
+}
+
+bool MCExecPoint::storearrayelement_cstring(MCArrayRef p_array, const char *p_key)
+{
+	return storearrayelement_oldstring(p_array, p_key);
+}
+
+bool MCExecPoint::hasarrayelement_cstring(MCArrayRef p_array, const char *p_key)
+{
+	return hasarrayelement_oldstring(p_array, p_key);
+}
+
+bool MCExecPoint::appendarrayelement_cstring(MCArrayRef p_array, const char *p_key)
+{
+	return hasarrayelement_oldstring(p_array, p_key);
+}
+
+bool MCExecPoint::fetcharrayelement_oldstring(MCArrayRef p_array, const MCString& p_key)
+{
+	MCNewAutoNameRef t_key;
+	if (!MCNameCreateWithNativeChars((const char_t *)p_key . getstring(), p_key . getlength(), &t_key))
+		return false;
+	return fetcharrayelement(p_array, *t_key);
+}
+
+bool MCExecPoint::storearrayelement_oldstring(MCArrayRef p_array, const MCString& p_key)
+{
+	MCNewAutoNameRef t_key;
+	if (!MCNameCreateWithNativeChars((const char_t *)p_key . getstring(), p_key . getlength(), &t_key))
+		return false;
+	return storearrayelement(p_array, *t_key);
+}
+
+bool MCExecPoint::hasarrayelement_oldstring(MCArrayRef p_array, const MCString& p_key)
+{
+	MCNewAutoNameRef t_key;
+	if (!MCNameCreateWithNativeChars((const char_t *)p_key . getstring(), p_key . getlength(), &t_key))
+		return false;
+	MCValueRef t_value;
+	return MCArrayFetchValue(p_array, getcasesensitive() == True, *t_key, t_value);
+}
+
+bool MCExecPoint::appendarrayelement_oldstring(MCArrayRef p_array, const MCString& p_key)
+{
+	MCNewAutoNameRef t_key;
+	if (!MCNameCreateWithNativeChars((const char_t *)p_key . getstring(), p_key . getlength(), &t_key))
+		return false;
+	return appendarrayelement(p_array, *t_key);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCExecPoint::factorarray(MCExecPoint& p_other, Operators p_op)
+{
+	MCAssert(false);
+	return ES_ERROR;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCExecPoint::copyaslegacypoint(MCPoint& r_point)
+{
+	if (!converttostring())
+		return false;
+	return MCU_stoi2x2(MCStringGetOldString((MCStringRef)value), r_point . x, r_point . y) == True;
+}
+
+bool MCExecPoint::copyaslegacyrectangle(MCRectangle& r_rectangle)
+{
+	if (!converttostring())
+		return false;
+		
+	int16_t t_left, t_top, t_right, t_bottom;
+	if (!MCU_stoi2x4(MCStringGetOldString((MCStringRef)value), t_left, t_top, t_right, t_bottom))
+		return false;
+		
+	r_rectangle . x = t_left;
+	r_rectangle . y = t_top;
+	r_rectangle . width = MCU_max(t_right - t_left, 1);
+	r_rectangle . height = MCU_max(t_bottom - t_top, 1);
+	
+	return true;
+}
+
+bool MCExecPoint::copyaslegacycolor(MCColor& r_color)
+{
+	if (!converttostring())
+		return false;
+	
+	if (!MCscreen -> parsecolor((MCStringRef)value, r_color))
+		return false;
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if 0
 
 void MCExecPoint::clear()
 {
@@ -616,20 +2134,6 @@ Parse_stat MCExecPoint::findvar(MCNameRef p_name, MCVarref** r_var)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern int UnicodeToUTF8(const uint2 *p_source_str, int p_source, char *p_dest_str, int p_dest);
-extern int UTF8ToUnicode(const char *p_source_str, int p_source, uint2 *p_dest_str, int p_dest);
-
-static int NativeToUnicode(const char *p_source_str, int p_source, uint2 *p_dest_str, int p_dest)
-{
-    if (p_dest_str == NULL)
-        return p_source * 2;
-    
-    for(int i = 0; i < p_source; i++)
-        p_dest_str[i] = MCUnicodeMapFromNative(p_source_str[i]);
-    
-    return p_source * 2;
-}
-
 void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
 {
 	const char *t_input;
@@ -642,7 +2146,7 @@ void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
 	if (p_reverse)
 	{
 		if (p_native)
-			t_output_length = NativeToUnicode(t_input, t_input_length, NULL, 0);
+			MCS_multibytetounicode(t_input, t_input_length, NULL, 0, t_output_length, LCH_ROMAN);
 		else
 			t_output_length = UTF8ToUnicode(t_input, t_input_length, NULL, 0);
 	}
@@ -662,7 +2166,7 @@ void MCExecPoint::dounicodetomultibyte(bool p_native, bool p_reverse)
 	if (p_reverse)
 	{
 		if (p_native)
-			t_output_length = NativeToUnicode(t_input, t_input_length, (uint2 *)t_buffer, t_output_length);
+			MCS_multibytetounicode(t_input, t_input_length, t_buffer, t_output_length, t_output_length, LCH_ROMAN);
 		else
 			t_output_length = UTF8ToUnicode(t_input, t_input_length, (uint2 *)t_buffer, t_output_length);
 	}
@@ -995,31 +2499,33 @@ bool MCExecPoint::copyasnameref(MCNameRef& r_name)
 	return MCNameCreateWithOldString(getsvalue(), r_name);
 }
 
-// Assumes the contents of the ep is UTF-16 and attempts conversion to native. If
-// successful, the new contents is native and the method returns true, otherwise
-// false and the contents remains unchanged.
-bool MCExecPoint::trytoconvertutf16tonative()
-{
-    // if empty then it can be native obviously but this also avoids getsvalue returning nil
-    if (isempty())
-        return true;
-    
-    MCExecPoint t_other_ep;
-    t_other_ep . setsvalue(getsvalue());
-    t_other_ep . utf16tonative();
-    
-    // MERG-2013-05-07: [[ Bug 8884 ]] If returning true the function setting back to utf16 instead of to native
-    MCExecPoint t_temp_ep;
-    t_temp_ep . setsvalue(t_other_ep . getsvalue());
-    t_temp_ep . nativetoutf16();
-    
-    if (getsvalue() . getlength() == t_temp_ep . getsvalue() . getlength()
-        && memcmp(getsvalue() . getstring(), t_temp_ep . getsvalue() . getstring(), getsvalue() . getlength()) == 0)
-        {
-            copysvalue(t_other_ep . getsvalue(). getstring(), t_other_ep . getsvalue(). getlength());
-            return true;
-        }
+/////////
 
-    return false;
+void MCExecPoint::setstringref_unsafe(MCStringRef p_string)
+{
+	setstaticmcstring(MCStringGetOldString(p_string));
 }
-        
+
+void MCExecPoint::setstringref_nullable_unsafe(MCStringRef p_string)
+{
+	if (p_string != nil)
+		setstaticmcstring(MCStringGetOldString(p_string));
+	else
+		clear();
+}
+
+void MCExecPoint::concatstringref(MCStringRef p_string, Exec_concat p_sep, bool p_first)
+{
+	concatmcstring(MCStringGetOldString(p_string), p_sep, p_first);
+}
+
+bool MCExecPoint::copyasstringref(MCStringRef& r_string)
+{
+	return MCStringCreateWithNativeChars(getsvalue() . getstring(), getsvalue() . getlength(), r_string);
+}
+
+#endif
+
+/////////
+
+#endif

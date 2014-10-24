@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "unicode.h"
 #include "textlayout.h"
 
 #include <CoreText/CoreText.h>
@@ -39,11 +38,12 @@ char *MCSystemLowercaseInternational(const MCString& p_string)
 	return t_lc_string;
 }
 
-int MCSystemCompareInternational(const char *p_left, const char *p_right)
+int MCSystemCompareInternational(MCStringRef p_left, MCStringRef p_right)
 {
 	CFStringRef t_left_ref, t_right_ref;
-	t_left_ref = CFStringCreateWithCStringNoCopy(NULL, p_left, kCFStringEncodingMacRoman, kCFAllocatorNull);
-	t_right_ref = CFStringCreateWithCStringNoCopy(NULL, p_right, kCFStringEncodingMacRoman, kCFAllocatorNull);
+    /* UNCHECKED */ MCStringConvertToCFStringRef(p_left, t_left_ref);
+    /* UNCHECKED */ MCStringConvertToCFStringRef(p_right, t_right_ref);
+
 	
 	// MW-2013-03-12: [[ Bug 10445 ]] Make sure we compare the string 'localized'.
 	int t_result;

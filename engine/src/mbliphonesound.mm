@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -55,26 +54,32 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCFinishedPlayingSound: public MCCustomEvent
 {
 private:
-	MCString m_media;
+	MCStringRef m_media;
     
 public:
-	MCFinishedPlayingSound (MCString p_media)
+	MCFinishedPlayingSound (MCStringRef p_media)
 	{
-        m_media = p_media.clone();
+        m_media = MCValueRetain(p_media);
 	}
+    
+    ~MCFinishedPlayingSound()
+    {
+        MCValueRelease(m_media);
+    }
     
 	void Destroy(void)
 	{
+        MCValueRelease(m_media);
 		delete this;
 	}
 	
 	void Dispatch(void)
 	{
-        MCdefaultstackptr -> getcurcard() -> message_with_args (MCM_play_stopped, m_media);
+        MCdefaultstackptr -> getcurcard() -> message_with_valueref_args (MCM_play_stopped, m_media);
 	}
 };
 
-void MCIHandleFinishedPlayingSound(MCString p_payload)
+void MCIHandleFinishedPlayingSound(MCStringRef p_payload)
 {
 	MCEventQueuePostCustom(new MCFinishedPlayingSound (p_payload));
 }
@@ -99,7 +104,19 @@ void MCIHandleFinishedPlayingSound(MCString p_payload)
 
 static MCSoundPlayerDelegate *s_sound_player_delegate = nil;
 static float s_sound_loudness = 1.0;
-static char *s_sound_file = nil;
+static MCStringRef s_sound_file = nil;
+
+bool MCSystemSoundInitialize()
+{
+	s_sound_file = MCValueRetain(kMCEmptyString);
+	return true;
+}
+
+bool MCSystemSoundFinalize()
+{
+	MCValueRelease(s_sound_file);
+	return true;
+}
 
 @implementation MCSoundPlayerDelegate
 
@@ -144,16 +161,12 @@ static char *s_sound_file = nil;
 // MM-2012-02-29: [[ BUG 10021 ]] Make sure we clear out the sound file if playback stops for any reason
 - (void)audioPlayerFailedToReachEnd:(NSNotification *)notification
 {
-	if (s_sound_file != nil)
-    {
-        delete s_sound_file;
-        s_sound_file = nil;
-    }
+	MCValueAssign(s_sound_file, kMCEmptyString);
 }
 
 - (void)audioPlayerDidReachEnd:(NSNotification *)notification
 {
-	if (s_sound_file != nil)
+	if (!MCStringIsEmpty(s_sound_file))
     {
         // MM-2012-02-29: [[ BUG 10039 ]] Audio looping does not work on iOS
         if (m_looping)
@@ -163,8 +176,7 @@ static char *s_sound_file = nil;
             // HC-2012-02-01: [[ Bug 9983 ]] - Added "playStopped" message to "play" so users can track when their tracks have finished playing
             // Send a message to indicate that we have finished playing a track.
             MCIHandleFinishedPlayingSound (s_sound_file);
-            delete s_sound_file;
-            s_sound_file = nil;
+            MCValueAssign(s_sound_file, kMCEmptyString);
         }
     }
 }
@@ -176,11 +188,7 @@ static char *s_sound_file = nil;
     {
         if ([m_player status] == AVPlayerStatusFailed || [m_player_item status] == AVPlayerItemStatusFailed)
         {
-            if (s_sound_file != nil)
-            {
-                delete s_sound_file;
-                s_sound_file = nil;
-            }
+            MCValueAssign(s_sound_file, kMCEmptyString);
         }
     }
 }
@@ -286,7 +294,7 @@ bool MCSystemGetPlayLoudness(uint2& r_loudness)
 	return true;
 }
 
-bool MCSystemPlaySound(const char *p_file, bool p_looping)
+bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping)
 {
 	if (s_sound_player_delegate != nil)
 	{
@@ -294,13 +302,9 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
 		s_sound_player_delegate = nil;
 	}
 	
-	if (s_sound_file != nil)
-	{
-		MCCStringFree(s_sound_file);
-		s_sound_file = nil;
-	}
+	MCValueRelease(s_sound_file);
 	
-	if (p_file == nil || *p_file == '\0')
+	if (MCStringIsEmpty(p_sound))
 		return true;
 	
     bool t_success;
@@ -310,15 +314,15 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
     if (t_success)
     {
         // Check if we are playing an ipod file or a resource file.
-        if (strncmp(p_file, "ipod-library://", 15) == 0)
+		if (MCStringBeginsWithCString(p_sound, (const char_t *)"ipod-library://", kMCStringOptionCompareExact))
         {
-            s_sound_file = strdup(p_file);
-            t_url = [NSURL URLWithString: [NSString stringWithCString: s_sound_file encoding: NSMacOSRomanStringEncoding]];
+            s_sound_file = MCValueRetain(p_sound);
+            t_url = [NSURL URLWithString: [NSString stringWithMCStringRef: s_sound_file]];
         }
         else
         {
-            s_sound_file = MCS_resolvepath(p_file);
-            t_url = [NSURL fileURLWithPath: [NSString stringWithCString: s_sound_file encoding: NSUTF8StringEncoding]];
+			/* UNCHECKED */ MCS_resolvepath(p_sound, s_sound_file);
+            t_url = [NSURL fileURLWithPath: [NSString stringWithMCStringRef: s_sound_file]];
         }
         t_success = t_url != nil;
     }
@@ -339,18 +343,16 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
         MCresult->clear();
     else
     {
-        MCCStringFree(s_sound_file);
-		s_sound_file = nil;
+        MCValueAssign(s_sound_file, kMCEmptyString);
         MCresult->sets("could not play sound");
     }
     
 	return true;		
 }
 
-bool MCSystemGetPlayingSound(const char *& r_sound)
+void MCSystemGetPlayingSound(MCStringRef &r_sound)
 {
-	r_sound = s_sound_file;
-	return true;
+	r_sound = MCValueRetain(s_sound_file);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -369,7 +371,7 @@ struct MCSystemSoundChannel;
 
 struct MCSystemSoundPlayer
 {
-	char *sound;
+	MCStringRef sound;
 	AVAudioPlayer *player;
 	MCObjectHandle *object;
 };
@@ -377,7 +379,7 @@ struct MCSystemSoundPlayer
 struct MCSystemSoundChannel
 {
 	MCSystemSoundChannel *next;
-	char *name;
+	MCStringRef name;
 	MCSystemSoundChannelDelegate *delegate;
 	MCSystemSoundPlayer current_player;
 	MCSystemSoundPlayer next_player;
@@ -393,8 +395,7 @@ static void delete_player_on_channel(MCSystemSoundChannel *p_channel, MCSystemSo
 	[x_player . player stop];
 	[x_player . player release];
 	x_player . player = nil;
-	MCCStringFree(x_player . sound);
-	x_player . sound = nil;
+	MCValueRelease(x_player.sound);
 	x_player . object -> Release();
 	x_player . object = nil;
 }
@@ -410,11 +411,11 @@ static void delete_sound_channel(MCSystemSoundChannel *p_channel)
 		delete_player_on_channel(p_channel, p_channel -> current_player);
 	
 	[p_channel -> delegate release];
-	MCCStringFree(p_channel -> name);
+	MCValueRelease(p_channel -> name);
 	MCMemoryDelete(p_channel);
 }
 
-static bool new_sound_channel(const char *p_channel, MCSystemSoundChannel*& r_channel)
+static bool new_sound_channel(MCStringRef p_channel, MCSystemSoundChannel*& r_channel)
 {
 	bool t_success;
 	t_success = true;
@@ -425,7 +426,7 @@ static bool new_sound_channel(const char *p_channel, MCSystemSoundChannel*& r_ch
 		t_success = MCMemoryNew(t_channel);
 	
 	if (t_success)
-		t_success = MCCStringClone(p_channel, t_channel -> name);
+		t_channel->name = MCValueRetain(p_channel);
 	
 	if (t_success)
 	{
@@ -449,10 +450,10 @@ static bool new_sound_channel(const char *p_channel, MCSystemSoundChannel*& r_ch
 	return t_success;
 }
 
-static bool find_sound_channel(const char *p_channel, bool p_create, MCSystemSoundChannel*& r_channel)
+static bool find_sound_channel(MCStringRef p_channel, bool p_create, MCSystemSoundChannel*& r_channel)
 {
 	for(MCSystemSoundChannel *t_channel = s_sound_channels; t_channel != nil; t_channel = t_channel -> next)
-		if (MCCStringEqualCaseless(p_channel, t_channel -> name))
+		if (MCStringIsEqualTo(p_channel, t_channel -> name, kMCCompareCaseless))
 		{
 			r_channel = t_channel;
 			return true;
@@ -464,19 +465,22 @@ static bool find_sound_channel(const char *p_channel, bool p_create, MCSystemSou
 	return false;
 }
 
-static bool new_player_for_channel(MCSystemSoundChannel *p_channel, const char *p_file, bool p_looping, MCObjectHandle *p_object, MCSystemSoundPlayer& x_player)
+static bool new_player_for_channel(MCSystemSoundChannel *p_channel, MCStringRef p_file, bool p_looping, MCObjectHandle *p_object, MCSystemSoundPlayer& x_player)
 {
-	char *t_resolved_file;
-	t_resolved_file = MCS_resolvepath(p_file);
+	MCStringRef t_resolved_file = nil;
+	/* UNCHECKED */ MCS_resolvepath(p_file, t_resolved_file);
 	
+	CFStringRef cfresolvedfile = nil;
+	/* UNCHECKED */ MCStringConvertToCFStringRef(t_resolved_file, cfresolvedfile);
 	NSURL *t_url;
-	t_url = [NSURL fileURLWithPath: [NSString stringWithCString: t_resolved_file encoding: NSMacOSRomanStringEncoding]];
+	t_url = [NSURL fileURLWithPath: (NSString *)cfresolvedfile];
+	CFRelease(cfresolvedfile);
 	
 	AVAudioPlayer *t_player;
 	t_player = [[AVAudioPlayer alloc] initWithContentsOfURL: t_url error: nil];
 	if (t_player == nil)
 	{
-		delete t_resolved_file;
+		MCValueRelease(t_resolved_file);
 		return false;
 	}
 	
@@ -495,7 +499,7 @@ static bool new_player_for_channel(MCSystemSoundChannel *p_channel, const char *
 }
 
 // MM-2012-02-11: Refactored to take a MCObjectHandle * rather than MCObject.
-bool MCSystemPlaySoundOnChannel(const char *p_channel, const char *p_file, MCSoundChannelPlayType p_type, MCObjectHandle *p_object)
+bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle *p_object)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, true, t_channel))
@@ -509,7 +513,7 @@ bool MCSystemPlaySoundOnChannel(const char *p_channel, const char *p_file, MCSou
 		t_channel -> current_player . player != nil)
 	{	
 		// If no file is given, cancel the next sound.
-		if (p_file == nil || MCCStringEqualCaseless(p_file, MCnullstring))
+		if (p_file == nil || MCStringIsEmpty(p_file))
 			return true;
 		
 		if (new_player_for_channel(t_channel, p_file, false, p_object, t_channel -> next_player))
@@ -532,7 +536,7 @@ bool MCSystemPlaySoundOnChannel(const char *p_channel, const char *p_file, MCSou
 		delete_player_on_channel(t_channel, t_channel -> current_player);
 	
 	// If no file is given, cancel the current sound.
-	if (p_file == nil || MCCStringEqualCaseless(p_file, MCnullstring))
+	if (p_file == nil || MCStringIsEmpty(p_file))
 		return true;
 	
 	if (new_player_for_channel(t_channel, p_file, p_type == kMCSoundChannelPlayLooping, p_object, t_channel -> current_player))
@@ -565,7 +569,7 @@ bool MCSystemPlaySoundOnChannel(const char *p_channel, const char *p_file, MCSou
 	return false;
 }
 
-bool MCSystemStopSoundChannel(const char *p_channel)
+bool MCSystemStopSoundChannel(MCStringRef p_channel)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -583,7 +587,7 @@ bool MCSystemStopSoundChannel(const char *p_channel)
 }
 
 // MM-2012-02-11: Refactored PauseResume to two funciton calls
-bool MCSystemPauseSoundChannel(const char *p_channel)
+bool MCSystemPauseSoundChannel(MCStringRef p_channel)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -602,7 +606,7 @@ bool MCSystemPauseSoundChannel(const char *p_channel)
 	return true;
 }
 
-bool MCSystemResumeSoundChannel(const char *p_channel)
+bool MCSystemResumeSoundChannel(MCStringRef p_channel)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -621,7 +625,7 @@ bool MCSystemResumeSoundChannel(const char *p_channel)
 	return true;
 }
 
-bool MCSystemDeleteSoundChannel(const char *p_channel)
+bool MCSystemDeleteSoundChannel(MCStringRef p_channel)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -633,7 +637,7 @@ bool MCSystemDeleteSoundChannel(const char *p_channel)
 	return true;
 }
 
-bool MCSystemSetSoundChannelVolume(const char *p_channel, int32_t p_loudness)
+bool MCSystemSetSoundChannelVolume(MCStringRef p_channel, int32_t p_loudness)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, true, t_channel))
@@ -648,7 +652,7 @@ bool MCSystemSetSoundChannelVolume(const char *p_channel, int32_t p_loudness)
 	return true;
 }
 
-bool MCSystemSoundChannelVolume(const char *p_channel, int32_t& r_volume)
+bool MCSystemSoundChannelVolume(MCStringRef p_channel, int32_t& r_volume)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -659,7 +663,7 @@ bool MCSystemSoundChannelVolume(const char *p_channel, int32_t& r_volume)
 	return true;
 }
 
-bool MCSystemSoundChannelStatus(const char *p_channel, MCSoundChannelStatus& r_status)
+bool MCSystemSoundChannelStatus(MCStringRef p_channel, intenum_t& r_status)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -676,39 +680,44 @@ bool MCSystemSoundChannelStatus(const char *p_channel, MCSoundChannelStatus& r_s
 	return true;
 }
 
-bool MCSystemSoundOnChannel(const char *p_channel, char*& r_sound)
+bool MCSystemSoundOnChannel(MCStringRef p_channel, MCStringRef& r_sound)
 {
-	MCSystemSoundChannel *t_channel;
+/*	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
 		return false;
 	
-	return MCCStringClone(t_channel -> current_player . sound, r_sound);
+	return MCCStringClone(t_channel -> current_player . sound, r_sound);*/
+    return false;
 }
 
-bool MCSystemNextSoundOnChannel(const char *p_channel, char*& r_sound)
+bool MCSystemNextSoundOnChannel(MCStringRef p_channel, MCStringRef& r_sound)
 {
-	MCSystemSoundChannel *t_channel;
+/*	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
 		return false;
 	
-    return MCCStringClone(t_channel -> next_player . sound, r_sound);
+    return MCCStringClone(t_channel -> next_player . sound, r_sound);*/
+    return false;
 }
 
 // MM-2012-02-11: Refactored to return a formatted sting of channels
-bool MCSystemListSoundChannels(char*& r_channels)
+bool MCSystemListSoundChannels(MCStringRef& r_channels)
 {
+	MCAutoListRef t_list;
+	MCListCreateMutable('\n', &t_list);
+    bool t_elementsfound = false;
+    
 	for(MCSystemSoundChannel *t_channel = s_sound_channels; t_channel != nil; t_channel = t_channel -> next)
-		if (t_channel -> name != nil)
-        {
-            if (r_channels == nil)
-                MCCStringClone(t_channel -> name, r_channels);
-            else
-                MCCStringAppendFormat(r_channels, "\n%s", t_channel -> name);
-        }
-	return true;
+    {
+		t_elementsfound = true;
+		MCListAppend(*t_list, t_channel->name);
+    }
+	
+    MCListCopyAsString(*t_list, r_channels);
+	return t_elementsfound;
 }
 
-extern void MCSoundPostSoundFinishedOnChannelMessage(const char *p_channel, const char *p_sound, MCObjectHandle *p_object);
+extern void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCStringRef p_sound, MCObjectHandle *p_object);
 
 @implementation MCSystemSoundChannelDelegate
 
@@ -739,28 +748,28 @@ extern void MCSoundPostSoundFinishedOnChannelMessage(const char *p_channel, cons
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
-bool MCSystemSetAudioCategory(MCSoundAudioCategory p_category)
+bool MCSystemSetAudioCategory(intenum_t p_category)
 {
     NSString *t_category;
     t_category = nil;
     switch (p_category)
     {
-        case kMCMCSoundAudioCategoryAmbient:
+        case kMCSoundAudioCategoryAmbient:
             t_category = AVAudioSessionCategoryAmbient;
             break;
-        case kMCMCSoundAudioCategorySoloAmbient:
+        case kMCSoundAudioCategorySoloAmbient:
             t_category = AVAudioSessionCategorySoloAmbient;
             break;
-        case kMCMCSoundAudioCategoryPlayback:
+        case kMCSoundAudioCategoryPlayback:
             t_category = AVAudioSessionCategoryPlayback;
             break;
-        case kMCMCSoundAudioCategoryRecord:
+        case kMCSoundAudioCategoryRecord:
             t_category = AVAudioSessionCategoryRecord;
             break;
-        case kMCMCSoundAudioCategoryPlayAndRecord:
+        case kMCSoundAudioCategoryPlayAndRecord:
             t_category = AVAudioSessionCategoryPlayAndRecord;
             break;
-        case kMCMCSoundAudioCategoryAudioProcessing:
+        case kMCSoundAudioCategoryAudioProcessing:
             t_category = AVAudioSessionCategoryAudioProcessing;
             break;
         default:

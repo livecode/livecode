@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "scriptpt.h"
 #include "util.h"
 #include "date.h"
@@ -42,31 +42,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "answer.h"
 #include "printer.h"
 
+#include "exec.h"
+#include "syntax.h"
+
 #include "platform.h"
 #include "osspec.h"
 
-const char *MCdialogtypes[] =
-{
-	"plain",
-	"clear",
-	"color",
-	"effect",
-	"error",
-	"file",
-	"folder",
-	"information",
-	"password",
-	"printer",
-	"program",
-	"question",
-	"record",
-	"titled",
-	"warning"
-};
-
 MCAnswer::~MCAnswer()
 {
-	delete it;
 	delete title;
 	
 	switch(mode)
@@ -108,7 +91,6 @@ Parse_stat MCAnswer::parse(MCScriptPoint &sp)
 	const LT *t_literal;
 
 	initpoint(sp);
-	getit(sp, it);
 
 	if (sp . skip_token(SP_ASK, TT_UNDEFINED, AT_PAGE) == PS_NORMAL)
 	{
@@ -310,7 +292,129 @@ Parse_errors MCAnswer::parse_notify(MCScriptPoint& sp)
 	return t_error;
 }
 
-#ifdef /* MCAnswer::exec */ LEGACY_EXEC
+void MCAnswer::exec_ctxt(MCExecContext& ctxt)
+{
+	MCAutoStringRef t_title;
+    if (!ctxt . EvalOptionalExprAsStringRef(title, kMCEmptyString, EE_ANSWER_BADTITLE, &t_title))
+        return;
+        
+    switch(mode)
+	{
+        case AT_PAGESETUP:
+            MCPrintingExecAnswerPageSetup(ctxt, sheet == True);
+            break;
+            
+        case AT_PRINTER:
+            MCPrintingExecAnswerPrinter(ctxt, sheet == True);
+            break;
+            
+        case AT_EFFECT:
+            MCMultimediaExecAnswerEffect(ctxt);
+            break;
+            
+        case AT_RECORD:
+            MCMultimediaExecAnswerRecord(ctxt);
+            break;
+            
+        case AT_COLOR:
+		{
+			MCColor t_initial_color;
+			MCColor *t_initial_color_ptr = &t_initial_color;
+			
+            // AL-2014-04-01: [[ Bug 12071 ]] If the intial color is empty (i.e. unset), pass nil ptr to dialog.
+            ctxt . TryToEvalOptionalExprAsColor(colour . initial, nil, EE_ANSWER_BADQUESTION, t_initial_color_ptr);
+            
+			MCDialogExecAnswerColor(ctxt, t_initial_color_ptr, *t_title, sheet == True);
+			break;
+		}
+            
+        case AT_FILE:
+        case AT_FILES:
+		{
+			MCAutoStringRef t_prompt, t_initial, t_filter;
+			MCAutoStringRefArray t_types;
+            if (!ctxt . EvalOptionalExprAsStringRef(file.prompt, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_prompt))
+                return;
+			if (!ctxt . EvalOptionalExprAsNullableStringRef(file.initial, EE_ANSWER_BADQUESTION, &t_initial))
+                return;
+			if (!ctxt . EvalOptionalExprAsStringRef(file.filter, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_filter))
+                return;
+            
+            
+            MCAutoStringRef t_initial_resolved;            
+            if (*t_initial != nil)
+            {
+                // IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+                if (!MCS_resolvepath(*t_initial, &t_initial_resolved))
+                {
+                    ctxt . LegacyThrow(EE_NO_MEMORY);
+                    return;
+                }
+            }
+            
+            /* UNCHECKED */ t_types.Extend(file.type_count);
+			for (uindex_t i = 0; i < file.type_count; i++)
+			{
+                if (!ctxt . EvalOptionalExprAsNullableStringRef(file.types[i], EE_ANSWER_BADQUESTION, t_types[i]))
+                    return;
+			}
+            
+			if (t_types.Count() > 0)
+				MCDialogExecAnswerFileWithTypes(ctxt, mode == AT_FILES, *t_prompt, *t_initial_resolved, *t_types, t_types.Count(), *t_title, sheet == True);
+			else if (*t_filter != nil)
+				MCDialogExecAnswerFileWithFilter(ctxt, mode == AT_FILES, *t_prompt, *t_initial_resolved, *t_filter, *t_title, sheet == True);
+			else
+				MCDialogExecAnswerFile(ctxt, mode == AT_FILES, *t_prompt, *t_initial_resolved, *t_title, sheet == True);
+            
+			break;
+		}
+
+        case AT_FOLDER:
+        case AT_FOLDERS:
+		{
+			MCAutoStringRef t_prompt, t_initial;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.prompt, EE_ANSWER_BADQUESTION, &t_prompt))
+                return;
+			if (!ctxt . EvalOptionalExprAsNullableStringRef(file.initial, EE_ANSWER_BADQUESTION, &t_initial))
+                return;
+            
+            MCAutoStringRef t_initial_resolved;
+            if (*t_initial != nil)
+            {
+                // IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+                if (!MCS_resolvepath(*t_initial, &t_initial_resolved))
+                {
+                    ctxt . LegacyThrow(EE_NO_MEMORY);
+                    return;
+                }
+            }
+            
+			MCDialogExecAnswerFolder(ctxt, mode == AT_FOLDERS, *t_prompt, *t_initial_resolved, *t_title, sheet == True);
+            
+			break;
+		}
+            
+        default:
+		{
+			MCAutoStringRef t_prompt;
+			MCAutoStringRefArray t_buttons;
+            
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(notify.prompt, EE_ANSWER_BADRESPONSE, &t_prompt))
+                return;
+			            
+			/* UNCHECKED */ t_buttons.Extend(notify.button_count);
+			for (uindex_t i = 0; i < notify.button_count; i++)
+			{
+                if (!ctxt . EvalOptionalExprAsNullableStringRef(notify.buttons[i], EE_ANSWER_BADRESPONSE, t_buttons[i]))
+                    return;
+			}
+            
+			MCDialogExecAnswerNotify(ctxt, mode, *t_prompt, *t_buttons, t_buttons.Count(), *t_title, sheet == True);
+		}
+	}
+}
+
+#ifdef LEGACY_EXEC
 Exec_stat MCAnswer::exec(MCExecPoint& ep)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -356,15 +460,15 @@ Exec_stat MCAnswer::exec(MCExecPoint& ep)
 		}
 
 	if (!t_error)
-		it -> set(ep);
+		ep . getit() -> set(ep);
 	else
 		MCeerror -> add(t_error, line, pos);
 
 	return t_error ? ES_ERROR : ES_NORMAL;
 }
-#endif /* MCAnswer::exec */
+#endif
 
-#ifdef /* MCAnswer::exec_pagesetup */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_pagesetup(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error;
@@ -387,9 +491,9 @@ Exec_errors MCAnswer::exec_pagesetup(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_pagesetup */
+#endif
 
-#ifdef /* MCAnswer::exec_printer */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_printer(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error;
@@ -412,9 +516,9 @@ Exec_errors MCAnswer::exec_printer(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_printer */
+#endif
 
-#ifdef /* MCAnswer::exec_effect */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_effect(MCExecPoint& ep, const char *p_title)
 {
 	MCresult -> clear(False);
@@ -422,9 +526,9 @@ Exec_errors MCAnswer::exec_effect(MCExecPoint& ep, const char *p_title)
 	MCQTEffectsDialog(ep, p_title, sheet);
 	return EE_UNDEFINED;
 }
-#endif /* MCAnswer::exec_effect */
+#endif
 
-#ifdef /* MCAnswer::exec_record */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_record(MCExecPoint& ep, const char *p_title)
 {
 	MCresult -> clear(False);
@@ -461,9 +565,9 @@ Exec_errors MCAnswer::exec_record(MCExecPoint& ep, const char *p_title)
 #endif
 	return EE_UNDEFINED;
 }
-#endif /* MCAnswer::exec_record */
+#endif
 
-#ifdef /* MCAnswer::exec_colour */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_colour(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -486,9 +590,9 @@ Exec_errors MCAnswer::exec_colour(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_colour */
+#endif
 
-#ifdef /* MCAnswer::exec_file */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -573,9 +677,9 @@ Exec_errors MCAnswer::exec_file(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_file */
+#endif
 
-#ifdef /* MCAnswer::exec_folder */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_folder(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -625,9 +729,9 @@ Exec_errors MCAnswer::exec_folder(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_folder */
+#endif
 
-#ifdef /* MCAnswer::exec_notify */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_notify(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -706,9 +810,9 @@ Exec_errors MCAnswer::exec_notify(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAnswer::exec_notify */
+#endif
 
-#ifdef /* MCAnswer::exec_custom */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAnswer::exec_custom(MCExecPoint& ep, const MCString& p_stack, const char *p_type, unsigned int p_count, ...)
 {
 	ep . setstringf("answer %s", p_type);
@@ -742,4 +846,152 @@ Exec_errors MCAnswer::exec_custom(MCExecPoint& ep, const MCString& p_stack, cons
 
 	return EE_UNDEFINED;
 }
-#endif /* MCAnswer::exec_custom */
+#endif
+
+void MCAnswer::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	switch(mode)
+	{
+	case AT_PAGESETUP:
+	case AT_PRINTER:
+		if (title != nil)
+			title -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
+
+		if (mode == AT_PAGESETUP)
+			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCPrintingExecAnswerPageSetupMethodInfo, 1);
+		else
+			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCPrintingExecAnswerPrinterMethodInfo, 1);
+		break;
+	
+	case AT_EFFECT:
+		if (title != nil)
+			title -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecAnswerEffectMethodInfo);
+		break;
+
+	case AT_RECORD:
+		if (title != nil)
+			title -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecAnswerRecordMethodInfo);
+		break;
+
+	case AT_COLOR:
+		if (colour . initial != nil)
+			colour . initial -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (title != nil)
+			title -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAnswerColorMethodInfo);
+		break;
+
+	case AT_FILE:
+	case AT_FILES:
+		MCSyntaxFactoryEvalConstantBool(ctxt, mode == AT_FILES);
+
+		if (file . prompt != nil)
+			file . prompt -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (file . initial != nil)
+			file . initial -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (file . filter != nil)
+			file . filter -> compile(ctxt);
+		else if (file . type_count > 0)
+		{
+			for (uindex_t i = 0; i < file . type_count; i++)
+				file . types[i] -> compile(ctxt);
+
+			MCSyntaxFactoryEvalList(ctxt, file . type_count);
+		}
+
+		if (title != nil)
+			title -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
+		
+		if (file . type_count > 0)
+			MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAnswerFileWithTypesMethodInfo);
+		else if (file . filter != nil)
+			MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAnswerFileWithFilterMethodInfo);
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAnswerFileMethodInfo);
+		break;
+
+	case AT_FOLDER:
+	case AT_FOLDERS:
+		MCSyntaxFactoryEvalConstantBool(ctxt, mode == AT_FOLDERS);
+
+		if (file . prompt != nil)
+			file . prompt -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (file . initial != nil)
+			file . initial -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (title != nil)
+			title -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
+		
+		MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAnswerFolderMethodInfo);
+		break;
+
+	default:	
+		MCSyntaxFactoryEvalConstantInt(ctxt, mode);
+
+		if (notify . prompt != nil)
+			notify . prompt -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		if (notify . button_count > 0)
+		{
+			for (uindex_t i = 0; i < notify . button_count; i++)
+				notify . buttons[i] -> compile(ctxt);
+
+			MCSyntaxFactoryEvalList(ctxt, notify . button_count);
+		}
+
+		if (title != nil)
+			title -> compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+
+		MCSyntaxFactoryEvalConstantBool(ctxt, sheet == True);
+		
+		MCSyntaxFactoryExecMethod(ctxt, kMCDialogExecAnswerNotifyMethodInfo);
+		break;
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
+}

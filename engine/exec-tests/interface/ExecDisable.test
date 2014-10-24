@@ -1,0 +1,9 @@
+setup
+
+create button
+
+disable button 1
+
+test the disabled of button 1
+
+teardown

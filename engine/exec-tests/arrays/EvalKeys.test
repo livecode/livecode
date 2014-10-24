@@ -1,0 +1,11 @@
+setup
+local tArray
+test the keys of tArray is empty
+
+put "foo" into tArray["bar"]
+
+test "bar" is among the lines of the keys of tArray
+
+test "baz" is not among the lines of the keys of tArray
+
+teardown

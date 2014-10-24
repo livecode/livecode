@@ -1,0 +1,11 @@
+setup
+
+test-error the owner of field "blahblah"
+
+create button
+test (the long id of the owner of the last button) is (the long id of the current card)
+
+group the last button
+test (the long id of the owner of the last button) is (the long id of the last group)
+
+teardown
