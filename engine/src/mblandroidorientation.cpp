@@ -53,11 +53,11 @@ typedef enum
 
 typedef enum
 {
-	kMCDisplayOrientationUnknown,
+    // AL-2014-10-24 : [[ Bug 13780 ]] Make sure Android orientation enum matches the orientation map
 	kMCDisplayOrientationPortrait,
+    kMCDisplayOrientationLandscapeLeft,
 	kMCDisplayOrientationPortraitUpsideDown,
 	kMCDisplayOrientationLandscapeRight,
-	kMCDisplayOrientationLandscapeLeft,
 	kMCDisplayOrientationFaceUp,
 } MCAndroidDisplayOrientation;
 
@@ -243,7 +243,6 @@ MCOrientation get_orientation(MCAndroidDisplayOrientation p_orientation)
 		return ORIENTATION_LANDSCAPE_LEFT_BIT;
 	case kMCDisplayOrientationFaceUp:
 		return ORIENTATION_FACE_UP_BIT;
-    case kMCDisplayOrientationUnknown:
 	default:
 		return ORIENTATION_UNKNOWN_BIT;
 	}
