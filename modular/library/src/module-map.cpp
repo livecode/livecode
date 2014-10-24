@@ -129,6 +129,9 @@ void MCMapEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not, MCArrayRef p
     t_value = nil;
     
     r_output = MCArrayFetchValue(p_target, MCArrayIsCaseSensitive(p_target), *t_key, t_value);
+    
+    if (p_is_not)
+        r_output = !r_output;
 }
 
 void MCMapEvalIsAmongTheKeysOfNumeric(integer_t p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
@@ -161,6 +164,9 @@ void MCMapEvalIsAmongTheKeysOfMatrix(MCProperListRef p_needle, bool p_is_not, MC
         MCValueRelease(t_path[i]);
     
     MCMemoryDeleteArray(t_path);
+    
+    if (p_is_not)
+        t_output = !t_output;
     
     r_output = t_output;
 }
@@ -283,4 +289,213 @@ void MCMapStoreElementOfMatrix(MCValueRef p_value, MCArrayRef& x_target, MCPrope
         return;
     
     // ctxt . Throw()
+}
+
+extern void log(const char *module, const char *test, bool result);
+#define log_result(test, result) log("MAP MODULE", test, result)
+void MCMapRunTests()
+{
+/*
+    MCMapFetchElementOfBinary(MCArrayRef p_target, MCDataRef p_key, MCValueRef& r_output)
+    MCMapStoreElementOfBinary(MCValueRef p_value, MCArrayRef& x_target, MCDataRef p_key)
+    MCMapFetchElementOf(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
+    MCMapStoreElementOf(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
+    MCMapFetchElementOfNumeric(MCArrayRef p_target, integer_t p_key, MCValueRef& r_output)
+    MCMapStoreElementOfNumeric(MCValueRef p_value, MCArrayRef& x_target, integer_t p_key)
+    MCMapFetchElementOfMatrix(MCArrayRef p_target, MCProperListRef p_key, MCValueRef& r_output)
+    MCMapStoreElementOfMatrix(MCValueRef p_value, MCArrayRef& x_target, MCProperListRef p_key)
+ */
+    
+    MCAutoArrayRef t_array, t_array_for_keys;
+    MCAutoArrayRef t_caseless, t_cs_array, t_cs_fs_array, t_fs_array;
+    MCArrayCreateMutable(&t_array);
+    
+    MCNewAutoNameRef t_1, t_2, t_3;
+    MCNameCreateWithNativeChars((const char_t *)"1", 1, &t_1);
+    MCNameCreateWithNativeChars((const char_t *)"2", 1, &t_2);
+    MCNameCreateWithNativeChars((const char_t *)"3", 1, &t_3);
+    
+    MCAutoNumberRef t_1n, t_2n, t_3n;
+    MCNumberCreateWithInteger(1, &t_1n);
+    MCNumberCreateWithInteger(2, &t_2n);
+    MCNumberCreateWithInteger(3, &t_3n);
+    
+    MCAutoArray<MCNameRef> t_path;
+    t_path . Push(*t_1);
+    t_path . Push(*t_2);
+    t_path . Push(*t_3);
+    
+    MCAutoArray<MCValueRef> t_list_elts;
+    t_list_elts . Push(*t_1n);
+    t_list_elts . Push(*t_2n);
+    t_list_elts . Push(*t_3n);
+    
+    unichar_t t_chars[6] = {0xE1, 'a', 0x301, 0xC1, 'A', 0x301};
+    
+    MCAutoStringRef t_lc_norm_str, t_uc_norm_str, t_lc_decomp_str, t_uc_decomp_str;
+    MCStringCreateWithChars((const unichar_t *)t_chars, 1, &t_lc_norm_str);
+    MCStringCreateWithChars((const unichar_t *)&t_chars[1], 2, &t_lc_decomp_str);
+    MCStringCreateWithChars((const unichar_t *)&t_chars[3], 1, &t_uc_norm_str);
+    MCStringCreateWithChars((const unichar_t *)&t_chars[4], 2, &t_uc_decomp_str);
+    
+    MCNewAutoNameRef t_lc_norm, t_uc_norm, t_lc_decomp, t_uc_decomp;
+    MCNameCreate(*t_lc_norm_str, &t_lc_norm);
+    MCNameCreate(*t_uc_norm_str, &t_uc_norm);
+    MCNameCreate(*t_lc_decomp_str, &t_lc_decomp);
+    MCNameCreate(*t_uc_decomp_str, &t_uc_decomp);
+    
+    MCAutoArray<MCNameRef> t_keys;
+    t_keys . Push(*t_lc_norm);
+    t_keys . Push(*t_lc_decomp);
+    t_keys . Push(*t_uc_norm);
+    t_keys . Push(*t_uc_decomp);
+    
+    MCAutoArray<MCStringRef> t_strings;
+    t_strings . Push(*t_lc_norm_str);
+    t_strings . Push(*t_lc_decomp_str);
+    t_strings . Push(*t_uc_norm_str);
+    t_strings . Push(*t_uc_decomp_str);
+    
+    MCNameRef t_key = *t_lc_norm;
+    MCArrayCreateWithOptions(false, false, &t_key, t_list_elts . Ptr(), 1, &t_caseless);
+    t_key = *t_lc_decomp;
+    MCArrayCreateWithOptions(false, true, &t_key, t_list_elts . Ptr(), 1, &t_fs_array);
+    t_key = *t_uc_norm;
+    MCArrayCreateWithOptions(true, false, &t_key, t_list_elts . Ptr(), 1, &t_cs_array);
+    t_key = *t_uc_decomp;
+    MCArrayCreateWithOptions(true, true, &t_key, t_list_elts . Ptr(), 1, &t_cs_fs_array);
+    
+    
+    /* MCMapEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output) */
+    bool t_none, t_cs, t_fs, t_cs_fs;
+    MCMapEvalIsAmongTheKeysOf(*t_lc_norm_str, false, *t_caseless, t_none);
+    MCMapEvalIsAmongTheKeysOf(*t_uc_norm_str, false, *t_caseless, t_cs);
+    MCMapEvalIsAmongTheKeysOf(*t_lc_decomp_str, false, *t_caseless, t_fs);
+    MCMapEvalIsAmongTheKeysOf(*t_uc_decomp_str, false, *t_caseless, t_cs_fs);
+    
+    log_result("caseless map, uncased string", t_none);
+    log_result("caseless map, cased string", t_cs);
+    log_result("caseless map, uncased decomp string", t_fs);
+    log_result("caseless map, cased decomp string", t_cs_fs);
+    
+    MCMapEvalIsAmongTheKeysOf(*t_lc_norm_str, true, *t_cs_array, t_none);
+    MCMapEvalIsAmongTheKeysOf(*t_uc_norm_str, false, *t_cs_array, t_cs);
+    MCMapEvalIsAmongTheKeysOf(*t_lc_decomp_str, true, *t_cs_array, t_fs);
+    MCMapEvalIsAmongTheKeysOf(*t_uc_decomp_str, false, *t_cs_array, t_cs_fs);
+    
+    log_result("case sensitive map, uncased string", t_none);
+    log_result("case sensitive map, cased string", t_cs);
+    log_result("case sensitive map, uncased decomp string", t_fs);
+    log_result("case sensitive map, cased decomp string", t_cs_fs);
+    
+    MCMapEvalIsAmongTheKeysOf(*t_lc_norm_str, true, *t_fs_array, t_none);
+    MCMapEvalIsAmongTheKeysOf(*t_uc_norm_str, true, *t_fs_array, t_cs);
+    MCMapEvalIsAmongTheKeysOf(*t_lc_decomp_str, false, *t_fs_array, t_fs);
+    MCMapEvalIsAmongTheKeysOf(*t_uc_decomp_str, false, *t_fs_array, t_cs_fs);
+    
+    log_result("form sensitive map, uncased string", t_none);
+    log_result("form sensitive map, cased string", t_cs);
+    log_result("form sensitive map, uncased decomp string", t_fs);
+    log_result("form sensitive map, cased decomp string", t_cs_fs);
+    
+    MCMapEvalIsAmongTheKeysOf(*t_lc_norm_str, true, *t_cs_fs_array, t_none);
+    MCMapEvalIsAmongTheKeysOf(*t_uc_norm_str, true, *t_cs_fs_array, t_cs);
+    MCMapEvalIsAmongTheKeysOf(*t_lc_decomp_str, true, *t_cs_fs_array, t_fs);
+    MCMapEvalIsAmongTheKeysOf(*t_uc_decomp_str, false, *t_cs_fs_array, t_cs_fs);
+    
+    log_result("case and form sensitive map, uncased string", t_none);
+    log_result("case and form sensitive map map, cased string", t_cs);
+    log_result("case and form sensitive map map, uncased decomp string", t_fs);
+    log_result("case and form sensitive map map, cased decomp string", t_cs_fs);
+    
+    /*MCMapEvalKeysOf(MCArrayRef p_target, MCProperListRef& r_output)*/
+    MCAutoProperListRef t_keys_list;
+    MCArrayCreateWithOptions(true, true, t_keys . Ptr(), (MCValueRef *)t_strings . Ptr(), t_keys . Size(), &t_array_for_keys);
+    MCMapEvalKeysOf(*t_array_for_keys, &t_keys_list);
+    bool t_result;
+    t_result = MCProperListGetLength(*t_keys_list) == 4;
+    
+    uindex_t t_offset;
+    if (t_result)
+        t_result = MCProperListFirstIndexOfElement(*t_keys_list, *t_uc_decomp_str, 0, t_offset);
+
+    if (t_result)
+        t_result = MCProperListFirstIndexOfElement(*t_keys_list, *t_lc_decomp_str, 0, t_offset);
+    
+    if (t_result)
+        t_result = MCProperListFirstIndexOfElement(*t_keys_list, *t_uc_norm_str, 0, t_offset);
+    
+    if (t_result)
+        t_result = MCProperListFirstIndexOfElement(*t_keys_list, *t_lc_norm_str, 0, t_offset);
+    
+    log_result("the keys of", t_result);
+    
+    /*MCMapEvalElementsOf(MCArrayRef p_target, MCProperListRef& r_output)*/
+    
+    MCAutoProperListRef t_elts_list;
+    MCMapEvalElementsOf(*t_array_for_keys, &t_elts_list);
+    t_result = MCProperListGetLength(*t_elts_list) == 4;
+
+    if (t_result)
+        t_result = MCProperListFirstIndexOfElement(*t_elts_list, *t_uc_decomp_str, 0, t_offset);
+    
+    if (t_result)
+        t_result = MCProperListFirstIndexOfElement(*t_elts_list, *t_lc_decomp_str, 0, t_offset);
+    
+    if (t_result)
+        t_result = MCProperListFirstIndexOfElement(*t_elts_list, *t_uc_norm_str, 0, t_offset);
+    
+    if (t_result)
+        t_result = MCProperListFirstIndexOfElement(*t_elts_list, *t_lc_norm_str, 0, t_offset);
+    
+    log_result("the elements of", t_result);
+    
+    /*MCMapEvalNumberOfElementsIn(MCArrayRef p_target, uindex_t& r_output)*/
+
+    uindex_t t_number;
+    MCMapEvalNumberOfElementsIn(*t_array_for_keys, t_number);
+    log_result("the number of elements in", t_number == 4);
+    
+    /*MCMapEvalIsAmongTheElementsOf(MCValueRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)*/
+    
+    t_result = true;
+    if (t_result)
+        MCMapEvalIsAmongTheElementsOf(*t_uc_decomp_str, false, *t_array_for_keys, t_result);
+    
+    if (t_result)
+        MCMapEvalIsAmongTheElementsOf(*t_lc_decomp_str, false, *t_array_for_keys, t_result);
+    
+    if (t_result)
+        MCMapEvalIsAmongTheElementsOf(*t_uc_norm_str, false, *t_array_for_keys, t_result);
+    
+    if (t_result)
+        MCMapEvalIsAmongTheElementsOf(*t_lc_norm_str, false, *t_array_for_keys, t_result);
+    
+    log_result("is among the elements of", t_result);
+    
+    /*MCMapEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
+     MCMapEvalIsAmongTheKeysOfNumeric(integer_t p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
+     MCMapEvalIsAmongTheKeysOfMatrix(MCProperListRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)*/
+    
+    MCArrayStoreValueOnPath(*t_array, true, t_path . Ptr(), t_path . Size(), kMCTrue);
+    
+    MCAutoProperListRef t_list;
+    MCProperListCreateMutable(&t_list);
+    MCProperListPushElements(*t_list, t_list_elts .Ptr(), t_list_elts . Size() - 1);
+    bool t_is_among;
+    MCMapEvalIsAmongTheKeysOfMatrix(*t_list, false, *t_array, t_is_among);
+    
+    log_result("is (partial) among the keys of matrix", t_is_among);
+    
+    MCProperListPushElement(*t_list, *t_3n);
+    
+    MCMapEvalIsAmongTheKeysOfMatrix(*t_list, false, *t_array, t_is_among);
+    
+    log_result("is among the keys of matrix", t_is_among);
+    
+    /*MCMapFetchElementOfNumeric(MCArrayRef p_target, integer_t p_key, MCValueRef& r_output)*/
+    MCValueRef t_value;
+    MCMapFetchElementOfMatrix(*t_array, *t_list, t_value);
+    
+    log_result("fetch element of matrix", t_value == kMCTrue);
 }
