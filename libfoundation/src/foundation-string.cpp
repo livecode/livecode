@@ -1527,7 +1527,7 @@ bool MCStringUnmapSentenceIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
     return MCStringUnmapIndices(self, kMCBreakIteratorTypeSentence, p_locale, p_in_range, r_out_range);
 }
 
-extern MCLocaleRef kMCBasicLocale;
+extern MCLocaleRef kMCLocaleBasic;
 bool MCStringMapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_char_range, MCRange &r_cu_range)
 {
     switch (p_type)
@@ -1540,7 +1540,7 @@ bool MCStringMapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_char
             return MCStringMapCodepointIndices(self, p_char_range, r_cu_range);
             
         case kMCCharChunkTypeGrapheme:
-            return MCStringMapGraphemeIndices(self, kMCBasicLocale, p_char_range, r_cu_range);
+            return MCStringMapGraphemeIndices(self, kMCLocaleBasic, p_char_range, r_cu_range);
     }
     
     MCAssert(false);
@@ -1559,7 +1559,7 @@ bool MCStringUnmapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_cu
             return MCStringUnmapCodepointIndices(self, p_cu_range, r_char_range);
             
         case kMCCharChunkTypeGrapheme:
-            return MCStringUnmapGraphemeIndices(self, kMCBasicLocale, p_cu_range, r_char_range);
+            return MCStringUnmapGraphemeIndices(self, kMCLocaleBasic, p_cu_range, r_char_range);
     }
     
     MCAssert(false);
@@ -4502,7 +4502,7 @@ static uindex_t __MCStringNativize(MCStringRef self)
     
     // Create a character break iterator and go through the string
     MCBreakIteratorRef t_breaker;
-    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeCharacter, t_breaker);
+    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeCharacter, t_breaker);
     /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_breaker, *t_norm);
     
     uindex_t t_current = 0, t_next;

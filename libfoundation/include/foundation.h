@@ -770,7 +770,6 @@ void MCFinalize(void);
 //  ERROR HANDLING
 //
 
-#ifdef __OLD_ERROR__
 typedef uint32_t MCErrorCode;
 enum
 {
@@ -795,7 +794,6 @@ MCErrorCode MCErrorPeek(void);
 
 // Sets the error handler - called whenever MCErrorThrow is called.
 void MCErrorSetHandler(MCErrorHandler handler);
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
