@@ -1369,6 +1369,7 @@ bool MCNameIsEmpty(MCNameRef name);
 // is *not* the same as MCValueIsEqualTo as it is a comparison up to case (of
 // the name's string) rather than exact.
 bool MCNameIsEqualTo(MCNameRef left, MCNameRef right);
+bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive);
 
 // The empty name object;
 extern MCNameRef kMCEmptyName;
@@ -2413,6 +2414,8 @@ bool MCProperListRemoveElement(MCProperListRef list, index_t p_start, index_t p_
 
 bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset);
 bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
+
+bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
 
 ////////////////////////////////////////////////////////////////////////////////
 

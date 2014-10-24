@@ -23,12 +23,14 @@ static bool create_key_for_array(MCStringRef p_string, MCArrayRef p_target, MCNa
     
     bool t_success;
     t_success = true;
-    
+
+    /*
     if (MCArrayIsFormSensitive(p_target) && !MCStringIsNative(p_string))
     {
         t_success = MCStringCreateWithBytes((const byte_t *)MCStringGetCharPtr(p_string), MCStringGetLength(p_string) * 2, kMCStringEncodingNative, false, &t_key_string);
     }
     else
+     */
         t_key_string = p_string;
     
     
@@ -79,7 +81,7 @@ static bool is_not_among_the_elements_of(void *context, MCArrayRef p_target, MCN
 static bool list_array_keys(void *context, MCArrayRef p_target, MCNameRef p_key, MCValueRef p_value)
 {
     MCProperListRef t_list = (MCProperListRef)context;
-    return MCProperListPushElement(t_list, p_key);
+    return MCProperListPushElement(t_list, MCNameGetString(p_key));
 }
 
 static bool list_array_elements(void *context, MCArrayRef p_target, MCNameRef p_key, MCValueRef p_value)

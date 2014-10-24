@@ -119,7 +119,7 @@ bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive,
     if (p_case_sensitive)
         r_array -> flags |= kMCArrayFlagIsCaseSensitive;
 
-    if (p_case_sensitive)
+    if (p_form_sensitive)
         r_array -> flags |= kMCArrayFlagIsFormSensitive;
     
 	return true;
@@ -847,9 +847,7 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MC
 		}
 		else
 		{
-			if ((!p_case_sensitive &&
-				MCNameIsEqualTo(t_entry -> key, p_key)) ||
-				t_entry -> key == p_key)
+            if (MCNameIsEqualTo(t_entry -> key, p_key, p_case_sensitive, MCArrayIsFormSensitive(self)))
 			{
 				r_slot = t_probe;
 				return true;

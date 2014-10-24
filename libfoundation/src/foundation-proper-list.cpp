@@ -498,6 +498,11 @@ bool MCProperListSort(MCProperListRef self, bool p_ascending, MCProperListSortTy
     return false;
 }
 
+bool MCProperListIsEqualTo(MCProperListRef self, MCProperListRef p_other)
+{
+    return __MCProperListIsEqualTo(self, p_other);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void __MCProperListDestroy(__MCProperList *self)
