@@ -77,6 +77,8 @@ void MCStackdirIOCommit (MCStackdirIORef op);
  * information may be available in the r_error_info.  If the
  * MCStackdirStatus is kMCStackdirStatusOOM, then the r_error_info may be
  * incomplete.
+ *
+ * The r_error_info is an array with integer keys, starting from 1.
  */
 MCStackdirStatus MCStackdirIOGetStatus (MCStackdirIORef op, MCArrayRef *r_error_info);
 

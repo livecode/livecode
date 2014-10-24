@@ -92,6 +92,30 @@ bool MCStackdirIONew (MCStackdirIORef &op);
 #define kMCStackdirMagicString MCSTR("Expanded LiveCode Stackfile 1.0.0\n")
 
 /* ----------------------------------------------------------------
+ * [Private] Error recording
+ * ---------------------------------------------------------------- */
+
+inline bool MCStackdirIOHasError (MCStackdirIORef op)
+{
+	return (op->m_status != kMCStackdirStatusSuccess);
+}
+
+/* These functions are used to help populate
+ * MCStackdirIORef::m_error_info.  Please note:
+ *
+ * 1. p_filename arguments must be standard paths.
+ *
+ * 2. p_message arguments should begin with a capital letter and
+ *    should not contain a trailing full stop or newline.
+ *
+ * 3. These functions always return false.
+ */
+
+bool MCStackdirIOErrorIO (MCStackdirIORef op, MCStringRef p_filename, MCStringRef p_message);
+bool MCStackdirIOErrorOutOfMemory (MCStackdirIORef op);
+bool MCStackdirIOErrorBadPath (MCStackdirIORef op, MCStringRef p_message);
+
+/* ----------------------------------------------------------------
  * [Private] Indirect implementations of public functions
  * ---------------------------------------------------------------- */
 
