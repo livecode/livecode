@@ -21,6 +21,7 @@
 		4D7FA7A71594E09500EEF440 /* foundation-string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA79A1594E09500EEF440 /* foundation-string.cpp */; };
 		4D7FA7A81594E09500EEF440 /* foundation-unicodechars.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA79B1594E09500EEF440 /* foundation-unicodechars.cpp */; };
 		4D7FA7A91594E09500EEF440 /* foundation-value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA79C1594E09500EEF440 /* foundation-value.cpp */; };
+		4DA0F80119FE61B500FDA4F3 /* foundation-typeinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA0F80019FE61B500FDA4F3 /* foundation-typeinfo.cpp */; };
 		4DB3EBE416A5C00800E90D30 /* foundation-string-cf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB3EBE316A5C00800E90D30 /* foundation-string-cf.cpp */; };
 		721CAAA81834D10D00858545 /* foundation-locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 721CAAA61834D10D00858545 /* foundation-locale.cpp */; };
 		721CAAA91834D10D00858545 /* foundation-unicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 721CAAA71834D10D00858545 /* foundation-unicode.cpp */; };
@@ -66,6 +67,7 @@
 		4D7FA7AB1594E09F00EEF440 /* foundation-inline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-inline.h"; path = "include/foundation-inline.h"; sourceTree = "<group>"; };
 		4D7FA7AC1594E09F00EEF440 /* foundation-stdlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-stdlib.h"; path = "include/foundation-stdlib.h"; sourceTree = "<group>"; };
 		4D7FA7AD1594E09F00EEF440 /* foundation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = foundation.h; path = include/foundation.h; sourceTree = "<group>"; };
+		4DA0F80019FE61B500FDA4F3 /* foundation-typeinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-typeinfo.cpp"; path = "src/foundation-typeinfo.cpp"; sourceTree = "<group>"; };
 		4DB3EBE316A5C00800E90D30 /* foundation-string-cf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-string-cf.cpp"; path = "src/foundation-string-cf.cpp"; sourceTree = "<group>"; };
 		4DF42A430B048617003F2D95 /* libfoundation.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfoundation.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DF42A520B04862E003F2D95 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -145,6 +147,8 @@
 		4DF42A570B048683003F2D95 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				4D7FA7971594E09500EEF440 /* foundation-private.h */,
+				721CAAAC18350B0E00858545 /* foundation-unicode-private.h */,
 				761D53EB19EBC70B00DBF726 /* foundation-typeconvert.cpp */,
 				1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */,
 				7696676C19E81D92008B0972 /* foundation-chunk.cpp */,
@@ -156,7 +160,6 @@
 				4D7FA7941594E09500EEF440 /* foundation-name.cpp */,
 				4D7FA7951594E09500EEF440 /* foundation-nativechars.cpp */,
 				4D7FA7961594E09500EEF440 /* foundation-number.cpp */,
-				4D7FA7971594E09500EEF440 /* foundation-private.h */,
 				7653455819F656640032E6E2 /* foundation-proper-list.cpp */,
 				4D7FA7981594E09500EEF440 /* foundation-set.cpp */,
 				4D7FA7991594E09500EEF440 /* foundation-stream.cpp */,
@@ -167,9 +170,9 @@
 				4D5837A21806A024006DE6A2 /* foundation-objc.mm */,
 				721CAAA61834D10D00858545 /* foundation-locale.cpp */,
 				721CAAA71834D10D00858545 /* foundation-unicode.cpp */,
-				721CAAAC18350B0E00858545 /* foundation-unicode-private.h */,
 				BE19F5D718FE92600001B410 /* foundation-bidi.cpp */,
 				7237187718E42F580006C484 /* foundation-text.cpp */,
+				4DA0F80019FE61B500FDA4F3 /* foundation-typeinfo.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -199,6 +202,8 @@
 /* Begin PBXProject section */
 		4DF42A350B04860B003F2D95 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4DF42A360B04860B003F2D95 /* Build configuration list for PBXProject "libfoundation" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -226,6 +231,7 @@
 			files = (
 				761D53EC19EBC70B00DBF726 /* foundation-typeconvert.cpp in Sources */,
 				4D7FA79D1594E09500EEF440 /* foundation-array.cpp in Sources */,
+				4DA0F80119FE61B500FDA4F3 /* foundation-typeinfo.cpp in Sources */,
 				4D7FA79E1594E09500EEF440 /* foundation-core.cpp in Sources */,
 				4D7FA79F1594E09500EEF440 /* foundation-debug.cpp in Sources */,
 				4D7FA7A01594E09500EEF440 /* foundation-error.cpp in Sources */,

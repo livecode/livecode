@@ -14,8 +14,8 @@ enum MCScriptObjectKind
 
 struct MCScriptObject
 {
-#ifdef _DEBUG
-    uint32_t __object_marker__
+#ifndef NDEBUG
+    uint32_t __object_marker__;
 #endif
     uint32_t references;
     MCScriptObjectKind kind;
@@ -24,7 +24,7 @@ struct MCScriptObject
 bool MCScriptCreateObject(MCScriptObjectKind kind, size_t size, MCScriptObject*& r_object);
 void MCScriptDestroyObject(MCScriptObject *object);
 
-void MCScriptRetainObject(MCScriptObject *object);
+MCScriptObject *MCScriptRetainObject(MCScriptObject *object);
 void MCScriptReleaseObject(MCScriptObject *object);
 
 void MCScriptReleaseObjectArray(MCScriptObject **elements, uindex_t count);
@@ -34,9 +34,26 @@ template<typename T> inline void MCScriptReleaseArray(T **elements, uindex_t cou
     MCScriptReleaseObjectArray((MCScriptObject **)elements, count);
 }
 
+#ifndef NDEBUG
+
+#define __MCSCRIPTOBJECT_MARKER__ 0xFEDEFECE
+
+extern void __MCScriptValidateObjectFailed(MCScriptObject *object, const char *function, const char *file, int line);
+extern void __MCScriptValidateObjectAndKindFailed(MCScriptObject *object, MCScriptObjectKind kind, const char *function, const char *file, int line);
+extern void __MCScriptAssertFailed(const char *label, const char *expr, const char *function, const char *file, int line);
+
+#define __MCScriptValidateObject__(obj) (((obj) == nil || (obj) -> __object_marker__ != __MCSCRIPTOBJECT_MARKER__) ? __MCScriptValidateObjectFailed((obj), __func__, __FILE__, __LINE__) : (void)0)
+#define __MCScriptValidateObjectAndKind__(obj, m_kind) (((obj) == nil || (obj) -> __object_marker__ != __MCSCRIPTOBJECT_MARKER__) || (obj) -> kind != (m_kind) ? __MCScriptValidateObjectAndKindFailed((obj), m_kind, __func__, __FILE__, __LINE__) : (void)0)
+#define __MCScriptAssert__(expr, label) ((!(expr)) ? __MCScriptAssertFailed(label, #expr, __func__, __FILE__, __LINE__) : (void)0)
+#define __MCScriptUnreachable__(label) (__MCScriptAssert__(false, (label)))
+
+#else
+
 #define __MCScriptValidateObject__(obj)
 #define __MCScriptValidateObjectAndKind__(obj, kind)
 #define __MCScriptAssert__(expr, label)
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -92,7 +109,7 @@ struct MCScriptImportedDefinition
     uindex_t module;
     MCScriptDefinitionKind kind;
     MCNameRef name;
-    MCTypeRef type;
+    MCTypeInfoRef type;
 };
 
 struct MCScriptDefinition
@@ -107,7 +124,7 @@ struct MCScriptExternalDefinition: public MCScriptDefinition
 
 struct MCScriptTypeDefinition: public MCScriptDefinition
 {
-	MCTypeRef type;
+	MCTypeInfoRef type;
 };
 
 struct MCScriptConstantDefinition: public MCScriptDefinition
@@ -117,21 +134,25 @@ struct MCScriptConstantDefinition: public MCScriptDefinition
 
 struct MCScriptVariableDefinition: public MCScriptDefinition
 {
-	MCTypeRef type;
+	MCTypeInfoRef type;
     
     // (computed) The index of the variable in an instance's slot table.
-	uindex_t slot;
+	uindex_t slot_index;
 };
 
 struct MCScriptHandlerDefinition: public MCScriptDefinition
 {
-	MCTypeRef signature;
+	MCTypeInfoRef signature;
 	uindex_t address;
+    
+    // The number of slots required in a frame in order to execute this handler.
+    // This is the sum of parameter count, local count and temporary count.
+    uindex_t slot_count;
 };
 
 struct MCScriptForeignHandlerDefinition: public MCScriptDefinition
 {
-    MCTypeRef signature;
+    MCTypeInfoRef signature;
     MCStringRef binding;
 };
 
@@ -143,8 +164,13 @@ struct MCScriptPropertyDefinition: public MCScriptDefinition
 
 struct MCScriptEventDefinition: public MCScriptDefinition
 {
-	MCTypeRef signature;
+	MCTypeInfoRef signature;
 };
+
+MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *definition);
+MCScriptHandlerDefinition *MCScriptDefinitionAsHandler(MCScriptDefinition *definition);
+
+////////////////////////////////////////////////////////////////////////////////
 
 struct MCScriptModule: public MCScriptObject
 {
@@ -191,6 +217,9 @@ struct MCScriptModule: public MCScriptObject
 
 void MCScriptDestroyModule(MCScriptModuleRef module);
 
+bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptPropertyDefinition*& r_definition);
+bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef module, MCNameRef handler, MCScriptHandlerDefinition*& r_definition);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCScriptInstance: public MCScriptObject
@@ -204,6 +233,8 @@ struct MCScriptInstance: public MCScriptObject
 
 void MCScriptDestroyInstance(MCScriptInstanceRef instance);
 
+bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScriptHandlerDefinition *handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_result);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // The bytecode represents a simple register machine. It has a stack of activation
@@ -213,9 +244,8 @@ void MCScriptDestroyInstance(MCScriptInstanceRef instance);
 // The array of registers is referenced directly in instructions with a 0-based
 // index.
 //
-// Parameters and globals are accessed indirectly - they must be copied into a
-// register before use; and copied back upon update. Both parameters and globals
-// are referenced with a 0-based index.
+// Globals are accessed indirectly - they must be copied into a register before use;
+// and copied back upon update.
 //
 // Each instruction is represented by a single byte, with arguments being encoded
 // sequentially as multi-byte (signed) integers.
@@ -239,21 +269,29 @@ enum MCScriptBytecodeOp
 	kMCScriptBytecodeOpJumpIfTrue,
 	kMCScriptBytecodeOpJumpIfFalse,
 	
+	// Constant register assignment:
+	//   assign <dst>, <index>
+	// Dst is a register and index is a constant pool index. The value in dst is
+    // freed, and the constant value at the specified index is assigned to it.
+	kMCScriptBytecodeOpAssignConstant,
+    
 	// Register assignment:
 	//   assign <dst>, <src>
 	// Dst and Src are registers. The value in dst is freed, and src copied
 	// into it.
 	kMCScriptBytecodeOpAssign,
 	
-	// Enter a handler:
-	//   enter <regcount>
-	// Begin a call, and <regcount> is the number of registers required for it.
-	kMCScriptBytecodeEnter,
-	// Leave a handler
-	//   leave
-	// End a call, returning control to the next instruction after the invoke.
-	kMCScriptBytecodeLeave,
-	
+    // Type conversion:
+    //   typecheck <reg>, <typeinfo>
+    // Reg is a register, and index is a definition. Throws an error if the value
+    // in <reg> does not conform to the given type.
+    kMCScriptBytecodeOpTypecheck,
+    
+	// Return control to caller:
+	//   return
+    // Return from a call.
+	kMCScriptBytecodeOpReturn,
+    
 	// Direct handler invocation:
 	//   invoke <index>, <arg_1>, ..., <arg_n>
 	// Handler with index <index> is invoked with the given registers as arguments.
@@ -276,11 +314,11 @@ enum MCScriptBytecodeOp
 	// Parameter fetch:
 	//   fetch-param <dst>, <param-index>
 	// Assigns the current value of <param-index> to register <dst>.
-	kMCScriptBytecodeOpFetchParameter,
+	//kMCScriptBytecodeOpFetchParameter,
 	// Parameter store:
 	//   store-param <src>, <param-index>
 	// Assigns the current value of register <src> to <param-index>
-	kMCScriptBytecodeOpStoreParameter,
+	//kMCScriptBytecodeOpStoreParameter,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -363,15 +401,22 @@ enum MCScriptEncodedValueKind
     kMCScriptEncodedValueKindNull,
     kMCScriptEncodedValueKindTrue,
     kMCScriptEncodedValueKindFalse,
-    kMCScriptEncodedValueKindZero,
-    kMCScriptEncodedValueKindOne,
-    kMCScriptEncodedValueKindMinusOne,
+    kMCScriptEncodedValueKindZeroInteger,
+    kMCScriptEncodedValueKindOneInteger,
+    kMCScriptEncodedValueKindMinusOneInteger,
     kMCScriptEncodedValueKindInteger,
+    kMCScriptEncodedValueKindZeroReal,
+    kMCScriptEncodedValueKindOneReal,
+    kMCScriptEncodedValueKindMinusOneReal,
     kMCScriptEncodedValueKindReal,
     kMCScriptEncodedValueKindEmptyString,
     kMCScriptEncodedValueKindString,
     kMCScriptEncodedValueKindEmptyName,
     kMCScriptEncodedValueKindName,
+    kMCScriptEncodedValueKindEmptyData,
+    kMCScriptEncodedValueKindData,
+    kMCScriptEncodedValueKindEmptyArray,
+    kMCScriptEncodedValueKindArray,
     kMCScriptEncodedValueKindNullType,
     kMCScriptEncodedValueKindBooleanType,
     kMCScriptEncodedValueKindIntegerType,

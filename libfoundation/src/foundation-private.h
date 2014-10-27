@@ -47,6 +47,45 @@ struct __MCValue
 
 //////////
 
+enum
+{
+    kMCTypeInfoTypeCodeMask = 0xff,
+};
+
+struct __MCTypeInfo
+{
+    MCNameRef name;
+    union
+    {
+        struct
+        {
+            MCValueCustomCallbacks callbacks;
+        } custom;
+        struct
+        {
+            MCRecordTypeFieldInfo *fields;
+            uindex_t field_count;
+        } record;
+        struct
+        {
+            MCEnumTypeFieldInfo *fields;
+            uindex_t field_count;
+        } enumeration;
+        struct
+        {
+            MCHandlerTypeFieldInfo *fields;
+            uindex_t field_count;
+            MCTypeInfoRef return_type;
+        } handler;
+        struct
+        {
+            MCTypeInfoRef basetype;
+        } opaque;
+    };
+};
+
+//////////
+
 struct __MCNull: public __MCValue
 {
 };

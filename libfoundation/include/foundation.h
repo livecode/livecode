@@ -550,7 +550,7 @@ struct MCRange
 //
 
 typedef void *MCValueRef;
-typedef struct __MCType *MCTypeRef;
+typedef struct __MCTypeInfo *MCTypeInfoRef;
 typedef struct __MCNull *MCNullRef;
 typedef struct __MCBoolean *MCBooleanRef;
 typedef struct __MCNumber *MCNumberRef;
@@ -1089,14 +1089,14 @@ enum
     kMCValueTypeCodeData,
 	kMCValueTypeCodeArray,
 	kMCValueTypeCodeList,
-	kMCValueTypeCodeSet,
-	kMCValueTypeCodePoint,
-	KMCValueTypeCodeRectangle,
+    kMCValueTypeCodeSet,
+    kMCValueTypeCodeProperList,
 	kMCValueTypeCodeEnum,
 	kMCValueTypeCodeRecord,
-	kMCValueTypeCodeType,
+	kMCValueTypeCodeHandler,
+    kMCValueTypeCodeOpaque,
 	kMCValueTypeCodeCustom,
-    kMCValueTypeCodeProperList,
+	kMCValueTypeCodeTypeInfo,
 };
 
 enum
@@ -1122,6 +1122,9 @@ bool MCValueCreateCustom(const MCValueCustomCallbacks *callbacks, size_t extra_b
 
 // Fetch the typecode of the given value.
 MCValueTypeCode MCValueGetTypeCode(MCValueRef value);
+
+// Fetch the typeinfo of the given value.
+MCTypeInfoRef MCValueGetTypeInfo(MCValueRef value);
 
 // Fetch the retain count.
 uindex_t MCValueGetRetainCount(MCValueRef value);
@@ -1247,35 +1250,64 @@ template<typename T> inline bool MCValueCreateCustom(const MCValueCustomCallback
 //  TYPE (META) DEFINITIONS
 //
 
-extern MCTypeRef kMCNullType;
-extern MCTypeRef kMCBooleanType;
-extern MCTypeRef kMCIntegerType;
-extern MCTypeRef kMCNumberType;
-extern MCTypeRef kMCStringType;
-extern MCTypeRef kMCDataType;
-extern MCTypeRef kMCArrayType;
+// A TypeInfoRef is a description of a type. TypeInfo's are uniqued objects with
+// equality of typeinfo's defined by the typeinfo's kind.
 
-// Return the typecode of a value of the give type.
-MCValueTypeCode MCTypeGetTypeCode(MCTypeRef type);
+extern MCTypeInfoRef kMCNullTypeInfo;
+extern MCTypeInfoRef kMCBooleanTypeInfo;
+extern MCTypeInfoRef kMCIntegerTypeInfo;
+extern MCTypeInfoRef kMCNumberTypeInfo;
+extern MCTypeInfoRef kMCStringTypeInfo;
+extern MCTypeInfoRef kMCDataTypeInfo;
+extern MCTypeInfoRef kMCArrayTypeInfo;
 
-bool MCIntegerRangeTypeCreate(integer_t minimum, integer_t maximum, MCTypeRef& r_type);
-bool MCUnsignedIntegerRangeTypeCreate(uinteger_t minimum, uinteger_t maximum, MCTypeRef& r_type);
+//////////
+
+// Return the typecode of a value of the given type.
+MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef type);
+
+// Return the name of the value of the given type.
+MCNameRef MCTypeInfoGetName(MCTypeInfoRef type);
+
+// Returns true if 'source' can be assigned to 'target'.
+bool MCTypeInfoConformsTo(MCTypeInfoRef source, MCTypeInfoRef target);
+
+//////////
+
+// Create a typeinfo which wraps the pre-existing hardcoded typecode based ValueRefs.
+bool MCBuiltinTypeInfoCreate(MCValueTypeCode code, MCTypeInfoRef& r_typeinfo);
+
+//////////
+
+// Create a typeinfo which is based on a custom valueref.
+bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *callbacks, MCTypeInfoRef& r_typeinfo);
+
+//////////
+
+// Create an opaque typeinfo.
+bool MCOpaqueTypeInfoCreate(MCTypeInfoRef basetype, void *info, MCTypeInfoRef& r_typeinfo);
+
+//////////
 
 struct MCEnumTypeFieldInfo
 {
 	MCNameRef name;
 };
 
-bool MCEnumTypeCreate(const MCEnumTypeFieldInfo *fields, uindex_t field_count, MCTypeRef& r_type);
+bool MCEnumTypeInfoCreate(const MCEnumTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef& r_typeinfo);
+
+//////////
 
 struct MCRecordTypeFieldInfo
 {
 	MCNameRef name;
-	MCTypeRef type;
+	MCTypeInfoRef type;
 	unsigned int width;
 };
 
-bool MCRecordTypeCreate(const MCRecordTypeFieldInfo *fields, uindex_t field_count, MCTypeRef& r_type);
+bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef& r_typeinfo);
+
+//////////
 
 enum MCHandlerTypeFieldMode
 {
@@ -1287,11 +1319,22 @@ enum MCHandlerTypeFieldMode
 struct MCHandlerTypeFieldInfo
 {
 	MCNameRef name;
-	MCTypeRef type;
+	MCTypeInfoRef type;
 	MCHandlerTypeFieldMode mode;
 };
 
-bool MCHandlerTypeCreate(const MCHandlerTypeFieldInfo *fields, uindex_t field_count, MCTypeRef return_type, MCTypeRef& r_type);
+bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
+MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
+uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
+MCNameRef MCHandlerTypeInfoGetParameterName(MCTypeInfoRef typeinfo, uindex_t index);
+MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef typeinfo, uindex_t index);
+MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typeinfo, uindex_t index);
+
+//////////
+
+// FOR LATER:
+//   bool MCIntegerRangeTypeCreate(integer_t minimum, integer_t maximum, MCTypeInfoRef& r_type);
+//   bool MCUnsignedIntegerRangeTypeCreate(uinteger_t minimum, uinteger_t maximum, MCTypeInfoRef& r_type);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
