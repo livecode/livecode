@@ -76,6 +76,8 @@ static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The followi
 #define NEWHEADERSIZE 8
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
+// AL-2014-10-27: [[ Bug 12558 ]] REVO7000 is a valid stackfile header
+static const char *newheader7000 = "REVO7000";
 
 MCDispatch::MCDispatch()
 {
@@ -424,7 +426,9 @@ IO_stat readheader(IO_handle& stream, char *version)
 	{
 		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
 		if (strncmp(tnewheader, newheader, NEWHEADERSIZE) == 0 ||
-			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0)
+			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0 ||
+            // AL-2014-10-27: [[ Bug 12558 ]] REVO7000 is a valid stackfile header
+            strncmp(tnewheader, newheader7000, NEWHEADERSIZE) == 0)
 		{
 			sprintf(version, "%c.%c.%c.%c", tnewheader[4], tnewheader[5], tnewheader[6], tnewheader[7]);
 			if (tnewheader[7] == '0')
