@@ -346,6 +346,9 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCBase64Encode;
 	case F_BASE_CONVERT:
 		return new MCBaseConvert;
+    // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+    case F_BIDI_DIRECTION:
+        return new MCBidiDirection;
 	case F_BINARY_ENCODE:
 		return new MCBinaryEncode;
 	case F_BINARY_DECODE:

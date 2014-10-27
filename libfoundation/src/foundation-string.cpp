@@ -577,10 +577,13 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					}
 				}
 				
+				// MW-2014-10-23: [[ Bug 13757 ]] Make sure we process the VS specific 'I64d' format
+				//   as 64-bit.
 				if (strncmp(t_format_ptr, "lld", 3) == 0 ||
 					strncmp(t_format_ptr, "llu", 3) == 0 ||
 					strncmp(t_format_ptr, "lf", 2) == 0 ||
-					strncmp(t_format_ptr, "f", 1) == 0)
+					strncmp(t_format_ptr, "f", 1) == 0 ||
+					strncmp(t_format_ptr, "I64d", 4) == 0)
 					t_arg_count += FORMAT_ARG_64_BIT;
 				else
 					t_arg_count += FORMAT_ARG_32_BIT;
@@ -1281,7 +1284,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         MCRange t_input, t_out;
         t_input . offset = 0;
         t_input . length = self -> char_count;
-        MCStringUnmapCodepointIndices(self, t_input, t_out);
+        MCStringMapCodepointIndices(self, t_input, t_out);
     }
     
     // Quick-n-dirty workaround
@@ -1291,8 +1294,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         r_out_range = p_in_range;
         return true;
     }
-    
-    
+
     return MCStringMapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
 }
 
@@ -1700,6 +1702,15 @@ bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r
 	return true;
 }
 
+bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count)
+{
+    MCAutoStringRef t_normalized;
+    if (!MCStringNormalizedCopyNFC(string, &t_normalized))
+        return false;
+    
+    return MCStringConvertToNative(*t_normalized, r_chars, r_char_count);
+}
+
 bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_char_count)
 {
 	// Allocate an array of chars one byte bigger than needed. As the allocated array
@@ -1713,6 +1724,14 @@ bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_cha
 	return true;
 }
 
+bool MCStringNormalizeAndConvertToCString(MCStringRef string, char*& r_cstring)
+{
+    MCAutoStringRef t_normalized;
+    if (!MCStringNormalizedCopyNFC(string, &t_normalized))
+        return false;
+    
+    return MCStringConvertToCString(*t_normalized, r_cstring);
+}
 
 bool MCStringConvertToCString(MCStringRef p_string, char*& r_cstring)
 {

@@ -310,6 +310,7 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
                 if (t_success)
                 {
                     uindex_t t_elements_over;
+                    t_elements_over = 0;
                     
                     // We iterate as long as one element still has uncombined rows
                     while (t_success && t_elements_over != t_count)
@@ -350,7 +351,8 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
                         
                         // One more row has been combined - doing it anyway mimics the previous behaviour of having an empty row
                         // added in the end when combining by columns
-                        MCListAppend(*t_list, *t_row);
+                        if (t_elements_over != t_count)
+                            MCListAppend(*t_list, *t_row);
                     }
                 }
                 
@@ -475,22 +477,12 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
                     t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
                 
                 if (t_success)
-                    t_success = MCStringAppendSubstring(t_temp_array[t_column_index], p_string, t_range);
-                
-                // SN-2014-09-01: [[ Bug 13297 ]] 'split by column' should append a row delimiter
-                //  *after* each element, including the last one
-                if (t_success)
-                    t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
+                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", &t_range, p_string);
             }
             else
             {
                 // AL-2014-06-12: [[ Bug 12610 ]] Range parameter to MCStringFormat must be a pointer to an MCRange
-                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", &t_range, p_string);
-                
-                // SN-2014-09-01: [[ Bug 13297 ]] 'split by column' should append a row delimiter
-                //  *after* each element, including the last one
-                if (t_success)
-                    t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
+                t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%@%*@", t_row_delim, &t_range, p_string);
             }
             
             // Next cell
@@ -1167,12 +1159,16 @@ void MCArraysEvalTransposeMatrix(MCExecContext& ctxt, MCArrayRef p_matrix, MCArr
 
 void MCArraysEvalIsAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
-	r_result = MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray;
+    // FG-2014-10-21: [[ Bugfix 13737 ]] An array is only an array if it has at
+    // least one key (i.e the empty array is not an array...)
+    r_result = MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray
+        && MCArrayGetCount((MCArrayRef)p_value) > 0;
 }
 
 void MCArraysEvalIsNotAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
-	r_result = MCValueGetTypeCode(p_value) != kMCValueTypeCodeArray;
+    MCArraysEvalIsAnArray(ctxt, p_value, r_result);
+    r_result = !r_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

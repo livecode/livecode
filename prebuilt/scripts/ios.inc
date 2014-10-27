@@ -48,3 +48,8 @@ if [ -e "${XCODES_DIR}/Xcode_5_1_0" ] ; then
 	addiOS "${XCODES_DIR}/Xcode_5_1_0/Xcode.app/Contents/Developer" iPhoneSimulator 7.1 i386
 	addiOS "${XCODES_DIR}/Xcode_5_1_0/Xcode.app/Contents/Developer" iPhoneOS 7.1 armv7
 fi
+if [ -e "${XCODES_DIR}/Xcode_6_0_0" ] ; then
+	addiOS "${XCODES_DIR}/Xcode_6_0_0/Xcode.app/Contents/Developer" iPhoneSimulator 8.0 i386
+	addiOS "${XCODES_DIR}/Xcode_6_0_0/Xcode.app/Contents/Developer" iPhoneOS 8.0 armv7
+fi
+

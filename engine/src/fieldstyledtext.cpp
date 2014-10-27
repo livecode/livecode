@@ -396,9 +396,10 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 
 		// Set the block's 'text' or 'unicodeText' entry in the block's run array.
 		// Depending on whether its unicode or not.
+        // FG-2014-10-21: [[ Bugfix 13742 ]] Only export as "text" in 7.0+
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ MCStringCopySubstring(p_event_data.m_text, p_event_data.m_range, &t_string);
-        /* UNCHECKED */ MCArrayStoreValue(ctxt . last_run, true, p_event_type == kMCFieldExportEventUnicodeRun ? MCNAME("unicodeText") : MCNAME("text"), *t_string);
+        /* UNCHECKED */ MCArrayStoreValue(ctxt . last_run, true, MCNAME("text"), *t_string);
 
 		// Set the block's 'metadata' entry in the block's run array.
 		if (p_event_data . character_style . has_metadata)
@@ -433,20 +434,11 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
         
         MCValueRef t_value;
         MCNameRef t_key;
-        t_key = ctxt . last_run_unicode ? MCNAME("unicodeText") : MCNAME("text");
+        t_key = MCNAME("text");
         MCAutoStringRef t_new_string;
         MCArrayFetchValue(ctxt . last_run, true, t_key, t_value);
         
-		if (ctxt . last_run_unicode)
-		{
-			uint16_t t_vtab;
-			t_vtab = 11;
-            MCAutoStringRef t_string;
-            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)&t_vtab, 2, kMCStringEncodingUTF16, false, &t_string);
-            MCStringFormat(&t_new_string, "%@%@", (MCStringRef)t_value, *t_string);
-		}
-		else
-            MCStringFormat(&t_new_string, "%@\x0b", (MCStringRef)t_value);
+        MCStringFormat(&t_new_string, "%@\x0b", (MCStringRef)t_value);
         
         /* UNCHECKED */ MCArrayStoreValue(ctxt . last_run, true, t_key, *t_new_string);
 	}

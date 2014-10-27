@@ -1080,7 +1080,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 	// MW-2011-09-14: [[ Redraw ]] We lock the screen between before closeCard and until
 	//   after preOpenCard.
 	MCRedrawLockScreen();
-
+    
 	MCCard *oldcard = curcard;
 	Boolean oldlock = MClockmessages;
 	if (card != oldcard)
@@ -1125,9 +1125,11 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		//   again - in particular, players will keep playing.
 		curcard->open();
 		
+        
 		// MW-2011-11-23: [[ Bug ]] Close the old card here to ensure no players
 		//   linger longer than they should.
 		oldcard -> close();
+        
 
 		// MW-2011-09-12: [[ MacScroll ]] Use 'getnextscroll()' to see if anything needs
 		//   changing on that score.
@@ -1140,12 +1142,36 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		updatecardsize();
 
 		// MW-2008-10-31: [[ ParentScripts ]] Send preOpenControl appropriately
-		if (curcard -> openbackgrounds(true, oldcard) == ES_ERROR
-		        || curcard != card || !opened
-		        || curcard->message(MCM_preopen_card) == ES_ERROR
-		        || curcard != card || !opened
-				|| curcard -> opencontrols(true) == ES_ERROR
-				|| curcard != card || !opened)
+        bool t_error;
+        t_error = false;
+        
+        if (!t_error)
+            t_error = curcard -> openbackgrounds(true, oldcard) == ES_ERROR || curcard != card || !opened;
+
+        if (!t_error)
+        {
+#ifdef FEATURE_PLATFORM_PLAYER
+            // PM-2014-10-13: [[ Bug 13569 ]] Detach all players before any messages are sent
+            for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+                if (t_player -> getstack() == curcard -> getstack())
+                    t_player -> detachplayer();
+#endif
+                
+            t_error = curcard->message(MCM_preopen_card) == ES_ERROR || curcard != card || !opened;
+        }
+        
+        if (!t_error)
+        {
+            t_error = curcard -> opencontrols(true) == ES_ERROR || curcard != card || !opened;
+#ifdef FEATURE_PLATFORM_PLAYER
+            // PM-2014-10-13: [[ Bug 13569 ]] after any messages are sent, attach all players previously detached
+             for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+                 if (t_player -> getstack() == curcard -> getstack())
+                    t_player -> attachplayer();
+#endif
+        }
+        
+        if (t_error)
 		{
 			// MW-2011-08-18: [[ Redraw ]] Use global screen lock
 			MCRedrawUnlockScreen();
@@ -1159,6 +1185,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 				return ES_ERROR;
 			}
 		}
+        
 		MClockmessages = True;
 
 		if (mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED)
@@ -1192,7 +1219,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 		if (card != oldcard)
 		{
 			MClockmessages = oldlock;
-
+ 
 			// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
 			if (curcard -> openbackgrounds(false, oldcard) == ES_ERROR
 			        || curcard != card
@@ -1206,7 +1233,8 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 				else
 					return ES_ERROR;
 			}
-			if (wasfocused)
+ 
+            if (wasfocused)
 				curcard->kfocus();
 			if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
 				curcard->message(MCM_mouse_enter);
@@ -1233,12 +1261,13 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 			else
 				return ES_ERROR;
 		}
-		
+   		
 		if (wasfocused)
 			kfocus();
 		if (MCmousestackptr == this && !mfocus(MCmousex, MCmousey))
 			curcard->message(MCM_mouse_enter);
 	}
+    
 	return ES_NORMAL;
 }
 

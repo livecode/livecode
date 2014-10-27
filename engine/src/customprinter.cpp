@@ -358,12 +358,14 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		{
             // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
             // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-			if (!(p_mark -> rectangle . inset % 2))
+            // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
+            if (p_mark -> rectangle . inset && !(p_mark -> rectangle . inset % 2))
 				p_mark -> rectangle . inset ++;
+            // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
 			p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2,
 														   p_mark -> rectangle . bounds . y + p_mark -> rectangle . inset / 2, 
-														   p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset, 
-														   p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset);
+                                                           MCMin(p_mark -> rectangle . bounds . width, p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset),
+                                                           MCMin(p_mark -> rectangle . bounds . height, p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset));
 			
 			MCPath *t_path;
 			if (p_mark -> stroke != nil && p_mark -> rectangle . bounds . height == 1)
@@ -385,12 +387,14 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		{
             // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
             // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+            // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
 			if (!(p_mark -> round_rectangle . inset % 2))
 				p_mark -> round_rectangle . inset ++;
+            // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
 			p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2,
 														   p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . inset / 2, 
-														   p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset, 
-														   p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset);
+                                                           MCMin(p_mark -> round_rectangle . bounds . width, p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset),
+                                                           MCMin(p_mark -> round_rectangle . bounds . height, p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset));
 			
 			MCPath *t_path;
 			t_path = MCPath::create_rounded_rectangle(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius / 2, p_mark -> stroke != nil);
@@ -407,12 +411,14 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		{
             // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
             // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+            // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
 			if (!(p_mark -> arc . inset % 2))
 				p_mark -> arc . inset ++;
+            // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
 			p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2,
 														   p_mark -> arc . bounds . y + p_mark -> arc . inset / 2, 
-														   p_mark -> arc . bounds . width - p_mark -> arc . inset, 
-														   p_mark -> arc . bounds . height - p_mark -> arc . inset);
+                                                           MCMin(p_mark -> arc . bounds . width, p_mark -> arc . bounds . width - p_mark -> arc . inset),
+                                                           MCMin(p_mark -> arc . bounds . height, p_mark -> arc . bounds . height - p_mark -> arc . inset));
 			
 			MCPath *t_path;
 			if (p_mark -> arc . complete)
@@ -2104,13 +2110,17 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 			uindex_t t_engine_dir_end;
             /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_engine_dir_end);
 			MCAutoStringRef t_module_path;
-			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*@/revpdfprinter.so", MCRangeMake(0, t_engine_dir_end), MCcmd);
+            MCRange t_range = MCRangeMake(0, t_engine_dir_end);
+            // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
+			/* UNCHECKED */ MCStringFormat(&t_module_path, "%*@/revpdfprinter.so", &t_range, MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 			uindex_t t_engine_dir_end;
             /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_engine_dir_end);
-			MCAutoStringRef t_module_path;            
-			MCStringFormat(&t_module_path, "%.*@/revpdfprinter.dylib", MCRangeMake(0, t_engine_dir_end), MCcmd);
+			MCAutoStringRef t_module_path;
+            MCRange t_range = MCRangeMake(0, t_engine_dir_end);
+            // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
+			MCStringFormat(&t_module_path, "%*@/revpdfprinter.dylib", &t_range, MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(_SERVER)
 			

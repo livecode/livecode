@@ -96,6 +96,9 @@ bool MCSystemSetLocationCalibrationTimeout(int32_t);
 void MCSystemSensorInitialize(void);
 void MCSystemSensorFinalize(void);
 
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+bool MCSystemGetLocationAuthorizationStatus(MCStringRef& r_status);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCSensorPostChangeMessage(MCSensorType p_sensor);

@@ -787,20 +787,35 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
     if (!ctxt.HasError())
     {
-        for (uindex_t i = 0; i < t_result_count; i++)
+        uinteger_t t_skipped;
+        t_skipped = 0;
+        for (uindex_t i = 0; i < t_result_count && i < r_value . int_value; i++)
         {
-            // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
-            MCContainer *t_container;
-            if (!t_params->evalcontainer(ctxt, t_container))
+            if (t_results[i] != nil)
             {
-                ctxt . LegacyThrow(EE_BINARYD_BADDEST);
-                return;
+                // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
+                // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
+                MCAutoPointer<MCContainer> t_container;
+                if (!t_params->evalcontainer(ctxt, &t_container))
+                {
+                    ctxt . LegacyThrow(EE_BINARYD_BADDEST);
+                    return;
+                }
+                
+                /* UNCHECKED */ t_container->set_valueref(t_results[i]);
             }
-            
-            /* UNCHECKED */ t_container->set_valueref(t_results[i]);
-            
+            else
+            {
+                t_skipped++;
+            }
             t_params = t_params->getnext();
         }
+        
+        // Account for the skipped ("x") parameters
+        if (t_skipped >= r_value . int_value)
+            r_value . int_value = 0;
+        else
+            r_value . int_value -= t_skipped;
     }
 }
 
@@ -3427,13 +3442,14 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         for (uindex_t i = 0; i < t_result_count; i++)
         {
             // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
-            MCContainer *t_container;
-            if (!t_result_params->evalcontainer(ctxt, t_container))
+            // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
+            MCAutoPointer<MCContainer> t_container;
+            if (!t_result_params->evalcontainer(ctxt, &t_container))
             {
                 ctxt . LegacyThrow(EE_MATCH_BADDEST);
                 return;
             }
-            
+
             /* UNCHECKED */ t_container->set_valueref(t_results[i]);
             
             t_result_params = t_result_params->getnext();
@@ -5974,15 +5990,15 @@ void MCMCISendString::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 #endif /* MCMCISendString */
     
     MCAutoStringRef t_string;
-    MCStringRef t_result;
+    MCAutoStringRef t_result;
 
     if (!MCExecValueTraits<MCStringRef>::eval(ctxt, string, EE_MCISENDSTRING_BADSOURCE, &t_string))
         return;
     
-    MCMultimediaEvalMCISendString(ctxt, *t_string, t_result);
+    MCMultimediaEvalMCISendString(ctxt, *t_string, &t_result);
     
     if (!ctxt . HasError())
-        MCExecValueTraits<MCStringRef>::set(r_value, t_result);
+        MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(*t_result));
 }
 
 void MCMCISendString::compile(MCSyntaxFactoryRef ctxt)
@@ -7294,19 +7310,19 @@ void MCUuidFunc::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	}
 
 	// Generate the uuid.
-    MCStringRef t_uuid;
+    MCAutoStringRef t_uuid;
 	switch(t_type)
 	{
         case kMCUuidTypeRandom:
-            MCEngineEvalRandomUuid(ctxt, t_uuid);
+            MCEngineEvalRandomUuid(ctxt, &t_uuid);
             break;
             
         case kMCUuidTypeMD5:
-            MCEngineEvalMD5Uuid(ctxt, *t_namespace_id, *t_name, t_uuid);
+            MCEngineEvalMD5Uuid(ctxt, *t_namespace_id, *t_name, &t_uuid);
             break;
             
         case kMCUuidTypeSHA1:
-            MCEngineEvalSHA1Uuid(ctxt, *t_namespace_id, *t_name, t_uuid);
+            MCEngineEvalSHA1Uuid(ctxt, *t_namespace_id, *t_name, &t_uuid);
             break;
             
         default:
@@ -7315,7 +7331,7 @@ void MCUuidFunc::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	}
 	
     if (!ctxt . HasError())
-        MCExecValueTraits<MCStringRef>::set(r_value, t_uuid);
+        MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(*t_uuid));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

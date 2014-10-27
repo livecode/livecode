@@ -1987,7 +1987,8 @@ void MCField::ffocus(Field_translations function, MCStringRef p_string, KeySym k
 
 void MCField::freturn(Field_translations function, MCStringRef p_string, KeySym key)
 {
-	if (flags & F_AUTO_TAB && cursorrectp.y + (cursorrectp.height << 1) > rect.y + getfheight())
+    // FG-2014-09-30: [[ Bugfix 13548 ]] Use total height of cursor in calculation
+    if (flags & F_AUTO_TAB && cursorrectp.y + ((cursorrects.height + cursorrectp.height) << 1) > rect.y + getfheight())
 		getcard()->kfocusnext(False);
 	else
 	{
@@ -2321,8 +2322,8 @@ void MCField::typetext(MCStringRef newtext)
 	if (MCactivefield == this)
 		unselect(False, True);
 	
-	MCStringRef t_remaining;
-	/* UNCHECKED */ MCStringCreateMutable(0, t_remaining);
+	MCAutoStringRef t_remaining;
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_remaining);
 	if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
 	{
 		uindex_t t_index = 0;
@@ -2331,11 +2332,11 @@ void MCField::typetext(MCStringRef newtext)
 		{
 			// Send the next character in the buffer as a key down event
 			MCAutoStringRef t_string;
-			/* UNCHECKED */ MCStringCopySubstring(newtext, MCRangeMake(t_index, t_length-t_index), &t_string);
-			if (!message_with_valueref_args(MCM_key_down, *t_string))
+			/* UNCHECKED */ MCStringCopySubstring(newtext, MCRangeMake(t_index, 1), &t_string);
+			if (message_with_valueref_args(MCM_key_down, *t_string) != ES_NORMAL)
 			{
 				// Nothing responded to the key; keep it as text
-				/* UNCHECKED */ MCStringAppendChar(t_remaining, MCStringGetCharAtIndex(newtext, t_index));
+				/* UNCHECKED */ MCStringAppendChar(*t_remaining, MCStringGetCharAtIndex(newtext, t_index));
 			}
 			
 			// Key up event then move on
@@ -2344,8 +2345,7 @@ void MCField::typetext(MCStringRef newtext)
 		}	
 		
 		// Only the non-handled keypresses should be processed further
-		MCValueRelease(newtext);
-		MCStringCopyAndRelease(t_remaining, newtext);
+        newtext = *t_remaining;
 	}
 	findex_t oldfocused;
     focusedparagraph->getselectionindex(oldfocused, oldfocused);

@@ -574,7 +574,7 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 		
 		CGColorSpaceRef t_colorspace;
-		t_colorspace = CGColorSpaceCreateDeviceRGB();
+		/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_colorspace);
 		
 		CGContextRef t_cg_context;
 		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));

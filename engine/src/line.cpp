@@ -75,7 +75,7 @@ MCLine::~MCLine()
 	MCBlock *t_block;
 	t_block = p_first;
 	
-	int4 t_frontier_width;
+	coord_t t_frontier_width;
 	t_frontier_width = 0;
 
 	MCBlock *t_break_block;
@@ -474,7 +474,8 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
 
 uint2 MCLine::getwidth()
 {
-	return width;
+    // AL-2014-10-21: [[ Bug 13403 ]] Returned line width as integer needs to be rounded up
+	return ceil(width);
 }
 
 uint2 MCLine::getheight()

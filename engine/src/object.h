@@ -1117,13 +1117,17 @@ protected:
 		setscript(*t_script);
 	}
 
+#ifdef OLD_EXEC
+    // MW-2014-09-30: [[ ScriptStack ]] Used by MCStack::setasscriptonly.
+    Exec_stat setscriptprop(MCExecPoint& ep);
+#endif
+
 private:
 #ifdef OLD_EXEC
 	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
 	Exec_stat setrectprop(Properties which, MCExecPoint& ep, Boolean effective);
 	Exec_stat getrectprop(Properties which, MCExecPoint& ep, Boolean effective);
 
-	Exec_stat setscriptprop(MCExecPoint& ep);
 	Exec_stat setparentscriptprop(MCExecPoint& ep);
 	Exec_stat setshowfocusborderprop(MCExecPoint& ep);
 #endif

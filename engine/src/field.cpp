@@ -1233,15 +1233,13 @@ Boolean MCField::mup(uint2 which, bool p_release)
 		}
 		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
 		{
-			MCAutoValueRef t_data;
-			if (MCselectiondata -> Fetch(TRANSFER_TYPE_UNICODE_TEXT, &t_data))
+			MCAutoStringRef t_string;
+			if (MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT, (MCValueRef&)&t_string))
 			{
 				extend = extendwords = False;
 				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
 				setfocus(mx, my);
-                MCAutoStringRef t_text_str;
-                /* UNCHECKED */ MCStringDecode((MCDataRef)*t_data, kMCStringEncodingUTF16, false, &t_text_str);
-				typetext(*t_text_str);
+				typetext(*t_string);
 			}
 		}
 		break;
@@ -1573,8 +1571,14 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 				if (pgptr == paragraphs)
 					break;
 			}
+            // SN-2014-09-17: [[ Bug 13462 ]] If no break has been found, we return the height of the field
 			if (theight != height)
-				ep.concatuint(height - theight, EC_RETURN, j++ == 0);
+            {
+                if (j)
+                    ep.concatuint(height - theight, EC_RETURN, false);
+                else
+                    ep.concatuint(height, EC_RETURN, true);
+            }
 		}
 		break;
     // JS-2013-05-15: [[ PageRanges ]] Return the pageRanges of the whole field.

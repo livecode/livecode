@@ -804,19 +804,66 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
     findex_t t_line_index;
     MCParagraph *sptr = p_field -> indextoparagraph(t_paragraph, si, ei, &t_line_index);
     
-    sptr -> defrag();
-    
     MCRectangle drect = p_field -> getrect();
     findex_t ssi, sei;
     p_field -> selectedmark(false, ssi, sei, false);
     int4 savex = p_field -> textx;
     int4 savey = p_field -> texty;
     
+    bool t_redraw_field;
+    t_redraw_field = false;
+    
+    // MW-2008-07-09: [[ Bug 6353 ]] Improvements in 2.9 meant that the field was
+    //   more careful about not doing anything if it wasn't the MCactivefield.
+    //   However, the unselection/reselection code here breaks text input if the
+    //   active field sets text properties of another field. Therefore we only
+    //   get and then reset the selection if we are the active field.
+    if (t_need_layout)
+    {
+        if (all)
+        {
+            // Same as this?
+            if (MCactivefield == p_field)
+            {
+                p_field -> selectedmark(False, ssi, sei, False);
+                p_field -> unselect(False, True);
+            }
+            p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;
+            p_field -> firstparagraph = p_field -> lastparagraph = NULL;
+            p_field -> cury = p_field -> focusedy = p_field -> topmargin;
+            p_field -> textx = p_field -> texty = 0;
+            //            p_field -> resetparagraphs();
+        }
+        else
+        {
+            // MW-2012-02-27: [[ Bug ]] Update rect slightly off, shows itself when
+            //   setting the box style of the top line of a field.
+            drect = p_field -> getfrect();
+            drect.y = p_field -> getcontenty() + p_field -> paragraphtoy(t_paragraph);
+            drect.height = 0;
+        }
+    }
+    
     do
     {
+        // AL-2014-09-24: [[ Bug 13529 ] Ensure all necessary cleanups are applied to each paragraph
+        //  affected by the property change
+        sptr -> defrag();
+        
         T::setter(ctxt, sptr, p_setter, p_value);
         if (ctxt . HasError())
             return;
+        
+        sptr -> cleanattrs();
+        
+        // SN-2014-06-02 [[ Bug 12562 ]] Changing the back color of a line which contains a tab makes LC crash
+        // Make sure that the segments and the lines are recomputed in case defrag() changed them.
+        if (sptr -> getneedslayout() && !all && sptr->getopened())
+        {
+            // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
+            sptr -> layout(false);
+            drect.height += sptr->getheight(p_field -> fixedheight);
+        }
         
         ei -= sptr->gettextlengthcr();
         sptr = sptr->next();
@@ -824,14 +871,11 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
     while(ei > 0);
 
     if (t_need_layout)
-    {
-        // SN-2014-06-02 [[ Bug 12562 ]] Changing the back color of a line which contains a tab makes LC crash
-        // Make sure that the segments and the lines are recomputed in case defrag() changed them
-        sptr -> layout(false);
-        
+    {        
         if (all)
         {
-            p_field -> recompute();
+            // AL-2014-09-24: [[ Bug 13529 ] Force recompute if 'all' is true
+            p_field -> do_recompute(true);
             p_field -> hscroll(savex - p_field -> textx, False);
             p_field -> vscroll(savey - p_field -> texty, False);
             p_field -> resetscrollbars(True);
@@ -839,7 +883,12 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
                 p_field -> seltext(ssi, sei, False);
         }
         else
+        {
             p_field -> removecursor();
+            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
+            if (t_redraw_field)
+                drect = p_field -> getrect();
+        }
         
         // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
         p_field -> layer_redrawrect(drect);
@@ -981,6 +1030,9 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
     MCParagraph *t_first_pgptr;
     t_first_pgptr = pgptr;
 
+    bool t_redraw_field;
+    t_redraw_field = false;
+    
     do
     {
         findex_t t_pg_length = pgptr->gettextlengthcr();
@@ -1028,6 +1080,9 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                     
                     T::setter(ctxt, bptr, p_setter, p_value);
                     
+                    // AL-2014-09-23 [[ Bug 13509 ]] Delete the atts struct if this block has no atts
+                    bptr -> cleanatts();
+                    
                     // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
                     //   fontref so it can compute its.
                     if (pgptr -> getopened())
@@ -1055,8 +1110,12 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             if (pgptr -> getneedslayout() && !all && pgptr->getopened())
             {
                 // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-                pgptr -> layout(false);
-                drect.height += pgptr->getheight(p_field -> fixedheight);
+                // AL-2014-09-22: [[ Bug 11817 ]] If we changed the amount of lines of this paragraph
+                //  then redraw the whole field.
+				if (pgptr -> layout(all, true))
+                    t_redraw_field = true;
+                else
+                    drect.height += pgptr->getheight(p_field -> fixedheight);
             }
         }
 
@@ -1084,7 +1143,12 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                 p_field -> seltext(ssi, sei, False);
         }
         else
+        {
             p_field -> removecursor();
+            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
+            if (t_redraw_field)
+                drect = p_field -> getrect();
+        }
         // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
         p_field -> layer_redrawrect(drect);
         if (!all)
@@ -1154,6 +1218,9 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
     MCParagraph *t_first_pgptr;
     t_first_pgptr = pgptr;
     
+    bool t_redraw_field;
+    t_redraw_field = false;
+    
     do
     {
         findex_t t_pg_length = pgptr->gettextlengthcr();
@@ -1201,6 +1268,9 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
                     
                     T::setter(ctxt, bptr, p_index, p_setter, p_value);
                     
+                    // AL-2014-09-23 [[ Bug 13509 ]] Delete the atts struct if this block has no atts
+                    bptr -> cleanatts();
+                    
                     // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
                     //   fontref so it can compute its.
                     if (pgptr -> getopened())
@@ -1228,8 +1298,12 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             if (pgptr -> getneedslayout() && !all && pgptr->getopened())
             {
                 // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-                pgptr -> layout(false);
-                drect.height += pgptr->getheight(p_field -> fixedheight);
+                // AL-2014-09-22: [[ Bug 11817 ]] If we changed the amount of lines of this paragraph
+                //  then redraw the whole field.
+				if (pgptr -> layout(all, true))
+                    t_redraw_field = true;
+                else
+                    drect.height += pgptr->getheight(p_field -> fixedheight);
             }
         }
         
@@ -1257,7 +1331,12 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
                 p_field -> seltext(ssi, sei, False);
         }
         else
+        {
             p_field -> removecursor();
+            // AL-2014-09-22: [[ Bug 11817 ]] If we are redrawing, then the dirty rect is the whole rect.
+            if (t_redraw_field)
+                drect = p_field -> getrect();
+        }
         // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
         p_field -> layer_redrawrect(drect);
         if (!all)
@@ -1290,14 +1369,16 @@ template<typename T, int Min, int Max> static void setparagraphattr_int(MCParagr
     }
 }
 
+// AL-2014-09-30: [[ Bug 13559 ]] Make sure these functions use the correct type for the template
+//  otherwise dereferencing and setting can overwrite other parapraph attrs.
 static void setparagraphattr_uint8(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, uinteger_t *p_value)
 {
-    setparagraphattr_int<uinteger_t, 0, 255>(attrs, p_flag, p_field_offset, p_value);
+    setparagraphattr_int<uint8_t, 0, 255>(attrs, p_flag, p_field_offset, (uint8_t *)p_value);
 }
 
 static void setparagraphattr_int16(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, integer_t *p_value)
 {
-    setparagraphattr_int<integer_t, INT16_MIN, INT16_MAX>(attrs, p_flag, p_field_offset, p_value);
+    setparagraphattr_int<int16_t, INT16_MIN, INT16_MAX>(attrs, p_flag, p_field_offset, (int16_t *)p_value);
 }
 
 static void setparagraphattr_color(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, const MCInterfaceNamedColor& p_color)
@@ -2416,8 +2497,8 @@ void MCField::GetEffectiveTextStyleOfCharChunk(MCExecContext& ctxt, uint32_t p_p
 
 void MCField::SetTextStyleOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceTextStyle& p_value)
 {
-    // AL-2014-07-30: [[ Bug 12923 ]] TextStyle setting can affect whole field layout
-    SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceTextStyle> >(ctxt, this, true, p_part_id, si, ei, &MCBlock::SetTextStyle, p_value);
+    // AL-2014-09-22: [[ Bug 11817 ]] Don't necessarily recompute the whole field when changing text styles
+    SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceTextStyle> >(ctxt, this, false, p_part_id, si, ei, &MCBlock::SetTextStyle, p_value);
 }
 
 void MCField::GetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value)
@@ -2465,8 +2546,8 @@ void MCField::SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_in
     else
         t_value = *p_value;
     
-    // AL-2014-07-30: [[ Bug 12923 ]] TextStyle setting can affect whole field layout
-    SetArrayCharPropOfCharChunk< PodFieldArrayPropType<bool> >(ctxt, this, true, p_part_id, si, ei, p_index, &MCBlock::SetTextStyleElement, t_value);
+    // AL-2014-09-22: [[ Bug 11817 ]] Don't necessarily recompute the whole field when changing text styles
+    SetArrayCharPropOfCharChunk< PodFieldArrayPropType<bool> >(ctxt, this, false, p_part_id, si, ei, p_index, &MCBlock::SetTextStyleElement, t_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3375,10 +3456,12 @@ void MCBlock::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p
     if (MCF_parsetextstyle(MCNameGetString(p_index), t_text_style) == ES_NORMAL)
     {
         if (atts == NULL)
-        {
-            atts = new Blockatts;;
+            atts = new Blockatts;
+        
+        // AL-2014-09-23 [[ Bug 13509 ]] Check F_HAS_FSTYLE when adding block attribute
+        if (!getflag(F_HAS_FSTYLE))
             atts -> fontstyle = parent -> getparent() -> gettextstyle();
-        }
+        
         flags |= F_HAS_FSTYLE;
         MCF_changetextstyle(atts -> fontstyle, t_text_style, p_setting);
         return;

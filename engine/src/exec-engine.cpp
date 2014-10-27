@@ -697,7 +697,7 @@ void MCEngineExecGet(MCExecContext& ctxt, MCValueRef p_value)
 
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (!MCS_put(ctxt, MCStringIsNative(p_value) ? kMCSPutOutput : kMCSPutUnicodeOutput, p_value))
+	if (!MCS_put(ctxt, kMCSPutOutput, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
@@ -705,7 +705,7 @@ void MCEngineExecPutOutputUnicode(MCExecContext& ctxt, MCDataRef p_value)
 {
 	MCAutoStringRef t_string;
 	if (!MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(p_value), MCDataGetLength(p_value)/sizeof(unichar_t), &t_string)
-		|| !MCS_put(ctxt, kMCSPutUnicodeOutput, *t_string))
+		|| !MCS_put(ctxt, kMCSPutOutput, *t_string))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
