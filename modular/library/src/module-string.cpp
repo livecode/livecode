@@ -61,7 +61,7 @@ void MCStringEvalLowercaseOf(MCStringRef p_source, MCStringRef& r_output)
     if (!MCStringMutableCopy(p_source, &t_string))
         return;
     
-    if (!MCStringLowercase(*t_string, kMCBasicLocale))
+    if (!MCStringLowercase(*t_string, kMCLocaleBasic))
         return;
     
     if (!MCStringCopy(*t_string, r_output))
@@ -74,7 +74,7 @@ void MCStringEvalUppercaseOf(MCStringRef p_source, MCStringRef& r_output)
     if (!MCStringMutableCopy(p_source, &t_string))
         return;
     
-    if (!MCStringUppercase(*t_string, kMCBasicLocale))
+    if (!MCStringUppercase(*t_string, kMCLocaleBasic))
         return;
     
     if (!MCStringCopy(*t_string, r_output))

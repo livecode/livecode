@@ -25,6 +25,8 @@ foreign handler EvalOffsetAfter(in Needle as string, in After as index, in Sourc
 foreign handler EvalLastOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
 foreign handler EvalLastOffsetBefore(in Needle as string, in Before as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
 
+foreign handler EvalContainsChars(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -242,6 +244,19 @@ syntax LastOffsetOfStringBefore is prefix operator with precedence 1
     "the" "last" "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Source: Expression>
 begin
     EvalLastOffsetBefore(Needle, Before, Source, output)
+end syntax
+
+/*
+Summary:            Determines whether <Needle> contains <Target>.
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+output:             True if the chars of <Needle> occur as a subsequence of the chars of <Target>, and false otherwise.
+*/
+
+syntax ContainsChars is neutral binary operator with precedence 1
+    <Target: Expression> "contains" <Needle: Expression>
+begin
+    EvalContainsChars(Target, Needle, output)
 end syntax
 
 --

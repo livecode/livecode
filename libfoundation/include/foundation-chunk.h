@@ -24,14 +24,17 @@ typedef uinteger_t (MCChunkCountCallback(void *context));
 uinteger_t MCChunkCountByteChunkCallback(void *context);
 uinteger_t MCChunkCountCodepointChunkCallback(void *context);
 
-void MCChunkGetExtentsByRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, integer_t& r_first, integer_t& r_chunk_count);
+void MCChunkGetExtentsByRange(integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsByExpression(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, integer_t& r_first, integer_t& r_chunk_count);
+void MCChunkGetExtentsByExpression(integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfByteChunkByRange(MCDataRef p_data, integer_t p_first, integer_t p_last, integer_t& r_first, integer_t& r_chunk_count);
-void MCChunkGetExtentsOfByteChunkByExpression(MCDataRef p_data, integer_t p_first, integer_t& r_first, integer_t& r_chunk_count);
+void MCChunkGetExtentsOfByteChunkByRange(MCDataRef p_data, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfByteChunkByExpression(MCDataRef p_data, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
 
-void MCChunkGetExtentsOfCodepointChunkByRange(MCStringRef p_data, integer_t p_first, integer_t p_last, integer_t& r_first, integer_t& r_chunk_count);
-void MCChunkGetExtentsOfCodepointChunkByExpression(MCStringRef p_data, integer_t p_first, integer_t& r_first, integer_t& r_chunk_count);
+void MCChunkGetExtentsOfCodepointChunkByRange(MCStringRef p_data, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfCodepointChunkByExpression(MCStringRef p_data, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
+
+void MCChunkGetExtentsOfElementChunkByRange(MCProperListRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count);
+void MCChunkGetExtentsOfElementChunkByExpression(MCProperListRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count);
 
 #endif // __MC_FOUNDATION_CHUNK__

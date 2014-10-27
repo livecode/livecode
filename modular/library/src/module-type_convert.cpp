@@ -18,7 +18,7 @@
 
 void MCTypeConvertExecSplitByDelimiter(MCStringRef p_target, MCStringRef p_delimiter, MCProperListRef& r_output)
 {
-    if (!MCProperListSplitStringByDelimiter(p_target, p_delimiter, kMCStringOptionCompareCaseless, r_output))
+    if (!MCStringSplitByDelimiter(p_target, p_delimiter, kMCStringOptionCompareCaseless, r_output))
 		return;
 }
 

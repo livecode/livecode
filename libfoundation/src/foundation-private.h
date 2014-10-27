@@ -221,6 +221,10 @@ enum
 	// If set then the array is indirect (i.e. contents is within another
 	// immutable array).
 	kMCArrayFlagIsIndirect = 1 << 7,
+    // If set then the array keys are case sensitive.
+    kMCArrayFlagIsCaseSensitive = 1 << 8,
+    // If set the the array keys are form sensitive.
+    kMCArrayFlagIsFormSensitive = 1 << 9,
 };
 
 struct __MCArrayKeyValue
@@ -266,6 +270,30 @@ struct __MCSet: public __MCValue
 {
 	uindex_t *limbs;
 	uindex_t limb_count;
+};
+
+//////////
+
+enum
+{
+	// If set then the list is mutable.
+	kMCProperListFlagIsMutable = 1 << 0,
+    // If set then the list is indirect (i.e. contents is within another
+	// immutable list).
+	kMCProperListFlagIsIndirect = 1 << 1,
+};
+
+struct __MCProperList: public __MCValue
+{
+	union
+	{
+		MCProperListRef contents;
+        struct
+        {
+            MCValueRef *list;
+            uindex_t length;
+        };
+	};
 };
 
 ////////
@@ -362,6 +390,14 @@ bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutabl
 
 bool __MCNumberInitialize(void);
 void __MCNumberFinalize(void);
+
+bool __MCProperListInitialize(void);
+void __MCProperListFinalize(void);
+void __MCProperListDestroy(__MCProperList *list);
+hash_t __MCProperListHash(__MCProperList *list);
+bool __MCProperListIsEqualTo(__MCProperList *list, __MCProperList *other_list);
+bool __MCProperListCopyDescription(__MCProperList *list, MCStringRef& r_string);
+bool __MCProperListImmutableCopy(__MCProperList *list, bool release, __MCProperList*& r_immutable_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 

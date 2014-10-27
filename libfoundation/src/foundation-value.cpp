@@ -200,6 +200,8 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 		if (((__MCCustomValue *)self) -> callbacks == ((__MCCustomValue *)other_self) -> callbacks)
 			return (((__MCCustomValue *)self) -> callbacks) -> equal(p_value, p_other_value);
 		return false;
+    case kMCValueTypeCodeProperList:
+        return __MCProperListIsEqualTo((__MCProperList*)self, (__MCProperList*)other_self);
 	// Shouldn't happen!
 	default:
 		break;
@@ -237,6 +239,8 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
         return __MCDataCopyDescription((__MCData*)p_value, r_desc);
 	case kMCValueTypeCodeCustom:
 		return ((__MCCustomValue *)self) -> callbacks -> describe(p_value, r_desc);
+    case kMCValueTypeCodeProperList:
+        return __MCProperListCopyDescription((__MCProperList*)p_value, r_desc);
 	default:
 		break;
 	}
@@ -395,6 +399,9 @@ void __MCValueDestroy(__MCValue *self)
 		break;
     case kMCValueTypeCodeData:
         __MCDataDestroy((__MCData *)self);
+        break;
+    case kMCValueTypeCodeProperList:
+        __MCProperListDestroy((__MCProperList *)self);
         break;
 	case kMCValueTypeCodeCustom:
 		return ((__MCCustomValue *)self) -> callbacks -> destroy(self);
@@ -807,6 +814,14 @@ bool __MCValueImmutableCopy(__MCValue *self, bool p_release, __MCValue*& r_new_v
     {
         __MCData *t_new_value;
         if (__MCDataImmutableCopy((__MCData*)self, p_release, t_new_value))
+            return r_new_value = t_new_value, true;
+    }
+    return false;
+            
+    case kMCValueTypeCodeProperList:
+    {
+        __MCProperList *t_new_value;
+        if (__MCProperListImmutableCopy((__MCProperList*)self, p_release, t_new_value))
             return r_new_value = t_new_value, true;
     }
     return false;

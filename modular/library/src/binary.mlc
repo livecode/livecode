@@ -19,6 +19,9 @@ foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as
 foreign handler FetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
 foreign handler StoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
 
+foreign handler EvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalIsInBytes(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -126,6 +129,34 @@ syntax ByteOffsetAfter is prefix operator with precedence 1
 	"the" "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
 	EvalOffsetOfBytesAfterIndexIn(Needle, After, Target, output)
+end syntax
+
+--
+
+/*
+Summary:            Determines whether <Needle> contains <Target>.
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+output:             True if the bytes of <Needle> occur as a subsequence of the bytes of <Target>, and false otherwise.
+*/
+
+syntax ContainsBytes is neutral binary operator with precedence 1
+    <Target: Expression> "contains" <Needle: Expression>
+begin
+    EvalContainsBytes(Target, Needle, output)
+end syntax
+
+/*
+Summary:            Determines whether <Needle> is in <Target>.
+Needle: 			An expression which evaluates to a single byte of binary data.
+Target: 			An expression which evaluates to binary data.
+output:             True if <Needle> is among the bytes of <Target>, and false otherwise.
+*/
+
+syntax IsInBytes is neutral binary operator with precedence 1
+    <Needle: Expression> "is" "in" <Target: Expression>
+begin
+    EvalIsInBytes(Target, Needle, output)
 end syntax
 
 --
