@@ -1469,9 +1469,14 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
         t_settings_ptr = &t_settings;
         break;
     case kMCImagePaletteTypeEmpty:
+        t_settings . type = kMCImagePaletteTypeEmpty;
         break;
     }
 
+    // AL-2014-10-27: [[ Bug 13804 ]] Make sure execution stops here if there was an error creating palette settings
+    if (ctxt . HasError())
+        return;
+    
     bool t_success;
     t_success = true;
     if (sformat == EX_SNAPSHOT)
@@ -1536,9 +1541,6 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	}
     
     MCInterfaceImagePaletteSettingsFree(ctxt, t_settings);
-
-    if (ctxt . HasError())
-        return;
 
 	if (*t_return_data != nil)
 	{
