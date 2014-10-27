@@ -4,74 +4,81 @@ This module specifies the syntax definitions and bindings for canvas drawing ope
 
 module com.livecode.canvas
 
+type CanvasFloat is float
+
 // TODO - type declarations
 // Transform
 record type Transform
-	a as real
-	b as real
-	c as real
-	d as real
-	tx as real
-	ty as real
-end type
-
-// Paint (supertype of pattern, gradient, color?)
-foreign handler MCCanvasPaintType_Measure(out r_size as integer) as undefined binds to "<builtin>"
-opaque type Paint
+	a as CanvasFloat
+	b as CanvasFloat
+	c as CanvasFloat
+	d as CanvasFloat
+	tx as CanvasFloat
+	ty as CanvasFloat
 end type
 
 // Color
-foreign handler MCCanvasColorType_Measure(out r_size as integer) as undefined binds to "<builtin>"
-opaque type Color based on Paint
+foreign handler MCCanvasColorType_Measure() as uint binds to "<builtin>"
+foreign handler MCCanvasColorType_Initialize(in pColor as poin ter) as undefined binds to "<builtin>"
+opaque type Color
 	measure is MCCanvasColorType_Measure
+	initialize is MCCanvasColorType_Initialize
 end type
 
-//record type Color
-//	Red as real
-//	Green as real
-//	Blue as real
-//	Alpha as real
-//end type
+// Paint (supertype of pattern, gradient, color?)
+opaque type Paint
+end type
+
+// Solid Paint
+foreign handler MCCanvasSolidPaintType_Measure() as uint binds to "<builtin>"
+opaque type SolidPaint based on Paint
+	measure is MCCanvasSolidPaintType_Measure
+end type
 
 // Pattern
-foreign handler MCCanvasPatternType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternType_Measure() as uint binds to "<builtin>"
 opaque type Pattern based on Paint
 	measure is MCCanvasPatternType_Measure
 end type
 
 // Gradient
-foreign handler MCCanvasGradientType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientStopType_Measure() as uint binds to "<builtin>"
+opaque type GradientStop
+	measure is MCCanvasGradientStopType_Measure
+end type
+
+foreign handler MCCanvasGradientType_Measure() as uint binds to "<builtin>"
 opaque type Gradient based on Paint
 	measure is MCCanvasGradientType_Measure
 end type
 
 // Image
-foreign handler MCCanvasImageType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageType_Measure() as uint binds to "<builtin>"
 opaque type Image
 	measure is MCCanvasImageType_Measure
 end type
 
 // Path
-foreign handler MCCanvasPathType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathType_Measure() as uint binds to "<builtin>"
 opaque type Path
 	measure is MCCanvasPathType_Measure
 end type
 
 // Effect
-foreign handler MCCanvasGraphicEffectType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectType_Measure() as uint binds to "<builtin>"
 opaque type GraphicEffect
 	measure is MCCanvasGraphicEffectType_Measure
 end type
 
 // Canvas
-foreign handler MCCanvasCanvasType_Measure(out r_size as integer) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasType_Measure() as uint binds to "<builtin>"
 opaque type Canvas
 	measure is MCCanvasCanvasType_Measure
 end type
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//foreign handler MCCanvasConvertDegreesToRadians(in pDegrees as real, out rRadians as real) as undefined binds to "<builtin>"
+//foreign handler MCCanvasConvertDegreesToRadians(in pDegrees as CanvasFloat, out rRadians as CanvasFloat) as undefined binds to "<builtin>"
 
 //syntax ValueInDegrees is phrase
 //	<mDegrees: Expression> "degrees"
@@ -84,8 +91,7 @@ end type
 
 // Constructors
 
-foreign handler MCCanvasColorMakeRGB(in pRed as real, in pGreen as real, in pBlue as real, out rColor as Color) as undefined binds to "<builtin>"
-foreign handler MCCanvasColorMakeRGBA(in pRed as real, in pGreen as real, in pBlue as real, in pAlpha as real, out rColor as Color) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorMakeRGBA(in pRed as CanvasFloat, in pGreen as CanvasFloat, in pBlue as CanvasFloat, in pAlpha as CanvasFloat, out rColor as Color) as undefined binds to "<builtin>"
 //foreign handler MCCanvasColorMakeWithString(in pList as string, out rColor as Color)
 
 syntax MakeColor is prefix operator with precedence 4
@@ -93,7 +99,7 @@ syntax MakeColor is prefix operator with precedence 4
 begin
 //	MCCanvasColorMakeWithString(mVal[0], output)
 //	MCCanvasColorMakeWithList(mVal[0], output)
-	MCCanvasColorMakeRGB(mVal[0], mVal[1], mVal[2], output)
+	MCCanvasColorMakeRGBA(mVal[0], mVal[1], mVal[2], 1.0, output)
 	MCCanvasColorMakeRGBA(mVal[0], mVal[1], mVal[2], mVal[3], output)
 end syntax
 
@@ -101,14 +107,14 @@ end syntax
 
 // Properties
 
-foreign handler MCCanvasColorGetRed(in pColor as Color, out rRed as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasColorSetRed(inout xColor as Color, in pRed as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasColorGetGreen(in pColor as Color, out rGreen as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasColorSetGreen(inout xColor as Color, in pGreen as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasColorGetBlue(in pColor as Color, out rBlue as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasColorSetBlue(inout xColor as Color, in pBlue as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasColorGetAlpha(in pColor as Color, out rAlpha as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasColorSetAlpha(inout xColor as Color, in pAlpha as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorGetRed(in pColor as Color, out rRed as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorSetRed(inout xColor as Color, in pRed as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorGetGreen(in pColor as Color, out rGreen as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorSetGreen(inout xColor as Color, in pGreen as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorGetBlue(in pColor as Color, out rBlue as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorSetBlue(inout xColor as Color, in pBlue as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorGetAlpha(in pColor as Color, out rAlpha as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorSetAlpha(inout xColor as Color, in pAlpha as CanvasFloat) as undefined binds to "<builtin>"
 
 syntax RedColorProperty is prefix operator with precedence 4
 	"the" "red" "of" <mColor: Expression>
@@ -144,13 +150,15 @@ end syntax
 // Constructors
 
 foreign handler MCCanvasTransformMakeIdentity(out rTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformMakeScale(in pScaleX as real, in pScaleY as real, out rTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformMakeRotation(in pRadians as real, out rTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformMakeTranslation(in pX as real, in pY as real, out rTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformMakeWithMatrix(in pA as real, in pB as real, in pC as real, in pD as real, in pTX as real, in pTY as real, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeScale(in pScaleX as CanvasFloat, in pScaleY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeRotation(in pRadians as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeTranslation(in pX as CanvasFloat, in pY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeWithMatrixValues(in pA as CanvasFloat, in pB as CanvasFloat, in pC as CanvasFloat, in pD as CanvasFloat, in pTX as CanvasFloat, in pTY as CanvasFloat, out rTransform as Transform) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformMakeWitHMatrixArray(in pMatrix as array, out rTransform as Transform) as undefined binds to "<builtin>"
 
 syntax MakeIdentityTransform is expression
-	"the" "identity" "transform"
+//	"the" "identity" "transform"
+	"identity" "transform"
 begin
 	MCCanvasTransformMakeIdentity(output)
 end syntax
@@ -181,14 +189,16 @@ end syntax
 // Properties
 
 foreign handler MCCanvasTransformGetScale(in pTransform as Transform, out rScaleXY as list) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformGetRotation(in pTransform as Transform, out rRotation as real) as undefined binds to "<builtin>"
-//foreign handler MCCanvasTransformGetRotationInRadians(in pTransform as Transform, out rRotation as real) as undefined binds to "<builtin>"
-//foreign handler MCCanvasTransformGetRotationInDegrees(in pTransform as Transform, out rRotation as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformGetRotation(in pTransform as Transform, out rRotation as CanvasFloat) as undefined binds to "<builtin>"
+//foreign handler MCCanvasTransformGetRotationInRadians(in pTransform as Transform, out rRotation as CanvasFloat) as undefined binds to "<builtin>"
+//foreign handler MCCanvasTransformGetRotationInDegrees(in pTransform as Transform, out rRotation as CanvasFloat) as undefined binds to "<builtin>"
 foreign handler MCCanvasTransformGetSkew(in pTransform as Transform, out rSkewXY as list) as undefined binds to "<builtin>"
 foreign handler MCCanvasTransformGetTranslation(in pTransform as Transform, out rTransXY as list) as undefined binds to "<builtin>"
 
-foreign handler MCCanvasTransformGetMatrix(in pTransform as Transform, out rMatrix as list) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformSetMatrix(inout xTransform as Transform, in pMatrix as list) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformGetMatrix(in pTransform as Transform, out rMatrix as array) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformSetMatrix(inout xTransform as Transform, in pMatrix as array) as undefined binds to "<builtin>"
+
+foreign handler MCCanvasTransformGetInverse(in pTransform as Transform, out rInverse as Transform) as undefined binds to "<builtin>"
 
 syntax ScaleTransformProperty is prefix operator with precedence 4
 	"the" "scale" "of" <mTransform: Expression>
@@ -234,14 +244,20 @@ begin
 	MCCanvasTransformSetMatrix(mTransform, input)
 end syntax
 
+syntax InverseTransformProperty is prefix operator with precedence 4
+	"the" "inverse" "of" <mTransform: Expression>
+begin
+	MCCanvasTransformGetInverse(mTransform, output)
+end syntax
+
 //////////
 
 // Operations
 
 foreign handler MCCanvasTransformConcat(inout xTransformA as Transform, in pTransformB as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformScale(inout xTransform as Transform, in pScaleX as real, in pScaleY as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformRotate(inout xTransform as Transform, in pRadians as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasTransformTranslate(inout xTransform as Transform, in pX as real, in pY as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformScale(inout xTransform as Transform, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformRotate(inout xTransform as Transform, in pRadians as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasTransformTranslate(inout xTransform as Transform, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
 
 syntax ConcatTransform is statement
 	"concat" <mTransformA: Expression> "with" <mTransformB: Expression>
@@ -270,26 +286,47 @@ begin
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
+// Solid Paint
+
+// Constructors
+
+foreign handler MCCanvasSolidPaintMakeWithColor(in pColor as Color, out rSolid as SolidPaint) as undefined binds to "<builtin>"
+
+syntax MakeSolidPaint is prefix operator with precedence 4
+	"solid" "paint" "with" <mColor: Expression>
+begin
+	MCCanvasSolidPaintMakeWithColor(mColor, output)
+end syntax
+
+//////////
+
+// Properties
+
+foreign handler MCCanvasSolidPaintGetColor(in pSolid as SolidPaint, out rColor as Color) as undefined binds to "<builtin>"
+foreign handler MCCanvasSolidPaintSetColor(inout pSolid as SolidPaint, in pColor as Color) as undefined binds to "<builtin>"
+
+syntax SolidPaintColorProperty as prefix operator with precedence 4
+	"the" "color" "of" <mSolid: Expression>
+begin
+	MCCanvasSolidPaintGetColor(mSolid, output)
+	MCCanvasSolidPaintSetColor(mSolid, input)
+end syntax
+
+////////////////////////////////////////////////////////////////////////////////
 // Pattern
 
 // Constructors
 
 foreign handler MCCanvasPatternMakeWithImage(in pImage as Image, out rPattern as Pattern) as undefined binds to "<builtin>"
 foreign handler MCCanvasPatternMakeWithTransformedImage(in pImage as Image, in pTransform as Transform, out rPattern as Pattern) as undefined binds to "<builtin>"
-foreign handler MCCanvasPatternMakeWithScaledImage(in pImage as Image, in pScaleX as real, in pScaleY as real, out rPattern as Pattern) as undefined binds to "<builtin>"
-foreign handler MCCanvasPatternMakeWithRotatedImage(in pImage as Image, in pRadians as real, out rPattern as Pattern) as undefined binds to "<builtin>"
-foreign handler MCCanvasPatternMakeWithTranslatedImage(in pImage as Image, in pX as real, in pY as real, out rPattern as Pattern) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternMakeWithScaledImage(in pImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat, out rPattern as Pattern) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternMakeWithRotatedImage(in pImage as Image, in pRadians as CanvasFloat, out rPattern as Pattern) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternMakeWithTranslatedImage(in pImage as Image, in pX as CanvasFloat, in pY as CanvasFloat, out rPattern as Pattern) as undefined binds to "<builtin>"
 
 syntax MakePattern is prefix operator with precedence 4
-	"pattern" "with" <mImage: Expression>
+	"pattern" "with" <mImage: Expression> [ ( "transformed" "by" <mTransform: Expression> | "scaled" "by" <mScale: ExpressionList> | "translated" "by" <mTranslation: Expression> | "rotated" "by" <mRadians: Expression> ) ]
 begin
 	MCCanvasPatternMakeWithImage(mImage, output)
-end syntax
-
-syntax MakeTransformedPattern is prefix operator with precedence 4
-//	"pattern" "with" <mImage: Expression> ( "transformed" "by" <mTransform: Expression> | "scaled" "by" <mScale: ExpressionList> | "translated" "by" <mTranslation: Expression> )
-	"pattern" "with" <mImage: Expression> ( "transformed" "by" <mTransform: Expression> | "scaled" "by" <mScale: ExpressionList> | "translated" "by" <mTranslation: Expression> | "rotated" "by" <mRadians: Expression> )
-begin
 	MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
 	MCCanvasPatternMakeWithScaledImage(mImage, mScale[0], mScale[0], output)
 	MCCanvasPatternMakeWithScaledImage(mImage, mScale[0], mScale[1], output)
@@ -331,9 +368,9 @@ end syntax
 // Operations
 
 foreign handler MCCanvasPatternTransform(inout xPattern as Pattern, in pTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasPatternScale(inout xPattern as Pattern, in pScaleX as real, in pScaleY as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasPatternRotate(inout xPattern as Pattern, in pRadians as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasPatternTranslate(inout xPattern as Pattern, in pX as real, in pY as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternScale(inout xPattern as Pattern, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternRotate(inout xPattern as Pattern, in pRadians as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternTranslate(inout xPattern as Pattern, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
 
 syntax TransformPattern is statement
 	"transform" <mPattern: Expression> "by" <mTransform: Expression>
@@ -367,7 +404,14 @@ end syntax
 
 // Constructors
 
-foreign handler MCCanvasGradientMakeWithRamp(in pType as integer, in pRamp as list, out rGradient as Gradient) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientStopMake(in pOffset as CanvasFloat, in pColor as Color, out rStop as GradientStop) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientMakeWithRamp(in pType as integer, in pRamp as list of GradientStop, out rGradient as Gradient) as undefined binds to "<builtin>"
+
+syntax MakeGradientStop is prefix operator with precedence 4
+	"gradient" "stop" "at" <mOffset: Expression> "with" <mColor: Expression>
+begin
+	MCCanvasGradientStopMake(mOffset, mColor, output)
+end syntax
 
 constant kGradientTypeLinear is 1
 constant kGradientTypeRadial is 2
@@ -383,7 +427,7 @@ begin
 end syntax
 
 syntax MakeGradientWithRamp is prefix operator with precedence 4
-	<mType: GradientType> "gradient" "with" "ramp" <mRamp: Expression>
+	<mType: GradientType> "gradient" "with" "ramp" <mRamp: ExpressionList>
 begin
 	MCCanvasGradientMakeWithRamp(mType, mRamp, output)
 end syntax
@@ -392,8 +436,8 @@ end syntax
 
 // Properties
 
-foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as integer, in pEnd as integer, out rStops as list) as undefined binds to "<builtin>"
-foreign handler MCCanvasGradientSetStops(inout xGradient as Gradient, in pStart as integer, in pEnd as integer, in rStops as list) as undefined binds to "<builtin>"
+//foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as integer, in pEnd as integer, out rStops as list) as undefined binds to "<builtin>"
+//foreign handler MCCanvasGradientSetStops(inout xGradient as Gradient, in pStart as integer, in pEnd as integer, in rStops as list) as undefined binds to "<builtin>"
 foreign handler MCCanvasGradientGetTypeAsString(in pGradient as Gradient, out rType as string) as undefined binds to "<builtin>"
 foreign handler MCCanvasGradientSetTypeAsString(inout xGradient as Gradient, in pType as string) as undefined binds to "<builtin>"
 foreign handler MCCanvasGradientGetRepeat(in pGradient as Gradient, out rRepeat as integer) as undefined binds to "<builtin>"
@@ -411,21 +455,21 @@ foreign handler MCCanvasGradientSetVia(inout xGradient as Gradient, in pVia as l
 foreign handler MCCanvasGradientGetTransform(in pGradient as Gradient, out rTransform as Transform) as undefined binds to "<builtin>"
 foreign handler MCCanvasGradientSetTransform(inout xGradient as Gradient, in pTransform as Transform) as undefined binds to "<builtin>"
 
-syntax GradientRampProperty is prefix operator with precedence 4
-	"the" "ramp" "of" <mGradient: Expression>
-begin
-	MCCanvasGradientGetStops(mGradient, 1, -1, output)
-	MCCanvasGradientSetStops(mGradient, 1, -1, input)
-end syntax
-
-syntax GradientStopsProperty is prefix operator with precedence 4
-	"stop" <mStart: Expression> [ "to" <mEnd: Expression> ] "of" <mGradient: Expression>
-begin
-	MCCanvasGradientGetStops(mGradient, mStart, mStart, output)
-	MCCanvasGradientSetStops(mGradient, mStart, mStart, input)
-	MCCanvasGradientGetStops(mGradient, mStart, mEnd, output)
-	MCCanvasGradientSetStops(mGradient, mStart, mEnd, input)
-end syntax
+//syntax GradientRampProperty is prefix operator with precedence 4
+//	"the" "ramp" "of" <mGradient: Expression>
+//begin
+//	MCCanvasGradientGetStops(mGradient, 1, -1, output)
+//	MCCanvasGradientSetStops(mGradient, 1, -1, input)
+//end syntax
+//
+//syntax GradientStopsProperty is prefix operator with precedence 4
+//	"stop" <mStart: Expression> [ "to" <mEnd: Expression> ] "of" <mGradient: Expression>
+//begin
+//	MCCanvasGradientGetStops(mGradient, mStart, mStart, output)
+//	MCCanvasGradientSetStops(mGradient, mStart, mStart, input)
+//	MCCanvasGradientGetStops(mGradient, mStart, mEnd, output)
+//	MCCanvasGradientSetStops(mGradient, mStart, mEnd, input)
+//end syntax
 
 syntax GradientTypeProperty is prefix operator with precedence 4
 	"the" "type" "of" <mGradient: Expression>
@@ -487,10 +531,21 @@ end syntax
 
 // Operations
 
+//foreign handler MCCanvasGradientAddStop(inout xGradient as Gradient, in pOffset as CanvasFloat, in pColor as Color) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientAddStop(inout xGradient as Gradient, in pStop as GradientStop) as undefined binds to "<builtin>"
+
 foreign handler MCCanvasGradientTransform(inout xGradient as Gradient, in pTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasGradientScale(inout xGradient as Gradient, in pScaleX as real, in pScaleY as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasGradientRotate(inout xGradient as Gradient, in pRadians as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasGradientTranslate(inout xGradient as Gradient, in pX as real, in pY as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientScale(inout xGradient as Gradient, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientRotate(inout xGradient as Gradient, in pRadians as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientTranslate(inout xGradient as Gradient, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
+
+syntax AddGradientStop is statement
+//	"add" "stop" "at" <mOffset: Expression> "with" <mColor: Expression> "to" <mGradient: Expression>
+	"add" <mStop: Expression> "to" <mGradient:Expression>
+begin
+//	MCCanvasGradientAddStop(mGradient, mOffset, mColor)
+	MCCanvasGradientAddStop(mGradient, mStop)
+end syntax
 
 syntax TransformGradient is statement
 	"transform" <mGradient: Expression> "by" <mTransform: Expression>
@@ -578,8 +633,8 @@ end syntax
 // Operations
 
 foreign handler MCCanvasImageTransform(inout xImage as Image, in pTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasImageScale(inout xImage as Image, in pScaleX as real, in pScaleY as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasImageRotate(inout xImage as Image, in pRadians as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageScale(inout xImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageRotate(inout xImage as Image, in pRadians as CanvasFloat) as undefined binds to "<builtin>"
 foreign handler MCCanvasImageCrop(inout xImage as Image, in pLeft as integer, in pTop as integer, in pRight as integer, in pBottom as integer) as undefined binds to "<builtin>"
 
 syntax TransformImage is statement
@@ -624,11 +679,11 @@ end syntax
 
 // Primitive Constructors
 
-foreign handler MCCanvasPathMakeWithRoundedRectangle(in pLeft as real, in pTop as real, in pRight as real, in pBottom as real, in pRadiusX as real, in pRadiusY as real, out rPath as Path) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathMakeWithRectangle(in pLeft as real, in pTop as real, in pRight as real, in pBottom as real, out rPath as Path) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathMakeWithCircle(in pX as real, in pY as real, in pRadius as real, out rPath as Path) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathMakeWithEllipse(in pX as real, in pY as real, in pRadiusX as real, in pRadiusY as real, out rPath as Path) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathMakeWithLine(in pStartX as real, in pStartY as real, in pEndX as real, in pEndY as real, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithRoundedRectangle(in pLeft as CanvasFloat, in pTop as CanvasFloat, in pRight as CanvasFloat, in pBottom as CanvasFloat, in pRadiusX as CanvasFloat, in pRadiusY as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithRectangle(in pLeft as CanvasFloat, in pTop as CanvasFloat, in pRight as CanvasFloat, in pBottom as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithCircle(in pX as CanvasFloat, in pY as CanvasFloat, in pRadius as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithEllipse(in pX as CanvasFloat, in pY as CanvasFloat, in pRadiusX as CanvasFloat, in pRadiusY as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithLine(in pStartX as CanvasFloat, in pStartY as CanvasFloat, in pEndX as CanvasFloat, in pEndY as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
 foreign handler MCCanvasPathMakeWithPoints(in pPoints as list, in pClose as boolean, out rPath as Path) as undefined binds to "<builtin>"
 
 syntax MakePathWithRoundedRectangle is prefix operator with precedence 4
@@ -643,9 +698,13 @@ end syntax
 // Properties
 
 foreign handler MCCanvasPathGetSubpaths(in pPath as Path, in pStart as integer, in pEnd as integer, out rSubpaths as Path) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathGetPoints(in pPath as Path, in pStart as integer, in pEnd as integer, out rPoints as list) as undefined binds to "<builtin>"
+//foreign handler MCCanvasPathGetPoints(in pPath as Path, in pStart as integer, in pEnd as integer, out rPoints as list of Point) as undefined binds to "<builtin>"
+//foreign handler MCCanvasPathGetPoint(in pPath as Path, in pIndex as integer, out rPoint as Point) as undefined binds to "<builtin>"
 foreign handler MCCanvasPathGetBoundingBox(in pPath as Path, out rRect as list) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathGetInstructions(in pPath as Path, in pStart as integer, in pEnd as integer, out rInstructions as list) as undefined binds to "<builtin>"
+//foreign handler MCCanvasPathGetInstructions(in pPath as Path, in pStart as integer, in pEnd as integer, out rInstructions as list of PathInstruction) as undefined binds to "<builtin>"
+//foreign handler MCCanvasPathGetInstruction(in pPath as Path, in pIndex as integer, out rInstruction as PathInstruction) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out rInstructions as string) as undefined binds to "<builtin>"
+// foreign handler MCCanvasPathSetInstructionsAsString(inout xPath as Path, in pInstructions as string) as undefined binds to "<builtin>"
 
 syntax PathSubpathProperty is prefix operator with precedence 4
 	"subpath" ( <mStart: Expression> "to" <mEnd: Expression> | <mIndex: Expression> ) "of" <mPath: Expression>
@@ -654,24 +713,36 @@ begin
 	MCCanvasPathGetSubpaths(mPath, mIndex, mIndex, output)
 end syntax
 
-syntax PathPointsProperty is prefix operator with precedence 4
-	"point" ( <mStart: Expression> "to" <mEnd: Expression> | <mIndex: Expression> ) "of" <mPath: Expression>
-begin
-	MCCanvasPathGetPoints(mPath, mStart, mEnd, output)
-	MCCanvasPathGetPoints(mPath, mIndex, mIndex, output)
-end syntax
+//syntax PathPointProperty is prefix operator with precedence 4
+//	"point" <mIndex: Expression> "of" <mPath: Expression>
+//begin
+//	MCCanvasPathGetPoint(mPath, mIndex, output)
+//end syntax
+//
+//syntax PathPointsProperty is prefix operator with precedence 4
+//	"point" <mStart: Expression> "to" <mEnd: Expression> "of" <mPath: Expression>
+//begin
+//	MCCanvasPathGetPoints(mPath, mStart, mEnd, output)
+//end syntax
+//
+//syntax PathBoundingBoxProperty is prefix operator with precedence 4
+//	"bounding" "box" "of" <mPath: Expression>
+//begin
+//	MCCanvasPathGetBoundingBox(mPath, output)
+//end syntax
+//
+//// TODO - split syntax instruction / instructions
+//syntax PathInstructionProperty is prefix operator with precedence 4
+//	"instruction" ( <mStart: Expression> "to" <mEnd: Expression> | <mIndex: Expression> ) "of" <mPath: Expression>
+//begin
+//	MCCanvasPathGetInstructions(mPath, mStart, mEnd, output)
+//	MCCanvasPathGetInstructions(mPath, mIndex, mIndex, output)
+//end syntax
 
-syntax PathBoundingBoxProperty is prefix operator with precedence 4
-	"bounding" "box" "of" <mPath: Expression>
+syntax PathInstructionsProperty is prefix operator with precedence 4
+	"the" "instructions" "of" <mPath: Expression>
 begin
-	MCCanvasPathGetBoundingBox(mPath, output)
-end syntax
-
-syntax PathInstructionProperty is prefix operator with precedence 4
-	"instruction" ( <mStart: Expression> "to" <mEnd: Expression> | <mIndex: Expression> ) "of" <mPath: Expression>
-begin
-	MCCanvasPathGetInstructions(mPath, mStart, mEnd, output)
-	MCCanvasPathGetInstructions(mPath, mIndex, mIndex, output)
+	MCCanvasPathGetInstructions(mPath, output)
 end syntax
 
 //////////
@@ -679,9 +750,9 @@ end syntax
 // Operations
 
 foreign handler MCCanvasPathTransform(inout xPath as Path, in pTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathScale(inout xPath as Path, in pScaleX as real, in pScaleY as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathRotate(inout xPath as Path, in pRadians as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathTranslate(inout xPath as Path, in pX as real, in pY as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathScale(inout xPath as Path, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathRotate(inout xPath as Path, in pRadians as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathTranslate(inout xPath as Path, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
 
 foreign handler MCCanvasPathAddPath(inout xPathA as Path, in pPathB as Path) as undefined binds to "<builtin>"
 
@@ -727,7 +798,7 @@ end syntax
 foreign handler MCCanvasGraphicEffectMakeWithPropertyArray(in pType as integer, in pProperties as array, out rGraphicEffect as GraphicEffect) as undefined binds to "<builtin>"
 
 syntax GraphicEffectType is phrase
-	( "color" "overlay" <mType=1> | "inner" "shadow" <mType=2> | "outer" "shadow" <mType=3> | "inner" "glow" <mType=4> | "outer" "glow" <mType=5> )
+	( "color" "overlay" <mType=0> | "inner" "shadow" <mType=1> | "outer" "shadow" <mType=2> | "inner" "glow" <mType=3> | "outer" "glow" <mType=4> )
 begin
 end syntax
 
@@ -746,20 +817,20 @@ foreign handler MCCanvasGraphicEffectGetColor(in pGraphicEffect as GraphicEffect
 foreign handler MCCanvasGraphicEffectSetColor(inout xGraphicEffect as GraphicEffect, in pColor as Color) as undefined binds to "<builtin>"
 foreign handler MCCanvasGraphicEffectGetBlendModeAsString(in pGraphicEffect as GraphicEffect, out rBlendMode as string) as undefined binds to "<builtin>"
 foreign handler MCCanvasGraphicEffectSetBlendModeAsString(inout xGraphicEffect as GraphicEffect, in pBlendMode as string) as undefined binds to "<builtin>"
-foreign handler MCCanvasGraphicEffectGetOpacity(in pGraphicEffect as GraphicEffect, out rOpacity as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasGraphicEffectSetOpacity(inout xGraphicEffect as GraphicEffect, in pOpacity as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectGetOpacity(in pGraphicEffect as GraphicEffect, out rOpacity as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectSetOpacity(inout xGraphicEffect as GraphicEffect, in pOpacity as CanvasFloat) as undefined binds to "<builtin>"
 
 //MCCanvasGraphicEffectGetFilterAsString(in pGraphicEffect as GraphicEffect, out rFilter as string) as undefined binds to "<builtin>"
 //MCCanvasGraphicEffectSetFilterAsString(inout xGraphicEffect as GraphicEffect, in pFilter as string) as undefined binds to "<builtin>"
-foreign handler MCCanvasGraphicEffectGetSize(in pGraphicEffect as GraphicEffect, out rSize as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasGraphicEffectSetSize(inout xGraphicEffect as GraphicEffect, in pSize as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasGraphicEffectGetSpread(in pGraphicEffect as GraphicEffect, out rSpread as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasGraphicEffectSetSpread(inout xGraphicEffect as GraphicEffect, in pSpread as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectGetSize(in pGraphicEffect as GraphicEffect, out rSize as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectSetSize(inout xGraphicEffect as GraphicEffect, in pSize as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectGetSpread(in pGraphicEffect as GraphicEffect, out rSpread as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectSetSpread(inout xGraphicEffect as GraphicEffect, in pSpread as CanvasFloat) as undefined binds to "<builtin>"
 
-foreign handler MCCanvasGraphicEffectGetDistance(in pGraphicEffect as GraphicEffect, out rDistance as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasGraphicEffectSetDistance(inout xGraphicEffect as GraphicEffect, in pDistance as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasGraphicEffectGetAngle(in pGraphicEffect as GraphicEffect, out rAngle as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasGraphicEffectSetAngle(inout xGraphicEffect as GraphicEffect, in pAngle as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectGetDistance(in pGraphicEffect as GraphicEffect, out rDistance as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectSetDistance(inout xGraphicEffect as GraphicEffect, in pDistance as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectGetAngle(in pGraphicEffect as GraphicEffect, out rAngle as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasGraphicEffectSetAngle(inout xGraphicEffect as GraphicEffect, in pAngle as CanvasFloat) as undefined binds to "<builtin>"
 
 syntax GraphicEffectTypeProperty is prefix operator with precedence 4
 	"the" "type" "of" <mGraphicEffect: Expression>
@@ -828,8 +899,8 @@ foreign handler MCCanvasGetFillRuleAsString(in pCanvas as Canvas, out rFillRule 
 foreign handler MCCanvasSetFillRuleAsString(inout xCanvas as Canvas, in pFillRule as string) as undefined binds to "<builtin>"
 foreign handler MCCanvasGetAntialias(in pCanvas as Canvas, out rAntialias as boolean) as undefined binds to "<builtin>"
 foreign handler MCCanvasSetAntialias(inout xCanvas as Canvas, in pAntialias as boolean) as undefined binds to "<builtin>"
-foreign handler MCCanvasGetOpacity(in pCanvas as Canvas, out rOpacity as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasSetOpacity(inout xCanvas as Canvas, in pOpacity as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasGetOpacity(in pCanvas as Canvas, out rOpacity as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasSetOpacity(inout xCanvas as Canvas, in pOpacity as CanvasFloat) as undefined binds to "<builtin>"
 foreign handler MCCanvasGetBlendModeAsString(in pCanvas as Canvas, out rBlendMode as string) as undefined binds to "<builtin>"
 foreign handler MCCanvasSetBlendModeAsString(inout xCanvas as Canvas, in pBlendMode as string) as undefined binds to "<builtin>"
 foreign handler MCCanvasGetStippled(in pCanvas as Canvas, out rStippled as boolean) as undefined binds to "<builtin>"
@@ -891,9 +962,9 @@ end syntax
 // Operations
 
 foreign handler MCCanvasCanvasTransform(inout xCanvas as Canvas, in pTransform as Transform) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasScale(inout xCanvas as Canvas, in pScaleX as real, in pScaleY as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasRotate(inout xCanvas as Canvas, in pAngle as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasTranslate(inout xCanvas as Canvas, in pX as real,in pY as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasScale(inout xCanvas as Canvas, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasRotate(inout xCanvas as Canvas, in pAngle as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasTranslate(inout xCanvas as Canvas, in pX as CanvasFloat,in pY as CanvasFloat) as undefined binds to "<builtin>"
 
 foreign handler MCCanvasCanvasSaveState(inout xCanvas as Canvas) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasRestoreState(inout xCanvas as Canvas) as undefined binds to "<builtin>"
@@ -904,14 +975,14 @@ foreign handler MCCanvasCanvasFill(inout xCanvas as Canvas) as undefined binds t
 foreign handler MCCanvasCanvasFillPath(inout xCanvas as Canvas, in pPath as Path) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasStroke(inout xCanvas as Canvas) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasStrokePath(inout xCanvas as Canvas, in pPath as Path) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasClipToRect(inout xCanvas as Canvas, in pLeft as real, in pTop as real, in pRight as real, in pBottom as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasClipToRect(inout xCanvas as Canvas, in pLeft as CanvasFloat, in pTop as CanvasFloat, in pRight as CanvasFloat, in pBottom as CanvasFloat) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasAddPath(inout xCanvas as Canvas, in pPath as Path) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasDrawImage(inout xCanvas, in pImage as Image, in pLeft as real, in pTop as real, in pRight as real, in pBottom as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasDrawRectOfImage(inout xCanvas, in pImage as Image, in pSrcLeft as real, in pSrcTop as real, in pSrcRight as real, in pSrcBottom as real, in pDstLeft as real, in pDstTop as real, in pDstRight as real, in pDstBottom as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasMoveTo(inout xCanvas as Canvas, in pX as real, in pY as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasLineTo(inout xCanvas as Canvas, in pX as real, in pY as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasCurveThroughPoint(inout xCanvas as Canvas, in pThroughX as real, in pThroughY as real, in pToX as real, in pToY as real) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasCurveThroughPoints(inout xCanvas as Canvas, in pThroughAX as real, in pThroughAY as real, in pThroughBX as real, in pThroughBY as real, in pToX as real, in pToY as real) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasDrawImage(inout xCanvas, in pImage as Image, in pLeft as CanvasFloat, in pTop as CanvasFloat, in pRight as CanvasFloat, in pBottom as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasDrawRectOfImage(inout xCanvas, in pImage as Image, in pSrcLeft as CanvasFloat, in pSrcTop as CanvasFloat, in pSrcRight as CanvasFloat, in pSrcBottom as CanvasFloat, in pDstLeft as CanvasFloat, in pDstTop as CanvasFloat, in pDstRight as CanvasFloat, in pDstBottom as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasMoveTo(inout xCanvas as Canvas, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasLineTo(inout xCanvas as Canvas, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasCurveThroughPoint(inout xCanvas as Canvas, in pThroughX as CanvasFloat, in pThroughY as CanvasFloat, in pToX as CanvasFloat, in pToY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasCurveThroughPoints(inout xCanvas as Canvas, in pThroughAX as CanvasFloat, in pThroughAY as CanvasFloat, in pThroughBX as CanvasFloat, in pThroughBY as CanvasFloat, in pToX as CanvasFloat, in pToY as CanvasFloat) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasClosePath(inout xCanvas as Canvas) as undefined binds to "<builtin>"
 
 syntax TransformCanvas is statement
