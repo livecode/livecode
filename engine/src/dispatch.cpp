@@ -75,6 +75,7 @@ MCImage *MCDispatch::imagecache;
 static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The following is not ASCII text,\n# so now would be a good time to q out of more\f\nexec mc $0 \"$@\"\n";
 
 #define NEWHEADERSIZE 8
+#define HEADERPREFIXSIZE 4
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
 static const char *newheader7000 = "REVO7000";
@@ -639,7 +640,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 			MCresult->sets("stack was produced by a newer version");
 			return IO_ERROR;
 		}
-
+        
 		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
 		//   parentscript resolution is required to false.
 		s_loaded_parent_script_reference = false;
