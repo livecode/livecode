@@ -75,6 +75,7 @@ bool MCScriptThrowValueProvidedForOutParameterError(MCScriptModuleRef module, MC
 bool MCScriptThrowNoValueProvidedForInParameterError(MCScriptModuleRef module, MCNameRef handler, MCNameRef parameter);
 bool MCScriptThrowInvalidValueForParameterError(MCScriptModuleRef module, MCNameRef handler, MCNameRef parameter, MCTypeInfoRef type, MCValueRef value);
 bool MCScriptThrowTypecheckFailureError(MCScriptModuleRef module, uindex_t address, MCTypeInfoRef type, MCValueRef value);
+bool MCScriptThrowOutOfMemoryError(MCScriptModuleRef module, uindex_t address);
 
 bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_property, MCValueRef& r_value)
 {
@@ -285,7 +286,23 @@ struct MCScriptFrame
 
 static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_instance, MCScriptHandlerDefinition *p_handler, MCScriptFrame*& r_frame)
 {
-    return false;
+    MCScriptFrame *self;
+    self = nil;
+    if (!MCMemoryNew(self) ||
+        !MCMemoryNewArray(p_handler -> slot_count, self -> slots))
+    {
+        MCMemoryDelete(self);
+        return p_caller != nil ? MCScriptThrowOutOfMemoryError(p_caller -> instance -> module, p_caller -> address) : MCScriptThrowOutOfMemoryError(nil, 0);
+    }
+    
+    self -> caller = p_caller;
+    self -> instance = MCScriptRetainInstance(p_instance);
+    self -> handler = p_handler;
+    self -> address = p_handler -> address;
+    
+    r_frame = self;
+    
+    return true;
 }
 
 static MCScriptFrame *MCScriptDestroyFrame(MCScriptFrame *p_current)
