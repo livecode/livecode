@@ -3602,28 +3602,10 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         
         // AL-2014-07-31: [[ Bug 13043 ]] It is possible for utf8 string length to be different
         // here from the char count of the string.
-        // SN-2014-10-27: [[ Bug 13554 ]] We use the C-string length before LC 7.0
-        uint32_t t_script_length;
-        if (MCstackfileversion < 7000)
-        {
-            MCAutoStringRefAsCString t_cstring;
-            t_cstring . Lock(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()));
-            t_script_length = strlen(*t_cstring);
-        }
-        else
-        {
-            MCAutoStringRefAsUTF8String t_utf8_string;
-            t_utf8_string . Lock(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()));
-            t_script_length = t_utf8_string . Size();
-        }
-        
-        t_size += 1 + 1 + 4 + t_script_length;
-
-        // for < 7.0, add 2 (for the 2 nul terminators). For >= 7.0, add 8 for the 2 uint32s
-        if (MCstackfileversion < 7000)
-            t_size += 2;
-        else
-            t_size += 8;
+        // SN-2014-10-27: [[ Bug 13554 ]] String length calculation refactored
+        t_size += 1 + 1 + 4
+                + p_stream . MeasureStringRefNew(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()), MCstackfileversion >= 7000)
+                + p_stream . MeasureStringRefNew(kMCEmptyString, MCstackfileversion >= 7000);
 	}
 
 	// MW-2009-09-24: Slight oversight on my part means that there is no record
