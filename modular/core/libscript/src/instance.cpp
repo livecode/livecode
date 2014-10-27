@@ -275,8 +275,11 @@ struct MCScriptFrame
     // The address (instruction pointer) into the instance's module bytecode.
     uindex_t address;
     
-    // The slots for the current handler invocation. This is a list consisting
-    // parameters, then local variables, then temporaries.
+    // The slots for the current handler invocation. The slots are in this order:
+    //   <return parameter> (if returntype defined)
+    //   <parameters>
+    //   <variables>
+    //   <temporaries>
     MCValueRef *slots;
 };
 
@@ -368,7 +371,7 @@ static inline MCTypeInfoRef MCScriptFetchTypeInFrame(MCScriptFrame *p_frame, int
 
 static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, int p_handler_index)
 {
-    return true;
+    return false;
 }
 
 bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHandlerDefinition *p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
@@ -526,10 +529,19 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // return
                 
+                // If there is no frame to return to, fetch the return value (if any).
+                if (t_frame -> caller == nil &&
+                    MCHandlerTypeInfoGetReturnType(t_frame -> handler -> signature) != nil)
+                {
+                    __MCScriptAssert__(t_frame -> slots[0] != nil,
+                                       "return value undefined in a handler which returns a value");
+                    r_value = MCValueRetain(t_frame -> slots[0]);
+                }
+                
                 // Pop and destroy the top frame of the stack.
                 t_frame = MCScriptDestroyFrame(t_frame);
                 
-                // If there is still a frame, update the bytecode ptr.
+                // If there is a frame to return to, update the bytecode ptr.
                 if (t_frame != nil)
                     t_next_bytecode = t_frame -> instance -> module -> bytecode + t_frame -> address;
             }
@@ -585,6 +597,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
         t_bytecode = t_next_bytecode;
     }
     
+    // Copy return value (if any).
     if (!t_success)
         while(t_frame != nil)
             t_frame = MCScriptDestroyFrame(t_frame);
