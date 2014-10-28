@@ -197,7 +197,10 @@ static uint32_t s_key_equivalent_depth = 0;
 - (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action
 {
     // MW-2014-10-22: [[ Bug 13510 ]] Make sure we update menus before searching for accelerators.
-    [[menu delegate] menuNeedsUpdate: menu];
+    // SN-2014-10-28: [[ Bug 13839 ]] This call to menuNeedsUpdate causes nesting call of performKeyEquivalent to
+    //  the menuDelegate. That eventually duplicate the call to keyDown, as well as preventing, in a way I did not define,
+    //  the expected execution (RawKeyDown end up to be never called).
+//    [[menu delegate] menuNeedsUpdate: menu];
 	return NO;
 }
 
