@@ -425,6 +425,8 @@ MCStackdirIOCommitSave_ObjectCallback (void *context, MCArrayRef p_array,
 void
 MCStackdirIOCommitSave (MCStackdirIORef op)
 {
+	bool t_success = true;
+
 	MCStackdirIOAssertSave(op);
 
 	/* Sanity check the state that we're supposed to be saving. */
@@ -432,18 +434,17 @@ MCStackdirIOCommitSave (MCStackdirIORef op)
 
 	if (!MCStackdirIOSaveTransactionStart (op)) return;
 
-	/* Save version info and all objects. If anything fails, abort the
-	 * transaction. */
-	if (!(MCStackdirIOSaveVersion (op) &&
-		  MCArrayApply (op->m_save_state,
-						MCStackdirIOCommitSave_ObjectCallback,
-						op)));
-	{
-		MCStackdirIOSaveTransactionCancel (op);
-		return;
-	}
+	/* Save version info and all objects. */
+	t_success = t_success && MCStackdirIOSaveVersion (op);
 
-	if (!MCStackdirIOSaveTransactionEnd (op)) return;
+	t_success = t_success && MCArrayApply (op->m_save_state,
+										   MCStackdirIOCommitSave_ObjectCallback,
+										   op);
+
+	if (t_success)
+		MCStackdirIOSaveTransactionEnd (op);
+	else
+		MCStackdirIOSaveTransactionCancel (op);
 }
 
 /* ----------------------------------------------------------------
