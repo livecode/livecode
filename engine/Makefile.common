@@ -16,7 +16,7 @@ CUSTOM_DEPS= libkernel.a libfoundation.a libpng.a libpcre.a libjpeg.a libopenssl
 
 CUSTOM_LIBS=$(MODE_LIBS) kernel foundation z gif png pcre jpeg graphics skia openssl
 # Removed: icuio icule iculx 
-CUSTOM_STATIC_LIBS=stdc++ icudata icuuc icui18n $(MODE_STATIC_LIBS)
+CUSTOM_STATIC_LIBS=icudata icuuc icui18n $(MODE_STATIC_LIBS)
 CUSTOM_DYNAMIC_LIBS=dl m pthread $(MODE_DYNAMIC_LIBS)
 
 CUSTOM_CCFLAGS=\
