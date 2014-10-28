@@ -21,12 +21,12 @@ ifeq ($(ARCH),)
     endif
 endif
 
+ifeq ($(CC),)
+	CC:=gcc
+endif
+
 ifeq ($(origin LD), default)
-	ifeq ($(origin CC), default)
-		LD:="g++"
-	else
-		LD:=$(CC)
-	endif
+	LD:=$(CC)
 	LD_IS_CC:=1
 endif
 
