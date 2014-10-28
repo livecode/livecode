@@ -51,11 +51,14 @@ struct _MCStackdirIOObjectSave
 {
 	MCStackdirIORef m_op;
 
-	/* Path to object directory */
-	MCStringRef m_path;
+	/* Object's UUID */
+	MCNameRef m_uuid;
 
 	/* Object's state array */
 	MCArrayRef m_state;
+
+	/* Path to object directory */
+	MCStringRef m_path;
 };
 
 /* ----------------------------------------------------------------
@@ -80,6 +83,9 @@ static bool MCStackdirIOSaveVersion (MCStackdirIORef op);
 
 /* Save one stack object */
 static bool MCStackdirIOSaveObject (MCStackdirIORef op, MCNameRef p_uuid, MCArrayRef p_state);
+
+/* Create object directory */
+static bool MCStackdirIOSaveObjectDirectory (MCStackdirIOObjectSaveRef info);
 
 /* Create object's "_kind" file */
 static bool MCStackdirIOSaveObjectKind (MCStackdirIOObjectSaveRef info);
@@ -382,6 +388,81 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 }
 
 /* ================================================================
+ * Object saving
+ * ================================================================ */
+
+static bool
+MCStackdirIOSaveObjectDirectory (MCStackdirIOObjectSaveRef info)
+{
+	MCStringRef t_uuid = MCNameGetString (info->m_uuid);
+	uindex_t t_uuid_len = MCStringGetLength (t_uuid);
+
+	/* Sanity-check UUID. Must be 36-character string. We assume that
+	 * it has already been processed into canonical format. */
+	/* FIXME Maybe these should be "bad state" errors. */
+	MCAssert (36 == t_uuid_len);
+
+	/* First step is to create the LSB directory. */
+	MCAutoStringRef t_uuid_lsb, t_lsb_dir;
+	/* UNCHECKED */ MCStringCopySubstring (t_uuid,
+										   MCRangeMake (t_uuid_len - 3, 2),
+										   &t_uuid_lsb);
+	/* UNCHECKED */ MCStringFormat (&t_lsb_dir, "%@/%@",
+									info->m_op->m_save_build_dir, *t_uuid_lsb);
+
+	if (!MCS_mkdir (*t_lsb_dir))
+	{
+		/* Test whether creating the directory failed because it
+		 * already existed (that's okay) */
+		if (!MCS_exists (*t_lsb_dir, false))
+			return MCStackdirIOErrorIO (info->m_op, *t_lsb_dir,
+										MCSTR ("Failed to create object directory"));
+	}
+
+	/* Now create object directory within */
+	MCAutoStringRef t_object_dir;
+	/* UNCHECKED */ MCStringFormat (&t_object_dir, "%@/%@", *t_lsb_dir, t_uuid);
+
+	if (!MCS_mkdir (*t_object_dir))
+		/* Here we *require* the object directory not to exist yet. */
+		return MCStackdirIOErrorIO (info->m_op, *t_lsb_dir,
+									MCSTR ("Failed to create object directory"));
+
+	info->m_path = MCValueRetain (*t_object_dir);
+	return true;
+}
+
+static bool
+MCStackdirIOSaveObject (MCStackdirIORef op, MCNameRef p_uuid, MCArrayRef p_state)
+{
+	bool t_success = true;
+	MCStackdirIOObjectSaveRef info;
+
+	/* Create and initialise object information structure */
+	t_success = MCMemoryNew (info);
+	if (!t_success)
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	info->m_op = op;
+	info->m_uuid = MCValueRetain (p_uuid);
+	info->m_state = MCValueRetain (p_state);
+	info->m_path = nil;
+
+	/* Create object directory */
+	t_success = t_success && MCStackdirIOSaveObjectDirectory (info);
+
+	/* Generate object contents */
+
+	/* Clean up */
+	MCValueRelease (info->m_uuid);
+	MCValueRelease (info->m_state);
+	MCValueRelease (info->m_path);
+	MCMemoryDelete (info);
+
+	return t_success;
+}
+
+/* ================================================================
  * Version information
  * ================================================================ */
 
@@ -419,7 +500,9 @@ MCStackdirIOCommitSave_ObjectCallback (void *context, MCArrayRef p_array,
 {
 	MCStackdirIORef t_op = (MCStackdirIORef) context;
 
-	/* The object state should always be an array! */
+	/* The object state should always be an array and the key should
+	 * always be a non-empty string. */
+	MCAssert (!MCNameIsEmpty (p_key));
 	MCAssert (MCValueIsArray (p_value));
 	MCArrayRef t_state = (MCArrayRef) p_value;
 
