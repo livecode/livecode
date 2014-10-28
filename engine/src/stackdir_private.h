@@ -82,6 +82,7 @@ bool MCStackdirIONew (MCStackdirIORef &op);
 /* FIXME these should probably be MCStringRefs */
 #define kMCStackdirVersionFile  MCSTR("_version")
 #define kMCStackdirKindFile     MCSTR("_kind")
+#define kMCStackdirParentFile   MCSTR("_parent")
 #define kMCStackdirContentsFile MCSTR("_contents")
 #define kMCStackdirOverflowFile MCSTR("_overflow")
 #define kMCStackdirSaveBackupDir MCSTR("_save_backup")
@@ -114,6 +115,7 @@ inline bool MCStackdirIOHasError (MCStackdirIORef op)
 bool MCStackdirIOErrorIO (MCStackdirIORef op, MCStringRef p_filename, MCStringRef p_message);
 bool MCStackdirIOErrorOutOfMemory (MCStackdirIORef op);
 bool MCStackdirIOErrorBadPath (MCStackdirIORef op, MCStringRef p_message);
+bool MCStackdirIOErrorBadState (MCStackdirIORef op, MCStringRef p_filename, MCStringRef p_message);
 
 /* ----------------------------------------------------------------
  * [Private] Indirect implementations of public functions

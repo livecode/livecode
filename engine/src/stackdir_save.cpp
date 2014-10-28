@@ -90,6 +90,10 @@ static bool MCStackdirIOSaveObject (MCStackdirIORef op, MCNameRef p_uuid, MCArra
 /* Create object directory */
 static bool MCStackdirIOSaveObjectDirectory (MCStackdirIOObjectSaveRef info);
 
+/* Extract the value corresponding to p_key from the object's state
+ * array, and save it to a file with name p_key. */
+static bool MCStackdirIOSaveObjectKeyDirect (MCStackdirIOObjectSaveRef info, MCStringRef p_key);
+
 /* Create object's "_kind" file */
 static bool MCStackdirIOSaveObjectKind (MCStackdirIOObjectSaveRef info);
 
@@ -454,17 +458,39 @@ MCStackdirIOSaveObjectDirectory (MCStackdirIOObjectSaveRef info)
 }
 
 static bool
+MCStackdirIOSaveObjectKeyDirect (MCStackdirIOObjectSaveRef info, MCStringRef p_key)
+{
+	MCNewAutoNameRef t_key;
+	MCValueRef t_value;
+	/* UNCHECKED */ MCNameCreate (p_key, &t_key);
+
+	/* Each object's state array has to have the specified key */
+	if (!MCArrayFetchValue (info->m_state, false, *t_key, t_value))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  MCSTR ("Missing required key in object."));
+
+	MCAutoStringRef t_content_literal, t_content;
+	/* UNCHECKED */ MCStackdirFormatLiteral (t_value, &t_content_literal);
+	/* UNCHECKED */ MCStringFormat (&t_content, "%@\n", *t_content_literal);
+
+	/* Construct path for file */
+	MCAutoStringRef t_path;
+	/* UNCHECKED */ MCStringFormat (&t_path, "%@/%@", info->m_path,
+									p_key);
+
+	return MCStackdirIOSaveUTF8 (info->m_op, *t_path, *t_content);
+}
+
+static bool
 MCStackdirIOSaveObjectKind (MCStackdirIOObjectSaveRef info)
 {
-	/* FIXME implementation */
-	return true;
+	return MCStackdirIOSaveObjectKeyDirect (info, kMCStackdirKindFile);
 }
 
 static bool
 MCStackdirIOSaveObjectParent (MCStackdirIOObjectSaveRef info)
 {
-	/* FIXME implementation */
-	return true;
+	return MCStackdirIOSaveObjectKeyDirect (info, kMCStackdirParentFile);
 }
 
 static bool

@@ -126,6 +126,18 @@ MCStackdirIOErrorBadPath (MCStackdirIORef op, MCStringRef p_message)
 	return false;
 }
 
+bool
+MCStackdirIOErrorBadState (MCStackdirIORef op, MCStringRef p_filename,
+						   MCStringRef p_message)
+{
+	MCStackdirIOError (op, kMCStackdirStatusBadPath,
+					   p_filename,     /* filename */
+					   kMCEmptyString, /* line */
+					   kMCEmptyString, /* column */
+					   p_message);     /* message */
+	return false;
+}
+
 /* ----------------------------------------------------------------
  * [Private] Low-level IO operation utilities
  * ---------------------------------------------------------------- */
