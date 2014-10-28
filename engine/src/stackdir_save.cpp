@@ -173,7 +173,6 @@ MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path)
 static bool
 MCStackdirIOSaveTransactionCreateDir (MCStackdirIORef op, MCStringRef &r_temp_path)
 {
-	static const size_t s_suffix_bytes = 6;
 	MCAutoStringRef t_resolved_path, t_base_path, t_temp_path;
 
 	if (!MCS_resolvepath (op->m_path, &t_resolved_path))
@@ -199,15 +198,20 @@ MCStackdirIOSaveTransactionCreateDir (MCStackdirIORef op, MCStringRef &r_temp_pa
 	while (true)
 	{
 		MCAutoDataRef t_suffix_data;
-		MCAutoStringRef t_suffix, t_native_path;
+		uint32_t t_suffix_numeric;
+		MCAutoStringRef t_native_path;
 
-		/* Create a random string */
-		/* UNCHECKED */ MCU_random_bytes (s_suffix_bytes, &t_suffix_data);
-		/* UNCHECKED */ MCU_base64encode(*t_suffix_data, &t_suffix);
+		/* Create a random number */
+		/* UNCHECKED */ MCU_random_bytes (sizeof (t_suffix_numeric),
+										  &t_suffix_data);
+		for (size_t i = 0; i < sizeof (t_suffix_numeric); ++i)
+		{
+			t_suffix_numeric += MCDataGetByteAtIndex (*t_suffix_data, i) << i;
+		}
 
 		/* Generate directory path */
-		/* UNCHECKED */ MCStringFormat (&t_temp_path, "%@.temp%@",
-										*t_base_path, *t_suffix);
+		/* UNCHECKED */ MCStringFormat (&t_temp_path, "%@.temp%x",
+										*t_base_path, t_suffix_numeric);
 
 		/* Attempt to create directory */
 		if (MCS_mkdir (*t_temp_path))
