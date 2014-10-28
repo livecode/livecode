@@ -93,6 +93,9 @@ static bool MCStackdirIOSaveObjectKind (MCStackdirIOObjectSaveRef info);
 /* Create object's "_parent" file */
 static bool MCStackdirIOSaveObjectParent (MCStackdirIOObjectSaveRef info);
 
+/* Save object's internal properties */
+static bool MCStackdirIOSaveObjectInternal (MCStackdirIOObjectSaveRef info);
+
 /* Save object's custom property sets (in ".propset" directories, and
  * create "_propsets" if necessary. */
 static bool MCStackdirIOSaveObjectPropsets (MCStackdirIOObjectSaveRef info);
@@ -433,6 +436,41 @@ MCStackdirIOSaveObjectDirectory (MCStackdirIOObjectSaveRef info)
 }
 
 static bool
+MCStackdirIOSaveObjectKind (MCStackdirIOObjectSaveRef info)
+{
+	/* FIXME implementation */
+	return true;
+}
+
+static bool
+MCStackdirIOSaveObjectParent (MCStackdirIOObjectSaveRef info)
+{
+	/* FIXME implementation */
+	return true;
+}
+
+static bool
+MCStackdirIOSaveObjectInternal (MCStackdirIOObjectSaveRef info)
+{
+	/* FIXME implementation */
+	return true;
+}
+
+static bool
+MCStackdirIOSaveObjectPropsets (MCStackdirIOObjectSaveRef info)
+{
+	/* FIXME implementation */
+	return true;
+}
+
+static bool
+MCStackdirIOSaveObjectShared (MCStackdirIOObjectSaveRef info)
+{
+	/* FIXME implementation */
+	return true;
+}
+
+static bool
 MCStackdirIOSaveObject (MCStackdirIORef op, MCNameRef p_uuid, MCArrayRef p_state)
 {
 	bool t_success = true;
@@ -452,6 +490,12 @@ MCStackdirIOSaveObject (MCStackdirIORef op, MCNameRef p_uuid, MCArrayRef p_state
 	t_success = t_success && MCStackdirIOSaveObjectDirectory (info);
 
 	/* Generate object contents */
+	t_success = (t_success &&
+				 MCStackdirIOSaveObjectKind (info) &&
+				 MCStackdirIOSaveObjectParent (info) &&
+				 MCStackdirIOSaveObjectInternal (info) &&
+				 MCStackdirIOSaveObjectPropsets (info) &&
+				 MCStackdirIOSaveObjectShared (info));
 
 	/* Clean up */
 	MCValueRelease (info->m_uuid);
