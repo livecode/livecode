@@ -21,8 +21,8 @@ ifeq ($(ARCH),)
     endif
 endif
 
-ifeq ($(CC),)
-	CC:=gcc
+ifeq ($(origin CC), default)
+	CC:="g++"
 endif
 
 ifeq ($(origin LD), default)
