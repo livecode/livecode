@@ -185,7 +185,7 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       
       put empty into sDeploySimulationStatus
       try
-         revIPhoneLaunchAppInSimulator tTempAppBundle, tFamily, "revIDEDeployIOSLaunchCallback"
+         revIPhoneLaunchAppInSimulator textEncode(tTempAppBundle, "utf-8"), tFamily, "revIDEDeployIOSLaunchCallback"
       catch tException
       end try
       
