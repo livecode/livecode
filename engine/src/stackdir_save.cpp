@@ -111,6 +111,12 @@ MCStackdirIORemoveFolderRecursive_Callback (void *p_context,
 {
 	MCStackdirIORef t_op = (MCStackdirIORef) p_context;
 
+	if (MCStringIsEqualTo (p_entry->name, MCSTR (".."),
+						   kMCStringOptionCompareExact) ||
+		MCStringIsEqualTo (p_entry->name, MCSTR ("."),
+						   kMCStringOptionCompareExact))
+		return true;
+
 	if (p_entry->is_folder)
 	{
 		/* Recurse */
