@@ -1338,6 +1338,14 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				MCcurtheme->drawwidget(dc, tabwinfo, tabrect);
 			twidth -= taboverlap;
 
+#ifdef _MACOSX
+            // FG-2014-10-24: [[ Bugfix 11912 ]]
+            // On OSX, reverse the text colour for selected tab buttons
+            if (i+1 == menuhistory)
+                reversetext = True;
+            else
+                reversetext = False;
+#endif
 		}
 		else
 			switch (MClook)
