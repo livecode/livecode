@@ -1462,6 +1462,7 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 {
 	MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
+	bool t_success = true;
 	
 	if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
         return false;
@@ -1477,14 +1478,14 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 	}
     
 	if (!t_file -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data)))
+	{
 		MCresult -> sets("error writing file");
+		t_success = false;
+	}
 	
 	t_file -> Close();
 	
-    if (!MCresult -> isclear())
-		return false;
-    
-    return true;
+    return t_success;
 }
 
 int64_t MCS_fsize(IO_handle p_stream)
