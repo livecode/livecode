@@ -169,6 +169,7 @@ struct MCScriptEventDefinition: public MCScriptDefinition
 
 MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *definition);
 MCScriptHandlerDefinition *MCScriptDefinitionAsHandler(MCScriptDefinition *definition);
+MCScriptForeignHandlerDefinition *MCScriptDefinitionAsForeignHandler(MCScriptDefinition *definition);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -220,6 +221,8 @@ void MCScriptDestroyModule(MCScriptModuleRef module);
 bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptPropertyDefinition*& r_definition);
 bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef module, MCNameRef handler, MCScriptHandlerDefinition*& r_definition);
 
+bool MCScriptResolveDefinitionInModule(MCScriptModuleRef module, uindex_t index, MCScriptInstanceRef& r_instance, MCScriptDefinition*& r_definition);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCScriptInstance: public MCScriptObject
@@ -244,12 +247,22 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScrip
 // The array of registers is referenced directly in instructions with a 0-based
 // index.
 //
+// The register file consists of the following in order:
+//   result register (if returns a value)
+//   parameters
+//   local variables
+//   temporaries
+//
 // Globals are accessed indirectly - they must be copied into a register before use;
 // and copied back upon update.
 //
 // Each instruction is represented by a single byte, with arguments being encoded
 // sequentially as multi-byte (signed) integers.
 //
+// The top nibble of each op indicates how many subsequent parameters there are.
+// If the top nibble is 15 then, an extension byte follows. If the extension byte is
+// present then the instruction requires 15 + extension byte arguments up to a
+// maximum of 256.
 
 enum MCScriptBytecodeOp
 {
@@ -310,15 +323,6 @@ enum MCScriptBytecodeOp
 	//   store-global: <src>, <glob-index>
 	// Assigns the current value of register <src> to <glob-index>.
 	kMCScriptBytecodeOpStoreGlobal,
-	
-	// Parameter fetch:
-	//   fetch-param <dst>, <param-index>
-	// Assigns the current value of <param-index> to register <dst>.
-	//kMCScriptBytecodeOpFetchParameter,
-	// Parameter store:
-	//   store-param <src>, <param-index>
-	// Assigns the current value of register <src> to <param-index>
-	//kMCScriptBytecodeOpStoreParameter,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

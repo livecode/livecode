@@ -560,6 +560,7 @@ typedef struct __MCData *MCDataRef;
 typedef struct __MCArray *MCArrayRef;
 typedef struct __MCEnum *MCEnumRef;
 typedef struct __MCRecord *MCRecordRef;
+typedef struct __MCHandler *MCHandlerRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCStream *MCStreamRef;
@@ -2199,6 +2200,14 @@ bool MCSetIntersect(MCSetRef set, MCSetRef other_set);
 
 bool MCSetIterate(MCSetRef set, uindex_t& x_iterator, uindex_t& r_element);
 bool MCSetList(MCSetRef set, uindex_t*& r_element, uindex_t& r_element_count);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  HANDLER DEFINITIONS
+//
+
+void *MCHandlerGetDefinition(MCHandlerRef handler);
+void *MCHandlerGetInstance(MCHandlerRef handler);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

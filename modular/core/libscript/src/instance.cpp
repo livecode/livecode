@@ -282,6 +282,10 @@ struct MCScriptFrame
     //   <variables>
     //   <temporaries>
     MCValueRef *slots;
+	
+	// The mapping array - this lists the mapping from parameters to registers
+	// in the callers frame, for handling inout/out parameters.
+	int *mapping;
 };
 
 static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_instance, MCScriptHandlerDefinition *p_handler, MCScriptFrame*& r_frame)
@@ -310,12 +314,22 @@ static MCScriptFrame *MCScriptDestroyFrame(MCScriptFrame *p_current)
     return nil;
 }
 
-static inline MCScriptBytecodeOp MCScriptBytecodeDecodeOp(byte_t*& x_bytecode_ptr)
+static inline void MCScriptBytecodeDecodeOp(byte_t*& x_bytecode_ptr, MCScriptBytecodeOp& r_op, int& r_arity)
 {
-    MCScriptBytecodeOp t_op;
-    t_op = (MCScriptBytecodeOp)*x_bytecode_ptr;
-    x_bytecode_ptr += 1;
-    return t_op;
+    byte_t t_op_byte;
+	t_op_byte = *x_bytecode_ptr++;
+	
+	// The lower nibble is the bytecode operation.
+	MCScriptBytecodeOp t_op;
+	t_op = (MCScriptBytecodeOp)(t_op & 0xf);
+	
+	// The upper nibble is the arity.
+	int t_arity;
+	t_arity = (t_op_byte >> 4);
+	
+	// If the arity is 15, then overflow to a subsequent byte.
+	if (t_arity == 15)
+		t_arity += *x_bytecode_ptr++;
 }
 
 // TODO: Make this better for negative numbers.
@@ -386,9 +400,34 @@ static inline MCTypeInfoRef MCScriptFetchTypeInFrame(MCScriptFrame *p_frame, int
     return (MCTypeInfoRef)t_value;
 }
 
-static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, int p_handler_index)
+static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptHandlerDefinition *p_handler, int *p_arguments, int p_arity)
 {
-    return false;
+	return false;
+}
+
+static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, int *p_arguments, int p_arity)
+{
+	return false;
+}
+
+static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, int *p_arguments, int p_arity)
+{
+	if (p_handler -> kind == kMCScriptDefinitionKindHandler)
+	{
+		MCScriptHandlerDefinition *t_handler;
+		t_handler = MCScriptDefinitionAsHandler(p_handler);
+		
+		return MCScriptPerformScriptInvoke(x_frame, x_next_bytecode, p_instance, t_handler, p_arguments, p_arity);
+	}
+	else if (p_handler -> kind == kMCScriptDefinitionKindForeignHandler)
+	{
+		MCScriptForeignHandlerDefinition *t_foreign_handler;
+		t_foreign_handler = MCScriptDefinitionAsForeignHandler(p_handler);
+		
+		return MCScriptPerformForeignInvoke(x_frame, p_instance, t_foreign_handler, p_arguments, p_arity);
+	}
+	
+	__MCScriptUnreachable__("non-handler definition passed to invoke");
 }
 
 bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHandlerDefinition *p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
@@ -405,6 +444,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
     bool t_success;
     t_success = true;
     
+	int t_arguments[256];
+	
     byte_t *t_bytecode;
     t_bytecode = t_frame -> instance -> module -> bytecode + t_frame -> address;
     for(;;)
@@ -413,7 +454,12 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
         t_next_bytecode = t_bytecode;
         
         MCScriptBytecodeOp t_op;
-        t_op = MCScriptBytecodeDecodeOp(t_next_bytecode);
+		int t_arity;
+        MCScriptBytecodeDecodeOp(t_next_bytecode, t_op, t_arity);
+		
+		for(int i = 0; i < t_arity; i++)
+			t_arguments[i] = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+		
         switch(t_op)
         {
             case kMCScriptBytecodeOpNone:
@@ -423,7 +469,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // jump <offset>
                 int t_offset;
-                t_offset = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+                t_offset = t_arguments[0];
                 
                 // <offset> is relative to the start of this instruction.
                 t_next_bytecode = t_bytecode + t_offset;
@@ -433,8 +479,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // jumpifdef <register>, <offset>
                 int t_register, t_offset;
-                t_register = MCScriptBytecodeDecodeArgument(t_next_bytecode);
-                t_offset = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+                t_register = t_arguments[0];
+                t_offset = t_arguments[1];
                 
                 // if the value in the register is undefined, then jump.
                 if (MCScriptFetchFromRegisterInFrame(t_frame, t_register) == kMCNull)
@@ -445,8 +491,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // jumpifdef <register>, <offset>
                 int t_register, t_offset;
-                t_register = MCScriptBytecodeDecodeArgument(t_next_bytecode);
-                t_offset = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+                t_register = t_arguments[0];
+                t_offset = t_arguments[1];
                 
                 // if the value in the register is not undefined, then jump.
                 if (MCScriptFetchFromRegisterInFrame(t_frame, t_register) != kMCNull)
@@ -457,8 +503,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // jumpiftrue <register>, <offset>
                 int t_register, t_offset;
-                t_register = MCScriptBytecodeDecodeArgument(t_next_bytecode);
-                t_offset = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+                t_register = t_arguments[0];
+                t_offset = t_arguments[1];
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
@@ -475,8 +521,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // jumpiffalse <register>, <offset>
                 int t_register, t_offset;
-                t_register = MCScriptBytecodeDecodeArgument(t_next_bytecode);
-                t_offset = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+                t_register = t_arguments[0];
+                t_offset = t_arguments[1];
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
@@ -493,8 +539,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // assignconst <dst>, <index>
                 int t_dst, t_constant_index;
-                t_dst = MCScriptBytecodeDecodeArgument(t_next_bytecode);
-                t_constant_index = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+                t_dst = t_arguments[0];
+                t_constant_index = t_arguments[1];
                 
                 // Fetch the constant.
                 MCValueRef t_value;
@@ -508,8 +554,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // assign <dst>, <src>
                 int t_dst, t_src;
-                t_dst = MCScriptBytecodeDecodeArgument(t_next_bytecode);
-                t_src = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+                t_dst = t_arguments[0];
+                t_src = t_arguments[1];
                 
                 __MCScriptAssert__(t_dst == t_src,
                                    "src and dst registers same in assign");
@@ -523,8 +569,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // typecheck <reg>, <typeinfo>
                 int t_register, t_type_index;
-                t_register = MCScriptBytecodeDecodeArgument(t_next_bytecode);
-                t_type_index = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+                t_register = t_arguments[0];
+                t_type_index = t_arguments[1];
                 
                 // Fetch the value from the frame
                 MCValueRef t_value;
@@ -552,8 +598,27 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 {
                     __MCScriptAssert__(t_frame -> slots[0] != nil,
                                        "return value undefined in a handler which returns a value");
-                    r_value = MCValueRetain(t_frame -> slots[0]);
+                    r_value = t_frame -> slots[0];
+					
+					// Mark the slot as free as the value has been taken.
+					t_frame -> slots[0] = nil;
                 }
+				
+				// If there is a mapping array the do the copyback.
+				if (t_frame -> mapping != nil)
+				{
+					int t_param_count;
+					t_param_count = MCHandlerTypeInfoGetParameterCount(t_frame -> handler -> signature);
+					for(int i = 0; i < t_param_count; i++)
+						if (MCHandlerTypeInfoGetParameterMode(t_frame -> handler -> signature, i) != kMCHandlerTypeFieldModeIn)
+						{
+							// Assign the return value to the mapped register.
+							MCScriptStoreToRegisterInFrame(t_frame -> caller, t_frame -> mapping[i], t_frame -> slots[i]);
+							
+							// Mark the slot as free as the value has been taken.
+							t_frame -> slots[i] = nil;
+						}
+				}
                 
                 // Pop and destroy the top frame of the stack.
                 t_frame = MCScriptDestroyFrame(t_frame);
@@ -567,20 +632,41 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // invoke <index>, <arg_1>, ..., <arg_n>
                 int t_index;
-                t_index = MCScriptBytecodeDecodeArgument(t_next_bytecode);
-                t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_frame -> instance, t_index);
+                t_index = t_arguments[0];
+				
+				MCScriptInstanceRef t_instance;
+				MCScriptDefinition *t_definition;
+				MCScriptResolveDefinitionInModule(t_frame -> instance -> module, t_index, t_instance, t_definition);
+				
+				t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity);
             }
             break;
             case kMCScriptBytecodeOpInvokeIndirect:
             {
+                // invoke *<src>, <arg_1>, ..., <arg_n>
+				int t_src;
+				t_src = t_arguments[0];
+				
+				MCValueRef t_handler;
+				t_handler = MCScriptFetchFromRegisterInFrame(t_frame, t_src);
+				
+				__MCScriptAssert__(MCValueGetTypeCode(t_handler) == kMCValueTypeCodeHandler,
+									"handler argument to invoke not a handler");
+				
+				MCScriptInstanceRef t_instance;
+				MCScriptDefinition *t_definition;
+				t_instance = (MCScriptInstanceRef)MCHandlerGetInstance((MCHandlerRef)t_handler);
+				t_definition = (MCScriptDefinition *)MCHandlerGetDefinition((MCHandlerRef)t_handler);
+				
+				t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity);
             }
             break;
             case kMCScriptBytecodeOpFetchGlobal:
             {
                 // fetch <dst>, <index>
                 int t_dst, t_index;
-                t_dst = MCScriptBytecodeDecodeArgument(t_next_bytecode);
-                t_index = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+                t_dst = t_arguments[0];
+                t_index = t_arguments[1];
                 
                 MCValueRef t_value;
                 t_value = MCScriptFetchFromGlobalInFrame(t_frame, t_index);
@@ -591,8 +677,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // store <dst>, <index>
                 int t_dst, t_index;
-                t_dst = MCScriptBytecodeDecodeArgument(t_next_bytecode);
-                t_index = MCScriptBytecodeDecodeArgument(t_next_bytecode);
+                t_dst = t_arguments[0];
+                t_index = t_arguments[1];
                 
                 MCValueRef t_value;
                 t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_dst);
