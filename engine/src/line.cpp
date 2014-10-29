@@ -701,7 +701,7 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
     // Non-fixed tabstops are calculated as offsets from the last tab position
     // while fixed tabstops are always at the same position, regardless of the
     // length of text between the stops.
-    int16_t t_last_segment_end = 0;
+    coord_t t_last_segment_end = 0;
     
     // We need to know whether the tabstops are fixed or flexible
     Boolean t_fixed_tabs;
@@ -716,7 +716,7 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
     {
         // Get the starting position for this segment
         int16_t t_segment_pos;
-        t_segment_pos = CalculateTabPosition(t_segments, t_last_segment_end);
+        t_segment_pos = CalculateTabPosition(t_segments, ceilf(t_last_segment_end));
         
         // Set the alignment of the segment.
         // This is done early to ensure all segments have an alignment set.
@@ -734,12 +734,13 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         
         // Fitting has been completed; get the width of the segment so that
         // the segment boundaries can be calculated
-        int16_t t_segment_width;
+        // AL-2014-10-28: [[ Bug 13829 ]] Calculate line width as floating point
+        coord_t t_segment_width;
         t_segment_width = sgptr->GetContentLength();
 
         // Position at which the next segment will be placed
-        int16_t t_next_segment_pos;
-        t_next_segment_pos = CalculateTabPosition(t_segments + 1, t_segment_pos + t_segment_width);
+        coord_t t_next_segment_pos;
+        t_next_segment_pos = CalculateTabPosition(t_segments + 1, t_segment_pos + ceilf(t_segment_width));
         
         // The last segment of the line should be no larger than its contents
         // (because it doesn't contain the whitespace of another tab) unless it
@@ -758,7 +759,7 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         // post-processing will be required to fix up the boundaries.
         int16_t t_left, t_right, t_top, t_bottom;
         t_left = t_segment_pos;
-        t_right = t_next_segment_pos;
+        t_right = ceilf(t_next_segment_pos);
         t_top = 0;
         t_bottom = 0;
         sgptr->SetBoundaries(t_left, t_right, t_top, t_bottom);
