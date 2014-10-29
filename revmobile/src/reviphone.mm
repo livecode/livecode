@@ -496,8 +496,8 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 	// Fetch the app path
 	MCString t_app;
 	if (t_success)
-        // SN-2014-10-28: [[ Bug 13827 ]] Fetch the string as an MCString (to allow UTF-8 characters)
-		t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsString, &t_app));
+        // SN-2014-10-28: [[ Bug 13827 ]] Fetch the string as a UTF-8 encoded MCString
+		t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsUTF8String, &t_app));
 	
 	// Fetch the family string
 	const char *t_family;

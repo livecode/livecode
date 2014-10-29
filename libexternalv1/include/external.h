@@ -205,6 +205,27 @@ enum
 	kMCOptionAsCString = 6,
 
 	/////////
+    
+    // SN-2014-10-29: [[ Bug 13827 ]] Update libexternalv1 to match the Unicode-strings update
+    // V6-ADDITIONS-START
+    kMCOptionAsUTF8String = 7,
+    kMCOptionAsUTF8CString = 8,
+    kMCOptionAsUTF16String = 9,
+    kMCOptionAsUTF16CString = 10,
+    
+#ifdef __HAS_CORE_FOUNDATION__
+    kMCExternalValueOptionAsNSNumber = 17,
+    kMCExternalValueOptionAsCFNumber = 18,
+    kMCExternalValueOptionAsNSString = 19,
+    kMCExternalValueOptionAsCFString = 20,
+    kMCExternalValueOptionAsNSData = 21,
+    kMCExternalValueOptionAsCFData = 22,
+    kMCExternalValueOptionAsNSArray = 23,
+    kMCExternalValueOptionAsCFArray = 24,
+    kMCExternalValueOptionAsNSDictionary = 25,
+    kMCExternalValueOptionAsCFDictionary = 26,
+#endif
+    // V6-ADDITIONS-END
 
 	// Use the numberFormat settings in the calling context.
 	kMCOptionNumberFormatDefault = 0 << 26,
