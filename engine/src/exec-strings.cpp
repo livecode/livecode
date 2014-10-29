@@ -1470,6 +1470,13 @@ static bool MCStringsCheckGraphemeBoundaries(MCStringRef p_string, MCRange p_ran
 
 void MCStringsEvalContains(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
+    // AL-2014-10-23: [[ Bug 13770 ]] Strings don't contain the empty string
+    if (MCStringIsEmpty(p_part))
+    {
+        r_result = false;
+        return;
+    }
+    
 	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
     
     bool t_found;
