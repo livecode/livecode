@@ -1419,6 +1419,13 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 
 bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 {
+    // AL-2014-10-29: Reinstate secure mode check when trying to save file
+    if (!MCSecureModeCanAccessDisk())
+	{
+		MCresult->sets("can't open file");
+		return false;
+	}
+    
 	MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
 	
@@ -1460,6 +1467,13 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 
 bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 {
+    // AL-2014-10-29: Reinstate secure mode check when trying to save file
+    if (!MCSecureModeCanAccessDisk())
+	{
+		MCresult->sets("can't open file");
+		return false;
+	}
+    
 	MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
 	bool t_success = true;
