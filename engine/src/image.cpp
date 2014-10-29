@@ -1678,18 +1678,8 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
             {
                 // FG-2014-10-17: [[ Bugfix 13706 ]]
                 // Calculate the correct size for 7.0+ style strings
-                if (MCstackfileversion < 7000)
-                    // Pre-7.0, strings are written as nul-terminated byte sequence
-                    t_length += MCStringGetLength(s_control_color_names[i]) + 1;
-                else
-                {
-                    // In 7.0, strings are written as 32-bit length value followed
-                    // by UTF-8 encoded string data. This is inefficient but is
-                    // necessary for getting the length correct.
-                    MCAutoStringRefAsUTF8String t_as_utf8;
-                    t_as_utf8.Lock(s_control_color_names[i]);
-                    t_length += t_as_utf8.Size() + 4;
-                }
+                // SN-2014-10-27: [[ Bug 13554 ]] String length calculation refactored
+                t_length += p_stream . MeasureStringRefNew(s_control_color_names[i], MCstackfileversion >= 7000);
             }
 			else
 				t_length += 1;
