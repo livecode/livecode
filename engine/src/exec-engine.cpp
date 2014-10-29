@@ -1053,12 +1053,19 @@ void MCEngineExecStartUsingStack(MCExecContext& ctxt, MCStack *p_stack)
 void MCEngineExecStartUsingStackByName(MCExecContext& ctxt, MCStringRef p_name)
 {
 	MCStack *sptr;
-	if ((sptr = MCdefaultstackptr->findstackname_string(p_name)) == NULL ||
-		!sptr->parsescript(True))
-		{
-			ctxt . LegacyThrow(EE_START_BADTARGET);
-			return;
-		}
+	if ((sptr = MCdefaultstackptr->findstackname_string(p_name)) == NULL)
+    {
+        ctxt . LegacyThrow(EE_START_BADTARGET);
+        return;
+    }
+    
+    // MW-2014-10-23: Throw a different error if the script won't compile.
+    if (!sptr->parsescript(True))
+    {
+        ctxt . LegacyThrow(EE_START_WONTCOMPILE);
+        return;
+    }
+    
 	MCEngineExecStartUsingStack(ctxt, sptr);
 }
 
