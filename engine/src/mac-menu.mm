@@ -153,9 +153,14 @@ static uint32_t s_key_equivalent_depth = 0;
 {
 	MCPlatformCallbackSendMenuUpdate(m_menu);
 	
-	[self hideShadowedMenuItem: @"About" menu: menu];
-	[self hideShadowedMenuItem: @"Preferences" menu: menu];
-	[self hideShadowedMenuItem: @"Quit" menu: menu];
+    // MW-2014-10-29: [[ Bug 13848 ]] Only do the item hiding if this is part of a menubar
+    //   (not a popup menu).
+    if ([menu supermenu] != nil)
+    {
+        [self hideShadowedMenuItem: @"About" menu: menu];
+        [self hideShadowedMenuItem: @"Preferences" menu: menu];
+        [self hideShadowedMenuItem: @"Quit" menu: menu];
+    }
 }
 
 - (void)menuItemSelected: (id)sender
