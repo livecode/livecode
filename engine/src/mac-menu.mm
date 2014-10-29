@@ -38,6 +38,7 @@
 static uint32_t s_menu_select_lock = 0;
 static bool s_menu_select_occured = false;
 static bool s_quit_item_has_accelerator = false;
+static bool s_update_menubar_menus = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -196,8 +197,8 @@ static uint32_t s_key_equivalent_depth = 0;
 
 - (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action
 {
-    // MW-2014-10-22: [[ Bug 13510 ]] Make sure we update menus before searching for accelerators.
-    [[menu delegate] menuNeedsUpdate: menu];
+    // MW-2014-10-29: [[ Bug 13847 ]] Make sure we only update menus once per accelerator.
+    s_update_menubar_menus = true;
 	return NO;
 }
 
@@ -224,7 +225,14 @@ static uint32_t s_key_equivalent_depth = 0;
 	NSMenuItem *t_shadow;
 	t_shadow = [self findShadowedMenuItem: tag];
 	if (t_shadow != nil)
+    {
+        // MW-2014-10-29: [[ Bug 13847 ]] Dispatch default accelerators from app menu.
+        uint32_t t_old_menu_select_lock;
+        t_old_menu_select_lock = s_menu_select_lock;
+        s_menu_select_lock = 0;
 		[(MCMenuDelegate *)[[t_shadow menu] delegate] menuItemSelected: t_shadow];
+        s_menu_select_lock = t_old_menu_select_lock;
+    }
 }
 
 - (NSMenuItem *)findShadowedMenuItem: (NSString *)tag
@@ -302,6 +310,7 @@ static uint32_t s_key_equivalent_depth = 0;
 // menuUpdate messages after each key-press...
 - (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action
 {
+    [self menuNeedsUpdate: menu];
 	return NO;
 }
 
@@ -354,6 +363,9 @@ void MCMacPlatformUnlockMenuSelect(void)
 	t_key_equiv = [super performKeyEquivalent: event];
 	MCMacPlatformUnlockMenuSelect();
 	
+    if (s_menubar != nil && self == s_menubar -> menu)
+        return t_key_equiv;
+    
     BOOL t_force_keypress;
     t_force_keypress = NO;
 
@@ -378,6 +390,19 @@ void MCMacPlatformUnlockMenuSelect(void)
         //   of our view code - so make sure modifiers are up to date (otherwise command
         //   key shortcuts don't work!).
         MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+        
+        // MW-2014-10-29: [[ Bug 13847 ]] Make sure we only update menus once per accelerator.
+        if (s_update_menubar_menus)
+        {
+            s_update_menubar_menus = false;
+            for(int i = 1; i < [s_menubar -> menu numberOfItems]; i++)
+            {
+                NSMenu *t_submenu;
+                t_submenu = [[s_menubar -> menu itemAtIndex: i] submenu];
+                if (t_submenu != nil)
+                    MCPlatformCallbackSendMenuUpdate([(MCMenuDelegate *)[t_submenu delegate] platformMenuRef]);
+            }
+        }
         
         [t_window -> GetView() handleKeyPress: event isDown: YES];
         [t_window -> GetView() handleKeyPress: event isDown: NO];
