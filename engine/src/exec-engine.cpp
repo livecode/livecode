@@ -200,18 +200,19 @@ static MCExecCustomTypeInfo _kMCEngineNumberFormatTypeInfo =
 
 //////////
 
+// AL-2014-10-29: [[ Bug 13704 ]] Security permissions set type should use bits rather than bit-shifted values
 static MCExecSetTypeElementInfo _kMCEngineSecurityCategoriesElementInfo[] =
 {
-	{ "disk", MC_SECUREMODE_DISK },
-	{ "network", MC_SECUREMODE_NETWORK },
-	{ "process", MC_SECUREMODE_PROCESS },
-	{ "registryRead", MC_SECUREMODE_REGISTRY_READ },
-	{ "registryWrite", MC_SECUREMODE_REGISTRY_WRITE },
-	{ "printing", MC_SECUREMODE_PRINT },	
-	{ "privacy", MC_SECUREMODE_PRIVACY },
-	{ "applescript", MC_SECUREMODE_APPLESCRIPT },
-	{ "doalternate", MC_SECUREMODE_DOALTERNATE },
-	{ "external", MC_SECUREMODE_EXTERNAL },
+	{ "disk", kMCSecureModeTypeDiskBit },
+	{ "network", kMCSecureModeTypeNetworkBit },
+	{ "process", kMCSecureModeTypeProcessBit },
+	{ "registryRead", kMCSecureModeTypeRegistryReadBit },
+	{ "registryWrite", kMCSecureModeTypeRegistryWriteBit },
+	{ "printing", kMCSecureModeTypePrintBit },	
+	{ "privacy", kMCSecureModeTypePrivacyBit },
+	{ "applescript", kMCSecureModeTypeApplescriptBit },
+	{ "doalternate", kMCSecureModeTypeDoalternateBit },
+	{ "external", kMCSecureModeTypeExternalBit },
 };
 
 static MCExecSetTypeInfo _kMCEngineSecurityCategoriesTypeInfo =
