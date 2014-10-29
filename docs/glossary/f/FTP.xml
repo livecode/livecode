@@ -1,7 +1,7 @@
 <doc>
 	<legacy_id>9</legacy_id>
 	<term>FTP</term>
-	<definition><p>File Transfer Protocol. The <glossary tag="protocol">protocol</glossary> used for transferring files via the Internet to and from  a file <glossary tag="server">server</glossary>.</p></definition>
+	<definition><p>File Transfer Protocol. The <glossary tag="protocol">protocol</glossary> used for transferring files via the Internet to and from a file <glossary tag="server">server</glossary>.</p></definition>
 	<categories>
 	 	<category>Networks &amp; Communication</category>
 	</categories>
