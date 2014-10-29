@@ -502,6 +502,9 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
 			CGContextTranslateCTM(t_img_context, 0, -(CGFloat)t_bitmap_height);
 			
+			// IM-2014-10-24: [[ Bug 13350 ]] Scale to the target bitmap size before further transformation.
+			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_height / r . height);
+
             // MW-2014-04-22: [[ Bug 12008 ]] Translate before scale.
 			CGContextTranslateCTM(t_img_context, -(CGFloat)r.x, -(CGFloat)r.y);
             
@@ -510,9 +513,6 @@ static void MCScreenDCDoSnapshot(void *p_env)
             float t_scale;
             t_scale = ((MCScreenDC *)MCscreen) -> logicaltoscreenscale();
 			CGContextScaleCTM(t_img_context, 1.0 / t_scale, 1.0 / t_scale);
-            
-			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_height / r . height);
-			
 			
 			bool t_is_rotated;
 			CGSize t_offset;
