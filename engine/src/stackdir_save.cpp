@@ -536,16 +536,7 @@ MCStackdirIOSaveVersion (MCStackdirIORef op)
 									op->m_save_build_dir,
 									kMCStackdirVersionFile);
 
-	MCAutoDataRef t_version_data;
-	/* UNCHECKED */ MCStringEncode (kMCStackdirMagicString,
-									kMCStringEncodingUTF8,
-									false, &t_version_data);
-
-	if (!MCS_savebinaryfile (*t_version_path, *t_version_data))
-		/* FIXME record proper error information */
-		return false;
-
-	return true;
+	return MCStackdirIOSaveUTF8 (op, *t_version_path, kMCStackdirMagicString);
 }
 
 /* ================================================================
