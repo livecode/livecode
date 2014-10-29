@@ -31,6 +31,61 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stackdir_private.h"
 
 /* ----------------------------------------------------------------
+ * Miscellaneous utility functions
+ * ---------------------------------------------------------------- */
+
+static int
+MCStackdirArrayApplySorted_DefaultCompare (const MCNameRef *a, const MCNameRef *b)
+{
+	return (int) MCStringCompareTo (MCNameGetString (*a), MCNameGetString (*b),
+									kMCStringOptionCompareCaseless);
+}
+
+bool
+MCStackdirArrayApplySorted (MCArrayRef array,
+							MCArrayApplyCallback p_callback,
+							void *p_callback_context,
+							MCStackdirArrayApplySortedCompareFunc p_compare)
+{
+	/* Trivial case */
+	if (MCArrayIsEmpty (array)) return true;
+
+	MCAutoArray<MCNameRef> t_keys;
+	/* UNCHECKED */ t_keys.New(0);
+
+	/* Construct list of all keys */
+	uintptr_t t_iterator = 0;
+	MCNameRef t_key;
+	MCValueRef t_value;
+	while (MCArrayIterate (array, t_iterator, t_key, t_value))
+	{
+		t_keys.Push (t_key);
+	}
+
+	/* Sort the keys using the comparison function. */
+	if (p_compare == NULL)
+		p_compare = MCStackdirArrayApplySorted_DefaultCompare;
+	qsort (t_keys.Ptr (), t_keys.Size(), sizeof (MCNameRef),
+		   (int (*)(const void *, const void *)) p_compare);
+
+	/* Call the callback for each key/value */
+	bool t_result = true;
+	for (uindex_t i = 0; i < t_keys.Size(); ++i)
+	{
+		t_key = t_keys[i];
+
+		/* We use case-sensitive fetch here because the keys should
+		 * *exactly* match (we got them from the array!) */
+		/* UNCHECKED */ MCArrayFetchValue (array, true, t_key, t_value);
+
+		t_result = p_callback (p_callback_context, array, t_key, t_value);
+		if (!t_result) break;
+	}
+
+	return t_result;
+}
+
+/* ----------------------------------------------------------------
  * [Private] Adding error reports
  * ---------------------------------------------------------------- */
 

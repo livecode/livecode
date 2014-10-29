@@ -126,6 +126,15 @@ void MCStackdirIOCommitSave (MCStackdirIORef op);
 void MCStackdirIOCommitLoad (MCStackdirIORef op);
 
 /* ----------------------------------------------------------------
+ * Utility functions
+ * ---------------------------------------------------------------- */
+
+/* Apply a callback function to each element of an array, in an order
+ * defined by sorting the keys using p_func. */
+typedef int (*MCStackdirArrayApplySortedCompareFunc)(const MCNameRef *, const MCNameRef *);
+bool MCStackdirArrayApplySorted (MCArrayRef array, MCArrayApplyCallback p_callback, void *p_callback_context, MCStackdirArrayApplySortedCompareFunc p_compare = NULL);
+
+/* ----------------------------------------------------------------
  * [Private] Filename generation
  * ---------------------------------------------------------------- */
 
