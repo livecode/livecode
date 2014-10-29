@@ -68,6 +68,9 @@ struct _MCStackdirIOObjectSave
 /* Recursively delete a directory */
 static bool MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path);
 
+/* Helper function for writing a UTF-8 text file */
+static bool MCStackdirIOSaveUTF8 (MCStackdirIORef op, MCStringRef p_path, MCStringRef p_contents);
+
 /* ----------------------------------------------------------------
  * [Private] Save operations
  * ---------------------------------------------------------------- */
@@ -113,6 +116,21 @@ static bool MCStackdirIOSavePropSet (MCArrayRef p_propset, MCStringRef p_propset
 /* ================================================================
  * Utility functions
  * ================================================================ */
+
+/* Helper function for writing a UTF-8 text file */
+static bool
+MCStackdirIOSaveUTF8 (MCStackdirIORef op, MCStringRef p_path,
+					  MCStringRef p_contents)
+{
+	MCAutoDataRef t_data;
+	/* UNCHECKED */ MCStringEncode (p_contents, kMCStringEncodingUTF8,
+									false, &t_data);
+	if (!MCS_savebinaryfile (p_path, *t_data))
+		return MCStackdirIOErrorIO (op, p_path,
+									MCSTR ("Failed to set contents of UTF-8 text file."));
+
+	return true;
+}
 
 static bool
 MCStackdirIORemoveFolderRecursive_Callback (void *p_context,
