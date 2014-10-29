@@ -3350,7 +3350,8 @@ void MCStack::openwindow(Boolean p_override)
 // MW-2014-09-30: [[ ScriptOnlyStack ]] Sets the stack as script only with the given script.
 void MCStack::setasscriptonly(MCStringRef p_script)
 {
-    /* UNCHECKED */ setscript(p_script);
+    MCExecContext ctxt(nil,nil,nil);
+    /* UNCHECKED */ SetScript(ctxt, p_script);
     
     m_is_script_only = true;
     

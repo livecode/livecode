@@ -544,7 +544,6 @@ public:
 	void external_idle();
 	void loadwindowshape();
 	void setidlefunc(void (*newfunc)());
-	Boolean setscript(MCStringRef newscript);
     // MW-2014-10-24: [[ Bug 13796 ]] Separate script setting from commandline from other cases.
 	Boolean setscript_from_commandline(MCStringRef newscript);
 	void checkdestroy();
