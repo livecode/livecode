@@ -916,7 +916,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
             return IO_ERROR;
         MCAutoStringRef t_script_str;
         /* UNCHECKED */ MCStringCreateWithCString(*script, &t_script_str);
-        if (!stacks -> setscript(*t_script_str))
+        if (!stacks -> setscript_from_commandline(*t_script_str))
             return IO_ERROR;
     }
     else
