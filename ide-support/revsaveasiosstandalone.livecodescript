@@ -1250,7 +1250,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts
    replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in tPlist
    replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in tPlist
    replace "${BUNDLE_VERSION}" with tBundleVersion in tPlist
-   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & textEncode(tDisplayName, "utf-8") & "</string>" in tPlist
+   replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & tDisplayName & "</string>" in tPlist
    replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOS & "</string>" in tPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in tPlist
    
