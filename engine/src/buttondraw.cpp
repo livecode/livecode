@@ -510,6 +510,21 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					}
 					setforeground(dc, DI_BOTTOM, False);
 				}
+#ifdef _MACOSX
+                // FG-2014-10-29: [[ Bugfix 13842 ]] On Yosemite, glowing buttons
+                // should draw with white text.
+                if (IsMacLFAM() && MCmajorosversion >= 0x10A0 && MCaqua
+                    && !(flags & F_DISABLED) && isstdbtn && getstyleint(flags) == F_STANDARD
+                    && ((state & CS_HILITED) || (state & CS_SHOW_DEFAULT))
+                    && rect.height <= 24 && MCappisactive
+                    && !(MCbuttonstate && MCmousestackptr && MCmousestackptr == getstack()
+                        && MCmousestackptr->getcard()->getmfocused() != nil
+                        && MCmousestackptr->getcard()->getmfocused() != this
+                        && MCmousestackptr->getcard()->getmfocused()->gettype() == CT_BUTTON))
+                    setforeground(dc, DI_BACK, False, True);
+                else
+                    setforeground(dc, DI_FORE, False);
+#endif
 				drawlabel(dc, sx + loff, sy + loff, twidth, shadowrect, lines[i], isunicode, fontstyle);
 				if (getstyleint(flags) == F_MENU && menumode == WM_CASCADE && !t_themed_menu)
 					drawcascade(dc, shadowrect); // draw arrow in text color
