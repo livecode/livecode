@@ -63,22 +63,6 @@ MCStackdirNormalizeString (MCStringRef p_string, MCStringRef & r_normalized)
  * Strings
  * ================================================================ */
 
-enum kMCStackdirStringChar
-{
-	kMCStackdirStringCharStringDelimiter = 0x22, /* " */
-	kMCStackdirStringCharEscapeCharacter = 0x5c, /* \ */
-	kMCStackdirStringCharSpace = 0x20,
-	kMCStackdirStringCharCarriageReturn = 0x0e,
-	kMCStackdirStringCharLineFeed = 0x0a,
-	kMCStackdirStringCharEscapeLineFeed = 0x6e,  /* n */
-	kMCStackdirStringCharEscapeCarriageReturn = 0x72, /* r */
-	kMCStackdirStringCharEscapeByte = 0x78, /* x */
-	kMCStackdirStringCharEscapeShort = 0x75, /* u */
-	kMCStackdirStringCharEscapeLong = 0x55, /* U */
-	kMCStackdirStringCharDigitZero = 0x30,
-	kMCStackdirStringCharUppercaseA = 0x41,
-};
-
 /* Filter for escaping characters in stackdir strings */
 class MCStackdirStringEscapeFilter : public MCTextFilter
 {
@@ -112,10 +96,9 @@ public:
 		codepoint_t t_source = PrevFilter () -> GetNextCodepoint ();
 
 		/* The '"' and '\' characters must always be escaped */
-		if (t_source == kMCStackdirStringCharStringDelimiter ||
-			t_source == kMCStackdirStringCharEscapeCharacter )
+		if (t_source == '"' || t_source == '\\' )
 		{
-			m_state[1] = kMCStackdirStringCharEscapeCharacter;
+			m_state[1] = '\\';
 			m_state[0] = t_source;
 			m_state_len = 2;
 			return true;
@@ -124,7 +107,7 @@ public:
 		/* Unicode categories L, M, N, P, S and the space character
 		 * U+0020 can be passed through directly. */
 		uint32_t t_mask = U_GET_GC_MASK (t_source);
-		if (t_source == kMCStackdirStringCharSpace ||
+		if (t_source == ' ' ||
 			t_mask & (U_GC_L_MASK | U_GC_M_MASK | U_GC_N_MASK |
 					  U_GC_P_MASK | U_GC_S_MASK))
 		{
@@ -135,41 +118,34 @@ public:
 
 		/* The newline and carriage return characters have special
 		 * escape sequences */
-		if (t_source == kMCStackdirStringCharLineFeed)
+		if (t_source == '\n')
 		{
-			m_state[1] = kMCStackdirStringCharEscapeCharacter;
-			m_state[0] = kMCStackdirStringCharEscapeLineFeed;
+			m_state[1] = '\\';
+			m_state[0] = 'n';
 			m_state_len = 2;
 			return true;
 		}
 
-		if (t_source == kMCStackdirStringCharCarriageReturn)
+		if (t_source == '\r')
 		{
-			m_state[1] = kMCStackdirStringCharEscapeCharacter;
-			m_state[0] = kMCStackdirStringCharEscapeCarriageReturn;
+			m_state[1] = '\\';
+			m_state[0] = 'r';
 			m_state_len = 2;
 			return true;
 		}
 
-		/* Place codepoint into state array in hexadecimal format */
-		for (uindex_t i = 0; i < sizeof (codepoint_t); ++i)
-		{
-			codepoint_t t_nibble = (t_source >> (4*i)) & 0xf;
-			if (t_nibble < 10)
-			{
-				m_state[i] = kMCStackdirStringCharDigitZero + t_nibble;
-			}
-			else
-			{
-				m_state[i] = kMCStackdirStringCharUppercaseA + (t_nibble - 10);
-			}
-		}
+		/* Place codepoint into state array in (reversed!) hexadecimal
+		 * format */
+		unsigned char t_hex[8];
+		sprintf ((char *) t_hex, "%08X", t_source);
+		for (int i = 0; i < 8; ++i)
+			m_state[i] = t_hex[7-i];
 
 		/* Unicode codepoints < 0xff can use \xhh format */
 		if (t_source <= 0xffU)
 		{
-			m_state[3] = kMCStackdirStringCharEscapeCharacter;
-			m_state[2] = kMCStackdirStringCharEscapeByte;
+			m_state[3] = '\\';
+			m_state[2] = 'x';
 			m_state_len = 4;
 			return true;
 		}
@@ -177,8 +153,8 @@ public:
 		/* Unicode codepoints < 0xffff can use \uhhhh format */
 		if (t_source <= 0xffffU)
 		{
-			m_state[5] = kMCStackdirStringCharEscapeCharacter;
-			m_state[4] = kMCStackdirStringCharEscapeShort;
+			m_state[5] = '\\';
+			m_state[4] = 'u';
 			m_state_len = 6;
 			return true;
 		}
@@ -186,8 +162,8 @@ public:
 		/* Otherwise, store full codepoint using \Uhhhhhhhh format */
 		if (t_source <= 0xffffffffU)
 		{
-			m_state[9] = kMCStackdirStringCharEscapeCharacter;
-			m_state[8] = kMCStackdirStringCharEscapeLong;
+			m_state[9] = '\\';
+			m_state[8] = 'U';
 			m_state_len = 10;
 			return true;
 		}
@@ -240,11 +216,8 @@ MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_literal)
 	}
 
 	/* Add delimiters at start and end */
-	if (!MCStringPrependCodepoint (*t_result,
-								   kMCStackdirStringCharStringDelimiter))
-		return false;
-	if (!MCStringAppendCodepoint (*t_result,
-								  kMCStackdirStringCharStringDelimiter))
+	if (!(MCStringPrependCodepoint (*t_result, '"') &&
+		  MCStringAppendCodepoint (*t_result, '"')))
 		return false;
 
 	r_literal = MCValueRetain (*t_result);
@@ -273,12 +246,12 @@ MCStackdirFormatName_TestUnquotable (MCStringRef p_string)
 		codepoint_t t_codepoint = t_filter->GetNextCodepoint();
 		t_filter->AdvanceCursor();
 
-		if (t_codepoint >= 0x30 && t_codepoint <= 0x39) continue; /* 0-9 */
-		if (t_codepoint >= 0x41 && t_codepoint <= 0x5A) continue; /* A-Z */
-		if (t_codepoint >= 0x61 && t_codepoint <= 0x7A) continue; /* a-z */
-		if (t_codepoint == 0x5F) continue; /* _ */
-		if (t_codepoint == 0x2D) continue; /* - */
-		if (t_codepoint == 0x2E) continue; /* . */
+		if (t_codepoint >= '0' && t_codepoint <= '9') continue;
+		if (t_codepoint >= 'A' && t_codepoint <= 'Z') continue;
+		if (t_codepoint >= 'a' && t_codepoint <= 'z') continue;
+		if (t_codepoint == '_') continue;
+		if (t_codepoint == '-') continue;
+		if (t_codepoint == '.') continue;
 
 		valid_unquoted = false;
 		break;
@@ -308,15 +281,6 @@ MCStackdirFormatName (MCNameRef p_name, MCStringRef & r_literal)
 /* ================================================================
  * Filenames
  * ================================================================ */
-
-enum kMCStackdirFilenameChar
-{
-	kMCStackdirFilenameCharEscapeCharacter = 0x5f, /* _ */
-	kMCStackdirFilenameCharEscapeByte      = 0x78, /* x */
-	kMCStackdirFilenameCharEscapeShort     = 0x75, /* u */
-	kMCStackdirFilenameCharDigitZero       = 0x30, /* 0 */
-	kMCStackdirFilenameCharLowercaseA      = 0x61, /* a */
-};
 
 enum {
 	kMCStackdirFilenameMaxLen = 255,
@@ -357,45 +321,38 @@ MCStackdirFormatFilename (MCStringRef p_string, MCStringRef p_suffix,
 		unichar_t t_source = MCStringGetCharAtIndex (*t_normalized, i);
 
 		/* a-z, 0-9 and - can be passed through */
-		if ((t_source >= 0x30 && t_source <= 0x39) /* 0-9 */ ||
-			(t_source >= 0x61 && t_source <= 0x7A) /* a-z */ ||
-			(t_source == 0x2D)                     /* - */ )
+		if ((t_source >= '0' && t_source <= '9') /* 0-9 */ ||
+			(t_source >= 'a' && t_source <= 'z') /* a-z */ ||
+			(t_source == '-')                    /* - */ )
 		{
 			if (!MCStringAppendChar (*t_filename, t_source))
 				return false;
 			continue;
 		}
 
-		if (!MCStringAppendChar (*t_filename, kMCStackdirFilenameCharEscapeCharacter))
+		if (!MCStringAppendChar (*t_filename, '_'))
 			return false;
 
-		if (t_source == kMCStackdirFilenameCharEscapeCharacter)
+		if (t_source == '_')
 		{
 			/* __ escape sequence */
-			if (!MCStringAppendChar (*t_filename,
-									 kMCStackdirFilenameCharEscapeCharacter))
+			if (!MCStringAppendChar (*t_filename, '_'))
 				return false;
 			continue;
 		}
 
-		unichar_t t_hex[4];
+		char t_hexc[4];
+		MCAutoStringRef t_hex;
 
 		/* Encode character in hexadecimal. */
-		for (uindex_t j = 0; j < sizeof (unichar_t); ++j)
-		{
-			unichar_t t_nibble = (t_source >> (4*(sizeof (unichar_t) - 1 - j))) & 0xf;
-			if (t_nibble < 10)
-				t_hex[j] = kMCStackdirFilenameCharDigitZero + t_nibble;
-			else
-				t_hex[j] = kMCStackdirFilenameCharLowercaseA + t_nibble;
-		}
+		sprintf (t_hexc, "%04hx", t_source);
+		MCStringCreateWithCString (t_hexc, &t_hex);
 
 		/* Characters <= 0xff can use _xhh format. */
 		if (t_source <= 0xffU)
 		{
-			if (!(MCStringAppendChar (*t_filename,
-									  kMCStackdirFilenameCharEscapeByte) &&
-				  MCStringAppendChars (*t_filename, &t_hex[2], 2)))
+			if (!(MCStringAppendChar (*t_filename, 'x') &&
+				  MCStringAppendSubstring (*t_filename, *t_hex, MCRangeMake (2, -1))))
 				return false;
 			continue;
 		}
@@ -403,9 +360,8 @@ MCStackdirFormatFilename (MCStringRef p_string, MCStringRef p_suffix,
 		/* Characters <= 0xffff can use _uhhhh format. */
 		if (t_source <= 0xffffU)
 		{
-			if (!(MCStringAppendChar (*t_filename,
-									  kMCStackdirFilenameCharEscapeShort) &&
-				  MCStringAppendChars (*t_filename, t_hex, 4)))
+			if (!(MCStringAppendChar (*t_filename, 'u') &&
+				  MCStringAppend (*t_filename, *t_hex)))
 				return false;
 			continue;
 		}
