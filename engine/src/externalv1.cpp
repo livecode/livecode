@@ -921,6 +921,10 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
     // MW-2014-10-30: [[ Bug 13875 ]] If either 'JumpTo' flag is specified, we just execute the callback direct.
     if ((p_options & kMCExternalRunOnMainThreadJumpTo) != 0)
     {
+        // The 'JumpTo' option cannot have any other flags set.
+        if ((p_options & ~kMCExternalRunOnMainThreadJumpTo) != 0)
+            return kMCExternalErrorNotImplemented;
+        
         ((MCExternalThreadOptionalCallback)p_callback)(p_callback_state);
         return kMCExternalErrorNone;
     }
@@ -934,6 +938,11 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
     t_block = (p_options & kMCExternalRunOnMainThreadPost) == kMCExternalRunOnMainThreadSend;
     t_safe = (p_options & kMCExternalRunOnMainThreadUnsafe) == kMCExternalRunOnMainThreadSafe;
     t_required = (p_options & kMCExternalRunOnMainThreadRequired) == kMCExternalRunOnMainThreadRequired;
+    
+    // MW-2014-10-30: [[ Bug 13875 ]] Make sure we return an appropriate error for invalid combinations of flags.
+    if (t_block && t_safe)
+        return kMCExternalErrorNotImplemented;
+    
 	if (!MCNotifyPush((MCExternalThreadOptionalCallback)p_callback, p_callback_state, t_block, t_safe, t_required))
 		return kMCExternalErrorOutOfMemory;
 
