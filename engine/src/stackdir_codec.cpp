@@ -260,6 +260,8 @@ MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_literal)
 static bool
 MCStackdirFormatName_TestUnquotable (MCStringRef p_string)
 {
+	if (MCStringIsEmpty (p_string)) return false;
+
 	MCTextFilter *t_filter;
 	t_filter = MCTextFilterCreate (p_string, kMCStringOptionCompareExact);
 	MCAssert (t_filter);
