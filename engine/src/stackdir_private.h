@@ -160,6 +160,15 @@ bool MCStackdirPathIsStackdir (MCStringRef p_path);
  * [Private] Data formatting
  * ---------------------------------------------------------------- */
 
+/* Format a string as a stackdir filename with an optional suffix.
+ *
+ * The p_string will be normalised and case-folded before conversion.
+ *
+ * Returns false if formatting failed (e.g. because the resulting
+ * filename was invalid or because of memory exhaustion).
+ */
+bool MCStackdirFormatFilename (MCStringRef p_string, MCStringRef p_suffix, MCStringRef & r_filename);
+
 /* Format a base type value as a stackdir-encoded string.
  *
  * Returns false if formatting failed (e.g. due to memory exhaustion). */

@@ -306,8 +306,126 @@ MCStackdirFormatName (MCNameRef p_name, MCStringRef & r_literal)
 }
 
 /* ================================================================
+ * Filenames
+ * ================================================================ */
+
+enum kMCStackdirFilenameChar
+{
+	kMCStackdirFilenameCharEscapeCharacter = 0x5f, /* _ */
+	kMCStackdirFilenameCharEscapeByte      = 0x78, /* x */
+	kMCStackdirFilenameCharEscapeShort     = 0x75, /* u */
+	kMCStackdirFilenameCharDigitZero       = 0x30, /* 0 */
+	kMCStackdirFilenameCharLowercaseA      = 0x61, /* a */
+};
+
+enum {
+	kMCStackdirFilenameMaxLen = 255,
+};
+
+/* ================================================================
  * Main entry points
  * ================================================================ */
+
+bool
+MCStackdirFormatFilename (MCStringRef p_string, MCStringRef p_suffix,
+						  MCStringRef & r_filename)
+{
+	MCAutoStringRef t_normalized;
+	if (!MCStackdirNormalizeString (p_string, &t_normalized))
+		return false;
+
+	uindex_t t_string_len = MCStringGetLength (*t_normalized);
+
+	/* Empty filenames and unreasonably large filenames are not
+	 * permitted */
+	if (0 == t_string_len || t_string_len > kMCStackdirFilenameMaxLen)
+		return false;
+
+	MCAutoStringRef t_filename;
+	if (!MCStringCreateMutable (t_string_len, &t_filename))
+		return false;
+
+	/* Valid filenames are less than 255 characters long and contain only
+	 * the characters "[a-z0-9_-]".  They permit the escape sequences __,
+	 * _xhh and _uhhhh. */
+	for (uindex_t i = 0; i < t_string_len; ++i)
+	{
+		/* Don't attempt to build unreasonably large filenames */
+		if (MCStringGetLength (*t_filename) >= kMCStackdirFilenameMaxLen)
+			return false;
+
+		unichar_t t_source = MCStringGetCharAtIndex (*t_normalized, i);
+
+		/* a-z, 0-9 and - can be passed through */
+		if ((t_source >= 0x30 && t_source <= 0x39) /* 0-9 */ ||
+			(t_source >= 0x61 && t_source <= 0x7A) /* a-z */ ||
+			(t_source == 0x2D)                     /* - */ )
+		{
+			if (!MCStringAppendChar (*t_filename, t_source))
+				return false;
+			continue;
+		}
+
+		if (!MCStringAppendChar (*t_filename, kMCStackdirFilenameCharEscapeCharacter))
+			return false;
+
+		if (t_source == kMCStackdirFilenameCharEscapeCharacter)
+		{
+			/* __ escape sequence */
+			if (!MCStringAppendChar (*t_filename,
+									 kMCStackdirFilenameCharEscapeCharacter))
+				return false;
+			continue;
+		}
+
+		unichar_t t_hex[4];
+
+		/* Encode character in hexadecimal. */
+		for (uindex_t j = 0; j < sizeof (unichar_t); ++j)
+		{
+			unichar_t t_nibble = (t_source >> (4*(sizeof (unichar_t) - 1 - j))) & 0xf;
+			if (t_nibble < 10)
+				t_hex[j] = kMCStackdirFilenameCharDigitZero + t_nibble;
+			else
+				t_hex[j] = kMCStackdirFilenameCharLowercaseA + t_nibble;
+		}
+
+		/* Characters <= 0xff can use _xhh format. */
+		if (t_source <= 0xffU)
+		{
+			if (!(MCStringAppendChar (*t_filename,
+									  kMCStackdirFilenameCharEscapeByte) &&
+				  MCStringAppendChars (*t_filename, &t_hex[2], 2)))
+				return false;
+			continue;
+		}
+
+		/* Characters <= 0xffff can use _uhhhh format. */
+		if (t_source <= 0xffffU)
+		{
+			if (!(MCStringAppendChar (*t_filename,
+									  kMCStackdirFilenameCharEscapeShort) &&
+				  MCStringAppendChars (*t_filename, t_hex, 4)))
+				return false;
+			continue;
+		}
+
+		MCUnreachable ();
+	}
+
+	/* Append the normalized suffix and check that the resulting
+	 * filename is short enough. */
+	MCAutoStringRef t_normalized_suffix;
+	if (!(MCStackdirNormalizeString (p_suffix, &t_normalized_suffix) &&
+		  MCStringAppend (*t_filename, *t_normalized_suffix)))
+		return false;
+
+	if (MCStringGetLength (*t_filename) > kMCStackdirFilenameMaxLen)
+		return false;
+
+	r_filename = MCValueRetain (*t_filename);
+	return true;
+}
 
 bool
 MCStackdirFormatLiteral (MCValueRef p_value, MCStringRef & r_literal)
