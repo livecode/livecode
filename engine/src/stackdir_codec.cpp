@@ -43,6 +43,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static bool MCStackdirNormalizeString (MCStringRef p_string, MCStringRef & r_normalized);
 
 static bool MCStackdirFormatBoolean (MCBooleanRef p_bool, MCStringRef & r_literal);
+static bool MCStackdirFormatInteger (MCNumberRef p_number, MCStringRef & r_literal);
+static bool MCStackdirFormatReal (MCNumberRef p_number, MCStringRef & r_literal);
+static bool MCStackdirFormatNumber (MCNumberRef p_number, MCStringRef & r_literal);
 static bool MCStackdirFormatData (MCDataRef p_data, MCStringRef & r_literal);
 static bool MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_literal);
 static bool MCStackdirFormatName (MCNameRef p_name, MCStringRef & r_literal);
@@ -72,6 +75,64 @@ MCStackdirFormatBoolean (MCBooleanRef p_bool, MCStringRef & r_literal)
 {
 	return MCStringCopy (p_bool ? MCSTR ("true") : MCSTR ("false"),
 						 r_literal);
+}
+
+/* ================================================================
+ * Numbers
+ * ================================================================ */
+
+static bool
+MCStackdirFormatInteger (MCNumberRef p_number, MCStringRef & r_literal)
+{
+	return MCStringFormat (r_literal, "%+i",
+						   MCNumberFetchAsInteger (p_number));
+}
+
+static bool
+MCStackdirFormatReal (MCNumberRef p_number, MCStringRef & r_literal)
+{
+	MCAutoStringRef t_format, t_result;
+	bool t_success;
+	/* We can always accurately represent a double precision integer
+	 * using 17 decimal digits, i.e. one digit to the left of the
+	 * decimal point and 16 to the right.
+	 *
+	 * BUG This might not work in the future if MCStringFormat ever
+	 * starts obeying the C locale.
+	 */
+	t_success = MCStringFormat (&t_format, "%+16g",
+								 MCNumberFetchAsReal (p_number));
+
+	/* We need to ensure that the result always includes a '.' or an
+	 * 'e' character so that it is correctly distinguished from an
+	 * integer */
+	bool t_found = false;
+	if (t_success)
+	{
+		t_found = MCStringWildcardMatch (*t_format,
+										 MCRangeMake (0, -1),
+										 MCSTR (".e"),
+										 kMCStringOptionCompareExact);
+
+		if (t_found)
+			t_success = MCStringFormat (&t_result, "%@.", *t_format);
+		else
+			t_success = MCStringCopy (*t_format, &t_result);
+	}
+
+	if (t_success)
+		t_success = MCStringCopy (*t_result, r_literal);
+
+	return t_success;
+}
+
+static bool
+MCStackdirFormatNumber (MCNumberRef p_number, MCStringRef & r_literal)
+{
+	if (MCNumberIsInteger (p_number))
+		return MCStackdirFormatInteger (p_number, r_literal);
+	else
+		return MCStackdirFormatReal (p_number, r_literal);
 }
 
 /* ================================================================
@@ -487,6 +548,8 @@ MCStackdirFormatLiteral (MCValueRef p_value, MCStringRef & r_literal)
 		return MCStackdirFormatData ((MCDataRef) p_value, r_literal);
 	case kMCValueTypeCodeBoolean:
 		return MCStackdirFormatBoolean ((MCBooleanRef) p_value, r_literal);
+	case kMCValueTypeCodeNumber:
+		return MCStackdirFormatNumber ((MCNumberRef) p_value, r_literal);
 	case kMCValueTypeCodeArray:
 		return MCSTR ("array");
 	default:
