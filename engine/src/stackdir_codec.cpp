@@ -42,6 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * Case-Fold). */
 static bool MCStackdirNormalizeString (MCStringRef p_string, MCStringRef & r_normalized);
 
+static bool MCStackdirFormatBoolean (MCBooleanRef p_bool, MCStringRef & r_literal);
 static bool MCStackdirFormatData (MCDataRef p_data, MCStringRef & r_literal);
 static bool MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_literal);
 static bool MCStackdirFormatName (MCNameRef p_name, MCStringRef & r_literal);
@@ -60,6 +61,17 @@ MCStackdirNormalizeString (MCStringRef p_string, MCStringRef & r_normalized)
 		return false;
 	r_normalized = MCValueRetain (*t_result);
 	return true;
+}
+
+/* ================================================================
+ * Booleans
+ * ================================================================ */
+
+static bool
+MCStackdirFormatBoolean (MCBooleanRef p_bool, MCStringRef & r_literal)
+{
+	return MCStringCopy (p_bool ? MCSTR ("true") : MCSTR ("false"),
+						 r_literal);
 }
 
 /* ================================================================
@@ -473,6 +485,8 @@ MCStackdirFormatLiteral (MCValueRef p_value, MCStringRef & r_literal)
 		return MCStackdirFormatString ((MCStringRef) p_value, r_literal);
 	case kMCValueTypeCodeData:
 		return MCStackdirFormatData ((MCDataRef) p_value, r_literal);
+	case kMCValueTypeCodeBoolean:
+		return MCStackdirFormatBoolean ((MCBooleanRef) p_value, r_literal);
 	case kMCValueTypeCodeArray:
 		return MCSTR ("array");
 	default:
