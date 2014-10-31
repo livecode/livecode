@@ -176,6 +176,7 @@ IO_stat MCDispatch::startup(void)
     MCStack *t_stack;
     MCStackSecurityCreateStack(t_stack);
     t_stack -> setparent(this);
+    t_stack -> setfilename(MCcmd);
 	stacks = t_stack;
     
 	MCcmd = openpath;

@@ -16,6 +16,16 @@
 
 #include "prefix.h"
 
+#include "globdefs.h"
+#include "filedefs.h"
+#include "objdefs.h"
+#include "parsedef.h"
+
+#include "globals.h"
+#include "stack.h"
+#include "execpt.h"
+#include "dispatch.h"
+
 #include "test.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,17 +100,86 @@ void MCExecuteLowLevelTest(int p_index)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCHighLevelTest
+{
+    const char *filename;
+};
+
 static bool s_highlevel_tests_fetched = false;
-static MCHighLevelTest **s_highlevel_tests = nil;
+static MCHighLevelTest *s_highlevel_tests = nil;
 static int s_highlevel_test_count = 0;
+
+static const char *s_fetch_highleveltest_script =
+"\
+if $TEST_DIR is empty then\n\
+  return empty\n\
+end if\n\
+set the folder to $TEST_DIR\n\
+local tTests\n\
+repeat for each line tFile in the files\n\
+  if tFile ends with \".livecodescript\" then\n\
+    put the folder & slash & tFile & return after tTests\n\
+  end if\n\
+end repeat\n\
+delete the last char of tTests\n\
+split tTests by return\n\
+return tTests\n\
+";
+
+static void MCEnsureHighLevelTests(void)
+{
+    if (s_highlevel_tests_fetched)
+        return;
+    
+    s_highlevel_tests_fetched = true;
+    
+    MCdefaultstackptr -> domess(s_fetch_highleveltest_script);
+    
+    MCExecPoint ep;
+    
+    MCVariableArray *t_array;
+    t_array = MCresult -> getvalue() . get_array();
+    
+    s_highlevel_test_count = t_array -> getnfilled();
+    MCMemoryNewArray(s_highlevel_test_count, s_highlevel_tests);
+    
+    for(int i = 0; i < s_highlevel_test_count; i++)
+    {
+        MCHashentry *t_entry;
+        t_entry = t_array -> lookupindex(i + 1, False);
+        s_highlevel_tests[i] . filename = t_entry -> value . get_string() . clone();
+    }
+}
 
 int MCCountHighLevelTests(void)
 {
-    return 0;
+    MCEnsureHighLevelTests();
+    return s_highlevel_test_count;
 }
 
 void MCExecuteHighLevelTest(int p_index)
 {
+    MCStack *t_stack;
+    t_stack = MCdispatcher -> findstackname(s_highlevel_tests[p_index] . filename);
+    if (t_stack == nil)
+    {
+        MCTestLog("HighLevelTest:LoadFailure:%s", s_highlevel_tests[p_index] . filename);
+        MCretcode = 1;
+        return;
+    }
+    
+    if (!t_stack -> parsescript(False))
+    {
+        MCTestLog("HighLevelTest:ParseFailure:%s", s_highlevel_tests[p_index] . filename);
+        MCretcode = 1;
+        return;
+    }
+    
+    MCAutoNameRef t_name;
+    t_name . CreateWithCString("test");
+    t_stack -> message(t_name);
+    
+    MCdispatcher -> destroystack(t_stack, True);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +213,7 @@ void MCTestDoAbort(const char *p_message, const char *p_file, int p_line)
     MCTestLog("LowLevelTest:Abort:%s", p_message);
     MCTestLog("LowLevelTest:File:%s", p_file);
     MCTestLog("LowLevelTest:Line:%d", p_line);
+    MCretcode = 1;
 }
 
 void MCTestDoAssertTrue(const char *p_message, bool p_value, const char *p_file, int p_line)
@@ -141,7 +221,10 @@ void MCTestDoAssertTrue(const char *p_message, bool p_value, const char *p_file,
     if (p_value)
         MCTestLog("LowLevelTest:Success:%s", p_message);
     else
+    {
         MCTestLog("LowLevelTest:Failure:%s", p_message);
+        MCretcode = 1;
+    }
     MCTestLog("LowLevelTest:File:%s", p_file);
     MCTestLog("LowLevelTest:Line:%d", p_line);
 }
@@ -151,7 +234,10 @@ void MCTestDoAssertFalse(const char *p_message, bool p_value, const char *p_file
     if (!p_value)
         MCTestLog("LowLevelTest:Success:%s", p_message);
     else
+    {
         MCTestLog("LowLevelTest:Failure:%s", p_message);
+        MCretcode = 1;
+    }
     MCTestLog("LowLevelTest:File:%s", p_file);
     MCTestLog("LowLevelTest:Line:%d", p_line);
 }
