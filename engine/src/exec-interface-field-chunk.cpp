@@ -1683,7 +1683,6 @@ void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         MCParagraph *pgptr = resolveparagraphs(p_part_id);
         MCParagraph *sptr = indextoparagraph(pgptr, si, ei, nil);
         coord_t minx, maxx;
-        findex_t t_si, t_ei; // needed to call MCParagraph::getextents
 
         // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
         //   This is because minx/maxx are uninitialized and it seems that they have to be for
@@ -1693,7 +1692,8 @@ void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
         do
         {
-            sptr->getxextents(t_si, t_ei, minx, maxx);
+            // AL-2014-10-31: [[ Bug 13897 ]] Pass in correct values to getextents
+            sptr->getxextents(si, ei, minx, maxx);
             sptr = sptr->next();
         }
         while (ei > 0 && sptr != pgptr);
