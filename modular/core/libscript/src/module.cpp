@@ -14,7 +14,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptImportedDefinition)
     MC_PICKLE_UINDEX(module)
     MC_PICKLE_INTENUM(MCScriptDefinitionKind, kind)
     MC_PICKLE_NAMEREF(name)
-    MC_PICKLE_TYPEREF(type)
+    MC_PICKLE_TYPEINFOREF(type)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptExternalDefinition)
@@ -22,7 +22,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptExternalDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptTypeDefinition)
-    MC_PICKLE_TYPEREF(type)
+    MC_PICKLE_TYPEINFOREF(type)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptConstantDefinition)
@@ -30,16 +30,16 @@ MC_PICKLE_BEGIN_RECORD(MCScriptConstantDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptVariableDefinition)
-    MC_PICKLE_TYPEREF(type)
+    MC_PICKLE_TYPEINFOREF(type)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
-    MC_PICKLE_TYPEREF(signature)
+    MC_PICKLE_TYPEINFOREF(signature)
     MC_PICKLE_UINDEX(address)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptForeignHandlerDefinition)
-    MC_PICKLE_TYPEREF(signature)
+    MC_PICKLE_TYPEINFOREF(signature)
     MC_PICKLE_STRINGREF(binding)
 MC_PICKLE_END_RECORD()
 
@@ -49,7 +49,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptPropertyDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptEventDefinition)
-    MC_PICKLE_TYPEREF(signature)
+    MC_PICKLE_TYPEINFOREF(signature)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_VARIANT(MCScriptDefinition, kind)

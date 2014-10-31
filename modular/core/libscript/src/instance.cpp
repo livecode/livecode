@@ -234,12 +234,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
         MCHandlerTypeFieldMode t_mode;
         t_mode = MCHandlerTypeInfoGetParameterMode(t_signature, i);
         
-        if (t_mode == kMCHandlerTypeFieldModeOut)
-        {
-            if (p_arguments[i] != nil)
-                return MCScriptThrowValueProvidedForOutParameterError(self -> module, p_handler, MCHandlerTypeInfoGetParameterName(t_signature, i));
-        }
-        else
+        if (t_mode != kMCHandlerTypeFieldModeOut)
         {
             if (p_arguments[i] == nil)
                 return MCScriptThrowNoValueProvidedForInParameterError(self -> module, p_handler, MCHandlerTypeInfoGetParameterName(t_signature, i));
@@ -309,9 +304,21 @@ static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_i
     return true;
 }
 
-static MCScriptFrame *MCScriptDestroyFrame(MCScriptFrame *p_current)
+static MCScriptFrame *MCScriptDestroyFrame(MCScriptFrame *self)
 {
-    return nil;
+    MCScriptFrame *t_caller;
+    t_caller = self -> caller;
+    
+    for(int i = 0; i < self -> handler -> slot_count; i++)
+        if (self -> slots[i] != nil)
+            MCValueRelease(self -> slots[i]);
+    
+    MCScriptReleaseInstance(self -> instance);
+    MCMemoryDeleteArray(self -> slots);
+    MCMemoryDeleteArray(self -> mapping);
+    MCMemoryDelete(self);
+    
+    return t_caller;
 }
 
 static inline void MCScriptBytecodeDecodeOp(byte_t*& x_bytecode_ptr, MCScriptBytecodeOp& r_op, int& r_arity)
@@ -402,7 +409,44 @@ static inline MCTypeInfoRef MCScriptFetchTypeInFrame(MCScriptFrame *p_frame, int
 
 static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptHandlerDefinition *p_handler, int *p_arguments, int p_arity)
 {
-	return false;
+    __MCScriptAssert__(p_arity == MCHandlerTypeInfoGetParameterCount(p_handler -> signature),
+                       "wrong number of parameters passed to script handler");
+    
+    MCScriptFrame *t_callee;
+    if (!MCScriptCreateFrame(x_frame, p_instance, p_handler, t_callee))
+        return false;
+
+    bool t_needs_mapping;
+    t_needs_mapping = false;
+    for(int i = 0; i < MCHandlerTypeInfoGetParameterCount(p_handler -> signature); i++)
+    {
+        MCHandlerTypeFieldMode t_mode;
+        t_mode = MCHandlerTypeInfoGetParameterMode(p_handler -> signature, i);
+        
+        MCValueRef t_value;
+        if (t_mode != kMCHandlerTypeFieldModeOut)
+            t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i]);
+        else
+            t_value = kMCNull;
+        
+        if (t_mode != kMCHandlerTypeFieldModeIn)
+            t_needs_mapping = true;
+        
+        t_callee -> slots[i] = MCValueRetain(t_value);
+    }
+    
+    if (t_needs_mapping)
+    {
+        if (!MCMemoryNewArray(p_arity, t_callee -> mapping))
+            return MCScriptThrowOutOfMemoryError(x_frame -> instance -> module, x_frame -> address);
+        
+        MCMemoryCopy(t_callee -> mapping, p_arguments, sizeof(int) * p_arity);
+    }
+    
+    x_frame = t_callee;
+    x_next_bytecode = x_frame -> instance -> module -> bytecode + x_frame -> address;
+    
+	return true;
 }
 
 static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, int *p_arguments, int p_arity)
@@ -412,6 +456,8 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
 
 static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, int *p_arguments, int p_arity)
 {
+    x_frame -> address = x_next_bytecode - x_frame -> instance -> module -> bytecode;
+    
 	if (p_handler -> kind == kMCScriptDefinitionKindHandler)
 	{
 		MCScriptHandlerDefinition *t_handler;
@@ -428,12 +474,14 @@ static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytec
 	}
 	
 	__MCScriptUnreachable__("non-handler definition passed to invoke");
+    
+    return false;
 }
 
 bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHandlerDefinition *p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
     // As this method is called internally, we can be sure that the arguments conform
-    // to the signature so don't need to check here.
+    // to the signature so in theory don't need to check here.
     
     // TODO: Add static assertion for the above.
     
@@ -441,9 +489,32 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
     if (!MCScriptCreateFrame(nil, self, p_handler, t_frame))
         return false;
 
+    // After we've created the frame we need to populate the parameter slots with the
+    // arguments. Internally, all script-based handlers are adjusted so that if the
+    // handler is declared as returning a value, this is the first register of the
+    // frame.
+    int t_first_parameter_slot;
+    t_first_parameter_slot = 0;
+    if (MCHandlerTypeInfoGetReturnType(p_handler -> signature) != nil)
+    {
+        t_frame -> slots[0] = MCValueRetain(kMCNull);
+        t_first_parameter_slot = 1;
+    }
+    for(uindex_t i = 0; i < p_argument_count; i++)
+    {
+        MCValueRef t_value;
+        if (MCHandlerTypeInfoGetParameterMode(p_handler -> signature, i) != kMCHandlerTypeFieldModeOut)
+            t_value = MCValueRetain(p_arguments[i]);
+        else
+            t_value = MCValueRetain(kMCNull);
+
+        t_frame -> slots[t_first_parameter_slot + i] = t_value;
+    }
+    
     bool t_success;
     t_success = true;
     
+    // This is used to build the mapping array for invokes.
 	int t_arguments[256];
 	
     byte_t *t_bytecode;
@@ -477,7 +548,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             break;
             case kMCScriptBytecodeOpJumpIfUndefined:
             {
-                // jumpifdef <register>, <offset>
+                // jumpifundef <register>, <offset>
                 int t_register, t_offset;
                 t_register = t_arguments[0];
                 t_offset = t_arguments[1];
@@ -592,40 +663,61 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // return
                 
-                // If there is no frame to return to, fetch the return value (if any).
-                if (t_frame -> caller == nil &&
-                    MCHandlerTypeInfoGetReturnType(t_frame -> handler -> signature) != nil)
+                // If there is no frame to return to, fetch the return value and copyback any
+                // out parameters.
+                if (t_frame -> caller == nil)
                 {
-                    __MCScriptAssert__(t_frame -> slots[0] != nil,
-                                       "return value undefined in a handler which returns a value");
-                    r_value = t_frame -> slots[0];
-					
-					// Mark the slot as free as the value has been taken.
-					t_frame -> slots[0] = nil;
-                }
-				
-				// If there is a mapping array the do the copyback.
-				if (t_frame -> mapping != nil)
-				{
+                    if (t_first_parameter_slot != 0)
+                    {
+                        __MCScriptAssert__(MCTypeInfoConformsTo(MCValueGetTypeInfo(t_frame -> slots[0]), MCHandlerTypeInfoGetReturnType(t_frame -> handler -> signature)),
+                                           "return value type mismatch");
+                        
+                        // Set the result value argument.
+                        r_value = t_frame -> slots[0];
+                        
+                        // Mark the slot as free as the value has been taken.
+                        t_frame -> slots[0] = nil;
+                    }
+                    
 					int t_param_count;
 					t_param_count = MCHandlerTypeInfoGetParameterCount(t_frame -> handler -> signature);
-					for(int i = 0; i < t_param_count; i++)
+                    for(int i = 0; i < t_param_count; i++)
 						if (MCHandlerTypeInfoGetParameterMode(t_frame -> handler -> signature, i) != kMCHandlerTypeFieldModeIn)
 						{
-							// Assign the return value to the mapped register.
-							MCScriptStoreToRegisterInFrame(t_frame -> caller, t_frame -> mapping[i], t_frame -> slots[i]);
-							
-							// Mark the slot as free as the value has been taken.
-							t_frame -> slots[i] = nil;
-						}
-				}
+                            __MCScriptAssert__(MCTypeInfoConformsTo(MCValueGetTypeInfo(t_frame -> slots[t_first_parameter_slot + 1]), MCHandlerTypeInfoGetParameterType(t_frame -> handler -> signature, i)),
+                                               "out parameter value type mismatch");
+                            
+                            // Move the value from the slot to the arguments array.
+                            p_arguments[i] = t_frame -> slots[t_first_parameter_slot + 1];
+                            
+                            // Mark the slot as nil as the value has been taken.
+                            t_frame -> slots[t_first_parameter_slot + 1] = nil;
+                        }
+                }
+				else
+                {
+                    // If there is a mapping array the do the copyback.
+                    if (t_frame -> mapping != nil)
+                    {
+                        int t_param_count;
+                        t_param_count = MCHandlerTypeInfoGetParameterCount(t_frame -> handler -> signature);
+                        for(int i = 0; i < t_param_count; i++)
+                            if (MCHandlerTypeInfoGetParameterMode(t_frame -> handler -> signature, i) != kMCHandlerTypeFieldModeIn)
+                            {
+                                // Assign the return value to the mapped register.
+                                MCScriptStoreToRegisterInFrame(t_frame -> caller, t_frame -> mapping[i], t_frame -> slots[i]);
+                                
+                                // Mark the slot as free as the value has been taken.
+                                t_frame -> slots[i] = nil;
+                            }
+                    }
+                    
+                    // Update the bytecode pointer to that of the caller.
+                    t_next_bytecode = t_frame -> caller -> instance -> module -> bytecode + t_frame -> caller -> address;
+                }
                 
                 // Pop and destroy the top frame of the stack.
                 t_frame = MCScriptDestroyFrame(t_frame);
-                
-                // If there is a frame to return to, update the bytecode ptr.
-                if (t_frame != nil)
-                    t_next_bytecode = t_frame -> instance -> module -> bytecode + t_frame -> address;
             }
             break;
             case kMCScriptBytecodeOpInvoke:
@@ -638,7 +730,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 				MCScriptDefinition *t_definition;
 				MCScriptResolveDefinitionInModule(t_frame -> instance -> module, t_index, t_instance, t_definition);
 				
-				t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity);
+				t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity - 1);
             }
             break;
             case kMCScriptBytecodeOpInvokeIndirect:
@@ -658,7 +750,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 				t_instance = (MCScriptInstanceRef)MCHandlerGetInstance((MCHandlerRef)t_handler);
 				t_definition = (MCScriptDefinition *)MCHandlerGetDefinition((MCHandlerRef)t_handler);
 				
-				t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity);
+				t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity - 1);
             }
             break;
             case kMCScriptBytecodeOpFetchGlobal:
