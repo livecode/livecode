@@ -4470,9 +4470,23 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         MCinfinity = HUGE_VAL;
         
-        long response;
-        if (Gestalt(gestaltSystemVersion, &response) == noErr)
-            MCmajorosversion = response;
+        // SN-2014-10-08: [[ YosemiteUpdate ]] gestaltSystemVersion stops to 9 after any Minor/Bugfix >= 10
+        //  We want to keep the same way the os version is built, which is 0xMMmb
+        //     - MM reads the decimal major version number
+        //     - m  reads the hexadecimal minor version number
+        //     - b  reads the hexadecimal bugfix number.
+        long t_major, t_minor, t_bugfix;
+        if (Gestalt(gestaltSystemVersionMajor, &t_major) == noErr &&
+            Gestalt(gestaltSystemVersionMinor, &t_minor) == noErr &&
+            Gestalt(gestaltSystemVersionBugFix, &t_bugfix) == noErr)
+        {
+            if (t_major < 10)
+                MCmajorosversion = t_major * 0x100;
+            else
+                MCmajorosversion = (t_major / 10) * 0x1000 + (t_major - 10) * 0x100;
+            MCmajorosversion += t_minor * 0x10;
+            MCmajorosversion += t_bugfix * 0x1;
+        }
 		
         MCaqua = True; // Move to MCScreenDC
         
@@ -4498,6 +4512,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         MCS_reset_time();
         // END HERE
         
+        long response;
         if (Gestalt('ICAp', &response) == noErr)
         {
             OSErr err;
@@ -6570,7 +6585,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     fptr = fopen(*t_path_utf, IO_APPEND_MODE);
                     break;
                 case kMCOpenFileModeWrite:
-                case kMCOpenFileModeExecutableWrite:
                     fptr = fopen(*t_path_utf, IO_WRITE_MODE);
                     break;
                 default:
@@ -6621,7 +6635,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 t_stream = fdopen(p_fd, IO_UPDATE_MODE);
                 break;
             case kMCOpenFileModeWrite:
-            case kMCOpenFileModeExecutableWrite:
                 t_stream = fdopen(p_fd, IO_WRITE_MODE);
                 break;
             default:
@@ -6632,7 +6645,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 			return NULL;
 		
 		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-        if (p_mode == kMCOpenFileModeWrite || p_mode == kMCOpenFileModeExecutableWrite)
+        if (p_mode == kMCOpenFileModeWrite)
 			setvbuf(t_stream, NULL, _IONBF, 0);
 		
 		IO_handle t_handle;
@@ -6667,7 +6680,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
                 break;
             case kMCOpenFileModeWrite:
-            case kMCOpenFileModeExecutableWrite:
                 fptr = fopen(*t_path_utf, IO_WRITE_MODE);
                 break;
             default:
