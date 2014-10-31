@@ -2608,11 +2608,15 @@ enum Exec_errors
 	// AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
     // {EE-0842} bidiDirection: error in source expression
 	EE_BIDIDIRECTION_BADSOURCE,
+    
+    // MW-2014-10-23: Improve the error message you get from 'start using <name>'
+    // {EE-0843} start: script of specified stack won't compile
+    EE_START_WONTCOMPILE,
 
-	/* {EE-0843} stackdir: bad path */
+	/* {EE-0844} stackdir: bad path */
 	EE_INTERNAL_STACKDIR_BADPATH,
 
-	/* {EE-0844} stackdir: bad state */
+	/* {EE-0845} stackdir: bad state */
 	EE_INTERNAL_STACKDIR_BADSTATE,
 };
 

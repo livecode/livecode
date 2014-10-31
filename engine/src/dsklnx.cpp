@@ -1712,33 +1712,20 @@ public:
         }
 
         FILE *t_fptr;
-        // [[ Bug 12192 ]] We want to create an executable file on Linux
-        // when calling OpenFile from MCS_save(binary|text)file
-        if (p_mode == kMCOpenFileModeExecutableWrite)
-        {
-            int t_fd = open(*t_path_sys, O_CREAT | O_TRUNC | O_WRONLY, 0777);
-            if (t_fd != -1)
-                t_fptr = fdopen(t_fd, "w");
-            else
-                t_fptr = NULL;
-        }
-        else
-        {
-            const char *t_mode;
-            if (p_mode == kMCOpenFileModeRead)
-                t_mode = IO_READ_MODE;
-            else if (p_mode == kMCOpenFileModeWrite)
-                t_mode = IO_WRITE_MODE;
-            else if (p_mode == kMCOpenFileModeUpdate)
-                t_mode = IO_UPDATE_MODE;
-            else if (p_mode == kMCOpenFileModeAppend)
-                t_mode = IO_APPEND_MODE;
+        const char *t_mode;
+        if (p_mode == kMCOpenFileModeRead)
+            t_mode = IO_READ_MODE;
+        else if (p_mode == kMCOpenFileModeWrite)
+            t_mode = IO_WRITE_MODE;
+        else if (p_mode == kMCOpenFileModeUpdate)
+            t_mode = IO_UPDATE_MODE;
+        else if (p_mode == kMCOpenFileModeAppend)
+            t_mode = IO_APPEND_MODE;
 
-            t_fptr = fopen(*t_path_sys, t_mode);
+        t_fptr = fopen(*t_path_sys, t_mode);
 
-            if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
-                t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
-        }
+        if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
+            t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
         if (t_fptr != NULL)
         {
@@ -1759,7 +1746,6 @@ public:
             t_fptr = fdopen(p_fd, IO_READ_MODE);
             break;
         case kMCOpenFileModeWrite:
-        case kMCOpenFileModeExecutableWrite:
             t_fptr = fdopen(p_fd, IO_WRITE_MODE);
             break;
         case kMCOpenFileModeUpdate:
@@ -1786,7 +1772,7 @@ public:
 
         if (p_mode == kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_READ_MODE);
-        else if (p_mode == kMCOpenFileModeWrite || p_mode == kMCOpenFileModeExecutableWrite)
+        else if (p_mode == kMCOpenFileModeWrite)
             t_fptr = fopen(*t_path_sys, IO_WRITE_MODE);
         else if (p_mode == kMCOpenFileModeUpdate)
             t_fptr = fopen(*t_path_sys, IO_UPDATE_MODE);

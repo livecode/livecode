@@ -181,7 +181,8 @@ MCPropertyInfo MCiOSPlayerControl::kProperties[] =
     DEFINE_RW_CTRL_PROPERTY(P_CONTENT, String, MCiOSPlayerControl, Content)
     DEFINE_RW_CTRL_PROPERTY(P_FULLSCREEN, Bool, MCiOSPlayerControl, Fullscreen)
     DEFINE_RW_CTRL_PROPERTY(P_PRESERVE_ASPECT, Bool, MCiOSPlayerControl, PreserveAspect)
-    DEFINE_RW_CTRL_PROPERTY(P_SHOW_CONTROLLER, Bool, MCiOSPlayerControl, Fullscreen)
+    // PM-2014-10-24: [[ Bug 13790 ]] Setting the showController to true resulted in going fullscreen in ios player
+    DEFINE_RW_CTRL_PROPERTY(P_SHOW_CONTROLLER, Bool, MCiOSPlayerControl, ShowController)
     DEFINE_RW_CTRL_PROPERTY(P_USE_APPLICATION_AUDIO_SESSION, Bool, MCiOSPlayerControl, UseApplicationAudioSession)
     DEFINE_RW_CTRL_PROPERTY(P_START_TIME, Int32, MCiOSPlayerControl, StartTime)
     DEFINE_RW_CTRL_PROPERTY(P_END_TIME, Int32, MCiOSPlayerControl, EndTime)
