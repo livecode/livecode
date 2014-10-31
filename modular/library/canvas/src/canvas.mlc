@@ -19,7 +19,7 @@ end type
 
 // Color
 foreign handler MCCanvasColorType_Measure() as uint binds to "<builtin>"
-foreign handler MCCanvasColorType_Initialize(in pColor as poin ter) as undefined binds to "<builtin>"
+foreign handler MCCanvasColorType_Initialize(in pColor as pointer) as undefined binds to "<builtin>"
 opaque type Color
 	measure is MCCanvasColorType_Measure
 	initialize is MCCanvasColorType_Initialize
@@ -54,14 +54,23 @@ end type
 
 // Image
 foreign handler MCCanvasImageType_Measure() as uint binds to "<builtin>"
+foreign handler MCCanvasImageType_Finalize(in pImage as pointer) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageType_Copy(in pSrcImage as pointer, in pDestImage as pointer) as undefined binds to "<builtin>"
+
 opaque type Image
 	measure is MCCanvasImageType_Measure
+	finalize is MCCanvasImageType_Finalize
+	copy is MCCanvasImageType_Copy
 end type
 
 // Path
 foreign handler MCCanvasPathType_Measure() as uint binds to "<builtin>"
+foreign handler MCCanvasPathType_Finalize(in pPath as pointer) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathType_Copy(in pSrcPath as pointer, in pDestPath as pointer) as undefined binds to "<builtin>"
 opaque type Path
 	measure is MCCanvasPathType_Measure
+	finalize is MCCanvasPathType_Finalize
+	copy is MCCanvasPathType_Copy
 end type
 
 // Effect
@@ -413,16 +422,16 @@ begin
 	MCCanvasGradientStopMake(mOffset, mColor, output)
 end syntax
 
-constant kGradientTypeLinear is 1
-constant kGradientTypeRadial is 2
-constant kGradientTypeConical is 3
-constant kGradientTypeDiamond is 4
-constant kGradientTypeSpiral is 5
-constant kGradientTypeXY is 6
-constant kGradientTypeSqrtXY is 7
+constant kGradientTypeLinear is 0
+constant kGradientTypeRadial is 1
+constant kGradientTypeConical is 2
+constant kGradientTypeDiamond is 3
+constant kGradientTypeSpiral is 4
+constant kGradientTypeXY is 5
+constant kGradientTypeSqrtXY is 6
 
 syntax GradientType is phrase
-	( "linear" <mType=1> | "radial" <mType=2> | "conical" <mType=3> | "diamond" <mType=4> | "spiral" <mType=5> | "xy" <mType=6> | "sqrtxy" <mType=7> )
+	( "linear" <mType=0> | "radial" <mType=1> | "conical" <mType=2> | "diamond" <mType=3> | "spiral" <mType=4> | "xy" <mType=5> | "sqrtxy" <mType=6> )
 begin
 end syntax
 
@@ -669,7 +678,7 @@ end syntax
 
 // Constructors
 
-foreign handler MCCanvasPathMakeWithString(in pString as string, out rPath as Path) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathMakeWithInstructionsAsString(in pString as string, out rPath as Path) as undefined binds to "<builtin>"
 
 syntax MakePath is prefix operator with precedence 4
 	"path" <mString: Expression>
@@ -681,7 +690,6 @@ end syntax
 
 foreign handler MCCanvasPathMakeWithRoundedRectangle(in pLeft as CanvasFloat, in pTop as CanvasFloat, in pRight as CanvasFloat, in pBottom as CanvasFloat, in pRadiusX as CanvasFloat, in pRadiusY as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
 foreign handler MCCanvasPathMakeWithRectangle(in pLeft as CanvasFloat, in pTop as CanvasFloat, in pRight as CanvasFloat, in pBottom as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathMakeWithCircle(in pX as CanvasFloat, in pY as CanvasFloat, in pRadius as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
 foreign handler MCCanvasPathMakeWithEllipse(in pX as CanvasFloat, in pY as CanvasFloat, in pRadiusX as CanvasFloat, in pRadiusY as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
 foreign handler MCCanvasPathMakeWithLine(in pStartX as CanvasFloat, in pStartY as CanvasFloat, in pEndX as CanvasFloat, in pEndY as CanvasFloat, out rPath as Path) as undefined binds to "<builtin>"
 foreign handler MCCanvasPathMakeWithPoints(in pPoints as list, in pClose as boolean, out rPath as Path) as undefined binds to "<builtin>"
@@ -692,6 +700,33 @@ begin
 	MCCanvasPathMakeWithRoundedRectangle(mRect[0], mRect[1], mRect[2], mRect[3], mRadius, mRadius, output)
 	MCCanvasPathMakeWithRoundedRectangle(mRect[0], mRect[1], mRect[2], mRect[3], mRadii[0], mRadii[1], output)
 end syntax
+
+syntax MakePathWithRectangle is prefix operator with precedence 4
+	"rectangle" <mRect: ExpressionList>
+begin
+	MCCanvasPathMakeWithRectangle(mRect[0], mRect[1], mRect[2], mRect[3], output)
+end syntax
+
+syntax MakePathWithCircle is prefix operator with precedence 4
+	"circle" "centered" "at" <mPoint: ExpressionList> "with" "radius" <mRadius: Expression>
+begin
+	MCCanvasPathMakeWithEllipse(mPoint[0], mPoint[1], mRadius, mRadius, output)
+end syntax
+
+syntax MakePathWithEllipse is prefix operator with precedence 4
+	"ellipse" "centered" "at" <mPoint: ExpressionList> "with" "radii" <mRadii: ExpressionList>
+begin
+	MCCanvasPathMakeWithEllipse(mPoint[0], mPoint[1], mRadii[0], mRadii[1], output)
+end syntax
+
+syntax MakePathWithLine is prefix operator with precedence 4
+	"line" "from" <mPointA: ExpressionList> "to" <mPointB: ExpressionList>
+begin
+	MCCanvasPathMakeWithLine(mPointA[0], mPointA[1], mPointB[0], mPointB[1], output)
+end syntax
+
+// TODO - input type for list of points?
+// syntax MakePathWithPoints(
 
 //////////
 
@@ -707,10 +742,10 @@ foreign handler MCCanvasPathGetInstructionsAsString(in pPath as Path, out rInstr
 // foreign handler MCCanvasPathSetInstructionsAsString(inout xPath as Path, in pInstructions as string) as undefined binds to "<builtin>"
 
 syntax PathSubpathProperty is prefix operator with precedence 4
-	"subpath" ( <mStart: Expression> "to" <mEnd: Expression> | <mIndex: Expression> ) "of" <mPath: Expression>
+	"subpath" <mStart: Expression> [ "to" <mEnd: Expression> ] "of" <mPath: Expression>
 begin
 	MCCanvasPathGetSubpaths(mPath, mStart, mEnd, output)
-	MCCanvasPathGetSubpaths(mPath, mIndex, mIndex, output)
+	MCCanvasPathGetSubpaths(mPath, mStart, mStart, output)
 end syntax
 
 //syntax PathPointProperty is prefix operator with precedence 4
@@ -724,13 +759,14 @@ end syntax
 //begin
 //	MCCanvasPathGetPoints(mPath, mStart, mEnd, output)
 //end syntax
-//
+
+// TODO - output format?
 //syntax PathBoundingBoxProperty is prefix operator with precedence 4
 //	"bounding" "box" "of" <mPath: Expression>
 //begin
 //	MCCanvasPathGetBoundingBox(mPath, output)
 //end syntax
-//
+
 //// TODO - split syntax instruction / instructions
 //syntax PathInstructionProperty is prefix operator with precedence 4
 //	"instruction" ( <mStart: Expression> "to" <mEnd: Expression> | <mIndex: Expression> ) "of" <mPath: Expression>
@@ -742,7 +778,7 @@ end syntax
 syntax PathInstructionsProperty is prefix operator with precedence 4
 	"the" "instructions" "of" <mPath: Expression>
 begin
-	MCCanvasPathGetInstructions(mPath, output)
+	MCCanvasPathGetInstructionsAsString(mPath, output)
 end syntax
 
 //////////
@@ -755,6 +791,37 @@ foreign handler MCCanvasPathRotate(inout xPath as Path, in pRadians as CanvasFlo
 foreign handler MCCanvasPathTranslate(inout xPath as Path, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
 
 foreign handler MCCanvasPathAddPath(inout xPathA as Path, in pPathB as Path) as undefined binds to "<builtin>"
+
+foreign handler MCCanvasPathMoveTo(inout xPath as Path, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathLineTo(inout xPath as Path, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathCurveThroughPoint(inout xPath as Path, in pThroughX as CanvasFloat, in pThroughY as CanvasFloat, in pToX as CanvasFloat, in pToY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathCurveThroughPoints(inout xPath as Path, in pThroughAX as CanvasFloat, in pThroughAY as CanvasFloat, in pThroughBX as CanvasFloat, in pThroughBY as CanvasFloat, in pToX as CanvasFloat, in pToY as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasPathClosePath(inout xPath as Path) as undefined binds to "<builtin>"
+
+syntax PathMoveTo is statement
+	"move" "to" <mPoint: ExpressionList> "on" <mPath: Expression>
+begin
+	MCCanvasPathMoveTo(mPath, mPoint[0], mPoint[1])
+end syntax
+
+syntax PathLineTo is statement
+	"line" "to" <mPoint: ExpressionList> "on" <mPath: Expression>
+begin
+	MCCanvasPathLineTo(mPath, mPoint[0], mPoint[1])
+end syntax
+
+syntax PathCurveThrough is statement
+	"curve" "through" <mThroughA: ExpressionList> [ "and" <mThroughB: ExpressionList> ] "to" <mPoint: ExpressionList> "on" <mPath: Expression>
+begin
+	MCCanvasPathCurveThroughPoint(mPath, mThroughA[0], mThroughA[1], mPoint[0], mPoint[1])
+	MCCanvasPathCurveThroughPoints(mPath, mThroughA[0], mThroughA[1], mThroughB[0], mThroughB[1], mPoint[0], mPoint[1])
+end syntax
+
+syntax PathClosePath is statement
+	"close" "path" "on" <mPath: Expression>
+begin
+	MCCanvasPathClosePath(mPath)
+end syntax
 
 syntax TransformPath is statement
 	"transform" <mPath: Expression> "by" <mTransform: Expression>
