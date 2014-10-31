@@ -24,6 +24,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "foundation-text.h"
 
+#include "util.h"
+
 #include "stackdir.h"
 
 #include <unicode/uchar.h>
@@ -40,6 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * Case-Fold). */
 static bool MCStackdirNormalizeString (MCStringRef p_string, MCStringRef & r_normalized);
 
+static bool MCStackdirFormatData (MCDataRef p_data, MCStringRef & r_literal);
 static bool MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_literal);
 static bool MCStackdirFormatName (MCNameRef p_name, MCStringRef & r_literal);
 
@@ -57,6 +60,82 @@ MCStackdirNormalizeString (MCStringRef p_string, MCStringRef & r_normalized)
 		return false;
 	r_normalized = MCValueRetain (*t_result);
 	return true;
+}
+
+/* ================================================================
+ * Data
+ * ================================================================ */
+
+static bool
+MCStackdirFormatData (MCDataRef p_data, MCStringRef & r_literal)
+{
+	/* Trivial case */
+	uindex_t t_source_length = MCDataGetLength (p_data);
+	if (t_source_length == 0)
+	{
+		r_literal = MCValueRetain (MCSTR ("<>"));
+		return true;
+	}
+
+	bool t_success = true;
+
+	/* We consider string encoding iff p_data contains valid UTF8.
+	 * Unfortunately, MCStringDecode doesn't do validation, so test by
+	 * doing a round-trip. */
+	MCAutoStringRef t_string;
+	MCAutoDataRef t_roundtrip_data;
+	t_success = (MCStringDecode (p_data, kMCStringEncodingUTF8,
+								 false, &t_string) &&
+				 MCStringEncode (*t_string, kMCStringEncodingUTF8,
+								 false, &t_roundtrip_data));
+
+	bool t_valid_utf8 = (t_success &&
+						 (MCDataCompareTo (p_data, *t_roundtrip_data) == 0));
+
+	/* Reset t_success at this point. If any failure occurred up to
+	 * here, assume it means that we can't use a string representation
+	 * for the data. */
+	t_success = true;
+
+	/* Only use the string format if the encoded string is shorter
+	 * than the corresponding base64 format. */
+	/* base64 uses approximately 4 output bytes for every 3 input bytes */
+	uindex_t t_base64_length_estimate =
+		(uindex_t) rint (ceil ((double) t_source_length * 4 / 3));
+
+	MCAutoStringRef t_formatted_string;
+	bool t_as_string = false;
+	t_as_string = (t_valid_utf8 &&
+				   MCStackdirFormatString (*t_string, &t_formatted_string) &&
+				   MCStringGetLength (*t_formatted_string) < t_base64_length_estimate);
+
+	MCAutoStringRef t_result;
+	if (t_as_string)
+	{
+		t_success = MCStringMutableCopy (*t_formatted_string, &t_result);
+	}
+	else
+	{
+		MCAutoStringRef t_base64;
+		MCU_base64encode (p_data, &t_base64);
+
+		/* Note that we have to manually remove all the newline
+		 * characters inserted by MCU_base64encode. */
+		t_success = (MCStringMutableCopy (*t_base64, &t_result) &&
+					 MCStringFindAndReplace (*t_result, kMCLineEndString,
+											 kMCEmptyString,
+											 kMCStringOptionCompareExact));
+	}
+
+	/* Add "<>" delimiters */
+	if (t_success)
+		t_success = (MCStringPrependCodepoint (*t_result, '<') &&
+					 MCStringAppendCodepoint (*t_result, '>'));
+
+	if (t_success)
+		r_literal = MCValueRetain (*t_result);
+
+	return t_success;
 }
 
 /* ================================================================
@@ -392,6 +471,8 @@ MCStackdirFormatLiteral (MCValueRef p_value, MCStringRef & r_literal)
 		return MCStackdirFormatName ((MCNameRef) p_value, r_literal);
 	case kMCValueTypeCodeString:
 		return MCStackdirFormatString ((MCStringRef) p_value, r_literal);
+	case kMCValueTypeCodeData:
+		return MCStackdirFormatData ((MCDataRef) p_value, r_literal);
 	case kMCValueTypeCodeArray:
 		return MCSTR ("array");
 	default:
