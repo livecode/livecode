@@ -526,9 +526,12 @@ void MCLine::SegmentLine()
         //  The search should only be in the range of the block.
         if (MCStringFirstIndexOfCharInRange(parent->GetInternalStringRef(), '\t', MCRangeMake(bptr -> GetOffset(), bptr -> GetLength()), kMCStringOptionCompareExact, t_offset))
         {
-            // Split the block at the tab
-            // Note that we want to create empty blocks after the tab
-            if ((t_offset + 1) <= bptr->GetOffset() + bptr->GetLength())
+            // Split the block at the tab unless it would create an empty block
+            // FG-2014-10-31: [[ Bugfix 13887 ]]
+            // There was previously a comment here saying that creating the
+            // empty block was a good thing. I have no idea why I wrote that...
+            // Removed that behaviour as it breaks some things.
+            if ((t_offset + 1) < bptr->GetOffset() + bptr->GetLength())
             {
                 bptr->split(t_offset + 1);
                 if (bptr == lastblock)
