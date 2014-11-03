@@ -111,7 +111,7 @@ MCStackdirFormatReal (MCNumberRef p_number, MCStringRef & r_literal)
 	{
 		t_found = MCStringWildcardMatch (*t_format,
 										 MCRangeMake (0, -1),
-										 MCSTR (".e"),
+										 MCSTR ("[.e]"),
 										 kMCStringOptionCompareExact);
 
 		if (t_found)
