@@ -68,6 +68,22 @@ void MCEncodingExecDecodeUsingBase64(MCStringRef p_target, MCDataRef& r_output)
     //    ctxt . Throw();
 }
 
+void MCEncodingExecEncodeUsingBinary(MCStringRef p_target, MCStringRef p_format, MCDataRef& r_output)
+{
+    //  TODO: Move binary encode/decode to foundation
+    //  Does this take a list?
+    //    ctxt . Throw();
+}
+
+void MCEncodingExecDecodeUsingBinary(MCDataRef p_target, MCStringRef p_format, MCStringRef& r_output)
+{
+    //  TODO: Move binary encode/decode to foundation
+    //  Does this take a list?
+    //    ctxt . Throw();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void MCEncodingExecEncodeUsingUTF8(MCStringRef p_target, MCDataRef& r_output)
 {
     if (MCStringEncode(p_target, kMCStringEncodingUTF8, false, r_output))
