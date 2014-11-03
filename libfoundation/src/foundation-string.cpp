@@ -405,6 +405,7 @@ static bool MCStringCreateMutableUnicode(uindex_t p_initial_capacity, MCStringRe
 	if (t_success)
 	{
 		self -> flags |= kMCStringFlagIsMutable;
+		self->char_count = 0;
 		r_string = self;
 	}
     
@@ -427,6 +428,7 @@ bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 	if (t_success)
 	{
 		self -> flags |= kMCStringFlagIsMutable;
+		self->char_count = 0;
 		r_string = self;
 	}
 
