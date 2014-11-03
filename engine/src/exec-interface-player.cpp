@@ -314,6 +314,12 @@ void MCPlayer::GetDuration(MCExecContext& ctxt, uinteger_t& r_duration)
 	r_duration = getduration();
 }
 
+// PM-2014-11-03: [[ Bug 13920 ]] Make sure we support loadedTime property
+void MCPlayer::GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_loaded_time)
+{
+	r_loaded_time = getmovieloadedtime();
+}
+
 void MCPlayer::GetLooping(MCExecContext& ctxt, bool& r_setting)
 {
 	r_setting = getflag(F_LOOPING);

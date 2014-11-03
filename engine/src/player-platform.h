@@ -283,6 +283,8 @@ public:
 	virtual void GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time);
 	virtual void SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time);
 	virtual void GetDuration(MCExecContext& ctxt, uinteger_t& r_duration);
+    // PM-2014-11-03: [[ Bug 13920 ]] Make sure we support loadedTime property
+    virtual void GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_loaded_time);
 	virtual void GetLooping(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetLooping(MCExecContext& ctxt, bool setting);
 	virtual void GetPaused(MCExecContext& ctxt, bool& r_setting);
