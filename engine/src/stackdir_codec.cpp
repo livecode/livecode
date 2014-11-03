@@ -426,7 +426,7 @@ MCStackdirFormatFilename (MCStringRef p_string, MCStringRef p_suffix,
 
 		/* Encode character in hexadecimal. */
 		sprintf (t_hexc, "%04hx", t_source);
-		MCStringCreateWithCString (t_hexc, &t_hex);
+		if (!MCStringCreateWithCString (t_hexc, &t_hex)) return false;
 
 		/* Characters <= 0xff can use _xhh format. */
 		if (t_source <= 0xffU)
