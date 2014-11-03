@@ -215,45 +215,32 @@ MCStackdirFormatData (MCDataRef p_data, MCStringRef & r_literal)
  * Strings
  * ================================================================ */
 
-/* Filter for escaping characters in stackdir strings */
-class MCStackdirStringEscapeFilter : public MCTextFilter
+static bool
+MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_literal)
 {
-public:
-	MCStackdirStringEscapeFilter () : m_state_len (0) {}
-	~MCStackdirStringEscapeFilter () {}
+	MCTextFilter *t_filter;
+	t_filter = MCTextFilterCreate (p_string, kMCStringOptionCompareExact);
 
-	virtual codepoint_t GetNextCodepoint ()
+	MCAutoStringRef t_result;
+	/* UNCHECKED */ MCStringCreateMutable (2 + MCStringGetLength (p_string),
+										   & t_result);
+
+	/* Add delimiter at start */
+	if (!MCStringAppendChar (*t_result, '"')) return false;
+
+	/* Build escaped string */
+	while (t_filter->HasData())
 	{
-		/* If we have some escape sequence characters queued up,
-		 * return the next one. */
-		if (m_state_len > 0)
-			return m_state[m_state_len + 1];
-		return 0;
-	}
+		codepoint_t t_source = t_filter->GetNextCodepoint ();
+		t_filter->AdvanceCursor ();
 
-	virtual bool AdvanceCursor ()
-	{
-		/* If the state vector was previously non-empty, shift to the
-		 * next position. */
-		if (m_state_len > 0)
-			--m_state_len;
-
-		/* If the state vector hasn't been drained yet, we're done. */
-		if (m_state_len > 0)
-			return true;
-
-		/* Otherwise, repopulate the state with the next source
-		 * character */
-		if (!PrevFilter () -> AdvanceCursor ()) return false;
-		codepoint_t t_source = PrevFilter () -> GetNextCodepoint ();
-
-		/* The '"' and '\' characters must always be escaped */
-		if (t_source == '"' || t_source == '\\' )
+		/* Always escape '"' and '\' */
+		if (t_source == '"' || t_source == '\\')
 		{
-			m_state[1] = '\\';
-			m_state[0] = t_source;
-			m_state_len = 2;
-			return true;
+			if (!(MCStringAppendChar (*t_result, '\\') &&
+				  MCStringAppendCodepoint (*t_result, t_source)))
+				return false;
+			continue;
 		}
 
 		/* Unicode categories L, M, N, P, S and the space character
@@ -263,117 +250,58 @@ public:
 			t_mask & (U_GC_L_MASK | U_GC_M_MASK | U_GC_N_MASK |
 					  U_GC_P_MASK | U_GC_S_MASK))
 		{
-			m_state[0] = t_source;
-			m_state_len = 1;
-			return true;
+			if (!MCStringAppendCodepoint (*t_result, t_source))
+				return false;
+			continue;
 		}
+
+		MCStringAppendChar (*t_result, '\\');
 
 		/* The newline and carriage return characters have special
 		 * escape sequences */
 		if (t_source == '\n')
 		{
-			m_state[1] = '\\';
-			m_state[0] = 'n';
-			m_state_len = 2;
-			return true;
+			if (!MCStringAppendChar (*t_result, 'n')) return false;
+			continue;
 		}
-
 		if (t_source == '\r')
 		{
-			m_state[1] = '\\';
-			m_state[0] = 'r';
-			m_state_len = 2;
-			return true;
+			if (!MCStringAppendChar (*t_result, 'r')) return false;
+			continue;
 		}
 
-		/* Place codepoint into state array in (reversed!) hexadecimal
-		 * format */
-		unsigned char t_hex[8];
-		sprintf ((char *) t_hex, "%08X", t_source);
-		for (int i = 0; i < 8; ++i)
-			m_state[i] = t_hex[7-i];
+		/* Encode character in hexadecimal. */
+		char t_hexc[8];
+		MCAutoStringRef t_hex;
+		sprintf (t_hexc, "%08x", t_source);
+		if (!MCStringCreateWithCString (t_hexc, &t_hex)) return false;
 
-		/* Unicode codepoints < 0xff can use \xhh format */
-		if (t_source <= 0xffU)
+		if (t_source <= 0xffU) /* Unicode codepoints < 0xff can use \xhh */
 		{
-			m_state[3] = '\\';
-			m_state[2] = 'x';
-			m_state_len = 4;
-			return true;
+			if (!(MCStringAppendChar (*t_result, 'x') &&
+				  MCStringAppendSubstring (*t_result, *t_hex, MCRangeMake (6, -1))))
+				return false;
+			continue;
 		}
-
-		/* Unicode codepoints < 0xffff can use \uhhhh format */
-		if (t_source <= 0xffffU)
+		else if (t_source <= 0xffffU) /* Unicode codepoints < 0xffff can use \uhh */
 		{
-			m_state[5] = '\\';
-			m_state[4] = 'u';
-			m_state_len = 6;
-			return true;
+			if (!(MCStringAppendChar (*t_result, 'x') &&
+				  MCStringAppendSubstring (*t_result, *t_hex, MCRangeMake (4, -1))))
+				return false;
+			continue;
 		}
-
-		/* Otherwise, store full codepoint using \Uhhhhhhhh format */
-		if (t_source <= 0xffffffffU)
+		else /* All other codepoints can use \Uhhhhhhhh */
 		{
-			m_state[9] = '\\';
-			m_state[8] = 'U';
-			m_state_len = 10;
-			return true;
-		}
-
-		MCUnreachable ();
-		return false;
-	}
-
-	virtual bool HasData () const
-	{
-		return m_state_len > 0 || PrevFilter ()->HasData ();
-	}
-
-	/* Unimplemented -- they're not needed. */
-	virtual void MarkText () { MCUnreachable (); }
-	virtual uindex_t GetMarkedLength() { MCUnreachable (); }
-
-private:
-	/* The maximum length that one codepoint can be encoded to is 10
-	 * characters (U+xxxxxxxx) */
-	enum { kMCStackdirStringMaxEscape = 10 };
-
-	/* The current state being stored. N.b. the state is stored at the
-	 * start of the state array, but in reverse order. */
-	uindex_t m_state_len;
-	codepoint_t m_state[kMCStackdirStringMaxEscape];
-};
-
-static bool
-MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_literal)
-{
-	MCTextFilter *t_filter;
-	MCStackdirStringEscapeFilter t_escape_filter;
-	t_filter = MCTextFilterCreate (p_string, kMCStringOptionCompareExact);
-	t_escape_filter.PlaceAfter (t_filter);
-
-	/* Note that t_filter should be automatically cleaned up by the
-	 * destructor of t_escape_filter when this function returns. */
-
-	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCStringCreateMutable (2 + MCStringGetLength (p_string),
-										   & t_result);
-
-	/* Build escaped string */
-	while (t_escape_filter.HasData())
-	{
-		if (!MCStringAppendCodepoint (*t_result,
-									  t_escape_filter.GetNextCodepoint ()))
+			if (!(MCStringAppendChar (*t_result, 'x') &&
+				  MCStringAppend (*t_result, *t_hex)))
 			return false;
+		}
 	}
 
-	/* Add delimiters at start and end */
-	if (!(MCStringPrependCodepoint (*t_result, '"') &&
-		  MCStringAppendCodepoint (*t_result, '"')))
-		return false;
+	/* Add delimiter at end */
+	if (!MCStringAppendChar (*t_result, '"')) return false;
 
-	r_literal = MCValueRetain (*t_result);
-	return true;
+	return MCStringCopy (*t_result, r_literal);
 }
 
 /* ================================================================
