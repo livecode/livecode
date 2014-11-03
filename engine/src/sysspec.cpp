@@ -601,7 +601,7 @@ Boolean MCS_unlink(MCStringRef p_path)
     if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
         return False;
 	
-	return MCsystem -> DeleteFile(*t_resolved_path);
+	return MCsystem -> DeleteFile(*t_native_path);
 }
 
 Boolean MCS_backup(MCStringRef p_old_name, MCStringRef p_new_name)
@@ -1419,15 +1419,22 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 
 bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 {
+    // AL-2014-10-29: Reinstate secure mode check when trying to save file
+    if (!MCSecureModeCanAccessDisk())
+	{
+		MCresult->sets("can't open file");
+		return false;
+	}
+    
 	MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
 	
 	if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
         return false;
 	
+    // MW-2014-10-24: [[ Bug 13797 ]] Don't create executable file.
 	IO_handle t_file;
-    // SN-2014-05-08 [[ Bug 12192 ]] Files created with 'url' should have the executable permission
-    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeExecutableWrite, false);
+    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeWrite, false);
 	
 	if (t_file == NULL)
 	{
@@ -1460,15 +1467,23 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 
 bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 {
+    // AL-2014-10-29: Reinstate secure mode check when trying to save file
+    if (!MCSecureModeCanAccessDisk())
+	{
+		MCresult->sets("can't open file");
+		return false;
+	}
+    
 	MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
+	bool t_success = true;
 	
 	if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
         return false;
 	
+    // MW-2014-10-24: [[ Bug 13797 ]] Don't create executable file.
 	IO_handle t_file;
-    // SN-2014-05-08 [[ Bug 12192 ]] Files created with 'url' should have the executable permission
-    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeExecutableWrite, false);
+    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeWrite, false);
 	
 	if (t_file == NULL)
 	{
@@ -1477,14 +1492,14 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 	}
     
 	if (!t_file -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data)))
+	{
 		MCresult -> sets("error writing file");
+		t_success = false;
+	}
 	
 	t_file -> Close();
 	
-    if (!MCresult -> isclear())
-		return false;
-    
-    return true;
+    return t_success;
 }
 
 int64_t MCS_fsize(IO_handle p_stream)
@@ -1643,10 +1658,18 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
     MCAutoStringRef t_data_string;
     // MW-2013-08-07: [[ Bug 11089 ]] The MCSystem::Shell() call returns binary data,
 	//   so since uses of MCS_runcmd() expect text, we need to do EOL conversion.
-    if (!MCStringCreateWithNativeChars((char_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_data_string) ||
-        (!MCStringConvertLineEndingsToLiveCode(*t_data_string, r_output)))
-    {
+    if (!MCStringCreateWithNativeChars((char_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), &t_data_string))
         r_output = MCValueRetain(kMCEmptyString);
+    else
+    {
+        // SN-2014-10-14: [[ Bug 13658 ]] Get the behaviour back to what it was in 6.x:
+        //  line-ending conversion for servers and Windows only
+#if defined(_SERVER) || defined(_WINDOWS)
+        if (!MCStringConvertLineEndingsToLiveCode(*t_data_string, r_output))
+            r_output = MCValueRetain(kMCEmptyString);
+#else
+        r_output = MCValueRetain(*t_data_string);
+#endif
     }
     
     return IO_NORMAL;
@@ -1737,7 +1760,7 @@ void MCS_unloadmodule(MCSysModuleHandle p_module)
 }
 
 // TODO: move somewhere better
-#ifdef _LINUX_DESKTOP
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
 MCLocaleRef MCS_getsystemlocale()
 {
     // TODO: implement properly

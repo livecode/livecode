@@ -2256,7 +2256,10 @@ void MCThere::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 			else
 				MCFilesEvalThereIsNotAFile(ctxt, *t_string, t_result);
 			break;
+        // AL-2014-10-02: [[ Bug 13579 ]] Default behavior is to check if there is a folder.
+        // In particular, this is the codepath for 'there is a url' for some reason.
 		case TM_DIRECTORY:
+        default:
 			if (form == IT_NORMAL)
 				MCFilesEvalThereIsAFolder(ctxt, *t_string, t_result);
 			else

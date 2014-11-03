@@ -218,6 +218,13 @@ bool MCSystemStopTrackingRotationRate()
     return t_success;
 }
 
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+bool MCSystemGetLocationAuthorizationStatus(MCStringRef& r_status)
+{
+    // Non implemented on Android
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAccelerationChanged(JNIEnv *env, jobject object, jfloat x, jfloat y, jfloat z, jfloat timestamp) __attribute__((visibility("default")));

@@ -735,7 +735,18 @@ bool MCSystemGetPixelDensity(real64_t& r_density)
     return false;
 }
 
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+#ifdef /* MCHandleLocationAuthorizationStatus */ LEGACY_EXEC
+static Exec_stat MCHandleLocationAuthorizationStatus(void *context, MCParameter *p_parameters)
+{
+    MCresult -> sets(MCIPhoneGetLocationAuthorizationStatus());
+    
+    return ES_NORMAL;
+}
+#endif /* MCHandleLocationAuthorizationStatus */
+
 /* MOVED TO mbliphoneorientation.mm */
+
 #ifdef /* MCHandleDeviceOrientationIphone */ LEGACY_EXEC
 static Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 {
@@ -1765,27 +1776,36 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
     {false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
     {false, "mobilePixelDensity", MCHandleDeviceScale, nil},
-    
-    {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
-    {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
+
+    {false, "iphoneLocationAuthorizationStatus", MCHandleLocationAuthorizationStatus, nil},
+    {false, "mobileLocationAuthorizationStatus", MCHandleLocationAuthorizationStatus, nil},
+	
+    // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingSensor and StopTrackingSensor must run on the script thread
+    {true, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
+    {true, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
     {false, "mobileSensorReading", MCHandleSensorReading, nil},
     {false, "mobileSensorAvailable", MCHandleSensorAvailable, nil},
     
     // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
-    /* DEPRECATED */ {false, "iphoneCanTrackLocation", MCHandleCanTrackLocation, nil},
-    /* DEPRECATED */ {false, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
-    /* DEPRECATED */ {false, "iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
-    /* DEPRECATED */ {false, "iphoneCurrentLocation", MCHandleCurrentLocation, nil},
-    /* DEPRECATED */ {false, "mobileCanTrackLocation", MCHandleCanTrackLocation, nil},
-    /* DEPRECATED */ {false, "mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
-    /* DEPRECATED */ {false, "mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
-    /* DEPRECATED */ {false, "mobileCurrentLocation", MCHandleCurrentLocation, nil},
+	/* DEPRECATED */ {false, "iphoneCanTrackLocation", MCHandleCanTrackLocation, nil},
     
-    /* DEPRECATED */ {false, "iphoneCanTrackHeading", MCHandleCanTrackHeading, nil},
-    /* DEPRECATED */ {false, "iphoneStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
-    /* DEPRECATED */ {false, "iphoneStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
-    /* DEPRECATED */ {false, "iphoneCurrentHeading", MCHandleCurrentHeading, nil},
-    {false, "iphoneSetHeadingCalibrationTimeout", MCHandleSetHeadingCalibrationTimeout, nil},
+    // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingLocation and StopTrackingLocation must run on the script thread
+	/* DEPRECATED */ {true, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+	/* DEPRECATED */ {true, "iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+    
+	/* DEPRECATED */ {false, "iphoneCurrentLocation", MCHandleCurrentLocation, nil},
+    /* DEPRECATED */ {false, "mobileCanTrackLocation", MCHandleCanTrackLocation, nil},
+    
+    // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingLocation and StopTrackingLocation must run on the script thread
+    /* DEPRECATED */ {true, "mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+	/* DEPRECATED */ {true, "mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+	/* DEPRECATED */ {false, "mobileCurrentLocation", MCHandleCurrentLocation, nil},
+	
+	/* DEPRECATED */ {false, "iphoneCanTrackHeading", MCHandleCanTrackHeading, nil},
+	/* DEPRECATED */ {false, "iphoneStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
+	/* DEPRECATED */ {false, "iphoneStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
+	/* DEPRECATED */ {false, "iphoneCurrentHeading", MCHandleCurrentHeading, nil},
+	{false, "iphoneSetHeadingCalibrationTimeout", MCHandleSetHeadingCalibrationTimeout, nil},
     {false, "iphoneHeadingCalibrationTimeout", MCHandleHeadingCalibrationTimeout, nil},
     /* DEPRECATED */ {false, "mobileCanTrackHeading", MCHandleCanTrackHeading, nil},
     /* DEPRECATED */ {false, "mobileStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
@@ -1945,9 +1965,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {true, "mobileGetContactData", MCHandleGetContactData, nil}, // ABNewPersonViewController
     {true, "mobileUpdateContact", MCHandleUpdateContact, nil},   // ABUnknownPersonViewController
     {true, "mobileCreateContact", MCHandleCreateContact, nil},
-    {false, "mobileAddContact", MCHandleAddContact, nil},
-    {false, "mobileFindContact", MCHandleFindContact, nil},
-    {false, "mobileRemoveContact", MCHandleRemoveContact, nil},
+    // PM-2014-10-08: [[ Bug 13621 ]] Add/Find/Remove contact must run on the script thread
+    {true, "mobileAddContact", MCHandleAddContact, nil},
+    {true, "mobileFindContact", MCHandleFindContact, nil},
+    {true, "mobileRemoveContact", MCHandleRemoveContact, nil},
     
     {false, "iphoneSetDoNotBackupFile", MCHandleFileSetDoNotBackup, nil},
     {false, "iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},

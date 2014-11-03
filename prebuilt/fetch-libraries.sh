@@ -6,7 +6,7 @@ VERSION_Curl="7.21.1"
 VERSION_ICU="52.1"
 
 # Libraries to fetch
-PLATFORMS=( mac linux ios win32 android )
+PLATFORMS=( mac linux win32 android )
 ARCHS_android=( armv6 )
 ARCHS_mac=( Universal )
 ARCHS_ios=( Universal )

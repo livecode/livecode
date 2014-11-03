@@ -702,15 +702,13 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	//   but use the integer width to break. This ensures measure(a & b) == measure(a) + measure(b)
 	//   (otherwise you get drift as the accumulated width the block calculates is different
 	//    from the width of the text that is drawn).
-    // AL-2014-09-11: [[ Bug 13403 ]] Continue to track width as an integer for breaking purposes
+
 	coord_t t_width_float;
 	t_width_float = 0;
-	int32_t t_width;
-	t_width = 0;
-    
+
 	// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
 	//   positioning issues.
-	int4 t_last_break_width;
+	coord_t t_last_break_width;
 	t_last_break_width = 0;
 	uint2 t_last_break_i;
 	t_last_break_i = m_index;
@@ -783,22 +781,21 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
             t_range = MCRangeMake(initial_i, i - initial_i);
             // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             t_width_float += MCFontMeasureTextSubstringFloat(m_font,  parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
-            t_width = (int32_t)floorf(t_width_float);
-		}
-
-		if (t_can_fit && t_width > maxwidth)
+        }
+        
+		if (t_can_fit && t_width_float > maxwidth)
 			break;
 
 		if (t_can_break)
 			t_break_index = i;
 
-        if (t_width <= maxwidth)
+        if (t_width_float <= maxwidth)
         {
             t_can_fit = true;
             t_whole_block = t_end_of_block;
         }
 
-		if (t_width >= maxwidth)
+		if (t_width_float >= maxwidth)
 			break;
 	}
 

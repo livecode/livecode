@@ -521,7 +521,23 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					}
 					setforeground(dc, DI_BOTTOM, False);
 				}
+#ifdef _MACOSX
+                // FG-2014-10-29: [[ Bugfix 13842 ]] On Yosemite, glowing buttons
+                // should draw with white text.
+                if (IsMacLFAM() && MCmajorosversion >= 0x10A0 && MCaqua
+                    && !(flags & F_DISABLED) && isstdbtn && getstyleint(flags) == F_STANDARD
+                    && ((state & CS_HILITED) || (state & CS_SHOW_DEFAULT))
+                    && rect.height <= 24 && MCappisactive
+                    && !(MCbuttonstate && MCmousestackptr && MCmousestackptr == getstack()
+                        && MCmousestackptr->getcard()->getmfocused() != nil
+                        && MCmousestackptr->getcard()->getmfocused() != this
+                        && MCmousestackptr->getcard()->getmfocused()->gettype() == CT_BUTTON))
+                    setforeground(dc, DI_BACK, False, True);
+                else
+                    setforeground(dc, DI_FORE, False);
+#endif
 				drawlabel(dc, sx + loff, sy + loff, twidth, shadowrect, line, fontstyle, t_mnemonic);
+
 				if (getstyleint(flags) == F_MENU && menumode == WM_CASCADE && !t_themed_menu)
 					drawcascade(dc, shadowrect); // draw arrow in text color
 				if (flags & F_DISABLED && MClook == LF_WIN95 || t_themed_menu)
@@ -1356,6 +1372,14 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				MCcurtheme->drawwidget(dc, tabwinfo, tabrect);
 			twidth -= taboverlap;
 
+#ifdef _MACOSX
+            // FG-2014-10-24: [[ Bugfix 11912 ]]
+            // On OSX, reverse the text colour for selected tab buttons
+            if (i+1 == menuhistory)
+                reversetext = True;
+            else
+                reversetext = False;
+#endif
 		}
 		else
 			switch (MClook)
@@ -1559,8 +1583,8 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				setforeground(dc, DI_BACK, False, True);
 			else
 				setforeground(dc, DI_FORE, False);
-        
-        dc -> drawtext(textx, cury + yoffset, t_tab, m_font, false, kMCDrawTextNoBreak);
+        // AL-2014-09-24: [[ Bug 13528 ]] Don't draw character indicating button is disabled
+        dc -> drawtext_substring(textx, cury + yoffset, t_tab, t_range, m_font, false, kMCDrawTextNoBreak);
 		if ((disabled || flags & F_DISABLED) && MClook == LF_MOTIF)
 			dc->setfillstyle(FillSolid, nil, 0 , 0);
 		curx += twidth;

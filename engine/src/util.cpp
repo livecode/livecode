@@ -1424,6 +1424,8 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 	
 	uint2 origin_horiz, origin_vert;
 	int2 arc, arclength;
+    arc = 0;
+    arclength = 0;
 	origin_horiz = tr.x + rr_width;
 	origin_vert = tr.y + rr_height;
 

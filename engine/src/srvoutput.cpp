@@ -404,22 +404,30 @@ void MCServerPutBinaryOutput(MCDataRef s)
 	MCS_write((const void*) MCDataGetBytePtr(s), 1, MCDataGetLength(s), IO_stdout);
 }
 
-// TODO: This should throw an error if output encoding is binary.
-void MCServerPutUnicodeOutput(MCDataRef p_data)
-{
-	// UTF-16 encoded data, so convert to output encoding.
-	MCServerOutputUnicodeChars((unichar_t *) MCDataGetBytePtr(p_data), MCDataGetLength(p_data) / 2);
-}
-
 void MCServerPutOutput(MCStringRef s)
-{	
-	if (MCserveroutputtextencoding == kMCSOutputTextEncodingNative && MCserveroutputlineendings == kMCSOutputLineEndingsLF)
-	{
-		MCS_write(MCStringGetCString(s), 1, MCStringGetLength(s), IO_stdout);
-		return;
-	}
+{
+    if (MCStringIsNative(s))
+    {
+        const char *t_chars;
+        uindex_t t_length;
+        t_chars = (const char *)MCStringGetNativeCharPtr(s);
+        t_length = MCStringGetLength(s);
+        if (MCserveroutputtextencoding == kMCSOutputTextEncodingNative && MCserveroutputlineendings == kMCSOutputLineEndingsLF)
+        {
+            MCS_write(t_chars, 1, t_length, IO_stdout);
+            return;
+        }
 	
-	MCServerOutputNativeChars(MCStringGetCString(s), MCStringGetLength(s));
+        MCServerOutputNativeChars(t_chars, t_length);
+    }
+    else
+    {
+        const unichar_t *t_chars;
+        uindex_t t_length;
+        t_chars = MCStringGetCharPtr(s);
+        t_length = MCStringGetLength(s);
+        MCServerOutputUnicodeChars(t_chars, t_length);
+    }
 }
 
 void MCServerPutHeader(MCStringRef s, bool p_new)
@@ -457,22 +465,18 @@ void MCServerPutHeader(MCStringRef s, bool p_new)
 
 void MCServerPutContent(MCStringRef s)
 {
-	MCServerOutputNativeMarkup(MCStringGetCString(s), MCStringGetLength(s), true);
-}
-
-void MCServerPutUnicodeContent(MCDataRef p_data)
-{
-	MCServerOutputUnicodeMarkup((const unichar_t *)MCDataGetBytePtr(p_data), MCDataGetLength(p_data) / 2, true);
+    if (MCStringIsNative(s))
+        MCServerOutputNativeMarkup((const char *)MCStringGetNativeCharPtr(s), MCStringGetLength(s), true);
+    else
+        MCServerOutputUnicodeMarkup(MCStringGetCharPtr(s), MCStringGetLength(s), true);
 }
 
 void MCServerPutMarkup(MCStringRef s)
 {
-	MCServerOutputNativeMarkup(MCStringGetCString(s), MCStringGetLength(s), false);
-}
-
-void MCServerPutUnicodeMarkup(MCDataRef p_data)
-{
-	MCServerOutputUnicodeMarkup((const unichar_t *)MCDataGetBytePtr(p_data), MCDataGetLength(p_data) / 2, false);
+    if (MCStringIsNative(s))
+        MCServerOutputNativeMarkup((const char *)MCStringGetNativeCharPtr(s), MCStringGetLength(s), false);
+    else
+        MCServerOutputUnicodeMarkup(MCStringGetCharPtr(s), MCStringGetLength(s), false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

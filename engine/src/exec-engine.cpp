@@ -200,18 +200,19 @@ static MCExecCustomTypeInfo _kMCEngineNumberFormatTypeInfo =
 
 //////////
 
+// AL-2014-10-29: [[ Bug 13704 ]] Security permissions set type should use bits rather than bit-shifted values
 static MCExecSetTypeElementInfo _kMCEngineSecurityCategoriesElementInfo[] =
 {
-	{ "disk", MC_SECUREMODE_DISK },
-	{ "network", MC_SECUREMODE_NETWORK },
-	{ "process", MC_SECUREMODE_PROCESS },
-	{ "registryRead", MC_SECUREMODE_REGISTRY_READ },
-	{ "registryWrite", MC_SECUREMODE_REGISTRY_WRITE },
-	{ "printing", MC_SECUREMODE_PRINT },	
-	{ "privacy", MC_SECUREMODE_PRIVACY },
-	{ "applescript", MC_SECUREMODE_APPLESCRIPT },
-	{ "doalternate", MC_SECUREMODE_DOALTERNATE },
-	{ "external", MC_SECUREMODE_EXTERNAL },
+	{ "disk", kMCSecureModeTypeDiskBit },
+	{ "network", kMCSecureModeTypeNetworkBit },
+	{ "process", kMCSecureModeTypeProcessBit },
+	{ "registryRead", kMCSecureModeTypeRegistryReadBit },
+	{ "registryWrite", kMCSecureModeTypeRegistryWriteBit },
+	{ "printing", kMCSecureModeTypePrintBit },	
+	{ "privacy", kMCSecureModeTypePrivacyBit },
+	{ "applescript", kMCSecureModeTypeApplescriptBit },
+	{ "doalternate", kMCSecureModeTypeDoalternateBit },
+	{ "external", kMCSecureModeTypeExternalBit },
 };
 
 static MCExecSetTypeInfo _kMCEngineSecurityCategoriesTypeInfo =
@@ -697,7 +698,7 @@ void MCEngineExecGet(MCExecContext& ctxt, MCValueRef p_value)
 
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (!MCS_put(ctxt, MCStringIsNative(p_value) ? kMCSPutOutput : kMCSPutUnicodeOutput, p_value))
+	if (!MCS_put(ctxt, kMCSPutOutput, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
@@ -705,7 +706,7 @@ void MCEngineExecPutOutputUnicode(MCExecContext& ctxt, MCDataRef p_value)
 {
 	MCAutoStringRef t_string;
 	if (!MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(p_value), MCDataGetLength(p_value)/sizeof(unichar_t), &t_string)
-		|| !MCS_put(ctxt, kMCSPutUnicodeOutput, *t_string))
+		|| !MCS_put(ctxt, kMCSPutOutput, *t_string))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
@@ -1053,12 +1054,19 @@ void MCEngineExecStartUsingStack(MCExecContext& ctxt, MCStack *p_stack)
 void MCEngineExecStartUsingStackByName(MCExecContext& ctxt, MCStringRef p_name)
 {
 	MCStack *sptr;
-	if ((sptr = MCdefaultstackptr->findstackname_string(p_name)) == NULL ||
-		!sptr->parsescript(True))
-		{
-			ctxt . LegacyThrow(EE_START_BADTARGET);
-			return;
-		}
+	if ((sptr = MCdefaultstackptr->findstackname_string(p_name)) == NULL)
+    {
+        ctxt . LegacyThrow(EE_START_BADTARGET);
+        return;
+    }
+    
+    // MW-2014-10-23: Throw a different error if the script won't compile.
+    if (!sptr->parsescript(True))
+    {
+        ctxt . LegacyThrow(EE_START_WONTCOMPILE);
+        return;
+    }
+    
 	MCEngineExecStartUsingStack(ctxt, sptr);
 }
 

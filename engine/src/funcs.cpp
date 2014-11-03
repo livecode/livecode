@@ -787,21 +787,35 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
     if (!ctxt.HasError())
     {
+        uinteger_t t_skipped;
+        t_skipped = 0;
         for (uindex_t i = 0; i < t_result_count && i < r_value . int_value; i++)
         {
-            // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
-            // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
-            MCAutoPointer<MCContainer> t_container;
-            if (!t_params->evalcontainer(ctxt, &t_container))
+            if (t_results[i] != nil)
             {
-                ctxt . LegacyThrow(EE_BINARYD_BADDEST);
-                return;
+                // AL-2014-09-09: [[ Bug 13359 ]] Make sure containers are used in case a param is a handler variable
+                // AL-2014-09-18: [[ Bug 13465 ]] Use auto class to prevent memory leak
+                MCAutoPointer<MCContainer> t_container;
+                if (!t_params->evalcontainer(ctxt, &t_container))
+                {
+                    ctxt . LegacyThrow(EE_BINARYD_BADDEST);
+                    return;
+                }
+                
+                /* UNCHECKED */ t_container->set_valueref(t_results[i]);
             }
-            
-            /* UNCHECKED */ t_container->set_valueref(t_results[i]);
-
+            else
+            {
+                t_skipped++;
+            }
             t_params = t_params->getnext();
         }
+        
+        // Account for the skipped ("x") parameters
+        if (t_skipped >= r_value . int_value)
+            r_value . int_value = 0;
+        else
+            r_value . int_value -= t_skipped;
     }
 }
 

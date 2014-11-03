@@ -1469,9 +1469,14 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
         t_settings_ptr = &t_settings;
         break;
     case kMCImagePaletteTypeEmpty:
+        t_settings . type = kMCImagePaletteTypeEmpty;
         break;
     }
 
+    // AL-2014-10-27: [[ Bug 13804 ]] Make sure execution stops here if there was an error creating palette settings
+    if (ctxt . HasError())
+        return;
+    
     bool t_success;
     t_success = true;
     if (sformat == EX_SNAPSHOT)
@@ -1536,9 +1541,6 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 	}
     
     MCInterfaceImagePaletteSettingsFree(ctxt, t_settings);
-
-    if (ctxt . HasError())
-        return;
 
 	if (*t_return_data != nil)
 	{
@@ -4301,7 +4303,13 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
 				if (arg == OA_FILE)
 					t_is_text = MCfiles[index] . textmode != 0;
 				else if (arg == OA_PROCESS)
+                {
 					t_is_text = MCprocesses[index] . textmode != 0;
+                    // SN-2014-10-14: [[ Bug 13658 ]] Ensure that we read all we can from a binary process, not
+                    //  until 0x4 (which might be read before the end, when outputting binary data)
+                    if (!t_is_text && *sptr == 0x4)
+                        ep.setsvalue("");
+                }
 				else
 					t_is_text = true;
 				if (!t_is_text)

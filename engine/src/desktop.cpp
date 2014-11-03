@@ -99,14 +99,18 @@ void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate)
 
 void MCPlatformHandleApplicationSuspend(void)
 {
-	MCdefaultstackptr -> getcard() -> message(MCM_suspend);
+	// FG-2014-09-22: [[ Bugfix 13480 ]] May have no default stack on startup
+    if (MCdefaultstackptr)
+        MCdefaultstackptr -> getcard() -> message(MCM_suspend);
 	MCappisactive = False;
 }
 
 void MCPlatformHandleApplicationResume(void)
 {
-	MCappisactive = True;
-	MCdefaultstackptr -> getcard() -> message(MCM_resume);
+	// FG-2014-09-22: [[ Bugfix 13480 ]] May have no default stack on startup
+    MCappisactive = True;
+    if (MCdefaultstackptr)
+        MCdefaultstackptr -> getcard() -> message(MCM_resume);
 }
 
 void MCPlatformHandleApplicationRun(bool& r_continue)

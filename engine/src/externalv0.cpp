@@ -309,7 +309,9 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
         if (t_wants_utf8)
             MCStringConvertToUTF8String(*t_string, args[nargs++]);
         else
-            MCStringConvertToCString(*t_string, args[nargs++]);
+            // AL-2014-09-30: [[ Bug 13530 ]] Nativize string before conversion for legacy behavior
+            MCStringNormalizeAndConvertToCString(*t_string, args[nargs++]);
+        
         p_parameters = p_parameters -> getnext();
     }
     
@@ -395,9 +397,16 @@ static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname,MCVariable
 		return ES_ERROR;
 	
 	if ((*tvar = newvar->evalvar(ctxt)) == NULL)
-	{
-		delete newvar;
-		return ES_ERROR;
+    {
+        // SN-2014-10-21: [[ Bug 13728 ]] The variable might be held in a container.
+        MCAutoPointer<MCContainer> t_container;
+        
+        if (!newvar->evalcontainer(*MCECptr, &t_container) ||
+                (*tvar = t_container->getvar()) == NULL)
+        {
+            delete newvar;
+            return ES_ERROR;
+        }
 	}
 	delete newvar;
 
@@ -471,7 +480,7 @@ static char *getfield(MCField *fptr, int *retval)
 	MCAutoStringRef t_string;;
 	fptr->exportastext(0, 0, INT32_MAX, &t_string);
     char *t_result;
-    /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+    /* UNCHECKED */ MCStringNormalizeAndConvertToCString(*t_string, t_result);
 	return t_result;
 }
 
@@ -565,7 +574,7 @@ static char *get_global(const char *arg1, const char *arg2,
         MCAutoStringRef t_string;
         /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
         char *t_result;
-        /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+        /* UNCHECKED */ MCStringNormalizeAndConvertToCString(*t_string, t_result);
 		return t_result;
 	}
 	*retval = xresFail;
@@ -748,7 +757,7 @@ static char *get_variable(const char *arg1, const char *arg2,
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
     char *t_result;
-    /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+    /* UNCHECKED */ MCStringNormalizeAndConvertToCString(*t_string, t_result);
 	return t_result;
 }
 
@@ -802,7 +811,7 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
     char *t_result;
-    /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
+    /* UNCHECKED */ MCStringNormalizeAndConvertToCString(*t_string, t_result);
     
     // SN-2014-04-07 [[ Bug 12118 ]] revExecuteSQL writes incomplete data into SQLite BLOB columns
     // arg3 is not a char* but rather a MCString; whence setting the length should not be forgotten,
@@ -853,7 +862,7 @@ static bool get_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_k
 	ctxt = (get_array_element_t *)p_context;
 
 	char* t_key;
-	MCStringConvertToCString(MCNameGetString(p_key), t_key);
+	MCStringNormalizeAndConvertToCString(MCNameGetString(p_key), t_key);
 
 	ctxt -> keys[ctxt -> index] = t_key;
 	MCExternalAddAllocatedString(MCexternalallocpool, t_key);
@@ -868,7 +877,7 @@ static bool get_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_k
         if (!MCECptr -> ConvertToString(p_value, &t_string))
             t_string = kMCEmptyString;
 
-        /* UNCHECKED */ MCStringConvertToNative(*t_string, t_chars, t_length);
+        /* UNCHECKED */ MCStringNormalizeAndConvertToNative(*t_string, t_chars, t_length);
 
         ctxt -> strings[ctxt -> index] . length = (int)t_length;
         ctxt -> strings[ctxt -> index] . sptr = (const char*)t_chars;
@@ -1351,7 +1360,7 @@ static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
     if (p_is_text)
         /* UNCHECKED */ MCStringConvertToUTF8(*t_string, t_result, t_char_count);
     else
-        /* UNCHECKED */ MCStringConvertToNative(*t_string, (char_t*&)t_result, t_char_count);
+        /* UNCHECKED */ MCStringNormalizeAndConvertToNative(*t_string, (char_t*&)t_result, t_char_count);
     
     // SN-2014-04-07 [[ Bug 12118 ]] revExecuteSQL writes incomplete data into SQLite BLOB columns
     // arg3 is not a char* but rather a MCString; whence setting the length should not be forgotten,
@@ -1447,7 +1456,7 @@ static bool get_array_element_utf8(void *p_context, MCArrayRef p_array, MCNameRe
         if (ctxt -> is_text)
             /* UNCHECKED */ MCStringConvertToUTF8(*t_string, t_chars, t_length);
         else
-            /* UNCHECKED */ MCStringConvertToNative(*t_string, (char_t*&)t_chars, t_length);
+            /* UNCHECKED */ MCStringNormalizeAndConvertToNative(*t_string, (char_t*&)t_chars, t_length);
         
         ctxt -> strings[ctxt -> index] . length = (int)t_length;
         ctxt -> strings[ctxt -> index] . sptr = (const char*)t_chars;

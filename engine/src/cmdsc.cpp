@@ -55,6 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "exec.h"
 #include "objptr.h"
+#include "stacksecurity.h"
 
 #include "syntax.h"
 #include "graphics_util.h"
@@ -931,10 +932,22 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 	}
-	else
-		if (te->type == TT_PROPERTY && te->which == P_DIRECTORY)
-			directory = True;
-	MCerrorlock++;
+	else if (te -> type == TT_PROPERTY && te -> which == P_SCRIPT)
+    {
+        // Accept 'create script only stack ... [ <name> ]'
+        if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_ONLY) != PS_NORMAL ||
+            sp . skip_token(SP_FACTOR, TT_CHUNK, CT_STACK) != PS_NORMAL)
+        {
+            MCperror -> add(PE_CREATE_BADTYPE, sp);
+            return PS_ERROR;
+        }
+        
+        script_only_stack = True;
+    }
+    else if (te->type == TT_PROPERTY && te->which == P_DIRECTORY)
+        directory = True;
+	
+    MCerrorlock++;
 	if (sp.parseexp(False, True, &newname) != PS_NORMAL)
 	{
 		if (directory || alias)
@@ -965,18 +978,25 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 	}
-	else
-		if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL || otype == CT_STACK
-		        && sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
-		{
-			container = new MCChunk(False);
-			if (container->parse(sp, False) != PS_NORMAL)
-			{
-				MCperror->add
-				(PE_CREATE_BADBGORCARD, sp);
-				return PS_ERROR;
-			}
-		}
+	else if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL ||
+             (otype == CT_STACK && sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL))
+    {
+        if (!script_only_stack)
+        {
+            container = new MCChunk(False);
+            if (container->parse(sp, False) != PS_NORMAL)
+            {
+                MCperror->add
+                (PE_CREATE_BADBGORCARD, sp);
+                return PS_ERROR;
+            }
+        }
+        else
+        {
+            MCperror -> add(PE_CREATE_BADTYPE, sp);
+            return PS_ERROR;
+        }
+    }
 	return PS_NORMAL;
 }
 
@@ -1064,102 +1084,118 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
 		delete aliasname;
 		return ES_NORMAL;
 	}
-	if (otype != CT_STACK && MCdefaultstackptr->islocked())
-	{
-		MCeerror->add(EE_CREATE_LOCKED, line, pos);
-		return ES_ERROR;
-	}
-	MCObject *optr;
-	if (otype == CT_STACK)
-	{
-		MCStack *odefaultstackptr = MCdefaultstackptr;
-		Boolean wasvisible = MCtemplatestack->isvisible();
-		
-		if (!visible)
-			MCtemplatestack->setflag(visible, F_VISIBLE);
-		if (container != NULL)
-		{
-			MCObject *tptr;
-			uint4 parid;
-			if (container->getobj(ep, tptr, parid, True) != ES_NORMAL
-			        || tptr->gettype() != CT_GROUP && tptr->gettype() != CT_STACK)
-			{
-				MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
-				return ES_ERROR;
-			}
-			MCdefaultstackptr = MCtemplatestack->clone();
-			MCdefaultstackptr->open();
-			if (tptr->gettype() == CT_GROUP)
-			{
-				MCGroup *gptr = (MCGroup *)tptr;
-				MCdefaultstackptr->setrect(gptr->getstack()->getrect());
-				gptr = (MCGroup *)gptr->clone(False, OP_NONE, false);
-				gptr->setparent(MCdefaultstackptr);
-				gptr->resetfontindex(tptr->getstack());
-				gptr->attach(OP_NONE, false);
-			}
-			else
-			{
-				tptr->getprop(0, P_NAME, ep, False);
-				if (MCdefaultstackptr->setprop(0, P_MAIN_STACK, ep, False) != ES_NORMAL)
-				{
-					delete MCdefaultstackptr;
-					MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
-					return ES_ERROR;
-				}
-			}
-		}
-		else
-		{
-			MCdefaultstackptr = MCtemplatestack->clone();
-			MCdefaultstackptr->open();
-		}
-		MCtemplatestack->setflag(wasvisible, F_VISIBLE);
-		optr = MCdefaultstackptr;
-		MCdefaultstackptr = odefaultstackptr;
-	}
-	else
-	{
-		MCObject *parent = NULL;
-		if (container != NULL)
-		{
-			uint4 parid;
-			if (container->getobj(ep, parent, parid, True) != ES_NORMAL
-			        || parent->gettype() != CT_GROUP)
-			{
-				MCeerror->add
-				(EE_CREATE_BADBGORCARD, line, pos);
-				return ES_ERROR;
-			}
-		}
-		if (otype == CT_CARD)
-		{
-			MCdefaultstackptr->stopedit();
-			optr = MCtemplatecard->clone(True, False);
-		}
-		else
-		{
-			MCControl *cptr = getobject(parent);
-			if (cptr == NULL)
-				return ES_ERROR;
-			Boolean wasvisible = cptr->isvisible();
-			if (!visible)
-				cptr->setflag(visible, F_VISIBLE);
-			cptr->setparent(parent);
-			optr = cptr->clone(True, OP_CENTER, false);
-			if (cptr == getobject(parent))
-			{ // handle case where template reset
-				cptr->setparent(NULL);
-				if (!visible)
-					cptr->setflag(wasvisible, F_VISIBLE);
-			}
-			if (otype == CT_MENU)
-			{
-				MCButton *bptr = (MCButton *)optr;
-				bptr->setupmenu();
-			}
-		}
-	}
+    
+    MCObject *optr;
+    if (script_only_stack)
+    {
+        MCStack *t_new_stack;
+        MCStackSecurityCreateStack(t_new_stack);
+        MCdispatcher -> appendstack(t_new_stack);
+        t_new_stack -> setparent(MCdispatcher -> gethome());
+        t_new_stack -> message(MCM_new_stack);
+        t_new_stack -> setflag(False, F_VISIBLE);
+        ep . clear();
+        t_new_stack -> setasscriptonly(ep);
+        optr = t_new_stack;
+    }
+    else
+    {
+        if (otype != CT_STACK && MCdefaultstackptr->islocked())
+        {
+            MCeerror->add(EE_CREATE_LOCKED, line, pos);
+            return ES_ERROR;
+        }
+        if (otype == CT_STACK)
+        {
+            MCStack *odefaultstackptr = MCdefaultstackptr;
+            Boolean wasvisible = MCtemplatestack->isvisible();
+            
+            if (!visible)
+                MCtemplatestack->setflag(visible, F_VISIBLE);
+            if (container != NULL)
+            {
+                MCObject *tptr;
+                uint4 parid;
+                if (container->getobj(ep, tptr, parid, True) != ES_NORMAL ||
+                        (tptr->gettype() != CT_GROUP && tptr->gettype() != CT_STACK))
+                {
+                    MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
+                    return ES_ERROR;
+                }
+                MCdefaultstackptr = MCtemplatestack->clone();
+                MCdefaultstackptr->open();
+                if (tptr->gettype() == CT_GROUP)
+                {
+                    MCGroup *gptr = (MCGroup *)tptr;
+                    MCdefaultstackptr->setrect(gptr->getstack()->getrect());
+                    gptr = (MCGroup *)gptr->clone(False, OP_NONE, false);
+                    gptr->setparent(MCdefaultstackptr);
+                    gptr->resetfontindex(tptr->getstack());
+                    gptr->attach(OP_NONE, false);
+                }
+                else
+                {
+                    tptr->getprop(0, P_NAME, ep, False);
+                    if (MCdefaultstackptr->setprop(0, P_MAIN_STACK, ep, False) != ES_NORMAL)
+                    {
+                        delete MCdefaultstackptr;
+                        MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
+                        return ES_ERROR;
+                    }
+                }
+            }
+            else
+            {
+                MCdefaultstackptr = MCtemplatestack->clone();
+                MCdefaultstackptr->open();
+            }
+            MCtemplatestack->setflag(wasvisible, F_VISIBLE);
+            optr = MCdefaultstackptr;
+            MCdefaultstackptr = odefaultstackptr;
+        }
+        else
+        {
+            MCObject *parent = NULL;
+            if (container != NULL)
+            {
+                uint4 parid;
+                if (container->getobj(ep, parent, parid, True) != ES_NORMAL
+                        || parent->gettype() != CT_GROUP)
+                {
+                    MCeerror->add
+                    (EE_CREATE_BADBGORCARD, line, pos);
+                    return ES_ERROR;
+                }
+            }
+            if (otype == CT_CARD)
+            {
+                MCdefaultstackptr->stopedit();
+                optr = MCtemplatecard->clone(True, False);
+            }
+            else
+            {
+                MCControl *cptr = getobject(parent);
+                if (cptr == NULL)
+                    return ES_ERROR;
+                Boolean wasvisible = cptr->isvisible();
+                if (!visible)
+                    cptr->setflag(visible, F_VISIBLE);
+                cptr->setparent(parent);
+                optr = cptr->clone(True, OP_CENTER, false);
+                if (cptr == getobject(parent))
+                { // handle case where template reset
+                    cptr->setparent(NULL);
+                    if (!visible)
+                        cptr->setflag(wasvisible, F_VISIBLE);
+                }
+                if (otype == CT_MENU)
+                {
+                    MCButton *bptr = (MCButton *)optr;
+                    bptr->setupmenu();
+                }
+            }
+        }
+    }
 	if (newname != NULL)
 	{
 		if (newname->eval(ep) != ES_NORMAL)
@@ -1199,8 +1235,14 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
 		MCAutoStringRef t_new_name;
         if (!ctxt . EvalOptionalExprAsNullableStringRef(newname, EE_CREATE_BADEXP, &t_new_name))
             return;
-        switch (otype)
-		{
+
+        MCObject *optr;
+        if (script_only_stack)
+            MCInterfaceExecCreateScriptOnlyStack(ctxt, *t_new_name);
+        else
+        {
+            switch (otype)
+            {
             case CT_STACK:
             {
                 MCObject *tptr = nil;
@@ -1241,7 +1283,8 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
                 MCInterfaceExecCreateControl(ctxt, *t_new_name, otype, (MCGroup *)parent, visible == False);
             }
                 break;
-		}
+            }
+        }
 	}
 }
 

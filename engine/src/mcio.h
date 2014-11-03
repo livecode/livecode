@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 #define PATH_MAX 260
-#elif !defined(_ANDROID_MOBILE)
+#elif !defined(PATH_MAX)
 #define PATH_MAX 1024
 #endif
 
@@ -54,9 +54,6 @@ enum MCOpenFileMode
     kMCOpenFileModeUpdate,
     kMCOpenFileModeAppend,
     kMCOpenFileModeCreate,
-    // [[ Bug 12192 ]] Need a specific mode for Linux, to enable the creation
-    // of an executable file from MCS_save(text|binary)file instead of 0664 permission
-    kMCOpenFileModeExecutableWrite
 };
 
 enum MCFileEncodingType

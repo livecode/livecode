@@ -981,13 +981,19 @@ void MCParagraph::defrag()
 
 // MW-2012-01-25: [[ ParaStyles ]] This method causes a reflow of the paragraph depending
 //   on the setting of 'dontWrap'.
-void MCParagraph::layout(bool p_force)
+// AL-2014-09-22: [[ Bug 11817 ]] Added cascade parameter to enable conditional r
+//  of subsequent paragraphs if the number of lines changes
+bool MCParagraph::layout(bool p_force, bool p_check_redraw)
 {
 	// MP-2013-09-02: [[ FasterField ]] If we don't need layout, and layout isn't being forced,
 	//   do nothing.
 	if (!needs_layout && !p_force)
-		return;
+		return false;
 
+    uindex_t t_count;
+    if (p_check_redraw)
+        t_count = countlines();
+    
     // Update the text direction properties of the paragraph
     resolvetextdirections();
     
@@ -995,10 +1001,28 @@ void MCParagraph::layout(bool p_force)
 		noflow();
 	else
 		flow();
-	
+    
 	// MP-2013-09-02: [[ FasterField ]] We've layed out the paragraph, so it doesn't need to
 	//   be again until mutated.
 	needs_layout = false;
+    
+    if (p_check_redraw)
+        return t_count != countlines();
+    
+    return false;
+}
+
+uindex_t MCParagraph::countlines()
+{
+    MCLine *t_line = lines;
+    uindex_t t_count = 0;
+    do
+    {
+        t_count++;
+        t_line = t_line -> next();
+    }
+    while (t_line != lines);
+    return t_count;
 }
 
 //reflow paragraph with wrapping
@@ -4272,6 +4296,11 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 {
 	if (lptr == NULL)
 		lptr = lines;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph
+    if (attrs != nil)
+        theight -= attrs -> space_above;
+    
 	do
 	{
 		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
@@ -4282,6 +4311,12 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 	}
 	while (lptr != lines);
 	lptr = NULL;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph.
+    // There is no failure for this paragraph if only the space below does not fit in the field
+    if (attrs != nil)
+        theight = MCU_max(((int32_t)theight) - attrs -> space_below, 0);
+    
 	return True;
 }
 
