@@ -112,6 +112,9 @@ public:
 	IO_stat Write(const void *p_buffer, uint32_t p_amount);
 
 	virtual IO_stat Flush(bool p_end);
+    
+    // SN-2014-10-27: [[ Bug 13554 ]] The string length is different according to the support of Unicode
+    uint32_t MeasureStringRefNew(MCStringRef p_string, bool p_supports_unicode);
 
 protected:
 	IO_handle m_stream;

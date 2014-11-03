@@ -71,7 +71,8 @@ void MCStack::setidlefunc(void (*newfunc)())
 	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 }
 
-Boolean MCStack::setscript(MCStringRef newscript)
+// MW-2014-10-24: [[ Bug 13796 ]] Separate script setting from commandline from other cases.
+Boolean MCStack::setscript_from_commandline(MCStringRef newscript)
 {
 	MCValueAssign(_script, newscript);
 	parsescript(False);

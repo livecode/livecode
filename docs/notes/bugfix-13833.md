@@ -1,0 +1,1 @@
+# Rendering many grcs when acceleratedRendering is true crashes hard

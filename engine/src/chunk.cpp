@@ -5600,7 +5600,8 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
     break_iterator = nil;
     sp = nil;
     range = MCRangeMake(0, 0);
-    exhausted = false;
+    // AL-2014-10-24: [[ Bug 13783 ]] Set exhausted to true if the string is immediately exhausted
+    exhausted = MCStringIsEmpty(p_text);
     length = MCStringGetLength(text);
     first_chunk = true;
     break_position = 0;
