@@ -229,7 +229,7 @@ MCStackdirIOSaveTransactionCreateDir (MCStackdirIORef op, MCStringRef &r_temp_pa
 	while (true)
 	{
 		MCAutoDataRef t_suffix_data;
-		uint32_t t_suffix_numeric;
+		uint32_t t_suffix_numeric = 0;
 		MCAutoStringRef t_native_path;
 
 		/* Create a random number */
