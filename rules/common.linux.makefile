@@ -44,7 +44,7 @@ GLOBAL_LIBS=\
 	$(SOLUTION_DIR)/prebuilt/lib/linux-$(ARCH)
 
 ifeq ($(MODE),debug)
-	DEFINES+=_DEBUG
+	DEFINES+=_DEBUG HAVE_VALGRIND
 else
 	DEFINES+=_RELEASE NDEBUG
 endif
