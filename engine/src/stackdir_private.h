@@ -84,14 +84,17 @@ bool MCStackdirIONew (MCStackdirIORef &op);
 #define kMCStackdirParentFile   MCSTR("_parent")
 #define kMCStackdirContentsFile MCSTR("_contents")
 #define kMCStackdirOverflowFile MCSTR("_overflow")
+#define kMCStackdirEmptyFile    MCSTR("_empty")
 
 #define kMCStackdirInternalKey  MCNAME("_internal")
 #define kMCStackdirTypeKey      MCNAME("_type")
 #define kMCStackdirLiteralKey   MCNAME("_literal")
+#define kMCStackdirCustomKey    MCNAME("_custom")
 
-#define kMCStackdirStringSuffix MCSTR(".txt")
-#define kMCStackdirDataSuffix   MCSTR(".bin")
-#define kMCStackdirArraySuffix  MCSTR(".map")
+#define kMCStackdirStringSuffix  MCSTR(".txt")
+#define kMCStackdirDataSuffix    MCSTR(".bin")
+#define kMCStackdirArraySuffix   MCSTR(".map")
+#define kMCStackdirPropsetSuffix MCSTR(".propset")
 
 #define kMCStackdirStringType   MCSTR("string")
 #define kMCStackdirDataType     MCSTR("data")

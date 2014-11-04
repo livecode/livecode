@@ -1161,10 +1161,67 @@ MCStackdirIOSaveObjectInternal (MCStackdirIOObjectSaveRef info)
 }
 
 static bool
+MCStackdirIOSaveObjectPropsets_PropsetCallback (void *context, MCArrayRef p_array,
+												MCNameRef p_key, MCValueRef p_value)
+{
+	MCStackdirIOObjectSaveRef info = (MCStackdirIOObjectSaveRef) context;
+
+	/* The value should always be an array */
+	MCAssert (MCValueIsArray (p_value));
+
+	/* If there aren't actually any properties, don't write anything. */
+	if (MCArrayIsEmpty ((MCArrayRef) p_value)) return true;
+
+	/* The default custom propset is identified by the empty name, and
+	 * gets given the special custom firectory name _empty. */
+	MCAutoStringRef t_propset_filename, t_propset_path;
+	if (MCNameIsEmpty (p_key))
+	{
+		/* UNCHECKED */ MCStringFormat (&t_propset_filename, "%@%@",
+										kMCStackdirEmptyFile,
+										kMCStackdirPropsetSuffix);
+	}
+	else
+	{
+		/* FIXME We don't yet support custom property sets with funny
+		 * names. */
+		if (!MCStackdirFormatFilename (MCNameGetString(p_key),
+									   kMCStackdirPropsetSuffix,
+									   &t_propset_filename))
+			return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+							MCSTR ("Custom property set with unsupported name"));
+	}
+
+	/* Create the propset directory */
+	/* UNCHECKED */ MCStringFormat (&t_propset_path, "%@/%@", info->m_path,
+									*t_propset_filename);
+
+	if (!MCS_mkdir (*t_propset_path))
+		return MCStackdirIOErrorIO (info->m_op, *t_propset_path,
+									MCSTR ("Failed to create custom propset directory"));
+
+	return MCStackdirIOSavePropSet (info->m_op, (MCArrayRef) p_value,
+									*t_propset_path);
+}
+
+static bool
 MCStackdirIOSaveObjectPropsets (MCStackdirIOObjectSaveRef info)
 {
-	/* FIXME implementation */
-	return true;
+	MCValueRef t_custom_propsets;
+
+	/* The state array may have _custom array (even if it's empty) */
+	if (!MCArrayFetchValue (info->m_state, false, kMCStackdirCustomKey,
+							t_custom_propsets))
+		return true;
+
+	if (!MCValueIsArray (t_custom_propsets))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  MCSTR ("Custom properties not an array"));
+
+	/* Loop over all the property sets */
+	return MCArrayApply ((MCArrayRef) t_custom_propsets,
+						 MCStackdirIOSaveObjectPropsets_PropsetCallback,
+						 info);
 }
 
 static bool
