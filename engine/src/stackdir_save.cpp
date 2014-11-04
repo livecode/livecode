@@ -135,7 +135,7 @@ static bool MCStackdirIOSaveObjectDirectory (MCStackdirIOObjectSaveRef info);
 
 /* Extract the value corresponding to p_key from the object's state
  * array, and save it to a file with name p_key. */
-static bool MCStackdirIOSaveObjectKeyDirect (MCStackdirIOObjectSaveRef info, MCStringRef p_key);
+static bool MCStackdirIOSaveObjectKeyDirect (MCStackdirIOObjectSaveRef info, MCStringRef p_key, bool p_required=true);
 
 /* Create object's "_kind" file */
 static bool MCStackdirIOSaveObjectKind (MCStackdirIOObjectSaveRef info);
@@ -1099,7 +1099,7 @@ MCStackdirIOSaveObjectDirectory (MCStackdirIOObjectSaveRef info)
 }
 
 static bool
-MCStackdirIOSaveObjectKeyDirect (MCStackdirIOObjectSaveRef info, MCStringRef p_key)
+MCStackdirIOSaveObjectKeyDirect (MCStackdirIOObjectSaveRef info, MCStringRef p_key, bool p_required)
 {
 	MCNewAutoNameRef t_key;
 	MCValueRef t_value;
@@ -1107,8 +1107,13 @@ MCStackdirIOSaveObjectKeyDirect (MCStackdirIOObjectSaveRef info, MCStringRef p_k
 
 	/* Each object's state array has to have the specified key */
 	if (!MCArrayFetchValue (info->m_state, false, *t_key, t_value))
-		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
-										  MCSTR ("Missing required key in object."));
+	{
+		if (p_required)
+			return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+											  MCSTR ("Missing required key in object."));
+		else
+			return true;
+	}
 
 	MCAutoStringRef t_content_literal, t_content;
 	/* UNCHECKED */ MCStackdirFormatLiteral (t_value, &t_content_literal);
@@ -1131,7 +1136,7 @@ MCStackdirIOSaveObjectKind (MCStackdirIOObjectSaveRef info)
 static bool
 MCStackdirIOSaveObjectParent (MCStackdirIOObjectSaveRef info)
 {
-	return MCStackdirIOSaveObjectKeyDirect (info, kMCStackdirParentFile);
+	return MCStackdirIOSaveObjectKeyDirect (info, kMCStackdirParentFile, false);
 }
 
 static bool
