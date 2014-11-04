@@ -479,7 +479,7 @@ MCStackdirFormatLiteral (MCValueRef p_value, MCStringRef & r_literal)
 	case kMCValueTypeCodeNumber:
 		return MCStackdirFormatNumber ((MCNumberRef) p_value, r_literal);
 	case kMCValueTypeCodeArray:
-		return MCSTR ("array");
+		return MCStringCreateWithCString ("array", r_literal);
 	default:
 		MCUnreachable ();
 	}
