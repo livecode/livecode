@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "util.h"
 #include "system.h"
+#include "sha1.h"
 
 #include "stackdir.h"
 
@@ -61,6 +62,42 @@ struct _MCStackdirIOObjectSave
 	MCStringRef m_path;
 };
 
+typedef struct _MCStackdirIOPropsetSave MCStackdirIOPropsetSave;
+typedef MCStackdirIOPropsetSave *MCStackdirIOPropsetSaveRef;
+
+struct _MCStackdirIOPropsetSave
+{
+	MCStackdirIORef m_op;
+
+	/* Propset directory */
+	MCStringRef m_path;
+
+	/* _contents property descriptors */
+	MCListRef m_contents;
+	MCStringRef m_contents_path;
+
+	/* _overflow property descriptors */
+	MCListRef m_overflow;
+	MCStringRef m_overflow_path;
+};
+
+typedef struct _MCStackdirIOArraySave MCStackdirIOArraySave;
+typedef MCStackdirIOArraySave *MCStackdirIOArraySaveRef;
+
+struct _MCStackdirIOArraySave
+{
+	MCStackdirIORef m_op;
+
+	/* Storage spec prefix */
+	MCStringRef m_storage_spec;
+
+	/* File that the array's being saved to */
+	MCStringRef m_path;
+
+	/* Target list */
+	MCListRef m_list;
+};
+
 /* ----------------------------------------------------------------
  * [Private] Utility functions
  * ---------------------------------------------------------------- */
@@ -68,8 +105,14 @@ struct _MCStackdirIOObjectSave
 /* Recursively delete a directory */
 static bool MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path);
 
-/* Helper function for writing a UTF-8 text file */
+/* Encode and write a UTF-8 text file */
 static bool MCStackdirIOSaveUTF8 (MCStackdirIORef op, MCStringRef p_path, MCStringRef p_contents);
+
+/* Generate a SHA-1 hash as a string */
+static bool MCStackdirIODataSha1 (MCDataRef p_data, MCStringRef & p_hash);
+
+/* Split up a property record */
+static bool MCStackdirIOArrayGetPropertyInfo (MCValueRef p_info, MCNameRef & r_type, MCValueRef & r_literal);
 
 /* ----------------------------------------------------------------
  * [Private] Save operations
@@ -111,11 +154,34 @@ static bool MCStackdirIOSaveObjectPropsets (MCStackdirIOObjectSaveRef info);
  * directories) */
 static bool MCStackdirIOSaveObjectShared (MCStackdirIOObjectSaveRef info);
 
+/* Recursively format property descriptors for array contents.
+ *
+ * The p_storage_spec is prepended to the name of each entry in the
+ * array.  It does not need to include a trailing ":".  The
+ * p_storage_spec is permitted to be nil or empty.  N.b. the
+ * p_storage_spec must be in *on-disk* format.
+ *
+ * The p_path is used to generate error messages if a problem occurs.
+ */
+static bool MCStackdirIOSaveArrayDescriptorsRecursive (MCStackdirIORef op, MCArrayRef p_array, MCStringRef p_storage_spec, MCStringRef p_path, MCListRef r_descriptor_list);
+
+/* Format an immediate property descriptor.
+ *
+ * The p_type_spec is permitted to be nil or empty.
+ */
+static bool MCStackdirIOSaveImmediateDescriptor (MCStackdirIORef op, MCStringRef p_storage_spec, MCStringRef p_type_spec, MCStringRef p_literal, MCStringRef & r_descriptor);
+
+/* Format an external property descriptor.
+ *
+ * The p_type_spec and the p_file_name are permitted to be nil or empty.
+ */
+static bool MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op, MCStringRef p_storage_spec, MCStringRef p_type_spec, MCStringRef p_file_type, MCDataRef p_file_contents, MCStringRef p_file_name, MCStringRef & r_descriptor);
+
 /* Save a property set.
  *
  * Generates "_contents" and/or "_overflow" files in p_propset_path,
  * along with any necessary external storage files. */
-static bool MCStackdirIOSavePropSet (MCArrayRef p_propset, MCStringRef p_propset_path);
+static bool MCStackdirIOSavePropSet (MCStackdirIORef op, MCArrayRef p_propset, MCStringRef p_propset_path);
 
 /* ================================================================
  * Utility functions
@@ -131,7 +197,7 @@ MCStackdirIOSaveUTF8 (MCStackdirIORef op, MCStringRef p_path,
 									false, &t_data);
 	if (!MCS_savebinaryfile (p_path, *t_data))
 		return MCStackdirIOErrorIO (op, p_path,
-									MCSTR ("Failed to set contents of UTF-8 text file."));
+									MCSTR ("Failed to set contents of UTF-8 text file"));
 
 	return true;
 }
@@ -188,6 +254,66 @@ MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path)
 
 	return t_success;
 }
+
+static bool
+MCStackdirIODataSha1 (MCDataRef p_data, MCStringRef & p_hash)
+{
+	sha1_state_t t_sha1;
+	sha1_init (&t_sha1);
+
+	/* Add the data to the sha1 stream */
+	sha1_append (&t_sha1, MCDataGetBytePtr (p_data), MCDataGetLength (p_data));
+
+	/* Extract the resulting digest from the stream */
+	uint8_t t_digest[20];
+	sha1_finish (&t_sha1, t_digest);
+
+	/* Format the digest as a string */
+	char t_digest_hex[41]; /* N.b. includes trailing nul */
+	for (int i = 0; i < 20; ++i)
+		sprintf(t_digest_hex + i*2, "%02x", t_digest[i]);
+
+	return MCStringCreateWithCString (t_digest_hex, p_hash);
+}
+
+static bool
+MCStackdirIOArrayGetPropertyInfo (MCValueRef p_info,
+								  MCNameRef & r_type,
+								  MCValueRef & r_literal)
+{
+	/*
+	 * If the property information (p_info) is an array, it must have
+	 * two sections:
+	 *
+	 * - p_value["_type"] should be an MCNameRef with the type of the
+	 *   property's value.  This might be kMCEmptyString if the
+	 *   property is of a basic type.
+	 *
+	 * - p_value["_literal"] could be any basic type, and has to be
+	 *   formatted correctly.
+	 *
+	 * All other types have the type inferred to be an empty string.
+	 */
+
+	if (!MCValueIsArray (p_info))
+	{
+		r_literal = MCValueRetain (p_info);
+		r_type = MCValueRetain (kMCEmptyName);
+		return true;
+	}
+
+	MCArrayRef t_array = (MCArrayRef) p_info;
+	MCValueRef t_type, t_literal;
+	if (!(MCArrayFetchValue (t_array, false, kMCStackdirTypeKey, t_type) &&
+		  MCArrayFetchValue (t_array, false, kMCStackdirLiteralKey, t_literal) &&
+		  MCValueGetTypeCode (t_type) == kMCValueTypeCodeName))
+		return false;
+
+	r_type = (MCNameRef) MCValueRetain (t_type);
+	r_literal = MCValueRetain (t_literal);
+	return true;
+}
+
 
 /* ================================================================
  * Save transactions
@@ -413,6 +539,521 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 }
 
 /* ================================================================
+ * Property descriptors
+ * ================================================================ */
+
+static bool
+MCStackdirIOSaveArrayDescriptorsRecursive_Callback (void *context,
+										MCArrayRef p_array,
+										MCNameRef p_key,
+										MCValueRef p_value)
+{
+	MCAssert (context != nil);
+	MCAssert (p_array != nil);
+	MCAssert (p_key != nil);
+	MCAssert (p_value != nil);
+
+	MCStackdirIOArraySaveRef info = (MCStackdirIOArraySaveRef) context;
+
+	MCStringRef t_invalid_property_message =
+		MCSTR ("Invalid property information array");
+
+	/* Extract property type and literal from the p_value */
+	MCNameRef t_prop_name = p_key;
+	MCNewAutoNameRef t_prop_type;
+	MCAutoValueRef t_prop_literal;
+
+	if (!MCStackdirIOArrayGetPropertyInfo (p_value, &t_prop_type,
+										   &t_prop_literal))
+		return MCStackdirIOErrorBadState (info->m_op,
+										  info->m_path,
+										  t_invalid_property_message);
+
+	/* Format parts of property descriptor */
+	MCAutoStringRef t_name, t_type_spec, t_literal;
+
+	if (!(MCStackdirFormatLiteral (t_prop_name, &t_name) &&
+		  MCStackdirFormatLiteral (*t_prop_literal, &t_literal)))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  t_invalid_property_message);
+
+	/* Need to cope with the fact that the type spec is permitted to
+	 * be omitted if the value is a basic type */
+	if (MCNameIsEmpty (*t_prop_type))
+		/* UNCHECKED */ MCStringCopy (kMCEmptyString, &t_type_spec);
+	else if (!MCStackdirFormatLiteral (*t_prop_type, &t_type_spec))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  t_invalid_property_message);
+
+	/* Create the storage spec */
+	MCAutoStringRef t_storage_spec;
+	/* UNCHECKED */ MCStringMutableCopy (info->m_storage_spec, &t_storage_spec);
+	/* UNCHECKED */ MCStringAppend (*t_storage_spec, *t_name);
+
+	/* Format the property descriptor */
+	MCAutoStringRef t_property_descriptor;
+	/* UNCHECKED */ MCStackdirIOSaveImmediateDescriptor (info->m_op,
+														 *t_storage_spec,
+														 *t_type_spec,
+														 *t_literal,
+														 &t_property_descriptor);
+
+	/* Add the property descriptor to the target list */
+	/* UNCHECKED */ MCListAppend (info->m_list, *t_property_descriptor);
+
+	/* If the literal was an array, recurse */
+	if (MCValueGetTypeCode (*t_prop_literal) == kMCValueTypeCodeArray)
+		return MCStackdirIOSaveArrayDescriptorsRecursive (info->m_op,
+														  (MCArrayRef) *t_prop_literal,
+														  *t_storage_spec,
+														  info->m_path,
+														  info->m_list);
+
+	return true;
+}
+
+static bool
+MCStackdirIOSaveArrayDescriptorsRecursive (MCStackdirIORef op,
+										   MCArrayRef p_array,
+										   MCStringRef p_storage_spec,
+										   MCStringRef p_path,
+										   MCListRef r_descriptor_list)
+{
+	MCAssert (op != nil);
+	MCAssert (p_array != nil);
+	MCAssert (r_descriptor_list != nil);
+
+	if (p_path == nil) p_path = kMCEmptyString;
+	if (p_storage_spec == nil) p_storage_spec = kMCEmptyString;
+
+	bool t_success;
+	t_success = true;
+	
+	/* If the storage spec is non-empty, then it's necessary to add a
+	 * separator to the end of it. */
+	MCAutoStringRef t_storage_spec;
+
+	if (t_success)
+		t_success = MCStringMutableCopy (p_storage_spec, &t_storage_spec);
+	if (t_success &&
+		!MCStringIsEmpty (*t_storage_spec))
+		t_success = MCStringAppendCodepoint (*t_storage_spec, ':');
+
+	if (!t_success)
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	MCStackdirIOArraySave info;
+	info.m_op = op;
+	info.m_storage_spec = *t_storage_spec;
+	info.m_path = p_path;
+	info.m_list = r_descriptor_list;
+
+	return MCStackdirArrayApplySorted (p_array,
+									   MCStackdirIOSaveArrayDescriptorsRecursive_Callback,
+									   &info);
+}
+
+
+static bool
+MCStackdirIOSaveImmediateDescriptor (MCStackdirIORef op,
+									 MCStringRef p_storage_spec,
+									 MCStringRef p_type_spec,
+									 MCStringRef p_literal,
+									 MCStringRef & r_descriptor)
+{
+	MCAutoListRef t_list;
+	bool t_success = true;
+
+	if (t_success)
+		t_success = (MCListCreateMutable (' ', &t_list) &&
+					 MCListAppend (*t_list, p_storage_spec));
+
+	/* Lexical analysis:
+	 *
+	 *    STORAGE_SPEC WS [TYPE_SPEC WS] LITERAL
+	 */
+	bool t_has_type = (p_type_spec != nil &&
+					   !MCStringIsEmpty (p_type_spec));
+
+	if (t_success && t_has_type)
+		t_success = MCListAppend (*t_list, p_type_spec);
+	if (t_success)
+		t_success = MCListAppend (*t_list, p_literal);
+
+	if (t_success)
+		t_success = MCListCopyAsString (*t_list, r_descriptor);
+
+	if (!t_success)
+		MCStackdirIOErrorOutOfMemory (op);
+	return t_success;
+}
+
+static bool
+MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op,
+									MCStringRef p_storage_spec,
+									MCStringRef p_type_spec,
+									MCStringRef p_file_type,
+									MCDataRef p_file_contents,
+									MCStringRef p_file_name,
+									MCStringRef & r_descriptor)
+{
+	MCAutoListRef t_list;
+	MCAutoStringRef t_hash;
+	bool t_success;
+	t_success = (MCListCreateMutable (' ', &t_list) &&
+				 MCListAppend (*t_list, p_storage_spec) &&
+				 MCStackdirIODataSha1 (p_file_contents, &t_hash));
+
+	/* Lexical analysis:
+	 *
+	 *    STORAGE_SPEC WS [TYPE_SPEC WS] "&" WS FILE_TYPE WS FILE_HASH [WS FILE_NAME]
+	 */
+	bool t_has_type = (p_type_spec != nil &&
+					   !MCStringIsEmpty (p_type_spec));
+	bool t_has_file_name = (p_file_name != nil &&
+							!MCStringIsEmpty (p_file_name));
+
+	if (t_success && t_has_type)
+		t_success = MCListAppend (*t_list, p_type_spec);
+	if (t_success)
+		t_success = (MCListAppendCString (*t_list, "&") &&
+					 MCListAppend (*t_list, p_file_type) &&
+					 MCListAppend (*t_list, *t_hash));
+	if (t_success && t_has_file_name)
+		t_success = MCListAppend (*t_list, p_file_name);
+
+	if (t_success)
+		t_success = MCListCopyAsString (*t_list, r_descriptor);
+
+	if (!t_success)
+		MCStackdirIOErrorOutOfMemory (op);
+	return t_success;
+}
+
+/* ================================================================
+ * Property sets
+ * ================================================================ */
+
+/* Choose how to store the property descriptor. There are several
+ * rules.  Properties that cannot be stored in the _contents file
+ * are evaluated for suitability for external storage.  Properties
+ * that cannot be stored externally end up in the _overflow
+ * file. */
+enum MCStackdirIOPropSetTarget
+{
+	kMCStackdirIOPropSetTargetContents,
+	kMCStackdirIOPropSetTargetExternal,
+	kMCStackdirIOPropSetTargetOverflow,
+
+	kMCStackdirIOPropSetTargetMaxDescriptorLen = 78,
+	kMCStackdirIOPropSetTargetMaxValueLen = 40,
+};
+
+static bool
+MCStackdirIOSavePropSet_PropertyCallback (void *context,
+										  MCArrayRef p_propset,
+										  MCNameRef p_key,
+										  MCValueRef p_value)
+{
+	MCStackdirIOPropsetSaveRef info = (MCStackdirIOPropsetSaveRef) context;
+
+	/* Check where the property descriptor should end up and stick it
+	 * into the correct place.
+	 */
+
+	MCNameRef  t_prop_name = p_key;
+	MCNewAutoNameRef  t_prop_type;
+	MCAutoValueRef t_prop_literal;
+
+	MCStringRef t_invalid_property_message =
+		MCSTR ("Invalid property information array");
+
+	/* First, extract the type and literal information from the
+	 * p_value. */
+	if (!MCStackdirIOArrayGetPropertyInfo (p_value, &t_prop_type,
+										   &t_prop_literal))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  t_invalid_property_message);
+
+	/* Next format each of the parts of the property descriptor */
+	MCValueTypeCode t_prop_literal_typecode = MCValueGetTypeCode (*t_prop_literal);
+	MCAutoStringRef t_storage_spec, t_type_spec, t_literal;
+
+	if (!(MCStackdirFormatLiteral (t_prop_name, &t_storage_spec) &&
+		  MCStackdirFormatLiteral (*t_prop_literal, &t_literal)))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  t_invalid_property_message);
+
+	/* Need to cope with the fact that the type spec is permitted to
+	 * be omitted if the value is a basic type */
+	if (MCNameIsEmpty (*t_prop_type))
+		/* UNCHECKED */ MCStringCopy (kMCEmptyString, &t_type_spec);
+	else if (!MCStackdirFormatLiteral (*t_prop_type, &t_type_spec))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  t_invalid_property_message);
+
+	/* Decide where the property descriptor (and contents!) should end
+	 * up */
+	int t_target = kMCStackdirIOPropSetTargetContents;
+	MCStringRef t_external_file_type;
+	MCAutoDataRef t_external_file_contents;
+	MCAutoStringRef t_external_filename;
+
+	if (t_target == kMCStackdirIOPropSetTargetContents)
+	{
+		/* We can store in the _contents file if the encoded value
+		 * isn't too big. */
+		switch (t_prop_literal_typecode)
+		{
+		case kMCValueTypeCodeArray:
+			/* Always attempt to save non-empty arrays externally */
+			if (MCArrayGetCount ((MCArrayRef) *t_prop_literal) > 0)
+				t_target = kMCStackdirIOPropSetTargetExternal;
+			break;
+
+		case kMCValueTypeCodeString:
+			/* Special case for "script" properties */
+			if (MCNameIsEqualTo (t_prop_name, MCNAME("script")))
+			{
+				t_target = kMCStackdirIOPropSetTargetExternal;
+				break;
+			}
+			/* FALL THROUGH TO NEXT CASE */
+
+		case kMCValueTypeCodeData:
+			{
+				/* Strings and data must have a sensible encoded length */
+				uindex_t t_literal_len = MCStringGetLength (*t_literal);
+				uindex_t t_descriptor_len = (t_literal_len +
+											 MCStringGetLength (*t_storage_spec) +
+											 MCStringGetLength (*t_type_spec));
+
+				if (t_literal_len > kMCStackdirIOPropSetTargetMaxValueLen &&
+					t_descriptor_len > kMCStackdirIOPropSetTargetMaxDescriptorLen)
+					t_target = kMCStackdirIOPropSetTargetExternal;
+			}
+			break;
+
+		case kMCValueTypeCodeBoolean:
+		case kMCValueTypeCodeNumber:
+			/* Can always be stored in _contents */
+			break;
+
+		default:
+			return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+											  t_invalid_property_message);
+		}
+	}
+
+	if (t_target == kMCStackdirIOPropSetTargetExternal)
+	{
+		/* Check whether the name can be successfully encoded as a
+		 * filename. If it can't, store it in _overflow. */
+		MCStringRef t_suffix;
+		switch (t_prop_literal_typecode)
+		{
+		case kMCValueTypeCodeData:
+			t_suffix = kMCStackdirDataSuffix;
+			break;
+		case kMCValueTypeCodeString:
+			t_suffix = kMCStackdirStringSuffix;
+			break;
+		case kMCValueTypeCodeArray:
+			t_suffix = kMCStackdirArraySuffix;
+			break;
+		default:
+			MCUnreachable ();
+		}
+
+		if (!MCStackdirFormatFilename (MCNameGetString (t_prop_name),
+									   t_suffix, &t_external_filename))
+			t_target = kMCStackdirIOPropSetTargetOverflow;
+	}
+
+	if (t_target == kMCStackdirIOPropSetTargetExternal)
+	{
+		/* Now that we're certain that external storage is possible,
+		 * do some more expensive preparations and write the external
+		 * file. */
+
+		MCAutoStringRef t_external_path;
+		if (!MCStringFormat (&t_external_path, "%@/%@", info->m_path,
+							 *t_external_filename))
+			return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+		switch (t_prop_literal_typecode)
+		{
+		case kMCValueTypeCodeData:
+			t_external_file_type = kMCStackdirDataType;
+			/* UNCHECKED */ MCDataCopy ((MCDataRef) *t_prop_literal,
+										&t_external_file_contents);
+			break;
+		case kMCValueTypeCodeString:
+			t_external_file_type = kMCStackdirStringType;
+			/* UNCHECKED */ MCStringEncode ((MCStringRef) *t_prop_literal,
+											kMCStringEncodingUTF8,
+											false, &t_external_file_contents);
+			break;
+		case kMCValueTypeCodeArray:
+			t_external_file_type = kMCStackdirArrayType;
+			{
+				MCAutoListRef t_array_list;
+				MCAutoStringRef t_array_string;
+				/* UNCHECKED */ MCListCreateMutable ('\n', &t_array_list);
+				if (!(MCStackdirIOSaveArrayDescriptorsRecursive (info->m_op,
+											(MCArrayRef) *t_prop_literal,
+											kMCEmptyString,
+											*t_external_path,
+											*t_array_list) &&
+					  MCListAppend (*t_array_list, kMCEmptyString)))
+					return false;
+				/* UNCHECKED */ MCListCopyAsString (*t_array_list,
+													&t_array_string);
+				/* UNCHECKED */ MCStringEncode (*t_array_string,
+												kMCStringEncodingUTF8,
+												false, &t_external_file_contents);
+				break;
+			}
+			break;
+		default:
+			MCUnreachable ();
+		}
+
+		if (!MCS_savebinaryfile (*t_external_path, *t_external_file_contents))
+			return MCStackdirIOErrorIO (info->m_op, *t_external_path,
+										MCSTR ("Failed to set contents of external file"));
+	}
+
+	/* In theory, we've now decided how the property should be stored.
+	 * Format a property descriptor of the correct type (immediate or
+	 * external). */
+	MCAutoStringRef t_property_descriptor;
+	switch (t_target)
+	{
+	case kMCStackdirIOPropSetTargetExternal:
+		/* UNCHECKED */ MCStackdirIOSaveExternalDescriptor (info->m_op,
+							*t_storage_spec,
+							*t_type_spec,
+							t_external_file_type,
+							*t_external_file_contents,
+							kMCEmptyString, /* Always use generated filename */
+							&t_property_descriptor);
+		break;
+	case kMCStackdirIOPropSetTargetOverflow:
+	case kMCStackdirIOPropSetTargetContents:
+		/* UNCHECKED */ MCStackdirIOSaveImmediateDescriptor (info->m_op,
+							*t_storage_spec,
+							*t_type_spec,
+							*t_literal,
+							&t_property_descriptor);
+		break;
+	default:
+		MCUnreachable ();
+	}
+
+	/* Add the property descriptor to the correct target file */
+	if (t_target == kMCStackdirIOPropSetTargetOverflow)
+		/* UNCHECKED */ MCListAppend (info->m_overflow, *t_property_descriptor);
+	else
+		/* UNCHECKED */ MCListAppend (info->m_contents, *t_property_descriptor);
+
+	/* If the value is an array and has internal storage, then add the
+	 * property descriptors for its contents to the appropriate file
+	 * too. */
+	if (t_prop_literal_typecode == kMCValueTypeCodeArray &&
+		t_target != kMCStackdirIOPropSetTargetExternal)
+	{
+		MCStringRef t_path;
+		MCListRef t_list;
+		switch (t_target)
+		{
+		case kMCStackdirIOPropSetTargetOverflow:
+			t_path = info->m_overflow_path;
+			t_list = info->m_overflow;
+			break;
+		case kMCStackdirIOPropSetTargetContents:
+			t_path = info->m_contents_path;
+			t_list = info->m_contents;
+			break;
+		default:
+			MCUnreachable ();
+		}
+
+		if (!MCStackdirIOSaveArrayDescriptorsRecursive (info->m_op,
+														(MCArrayRef) *t_prop_literal,
+														*t_storage_spec,
+														t_path,
+														t_list))
+			return false;
+	}
+
+	return true;
+}
+
+static bool
+MCStackdirIOSavePropSet (MCStackdirIORef op, MCArrayRef p_propset,
+						 MCStringRef p_propset_path)
+{
+	/* Fast path */
+	if (MCArrayIsEmpty (p_propset)) return true;
+
+	bool t_success = true;
+
+	MCAutoStringRef t_contents_path, t_overflow_path;
+	if (t_success)
+		t_success = (MCStringFormat (&t_contents_path, "%@/%@",
+									 p_propset_path, kMCStackdirContentsFile) &&
+					 MCStringFormat (&t_overflow_path, "%@/%@",
+									 p_propset_path, kMCStackdirOverflowFile));
+
+	/* Create and initialise propset information structure */
+	MCStackdirIOPropsetSave info;
+	MCAutoListRef t_contents_list, t_overflow_list;
+	if (t_success)
+		t_success = (MCListCreateMutable (kMCLineEndString, &t_contents_list) &&
+					 MCListCreateMutable (kMCLineEndString, &t_overflow_list));
+
+	if (t_success)
+	{
+		info.m_op = op;
+		info.m_path = p_propset_path;
+		info.m_contents_path = *t_contents_path;
+		info.m_overflow_path = *t_overflow_path;
+		info.m_contents = *t_contents_list;
+		info.m_overflow = *t_overflow_list;
+	}
+
+	/* Generate property descriptors */
+	if (t_success)
+		t_success = MCStackdirArrayApplySorted (p_propset,
+						MCStackdirIOSavePropSet_PropertyCallback,
+						&info);
+
+	/* Write propset files. We append the empty string to each list in
+	 * order to ensure that they contain a trailing newline
+	 * character. */
+	if (t_success && !MCListIsEmpty (*t_contents_list))
+	{
+		MCAutoStringRef t_contents;
+		t_success = (MCListAppend (*t_contents_list, kMCEmptyString) &&
+					 MCListCopyAsString (*t_contents_list, &t_contents) &&
+					 MCStackdirIOSaveUTF8 (op, *t_contents_path,
+										   *t_contents));
+	}
+
+	if (t_success && !MCListIsEmpty (*t_overflow_list))
+	{
+		MCAutoStringRef t_overflow;
+		t_success = (MCListAppend (*t_overflow_list, kMCEmptyString) &&
+					 MCListCopyAsString (*t_overflow_list, &t_overflow) &&
+					 MCStackdirIOSaveUTF8 (op, *t_overflow_path,
+										   *t_overflow));
+	}
+
+	return t_success;
+}
+
+/* ================================================================
  * Object saving
  * ================================================================ */
 
@@ -496,8 +1137,22 @@ MCStackdirIOSaveObjectParent (MCStackdirIOObjectSaveRef info)
 static bool
 MCStackdirIOSaveObjectInternal (MCStackdirIOObjectSaveRef info)
 {
-	/* FIXME implementation */
-	return true;
+	MCValueRef t_internal_props;
+
+	/* The state array has to have an _internal array */
+	if (!MCArrayFetchValue (info->m_state, false, kMCStackdirInternalKey,
+							t_internal_props))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  MCSTR ("No internal properties in object."));
+
+	if (!MCValueIsArray (t_internal_props))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  MCSTR ("Internal properties not an array"));
+
+	/* Reuse the propset saving logic, saving into the object
+	 * directory. */
+	return MCStackdirIOSavePropSet (info->m_op, (MCArrayRef) t_internal_props,
+									info->m_path);
 }
 
 static bool
@@ -531,15 +1186,16 @@ MCStackdirIOSaveObject (MCStackdirIORef op, MCNameRef p_uuid, MCArrayRef p_state
 	info->m_path = nil;
 
 	/* Create object directory */
-	t_success = t_success && MCStackdirIOSaveObjectDirectory (info);
+	if (t_success)
+		t_success = MCStackdirIOSaveObjectDirectory (info);
 
 	/* Generate object contents */
-	t_success = (t_success &&
-				 MCStackdirIOSaveObjectKind (info) &&
-				 MCStackdirIOSaveObjectParent (info) &&
-				 MCStackdirIOSaveObjectInternal (info) &&
-				 MCStackdirIOSaveObjectPropsets (info) &&
-				 MCStackdirIOSaveObjectShared (info));
+	if (t_success)
+		t_success = (MCStackdirIOSaveObjectKind (info) &&
+					 MCStackdirIOSaveObjectParent (info) &&
+					 MCStackdirIOSaveObjectInternal (info) &&
+					 MCStackdirIOSaveObjectPropsets (info) &&
+					 MCStackdirIOSaveObjectShared (info));
 
 	/* Clean up */
 	MCValueRelease (info->m_uuid);

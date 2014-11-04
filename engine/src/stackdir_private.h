@@ -79,12 +79,24 @@ struct _MCStackdirIO
 bool MCStackdirIONew (MCStackdirIORef &op);
 
 /* Filenames */
-/* FIXME these should probably be MCStringRefs */
 #define kMCStackdirVersionFile  MCSTR("_version")
 #define kMCStackdirKindFile     MCSTR("_kind")
 #define kMCStackdirParentFile   MCSTR("_parent")
 #define kMCStackdirContentsFile MCSTR("_contents")
 #define kMCStackdirOverflowFile MCSTR("_overflow")
+
+#define kMCStackdirInternalKey  MCNAME("_internal")
+#define kMCStackdirTypeKey      MCNAME("_type")
+#define kMCStackdirLiteralKey   MCNAME("_literal")
+
+#define kMCStackdirStringSuffix MCSTR(".txt")
+#define kMCStackdirDataSuffix   MCSTR(".bin")
+#define kMCStackdirArraySuffix  MCSTR(".map")
+
+#define kMCStackdirStringType   MCSTR("string")
+#define kMCStackdirDataType     MCSTR("data")
+#define kMCStackdirArrayType    MCSTR("array")
+
 #define kMCStackdirSaveBackupDir MCSTR("_save_backup")
 
 /* Contents of version file */
