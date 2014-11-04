@@ -190,7 +190,8 @@ struct PodFieldPropType<MCInterfaceNamedColor>
     {
         if (a . name != nil && b . name != nil)
             return MCStringIsEqualTo(a . name, b . name, kMCCompareExact);
-        else if (a . name == nil || b . name == nil)
+        // SN-2014-11-03: [[ Bug 13925 ]] It's false if one has a name, and not the other.
+        else if (a . name != nil || b . name != nil)
             return false;
         else
             return (a . color . blue == b . color . blue
