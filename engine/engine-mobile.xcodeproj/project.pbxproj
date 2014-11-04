@@ -254,6 +254,10 @@
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE5E7EB174BBE89001AB76D /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE5E7E6174BBE64001AB76D /* uuid.cpp */; };
 		4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE9499D142762490072D9C6 /* CoreText.framework */; };
+		720E350719F5707F00EA00ED /* native-layer-ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 720E350019F5707F00EA00ED /* native-layer-ios.mm */; };
+		720E350819F5707F00EA00ED /* native-layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720E350119F5707F00EA00ED /* native-layer.cpp */; };
+		720E350919F5707F00EA00ED /* widget-events.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720E350319F5707F00EA00ED /* widget-events.cpp */; };
+		720E350A19F5707F00EA00ED /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 720E350519F5707F00EA00ED /* widget.cpp */; };
 		722A7EEF191B8B6B008C7C4A /* segment.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 722A7EED191B8B6B008C7C4A /* segment.cpp */; };
 		7231B08718CF3FFF00295AE6 /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7231B08518CF3FFF00295AE6 /* graphicscontext.cpp */; };
 		7231B08A18CF40B600295AE6 /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7231B08818CF40B600295AE6 /* imagelist.cpp */; };
@@ -943,6 +947,14 @@
 		4DFFC8EE13DD909F006233A4 /* name.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = name.cpp; path = src/name.cpp; sourceTree = "<group>"; };
 		4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
+		720E34FF19F5707F00EA00ED /* native-layer-ios.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "native-layer-ios.h"; path = "src/native-layer-ios.h"; sourceTree = "<group>"; };
+		720E350019F5707F00EA00ED /* native-layer-ios.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "native-layer-ios.mm"; path = "src/native-layer-ios.mm"; sourceTree = "<group>"; };
+		720E350119F5707F00EA00ED /* native-layer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "native-layer.cpp"; path = "src/native-layer.cpp"; sourceTree = "<group>"; };
+		720E350219F5707F00EA00ED /* native-layer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "native-layer.h"; path = "src/native-layer.h"; sourceTree = "<group>"; };
+		720E350319F5707F00EA00ED /* widget-events.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "widget-events.cpp"; path = "src/widget-events.cpp"; sourceTree = "<group>"; };
+		720E350419F5707F00EA00ED /* widget-events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "widget-events.h"; path = "src/widget-events.h"; sourceTree = "<group>"; };
+		720E350519F5707F00EA00ED /* widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = widget.cpp; path = src/widget.cpp; sourceTree = "<group>"; };
+		720E350619F5707F00EA00ED /* widget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = widget.h; path = src/widget.h; sourceTree = "<group>"; };
 		722A7EED191B8B6B008C7C4A /* segment.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = segment.cpp; path = src/segment.cpp; sourceTree = "<group>"; };
 		722A7EEE191B8B6B008C7C4A /* segment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = segment.h; path = src/segment.h; sourceTree = "<group>"; };
 		7231B08518CF3FFF00295AE6 /* graphicscontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
@@ -1712,6 +1724,14 @@
 		E81AC13B170C90C600315861 /* Core - Objects */ = {
 			isa = PBXGroup;
 			children = (
+				720E34FF19F5707F00EA00ED /* native-layer-ios.h */,
+				720E350019F5707F00EA00ED /* native-layer-ios.mm */,
+				720E350119F5707F00EA00ED /* native-layer.cpp */,
+				720E350219F5707F00EA00ED /* native-layer.h */,
+				720E350319F5707F00EA00ED /* widget-events.cpp */,
+				720E350419F5707F00EA00ED /* widget-events.h */,
+				720E350519F5707F00EA00ED /* widget.cpp */,
+				720E350619F5707F00EA00ED /* widget.h */,
 				722A7EED191B8B6B008C7C4A /* segment.cpp */,
 				722A7EEE191B8B6B008C7C4A /* segment.h */,
 				4DD3DDB21040AC1A00CAC7EF /* aclip.cpp */,
@@ -2219,6 +2239,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4CCD60C319DB0535002DFCE5 /* mobile-splashscreen-template.plist in Resources */,
+				728DC4CF1A07FA1E003E59AB /* iphone_widget_test.livecode in Resources */,
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
 			);
@@ -2323,6 +2344,7 @@
 				4DABCDA915ECD4700085E214 /* cmdsf.cpp in Sources */,
 				4DABCDAA15ECD4700085E214 /* cmdsm.cpp in Sources */,
 				4DABCDAB15ECD4700085E214 /* cmdsp.cpp in Sources */,
+				720E350719F5707F00EA00ED /* native-layer-ios.mm in Sources */,
 				4DABCDAC15ECD4700085E214 /* cmdss.cpp in Sources */,
 				4DABCDAD15ECD4700085E214 /* combiners.cpp in Sources */,
 				4DABCDAE15ECD4700085E214 /* constant.cpp in Sources */,
@@ -2364,6 +2386,7 @@
 				4DABCDD615ECD4700085E214 /* ifile.cpp in Sources */,
 				4DABCDD715ECD4700085E214 /* igif.cpp in Sources */,
 				4DABCDD815ECD4700085E214 /* iimport.cpp in Sources */,
+				720E350819F5707F00EA00ED /* native-layer.cpp in Sources */,
 				4DABCDD915ECD4700085E214 /* ijpg.cpp in Sources */,
 				4DABCDDA15ECD4700085E214 /* image.cpp in Sources */,
 				E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */,
@@ -2396,6 +2419,7 @@
 				4DABCE7A15ECD62C0085E214 /* mbliphoneappview.mm in Sources */,
 				4DABCDF515ECD4970085E214 /* mbliphonebrowser.mm in Sources */,
 				4DABCDF615ECD4970085E214 /* mbliphonebusyindicator.mm in Sources */,
+				720E350919F5707F00EA00ED /* widget-events.cpp in Sources */,
 				4DABCDF715ECD4970085E214 /* mbliphonecalendar.mm in Sources */,
 				4DABCDF815ECD4970085E214 /* mbliphonecamera.mm in Sources */,
 				4DABCDF915ECD4970085E214 /* mbliphonecontact.mm in Sources */,
@@ -2503,6 +2527,7 @@
 				BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */,
 				7607CF321768D26700ADB512 /* mbliphoneorientation.mm in Sources */,
 				7607CF701769BB4D00ADB512 /* exec-interface-aclip.cpp in Sources */,
+				720E350A19F5707F00EA00ED /* widget.cpp in Sources */,
 				7607CF711769BB4D00ADB512 /* exec-interface-button.cpp in Sources */,
 				7607CF721769BB4D00ADB512 /* exec-interface-card.cpp in Sources */,
 				7607CF731769BB4D00ADB512 /* exec-interface-control.cpp in Sources */,

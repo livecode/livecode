@@ -1637,6 +1637,8 @@
 		4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
 		4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxnetwork.cpp; path = src/sysunxnetwork.cpp; sourceTree = "<group>"; };
 		4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
+		720E34F519F56FE700EA00ED /* native-layer-ios.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = "native-layer-ios.mm"; path = "src/native-layer-ios.mm"; sourceTree = "<group>"; };
+		720E34F619F56FE700EA00ED /* native-layer-ios.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "native-layer-ios.h"; path = "src/native-layer-ios.h"; sourceTree = "<group>"; };
 		721CAAC018351E1800858545 /* libicui18n.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicui18n.a; path = ../prebuilt/lib/mac/libicui18n.a; sourceTree = "<group>"; };
 		721CAAC218351E7400858545 /* libicudata.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicudata.a; path = ../prebuilt/lib/mac/libicudata.a; sourceTree = "<group>"; };
 		721CAAC318351E7400858545 /* libicuio.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuio.a; path = ../prebuilt/lib/mac/libicuio.a; sourceTree = "<group>"; };
@@ -3167,6 +3169,8 @@
 		E8A49109170F192000769C7A /* Core - Objects */ = {
 			isa = PBXGroup;
 			children = (
+				720E34F519F56FE700EA00ED /* native-layer-ios.mm */,
+				720E34F619F56FE700EA00ED /* native-layer-ios.h */,
 				72D6A8B719EFE67100D00689 /* native-layer-android.cpp */,
 				72D6A8B819EFE67100D00689 /* native-layer-android.h */,
 				72D6A8B519ED30D600D00689 /* native-layer-x11.cpp */,
