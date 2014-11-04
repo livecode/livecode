@@ -100,7 +100,7 @@ MCStackdirFormatReal (MCNumberRef p_number, MCStringRef & r_literal)
 	 * BUG This might not work in the future if MCStringFormat ever
 	 * starts obeying the C locale.
 	 */
-	t_success = MCStringFormat (&t_format, "%+16g",
+	t_success = MCStringFormat (&t_format, "%+.16g",
 								 MCNumberFetchAsReal (p_number));
 
 	/* We need to ensure that the result always includes a '.' or an
@@ -114,7 +114,7 @@ MCStackdirFormatReal (MCNumberRef p_number, MCStringRef & r_literal)
 										 MCSTR ("[.e]"),
 										 kMCStringOptionCompareExact);
 
-		if (t_found)
+		if (!t_found)
 			t_success = MCStringFormat (&t_result, "%@.", *t_format);
 		else
 			t_success = MCStringCopy (*t_format, &t_result);
