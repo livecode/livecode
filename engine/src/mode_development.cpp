@@ -2148,9 +2148,8 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
         }
     }
     
-    if (t_success)
-        t_success = MCStringAppendNativeChar(*t_info, '\n');
-    
+    // AL-2014-11-04: [[ Bug 13865 ]] Don't add an extra line between deploy targets and addons
+
     if (t_success && MClicenseparameters . addons != nil)
     {
         MCAutoStringRef t_keys;
