@@ -117,12 +117,142 @@ const char *MCexecutionerrors = "";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCInternalTestCmd: public MCStatement
+{
+public:
+    MCInternalTestCmd(void)
+    {
+        m_label = nil;
+        m_expr = nil;
+    }
+    
+    ~MCInternalTestCmd(void)
+    {
+        if (m_label != nil)
+            delete m_label;
+        if (m_expr != nil)
+            delete m_expr;
+    }
+    
+    Parse_stat parse(MCScriptPoint& sp)
+    {
+        initpoint(sp);
+        
+        if (sp . parseexp(False, True, &m_label) != PS_NORMAL)
+        {
+            MCperror -> add(PE_EXPRESSION_NOFACT, sp);
+            return PS_ERROR;
+        }
+        
+        Symbol_type t_type;
+        Parse_stat t_status;
+        t_status = PS_NORMAL;
+        
+        if (t_status == PS_NORMAL && (sp . next(t_type) != PS_NORMAL || t_type != ST_ID))
+            t_status = PS_ERROR;
+        
+        if (t_status == PS_NORMAL && sp . gettoken() == "assert")
+            m_abort = false;
+        else if (t_status == PS_NORMAL && sp . gettoken() == "abort")
+            m_abort = true;
+        else
+            t_status = PS_ERROR;
+        
+        if (!m_abort)
+        {
+            // See if there is a type token
+            MCScriptPoint temp_sp(sp);
+            if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_TRUE) == PS_NORMAL)
+                m_type = TYPE_TRUE;
+            else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_FALSE) == PS_NORMAL)
+                m_type = TYPE_FALSE;
+            else
+                m_type = TYPE_NONE;
+            
+            // Now try to parse an expression
+            if (sp.parseexp(False, True, &m_expr) == PS_NORMAL)
+                return PS_NORMAL;
+            
+            // Now if we are not of NONE type, then backup and try for just an
+            // expression (TYPE_NONE).
+            if (m_type != TYPE_NONE)
+            {
+                MCperror -> clear();
+                sp = temp_sp;
+            }
+            
+            // Parse the expression again (if not NONE, otherwise we already have
+            // a badexpr error to report).
+            if (m_type == TYPE_NONE ||
+                sp.parseexp(False, True, &m_expr) != PS_NORMAL)
+            {
+                MCperror -> add(PE_ASSERT_BADEXPR, sp);
+                return PS_ERROR;
+            }
+            
+            // We must be of type none.
+            m_type = TYPE_NONE;
+        }
+        return t_status;
+    }
+    
+    Exec_stat exec(MCExecPoint& ep)
+    {
+        if (m_label -> eval(ep) != ES_NORMAL)
+            return ES_ERROR;
+        
+        char *message;
+        message = ep . getsvalue() . clone();
+        
+        if (m_abort)
+        {
+            MCTestDoAbort(message, MCdefaultstackptr -> getname_cstring(), line, true);
+            delete message;
+            return ES_NORMAL;
+        }
+        
+        if (m_expr -> eval(ep) != ES_NORMAL)
+        {
+            delete message;
+            return ES_ERROR;
+        }
+        
+        
+        bool t_value;
+        t_value = (ep . getsvalue() != MCtruemcstring);
+        if (m_type == TYPE_FALSE)
+            MCTestDoAssertTrue(message, t_value, MCdefaultstackptr -> getname_cstring(), line, true);
+        else
+            MCTestDoAssertFalse(message, t_value, MCdefaultstackptr -> getname_cstring(), line, true);
+        
+        delete message;
+        return ES_NORMAL;
+    }
+    
+private:
+    MCExpression *m_label;
+    bool m_abort;
+    
+    enum Type
+    {
+        TYPE_NONE,
+        TYPE_TRUE,
+        TYPE_FALSE,
+    };
+    
+    Type m_type;
+    MCExpression *m_expr;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Small helper template
 template<class T> inline MCStatement *class_factory(void) { return new T; }
 
 // The internal verb table used by the '_internal' command
 MCInternalVerbInfo MCinternalverbs[] =
 {
+    {"test", nil, class_factory<MCInternalTestCmd> },
 	{ nil, nil, nil }
 };
 

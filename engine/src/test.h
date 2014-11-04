@@ -52,9 +52,9 @@ struct MCHighLevelTest;
 int MCCountHighLevelTests(void);
 void MCExecuteHighLevelTest(int index);
 
-void MCTestDoAbort(const char *message, const char *file, int line);
-void MCTestDoAssertTrue(const char *message, bool value, const char *file, int line);
-void MCTestDoAssertFalse(const char *message, bool value, const char *file, int line);
+void MCTestDoAbort(const char *message, const char *file, int line, bool p_is_high_level = false);
+void MCTestDoAssertTrue(const char *message, bool value, const char *file, int line, bool p_is_high_level = false);
+void MCTestDoAssertFalse(const char *message, bool value, const char *file, int line, bool p_is_high_level = false);
 
 #define MCTestAbort(message) MCTestDoAbort(message, __FILE__, __LINE__)
 #define MCTestAssertTrue(message, value) MCTestDoAssertTrue(message, value, __FILE__, __LINE__)

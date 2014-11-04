@@ -25,6 +25,7 @@
 #include "stack.h"
 #include "execpt.h"
 #include "dispatch.h"
+#include "mcio.h"
 
 #include "test.h"
 
@@ -36,6 +37,9 @@ static int s_lowlevel_test_count = 0;
 
 static void MCTestLog(const char *format, ...);
 static bool MCFetchLowLevelTestSection(MCLowLevelTest**& r_tests, int& r_count);
+
+static const char *low_level = "LowLevel";
+static const char *high_level = "HighLevel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -168,7 +172,7 @@ void MCExecuteHighLevelTest(int p_index)
         return;
     }
     
-    if (!t_stack -> parsescript(False))
+    if (!t_stack -> parsescript(False, True))
     {
         MCTestLog("HighLevelTest:ParseFailure:%s", s_highlevel_tests[p_index] . filename);
         MCretcode = 1;
@@ -186,8 +190,11 @@ void MCExecuteHighLevelTest(int p_index)
 
 static void MCTestLog(const char *p_format, ...)
 {
+    char test_log[PATH_MAX];
+    snprintf(test_log, sizeof(test_log), "%s/test.log", getenv("TEST_DIR"));
+    
     FILE *t_file;
-    t_file = fopen("/Users/mark/Desktop/test.log", "a");
+    t_file = fopen(test_log, "a");
     
     time_t t_time;
     t_time = time(NULL);
@@ -208,38 +215,42 @@ static void MCTestLog(const char *p_format, ...)
     fclose(t_file);
 }
 
-void MCTestDoAbort(const char *p_message, const char *p_file, int p_line)
+void MCTestDoAbort(const char *p_message, const char *p_file, int p_line, bool p_is_high_level)
 {
-    MCTestLog("LowLevelTest:Abort:%s", p_message);
-    MCTestLog("LowLevelTest:File:%s", p_file);
-    MCTestLog("LowLevelTest:Line:%d", p_line);
+    const char *level = p_is_high_level ? high_level : low_level;
+    
+    MCTestLog("%sTest:Abort:%s", level, p_message);
+    MCTestLog("%sTest:File:%s", level, p_file);
+    MCTestLog("%sTest:Line:%d", level, p_line);
     MCretcode = 1;
 }
 
-void MCTestDoAssertTrue(const char *p_message, bool p_value, const char *p_file, int p_line)
+void MCTestDoAssertTrue(const char *p_message, bool p_value, const char *p_file, int p_line, bool p_is_high_level)
 {
+    const char *level = p_is_high_level ? high_level : low_level;
     if (p_value)
-        MCTestLog("LowLevelTest:Success:%s", p_message);
+        MCTestLog("%sTest:Success:%s", level, p_message);
     else
     {
-        MCTestLog("LowLevelTest:Failure:%s", p_message);
+        MCTestLog("%sTest:Failure:%s", level, p_message);
         MCretcode = 1;
     }
-    MCTestLog("LowLevelTest:File:%s", p_file);
-    MCTestLog("LowLevelTest:Line:%d", p_line);
+    MCTestLog("%sTest:File:%s", level, p_file);
+    MCTestLog("%sTest:Line:%d", level, p_line);
 }
 
-void MCTestDoAssertFalse(const char *p_message, bool p_value, const char *p_file, int p_line)
+void MCTestDoAssertFalse(const char *p_message, bool p_value, const char *p_file, int p_line, bool p_is_high_level)
 {
+    const char *level = p_is_high_level ? high_level : low_level;
     if (!p_value)
-        MCTestLog("LowLevelTest:Success:%s", p_message);
+        MCTestLog("%sTest:Success:%s", level, p_message);
     else
     {
-        MCTestLog("LowLevelTest:Failure:%s", p_message);
+        MCTestLog("%sTest:Failure:%s", level, p_message);
         MCretcode = 1;
     }
-    MCTestLog("LowLevelTest:File:%s", p_file);
-    MCTestLog("LowLevelTest:Line:%d", p_line);
+    MCTestLog("%sTest:File:%s", level, p_file);
+    MCTestLog("%sTest:Line:%d", level, p_line);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
