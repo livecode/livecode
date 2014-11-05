@@ -95,9 +95,6 @@ struct _MCStackdirIOArraySave
 	/* Storage spec prefix */
 	MCStringRef m_storage_spec;
 
-	/* File that the array's being saved to */
-	MCStringRef m_path;
-
 	/* Target list */
 	MCListRef m_list;
 };
@@ -133,7 +130,7 @@ static bool MCStackdirIOSaveUTF8 (MCStackdirIORef op, MCStringRef p_path, MCStri
 static bool MCStackdirIODataSha1 (MCDataRef p_data, MCStringRef & p_hash);
 
 /* Split up a property record */
-static bool MCStackdirIOArrayGetPropertyInfo (MCValueRef p_info, MCNameRef & r_type, MCValueRef & r_literal);
+static bool MCStackdirIOArrayGetPropertyInfo (MCStackdirIORef op, MCValueRef p_info, MCNameRef & r_type, MCValueRef & r_literal);
 
 /* ----------------------------------------------------------------
  * [Private] Save operations
@@ -184,7 +181,7 @@ static bool MCStackdirIOSaveObjectShared (MCStackdirIOObjectSaveRef info);
  *
  * The p_path is used to generate error messages if a problem occurs.
  */
-static bool MCStackdirIOSaveArrayDescriptorsRecursive (MCStackdirIORef op, MCArrayRef p_array, MCStringRef p_storage_spec, MCStringRef p_path, MCListRef r_descriptor_list);
+static bool MCStackdirIOSaveArrayDescriptorsRecursive (MCStackdirIORef op, MCArrayRef p_array, MCStringRef p_storage_spec, MCListRef r_descriptor_list);
 
 /* Format an immediate property descriptor.
  *
@@ -208,13 +205,130 @@ static bool MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op, MCStringRef 
  * can't be saved into external files.  If the x_overflow_list is nil,
  * these troublesome values will be stored in the x_list.
  */
-static bool MCStackdirIOSaveProperty (MCStackdirIORef op, MCNameRef p_name, MCValueRef p_value, MCStringRef p_path, MCStringRef p_external_dir, MCListRef x_list, MCListRef x_overflow_list);
+static bool MCStackdirIOSaveProperty (MCStackdirIORef op, MCNameRef p_name, MCValueRef p_value, MCStringRef p_external_dir, MCListRef x_list, MCListRef x_overflow_list);
 
 /* Save a property set.
  *
  * Generates "_contents" and/or "_overflow" files in p_propset_path,
  * along with any necessary external storage files. */
 static bool MCStackdirIOSavePropSet (MCStackdirIORef op, MCArrayRef p_propset, MCStringRef p_propset_path);
+
+/* ================================================================
+ * Errors
+ * ================================================================ */
+
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorWriteUTF8File,
+							kMCStackdirStatusIOError,
+							"Failed to write UTF-8 text file")
+
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorRecursiveDeleteFile,
+							kMCStackdirStatusIOError,
+							"Failed to delete file")
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorRecursiveDeleteDirectory,
+							kMCStackdirStatusIOError,
+							"Failed to delete directory")
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorRecursiveEnterDirectory,
+							kMCStackdirStatusIOError,
+							"Failed to set current directory while removing")
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorRecursiveLeaveDirectory,
+							kMCStackdirStatusIOError,
+							"Failed to restore current directory while removing")
+
+
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorResolveTransactionPath,
+					   kMCStackdirStatusIOError,
+					   "Failed to resolve transaction path");
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorUniqueTransactionPath,
+					   kMCStackdirStatusIOError,
+					   "Failed to generate unique transaction path");
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorCreateTransactionDir,
+							kMCStackdirStatusIOError,
+							"Failed to create unique transaction directory");
+
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorRestoreOverwrite,
+							kMCStackdirStatusIOError,
+							"Failed to move original stackdir back to target location");
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorDeleteBackupDirectory,
+							kMCStackdirStatusIOError,
+							"Failed to remove overwrite backup directory");
+
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorCannotOverwrite,
+					   kMCStackdirStatusBadPath,
+					   "Target exists and is not a stackdir");
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorRenameOverwrite,
+					   kMCStackdirStatusIOError,
+					   "Failed to move original stackdir to backup directory")
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorRenameComplete,
+					   kMCStackdirStatusIOError,
+					   "Failed to move new stackdir into place")
+
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorBadTypeInfo,
+					   kMCStackdirStatusBadState,
+					   "Object state contains invalid value info")
+
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorFormatArrayPropertyName,
+					   kMCStackdirStatusBadState,
+					   "Failed to format name of array member")
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorFormatArrayPropertyType,
+					   kMCStackdirStatusBadState,
+					   "Failed to format type of array member")
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorFormatArrayPropertyValue,
+					   kMCStackdirStatusBadState,
+					   "Failed to format value of array member")
+
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorFormatPropertyName,
+					   kMCStackdirStatusBadState,
+					   "Failed to format property name")
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorFormatPropertyType,
+					   kMCStackdirStatusBadState,
+					   "Failed to format property type")
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorFormatPropertyValue,
+					   kMCStackdirStatusBadState,
+					   "Failed to format property value")
+
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorCreateExternalDir,
+							kMCStackdirStatusIOError,
+							"Failed to create directory for externally-stored values")
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorWriteExternalFile,
+							kMCStackdirStatusIOError,
+							"Failed to write externally-stored value file")
+
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorCreateObjectLSBDir,
+							kMCStackdirStatusIOError,
+							"Failed to create object LSB directory")
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorCreateObjectDir,
+							kMCStackdirStatusIOError,
+							"Failed to create object directory")
+
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorObjectRequiredKey,
+							kMCStackdirStatusBadState,
+							"Object state lacks required key");
+
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorObjectMissingInternal,
+					   kMCStackdirStatusBadState,
+					   "Object state lacks internal property array");
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorObjectInvalidInternal,
+					   kMCStackdirStatusBadState,
+					   "Invalid internal property array");
+
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorInvalidPropsetName,
+					   kMCStackdirStatusBadState,
+					   "Custom propset has unsupported name");
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorCreatePropsetDir,
+							kMCStackdirStatusIOError,
+							"Failed to create custom propset directory")
+
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorObjectInvalidCustom,
+					   kMCStackdirStatusBadState,
+					   "Invalid custom propsets array");
+
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorInvalidSharedCardArray,
+					   kMCStackdirStatusBadState,
+					   "Invalid per-card array of shared properties");
+
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorObjectInvalidShared,
+					   kMCStackdirStatusBadState,
+					   "Invalid shared properties array");
 
 /* ================================================================
  * Utility functions
@@ -226,12 +340,12 @@ MCStackdirIOSaveUTF8 (MCStackdirIORef op, MCStringRef p_path,
 					  MCStringRef p_contents)
 {
 	MCAutoDataRef t_data;
-	/* UNCHECKED */ MCStringEncode (p_contents, kMCStringEncodingUTF8,
-									false, &t_data);
-	if (!MCS_savebinaryfile (p_path, *t_data))
-		return MCStackdirIOErrorIO (op, p_path,
-									MCSTR ("Failed to set contents of UTF-8 text file"));
 
+	if (!MCStringEncode (p_contents, kMCStringEncodingUTF8,
+						 false, &t_data))
+		return MCStackdirIOErrorOutOfMemory (op);
+	if (!MCS_savebinaryfile (p_path, *t_data))
+		return MCStackdirIOSaveErrorWriteUTF8File (op, p_path);
 	return true;
 }
 
@@ -250,14 +364,12 @@ MCStackdirIORemoveFolderRecursive_Callback (void *p_context,
 	if (p_entry->is_folder)
 	{
 		/* Recurse */
-		if (!MCStackdirIORemoveFolderRecursive (t_op, p_entry->name))
-			return false;
+		return MCStackdirIORemoveFolderRecursive (t_op, p_entry->name);
 	}
 	else
 	{
 		if (!MCS_unlink (p_entry->name))
-			return MCStackdirIOErrorIO (t_op, p_entry->name,
-										MCSTR ("Failed to delete file"));
+			return MCStackdirIOSaveErrorRecursiveDeleteFile (t_op, p_entry->name);
 	}
 	return true;
 }
@@ -270,20 +382,24 @@ MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path)
 
 	/* Change to the target directory. */
 	MCS_getcurdir (&t_save_cwd);
+
 	if (!MCS_setcurdir (p_path))
-		return MCStackdirIOErrorIO (op, p_path,
-									MCSTR ("Failed to change directory"));
+	{
+		return MCStackdirIOSaveErrorRecursiveEnterDirectory (op, p_path);
+	}
 
 	/* Recurse */
-	t_success = MCsystem->ListFolderEntries (MCStackdirIORemoveFolderRecursive_Callback, op);
+	if (t_success)
+		t_success = MCsystem->ListFolderEntries (MCStackdirIORemoveFolderRecursive_Callback, op);
 
 	/* Restore working directory and remove target directory */
 	if (!MCS_setcurdir (*t_save_cwd))
-		return MCStackdirIOErrorIO (op, *t_save_cwd,
-									MCSTR ("Failed to change directory"));
+	{
+		return MCStackdirIOSaveErrorRecursiveLeaveDirectory (op, *t_save_cwd);
+	}
+
 	if (t_success && !MCS_rmdir (p_path))
-		return MCStackdirIOErrorIO (op, p_path,
-									MCSTR ("Failed to delete directory"));
+		return MCStackdirIOSaveErrorRecursiveDeleteDirectory (op, p_path);
 
 	return t_success;
 }
@@ -310,7 +426,8 @@ MCStackdirIODataSha1 (MCDataRef p_data, MCStringRef & p_hash)
 }
 
 static bool
-MCStackdirIOArrayGetPropertyInfo (MCValueRef p_info,
+MCStackdirIOArrayGetPropertyInfo (MCStackdirIORef op,
+								  MCValueRef p_info,
 								  MCNameRef & r_type,
 								  MCValueRef & r_literal)
 {
@@ -340,7 +457,7 @@ MCStackdirIOArrayGetPropertyInfo (MCValueRef p_info,
 	if (!(MCArrayFetchValue (t_array, false, kMCStackdirTypeKey, t_type) &&
 		  MCArrayFetchValue (t_array, false, kMCStackdirLiteralKey, t_literal) &&
 		  MCValueGetTypeCode (t_type) == kMCValueTypeCodeName))
-		return false;
+		return MCStackdirIOSaveErrorBadTypeInfo (op);
 
 	r_type = (MCNameRef) MCValueRetain (t_type);
 	r_literal = MCValueRetain (t_literal);
@@ -366,16 +483,16 @@ MCStackdirIOSaveTransactionCreateDir (MCStackdirIORef op, MCStringRef &r_temp_pa
 	MCAutoStringRef t_resolved_path, t_base_path, t_temp_path;
 
 	if (!MCS_resolvepath (op->m_path, &t_resolved_path))
-		return MCStackdirIOErrorIO (op, op->m_path,
-									MCSTR ("Failed to resolve path"));
+		return MCStackdirIOSaveErrorResolveTransactionPath (op);
 
 	/* If the target path ends in a "/", remove it */
 	if (MCStringEndsWithCString (*t_resolved_path, (const char_t *) "/",
 								 kMCStringOptionCompareExact))
 	{
 		uindex_t len = MCStringGetLength (*t_resolved_path) - 1;
-		/* UNCHECKED */ MCStringCopySubstring (*t_resolved_path, MCRangeMake (0, len),
-											   &t_base_path);
+		if (!MCStringCopySubstring (*t_resolved_path, MCRangeMake (0, len),
+									&t_base_path))
+			return MCStackdirIOErrorOutOfMemory (op);
 	}
 	else
 	{
@@ -392,16 +509,17 @@ MCStackdirIOSaveTransactionCreateDir (MCStackdirIORef op, MCStringRef &r_temp_pa
 		MCAutoStringRef t_native_path;
 
 		/* Create a random number */
-		/* UNCHECKED */ MCU_random_bytes (sizeof (t_suffix_numeric),
-										  &t_suffix_data);
+		if (!MCU_random_bytes (sizeof (t_suffix_numeric), &t_suffix_data))
+			return MCStackdirIOSaveErrorUniqueTransactionPath (op);
 		for (size_t i = 0; i < sizeof (t_suffix_numeric); ++i)
 		{
 			t_suffix_numeric += MCDataGetByteAtIndex (*t_suffix_data, i) << i;
 		}
 
 		/* Generate directory path */
-		/* UNCHECKED */ MCStringFormat (&t_temp_path, "%@.temp%x",
-										*t_base_path, t_suffix_numeric);
+		if (!MCStringFormat (&t_temp_path, "%@.temp%x",
+							 *t_base_path, t_suffix_numeric))
+			return MCStackdirIOErrorOutOfMemory (op);
 
 		/* Attempt to create directory */
 		if (MCS_mkdir (*t_temp_path))
@@ -411,8 +529,7 @@ MCStackdirIOSaveTransactionCreateDir (MCStackdirIORef op, MCStringRef &r_temp_pa
 		 * exist, there must be some other IO error. */
 		if (!(MCS_exists (*t_temp_path, true) ||
 			  MCS_exists (*t_temp_path, false)))
-			return MCStackdirIOErrorIO (op, *t_temp_path,
-										MCSTR ("Failed to create temporary directory"));
+			return MCStackdirIOSaveErrorCreateTransactionDir (op, *t_temp_path);
 	}
 
 	r_temp_path = MCValueRetain (*t_temp_path);
@@ -465,8 +582,7 @@ MCStackdirIOSaveTransactionCancel (MCStackdirIORef op)
 			MCLog ("MCStackdirIOCommit(): CRITICAL: Save failed; "
 				   "original data moved to '%@'.",
 				   op->m_save_backup_path);
-			MCStackdirIOErrorIO (op, op->m_path,
-								 MCSTR ("Failed to restore original stackdir"));
+			MCStackdirIOSaveErrorRestoreOverwrite (op, op->m_save_backup_path);
 			t_success = false;
 		}
 	}
@@ -476,9 +592,8 @@ MCStackdirIOSaveTransactionCancel (MCStackdirIORef op)
 	 * because it'll have contents if we copied the original data into
 	 * it and failed to put it back. */
 	if (op->m_save_backup_dir != nil &&
-		!MCS_rmdir (op->m_save_build_dir))
-		MCStackdirIOErrorIO (op, op->m_save_build_dir,
-							 MCSTR ("Failed to remove temporary backup directory"));
+		!MCS_rmdir (op->m_save_backup_dir))
+		MCStackdirIOSaveErrorDeleteBackupDirectory (op, op->m_save_build_dir);
 		t_success = false;
 
 	/* If the build directory was successfully created, delete it. */
@@ -517,7 +632,7 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 			 MCS_exists (op->m_path, false))
 	{
 		MCStackdirIOSaveTransactionCancel (op);
-		return MCStackdirIOErrorBadPath (op, MCSTR ("Target exists and is not a stackdir"));
+		return MCStackdirIOSaveErrorCannotOverwrite (op);
 	}
 
 	/* If overwriting, create an additional temporary directory, and
@@ -532,14 +647,17 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 		}
 		op->m_save_backup_dir = MCValueRetain (*t_backup_dir);
 
-		/* UNCHECKED */ MCStringFormat (&t_backup_path, "%@/%@",
-										*t_backup_dir, kMCStackdirSaveBackupDir);
+		if (!MCStringFormat (&t_backup_path, "%@/%@",
+							 *t_backup_dir, kMCStackdirSaveBackupDir))
+		{
+			MCStackdirIOSaveTransactionCancel (op);
+			return MCStackdirIOErrorOutOfMemory (op);
+		}
 
 		if (!MCS_rename (op->m_path, *t_backup_path))
 		{
 			MCStackdirIOSaveTransactionCancel (op);
-			return MCStackdirIOErrorIO (op, op->m_path,
-										MCSTR ("Failed to rename original stackdir"));
+			return MCStackdirIOSaveErrorRenameOverwrite (op);
 		}
 		op->m_save_backup_path = MCValueRetain (*t_backup_path);
 	}
@@ -550,8 +668,7 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 		/* Oops! That should have worked!  During cancellation, we'll
 		 * try to put the original data back. */
 		MCStackdirIOSaveTransactionCancel (op);
-		return MCStackdirIOErrorIO (op, op->m_path,
-									MCSTR ("Failed to move new stackdir into place"));
+		return MCStackdirIOSaveErrorRenameComplete (op);
 		return false;
 	}
 
@@ -562,7 +679,7 @@ MCStackdirIOSaveTransactionEnd (MCStackdirIORef op)
 	if (t_overwriting)
 	{
 		MCStackdirStatus t_op_status = op->m_status;
-		/* UNCHECKED */ MCStackdirIORemoveFolderRecursive (op, *t_backup_dir);
+		/* INTENTIONALLY UNCHECKED */ MCStackdirIORemoveFolderRecursive (op, *t_backup_dir);
 
 		op->m_status = t_op_status; /* Reset the status */
 	}
@@ -588,58 +705,59 @@ MCStackdirIOSaveArrayDescriptorsRecursive_Callback (void *context,
 
 	MCStackdirIOArraySaveRef info = (MCStackdirIOArraySaveRef) context;
 
-	MCStringRef t_invalid_property_message =
-		MCSTR ("Invalid property information array");
-
 	/* Extract property type and literal from the p_value */
 	MCNameRef t_prop_name = p_key;
 	MCNewAutoNameRef t_prop_type;
 	MCAutoValueRef t_prop_literal;
 
-	if (!MCStackdirIOArrayGetPropertyInfo (p_value, &t_prop_type,
+	if (!MCStackdirIOArrayGetPropertyInfo (info->m_op,
+										   p_value,
+										   &t_prop_type,
 										   &t_prop_literal))
-		return MCStackdirIOErrorBadState (info->m_op,
-										  info->m_path,
-										  t_invalid_property_message);
+		return false;
 
 	/* Format parts of property descriptor */
 	MCAutoStringRef t_name, t_type_spec, t_literal;
 
-	if (!(MCStackdirFormatLiteral (t_prop_name, &t_name) &&
-		  MCStackdirFormatLiteral (*t_prop_literal, &t_literal)))
-		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
-										  t_invalid_property_message);
+	if (!MCStackdirFormatLiteral (t_prop_name, &t_name))
+		return MCStackdirIOSaveErrorFormatArrayPropertyName (info->m_op);
+	if (!MCStackdirFormatLiteral (*t_prop_literal, &t_literal))
+		return MCStackdirIOSaveErrorFormatArrayPropertyValue (info->m_op);
 
 	/* Need to cope with the fact that the type spec is permitted to
 	 * be omitted if the value is a basic type */
 	if (MCNameIsEmpty (*t_prop_type))
-		/* UNCHECKED */ MCStringCopy (kMCEmptyString, &t_type_spec);
+	{
+		if (!MCStringCopy (kMCEmptyString, &t_type_spec))
+			return MCStackdirIOErrorOutOfMemory (info->m_op);
+	}
 	else if (!MCStackdirFormatLiteral (*t_prop_type, &t_type_spec))
-		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
-										  t_invalid_property_message);
+		return MCStackdirIOSaveErrorFormatArrayPropertyType (info->m_op);
 
 	/* Create the storage spec */
 	MCAutoStringRef t_storage_spec;
-	/* UNCHECKED */ MCStringMutableCopy (info->m_storage_spec, &t_storage_spec);
-	/* UNCHECKED */ MCStringAppend (*t_storage_spec, *t_name);
+	if (!(MCStringMutableCopy (info->m_storage_spec, &t_storage_spec) &&
+		  MCStringAppend (*t_storage_spec, *t_name)))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
 
-	/* Format the property descriptor */
+	/* Format the property descriptor and add it to the target list*/
 	MCAutoStringRef t_property_descriptor;
-	/* UNCHECKED */ MCStackdirIOSaveImmediateDescriptor (info->m_op,
-														 *t_storage_spec,
-														 *t_type_spec,
-														 *t_literal,
-														 &t_property_descriptor);
+	if (!MCStackdirIOSaveImmediateDescriptor (info->m_op,
+											  *t_storage_spec,
+											  *t_type_spec,
+											  *t_literal,
+											  &t_property_descriptor))
+		return false;
 
 	/* Add the property descriptor to the target list */
-	/* UNCHECKED */ MCListAppend (info->m_list, *t_property_descriptor);
+	if (!MCListAppend (info->m_list, *t_property_descriptor))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
 
 	/* If the literal was an array, recurse */
 	if (MCValueGetTypeCode (*t_prop_literal) == kMCValueTypeCodeArray)
 		return MCStackdirIOSaveArrayDescriptorsRecursive (info->m_op,
 														  (MCArrayRef) *t_prop_literal,
 														  *t_storage_spec,
-														  info->m_path,
 														  info->m_list);
 
 	return true;
@@ -649,14 +767,12 @@ static bool
 MCStackdirIOSaveArrayDescriptorsRecursive (MCStackdirIORef op,
 										   MCArrayRef p_array,
 										   MCStringRef p_storage_spec,
-										   MCStringRef p_path,
 										   MCListRef r_descriptor_list)
 {
 	MCAssert (op != nil);
 	MCAssert (p_array != nil);
 	MCAssert (r_descriptor_list != nil);
 
-	if (p_path == nil) p_path = kMCEmptyString;
 	if (p_storage_spec == nil) p_storage_spec = kMCEmptyString;
 
 	bool t_success;
@@ -678,7 +794,6 @@ MCStackdirIOSaveArrayDescriptorsRecursive (MCStackdirIORef op,
 	MCStackdirIOArraySave info;
 	info.m_op = op;
 	info.m_storage_spec = *t_storage_spec;
-	info.m_path = p_path;
 	info.m_list = r_descriptor_list;
 
 	return MCStackdirArrayApplySorted (p_array,
@@ -782,7 +897,6 @@ static bool
 MCStackdirIOSaveProperty (MCStackdirIORef op,
 						  MCNameRef p_name,
 						  MCValueRef p_value,
-						  MCStringRef p_path,
 						  MCStringRef p_external_dir,
 						  MCListRef x_list,
 						  MCListRef x_overflow_list)
@@ -800,27 +914,28 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 
 	/* First, extract the type and literal information from the
 	 * p_value. */
-	if (!MCStackdirIOArrayGetPropertyInfo (p_value, &t_prop_type,
+	if (!MCStackdirIOArrayGetPropertyInfo (op, p_value, &t_prop_type,
 										   &t_prop_literal))
-		return MCStackdirIOErrorBadState (op, p_path,
-										  t_invalid_property_message);
+		return false;
 
 	/* Next format each of the parts of the property descriptor */
 	MCValueTypeCode t_prop_literal_typecode = MCValueGetTypeCode (*t_prop_literal);
 	MCAutoStringRef t_storage_spec, t_type_spec, t_literal;
 
-	if (!(MCStackdirFormatLiteral (t_prop_name, &t_storage_spec) &&
-		  MCStackdirFormatLiteral (*t_prop_literal, &t_literal)))
-		return MCStackdirIOErrorBadState (op, p_path,
-										  t_invalid_property_message);
+	if (!MCStackdirFormatLiteral (t_prop_name, &t_storage_spec))
+		return MCStackdirIOSaveErrorFormatPropertyName (op);
+	if (!MCStackdirFormatLiteral (*t_prop_literal, &t_literal))
+		return MCStackdirIOSaveErrorFormatPropertyValue (op);
 
 	/* Need to cope with the fact that the type spec is permitted to
 	 * be omitted if the value is a basic type */
 	if (MCNameIsEmpty (*t_prop_type))
-		/* UNCHECKED */ MCStringCopy (kMCEmptyString, &t_type_spec);
+	{
+		if (!MCStringCopy (kMCEmptyString, &t_type_spec))
+			return MCStackdirIOErrorOutOfMemory (op);
+	}
 	else if (!MCStackdirFormatLiteral (*t_prop_type, &t_type_spec))
-		return MCStackdirIOErrorBadState (op, p_path,
-										  t_invalid_property_message);
+		return MCStackdirIOSaveErrorFormatPropertyType (op);
 
 	/* Decide where the property descriptor (and contents!) should end
 	 * up */
@@ -870,8 +985,10 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 			break;
 
 		default:
-			return MCStackdirIOErrorBadState (op, p_path,
-											  t_invalid_property_message);
+			/* We shouldn't ever get here; all types other than the
+			 * above should be weeded out by an earlier failure of
+			 * MCStackdirFormatLiteral(). */
+			MCUnreachable ();
 		}
 	}
 
@@ -939,7 +1056,6 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 				if (!(MCStackdirIOSaveArrayDescriptorsRecursive (op,
 											(MCArrayRef) *t_prop_literal,
 											kMCEmptyString,
-											*t_external_path,
 											*t_array_list) &&
 					  MCListAppend (*t_array_list, kMCEmptyString)))
 					return false;
@@ -959,13 +1075,11 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 		 * already exists. */
 		if (!MCS_mkdir (p_external_dir) &&
 			!MCS_exists (p_external_dir, false))
-			return MCStackdirIOErrorIO (op, p_external_dir,
-										MCSTR ("Failed to create external property directory"));
+			return MCStackdirIOSaveErrorCreateExternalDir (op, p_external_dir);
 
 		/* Save the external file */
 		if (!MCS_savebinaryfile (*t_external_path, *t_external_file_contents))
-			return MCStackdirIOErrorIO (op, *t_external_path,
-										MCSTR ("Failed to set contents of external file"));
+			return MCStackdirIOSaveErrorWriteExternalFile (op, *t_external_path);
 	}
 
 	/* Only attempt overflow storage if an overflow list was provided */
@@ -1028,7 +1142,6 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 		if (!MCStackdirIOSaveArrayDescriptorsRecursive (op,
 														(MCArrayRef) *t_prop_literal,
 														*t_storage_spec,
-														p_path,
 														t_list))
 			return false;
 	}
@@ -1051,7 +1164,6 @@ MCStackdirIOSavePropSet_PropertyCallback (void *context,
 	return MCStackdirIOSaveProperty (info->m_op,
 									 p_key,
 									 p_value,
-									 info->m_path,
 									 info->m_path,
 									 info->m_contents,
 									 info->m_overflow);
@@ -1130,31 +1242,27 @@ MCStackdirIOSaveObjectDirectory (MCStackdirIOObjectSaveRef info)
 	/* FIXME Maybe these should be "bad state" errors. */
 	MCAssert (36 == t_uuid_len);
 
-	/* First step is to create the LSB directory. */
-	MCAutoStringRef t_uuid_lsb, t_lsb_dir;
-	/* UNCHECKED */ MCStringCopySubstring (t_uuid,
-										   MCRangeMake (t_uuid_len - 3, 2),
-										   &t_uuid_lsb);
-	/* UNCHECKED */ MCStringFormat (&t_lsb_dir, "%@/%@",
-									info->m_op->m_save_build_dir, *t_uuid_lsb);
+	/* First step is to create the LSB directory.  Just grab the last
+	 * two characters of the UUID. */
+	MCAutoStringRef t_uuid_lsb, t_lsb_dir, t_object_dir;
+	if (!(MCStringCopySubstring (t_uuid,
+								 MCRangeMake (t_uuid_len - 3, 2),
+								 &t_uuid_lsb) &&
+		  MCStringFormat (&t_lsb_dir, "%@/%@",
+						  info->m_op->m_save_build_dir, *t_uuid_lsb) &&
+		  MCStringFormat (&t_object_dir, "%@/%@", *t_lsb_dir, t_uuid)))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
 
-	if (!MCS_mkdir (*t_lsb_dir))
-	{
-		/* Test whether creating the directory failed because it
-		 * already existed (that's okay) */
-		if (!MCS_exists (*t_lsb_dir, false))
-			return MCStackdirIOErrorIO (info->m_op, *t_lsb_dir,
-										MCSTR ("Failed to create object directory"));
-	}
+	/* If creating the LSB directory fails but it
+	 * already exists, that's okay */
+	if (!MCS_mkdir (*t_lsb_dir) &&
+		!MCS_exists (*t_lsb_dir, false))
+		return MCStackdirIOSaveErrorCreateObjectLSBDir (info->m_op, *t_lsb_dir);
 
 	/* Now create object directory within */
-	MCAutoStringRef t_object_dir;
-	/* UNCHECKED */ MCStringFormat (&t_object_dir, "%@/%@", *t_lsb_dir, t_uuid);
-
 	if (!MCS_mkdir (*t_object_dir))
 		/* Here we *require* the object directory not to exist yet. */
-		return MCStackdirIOErrorIO (info->m_op, *t_lsb_dir,
-									MCSTR ("Failed to create object directory"));
+		return MCStackdirIOSaveErrorCreateObjectDir (info->m_op, *t_object_dir);
 
 	info->m_path = MCValueRetain (*t_object_dir);
 	return true;
@@ -1165,26 +1273,27 @@ MCStackdirIOSaveObjectKeyDirect (MCStackdirIOObjectSaveRef info, MCStringRef p_k
 {
 	MCNewAutoNameRef t_key;
 	MCValueRef t_value;
-	/* UNCHECKED */ MCNameCreate (p_key, &t_key);
+	if (!MCNameCreate (p_key, &t_key))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	/* Construct path for file */
+	MCAutoStringRef t_path;
+	if (!MCStringFormat (&t_path, "%@/%@", info->m_path, p_key))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
 
 	/* Each object's state array has to have the specified key */
 	if (!MCArrayFetchValue (info->m_state, false, *t_key, t_value))
 	{
 		if (p_required)
-			return MCStackdirIOErrorBadState (info->m_op, info->m_path,
-											  MCSTR ("Missing required key in object."));
+			return MCStackdirIOSaveErrorObjectRequiredKey (info->m_op, *t_path);
 		else
 			return true;
 	}
 
 	MCAutoStringRef t_content_literal, t_content;
-	/* UNCHECKED */ MCStackdirFormatLiteral (t_value, &t_content_literal);
-	/* UNCHECKED */ MCStringFormat (&t_content, "%@\n", *t_content_literal);
-
-	/* Construct path for file */
-	MCAutoStringRef t_path;
-	/* UNCHECKED */ MCStringFormat (&t_path, "%@/%@", info->m_path,
-									p_key);
+	if (!(MCStackdirFormatLiteral (t_value, &t_content_literal) &&
+		  MCStringFormat (&t_content, "%@\n", *t_content_literal)))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
 
 	return MCStackdirIOSaveUTF8 (info->m_op, *t_path, *t_content);
 }
@@ -1209,16 +1318,15 @@ MCStackdirIOSaveObjectInternal (MCStackdirIOObjectSaveRef info)
 	/* The state array has to have an _internal array */
 	if (!MCArrayFetchValue (info->m_state, false, kMCStackdirInternalKey,
 							t_internal_props))
-		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
-										  MCSTR ("No internal properties in object."));
+		return MCStackdirIOSaveErrorObjectMissingInternal (info->m_op);
 
 	if (!MCValueIsArray (t_internal_props))
-		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
-										  MCSTR ("Internal properties not an array"));
+		return MCStackdirIOSaveErrorObjectInvalidInternal (info->m_op);
 
 	/* Reuse the propset saving logic, saving into the object
 	 * directory. */
-	return MCStackdirIOSavePropSet (info->m_op, (MCArrayRef) t_internal_props,
+	return MCStackdirIOSavePropSet (info->m_op,
+									(MCArrayRef) t_internal_props,
 									info->m_path);
 }
 
@@ -1239,9 +1347,10 @@ MCStackdirIOSaveObjectPropsets_PropsetCallback (void *context, MCArrayRef p_arra
 	MCAutoStringRef t_propset_filename, t_propset_path;
 	if (MCNameIsEmpty (p_key))
 	{
-		/* UNCHECKED */ MCStringFormat (&t_propset_filename, "%@%@",
-										kMCStackdirEmptyFile,
-										kMCStackdirPropsetSuffix);
+		if (!MCStringFormat (&t_propset_filename, "%@%@",
+							 kMCStackdirEmptyFile,
+							 kMCStackdirPropsetSuffix))
+			return MCStackdirIOErrorOutOfMemory (info->m_op);
 	}
 	else
 	{
@@ -1250,20 +1359,28 @@ MCStackdirIOSaveObjectPropsets_PropsetCallback (void *context, MCArrayRef p_arra
 		if (!MCStackdirFormatFilename (MCNameGetString(p_key),
 									   kMCStackdirPropsetSuffix,
 									   &t_propset_filename))
-			return MCStackdirIOErrorBadState (info->m_op, info->m_path,
-							MCSTR ("Custom property set with unsupported name"));
+			return MCStackdirIOSaveErrorInvalidPropsetName (info->m_op);
 	}
 
 	/* Create the propset directory */
-	/* UNCHECKED */ MCStringFormat (&t_propset_path, "%@/%@", info->m_path,
-									*t_propset_filename);
+	if (!MCStringFormat (&t_propset_path, "%@/%@", info->m_path,
+						 *t_propset_filename))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
 
 	if (!MCS_mkdir (*t_propset_path))
-		return MCStackdirIOErrorIO (info->m_op, *t_propset_path,
-									MCSTR ("Failed to create custom propset directory"));
+		return MCStackdirIOSaveErrorCreatePropsetDir (info->m_op, *t_propset_path);
 
-	return MCStackdirIOSavePropSet (info->m_op, (MCArrayRef) p_value,
-									*t_propset_path);
+	bool t_success = true;
+	if (t_success)
+	{
+		MCStackdirIOErrorLocationPush (info->m_op, *t_propset_path);
+		t_success = MCStackdirIOSavePropSet (info->m_op,
+											 (MCArrayRef) p_value,
+											 *t_propset_path);
+		MCStackdirIOErrorLocationPop (info->m_op);
+	}
+
+	return t_success;
 }
 
 static bool
@@ -1277,8 +1394,7 @@ MCStackdirIOSaveObjectPropsets (MCStackdirIOObjectSaveRef info)
 		return true;
 
 	if (!MCValueIsArray (t_custom_propsets))
-		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
-										  MCSTR ("Custom properties not an array"));
+		return MCStackdirIOSaveErrorObjectInvalidCustom (info->m_op);
 
 	/* Loop over all the property sets */
 	return MCArrayApply ((MCArrayRef) t_custom_propsets,
@@ -1304,7 +1420,6 @@ MCStackdirIOSaveObjectShared_PropCallback (void *context, MCArrayRef p_array,
 	return MCStackdirIOSaveProperty (info->m_op,
 									 p_key,
 									 p_value,
-									 info->m_path,
 									 info->m_external_dir,
 									 info->m_list,
 									 nil);
@@ -1317,8 +1432,7 @@ MCStackdirIOSaveObjectShared_CardCallback (void *context, MCArrayRef p_array,
 	MCStackdirIOObjectSaveRef info = (MCStackdirIOObjectSaveRef) context;
 
 	if (!MCValueIsArray (p_value))
-		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
-										  MCSTR ("Shared card properties not an array"));
+		return MCStackdirIOSaveErrorInvalidSharedCardArray (info->m_op);
 
 	MCArrayRef t_properties = (MCArrayRef) p_value;
 
@@ -1349,9 +1463,16 @@ MCStackdirIOSaveObjectShared_CardCallback (void *context, MCArrayRef p_array,
 	shared_info.m_path = info->m_shared_path;
 	shared_info.m_external_dir = *t_external_dir;
 
-	return MCStackdirArrayApplySorted (t_properties,
-									   MCStackdirIOSaveObjectShared_PropCallback,
-									   &shared_info);
+	bool t_success = true;
+	if (t_success)
+	{
+		MCStackdirIOErrorLocationPush (info->m_op, *t_external_dir);
+		t_success = MCStackdirArrayApplySorted (t_properties,
+												MCStackdirIOSaveObjectShared_PropCallback,
+												&shared_info);
+		MCStackdirIOErrorLocationPop (info->m_op);
+	}
+	return t_success;
 }
 
 static bool
@@ -1365,8 +1486,7 @@ MCStackdirIOSaveObjectShared (MCStackdirIOObjectSaveRef info)
 		return true;
 
 	if (!MCValueIsArray (t_shared_properties))
-		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
-										  MCSTR ("Shared properties not an array"));
+		return MCStackdirIOSaveErrorObjectInvalidShared (info->m_op);
 
 	/* Create and initialize shared property information. */
 	MCAutoListRef t_shared_list;
@@ -1379,10 +1499,17 @@ MCStackdirIOSaveObjectShared (MCStackdirIOObjectSaveRef info)
 	info->m_shared = *t_shared_list;
 	info->m_shared_path = *t_shared_path;
 
-	if (!MCStackdirArrayApplySorted ((MCArrayRef) t_shared_properties,
-									 MCStackdirIOSaveObjectShared_CardCallback,
-									 info))
-		return false;
+	bool t_success = true;
+
+	if (t_success)
+	{
+		MCStackdirIOErrorLocationPush (info->m_op, *t_shared_path);
+		t_success = MCStackdirArrayApplySorted ((MCArrayRef) t_shared_properties,
+												MCStackdirIOSaveObjectShared_CardCallback,
+												info);
+		MCStackdirIOErrorLocationPop (info->m_op);
+	}
+	if (!t_success) return false;
 
 	/* Save the _shared file. Append an empty string to the list to
 	 * ensure that the output file contains a trailing newline
@@ -1422,11 +1549,15 @@ MCStackdirIOSaveObject (MCStackdirIORef op, MCNameRef p_uuid, MCArrayRef p_state
 
 	/* Generate object contents */
 	if (t_success)
+	{
+		MCStackdirIOErrorLocationPush (op, info->m_path);
 		t_success = (MCStackdirIOSaveObjectKind (info) &&
 					 MCStackdirIOSaveObjectParent (info) &&
 					 MCStackdirIOSaveObjectInternal (info) &&
 					 MCStackdirIOSaveObjectPropsets (info) &&
 					 MCStackdirIOSaveObjectShared (info));
+		MCStackdirIOErrorLocationPop (op);
+	}
 
 	/* Clean up */
 	MCValueRelease (info->m_uuid);
@@ -1484,6 +1615,9 @@ MCStackdirIOCommitSave (MCStackdirIORef op)
 
 	/* Sanity check the state that we're supposed to be saving. */
 	MCAssert (op->m_save_state);
+	MCAssert (op->m_path);
+
+	MCStackdirIOErrorLocationPush (op, op->m_path);
 
 	if (!MCStackdirIOSaveTransactionStart (op)) return;
 
@@ -1498,6 +1632,8 @@ MCStackdirIOCommitSave (MCStackdirIORef op)
 		MCStackdirIOSaveTransactionEnd (op);
 	else
 		MCStackdirIOSaveTransactionCancel (op);
+
+	MCStackdirIOErrorLocationPop (op);
 }
 
 /* ----------------------------------------------------------------

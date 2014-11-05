@@ -49,6 +49,9 @@ struct _MCStackdirIO
 	MCStackdirStatus m_status;
 	/* Array with all accumulated errors & warnings */
 	MCArrayRef m_error_info;
+	/* Error location stack */
+	/* FIXME replace with proper list */
+	MCArrayRef m_error_location_stack;
 
 	/* Path of the root of the expanded stack directory tree */
 	MCStringRef m_path;
@@ -122,7 +125,7 @@ inline bool MCStackdirIOHasError (MCStackdirIORef op)
 /* These functions are used to help populate
  * MCStackdirIORef::m_error_info.  Please note:
  *
- * 1. p_filename arguments must be standard paths.
+ * 1. p_path arguments must be standard paths.
  *
  * 2. p_message arguments should begin with a capital letter and
  *    should not contain a trailing full stop or newline.
@@ -130,10 +133,22 @@ inline bool MCStackdirIOHasError (MCStackdirIORef op)
  * 3. These functions always return false.
  */
 
-bool MCStackdirIOErrorIO (MCStackdirIORef op, MCStringRef p_filename, MCStringRef p_message);
+bool MCStackdirIOError (MCStackdirIORef op, MCStackdirStatus p_status, MCStringRef p_message);
+bool MCStackdirIOErrorFull (MCStackdirIORef op, MCStackdirStatus p_status, MCStringRef p_path, index_t p_line, index_t p_column, MCStringRef p_message);
+
 bool MCStackdirIOErrorOutOfMemory (MCStackdirIORef op);
-bool MCStackdirIOErrorBadPath (MCStackdirIORef op, MCStringRef p_message);
-bool MCStackdirIOErrorBadState (MCStackdirIORef op, MCStringRef p_filename, MCStringRef p_message);
+
+void MCStackdirIOErrorLocationPop (MCStackdirIORef op);
+void MCStackdirIOErrorLocationPush (MCStackdirIORef op, MCStringRef p_path, MCValueRef p_line = kMCEmptyString, MCValueRef p_column = kMCEmptyString);
+void MCStackdirIOErrorLocationPush (MCStackdirIORef op, MCStringRef p_path, index_t p_line, index_t p_column = -1);
+
+#define MC_STACKDIR_ERROR_FUNC(f,s,m)			\
+	static bool f(MCStackdirIORef op) { return MCStackdirIOError (op, (s), MCSTR((m))); }
+
+#define MC_STACKDIR_ERROR_FUNC_FULL(f,s,m)						\
+	static bool f(MCStackdirIORef op, MCStringRef path,					\
+				  index_t line = -1, index_t col = -1) {				\
+	return MCStackdirIOErrorFull (op, s, path, line, col, MCSTR(m)); }
 
 /* ----------------------------------------------------------------
  * [Private] Indirect implementations of public functions

@@ -89,31 +89,20 @@ MCStackdirArrayApplySorted (MCArrayRef array,
  * [Private] Adding error reports
  * ---------------------------------------------------------------- */
 
-/* Format an error into an immutable array, then append it to the
- * operation's current list of error and warning reports, setting
- * the operation's status. */
-static void
-MCStackdirIOError (MCStackdirIORef op, MCStackdirStatus p_status,
-				   MCStringRef p_filename, MCValueRef p_file_line,
-				   MCValueRef p_file_col, MCStringRef p_message)
+bool
+MCStackdirIOErrorReport (MCStackdirIORef op,
+						 MCStackdirStatus p_status,
+						 MCStringRef p_filename,
+						 MCValueRef p_file_line,
+						 MCValueRef p_file_col,
+						 MCStringRef p_message,
+						 MCArrayRef & r_report)
 {
 	MCAutoNumberRef t_status;
 	if (!MCNumberCreateWithInteger (p_status, &t_status))
 	{
-		MCStackdirIOErrorOutOfMemory (op);
-		return;
+		return MCStackdirIOErrorOutOfMemory (op);
 	}
-
-	/* Providing the full path of the offending file is handy for
-	 * debugging. If we can't resolve the path, fall back to just
-	 * using it directly. */
-	MCAutoStringRef t_resolved_filename;
-	if (!MCS_resolvepath (p_filename, &t_resolved_filename))
-		t_resolved_filename = MCValueRetain (p_filename);
-
-
-	/* Create an (immutable) report array and append it onto the end
-	 * of the error list */
 
 	MCNameRef t_keys[] = {
 		/* FIXME Turn these keys into named constants. */
@@ -131,34 +120,180 @@ MCStackdirIOError (MCStackdirIORef op, MCStackdirStatus p_status,
 	t_values[3] = p_file_col;
 	t_values[4] = p_message;
 
+	if (!MCArrayCreate (false, t_keys, t_values, 5, r_report))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	return true;
+}
+
+void
+MCStackdirIOErrorLocationPush (MCStackdirIORef op,
+							   MCStringRef p_path,
+							   MCValueRef p_line,
+							   MCValueRef p_column)
+{
+	/* The error location is stored in the same way as an error or
+	 * warning report.  This is to simplify the process of adding
+	 * reports in MCStackdirIOError(). */
 
 	/* N.b. dense arrays are 1-indexed */
-	uindex_t t_idx = MCArrayGetCount (op->m_error_info) + 1;
+	uindex_t t_idx = MCArrayGetCount (op->m_error_location_stack) + 1;
 
 	MCAutoArrayRef t_report;
-	if (!(MCArrayCreate (false, t_keys, t_values, 5, &t_report) &&
-		  MCArrayStoreValueAtIndex (op->m_error_info, t_idx,
-									*t_report)))
-	{
-		MCStackdirIOErrorOutOfMemory (op);
+	if (!MCStackdirIOErrorReport (op,
+								  kMCStackdirStatusSuccess,
+								  p_path,
+								  p_line,
+								  p_column,
+								  kMCEmptyString,
+								  &t_report))
 		return;
+	if (!MCArrayStoreValueAtIndex (op->m_error_location_stack, t_idx,
+								   *t_report))
+		MCStackdirIOErrorOutOfMemory (op);
+}
+
+void
+MCStackdirIOErrorLocationPush (MCStackdirIORef op,
+							   MCStringRef p_path,
+							   index_t p_line,
+							   index_t p_column)
+{
+	MCAutoNumberRef t_line, t_column;
+	MCValueRef t_line_value, t_column_value;
+	if (p_line != -1)
+	{
+		if (!MCNumberCreateWithInteger (p_line, &t_line))
+		{
+			MCStackdirIOErrorOutOfMemory (op);
+			return;
+		}
+		t_line_value = (MCValueRef) *t_line;
+	}
+	else
+		t_line_value = (MCValueRef) kMCEmptyString;
+
+	if (p_column != -1)
+	{
+		if (!MCNumberCreateWithInteger (p_column, &t_column))
+		{
+			MCStackdirIOErrorOutOfMemory (op);
+			return;
+		}
+		t_column_value = (MCValueRef) *t_column;
+	}
+	else
+		t_column_value = (MCValueRef) kMCEmptyString;
+
+	MCStackdirIOErrorLocationPush (op, p_path,
+								   t_line_value,
+								   t_column_value);
+}
+
+void
+MCStackdirIOErrorLocationPop (MCStackdirIORef op)
+{
+	MCAssert (op != nil);
+	MCAssert (op->m_error_location_stack != nil);
+
+	if (MCArrayIsEmpty (op->m_error_location_stack))
+		return;
+
+	uindex_t t_idx = MCArrayGetCount (op->m_error_location_stack);
+	if (!MCArrayRemoveValueAtIndex (op->m_error_location_stack, t_idx))
+		MCStackdirIOErrorOutOfMemory (op);
+}
+
+
+static bool
+MCStackdirIOErrorLocation (MCStackdirIORef op,
+						   MCArrayRef & r_location)
+{
+
+	/* N.b. dense arrays are 1-indexed */
+	MCValueRef t_location_info;
+	uindex_t t_location_idx = MCArrayGetCount (op->m_error_location_stack);
+
+	if (MCArrayFetchValueAtIndex (op->m_error_location_stack,
+								  t_location_idx, t_location_info))
+	{
+		if (!MCArrayMutableCopy ((MCArrayRef) t_location_info, r_location))
+			return MCStackdirIOErrorOutOfMemory (op);
+		return true;
+	}
+
+	return MCStackdirIOErrorReport (op,
+									kMCStackdirStatusSuccess,
+									kMCEmptyString,
+									kMCEmptyString,
+									kMCEmptyString,
+									kMCEmptyString,
+									r_location);
+}
+
+/* Format an error into an immutable array, then append it to the
+ * operation's current list of error and warning reports, setting
+ * the operation's status. */
+bool
+MCStackdirIOError (MCStackdirIORef op, MCStackdirStatus p_status,
+				   MCStringRef p_message)
+{
+	MCAutoNumberRef t_status;
+	if (!MCNumberCreateWithInteger (p_status, &t_status))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	bool t_success = true;
+
+	/* N.b. dense arrays are 1-indexed */
+	MCAutoArrayRef t_report;
+	uindex_t t_idx = MCArrayGetCount (op->m_error_info) + 1;
+
+	if (t_success)
+		t_success = MCStackdirIOErrorLocation (op, &t_report);
+
+	if (t_success)
+	{
+		/* Attempt to resolve the filename.  If we can't, it's not a
+		 * problem; just use the filename how it is. */
+		MCValueRef t_filename;
+		MCAutoStringRef t_resolved;
+		if (MCArrayFetchValue (*t_report, false,
+							   MCNAME("filename"), t_filename) &&
+			MCS_resolvepath ((MCStringRef) t_filename, &t_resolved))
+		{
+			if (!MCArrayStoreValue (*t_report, false,
+									MCNAME("filename"), *t_resolved))
+				return MCStackdirIOErrorOutOfMemory (op);
+		}
+
+		/* Update and store the report */
+		if (!(MCArrayStoreValue (*t_report, false,
+								 MCNAME("status"), *t_status) &&
+			  MCArrayStoreValue (*t_report, false,
+								 MCNAME("message"), p_message) &&
+			  MCArrayStoreValueAtIndex (op->m_error_info, t_idx,
+										*t_report)))
+			return MCStackdirIOErrorOutOfMemory (op);
 	}
 
 	/* Set the status of the operation, if it doesn't already have an
 	 * error status */
 	if (!MCStackdirIOHasError (op))
 		op->m_status = p_status;
+	return false;
 }
 
 bool
-MCStackdirIOErrorIO (MCStackdirIORef op, MCStringRef p_filename,
-					 MCStringRef p_message)
+MCStackdirIOErrorFull (MCStackdirIORef op,
+					   MCStackdirStatus p_status,
+					   MCStringRef p_path,
+					   index_t p_line,
+					   index_t p_column,
+					   MCStringRef p_message)
 {
-	MCStackdirIOError (op, kMCStackdirStatusIOError,
-					   p_filename,     /* filename */
-					   kMCEmptyString, /* line */
-					   kMCEmptyString, /* column */
-					   p_message);        /* message */
+	MCStackdirIOErrorLocationPush (op, p_path, p_line, p_column);
+	MCStackdirIOError (op, p_status, p_message);
+	MCStackdirIOErrorLocationPop (op);
 	return false;
 }
 
@@ -167,29 +302,6 @@ MCStackdirIOErrorOutOfMemory (MCStackdirIORef op)
 {
 	/* Can't do anything! */
 	op->m_status = kMCStackdirStatusOutOfMemory;
-	return false;
-}
-
-bool
-MCStackdirIOErrorBadPath (MCStackdirIORef op, MCStringRef p_message)
-{
-	MCStackdirIOError (op, kMCStackdirStatusBadPath,
-					   op->m_path,     /* filename */
-					   kMCEmptyString, /* line */
-					   kMCEmptyString, /* column */
-					   p_message);     /* message */
-	return false;
-}
-
-bool
-MCStackdirIOErrorBadState (MCStackdirIORef op, MCStringRef p_filename,
-						   MCStringRef p_message)
-{
-	MCStackdirIOError (op, kMCStackdirStatusBadPath,
-					   p_filename,     /* filename */
-					   kMCEmptyString, /* line */
-					   kMCEmptyString, /* column */
-					   p_message);     /* message */
 	return false;
 }
 
@@ -202,6 +314,7 @@ MCStackdirIONew (MCStackdirIORef & op)
 {
 	if (!MCMemoryNew (op)) return false;
 	if (!MCArrayCreateMutable (op->m_error_info)) return false;
+	if (!MCArrayCreateMutable (op->m_error_location_stack)) return false;
 
 	op->m_status = kMCStackdirStatusSuccess;
 
@@ -249,6 +362,7 @@ MCStackdirIODestroy (MCStackdirIORef & op)
 	if (op == nil) return;
 
 	MCValueRelease (op->m_error_info);
+	MCValueRelease (op->m_error_location_stack);
 
 	MCValueRelease (op->m_path);
 	MCValueRelease (op->m_save_build_dir);
