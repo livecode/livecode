@@ -172,9 +172,12 @@ MCStackdirFormatData (MCDataRef p_data, MCStringRef & r_literal)
 
 	/* Only use the string format if the encoded string is shorter
 	 * than the corresponding base64 format. */
-	/* base64 uses approximately 4 output bytes for every 3 input bytes */
+	/* base64 uses approximately 4 output bytes for every 3 input
+	 * bytes.  We add an additional 2 bytes to the estimate to
+	 * compensate for the fact that the encoded string will have "..."
+	 * delimiters. */
 	uindex_t t_base64_length_estimate =
-		(uindex_t) rint (ceil ((double) t_source_length * 4 / 3));
+		2 + (uindex_t) rint (ceil ((double) t_source_length * 4 / 3));
 
 	MCAutoStringRef t_formatted_string;
 	bool t_as_string = false;
