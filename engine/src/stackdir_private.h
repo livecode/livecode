@@ -190,6 +190,13 @@ bool MCStackdirCreateFilename (MCNameRef p_str, MCStringRef & r_filename);
 bool MCStackdirPathIsStackdir (MCStringRef p_path);
 
 /* ----------------------------------------------------------------
+ * [Private] UUID handling
+ * ---------------------------------------------------------------- */
+
+/* Test whether p_uuid is a valid UUID */
+bool MCStackdirStringIsUUID (MCStringRef p_uuid);
+
+/* ----------------------------------------------------------------
  * [Private] Data formatting
  * ---------------------------------------------------------------- */
 

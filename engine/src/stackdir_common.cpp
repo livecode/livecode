@@ -25,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "sysdefs.h"
 
 #include "system.h"
+#include "uuid.h"
 
 #include "stackdir.h"
 
@@ -350,6 +351,17 @@ MCStackdirPathIsStackdir (MCStringRef p_path)
 		return false;
 
 	return true;
+}
+
+/* ----------------------------------------------------------------
+ * [Private] UUID handling
+ * ---------------------------------------------------------------- */
+
+bool
+MCStackdirStringIsUUID (MCStringRef p_uuid)
+{
+	MCUuid t_uuid;
+	return MCUuidFromCString (MCStringGetCString (p_uuid), t_uuid);
 }
 
 /* ----------------------------------------------------------------
