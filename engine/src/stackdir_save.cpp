@@ -293,6 +293,9 @@ MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorWriteExternalFile,
 							kMCStackdirStatusIOError,
 							"Failed to write externally-stored value file")
 
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorInvalidObjectUUID,
+					   kMCStackdirStatusBadState,
+					   "Object has invalid UUID");
 MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorCreateObjectLSBDir,
 							kMCStackdirStatusIOError,
 							"Failed to create object LSB directory")
@@ -322,6 +325,9 @@ MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorObjectInvalidCustom,
 					   kMCStackdirStatusBadState,
 					   "Invalid custom propsets array");
 
+MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorInvalidSharedCardUUID,
+					   kMCStackdirStatusBadState,
+					   "Invalid card UUID for shared properties")
 MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorInvalidSharedCardArray,
 					   kMCStackdirStatusBadState,
 					   "Invalid per-card array of shared properties");
@@ -1234,23 +1240,24 @@ MCStackdirIOSavePropSet (MCStackdirIORef op, MCArrayRef p_propset,
 static bool
 MCStackdirIOSaveObjectDirectory (MCStackdirIOObjectSaveRef info)
 {
-	MCStringRef t_uuid = MCNameGetString (info->m_uuid);
-	uindex_t t_uuid_len = MCStringGetLength (t_uuid);
+	/* Sanity-check UUID and make sure it's properly normalised. */
+	MCAutoStringRef t_uuid;
+	if (!(MCStackdirStringIsUUID (MCNameGetString (info->m_uuid)) &&
+		  MCStackdirFormatFilename (MCNameGetString (info->m_uuid),
+									kMCEmptyString, &t_uuid)))
+		return MCStackdirIOSaveErrorInvalidObjectUUID (info->m_op);
 
-	/* Sanity-check UUID. Must be 36-character string. We assume that
-	 * it has already been processed into canonical format. */
-	/* FIXME Maybe these should be "bad state" errors. */
-	MCAssert (36 == t_uuid_len);
+	uindex_t t_uuid_len = MCStringGetLength (*t_uuid);
 
 	/* First step is to create the LSB directory.  Just grab the last
 	 * two characters of the UUID. */
 	MCAutoStringRef t_uuid_lsb, t_lsb_dir, t_object_dir;
-	if (!(MCStringCopySubstring (t_uuid,
+	if (!(MCStringCopySubstring (*t_uuid,
 								 MCRangeMake (t_uuid_len - 3, 2),
 								 &t_uuid_lsb) &&
 		  MCStringFormat (&t_lsb_dir, "%@/%@",
 						  info->m_op->m_save_build_dir, *t_uuid_lsb) &&
-		  MCStringFormat (&t_object_dir, "%@/%@", *t_lsb_dir, t_uuid)))
+		  MCStringFormat (&t_object_dir, "%@/%@", *t_lsb_dir, *t_uuid)))
 		return MCStackdirIOErrorOutOfMemory (info->m_op);
 
 	/* If creating the LSB directory fails but it
@@ -1403,7 +1410,7 @@ MCStackdirIOSaveObjectPropsets (MCStackdirIOObjectSaveRef info)
 }
 
 static bool
-MCStackdirIOSaveObjectSharedHeader (MCStackdirIORef op, MCNameRef p_uuid,
+MCStackdirIOSaveObjectSharedHeader (MCStackdirIORef op, MCStringRef p_uuid,
 									MCStringRef & r_header)
 {
 	if (!MCStringFormat (r_header, "[%@]", p_uuid))
@@ -1439,12 +1446,16 @@ MCStackdirIOSaveObjectShared_CardCallback (void *context, MCArrayRef p_array,
 	/* Fast path */
 	if (MCArrayIsEmpty (t_properties)) return true;
 
-	/* FIXME do a proper check that the p_key is actually a UUID */
-	MCAssert (MCStringGetLength (MCNameGetString (p_key)) == 36);
+	/* Sanity-check UUID and make sure it's properly normalised. */
+	MCAutoStringRef t_uuid;
+	if (!(MCStackdirStringIsUUID (MCNameGetString (p_key)) &&
+		  MCStackdirFormatFilename (MCNameGetString (p_key),
+									kMCEmptyString, &t_uuid)))
+		return MCStackdirIOSaveErrorInvalidSharedCardUUID (info->m_op);
 
 	/* Add a header to the _shared file */
 	MCAutoStringRef t_header;
-	if (!MCStackdirIOSaveObjectSharedHeader (info->m_op, p_key, &t_header))
+	if (!MCStackdirIOSaveObjectSharedHeader (info->m_op, *t_uuid, &t_header))
 		return false;
 	if (!MCListAppend (info->m_shared, *t_header))
 		return MCStackdirIOErrorOutOfMemory (info->m_op);
@@ -1453,7 +1464,7 @@ MCStackdirIOSaveObjectShared_CardCallback (void *context, MCArrayRef p_array,
 	 * stored. N.b. this'll get created only if needed. */
 	MCAutoStringRef t_external_dir;
 	if (!MCStringFormat (&t_external_dir, "%@/%@%@", info->m_path,
-						 p_key, kMCStackdirSharedSuffix))
+						 *t_uuid, kMCStackdirSharedSuffix))
 		return MCStackdirIOErrorOutOfMemory (info->m_op);
 
 	/* Add the properties to the _shared file */
