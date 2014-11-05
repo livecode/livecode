@@ -560,6 +560,7 @@ typedef struct __MCArray *MCArrayRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCStream *MCStreamRef;
+typedef struct __MCProperList *MCProperListRef;
 
 // Forward declaration
 typedef struct __MCLocale* MCLocaleRef;
@@ -1089,6 +1090,7 @@ enum
 	kMCValueTypeCodePoint,
 	KMCValueTypeCodeRectangle,
 	kMCValueTypeCodeCustom,
+    kMCValueTypeCodeProperList,
 };
 
 enum
@@ -2236,5 +2238,92 @@ bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set);
 bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+//  PROPER LIST DEFINITIONS
+//
+
+// The type describing options for list sorting.
+typedef uint32_t MCProperListSortType;
+enum
+{
+	// Sort using a codepoint by codepoint comparison.
+	kMCProperListSortTypeText = 0,
+	// Sort using a byte by byte comparison.
+	kMCProperListSortTypeBinary = 1,
+    // Sort by collation according to the system locale.
+	kMCProperListSortTypeInternational = 2,
+	// Sorts numerically
+	kMCProperListSortTypeNumeric = 3,
+    // Sorts chronologically by date / time
+	kMCProperListSortTypeDateTime = 4,
+};
+
+/////////
+
+extern MCProperListRef kMCEmptyProperList;
+
+// Create an immutable list containing the given values.
+bool MCProperListCreate(const MCValueRef *values, uindex_t length, MCProperListRef& r_list);
+
+// Create an empty mutable list.
+bool MCProperListCreateMutable(MCProperListRef& r_list);
+
+// Make an immutable copy of the given list. If the 'copy and release' form is
+// used then the original list is released (has its reference count reduced by
+// one).
+bool MCProperListCopy(MCProperListRef list, MCProperListRef& r_new_list);
+bool MCProperListCopyAndRelease(MCProperListRef list, MCProperListRef& r_new_list);
+
+// Make a mutable copy of the given list. If the 'copy and release' form is
+// used then the original list is released (has its reference count reduced by
+// one).
+bool MCProperListMutableCopy(MCProperListRef list, MCProperListRef& r_new_list);
+bool MCProperListMutableCopyAndRelease(MCProperListRef list, MCProperListRef& r_new_list);
+
+// Returns 'true' if the given list is mutable.
+bool MCProperListIsMutable(MCProperListRef list);
+
+// Returns the number of elements in the list.
+uindex_t MCProperListGetLength(MCProperListRef list);
+
+// Returns true if the given list is the empty list.
+bool MCProperListIsEmpty(MCProperListRef list);
+
+// Reform a list into a string, combining the elements with p_delimiter
+bool MCProperListCombineWithDelimiter(MCProperListRef list, MCStringRef p_delimiter, MCStringRef& r_list);
+
+// Sort list according to the given sort key type
+bool MCProperListSort(MCProperListRef list, bool p_ascending, MCProperListSortType p_sort_type);
+
+// Fetch the first element of the list. The returned value is not retained.
+MCValueRef MCProperListFetchHead(MCProperListRef list);
+// Fetch the last element of the list. The returned value is not retained.
+MCValueRef MCProperListFetchTail(MCProperListRef list);
+// Fetch the element of the list at the specified index. The returned value is not retained.
+MCValueRef MCProperListFetchElementAtIndex(MCProperListRef list, uindex_t p_index);
+
+// Copy the elements at the specified range as a list.
+bool MCProperListCopySublist(MCProperListRef list, MCRange p_range, MCProperListRef& r_elements);
+
+bool MCProperListPushElement(MCProperListRef list, MCValueRef p_value);
+// Pushes all of the values in p_values onto the end of the list
+bool MCProperListPushElements(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length);
+
+bool MCProperListAppendList(MCProperListRef list, MCProperListRef p_value);
+
+// The returned value is owned by the caller.
+bool MCProperListPop(MCProperListRef list, MCValueRef& r_value);
+
+bool MCProperListInsertElement(MCProperListRef list, MCValueRef p_value, index_t p_index);
+bool MCProperListInsertElements(MCProperListRef list, const MCValueRef *p_value, uindex_t p_length, index_t p_index);
+bool MCProperListInsertList(MCProperListRef list, MCProperListRef p_value, index_t p_index);
+
+bool MCProperListRemoveElement(MCProperListRef list, index_t p_index);
+bool MCProperListRemoveElement(MCProperListRef list, index_t p_start, index_t p_finish);
+
+bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset);
+bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
+
+bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
 
 #endif

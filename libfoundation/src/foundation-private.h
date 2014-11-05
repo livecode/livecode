@@ -268,6 +268,30 @@ struct __MCSet: public __MCValue
 	uindex_t limb_count;
 };
 
+//////////
+
+enum
+{
+	// If set then the list is mutable.
+	kMCProperListFlagIsMutable = 1 << 0,
+    // If set then the list is indirect (i.e. contents is within another
+	// immutable list).
+	kMCProperListFlagIsIndirect = 1 << 1,
+};
+
+struct __MCProperList: public __MCValue
+{
+	union
+	{
+		MCProperListRef contents;
+        struct
+        {
+            MCValueRef *list;
+            uindex_t length;
+        };
+	};
+};
+
 ////////
 
 struct __MCCustomValue: public __MCValue
@@ -359,6 +383,14 @@ hash_t __MCDataHash(__MCData *self);
 bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data);
 bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description);
 bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value);
+
+bool __MCProperListInitialize(void);
+void __MCProperListFinalize(void);
+void __MCProperListDestroy(__MCProperList *list);
+hash_t __MCProperListHash(__MCProperList *list);
+bool __MCProperListIsEqualTo(__MCProperList *list, __MCProperList *other_list);
+bool __MCProperListCopyDescription(__MCProperList *list, MCStringRef& r_string);
+bool __MCProperListImmutableCopy(__MCProperList *list, bool release, __MCProperList*& r_immutable_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 

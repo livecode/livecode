@@ -181,6 +181,8 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 		if (((__MCCustomValue *)self) -> callbacks == ((__MCCustomValue *)other_self) -> callbacks)
 			return (((__MCCustomValue *)self) -> callbacks) -> equal(p_value, p_other_value);
 		return false;
+    case kMCValueTypeCodeProperList:
+        return __MCProperListIsEqualTo((__MCProperList*)self, (__MCProperList*)other_self);
 	// Shouldn't happen!
 	default:
 		break;
@@ -344,6 +346,9 @@ void __MCValueDestroy(__MCValue *self)
 		break;
     case kMCValueTypeCodeData:
         __MCDataDestroy((__MCData *)self);
+        break;
+    case kMCValueTypeCodeProperList:
+        __MCProperListDestroy((__MCProperList *)self);
         break;
 	case kMCValueTypeCodeCustom:
 		return ((__MCCustomValue *)self) -> callbacks -> destroy(self);
