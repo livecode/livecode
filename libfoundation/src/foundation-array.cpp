@@ -505,6 +505,19 @@ bool MCArrayStoreValueAtIndex(MCArrayRef self, index_t p_index, MCValueRef p_val
 	return MCArrayStoreValue(self, true, *t_key, p_value);
 }
 
+bool
+MCArrayRemoveValueAtIndex(MCArrayRef self, index_t p_index)
+{
+	char t_index_str[16];
+	sprintf(t_index_str, "%d", p_index);
+	MCNewAutoNameRef t_key;
+	if (!MCNameCreateWithNativeChars((const char_t *)t_index_str,
+									 strlen(t_index_str),
+									 &t_key))
+		return false;
+	return MCArrayRemoveValue(self, true, *t_key);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCArrayIsEmpty(MCArrayRef self)
