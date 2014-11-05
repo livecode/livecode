@@ -2289,11 +2289,21 @@ uindex_t MCProperListGetLength(MCProperListRef list);
 // Returns true if the given list is the empty list.
 bool MCProperListIsEmpty(MCProperListRef list);
 
-// Reform a list into a string, combining the elements with p_delimiter
-bool MCProperListCombineWithDelimiter(MCProperListRef list, MCStringRef p_delimiter, MCStringRef& r_list);
 
-// Sort list according to the given sort key type
-bool MCProperListSort(MCProperListRef list, bool p_ascending, MCProperListSortType p_sort_type);
+// Apply the callback to each element of list. The contents should not be modified.
+typedef bool (*MCProperListApplyCallback)(void *context, MCValueRef element);
+bool MCProperListApply(MCProperListRef list, MCProperListApplyCallback p_callback, void *context);
+
+// Apply the callback to each element of list to create a new list.
+typedef bool (*MCProperListMapCallback)(MCValueRef element, MCValueRef& r_new_element);
+bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list);
+
+// Sort list by comparing elements using the provided callback.
+typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef left, const MCValueRef right);
+bool MCProperListSort(MCProperListRef list, bool p_reverse, MCProperListQuickSortCallback p_callback);
+
+typedef compare_t (*MCProperListCompareElementCallback)(void *context, const MCValueRef left, const MCValueRef right);
+bool MCProperListStableSort(MCProperListRef list, bool p_reverse, MCProperListCompareElementCallback p_callback, void *context);
 
 // Fetch the first element of the list. The returned value is not retained.
 MCValueRef MCProperListFetchHead(MCProperListRef list);
