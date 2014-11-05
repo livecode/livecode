@@ -60,6 +60,10 @@ struct _MCStackdirIOObjectSave
 
 	/* Path to object directory */
 	MCStringRef m_path;
+
+	/* Shared properties */
+	MCListRef m_shared;
+	MCStringRef m_shared_path;
 };
 
 typedef struct _MCStackdirIOPropsetSave MCStackdirIOPropsetSave;
@@ -96,6 +100,23 @@ struct _MCStackdirIOArraySave
 
 	/* Target list */
 	MCListRef m_list;
+};
+
+typedef struct _MCStackdirIOSharedSave MCStackdirIOSharedSave;
+typedef MCStackdirIOSharedSave *MCStackdirIOSharedSaveRef;
+
+struct _MCStackdirIOSharedSave
+{
+	MCStackdirIORef m_op;
+
+	/* Object directory */
+	MCStringRef m_path;
+
+	/* Target list */
+	MCListRef m_list;
+
+	/* .shared directory */
+	MCStringRef m_external_dir;
 };
 
 /* ----------------------------------------------------------------
@@ -1266,9 +1287,116 @@ MCStackdirIOSaveObjectPropsets (MCStackdirIOObjectSaveRef info)
 }
 
 static bool
+MCStackdirIOSaveObjectSharedHeader (MCStackdirIORef op, MCNameRef p_uuid,
+									MCStringRef & r_header)
+{
+	if (!MCStringFormat (r_header, "[%@]", p_uuid))
+		return MCStackdirIOErrorOutOfMemory (op);
+	return true;
+}
+
+static bool
+MCStackdirIOSaveObjectShared_PropCallback (void *context, MCArrayRef p_array,
+										   MCNameRef p_key, MCValueRef p_value)
+{
+	MCStackdirIOSharedSaveRef info = (MCStackdirIOSharedSaveRef) context;
+
+	return MCStackdirIOSaveProperty (info->m_op,
+									 p_key,
+									 p_value,
+									 info->m_path,
+									 info->m_external_dir,
+									 info->m_list,
+									 nil);
+}
+
+static bool
+MCStackdirIOSaveObjectShared_CardCallback (void *context, MCArrayRef p_array,
+										   MCNameRef p_key, MCValueRef p_value)
+{
+	MCStackdirIOObjectSaveRef info = (MCStackdirIOObjectSaveRef) context;
+
+	if (!MCValueIsArray (p_value))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  MCSTR ("Shared card properties not an array"));
+
+	MCArrayRef t_properties = (MCArrayRef) p_value;
+
+	/* Fast path */
+	if (MCArrayIsEmpty (t_properties)) return true;
+
+	/* FIXME do a proper check that the p_key is actually a UUID */
+	MCAssert (MCStringGetLength (MCNameGetString (p_key)) == 36);
+
+	/* Add a header to the _shared file */
+	MCAutoStringRef t_header;
+	if (!MCStackdirIOSaveObjectSharedHeader (info->m_op, p_key, &t_header))
+		return false;
+	if (!MCListAppend (info->m_shared, *t_header))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	/* Figure out the directory in which any external files should be
+	 * stored. N.b. this'll get created only if needed. */
+	MCAutoStringRef t_external_dir;
+	if (!MCStringFormat (&t_external_dir, "%@/%@%@", info->m_path,
+						 p_key, kMCStackdirSharedSuffix))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	/* Add the properties to the _shared file */
+	MCStackdirIOSharedSave shared_info;
+	shared_info.m_op = info->m_op;
+	shared_info.m_list = info->m_shared;
+	shared_info.m_path = info->m_shared_path;
+	shared_info.m_external_dir = *t_external_dir;
+
+	return MCStackdirArrayApplySorted (t_properties,
+									   MCStackdirIOSaveObjectShared_PropCallback,
+									   &shared_info);
+}
+
+static bool
 MCStackdirIOSaveObjectShared (MCStackdirIOObjectSaveRef info)
 {
-	/* FIXME implementation */
+	MCValueRef t_shared_properties;
+
+	/* The state array may have a _shared array (even if it's empty) */
+	if (!MCArrayFetchValue (info->m_state, false, kMCStackdirSharedKey,
+							t_shared_properties))
+		return true;
+
+	if (!MCValueIsArray (t_shared_properties))
+		return MCStackdirIOErrorBadState (info->m_op, info->m_path,
+										  MCSTR ("Shared properties not an array"));
+
+	/* Create and initialize shared property information. */
+	MCAutoListRef t_shared_list;
+	MCAutoStringRef t_shared_path;
+	if (!(MCListCreateMutable (kMCLineEndString, &t_shared_list) &&
+		  MCStringFormat (&t_shared_path, "%@/%@", info->m_path,
+						  kMCStackdirSharedFile)))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	info->m_shared = *t_shared_list;
+	info->m_shared_path = *t_shared_path;
+
+	if (!MCStackdirArrayApplySorted ((MCArrayRef) t_shared_properties,
+									 MCStackdirIOSaveObjectShared_CardCallback,
+									 info))
+		return false;
+
+	/* Save the _shared file. Append an empty string to the list to
+	 * ensure that the output file contains a trailing newline
+	 * character. */
+	if (!MCListIsEmpty (*t_shared_list))
+	{
+		MCAutoStringRef t_contents;
+		if (!(MCListAppend (*t_shared_list, kMCEmptyString) &&
+			  MCListCopyAsString (*t_shared_list, &t_contents)))
+			return MCStackdirIOErrorOutOfMemory (info->m_op);
+		if (!MCStackdirIOSaveUTF8 (info->m_op, *t_shared_path, *t_contents))
+			return false;
+	}
+
 	return true;
 }
 
