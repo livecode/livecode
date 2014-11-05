@@ -33,11 +33,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define standardbtn() ((IsMacEmulatedLF() || MCcurtheme!=NULL) && flags & F_3D \
 		  && !(flags & F_AUTO_ARM) && flags & F_SHOW_BORDER \
-	          && (IsMacEmulatedLF() && getstyleint(flags) == F_STANDARD|| \
-						MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_PUSHBUTTON) && \
-						getstyleint(flags) == F_STANDARD || MCcurtheme \
-		      && MCcurtheme->iswidgetsupported(WTHEME_TYPE_BEVELBUTTON) && getstyleint(flags) == F_RECTANGLE) \
-		  && !(flags & F_SHADOW) && flags & F_OPAQUE)
+		  && ((IsMacEmulatedLF() && getstyleint(flags) == F_STANDARD) || \
+			  (MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_PUSHBUTTON) && \
+			   getstyleint(flags) == F_STANDARD) || \
+			  (MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_BEVELBUTTON) && \
+			   getstyleint(flags) == F_RECTANGLE)) \
+		   && !(flags & F_SHADOW) && flags & F_OPAQUE)
 
 #define MENU_FLAGS (F_RECTANGLE | F_VISIBLE | F_SHOW_NAME \
 		    | F_ALIGN_LEFT | F_3D | F_TRAVERSAL_ON \

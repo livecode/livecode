@@ -3768,7 +3768,9 @@ void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangl
 {
 	MCImageBitmap *t_bitmap;
 	t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, nil, p_region, 0, p_size);
-	MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
+	// IM-2014-10-24: [[ Bug 13784 ]] Don't export unless we get a valid bitmap
+	if (t_bitmap != nil)
+		MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
 }
 
 void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCDataRef &r_data)
@@ -3793,7 +3795,9 @@ void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef
 	{
 		MCImageBitmap *t_bitmap;
 		t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, p_display, p_region, t_window, p_size);
-		MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
+		// IM-2014-10-24: [[ Bug 13784 ]] Don't export unless we get a valid bitmap
+		if (t_bitmap != nil)
+			MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_metadata, p_filename, p_mask_filename);
 	}
 }
 
@@ -3873,15 +3877,12 @@ void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_fo
 		
 		// IM-2014-09-02: [[ Bug 13295 ]] Call shorthand version of lockbitmap(),
 		// which will copy if necessary.
-		/* UNCHECKED */ p_target->lockbitmap(t_bitmap, false, true);
-		t_image_locked = true;
-        
-        MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_metadata, r_data);
-        
-        if (t_image_locked)
+		// IM-2014-10-24: [[ Bug 13784 ]] Don't export unless we get a valid bitmap
+		if (p_target->lockbitmap(t_bitmap, false, true))
+		{
+			MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_metadata, r_data);
             p_target->unlockbitmap(t_bitmap);
-        else
-            MCImageFreeBitmap(t_bitmap);
+		}
 	}
 }
 void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename)
@@ -3897,15 +3898,12 @@ void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, in
 		
 		// IM-2014-09-02: [[ Bug 13295 ]] Call shorthand version of lockbitmap(),
 		// which will copy if necessary.
-		/* UNCHECKED */ p_target->lockbitmap(t_bitmap, false, true);
-		t_image_locked = true;
-        
-        MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_metadata, p_filename, p_mask_filename);
-        
-        if (t_image_locked)
+		// IM-2014-10-24: [[ Bug 13784 ]] Don't export unless we get a valid bitmap
+		if (p_target->lockbitmap(t_bitmap, false, true))
+		{
+			MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(p_target), p_metadata, p_filename, p_mask_filename);
             p_target->unlockbitmap(t_bitmap);
-        else
-            MCImageFreeBitmap(t_bitmap);
+		}
 	}
 }
 

@@ -1419,15 +1419,22 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 
 bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 {
+    // AL-2014-10-29: Reinstate secure mode check when trying to save file
+    if (!MCSecureModeCanAccessDisk())
+	{
+		MCresult->sets("can't open file");
+		return false;
+	}
+    
 	MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
 	
 	if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
         return false;
 	
+    // MW-2014-10-24: [[ Bug 13797 ]] Don't create executable file.
 	IO_handle t_file;
-    // SN-2014-05-08 [[ Bug 12192 ]] Files created with 'url' should have the executable permission
-    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeExecutableWrite, false);
+    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeWrite, false);
 	
 	if (t_file == NULL)
 	{
@@ -1460,15 +1467,23 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 
 bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 {
+    // AL-2014-10-29: Reinstate secure mode check when trying to save file
+    if (!MCSecureModeCanAccessDisk())
+	{
+		MCresult->sets("can't open file");
+		return false;
+	}
+    
 	MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
+	bool t_success = true;
 	
 	if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
         return false;
 	
+    // MW-2014-10-24: [[ Bug 13797 ]] Don't create executable file.
 	IO_handle t_file;
-    // SN-2014-05-08 [[ Bug 12192 ]] Files created with 'url' should have the executable permission
-    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeExecutableWrite, false);
+    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeWrite, false);
 	
 	if (t_file == NULL)
 	{
@@ -1477,14 +1492,14 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 	}
     
 	if (!t_file -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data)))
+	{
 		MCresult -> sets("error writing file");
+		t_success = false;
+	}
 	
 	t_file -> Close();
 	
-    if (!MCresult -> isclear())
-		return false;
-    
-    return true;
+    return t_success;
 }
 
 int64_t MCS_fsize(IO_handle p_stream)

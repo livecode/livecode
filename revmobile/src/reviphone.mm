@@ -494,10 +494,10 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		t_success = Throw("simulator already running");
 	
 	// Fetch the app path
-	const char *t_app;
-	t_app = nil;
+	MCString t_app;
 	if (t_success)
-		t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsCString, &t_app));
+        // SN-2014-10-28: [[ Bug 13827 ]] Fetch the string as a UTF-8 encoded MCString
+		t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsUTF8String, &t_app));
 	
 	// Fetch the family string
 	const char *t_family;
@@ -533,7 +533,8 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		[t_delegate setMessage: t_callback];
 		[t_delegate setTarget: t_target];
 
-		t_app_spec = [s_simulator_proxy specifierWithApplicationPath: [NSString stringWithCString:t_app encoding: NSMacOSRomanStringEncoding]];
+        // SN-2014-10-27: [[ Bug 13827 ]] We need to pass the parameter as a UTF-8 string
+		t_app_spec = [s_simulator_proxy specifierWithApplicationPath: [NSString stringWithUTF8String:t_app.buffer]];
 		
 		t_session_config = [s_simulator_proxy newSessionConfig];
 		

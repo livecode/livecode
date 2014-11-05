@@ -271,6 +271,17 @@ void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 		if (p_name != nil)
 			filename = MCValueRetain(p_name);
 		prepare(kMCEmptyString);
+#ifdef FEATURE_PLATFORM_PLAYER
+        // PM-2014-10-24: [[ Bug 13776 ]] Make sure we attach the player after prepare()
+        // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
+        if (m_platform_player != nil && !m_is_attached && m_should_attach)
+        {
+            MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+            m_is_attached = true;
+            m_should_attach = false;
+        }
+#endif
+
 		Redraw();
 	}
 }
