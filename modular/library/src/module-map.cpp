@@ -304,8 +304,6 @@ void MCMapRunTests()
     MCMapStoreElementOf(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
     MCMapFetchElementOfNumeric(MCArrayRef p_target, integer_t p_key, MCValueRef& r_output)
     MCMapStoreElementOfNumeric(MCValueRef p_value, MCArrayRef& x_target, integer_t p_key)
-    MCMapFetchElementOfMatrix(MCArrayRef p_target, MCProperListRef p_key, MCValueRef& r_output)
-    MCMapStoreElementOfMatrix(MCValueRef p_value, MCArrayRef& x_target, MCProperListRef p_key)
  */
     
     MCAutoArrayRef t_array, t_array_for_keys;
@@ -495,9 +493,20 @@ void MCMapRunTests()
     
     log_result("is among the keys of matrix", t_is_among);
     
-    /*MCMapFetchElementOfNumeric(MCArrayRef p_target, integer_t p_key, MCValueRef& r_output)*/
-    MCValueRef t_value;
-    MCMapFetchElementOfMatrix(*t_array, *t_list, t_value);
+    /*MCMapStoreElementOfMatrix(MCValueRef p_value, MCArrayRef& x_target, MCProperListRef p_key)*/
+    MCAutoNumberRef t_4n;
+    MCNumberCreateWithInteger(4, &t_4n);
+    MCProperListPushElement(*t_list, *t_4n);
     
-    log_result("fetch element of matrix", t_value == kMCTrue);
+    MCArrayRef t_matrix;
+    MCArrayCreateMutable(t_matrix);
+    MCMapStoreElementOfMatrix(kMCTrue, t_matrix, *t_list);
+    
+    /*MCMapFetchElementOfMatrix(MCArrayRef p_target, MCProperListRef p_key, MCValueRef& r_output)*/
+    MCValueRef t_value;
+    MCMapFetchElementOfMatrix(t_matrix, *t_list, t_value);
+    
+    MCValueRelease(t_matrix);
+    
+    log_result("store/fetch element of matrix", t_value == kMCTrue);
 }
