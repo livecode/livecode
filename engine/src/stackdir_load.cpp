@@ -51,6 +51,14 @@ MCStackdirIONewLoad (MCStackdirIORef & op)
 	return true;
 }
 
+void
+MCStackdirIOSetConflictPermitted (MCStackdirIORef op,
+								  bool enabled)
+{
+	MCStackdirIOAssertLoad (op);
+	op->m_load_allow_conflicts = enabled;
+}
+
 /* ----------------------------------------------------------------
  * [Private] High-level operations
  * ---------------------------------------------------------------- */

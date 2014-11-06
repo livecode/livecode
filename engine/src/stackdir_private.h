@@ -71,6 +71,8 @@ struct _MCStackdirIO
 	MCArrayRef m_load_state;
 	/* Alternative stack state in case of VCS conflict */
 	MCArrayRef m_load_state_theirs;
+	/* Whether to permit VCS conflicts */
+	bool m_load_allow_conflicts;
 	/* Source location information from load operation */
 	MCArrayRef m_source_info;
 };
