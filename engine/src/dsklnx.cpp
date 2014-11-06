@@ -1912,15 +1912,15 @@ public:
         closedir(dirptr);
         *dptr = tptr;
 #endif /* MCS_getentries_dsk_lnx */
-		MCStringRef t_path;
+		MCAutoStringRefAsSysString t_path;
 		if (p_folder == nil)
-			t_path = MCSTR(".");
+			/* UNCHECKED */ t_path . Lock(MCSTR("."));
 		else
-			t_path = p_folder;
+			/* UNCHECKED */ t_path . Lock(p_folder);
 
         DIR *dirptr;
 
-        if ((dirptr = opendir(MCStringGetCString (t_path))) == NULL)
+        if ((dirptr = opendir(*t_path)) == NULL)
         {
             return false;
         }
