@@ -51,6 +51,15 @@ MCStackdirIONewLoad (MCStackdirIORef & op)
 	return true;
 }
 
+bool
+MCStackdirIOHasConflict (MCStackdirIORef op)
+{
+	MCStackdirIOAssertLoad (op);
+
+	/* FIXME This is a stub and needs a proper implementation. */
+	return false;
+}
+
 void
 MCStackdirIOSetConflictPermitted (MCStackdirIORef op,
 								  bool enabled)
