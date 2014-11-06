@@ -163,3 +163,79 @@ void MCEncodingEvalURLDecoded(MCStringRef p_target, MCStringRef& r_output)
     
     //    ctxt . Throw();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern void log(const char *module, const char *test, bool result);
+#define log_result(test, result) log("ENCODING MODULE", test, result)
+void MCEncodingRunTests()
+{
+/*
+ void MCEncodingEvalEncodedOfValue(MCValueRef p_target, MCDataRef& r_output)
+ void MCEncodingEvalDecodedOfValue(MCDataRef p_target, MCValueRef& r_output)
+ void MCEncodingExecEncodeUsingBase64(MCDataRef p_target, MCStringRef& r_output)
+ void MCEncodingExecDecodeUsingBase64(MCStringRef p_target, MCDataRef& r_output)
+ void MCEncodingExecEncodeUsingBinary(MCStringRef p_target, MCStringRef p_format, MCDataRef& r_output)
+ void MCEncodingExecDecodeUsingBinary(MCDataRef p_target, MCStringRef p_format, MCStringRef& r_output)
+ void MCEncodingExecEncodeUsingUTF8(MCStringRef p_target, MCDataRef& r_output)
+ void MCEncodingExecDecodeUsingUTF8(MCDataRef p_target, MCStringRef& r_output)
+ void MCEncodingExecEncodeUsingUTF16(MCStringRef p_target, MCDataRef& r_output)
+ void MCEncodingExecDecodeUsingUTF16(MCDataRef p_target, MCStringRef& r_output)
+ void MCEncodingExecEncodeUsingUTF32(MCStringRef p_target, MCDataRef& r_output)
+ void MCEncodingExecDecodeUsingUTF32(MCDataRef p_target, MCStringRef& r_output)
+ void MCEncodingExecEncodeUsingASCII(MCStringRef p_target, MCDataRef& r_output)
+ void MCEncodingExecDecodeUsingASCII(MCDataRef p_target, MCStringRef& r_output)
+ */
+ 
+/*
+void MCEncodingExecCompress(MCDataRef& x_target)
+void MCEncodingExecDecompress(MCDataRef& x_target)
+*/
+    MCAutoDataRef t_data;
+    MCDataCreateWithBytes((const byte_t *)"hello world", 11, &t_data);
+    
+    MCDataRef t_to_compress;
+    MCDataMutableCopy(*t_data, t_to_compress);
+    MCEncodingExecCompress(t_to_compress);
+
+    log_result("compress changes data", !MCDataIsEqualTo(*t_data, t_to_compress));
+    
+    MCEncodingExecDecompress(t_to_compress);
+    
+    log_result("compress/decompress round trip", MCDataIsEqualTo(*t_data, t_to_compress));
+    
+    MCValueRelease(t_to_compress);
+    
+    MCDataRef t_empty;
+    MCDataMutableCopy(kMCEmptyData, t_empty);
+    
+    MCEncodingExecCompress(t_empty);
+    MCEncodingExecDecompress(t_empty);
+    
+    log_result("compress/decompress empty", MCDataIsEqualTo(t_empty, kMCEmptyData));
+    
+    MCValueRelease(t_empty);
+ /*
+    void MCEncodingEvalURLEncoded(MCStringRef p_target, MCStringRef& r_output)
+    void MCEncodingEvalURLDecoded(MCStringRef p_target, MCStringRef& r_output)
+*/
+    MCStringRef t_test_a, t_test_b;
+    
+    t_test_a = MCSTR(" ");
+    t_test_b = MCSTR("+");
+    
+    MCAutoStringRef t_encoded, t_decoded;
+    
+    MCEncodingEvalURLEncoded(t_test_a, &t_encoded);
+    
+    log_result("url encode", MCStringIsEqualTo(*t_encoded, t_test_b, kMCStringOptionCompareCaseless));
+    
+    MCEncodingEvalURLDecoded(t_test_b, &t_decoded);
+    
+    log_result("url decode", MCStringIsEqualTo(*t_decoded, t_test_a, kMCStringOptionCompareCaseless));
+    
+    /*
+assert urldecode("%3F") is "?"
+assert urldecode("abcde") is "abcde"
+*/
+}

@@ -29,6 +29,7 @@
 		7653455919F656650032E6E2 /* foundation-proper-list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7653455819F656640032E6E2 /* foundation-proper-list.cpp */; };
 		769372121A03AEC00001A9FF /* foundation-filters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 769372111A03AEC00001A9FF /* foundation-filters.cpp */; };
 		7696676D19E81D92008B0972 /* foundation-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7696676C19E81D92008B0972 /* foundation-chunk.cpp */; };
+		76E711FA1A0B8E7F00B68F93 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76E711F91A0B8E7F00B68F93 /* libz.a */; };
 		76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */; };
 		BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE19F5D718FE92600001B410 /* foundation-bidi.cpp */; };
 /* End PBXBuildFile section */
@@ -85,6 +86,7 @@
 		769372131A03AF360001A9FF /* foundation-filters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-filters.h"; path = "include/foundation-filters.h"; sourceTree = "<group>"; };
 		7696676B19E81D88008B0972 /* foundation-chunk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-chunk.h"; path = "include/foundation-chunk.h"; sourceTree = "<group>"; };
 		7696676C19E81D92008B0972 /* foundation-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-chunk.cpp"; path = "src/foundation-chunk.cpp"; sourceTree = "<group>"; };
+		76E711F91A0B8E7F00B68F93 /* libz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libz.a; path = "/Users/alilloyd/Documents/GitHub/livecode-widgets/thirdparty/libz/../../_build/mac/Debug/libz.a"; sourceTree = "<absolute>"; };
 		BE19F5D718FE92600001B410 /* foundation-bidi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-bidi.cpp"; path = "src/foundation-bidi.cpp"; sourceTree = "<group>"; };
 		BE19F5D918FE93490001B410 /* foundation-bidi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-bidi.h"; path = "include/foundation-bidi.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -94,6 +96,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76E711FA1A0B8E7F00B68F93 /* libz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,6 +124,7 @@
 		4DF42A330B04860B003F2D95 = {
 			isa = PBXGroup;
 			children = (
+				76E711F91A0B8E7F00B68F93 /* libz.a */,
 				4DF42A480B04861E003F2D95 /* Configurations */,
 				4DCA07BB11E8D720005CF640 /* Headers */,
 				4DF42A570B048683003F2D95 /* Source */,
@@ -204,6 +208,8 @@
 /* Begin PBXProject section */
 		4DF42A350B04860B003F2D95 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4DF42A360B04860B003F2D95 /* Build configuration list for PBXProject "libfoundation" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -303,6 +309,10 @@
 					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
 					"\"$(SOLUTION_DIR)/prebuilt/include\"",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/alilloyd/Documents/GitHub/livecode-widgets/thirdparty/libz/../../_build/mac/Debug",
+				);
 				PRODUCT_NAME = foundation;
 			};
 			name = Debug;
@@ -336,6 +346,10 @@
 					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
 					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
 					"\"$(SOLUTION_DIR)/prebuilt/include\"",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/alilloyd/Documents/GitHub/livecode-widgets/thirdparty/libz/../../_build/mac/Debug",
 				);
 				PRODUCT_NAME = foundation;
 			};
