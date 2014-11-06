@@ -133,6 +133,14 @@ MCStackdirIOErrorLocationPush (MCStackdirIORef op,
 							   MCValueRef p_line,
 							   MCValueRef p_column)
 {
+	/* Attempt to resolve the filename.  If we can't, it's not a
+	 * problem; just use the filename how it is. */
+	MCAutoStringRef t_filename, t_resolved;
+	if (MCS_resolvepath (p_path, &t_resolved))
+		&t_filename = MCValueRetain (*t_resolved);
+	else
+		&t_filename = MCValueRetain (p_path);
+
 	/* The error location is stored in the same way as an error or
 	 * warning report.  This is to simplify the process of adding
 	 * reports in MCStackdirIOError(). */
@@ -143,7 +151,7 @@ MCStackdirIOErrorLocationPush (MCStackdirIORef op,
 	MCAutoArrayRef t_report;
 	if (!MCStackdirIOErrorReport (op,
 								  kMCStackdirStatusSuccess,
-								  p_path,
+								  *t_filename,
 								  p_line,
 								  p_column,
 								  kMCEmptyString,
@@ -254,19 +262,6 @@ MCStackdirIOError (MCStackdirIORef op, MCStackdirStatus p_status,
 
 	if (t_success)
 	{
-		/* Attempt to resolve the filename.  If we can't, it's not a
-		 * problem; just use the filename how it is. */
-		MCValueRef t_filename;
-		MCAutoStringRef t_resolved;
-		if (MCArrayFetchValue (*t_report, false,
-							   MCNAME("filename"), t_filename) &&
-			MCS_resolvepath ((MCStringRef) t_filename, &t_resolved))
-		{
-			if (!MCArrayStoreValue (*t_report, false,
-									MCNAME("filename"), *t_resolved))
-				return MCStackdirIOErrorOutOfMemory (op);
-		}
-
 		/* Update and store the report */
 		if (!(MCArrayStoreValue (*t_report, false,
 								 MCNAME("status"), *t_status) &&
