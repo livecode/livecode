@@ -115,16 +115,12 @@ bool apk_set_current_folder(MCStringRef p_apk_path)
 	return true;
 }
 
-bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+bool apk_list_folder_entries(MCStringRef p_apk_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
 	bool t_success = true;
 	MCAutoStringRef t_list;
-    MCAutoStringRef t_current_folder;
-    
-    if (!apk_get_current_folder(&t_current_folder))
-        return false;
-    
-	MCAndroidEngineCall("getAssetFolderEntryList", "xx", &(&t_list), *t_current_folder);
+
+	MCAndroidEngineCall("getAssetFolderEntryList", "xx", &(&t_list), p_apk_folder);
 
 	t_success = *t_list != nil;
 
@@ -500,14 +496,21 @@ bool MCAndroidSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+bool MCAndroidSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
-    MCAutoStringRef t_folder;
-	if (apk_get_current_folder(&t_folder))
-		return apk_list_folder_entries(p_callback, p_context);
+	MCAutoStringRef t_apk_folder;
+	if ((p_folder == nil && apk_get_current_folder (&t_apk_folder)) ||
+		path_to_apk_path (t_path, &t_apk_folder))
+		return apk_list_folder_entries (*t_apk_folder, p_callback, p_context);
+
+	MCStringRef t_path;
+	if (p_folder == nil)
+		t_path = MCSTR (".");
+	else
+		t_path = p_folder;
 
 	DIR *t_dir;
-	t_dir = opendir(".");
+	t_dir = opendir(MCStringGetCString (t_path));
 	if (t_dir == NULL)
 		return false;
 	

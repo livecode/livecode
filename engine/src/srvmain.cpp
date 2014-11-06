@@ -492,7 +492,7 @@ static void X_load_extensions(MCServerScript *p_script)
 
 	if (MCS_setcurdir(s_server_home) &&
 		MCS_setcurdir(MCSTR("externals")))
-		MCsystem -> ListFolderEntries(load_extension_callback, p_script);
+		MCsystem -> ListFolderEntries(nil, load_extension_callback, p_script);
 	
 	MCS_setcurdir(*t_dir);
 	
