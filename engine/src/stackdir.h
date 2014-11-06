@@ -109,6 +109,9 @@ bool MCStackdirIONewLoad (MCStackdirIORef & op);
  */
 void MCStackdirIOSetConflictPermitted (MCStackdirIORef op, bool enabled);
 
+/* Query whether conflicts are permitted. */
+bool MCStackdirIOGetConflictPermitted (MCStackdirIORef op);
+
 /* Query whether a conflict was detected.
  *
  * If the operation has not yet been performed, returns false.
