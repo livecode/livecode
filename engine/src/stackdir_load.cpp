@@ -36,6 +36,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  */
 
 /* ================================================================
+ * File-local declarations
+ * ================================================================ */
+
+/* ----------------------------------------------------------------
+ * [Private] Utility functions
+ * ---------------------------------------------------------------- */
+
+static inline bool MCStackdirIOLoadIsOperationComplete (MCStackdirIORef op)
+{
+	return (op->m_load_state != nil);
+}
+
+/* ================================================================
  * High-level entry points
  * ================================================================ */
 
@@ -75,6 +88,57 @@ MCStackdirIOGetConflictPermitted (MCStackdirIORef op)
 	return op->m_load_allow_conflicts;
 }
 
+bool
+MCStackdirIOGetState (MCStackdirIORef op,
+					  MCArrayRef *r_state,
+					  MCArrayRef *r_source_info,
+					  MCStackdirResult mode)
+{
+	MCStackdirIOAssertLoad (op);
+
+	if (!MCStackdirIOLoadIsOperationComplete (op)) return false;
+	if (MCStackdirIOHasError (op)) return false;
+
+	MCArrayRef t_state;
+	MCArrayRef t_source_info;
+	switch (mode)
+	{
+	case kMCStackdirResultOurs:
+		t_state = op->m_load_state;
+		t_source_info = op->m_source_info;
+		break;
+
+	case kMCStackdirResultTheirs:
+		/* If conflicts are disabled, do nothing */
+		if (!MCStackdirIOGetConflictPermitted (op)) return false;
+
+		/* If there was no conflict, then return the "ours" data. */
+		if (!MCStackdirIOHasConflict (op))
+			return MCStackdirIOGetState (op, r_state, r_source_info);
+
+		t_state = op->m_load_state_theirs;
+		t_source_info = op->m_source_info_theirs;
+		break;
+
+	default:
+		MCUnreachable ();
+	}
+
+	if (r_state != nil)
+	{
+		MCAssert (t_state != nil);
+		*r_state = MCValueRetain (t_state);
+	}
+	if (r_source_info != nil)
+	{
+		MCAssert (t_source_info);
+		*r_source_info = MCValueRetain (t_source_info);
+	}
+
+	return true;
+
+}
+
 /* ----------------------------------------------------------------
  * [Private] High-level operations
  * ---------------------------------------------------------------- */
@@ -82,5 +146,9 @@ MCStackdirIOGetConflictPermitted (MCStackdirIORef op)
 void
 MCStackdirIOCommitLoad (MCStackdirIORef op)
 {
-	/* FIXME */
+	MCStackdirIOAssertLoad (op);
+
+	/* FIXME implementation */
+	MCArrayCreateMutable (op->m_load_state);
+	MCArrayCreateMutable (op->m_source_info);
 }

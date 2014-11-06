@@ -126,9 +126,11 @@ bool MCStackdirIOHasConflict (MCStackdirIORef op);
  * kMCStackdirResultOurs or kMCStackdirResultTheirs in the p_mode.
  *
  * If the output variables were not set (e.g. because an out of memory
- * error occurred), returns false.  Otherwise, returns true.
+ * error occurred or the operation has not yet been performed),
+ * returns false.  Otherwise, returns true.
  */
-bool MCStackdirIOGetState (MCArrayRef *r_state, MCArrayRef *r_source_info,
+bool MCStackdirIOGetState (MCStackdirIORef op,
+						   MCArrayRef *r_state, MCArrayRef *r_source_info,
 						   MCStackdirResult mode = kMCStackdirResultDefault);
 
 /* ----------------------------------------------------------------

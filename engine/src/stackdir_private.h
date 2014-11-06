@@ -75,6 +75,7 @@ struct _MCStackdirIO
 	bool m_load_allow_conflicts;
 	/* Source location information from load operation */
 	MCArrayRef m_source_info;
+	MCArrayRef m_source_info_theirs;
 };
 
 /* Create a new IO operation state structure.
