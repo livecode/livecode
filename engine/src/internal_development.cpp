@@ -968,6 +968,66 @@ public:
 	}
 };
 
+/* _internal stackdir load <path> into <state> */
+class MCInternalStackdirLoad : public MCStatement
+{
+protected:
+	MCExpression *m_path;
+	MCChunk m_dest;
+
+public:
+	MCInternalStackdirLoad (void)
+		: m_path (nil), m_dest (True)
+	{ }
+
+	virtual ~MCInternalStackdirLoad (void)
+	{
+		delete m_path;
+	}
+
+	Parse_stat parse (MCScriptPoint & sp)
+	{
+		initpoint (sp);
+
+		if (sp.parseexp(False, True, &m_path) != PS_NORMAL ||
+			sp.skip_token (SP_FACTOR, TT_PREP, PT_INTO) != PS_NORMAL)
+		{
+			MCperror->add (PE_INTERNAL_BADNOUN, sp);
+			return PS_ERROR;
+		}
+
+		if (m_dest.parse(sp, False) != PS_NORMAL)
+		{
+			MCperror->add (PE_INTERNAL_BADNOUN, sp);
+			return PS_ERROR;
+		}
+
+		/* Only allow loading into a variable */
+		if (!m_dest.isvarchunk())
+		{
+			MCperror->add (PE_INTERNAL_BADNOUN, sp);
+			return PS_ERROR;
+		}
+
+		return PS_NORMAL;
+	}
+
+	void exec_ctxt (MCExecContext & ctxt)
+	{
+		MCAutoStringRef t_path;
+		if (!ctxt.EvalExprAsStringRef (m_path,
+									   EE_INTERNAL_STACKDIR_BADPATH,
+									   &t_path))
+			return;
+
+		MCVariableChunkPtr t_var_chunk;
+		if (!m_dest.evalvarchunk(ctxt, false, true, t_var_chunk))
+			return;
+
+		MCStackdirExecInternalLoad (ctxt, *t_path, t_var_chunk);
+	}
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template<class T> inline MCStatement *class_factory(void)
@@ -1004,6 +1064,7 @@ MCInternalVerbInfo MCinternalverbs[] =
 	{ "syntax", "compile", class_factory<MCIdeSyntaxCompile> },
 	{ "filter", "controls", class_factory<MCIdeFilterControls> },
 	{ "stackdir", "save", class_factory<MCInternalStackdirSave> },
+	{ "stackdir", "load", class_factory<MCInternalStackdirLoad> },
 	{ nil, nil, nil }
 };
 

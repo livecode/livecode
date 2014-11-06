@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 #include "sysdefs.h"
+#include "exec.h"
 
 #include "util.h"
 #include "system.h"
@@ -151,4 +152,44 @@ MCStackdirIOCommitLoad (MCStackdirIORef op)
 	/* FIXME implementation */
 	MCArrayCreateMutable (op->m_load_state);
 	MCArrayCreateMutable (op->m_source_info);
+}
+
+/* ----------------------------------------------------------------
+ * [Public] Internal debugging commands
+ * ---------------------------------------------------------------- */
+
+/* _internal stackdir load <path> into <variable> */
+void
+MCStackdirExecInternalLoad (MCExecContext & ctxt,
+							MCStringRef p_path,
+							MCVariableChunkPtr p_var)
+{
+	/* Run load transaction */
+	MCStackdirIORef t_op;
+	/* UNCHECKED */ MCStackdirIONewLoad (t_op);
+	MCStackdirIOSetPath (t_op, p_path);
+
+	MCStackdirIOCommit (t_op);
+
+	MCAutoArrayRef t_error_info;
+	MCStackdirStatus t_status;
+	t_status = MCStackdirIOGetStatus (t_op, &(&t_error_info));
+
+	if (t_status == kMCStackdirStatusSuccess)
+	{
+		MCAutoArrayRef t_state;
+		/* UNCHECKED */ MCStackdirIOGetState (t_op, &(&t_state), nil);
+
+		MCEngineExecPutIntoVariable (ctxt,
+									 (MCValueRef) *t_state,
+									 PT_INTO,
+									 p_var);
+		ctxt.SetTheResultToBool (true);
+	}
+	else
+	{
+		ctxt.SetTheResultToValue (*t_error_info);
+	}
+
+	MCStackdirIODestroy (t_op);
 }

@@ -138,5 +138,6 @@ bool MCStackdirIOGetState (MCStackdirIORef op,
  * ---------------------------------------------------------------- */
 
 void MCStackdirExecInternalSave (MCExecContext & ctxt, MCStringRef p_path, MCArrayRef p_state_array);
+void MCStackdirExecInternalLoad (MCExecContext & ctxt, MCStringRef p_path, MCVariableChunkPtr p_val);
 
 #endif /* ! _MC_STACKDIR_H_ */
