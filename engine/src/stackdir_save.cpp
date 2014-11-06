@@ -1685,9 +1685,9 @@ MCStackdirExecInternalSave (MCExecContext & ctxt, MCStringRef p_path,
 
 	MCStackdirIOCommit (t_op);
 
-	MCArrayRef t_error_info = nil;
+	MCAutoArrayRef t_error_info;
 	MCStackdirStatus t_status;
-	t_status = MCStackdirIOGetStatus (t_op, &t_error_info);
+	t_status = MCStackdirIOGetStatus (t_op, &(&t_error_info));
 
 	if (t_status == kMCStackdirStatusSuccess)
 	{
@@ -1695,8 +1695,7 @@ MCStackdirExecInternalSave (MCExecContext & ctxt, MCStringRef p_path,
 	}
 	else
 	{
-		ctxt.SetTheResultToValue (t_error_info);
-		MCValueRelease (t_error_info);
+		ctxt.SetTheResultToValue (*t_error_info);
 	}
 
 	MCStackdirIODestroy (t_op);
