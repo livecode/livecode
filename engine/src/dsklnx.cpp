@@ -1852,7 +1852,7 @@ public:
         dlclose(p_module);
     }
 
-    virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+    virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_lnx */ LEGACY_SYSTEM
         uint4 flag = files ? S_IFREG : S_IFDIR;
@@ -1912,9 +1912,15 @@ public:
         closedir(dirptr);
         *dptr = tptr;
 #endif /* MCS_getentries_dsk_lnx */
+		MCStringRef t_path;
+		if (p_folder == nil)
+			t_path = MCSTR(".");
+		else
+			t_path = p_folder;
+
         DIR *dirptr;
 
-        if ((dirptr = opendir(".")) == NULL)
+        if ((dirptr = opendir(MCStringGetCString (t_path))) == NULL)
         {
             return false;
         }

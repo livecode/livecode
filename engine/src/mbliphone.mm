@@ -815,10 +815,16 @@ bool MCIPhoneSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 //}
 
 
-bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+bool MCIPhoneSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
+	MCAutoStringRefAsUTF8String t_path;
+	if (p_folder == nil)
+	  /* UNCHECKED */ t_path . Lock(MCSTR("."));
+	else
+	  /* UNCHECKED */ t_path . Lock(p_folder);
+
 	DIR *t_dir;
-	t_dir = opendir(".");
+	t_dir = opendir(*t_path);
 	if (t_dir == NULL)
 		return false;
 	

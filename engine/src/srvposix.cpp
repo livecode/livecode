@@ -541,10 +541,16 @@ struct MCPosixSystem: public MCSystemInterface
 		return MCStringCopy(p_path, r_short_path);
 	}
 	
-	bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+	bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 	{
+		MCStringRef t_path;
+		if (p_folder == nil)
+			t_path = MCSTR (".");
+		else
+			t_path = p_folder;
+
 		DIR *t_dir;
-		t_dir = opendir(".");
+		t_dir = opendir(MCStringGetCString (t_path));
 		if (t_dir == NULL)
 			return false;
 		

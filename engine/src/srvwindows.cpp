@@ -894,7 +894,7 @@ struct MCWindowsSystem: public MCSystemInterface
 	}
 	
 	
-	bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+	bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 	{
 		MCSystemFolderEntry t_entry;
 		memset(&t_entry, 0, sizeof(MCSystemFolderEntry));
@@ -906,7 +906,10 @@ struct MCWindowsSystem: public MCSystemInterface
 		Boolean ok = False;
 
 		MCAutoStringRef tpath_ref;
-		/* UNCHECKED */ GetCurrentFolder(&tpath_ref);
+		if (p_folder == nil)
+			/* UNCHECKED */ GetCurrentFolder(&tpath_ref);
+		else
+			&tpath_ref = MCValueRetain (p_folder);
 
 		char *tpath = strdup(MCStringGetCString(*tpath_ref));
 		char *spath = new char [strlen(tpath) + 5];//path to be searched
