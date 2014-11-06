@@ -1,0 +1,257 @@
+
+module com.livecode.math
+
+foreign handler EvalIntegerToPowerOfInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalRealToPowerOfReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalNumberToPowerOfNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+
+foreign handler EvalBase10LogInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalBase10LogReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalBase10LogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+foreign handler EvalNaturalLogInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalNaturalLogReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalNaturalLogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+foreign handler EvalExpInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalExpReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalExpNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+foreign handler EvalSinInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalSinReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalSinNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+foreign handler EvalCosInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalCosReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalCosNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+foreign handler EvalTanInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalTanReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalTanNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+foreign handler EvalAbsInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalAbsReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalAbsNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+foreign handler EvalTruncInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalTruncReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalTruncNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+
+foreign handler EvalMinInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalMinReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalMinNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler EvalMaxInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalMaxReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler EvalMaxNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+
+foreign handler EvalRandomReal(out Value as real) as undefined binds to "<builtin>"
+
+foreign handler EvalConvertBase(in Operand as string, in Source as integer, in Target as integer, out Value as string) as undefined binds to "<builtin>"
+foreign handler EvalConvertFromBase(in Operand as string, in Source as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler EvalConvertToBase(in Operand as integer, in Target as integer, out Value as string) as undefined binds to "<builtin>"
+
+--
+
+/*
+Summary:    Binary exponentiation operation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     The result of raising <Left> to the power <Right>.
+*/
+
+syntax ExpOperator is left binary operator with precedence 2
+    <Left: Expression> "^" <Right: Expression>
+begin
+    EvalIntegerToPowerOfInteger(Left, Right, output)
+    EvalRealToPowerOfReal(Left, Right, output)
+    EvalNumberToPowerOfNumber(Left, Right, output)
+end syntax
+
+--
+
+/*
+Summary:    Sin operator.
+Operand:    An expression that evaluates to a number.
+
+*/
+
+syntax SinOperator is prefix operator with precedence 1
+    "the" "sin" "of" <Operand: Expression>
+begin
+    EvalSinInteger(Operand, output)
+    EvalSinReal(Operand, output)
+    EvalSinNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Sin operator.
+Operand:    An expression that evaluates to a number.
+
+*/
+
+syntax CosOperator is prefix operator with precedence 1
+    "the" "cos" "of" <Operand: Expression>
+begin
+    EvalCosInteger(Operand, output)
+    EvalCosReal(Operand, output)
+    EvalCosNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Tan operator.
+Operand:    An expression that evaluates to a number.
+
+*/
+
+syntax TanOperator is prefix operator with precedence 1
+    "the" "tan" "of" <Operand: Expression>
+begin
+    EvalTanInteger(Operand, output)
+    EvalTanReal(Operand, output)
+    EvalTanNumber(Operand, output)
+end syntax
+
+--
+
+/*
+Summary:    Base 10 log operator.
+Operand:    An expression that evaluates to a number.
+
+*/
+
+syntax Base10LogOperator is prefix operator with precedence 1
+    "the" "log" "of" <Operand: Expression>
+begin
+    EvalLogInteger(Operand, output)
+    EvalLogReal(Operand, output)
+    EvalLogNumber(Operand, output)
+end syntax
+
+--
+
+/*
+Summary:    Natural log operator.
+Operand:    An expression that evaluates to a number.
+
+*/
+
+syntax BaseELogOperator is prefix operator with precedence 1
+    "the" "natural" "log" "of" <Operand: Expression>
+begin
+    EvalNaturalLogInteger(Operand, output)
+    EvalNaturalLogReal(Operand, output)
+    EvalNaturalLogNumber(Operand, output)
+end syntax
+
+
+/*
+Summary:    Exponentiation operator.
+Operand:    An expression that evaluates to a number.
+output:     e to the power of <Operand>
+*/
+
+syntax ExpOperator is prefix operator with precedence 1
+    "the" "exp" "of" <Operand: Expression>
+begin
+    EvalExpInteger(Operand, output)
+    EvalExpReal(Operand, output)
+    EvalExpNumber(Operand, output)
+end syntax
+
+--
+
+/*
+Summary:    Truncation operator.
+Operand:    An expression that evaluates to a number.
+output:     The integer part of the decimal representation of <Operand>
+*/
+
+syntax TruncOperator is prefix operator with precedence 1
+    "the" "trunc" "of" <Operand: Expression>
+begin
+    EvalTruncInteger(Operand, output)
+    EvalTruncReal(Operand, output)
+    EvalTruncNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Absolute value operator.
+Operand:    An expression that evaluates to a number.
+output:     The absolute value of <Operand>, i.e. the value of <Operand> if it is greater than or equal to 0,
+            or the negation of the value of <Operand> if it is less than zero.
+*/
+
+syntax AbsOperator is prefix operator with precedence 1
+    "the" "abs" "of" <Operand: Expression>
+begin
+    EvalAbsInteger(Operand, output)
+    EvalAbsReal(Operand, output)
+    EvalAbsNumber(Operand, output)
+end syntax
+
+--
+
+/*
+Summary:    Generates a pseudo-random number.
+output:     A real between 0.0 and 1.0.
+*/
+
+syntax RandomNumber is expression
+    "any" "number"
+begin
+    EvalRandomReal(output)
+end syntax
+
+--
+
+/*
+Summary:    Min operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     The value of <Left>, if it is less than the value of <Right>, and the value of <Right> otherwise.
+*/
+
+syntax MinOperator is prefix operator with precedence 1
+    "the" "min" "of" <Left: Expression> "and" <Right: Expression>
+begin
+    EvalMinInteger(Left, Right, output)
+    EvalMinReal(Left, Right, output)
+    EvalMinNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Max operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     The value of <Left>, if it is greater than the value of <Right>, and the value of <Right> otherwise.
+*/
+
+syntax MaxOperator is prefix operator with precedence 1
+    "the" "max" "of" <Left: Expression> "and" <Right: Expression>
+begin
+    EvalMaxInteger(Left, Right, output)
+    EvalMaxReal(Left, Right, output)
+    EvalMaxNumber(Left, Right, output)
+end syntax
+
+--
+
+/*
+Summary:    Converts the base of <Operand>
+Operand:    An expression that evaluates to an integer.
+From:       An expression that evaluates to an integer.
+To:         An expression that evaluates to an integer.
+output:     A string representation of the value of <Operand> when interpreted as a number in base <From>, converted to base <To>.
+*/
+
+syntax BaseConvert is postfix operator with precedence 1
+    <Operand: Expression> "converted" ["from" "base" <Source: Expression> ] ["to" "base" <Target: Expression> ]
+begin
+    EvalConvertBase(Operand, Source, Target, output)
+    EvalConvertFromBase(Operand, Target, output)
+    EvalConvertToBase(Operand, Source, output)
+end syntax
+
+--
+
+end module
