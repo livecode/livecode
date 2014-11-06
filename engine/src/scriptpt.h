@@ -146,6 +146,7 @@ public:
 	Parse_stat nexttoken();
 	void cleartoken(void);
 	Parse_stat lookup(Script_point, const LT *&);
+    bool lookupconstantvalue(const char*& r_value);
 	Parse_stat lookupconstant(MCExpression **);
 	Parse_stat skip_token(Script_point, Token_type, uint2 n = 0);
 	MCExpression *insertfactor(MCExpression *nfact, MCExpression *&cfact,

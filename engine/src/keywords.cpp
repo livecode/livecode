@@ -146,8 +146,8 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 		bool initialised = false;
 		if (sp.skip_token(SP_FACTOR, TT_BINOP, O_EQ) == PS_NORMAL)
 		{
-			if (sp.next(type) != PS_NORMAL || MCexplicitvariables && type != ST_LIT
-			        && type != ST_NUM)
+            // MW-2014-11-06: [[ Bug 3680 ]] If there is nothing after '=' it's an error.
+			if (sp.next(type) != PS_NORMAL)
 			{
 				if (constant)
 					MCperror->add(PE_CONSTANT_BADINIT, sp);
@@ -155,8 +155,12 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 					MCperror->add(PE_LOCAL_BADINIT, sp);
 				return PS_ERROR;
 			}
-			if (type == ST_MIN)
-			{ // negative initializer
+            
+            // MW-2014-11-06: [[ Bug 3680 ]] We allow either - or + next, but only if the
+            //   next token is a number.
+			if (type == ST_MIN || type == ST_OP && sp.token_is_cstring("+"))
+			{
+                // negative or positive initializer
 				if (sp.next(type) != PS_NORMAL || type != ST_NUM)
 				{
 					if (constant)
@@ -165,10 +169,39 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 						MCperror->add(PE_LOCAL_BADINIT, sp);
 					return PS_ERROR;
 				}
-				/* UNCHECKED */ MCStringFormat(&init, "-%@", sp.gettoken_stringref());
+                if (type == ST_MIN)
+                    /* UNCHECKED */ MCStringFormat(&init, "-%@", sp.gettoken_stringref());
+                else
+                    init = sp.gettoken_stringref();
 			}
 			else
-				init = sp.gettoken_stringref();
+            {
+                // MW-2014-11-06: [[ Bug 3680 ]] If we are in explicit var mode, and the token
+                //   is not a string literal or a number, then it must be a constant in the constant
+                //   table that is the same as its token.
+                if (MCexplicitvariables && type == ST_ID)
+                {
+                    // If the unquoted literal is a recognised constant and the constant's value
+                    // is identical (case-sensitively) to the value, it is fine to make it a literal.
+                    const char *t_value;
+                    if (sp . lookupconstantvalue(t_value) &&
+                        MCStringIsEqualToCString(sp . gettoken_stringref(), t_value, kMCStringOptionCompareExact))
+                        type = ST_LIT;
+                }
+                
+                // MW-2014-11-06: [[ Bug 3680 ]] If now, explicitvariables is on and we don't have a literal or
+                //   a number, its an error.
+                if (MCexplicitvariables && type != ST_LIT && type != ST_NUM)
+                {
+					if (constant)
+						MCperror->add(PE_CONSTANT_BADINIT, sp);
+					else
+						MCperror->add(PE_LOCAL_BADINIT, sp);
+					return PS_ERROR;
+                }
+                
+                init = sp.gettoken_stringref();
+            }
 
 			initialised = true;
 		}
