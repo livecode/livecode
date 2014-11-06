@@ -99,6 +99,59 @@ template<typename ParamType,
          Exec_errors EvalError,
          Parse_errors ParseError,
          MCExecMethodInfo*& MethodInfo>
+class MCConstantOrUnaryFunctionCtxt: public MCUnaryFunction
+{
+public:
+    MCConstantOrUnaryFunctionCtxt() { m_expression = nil; }
+    
+    virtual ~MCConstantOrUnaryFunctionCtxt() { delete m_expression; }
+    
+    virtual Parse_stat parse(MCScriptPoint &sp, Boolean the)
+    {
+        if (get0or1param(sp, &m_expression, the) != PS_NORMAL)
+        {
+            MCperror -> add(ParseError, sp);
+            return PS_ERROR;
+        }
+        
+        return PS_NORMAL;
+    }
+    
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+    {
+        ReturnType t_result;
+        
+        if (m_expression != nil)
+        {
+            ParamType t_param;
+            
+            if (!MCExecValueTraits<ParamType>::eval(ctxt, m_expression, EvalError, t_param))
+                return;
+        
+            EvalFunction(ctxt, MCExecValueTraits<ParamType>::optional_get(t_param), t_result);
+            
+            MCExecValueTraits<ParamType>::release(t_param);
+        }
+        else
+            EvalFunction(ctxt, nil, t_result);
+        
+        if (!ctxt . HasError())
+            MCExecValueTraits<ReturnType>::set(r_value, t_result);
+    }
+    
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return MethodInfo; }
+    virtual MCExpression *getmethodarg(void) const { return m_expression; }
+    
+protected:
+    MCExpression *m_expression;
+};
+
+template<typename ParamType,
+         typename ReturnType,
+         void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ReturnType>::out_type),
+         Exec_errors EvalError,
+         Parse_errors ParseError,
+         MCExecMethodInfo*& MethodInfo>
 class MCUnaryFunctionCtxt: public MCUnaryFunction
 {
 public:
