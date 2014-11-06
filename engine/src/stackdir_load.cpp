@@ -40,6 +40,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * ================================================================ */
 
 /* ----------------------------------------------------------------
+ * [Public] High-level operations
+ * ---------------------------------------------------------------- */
+
+bool
+MCStackdirIONewLoad (MCStackdirIORef & op)
+{
+	if (!MCStackdirIONew (op)) return false;
+	op->m_type = kMCStackdirIOTypeLoad;
+	return true;
+}
+
+/* ----------------------------------------------------------------
  * [Private] High-level operations
  * ---------------------------------------------------------------- */
 
