@@ -116,6 +116,15 @@ struct _MCStackdirIOSharedSave
 	MCStringRef m_external_dir;
 };
 
+typedef struct _MCStackdirIORemoveFolderRecursiveContext MCStackdirIORemoveFolderRecursiveContext;
+typedef MCStackdirIORemoveFolderRecursiveContext *MCStackdirIORemoveFolderRecursiveContextRef;
+
+struct _MCStackdirIORemoveFolderRecursiveContext
+{
+	MCStackdirIORef m_op;
+	MCStringRef m_parent_dir;
+};
+
 /* ----------------------------------------------------------------
  * [Private] Utility functions
  * ---------------------------------------------------------------- */
@@ -227,13 +236,6 @@ MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorRecursiveDeleteFile,
 MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorRecursiveDeleteDirectory,
 							kMCStackdirStatusIOError,
 							"Failed to delete directory")
-MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorRecursiveEnterDirectory,
-							kMCStackdirStatusIOError,
-							"Failed to set current directory while removing")
-MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorRecursiveLeaveDirectory,
-							kMCStackdirStatusIOError,
-							"Failed to restore current directory while removing")
-
 
 MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorResolveTransactionPath,
 					   kMCStackdirStatusIOError,
@@ -359,7 +361,9 @@ static bool
 MCStackdirIORemoveFolderRecursive_Callback (void *p_context,
 											const MCSystemFolderEntry *p_entry)
 {
-	MCStackdirIORef t_op = (MCStackdirIORef) p_context;
+	MCStackdirIORemoveFolderRecursiveContextRef t_context =
+		(MCStackdirIORemoveFolderRecursiveContextRef) p_context;
+	MCStackdirIORef t_op = t_context->m_op;
 
 	if (MCStringIsEqualTo (p_entry->name, MCSTR (".."),
 						   kMCStringOptionCompareExact) ||
@@ -367,15 +371,20 @@ MCStackdirIORemoveFolderRecursive_Callback (void *p_context,
 						   kMCStringOptionCompareExact))
 		return true;
 
+	MCAutoStringRef t_path;
+	if (!MCStringFormat (&t_path, "%@/%@",
+						 t_context->m_parent_dir, p_entry->name))
+		return MCStackdirIOErrorOutOfMemory (t_op);
+
 	if (p_entry->is_folder)
 	{
 		/* Recurse */
-		return MCStackdirIORemoveFolderRecursive (t_op, p_entry->name);
+		return MCStackdirIORemoveFolderRecursive (t_op, *t_path);
 	}
 	else
 	{
-		if (!MCS_unlink (p_entry->name))
-			return MCStackdirIOSaveErrorRecursiveDeleteFile (t_op, p_entry->name);
+		if (!MCS_unlink (*t_path))
+			return MCStackdirIOSaveErrorRecursiveDeleteFile (t_op, *t_path);
 	}
 	return true;
 }
@@ -386,24 +395,21 @@ MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path)
 	MCAutoStringRef t_save_cwd;
 	bool t_success = true;
 
-	/* Change to the target directory. */
-	MCS_getcurdir (&t_save_cwd);
-
-	if (!MCS_setcurdir (p_path))
-	{
-		return MCStackdirIOSaveErrorRecursiveEnterDirectory (op, p_path);
-	}
-
-	/* Recurse */
+	/* Loop over directory entries */
 	if (t_success)
-		t_success = MCsystem->ListFolderEntries (MCStackdirIORemoveFolderRecursive_Callback, op);
-
-	/* Restore working directory and remove target directory */
-	if (!MCS_setcurdir (*t_save_cwd))
 	{
-		return MCStackdirIOSaveErrorRecursiveLeaveDirectory (op, *t_save_cwd);
+		MCStackdirIORemoveFolderRecursiveContext info;
+		info.m_op = op;
+		info.m_parent_dir = p_path;
+
+		MCAutoStringRef t_native_path;
+		/* UNCHECKED */ MCS_pathtonative (p_path, &t_native_path);
+		t_success = MCsystem->ListFolderEntries (*t_native_path,
+								MCStackdirIORemoveFolderRecursive_Callback,
+								&info);
 	}
 
+	/* Attempt to remove the directory itself. */
 	if (t_success && !MCS_rmdir (p_path))
 		return MCStackdirIOSaveErrorRecursiveDeleteDirectory (op, p_path);
 
