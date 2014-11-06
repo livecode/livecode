@@ -543,14 +543,14 @@ struct MCPosixSystem: public MCSystemInterface
 	
 	bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 	{
-		MCStringRef t_path;
+		MCAutoStringRefAsSysString t_path;
 		if (p_folder == nil)
-			t_path = MCSTR (".");
+			/* UNCHECKED */ t_path . Lock(MCSTR ("."));
 		else
-			t_path = p_folder;
+			/* UNCHECKED */ t_path . Lock(p_folder);
 
 		DIR *t_dir;
-		t_dir = opendir(MCStringGetCString (t_path));
+		t_dir = opendir(*t_path);
 		if (t_dir == NULL)
 			return false;
 		
