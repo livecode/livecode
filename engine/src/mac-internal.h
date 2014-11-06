@@ -539,7 +539,8 @@ NSMenu *MCMacPlatformGetIconMenu(void);
 
 void MCMacPlatformLockMenuSelect(void);
 void MCMacPlatformUnlockMenuSelect(void);
-bool MCMacPlatformWasMenuSelect(void);
+// SN-2014-11-06: [[ Bug 13836 ]] Returns whether the last item selected was a shadowed item
+bool MCMacPlatformWasShadowItemSelected(void);
 
 bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
 
