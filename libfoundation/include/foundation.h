@@ -1240,6 +1240,8 @@ extern MCTypeInfoRef kMCNumberTypeInfo;
 extern MCTypeInfoRef kMCStringTypeInfo;
 extern MCTypeInfoRef kMCDataTypeInfo;
 extern MCTypeInfoRef kMCArrayTypeInfo;
+extern MCTypeInfoRef kMCSetTypeInfo;
+extern MCTypeInfoRef kMCListTypeInfo;
 
 //////////
 
