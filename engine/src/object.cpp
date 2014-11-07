@@ -2861,7 +2861,11 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	{
 		if ((stat = IO_read_string(script, stream)) != IO_NORMAL)
 			return stat;
-		
+        
+        // SN-2014-11-07: [[ Bug 13957 ]] It's possible to get a NULL script but having the
+        //  F_SCRIPT flag. Unset the flag in case it's needed
+        if (script == NULL)
+            flags &= ~F_SCRIPT;
 		getstack() -> securescript(this);
 	}
 
