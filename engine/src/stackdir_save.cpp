@@ -1259,7 +1259,7 @@ MCStackdirIOSaveObjectDirectory (MCStackdirIOObjectSaveRef info)
 	 * two characters of the UUID. */
 	MCAutoStringRef t_uuid_lsb, t_lsb_dir, t_object_dir;
 	if (!(MCStringCopySubstring (*t_uuid,
-								 MCRangeMake (t_uuid_len - 3, 2),
+								 MCRangeMake (t_uuid_len - 2, 2),
 								 &t_uuid_lsb) &&
 		  MCStringFormat (&t_lsb_dir, "%@/%@",
 						  info->m_op->m_save_build_dir, *t_uuid_lsb) &&
