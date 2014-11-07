@@ -692,17 +692,13 @@ void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_k
 
 void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
 {
-    MCPlatformKeyCode t_mapped_key_code;
-    MCAutoStringRef t_mapped_char;
-    map_key_to_engine(p_key_code, p_mapped_codepoint, p_unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
-    
     // SN-2014-10-31: [[ Bug 13832 ]] We now output all the key messages that have been queued
     //  (by either MCPlatformHandleKeyDown, or MCPlatformHandleTextInputInsertText)
     while (s_pending_key_up != nil)
     {
         MCPlatformKeyCode t_mapped_key_code;
-        uint8_t t_mapped_char[2];
-        map_key_to_engine(s_pending_key_up -> key_code, s_pending_key_up -> mapped_codepoint, s_pending_key_up -> unmapped_codepoint, t_mapped_key_code, t_mapped_char);
+        MCAutoStringRef t_mapped_char;
+        map_key_to_engine(s_pending_key_up -> key_code, s_pending_key_up -> mapped_codepoint, s_pending_key_up -> unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
         
     MCdispatcher -> wkup(p_window, *t_mapped_char, t_mapped_key_code);
         MCKeyMessageNext(s_pending_key_up);
@@ -863,7 +859,7 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
                     MCAutoStringRef t_mapped_char;
                     MCPlatformKeyCode t_mapped_key_code;
 
-                    map_key_to_engine(s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint, t_mapped_key_code, t_mapped_char);
+                    map_key_to_engine(s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
                     
                     MCdispatcher -> wkdown(p_window, *t_mapped_char, t_mapped_key_code);
                     
