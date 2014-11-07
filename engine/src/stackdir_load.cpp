@@ -40,6 +40,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * File-local declarations
  * ================================================================ */
 
+/* This structure is only used to pass information about the LSB
+ * directory through to the object directory handler. */
+typedef struct _MCStackdirIOObjectDirInfo MCStackdirIOObjectDirInfo;
+typedef MCStackdirIOObjectDirInfo *MCStackdirIOObjectDirInfoRef;
+
+struct _MCStackdirIOObjectDirInfo
+{
+	MCStackdirIORef m_op;
+
+	/* Object's LSB directory name */
+	MCStringRef m_lsb_name;
+
+	/* Path to LSB directory */
+	MCStringRef m_lsb_path;
+};
+
 /* ----------------------------------------------------------------
  * [Private] Utility functions
  * ---------------------------------------------------------------- */
@@ -47,6 +63,62 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static inline bool MCStackdirIOLoadIsOperationComplete (MCStackdirIORef op)
 {
 	return (op->m_load_state != nil);
+}
+
+static bool MCStackdirIOLoadIsValidObjectDir (MCStringRef p_object_dir, MCStringRef p_lsb_dir);
+
+/* ----------------------------------------------------------------
+ * [Private] Load operations
+ * ---------------------------------------------------------------- */
+
+static bool MCStackdirIOLoadObject (MCStackdirIORef op, MCStringRef p_obj_path);
+
+/* ================================================================
+ * Errors
+ * ================================================================ */
+
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOLoadErrorNotStackdir,
+							kMCStackdirStatusBadPath,
+							"Target is not a stackdir")
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOLoadErrorInvalidObjectDir,
+							kMCStackdirStatusBadStructure,
+							"Object directory layout is incorrect")
+
+/* ================================================================
+ * Utility functions
+ * ================================================================ */
+
+static bool
+MCStackdirIOLoadIsValidObjectDir (MCStringRef p_object_dir,
+								  MCStringRef p_lsb_dir)
+{
+	/* The object directory must be named according to the UUID */
+	if (!MCStackdirStringIsUUID (p_object_dir))
+		return false;
+
+	/* The LSB directory has to be exactly two hex characters. */
+	if (2 != MCStringGetLength (p_lsb_dir))
+		return false;
+
+	/* The LSB directory's name should be the last two characters of
+	   the UUID. */
+	if (!MCStringEndsWith (p_object_dir, p_lsb_dir,
+						   kMCStringOptionCompareExact))
+		return false;
+
+	return true;
+}
+
+/* ================================================================
+ * Object loading
+ * ================================================================ */
+
+static bool
+MCStackdirIOLoadObject (MCStackdirIORef op,
+						MCStringRef p_obj_path)
+{
+	/* FIXME implementation */
+	return true;
 }
 
 /* ================================================================
@@ -144,14 +216,114 @@ MCStackdirIOGetState (MCStackdirIORef op,
  * [Private] High-level operations
  * ---------------------------------------------------------------- */
 
+static bool
+MCStackdirIOCommitLoad_ObjectDirCallback (void *context,
+										  const MCSystemFolderEntry *p_entry)
+{
+	MCStackdirIOObjectDirInfoRef t_dir_info = (MCStackdirIOObjectDirInfoRef) context;
+
+	if (MCStringBeginsWithCString (p_entry->name, (const char_t *) ".",
+								   kMCStringOptionCompareExact))
+		return true;
+
+	MCAutoStringRef t_object_path;
+	if (!MCStringFormat (&t_object_path, "%@/%@",
+						 t_dir_info->m_lsb_path, p_entry->name))
+		return MCStackdirIOErrorOutOfMemory (t_dir_info->m_op);
+
+	/* Verify that the directory layout is valid. Check the LSB
+	 * directory and object directory at the same time. */
+	if (!p_entry->is_folder ||
+		!MCStackdirIOLoadIsValidObjectDir (p_entry->name,
+										   t_dir_info->m_lsb_name))
+		return MCStackdirIOLoadErrorInvalidObjectDir (t_dir_info->m_op,
+													  *t_object_path);
+
+	/* Load object */
+	bool t_success = true;
+
+	MCStackdirIOErrorLocationPush (t_dir_info->m_op, *t_object_path);
+
+	if (t_success)
+		t_success = MCStackdirIOLoadObject (t_dir_info->m_op, *t_object_path);
+
+	MCStackdirIOErrorLocationPop (t_dir_info->m_op);
+
+	return t_success;
+}
+
+static bool
+MCStackdirIOCommitLoad_LsbDirCallback (void *context,
+									   const MCSystemFolderEntry *p_entry)
+{
+	MCStackdirIORef t_op = (MCStackdirIORef) context;
+
+	if (MCStringBeginsWithCString (p_entry->name, (const char_t *) ".",
+								   kMCStringOptionCompareExact))
+		return true;
+
+	/* Only interested in directories, so skip other files */
+	if (!p_entry->is_folder) return true;
+
+	/* We don't actually verify whether this is a valid LSB directory
+	 * name at this stage; we allow the object-specific callback
+	 * function to check it. */
+	MCAutoStringRef t_save_cwd;
+	bool t_success = true;
+
+	MCAutoStringRef t_lsb_path, t_lsb_native_path;
+	if (!(MCStringFormat (&t_lsb_path, "%@/%@",
+						  t_op->m_path, p_entry->name) &&
+		  MCS_pathtonative (*t_lsb_path, &t_lsb_native_path)))
+		return MCStackdirIOErrorOutOfMemory (t_op);
+
+	/* Iterate over the contents of the LSB directory (which should be
+	 * *only* object directories) */
+	MCStackdirIOObjectDirInfo t_dir_info;
+	t_dir_info.m_op = t_op;
+	t_dir_info.m_lsb_name = p_entry->name;
+	t_dir_info.m_lsb_path = *t_lsb_path;
+
+	if (t_success)
+		t_success = MCsystem->ListFolderEntries (*t_lsb_native_path,
+												 MCStackdirIOCommitLoad_ObjectDirCallback,
+												 &t_dir_info);
+
+	return t_success;
+}
+
 void
 MCStackdirIOCommitLoad (MCStackdirIORef op)
 {
 	MCStackdirIOAssertLoad (op);
 
-	/* FIXME implementation */
 	MCArrayCreateMutable (op->m_load_state);
 	MCArrayCreateMutable (op->m_source_info);
+
+	/* Sanity check that the target path has been set */
+	MCAssert (op->m_path);
+
+	/* Check that the target path is, in fact, a stackdir */
+	if (MCStackdirPathIsStackdir (op->m_path))
+	{
+		MCAutoStringRef t_save_cwd;
+		bool t_success = true;
+
+		MCStackdirIOErrorLocationPush (op, op->m_path);
+
+		/* Iterate over stackdir contents (which should mostly be LSB
+		 * directories) */
+		if (t_success)
+			t_success = MCsystem->ListFolderEntries (op->m_path,
+										MCStackdirIOCommitLoad_LsbDirCallback,
+										op);
+
+		MCStackdirIOErrorLocationPop (op);
+	}
+	else
+	{
+		MCStackdirIOLoadErrorNotStackdir (op, op->m_path);
+	}
 }
 
 /* ----------------------------------------------------------------

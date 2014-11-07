@@ -43,6 +43,7 @@ enum MCStackdirStatus
 
 	kMCStackdirStatusBadPath     = 5,    /* Stack path is invalid */
 	kMCStackdirStatusBadState    = 6,    /* Stack state array is invalid */
+	kMCStackdirStatusBadStructure = 7,    /* On-disk file layout is invalid */
 };
 
 typedef struct _MCStackdirIO MCStackdirIO;
