@@ -870,10 +870,10 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
     {
         NSColor *t_color;
         
-        t_color = [mColorPanel color];
+        t_color = [[mColorPanel color] colorUsingColorSpaceName: NSCalibratedRGBColorSpace];
         
         // Convert the value from to a colour component value.
-        s_color_dialog_color . red   = (uint2) ([t_color  redComponent] * UINT16_MAX);
+        s_color_dialog_color . red   = (uint2) ([t_color redComponent] * UINT16_MAX);
         s_color_dialog_color . green = (uint2) ([t_color greenComponent] * UINT16_MAX);
         s_color_dialog_color . blue  = (uint2) ([t_color blueComponent] * UINT16_MAX);
     }
@@ -890,7 +890,6 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
 {
     if (mResult != kMCPlatformDialogResultSuccess)
         mResult = kMCPlatformDialogResultCancel;
-    [self getColor];
 }
 
 //////////
@@ -947,8 +946,9 @@ void MCPlatformBeginColorDialog(const char *p_title, const MCColor& p_color)
     
     // Make the colour picker the first window.
     // as modal mode breaks the color picker
-//    [NSApp runModalForWindow: t_colorPicker];
+    //[NSApp runModalForWindow: t_colorPicker];
     [t_colorPicker makeKeyAndOrderFront:t_colorPicker];
+    [NSApp becomePseudoModalFor: t_colorPicker];
 }
 
 MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
@@ -959,6 +959,7 @@ MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_color)
         if (s_color_dialog_result == kMCPlatformDialogResultSuccess)
             r_color = s_color_dialog_color;
         
+        [NSApp becomePseudoModalFor: nil];
         [s_color_dialog_delegate dealloc];
         s_color_dialog_delegate = NULL;
     }

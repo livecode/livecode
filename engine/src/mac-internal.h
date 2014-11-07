@@ -81,6 +81,23 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
+//   at the MouseSync event.
+@interface com_runrev_livecode_MCApplication: NSApplication
+{
+    NSWindow* m_pseudo_modal_for;
+}
+
+-(id)init;
+
+- (void)sendEvent:(NSEvent *)event;
+
+// FG-2014-11-07: [[ Bugfix 13628 ]] Fake being modal for a non-modal window
+- (void)becomePseudoModalFor: (NSWindow*)window;
+- (NSWindow*)pseudoModalFor;
+
+@end
+
 @interface com_runrev_livecode_MCWindow: NSWindow
 {
 	bool m_can_become_key : 1;
