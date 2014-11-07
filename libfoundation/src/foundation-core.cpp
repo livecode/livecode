@@ -56,6 +56,9 @@ bool MCInitialize(void)
     if (!__MCDataInitialize())
         return false;
     
+    if (!__MCRecordInitialize())
+        return false;
+    
     if (!__MCLocaleInitialize())
         return false;
 
@@ -65,6 +68,7 @@ bool MCInitialize(void)
 void MCFinalize(void)
 {
 	__MCLocaleFinalize();
+    __MCRecordFinalize();
     __MCSetFinalize();
 	__MCListFinalize();
 	__MCArrayFinalize();

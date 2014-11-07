@@ -300,6 +300,20 @@ struct __MCSet: public __MCValue
 
 ////////
 
+enum
+{
+    // The data are mutable
+    kMCRecordFlagIsMutable = 1,
+};
+
+struct __MCRecord: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+    MCValueRef *fields;
+};
+
+////////
+
 struct __MCCustomValue: public __MCValue
 {
 	const MCValueCustomCallbacks *callbacks;
@@ -389,6 +403,14 @@ hash_t __MCDataHash(__MCData *self);
 bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data);
 bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description);
 bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value);
+
+bool __MCRecordInitialize(void);
+void __MCRecordFinalize(void);
+void __MCRecordDestroy(__MCRecord *data);
+hash_t __MCRecordHash(__MCRecord *self);
+bool __MCRecordIsEqualTo(__MCRecord *self, __MCRecord *p_other_data);
+bool __MCRecordCopyDescription(__MCRecord *self, MCStringRef &r_description);
+bool __MCRecordImmutableCopy(__MCRecord *self, bool p_release, __MCRecord *&r_immutable_value);
 
 bool __MCTypeInfoInitialize(void);
 void __MCTypeInfoFinalize(void);

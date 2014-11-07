@@ -560,6 +560,7 @@ typedef struct __MCData *MCDataRef;
 typedef struct __MCArray *MCArrayRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
+typedef struct __MCRecord *MCRecordRef;
 typedef struct __MCStream *MCStreamRef;
 
 // Forward declaration
@@ -2163,6 +2164,26 @@ bool MCSetIntersect(MCSetRef set, MCSetRef other_set);
 
 bool MCSetIterate(MCSetRef set, uindex_t& x_iterator, uindex_t& r_element);
 bool MCSetList(MCSetRef set, uindex_t*& r_element, uindex_t& r_element_count);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  RECORD DEFINITIONS
+//
+
+bool MCRecordCreate(MCTypeInfoRef typeinfo, const MCValueRef *values, uindex_t value_count, MCRecordRef& r_record);
+
+bool MCRecordCreateMutable(MCRecordRef& r_record);
+
+bool MCRecordCopy(MCRecordRef record, MCRecordRef& r_new_record);
+bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
+
+bool MCRecordMutableCopy(MCRecordRef record, MCRecordRef& r_new_record);
+bool MCRecordMutableCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
+
+bool MCRecordIsMutable(MCRecordRef self);
+
+bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
+bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

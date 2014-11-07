@@ -160,6 +160,8 @@ hash_t MCValueHash(MCValueRef p_value)
         return __MCDataHash((__MCData*) self);
 	case kMCValueTypeCodeCustom:
         return ((__MCCustomValue *)self) -> callbacks -> hash(p_value);
+    case kMCValueTypeCodeRecord:
+        return __MCRecordHash((__MCRecord*) self);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoHash((__MCTypeInfo*) self);
 	default:
@@ -220,7 +222,9 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 	case kMCValueTypeCodeCustom:
 		if (((__MCCustomValue *)self) -> callbacks == ((__MCCustomValue *)other_self) -> callbacks)
 			return (((__MCCustomValue *)self) -> callbacks) -> equal(p_value, p_other_value);
-		return false;
+        return false;
+    case kMCValueTypeCodeRecord:
+        return __MCRecordIsEqualTo((__MCRecord*)self, (__MCRecord*)other_self);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoIsEqualTo((__MCTypeInfo *)self, (__MCTypeInfo *)other_self);
 	// Shouldn't happen!
@@ -260,6 +264,8 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
         return __MCDataCopyDescription((__MCData*)p_value, r_desc);
 	case kMCValueTypeCodeCustom:
         return ((__MCCustomValue *)self) -> callbacks -> describe(p_value, r_desc);
+    case kMCValueTypeCodeRecord:
+        return __MCRecordCopyDescription((__MCRecord*)p_value, r_desc);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoCopyDescription((__MCTypeInfo*)p_value, r_desc);
 	default:
@@ -391,7 +397,10 @@ void __MCValueDestroy(__MCValue *self)
         __MCDataDestroy((__MCData *)self);
         break;
 	case kMCValueTypeCodeCustom:
-		return ((__MCCustomValue *)self) -> callbacks -> destroy(self);
+        return ((__MCCustomValue *)self) -> callbacks -> destroy(self);
+    case kMCValueTypeCodeRecord:
+        __MCRecordDestroy((__MCRecord *)self);
+        break;
     case kMCValueTypeCodeTypeInfo:
         __MCTypeInfoDestroy((__MCTypeInfo *)self);
         break;
@@ -809,7 +818,15 @@ bool __MCValueImmutableCopy(__MCValue *self, bool p_release, __MCValue*& r_new_v
 			return r_new_value = (__MCValue *)t_new_value, true;
 	}
 	return false;
-	
+            
+    case kMCValueTypeCodeRecord:
+    {
+        __MCRecord *t_new_value;
+        if (__MCRecordImmutableCopy((__MCRecord*)self, p_release, t_new_value))
+            return r_new_value = t_new_value, true;
+    }
+    return false;
+            
 	default:
 		break;
 	}
