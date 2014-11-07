@@ -1963,14 +1963,21 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		break;
 	case P_DEFAULT_MENU_BAR:
 		{
-			MCGroup *gptr = (MCGroup *)MCdefaultstackptr->getobjname(CT_GROUP,
-			                ep.getsvalue());
-			if (gptr == NULL)
-			{
-				MCeerror->add
-				(EE_PROPERTY_NODEFAULTMENUBAR, line, pos, ep.getsvalue());
-				return ES_ERROR;
-			}
+            MCGroup *gptr = (MCGroup *)MCdefaultstackptr->getobjname(CT_GROUP, ep.getsvalue());
+            
+            if (gptr == NULL)
+            {
+                // AL-2014-10-31: [[ Bug 13884 ]] Resolve chunk properly if the name is not found
+                //  so that setting the defaultMenubar by the long id of a group works.
+                MCObject *optr = getobj(ep);
+                if (optr == NULL || optr -> gettype() != CT_GROUP)
+                {
+                    MCeerror->add(EE_PROPERTY_NODEFAULTMENUBAR, line, pos, ep.getsvalue());
+                    return ES_ERROR;
+                }
+                gptr = (MCGroup *)optr;
+            }
+
 			MCdefaultmenubar = gptr;
 			MCscreen->updatemenubar(False);
 		}
