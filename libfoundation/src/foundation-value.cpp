@@ -49,6 +49,40 @@ MCValueTypeCode MCValueGetTypeCode(MCValueRef p_value)
 	return __MCValueGetTypeCode(self);
 }
 
+MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
+{
+    switch(MCValueGetTypeCode(p_value))
+    {
+        case kMCValueTypeCodeNull:
+            return kMCNullTypeInfo;
+        case kMCValueTypeCodeBoolean:
+            return kMCBooleanTypeInfo;
+        case kMCValueTypeCodeNumber:
+            return kMCNumberTypeInfo;
+        case kMCValueTypeCodeString:
+            return kMCStringTypeInfo;
+        case kMCValueTypeCodeData:
+            return kMCDataTypeInfo;
+        case kMCValueTypeCodeArray:
+            return kMCArrayTypeInfo;
+        case kMCValueTypeCodeList:
+            return kMCListTypeInfo;
+        case kMCValueTypeCodeSet:
+            return kMCSetTypeInfo;
+        case kMCValueTypeCodeCustom:
+            MCAssert(false); // TODO
+            return nil;
+        case kMCValueTypeCodeRecord:
+            MCAssert(false); // TODO
+            return nil;
+        case kMCValueTypeCodeHandler:
+            MCAssert(false); // TODO
+            return nil;
+    }
+    
+    MCUnreachable();
+}
+
 MCValueRef MCValueRetain(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;

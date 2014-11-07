@@ -1118,6 +1118,9 @@ bool MCValueCreateCustom(const MCValueCustomCallbacks *callbacks, size_t extra_b
 // Fetch the typecode of the given value.
 MCValueTypeCode MCValueGetTypeCode(MCValueRef value);
 
+// Fetch the typeinfo of the given value.
+MCTypeInfoRef MCValueGetTypeInfo(MCValueRef value);
+
 bool MCValueIsEmpty(MCValueRef value);
 bool MCValueIsArray(MCValueRef value);
 
