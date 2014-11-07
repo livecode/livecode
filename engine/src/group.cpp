@@ -808,7 +808,7 @@ void MCGroup::setrect(const MCRectangle &nrect)
 	}
 }
 
-Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -993,7 +993,7 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
         break;
 #endif
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

@@ -1656,7 +1656,7 @@ void MCButton::setrect(const MCRectangle &nrect)
 	}
 }
 
-Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	uint2 fheight;
 	uint2 j = 0;
@@ -1934,7 +1934,7 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
         break;
 #endif /* MCButton::getprop */ 
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

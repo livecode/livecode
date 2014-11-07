@@ -56,6 +56,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "mode.h"
 
+#include "platform.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static const char *ink_names[] =
@@ -248,11 +250,14 @@ Exec_stat MCObject::getcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 	return t_stat;
 }
 
-Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 #ifdef /* MCObject::getprop */ LEGACY_EXEC
 	uint2 num = 0;
 
+    Exec_stat t_stat;
+    t_stat = ES_NORMAL;
+    
 	switch (which)
 	{
 	case P_ID:
@@ -362,7 +367,7 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 			ep.setint(colors[i].pixel & 0xFFFFFF);
 		}
 		else if (effective && parent != NULL)
-			return parent->getprop(parid, which, ep, effective);
+			t_stat = parent->getprop(parid, which, ep, effective, true);
 		else
 			ep.clear();
 	}
@@ -392,7 +397,7 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		if (getcindex(which - P_FORE_COLOR, i))
 			ep.setcolor(colors[i], colornames[i]);
 		else if (effective && parent != NULL)
-			return parent->getprop(parid, which, ep, effective);
+			t_stat = parent->getprop(parid, which, ep, effective, true);
 		else
 			ep.clear();
 	}
@@ -427,7 +432,7 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 				ep.setint(patterns[i].id);
 		else
 			if (effective && parent != NULL)
-				return parent->getprop(parid, which, ep, effective);
+				t_stat = parent->getprop(parid, which, ep, effective, true);
 			else
 				ep.clear();
 	}
@@ -468,7 +473,7 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 			 (which == P_TEXT_STYLE && (m_font_flags & FF_HAS_TEXTSTYLE) == 0))
 		{
 			if (effective && parent != NULL)
-				return parent->getprop(parid, which, ep, effective);
+				t_stat = parent->getprop(parid, which, ep, effective, true);
 			else
 				ep.clear();
 		}
@@ -517,7 +522,7 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
             // if visible and effective and parent is a
             // group then keep searching parent properties 
             if (t_vis && effective && parent != NULL && parent->gettype() == CT_GROUP)
-                return parent->getprop(parid, which, ep, effective);
+                return parent->getprop(parid, which, ep, effective, true);
 			
 			ep.setboolean(which == P_VISIBLE ? t_vis : !t_vis);
         }
@@ -594,8 +599,25 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		}
 	}
 
-	return ES_NORMAL;
+    // If the property request percolated all the way up to MCDispatch and
+    // wasn't set anywhere, MCDispatch will return a status of NOT_HANDLED
+    // indicating that this is a theming property that needs to be handled
+    // specially. (It can't be done in MCDispatch as it doesn't know what object
+    // requested the property so can't do per-control-type theming).
+    if (effective && !recursive && t_stat == ES_NOT_HANDLED)
+        return getsystemthemeprop(which, ep);
+    
+	return t_stat;
 #endif /* MCObject::getprop */
+}
+
+Exec_stat MCObject::getsystemthemeprop(Properties which, MCExecPoint &ep)
+{
+#ifdef /* MCObject::getsystemthemeprop */ LEGACY_EXEC
+    // Do nothing at the moment
+    ep.clear();
+    return ES_NORMAL;
+#endif /* MCObject::getsystemthemeprop */
 }
 
 static bool string_contains_item(const char *p_string, const char *p_item)

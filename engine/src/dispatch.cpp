@@ -131,7 +131,7 @@ bool MCDispatch::isdragtarget(void)
 	return m_drag_target;
 }
 
-Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{

@@ -61,7 +61,7 @@ public:
 	MCDispatch();
 	// virtual functions from MCObject
 	virtual ~MCDispatch();
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	// dummy cut function for checking licensing
 	virtual Boolean cut(Boolean home);
