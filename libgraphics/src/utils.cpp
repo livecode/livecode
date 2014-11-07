@@ -803,6 +803,11 @@ MCGAffineTransform MCGAffineTransformMakeScale(MCGFloat p_xscale, MCGFloat p_ysc
 	return t_transform;
 }
 
+MCGAffineTransform MCGAffineTransformMakeSkew(MCGFloat p_xskew, MCGFloat p_yskew)
+{
+	return MCGAffineTransformMake(1, p_yskew, p_xskew, 1, 0, 0);
+}
+
 MCGAffineTransform MCGAffineTransformConcat(const MCGAffineTransform& p_transform_1, const MCGAffineTransform& p_transform_2)
 {
 	MCGAffineTransform t_result;
@@ -828,6 +833,11 @@ MCGAffineTransform MCGAffineTransformTranslate(const MCGAffineTransform &p_trans
 MCGAffineTransform MCGAffineTransformScale(const MCGAffineTransform &p_transform, MCGFloat p_xscale, MCGFloat p_yscale)
 {
 	return MCGAffineTransformConcat(MCGAffineTransformMakeScale(p_xscale, p_yscale), p_transform);
+}
+
+MCGAffineTransform MCGAffineTransformSkew(const MCGAffineTransform &p_transform, MCGFloat p_xskew, MCGFloat p_yskew)
+{
+	return MCGAffineTransformConcat(MCGAffineTransformMakeSkew(p_xskew, p_yskew), p_transform);
 }
 
 MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& p_transform)

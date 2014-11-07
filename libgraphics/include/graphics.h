@@ -927,11 +927,13 @@ MCGAffineTransform MCGAffineTransformMakeIdentity(void);
 MCGAffineTransform MCGAffineTransformMakeRotation(MCGFloat p_angle);
 MCGAffineTransform MCGAffineTransformMakeTranslation(MCGFloat p_xoffset, MCGFloat p_yoffset);
 MCGAffineTransform MCGAffineTransformMakeScale(MCGFloat p_xscale, MCGFloat p_yscale);
+MCGAffineTransform MCGAffineTransformMakeSkew(MCGFloat p_xskew, MCGFloat p_yskew);
 
 MCGAffineTransform MCGAffineTransformConcat(const MCGAffineTransform& transform_1, const MCGAffineTransform& transform_2);
 MCGAffineTransform MCGAffineTransformRotate(const MCGAffineTransform& transform, MCGFloat angle);
 MCGAffineTransform MCGAffineTransformTranslate(const MCGAffineTransform& transform, MCGFloat xoffset, MCGFloat yoffset);
 MCGAffineTransform MCGAffineTransformScale(const MCGAffineTransform& transform, MCGFloat xscale, MCGFloat yscale);
+MCGAffineTransform MCGAffineTransformSkew(const MCGAffineTransform &p_transform, MCGFloat p_xskew, MCGFloat p_yskew);
 MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& transform);
 
 // IM-2014-06-11: [[ Bug 12557 ]] Returns transform that would convert rectangle a to rectangle b by scaling + translating
