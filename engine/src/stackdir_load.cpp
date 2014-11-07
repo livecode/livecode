@@ -40,6 +40,25 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * File-local declarations
  * ================================================================ */
 
+typedef struct _MCStackdirIOObjectLoad MCStackdirIOObjectLoad;
+typedef MCStackdirIOObjectLoad *MCStackdirIOObjectLoadRef;
+
+struct _MCStackdirIOObjectLoad
+{
+	MCStackdirIORef m_op;
+
+	/* Path of object directory */
+	MCStringRef m_path;
+
+	/* State and source info for "ours" */
+	MCArrayRef m_state;
+	MCArrayRef m_source_info;
+
+	/* State and source info for "theirs" */
+	MCArrayRef m_state_theirs;
+	MCArrayRef m_source_info_theirs;
+};
+
 /* This structure is only used to pass information about the LSB
  * directory through to the object directory handler. */
 typedef struct _MCStackdirIOObjectDirInfo MCStackdirIOObjectDirInfo;
@@ -75,7 +94,24 @@ static bool MCStackdirIOLoadIsValidObjectDir (MCStringRef p_object_dir, MCString
  * [Private] Load operations
  * ---------------------------------------------------------------- */
 
-static bool MCStackdirIOLoadObject (MCStackdirIORef op, MCStringRef p_obj_path);
+static bool MCStackdirIOLoadObject (MCStackdirIORef op, MCStringRef p_uuid, MCStringRef p_obj_path);
+
+/* Load an object's "_parent" file */
+static bool MCStackdirIOLoadObjectParent (MCStackdirIOObjectLoadRef info);
+
+/* Load an object's "_kind" file */
+static bool MCStackdirIOLoadObjectKind (MCStackdirIOObjectLoadRef info);
+
+/* Load object's internal properties */
+static bool MCStackdirIOLoadObjectInternal (MCStackdirIOObjectLoadRef info);
+
+/* Load object's custom properties (in ".propset" directories, and
+ * reading "_propsets" if present. */
+static bool MCStackdirIOLoadObjectCustom (MCStackdirIOObjectLoadRef info);
+
+/* Load object's shared properties (in "_shared" file and ".shared"
+ * directories) */
+static bool MCStackdirIOLoadObjectShared (MCStackdirIOObjectLoadRef info);
 
 /* ================================================================
  * Errors
@@ -119,7 +155,80 @@ MCStackdirIOLoadIsValidObjectDir (MCStringRef p_object_dir,
 
 static bool
 MCStackdirIOLoadObject (MCStackdirIORef op,
+						MCStringRef p_uuid,
 						MCStringRef p_obj_path)
+{
+	/* Create state and source info arrays */
+	MCAutoArrayRef t_object_state, t_object_state_theirs,
+		t_object_source_info, t_object_source_info_theirs;
+	if (!(MCArrayCreateMutable (&t_object_state) &&
+		  MCArrayCreateMutable (&t_object_state_theirs) &&
+		  MCArrayCreateMutable (&t_object_source_info) &&
+		  MCArrayCreateMutable (&t_object_source_info_theirs)))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	/* Create object load information structure */
+	MCStackdirIOObjectLoad t_load_info;
+	t_load_info.m_op = op;
+	t_load_info.m_path = p_obj_path;
+	t_load_info.m_state = *t_object_state;
+	t_load_info.m_source_info = *t_object_source_info;
+	t_load_info.m_state_theirs = *t_object_state_theirs;
+	t_load_info.m_source_info_theirs = *t_object_source_info_theirs;
+
+	if (!(MCStackdirIOLoadObjectKind (&t_load_info) &&
+		  MCStackdirIOLoadObjectParent (&t_load_info) &&
+		  MCStackdirIOLoadObjectInternal (&t_load_info) &&
+		  MCStackdirIOLoadObjectCustom (&t_load_info) &&
+		  MCStackdirIOLoadObjectShared (&t_load_info)))
+		return false;
+
+	/* Store load results */
+	MCNewAutoNameRef t_uuid_name;
+	if (!(MCNameCreate (p_uuid, &t_uuid_name) &&
+		  MCArrayStoreValue (op->m_load_state, true, *t_uuid_name,
+							 (MCValueRef) *t_object_state) &&
+		  MCArrayStoreValue (op->m_load_state_theirs, true, *t_uuid_name,
+							 (MCValueRef) *t_object_state_theirs) &&
+		  MCArrayStoreValue (op->m_source_info, true, *t_uuid_name,
+							 (MCValueRef) *t_object_source_info) &&
+		  MCArrayStoreValue (op->m_source_info_theirs, true, *t_uuid_name,
+							 (MCValueRef) *t_object_source_info_theirs)))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	return true;
+}
+
+static bool
+MCStackdirIOLoadObjectParent (MCStackdirIOObjectLoadRef info)
+{
+	/* FIXME implementation */
+	return true;
+}
+
+static bool
+MCStackdirIOLoadObjectKind (MCStackdirIOObjectLoadRef info)
+{
+	/* FIXME implementation */
+	return true;
+}
+
+static bool
+MCStackdirIOLoadObjectInternal (MCStackdirIOObjectLoadRef info)
+{
+	/* FIXME implementation */
+	return true;
+}
+
+static bool
+MCStackdirIOLoadObjectCustom (MCStackdirIOObjectLoadRef info)
+{
+	/* FIXME implementation */
+	return true;
+}
+
+static bool
+MCStackdirIOLoadObjectShared (MCStackdirIOObjectLoadRef info)
 {
 	/* FIXME implementation */
 	return true;
@@ -249,7 +358,9 @@ MCStackdirIOCommitLoad_ObjectDirCallback (void *context,
 	MCStackdirIOErrorLocationPush (t_dir_info->m_op, *t_object_path);
 
 	if (t_success)
-		t_success = MCStackdirIOLoadObject (t_dir_info->m_op, *t_object_path);
+		t_success = MCStackdirIOLoadObject (t_dir_info->m_op,
+											p_entry->name,
+											*t_object_path);
 
 	MCStackdirIOErrorLocationPop (t_dir_info->m_op);
 
@@ -301,8 +412,14 @@ MCStackdirIOCommitLoad (MCStackdirIORef op)
 {
 	MCStackdirIOAssertLoad (op);
 
-	MCArrayCreateMutable (op->m_load_state);
-	MCArrayCreateMutable (op->m_source_info);
+	if (!(MCArrayCreateMutable (op->m_load_state) &&
+		  MCArrayCreateMutable (op->m_source_info) &&
+		  MCArrayCreateMutable (op->m_load_state_theirs) &&
+		  MCArrayCreateMutable (op->m_source_info_theirs)))
+	{
+		MCStackdirIOErrorOutOfMemory (op);
+		return;
+	}
 
 	/* Sanity check that the target path has been set */
 	MCAssert (op->m_path);
