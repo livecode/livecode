@@ -1066,6 +1066,10 @@ hash_t MCHashPointer(void *p);
 // Returns a hash value for the given sequence of bytes.
 hash_t MCHashBytes(const void *bytes, size_t byte_count);
 
+// Returns a hash value for the given sequence of bytes, continuing a previous
+// hashing sequence (byte_count should be a multiple of 4).
+hash_t MCHashBytesStream(hash_t previous, const void *bytes, size_t byte_count);
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 

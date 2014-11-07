@@ -225,6 +225,27 @@ hash_t MCHashBytes(const void *p_bytes, size_t length)
     return H;
 }
 
+hash_t MCHashBytesStream(hash_t p_start, const void *p_bytes, size_t length)
+{
+    MCAssert((length % 4) == 0);
+    uint8_t *bytes = (uint8_t *)p_bytes;
+    
+    /* The ELF hash algorithm, used in the ELF object file format */
+    uint32_t H = p_start, T1, T2;
+    int32_t rem = length;
+    
+    while (3 < rem)
+	{
+		ELF_STEP(bytes[length - rem]);
+		ELF_STEP(bytes[length - rem + 1]);
+		ELF_STEP(bytes[length - rem + 2]);
+		ELF_STEP(bytes[length - rem + 3]);
+		rem -= 4;
+    }
+    
+    return H;
+}
+
 #undef ELF_STEP
 
 ////////////////////////////////////////////////////////////////////////////////
