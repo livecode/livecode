@@ -47,6 +47,36 @@ struct __MCValue
 
 //////////
 
+enum
+{
+    kMCTypeInfoTypeCodeMask = 0xff,
+};
+
+struct __MCTypeInfo: public __MCValue
+{
+    union
+    {
+        struct
+        {
+            MCNameRef name;
+            MCTypeInfoRef typeinfo;
+        } named;
+        struct
+        {
+            MCRecordTypeFieldInfo *fields;
+            uindex_t field_count;
+        } record;
+        struct
+        {
+            MCHandlerTypeFieldInfo *fields;
+            uindex_t field_count;
+            MCTypeInfoRef return_type;
+        } handler;
+    };
+};
+
+//////////
+
 struct __MCNull: public __MCValue
 {
 };
@@ -359,6 +389,13 @@ hash_t __MCDataHash(__MCData *self);
 bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data);
 bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description);
 bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value);
+
+bool __MCTypeInfoInitialize(void);
+void __MCTypeInfoFinalize(void);
+void __MCTypeInfoDestroy(__MCTypeInfo *self);
+hash_t __MCTypeInfoHash(__MCTypeInfo *self);
+bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self);
+bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description);
 
 ////////////////////////////////////////////////////////////////////////////////
 

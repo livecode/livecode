@@ -125,7 +125,9 @@ hash_t MCValueHash(MCValueRef p_value)
     case kMCValueTypeCodeData:
         return __MCDataHash((__MCData*) self);
 	case kMCValueTypeCodeCustom:
-		return ((__MCCustomValue *)self) -> callbacks -> hash(p_value);
+        return ((__MCCustomValue *)self) -> callbacks -> hash(p_value);
+    case kMCValueTypeCodeTypeInfo:
+        return __MCTypeInfoHash((__MCTypeInfo*) self);
 	default:
 		break;
 	}
@@ -185,6 +187,8 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 		if (((__MCCustomValue *)self) -> callbacks == ((__MCCustomValue *)other_self) -> callbacks)
 			return (((__MCCustomValue *)self) -> callbacks) -> equal(p_value, p_other_value);
 		return false;
+    case kMCValueTypeCodeTypeInfo:
+        return __MCTypeInfoIsEqualTo((__MCTypeInfo *)self, (__MCTypeInfo *)other_self);
 	// Shouldn't happen!
 	default:
 		break;
@@ -221,7 +225,9 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
     case kMCValueTypeCodeData:
         return __MCDataCopyDescription((__MCData*)p_value, r_desc);
 	case kMCValueTypeCodeCustom:
-		return ((__MCCustomValue *)self) -> callbacks -> describe(p_value, r_desc);
+        return ((__MCCustomValue *)self) -> callbacks -> describe(p_value, r_desc);
+    case kMCValueTypeCodeTypeInfo:
+        return __MCTypeInfoCopyDescription((__MCTypeInfo*)p_value, r_desc);
 	default:
 		break;
 	}
@@ -352,6 +358,9 @@ void __MCValueDestroy(__MCValue *self)
         break;
 	case kMCValueTypeCodeCustom:
 		return ((__MCCustomValue *)self) -> callbacks -> destroy(self);
+    case kMCValueTypeCodeTypeInfo:
+        __MCTypeInfoDestroy((__MCTypeInfo *)self);
+        break;
     default:
         // Shouldn't get here
         MCAssert(false);

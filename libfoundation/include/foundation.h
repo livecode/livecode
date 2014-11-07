@@ -550,6 +550,7 @@ struct MCRange
 //
 
 typedef void *MCValueRef;
+typedef struct __MCTypeInfo *MCTypeInfoRef;
 typedef struct __MCNull *MCNullRef;
 typedef struct __MCBoolean *MCBooleanRef;
 typedef struct __MCNumber *MCNumberRef;
@@ -1095,6 +1096,7 @@ enum
 	kMCValueTypeCodeCustom,
 	kMCValueTypeCodeRecord,
 	kMCValueTypeCodeHandler,
+	kMCValueTypeCodeTypeInfo,
 };
 
 enum
@@ -1223,6 +1225,95 @@ template<typename T> inline bool MCValueCreateCustom(const MCValueCustomCallback
 		return r_value = (T)t_value, true;
 	return false;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  TYPE (META) DEFINITIONS
+//
+
+// A TypeInfoRef is a description of a type. TypeInfo's are uniqued objects with
+// equality of typeinfo's defined by the typeinfo's kind. Once created, typeinfo's
+// are equal iff their pointers are equal. (Note equal is not the same as conformance!)
+
+// These are typeinfo's for all the 'builtin' valueref types.
+extern MCTypeInfoRef kMCNullTypeInfo;
+extern MCTypeInfoRef kMCBooleanTypeInfo;
+extern MCTypeInfoRef kMCNumberTypeInfo;
+extern MCTypeInfoRef kMCStringTypeInfo;
+extern MCTypeInfoRef kMCDataTypeInfo;
+extern MCTypeInfoRef kMCArrayTypeInfo;
+
+//////////
+
+// Return the typecode of a value of the given type.
+MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef type);
+
+// Returns the name of the type, if it has one.
+MCNameRef MCTypeInfoGetName(MCTypeInfoRef type);
+
+// Binds the given typeinfo to the given name (creating a named typeinfo). A bound
+// typeinfo acts like its target apart from the non-nil return from GetName. Bindings
+// never chain - a typeinfo is either a named binding, or an actual typeinfo.
+bool MCTypeInfoBind(MCNameRef name, MCTypeInfoRef typeinfo, MCTypeInfoRef& r_typeinfo);
+
+//////////
+
+// Record types an ordered sequence of named, typed slots.
+
+struct MCRecordTypeFieldInfo
+{
+	MCNameRef name;
+	MCTypeInfoRef type;
+};
+
+// Create a description of a record with the given fields.
+bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef& r_typeinfo);
+
+// Return the number of fields in the record.
+uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
+
+// Return the name of the field at the given index.
+MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Return the type of the field at the given index.
+MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef typeinfo, uindex_t index);
+
+//////////
+
+// Handler types describe the signature of a function.
+
+enum MCHandlerTypeFieldMode
+{
+	kMCHandlerTypeFieldModeIn,
+	kMCHandlerTypeFieldModeOut,
+	kMCHandlerTypeFieldModeInOut,
+};
+
+struct MCHandlerTypeFieldInfo
+{
+	MCNameRef name;
+	MCTypeInfoRef type;
+	MCHandlerTypeFieldMode mode;
+};
+
+// Create a description of a handler with the given signature.
+bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
+
+// Get the return type of the handler. A return-type of kMCNullTypeInfo means no
+// value is returned.
+MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
+
+// Get the number of parameters the handler takes.
+uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
+
+// Return the name of the index'th parameter.
+MCNameRef MCHandlerTypeInfoGetParameterName(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Return the mode of the index'th parameter.
+MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Return the type of the index'th parameter.
+MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typeinfo, uindex_t index);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
