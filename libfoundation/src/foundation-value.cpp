@@ -148,6 +148,10 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 	if (__MCValueGetTypeCode(self) != __MCValueGetTypeCode(other_self))
 		return false;
 
+    // If both values are interred, then they can't be equal.
+    if (MCValueIsUnique(p_value) && MCValueIsUnique(p_other_value))
+        return false;
+    
 	switch(__MCValueGetTypeCode(self))
 	{
 	// There is only one null value, so if we get here, we are not equal.
