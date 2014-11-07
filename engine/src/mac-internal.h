@@ -343,6 +343,10 @@ class MCMacPlatformSurface;
 
 - (void)aboutMenuItemSelected: (id)sender;
 - (void)preferencesMenuItemSelected: (id)sender;
+// SN-2014-11-06: [[ Bug 13940 ]] Added declaration for quitMenuItemSelected
+//  and quitApplicationSelected, the latter quitting the app straight.
+- (void)quitMenuItemSelected: (id)sender;
+- (void)quitApplicationSelected: (id)sender;
 
 - (void)menuNeedsUpdate: (NSMenu *)menu;
 
@@ -539,7 +543,8 @@ NSMenu *MCMacPlatformGetIconMenu(void);
 
 void MCMacPlatformLockMenuSelect(void);
 void MCMacPlatformUnlockMenuSelect(void);
-bool MCMacPlatformWasMenuSelect(void);
+// SN-2014-11-06: [[ Bug 13836 ]] Returns whether the last item selected was a shadowed item
+bool MCMacPlatformWasShadowItemSelected(void);
 
 bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
 
