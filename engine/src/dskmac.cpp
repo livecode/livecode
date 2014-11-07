@@ -5855,7 +5855,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     }
     
 #define CATALOG_MAX_ENTRIES 16
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_mac */ LEGACY_SYSTEM
         OSStatus t_os_status;
@@ -6007,20 +6007,22 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         FSCloseIterator(t_catalog_iterator);
 #endif /* MCS_getentries_dsk_mac */  
         
-        MCAutoStringRef t_curdir, t_redirect;
+        MCAutoStringRef t_path, t_redirect;
         bool t_success;
         t_success = true;
-        
-        MCS_getcurdir(&t_curdir);
+		if (p_folder == nil)
+			MCS_getcurdir(&t_path);
+		else
+			&t_path = MCValueRetain (p_folder);
         // MW-2014-09-17: [[ Bug 13455 ]] First list in the usual path.
-        t_success = MCS_getentries_for_folder(*t_curdir, p_callback, x_context);
+        t_success = MCS_getentries_for_folder(*t_path, p_callback, x_context);
         
         bool *t_files = (bool *)x_context;
         // MW-2014-09-17: [[ Bug 13455 ]] If we are fetching files, and the path is inside MacOS, then
         //   merge the list with files from the corresponding path in Resources/_MacOS.
         // NOTE: the overall operation should still succeed if the redirect doesn't exist
         if (t_success && *t_files &&
-            MCS_apply_redirect(*t_curdir, false, &t_redirect))
+            MCS_apply_redirect(*t_path, false, &t_redirect))
             t_success = MCS_getentries_for_folder(*t_redirect, p_callback, x_context) || t_success;
         
         return t_success;

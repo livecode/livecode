@@ -541,16 +541,35 @@ struct MCPosixSystem: public MCSystemInterface
 		return MCStringCopy(p_path, r_short_path);
 	}
 	
-	bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+	bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 	{
+		MCAutoStringRefAsSysString t_path;
+		if (p_folder == nil)
+			/* UNCHECKED */ t_path . Lock(MCSTR ("."));
+		else
+			/* UNCHECKED */ t_path . Lock(p_folder);
+
 		DIR *t_dir;
-		t_dir = opendir(".");
+		t_dir = opendir(*t_path);
 		if (t_dir == NULL)
 			return false;
 		
 		MCSystemFolderEntry t_entry;
 		memset(&t_entry, 0, sizeof(MCSystemFolderEntry));
 		
+		/* For each directory entry, we need to construct a path that can
+		 * be passed to stat(2).  Allocate a buffer large enough for the
+		 * path, a path separator character, and any possible filename. */
+		size_t t_path_len = strlen(*t_path);
+		size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
+		char *t_entry_path = new char[t_entry_path_len + 1];
+		strcpy (t_entry_path, *t_path);
+		if ((*t_path)[t_path_len - 1] != '/')
+		{
+			strcat (t_entry_path, "/");
+			++t_path_len;
+		}
+
 		bool t_success;
 		t_success = true;
 		while(t_success)
@@ -562,9 +581,14 @@ struct MCPosixSystem: public MCSystemInterface
 			
 			if (strcmp(t_dir_entry -> d_name, ".") == 0)
 				continue;
+
+			/* Truncate the directory entry path buffer to the path
+			 * separator. */
+			t_entry_path[t_path_len] = 0;
+			strcat (t_entry_path, direntp->d_name);
 			
 			struct stat64 t_stat;
-			stat64(t_dir_entry -> d_name, &t_stat);
+			stat64(t_entry_path, &t_stat);
 			
 			t_entry . name = t_dir_entry -> d_name;
 			t_entry . data_size = t_stat . st_size;
@@ -579,6 +603,7 @@ struct MCPosixSystem: public MCSystemInterface
 			t_success = p_callback(p_context, &t_entry);
 		}
 		
+		delete t_entry_path;
 		closedir(t_dir);
 		
 		return t_success;
