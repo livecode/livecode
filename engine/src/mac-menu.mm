@@ -367,9 +367,6 @@ void MCMacPlatformUnlockMenuSelect(void)
 	MCMacPlatformLockMenuSelect();
 	t_key_equiv = [super performKeyEquivalent: event];
 	MCMacPlatformUnlockMenuSelect();
-	
-    if (s_menubar != nil && self == s_menubar -> menu)
-        return t_key_equiv;
     
     BOOL t_force_keypress;
     t_force_keypress = NO;
@@ -382,6 +379,10 @@ void MCMacPlatformUnlockMenuSelect(void)
         MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], t_keycode);
         t_force_keypress = t_keycode == kMCPlatformKeyCodeTab || t_keycode == kMCPlatformKeyCodeEscape;
     }
+    
+    // SN-2014-11-04: [[ Bug 13911 ]] We should not shortcut TAB or ESC, even if in the menubar
+    if (s_menubar != nil && self == s_menubar -> menu && !t_force_keypress)
+        return t_key_equiv;
     
     // MW-2014-04-10: [[ Bug 12047 ]] If it was found as a key equivalent dispatch
     //   a keypress so the engine can handle it. Otherwise we return NO and the
