@@ -1091,8 +1091,6 @@ enum
 	kMCValueTypeCodeArray,
 	kMCValueTypeCodeList,
 	kMCValueTypeCodeSet,
-	kMCValueTypeCodePoint,
-	KMCValueTypeCodeRectangle,
 	kMCValueTypeCodeCustom,
 	kMCValueTypeCodeRecord,
 	kMCValueTypeCodeHandler,
@@ -2156,16 +2154,6 @@ bool MCSetIntersect(MCSetRef set, MCSetRef other_set);
 
 bool MCSetIterate(MCSetRef set, uindex_t& x_iterator, uindex_t& r_element);
 bool MCSetList(MCSetRef set, uindex_t*& r_element, uindex_t& r_element_count);
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  POINT DEFINITIONS
-//
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  RECTANGLE DEFINITIONS
-//
 
 ////////////////////////////////////////////////////////////////////////////////
 //
