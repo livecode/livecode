@@ -1929,6 +1929,19 @@ public:
 
         bool t_success = true;
 
+		/* For each directory entry, we need to construct a path that can
+		 * be passed to stat(2).  Allocate a buffer large enough for the
+		 * path, a path separator character, and any possible filename. */
+		size_t t_path_len = strlen(*t_path);
+		size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
+		char *t_entry_path = new char[t_entry_path_len + 1];
+		strcpy (t_entry_path, *t_path);
+		if ((*t_path)[t_path_len - 1] != '/')
+		{
+			strcat (t_entry_path, "/");
+			++t_path_len;
+		}
+
         while (t_success && (direntp = readdir64(dirptr)) != NULL)
         {
             MCSystemFolderEntry p_entry;
@@ -1936,8 +1949,14 @@ public:
 
             if (MCCStringEqual(direntp->d_name, "."))
                 continue;
+
+			/* Truncate the directory entry path buffer to the path
+			 * separator. */
+			t_entry_path[t_path_len] = 0;
+			strcat (t_entry_path, direntp->d_name);
+
             struct stat buf;
-            stat(direntp->d_name, &buf);
+            stat(t_entry_path, &buf);
 
             if (direntp -> d_name != nil && MCStringCreateWithSysString(direntp -> d_name, t_unicode_name))
                 p_entry.name = t_unicode_name;
@@ -1957,6 +1976,7 @@ public:
             MCValueRelease(t_unicode_name);
         }
 
+		delete t_entry_path;
         closedir(dirptr);
 
         return t_success;
