@@ -61,6 +61,10 @@ struct MCPlatformMenu
     // reason - it returns 'empty').
     bool quit_has_accelerator : 1;
     
+    // SN-2014-11-06: [[ Bu 13940 ]] Add a flag for the presence of a Preferences shortcut
+    //  to allow the menu item to be disabled.
+    bool preferences_has_accelerator : 1;
+    
     // SN-2014-11-06: [[ Bug 13836 ]] Set to true if the menu needs to be updated.
     bool needs_update : 1;
 };
@@ -185,13 +189,14 @@ static uint32_t s_key_equivalent_depth = 0;
     //   was specified, we handle Cmd-Q as if it weren't an accelerator but was a select.
     //   (This is for the case where the 'Exit' menu item has no accelerator, but Cocoa requires
     //    said accelerator for conformance).
-//    bool t_item_is_quit_without_accelerator;
-//    t_item_is_quit_without_accelerator = false;
-//    if ([[t_item representedObject] isEqualToString: @"Quit"])
-//        t_item_is_quit_without_accelerator = ![(com_runrev_livecode_MCMenuDelegate *)[[t_item menu] delegate] platformMenuRef] -> quit_has_accelerator;
+    bool t_quit_accelerator_present;
+    t_quit_accelerator_present = false;
+    if ([[t_item keyEquivalent] isEqualToString: @"q"])
+        t_quit_accelerator_present = [(com_runrev_livecode_MCMenuDelegate *)[[t_item menu] delegate] platformMenuRef] -> quit_has_accelerator;
     
-	if (s_menu_select_lock == 0/* || t_item_is_quit_without_accelerator*/)
+	if (s_menu_select_lock == 0 || t_quit_accelerator_present)
 		MCPlatformCallbackSendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
+    
     // SN-2014-11-06: [[ Bug 13836 ]] s_menu_select_occured was not used.
 }
 
@@ -283,35 +288,18 @@ static uint32_t s_key_equivalent_depth = 0;
 	[self shadowedMenuItemSelected: @"Quit"];
 }
 
+// SN-2014-11-06: [[ Bug 13940 ]] The user asked to quit - and no accelerator was added for this,
+//  so we quit!
+- (void)quitApplicationSelected: (id)sender
+{
+    NSApplication* t_app = [NSApplication sharedApplication];
+    
+    [t_app terminate:t_app];
+}
+
+// SN-2014-11-06: [[ Bug 13940 ]] menuNeedsUpdate not longer needed at the Application level
 - (void)menuNeedsUpdate: (NSMenu *)menu
 {
-	NSMenuItem *t_prefs, *t_about, *t_quit;
-	t_prefs = [self findShadowedMenuItem: @"Preferences"];
-	t_about = [self findShadowedMenuItem: @"About"];
-	t_quit = [self findShadowedMenuItem: @"Quit"];
-	
-    if (t_quit != nil)
-    {
-		[[[t_quit menu] delegate] menuNeedsUpdate: [t_prefs menu]];
-		t_quit = [self findShadowedMenuItem: @"Quit"];
-		[[menu itemAtIndex: 10] setEnabled: t_quit != nil ? [t_quit isEnabled] : NO];
-	}
-
-	if (t_prefs != nil)
-	{
-		[[[t_prefs menu] delegate] menuNeedsUpdate: [t_prefs menu]];
-		t_prefs = [self findShadowedMenuItem: @"Preferences"];
-		[[menu itemAtIndex: 2] setEnabled: t_prefs != nil ? [t_prefs isEnabled] : NO];
-	}
-	
-	if (t_about != nil)
-	{
-		if (t_prefs == nil ||
-			[t_about menu] != [t_prefs menu])
-			[[[t_about menu] delegate] menuNeedsUpdate: [t_about menu]];
-		t_about = [self findShadowedMenuItem: @"About"];
-		[[menu itemAtIndex: 0] setEnabled: t_about != nil ? [t_about isEnabled] : NO];
-	}
 }
 
 - (BOOL)validateMenuItem: (NSMenuItem *)item
@@ -500,6 +488,10 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 	// Turn on auto-enablement - this allows dialogs to control the enablement
 	// of items with appropriate tag.
 	[t_menu -> menu setAutoenablesItems: YES];
+    
+    // SN-2014-11-06: [[ Bug 13940 ]] Initialises the accelerator presence flag.
+    t_menu -> quit_has_accelerator = false;
+    t_menu -> preferences_has_accelerator = false;
 	
 	r_menu = t_menu;
 }
@@ -657,7 +649,22 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 				[t_item setTarget: p_menu -> menu_delegate];
 			}
 			else
-			{
+            {
+                // SN-2014-11-06: [[ Bug 13940 ]] Update the parent - if any - to know that his submenu has
+                //  a Quit or a Preferences accelerator
+                NSMenu *t_supermenu;
+                t_supermenu = [p_menu -> menu supermenu];
+                
+                if (t_supermenu != nil)
+                {
+                    MCPlatformMenuRef t_supermenu_ref;
+                    t_supermenu_ref = [(MCMenuDelegate *)[t_supermenu delegate] platformMenuRef];
+                    if (t_action == kMCPlatformMenuItemActionQuit)
+                        t_supermenu_ref -> quit_has_accelerator = true;
+                    else if (t_action == kMCPlatformMenuItemActionPreferences)
+                        t_supermenu_ref -> preferences_has_accelerator = true;
+                }
+                
 				SEL t_selector;
 				if (MCMacPlatformMapMenuItemActionToSelector(t_action, t_selector))
 				{
@@ -699,9 +706,6 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 				[t_item setKeyEquivalent: @""];
 				[t_item setKeyEquivalentModifierMask: 0];
 			}
-            
-            if ([[t_item representedObject] isEqualToString: @"Quit"])
-                p_menu -> quit_has_accelerator = t_accelerator != 0;
 		}
 		break;
 		case kMCPlatformMenuItemPropertyEnabled:
@@ -833,7 +837,12 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 	[t_app_menu addItemWithTitle: NSLocalizedString(@"Preferences...", nil)
 						  action: @selector(preferencesMenuItemSelected:)
 				   keyEquivalent: @","];
-	[[t_app_menu itemAtIndex: 2] setTarget: s_app_menu_delegate];
+    // SN-2014-11-06: [[ Bug 13940 ]] Only enable the Preference menu if the shortcut exists in the menubar
+    if (p_menu -> preferences_has_accelerator)
+        [[t_app_menu itemAtIndex: 2] setTarget: s_app_menu_delegate];
+    else
+        [[t_app_menu itemAtIndex: 2] setEnabled: NO];
+    
 	[t_app_menu addItem: [NSMenuItem separatorItem]];
 	[t_app_menu addItemWithTitle: NSLocalizedString(@"Services", nil)
 						  action: nil
@@ -855,7 +864,14 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 	[t_app_menu addItemWithTitle: [NSString stringWithFormat: NSLocalizedString(@"Quit %@", @"Quit {Application Name}"), t_app_name]
 						  action: @selector(quitMenuItemSelected:)
 				   keyEquivalent:@"q"];
-	[[t_app_menu itemAtIndex: 10] setTarget: s_app_menu_delegate];
+    // SN-2014-11-06: [[ Bug 13940 ]] In case there is no Quit shortcut in this menubar,
+    //  the action will simply be to close the application.
+    if (p_menu -> quit_has_accelerator)
+        [[t_app_menu itemAtIndex: 10] setAction:@selector(quitMenuItemSelected:)];
+    else
+        [[t_app_menu itemAtIndex: 10] setAction:@selector(quitApplicationSelected:)];
+    
+    [[t_app_menu itemAtIndex: 10] setTarget: s_app_menu_delegate];
 	[t_app_menu setDelegate: s_app_menu_delegate];
 	
 	NSMenuItem *t_app_menu_item;

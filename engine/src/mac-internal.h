@@ -343,6 +343,10 @@ class MCMacPlatformSurface;
 
 - (void)aboutMenuItemSelected: (id)sender;
 - (void)preferencesMenuItemSelected: (id)sender;
+// SN-2014-11-06: [[ Bug 13940 ]] Added declaration for quitMenuItemSelected
+//  and quitApplicationSelected, the latter quitting the app straight.
+- (void)quitMenuItemSelected: (id)sender;
+- (void)quitApplicationSelected: (id)sender;
 
 - (void)menuNeedsUpdate: (NSMenu *)menu;
 

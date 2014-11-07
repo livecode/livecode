@@ -915,7 +915,8 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
         // MW-2014-06-10: [[ Bug 12590 ]] Make sure we lock screen around the menu update message.
         MCRedrawLockScreen();
 		s_menubar_lock_count += 1;
-		s_menubar_targets[t_parent_menu_index] -> Get() -> message_with_args(MCM_mouse_down, "1");
+        // SN-2014-11-06: [[ Bug 13940 ]] Keep the behaviour as previously: mouseDown "" is sent when updating menus
+		s_menubar_targets[t_parent_menu_index] -> Get() -> message_with_args(MCM_mouse_down, "");
 		s_menubar_lock_count -= 1;
         MCRedrawUnlockScreen();
 	}
