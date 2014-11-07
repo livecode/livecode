@@ -1254,6 +1254,10 @@ MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef type);
 // Returns the name of the type, if it has one.
 MCNameRef MCTypeInfoGetName(MCTypeInfoRef type);
 
+// Returns true if the source typeinfo can be assigned to a slot with the target
+// typeinfo with no typecheck or conversion.
+bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
+
 // Binds the given typeinfo to the given name (creating a named typeinfo). A bound
 // typeinfo acts like its target apart from the non-nil return from GetName. Bindings
 // never chain - a typeinfo is either a named binding, or an actual typeinfo.

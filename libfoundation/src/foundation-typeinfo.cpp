@@ -52,6 +52,11 @@ MCNameRef MCTypeInfoGetName(MCTypeInfoRef self)
     return nil;
 }
 
+bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
+{
+    return source == target;
+}
+
 bool MCTypeInfoBind(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
