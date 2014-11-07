@@ -85,10 +85,21 @@ static inline bool MCStackdirIOScannerGetChar (MCStackdirIOScannerRef scanner, c
  * another character available. */
 static inline bool MCStackdirIOScannerNextChar (MCStackdirIOScannerRef scanner);
 
+static bool MCStackdirIOScanEOF (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
+static bool MCStackdirIOScanNewline (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
+static bool MCStackdirIOScanSpace (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
+static bool MCStackdirIOScanStorageSeparator (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
+static bool MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
+
 /* Table of scanner functions. These are called in order */
 typedef bool (*MCStackdirIOScanFunc)(MCStackdirIOScannerRef, MCStackdirIOTokenRef);
 static const MCStackdirIOScanFunc kMCStackdirIOScanFuncs[] =
 	{
+		MCStackdirIOScanEOF,
+		MCStackdirIOScanNewline,
+		MCStackdirIOScanSpace,
+		MCStackdirIOScanStorageSeparator,
+		MCStackdirIOScanExternalIndicator,
 		NULL,
 	};
 
@@ -469,6 +480,110 @@ MCStackdirIOScannerNextChar (MCStackdirIOScannerRef scanner)
 	if (scanner->m_filter->AdvanceCursor ())
 	{
 		++scanner->m_column;
+		return true;
+	}
+	return false;
+}
+
+/* ----------------------------------------------------------------
+ * Scanning special tokens
+ * ---------------------------------------------------------------- */
+
+static bool
+MCStackdirIOScanEOF (MCStackdirIOScannerRef scanner,
+					 MCStackdirIOTokenRef r_token)
+{
+	codepoint_t t_char;
+	if (MCStackdirIOScannerGetChar (scanner, t_char)) return false;
+
+	r_token->m_type = kMCStackdirIOTokenTypeEOF;
+	return true;
+}
+
+static bool
+MCStackdirIOScanNewline (MCStackdirIOScannerRef scanner,
+						 MCStackdirIOTokenRef r_token)
+{
+	codepoint_t t_char;
+	bool t_found_newline = false;
+	MCStackdirIOScannerGetChar (scanner, t_char);
+	if (t_char == '\n')
+	{
+		MCStackdirIOScannerNextChar (scanner);
+		t_found_newline = true;
+	}
+	else if (t_char == '\r')
+	{
+		t_found_newline = true;
+		 /* To cope with \r\n line endings, we need to check if the
+		  * next character is \n, and if so, step over it. */
+		if (MCStackdirIOScannerNextChar (scanner))
+		{
+			MCStackdirIOScannerGetChar (scanner, t_char);
+			if (t_char == '\n')
+				MCStackdirIOScannerNextChar (scanner);
+		}
+	}
+
+	if (!t_found_newline) return false;
+
+	/* Update the scanner's line and column counters */
+	scanner->m_column = 0;
+	scanner->m_line += 1;
+
+	r_token->m_type = kMCStackdirIOTokenTypeNewline;
+	return true;
+}
+
+/* ----------------------------------------------------------------
+ * Scanning trivial tokens
+ * ---------------------------------------------------------------- */
+
+static bool
+MCStackdirIOScanSpace (MCStackdirIOScannerRef scanner,
+					   MCStackdirIOTokenRef r_token)
+{
+	codepoint_t t_char;
+	MCStackdirIOScannerGetChar (scanner, t_char);
+
+	bool t_found_space = false;
+	while (t_char == ' ')
+	{
+		t_found_space = true;
+		if (!MCStackdirIOScannerNextChar (scanner)) break;
+		MCStackdirIOScannerGetChar (scanner, t_char);
+	}
+	if (!t_found_space) return false;
+
+	r_token->m_type = kMCStackdirIOTokenTypeSpace;
+	return true;
+}
+
+static bool
+MCStackdirIOScanStorageSeparator (MCStackdirIOScannerRef scanner,
+								  MCStackdirIOTokenRef r_token)
+{
+	codepoint_t t_char;
+	MCStackdirIOScannerGetChar (scanner, t_char);
+	if (t_char == ':')
+	{
+		MCStackdirIOScannerNextChar (scanner);
+		r_token->m_type = kMCStackdirIOTokenTypeStorageSeparator;
+		return true;
+	}
+	return false;
+}
+
+static bool
+MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner,
+								   MCStackdirIOTokenRef r_token)
+{
+	codepoint_t t_char;
+	MCStackdirIOScannerGetChar (scanner, t_char);
+	if (t_char == '&')
+	{
+		MCStackdirIOScannerNextChar (scanner);
+		r_token->m_type = kMCStackdirIOTokenTypeExternalIndicator;
 		return true;
 	}
 	return false;

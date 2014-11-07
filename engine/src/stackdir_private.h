@@ -256,12 +256,14 @@ bool MCStackdirIOScannerNew (MCStringRef p_string, MCStackdirIOScannerRef & scan
 
 /* Peek the next token from the scanner. The r_token will be valid
  * until the next call to MCStackdirIOScannerPeek() or
- * MCStackdirIOScannerConsume(). */
+ * MCStackdirIOScannerConsume().  Returns true if a token was
+ * found. */
 bool MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef & r_token);
 
-/* Consume the next token from the scanner. The r_token will be valid
+/* Consume the next token from the scanner.  The r_token will be valid
  * until the next call to MCStackdirIOScannerPeek() or
- * MCStackdirIOScannerConsume(). */
+ * MCStackdirIOScannerConsume().  Returns true if a token was
+ * found. */
 bool MCStackdirIOScannerConsume (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef & r_token);
 
 /* Clean up a scanner when no longer needed */
