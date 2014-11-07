@@ -1548,39 +1548,32 @@ static bool
 MCStackdirIOSaveObject (MCStackdirIORef op, MCNameRef p_uuid, MCArrayRef p_state)
 {
 	bool t_success = true;
-	MCStackdirIOObjectSaveRef info;
+	MCStackdirIOObjectSave t_info;
 
 	/* Create and initialise object information structure */
-	t_success = MCMemoryNew (info);
-	if (!t_success)
-		return MCStackdirIOErrorOutOfMemory (op);
-
-	info->m_op = op;
-	info->m_uuid = MCValueRetain (p_uuid);
-	info->m_state = MCValueRetain (p_state);
-	info->m_path = nil;
+	t_info.m_op = op;
+	t_info.m_uuid = p_uuid;
+	t_info.m_state = p_state;
+	t_info.m_path = nil;
 
 	/* Create object directory */
 	if (t_success)
-		t_success = MCStackdirIOSaveObjectDirectory (info);
+		t_success = MCStackdirIOSaveObjectDirectory (&t_info);
 
 	/* Generate object contents */
 	if (t_success)
 	{
-		MCStackdirIOErrorLocationPush (op, info->m_path);
-		t_success = (MCStackdirIOSaveObjectKind (info) &&
-					 MCStackdirIOSaveObjectParent (info) &&
-					 MCStackdirIOSaveObjectInternal (info) &&
-					 MCStackdirIOSaveObjectPropsets (info) &&
-					 MCStackdirIOSaveObjectShared (info));
+		MCStackdirIOErrorLocationPush (op, t_info.m_path);
+		t_success = (MCStackdirIOSaveObjectKind (&t_info) &&
+					 MCStackdirIOSaveObjectParent (&t_info) &&
+					 MCStackdirIOSaveObjectInternal (&t_info) &&
+					 MCStackdirIOSaveObjectPropsets (&t_info) &&
+					 MCStackdirIOSaveObjectShared (&t_info));
 		MCStackdirIOErrorLocationPop (op);
 	}
 
 	/* Clean up */
-	MCValueRelease (info->m_uuid);
-	MCValueRelease (info->m_state);
-	MCValueRelease (info->m_path);
-	MCMemoryDelete (info);
+	MCValueRelease (t_info.m_path);
 
 	return t_success;
 }
