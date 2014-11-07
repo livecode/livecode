@@ -60,11 +60,15 @@ struct _MCStackdirIOObjectDirInfo
  * [Private] Utility functions
  * ---------------------------------------------------------------- */
 
+/* Test whether the load operation has been performed by calling
+ * MCStackdirIOCommit() */
 static inline bool MCStackdirIOLoadIsOperationComplete (MCStackdirIORef op)
 {
 	return (op->m_load_state != nil);
 }
 
+/* Test whether p_object_dir is a validly-named object directory and
+ * whether p_lsb_dir is a valid LSB directory for p_object_dir. */
 static bool MCStackdirIOLoadIsValidObjectDir (MCStringRef p_object_dir, MCStringRef p_lsb_dir);
 
 /* ----------------------------------------------------------------
