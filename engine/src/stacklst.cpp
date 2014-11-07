@@ -337,9 +337,10 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 		{
 			if (t_lowersym == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 			{
+                // SN-2014-11-06: [[ Bug 13836 ]] mouseDown must be sent to the menubar group.
                 // MW-2014-10-22: [[ Bug 13510 ]] Make sure we send the update message to the menu of menubar - not
                 //   the menubar group.
-				accelerators[i] . button -> message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
+				t_menubar -> message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
 
 				// We now need to re-search for the accelerator, since it could have gone/been deleted in the mouseDown
 				for(uint2 i = 0; i < naccelerators; i++)

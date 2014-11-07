@@ -1719,7 +1719,15 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
 				// if the mouse button is down after clicking on a button, don't draw the default button animation
 				MCControl *t_control = MCmousestackptr->getcard()->getmfocused();
 				if (MCbuttonstate && t_control && t_control->gettype() == CT_BUTTON)
-					winfo.state |= WTHEME_STATE_SUPPRESSDEFAULT;
+                {
+                    // FG-2014-11-05: [[ Bugfix 13909 ]]
+                    // Don't suppress the default on OSX Yosemite if it is this
+                    // button being pressed but the mouse is outside the button.
+                    if (!(IsMacLFAM() && MCaqua && MCmajorosversion >= 0x10A0 && t_control == this)
+                          || (rect.x > MCmousex && MCmousex >= rect.x+rect.width
+                              && rect.y > MCmousey && MCmousey >= rect.y+rect.height))
+                        winfo.state |= WTHEME_STATE_SUPPRESSDEFAULT;
+                }
 			}
 			
 #ifdef _MACOSX
