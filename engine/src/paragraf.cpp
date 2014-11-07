@@ -243,6 +243,12 @@ IO_stat MCParagraph::load(IO_handle stream, const char *version, bool is_ext)
 				}
 				uint2 index, len;
 				newblock->getindex(index, len);
+                
+                // SN-2014-10-31: [[ Bug 13881 ]] Ensure that the block hasn't been corrupted.
+                //  (leads to a potential crash, in case the corrupted stack ends up to be valid).
+                if (index > textsize || len + index > textsize)
+                    return IO_ERROR;
+                
 				if (newblock->hasunicode())
 				{
 					len >>= 1;
