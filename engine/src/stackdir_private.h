@@ -217,4 +217,54 @@ bool MCStackdirFormatFilename (MCStringRef p_string, MCStringRef p_suffix, MCStr
  * Returns false if formatting failed (e.g. due to memory exhaustion). */
 bool MCStackdirFormatLiteral (MCValueRef p_value, MCStringRef & r_literal);
 
+/* ----------------------------------------------------------------
+ * [Private] Data scanning and parsing
+ * ---------------------------------------------------------------- */
+
+enum MCStackdirIOTokenType
+{
+	kMCStackdirIOTokenTypeNone = 0,
+	kMCStackdirIOTokenTypeNewline,
+	kMCStackdirIOTokenTypeSpace,
+	kMCStackdirIOTokenTypeInteger,
+	kMCStackdirIOTokenTypeReal,
+	kMCStackdirIOTokenTypeString,
+	kMCStackdirIOTokenTypeUnquotedString,
+	kMCStackdirIOTokenTypeData,
+	kMCStackdirIOTokenTypeStorageSeparator,
+	kMCStackdirIOTokenTypeExternalIndicator,
+	kMCStackdirIOTokenTypeEOF,
+	kMCStackdirIOTokenTypeError,
+};
+
+typedef struct _MCStackdirIOToken MCStackdirIOToken;
+typedef MCStackdirIOToken *MCStackdirIOTokenRef;
+
+struct _MCStackdirIOToken
+{
+	uindex_t m_line;
+	uindex_t m_column;
+	MCStackdirIOTokenType m_type;
+	MCValueRef m_value;
+};
+
+typedef struct _MCStackdirIOScanner MCStackdirIOScanner;
+typedef MCStackdirIOScanner *MCStackdirIOScannerRef;
+
+/* Create a new scanner for p_string */
+bool MCStackdirIOScannerNew (MCStringRef p_string, MCStackdirIOScannerRef & scanner);
+
+/* Peek the next token from the scanner. The r_token will be valid
+ * until the next call to MCStackdirIOScannerPeek() or
+ * MCStackdirIOScannerConsume(). */
+bool MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef & r_token);
+
+/* Consume the next token from the scanner. The r_token will be valid
+ * until the next call to MCStackdirIOScannerPeek() or
+ * MCStackdirIOScannerConsume(). */
+bool MCStackdirIOScannerConsume (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef & r_token);
+
+/* Clean up a scanner when no longer needed */
+void MCStackdirIOScannerDestroy (MCStackdirIOScannerRef & scanner);
+
 #  endif /* ! _MC_STACKDIR_PRIVATE_H_ */

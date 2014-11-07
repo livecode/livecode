@@ -28,6 +28,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stackdir.h"
 
+#include "stackdir_private.h"
+
 #include <unicode/uchar.h>
 
 /* This file contains code relating to encoding and decoding the
@@ -37,6 +39,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /* ================================================================
  * File-local declarations
  * ================================================================ */
+
+struct _MCStackdirIOScanner
+{
+	/* Filter for iterating over string */
+	MCTextFilter *m_filter;
+
+	/* Current logical file position */
+	uindex_t m_line;
+	uindex_t m_column;
+
+	/* Contains the next token */
+	MCStackdirIOToken m_token;
+
+	/* True if the next token has already been peeked. */
+	bool m_has_peek;
+};
 
 /* Normalize and case-fold a string (Normalized Form C, Simple
  * Case-Fold). */
@@ -50,9 +68,37 @@ static bool MCStackdirFormatData (MCDataRef p_data, MCStringRef & r_literal);
 static bool MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_literal);
 static bool MCStackdirFormatName (MCNameRef p_name, MCStringRef & r_literal);
 
+/* Reset the token, freeing any currently-held resources */
+static void MCStackdirIOScannerResetToken (MCStackdirIOScannerRef scanner);
+
+/* Test whether the token is unset */
+static inline bool MCStackdirIOTokenIsNone (MCStackdirIOTokenRef p_token);
+
+/* Test whether the token indicates an error */
+static inline bool MCStackdirIOTokenIsError (MCStackdirIOTokenRef p_token);
+
+/* Obtain the current character in the scanner. Returns false if there
+ * is no valid current character. */
+static inline bool MCStackdirIOScannerGetChar (MCStackdirIOScannerRef scanner, codepoint_t & r_char);
+
+/* Move to the next character in the scanner. Returns true if there is
+ * another character available. */
+static inline bool MCStackdirIOScannerNextChar (MCStackdirIOScannerRef scanner);
+
+/* Table of scanner functions. These are called in order */
+typedef bool (*MCStackdirIOScanFunc)(MCStackdirIOScannerRef, MCStackdirIOTokenRef);
+static const MCStackdirIOScanFunc kMCStackdirIOScanFuncs[] =
+	{
+		NULL,
+	};
+
 /* ================================================================
- * Utility functions
+ * Formatting
  * ================================================================ */
+
+/* ----------------------------------------------------------------
+ * Formatting utility functions
+ * ---------------------------------------------------------------- */
 
 static bool
 MCStackdirNormalizeString (MCStringRef p_string, MCStringRef & r_normalized)
@@ -66,9 +112,9 @@ MCStackdirNormalizeString (MCStringRef p_string, MCStringRef & r_normalized)
 	return true;
 }
 
-/* ================================================================
- * Booleans
- * ================================================================ */
+/* ----------------------------------------------------------------
+ * Boolean formatting
+ * ---------------------------------------------------------------- */
 
 static bool
 MCStackdirFormatBoolean (MCBooleanRef p_bool, MCStringRef & r_literal)
@@ -77,9 +123,9 @@ MCStackdirFormatBoolean (MCBooleanRef p_bool, MCStringRef & r_literal)
 						 r_literal);
 }
 
-/* ================================================================
- * Numbers
- * ================================================================ */
+/* ----------------------------------------------------------------
+ * Number formatting
+ * ---------------------------------------------------------------- */
 
 static bool
 MCStackdirFormatInteger (MCNumberRef p_number, MCStringRef & r_literal)
@@ -135,9 +181,9 @@ MCStackdirFormatNumber (MCNumberRef p_number, MCStringRef & r_literal)
 		return MCStackdirFormatReal (p_number, r_literal);
 }
 
-/* ================================================================
- * Data
- * ================================================================ */
+/* ----------------------------------------------------------------
+ * Data formatting
+ * ---------------------------------------------------------------- */
 
 static bool
 MCStackdirFormatData (MCDataRef p_data, MCStringRef & r_literal)
@@ -214,9 +260,9 @@ MCStackdirFormatData (MCDataRef p_data, MCStringRef & r_literal)
 	return t_success;
 }
 
-/* ================================================================
- * Strings
- * ================================================================ */
+/* ----------------------------------------------------------------
+ * String formatting
+ * ---------------------------------------------------------------- */
 
 static bool
 MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_literal)
@@ -307,9 +353,9 @@ MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_literal)
 	return MCStringCopy (*t_result, r_literal);
 }
 
-/* ================================================================
- * Names
- * ================================================================ */
+/* ----------------------------------------------------------------
+ * Name formatting
+ * ---------------------------------------------------------------- */
 
 /* Test whether p_name can be represented as an unquoted name
  * string. */
@@ -361,17 +407,75 @@ MCStackdirFormatName (MCNameRef p_name, MCStringRef & r_literal)
 	return MCStackdirFormatString (*t_normalized, r_literal);
 }
 
-/* ================================================================
- * Filenames
- * ================================================================ */
+/* ----------------------------------------------------------------
+ * Filename formatting
+ * ---------------------------------------------------------------- */
 
 enum {
 	kMCStackdirFilenameMaxLen = 255,
 };
 
 /* ================================================================
+ * Scanning
+ * ================================================================ */
+
+/* ----------------------------------------------------------------
+ * Scanning utility functions
+ * ---------------------------------------------------------------- */
+
+static void
+MCStackdirIOScannerResetToken (MCStackdirIOScannerRef scanner)
+{
+	MCStackdirIOTokenRef t_token = &(scanner->m_token);
+	/* Reset the token */
+	MCValueRelease (t_token->m_value);
+
+	t_token->m_line = scanner->m_line;
+	t_token->m_column = scanner->m_column;
+	t_token->m_type = kMCStackdirIOTokenTypeNone;
+	t_token->m_value = nil;
+}
+
+static inline bool
+MCStackdirIOTokenIsNone (MCStackdirIOTokenRef p_token)
+{
+	return (p_token->m_type == kMCStackdirIOTokenTypeNone);
+}
+
+static inline bool
+MCStackdirIOTokenIsError (MCStackdirIOTokenRef p_token)
+{
+	return (p_token->m_type == kMCStackdirIOTokenTypeError);
+}
+
+static inline bool
+MCStackdirIOScannerGetChar (MCStackdirIOScannerRef scanner,
+							codepoint_t & r_char)
+{
+	if (!scanner->m_filter->HasData()) return false;
+	r_char = scanner->m_filter->GetNextCodepoint ();
+	return true;
+}
+
+static inline bool
+MCStackdirIOScannerNextChar (MCStackdirIOScannerRef scanner)
+{
+	/* This function also takes care of tracking the column number. */
+	if (scanner->m_filter->AdvanceCursor ())
+	{
+		++scanner->m_column;
+		return true;
+	}
+	return false;
+}
+
+/* ================================================================
  * Main entry points
  * ================================================================ */
+
+/* ----------------------------------------------------------------
+ * Formatting
+ * ---------------------------------------------------------------- */
 
 bool
 MCStackdirFormatFilename (MCStringRef p_string, MCStringRef p_suffix,
@@ -486,4 +590,99 @@ MCStackdirFormatLiteral (MCValueRef p_value, MCStringRef & r_literal)
 	default:
 		MCUnreachable ();
 	}
+}
+
+/* ----------------------------------------------------------------
+ * Scanning
+ *---------------------------------------------------------------- */
+
+bool
+MCStackdirIOScannerNew (MCStringRef p_string,
+						MCStackdirIOScannerRef & scanner)
+{
+	if (!MCMemoryNew (scanner)) return false;
+
+	scanner->m_filter = MCTextFilterCreate (p_string,
+											kMCStringOptionCompareExact);
+	if (!scanner->m_filter)
+	{
+		MCMemoryDelete (scanner);
+		return false;
+	}
+
+	return true;
+}
+
+void
+MCStackdirIOScannerDestroy (MCStackdirIOScannerRef & scanner)
+{
+	if (scanner == nil) return;
+
+	MCValueRelease (scanner->m_token.m_value);
+	delete scanner->m_filter;
+
+	MCMemoryDelete (scanner);
+
+	scanner = nil;
+}
+
+bool
+MCStackdirIOScannerConsume (MCStackdirIOScannerRef scanner,
+							MCStackdirIOTokenRef & r_token)
+{
+	MCAssert (scanner != nil);
+
+	bool t_result = MCStackdirIOScannerPeek (scanner, r_token);
+	scanner->m_has_peek = false;
+	return t_result;
+}
+
+bool
+MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner,
+						 MCStackdirIOTokenRef & r_token)
+{
+	MCAssert (scanner != nil);
+
+	MCStackdirIOTokenRef t_token = &(scanner->m_token);
+
+	/* Peeking multiple times in a row will just return the same
+	 * token. */
+	if (scanner->m_has_peek)
+	{
+		r_token = t_token;
+		return true;
+	}
+
+	/* Reset the token */
+	MCStackdirIOScannerResetToken (scanner);
+
+	bool t_success = true;
+
+	/* Try to match each token type by looping through the table of
+	 * scanning functions in order. */
+	for (int i = 0; kMCStackdirIOScanFuncs[i] != NULL; ++i)
+	{
+		MCStackdirIOScanFunc t_scan = kMCStackdirIOScanFuncs[i];
+		if (t_scan (scanner, t_token)) break;
+		if (MCStackdirIOTokenIsError (t_token))
+		{
+			t_success = false;
+			break;
+		}
+	}
+
+	/* If nothing was found, signal an error */
+	if (t_success && MCStackdirIOTokenIsNone (t_token))
+	{
+		t_token->m_type = kMCStackdirIOTokenTypeError;
+		t_success = false;
+	}
+
+	/* We always set this to true.  This ensures that if there's an
+	 * error, repeated calls to MCStackdirIOScannerPeek(C) will
+	 * continue to indicate the error without rescanning. */
+	scanner->m_has_peek = true;
+
+	r_token = t_token;
+	return t_success;
 }
