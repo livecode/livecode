@@ -1093,6 +1093,8 @@ enum
 	kMCValueTypeCodePoint,
 	KMCValueTypeCodeRectangle,
 	kMCValueTypeCodeCustom,
+	kMCValueTypeCodeRecord,
+	kMCValueTypeCodeHandler,
 };
 
 enum
