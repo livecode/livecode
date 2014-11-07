@@ -194,6 +194,8 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
 		t_hb_sk_face = (MCHarfbuzzSkiaFace *)MCGCacheTableGet(s_hb_face_cache, t_key, sizeof(t_id));
 		if (t_hb_sk_face != nil)
 		{
+            // AL-2014-10-27: [[ Bug 13802 ]] Make sure to set the size when we retrieve the cached face
+            t_hb_sk_face -> skia_face -> size = p_size;
 			MCMemoryDelete(t_key);
 			return t_hb_sk_face;
 		}

@@ -43,8 +43,11 @@
 		7653463519F801AA0032E6E2 /* module-type_convert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7653447219ED2EEF0032E6E2 /* module-type_convert.cpp */; };
 		7653463719F807A70032E6E2 /* module-list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7653448019ED30090032E6E2 /* module-list.cpp */; };
 		7653464D19F810430032E6E2 /* module-map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 765344D019EE83FC0032E6E2 /* module-map.cpp */; };
+		769371FB1A0141500001A9FF /* module-type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76972AA419E53A9E0022F060 /* module-type.cpp */; };
 		769729C819E437210022F060 /* module-binary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 769729C619E437210022F060 /* module-binary.cpp */; };
 		76972AA519E53A9E0022F060 /* module-type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76972AA419E53A9E0022F060 /* module-type.cpp */; };
+		76E710721A08FE2300B68F93 /* module-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76454B2919FA9F03007E5F8D /* module-math.cpp */; };
+		76E710731A08FE2300B68F93 /* module-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76454B2919FA9F03007E5F8D /* module-math.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +64,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = foundation;
+		};
+		76E711F71A0B8E6400B68F93 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 76E711F31A0B8E6400B68F93 /* libz.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2AAC046055464E500DB518D;
+			remoteInfo = libz;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -83,6 +93,7 @@
 		4D21B5F519DEECD800B64BEF /* binary.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = binary.mlc; path = src/binary.mlc; sourceTree = "<group>"; };
 		4D21B5F919DEECD800B64BEF /* segmentchunk.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = segmentchunk.mlc; path = src/segmentchunk.mlc; sourceTree = "<group>"; };
 		4D21B5FA19DEECD800B64BEF /* string.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = string.mlc; path = src/string.mlc; sourceTree = "<group>"; };
+		76454B2919FA9F03007E5F8D /* module-math.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-math.cpp"; path = "src/module-math.cpp"; sourceTree = "<group>"; };
 		7653446B19ED2EEF0032E6E2 /* module-arithmetic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-arithmetic.cpp"; path = "src/module-arithmetic.cpp"; sourceTree = "<group>"; };
 		7653446C19ED2EEF0032E6E2 /* module-bitwise.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-bitwise.cpp"; path = "src/module-bitwise.cpp"; sourceTree = "<group>"; };
 		7653446D19ED2EEF0032E6E2 /* module-char_chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-char_chunk.cpp"; path = "src/module-char_chunk.cpp"; sourceTree = "<group>"; };
@@ -119,6 +130,8 @@
 		76972A3F19E44C190022F060 /* module-string.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-string.cpp"; path = "src/module-string.cpp"; sourceTree = "<group>"; };
 		76972AA319E53A700022F060 /* type.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = type.mlc; path = src/type.mlc; sourceTree = "<group>"; };
 		76972AA419E53A9E0022F060 /* module-type.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-type.cpp"; path = "src/module-type.cpp"; sourceTree = "<group>"; };
+		76E710711A08F63400B68F93 /* file.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = file.mlc; path = src/file.mlc; sourceTree = "<group>"; };
+		76E711F31A0B8E6400B68F93 /* libz.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libz.xcodeproj; path = ../../thirdparty/libz/libz.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -195,6 +208,7 @@
 		4D21B5F319DEECBD00B64BEF /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				76E711F31A0B8E6400B68F93 /* libz.xcodeproj */,
 				4D21B5ED19DEECBB00B64BEF /* libfoundation.xcodeproj */,
 			);
 			name = Projects;
@@ -207,6 +221,7 @@
 				7697299319E3FBC60022F060 /* bitwise.mlc */,
 				7697299419E3FBC60022F060 /* logic.mlc */,
 				7697299219E3ED5C0022F060 /* arithmetic.mlc */,
+				76E710711A08F63400B68F93 /* file.mlc */,
 				7697299119E3ED290022F060 /* math-foundation.mlc */,
 				4D21B5F519DEECD800B64BEF /* binary.mlc */,
 				4D21B5F919DEECD800B64BEF /* segmentchunk.mlc */,
@@ -227,6 +242,7 @@
 				7653446E19ED2EEF0032E6E2 /* module-encoding.cpp */,
 				7653448019ED30090032E6E2 /* module-list.cpp */,
 				765344D019EE83FC0032E6E2 /* module-map.cpp */,
+				76454B2919FA9F03007E5F8D /* module-math.cpp */,
 				7653446F19ED2EEF0032E6E2 /* module-math_foundation.cpp */,
 				7653447019ED2EEF0032E6E2 /* module-sort.cpp */,
 				7653447219ED2EEF0032E6E2 /* module-type_convert.cpp */,
@@ -241,6 +257,14 @@
 				765345C519F7E9A90032E6E2 /* stdlib_testing.1 */,
 			);
 			path = "stdlib-testing";
+			sourceTree = "<group>";
+		};
+		76E711F41A0B8E6400B68F93 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				76E711F81A0B8E6400B68F93 /* libz.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -315,6 +339,10 @@
 					ProductGroup = 4D21B5EE19DEECBB00B64BEF /* Products */;
 					ProjectRef = 4D21B5ED19DEECBB00B64BEF /* libfoundation.xcodeproj */;
 				},
+				{
+					ProductGroup = 76E711F41A0B8E6400B68F93 /* Products */;
+					ProjectRef = 76E711F31A0B8E6400B68F93 /* libz.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -332,6 +360,13 @@
 			remoteRef = 4D21B5F119DEECBB00B64BEF /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		76E711F81A0B8E6400B68F93 /* libz.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libz.a;
+			remoteRef = 76E711F71A0B8E6400B68F93 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -345,6 +380,7 @@
 				7653447419ED2EEF0032E6E2 /* module-bitwise.cpp in Sources */,
 				7653447619ED2EEF0032E6E2 /* module-encoding.cpp in Sources */,
 				7653447719ED2EEF0032E6E2 /* module-math_foundation.cpp in Sources */,
+				76E710721A08FE2300B68F93 /* module-math.cpp in Sources */,
 				7653447819ED2EEF0032E6E2 /* module-sort.cpp in Sources */,
 				7653447A19ED2EEF0032E6E2 /* module-type_convert.cpp in Sources */,
 				7653448119ED30090032E6E2 /* module-list.cpp in Sources */,
@@ -361,11 +397,13 @@
 				7653462D19F801AA0032E6E2 /* module-arithmetic.cpp in Sources */,
 				7653462E19F801AA0032E6E2 /* module-bitwise.cpp in Sources */,
 				7653463019F801AA0032E6E2 /* module-encoding.cpp in Sources */,
+				76E710731A08FE2300B68F93 /* module-math.cpp in Sources */,
 				7653463319F801AA0032E6E2 /* module-math_foundation.cpp in Sources */,
 				7653463419F801AA0032E6E2 /* module-sort.cpp in Sources */,
 				7653463519F801AA0032E6E2 /* module-type_convert.cpp in Sources */,
 				7653463719F807A70032E6E2 /* module-list.cpp in Sources */,
 				7653464D19F810430032E6E2 /* module-map.cpp in Sources */,
+				769371FB1A0141500001A9FF /* module-type.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

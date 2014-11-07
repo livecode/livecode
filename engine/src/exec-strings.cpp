@@ -1470,6 +1470,13 @@ static bool MCStringsCheckGraphemeBoundaries(MCStringRef p_string, MCRange p_ran
 
 void MCStringsEvalContains(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
+    // AL-2014-10-23: [[ Bug 13770 ]] Strings don't contain the empty string
+    if (MCStringIsEmpty(p_part))
+    {
+        r_result = false;
+        return;
+    }
+    
 	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
     
     bool t_found;
@@ -1523,8 +1530,9 @@ void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef
         return;
     }
     
+    // MW-2014-10-24: [[ Bug 13787 ]] Make sure we calculate the correct range.
     MCRange t_range;
-    t_range = MCRangeMake(0, t_self_length);
+    t_range = MCRangeMake(MCStringGetLength(p_whole) - t_self_length, t_self_length);
     
     r_result = MCStringsCheckGraphemeBoundaries(p_whole, t_range);
 }

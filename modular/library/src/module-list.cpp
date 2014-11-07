@@ -127,7 +127,6 @@ void MCListRunTests()
     MCListExecPopElementInto(MCProperListRef& x_source, MCValueRef& r_output)
     MCListExecInsertSingleElementIntoListAt(MCValueRef p_value, MCProperListRef& x_target, index_t p_index)
     MCListExecInsertMultipleElementsIntoListAt(MCProperListRef p_value, MCProperListRef& x_target, index_t p_index)
-    MCListEvalContains(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
     MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
     MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 */
@@ -162,9 +161,14 @@ void MCListRunTests()
     MCAssert(*t_sublist != nil);
     log_result("fetch element range of", MCProperListGetLength(*t_sublist) == 2);
     
+    /*MCListEvalContains(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)*/
+    bool t_result;
+    MCListEvalContains(*t_list, *t_sublist, t_result);
+    log_result("contains", t_result);
+    
     /*MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, MCProperListRef p_target, bool& r_output)*/
     bool t_is_among;
     MCListEvalIsAmongTheElementsOf(kMCEmptyName, *t_list, t_is_among);
 
-    log_result("is among elements of", t_is_among);
+    log_result("is among elements of", t_is_among);    
 }

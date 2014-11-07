@@ -626,6 +626,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       if line 1 of it contains "no version information available" then
          delete line 1 of it
       end if
+      // SN-2014-10-27: [[ Bug 13800 ]] libpng 1.6+ raises a warning for the PNG files having embedded sRGB profile
+      if line 1 of it contains "iCCP: Not recognizing known sRGB profile that has been edited" then
+         delete line 1 of it
+      end if
       if it is not empty then
          throw "could not generate package manifest"
       end if

@@ -1,0 +1,15 @@
+/*  
+This module specifies the syntax definitions and bindings for file i/o operations in modular LiveCode.
+*/
+
+module com.livecode.file
+
+
+--
+
+syntax OpenFileForRead is statement
+    
+
+
+
+end module

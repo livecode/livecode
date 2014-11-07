@@ -413,7 +413,8 @@ public:
         return True;
     }
     
-    Boolean mup(uint2 which)
+    // PM-2014-10-24 [[ Bug 13751 ]] Make sure the correct mup() is called on the volume selector
+    Boolean mup(uint2 which, bool release)
     {
         m_grabbed_part = kMCPlayerControllerPartUnknown;
         return True;

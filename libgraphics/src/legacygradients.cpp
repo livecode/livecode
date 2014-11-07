@@ -342,7 +342,7 @@ template<MCGradientFillKind x_type> static inline int4 compute_index(int4 p_x, i
 			break;
 		default:
 			//assert (false);
-			return NULL;
+			return 0;
 	}
 	if (p_mirror)
 	{
