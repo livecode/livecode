@@ -369,13 +369,18 @@ MCStackdirFormatName_TestUnquotable (MCStringRef p_string)
 	MCAssert (t_filter);
 
 	bool valid_unquoted = true;
+	bool first_char = true;
 
 	while (t_filter->HasData())
 	{
 		codepoint_t t_codepoint = t_filter->GetNextCodepoint();
 		t_filter->AdvanceCursor();
 
-		if (t_codepoint >= '0' && t_codepoint <= '9') continue;
+		/* The first character is not permitted to be a digit. */
+		if (!first_char &&
+			(t_codepoint >= '0' && t_codepoint <= '9')) continue;
+		first_char = false;
+
 		if (t_codepoint >= 'A' && t_codepoint <= 'Z') continue;
 		if (t_codepoint >= 'a' && t_codepoint <= 'z') continue;
 		if (t_codepoint == '_') continue;
