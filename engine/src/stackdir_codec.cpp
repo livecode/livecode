@@ -91,6 +91,7 @@ static bool MCStackdirIOScanSpace (MCStackdirIOScannerRef scanner, MCStackdirIOT
 static bool MCStackdirIOScanStorageSeparator (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 static bool MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 static bool MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
+static bool MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 
 /* Table of scanner functions. These are called in order */
 typedef bool (*MCStackdirIOScanFunc)(MCStackdirIOScannerRef, MCStackdirIOTokenRef);
@@ -102,6 +103,7 @@ static const MCStackdirIOScanFunc kMCStackdirIOScanFuncs[] =
 		MCStackdirIOScanStorageSeparator,
 		MCStackdirIOScanExternalIndicator,
 		MCStackdirIOScanNumber,
+		MCStackdirIOScanUnquotedString,
 		NULL,
 	};
 
@@ -620,7 +622,9 @@ MCStackdirIOScanNumberSign (MCStackdirIOScannerRef scanner,
 	codepoint_t t_char;
 
 	r_sign = 1;
-	MCStackdirIOScannerGetChar (scanner, t_char);
+	if (!MCStackdirIOScannerGetChar (scanner, t_char))
+		return false;
+
 	if (t_char == '+' || t_char == '-')
 	{
 		r_sign = (t_char == '+') ? 1 : -1;
@@ -689,8 +693,9 @@ MCStackdirIOScanNumberFraction (MCStackdirIOScannerRef scanner,
 	r_fraction_part = 0;
 
 	/* The fraction part must start with a '.' */
-	MCStackdirIOScannerGetChar (scanner, t_char);
-	if (t_char != '.') return false;
+	if (!MCStackdirIOScannerGetChar (scanner, t_char) ||
+		t_char != '.')
+		return false;
 	MCStackdirIOScannerNextChar (scanner);
 
 	/* Ensure that we can detect an over- or underflow */
@@ -729,8 +734,9 @@ MCStackdirIOScanNumberExponent (MCStackdirIOScannerRef scanner,
 	r_exponent_factor = 1.0;
 
 	/* The exponent part must start with an 'e' */
-	MCStackdirIOScannerGetChar (scanner, t_char);
-	if (t_char != 'e') return false;
+	if (!MCStackdirIOScannerGetChar (scanner, t_char) ||
+		t_char != 'e')
+		return false;
 	MCStackdirIOScannerNextChar (scanner);
 
 	/* The exponent can have an optional sign */
@@ -868,6 +874,55 @@ MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner,
 	}
 
 	MCUnreachable ();
+	return false;
+}
+
+/* ----------------------------------------------------------------
+ * Scanning unquoted strings
+ * ---------------------------------------------------------------- */
+
+static bool
+MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner,
+								MCStackdirIOTokenRef r_token)
+{
+	MCAutoStringRef t_value;
+	codepoint_t t_char;
+	bool t_found = false;
+
+	while (MCStackdirIOScannerGetChar (scanner, t_char))
+	{
+		bool t_valid_char = false;
+
+		/* The first character isn't allowed to be a digit */
+		t_valid_char |= (!t_found &&
+						 (t_char >= '0' && t_char <= '9'));
+
+		t_valid_char |= (t_char >= 'a' && t_char <= 'z');
+		t_valid_char |= (t_char >= 'A' && t_char <= 'Z');
+		t_valid_char |= (t_char == '_');
+		t_valid_char |= (t_char == '-');
+		t_valid_char |= (t_char == '.');
+
+		if (!t_valid_char) break;
+
+		/* Only allocate storage for the result if we found a valid
+		 * character. */
+		if (!t_found)
+		{
+			/* UNCHECKED */ MCStringCreateMutable (1, &t_value);
+			t_found = true;
+		}
+
+		/* UNCHECKED */ MCStringAppendCodepoint (*t_value, t_char);
+		MCStackdirIOScannerNextChar (scanner);
+	}
+
+	if (t_found)
+	{
+		r_token->m_type = kMCStackdirIOTokenTypeUnquotedString;
+		r_token->m_value = MCValueRetain (*t_value);
+		return true;
+	}
 	return false;
 }
 
