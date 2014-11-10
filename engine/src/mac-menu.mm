@@ -38,6 +38,8 @@
 static uint32_t s_menu_select_lock = 0;
 // SN-2014-11-06: [[ Bug 13836 ]] Stores whether a shadowed item got selected
 static bool s_shadow_item_selected = false;
+// SN-2014-11-10: [[ Bug 13836 ]] Keeps the track about the open items in the menu bar.
+static uint32_t s_open_menubar_items = 0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,9 +66,6 @@ struct MCPlatformMenu
     // SN-2014-11-06: [[ Bu 13940 ]] Add a flag for the presence of a Preferences shortcut
     //  to allow the menu item to be disabled.
     bool preferences_has_accelerator : 1;
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] Set to true if the menu needs to be updated.
-    bool needs_update : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,23 +158,22 @@ static uint32_t s_key_equivalent_depth = 0;
 
 - (void)menuNeedsUpdate: (NSMenu *)menu
 {
-    // SN-2014-11-06: [[ Bug 13836 ]] Ensure that the menu is only updated if needed...
-    // SN-2014-11-06: [[ Bug 13849 ]] ...since rebuilding a menubar sends mouseDown to it
-    if (m_menu -> needs_update)
+    // SN-2014-11-10: [[ Bug 13836 ]] Only allow the menu to refresh the whole menubar if
+    //  it is the first click on the menubar (otherwise, clicking and sliding would refresh
+    //  the menubar each the item hovered changes)...
+    // SN-2014-11-06: [[ Bug 13849 ]] ...since rebuilding a menubar sends mouseDown to the menubar
+    if ([menu supermenu] == nil || !s_open_menubar_items)
     {
         MCPlatformCallbackSendMenuUpdate(m_menu);
-        
-        // MW-2014-10-29: [[ Bug 13848 ]] Only do the item hiding if this is part of a menubar
-        //   (not a popup menu).
-        if ([menu supermenu] != nil)
-        {
-            [self hideShadowedMenuItem: @"About" menu: menu];
-            [self hideShadowedMenuItem: @"Preferences" menu: menu];
-            [self hideShadowedMenuItem: @"Quit" menu: menu];
-        }
-        
-        // SN-2014-22-06: [[ Bug 13836 ]] This menu is now up-to-date
-        m_menu -> needs_update = false;
+    }
+    
+    // MW-2014-10-29: [[ Bug 13848 ]] Only do the item hiding if this is part of a menubar
+    //   (not a popup menu).
+    if ([menu supermenu] != nil)
+    {
+        [self hideShadowedMenuItem: @"About" menu: menu];
+        [self hideShadowedMenuItem: @"Preferences" menu: menu];
+        [self hideShadowedMenuItem: @"Quit" menu: menu];
     }
 }
 
@@ -217,6 +215,23 @@ static uint32_t s_key_equivalent_depth = 0;
 {
     // SN-2014-11-06: [[ Bug 13836 ]] We don't update the menubar everytime an accelerator is used
 	return NO;
+}
+
+//////////
+
+// SN-2014-11-10: [[ Bug 13836 ]] We want to know how many items are open in the menubar,
+//  When sliding after having clicked in the menubar, the new item receives menuWillOpen
+//  before the other one receives menuWillClose.
+- (void)menuWillOpen:(NSMenu *)menu
+{
+    if ([s_menubar -> menu isEqualTo: [menu supermenu]])
+        s_open_menubar_items++;
+}
+
+- (void)menuDidClose:(NSMenu *)menu
+{
+    if ([s_menubar -> menu isEqualTo: [menu supermenu]])
+        s_open_menubar_items--;
 }
 
 @end
@@ -297,9 +312,11 @@ static uint32_t s_key_equivalent_depth = 0;
     [t_app terminate:t_app];
 }
 
-// SN-2014-11-06: [[ Bug 13940 ]] menuNeedsUpdate not longer needed at the Application level
+// SN-2014-11-10: [[ Bug 13836 ]] The menubar should be updated if left item is clicked
 - (void)menuNeedsUpdate: (NSMenu *)menu
 {
+    if (!s_open_menubar_items)
+        MCPlatformCallbackSendMenuUpdate(s_menubar);
 }
 
 - (BOOL)validateMenuItem: (NSMenuItem *)item
@@ -317,6 +334,18 @@ static uint32_t s_key_equivalent_depth = 0;
     //  We don't want to rebuild all of this each time an accelerator is used.
 //    [self menuNeedsUpdate: menu];
     return NO;
+}
+
+//////////
+
+- (void)menuWillOpen:(NSMenu *)menu
+{
+    s_open_menubar_items++;
+}
+
+- (void)menuDidClose:(NSMenu *)menu
+{
+    s_open_menubar_items--;
 }
 
 @end
@@ -444,9 +473,6 @@ static void MCPlatformDestroyMenuItem(MCPlatformMenuRef p_menu, uindex_t p_index
 	// Update the submenu pointer (so we don't have any dangling
 	// refs).
     [t_item setSubmenu: nil];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 	
 	// Now release the platform menu.
 	MCPlatformReleaseMenu(t_submenu_ref);
@@ -481,9 +507,6 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 	t_menu -> menu_delegate = [[MCMenuDelegate alloc] initWithPlatformMenuRef: t_menu];
 	[t_menu -> menu setDelegate: t_menu -> menu_delegate];
     t_menu -> is_menubar = false;
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    t_menu -> needs_update = false;
 	
 	// Turn on auto-enablement - this allows dialogs to control the enablement
 	// of items with appropriate tag.
@@ -519,8 +542,6 @@ void MCPlatformReleaseMenu(MCPlatformMenuRef p_menu)
 void MCPlatformSetMenuTitle(MCPlatformMenuRef p_menu, const char *p_title)
 {
     [p_menu -> menu setTitle: [NSString stringWithCString: p_title encoding: NSUTF8StringEncoding]];
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 }
 
 void MCPlatformCountMenuItems(MCPlatformMenuRef p_menu, uindex_t& r_count)
@@ -544,9 +565,6 @@ void MCPlatformAddMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 	
 	// Insert the item in the menu.
 	[p_menu -> menu insertItem: t_item atIndex: p_where];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 	
 	[t_item release];
 }
@@ -556,9 +574,6 @@ void MCPlatformAddMenuSeparatorItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 	MCPlatformClampMenuItemIndex(p_menu, p_where);
 	
     [p_menu -> menu insertItem: [NSMenuItem separatorItem] atIndex: p_where];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 }
  
 void MCPlatformRemoveMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
@@ -567,9 +582,6 @@ void MCPlatformRemoveMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 	
 	MCPlatformDestroyMenuItem(p_menu, p_where);
 	[p_menu -> menu removeItemAtIndex: p_where];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 }
 
 void MCPlatformRemoveAllMenuItems(MCPlatformMenuRef p_menu)
@@ -577,9 +589,6 @@ void MCPlatformRemoveAllMenuItems(MCPlatformMenuRef p_menu)
 	for(uindex_t i = 0; i < [p_menu -> menu numberOfItems]; i++)
 		MCPlatformDestroyMenuItem(p_menu, i);
 	[p_menu -> menu removeAllItems];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 }
 
 void MCPlatformGetMenuParent(MCPlatformMenuRef p_menu, MCPlatformMenuRef& r_parent, uindex_t& r_index)
@@ -626,9 +635,6 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 	
 	NSMenuItem *t_item;
 	t_item = [p_menu -> menu itemAtIndex: p_index];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 	
 	switch(p_property)
 	{
