@@ -822,7 +822,6 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 	t_person_id = [personId intValue];
 	
     ABAddressBookRef t_address_book = nil;
-	//m_success = nil != (t_address_book = ABAddressBookCreate());
     
     // ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
     if (MCmajorosversion < 600)
