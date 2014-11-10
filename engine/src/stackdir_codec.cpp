@@ -92,6 +92,7 @@ static bool MCStackdirIOScanStorageSeparator (MCStackdirIOScannerRef scanner, MC
 static bool MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 static bool MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 static bool MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
+static bool MCStackdirIOScanString (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 
 /* Table of scanner functions. These are called in order */
 typedef bool (*MCStackdirIOScanFunc)(MCStackdirIOScannerRef, MCStackdirIOTokenRef);
@@ -102,6 +103,7 @@ static const MCStackdirIOScanFunc kMCStackdirIOScanFuncs[] =
 		MCStackdirIOScanSpace,
 		MCStackdirIOScanStorageSeparator,
 		MCStackdirIOScanExternalIndicator,
+		MCStackdirIOScanString,
 		MCStackdirIOScanNumber,
 		MCStackdirIOScanUnquotedString,
 		NULL,
@@ -924,6 +926,129 @@ MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner,
 		return true;
 	}
 	return false;
+}
+
+/* ----------------------------------------------------------------
+ * Scanning regular strings
+ * ---------------------------------------------------------------- */
+
+static bool
+MCStackdirIOScanStringUnescape (MCStackdirIOScannerRef scanner,
+								MCStackdirIOTokenRef r_token,
+								codepoint_t & r_char)
+{
+	/* This should be called when the current character is an escape
+	 * character */
+	MCStackdirIOScannerGetChar (scanner, r_char);
+	MCStackdirIOScannerNextChar (scanner);
+	if (r_char != '\\') return true;
+
+	/* The escape sequence *must* begin with a valid escape type
+	 * specifier. */
+	if (!MCStackdirIOScannerGetChar (scanner, r_char))
+	{
+		r_token->m_type = kMCStackdirIOTokenTypeError;
+		return false;
+	}
+	MCStackdirIOScannerNextChar (scanner);
+
+	/* There are two types of escape: direct escapes, and escapes that
+	 * take a number of hexadecimal characters as an argument. */
+	uindex_t t_num_digits;
+	switch (r_char)
+	{
+	case '"':
+	case '\\':
+		return true;
+	case 'n':
+		r_char = '\n';
+		return true;
+	case 'r':
+		r_char = '\r';
+		return true;
+	case 'x':
+		t_num_digits = 2;
+		break;
+	case 'u':
+		t_num_digits = 4;
+		break;
+	case 'U':
+		t_num_digits = 8;
+		break;
+	default:
+		r_token->m_type = kMCStackdirIOTokenTypeError;
+		return false;
+	}
+
+	MCAutoStringRef t_hex;
+	/* UNCHECKED */ MCStringCreateMutable (t_num_digits, &t_hex);
+
+	/* Consume the right number of characters, ensuring that they are
+	 * hexadecimal digits */
+	codepoint_t t_hex_char;
+	for (uindex_t i = 0; i < t_num_digits; ++i)
+	{
+		if (!MCStackdirIOScannerGetChar (scanner, t_hex_char))
+		{
+			r_token->m_type = kMCStackdirIOTokenTypeError;
+			return false;
+		}
+
+		bool t_valid_hex = false;
+		t_valid_hex |= (t_hex_char >= '0' && t_hex_char <= '9');
+		t_valid_hex |= (t_hex_char >= 'a' && t_hex_char <= 'f');
+		t_valid_hex |= (t_hex_char >= 'A' && t_hex_char <= 'F');
+
+		if (!t_valid_hex)
+		{
+			r_token->m_type = kMCStackdirIOTokenTypeError;
+			return false;
+		}
+
+		/* UNCHECKED */ MCStringAppendCodepoint (*t_hex, t_hex_char);
+		MCStackdirIOScannerNextChar (scanner);
+	}
+
+	/* Parse the hex string into a codepoint */
+	sscanf (MCStringGetCString (*t_hex), "%x", &r_char);
+	return true;
+}
+
+static bool
+MCStackdirIOScanString (MCStackdirIOScannerRef scanner,
+						MCStackdirIOTokenRef r_token)
+{
+	codepoint_t t_char;
+	MCAutoStringRef t_value;
+
+	/* Strings start with a string delimiter */
+	MCStackdirIOScannerGetChar (scanner, t_char);
+	if (t_char != '"') return false;
+
+	/* UNCHECKED */ MCStringCreateMutable (0, &t_value);
+
+	while (true)
+	{
+		if (!MCStackdirIOScannerNextChar (scanner))
+		{
+			r_token->m_type = kMCStackdirIOTokenTypeError;
+			return false;
+		}
+
+		if (!MCStackdirIOScanStringUnescape (scanner,
+											 r_token,
+											 t_char))
+			return false;
+
+		/* End of string */
+		if (t_char == '"') break;
+
+		/* UNCHECKED */ MCStringAppendCodepoint (*t_value, t_char);
+	}
+
+	r_token->m_value = MCValueRetain (*t_value);
+	r_token->m_type = kMCStackdirIOTokenTypeString;
+	return true;
 }
 
 /* ================================================================
