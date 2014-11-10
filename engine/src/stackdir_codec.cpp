@@ -93,6 +93,7 @@ static bool MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner, M
 static bool MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 static bool MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 static bool MCStackdirIOScanString (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
+static bool MCStackdirIOScanData (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 
 /* Table of scanner functions. These are called in order */
 typedef bool (*MCStackdirIOScanFunc)(MCStackdirIOScannerRef, MCStackdirIOTokenRef);
@@ -104,6 +105,7 @@ static const MCStackdirIOScanFunc kMCStackdirIOScanFuncs[] =
 		MCStackdirIOScanStorageSeparator,
 		MCStackdirIOScanExternalIndicator,
 		MCStackdirIOScanString,
+		MCStackdirIOScanData,
 		MCStackdirIOScanNumber,
 		MCStackdirIOScanUnquotedString,
 		NULL,
@@ -1048,6 +1050,91 @@ MCStackdirIOScanString (MCStackdirIOScannerRef scanner,
 
 	r_token->m_value = MCValueRetain (*t_value);
 	r_token->m_type = kMCStackdirIOTokenTypeString;
+	return true;
+}
+
+/* ----------------------------------------------------------------
+ * Scanning data
+ * ---------------------------------------------------------------- */
+
+static bool
+MCStackdirIOScanDataBase64 (MCStackdirIOScannerRef scanner,
+							MCStackdirIOTokenRef r_token,
+							MCDataRef &r_data)
+{
+	codepoint_t t_char;
+	MCAutoStringRef t_base64;
+	/* UNCHECKED */ MCStringCreateMutable (0, &t_base64);
+
+	/* Build a string containing base64 encoded data */
+	while (MCStackdirIOScannerGetChar (scanner, t_char))
+	{
+		bool t_valid_char = false;
+		/* RFC4648 base64 dictionary */
+		t_valid_char |= (t_char >= '0' && t_char <= '9');
+		t_valid_char |= (t_char >= 'a' && t_char <= 'z');
+		t_valid_char |= (t_char >= 'A' && t_char <= 'Z');
+		t_valid_char |= (t_char == '+');
+		t_valid_char |= (t_char == '/');
+		t_valid_char |= (t_char == '=');
+
+		if (!t_valid_char) break;
+
+		/* UNCHECKED */ MCStringAppendCodepoint (*t_base64, t_char);
+		MCStackdirIOScannerNextChar (scanner);
+	}
+
+	/* Decode data */
+	MCU_base64decode (*t_base64, r_data);
+	return true;
+}
+
+static bool
+MCStackdirIOScanData (MCStackdirIOScannerRef scanner,
+					  MCStackdirIOTokenRef r_token)
+{
+	codepoint_t t_char;
+	MCAutoDataRef t_value;
+
+	/* Data starts with a data start delimiter */
+	if (!MCStackdirIOScannerGetChar (scanner, t_char) ||
+		(t_char != '<')) return false;
+
+	if (!MCStackdirIOScannerNextChar (scanner))
+	{
+		r_token->m_type = kMCStackdirIOTokenTypeError;
+		return false;
+	}
+
+	/* The data might be in string format.  Otherwise, it's necessary
+	 * to read base64 characters up to the next data delimiter. */
+	if (MCStackdirIOScanString (scanner, r_token))
+	{
+		MCStringRef t_string = (MCStringRef) r_token->m_value;
+		/* UNCHECKED */ MCStringEncodeAndRelease (t_string,
+												  kMCStringEncodingUTF8,
+												  false,
+												  &t_value);
+		r_token->m_value = nil;
+	}
+	else
+	{
+		MCStackdirIOScanDataBase64 (scanner,
+									r_token,
+									&t_value);
+	}
+
+	/* Check that the data *ends* with a date end delimiter */
+	if (!MCStackdirIOScannerGetChar (scanner, t_char) ||
+		(t_char != '>'))
+	{
+		r_token->m_type = kMCStackdirIOTokenTypeError;
+		return false;
+	}
+	MCStackdirIOScannerNextChar (scanner);
+
+	r_token->m_type = kMCStackdirIOTokenTypeData;
+	r_token->m_value = MCValueRetain (*t_value);
 	return true;
 }
 
