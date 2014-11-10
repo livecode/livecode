@@ -604,7 +604,8 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		MCImageBitmap *t_copy = nil;
 		if (m_rep != nil)
 		{
-            t_success = copybitmap(false, t_copy);
+            // PM-2014-11-05: [[ Bug 13938 ]] Make sure new alphaData does not add to previous one
+            t_success = lockbitmap(t_copy, false);
 		}
 		else
 		{
