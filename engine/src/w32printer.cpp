@@ -806,7 +806,8 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			else
 				SetBkMode(t_dc, TRANSPARENT);
 			if (p_mark -> text . unicode_override)
-				TextOutW(t_dc, p_mark -> text . position . x, p_mark -> text . position . y, (LPCWSTR)p_mark -> text . data, p_mark -> text . length >> 1);
+				// SN-2014-10-31: [[ Bug 13866 ]] The length is in characters, so fits the number of wchars
+				TextOutW(t_dc, p_mark -> text . position . x, p_mark -> text . position . y, (LPCWSTR)p_mark -> text . data, p_mark -> text . length);
 			else
 				TextOutA(t_dc, p_mark -> text . position . x, p_mark -> text . position . y, (LPCSTR)p_mark -> text . data, p_mark -> text . length);
 
