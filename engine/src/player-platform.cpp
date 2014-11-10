@@ -1870,6 +1870,7 @@ void MCPlayer::freetmp()
 		MCValueAssign(filename, kMCEmptyString);
 	}
 }
+
 uint4 MCPlayer::getmovieloadedtime()
 {
     uint4 loadedtime;
