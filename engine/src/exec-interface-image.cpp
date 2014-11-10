@@ -720,10 +720,8 @@ void MCImage::SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle)
 void MCImage::GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle)
 {
     if (m_center_rect . x != INT16_MIN)
-    {
-        r_rectangle = new MCRectangle;
+        // AL-2014-11-05: [[ Bug 13943 ]] Return center rect correctly
         *r_rectangle = m_center_rect;
-    }
     else
         r_rectangle = NULL;
 }
