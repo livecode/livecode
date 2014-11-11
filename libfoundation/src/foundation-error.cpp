@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
+MCTypeInfoRef kMCGenericErrorTypeInfo;
 
 static MCErrorRef s_last_error = nil;
 
@@ -115,7 +116,20 @@ bool MCErrorThrowOutOfMemory(void)
     }
     
     MCErrorThrow(s_out_of_memory_error);
+    MCValueRelease(s_out_of_memory_error);
     s_out_of_memory_error = nil;
+    
+    return false;
+}
+
+bool MCErrorThrowGeneric(void)
+{
+    MCErrorRef t_error;
+    if (!MCErrorCreate(kMCGenericErrorTypeInfo, nil, t_error))
+        return false;
+    
+    MCErrorThrow(t_error);
+    MCValueRelease(t_error);
     
     return false;
 }
@@ -151,6 +165,12 @@ bool __MCErrorInitialize(void)
         return false;
     if (!MCTypeInfoBindAndRelease(MCNAME("livecode.lang.OutOfMemoryError"), kMCOutOfMemoryErrorTypeInfo, kMCOutOfMemoryErrorTypeInfo))
         return false;
+    
+    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("unknown"), kMCGenericErrorTypeInfo))
+        return false;
+    if (!MCTypeInfoBindAndRelease(MCNAME("livecode.lang.GenericError"), kMCGenericErrorTypeInfo, kMCOutOfMemoryErrorTypeInfo))
+        return false;
+    
     if (!MCErrorCreate(kMCOutOfMemoryErrorTypeInfo, nil, s_out_of_memory_error))
         return false;
     

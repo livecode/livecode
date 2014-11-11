@@ -2168,6 +2168,7 @@ bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
 //
 
 extern MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
+extern MCTypeInfoRef kMCGenericErrorTypeInfo;
 
 bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
 
@@ -2196,6 +2197,9 @@ MCErrorRef MCErrorPeek(void);
 
 // Throw an out of memory error.
 bool MCErrorThrowOutOfMemory(void);
+
+// Throw a generic runtime error (one that hasn't had a class made for it yet).
+bool MCErrorThrowGeneric(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
