@@ -2745,7 +2745,6 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 		((MCCard *)this) -> draw(t_context, r, true);
 	else
 	{
-
 		t_context -> setopacity(blendlevel * 255 / 100);
 		t_context -> setfunction(GXblendSrcOver);
 
