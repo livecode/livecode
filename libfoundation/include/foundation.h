@@ -1234,6 +1234,7 @@ extern MCTypeInfoRef kMCDataTypeInfo;
 extern MCTypeInfoRef kMCArrayTypeInfo;
 extern MCTypeInfoRef kMCSetTypeInfo;
 extern MCTypeInfoRef kMCListTypeInfo;
+extern MCTypeInfoRef kMCProperListTypeInfo;
 
 //////////
 

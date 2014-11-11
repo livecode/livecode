@@ -28,6 +28,7 @@ MCTypeInfoRef kMCDataTypeInfo;
 MCTypeInfoRef kMCArrayTypeInfo;
 MCTypeInfoRef kMCSetTypeInfo;
 MCTypeInfoRef kMCListTypeInfo;
+MCTypeInfoRef kMCProperListTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -423,7 +424,8 @@ bool __MCTypeInfoInitialize(void)
         __MCTypeInfoCreateBuiltin(kMCValueTypeCodeData, kMCDataTypeInfo) &&
         __MCTypeInfoCreateBuiltin(kMCValueTypeCodeArray, kMCArrayTypeInfo) &&
         __MCTypeInfoCreateBuiltin(kMCValueTypeCodeList, kMCListTypeInfo) &&
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeSet, kMCSetTypeInfo);
+        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeSet, kMCSetTypeInfo) &&
+        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeProperList, kMCProperListTypeInfo);
 }
 
 void __MCTypeInfoFinalize(void)
@@ -436,6 +438,7 @@ void __MCTypeInfoFinalize(void)
     MCValueRelease(kMCArrayTypeInfo);
     MCValueRelease(kMCListTypeInfo);
     MCValueRelease(kMCSetTypeInfo);
+    MCValueRelease(kMCProperListTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
