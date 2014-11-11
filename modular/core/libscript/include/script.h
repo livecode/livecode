@@ -143,12 +143,12 @@ bool MCScriptGetDependenciesOfModule(MCScriptModuleRef module, const MCNameRef*&
 bool MCScriptCreateInstanceOfModule(MCScriptModuleRef module, MCScriptInstanceRef& r_instance);
 
 // Retain a module.
-void MCScriptRetainModule(MCScriptModuleRef module);
+MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef module);
 // Release a module.
 void MCScriptReleaseModule(MCScriptModuleRef module);
 
 // Retain a instance.
-void MCScriptRetainInstance(MCScriptInstanceRef instance);
+MCScriptInstanceRef MCScriptRetainInstance(MCScriptInstanceRef instance);
 // Release a instance.
 void MCScriptReleaseInstance(MCScriptInstanceRef instance);
 
@@ -156,6 +156,7 @@ void MCScriptReleaseInstance(MCScriptInstanceRef instance);
 bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef& r_value);
 // Set a property of an instance.
 bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef value);
+
 // Call a handler of an instance.
 bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 
@@ -194,20 +195,20 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef builder, MCStreamRef stream);
 void MCScriptAddDependencyToModule(MCScriptModuleBuilderRef builder, MCNameRef dependency);
 
 void MCScriptAddExportToModule(MCScriptModuleBuilderRef builder, MCNameRef definition);
-void MCScriptAddImportToModule(MCScriptModuleBuilderRef builder, MCNameRef module, MCNameRef definition, MCScriptDefinitionKind kind, MCTypeRef type);
+void MCScriptAddImportToModule(MCScriptModuleBuilderRef builder, MCNameRef module, MCNameRef definition, MCScriptDefinitionKind kind, MCTypeInfoRef type);
 
-void MCScriptAddTypeToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeRef type);
-void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCValueRef value);
-void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeRef type);
+void MCScriptAddTypeToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef type);
+void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef value);
+void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef type);
 
-void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeRef signature, uindex_t temporary_count);
+void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, uindex_t temporary_count);
 void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef builder);
 
-void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeRef signature, MCStringRef binding);
+void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, MCStringRef binding);
 
 void MCScriptAddPropertyToModule(MCScriptModuleBuilderRef builder, MCNameRef getter, MCNameRef setter);
 
-void MCScriptAddEventToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeRef signature);
+void MCScriptAddEventToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature);
 
 void MCScriptDeferLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uintptr_t& r_label);
 void MCScriptResolveLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uintptr_t label);

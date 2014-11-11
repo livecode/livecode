@@ -1254,8 +1254,6 @@ bool MCTypeInfoBindAndRelease(MCNameRef name, MCTypeInfoRef typeinfo, MCTypeInfo
 
 //////////
 
-// Record types an ordered sequence of named, typed slots.
-
 struct MCRecordTypeFieldInfo
 {
 	MCNameRef name;
@@ -2526,10 +2524,18 @@ enum MCPickleFieldType
 
 struct MCPickleRecordFieldInfo
 {
+    // The kind (native type) of the field.
     MCPickleFieldType kind;
+    // The name of the field.
     const char *tag;
+    // The offset of the field within the record.
     size_t field_offset;
+    // The offset of an associated field within the record
+    // Variable sized arrays use this for the count field.
     size_t aux_field_offset;
+    // Extra information about the field.
+    // For callback fields, this is the function pointer.
+    // For array of variant or record fields, this is the pickleinfo for the element.
     void *extra;
 };
 
@@ -2587,7 +2593,7 @@ struct MCPickleVariantInfo
 #define MC_PICKLE_VALUEREF(Field) MC_PICKLE_FIELD(ValueRef, Field, 0)
 #define MC_PICKLE_STRINGREF(Field) MC_PICKLE_FIELD(StringRef, Field, 0)
 #define MC_PICKLE_NAMEREF(Field) MC_PICKLE_FIELD(NameRef, Field, 0)
-#define MC_PICKLE_TYPEREF(Field) MC_PICKLE_FIELD(TypeRef, Field, 0)
+#define MC_PICKLE_TYPEINFOREF(Field) MC_PICKLE_FIELD(TypeInfoRef, Field, 0)
 #define MC_PICKLE_CALLBACK(Field, CCallback) MC_PICKLE_FIELD(Callback, Field, CCallback)
 
 #define MC_PICKLE_INTENUM(EType, EField) MC_PICKLE_FIELD(IntEnum, EField, k##EType##__Last)

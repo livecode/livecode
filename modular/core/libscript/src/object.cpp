@@ -5,7 +5,22 @@
 
 bool MCScriptCreateObject(MCScriptObjectKind p_kind, size_t p_size, MCScriptObject*& r_object)
 {
-    return false;
+    MCScriptObject *self;
+    if (!MCMemoryAllocate(p_size, self))
+        return false;
+    
+#ifdef _DEBUG
+    self -> __object_marker__ = __MCSCRIPTOBJECT_MARKER__
+#endif
+    
+    self -> references = 1;
+    self -> kind = p_kind;
+    
+    MCMemoryClear(self + 1, p_size - sizeof(MCScriptObject));
+    
+    r_object = self;
+    
+    return true;
 }
 
 void MCScriptDestroyObject(MCScriptObject *self)
@@ -35,11 +50,13 @@ void MCScriptDestroyObject(MCScriptObject *self)
     }
 }
 
-void MCScriptRetainObject(MCScriptObject *self)
+MCScriptObject *MCScriptRetainObject(MCScriptObject *self)
 {
     __MCScriptValidateObject__(self);
     
     self -> references += 1;
+
+    return self;
 }
 
 void MCScriptReleaseObject(MCScriptObject *self)
@@ -48,6 +65,10 @@ void MCScriptReleaseObject(MCScriptObject *self)
     
     __MCScriptAssert__(self -> references > 0, "invalid reference count");
     
+    self -> references -= 1;
+    
+    if (self -> references == 0)
+        MCScriptDestroyObject(self);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,6 +77,23 @@ void MCscriptReleaseObjectArray(MCScriptObject **p_elements, uindex_t p_count)
 {
     for(uindex_t i = 0; i < p_count; i++)
         MCScriptReleaseObject(p_elements[i]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void __MCScriptValidateObjectFailed__(MCScriptObject *object, const char *function, const char *file, int line)
+{
+    abort();
+}
+
+void __MCScriptValidateObjectAndKindFailed__(MCScriptObject *object, MCScriptObjectKind kind, const char *function, const char *file, int line)
+{
+    abort();
+}
+
+void __MCScriptAssertFailed__(const char *label, const char *expr, const char *function, const char *file, int line)
+{
+    abort();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
