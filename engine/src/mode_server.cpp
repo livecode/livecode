@@ -60,10 +60,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  Globals specific to SERVER mode
 //
 
+// AL-2014-11-07: [[ Bug 13919 ]] Set the script limits to 0 for server community
+//  as script only stacks are subjected to license parameter checks
+
 MCLicenseParameters MClicenseparameters =
 {
 	NULL, NULL, NULL, kMCLicenseClassNone, 0,
-	10, 10, 50, 10,
+	0, 0, 0, 0,
 	0,
 	NULL,
 };
