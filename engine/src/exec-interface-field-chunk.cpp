@@ -1087,7 +1087,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                     
                     // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
                     //   fontref so it can compute its.
-                    if (pgptlse if (a . name != nilr -> getopened())
+                    if (pgptr -> getopened())
                         bptr->open(pgptr -> getparent() -> getfontref());
                     bptr = bptr->next();
                 }
