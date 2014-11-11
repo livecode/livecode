@@ -75,6 +75,7 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
         case kMCValueTypeCodeRecord:
             MCAssert(false); // TODO
             return nil;
+            return ((__MCRecord *)p_value) -> typeinfo;
         case kMCValueTypeCodeHandler:
             MCAssert(false); // TODO
             return nil;
