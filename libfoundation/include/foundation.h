@@ -2643,7 +2643,7 @@ bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *info, void*& r_record)
 bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *info, void* record);
 
 // Release a record read in using MCPickleRead.
-bool MCPickleRelease(MCPickleRecordInfo *info, void *record);
+void MCPickleRelease(MCPickleRecordInfo *info, void *record);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

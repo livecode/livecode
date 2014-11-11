@@ -389,3 +389,70 @@ bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *p_info, void *p_recor
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, void *p_field_ptr, const void *p_aux_ptr, const void *p_extra)
+{
+    switch(p_kind)
+    {
+        case kMCPickleFieldTypeValueRef:
+        case kMCPickleFieldTypeStringRef:
+        case kMCPickleFieldTypeNameRef:
+        case kMCPickleFieldTypeTypeInfoRef:
+            MCValueRelease(*(MCValueRef *)p_field_ptr);
+            break;
+            
+        case kMCPickleFieldTypeArrayOfByte:
+            free(*(void **)p_field_ptr);
+            break;
+            
+        case kMCPickleFieldTypeArrayOfValueRef:
+        case kMCPickleFieldTypeArrayOfNameRef:
+            for(uindex_t i = 0; i < *(uindex_t *)p_aux_ptr; i++)
+                MCValueRelease((*(MCValueRef **)p_field_ptr)[i]);
+            free(*(MCValueRef **)p_field_ptr);
+            break;
+        
+        case kMCPickleFieldTypeArrayOfRecord:
+            for(uindex_t i = 0; i < *(uindex_t *)p_aux_ptr; i++)
+                MCPickleRelease((MCPickleRecordInfo *)p_extra, &((void **)p_field_ptr)[i]);
+            free(*(MCValueRef **)p_field_ptr);
+            break;
+            
+        case kMCPickleFieldTypeArrayOfVariant:
+            for(uindex_t i = 0; i < *(uindex_t *)p_aux_ptr; i++)
+            {
+                void *t_variant;
+                t_variant = ((void **)p_field_ptr)[i];
+            
+                MCPickleVariantInfo *t_info;
+                t_info = (MCPickleVariantInfo *)p_extra;
+            
+                int t_kind;
+                t_kind = *((int *)((uint8_t *)t_variant + t_info -> kind_offset));
+
+                for(int i = 0; t_info -> cases[i] . kind != -1; i++)
+                    if (t_kind == t_info -> cases[i] . kind)
+                    {
+                        MCPickleRelease(t_info -> cases[i] . record, t_variant);
+                        break;
+                    }
+            }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+void MCPickleRelease(MCPickleRecordInfo *p_info, void *p_record)
+{
+    for(uindex_t i = 0; i < p_info -> fields[i] . kind != kMCPickleFieldTypeNone; i++)
+    {
+        void *t_field_ptr, *t_extra_field_ptr;
+        t_field_ptr = static_cast<uint8_t *>(p_record) + p_info -> fields[i] . field_offset;
+        t_extra_field_ptr = static_cast<uint8_t *>(p_record) + p_info -> fields[i] . aux_field_offset;
+        MCPickleReleaseField(p_info -> fields[i] . kind, p_record, t_field_ptr, t_extra_field_ptr, p_info -> fields[i] . extra);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
