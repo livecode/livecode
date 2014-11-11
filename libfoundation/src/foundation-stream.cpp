@@ -408,6 +408,74 @@ bool MCStreamReadDouble(MCStreamRef stream, double& r_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCStreamWriteUInt8(MCStreamRef self, uint8_t p_value)
+{
+	return MCStreamWrite(self, &p_value, sizeof(uint8_t));
+}
+
+bool MCStreamWriteUInt16(MCStreamRef self, uint16_t p_value)
+{
+    uint16_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost(p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint16_t));
+}
+
+bool MCStreamWriteUInt32(MCStreamRef self, uint32_t p_value)
+{
+    uint32_t t_swapped_value;
+    t_swapped_value = MCSwapInt32NetworkToHost(p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint32_t));
+}
+
+bool MCStreamReadUInt64(MCStreamRef self, uint64_t p_value)
+{
+    uint64_t t_swapped_value;
+    t_swapped_value = MCSwapInt64NetworkToHost(p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint64_t));
+}
+
+bool MCStreamWriteInt8(MCStreamRef self, int8_t p_value)
+{
+	return MCStreamWrite(self, &p_value, sizeof(int8_t));
+}
+
+bool MCStreamWriteInt16(MCStreamRef self, int16_t p_value)
+{
+    uint16_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost((uint16_t)p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint16_t));
+}
+
+bool MCStreamWriteInt32(MCStreamRef self, int32_t p_value)
+{
+    uint32_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost((uint32_t)p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint32_t));
+}
+
+bool MCStreamWriteInt64(MCStreamRef self, int64_t p_value)
+{
+    uint64_t t_swapped_value;
+    t_swapped_value = MCSwapInt16NetworkToHost((uint64_t)p_value);
+	return MCStreamWrite(self, &t_swapped_value, sizeof(uint64_t));
+}
+
+bool MCStreamReadCompactUInt32(MCStreamRef stream, uint32_t& r_value);
+bool MCStreamReadCompactUInt64(MCStreamRef stream, uint64_t& r_value);
+bool MCStreamReadCompactSInt32(MCStreamRef stream, uint32_t& r_value);
+bool MCStreamReadCompactSInt64(MCStreamRef stream, uint64_t& r_value);
+
+bool MCStreamWriteFloat(MCStreamRef stream, float p_value);
+
+bool MCStreamWriteDouble(MCStreamRef stream, double p_value)
+{
+	uint64_t t_bits;
+    MCMemoryCopy(&t_bits, &p_value, sizeof(uint64_t));
+	return MCStreamWriteUInt64(stream, t_bits);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCStreamReadBoolean(MCStreamRef stream, MCBooleanRef& r_boolean)
 {
 	uint8_t t_value;
