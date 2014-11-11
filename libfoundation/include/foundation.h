@@ -2466,6 +2466,8 @@ uindex_t MCProperListGetLength(MCProperListRef list);
 // Returns true if the given list is the empty list.
 bool MCProperListIsEmpty(MCProperListRef list);
 
+// Iterate over the elements in the list.
+bool MCProperListIterate(MCProperListRef list, uintptr_t& x_iterator, MCValueRef& r_element);
 
 // Apply the callback to each element of list. The contents should not be modified.
 typedef bool (*MCProperListApplyCallback)(void *context, MCValueRef element);
