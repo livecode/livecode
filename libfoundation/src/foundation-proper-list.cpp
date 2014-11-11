@@ -487,6 +487,21 @@ bool MCProperListFirstIndexOfList(MCProperListRef self, MCProperListRef p_needle
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCProperListIterate(MCProperListRef self, uintptr_t& x_iterator, MCValueRef& r_element)
+{
+    if (MCProperListIsIndirect(self))
+        self = self -> contents;
+    
+    if (x_iterator == self -> length)
+        return false;
+    
+    r_element = self -> list[x_iterator];
+    
+    x_iterator += 1;
+    
+    return true;
+}
+
 bool MCProperListApply(MCProperListRef self, MCProperListApplyCallback p_callback, void *context)
 {
     if (MCProperListIsIndirect(self))
