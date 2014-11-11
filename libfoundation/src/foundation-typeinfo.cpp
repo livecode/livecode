@@ -422,8 +422,8 @@ bool __MCTypeInfoInitialize(void)
         __MCTypeInfoCreateBuiltin(kMCValueTypeCodeString, kMCStringTypeInfo) &&
         __MCTypeInfoCreateBuiltin(kMCValueTypeCodeData, kMCDataTypeInfo) &&
         __MCTypeInfoCreateBuiltin(kMCValueTypeCodeArray, kMCArrayTypeInfo) &&
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeArray, kMCListTypeInfo) &&
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeArray, kMCSetTypeInfo);
+        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeList, kMCListTypeInfo) &&
+        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeSet, kMCSetTypeInfo);
 }
 
 void __MCTypeInfoFinalize(void)
