@@ -528,6 +528,7 @@
 		4DFFC7E113DD8A91006233A4 /* sysunxnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */; };
 		4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */; };
 		4DFFC7EF13DD8AFC006233A4 /* name.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7EE13DD8AFC006233A4 /* name.cpp */; };
+		72B67C511A0BBDF600BB2594 /* mac-theme.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72B67C501A0BBDF600BB2594 /* mac-theme.mm */; };
 		76CCAA7C19800BCD00C79271 /* mac-qt-recorder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */; };
 		76CCAA7E1980152A00C79271 /* platform-recorder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */; };
 		A71F80540F4F178C003012FD /* Standalone.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80530F4F178C003012FD /* Standalone.icns */; };
@@ -1539,6 +1540,7 @@
 		4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxnetwork.cpp; path = src/sysunxnetwork.cpp; sourceTree = "<group>"; };
 		4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC7EE13DD8AFC006233A4 /* name.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = name.cpp; path = src/name.cpp; sourceTree = "<group>"; };
+		72B67C501A0BBDF600BB2594 /* mac-theme.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-theme.mm"; path = "src/mac-theme.mm"; sourceTree = "<group>"; };
 		76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-recorder.mm"; path = "src/mac-qt-recorder.mm"; sourceTree = "<group>"; };
 		76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-recorder.cpp"; path = "src/platform-recorder.cpp"; sourceTree = "<group>"; };
 		A04643DB0BAAA63A0030A830 /* w32ans.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32ans.cpp; path = src/w32ans.cpp; sourceTree = "<group>"; };
@@ -2133,6 +2135,7 @@
 				4D30CAF5189AC1720034CDC6 /* mac-snapshot.mm */,
 				4DA028F518F54B5D000CFCF8 /* mac-sound.mm */,
 				4DECD1341886F0FF00463D52 /* mac-surface.mm */,
+				72B67C501A0BBDF600BB2594 /* mac-theme.mm */,
 				4DECD0C71886E4FD00463D52 /* mac-window.mm */,
 				4D5881B90B80C79600200116 /* osxcisupport.mm */,
 				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
@@ -3767,6 +3770,7 @@
 				4DEE2AD50FDE42710009423C /* objectstream.cpp in Sources */,
 				4DEE2AD60FDE42710009423C /* objptr.cpp in Sources */,
 				4DEE2AD70FDE42710009423C /* opensslsocket.cpp in Sources */,
+				72B67C511A0BBDF600BB2594 /* mac-theme.mm in Sources */,
 				4DEE2AD80FDE42710009423C /* operator.cpp in Sources */,
 				4D232D9918DB03A800A4FF3E /* platform.cpp in Sources */,
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
