@@ -107,3 +107,45 @@ void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MCStringRef& 
     if (!MCStringCopy(*t_data, x_target))
         return;
 }
+
+void MCCharEvalOffsetOfCharsInRange(MCHandlerContext ctxt, MCStringRef p_needle, MCStringRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
+{
+    uindex_t t_offset;
+    t_offset = 0;
+    if (!MCStringIsEmpty(p_needle))
+    {
+        if (p_is_last)
+            MCStringLastIndexOfStringInRange(p_target, p_needle, p_range, ctxt . GetStringComparisonOptions(), t_offset);
+        else
+            MCStringFirstIndexOfStringInRange(p_target, p_needle, p_range, ctxt . GetStringComparisonOptions(), t_offset);
+        
+        // correct output index
+        t_offset++;
+    }
+    r_output = t_offset;
+}
+
+void MCCharEvalOffsetOfChars(MCHandlerContext ctxt, MCStringRef p_needle, MCStringRef p_target, bool p_is_last, uindex_t& r_output)
+{
+    MCCharEvalOffsetOfCharsInRange(ctxt, p_needle, MCRangeMake(0, UINDEX_MAX), p_target, p_is_last, r_output);
+}
+
+void MCCharEvalOffsetOfCharsAfter(MCHandlerContext ctxt, MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, bool p_is_last, uindex_t& r_output)
+{
+    MCCharEvalOffsetOfCharsInRange(ctxt, p_needle, MCRangeMake(p_after, UINDEX_MAX), p_target, p_is_last, r_output);
+}
+
+void MCCharEvalOffsetOfCharsBefore(MCDataRef p_needle, MCDataRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
+{
+    MCCharEvalOffsetOfCharsInRange(ctxt, p_needle, MCRangeMake(0, p_before), p_target, p_is_last, r_output);
+}
+
+void MCCharEvalBeginsWith(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRef p_prefix, bool& r_result)
+{
+    r_result = MCStringBeginsWith(p_source, p_prefix, ctxt . GetStringComparisonOptions());
+}
+
+void MCCharEvalEndsWith(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRef p_suffix, bool& r_result)
+{
+    r_result = MCStringBeginsWith(p_source, p_prefix, ctxt . GetStringComparisonOptions());
+}
