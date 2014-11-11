@@ -716,12 +716,13 @@ bool MCContactFindContact(const char* p_person_name, char *&r_chosen)
 {
     // PM-2014-11-10: [[ Bug 13979 ]] On iOS 8, we need to request authorization to be able to get a record identifier
     // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
-    if (MCmajorosversion >= 800)
+#ifdef __IPHONE_6_0
+	if (MCmajorosversion >= 800)
     {
         ABAddressBookRef t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
         requestAuthorization(t_address_book);
     }
-
+#endif
 	MCIPhoneCallSelectorOnMainFiber(self, @selector(doShowPickContact));
 	
     while (m_running)
