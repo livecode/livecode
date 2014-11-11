@@ -153,11 +153,15 @@ const char *MCAudioClip::gettypestring()
 
 void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (play())
-    {
+    // PM-2014-11-11: [[ Bug 13950 ]] Make sure looping audioClip can be stopped
 #ifndef FEATURE_PLATFORM_AUDIO
-		MCscreen->addtimer(this, MCM_internal, looping ? LOOP_RATE: PLAY_RATE);
+    if (play())
+    {
+        MCscreen->addtimer(this, MCM_internal, looping ? LOOP_RATE: PLAY_RATE);
 #else
+    if (MCPlatformSoundIsPlaying(s_current_sound))
+    {
+        // Do nothing
 #endif
     }
 	else
