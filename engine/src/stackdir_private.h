@@ -171,19 +171,6 @@ typedef int (*MCStackdirArrayApplySortedCompareFunc)(const MCNameRef *, const MC
 bool MCStackdirArrayApplySorted (MCArrayRef array, MCArrayApplyCallback p_callback, void *p_callback_context, MCStackdirArrayApplySortedCompareFunc p_compare = NULL);
 
 /* ----------------------------------------------------------------
- * [Private] Filename generation
- * ---------------------------------------------------------------- */
-
-/* Generate a valid stackdir filename from an arbitrary string or
- * name.
- *
- * If no valid stackdir filename could be generated for the string,
- * returns false.  Otherwise, returns true.
- */
-bool MCStackdirCreateFilename (MCStringRef p_str, MCStringRef & r_filename);
-bool MCStackdirCreateFilename (MCNameRef p_str, MCStringRef & r_filename);
-
-/* ----------------------------------------------------------------
  * [Private] Tests on expanded stackfile bundles
  * ---------------------------------------------------------------- */
 
