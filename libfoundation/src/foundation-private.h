@@ -72,6 +72,11 @@ struct __MCTypeInfo: public __MCValue
             uindex_t field_count;
             MCTypeInfoRef return_type;
         } handler;
+        struct
+        {
+            MCNameRef domain;
+            MCStringRef message;
+        } error;
     };
 };
 
@@ -314,6 +319,19 @@ struct __MCRecord: public __MCValue
 
 ////////
 
+struct __MCError: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+    MCStringRef message;
+    MCArrayRef info;
+    
+    MCValueRef target;
+    uindex_t row;
+    uindex_t column;
+};
+
+////////
+
 struct __MCCustomValue: public __MCValue
 {
 	const MCValueCustomCallbacks *callbacks;
@@ -345,8 +363,9 @@ template<class T> inline bool __MCValueCreate(MCValueTypeCode p_type_code, T*& r
 //////////
 
 bool __MCUnicodeInitialize();
-bool __MCLocaleInitialize();
 void __MCUnicodeFinalize();
+
+bool __MCLocaleInitialize();
 void __MCLocaleFinalize();
 
 bool __MCValueInitialize(void);
@@ -411,6 +430,13 @@ hash_t __MCRecordHash(__MCRecord *self);
 bool __MCRecordIsEqualTo(__MCRecord *self, __MCRecord *p_other_data);
 bool __MCRecordCopyDescription(__MCRecord *self, MCStringRef &r_description);
 bool __MCRecordImmutableCopy(__MCRecord *self, bool p_release, __MCRecord *&r_immutable_value);
+
+bool __MCErrorInitialize();
+void __MCErrorFinalize();
+void __MCErrorDestroy(__MCError *error);
+hash_t __MCErrorHash(__MCError *error);
+bool __MCErrorIsEqualTo(__MCError *error, __MCError *other_error);
+bool __MCErrorCopyDescription(__MCError *error, MCStringRef& r_string);
 
 bool __MCTypeInfoInitialize(void);
 void __MCTypeInfoFinalize(void);

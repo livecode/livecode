@@ -561,6 +561,7 @@ typedef struct __MCArray *MCArrayRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCRecord *MCRecordRef;
+typedef struct __MCError *MCErrorRef;
 typedef struct __MCStream *MCStreamRef;
 
 // Forward declaration
@@ -759,39 +760,6 @@ inline MCRange MCRangeMake(uindex_t p_offset, uindex_t p_length)
 
 bool MCInitialize(void);
 void MCFinalize(void);
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  ERROR HANDLING
-//
-
-typedef uint32_t MCErrorCode;
-enum
-{
-	kMCErrorNone,
-	
-	kMCErrorOutOfMemory,
-};
-
-typedef void (*MCErrorHandler)(MCErrorCode code);
-
-// Throw the given error code (local to the current thread).
-bool MCErrorThrow(MCErrorCode code);
-
-// Catch the current error code (on the current thread) if any and clear it.
-MCErrorCode MCErrorCatch(void);
-
-// Returns true if there is an error pending on the current thread.
-bool MCErrorIsPending(void);
-
-// Returns any pending error (on the current thread) without clearing it.
-MCErrorCode MCErrorPeek(void);
-
-// Sets the error handler - called whenever MCErrorThrow is called.
-void MCErrorSetHandler(MCErrorHandler handler);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1096,6 +1064,7 @@ enum
 	kMCValueTypeCodeRecord,
 	kMCValueTypeCodeHandler,
 	kMCValueTypeCodeTypeInfo,
+    kMCValueTypeCodeError,
 };
 
 enum
@@ -1263,6 +1232,7 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
 // typeinfo acts like its target apart from the non-nil return from GetName. Bindings
 // never chain - a typeinfo is either a named binding, or an actual typeinfo.
 bool MCTypeInfoBind(MCNameRef name, MCTypeInfoRef typeinfo, MCTypeInfoRef& r_typeinfo);
+bool MCTypeInfoBindAndRelease(MCNameRef name, MCTypeInfoRef typeinfo, MCTypeInfoRef& r_typeinfo);
 
 //////////
 
@@ -1322,6 +1292,13 @@ MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef typeinfo,
 
 // Return the type of the index'th parameter.
 MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typeinfo, uindex_t index);
+
+//////////
+
+bool MCErrorTypeInfoCreate(MCNameRef domain, MCStringRef message, MCTypeInfoRef& r_typeinfo);
+
+MCNameRef MCErrorTypeInfoGetDomain(MCTypeInfoRef error);
+MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef error);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2184,6 +2161,41 @@ bool MCRecordIsMutable(MCRecordRef self);
 
 bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
 bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  ERROR DEFINITIONS
+//
+
+extern MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
+
+bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
+
+bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
+
+MCNameRef MCErrorGetDomain(MCErrorRef error);
+MCArrayRef MCErrorGetInfo(MCErrorRef error);
+MCStringRef MCErrorGetMessage(MCErrorRef error);
+
+uindex_t MCErrorGetDepth(MCErrorRef error);
+MCValueRef MCErrorGetTargetAtLevel(MCErrorRef error, uindex_t level);
+uindex_t MCErrorGetRowAtLevel(MCErrorRef error, uindex_t row);
+uindex_t MCErrorGetColumnAtLevel(MCErrorRef error, uindex_t column);
+
+// Throw the given error code (local to the current thread).
+bool MCErrorThrow(MCErrorRef error);
+
+// Catch the current error code (on the current thread) if any and clear it.
+bool MCErrorCatch(MCErrorRef& r_error);
+
+// Returns true if there is an error pending on the current thread.
+bool MCErrorIsPending(void);
+
+// Returns any pending error (on the current thread) without clearing it.
+MCErrorRef MCErrorPeek(void);
+
+// Throw an out of memory error.
+bool MCErrorThrowOutOfMemory(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

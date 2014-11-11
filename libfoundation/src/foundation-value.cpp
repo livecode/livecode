@@ -73,12 +73,12 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
             MCAssert(false); // TODO
             return nil;
         case kMCValueTypeCodeRecord:
-            MCAssert(false); // TODO
-            return nil;
             return ((__MCRecord *)p_value) -> typeinfo;
         case kMCValueTypeCodeHandler:
             MCAssert(false); // TODO
             return nil;
+        case kMCValueTypeCodeError:
+            return ((__MCError *)p_value) -> typeinfo;
     }
     
     MCUnreachable();
@@ -165,6 +165,8 @@ hash_t MCValueHash(MCValueRef p_value)
         return __MCRecordHash((__MCRecord*) self);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoHash((__MCTypeInfo*) self);
+    case kMCValueTypeCodeError:
+        return __MCErrorHash((__MCError*)self);
 	default:
 		break;
 	}
@@ -228,6 +230,8 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
         return __MCRecordIsEqualTo((__MCRecord*)self, (__MCRecord*)other_self);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoIsEqualTo((__MCTypeInfo *)self, (__MCTypeInfo *)other_self);
+    case kMCValueTypeCodeError:
+        return __MCErrorIsEqualTo((__MCError *)self, (__MCError *)other_self);
 	// Shouldn't happen!
 	default:
 		break;
@@ -269,6 +273,8 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
         return __MCRecordCopyDescription((__MCRecord*)p_value, r_desc);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoCopyDescription((__MCTypeInfo*)p_value, r_desc);
+    case kMCValueTypeCodeError:
+        return __MCErrorCopyDescription((__MCError*)p_value, r_desc);
 	default:
 		break;
 	}
@@ -404,6 +410,9 @@ void __MCValueDestroy(__MCValue *self)
         break;
     case kMCValueTypeCodeTypeInfo:
         __MCTypeInfoDestroy((__MCTypeInfo *)self);
+        break;
+    case kMCValueTypeCodeError:
+        __MCErrorDestroy((__MCError *)self);
         break;
     default:
         // Shouldn't get here

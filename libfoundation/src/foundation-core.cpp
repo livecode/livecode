@@ -29,11 +29,14 @@ const char *__MCSysCharset;
 
 bool MCInitialize(void)
 {
-	if (!__MCUnicodeInitialize())
+    if (!__MCUnicodeInitialize())
         return false;
     
     if (!__MCValueInitialize())
 		return false;
+
+    if (!__MCErrorInitialize())
+        return false;
 
     if (!__MCTypeInfoInitialize())
         return false;
@@ -76,6 +79,7 @@ void MCFinalize(void)
 	__MCStringFinalize();
     __MCDataFinalize();
     __MCTypeInfoFinalize();
+    __MCErrorFinalize();
 	__MCValueFinalize();
     __MCUnicodeFinalize();
 }
@@ -91,7 +95,7 @@ bool MCMemoryAllocate(size_t p_size, void*& r_block)
 		r_block = t_block;
 		return true;
 	}
-	return MCErrorThrow(kMCErrorOutOfMemory);
+	return MCErrorThrowOutOfMemory();
 }
 
 bool MCMemoryAllocateCopy(const void *p_block, size_t p_block_size, void*& r_block)
@@ -101,7 +105,7 @@ bool MCMemoryAllocateCopy(const void *p_block, size_t p_block_size, void*& r_blo
 		MCMemoryCopy(r_block, p_block, p_block_size);
 		return true;
 	}
-	return MCErrorThrow(kMCErrorOutOfMemory);
+	return MCErrorThrowOutOfMemory();
 }
 
 bool MCMemoryReallocate(void *p_block, size_t p_new_size, void*& r_new_block)
@@ -113,7 +117,7 @@ bool MCMemoryReallocate(void *p_block, size_t p_new_size, void*& r_new_block)
 		r_new_block = t_new_block;
 		return true;
 	}
-	return MCErrorThrow(kMCErrorOutOfMemory);
+	return MCErrorThrowOutOfMemory();
 }
 
 void MCMemoryDeallocate(void *p_block)

@@ -31,9 +31,6 @@ MCTypeInfoRef kMCListTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Resolves the typinfo to a concrete type. Specifically, this jumps passed a
-// 'named' link.
-static MCTypeInfoRef __MCTypeInfoResolve(MCTypeInfoRef self);
 static bool __MCTypeInfoIsNamed(MCTypeInfoRef self);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,6 +69,16 @@ bool MCTypeInfoBind(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCTypeInfoRef& r
     
     MCValueRelease(self);
     
+    return false;
+}
+
+bool MCTypeInfoBindAndRelease(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCTypeInfoRef& r_typeinfo)
+{
+    if (MCTypeInfoBind(p_name, p_typeinfo, r_typeinfo))
+    {
+        MCValueRelease(p_typeinfo);
+        return true;
+    }
     return false;
 }
 
@@ -227,6 +234,36 @@ MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef unresolved_self, u
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCErrorTypeInfoCreate(MCNameRef p_domain, MCStringRef p_message, MCTypeInfoRef& r_typeinfo)
+{
+    __MCTypeInfo *self;
+    if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
+        return false;
+    
+    self -> error . domain = MCValueRetain(p_domain);
+    self -> error . message = MCValueRetain(p_message);
+    
+    return true;
+}
+
+MCNameRef MCErrorTypeInfoGetDomain(MCTypeInfoRef unresolved_self)
+{
+    MCTypeInfoRef self;
+    self = __MCTypeInfoResolve(unresolved_self);
+    
+    return self -> error . domain;
+}
+
+MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef unresolved_self)
+{
+    MCTypeInfoRef self;
+    self = __MCTypeInfoResolve(unresolved_self);
+    
+    return self -> error . message;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool __MCTypeInfoCreateBuiltin(MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
@@ -253,7 +290,7 @@ static bool __MCTypeInfoIsNamed(MCTypeInfoRef self)
     return __MCTypeInfoGetTypeCode(self) == 0xff;
 }
 
-static MCTypeInfoRef __MCTypeInfoResolve(MCTypeInfoRef self)
+MCTypeInfoRef __MCTypeInfoResolve(MCTypeInfoRef self)
 {
     if (__MCTypeInfoIsNamed(self))
         return self -> named . typeinfo;
@@ -288,6 +325,11 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         MCValueRelease(self -> handler . return_type);
         MCMemoryDeleteArray(self -> handler . fields);
     }
+    else if (__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeError)
+    {
+        MCValueRelease(self -> error . domain);
+        MCValueRelease(self -> error . message);
+    }
 }
 
 hash_t __MCTypeInfoHash(__MCTypeInfo *self)
@@ -311,6 +353,11 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
         t_hash = MCHashBytesStream(t_hash, &self -> handler . field_count, sizeof(self -> handler . field_count));
         t_hash = MCHashBytesStream(t_hash, &self -> handler . return_type, sizeof(self -> handler . return_type));
         t_hash = MCHashBytesStream(t_hash, self -> handler . fields, sizeof(MCRecordTypeFieldInfo) * self -> handler . field_count);
+    }
+    else if (t_code == kMCValueTypeCodeError)
+    {
+        t_hash = MCHashBytesStream(t_hash, &self -> error . domain, sizeof(self -> error . domain));
+        t_hash = MCHashBytesStream(t_hash, self -> error . message, sizeof(self -> error . message));
     }
     
     return t_hash;
@@ -349,6 +396,13 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
                 self -> handler . fields[i] . type != other_self -> handler . fields[i] . type ||
                 self -> handler . fields[i] . mode != other_self -> handler . fields[i] . mode)
                 return false;
+    }
+    else if (t_code == kMCValueTypeCodeError)
+    {
+        if (self -> error . domain != other_self -> error . domain)
+            return false;
+        if (self -> error . message != other_self -> error . message)
+            return false;
     }
     
     return true;
