@@ -2424,7 +2424,7 @@ bool MCProperListInsertElements(MCProperListRef list, const MCValueRef *p_value,
 bool MCProperListInsertList(MCProperListRef list, MCProperListRef p_value, index_t p_index);
 
 bool MCProperListRemoveElement(MCProperListRef list, index_t p_index);
-bool MCProperListRemoveElement(MCProperListRef list, index_t p_start, index_t p_finish);
+bool MCProperListRemoveElements(MCProperListRef list, index_t p_start, index_t p_finish);
 
 bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset);
 bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
