@@ -180,6 +180,8 @@ hash_t MCValueHash(MCValueRef p_value)
         return __MCDataHash((__MCData*) self);
 	case kMCValueTypeCodeCustom:
         return ((__MCCustomValue *)self) -> callbacks -> hash(p_value);
+    case kMCValueTypeCodeProperList:
+        return __MCProperListHash((__MCProperList *)self);
     case kMCValueTypeCodeRecord:
         return __MCRecordHash((__MCRecord*) self);
     case kMCValueTypeCodeTypeInfo:
