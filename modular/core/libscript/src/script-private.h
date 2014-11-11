@@ -158,8 +158,8 @@ struct MCScriptForeignHandlerDefinition: public MCScriptDefinition
 
 struct MCScriptPropertyDefinition: public MCScriptDefinition
 {
-	MCScriptDefinition *getter;
-	MCScriptDefinition *setter;
+	uindex_t getter;
+	uindex_t setter;
 };
 
 struct MCScriptEventDefinition: public MCScriptDefinition

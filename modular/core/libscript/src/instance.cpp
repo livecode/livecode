@@ -86,18 +86,21 @@ bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
     if (!MCScriptLookupPropertyDefinitionInModule(self -> module, p_property, t_definition))
         return false;
     
-    /* LOAD CHECK */ __MCScriptAssert__(t_definition -> getter != nil,
+    MCScriptDefinition *t_getter;
+    t_getter = t_definition -> getter != 0 ? self -> module -> definitions[t_definition -> getter] : nil;
+    
+    /* LOAD CHECK */ __MCScriptAssert__(t_getter != nil,
                                             "property has no getter");
-    /* LOAD CHECK */ __MCScriptAssert__(t_definition -> getter -> kind == kMCScriptDefinitionKindVariable ||
-                                            t_definition -> getter -> kind == kMCScriptDefinitionKindHandler,
+    /* LOAD CHECK */ __MCScriptAssert__(t_getter -> kind == kMCScriptDefinitionKindVariable ||
+                                            t_getter -> kind == kMCScriptDefinitionKindHandler,
                                             "property getter is not a variable or handler");
     
-    if (t_definition -> getter -> kind == kMCScriptDefinitionKindVariable)
+    if (t_getter -> kind == kMCScriptDefinitionKindVariable)
     {
         // The easy case - fetching a variable-based property.
         
         MCScriptVariableDefinition *t_variable_def;
-        t_variable_def = MCScriptDefinitionAsVariable(t_definition -> getter);
+        t_variable_def = MCScriptDefinitionAsVariable(t_getter);
         
         // Variables are backed by an slot in the instance.
         uindex_t t_slot_index;
@@ -109,12 +112,12 @@ bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
         // Slot based properties are easy, we just copy the value out of the slot.
         r_value = MCValueRetain(self -> slots[t_slot_index]);
     }
-    else if (t_definition -> getter -> kind == kMCScriptDefinitionKindHandler)
+    else if (t_getter -> kind == kMCScriptDefinitionKindHandler)
     {
         // The more difficult case - we have to execute a handler.
         
         MCScriptHandlerDefinition *t_handler_def;
-        t_handler_def = MCScriptDefinitionAsHandler(t_definition -> getter);
+        t_handler_def = MCScriptDefinitionAsHandler(t_getter);
         
         /* LOAD CHECK */ __MCScriptAssert__(MCHandlerTypeInfoConformsToPropertyGetter(t_handler_def -> signature),
                                             "incorrect signature for property getter");
@@ -139,22 +142,25 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
     if (!MCScriptLookupPropertyDefinitionInModule(self -> module, p_property, t_definition))
         return false;
     
+    MCScriptDefinition *t_setter;
+    t_setter = t_definition -> setter != 0 ? self -> module -> definitions[t_definition -> setter] : nil;
+    
     // If there is no setter for the property then this is an error.
     if (t_definition -> setter == nil)
         return MCScriptThrowAttemptToSetReadOnlyPropertyError(self -> module, p_property);
     
-    /* LOAD CHECK */ __MCScriptAssert__(t_definition -> setter != nil,
+    /* LOAD CHECK */ __MCScriptAssert__(t_setter != nil,
                                         "property has no setter");
-    /* LOAD CHECK */ __MCScriptAssert__(t_definition -> getter -> kind == kMCScriptDefinitionKindVariable ||
-                                        t_definition -> getter -> kind == kMCScriptDefinitionKindHandler,
+    /* LOAD CHECK */ __MCScriptAssert__(t_setter -> kind == kMCScriptDefinitionKindVariable ||
+                                        t_setter -> kind == kMCScriptDefinitionKindHandler,
                                         "property setter is not a variable or handler");
     
-    if (t_definition -> setter -> kind == kMCScriptDefinitionKindVariable)
+    if (t_setter -> kind == kMCScriptDefinitionKindVariable)
     {
         // The easy case - storing a variable-based property.
         
         MCScriptVariableDefinition *t_variable_def;
-        t_variable_def = MCScriptDefinitionAsVariable(t_definition -> setter);
+        t_variable_def = MCScriptDefinitionAsVariable(t_setter);
         
         // Make sure the value is of the correct type - if not it is an error.
         // (The caller has to ensure things are converted as appropriate).
@@ -175,12 +181,12 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
             self -> slots[t_slot_index] = MCValueRetain(p_value);
         }
     }
-    else if (t_definition -> getter -> kind == kMCScriptDefinitionKindHandler)
+    else if (t_setter -> kind == kMCScriptDefinitionKindHandler)
     {
         // The more difficult case - we have to execute a handler.
         
         MCScriptHandlerDefinition *t_handler_def;
-        t_handler_def = MCScriptDefinitionAsHandler(t_definition -> getter);
+        t_handler_def = MCScriptDefinitionAsHandler(t_setter);
         
         /* LOAD CHECK */ __MCScriptAssert__(MCHandlerTypeInfoConformsToPropertySetter(t_handler_def -> signature),
                                             "incorrect signature for property setter");

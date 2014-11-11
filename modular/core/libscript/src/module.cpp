@@ -44,8 +44,8 @@ MC_PICKLE_BEGIN_RECORD(MCScriptForeignHandlerDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptPropertyDefinition)
-    MC_PICKLE_CALLBACK(getter, 0)
-    MC_PICKLE_CALLBACK(setter, 0)
+    MC_PICKLE_UINDEX(getter)
+    MC_PICKLE_UINDEX(setter)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptEventDefinition)
