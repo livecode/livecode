@@ -558,11 +558,10 @@ typedef struct __MCString *MCStringRef;
 typedef struct __MCName *MCNameRef;
 typedef struct __MCData *MCDataRef;
 typedef struct __MCArray *MCArrayRef;
-typedef struct __MCEnum *MCEnumRef;
-typedef struct __MCRecord *MCRecordRef;
-typedef struct __MCHandler *MCHandlerRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
+typedef struct __MCRecord *MCRecordRef;
+typedef struct __MCError *MCErrorRef;
 typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
 
@@ -762,39 +761,6 @@ inline MCRange MCRangeMake(uindex_t p_offset, uindex_t p_length)
 
 bool MCInitialize(void);
 void MCFinalize(void);
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  ERROR HANDLING
-//
-
-typedef uint32_t MCErrorCode;
-enum
-{
-	kMCErrorNone,
-	
-	kMCErrorOutOfMemory,
-};
-
-typedef void (*MCErrorHandler)(MCErrorCode code);
-
-// Throw the given error code (local to the current thread).
-bool MCErrorThrow(MCErrorCode code);
-
-// Catch the current error code (on the current thread) if any and clear it.
-MCErrorCode MCErrorCatch(void);
-
-// Returns true if there is an error pending on the current thread.
-bool MCErrorIsPending(void);
-
-// Returns any pending error (on the current thread) without clearing it.
-MCErrorCode MCErrorPeek(void);
-
-// Sets the error handler - called whenever MCErrorThrow is called.
-void MCErrorSetHandler(MCErrorHandler handler);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1071,6 +1037,10 @@ hash_t MCHashPointer(void *p);
 // Returns a hash value for the given sequence of bytes.
 hash_t MCHashBytes(const void *bytes, size_t byte_count);
 
+// Returns a hash value for the given sequence of bytes, continuing a previous
+// hashing sequence (byte_count should be a multiple of 4).
+hash_t MCHashBytesStream(hash_t previous, const void *bytes, size_t byte_count);
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1090,14 +1060,13 @@ enum
     kMCValueTypeCodeData,
 	kMCValueTypeCodeArray,
 	kMCValueTypeCodeList,
-    kMCValueTypeCodeSet,
+	kMCValueTypeCodeSet,
     kMCValueTypeCodeProperList,
-	kMCValueTypeCodeEnum,
+	kMCValueTypeCodeCustom,
 	kMCValueTypeCodeRecord,
 	kMCValueTypeCodeHandler,
-    kMCValueTypeCodeOpaque,
-	kMCValueTypeCodeCustom,
 	kMCValueTypeCodeTypeInfo,
+    kMCValueTypeCodeError,
 };
 
 enum
@@ -1252,50 +1221,36 @@ template<typename T> inline bool MCValueCreateCustom(const MCValueCustomCallback
 //
 
 // A TypeInfoRef is a description of a type. TypeInfo's are uniqued objects with
-// equality of typeinfo's defined by the typeinfo's kind.
+// equality of typeinfo's defined by the typeinfo's kind. Once created, typeinfo's
+// are equal iff their pointers are equal. (Note equal is not the same as conformance!)
 
+// These are typeinfo's for all the 'builtin' valueref types.
 extern MCTypeInfoRef kMCNullTypeInfo;
 extern MCTypeInfoRef kMCBooleanTypeInfo;
-extern MCTypeInfoRef kMCIntegerTypeInfo;
 extern MCTypeInfoRef kMCNumberTypeInfo;
 extern MCTypeInfoRef kMCStringTypeInfo;
 extern MCTypeInfoRef kMCDataTypeInfo;
 extern MCTypeInfoRef kMCArrayTypeInfo;
+extern MCTypeInfoRef kMCSetTypeInfo;
+extern MCTypeInfoRef kMCListTypeInfo;
 
 //////////
 
 // Return the typecode of a value of the given type.
 MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef type);
 
-// Return the name of the value of the given type.
+// Returns the name of the type, if it has one.
 MCNameRef MCTypeInfoGetName(MCTypeInfoRef type);
 
-// Returns true if 'source' can be assigned to 'target'.
-bool MCTypeInfoConformsTo(MCTypeInfoRef source, MCTypeInfoRef target);
+// Returns true if the source typeinfo can be assigned to a slot with the target
+// typeinfo with no typecheck or conversion.
+bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
 
-//////////
-
-// Create a typeinfo which wraps the pre-existing hardcoded typecode based ValueRefs.
-bool MCBuiltinTypeInfoCreate(MCValueTypeCode code, MCTypeInfoRef& r_typeinfo);
-
-//////////
-
-// Create a typeinfo which is based on a custom valueref.
-bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *callbacks, MCTypeInfoRef& r_typeinfo);
-
-//////////
-
-// Create an opaque typeinfo.
-bool MCOpaqueTypeInfoCreate(MCTypeInfoRef basetype, void *info, MCTypeInfoRef& r_typeinfo);
-
-//////////
-
-struct MCEnumTypeFieldInfo
-{
-	MCNameRef name;
-};
-
-bool MCEnumTypeInfoCreate(const MCEnumTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef& r_typeinfo);
+// Binds the given typeinfo to the given name (creating a named typeinfo). A bound
+// typeinfo acts like its target apart from the non-nil return from GetName. Bindings
+// never chain - a typeinfo is either a named binding, or an actual typeinfo.
+bool MCTypeInfoBind(MCNameRef name, MCTypeInfoRef typeinfo, MCTypeInfoRef& r_typeinfo);
+bool MCTypeInfoBindAndRelease(MCNameRef name, MCTypeInfoRef typeinfo, MCTypeInfoRef& r_typeinfo);
 
 //////////
 
@@ -1303,12 +1258,23 @@ struct MCRecordTypeFieldInfo
 {
 	MCNameRef name;
 	MCTypeInfoRef type;
-	unsigned int width;
 };
 
+// Create a description of a record with the given fields.
 bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef& r_typeinfo);
 
+// Return the number of fields in the record.
+uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
+
+// Return the name of the field at the given index.
+MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Return the type of the field at the given index.
+MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef typeinfo, uindex_t index);
+
 //////////
+
+// Handler types describe the signature of a function.
 
 enum MCHandlerTypeFieldMode
 {
@@ -1324,18 +1290,31 @@ struct MCHandlerTypeFieldInfo
 	MCHandlerTypeFieldMode mode;
 };
 
+// Create a description of a handler with the given signature.
 bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
+
+// Get the return type of the handler. A return-type of kMCNullTypeInfo means no
+// value is returned.
 MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
+
+// Get the number of parameters the handler takes.
 uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
+
+// Return the name of the index'th parameter.
 MCNameRef MCHandlerTypeInfoGetParameterName(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Return the mode of the index'th parameter.
 MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Return the type of the index'th parameter.
 MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typeinfo, uindex_t index);
 
 //////////
 
-// FOR LATER:
-//   bool MCIntegerRangeTypeCreate(integer_t minimum, integer_t maximum, MCTypeInfoRef& r_type);
-//   bool MCUnsignedIntegerRangeTypeCreate(uinteger_t minimum, uinteger_t maximum, MCTypeInfoRef& r_type);
+bool MCErrorTypeInfoCreate(MCNameRef domain, MCStringRef message, MCTypeInfoRef& r_typeinfo);
+
+MCNameRef MCErrorTypeInfoGetDomain(MCTypeInfoRef error);
+MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef error);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2203,21 +2182,62 @@ bool MCSetList(MCSetRef set, uindex_t*& r_element, uindex_t& r_element_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  HANDLER DEFINITIONS
+//  RECORD DEFINITIONS
 //
 
-void *MCHandlerGetDefinition(MCHandlerRef handler);
-void *MCHandlerGetInstance(MCHandlerRef handler);
+bool MCRecordCreate(MCTypeInfoRef typeinfo, const MCValueRef *values, uindex_t value_count, MCRecordRef& r_record);
+
+bool MCRecordCreateMutable(MCRecordRef& r_record);
+
+bool MCRecordCopy(MCRecordRef record, MCRecordRef& r_new_record);
+bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
+
+bool MCRecordMutableCopy(MCRecordRef record, MCRecordRef& r_new_record);
+bool MCRecordMutableCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
+
+bool MCRecordIsMutable(MCRecordRef self);
+
+bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
+bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  POINT DEFINITIONS
+//  ERROR DEFINITIONS
 //
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  RECTANGLE DEFINITIONS
-//
+extern MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
+extern MCTypeInfoRef kMCGenericErrorTypeInfo;
+
+bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
+
+bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
+
+MCNameRef MCErrorGetDomain(MCErrorRef error);
+MCArrayRef MCErrorGetInfo(MCErrorRef error);
+MCStringRef MCErrorGetMessage(MCErrorRef error);
+
+uindex_t MCErrorGetDepth(MCErrorRef error);
+MCValueRef MCErrorGetTargetAtLevel(MCErrorRef error, uindex_t level);
+uindex_t MCErrorGetRowAtLevel(MCErrorRef error, uindex_t row);
+uindex_t MCErrorGetColumnAtLevel(MCErrorRef error, uindex_t column);
+
+// Throw the given error code (local to the current thread).
+bool MCErrorThrow(MCErrorRef error);
+
+// Catch the current error code (on the current thread) if any and clear it.
+bool MCErrorCatch(MCErrorRef& r_error);
+
+// Returns true if there is an error pending on the current thread.
+bool MCErrorIsPending(void);
+
+// Returns any pending error (on the current thread) without clearing it.
+MCErrorRef MCErrorPeek(void);
+
+// Throw an out of memory error.
+bool MCErrorThrowOutOfMemory(void);
+
+// Throw a generic runtime error (one that hasn't had a class made for it yet).
+bool MCErrorThrowGeneric(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
