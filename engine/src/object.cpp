@@ -66,6 +66,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+// PM-2014-11-11: [[ Bug 13970 ]] Added for the MCplayers' syncbuffering call
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uint1 MCObject::dashlist[2] = {4, 4};
@@ -2742,6 +2747,14 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	{
 		t_context -> setopacity(blendlevel * 255 / 100);
 		t_context -> setfunction(GXblendSrcOver);
+
+        // PM-2014-11-11: [[ Bug 13970 ]] Make sure each player is buffered correctly for export snapshot
+        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+            t_player -> syncbuffering(t_context);
+            
+#ifdef FEATURE_PLATFORM_PLAYER
+        MCPlatformWaitForEvent(0.0, true);
+#endif
 		if (t_effects != nil)
 			t_context -> begin_with_effects(t_effects, static_cast<MCControl *>(this) -> getrect());
 		// MW-2011-09-06: [[ Redraw ]] Render the control isolated, but not as a sprite.

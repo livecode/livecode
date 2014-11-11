@@ -38,6 +38,8 @@
 static uint32_t s_menu_select_lock = 0;
 // SN-2014-11-06: [[ Bug 13836 ]] Stores whether a shadowed item got selected
 static bool s_shadow_item_selected = false;
+// SN-2014-11-10: [[ Bug 13836 ]] Keeps the track about the open items in the menu bar.
+static uint32_t s_open_menubar_items = 0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,14 +61,13 @@ struct MCPlatformMenu
     // If the quit item in this menu has an accelerator, this is true.
     // (Cocoa seems to 'hide' the quit menu item accelerator for some inexplicable
     // reason - it returns 'empty').
-    bool quit_has_accelerator : 1;
+    NSMenuItem* quit_item;
     
     // SN-2014-11-06: [[ Bu 13940 ]] Add a flag for the presence of a Preferences shortcut
     //  to allow the menu item to be disabled.
-    bool preferences_has_accelerator : 1;
+    NSMenuItem* preferences_item;
     
-    // SN-2014-11-06: [[ Bug 13836 ]] Set to true if the menu needs to be updated.
-    bool needs_update : 1;
+    NSMenuItem* about_item;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +85,15 @@ static NSMenu *s_services_menu = nil;
 // selection has occured as a result of a key-press and so must be dispatched as
 // such.
 static uint32_t s_key_equivalent_depth = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+
+enum MCShadowedItemTags
+{
+    kMCShadowedItemAbout = 'abou',
+    kMCShadowedItemPreferences = 'pref',
+    kMCShadowedItemQuit = 'quit'
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -114,10 +124,10 @@ static uint32_t s_key_equivalent_depth = 0;
 
 //////////
 
-- (void)hideShadowedMenuItem:(NSString *)tag menu:(NSMenu *)menu
+- (void)hideShadowedMenuItem:(NSInteger)tag menu:(NSMenu *)menu
 {
 	NSInteger t_index;
-	t_index = [menu indexOfItemWithRepresentedObject: tag];
+	t_index = [menu indexOfItemWithTag: tag];
 	if (t_index == -1)
 		return;
 	
@@ -159,23 +169,22 @@ static uint32_t s_key_equivalent_depth = 0;
 
 - (void)menuNeedsUpdate: (NSMenu *)menu
 {
-    // SN-2014-11-06: [[ Bug 13836 ]] Ensure that the menu is only updated if needed...
-    // SN-2014-11-06: [[ Bug 13849 ]] ...since rebuilding a menubar sends mouseDown to it
-    if (m_menu -> needs_update)
+    // SN-2014-11-10: [[ Bug 13836 ]] Only allow the menu to refresh the whole menubar if
+    //  it is the first click on the menubar (otherwise, clicking and sliding would refresh
+    //  the menubar each the item hovered changes)...
+    // SN-2014-11-06: [[ Bug 13849 ]] ...since rebuilding a menubar sends mouseDown to the menubar
+    if ([menu supermenu] == nil || !s_open_menubar_items)
     {
         MCPlatformCallbackSendMenuUpdate(m_menu);
-        
-        // MW-2014-10-29: [[ Bug 13848 ]] Only do the item hiding if this is part of a menubar
-        //   (not a popup menu).
-        if ([menu supermenu] != nil)
-        {
-            [self hideShadowedMenuItem: @"About" menu: menu];
-            [self hideShadowedMenuItem: @"Preferences" menu: menu];
-            [self hideShadowedMenuItem: @"Quit" menu: menu];
-        }
-        
-        // SN-2014-22-06: [[ Bug 13836 ]] This menu is now up-to-date
-        m_menu -> needs_update = false;
+    }
+    
+    // MW-2014-10-29: [[ Bug 13848 ]] Only do the item hiding if this is part of a menubar
+    //   (not a popup menu).
+    if ([menu supermenu] != nil)
+    {
+        [self hideShadowedMenuItem: kMCShadowedItemAbout menu: menu];
+        [self hideShadowedMenuItem: kMCShadowedItemPreferences menu: menu];
+        [self hideShadowedMenuItem: kMCShadowedItemQuit menu: menu];
     }
 }
 
@@ -192,7 +201,7 @@ static uint32_t s_key_equivalent_depth = 0;
     bool t_quit_accelerator_present;
     t_quit_accelerator_present = false;
     if ([[t_item keyEquivalent] isEqualToString: @"q"])
-        t_quit_accelerator_present = [(com_runrev_livecode_MCMenuDelegate *)[[t_item menu] delegate] platformMenuRef] -> quit_has_accelerator;
+        t_quit_accelerator_present = [(com_runrev_livecode_MCMenuDelegate *)[[t_item menu] delegate] platformMenuRef] -> quit_item != nil;
     
 	if (s_menu_select_lock == 0 || t_quit_accelerator_present)
 		MCPlatformCallbackSendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
@@ -217,6 +226,23 @@ static uint32_t s_key_equivalent_depth = 0;
 {
     // SN-2014-11-06: [[ Bug 13836 ]] We don't update the menubar everytime an accelerator is used
 	return NO;
+}
+
+//////////
+
+// SN-2014-11-10: [[ Bug 13836 ]] We want to know how many items are open in the menubar,
+//  When sliding after having clicked in the menubar, the new item receives menuWillOpen
+//  before the other one receives menuWillClose.
+- (void)menuWillOpen:(NSMenu *)menu
+{
+    if ([s_menubar -> menu isEqualTo: [menu supermenu]])
+        s_open_menubar_items++;
+}
+
+- (void)menuDidClose:(NSMenu *)menu
+{
+    if ([s_menubar -> menu isEqualTo: [menu supermenu]])
+        s_open_menubar_items--;
 }
 
 @end
@@ -297,9 +323,11 @@ static uint32_t s_key_equivalent_depth = 0;
     [t_app terminate:t_app];
 }
 
-// SN-2014-11-06: [[ Bug 13940 ]] menuNeedsUpdate not longer needed at the Application level
+// SN-2014-11-10: [[ Bug 13836 ]] The menubar should be updated if left item is clicked
 - (void)menuNeedsUpdate: (NSMenu *)menu
 {
+    if (!s_open_menubar_items)
+        MCPlatformCallbackSendMenuUpdate(s_menubar);
 }
 
 - (BOOL)validateMenuItem: (NSMenuItem *)item
@@ -317,6 +345,18 @@ static uint32_t s_key_equivalent_depth = 0;
     //  We don't want to rebuild all of this each time an accelerator is used.
 //    [self menuNeedsUpdate: menu];
     return NO;
+}
+
+//////////
+
+- (void)menuWillOpen:(NSMenu *)menu
+{
+    s_open_menubar_items++;
+}
+
+- (void)menuDidClose:(NSMenu *)menu
+{
+    s_open_menubar_items--;
 }
 
 @end
@@ -444,9 +484,6 @@ static void MCPlatformDestroyMenuItem(MCPlatformMenuRef p_menu, uindex_t p_index
 	// Update the submenu pointer (so we don't have any dangling
 	// refs).
     [t_item setSubmenu: nil];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 	
 	// Now release the platform menu.
 	MCPlatformReleaseMenu(t_submenu_ref);
@@ -481,17 +518,15 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 	t_menu -> menu_delegate = [[MCMenuDelegate alloc] initWithPlatformMenuRef: t_menu];
 	[t_menu -> menu setDelegate: t_menu -> menu_delegate];
     t_menu -> is_menubar = false;
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    t_menu -> needs_update = false;
 	
 	// Turn on auto-enablement - this allows dialogs to control the enablement
 	// of items with appropriate tag.
 	[t_menu -> menu setAutoenablesItems: YES];
     
     // SN-2014-11-06: [[ Bug 13940 ]] Initialises the accelerator presence flag.
-    t_menu -> quit_has_accelerator = false;
-    t_menu -> preferences_has_accelerator = false;
+    t_menu -> quit_item = nil;
+    t_menu -> preferences_item = nil;
+    t_menu -> about_item = nil;
 	
 	r_menu = t_menu;
 }
@@ -513,14 +548,15 @@ void MCPlatformReleaseMenu(MCPlatformMenuRef p_menu)
 	
 	[p_menu -> menu release];
 	[p_menu -> menu_delegate release];
+    [p_menu -> about_item release];
+    [p_menu -> preferences_item release];
+    [p_menu -> quit_item release];
 	MCMemoryDelete(p_menu);
 }
 
 void MCPlatformSetMenuTitle(MCPlatformMenuRef p_menu, const char *p_title)
 {
     [p_menu -> menu setTitle: [NSString stringWithCString: p_title encoding: NSUTF8StringEncoding]];
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 }
 
 void MCPlatformCountMenuItems(MCPlatformMenuRef p_menu, uindex_t& r_count)
@@ -544,9 +580,6 @@ void MCPlatformAddMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 	
 	// Insert the item in the menu.
 	[p_menu -> menu insertItem: t_item atIndex: p_where];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 	
 	[t_item release];
 }
@@ -556,9 +589,6 @@ void MCPlatformAddMenuSeparatorItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 	MCPlatformClampMenuItemIndex(p_menu, p_where);
 	
     [p_menu -> menu insertItem: [NSMenuItem separatorItem] atIndex: p_where];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 }
  
 void MCPlatformRemoveMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
@@ -567,9 +597,6 @@ void MCPlatformRemoveMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 	
 	MCPlatformDestroyMenuItem(p_menu, p_where);
 	[p_menu -> menu removeItemAtIndex: p_where];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 }
 
 void MCPlatformRemoveAllMenuItems(MCPlatformMenuRef p_menu)
@@ -577,9 +604,6 @@ void MCPlatformRemoveAllMenuItems(MCPlatformMenuRef p_menu)
 	for(uindex_t i = 0; i < [p_menu -> menu numberOfItems]; i++)
 		MCPlatformDestroyMenuItem(p_menu, i);
 	[p_menu -> menu removeAllItems];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 }
 
 void MCPlatformGetMenuParent(MCPlatformMenuRef p_menu, MCPlatformMenuRef& r_parent, uindex_t& r_index)
@@ -626,9 +650,6 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 	
 	NSMenuItem *t_item;
 	t_item = [p_menu -> menu itemAtIndex: p_index];
-    
-    // SN-2014-11-06: [[ Bug 13836 ]] This menu needs to be updated in the next menuNeedsUpdate.
-    p_menu -> needs_update = true;
 	
 	switch(p_property)
 	{
@@ -660,9 +681,20 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
                     MCPlatformMenuRef t_supermenu_ref;
                     t_supermenu_ref = [(MCMenuDelegate *)[t_supermenu delegate] platformMenuRef];
                     if (t_action == kMCPlatformMenuItemActionQuit)
-                        t_supermenu_ref -> quit_has_accelerator = true;
+                    {
+                        [t_item setTag:kMCShadowedItemQuit];
+                        t_supermenu_ref -> quit_item = [t_item retain];
+                    }
                     else if (t_action == kMCPlatformMenuItemActionPreferences)
-                        t_supermenu_ref -> preferences_has_accelerator = true;
+                    {
+                        [t_item setTag:kMCShadowedItemPreferences];
+                        t_supermenu_ref -> preferences_item = [t_item retain];
+                    }
+                    else if (t_action == kMCPlatformMenuItemActionAbout)
+                    {
+                        [t_item setTag: kMCShadowedItemAbout];
+                        t_supermenu_ref -> about_item = [t_item retain];
+                    }
                 }
                 
 				SEL t_selector;
@@ -829,18 +861,33 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 	NSMenu *t_app_menu;
 	t_app_menu = [[NSMenu alloc] initWithTitle: t_app_name];
 	
-	[t_app_menu addItemWithTitle: [NSString stringWithFormat: NSLocalizedString(@"About %@", @"About {Application Name}"), t_app_name]
+    NSString *t_about_string;
+    if (p_menu -> about_item != nil)
+        t_about_string = [p_menu -> about_item title];
+    else
+        t_about_string = [NSString stringWithFormat: NSLocalizedString(@"About %@", @"About {Application Name}"), t_app_name];
+    
+	[t_app_menu addItemWithTitle: t_about_string
 						  action: @selector(aboutMenuItemSelected:)
 				   keyEquivalent: @""];
+    if (p_menu -> about_item == nil)
+        [[t_app_menu itemAtIndex: 0] setEnabled:NO];
 	[[t_app_menu itemAtIndex: 0] setTarget: s_app_menu_delegate];
-	[t_app_menu addItem: [NSMenuItem separatorItem]];
-	[t_app_menu addItemWithTitle: NSLocalizedString(@"Preferences...", nil)
+        
+    [t_app_menu addItem: [NSMenuItem separatorItem]];
+    
+    NSString *t_preferences_string;
+    if (p_menu -> preferences_item != nil)
+        t_preferences_string = [p_menu -> preferences_item title];
+    else
+        t_preferences_string = @"Preferences...";
+    
+	[t_app_menu addItemWithTitle: t_preferences_string
 						  action: @selector(preferencesMenuItemSelected:)
 				   keyEquivalent: @","];
     // SN-2014-11-06: [[ Bug 13940 ]] Only enable the Preference menu if the shortcut exists in the menubar
-    if (p_menu -> preferences_has_accelerator)
-        [[t_app_menu itemAtIndex: 2] setTarget: s_app_menu_delegate];
-    else
+    [[t_app_menu itemAtIndex: 2] setTarget: s_app_menu_delegate];
+    if (p_menu -> preferences_item == nil)
         [[t_app_menu itemAtIndex: 2] setEnabled: NO];
     
 	[t_app_menu addItem: [NSMenuItem separatorItem]];
@@ -861,12 +908,19 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 						  action: @selector(unhideAllApplications:)
 				   keyEquivalent: @""];
 	[t_app_menu addItem: [NSMenuItem separatorItem]];
-	[t_app_menu addItemWithTitle: [NSString stringWithFormat: NSLocalizedString(@"Quit %@", @"Quit {Application Name}"), t_app_name]
+    
+    NSString *t_quit_string;
+    if (p_menu -> quit_item != nil)
+        t_quit_string = [NSString stringWithFormat: @"%@ %@", [p_menu -> quit_item title], t_app_name];
+    else
+        t_quit_string = [NSString stringWithFormat: NSLocalizedString(@"Quit %@", @"Quit {Application Name}"), t_app_name];
+    
+	[t_app_menu addItemWithTitle: t_quit_string
 						  action: @selector(quitMenuItemSelected:)
 				   keyEquivalent:@"q"];
     // SN-2014-11-06: [[ Bug 13940 ]] In case there is no Quit shortcut in this menubar,
     //  the action will simply be to close the application.
-    if (p_menu -> quit_has_accelerator)
+    if (p_menu -> quit_item != nil)
         [[t_app_menu itemAtIndex: 10] setAction:@selector(quitMenuItemSelected:)];
     else
         [[t_app_menu itemAtIndex: 10] setAction:@selector(quitApplicationSelected:)];
