@@ -179,7 +179,7 @@ struct MCScriptModule: public MCScriptObject
     MCScriptPackageRef package;
     
     // The type of module.
-    MCScriptModuleKind kind;
+    MCScriptModuleKind module_kind;
     
     // The name of the module (value_pool)
     MCNameRef name;
