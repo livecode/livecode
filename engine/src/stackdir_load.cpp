@@ -96,6 +96,10 @@ static bool MCStackdirIOLoadIsValidObjectDir (MCStringRef p_object_dir, MCString
 
 static bool MCStackdirIOLoadObject (MCStackdirIORef op, MCStringRef p_uuid, MCStringRef p_obj_path);
 
+/* Read a datum from the file named p_key, and save it into the state
+ * vector with the same p_key. */
+static bool MCStackdirIOLoadObjectKeyDirect (MCStackdirIOObjectLoadRef info, MCStringRef p_key, bool p_required=true);
+
 /* Load an object's "_parent" file */
 static bool MCStackdirIOLoadObjectParent (MCStackdirIOObjectLoadRef info);
 
@@ -123,6 +127,9 @@ MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOLoadErrorNotStackdir,
 MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOLoadErrorInvalidObjectDir,
 							kMCStackdirStatusBadStructure,
 							"Object directory layout is incorrect")
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOLoadErrorDirectLiteral,
+							kMCStackdirStatusSyntaxError,
+							"Expected literal value")
 
 /* ================================================================
  * Utility functions
@@ -200,17 +207,80 @@ MCStackdirIOLoadObject (MCStackdirIORef op,
 }
 
 static bool
+MCStackdirIOLoadObjectKeyDirect (MCStackdirIOObjectLoadRef info,
+								 MCStringRef p_key,
+								 bool p_required)
+{
+	/* Construct path for file */
+	MCAutoStringRef t_path;
+	if (!MCStringFormat (&t_path, "%@/%@", info->m_path, p_key))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	/* Load file into memory.  If p_required is false, allow the file
+	 * to be unreadable. */
+	MCAutoStringRef t_content;
+	if (!MCStackdirIOLoadUTF8 (info->m_op,
+							   *t_path,
+							   &t_content,
+							   !p_required))
+		return (!MCStackdirIOHasError (info->m_op));
+
+	/* Parse a token from the contents of the file.  If the file
+	 * exists, we require it to contain a valid value. */
+	MCStackdirIOScannerRef t_scanner;
+	MCStackdirIOTokenRef t_token;
+	bool t_success = true;
+	MCAutoValueRef t_value;
+	if (!MCStackdirIOScannerNew (*t_content, t_scanner))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	if (t_success)
+	{
+		if (!MCStackdirIOScannerConsume (t_scanner, t_token) ||
+			t_token->m_value == nil)
+		{
+			t_success = false;
+			MCStackdirIOLoadErrorDirectLiteral (info->m_op,
+												*t_path,
+												t_token->m_line,
+												t_token->m_column);
+		}
+	}
+
+	if (t_success)
+		&t_value = MCValueRetain (t_token->m_value);
+
+	MCStackdirIOScannerDestroy (t_scanner);
+	if (!t_success) return false;
+
+	/* Insert the value into the state array */
+	MCNewAutoNameRef t_key;
+	if (!MCNameCreate (p_key, &t_key))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	if (!MCArrayStoreValue (info->m_state,
+							false,
+							*t_key,
+							*t_value))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	return true;
+}
+
+static bool
 MCStackdirIOLoadObjectParent (MCStackdirIOObjectLoadRef info)
 {
-	/* FIXME implementation */
-	return true;
+	return MCStackdirIOLoadObjectKeyDirect (info,
+											kMCStackdirParentFile,
+											false);
 }
 
 static bool
 MCStackdirIOLoadObjectKind (MCStackdirIOObjectLoadRef info)
 {
-	/* FIXME implementation */
-	return true;
+	return MCStackdirIOLoadObjectKeyDirect (info,
+											kMCStackdirKindFile,
+											true);
 }
 
 static bool
