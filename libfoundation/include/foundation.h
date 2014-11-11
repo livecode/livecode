@@ -2514,7 +2514,7 @@ enum MCPickleFieldType
     kMCPickleFieldTypeValueRef,
     kMCPickleFieldTypeStringRef,
     kMCPickleFieldTypeNameRef,
-    kMCPickleFieldTypeTypeRef,
+    kMCPickleFieldTypeTypeInfoRef,
     kMCPickleFieldTypeArrayOfByte,
     kMCPickleFieldTypeArrayOfNameRef,
     kMCPickleFieldTypeArrayOfRecord,
