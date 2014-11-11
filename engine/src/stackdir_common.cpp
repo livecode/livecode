@@ -31,6 +31,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stackdir_private.h"
 
+static bool MCStackdirIOErrorReport (MCStackdirIORef op, MCStackdirStatus p_status, MCStringRef p_filename, MCValueRef p_file_line, MCValueRef p_file_col, MCStringRef p_message, MCArrayRef & r_report);
+static bool MCStackdirIOErrorLocation (MCStackdirIORef op, MCArrayRef & r_location);
+
 /* ================================================================
  * Errors
  * ================================================================ */
@@ -150,7 +153,7 @@ MCStackdirIOLoadUTF8 (MCStackdirIORef op,
  * [Private] Adding error reports
  * ---------------------------------------------------------------- */
 
-bool
+static bool
 MCStackdirIOErrorReport (MCStackdirIORef op,
 						 MCStackdirStatus p_status,
 						 MCStringRef p_filename,
@@ -193,13 +196,37 @@ MCStackdirIOErrorLocationPush (MCStackdirIORef op,
 							   MCValueRef p_line,
 							   MCValueRef p_column)
 {
-	/* Attempt to resolve the filename.  If we can't, it's not a
-	 * problem; just use the filename how it is. */
 	MCAutoStringRef t_filename, t_resolved;
-	if (MCS_resolvepath (p_path, &t_resolved))
-		&t_filename = MCValueRetain (*t_resolved);
-	else
-		&t_filename = MCValueRetain (p_path);
+	if (!MCStringIsEmpty (p_path))
+	{
+		/* Attempt to resolve the filename.  If we can't, it's not a
+		 * problem; just use the filename how it is. */
+		if (MCS_resolvepath (p_path, &t_resolved))
+			&t_filename = MCValueRetain (*t_resolved);
+		else
+			&t_filename = MCValueRetain (p_path);
+	}
+	else if (0 < MCArrayGetCount (op->m_error_location_stack))
+	{
+		/* Pull the filename from the current top of the error
+		 * location stack. */
+		MCAutoArrayRef t_prev_report;
+		if (!MCStackdirIOErrorLocation (op, &t_prev_report))
+			return;
+
+		MCValueRef t_prev_path;
+		if (!MCArrayFetchValue (*t_prev_report,
+								true,
+								MCNAME ("filename"),
+								t_prev_path))
+		{
+			MCStackdirIOErrorOutOfMemory (op);
+			return;
+		}
+		MCAssert (MCValueGetTypeCode (t_prev_path) == kMCValueTypeCodeString);
+
+		&t_filename = MCValueRetain ((MCStringRef) t_prev_path);
+	}
 
 	/* The error location is stored in the same way as an error or
 	 * warning report.  This is to simplify the process of adding
