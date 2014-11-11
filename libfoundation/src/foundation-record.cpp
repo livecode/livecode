@@ -29,11 +29,11 @@ bool MCRecordCreate(MCTypeInfoRef p_typeinfo, const MCValueRef *p_values, uindex
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
     if (p_value_count != t_resolved_typeinfo -> record . field_count)
-        return false;
+        return MCErrorThrowGeneric();
     
     for(uindex_t i = 0; i < p_value_count; i++)
         if (MCTypeInfoConforms(MCValueGetTypeInfo(p_values[i]), t_resolved_typeinfo -> record . fields[i] . type))
-            return false;
+            return MCErrorThrowGeneric();
     
     __MCRecord *self;
     self = nil;
@@ -195,7 +195,7 @@ bool MCRecordStoreValue(MCRecordRef self, MCNameRef p_field, MCValueRef p_value)
         if (MCNameIsEqualTo(p_field, t_resolved_typeinfo -> record . fields[i] . name))
         {
             if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_resolved_typeinfo -> record . fields[i] . type))
-                return false;
+                return MCErrorThrowGeneric();
             
             self -> fields[i] = MCValueRetain(p_value);
             return true;
