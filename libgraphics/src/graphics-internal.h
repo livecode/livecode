@@ -223,43 +223,6 @@ void MCGAffineTransformFromSkMatrix(const SkMatrix &matrix, MCGAffineTransform &
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
-{	
-	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
-}
-
-inline void MCGColorSetRed(MCGColor& x_color, MCGFloat p_red) {
-	x_color = (x_color & 0xFF00FFFF) | ((uint8_t)(p_red * 255) << 16);
-}
-
-inline void MCGColorSetGreen(MCGColor& x_color, MCGFloat p_green) {
-	x_color = (x_color & 0xFFFF00FF) | ((uint8_t)(p_green * 255) << 8);
-}
-
-inline void MCGColorSetBlue(MCGColor& x_color, MCGFloat p_blue) {
-	x_color = (x_color & 0xFFFFFF00) | ((uint8_t)(p_blue * 255) << 0);
-}
-
-inline void MCGColorSetAlpha(MCGColor& x_color, MCGFloat p_alpha) {
-	x_color = (x_color & 0x00FFFFFF) | ((uint8_t)(p_alpha * 255) << 24);
-}
-
-inline MCGFloat MCGColorGetRed(MCGColor p_color) {
-    return ((p_color >> 16) & 0xFF) / 255.0f;
-}
-
-inline MCGFloat MCGColorGetGreen(MCGColor p_color) {
-    return ((p_color >> 8) & 0xFF) / 255.0f;
-}
-
-inline MCGFloat MCGColorGetBlue(MCGColor p_color) {
-    return ((p_color >> 0) & 0xFF) / 255.0f;
-}
-
-inline MCGFloat MCGColorGetAlpha(MCGColor p_color) {
-    return ((p_color >> 24) & 0xFF) / 255.0f;
-}
-
 inline SkColor MCGColorToSkColor(MCGColor p_color)
 {
 	return p_color;

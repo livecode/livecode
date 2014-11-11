@@ -67,6 +67,8 @@ MCStringRef MCScriptGetErrorDescription(MCScriptErrorRef error);
 // Packages are a zip archive with the following structure:
 //   <root>/
 //     manifest.xml
+//     support/
+//       <files for the IDE / store etc.>
 //     modules/
 //       <compiled module files>
 //     symbols/
@@ -83,6 +85,31 @@ MCStringRef MCScriptGetErrorDescription(MCScriptErrorRef error);
 // The manifest file describes the contents of the package along with any other
 // metadata. Most of the information is inferable from the rest of the archive,
 // however it is repeated in the manifest to make it easier for simple introspection.
+//
+// The manifest.xml file has the following schema:
+//   <package version="1.0" name="com.livecode.foo">
+//     <version>X.Y.Z</version>
+//     <author>Mr Magoo</author>
+//     <license>commercial|dual|community</license>
+//     <label>Human Readable Foo</label>
+//     <description>Foo is a super amazing widget that will do everything for you.</description>
+//     <requires name="com.livecode.bar" version="X.Y.Z" />
+//     <requires name="com.livecode.baz" version="X.Y.Z" />
+//     <widget|library>
+//       <property name="foo" get="optional(integer)" set="optional(integer)" />
+//       <property name="bar" get="string" />
+//       <event name="click" parameters="in(integer),out(real)" return="optional(any)" />
+//       <handler name="magic" parameters="in(integer),inout(string)" return="undefined" />
+//     </widget>
+//   </package>
+// Here the 'version' field in the package tag is the version of the package manifest
+// XML.
+//
+// There is either a widget or a library node. Widgets can have properties and events,
+// libraries only handlers.
+//
+// The support folder is for resources required by things like the IDE and Marketplace.
+// For example, icons for the tools palette and such.
 //
 // The module files are compiled bytecode for both the principal and child modules
 // within the package. These files contain no debug information, instead all debug
@@ -143,12 +170,12 @@ bool MCScriptGetDependenciesOfModule(MCScriptModuleRef module, const MCNameRef*&
 bool MCScriptCreateInstanceOfModule(MCScriptModuleRef module, MCScriptInstanceRef& r_instance);
 
 // Retain a module.
-void MCScriptRetainModule(MCScriptModuleRef module);
+MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef module);
 // Release a module.
 void MCScriptReleaseModule(MCScriptModuleRef module);
 
 // Retain a instance.
-void MCScriptRetainInstance(MCScriptInstanceRef instance);
+MCScriptInstanceRef MCScriptRetainInstance(MCScriptInstanceRef instance);
 // Release a instance.
 void MCScriptReleaseInstance(MCScriptInstanceRef instance);
 
@@ -156,6 +183,7 @@ void MCScriptReleaseInstance(MCScriptInstanceRef instance);
 bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef& r_value);
 // Set a property of an instance.
 bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef value);
+
 // Call a handler of an instance.
 bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 
@@ -194,34 +222,38 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef builder, MCStreamRef stream);
 void MCScriptAddDependencyToModule(MCScriptModuleBuilderRef builder, MCNameRef dependency);
 
 void MCScriptAddExportToModule(MCScriptModuleBuilderRef builder, MCNameRef definition);
-void MCScriptAddImportToModule(MCScriptModuleBuilderRef builder, MCNameRef module, MCNameRef definition, MCScriptDefinitionKind kind, MCTypeRef type);
+void MCScriptAddImportToModule(MCScriptModuleBuilderRef builder, MCNameRef module, MCNameRef definition, MCScriptDefinitionKind kind, MCTypeInfoRef type);
 
-void MCScriptAddTypeToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeRef type);
-void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCValueRef value);
-void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeRef type);
+void MCScriptAddTypeToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef type);
+void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef value);
+void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef type);
 
-void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeRef signature, uindex_t temporary_count);
+void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, uindex_t temporary_count);
 void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef builder);
 
-void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeRef signature, MCStringRef binding);
+void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, MCStringRef binding);
 
 void MCScriptAddPropertyToModule(MCScriptModuleBuilderRef builder, MCNameRef getter, MCNameRef setter);
 
-void MCScriptAddEventToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeRef signature);
+void MCScriptAddEventToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature);
 
 void MCScriptDeferLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uintptr_t& r_label);
 void MCScriptResolveLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uintptr_t label);
-void MCScriptEmitUnconditionalJumpInModule(MCScriptModuleBuilderRef builder, uintptr_t target_label);
-void MCScriptEmitConditionalJumpInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptEmitJumpInModule(MCScriptModuleBuilderRef builder, uintptr_t target_label);
+void MCScriptEmitJumpIfUndefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptEmitJumpIfDefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptEmitJumpIfFalseInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptEmitJumpIfTrueInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, MCValueRef constant);
 void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t src_reg);
+void MCScriptEmitTypecheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg, MCValueRef typeinfo);
+void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef builder);
 void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index);
 void MCScriptBeginIndirectInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t handler_reg);
 void MCScriptContinueInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t arg_reg);
 void MCScriptEndInvokeInModule(MCScriptModuleBuilderRef builder);
 void MCScriptEmitFetchGlobalInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t glob_index);
 void MCScriptEmitStoreGlobalInModule(MCScriptModuleBuilderRef builder, uindex_t src_reg, uindex_t glob_index);
-void MCScriptEmitFetchParameterInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t param_index);
-void MCScriptEmitStoreParameterInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t param_index);
 
 ////////////////////////////////////////////////////////////////////////////////
 
