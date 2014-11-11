@@ -223,8 +223,8 @@ typedef struct _MCWidgetTabPaneInfo
 MCWidgetTabPaneInfo;
 
 #define IsMacLFAM() (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEMAC)
-#define IsMacLF() (MClook == LF_MAC || MCcurtheme && MCcurtheme->getthemefamilyid() == LF_MAC)
-#define IsXLF() (MClook == LF_MOTIF || MCcurtheme && MCcurtheme->getthemefamilyid() == LF_MOTIF)
+#define IsMacLF() (MClook == LF_MAC || (MCcurtheme && MCcurtheme->getthemefamilyid() == LF_MAC))
+#define IsXLF() (MClook == LF_MOTIF || (MCcurtheme && MCcurtheme->getthemefamilyid() == LF_MOTIF))
 #define IsMacEmulatedLF() (MClook == LF_MAC && MCcurtheme == NULL)
 #define IsXEmulatedLF() (MClook == LF_MOTIF && MCcurtheme == NULL)
 

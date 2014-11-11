@@ -1841,6 +1841,11 @@ void MCIdeScriptReplace::exec_ctxt(MCExecContext & ctxt)
         t_start_index = t_start;
         t_end_index = t_end;
 
+        // MW-2014-10-24: [[ Bug 13598 ]] If we are passed (0,0) then treat this as (1,1) - i.e
+        //   first char of field.
+        if (t_start_index == 0 && t_end_index == 0)
+            t_start_index = 1, t_end_index = 1;
+
         t_start_index -= 1;
 
         if (t_start_index > t_end_index)
@@ -1881,6 +1886,11 @@ void MCIdeScriptReplace::exec_ctxt(MCExecContext & ctxt)
     t_start_index = t_start;
     t_end_index = t_end;
 
+    // MW-2014-10-24: [[ Bug 13598 ]] If we are passed (0,0) then treat this as (1,1) - i.e
+    //   first char of field.
+    if (t_start_index == 0 && t_end_index == 0)
+        t_start_index = 1, t_end_index = 1;
+    
     t_start_index -= 1;
 
     if (t_start_index > t_end_index)

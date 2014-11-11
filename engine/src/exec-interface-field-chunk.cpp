@@ -1702,8 +1702,9 @@ void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         //   If minx > maxx then just assume both are 0.
         if (minx > maxx)
             minx = maxx = 0;
-
-        r_value = getcontentx() + minx;
+        
+        // AL-2014-10-28: [[ Bug 13829 ]] The formattedLeft should be floorf'd to give the correct integer value.
+        r_value = floorf(getcontentx() + minx);
     }
     else
         r_value = 0;
@@ -1735,7 +1736,8 @@ void MCField::GetFormattedWidthOfCharChunk(MCExecContext& ctxt, uint32_t p_part_
         if (minx > maxx)
             minx = maxx = 0;
 
-        r_value = maxx - minx;
+        // AL-2014-10-28: [[ Bug 13829 ]] The formattedWidth should be ceilf'd to give the correct integer value.
+        r_value = ceilf(maxx - minx);
     }
     else
         r_value = 0;
@@ -1794,8 +1796,10 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
         // MW-2012-01-25: [[ FieldMetrics ]] Make sure the rect we return is in card coords.
         r_value . height = (maxy - 2*y);
-        r_value . width = maxx - minx;
-        r_value . x = minx + getcontentx();
+        // AL-2014-10-28: [[ Bug 13829 ]] The left and width of the formattedRect should be
+        // floorf'd and ceilf'd respectively, to give the correct integer bounds.
+        r_value . width = ceilf(maxx - minx);
+        r_value . x = floorf(minx + getcontentx());
         r_value . y = y + yoffset;
     }
     else

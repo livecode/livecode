@@ -290,6 +290,9 @@ MCStack::MCStack()
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
 
+	m_view_need_redraw = false;
+	m_view_need_resize = false;
+
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
@@ -488,6 +491,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
     
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
+
+	m_view_need_redraw = sref.m_view_need_redraw;
+	m_view_need_resize = sref.m_view_need_resize;
 
 	view_copy(sref);
 }
@@ -3350,7 +3356,8 @@ void MCStack::openwindow(Boolean p_override)
 // MW-2014-09-30: [[ ScriptOnlyStack ]] Sets the stack as script only with the given script.
 void MCStack::setasscriptonly(MCStringRef p_script)
 {
-    /* UNCHECKED */ setscript(p_script);
+    MCExecContext ctxt(nil,nil,nil);
+    /* UNCHECKED */ SetScript(ctxt, p_script);
     
     m_is_script_only = true;
     

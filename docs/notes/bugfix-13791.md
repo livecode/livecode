@@ -1,0 +1,1 @@
+# Crash when saving a script-only stack.

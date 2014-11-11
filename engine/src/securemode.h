@@ -17,16 +17,31 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef _SECUREMODE_H
 #define _SECUREMODE_H
 
-#define MC_SECUREMODE_DISK				(1 << 0)
-#define MC_SECUREMODE_NETWORK			(1 << 1)
-#define MC_SECUREMODE_PROCESS			(1 << 2)
-#define MC_SECUREMODE_REGISTRY_READ		(1 << 3)
-#define MC_SECUREMODE_REGISTRY_WRITE	(1 << 4)
-#define MC_SECUREMODE_PRINT				(1 << 5)
-#define MC_SECUREMODE_PRIVACY			(1 << 6)
-#define MC_SECUREMODE_APPLESCRIPT		(1 << 7)
-#define MC_SECUREMODE_DOALTERNATE		(1 << 8)
-#define MC_SECUREMODE_EXTERNAL			(1 << 9)
+// AL-2014-10-29: [[ Bug 13704 ]] Define security permissions bits
+enum MCSecureModeType
+{
+    kMCSecureModeTypeDiskBit,
+    kMCSecureModeTypeNetworkBit,
+    kMCSecureModeTypeProcessBit,
+    kMCSecureModeTypeRegistryReadBit,
+    kMCSecureModeTypeRegistryWriteBit,
+    kMCSecureModeTypePrintBit,
+    kMCSecureModeTypePrivacyBit,
+    kMCSecureModeTypeApplescriptBit,
+    kMCSecureModeTypeDoalternateBit,
+    kMCSecureModeTypeExternalBit,
+};
+
+#define MC_SECUREMODE_DISK				(1 << kMCSecureModeTypeDiskBit)
+#define MC_SECUREMODE_NETWORK			(1 << kMCSecureModeTypeNetworkBit)
+#define MC_SECUREMODE_PROCESS			(1 << kMCSecureModeTypeProcessBit)
+#define MC_SECUREMODE_REGISTRY_READ		(1 << kMCSecureModeTypeRegistryReadBit)
+#define MC_SECUREMODE_REGISTRY_WRITE	(1 << kMCSecureModeTypeRegistryWriteBit)
+#define MC_SECUREMODE_PRINT				(1 << kMCSecureModeTypePrintBit)
+#define MC_SECUREMODE_PRIVACY			(1 << kMCSecureModeTypePrivacyBit)
+#define MC_SECUREMODE_APPLESCRIPT		(1 << kMCSecureModeTypeApplescriptBit)
+#define MC_SECUREMODE_DOALTERNATE		(1 << kMCSecureModeTypeDoalternateBit)
+#define MC_SECUREMODE_EXTERNAL			(1 << kMCSecureModeTypeExternalBit)
 
 #define MC_SECUREMODE_ALL			(MC_SECUREMODE_DISK | MC_SECUREMODE_NETWORK | MC_SECUREMODE_PROCESS \
 										| MC_SECUREMODE_REGISTRY_READ | MC_SECUREMODE_REGISTRY_WRITE \

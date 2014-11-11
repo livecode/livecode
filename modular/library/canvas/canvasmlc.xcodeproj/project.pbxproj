@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E819C8921A0BC6090033577E /* module-canvas.h in Headers */ = {isa = PBXBuildFile; fileRef = E819C8911A0BC6090033577E /* module-canvas.h */; };
 		E8611A7319F11C4A0047E1BC /* module-canvas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8611A6919F118280047E1BC /* module-canvas.cpp */; };
 /* End PBXBuildFile section */
 
@@ -35,6 +36,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E819C8911A0BC6090033577E /* module-canvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "module-canvas.h"; sourceTree = "<group>"; };
 		E8611A6619F117930047E1BC /* canvas.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; path = canvas.mlc; sourceTree = "<group>"; };
 		E8611A6919F118280047E1BC /* module-canvas.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "module-canvas.cpp"; sourceTree = "<group>"; };
 		E8611A6E19F11AF60047E1BC /* libcanvasmlc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libcanvasmlc.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -67,6 +69,7 @@
 			children = (
 				E8611A6619F117930047E1BC /* canvas.mlc */,
 				E8611A6919F118280047E1BC /* module-canvas.cpp */,
+				E819C8911A0BC6090033577E /* module-canvas.h */,
 			);
 			name = Source;
 			path = src;
@@ -112,6 +115,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E819C8921A0BC6090033577E /* module-canvas.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

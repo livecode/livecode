@@ -442,60 +442,130 @@ bool MCProperListFirstIndexOfList(MCProperListRef self, MCProperListRef p_needle
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCProperListCombineWithDelimiter(MCProperListRef self, MCStringRef p_delimiter, MCStringRef& r_list)
+bool MCProperListApply(MCProperListRef self, MCProperListApplyCallback p_callback, void *context)
 {
     if (MCProperListIsIndirect(self))
         self = self -> contents;
     
-    MCAutoStringRef t_list_string;
     for (uindex_t i = 0; i < self -> length; i++)
-    {
-        if (MCValueGetTypeCode(self -> list[i]) != kMCValueTypeCodeString)
+        if (!p_callback(context, self -> list[i]))
             return false;
+    
+    return true;
+}
+
+bool MCProperListMap(MCProperListRef self, MCProperListMapCallback p_callback, MCProperListRef& r_new_list)
+{
+    if (MCProperListIsIndirect(self))
+        self = self -> contents;
+    
+    MCAutoArray<MCValueRef> t_values;
+    bool t_success;
+    t_success = true;
+    
+    for (uindex_t i = 0; t_success && i < self -> length; i++)
+    {
+        MCValueRef t_value;
+        if (!p_callback(self -> list[i], t_value))
+            t_success = false;
         
-        if (i == 0)
-        {
-            if (!MCStringMutableCopy((MCStringRef)self -> list[i], &t_list_string))
-                return false;
-        }
-        else
-        {
-            if (!MCStringAppendFormat(*t_list_string, "%@%@", p_delimiter, (MCStringRef)self -> list[i]))
-                return false;
-        }
+        if (t_success);
+            t_values . Push(t_value);
     }
     
-    return MCStringCopy(*t_list_string, r_list);
+    if (t_success)
+        t_success = MCProperListCreate(t_values . Ptr(), t_values . Size(), r_new_list);
+
+    if (!t_success)
+    {
+        for (uindex_t i = 0; i < t_values . Size(); i++)
+            MCValueRelease(t_values[i]);
+    }
+    
+    return t_success;
 }
 
-static bool MCProperListDoSort(MCValueRef *list, uindex_t p_item_count, MCValueRef *p_temp, MCProperListSortType p_type, bool p_ascending)
+bool MCProperListSort(MCProperListRef self, bool p_reverse, MCProperListQuickSortCallback p_callback)
 {
-    return false;
-}
-
-bool MCProperListSort(MCProperListRef self, bool p_ascending, MCProperListSortType p_sort_type)
-{
-    // TODO - implement sorting.
+    MCAssert(MCProperListIsMutable(self));
+ 
     uindex_t t_item_count;
     t_item_count = MCProperListGetLength(self);
     
     if (t_item_count < 2)
         return true;
     
+    if (MCProperListIsIndirect(self))
+        if (!__MCProperListResolveIndirect(self))
+            return false;
+
+    qsort(self -> list, self -> length, sizeof(MCValueRef), (int (*)(const void *, const void *))p_callback);
+
+    return true;
+}
+
+static void MCProperListDoStableSort(MCValueRef*& list, uindex_t p_item_count, MCValueRef*& p_temp, bool p_reverse, MCProperListCompareElementCallback p_callback, void *context)
+{
+    if (p_item_count <= 1)
+        return;
+    
+    uint32_t t_first_half_count = p_item_count / 2;
+    uint32_t t_second_half_count = p_item_count - t_first_half_count;
+    MCValueRef *t_first_half = list;
+    MCValueRef *t_second_half = t_first_half + t_first_half_count;
+    
+    // Sort the halves recursively
+    MCProperListDoStableSort(t_first_half, t_first_half_count, p_temp, p_reverse, p_callback, context);
+    MCProperListDoStableSort(t_second_half, t_second_half_count, p_temp, p_reverse, p_callback, context);
+    
+    // And interleave appropriately
+    MCValueRef *tmp = p_temp;
+    while (t_first_half_count > 0 && t_second_half_count > 0)
+    {
+        compare_t t_result;
+        t_result = p_callback(context, *t_first_half, *t_second_half);
+        bool t_take_first;
+        t_take_first = p_reverse ? t_result >= 0 : t_result < 0;
+        
+        if (t_take_first)
+        {
+            *tmp++ = *t_first_half++;
+            t_first_half_count--;
+        }
+        else
+        {
+            *tmp++ = *t_second_half++;
+            t_second_half_count--;
+        }
+    }
+    
+    for (uindex_t i = 0; i < t_first_half_count; i++)
+        tmp[i] = t_first_half[i];
+    for (uindex_t i = 0; i < (p_item_count - t_second_half_count); i++)
+        list[i] = p_temp[i];
+}
+
+bool MCProperListStableSort(MCProperListRef self, bool p_reverse, MCProperListCompareElementCallback p_callback, void *context)
+{
     MCAssert(MCProperListIsMutable(self));
     
+    uindex_t t_item_count;
+    t_item_count = MCProperListGetLength(self);
+        
+    if (t_item_count < 2)
+        return true;
+        
     if (__MCProperListIsIndirect(self))
         if (!__MCProperListResolveIndirect(self))
             return false;
     
     MCValueRef *t_temp_array = new MCValueRef[t_item_count];
     
-    bool t_success;
-    t_success = MCProperListDoSort(self -> list, t_item_count, t_temp_array, p_sort_type, p_ascending);
+    MCProperListDoStableSort(self -> list, t_item_count, t_temp_array, p_reverse, p_callback, context);
     
     delete[] t_temp_array;
     
-    return false;
+    return true;
 }
 
 bool MCProperListIsEqualTo(MCProperListRef self, MCProperListRef p_other)

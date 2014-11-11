@@ -75,6 +75,7 @@ MCImage *MCDispatch::imagecache;
 static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The following is not ASCII text,\n# so now would be a good time to q out of more\f\nexec mc $0 \"$@\"\n";
 
 #define NEWHEADERSIZE 8
+#define HEADERPREFIXSIZE 4
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
 static const char *newheader7000 = "REVO7000";
@@ -490,15 +491,35 @@ IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 	char tnewheader[NEWHEADERSIZE];
 	if (IO_read(tnewheader, NEWHEADERSIZE, stream) == IO_NORMAL)
 	{
-		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
-		if (strncmp(tnewheader, newheader, NEWHEADERSIZE) == 0 ||
-			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0 ||
-			strncmp(tnewheader, newheader7000, NEWHEADERSIZE) == 0)
+        // AL-2014-10-27: [[ Bug 12558 ]] Check for valid header prefix
+		if (strncmp(tnewheader, "REVO", HEADERPREFIXSIZE) == 0)
 		{
-			r_version = (tnewheader[4] - '0') * 1000;
-			r_version += (tnewheader[5] - '0') * 100;
-			r_version += (tnewheader[6] - '0') * 10;
-			r_version += (tnewheader[7] - '0') * 1;
+            // The header version can now consist of any alphanumeric characters
+            // They map to numbers as follows:
+            // 0-9 -> 0-9
+            // A-Z -> 10-35
+            // a-z -> 36-61
+            uint1 versionnum[4];
+            for (uint1 i = 0; i < 4; i++)
+            {
+                char t_char = tnewheader[i + 4];
+                if ('0' <= t_char && t_char <= '9')
+                    versionnum[i] = (uint1)(t_char - '0');
+                else if ('A' <= t_char && t_char <= 'Z')
+                    versionnum[i] = (uint1)(t_char - 'A' + 10);
+                else if ('a' <= t_char && t_char <= 'z')
+                    versionnum[i] = (uint1)(t_char - 'a' + 36);
+                else
+                    return IO_ERROR;
+            }
+
+            // Future file format versions will always still compare greater than MAX_STACKFILE_VERSION,
+            // so it is ok that r_version does not accurately reflect future version values.
+            // TODO: change this, and comparisons for version >= 7000 / 5500, etc 
+			r_version = versionnum[0] * 1000;
+			r_version += versionnum[1] * 100;
+			r_version += versionnum[2] * 10;
+            r_version += versionnum[3];
 		}
 		else
 		{
@@ -639,7 +660,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 			MCresult->sets("stack was produced by a newer version");
 			return IO_ERROR;
 		}
-
+        
 		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
 		//   parentscript resolution is required to false.
 		s_loaded_parent_script_reference = false;
@@ -916,7 +937,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
             return IO_ERROR;
         MCAutoStringRef t_script_str;
         /* UNCHECKED */ MCStringCreateWithCString(*script, &t_script_str);
-        if (!stacks -> setscript(*t_script_str))
+        if (!stacks -> setscript_from_commandline(*t_script_str))
             return IO_ERROR;
     }
     else
@@ -1076,18 +1097,24 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
 	}
     
     // Compute the body of the script file.
-    MCAutoStringRef t_script_body;
+	MCAutoStringRef t_converted;
 
-    // Write out the standard script stack header, and then the script itself
-    MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+	// MW-2014-10-24: [[ Bug 13791 ]] We need to post-process the generated string on some
+	//   platforms for line-ending conversion so temporarily need a stringref - hence we
+	//   put the processing in its own block.
+	{
+		MCAutoStringRef t_script_body;
 
-    // Convert line endings - but only if the native line ending isn't CR!
-    MCAutoStringRef t_converted;
+		// Write out the standard script stack header, and then the script itself
+		MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+
+		// Convert line endings - but only if the native line ending isn't CR!
 #ifndef __CR__
-    MCStringConvertLineEndingsToLiveCodeAndRelease(*t_script_body, &t_converted);
+		MCStringConvertLineEndingsToLiveCode(*t_script_body, &t_converted);
 #else
-    t_converted = *t_script_body;
+		t_converted = *t_script_body;
 #endif
+	}
     
     // Open the output stream.
 	IO_handle stream;

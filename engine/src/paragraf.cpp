@@ -491,8 +491,6 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
         if ((stat = IO_read_string_legacy_full(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
 			return stat;
 
-        MCLog("Read paragraph text of length %d", t_length);
-        
         if (!MCStringCreateMutable(0, m_text))
 			return IO_ERROR;
 
@@ -537,8 +535,6 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					newblock->GetRange(index, len);
                     t_last_added = index+len;
 
-                    MCLog(" Read block is_unicode=%d, index=%d, len=%d", newblock -> IsSavedAsUnicode(), index, len);
-                    
                     // Some stacks seem to be saved with invalid blocks that
                     // exceed the length of the paragraph character data
                     // SN-2014-09-29: [[ Bug 13552 ]] Clamp the length appropriately

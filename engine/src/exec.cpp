@@ -860,12 +860,18 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
     t_success = false;
     t_can_debug = true;
     
-    t_success = EvalExprAsNonStrictBool(p_expr, p_error, r_value);
-    while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
+    // AL-2014-10-27: [[ Bug 13824 ]] The loop here should continue to
+    //  try to evaluate as non-strict bool, rather than only trying once.
+    do
     {
-        t_can_debug = MCB_error(*this, line, pos, p_error);
-        IgnoreLastError();
+        t_success = EvalExprAsNonStrictBool(p_expr, p_error, r_value);
+        if (!t_success)
+        {
+            t_can_debug = MCB_error(*this, line, pos, p_error);
+            IgnoreLastError();
+        }
     }
+    while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
     if (t_success)
 		return true;
