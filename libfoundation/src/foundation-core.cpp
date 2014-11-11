@@ -76,6 +76,7 @@ bool MCInitialize(void)
 
 void MCFinalize(void)
 {
+    __MCProperListFinalize();
 	__MCLocaleFinalize();
     __MCRecordFinalize();
     __MCSetFinalize();
