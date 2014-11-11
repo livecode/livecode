@@ -2390,6 +2390,15 @@ bool MCStreamReadInt16(MCStreamRef stream, int16_t& r_value);
 bool MCStreamReadInt32(MCStreamRef stream, int32_t& r_value);
 bool MCStreamReadInt64(MCStreamRef stream, int64_t& r_value);
 
+bool MCStreamWriteUInt8(MCStreamRef stream, uint8_t value);
+bool MCStreamWriteUInt16(MCStreamRef stream, uint16_t value);
+bool MCStreamWriteUInt32(MCStreamRef stream, uint32_t value);
+bool MCStreamWriteUInt64(MCStreamRef stream, uint64_t value);
+bool MCStreamWriteInt8(MCStreamRef stream, int8_t value);
+bool MCStreamWriteInt16(MCStreamRef stream, int16_t value);
+bool MCStreamWriteInt32(MCStreamRef stream, int32_t value);
+bool MCStreamWriteInt64(MCStreamRef stream, int64_t value);
+
 // Variable-sized unsigned and signing integer functions. These methods use
 // the top-bit of successive bytes to indicate whether more bytes follow - each
 // byte encodes 7 bits of information.
@@ -2401,6 +2410,9 @@ bool MCStreamReadCompactSInt64(MCStreamRef stream, uint64_t& r_value);
 // Fixed-size binary-floating point functions.
 bool MCStreamReadFloat(MCStreamRef stream, float& r_value);
 bool MCStreamReadDouble(MCStreamRef stream, double& r_value);
+
+bool MCStreamWriteFloat(MCStreamRef stream, float value);
+bool MCStreamWriteDouble(MCStreamRef stream, double value);
 
 // Known valueref functions - these assume the given type is present.
 bool MCStreamReadBoolean(MCStreamRef stream, MCBooleanRef& r_boolean);
