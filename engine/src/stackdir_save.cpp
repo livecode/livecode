@@ -853,12 +853,17 @@ MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op,
 
 	if (t_success && t_has_type)
 		t_success = MCListAppend (*t_list, p_type_spec);
+	MCAutoStringRef t_hash_literal;
 	if (t_success)
 		t_success = (MCListAppendCString (*t_list, "&") &&
 					 MCListAppend (*t_list, p_file_type) &&
-					 MCListAppend (*t_list, *t_hash));
+					 MCStackdirFormatLiteral (*t_hash, &t_hash_literal) &&
+					 MCListAppend (*t_list, *t_hash_literal));
+	MCAutoStringRef t_file_name_literal;
 	if (t_success && t_has_file_name)
-		t_success = MCListAppend (*t_list, p_file_name);
+		t_success = (MCStackdirFormatLiteral (p_file_name,
+											  &t_file_name_literal) &&
+					 MCListAppend (*t_list, *t_file_name_literal));
 
 	if (t_success)
 		t_success = MCListCopyAsString (*t_list, r_descriptor);
