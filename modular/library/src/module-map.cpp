@@ -81,13 +81,13 @@ static bool is_not_among_the_elements_of(void *context, MCArrayRef p_target, MCN
 static bool list_array_keys(void *context, MCArrayRef p_target, MCNameRef p_key, MCValueRef p_value)
 {
     MCProperListRef t_list = (MCProperListRef)context;
-    return MCProperListPushElement(t_list, MCNameGetString(p_key));
+    return MCProperListPushElementOntoBack(t_list, MCNameGetString(p_key));
 }
 
 static bool list_array_elements(void *context, MCArrayRef p_target, MCNameRef p_key, MCValueRef p_value)
 {
     MCProperListRef t_list = (MCProperListRef)context;
-    return MCProperListPushElement(t_list, p_value);
+    return MCProperListPushElementOntoBack(t_list, p_value);
 }
 
 void MCMapEvalKeysOf(MCArrayRef p_target, MCProperListRef& r_output)
@@ -481,13 +481,13 @@ void MCMapRunTests()
     
     MCAutoProperListRef t_list;
     MCProperListCreateMutable(&t_list);
-    MCProperListPushElements(*t_list, t_list_elts .Ptr(), t_list_elts . Size() - 1);
+    MCProperListPushElementsOntoBack(*t_list, t_list_elts .Ptr(), t_list_elts . Size() - 1);
     bool t_is_among;
     MCMapEvalIsAmongTheKeysOfMatrix(*t_list, false, *t_array, t_is_among);
     
     log_result("is (partial) among the keys of matrix", t_is_among);
     
-    MCProperListPushElement(*t_list, *t_3n);
+    MCProperListPushElementOntoBack(*t_list, *t_3n);
     
     MCMapEvalIsAmongTheKeysOfMatrix(*t_list, false, *t_array, t_is_among);
     
@@ -496,7 +496,7 @@ void MCMapRunTests()
     /*MCMapStoreElementOfMatrix(MCValueRef p_value, MCArrayRef& x_target, MCProperListRef p_key)*/
     MCAutoNumberRef t_4n;
     MCNumberCreateWithInteger(4, &t_4n);
-    MCProperListPushElement(*t_list, *t_4n);
+    MCProperListPushElementOntoBack(*t_list, *t_4n);
     
     MCArrayRef t_matrix;
     MCArrayCreateMutable(t_matrix);

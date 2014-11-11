@@ -2514,14 +2514,17 @@ MCValueRef MCProperListFetchElementAtIndex(MCProperListRef list, uindex_t p_inde
 // Copy the elements at the specified range as a list.
 bool MCProperListCopySublist(MCProperListRef list, MCRange p_range, MCProperListRef& r_elements);
 
-bool MCProperListPushElement(MCProperListRef list, MCValueRef p_value);
+bool MCProperListPushElementOntoFront(MCProperListRef list, MCValueRef p_value);
+bool MCProperListPushElementOntoBack(MCProperListRef list, MCValueRef p_value);
 // Pushes all of the values in p_values onto the end of the list
-bool MCProperListPushElements(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length);
+bool MCProperListPushElementsOntoFront(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length);
+bool MCProperListPushElementsOntoBack(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length);
 
 bool MCProperListAppendList(MCProperListRef list, MCProperListRef p_value);
 
 // The returned value is owned by the caller.
-bool MCProperListPop(MCProperListRef list, MCValueRef& r_value);
+bool MCProperListPopFront(MCProperListRef list, MCValueRef& r_value);
+bool MCProperListPopBack(MCProperListRef list, MCValueRef& r_value);
 
 bool MCProperListInsertElement(MCProperListRef list, MCValueRef p_value, index_t p_index);
 bool MCProperListInsertElements(MCProperListRef list, const MCValueRef *p_value, uindex_t p_length, index_t p_index);
