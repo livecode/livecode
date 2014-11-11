@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "globals.h"
+#include "platform.h"
 
 enum {
     MAC_SHADOW,
@@ -486,8 +487,8 @@ public:
 	Boolean isvisible();
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
-	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o);
-	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False);
+	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected = false);
+	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False, bool selected = false);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);
 	Boolean setpattern(uint2 newpixmap, const MCString &);
@@ -724,6 +725,12 @@ protected:
 	
     // MW-2014-09-30: [[ ScriptStack ]] Used by MCStack::setasscriptonly.
 	Exec_stat setscriptprop(MCExecPoint& ep);
+    
+    // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    virtual MCPlatformControlState getcontrolstate();
+    bool getthemeselectorsforprop(Properties, MCPlatformControlType&, MCPlatformControlPart&, MCPlatformControlState&, MCPlatformThemeProperty&, MCPlatformThemePropertyType&);
     
 private:
 	Exec_stat getrectprop(Properties which, MCExecPoint& ep, Boolean effective);

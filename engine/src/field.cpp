@@ -3234,3 +3234,29 @@ bool MCField::imagechanged(MCImage *p_image, bool p_deleting)
 
 	return t_used;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformControlType MCField::getcontroltype()
+{
+    MCPlatformControlType t_type;
+    t_type = kMCPlatformControlTypeInputField;
+    
+    if (flags & F_LIST_BEHAVIOR)
+        t_type = kMCPlatformControlTypeList;
+    
+    return t_type;
+}
+
+MCPlatformControlPart MCField::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}
+
+MCPlatformControlState MCField::getcontrolstate()
+{
+    int t_state;
+    t_state = MCControl::getcontrolstate();
+    
+    return MCPlatformControlState(t_state);
+}

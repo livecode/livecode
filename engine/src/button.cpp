@@ -4733,3 +4733,58 @@ IO_stat MCButton::load(IO_handle stream, const char *version)
 	}
 	return IO_NORMAL;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformControlType MCButton::getcontroltype()
+{
+    MCPlatformControlType t_type;
+    t_type = kMCPlatformControlTypeButton;
+    if (getstyleint(flags) == F_MENU)
+    {
+        t_type = kMCPlatformControlTypeMenu;
+        switch (menumode)
+        {
+            case WM_POPUP:
+                t_type = kMCPlatformControlTypePopupMenu;
+                break;
+                
+            case WM_OPTION:
+                t_type = kMCPlatformControlTypeOptionMenu;
+                break;
+                
+            case WM_COMBO:
+                t_type = kMCPlatformControlTypeComboBox;
+                break;
+                
+            case WM_PULLDOWN:
+                t_type = kMCPlatformControlTypePulldownMenu;
+                break;
+                
+            default:
+                break;
+        }
+    }
+    
+    return t_type;
+}
+
+MCPlatformControlPart MCButton::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}
+
+MCPlatformControlState MCButton::getcontrolstate()
+{
+    int t_state;
+    t_state = MCControl::getcontrolstate();
+    
+    if (flags & F_DEFAULT)
+        t_state |= kMCPlatformControlStateDefault;
+    
+    if (t_state & kMCPlatformControlStateMouseFocus
+        && MCbuttonstate & 1)
+        t_state |= kMCPlatformControlStatePressed;
+    
+    return MCPlatformControlState(t_state);
+}

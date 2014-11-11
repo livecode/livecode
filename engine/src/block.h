@@ -295,5 +295,11 @@ public:
 	MCBlock *advanceindex(uint2& p_index);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
+    
+    // FG-2014-11-11: [[ Better theming ]]
+    // Sets up the colours on the DC for the given type of drawing
+    void setcolorfornormaltext(MCDC*, MCColor*);
+    void setcolorforhilite(MCDC*);
+    void setcolorforselectedtext(MCDC*, MCColor*);
 };
 #endif

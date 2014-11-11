@@ -605,7 +605,15 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
     // specially. (It can't be done in MCDispatch as it doesn't know what object
     // requested the property so can't do per-control-type theming).
     if (effective && !recursive && t_stat == ES_NOT_HANDLED)
-        return getsystemthemeprop(which, ep);
+    {
+        t_stat = getsystemthemeprop(which, ep);
+        if (t_stat == ES_NOT_HANDLED)
+        {
+            MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
+            return ES_ERROR;
+        }
+        return t_stat;
+    }
     
 	return t_stat;
 #endif /* MCObject::getprop */
@@ -614,8 +622,46 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 Exec_stat MCObject::getsystemthemeprop(Properties which, MCExecPoint &ep)
 {
 #ifdef /* MCObject::getsystemthemeprop */ LEGACY_EXEC
-    // Do nothing at the moment
-    ep.clear();
+    
+    // Get the theming selectors for this object
+    MCPlatformControlType t_type;
+    MCPlatformControlPart t_part;
+    MCPlatformControlState t_state;
+    MCPlatformThemeProperty t_prop;
+    MCPlatformThemePropertyType t_proptype;
+    bool t_as_pixel;
+    if (!getthemeselectorsforprop(which, t_type, t_part, t_state, t_prop, t_proptype))
+        return ES_NOT_HANDLED;
+    
+    // Colour props can be retrieved as items (color) or a pixel (integer)
+    t_as_pixel = P_FORE_PIXEL <= which && which <= P_FOCUS_PIXEL;
+    
+    // Get the property
+    bool t_found;
+    switch (t_proptype)
+    {
+        case kMCPlatformThemePropertyTypeColor:
+            MCColor t_color;
+            t_found = MCPlatformGetControlThemePropColor(t_type, t_part, t_state, t_prop, t_color);
+            if (t_found)
+            {
+                if (t_as_pixel)
+                    ep.setint(t_color.pixel & 0x00FFFFFF);
+                else
+                    ep.setcolor(t_color);
+            }
+            break;
+            
+        case kMCPlatformThemePropertyTypeFont:
+            break;
+            
+        case kMCPlatformThemePropertyTypeInteger:
+            break;
+            
+        default:
+            MCAssert(false);
+    }
+    
     return ES_NORMAL;
 #endif /* MCObject::getsystemthemeprop */
 }
@@ -1845,5 +1891,106 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformControlType MCObject::getcontroltype()
+{
+    return kMCPlatformControlTypeGlobal;
+}
+
+MCPlatformControlPart MCObject::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}
+
+MCPlatformControlState MCObject::getcontrolstate()
+{
+    int t_state = kMCPlatformControlStateNormal;
+    
+    if (flags & F_DISABLED)
+        t_state |= kMCPlatformControlStateDisabled;
+    
+    if (MCmousestackptr == getstack() && getstack()->getcurcard() == getcard())
+    {
+        if (MCmousex <= rect.x && rect.x+rect.width < MCmousex
+            && MCmousey <= rect.y && rect.y+rect.height < MCmousey)
+            t_state |= kMCPlatformControlStateMouseOver;
+        
+        if (getstack()->getcurcard()->getmousecontrol() == this)
+            t_state |= kMCPlatformControlStateMouseFocus;
+    }
+    
+    if (getstack()->getcurcard() == getcard() && getstack()->state & CS_KFOCUSED)
+        t_state |= kMCPlatformControlStateWindowActive;
+    
+    return MCPlatformControlState(t_state);
+}
+
+bool MCObject::getthemeselectorsforprop(Properties which, MCPlatformControlType& r_type, MCPlatformControlPart& r_part, MCPlatformControlState& r_state, MCPlatformThemeProperty& r_prop, MCPlatformThemePropertyType& r_proptype)
+{
+    // Get the theming selectors for this object
+    MCPlatformControlType t_type;
+    MCPlatformControlPart t_part;
+    MCPlatformControlState t_state;
+    MCPlatformThemeProperty t_prop;
+    MCPlatformThemePropertyType t_proptype;
+    t_type = getcontroltype();
+    t_part = getcontrolsubpart();
+    t_state = getcontrolstate();
+    
+    // Transform the LiveCode property into the corresponding theme property
+    switch (which)
+    {
+        case P_FORE_PIXEL:
+        case P_FORE_COLOR:
+            t_proptype = kMCPlatformThemePropertyTypeColor;
+            t_prop = kMCPlatformThemePropertyTextColor;
+            break;
+            
+        case P_BACK_PIXEL:
+        case P_BACK_COLOR:
+            t_proptype = kMCPlatformThemePropertyTypeColor;
+            t_prop = kMCPlatformThemePropertyBackgroundColor;
+            break;
+            
+        case P_HILITE_PIXEL:
+        case P_HILITE_COLOR:
+            t_proptype = kMCPlatformThemePropertyTypeColor;
+            t_prop = kMCPlatformThemePropertyBackgroundColor;
+            t_state = MCPlatformControlState(t_state | kMCPlatformControlStateSelected);
+            break;
+            
+        case P_FOCUS_COLOR:
+        case P_FOCUS_PIXEL:
+            t_proptype = kMCPlatformThemePropertyTypeColor;
+            t_prop = kMCPlatformThemePropertyFocusColor;
+            break;
+            
+        case P_BORDER_COLOR:
+        case P_BORDER_PIXEL:
+            t_proptype = kMCPlatformThemePropertyTypeColor;
+            t_prop = kMCPlatformThemePropertyBorderColor;
+            break;
+            
+        case P_SHADOW_COLOR:
+        case P_SHADOW_PIXEL:
+            t_proptype = kMCPlatformThemePropertyTypeColor;
+            t_prop = kMCPlatformThemePropertyShadowColor;
+            break;
+            
+        default:
+            // Unsupported property type
+            return false;
+    }
+    
+    r_type = t_type;
+    r_part = t_part;
+    r_state = t_state;
+    r_prop = t_prop;
+    r_proptype = t_proptype;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 #include "props.cpp"

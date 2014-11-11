@@ -549,5 +549,12 @@ public:
 	bool imagechanged(MCImage *p_image, bool p_deleting);
 	
 	MCRectangle firstRectForCharacterRange(int32_t& si, int32_t& ei);
+    
+protected:
+    
+    // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    virtual MCPlatformControlState getcontrolstate();
 };
 #endif

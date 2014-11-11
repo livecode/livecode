@@ -1220,7 +1220,7 @@ Boolean MCObject::resizeparent()
 
 Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
                                MCColor &c, MCPatternRef &r_pattern,
-                               int2 &x, int2 &y, MCDC *dc, MCObject *o)
+                               int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected)
 {
 	uint2 i;
 	if (dc->getdepth() > 1)
@@ -1259,14 +1259,65 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 					if (di == DI_BACK)
 						c = dc->getwhite();
 					else
-						parent->getforecolor(di, rev, False, c, r_pattern, x, y, dc, o);
+						parent->getforecolor(di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
 					return True;
 				}
 				if (parent && parent != MCdispatcher)
-					return parent->getforecolor(di, rev, False, c, r_pattern, x, y, dc, o);
+					return parent->getforecolor(di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
 			}
 	}
 
+    // Try to get the colour from the system theme rather than these hard-coded values
+    MCPlatformControlType t_control_type;
+    MCPlatformControlPart t_control_part;
+    MCPlatformControlState t_control_state;
+    MCPlatformThemeProperty t_theme_prop;
+    MCPlatformThemePropertyType t_theme_prop_type;
+    Properties which;
+    switch (di)
+    {
+        case DI_TOP:
+            which = P_TOP_COLOR;
+            break;
+            
+        case DI_BOTTOM:
+            which = P_BOTTOM_COLOR;
+            break;
+            
+        case DI_FORE:
+            which = P_FORE_COLOR;
+            break;
+            
+        case DI_BACK:
+            which = P_BACK_COLOR;
+            break;
+            
+        case DI_HILITE:
+            which = P_HILITE_COLOR;
+            break;
+            
+        case DI_FOCUS:
+            which = P_FOCUS_COLOR;
+            break;
+            
+        case DI_BORDER:
+            which = P_BORDER_COLOR;
+            break;
+            
+        case DI_SHADOW:
+            which = P_SHADOW_COLOR;
+            break;
+            
+    }
+    if (o->getthemeselectorsforprop(which, t_control_type, t_control_part, t_control_state, t_theme_prop, t_theme_prop_type))
+    {
+        if (selected)
+            t_control_state |= kMCPlatformControlStateSelected;
+        
+        if (MCPlatformGetControlThemePropColor(t_control_type, t_control_part, t_control_state, t_theme_prop, c))
+            return True;
+    }
+    
 	switch (di)
 	{
 
@@ -1312,7 +1363,7 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 	return True;
 }
 
-void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
+void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite, bool selected)
 {
 	uint2 idi = di;
 	if (rev)
@@ -1337,7 +1388,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	MCColor color;
 	MCPatternRef t_pattern = nil;
 	int2 x, y;
-	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc, this))
+	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc, this, selected))
 	{
 		MCColor fcolor;
 		if (dc->getdepth() == 1 && di != DI_BACK
@@ -4306,6 +4357,8 @@ void MCObject::mapfont(void)
 		// This should never happen as the only object with nil parent when
 		// opened should be MCdispatcher, which always has font attrs.
 		assert(false);
+        
+        // TODO: font theming
 	}
 	
 	// MW-2012-03-02: [[ Bug 10044 ]] If we had to temporarily map the parent's font

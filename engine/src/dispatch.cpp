@@ -137,31 +137,31 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 	{
 #ifdef /* MCDispatch::getprop */ LEGACY_EXEC
 	case P_BACK_PIXEL:
-		ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
-		return ES_NORMAL;
+        //ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
+        return ES_NOT_HANDLED;
 	case P_TOP_PIXEL:
-		ep.setint(MCscreen->white_pixel.pixel & 0xFFFFFF);
-		return ES_NORMAL;
+        //ep.setint(MCscreen->white_pixel.pixel & 0xFFFFFF);
+        return ES_NOT_HANDLED;
 	case P_HILITE_PIXEL:
 	case P_FORE_PIXEL:
 	case P_BORDER_PIXEL:
 	case P_BOTTOM_PIXEL:
 	case P_SHADOW_PIXEL:
 	case P_FOCUS_PIXEL:
-		ep.setint(MCscreen->black_pixel.pixel & 0xFFFFFF);
-		return ES_NORMAL;
+        //ep.setint(MCscreen->black_pixel.pixel & 0xFFFFFF);
+        return ES_NOT_HANDLED;
 	case P_BACK_COLOR:
 	case P_HILITE_COLOR:
-		ep.setstaticcstring("white");
-		return ES_NORMAL;
+        //ep.setstaticcstring("white");
+        return ES_NOT_HANDLED;
 	case P_FORE_COLOR:
 	case P_BORDER_COLOR:
 	case P_TOP_COLOR:
 	case P_BOTTOM_COLOR:
 	case P_SHADOW_COLOR:
 	case P_FOCUS_COLOR:
-		ep.setstaticcstring("black");
-		return ES_NORMAL;
+        //ep.setstaticcstring("black");
+        return ES_NOT_HANDLED;
 	case P_FORE_PATTERN:
 	case P_BACK_PATTERN:
 	case P_HILITE_PATTERN:
