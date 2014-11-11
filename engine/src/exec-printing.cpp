@@ -710,8 +710,14 @@ void MCPrintingExecOpenPrintingWithDialog(MCExecContext& ctxt, bool p_as_sheet)
 	MCAutoStringRef t_result;
 	if (MCprinter->ChoosePrinter(p_as_sheet, &t_result))
 	{
-		ctxt.SetTheResultToValue(*t_result);
-		MCPrintingExecOpenPrinting(ctxt);
+        // PM-2014-11-04: [[ Bug 13915 ]] Make sure we do not print if user cancels        
+        if (MCStringGetLength(*t_result) > 0)
+            ctxt.SetTheResultToValue(MCN_cancel);
+        else
+        {
+            ctxt.SetTheResultToEmpty();
+            MCPrintingExecOpenPrinting(ctxt);
+        }
 
 		return;
 	}
