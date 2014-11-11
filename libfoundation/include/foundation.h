@@ -1990,6 +1990,9 @@ bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
 bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
 bool MCDataContains(MCDataRef p_data, MCDataRef p_needle);
+bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle);
+bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle);
+
 uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range);
 uindex_t MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range);
 

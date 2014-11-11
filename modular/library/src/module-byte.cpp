@@ -42,6 +42,16 @@ void MCByteEvalContainsBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_out
     r_output = MCDataContains(p_target, p_needle);
 }
 
+void MCByteEvalBeginsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
+{
+    r_output = MCDataBeginsWith(p_target, p_needle);
+}
+
+void MCByteEvalEndsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
+{
+    r_output = MCDataEndsWith(p_target, p_needle);
+}
+
 void MCByteEvalOffsetOfBytesInRange(MCDataRef p_needle, MCDataRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
 {
     uindex_t t_offset;

@@ -411,22 +411,48 @@ compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
 bool MCDataContains(MCDataRef p_data, MCDataRef p_needle)
 {
     uindex_t t_needle_byte_count, t_byte_count;
-    t_needle_byte_count = MCDataGetLength(p_needle);
-    t_byte_count = MCDataGetLength(p_data);
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
     
-    const byte_t *t_bytes, *t_needle_bytes;
-    t_bytes = MCDataGetBytePtr(p_data);
-    t_needle_bytes = MCDataGetBytePtr(p_needle);
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    const byte_t *t_bytes;
+    t_bytes = p_data -> bytes;
     
     bool t_found = false;
     for (uindex_t i = 0; i < t_byte_count - t_needle_byte_count + 1; i++)
-        if (MCMemoryCompare(t_bytes++, t_needle_bytes, sizeof(byte_t) * t_needle_byte_count) == 0)
+        if (MCMemoryCompare(t_bytes++, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0)
         {
             t_found = true;
             break;
         }
     
     return t_found;
+}
+
+bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle)
+{
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
+    
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    return MCMemoryCompare(p_data -> bytes, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0;
+}
+
+bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle)
+{
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
+    
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    return MCMemoryCompare(p_data -> bytes + t_byte_count - t_needle_byte_count - 1, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0;
 }
 
 uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range)
@@ -452,6 +478,7 @@ uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range
     
     return t_result;
 }
+
 
 uindex_t MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range)
 {

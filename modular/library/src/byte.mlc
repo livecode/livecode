@@ -12,6 +12,10 @@ foreign handler EvalOffsetOfBytesAfter(in Needle as data, in After as index, in 
 
 foreign handler EvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
 
+foreign handler EvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalBeginsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalEndsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+
 foreign handler FetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
 foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
 foreign handler FetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
@@ -96,9 +100,6 @@ begin
     EvalOffsetOfBytesBefore(Needle, Before, Target, IsFirst, output)
 end syntax
 
---
-
-
 /*
 Summary:            Determines whether <Needle> is in <Target>.
 Needle: 			An expression which evaluates to a single byte of binary data.
@@ -112,6 +113,8 @@ begin
     EvalIsInBytes(Target, Needle, output)
 end syntax
 
+--
+
 /*
 Summary:            Determines whether <Needle> contains <Target>.
 Needle: 			An expression which evaluates to binary data.
@@ -123,6 +126,32 @@ syntax ContainsBytes is neutral binary operator with precedence 1
     <Target: Expression> "contains" <Needle: Expression>
 begin
     EvalContainsBytes(Target, Needle, output)
+end syntax
+
+/*
+Summary:            Determines whether <Target> begins with <Needle>.
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+output:             True if the bytes of <Needle> occur as an initial subsequence of the bytes of <Target>, and false otherwise.
+*/
+
+syntax BeginsWithBytes is neutral binary operator with precedence 1
+    <Target: Expression> "begins" "with" <Needle: Expression>
+begin
+    EvalBeginsWithBytes(Target, Needle, output)
+end syntax
+
+/*
+Summary:            Determines whether <Target> ends with <Needle>.
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+output:             True if the bytes of <Needle> occur as a final subsequence of the bytes of <Target>, and false otherwise.
+*/
+
+syntax EndsWithBytes is neutral binary operator with precedence 1
+    <Target: Expression> "ends" "with" <Needle: Expression>
+begin
+    EvalEndsWithBytes(Target, Needle, output)
 end syntax
 
 --
