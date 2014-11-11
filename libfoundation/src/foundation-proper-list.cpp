@@ -59,7 +59,7 @@ bool MCProperListCreate(const MCValueRef *p_values, uindex_t p_length, MCProperL
 		t_success = MCProperListCreateMutable(t_list);
 
 	if (t_success)
-        t_success = MCProperListPushElements(t_list, p_values, p_length);
+        t_success = MCProperListPushElementsOntoBack(t_list, p_values, p_length);
 
 	if (t_success)
 		return MCProperListCopyAndRelease(t_list, r_list);
@@ -225,7 +225,7 @@ bool MCProperListIsEmpty(MCProperListRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCProperListPushElements(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length)
+bool MCProperListPushElementsOntoBack(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length)
 {
 	MCAssert(MCProperListIsMutable(self));
     
@@ -246,9 +246,36 @@ bool MCProperListPushElements(MCProperListRef self, const MCValueRef *p_values, 
     return true;
 }
 
-bool MCProperListPushElement(MCProperListRef self, const MCValueRef p_value)
+bool MCProperListPushElementsOntoFront(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length)
 {
-    return MCProperListPushElements(self, &p_value, 1);
+    MCAssert(MCProperListIsMutable(self));
+    
+    if (__MCProperListIsIndirect(self))
+        if (!__MCProperListResolveIndirect(self))
+            return false;
+    
+    uindex_t t_new_length;
+    t_new_length = self -> length + p_length;
+    
+    if (!MCMemoryResizeArray(t_new_length, self -> list, self -> length))
+        return false;
+    
+    MCMemoryMove(self -> list + p_length, self -> list, sizeof(MCValueRef) * p_length);
+    
+    for (uindex_t i = 0; i < p_length; i++)
+        self -> list[i] = MCValueRetain(p_values[i]);
+    
+    return true;
+}
+
+bool MCProperListPushElementOntoBack(MCProperListRef self, const MCValueRef p_value)
+{
+    return MCProperListPushElementsOntoFront(self, &p_value, 1);
+}
+
+bool MCProperListPushElementOntoFront(MCProperListRef self, const MCValueRef p_value)
+{
+    return MCProperListPushElementsOntoBack(self, &p_value, 1);
 }
 
 bool MCProperListAppendList(MCProperListRef self, MCProperListRef p_value)
@@ -256,7 +283,7 @@ bool MCProperListAppendList(MCProperListRef self, MCProperListRef p_value)
     if (MCProperListIsIndirect(p_value))
         self = p_value -> contents;
     
-    return MCProperListPushElements(self, p_value -> list, p_value -> length);
+    return MCProperListPushElementsOntoBack(self, p_value -> list, p_value -> length);
 }
 
 bool MCProperListInsertElements(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length, index_t p_index)
@@ -357,7 +384,7 @@ MCValueRef MCProperListFetchElementAtIndex(MCProperListRef self, uindex_t p_inde
     return self -> list[p_index];
 }
 
-bool MCProperListPop(MCProperListRef self, MCValueRef& r_value)
+bool MCProperListPopBack(MCProperListRef self, MCValueRef& r_value)
 {
     MCAssert(MCProperListIsMutable(self));
     
@@ -369,6 +396,24 @@ bool MCProperListPop(MCProperListRef self, MCValueRef& r_value)
     t_value = self -> list[self -> length - 1];
     
     if (__MCProperListShrinkAt(self, self -> length - 1, 1))
+        return false;
+    
+    r_value = t_value;
+    return true;
+}
+
+bool MCProperListPopFront(MCProperListRef self, MCValueRef& r_value)
+{
+    MCAssert(MCProperListIsMutable(self));
+    
+    if (__MCProperListIsIndirect(self))
+        if (!__MCProperListResolveIndirect(self))
+            return false;
+    
+    MCValueRef t_value;
+    t_value = self -> list[0];
+    
+    if (__MCProperListShrinkAt(self, 0, 1))
         return false;
     
     r_value = t_value;

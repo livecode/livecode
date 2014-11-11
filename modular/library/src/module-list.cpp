@@ -28,44 +28,36 @@ void MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
     r_output = MCValueRetain(MCProperListFetchTail(p_target));
 }
 
-void MCListExecPushSingleElementOnto(MCValueRef p_value, MCProperListRef& x_target)
+void MCListExecPushSingleElementOnto(MCValueRef p_value, bool p_is_front, MCProperListRef& x_target)
 {
-    if (MCProperListPushElement(x_target, p_value))
-        return;
+    if (p_is_front)
+    {
+        if (MCProperListPushElementOntoFront(x_target, p_value))
+            return;
+    }
+    else
+    {
+        if (MCProperListPushElementOntoBack(x_target, p_value))
+            return;
+    }
     
 //    ctxt . Throw();
 }
 
-void MCListExecPushMultipleElementsOnto(MCProperListRef p_value, MCProperListRef& x_target)
+void MCListExecPopElementInto(MCProperListRef& x_source, bool p_is_front, MCValueRef& r_output)
 {
-    if (MCProperListAppendList(x_target, p_value))
-        return;
+    if (p_is_front)
+    {
+        if (MCProperListPopFront(x_source, r_output))
+            return;
+    }
+    else
+    {
+        if (MCProperListPopBack(x_source, r_output))
+            return;
+    }
     
 //    ctxt . Throw();
-}
-
-void MCListExecPopElementInto(MCProperListRef& x_source, MCValueRef& r_output)
-{
-    if (MCProperListPop(x_source, r_output))
-        return;
-    
-//    ctxt . Throw();
-}
-
-void MCListExecInsertSingleElementIntoListAt(MCValueRef p_value, MCProperListRef& x_target, index_t p_index)
-{
-    if (MCProperListInsertElement(x_target, p_value, p_index))
-        return;
-    
-    //    ctxt . Throw();
-}
-
-void MCListExecInsertMultipleElementsIntoListAt(MCProperListRef p_value, MCProperListRef& x_target, index_t p_index)
-{
-    if (MCProperListInsertList(x_target, p_value, p_index))
-        return;
-    
-    //    ctxt . Throw();
 }
 
 void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
@@ -182,11 +174,11 @@ void MCListRunTests()
     MCAutoProperListRef t_list;
     MCProperListCreateMutable(&t_list);
     
-    MCProperListPushElement(*t_list, kMCEmptyArray);
-    MCProperListPushElement(*t_list, kMCEmptyString);
-    MCProperListPushElement(*t_list, kMCEmptyName);
-    MCProperListPushElement(*t_list, kMCEmptyProperList);
-    MCProperListPushElement(*t_list, kMCEmptySet);
+    MCProperListPushElementOntoBack(*t_list, kMCEmptyArray);
+    MCProperListPushElementOntoBack(*t_list, kMCEmptyString);
+    MCProperListPushElementOntoBack(*t_list, kMCEmptyName);
+    MCProperListPushElementOntoBack(*t_list, kMCEmptyProperList);
+    MCProperListPushElementOntoBack(*t_list, kMCEmptySet);
     
     /*MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)*/
     

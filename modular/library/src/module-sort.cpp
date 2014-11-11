@@ -194,7 +194,7 @@ void MCSortRunTests()
 
     MCProperListRef t_list;
     MCProperListCreateMutable(t_list);
-    MCProperListPushElements(t_list, t_list_elts . Ptr(), t_list_elts . Size());
+    MCProperListPushElementsOntoBack(t_list, t_list_elts . Ptr(), t_list_elts . Size());
     MCSortExecSortListAscendingNumeric(t_list);
     // should be 1,2,b,0x02,a,0x01
     
