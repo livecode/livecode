@@ -1789,6 +1789,8 @@ bool MCStringSubstringContains(MCStringRef string, MCRange range, MCStringRef ne
 // Find the first offset of needle in string, on or after index 'after',
 // processing as appropriate according to options.
 bool MCStringFirstIndexOf(MCStringRef string, MCStringRef needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
+bool MCStringFirstIndexOfStringInRange(MCStringRef string, MCStringRef p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
+
 // Find the first offset of needle in string - where needle is a Unicode character
 // (note it is a codepoint, not unichar - i.e. a 20-bit value).
 bool MCStringFirstIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
@@ -1799,6 +1801,8 @@ bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCR
 // Find the last offset of needle in string, on or before index 'before',
 // processing as appropriate according to options.
 bool MCStringLastIndexOf(MCStringRef string, MCStringRef needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
+bool MCStringLastIndexOfStringInRange(MCStringRef string, MCStringRef p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
+
 // Find the last offset of needle in string - where needle is a Unicode character
 // (note it is a codepoint, not unichar - i.e. a 20-bit value).
 bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
@@ -2011,7 +2015,11 @@ bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
 bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
 bool MCDataContains(MCDataRef p_data, MCDataRef p_needle);
-uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, uindex_t p_start_offset);
+bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle);
+bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle);
+
+uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range);
+uindex_t MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range);
 
 // convert the given data to CFDataRef
 #if defined(__MAC__) || defined (__IOS__)
@@ -2520,7 +2528,7 @@ bool MCProperListInsertElements(MCProperListRef list, const MCValueRef *p_value,
 bool MCProperListInsertList(MCProperListRef list, MCProperListRef p_value, index_t p_index);
 
 bool MCProperListRemoveElement(MCProperListRef list, index_t p_index);
-bool MCProperListRemoveElement(MCProperListRef list, index_t p_start, index_t p_finish);
+bool MCProperListRemoveElements(MCProperListRef list, index_t p_start, index_t p_finish);
 
 bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset);
 bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);

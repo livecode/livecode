@@ -113,6 +113,55 @@ void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_fi
     // PUT INTO AMBIGUITY
 }
 
+void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+{
+    uindex_t t_start, t_count;
+    t_start += t_count;
+    MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    MCProperListInsertElement(x_target, p_value, t_start);
+}
+
+void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+{
+    uindex_t t_start, t_count;
+    MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    MCProperListInsertElement(x_target, p_value, t_start);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, index_t p_finish, MCProperListRef& x_target)
+{
+    uindex_t t_start, t_count;
+    MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    
+    MCProperListRemoveElements(x_target, t_start, t_start + t_count);
+    MCProperListInsertList(x_target, p_list, t_start);
+}
+
+void MCListSpliceIntoElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+{
+    MCListSpliceIntoElementRangeOf(p_list, p_index, p_index, x_target);
+}
+
+void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+{
+    uindex_t t_start, t_count;
+    MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    
+    MCProperListInsertList(x_target, p_list, t_start);
+}
+
+void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+{
+    uindex_t t_start, t_count;
+    MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    
+    t_start += t_count;
+    
+    MCProperListInsertList(x_target, p_list, t_start);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 extern void log(const char *module, const char *test, bool result);

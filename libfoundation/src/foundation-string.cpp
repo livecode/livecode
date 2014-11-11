@@ -2338,23 +2338,26 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
 
 bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_after, MCStringOptions p_options, uindex_t& r_offset)
 {
+    return MCStringFirstIndexOfStringInRange(self, p_needle, MCRangeMake(p_after, UINDEX_MAX), p_options, r_offset);
+}
+
+
+bool MCStringFirstIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset)
+{
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
     if (__MCStringIsIndirect(p_needle))
         p_needle = p_needle -> string;
     
-	// Make sure we are not looking after the string length
-	if (p_after > self -> char_count)
-        return false;
-        
+    __MCStringClampRange(self, p_range);
     
     bool self_native = MCStringIsNative(self);
     if (self_native)
     {
         if (MCStringIsNative(p_needle))
         {
-            for(uindex_t t_offset = p_after; t_offset < self -> char_count; t_offset += 1)
+            for(uindex_t t_offset = p_range . offset; t_offset < p_range . offset + p_range . length; t_offset += 1)
             {
                 uindex_t t_prefix_length;
                 if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
@@ -2375,21 +2378,21 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
         if (MCStringCantBeNative(p_needle, p_options))
             return false;
     }
-
+    
     bool t_result;
     const void *self_chars;
     if (self_native)
-        self_chars = self -> native_chars + p_after;
+        self_chars = self -> native_chars + p_range . offset;
     else
-        self_chars = self -> chars + p_after;
+        self_chars = self -> chars + p_range . length;
     
     // AL-2014-09-05: [[ Bug 13352 ]] Crash due to not taking into account p_after by adjusting length of string.
-    t_result = MCUnicodeFirstIndexOf(self_chars, self -> char_count - p_after, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
+    t_result = MCUnicodeFirstIndexOf(self_chars, p_range . length, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
     
     // Correct the output index
     if (t_result == true)
-        r_offset += p_after;
-
+        r_offset += p_range . offset;
+    
     return t_result;
 }
 
@@ -2443,33 +2446,39 @@ bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCR
 
 bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_before, MCStringOptions p_options, uindex_t& r_offset)
 {
+    return MCStringLastIndexOfStringInRange(self, p_needle, MCRangeMake(0, p_before), p_options, r_offset);
+}
+
+bool MCStringLastIndexOfStringInRange(MCStringRef self, MCStringRef p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset)
+{
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
     if (__MCStringIsIndirect(p_needle))
         p_needle = p_needle -> string;
     
-	// Make sure the before index is in range.
-	p_before = MCMin(p_before, self -> char_count);
+    __MCStringClampRange(self, p_range);
     
     if (MCStringIsNative(self))
     {
         if (MCStringIsNative(p_needle))
         {
-            for(uindex_t t_offset = p_before; t_offset > 0; t_offset -= 1)
+            uindex_t t_limit;
+            t_limit = p_range . offset + p_range . length;
+            while (t_limit--)
             {
                 // Compute the length of the shared prefix *before* offset - this means
                 // we adjust offset down by one before comparing.
                 uindex_t t_prefix_length;
                 if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-                    t_prefix_length = MCNativeCharsSharedPrefixCaseless(self -> native_chars + (t_offset - 1), self -> char_count - (t_offset - 1), p_needle -> native_chars, p_needle -> char_count);
+                    t_prefix_length = MCNativeCharsSharedPrefixCaseless(self -> native_chars + (t_limit - 1), self -> char_count - (t_limit - 1), p_needle -> native_chars, p_needle -> char_count);
                 else
-                    t_prefix_length = MCNativeCharsSharedPrefixExact(self -> native_chars + (t_offset - 1), self -> char_count - (t_offset - 1), p_needle -> native_chars, p_needle -> char_count);
+                    t_prefix_length = MCNativeCharsSharedPrefixExact(self -> native_chars + (t_limit - 1), self -> char_count - (t_limit - 1), p_needle -> native_chars, p_needle -> char_count);
                 
                 // If the prefix length is the same as the needle then we are done.
                 if (t_prefix_length == p_needle -> char_count)
                 {
-                    r_offset = t_offset - 1;
+                    r_offset = t_limit - 1;
                     return true;
                 }
             }
@@ -2479,8 +2488,8 @@ bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_befo
         if (MCStringCantBeNative(p_needle, p_options))
             return false;
     }
-
-    return MCUnicodeLastIndexOf(self -> chars, p_before, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
+    
+    return MCUnicodeLastIndexOf(self -> chars + p_range . offset, p_range . length, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
 }
 
 bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_before, MCStringOptions p_options, uindex_t& r_offset)

@@ -1,0 +1,217 @@
+/*  
+This module specifies the syntax definitions and bindings for operations on binary data in modular LiveCode.
+*/
+
+module com.livecode.binary
+
+foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
+
+foreign handler EvalOffsetOfBytes(in Needle as data, in Target as data, in IsLast as bool, out Offset as index) as undefined binds to "<builtin>"
+foreign handler EvalOffsetOfBytesBefore(in Needle as data, in Before as index, in Target as data, in IsLast as bool, out Offset as index) as undefined binds to "<builtin>"
+foreign handler EvalOffsetOfBytesAfter(in Needle as data, in After as index, in Target as data, in IsFirst as bool, out Offset as index) as undefined binds to "<builtin>"
+
+foreign handler EvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
+
+foreign handler EvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalBeginsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+foreign handler EvalEndsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+
+foreign handler FetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
+foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
+foreign handler FetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
+foreign handler StoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
+
+foreign handler StoreBeforeByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
+foreign handler StoreAfterByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
+
+--
+
+/*
+Summary:            Counts the number of bytes in <Target>.
+
+Target: 			An expression which evaluates to binary data.
+
+Example: 			
+
+	repeat with x = 1 to the number of bytes in tData
+		// do something
+	end repeat
+*/
+
+syntax CountBytesOf is prefix operator with precedence 1
+	"the" "number" "of" "bytes" "in" <Target: Expression>
+begin
+	EvalNumberOfBytesIn(Target, output)
+end syntax
+
+--
+
+/*
+
+Summary:            Finds the first or last occurrence of <Needle> within <Target>
+
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+output:             Returns the number of bytes between the first byte of <Target> and the first or last occurrence of <Needle>	within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target>.
+                    Searches for first occurrence if neither first nor last is specified.
+*/
+
+syntax ByteOffset is prefix operator with precedence 1
+    "the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
+begin
+    EvalOffsetOfBytes(Needle, Target, IsLast, output)
+end syntax
+
+/*
+
+Summary:            Finds the first or last occurrence of <Needle> after a specified index in <Target>
+
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+After:              An expression which evaluates to a valid integer index of Target.
+output:             Returns the number of bytes between the first byte of <Target> and the first or last occurrence of <Needle>	after index <After> in <Target>.
+                    Returns 0 if <Needle> does not occur after index <After> in <Target>.
+                    Searches for first occurrence if neither first nor last is specified.
+*/
+
+syntax ByteOffsetAfter is prefix operator with precedence 1
+	"the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+begin
+	EvalOffsetOfBytesAfter(Needle, After, Target, IsLast, output)
+end syntax
+
+/*
+
+Summary:            Finds the first or last occurrence of <Needle> before a specified index in <Target>.
+
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+After:              An expression which evaluates to a valid integer index of Target.
+output:             Returns the number of bytes between the first byte of <Target> and the first or last occurrence of <Needle>	before index <Before> in <Target>.
+                    Returns 0 if <Needle> does not occur before index <Before> in <Target>.
+                    Searches for last occurrence if neither first nor last is specified.
+
+*/
+
+syntax ByteOffsetBefore is prefix operator with precedence 1
+    "the" ["first" <IsFirst=true> | "last" <IsFirst=false>] "offset" "of" "bytes" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+begin
+    EvalOffsetOfBytesBefore(Needle, Before, Target, IsFirst, output)
+end syntax
+
+/*
+Summary:            Determines whether <Needle> is in <Target>.
+Needle: 			An expression which evaluates to a single byte of binary data.
+Target: 			An expression which evaluates to binary data.
+output:             True if <Needle> is among the bytes of <Target>, and false otherwise.
+*/
+
+syntax IsAmongTheBytesOf is neutral binary operator with precedence 1
+    <Needle: Expression> "is" "in" <Target: Expression>
+begin
+    EvalIsInBytes(Target, Needle, output)
+end syntax
+
+--
+
+/*
+Summary:            Determines whether <Needle> contains <Target>.
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+output:             True if the bytes of <Needle> occur as a subsequence of the bytes of <Target>, and false otherwise.
+*/
+
+syntax ContainsBytes is neutral binary operator with precedence 1
+    <Target: Expression> "contains" <Needle: Expression>
+begin
+    EvalContainsBytes(Target, Needle, output)
+end syntax
+
+/*
+Summary:            Determines whether <Target> begins with <Needle>.
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+output:             True if the bytes of <Needle> occur as an initial subsequence of the bytes of <Target>, and false otherwise.
+*/
+
+syntax BeginsWithBytes is neutral binary operator with precedence 1
+    <Target: Expression> "begins" "with" <Needle: Expression>
+begin
+    EvalBeginsWithBytes(Target, Needle, output)
+end syntax
+
+/*
+Summary:            Determines whether <Target> ends with <Needle>.
+Needle: 			An expression which evaluates to binary data.
+Target: 			An expression which evaluates to binary data.
+output:             True if the bytes of <Needle> occur as a final subsequence of the bytes of <Target>, and false otherwise.
+*/
+
+syntax EndsWithBytes is neutral binary operator with precedence 1
+    <Target: Expression> "ends" "with" <Needle: Expression>
+begin
+    EvalEndsWithBytes(Target, Needle, output)
+end syntax
+
+--
+
+/*
+
+Summary:            Designates the byte of data at index <Index> in <Target>.
+Index: 				An expression which evaluates to a valid integer index of <Target>.
+Target:				An expression which evaluates to binary data.
+output:             Either locates the byte of data at the given index either for use as the target container of another operation, 
+                    or evaluates the byte of data at the given index as the source of another operation.
+
+Example: 			delete byte 5 of tData // Locates byte 5 and removes it from tData
+Example: 			get byte 5 of tData // Evaluates byte 5
+
+*/
+
+syntax SingletonByteOf is prefix operator with precedence 1
+	"byte" <Index: Expression> "of" <Target: Expression>
+begin
+	FetchByteOf(Index, Target, output)
+	StoreByteOf(input, Index, Target)
+end syntax
+
+/*
+
+Summary:            Designates the bytes of data between indices <Start> and <Finish> in <Target>.
+
+Start:              An expression which evaluates to a valid integer index of <Target>.
+Finish:             An expression which evaluates to a valid integer index of <Target>.
+Target:             An expression which evaluates to binary data.
+output:             Either locates the bytes of data between the given indices either for use as the target container of another operation, 
+                    or evaluates the bytes of data at the given indices as the source of another operation.
+                    
+Example: 			put tBytes into byte 5 to 10 of tData // Locates bytes 5 to 10 and replace them with tBytes
+Example: 			get byte 5 to 10 of tData // Evaluates bytes 5 to 10
+
+*/
+
+syntax RangeByteOf is prefix operator with precedence 1
+	"byte" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	FetchByteRangeOf(Start, Finish, Target, output)
+	StoreByteRangeOf(input, Start, Finish, Target)
+end syntax
+
+--
+
+syntax BeforeByteOf is prefix operator with precedence 1
+    "before" "byte" <Index: Expression> "of" <Target: Expression>
+begin
+    StoreBeforeByteOf(input, Index, Target)
+end syntax
+
+syntax AfterByteOf is prefix operator with precedence 1
+    "after" "byte" <Index: Expression> "of" <Target: Expression>
+begin
+    StoreAfterByteOf(input, Index, Target)
+end syntax
+
+--
+
+end module

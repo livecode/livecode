@@ -410,15 +410,19 @@ compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
 
 bool MCDataContains(MCDataRef p_data, MCDataRef p_needle)
 {
-    uindex_t t_byte_count = MCDataGetLength(p_data);
-    uindex_t t_needle_byte_count = MCDataGetLength(p_needle);
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
     
-    const byte_t *t_bytes = MCDataGetBytePtr(p_data);
-    const byte_t *t_needle_bytes = MCDataGetBytePtr(p_needle);
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    const byte_t *t_bytes;
+    t_bytes = p_data -> bytes;
     
     bool t_found = false;
     for (uindex_t i = 0; i < t_byte_count - t_needle_byte_count + 1; i++)
-        if (MCMemoryCompare(t_bytes++, t_needle_bytes, sizeof(byte_t) * t_needle_byte_count) == 0)
+        if (MCMemoryCompare(t_bytes++, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0)
         {
             t_found = true;
             break;
@@ -427,10 +431,37 @@ bool MCDataContains(MCDataRef p_data, MCDataRef p_needle)
     return t_found;
 }
 
-uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, uindex_t p_start_offset)
+bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle)
 {
-    uindex_t t_byte_count = MCDataGetLength(p_data);
-    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
+    
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    return MCMemoryCompare(p_data -> bytes, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0;
+}
+
+bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle)
+{
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
+    
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    return MCMemoryCompare(p_data -> bytes + t_byte_count - t_needle_byte_count - 1, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0;
+}
+
+uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range)
+{
+    __MCDataClampRange(p_data, t_range);
+    
+    uindex_t t_limit, t_chunk_byte_count;
+    t_chunk_byte_count = MCDataGetLength(p_chunk);
+    t_limit = t_range . offset + t_range . length - t_chunk_byte_count + 1;
     
     const byte_t *t_bytes = MCDataGetBytePtr(p_data);
     const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
@@ -438,20 +469,41 @@ uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, uindex_t p_star
     uindex_t t_offset, t_result;
     t_result = 0;
     
-    // SN-2014-09-05: [[ Bug 13346 ]] byteOffset is 0 if the byte is not found, and 'empty'
-    // is by definition not found; getting in the loop ensures at least 1 is returned.
-    if (t_chunk_byte_count == 0)
-        return t_result;
-    
-    for (t_offset = p_start_offset; t_offset < t_byte_count - t_chunk_byte_count + 1; t_offset++)
+    for (t_offset = t_range . offset; t_offset < t_limit; t_offset++)
         if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
         {
-            t_result = t_offset - p_start_offset + 1;
+            t_result = t_offset - t_range . offset;
             break;
         }
     
     return t_result;
 }
+
+
+uindex_t MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range)
+{
+    __MCDataClampRange(p_data, t_range);
+    
+    uindex_t t_limit, t_chunk_byte_count;
+    t_chunk_byte_count = MCDataGetLength(p_chunk);
+    t_limit = t_range . offset + t_range . length - t_chunk_byte_count + 1;
+    
+    const byte_t *t_bytes = MCDataGetBytePtr(p_data);
+    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
+    
+    uindex_t t_offset, t_result;
+    t_result = 0;
+    
+    while (--t_limit)
+        if (MCMemoryCompare(t_bytes + t_limit, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
+        {
+            t_result = t_limit - t_range . offset;
+            break;
+        }
+    
+    return t_result;
+}
+
 
 #if defined(__MAC__) || defined (__IOS__)
 bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata)

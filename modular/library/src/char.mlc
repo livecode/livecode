@@ -1,0 +1,215 @@
+module com.livecode.char
+
+foreign handler FetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
+foreign handler StoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+foreign handler FetchCharRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"
+foreign handler StoreCharRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+
+foreign handler EvalNumberOfCharsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
+
+foreign handler EvalIsAmongTheCharsOf(in Needle as string, in Source as string, out Value as bool) as undefined binds to "<builtin>"
+
+foreign handler StoreBeforeCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+foreign handler StoreAfterCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+
+foreign handler EvalOffsetOfChars(in Needle as string, in Target as string, in IsLast as bool, out Offset as index) as undefined binds to "<builtin>"
+foreign handler EvalOffsetOfCharsBefore(in Needle as string, in Before as index, in Target as string, in IsLast as bool, out Offset as index) as undefined binds to "<builtin>"
+foreign handler EvalOffsetOfCharsAfter(in Needle as string, in After as index, in Target as string, in IsFirst as bool, out Offset as index) as undefined binds to "<builtin>"
+
+--
+
+/*
+Summary:            Counts the number of chars in <Target>.
+
+Target: 			An expression which evaluates to a string.
+
+Example: 			
+
+	repeat with x = 1 to the number of chars in tString
+		// do something
+	end repeat
+*/
+
+syntax CountCharsOf is prefix operator with precedence 1
+	"the" "number" "of" "chars" "in" <Target: Expression>
+begin
+	EvalNumberOfCharsIn(Target, output)
+end syntax
+
+--
+
+/*
+
+Summary:            Designates the char at index <Index> in <Target>.
+Index: 				An expression which evaluates to a valid integer index of <Target>.
+Target:				An expression which evaluates to a string.
+output:             Either locates the char at the given index either for use as the target container of another operation, 
+                    or evaluates the char at the given index as the source of another operation.
+
+Example: 			delete char 5 of tString // Locates char 5 and removes it from tString
+Example: 			get char 5 of tString // Evaluates char 5
+
+*/
+
+syntax SingletonCharOf is prefix operator with precedence 1
+	"char" <Index: Expression> "of" <Target: Expression>
+begin
+	FetchCharOf(Index, Target, output)
+	StoreCharOf(input, Index, Target)
+end syntax
+
+/*
+
+Summary:            Designates the chars between indices <Start> and <Finish> in <Target>.
+
+Start:              An expression which evaluates to a valid integer index of <Target>.
+Finish:             An expression which evaluates to a valid integer index of <Target>.
+Target:             An expression which evaluates to a string.
+output:             Either locates the chars between the given indices either for use as the target container of another operation, 
+                    or evaluates the chars at the given indices as the source of another operation.
+                    
+Example: 			put tChars into char 5 to 10 of tString // Locates chars 5 to 10 of tString and replace them with tChars
+Example: 			get char 5 to 10 of tString // Evaluates chars 5 to 10
+
+*/
+
+syntax RangeCharOf is prefix operator with precedence 1
+	"char" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	FetchCharRangeOf(Start, Finish, Target, output)
+	StoreCharRangeOf(input, Start, Finish, Target)
+end syntax
+
+--
+
+/*
+Summary:            Determines whether <Needle> is in <Source>.
+Needle: 			An expression which evaluates to a char.
+Target: 			An expression which evaluates to a string.
+output:             True if <Needle> is among the chars of <Target>, and false otherwise.
+*/
+
+syntax CharIsIn is neutral binary operator with precedence 1
+    <Needle: Expression> "is" "in" <Source: Expression>
+begin
+    EvalIsAmongTheCharsOf(Needle, Source, output)
+end syntax
+
+--
+
+syntax BeforeCharOf is prefix operator with precedence 1
+    "before" "char" <Index: Expression> "of" <Target: Expression>
+begin
+    StoreBeforeCharOf(input, Index, Target)
+end syntax
+
+syntax AfterCharOf is prefix operator with precedence 1
+    "after" "char" <Index: Expression> "of" <Target: Expression>
+begin
+    StoreAfterCharOf(input, Index, Target)
+end syntax
+
+--
+
+/*
+
+Summary:            Finds the first or last occurrence of <Needle> within <Target>
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+output:             Returns the number of chars between the first char of <Target> and the first or last occurrence of <Needle>	within <Target>.
+                    Returns 0 if <Needle> does not occur within <Target>.
+                    Searches for first occurrence if neither first nor last is specified.
+*/
+
+syntax CharOffset is prefix operator with precedence 1
+    "the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" ["chars"] <Needle: Expression> "in" <Target: Expression>
+begin
+    EvalOffsetOfChars(Needle, Target, IsLast, output)
+end syntax
+
+/*
+
+Summary:            Finds the first or last occurrence of <Needle> after a specified index in <Target>
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+After:              An expression which evaluates to a valid integer index of Target.
+output:             Returns the number of chars between the first char of <Target> and the first or last occurrence of <Needle>	after index <After> in <Target>.
+                    Returns 0 if <Needle> does not occur after index <After> in <Target>.
+                    Searches for first occurrence if neither first nor last is specified.
+*/
+
+syntax CharOffsetAfter is prefix operator with precedence 1
+    "the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" ["chars"] <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+begin
+    EvalOffsetOfCharsAfter(Needle, After, Target, IsLast, output)
+end syntax
+
+/*
+
+Summary:            Finds the first or last occurrence of <Needle> before a specified index in <Target>.
+
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+After:              An expression which evaluates to a valid integer index of Target.
+output:             Returns the number of chars between the first char of <Target> and the first or last occurrence of <Needle>	before index <Before> in <Target>.
+                    Returns 0 if <Needle> does not occur before index <Before> in <Target>.
+                    Searches for last occurrence if neither first nor last is specified.
+
+*/
+
+syntax CharOffsetBefore is prefix operator with precedence 1
+    "the" ["first" <IsFirst=true> | "last" <IsFirst=false>] "offset" "of" ["chars"] <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+begin
+    EvalOffsetOfCharsBefore(Needle, Before, Target, IsFirst, output)
+end syntax
+
+
+/*
+Summary:            Determines whether <Needle> contains <Target>.
+Needle: 			An expression which evaluates to a string.
+Target: 			An expression which evaluates to a string.
+output:             True if the chars of <Needle> occur as a subsequence of the chars of <Target>, and false otherwise.
+*/
+
+syntax ContainsChars is neutral binary operator with precedence 1
+    <Target: Expression> "contains" <Needle: Expression>
+begin
+    EvalContainsChars(Target, Needle, output)
+end syntax
+
+--
+
+/*
+Summary:            Determines whether <Source> begins with <Prefix>
+Prefix: 			An expression which evaluates to a string.
+Source: 			An expression which evaluates to a string.
+output:             Returns true if the characters in <Prefix> occur at the start of <Source>,
+                    modulo the contextual string options of the current handler.
+*/
+
+syntax BeginsWithString is neutral binary operator with precedence 1
+    <Source: Expression> "begins" "with" <Prefix: Expression>
+begin
+    EvalBeginsWith(Source, Prefix, output)
+end syntax
+
+/*
+Summary:            Determines whether <Source> ends with <Prefix>
+Prefix: 			An expression which evaluates to a string.
+Source: 			An expression which evaluates to a string.
+output:             Returns true if the characters in <Prefix> occur at the end of <Source>,
+                    modulo the contextual string options of the current handler.
+*/
+
+
+syntax EndsWithString is neutral binary operator with precedence 1
+    <Source: Expression> "ends" "with" <Suffix: Expression>
+begin
+    EvalEndsWith(Source, Suffix, output)
+end syntax
+
+--
+
+end module

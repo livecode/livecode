@@ -91,6 +91,8 @@ MCStringRef MCScriptGetErrorDescription(MCScriptErrorRef error);
 //     <version>X.Y.Z</version>
 //     <author>Mr Magoo</author>
 //     <license>commercial|dual|community</license>
+//     <label>Human Readable Foo</label>
+//     <description>Foo is a super amazing widget that will do everything for you.</description>
 //     <requires name="com.livecode.bar" version="X.Y.Z" />
 //     <requires name="com.livecode.baz" version="X.Y.Z" />
 //     <widget|library>
