@@ -418,6 +418,7 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self);
 hash_t __MCTypeInfoHash(__MCTypeInfo *self);
 bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self);
 bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description);
+MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
 
 ////////////////////////////////////////////////////////////////////////////////
 

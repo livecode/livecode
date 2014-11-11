@@ -25,11 +25,14 @@ bool MCRecordCreate(MCTypeInfoRef p_typeinfo, const MCValueRef *p_values, uindex
     bool t_success;
     t_success = true;
     
-    if (p_value_count != p_typeinfo -> record . field_count)
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
+    
+    if (p_value_count != t_resolved_typeinfo -> record . field_count)
         return false;
     
     for(uindex_t i = 0; i < p_value_count; i++)
-        if (MCTypeInfoConforms(MCValueGetTypeInfo(p_values[i]), p_typeinfo -> record . fields[i] . type))
+        if (MCTypeInfoConforms(MCValueGetTypeInfo(p_values[i]), t_resolved_typeinfo -> record . fields[i] . type))
             return false;
     
     __MCRecord *self;
@@ -64,17 +67,20 @@ bool MCRecordCreateMutable(MCTypeInfoRef p_typeinfo, MCRecordRef& r_record)
     bool t_success;
     t_success = true;
     
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
+    
     __MCRecord *self;
     self = nil;
     if (t_success)
         t_success = __MCValueCreate(kMCValueTypeCodeRecord, self);
     
     if (t_success)
-        t_success = MCMemoryNewArray(p_typeinfo -> record . field_count, self -> fields);
+        t_success = MCMemoryNewArray(t_resolved_typeinfo -> record . field_count, self -> fields);
     
     if (t_success)
     {
-        for(uindex_t i = 0; i < p_typeinfo -> record . field_count; i++)
+        for(uindex_t i = 0; i < t_resolved_typeinfo -> record . field_count; i++)
             self -> fields[i] = MCValueRetain(kMCNull);
         
         self -> flags |= kMCRecordFlagIsMutable;
@@ -99,7 +105,10 @@ bool MCRecordCopy(MCRecordRef self, MCRecordRef& r_new_record)
         return true;
     }
     
-    return MCRecordCreate(self -> typeinfo, self -> fields, self -> typeinfo -> record . field_count, r_new_record);
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
+    
+    return MCRecordCreate(self -> typeinfo, self -> fields, t_resolved_typeinfo -> record . field_count, r_new_record);
 }
 
 bool MCRecordCopyAndRelease(MCRecordRef self, MCRecordRef& r_new_record)
@@ -119,9 +128,12 @@ bool MCRecordCopyAndRelease(MCRecordRef self, MCRecordRef& r_new_record)
         return true;
     }
     
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
+    
     // Otherwise make a copy of the data and then release the original
     bool t_success;
-    t_success = MCRecordCreate(self -> typeinfo, self -> fields, self -> typeinfo -> record . field_count, r_new_record);
+    t_success = MCRecordCreate(self -> typeinfo, self -> fields, t_resolved_typeinfo -> record . field_count, r_new_record);
     MCValueRelease(self);
     
     return t_success;
@@ -129,8 +141,11 @@ bool MCRecordCopyAndRelease(MCRecordRef self, MCRecordRef& r_new_record)
 
 bool MCRecordMutableCopy(MCRecordRef self, MCRecordRef& r_new_record)
 {
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
+    
     MCRecordRef t_new_self;
-    if (!MCRecordCreate(self -> typeinfo, self -> fields, self -> typeinfo -> record . field_count, t_new_self))
+    if (!MCRecordCreate(self -> typeinfo, self -> fields, t_resolved_typeinfo -> record . field_count, t_new_self))
         return false;
     
     t_new_self -> flags |= kMCRecordFlagIsMutable;
@@ -158,8 +173,11 @@ bool MCRecordIsMutable(MCRecordRef self)
 
 bool MCRecordFetchValue(MCRecordRef self, MCNameRef p_field, MCValueRef& r_value)
 {
-    for(uindex_t i = 0; i < self -> typeinfo -> record . field_count; i++)
-        if (MCNameIsEqualTo(p_field, self -> typeinfo -> record . fields[i] . name))
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
+    
+    for(uindex_t i = 0; i < t_resolved_typeinfo -> record . field_count; i++)
+        if (MCNameIsEqualTo(p_field, t_resolved_typeinfo -> record . fields[i] . name))
         {
             r_value = self -> fields[i];
             return true;
@@ -170,10 +188,13 @@ bool MCRecordFetchValue(MCRecordRef self, MCNameRef p_field, MCValueRef& r_value
 
 bool MCRecordStoreValue(MCRecordRef self, MCNameRef p_field, MCValueRef p_value)
 {
-    for(uindex_t i = 0; i < self -> typeinfo -> record . field_count; i++)
-        if (MCNameIsEqualTo(p_field, self -> typeinfo -> record . fields[i] . name))
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
+    
+    for(uindex_t i = 0; i < t_resolved_typeinfo -> record . field_count; i++)
+        if (MCNameIsEqualTo(p_field, t_resolved_typeinfo -> record . fields[i] . name))
         {
-            if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), self -> typeinfo -> record . fields[i] . type))
+            if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_resolved_typeinfo -> record . fields[i] . type))
                 return false;
             
             self -> fields[i] = MCValueRetain(p_value);
@@ -187,16 +208,22 @@ bool MCRecordStoreValue(MCRecordRef self, MCNameRef p_field, MCValueRef p_value)
 
 void __MCRecordDestroy(__MCRecord *self)
 {
-    for(uindex_t i = 0; i < self -> typeinfo -> record . field_count; i++)
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
+    
+    for(uindex_t i = 0; i < t_resolved_typeinfo -> record . field_count; i++)
         MCValueRelease(self -> fields[i]);
     MCMemoryDelete(self -> fields);
 }
 
 hash_t __MCRecordHash(__MCRecord *self)
 {
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
+    
     hash_t t_hash;
     t_hash = 0;
-    for(uindex_t i = 0; i < self -> typeinfo -> record . field_count; i++)
+    for(uindex_t i = 0; i < t_resolved_typeinfo -> record . field_count; i++)
     {
         hash_t t_element_hash;
         t_element_hash = MCValueHash(self -> fields[i]);
@@ -211,8 +238,11 @@ bool __MCRecordIsEqualTo(__MCRecord *self, __MCRecord *other_self)
     if (self -> typeinfo != other_self -> typeinfo)
         return false;
     
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
+    
     // Each field within the record must be equal to be equal.
-    for(uindex_t i = 0; i < self -> typeinfo -> record . field_count; i++)
+    for(uindex_t i = 0; i < t_resolved_typeinfo -> record . field_count; i++)
         if (!MCValueIsEqualTo(self -> fields[i], other_self -> fields[i]))
             return false;
 
