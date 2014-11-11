@@ -67,6 +67,8 @@ MCStringRef MCScriptGetErrorDescription(MCScriptErrorRef error);
 // Packages are a zip archive with the following structure:
 //   <root>/
 //     manifest.xml
+//     support/
+//       <files for the IDE / store etc.>
 //     modules/
 //       <compiled module files>
 //     symbols/
@@ -83,6 +85,29 @@ MCStringRef MCScriptGetErrorDescription(MCScriptErrorRef error);
 // The manifest file describes the contents of the package along with any other
 // metadata. Most of the information is inferable from the rest of the archive,
 // however it is repeated in the manifest to make it easier for simple introspection.
+//
+// The manifest.xml file has the following schema:
+//   <package version="1.0" name="com.livecode.foo">
+//     <version>X.Y.Z</version>
+//     <author>Mr Magoo</author>
+//     <license>commercial|dual|community</license>
+//     <requires name="com.livecode.bar" version="X.Y.Z" />
+//     <requires name="com.livecode.baz" version="X.Y.Z" />
+//     <widget|library>
+//       <property name="foo" get="optional(integer)" set="optional(integer)" />
+//       <property name="bar" get="string" />
+//       <event name="click" parameters="in(integer),out(real)" return="optional(any)" />
+//       <handler name="magic" parameters="in(integer),inout(string)" return="undefined" />
+//     </widget>
+//   </package>
+// Here the 'version' field in the package tag is the version of the package manifest
+// XML.
+//
+// There is either a widget or a library node. Widgets can have properties and events,
+// libraries only handlers.
+//
+// The support folder is for resources required by things like the IDE and Marketplace.
+// For example, icons for the tools palette and such.
 //
 // The module files are compiled bytecode for both the principal and child modules
 // within the package. These files contain no debug information, instead all debug
