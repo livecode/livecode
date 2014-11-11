@@ -19,7 +19,7 @@
 
 #include "foundation-private.h"
 
-//////////
+////////////////////////////////////////////////////////////////////////////////
 
 enum
 {
@@ -55,20 +55,14 @@ enum
     kMCEncodedValueKindErrorTypeInfo,
 };
 
-struct MCPickleValuePool
-{
-    MCValueRef *values;
-    uindex_t size;
-};
-
-//////////
+////////////////////////////////////////////////////////////////////////////////
 
 bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *p_info, MCValueRef*& r_value_pool, uindex_t& r_value_pool_size, void *r_record)
 {
     return false;
 }
 
-//////////
+////////////////////////////////////////////////////////////////////////////////
 
 // We encode uint's as a sequence of bytes, each byte containing 7-bits of the
 // final value. The last byte in the sequence has 0 as the top-bit, the rest have
@@ -300,9 +294,7 @@ static bool MCPickleWriteValueRef(MCStreamRef stream, MCValueRef p_value)
     return false;
 }
 
-static bool MCPickleWritePooledValueRef(MCStreamRef stream, )
-
-static bool MCPickleWriteField(MCStreamRef stream, MCPickleValuePool& x_pool, MCPickleFieldType p_kind, const void *p_field_ptr, const void *p_aux_ptr, const void *p_extra)
+static bool MCPickleWriteField(MCStreamRef stream, MCPickleFieldType p_kind, void *p_base_ptr, void *p_field_ptr, const void *p_aux_ptr, const void *p_extra)
 {
     bool t_success;
     t_success = true;
@@ -321,10 +313,16 @@ static bool MCPickleWriteField(MCStreamRef stream, MCPickleValuePool& x_pool, MC
             t_success = MCPickleWriteCompactUInt(stream, *(intenum_t *)p_field_ptr);
             break;
         case kMCPickleFieldTypeValueRef:
+            t_success = MCPickleWriteValueRef(stream, *(MCValueRef *)p_field_ptr);
+            break;
         case kMCPickleFieldTypeStringRef:
+            t_success = MCPickleWriteStringRef(stream, *(MCStringRef *)p_field_ptr);
+            break;
         case kMCPickleFieldTypeNameRef:
+            t_success = MCPickleWriteStringRef(stream, MCNameGetString(*(MCNameRef *)p_field_ptr));
+            break;
         case kMCPickleFieldTypeTypeInfoRef:
-            t_success = MCPickleWritePooledValueRef(MCStreamRef stream, *(MCvalueRef *)p_field_ptr);
+            t_success = MCPickleWriteTypeInfoRef(stream, *(MCTypeInfoRef *)p_field_ptr);
             break;
         case kMCPickleFieldTypeArrayOfByte:
             t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
@@ -333,25 +331,50 @@ static bool MCPickleWriteField(MCStreamRef stream, MCPickleValuePool& x_pool, MC
         case kMCPickleFieldTypeArrayOfNameRef:
             t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
             for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
-                t_success = MCPickleWritePooledValueRef(stream, x_pool, (*(MCValueRef **)p_field_ptr)[i]);
+                t_success = MCPickleWriteStringRef(stream, MCNameGetString((*(MCNameRef **)p_field_ptr)[i]));
+            break;
+        case kMCPickleFieldTypeArrayOfRecord:
+            t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+                t_success = MCPickleWrite(stream, (MCPickleRecordInfo *)p_extra, &((void **)p_field_ptr)[i]);
+            break;
+        case kMCPickleFieldTypeArrayOfVariant:
+            t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+            {
+                void *t_variant;
+                t_variant = ((void **)p_field_ptr)[i];
+                
+                MCPickleVariantInfo *t_info;
+                t_info = (MCPickleVariantInfo *)p_extra;
+                
+                int t_kind;
+                t_kind = *((int *)((uint8_t *)t_variant + t_info -> kind_offset));
+                
+                MCPickleRecordInfo *t_record_info;
+                t_record_info = nil;
+                for(int i = 0; t_info -> cases[i] . kind != -1; i++)
+                    if (t_kind == t_info -> cases[i] . kind)
+                    {
+                        t_record_info = t_info -> cases[i] . record;
+                        break;
+                    }
+                
+                if (t_record_info != nil)
+                    t_success = MCPickleWrite(stream, t_record_info, t_variant);
+                else
+                    t_success = false;
+            }
+            break;
     }
     
     return t_success;
 }
 
-bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *p_info, MCValueRef *p_value_pool, uindex_t p_value_pool_size, void *p_record)
+bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *p_info, void *p_record)
 {
     bool t_success;
     t_success = true;
-    
-    MCPickleValuePool t_pool;
-    t_pool . values = nil;
-    t_pool . size = 0;
-    if (t_success)
-        t_success = MCMemoryNewArray(p_value_pool_size, t_pool . values, t_pool . size);
-    if (t_success)
-        for(uindex_t i = 0; i < p_value_pool_size; i++)
-            t_pool . values[i] = MCValueRetain(p_value_pool[i]);
     
     for(uindex_t i = 0; t_success && i < p_info -> fields[i] . kind != kMCPickleFieldTypeNone; i++)
     {
@@ -359,21 +382,10 @@ bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *p_info, MCValueRef *p
         t_field_ptr = static_cast<uint8_t *>(p_record) + p_info -> fields[i] . field_offset;
         t_extra_field_ptr = static_cast<uint8_t *>(p_record) + p_info -> fields[i] . aux_field_offset;
         if (t_success)
-            t_success = MCPickleWriteField(stream, t_pool, p_info -> fields[i] . kind, t_field_ptr, t_extra_field_ptr, p_info -> fields[i] . extra);
+            t_success = MCPickleWriteField(stream, p_info -> fields[i] . kind, p_record, t_field_ptr, t_extra_field_ptr, p_info -> fields[i] . extra);
     }
-    
-    if (t_success)
-        t_success = MCPickleWriteCompactUInt(stream, t_pool . size);
-    
-    for(uindex_t i = 0; t_success && i < t_pool . size; i++)
-    {
-        t_success = MCPickleWriteValueRef(stream, t_pool . values[i]);
-        MCValueRelease(t_pool . values[i]);
-    }
-    
-    MCMemoryDeleteArray(t_pool . values);
         
     return t_success;
 }
 
-//////////
+////////////////////////////////////////////////////////////////////////////////
