@@ -237,17 +237,21 @@ void MCScriptAddEventToModule(MCScriptModuleBuilderRef builder, MCNameRef name, 
 
 void MCScriptDeferLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uintptr_t& r_label);
 void MCScriptResolveLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uintptr_t label);
-void MCScriptEmitUnconditionalJumpInModule(MCScriptModuleBuilderRef builder, uintptr_t target_label);
-void MCScriptEmitConditionalJumpInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptEmitJumpInModule(MCScriptModuleBuilderRef builder, uintptr_t target_label);
+void MCScriptEmitJumpIfUndefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptEmitJumpIfDefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptEmitJumpIfFalseInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptEmitJumpIfTrueInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, MCValueRef constant);
 void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t src_reg);
+void MCScriptEmitTypecheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg, MCValueRef typeinfo);
+void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef builder);
 void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index);
 void MCScriptBeginIndirectInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t handler_reg);
 void MCScriptContinueInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t arg_reg);
 void MCScriptEndInvokeInModule(MCScriptModuleBuilderRef builder);
 void MCScriptEmitFetchGlobalInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t glob_index);
 void MCScriptEmitStoreGlobalInModule(MCScriptModuleBuilderRef builder, uindex_t src_reg, uindex_t glob_index);
-void MCScriptEmitFetchParameterInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t param_index);
-void MCScriptEmitStoreParameterInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t param_index);
 
 ////////////////////////////////////////////////////////////////////////////////
 
