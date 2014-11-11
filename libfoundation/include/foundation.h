@@ -558,6 +558,7 @@ typedef struct __MCString *MCStringRef;
 typedef struct __MCName *MCNameRef;
 typedef struct __MCData *MCDataRef;
 typedef struct __MCArray *MCArrayRef;
+typedef struct __MCHandler *MCHandlerRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCRecord *MCRecordRef;
@@ -2161,6 +2162,14 @@ bool MCRecordIsMutable(MCRecordRef self);
 
 bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
 bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  HANDLER DEFINITIONS
+//
+
+void *MCHandlerGetDefinition(MCHandlerRef handler);
+void *MCHandlerGetInstance(MCHandlerRef handler);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
