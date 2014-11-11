@@ -23,6 +23,13 @@
 			remoteGlobalIDString = 4DF42A430B048617003F2D95;
 			remoteInfo = foundation;
 		};
+		4DDA202C1A127A65001B0CA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D05714F19E321DA0080F97B /* libfoundation.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95;
+			remoteInfo = foundation;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -128,6 +135,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4DDA202D1A127A65001B0CA2 /* PBXTargetDependency */,
 			);
 			name = script;
 			productName = libscript;
@@ -190,6 +198,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4DDA202D1A127A65001B0CA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = foundation;
+			targetProxy = 4DDA202C1A127A65001B0CA2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		4D322F1819DD945E008476D3 /* Debug */ = {
