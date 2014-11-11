@@ -27,7 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "util.h"
 #include "system.h"
-#include "sha1.h"
 
 #include "stackdir.h"
 
@@ -131,9 +130,6 @@ struct _MCStackdirIORemoveFolderRecursiveContext
 
 /* Recursively delete a directory */
 static bool MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path);
-
-/* Generate a SHA-1 hash as a string */
-static bool MCStackdirIODataSha1 (MCDataRef p_data, MCStringRef & p_hash);
 
 /* Split up a property record */
 static bool MCStackdirIOArrayGetPropertyInfo (MCStackdirIORef op, MCValueRef p_info, MCNameRef & r_type, MCValueRef & r_literal);
@@ -392,27 +388,6 @@ MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path)
 		return MCStackdirIOSaveErrorRecursiveDeleteDirectory (op, p_path);
 
 	return t_success;
-}
-
-static bool
-MCStackdirIODataSha1 (MCDataRef p_data, MCStringRef & p_hash)
-{
-	sha1_state_t t_sha1;
-	sha1_init (&t_sha1);
-
-	/* Add the data to the sha1 stream */
-	sha1_append (&t_sha1, MCDataGetBytePtr (p_data), MCDataGetLength (p_data));
-
-	/* Extract the resulting digest from the stream */
-	uint8_t t_digest[20];
-	sha1_finish (&t_sha1, t_digest);
-
-	/* Format the digest as a string */
-	char t_digest_hex[41]; /* N.b. includes trailing nul */
-	for (int i = 0; i < 20; ++i)
-		sprintf(t_digest_hex + i*2, "%02x", t_digest[i]);
-
-	return MCStringCreateWithCString (t_digest_hex, p_hash);
 }
 
 static bool

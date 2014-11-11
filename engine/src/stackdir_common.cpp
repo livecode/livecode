@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "system.h"
 #include "uuid.h"
+#include "sha1.h"
 
 #include "stackdir.h"
 
@@ -147,6 +148,28 @@ MCStackdirIOLoadUTF8 (MCStackdirIORef op,
 
 	p_contents = MCValueRetain (*t_string);
 	return true;
+}
+
+bool
+MCStackdirIODataSha1 (MCDataRef p_data,
+					  MCStringRef & p_hash)
+{
+	sha1_state_t t_sha1;
+	sha1_init (&t_sha1);
+
+	/* Add the data to the sha1 stream */
+	sha1_append (&t_sha1, MCDataGetBytePtr (p_data), MCDataGetLength (p_data));
+
+	/* Extract the resulting digest from the stream */
+	uint8_t t_digest[20];
+	sha1_finish (&t_sha1, t_digest);
+
+	/* Format the digest as a string */
+	char t_digest_hex[41]; /* N.b. includes trailing nul */
+	for (int i = 0; i < 20; ++i)
+		sprintf(t_digest_hex + i*2, "%02x", t_digest[i]);
+
+	return MCStringCreateWithCString (t_digest_hex, p_hash);
 }
 
 /* ----------------------------------------------------------------
