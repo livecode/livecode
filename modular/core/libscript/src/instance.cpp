@@ -158,7 +158,7 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
         
         // Make sure the value is of the correct type - if not it is an error.
         // (The caller has to ensure things are converted as appropriate).
-        if (!MCTypeInfoConformsTo(MCValueGetTypeInfo(p_value), t_variable_def -> type))
+        if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_variable_def -> type))
             return MCScriptThrowInvalidValueForPropertyError(self -> module, p_property, t_variable_def -> type, p_value);
         
         // Variables are backed by an slot in the instance.
@@ -191,7 +191,7 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
         
         // Make sure the value if of the correct type - if not it is an error.
         // (The caller has to ensure things are converted as appropriate).
-        if (!MCTypeInfoConformsTo(MCValueGetTypeInfo(p_value), t_property_type))
+        if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_property_type))
             return MCScriptThrowInvalidValueForPropertyError(self -> module, p_property, t_property_type, p_value);
         
         MCValueRef t_result;
@@ -242,7 +242,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
             MCTypeInfoRef t_type;
             t_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
             
-            if (!MCTypeInfoConformsTo(MCValueGetTypeInfo(p_arguments[i]), t_type))
+            if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_arguments[i]), t_type))
                 return MCScriptThrowInvalidValueForParameterError(self -> module, p_handler, MCHandlerTypeInfoGetParameterName(t_signature, i), t_type, p_arguments[i]);
         }
     }
@@ -652,7 +652,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 t_type = MCScriptFetchTypeInFrame(t_frame, t_type_index);
                 
                 // If the value's typeinfo doesn't conform, its an error.
-                if (!MCTypeInfoConformsTo(MCValueGetTypeInfo(t_value), t_type))
+                if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_type))
                 {
                     t_frame -> address = t_bytecode - t_frame -> instance -> module -> bytecode;
                     t_success = MCScriptThrowTypecheckFailureError(t_frame -> instance -> module, t_frame -> address, t_type, t_value);
@@ -669,7 +669,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 {
                     if (t_first_parameter_slot != 0)
                     {
-                        __MCScriptAssert__(MCTypeInfoConformsTo(MCValueGetTypeInfo(t_frame -> slots[0]), MCHandlerTypeInfoGetReturnType(t_frame -> handler -> signature)),
+                        __MCScriptAssert__(MCTypeInfoConforms(MCValueGetTypeInfo(t_frame -> slots[0]), MCHandlerTypeInfoGetReturnType(t_frame -> handler -> signature)),
                                            "return value type mismatch");
                         
                         // Set the result value argument.
@@ -684,7 +684,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     for(int i = 0; i < t_param_count; i++)
 						if (MCHandlerTypeInfoGetParameterMode(t_frame -> handler -> signature, i) != kMCHandlerTypeFieldModeIn)
 						{
-                            __MCScriptAssert__(MCTypeInfoConformsTo(MCValueGetTypeInfo(t_frame -> slots[t_first_parameter_slot + 1]), MCHandlerTypeInfoGetParameterType(t_frame -> handler -> signature, i)),
+                            __MCScriptAssert__(MCTypeInfoConforms(MCValueGetTypeInfo(t_frame -> slots[t_first_parameter_slot + 1]), MCHandlerTypeInfoGetParameterType(t_frame -> handler -> signature, i)),
                                                "out parameter value type mismatch");
                             
                             // Move the value from the slot to the arguments array.
