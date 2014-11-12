@@ -25,6 +25,13 @@ bool MCScriptCreateInstanceOfModule(MCScriptModuleRef p_module, MCScriptInstance
     if (t_success)
         t_success = MCMemoryNewArray(p_module -> slot_count, t_instance -> slots);
     
+    if (t_success)
+    {
+        r_instance = t_instance;
+    }
+    else
+        MCScriptDestroyObject(t_instance);
+    
     return t_success;
 }
 
