@@ -48,6 +48,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "parentscript.h"
 #include "bitmapeffect.h"
+#include "flst.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -653,9 +654,26 @@ Exec_stat MCObject::getsystemthemeprop(Properties which, MCExecPoint &ep)
             break;
             
         case kMCPlatformThemePropertyTypeFont:
+            MCFontRef t_fontref;
+            t_found = MCPlatformGetControlThemePropFont(t_type, t_part, t_state, t_prop, t_fontref);
+            if (t_found)
+            {
+                const char* t_font_name;
+                uint2 t_font_size, t_font_style;
+                Boolean t_printer;
+                MCdispatcher->getfontlist()->getfontstructinfo(t_font_name, t_font_size, t_font_style, t_printer, MCFontGetFontStruct(t_fontref));
+                
+                ep.setcstring(t_font_name);
+                
+                MCFontRelease(t_fontref);
+            }
             break;
             
         case kMCPlatformThemePropertyTypeInteger:
+            int t_value;
+            t_found = MCPlatformGetControlThemePropInteger(t_type, t_part, t_state, t_prop, t_value);
+            if (t_found)
+                ep.setint(t_value);
             break;
             
         default:
@@ -1909,7 +1927,7 @@ MCPlatformControlState MCObject::getcontrolstate()
     if (flags & F_DISABLED)
         t_state |= kMCPlatformControlStateDisabled;
     
-    if (MCmousestackptr == getstack() && getstack()->getcurcard() == getcard())
+    if (getstack() && MCmousestackptr == getstack() && getstack()->getcurcard() == getcard())
     {
         if (MCmousex <= rect.x && rect.x+rect.width < MCmousex
             && MCmousey <= rect.y && rect.y+rect.height < MCmousey)
@@ -1919,7 +1937,7 @@ MCPlatformControlState MCObject::getcontrolstate()
             t_state |= kMCPlatformControlStateMouseFocus;
     }
     
-    if (getstack()->getcurcard() == getcard() && getstack()->state & CS_KFOCUSED)
+    if (getstack() && getstack()->getcurcard() == getcard() && getstack()->state & CS_KFOCUSED)
         t_state |= kMCPlatformControlStateWindowActive;
     
     return MCPlatformControlState(t_state);
@@ -1975,6 +1993,16 @@ bool MCObject::getthemeselectorsforprop(Properties which, MCPlatformControlType&
         case P_SHADOW_PIXEL:
             t_proptype = kMCPlatformThemePropertyTypeColor;
             t_prop = kMCPlatformThemePropertyShadowColor;
+            break;
+            
+        case P_TEXT_FONT:
+            t_proptype = kMCPlatformThemePropertyTypeFont;
+            t_prop = kMCPlatformThemePropertyTextFont;
+            break;
+            
+        case P_TEXT_SIZE:
+            t_proptype = kMCPlatformThemePropertyTypeInteger;
+            t_prop = kMCPlatformThemePropertyTextSize;
             break;
             
         default:

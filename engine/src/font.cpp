@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "context.h"
 #include "stacklst.h"
+#include "flst.h"
 
 #include "graphics_util.h"
 #include "unicode.h"
@@ -95,8 +96,28 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 			return true;
 		}
 	}
+    
+    uint2 t_temp_size;
+    MCFontStruct* t_font_struct;
+    t_temp_size = p_size;
+    t_font_struct = MCdispatcher -> loadfont(MCNameGetCString(p_name), t_temp_size, MCFontStyleToTextStyle(p_style), (p_style & kMCFontStylePrinterMetrics) != 0);
+    
+    return MCFontCreateWithFontStruct(p_name, p_style, p_size, t_font_struct, r_font);
+}
 
-	MCFontRef self;
+bool MCFontCreateWithFontStruct(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontStruct* p_font_struct, MCFontRef& r_font)
+{
+    for(MCFont *t_font = s_fonts; t_font != nil; t_font = t_font -> next)
+    {
+        if (p_font_struct == t_font->fontstruct)
+        {
+            t_font -> references += 1;
+            r_font = t_font;
+            return true;
+        }
+    }
+    
+    MCFontRef self;
 	if (!MCMemoryNew(self))
 		return false;
 
@@ -105,9 +126,7 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 	self -> style = p_style;
 	self -> size = p_size;
 
-	uint2 t_temp_size;
-	t_temp_size = self -> size;
-	self -> fontstruct = MCdispatcher -> loadfont(MCNameGetCString(self -> name), t_temp_size, MCFontStyleToTextStyle(self -> style), (self -> style & kMCFontStylePrinterMetrics) != 0);
+    self -> fontstruct = p_font_struct;
 
 	// MW-2013-12-04: [[ Bug 11535 ]] Test to see if the font is fixed-width, at least for
 	//   Roman script.
@@ -143,6 +162,29 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 	r_font = self;
 
 	return true;
+}
+
+bool MCFontCreateWithHandle(MCSysFontHandle p_handle, MCFontRef& r_font)
+{
+    MCFontStruct* t_font_struct;
+    t_font_struct = MCdispatcher->loadfontwithhandle(p_handle);
+    if (t_font_struct == nil)
+        return false;
+    
+    MCNameRef t_name;
+    const char* t_name_cstring;
+    uint2 t_size, t_style;
+    Boolean t_printer;
+    if (!MCdispatcher->getfontlist()->getfontstructinfo(t_name_cstring, t_size, t_style, t_printer, t_font_struct))
+        return false;
+    
+    if (!MCNameCreateWithCString(t_name_cstring, t_name))
+        return false;
+    
+    // The returned style is not the same as the MCFont* style values
+    t_style = 0;
+    
+    return MCFontCreateWithFontStruct(t_name, t_style, t_size, t_font_struct, r_font);
 }
 
 MCFontRef MCFontRetain(MCFontRef self)

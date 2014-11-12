@@ -53,6 +53,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "scrolbar.h"
 #include "styledtext.h"
+#include "flst.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -1759,9 +1760,21 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		}
 		else
 		{
-			// This should never happen as the dispatcher always has font props
+            MCFontRef t_default_font;
+            MCPlatformGetControlThemePropFont(kMCPlatformControlTypeGlobal, kMCPlatformControlPartNone, kMCPlatformControlStateDefault, kMCPlatformThemePropertyTextFont, t_default_font);
+            
+            MCFontStruct* t_font_struct;
+            t_font_struct = MCFontGetFontStruct(t_default_font);
+            
+            const char* t_name_cstring;
+            Boolean t_printer;
+            
+            MCdispatcher->getfontlist()->getfontstructinfo(t_name_cstring, size, style, t_printer, t_font_struct);
+            MCNameCreateWithCString(t_name_cstring, fname);
+            
+            // This should never happen as the dispatcher always has font props
 			// set.
-			assert(false);
+            //assert(false);
 		}
 	}
 
@@ -4294,14 +4307,28 @@ void MCObject::unlockshape(MCObjectShape& p_shape)
 
 // MW-2012-02-14: [[ FontRefs ]] New method which maps the object's concrete font
 //   on open.
-void MCObject::mapfont(void)
+bool MCObject::mapfont(bool recursive)
 {
-	// MW-2012-02-24: [[ FontRefs ]] Fix a problem with images used as icons.
+    // This may be called even when the font has already been mapped
+    if (m_font != nil)
+    {
+        if (hasfontattrs())
+            return true;
+        if (parent == nil)
+            return false;
+        return parent->mapfont(true);
+    }
+    
+    // MW-2012-02-24: [[ FontRefs ]] Fix a problem with images used as icons.
 	//   Images don't use the fontref, so don't do anything if we are an image.
 
 	if (gettype() == CT_IMAGE)
 		return;
 	
+    // This is only set if an explicitly-set font was found at some point
+    bool t_explicit_font;
+    t_explicit_font = false;
+    
 	// MW-2012-03-02: [[ Bug 10044 ]] If the parent isn't open, then we won't have a
 	//   font. This causes problems for some things (like import snapshot) so in this
 	//   case we ask the parent to map it's font.
@@ -4312,8 +4339,9 @@ void MCObject::mapfont(void)
 	if (parent != nil && parent -> m_font == nil)
 	{
 		t_mapped_parent = true;
-		parent -> mapfont();
 	}
+    if (parent != nil)
+        t_explicit_font = parent -> mapfont(true);
 	
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we check for a stack using ideal layout
 	//   as this requires new font computation.
@@ -4321,7 +4349,9 @@ void MCObject::mapfont(void)
 	// copy the parent's font.
 	if (hasfontattrs() || (gettype() == CT_STACK && static_cast<MCStack *>(this) -> getuseideallayout()))
 	{
-		// MW-2012-02-19: [[ SplitTextAttrs ]] Compute the attrs to write out. If we don't
+        t_explicit_font = true;
+        
+        // MW-2012-02-19: [[ SplitTextAttrs ]] Compute the attrs to write out. If we don't
 		//   have all of the attrs, fetch the inherited ones.
 		MCNameRef t_textfont;
 		uint2 t_textstyle, t_textsize;
@@ -4336,14 +4366,14 @@ void MCObject::mapfont(void)
 		//   set, make sure we create a printer font.
 		// MW-2013-12-04: [[ Bug 11513 ]] Make sure we check for ideal layout, rather than
 		//   just for formatForPrinting.
-		if (parent != nil && MCFontHasPrinterMetrics(parent -> m_font) ||
+        if (parent != nil && parent -> m_font != nil && MCFontHasPrinterMetrics(parent -> m_font) ||
 			gettype() == CT_STACK && ((MCStack *)this) -> getuseideallayout())
 			t_font_style |= kMCFontStylePrinterMetrics;
 
 		// Create our font.
 		/* UNCHECKED */ MCFontCreate(t_textfont, t_font_style, t_textsize, m_font);
 	}
-	else if (parent != nil)
+	else if (parent != nil && t_explicit_font)
 	{
 		if (parent -> m_font == nil)
 		{
@@ -4352,14 +4382,16 @@ void MCObject::mapfont(void)
 		else
 			m_font = MCFontRetain(parent -> m_font);
 	}
-	else
-	{
-		// This should never happen as the only object with nil parent when
-		// opened should be MCdispatcher, which always has font attrs.
-		assert(false);
-        
-        // TODO: font theming
-	}
+    else if (recursive)
+    {
+        // No font style font - it will be resolved after unwinding
+        return false;
+    }
+    else
+    {
+        // No font style was found. Use the themed font
+        MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, m_font);
+    }
 	
 	// MW-2012-03-02: [[ Bug 10044 ]] If we had to temporarily map the parent's font
 	//   then unmap it here.

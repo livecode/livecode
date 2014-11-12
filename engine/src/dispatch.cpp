@@ -176,14 +176,14 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 		ep.setstaticcstring(MCleftstring);
 		return ES_NORMAL;
 	case P_TEXT_FONT:
-		ep.setstaticcstring(DEFAULT_TEXT_FONT);
-		return ES_NORMAL;
+        //ep.setstaticcstring(DEFAULT_TEXT_FONT);
+		return ES_NOT_HANDLED;
 	case P_TEXT_HEIGHT:
-		ep.setint(heightfromsize(DEFAULT_TEXT_SIZE));
-		return ES_NORMAL;
+        //ep.setint(heightfromsize(DEFAULT_TEXT_SIZE));
+		return ES_NOT_HANDLED;
 	case P_TEXT_SIZE:
-		ep.setint(DEFAULT_TEXT_SIZE);
-		return ES_NORMAL;
+        //ep.setint(DEFAULT_TEXT_SIZE);
+		return ES_NOT_HANDLED;
 	case P_TEXT_STYLE:
 		ep.setstaticcstring(MCplainstring);
 		return ES_NORMAL;
@@ -1535,6 +1535,17 @@ MCFontStruct *MCDispatch::loadfont(const MCString &fname, uint2 &size,
 		fonts = new MCFontlist;
 #endif
 	return fonts->getfont(fname, size, style, printer);
+}
+
+MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle)
+{
+#if defined(_MACOSX)
+    if (fonts == nil)
+        fonts = new MCFontlist;
+    return fonts->getfontbyhandle(p_handle);
+#else
+    return NULL;
+#endif
 }
 
 MCStack *MCDispatch::findstackname(const MCString &s)
