@@ -248,9 +248,14 @@ bool MCProperListPushElementOntoFront(MCProperListRef self, const MCValueRef p_v
 bool MCProperListAppendList(MCProperListRef self, MCProperListRef p_value)
 {
     if (MCProperListIsIndirect(p_value))
-        self = p_value -> contents;
+        p_value = p_value -> contents;
     
-    return MCProperListPushElementsOntoBack(self, p_value -> list, p_value -> length);
+    if (p_value != self)
+        return MCProperListPushElementsOntoBack(self, p_value -> list, p_value -> length);
+    
+    MCAutoProperListRef t_list;
+    MCProperListCopy(p_value, &t_list);
+    return MCProperListAppendList(self, *t_list);
 }
 
 bool MCProperListInsertElements(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length, index_t p_index)
@@ -278,9 +283,14 @@ bool MCProperListInsertElement(MCProperListRef self, MCValueRef p_value, index_t
 bool MCProperListInsertList(MCProperListRef self, MCProperListRef p_value, index_t p_index)
 {
     if (MCProperListIsIndirect(p_value))
-        self = p_value -> contents;
+        p_value = p_value -> contents;
     
-    return MCProperListInsertElements(self, p_value -> list, p_value -> length, p_index);
+    if (p_value != self)
+        return MCProperListInsertElements(self, p_value -> list, p_value -> length, p_index);
+    
+    MCAutoProperListRef t_list;
+    MCProperListCopy(p_value, &t_list);
+    return MCProperListInsertList(self, p_value, p_index);
 }
 
 bool MCProperListRemoveElements(MCProperListRef self, index_t p_start, index_t p_finish)
