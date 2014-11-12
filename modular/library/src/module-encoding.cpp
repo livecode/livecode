@@ -43,7 +43,7 @@ void MCEncodingExecCompress(MCDataRef& x_target)
 void MCEncodingExecDecompress(MCDataRef& x_target)
 {
     MCAutoDataRef t_decompressed;
-    if (MCFiltersCompress(x_target, &t_decompressed))
+    if (MCFiltersDecompress(x_target, &t_decompressed))
     {
         MCValueAssign(x_target, *t_decompressed);
         return;

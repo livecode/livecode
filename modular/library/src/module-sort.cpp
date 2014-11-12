@@ -211,7 +211,7 @@ void MCSortRunTests()
     // should be 0x01,0x02,a,b,1,2
     
     log_result("sort binary", MCDataIsEqualTo((MCDataRef)MCProperListFetchHead(t_list), *t_data1));
-    log_result("sort binary stable", MCNumberFetchAsInteger((MCNumberRef)MCProperListFetchHead(t_list)) == 2);
+    log_result("sort binary stable", MCNumberFetchAsInteger((MCNumberRef)MCProperListFetchTail(t_list)) == 2);
     
     MCValueRelease(t_list);
 }
