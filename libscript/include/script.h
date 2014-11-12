@@ -156,8 +156,7 @@ bool MCScriptUnloadPackage(MCScriptPackageRef package);
 // Lookup the module with the given name. Returns false if no such module exists.
 bool MCScriptLookupModule(MCNameRef name, MCScriptModuleRef& r_module);
 
-// Ensure all of a module's dependencies are loaded. An error is returned if
-// a dependency cannot be satisfied.
+// Ensure that the module is valid and has resolved all its dependencies.
 bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef module);
 
 // List the module's direct dependencies.
@@ -237,13 +236,13 @@ void MCScriptAddPropertyToModule(MCScriptModuleBuilderRef builder, MCNameRef nam
 
 void MCScriptAddEventToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, uindex_t& r_index);
 
-void MCScriptDeferLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uintptr_t& r_label);
-void MCScriptResolveLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uintptr_t label);
-void MCScriptEmitJumpInModule(MCScriptModuleBuilderRef builder, uintptr_t target_label);
-void MCScriptEmitJumpIfUndefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
-void MCScriptEmitJumpIfDefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
-void MCScriptEmitJumpIfFalseInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
-void MCScriptEmitJumpIfTrueInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uintptr_t target_label);
+void MCScriptDeferLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uindex_t& r_label);
+void MCScriptResolveLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uindex_t label);
+void MCScriptEmitJumpInModule(MCScriptModuleBuilderRef builder, uindex_t target_label);
+void MCScriptEmitJumpIfUndefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
+void MCScriptEmitJumpIfDefinedInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
+void MCScriptEmitJumpIfFalseInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
+void MCScriptEmitJumpIfTrueInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
 void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, MCValueRef constant);
 void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t src_reg);
 void MCScriptEmitTypecheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg, MCValueRef typeinfo);
