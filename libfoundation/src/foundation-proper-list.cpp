@@ -539,7 +539,7 @@ static void MCProperListDoStableSort(MCValueRef*& list, uindex_t p_item_count, M
         compare_t t_result;
         t_result = p_callback(context, *t_first_half, *t_second_half);
         bool t_take_first;
-        t_take_first = p_reverse ? t_result >= 0 : t_result < 0;
+        t_take_first = p_reverse ? t_result >= 0 : t_result <= 0;
         
         if (t_take_first)
         {
