@@ -829,10 +829,12 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
         case kMCPickleFieldTypeNameRef:
         case kMCPickleFieldTypeTypeInfoRef:
             MCValueRelease(*(MCValueRef *)p_field_ptr);
+            *(MCValueRef *)p_field_ptr = nil;
             break;
             
         case kMCPickleFieldTypeArrayOfByte:
             free(*(void **)p_field_ptr);
+            *(MCValueRef *)p_field_ptr = nil;
             break;
             
         case kMCPickleFieldTypeArrayOfValueRef:
@@ -840,6 +842,8 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
             for(uindex_t i = 0; i < *(uindex_t *)p_aux_ptr; i++)
                 MCValueRelease((*(MCValueRef **)p_field_ptr)[i]);
             free(*(MCValueRef **)p_field_ptr);
+            *(uindex_t *)p_aux_ptr = 0;
+            *(MCValueRef *)p_field_ptr = nil;
             break;
         
         case kMCPickleFieldTypeArrayOfRecord:
@@ -848,6 +852,8 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
                 for(uindex_t i = 0; i < *(uindex_t *)p_aux_ptr; i++)
                     MCPickleRelease((MCPickleRecordInfo *)p_extra, *((uint8_t **)p_field_ptr) + i * ((MCPickleRecordInfo *)p_extra) -> size);
                 free(*(void **)p_field_ptr);
+                *(uindex_t *)p_aux_ptr = 0;
+                *(MCValueRef *)p_field_ptr = nil;
             }
             break;
             
@@ -873,6 +879,8 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
                         }
                 }
                 free(*(void **)p_field_ptr);
+                *(uindex_t *)p_aux_ptr = 0;
+                *(MCValueRef *)p_field_ptr = nil;
             }
             break;
             
