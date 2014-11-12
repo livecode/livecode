@@ -1315,18 +1315,22 @@ MCStackdirIOScannerDestroy (MCStackdirIOScannerRef & scanner)
 
 bool
 MCStackdirIOScannerConsume (MCStackdirIOScannerRef scanner,
-							MCStackdirIOToken & r_token)
+							MCStackdirIOToken & r_token,
+							MCStackdirIOTokenType p_accept_type)
 {
 	MCAssert (scanner != nil);
 
-	bool t_result = MCStackdirIOScannerPeek (scanner, r_token);
+	bool t_result = MCStackdirIOScannerPeek (scanner,
+											 r_token,
+											 p_accept_type);
 	scanner->m_has_peek = false;
 	return t_result;
 }
 
 bool
 MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner,
-						 MCStackdirIOToken & r_token)
+						 MCStackdirIOToken & r_token,
+						 MCStackdirIOTokenType p_accept_type)
 {
 	MCAssert (scanner != nil);
 
@@ -1371,5 +1375,10 @@ MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner,
 	scanner->m_has_peek = true;
 
 	MCStackdirIOTokenCopy (t_token, r_token);
+
+	/* Handle a narrowing token type selection */
+	if (p_accept_type != kMCStackdirIOTokenTypeNone)
+		return t_success && t_token.m_type == p_accept_type;
+
 	return t_success;
 }
