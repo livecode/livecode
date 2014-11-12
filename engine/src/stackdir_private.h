@@ -109,6 +109,10 @@ bool MCStackdirIONew (MCStackdirIORef &op);
 #define kMCStackdirDataType     MCSTR("data")
 #define kMCStackdirArrayType    MCSTR("array")
 
+#define kMCStackdirTrueLiteral  MCSTR("true")
+#define kMCStackdirFalseLiteral MCSTR("false")
+#define kMCStackdirArrayLiteral MCSTR("array")
+
 #define kMCStackdirSaveBackupDir MCSTR("_save_backup")
 
 /* Contents of version file */

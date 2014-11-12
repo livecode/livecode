@@ -138,8 +138,10 @@ MCStackdirNormalizeString (MCStringRef p_string, MCStringRef & r_normalized)
 static bool
 MCStackdirFormatBoolean (MCBooleanRef p_bool, MCStringRef & r_literal)
 {
-	return MCStringCopy (p_bool ? MCSTR ("true") : MCSTR ("false"),
-						 r_literal);
+	if (p_bool)
+		return MCStringCopy (kMCStackdirTrueLiteral, r_literal);
+	else
+		return MCStringCopy (kMCStackdirFalseLiteral, r_literal);
 }
 
 /* ----------------------------------------------------------------
@@ -1255,7 +1257,7 @@ MCStackdirFormatLiteral (MCValueRef p_value, MCStringRef & r_literal)
 	case kMCValueTypeCodeNumber:
 		return MCStackdirFormatNumber ((MCNumberRef) p_value, r_literal);
 	case kMCValueTypeCodeArray:
-		return MCStringCreateWithCString ("array", r_literal);
+		return MCStringCopy (kMCStackdirArrayLiteral, r_literal);
 	default:
 		MCUnreachable ();
 	}
