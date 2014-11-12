@@ -170,6 +170,12 @@ void MCStackdirIOCommitLoad (MCStackdirIORef op);
 typedef int (*MCStackdirArrayApplySortedCompareFunc)(const MCNameRef *, const MCNameRef *);
 bool MCStackdirArrayApplySorted (MCArrayRef array, MCArrayApplyCallback p_callback, void *p_callback_context, MCStackdirArrayApplySortedCompareFunc p_compare = NULL);
 
+/* Encode and write a UTF-8 text file */
+bool MCStackdirIOSaveUTF8 (MCStackdirIORef op, MCStringRef p_path, MCStringRef p_contents);
+
+/* Read and decode a UTF-8 text file */
+bool MCStackdirIOLoadUTF8 (MCStackdirIORef op, MCStringRef p_path, MCStringRef & p_contents, bool p_allow_missing);
+
 /* ----------------------------------------------------------------
  * [Private] Tests on expanded stackfile bundles
  * ---------------------------------------------------------------- */

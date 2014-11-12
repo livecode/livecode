@@ -31,6 +31,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stackdir_private.h"
 
+/* ================================================================
+ * Errors
+ * ================================================================ */
+
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOCommonErrorWriteUTF8File,
+							kMCStackdirStatusIOError,
+							"Failed to write UTF-8 text file")
+MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOCommonErrorReadUTF8File,
+							kMCStackdirStatusIOError,
+							"Failed to read UTF-8 text file")
+
 /* ----------------------------------------------------------------
  * Miscellaneous utility functions
  * ---------------------------------------------------------------- */
@@ -84,6 +95,55 @@ MCStackdirArrayApplySorted (MCArrayRef array,
 	}
 
 	return t_result;
+}
+
+/* Helper function for writing a UTF-8 text file */
+bool
+MCStackdirIOSaveUTF8 (MCStackdirIORef op,
+					  MCStringRef p_path,
+					  MCStringRef p_contents)
+{
+	MCAutoDataRef t_data;
+
+	if (!MCStringEncode (p_contents, kMCStringEncodingUTF8,
+						 false, &t_data))
+		return MCStackdirIOErrorOutOfMemory (op);
+	if (!MCS_savebinaryfile (p_path, *t_data))
+		return MCStackdirIOCommonErrorWriteUTF8File (op, p_path);
+	return true;
+}
+
+/* Helper function for loading a UTF-8 text file */
+bool
+MCStackdirIOLoadUTF8 (MCStackdirIORef op,
+					  MCStringRef p_path,
+					  MCStringRef & p_contents,
+					  bool p_allow_missing)
+{
+	/* Read file */
+	MCAutoDataRef t_data;
+	if (!MCS_loadbinaryfile (p_path, &t_data))
+	{
+		if (p_allow_missing
+			&& !MCS_exists (p_path, true)
+			&& !MCS_exists (p_path, false))
+		{
+			p_contents = MCValueRetain (kMCEmptyString);
+			return false;
+		}
+		else
+		{
+			return MCStackdirIOCommonErrorReadUTF8File (op, p_path);
+		}
+	}
+
+	/* Decode data */
+	MCAutoStringRef t_string;
+	if (!MCStringDecode (*t_data, kMCStringEncodingUTF8, false, &t_string))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	p_contents = MCValueRetain (*t_string);
+	return true;
 }
 
 /* ----------------------------------------------------------------

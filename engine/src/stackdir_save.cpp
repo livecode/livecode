@@ -132,9 +132,6 @@ struct _MCStackdirIORemoveFolderRecursiveContext
 /* Recursively delete a directory */
 static bool MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path);
 
-/* Encode and write a UTF-8 text file */
-static bool MCStackdirIOSaveUTF8 (MCStackdirIORef op, MCStringRef p_path, MCStringRef p_contents);
-
 /* Generate a SHA-1 hash as a string */
 static bool MCStackdirIODataSha1 (MCDataRef p_data, MCStringRef & p_hash);
 
@@ -225,10 +222,6 @@ static bool MCStackdirIOSavePropSet (MCStackdirIORef op, MCArrayRef p_propset, M
 /* ================================================================
  * Errors
  * ================================================================ */
-
-MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorWriteUTF8File,
-							kMCStackdirStatusIOError,
-							"Failed to write UTF-8 text file")
 
 MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOSaveErrorRecursiveDeleteFile,
 							kMCStackdirStatusIOError,
@@ -341,21 +334,6 @@ MC_STACKDIR_ERROR_FUNC(MCStackdirIOSaveErrorObjectInvalidShared,
 /* ================================================================
  * Utility functions
  * ================================================================ */
-
-/* Helper function for writing a UTF-8 text file */
-static bool
-MCStackdirIOSaveUTF8 (MCStackdirIORef op, MCStringRef p_path,
-					  MCStringRef p_contents)
-{
-	MCAutoDataRef t_data;
-
-	if (!MCStringEncode (p_contents, kMCStringEncodingUTF8,
-						 false, &t_data))
-		return MCStackdirIOErrorOutOfMemory (op);
-	if (!MCS_savebinaryfile (p_path, *t_data))
-		return MCStackdirIOSaveErrorWriteUTF8File (op, p_path);
-	return true;
-}
 
 static bool
 MCStackdirIORemoveFolderRecursive_Callback (void *p_context,
