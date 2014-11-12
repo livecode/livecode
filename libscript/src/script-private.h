@@ -102,6 +102,9 @@ struct MCScriptDependency
 {
     MCNameRef name;
     uindex_t version;
+    
+    // The resolved instance - not pickled
+    MCScriptInstanceRef instance;
 };
 
 struct MCScriptImportedDefinition
@@ -136,7 +139,7 @@ struct MCScriptVariableDefinition: public MCScriptDefinition
 {
 	MCTypeInfoRef type;
     
-    // (computed) The index of the variable in an instance's slot table.
+    // (computed) The index of the variable in an instance's slot table - not pickled
 	uindex_t slot_index;
 };
 
@@ -147,7 +150,7 @@ struct MCScriptHandlerDefinition: public MCScriptDefinition
 	uindex_t finish_address;
     
     // The number of slots required in a frame in order to execute this handler.
-    // This is the sum of parameter count, local count and temporary count.
+    // This is the sum of parameter count, local count and temporary count - not pickled
     uindex_t slot_count;
 };
 
@@ -176,7 +179,7 @@ MCScriptForeignHandlerDefinition *MCScriptDefinitionAsForeignHandler(MCScriptDef
 
 struct MCScriptModule: public MCScriptObject
 {
-    // The owning package.
+    // The owning package - not pickled
     MCScriptPackageRef package;
     
     // The type of module.
@@ -213,9 +216,19 @@ struct MCScriptModule: public MCScriptObject
     uint8_t *bytecode;
     uindex_t bytecode_count;
     
-    // (computed) The number of slots needed by an instance.
+    // After a module has been validated and had its dependencies resolved, this
+    // var is true - not pickled
+    bool is_usable : 1;
+    
+    // (computed) The number of slots needed by an instance - not pickled
     uindex_t slot_count;
-
+    
+    // If this is a non-widget module, then it only has one instance - not pickled
+    MCScriptInstanceRef shared_instance;
+    
+    // This is the module-chain link. We keep a linked list of all modules in memory
+    // with unique names -- not pickled.
+    MCScriptModule *next_module;
 };
 
 bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_module);

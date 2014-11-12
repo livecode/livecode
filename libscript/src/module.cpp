@@ -77,13 +77,32 @@ MC_PICKLE_END_RECORD()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCScriptModule *s_modules = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCScriptDestroyModule(MCScriptModuleRef self)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
     
+    // Release the bits pickle-release doesn't touch.
+    for(uindex_t i = 0; i < self -> dependency_count; i++)
+        if (self -> dependencies[i] . instance != nil)
+            MCScriptReleaseInstance(self -> dependencies[i] . instance);
+    
+    // Remove ourselves from the global module list.
+    if (s_modules == self)
+        s_modules = self -> next_module;
+    else
+        for(MCScriptModule *t_module = s_modules; t_module != nil; t_module = t_module -> next_module)
+            if (t_module -> next_module == self)
+            {
+                t_module -> next_module = self -> next_module;
+                break;
+            }
+    
     MCPickleRelease(kMCScriptModulePickleInfo, self);
 }
-
 
 bool MCScriptValidateModule(MCScriptModuleRef self)
 {
@@ -136,22 +155,22 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                     case kMCScriptBytecodeOpJumpIfTrue:
                         // check arity == 2
                         // check resolved address is within handler
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0]);
+                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpAssignConstant:
                         // check arity == 2
                         // check index argument is within value pool range
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0]);
+                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpAssign:
                         // check arity == 2
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0]);
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[1]);
+                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
+                        t_temporary_count = MCMax(t_temporary_count, t_operands[1] + 1);
                         break;
                     case kMCScriptBytecodeOpTypecheck:
                         // check arity == 2
                         // check typeinfo argument is within value pool range
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0]);
+                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpReturn:
                         // check arity == 0
@@ -161,18 +180,18 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         // check definition[index] is handler
                         // check signature of defintion[index] conforms with invoke arity
                         for(uindex_t i = 1; i < t_arity; i++)
-                            t_temporary_count = MCMax(t_temporary_count, t_operands[i]);
+                            t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
                     case kMCScriptBytecodeOpInvokeIndirect:
                         for(uindex_t i = 0; i < t_arity; i++)
-                            t_temporary_count = MCMax(t_temporary_count, t_operands[i]);
+                            t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
                     case kMCScriptBytecodeOpFetchGlobal:
                     case kMCScriptBytecodeOpStoreGlobal:
                         // check arity is 2
                         // check glob index is in definition range
                         // check definition[index] is variable
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0]);
+                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                 }
             }
@@ -224,14 +243,74 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
     if (!MCScriptCreateObject(kMCScriptObjectKindModule, sizeof(MCScriptModule), (MCScriptObject*&)t_module))
         return false;
     
-    if (!MCPickleRead(stream, kMCScriptModulePickleInfo, t_module) ||
-        !MCScriptValidateModule(t_module))
+    // If the unpickling fails, there's nothing we can do.
+    if (!MCPickleRead(stream, kMCScriptModulePickleInfo, t_module))
     {
         MCScriptDestroyObject(t_module);
         return false;
     }
     
+    // If there is already a module with the same name in memory, there's nothing we can do.
+    for(MCScriptModule *t_other_module = s_modules; t_other_module != nil; t_other_module = t_other_module -> next_module)
+        if (MCNameIsEqualTo(t_other_module -> name, t_module -> name))
+        {
+            MCScriptDestroyObject(t_module);
+            return false;
+        }
+    
+    // Link our module into the global module list.
+    t_module -> next_module = s_modules;
+    s_modules = t_module;
+    
+    // Return the shiny new module.
     r_module = t_module;
+    
+    return true;
+}
+
+bool MCScriptLookupModule(MCNameRef p_name, MCScriptModuleRef& r_module)
+{
+    for(MCScriptModule *t_module = s_modules; t_module != nil; t_module = t_module -> next_module)
+        if (MCNameIsEqualTo(p_name, t_module -> name))
+        {
+            r_module = t_module;
+            return true;
+        }
+    
+    return false;
+}
+
+bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
+{
+    // If the module has already been ensured as usable, we are done.
+    if (self -> is_usable)
+        return true;
+    
+    // First validate the module - if this fails we do nothing more.
+    if (!MCScriptValidateModule(self))
+        return false;
+    
+    // Next ensure we can resolve all its external dependencies.
+    for(uindex_t i = 0; i < self -> dependency_count; i++)
+    {
+        MCScriptModuleRef t_module;
+        if (!MCScriptLookupModule(self -> dependencies[i] . name, t_module))
+            return false;
+     
+        // A used module must be a library.
+        if (t_module -> module_kind != kMCScriptModuleKindLibrary)
+            return false;
+        
+        // A used module must be usable.
+        if (!MCScriptEnsureModuleIsUsable(t_module))
+            return false;
+        
+        // Now create the instance we need.
+        if (!MCScriptCreateInstanceOfModule(t_module, self -> dependencies[i] . instance))
+            return false;
+    }
+    
+    self -> is_usable = true;
     
     return true;
 }
@@ -274,10 +353,22 @@ bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef self, MCNameRef 
     return false;
 }
 
-bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef self, MCNameRef handler, MCScriptHandlerDefinition*& r_definition)
+bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef self, MCNameRef p_handler, MCScriptHandlerDefinition*& r_definition)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
-
+    
+    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
+    {
+        if (self -> definitions[self -> exported_definitions[i] . index - 1] -> kind != kMCScriptDefinitionKindHandler)
+            continue;
+        
+        if (!MCNameIsEqualTo(p_handler, self -> exported_definitions[i] . name))
+            continue;
+        
+        r_definition = static_cast<MCScriptHandlerDefinition *>(self -> definitions[self -> exported_definitions[i] . index - 1]);
+        return true;
+    }
+    
     return false;
 }
 

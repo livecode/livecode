@@ -11,6 +11,20 @@ bool MCScriptCreateInstanceOfModule(MCScriptModuleRef p_module, MCScriptInstance
     MCScriptInstanceRef t_instance;
     t_instance = nil;
     
+    // If the module is not usable, then we cannot create an instance.
+    if (t_success)
+        if (!p_module -> is_usable)
+            return false;
+    
+    // If this is a module which shares a single instance, then return that if we have
+    // one.
+    if (p_module -> module_kind != kMCScriptModuleKindWidget &&
+        p_module -> shared_instance != nil)
+    {
+        r_instance = MCScriptRetainInstance(p_module -> shared_instance);
+        return true;
+    }
+    
     // Attempt to create a script object.
     if (t_success)
         t_success = MCScriptCreateObject(kMCScriptObjectKindInstance, sizeof(MCScriptInstance), (MCScriptObject*&)t_instance);
@@ -30,6 +44,12 @@ bool MCScriptCreateInstanceOfModule(MCScriptModuleRef p_module, MCScriptInstance
         for(uindex_t i = 0; i < p_module -> slot_count; i++)
             t_instance -> slots[i] = MCValueRetain(kMCNull);
 
+        // If this is a module which shares its instance, then add a link to it.
+        // (Note this is weak reference - we don't retain, otherwise we would have
+        //  a cycle!).
+        if (p_module -> module_kind != kMCScriptModuleKindWidget)
+            p_module -> shared_instance = t_instance;
+        
         r_instance = t_instance;
     }
     else
@@ -49,6 +69,12 @@ void MCScriptDestroyInstance(MCScriptInstanceRef self)
             MCValueRelease(self -> slots[i]);
         MCMemoryDeleteArray(self -> slots);
     }
+    
+    // If the instance has a module, and this is the shared instance then set
+    // the shared instance field to nil.
+    if (self -> module != nil &&
+        self -> module -> shared_instance == self)
+        self -> module -> shared_instance = nil;
     
     // If the instance was associated with its module, then release it.
     if (self -> module != nil)
@@ -462,19 +488,25 @@ static inline void MCScriptStoreToRegisterInFrame(MCScriptFrame *p_frame, int p_
 
 static inline MCValueRef MCScriptFetchFromGlobalInFrame(MCScriptFrame *p_frame, int p_index)
 {
-    __MCScriptAssert__(p_index >= 0 && p_index < p_frame -> instance -> module -> slot_count,
-                       "global out of range on fetch");
-    return p_frame -> instance -> slots[p_index];
+    __MCScriptAssert__(p_index - 1 < p_frame -> instance -> module -> definition_count,
+                       "index out of range in global definition reference");
+    __MCScriptAssert__(p_frame -> instance -> module -> definitions[p_index - 1] -> kind == kMCScriptDefinitionKindVariable,
+                       "definition is not a variable in global reference");
+    return p_frame -> instance -> slots[static_cast<MCScriptVariableDefinition *>(p_frame -> instance -> module -> definitions[p_index - 1]) -> slot_index];
 }
 
 static inline void MCScriptStoreToGlobalInFrame(MCScriptFrame *p_frame, int p_index, MCValueRef p_value)
 {
-    __MCScriptAssert__(p_index >= 0 && p_index < p_frame -> instance -> module -> slot_count,
-                       "global out of range on fetch");
-    if  (p_frame -> instance -> slots[p_index] != p_value)
+    __MCScriptAssert__(p_index - 1 < p_frame -> instance -> module -> definition_count,
+                       "index out of range in global definition reference");
+    __MCScriptAssert__(p_frame -> instance -> module -> definitions[p_index - 1] -> kind == kMCScriptDefinitionKindVariable,
+                       "definition is not a variable in global reference");
+    MCValueRef *t_slot;
+    t_slot = &p_frame -> instance -> slots[static_cast<MCScriptVariableDefinition *>(p_frame -> instance -> module -> definitions[p_index - 1]) -> slot_index];
+    if  (*t_slot != p_value)
     {
-        MCValueRelease(p_frame -> instance -> slots[p_index]);
-        p_frame -> instance -> slots[p_index] = MCValueRetain(p_value);
+        MCValueRelease(*t_slot);
+        *t_slot = MCValueRetain(p_value);
     }
 }
 
@@ -654,7 +686,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 // jumpifundef <register>, <offset>
                 int t_register, t_offset;
                 t_register = t_arguments[0];
-                t_offset = (t_arguments[0] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
+                t_offset = (t_arguments[1] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
                 
                 // if the value in the register is undefined, then jump.
                 if (MCScriptFetchFromRegisterInFrame(t_frame, t_register) == kMCNull)
@@ -666,7 +698,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 // jumpifdef <register>, <offset>
                 int t_register, t_offset;
                 t_register = t_arguments[0];
-                t_offset = (t_arguments[0] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
+                t_offset = (t_arguments[1] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
                 
                 // if the value in the register is not undefined, then jump.
                 if (MCScriptFetchFromRegisterInFrame(t_frame, t_register) != kMCNull)
@@ -678,7 +710,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 // jumpiftrue <register>, <offset>
                 int t_register, t_offset;
                 t_register = t_arguments[0];
-                t_offset = (t_arguments[0] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
+                t_offset = (t_arguments[1] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
@@ -696,7 +728,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 // jumpiffalse <register>, <offset>
                 int t_register, t_offset;
                 t_register = t_arguments[0];
-                t_offset = (t_arguments[0] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
+                t_offset = (t_arguments[1] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
@@ -731,7 +763,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 t_dst = t_arguments[0];
                 t_src = t_arguments[1];
                 
-                __MCScriptAssert__(t_dst == t_src,
+                __MCScriptAssert__(t_dst != t_src,
                                    "src and dst registers same in assign");
                 
                 MCValueRef t_value;
@@ -831,8 +863,12 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 				
 				MCScriptInstanceRef t_instance;
 				MCScriptDefinition *t_definition;
-				MCScriptResolveDefinitionInModule(t_frame -> instance -> module, t_index, t_instance, t_definition);
+				bool t_resolved;
+                t_resolved = MCScriptResolveDefinitionInModule(t_frame -> instance -> module, t_index, t_instance, t_definition);
 				
+                __MCScriptAssert__(t_resolved,
+                                   "definition resolution failed");
+                
 				t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity - 1);
             }
             break;
