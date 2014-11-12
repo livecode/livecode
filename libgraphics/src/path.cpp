@@ -99,7 +99,7 @@ bool MCGPathIsValid(MCGPathRef self)
 	return self != NULL && 	self -> is_valid;
 }
 
-bool MCPathIsMutable(MCGPathRef self)
+bool MCGPathIsMutable(MCGPathRef self)
 {
 	return self -> is_mutable;
 }
