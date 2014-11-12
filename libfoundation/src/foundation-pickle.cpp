@@ -512,7 +512,7 @@ bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *p_info, void* r_record
     bool t_success;
     t_success = true;
     
-    for(uindex_t i = 0; t_success && i < p_info -> fields[i] . kind != kMCPickleFieldTypeNone; i++)
+    for(uindex_t i = 0; t_success && p_info -> fields[i] . kind != kMCPickleFieldTypeNone; i++)
     {
         MCPickleRecordFieldInfo *t_field;
         t_field = &p_info -> fields[i];
@@ -857,7 +857,7 @@ bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *p_info, void *p_recor
     bool t_success;
     t_success = true;
     
-    for(uindex_t i = 0; t_success && i < p_info -> fields[i] . kind != kMCPickleFieldTypeNone; i++)
+    for(uindex_t i = 0; t_success && p_info -> fields[i] . kind != kMCPickleFieldTypeNone; i++)
     {
         MCPickleRecordFieldInfo *t_field;
         t_field = &p_info -> fields[i];
@@ -950,7 +950,7 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
 
 void MCPickleRelease(MCPickleRecordInfo *p_info, void *p_record)
 {
-    for(uindex_t i = 0; i < p_info -> fields[i] . kind != kMCPickleFieldTypeNone; i++)
+    for(uindex_t i = 0; p_info -> fields[i] . kind != kMCPickleFieldTypeNone; i++)
     {
         void *t_field_ptr, *t_extra_field_ptr;
         t_field_ptr = static_cast<uint8_t *>(p_record) + p_info -> fields[i] . field_offset;
