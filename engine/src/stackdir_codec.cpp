@@ -90,6 +90,7 @@ static bool MCStackdirIOScanNewline (MCStackdirIOScannerRef scanner, MCStackdirI
 static bool MCStackdirIOScanSpace (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 static bool MCStackdirIOScanStorageSeparator (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 static bool MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
+static bool MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
 
 /* Table of scanner functions. These are called in order */
 typedef bool (*MCStackdirIOScanFunc)(MCStackdirIOScannerRef, MCStackdirIOTokenRef);
@@ -100,6 +101,7 @@ static const MCStackdirIOScanFunc kMCStackdirIOScanFuncs[] =
 		MCStackdirIOScanSpace,
 		MCStackdirIOScanStorageSeparator,
 		MCStackdirIOScanExternalIndicator,
+		MCStackdirIOScanNumber,
 		NULL,
 	};
 
@@ -586,6 +588,286 @@ MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner,
 		r_token->m_type = kMCStackdirIOTokenTypeExternalIndicator;
 		return true;
 	}
+	return false;
+}
+
+/* ----------------------------------------------------------------
+ * Scanning numbers
+ * ---------------------------------------------------------------- */
+
+/* This implements a scanner that supports the following syntax:
+ *
+ * NUMBER         ::= [SIGN] (INTEGER_NUMBER | REAL_NUMBER)
+ * INTEGER_NUMBER ::= NONZERODIGIT DIGIT* | "0"
+ * REAL_NUMBER    ::= POINT_REAL | EXPONENT_REAL
+ * POINT_REAL     ::= [INT_PART] FRACTION | INT_PART "."
+ * EXPONENT_REAL  ::= (INT_PART | POINT_REAL) EXPONENT
+ * INT_PART       ::= DIGIT+
+ * FRACTION       ::= "." DIGIT+
+ * EXPONENT       ::= "e" [SIGN] DIGIT+
+ * SIGN           ::= "+" | "-"
+ * DIGIT          ::= "0"..."9"
+ * NONZERODIGIT   ::= "1"..."9"
+ */
+
+/* Both integers and real numbers may have an optional sign prefix.
+ * It defaults to '+' if not specified. */
+static bool
+MCStackdirIOScanNumberSign (MCStackdirIOScannerRef scanner,
+							MCStackdirIOTokenRef r_token,
+							integer_t & r_sign)
+{
+	codepoint_t t_char;
+
+	r_sign = 1;
+	MCStackdirIOScannerGetChar (scanner, t_char);
+	if (t_char == '+' || t_char == '-')
+	{
+		r_sign = (t_char == '+') ? 1 : -1;
+		MCStackdirIOScannerNextChar (scanner);
+		return true;
+	}
+	return false;
+}
+
+/* Scan the integer part of a number, which must be a sequence of
+ * decimal digits not starting with a zero, or zero (for integers) or
+ * a sequence of decimal digits (for reals).  We scan into a uint64_t
+ * because it's guaranteed to be able to store the full mantissa of a
+ * double (if for some reason someone decides to write it out as an
+ * integer). */
+static bool
+MCStackdirIOScanNumberInteger (MCStackdirIOScannerRef scanner,
+							   MCStackdirIOTokenRef r_token,
+							   uint64_t & r_integer_part,
+							   bool & r_is_valid_integer)
+{
+	codepoint_t t_char;
+
+	bool t_found_digit = false;
+	r_is_valid_integer = true;
+	r_integer_part = 0;
+
+	while (MCStackdirIOScannerGetChar (scanner, t_char))
+	{
+		/* Check if the character is a digit. */
+		if (!(t_char >= '0' && t_char <= '9')) break;
+		t_found_digit = true;
+
+		/* Integers aren't allowed to start with a leading 0 */
+		if (t_char == '0' && r_integer_part == 0)
+			r_is_valid_integer = false;
+
+		/* Add each digit into the integer part, checking for
+		 * overflow. */
+		uint64_t t_new = (r_integer_part * 10) + (t_char - '0');
+		if (t_new < r_integer_part)
+		{
+			/* Overflow */
+			r_token->m_type = kMCStackdirIOTokenTypeError;
+			return false;
+		}
+
+		r_integer_part = t_new;
+		MCStackdirIOScannerNextChar (scanner);
+	}
+	return t_found_digit;
+}
+
+/* Scan the fraction part of a real number.  It has to be a '.'
+ * followed by some sequence of digits.  This is constructed into a
+ * double precision integer. */
+/* BUG This is a naive implementation that doesn't check for or
+ * compensate for rounding errors. */
+static bool
+MCStackdirIOScanNumberFraction (MCStackdirIOScannerRef scanner,
+								MCStackdirIOTokenRef r_token,
+								real64_t & r_fraction_part)
+{
+	codepoint_t t_char;
+
+	r_fraction_part = 0;
+
+	/* The fraction part must start with a '.' */
+	MCStackdirIOScannerGetChar (scanner, t_char);
+	if (t_char != '.') return false;
+	MCStackdirIOScannerNextChar (scanner);
+
+	/* Ensure that we can detect an over- or underflow */
+	errno = 0;
+
+	uindex_t t_places = 0;
+	while (MCStackdirIOScannerGetChar (scanner, t_char))
+	{
+		/* Check that the character is a digit */
+		if (!(t_char >= '0' && t_char <= '9')) break;
+
+		/* Add each digit into the fraction part */
+		uint32_t t_digit = t_char - '0';
+		r_fraction_part += t_digit * exp10 (++t_places);
+
+		MCStackdirIOScannerNextChar (scanner);
+	}
+
+	/* Underflow check */
+	if (errno == ERANGE)
+	{
+		r_token->m_type = kMCStackdirIOTokenTypeError;
+		return false;
+	}
+
+	return true;
+}
+
+static bool
+MCStackdirIOScanNumberExponent (MCStackdirIOScannerRef scanner,
+								MCStackdirIOTokenRef r_token,
+								real64_t & r_exponent_factor)
+{
+	codepoint_t t_char;
+
+	r_exponent_factor = 1.0;
+
+	/* The exponent part must start with an 'e' */
+	MCStackdirIOScannerGetChar (scanner, t_char);
+	if (t_char != 'e') return false;
+	MCStackdirIOScannerNextChar (scanner);
+
+	/* The exponent can have an optional sign */
+	integer_t t_exponent_sign;
+	MCStackdirIOScanNumberSign (scanner,
+								r_token,
+								t_exponent_sign);
+
+	/* The exponent is an integer and is required to follow the
+	 * 'e'. */
+	bool t_ignored;
+	uint64_t t_exponent_unsigned;
+	if (!MCStackdirIOScanNumberInteger (scanner,
+										r_token,
+										t_exponent_unsigned,
+										t_ignored))
+	{
+		r_token->m_type = kMCStackdirIOTokenTypeError;
+		return false;
+	}
+
+	/* Attempt to create the exponent factor, checking for
+	 * overflow. */
+	real64_t t_exponent;
+	errno = 0;
+	t_exponent = copysign (t_exponent_unsigned, t_exponent_sign);
+	r_exponent_factor = exp10 (t_exponent);
+
+	if (errno == ERANGE)
+	{
+		r_token->m_type = kMCStackdirIOTokenTypeError;
+		return false;
+	}
+
+	return true;
+}
+
+static bool
+MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner,
+						MCStackdirIOTokenRef r_token)
+{
+	codepoint_t t_char;
+
+	/* Parse sign, if present */
+	bool t_have_sign;
+	integer_t t_sign;
+	t_have_sign = MCStackdirIOScanNumberSign (scanner,
+											  r_token,
+											  t_sign);
+
+	/* Parse integer, if present */
+	uint64_t t_integer_part;
+	bool t_have_integer_part;
+	bool t_is_valid_integer;
+	t_have_integer_part = MCStackdirIOScanNumberInteger (scanner,
+														 r_token,
+														 t_integer_part,
+														 t_is_valid_integer);
+
+	/* Parse fraction part, if present */
+	real64_t t_fraction_part;
+	bool t_have_fraction_part;
+	t_have_fraction_part = MCStackdirIOScanNumberFraction (scanner,
+														   r_token,
+														   t_fraction_part);
+
+	/* If there's no integer or fraction part, this isn't a number. */
+	if (!t_have_integer_part && !t_have_fraction_part)
+	{
+		/* Bare signs are a syntax error */
+		if (t_have_sign)
+			r_token->m_type = kMCStackdirIOTokenTypeError;
+		return false;
+	}
+
+	/* Parse exponent part, if present */
+	real64_t t_exponent_factor;
+	bool t_have_exponent_part;
+	t_have_exponent_part = MCStackdirIOScanNumberExponent (scanner,
+														   r_token,
+														   t_exponent_factor);
+
+	real64_t t_real_value;
+	integer_t t_integer_value;
+	bool t_is_real = false;
+	bool t_is_integer = false;
+
+	if (t_have_exponent_part || t_have_fraction_part)
+	{
+		/* If there's an exponent or fraction part, this must be a
+		 * real. */
+		t_real_value = t_exponent_factor * ((real64_t) t_integer_part +
+											t_fraction_part);
+		t_real_value = copysign (t_real_value, t_sign);
+		t_is_real = true;
+	}
+	else if (t_have_integer_part && t_is_valid_integer)
+	{
+		/* Alternatively, we might have an integer */
+		if (t_integer_part < INT_MAX)
+		{
+			t_integer_value = t_integer_part * t_sign;
+			t_is_integer = true;
+		}
+		else
+		{
+			/* Cope with big integers by falling back to floats */
+			t_real_value = (real64_t) t_integer_part * t_sign;
+			t_is_real = true;
+		}
+	}
+	else
+	{
+		/* Some invalid syntax occurred */
+		r_token->m_type = kMCStackdirIOTokenTypeError;
+		return false;
+	}
+
+	if (t_is_real)
+	{
+		MCAutoNumberRef t_value;
+		/* UNCHECKED */ MCNumberCreateWithReal (t_real_value, &t_value);
+		r_token->m_value = MCValueRetain (*t_value);
+		r_token->m_type = kMCStackdirIOTokenTypeNumber;
+		return true;
+	}
+
+	if (t_is_integer)
+	{
+		MCAutoNumberRef t_value;
+		/* UNCHECKED */ MCNumberCreateWithInteger (t_integer_value, &t_value);
+		r_token->m_value = MCValueRetain (*t_value);
+		r_token->m_type = kMCStackdirIOTokenTypeNumber;
+		return true;
+	}
+
+	MCUnreachable ();
 	return false;
 }
 
