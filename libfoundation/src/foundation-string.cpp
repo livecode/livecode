@@ -664,7 +664,11 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					/* UNCHECKED */ MCStringFormat(&t_string, "%d", MCNumberFetchAsInteger((MCNumberRef)t_value));
 				else
 					/* UNCHECKED */ MCStringFormat(&t_string, "%f", MCNumberFetchAsReal((MCNumberRef)t_value));
-			else
+			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
+                /* UNCHECKED */ MCStringFormat(&t_string, t_value == kMCTrue ? "<true>" : "<false>");
+			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNull)
+                /* UNCHECKED */ MCStringFormat(&t_string, "<null>");
+            else
 				MCAssert(false);
 
 			if (t_range == nil)
