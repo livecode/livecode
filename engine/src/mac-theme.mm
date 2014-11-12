@@ -29,9 +29,12 @@
 #include "util.h"
 #include "object.h"
 #include "stack.h"
+#include "font.h"
 
 #import <AppKit/NSColor.h>
+#import <AppKit/NSFont.h>
 #import <AppKit/NSImageRep.h>
+#import <CoreText/CoreText.h>
 
 bool MCPlatformGetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool)
 {
@@ -234,5 +237,48 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
 
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)
 {
-    return false;
+    // First of all, get the expected size of the font for the given property
+    int t_font_size;
+    if (!MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_font_size))
+        return false;
+    
+    // Only size 11 and 13 fonts are supported
+    if (t_font_size != 11 && t_font_size != 13)
+        return false;
+    
+    // Fonts are expensive to create so cache them
+    static MCFontRef s_user_font_11;
+    static MCFontRef s_user_font_13;
+    static MCFontRef s_system_font_11;
+    static MCFontRef s_system_font_13;
+    
+    MCFontRef* t_which_fontref = nil;
+    
+    NSFont* t_font = nil;
+    switch (p_type)
+    {
+        case kMCPlatformControlTypeInputField:
+            t_which_fontref = t_font_size == 11 ? &s_user_font_11 : &s_user_font_13;
+            if (*t_which_fontref == nil)
+                t_font = [[NSFont userFontOfSize: t_font_size] retain];
+            break;
+            
+        default:
+            t_which_fontref = t_font_size == 11 ? &s_system_font_11 : &s_system_font_13;
+            if (*t_which_fontref == nil)
+                t_font = [[NSFont systemFontOfSize: t_font_size] retain];
+            break;
+    }
+    
+    if (*t_which_fontref == nil && t_font == nil)
+        return false;
+    
+    if (*t_which_fontref == nil)
+    {
+        // Create the in-engine font representation
+        MCFontCreateWithHandle((MCSysFontHandle)t_font, *t_which_fontref);
+    }
+
+    r_font = MCFontRetain(*t_which_fontref);
+    return true;
 }
