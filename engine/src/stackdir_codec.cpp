@@ -69,13 +69,13 @@ static bool MCStackdirFormatString (MCStringRef p_string, MCStringRef & r_litera
 static bool MCStackdirFormatName (MCNameRef p_name, MCStringRef & r_literal);
 
 /* Reset the token, freeing any currently-held resources */
-static void MCStackdirIOScannerResetToken (MCStackdirIOScannerRef scanner);
+static void MCStackdirIOScannerResetToken (MCStackdirIOScannerRef scanner, MCStackdirIOToken & x_token);
 
 /* Test whether the token is unset */
-static inline bool MCStackdirIOTokenIsNone (MCStackdirIOTokenRef p_token);
+static inline bool MCStackdirIOTokenIsNone (MCStackdirIOToken & p_token);
 
 /* Test whether the token indicates an error */
-static inline bool MCStackdirIOTokenIsError (MCStackdirIOTokenRef p_token);
+static inline bool MCStackdirIOTokenIsError (MCStackdirIOToken & p_token);
 
 /* Obtain the current character in the scanner. Returns false if there
  * is no valid current character. */
@@ -85,18 +85,18 @@ static inline bool MCStackdirIOScannerGetChar (MCStackdirIOScannerRef scanner, c
  * another character available. */
 static inline bool MCStackdirIOScannerNextChar (MCStackdirIOScannerRef scanner);
 
-static bool MCStackdirIOScanEOF (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
-static bool MCStackdirIOScanNewline (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
-static bool MCStackdirIOScanSpace (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
-static bool MCStackdirIOScanStorageSeparator (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
-static bool MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
-static bool MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
-static bool MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
-static bool MCStackdirIOScanString (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
-static bool MCStackdirIOScanData (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef r_token);
+static bool MCStackdirIOScanEOF (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
+static bool MCStackdirIOScanNewline (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
+static bool MCStackdirIOScanSpace (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
+static bool MCStackdirIOScanStorageSeparator (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
+static bool MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
+static bool MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
+static bool MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
+static bool MCStackdirIOScanString (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
+static bool MCStackdirIOScanData (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
 
 /* Table of scanner functions. These are called in order */
-typedef bool (*MCStackdirIOScanFunc)(MCStackdirIOScannerRef, MCStackdirIOTokenRef);
+typedef bool (*MCStackdirIOScanFunc)(MCStackdirIOScannerRef, MCStackdirIOToken &);
 static const MCStackdirIOScanFunc kMCStackdirIOScanFuncs[] =
 	{
 		MCStackdirIOScanEOF,
@@ -450,28 +450,44 @@ enum {
  * ---------------------------------------------------------------- */
 
 static void
-MCStackdirIOScannerResetToken (MCStackdirIOScannerRef scanner)
+MCStackdirIOScannerResetToken (MCStackdirIOScannerRef scanner,
+							   MCStackdirIOToken & x_token)
 {
-	MCStackdirIOTokenRef t_token = &(scanner->m_token);
 	/* Reset the token */
-	MCValueRelease (t_token->m_value);
+	MCValueRelease (x_token.m_value);
 
-	t_token->m_line = scanner->m_line;
-	t_token->m_column = scanner->m_column;
-	t_token->m_type = kMCStackdirIOTokenTypeNone;
-	t_token->m_value = nil;
+	x_token.m_line = scanner->m_line;
+	x_token.m_column = scanner->m_column;
+	x_token.m_type = kMCStackdirIOTokenTypeNone;
+	x_token.m_value = nil;
+}
+
+void
+MCStackdirIOTokenCopy (MCStackdirIOToken & p_src,
+					   MCStackdirIOToken & r_dest)
+{
+	MCValueRelease (r_dest.m_value);
+
+	r_dest.m_line = p_src.m_line;
+	r_dest.m_column = p_src.m_column;
+	r_dest.m_type = p_src.m_type;
+
+	if (p_src.m_value != nil)
+		r_dest.m_value = MCValueRetain (p_src.m_value);
+	else
+		r_dest.m_value = nil;
 }
 
 static inline bool
-MCStackdirIOTokenIsNone (MCStackdirIOTokenRef p_token)
+MCStackdirIOTokenIsNone (MCStackdirIOToken & p_token)
 {
-	return (p_token->m_type == kMCStackdirIOTokenTypeNone);
+	return (p_token.m_type == kMCStackdirIOTokenTypeNone);
 }
 
 static inline bool
-MCStackdirIOTokenIsError (MCStackdirIOTokenRef p_token)
+MCStackdirIOTokenIsError (MCStackdirIOToken & p_token)
 {
-	return (p_token->m_type == kMCStackdirIOTokenTypeError);
+	return (p_token.m_type == kMCStackdirIOTokenTypeError);
 }
 
 static inline bool
@@ -501,18 +517,18 @@ MCStackdirIOScannerNextChar (MCStackdirIOScannerRef scanner)
 
 static bool
 MCStackdirIOScanEOF (MCStackdirIOScannerRef scanner,
-					 MCStackdirIOTokenRef r_token)
+					 MCStackdirIOToken & r_token)
 {
 	codepoint_t t_char;
 	if (MCStackdirIOScannerGetChar (scanner, t_char)) return false;
 
-	r_token->m_type = kMCStackdirIOTokenTypeEOF;
+	r_token.m_type = kMCStackdirIOTokenTypeEOF;
 	return true;
 }
 
 static bool
 MCStackdirIOScanNewline (MCStackdirIOScannerRef scanner,
-						 MCStackdirIOTokenRef r_token)
+						 MCStackdirIOToken & r_token)
 {
 	codepoint_t t_char;
 	bool t_found_newline = false;
@@ -541,7 +557,7 @@ MCStackdirIOScanNewline (MCStackdirIOScannerRef scanner,
 	scanner->m_column = 0;
 	scanner->m_line += 1;
 
-	r_token->m_type = kMCStackdirIOTokenTypeNewline;
+	r_token.m_type = kMCStackdirIOTokenTypeNewline;
 	return true;
 }
 
@@ -551,7 +567,7 @@ MCStackdirIOScanNewline (MCStackdirIOScannerRef scanner,
 
 static bool
 MCStackdirIOScanSpace (MCStackdirIOScannerRef scanner,
-					   MCStackdirIOTokenRef r_token)
+					   MCStackdirIOToken & r_token)
 {
 	codepoint_t t_char;
 	MCStackdirIOScannerGetChar (scanner, t_char);
@@ -565,20 +581,20 @@ MCStackdirIOScanSpace (MCStackdirIOScannerRef scanner,
 	}
 	if (!t_found_space) return false;
 
-	r_token->m_type = kMCStackdirIOTokenTypeSpace;
+	r_token.m_type = kMCStackdirIOTokenTypeSpace;
 	return true;
 }
 
 static bool
 MCStackdirIOScanStorageSeparator (MCStackdirIOScannerRef scanner,
-								  MCStackdirIOTokenRef r_token)
+								  MCStackdirIOToken & r_token)
 {
 	codepoint_t t_char;
 	MCStackdirIOScannerGetChar (scanner, t_char);
 	if (t_char == ':')
 	{
 		MCStackdirIOScannerNextChar (scanner);
-		r_token->m_type = kMCStackdirIOTokenTypeStorageSeparator;
+		r_token.m_type = kMCStackdirIOTokenTypeStorageSeparator;
 		return true;
 	}
 	return false;
@@ -586,14 +602,14 @@ MCStackdirIOScanStorageSeparator (MCStackdirIOScannerRef scanner,
 
 static bool
 MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner,
-								   MCStackdirIOTokenRef r_token)
+								   MCStackdirIOToken & r_token)
 {
 	codepoint_t t_char;
 	MCStackdirIOScannerGetChar (scanner, t_char);
 	if (t_char == '&')
 	{
 		MCStackdirIOScannerNextChar (scanner);
-		r_token->m_type = kMCStackdirIOTokenTypeExternalIndicator;
+		r_token.m_type = kMCStackdirIOTokenTypeExternalIndicator;
 		return true;
 	}
 	return false;
@@ -622,7 +638,7 @@ MCStackdirIOScanExternalIndicator (MCStackdirIOScannerRef scanner,
  * It defaults to '+' if not specified. */
 static bool
 MCStackdirIOScanNumberSign (MCStackdirIOScannerRef scanner,
-							MCStackdirIOTokenRef r_token,
+							MCStackdirIOToken & r_token,
 							integer_t & r_sign)
 {
 	codepoint_t t_char;
@@ -648,7 +664,7 @@ MCStackdirIOScanNumberSign (MCStackdirIOScannerRef scanner,
  * integer). */
 static bool
 MCStackdirIOScanNumberInteger (MCStackdirIOScannerRef scanner,
-							   MCStackdirIOTokenRef r_token,
+							   MCStackdirIOToken & r_token,
 							   uint64_t & r_integer_part,
 							   bool & r_is_valid_integer)
 {
@@ -674,7 +690,7 @@ MCStackdirIOScanNumberInteger (MCStackdirIOScannerRef scanner,
 		if (t_new < r_integer_part)
 		{
 			/* Overflow */
-			r_token->m_type = kMCStackdirIOTokenTypeError;
+			r_token.m_type = kMCStackdirIOTokenTypeError;
 			return false;
 		}
 
@@ -691,7 +707,7 @@ MCStackdirIOScanNumberInteger (MCStackdirIOScannerRef scanner,
  * compensate for rounding errors. */
 static bool
 MCStackdirIOScanNumberFraction (MCStackdirIOScannerRef scanner,
-								MCStackdirIOTokenRef r_token,
+								MCStackdirIOToken & r_token,
 								real64_t & r_fraction_part)
 {
 	codepoint_t t_char;
@@ -723,7 +739,7 @@ MCStackdirIOScanNumberFraction (MCStackdirIOScannerRef scanner,
 	/* Underflow check */
 	if (errno == ERANGE)
 	{
-		r_token->m_type = kMCStackdirIOTokenTypeError;
+		r_token.m_type = kMCStackdirIOTokenTypeError;
 		return false;
 	}
 
@@ -732,7 +748,7 @@ MCStackdirIOScanNumberFraction (MCStackdirIOScannerRef scanner,
 
 static bool
 MCStackdirIOScanNumberExponent (MCStackdirIOScannerRef scanner,
-								MCStackdirIOTokenRef r_token,
+								MCStackdirIOToken & r_token,
 								real64_t & r_exponent_factor)
 {
 	codepoint_t t_char;
@@ -760,7 +776,7 @@ MCStackdirIOScanNumberExponent (MCStackdirIOScannerRef scanner,
 										t_exponent_unsigned,
 										t_ignored))
 	{
-		r_token->m_type = kMCStackdirIOTokenTypeError;
+		r_token.m_type = kMCStackdirIOTokenTypeError;
 		return false;
 	}
 
@@ -773,7 +789,7 @@ MCStackdirIOScanNumberExponent (MCStackdirIOScannerRef scanner,
 
 	if (errno == ERANGE)
 	{
-		r_token->m_type = kMCStackdirIOTokenTypeError;
+		r_token.m_type = kMCStackdirIOTokenTypeError;
 		return false;
 	}
 
@@ -782,7 +798,7 @@ MCStackdirIOScanNumberExponent (MCStackdirIOScannerRef scanner,
 
 static bool
 MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner,
-						MCStackdirIOTokenRef r_token)
+						MCStackdirIOToken & r_token)
 {
 	codepoint_t t_char;
 
@@ -814,7 +830,7 @@ MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner,
 	{
 		/* Bare signs are a syntax error */
 		if (t_have_sign)
-			r_token->m_type = kMCStackdirIOTokenTypeError;
+			r_token.m_type = kMCStackdirIOTokenTypeError;
 		return false;
 	}
 
@@ -857,7 +873,7 @@ MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner,
 	else
 	{
 		/* Some invalid syntax occurred */
-		r_token->m_type = kMCStackdirIOTokenTypeError;
+		r_token.m_type = kMCStackdirIOTokenTypeError;
 		return false;
 	}
 
@@ -865,8 +881,8 @@ MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner,
 	{
 		MCAutoNumberRef t_value;
 		/* UNCHECKED */ MCNumberCreateWithReal (t_real_value, &t_value);
-		r_token->m_value = MCValueRetain (*t_value);
-		r_token->m_type = kMCStackdirIOTokenTypeNumber;
+		r_token.m_value = MCValueRetain (*t_value);
+		r_token.m_type = kMCStackdirIOTokenTypeNumber;
 		return true;
 	}
 
@@ -874,8 +890,8 @@ MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner,
 	{
 		MCAutoNumberRef t_value;
 		/* UNCHECKED */ MCNumberCreateWithInteger (t_integer_value, &t_value);
-		r_token->m_value = MCValueRetain (*t_value);
-		r_token->m_type = kMCStackdirIOTokenTypeNumber;
+		r_token.m_value = MCValueRetain (*t_value);
+		r_token.m_type = kMCStackdirIOTokenTypeNumber;
 		return true;
 	}
 
@@ -889,7 +905,7 @@ MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner,
 
 static bool
 MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner,
-								MCStackdirIOTokenRef r_token)
+								MCStackdirIOToken & r_token)
 {
 	MCAutoStringRef t_value;
 	codepoint_t t_char;
@@ -925,8 +941,8 @@ MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner,
 
 	if (t_found)
 	{
-		r_token->m_type = kMCStackdirIOTokenTypeUnquotedString;
-		r_token->m_value = MCValueRetain (*t_value);
+		r_token.m_type = kMCStackdirIOTokenTypeUnquotedString;
+		r_token.m_value = MCValueRetain (*t_value);
 		return true;
 	}
 	return false;
@@ -938,7 +954,7 @@ MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner,
 
 static bool
 MCStackdirIOScanStringUnescape (MCStackdirIOScannerRef scanner,
-								MCStackdirIOTokenRef r_token,
+								MCStackdirIOToken & r_token,
 								codepoint_t & r_char)
 {
 	/* This should be called when the current character is an escape
@@ -951,7 +967,7 @@ MCStackdirIOScanStringUnescape (MCStackdirIOScannerRef scanner,
 	 * specifier. */
 	if (!MCStackdirIOScannerGetChar (scanner, r_char))
 	{
-		r_token->m_type = kMCStackdirIOTokenTypeError;
+		r_token.m_type = kMCStackdirIOTokenTypeError;
 		return false;
 	}
 	MCStackdirIOScannerNextChar (scanner);
@@ -980,7 +996,7 @@ MCStackdirIOScanStringUnescape (MCStackdirIOScannerRef scanner,
 		t_num_digits = 8;
 		break;
 	default:
-		r_token->m_type = kMCStackdirIOTokenTypeError;
+		r_token.m_type = kMCStackdirIOTokenTypeError;
 		return false;
 	}
 
@@ -994,7 +1010,7 @@ MCStackdirIOScanStringUnescape (MCStackdirIOScannerRef scanner,
 	{
 		if (!MCStackdirIOScannerGetChar (scanner, t_hex_char))
 		{
-			r_token->m_type = kMCStackdirIOTokenTypeError;
+			r_token.m_type = kMCStackdirIOTokenTypeError;
 			return false;
 		}
 
@@ -1005,7 +1021,7 @@ MCStackdirIOScanStringUnescape (MCStackdirIOScannerRef scanner,
 
 		if (!t_valid_hex)
 		{
-			r_token->m_type = kMCStackdirIOTokenTypeError;
+			r_token.m_type = kMCStackdirIOTokenTypeError;
 			return false;
 		}
 
@@ -1020,7 +1036,7 @@ MCStackdirIOScanStringUnescape (MCStackdirIOScannerRef scanner,
 
 static bool
 MCStackdirIOScanString (MCStackdirIOScannerRef scanner,
-						MCStackdirIOTokenRef r_token)
+						MCStackdirIOToken & r_token)
 {
 	codepoint_t t_char;
 	MCAutoStringRef t_value;
@@ -1035,7 +1051,7 @@ MCStackdirIOScanString (MCStackdirIOScannerRef scanner,
 	{
 		if (!MCStackdirIOScannerNextChar (scanner))
 		{
-			r_token->m_type = kMCStackdirIOTokenTypeError;
+			r_token.m_type = kMCStackdirIOTokenTypeError;
 			return false;
 		}
 
@@ -1050,8 +1066,8 @@ MCStackdirIOScanString (MCStackdirIOScannerRef scanner,
 		/* UNCHECKED */ MCStringAppendCodepoint (*t_value, t_char);
 	}
 
-	r_token->m_value = MCValueRetain (*t_value);
-	r_token->m_type = kMCStackdirIOTokenTypeString;
+	r_token.m_value = MCValueRetain (*t_value);
+	r_token.m_type = kMCStackdirIOTokenTypeString;
 	return true;
 }
 
@@ -1061,7 +1077,7 @@ MCStackdirIOScanString (MCStackdirIOScannerRef scanner,
 
 static bool
 MCStackdirIOScanDataBase64 (MCStackdirIOScannerRef scanner,
-							MCStackdirIOTokenRef r_token,
+							MCStackdirIOToken & r_token,
 							MCDataRef &r_data)
 {
 	codepoint_t t_char;
@@ -1093,7 +1109,7 @@ MCStackdirIOScanDataBase64 (MCStackdirIOScannerRef scanner,
 
 static bool
 MCStackdirIOScanData (MCStackdirIOScannerRef scanner,
-					  MCStackdirIOTokenRef r_token)
+					  MCStackdirIOToken & r_token)
 {
 	codepoint_t t_char;
 	MCAutoDataRef t_value;
@@ -1104,7 +1120,7 @@ MCStackdirIOScanData (MCStackdirIOScannerRef scanner,
 
 	if (!MCStackdirIOScannerNextChar (scanner))
 	{
-		r_token->m_type = kMCStackdirIOTokenTypeError;
+		r_token.m_type = kMCStackdirIOTokenTypeError;
 		return false;
 	}
 
@@ -1112,12 +1128,12 @@ MCStackdirIOScanData (MCStackdirIOScannerRef scanner,
 	 * to read base64 characters up to the next data delimiter. */
 	if (MCStackdirIOScanString (scanner, r_token))
 	{
-		MCStringRef t_string = (MCStringRef) r_token->m_value;
+		MCStringRef t_string = (MCStringRef) r_token.m_value;
 		/* UNCHECKED */ MCStringEncodeAndRelease (t_string,
 												  kMCStringEncodingUTF8,
 												  false,
 												  &t_value);
-		r_token->m_value = nil;
+		r_token.m_value = nil;
 	}
 	else
 	{
@@ -1130,13 +1146,13 @@ MCStackdirIOScanData (MCStackdirIOScannerRef scanner,
 	if (!MCStackdirIOScannerGetChar (scanner, t_char) ||
 		(t_char != '>'))
 	{
-		r_token->m_type = kMCStackdirIOTokenTypeError;
+		r_token.m_type = kMCStackdirIOTokenTypeError;
 		return false;
 	}
 	MCStackdirIOScannerNextChar (scanner);
 
-	r_token->m_type = kMCStackdirIOTokenTypeData;
-	r_token->m_value = MCValueRetain (*t_value);
+	r_token.m_type = kMCStackdirIOTokenTypeData;
+	r_token.m_value = MCValueRetain (*t_value);
 	return true;
 }
 
@@ -1299,7 +1315,7 @@ MCStackdirIOScannerDestroy (MCStackdirIOScannerRef & scanner)
 
 bool
 MCStackdirIOScannerConsume (MCStackdirIOScannerRef scanner,
-							MCStackdirIOTokenRef & r_token)
+							MCStackdirIOToken & r_token)
 {
 	MCAssert (scanner != nil);
 
@@ -1310,22 +1326,22 @@ MCStackdirIOScannerConsume (MCStackdirIOScannerRef scanner,
 
 bool
 MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner,
-						 MCStackdirIOTokenRef & r_token)
+						 MCStackdirIOToken & r_token)
 {
 	MCAssert (scanner != nil);
 
-	MCStackdirIOTokenRef t_token = &(scanner->m_token);
+	MCStackdirIOToken & t_token = scanner->m_token;
 
 	/* Peeking multiple times in a row will just return the same
 	 * token. */
 	if (scanner->m_has_peek)
 	{
-		r_token = t_token;
+		MCStackdirIOTokenCopy (t_token, r_token);
 		return true;
 	}
 
 	/* Reset the token */
-	MCStackdirIOScannerResetToken (scanner);
+	MCStackdirIOScannerResetToken (scanner, t_token);
 
 	bool t_success = true;
 
@@ -1345,7 +1361,7 @@ MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner,
 	/* If nothing was found, signal an error */
 	if (t_success && MCStackdirIOTokenIsNone (t_token))
 	{
-		t_token->m_type = kMCStackdirIOTokenTypeError;
+		t_token.m_type = kMCStackdirIOTokenTypeError;
 		t_success = false;
 	}
 
@@ -1354,6 +1370,6 @@ MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner,
 	 * continue to indicate the error without rescanning. */
 	scanner->m_has_peek = true;
 
-	r_token = t_token;
+	MCStackdirIOTokenCopy (t_token, r_token);
 	return t_success;
 }

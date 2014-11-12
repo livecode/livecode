@@ -228,7 +228,7 @@ MCStackdirIOLoadObjectKeyDirect (MCStackdirIOObjectLoadRef info,
 	/* Parse a token from the contents of the file.  If the file
 	 * exists, we require it to contain a valid value. */
 	MCStackdirIOScannerRef t_scanner;
-	MCStackdirIOTokenRef t_token;
+	MCStackdirIOToken t_token;
 	bool t_success = true;
 	MCAutoValueRef t_value;
 	if (!MCStackdirIOScannerNew (*t_content, t_scanner))
@@ -237,18 +237,18 @@ MCStackdirIOLoadObjectKeyDirect (MCStackdirIOObjectLoadRef info,
 	if (t_success)
 	{
 		if (!MCStackdirIOScannerConsume (t_scanner, t_token) ||
-			t_token->m_value == nil)
+			t_token.m_value == nil)
 		{
 			t_success = false;
 			MCStackdirIOLoadErrorDirectLiteral (info->m_op,
 												*t_path,
-												t_token->m_line,
-												t_token->m_column);
+												t_token.m_line,
+												t_token.m_column);
 		}
 	}
 
 	if (t_success)
-		&t_value = MCValueRetain (t_token->m_value);
+		&t_value = MCValueRetain (t_token.m_value);
 
 	MCStackdirIOScannerDestroy (t_scanner);
 	if (!t_success) return false;

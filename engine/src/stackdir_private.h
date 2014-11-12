@@ -237,10 +237,20 @@ enum MCStackdirIOTokenType
 };
 
 typedef struct _MCStackdirIOToken MCStackdirIOToken;
-typedef MCStackdirIOToken *MCStackdirIOTokenRef;
 
 struct _MCStackdirIOToken
 {
+	_MCStackdirIOToken()
+		: m_line(0), m_column (0),
+		  m_type (kMCStackdirIOTokenTypeNone),
+		  m_value (nil)
+	{}
+
+	~_MCStackdirIOToken()
+	{
+		MCValueRelease (m_value);
+	}
+
 	uindex_t m_line;
 	uindex_t m_column;
 	MCStackdirIOTokenType m_type;
@@ -250,6 +260,9 @@ struct _MCStackdirIOToken
 typedef struct _MCStackdirIOScanner MCStackdirIOScanner;
 typedef MCStackdirIOScanner *MCStackdirIOScannerRef;
 
+/* Copy a token */
+void MCStackdirIOTokenCopy (MCStackdirIOToken & p_src, MCStackdirIOToken & r_dest);
+
 /* Create a new scanner for p_string */
 bool MCStackdirIOScannerNew (MCStringRef p_string, MCStackdirIOScannerRef & scanner);
 
@@ -257,13 +270,13 @@ bool MCStackdirIOScannerNew (MCStringRef p_string, MCStackdirIOScannerRef & scan
  * until the next call to MCStackdirIOScannerPeek() or
  * MCStackdirIOScannerConsume().  Returns true if a token was
  * found. */
-bool MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef & r_token);
+bool MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
 
 /* Consume the next token from the scanner.  The r_token will be valid
  * until the next call to MCStackdirIOScannerPeek() or
  * MCStackdirIOScannerConsume().  Returns true if a token was
  * found. */
-bool MCStackdirIOScannerConsume (MCStackdirIOScannerRef scanner, MCStackdirIOTokenRef & r_token);
+bool MCStackdirIOScannerConsume (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
 
 /* Clean up a scanner when no longer needed */
 void MCStackdirIOScannerDestroy (MCStackdirIOScannerRef & scanner);
