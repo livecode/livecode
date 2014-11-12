@@ -740,14 +740,20 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
             if (p_var . mark . changed != 0)
             {
                 MCAutoDataRef t_data;
-                if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
+                if (!MCDataMutableCopyAndRelease((MCDataRef)p_var . mark . text, &t_data))
                     return;
                 
                 /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), (MCDataRef)p_value);
                 p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
             }
             else
+            {
+                // AL-2014-11-12: [[ Bug 13987 ]] Release the mark here, so that eg 'put x into byte y of z'
+                //  can take advantage of the fact that z has only one reference. Otherwise it requires a copy
+                MCValueRelease(p_var . mark . text);
+                
                 p_var . variable -> replace(ctxt, (MCDataRef)p_value, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+            }
         }
         else
         {
@@ -762,16 +768,21 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
             if (p_var . mark . changed != 0)
             {
                 MCAutoStringRef t_string;
-                if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
+                if (!MCStringMutableCopyAndRelease((MCStringRef)p_var . mark . text, &t_string))
                     return;
             
                 /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
                 p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
             }
             else
+            {
+                // AL-2014-11-12: [[ Bug 13987 ]] Release the mark here, so that eg 'put x into char y of z'
+                //  can take advantage of the fact that z has only one reference. Otherwise it requires a copy
+                MCValueRelease(p_var . mark . text);
+                
                 p_var . variable -> replace(ctxt, *t_value_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+            }
         }
-        MCValueRelease(p_var . mark . text);
 	}
 }
 
