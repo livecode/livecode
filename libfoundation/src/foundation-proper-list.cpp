@@ -290,7 +290,7 @@ bool MCProperListInsertList(MCProperListRef self, MCProperListRef p_value, index
     
     MCAutoProperListRef t_list;
     MCProperListCopy(p_value, &t_list);
-    return MCProperListInsertList(self, p_value, p_index);
+    return MCProperListInsertList(self, *t_list, p_index);
 }
 
 bool MCProperListRemoveElements(MCProperListRef self, index_t p_start, index_t p_finish)
