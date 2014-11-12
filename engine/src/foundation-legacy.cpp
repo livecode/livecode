@@ -694,9 +694,11 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 
 bool MCValueIsEmpty(MCValueRef p_value)
 {
+    // AL-2014-10-31: [[ Bug 13890 ]] An empty array is not necessarily equal to kMCEmptyArray,
+    //  so we need to use MCArrayIsEmpty instead.
     return p_value == kMCNull ||
             p_value == kMCEmptyName ||
-            p_value == kMCEmptyArray ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray && MCArrayIsEmpty((MCArrayRef)p_value)) ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString && MCStringIsEmpty((MCStringRef)p_value)) ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName && MCNameIsEmpty((MCNameRef)p_value)) ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && MCDataIsEmpty((MCDataRef)p_value)) ||
