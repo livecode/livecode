@@ -62,9 +62,19 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
     if (self == nil)
         return false;
     
+    if (!self -> valid)
+        return false;
+    
+    byte_t t_header[4];
+    t_header[0] = 'L';
+    t_header[1] = 'C';
+    t_header[2] = 0;
+    t_header[3] = 0;
+    
     bool t_success;
     if (self -> valid)
-        t_success = MCScriptWriteRawModule(p_stream, &self -> module);
+        t_success = MCStreamWrite(p_stream, t_header, 4) &&
+                    MCScriptWriteRawModule(p_stream, &self -> module);
     else
         t_success = false;
     
@@ -114,7 +124,7 @@ void MCScriptAddExportToModule(MCScriptModuleBuilderRef self, uindex_t p_definit
         return;
     }
     
-    self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . name = (MCNameRef)MCProperListFetchElementAtIndex(self -> definition_names, p_definition);
+    self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . name = MCValueRetain((MCNameRef)MCProperListFetchElementAtIndex(self -> definition_names, p_definition - 1));
     self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . index = p_definition;
 }
 
@@ -147,7 +157,7 @@ void MCScriptAddImportToModule(MCScriptModuleBuilderRef self, uindex_t p_index, 
     t_definition -> kind = kMCScriptDefinitionKindExternal;
     t_definition -> index = self -> module . imported_definition_count;
 
-    r_index = self -> module . imported_definition_count;
+    r_index = self -> module . definition_count;
 }
 
 void MCScriptAddTypeToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCTypeInfoRef p_type, uindex_t& r_index)
@@ -170,7 +180,7 @@ void MCScriptAddTypeToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MC
     t_definition -> kind = kMCScriptDefinitionKindType;
     t_definition -> type = MCValueRetain(p_type);
     
-    r_index = self -> module . imported_definition_count;
+    r_index = self -> module . definition_count;
 }
 
 void MCScriptAddConstantToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCValueRef p_value, uindex_t& r_index)
@@ -193,7 +203,7 @@ void MCScriptAddConstantToModule(MCScriptModuleBuilderRef self, MCNameRef p_name
     t_definition -> kind = kMCScriptDefinitionKindConstant;
     t_definition -> value = MCValueRetain(p_value);
     
-    r_index = self -> module . imported_definition_count;
+    r_index = self -> module . definition_count;
 }
 
 void MCScriptAddVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCTypeInfoRef p_type, uindex_t& r_index)
@@ -216,7 +226,7 @@ void MCScriptAddVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name
     t_definition -> kind = kMCScriptDefinitionKindVariable;
     t_definition -> type = MCValueRetain(p_type);
     
-    r_index = self -> module . imported_definition_count;
+    r_index = self -> module . definition_count;
 }
 
 void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCTypeInfoRef p_signature, MCStringRef p_binding, uindex_t& r_index)
@@ -240,7 +250,7 @@ void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef self, MCNameRef 
     t_definition -> signature = MCValueRetain(p_signature);
     t_definition -> binding = MCValueRetain(p_binding);
     
-    r_index = self -> module . imported_definition_count;
+    r_index = self -> module . definition_count;
     
 }
 
@@ -265,7 +275,7 @@ void MCScriptAddPropertyToModule(MCScriptModuleBuilderRef self, MCNameRef p_name
     t_definition -> getter = p_getter;
     t_definition -> setter = p_setter;
     
-    r_index = self -> module . imported_definition_count;
+    r_index = self -> module . definition_count;
 }
 
 void MCScriptAddEventToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCTypeInfoRef p_signature, uindex_t& r_index)
@@ -288,7 +298,7 @@ void MCScriptAddEventToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, M
     t_definition -> kind = kMCScriptDefinitionKindEvent;
     t_definition -> signature = MCValueRetain(p_signature);
     
-    r_index = self -> module . imported_definition_count;
+    r_index = self -> module . definition_count;
 }
 
 ///////////
@@ -352,7 +362,7 @@ static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value
     uint8_t t_bytes[5];
     uindex_t t_index;
     t_index = 0;
-    while(p_value != 0)
+    do
     {
         // Fetch the next 7 bits.
         uint8_t t_byte;
@@ -367,6 +377,7 @@ static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value
         
         t_bytes[t_index++] = t_byte;
     }
+    while(p_value != 0);
     
     if (!MCMemoryResizeArray(self -> module . bytecode_count + t_index, self -> module . bytecode, self -> module . bytecode_count))
     {
@@ -411,12 +422,18 @@ static void __begin_instruction(MCScriptModuleBuilderRef self, MCScriptBytecodeO
     
     self -> instructions[self -> instruction_count - 1] . operation = p_operation;
     self -> instructions[self -> instruction_count - 1] . arity = 0;
-    self -> instructions[self -> instruction_count - 1] . arity = self -> operand_count;
+    self -> instructions[self -> instruction_count - 1] . operands = self -> operand_count;
 }
 
 static void __continue_instruction(MCScriptModuleBuilderRef self, uindex_t p_argument)
 {
     if (!MCMemoryResizeArray(self -> operand_count + 1, self -> operands, self -> operand_count))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    if (self -> instructions[self -> instruction_count - 1] . arity == 256)
     {
         self -> valid = false;
         return;
@@ -437,7 +454,8 @@ static void __emit_instruction(MCScriptModuleBuilderRef self, MCScriptBytecodeOp
     
     va_list t_args;
     va_start(t_args, p_arity);
-    __continue_instruction(self, va_arg(t_args, uindex_t));
+    for(uindex_t i = 0; i < p_arity; i++)
+        __continue_instruction(self, va_arg(t_args, uindex_t));
     va_end(t_args);
     
     __end_instruction(self);
@@ -462,11 +480,11 @@ void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_nam
     
     t_definition -> kind = kMCScriptDefinitionKindHandler;
     t_definition -> signature = MCValueRetain(p_signature);
-    t_definition -> address = self -> module . bytecode_count;
+    t_definition -> start_address = self -> module . bytecode_count;
     
-    self -> current_handler = self -> module . imported_definition_count;
+    self -> current_handler = self -> module . definition_count;
     
-    r_index = self -> module . imported_definition_count;
+    r_index = self -> module . definition_count;
 }
 
 void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
@@ -542,9 +560,12 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
             __emit_bytecode_uint(self, t_operands[i]);
     }
     
+    t_handler -> finish_address = self -> module . bytecode_count;
+    
     self -> instruction_count = 0;
     self -> operand_count = 0;
     self -> label_count = 0;
+    self -> current_handler = 0;
 }
 
 void MCScriptDeferLabelForBytecodeInModule(MCScriptModuleBuilderRef self, uindex_t& r_label)

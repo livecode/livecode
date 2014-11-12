@@ -13,28 +13,64 @@
 		4D21B60319E3DFF800B64BEF /* instance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60219E3DFF800B64BEF /* instance.cpp */; };
 		4D21B60519E3E00000B64BEF /* error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60419E3E00000B64BEF /* error.cpp */; };
 		4D322F2219DD95A4008476D3 /* object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D322F2119DD95A4008476D3 /* object.cpp */; };
+		4D44E3641A139F460073FFA2 /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D322F1619DD945E008476D3 /* libscript.a */; };
+		4D44E3651A139F480073FFA2 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E35F1A139D8F0073FFA2 /* libfoundation.a */; };
+		4D44E3671A139F590073FFA2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3661A139F590073FFA2 /* CoreFoundation.framework */; };
+		4D44E36F1A139F9C0073FFA2 /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3681A139F9C0073FFA2 /* libicudata.a */; };
+		4D44E3701A139F9C0073FFA2 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3691A139F9C0073FFA2 /* libicui18n.a */; };
+		4D44E3711A139F9C0073FFA2 /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E36A1A139F9C0073FFA2 /* libicuio.a */; };
+		4D44E3721A139F9C0073FFA2 /* libicule.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E36B1A139F9C0073FFA2 /* libicule.a */; };
+		4D44E3731A139F9C0073FFA2 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E36C1A139F9C0073FFA2 /* libiculx.a */; };
+		4D44E3741A139F9C0073FFA2 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E36D1A139F9C0073FFA2 /* libicutu.a */; };
+		4D44E3751A139F9C0073FFA2 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E36E1A139F9C0073FFA2 /* libicuuc.a */; };
 		4DDA20451A136FF4001B0CA2 /* builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA20441A136FF4001B0CA2 /* builder.cpp */; };
+		4DDA20701A139BC0001B0CA2 /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA206F1A139BC0001B0CA2 /* test.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		4D05715619E321DA0080F97B /* PBXContainerItemProxy */ = {
+		4D44E35E1A139D8F0073FFA2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 4D05714F19E321DA0080F97B /* libfoundation.xcodeproj */;
+			containerPortal = 4D44E35A1A139D8F0073FFA2 /* libfoundation.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 4DF42A430B048617003F2D95;
 			remoteInfo = foundation;
 		};
-		4DDA202C1A127A65001B0CA2 /* PBXContainerItemProxy */ = {
+		4D44E3601A139D9D0073FFA2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 4D05714F19E321DA0080F97B /* libfoundation.xcodeproj */;
+			containerPortal = 4D44E35A1A139D8F0073FFA2 /* libfoundation.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = foundation;
 		};
+		4D44E3621A139DA20073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E35A1A139D8F0073FFA2 /* libfoundation.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95;
+			remoteInfo = foundation;
+		};
+		4DDA20711A139BCC001B0CA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D322F0E19DD945E008476D3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D322F1519DD945E008476D3;
+			remoteInfo = script;
+		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		4DDA20641A139BA1001B0CA2 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		4D05714F19E321DA0080F97B /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../../../libfoundation/libfoundation.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D21B5A819DDA9F400B64BEF /* script.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = script.h; path = include/script.h; sourceTree = "<group>"; };
 		4D21B5A919DDAA0C00B64BEF /* script-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "script-private.h"; path = "src/script-private.h"; sourceTree = "<group>"; };
 		4D21B5FE19E3DFCB00B64BEF /* module.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = module.cpp; path = src/module.cpp; sourceTree = "<group>"; };
@@ -43,7 +79,21 @@
 		4D21B60419E3E00000B64BEF /* error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = error.cpp; path = src/error.cpp; sourceTree = "<group>"; };
 		4D322F1619DD945E008476D3 /* libscript.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libscript.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D322F2119DD95A4008476D3 /* object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = object.cpp; path = src/object.cpp; sourceTree = "<group>"; };
+		4D44E3571A139D510073FFA2 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = "<group>"; };
+		4D44E3581A139D510073FFA2 /* Global.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = "<group>"; };
+		4D44E3591A139D510073FFA2 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = "<group>"; };
+		4D44E35A1A139D8F0073FFA2 /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../libfoundation/libfoundation.xcodeproj; sourceTree = "<group>"; };
+		4D44E3661A139F590073FFA2 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		4D44E3681A139F9C0073FFA2 /* libicudata.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicudata.a; path = ../prebuilt/lib/mac/libicudata.a; sourceTree = "<group>"; };
+		4D44E3691A139F9C0073FFA2 /* libicui18n.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicui18n.a; path = ../prebuilt/lib/mac/libicui18n.a; sourceTree = "<group>"; };
+		4D44E36A1A139F9C0073FFA2 /* libicuio.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuio.a; path = ../prebuilt/lib/mac/libicuio.a; sourceTree = "<group>"; };
+		4D44E36B1A139F9C0073FFA2 /* libicule.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicule.a; path = ../prebuilt/lib/mac/libicule.a; sourceTree = "<group>"; };
+		4D44E36C1A139F9C0073FFA2 /* libiculx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiculx.a; path = ../prebuilt/lib/mac/libiculx.a; sourceTree = "<group>"; };
+		4D44E36D1A139F9C0073FFA2 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
+		4D44E36E1A139F9C0073FFA2 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
 		4DDA20441A136FF4001B0CA2 /* builder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = builder.cpp; path = src/builder.cpp; sourceTree = "<group>"; };
+		4DDA20661A139BA1001B0CA2 /* libscript-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "libscript-test"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4DDA206F1A139BC0001B0CA2 /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = test.cpp; path = src/test.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,28 +104,46 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4DDA20631A139BA1001B0CA2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D44E36F1A139F9C0073FFA2 /* libicudata.a in Frameworks */,
+				4D44E3701A139F9C0073FFA2 /* libicui18n.a in Frameworks */,
+				4D44E3711A139F9C0073FFA2 /* libicuio.a in Frameworks */,
+				4D44E3721A139F9C0073FFA2 /* libicule.a in Frameworks */,
+				4D44E3731A139F9C0073FFA2 /* libiculx.a in Frameworks */,
+				4D44E3741A139F9C0073FFA2 /* libicutu.a in Frameworks */,
+				4D44E3751A139F9C0073FFA2 /* libicuuc.a in Frameworks */,
+				4D44E3671A139F590073FFA2 /* CoreFoundation.framework in Frameworks */,
+				4D44E3651A139F480073FFA2 /* libfoundation.a in Frameworks */,
+				4D44E3641A139F460073FFA2 /* libscript.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		4D05714B19E321C00080F97B /* References */ = {
 			isa = PBXGroup;
 			children = (
-				4D05714F19E321DA0080F97B /* libfoundation.xcodeproj */,
+				4D44E35A1A139D8F0073FFA2 /* libfoundation.xcodeproj */,
 			);
 			name = References;
-			sourceTree = "<group>";
-		};
-		4D05715019E321DA0080F97B /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				4D05715719E321DA0080F97B /* libfoundation.a */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		4D322F0D19DD945E008476D3 = {
 			isa = PBXGroup;
 			children = (
+				4D44E3681A139F9C0073FFA2 /* libicudata.a */,
+				4D44E3691A139F9C0073FFA2 /* libicui18n.a */,
+				4D44E36A1A139F9C0073FFA2 /* libicuio.a */,
+				4D44E36B1A139F9C0073FFA2 /* libicule.a */,
+				4D44E36C1A139F9C0073FFA2 /* libiculx.a */,
+				4D44E36D1A139F9C0073FFA2 /* libicutu.a */,
+				4D44E36E1A139F9C0073FFA2 /* libicuuc.a */,
+				4D44E3661A139F590073FFA2 /* CoreFoundation.framework */,
+				4D44E3471A139C070073FFA2 /* Configurations */,
 				4D05714B19E321C00080F97B /* References */,
 				4D322F1D19DD955F008476D3 /* Headers */,
 				4D322F1E19DD9565008476D3 /* Source */,
@@ -87,6 +155,7 @@
 			isa = PBXGroup;
 			children = (
 				4D322F1619DD945E008476D3 /* libscript.a */,
+				4DDA20661A139BA1001B0CA2 /* libscript-test */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -109,8 +178,27 @@
 				4D21B60219E3DFF800B64BEF /* instance.cpp */,
 				4D21B60419E3E00000B64BEF /* error.cpp */,
 				4DDA20441A136FF4001B0CA2 /* builder.cpp */,
+				4DDA206F1A139BC0001B0CA2 /* test.cpp */,
 			);
 			name = Source;
+			sourceTree = "<group>";
+		};
+		4D44E3471A139C070073FFA2 /* Configurations */ = {
+			isa = PBXGroup;
+			children = (
+				4D44E3571A139D510073FFA2 /* Debug.xcconfig */,
+				4D44E3581A139D510073FFA2 /* Global.xcconfig */,
+				4D44E3591A139D510073FFA2 /* Release.xcconfig */,
+			);
+			name = Configurations;
+			sourceTree = "<group>";
+		};
+		4D44E35B1A139D8F0073FFA2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D44E35F1A139D8F0073FFA2 /* libfoundation.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -138,12 +226,31 @@
 			buildRules = (
 			);
 			dependencies = (
-				4DDA202D1A127A65001B0CA2 /* PBXTargetDependency */,
+				4D44E3611A139D9D0073FFA2 /* PBXTargetDependency */,
 			);
 			name = script;
 			productName = libscript;
 			productReference = 4D322F1619DD945E008476D3 /* libscript.a */;
 			productType = "com.apple.product-type.library.static";
+		};
+		4DDA20651A139BA1001B0CA2 /* libscript-test */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4DDA206E1A139BA1001B0CA2 /* Build configuration list for PBXNativeTarget "libscript-test" */;
+			buildPhases = (
+				4DDA20621A139BA1001B0CA2 /* Sources */,
+				4DDA20631A139BA1001B0CA2 /* Frameworks */,
+				4DDA20641A139BA1001B0CA2 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4D44E3631A139DA20073FFA2 /* PBXTargetDependency */,
+				4DDA20721A139BCC001B0CA2 /* PBXTargetDependency */,
+			);
+			name = "libscript-test";
+			productName = "libscript-test";
+			productReference = 4DDA20661A139BA1001B0CA2 /* libscript-test */;
+			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
@@ -166,23 +273,24 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 4D05715019E321DA0080F97B /* Products */;
-					ProjectRef = 4D05714F19E321DA0080F97B /* libfoundation.xcodeproj */;
+					ProductGroup = 4D44E35B1A139D8F0073FFA2 /* Products */;
+					ProjectRef = 4D44E35A1A139D8F0073FFA2 /* libfoundation.xcodeproj */;
 				},
 			);
 			projectRoot = "";
 			targets = (
 				4D322F1519DD945E008476D3 /* script */,
+				4DDA20651A139BA1001B0CA2 /* libscript-test */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		4D05715719E321DA0080F97B /* libfoundation.a */ = {
+		4D44E35F1A139D8F0073FFA2 /* libfoundation.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libfoundation.a;
-			remoteRef = 4D05715619E321DA0080F97B /* PBXContainerItemProxy */;
+			remoteRef = 4D44E35E1A139D8F0073FFA2 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -201,19 +309,38 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4DDA20621A139BA1001B0CA2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4DDA20701A139BC0001B0CA2 /* test.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		4DDA202D1A127A65001B0CA2 /* PBXTargetDependency */ = {
+		4D44E3611A139D9D0073FFA2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = foundation;
-			targetProxy = 4DDA202C1A127A65001B0CA2 /* PBXContainerItemProxy */;
+			targetProxy = 4D44E3601A139D9D0073FFA2 /* PBXContainerItemProxy */;
+		};
+		4D44E3631A139DA20073FFA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = foundation;
+			targetProxy = 4D44E3621A139DA20073FFA2 /* PBXContainerItemProxy */;
+		};
+		4DDA20721A139BCC001B0CA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4D322F1519DD945E008476D3 /* script */;
+			targetProxy = 4DDA20711A139BCC001B0CA2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		4D322F1819DD945E008476D3 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4D44E3571A139D510073FFA2 /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
@@ -252,6 +379,7 @@
 		};
 		4D322F1919DD945E008476D3 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4D44E3591A139D510073FFA2 /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
@@ -285,13 +413,8 @@
 		4D322F1B19DD945E008476D3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../../libfoundation/include",
-					"$(inherited)",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-				);
+				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -299,12 +422,29 @@
 		4D322F1C19DD945E008476D3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../../libfoundation/include",
+				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		4DDA206C1A139BA1001B0CA2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		4DDA206D1A139BA1001B0CA2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -327,6 +467,15 @@
 			buildConfigurations = (
 				4D322F1B19DD945E008476D3 /* Debug */,
 				4D322F1C19DD945E008476D3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4DDA206E1A139BA1001B0CA2 /* Build configuration list for PBXNativeTarget "libscript-test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4DDA206C1A139BA1001B0CA2 /* Debug */,
+				4DDA206D1A139BA1001B0CA2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

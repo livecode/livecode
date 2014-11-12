@@ -228,12 +228,12 @@ void MCScriptAddTypeToModule(MCScriptModuleBuilderRef builder, MCNameRef name, M
 void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCValueRef value, uindex_t& r_index);
 void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef type, uindex_t& r_index);
 
-void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, uindex_t temporary_count, uindex_t& r_index);
+void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, uindex_t& r_index);
 void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef builder);
 
 void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, MCStringRef binding, uindex_t& r_index);
 
-void MCScriptAddPropertyToModule(MCScriptModuleBuilderRef builder, MCNameRef getter, MCNameRef setter, uindex_t& r_index);
+void MCScriptAddPropertyToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t getter, uindex_t setter, uindex_t& r_index);
 
 void MCScriptAddEventToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, uindex_t& r_index);
 

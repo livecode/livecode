@@ -38,13 +38,13 @@ template<typename T> inline void MCScriptReleaseArray(T **elements, uindex_t cou
 
 #define __MCSCRIPTOBJECT_MARKER__ 0xFEDEFECE
 
-extern void __MCScriptValidateObjectFailed(MCScriptObject *object, const char *function, const char *file, int line);
-extern void __MCScriptValidateObjectAndKindFailed(MCScriptObject *object, MCScriptObjectKind kind, const char *function, const char *file, int line);
-extern void __MCScriptAssertFailed(const char *label, const char *expr, const char *function, const char *file, int line);
+extern void __MCScriptValidateObjectFailed__(MCScriptObject *object, const char *function, const char *file, int line);
+extern void __MCScriptValidateObjectAndKindFailed__(MCScriptObject *object, MCScriptObjectKind kind, const char *function, const char *file, int line);
+extern void __MCScriptAssertFailed__(const char *label, const char *expr, const char *function, const char *file, int line);
 
-#define __MCScriptValidateObject__(obj) (((obj) == nil || (obj) -> __object_marker__ != __MCSCRIPTOBJECT_MARKER__) ? __MCScriptValidateObjectFailed((obj), __func__, __FILE__, __LINE__) : (void)0)
-#define __MCScriptValidateObjectAndKind__(obj, m_kind) (((obj) == nil || (obj) -> __object_marker__ != __MCSCRIPTOBJECT_MARKER__) || (obj) -> kind != (m_kind) ? __MCScriptValidateObjectAndKindFailed((obj), m_kind, __func__, __FILE__, __LINE__) : (void)0)
-#define __MCScriptAssert__(expr, label) ((!(expr)) ? __MCScriptAssertFailed(label, #expr, __func__, __FILE__, __LINE__) : (void)0)
+#define __MCScriptValidateObject__(obj) (((obj) == nil || (obj) -> __object_marker__ != __MCSCRIPTOBJECT_MARKER__) ? __MCScriptValidateObjectFailed__((obj), __func__, __FILE__, __LINE__) : (void)0)
+#define __MCScriptValidateObjectAndKind__(obj, m_kind) (((obj) == nil || (obj) -> __object_marker__ != __MCSCRIPTOBJECT_MARKER__) || (obj) -> kind != (m_kind) ? __MCScriptValidateObjectAndKindFailed__((obj), m_kind, __func__, __FILE__, __LINE__) : (void)0)
+#define __MCScriptAssert__(expr, label) ((!(expr)) ? __MCScriptAssertFailed__(label, #expr, __func__, __FILE__, __LINE__) : (void)0)
 #define __MCScriptUnreachable__(label) (__MCScriptAssert__(false, (label)))
 
 #else
@@ -143,7 +143,8 @@ struct MCScriptVariableDefinition: public MCScriptDefinition
 struct MCScriptHandlerDefinition: public MCScriptDefinition
 {
 	MCTypeInfoRef signature;
-	uindex_t address;
+	uindex_t start_address;
+	uindex_t finish_address;
     
     // The number of slots required in a frame in order to execute this handler.
     // This is the sum of parameter count, local count and temporary count.
@@ -214,11 +215,14 @@ struct MCScriptModule: public MCScriptObject
     
     // (computed) The number of slots needed by an instance.
     uindex_t slot_count;
+
 };
+
+bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_module);
 
 bool MCScriptWriteRawModule(MCStreamRef stream, MCScriptModule *module);
 bool MCScriptReadRawModule(MCStreamRef stream, MCScriptModule *module);
-bool MCScriptReleaseRawModule(MCScriptModule *module);
+void MCScriptReleaseRawModule(MCScriptModule *module);
 
 void MCScriptDestroyModule(MCScriptModuleRef module);
 
@@ -283,8 +287,8 @@ enum MCScriptBytecodeOp
 	// Register is used for test.
 	kMCScriptBytecodeOpJumpIfUndefined,
 	kMCScriptBytecodeOpJumpIfDefined,
-	kMCScriptBytecodeOpJumpIfTrue,
 	kMCScriptBytecodeOpJumpIfFalse,
+	kMCScriptBytecodeOpJumpIfTrue,
 	
 	// Constant register assignment:
 	//   assign <dst>, <index>
@@ -328,6 +332,8 @@ enum MCScriptBytecodeOp
 	// Assigns the current value of register <src> to <glob-index>.
 	kMCScriptBytecodeOpStoreGlobal,
 };
+
+bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);
 
 ////////////////////////////////////////////////////////////////////////////////
 

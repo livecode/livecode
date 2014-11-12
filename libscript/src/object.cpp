@@ -10,7 +10,7 @@ bool MCScriptCreateObject(MCScriptObjectKind p_kind, size_t p_size, MCScriptObje
         return false;
     
 #ifdef _DEBUG
-    self -> __object_marker__ = __MCSCRIPTOBJECT_MARKER__
+    self -> __object_marker__ = __MCSCRIPTOBJECT_MARKER__;
 #endif
     
     self -> references = 1;
@@ -73,7 +73,7 @@ void MCScriptReleaseObject(MCScriptObject *self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCscriptReleaseObjectArray(MCScriptObject **p_elements, uindex_t p_count)
+void MCScriptReleaseObjectArray(MCScriptObject **p_elements, uindex_t p_count)
 {
     for(uindex_t i = 0; i < p_count; i++)
         MCScriptReleaseObject(p_elements[i]);
@@ -83,16 +83,19 @@ void MCscriptReleaseObjectArray(MCScriptObject **p_elements, uindex_t p_count)
 
 void __MCScriptValidateObjectFailed__(MCScriptObject *object, const char *function, const char *file, int line)
 {
+    MCLog("NOT A SCRIPT OBJECT - %p, %s, %s, %d", object, function, file, line);
     abort();
 }
 
 void __MCScriptValidateObjectAndKindFailed__(MCScriptObject *object, MCScriptObjectKind kind, const char *function, const char *file, int line)
 {
+    MCLog("NOT A CORRECT OBJECT - %p, %d, %s, %s, %d", object, kind, function, file, line);
     abort();
 }
 
 void __MCScriptAssertFailed__(const char *label, const char *expr, const char *function, const char *file, int line)
 {
+    MCLog("FAILURE - %s, %s, %s, %s, %d", label, expr, function, file, line);
     abort();
 }
 
