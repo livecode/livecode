@@ -305,7 +305,9 @@ void MCScriptAddEventToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, M
 
 static uindex_t __measure_uint(uindex_t p_value)
 {
-    if (p_value < (1 << 7))
+    return 2;
+    
+    /*if (p_value < (1 << 7))
         return 1;
     if (p_value < (1 << 14))
         return 2;
@@ -313,7 +315,7 @@ static uindex_t __measure_uint(uindex_t p_value)
         return 3;
     if (p_value < (1 << 28))
         return 4;
-    return 5;
+    return 5;*/
 }
 
 static uindex_t __measure_instruction(MCScriptModuleBuilderRef self, MCScriptBytecodeInstruction *p_instruction)
@@ -324,7 +326,7 @@ static uindex_t __measure_instruction(MCScriptModuleBuilderRef self, MCScriptByt
     if (p_instruction -> arity >= 15)
         t_size += 1;
     
-    if (p_instruction -> operation == kMCScriptBytecodeOpJump)
+    /*if (p_instruction -> operation == kMCScriptBytecodeOpJump)
         t_size += 3;
     else if (p_instruction -> operation >= kMCScriptBytecodeOpJumpIfUndefined && p_instruction -> operation <= kMCScriptBytecodeOpJumpIfFalse)
     {
@@ -332,10 +334,10 @@ static uindex_t __measure_instruction(MCScriptModuleBuilderRef self, MCScriptByt
         t_size += 3;
     }
     else
-    {
+    {*/
         for(uindex_t i = 0; i < p_instruction -> arity; i++)
             t_size += __measure_uint(self -> operands[p_instruction -> operands + i]);
-    }
+    /*}*/
     
     return t_size;
 }
@@ -359,7 +361,7 @@ static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value
     if (self == nil || !self -> valid)
         return;
     
-    uint8_t t_bytes[5];
+    /*uint8_t t_bytes[5];
     uindex_t t_index;
     t_index = 0;
     do
@@ -377,7 +379,16 @@ static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value
         
         t_bytes[t_index++] = t_byte;
     }
-    while(p_value != 0);
+    while(p_value != 0);*/
+    
+    uint8_t t_bytes[2];
+    uindex_t t_index;
+    t_bytes[0] = ((p_value >> 7) & 0x7f) | 0x80;
+    t_bytes[1] = (p_value & 0x7f);
+    t_index = 2;
+    
+    if ((p_value >> 14) != 0)
+        MCAssert(false);
     
     if (!MCMemoryResizeArray(self -> module . bytecode_count + t_index, self -> module . bytecode, self -> module . bytecode_count))
     {
@@ -385,7 +396,7 @@ static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value
         return;
     }
     
-    MCMemoryCopy(self -> module . bytecode - t_index - 1, t_bytes, t_index);
+    MCMemoryCopy(self -> module . bytecode + self -> module . bytecode_count - t_index, t_bytes, t_index);
 }
 
 static void __emit_constant(MCScriptModuleBuilderRef self, MCValueRef p_constant, uindex_t& r_index)
@@ -529,7 +540,7 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
             continue;
         
         index_t t_target_address;
-        t_target_address = self -> instructions[self -> labels[t_operands[t_address_index]] . instruction] . address - t_address;
+        t_target_address = self -> instructions[self -> labels[t_operands[t_address_index] - 1] . instruction] . address - t_address;
         
         uindex_t t_encoded_target_address;
         if (t_target_address > 0)
@@ -641,7 +652,7 @@ void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef self, uindex_t 
     uindex_t t_constant_index;
     __emit_constant(self, p_constant, t_constant_index);
     
-    __emit_instruction(self, kMCScriptBytecodeOpAssignConstant, 2, p_reg, t_constant_index);
+    __emit_instruction(self, kMCScriptBytecodeOpAssignConstant, 2, p_reg, t_constant_index - 1);
 }
 
 void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef self, uindex_t p_dst_reg, uindex_t p_src_reg)
