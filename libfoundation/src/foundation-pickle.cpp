@@ -418,7 +418,7 @@ static bool MCPickleReadField(MCStreamRef stream, MCPickleFieldType p_kind, void
             t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
                             MCMemoryNewArray(*(uindex_t *)p_aux_ptr, ((MCPickleRecordInfo *)p_extra) -> size, *(void **)p_field_ptr);
             for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
-                t_success = MCPickleWrite(stream, (MCPickleRecordInfo *)p_extra, *((uint8_t **)p_field_ptr) + i * ((MCPickleRecordInfo *)p_extra) -> size);
+                t_success = MCPickleRead(stream, (MCPickleRecordInfo *)p_extra, *((uint8_t **)p_field_ptr) + i * ((MCPickleRecordInfo *)p_extra) -> size);
             break;
         case kMCPickleFieldTypeArrayOfVariant:
             t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
