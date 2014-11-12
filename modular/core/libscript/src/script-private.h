@@ -216,6 +216,10 @@ struct MCScriptModule: public MCScriptObject
     uindex_t slot_count;
 };
 
+bool MCScriptWriteRawModule(MCStreamRef stream, MCScriptModule *module);
+bool MCScriptReadRawModule(MCStreamRef stream, MCScriptModule *module);
+bool MCScriptReleaseRawModule(MCScriptModule *module);
+
 void MCScriptDestroyModule(MCScriptModuleRef module);
 
 bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptPropertyDefinition*& r_definition);

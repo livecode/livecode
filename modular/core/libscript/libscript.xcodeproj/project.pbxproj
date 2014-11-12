@@ -13,6 +13,7 @@
 		4D21B60319E3DFF800B64BEF /* instance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60219E3DFF800B64BEF /* instance.cpp */; };
 		4D21B60519E3E00000B64BEF /* error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60419E3E00000B64BEF /* error.cpp */; };
 		4D322F2219DD95A4008476D3 /* object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D322F2119DD95A4008476D3 /* object.cpp */; };
+		4DDA20451A136FF4001B0CA2 /* builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA20441A136FF4001B0CA2 /* builder.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +43,7 @@
 		4D21B60419E3E00000B64BEF /* error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = error.cpp; path = src/error.cpp; sourceTree = "<group>"; };
 		4D322F1619DD945E008476D3 /* libscript.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libscript.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D322F2119DD95A4008476D3 /* object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = object.cpp; path = src/object.cpp; sourceTree = "<group>"; };
+		4DDA20441A136FF4001B0CA2 /* builder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = builder.cpp; path = src/builder.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +108,7 @@
 				4D21B60019E3DFED00B64BEF /* package.cpp */,
 				4D21B60219E3DFF800B64BEF /* instance.cpp */,
 				4D21B60419E3E00000B64BEF /* error.cpp */,
+				4DDA20441A136FF4001B0CA2 /* builder.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -192,6 +195,7 @@
 				4D322F2219DD95A4008476D3 /* object.cpp in Sources */,
 				4D21B5FF19E3DFCB00B64BEF /* module.cpp in Sources */,
 				4D21B60319E3DFF800B64BEF /* instance.cpp in Sources */,
+				4DDA20451A136FF4001B0CA2 /* builder.cpp in Sources */,
 				4D21B60119E3DFED00B64BEF /* package.cpp in Sources */,
 				4D21B60519E3E00000B64BEF /* error.cpp in Sources */,
 			);
