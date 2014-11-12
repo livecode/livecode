@@ -57,9 +57,433 @@ enum
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *p_info, MCValueRef*& r_value_pool, uindex_t& r_value_pool_size, void *r_record)
+static bool MCPickleReadCompactUInt(MCStreamRef stream, uint32_t& r_value)
 {
-    return false;
+    uint32_t t_value;
+    t_value = 0;
+    
+    int t_shift;
+    t_shift = 0;
+    
+    uint8_t t_byte;
+    for(;;)
+    {
+        if (!MCStreamReadUInt8(stream, t_byte))
+            return false;
+        
+        t_value |= (t_byte & 0x7f) << t_shift;
+        
+        if ((t_byte & 0x80) == 0)
+            break;
+        
+        t_shift += 7;
+    }
+    
+    r_value = t_value;
+    
+    return true;
+}
+
+static bool MCPickleReadStringRef(MCStreamRef stream, MCStringRef& r_value)
+{
+    uindex_t t_length;
+    if (!MCPickleReadCompactUInt(stream, t_length))
+        return false;
+    
+    uint8_t *t_bytes;
+    if (!MCMemoryNewArray(t_length, t_bytes))
+        return false;
+    
+    if (!MCStreamRead(stream, t_bytes, t_length) ||
+        !MCStringCreateWithBytesAndRelease(t_bytes, t_length, kMCStringEncodingUTF8, false, r_value))
+    {
+        free(t_bytes);
+        return false;
+    }
+    
+    return true;
+}
+
+static bool MCPickleReadNameRef(MCStreamRef stream, MCNameRef& r_value)
+{
+    MCAutoStringRef t_string;
+    if (!MCPickleReadStringRef(stream, &t_string))
+        return false;
+    return MCNameCreate(*t_string, r_value);
+}
+
+static bool MCPickleReadTypeInfoRef(MCStreamRef stream, uint8_t p_kind, MCTypeInfoRef& r_value)
+{
+    MCNewAutoNameRef t_name;
+    uint8_t t_kind;
+    if (p_kind == kMCEncodedValueKindNamedTypeInfo)
+    {
+        if (!MCPickleReadNameRef(stream, &t_name))
+            return false;
+        if (!MCStreamReadUInt8(stream, t_kind))
+            return false;
+    }
+    else
+        t_kind = p_kind;
+    
+    MCTypeInfoRef t_typeinfo;
+    switch(t_kind)
+    {
+        case kMCEncodedValueKindNullTypeInfo:
+            t_typeinfo = MCValueRetain(kMCNullTypeInfo);
+            break;
+        case kMCEncodedValueKindBooleanTypeInfo:
+            t_typeinfo = MCValueRetain(kMCBooleanTypeInfo);
+            break;
+        case kMCEncodedValueKindNumberTypeInfo:
+            t_typeinfo = MCValueRetain(kMCNumberTypeInfo);
+            break;
+            //case kMCEncodedValueKindNameTypeInfo:
+            //    r_value = MCValueRetain(kMCNameTypeInfo);
+            //    break;
+        case kMCEncodedValueKindStringTypeInfo:
+            t_typeinfo = MCValueRetain(kMCStringTypeInfo);
+            break;
+        case kMCEncodedValueKindDataTypeInfo:
+            t_typeinfo = MCValueRetain(kMCDataTypeInfo);
+            break;
+        case kMCEncodedValueKindArrayTypeInfo:
+            t_typeinfo = MCValueRetain(kMCArrayTypeInfo);
+            break;
+        case kMCEncodedValueKindProperListTypeInfo:
+            t_typeinfo = MCValueRetain(kMCProperListTypeInfo);
+            break;
+            //case kMCEncodedValueKindRecordTypeInfo:
+            //r_value = MCValueRetain(kMCRecordTypeInfo);
+            //break;
+            //case kMCEncodedValueKindHandlerTypeInfo:
+            //r_value = MCValueRetain(kMCHandlerTypeInfo);
+            //break;
+            //case kMCEncodedValueKindErrorTypeInfo:
+            //r_value = MCValueRetain(kMCErrorTypeInfo);
+            //break;
+        default:
+            return false;
+    }
+    
+    if (*t_name != nil)
+    {
+        if (!MCTypeInfoBindAndRelease(*t_name, t_typeinfo, r_value))
+        {
+            MCValueRelease(t_typeinfo);
+            return false;
+        }
+    }
+    else
+    {
+        r_value = t_typeinfo;
+    }
+    
+    return true;
+}
+
+static bool MCPickleReadValueRef(MCStreamRef stream, MCValueRef& r_value)
+{
+    uint8_t t_kind;
+    if (!MCStreamReadUInt8(stream, t_kind))
+        return false;
+    
+    switch(t_kind)
+    {
+        case kMCEncodedValueKindNull:
+            r_value = MCValueRetain(kMCNull);
+            break;
+            
+        case kMCEncodedValueKindTrue:
+            r_value = MCValueRetain(kMCTrue);
+            break;
+        
+        case kMCEncodedValueKindFalse:
+            r_value = MCValueRetain(kMCFalse);
+            break;
+            
+        case kMCEncodedValueKindIntegerZero:
+            r_value = MCValueRetain(kMCZero);
+            break;
+            
+        case kMCEncodedValueKindIntegerOne:
+            r_value = MCValueRetain(kMCOne);
+            break;
+            
+        case kMCEncodedValueKindIntegerMinusOne:
+            r_value = MCValueRetain(kMCMinusOne);
+            break;
+            
+        case kMCEncodedValueKindIntegerPositive:
+            {
+                uint32_t t_value;
+                if (!MCPickleReadCompactUInt(stream, t_value))
+                    return false;
+                if (!MCNumberCreateWithInteger(t_value, (MCNumberRef&)t_value))
+                    return false;
+            }
+            break;
+        
+        case kMCEncodedValueKindIntegerNegative:
+            {
+                uint32_t t_value;
+                if (!MCPickleReadCompactUInt(stream, t_value))
+                    return false;
+                if (!MCNumberCreateWithInteger(-t_value, (MCNumberRef&)t_value))
+                    return false;
+            }
+            break;
+            
+        case kMCEncodedValueKindRealZero:
+            r_value = MCValueRetain(kMCZero); // TODO - this needs to be real zero
+            break;
+            
+        case kMCEncodedValueKindRealOne:
+            r_value = MCValueRetain(kMCOne); // TODO - this needs to be real one
+            break;
+            
+        case kMCEncodedValueKindRealMinusOne:
+            r_value = MCValueRetain(kMCMinusOne); // TODO - this needs to be real minus one
+            break;
+            
+        case kMCEncodedValueKindReal:
+            {
+                double t_value;
+                if (!MCStreamReadDouble(stream, t_value))
+                    return false;
+                if (!MCNumberCreateWithReal(t_value, (MCNumberRef&)t_value))
+                    return false;
+            }
+            break;
+            
+        case kMCEncodedValueKindName:
+            if (!MCPickleReadNameRef(stream, (MCNameRef&)r_value))
+                return false;
+            break;
+            
+        case kMCEncodedValueKindString:
+            if (!MCPickleReadStringRef(stream, (MCStringRef&)r_value))
+                return false;
+            break;
+            
+        case kMCEncodedValueKindData:
+            {
+                uindex_t t_size;
+                if (!MCPickleReadCompactUInt(stream, t_size))
+                    return false;
+                
+                uint8_t *t_bytes;
+                if (!MCMemoryNewArray(t_size, t_bytes))
+                    return false;
+                
+                if (!MCStreamRead(stream, t_bytes, t_size) ||
+                    !MCDataCreateWithBytesAndRelease(t_bytes, t_size, (MCDataRef&)r_value))
+                {
+                    free(t_bytes);
+                    return false;
+                }
+            }
+            break;
+            
+        case kMCEncodedValueKindArray:
+            {
+                uindex_t t_size;
+                if (!MCPickleReadCompactUInt(stream, t_size))
+                    return false;
+                
+                MCArrayRef t_array;
+                if (!MCArrayCreateMutable(t_array))
+                    return false;
+                
+                while(t_size > 0)
+                {
+                    MCNewAutoNameRef t_key;
+                    MCAutoValueRef t_element;
+                    if (!MCPickleReadNameRef(stream, &t_key) ||
+                        !MCPickleReadValueRef(stream, &t_element) ||
+                        !MCArrayStoreValue(t_array, true, *t_key, *t_element))
+                    {
+                        MCValueRelease(t_array);
+                        return false;
+                    }
+                    
+                    t_size -= 1;
+                }
+                
+                r_value = t_array;
+            }
+            break;
+            
+        case kMCEncodedValueKindProperList:
+            {
+                uindex_t t_size;
+                if (!MCPickleReadCompactUInt(stream, t_size))
+                    return false;
+                
+                MCProperListRef t_list;
+                if (!MCProperListCreateMutable(t_list))
+                    return false;
+                
+                while(t_size > 0)
+                {
+                    MCAutoValueRef t_value;
+                    if (!MCPickleReadValueRef(stream, &t_value) ||
+                        !MCProperListPushElementOntoBack(t_list, *t_value))
+                    {
+                        MCValueRelease(t_list);
+                        return false;
+                    }
+                    
+                    t_size -= 1;
+                }
+                
+                r_value = t_list;
+            }
+            break;
+            
+        case kMCEncodedValueKindNamedTypeInfo:
+        case kMCEncodedValueKindNullTypeInfo:
+        case kMCEncodedValueKindBooleanTypeInfo:
+        case kMCEncodedValueKindNumberTypeInfo:
+        case kMCEncodedValueKindNameTypeInfo:
+        case kMCEncodedValueKindStringTypeInfo:
+        case kMCEncodedValueKindDataTypeInfo:
+        case kMCEncodedValueKindArrayTypeInfo:
+        case kMCEncodedValueKindProperListTypeInfo:
+        case kMCEncodedValueKindRecordTypeInfo:
+        case kMCEncodedValueKindHandlerTypeInfo:
+        case kMCEncodedValueKindErrorTypeInfo:
+            if (!MCPickleReadTypeInfoRef(stream, t_kind, (MCTypeInfoRef&)r_value))
+                return false;
+            break;
+    }
+
+    return true;
+}
+
+static bool MCPickleReadField(MCStreamRef stream, MCPickleFieldType p_kind, void *p_base_ptr, void *p_field_ptr, const void *p_aux_ptr, const void *p_extra)
+{
+    bool t_success;
+    t_success = true;
+    
+    
+    switch(p_kind)
+    {
+        case kMCPickleFieldTypeNone:
+            break;
+        case kMCPickleFieldTypeByte:
+            t_success = MCStreamReadUInt8(stream, *(uint8_t *)p_field_ptr);
+            break;
+        case kMCPickleFieldTypeUIndex:
+            t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_field_ptr);
+            break;
+        case kMCPickleFieldTypeIntEnum:
+            t_success = MCPickleReadCompactUInt(stream, *(uint32_t *)p_field_ptr);
+            break;
+        case kMCPickleFieldTypeValueRef:
+            t_success = MCPickleReadValueRef(stream, *(MCValueRef *)p_field_ptr);
+            break;
+        case kMCPickleFieldTypeStringRef:
+            t_success = MCPickleReadStringRef(stream, *(MCStringRef *)p_field_ptr);
+            break;
+        case kMCPickleFieldTypeNameRef:
+            t_success = MCPickleReadNameRef(stream, *(MCNameRef *)p_field_ptr);
+            break;
+        case kMCPickleFieldTypeTypeInfoRef:
+            {
+                uint8_t t_kind;
+                t_success = MCStreamReadUInt8(stream, t_kind);
+                if (t_success)
+                    t_success = MCPickleReadTypeInfoRef(stream, t_kind, *(MCTypeInfoRef *)p_field_ptr);
+            }
+            break;
+        case kMCPickleFieldTypeArrayOfByte:
+
+            t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
+                            MCMemoryNewArray(*(uindex_t *)p_aux_ptr, *(uint8_t **)p_field_ptr) &&
+                            MCStreamRead(stream, *(void **)p_field_ptr, *(uindex_t *)p_aux_ptr);
+            break;
+        case kMCPickleFieldTypeArrayOfValueRef:
+            t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
+                            MCMemoryNewArray(*(uindex_t *)p_aux_ptr, *(MCValueRef **)p_field_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+                t_success = MCPickleReadValueRef(stream, (*(MCValueRef **)p_field_ptr)[i]);
+            break;
+        case kMCPickleFieldTypeArrayOfNameRef:
+            t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+                t_success = MCPickleReadNameRef(stream, (*(MCNameRef **)p_field_ptr)[i]);
+            break;
+        case kMCPickleFieldTypeArrayOfRecord:
+            t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
+                            MCMemoryNewArray(*(uindex_t *)p_aux_ptr, ((MCPickleRecordInfo *)p_extra) -> size, *(void **)p_field_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+                t_success = MCPickleWrite(stream, (MCPickleRecordInfo *)p_extra, *((uint8_t **)p_field_ptr) + i * ((MCPickleRecordInfo *)p_extra) -> size);
+            break;
+        case kMCPickleFieldTypeArrayOfVariant:
+            t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
+                            MCMemoryNewArray(*(uindex_t *)p_aux_ptr, *(void ***)p_field_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+            {
+                MCPickleVariantInfo *t_info;
+                t_info = (MCPickleVariantInfo *)p_extra;
+                
+                uint32_t t_kind;
+                t_success = MCPickleReadCompactUInt(stream, t_kind);
+                if (!t_success)
+                    break;
+                
+                MCPickleRecordInfo *t_record_info;
+                t_record_info = nil;
+                for(int i = 0; t_info -> cases[i] . kind != -1; i++)
+                    if (t_kind == t_info -> cases[i] . kind)
+                    {
+                        t_record_info = t_info -> cases[i] . record;
+                        break;
+                    }
+                
+                if (t_record_info != nil)
+                {
+                    void *t_new_record;
+                    t_success = MCPickleRead(stream, t_record_info, t_new_record);
+                    if (t_success)
+                    {
+                        *(uint32_t *)(((uint8_t *)t_new_record) + t_info -> kind_offset) = t_kind;
+                        *((void ***)p_field_ptr)[i] = t_new_record;
+                    }
+                }
+                else
+                    t_success = false;
+            }
+            break;
+    }
+    
+    return t_success;
+}
+
+bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *p_info, void*& r_record)
+{
+    bool t_success;
+    t_success = true;
+    
+    void *t_record;
+    if (!MCMemoryNew(p_info -> size, t_record))
+        return false;
+    
+    for(uindex_t i = 0; t_success && i < p_info -> fields[i] . kind != kMCPickleFieldTypeNone; i++)
+    {
+        void *t_field_ptr, *t_extra_field_ptr;
+        t_field_ptr = static_cast<uint8_t *>(t_record) + p_info -> fields[i] . field_offset;
+        t_extra_field_ptr = static_cast<uint8_t *>(t_record) + p_info -> fields[i] . aux_field_offset;
+        t_success = MCPickleReadField(stream, p_info -> fields[i] . kind, t_record, t_field_ptr, t_extra_field_ptr, p_info -> fields[i] . extra);
+    }
+
+    if (t_success)
+        r_record = t_record;
+    else
+        MCPickleRelease(p_info, t_record);
+
+    return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,48 +535,59 @@ static bool MCPickleWriteTypeInfoRef(MCStreamRef stream, MCTypeInfoRef p_value)
     bool t_success;
     t_success = true;
     
-    switch(MCTypeInfoGetTypeCode(p_value))
+    if (MCTypeInfoGetName(p_value) != nil)
     {
-        case kMCValueTypeCodeNull:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindNullTypeInfo);
-            break;
-        case kMCValueTypeCodeBoolean:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindBooleanTypeInfo);
-            break;
-        case kMCValueTypeCodeNumber:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindNumberTypeInfo);
-            break;
-        case kMCValueTypeCodeName:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindNameTypeInfo);
-            break;
-        case kMCValueTypeCodeString:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindStringTypeInfo);
-            break;
-        case kMCValueTypeCodeData:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindDataTypeInfo);
-            break;
-        case kMCValueTypeCodeArray:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindArrayTypeInfo);
-            break;
-        case kMCValueTypeCodeProperList:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindProperListTypeInfo);
-            break;
-        case kMCValueTypeCodeRecord:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindRecordTypeInfo);
-            // TODO: Encode the rest of the record info
-            break;
-        case kMCValueTypeCodeHandler:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindHandlerTypeInfo);
-            // TODO: Encode the rest of the handler info
-            break;
-        case kMCValueTypeCodeError:
-            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindErrorTypeInfo);
-            // TODO: Encode the rest of the error info
-            break;
-        default:
-            // Unsupported typeinfo for pickle.
-            t_success = false;
-            break;
+        if (t_success)
+            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindNamedTypeInfo);
+        if (t_success)
+            t_success = MCPickleWriteStringRef(stream, MCNameGetString(MCTypeInfoGetName((MCTypeInfoRef)p_value)));
+    }
+    
+    if (t_success)
+    {
+        switch(MCTypeInfoGetTypeCode(p_value))
+        {
+            case kMCValueTypeCodeNull:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindNullTypeInfo);
+                break;
+            case kMCValueTypeCodeBoolean:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindBooleanTypeInfo);
+                break;
+            case kMCValueTypeCodeNumber:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindNumberTypeInfo);
+                break;
+            case kMCValueTypeCodeName:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindNameTypeInfo);
+                break;
+            case kMCValueTypeCodeString:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindStringTypeInfo);
+                break;
+            case kMCValueTypeCodeData:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindDataTypeInfo);
+                break;
+            case kMCValueTypeCodeArray:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindArrayTypeInfo);
+                break;
+            case kMCValueTypeCodeProperList:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindProperListTypeInfo);
+                break;
+            case kMCValueTypeCodeRecord:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindRecordTypeInfo);
+                // TODO: Encode the rest of the record info
+                break;
+            case kMCValueTypeCodeHandler:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindHandlerTypeInfo);
+                // TODO: Encode the rest of the handler info
+                break;
+            case kMCValueTypeCodeError:
+                t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindErrorTypeInfo);
+                // TODO: Encode the rest of the error info
+                break;
+            default:
+                // Unsupported typeinfo for pickle.
+                t_success = false;
+                break;
+        }
     }
     
     return t_success;
@@ -272,20 +707,8 @@ static bool MCPickleWriteValueRef(MCStreamRef stream, MCValueRef p_value)
             }
             break;
         case kMCValueTypeCodeTypeInfo:
-            if (MCTypeInfoGetName((MCTypeInfoRef)p_value) != nil)
-            {
-                if (t_success)
-                    t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindNamedTypeInfo);
-                if (t_success)
-                    t_success = MCPickleWriteStringRef(stream, MCNameGetString(MCTypeInfoGetName((MCTypeInfoRef)p_value)));
-                if (t_success)
-                    t_success = MCPickleWriteTypeInfoRef(stream, (MCTypeInfoRef)p_value);
-            }
-            else
-            {
-                if (t_success)
-                    t_success = MCPickleWriteTypeInfoRef(stream, (MCTypeInfoRef)p_value);
-            }
+            if (t_success)
+                t_success = MCPickleWriteTypeInfoRef(stream, (MCTypeInfoRef)p_value);
             break;
         default:
             // Unsupported value for pickle.
@@ -328,6 +751,11 @@ static bool MCPickleWriteField(MCStreamRef stream, MCPickleFieldType p_kind, voi
             t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
                             MCStreamWrite(stream, *(const uint8_t **)p_field_ptr, *(uindex_t *)p_aux_ptr);
             break;
+        case kMCPickleFieldTypeArrayOfValueRef:
+            t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+                t_success = MCPickleWriteValueRef(stream, (*(MCValueRef **)p_field_ptr)[i]);
+            break;
         case kMCPickleFieldTypeArrayOfNameRef:
             t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
             for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
@@ -336,14 +764,14 @@ static bool MCPickleWriteField(MCStreamRef stream, MCPickleFieldType p_kind, voi
         case kMCPickleFieldTypeArrayOfRecord:
             t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
             for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
-                t_success = MCPickleWrite(stream, (MCPickleRecordInfo *)p_extra, &((void **)p_field_ptr)[i]);
+                t_success = MCPickleWrite(stream, (MCPickleRecordInfo *)p_extra, *((uint8_t **)p_field_ptr) + i * ((MCPickleRecordInfo *)p_extra) -> size);
             break;
         case kMCPickleFieldTypeArrayOfVariant:
             t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
             for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
             {
                 void *t_variant;
-                t_variant = ((void **)p_field_ptr)[i];
+                t_variant = (*(void ***)p_field_ptr)[i];
                 
                 MCPickleVariantInfo *t_info;
                 t_info = (MCPickleVariantInfo *)p_extra;
@@ -361,7 +789,10 @@ static bool MCPickleWriteField(MCStreamRef stream, MCPickleFieldType p_kind, voi
                     }
                 
                 if (t_record_info != nil)
-                    t_success = MCPickleWrite(stream, t_record_info, t_variant);
+                {
+                    t_success = MCPickleWriteCompactUInt(stream, t_kind) &&
+                                    MCPickleWrite(stream, t_record_info, t_variant);
+                }
                 else
                     t_success = false;
             }
@@ -381,8 +812,7 @@ bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *p_info, void *p_recor
         void *t_field_ptr, *t_extra_field_ptr;
         t_field_ptr = static_cast<uint8_t *>(p_record) + p_info -> fields[i] . field_offset;
         t_extra_field_ptr = static_cast<uint8_t *>(p_record) + p_info -> fields[i] . aux_field_offset;
-        if (t_success)
-            t_success = MCPickleWriteField(stream, p_info -> fields[i] . kind, p_record, t_field_ptr, t_extra_field_ptr, p_info -> fields[i] . extra);
+        t_success = MCPickleWriteField(stream, p_info -> fields[i] . kind, p_record, t_field_ptr, t_extra_field_ptr, p_info -> fields[i] . extra);
     }
         
     return t_success;
@@ -413,29 +843,36 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
             break;
         
         case kMCPickleFieldTypeArrayOfRecord:
-            for(uindex_t i = 0; i < *(uindex_t *)p_aux_ptr; i++)
-                MCPickleRelease((MCPickleRecordInfo *)p_extra, &((void **)p_field_ptr)[i]);
-            free(*(MCValueRef **)p_field_ptr);
+            if (*(void **)p_field_ptr != nil)
+            {
+                for(uindex_t i = 0; i < *(uindex_t *)p_aux_ptr; i++)
+                    MCPickleRelease((MCPickleRecordInfo *)p_extra, *((uint8_t **)p_field_ptr) + i * ((MCPickleRecordInfo *)p_extra) -> size);
+                free(*(void **)p_field_ptr);
+            }
             break;
             
         case kMCPickleFieldTypeArrayOfVariant:
-            for(uindex_t i = 0; i < *(uindex_t *)p_aux_ptr; i++)
+            if (*(void **)p_field_ptr != nil)
             {
-                void *t_variant;
-                t_variant = ((void **)p_field_ptr)[i];
-            
-                MCPickleVariantInfo *t_info;
-                t_info = (MCPickleVariantInfo *)p_extra;
-            
-                int t_kind;
-                t_kind = *((int *)((uint8_t *)t_variant + t_info -> kind_offset));
+                for(uindex_t i = 0; i < *(uindex_t *)p_aux_ptr; i++)
+                {
+                    void *t_variant;
+                    t_variant = (*(void ***)p_field_ptr)[i];
+                
+                    MCPickleVariantInfo *t_info;
+                    t_info = (MCPickleVariantInfo *)p_extra;
+                
+                    int t_kind;
+                    t_kind = *((int *)((uint8_t *)t_variant + t_info -> kind_offset));
 
-                for(int i = 0; t_info -> cases[i] . kind != -1; i++)
-                    if (t_kind == t_info -> cases[i] . kind)
-                    {
-                        MCPickleRelease(t_info -> cases[i] . record, t_variant);
-                        break;
-                    }
+                    for(int i = 0; t_info -> cases[i] . kind != -1; i++)
+                        if (t_kind == t_info -> cases[i] . kind)
+                        {
+                            MCPickleRelease(t_info -> cases[i] . record, t_variant);
+                            break;
+                        }
+                }
+                free(*(void **)p_field_ptr);
             }
             break;
             
@@ -453,6 +890,7 @@ void MCPickleRelease(MCPickleRecordInfo *p_info, void *p_record)
         t_extra_field_ptr = static_cast<uint8_t *>(p_record) + p_info -> fields[i] . aux_field_offset;
         MCPickleReleaseField(p_info -> fields[i] . kind, p_record, t_field_ptr, t_extra_field_ptr, p_info -> fields[i] . extra);
     }
+    free(p_record);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -2576,6 +2576,7 @@ struct MCPickleRecordFieldInfo
 
 struct MCPickleRecordInfo
 {
+    size_t size;
     MCPickleRecordFieldInfo *fields;
 };
 
@@ -2597,7 +2598,7 @@ struct MCPickleVariantInfo
         static MCPickleRecordFieldInfo __fields[]; \
         static MCPickleRecordInfo __info; \
     }; \
-    MCPickleRecordInfo __##Type##_PickleImp::__info = { __##Type##_PickleImp::__fields }; \
+    MCPickleRecordInfo __##Type##_PickleImp::__info = { sizeof(Type), __##Type##_PickleImp::__fields }; \
     MCPickleRecordInfo *k##Type##PickleInfo = &__##Type##_PickleImp::__info; \
     MCPickleRecordFieldInfo __##Type##_PickleImp::__fields[] = {
 #define MC_PICKLE_END_RECORD() \
