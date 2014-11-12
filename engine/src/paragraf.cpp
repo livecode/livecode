@@ -535,6 +535,11 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					newblock->GetRange(index, len);
                     t_last_added = index+len;
 
+                    // SN-2014-10-31: [[ Bug 13881 ]] Ensure that the block hasn't been corrupted.
+                    //  (leads to a potential crash, in case the corrupted stack ends up to be valid).
+                    if (index > t_length)
+                        return IO_ERROR;
+                    
                     // Some stacks seem to be saved with invalid blocks that
                     // exceed the length of the paragraph character data
                     // SN-2014-09-29: [[ Bug 13552 ]] Clamp the length appropriately

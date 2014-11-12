@@ -545,7 +545,10 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
 	MCObject *objptr;
 	MCChunk *tchunk = new MCChunk(False);
 	MCerrorlock++;
-    MCScriptPoint sp(p_value);
+    // AL-2014-11-10: [[ Bug 13972 ]] Parsing the chunk without passing through the context results
+    //  in a parse error for unquoted stack and card names, since there is then no handler in which to
+    //  create a new unquoted literal variable.
+    MCScriptPoint sp(ctxt, p_value);
 	Parse_stat stat = tchunk->parse(sp, False);
 	if (stat == PS_NORMAL)
 	{

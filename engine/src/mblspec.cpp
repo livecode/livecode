@@ -683,7 +683,8 @@ static bool MCS_downloadurl_callback(void *p_context, MCSystemUrlStatus p_status
         const char *t_bytes = (const char *)MCDataGetBytePtr(t_data);
         
         context -> length += t_length;
-        IO_write_string_legacy_full(MCString(t_bytes, t_length), context -> output, 2, true);
+        // PM-2014-11-03: [[ Bug 13877 ]] Make sure we write bytes
+        MCS_write(t_bytes, t_length, 1, context -> output);
 	}
 	
 	send_url_progress(context -> object, p_status, context -> url, context -> length, context -> total, p_data);

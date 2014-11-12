@@ -723,6 +723,7 @@ bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
 bool MCExecContext::EvaluateExpression(MCExpression *p_expr, Exec_errors p_error, MCExecValue& r_result)
 {
 	MCAssert(p_expr != nil);
@@ -760,21 +761,23 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
 {
     MCAssert(p_expr != nil);
 	
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
+    t_can_debug = true;
     
-    do
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    p_expr -> eval(*this, r_result);
+    
+    while (t_can_debug && (t_failure = HasError()) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        p_expr -> eval(*this, r_result);
-        if (!HasError())
-            t_success = true;
-        else
-            t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
+        
+        if (t_can_debug)
+            p_expr -> eval(*this, r_result);
     }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
-	if (t_success)
+	if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
@@ -785,29 +788,39 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
 {
     MCAssert(p_expr != nil);
 	
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
     t_can_debug = true;
     
     // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
     Boolean t_old_expectation = m_numberexpected;
     m_numberexpected = True;
-    do
+
+    MCExecValue t_value;
+    double t_result;
+
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    p_expr -> eval_ctxt(*this, t_value);
+    if (!MCExecTypeIsNumber(t_value . type))
+        MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &t_result);
+    
+    while (t_can_debug && (t_failure = HasError()) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        MCExecValue t_value;        
-        p_expr -> eval_ctxt(*this, t_value);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
         
-        if (!HasError())
-            t_success = true;
-        else
+        if (t_can_debug)
         {
-            t_can_debug = MCB_error(*this, line, pos, p_error);
-            IgnoreLastError();
-            break;
+            p_expr -> eval_ctxt(*this, t_value);
+            if (!MCExecTypeIsNumber(t_value . type))
+                MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &t_result);
         }
-        
+    }
+    
+	if (!t_failure)
+    {
         if (!MCExecTypeIsNumber(t_value . type))
-            MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &r_result);
+            r_result = t_result;
         else if (t_value . type == kMCExecValueTypeInt)
             r_result = t_value . int_value;
         else if (t_value . type == kMCExecValueTypeUInt)
@@ -816,12 +829,10 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
             r_result = t_value . float_value;
         else
             r_result = t_value . double_value;
-    }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
-    
-    m_numberexpected = t_old_expectation;
-	if (t_success)
+        
+        m_numberexpected = t_old_expectation;
 		return true;
+    }
 	
 	LegacyThrow(p_error);
 	return false;
@@ -834,9 +845,8 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
     bool t_failure, t_can_debug;
     t_can_debug = true;
     
-    // AL-2014-08-22: [[ Bug 13255 ]] Ensure error is thrown when param evaluation fails first time
-    //  and t_can_debug is false.
-    while (t_can_debug && (t_failure = !p_param -> eval_ctxt(*this, r_result)) &&
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    while (t_can_debug && (t_failure = (!p_param -> eval_ctxt(*this, r_result) || HasError())) &&
            (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
         t_can_debug = MCB_error(*this, line, pos, p_error);
@@ -856,24 +866,18 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
     MCAssert(p_expr != nil);
     MCExecValue t_value;
     
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
     t_can_debug = true;
     
-    // AL-2014-10-27: [[ Bug 13824 ]] The loop here should continue to
-    //  try to evaluate as non-strict bool, rather than only trying once.
-    do
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    while (t_can_debug && (t_failure = !EvalExprAsNonStrictBool(p_expr, p_error, r_value)) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        t_success = EvalExprAsNonStrictBool(p_expr, p_error, r_value);
-        if (!t_success)
-        {
-            t_can_debug = MCB_error(*this, line, pos, p_error);
-            IgnoreLastError();
-        }
+        t_can_debug = MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
     }
-    while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
-    if (t_success)
+    if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
@@ -882,21 +886,18 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
 
 bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue p_value)
 {
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
+    t_can_debug = true;
     
-    do
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    while (t_can_debug && (t_failure = (!p_var -> give_value(*this, p_value) || HasError())) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        p_var -> give_value(*this, p_value);
-        if (!HasError())
-            t_success = true;
-        else
-            t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
-	if (t_success)
+	if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
@@ -1128,9 +1129,9 @@ MCVarref* MCExecContext::GetIt() const
 
 void MCExecContext::SetItToValue(MCValueRef p_value)
 {
-    MCVariable *t_var;
-    t_var = GetIt() -> evalvar(*this);
-	t_var -> setvalueref(p_value);
+    MCAutoPointer<MCContainer> t_container;
+    GetIt() -> evalcontainer(*this, &t_container);
+	t_container -> set_valueref(p_value);
 }
 
 void MCExecContext::SetItToEmpty(void)

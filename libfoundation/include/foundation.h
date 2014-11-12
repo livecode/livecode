@@ -1895,8 +1895,11 @@ bool MCDataPrependBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte
 bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
 
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
+bool MCDataInsertBytes(MCDataRef self, uindex_t p_at, const byte_t *p_bytes, uindex_t p_byte_count);
+
 bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
+bool MCDataReplaceBytes(MCDataRef r_data, MCRange p_range, const byte_t *p_new_data, uindex_t p_byte_count);
 
 bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
