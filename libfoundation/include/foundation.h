@@ -2640,7 +2640,7 @@ struct MCPickleVariantInfo
 #define MC_PICKLE_ARRAY_OF_VARIANT(Variant, Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfVariant, Field, CountField, k##Variant##PickleInfo)
 
 // Read in the stream in the format conforming to the specified pickle info.
-bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *info, void*& r_record);
+bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *info, void* r_record);
 
 // Write the given record to the stream in the format conforming to the specified
 // pickle info.
