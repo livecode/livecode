@@ -68,8 +68,6 @@ bool MCTypeInfoBind(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCTypeInfoRef& r
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
     
-    MCValueRelease(self);
-    
     return false;
 }
 
@@ -243,6 +241,8 @@ bool MCErrorTypeInfoCreate(MCNameRef p_domain, MCStringRef p_message, MCTypeInfo
     
     self -> error . domain = MCValueRetain(p_domain);
     self -> error . message = MCValueRetain(p_message);
+    
+    r_typeinfo = self;
     
     return true;
 }

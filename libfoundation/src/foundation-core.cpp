@@ -35,6 +35,12 @@ bool MCInitialize(void)
     if (!__MCValueInitialize())
 		return false;
     
+	if (!__MCStringInitialize())
+		return false;
+    
+	if (!__MCNameInitialize())
+		return false;
+    
     if (!__MCErrorInitialize())
         return false;
     
@@ -43,12 +49,6 @@ bool MCInitialize(void)
     
     if (!__MCNumberInitialize())
         return false;
-    
-	if (!__MCStringInitialize())
-		return false;
-
-	if (!__MCNameInitialize())
-		return false;
 
 	if (!__MCArrayInitialize())
 		return false;
@@ -82,12 +82,12 @@ void MCFinalize(void)
     __MCSetFinalize();
 	__MCListFinalize();
 	__MCArrayFinalize();
-	__MCNameFinalize();
-	__MCStringFinalize();
     __MCDataFinalize();
     __MCNumberFinalize();
     __MCTypeInfoFinalize();
     __MCErrorFinalize();
+	__MCNameFinalize();
+	__MCStringFinalize();
 	__MCValueFinalize();
     __MCUnicodeFinalize();
 }
