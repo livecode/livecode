@@ -959,9 +959,7 @@ MCStackdirIOScanStringUnescape (MCStackdirIOScannerRef scanner,
 {
 	/* This should be called when the current character is an escape
 	 * character */
-	MCStackdirIOScannerGetChar (scanner, r_char);
 	MCStackdirIOScannerNextChar (scanner);
-	if (r_char != '\\') return true;
 
 	/* The escape sequence *must* begin with a valid escape type
 	 * specifier. */
@@ -1039,31 +1037,45 @@ MCStackdirIOScanString (MCStackdirIOScannerRef scanner,
 						MCStackdirIOToken & r_token)
 {
 	codepoint_t t_char;
-	MCAutoStringRef t_value;
 
 	/* Strings start with a string delimiter */
 	MCStackdirIOScannerGetChar (scanner, t_char);
 	if (t_char != '"') return false;
+	MCStackdirIOScannerNextChar (scanner);
 
+	MCAutoStringRef t_value;
 	/* UNCHECKED */ MCStringCreateMutable (0, &t_value);
 
 	while (true)
 	{
-		if (!MCStackdirIOScannerNextChar (scanner))
+		if (!MCStackdirIOScannerGetChar (scanner, t_char))
 		{
 			r_token.m_type = kMCStackdirIOTokenTypeError;
 			return false;
 		}
 
-		if (!MCStackdirIOScanStringUnescape (scanner,
-											 r_token,
-											 t_char))
-			return false;
-
-		/* End of string */
-		if (t_char == '"') break;
-
-		/* UNCHECKED */ MCStringAppendCodepoint (*t_value, t_char);
+		if (t_char == '"')
+		{
+			/* End of string. Make sure to step past the end
+			 * delimiter! */
+			MCStackdirIOScannerNextChar (scanner);
+			break;
+		}
+		else if (t_char == '\\')
+		{
+			/* Escape character */
+			if (!MCStackdirIOScanStringUnescape (scanner,
+												 r_token,
+												 t_char))
+				return false;
+			/* UNCHECKED */ MCStringAppendCodepoint (*t_value, t_char);
+		}
+		else
+		{
+			/* Normal character */
+			MCStackdirIOScannerNextChar (scanner);
+			/* UNCHECKED */ MCStringAppendCodepoint (*t_value, t_char);
+		}
 	}
 
 	r_token.m_value = MCValueRetain (*t_value);
