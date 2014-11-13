@@ -28,6 +28,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
+#include "foundation-math.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Math, BaseConvert, 4)
@@ -132,79 +134,21 @@ void MCMathEvalBaseConvert(MCExecContext& ctxt, MCStringRef p_source, integer_t 
 		return;
 	}
 
-
-	uint4 value = 0;
-	Boolean negative = False;
-
-	// MW-2008-01-31: [[ Bug 5841 ]] Added in some more strict error checking to
-	//   stop baseConvert attempting to convert strings with digits outside the
-	//   source-base.
-	bool t_error;
-	t_error = false;
-
-    MCAutoStringRefAsNativeChars t_auto_native;
-    char_t* t_native;
-    uindex_t t_length;
-
-    t_error = !t_auto_native . Lock(p_source, t_native, t_length);
-
-    if (!t_error && t_length == 0)
-		t_error = true;
-	
-	uint4 i;
-	if (!t_error)
-	{
-        if (t_native[0] == '+')
-			i = 1;
-        else if (t_native[0] == '-')
-			i = 1, negative = True;
-		else
-			i = 0;
-	}
-	
-    while(!t_error && i < t_length)
-	{
-		value *= p_source_base;
-        char_t source = MCS_toupper(t_native[i]);
-		if (isdigit((uint1)source))
-		{
-			if (source - '0' >= p_source_base)
-				t_error = true;
-			else
-				value += source - '0';
-		}
-		else if (source >= 'A' && source < 'A' + p_source_base - 10)
-			value += source - 'A' + 10;
-		else
-			t_error = true;
-	
-		i += 1;
-	}
-
-	if (t_error)
-	{
-		ctxt . LegacyThrow(EE_BASECONVERT_CANTCONVERT, p_source);
+    bool t_negative;
+    uinteger_t t_digits;
+    bool t_error;
+    if (!MCMathConvertToBase10(p_source, p_source_base, t_negative, t_digits, t_error))
+    {
+        if (t_error)
+            ctxt . LegacyThrow(EE_BASECONVERT_CANTCONVERT, p_source);
+        else
+            // Memory error
+            ctxt . Throw();
 		return;
 	}
 
-	char_t result[64];
-	char_t *dptr = &result[63];
-	do
-	{
-		uint2 digit = value % p_dest_base;
-		value /= p_dest_base;
-		if (digit >= 10)
-			*dptr-- = digit - 10 + 'A';
-		else
-			*dptr-- = digit + '0';
-	}
-	while (value);
-	if (negative)
-		*dptr-- = '-';
-	dptr++;
-
-	if (!MCStringCreateWithNativeChars(dptr, 64 - (dptr - result), r_result))
-	{
+    if (!MCMathConvertFromBase10(t_digits, t_negative, p_dest_base, r_result))
+    {
 		ctxt . Throw();
 		return;
 	}

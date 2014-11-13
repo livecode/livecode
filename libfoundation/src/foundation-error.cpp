@@ -20,35 +20,169 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCErrorCode s_last_error = kMCErrorNone;
-static MCErrorHandler s_handler = nil;
+MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
+MCTypeInfoRef kMCGenericErrorTypeInfo;
+
+static MCErrorRef s_last_error = nil;
+
+static MCErrorRef s_out_of_memory_error = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCErrorThrow(MCErrorCode p_code)
+bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_error)
 {
-	if (s_handler != nil)
-		s_handler(p_code);
-	s_last_error = p_code;
-	return false;
+    __MCError *self;
+    if (!__MCValueCreate(kMCValueTypeCodeError, self))
+        return false;
+    
+    self -> typeinfo = MCValueRetain(p_typeinfo);
+    self -> message = MCValueRetain(MCErrorTypeInfoGetMessage(p_typeinfo));
+    if (p_info != nil)
+        self -> info = MCValueRetain(p_info);
+    
+    self -> target = nil;
+    self -> row = 0;
+    self -> column = 0;
+    
+    r_error = self;
+    
+    return true;
 }
 
-MCErrorCode MCErrorCatch(void)
+bool MCErrorUnwind(MCErrorRef p_error, MCValueRef p_target, uindex_t p_row, uindex_t p_column)
 {
-	MCErrorCode t_error;
-	t_error = s_last_error;
-	s_last_error = kMCErrorNone;
-	return t_error;
+    p_error -> target = MCValueRetain(p_target);
+    p_error -> row = p_row;
+    p_error -> column = p_column;
+    return true;
+}
+
+MCNameRef MCErrorGetDomain(MCErrorRef self)
+{
+    return MCErrorTypeInfoGetDomain(self -> typeinfo);
+}
+
+MCArrayRef MCErrorGetInfo(MCErrorRef self)
+{
+    return self -> info;
+}
+
+MCStringRef MCErrorGetMessage(MCErrorRef self)
+{
+    return self -> message;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCErrorThrow(MCErrorRef p_error)
+{
+    if (s_last_error != nil)
+        MCValueRelease(s_last_error);
+    
+    s_last_error = MCValueRetain(p_error);
+	
+    return false;
+}
+
+bool MCErrorCatch(MCErrorRef& r_error)
+{
+    if (s_last_error == nil)
+        return false;
+    
+    r_error = s_last_error;
+    s_last_error = nil;
+    
+    return true;
+}
+
+MCErrorRef MCErrorPeek(void)
+{
+    return s_last_error;
 }
 
 bool MCErrorIsPending(void)
 {
-	return s_last_error != kMCErrorNone;
+    return s_last_error != nil;
 }
 
-void MCErrorSetHandler(MCErrorHandler p_handler)
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCErrorThrowOutOfMemory(void)
 {
-	s_handler = p_handler;
+    if (s_out_of_memory_error == nil &&
+        !MCErrorCreate(kMCOutOfMemoryErrorTypeInfo, nil, s_out_of_memory_error))
+    {
+        exit(-1);
+        return false;
+    }
+    
+    MCErrorThrow(s_out_of_memory_error);
+    MCValueRelease(s_out_of_memory_error);
+    s_out_of_memory_error = nil;
+    
+    return false;
+}
+
+bool MCErrorThrowGeneric(void)
+{
+    MCErrorRef t_error;
+    if (!MCErrorCreate(kMCGenericErrorTypeInfo, nil, t_error))
+        return false;
+    
+    MCErrorThrow(t_error);
+    MCValueRelease(t_error);
+    
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void __MCErrorDestroy(__MCError *self)
+{
+    MCValueRelease(self -> typeinfo);
+    MCValueRelease(self -> message);
+    MCValueRelease(self -> info);
+    MCValueRelease(self -> target);
+}
+
+hash_t __MCErrorHash(__MCError *self)
+{
+    return 0;
+}
+
+bool __MCErrorIsEqualTo(__MCError *self, __MCError *other_error)
+{
+    return MCValueIsEqualTo(self -> typeinfo, other_error -> typeinfo);
+}
+
+bool __MCErrorCopyDescription(__MCError *self, MCStringRef& r_string)
+{
+    return false;
+}
+
+bool __MCErrorInitialize(void)
+{
+    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("out of memory"), kMCOutOfMemoryErrorTypeInfo))
+        return false;
+    if (!MCTypeInfoBindAndRelease(MCNAME("livecode.lang.OutOfMemoryError"), kMCOutOfMemoryErrorTypeInfo, kMCOutOfMemoryErrorTypeInfo))
+        return false;
+    
+    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("unknown"), kMCGenericErrorTypeInfo))
+        return false;
+    if (!MCTypeInfoBindAndRelease(MCNAME("livecode.lang.GenericError"), kMCGenericErrorTypeInfo, kMCGenericErrorTypeInfo))
+        return false;
+    
+    if (!MCErrorCreate(kMCOutOfMemoryErrorTypeInfo, nil, s_out_of_memory_error))
+        return false;
+    
+    return true;
+}
+
+void __MCErrorFinalize(void)
+{
+    MCValueRelease(s_last_error);
+    MCValueRelease(s_out_of_memory_error);
+    MCValueRelease(kMCOutOfMemoryErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

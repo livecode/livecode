@@ -859,8 +859,16 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		
         // MW-2014-07-16: [[ Bug 12799 ]] If polling sockets does something then don't wait for long.
         extern Boolean MCS_handle_sockets();
+        
+        // SN-2014-10-17: [[ Bug 13360 ]] If MCS_handle_sockets returns true, we don't want to get stuck in a
+        //  loop waiting 0.0 s for events. That was causing issues in MCRead::readuntil, if data arrived after
+        //  the call to read()
         if (MCS_handle_sockets())
+        {
+            if (anyevent)
+                done = True;
             t_sleep = 0.0;
+        }
         
 		// Wait for t_sleep seconds and collect at most one event. If an event
 		// is collected and anyevent is True, then we are done.

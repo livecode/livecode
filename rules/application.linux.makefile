@@ -20,9 +20,7 @@ SHARED_LIBS=$(CUSTOM_SHARED_LIBS)
 STATIC_LIBS=$(CUSTOM_STATIC_LIBS)
 DYNAMIC_LIBS=$(CUSTOM_DYNAMIC_LIBS)
 
-ifeq ($(ARCH),x86_64)
-	DYNAMIC_LIBS+=stdc++
-else
+ifneq ($(ARCH),x86_64)
 	STATIC_LIBS+=stdc++
 endif
 
@@ -36,7 +34,7 @@ ifeq ($(LD_IS_CC),1)
 	# If we are using the compiler to link, we need to prefix the linker options
 	LDFLAGS_FINAL:=$(addprefix -Xlinker ,$(LDFLAGS_FINAL))
 
-	LINK_STEP1:=$(CC) -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS_LTO) $(LDFLAGS_FINAL) $(OBJECTS) $(CUSTOM_OBJECTS) \
+	LINK_STEP1:=$(CXX) -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS_LTO) $(LDFLAGS_FINAL) $(OBJECTS) $(CUSTOM_OBJECTS) \
 			-Wl,-Bstatic \
 			-Wl,--start-group \
 				$(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) \
@@ -47,7 +45,7 @@ ifeq ($(LD_IS_CC),1)
 			$(addprefix -l,$(DYNAMIC_LIBS))
 	LINK_STEP2:=
 else
-	LINK_STEP1:=$(CC) -Wl,-relocatable -nodefaultlibs -fvisibility=hidden -o$(TARGET_PATH).rel $(LDFLAGS_LTO) $(OBJECTS) $(CUSTOM_OBJECTS) \
+	LINK_STEP1:=$(CXX) -Wl,-relocatable -nodefaultlibs -fvisibility=hidden -o$(TARGET_PATH).rel $(LDFLAGS_LTO) $(OBJECTS) $(CUSTOM_OBJECTS) \
 			-Wl,-Bstatic \
 			-Wl,--start-group \
 				$(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) \
@@ -75,3 +73,4 @@ endif
 
 .PHONY: $(NAME)
 $(NAME): $(TARGET_PATH)
+

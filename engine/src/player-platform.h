@@ -80,9 +80,12 @@ class MCPlayer : public MCControl, public MCPlayerInterface
     bool m_scrub_back_is_pressed : 1;
     bool m_scrub_forward_is_pressed : 1;
     bool m_modify_selection_while_playing : 1;
+
+    bool m_is_attached : 1;
+    bool m_should_attach : 1;
     
 	static MCPropertyInfo kProperties[];
-	static MCObjectPropertyTable kPropertyTable;
+    static MCObjectPropertyTable kPropertyTable;
 	
 public:
 	MCPlayer();
@@ -401,6 +404,10 @@ public:
     void handle_mfocus(int x, int y);
     
     void popup_closed(void);
+    
+    // PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
+    void attachplayer(void);
+    void detachplayer(void);
 };
 #endif
 

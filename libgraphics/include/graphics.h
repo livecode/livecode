@@ -290,6 +290,8 @@ enum MCGFillRule
 {
 	kMCGFillRuleNonZero,
 	kMCGFillRuleEvenOdd,
+	
+	kMCGFillRuleCount
 };
 
 enum MCGPaintStyle
@@ -389,6 +391,8 @@ enum MCGImageFilter
 	kMCGImageFilterLow,
 	kMCGImageFilterMedium,
     kMCGImageFilterHigh,
+    
+    kMCGImageFilterCount
 };
 
 enum MCGGradientFunction
@@ -401,6 +405,8 @@ enum MCGGradientFunction
 	kMCGLegacyGradientSpiral,
 	kMCGLegacyGradientXY,
 	kMCGLegacyGradientSqrtXY,
+	
+	kMCGGradientFunctionCount
 };
 
 enum MCGGradientTileMode
@@ -520,6 +526,45 @@ inline bool MCGSizeIsEqual(const MCGSize &p_a, const MCGSize &p_b)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
+{
+	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
+}
+
+inline void MCGColorSetRed(MCGColor& x_color, MCGFloat p_red) {
+	x_color = (x_color & 0xFF00FFFF) | ((uint8_t)(p_red * 255) << 16);
+}
+
+inline void MCGColorSetGreen(MCGColor& x_color, MCGFloat p_green) {
+	x_color = (x_color & 0xFFFF00FF) | ((uint8_t)(p_green * 255) << 8);
+}
+
+inline void MCGColorSetBlue(MCGColor& x_color, MCGFloat p_blue) {
+	x_color = (x_color & 0xFFFFFF00) | ((uint8_t)(p_blue * 255) << 0);
+}
+
+inline void MCGColorSetAlpha(MCGColor& x_color, MCGFloat p_alpha) {
+	x_color = (x_color & 0x00FFFFFF) | ((uint8_t)(p_alpha * 255) << 24);
+}
+
+inline MCGFloat MCGColorGetRed(MCGColor p_color) {
+	return ((p_color >> 16) & 0xFF) / 255.0f;
+}
+
+inline MCGFloat MCGColorGetGreen(MCGColor p_color) {
+	return ((p_color >> 8) & 0xFF) / 255.0f;
+}
+
+inline MCGFloat MCGColorGetBlue(MCGColor p_color) {
+	return ((p_color >> 0) & 0xFF) / 255.0f;
+}
+
+inline MCGFloat MCGColorGetAlpha(MCGColor p_color) {
+	return ((p_color >> 24) & 0xFF) / 255.0f;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 inline MCGRectangle MCGRectangleMake(MCGFloat p_x, MCGFloat p_y, MCGFloat p_width, MCGFloat p_height)
 {
 	MCGRectangle t_rect;
@@ -606,6 +651,12 @@ inline MCGIntegerRectangle MCGIntegerRectangleMake(int32_t x, int32_t y, uint32_
 	return t_rect;
 }
 
+// IM-2014-10-22: [[ Bug 13746 ]] Add convenience function to construct rectangle from left, top, right, bottom coords
+inline MCGIntegerRectangle MCGIntegerRectangleMakeLTRB(int32_t l, int32_t t, int32_t r, int32_t b)
+{
+	return MCGIntegerRectangleMake(l, t, r - l, b - t);
+}
+
 inline bool MCGIntegerRectangleIsEmpty(const MCGIntegerRectangle &p_rect)
 {
 	return p_rect.size.width == 0 || p_rect.size.height == 0;
@@ -688,6 +739,8 @@ void MCGPathCopyAndRelease(MCGPathRef path, MCGPathRef& r_new_path);
 void MCGPathMutableCopy(MCGPathRef path, MCGPathRef& r_new_path);
 void MCGPathMutableCopyAndRelease(MCGPathRef path, MCGPathRef& r_new_path);
 
+bool MCGPathMutableCopySubpaths(MCGPathRef self, uint32_t p_first, uint32_t p_last, MCGPathRef &r_subpaths);
+
 void MCGPathAddRectangle(MCGPathRef path, MCGRectangle bounds);
 void MCGPathAddRoundedRectangle(MCGPathRef path, MCGRectangle bounds, MCGSize corner_radii);
 void MCGPathAddEllipse(MCGPathRef path, MCGPoint center, MCGSize radii, MCGFloat rotation);
@@ -709,6 +762,10 @@ void MCGPathCloseSubpath(MCGPathRef path);
 void MCGPathThicken(MCGPathRef path, const MCGStrokeAttr& attr, MCGPathRef& r_thick_path);
 void MCGPathFlatten(MCGPathRef path, MCGFloat flatness, MCGPathRef& r_flat_path);
 void MCGPathSimplify(MCGPathRef path, MCGPathRef& r_simple_path);
+
+bool MCGPathTransform(MCGPathRef path, const MCGAffineTransform &p_transform);
+
+bool MCGPathGetBoundingBox(MCGPathRef path, MCGRectangle &r_bounds);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -870,15 +927,18 @@ MCGAffineTransform MCGAffineTransformMakeIdentity(void);
 MCGAffineTransform MCGAffineTransformMakeRotation(MCGFloat p_angle);
 MCGAffineTransform MCGAffineTransformMakeTranslation(MCGFloat p_xoffset, MCGFloat p_yoffset);
 MCGAffineTransform MCGAffineTransformMakeScale(MCGFloat p_xscale, MCGFloat p_yscale);
+MCGAffineTransform MCGAffineTransformMakeSkew(MCGFloat p_xskew, MCGFloat p_yskew);
 
 MCGAffineTransform MCGAffineTransformConcat(const MCGAffineTransform& transform_1, const MCGAffineTransform& transform_2);
 MCGAffineTransform MCGAffineTransformRotate(const MCGAffineTransform& transform, MCGFloat angle);
 MCGAffineTransform MCGAffineTransformTranslate(const MCGAffineTransform& transform, MCGFloat xoffset, MCGFloat yoffset);
 MCGAffineTransform MCGAffineTransformScale(const MCGAffineTransform& transform, MCGFloat xscale, MCGFloat yscale);
+MCGAffineTransform MCGAffineTransformSkew(const MCGAffineTransform &p_transform, MCGFloat p_xskew, MCGFloat p_yskew);
 MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& transform);
 
 // IM-2014-06-11: [[ Bug 12557 ]] Returns transform that would convert rectangle a to rectangle b by scaling + translating
 MCGAffineTransform MCGAffineTransformFromRectangles(const MCGRectangle &p_a, const MCGRectangle &p_b);
+bool MCGAffineTransformFromPoints(const MCGPoint p_src[3], const MCGPoint p_dst[3], MCGAffineTransform &r_transform);
 
 MCGPoint MCGPointApplyAffineTransform(const MCGPoint& p_point, const MCGAffineTransform& p_transform);
 MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const MCGAffineTransform& p_transform);

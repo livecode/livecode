@@ -16,14 +16,25 @@
 
 #include <foundation.h>
 
+static bool MCProperListCombine(void *context, MCValueRef p_value)
+{
+    MCListRef t_list = *(MCListRef *)context;
+    return MCListAppend(t_list, p_value);
+}
+
 void MCTypeConvertExecSplitByDelimiter(MCStringRef p_target, MCStringRef p_delimiter, MCProperListRef& r_output)
 {
-    if (!MCProperListSplitStringByDelimiter(p_target, p_delimiter, kMCStringOptionCompareCaseless, r_output))
+    if (!MCStringSplitByDelimiter(p_target, p_delimiter, kMCStringOptionCompareCaseless, r_output))
 		return;
 }
 
 void MCTypeConvertExecCombineWithDelimiter(MCProperListRef p_target, MCStringRef p_delimiter, MCStringRef& r_output)
 {
-    if (!MCProperListCombineWithDelimiter(p_target, p_delimiter, r_output))
+    MCListRef t_list;
+    MCListCreateMutable(p_delimiter, t_list);
+    
+    if (!MCProperListApply(p_target, MCProperListCombine, &t_list))
         return;
+    
+    MCListCopyAsStringAndRelease(t_list, r_output);
 }

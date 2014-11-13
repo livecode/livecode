@@ -614,6 +614,10 @@ public:
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
+    
+    // Clear attrs if they are not needed
+	void cleanattrs(void);
+    
 	// Sets the given paragraph attribute to the value in ep.
 #ifdef LEGACY_EXEC
 	Exec_stat setparagraphattr(Properties which, MCExecPoint& ep);
@@ -741,7 +745,9 @@ public:
 	void adjustrectsfortable(MCRectangle& x_inner_rect, MCRectangle& x_outer_rect);
 
 	// Force the paragraph to re-flow itself depending on its setting of dontWrap.
-	void layout(bool p_force);
+    // AL-2014-09-22: [[ Bug 11817 ]] If p_check_redraw is true, returns true if the number of lines changes under this new layout
+	bool layout(bool p_force, bool p_check_redraw = false);
+    uindex_t countlines();
 	
 	// Draw the paragraph
 	void draw(MCDC *dc, int2 x, int2 y,

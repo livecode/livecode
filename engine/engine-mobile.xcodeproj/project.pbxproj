@@ -26,8 +26,10 @@
 		4C529CBF1973CF4A007C5F7C /* stacktile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C529CBD1973CF4A007C5F7C /* stacktile.cpp */; };
 		4C8544E8199E10DB00A568B6 /* coretextlayout.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C8544E7199E10DB00A568B6 /* coretextlayout.mm */; };
 		4C977245193C986700DB2F4A /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C977244193C986700DB2F4A /* coretextfonts.cpp */; };
+		4CCD60C319DB0535002DFCE5 /* mobile-splashscreen-template.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4CCD60C219DB0535002DFCE5 /* mobile-splashscreen-template.plist */; };
 		4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
 		4CD7DFE318A140D800CBCB57 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */; };
+		4CF72F8219DBFEE100B1E89B /* mobile-splashscreen-template.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4CCD60C219DB0535002DFCE5 /* mobile-splashscreen-template.plist */; };
 		4D08A0D0138EA51D0081F990 /* libstandalone-mobile-lib-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */; };
 		4D08A113138EA7C60081F990 /* dummy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D08A112138EA7C60081F990 /* dummy.cpp */; };
 		4D08A117138EA84C0081F990 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D08A116138EA84C0081F990 /* Foundation.framework */; };
@@ -542,18 +544,18 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
-				4D82FCDB171485DF00C48403 /* Default-568h@2x.png in Copy Files */,
-				4D82FCF01714877A00C48403 /* mobile-device-template.plist in Copy Files */,
-				4D82FCDC171485E200C48403 /* mobile-template.plist in Copy Files */,
-				4D82FCDD171485E400C48403 /* mobile-remote-notification-template.plist in Copy Files */,
-				4D82FCDE171485E600C48403 /* mobile-url-scheme-template.plist in Copy Files */,
-				4D82FD00171487AE00C48403 /* template-store-entitlements.xcent in Copy Files */,
-				4D82FCEC1714876C00C48403 /* template-entitlements.xcent in Copy Files */,
-				4D82FCED1714876C00C48403 /* template-remote-notification-entitlements.xcent in Copy Files */,
-				4D82FCEE1714876C00C48403 /* template-remote-notification-store-entitlements.xcent in Copy Files */,
-				4D82FCEF1714876F00C48403 /* template-ResourceRules.plist in Copy Files */,
+				4CF72F8219DBFEE100B1E89B /* mobile-splashscreen-template.plist in CopyFiles */,
+				4D82FCDB171485DF00C48403 /* Default-568h@2x.png in CopyFiles */,
+				4D82FCF01714877A00C48403 /* mobile-device-template.plist in CopyFiles */,
+				4D82FCDC171485E200C48403 /* mobile-template.plist in CopyFiles */,
+				4D82FCDD171485E400C48403 /* mobile-remote-notification-template.plist in CopyFiles */,
+				4D82FCDE171485E600C48403 /* mobile-url-scheme-template.plist in CopyFiles */,
+				4D82FD00171487AE00C48403 /* template-store-entitlements.xcent in CopyFiles */,
+				4D82FCEC1714876C00C48403 /* template-entitlements.xcent in CopyFiles */,
+				4D82FCED1714876C00C48403 /* template-remote-notification-entitlements.xcent in CopyFiles */,
+				4D82FCEE1714876C00C48403 /* template-remote-notification-store-entitlements.xcent in CopyFiles */,
+				4D82FCEF1714876F00C48403 /* template-ResourceRules.plist in CopyFiles */,
 			);
-			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -583,6 +585,7 @@
 		4C9EAA0514E5902B00CCF92C /* mblandroidsound.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsound.cpp; path = src/mblandroidsound.cpp; sourceTree = "<group>"; };
 		4CAEA83F14E911FE006DFECF /* paragrafattr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = paragrafattr.cpp; path = src/paragrafattr.cpp; sourceTree = "<group>"; };
 		4CAEA84114E9121C006DFECF /* fieldstyledtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldstyledtext.cpp; path = src/fieldstyledtext.cpp; sourceTree = "<group>"; };
+		4CCD60C219DB0535002DFCE5 /* mobile-splashscreen-template.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; name = "mobile-splashscreen-template.plist"; path = "rsrc/mobile-splashscreen-template.plist"; sourceTree = "<group>"; };
 		4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "rsrc/Default-568h@2x.png"; sourceTree = "<group>"; };
 		4CD6214D14F639A00063C1B5 /* fonttable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fonttable.cpp; path = src/fonttable.cpp; sourceTree = "<group>"; };
 		4CE7B26D1704A8810072029F /* stacksecurity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stacksecurity.cpp; path = src/stacksecurity.cpp; sourceTree = "<group>"; };
@@ -1426,6 +1429,7 @@
 				4D82FCD8171485CA00C48403 /* mobile-template.plist */,
 				4D82FCD9171485D000C48403 /* mobile-remote-notification-template.plist */,
 				4D82FCDA171485D600C48403 /* mobile-url-scheme-template.plist */,
+				4CCD60C219DB0535002DFCE5 /* mobile-splashscreen-template.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2214,6 +2218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4CCD60C319DB0535002DFCE5 /* mobile-splashscreen-template.plist in Resources */,
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
 			);
@@ -2748,6 +2753,7 @@
 				);
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -2794,6 +2800,7 @@
 				);
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};

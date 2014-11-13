@@ -573,10 +573,12 @@ static bool hfs_code_to_string(unsigned long p_code, char *r_string)
 			t_bundle_type = @"????";
 		
 		for (uint32_t i = 0; i < m_filter->filetypes_count && !t_should_show; i++)
-			if (MCStringIsEqualToCString(m_filter->filetypes[i], t_type, kMCCompareCaseless) ||
+            // AL-2014-10-21: [[ Bug 13745 ]] Empty filter is not wild, so only do comparisons for non-empty
+			if (!MCStringIsEmpty(m_filter->filetypes[i]) &&
+                (MCStringIsEqualToCString(m_filter->filetypes[i], t_type, kMCCompareCaseless) ||
                 MCStringIsEqualToCString(m_filter->filetypes[i], t_creator, kMCCompareCaseless) ||
                 MCStringIsEqualToCString(m_filter->filetypes[i], [t_bundle_sig cStringUsingEncoding: NSMacOSRomanStringEncoding], kMCCompareCaseless) ||
-                MCStringIsEqualToCString(m_filter->filetypes[i], [t_bundle_type cStringUsingEncoding: NSMacOSRomanStringEncoding], kMCCompareCaseless))
+                MCStringIsEqualToCString(m_filter->filetypes[i], [t_bundle_type cStringUsingEncoding: NSMacOSRomanStringEncoding], kMCCompareCaseless)))
 				t_should_show = YES;
 	}
 	

@@ -157,21 +157,27 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	MChInst = hInstance;
 
 	// Get the command line and convert it into the expected argc/argv form
-	LPCWSTR lpWCmdLine = GetCommandLineW();
-	LPWSTR *lpWargv = CommandLineToArgvW(lpWCmdLine, &argc);
-	
+	LPWSTR lpWCmdLine = wcsdup(GetCommandLineW());
+
+    // FG-2014-09-23: [[ Bugfix 12444 ]] Re-arrange command line processing to
+    // match behaviour in 6.x and below.
+    WCHAR* wcFileNameBuf = new WCHAR[MAX_PATH+1];
+    DWORD dwFileNameLen = GetModuleFileNameW(NULL, wcFileNameBuf, MAX_PATH+1);
+    
 	// Windows uses slashes the opposite way around to the other platforms and requires conversion
-	for (int i = 0; i < argc; i++)
+    for (DWORD i = 0; i < dwFileNameLen; i++)
+    {
+        if (wcFileNameBuf[i] == '/')
+            wcFileNameBuf[i] = '\\';
+        else if (wcFileNameBuf[i] == '\\')
+            wcFileNameBuf[i] = '/';
+    }
+	LPWSTR csptr = lpWCmdLine;
+	while (*csptr)
 	{
-		LPWSTR sptr = lpWargv[i];
-		while (*sptr)
-		{
-			if (*sptr == '\\')
-				*sptr = '/';
-			else if (i == 0 && *sptr == '/')
-				*sptr = '\\';
-			sptr++;
-		}
+		if (*csptr == '\\')
+			*csptr = '/';
+		csptr++;
 	}
 
 	if (!MCInitialize())
@@ -181,11 +187,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     /* UNCHECKED */ MCStringCreateWithWString(lpWCmdLine, MCcmdline);
     
 	// Convert the WStrings (UTF-16) into StringRefs
+    LPWSTR *lpWargv = CommandLineToArgvW(lpWCmdLine, &argc);
 	argv.New(argc);
-	for (int i = 0; i < argc; i++)
+    /* UNCHECKED */ MCStringCreateWithWString(wcFileNameBuf, argv[0]);
+	for (int i = 1; i < argc; i++)
 		/* UNCHECKED */ MCStringCreateWithWString(lpWargv[i], argv[i]);
 	
 	LocalFree(lpWargv);
+    delete wcFileNameBuf;
+    delete lpWCmdLine;
 	
 	// Convert the environment strings into StringRefs
 	envp.New(1);

@@ -73,20 +73,19 @@ MCSErrorMode MCS_get_errormode(void)
 	return kMCSErrorModeNone;
 }
 
-bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
+bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_string)
 {
     bool t_success;
     switch (p_kind)
 	{
     case kMCSPutOutput:
-    case kMCSPutUnicodeOutput:
     case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
-		t_success = MCmb -> set(ctxt, p_data);
+		t_success = MCmb -> set(ctxt, p_string);
         break;
     case kMCSPutAfterMessage:
         // SN-2014-04-11 [[ FasterVariable ]] parameter updated to use the new 'set' operation on variables
-        t_success = MCmb -> set(ctxt, p_data, kMCVariableSetAfter);
+        t_success = MCmb -> set(ctxt, p_string, kMCVariableSetAfter);
         break;
 	default:
         t_success = false;

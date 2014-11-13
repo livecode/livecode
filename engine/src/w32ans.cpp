@@ -51,10 +51,9 @@ static void getfilter(MCStringRef p_filter, MCStringRef &r_filter)
 {
 	if (p_filter != nil && !MCStringIsEmpty(p_filter))
 	{
-		static MCAutoStringRef t_filterstring;
-
-		if (*t_filterstring != nil)
-			MCValueRelease(*t_filterstring);
+		// SN-2014-10-29: [[ Bug 13850 ]] Remove the static variable - t_filterstring::m_value was not set to NULL
+		//  and triggered MCAssert(false).
+		MCAutoStringRef t_filterstring;
 
 		/* UNCHECKED */ MCStringMutableCopy(p_filter, &t_filterstring);
 		
@@ -354,7 +353,8 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 					/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(t_last_slash + 1, MCStringGetLength(*t_fixed_path) - (t_last_slash + 1)), &t_initial_file);
 
 				MCAutoStringRef t_folder_split;
-				/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(0, t_last_slash - 1), &t_folder_split);
+				// SN-2014-10-29: [[ Bug 13850 ]] The length is t_last_slash, not t_last_slash - 1
+				/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(0, t_last_slash), &t_folder_split);
 				if (MCS_exists(*t_folder_split, False))
 					t_initial_folder = *t_folder_split;
 			}
@@ -366,7 +366,8 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			if (MCStringLastIndexOfChar(*t_fixed_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
 			{
 				MCAutoStringRef t_folder_split;
-				/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(0, t_last_slash - 1), &t_folder_split);
+				// SN-2014-10-29: [[ Bug 13850 ]] The length is t_last_slash, not t_last_slash - 1
+				/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(0, t_last_slash), &t_folder_split);
 				
 				if (MCS_exists(*t_folder_split, False))
 					t_initial_folder = *t_folder_split;

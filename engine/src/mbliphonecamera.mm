@@ -146,9 +146,26 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 	// 19/10/2010 IM - fix crash in iOS4.0
 	// UIPopoverController only available on iPad but NSClassFromString returns non-nil in iOS4 phone/pod
     // AL-2013-10-04 [[ Bug 11255 ]] Uninitialised variable can cause crash in iPhonePickPhoto
-	id t_popover = nil;
-	if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
-		t_popover = NSClassFromString(@"UIPopoverController");
+    id t_popover = nil;
+    uint32_t t_orientations;
+    t_orientations = [[MCIPhoneApplication sharedApplication] allowedOrientations];
+    bool t_allowed_landscape = false;
+    bool t_allowed_portrait_upside_down = false;
+    
+    if ((t_orientations & (1 << UIInterfaceOrientationLandscapeLeft)) != 0 || (t_orientations & (1 << UIInterfaceOrientationLandscapeRight)) != 0)
+        t_allowed_landscape = true;
+    
+    if ((t_orientations & (1 << UIInterfaceOrientationPortraitUpsideDown)) != 0)
+        t_allowed_portrait_upside_down = true;
+    
+    // PM-2014-10-13: [[ Bug 13236 ]] If we are on iPad and the supported orientations contain any of LandscapeLeft, LandscapeRight, PortraitUpsideDown,
+    // then the photo-picker is displayed using the standard iOS fullscreen overlay view (as it is the case with iphone).
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad && !t_allowed_landscape && !t_allowed_portrait_upside_down && m_source_type == UIImagePickerControllerSourceTypeCamera)
+        t_popover = NSClassFromString(@"UIPopoverController");
+    
+    // PM-2014-10-17: [[ Bug 13708 ]] If we are on iPad and the source is other than camera, use a popover to display the photo-picker.
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad && m_source_type != UIImagePickerControllerSourceTypeCamera)
+        t_popover = NSClassFromString(@"UIPopoverController");
 	
 	if (t_popover != nil)
 	{

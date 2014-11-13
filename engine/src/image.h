@@ -549,7 +549,8 @@ public:
 	bool getclipboardtext(MCDataRef& r_data);
 	
 	// MW-2011-09-13: [[ Masks ]] Updated to return a 'MCWindowMask'
-	MCWindowShape *makewindowshape(void);
+	// IM-2014-10-22: [[ Bug 13746 ]] Add size parameter to allow scaled window shapes
+	MCWindowShape *makewindowshape(const MCGIntegerSize &p_size);
 	
 #if defined(_MAC_DESKTOP)
 	CGImageRef makeicon(uint4 p_width, uint4 p_height);

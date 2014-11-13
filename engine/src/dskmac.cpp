@@ -155,7 +155,8 @@ static void getosacomponents();
 static OSErr osacompile(MCStringRef s, ComponentInstance compinstance, OSAID &id);
 static OSErr osaexecute(MCStringRef& r_string,ComponentInstance compinstance, OSAID id);
 
-static bool fetch_ae_as_fsref_list(char*& string, uint4& length);
+// SN-2014-10-07: [[ Bug 13587 ]] Update to return an MCList
+static bool fetch_ae_as_fsref_list(MCListRef &r_list);
 
 /***************************************************************************/
 
@@ -533,6 +534,7 @@ static sysfolders sysfolderlist[] = {
     // MW-2007-09-11: Added for uniformity across platforms
     {&MCN_documents, 'docs', kUserDomain, 'docs'},
     // MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
+    // FG-2014-09-26: [[ Bug 13523 ]] This entry must not match a request for "asup"
     {&MCN_support, 0, kUserDomain, 'asup'},
 };
 
@@ -874,7 +876,7 @@ static bool MCS_file_exists_at_path(MCStringRef p_path)
 	struct stat buf;
 	t_found = (stat(*t_new_path, (struct stat *)&buf) == 0);
 	if (t_found)
-        if ((buf . st_mode & S_IFDIR) != 0)
+        if (S_ISDIR(buf . st_mode))
             t_found = false;
     
     return t_found;
@@ -912,7 +914,12 @@ static bool MCS_apply_redirect(MCStringRef p_path, bool p_is_file, MCStringRef& 
     
     // Construct the new path from the path after MacOS/ inside Resources/_macos.
     MCAutoStringRef t_new_path;
-    /* UNCHECKED */ MCStringFormat(&t_new_path, "%.*@/Resources/_MacOS/%.*@", MCRangeMake(0, t_engine_path_length - 6), MCcmd, MCRangeMake(t_engine_path_length, UINDEX_MAX), p_path);
+    MCRange t_cmd_range, t_path_range;
+    t_cmd_range = MCRangeMake(0, t_engine_path_length - 6);
+    t_path_range = MCRangeMake(t_engine_path_length + 1, UINDEX_MAX);
+    
+    // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
+    /* UNCHECKED */ MCStringFormat(&t_new_path, "%*@/Resources/_MacOS/%*@", &t_cmd_range, MCcmd, &t_path_range, p_path);
     
     if (p_is_file && !MCS_file_exists_at_path(*t_new_path))
         return false;
@@ -986,6 +993,80 @@ static void handle_signal(int sig)
             break;
 	}
 	return;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// The external list of environment vars (terminated by NULL).
+extern char **environ;
+
+// Check to see if two environment var definitions are for the same variable.
+static bool same_var(const char *p_left, const char *p_right)
+{
+    const char *t_left_sep, *t_right_sep;
+    t_left_sep = strchr(p_left, '=');
+    if (t_left_sep == NULL)
+        t_left_sep = p_left + strlen(p_left);
+    t_right_sep = strchr(p_right, '=');
+    if (t_right_sep == NULL)
+        t_right_sep = p_right + strlen(p_right);
+    
+    if (t_left_sep - p_left != t_right_sep - p_right)
+        return false;
+    
+    if (strncmp(p_left, p_right, t_left_sep - p_left) != 0)
+        return false;
+    
+    return true;
+}
+
+// [[ Bug 13622 ]] On Yosemite, there can be duplicate environment variable
+//    entries in the environ global list of vars. This is what is passed through
+//    to child processes and it seems default behavior is for the second value
+//    in the list to be taken - however, the most recently set value by this process
+//    will be first in the list (it seems). Therefore we just remove any duplicates
+//    before passing on to execle.
+static char **fix_environ(void)
+{
+    char **t_new_environ;
+    if (MCmajorosversion > 0x1090)
+    {
+        // Build a new environ, making sure that each var only takes the
+        // first definition in the list. We don't have to care about memory
+        // in particular, as this process is being wholesale replaced by an
+        // exec.
+        int t_new_length;
+        t_new_environ = NULL;
+        t_new_length = 0;
+        for(int i = 0; environ[i] != NULL; i++)
+        {
+            bool t_found;
+            t_found = false;
+            for(int j = 0; j < t_new_length; j++)
+            {
+                if (same_var(t_new_environ[j], environ[i]))
+                {
+                    t_found = true;
+                    break;
+                }
+            }
+            
+            if (!t_found)
+            {
+                t_new_environ = (char **)realloc(t_new_environ, (t_new_length + 2) * sizeof(char *));
+                if (t_new_environ == NULL)
+                    _exit(-1);
+                t_new_environ[t_new_length++] = environ[i];
+            }
+        }
+        
+        // Terminate the new environment list.
+        t_new_environ[t_new_length] = NULL;
+        
+        return t_new_environ;
+    }
+    
+    return environ;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3812,11 +3893,12 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     // we get a bad URL!
                     if (MCmajorosversion >= 0x1060)
                     {
-                        char *string = nil;
-                        uint4 length = 0;
-                        if (fetch_ae_as_fsref_list(string, length))
+                        // SN-2014-10-07: [[ Bug 13587 ]] fetch_as_as_fsref_list updated to return an MCList
+                        MCAutoListRef t_list;
+                        
+                        if (fetch_ae_as_fsref_list(&t_list))
                         {
-                            /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)string, r_value);
+                            /* UNCHECKED */ MCListCopyAsString(*t_list, r_value);
                             return;
                         }
                     }
@@ -3829,10 +3911,10 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     }
                     else
                     {
-                        char *string = nil;
-                        uint4 length = 0;
-                        if (fetch_ae_as_fsref_list(string, length))
-                            /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)string, r_value);
+                        // SN-2014-10-07: [[ Bug 13587 ]] fetch_ae_as_frsef_list updated to return an MCList
+                        MCAutoListRef t_list;
+                        if (fetch_ae_as_fsref_list(&t_list))
+                            /* UNCHECKED */ MCListCopyAsString(*t_list, r_value);
                         else
                             /* UNCHECKED */ MCStringCreateWithCString("file list error", r_value);
                     }
@@ -4388,9 +4470,23 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         MCinfinity = HUGE_VAL;
         
-        long response;
-        if (Gestalt(gestaltSystemVersion, &response) == noErr)
-            MCmajorosversion = response;
+        // SN-2014-10-08: [[ YosemiteUpdate ]] gestaltSystemVersion stops to 9 after any Minor/Bugfix >= 10
+        //  We want to keep the same way the os version is built, which is 0xMMmb
+        //     - MM reads the decimal major version number
+        //     - m  reads the hexadecimal minor version number
+        //     - b  reads the hexadecimal bugfix number.
+        long t_major, t_minor, t_bugfix;
+        if (Gestalt(gestaltSystemVersionMajor, &t_major) == noErr &&
+            Gestalt(gestaltSystemVersionMinor, &t_minor) == noErr &&
+            Gestalt(gestaltSystemVersionBugFix, &t_bugfix) == noErr)
+        {
+            if (t_major < 10)
+                MCmajorosversion = t_major * 0x100;
+            else
+                MCmajorosversion = (t_major / 10) * 0x1000 + (t_major - 10) * 0x100;
+            MCmajorosversion += t_minor * 0x10;
+            MCmajorosversion += t_bugfix * 0x1;
+        }
 		
         MCaqua = True; // Move to MCScreenDC
         
@@ -4416,6 +4512,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         MCS_reset_time();
         // END HERE
         
+        long response;
         if (Gestalt('ICAp', &response) == noErr)
         {
             OSErr err;
@@ -5467,31 +5564,42 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             t_found_folder = false;
             
             uint4 t_mac_folder;
+            t_mac_folder = 0;
             if (p_context . getsvalue() . getlength() == 4)
             {
                 memcpy(&t_mac_folder, p_context . getsvalue() . getstring(), 4);
                 t_mac_folder = MCSwapInt32NetworkToHost(t_mac_folder);
             }
-            else
+            else if (p_context . getsvalue() == "engine")
+            {
+                extern char *MCcmd;
+                char* t_folder;
+                t_folder_path = my_strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+
                 t_mac_folder = 0;
+                t_found_folder = true;
+            }
 			
             OSErr t_os_error;
             uint2 t_i;
-            for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
-                if (p_context . getsvalue() == sysfolderlist[t_i] . token || t_mac_folder == sysfolderlist[t_i] . macfolder)
-                {
-                    Boolean t_create_folder;
-                    t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
-                    
-                    // MW-2012-10-10: [[ Bug 10453 ]] Use the 'mactag' field for the folder id as macfolder can be
-                    //   zero.
-                    t_os_error = FSFindFolder(sysfolderlist[t_i] . domain, sysfolderlist[t_i] . mactag, t_create_folder, &t_folder_ref);
-                    if (t_os_error == noErr)
+            if (!t_found_folder)
+            {
+                for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
+                    if (p_context . getsvalue() == sysfolderlist[t_i] . token || t_mac_folder == sysfolderlist[t_i] . macfolder)
                     {
-                        t_found_folder = true;
-                        break;
+                        Boolean t_create_folder;
+                        t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
+
+                        // MW-2012-10-10: [[ Bug 10453 ]] Use the 'mactag' field for the folder id as macfolder can be
+                        //   zero.
+                        t_os_error = FSFindFolder(sysfolderlist[t_i] . domain, sysfolderlist[t_i] . mactag, t_create_folder, &t_folder_ref);
+                        if (t_os_error == noErr)
+                        {
+                            t_found_folder = true;
+                            break;
+                        }
                     }
-                }
+            }
             
             if (!t_found_folder && p_context . getsvalue() . getlength() == 4)
             {
@@ -5504,16 +5612,16 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             if (!t_found_folder)
                 t_error = "folder not found";
         }
-		
-        char *t_folder_path;
-        t_folder_path = NULL;
-        if (t_error == NULL)
+
+
+        // SN-2014-07-30: [[ Bug 13026 ]] If the engine was asked, the folder path is directly set
+        if (t_error == NULL && t_folder_path == NULL)
         {
             t_folder_path = MCS_fsref_to_path(t_folder_ref);
             if (t_folder_path == NULL)
                 t_error = "folder not found";
         }
-        
+
         if (t_error == NULL)
             p_context . copysvalue(t_folder_path, strlen(t_folder_path));
         else
@@ -5521,7 +5629,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             p_context . clear();
             MCresult -> sets(t_error);
         }
-        
+
         delete t_folder_path;
 #endif /* MCS_getspecialfolder_dsk_mac */
         uint32_t t_mac_folder = 0;
@@ -5614,7 +5722,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         t_found = stat(*t_utf8_path, (struct stat *)&buf) == 0;
         if (t_found)
-            t_found = ((buf.st_mode & S_IFDIR) == 0);
+            t_found = !S_ISDIR(buf.st_mode);
         
         if (!t_found)
             return False;
@@ -5635,7 +5743,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         t_found = stat(*t_utf8_path, (struct stat *)&buf) == 0;
         if (t_found)
-            t_found = (buf.st_mode & S_IFDIR) != 0;
+            t_found = S_ISDIR(buf.st_mode);
         
         if (!t_found)
             return False;
@@ -5664,7 +5772,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #ifdef /* MCS_umask_dsk_mac */ LEGACY_SYSTEM
 	return 0;
 #endif /* MCS_umask_dsk_mac */
-        return 0;
+        return umask(p_mask);
     }
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
@@ -5910,9 +6018,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         bool *t_files = (bool *)x_context;
         // MW-2014-09-17: [[ Bug 13455 ]] If we are fetching files, and the path is inside MacOS, then
         //   merge the list with files from the corresponding path in Resources/_MacOS.
+        // NOTE: the overall operation should still succeed if the redirect doesn't exist
         if (t_success && *t_files &&
             MCS_apply_redirect(*t_curdir, false, &t_redirect))
-            t_success = MCS_getentries_for_folder(*t_redirect, p_callback, x_context);
+            t_success = MCS_getentries_for_folder(*t_redirect, p_callback, x_context) || t_success;
         
         return t_success;
     }
@@ -6476,7 +6585,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     fptr = fopen(*t_path_utf, IO_APPEND_MODE);
                     break;
                 case kMCOpenFileModeWrite:
-                case kMCOpenFileModeExecutableWrite:
                     fptr = fopen(*t_path_utf, IO_WRITE_MODE);
                     break;
                 default:
@@ -6527,7 +6635,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 t_stream = fdopen(p_fd, IO_UPDATE_MODE);
                 break;
             case kMCOpenFileModeWrite:
-            case kMCOpenFileModeExecutableWrite:
                 t_stream = fdopen(p_fd, IO_WRITE_MODE);
                 break;
             default:
@@ -6538,7 +6645,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 			return NULL;
 		
 		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-        if (p_mode == kMCOpenFileModeWrite || p_mode == kMCOpenFileModeExecutableWrite)
+        if (p_mode == kMCOpenFileModeWrite)
 			setvbuf(t_stream, NULL, _IONBF, 0);
 		
 		IO_handle t_handle;
@@ -6573,7 +6680,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
                 break;
             case kMCOpenFileModeWrite:
-            case kMCOpenFileModeExecutableWrite:
                 fptr = fopen(*t_path_utf, IO_WRITE_MODE);
                 break;
             default:
@@ -7173,6 +7279,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 MCprocesses[MCnprocesses].ihandle = NULL;
                 if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
                 {
+                    // [[ Bug 13622 ]] Make sure environ is appropriate (on Yosemite it can
+                    //    be borked).
+                    environ = fix_environ();
+                    
                     close(tochild[1]);
                     close(0);
                     dup(tochild[0]);
@@ -7185,6 +7295,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     close(toparent[1]);
                     MCAutoStringRefAsUTF8String t_shellcmd;
                     /* UNCHECKED */ t_shellcmd . Lock(MCshellcmd);
+                    
+                    // Use execl and pass our new environ through to it.
                     execl(*t_shellcmd, *t_shellcmd, "-s", NULL);
                     _exit(-1);
                 }
@@ -7972,7 +8084,8 @@ MCSystemInterface *MCDesktopCreateMacSystem(void)
  *****************************************************************************/
 
 
-static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
+// SN-2014-10-07: [[ Bug 13587 ]] Using a MCList allows us to preserve unicode chars
+static bool fetch_ae_as_fsref_list(MCListRef &r_list)
 {
 	AEDescList docList; //get a list of alias records for the documents
 	long count;
@@ -7988,6 +8101,10 @@ static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
 		Size rSize;      //returned size, atual size of the docName
 		long item;
 		// get a FSSpec record, starts from count==1
+        // SN-2014-10-07: [[ Bug 13587 ]] We store the paths in a list
+        MCAutoListRef t_list;
+        /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
+        
 		for (item = 1; item <= count; item++)
 		{
 			if (AEGetNthPtr(&docList, item, typeFSRef, &rKeyword, &rType,
@@ -7997,20 +8114,14 @@ static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
 				return false;
 			}
             
+            // SN-2014-10-07: [[ Bug 13587 ]] Append directly the string, instead of converting to a CString
             MCAutoStringRef t_fullpathname;
-			/* UNCHECKED */ MCS_mac_fsref_to_path(t_doc_fsref, &t_fullpathname);
-			uint2 newlength = MCStringGetLength(*t_fullpathname) + 1;
-			MCU_realloc(&string, length, length + newlength, 1);
-			if (length)
-				string[length - 1] = '\n';
-            char *t_fullpathname_cstring;
-            /* UNCHECKED */ MCStringConvertToCString(*t_fullpathname, t_fullpathname_cstring);
-			memcpy(&string[length], t_fullpathname_cstring, newlength);
-			length += newlength;
-            delete t_fullpathname_cstring;
+            if (MCS_mac_fsref_to_path(t_doc_fsref, &t_fullpathname))
+                MCListAppend(*t_list, *t_fullpathname);
 		}
-		string[length - 1] = '\0';
 		AEDisposeDesc(&docList);
+        
+        return MCListCopy(*t_list, r_list);
 	}
 	return true;
 }
@@ -8825,6 +8936,10 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 			// Fork
 			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
 			{
+                // [[ Bug 13622 ]] Make sure environ is appropriate (on Yosemite it can
+                //    be borked).
+                environ = fix_environ();
+                
 				MCAutoStringRefAsUTF8String t_utf8_string;
                 /* UNCHECKED */ t_utf8_string . Lock(MCNameGetString(name));
 				

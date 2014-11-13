@@ -337,16 +337,20 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 		{
 			if (t_lowersym == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 			{
-				t_menubar -> message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
+                // MW-2014-10-22: [[ Bug 13510 ]] Make sure we send the update message to the menu of menubar - not
+                //   the menubar group.
+				accelerators[i] . button -> message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
 
 				// We now need to re-search for the accelerator, since it could have gone/been deleted in the mouseDown
 				for(uint2 i = 0; i < naccelerators; i++)
 				{
 					if (t_lowersym == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 					{
-						MCmodifierstate &= t_mod_mask;
-						accelerators[i] . button -> activate(True, t_lowersym);
+                        MCmodifierstate &= t_mod_mask;
+                        // TKD-2014-09-26: [[ Bug 13560 ]] Unlock the screen prior to triggering menu item. If code outside of
+                        //   the engine updates the window size the window isn't redrawn (e.g. [NSWindow toggleFullScreen:nil]).
                         MCRedrawUnlockScreen();
+                        accelerators[i] . button -> activate(True, t_lowersym);
 						return True;
 					}
 				}

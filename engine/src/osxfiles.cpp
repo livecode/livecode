@@ -111,7 +111,7 @@ static bool MCS_file_exists_at_path(const char *path)
 	struct stat buf;
 	t_found = (stat(newpath, (struct stat *)&buf) == 0);
 	if (t_found)
-        if ((buf . st_mode & S_IFDIR) != 0)
+        if (S_ISDIR(buf.st_mode))
             t_found = false;
     
     delete newpath;
@@ -716,11 +716,11 @@ Boolean MCS_exists(const char *path, Boolean file)
 	if (found)
 		if (file)
 		{
-			if (buf.st_mode & S_IFDIR)
+			if (S_ISDIR(buf.st_mode))
 				found = False;
 		}
 		else
-			if (!(buf.st_mode & S_IFDIR))
+			if (!S_ISDIR(buf.st_mode))
 				found = False;
 	delete newpath;
 	return found;
@@ -2098,10 +2098,9 @@ static sysfolders sysfolderlist[] = {
 									    {"Home", 'cusr', kUserDomain, 'cusr'},
 										// MW-2007-09-11: Added for uniformity across platforms
 										{"Documents", 'docs', kUserDomain, 'docs'},
-										// MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
-                                        // SN-2014-07-30: [[ Bug 13026 ]] We don't want any folder which doesn't match one above
-                                        //  to return the Application Support folder
-										{"Support", 'asup', kUserDomain, 'asup'},
+										// MW-2007-10-08: [[ Bug 10277 ]] Add support for the 'application support' at user level.
+                                        // FG-2014-09-26: [[ Bug 13523 ]] This entry must not match a request for "asup"
+										{"Support", 0, kUserDomain, 'asup'},
                                     };
 
 // MW-2008-06-18: [[ Bug 6577 ]] specialFolderPath("home") didn't work as it is 4 chars long and
@@ -2124,6 +2123,7 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 		t_found_folder = false;
 	
 		uint4 t_mac_folder;
+        t_mac_folder = 0;
 		if (p_context . getsvalue() . getlength() == 4)
 		{
 			memcpy(&t_mac_folder, p_context . getsvalue() . getstring(), 4);
@@ -2141,10 +2141,10 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 			
 		OSErr t_os_error;
 		uint2 t_i;
-        if (t_mac_folder != 0)
+        if (!t_found_folder)
         {
             for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
-                if (p_context . getsvalue() == sysfolderlist[t_i] . token || t_mac_folder == sysfolderlist[t_i] . macfolder)
+                if (p_context . getsvalue() == sysfolderlist[t_i] . token || (t_mac_folder != 0 && t_mac_folder == sysfolderlist[t_i] . macfolder))
                 {
                     Boolean t_create_folder;
                     t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;

@@ -74,6 +74,10 @@ enum
 	kMCExternalRunOnMainThreadImmediate = 0 << 3,
 	// The callback should be invoked synchronized to the event queue
 	kMCExternalRunOnMainThreadDeferred = 1 << 3,
+    
+    // The mask for the JumpTo options.
+    kMCExternalRunOnMainThreadJumpTo = 3 << 4,
+
 	// Call the callback on the UI thread (V4+).
 	kMCExternalRunOnMainThreadJumpToUI = 1 << 4,
 	// Call the callback on the Engine thread (V4+)
@@ -549,9 +553,9 @@ static bool options_get_convert_octals(MCExternalValueOptions p_options)
 
 static MCExternalError string_to_boolean(MCStringRef p_string, MCExternalValueOptions p_options, void *r_value)
 {
-	if (p_string == kMCTrueString)
+	if (MCStringIsEqualTo(p_string, kMCTrueString, kMCStringOptionCompareCaseless))
 		*(bool *)r_value = true;
-	else if (p_string == kMCFalseString)
+	else if (MCStringIsEqualTo(p_string, kMCFalseString, kMCStringOptionCompareCaseless))
 		*(bool *)r_value = false;
 	else
 		return kMCExternalErrorNotABoolean;
@@ -836,7 +840,7 @@ static MCExternalError convert_stringref_to_mcstring(MCStringRef p_string, MCStr
 {
 	char_t *t_chars;
 	uindex_t t_char_count;
-	if (!MCStringConvertToNative(p_string, t_chars, t_char_count))
+	if (!MCStringNormalizeAndConvertToNative(p_string, t_chars, t_char_count))
 		return kMCExternalErrorOutOfMemory;
 	
 	r_mcstring . set((char *)t_chars, t_char_count);
@@ -1061,7 +1065,7 @@ MCExternalError MCExternalVariable::GetInteger(MCExternalValueOptions p_options,
 	MCValueRef t_value;
 	t_value = GetValueRef();
 	if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
-		return number_to_integer(p_options, MCNumberFetchAsReal((MCNumberRef)t_value), &r_value);
+		return number_to_integer(MCNumberFetchAsReal((MCNumberRef)t_value), p_options, &r_value);
 	
 	MCExternalError t_error;
 	MCAutoStringRef t_string_value;
@@ -1166,7 +1170,7 @@ MCExternalError MCExternalVariable::GetCData(MCExternalValueOptions p_options, v
     if (m_string_conversion != nil)
         MCMemoryDeleteArray(m_string_conversion);
 	
-    if (!MCStringConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
+    if (!MCStringNormalizeAndConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
         return kMCExternalErrorOutOfMemory;
 	
 	t_string . set(m_string_conversion, t_length);
@@ -1187,7 +1191,7 @@ MCExternalError MCExternalVariable::GetCString(MCExternalValueOptions p_options,
     if (m_string_conversion != nil)
         MCMemoryDeleteArray(m_string_conversion);
 	
-    if (!MCStringConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
+    if (!MCStringNormalizeAndConvertToNative(*t_string_value, (char_t*&)m_string_conversion, t_length))
         return kMCExternalErrorOutOfMemory;
 	
 	if (memchr(m_string_conversion, '\0', t_length) != nil)
@@ -1492,9 +1496,32 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
 static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p_callback_state, MCExternalRunOnMainThreadOptions p_options)
 {
 #if defined(_DESKTOP)
+    // MW-2014-10-30: [[ Bug 13875 ]] If either 'JumpTo' flag is specified, we just execute the callback direct.
+    if ((p_options & kMCExternalRunOnMainThreadJumpTo) != 0)
+    {
+        // The 'JumpTo' option cannot have any other flags set.
+        if ((p_options & ~kMCExternalRunOnMainThreadJumpTo) != 0)
+            return kMCExternalErrorNotImplemented;
+        
+        ((MCExternalThreadOptionalCallback)p_callback)(p_callback_state);
+        return kMCExternalErrorNone;
+    }
+    
 	// MW-2013-06-25: [[ DesktopPingWait ]] Pass the correct parameters through
 	//   to MCNotifyPush so that LCObjectPost works.
-	if (!MCNotifyPush((MCExternalThreadOptionalCallback)p_callback, p_callback_state, (p_options & kMCExternalRunOnMainThreadPost) == 0, (p_options & kMCExternalRunOnMainThreadSafe) != 0))
+    // MW-2014-10-23: [[ Bug 13721 ]] Correctly compute the notify flags to pass - in particular
+    //   compute the 'required' flag and pass that as that determines the signature of the
+    //   callback.
+    bool t_block, t_safe, t_required;
+    t_block = (p_options & kMCExternalRunOnMainThreadPost) == kMCExternalRunOnMainThreadSend;
+    t_safe = (p_options & kMCExternalRunOnMainThreadUnsafe) == kMCExternalRunOnMainThreadSafe;
+    t_required = (p_options & kMCExternalRunOnMainThreadRequired) == kMCExternalRunOnMainThreadRequired;
+    
+    // MW-2014-10-30: [[ Bug 13875 ]] Make sure we return an appropriate error for invalid combinations of flags.
+    if (t_block && t_safe)
+        return kMCExternalErrorNotImplemented;
+    
+	if (!MCNotifyPush((MCExternalThreadOptionalCallback)p_callback, p_callback_state, t_block, t_safe, t_required))
 		return kMCExternalErrorOutOfMemory;
 
 	return kMCExternalErrorNone;

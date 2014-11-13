@@ -41,13 +41,13 @@ public:
 	void setparagraphs(MCParagraph *&newpar);
 	Boolean getset();
 	void setset(Boolean newdata);
-	void setdata(int4 newdata)
+	void setdata(uintptr_t newdata)
 	{
 		data = (void *)newdata;
 	}
-	int4 getdata()
+	uintptr_t getdata()
 	{
-		return (int4)(intptr_t)data;
+		return (uintptr_t)data;
 	}
 	MCCdata *next()
 	{

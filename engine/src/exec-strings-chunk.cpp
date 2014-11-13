@@ -176,7 +176,7 @@ void MCStringsGetExtentsByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, 
         r_chunk_count = 1;
 }
 
-void MCStringsGetExtentsByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCValueRef p_string, integer_t& r_first, integer_t& r_chunk_count)
+void MCStringsGetExtentsByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCValueRef p_string, uinteger_t& r_first, uinteger_t& r_chunk_count)
 {
     if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
         MCChunkGetExtentsOfByteChunkByRange((MCDataRef)p_string, p_first, p_last, r_first, r_chunk_count);
@@ -192,7 +192,7 @@ void MCStringsGetExtentsByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, in
     }
 }
 
-void MCStringsGetExtentsByExpression(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, MCValueRef p_string, integer_t& r_first, integer_t& r_chunk_count)
+void MCStringsGetExtentsByExpression(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, MCValueRef p_string, uinteger_t& r_first, uinteger_t& r_chunk_count)
 {
     if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
         MCChunkGetExtentsOfByteChunkByExpression((MCDataRef)p_string, p_first, r_first, r_chunk_count);
@@ -275,10 +275,18 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
             if (p_whole_chunk && !p_further_chunks)
             {
+                // AL-2014-10-15: [[ Bug 13680 ]] Make sure the previously found delimiter's length is used to adjust the string offsets.
+                
+                // Wholechunk operations need additional processing of mark indices to preserve the presence or otherwise of trailing delimiters.
+                // If we found a trailing delimiter for this item or line, make sure it is included in the mark.
+                // e.g. mark item 3 of a,b,c, -> a,b,(c,) so that delete item 3 of a,b,c, -> a,b,
+                
                 if (r_end < t_length)
-                    r_end++;
+                    r_end += t_found_range . length;
+                // If we didn't, and this operation does not force additional delimiters, then include the previous delimiter in the mark.
+                // e.g. mark item 3 of a,b,c -> a,b(,c) so that delete item 3 of a,b,c -> a,b
                 else if (r_start > 0 && !r_add)
-                    r_start--;
+                    r_start -= t_found_range . length;
             }
         }
             break;
@@ -398,8 +406,13 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             {
                 while (r_end < t_length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_end)))
                     r_end++;
-                while (r_start > 0 && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
-                    r_start--;
+                // AL-2014-09-29: [[ Bug 13550 ]] Only delete preceding whitespace if wholechunks is true
+                //  and word chunk range goes to the end of the string. 
+                if (r_end == t_length)
+                {
+                    while (r_start > 0 && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
+                        r_start--;
+                }
                 return;
             }
             
@@ -529,8 +542,7 @@ void MCStringsSetTextChunk(MCExecContext& ctxt, MCStringRef p_source, Prepositio
 
 void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_eval_mutable, MCStringRef& r_result)
 {
-    int4 t_first;
-    int4 t_chunk_count;
+    uinteger_t t_first, t_chunk_count;
     MCStringsGetExtentsByRange(ctxt, p_chunk_type, p_first, p_last, p_source, t_first, t_chunk_count);
     
     MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, p_eval_mutable, r_result);
@@ -538,8 +550,7 @@ void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Ch
 
 void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, bool p_eval_mutable, MCStringRef& r_result)
 {
-    int4 t_first;
-    int4 t_chunk_count;
+    uinteger_t t_first, t_chunk_count;
     MCStringsGetExtentsByExpression(ctxt, p_chunk_type, p_first, p_source, t_first, t_chunk_count);
     
     MCStringsGetTextChunk(ctxt, p_source, p_chunk_type, t_first, t_chunk_count, p_eval_mutable, r_result);
@@ -556,16 +567,14 @@ void MCStringsEvalTextChunkByOrdinal(MCExecContext& ctxt, MCStringRef p_source, 
 
 void MCStringsSetTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCStringRef& x_target)
 {
-    int4 t_first;
-    int4 t_chunk_count;
+    uinteger_t t_first, t_chunk_count;
     MCStringsGetExtentsByRange(ctxt, p_chunk_type, p_first, p_last, x_target, t_first, t_chunk_count);
     MCStringsSetTextChunk(ctxt, p_source, p_type, p_chunk_type, t_first, t_chunk_count, x_target);
 }
 
 void MCStringsSetTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Preposition_type p_type, Chunk_term p_chunk_type, integer_t p_first, MCStringRef& x_target)
 {
-    int4 t_first;
-    int4 t_chunk_count;
+    uinteger_t t_first, t_chunk_count;
     MCStringsGetExtentsByExpression(ctxt, p_chunk_type, p_first, x_target, t_first, t_chunk_count);
     MCStringsSetTextChunk(ctxt, p_source, p_type, p_chunk_type, t_first, t_chunk_count, x_target);
 }
@@ -724,8 +733,7 @@ void MCStringsGetTextChunk(MCExecContext& ctxt, MCStringRef p_source, integer_t 
 
 void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result)
 {
-    int4 t_first;
-    int4 t_chunk_count;
+    uinteger_t t_first, t_chunk_count;
     MCStringsGetExtentsByRange(ctxt, p_chunk_type, p_first, p_last, p_source, t_first, t_chunk_count);
     
     int4 t_add;
@@ -739,8 +747,7 @@ void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Ch
 
 void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t& x_start, integer_t& x_end, MCStringRef& r_result)
 {
-    int4 t_first;
-    int4 t_chunk_count;
+    uinteger_t t_first, t_chunk_count;
     MCStringsGetExtentsByExpression(ctxt, p_chunk_type, p_first, p_source, t_first, t_chunk_count);
     
     int4 t_add;
@@ -906,8 +913,7 @@ void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type,
     MCAutoStringRef t_string;
     MCStringCopySubstring((MCStringRef)x_mark . text, t_cu_range, &t_string);
     
-    int4 t_first;
-    int4 t_chunk_count;
+    uinteger_t t_first, t_chunk_count;
     MCStringsGetExtentsByRange(ctxt, p_chunk_type, p_first, p_last, *t_string, t_first, t_chunk_count);
     
     int4 t_add;
@@ -1073,8 +1079,7 @@ void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, int
         x_mark . text = MCValueRetain(*t_data);
     }
     
-    int4 t_first;
-    int4 t_chunk_count;
+    uinteger_t t_first, t_chunk_count;
     MCStringsGetExtentsByRange(ctxt, CT_BYTE, p_first, p_last, x_mark . text, t_first, t_chunk_count);
     
     // convert codeunit indices to byte indices

@@ -36,6 +36,9 @@ MCImageLoader::MCImageLoader(IO_handle p_stream)
 	m_header_loaded = m_frames_loaded = false;
 	
 	m_frames = nil;
+
+    // AL-2014-09-29: [[ Bug 13353 ]] Initialize m_name to the empty string
+    m_name = MCValueRetain(kMCEmptyString);
 }
 
 MCImageLoader::~MCImageLoader()
@@ -129,7 +132,12 @@ bool MCImageLoader::EnsureHeader()
 	if (!m_valid)
 		return false;
 	
-	m_valid = m_header_loaded = LoadHeader(m_width, m_height, m_xhot, m_yhot, m_name, m_frame_count);
+    // AL-2014-09-29: [[ Bug 13353 ]] We initialize m_name to the empty string, so use MCValueAssign here.
+    MCAutoStringRef t_name;
+	m_valid = m_header_loaded = LoadHeader(m_width, m_height, m_xhot, m_yhot, &t_name, m_frame_count);
+    
+    if (m_valid)
+        MCValueAssign(m_name, *t_name);
 	
 	return m_valid;
 }

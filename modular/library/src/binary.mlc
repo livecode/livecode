@@ -9,15 +9,7 @@ foreign handler ExecPutBytesAfter(in Source as data, inout Target as data) as un
 
 foreign handler EvalConcatenateBytes(in Left as data, in Right as data, out Result as data) as undefined binds to "<builtin>"
 
-foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
-
-foreign handler EvalOffsetOfBytesIn(in Needle as data, in Target as data, out Offset as index) as undefined binds to "<builtin>"
-foreign handler EvalOffsetOfBytesAfterIndexIn(in Needle as data, in After as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
-
-foreign handler FetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
-foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
-foreign handler FetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
-foreign handler StoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
+foreign handler EvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
 
 --
 
@@ -69,107 +61,6 @@ syntax ConcatenateBytes is left binary operator with precedence 2
     <Left: Expression> "&" <Right: Expression>
 begin
     EvalConcatenateBytes(Left, Right, output)
-end syntax
-
---
-
-/*
-Summary:            Counts the number of bytes in <Target>.
-
-Target: 			An expression which evaluates to binary data.
-
-Example: 			
-
-	repeat with x = 1 to the number of bytes in tData
-		// do something
-	end repeat
-*/
-
-syntax CountBytesOf is prefix operator with precedence 1
-	"the" "number" "of" "bytes" "in" <Target: Expression>
-begin
-	EvalNumberOfBytesIn(Target, output)
-end syntax
-
---
-
-/*
-
-Summary:            Finds the first occurrence of <Needle> within <Target>
-
-Needle: 			An expression which evaluates to binary data.
-Target: 			An expression which evaluates to binary data.
-output:             Returns the number of bytes between the first byte of <Target> and the first occurrence of <Needle>	within <Target>.
-                    Returns 0 if <Needle> does not occur within <Target>.
-
-*/
-
-syntax ByteOffset is prefix operator with precedence 1
-	"the" "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
-begin
-	EvalOffsetOfBytesIn(Needle, Target, output)
-end syntax
-
-/*
-
-Summary:            Finds the first occurrence of <Needle> within <Target> after index <After>
-
-Needle: 			An expression which evaluates to binary data.
-Target: 			An expression which evaluates to binary data.
-After:              An expression which evaluates to a valid integer index of <Target>.
-output:             Returns the number of bytes between the first byte of <Target> and the first occurrence of <Needle>	within <Target>.
-                    Returns 0 if <Needle> does not occur within <Target> after index <After>.
-
-*/
-
-syntax ByteOffsetAfter is prefix operator with precedence 1
-	"the" "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
-begin
-	EvalOffsetOfBytesAfterIndexIn(Needle, After, Target, output)
-end syntax
-
---
-
-/*
-
-Summary:            Designates the byte of data at index <Index> in <Target>.
-Index: 				An expression which evaluates to a valid integer index of <Target>.
-Target:				An expression which evaluates to binary data.
-output:             Either locates the byte of data at the given index either for use as the target container of another operation, 
-                    or evaluates the byte of data at the given index as the source of another operation.
-
-Example: 			delete byte 5 of tData // Locates byte 5 and removes it from tData
-Example: 			get byte 5 of tData // Evaluates byte 5
-
-*/
-
-syntax SingletonByteOf is prefix operator with precedence 1
-	"byte" <Index: Expression> "of" <Target: Expression>
-begin
-	FetchByteOf(Index, Target, output)
-	StoreByteOf(input, Index, Target)
-end syntax
-
-/*
-
-Summary:            Designates the bytes of data between indices <Start> and <Finish> in <Target>.
-
-Start:              An expression which evaluates to a valid integer index of <Target>.
-Finish:             An expression which evaluates to a valid integer index of <Target>.
-Target:             An expression which evaluates to binary data.
-output:             Either locates the bytes of data between the given indices either for use as the target container of another operation, 
-                    or evaluates the bytes of data at the given indices as the source of another operation.
-                    
-Example: 			put tBytes into byte 5 to 10 of tData // Locates bytes 5 to 10 and replace them with tBytes
-Example: 			get byte 5 to 10 of tData // Evaluates bytes 5 to 10
-
-*/
-
-syntax RangeByteOf is prefix operator with precedence 1
-	"byte" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
-begin
-	FetchByteRangeOf(Start, Finish, Target, output)
-	StoreByteRangeOf(input, Start, Finish, Target)
 end syntax
 
 --

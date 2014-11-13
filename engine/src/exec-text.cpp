@@ -117,7 +117,8 @@ void MCTextEvalMeasureText(MCExecContext& ctxt, MCObject *p_obj, MCStringRef p_t
     bool t_success;
     t_success = false;
     
-    if (p_mode == nil)
+    // AL-2014-10-27: [[ Bug 13809 ]] Can specify "width" to get width, as well as leaving parameter empty
+    if (p_mode == nil || MCStringIsEqualTo(p_mode, MCSTR("width"), kMCStringOptionCompareCaseless))
         t_success = MCStringFormat(r_result, "%d", t_bounds . width);
     else if (MCStringIsEqualTo(p_mode, MCSTR("size"), kMCStringOptionCompareCaseless))
         t_success = MCStringFormat(r_result, "%d,%d", t_bounds . width, t_bounds . height);

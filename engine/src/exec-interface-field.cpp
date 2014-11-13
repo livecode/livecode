@@ -1241,7 +1241,13 @@ void MCField::GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*
                 break;
         }
         if (theight != height)
-            t_heights . Push(height - theight);
+        {
+            // SN-2014-09-17: [[ Bug 13462 ]] If no break has been found, we return the height of the field
+            if (j)
+                t_heights . Push(height - theight);
+            else
+                t_heights . Push(height);
+        }
     }
     
     t_heights . Take(r_heights, r_count);

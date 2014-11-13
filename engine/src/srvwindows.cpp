@@ -637,7 +637,7 @@ struct MCWindowsSystem: public MCSystemInterface
 		struct stat buf;
 		if (stat(MCStringGetCString(p_path), &buf))
 			return False;
-		if (buf.st_mode & S_IFDIR)
+		if (S_ISDIR(buf.st_mode))
 			return True;
 		if (!(buf.st_mode & _S_IWRITE))
 			return True;

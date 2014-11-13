@@ -25,6 +25,8 @@ foreign handler EvalOffsetAfter(in Needle as string, in After as index, in Sourc
 foreign handler EvalLastOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
 foreign handler EvalLastOffsetBefore(in Needle as string, in Before as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
 
+foreign handler EvalContainsChars(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -112,37 +114,6 @@ end syntax
 --
 
 /*
-Summary:            Determines whether <Source> begins with <Prefix>
-Prefix: 			An expression which evaluates to a string.
-Source: 			An expression which evaluates to a string.
-output:             Returns true if the characters in <Prefix> occur at the start of <Source>, 
-                    modulo the contextual string options of the current handler.
-*/
-
-syntax BeginsWithString is neutral binary operator with precedence 1
-    <Source: Expression> "begins" "with" <Prefix: Expression>
-begin
-    EvalBeginsWith(Source, Prefix, output)
-end syntax
-
-/*
-Summary:            Determines whether <Source> ends with <Prefix>
-Prefix: 			An expression which evaluates to a string.
-Source: 			An expression which evaluates to a string.
-output:             Returns true if the characters in <Prefix> occur at the end of <Source>, 
-                    modulo the contextual string options of the current handler.
-*/
-
-
-syntax EndsWithString is neutral binary operator with precedence 1
-    <Source: Expression> "ends" "with" <Suffix: Expression>
-begin
-    EvalEndsWith(Source, Suffix, output)
-end syntax
-
---
-
-/*
 Summary:            Uppercases <Source>.
 Source: 			An expression which evaluates to a string.
 output:             
@@ -166,82 +137,6 @@ syntax LowercaseString is prefix operator with precedence 1
     "the" "lower" "of" <Source: Expression>
 begin
     EvalLowercaseOf(Source, output)
-end syntax
-
---
-
-/*
-
-Summary:            Finds the first occurrence of <Needle> within <Target>.
-
-Needle: 			An expression which evaluates to a string.
-Target: 			An expression which evaluates to a string.
-output:             Returns the number of chars between the first char of <Target> 
-                    and the first char of the first occurrence of <Needle> within <Target>.
-                    Returns 0 if <Needle> does not occur within <Target>.
-
-*/
-
-syntax OffsetOfString is prefix operator with precedence 1
-    "the" "offset" "of" <Needle: Expression> "in" <Source: Expression>
-begin
-    EvalOffset(Needle, Source, output)
-end syntax
-
-/*
-
-Summary:            Finds the first occurrence of <Needle> within <Target> after index <After>.
-
-Needle: 			An expression which evaluates to a string.
-Target: 			An expression which evaluates to a string.
-After:              An expression which evaluates to a valid integer index of <Target>.
-output:             Returns the number of chars between the first char of <Target> 
-                    and the first char of the first occurrence of <Needle> within <Target>.
-                    Returns 0 if <Needle> does not occur within <Target> after index <After>.
-                    
-*/
-
-syntax OffsetOfStringAfter is prefix operator with precedence 1
-    "the" "offset" "of" <Needle: Expression> "after" <After: Expression> "in" <Source: Expression>
-begin
-    EvalOffsetAfter(Needle, After, Source, output)
-end syntax
-
-/*
-
-Summary:            Finds the last occurrence of <Needle> within <Target>
-
-Needle: 			An expression which evaluates to a string.
-Target: 			An expression which evaluates to a string.
-output:             Returns the number of chars between the first char of <Target> 
-                    and the first char of the last occurrence of <Needle> within <Target>.
-                    Returns 0 if <Needle> does not occur within <Target>.
-
-*/
-
-syntax LastOffsetOfString is prefix operator with precedence 1
-    "the" "last" "offset" "of" <Needle: Expression> "in" <Source: Expression>
-begin
-    EvalLastOffset(Needle, Source, output)
-end syntax
-
-/*
-
-Summary:            Finds the last occurrence of <Needle> within <Target> before index <Before>.
-
-Needle: 			An expression which evaluates to a string.
-Target: 			An expression which evaluates to a string.
-Before:             An expression which evaluates to a valid integer index of <Target>.
-output:             Returns the number of chars between the first char of <Target> 
-                    and the first char of the last occurrence of <Needle> within <Target> before <Before>.
-                    Returns 0 if <Needle> does not occur within <Target>.
-
-*/
-
-syntax LastOffsetOfStringBefore is prefix operator with precedence 1
-    "the" "last" "offset" "of" <Needle: Expression> "before" <Before: Expression> "in" <Source: Expression>
-begin
-    EvalLastOffsetBefore(Needle, Before, Source, output)
 end syntax
 
 --

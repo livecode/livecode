@@ -327,7 +327,7 @@ typedef enum
     ORIENTATION_LANDSCAPE_LEFT_BIT = 4,
     ORIENTATION_FACE_UP_BIT = 5,
     ORIENTATION_FACE_DOWN_BIT = 6,
-} MCOrientationSet;
+} MCOrientation;
 
 typedef enum
 {
@@ -338,7 +338,7 @@ typedef enum
 	ORIENTATION_LANDSCAPE_LEFT = 1 << ORIENTATION_LANDSCAPE_LEFT_BIT,
 	ORIENTATION_FACE_UP = 1 << ORIENTATION_FACE_UP_BIT,
 	ORIENTATION_FACE_DOWN = 1 << ORIENTATION_FACE_DOWN_BIT
-} MCOrientation;
+} MCOrientationSet;
 
 void MCSystemGetAllowedOrientations(uint32_t& r_orientations);
 void MCSystemSetAllowedOrientations(uint32_t p_orientations);

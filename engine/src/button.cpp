@@ -592,8 +592,8 @@ void MCButton::kfocus()
 
 Boolean MCButton::kfocusnext(Boolean top)
 {
-	if ((IsMacLF() && !(state & CS_SHOW_DEFAULT))
-	        && !(flags & F_AUTO_ARM) && entry == NULL
+	if (((IsMacLF() && !(state & CS_SHOW_DEFAULT))
+		 && !(flags & F_AUTO_ARM) && entry == NULL)
 	        || !(flags & F_VISIBLE || MCshowinvisibles)
 	        || !(flags & F_TRAVERSAL_ON) || state & CS_KFOCUSED || flags & F_DISABLED)
 		return False;
@@ -602,8 +602,8 @@ Boolean MCButton::kfocusnext(Boolean top)
 
 Boolean MCButton::kfocusprev(Boolean bottom)
 {
-	if ((IsMacLF() && !(state & CS_SHOW_DEFAULT))
-	        && !(flags & F_AUTO_ARM) && entry == NULL
+	if (((IsMacLF() && !(state & CS_SHOW_DEFAULT))
+		 && !(flags & F_AUTO_ARM) && entry == NULL)
 	        || !(flags & F_VISIBLE || MCshowinvisibles)
 	        || !(flags & F_TRAVERSAL_ON) || state & CS_KFOCUSED || flags & F_DISABLED)
 		return False;
@@ -816,14 +816,14 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 		if ((((key == XK_Right || key == XK_space
 		        || key == XK_Return || key == XK_KP_Enter)
 		        && (menumode == WM_CASCADE || menumode == WM_OPTION))
-		        || key == XK_Down && menumode != WM_CASCADE)
+			 || (key == XK_Down && menumode != WM_CASCADE))
 		        && state & CS_KFOCUSED && findmenu())
 		{
 			openmenu(True);
 			return True;
 		}
-		if ((key == XK_space || (state & CS_SHOW_DEFAULT || state & CS_ARMED)
-		        && (key == XK_Return || key == XK_KP_Enter))
+		if ((key == XK_space || ((state & CS_SHOW_DEFAULT || state & CS_ARMED)
+								 && (key == XK_Return || key == XK_KP_Enter)))
 		        && !(MCmodifierstate & MS_MOD1))
 		{
 			activate(False, t_char);
@@ -1151,8 +1151,17 @@ Boolean MCButton::mdown(uint2 which)
 	{
         // SN-2014-08-26: [[ Bug 13201 ]] mx/my are now related to the button's rectangle,
         //  not the stack's rectangle anymore.
-		if (state & CS_SCROLLBAR && mx > rect.width - MCscrollbarwidth
-		        && mx < rect.width)
+        // SN-2014-10-17: [[ Bug 13675 ]] mx/my refer to the button's rectangle on Mac only
+        int2 t_right_limit, t_left_limit;
+#ifdef _MACOSX
+        t_left_limit = rect.width - MCscrollbarwidth;
+        t_right_limit = rect.width;
+#else
+        t_left_limit = rect.x + rect.width - MCscrollbarwidth;
+        t_right_limit = rect.x + rect.width;
+#endif
+        if (state & CS_SCROLLBAR && mx > t_left_limit
+                && mx < t_right_limit)
 		{
 			menu->mdown(which);
 			state |= CS_FIELD_GRAB;
@@ -1310,7 +1319,9 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 			        && MCeventtime - clicktime < OPTION_TIME)
 				return True;
 			else
-				if (menumode == WM_PULLDOWN && MCU_point_in_rect(rect, mx, my))
+                // SN-2014-10-02: [[ Bug 13539 ]] Only consider the mouse location if we are
+                //   sure that the coordinates are related to the stack, not the pulldown menu
+				if (menumode == WM_PULLDOWN && MCmousestackptr == getstack() && MCU_point_in_rect(rect, mx, my))
 				{
 					if (state & CS_MOUSE_UP_MENU)
 					{
@@ -4181,15 +4192,25 @@ uint2 MCButton::getmousetab(int2 &curx)
 		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 		MCStringRef t_tab;
 		t_tab = (MCStringRef)t_tabval;
+        
+        // AL-2014-09-24: [[ Bug 13528 ]] Measure disabled tab text correctly
+        MCRange t_range;
+        t_range = MCRangeMake(0, MCStringGetLength(t_tab));
+        if (MCStringGetCharAtIndex(t_tab, t_range.offset) == '(')
+        {
+            t_range.offset++;
+            t_range.length--;
+        }
+        
         // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 		if (MCcurtheme)
-            tx += MCFontMeasureText(m_font, t_tab, getstack() -> getdevicetransform()) + tabrightmargin + tableftmargin - taboverlap;
+            tx += MCFontMeasureTextSubstring(m_font, t_tab, t_range, getstack() -> getdevicetransform()) + tabrightmargin + tableftmargin - taboverlap;
 		else
 		{
 			if (IsMacLF())
-                tx += MCFontMeasureText(m_font, t_tab, getstack() -> getdevicetransform()) + theight * 2 / 3 + 7;
+                tx += MCFontMeasureTextSubstring(m_font, t_tab, t_range, getstack() -> getdevicetransform()) + theight * 2 / 3 + 7;
 			else
-                tx += MCFontMeasureText(m_font, t_tab, getstack() -> getdevicetransform()) + 12;
+                tx += MCFontMeasureTextSubstring(m_font, t_tab, t_range, getstack() -> getdevicetransform()) + 12;
 
 		}
 		if (mx < tx)
@@ -4729,4 +4750,4 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		}
 	}
 	return IO_NORMAL;
-}	
+}

@@ -856,6 +856,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, GetEffective##tag), nil, true, false, kMCPropertyInfoChunkTypeNone },
 
+#define DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), true, false, kMCPropertyInfoChunkTypeNone },
+
 #define DEFINE_WO_OBJ_CHUNK_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfCharChunk), false, false, true },
 
@@ -2123,6 +2126,7 @@ extern MCExecMethodInfo *kMCStringsExecFilterWildcardMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterRegexMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterWildcardIntoItMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterRegexIntoItMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalBidiDirectionMethodInfo;
 
 extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByRangeMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByExpressionMethodInfo;
@@ -2146,11 +2150,13 @@ void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef
 void MCStringsEvalNumToChar(MCExecContext& ctxt, uinteger_t codepoint, MCValueRef& r_character);
 void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);
 void MCStringsEvalNumToUnicodeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);
-void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef character, uinteger_t& r_codepoint);
+void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef character, MCValueRef& r_codepoint);
 void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
 void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
-void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_byte);
+void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCDataRef& r_byte);
 void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef byte, integer_t& r_codepoint);
+
+bool MCStringsEvalTextEncoding(MCStringRef encoding, MCStringEncoding& r_encoding);
 
 void MCStringsEvalTextDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCDataRef p_encoded_text, MCStringRef& r_decoded_text);
 void MCStringsEvalTextEncode(MCExecContext& ctxt, MCStringRef p_encoding, MCStringRef p_decoded_text, MCDataRef& r_encoded_text);
@@ -2224,6 +2230,8 @@ void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_string, bool& r_resu
 void MCStringsEvalIsNotAscii(MCExecContext& ctxt, MCValueRef p_string, bool& r_result);
 
 void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count);
+
+void MCStringsEvalBidiDirection(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_result);
 
 void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_eval_mutable, MCStringRef& x_string);
 void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, bool p_eval_mutable, MCStringRef &x_string);
@@ -3013,6 +3021,7 @@ void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *
 void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_target, MCPoint *p_at, int p_mode);
 
 void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCStack *p_owner, MCStringRef p_new_name, bool p_force_invisible);
+void MCInterfaceExecCreateScriptOnlyStack(MCExecContext& ctxt, MCStringRef p_new_name);
 void MCInterfaceExecCreateStackWithGroup(MCExecContext& ctxt, MCGroup *p_group_to_copy, MCStringRef p_new_name, bool p_force_invisible);
 void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, bool p_force_invisible);
 void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, int p_type, MCGroup *p_container, bool p_force_invisible);
@@ -5155,6 +5164,8 @@ extern MCExecMethodInfo *kMCSensorGetDetailedRotationRateOfDeviceMethodInfo;
 extern MCExecMethodInfo *kMCSensorGetRotationRateOfDeviceMethodInfo;
 extern MCExecMethodInfo *kMCSensorGetLocationCalibrationMethodInfo;
 extern MCExecMethodInfo *kMCSensorSetLocationCalibrationMethodInfo;
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+extern MCExecMethodInfo *kMCSensorSetLocationAuthorizationStatusMethodInfo;
 
 void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely);
 void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor);
@@ -5169,6 +5180,8 @@ void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_
 void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotation_rate);
 void MCSensorSetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t p_timeout);
 void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeout);
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+void MCSensorGetLocationAuthorizationStatus(MCExecContext& ctxt, MCStringRef &r_status);
 
 //////////
 

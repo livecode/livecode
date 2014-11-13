@@ -632,6 +632,8 @@ LT factor_table[] =
         {"bg", TT_CHUNK, CT_BACKGROUND},
         {"bgbehavior", TT_PROPERTY, P_BACKGROUND_BEHAVIOR},
         {"bgs", TT_CLASS, CT_BACKGROUND},
+        // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+        {"bididirection", TT_FUNCTION, F_BIDI_DIRECTION},
         {"binarydecode", TT_FUNCTION, F_BINARY_DECODE},
         {"binaryencode", TT_FUNCTION, F_BINARY_ENCODE},
         {"bitand", TT_BINOP, O_AND_BITS},
@@ -2100,6 +2102,8 @@ static LT sugar_table[] =
         {"message", TT_CHUNK, CT_UNDEFINED},
         {"new", TT_CHUNK, CT_UNDEFINED},
 		{"nothing", TT_UNDEFINED, SG_NOTHING},
+        // MW-2014-09-30: [[ ScriptOnlyStack ]] Token for 'only'.
+        {"only", TT_UNDEFINED, SG_ONLY},
 		{"open", TT_UNDEFINED, SG_OPEN},
 		{"optimized", TT_UNDEFINED, SG_OPTIMIZED},
 		{"options", TT_UNDEFINED, SG_OPTIONS},

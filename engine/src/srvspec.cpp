@@ -675,18 +675,6 @@ bool MCS_put_binary(MCExecContext& ctxt, MCSPutKind p_kind, MCDataRef p_data)
 		MCServerPutBinaryOutput(p_data);
 		break;
 
-	case kMCSPutUnicodeOutput:
-		MCServerPutUnicodeOutput(p_data);
-		break;
-			
-	case kMCSPutUnicodeContent:
-		MCServerPutUnicodeContent(p_data);
-		break;
-			
-	case kMCSPutUnicodeMarkup:
-		MCServerPutUnicodeMarkup(p_data);
-		break;
-			
 	default:
 		break;
 	}

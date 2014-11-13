@@ -39,6 +39,8 @@ SetOption_ALERT()
 
 /*----------------------------------------------------------------------------*/
 
+/* --PATCH-- */ extern int ErrorOccured;
+
 MESSAGE(msg, pos)
    char *msg;
    long pos;
@@ -77,8 +79,9 @@ MESSAGE(msg, pos)
 
    printpos(pos);
    printf("%s\n", msg);
-   exit(1);
-   
+    /* --PATCH-- */ // exit(1);
+    /* --PATCH-- */ ErrorOccured = 1;
+    
 #endif
 
    

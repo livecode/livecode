@@ -99,7 +99,7 @@ bool MCGPathIsValid(MCGPathRef self)
 	return self != NULL && 	self -> is_valid;
 }
 
-bool MCPathIsMutable(MCGPathRef self)
+bool MCGPathIsMutable(MCGPathRef self)
 {
 	return self -> is_mutable;
 }
@@ -163,6 +163,89 @@ void MCGPathMutableCopyAndRelease(MCGPathRef self, MCGPathRef& r_new_path)
 	MCGPathMutableCopy(self, r_new_path);
 	if (MCGPathIsValid(r_new_path))	
 		MCGPathRelease(self);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCGPathMutableCopySubpaths(MCGPathRef self, uint32_t p_first, uint32_t p_last, MCGPathRef &r_subpaths)
+{
+	if (!MCGPathIsValid(self))
+		return false;
+	
+	bool t_success;
+	t_success = true;
+	
+	MCGPathRef t_path;
+	t_path = nil;
+	
+	if (t_success)
+		t_success = MCGPathCreateMutable(t_path);
+	
+	if (t_success)
+	{
+		SkPath::Iter t_iter(*self->path, false);
+		SkPath::Verb t_verb;
+		SkPoint t_points[4];
+		uint32_t t_subpath_index;
+		t_subpath_index = 0;
+		
+		
+		do
+		{
+			t_verb = t_iter.next(t_points);
+			// Move command indicates the start of a new subpath
+			if (t_verb == SkPath::kMove_Verb)
+				t_subpath_index++;
+		}
+		while (t_success && t_subpath_index < p_first && t_verb != SkPath::kDone_Verb);
+		
+		if (t_success && t_verb == SkPath::kMove_Verb)
+		{
+			t_path->path->moveTo(t_points[0]);
+			
+			do
+			{
+				t_verb = t_iter.next(t_points);
+				switch(t_verb)
+				{
+					case SkPath::kMove_Verb:
+						t_subpath_index++;
+						if (t_subpath_index <= p_last)
+							t_path->path->moveTo(t_points[0]);
+						break;
+						
+					case SkPath::kLine_Verb:
+						if (t_iter.isCloseLine())
+							t_path->path->close();
+						else
+							t_path->path->lineTo(t_points[0]);
+						break;
+						
+					case SkPath::kQuad_Verb:
+						t_path->path->quadTo(t_points[0], t_points[1]);
+						break;
+						
+					case SkPath::kCubic_Verb:
+						t_path->path->cubicTo(t_points[0], t_points[1], t_points[2]);
+						break;
+						
+					default:
+						break;
+				}
+				
+				// TODO - check validity of SkPath
+			}
+			while (t_success && t_subpath_index <= p_last && t_verb != SkPath::kDone_Verb);
+			
+		}
+	}
+	
+	if (t_success)
+		r_subpaths = t_path;
+	else
+		MCGPathRelease(t_path);
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -528,6 +611,33 @@ void MCGPathSimplify(MCGPathRef self, MCGPathRef& r_simple_path)
 		return;
 	
 	// TODO: Implement
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCGPathGetBoundingBox(MCGPathRef self, MCGRectangle &r_bounds)
+{
+	if (!MCGPathIsValid(self))
+		return false;
+	
+	r_bounds = MCGRectangleFromSkRect(self->path->getBounds());
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCGPathTransform(MCGPathRef self, const MCGAffineTransform &p_transform)
+{
+	if (!MCGPathIsValid(self))
+		return false;
+	
+	if (!MCGPathIsMutable(self))
+		return false;
+	
+	SkMatrix t_matrix;
+	MCGAffineTransformToSkMatrix(p_transform, t_matrix);
+	self->path->transform(t_matrix);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

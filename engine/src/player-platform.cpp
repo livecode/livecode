@@ -103,11 +103,6 @@ static MCColor controllercolors[] = {
     
 };
 
-inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
-{
-	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
-}
-
 inline void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
 {
 	r_x_offset = floor(0.5f + p_distance * cos(p_angle * M_PI / 180.0));
@@ -413,7 +408,8 @@ public:
         return True;
     }
     
-    Boolean mup(uint2 which)
+    // PM-2014-10-24 [[ Bug 13751 ]] Make sure the correct mup() is called on the volume selector
+    Boolean mup(uint2 which, bool release)
     {
         m_grabbed_part = kMCPlayerControllerPartUnknown;
         return True;
@@ -518,6 +514,7 @@ public:
         m_font = nil;
         
         m_player = nil;
+        m_grabbed_part = -1;
     }
     
     ~MCPlayerRatePopup(void)
@@ -733,6 +730,9 @@ public:
     
     Boolean mup(uint2 which, bool release)
     {
+        // PM-2014-09-30: [[ Bug 13119 ]] Make sure a playRateChanged message is sent when the mouse is up/released, but not when creating the ratepopup
+        if (m_grabbed_part != -1)
+            m_player -> timer(MCM_play_rate_changed,nil);
         m_grabbed_part = kMCPlayerControllerPartUnknown;
         return True;
     }
@@ -868,6 +868,10 @@ MCPlayer::MCPlayer()
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
+    
+    // PM-2104-10-14: [[ Bug 13569 ]] Make sure changes to player in preOpenCard are not visible
+    m_is_attached = false;
+    m_should_attach = false;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -955,8 +959,18 @@ MCRectangle MCPlayer::getactiverect(void)
 
 void MCPlayer::open()
 {
-	MCControl::open();
-	prepare(kMCEmptyString);
+    MCControl::open();
+    prepare(kMCEmptyString);
+    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
+    // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
+    
+    if (m_platform_player != nil && !m_is_attached && m_should_attach)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+        m_should_attach = false;
+    }
+    
 }
 
 void MCPlayer::close()
@@ -971,6 +985,14 @@ void MCPlayer::close()
     
     if (s_volume_popup != nil)
         s_volume_popup -> close();
+    
+    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
+    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
+    if (m_platform_player != nil && m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+    }
 }
 
 Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
@@ -1100,8 +1122,9 @@ Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 
 Boolean MCPlayer::doubledown(uint2 which)
 {
-    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown 
-    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+    // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubledown on the controller as a single mdown
+    // PM-2014-10-22: [[ Bug 13752 ]] If on edit mode, treat a doubledown on the controller as a MCControl::doubledown
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown || (which == Button1 && getstack() -> gettool(this) == T_POINTER))
         return MCControl::doubledown(which);
     if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
     {
@@ -1116,7 +1139,8 @@ Boolean MCPlayer::doubledown(uint2 which)
 Boolean MCPlayer::doubleup(uint2 which)
 {
     // PM-2014-08-11: [[ Bug 13063 ]] Treat a doubleup on the controller as a single mup
-    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown)
+    // PM-2014-10-22: [[ Bug 13752 ]] If on edit mode, treat a doubledown on the controller as a MCControl::doubledown
+    if (hittestcontroller(mx, my) == kMCPlayerControllerPartUnknown || (which == Button1 && getstack() -> gettool(this) == T_POINTER))
         return MCControl::doubleup(which);
     if (which == Button1 && getstack() -> gettool(this) == T_BROWSE)
         handle_mup(which);
@@ -1394,6 +1418,16 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                 if (data != MCnullmcstring)
                     filename = data.clone();
                 prepare(MCnullstring);
+                
+                // PM-2014-10-20: [[ Bug 13711 ]] Make sure we attach the player after prepare()
+                // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
+                if (m_platform_player != nil && !m_is_attached && m_should_attach)
+                {
+                    MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+                    m_is_attached = true;
+                    m_should_attach = false;
+                }
+
                 dirty = wholecard = True;
             }
             break;
@@ -1815,14 +1849,9 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 //   currently in use.
 bool MCPlayer::getversion(MCStringRef& r_string)
 {
-#if 0
     extern void MCQTGetVersion(MCStringRef &r_version);
     MCQTGetVersion(r_string);
     return true;
-#else
-    r_string = MCValueRetain(kMCEmptyString);
-    return true;
-#endif
 }
 
 void MCPlayer::freetmp()
@@ -2054,6 +2083,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
     }
 
 	Boolean ok = False;
+    m_should_attach = false;
     
     if (state & CS_PREPARED)
         return True;
@@ -2120,8 +2150,15 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	t_visible = getflag(F_VISIBLE);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
-	MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-	
+    if (m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+        m_should_attach = true;
+    }
+    else
+        m_should_attach = true;
+    	
 	layer_redrawall();
 	
 	setloudness();
@@ -2138,10 +2175,46 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	return ok;
 }
 
+// PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
+void MCPlayer::attachplayer()
+{
+    if (m_platform_player == nil)
+        return;
+    
+    // Make sure we attach the player only if it was previously detached by detachplayer().
+    if (!m_is_attached && m_should_attach)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+        m_should_attach = false;
+    }
+}
+
+// PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
+void MCPlayer::detachplayer()
+{
+    if (m_platform_player == nil)
+        return;
+    
+    if (m_is_attached)
+    {
+        MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
+        m_should_attach = true;
+    }
+}
+
 Boolean MCPlayer::playstart(MCStringRef options)
 {
 	if (!prepare(options))
 		return False;
+    
+    // PM-2014-10-21: [[ Bug 13710 ]] Attach the player if not already attached
+    if (m_platform_player != nil && !m_is_attached)
+    {
+        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+        m_is_attached = true;
+    }
 	playpause(False);
 	return True;
 }
@@ -2221,13 +2294,15 @@ Boolean MCPlayer::playstop()
     
     m_modify_selection_while_playing = false;
 	
-	if (m_platform_player != nil)
+    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
+	if (m_platform_player != nil && m_is_attached)
 	{
 		MCPlatformStopPlayer(m_platform_player);
 
 		needmessage = getduration() > getmoviecurtime();
 		
 		MCPlatformDetachPlayer(m_platform_player);
+        m_is_attached = false;
 	}
     
     redrawcontroller();
@@ -4188,6 +4263,14 @@ void MCPlayer::handle_shift_mdown(int p_which)
         case kMCPlayerControllerPartThumb:
         case kMCPlayerControllerPartWell:
         {
+            // PM-2014-09-30: [[ Bug 13540 ]] shift+clicking on controller well/thumb/play button does something only if showSelection is true
+            if (!getflag(F_SHOW_SELECTION))
+            {
+                handle_mdown(p_which);
+                return;
+            }
+                
+            
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             MCRectangle t_part_thumb_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb);
             
@@ -4259,20 +4342,20 @@ void MCPlayer::handle_shift_mdown(int p_which)
             }
             
             if (hasfilename())
-            {
-                bool t_show_selection;
-                t_show_selection = true;
-                setflag(True, F_SHOW_SELECTION);
-                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-                
                 setselection(true);
-            }
-            
+
             layer_redrawrect(getcontrollerrect());
         }
             break;
             
         case kMCPlayerControllerPartPlay:
+            // PM-2014-09-30: [[ Bug 13540 ]] shift+clicking on controller well/thumb/play button does something only if showSelection is true
+            if (!getflag(F_SHOW_SELECTION))
+            {
+                handle_mdown(p_which);
+                return;
+            }
+            
             shift_play();
             break;
           
@@ -4385,11 +4468,6 @@ void MCPlayer::shift_play()
     
     if (hasfilename())
     {
-        bool t_show_selection;
-        t_show_selection = true;
-        setflag(True, F_SHOW_SELECTION);
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
-        
         // MW-2014-07-18: [[ Bug 12825 ]] When play button clicked, previous behavior was to
         //   force rate to 1.0.
         if (!getstate(CS_PREPARED) || ispaused())

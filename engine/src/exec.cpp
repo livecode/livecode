@@ -187,7 +187,20 @@ bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
     }
     
 	if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeArray)
+    {
+        // FG-2014-10-21: [[ Bugfix 13724 ]] The legacy behavior requires that
+        // anything that can be converted to a string will convert to an empty
+        // array (for example, 'the extents of "foo"' should return empty
+        // rather than throwing an error).
+        MCAutoStringRef t_ignored;
+        if (ConvertToString(p_value, &t_ignored))
+        {
+            r_array = MCValueRetain(kMCEmptyArray);
+            return true;
+        }
+        
         return false;
+    }
     
     r_array = MCValueRetain((MCArrayRef)p_value);
 	return true;
@@ -292,12 +305,12 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
         double t_real;
         if (!ConvertToReal(x_value . valueref_value, t_real))
         {
-            MCArrayRef t_array;
-            if (!ConvertToArray(x_value . valueref_value, t_array))
+            MCAutoArrayRef t_array;
+            if (!ConvertToArray(x_value . valueref_value, &t_array))
                 return false;
             
             MCValueRelease(x_value . valueref_value);
-            MCExecValueTraits<MCArrayRef>::set(x_value, t_array);
+            MCExecValueTraits<MCArrayRef>::set(x_value, MCValueRetain(*t_array));
             return true;
         }
 
@@ -847,12 +860,18 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
     t_success = false;
     t_can_debug = true;
     
-    t_success = EvalExprAsNonStrictBool(p_expr, p_error, r_value);
-    while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
+    // AL-2014-10-27: [[ Bug 13824 ]] The loop here should continue to
+    //  try to evaluate as non-strict bool, rather than only trying once.
+    do
     {
-        t_can_debug = MCB_error(*this, line, pos, p_error);
-        IgnoreLastError();
+        t_success = EvalExprAsNonStrictBool(p_expr, p_error, r_value);
+        if (!t_success)
+        {
+            t_can_debug = MCB_error(*this, line, pos, p_error);
+            IgnoreLastError();
+        }
     }
+    while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
     if (t_success)
 		return true;
@@ -2247,7 +2266,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             }
         }
             break;
-           
+        
         case kMCPropertyTypeMixedItemsOfString:
         {
             bool t_mixed;
@@ -2266,7 +2285,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 else
                 {
                     char_t t_delimiter;
-                    t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
+                    t_delimiter = ',';
                     if (MCPropertyFormatStringList(t_value, t_count, t_delimiter, r_value . stringref_value))
                     {
                         r_value . type = kMCExecValueTypeStringRef;
@@ -2299,7 +2318,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 else
                 {
                     char_t t_delimiter;
-                    t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
+                    t_delimiter = prop -> type == kMCPropertyTypeMixedLinesOfUInt ? '\n' : ',';
                     if (MCPropertyFormatUIntList(t_value, t_count, t_delimiter, r_value . stringref_value))
                     {
                         r_value . type = kMCExecValueTypeStringRef;
@@ -2776,6 +2795,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                       
         case kMCPropertyTypeLinesOfUInt:
         case kMCPropertyTypeItemsOfUInt:
+        // AL-2014-09-24: [[ Bug 13529 ]] Handle mixed items of uint case
+        case kMCPropertyTypeMixedItemsOfUInt:
         {
             MCAutoStringRef t_input;
             uinteger_t* t_value;

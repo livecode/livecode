@@ -243,10 +243,13 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
     // If possible, return a codepoint from the cached state
     if (m_ReadIndex < m_StateLength)
     {
+        // AL-2014-10-23: [[ Bug 13762 ]] Update the mark point when fetching codepoints from the state
+        m_MarkPoint++;
         // Check whether we have a surrogate pair
         // We are sure to have the following trail surrogate if we find a lead surrogate
         if (m_State[m_ReadIndex] > 0xD800 && m_State[m_ReadIndex] < 0xDBFF)
         {
+            m_MarkPoint++;
             m_surrogate = true;
             return MCUnicodeSurrogatesToCodepoint(m_State[m_ReadIndex], m_State[m_ReadIndex + 1]);
         }
@@ -323,9 +326,12 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepointReverse()
     // If possible, return a codepoint from the cached state
     if (m_ReadIndex < m_StateLength)
     {
+        // AL-2014-10-23: [[ Bug 13762 ]] Update the mark point when fetching codepoints from the state
+        m_MarkPoint++;
         // We are sure to have the preceding lead surrogate if we find a trail surrogate
         if (m_State[kMCTextFilterMaxNormLength - m_ReadIndex - 1] >= 0xDC00 && m_State[kMCTextFilterMaxNormLength - m_ReadIndex - 1] < 0xE000)
         {
+            m_MarkPoint++;
             m_surrogate = true;
             return MCUnicodeSurrogatesToCodepoint(m_State[kMCTextFilterMaxNormLength - m_ReadIndex - 2], m_State[kMCTextFilterMaxNormLength - m_ReadIndex - 1]);
         }

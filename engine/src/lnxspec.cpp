@@ -833,7 +833,7 @@ Boolean MCS_noperm(const char *path)
 	struct stat64 buf;
 	if (stat64(path, &buf))
 		return False;
-	if (buf.st_mode & S_IFDIR)
+	if (S_ISDIR(buf.st_mode))
 		return True;
 	if (!(buf.st_mode & S_IWUSR))
 		return True;
@@ -850,11 +850,11 @@ Boolean MCS_exists(const char *path, Boolean file)
 	if (found)
 		if (file)
 		{
-			if (buf.st_mode & S_IFDIR)
+			if (S_ISDIR(buf.st_mode))
 				found = False;
 		}
 		else
-			if (!(buf.st_mode & S_IFDIR))
+			if (!S_ISDIR(buf.st_mode))
 				found = False;
 	delete newpath;
 	return found;

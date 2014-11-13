@@ -1,0 +1,1 @@
+# Native chars don't hash to the same value as equivalent unicode chars

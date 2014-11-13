@@ -47,6 +47,41 @@ struct __MCValue
 
 //////////
 
+enum
+{
+    kMCTypeInfoTypeCodeMask = 0xff,
+};
+
+struct __MCTypeInfo: public __MCValue
+{
+    union
+    {
+        struct
+        {
+            MCNameRef name;
+            MCTypeInfoRef typeinfo;
+        } named;
+        struct
+        {
+            MCRecordTypeFieldInfo *fields;
+            uindex_t field_count;
+        } record;
+        struct
+        {
+            MCHandlerTypeFieldInfo *fields;
+            uindex_t field_count;
+            MCTypeInfoRef return_type;
+        } handler;
+        struct
+        {
+            MCNameRef domain;
+            MCStringRef message;
+        } error;
+    };
+};
+
+//////////
+
 struct __MCNull: public __MCValue
 {
 };
@@ -221,6 +256,10 @@ enum
 	// If set then the array is indirect (i.e. contents is within another
 	// immutable array).
 	kMCArrayFlagIsIndirect = 1 << 7,
+    // If set then the array keys are case sensitive.
+    kMCArrayFlagIsCaseSensitive = 1 << 8,
+    // If set the the array keys are form sensitive.
+    kMCArrayFlagIsFormSensitive = 1 << 9,
 };
 
 struct __MCArrayKeyValue
@@ -268,6 +307,57 @@ struct __MCSet: public __MCValue
 	uindex_t limb_count;
 };
 
+//////////
+
+enum
+{
+	// If set then the list is mutable.
+	kMCProperListFlagIsMutable = 1 << 0,
+    // If set then the list is indirect (i.e. contents is within another
+	// immutable list).
+	kMCProperListFlagIsIndirect = 1 << 1,
+};
+
+struct __MCProperList: public __MCValue
+{
+	union
+	{
+		MCProperListRef contents;
+        struct
+        {
+            MCValueRef *list;
+            uindex_t length;
+        };
+	};
+};
+
+////////
+
+enum
+{
+    // The data are mutable
+    kMCRecordFlagIsMutable = 1,
+};
+
+struct __MCRecord: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+    MCValueRef *fields;
+};
+
+////////
+
+struct __MCError: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+    MCStringRef message;
+    MCArrayRef info;
+    
+    MCValueRef target;
+    uindex_t row;
+    uindex_t column;
+};
+
 ////////
 
 struct __MCCustomValue: public __MCValue
@@ -301,8 +391,9 @@ template<class T> inline bool __MCValueCreate(MCValueTypeCode p_type_code, T*& r
 //////////
 
 bool __MCUnicodeInitialize();
-bool __MCLocaleInitialize();
 void __MCUnicodeFinalize();
+
+bool __MCLocaleInitialize();
 void __MCLocaleFinalize();
 
 bool __MCValueInitialize(void);
@@ -360,8 +451,36 @@ bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data);
 bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description);
 bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value);
 
-bool __MCNumberInitialize(void);
-void __MCNumberFinalize(void);
+bool __MCProperListInitialize(void);
+void __MCProperListFinalize(void);
+void __MCProperListDestroy(__MCProperList *list);
+hash_t __MCProperListHash(__MCProperList *list);
+bool __MCProperListIsEqualTo(__MCProperList *list, __MCProperList *other_list);
+bool __MCProperListCopyDescription(__MCProperList *list, MCStringRef& r_string);
+bool __MCProperListImmutableCopy(__MCProperList *list, bool release, __MCProperList*& r_immutable_value);
+
+bool __MCRecordInitialize(void);
+void __MCRecordFinalize(void);
+void __MCRecordDestroy(__MCRecord *data);
+hash_t __MCRecordHash(__MCRecord *self);
+bool __MCRecordIsEqualTo(__MCRecord *self, __MCRecord *p_other_data);
+bool __MCRecordCopyDescription(__MCRecord *self, MCStringRef &r_description);
+bool __MCRecordImmutableCopy(__MCRecord *self, bool p_release, __MCRecord *&r_immutable_value);
+
+bool __MCErrorInitialize();
+void __MCErrorFinalize();
+void __MCErrorDestroy(__MCError *error);
+hash_t __MCErrorHash(__MCError *error);
+bool __MCErrorIsEqualTo(__MCError *error, __MCError *other_error);
+bool __MCErrorCopyDescription(__MCError *error, MCStringRef& r_string);
+
+bool __MCTypeInfoInitialize(void);
+void __MCTypeInfoFinalize(void);
+void __MCTypeInfoDestroy(__MCTypeInfo *self);
+hash_t __MCTypeInfoHash(__MCTypeInfo *self);
+bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self);
+bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description);
+MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
 
 ////////////////////////////////////////////////////////////////////////////////
 

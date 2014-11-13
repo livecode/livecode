@@ -81,7 +81,6 @@ public:
 	virtual void SetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
 	virtual void GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
     
-    void EndTimeChanged(void);
     void MovieFinished(void);
     void TimeJumped(void);
     void MovieIsLoading(CMTimeRange p_timerange);
@@ -140,6 +139,9 @@ private:
     
     id m_time_observer_token;
     
+    // MW-2014-10-22: [[ Bug 13267 ]] Use an end-time observer rather than the built in 'action at end' (10.8 bug).
+    id m_endtime_observer_token;
+    
     uint32_t *m_markers;
     uindex_t m_marker_count;
     uint32_t m_last_marker;
@@ -189,11 +191,16 @@ private:
         MCPlatformBreakWait();
     else if([keyPath isEqualToString: @"currentItem.loadedTimeRanges"])
     {
-        NSArray *t_time_ranges = (NSArray *)[change objectForKey:NSKeyValueChangeNewKey];
-        if (t_time_ranges && [t_time_ranges count])
+        // PM-2014-10-14: [[ Bug 13650 ]] Do this check to prevent a crash
+        if([change objectForKey:NSKeyValueChangeNewKey] != [NSNull null])
         {
-            CMTimeRange timerange = [[t_time_ranges objectAtIndex:0] CMTimeRangeValue];
-            m_av_player -> MovieIsLoading(timerange);
+            NSArray *t_time_ranges = (NSArray *)[change objectForKey:NSKeyValueChangeNewKey];
+            
+            if (t_time_ranges && [t_time_ranges count])
+            {
+                CMTimeRange timerange = [[t_time_ranges objectAtIndex:0] CMTimeRangeValue];
+                m_av_player -> MovieIsLoading(timerange);
+            }
         }
     }
 }
@@ -277,6 +284,9 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_selection_finish = 0;
     m_stepped = false;
     m_buffered_time = 0;
+    
+    m_time_observer_token = nil;
+    m_endtime_observer_token = nil;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -285,7 +295,13 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 		CFRelease(m_current_frame);
     
     // First detach the observer from everything we've attached it to.
-    [m_player removeTimeObserver:m_time_observer_token];
+    if (m_time_observer_token != nil)
+        [m_player removeTimeObserver:m_time_observer_token];
+    
+    // MW-2014-10-22: [[ Bug 13267 ]] Remove the end-time observer.
+    if (m_endtime_observer_token != nil)
+        [m_player removeTimeObserver:m_endtime_observer_token];
+    
     @try
     {
         [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
@@ -371,6 +387,10 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
     int32_t t_current_time;
     t_current_time = CMTimeToLCTime([m_player currentTime]);
     
+    // PM-2014-10-28: [[ Bug 13773 ]] If the thumb is after the first marker and the user drags it before the first marker, then we have to reset m_last marker, so as to be dispatched
+    if (t_current_time < m_last_marker)
+        m_last_marker = -1;
+    
     // PM-2014-08-12: [[ Bug 13156 ]] When clicked'n'hold the back button of the controller, t_current_time was negative after returning to the start of the video, and this was causing the last callback of the queue to be invoked after the first one. So make sure that t_current_time is valid.
     
     if (t_current_time > CMTimeToLCTime(m_player.currentItem.asset.duration) || t_current_time < 0)
@@ -393,27 +413,17 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
             {
                 m_last_marker = m_markers[t_index - 1];
                 MCPlatformCallbackSendPlayerMarkerChanged(this, m_last_marker);
+                m_synchronizing = true;
             }
         }
     }
     
-    if (!m_synchronizing)
+    // PM-2014-10-28: [[ Bug 13773 ]] Make sure we don't send a currenttimechanged messsage if the callback is processed
+    if (!m_synchronizing && IsPlaying())
         MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
-}
-void MCAVFoundationPlayer::EndTimeChanged(void)
-{
-    // PM-2014-08-06: [[ Bug 13064 ]] Make sure selection start/end points are respected
-    if (m_play_selection_only)
-    {
-        [m_player setActionAtItemEnd: AVPlayerActionAtItemEndPause];
-        // PM-2014-07-15 [[ Bug 12818 ]] If the duration of the selection is 0 then the player ignores the selection
-        if (m_selection_duration != 0)
-            [[m_player currentItem] setForwardPlaybackEndTime:CMTimeFromLCTime(m_selection_finish)];
-        else
-            [[m_player currentItem] setForwardPlaybackEndTime:kCMTimeInvalid];
-    }
-    else
-        [[m_player currentItem] setForwardPlaybackEndTime: kCMTimeInvalid];
+    
+    m_synchronizing = false;
+    
 }
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
@@ -691,8 +701,19 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
 
     // Release the old player (if any).
     [m_view setPlayer: nil];
-    [m_player removeTimeObserver:m_time_observer_token];
-
+    if (m_time_observer_token != nil)
+    {
+        [m_player removeTimeObserver:m_time_observer_token];
+        m_time_observer_token = nil;
+    }
+    
+    // MW-2014-10-22: [[ Bug 13267 ]] Remove the endtime observer.
+    if (m_endtime_observer_token != nil)
+    {
+        [m_player removeTimeObserver:m_endtime_observer_token];
+        m_endtime_observer_token = nil;
+    }
+    
     @try
     {
         [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
@@ -727,21 +748,6 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(timeJumped:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
     
-    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(30, 1000) queue:nil usingBlock:^(CMTime time) {
-    
-        // The block is invoked periodically at the interval specified, interpreted according to the timeline of the current item.
-        // The block is also invoked whenever time jumps and whenever playback starts or stops.
-        if (CMTimeCompare(time, m_observed_time) == 0)
-            return;
-
-        m_observed_time = time;
-
-        // PM-2014-08-05: [[ Bug 13105 ]] Make sure a currenttimechanged message is sent when we click step forward/backward buttons
-        // PM-2014-08-12: [[ Bug 13091 ]] Removed the isPlaying() condition, so as to receive currenttimechanged messages when dragging the thumb, clicking in the well or using the forward/back buttons. This will trigger callbacks
-        if (!m_offscreen)
-            HandleCurrentTimeChanged();
-        }];
-    
     m_time_scale = [m_player currentItem] . asset . duration . timescale;
 }
 
@@ -775,34 +781,6 @@ void MCAVFoundationPlayer::Start(double rate)
 {
     if (m_offscreen && !CVDisplayLinkIsRunning(m_display_link))
         CVDisplayLinkStart(m_display_link);
- 
-    EndTimeChanged();
-    
-    // PM-2014-08-14: This fixes the issue of pause not being instant. 
-    if (m_time_observer_token)
-    {
-        [m_player removeTimeObserver:m_time_observer_token];
-        m_time_observer_token = nil;
-    }
-    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(30, 1000) queue:nil usingBlock:^(CMTime time) {
-    
-        /* 
-        When alwaysBuffer is true and movie finishes, the CVDisplayLink stops. After that, in case currenttime changes
-        (for example when user clicks on the controller well), we have to re-start the CVDisplayLink so as to update
-        the current movie frame
-        */
-        if (m_offscreen && !CVDisplayLinkIsRunning(m_display_link))
-            CVDisplayLinkStart(m_display_link);
-        
-        if (CMTimeCompare(time, m_observed_time) == 0)
-            return;
-        
-        m_observed_time = time;
-        
-        if (!m_offscreen)
-            HandleCurrentTimeChanged();
-        
-    }];
 
     // PM-2014-07-15 Various tweaks to handle all cases of playback
     if (!m_play_selection_only)
@@ -829,6 +807,68 @@ void MCAVFoundationPlayer::Start(double rate)
         }
 
     }
+    
+    // PM-2014-08-14: This fixes the issue of pause not being instant.
+    if (m_time_observer_token != nil)
+    {
+        [m_player removeTimeObserver:m_time_observer_token];
+        m_time_observer_token = nil;
+    }
+    
+    // MW-2014-10-22: [[ Bug 13267 ]] Remove the endtime observer.
+    if (m_endtime_observer_token != nil)
+    {
+        [m_player removeTimeObserver: m_endtime_observer_token];
+        m_endtime_observer_token = nil;
+    }
+    
+    
+    // MW-2014-10-22: [[ Bug 13267 ]] If we are only playing a selection, then setup a boundary time observer which will
+    //   pause at the endtime.
+    if (m_play_selection_only)
+    {
+        // MW-2014-10-22: [[ Bug 13267 ]] Boundary time observers often go 'past' the requested time by a small amount
+        //   so we set the boundary to be one timescale unit before the actual end time, and then adjust when we hit
+        //   that time.
+        CMTime t_end_time, t_original_end_time;
+        if (m_selection_duration != 0)
+            t_end_time = CMTimeFromLCTime(m_selection_finish);
+        else
+            t_end_time = [m_player currentItem] . asset . duration;
+        t_original_end_time = t_end_time;
+        t_end_time . value -= 1;
+        m_endtime_observer_token = [m_player addBoundaryTimeObserverForTimes: [NSArray arrayWithObject: [NSValue valueWithCMTime: t_end_time]]
+                                                                       queue: nil usingBlock: ^(void) {
+                                                                           [m_player pause];
+                                                                           [m_player seekToTime: t_original_end_time toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+                                                                       }];
+    }
+    
+    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(30, 1000) queue:nil usingBlock:^(CMTime time) {
+
+        /*
+        When alwaysBuffer is true and movie finishes, the CVDisplayLink stops. After that, in case currenttime changes
+        (for example when user clicks on the controller well), we have to re-start the CVDisplayLink so as to update
+        the current movie frame
+        */
+        
+        if (m_offscreen && !CVDisplayLinkIsRunning(m_display_link))
+            CVDisplayLinkStart(m_display_link);
+
+        if (CMTimeCompare(time, m_observed_time) == 0)
+            return;
+
+        m_observed_time = time;
+
+        // MW-2014-10-22: [[ Bug 13267 ]] If offscreen and this is called when the rate is 0,
+        //   we must have just been paused by an endtime observer, so force a refresh by updating
+        //   the frame.
+        if (!m_offscreen)
+            HandleCurrentTimeChanged();
+        else if ([m_player rate] == 0.0)
+            DoUpdateCurrentFrame(this);
+        
+    }];
     
     m_playing = true;
     m_finished = false;
@@ -876,7 +916,7 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
         
 		CGColorSpaceRef t_colorspace;
-		t_colorspace = CGColorSpaceCreateDeviceRGB();
+		/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_colorspace);
         
 		CGContextRef t_cg_context;
 		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));

@@ -352,7 +352,7 @@ struct MCMacSystem: public MCSystemInterface
 		
 		bool t_found;
 		t_found = stat(p_path, &t_info) == 0;
-		if (t_found && (t_info.st_mode & S_IFDIR) == 0)
+		if (t_found && !S_ISDIR(t_info.st_mode))
 			return true;
 		
 		return false;
@@ -364,7 +364,7 @@ struct MCMacSystem: public MCSystemInterface
 		
 		bool t_found;
 		t_found = stat(p_path, &t_info) == 0;
-		if (t_found && (t_info.st_mode & S_IFDIR) != 0)
+		if (t_found && S_ISDIR(t_info.st_mode))
 			return true;
 		
 		return false;
@@ -376,7 +376,7 @@ struct MCMacSystem: public MCSystemInterface
 		if (stat(MCStringGetCString(p_path), &t_info) != 0)
 			return false;
 		
-		if ((t_info . st_mode & S_IFDIR) != 0)
+		if (S_ISDIR(t_info . st_mode))
 			return true;
 		
 		if ((t_info . st_mode & S_IWUSR) == 0)

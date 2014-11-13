@@ -416,16 +416,63 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	// Set the current one.
 	m_current_file = t_file;
 	
-	// Note that script point does not copy 'script' and requires it to be NUL-
-	// terminated. Indeed, this string *has* to persist until termination as
-	// constants, handler names and variable names use substrings of it directly.
+    // MERG 2013-12-24: [[ Shebang ]] Don't use tagged mode in script files
+    bool t_is_script_file;
+    t_is_script_file = false;
+    if (t_file -> script[0] == '#' && t_file -> script[1] == '!')
+        t_is_script_file = true;
+    
+    // MW-2014-10-24: [[ Bug 13730 ]] When in script file mode, we check the second
+    //   line for a match to the RE "coding[=:]\s*([-\w.]+)" and take this to be the
+    //   source encoding.
+    MCStringEncoding t_encoding;
+    t_encoding = kMCStringEncodingNative;
+    if (t_is_script_file)
+    {
+        char *t_end_of_first_line;
+        t_end_of_first_line = strchr(t_file -> script, '\n');
+        if (t_end_of_first_line != NULL)
+        {
+            t_end_of_first_line += 1;
+            if (t_end_of_first_line[0] == '\r')
+                t_end_of_first_line += 1;
+            if (t_end_of_first_line[0] == '#')
+            {
+                const char *t_end_of_second_line;
+                t_end_of_second_line = strchr(t_end_of_first_line, '\n');
+                if (t_end_of_second_line == NULL)
+                    t_end_of_second_line = t_end_of_first_line + strlen(t_end_of_first_line);
+                
+                MCAutoStringRef t_line;
+                /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)t_end_of_first_line, t_end_of_second_line - t_end_of_first_line, &t_line);
 
+                MCAutoStringRef t_encoding_str;
+                
+                regexp *t_regexp;
+                t_regexp = MCR_compile(MCSTR("coding[=:]\\s*([-\\w.]+)"), false);
+                if (t_regexp != NULL)
+                {
+                    if (MCR_exec(t_regexp, *t_line, MCRangeMake(0, MCStringGetLength(*t_line))) != 0 &&
+                        t_regexp -> matchinfo[1] . rm_so != -1)
+                    {
+                        uindex_t t_start, t_length;
+                        t_start = t_regexp->matchinfo[1].rm_so;
+                        t_length = t_regexp->matchinfo[1].rm_eo - t_start;
+                        /* UNCHECKED */ MCStringCopySubstring(*t_line, MCRangeMake(t_start, t_length), &t_encoding_str);
+                    }
+                }
+                
+                if (*t_encoding_str != NULL)
+                    MCStringsEvalTextEncoding(*t_encoding_str, t_encoding);
+            }
+        }
+    }
+    
     MCAutoStringRef t_file_script;
-    /* UNCHECKED */ MCStringCreateWithCString(t_file -> script, &t_file_script);
+    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)t_file -> script, strlen(t_file -> script), t_encoding, false, &t_file_script);
 	MCScriptPoint sp(this, hlist, *t_file_script);
 
-    // MERG 2013-12-24: [[ Shebang ]] Don't use tagged mode in script files
-    if (!(t_file -> script[0] == '#' && t_file -> script[1] == '!'))
+    if (!t_is_script_file)
         sp . allowtags(True);
 	
 	// The statement chain that will executed.

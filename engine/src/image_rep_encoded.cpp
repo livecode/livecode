@@ -187,24 +187,29 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 	if (MCSecureModeCanAccessDisk())
 		t_stream = MCS_open(m_file_name, kMCOpenFileModeRead, false, false, 0);
 	
-	// MW-2013-09-25: [[ Bug 10983 ]] Only ever try to load the rep as a url once.
-	if (t_stream == nil && !m_url_load_attempted)
-	{
-		// MW-2013-09-25: [[ Bug 10983 ]] Mark the rep has having attempted url load.
-		m_url_load_attempted = true;
+	if (t_stream == nil)
+    {
+        // MW-2013-09-25: [[ Bug 10983 ]] Only ever try to load the rep as a url once.
+        if (!m_url_load_attempted)
+        {
+            // MW-2013-09-25: [[ Bug 10983 ]] Mark the rep has having attempted url load.
+            m_url_load_attempted = true;
 
-        MCExecContext ctxt(MCdefaultstackptr, nil, nil);
-        MCAutoValueRef t_data;
-        MCU_geturl(ctxt, m_file_name, &t_data);
-        if (ctxt.HasError() || MCValueIsEmpty(*t_data))
-            return false;
-        MCAutoDataRef t_dataref;
-        /* UNCHECKED */ ctxt . ConvertToData(*t_data, &t_dataref);
-        
-        /* UNCHECKED */ MCMemoryAllocateCopy(MCDataGetBytePtr(*t_dataref), MCDataGetLength(*t_dataref), m_url_data);
-        m_url_data_size = MCDataGetLength(*t_dataref);
+            MCExecContext ctxt(MCdefaultstackptr, nil, nil);
+            MCAutoValueRef t_data;
+            MCU_geturl(ctxt, m_file_name, &t_data);
+            if (ctxt.HasError() || MCValueIsEmpty(*t_data))
+                return false;
+            MCAutoDataRef t_dataref;
+            /* UNCHECKED */ ctxt . ConvertToData(*t_data, &t_dataref);
 
-        t_stream = MCS_fakeopen((const char *)m_url_data, m_url_data_size);
+            /* UNCHECKED */ MCMemoryAllocateCopy(MCDataGetBytePtr(*t_dataref), MCDataGetLength(*t_dataref), m_url_data);
+            m_url_data_size = MCDataGetLength(*t_dataref);
+        }
+
+        // IM-2014-09-30: [[ Bug 13501 ]] If we already have the url data then make sure we use it.
+        if (m_url_data != nil)
+            t_stream =  MCS_fakeopen((const char *)m_url_data, m_url_data_size);
 	}
 
 	if (t_stream != nil)

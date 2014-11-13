@@ -2305,7 +2305,9 @@ void MCAndroidFinalizeBuildInfo()
             MCValueRelease(s_build_info[i]);
         }
         MCMemoryDeleteArray(s_build_info);
-    }        
+        // AL-2014-10-08: [[ Bug 13626 ]] Set s_build_info back to NULL when finalizing
+        s_build_info = NULL;
+    }
 }
 
 bool MCAndroidSignatureMatch(const char *p_signature)

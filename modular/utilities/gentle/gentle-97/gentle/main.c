@@ -12,6 +12,8 @@
 */
 
 
+int ErrorOccured = 0;
+
 static scanargs();
 
 main (argc, argv)
@@ -26,7 +28,7 @@ main (argc, argv)
    
    ROOT ();
    
-   exit(0);
+   /* --PATCH-- */ exit(ErrorOccured);
 }
 
 /*----------------------------------------------------------------------------*/

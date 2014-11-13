@@ -31,7 +31,7 @@ extern void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWindowShape *MCImage::makewindowshape(void)
+MCWindowShape *MCImage::makewindowshape(const MCGIntegerSize &p_size)
 {
 	bool t_success = true;
 	
@@ -42,7 +42,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 	uindex_t t_alpha_stride = 0;
 	uindex_t t_width, t_height;
 	
-	t_success = lockbitmap(t_bitmap, true);
+	t_success = lockbitmap(true, true, &p_size, t_bitmap);
 	
 	if (t_success)
 		t_success = MCImageBitmapHasTransparency(t_bitmap);
@@ -59,8 +59,8 @@ MCWindowShape *MCImage::makewindowshape(void)
 	if (t_success)
 	{
 		surface_extract_alpha(t_bitmap->data, t_bitmap->stride, t_alpha, t_alpha_stride, t_width, t_height);
-		MCPlatformWindowMaskCreate(t_width, t_height, t_alpha_stride, t_alpha, t_mask_image);
-		MCMemoryDeallocate(t_alpha);
+		// IM-2014-10-03: [[ Bug 13432 ]] Pass ownership of alpha buffer to the new mask
+		MCPlatformWindowMaskCreateWithAlphaAndRelease(t_width, t_height, t_alpha_stride, t_alpha, t_mask_image);
 	}
 	
 	if (t_success)

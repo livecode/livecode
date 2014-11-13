@@ -158,7 +158,8 @@ void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string)
 	if (MCS_getentries(false, false, &t_list) && MCListCopyAsString(*t_list, r_string))
 		return;
 
-	ctxt . Throw();
+    // SN-2014-10-07: [[ Bug 13619 ]] 'the folders' should return empty, in case of an error
+    r_string = MCValueRetain(kMCEmptyString);
 }
 
 void MCFilesEvalFiles(MCExecContext& ctxt, MCStringRef& r_string)
@@ -172,7 +173,8 @@ void MCFilesEvalFiles(MCExecContext& ctxt, MCStringRef& r_string)
 	if (MCS_getentries(true, false, &t_list) && MCListCopyAsString(*t_list, r_string))
 		return;
 
-	ctxt . Throw();
+    // SN-2014-10-07: [[ Bug 13619 ]] 'the files' should return empty, in case of an error
+    r_string = MCValueRetain(kMCEmptyString);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -882,6 +884,9 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
 			t_encoding = (Encoding_type)kMCFileEncodingNative;
 		}
     }
+    // FG-2014-09-23: [[ Bugfix 12545 ]] "text" is not valid when performing I/O
+    else if (p_encoding == kMCFileEncodingText && p_is_driver)
+        t_encoding = (Encoding_type)kMCFileEncodingNative;
     else
         t_encoding = (Encoding_type)p_encoding;
 
@@ -2125,12 +2130,24 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
 		break;
 	case RF_UNTIL:
     {
-        MCFilesExecReadUntil(ctxt, t_stream, t_index, p_sentinel, p_max_wait, p_time_units, t_encoding, &t_output, t_stat);
+        // MW-2014-10-23: [[ Bug ]] Only prod the 'sentinal' if its the until case (otherwise
+        //   it is nil).
+        // SN-2014-10-14: [[ Bug 13658 ]] In case we want to read everything (EOF, end, empty) from a binary process,
+        //  the sentinel must be empty, not Ctrl-D (0x04, which might appear in a binary data output.
+        MCAutoStringRef t_sentinel;
+        if (MCprocesses[t_index] . encoding == kMCFileEncodingBinary &&
+            MCStringGetLength(p_sentinel) == 1 && MCStringGetCharAtIndex(p_sentinel, 0) == 0x4)
+            t_sentinel = kMCEmptyString;
+        else
+            t_sentinel = p_sentinel;
+
+        MCFilesExecReadUntil(ctxt, t_stream, t_index, *t_sentinel, p_max_wait, p_time_units, t_encoding, &t_output, t_stat);
 		break;
 	}
 	default:  
 		break;
 	}
+
     MCFilesReadComplete(ctxt, *t_output, t_stat, t_encoding != kMCFileEncodingBinary);
 }
 

@@ -39,8 +39,8 @@ extern MCGFloat MCResGetDeviceScale(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, int32_t p_width, int32_t p_height, const void *p_bits, uint32_t p_stride, bool p_has_alpha);
-static void MCMacRenderRasterToCG(CGContextRef p_target, CGRect p_area, const MCGRaster &p_raster);
+// IM-2014-10-03: [[ Bug 13432 ]] Add src_rect, alpha & blend mode parameters to MCMacRenderRasterToCG().
+static void MCMacRenderRasterToCG(CGContextRef p_target, CGRect p_dst_rect, const MCGRaster &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend);
 static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGImageRef &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend);
 
 static void MCMacClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_region, uint32_t p_surface_height);
@@ -67,6 +67,8 @@ MCMacPlatformSurface::MCMacPlatformSurface(MCMacPlatformWindow *p_window, CGCont
 	
 	// Borrow the CGContext and MCRegion for now.
 	m_cg_context = p_cg_context;
+	m_cg_context_first_lock = true;
+	
 	m_update_rgn = p_update_rgn;
     
     m_raster . pixels = nil;
@@ -176,6 +178,13 @@ void MCMacPlatformSurface::UnlockPixels(MCGIntegerRectangle p_region, MCGRaster&
 
 bool MCMacPlatformSurface::LockSystemContext(void*& r_context)
 {
+	// IM-2014-10-03: [[ Bug 13432 ]] Make sure the window mask has been applied to the context.
+	if (m_cg_context_first_lock)
+	{
+		m_cg_context_first_lock = false;
+		ApplyMaskToCGContext();
+	}
+	
 	// IM-2014-06-12: [[ Bug 12354 ]] Lock the surface context without scaling
 	CGFloat t_scale;
 	t_scale = 1.0 / GetBackingScaleFactor();
@@ -236,12 +245,12 @@ bool MCMacPlatformSurface::Composite(MCGRectangle p_dst_rect, MCGImageRef p_src_
 	return true;
 }
 
-void MCMacPlatformSurface::Lock(void)
+void MCMacPlatformSurface::ApplyMaskToCGContext()
 {
     CGImageRef t_mask;
 	t_mask = nil;
 	if (m_window -> m_mask != nil)
-		t_mask = (CGImageRef)m_window -> m_mask;
+		t_mask = ((MCMacPlatformWindowMask*)m_window -> m_mask) -> cg_mask;
     
 	if (t_mask != nil)
 	{
@@ -265,7 +274,10 @@ void MCMacPlatformSurface::Lock(void)
 		t_dst_rect . size . height = t_mask_height;
 		CGContextClipToMask(m_cg_context, t_dst_rect, t_mask);
 	}
-	
+}
+
+void MCMacPlatformSurface::Lock(void)
+{
 	CGContextSaveGState(m_cg_context);
 }
 
@@ -285,8 +297,21 @@ void MCMacPlatformSurface::Unlock(void)
         CGRect t_dst_rect;
         t_dst_rect = MCMacFlipCGRect(MCGIntegerRectangleToCGRect(t_bounds), t_surface_height);
         
+		if (m_window->m_mask != nil)
+		{
+			// IM-2014-10-22: [[ Bug 13746 ]] Apply the backing scale to the mask offset
+			MCGFloat t_scale;
+			t_scale = GetBackingScaleFactor();
+			
+			// IM-2014-10-03: [[ Bug 13432 ]] Set the buffer alpha directly from the mask raster.
+			MCMacPlatformWindowMask *t_mask;
+			t_mask = (MCMacPlatformWindowMask*)m_window->m_mask;
+			MCGRasterApplyAlpha(m_raster, t_mask->mask, MCGIntegerPointMake(-t_bounds.origin.x * t_scale, -t_bounds.origin.y * t_scale));
+		}
+			
         MCMacClipCGContextToRegion(m_cg_context, m_update_rgn, t_surface_height);
-        MCMacRenderRasterToCG(m_cg_context, t_dst_rect, m_raster);
+        // IM-2014-10-03: [[ Bug 13432 ]] Render with copy blend mode to replace destination alpha with the source alpha.
+        MCMacRenderRasterToCG(m_cg_context, t_dst_rect, m_raster, MCGRectangleMake(0, 0, m_raster.width, m_raster.height), 1.0, kMCGBlendModeCopy);
         
         free(m_raster . pixels);
         m_raster . pixels = nil;
@@ -370,6 +395,18 @@ static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
 	MCAssert(false); // unknown blend mode
 }
 
+static void MCMacRenderCGImage(CGContextRef p_target, CGRect p_dst_rect, CGImageRef p_src, MCGFloat p_alpha, MCGBlendMode p_blend)
+{
+	CGContextSaveGState(p_target);
+	
+	CGContextClipToRect(p_target, p_dst_rect);
+	CGContextSetAlpha(p_target, p_alpha);
+	CGContextSetBlendMode(p_target, MCGBlendModeToCGBlendMode(p_blend));
+	CGContextDrawImage(p_target, p_dst_rect, p_src);
+	
+	CGContextRestoreGState(p_target);
+}
+
 static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGImageRef &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 {
 	bool t_success = true;
@@ -379,48 +416,27 @@ static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGIm
 	t_success = MCGImageToCGImage(p_src, p_src_rect, false, false, t_image);
 	if (t_success)
 	{
-		CGContextSaveGState(p_target);
-		
-		CGContextClipToRect(p_target, p_dst_rect);
-		CGContextSetAlpha(p_target, p_alpha);
-		CGContextSetBlendMode(p_target, MCGBlendModeToCGBlendMode(p_blend));
-		CGContextDrawImage(p_target, p_dst_rect, t_image);
-		
-		CGContextRestoreGState(p_target);
+		MCMacRenderCGImage(p_target, p_dst_rect, t_image, p_alpha, p_blend);
 		CGImageRelease(t_image);
 	}
 }
 
-static void MCMacRenderRasterToCG(CGContextRef p_target, CGRect p_area, const MCGRaster &p_raster)
+static void MCMacRenderRasterToCG(CGContextRef p_target, CGRect p_dst_rect, const MCGRaster &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 {
 	CGColorSpaceRef t_colorspace;
-	t_colorspace = CGColorSpaceCreateDeviceRGB();
-	if (t_colorspace != nil)
+	if (MCMacPlatformGetImageColorSpace(t_colorspace))
 	{
 		CGImageRef t_image;
 		t_image = nil;
 		
-		if (MCGRasterToCGImage(p_raster, MCGRectangleMake(0, 0, p_raster.width, p_raster.height), t_colorspace, false, false, t_image))
+		if (MCGRasterToCGImage(p_src, p_src_rect, t_colorspace, false, false, t_image))
 		{
-			CGContextClipToRect((CGContextRef)p_target, p_area);
-			CGContextDrawImage((CGContextRef)p_target, p_area, t_image);
+			MCMacRenderCGImage(p_target, p_dst_rect, t_image, p_alpha, p_blend);
 			CGImageRelease(t_image);
 		}
 		
 		CGColorSpaceRelease(t_colorspace);
 	}
-}
-
-static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, int32_t p_width, int32_t p_height, const void *p_bits, uint32_t p_stride, bool p_has_alpha)
-{
-	MCGRaster t_raster;
-	t_raster.width = p_width;
-	t_raster.height = p_height;
-	t_raster.pixels = const_cast<void*>(p_bits);
-	t_raster.stride = p_stride;
-	t_raster.format = p_has_alpha ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
-	
-	MCMacRenderRasterToCG(p_target, p_area, t_raster);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -481,5 +497,11 @@ static void MCMacClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_re
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
+bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace)
+{
+	return MCImageGetCGColorSpace(r_colorspace);
+}
 
+////////////////////////////////////////////////////////////////////////////////
 

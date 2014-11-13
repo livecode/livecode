@@ -87,12 +87,8 @@ bool UrlRequestSetHTTPHeader(MCStringRef p_key, MCStringRef p_value, void *p_con
 		[t_request setValue: t_value forHTTPHeaderField: t_key];
 	}
 	
-	if (t_key != nil)
-		[t_key release];
-	
-	if (t_value != nil)
-		[t_value release];
-	
+    // PM-2014-10-27: [[ Bug 13778 ]] (Removed code: Make sure we do not release t_key and t_value since they are autoreleased)
+		
 	return t_success;
 }
 

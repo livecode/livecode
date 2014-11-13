@@ -116,8 +116,9 @@ void MCImage::SetHotSpot(MCExecContext& ctxt, MCPoint p_spot)
 {
 	uint32_t t_pixwidth, t_pixheight;
 	getgeometry(t_pixwidth, t_pixheight);
-	xhot = MCMax(1, MCMin(xhot, (int32_t)t_pixwidth));
-	yhot = MCMax(1, MCMin(yhot, (int32_t)t_pixheight));
+    // SN-2014-10-27: [[ Bug 13821 ]] Set the values of the parameter, not xhot and yhot
+	xhot = MCMax(1, MCMin(p_spot . x, (int32_t)t_pixwidth));
+	yhot = MCMax(1, MCMin(p_spot . y, (int32_t)t_pixheight));
 }
 
 void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)

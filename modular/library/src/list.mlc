@@ -3,25 +3,30 @@ module com.livecode.list
 foreign handler EvalHeadOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
 foreign handler EvalTailOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
 
-foreign handler ExecPushSingleElementOnto(in Value as any, inout Target as list) as undefined binds to "<builtin>"
-foreign handler ExecPushMultipleElementsOnto(in Value as list, inout Target as list) as undefined binds to "<builtin>"
-foreign handler ExecPopElementInto(inout Source as list, out Target as any) as undefined binds to "<builtin>"
-
-foreign handler ExecInsertSingleElementIntoListAt(in Value as any, inout Target as list, in Index as index) as undefined binds to "<builtin>"
-foreign handler ExecInsertMultipleElementsIntoListAt(in Value as list, inout Target as list, in Index as index) as undefined binds to "<builtin>"
+foreign handler ExecPushElementOnto(in Value as any, in IsFront as bool, inout Target as list) as undefined binds to "<builtin>"
+foreign handler ExecPopElementInto(inout Source as list, in IsFront as bool, out Target as any) as undefined binds to "<builtin>"
 
 foreign handler EvalNumberOfElementsIn(in Target as list, out Count as index) as undefined binds to "<builtin>"
 
-foreign handler EvalIsAmongTheElementsOf(in Needle as any, in IsNot as bool, in Target as list, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalIsAmongTheElementsOf(in Needle as any, in Target as list, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalContainsElements(in Target as list, in Needle as list, out Result as bool) as undefined binds to "<builtin>"
 
 foreign handler FetchElementOf(in Index as index, in Target as list, out Value as any) as undefined binds to "<builtin>"
 foreign handler StoreElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
 foreign handler FetchElementRangeOf(in Start as index, in Finish as index, in Target as list, out Value as list) as undefined binds to "<builtin>"
 foreign handler StoreElementRangeOf(in Value as any, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
 
+foreign handler StoreBeforeElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler StoreAfterElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+
+foreign handler SpliceIntoElementRangeOf(in Source as list, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler SpliceIntoElementOf(in Source as list, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler SpliceBeforeElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler SpliceAfterElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+
 --
 
-/* 
+/*
 Summary:        Returns the first element of <Target>.
 Target:         An expression which evaluates to a list.
 */
@@ -50,24 +55,13 @@ Summary:        Pushes <Value> onto <Target>, i.e. <Target> becomes the tail of 
                 with an index one greater than the previous tail.
 Value:          Any expression.
 Target:         An expression which evaluates to a list.
+
 */
 
 syntax PushOntoList is statement
-    "push" <Value: Expression> "onto" <Target:Expression>
+    "push" <Value: Expression> "onto" [ "front" "of" <IsFront=true> | "back" "of" <IsFront=false> ] <Target:Expression>
 begin
-    ExecPushSingleElementOnto(Value, Target)
-end syntax
-
-/* 
-Summary:        Concatenates the lists <Target> and <Value>.
-Value:          An expression which evaluates to a list.
-Target:         An expression which evaluates to a list.
-*/
-
-syntax PushElementsOntoList is statement
-    "push" "the" "elements" "of" <Value: Expression> "onto" <Target:Expression>
-begin
-    ExecPushMultipleElementsOnto(Value, Target)
+    ExecPushSingleElementOnto(Value, isFront, Target)
 end syntax
 
 /* 
@@ -78,40 +72,9 @@ Target:         An expression which evaluates to a container.
 */
 
 syntax PopList is statement
-    "pop" <Source: Expression> "into" <Target: Expression>
+    "pop" [ "front" "of" <IsFront=true> | "back" "of" <IsFront=false> ] <Source: Expression> "into" <Target: Expression>
 begin
-    ExecPopElementInto(Source, Target)
-end syntax
-
---
-
-/*
-Summary:        Inserts <Value> into <Target> at index <Index>. All preexisting elements at
-                this index or above have their indices incremented by one.
-Value:          Any expression.
-Target:         An expression which evaluates to a list.
-Index:          An expression which evaluates to a valid integer index of <Target>
-*/
-
-syntax InsertAt is statement
-    "insert" <Value: Expression> "into" <Target: Expression> "at" "index" <Index: Expression>
-begin
-    ExecInsertSingleElementIntoListAt(Value, Target, Index)
-end syntax
-
-/*
-Summary:        Inserts the elements of <Value> into <Target> at index <Index>. 
-                All preexisting elements at this index or above have their indices incremented
-                by the number of elements in <Value>.
-Value:          An expression which evaluates to a list.
-Target:         An expression which evaluates to a list.
-Index:          An expression which evaluates to a valid integer index of <Target>
-*/
-
-syntax InsertElementsAt is statement
-    "insert" "the" "elements" "of" <Value: Expression> "into" <Target: Expression> "at" "index" <Index: Expression>
-begin
-    ExecInsertMultipleElementsIntoListAt(Value, Target, Index)
+    ExecPopElementInto(Source, IsFront, Target)
 end syntax
 
 --
@@ -130,7 +93,7 @@ end syntax
 --
 
 /* 
-Summary:        Determines if a list contains a given element
+Summary:        Determines if a given element is in <Target>
 Needle:         Any expression.
 Target:         An expression which evaluates to a list.
 output:         Returns true if <Needle> can be found among the elements of <Target>, 
@@ -138,10 +101,24 @@ output:         Returns true if <Needle> can be found among the elements of <Tar
                 would return true.
 */
                 
-syntax AmongElementsOf is neutral binary operator with precedence 1
-    <Needle: Expression> "is" ["not" <IsNot=true>] "among" "the" "elements" "of" <Target: Expression>
+syntax IsInElements is neutral binary operator with precedence 1
+    <Needle: Expression> "is" "in" <Target: Expression>
 begin
-    EvalIsAmongTheElementsOf(Needle, IsNot, Target, output)
+    EvalIsAmongTheElementsOf(Needle, Target, output)
+end syntax
+
+/* 
+Summary:        Determines if <Target> contains <Needle> as a subsequence.
+Needle:         Any expression which evaluates to a list.
+Target:         An expression which evaluates to a list.
+output:         Returns true if the elements of <Needle> occur as a subsequence of the elements of <Target>,
+                and false otherwise.
+*/
+                
+syntax ContainsElements is neutral binary operator with precedence 1
+    <Target: Expression> "contains" <Target: Expression>
+begin
+    EvalContainsElements(Target, Needle, output)
 end syntax
 
 --
@@ -174,13 +151,91 @@ output:             Either locates the element containers between the given indi
                     single container for the target of another operation, or evaluates the elements
                     between the given indices as a list.
 
-*/
 
 syntax RangeElementsOf is prefix operator with precedence 1
 	"elements" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
 	FetchElementRangeOf(Start, Finish, Target, output)
 	StoreElementRangeOf(input, Start, Finish, Target)
+end syntax
+
+--
+
+syntax BeforeElementOf is prefix operator with precedence 1
+    "before" "element" <Index: Expression> "of" <Target: Expression>
+begin
+    StoreBeforeElementOf(input, Index, Target)
+end syntax
+
+syntax AfterElementOf is prefix operator with precedence 1
+    "after" "element" <Index: Expression> "of" <Target: Expression>
+begin
+    StoreAfterElementOf(input, Index, Target)
+end syntax
+
+--
+
+/*
+
+Summary:            Removes the elements of <Target> from <Start > to <Finish> and inserts each of the elements of
+                    <Source> into <Target> at <Start>.
+Source:             An expression which evaluates to a list.
+Start:              An expression which evaluates to a valid integer index of <Target>.
+Finish:             An expression which evaluates to a valid integer index of <Target>.
+Target:             An expression which evaluates to a list.
+
+*/
+
+syntax SpliceIntoRange is statement
+    "splice" <Source: Expression> "into" "element" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+    SpliceIntoElementRangeOf(Source, Start, Finish, Target)
+end syntax
+
+/*
+
+Summary:            Removes the element of <Target> at <Index> and inserts each of the elements of <Source> into
+                    <Target> at <Index>.
+Source:             An expression which evaluates to a list.
+Index:              An expression which evaluates to a valid integer index of <Target>.
+Target:             An expression which evaluates to a list.
+
+*/
+
+syntax SpliceIntoElement is statement
+    "splice" <Source: Expression> "into" "element" <Index: Expression> "of" <Target: Expression>
+begin
+    SpliceIntoElementOf(Source, Start, Finish, Target)
+end syntax
+
+/*
+
+Summary:            Inserts each of the elements of <Source> into <Target> before element at index <Index>.
+Source:             An expression which evaluates to a list.
+Index:              An expression which evaluates to a valid integer index of <Target>.
+Target:             An expression which evaluates to a list.
+
+*/
+
+syntax SpliceBeforeElement is statement
+    "splice" <Source: Expression> "before" "element" <Index: Expression> "of" <Target: Expression>
+begin
+    SpliceBeforeElementOf(Source, Start, Finish, Target)
+end syntax
+
+/*
+
+Summary:            Inserts each of the elements of <Source> into <Target> after element at index <Index>.
+Source:             An expression which evaluates to a list.
+Index:              An expression which evaluates to a valid integer index of <Target>.
+Target:             An expression which evaluates to a list.
+
+*/
+
+syntax SpliceAfterElement is statement
+    "splice" <Source: Expression> "after" "element" <Index: Expression> "of" <Target: Expression>
+begin
+    SpliceAfterElementOf(Source, Start, Finish, Target)
 end syntax
 
 --

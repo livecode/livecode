@@ -44,3 +44,10 @@ void MCBitwiseEvalBitwiseShift(integer_t p_operand, integer_t p_shift, integer_t
     else
         r_output = p_operand << p_shift;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MCBitwiseRunTests()
+{
+    
+}

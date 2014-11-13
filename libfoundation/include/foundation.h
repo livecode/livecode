@@ -355,7 +355,7 @@ typedef signed long int int64_t;
 #define UINT16_MIN (0U)
 #define UINT16_MAX (65535U)
 #define INT16_MIN (-32768)
-#define INT16_MAX (32767U)
+#define INT16_MAX (32767)
 
 #define UINT32_MIN (0U)
 #define UINT32_MAX (4294967295U)
@@ -550,7 +550,7 @@ struct MCRange
 //
 
 typedef void *MCValueRef;
-typedef struct __MCType *MCTypeRef;
+typedef struct __MCTypeInfo *MCTypeInfoRef;
 typedef struct __MCNull *MCNullRef;
 typedef struct __MCBoolean *MCBooleanRef;
 typedef struct __MCNumber *MCNumberRef;
@@ -558,10 +558,11 @@ typedef struct __MCString *MCStringRef;
 typedef struct __MCName *MCNameRef;
 typedef struct __MCData *MCDataRef;
 typedef struct __MCArray *MCArrayRef;
-typedef struct __MCEnum *MCEnumRef;
-typedef struct __MCRecord *MCRecordRef;
+typedef struct __MCHandler *MCHandlerRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
+typedef struct __MCRecord *MCRecordRef;
+typedef struct __MCError *MCErrorRef;
 typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
 
@@ -761,41 +762,6 @@ inline MCRange MCRangeMake(uindex_t p_offset, uindex_t p_length)
 
 bool MCInitialize(void);
 void MCFinalize(void);
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  ERROR HANDLING
-//
-
-#ifdef __OLD_ERROR__
-typedef uint32_t MCErrorCode;
-enum
-{
-	kMCErrorNone,
-	
-	kMCErrorOutOfMemory,
-};
-
-typedef void (*MCErrorHandler)(MCErrorCode code);
-
-// Throw the given error code (local to the current thread).
-bool MCErrorThrow(MCErrorCode code);
-
-// Catch the current error code (on the current thread) if any and clear it.
-MCErrorCode MCErrorCatch(void);
-
-// Returns true if there is an error pending on the current thread.
-bool MCErrorIsPending(void);
-
-// Returns any pending error (on the current thread) without clearing it.
-MCErrorCode MCErrorPeek(void);
-
-// Sets the error handler - called whenever MCErrorThrow is called.
-void MCErrorSetHandler(MCErrorHandler handler);
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1072,6 +1038,10 @@ hash_t MCHashPointer(void *p);
 // Returns a hash value for the given sequence of bytes.
 hash_t MCHashBytes(const void *bytes, size_t byte_count);
 
+// Returns a hash value for the given sequence of bytes, continuing a previous
+// hashing sequence (byte_count should be a multiple of 4).
+hash_t MCHashBytesStream(hash_t previous, const void *bytes, size_t byte_count);
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1092,12 +1062,12 @@ enum
 	kMCValueTypeCodeArray,
 	kMCValueTypeCodeList,
 	kMCValueTypeCodeSet,
-	kMCValueTypeCodePoint,
-	KMCValueTypeCodeRectangle,
-	kMCValueTypeCodeEnum,
-	kMCValueTypeCodeRecord,
-	kMCValueTypeCodeType,
+    kMCValueTypeCodeProperList,
 	kMCValueTypeCodeCustom,
+	kMCValueTypeCodeRecord,
+	kMCValueTypeCodeHandler,
+	kMCValueTypeCodeTypeInfo,
+    kMCValueTypeCodeError,
 };
 
 enum
@@ -1123,6 +1093,9 @@ bool MCValueCreateCustom(const MCValueCustomCallbacks *callbacks, size_t extra_b
 
 // Fetch the typecode of the given value.
 MCValueTypeCode MCValueGetTypeCode(MCValueRef value);
+
+// Fetch the typeinfo of the given value.
+MCTypeInfoRef MCValueGetTypeInfo(MCValueRef value);
 
 // Fetch the retain count.
 uindex_t MCValueGetRetainCount(MCValueRef value);
@@ -1248,35 +1221,65 @@ template<typename T> inline bool MCValueCreateCustom(const MCValueCustomCallback
 //  TYPE (META) DEFINITIONS
 //
 
-extern MCTypeRef kMCNullType;
-extern MCTypeRef kMCBooleanType;
-extern MCTypeRef kMCIntegerType;
-extern MCTypeRef kMCNumberType;
-extern MCTypeRef kMCStringType;
-extern MCTypeRef kMCDataType;
-extern MCTypeRef kMCArrayType;
+// A TypeInfoRef is a description of a type. TypeInfo's are uniqued objects with
+// equality of typeinfo's defined by the typeinfo's kind. Once created, typeinfo's
+// are equal iff their pointers are equal. (Note equal is not the same as conformance!)
 
-// Return the typecode of a value of the give type.
-MCValueTypeCode MCTypeGetTypeCode(MCTypeRef type);
+// These are typeinfo's for all the 'builtin' valueref types.
+extern MCTypeInfoRef kMCNullTypeInfo;
+extern MCTypeInfoRef kMCBooleanTypeInfo;
+extern MCTypeInfoRef kMCNumberTypeInfo;
+extern MCTypeInfoRef kMCStringTypeInfo;
+extern MCTypeInfoRef kMCDataTypeInfo;
+extern MCTypeInfoRef kMCArrayTypeInfo;
+extern MCTypeInfoRef kMCSetTypeInfo;
+extern MCTypeInfoRef kMCListTypeInfo;
+extern MCTypeInfoRef kMCProperListTypeInfo;
 
-bool MCIntegerRangeTypeCreate(integer_t minimum, integer_t maximum, MCTypeRef& r_type);
-bool MCUnsignedIntegerRangeTypeCreate(uinteger_t minimum, uinteger_t maximum, MCTypeRef& r_type);
+//////////
 
-struct MCEnumTypeFieldInfo
-{
-	MCNameRef name;
-};
+// Return the typecode of a value of the given type.
+MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef type);
 
-bool MCEnumTypeCreate(const MCEnumTypeFieldInfo *fields, uindex_t field_count, MCTypeRef& r_type);
+// Returns the name of the type, if it has one.
+MCNameRef MCTypeInfoGetName(MCTypeInfoRef type);
+
+// Returns true if the type is optional.
+bool MCTypeInfoIsOptional(MCTypeInfoRef type);
+
+// Returns true if the source typeinfo can be assigned to a slot with the target
+// typeinfo with no typecheck or conversion.
+bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
+
+// Binds the given typeinfo to the given name (creating a named typeinfo). A bound
+// typeinfo acts like its target apart from the non-nil return from GetName. Bindings
+// never chain - a typeinfo is either a named binding, or an actual typeinfo.
+bool MCTypeInfoBind(MCNameRef name, MCTypeInfoRef typeinfo, MCTypeInfoRef& r_typeinfo);
+bool MCTypeInfoBindAndRelease(MCNameRef name, MCTypeInfoRef typeinfo, MCTypeInfoRef& r_typeinfo);
+
+//////////
 
 struct MCRecordTypeFieldInfo
 {
 	MCNameRef name;
-	MCTypeRef type;
-	unsigned int width;
+	MCTypeInfoRef type;
 };
 
-bool MCRecordTypeCreate(const MCRecordTypeFieldInfo *fields, uindex_t field_count, MCTypeRef& r_type);
+// Create a description of a record with the given fields.
+bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef& r_typeinfo);
+
+// Return the number of fields in the record.
+uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
+
+// Return the name of the field at the given index.
+MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Return the type of the field at the given index.
+MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef typeinfo, uindex_t index);
+
+//////////
+
+// Handler types describe the signature of a function.
 
 enum MCHandlerTypeFieldMode
 {
@@ -1287,12 +1290,32 @@ enum MCHandlerTypeFieldMode
 
 struct MCHandlerTypeFieldInfo
 {
-	MCNameRef name;
-	MCTypeRef type;
+	MCTypeInfoRef type;
 	MCHandlerTypeFieldMode mode;
 };
 
-bool MCHandlerTypeCreate(const MCHandlerTypeFieldInfo *fields, uindex_t field_count, MCTypeRef return_type, MCTypeRef& r_type);
+// Create a description of a handler with the given signature.
+bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
+
+// Get the return type of the handler. A return-type of kMCNullTypeInfo means no
+// value is returned.
+MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
+
+// Get the number of parameters the handler takes.
+uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
+
+// Return the mode of the index'th parameter.
+MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Return the type of the index'th parameter.
+MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typeinfo, uindex_t index);
+
+//////////
+
+bool MCErrorTypeInfoCreate(MCNameRef domain, MCStringRef message, MCTypeInfoRef& r_typeinfo);
+
+MCNameRef MCErrorTypeInfoGetDomain(MCTypeInfoRef error);
+MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef error);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1368,6 +1391,7 @@ bool MCNameIsEmpty(MCNameRef name);
 // is *not* the same as MCValueIsEqualTo as it is a comparison up to case (of
 // the name's string) rather than exact.
 bool MCNameIsEqualTo(MCNameRef left, MCNameRef right);
+bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive);
 
 // The empty name object;
 extern MCNameRef kMCEmptyName;
@@ -1684,6 +1708,9 @@ bool MCStringConvertToUnicode(MCStringRef string, unichar_t*& r_chars, uindex_t&
 // terminated, but this is not reflected in the char count.
 bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
 
+// Normalizes and converts to native
+bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
+
 // Converts the contents of the string to UTF-8. The caller takes ownership of the
 // char array. Note that the returned array is NUL terminated but this is not
 // reflected in the char count.
@@ -1691,6 +1718,9 @@ bool MCStringConvertToUTF8(MCStringRef string, char*& r_chars, uindex_t& r_char_
 
 // Converts the contents of the string to UTF-32.
 bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_t &r_char_count);
+
+// Normalizes and converts to c-string
+bool MCStringNormalizeAndConvertToCString(MCStringRef string, char*& r_cstring);
 
 // Converts the content to char_t*
 bool MCStringConvertToCString(MCStringRef string, char*& r_cstring);
@@ -1758,6 +1788,8 @@ bool MCStringSubstringContains(MCStringRef string, MCRange range, MCStringRef ne
 // Find the first offset of needle in string, on or after index 'after',
 // processing as appropriate according to options.
 bool MCStringFirstIndexOf(MCStringRef string, MCStringRef needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
+bool MCStringFirstIndexOfStringInRange(MCStringRef string, MCStringRef p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
+
 // Find the first offset of needle in string - where needle is a Unicode character
 // (note it is a codepoint, not unichar - i.e. a 20-bit value).
 bool MCStringFirstIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
@@ -1768,6 +1800,8 @@ bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCR
 // Find the last offset of needle in string, on or before index 'before',
 // processing as appropriate according to options.
 bool MCStringLastIndexOf(MCStringRef string, MCStringRef needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
+bool MCStringLastIndexOfStringInRange(MCStringRef string, MCStringRef p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
+
 // Find the last offset of needle in string - where needle is a Unicode character
 // (note it is a codepoint, not unichar - i.e. a 20-bit value).
 bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
@@ -1896,6 +1930,12 @@ bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, MCStringRef ro
 
 //////////
 
+// Proper list versions of string splitting
+bool MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
+bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
+
+//////////
+
 // Converts two surrogate pair code units into a codepoint
 codepoint_t MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail);
 
@@ -1974,7 +2014,11 @@ bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
 bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
 bool MCDataContains(MCDataRef p_data, MCDataRef p_needle);
-uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, uindex_t p_start_offset);
+bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle);
+bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle);
+
+uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range);
+uindex_t MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range);
 
 // convert the given data to CFDataRef
 #if defined(__MAC__) || defined (__IOS__)
@@ -1990,9 +2034,13 @@ extern MCArrayRef kMCEmptyArray;
 
 // Create an immutable array containing the given keys and values.
 bool MCArrayCreate(bool case_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
+// Create an immutable array containing the given keys and values with the requested string comparison options.
+bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
 
 // Create an empty mutable array.
 bool MCArrayCreateMutable(MCArrayRef& r_array);
+// Create an empty mutable array with the requested string comparison options.
+bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive);
 
 // Make an immutable copy of the given array. If the 'copy and release' form is
 // used then the original array is released (has its reference count reduced by
@@ -2011,6 +2059,11 @@ bool MCArrayIsMutable(MCArrayRef array);
 
 // Returns the number of elements in the array.
 uindex_t MCArrayGetCount(MCArrayRef array);
+
+// Returns whether the keys of the array have been predesignated case sensitive or not.
+bool MCArrayIsCaseSensitive(MCArrayRef array);
+// Returns whether the keys of the array have been predesignated form sensitive or not.
+bool MCArrayIsFormSensitive(MCArrayRef array);
 
 // Fetch the value from the array with the given key. The returned value is
 // not retained. If being stored elsewhere ValueCopy should be used to make an
@@ -2138,13 +2191,70 @@ bool MCSetList(MCSetRef set, uindex_t*& r_element, uindex_t& r_element_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  POINT DEFINITIONS
+//  RECORD DEFINITIONS
 //
+
+bool MCRecordCreate(MCTypeInfoRef typeinfo, const MCValueRef *values, uindex_t value_count, MCRecordRef& r_record);
+
+bool MCRecordCreateMutable(MCRecordRef& r_record);
+
+bool MCRecordCopy(MCRecordRef record, MCRecordRef& r_new_record);
+bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
+
+bool MCRecordMutableCopy(MCRecordRef record, MCRecordRef& r_new_record);
+bool MCRecordMutableCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
+
+bool MCRecordIsMutable(MCRecordRef self);
+
+bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
+bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  RECTANGLE DEFINITIONS
+//  HANDLER DEFINITIONS
 //
+
+void *MCHandlerGetDefinition(MCHandlerRef handler);
+void *MCHandlerGetInstance(MCHandlerRef handler);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  ERROR DEFINITIONS
+//
+
+extern MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
+extern MCTypeInfoRef kMCGenericErrorTypeInfo;
+
+bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
+
+bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
+
+MCNameRef MCErrorGetDomain(MCErrorRef error);
+MCArrayRef MCErrorGetInfo(MCErrorRef error);
+MCStringRef MCErrorGetMessage(MCErrorRef error);
+
+uindex_t MCErrorGetDepth(MCErrorRef error);
+MCValueRef MCErrorGetTargetAtLevel(MCErrorRef error, uindex_t level);
+uindex_t MCErrorGetRowAtLevel(MCErrorRef error, uindex_t row);
+uindex_t MCErrorGetColumnAtLevel(MCErrorRef error, uindex_t column);
+
+// Throw the given error code (local to the current thread).
+bool MCErrorThrow(MCErrorRef error);
+
+// Catch the current error code (on the current thread) if any and clear it.
+bool MCErrorCatch(MCErrorRef& r_error);
+
+// Returns true if there is an error pending on the current thread.
+bool MCErrorIsPending(void);
+
+// Returns any pending error (on the current thread) without clearing it.
+MCErrorRef MCErrorPeek(void);
+
+// Throw an out of memory error.
+bool MCErrorThrowOutOfMemory(void);
+
+// Throw a generic runtime error (one that hasn't had a class made for it yet).
+bool MCErrorThrowGeneric(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2287,6 +2397,15 @@ bool MCStreamReadInt16(MCStreamRef stream, int16_t& r_value);
 bool MCStreamReadInt32(MCStreamRef stream, int32_t& r_value);
 bool MCStreamReadInt64(MCStreamRef stream, int64_t& r_value);
 
+bool MCStreamWriteUInt8(MCStreamRef stream, uint8_t value);
+bool MCStreamWriteUInt16(MCStreamRef stream, uint16_t value);
+bool MCStreamWriteUInt32(MCStreamRef stream, uint32_t value);
+bool MCStreamWriteUInt64(MCStreamRef stream, uint64_t value);
+bool MCStreamWriteInt8(MCStreamRef stream, int8_t value);
+bool MCStreamWriteInt16(MCStreamRef stream, int16_t value);
+bool MCStreamWriteInt32(MCStreamRef stream, int32_t value);
+bool MCStreamWriteInt64(MCStreamRef stream, int64_t value);
+
 // Variable-sized unsigned and signing integer functions. These methods use
 // the top-bit of successive bytes to indicate whether more bytes follow - each
 // byte encodes 7 bits of information.
@@ -2298,6 +2417,9 @@ bool MCStreamReadCompactSInt64(MCStreamRef stream, uint64_t& r_value);
 // Fixed-size binary-floating point functions.
 bool MCStreamReadFloat(MCStreamRef stream, float& r_value);
 bool MCStreamReadDouble(MCStreamRef stream, double& r_value);
+
+bool MCStreamWriteFloat(MCStreamRef stream, float value);
+bool MCStreamWriteDouble(MCStreamRef stream, double value);
 
 // Known valueref functions - these assume the given type is present.
 bool MCStreamReadBoolean(MCStreamRef stream, MCBooleanRef& r_boolean);
@@ -2334,30 +2456,86 @@ enum
 
 /////////
 
-// Split a string into a list using p_delimiter as the element delimiter
-bool MCProperListSplitStringByDelimiter(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCProperListRef& r_list);
-// Reform a list into a string, combining the elements with p_delimiter
-bool MCProperListCombineWithDelimiter(MCProperListRef list, MCStringRef p_delimiter, MCStringRef& r_list);
+extern MCProperListRef kMCEmptyProperList;
 
-// Sort list according to the given sort key type
-bool MCProperListSort(MCProperListRef list, bool p_ascending, MCProperListSortType p_sort_type);
+// Create an immutable list containing the given values.
+bool MCProperListCreate(const MCValueRef *values, uindex_t length, MCProperListRef& r_list);
+
+// Create an empty mutable list.
+bool MCProperListCreateMutable(MCProperListRef& r_list);
+
+// Make an immutable copy of the given list. If the 'copy and release' form is
+// used then the original list is released (has its reference count reduced by
+// one).
+bool MCProperListCopy(MCProperListRef list, MCProperListRef& r_new_list);
+bool MCProperListCopyAndRelease(MCProperListRef list, MCProperListRef& r_new_list);
+
+// Make a mutable copy of the given list. If the 'copy and release' form is
+// used then the original list is released (has its reference count reduced by
+// one).
+bool MCProperListMutableCopy(MCProperListRef list, MCProperListRef& r_new_list);
+bool MCProperListMutableCopyAndRelease(MCProperListRef list, MCProperListRef& r_new_list);
+
+// Returns 'true' if the given list is mutable.
+bool MCProperListIsMutable(MCProperListRef list);
+
+// Returns the number of elements in the list.
+uindex_t MCProperListGetLength(MCProperListRef list);
+
+// Returns true if the given list is the empty list.
+bool MCProperListIsEmpty(MCProperListRef list);
+
+// Iterate over the elements in the list.
+bool MCProperListIterate(MCProperListRef list, uintptr_t& x_iterator, MCValueRef& r_element);
+
+// Apply the callback to each element of list. The contents should not be modified.
+typedef bool (*MCProperListApplyCallback)(void *context, MCValueRef element);
+bool MCProperListApply(MCProperListRef list, MCProperListApplyCallback p_callback, void *context);
+
+// Apply the callback to each element of list to create a new list.
+typedef bool (*MCProperListMapCallback)(MCValueRef element, MCValueRef& r_new_element);
+bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list);
+
+// Sort list by comparing elements using the provided callback.
+typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef left, const MCValueRef right);
+bool MCProperListSort(MCProperListRef list, bool p_reverse, MCProperListQuickSortCallback p_callback);
+
+typedef compare_t (*MCProperListCompareElementCallback)(void *context, const MCValueRef left, const MCValueRef right);
+bool MCProperListStableSort(MCProperListRef list, bool p_reverse, MCProperListCompareElementCallback p_callback, void *context);
 
 // Fetch the first element of the list. The returned value is not retained.
 MCValueRef MCProperListFetchHead(MCProperListRef list);
 // Fetch the last element of the list. The returned value is not retained.
 MCValueRef MCProperListFetchTail(MCProperListRef list);
+// Fetch the element of the list at the specified index. The returned value is not retained.
+MCValueRef MCProperListFetchElementAtIndex(MCProperListRef list, uindex_t p_index);
 
+// Copy the elements at the specified range as a list.
+bool MCProperListCopySublist(MCProperListRef list, MCRange p_range, MCProperListRef& r_elements);
 
-bool MCProperListFetchElementAtIndex(MCProperListRef list, index_t p_index, MCValueRef& r_value);
-bool MCProperListPushElement(MCProperListRef list, MCValueRef p_value);
-bool MCProperListPushElements(MCProperListRef list, MCProperListRef p_value);
+bool MCProperListPushElementOntoFront(MCProperListRef list, MCValueRef p_value);
+bool MCProperListPushElementOntoBack(MCProperListRef list, MCValueRef p_value);
+// Pushes all of the values in p_values onto the end of the list
+bool MCProperListPushElementsOntoFront(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length);
+bool MCProperListPushElementsOntoBack(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length);
 
-bool MCProperListPop(MCProperListRef list, MCValueRef& r_value);
+bool MCProperListAppendList(MCProperListRef list, MCProperListRef p_value);
+
+// The returned value is owned by the caller.
+bool MCProperListPopFront(MCProperListRef list, MCValueRef& r_value);
+bool MCProperListPopBack(MCProperListRef list, MCValueRef& r_value);
 
 bool MCProperListInsertElement(MCProperListRef list, MCValueRef p_value, index_t p_index);
-bool MCProperListInsertElements(MCProperListRef list, MCProperListRef p_value, index_t p_index);
+bool MCProperListInsertElements(MCProperListRef list, const MCValueRef *p_value, uindex_t p_length, index_t p_index);
+bool MCProperListInsertList(MCProperListRef list, MCProperListRef p_value, index_t p_index);
 
-uindex_t MCProperListGetCount(MCProperListRef list);
+bool MCProperListRemoveElement(MCProperListRef list, index_t p_index);
+bool MCProperListRemoveElements(MCProperListRef list, index_t p_start, index_t p_finish);
+
+bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset);
+bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
+
+bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2370,25 +2548,35 @@ enum MCPickleFieldType
     kMCPickleFieldTypeValueRef,
     kMCPickleFieldTypeStringRef,
     kMCPickleFieldTypeNameRef,
-    kMCPickleFieldTypeTypeRef,
+    kMCPickleFieldTypeTypeInfoRef,
     kMCPickleFieldTypeArrayOfByte,
+    kMCPickleFieldTypeArrayOfValueRef,
     kMCPickleFieldTypeArrayOfNameRef,
+    kMCPickleFieldTypeArrayOfTypeInfoRef,
     kMCPickleFieldTypeArrayOfRecord,
     kMCPickleFieldTypeArrayOfVariant,
-    kMCPickleFieldTypeCallback,
 };
 
 struct MCPickleRecordFieldInfo
 {
+    // The kind (native type) of the field.
     MCPickleFieldType kind;
+    // The name of the field.
     const char *tag;
+    // The offset of the field within the record.
     size_t field_offset;
+    // The offset of an associated field within the record
+    // Variable sized arrays use this for the count field.
     size_t aux_field_offset;
+    // Extra information about the field.
+    // For callback fields, this is the function pointer.
+    // For array of variant or record fields, this is the pickleinfo for the element.
     void *extra;
 };
 
 struct MCPickleRecordInfo
 {
+    size_t size;
     MCPickleRecordFieldInfo *fields;
 };
 
@@ -2410,7 +2598,7 @@ struct MCPickleVariantInfo
         static MCPickleRecordFieldInfo __fields[]; \
         static MCPickleRecordInfo __info; \
     }; \
-    MCPickleRecordInfo __##Type##_PickleImp::__info = { __##Type##_PickleImp::__fields }; \
+    MCPickleRecordInfo __##Type##_PickleImp::__info = { sizeof(Type), __##Type##_PickleImp::__fields }; \
     MCPickleRecordInfo *k##Type##PickleInfo = &__##Type##_PickleImp::__info; \
     MCPickleRecordFieldInfo __##Type##_PickleImp::__fields[] = {
 #define MC_PICKLE_END_RECORD() \
@@ -2441,30 +2629,26 @@ struct MCPickleVariantInfo
 #define MC_PICKLE_VALUEREF(Field) MC_PICKLE_FIELD(ValueRef, Field, 0)
 #define MC_PICKLE_STRINGREF(Field) MC_PICKLE_FIELD(StringRef, Field, 0)
 #define MC_PICKLE_NAMEREF(Field) MC_PICKLE_FIELD(NameRef, Field, 0)
-#define MC_PICKLE_TYPEREF(Field) MC_PICKLE_FIELD(TypeRef, Field, 0)
-#define MC_PICKLE_CALLBACK(Field, CCallback) MC_PICKLE_FIELD(Callback, Field, CCallback)
+#define MC_PICKLE_TYPEINFOREF(Field) MC_PICKLE_FIELD(TypeInfoRef, Field, 0)
 
 #define MC_PICKLE_INTENUM(EType, EField) MC_PICKLE_FIELD(IntEnum, EField, k##EType##__Last)
 
-#define MC_PICKLE_ARRAY_OF_BYTE(Field, CountField) MC_PICKLE_FIELD_AUX(Byte, Field, CountField, 0)
-#define MC_PICKLE_ARRAY_OF_NAMEREF(Field, CountField) MC_PICKLE_FIELD_AUX(NameRef, Field, CountField, 0)
+#define MC_PICKLE_ARRAY_OF_BYTE(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfByte, Field, CountField, 0)
+#define MC_PICKLE_ARRAY_OF_VALUEREF(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfValueRef, Field, CountField, 0)
+#define MC_PICKLE_ARRAY_OF_NAMEREF(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfNameRef, Field, CountField, 0)
+#define MC_PICKLE_ARRAY_OF_TYPEINFOREF(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfTypeInfoRef, Field, CountField, 0)
 #define MC_PICKLE_ARRAY_OF_RECORD(Record, Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfRecord, Field, CountField, k##Record##PickleInfo)
 #define MC_PICKLE_ARRAY_OF_VARIANT(Variant, Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfVariant, Field, CountField, k##Variant##PickleInfo)
 
 // Read in the stream in the format conforming to the specified pickle info.
-// All refs which are deserialized are returned in the value_pool array, only
-// these need to be released to release all the refs used by the record.
-// Any C arrays allocated within the record should be freed with 'free()'.
-// Any variants or records allocated within the record should be freed with 'free()'.
-// The only exception is an array of record, where each record will be inline and
-// thus not require freeing.
-bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *info, MCValueRef*& r_value_pool, uindex_t& r_value_pool_size, void*& r_record);
+bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *info, void* r_record);
 
 // Write the given record to the stream in the format conforming to the specified
 // pickle info.
-// The value pool for the pickle is initialized to be value_pool with any further
-// values being added to it as necessary.
-bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *info, MCValueRef *value_pool, uindex_t value_pool_size, void* record);
+bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *info, void* record);
+
+// Release a record read in using MCPickleRead.
+void MCPickleRelease(MCPickleRecordInfo *info, void *record);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

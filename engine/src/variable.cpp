@@ -1059,7 +1059,20 @@ bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 		return false;
 
 	if (MCNameGetCharAtIndex(p_name, 0) == '$')
-		t_new_global -> is_env = true;
+  {
+    MCAutoStringRef t_env;
+    /* UNCHECKED */ MCStringCopySubstring(
+      MCNameGetString(p_name),
+      MCRangeMake(1, MCStringGetLength(MCNameGetString(p_name))), 
+      &t_env
+    );
+        
+    MCAutoStringRef t_value;
+    if (MCS_getenv(*t_env, &t_value))
+      t_new_global -> setvalueref(*t_value);
+
+    t_new_global -> is_env = true;
+  }
 
 	t_new_global -> is_global = true;
 

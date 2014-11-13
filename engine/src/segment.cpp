@@ -279,8 +279,9 @@ MCLine *MCSegment::Fit(coord_t p_max_width)
     }
     
     // Was breaking required?
+    // FG-2014-10-21: [[ Bugfix 13727 ]] Breaking a block implies breaking a segment
     MCLine *t_newline = NULL;
-    if (t_need_break_segment)
+    if (t_need_break_segment || t_need_break_block)
     {
         // A block was broken and therefore the segment possibly needs to be split
         MCSegment *t_split_segment;

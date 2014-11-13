@@ -690,9 +690,10 @@ MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &p
 	t_left = MCMax(p_rect_1.origin.x, p_rect_2.origin.x);
 	t_top = MCMax(p_rect_1.origin.y, p_rect_2.origin.y);
 	
+	// IM-2014-10-22: [[ Bug 13746 ]] Cast to signed ints to fix unsigned arithmetic overflow
 	int32_t t_right, t_bottom;
-	t_right = MCMin(p_rect_1.origin.x + p_rect_1.size.width, p_rect_2.origin.x + p_rect_2.size.width);
-	t_bottom = MCMin(p_rect_1.origin.y + p_rect_1.size.height, p_rect_2.origin.y + p_rect_2.size.height);
+	t_right = MCMin(p_rect_1.origin.x + (int32_t)p_rect_1.size.width, p_rect_2.origin.x + (int32_t)p_rect_2.size.width);
+	t_bottom = MCMin(p_rect_1.origin.y + (int32_t)p_rect_1.size.height, p_rect_2.origin.y + (int32_t)p_rect_2.size.height);
 	
 	t_right = MCMax(t_left, t_right);
 	t_bottom = MCMax(t_top, t_bottom);
@@ -802,6 +803,11 @@ MCGAffineTransform MCGAffineTransformMakeScale(MCGFloat p_xscale, MCGFloat p_ysc
 	return t_transform;
 }
 
+MCGAffineTransform MCGAffineTransformMakeSkew(MCGFloat p_xskew, MCGFloat p_yskew)
+{
+	return MCGAffineTransformMake(1, p_yskew, p_xskew, 1, 0, 0);
+}
+
 MCGAffineTransform MCGAffineTransformConcat(const MCGAffineTransform& p_transform_1, const MCGAffineTransform& p_transform_2)
 {
 	MCGAffineTransform t_result;
@@ -827,6 +833,11 @@ MCGAffineTransform MCGAffineTransformTranslate(const MCGAffineTransform &p_trans
 MCGAffineTransform MCGAffineTransformScale(const MCGAffineTransform &p_transform, MCGFloat p_xscale, MCGFloat p_yscale)
 {
 	return MCGAffineTransformConcat(MCGAffineTransformMakeScale(p_xscale, p_yscale), p_transform);
+}
+
+MCGAffineTransform MCGAffineTransformSkew(const MCGAffineTransform &p_transform, MCGFloat p_xskew, MCGFloat p_yskew)
+{
+	return MCGAffineTransformConcat(MCGAffineTransformMakeSkew(p_xskew, p_yskew), p_transform);
 }
 
 MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& p_transform)
@@ -870,6 +881,77 @@ MCGAffineTransform MCGAffineTransformFromRectangles(const MCGRectangle &p_a, con
 	t_dy = p_b.origin.y - (p_a.origin.y * t_y_scale);
 	
 	return MCGAffineTransformMake(t_x_scale, 0, 0, t_y_scale, t_dx, t_dy);
+}
+
+// solve simultaneous eqations in the form ax + by + k = 0. Equation input values are {x, y, k}. returns false if no unique solution found.
+bool solve_simul_eq_2_vars(const MCGFloat p_eq_1[3], const MCGFloat p_eq_2[3], MCGFloat &r_a, MCGFloat &r_b)
+{
+	MCGFloat a, b, c;
+	b = p_eq_1[1] * p_eq_2[0] - p_eq_2[1] * p_eq_1[0];
+	c = p_eq_1[2] * p_eq_2[0] - p_eq_2[2] * p_eq_1[0];
+	
+	if (b == 0)
+		return false;
+	
+	b = -c / b;
+	
+	MCGFloat a1, a2;
+	if (p_eq_1[0] != 0)
+	{
+		a1 = -(b * p_eq_1[1] + p_eq_1[2]) / p_eq_1[0];
+		if (a1 * p_eq_2[0] + b * p_eq_2[1] + p_eq_2[2] != 0)
+			return false;
+		a = a1;
+	}
+	else if (p_eq_2[0] != 0)
+	{
+		a2 = -(b * p_eq_2[1] + p_eq_2[2]) / p_eq_2[0];
+		if (a2 * p_eq_1[0] + b * p_eq_2[1] + p_eq_2[2] != 0)
+			return false;
+	}
+	else
+		return false;
+	
+	r_a = a;
+	r_b = b;
+	
+	return true;
+}
+
+bool MCGAffineTransformFromPoints(const MCGPoint p_src[3], const MCGPoint p_dst[3], MCGAffineTransform &r_transform)
+{
+	MCGFloat a, b, c, d, tx, ty;
+	
+	MCGFloat t_eq1[3], t_eq2[3];
+	t_eq1[0] = p_src[0].x - p_src[1].x;
+	t_eq1[1] = p_src[0].y - p_src[1].y;
+	t_eq1[2] = -(p_dst[0].x - p_dst[1].x);
+	
+	t_eq2[0] = p_src[0].x - p_src[2].x;
+	t_eq2[1] = p_src[0].y - p_src[2].y;
+	t_eq2[2] = -(p_dst[0].x - p_dst[2].x);
+	
+	if (!solve_simul_eq_2_vars(t_eq1, t_eq2, a, c))
+		return false;
+	
+	t_eq1[2] = -(p_dst[0].y - p_dst[1].y);
+	t_eq2[2] = -(p_dst[0].y - p_dst[2].y);
+	
+	if (!solve_simul_eq_2_vars(t_eq1, t_eq2, b, d))
+		return false;
+	
+	tx = p_dst[0].x - a * p_src[0].x - c * p_src[0].y;
+	ty = p_dst[0].y - b * p_src[0].x - d * p_src[0].y;
+	
+	if (tx != p_dst[1].x - a * p_src[1].x - c * p_src[1].y ||
+		tx != p_dst[2].x - a * p_src[2].x - c * p_src[2].y ||
+		ty != p_dst[1].y - b * p_src[1].x - d * p_src[1].y ||
+		ty != p_dst[2].y - b * p_src[2].x - d * p_src[2].y)
+		return false;
+	
+	r_transform = MCGAffineTransformMake(a, b, c, d, tx, ty);
+	
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

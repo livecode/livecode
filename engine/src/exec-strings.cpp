@@ -101,6 +101,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcard, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegex, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterWildcardIntoIt, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Strings, FilterRegexIntoIt, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, BidiDirection, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -266,15 +267,15 @@ void MCStringsEvalNumToUnicodeChar(MCExecContext &ctxt, uinteger_t p_codepoint, 
     ctxt . Throw();
 }
 
-void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef p_character, uinteger_t& r_codepoint)
+void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef p_character, MCValueRef& r_codepoint)
 {
 	// This function has to be backwards compatible and do the broken stuff...
     MCAutoDataRef t_data;
     ctxt.ConvertToData(p_character, &t_data);
-    // In case of empty string as input, the result must be 0
+    // In case of empty string as input, the result must be empty
     if (MCDataIsEmpty(*t_data))
     {
-        r_codepoint = 0;
+        r_codepoint = MCValueRetain(kMCEmptyString);
         return;
     }
     else if (ctxt.GetUseUnicode())
@@ -283,17 +284,17 @@ void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef p_character, uintege
         {
             const uint16_t *t_val;
             t_val = (const uint16_t*)MCDataGetBytePtr(*t_data);
-            r_codepoint = *t_val;
+            /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(*t_val, (MCNumberRef&)r_codepoint);
             return;
         }
     }
     else
     {
-        r_codepoint = MCDataGetByteAtIndex(*t_data, 0);
+        /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(MCDataGetByteAtIndex(*t_data, 0), (MCNumberRef&)r_codepoint);
         return;
     }
     
-    r_codepoint = ~0;
+    /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(~0, (MCNumberRef&)r_codepoint);
 }
 
 void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef p_character, uinteger_t& r_codepoint)
@@ -346,11 +347,12 @@ void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef p_character,
     ctxt.Throw();
 }
 
-void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t p_byte, MCStringRef& r_byte)
+// AL-2014-10-21: [[ Bug 13740 ]] numToByte should return a DataRef
+void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t p_byte, MCDataRef& r_byte)
 {
-	char_t t_byte_as_char;
-	t_byte_as_char = (char_t)p_byte;
-	if (MCStringCreateWithNativeChars(&t_byte_as_char, 1, r_byte))
+	byte_t t_byte_as_char;
+	t_byte_as_char = (byte_t)p_byte;
+	if (MCDataCreateWithBytes(&t_byte_as_char, 1, r_byte))
 		return;
 
 	ctxt . Throw();
@@ -1451,28 +1453,88 @@ void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCStringsCheckGraphemeBoundaries(MCStringRef p_string, MCRange p_range)
+{
+    MCRange t_grapheme_range;
+    MCStringUnmapGraphemeIndices(p_string, kMCBasicLocale, p_range, t_grapheme_range);
+    
+    MCRange t_grapheme_range_r;
+    MCStringMapGraphemeIndices(p_string, kMCBasicLocale, t_grapheme_range, t_grapheme_range_r);
+    
+    if (t_grapheme_range_r . offset == p_range . offset &&
+        t_grapheme_range_r . length == p_range . length)
+        return true;
+    
+    return false;
+}
+
 void MCStringsEvalContains(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
+    // AL-2014-10-23: [[ Bug 13770 ]] Strings don't contain the empty string
+    if (MCStringIsEmpty(p_part))
+    {
+        r_result = false;
+        return;
+    }
+    
 	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
-	r_result = MCStringContains(p_whole, p_part, t_compare_option);
+    
+    bool t_found;
+    MCRange t_range;
+    t_found = MCStringFind(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, &t_range);
+    if (!t_found)
+    {
+        r_result = false;
+        return;
+    }
+    
+    r_result = MCStringsCheckGraphemeBoundaries(p_whole, t_range);
 }
 
 void MCStringsEvalDoesNotContain(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
-	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
-	r_result = !MCStringContains(p_whole, p_part, t_compare_option);
+    bool t_result;
+    MCStringsEvalContains(ctxt, p_whole, p_part, t_result);
+    r_result = !t_result;
 }
 
 void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
 	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
-	r_result = MCStringBeginsWith(p_whole, p_part, t_compare_option);
+    
+    bool t_found;
+    uindex_t t_self_length;
+    t_found = MCStringSharedPrefix(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, t_self_length);
+    if (!t_found)
+    {
+        r_result = false;
+        return;
+    }
+    
+    MCRange t_range;
+    t_range = MCRangeMake(0, t_self_length);
+    
+    r_result = MCStringsCheckGraphemeBoundaries(p_whole, t_range);
 }
 
 void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
-    MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
-    r_result = MCStringEndsWith(p_whole, p_part, t_compare_option);
+	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
+    
+    bool t_found;
+    uindex_t t_self_length;
+    t_found = MCStringSharedSuffix(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, t_self_length);
+    if (!t_found)
+    {
+        r_result = false;
+        return;
+    }
+    
+    // MW-2014-10-24: [[ Bug 13787 ]] Make sure we calculate the correct range.
+    MCRange t_range;
+    t_range = MCRangeMake(MCStringGetLength(p_whole) - t_self_length, t_self_length);
+    
+    r_result = MCStringsCheckGraphemeBoundaries(p_whole, t_range);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1599,6 +1661,11 @@ void MCStringsEvalIsNotAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_ch
 
 void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
 {
+    if (MCDataIsEmpty(p_chunk))
+    {
+        r_result = false;
+        return;
+    }
     r_result = MCDataContains(p_string, p_chunk);
 }
 
@@ -1666,7 +1733,15 @@ void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStr
 
 void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCDataFirstIndexOf(p_string, p_chunk, p_start_offset);
+    // SN-2014-09-05: [[ Bug 13346 ]] byteOffset is 0 if the byte is not found, and 'empty'
+    // is by definition not found; getting in the loop ensures at least 1 is returned.
+    if (MCDataIsEmpty(p_chunk))
+    {
+        r_result = 0;
+        return;
+    }
+    
+    r_result = MCDataFirstIndexOf(p_string, p_chunk, MCRangeMake(p_start_offset, UINDEX_MAX)) + 1;
 }
 
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
@@ -2139,9 +2214,40 @@ void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems,
 			
         case ST_NUMERIC:
             // AL-2014-07-21: [[ Bug 12847 ]] If output is empty, don't construe as 0 for sorting purposes
-            if (t_success && !MCValueIsEmpty(*t_output) && ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
-                break;
-			
+            if (t_success && !MCValueIsEmpty(*t_output))
+            {
+                if (ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
+                    break;
+                
+                // AL-2014-10-14: [[ Bug 13664 ]] Try to parse numeric initial segment of string
+                MCAutoStringRef t_string;
+                if (ctxt . ConvertToString(*t_output, &t_string))
+                {
+                    uindex_t t_start, t_end, t_length;
+                    t_length = MCStringGetLength(*t_string);
+                    t_start = 0;
+                    // if there are consecutive spaces at the beginning, skip them
+                    while (t_start < t_length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(*t_string, t_start)))
+                        t_start++;
+                    
+                    t_end = t_start;
+                    while (t_end < t_length)
+                    {
+                        char_t t_char = MCStringGetNativeCharAtIndex(*t_string, t_end);
+                        if (!isdigit((uint1)t_char) && t_char != '.' && t_char != '-' && t_char != '+')
+                            break;
+                        
+                        t_end++;
+                    }
+                    
+                    MCAutoStringRef t_numeric_part;
+                    if (t_end != t_start &&
+                        MCStringCopySubstring(*t_string, MCRangeMake(t_start, t_end - t_start), &t_numeric_part) &&
+                        ctxt . ConvertToNumber(*t_numeric_part, items[nitems].nvalue))
+                        break;
+                }
+                
+			}
             /* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
             break;
         case ST_BINARY:
@@ -2212,3 +2318,19 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
     
     t_sorted . Take(r_sorted_array, r_sorted_count);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+void MCStringsEvalBidiDirection(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_result)
+{
+    bool t_ltr;
+    t_ltr = MCStringResolvesLeftToRight(p_string);
+    
+    if (MCStringCreateWithCString(t_ltr ? "ltr" : "rtl", r_result))
+        return;
+    
+    ctxt . Throw();
+}
+
+////////////////////////////////////////////////////////////////////////////////
