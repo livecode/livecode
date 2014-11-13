@@ -194,6 +194,13 @@ MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorCustomNotDir,
 							 kMCStackdirStatusBadStructure,
 							 "Non-directory custom property set")
 
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorSharedHeader,
+							 kMCStackdirStatusSyntaxError,
+							 "Expected shared property header")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorSharedNewline,
+							 kMCStackdirStatusSyntaxError,
+							 "Shared header not followed by new line")
+
 /* ================================================================
  * Utility functions
  * ================================================================ */
@@ -998,8 +1005,103 @@ MCStackdirIOLoadObjectCustom (MCStackdirIOObjectLoadRef info)
 static bool
 MCStackdirIOLoadObjectShared (MCStackdirIOObjectLoadRef info)
 {
-	/* FIXME implementation */
-	return true;
+	MCAutoArrayRef t_shared;
+	MCAutoStringRef t_shared_file;
+	if (!(MCArrayCreateMutable (&t_shared) &&
+		  MCArrayStoreValue (info->m_state,
+							 true,
+							 kMCStackdirSharedKey,
+							 *t_shared) &&
+		  MCStringFormat (&t_shared_file, "%@/%@",
+						  info->m_path, kMCStackdirSharedFile)))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	/* Load the file into memory. It's permitted to be missing */
+	MCAutoStringRef t_shared_content;
+	if (!MCStackdirIOLoadUTF8 (info->m_op,
+							   *t_shared_file,
+							   &t_shared_content,
+							   false)) /* required */
+		return (!MCStackdirIOHasError (info->m_op));
+
+	/* Set up a scanner */
+	MCStackdirIOScannerRef t_scanner;
+	if (!MCStackdirIOScannerNew (*t_shared_content, t_scanner))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	MCStackdirIOErrorLocationPush (info->m_op, *t_shared_file);
+
+	/* Repeatedly parse shared property sections until EOF */
+	bool t_success = true;
+	MCStackdirIOToken t_token;
+	while (t_success)
+	{
+		if (MCStackdirIOScannerPeek (t_scanner, t_token,
+									 kMCStackdirIOTokenTypeEOF))
+			break;
+
+		/* Each section must start with a header, which contains the
+		 * UUID  of the card. */
+		if (!MCStackdirIOScannerConsume (t_scanner, t_token,
+										 kMCStackdirIOTokenTypeSharedHeader))
+		{
+			MCStackdirIOLoadErrorSharedHeader (info->m_op, kMCEmptyString,
+											   t_token.m_line, t_token.m_column);
+			t_success = false;
+			break;
+		}
+
+		/* Set up the array for the shared properties, and the path to
+		 * the directory to be checked for external files. */
+		MCStringRef t_uuid;
+		MCNewAutoNameRef t_uuid_key;
+		MCAutoArrayRef t_state;
+		MCAutoStringRef t_external_dir;
+		t_uuid = (MCStringRef) t_token.m_value;
+		if (!(MCNameCreate ((MCStringRef) t_token.m_value, &t_uuid_key) &&
+			  MCArrayCreateMutable (&t_state) &&
+			  MCArrayStoreValue (*t_shared,
+								 true,
+								 *t_uuid_key,
+								 *t_state) &&
+			  MCStringFormat (&t_external_dir, "%@/%@%@",
+							  info->m_path, t_uuid, kMCStackdirSharedSuffix)))
+		{
+			MCStackdirIOErrorOutOfMemory (info->m_op);
+			t_success = false;
+			break;
+		}
+
+		/* The next token must be a linefeed */
+		if (!MCStackdirIOScannerConsume (t_scanner, t_token,
+										 kMCStackdirIOTokenTypeNewline))
+		{
+			MCStackdirIOLoadErrorSharedNewline (info->m_op, kMCEmptyString,
+												t_token.m_line, t_token.m_column);
+			t_success = false;
+			break;
+		}
+
+		/* Now parse properties until the next header or EOF */
+		while (t_success)
+		{
+			if (MCStackdirIOScannerPeek (t_scanner, t_token,
+										 kMCStackdirIOTokenTypeEOF) ||
+				MCStackdirIOScannerPeek (t_scanner, t_token,
+										 kMCStackdirIOTokenTypeSharedHeader))
+				break;
+
+			t_success = MCStackdirIOLoadProperty (info->m_op,
+												  t_scanner,
+												  *t_external_dir,
+												  *t_state);
+		}
+	}
+
+	MCStackdirIOErrorLocationPop (info->m_op);
+	MCStackdirIOScannerDestroy (t_scanner);
+
+	return t_success;
 }
 
 /* ================================================================
