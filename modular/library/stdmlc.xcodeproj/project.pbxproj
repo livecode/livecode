@@ -401,6 +401,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				765345C419F7E9A90032E6E2 /* main.cpp in Sources */,
+				76EF04F21A14F0B300A05561 /* module-byte.cpp in Sources */,
 				7653462A19F801AA0032E6E2 /* module-binary.cpp in Sources */,
 				7653462D19F801AA0032E6E2 /* module-arithmetic.cpp in Sources */,
 				7653462E19F801AA0032E6E2 /* module-bitwise.cpp in Sources */,

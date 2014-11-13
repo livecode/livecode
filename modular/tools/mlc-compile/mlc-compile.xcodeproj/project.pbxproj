@@ -187,8 +187,6 @@
 		4DA53A3419E51C690089FBDC /* position.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = position.c; path = src/position.c; sourceTree = SOURCE_ROOT; };
 		4DA53A3719E51C990089FBDC /* position.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = position.h; path = src/position.h; sourceTree = SOURCE_ROOT; };
 		4DA53A3819E51F570089FBDC /* literal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = literal.h; path = src/literal.h; sourceTree = SOURCE_ROOT; };
-		4DE027CE19EE9702004485C9 /* canvas.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = canvas.mlc; path = ../../library/src/canvas.mlc; sourceTree = "<group>"; };
-		4DE027CF19EE9702004485C9 /* char-chunk.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "char-chunk.mlc"; path = "../../library/src/char-chunk.mlc"; sourceTree = "<group>"; };
 		4DE027D019EE9702004485C9 /* list.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = list.mlc; path = ../../library/src/list.mlc; sourceTree = "<group>"; };
 		4DE027D119EE9A89004485C9 /* grammar-examples.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "grammar-examples.mlc"; sourceTree = "<group>"; };
 		4DEB63ED19E5220E009DF2EA /* report.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = report.h; path = src/report.h; sourceTree = SOURCE_ROOT; };
@@ -241,8 +239,6 @@
 		4D3AA12719D311C900886BE7 /* Library */ = {
 			isa = PBXGroup;
 			children = (
-				4DE027CE19EE9702004485C9 /* canvas.mlc */,
-				4DE027CF19EE9702004485C9 /* char-chunk.mlc */,
 				4DE027D019EE9702004485C9 /* list.mlc */,
 				4DEB641919E6C74B009DF2EA /* arithmetic.mlc */,
 				4DEB641A19E6C74B009DF2EA /* bitwise.mlc */,
