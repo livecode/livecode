@@ -475,14 +475,14 @@ static inline uindex_t MCScriptBytecodeDecodeArgument(byte_t*& x_bytecode_ptr)
 
 static inline MCValueRef MCScriptFetchFromRegisterInFrame(MCScriptFrame *p_frame, int p_register)
 {
-    __MCScriptAssert__(p_register >= 0 && p_register < p_frame -> handler -> slot_count,
+    /* LOAD CHECK */ __MCScriptAssert__(p_register >= 0 && p_register < p_frame -> handler -> slot_count,
                        "register out of range on fetch");
     return p_frame -> slots[p_register];
 }
 
 static inline void MCScriptStoreToRegisterInFrame(MCScriptFrame *p_frame, int p_register, MCValueRef p_value)
 {
-    __MCScriptAssert__(p_register >= 0 && p_register < p_frame -> handler -> slot_count,
+    /* LOAD CHECK */ __MCScriptAssert__(p_register >= 0 && p_register < p_frame -> handler -> slot_count,
                        "register out of range on store");
     if  (p_frame -> slots[p_register] != p_value)
     {
@@ -517,7 +517,7 @@ static inline void MCScriptStoreToGlobalInFrame(MCScriptFrame *p_frame, int p_in
 
 static inline MCValueRef MCScriptFetchConstantInFrame(MCScriptFrame *p_frame, int p_index)
 {
-    __MCScriptAssert__(p_index >= 0 && p_index < p_frame -> instance -> module -> value_count,
+    /* LOAD CHECK */ __MCScriptAssert__(p_index >= 0 && p_index < p_frame -> instance -> module -> value_count,
                        "constant out of range on fetch");
     return p_frame -> instance -> module -> values[p_index];
 }
@@ -526,14 +526,14 @@ static inline MCTypeInfoRef MCScriptFetchTypeInFrame(MCScriptFrame *p_frame, int
 {
     MCValueRef t_value;
     t_value = MCScriptFetchConstantInFrame(p_frame, p_index);
-    __MCScriptAssert__(MCValueGetTypeCode(t_value) == kMCValueTypeCodeTypeInfo,
+    /* LOAD CHECK */ __MCScriptAssert__(MCValueGetTypeCode(t_value) == kMCValueTypeCodeTypeInfo,
                        "incorrect type of constant when fetched from pool");
     return (MCTypeInfoRef)t_value;
 }
 
 static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptHandlerDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
 {
-    __MCScriptAssert__(p_arity == MCHandlerTypeInfoGetParameterCount(p_handler -> signature),
+    /* LOAD CHECK */ __MCScriptAssert__(p_arity == MCHandlerTypeInfoGetParameterCount(p_handler -> signature) + (MCHandlerTypeInfoGetReturnType(p_handler -> signature) != kMCNullTypeInfo ? 1 : 0),
                        "wrong number of parameters passed to script handler");
     
     MCScriptFrame *t_callee;
@@ -608,7 +608,7 @@ static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytec
 		return MCScriptPerformForeignInvoke(x_frame, p_instance, t_foreign_handler, p_arguments, p_arity);
 	}
 	
-	__MCScriptUnreachable__("non-handler definition passed to invoke");
+	/* LOAD CHECK */ __MCScriptUnreachable__("non-handler definition passed to invoke");
     
     return false;
 }
