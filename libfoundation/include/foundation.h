@@ -1290,7 +1290,6 @@ enum MCHandlerTypeFieldMode
 
 struct MCHandlerTypeFieldInfo
 {
-	MCNameRef name;
 	MCTypeInfoRef type;
 	MCHandlerTypeFieldMode mode;
 };
@@ -1304,9 +1303,6 @@ MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
 
 // Get the number of parameters the handler takes.
 uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
-
-// Return the name of the index'th parameter.
-MCNameRef MCHandlerTypeInfoGetParameterName(MCTypeInfoRef typeinfo, uindex_t index);
 
 // Return the mode of the index'th parameter.
 MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef typeinfo, uindex_t index);

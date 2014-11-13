@@ -172,10 +172,9 @@ static bool MCPickleReadTypeInfoRef(MCStreamRef stream, uint8_t p_kind, MCTypeIn
                 for(uindex_t i = 0; t_success && i < t_param_count; i++)
                 {
                     uint8_t t_mode, t_type_kind;;
-                    t_success = MCPickleReadNameRef(stream, t_param_info[i] . name) &&
-                                    MCStreamReadUInt8(stream, t_mode) &&
-                                    MCStreamReadUInt8(stream, t_type_kind) &&
-                                    MCPickleReadTypeInfoRef(stream, t_type_kind, t_param_info[i] . type);
+                    t_success = MCStreamReadUInt8(stream, t_mode) &&
+                                MCStreamReadUInt8(stream, t_type_kind) &&
+                                MCPickleReadTypeInfoRef(stream, t_type_kind, t_param_info[i] . type);
                     if (t_success)
                         t_param_info[i] . mode = (MCHandlerTypeFieldMode)t_mode;
                 }
@@ -193,8 +192,6 @@ static bool MCPickleReadTypeInfoRef(MCStreamRef stream, uint8_t p_kind, MCTypeIn
                 
                 for(uindex_t i = 0; i < t_param_count; i++)
                 {
-                    if (t_param_info[i] . name != nil)
-                        MCValueRelease(t_param_info[i] . name);
                     if (t_param_info[i] . type != nil)
                         MCValueRelease(t_param_info[i] . type);
                 }
@@ -633,8 +630,7 @@ static bool MCPickleWriteTypeInfoRef(MCStreamRef stream, MCTypeInfoRef p_value)
                 t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindHandlerTypeInfo) &&
                                 MCPickleWriteCompactUInt(stream, MCHandlerTypeInfoGetParameterCount(p_value));
                 for(uindex_t i = 0; t_success && i < MCHandlerTypeInfoGetParameterCount(p_value); i++)
-                    t_success = MCPickleWriteStringRef(stream, MCNameGetString(MCHandlerTypeInfoGetParameterName(p_value, i))) &&
-                                    MCStreamWriteUInt8(stream, MCHandlerTypeInfoGetParameterMode(p_value, i)) &&
+                    t_success = MCStreamWriteUInt8(stream, MCHandlerTypeInfoGetParameterMode(p_value, i)) &&
                                     MCPickleWriteTypeInfoRef(stream, MCHandlerTypeInfoGetParameterType(p_value, i));
                 if (t_success)
                     t_success = MCPickleWriteTypeInfoRef(stream, MCHandlerTypeInfoGetReturnType(p_value));

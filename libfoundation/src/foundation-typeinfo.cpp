@@ -167,7 +167,6 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, uindex_t p_
     
     for(uindex_t i = 0; i < p_field_count; i++)
     {
-        self -> handler . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
     }
@@ -201,17 +200,6 @@ uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef unresolved_self)
     MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeHandler);
     
     return self -> handler . field_count;
-}
-
-MCNameRef MCHandlerTypeInfoGetParameterName(MCTypeInfoRef unresolved_self, uindex_t p_index)
-{
-    MCTypeInfoRef self;
-    self = __MCTypeInfoResolve(unresolved_self);
-    
-    MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeHandler);
-    MCAssert(self -> handler . field_count > p_index);
-    
-    return self -> handler . fields[p_index] . name;
 }
 
 MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef unresolved_self, uindex_t p_index)
@@ -325,7 +313,6 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
     {
         for(uindex_t i = 0; i < self -> handler . field_count; i++)
         {
-            MCValueRelease(self -> handler . fields[i] . name);
             MCValueRelease(self -> handler . fields[i] . type);
         }
         MCValueRelease(self -> handler . return_type);
@@ -398,8 +385,7 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
             return false;
         
         for(uindex_t i = 0; i < self -> handler . field_count; i++)
-            if (!MCNameIsEqualTo(self -> handler . fields[i] . name, other_self -> handler . fields[i] . name) ||
-                self -> handler . fields[i] . type != other_self -> handler . fields[i] . type ||
+            if (self -> handler . fields[i] . type != other_self -> handler . fields[i] . type ||
                 self -> handler . fields[i] . mode != other_self -> handler . fields[i] . mode)
                 return false;
     }
