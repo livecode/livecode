@@ -456,6 +456,16 @@ static bool MCPickleReadField(MCStreamRef stream, MCPickleFieldType p_kind, void
             for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
                 t_success = MCPickleReadNameRef(stream, (*(MCNameRef **)p_field_ptr)[i]);
             break;
+        case kMCPickleFieldTypeArrayOfTypeInfoRef:
+            t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
+            MCMemoryNewArray(*(uindex_t *)p_aux_ptr, *(MCValueRef **)p_field_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+            {
+                uint8_t t_kind;
+                t_success = MCStreamReadUInt8(stream, t_kind) &&
+                            MCPickleReadTypeInfoRef(stream, t_kind, (*(MCTypeInfoRef **)p_field_ptr)[i]);
+            }
+            break;
         case kMCPickleFieldTypeArrayOfRecord:
             t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
                             MCMemoryNewArray(*(uindex_t *)p_aux_ptr, ((MCPickleRecordInfo *)p_extra) -> size, *(void **)p_field_ptr);
@@ -810,6 +820,11 @@ static bool MCPickleWriteField(MCStreamRef stream, MCPickleFieldType p_kind, voi
             t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
             for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
                 t_success = MCPickleWriteStringRef(stream, MCNameGetString((*(MCNameRef **)p_field_ptr)[i]));
+            break;
+        case kMCPickleFieldTypeArrayOfTypeInfoRef:
+            t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+                t_success = MCPickleWriteTypeInfoRef(stream, (*(MCTypeInfoRef **)p_field_ptr)[i]);
             break;
         case kMCPickleFieldTypeArrayOfRecord:
             t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
