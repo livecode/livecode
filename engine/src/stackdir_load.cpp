@@ -240,10 +240,11 @@ MCStackdirIOLoadProperty_Array (MCStackdirIORef op,
 							t_literal_info))
 		return MCStackdirIOLoadErrorArrayOrdering (op);
 
-	/* Check that the literal info is actually an array. We should
-	 * *always* create a literal info array, so use an assertion
-	 * here. */
-	MCAssert (MCValueIsArray (t_literal_info));
+	/* Check that the literal info is actually an array.  If it isn't,
+	 * then it indicates that the property was previously defined as a
+	 * non-array basic type, which would be a syntax error. */
+	if (!MCValueIsArray (t_literal_info))
+		return MCStackdirIOLoadErrorArrayType (op);
 
 	/* Get the actual literal from the literal info array.  Once
 	 * again, this shouldn't fail. */
@@ -660,25 +661,41 @@ MCStackdirIOLoadProperty (MCStackdirIORef op,
 					kMCEmptyString, t_newline_token.m_line,
 					t_newline_token.m_column);
 
-	/* Create a literal info structure and store it in the propset. */
-	MCAutoArrayRef t_literal_info;
+	/* Finally, store the data in the state array */
 	MCNewAutoNameRef t_key;
-	if (!(MCArrayCreateMutable (&t_literal_info) &&
-		  MCNameCreate (*t_storage_spec, &t_key) &&
-		  MCArrayStoreValue (*t_literal_info,
-							 true,
-							 kMCStackdirTypeKey,
-							 *t_type) &&
-		  MCArrayStoreValue (*t_literal_info,
-							 true,
-							 kMCStackdirLiteralKey,
-							 *t_value) &&
-		  MCArrayStoreValue (x_propset,
-							 true,
-							 *t_key,
-							 *t_literal_info)))
+	if (!MCNameCreate (*t_storage_spec, &t_key))
 		return MCStackdirIOErrorOutOfMemory (op);
 
+	if (MCNameIsEmpty (*t_type) && !MCValueIsArray (*t_value))
+	{
+		/* If there's no derived type involved, and the value *isn't*
+		 * an array, then just store the value directly in the state
+		 * array. */
+		if (!MCArrayStoreValue (x_propset,
+								true,
+								*t_key,
+								*t_value))
+			return MCStackdirIOErrorOutOfMemory (op);
+	}
+	else
+	{
+		/* Create a literal info structure and store it in the propset. */
+		MCAutoArrayRef t_literal_info;
+		if (!(MCArrayCreateMutable (&t_literal_info) &&
+			  MCArrayStoreValue (*t_literal_info,
+								 true,
+								 kMCStackdirTypeKey,
+								 *t_type) &&
+			  MCArrayStoreValue (*t_literal_info,
+								 true,
+								 kMCStackdirLiteralKey,
+								 *t_value) &&
+			  MCArrayStoreValue (x_propset,
+								 true,
+								 *t_key,
+								 *t_literal_info)))
+			return MCStackdirIOErrorOutOfMemory (op);
+	}
 	return true;
 }
 
