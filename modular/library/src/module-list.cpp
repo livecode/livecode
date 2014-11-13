@@ -102,7 +102,8 @@ void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_fi
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
-    // PUT INTO AMBIGUITY
+    MCProperListRemoveElements(x_target, t_start, t_count);
+    MCProperListInsertElement(x_target, p_value, t_start);
 }
 
 void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
@@ -127,7 +128,7 @@ void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, ind
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
-    MCProperListRemoveElements(x_target, t_start, t_start + t_count);
+    MCProperListRemoveElements(x_target, t_start, t_count);
     MCProperListInsertList(x_target, p_list, t_start);
 }
 
@@ -160,17 +161,6 @@ extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("LIST MODULE", test, result)
 void MCListRunTests()
 {
-/*
-    MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
-    MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
-    MCListExecPushSingleElementOnto(MCValueRef p_value, MCProperListRef& x_target)
-    MCListExecPushMultipleElementsOnto(MCProperListRef p_value, MCProperListRef& x_target)
-    MCListExecPopElementInto(MCProperListRef& x_source, MCValueRef& r_output)
-    MCListExecInsertSingleElementIntoListAt(MCValueRef p_value, MCProperListRef& x_target, index_t p_index)
-    MCListExecInsertMultipleElementsIntoListAt(MCProperListRef p_value, MCProperListRef& x_target, index_t p_index)
-    MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
-    MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
-*/
     MCAutoProperListRef t_list;
     MCProperListCreateMutable(&t_list);
     
@@ -180,7 +170,7 @@ void MCListRunTests()
     MCProperListPushElementOntoBack(*t_list, kMCEmptyProperList);
     MCProperListPushElementOntoBack(*t_list, kMCEmptySet);
     
-    /*MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)*/
+//  MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
     
     uindex_t t_num;
     MCListEvalNumberOfElementsIn(*t_list, t_num);
@@ -189,11 +179,21 @@ void MCListRunTests()
     MCValueRef t_value;
     t_value = nil;
     
-    /*MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)*/
-    MCListFetchElementOf(5, *t_list, t_value);
+//  MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
+    MCListEvalHeadOf(*t_list, t_value);
+    
+    log_result("head of", kMCEmptyArray == t_value);
+ 
+//  MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
+    MCListEvalTailOf(*t_list, t_value);
+    
+    log_result("head of", kMCEmptySet == t_value);
+    
+//  MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
+    MCListFetchElementOf(3, *t_list, t_value);
 
     MCAssert(t_value != nil);
-    log_result("fetch element x of", MCValueIsEqualTo(t_value, kMCEmptySet));
+    log_result("fetch element x of", MCValueIsEqualTo(t_value, kMCEmptyName));
     
     /*MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef p_target, MCProperListRef& r_output)*/
     MCAutoProperListRef t_sublist;
@@ -211,5 +211,37 @@ void MCListRunTests()
     bool t_is_among;
     MCListEvalIsAmongTheElementsOf(kMCEmptyName, *t_list, t_is_among);
 
-    log_result("is among elements of", t_is_among);    
+    log_result("is among elements of", t_is_among);
+    
+//  MCListExecPopElementInto(MCProperListRef& x_source, bool p_is_front, MCValueRef& r_output)
+    MCAutoValueRef t_popped;
+    MCProperListRef t_lst;
+    MCProperListMutableCopy(*t_list, t_lst);
+    MCListExecPopElementInto(t_lst, false, &t_popped);
+    MCListEvalNumberOfElementsIn(t_lst, t_num);
+    
+    log_result("pop from back", *t_popped == kMCEmptySet && t_num == 4);
+    
+    MCAutoValueRef t_front_popped;
+    MCListExecPopElementInto(t_lst, true, &t_front_popped);
+    MCListEvalNumberOfElementsIn(t_lst, t_num);
+    
+    log_result("pop from front", *t_front_popped == kMCEmptyArray && t_num == 3);
+    
+//  void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
+    
+    MCListStoreElementRangeOf(*t_sublist, 1, -1, t_lst);
+    MCListEvalNumberOfElementsIn(t_lst, t_num);
+    
+    log_result("store range of", t_num == 1 && MCValueGetTypeCode(MCProperListFetchHead(t_lst)) == kMCValueTypeCodeProperList);
+    
+//  void MCListSpliceIntoElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+    
+    MCListSpliceIntoElementOf(*t_sublist, 1, t_lst);
+    MCListEvalNumberOfElementsIn(t_lst, t_num);
+    MCListEvalIsAmongTheElementsOf(*t_sublist, t_lst, t_result);
+    
+    log_result("splice into element", t_num == 2 && !t_result);
+    
+    MCValueRelease(t_lst);
 }

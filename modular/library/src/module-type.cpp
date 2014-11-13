@@ -23,7 +23,7 @@ void MCTypeEvalStringAsBool(MCStringRef p_target, bool& r_output)
         return;
 }
 
-void MCTypeEvalStringAsReal(MCStringRef p_target, real64_t r_output)
+void MCTypeEvalStringAsReal(MCStringRef p_target, real64_t& r_output)
 {
     if (!MCTypeConvertStringToReal(p_target, r_output))
         return;
@@ -112,8 +112,7 @@ void MCTypeRunTests()
     bool t_result;
     t_result = (t_int == t_int2);
     
-    
-    
+    log_result("round trip integer -> string -> integer", t_result);
     
     t_real = 1.23545467e25;
     MCTypeEvalRealAsString(t_real, &t_real_string);
@@ -121,6 +120,6 @@ void MCTypeRunTests()
     if (t_result)
         t_result = (t_real == t_real2);
     
-    
+    log_result("round trip real -> string -> real", t_result);
     
 }
