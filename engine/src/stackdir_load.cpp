@@ -385,7 +385,8 @@ MCStackdirIOLoadProperty_LoadExternal (MCStackdirIORef op,
 	if (!MCS_loadbinaryfile (p_path, &t_content))
 		return MCStackdirIOLoadErrorPropertyExternalRead (op, p_path);
 
-	/* FIXME verify the SHA-1 */
+	/* FIXME verify the SHA-1. This might be complex in the presence
+	 * of conflicts. */
 
 	/* Convert the data */
 	switch (p_type_code)
@@ -993,7 +994,8 @@ MCStackdirIOLoadObjectCustom (MCStackdirIOObjectLoadRef info)
 		  MCS_pathtonative (info->m_path, &t_native_path)))
 		return MCStackdirIOErrorOutOfMemory (info->m_op);
 
-	/* FIXME add support for reading the _propsets file */
+	/* FIXME add support for reading the _propsets file -- see also
+	 * MCStackdirIOSaveObjectPropsets(). */
 
 	/* Iterate over the contents of the object directory, looking for
 	 * property sets. */

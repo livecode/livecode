@@ -434,16 +434,15 @@ MCStackdirIONew (MCStackdirIORef & op)
 bool
 MCStackdirPathIsStackdir (MCStringRef p_path)
 {
-	/* FIXME record proper error information */
-
 	/* Stackdir must be a folder */
 	if (!MCS_exists (p_path, false))
 		return false;
 
 	/* Stackdir must contain a version file. */
 	MCAutoStringRef t_version_path;
-	/* UNCHECKED */ MCStringFormat (&t_version_path, "%@/%@", p_path,
-									kMCStackdirVersionFile);
+	if (!MCStringFormat (&t_version_path, "%@/%@", p_path,
+						 kMCStackdirVersionFile))
+		return false;
 
 	/* The version file must have the correct contents */
 	MCAutoDataRef t_version_data;
