@@ -149,8 +149,11 @@ int main(int argc, char *argv[])
     MCLog("numberValue: before = %@, after = %@", t_before_value, t_after_value);
     
     MCValueRef t_virtual_value;
+    CHECK(MCScriptSetPropertyOfInstance(t_widget_instance, MCNAME("useDefault"), kMCFalse));
     CHECK(MCScriptGetPropertyOfInstance(t_widget_instance, MCNAME("virtualNumberValue"), t_virtual_value));
-    
+    MCLog("virtualNumberValue: %@", t_virtual_value);
+    CHECK(MCScriptSetPropertyOfInstance(t_widget_instance, MCNAME("useDefault"), kMCTrue));
+    CHECK(MCScriptGetPropertyOfInstance(t_widget_instance, MCNAME("virtualNumberValue"), t_virtual_value));
     MCLog("virtualNumberValue: %@", t_virtual_value);
     
     MCFinalize();
