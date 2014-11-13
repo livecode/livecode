@@ -915,12 +915,22 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 t_index = t_arguments[0];
 				
 				MCScriptInstanceRef t_instance;
-				MCScriptDefinition *t_definition;
-				bool t_resolved;
-                t_resolved = MCScriptResolveDefinitionInModule(t_frame -> instance -> module, t_index, t_instance, t_definition);
-				
-                __MCScriptAssert__(t_resolved,
-                                   "definition resolution failed");
+				t_instance = t_frame -> instance;
+                
+                MCScriptDefinition *t_definition;
+                t_definition = t_instance -> module -> definitions[t_index];
+                
+                if (t_definition -> kind == kMCScriptDefinitionKindExternal)
+                {
+                    MCScriptExternalDefinition *t_ext_def;
+                    t_ext_def = static_cast<MCScriptExternalDefinition *>(t_definition);
+                    
+                    MCScriptImportedDefinition *t_import_def;
+                    t_import_def = &t_instance -> module -> imported_definitions[t_ext_def -> index];
+                    
+                    t_instance = t_instance -> module -> dependencies[t_import_def -> module] . instance;
+                    t_definition = t_import_def -> definition;
+                }
                 
 				t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity - 1);
             }

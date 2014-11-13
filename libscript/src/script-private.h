@@ -92,6 +92,8 @@ void MCScriptDestroyPackage(MCScriptPackageRef package);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCScriptDefinition;
+
 struct MCScriptExportedDefinition
 {
     MCNameRef name;
@@ -113,6 +115,9 @@ struct MCScriptImportedDefinition
     MCScriptDefinitionKind kind;
     MCNameRef name;
     MCTypeInfoRef type;
+    
+    // The resolved definition - not pickled
+    MCScriptDefinition *definition;
 };
 
 struct MCScriptDefinition
@@ -241,8 +246,7 @@ void MCScriptDestroyModule(MCScriptModuleRef module);
 
 bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptPropertyDefinition*& r_definition);
 bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef module, MCNameRef handler, MCScriptHandlerDefinition*& r_definition);
-
-bool MCScriptResolveDefinitionInModule(MCScriptModuleRef module, uindex_t index, MCScriptInstanceRef& r_instance, MCScriptDefinition*& r_definition);
+bool MCScriptLookupDefinitionInModule(MCScriptModuleRef self, MCNameRef p_name, MCScriptDefinition*& r_definition);
 
 ////////////////////////////////////////////////////////////////////////////////
 

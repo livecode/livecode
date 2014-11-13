@@ -305,6 +305,26 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
         if (t_module -> module_kind != kMCScriptModuleKindLibrary)
             return false;
         
+        // Check all the imported definitions from the module, and compute indicies.
+        for(uindex_t t_import = 0; t_import < self -> imported_definition_count; t_import++)
+        {
+            MCScriptImportedDefinition *t_import_def;
+            t_import_def = &self -> imported_definitions[t_import];
+            if (t_import_def -> module != i)
+                continue;
+            
+            MCScriptDefinition *t_def;
+            if (!MCScriptLookupDefinitionInModule(t_module, t_import_def -> name, t_def))
+                return false;
+            
+            if (t_def -> kind != t_import_def -> kind)
+                return false;
+            
+            // Check that signatures match.
+            
+            t_import_def -> definition = t_def;
+        }
+            
         // A used module must be usable.
         if (!MCScriptEnsureModuleIsUsable(t_module))
             return false;
@@ -376,9 +396,18 @@ bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef self, MCNameRef p
     return false;
 }
 
-bool MCScriptResolveDefinitionInModule(MCScriptModuleRef self, uindex_t index, MCScriptInstanceRef& r_instance, MCScriptDefinition*& r_definition)
+bool MCScriptLookupDefinitionInModule(MCScriptModuleRef self, MCNameRef p_name, MCScriptDefinition*& r_definition)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
+    
+    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
+    {
+        if (!MCNameIsEqualTo(p_name, self -> exported_definitions[i] . name))
+            continue;
+        
+        r_definition = static_cast<MCScriptHandlerDefinition *>(self -> definitions[self -> exported_definitions[i] . index]);
+        return true;
+    }
     
     return false;
 }
