@@ -243,6 +243,7 @@ enum MCStackdirIOTokenType
 	kMCStackdirIOTokenTypeData,
 	kMCStackdirIOTokenTypeStorageSeparator,
 	kMCStackdirIOTokenTypeExternalIndicator,
+	kMCStackdirIOTokenTypeSharedHeader,
 	kMCStackdirIOTokenTypeEOF,
 	kMCStackdirIOTokenTypeError,
 };

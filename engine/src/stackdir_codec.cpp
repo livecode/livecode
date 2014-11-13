@@ -97,6 +97,7 @@ static bool MCStackdirIOScanNumber (MCStackdirIOScannerRef scanner, MCStackdirIO
 static bool MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
 static bool MCStackdirIOScanString (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
 static bool MCStackdirIOScanData (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
+static bool MCStackdirIOScanSharedHeader (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
 
 /* Table of scanner functions. These are called in order */
 typedef bool (*MCStackdirIOScanFunc)(MCStackdirIOScannerRef, MCStackdirIOToken &);
@@ -110,6 +111,7 @@ static const MCStackdirIOScanFunc kMCStackdirIOScanFuncs[] =
 		MCStackdirIOScanString,
 		MCStackdirIOScanData,
 		MCStackdirIOScanNumber,
+		MCStackdirIOScanSharedHeader,
 		MCStackdirIOScanUnquotedString,
 		NULL,
 	};
@@ -1179,6 +1181,62 @@ MCStackdirIOScanData (MCStackdirIOScannerRef scanner,
 
 	r_token.m_type = kMCStackdirIOTokenTypeData;
 	r_token.m_value = MCValueRetain (*t_value);
+	return true;
+}
+
+/* ----------------------------------------------------------------
+ * Scanning _shared file UUID headers
+ * ---------------------------------------------------------------- */
+
+static bool
+MCStackdirIOScanSharedHeader (MCStackdirIOScannerRef scanner,
+							  MCStackdirIOToken & r_token)
+{
+	codepoint_t t_char;
+
+	/* Shared headers have to start with '[' */
+	if (!MCStackdirIOScannerGetChar (scanner, t_char) ||
+		(t_char != '[')) return false;
+
+	if (!MCStackdirIOScannerNextChar (scanner))
+	{
+		r_token.m_type = kMCStackdirIOTokenTypeError;
+		return false;
+	}
+
+	/* The contents of the header is a UUID in dashed hexadecimal
+	 * format. */
+	MCAutoStringRef t_value;
+	/* UNCHECKED */ MCStringCreateMutable (0, &t_value);
+
+	bool t_found_end = false;
+	while (!t_found_end)
+	{
+		if (!MCStackdirIOScannerGetChar (scanner, t_char))
+		{
+			r_token.m_type = kMCStackdirIOTokenTypeError;
+			return false;
+		}
+
+		if (t_char == ']')
+		{
+			t_found_end = true;
+		}
+		else if (MCStackdirIsHexDigit (t_char) || t_char == '-')
+		{
+			/* UNCHECKED */ MCStringAppendCodepoint (*t_value, t_char);
+		}
+		else
+		{
+			r_token.m_type = kMCStackdirIOTokenTypeError;
+			return false;
+		}
+
+		MCStackdirIOScannerNextChar (scanner);
+	}
+
+	r_token.m_value = MCValueRetain (*t_value);
+	r_token.m_type = kMCStackdirIOTokenTypeSharedHeader;
 	return true;
 }
 
