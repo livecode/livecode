@@ -493,21 +493,21 @@ static inline void MCScriptStoreToRegisterInFrame(MCScriptFrame *p_frame, int p_
 
 static inline MCValueRef MCScriptFetchFromGlobalInFrame(MCScriptFrame *p_frame, int p_index)
 {
-    __MCScriptAssert__(p_index - 1 < p_frame -> instance -> module -> definition_count,
+    /* LOAD CHECK */ __MCScriptAssert__(p_index < p_frame -> instance -> module -> definition_count,
                        "index out of range in global definition reference");
-    __MCScriptAssert__(p_frame -> instance -> module -> definitions[p_index - 1] -> kind == kMCScriptDefinitionKindVariable,
-                       "definition is not a variable in global reference");
-    return p_frame -> instance -> slots[static_cast<MCScriptVariableDefinition *>(p_frame -> instance -> module -> definitions[p_index - 1]) -> slot_index];
+    /* LOAD CHECK */ __MCScriptAssert__(p_frame -> instance -> module -> definitions[p_index] -> kind == kMCScriptDefinitionKindVariable,
+                       "definition is not a global variable");
+    return p_frame -> instance -> slots[static_cast<MCScriptVariableDefinition *>(p_frame -> instance -> module -> definitions[p_index]) -> slot_index];
 }
 
 static inline void MCScriptStoreToGlobalInFrame(MCScriptFrame *p_frame, int p_index, MCValueRef p_value)
 {
-    __MCScriptAssert__(p_index - 1 < p_frame -> instance -> module -> definition_count,
+    /* LOAD CHECK */ __MCScriptAssert__(p_index < p_frame -> instance -> module -> definition_count,
                        "index out of range in global definition reference");
-    __MCScriptAssert__(p_frame -> instance -> module -> definitions[p_index - 1] -> kind == kMCScriptDefinitionKindVariable,
-                       "definition is not a variable in global reference");
+    /* LOAD CHECK */ __MCScriptAssert__(p_frame -> instance -> module -> definitions[p_index] -> kind == kMCScriptDefinitionKindVariable,
+                       "definition is not a global variable");
     MCValueRef *t_slot;
-    t_slot = &p_frame -> instance -> slots[static_cast<MCScriptVariableDefinition *>(p_frame -> instance -> module -> definitions[p_index - 1]) -> slot_index];
+    t_slot = &p_frame -> instance -> slots[static_cast<MCScriptVariableDefinition *>(p_frame -> instance -> module -> definitions[p_index]) -> slot_index];
     if  (*t_slot != p_value)
     {
         MCValueRelease(*t_slot);

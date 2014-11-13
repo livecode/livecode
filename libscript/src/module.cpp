@@ -344,13 +344,13 @@ bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef self, MCNameRef 
     
     for(uindex_t i = 0; i < self -> exported_definition_count; i++)
     {
-        if (self -> definitions[self -> exported_definitions[i] . index - 1] -> kind != kMCScriptDefinitionKindProperty)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindProperty)
             continue;
         
         if (!MCNameIsEqualTo(p_property, self -> exported_definitions[i] . name))
             continue;
         
-        r_definition = static_cast<MCScriptPropertyDefinition *>(self -> definitions[self -> exported_definitions[i] . index - 1]);
+        r_definition = static_cast<MCScriptPropertyDefinition *>(self -> definitions[self -> exported_definitions[i] . index]);
         return true;
     }
     
@@ -363,13 +363,13 @@ bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef self, MCNameRef p
     
     for(uindex_t i = 0; i < self -> exported_definition_count; i++)
     {
-        if (self -> definitions[self -> exported_definitions[i] . index - 1] -> kind != kMCScriptDefinitionKindHandler)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindHandler)
             continue;
         
         if (!MCNameIsEqualTo(p_handler, self -> exported_definitions[i] . name))
             continue;
         
-        r_definition = static_cast<MCScriptHandlerDefinition *>(self -> definitions[self -> exported_definitions[i] . index - 1]);
+        r_definition = static_cast<MCScriptHandlerDefinition *>(self -> definitions[self -> exported_definitions[i] . index]);
         return true;
     }
     

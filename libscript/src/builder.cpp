@@ -110,7 +110,7 @@ void MCScriptAddDependencyToModule(MCScriptModuleBuilderRef self, MCNameRef p_de
     self -> module . dependencies[self -> module . dependency_count - 1] . name = MCValueRetain(p_dependency);
     self -> module . dependencies[self -> module . dependency_count - 1] . version = 0;
     
-    r_index = self -> module . dependency_count;
+    r_index = self -> module . dependency_count - 1;
 }
 
 void MCScriptAddExportToModule(MCScriptModuleBuilderRef self, uindex_t p_definition)
@@ -124,7 +124,7 @@ void MCScriptAddExportToModule(MCScriptModuleBuilderRef self, uindex_t p_definit
         return;
     }
     
-    self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . name = MCValueRetain((MCNameRef)MCProperListFetchElementAtIndex(self -> definition_names, p_definition - 1));
+    self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . name = MCValueRetain((MCNameRef)MCProperListFetchElementAtIndex(self -> definition_names, p_definition));
     self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . index = p_definition;
 }
 
@@ -155,9 +155,9 @@ void MCScriptAddImportToModule(MCScriptModuleBuilderRef self, uindex_t p_index, 
     t_definition = static_cast<MCScriptExternalDefinition *>(self -> module . definitions[self -> module . definition_count - 1]);
     
     t_definition -> kind = kMCScriptDefinitionKindExternal;
-    t_definition -> index = self -> module . imported_definition_count;
+    t_definition -> index = self -> module . imported_definition_count - 1;
 
-    r_index = self -> module . definition_count;
+    r_index = self -> module . definition_count - 1;
 }
 
 void MCScriptAddTypeToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCTypeInfoRef p_type, uindex_t& r_index)
@@ -180,7 +180,7 @@ void MCScriptAddTypeToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MC
     t_definition -> kind = kMCScriptDefinitionKindType;
     t_definition -> type = MCValueRetain(p_type);
     
-    r_index = self -> module . definition_count;
+    r_index = self -> module . definition_count - 1;
 }
 
 void MCScriptAddConstantToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCValueRef p_value, uindex_t& r_index)
@@ -203,7 +203,7 @@ void MCScriptAddConstantToModule(MCScriptModuleBuilderRef self, MCNameRef p_name
     t_definition -> kind = kMCScriptDefinitionKindConstant;
     t_definition -> value = MCValueRetain(p_value);
     
-    r_index = self -> module . definition_count;
+    r_index = self -> module . definition_count - 1;
 }
 
 void MCScriptAddVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCTypeInfoRef p_type, uindex_t& r_index)
@@ -226,7 +226,7 @@ void MCScriptAddVariableToModule(MCScriptModuleBuilderRef self, MCNameRef p_name
     t_definition -> kind = kMCScriptDefinitionKindVariable;
     t_definition -> type = MCValueRetain(p_type);
     
-    r_index = self -> module . definition_count;
+    r_index = self -> module . definition_count - 1;
 }
 
 void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCTypeInfoRef p_signature, MCStringRef p_binding, uindex_t& r_index)
@@ -250,7 +250,7 @@ void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef self, MCNameRef 
     t_definition -> signature = MCValueRetain(p_signature);
     t_definition -> binding = MCValueRetain(p_binding);
     
-    r_index = self -> module . definition_count;
+    r_index = self -> module . definition_count - 1;
     
 }
 
@@ -271,11 +271,13 @@ void MCScriptAddPropertyToModule(MCScriptModuleBuilderRef self, MCNameRef p_name
     MCScriptPropertyDefinition *t_definition;
     t_definition = static_cast<MCScriptPropertyDefinition *>(self -> module . definitions[self -> module . definition_count - 1]);
     
+    // The property getters and setter references are stored with +1 indices, 0 meaning
+    // no getter/setter.
     t_definition -> kind = kMCScriptDefinitionKindProperty;
-    t_definition -> getter = p_getter;
-    t_definition -> setter = p_setter;
+    t_definition -> getter = p_getter + 1;
+    t_definition -> setter = p_setter == UINDEX_MAX ? 0 : p_setter + 1;
     
-    r_index = self -> module . definition_count;
+    r_index = self -> module . definition_count - 1;
 }
 
 void MCScriptAddEventToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, MCTypeInfoRef p_signature, uindex_t& r_index)
@@ -298,7 +300,7 @@ void MCScriptAddEventToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, M
     t_definition -> kind = kMCScriptDefinitionKindEvent;
     t_definition -> signature = MCValueRetain(p_signature);
     
-    r_index = self -> module . definition_count;
+    r_index = self -> module . definition_count - 1;
 }
 
 ///////////
@@ -495,7 +497,7 @@ void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_nam
     
     self -> current_handler = self -> module . definition_count;
     
-    r_index = self -> module . definition_count;
+    r_index = self -> module . definition_count - 1;
 }
 
 void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
