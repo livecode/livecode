@@ -554,7 +554,7 @@ MCStackdirIOScanNewline (MCStackdirIOScannerRef scanner,
 	if (!t_found_newline) return false;
 
 	/* Update the scanner's line and column counters */
-	scanner->m_column = 0;
+	scanner->m_column = 1;
 	scanner->m_line += 1;
 
 	r_token.m_type = kMCStackdirIOTokenTypeNewline;
@@ -1296,6 +1296,9 @@ MCStackdirIOScannerNew (MCStringRef p_string,
 		MCMemoryDelete (scanner);
 		return false;
 	}
+
+	scanner->m_line = 1;
+	scanner->m_column = 1;
 
 	return true;
 }
