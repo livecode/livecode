@@ -293,7 +293,7 @@ bool MCProperListInsertList(MCProperListRef self, MCProperListRef p_value, index
     return MCProperListInsertList(self, *t_list, p_index);
 }
 
-bool MCProperListRemoveElements(MCProperListRef self, index_t p_start, index_t p_finish)
+bool MCProperListRemoveElements(MCProperListRef self, uindex_t p_start, uindex_t p_count)
 {
     MCAssert(MCProperListIsMutable(self));
     
@@ -302,10 +302,10 @@ bool MCProperListRemoveElements(MCProperListRef self, index_t p_start, index_t p
             return false;
     
     MCAutoArray<MCValueRef> t_values;
-    for (uindex_t i = p_start; i <= p_finish; i++)
+    for (uindex_t i = p_start; i < p_start + p_count; i++)
         t_values . Push(self -> list[i]);
     
-    if (__MCProperListShrinkAt(self, p_start, p_start - p_finish + 1))
+    if (!__MCProperListShrinkAt(self, p_start, p_count))
         return false;
     
     for (uindex_t i = 0; i <= t_values . Size(); i++)
@@ -314,9 +314,9 @@ bool MCProperListRemoveElements(MCProperListRef self, index_t p_start, index_t p
     return true;
 }
 
-bool MCProperListRemoveElement(MCProperListRef self, index_t p_index)
+bool MCProperListRemoveElement(MCProperListRef self, uindex_t p_index)
 {
-    return MCProperListRemoveElements(self, p_index, p_index);
+    return MCProperListRemoveElements(self, p_index, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,7 +359,7 @@ bool MCProperListPopBack(MCProperListRef self, MCValueRef& r_value)
     MCValueRef t_value;
     t_value = self -> list[self -> length - 1];
     
-    if (__MCProperListShrinkAt(self, self -> length - 1, 1))
+    if (!__MCProperListShrinkAt(self, self -> length - 1, 1))
         return false;
     
     r_value = t_value;
@@ -377,7 +377,7 @@ bool MCProperListPopFront(MCProperListRef self, MCValueRef& r_value)
     MCValueRef t_value;
     t_value = self -> list[0];
     
-    if (__MCProperListShrinkAt(self, 0, 1))
+    if (!__MCProperListShrinkAt(self, 0, 1))
         return false;
     
     r_value = t_value;

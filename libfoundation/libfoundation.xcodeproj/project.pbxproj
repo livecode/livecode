@@ -34,6 +34,7 @@
 		769372121A03AEC00001A9FF /* foundation-filters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 769372111A03AEC00001A9FF /* foundation-filters.cpp */; };
 		7696676D19E81D92008B0972 /* foundation-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7696676C19E81D92008B0972 /* foundation-chunk.cpp */; };
 		76E711FC1A0BA24B00B68F93 /* foundation-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76E711FB1A0BA24B00B68F93 /* foundation-math.cpp */; };
+		76EF04DC1A1374AE00A05561 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76EF04DB1A1374AE00A05561 /* libz.a */; };
 		76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */; };
 		BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE19F5D718FE92600001B410 /* foundation-bidi.cpp */; };
 /* End PBXBuildFile section */
@@ -96,6 +97,7 @@
 		7696676C19E81D92008B0972 /* foundation-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-chunk.cpp"; path = "src/foundation-chunk.cpp"; sourceTree = "<group>"; };
 		76E711FB1A0BA24B00B68F93 /* foundation-math.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-math.cpp"; path = "src/foundation-math.cpp"; sourceTree = "<group>"; };
 		76E711FD1A0BA45300B68F93 /* foundation-math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-math.h"; path = "include/foundation-math.h"; sourceTree = "<group>"; };
+		76EF04DB1A1374AE00A05561 /* libz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libz.a; path = "../../../../Library/Developer/Xcode/DerivedData/stdmlc-hgzfspnjftagjqeemfdyozcuklyi/Build/Products/Debug/libz.a"; sourceTree = "<group>"; };
 		BE19F5D718FE92600001B410 /* foundation-bidi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-bidi.cpp"; path = "src/foundation-bidi.cpp"; sourceTree = "<group>"; };
 		BE19F5D918FE93490001B410 /* foundation-bidi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-bidi.h"; path = "include/foundation-bidi.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -105,6 +107,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76EF04DC1A1374AE00A05561 /* libz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,6 +136,7 @@
 		4DF42A330B04860B003F2D95 = {
 			isa = PBXGroup;
 			children = (
+				76EF04DB1A1374AE00A05561 /* libz.a */,
 				4DF42A480B04861E003F2D95 /* Configurations */,
 				4DCA07BB11E8D720005CF640 /* Headers */,
 				4DF42A570B048683003F2D95 /* Source */,
