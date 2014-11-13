@@ -728,7 +728,7 @@ MCStackdirIOScanNumberFraction (MCStackdirIOScannerRef scanner,
 	/* Ensure that we can detect an over- or underflow */
 	errno = 0;
 
-	uindex_t t_places = 0;
+	real64_t t_places = 0;
 	while (MCStackdirIOScannerGetChar (scanner, t_char))
 	{
 		/* Check that the character is a digit */
@@ -736,7 +736,7 @@ MCStackdirIOScanNumberFraction (MCStackdirIOScannerRef scanner,
 
 		/* Add each digit into the fraction part */
 		uint32_t t_digit = t_char - '0';
-		r_fraction_part += t_digit * exp10 (++t_places);
+		r_fraction_part += t_digit * exp10 (- (++t_places));
 
 		MCStackdirIOScannerNextChar (scanner);
 	}
