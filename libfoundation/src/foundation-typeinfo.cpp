@@ -49,6 +49,11 @@ MCNameRef MCTypeInfoGetName(MCTypeInfoRef self)
     return nil;
 }
 
+bool MCTypeInfoIsOptional(MCTypeInfoRef self)
+{
+    return false;
+}
+
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
 {
     return source == target;
