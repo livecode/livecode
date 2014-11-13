@@ -28,13 +28,24 @@ void build_library_module(MCStreamRef stream)
     uindex_t t_alternate, t_endif;
     MCScriptDeferLabelForBytecodeInModule(t_builder, t_alternate);
     MCScriptDeferLabelForBytecodeInModule(t_builder, t_endif);
+    
+    //   fetch-local 1, <0:useDefault>
+    //   jump-if-false 1, DontUseDefault
+    //   fetch-local 0, <1:default>
+    //   jump Return
+    // DontUseDefault:
+    //   assign-constant 0, <0>
+    // Return
+    //   return 0
+    
+    MCScriptEmitFetchLocalInModule(t_builder, 1, 0);
     MCScriptEmitJumpIfFalseInModule(t_builder, 1, t_alternate);
-    MCScriptEmitAssignInModule(t_builder, 0, 2);
+    MCScriptEmitFetchLocalInModule(t_builder, 0, 1);
     MCScriptEmitJumpInModule(t_builder, t_endif);
     MCScriptResolveLabelForBytecodeInModule(t_builder, t_alternate);
     MCScriptEmitAssignConstantInModule(t_builder, 0, kMCZero);
     MCScriptResolveLabelForBytecodeInModule(t_builder, t_endif);
-    MCScriptEmitReturnInModule(t_builder);
+    MCScriptEmitReturnInModule(t_builder, 0);
     MCScriptEndHandlerInModule(t_builder);
     
     MCScriptAddExportToModule(t_builder, t_handler_index);
@@ -78,12 +89,11 @@ void build_widget_module(MCStreamRef stream)
     MCScriptBeginHandlerInModule(t_builder, MCNAME("virtualNumberValue"), *t_virt_number_value_getter_sig, t_virt_number_value_getter);
     MCScriptEmitFetchGlobalInModule(t_builder, 1, t_usedef_var_index);
     MCScriptEmitFetchGlobalInModule(t_builder, 2, t_number_value_var_index);
-    MCScriptBeginInvokeInModule(t_builder, t_compute_value_def);
-    MCScriptContinueInvokeInModule(t_builder, 0);
+    MCScriptBeginInvokeInModule(t_builder, t_compute_value_def, 0);
     MCScriptContinueInvokeInModule(t_builder, 1);
     MCScriptContinueInvokeInModule(t_builder, 2);
     MCScriptEndInvokeInModule(t_builder);
-    MCScriptEmitReturnInModule(t_builder);
+    MCScriptEmitReturnInModule(t_builder, 0);
     MCScriptEndHandlerInModule(t_builder);
     
     uindex_t t_virt_number_value_prop_index;

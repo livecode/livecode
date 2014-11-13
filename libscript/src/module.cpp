@@ -35,6 +35,7 @@ MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
     MC_PICKLE_TYPEINFOREF(signature)
+    MC_PICKLE_ARRAY_OF_TYPEINFOREF(locals, local_count)
     MC_PICKLE_UINDEX(start_address)
     MC_PICKLE_UINDEX(finish_address)
 MC_PICKLE_END_RECORD()
@@ -118,13 +119,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
             MCScriptHandlerDefinition *t_handler;
             t_handler = static_cast<MCScriptHandlerDefinition *>(self -> definitions[i]);
             
-            // Compute the parameter count from the typeinfo.
-            uindex_t t_parameter_count;
-            t_parameter_count = MCHandlerTypeInfoGetParameterCount(t_handler -> signature);
-            if (MCHandlerTypeInfoGetReturnType(t_handler -> signature) != kMCNullTypeInfo)
-                t_parameter_count += 1;
-            
-            // Compute variable and parameter count from scanning the bytecode.
+            // Compute the temporary (register) count from scanning the bytecode.
             uindex_t t_temporary_count;
             t_temporary_count = 0;
             
@@ -142,15 +137,10 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                 
                 switch(t_operation)
                 {
-                    case kMCScriptBytecodeOpNone:
-                        // check arity == 0
-                        break;
                     case kMCScriptBytecodeOpJump:
                         // check arity == 1
                         // check resolved address is within handler
                         break;
-                    case kMCScriptBytecodeOpJumpIfUndefined:
-                    case kMCScriptBytecodeOpJumpIfDefined:
                     case kMCScriptBytecodeOpJumpIfFalse:
                     case kMCScriptBytecodeOpJumpIfTrue:
                         // check arity == 2
@@ -167,17 +157,9 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         t_temporary_count = MCMax(t_temporary_count, t_operands[1] + 1);
                         break;
-                    case kMCScriptBytecodeOpDefcheck:
+                    case kMCScriptBytecodeOpReturn:
                         // check arity == 1
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
-                        break;
-                    case kMCScriptBytecodeOpTypecheck:
-                        // check arity == 2
-                        // check typeinfo argument is within value pool range
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
-                        break;
-                    case kMCScriptBytecodeOpReturn:
-                        // check arity == 0
                         break;
                     case kMCScriptBytecodeOpInvoke:
                         // check index operand is within definition range
@@ -189,6 +171,13 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                     case kMCScriptBytecodeOpInvokeIndirect:
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
+                        break;
+                    case kMCScriptBytecodeOpFetchLocal:
+                    case kMCScriptBytecodeOpStoreLocal:
+                        // check arity is 2
+                        // check local index is in range
+                        // check definition[index] is variable
+                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpFetchGlobal:
                     case kMCScriptBytecodeOpStoreGlobal:
@@ -207,7 +196,8 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                 return false;
             
             // The total number of slots we need is params (inc result) + temps.
-            t_handler -> slot_count = t_parameter_count + t_temporary_count;
+            t_handler -> register_offset = MCHandlerTypeInfoGetParameterCount(t_handler -> signature) + t_handler -> local_count;
+            t_handler -> slot_count = t_handler -> register_offset + t_temporary_count;
         }
     
     return true;

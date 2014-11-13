@@ -151,12 +151,19 @@ struct MCScriptVariableDefinition: public MCScriptDefinition
 struct MCScriptHandlerDefinition: public MCScriptDefinition
 {
 	MCTypeInfoRef signature;
+    
+    MCTypeInfoRef *locals;
+    uindex_t local_count;
+    
 	uindex_t start_address;
 	uindex_t finish_address;
     
     // The number of slots required in a frame in order to execute this handler.
     // This is the sum of parameter count, local count and temporary count - not pickled
     uindex_t slot_count;
+    
+    // The start of the registers.
+    uindex_t register_offset;
 };
 
 struct MCScriptForeignHandlerDefinition: public MCScriptDefinition
@@ -291,8 +298,6 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScrip
 
 enum MCScriptBytecodeOp
 {
-    kMCScriptBytecodeOpNone,
-	
 	// Unconditional jump:
 	//  X: jump <Y-X>
 	// Location is encoded as relative position to jump instruction.
@@ -302,8 +307,6 @@ enum MCScriptBytecodeOp
 	//  X: jump* <register>, <Y - X>
 	// Location is encoded as relative position to jump instruction.
 	// Register is used for test.
-	kMCScriptBytecodeOpJumpIfUndefined,
-	kMCScriptBytecodeOpJumpIfDefined,
 	kMCScriptBytecodeOpJumpIfFalse,
 	kMCScriptBytecodeOpJumpIfTrue,
 	
@@ -318,33 +321,31 @@ enum MCScriptBytecodeOp
 	// Dst and Src are registers. The value in dst is freed, and src copied
 	// into it.
 	kMCScriptBytecodeOpAssign,
-	
-    // Defined check:
-    //   defcheck <reg>
-    // Checks that the value in <reg> is defined. Throws an error if it is not.
-    kMCScriptBytecodeOpDefcheck,
     
-    // Type conversion:
-    //   typecheck <reg>, <typeinfo>
-    // Reg is a register, and index is a definition. Throws an error if the value
-    // in <reg> does not conform to the given type.
-    kMCScriptBytecodeOpTypecheck,
-    
-	// Return control to caller:
-	//   return
+	// Return control to caller with value:
+	//   return <reg>
     // Return from a call.
 	kMCScriptBytecodeOpReturn,
     
 	// Direct handler invocation:
-	//   invoke <index>, <arg_1>, ..., <arg_n>
+	//   invoke <index>, <result>, <arg_1>, ..., <arg_n>
 	// Handler with index <index> is invoked with the given registers as arguments.
 	kMCScriptBytecodeOpInvoke,
 	// Indirect handler invocation:
-	//   invoke *<handler>, <arg_1>, ..., <arg_n>
+	//   invoke *<handler>, <result>, <arg_1>, ..., <arg_n>
 	// The handler reference in register <handler> is invoked with the given registers
 	// as arguments.
 	kMCScriptBytecodeOpInvokeIndirect,
 	
+	// Local fetch:
+	//   fetch-local <dst>, <local-index>
+	// Assigns the current value of <glob-index> to register <dst>.
+	kMCScriptBytecodeOpFetchLocal,
+	// Local store:
+	//   store-local <src>, <local-index>
+	// Assigns the current value of register <src> to <glob-index>.
+	kMCScriptBytecodeOpStoreLocal,
+    
 	// Global fetch:
 	//   fetch-global <dst>, <glob-index>
 	// Assigns the current value of <glob-index> to register <dst>.
