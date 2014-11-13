@@ -208,9 +208,19 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
     switch (p_prop)
     {
         case kMCPlatformThemePropertyTextSize:
+        {
             t_found = true;
+            
+            // We use 12-point Helvetica on Linux traditionally
+            if (p_state & kMCPlatformControlStateCompatibility)
+            {
+                r_int = 12;
+                break;
+            }
+            
             r_int = pango_font_description_get_size(t_style->font_desc)/PANGO_SCALE;
             break;
+        }
             
         default:
             break;
@@ -332,9 +342,22 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     
     MCFontRef t_font_ref;
     MCNameRef t_font_name;
-    t_found = MCNameCreateWithCString(pango_font_description_get_family(t_pango), t_font_name);
+    int t_font_size;
+    
+    // We use 12-point Helvetica on Linux, traditionally
+    if (p_state & kMCPlatformControlStateCompatibility)
+    {
+        MCNameCreateWithCString("Helvetica", t_font_name);
+        t_font_size = 12;
+    }
+    else
+    {
+        t_found = MCNameCreateWithCString(pango_font_description_get_family(t_pango), t_font_name);
+        t_font_size = pango_font_description_get_size(t_pango)/PANGO_SCALE;
+    }
+    
     if (t_found)
-        t_found = MCFontCreate(t_font_name, 0, pango_font_description_get_size(t_pango)/PANGO_SCALE, t_font_ref);
+        t_found = MCFontCreate(t_font_name, 0, t_font_size, t_font_ref);
     if (t_found)
         r_font = t_font_ref;
     MCNameDelete(t_font_name);
