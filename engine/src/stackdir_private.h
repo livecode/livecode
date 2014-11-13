@@ -221,6 +221,17 @@ bool MCStackdirFormatLiteral (MCValueRef p_value, MCStringRef & r_literal);
  * [Private] Data scanning and parsing
  * ---------------------------------------------------------------- */
 
+/* Parse a stackdir filename to a string with an optional suffix.
+ *
+ * If the p_suffix is non-empty, it will be required to be present and
+ * removed before parsing.
+ *
+ * Returns false if parsing failed (e.g. because the suffix was not
+ * present, the filname was syntactically invalid, or because of
+ * memory exhaustion).
+ */
+bool MCStackdirParseFilename (MCStringRef p_filename, MCStringRef p_suffix, MCStringRef & r_string);
+
 enum MCStackdirIOTokenType
 {
 	kMCStackdirIOTokenTypeNone = 0,

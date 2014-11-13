@@ -1306,6 +1306,113 @@ MCStackdirFormatLiteral (MCValueRef p_value, MCStringRef & r_literal)
 }
 
 /* ----------------------------------------------------------------
+ * Parsing
+ *---------------------------------------------------------------- */
+
+bool
+MCStackdirParseFilename (MCStringRef p_filename,
+						 MCStringRef p_suffix,
+						 MCStringRef & r_string)
+{
+	/* If a non-empty suffix p_suffix is provided, it must be present
+	 * (and is then removed before further processing) */
+	MCAutoStringRef t_basename;
+	if (MCStringIsEmpty (p_suffix))
+	{
+		&t_basename = MCValueRetain (p_filename);
+	}
+	else
+	{
+		if (!MCStringEndsWith (p_filename,
+							   p_suffix,
+							   kMCStringOptionCompareExact))
+			return false;
+
+		uindex_t t_filename_len = MCStringGetLength (p_filename);
+		uindex_t t_suffix_len = MCStringGetLength (p_suffix);
+		if (!MCStringCopySubstring (p_filename,
+									MCRangeMake (0, t_filename_len-t_suffix_len),
+									&t_basename))
+			return false;
+	}
+
+	uindex_t t_basename_len = MCStringGetLength (*t_basename);
+
+	MCAutoStringRef t_string;
+	if (!MCStringCreateMutable (t_basename_len, &t_string))
+		return false;
+
+	/* Valid filenames are less than 255 characters long and contain
+	 * only the characters "[a-z0-9_-]". They permit the escape
+	 * sequences __, _xhh and _uhhhh. */
+	for (uindex_t i = 0; i < t_basename_len; ++i)
+	{
+		/* Check that each character is valid */
+		unichar_t t_source = MCStringGetCharAtIndex (*t_basename, i);
+
+		bool t_valid = ((t_source >= '0' && t_source <= '9') ||
+						(t_source >= 'a' && t_source <= 'z') ||
+						(t_source == '-') ||
+						(t_source == '_'));
+		if (!t_valid) return false;
+
+		/* If non-escape character, pass through */
+		if (t_source != '_')
+		{
+			if (!MCStringAppendChar (*t_string, t_source)) return false;
+			continue;
+		}
+
+		/* Process escape sequence */
+		uindex_t t_num_digits;
+
+		if (++i >= t_basename_len) return false;
+		t_source = MCStringGetCharAtIndex (*t_basename, i);
+
+		switch (t_source)
+		{
+		case '_': /* Literal '_' */
+			if (!MCStringAppendChar (*t_string, '_'))
+				return false;
+			continue;
+
+		case 'x': /* _xhh */
+			t_num_digits = 2;
+			break;
+		case 'u': /* _uhhhh */
+			t_num_digits = 4;
+			break;
+
+		default:
+			return false;
+		}
+
+		/* Read hex characters */
+		char t_hex[5];
+		uindex_t j;
+		for (j = 0; j < t_num_digits; ++j)
+		{
+			codepoint_t t_hex_char;
+
+			if (++i >= t_basename_len) return false;
+			t_hex_char = MCStringGetCharAtIndex (*t_basename, i);
+
+			if (!MCStackdirIsHexDigit (t_hex_char)) return false;
+
+			t_hex[j] = (char) t_hex_char;
+		}
+		t_hex[j] = 0; /* Trailing nul */
+
+		/* Parse the hex string into a char */
+		t_source = strtoul (t_hex, NULL, 16);
+		if (!MCStringAppendChar (*t_string, t_source)) return false;
+	}
+
+	r_string = MCValueRetain (*t_string);
+	return true;
+}
+
+/* ----------------------------------------------------------------
  * Scanning
  *---------------------------------------------------------------- */
 
