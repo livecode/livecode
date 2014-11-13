@@ -16,7 +16,7 @@
 'action' Bind(MODULE)
 
     'rule' Bind(Module:module(Position, Name, Imports, Definitions)):
-        DefineId(Name, module)
+        --DefineId(Name, module)
 
         -- Step 1: Ensure all id's referencing definitions point to the definition.
         --         and no duplicate definitions have been attempted.

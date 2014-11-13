@@ -91,7 +91,8 @@
 
     EmitBeginModule
     EmitEndModule
-    EmitDeclaration
+    EmitDefinitionIndex
+    EmitExportedDefinition
     EmitModuleDependency
     EmitImportedType
     EmitImportedConstant
@@ -119,6 +120,43 @@
     EmitArrayType
     EmitListType
     EmitUndefinedType
+    EmitBeginRecordType
+    EmitRecordTypeField
+    EmitEndRecordType
+    EmitBeginHandlerType
+    EmitHandlerTypeInParameter
+    EmitHandlerTypeOutParameter
+    EmitHandlerTypeInOutParameter
+    EmitEndHandlerType
+    EmitHandlerParameter
+    EmitHandlerVariable
+    EmitDeferLabel
+    EmitResolveLabel
+    EmitCreateRegister
+    EmitDestroyRegister
+    EmitJump
+    EmitJumpIfTrue
+    EmitJumpIfFalse
+    EmitPushRepeatLabels
+    EmitPopRepeatLabels
+    EmitCurrentRepeatLabels
+    EmitBeginInvoke
+    EmitBeginIndirectInvoke
+    EmitBeginBuiltinInvoke
+    EmitContinueInvoke
+    EmitEndInvoke
+    EmitAssignUndefined
+    EmitAssignTrue
+    EmitAssignFalse
+    EmitAssignInteger
+    EmitAssignReal
+    EmitAssignString
+    EmitFetchLocal
+    EmitStoreLocal
+    EmitFetchGlobal
+    EmitStoreGlobal
+    EmitReturn
+    EmitReturnNothing
 
     ErrorsDidOccur
     Fatal_OutOfMemory
@@ -278,17 +316,19 @@
 
 --------------------------------------------------------------------------------
 
-'action' EmitBeginModule(Name: NAME -> Index: INT)
+'action' EmitBeginModule(Name: NAME -> ModuleIndex: INT)
 'action' EmitEndModule()
 
-'action' EmitModuleDependency(Name: NAME -> Index: INT)
+'action' EmitModuleDependency(Name: NAME -> ModuleIndex: INT)
 
-'action' EmitImportedType(Name: NAME, TypeIndex: INT -> Index: INT)
-'action' EmitImportedConstant(Name: NAME, TypeIndex: INT -> Index: INT)
-'action' EmitImportedVariable(Name: NAME, TypeIndex: INT -> Index: INT)
-'action' EmitImportedHandler(Name: NAME, TypeIndex: INT -> Index: INT)
+'action' EmitImportedType(ModuleIndex: INT, Name: NAME, TypeIndex: INT -> Index: INT)
+'action' EmitImportedConstant(ModuleIndex: INT, Name: NAME, TypeIndex: INT -> Index: INT)
+'action' EmitImportedVariable(ModuleIndex: INT, Name: NAME, TypeIndex: INT -> Index: INT)
+'action' EmitImportedHandler(ModuleIndex: INT, Name: NAME, TypeIndex: INT -> Index: INT)
 
-'action' EmitDeclaration(-> Index: INT)
+'action' EmitExportedDefinition(Index: INT)
+
+'action' EmitDefinitionIndex(-> Index: INT)
 
 'action' EmitTypeDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
@@ -313,6 +353,46 @@
 'action' EmitArrayType(-> INT)
 'action' EmitListType(-> INT)
 'action' EmitUndefinedType(-> INT)
+
+'action' EmitBeginRecordType(BaseType: INT)
+'action' EmitRecordTypeField(Name: NAME, Type: INT)
+'action' EmitEndRecordType(-> INT)
+
+'action' EmitBeginHandlerType(ReturnType: INT)
+'action' EmitHandlerTypeInParameter(Name: NAME, Type: INT)
+'action' EmitHandlerTypeOutParameter(Name: NAME, Type: INT)
+'action' EmitHandlerTypeInOutParameter(Name: NAME, Type: INT)
+'action' EmitEndHandlerType(-> INT)
+
+'action' EmitHandlerParameter(Name: NAME, Type: INT -> Index: INT)
+'action' EmitHandlerVariable(Name: NAME, Type: INT -> Index: INT)
+'action' EmitDeferLabel(-> Label: INT)
+'action' EmitResolveLabel(Label: INT)
+'action' EmitCreateRegister(-> Register: INT)
+'action' EmitDestroyRegister(Register: INT)
+'action' EmitJump(Label: INT)
+'action' EmitJumpIfTrue(Register: INT, Label: INT)
+'action' EmitJumpIfFalse(Register: INT, Label: INT)
+'action' EmitPushRepeatLabels(Head: INT, Tail: INT)
+'action' EmitCurrentRepeatLabels(-> Next: INT, Exit: INT)
+'action' EmitPopRepeatLabels()
+'action' EmitBeginInvoke(Index: INT, ResultRegister: INT)
+'action' EmitBeginIndirectInvoke(Register: INT, ResultRegister: INT)
+'action' EmitBeginBuiltinInvoke(Name: STRING, ResultRegister: INT)
+'action' EmitContinueInvoke(Register: INT)
+'action' EmitEndInvoke()
+'action' EmitAssignUndefined(Register: INT)
+'action' EmitAssignTrue(Register: INT)
+'action' EmitAssignFalse(Register: INT)
+'action' EmitAssignInteger(Register: INT, Value: INT)
+'action' EmitAssignReal(Register: INT, Value: DOUBLE)
+'action' EmitAssignString(Register: INT, Value: STRING)
+'action' EmitFetchLocal(Register: INT, Var: INT)
+'action' EmitStoreLocal(Register: INT, Var: INT)
+'action' EmitFetchGlobal(Register: INT, Var: INT)
+'action' EmitStoreGlobal(Register: INT, Var: INT)
+'action' EmitReturn(Register: INT)
+'action' EmitReturnNothing()
 
 --------------------------------------------------------------------------------
 
