@@ -163,6 +163,7 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
                 switch (p_type)
                 {
                     case kMCPlatformControlTypeInputField:
+                    case kMCPlatformControlTypeList:
                         t_color = [NSColor textBackgroundColor];
                         break;
                         
