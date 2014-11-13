@@ -52,40 +52,40 @@ MC_EXEC_DEFINE_EVAL_METHOD(Filters, SHA1Digest, 2)
 
 bool MCFiltersIsoToMac(MCDataRef p_source, MCDataRef &r_result)
 {
-    MCAutoByteArray t_buffer;
-    const char_t *t_srcptr;
-    uindex_t t_srclen;
-    t_srcptr = MCDataGetBytePtr(p_source);
-    t_srclen = MCDataGetLength(p_source);
-    
-    if (!t_buffer.New(t_srclen))
-        return false;
-    
-    uint1 *sptr = (uint1 *)t_buffer.Bytes();
-    uindex_t len = t_srclen;
-    while (len--)
-        *sptr++ = MCisotranslations[*t_srcptr++];
-    
-    return t_buffer.CreateDataAndRelease(r_result);
+	MCAutoByteArray t_buffer;
+	const char_t *t_srcptr;
+	uindex_t t_srclen;
+	t_srcptr = MCDataGetBytePtr(p_source);
+	t_srclen = MCDataGetLength(p_source);
+
+	if (!t_buffer.New(t_srclen))
+		return false;
+
+	uint1 *sptr = (uint1 *)t_buffer.Bytes();
+	uindex_t len = t_srclen;
+	while (len--)
+		*sptr++ = MCisotranslations[*t_srcptr++];
+
+	return t_buffer.CreateDataAndRelease(r_result);
 }
 
 bool MCFiltersMacToIso(MCDataRef p_source, MCDataRef &r_result)
 {
-    MCAutoByteArray t_buffer;
-    const char_t *t_srcptr;
-    uindex_t t_srclen;
-    t_srcptr = MCDataGetBytePtr(p_source);
-    t_srclen = MCDataGetLength(p_source);
-    
-    if (!t_buffer.New(t_srclen))
-        return false;
-    
-    uint1 *sptr = (uint1 *)t_buffer.Bytes();
-    uindex_t len = t_srclen;
-    while (len--)
-        *sptr++ = MCmactranslations[*t_srcptr++];
-    
-    return t_buffer.CreateDataAndRelease(r_result);
+	MCAutoByteArray t_buffer;
+	const char_t *t_srcptr;
+	uindex_t t_srclen;
+	t_srcptr = MCDataGetBytePtr(p_source);
+	t_srclen = MCDataGetLength(p_source);
+
+	if (!t_buffer.New(t_srclen))
+		return false;
+
+	uint1 *sptr = (uint1 *)t_buffer.Bytes();
+	uindex_t len = t_srclen;
+	while (len--)
+		*sptr++ = MCmactranslations[*t_srcptr++];
+
+	return t_buffer.CreateDataAndRelease(r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
