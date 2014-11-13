@@ -1197,8 +1197,8 @@ bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef
 	MCStringRef t_output_files_string;
 	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output_files, t_output_files_string);
 
-	// Finally encode as native string and encapsulate in a dataref.
-	/* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingNative, false, r_output);
+    // SN-2014-11-13: [[ Bug 13993 ]] MCPasteBoard::Fetch now returns a UTF-16 encoded string for the files
+    /* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingUTF16, false, r_output);
 
 	return true;
 }

@@ -2789,7 +2789,8 @@ bool MCStringBreakIntoChunks(MCStringRef self, codepoint_t p_separator, MCString
 	
 	// Count the number of chunks, adjusting for an empty trailing chunk.
 	uindex_t t_range_count;
-	t_range_count = MCStringCountChar(self, MCRangeMake(0, MCStringGetLength(self)), p_separator, p_options);
+	// SN-2014-11-13: [[ Bug 13993 ]] No delimiter found means 1 range, 1 delimiter means 2 ranges, etc.
+	t_range_count = MCStringCountChar(self, MCRangeMake(0, MCStringGetLength(self)), p_separator, p_options) + 1;
 	if (t_length > 0 && MCStringGetNativeCharAtIndex(self, t_length - 1) == p_separator)
 		t_range_count -= 1;
 	
@@ -2805,6 +2806,11 @@ bool MCStringBreakIntoChunks(MCStringRef self, codepoint_t p_separator, MCString
 	t_index = 0;
 	for(;;)
 	{
+		// SN-2014-11-13: [[ Bug 13993 ]] The offset might be after the last char, if the previous delimiter
+		// was the last char of the string. We are done in that case.
+		if (t_prev_offset == MCStringGetLength(self))
+			break;
+
 		if (!MCStringFirstIndexOfChar(self, p_separator, t_prev_offset, p_options, t_offset))
 		{
 			t_ranges[t_index] . offset = t_prev_offset;
