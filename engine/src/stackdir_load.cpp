@@ -190,6 +190,10 @@ MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyNewline,
 							 kMCStackdirStatusSyntaxError,
 							 "Property descriptor lacks terminating newline")
 
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorCustomNotDir,
+							 kMCStackdirStatusBadStructure,
+							 "Non-directory custom property set")
+
 /* ================================================================
  * Utility functions
  * ================================================================ */
@@ -913,10 +917,82 @@ MCStackdirIOLoadObjectInternal (MCStackdirIOObjectLoadRef info)
 }
 
 static bool
+MCStackdirIOLoadObjectCustom_Callback (void *context,
+									   const MCSystemFolderEntry *p_entry)
+{
+	MCStackdirIOObjectLoadRef info = (MCStackdirIOObjectLoadRef) context;
+
+	/* Check if the directory looks like it might be a property set.
+	 * There's a special case for the default property set, which has
+	 * an empty name. */
+	MCAutoStringRef t_propset_name;
+	if (MCStringIsEqualTo (p_entry->name,
+						   MCSTR ("_empty.propset"),
+						   kMCStringOptionCompareExact))
+		&t_propset_name = MCValueRetain (kMCEmptyString);
+	else if (!MCStackdirParseFilename (p_entry->name,
+									   kMCStackdirPropsetSuffix,
+									   &t_propset_name))
+		return true;
+
+	/* Build the full path to the directory */
+	MCAutoStringRef t_path;
+	if (!MCStringFormat (&t_path, "%@/%@", info->m_path, p_entry->name))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	/* If it *looks* like it might be a propset directory, it *must*
+	 * be a directory */
+	if (!p_entry->is_folder)
+		return MCStackdirIOLoadErrorCustomNotDir (info->m_op,
+												  *t_path);
+
+	/* Get the array of custom property sets */
+	MCValueRef t_custom;
+	bool t_success;
+	t_success = MCArrayFetchValue (info->m_state,
+								   true,
+								   kMCStackdirCustomKey,
+								   t_custom);
+	MCAssert (t_success); /* This *must* be present */
+	MCAssert (MCValueIsArray (t_custom));
+
+	/* Create a new array for this propset */
+	MCAutoArrayRef t_propset;
+	MCNewAutoNameRef t_propset_key;
+	if (!(MCArrayCreateMutable (&t_propset) &&
+		  MCNameCreate (*t_propset_name, &t_propset_key) &&
+		  MCArrayStoreValue ((MCArrayRef) t_custom,
+							 true,
+							 *t_propset_key,
+							 *t_propset)))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	return MCStackdirIOLoadPropset (info->m_op,
+									*t_path, /* p_propset_dir */
+									*t_path, /* p_external_dir */
+									*t_propset);
+}
+
+static bool
 MCStackdirIOLoadObjectCustom (MCStackdirIOObjectLoadRef info)
 {
-	/* FIXME implementation */
-	return true;
+	MCAutoArrayRef t_custom;
+	MCAutoStringRef t_native_path;
+	if (!(MCArrayCreateMutable (&t_custom) &&
+		  MCArrayStoreValue (info->m_state,
+							 true,
+							 kMCStackdirCustomKey,
+							 *t_custom) &&
+		  MCS_pathtonative (info->m_path, &t_native_path)))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	/* FIXME add support for reading the _propsets file */
+
+	/* Iterate over the contents of the object directory, looking for
+	 * property sets. */
+	return MCsystem->ListFolderEntries (*t_native_path,
+										MCStackdirIOLoadObjectCustom_Callback,
+										info);
 }
 
 static bool
