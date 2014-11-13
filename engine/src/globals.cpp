@@ -1016,7 +1016,7 @@ bool X_open(int argc, char *argv[], char *envp[])
         MCttfont = "Helvetica Neue";
     }*/
 #elif defined(TARGET_PLATFORM_LINUX)
-	MCdispatcher -> setfontattrs("Helvetica", 12, FA_DEFAULT_STYLE);
+    //MCdispatcher -> setfontattrs("Helvetica", 12, FA_DEFAULT_STYLE);
 #else
 	MCdispatcher -> setfontattrs(DEFAULT_TEXT_FONT, DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
 #endif
