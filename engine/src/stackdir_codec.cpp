@@ -60,6 +60,9 @@ struct _MCStackdirIOScanner
  * Case-Fold). */
 static bool MCStackdirNormalizeString (MCStringRef p_string, MCStringRef & r_normalized);
 
+/* Test whether a character is a hexadecimal digit */
+static bool MCStackdirIsHexDigit (codepoint_t p_char);
+
 static bool MCStackdirFormatBoolean (MCBooleanRef p_bool, MCStringRef & r_literal);
 static bool MCStackdirFormatInteger (MCNumberRef p_number, MCStringRef & r_literal);
 static bool MCStackdirFormatReal (MCNumberRef p_number, MCStringRef & r_literal);
@@ -453,6 +456,16 @@ enum {
 /* ----------------------------------------------------------------
  * Scanning utility functions
  * ---------------------------------------------------------------- */
+
+static bool
+MCStackdirIsHexDigit (codepoint_t p_char)
+{
+	bool t_valid_hex = false;
+	t_valid_hex |= (p_char >= '0' && p_char <= '9');
+	t_valid_hex |= (p_char >= 'a' && p_char <= 'f');
+	t_valid_hex |= (p_char >= 'A' && p_char <= 'F');
+	return t_valid_hex;
+}
 
 static void
 MCStackdirIOScannerResetToken (MCStackdirIOScannerRef scanner,
@@ -1003,13 +1016,13 @@ MCStackdirIOScanStringUnescape (MCStackdirIOScannerRef scanner,
 		return false;
 	}
 
-	MCAutoStringRef t_hex;
-	/* UNCHECKED */ MCStringCreateMutable (t_num_digits, &t_hex);
+	char t_hex[9];
 
 	/* Consume the right number of characters, ensuring that they are
 	 * hexadecimal digits */
 	codepoint_t t_hex_char;
-	for (uindex_t i = 0; i < t_num_digits; ++i)
+	uindex_t i;
+	for (i = 0; i < t_num_digits; ++i)
 	{
 		if (!MCStackdirIOScannerGetChar (scanner, t_hex_char))
 		{
@@ -1017,23 +1030,19 @@ MCStackdirIOScanStringUnescape (MCStackdirIOScannerRef scanner,
 			return false;
 		}
 
-		bool t_valid_hex = false;
-		t_valid_hex |= (t_hex_char >= '0' && t_hex_char <= '9');
-		t_valid_hex |= (t_hex_char >= 'a' && t_hex_char <= 'f');
-		t_valid_hex |= (t_hex_char >= 'A' && t_hex_char <= 'F');
-
-		if (!t_valid_hex)
+		if (!MCStackdirIsHexDigit (t_hex_char))
 		{
 			r_token.m_type = kMCStackdirIOTokenTypeError;
 			return false;
 		}
 
-		/* UNCHECKED */ MCStringAppendCodepoint (*t_hex, t_hex_char);
+		t_hex[i] = (char) t_hex_char;
 		MCStackdirIOScannerNextChar (scanner);
 	}
+	t_hex[i] = 0; /* Trailing nul */
 
 	/* Parse the hex string into a codepoint */
-	sscanf (MCStringGetCString (*t_hex), "%x", &r_char);
+	r_char = strtoul (t_hex, NULL, 16);
 	return true;
 }
 
