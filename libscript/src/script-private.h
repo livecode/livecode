@@ -272,21 +272,22 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScrip
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// The bytecode represents a simple register machine. It has a stack of activation
-// frames, with each frame containing an array of registers. Each register can hold
-// a single boxed value.
+// The bytecode represents a simple register machine. It is designed to be very
+// high-level and (easily) verifiably safe.
 //
-// The array of registers is referenced directly in instructions with a 0-based
-// index.
+// It has a stack of activation frames, with each frame contaning an array of
+// variables (parameters and locals) and an array of registers.
 //
-// The register file consists of the following in order:
-//   result register (if returns a value)
-//   parameters
-//   local variables
-//   temporaries
+// Each variable and register can hold a single (boxed) value.
 //
-// Globals are accessed indirectly - they must be copied into a register before use;
-// and copied back upon update.
+// Variables are strongly typed, registers can hold any value.
+//
+// Variables are accessed via fetch-local and store-local. Fetch-local requires
+// that non-optionally typed variables are defined; store-local requires that
+// the value being stored conforms type-wise with the variable.
+//
+// Global variables are accessed in an identical fashion, except they use
+// fetch-global and store-global.
 //
 // Each instruction is represented by a single byte, with arguments being encoded
 // sequentially as multi-byte (signed) integers.
@@ -307,7 +308,10 @@ enum MCScriptBytecodeOp
 	//  X: jump* <register>, <Y - X>
 	// Location is encoded as relative position to jump instruction.
 	// Register is used for test.
-	kMCScriptBytecodeOpJumpIfFalse,
+    //
+    // It is a runtime error if <register> does not contain a boolean.
+	//
+    kMCScriptBytecodeOpJumpIfFalse,
 	kMCScriptBytecodeOpJumpIfTrue,
 	
 	// Constant register assignment:
@@ -325,34 +329,66 @@ enum MCScriptBytecodeOp
 	// Return control to caller with value:
 	//   return <reg>
     // Return from a call.
+    //
+    // It is an error if <reg> does not contain a value conforming to the return
+    // type of the executing handler.
+    //
 	kMCScriptBytecodeOpReturn,
     
 	// Direct handler invocation:
 	//   invoke <index>, <result>, <arg_1>, ..., <arg_n>
 	// Handler with index <index> is invoked with the given registers as arguments.
+    //
+    // It is a runtime error if the number of arguments is different from the
+    // signature of <index>.
+    // It is a runtime error if for a non-out parameter, the contents of <arg_i>
+    // does not conform to the type of the parameter required by the signature.
+    // It is a runtime error if, on-exit, any out parameters which have a non-optional
+    // type are undefined.
+    //
 	kMCScriptBytecodeOpInvoke,
 	// Indirect handler invocation:
 	//   invoke *<handler>, <result>, <arg_1>, ..., <arg_n>
 	// The handler reference in register <handler> is invoked with the given registers
 	// as arguments.
+    //
+    // Conformance rules are the same as for normal invoke, except the signature of
+    // the handler is potentially dynamic.
+    //
 	kMCScriptBytecodeOpInvokeIndirect,
 	
 	// Local fetch:
 	//   fetch-local <dst>, <local-index>
 	// Assigns the current value of <glob-index> to register <dst>.
+    //
+    // It is a runtime error if the type of the variable is non-optional and it
+    // has an undefined value.
+    //
 	kMCScriptBytecodeOpFetchLocal,
 	// Local store:
 	//   store-local <src>, <local-index>
 	// Assigns the current value of register <src> to <glob-index>.
+    //
+    // It is a runtime error if the type of the value in <src> does not conform
+    // to the type of the target local variable.
+    //
 	kMCScriptBytecodeOpStoreLocal,
     
 	// Global fetch:
 	//   fetch-global <dst>, <glob-index>
 	// Assigns the current value of <glob-index> to register <dst>.
+    //
+    // It is a runtime error if the type of the variable is non-optional and it
+    // has an undefined value.
+    //
 	kMCScriptBytecodeOpFetchGlobal,
 	// Global store:
 	//   store-global: <src>, <glob-index>
 	// Assigns the current value of register <src> to <glob-index>.
+    //
+    // It is a runtime error if the type of the value in <src> does not conform
+    // to the type of the target global variable.
+    //
 	kMCScriptBytecodeOpStoreGlobal,
 };
 
