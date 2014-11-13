@@ -176,10 +176,15 @@ MCStackdirFormatReal (MCNumberRef p_number, MCStringRef & r_literal)
 	bool t_found = false;
 	if (t_success)
 	{
-		t_found = MCStringWildcardMatch (*t_format,
-										 MCRangeMake (0, -1),
-										 MCSTR ("[.e]"),
-										 kMCStringOptionCompareExact);
+		const char *t_cstring = MCStringGetCString (*t_format);
+		for ( ; *t_cstring != 0; ++t_cstring)
+		{
+			if (*t_cstring == 'e' || *t_cstring == '.')
+			{
+				t_found = true;
+				break;
+			}
+		}
 
 		if (!t_found)
 			t_success = MCStringFormat (&t_result, "%@.", *t_format);
