@@ -25,21 +25,17 @@ void MCCharEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_output)
 
 void MCCharEvalIsAmongTheCharsOf(MCHandlerContext& ctxt, MCStringRef p_needle, MCStringRef p_target, bool& r_output)
 {
-    bool t_output;
-    t_output = false;
-    
+    // Error if there is more than one char in needle.
     if (MCStringGetLength(p_needle) == 1)
-    {
-        uindex_t t_dummy;
-        t_output = MCStringFirstIndexOfChar(p_target, MCStringGetCodepointAtIndex(p_needle, 0), 0, ctxt . GetStringComparisonOptions(), t_dummy);
-    }
+        return;
     
-    r_output = t_output;
+    uindex_t t_dummy;
+    r_output = MCStringFirstIndexOfChar(p_target, MCStringGetCodepointAtIndex(p_needle, 0), 0, ctxt . GetStringComparisonOptions(), t_dummy);
 }
 
 void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
-    integer_t t_start, t_count;
+    uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_start, p_finish, t_start, t_count);
     if (!MCStringCopySubstring(p_target, MCRangeMake(t_start, t_count), r_output))
         return;
@@ -47,7 +43,7 @@ void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_tar
 
 void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
-    integer_t t_start, t_count;
+    uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
     MCAutoStringRef t_data;
@@ -74,16 +70,14 @@ void MCCharStoreCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_targ
 
 void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
-    integer_t t_start, t_count;
+    uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
-    
-    t_start += t_count;
     
     MCAutoStringRef t_data;
     if (!MCStringMutableCopy(x_target, &t_data))
         return;
     
-    if (!MCStringInsert(*t_data, t_start, p_value))
+    if (!MCStringInsert(*t_data, t_start + t_count, p_value))
         return;
     
     MCValueRelease(x_target);
@@ -93,7 +87,7 @@ void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x
 
 void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
-    integer_t t_start, t_count;
+    uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
     
     MCAutoStringRef t_data;
@@ -148,4 +142,13 @@ void MCCharEvalBeginsWith(MCHandlerContext& ctxt, MCStringRef p_source, MCString
 void MCCharEvalEndsWith(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRef p_suffix, bool& r_result)
 {
     r_result = MCStringBeginsWith(p_source, p_prefix, ctxt . GetStringComparisonOptions());
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern void log(const char *module, const char *test, bool result);
+#define log_result(test, result) log("CHAR MODULE", test, result)
+void MCCharRunTests()
+{
+    // Need handler context object to test
 }
