@@ -18,8 +18,8 @@ void build_library_module(MCStreamRef stream)
     
     MCHandlerTypeFieldInfo t_fields[2] =
     {
-        { MCNAME("useDefault"), kMCBooleanTypeInfo, kMCHandlerTypeFieldModeIn },
-        { MCNAME("default"), kMCNumberTypeInfo, kMCHandlerTypeFieldModeIn },
+        { kMCBooleanTypeInfo, kMCHandlerTypeFieldModeIn },
+        { kMCNumberTypeInfo, kMCHandlerTypeFieldModeIn },
     };
     MCAutoTypeInfoRef t_compute_value_sig;
     CHECK(MCHandlerTypeInfoCreate(t_fields, 2, kMCNumberTypeInfo, &t_compute_value_sig));
@@ -63,8 +63,8 @@ void build_widget_module(MCStreamRef stream)
     
     MCHandlerTypeFieldInfo t_fields[2] =
     {
-        { MCNAME("useDefault"), kMCBooleanTypeInfo, kMCHandlerTypeFieldModeIn },
-        { MCNAME("default"), kMCNumberTypeInfo, kMCHandlerTypeFieldModeIn },
+        { kMCBooleanTypeInfo, kMCHandlerTypeFieldModeIn },
+        { kMCNumberTypeInfo, kMCHandlerTypeFieldModeIn },
     };
     MCAutoTypeInfoRef t_compute_value_sig;
     CHECK(MCHandlerTypeInfoCreate(t_fields, 2, kMCNumberTypeInfo, &t_compute_value_sig));

@@ -392,13 +392,13 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
         if (t_mode != kMCHandlerTypeFieldModeOut)
         {
             if (p_arguments[i] == nil)
-                return MCScriptThrowNoValueProvidedForInParameterError(self -> module, p_handler, MCHandlerTypeInfoGetParameterName(t_signature, i));
+                return MCScriptThrowNoValueProvidedForInParameterError(self -> module, p_handler, nil);
             
             MCTypeInfoRef t_type;
             t_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
             
             if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_arguments[i]), t_type))
-                return MCScriptThrowInvalidValueForParameterError(self -> module, p_handler, MCHandlerTypeInfoGetParameterName(t_signature, i), t_type, p_arguments[i]);
+                return MCScriptThrowInvalidValueForParameterError(self -> module, p_handler, nil, t_type, p_arguments[i]);
         }
     }
     
