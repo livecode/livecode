@@ -94,6 +94,16 @@ static bool MCStackdirIOLoadIsValidObjectDir (MCStringRef p_object_dir, MCString
  * [Private] Load operations
  * ---------------------------------------------------------------- */
 
+/* Load a single property by parsing using scanner, and store it in
+ * x_propset. External files should be loaded relative to
+ * p_external_dir.  */
+static bool MCStackdirIOLoadProperty (MCStackdirIORef op, MCStackdirIOScannerRef scanner, MCStringRef p_external_dir, MCArrayRef x_propset);
+
+/* Load a property set from p_propset_path and store the properties
+ * found in x_propset.  If p_required is false, then IO errors while
+ * opening the file will be ignored if the file doesn't exist.. */
+static bool MCStackdirIOLoadPropFile (MCStackdirIORef op, MCStringRef p_propset_path, MCStringRef p_external_dir, MCArrayRef x_propset, bool p_required);
+
 static bool MCStackdirIOLoadObject (MCStackdirIORef op, MCStringRef p_uuid, MCStringRef p_obj_path);
 
 /* Read a datum from the file named p_key, and save it into the state
@@ -131,6 +141,55 @@ MC_STACKDIR_ERROR_FUNC_FULL(MCStackdirIOLoadErrorDirectLiteral,
 							kMCStackdirStatusSyntaxError,
 							"Expected literal value")
 
+MC_STACKDIR_ERROR_FUNC (MCStackdirIOLoadErrorArrayOrdering,
+						kMCStackdirStatusSyntaxError,
+						"Array entry descriptor before array's descriptor")
+MC_STACKDIR_ERROR_FUNC (MCStackdirIOLoadErrorArrayType,
+						kMCStackdirStatusSyntaxError,
+						"Array entry descriptor for non-array property")
+MC_STACKDIR_ERROR_FUNC (MCStackdirIOLoadErrorPropertyUnquotedStringLiteral,
+						kMCStackdirStatusSyntaxError,
+						"Invalid unquoted string literal (expected 'true', "
+						"'false' or 'array')")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyExternalType,
+							 kMCStackdirStatusSyntaxError,
+							 "Invalid external storage type (expected unquoted "
+							 "string)")
+MC_STACKDIR_ERROR_FUNC (MCStackdirIOLoadErrorPropertyExternalTypeCode,
+						kMCStackdirStatusSyntaxError,
+						"Invalid external storage type (expected 'array', "
+						"'data' or 'string')")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyExternalHash,
+							 kMCStackdirStatusSyntaxError,
+							 "Invalid external storage hash (expected string)")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyExternalPath,
+							 kMCStackdirStatusSyntaxError,
+							 "Invalid external filename (expected string)")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyExternalRead,
+							 kMCStackdirStatusIOError,
+							 "Failed to read external file")
+MC_STACKDIR_ERROR_FUNC (MCStackdirIOLoadErrorPropertyExternalInvalid,
+						kMCStackdirStatusSyntaxError,
+						"External storage not permitted here.")
+MC_STACKDIR_ERROR_FUNC (MCStackdirIOLoadErrorPropertyExternalPathRequired,
+						kMCStackdirStatusSyntaxError,
+						"Filename cannot be inferred for externally stored "
+						"property")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyStorageSpec,
+							 kMCStackdirStatusSyntaxError,
+							 "Invalid storage specifier (expected string)")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyStorageSeparator,
+							 kMCStackdirStatusSyntaxError,
+							 "Invalid storage specifier terminator (expected "
+							 "space or ':')")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyLiteral,
+							 kMCStackdirStatusSyntaxError,
+							 "Invalid property value (expected literal or "
+							 "external)")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyNewline,
+							 kMCStackdirStatusSyntaxError,
+							 "Property descriptor lacks terminating newline")
+
 /* ================================================================
  * Utility functions
  * ================================================================ */
@@ -154,6 +213,542 @@ MCStackdirIOLoadIsValidObjectDir (MCStringRef p_object_dir,
 		return false;
 
 	return true;
+}
+
+/* ================================================================
+ * Property loading
+ * ================================================================ */
+
+
+static inline bool
+MCStackdirIOLoadProperty_Array (MCStackdirIORef op,
+								MCStackdirIOScannerRef scanner,
+								MCStringRef p_external_dir,
+								MCStringRef p_storage_spec,
+								MCArrayRef x_propset)
+{
+	MCNewAutoNameRef t_storage_spec_key;
+	if (!MCNameCreate (p_storage_spec, &t_storage_spec_key))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	/* We need to ensure that a literal info array *already* exists in
+	 * the state array for the destination array literal. */
+	MCValueRef t_literal_info;
+	if (!MCArrayFetchValue (x_propset,
+							true,
+							*t_storage_spec_key,
+							t_literal_info))
+		return MCStackdirIOLoadErrorArrayOrdering (op);
+
+	/* Check that the literal info is actually an array. We should
+	 * *always* create a literal info array, so use an assertion
+	 * here. */
+	MCAssert (MCValueIsArray (t_literal_info));
+
+	/* Get the actual literal from the literal info array.  Once
+	 * again, this shouldn't fail. */
+	bool t_success;
+	MCValueRef t_array_props;
+	t_success = MCArrayFetchValue ((MCArrayRef) t_literal_info,
+								   true,
+								   kMCStackdirLiteralKey,
+								   t_array_props);
+	MCAssert (t_success);
+
+	/* It's possible that a properties file could define a property as
+	 * a string, and the in a later line attempt to add an array entry
+	 * to it.  That's a syntax error. */
+	if (!MCValueIsArray (t_array_props))
+		return MCStackdirIOLoadErrorArrayType (op);
+
+	return MCStackdirIOLoadProperty (op,
+									 scanner,
+									 p_external_dir,
+									 (MCArrayRef) t_array_props);
+}
+
+static inline bool
+MCStackdirIOLoadProperty_Unquoted (MCStackdirIORef op,
+								   MCStringRef p_literal,
+								   MCValueRef & r_value)
+{
+	if (MCStringIsEqualTo (p_literal,
+						   kMCStackdirTrueLiteral,
+						   kMCStringOptionCompareExact))
+	{
+		/* TRUE */
+		r_value = MCValueRetain (kMCTrue);
+	}
+	else if (MCStringIsEqualTo (p_literal,
+								kMCStackdirFalseLiteral,
+								kMCStringOptionCompareExact))
+	{
+		/* FALSE */
+		r_value = MCValueRetain (kMCFalse);
+	}
+	else if (MCStringIsEqualTo (p_literal,
+								kMCStackdirArrayLiteral,
+								kMCStringOptionCompareExact))
+	{
+		/* ARRAY */
+		MCArrayRef t_array_value;
+		if (!MCArrayCreateMutable (t_array_value))
+			return MCStackdirIOErrorOutOfMemory (op);
+		r_value = t_array_value;
+	}
+	else
+	{
+		return MCStackdirIOLoadErrorPropertyUnquotedStringLiteral (op);
+	}
+	return true;
+}
+
+static inline bool
+MCStackdirIOLoadProperty_ParseExternal (MCStackdirIORef op,
+										MCStackdirIOScannerRef scanner,
+										MCStringRef & r_type,
+										MCStringRef & r_hash,
+										MCStringRef & r_filename)
+{
+	/* The external indicator character "&" should already have been
+	 * consumed. */
+
+	/* The first item in the external descriptor must be the external
+	 * storage type: string, data or array (after some whitespace). */
+	MCStackdirIOToken t_type_token;
+	MCAutoStringRef t_external_type_string;
+	if (!(MCStackdirIOScannerConsume (scanner, t_type_token,
+									  kMCStackdirIOTokenTypeSpace) &&
+		  MCStackdirIOScannerConsume (scanner, t_type_token,
+									  kMCStackdirIOTokenTypeUnquotedString)))
+		return MCStackdirIOLoadErrorPropertyExternalType (op,
+					kMCEmptyString, t_type_token.m_line, t_type_token.m_column);
+
+	/* The second item (after some whitespace) must be the file
+	 * hash. */
+	MCStackdirIOToken t_hash_token;
+	if (!(MCStackdirIOScannerConsume (scanner, t_hash_token,
+									  kMCStackdirIOTokenTypeSpace) &&
+		  MCStackdirIOScannerConsume (scanner, t_hash_token,
+									  kMCStackdirIOTokenTypeString)))
+		return MCStackdirIOLoadErrorPropertyExternalHash (op,
+					kMCEmptyString, t_hash_token.m_line, t_hash_token.m_column);
+
+	/* The third (optional) item (after more whitespace) may be the
+	 * file name. */
+	MCStackdirIOToken t_filename_token;
+	bool t_have_filename = false;
+	if (MCStackdirIOScannerPeek (scanner, t_filename_token,
+								 kMCStackdirIOTokenTypeSpace))
+	{
+		if (!(MCStackdirIOScannerConsume (scanner, t_filename_token,
+										  kMCStackdirIOTokenTypeSpace) &&
+			  MCStackdirIOScannerConsume (scanner, t_filename_token,
+										  kMCStackdirIOTokenTypeString)))
+			return MCStackdirIOLoadErrorPropertyExternalPath (op,
+						kMCEmptyString, t_filename_token.m_line,
+						t_filename_token.m_column);
+
+		t_have_filename = true;
+	}
+
+	r_type = MCValueRetain ((MCStringRef) t_type_token.m_value);
+	r_hash = MCValueRetain ((MCStringRef) t_hash_token.m_value);
+	if (t_have_filename)
+		r_filename = MCValueRetain ((MCStringRef) t_filename_token.m_value);
+	else
+		r_filename = MCValueRetain (kMCEmptyString);
+	return true;
+}
+
+static bool
+MCStackdirIOLoadProperty_LoadExternal (MCStackdirIORef op,
+									   MCStringRef p_path,
+									   MCStringRef p_hash,
+									   MCValueTypeCode p_type_code,
+									   MCValueRef & r_value)
+{
+	/* Read the file */
+	MCAutoDataRef t_content;
+	if (!MCS_loadbinaryfile (p_path, &t_content))
+		return MCStackdirIOLoadErrorPropertyExternalRead (op, p_path);
+
+	/* FIXME verify the SHA-1 */
+
+	/* Convert the data */
+	switch (p_type_code)
+	{
+	case kMCValueTypeCodeData:
+		/* Data is trivially returned without modification */
+		r_value = MCValueRetain (*t_content);
+		break;
+
+	case kMCValueTypeCodeString:
+		{
+			MCAutoStringRef t_string;
+			/* Strings must be decoded as UTF-8 */
+			if (!MCStringDecode (*t_content,
+								 kMCStringEncodingUTF8,
+								 false,
+								 &t_string))
+				return MCStackdirIOErrorOutOfMemory (op);
+			r_value = MCValueRetain (*t_string);
+		}
+		break;
+
+	case kMCValueTypeCodeArray:
+		{
+			/* Arrays need to be parsed */
+			MCAutoArrayRef t_array;
+			if (!MCArrayCreateMutable (&t_array))
+				return MCStackdirIOErrorOutOfMemory (op);
+
+			if (!MCStackdirIOLoadPropFile (op,
+										   p_path,
+										   nil, /* p_external_dir */
+										   *t_array,
+										   true))
+				return false;
+			r_value = MCValueRetain (*t_array);
+		}
+		break;
+	default:
+		MCUnreachable ();
+	}
+
+	return true;
+}
+
+static bool
+MCStackdirIOLoadProperty_External (MCStackdirIORef op,
+								   MCStackdirIOScannerRef scanner,
+								   MCStringRef p_external_dir,
+								   MCStringRef p_storage_spec,
+								   MCValueRef & r_value)
+{
+	/* If p_external_dir is nil, then external properties are not
+	 * permitted. */
+	if (p_external_dir == nil)
+		return MCStackdirIOLoadErrorPropertyExternalInvalid (op);
+
+	/* Dealing with external files is more complicated!
+	 * First parse the information from the property descriptor */
+	MCAutoStringRef t_external_type_string;
+	MCAutoStringRef t_external_hash;
+	MCAutoStringRef t_external_file_name;
+	if (!MCStackdirIOLoadProperty_ParseExternal (op,
+												 scanner,
+												 &t_external_type_string,
+												 &t_external_hash,
+												 &t_external_file_name))
+		return false;
+
+	/* Decode the storage type */
+	MCValueTypeCode t_external_type_code;
+
+	struct ExternalTypeInfo
+	{
+		MCStringRef m_str;
+		MCValueTypeCode m_code;
+	};
+	struct ExternalTypeInfo t_type_map[] = {
+		{ kMCStackdirStringType, kMCValueTypeCodeString },
+		{ kMCStackdirDataType, kMCValueTypeCodeData },
+		{ kMCStackdirArrayType, kMCValueTypeCodeArray },
+		{ NULL, kMCValueTypeCodeNull },
+	};
+
+	t_external_type_code = kMCValueTypeCodeNull;
+	for (int i = 0; t_type_map[i].m_str != NULL; ++i)
+	{
+		if (MCStringIsEqualTo (t_type_map[i].m_str,
+							   *t_external_type_string,
+							   kMCStringOptionCompareExact))
+		{
+			t_external_type_code = t_type_map[i].m_code;
+			break;
+		}
+	}
+
+	if (t_external_type_code == kMCValueTypeCodeNull)
+		return MCStackdirIOLoadErrorPropertyExternalTypeCode (op);
+
+	/* If a file name wasn't specified, generate one.  In some
+	 * cases it may not be possible to do so, in which case
+	 * one should have been provided. */
+	/* FIXME it may be possible to factor this out from both here and
+	 * the corresponding save code. */
+	MCAutoStringRef t_file_name;
+	if (MCStringIsEmpty (*t_external_file_name))
+	{
+		MCStringRef t_suffix;
+		switch (t_external_type_code)
+		{
+		case kMCValueTypeCodeString:
+			t_suffix = kMCStackdirStringSuffix;
+			break;
+		case kMCValueTypeCodeArray:
+			t_suffix = kMCStackdirArraySuffix;
+			break;
+		case kMCValueTypeCodeData:
+			t_suffix = kMCStackdirDataSuffix;
+			break;
+		default:
+			MCUnreachable ();
+		}
+		if (!MCStackdirFormatFilename (p_storage_spec,
+									   t_suffix,
+									   &t_file_name))
+			return MCStackdirIOLoadErrorPropertyExternalPathRequired (op);
+	}
+	else
+	{
+		&t_file_name = MCValueRetain (*t_external_file_name);
+	}
+
+	/* Construct the full path to the external file */
+	MCAutoStringRef t_path;
+	if (!MCStringFormat (&t_path, "%@/%@", p_external_dir, *t_file_name))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	/* Load the data */
+	return MCStackdirIOLoadProperty_LoadExternal (op,
+												  *t_path,
+												  *t_external_hash,
+												  t_external_type_code,
+												  r_value);
+}
+
+
+static bool
+MCStackdirIOLoadProperty (MCStackdirIORef op,
+						  MCStackdirIOScannerRef scanner,
+						  MCStringRef p_external_dir,
+						  MCArrayRef x_propset)
+{
+	/* Storage spec */
+	MCStackdirIOToken t_storage_token;
+	MCStackdirIOScannerConsume (scanner, t_storage_token);
+	switch (t_storage_token.m_type)
+	{
+	case kMCStackdirIOTokenTypeUnquotedString:
+	case kMCStackdirIOTokenTypeString:
+		break;
+
+	default:
+		return MCStackdirIOLoadErrorPropertyStorageSpec (op,
+					kMCEmptyString, t_storage_token.m_line,
+					t_storage_token.m_column);
+	}
+
+	MCAutoStringRef t_storage_spec;
+	&t_storage_spec = MCValueRetain ((MCStringRef) t_storage_token.m_value);
+
+	/* Storage separator (whitespace or ":") */
+	/* If the next token is ":", then recurse (because this is a
+	 * property descriptor for an entry in an array).  Otherwise, the
+	 * next token must be space. */
+	MCStackdirIOToken t_storage_sep_token;
+	MCStackdirIOScannerConsume (scanner, t_storage_sep_token);
+	switch (t_storage_sep_token.m_type)
+	{
+	case kMCStackdirIOTokenTypeSpace:
+		break;
+	case kMCStackdirIOTokenTypeStorageSeparator:
+		bool t_success;
+		MCStackdirIOErrorLocationPush (op, kMCEmptyString,
+									   t_storage_sep_token.m_line,
+									   t_storage_sep_token.m_column);
+		t_success = MCStackdirIOLoadProperty_Array (op,
+													scanner,
+													p_external_dir,
+													*t_storage_spec,
+													x_propset);
+		MCStackdirIOErrorLocationPop (op);
+		return t_success;
+	default:
+		return MCStackdirIOLoadErrorPropertyStorageSeparator (op,
+					kMCEmptyString, t_storage_sep_token.m_line,
+					t_storage_sep_token.m_column);
+	}
+
+	/* The next token might be a type.  Alternatively, it might be a
+	 * literal value.  If it's a string or unquoted string, store it
+	 * and check for a value again later. */
+	MCStackdirIOToken t_type_token;
+	bool t_have_type;
+	MCStackdirIOScannerConsume (scanner, t_type_token);
+	switch (t_type_token.m_type)
+	{
+	case kMCStackdirIOTokenTypeString:
+	case kMCStackdirIOTokenTypeUnquotedString:
+		t_have_type = true;
+		break;
+	default:
+		t_have_type = false;
+		break;
+	}
+
+	/* If it looks like there *might* be a type specifier, look for a
+	 * following value specifier. */
+	MCStackdirIOToken t_value_token;
+	MCNewAutoNameRef t_type;
+	if (t_have_type &&
+		MCStackdirIOScannerPeek (scanner, t_value_token,
+								 kMCStackdirIOTokenTypeSpace))
+	{
+		MCStackdirIOScannerConsume (scanner, t_value_token,
+									kMCStackdirIOTokenTypeSpace);
+		MCStackdirIOScannerConsume (scanner, t_value_token); /* value */
+
+		if (!MCNameCreate ((MCStringRef) t_type_token.m_value, &t_type))
+			return MCStackdirIOErrorOutOfMemory (op);
+	}
+	else
+	{
+		t_have_type = false;
+		MCStackdirIOTokenCopy (t_type_token, t_value_token);
+
+		/* No type spec, so just use an empty type */
+		&t_type = MCValueRetain (kMCEmptyName);
+	}
+
+	/* Interpret the value */
+	MCAutoValueRef t_value;
+	MCStackdirIOErrorLocationPush (op, kMCEmptyString,
+							t_value_token.m_line, t_value_token.m_column);
+	switch (t_value_token.m_type)
+	{
+	case kMCStackdirIOTokenTypeUnquotedString:
+		/* There are a few valid unquoted string values that can be
+		 * stored in a property descriptor. */
+		if (!MCStackdirIOLoadProperty_Unquoted (op,
+										(MCStringRef) t_value_token.m_value,
+										&t_value))
+			return false;
+		break;
+
+	case kMCStackdirIOTokenTypeString:
+	case kMCStackdirIOTokenTypeData:
+	case kMCStackdirIOTokenTypeNumber:
+		/* These are always self-evaluating! */
+		&t_value = MCValueRetain (t_value_token.m_value);
+		break;
+
+	case kMCStackdirIOTokenTypeExternalIndicator:
+		if (!MCStackdirIOLoadProperty_External (op,
+												scanner,
+												p_external_dir,
+												*t_storage_spec,
+												&t_value))
+			return false;
+		break;
+
+	default:
+		return MCStackdirIOLoadErrorPropertyLiteral (op,
+											kMCEmptyString,
+											t_value_token.m_line,
+											t_value_token.m_column);
+	}
+	MCStackdirIOErrorLocationPop (op);
+
+	/* Terminating newline */
+	MCStackdirIOToken t_newline_token;
+	if (!MCStackdirIOScannerConsume (scanner, t_newline_token,
+									 kMCStackdirIOTokenTypeNewline))
+		return MCStackdirIOLoadErrorPropertyNewline (op,
+					kMCEmptyString, t_newline_token.m_line,
+					t_newline_token.m_column);
+
+	/* Create a literal info structure and store it in the propset. */
+	MCAutoArrayRef t_literal_info;
+	MCNewAutoNameRef t_key;
+	if (!(MCArrayCreateMutable (&t_literal_info) &&
+		  MCNameCreate (*t_storage_spec, &t_key) &&
+		  MCArrayStoreValue (*t_literal_info,
+							 true,
+							 kMCStackdirTypeKey,
+							 *t_type) &&
+		  MCArrayStoreValue (*t_literal_info,
+							 true,
+							 kMCStackdirLiteralKey,
+							 *t_value) &&
+		  MCArrayStoreValue (x_propset,
+							 true,
+							 *t_key,
+							 *t_literal_info)))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	return true;
+}
+
+static bool
+MCStackdirIOLoadPropFile (MCStackdirIORef op,
+						  MCStringRef p_path,
+						  MCStringRef p_external_dir,
+						  MCArrayRef x_propset,
+						  bool p_required)
+{
+	/* Load the file into memory.  If p_required is false, allow the
+	 * file to be missing. */
+	MCAutoStringRef t_content;
+	if (!MCStackdirIOLoadUTF8 (op,
+							   p_path,
+							   &t_content,
+							   !p_required))
+		return (!MCStackdirIOHasError (op));
+
+	/* Set up a scanner */
+	MCStackdirIOScannerRef t_scanner;
+	if (!MCStackdirIOScannerNew (*t_content, t_scanner))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	MCStackdirIOErrorLocationPush (op, p_path);
+
+	/* Repeatedly parse property descriptors until EOF */
+	bool t_success = true;
+	MCStackdirIOToken t_token;
+	while (t_success)
+	{
+		if (MCStackdirIOScannerPeek (t_scanner, t_token,
+									 kMCStackdirIOTokenTypeEOF))
+			break;
+
+		t_success = MCStackdirIOLoadProperty (op,
+											  t_scanner,
+											  p_external_dir,
+											  x_propset);
+	}
+
+	MCStackdirIOErrorLocationPop (op);
+	MCStackdirIOScannerDestroy (t_scanner);
+
+	return t_success;
+}
+
+static bool
+MCStackdirIOLoadPropset (MCStackdirIORef op,
+						 MCStringRef p_propset_dir,
+						 MCStringRef p_external_dir,
+						 MCArrayRef x_propset)
+{
+	MCAutoStringRef t_contents_path, t_overflow_path;
+	if (!(MCStringFormat (&t_contents_path, "%@/%@",
+						  p_propset_dir, kMCStackdirContentsFile) &&
+		  MCStringFormat (&t_overflow_path, "%@/%@",
+						  p_propset_dir, kMCStackdirOverflowFile)))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	return (MCStackdirIOLoadPropFile (op,
+									  *t_contents_path,
+									  p_external_dir,
+									  x_propset,
+									  false) &&
+			MCStackdirIOLoadPropFile (op,
+									  *t_overflow_path,
+									  p_external_dir,
+									  x_propset,
+									  false));
 }
 
 /* ================================================================
@@ -217,7 +812,7 @@ MCStackdirIOLoadObjectKeyDirect (MCStackdirIOObjectLoadRef info,
 		return MCStackdirIOErrorOutOfMemory (info->m_op);
 
 	/* Load file into memory.  If p_required is false, allow the file
-	 * to be unreadable. */
+	 * to be missing. */
 	MCAutoStringRef t_content;
 	if (!MCStackdirIOLoadUTF8 (info->m_op,
 							   *t_path,
@@ -286,8 +881,18 @@ MCStackdirIOLoadObjectKind (MCStackdirIOObjectLoadRef info)
 static bool
 MCStackdirIOLoadObjectInternal (MCStackdirIOObjectLoadRef info)
 {
-	/* FIXME implementation */
-	return true;
+	MCAutoArrayRef t_internal;
+	if (!(MCArrayCreateMutable (&t_internal) &&
+		  MCArrayStoreValue (info->m_state,
+							 true,
+							 kMCStackdirInternalKey,
+							 *t_internal)))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+
+	return MCStackdirIOLoadPropset (info->m_op,
+									info->m_path, /* p_propset_dir */
+									info->m_path, /* p_external_dir */
+									*t_internal);
 }
 
 static bool
