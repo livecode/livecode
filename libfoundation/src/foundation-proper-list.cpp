@@ -308,7 +308,7 @@ bool MCProperListRemoveElements(MCProperListRef self, uindex_t p_start, uindex_t
     if (!__MCProperListShrinkAt(self, p_start, p_count))
         return false;
     
-    for (uindex_t i = 0; i <= t_values . Size(); i++)
+    for (uindex_t i = 0; i < t_values . Size(); i++)
         MCValueRelease(t_values[i]);
     
     return true;
