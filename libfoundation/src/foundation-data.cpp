@@ -452,10 +452,10 @@ bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle)
     if (t_needle_byte_count > t_byte_count)
         return false;
     
-    return MCMemoryCompare(p_data -> bytes + t_byte_count - t_needle_byte_count - 1, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0;
+    return MCMemoryCompare(p_data -> bytes + t_byte_count - t_needle_byte_count, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0;
 }
 
-uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range)
+bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index)
 {
     __MCDataClampRange(p_data, t_range);
     
@@ -468,19 +468,24 @@ uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range
     
     uindex_t t_offset, t_result;
     t_result = 0;
+    
+    bool t_found;
+    t_found = false;
     
     for (t_offset = t_range . offset; t_offset < t_limit; t_offset++)
         if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
         {
             t_result = t_offset - t_range . offset;
+            t_found = true;
             break;
         }
     
-    return t_result;
+    r_index = t_result;
+    return t_found;
 }
 
 
-uindex_t MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range)
+bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index)
 {
     __MCDataClampRange(p_data, t_range);
     
@@ -494,14 +499,19 @@ uindex_t MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range)
     uindex_t t_offset, t_result;
     t_result = 0;
     
+    bool t_found;
+    t_found = false;
+    
     while (--t_limit)
         if (MCMemoryCompare(t_bytes + t_limit, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
         {
             t_result = t_limit - t_range . offset;
+            t_found = true;
             break;
         }
     
-    return t_result;
+    r_index = t_result;
+    return t_found;
 }
 
 
