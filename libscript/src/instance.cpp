@@ -542,6 +542,16 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
 
     bool t_needs_mapping;
     t_needs_mapping = false;
+    
+    uindex_t t_map_index;
+    t_map_index = 0;
+    if (MCHandlerTypeInfoGetReturnType(p_handler -> signature) != kMCNullTypeInfo)
+    {
+        t_callee -> slots[t_map_index] = MCValueRetain(kMCNull);
+        t_map_index += 1;
+        t_needs_mapping = true;
+    }
+
     for(int i = 0; i < MCHandlerTypeInfoGetParameterCount(p_handler -> signature); i++)
     {
         MCHandlerTypeFieldMode t_mode;
@@ -549,14 +559,15 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
         
         MCValueRef t_value;
         if (t_mode != kMCHandlerTypeFieldModeOut)
-            t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i]);
+            t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[t_map_index]);
         else
             t_value = kMCNull;
         
         if (t_mode != kMCHandlerTypeFieldModeIn)
             t_needs_mapping = true;
         
-        t_callee -> slots[i] = MCValueRetain(t_value);
+        t_callee -> slots[t_map_index] = MCValueRetain(t_value);
+        t_map_index += 1;
     }
     
     if (t_needs_mapping)
@@ -857,17 +868,36 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     // If there is a mapping array the do the copyback.
                     if (t_frame -> mapping != nil)
                     {
+                        int t_map_index;
+                        t_map_index = 0;
+                        if (MCHandlerTypeInfoGetReturnType(t_frame -> handler -> signature) != nil)
+                        {
+                            __MCScriptAssert__(MCTypeInfoConforms(MCValueGetTypeInfo(t_frame -> slots[0]), MCHandlerTypeInfoGetReturnType(t_frame -> handler -> signature)),
+                                               "return value type mismatch");
+                            
+                            MCScriptStoreToRegisterInFrame(t_frame -> caller, t_frame -> mapping[0], t_frame -> slots[0]);
+                            t_frame -> slots[0] = nil;
+                            t_map_index++;
+                        }
+                        
                         int t_param_count;
                         t_param_count = MCHandlerTypeInfoGetParameterCount(t_frame -> handler -> signature);
                         for(int i = 0; i < t_param_count; i++)
+                        {
                             if (MCHandlerTypeInfoGetParameterMode(t_frame -> handler -> signature, i) != kMCHandlerTypeFieldModeIn)
                             {
+                                __MCScriptAssert__(MCTypeInfoConforms(MCValueGetTypeInfo(t_frame -> slots[t_map_index]), MCHandlerTypeInfoGetParameterType(t_frame -> handler -> signature, i)),
+                                                   "out parameter value type mismatch");
+                                
                                 // Assign the return value to the mapped register.
-                                MCScriptStoreToRegisterInFrame(t_frame -> caller, t_frame -> mapping[i], t_frame -> slots[i]);
+                                MCScriptStoreToRegisterInFrame(t_frame -> caller, t_frame -> mapping[t_map_index], t_frame -> slots[t_map_index]);
                                 
                                 // Mark the slot as free as the value has been taken.
-                                t_frame -> slots[i] = nil;
+                                t_frame -> slots[t_map_index] = nil;
                             }
+                            
+                            t_map_index += 1;
+                        }
                     }
                     
                     // Update the bytecode pointer to that of the caller.
