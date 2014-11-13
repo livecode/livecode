@@ -1116,6 +1116,14 @@ MCStackdirIOCommitLoad (MCStackdirIORef op)
 	/* Sanity check that the target path has been set */
 	MCAssert (op->m_path);
 
+	/* Convert to native path */
+	MCAutoStringRef t_native_path;
+	if (!MCS_pathtonative (op->m_path, &t_native_path))
+	{
+		MCStackdirIOErrorOutOfMemory (op);
+		return;
+	}
+
 	/* Check that the target path is, in fact, a stackdir */
 	if (MCStackdirPathIsStackdir (op->m_path))
 	{
@@ -1127,7 +1135,7 @@ MCStackdirIOCommitLoad (MCStackdirIORef op)
 		/* Iterate over stackdir contents (which should mostly be LSB
 		 * directories) */
 		if (t_success)
-			t_success = MCsystem->ListFolderEntries (op->m_path,
+			t_success = MCsystem->ListFolderEntries (*t_native_path,
 										MCStackdirIOCommitLoad_LsbDirCallback,
 										op);
 
