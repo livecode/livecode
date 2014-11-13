@@ -146,6 +146,11 @@ bool MCScriptThrowInvalidValueForParameterError(MCScriptModuleRef module, MCName
     return MCErrorThrowGeneric();
 }
 
+bool MCScriptThrowDefcheckFailureError(MCScriptModuleRef module, uindex_t address)
+{
+    return MCErrorThrowGeneric();
+}
+
 bool MCScriptThrowTypecheckFailureError(MCScriptModuleRef module, uindex_t address, MCTypeInfoRef type, MCValueRef value)
 {
     return MCErrorThrowGeneric();
@@ -769,6 +774,24 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCValueRef t_value;
                 t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_src);
                 MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_value);
+            }
+            break;
+            case kMCScriptBytecodeOpDefcheck:
+            {
+                // defcheck <reg>
+                int t_register;
+                t_register = t_arguments[0];
+                
+                // Fetch the value from the frame
+                MCValueRef t_value;
+                t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_register);
+                
+                // If the value is null then its an error.
+                if (t_value == kMCNull)
+                {
+                    t_frame -> address = t_bytecode - t_frame -> instance -> module -> bytecode;
+                    t_success = MCScriptThrowDefcheckFailureError(t_frame -> instance -> module, t_frame -> address);
+                }
             }
             break;
             case kMCScriptBytecodeOpTypecheck:

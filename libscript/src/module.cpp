@@ -167,6 +167,10 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         t_temporary_count = MCMax(t_temporary_count, t_operands[1] + 1);
                         break;
+                    case kMCScriptBytecodeOpDefcheck:
+                        // check arity == 1
+                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
+                        break;
                     case kMCScriptBytecodeOpTypecheck:
                         // check arity == 2
                         // check typeinfo argument is within value pool range

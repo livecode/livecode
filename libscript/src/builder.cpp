@@ -663,6 +663,14 @@ void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef self, uindex_t p_dst_re
     __emit_instruction(self, kMCScriptBytecodeOpAssign, 2, p_dst_reg, p_src_reg);
 }
 
+void MCScriptEmitDefcheckInModule(MCScriptModuleBuilderRef self, uindex_t p_reg)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    __emit_instruction(self, kMCScriptBytecodeOpDefcheck, 1, p_reg);
+}
+
 void MCScriptEmitTypecheckInModule(MCScriptModuleBuilderRef self, uindex_t p_reg, MCValueRef p_typeinfo)
 {
     if (self == nil || !self -> valid)

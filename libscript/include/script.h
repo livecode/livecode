@@ -245,6 +245,7 @@ void MCScriptEmitJumpIfFalseInModule(MCScriptModuleBuilderRef builder, uindex_t 
 void MCScriptEmitJumpIfTrueInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
 void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, MCValueRef constant);
 void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t src_reg);
+void MCScriptEmitDefcheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
 void MCScriptEmitTypecheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg, MCValueRef typeinfo);
 void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef builder);
 void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index);

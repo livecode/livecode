@@ -315,6 +315,11 @@ enum MCScriptBytecodeOp
 	// into it.
 	kMCScriptBytecodeOpAssign,
 	
+    // Defined check:
+    //   defcheck <reg>
+    // Checks that the value in <reg> is defined. Throws an error if it is not.
+    kMCScriptBytecodeOpDefcheck,
+    
     // Type conversion:
     //   typecheck <reg>, <typeinfo>
     // Reg is a register, and index is a definition. Throws an error if the value
