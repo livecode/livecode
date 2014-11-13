@@ -1532,10 +1532,17 @@ MCStackdirIOScannerPeek (MCStackdirIOScannerRef scanner,
 
 	/* Peeking multiple times in a row will just return the same
 	 * token. */
-	if (scanner->m_has_peek)
+	if (scanner->m_has_peek || MCStackdirIOTokenIsError (t_token))
 	{
 		MCStackdirIOTokenCopy (t_token, r_token);
-		return true;
+
+		bool t_success = !MCStackdirIOTokenIsError (r_token);
+
+		/* Handle a narrowing token type selection */
+		if (p_accept_type != kMCStackdirIOTokenTypeNone)
+			return t_success && t_token.m_type == p_accept_type;
+
+		return t_success;
 	}
 
 	/* Reset the token */
