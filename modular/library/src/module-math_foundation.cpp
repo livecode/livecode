@@ -29,9 +29,9 @@ void MCMathFoundationExecRoundUpReal(double& x_target)
 void MCMathFoundationExecRoundToNearestReal(double& x_target)
 {
 	if (x_target < 0.0)
-		MCMathFoundationExecRoundUpReal(x_target);
+        x_target = ceil(x_target - 0.5);
 	else
-        MCMathFoundationExecRoundUpReal(x_target);
+        x_target = floor(x_target + 0.5);
 }
 
 void MCMathFoundationExecRoundDownNumber(MCNumberRef& x_target)
