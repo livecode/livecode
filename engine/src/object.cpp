@@ -1219,11 +1219,35 @@ Boolean MCObject::resizeparent()
 	return False;
 }
 
-Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
+Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
                                MCColor &c, MCPatternRef &r_pattern,
                                int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected)
 {
-	uint2 i;
+    uint2 di;
+    switch (p_di)
+    {
+        case DI_PSEUDO_TEXT_COLOR:
+        case DI_PSEUDO_TEXT_COLOR_SEL_FORE:
+        case DI_PSEUDO_BUTTON_TEXT:
+            di = DI_FORE;
+            break;
+            
+        case DI_PSEUDO_TEXT_BACKGROUND:
+        case DI_PSEUDO_TEXT_COLOR_SEL_BACK:
+        case DI_PSEUDO_BUTTON_TEXT_SEL:
+            di = DI_BACK;
+            break;
+            
+        case DI_PSEUDO_TEXT_BACKGROUND_SEL:
+            di = DI_HILITE;
+            break;
+        
+        default:
+            di = p_di;
+            break;
+    }
+    
+    uint2 i;
 	if (dc->getdepth() > 1)
 	{
 		Boolean hasindex = getcindex(di, i);
@@ -1257,14 +1281,14 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 				if (MClook != LF_MOTIF && hilite && flags & F_OPAQUE
 				        && !(flags & F_DISABLED))
 				{
-					if (di == DI_BACK)
-						c = dc->getwhite();
-					else
-						parent->getforecolor(di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
+                    //if (di == DI_BACK)
+                    //	c = dc->getwhite();
+                    //else
+						parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
 					return True;
 				}
 				if (parent && parent != MCdispatcher)
-					return parent->getforecolor(di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
+					return parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
 			}
 	}
 
@@ -1275,7 +1299,7 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
     MCPlatformThemeProperty t_theme_prop;
     MCPlatformThemePropertyType t_theme_prop_type;
     Properties which;
-    switch (di)
+    switch (p_di)
     {
         case DI_TOP:
             which = P_TOP_COLOR;
@@ -1285,15 +1309,25 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
             which = P_BOTTOM_COLOR;
             break;
             
+        case DI_PSEUDO_TEXT_COLOR_SEL_FORE:
+        case DI_PSEUDO_TEXT_COLOR_SEL_BACK:
+        case DI_PSEUDO_BUTTON_TEXT_SEL:
+            selected = true;
+            /* FALLTHROUGH */
+            
         case DI_FORE:
+        case DI_PSEUDO_TEXT_COLOR:
+        case DI_PSEUDO_BUTTON_TEXT:
             which = P_FORE_COLOR;
             break;
             
         case DI_BACK:
+        case DI_PSEUDO_TEXT_BACKGROUND:
             which = P_BACK_COLOR;
             break;
             
         case DI_HILITE:
+        case DI_PSEUDO_TEXT_BACKGROUND_SEL:
             which = P_HILITE_COLOR;
             break;
             
@@ -1378,6 +1412,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite, bo
 			idi = DI_TOP;
 			break;
 		case DI_BACK:
+        case DI_PSEUDO_BUTTON_TEXT_SEL:
 			idi = DI_HILITE;
 			break;
 		default:
@@ -4323,7 +4358,7 @@ bool MCObject::mapfont(bool recursive)
 	//   Images don't use the fontref, so don't do anything if we are an image.
 
 	if (gettype() == CT_IMAGE)
-		return;
+		return false;
 	
     // This is only set if an explicitly-set font was found at some point
     bool t_explicit_font;
@@ -4399,6 +4434,8 @@ bool MCObject::mapfont(bool recursive)
 	//   first place.
 	if (t_mapped_parent)
 		parent -> unmapfont();
+    
+    return t_explicit_font;
 }
 
 // MW-2012-02-14: [[ FontRefs ]] New method which unmaps the object's concrete font

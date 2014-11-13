@@ -2366,14 +2366,14 @@ void MCBlock::setcolorfornormaltext(MCDC* dc, MCColor* p_color)
     else if (flags & F_HAS_COLOR)
         dc->setforeground(*atts -> color);
     else
-        f->setforeground(dc, DI_FORE, False, True);
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR, False, True);
 }
 
 void MCBlock::setcolorforhilite(MCDC* dc)
 {
     MCField* f = parent->getparent();
     
-    f->setforeground(dc, DI_HILITE, False, True);
+    f->setforeground(dc, DI_PSEUDO_TEXT_BACKGROUND_SEL, False, True);
 }
 
 void MCBlock::setcolorforselectedtext(MCDC* dc, MCColor* p_color)
@@ -2385,7 +2385,7 @@ void MCBlock::setcolorforselectedtext(MCDC* dc, MCColor* p_color)
     else if (flags & F_HAS_COLOR)
         dc->setforeground(*atts -> color);
     else if (!IsMacLF()) // TODO: if platform reverses selected text
-        f->setforeground(dc, DI_BACK, False, True, true);
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR_SEL_BACK, False, True, true);
     else
-        f->setforeground(dc, DI_FORE, False, True, true);
+        f->setforeground(dc, DI_PSEUDO_TEXT_COLOR_SEL_FORE, False, True, true);
 }

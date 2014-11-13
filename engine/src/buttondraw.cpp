@@ -138,15 +138,17 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCcurtheme -> drawmenuheaderbackground(dc, dirty, this))
 		{
 			t_themed_menu = true;
-			dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
+            //dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
+            setforeground(dc, DI_PSEUDO_BUTTON_TEXT, False);
 		}
 		else if (menucontrol != MENUCONTROL_NONE && MCcurtheme != NULL &&
 				MCcurtheme -> drawmenuitembackground(dc, dirty, this))
 		{
 			t_themed_menu = true;
 			indicator = False;
-			dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
-			}
+            //dc -> setforeground(getflag(F_DISABLED) ? dc -> getgray() : dc -> getblack());
+            setforeground(dc, DI_PSEUDO_BUTTON_TEXT, False);
+        }
 		else
 		{
 		if (flags & F_OPAQUE && (MCcurtheme == NULL || !noback
@@ -342,6 +344,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 
 		if (flags & F_DISABLED)
+        {
 			if (MClook == LF_MOTIF)
 			{
 				setforeground(dc, DI_FORE, False);
@@ -354,15 +357,18 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			}
 			else
 				setforeground(dc, DI_TOP, False);
+        }
 		else
-			if (white && state & CS_KFOCUSED && !(state & CS_SUBMENU) ||
-				isstdbtn && noback && (MCcurtheme == NULL || MCcurtheme->getthemeid() != LF_NATIVEWIN && MCcurtheme->getthemeid() != LF_NATIVEGTK) && state & CS_HILITED && !MCaqua ||
-				MClook != LF_MOTIF && style == F_MENU && flags & F_OPAQUE && state & CS_ARMED && !(flags & F_SHOW_BORDER))
-				setforeground(dc, DI_BACK, False, True);
+        {
+			if ((white && state & CS_KFOCUSED && !(state & CS_SUBMENU)) ||
+				(isstdbtn && noback && (MCcurtheme == NULL || (MCcurtheme->getthemeid() != LF_NATIVEWIN && MCcurtheme->getthemeid() != LF_NATIVEGTK)) && state & CS_HILITED && !MCaqua) ||
+				(MClook != LF_MOTIF && style == F_MENU && flags & F_OPAQUE && state & CS_ARMED && !(flags & F_SHOW_BORDER)))
+				setforeground(dc, DI_PSEUDO_BUTTON_TEXT_SEL, False, True);
 			else
 				setforeground(dc, DI_FORE, (state & CS_HILITED && flags & F_HILITE_FILL
-				                            || state & CS_ARMED && flags & F_ARM_FILL) && flags & F_OPAQUE && (MClook != LF_WIN95 && !MCaqua
+				                            || state & CS_ARMED && flags & F_ARM_FILL) && flags & F_OPAQUE && ((MClook != LF_WIN95 && !MCaqua)
 				                            || style != F_STANDARD), False);
+        }
 		}
 
 		// MW-2009-06-14: We will assume (perhaps unwisely) that is 'opaque' is set

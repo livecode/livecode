@@ -4765,6 +4765,10 @@ MCPlatformControlType MCButton::getcontroltype()
                 break;
         }
     }
+    else if (menucontrol != MENUCONTROL_NONE)
+    {
+        t_type = kMCPlatformControlTypeMenuItem;
+    }
     
     return t_type;
 }

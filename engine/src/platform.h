@@ -1212,7 +1212,7 @@ void MCPlatformSwitchFocusToView(MCPlatformWindowRef window, uint32_t id);
 
 enum MCPlatformControlType
 {
-    kMCPlatformControlTypeGlobal,       // Global theming (i.e the theme inherited by all controls)
+    kMCPlatformControlTypeGlobal = 0,   // Global theming (i.e the theme inherited by all controls)
     kMCPlatformControlTypeButton,       // Buttons not covered more specifically
     kMCPlatformControlTypeCheckbox,     // On-off tick box
     kMCPlatformControlTypeRadioButton,  // One-of-many selection button
@@ -1222,6 +1222,7 @@ enum MCPlatformControlType
     kMCPlatformControlTypeInputField,   // Standard text entry box
     kMCPlatformControlTypeList,         // Itemised text box
     kMCPlatformControlTypeMenu,         // Menus not covered more specifically
+    kMCPlatformControlTypeMenuItem,     // Item within a menu
     kMCPlatformControlTypeOptionMenu,   // Select a single item
     kMCPlatformControlTypePulldownMenu, // Menu as found in menubars
     kMCPlatformControlTypeComboBox,     // Input field/option menu combination
