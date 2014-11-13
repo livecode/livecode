@@ -1238,7 +1238,6 @@ enum MCPlatformControlType
 typedef unsigned int MCPlatformControlState;
 enum
 {
-    kMCPlatformControlStateNormal           = 0,
     kMCPlatformControlStateDisabled         = (1<<0),   // Control is disabled
     kMCPlatformControlStateOn               = (1<<1),   // Control is "on" (e.g. ticked checkbox)
     kMCPlatformControlStateMouseOver        = (1<<2),   // Mouse is within the control's bounds
@@ -1247,7 +1246,11 @@ enum
     kMCPlatformControlStateDefault          = (1<<6),   // Control is the default action
     kMCPlatformControlStateReadOnly         = (1<<7),   // Control is not modifiable
     kMCPlatformControlStateSelected         = (1<<8),   // Control is selected
-    kMCPlatformControlStateWindowActive     = (1<<9)    // Control is in focused window
+    kMCPlatformControlStateWindowActive     = (1<<9),   // Control is in focused window
+    
+    kMCPlatformControlStateCompatibility    = (1<<31),   // Use backwards-compatible theming
+    
+    kMCPlatformControlStateNormal           = kMCPlatformControlStateCompatibility
 };
 
 enum MCPlatformControlPart

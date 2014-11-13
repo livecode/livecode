@@ -50,7 +50,10 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
     {
         case kMCPlatformThemePropertyTextSize:
         {
-            if (p_type == kMCPlatformControlTypeInputField)
+            // If in backwards-compatibility mode, all text is size 11
+            if (p_state & kMCPlatformControlStateCompatibility)
+                r_int = 11;
+            else if (p_type == kMCPlatformControlTypeInputField)
                 r_int = 11;
             else
                 r_int = 13;
@@ -168,6 +171,13 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
                         break;
                         
                     case kMCPlatformControlTypeWindow:
+                        // In compatibility mode, handle window colour the old way
+                        if (p_state & kMCPlatformControlStateCompatibility)
+                        {
+                            return false;
+                        }
+                        /* FALLTHROUGH */
+                        
                     case kMCPlatformControlTypeMessageBox:
                         // windowBackgroundColor is a pattern
                         t_is_pattern = true;

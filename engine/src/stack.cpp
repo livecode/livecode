@@ -3166,3 +3166,13 @@ void MCStack::setasscriptonly(MCExecPoint& ep)
         cards->setparent(this);
     }
 }
+
+MCPlatformControlType MCStack::getcontroltype()
+{
+    return kMCPlatformControlTypeWindow;
+}
+
+MCPlatformControlPart MCStack::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}

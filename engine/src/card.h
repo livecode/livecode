@@ -44,6 +44,10 @@ protected:
 	static int2 startx;
 	static int2 starty;
 	static MCObjptr *removedcontrol;
+    
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    
 public:
 	MCCard();
 	MCCard(const MCCard &cref);

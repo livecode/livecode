@@ -1796,7 +1796,7 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		else
 		{
             MCFontRef t_default_font;
-            MCPlatformGetControlThemePropFont(kMCPlatformControlTypeGlobal, kMCPlatformControlPartNone, kMCPlatformControlStateDefault, kMCPlatformThemePropertyTextFont, t_default_font);
+            MCPlatformGetControlThemePropFont(kMCPlatformControlTypeGlobal, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, t_default_font);
             
             MCFontStruct* t_font_struct;
             t_font_struct = MCFontGetFontStruct(t_default_font);

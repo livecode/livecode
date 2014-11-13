@@ -260,6 +260,9 @@ protected:
 	
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
+    
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
 
 public:
 	Boolean menuwindow;

@@ -1940,6 +1940,9 @@ MCPlatformControlState MCObject::getcontrolstate()
     if (getstack() && getstack()->getcurcard() == getcard() && getstack()->state & CS_KFOCUSED)
         t_state |= kMCPlatformControlStateWindowActive;
     
+    // Remain in backwards-compatible mode for now
+    t_state |= kMCPlatformControlStateCompatibility;
+    
     return MCPlatformControlState(t_state);
 }
 

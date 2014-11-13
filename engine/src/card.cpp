@@ -3193,3 +3193,13 @@ bool MCCard::recomputefonts(MCFontRef p_parent_font)
 	// to be provided to children).
 	return t_changed;
 }
+
+MCPlatformControlType MCCard::getcontroltype()
+{
+    return kMCPlatformControlTypeWindow;
+}
+
+MCPlatformControlPart MCCard::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}
