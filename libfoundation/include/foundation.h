@@ -1244,6 +1244,9 @@ MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef type);
 // Returns the name of the type, if it has one.
 MCNameRef MCTypeInfoGetName(MCTypeInfoRef type);
 
+// Returns true if the type is optional.
+bool MCTypeInfoIsOptional(MCTypeInfoRef type);
+
 // Returns true if the source typeinfo can be assigned to a slot with the target
 // typeinfo with no typecheck or conversion.
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
