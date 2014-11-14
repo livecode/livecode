@@ -16,6 +16,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
 
+#ifdef HAVE_VALGRIND
+#  include <valgrind/memcheck.h>
+#endif /* HAVE_VALGRIND */
+
 #include "foundation-private.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -294,10 +298,21 @@ bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_v
     if (p_type_code <= kMCValueTypeCodeList && s_value_pools[p_type_code] . count > 0)
     {
         t_value = s_value_pools[p_type_code] . values;
+
+#ifdef HAVE_VALGRIND
+		/* Valgrind support */
+		/* Verify that the next buffer in the free list has actually
+		 * been previously allocated to us and we're allowed to use
+		 * it.  The first few bytes of the buffer should contain the
+		 * address of the following buffer (if there is one). */
+		VALGRIND_MAKE_MEM_UNDEFINED(t_value, p_size);
+		VALGRIND_MAKE_MEM_DEFINED(t_value, sizeof (__MCValue *));
+#endif /* HAVE_VALGRIND */
+
         s_value_pools[p_type_code] . count -= 1;
         s_value_pools[p_type_code] . values = *(__MCValue **)t_value;
         MCMemoryClear(t_value, p_size);
-    }
+	}
     else
     {
         if (!MCMemoryNew(p_size, t_value))
@@ -359,7 +374,28 @@ void __MCValueDestroy(__MCValue *self)
         s_value_pools[t_code] . count += 1;
         *(__MCValue **)self = s_value_pools[t_code] . values;
         s_value_pools[t_code] . values = self;
-        return;
+
+#ifdef HAVE_VALGRIND
+		/* Valgrind support */
+		/* Mark the pooled buffer as inaccessible. If anything tries
+		 * to access it, Valgrind will log an error message. */
+		size_t t_size;
+		switch (t_code)
+		{
+		case kMCValueTypeCodeNull:    t_size = sizeof(__MCNull);    break;
+		case kMCValueTypeCodeBoolean: t_size = sizeof(__MCBoolean); break;
+		case kMCValueTypeCodeNumber:  t_size = sizeof(__MCNumber);  break;
+		case kMCValueTypeCodeName:    t_size = sizeof(__MCName);    break;
+		case kMCValueTypeCodeString:  t_size = sizeof(__MCString);  break;
+		case kMCValueTypeCodeData:    t_size = sizeof(__MCData);    break;
+		case kMCValueTypeCodeArray:   t_size = sizeof(__MCArray);   break;
+		case kMCValueTypeCodeList:    t_size = sizeof(__MCList);    break;
+		default:                      MCUnreachable();
+		}
+		VALGRIND_MAKE_MEM_NOACCESS(self, t_size);
+#endif /* HAVE_VALGRIND */
+
+		return;
     }
     
 	MCMemoryDelete(self);
