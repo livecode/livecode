@@ -307,6 +307,7 @@
 		4D6F06C619CC2D7800DDC6E0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_C_LANGUAGE_STANDARD = ansi;
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				SDKROOT = macosx10.6;
@@ -316,6 +317,7 @@
 		4D6F06C719CC2D7800DDC6E0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_C_LANGUAGE_STANDARD = ansi;
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				SDKROOT = macosx10.6;
@@ -386,6 +388,7 @@
 				4D3AA09019CC47F900886BE7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		4D6F06C519CC2D7800DDC6E0 /* Build configuration list for PBXProject "gentle" */ = {
 			isa = XCConfigurationList;
