@@ -321,6 +321,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  COMPILER HINT MACROS
+//
+
+// If we are using GCC or Clang, we can give the compiler various
+// hints. This is particularly useful for Clang's static analysis
+// feature.
+#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
+#  define ATTRIBUTE_NORETURN  __attribute__((__noreturn__))
+#  define ATTRIBUTE_UNUSED __attribute__((__unused__))
+#else
+#  define ATTRIBUTE_NORETURN
+#  define ATTRIBUTE_UNUSED
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  FIXED WIDTH INTEGER TYPES
 //
 
@@ -800,15 +816,6 @@ void MCErrorSetHandler(MCErrorHandler handler);
 //
 
 #ifdef _DEBUG
-
-// If we are using GCC or Clang, we can give the compiler the hint that the
-// assertion functions do not return. This is particularly useful for Clang's
-// static analysis feature.
-#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
-#define ATTRIBUTE_NORETURN  __attribute__((__noreturn__))
-#else
-#define ATTRIBUTE_NORETURN
-#endif
 
 extern void __MCAssert(const char *file, uint32_t line, const char *message) ATTRIBUTE_NORETURN;
 #define MCAssert(m_expr) (void)( (!!(m_expr)) || (__MCAssert(__FILE__, __LINE__, #m_expr), 0) )
