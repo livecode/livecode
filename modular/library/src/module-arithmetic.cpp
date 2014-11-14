@@ -39,7 +39,7 @@ void MCArithmeticExecAddRealToReal(double p_number, double& x_target)
 }
 
 void MCArithmeticExecAddNumberToNumber(MCNumberRef p_number, MCNumberRef& x_target)
-{
+{    
     double t_target, t_number;
     t_target = MCNumberFetchAsReal(x_target);
     t_number = MCNumberFetchAsReal(p_number);
@@ -48,13 +48,7 @@ void MCArithmeticExecAddNumberToNumber(MCNumberRef p_number, MCNumberRef& x_targ
     
     //if no error
     MCValueRelease(x_target);
-    
-    if (t_target <= INTEGER_MAX && t_target >= INTEGER_MIN)
-    {
-        MCNumberCreateWithInteger(t_target, x_target);
-        return;
-    }
-    
+
     MCNumberCreateWithReal(t_target, x_target);
 }
 
@@ -89,12 +83,6 @@ void MCArithmeticExecSubtractNumberFromNumber(MCNumberRef p_number, MCNumberRef&
     
     //if no error
     MCValueRelease(x_target);
-    
-    if (t_target <= INTEGER_MAX && t_target >= INTEGER_MIN)
-    {
-        MCNumberCreateWithInteger(t_target, x_target);
-        return;
-    }
     
     MCNumberCreateWithReal(t_target, x_target);
 }
@@ -131,12 +119,6 @@ void MCArithmeticExecMultiplyNumberByNumber(MCNumberRef p_number, MCNumberRef& x
     //if no error
     MCValueRelease(x_target);
     
-    if (t_target <= INTEGER_MAX && t_target >= INTEGER_MIN)
-    {
-        MCNumberCreateWithInteger(t_target, x_target);
-        return;
-    }
-    
     MCNumberCreateWithReal(t_target, x_target);
 }
 
@@ -163,12 +145,6 @@ void MCArithmeticExecDivideNumberByNumber(MCNumberRef p_number, MCNumberRef& x_t
     
     //if no error
     MCValueRelease(x_target);
-    
-    if (t_target <= INTEGER_MAX && t_target >= INTEGER_MIN)
-    {
-        MCNumberCreateWithInteger(t_target, x_target);
-        return;
-    }
     
     MCNumberCreateWithReal(t_target, x_target);
 }
@@ -319,13 +295,6 @@ void MCArithmeticEvalNumberModNumber(MCNumberRef p_left, MCNumberRef p_right, MC
     double t_result;
     MCArithmeticEvalRealModReal(t_left, t_left, t_result);
     
-    //if no error
-    if (t_result <= INTEGER_MAX && t_result >= INTEGER_MIN)
-    {
-        MCNumberCreateWithInteger(t_result, r_output);
-        return;
-    }
-    
     MCNumberCreateWithReal(t_result, r_output);
 }
 
@@ -364,13 +333,6 @@ void MCArithmeticEvalNumberWrapNumber(MCNumberRef p_left, MCNumberRef p_right, M
     
     double t_result;
     MCArithmeticEvalRealWrapReal(t_left, t_left, t_result);
-    
-    //if no error
-    if (t_result <= INTEGER_MAX && t_result >= INTEGER_MIN)
-    {
-        MCNumberCreateWithInteger(t_result, r_output);
-        return;
-    }
     
     MCNumberCreateWithReal(t_result, r_output);
 }

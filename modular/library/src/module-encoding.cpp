@@ -220,22 +220,31 @@ void MCEncodingExecDecompress(MCDataRef& x_target)
     void MCEncodingEvalURLDecoded(MCStringRef p_target, MCStringRef& r_output)
 */
     MCStringRef t_test_a, t_test_b;
+    MCStringRef t_test_c, t_test_d;
     
     t_test_a = MCSTR(" ");
     t_test_b = MCSTR("+");
     
+    t_test_c = MCSTR("?");
+    t_test_d = MCSTR("%3F");
+    
     MCAutoStringRef t_encoded, t_decoded;
+    MCAutoStringRef t_encoded2, t_decoded2;
     
     MCEncodingEvalURLEncoded(t_test_a, &t_encoded);
     
-    log_result("url encode", MCStringIsEqualTo(*t_encoded, t_test_b, kMCStringOptionCompareCaseless));
+    log_result("url encode space", MCStringIsEqualTo(*t_encoded, t_test_b, kMCStringOptionCompareCaseless));
+    
+    MCEncodingEvalURLEncoded(t_test_c, &t_encoded2);
+    
+    log_result("url encode ?", MCStringIsEqualTo(*t_encoded2, t_test_d, kMCStringOptionCompareCaseless));
     
     MCEncodingEvalURLDecoded(t_test_b, &t_decoded);
     
-    log_result("url decode", MCStringIsEqualTo(*t_decoded, t_test_a, kMCStringOptionCompareCaseless));
+    log_result("url decode +", MCStringIsEqualTo(*t_decoded, t_test_a, kMCStringOptionCompareCaseless));
     
-    /*
-assert urldecode("%3F") is "?"
-assert urldecode("abcde") is "abcde"
-*/
+    MCEncodingEvalURLDecoded(t_test_d, &t_decoded2);
+    
+    log_result("url decode %3F", MCStringIsEqualTo(*t_decoded2, t_test_c, kMCStringOptionCompareCaseless));
+    
 }

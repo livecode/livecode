@@ -309,7 +309,7 @@ void MCMathEvalConvertToBase10(MCStringRef p_operand, integer_t p_source_base, i
     bool t_error;
     if (MCMathConvertToBase10(p_operand, p_source_base, t_negative, t_result, t_error))
     {
-        if (t_result > INTEGER_MAX)
+        if ((t_negative && t_result > INTEGER_MAX) || (!t_negative && t_result > abs(INTEGER_MIN)))
         {
             // overflow
         }

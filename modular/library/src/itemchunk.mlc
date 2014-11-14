@@ -7,8 +7,7 @@ foreign handler StoreItemRangeOf(in Value as string, in Start as index, in Finis
 
 foreign handler EvalNumberOfItemsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
 
-foreign handler EvalIsAmongTheItemsOf(in Needle as string, in Target as string, out Result as bool) as undefined binds to "<builtin>"
-foreign handler EvalIsNotAmongTheItemsOf(in Needle as string, in Target as string, out Result as bool) as undefined binds to "<builtin>"
+foreign handler EvalIsAmongTheItemsOf(in Needle as string, in Target as string, in IsNot as bool, out Result as bool) as undefined binds to "<builtin>"
 
 foreign handler EvalOffsetOfItemIn(in Needle as string, in Target as string, out Offset as index) as undefined binds to "<builtin>"
 

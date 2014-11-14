@@ -1733,15 +1733,15 @@ void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStr
 
 void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
+    uindex_t t_result;
+    t_result = 0;
     // SN-2014-09-05: [[ Bug 13346 ]] byteOffset is 0 if the byte is not found, and 'empty'
     // is by definition not found; getting in the loop ensures at least 1 is returned.
-    if (MCDataIsEmpty(p_chunk))
-    {
-        r_result = 0;
-        return;
-    }
     
-    r_result = MCDataFirstIndexOf(p_string, p_chunk, MCRangeMake(p_start_offset, UINDEX_MAX)) + 1;
+    if (!MCDataIsEmpty(p_chunk) && MCDataFirstIndexOf(p_string, p_chunk, MCRangeMake(p_start_offset, UINDEX_MAX), t_result))
+        t_result++;
+    
+    r_result = t_result;
 }
 
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)

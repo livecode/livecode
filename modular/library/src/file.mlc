@@ -8,8 +8,12 @@ module com.livecode.file
 --
 
 syntax OpenFileForRead is statement
-    
+    "open" "file" <File: Expression> "for" "read"
+begin
+    OpenFileForRead(File)
+end syntax
 
+syntax 
 
 
 end module

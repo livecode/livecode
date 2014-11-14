@@ -2017,8 +2017,8 @@ bool MCDataContains(MCDataRef p_data, MCDataRef p_needle);
 bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle);
 bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle);
 
-uindex_t MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range);
-uindex_t MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range);
+bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index);
+bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index);
 
 // convert the given data to CFDataRef
 #if defined(__MAC__) || defined (__IOS__)
@@ -2529,8 +2529,8 @@ bool MCProperListInsertElement(MCProperListRef list, MCValueRef p_value, index_t
 bool MCProperListInsertElements(MCProperListRef list, const MCValueRef *p_value, uindex_t p_length, index_t p_index);
 bool MCProperListInsertList(MCProperListRef list, MCProperListRef p_value, index_t p_index);
 
-bool MCProperListRemoveElement(MCProperListRef list, index_t p_index);
-bool MCProperListRemoveElements(MCProperListRef list, index_t p_start, index_t p_finish);
+bool MCProperListRemoveElement(MCProperListRef list, uindex_t p_index);
+bool MCProperListRemoveElements(MCProperListRef list, uindex_t p_start, uindex_t p_finish);
 
 bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset);
 bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);

@@ -50,6 +50,9 @@
 		76E710731A08FE2300B68F93 /* module-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76454B2919FA9F03007E5F8D /* module-math.cpp */; };
 		76EF04BC1A12127500A05561 /* module-byte.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF04BB1A12127500A05561 /* module-byte.cpp */; };
 		76EF04C81A125F7100A05561 /* module-char.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7653446D19ED2EEF0032E6E2 /* module-char.cpp */; };
+		76EF04E21A13AFBF00A05561 /* module-file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF04E01A13AFBF00A05561 /* module-file.cpp */; };
+		76EF04E31A13AFBF00A05561 /* module-url.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF04E11A13AFBF00A05561 /* module-url.cpp */; };
+		76EF04F21A14F0B300A05561 /* module-byte.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF04BB1A12127500A05561 /* module-byte.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -136,6 +139,9 @@
 		76E711F31A0B8E6400B68F93 /* libz.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libz.xcodeproj; path = ../../thirdparty/libz/libz.xcodeproj; sourceTree = "<group>"; };
 		76EF04B91A120ED400A05561 /* byte.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = byte.mlc; path = src/byte.mlc; sourceTree = "<group>"; };
 		76EF04BB1A12127500A05561 /* module-byte.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-byte.cpp"; path = "src/module-byte.cpp"; sourceTree = "<group>"; };
+		76EF04DE1A13ABD300A05561 /* url.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = url.mlc; path = src/url.mlc; sourceTree = "<group>"; };
+		76EF04E01A13AFBF00A05561 /* module-file.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-file.cpp"; path = "src/module-file.cpp"; sourceTree = "<group>"; };
+		76EF04E11A13AFBF00A05561 /* module-url.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-url.cpp"; path = "src/module-url.cpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -238,6 +244,7 @@
 				7653447F19ED2FFC0032E6E2 /* list.mlc */,
 				765344CF19EE6DCC0032E6E2 /* map.mlc */,
 				7653453619F508E90032E6E2 /* math.mlc */,
+				76EF04DE1A13ABD300A05561 /* url.mlc */,
 				769729C619E437210022F060 /* module-binary.cpp */,
 				76EF04BB1A12127500A05561 /* module-byte.cpp */,
 				76972A3F19E44C190022F060 /* module-string.cpp */,
@@ -246,12 +253,14 @@
 				7653446C19ED2EEF0032E6E2 /* module-bitwise.cpp */,
 				7653446D19ED2EEF0032E6E2 /* module-char.cpp */,
 				7653446E19ED2EEF0032E6E2 /* module-encoding.cpp */,
+				76EF04E01A13AFBF00A05561 /* module-file.cpp */,
 				7653448019ED30090032E6E2 /* module-list.cpp */,
 				765344D019EE83FC0032E6E2 /* module-map.cpp */,
 				76454B2919FA9F03007E5F8D /* module-math.cpp */,
 				7653446F19ED2EEF0032E6E2 /* module-math_foundation.cpp */,
 				7653447019ED2EEF0032E6E2 /* module-sort.cpp */,
 				7653447219ED2EEF0032E6E2 /* module-type_convert.cpp */,
+				76EF04E11A13AFBF00A05561 /* module-url.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -383,6 +392,7 @@
 				769729C819E437210022F060 /* module-binary.cpp in Sources */,
 				76972AA519E53A9E0022F060 /* module-type.cpp in Sources */,
 				7653447319ED2EEF0032E6E2 /* module-arithmetic.cpp in Sources */,
+				76EF04E21A13AFBF00A05561 /* module-file.cpp in Sources */,
 				76EF04BC1A12127500A05561 /* module-byte.cpp in Sources */,
 				7653447419ED2EEF0032E6E2 /* module-bitwise.cpp in Sources */,
 				7653447619ED2EEF0032E6E2 /* module-encoding.cpp in Sources */,
@@ -393,6 +403,7 @@
 				7653447A19ED2EEF0032E6E2 /* module-type_convert.cpp in Sources */,
 				7653448119ED30090032E6E2 /* module-list.cpp in Sources */,
 				765344D119EE83FC0032E6E2 /* module-map.cpp in Sources */,
+				76EF04E31A13AFBF00A05561 /* module-url.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -401,6 +412,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				765345C419F7E9A90032E6E2 /* main.cpp in Sources */,
+				76EF04F21A14F0B300A05561 /* module-byte.cpp in Sources */,
 				7653462A19F801AA0032E6E2 /* module-binary.cpp in Sources */,
 				7653462D19F801AA0032E6E2 /* module-arithmetic.cpp in Sources */,
 				7653462E19F801AA0032E6E2 /* module-bitwise.cpp in Sources */,

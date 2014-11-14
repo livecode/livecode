@@ -153,7 +153,7 @@ output:             Either locates the element containers between the given indi
 
 
 syntax RangeElementsOf is prefix operator with precedence 1
-	"elements" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+	"element" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
 	FetchElementRangeOf(Start, Finish, Target, output)
 	StoreElementRangeOf(input, Start, Finish, Target)
