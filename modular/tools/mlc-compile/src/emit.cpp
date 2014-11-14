@@ -155,9 +155,31 @@ void EmitEndModule(void)
     void *t_buffer;
     size_t t_size;
     MCMemoryOutputStreamFinish(t_stream, t_buffer, t_size);
+    MCValueRelease(t_stream);
     
     if (t_success)
+    {
         MCLog("Generated module file of size %ld\n", t_size);
+        
+        MCScriptModuleRef t_module;
+        MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
+        t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
+        MCValueRelease(t_stream);
+        
+        if (t_success)
+            t_success = MCScriptEnsureModuleIsUsable(t_module);
+        
+        MCScriptInstanceRef t_instance;
+        if (t_success)
+            t_success = MCScriptCreateInstanceOfModule(t_module, t_instance);
+        
+        MCValueRef t_result;
+        if (t_success)
+            t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("test"), nil, 0, t_result);
+        
+        if (t_success)
+            MCLog("Executed test with result %@", t_result);
+    }
     
     MCFinalize();
 }

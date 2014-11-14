@@ -243,8 +243,6 @@ struct MCScriptModule: public MCScriptObject
     MCScriptModule *next_module;
 };
 
-bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_module);
-
 bool MCScriptWriteRawModule(MCStreamRef stream, MCScriptModule *module);
 bool MCScriptReadRawModule(MCStreamRef stream, MCScriptModule *module);
 void MCScriptReleaseRawModule(MCScriptModule *module);
