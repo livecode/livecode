@@ -1,6 +1,10 @@
 #ifndef __LITERAL__
 #define __LITERAL__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct Name *NameRef;
 
 void InitializeLiterals(void);
@@ -23,5 +27,9 @@ void DefineMeaning(NameRef name, long meaning);
 void UndefineMeaning(NameRef name);
 int HasLocalMeaning(NameRef name, long *r_meaning);
 int HasMeaning(NameRef name, long *r_meaning);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -104,6 +104,7 @@
     EmitEndHandlerDefinition
     EmitForeignHandlerDefinition
     EmitNamedType
+    EmitOptionalType
     EmitPointerType
     EmitBoolType
     EmitIntType
@@ -195,6 +196,8 @@
     Error_ContextSyntaxArgumentMustBindToInParameter
     Error_InputSyntaxArgumentMustBindToInParameter
     Error_OutputSyntaxArgumentMustBindToOutParameter
+    Error_ContainerSyntaxArgumentMustBindToInParameter
+    Error_IteratorSyntaxArgumentMustBindToInOutParameter
     Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter
 
 --------------------------------------------------------------------------------
@@ -336,6 +339,7 @@
 'action' EmitEndHandlerDefinition()
 'action' EmitForeignHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, Binding: STRING)
 
+'action' EmitOptionalType(INT -> INT)
 'action' EmitNamedType(INT -> INT)
 'action' EmitPointerType(-> INT)
 'action' EmitBoolType(-> INT)
@@ -437,6 +441,8 @@
 'action' Error_ContextSyntaxArgumentMustBindToInParameter(Position: POS)
 'action' Error_InputSyntaxArgumentMustBindToInParameter(Position: POS)
 'action' Error_OutputSyntaxArgumentMustBindToOutParameter(Position: POS)
+'action' Error_ContainerSyntaxArgumentMustBindToInParameter(Position: POS)
+'action' Error_IteratorSyntaxArgumentMustBindToInOutParameter(Position: POS)
 'action' Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter(Position: POS)
 
 --------------------------------------------------------------------------------

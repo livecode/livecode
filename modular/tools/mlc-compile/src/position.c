@@ -113,7 +113,7 @@ void FinalizeFiles(void)
 void AddFile(const char *p_filename)
 {
     FileRef t_new_file;
-    t_new_file = (FileRef)malloc(sizeof(struct File));
+    t_new_file = (FileRef)calloc(sizeof(struct File), 1);
     if (t_new_file == NULL)
         Fatal_OutOfMemory();
     

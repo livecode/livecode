@@ -5,6 +5,7 @@
     types
     bind
     check
+    generate
     syntax
 
 --------------------------------------------------------------------------------
@@ -28,8 +29,8 @@
         (|
             ErrorsDidOccur()
         ||
-            -- do something!
-            print(Modules)
+            where(Modules -> modulelist(Module, _))
+            Generate(Module)
         |)
 
 'action' BootstrapCompile(MODULELIST)
@@ -202,8 +203,8 @@
     'rule' OptionalTypeClause(-> Type):
         "as" Type(-> Type)
         
-    'rule' OptionalTypeClause(-> nil):
-        -- empty
+    'rule' OptionalTypeClause(-> optional(Position, any(Position))):
+        @(-> Position)
 
 ---------- Type
 
@@ -237,8 +238,8 @@
     'rule' OptionalBaseType(-> BaseType):
         "based" "on" Type(-> BaseType)
         
-    'rule' OptionalBaseType(-> nil):
-        -- nothing
+    'rule' OptionalBaseType(-> undefined(Position)):
+        @(-> Position)
 
 --
 
@@ -568,7 +569,7 @@
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
-        
+
     'rule' Statement(-> Statement):
         CustomStatements(-> Statement)
         

@@ -57,7 +57,10 @@
     private
 
 'type' TYPE
+    any(Position: POS)
+    undefined(Position: POS)
     named(Position: POS, Name: ID)
+    optional(Position: POS, Type: TYPE)
     opaque(Position: POS, Base: TYPE, Fields: FIELDLIST)
     record(Position: POS, Base: TYPE, Fields: FIELDLIST)
     enum(Position: POS, Base: TYPE, Fields: FIELDLIST)
@@ -68,7 +71,6 @@
     uint(Position: POS)
     float(Position: POS)
     double(Position: POS)
-    any(Position: POS)
     boolean(Position: POS)
     integer(Position: POS)
     real(Position: POS)
@@ -77,7 +79,6 @@
     data(Position: POS)
     array(Position: POS)
     list(Position: POS)
-    undefined(Position: POS)
     nil
 
 'type' FIELDLIST

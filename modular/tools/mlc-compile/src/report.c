@@ -129,6 +129,8 @@ DEFINE_ERROR(ConstantSyntaxArgumentMustBindToInParameter, "Constant syntax argum
 DEFINE_ERROR(ContextSyntaxArgumentMustBindToInParameter, "'context' syntax argument must bind to in parameter")
 DEFINE_ERROR(InputSyntaxArgumentMustBindToInParameter, "'input' syntax argument must bind to in parameter")
 DEFINE_ERROR(OutputSyntaxArgumentMustBindToOutParameter, "'output' syntax argument must bind to out parameter")
+DEFINE_ERROR(ContainerSyntaxArgumentMustBindToInParameter, "'container' syntax argument must bind to in parameter")
+DEFINE_ERROR(IteratorSyntaxArgumentMustBindToInOutParameter, "'iterator' syntax argument must bind to inout parameter")
 DEFINE_ERROR(PhraseBoundMarkSyntaxArgumentMustBindToInParameter, "Syntax mark argument which is of phrase type must bind to in parameter")
 
 ////////////////////////////////////////////////////////////////////////////////

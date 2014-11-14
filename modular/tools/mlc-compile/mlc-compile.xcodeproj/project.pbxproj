@@ -13,6 +13,30 @@
 		4D3AA08819CC3EEF00886BE7 /* gen.y in Sources */ = {isa = PBXBuildFile; fileRef = 4D3AA08719CC3EEF00886BE7 /* gen.y */; };
 		4D3AA09919CC486200886BE7 /* libgrts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D3AA09819CC485A00886BE7 /* libgrts.a */; };
 		4D3AA09C19CC499100886BE7 /* gen.l in Sources */ = {isa = PBXBuildFile; fileRef = 4D3AA09B19CC499100886BE7 /* gen.l */; };
+		4D44E3A81A1631C60073FFA2 /* generate.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D44E3A71A1631C60073FFA2 /* generate.c */; };
+		4D44E3A91A1631D10073FFA2 /* generate.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D44E3A31A1631A50073FFA2 /* generate.c */; };
+		4D44E3AB1A1632160073FFA2 /* emit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D44E3AA1A1632160073FFA2 /* emit.cpp */; };
+		4D44E3AC1A1632160073FFA2 /* emit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D44E3AA1A1632160073FFA2 /* emit.cpp */; };
+		4D44E3AF1A16421C0073FFA2 /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E39C1A160ABA0073FFA2 /* libscript.a */; };
+		4D44E3B81A16423A0073FFA2 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3B51A1642320073FFA2 /* libfoundation.a */; };
+		4D44E3BD1A16424F0073FFA2 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3B51A1642320073FFA2 /* libfoundation.a */; };
+		4D44E3BE1A1642520073FFA2 /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E39C1A160ABA0073FFA2 /* libscript.a */; };
+		4D44E3C61A1642A70073FFA2 /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3BF1A1642A70073FFA2 /* libicudata.a */; };
+		4D44E3C71A1642A70073FFA2 /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3BF1A1642A70073FFA2 /* libicudata.a */; };
+		4D44E3C81A1642A70073FFA2 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C01A1642A70073FFA2 /* libicui18n.a */; };
+		4D44E3C91A1642A70073FFA2 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C01A1642A70073FFA2 /* libicui18n.a */; };
+		4D44E3CA1A1642A70073FFA2 /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C11A1642A70073FFA2 /* libicuio.a */; };
+		4D44E3CB1A1642A70073FFA2 /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C11A1642A70073FFA2 /* libicuio.a */; };
+		4D44E3CC1A1642A70073FFA2 /* libicule.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C21A1642A70073FFA2 /* libicule.a */; };
+		4D44E3CD1A1642A70073FFA2 /* libicule.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C21A1642A70073FFA2 /* libicule.a */; };
+		4D44E3CE1A1642A70073FFA2 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C31A1642A70073FFA2 /* libiculx.a */; };
+		4D44E3CF1A1642A70073FFA2 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C31A1642A70073FFA2 /* libiculx.a */; };
+		4D44E3D01A1642A70073FFA2 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C41A1642A70073FFA2 /* libicutu.a */; };
+		4D44E3D11A1642A70073FFA2 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C41A1642A70073FFA2 /* libicutu.a */; };
+		4D44E3D21A1642A70073FFA2 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C51A1642A70073FFA2 /* libicuuc.a */; };
+		4D44E3D31A1642A70073FFA2 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C51A1642A70073FFA2 /* libicuuc.a */; };
+		4D44E3D51A1642BC0073FFA2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3D41A1642BC0073FFA2 /* CoreFoundation.framework */; };
+		4D44E3D61A1642C60073FFA2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3D41A1642BC0073FFA2 /* CoreFoundation.framework */; };
 		4D6E0E7B19E71592001AE5CC /* check.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6E0E7919E7158C001AE5CC /* check.c */; };
 		4D6F072919CC388F00DDC6E0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F072819CC388F00DDC6E0 /* main.c */; };
 		4D78D28E19E9446F00DDEF0B /* syntax.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D78D28C19E9446F00DDEF0B /* syntax.c */; };
@@ -89,6 +113,41 @@
 			proxyType = 2;
 			remoteGlobalIDString = 4DDA20661A139BA1001B0CA2;
 			remoteInfo = "libscript-test";
+		};
+		4D44E3AD1A1642150073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D322F1519DD945E008476D3;
+			remoteInfo = script;
+		};
+		4D44E3B41A1642320073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3B01A1642320073FFA2 /* libfoundation.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DF42A430B048617003F2D95;
+			remoteInfo = foundation;
+		};
+		4D44E3B61A1642370073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3B01A1642320073FFA2 /* libfoundation.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95;
+			remoteInfo = foundation;
+		};
+		4D44E3B91A1642400073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D322F1519DD945E008476D3;
+			remoteInfo = script;
+		};
+		4D44E3BB1A1642480073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3B01A1642320073FFA2 /* libfoundation.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95;
+			remoteInfo = foundation;
 		};
 		4D6F071E19CC37BB00DDC6E0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -176,6 +235,18 @@
 		4D3AA0B419CC594800886BE7 /* STRING_LITERAL.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = STRING_LITERAL.t; path = src/STRING_LITERAL.t; sourceTree = SOURCE_ROOT; };
 		4D3AA0B519CC597300886BE7 /* SEPARATOR.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = SEPARATOR.t; path = src/SEPARATOR.t; sourceTree = SOURCE_ROOT; };
 		4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libscript.xcodeproj; path = ../../../libscript/libscript.xcodeproj; sourceTree = "<group>"; };
+		4D44E3A31A1631A50073FFA2 /* generate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = generate.c; path = src/_GG_/generate.c; sourceTree = "<group>"; };
+		4D44E3A71A1631C60073FFA2 /* generate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = generate.c; path = src/_G_/generate.c; sourceTree = "<group>"; };
+		4D44E3AA1A1632160073FFA2 /* emit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = emit.cpp; path = src/emit.cpp; sourceTree = SOURCE_ROOT; };
+		4D44E3B01A1642320073FFA2 /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../../../libfoundation/libfoundation.xcodeproj; sourceTree = "<group>"; };
+		4D44E3BF1A1642A70073FFA2 /* libicudata.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicudata.a; path = ../../../prebuilt/lib/mac/libicudata.a; sourceTree = "<group>"; };
+		4D44E3C01A1642A70073FFA2 /* libicui18n.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicui18n.a; path = ../../../prebuilt/lib/mac/libicui18n.a; sourceTree = "<group>"; };
+		4D44E3C11A1642A70073FFA2 /* libicuio.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuio.a; path = ../../../prebuilt/lib/mac/libicuio.a; sourceTree = "<group>"; };
+		4D44E3C21A1642A70073FFA2 /* libicule.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicule.a; path = ../../../prebuilt/lib/mac/libicule.a; sourceTree = "<group>"; };
+		4D44E3C31A1642A70073FFA2 /* libiculx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiculx.a; path = ../../../prebuilt/lib/mac/libiculx.a; sourceTree = "<group>"; };
+		4D44E3C41A1642A70073FFA2 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../../../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
+		4D44E3C51A1642A70073FFA2 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../../../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
+		4D44E3D41A1642BC0073FFA2 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		4D6E0E7119E710BE001AE5CC /* check.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = check.g; path = src/check.g; sourceTree = SOURCE_ROOT; };
 		4D6E0E7919E7158C001AE5CC /* check.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = check.c; path = src/_GG_/check.c; sourceTree = "<group>"; };
 		4D6F070B19CC36DD00DDC6E0 /* mlc-compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mlc-compile"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -228,6 +299,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D44E3D61A1642C60073FFA2 /* CoreFoundation.framework in Frameworks */,
+				4D44E3CD1A1642A70073FFA2 /* libicule.a in Frameworks */,
+				4D44E3D31A1642A70073FFA2 /* libicuuc.a in Frameworks */,
+				4D44E3BE1A1642520073FFA2 /* libscript.a in Frameworks */,
+				4D44E3C71A1642A70073FFA2 /* libicudata.a in Frameworks */,
+				4D44E3C91A1642A70073FFA2 /* libicui18n.a in Frameworks */,
+				4D44E3CB1A1642A70073FFA2 /* libicuio.a in Frameworks */,
+				4D44E3D11A1642A70073FFA2 /* libicutu.a in Frameworks */,
+				4D44E3CF1A1642A70073FFA2 /* libiculx.a in Frameworks */,
+				4D44E3BD1A16424F0073FFA2 /* libfoundation.a in Frameworks */,
 				4D21B66619E43BE100B64BEF /* libgrts.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -236,6 +317,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D44E3D51A1642BC0073FFA2 /* CoreFoundation.framework in Frameworks */,
+				4D44E3CC1A1642A70073FFA2 /* libicule.a in Frameworks */,
+				4D44E3D21A1642A70073FFA2 /* libicuuc.a in Frameworks */,
+				4D44E3B81A16423A0073FFA2 /* libfoundation.a in Frameworks */,
+				4D44E3C61A1642A70073FFA2 /* libicudata.a in Frameworks */,
+				4D44E3C81A1642A70073FFA2 /* libicui18n.a in Frameworks */,
+				4D44E3CA1A1642A70073FFA2 /* libicuio.a in Frameworks */,
+				4D44E3D01A1642A70073FFA2 /* libicutu.a in Frameworks */,
+				4D44E3CE1A1642A70073FFA2 /* libiculx.a in Frameworks */,
+				4D44E3AF1A16421C0073FFA2 /* libscript.a in Frameworks */,
 				4D3AA09919CC486200886BE7 /* libgrts.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -279,9 +370,18 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		4D44E3B11A1642320073FFA2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D44E3B51A1642320073FFA2 /* libfoundation.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		4D6F070019CC36B700DDC6E0 = {
 			isa = PBXGroup;
 			children = (
+				4D44E3D41A1642BC0073FFA2 /* CoreFoundation.framework */,
 				4D3AA12719D311C900886BE7 /* Library */,
 				4D78D29019E9452B00DDEF0B /* Tests */,
 				4D6F071819CC37A200DDC6E0 /* References */,
@@ -336,6 +436,7 @@
 				4DEB63FF19E58CBB009DF2EA /* set.c */,
 				4DEB640919E6822E009DF2EA /* syntax-gen.c */,
 				4DEB642719E81D95009DF2EA /* operator.c */,
+				4D44E3AA1A1632160073FFA2 /* emit.cpp */,
 			);
 			name = Sources;
 			path = "mlc-compile";
@@ -344,6 +445,14 @@
 		4D6F071819CC37A200DDC6E0 /* References */ = {
 			isa = PBXGroup;
 			children = (
+				4D44E3BF1A1642A70073FFA2 /* libicudata.a */,
+				4D44E3C01A1642A70073FFA2 /* libicui18n.a */,
+				4D44E3C11A1642A70073FFA2 /* libicuio.a */,
+				4D44E3C21A1642A70073FFA2 /* libicule.a */,
+				4D44E3C31A1642A70073FFA2 /* libiculx.a */,
+				4D44E3C41A1642A70073FFA2 /* libicutu.a */,
+				4D44E3C51A1642A70073FFA2 /* libicuuc.a */,
+				4D44E3B01A1642320073FFA2 /* libfoundation.xcodeproj */,
 				4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */,
 				4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */,
 			);
@@ -372,6 +481,7 @@
 		4DA53A1F19E443430089FBDC /* Bootstrap */ = {
 			isa = PBXGroup;
 			children = (
+				4D44E3A31A1631A50073FFA2 /* generate.c */,
 				4D78D29A19E9493700DDEF0B /* gen-bootstrap.h */,
 				4D6E0E7919E7158C001AE5CC /* check.c */,
 				4DEB640319E592B6009DF2EA /* support.c */,
@@ -390,6 +500,7 @@
 		4DA53A2B19E443610089FBDC /* Full */ = {
 			isa = PBXGroup;
 			children = (
+				4D44E3A71A1631C60073FFA2 /* generate.c */,
 				4D78D29C19E9586400DDEF0B /* grammar_full.g */,
 				4D78D29B19E9499000DDEF0B /* gen-full.h */,
 				4D78D28C19E9446F00DDEF0B /* syntax.c */,
@@ -421,6 +532,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				4D44E3BC1A1642480073FFA2 /* PBXTargetDependency */,
+				4D44E3BA1A1642400073FFA2 /* PBXTargetDependency */,
 				4D21B65719E43BE100B64BEF /* PBXTargetDependency */,
 				4D21B65919E43BE100B64BEF /* PBXTargetDependency */,
 				4D21B65B19E43BE100B64BEF /* PBXTargetDependency */,
@@ -444,6 +557,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				4D44E3B71A1642370073FFA2 /* PBXTargetDependency */,
+				4D44E3AE1A1642150073FFA2 /* PBXTargetDependency */,
 				4D3AA09519CC485A00886BE7 /* PBXTargetDependency */,
 				4D6F072319CC37C900DDC6E0 /* PBXTargetDependency */,
 				4D6F072519CC37C900DDC6E0 /* PBXTargetDependency */,
@@ -478,6 +593,10 @@
 					ProjectRef = 4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */;
 				},
 				{
+					ProductGroup = 4D44E3B11A1642320073FFA2 /* Products */;
+					ProjectRef = 4D44E3B01A1642320073FFA2 /* libfoundation.xcodeproj */;
+				},
+				{
 					ProductGroup = 4D44E3961A160ABA0073FFA2 /* Products */;
 					ProjectRef = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
 				},
@@ -510,6 +629,13 @@
 			fileType = "compiled.mach-o.executable";
 			path = "libscript-test";
 			remoteRef = 4D44E39D1A160ABA0073FFA2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D44E3B51A1642320073FFA2 /* libfoundation.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libfoundation.a;
+			remoteRef = 4D44E3B41A1642320073FFA2 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		4D6F071F19CC37BB00DDC6E0 /* gentle */ = {
@@ -686,6 +812,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D44E3A91A1631D10073FFA2 /* generate.c in Sources */,
 				4DEB640819E592B7009DF2EA /* syntax.c in Sources */,
 				4DEB63F319E52842009DF2EA /* report.c in Sources */,
 				4DEB640619E592B7009DF2EA /* support.c in Sources */,
@@ -696,6 +823,7 @@
 				4D21B66119E43BE100B64BEF /* main.c in Sources */,
 				4DEB640B19E6822E009DF2EA /* syntax-gen.c in Sources */,
 				4DA53A2A19E4435D0089FBDC /* types.c in Sources */,
+				4D44E3AC1A1632160073FFA2 /* emit.cpp in Sources */,
 				4DEB642919E81D95009DF2EA /* operator.c in Sources */,
 				4DA53A3119E449990089FBDC /* bind.c in Sources */,
 				4DA53A2719E4435D0089FBDC /* gen.l in Sources */,
@@ -715,6 +843,8 @@
 				4DEB640019E58CBB009DF2EA /* set.c in Sources */,
 				4DA53A2E19E446580089FBDC /* grammar_full.c in Sources */,
 				4D3AA08819CC3EEF00886BE7 /* gen.y in Sources */,
+				4D44E3A81A1631C60073FFA2 /* generate.c in Sources */,
+				4D44E3AB1A1632160073FFA2 /* emit.cpp in Sources */,
 				4DEB642819E81D95009DF2EA /* operator.c in Sources */,
 				4DA53A3319E449DD0089FBDC /* bind.c in Sources */,
 				4D3AA09C19CC499100886BE7 /* gen.l in Sources */,
@@ -748,6 +878,26 @@
 			name = grts;
 			targetProxy = 4D3AA09419CC485A00886BE7 /* PBXContainerItemProxy */;
 		};
+		4D44E3AE1A1642150073FFA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = script;
+			targetProxy = 4D44E3AD1A1642150073FFA2 /* PBXContainerItemProxy */;
+		};
+		4D44E3B71A1642370073FFA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = foundation;
+			targetProxy = 4D44E3B61A1642370073FFA2 /* PBXContainerItemProxy */;
+		};
+		4D44E3BA1A1642400073FFA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = script;
+			targetProxy = 4D44E3B91A1642400073FFA2 /* PBXContainerItemProxy */;
+		};
+		4D44E3BC1A1642480073FFA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = foundation;
+			targetProxy = 4D44E3BB1A1642480073FFA2 /* PBXContainerItemProxy */;
+		};
 		4D6F072319CC37C900DDC6E0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = gentle;
@@ -770,8 +920,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++98";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -793,6 +941,12 @@
 					"BOOTSTRAP=1",
 					"$(inherited)",
 				);
+				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = (
+					"DEBUG=1",
+					"YYDEBUG=1",
+					"BOOTSTRAP=1",
+					"$(inherited)",
+				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -801,6 +955,10 @@
 					"$(SRCROOT)/src/_GG_",
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "mlc-bootstrap-compile";
@@ -811,8 +969,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++98";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -837,6 +993,10 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+				);
 				PRODUCT_NAME = "mlc-bootstrap-compile";
 			};
 			name = Release;
@@ -844,6 +1004,14 @@
 		4D6F070519CC36B700DDC6E0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = _DEBUG;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(SRCROOT)/../../../libfoundation/include",
+					"$(SRCROOT)/../../../libscript/include",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				SDKROOT = macosx10.6;
 			};
@@ -852,6 +1020,13 @@
 		4D6F070619CC36B700DDC6E0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(SRCROOT)/../../../libfoundation/include",
+					"$(SRCROOT)/../../../libscript/include",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				SDKROOT = macosx10.6;
 			};
@@ -861,8 +1036,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++98";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -887,6 +1060,10 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -896,8 +1073,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++98";
-				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -916,6 +1091,10 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

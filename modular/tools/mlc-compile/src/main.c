@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
         yydebug = 1;
     }
     
+    InitializeFiles();
     InitializePosition();
     InitializeLiterals();
     InitializeReports();
@@ -124,6 +125,7 @@ int main(int argc, char *argv[])
     FinalizeReports();
     FinalizeLiterals();
     FinalizePosition();
+    FinalizeFiles();
     
     return t_return_code;
     

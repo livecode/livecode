@@ -733,6 +733,18 @@
             Error_OutputSyntaxArgumentMustBindToOutParameter(Position)
         |]
         
+    'rule' CheckSyntaxMethodArgumentMode(Position, iterator, Mode):
+        [|
+            ne(Mode, inout)
+            Error_IteratorSyntaxArgumentMustBindToInOutParameter(Position)
+        |]
+        
+    'rule' CheckSyntaxMethodArgumentMode(Position, container, Mode):
+        [|
+            ne(Mode, in)
+            Error_ContainerSyntaxArgumentMustBindToInParameter(Position)
+        |]
+
     'rule' CheckSyntaxMethodArgumentMode(Position, phrase, Mode):
         [|
             ne(Mode, in)

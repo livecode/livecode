@@ -211,8 +211,8 @@ variable mMyPointerOpaqueTypeVariable as MyPointerOpaqueType
 //
 
 foreign handler MyForeignStatementHandler(in pArg1 as int) as undefined binds to "MyBinding"
-foreign handler MyForeignExpressionHandler(in pArg1 as integer, in pArg2 as string, in pArg3 as MyHandlerType) as undefined binds to "MyBinding"
-foreign handler MyForeignIteratorHandler() as undefined binds to "MyBinding"
+foreign handler MyForeignExpressionHandler(in pArg1 as integer, in pArg2 as string, out pArg3 as MyHandlerType) as undefined binds to "MyBinding"
+foreign handler MyForeignIteratorHandler(inout foo, in bar, out baz) as undefined binds to "MyBinding"
 
 handler MyHandler(in pArg1 as integer, in pArg2 as string, in pArg3 as MyHandlerType) as boolean
 end handler
@@ -223,7 +223,7 @@ end handler
 //
 
 handler MyExpressionHandler(pParam)
-    MyExpressionHandler(null)
+    MyExpressionHandler(undefined)
     MyExpressionHandler(true)
     MyExpressionHandler(false)
     MyExpressionHandler(100)
@@ -288,19 +288,19 @@ end syntax
 syntax MyExpressionSyntax is expression
     "evaluate" <Value: Expression> "specially"
 begin
-    MyForeignExpressionHandler(Value, output)
+    //MyForeignExpressionHandler(Value, output)
 end syntax
 
 syntax MyPrefixExpressionSyntax is prefix operator with precedence 1
     "something" "after" "me" <Value: Expression>
 begin
-    MyForeignExpressionHandler(Value, output)
+    //MyForeignExpressionHandler(Value, output)
 end syntax
 
 syntax MyPostfixExpressionSyntax is postfix operator with precedence 1
     <Value: Expression> "something" "before" "me"
 begin
-    MyForeignExpressionHandler(Value, output)
+    //MyForeignExpressionHandler(Value, output)
 end syntax
 
 syntax MyLeftBinaryExpressionSyntax is left binary operator with precedence 1

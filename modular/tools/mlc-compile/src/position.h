@@ -3,6 +3,10 @@
 
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef long PositionRef;
 typedef struct File *FileRef;
 
@@ -35,5 +39,9 @@ void SetOutputFile(const char *filename);
 void SetTemplateFile(const char *filename);
 FILE *OpenOutputFile(void);
 FILE *OpenTemplateFile(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

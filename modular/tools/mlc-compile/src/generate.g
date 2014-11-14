@@ -133,7 +133,7 @@
         GenerateDefinitionIndex(Name)
     
     'rule' GenerateDefinitionIndexes(constant(_, _, Name, _)):
-        GenerateDefinitionIndex(Name)
+        -- GenerateDefinitionIndex(Name)
     
     'rule' GenerateDefinitionIndexes(variable(_, _, Name, _)):
         GenerateDefinitionIndex(Name)
@@ -234,6 +234,18 @@
         Id'Name -> Name
         Info'Index -> DefIndex
         EmitForeignHandlerDefinition(DefIndex, Position, Name, TypeIndex, Binding)
+        
+    'rule' GenerateDefinitions(property(_, _, _)):
+        -- TODO
+        
+    'rule' GenerateDefinitions(event(_, _, _)):
+        -- TODO
+        
+    'rule' GenerateDefinitions(syntax(_, _, _, _, _, _)):
+        -- TODO
+        
+    'rule' GenerateDefinitions(nil):
+        -- nothing
 
 ----
 
@@ -246,6 +258,10 @@
         EmitHandlerParameter(Name, TypeIndex -> Index)
         Info'Index <- Index
         GenerateParameters(Rest)
+
+    'rule' GenerateParameters(nil):
+        -- nothing
+        
 
 'action' GenerateBody(STATEMENT)
 
@@ -303,6 +319,7 @@
         GenerateBody(Body)
         EmitJump(RepeatHead)
         EmitResolveLabel(RepeatTail)
+        EmitDestroyRegister(CountRegister)
         EmitPopRepeatLabels()
         
     'rule' GenerateBody(repeatwhile(Position, Condition, Body)):
@@ -358,6 +375,7 @@
         EmitBeginBuiltinInvoke("RepeatUpToCondition", ContinueRegister)
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(LimitRegister)
+        EmitEndInvoke()
 
         EmitStoreVar(VarKind, CounterRegister, VarIndex)
         EmitJumpIfFalse(ContinueRegister, RepeatTail)
@@ -371,8 +389,13 @@
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(LimitRegister)
         EmitContinueInvoke(StepRegister)
+        EmitEndInvoke()
+
         EmitJump(RepeatHead)
         EmitResolveLabel(RepeatTail)
+        EmitDestroyRegister(CounterRegister)
+        EmitDestroyRegister(LimitRegister)
+        EmitDestroyRegister(StepRegister)
 
     'rule' GenerateBody(repeatdownto(Position, Slot, Start, Finish, Step, Body)):
         QuerySymbolId(Slot -> Info)
@@ -399,6 +422,7 @@
         EmitBeginBuiltinInvoke("RepeatDownToCondition", ContinueRegister)
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(LimitRegister)
+        EmitEndInvoke()
 
         EmitStoreVar(VarKind, CounterRegister, VarIndex)
         EmitJumpIfFalse(ContinueRegister, RepeatTail)
@@ -412,8 +436,12 @@
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(LimitRegister)
         EmitContinueInvoke(StepRegister)
+        EmitEndInvoke()
         EmitJump(RepeatHead)
         EmitResolveLabel(RepeatTail)
+        EmitDestroyRegister(CounterRegister)
+        EmitDestroyRegister(LimitRegister)
+        EmitDestroyRegister(StepRegister)
         
     'rule' GenerateBody(repeatforeach(Position, Iterator, Slot, Container, Body)):
         -- TODO
@@ -456,10 +484,17 @@
 
     'rule' GenerateBody(invoke(_, Method, Arguments)):
         -- TODO
+        
+    'rule' GenerateBody(nil):
+        -- nothing
 
 ----
 
 'action' GenerateExpression(EXPRESSION -> INT)
+
+    'rule' GenerateExpression(Expr -> Reg):
+        EmitCreateRegister(-> Reg)
+        GenerateExpressionInRegister(Reg, Expr)
 
 'action' GenerateExpressionInRegister(INT, EXPRESSION)
 
@@ -486,6 +521,18 @@
         Info'Kind -> Kind
         Info'Index -> Index
         EmitFetchVar(Kind, Result, Index)
+        
+    'rule' GenerateExpressionInRegister(Result, as(_, _, _)):
+        -- TODO
+    
+    'rule' GenerateExpressionInRegister(Result, list(_, _)):
+        -- TODO
+    
+    'rule' GenerateExpressionInRegister(Result, call(_, Handler, Arguments)):
+        -- TODO
+    
+    'rule' GenerateExpressionInRegister(Result, invoke(_, _, _)):
+        -- TODO
 
 ----
 
@@ -536,6 +583,10 @@
 
 'action' GenerateType(TYPE -> INT)
 
+    'rule' GenerateType(optional(_, Base) -> Index):
+        GenerateType(Base -> BaseTypeIndex)
+        EmitOptionalType(BaseTypeIndex -> Index)
+
     'rule' GenerateType(named(_, Id) -> Index):
         QuerySymbolId(Id -> Info)
         Info'Index -> OtherTypeIndex
@@ -553,21 +604,15 @@
         GenerateHandlerTypeParameters(Parameters)
         EmitEndHandlerType(-> Index)
 
-    'rule' GenerateType(pointer(_) -> Index):
-        EmitPointerType(-> Index)
-    'rule' GenerateType(bool(_) -> Index):
-        EmitBoolType(-> Index)
-    'rule' GenerateType(int(_) -> Index):
-        EmitIntType(-> Index)
-    'rule' GenerateType(uint(_) -> Index):
-        EmitUIntType(-> Index)
-    'rule' GenerateType(float(_) -> Index):
-        EmitFloatType(-> Index)
-    'rule' GenerateType(double(_) -> Index):
-        EmitDoubleType(-> Index)
+    'rule' GenerateType(opaque(_, _, _) -> Index):
+        -- TODO
+        EmitUndefinedType(-> Index)
 
     'rule' GenerateType(any(_) -> Index):
         EmitAnyType(-> Index)
+    'rule' GenerateType(undefined(_) -> Index):
+        EmitUndefinedType(-> Index)
+
     'rule' GenerateType(boolean(_) -> Index):
         EmitBooleanType(-> Index)
     'rule' GenerateType(integer(_) -> Index):
@@ -584,8 +629,23 @@
         EmitArrayType(-> Index)
     'rule' GenerateType(list(_) -> Index):
         EmitListType(-> Index)
-    'rule' GenerateType(undefined(_) -> Index):
-        EmitUndefinedType(-> Index)
+        
+    'rule' GenerateType(pointer(_) -> Index):
+        EmitPointerType(-> Index)
+    'rule' GenerateType(bool(_) -> Index):
+        EmitBoolType(-> Index)
+    'rule' GenerateType(int(_) -> Index):
+        EmitIntType(-> Index)
+    'rule' GenerateType(uint(_) -> Index):
+        EmitUIntType(-> Index)
+    'rule' GenerateType(float(_) -> Index):
+        EmitFloatType(-> Index)
+    'rule' GenerateType(double(_) -> Index):
+        EmitDoubleType(-> Index)
+
+    'rule' GenerateType(Type -> 0):
+        print(Type)
+        Fatal_InternalInconsistency("attempt to generate uncoded type")
 
 'action' GenerateRecordTypeFields(FIELDLIST)
 
@@ -594,6 +654,9 @@
         Id'Name -> Name
         EmitRecordTypeField(Name, TypeIndex)
         GenerateRecordTypeFields(Tail)
+        
+    'rule' GenerateRecordTypeFields(nil):
+        -- nothing
 
 'action' GenerateHandlerTypeParameters(PARAMETERLIST)
 
@@ -611,6 +674,9 @@
             EmitHandlerTypeInOutParameter(Name, TypeIndex)
         |)
         GenerateHandlerTypeParameters(Rest)
+        
+    'rule' GenerateHandlerTypeParameters(nil):
+        -- nothing
 
 --------------------------------------------------------------------------------
 
@@ -649,7 +715,7 @@
     'rule' QuerySymbolId(Id -> Info):
         QueryId(Id -> symbol(Info))
 
-'action' QueryModuleId(ID -> MODULEINFO)
+'condition' QueryModuleId(ID -> MODULEINFO)
 
     'rule' QueryModuleId(Id -> Info):
         QueryId(Id -> module(Info))
