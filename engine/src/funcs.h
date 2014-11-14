@@ -216,6 +216,7 @@ public:
     {
         source = version = NULL;
     }
+
     virtual ~MCArrayEncode();
     virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
@@ -251,6 +252,14 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
+};
+
+// AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+class MCBidiDirection : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCStringsEvalBidiDirection, EE_BIDIDIRECTION_BADSOURCE, PE_BIDIDIRECTION_BADPARAM, kMCStringsEvalBidiDirectionMethodInfo>
+{
+public:
+    MCBidiDirection(){}
+    virtual ~MCBidiDirection(){}
 };
 
 class MCBinaryEncode : public MCFunction
@@ -302,7 +311,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalCapsLockKeyMethodInfo; }
 };
 
-class MCCharToNum : public MCUnaryFunctionCtxt<MCValueRef, uinteger_t, MCStringsEvalCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo>
+class MCCharToNum : public MCUnaryFunctionCtxt<MCValueRef, MCValueRef, MCStringsEvalCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo>
 {
 public:
     MCCharToNum(){}
@@ -1277,7 +1286,8 @@ public:
     virtual ~MCNumToUnicodeChar(){}
 };
 
-class MCNumToByte: public MCUnaryFunctionCtxt<integer_t, MCStringRef, MCStringsEvalNumToByte, EE_NUMTOBYTE_BADSOURCE, PE_NUMTOBYTE_BADPARAM, kMCStringsEvalNumToByteMethodInfo>
+// AL-2014-10-21: [[ Bug 13740 ]] numToByte should return a DataRef
+class MCNumToByte: public MCUnaryFunctionCtxt<integer_t, MCDataRef, MCStringsEvalNumToByte, EE_NUMTOBYTE_BADSOURCE, PE_NUMTOBYTE_BADPARAM, kMCStringsEvalNumToByteMethodInfo>
 {
 public:
     MCNumToByte(void){}

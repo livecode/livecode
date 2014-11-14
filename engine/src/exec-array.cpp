@@ -36,7 +36,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, Keys, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, Extents, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Combine, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineByRowOrColumn, 3)
+// SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
+// different from combining by row
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineByRow, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineByColumn, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineAsSet, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Split, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitByRow, 2)
@@ -238,41 +241,34 @@ void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
     ctxt . Throw();
 }
 
-void MCArraysExecCombineByRowOrColumn(MCExecContext& ctxt, MCArrayRef p_array, bool p_is_row, MCStringRef &r_string)
-{
-    if (p_is_row)
-    {
-        // Temporarily buggy output for 'combine by row'
-        MCArraysExecCombineByRow(ctxt, p_array, r_string);
-        return;
-    }
-
-    MCStringRef t_delimiter;
-    if (p_is_row)
-        t_delimiter = ctxt . GetRowDelimiter();
-    else
-        t_delimiter = ctxt . GetColumnDelimiter();
-
+// SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
+// different from combining by row
+void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef &r_string)
+{    
+    MCStringRef t_row_delimiter, t_col_delimiter;
+    t_row_delimiter = ctxt . GetRowDelimiter();
+    t_col_delimiter = ctxt . GetColumnDelimiter();
+    
     MCAutoListRef t_list;
-    MCListCreateMutable(t_delimiter, &t_list);
-
+    MCListCreateMutable(t_row_delimiter, &t_list);
+    
     uindex_t t_count = MCArrayGetCount(p_array);
     combine_int_indexed_array_t t_lisctxt;
     bool t_success;
-
+    
     t_lisctxt . elements = nil;
     t_lisctxt . index = 0;
     t_lisctxt . converter = &ctxt;
     t_success = MCMemoryNewArray(t_count, t_lisctxt . elements);
-
+    
     if (t_success)
     {
         if (MCArrayApply(p_array, list_int_indexed_array_elements, &t_lisctxt))
         {
             bool t_valid_keys;
-
+            
             qsort(t_lisctxt . elements, t_count, sizeof(array_element_t), compare_int_indexed_elements);
-
+            
             // Combine by row/column is only valid if all the indices are consecutive numbers
             // Otherwise, an empty string is returned - no error
             index_t t_last_index;
@@ -285,29 +281,91 @@ void MCArraysExecCombineByRowOrColumn(MCExecContext& ctxt, MCArrayRef p_array, b
                 else
                     t_valid_keys = ++t_last_index == t_lisctxt . elements[i] . key;
             }
-
+            
             if (t_valid_keys)
             {
+                // SN-2014-09-01: [[ Bug 13297 ]]
+                // We need to store the converted strings in a array, to be able to iterate through the elements by one row-delimitated
+                //  at a time
+                MCStringRef* t_strings;
+                uindex_t *t_next_row_indices;
+                
+                t_strings = NULL;
+                t_next_row_indices = NULL;
+                
+                /* UNCHECKED */ MCMemoryNewArray(t_count, t_strings);
+                // MCMemoryNewArray initialises all t_next_row_indices elements to 0.
+                /* UNCHECKED */ MCMemoryNewArray(t_count, t_next_row_indices);
+                
                 for (int i = 0; i < t_count && t_success; ++i)
                 {
-                    MCAutoStringRef t_string;
-
                     if (t_lisctxt . elements[i] . key == 0) // The index 0 is ignored
                         continue;
-
-                    if (ctxt . ConvertToString(t_lisctxt . elements[i] . value, &t_string))
-                        t_success = MCListAppend(*t_list, *t_string);
-                    else
-                        t_success = false;
+                    
+                    t_success = ctxt . ConvertToString(t_lisctxt . elements[i] . value, t_strings[i]);
                 }
+                
+                // SN-2014-09-01: [[ Bug 13297 ]] Added a missed part in column-combining:
+                // only combining row-by-row the array elements.
+                if (t_success)
+                {
+                    uindex_t t_elements_over;
+                    t_elements_over = 0;
+                    
+                    // We iterate as long as one element still has uncombined rows
+                    while (t_success && t_elements_over != t_count)
+                    {
+                        MCAutoListRef t_row;
+                        
+                        t_success = MCListCreateMutable(t_col_delimiter, &t_row);
+                        t_elements_over = 0;
+                        
+                        // Iterate through all the elements of the array
+                        for (int i = 0; i < t_count && t_success; ++i)
+                        {
+                            // Only consider this element if it has any uncombined rows remaining
+                            if (t_next_row_indices[i] < MCStringGetLength(t_strings[i]))
+                            {
+                                MCRange t_cell_range;
+                                if (MCStringFind(t_strings[i], MCRangeMake(t_next_row_indices[i], UINDEX_MAX), t_row_delimiter, ctxt.GetStringComparisonType(), &t_cell_range))
+                                {
+                                    // We found a row delimiter, so we stop the copy range before it and update the next index from which to look
+                                    t_success = MCListAppendSubstring(*t_row, t_strings[i], MCRangeMake(t_next_row_indices[i], t_cell_range . offset - t_next_row_indices[i]));
+                                    t_next_row_indices[i] = t_cell_range . offset + t_cell_range . length;
+                                }
+                                else
+                                {
+                                    // No row delimiter: we copy the remaining part of the string and mark the element
+                                    // as wholly combined by setting the next index to the length of the element
+                                    t_success = MCListAppendSubstring(*t_row, t_strings[i], MCRangeMake(t_next_row_indices[i], UINDEX_MAX));
+                                    t_next_row_indices[i] = MCStringGetLength(t_strings[i]);
+                                }
+                            }
+                            else
+                            {
+                                // Everything has been combined in this element
+                                t_elements_over++;
+                                MCListAppend(*t_row, kMCEmptyString);
+                            }
+                        }
+                        
+                        // One more row has been combined - doing it anyway mimics the previous behaviour of having an empty row
+                        // added in the end when combining by columns
+                        if (t_elements_over != t_count)
+                            MCListAppend(*t_list, *t_row);
+                    }
+                }
+                
+                MCMemoryDeleteArray(t_next_row_indices);
+                MCMemoryDeleteArray(t_strings);
             }
         }
         MCMemoryDeleteArray(t_lisctxt . elements);
     }
-
+    
     if (t_success && MCListCopyAsString(*t_list, r_string))
         return;
-
+    
     ctxt . Throw();
 }
 
@@ -419,14 +477,12 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
                     t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
                 
                 if (t_success)
-                    t_success = MCStringAppendSubstring(t_temp_array[t_column_index], p_string, t_range);
+                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", &t_range, p_string);
             }
             else
             {
-                t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
                 // AL-2014-06-12: [[ Bug 12610 ]] Range parameter to MCStringFormat must be a pointer to an MCRange
-                if (t_success)
-                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", &t_range, p_string);
+                t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%@%*@", t_row_delim, &t_range, p_string);
             }
             
             // Next cell
@@ -605,9 +661,9 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
     if (p_version != nil)
         MCInterfaceStackFileVersionParse(ctxt, p_version, t_version);
     
-    // AL-2014-05-22: [[ Bug 12203 ]] Make arrayEncode encode in legacy format by default.
+    // AL-2014-05-22: [[ Bug 12547 ]] Make arrayEncode encode in 7.0 format by default.
     bool t_legacy;
-    t_legacy = p_version == nil || t_version . version < 7000;
+    t_legacy = p_version != nil && t_version . version < 7000;
     
     if (t_legacy)
     {
@@ -1103,12 +1159,16 @@ void MCArraysEvalTransposeMatrix(MCExecContext& ctxt, MCArrayRef p_matrix, MCArr
 
 void MCArraysEvalIsAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
-	r_result = MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray;
+    // FG-2014-10-21: [[ Bugfix 13737 ]] An array is only an array if it has at
+    // least one key (i.e the empty array is not an array...)
+    r_result = MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray
+        && MCArrayGetCount((MCArrayRef)p_value) > 0;
 }
 
 void MCArraysEvalIsNotAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
-	r_result = MCValueGetTypeCode(p_value) != kMCValueTypeCodeArray;
+    MCArraysEvalIsAnArray(ctxt, p_value, r_result);
+    r_result = !r_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

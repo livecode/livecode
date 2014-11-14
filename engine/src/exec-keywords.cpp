@@ -111,7 +111,7 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
 }
 
 void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool platform_message, bool is_function)
-{
+{    
 	if (MCscreen->abortkey())
 	{
 		ctxt . LegacyThrow(EE_HANDLER_ABORT);
@@ -153,20 +153,19 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
-		MCVariable* t_var;
-		t_var = tptr -> evalvar(ctxt);
-        
-		if (t_var == NULL)
-		{
-			tptr -> clear_argument();
+        // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
+        MCContainer *t_container;
+        if (tptr -> evalcontainer(ctxt, t_container))
+            tptr -> set_argument_container(t_container);
+        else
+        {
+            tptr -> clear_argument();
             MCExecValue t_value;
             //HERE
-			if (!ctxt . TryToEvaluateParameter(tptr, line, pos, is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM, t_value))
+            if (!ctxt . TryToEvaluateParameter(tptr, line, pos, is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM, t_value))
                 return;
-			tptr->give_exec_argument(t_value);
-		}
-		else
-			tptr->set_argument_var(t_var);
+            tptr->give_exec_argument(t_value);
+        }
         
         tptr = tptr->getnext();
     }
@@ -266,6 +265,14 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
         ctxt . SetExecStat(stat);
     else
         ctxt . SetExecStat(ES_NORMAL);
+
+    // AL-2014-09-17: [[ Bug 13465 ]] Clear parameters after executing command/function
+    tptr = params;
+    while (tptr != NULL)
+	{
+        tptr -> clear_argument();
+        tptr = tptr->getnext();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -826,6 +833,8 @@ void MCKeywordsExecExit(MCExecContext& ctxt, Exec_stat stat)
 	{
 		MCexitall = True;
 		ctxt . SetExecStat(ES_NORMAL);
+        // SN-2014-09-17: [[ Bug 13430 ]] Missing return.
+        return;
 	}
 	ctxt . SetExecStat(stat);
 }

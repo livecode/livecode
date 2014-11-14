@@ -96,6 +96,10 @@ void MCParameter::setn_argument(real8 p_number)
 
 void MCParameter::clear_argument(void)
 {
+    // AL-2014-09-17: [[ Bug 13465 ]] Delete container when clearing a parameter
+    delete container;
+    container = nil;
+    var  = nil;
 	MCExecTypeRelease(value);
 }
 
@@ -193,6 +197,10 @@ bool MCParameter::eval_argument(MCExecContext &ctxt, MCValueRef &r_value)
     if (var != NULL)
         return var -> eval(ctxt, r_value);
 
+    // AL-2014-08-28: [[ ArrayElementRefParams ]] MCParameter argument can now be a container
+    if (container != nil)
+        return container -> eval(ctxt, r_value);
+    
     if (value . type == kMCExecValueTypeNone)
         return r_value = MCValueRetain(kMCEmptyString), true;
 
@@ -217,6 +225,9 @@ bool MCParameter::eval_argument_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (var != NULL)
         return var -> eval_ctxt(ctxt, r_value);
     
+    if (container != nil)
+        return container -> eval_ctxt(ctxt, r_value);
+    
     MCExecTypeCopy(value, r_value);
     return true;
 }
@@ -237,6 +248,11 @@ Exec_stat MCParameter::eval_argument(MCExecPoint& ep)
 MCVariable *MCParameter::eval_argument_var(void)
 {
 	return var;
+}
+
+MCContainer *MCParameter::eval_argument_container(void)
+{
+	return container;
 }
 
 /////////
@@ -273,6 +289,11 @@ void MCParameter::set_argument(MCExecPoint& ep)
 void MCParameter::set_argument_var(MCVariable* p_var)
 {
 	var = p_var;
+}
+
+void MCParameter::set_argument_container(MCContainer* p_container)
+{
+	container = p_container;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

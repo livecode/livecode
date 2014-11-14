@@ -100,70 +100,138 @@ static char *my_strndup(const char *s, uint32_t l)
 
 // File opening and closing
 
+// This function checks that a file really does exist at the given location.
+// The path is expected to have been resolved but in native encoding.
+static bool MCS_file_exists_at_path(const char *path)
+{
+	char *newpath = path2utf(strdup(path));
+    
+    bool t_found;
+    
+	struct stat buf;
+	t_found = (stat(newpath, (struct stat *)&buf) == 0);
+	if (t_found)
+        if (S_ISDIR(buf.st_mode))
+            t_found = false;
+    
+    delete newpath;
+    
+    return t_found;
+}
+
+// MW-2014-09-17: [[ Bug 13455 ]] Attempt to redirect path. If p_is_file is false,
+//   the path is taken to be a directory and is always redirected if is within
+//   Contents/MacOS. If p_is_file is true, then the file is only redirected if
+//   the original doesn't exist, and the redirection does.
+static bool MCS_apply_redirect(char*& x_path, bool p_is_file)
+{
+    // If the original file exists, do nothing.
+    if (p_is_file && MCS_file_exists_at_path(x_path))
+        return false;
+
+    int t_engine_path_length;
+    t_engine_path_length = strrchr(MCcmd, '/') - MCcmd;
+    
+    // If the length of the path is less than the folder prefix of the exe, it
+    // cannot be inside <bundle>/Contents/MacOS/
+    if (strlen(x_path) < t_engine_path_length)
+        return false;
+    
+    // If the prefix of path is not the same as MCcmd up to the folder, it
+    // cannot be inside <bundle>/Contents/MacOS/
+    if (strncmp(x_path, MCcmd, t_engine_path_length) != 0)
+        return false;
+    
+    // If the final component is not MacOS then it is not inside the relevant
+    // folder.
+    if (x_path[t_engine_path_length] != '\0' &&
+        x_path[t_engine_path_length] != '/')
+        return false;
+    
+    // Construct the new path from the path after MacOS/ inside Resources/_macos.
+    char *t_new_path;
+    /* UNCHECKED */ MCCStringFormat(t_new_path, "%.*s/Resources/_MacOS/%s", t_engine_path_length - 6, MCcmd, x_path + t_engine_path_length);
+    
+    if (p_is_file && !MCS_file_exists_at_path(t_new_path))
+    {
+        free(t_new_path);
+        return false;
+    }
+    
+    free(x_path);
+    x_path = t_new_path;
+    return true;
+}
+
 IO_handle MCS_open(const char *path, const char *mode,
 									 Boolean map, Boolean driver, uint4 offset)
 {
 	IO_handle handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-		char *oldpath = strclone(path);
-		
-		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
-		char *t_resolved_path;
-		t_resolved_path = MCS_resolvepath(path);
-		if (t_resolved_path == NULL)
-			return NULL;
-		
-		char *newpath = path2utf(t_resolved_path);
-		FILE *fptr;
+    //opening regular files
+    //set the file type and it's creator. These are 2 global variables
+    char *oldpath = strclone(path);
+    
+    // OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
+    char *t_resolved_path;
+    t_resolved_path = MCS_resolvepath(path);
+    if (t_resolved_path == NULL)
+        return NULL;
+    
+    // MW-2014-09-17: [[ Bug 13455 ]] If we are opening a file for read in non-driver mode
+    //   then check for redirection.
+    if (!driver && mode == IO_READ_MODE)
+        MCS_apply_redirect(t_resolved_path, true);
 
-		if (driver)
-		{
-			fptr = fopen(newpath,  mode );
-			if (fptr != NULL)
-			{
-				int val;
-				val = fcntl(fileno(fptr), F_GETFL, val);
-				val |= O_NONBLOCK |  O_NOCTTY;
-				fcntl(fileno(fptr), F_SETFL, val);
-				configureSerialPort((short)fileno(fptr));
-			}
-		}
-		else
-		{
-			fptr = fopen(newpath, IO_READ_MODE);
-			if (fptr == NULL)
-				fptr = fopen(oldpath, IO_READ_MODE);
-			Boolean created = True;
-			if (fptr != NULL)
-			{
-				created = False;
-				if (mode != IO_READ_MODE)
-				{
-					fclose(fptr);
-					fptr = NULL;
-				}
-			}
-			if (fptr == NULL)
-				fptr = fopen(newpath, mode);
+    char *newpath = path2utf(t_resolved_path);
+    FILE *fptr;
 
-			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
-				fptr = fopen(newpath, IO_CREATE_MODE);
-			if (fptr != NULL && created)
-				MCS_setfiletype(oldpath);
-		}
+    if (driver)
+    {
+        fptr = fopen(newpath,  mode );
+        if (fptr != NULL)
+        {
+            int val;
+            val = fcntl(fileno(fptr), F_GETFL, val);
+            val |= O_NONBLOCK |  O_NOCTTY;
+            fcntl(fileno(fptr), F_SETFL, val);
+            configureSerialPort((short)fileno(fptr));
+        }
+    }
+    else
+    {
+        fptr = fopen(newpath, IO_READ_MODE);
+        if (fptr == NULL)
+            fptr = fopen(oldpath, IO_READ_MODE);
+        Boolean created = True;
+        if (fptr != NULL)
+        {
+            created = False;
+            if (mode != IO_READ_MODE)
+            {
+                fclose(fptr);
+                fptr = NULL;
+            }
+        }
+        if (fptr == NULL)
+            fptr = fopen(newpath, mode);
 
-		delete newpath;
-		delete oldpath;
-		if (fptr != NULL)
-		{
-			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
-			if (offset > 0)
-				fseek(handle->fptr, offset, SEEK_SET);
+        if (fptr == NULL && !strequal(mode, IO_READ_MODE))
+            fptr = fopen(newpath, IO_CREATE_MODE);
+        if (fptr != NULL && created)
+            MCS_setfiletype(oldpath);
+    }
 
-			if (strequal(mode, IO_APPEND_MODE))
-				handle->flags |= IO_SEEKED;
-		}
+    delete newpath;
+    delete oldpath;
+    if (fptr != NULL)
+    {
+        handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
+        if (offset > 0)
+            fseek(handle->fptr, offset, SEEK_SET);
+
+        if (strequal(mode, IO_APPEND_MODE))
+            handle->flags |= IO_SEEKED;
+    }
 
 	return handle;
 }
@@ -236,6 +304,9 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		MCresult -> sets("bad path");
 		return;
 	}
+    
+    // MW-2014-09-17: [[ Bug 13455 ]] Check for redirection.
+    MCS_apply_redirect(t_resolved_path, true);
 	
 	char *newpath = path2utf(t_resolved_path);
 	
@@ -635,19 +706,21 @@ Boolean MCS_exists(const char *path, Boolean file)
 	if (t_resolved_path == NULL)
 		return False;
 	
+    if (file)
+        MCS_apply_redirect(t_resolved_path, file);
+    
 	char *newpath = path2utf(t_resolved_path);
-
 
 	struct stat buf;
 	found = stat(newpath, (struct stat *)&buf) == 0;
 	if (found)
 		if (file)
 		{
-			if (buf.st_mode & S_IFDIR)
+			if (S_ISDIR(buf.st_mode))
 				found = False;
 		}
 		else
-			if (!(buf.st_mode & S_IFDIR))
+			if (!S_ISDIR(buf.st_mode))
 				found = False;
 	delete newpath;
 	return found;
@@ -1959,7 +2032,7 @@ Boolean MCS_setcurdir(const char *path)
 	t_resolved_path = MCS_resolvepath(path);
 	if (t_resolved_path == NULL)
 		return False;
-
+    
 	char *newpath = NULL;
 	newpath = path2utf(t_resolved_path);
 	
@@ -2025,10 +2098,9 @@ static sysfolders sysfolderlist[] = {
 									    {"Home", 'cusr', kUserDomain, 'cusr'},
 										// MW-2007-09-11: Added for uniformity across platforms
 										{"Documents", 'docs', kUserDomain, 'docs'},
-										// MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
-                                        // SN-2014-07-30: [[ Bug 13026 ]] We don't want any folder which doesn't match one above
-                                        //  to return the Application Support folder
-										{"Support", 'asup', kUserDomain, 'asup'},
+										// MW-2007-10-08: [[ Bug 10277 ]] Add support for the 'application support' at user level.
+                                        // FG-2014-09-26: [[ Bug 13523 ]] This entry must not match a request for "asup"
+										{"Support", 0, kUserDomain, 'asup'},
                                     };
 
 // MW-2008-06-18: [[ Bug 6577 ]] specialFolderPath("home") didn't work as it is 4 chars long and
@@ -2051,6 +2123,7 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 		t_found_folder = false;
 	
 		uint4 t_mac_folder;
+        t_mac_folder = 0;
 		if (p_context . getsvalue() . getlength() == 4)
 		{
 			memcpy(&t_mac_folder, p_context . getsvalue() . getstring(), 4);
@@ -2068,10 +2141,10 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 			
 		OSErr t_os_error;
 		uint2 t_i;
-        if (t_mac_folder != 0)
+        if (!t_found_folder)
         {
             for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
-                if (p_context . getsvalue() == sysfolderlist[t_i] . token || t_mac_folder == sysfolderlist[t_i] . macfolder)
+                if (p_context . getsvalue() == sysfolderlist[t_i] . token || (t_mac_folder != 0 && t_mac_folder == sysfolderlist[t_i] . macfolder))
                 {
                     Boolean t_create_folder;
                     t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
@@ -2123,17 +2196,40 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 /*                  General Filesystem Handling                     */
 /********************************************************************/ 
 
-#define CATALOG_MAX_ENTRIES 16
+static void MCS_getentries_for_folder(MCExecPoint& p_context, const char *p_path, bool p_files, bool p_detailed);
+
 void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 {
-	OSStatus t_os_status;
-
+    char *t_path;
+    t_path = MCS_getcurdir();
+    
 	p_context . clear();
+    
+    // MW-2014-09-17: [[ Bug 13455 ]] First list in the usual path.
+    MCS_getentries_for_folder(p_context, t_path, p_files, p_detailed);
+    
+    // MW-2014-09-17: [[ Bug 13455 ]] If we are fetching files, and the path is inside MacOS, then
+    //   merge the list with files from the corresponding path in Resources/_MacOS.
+    if (p_files &&
+        MCS_apply_redirect(t_path, false))
+        MCS_getentries_for_folder(p_context, t_path, p_files, p_detailed);
+    
+    free(t_path);
+}
+
+#define CATALOG_MAX_ENTRIES 16
+static void MCS_getentries_for_folder(MCExecPoint& p_context, const char *p_path, bool p_files, bool p_detailed)
+{
+	OSStatus t_os_status;
 	
 	Boolean t_is_folder;
 	FSRef t_current_fsref;
 	
-	t_os_status = FSPathMakeRef((const UInt8 *)".", &t_current_fsref, &t_is_folder);
+    char *t_utf8_path;
+    t_utf8_path = path2utf(strdup(p_path));
+	t_os_status = FSPathMakeRef((const UInt8 *)t_utf8_path, &t_current_fsref, &t_is_folder);
+    free(t_utf8_path);
+    
 	if (t_os_status != noErr || !t_is_folder)
 		return;
 
@@ -2143,13 +2239,17 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 	if (t_os_status != noErr)
 		return;
 	
+    bool t_first;
+    t_first = p_context . isempty();
+    
 	uint4 t_entry_count;
 	t_entry_count = 0;
 	
 	if (!p_files)
 	{
 		t_entry_count++;
-		p_context . concatcstring("..", EC_RETURN, true);
+		p_context . concatcstring("..", EC_RETURN, t_first);
+        t_first = false;
 	}
 	
 	ItemCount t_max_objects, t_actual_objects;
@@ -2270,10 +2370,14 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 						t_permissions -> mode & 0777,
 						t_filetype);
 						
-					p_context . concatcstring(t_buffer, EC_RETURN, t_entry_count == 0);
+					p_context . concatcstring(t_buffer, EC_RETURN, t_first);
+                    t_first = false;
 				}
 				else
-					p_context . concatchars(t_native_name, t_native_length, EC_RETURN, t_entry_count == 0);
+                {
+					p_context . concatchars(t_native_name, t_native_length, EC_RETURN, t_first);
+                    t_first = false;
+                }
 					
 				t_entry_count += 1;		
 			}

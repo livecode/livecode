@@ -1,0 +1,1 @@
+# Setting read-only global properties crashes Livecode

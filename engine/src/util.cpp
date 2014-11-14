@@ -1345,17 +1345,19 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 #endif
 
 // MM-2014-08-01: [[ Bug ]] Pulled name table initialisation out of MCU_matchname to prevent crah on Linux.
-static const char *nametable[] =
+// IM-2014-08-20: [[ Bug ]] Cannot guarantee that the globals have been initialized before nametable,
+// so use pointers to the globals rather than their value and dereference later.
+static const char **nametable[] =
 {
-    MCstackstring, MCaudiostring,
-    MCvideostring, MCbackgroundstring,
-    MCcardstring, MCnullstring,
-    MCgroupstring, MCnullstring,
-    MCbuttonstring, MCnullstring,
-    MCnullstring, MCscrollbarstring,
-    MCimagestring, MCgraphicstring,
-    MCepsstring, MCmagnifierstring,
-    MCcolorstring, MCfieldstring
+    &MCstackstring, &MCaudiostring,
+    &MCvideostring, &MCbackgroundstring,
+    &MCcardstring, &MCnullstring,
+    &MCgroupstring, &MCnullstring,
+    &MCbuttonstring, &MCnullstring,
+    &MCnullstring, &MCscrollbarstring,
+    &MCimagestring, &MCgraphicstring,
+    &MCepsstring, &MCmagnifierstring,
+    &MCcolorstring, &MCfieldstring
 };
 
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
@@ -1378,8 +1380,8 @@ bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
         MCStringGetLength(t_test) - t_offset > t_name_length + 1 &&
         MCStringGetNativeCharAtIndex(t_test, t_offset + t_name_length + 1) == '"' &&
         MCStringSubstringIsEqualTo(t_test, MCRangeMake(t_offset + 1, t_name_length), t_name, kMCCompareCaseless) &&
-        t_offset >= (int)strlen(nametable[type - CT_STACK]) &&
-        MCStringSubstringIsEqualTo(t_test, MCRangeMake(0, strlen(nametable[type - CT_STACK])), MCSTR(nametable[type - CT_STACK]), kMCCompareCaseless))
+        t_offset >= (int)strlen(*nametable[type - CT_STACK]) &&
+        MCStringSubstringIsEqualTo(t_test, MCRangeMake(0, strlen(*nametable[type - CT_STACK])), MCSTR(*nametable[type - CT_STACK]), kMCCompareCaseless))
             match = True;
 
 	return match;
@@ -1422,6 +1424,8 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 	
 	uint2 origin_horiz, origin_vert;
 	int2 arc, arclength;
+    arc = 0;
+    arclength = 0;
 	origin_horiz = tr.x + rr_width;
 	origin_vert = tr.y + rr_height;
 
@@ -2488,49 +2492,64 @@ bool MCU_couldbeurl(const MCString& p_potential_url)
 	return true;
 }
 
-void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef &r_output)
+void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
+// SJT-2014-09-10: [[ URLMessages ]] Send "getURL" messages on all platforms.
 {
 	MCAutoStringRef t_filename;
-	if (MCStringGetLength(p_target) > 5 && MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless))
+	if (MCStringGetLength(p_url) > 5 && MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
-		if (MCS_loadtextfile(*t_filename, (MCStringRef&)r_output))
-			return;
+		MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url)-5), &t_filename);
+		MCS_loadtextfile(*t_filename, (MCStringRef&)r_output);
 	}
-	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless))
+	else if (MCStringGetLength(p_url) > 8 && MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		if (MCS_loadbinaryfile(*t_filename, (MCDataRef&)r_output))
-			return;
+		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
+		MCS_loadbinaryfile(*t_filename, (MCDataRef&)r_output);
 	}
-	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
+	else if (MCStringGetLength(p_url) > 8 && MCStringBeginsWithCString(p_url, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);	
+		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
 		MCS_loadresfile(*t_filename, (MCStringRef&)r_output);
-		return;
 	}
-    else
+	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
 	{
-        // MW-2013-06-25: [[ Bug 10983 ]] Take more care to check if we do in fact
-		//   have something that could be a url.
-		// MW-2013-07-01: [[ Bug 10975 ]] Change to use MCU_couldbeurl utility function.
-		if (MCU_couldbeurl(MCStringGetOldString(p_target)))
+		// Send a "getURL" message
+		Boolean oldlock = MClockmessages;
+		MClockmessages = False;
+		MCParameter p1;
+		p1 . setvalueref_argument(p_url);
+		Exec_stat t_stat = ctxt . GetObject() -> message(MCM_get_url, &p1, True, True);
+		MClockmessages = oldlock;
+
+		switch (t_stat) 
 		{
-			MCS_geturl(ctxt . GetObject(), p_target);
-			MCurlresult->copyasvalueref((MCValueRef&)r_output);
-			return;
+		case ES_NOT_HANDLED:
+		case ES_PASS:
+			// Either there was no message handler, or the handler passed the message,
+			// so process the URL in the engine.
+			MCS_geturl(ctxt . GetObject(), p_url);
+			break;
+
+		case ES_ERROR:
+			ctxt . Throw();
+			break;
+
+		default:
+			break;
 		}
-		else
-        {
-			// MM-2014-08-12: [[ Bug 2902 ]] Make sure we set the result accordingly if the URL is invalid.
-			MCAutoStringRef t_err;
-            MCStringFormat(&t_err, "invalid URL: %@", p_target);
-            MCresult -> setvalueref(*t_err);
-        }
+
+		MCurlresult->copyasvalueref((MCValueRef&)r_output);
 	}
-	
-	r_output = MCValueRetain(kMCEmptyString);
-	//ctxt.Throw();
+	else
+	{
+		// MM-2014-08-12: [[ Bug 2902 ]] Make sure we set the result accordingly if the URL is invalid.
+		MCAutoStringRef t_err;
+		MCStringFormat(&t_err, "invalid URL: %@", p_url);
+		MCresult -> setvalueref(*t_err);
+	}
+
+	if (r_output == nil)
+		r_output = MCValueRetain(kMCEmptyString);
 }
 
 #ifdef LEGACY_EXEC
@@ -2548,11 +2567,12 @@ void MCU_geturl(MCExecPoint &ep)
 #endif
 
 void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
+// SJT-2014-09-10: [[ URLMessages ]] Send "putURL" messages on all platforms.
 {
 	if (MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
 		MCAutoStringRef t_path, t_data;
-        /* UNCHECKED */ ctxt . ConvertToString(p_data, &t_data);
+		/* UNCHECKED */ ctxt . ConvertToString(p_data, &t_data);
 		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url) - 5), &t_path);
 		MCS_savetextfile(*t_path, *t_data);
 	}
@@ -2572,11 +2592,44 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_saveresfile(*t_path, *t_data);
 	}
-	else
+	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
 	{
 		MCAutoDataRef t_data;
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
-		MCS_putintourl(ctxt.GetObject(), *t_data, p_url);
+
+		// Send "putURL" message
+		Boolean oldlock = MClockmessages;
+		MClockmessages = False;
+		MCParameter p1;
+		p1 . setvalueref_argument(*t_data);
+		MCParameter p2;
+		p2 . setvalueref_argument(p_url);
+		p1.setnext(&p2);
+		Exec_stat t_stat = ctxt . GetObject() -> message(MCM_put_url, &p1, False, True);
+		MClockmessages = oldlock;
+
+		switch (t_stat)
+		{
+		case ES_NOT_HANDLED:
+		case ES_PASS:
+			// Either there was no message handler, or the handler passed the message,
+			// so process the URL in the engine.
+			MCS_putintourl(ctxt.GetObject(), *t_data, p_url);
+			break;
+
+		case ES_ERROR:
+			ctxt . Throw();
+			break;
+
+		default:
+			break;
+		}
+	}
+	else
+	{
+		MCAutoStringRef t_err;
+		MCStringFormat(&t_err, "invalid URL: %@", p_url);
+		MCresult -> setvalueref(*t_err);
 	}
 }
 

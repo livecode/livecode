@@ -68,6 +68,8 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_ABBREV_ID, String, MCObject, AbbrevId)
 	DEFINE_RO_OBJ_PROPERTY(P_LONG_ID, String, MCObject, LongId)
 	DEFINE_RW_OBJ_PROPERTY(P_NAME, String, MCObject, Name)
+    // SN-2014-08-25: [[ Bug 13276 ]] Added the property definition for 'abbreviated name'
+    DEFINE_RO_OBJ_PROPERTY(P_ABBREV_NAME, String, MCObject, AbbrevName)
 	DEFINE_RO_OBJ_PROPERTY(P_SHORT_NAME, String, MCObject, ShortName)
 	DEFINE_RO_OBJ_PROPERTY(P_LONG_NAME, String, MCObject, LongName)
 	DEFINE_RW_OBJ_PROPERTY(P_ALT_ID, UInt32, MCObject, AltId)

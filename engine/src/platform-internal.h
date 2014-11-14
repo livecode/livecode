@@ -30,7 +30,7 @@ public:
 	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster) = 0;
 	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster) = 0;
 	
-	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area) = 0;
 	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster) = 0;
 	
 	virtual bool LockSystemContext(void*& r_context) = 0;
@@ -272,7 +272,7 @@ void MCPlatformWindowDeathGrip(MCPlatformWindowRef window);
 void MCPlatformCallbackSendApplicationStartup(int argc, MCStringRef *argv, MCStringRef *envp, int& r_error_code, MCStringRef& r_error_message);
 void MCPlatformCallbackSendApplicationShutdown(int& r_exit_code);
 void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate);
-void MCPlatformCallbackSendApplicationRun(void);
+void MCPlatformCallbackSendApplicationRun(bool& r_continue);
 void MCPlatformCallbackSendApplicationSuspend(void);
 void MCPlatformCallbackSendApplicationResume(void);
 
@@ -328,6 +328,7 @@ void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
 void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerBufferUpdated(MCPlatformPlayerRef player);
 
 void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef sound);
 

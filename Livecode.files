@@ -844,7 +844,8 @@ libfoundation/src/foundation-unicodechars.cpp
 libfoundation/src/foundation-unicode.cpp
 libfoundation/src/foundation-unicode-private.h
 libfoundation/src/foundation-value.cpp
-libfoundation/score.txtlibgraphics/src/blur.cpp
+libfoundation/score.txt
+libgraphics/src/blur.cpp
 libgraphics/src/context.cpp
 libgraphics/src/graphics-internal.h
 libgraphics/src/legacyblendmodes.cpp
@@ -862,6 +863,7 @@ libgraphics/src/osxtext.cpp
 libgraphics/src/region.cpp
 libgraphics/src/utils.cpp
 libgraphics/include/graphics.h
+libgraphics/Makefile
 prebuilt/bin/perfect.exe
 prebuilt/bin/Revolution.exe
 prebuilt/lib/libcrypto.a
@@ -3229,6 +3231,7 @@ thirdparty/libskia/src/ports/SkXMLParser_empty.cpp
 thirdparty/libskia/src/ports/SkXMLParser_expat.cpp
 thirdparty/libskia/src/ports/SkXMLParser_tinyxml.cpp
 thirdparty/libskia/src/ports/SkXMLPullParser_expat.cpp
+thirdparty/libskia/Makefile
 thirdparty/libsqlite/include/sqlitedataset/dataset.h
 thirdparty/libsqlite/include/sqlitedataset/qry_dat.h
 thirdparty/libsqlite/include/sqlitedataset/sqlitedataset.h

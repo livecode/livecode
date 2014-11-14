@@ -577,6 +577,24 @@ inline MCGSize MCGSizeMake(MCGFloat p_w, MCGFloat p_h)
 	return t_size;
 }
 
+inline MCGIntegerPoint MCGIntegerPointMake(int32_t x, int32_t y)
+{
+	MCGIntegerPoint t_point;
+	t_point.x = x;
+	t_point.y = y;
+
+	return t_point;
+}
+
+inline MCGIntegerSize MCGIntegerSizeMake(uint32_t width, uint32_t height)
+{
+	MCGIntegerSize t_size;
+	t_size.width = width;
+	t_size.height = height;
+
+	return t_size;
+}
+
 inline MCGIntegerRectangle MCGIntegerRectangleMake(int32_t x, int32_t y, uint32_t width, uint32_t height)
 {
 	MCGIntegerRectangle t_rect;
@@ -586,6 +604,12 @@ inline MCGIntegerRectangle MCGIntegerRectangleMake(int32_t x, int32_t y, uint32_
 	t_rect.size.height = height;
 	
 	return t_rect;
+}
+
+// IM-2014-10-22: [[ Bug 13746 ]] Add convenience function to construct rectangle from left, top, right, bottom coords
+inline MCGIntegerRectangle MCGIntegerRectangleMakeLTRB(int32_t l, int32_t t, int32_t r, int32_t b)
+{
+	return MCGIntegerRectangleMake(l, t, r - l, b - t);
 }
 
 inline bool MCGIntegerRectangleIsEmpty(const MCGIntegerRectangle &p_rect)

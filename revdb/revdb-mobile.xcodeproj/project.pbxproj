@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4D379C0E17141EF400B9037C /* libsqlite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D379BC017141E0900B9037C /* libsqlite.a */; };
 		4D379C0F17141EFF00B9037C /* libmysql.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D379BB617141DFE00B9037C /* libmysql.a */; };
+		4D72497119AC8543000573EB /* libopensslmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D72496E19AC852C000573EB /* libopensslmobile.a */; };
 		4DA0BA4212E841CF00B4F692 /* database.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA0BA3F12E841CF00B4F692 /* database.cpp */; };
 		4DA0BA4312E841CF00B4F692 /* dbdrivercommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA0BA4012E841CF00B4F692 /* dbdrivercommon.cpp */; };
 		4DA0BA4412E841CF00B4F692 /* revdb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA0BA4112E841CF00B4F692 /* revdb.cpp */; };
@@ -71,6 +72,20 @@
 			remoteGlobalIDString = 4D7EFD7912E72ABA00D67888;
 			remoteInfo = mysql;
 		};
+		4D72496D19AC852C000573EB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D72496819AC852C000573EB /* libopenssl-mobile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DD3E0181040BB5D00CAC7EF;
+			remoteInfo = opensslmobile;
+		};
+		4D72496F19AC852C000573EB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D72496819AC852C000573EB /* libopenssl-mobile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DBF5ABF1802C0E7009CAB2E;
+			remoteInfo = revsecurity;
+		};
 		4DA0B9E512E8416E00B4F692 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DA0B9E112E8416E00B4F692 /* libexternal-mobile.xcodeproj */;
@@ -91,6 +106,7 @@
 		4D08A42C138FFCCD0081F990 /* revdb.ios */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = revdb.ios; sourceTree = "<group>"; };
 		4D08A42D138FFCE60081F990 /* dbsqlite.ios */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dbsqlite.ios; sourceTree = "<group>"; };
 		4D08A42E138FFD090081F990 /* dbmysql.ios */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dbmysql.ios; sourceTree = "<group>"; };
+		4D72496819AC852C000573EB /* libopenssl-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libopenssl-mobile.xcodeproj"; path = "../thirdparty/libopenssl/libopenssl-mobile.xcodeproj"; sourceTree = "<group>"; };
 		4D7EFD6312E72A5A00D67888 /* Debug Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Debug Mobile.xcconfig"; path = "../rules/Debug Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4D7EFD6412E72A5A00D67888 /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../rules/Release Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4D7EFD6512E72A5A00D67888 /* Global Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Global Mobile.xcconfig"; path = "../rules/Global Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
@@ -139,6 +155,7 @@
 			files = (
 				4DA0BD1712E879F100B4F692 /* libexternal.a in Frameworks */,
 				4D379C0F17141EFF00B9037C /* libmysql.a in Frameworks */,
+				4D72497119AC8543000573EB /* libopensslmobile.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -157,6 +174,15 @@
 			isa = PBXGroup;
 			children = (
 				4D379BC017141E0900B9037C /* libsqlite.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4D72496919AC852C000573EB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D72496E19AC852C000573EB /* libopensslmobile.a */,
+				4D72497019AC852C000573EB /* librevsecurity.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -197,6 +223,7 @@
 		4DA0B9D312E8415600B4F692 /* References */ = {
 			isa = PBXGroup;
 			children = (
+				4D72496819AC852C000573EB /* libopenssl-mobile.xcodeproj */,
 				4DA0BD3212E87A1C00B4F692 /* libmysql-mobile.xcodeproj */,
 				4DA0BA9312E842FA00B4F692 /* libsqlite-mobile.xcodeproj */,
 				4DA0B9E112E8416E00B4F692 /* libexternal-mobile.xcodeproj */,
@@ -323,6 +350,8 @@
 /* Begin PBXProject section */
 		4D7EFD3A12E72A1C00D67888 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4D7EFD3D12E72A1C00D67888 /* Build configuration list for PBXProject "revdb-mobile" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -344,6 +373,10 @@
 				{
 					ProductGroup = 4D379BB217141DFE00B9037C /* Products */;
 					ProjectRef = 4DA0BD3212E87A1C00B4F692 /* libmysql-mobile.xcodeproj */;
+				},
+				{
+					ProductGroup = 4D72496919AC852C000573EB /* Products */;
+					ProjectRef = 4D72496819AC852C000573EB /* libopenssl-mobile.xcodeproj */;
 				},
 				{
 					ProductGroup = 4D379BBC17141E0900B9037C /* Products */;
@@ -372,6 +405,20 @@
 			fileType = archive.ar;
 			path = libsqlite.a;
 			remoteRef = 4D379BBF17141E0900B9037C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D72496E19AC852C000573EB /* libopensslmobile.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libopensslmobile.a;
+			remoteRef = 4D72496D19AC852C000573EB /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D72497019AC852C000573EB /* librevsecurity.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = librevsecurity.a;
+			remoteRef = 4D72496F19AC852C000573EB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		4DA0B9E612E8416E00B4F692 /* libexternal.a */ = {

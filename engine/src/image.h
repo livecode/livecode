@@ -462,16 +462,18 @@ public:
 
 	uint32_t getcompression();
 
-	// IM-2014-05-12: [[ ImageRepUpdate ]] Returns a bitmap version of the image at the requested scale.
+	// IM-2014-05-12: [[ ImageRepUpdate ]] Returns a bitmap version of the image at the requested size.
+	// IM-2024-09-02: [[ Bug 13295 ]] Replace scale param with optional target size.
 	// Release the bitmap with unlockbitmap() once done with it.
-	bool lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat p_scale, MCImageBitmap *&r_bitmap);
+	bool lockbitmap(bool p_premultiplied, bool p_update_transform, const MCGIntegerSize *p_size, MCImageBitmap *&r_bitmap);
 
 	// get the current (transformed) image data
 	bool lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform = true);
 	void unlockbitmap(MCImageBitmap *p_bitmap);
 	
-	// IM-2013-07-26: [[ ResIndependence ]] create bitmap copy of transformed image at the given scale
-	bool copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *&r_bitmap);
+	// IM-2013-07-26: [[ ResIndependence ]] create bitmap copy of transformed image.
+	// IM-2014-09-02: [[ Bug 13295 ]] Remove unused scale param.
+	bool copybitmap(bool p_premultiplied, MCImageBitmap *&r_bitmap);
 
 	// IM-2013-07-19: [[ ResIndependence ]] get image source size (in points)
 	bool getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
@@ -547,7 +549,8 @@ public:
 	bool getclipboardtext(MCDataRef& r_data);
 	
 	// MW-2011-09-13: [[ Masks ]] Updated to return a 'MCWindowMask'
-	MCWindowShape *makewindowshape(void);
+	// IM-2014-10-22: [[ Bug 13746 ]] Add size parameter to allow scaled window shapes
+	MCWindowShape *makewindowshape(const MCGIntegerSize &p_size);
 	
 #if defined(_MAC_DESKTOP)
 	CGImageRef makeicon(uint4 p_width, uint4 p_height);

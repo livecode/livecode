@@ -1132,45 +1132,20 @@ void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInt
 
 void MCField::DoSetTabStops(MCExecContext& ctxt, bool is_relative, uindex_t p_count, uinteger_t *p_tabs)
 {
-    MCAutoArray<uint2> t_new_tabs;
     int4 t_oldx = textx;
     int4 t_oldy = texty;
     
-    uint2 *t_new = nil;
-    uindex_t t_new_count = 0;
+    uint2 *t_new_tabs = nil;
+    uindex_t t_count = 0;
     
-    uint2 t_previous_tab_stop;
-    t_previous_tab_stop = 0;
-    
-    for (uindex_t i = 0; i < p_count; i++)
-    {
-        if (p_tabs[i] > 65535)
-        {
-            ctxt . LegacyThrow(EE_PROPERTY_NAN);
-            return;
-        }
-
-        // AL-2014-06-25: [[ Bug 12697]] If a tabStop is smaller than the preceding one,
-        //  then calculate as relative distance.
-        if (is_relative || p_tabs[i] < t_previous_tab_stop)
-        {
-            t_new_tabs . Push(p_tabs[i] + t_previous_tab_stop);
-            t_previous_tab_stop = t_new_tabs[i];
-        }
-        else
-            t_new_tabs . Push(p_tabs[i]);
-        
-        t_previous_tab_stop = p_tabs[i];
-    }
-    
-    t_new_tabs . Take(t_new, t_new_count);
+    MCInterfaceTabStopsParse(ctxt, is_relative, p_tabs, p_count, t_new_tabs, t_count);
     
     delete tabs;
     
-    if (t_new != nil)
+    if (t_new_tabs != nil)
     {
-        tabs = t_new;
-        ntabs = t_new_count;
+        tabs = t_new_tabs;
+        ntabs = t_count;
         flags |= F_TABS;
     }
     else
@@ -1266,7 +1241,13 @@ void MCField::GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*
                 break;
         }
         if (theight != height)
-            t_heights . Push(height - theight);
+        {
+            // SN-2014-09-17: [[ Bug 13462 ]] If no break has been found, we return the height of the field
+            if (j)
+                t_heights . Push(height - theight);
+            else
+                t_heights . Push(height);
+        }
     }
     
     t_heights . Take(r_heights, r_count);

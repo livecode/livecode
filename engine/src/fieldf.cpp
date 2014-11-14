@@ -1054,14 +1054,18 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 		{
 			setforeground(dc, DI_BORDER, False);
 			
-			int32_t cy;
-			cy = y + pgheight;
-			while(cy < grect . y + grect . height)
-			{
-				if (y >= grect . y)
-					dc -> drawline(grect . x, cy, grect . x + grect . width, cy);
-				cy += pgheight;
-			}
+            // SN-2014-09-10: [[ Bug 13374 ]] If the last line is hidden, the we take the field's lineheight.
+            if (pgheight == 0)
+                pgheight = fixedheight;
+            
+            int32_t cy;
+            cy = y + pgheight;
+            while(cy < grect . y + grect . height)
+            {
+                if (y >= grect . y)
+                    dc -> drawline(grect . x, cy, grect . x + grect . width, cy);
+                cy += pgheight;
+            }
 		}
 		
 		// MW-2012-03-15: [[ Bug 10069 ]] If we have vGrid set on the field, then render grid lines
@@ -1983,7 +1987,8 @@ void MCField::ffocus(Field_translations function, MCStringRef p_string, KeySym k
 
 void MCField::freturn(Field_translations function, MCStringRef p_string, KeySym key)
 {
-	if (flags & F_AUTO_TAB && cursorrectp.y + (cursorrectp.height << 1) > rect.y + getfheight())
+    // FG-2014-09-30: [[ Bugfix 13548 ]] Use total height of cursor in calculation
+    if (flags & F_AUTO_TAB && cursorrectp.y + ((cursorrects.height + cursorrectp.height) << 1) > rect.y + getfheight())
 		getcard()->kfocusnext(False);
 	else
 	{
@@ -2317,8 +2322,8 @@ void MCField::typetext(MCStringRef newtext)
 	if (MCactivefield == this)
 		unselect(False, True);
 	
-	MCStringRef t_remaining;
-	/* UNCHECKED */ MCStringCreateMutable(0, t_remaining);
+	MCAutoStringRef t_remaining;
+	/* UNCHECKED */ MCStringCreateMutable(0, &t_remaining);
 	if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
 	{
 		uindex_t t_index = 0;
@@ -2327,11 +2332,11 @@ void MCField::typetext(MCStringRef newtext)
 		{
 			// Send the next character in the buffer as a key down event
 			MCAutoStringRef t_string;
-			/* UNCHECKED */ MCStringCopySubstring(newtext, MCRangeMake(t_index, t_length-t_index), &t_string);
-			if (!message_with_valueref_args(MCM_key_down, *t_string))
+			/* UNCHECKED */ MCStringCopySubstring(newtext, MCRangeMake(t_index, 1), &t_string);
+			if (message_with_valueref_args(MCM_key_down, *t_string) != ES_NORMAL)
 			{
 				// Nothing responded to the key; keep it as text
-				/* UNCHECKED */ MCStringAppendChar(t_remaining, MCStringGetCharAtIndex(newtext, t_index));
+				/* UNCHECKED */ MCStringAppendChar(*t_remaining, MCStringGetCharAtIndex(newtext, t_index));
 			}
 			
 			// Key up event then move on
@@ -2340,8 +2345,7 @@ void MCField::typetext(MCStringRef newtext)
 		}	
 		
 		// Only the non-handled keypresses should be processed further
-		MCValueRelease(newtext);
-		MCStringCopyAndRelease(t_remaining, newtext);
+        newtext = *t_remaining;
 	}
 	findex_t oldfocused;
     focusedparagraph->getselectionindex(oldfocused, oldfocused);
@@ -2414,6 +2418,8 @@ void MCField::stopcomposition(Boolean del,Boolean force)
 		replacecursor(True, True);
 	}
 	composelength = 0;
+    // MW-2014-08-18: [[ Bug 13196 ]] Make sure we reset the compose cursor offset.
+    composecursorindex = 0;
 	composing = False;
 }
 
@@ -2431,6 +2437,9 @@ void MCField::deletecomposition()
 		state |= CS_CHANGED;
 	}
 	composelength = 0;
+    
+    // MW-2014-08-18: [[ Bug 13196 ]] Make sure we reset the compose cursor offset.
+    composecursorindex = 0;
 }
 
 Boolean MCField::getcompositionrect(MCRectangle &r, findex_t offset)

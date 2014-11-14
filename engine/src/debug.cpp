@@ -672,29 +672,32 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 		if (t_success)
 			t_success = MCStringDivideAtChar(*t_watch, ',', kMCCompareExact, &t_obj, &t_obj_tail);
 
-		MCAutoStringRef t_express;
-		MCAutoStringRef t_express_tail;
+        // SN-2014-09-18: [[ Bug 13453 ]] The input is object, handler, variable, condition
+		MCAutoStringRef t_hname;
+		MCAutoStringRef t_hname_tail;
 
 		if (t_success)
-			t_success = MCStringDivideAtChar(*t_obj_tail, ',', kMCCompareExact, &t_express, &t_express_tail);
+			t_success = MCStringDivideAtChar(*t_obj_tail, ',', kMCCompareExact, &t_hname, &t_hname_tail);
 
 		MCAutoStringRef t_vname;
-		MCAutoStringRef t_hname;
+		MCAutoStringRef t_express;
 
 		if (t_success)
-			t_success = MCStringDivideAtChar(*t_express_tail, ',', kMCCompareExact, &t_vname, &t_hname);
+			t_success = MCStringDivideAtChar(*t_hname_tail, ',', kMCCompareExact, &t_vname, &t_express);
 
 		MCObjectPtr t_object;
 
+        // SN-2014-09-18: [[ Bug 13453 ]] With an empty string (no watchedVariables anymore), TryToResolveObject fails
 		if (t_success)
-		{
-			MCInterfaceTryToResolveObject(ctxt, *t_obj, t_object);
-
+			t_success = MCInterfaceTryToResolveObject(ctxt, *t_obj, t_object);
+        
+        if (t_success)
+        {
 			// OK-2010-01-14: [[Bug 6506]] - Allow globals in watchedVariables
 			//   If the object and handler are empty we assume its a global, otherwise
 			//   do the previous behavior.
 
-			if (MCStringGetLength(*t_obj) == 0 && MCStringGetLength(*t_hname) == 0 ||
+			if ((MCStringGetLength(*t_obj) == 0 && MCStringGetLength(*t_hname) == 0) ||
 				t_object . object != nil)
 			{
 				Watchvar *t_new_watches;
@@ -754,10 +757,9 @@ bool MCB_unparsewatches(MCStringRef &r_watches)
 				if (t_success)
 					t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].varname);
 
-				if (t_success && MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
-				{
+                // SN-2014-09-18: [[ Bug 13453 ]] A watched variable's expression is never nil
+				if (t_success)
 					t_success = MCListAppend(*t_watched_var, MCwatchedvars[i].expression);
-				}
 
 				if (t_success)
 					t_success = MCListAppend(*t_watches_list, *t_watched_var);

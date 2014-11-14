@@ -31,6 +31,7 @@ public:
 		exp = nil;
 		next = nil;
 		var = nil;
+        container = nil;
 		value . type = kMCExecValueTypeNone;
         value . valueref_value = nil;
 	}
@@ -38,6 +39,8 @@ public:
 	~MCParameter(void)
 	{
 		delete exp;
+        // AL-2014-09-17: [[ Bug 13465 ]] Delete container when parameter is deleted
+        delete container;
 		MCExecTypeRelease(value);
 	}
 
@@ -79,7 +82,8 @@ public:
     Exec_stat eval_argument(MCExecPoint& ep);
 #endif
     MCVariable *eval_argument_var(void);
-
+    MCContainer *eval_argument_container(void);
+    
     bool eval_argument(MCExecContext& ctxt, MCValueRef &r_value);
     bool eval_argument_ctxt(MCExecContext& ctxt, MCExecValue &r_value);
 
@@ -90,6 +94,7 @@ public:
 	void set_argument(MCExecPoint& ep);
 #endif
 	void set_argument_var(MCVariable* var);
+    void set_argument_container(MCContainer* container);
 
 	// Evaluate the value of the given parameter in the context of
 	// <ep>.
@@ -124,6 +129,7 @@ private:
 	// Parameter as value (i.e. value of the argument when
 	// passed to a function/command).
 	MCVariable *var;
+    MCContainer *container;
 	MCExecValue value;
 };
 

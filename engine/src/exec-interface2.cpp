@@ -601,6 +601,42 @@ static MCExecCustomTypeInfo _kMCInterfaceStackFileVersionTypeInfo =
 
 //////////
 
+void MCInterfaceTabStopsParse(MCExecContext& ctxt, bool p_is_relative, uinteger_t* p_tabs, uindex_t p_tab_count, uint2*& r_new_stops, uindex_t& r_new_stop_count)
+{
+    MCAutoArray<uint2> t_new_tabs;
+    
+    uint2 t_previous_tab_stop;
+    t_previous_tab_stop = 0;
+    
+    for (uindex_t i = 0; i < p_tab_count; i++)
+    {
+        if (p_tabs[i] > 65535)
+        {
+            ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            return;
+        }
+        
+        // AL-2014-06-25: [[ Bug 12697 ]] If a tabStop is smaller than the preceding one,
+        //  then calculate as relative distance.
+        if (p_is_relative || p_tabs[i] < t_previous_tab_stop)
+        {
+            t_new_tabs . Push(p_tabs[i] + t_previous_tab_stop);
+            t_previous_tab_stop = t_new_tabs[i];
+        }
+        else
+        {
+            t_new_tabs . Push(p_tabs[i]);
+            // AL-2014-09-10: [[ Bug 13375 ]] Only reset the previous tab stop if this 
+            //  non-relative tab stop was successfully placed at the specified location
+            t_previous_tab_stop = p_tabs[i];
+        }
+    }
+    
+    t_new_tabs . Take(r_new_stops, r_new_stop_count);
+}
+
+//////////
+
 static MCExecEnumTypeElementInfo _kMCInterfaceLookAndFeelElementInfo[] =
 {	
 	{ "Appearance Manager", LF_AM, false },
@@ -1513,8 +1549,16 @@ void MCInterfaceSetDefaultMenubar(MCExecContext& ctxt, MCNameRef p_value)
 																	 
 	if (gptr == NULL)
 	{
-		ctxt . LegacyThrow(EE_PROPERTY_NODEFAULTMENUBAR);
-		return;
+        // AL-2014-10-31: [[ Bug 13884 ]] Resolve chunk properly if the name is not found
+        //  so that setting the defaultMenubar by the long id of a group works.
+        MCObjectPtr t_object;
+        if (!MCInterfaceTryToResolveObject(ctxt, MCNameGetString(p_value), t_object) ||
+            t_object . object -> gettype() != CT_GROUP)
+        {
+            ctxt . LegacyThrow(EE_PROPERTY_NODEFAULTMENUBAR);
+            return;
+        }
+        gptr = (MCGroup *)t_object . object;
 	}
 	
 	MCdefaultmenubar = gptr;
@@ -2457,7 +2501,14 @@ void MCInterfaceEvalAudioClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p
 void MCInterfaceEvalAudioClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
-    t_clip = static_cast<MCStack *>(p_stack . object) -> getAVid(CT_AUDIO_CLIP, p_id);
+    MCStack *t_stack;
+    
+    t_stack = static_cast<MCStack *>(p_stack . object);
+    t_clip = t_stack -> getAVid(CT_AUDIO_CLIP, p_id);
+    
+    // AL-2014-10-21: [[ Bug 13738 ]] Search for audio clip by id if it wasn't attached to the current stack
+    if (t_clip == nil)
+        t_clip = t_stack -> getobjid(CT_AUDIO_CLIP, p_id);
     
     if (t_clip != nil)
     {
@@ -2465,6 +2516,8 @@ void MCInterfaceEvalAudioClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stac
         r_clip . part_id = p_stack . part_id;
         return;
     }
+    
+    
     
     ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
 }
@@ -2506,7 +2559,14 @@ void MCInterfaceEvalVideoClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p
 void MCInterfaceEvalVideoClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
-    t_clip = static_cast<MCStack *>(p_stack . object) -> getAVid(CT_VIDEO_CLIP, p_id);
+    MCStack *t_stack;
+    
+    t_stack = static_cast<MCStack *>(p_stack . object);
+    t_clip = t_stack -> getAVid(CT_VIDEO_CLIP, p_id);
+    
+    // AL-2014-10-21: [[ Bug 13738 ]] Search for video clip by id if it wasn't attached to the current stack
+    if (t_clip == nil)
+        t_clip = t_stack -> getobjid(CT_VIDEO_CLIP, p_id);
     
     if (t_clip != nil)
     {
@@ -3362,7 +3422,8 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
         
         r_mark . start = 0;
         r_mark . finish = MCStringGetLength((MCStringRef)r_mark . text);
-        r_mark . changed = false;
+        // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+        r_mark . changed = 0;
     	return;
     }
     // AL-2014-08-04: [[ Bug 13081 ]] Prevent crash when evaluating non-container chunk

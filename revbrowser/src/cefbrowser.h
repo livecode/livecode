@@ -104,6 +104,9 @@ public:
 	virtual bool GetBorder(void);
 	virtual void SetBorder(bool p_border);
 
+	bool GetOverflowHidden(void);
+	void SetOverflowHidden(bool p_hidden);
+	
 	virtual bool GetScrollbars(void);
 	virtual void SetScrollbars(bool p_scrollbars);
 
@@ -172,7 +175,8 @@ public:
 	CefRefPtr<CefBrowser> GetCefBrowser(void);
 
 	// Browser event handlers
-	void OnCefBrowserCreated(CefRefPtr<CefBrowser> p_browser);
+	virtual void OnCefBrowserCreated(CefRefPtr<CefBrowser> p_browser);
+	virtual void OnCefBrowserClosed(CefRefPtr<CefBrowser> p_browser);
 };
 
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser);

@@ -1,0 +1,1 @@
+# Add Hi-DPI support option to Windows standalone settings dialog.

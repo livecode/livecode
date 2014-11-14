@@ -9,4 +9,16 @@ We have added two new properties to the player object enabling you to customise 
 
 - The **forecolor** of a player is the color of the selected area. The selected area is the area between the selection handles.
 
+We have also added support for getting information about the download progress of a remote multimedia file:
+
+- The **loadedtime** of a player is the time up to which the movie can be played. The download progress is also displayed on the controller well.
+
+You can also query the **status** property of the player. This property can take either of the values:
+- **loading** (for remote multimedia files)
+- **playing**
+- **paused**
+
+A new message is added to the player:
+- The **playRateChanged** message is sent to the player when the rate is changed by the rate scrollbar controller. To enable the rate scrollbar controller, hold shift + click on scrubForward/scrubBack buttons of the player controller.
+
 Note AVFoundation player is supported in OSX 10.8 and above. On systems running OSX 10.6 and 10.7, LiveCode continues to provide player functionality using the QTKit API.

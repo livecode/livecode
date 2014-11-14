@@ -86,6 +86,9 @@ bool MCAndroidPickPhoto(const char *p_source, int32_t p_max_width, int32_t p_max
 	MCAndroidEngineCall("showPhotoPicker", "vs", nil, p_source);
 #endif /* MCMobilePickPhoto */
 	MCAndroidEngineCall("showPhotoPicker", "vs", nil, p_source);
+    // SN-2014-09-03: [[ Bug 13329 ]] MCAndroidPickPhoto's return value is ignored in 6.x,
+    // but not in 7.0 - whence the failure in mobilePickPhoto
+    return true;
 }
 
 static char *s_pick_photo_data = nil;
@@ -109,7 +112,10 @@ static const char *MCPhotoSourceTypeToCString(MCPhotoSourceType p_source)
 }
 
 bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size, MCStringRef& r_result)
-{    
+{
+    // SN-2014-09-03: [[ Bug 13329 ]] We need to initialise the photo_returned variable
+    s_pick_photo_returned = false;
+    
 	if (!MCAndroidPickPhoto(MCPhotoSourceTypeToCString(p_source), p_max_width, p_max_height))
         return false;
     
@@ -132,7 +138,7 @@ bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32
         /* UNCHECKED */MCStringCreateWithCString("cancel", r_result);
 	}
     
-	return ES_NORMAL;
+	return true;
 }
 
 bool MCSystemCanAcquirePhoto(MCPhotoSourceType p_source)

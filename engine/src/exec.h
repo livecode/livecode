@@ -290,7 +290,8 @@ struct MCPropertyInfo
     MCPropertyInfoChunkType chunk_type;
 };
 
-void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_start, int32_t& x_finish, uint32_t p_start, uint32_t p_count);
+// SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+void MCExecResolveCharsOfField(MCExecContext& ctxt, MCField *p_field, uint32_t p_part, MCMarkedText p_mark, int32_t& r_start, int32_t& r_finish);
 
 template<typename O, typename A, void (O::*Method)(MCExecContext&, A)> inline void MCPropertyObjectThunk(MCExecContext& ctxt, MCObjectPtr *obj, A arg)
 {
@@ -320,7 +321,8 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, uint32_t, int
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -339,7 +341,8 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, u
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -358,7 +361,8 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, u
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -377,7 +381,8 @@ template<typename O, typename A, typename B, typename C, void (O::*Method)(MCExe
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -396,7 +401,8 @@ template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, M
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -415,7 +421,8 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, ui
     {
         t_si = 0;
         t_ei = INT32_MAX;
-        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+        // SN-2014-09-02: [[ Bug 13314 ]] Added the mark as a parameter, to allow the changes of a mark to taken in account.
+        MCExecResolveCharsOfField(ctxt, (MCField *)obj -> object, obj -> part_id, obj -> mark, t_si, t_ei);
     }
     else
     {
@@ -766,6 +773,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 #define DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(prop, type, obj, tag) \
 { prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, GetEffective##tag), nil, true, false, kMCPropertyInfoChunkTypeNone },
+
+#define DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectListThunkSet##type(obj, Set##tag), true, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_WO_OBJ_CHUNK_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectThunkSet##type(ObjectChunk, obj, Set##tag##OfCharChunk), false, false, true },
@@ -1743,7 +1753,10 @@ void MCLogicEvalIsNotABoolean(MCExecContext& ctxt, MCValueRef p_value, bool& r_r
 extern MCExecMethodInfo *kMCArraysEvalKeysMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalExtentsMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecCombineMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecCombineByRowOrColumnMethodInfo;
+// SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
+// different from combining by row
+extern MCExecMethodInfo *kMCArraysExecCombineByRowMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecCombineByColumnMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecCombineAsSetMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecSplitMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecSplitByColumnMethodInfo;
@@ -1762,7 +1775,10 @@ extern MCExecMethodInfo *kMCArraysEvalIsNotAmongTheKeysOfMethodInfo;
 void MCArraysEvalKeys(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysEvalExtents(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCStringRef& r_string);
-void MCArraysExecCombineByRowOrColumn(MCExecContext& ctxt, MCArrayRef p_array, bool p_is_row, MCStringRef &r_string);
+// SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
+// different from combining by row
+void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef &r_string);
+void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_element_delimiter, MCStringRef& r_string);
 void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCArrayRef& r_array);
 void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArrayRef& r_array);
@@ -2042,6 +2058,7 @@ extern MCExecMethodInfo *kMCStringsExecFilterWildcardMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterRegexMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterWildcardIntoItMethodInfo;
 extern MCExecMethodInfo *kMCStringsExecFilterRegexIntoItMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalBidiDirectionMethodInfo;
 
 extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByRangeMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalLinesOfTextByExpressionMethodInfo;
@@ -2065,11 +2082,13 @@ void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef
 void MCStringsEvalNumToChar(MCExecContext& ctxt, uinteger_t codepoint, MCValueRef& r_character);
 void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);
 void MCStringsEvalNumToUnicodeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);
-void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef character, uinteger_t& r_codepoint);
+void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef character, MCValueRef& r_codepoint);
 void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
 void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
-void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_byte);
+void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCDataRef& r_byte);
 void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef byte, integer_t& r_codepoint);
+
+bool MCStringsEvalTextEncoding(MCStringRef encoding, MCStringEncoding& r_encoding);
 
 void MCStringsEvalTextDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCDataRef p_encoded_text, MCStringRef& r_decoded_text);
 void MCStringsEvalTextEncode(MCExecContext& ctxt, MCStringRef p_encoding, MCStringRef p_decoded_text, MCDataRef& r_encoded_text);
@@ -2143,6 +2162,8 @@ void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_string, bool& r_resu
 void MCStringsEvalIsNotAscii(MCExecContext& ctxt, MCValueRef p_string, bool& r_result);
 
 void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count);
+
+void MCStringsEvalBidiDirection(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_result);
 
 void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_eval_mutable, MCStringRef& x_string);
 void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, bool p_eval_mutable, MCStringRef &x_string);
@@ -2932,6 +2953,7 @@ void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *
 void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_target, MCPoint *p_at, int p_mode);
 
 void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCStack *p_owner, MCStringRef p_new_name, bool p_force_invisible);
+void MCInterfaceExecCreateScriptOnlyStack(MCExecContext& ctxt, MCStringRef p_new_name);
 void MCInterfaceExecCreateStackWithGroup(MCExecContext& ctxt, MCGroup *p_group_to_copy, MCStringRef p_new_name, bool p_force_invisible);
 void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, bool p_force_invisible);
 void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, int p_type, MCGroup *p_container, bool p_force_invisible);
@@ -3367,6 +3389,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceImagePaintCompressionTypeInfo;
 
 ///////////
 
+extern MCExecEnumTypeInfo *kMCInterfacePlayerStatusTypeInfo;
 extern MCExecSetTypeInfo *kMCInterfaceMediaTypesTypeInfo;
 extern MCExecCustomTypeInfo *kMCMultimediaTrackTypeInfo;
 extern MCExecCustomTypeInfo *kMCMultimediaQTVRConstraintsTypeInfo;
@@ -3753,7 +3776,7 @@ void MCEngineSetRecursionLimit(MCExecContext& ctxt, uinteger_t p_value);
 void MCEngineGetAddress(MCExecContext& ctxt, MCStringRef &r_value);
 void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value);
 
-void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedText& r_mark);
+void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, bool p_data, MCMarkedText& r_mark);
 
 void MCEngineEvalRandomUuid(MCExecContext& ctxt, MCStringRef& r_uuid);
 void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
@@ -4509,6 +4532,8 @@ void MCLegacyGetStackFiles(MCExecContext& ctxt, MCStringRef& r_value);
 void MCLegacySetStackFiles(MCExecContext& ctxt, MCStringRef value);
 
 void MCLegacyGetMenuBar(MCExecContext& ctxt, MCStringRef& r_value);
+// SN-2014-09-01: [[ Bug 13300 ]] Updated 'set the menubar' to have a (useless) setter at the global scope
+void MCLegacySetMenuBar(MCExecContext& ctxt, MCStringRef p_value);
 
 void MCLegacyGetEditMenus(MCExecContext& ctxt, bool& r_value);
 void MCLegacySetEditMenus(MCExecContext& ctxt, bool value);
@@ -4743,7 +4768,8 @@ void MCPrintingGetPrintJobCollate(MCExecContext& ctxt, bool &r_value);
 void MCPrintingSetPrintJobCollate(MCExecContext& ctxt, bool p_value);
 void MCPrintingGetPrintJobColor(MCExecContext& ctxt, bool &r_value);
 void MCPrintingSetPrintJobColor(MCExecContext& ctxt, bool p_value);
-void MCPrintingGetPrintJobPage(MCExecContext& ctxt, integer_t &r_value);
+// SN-2014-09-17: [[ Bug 13467 ]] PrintPageNumber may return empty
+void MCPrintingGetPrintJobPage(MCExecContext& ctxt, integer_t *&r_value);
 
 void MCPrintingGetPrintCardBorders(MCExecContext& ctxt, bool &r_card_borders);
 void MCPrintingSetPrintCardBorders(MCExecContext& ctxt, bool p_card_borders);
@@ -5068,6 +5094,8 @@ extern MCExecMethodInfo *kMCSensorGetDetailedRotationRateOfDeviceMethodInfo;
 extern MCExecMethodInfo *kMCSensorGetRotationRateOfDeviceMethodInfo;
 extern MCExecMethodInfo *kMCSensorGetLocationCalibrationMethodInfo;
 extern MCExecMethodInfo *kMCSensorSetLocationCalibrationMethodInfo;
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+extern MCExecMethodInfo *kMCSensorSetLocationAuthorizationStatusMethodInfo;
 
 void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely);
 void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor);
@@ -5082,6 +5110,8 @@ void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_
 void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotation_rate);
 void MCSensorSetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t p_timeout);
 void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeout);
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+void MCSensorGetLocationAuthorizationStatus(MCExecContext& ctxt, MCStringRef &r_status);
 
 //////////
 

@@ -528,10 +528,13 @@ void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool itali
         // MM-2012-03-06: Check to see if we have a custom font of the given style and name available
         if (!create_font_face_from_custom_font_name_and_style(name, bold, italic, t_font->typeface))
         {
-            char *t_name;
-            /* UNCHECKED */ MCStringConvertToCString(name, t_name);
-			/* UNCHECKED */ MCAndroidTypefaceCreateWithName(t_name, bold, italic, t_font->typeface);
-            delete t_name;
+            MCAutoStringRefAsCString t_name;
+            /* UNCHECKED */ t_name . Lock(name);
+            
+            // AL-2014-09-10: [[ Bug 13335 ]] If the font does not exist, fall back to the default family
+            //  but retain the styling.
+			if (!MCAndroidTypefaceCreateWithName(*t_name, bold, italic, t_font->typeface))
+                MCAndroidTypefaceCreateWithName(nil, bold, italic, t_font->typeface);
         }
         
 		MCAssert(t_font->typeface != NULL);

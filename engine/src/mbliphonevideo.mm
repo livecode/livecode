@@ -64,7 +64,7 @@ static NSObject *s_movie_player_delegate = nil;
 	UIControl *m_overlay;
 }
 
-- (id)init;
+- (id)initWithPlayer;
 - (void)dealloc;
 
 - (void)begin: (bool)p_add_overlay;
@@ -80,7 +80,8 @@ static NSObject *s_movie_player_delegate = nil;
 
 @implementation FullscreenMovieDelegate
 
-- (id)init
+// AL-2014-09-09: [[ Bug 13354 ]] Replace deprecated MPMoviePlayerContentPreloadDidFinishNotification
+- (id)initWithPlayer: (MPMoviePlayerController *)p_player
 {
 	self = [super init];
 	if (self == nil)
@@ -90,11 +91,11 @@ static NSObject *s_movie_player_delegate = nil;
 											 selector:@selector(movieFinished:)
 												 name:MPMoviePlayerPlaybackDidFinishNotification 
 											   object:nil];
-	
+
 	[[NSNotificationCenter defaultCenter] addObserver:self 
 											 selector:@selector(moviePreloadFinished:)
-												 name:MPMoviePlayerContentPreloadDidFinishNotification 
-											   object:nil];
+												 name:MPMoviePlayerLoadStateDidChangeNotification 
+											   object:p_player];
 	
 	m_running = true;
 	m_overlay = nil;
@@ -159,7 +160,8 @@ static NSObject *s_movie_player_delegate = nil;
 
 - (void)moviePreloadFinished: (NSNotification *) p_notification
 {
-	if ([[p_notification userInfo] objectForKey: @"error"] != nil)
+	// AL-2014-09-09: [[ Bug 13354 ]] Replace deprecated MPMoviePlayerContentPreloadDidFinishNotification
+	if ([[p_notification object] loadState] & MPMovieLoadStateUnknown)
 	{
 		m_running = false;
 		
@@ -240,7 +242,7 @@ static void play_fullscreen_movie_prewait(void *p_context)
 	
 	configure_playback_range(ctxt -> movie_player);
 	
-	ctxt -> delegate = [[FullscreenMovieDelegate alloc] init];
+	ctxt -> delegate = [[FullscreenMovieDelegate alloc] initWithPlayer:ctxt -> movie_player];
 	
 	// Present the view controller and get the delegate to setup its overlay
 	// if needed.

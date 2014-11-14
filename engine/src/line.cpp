@@ -75,7 +75,7 @@ MCLine::~MCLine()
 	MCBlock *t_block;
 	t_block = p_first;
 	
-	int4 t_frontier_width;
+	coord_t t_frontier_width;
 	t_frontier_width = 0;
 
 	MCBlock *t_break_block;
@@ -474,7 +474,8 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
 
 uint2 MCLine::getwidth()
 {
-	return width;
+    // AL-2014-10-21: [[ Bug 13403 ]] Returned line width as integer needs to be rounded up
+	return ceil(width);
 }
 
 uint2 MCLine::getheight()
@@ -521,12 +522,16 @@ void MCLine::SegmentLine()
     {
         // Does this block contain a tab?
         uindex_t t_offset;
-        if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', bptr->GetOffset(), kMCStringOptionCompareExact, t_offset)
-            && t_offset < bptr->GetOffset()+bptr->GetLength())
+        // AL-2014-08-21: [[ Bug 13247 ]] Don't repeatedly search to the end of the paragraph to find tab chars.
+        //  The search should only be in the range of the block.
+        if (MCStringFirstIndexOfCharInRange(parent->GetInternalStringRef(), '\t', MCRangeMake(bptr -> GetOffset(), bptr -> GetLength()), kMCStringOptionCompareExact, t_offset))
         {
-            // Split the block at the tab
-            // Note that we want to create empty blocks after the tab
-            if ((t_offset + 1) <= bptr->GetOffset() + bptr->GetLength())
+            // Split the block at the tab unless it would create an empty block
+            // FG-2014-10-31: [[ Bugfix 13887 ]]
+            // There was previously a comment here saying that creating the
+            // empty block was a good thing. I have no idea why I wrote that...
+            // Removed that behaviour as it breaks some things.
+            if ((t_offset + 1) < bptr->GetOffset() + bptr->GetLength())
             {
                 bptr->split(t_offset + 1);
                 if (bptr == lastblock)
@@ -699,7 +704,7 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
     // Non-fixed tabstops are calculated as offsets from the last tab position
     // while fixed tabstops are always at the same position, regardless of the
     // length of text between the stops.
-    int16_t t_last_segment_end = 0;
+    coord_t t_last_segment_end = 0;
     
     // We need to know whether the tabstops are fixed or flexible
     Boolean t_fixed_tabs;
@@ -714,7 +719,7 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
     {
         // Get the starting position for this segment
         int16_t t_segment_pos;
-        t_segment_pos = CalculateTabPosition(t_segments, t_last_segment_end);
+        t_segment_pos = CalculateTabPosition(t_segments, ceilf(t_last_segment_end));
         
         // Set the alignment of the segment.
         // This is done early to ensure all segments have an alignment set.
@@ -732,12 +737,13 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         
         // Fitting has been completed; get the width of the segment so that
         // the segment boundaries can be calculated
-        int16_t t_segment_width;
+        // AL-2014-10-28: [[ Bug 13829 ]] Calculate line width as floating point
+        coord_t t_segment_width;
         t_segment_width = sgptr->GetContentLength();
 
         // Position at which the next segment will be placed
-        int16_t t_next_segment_pos;
-        t_next_segment_pos = CalculateTabPosition(t_segments + 1, t_segment_pos + t_segment_width);
+        coord_t t_next_segment_pos;
+        t_next_segment_pos = CalculateTabPosition(t_segments + 1, t_segment_pos + ceilf(t_segment_width));
         
         // The last segment of the line should be no larger than its contents
         // (because it doesn't contain the whitespace of another tab) unless it
@@ -756,7 +762,7 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         // post-processing will be required to fix up the boundaries.
         int16_t t_left, t_right, t_top, t_bottom;
         t_left = t_segment_pos;
-        t_right = t_next_segment_pos;
+        t_right = ceilf(t_next_segment_pos);
         t_top = 0;
         t_bottom = 0;
         sgptr->SetBoundaries(t_left, t_right, t_top, t_bottom);

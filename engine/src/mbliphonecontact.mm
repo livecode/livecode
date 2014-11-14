@@ -635,13 +635,52 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void requestAuthorization(ABAddressBookRef &x_address_book)
+{
+#ifdef __IPHONE_6_0
+    ABAuthorizationStatus t_status = ABAddressBookGetAuthorizationStatus();
+    
+    // ABAddressBookGetAuthorizationStatus() returns kABAuthorizationStatusNotDetermined *only* the first time the app is installed. The user will only be prompted the first time access is requested; any subsequent calls will use the existing permissions.
+    if (t_status == kABAuthorizationStatusNotDetermined)
+    {
+        __block bool t_blocking;
+        t_blocking = true;
+        ABAddressBookRequestAccessWithCompletion(x_address_book, ^(bool granted, CFErrorRef error) {
+            MCIPhoneRunBlockOnMainFiber(^(void){
+                
+                t_blocking = false;
+            });
+        });
+        
+        while (t_blocking)
+            MCscreen -> wait(1.0, False, True);
+    }
+#endif
+}
+
 bool MCContactAddContact(MCArrayRef p_contact, int32_t& r_chosen)
 {
     bool t_success = true;
 	
     ABAddressBookRef t_address_book = nil;
+    
+    // PM-2014-10-08: [[ Bug 13621 ]] ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
+    if (MCmajorosversion < 600)
+    {
+        // Fetch the address book
+        t_address_book = ABAddressBookCreate();
+    }
+    else
+    {
+#ifdef __IPHONE_6_0
+        // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
+        t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
+        requestAuthorization(t_address_book);
+#endif
+    }
+
 	if (t_success)
-		t_success = nil != (t_address_book = ABAddressBookCreate());
+		t_success = (nil != t_address_book);
 	
 	ABRecordRef t_contact = nil;
 	if (t_success)
@@ -675,7 +714,23 @@ bool MCContactDeleteContact(int32_t p_person_id)
 {
 	bool t_success = true;
 	
-    ABAddressBookRef t_address_book = ABAddressBookCreate();
+    ABAddressBookRef t_address_book = nil;
+    
+    // PM-2014-10-08: [[ Bug 13621 ]] ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
+    if (MCmajorosversion < 600)
+    {
+        // Fetch the address book
+        t_address_book = ABAddressBookCreate();
+    }
+    else
+    {
+#ifdef __IPHONE_6_0
+        // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
+        t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
+        requestAuthorization(t_address_book);
+#endif
+    }
+    
     ABRecordRef t_contact = ABAddressBookGetPersonWithRecordID (t_address_book, p_person_id);
 	
 	t_success = t_contact != nil && t_address_book != nil;
@@ -698,9 +753,24 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		r_chosen = nil;
 		return true;
 	}
-	
-    // Fetch the address book
-    ABAddressBookRef t_address_book = ABAddressBookCreate();
+    
+    ABAddressBookRef t_address_book = nil;
+    
+    // PM-2014-10-08: [[ Bug 13621 ]] ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
+    if (MCmajorosversion < 600)
+    {
+        // Fetch the address book
+        t_address_book = ABAddressBookCreate();
+    }
+    else
+    {
+#ifdef __IPHONE_6_0
+        // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
+        t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
+        requestAuthorization(t_address_book);
+#endif
+    }
+    
 	t_success = t_address_book != nil;
 	
 	CFStringRef t_person_name = nil;
@@ -768,7 +838,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 		// Returned values.
 		m_selected_person = kABRecordInvalidID;
-	}
+    }
     
 	return self;
 }
@@ -859,18 +929,33 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		// Show the picker
 		m_running = true;
 		
-		[MCIPhoneGetViewController() presentModalViewController:m_pick_contact animated:YES];
+        if (MCmajorosversion >= 500)
+        {
+            [MCIPhoneGetViewController() presentViewController:m_pick_contact animated:YES completion:nil];
+        }
+        else
+            [MCIPhoneGetViewController() presentModalViewController:m_pick_contact animated:YES];
 	}
 }
 
 -(bool)showPickContact: (int32_t&) r_chosen
 {
+    // PM-2014-11-10: [[ Bug 13979 ]] On iOS 8, we need to request authorization to be able to get a record identifier
+    // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
+    if (MCmajorosversion >= 800)
+    {
+        ABAddressBookRef t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
+        requestAuthorization(t_address_book);
+    }
+
 	MCIPhoneCallSelectorOnMainFiber(self, @selector(doShowPickContact));
 	
     while (m_running)
 		MCscreen -> wait(1.0, False, True);
 	
-	[self dismissController];
+    // PM-2014-10-10: [[ Bug 13639 ]] On iOS 8, the ABPeoplePickerNavigationController is dismissed in peoplePickerNavigationController:didSelectPerson. If [self dismissController] is called, then the completion block of dismissViewControllerAnimated:completion:^(){} in doDismissController is never called. So m_finish never becomes true and the app freezes
+    if (MCmajorosversion < 800)
+        [self dismissController];
 	
     // Return the result
     if (m_selected_person == kABRecordInvalidID)
@@ -879,6 +964,25 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
         r_chosen = m_selected_person;
 	
 	return m_success;
+}
+
+// PM-2014-10-10: [[ Bug 13639 ]] In iOS 8, this is the replacement for peoplePickerNavigationController:shouldContinueAfterSelectingPerson
+// Called after a person has been selected by the user. It seems that it is also dismissing the ABPeoplePickerNavigationController (m_pick_contact), so we should not call [self dismissController] in showPickContact.
+- (void)peoplePickerNavigationController:(ABPeoplePickerNavigationController*)peoplePicker didSelectPerson:(ABRecordRef)person;
+{
+    if (person != NULL)
+        m_selected_person = ABRecordGetRecordID(person);
+    m_running = false;
+    return;
+}
+
+
+- (void)peoplePickerNavigationController:(ABPeoplePickerNavigationController *)peoplePicker didSelectPerson:(ABRecordRef)person property:(ABPropertyID)property identifier:(ABMultiValueIdentifier)identifier
+{
+    if (person != NULL)
+        m_selected_person = ABRecordGetRecordID(person);
+    m_running = false;
+    return;
 }
 
 - (BOOL)peoplePickerNavigationController:(ABPeoplePickerNavigationController *)peoplePicker shouldContinueAfterSelectingPerson:(ABRecordRef)person
@@ -944,7 +1048,23 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 	t_person_id = [personId intValue];
 	
     ABAddressBookRef t_address_book = nil;
-	m_success = nil != (t_address_book = ABAddressBookCreate());
+    
+    // ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
+    if (MCmajorosversion < 600)
+    {
+        // Fetch the address book
+        t_address_book = ABAddressBookCreate();
+    }
+    else
+    {
+#ifdef __IPHONE_6_0
+        // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
+        t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
+        requestAuthorization(t_address_book);
+#endif
+    }
+    
+    m_success = t_address_book != nil;
 
     ABRecordRef t_person = ABAddressBookGetPersonWithRecordID (t_address_book, t_person_id);
 	if (t_person != nil)
@@ -1297,7 +1417,23 @@ bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef &r_contact_data)
 	bool t_success = true;
 	
     ABAddressBookRef t_address_book = nil;
-	t_success = nil != (t_address_book = ABAddressBookCreate());
+    
+    // PM-2014-10-08: [[ Bug 13621 ]] ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
+    if (MCmajorosversion < 600)
+    {
+        // Fetch the address book
+        t_address_book = ABAddressBookCreate();
+    }
+    else
+    {
+#ifdef __IPHONE_6_0
+        // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
+        t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
+        requestAuthorization(t_address_book);
+#endif
+    }
+
+	t_success = (nil != t_address_book);
 	
     ABRecordRef t_person = nil;
 	if (t_success)

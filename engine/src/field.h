@@ -172,6 +172,8 @@ typedef bool (*MCFieldExportCallback)(void *context, MCFieldExportEventType even
 
 struct MCInterfaceFieldRanges;
 struct MCInterfaceFieldRange;
+// SN-2014-11-04: [[ Bug 13934 ]] Add forward declaration for the friends function of MCField
+struct MCFieldLayoutSettings;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -247,14 +249,10 @@ class MCField : public MCControl
 	static MCObjectPropertyTable kPropertyTable;
 public:
 
-    template<typename T>
-    friend void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, void (MCParagraph::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value);
-
-    template <typename T>
-    friend void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, void (MCBlock::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value);
-    
-    template <typename T>
-    friend void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, MCNameRef index, void (MCBlock::*p_setter)(MCExecContext&, MCNameRef, typename T::arg_type), typename T::arg_type p_value);
+    // SN-2014-11-04: [[ Bug 13934 ]] Refactor the laying out the field when setting properties
+    friend MCParagraph* PrepareLayoutSettings(bool all, MCField *p_field, uint32_t p_part_id, findex_t &si, findex_t &ei, MCFieldLayoutSettings &r_layout_settings);
+    friend void LayoutParagraph(MCParagraph *p_paragraph, MCFieldLayoutSettings &x_settings);
+    friend void FinishLayout(MCFieldLayoutSettings &x_settings);
 
 	MCField();
 	MCField(const MCField &fref);

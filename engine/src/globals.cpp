@@ -496,6 +496,7 @@ MCThreadMutexRef MCpatternmutex = NULL;
 MCThreadMutexRef MCimagerepmutex = NULL;
 MCThreadMutexRef MCfieldmutex = NULL;
 MCThreadMutexRef MCthememutex = NULL;
+MCThreadMutexRef MCgraphicmutex = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -535,8 +536,14 @@ void X_clear_globals(void)
 	MCraisemenus = True;
 	MCraisepalettes = True;
 	MCsystemmodals = True;
-	MCactivatepalettes = True;
-	MChidepalettes = False;
+    MCactivatepalettes = True;
+    // SN-2014-10-2-: [[ Bug 13684 ]] Bugfix brought in 7.0 initialisation
+    // MW-2007-07-05: [[ Bug 2288 ]] Default for hidePalettes is not system-standard
+#ifdef _MACOSX
+	MChidepalettes = True;
+#else
+    MChidepalettes = False;
+#endif
 	MCdontuseNS = False;
 	MCdontuseQT = False;
 	MCdontuseQTeffects = False;
@@ -835,6 +842,7 @@ void X_clear_globals(void)
     MCimagerepmutex = NULL;
     MCfieldmutex = NULL;
     MCthememutex = NULL;
+    MCgraphicmutex = NULL;
 
 #ifdef _ANDROID_MOBILE
     extern void MCAndroidMediaPickInitialize();
@@ -887,6 +895,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     /* UNCHECKED */ MCThreadMutexCreate(MCimagerepmutex);
     /* UNCHECKED */ MCThreadMutexCreate(MCfieldmutex);
     /* UNCHECKED */ MCThreadMutexCreate(MCthememutex);
+    /* UNCHECKED */ MCThreadMutexCreate(MCgraphicmutex);
     
     ////
     
@@ -1033,7 +1042,13 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		MCdispatcher -> setfontattrs(MCSTR("Tahoma"), 11, FA_DEFAULT_STYLE);
 	}
 #elif defined(TARGET_PLATFORM_MACOS_X)
-	MCdispatcher -> setfontattrs(MCSTR("Lucida Grande"), 11, FA_DEFAULT_STYLE);
+    if (MCmajorosversion < 0x10A0)
+        MCdispatcher -> setfontattrs(MCSTR("Lucida Grande"), 11, FA_DEFAULT_STYLE);
+    else
+    {
+        MCdispatcher -> setfontattrs(MCSTR("Helvetica Neue"), 11, FA_DEFAULT_STYLE);
+        MCttfont = MCSTR("Helvetica Neue");
+    }
 #elif defined(TARGET_PLATFORM_LINUX)
 	MCdispatcher -> setfontattrs(MCSTR("Helvetica"), 12, FA_DEFAULT_STYLE);
 #else
@@ -1291,6 +1306,7 @@ int X_close(void)
     MCThreadMutexRelease(MCimagerepmutex);
     MCThreadMutexRelease(MCfieldmutex);
     MCThreadMutexRelease(MCthememutex);
+    MCThreadMutexRelease(MCgraphicmutex);
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions

@@ -18,9 +18,9 @@
 
 	<examples>
 <example>revBrowserSet tBrowserId, "url", "http://www.runrev.com"</example>
-<example><p>answer file "Please choose a file to display"</p><p>if the
-result is not "cancel" then</p><p>  put it into tFile</p><p>  put
-revBrowserSet tBrowserID,"url","file://" &amp; tFile     </p><p>end
+<example><p>answer file "Please choose a file to display"</p><p>if theresult
+is not "cancel" then</p><p>  put it into tFile</p><p>  put revBrowserSet
+tBrowserID,"url","file://" &amp; tFile     </p><p>end
 if</p></example>
 	</examples>
 
@@ -183,7 +183,9 @@ stack</description>
 
 	<value>The <b>revBrowserSet</b> command puts empty into the result if
 successful. </value>
-	<comments><note> The "advanced" callback messages are: <message tag="browserClick">browserClick</message>, <message tag="browserOut">browserOut</message> and <message tag="browserOver">browserOver</message>. These messages are only sent when
+	<comments><note> The "advanced" callback messages are: <message tag="browserClick">browserClick</message>
+, <message tag="browserOut">browserOut</message> and <message tag="browserOver">browserOver</message>
+. These messages are only sent when
 the "messages" property is set to true. The other callback messages are
 always sent.<p></note><p></p><note> Setting the selected property selects
 the first instance of that text. Setting the property repeatedly to the same

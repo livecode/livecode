@@ -126,6 +126,8 @@ private:
 	}
 };
 
+struct MCMarkImage;
+
 class MCMetaContext: public MCContext
 {
 public:
@@ -241,6 +243,8 @@ private:
 	MCMarkStroke *f_stroke;
 	MCMarkFill *f_fill_foreground;
 	MCMarkFill *f_fill_background;
+    // SN-2014-08-25: [[ Bug 13187 ]] MarkImage added to save the image to be drawn
+    MCMarkImage *f_image;
 	bool f_stroke_used;
 	bool f_fill_foreground_used;
 	bool f_fill_background_used;
@@ -335,6 +339,9 @@ struct MCMarkImage
 
 	// The place to render the top-left of the src rect
 	int2 dx, dy;
+    
+    // SN-2014-08-25: [[ Bug 13187 ]] Added to allow listing of MarkImages
+    MCMarkImage *previous;
 };
 
 struct MCMarkMetafile

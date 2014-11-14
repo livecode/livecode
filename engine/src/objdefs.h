@@ -446,6 +446,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define CS_PAUSED               (1UL << 15)
 #define CS_CLOSING              (1UL << 16)
 #define CS_EXTERNAL_CONTROLLER	(1UL << 17)
+#define CS_CTC_PENDING          (1UL << 18)
 // MCGroup state
 #define CS_NEED_UPDATE          (1UL << 13)
 // Uses CS_HSCROLL 14

@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "exec-interface.h"
+#include "systhreads.h"
+
 
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
 #define GRAPHIC_EXTRA_FILLGRADIENT		(1UL << 1)
@@ -89,8 +91,9 @@ MCPropertyInfo MCGraphic::kProperties[] =
     
     DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LinesOfPoint, MCGraphic, MarkerPoints)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    // AL-2014-09-23: [[ Bug 13521 ]] Mark non-effective versions of properties as such
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
     // SN-2014-06-24: [[ rect_point ]] allow effective [relative] points as read-only
     DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
     DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
@@ -873,8 +876,11 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_poin
 		fakepoint.y = cy + (int2)(sin(iangle) * dy);
 		r_points[i] = fakepoint;
 	}
-	r_points[nsides] = fakepoint;
-	r_point_count = nsides;
+    
+    // SN-2014-11-11: [[ Bug 13974 ]] The last side is linked to the first point, for a
+    // regular polygon.
+	r_points[nsides] = r_points[0];
+	r_point_count = nsides + 1;
 	return (true);
 }
 
@@ -2153,6 +2159,10 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		dc->setlineatts(markerlsize, LineSolid, CapRound, JoinRound);
 		uint2 i;
 		uint2 last = MAXUINT2;
+        
+        // MM-2014-08-20: [[ Bug 13230 ]] Marker points are offset as they are drawn which causes issues with multi-threading.
+        //  Could be refactored so that the offsetting happens in a separate buffer, but for the moment just put locks around it.
+        MCThreadMutexLock(MCgraphicmutex);
 		for (i = 0 ; i < nrealpoints ; i++)
 		{
 			if (realpoints[i].x != MININT2)
@@ -2180,6 +2190,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		if (last != MAXUINT2)
 			MCU_offset_points(markerpoints, nmarkerpoints,
 			                  -realpoints[last].x, -realpoints[last].y);
+        MCThreadMutexUnlock(MCgraphicmutex);
 	}
 	MCStringRef slabel = getlabeltext();
 	if (flags & F_G_SHOW_NAME &&  !MCStringIsEmpty(slabel))

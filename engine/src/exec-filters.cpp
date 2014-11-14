@@ -1004,6 +1004,7 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
                                 
                 done++;
                 offset += count;
+                break;
             }
 		case 'x':
 			if (count == BINARY_NOCOUNT)
@@ -1012,7 +1013,10 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
 				offset = length;
 			else
 				offset += count;
-			break;
+                
+            r_results[t_index] = nil;
+            done++;
+            break;
 		default:
 			ctxt.LegacyThrow(EE_BINARYD_BADFORMAT);
 			return;

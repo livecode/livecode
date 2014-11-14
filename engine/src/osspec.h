@@ -217,14 +217,14 @@ enum MCSPutKind
 	kMCSPutBeforeMessage,
 	
 	kMCSPutOutput,
-	kMCSPutUnicodeOutput,
+	//kMCSPutUnicodeOutput,
 	kMCSPutBinaryOutput,
 	kMCSPutHeader,
 	kMCSPutNewHeader,
 	kMCSPutContent,
-	kMCSPutUnicodeContent,
+	//kMCSPutUnicodeContent,
 	kMCSPutMarkup,
-	kMCSPutUnicodeMarkup
+	//kMCSPutUnicodeMarkup
 };
 
 bool MCS_put(MCExecContext &ctxt, MCSPutKind kind, MCStringRef data);

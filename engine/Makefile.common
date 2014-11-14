@@ -15,7 +15,8 @@ CUSTOM_INCLUDES=\
 CUSTOM_DEPS= libkernel.a libfoundation.a libpng.a libpcre.a libjpeg.a libopenssl.a libgraphics.a libskia.a $(MODE_DEPS) 
 
 CUSTOM_LIBS=$(MODE_LIBS) kernel foundation z gif png pcre jpeg graphics skia openssl
-CUSTOM_STATIC_LIBS=stdc++ icudata icui18n icuio icule iculx icuuc $(MODE_STATIC_LIBS)
+# Removed: icuio icule iculx 
+CUSTOM_STATIC_LIBS=icudata icuuc icui18n $(MODE_STATIC_LIBS)
 CUSTOM_DYNAMIC_LIBS=dl m pthread $(MODE_DYNAMIC_LIBS)
 
 CUSTOM_CCFLAGS=\
@@ -24,7 +25,8 @@ CUSTOM_CCFLAGS=\
 	-fmessage-length=0 \
 	$(MODE_CCFLAGS)
 
-CUSTOM_LDFLAGS=-static-libgcc \
-	$(MODE_LDFLAGS) -Wl,-rpath,\$$ORIGIN
+CUSTOM_LDFLAGS=$(MODE_LDFLAGS)
+CUSTOM_LDFLAGS_LTO=$(MODE_LDFLAGS_LTO) -static-libgcc -Wl,-rpath,\$$ORIGIN
+CUSTOM_LDFLAGS_FINAL=$(MODE_LDFLAGS_FINAL) -rpath \$$ORIGIN
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/../rules/application.linux.makefile

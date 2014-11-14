@@ -632,6 +632,8 @@ LT factor_table[] =
         {"bg", TT_CHUNK, CT_BACKGROUND},
         {"bgbehavior", TT_PROPERTY, P_BACKGROUND_BEHAVIOR},
         {"bgs", TT_CLASS, CT_BACKGROUND},
+        // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+        {"bididirection", TT_FUNCTION, F_BIDI_DIRECTION},
         {"binarydecode", TT_FUNCTION, F_BINARY_DECODE},
         {"binaryencode", TT_FUNCTION, F_BINARY_ENCODE},
         {"bitand", TT_BINOP, O_AND_BITS},
@@ -1113,6 +1115,7 @@ LT factor_table[] =
         {"liveresizing", TT_PROPERTY, P_LIVE_RESIZING},
         {"ln", TT_FUNCTION, F_LN},
         {"ln1", TT_FUNCTION, F_LN1},
+        {"loadedtime", TT_PROPERTY, P_MOVIE_LOADED_TIME},
         {"loc", TT_PROPERTY, P_LOCATION},
         {"localloc", TT_FUNCTION, F_LOCAL_LOC},
         {"localnames", TT_FUNCTION, F_LOCALS},
@@ -1616,6 +1619,8 @@ LT factor_table[] =
         {"startupiconic", TT_PROPERTY, P_START_UP_ICONIC},
         {"startvalue", TT_PROPERTY, P_START_VALUE},
         {"statround", TT_FUNCTION, F_STAT_ROUND},
+        // PM-2014-09-02: [[ Bug 13092 ]] Added status property to the player object
+        {"status", TT_PROPERTY, P_STATUS},
 		{"statusicon", TT_PROPERTY, P_STATUS_ICON},
 		{"statusiconmenu", TT_PROPERTY, P_STATUS_ICON_MENU},
 		{"statusicontooltip", TT_PROPERTY, P_STATUS_ICON_TOOLTIP},
@@ -2096,6 +2101,8 @@ static LT sugar_table[] =
         {"message", TT_CHUNK, CT_UNDEFINED},
         {"new", TT_CHUNK, CT_UNDEFINED},
 		{"nothing", TT_UNDEFINED, SG_NOTHING},
+        // MW-2014-09-30: [[ ScriptOnlyStack ]] Token for 'only'.
+        {"only", TT_UNDEFINED, SG_ONLY},
 		{"open", TT_UNDEFINED, SG_OPEN},
 		{"optimized", TT_UNDEFINED, SG_OPTIMIZED},
 		{"options", TT_UNDEFINED, SG_OPTIONS},

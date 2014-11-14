@@ -46,6 +46,11 @@
  - (void)selectionChanged: (id)object;
  
  @end
+
+@interface QTMovie(QtExtensions)
+- (NSArray*)loadedRanges;
+- (QTTime)maxTimeLoaded;
+@end
  
 class MCQTKitPlayer: public MCPlatformPlayer
 {
@@ -72,6 +77,7 @@ public:
     
     void MovieFinished(void);
     void CurrentTimeChanged(void);
+    void MovieIsLoading(QTTimeRange p_timerange);
     
 protected:
     virtual void Realize(void);
@@ -92,6 +98,7 @@ private:
     QTMovieView *m_view;
     CVImageBufferRef m_current_frame;
     QTTime m_last_current_time;
+    QTTime m_buffered_time;
     
     com_runrev_livecode_MCQTKitPlayerObserver *m_observer;
     
@@ -178,6 +185,7 @@ MCQTKitPlayer::MCQTKitPlayer(void)
     m_synchronizing = false;
     
     m_last_current_time = do_QTMakeTime(INT64_MAX, 1);
+    m_buffered_time = do_QTMakeTime(0, 1);
 }
 
 MCQTKitPlayer::~MCQTKitPlayer(void)
@@ -188,7 +196,7 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
     // MW-2014-07-16: [[ Bug 12506 ]] Make sure we unhook the callbacks before releasing (it
     //   seems it takes a while for QTKit to actually release the objects!).
     MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
-    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallAlways, nil, nil);
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     [m_observer release];
@@ -196,6 +204,21 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
 	[m_movie release];
     
     MCMemoryDeleteArray(m_markers);
+}
+
+void MCQTKitPlayer::MovieIsLoading(QTTimeRange p_timerange)
+{
+    QTTime t_buffered_time;
+    t_buffered_time = p_timerange.duration;
+    m_buffered_time = t_buffered_time;
+    MCPlatformCallbackSendPlayerBufferUpdated(this);
+    /*
+    float t_movie_duration, t_loaded_part;
+    t_movie_duration = (float)m_movie.duration.timeValue/(float)m_movie.duration.timeScale;
+    t_loaded_part = (float)t_buffered_time.timeValue/(float)t_buffered_time.timeScale;
+    MCLog("=============Loaded %.2f / 1.00", (float)t_loaded_part/(float)t_movie_duration);
+    */
+    
 }
 
 void MCQTKitPlayer::MovieFinished(void)
@@ -235,9 +258,11 @@ OSErr MCQTKitPlayer::MovieDrawingComplete(Movie p_movie, long p_ref)
 	t_self = (MCQTKitPlayer *)p_ref;
     
     t_self -> CacheCurrentFrame();
-	
-	MCPlatformCallbackSendPlayerFrameChanged(t_self);
-    t_self -> CurrentTimeChanged();
+    MCPlatformCallbackSendPlayerFrameChanged(t_self);
+    
+    // PM-2104-08-28: [[ Bug 12830 ]] Make sure frames are updated only when movie is playing
+    if (t_self -> IsPlaying())
+        t_self -> CurrentTimeChanged();
 	
 	return noErr;
 }
@@ -278,7 +303,8 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
 
-		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
+        // PM-2104-08-28: [[ Bug 12830 ]] The movieDrawingCallAlways flag indicates that we want QuickTime to call MovieDrawingComplete every time the movie is tasked (that is, every time our application calls MoviesTask, either directly or indirectly).
+		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallAlways, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
         
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 	}
@@ -290,7 +316,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 			t_player -> m_current_frame = nil;
 		}
 
-		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
+		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallAlways, nil, nil);
         
 		// Switching to non-offscreen
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
@@ -348,6 +374,10 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
             QTTime t_current_time;
             t_current_time = [self -> m_movie currentTime];
             
+            // PM-2014-10-28: [[ Bug 13773 ]] If the thumb is after the first marker and the user drags it before the first marker, then we have to reset m_last marker, so as to be dispatched
+            if (t_current_time . timeValue < self -> m_last_marker)
+                self -> m_last_marker = -1;
+            
             if (do_QTTimeCompare(t_current_time, self -> m_last_current_time) != 0)
             {
                 self -> m_last_current_time = t_current_time;
@@ -369,12 +399,16 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
                         {
                             self -> m_last_marker = self -> m_markers[t_index - 1];
                             MCPlatformCallbackSendPlayerMarkerChanged(self, self -> m_last_marker);
+                            self -> m_synchronizing = true;
                         }
                     }
                 }
                 
-                if (!self -> m_offscreen)
+                // PM-2014-10-28: [[ Bug 13773 ]] Make sure we don't send a currenttimechanged messsage if the callback is processed
+                if (!self -> m_offscreen && !self -> m_synchronizing && self -> IsPlaying())
                     self -> CurrentTimeChanged();
+                
+                self -> m_synchronizing = false;
             }
         }
         break;
@@ -388,7 +422,7 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
 
 void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
 {
-	NSError *t_error;
+    NSError *t_error;
 	t_error = nil;
     
     MCStringRef t_filename;
@@ -428,8 +462,11 @@ void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
 	
     // MW-2014-07-18: [[ Bug ]] Clean up callbacks before we release.
     MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
-    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallAlways, nil, nil);
 	[m_movie release];
+    
+    // PM-2014-09-02: [[ Bug 13306 ]] Make sure we reset the previous value of loadedtime when loading a new movie
+    m_buffered_time = do_QTMakeTime(0, 1);
     
 	m_movie = t_new_movie;
     
@@ -462,8 +499,18 @@ void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
     //   if we are already offscreen.
     if (m_offscreen)
     {
-		SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)this);
+		SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallAlways, MCQTKitPlayer::MovieDrawingComplete, (long int)this);
         CacheCurrentFrame();
+    }
+    if (p_is_url && [m_movie respondsToSelector:@selector(loadedRanges)])
+    {
+        NSArray *t_load_ranges = [m_movie loadedRanges];
+        if (t_load_ranges)
+        {
+            QTTimeRange t_time_range;
+            t_time_range = [[t_load_ranges objectAtIndex: 0] QTTimeRangeValue];
+            MovieIsLoading(t_time_range);
+        }
     }
 }
 
@@ -535,7 +582,7 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 		
 		CGColorSpaceRef t_colorspace;
-		t_colorspace = CGColorSpaceCreateDeviceRGB();
+		/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_colorspace);
 		
 		CGContextRef t_cg_context;
 		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
@@ -751,6 +798,10 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			*(MCPlatformPlayerMediaTypes *)r_value = t_types;
 		}
             break;
+        // PM-2014-08-20 [[ Bug 13121 ]] Added property for displaying download progress
+        case kMCPlatformPlayerPropertyLoadedTime:
+			*(uint32_t *)r_value = m_buffered_time . timeValue;
+			break;
 		case kMCPlatformPlayerPropertyDuration:
 			*(uint32_t *)r_value = [m_movie duration] . timeValue;
 			break;

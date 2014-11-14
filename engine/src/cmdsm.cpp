@@ -1310,8 +1310,12 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 		MCAutoStringRef t_string;
 		if (form == FORM_NONE)
 		{
-            if (chunk == TYPE_COLUMN || chunk == TYPE_ROW)
-                MCArraysExecCombineByRowOrColumn(ctxt, *t_array, chunk == TYPE_ROW, &t_string);
+            // SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
+            // different from combining by row
+            if (chunk == TYPE_ROW)
+                MCArraysExecCombineByRow(ctxt, *t_array, &t_string);
+            else if (chunk == TYPE_COLUMN)
+                MCArraysExecCombineByColumn(ctxt, *t_array, &t_string);
             else
 				MCArraysExecCombine(ctxt, *t_array, *t_element_del, *t_key_del, &t_string);
 		}
@@ -1363,8 +1367,12 @@ void MCArrayOp::compile(MCSyntaxFactoryRef ctxt)
 	{
 		if (form == FORM_NONE)
 		{
-            if (mode == TYPE_COLUMN || mode == TYPE_ROW)
-                MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByRowOrColumnMethodInfo, 0, 1, 0);
+            // SN-2014-09-01: [[ Bug 13297 ]] Combining by column deserves its own function as it is too
+            // different from combining by row
+            if (mode == TYPE_ROW)
+                MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByRowMethodInfo, 0, 0);
+            else if (mode == TYPE_COLUMN)
+                MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByColumnMethodInfo, 0, 0);
 			else
 				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineMethodInfo, 0, 1, 2, 0);
 		}

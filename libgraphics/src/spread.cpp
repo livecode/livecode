@@ -269,6 +269,14 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
                 xdptr[x] = 0;
                 x++, next++;
             }
+            
+            // MW-2014-08-27: [[ Bug 13221 ]] If we reached the edge of the source, then we
+            //   assume the next pixel is clear.
+            if (next == width - 1)
+            {
+                xdptr[x] = 0;
+                x++, next++;
+            }
         }
 	}
     

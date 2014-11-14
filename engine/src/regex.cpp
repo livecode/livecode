@@ -217,8 +217,12 @@ int regcomp(regex_t *preg, MCStringRef pattern, int cflags)
     if ((cflags & REG_NEWLINE) != 0)
 		options |= PCRE_MULTILINE;
 
+    // AL-2014-08-20: [[ Bug 13186 ]] Ensure pattern string doesn't get permanently converted to UTF-16
+    MCAutoStringRef t_temp;
+    /* UNCHECKED */ MCStringMutableCopy(pattern, &t_temp);
+    
     // SN-2014-01-14: [[ libpcre update ]]
-    preg->re_pcre = pcre16_compile((PCRE_SPTR16)MCStringGetCharPtr(pattern), options, &errorptr, &erroffset, NULL);
+    preg->re_pcre = pcre16_compile((PCRE_SPTR16)MCStringGetCharPtr(*t_temp), options, &errorptr, &erroffset, NULL);
 	preg->re_erroffset = erroffset;
 
 	if (preg->re_pcre == NULL)
@@ -423,5 +427,7 @@ void MCR_clearcache()
 	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
 	{
 		MCR_free(MCregexcache[i]);
+        // PM-2014-10-02: [[ Bug 11647 ]] Make sure we clear old data to prevent a crash when restarting the app
+        MCregexcache[i] = nil;
 	}
 }

@@ -623,8 +623,9 @@ void MCPrintingExecPrintRectOfCard(MCExecContext& ctxt, MCCard *p_card, MCPoint 
 	MCRectangle t_src_rect;
 	t_src_rect . x = p_from . x;
 	t_src_rect . y = p_from . y;
-	t_src_rect . width = p_to . x - p_to . x;
-	t_src_rect . height = p_to . y - p_to . y;
+    // SN-2014-11-03: [[ Bug 13913 ]] Use the correct coordinates
+	t_src_rect . width = p_from . x - p_to . x;
+	t_src_rect . height = p_from . y - p_to . y;
 	
 	MCprinter -> LayoutCard(p_card, &t_src_rect);
 
@@ -709,8 +710,14 @@ void MCPrintingExecOpenPrintingWithDialog(MCExecContext& ctxt, bool p_as_sheet)
 	MCAutoStringRef t_result;
 	if (MCprinter->ChoosePrinter(p_as_sheet, &t_result))
 	{
-		ctxt.SetTheResultToValue(*t_result);
-		MCPrintingExecOpenPrinting(ctxt);
+        // PM-2014-11-04: [[ Bug 13915 ]] Make sure we do not print if user cancels        
+        if (MCStringGetLength(*t_result) > 0)
+            ctxt.SetTheResultToValue(MCN_cancel);
+        else
+        {
+            ctxt.SetTheResultToEmpty();
+            MCPrintingExecOpenPrinting(ctxt);
+        }
 
 		return;
 	}
@@ -943,9 +950,15 @@ void MCPrintingSetPrintJobColor(MCExecContext& ctxt, bool p_value)
 	MCprinter -> SetJobColor(p_value);
 }
 
-void MCPrintingGetPrintJobPage(MCExecContext& ctxt, integer_t &r_value)
+// SN-2014-09-17: [[ Bug 13467 ]] When -1 is returned by the printer, we should get empty instead
+void MCPrintingGetPrintJobPage(MCExecContext& ctxt, integer_t *&r_value)
 {
-	r_value = MCprinter -> GetJobPageNumber();
+    integer_t t_value;
+	t_value = MCprinter -> GetJobPageNumber();
+    if (t_value == -1)
+        r_value = nil;
+    else
+        *r_value = t_value;
 }
 
 void MCPrintingGetPrintJobDuplex(MCExecContext& ctxt, intenum_t &r_value)

@@ -95,7 +95,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_PRINT_JOB_COLLATE, Bool, Printing, PrintJobCollate)
 	DEFINE_RW_PROPERTY(P_PRINT_JOB_COLOR, Bool, Printing, PrintJobColor)
 	DEFINE_RW_ENUM_PROPERTY(P_PRINT_JOB_DUPLEX, PrintingPrintJobDuplex, Printing, PrintJobDuplex)
-	DEFINE_RO_PROPERTY(P_PRINT_JOB_PAGE, Int32, Printing, PrintJobPage)
+    // SN-2014-09-17: [[ Bug 13467 ]] PrintPageNumber may return empty
+	DEFINE_RO_PROPERTY(P_PRINT_JOB_PAGE, OptionalInt16, Printing, PrintJobPage)
 	DEFINE_RO_PROPERTY(P_PRINT_DEVICE_RECTANGLE, Rectangle, Printing, PrintDeviceRectangle)
 	DEFINE_RW_PROPERTY(P_PRINT_DEVICE_SETTINGS, BinaryString, Printing, PrintDeviceSettings)
 	DEFINE_RW_PROPERTY(P_PRINT_DEVICE_NAME, String, Printing, PrintDeviceName)
@@ -149,7 +150,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 
 	DEFINE_RW_ENUM_PROPERTY(P_DRAG_ACTION, PasteboardDragAction, Pasteboard, DragAction)
 	DEFINE_RW_PROPERTY(P_ACCEPT_DROP, Bool, Pasteboard, AcceptDrop)
-	DEFINE_RW_PROPERTY(P_DRAG_IMAGE, UInt16, Pasteboard, DragImage)
+    // SN-2014-10-07: [[ Bug 13610 ]] The id passed to MCPasteBoardSet/GetDragImage is a uint32_t
+	DEFINE_RW_PROPERTY(P_DRAG_IMAGE, UInt32, Pasteboard, DragImage)
 	DEFINE_RW_PROPERTY(P_DRAG_IMAGE_OFFSET, OptionalPoint, Pasteboard, DragImageOffset)
 	DEFINE_RW_SET_PROPERTY(P_ALLOWABLE_DRAG_ACTIONS, PasteboardAllowableDragActions, Pasteboard, AllowableDragActions)
 	DEFINE_RW_PROPERTY(P_ALLOW_INLINE_INPUT, Bool, Interface, AllowInlineInput)
@@ -206,7 +208,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_PLAY_LOUDNESS, UInt16, Multimedia, PlayLoudness)
 	
 	DEFINE_RW_PROPERTY(P_STACK_FILES, String, Legacy, StackFiles)
-	DEFINE_RO_PROPERTY(P_MENU_BAR, String, Legacy, MenuBar)
+    // SN-2014-09-01: [[ Bug 13300 ]] Updated 'set the menubar' to have a (useless) setter at the global scope 
+	DEFINE_RW_PROPERTY(P_MENU_BAR, String, Legacy, MenuBar)
 	DEFINE_RW_PROPERTY(P_EDIT_MENUS, Bool, Legacy, EditMenus)
 	DEFINE_RW_PROPERTY(P_BUFFER_MODE, String, Legacy, BufferMode)
 	DEFINE_RW_PROPERTY(P_MULTI_EFFECT, Bool, Legacy, MultiEffect)
@@ -387,7 +390,10 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
 {
 	for(uindex_t i = 0; i < sizeof(kMCPropertyInfoTable) / sizeof(MCPropertyInfo); i++)
-		if (kMCPropertyInfoTable[i] . property == p_which && kMCPropertyInfoTable[i] . effective == p_effective &&
+        if (kMCPropertyInfoTable[i] . property == p_which &&
+            // SN-2014-08-14: [[ Bug 13204 ]] We want to check for the 'effective property' only if it
+            //  is differs from the 'property'.
+            (!kMCPropertyInfoTable[i] . has_effective || (kMCPropertyInfoTable[i] . effective == p_effective)) &&
             kMCPropertyInfoTable[i] . is_array_prop == p_is_array_prop)
 		{
 			r_info = &kMCPropertyInfoTable[i];
@@ -983,20 +989,21 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		}
 		sp.backup();
 	default:
-		if (which >= P_FIRST_ARRAY_PROP)
-		{
-			if (sp.next(type) == PS_NORMAL && type == ST_LB)
-			{
-				if (sp.parseexp(False, True, &customindex) != PS_NORMAL
-				        || sp.next(type) != PS_NORMAL || type != ST_RB)
-				{
-					MCperror->add(PE_PROPERTY_BADINDEX, sp);
-					return PS_ERROR;
-				}
-			}
-			else
-				sp.backup();
-		}
+        if (sp.next(type) == PS_NORMAL)
+        {
+            if (type == ST_LB)
+            {
+                if (sp.parseexp(False, True, &customindex) != PS_NORMAL
+                        || sp.next(type) != PS_NORMAL || type != ST_RB)
+                {
+                    MCperror->add(PE_PROPERTY_BADINDEX, sp);
+                    return PS_ERROR;
+                }
+            }
+            else
+                sp.backup();
+        }
+
 		if (sp.skip_token(SP_FACTOR, TT_LPAREN) == PS_NORMAL)
 			lp = True;
 		else
@@ -2387,14 +2394,21 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 		break;
 	case P_DEFAULT_MENU_BAR:
 		{
-			MCGroup *gptr = (MCGroup *)MCdefaultstackptr->getobjname(CT_GROUP,
-			                ep.getsvalue());
-			if (gptr == NULL)
-			{
-				MCeerror->add
-				(EE_PROPERTY_NODEFAULTMENUBAR, line, pos, ep.getsvalue());
-				return ES_ERROR;
-			}
+            MCGroup *gptr = (MCGroup *)MCdefaultstackptr->getobjname(CT_GROUP, ep.getsvalue());
+            
+            if (gptr == NULL)
+            {
+                // AL-2014-10-31: [[ Bug 13884 ]] Resolve chunk properly if the name is not found
+                //  so that setting the defaultMenubar by the long id of a group works.
+                MCObject *optr = getobj(ep);
+                if (optr == NULL || optr -> gettype() != CT_GROUP)
+                {
+                    MCeerror->add(EE_PROPERTY_NODEFAULTMENUBAR, line, pos, ep.getsvalue());
+                    return ES_ERROR;
+                }
+                gptr = (MCGroup *)optr;
+            }
+
 			MCdefaultmenubar = gptr;
 			MCscreen->updatemenubar(False);
 		}
@@ -5407,6 +5421,9 @@ void MCProperty::eval_global_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
     t_is_array_prop = (*t_index != nil && !MCNameIsEmpty(*t_index));
     
 	const MCPropertyInfo *t_info;
+    // AL-2014-09-01: [[ Bug 13312 ]] Initialise t_info to nil to prevent crashes
+    t_info = nil;
+    
 	if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
         t_info = lookup_mode_property(getmodepropertytable(), which, effective, t_is_array_prop);
         
@@ -5452,10 +5469,7 @@ void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 		// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
 		//   a nil index translates to the empty name (the array[empty] <=> the array).
 		MCNameRef t_derived_index_name;
-		if (t_prop < P_FIRST_ARRAY_PROP)
-			t_derived_index_name = nil;
-		else
-			t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
+        t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
 		
         if (t_success)
             t_success = target -> getprop(ctxt, t_prop, t_derived_index_name, effective, r_value);
@@ -5511,7 +5525,10 @@ void MCProperty::set_global_property(MCExecContext& ctxt, MCExecValue p_value)
     t_is_array_prop = (*t_index != nil && !MCNameIsEmpty(*t_index));
     
 	const MCPropertyInfo *t_info;
-	if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
+    // AL-2014-09-01: [[ Bug 13312 ]] Initialise t_info to nil to prevent crashes
+    t_info = nil;
+    
+    if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
         t_info = lookup_mode_property(getmodepropertytable(), which, effective, t_is_array_prop);
     
     if (t_info != nil)
@@ -5560,10 +5577,7 @@ void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)
 		// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
 		//   a nil index translates to the empty name (the array[empty] <=> the array).
 		MCNameRef t_derived_index_name;
-		if (t_prop < P_FIRST_ARRAY_PROP)
-			t_derived_index_name = nil;
-		else
-			t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
+        t_derived_index_name = *t_index_name != nil ? *t_index_name : kMCEmptyName;
 		
 		t_success = target -> setprop(ctxt, t_prop, t_derived_index_name, effective, p_value);
 	}

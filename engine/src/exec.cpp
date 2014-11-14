@@ -38,6 +38,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "param.h"
 
+// SN-2014-09-05: [[ Bug 13378 ]] Include the definition of MCServerScript
+#ifdef _SERVER
+#include "srvscript.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::ForceToString(MCValueRef p_value, MCStringRef& r_string)
@@ -182,7 +187,20 @@ bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
     }
     
 	if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeArray)
+    {
+        // FG-2014-10-21: [[ Bugfix 13724 ]] The legacy behavior requires that
+        // anything that can be converted to a string will convert to an empty
+        // array (for example, 'the extents of "foo"' should return empty
+        // rather than throwing an error).
+        MCAutoStringRef t_ignored;
+        if (ConvertToString(p_value, &t_ignored))
+        {
+            r_array = MCValueRetain(kMCEmptyArray);
+            return true;
+        }
+        
         return false;
+    }
     
     r_array = MCValueRetain((MCArrayRef)p_value);
 	return true;
@@ -287,12 +305,12 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
         double t_real;
         if (!ConvertToReal(x_value . valueref_value, t_real))
         {
-            MCArrayRef t_array;
-            if (!ConvertToArray(x_value . valueref_value, t_array))
+            MCAutoArrayRef t_array;
+            if (!ConvertToArray(x_value . valueref_value, &t_array))
                 return false;
             
             MCValueRelease(x_value . valueref_value);
-            MCExecValueTraits<MCArrayRef>::set(x_value, t_array);
+            MCExecValueTraits<MCArrayRef>::set(x_value, MCValueRetain(*t_array));
             return true;
         }
 
@@ -705,6 +723,7 @@ bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
 bool MCExecContext::EvaluateExpression(MCExpression *p_expr, Exec_errors p_error, MCExecValue& r_result)
 {
 	MCAssert(p_expr != nil);
@@ -742,21 +761,23 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
 {
     MCAssert(p_expr != nil);
 	
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
+    t_can_debug = true;
     
-    do
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    p_expr -> eval(*this, r_result);
+    
+    while (t_can_debug && (t_failure = HasError()) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        p_expr -> eval(*this, r_result);
-        if (!HasError())
-            t_success = true;
-        else
-            t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
+        
+        if (t_can_debug)
+            p_expr -> eval(*this, r_result);
     }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
-	if (t_success)
+	if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
@@ -767,29 +788,39 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
 {
     MCAssert(p_expr != nil);
 	
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
     t_can_debug = true;
     
     // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
     Boolean t_old_expectation = m_numberexpected;
     m_numberexpected = True;
-    do
+
+    MCExecValue t_value;
+    double t_result;
+
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    p_expr -> eval_ctxt(*this, t_value);
+    if (!MCExecTypeIsNumber(t_value . type))
+        MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &t_result);
+    
+    while (t_can_debug && (t_failure = HasError()) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        MCExecValue t_value;        
-        p_expr -> eval_ctxt(*this, t_value);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
         
-        if (!HasError())
-            t_success = true;
-        else
+        if (t_can_debug)
         {
-            t_can_debug = MCB_error(*this, line, pos, p_error);
-            IgnoreLastError();
-            break;
+            p_expr -> eval_ctxt(*this, t_value);
+            if (!MCExecTypeIsNumber(t_value . type))
+                MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &t_result);
         }
-        
+    }
+    
+	if (!t_failure)
+    {
         if (!MCExecTypeIsNumber(t_value . type))
-            MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &r_result);
+            r_result = t_result;
         else if (t_value . type == kMCExecValueTypeInt)
             r_result = t_value . int_value;
         else if (t_value . type == kMCExecValueTypeUInt)
@@ -798,12 +829,10 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
             r_result = t_value . float_value;
         else
             r_result = t_value . double_value;
-    }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
-    
-    m_numberexpected = t_old_expectation;
-	if (t_success)
+        
+        m_numberexpected = t_old_expectation;
 		return true;
+    }
 	
 	LegacyThrow(p_error);
 	return false;
@@ -813,20 +842,19 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
 {
     MCAssert(p_param != nil);
 	
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
+    t_can_debug = true;
     
-    do
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    while (t_can_debug && (t_failure = (!p_param -> eval_ctxt(*this, r_result) || HasError())) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        if (p_param -> eval_ctxt(*this, r_result))
-            t_success = true;
-        else
-            t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+	
     
-	if (t_success)
+	if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
@@ -838,18 +866,18 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
     MCAssert(p_expr != nil);
     MCExecValue t_value;
     
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
     t_can_debug = true;
     
-    t_success = EvalExprAsNonStrictBool(p_expr, p_error, r_value);
-    while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    while (t_can_debug && (t_failure = !EvalExprAsNonStrictBool(p_expr, p_error, r_value)) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
         t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
     
-    if (t_success)
+    if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
@@ -858,21 +886,18 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
 
 bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue p_value)
 {
-    bool t_success, t_can_debug;
-    t_success = false;
+    bool t_failure, t_can_debug;
+    t_can_debug = true;
     
-    do
+    // AL-2014-11-06: [[ Bug 13930 ]] Make sure all the 'TryTo...' functions do the correct thing
+    while (t_can_debug && (t_failure = (!p_var -> give_value(*this, p_value) || HasError())) &&
+           (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        p_var -> give_value(*this, p_value);
-        if (!HasError())
-            t_success = true;
-        else
-            t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
-	if (t_success)
+	if (!t_failure)
 		return true;
 	
 	LegacyThrow(p_error);
@@ -1089,10 +1114,11 @@ MCVarref* MCExecContext::GetIt() const
     if (m_curhandler != nil)
         return m_curhandler -> getit();
 
-#ifdef MODE_SERVER
+    // SN-2014-09-05: [[ Bug 13378 ]] Changed the #ifdef to be _SERVER, and updated the member name
+#ifdef _SERVER
     // If we are here it means we must be in global scope, executing in a
     // MCServerScript object.
-    return static_cast<MCServerScript *>(m_curobj) -> getit();
+    return static_cast<MCServerScript *>(m_object) -> GetIt();
 #else
     // We should never get here as execution only occurs within handlers unless
     // in server mode.
@@ -1103,9 +1129,9 @@ MCVarref* MCExecContext::GetIt() const
 
 void MCExecContext::SetItToValue(MCValueRef p_value)
 {
-    MCVariable *t_var;
-    t_var = GetIt() -> evalvar(*this);
-	t_var -> setvalueref(p_value);
+    MCAutoPointer<MCContainer> t_container;
+    GetIt() -> evalcontainer(*this, &t_container);
+	t_container -> set_valueref(p_value);
 }
 
 void MCExecContext::SetItToEmpty(void)
@@ -2241,7 +2267,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             }
         }
             break;
-           
+        
         case kMCPropertyTypeMixedItemsOfString:
         {
             bool t_mixed;
@@ -2260,7 +2286,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 else
                 {
                     char_t t_delimiter;
-                    t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
+                    t_delimiter = ',';
                     if (MCPropertyFormatStringList(t_value, t_count, t_delimiter, r_value . stringref_value))
                     {
                         r_value . type = kMCExecValueTypeStringRef;
@@ -2293,7 +2319,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 else
                 {
                     char_t t_delimiter;
-                    t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
+                    t_delimiter = prop -> type == kMCPropertyTypeMixedLinesOfUInt ? '\n' : ',';
                     if (MCPropertyFormatUIntList(t_value, t_count, t_delimiter, r_value . stringref_value))
                     {
                         r_value . type = kMCExecValueTypeStringRef;
@@ -2770,6 +2796,8 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                       
         case kMCPropertyTypeLinesOfUInt:
         case kMCPropertyTypeItemsOfUInt:
+        // AL-2014-09-24: [[ Bug 13529 ]] Handle mixed items of uint case
+        case kMCPropertyTypeMixedItemsOfUInt:
         {
             MCAutoStringRef t_input;
             uinteger_t* t_value;
@@ -3299,10 +3327,33 @@ bool MCExecTypeIsNumber(MCExecValueType p_type)
     return p_type > kMCExecValueTypeNumberRef && p_type < kMCExecValueTypeChar && p_type != kMCExecValueTypeBool;
 }
 
-void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_start, int32_t& x_finish, uint32_t p_start, uint32_t p_count)
+
+// SN-2014-09-02: [[ Bug 13314 ]] Resolving the chars of a field should also take in account the changes brought
+// to the marked text (chiefly being chunk delimiters added).
+void MCExecResolveCharsOfField(MCExecContext& ctxt, MCField *p_field, uint32_t p_part, MCMarkedText p_mark, int32_t& r_start, int32_t& r_finish)
 {
-    x_start = p_start;
-    x_finish = p_start + p_count;
+    r_start = p_mark . start;
+    r_finish = p_mark . finish;
+    
+    // MCMarkedText::changed is only accessed by Interface / Variable-setting function.
+    // Putting the replacement of the field content should not interleave with another
+    if (p_mark.changed != 0)
+    {
+        MCAutoStringRef t_mark_as_string;
+        if (!ctxt . ConvertToString(p_mark . text, &t_mark_as_string))
+            ctxt . Throw();
+        else
+        {
+            // We only want to append the forced delimiters added, not to reset the whole field's string
+            // which leads to a loss of all the blocks.
+            MCAutoStringRef t_forced_delimiters;
+            /* UNCHECKED */ MCStringCopySubstring(*t_mark_as_string, MCRangeMake(MCStringGetLength(*t_mark_as_string) - p_mark . changed, p_mark . changed), &t_forced_delimiters);
+            
+            // INT32_MAX is PARAGRAPH_MAX_LEN (asking settextindex to append to the field)
+            p_field -> settextindex(p_part, INT32_MAX, INT32_MAX, *t_forced_delimiters, false);
+        }
+    }
+    
     /*
     findex_t t_start = x_start;
     findex_t t_finish = x_finish;

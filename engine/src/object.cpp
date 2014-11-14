@@ -66,6 +66,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+// PM-2014-11-11: [[ Bug 13970 ]] Added for the MCplayers' syncbuffering call
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uint1 MCObject::dashlist[2] = {4, 4};
@@ -614,7 +619,11 @@ Boolean MCObject::kup(MCStringRef p_string, KeySym key)
 	// OK-2010-04-01: [[Bug 6215]] - Need to also check for arrow keys here using the KeySym
 	//   as they don't have an ascii code.
 	// TODO: filter out the C1 control codes too
-	if (key >= 32 && key != 127 && key != XK_Left && key != XK_Right && key != XK_Up && key != XK_Down)
+	// SN-2014-09-10: [[ Bug 13348 ]] We need to take in consideration what is in the string, not the
+	// key typed
+	unichar_t t_char;
+	t_char = MCStringGetCharAtIndex(p_string, 0);
+	if (t_char >= 32 && t_char != 127 && key != XK_Left && key != XK_Right && key != XK_Up && key != XK_Down)
 		if (message_with_valueref_args(MCM_key_up, p_string) == ES_NORMAL)
 			return True;
 	return False;
@@ -2860,6 +2869,14 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	{
 		t_context -> setopacity(blendlevel * 255 / 100);
 		t_context -> setfunction(GXblendSrcOver);
+
+        // PM-2014-11-11: [[ Bug 13970 ]] Make sure each player is buffered correctly for export snapshot
+        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+            t_player -> syncbuffering(t_context);
+            
+#ifdef FEATURE_PLATFORM_PLAYER
+        MCPlatformWaitForEvent(0.0, true);
+#endif
 		if (t_effects != nil)
 			t_context -> begin_with_effects(t_effects, static_cast<MCControl *>(this) -> getrect());
 		// MW-2011-09-06: [[ Redraw ]] Render the control isolated, but not as a sprite.
@@ -2984,7 +3001,11 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	{
 		if ((stat = IO_read_stringref_new(_script, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
-		
+        
+        // SN-2014-11-07: [[ Bug 13957 ]] It's possible to get a NULL script but having the
+        //  F_SCRIPT flag. Unset the flag in case it's needed
+        if (_script == NULL)
+            flags &= ~F_SCRIPT;
 		getstack() -> securescript(this);
 	}
 
@@ -3598,16 +3619,10 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         
         // AL-2014-07-31: [[ Bug 13043 ]] It is possible for utf8 string length to be different
         // here from the char count of the string.
-        MCAutoStringRefAsUTF8String t_utf8_string;
-        t_utf8_string . Lock(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()));
-        
-        t_size += 1 + 1 + 4 + t_utf8_string . Size();
-
-        // for < 7.0, add 2 (for the 2 nul terminators). For >= 7.0, add 8 for the 2 uint32s
-        if (MCstackfileversion < 7000)
-            t_size += 2;
-        else
-            t_size += 8;
+        // SN-2014-10-27: [[ Bug 13554 ]] String length calculation refactored
+        t_size += 1 + 1 + 4
+                + p_stream . MeasureStringRefNew(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()), MCstackfileversion >= 7000)
+                + p_stream . MeasureStringRefNew(kMCEmptyString, MCstackfileversion >= 7000);
 	}
 
 	// MW-2009-09-24: Slight oversight on my part means that there is no record

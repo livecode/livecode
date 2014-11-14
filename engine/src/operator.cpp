@@ -312,11 +312,11 @@ void MCConcat::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeData &&
         MCValueGetTypeCode(*t_right) == kMCValueTypeCodeData)
     {
-        MCDataRef t_result;
-        MCStringsEvalConcatenate(ctxt, (MCDataRef)*t_left, (MCDataRef)*t_right, t_result);
+        MCAutoDataRef t_result;
+        MCStringsEvalConcatenate(ctxt, (MCDataRef)*t_left, (MCDataRef)*t_right, &t_result);
         
         if (!ctxt . HasError())
-            MCExecValueTraits<MCDataRef>::set(r_value, t_result);
+            MCExecValueTraits<MCDataRef>::set(r_value, MCValueRetain(*t_result));
         return;
     }
     
@@ -327,11 +327,11 @@ void MCConcat::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . ConvertToString(*t_right, &t_right_string))
         return;
     
-    MCStringRef t_result;
-    MCStringsEvalConcatenate(ctxt, *t_left_string, *t_right_string, t_result);
+    MCAutoStringRef t_result;
+    MCStringsEvalConcatenate(ctxt, *t_left_string, *t_right_string, &t_result);
     
     if (!ctxt . HasError())
-        MCExecValueTraits<MCStringRef>::set(r_value, t_result);
+        MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(*t_result));
 }
 
 void MCConcat::compile(MCSyntaxFactoryRef ctxt)
@@ -2256,7 +2256,10 @@ void MCThere::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 			else
 				MCFilesEvalThereIsNotAFile(ctxt, *t_string, t_result);
 			break;
+        // AL-2014-10-02: [[ Bug 13579 ]] Default behavior is to check if there is a folder.
+        // In particular, this is the codepath for 'there is a url' for some reason.
 		case TM_DIRECTORY:
+        default:
 			if (form == IT_NORMAL)
 				MCFilesEvalThereIsAFolder(ctxt, *t_string, t_result);
 			else

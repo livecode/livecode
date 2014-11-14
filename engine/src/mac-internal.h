@@ -81,15 +81,29 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
+//   at the MouseSync event.
+@interface com_runrev_livecode_MCApplication: NSApplication
+{
+    NSWindow* m_pseudo_modal_for;
+}
+
+-(id)init;
+
+- (void)sendEvent:(NSEvent *)event;
+
+// FG-2014-11-07: [[ Bugfix 13628 ]] Fake being modal for a non-modal window
+- (void)becomePseudoModalFor: (NSWindow*)window;
+- (NSWindow*)pseudoModalFor;
+
+@end
+
 @interface com_runrev_livecode_MCWindow: NSWindow
 {
 	bool m_can_become_key : 1;
-    bool m_is_popup : 1;
-    id m_monitor;
 }
 
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
-- (void)dealloc;
 
 - (void)setCanBecomeKeyWindow: (BOOL)value;
 
@@ -99,22 +113,25 @@ class MCMacPlatformSurface;
 // MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
 - (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
 
-- (void)popupAndMonitor;
 
 @end
 
 @interface com_runrev_livecode_MCPanel: NSPanel
 {
 	bool m_can_become_key : 1;
+    bool m_is_popup : 1;
+    id m_monitor;
 }
 
 - (void)setCanBecomeKeyWindow: (BOOL)value;
+- (void)dealloc;
 
 - (BOOL)canBecomeKeyWindow;
 - (BOOL)makeFirstResponder: (NSResponder *)responder;
 
 // MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
 - (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
+- (void)popupAndMonitor;
 
 @end
 
@@ -343,6 +360,10 @@ class MCMacPlatformSurface;
 
 - (void)aboutMenuItemSelected: (id)sender;
 - (void)preferencesMenuItemSelected: (id)sender;
+// SN-2014-11-06: [[ Bug 13940 ]] Added declaration for quitMenuItemSelected
+//  and quitApplicationSelected, the latter quitting the app straight.
+- (void)quitMenuItemSelected: (id)sender;
+- (void)quitApplicationSelected: (id)sender;
 
 - (void)menuNeedsUpdate: (NSMenu *)menu;
 
@@ -366,7 +387,7 @@ public:
 	virtual bool LockGraphics(MCGIntegerRectangle area, MCGContextRef& r_context, MCGRaster &r_raster);
 	virtual void UnlockGraphics(MCGIntegerRectangle area, MCGContextRef context, MCGRaster &raster);
 	
-	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster);
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area);
 	virtual void UnlockPixels(MCGIntegerRectangle area, MCGRaster& raster);
 	
 	virtual bool LockSystemContext(void*& r_context);
@@ -379,12 +400,17 @@ public:
 private:
     void Lock(void);
 	void Unlock(void);
+	
+	// IM-2014-10-03: [[ Bug 13432 ]] Convenience method to clear context and clip to the window mask
+	void ApplyMaskToCGContext(void);
     
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
 	MCGRegionRef m_update_rgn;
     
     MCGRaster m_raster;
+	
+	bool m_cg_context_first_lock;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -506,6 +532,9 @@ void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy);
 void MCMacPlatformHandleMouseSync(void);
 void MCMacPlatformHandleMouseAfterWindowHidden(void);
 
+void MCMacPlatformHandleMouseForResizeStart(void);
+void MCMacPlatformHandleMouseForResizeEnd(void);
+
 void MCMacPlatformSyncMouseBeforeDragging(void);
 void MCMacPlatformSyncMouseAfterTracking(void);
 
@@ -531,7 +560,8 @@ NSMenu *MCMacPlatformGetIconMenu(void);
 
 void MCMacPlatformLockMenuSelect(void);
 void MCMacPlatformUnlockMenuSelect(void);
-bool MCMacPlatformWasMenuSelect(void);
+// SN-2014-11-06: [[ Bug 13836 ]] Returns whether the last item selected was a shadowed item
+bool MCMacPlatformWasShadowItemSelected(void);
 
 bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
 
@@ -564,6 +594,27 @@ void MCPlatformFinalizeAbortKey(void);
 
 bool MCPlatformInitializeColorTransform(void);
 void MCPlatformFinalizeColorTransform(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-09-29: [[ Bug 13451 ]] Return the standard colorspace for images on OSX
+bool MCMacPlatformGetImageColorSpace(CGColorSpaceRef &r_colorspace);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-10-03: [[ Bug 13432 ]] Store both alpha data and derived cg image in the mask.
+struct MCMacPlatformWindowMask
+{
+	MCGRaster mask;
+	CGImageRef cg_mask;
+	
+	uint32_t references;
+};
+
+// IM-2014-09-30: [[ Bug 13501 ]] Allow system event checking to be enabled/disabled
+void MCMacPlatformEnableEventChecking(void);
+void MCMacPlatformDisableEventChecking(void);
+bool MCMacPlatformIsEventCheckingEnabled(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

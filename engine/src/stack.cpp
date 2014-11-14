@@ -284,8 +284,14 @@ MCStack::MCStack()
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks are not script-only by default.
+    m_is_script_only = false;
+    
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
+
+	m_view_need_redraw = false;
+	m_view_need_resize = false;
 
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
@@ -480,8 +486,14 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Stacks copy the source script-onlyness.
+    m_is_script_only = sref.m_is_script_only;
+    
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
+
+	m_view_need_redraw = sref.m_view_need_redraw;
+	m_view_need_resize = sref.m_view_need_resize;
 
 	view_copy(sref);
 }
@@ -2648,22 +2660,9 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 				// MW-2004-04-27: [[Deep Masks]] If a window already has a mask, replace it now to avoid flicker
 				if (m_window_shape != NULL)
 				{
-					MCImage *t_image;
-					// MW-2009-02-02: [[ Improved image search ]] Search for the appropriate image object using the standard method.
-					t_image = resolveimageid(windowshapeid);
-					if (t_image != NULL)
-					{
-						MCWindowShape *t_new_mask;
-						setextendedstate(True, ECS_MASK_CHANGED);
-						t_image -> setflag(True, F_I_ALWAYS_BUFFER);
-						t_image -> open();
-						t_new_mask = t_image -> makewindowshape();
-						t_image -> close();
-                        // MW-2014-06-11: [[ Bug 12495 ]] Refactored action as different whether using platform API or not.
-						if (t_new_mask != NULL)
-                            updatewindowshape(t_new_mask);
-                        break;
-					}
+					// IM-2014-10-22: [[ Bug 13746 ]] use common loadwindowshape() method
+					loadwindowshape();
+					break;
 				}
 #endif
 			}
@@ -3342,4 +3341,30 @@ bool MCStack::haswindow(void)
 	return window != NULL;
 }
 
+void MCStack::openwindow(Boolean p_override)
+{
+	if (MCModeMakeLocalWindows() && window != NULL)
+	{
+		// IM-2014-09-23: [[ Bug 13349 ]] Sync geometry to window before opening.
+		view_update_geometry();
+		platform_openwindow(p_override);
+	}
+}
+
 //////////
+
+// MW-2014-09-30: [[ ScriptOnlyStack ]] Sets the stack as script only with the given script.
+void MCStack::setasscriptonly(MCStringRef p_script)
+{
+    MCExecContext ctxt(nil,nil,nil);
+    /* UNCHECKED */ SetScript(ctxt, p_script);
+    
+    m_is_script_only = true;
+    
+    // Make sure we have at least one card.
+    if (cards == NULL)
+    {
+        curcard = cards = MCtemplatecard->clone(False, False);
+        cards->setparent(this);
+    }
+}

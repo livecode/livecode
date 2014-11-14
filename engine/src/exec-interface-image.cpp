@@ -116,8 +116,9 @@ void MCImage::SetHotSpot(MCExecContext& ctxt, MCPoint p_spot)
 {
 	uint32_t t_pixwidth, t_pixheight;
 	getgeometry(t_pixwidth, t_pixheight);
-	xhot = MCMax(1, MCMin(xhot, (int32_t)t_pixwidth));
-	yhot = MCMax(1, MCMin(yhot, (int32_t)t_pixheight));
+    // SN-2014-10-27: [[ Bug 13821 ]] Set the values of the parameter, not xhot and yhot
+	xhot = MCMax(1, MCMin(p_spot . x, (int32_t)t_pixwidth));
+	yhot = MCMax(1, MCMin(p_spot . y, (int32_t)t_pixheight));
 }
 
 void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
@@ -434,7 +435,8 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
 			
 			MCImageBitmap *t_bitmap = nil;
 			
-			t_success = copybitmap(1.0, false, t_bitmap);
+            // IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
+            t_success = lockbitmap(t_bitmap, false);
 			if (t_success)
 			{
 				MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
@@ -447,9 +449,12 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
                     *t_data_ptr++ = MCGPixelPack(kMCGPixelFormatARGB, t_r, t_g, t_b, t_a);
                 }
 #endif
+                unlockbitmap(t_bitmap);
             }
-            MCImageFreeBitmap(t_bitmap);
-			
+            
+            if (t_tmp_locked)
+                setflag(false, F_LOCK_LOCATION);
+            
 			closeimage();
 		}
 	}
@@ -471,10 +476,10 @@ void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
 		bool t_success = true;
 		
 		MCImageBitmap *t_copy = nil;
-		if (m_rep != nil)
-		{
-            t_success = copybitmap(1.0, false, t_copy);
-		}
+        if (m_rep != nil)
+        {
+            t_success = copybitmap(false, t_copy);
+        }
 		else
 		{
 			t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
@@ -549,8 +554,9 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 			openimage();
 			
 			MCImageBitmap *t_bitmap = nil;
-			
-			t_success = copybitmap(1.0, true, t_bitmap);
+            
+            // IM-2014-09-02: [[ Bug 13295 ]] Call lockbitmap() insted of copybitmap() to avoid unnecessary copy
+            t_success = lockbitmap(t_bitmap, true);
 			if (t_success)
 			{
 				uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data;
@@ -559,7 +565,8 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 					uint32_t *t_src_row = (uint32_t*)t_src_ptr;
 					for (uindex_t x = 0; x < t_bitmap->width; x++)
 					{
-						uint8_t t_alpha = *t_src_row++ >> 24;
+                        uint8_t t_alpha;
+                        t_alpha = MCGPixelGetNativeAlpha(*t_src_row++);
 						if (p_flatten && t_alpha > 0)
 							*t_data_ptr++ = 0xFF;
 						else
@@ -567,8 +574,8 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 					}
 					t_src_ptr += t_bitmap->stride;
 				}
+                unlockbitmap(t_bitmap);
 			}
-            MCImageFreeBitmap(t_bitmap);
 
             if (t_tmp_locked)
                 setflag(false, F_LOCK_LOCATION);
@@ -597,7 +604,8 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		MCImageBitmap *t_copy = nil;
 		if (m_rep != nil)
 		{
-            t_success = copybitmap(1.0, false, t_copy);
+            // PM-2014-11-05: [[ Bug 13938 ]] Make sure new alphaData does not add to previous one
+            t_success = lockbitmap(t_copy, false);
 		}
 		else
 		{
@@ -713,10 +721,8 @@ void MCImage::SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle)
 void MCImage::GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle)
 {
     if (m_center_rect . x != INT16_MIN)
-    {
-        r_rectangle = new MCRectangle;
+        // AL-2014-11-05: [[ Bug 13943 ]] Return center rect correctly
         *r_rectangle = m_center_rect;
-    }
     else
         r_rectangle = NULL;
 }

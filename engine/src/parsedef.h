@@ -314,6 +314,8 @@ enum Functions {
     F_BASE_CONVERT,
     F_BASE64_DECODE,
     F_BASE64_ENCODE,
+    // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+    F_BIDI_DIRECTION,
     F_BINARY_DECODE,
     F_BINARY_ENCODE,
     F_BUILD_NUMBER,
@@ -1309,7 +1311,9 @@ enum Properties {
     P_PLAY_SELECTION,
     P_SHOW_SELECTION,
     P_PAUSED,
+    P_STATUS,
     P_MOVIE_CONTROLLER_ID,
+    P_MOVIE_LOADED_TIME,
     P_TRACK_COUNT,
     P_TRACKS,
     P_ENABLED_TRACKS,
@@ -1883,6 +1887,9 @@ enum Sugar_constants {
 	SG_FALSE,
 	SG_SUCCESS,
 	SG_FAILURE,
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Tag for 'only' keyword in create command.
+    SG_ONLY,
 	
     // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
 	SG_HOST,

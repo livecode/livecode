@@ -339,7 +339,9 @@ void MCStack::updatewindowshape(MCWindowShape *p_shape)
 {
     destroywindowshape();
     m_window_shape = p_shape;
-    MCPlatformSetWindowProperty(window, kMCPlatformWindowPropertyMask, kMCPlatformPropertyTypeWindowMask, (MCPlatformWindowMaskRef *)&m_window_shape -> handle);
+    // IM-2014-10-22: [[ Bug 13746 ]] Check for platform window before setting mask
+	if (window != nil)
+		MCPlatformSetWindowProperty(window, kMCPlatformWindowPropertyMask, kMCPlatformPropertyTypeWindowMask, (MCPlatformWindowMaskRef *)&m_window_shape -> handle);
     dirtyall();
 }
 
@@ -392,9 +394,9 @@ public:
 	}
 	
     // MM-2014-07-31: [[ ThreadedRendering ]] Updated to wrap new platform surface API.
-	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
+	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area)
 	{
-		return MCPlatformSurfaceLockPixels(m_surface, p_area, r_raster);
+		return MCPlatformSurfaceLockPixels(m_surface, p_area, r_raster, r_locked_area);
 	}
 	
     // MM-2014-07-31: [[ ThreadedRendering ]] Updated to wrap new platform surface API.

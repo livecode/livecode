@@ -507,7 +507,8 @@ bool MCVariable::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariable
         value = p_value;
     }
     
-    synchronize(ctxt);
+    // SN-2014-09-18 [[ Bug 13453 ]] give_value should notify the debugger about it
+    synchronize(ctxt, true);
     return true;
 }
 
@@ -1058,7 +1059,20 @@ bool MCVariable::ensureglobal(MCNameRef p_name, MCVariable*& r_var)
 		return false;
 
 	if (MCNameGetCharAtIndex(p_name, 0) == '$')
-		t_new_global -> is_env = true;
+  {
+    MCAutoStringRef t_env;
+    /* UNCHECKED */ MCStringCopySubstring(
+      MCNameGetString(p_name),
+      MCRangeMake(1, MCStringGetLength(MCNameGetString(p_name))), 
+      &t_env
+    );
+        
+    MCAutoStringRef t_value;
+    if (MCS_getenv(*t_env, &t_value))
+      t_new_global -> setvalueref(*t_value);
+
+    t_new_global -> is_env = true;
+  }
 
 	t_new_global -> is_global = true;
 
@@ -1227,9 +1241,7 @@ MCVarref *MCVariable::newvarref(void)
 
 MCContainer::~MCContainer(void)
 {
-	if (m_length == 0)
-		return;
-
+    // AL-2014-09-17: [[ Bug 13465 ]] Delete path array regardless of length
 	for(uindex_t i = 0; i < m_length; i++)
 		MCValueRelease(m_path[i]);
 	MCMemoryDeleteArray(m_path);
@@ -1292,10 +1304,14 @@ bool MCContainer::remove(MCExecContext& ctxt)
 	return m_variable -> remove(ctxt, m_path, m_length);
 }
 
-
 bool MCContainer::set_valueref(MCValueRef p_value)
 {
 	return m_variable -> setvalueref(m_path, m_length, m_case_sensitive, p_value);
+}
+
+MCValueRef MCContainer::get_valueref()
+{
+	return m_variable -> getvalueref(m_path, m_length, m_case_sensitive);
 }
 
 bool MCContainer::clear(void)
@@ -1337,6 +1353,7 @@ bool MCContainer::createwithvariable(MCVariable *p_var, MCContainer*& r_containe
 	r_container = new MCContainer;
 	r_container -> m_variable = p_var;
 	r_container -> m_length = 0;
+    r_container -> m_path = nil;
 	r_container -> m_case_sensitive = false;
 	return true;
 }
@@ -1351,18 +1368,23 @@ bool MCContainer::createwithpath(MCVariable *p_var, MCNameRef *p_path, uindex_t 
 	return true;
 }
 
+bool MCContainer::copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer*& r_container)
+{
+	return createwithpath(p_container -> m_variable, p_path, p_length, r_container);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCVarref::~MCVarref()
 {
-	if (dimensions <= 1)
-		delete exp;
-	else
-	{
-		for(uint4 i = 0; i < dimensions; ++i)
-			delete exps[i];
-		delete exps;
-	}
+    if (dimensions <= 1)
+        delete exp;
+    else
+    {
+        for(uint4 i = 0; i < dimensions; ++i)
+            delete exps[i];
+        delete exps;
+    }
 }
 
 #ifdef LEGACY_EXEC
@@ -1403,6 +1425,19 @@ MCVariable *MCVarref::fetchvar(MCExecContext& ctxt)
 	return t_parentscript -> GetVariable(index);
 }
 
+MCContainer *MCVarref::fetchcontainer(MCExecContext& ctxt)
+{
+	// MW-2009-01-28: [[ Inherited parentScripts ]]
+	// If we are in parentScript context, then fetch the script local from there,
+	// otherwise use the information stored in this.
+	MCParentScriptUse *t_parentscript;
+	t_parentscript = ctxt . GetParentScript();
+	if (!isscriptlocal || t_parentscript == NULL)
+		return handler -> getcontainer(index, isparam);
+    
+    return nil;
+}
+
 #ifdef LEGACY_EXEC
 MCVariable *MCVarref::evalvar(MCExecPoint& ep)
 {
@@ -1415,7 +1450,7 @@ MCVariable *MCVarref::evalvar(MCExecPoint& ep)
 
 MCVariable *MCVarref::evalvar(MCExecContext& ctxt)
 {
-    if (dimensions != 0)
+    if (dimensions != 0 || isparam)
         return NULL;
 
     return fetchvar(ctxt);
@@ -1456,24 +1491,27 @@ Exec_stat MCVarref::eval(MCExecPoint& ep)
 void MCVarref::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
     MCValueRef t_value;
-	if (dimensions == 0)
+	if (dimensions == 0 && !isparam)
 	{
         MCVariable *t_resolved_ref;
-		
-		t_resolved_ref = fetchvar(ctxt);
+            
+        t_resolved_ref = fetchvar(ctxt);
         
-        if (!t_resolved_ref -> copyasexecvalue(r_value))
-            ctxt . Throw();
-
-        return;
+        if (t_resolved_ref != nil)
+        {
+            if (t_resolved_ref -> copyasexecvalue(r_value))
+                return;
+        }
 	}
     else
     {
         MCAutoPointer<MCContainer> t_container;
-        if (!resolve(ctxt, &t_container)
-                || !t_container -> eval_ctxt(ctxt, r_value))
-            ctxt . Throw();
+        if (resolve(ctxt, &t_container)
+                && t_container -> eval_ctxt(ctxt, r_value))
+            return;
     }
+    
+    ctxt . Throw();
 }
 
 #ifdef LEGACY_EXEC
@@ -1491,10 +1529,10 @@ Exec_stat MCVarref::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 
 bool MCVarref::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
 {
-    if (dimensions == 0)
+	if (dimensions == 0 && !isparam)
         return MCContainer::createwithvariable(fetchvar(ctxt), r_container);
-    else
-        return resolve(ctxt, r_container);
+
+    return resolve(ctxt, r_container);
 }
 
 void MCVarref::compile(MCSyntaxFactoryRef ctxt)
@@ -1569,7 +1607,7 @@ Exec_stat MCVarref::set(MCExecPoint &ep, Boolean append)
 
 bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
 {
-	if (dimensions == 0)
+	if (dimensions == 0 && !isparam)
 	{
 		MCVariable *t_resolved_ref;
         
@@ -1587,7 +1625,7 @@ bool MCVarref::set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingSty
 
 bool MCVarref::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting)
 {
-	if (dimensions == 0)
+	if (dimensions == 0 && !isparam)
 	{
 		MCVariable *t_resolved_ref;
         
@@ -1605,7 +1643,7 @@ bool MCVarref::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSe
 
 bool MCVarref::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_range)
 {
-    if (dimensions == 0)
+	if (dimensions == 0 && !isparam)
     {
         MCVariable *t_resolved_ref;
         
@@ -1623,7 +1661,7 @@ bool MCVarref::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_
 
 bool MCVarref::deleterange(MCExecContext &ctxt, MCRange p_range)
 {
-    if (dimensions == 0)
+	if (dimensions == 0 && !isparam)
     {
         MCVariable *t_resolved_ref;
         
@@ -1667,7 +1705,7 @@ Parse_stat MCVarref::parsearray(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 
-		if (dimensions == 0)
+        if (dimensions == 0)
 		{
 			exp = t_new_dimension;
 			dimensions = 1;
@@ -1719,7 +1757,7 @@ void MCVarref::clearuql()
 {
 	if (ref != NULL)
 		ref->clearuql();
-	else
+	else if (!isparam)
 		handler->getvar(index, isparam)->clearuql();
 }
 
@@ -1746,7 +1784,7 @@ Exec_stat MCVarref::dofree(MCExecPoint &ep)
 
 bool MCVarref::dofree(MCExecContext& ctxt)
 {
-	if (dimensions == 0)
+	if (dimensions == 0 && !isparam)
 	{
 		MCVariable *t_var;
 		
@@ -1856,30 +1894,32 @@ Exec_stat MCVarref::resolve(MCExecPoint& ep, MCContainer*& r_container)
 
 bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 {
-	MCVariable *t_var;
-	t_var = fetchvar(ctxt);
-    
-	if (dimensions == 0)
-	{
-		/* UNCHECKED */ MCContainer::createwithvariable(t_var, r_container);
-        return true;
-	}
-    
+    if (dimensions == 0 && !isparam)
+        return MCContainer::createwithvariable(fetchvar(ctxt), r_container);
+
 	MCExpression **t_dimensions;
 	if (dimensions == 1)
 		t_dimensions = &exp;
 	else
 		t_dimensions = exps;
     
-	uindex_t t_dimension_count;
-	t_dimension_count = dimensions;
-    
 	uindex_t t_path_length;
 	t_path_length = 0;
     
-	MCNameRef *t_path;
-	/* UNCHECKED */ MCMemoryNewArray(dimensions, t_path);    
+    // AL-2014-08-20: [[ ArrayElementRefParams ]] If the Varref refers to a container then
+    //  resolving the path requires appending the new dimensions to the old path
+    
+	MCNameRef *t_path, *t_old_path;
+    getpath(ctxt, t_old_path, t_path_length);
+    
+    uindex_t t_new_dimension_count;
+	t_new_dimension_count = dimensions + t_path_length;
 
+    /* UNCHECKED */ MCMemoryNewArray(t_new_dimension_count, t_path, t_new_dimension_count);
+
+    for (uindex_t i = 0; i < t_path_length; i++)
+        t_path[i] = MCValueRetain(t_old_path[i]);
+    
     for(uindex_t i = 0; i < dimensions && !ctxt . HasError(); i++)
 	{
         MCAutoValueRef t_value;
@@ -1897,7 +1937,7 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 					uindex_t t_length;
                     t_length = MCArrayGetCount(*t_array);
                     
-					/* UNCHECKED */ MCMemoryResizeArray(t_dimension_count + t_length, t_path, t_dimension_count);
+					/* UNCHECKED */ MCMemoryResizeArray(t_new_dimension_count + t_length, t_path, t_new_dimension_count);
 
 					for(uindex_t t_index = 1; t_index <= t_length; t_index += 1)
                     {
@@ -1919,8 +1959,10 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 
     if (!ctxt . HasError())
     {
-        /* UNCHECKED */ MCContainer::createwithpath(t_var, t_path, t_path_length, r_container);
-        return true;
+        if (isparam)
+            return MCContainer::copywithpath(fetchcontainer(ctxt), t_path, t_path_length, r_container);
+        else
+            return MCContainer::createwithpath(fetchvar(ctxt), t_path, t_path_length, r_container);
     }
 	else
 	{
@@ -1930,6 +1972,18 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 
         return false;
     }
+}
+
+void MCVarref::getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_length)
+{
+    if (!isparam)
+    {
+        r_path = nil;
+        r_length = 0;
+        return;
+    }
+    
+    fetchcontainer(ctxt) -> getpath(r_path, r_length);
 }
 
 // Resolve references to the appropriate element refered to by this Varref.

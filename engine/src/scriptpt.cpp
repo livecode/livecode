@@ -1354,6 +1354,35 @@ Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 	return PS_NO_MATCH;
 }
 
+bool MCScriptPoint::lookupconstantvalue(const char *& r_value)
+{
+	uint2 high = constant_table_size;
+	uint2 low = 0;
+	int4 cond;
+    
+    MCAutoStringRefAsCString t_token;
+    t_token . Lock(gettoken_stringref());
+    const char *token_cstring = *t_token;
+	while (low < high)
+	{
+		uint2 mid = low + ((high - low) >> 1);
+		cond = MCU_strncasecmp(token_cstring, constant_table[mid].token, token.getlength());
+		if (cond == 0)
+			cond -= constant_table[mid].token[token.getlength()];
+		if (cond < 0)
+			high = mid;
+		else
+			if (cond > 0)
+				low = mid + 1;
+			else
+			{
+                r_value = constant_table[mid] . svalue;
+				return true;
+			}
+	}
+	return false;
+}
+
 Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 {
 	if (m_type == ST_LIT)

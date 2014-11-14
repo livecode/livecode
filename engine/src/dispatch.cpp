@@ -54,6 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 #include "font.h"
 #include "stacksecurity.h"
+#include "scriptpt.h"
 
 #include "exec.h"
 #include "exec-interface.h"
@@ -74,6 +75,7 @@ MCImage *MCDispatch::imagecache;
 static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The following is not ASCII text,\n# so now would be a good time to q out of more\f\nexec mc $0 \"$@\"\n";
 
 #define NEWHEADERSIZE 8
+#define HEADERPREFIXSIZE 4
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
 static const char *newheader7000 = "REVO7000";
@@ -489,15 +491,35 @@ IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 	char tnewheader[NEWHEADERSIZE];
 	if (IO_read(tnewheader, NEWHEADERSIZE, stream) == IO_NORMAL)
 	{
-		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
-		if (strncmp(tnewheader, newheader, NEWHEADERSIZE) == 0 ||
-			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0 ||
-			strncmp(tnewheader, newheader7000, NEWHEADERSIZE) == 0)
+        // AL-2014-10-27: [[ Bug 12558 ]] Check for valid header prefix
+		if (strncmp(tnewheader, "REVO", HEADERPREFIXSIZE) == 0)
 		{
-			r_version = (tnewheader[4] - '0') * 1000;
-			r_version += (tnewheader[5] - '0') * 100;
-			r_version += (tnewheader[6] - '0') * 10;
-			r_version += (tnewheader[7] - '0') * 1;
+            // The header version can now consist of any alphanumeric characters
+            // They map to numbers as follows:
+            // 0-9 -> 0-9
+            // A-Z -> 10-35
+            // a-z -> 36-61
+            uint1 versionnum[4];
+            for (uint1 i = 0; i < 4; i++)
+            {
+                char t_char = tnewheader[i + 4];
+                if ('0' <= t_char && t_char <= '9')
+                    versionnum[i] = (uint1)(t_char - '0');
+                else if ('A' <= t_char && t_char <= 'Z')
+                    versionnum[i] = (uint1)(t_char - 'A' + 10);
+                else if ('a' <= t_char && t_char <= 'z')
+                    versionnum[i] = (uint1)(t_char - 'a' + 36);
+                else
+                    return IO_ERROR;
+            }
+
+            // Future file format versions will always still compare greater than MAX_STACKFILE_VERSION,
+            // so it is ok that r_version does not accurately reflect future version values.
+            // TODO: change this, and comparisons for version >= 7000 / 5500, etc 
+			r_version = versionnum[0] * 1000;
+			r_version += versionnum[1] * 100;
+			r_version += versionnum[2] * 10;
+            r_version += versionnum[3];
 		}
 		else
 		{
@@ -628,6 +650,9 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 	Boolean loadhome = False;
 	uint32_t version;
 
+    sptr = NULL;
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] First see if it is a binary stack.
 	if (readheader(stream, version) == IO_NORMAL)
 	{
 		if (version > MAX_STACKFILE_VERSION)
@@ -635,7 +660,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 			MCresult->sets("stack was produced by a newer version");
 			return IO_ERROR;
 		}
-
+        
 		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
 		//   parentscript resolution is required to false.
 		s_loaded_parent_script_reference = false;
@@ -700,7 +725,139 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 			sptr = NULL;
 			return IO_ERROR;
 		}
+    }
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] If we failed to load a stack from that step
+    //   then check to see if it is a script file stack.
+    if (sptr == NULL)
+    {
+        // Clear the error return.
+        MCresult -> clear();
+        
+        // Reset to position 0.
+        MCS_seek_set(stream, 0);
+        
+        // Load the file into memory - we need to process a byteorder mark and any
+        // line endings.
+        int64_t t_size;
+        t_size = MCS_fsize(stream);
+        
+        uint8_t *t_script;
+        /* UNCHECKED */ MCMemoryAllocate(t_size, t_script);
 
+        if (IO_read(t_script, t_size, stream) == IO_ERROR)
+        {
+            MCresult -> sets("unable to read file");
+            return IO_ERROR;
+        }
+
+        // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
+        MCFileEncodingType t_file_encoding = MCS_resolve_BOM(stream);
+        MCStringEncoding t_string_encoding;
+        MCAutoStringRef t_raw_script_string, t_LC_script_string;
+
+        uint32_t t_BOM_offset;
+        switch (t_file_encoding)
+        {
+        case kMCFileEncodingUTF8:
+            t_BOM_offset = 3;
+            t_string_encoding = kMCStringEncodingUTF8;
+            break;
+        case kMCFileEncodingUTF16:
+            t_string_encoding = kMCStringEncodingUTF16;
+            t_BOM_offset = 2;
+            break;
+        case kMCFileEncodingUTF16BE:
+            t_string_encoding = kMCStringEncodingUTF16BE;
+            t_BOM_offset = 2;
+            break;
+        case kMCFileEncodingUTF16LE:
+            t_string_encoding = kMCStringEncodingUTF16LE;
+            t_BOM_offset = 2;
+            break;
+        default:
+            // Assume native
+            t_string_encoding = kMCStringEncodingNative;
+            t_BOM_offset = 0;
+            break;
+        }
+
+        /* UNCHECKED */ MCStringCreateWithBytes(t_script + t_BOM_offset, t_size - t_BOM_offset, t_string_encoding, false, &t_raw_script_string);
+        /* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_raw_script_string, &t_LC_script_string);
+
+        MCMemoryDeallocate(t_script);
+        
+        // Now attempt to parse the header line:
+        //   'script' <string>
+        MCScriptPoint sp(*t_LC_script_string);
+        
+        // Parse 'script' token.
+        if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) == PS_NORMAL)
+        {
+            // Parse <string> token.
+            Symbol_type t_type;
+            if (sp . next(t_type) == PS_NORMAL &&
+                t_type == ST_LIT)
+            {
+                MCNewAutoNameRef t_script_name;
+                MCNameClone(sp . gettoken_nameref(), &t_script_name);
+                
+                // Parse end of line.
+                Parse_stat t_stat;
+                t_stat = sp . next(t_type);
+                if (t_stat == PS_EOL || t_stat == PS_EOF)
+                {
+                    // MW-2014-10-23: [[ Bug ]] Make sure we trim the correct number of lines.
+                    // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
+                    // Now trim the ep down to the remainder of the script.
+                    // Trim the header.
+                    uint32_t t_lines = sp.getline();
+                    uint32_t t_index = 0;
+
+                    // Jump over the possible lines before the string token
+                    while (MCStringFirstIndexOfChar(*t_LC_script_string, '\n', t_index, kMCStringOptionCompareExact, t_index) &&
+                           t_lines > 0)
+                        t_lines -= 1;
+                    
+                    // Add one to the index so we include the LF
+                    t_index += 1;
+
+                    // t_line now has the last LineFeed of the token
+                    MCAutoStringRef t_LC_script_body;
+
+                    // We copy the body of the stack script
+                    MCStringCopySubstring(*t_LC_script_string, MCRangeMake(t_index, MCStringGetLength(*t_LC_script_string) - t_index), &t_LC_script_body);
+                    
+                    // Create a stack.
+                    /* UNCHECKED */ MCStackSecurityCreateStack(sptr);
+                    
+                    // Set its parent.
+                    if (stacks == NULL)
+                        sptr->setparent(this);
+                    else
+                        sptr->setparent(stacks);
+                    
+                    // Set its filename.
+                    sptr->setfilename(p_openpath);
+                    
+                    // Set its name.
+                    sptr -> setname(*t_script_name);
+                    
+                    // Make it invisible
+                    sptr -> setflag(False, F_VISIBLE);
+                    
+                    // Set it up as script only.
+                    sptr -> setasscriptonly(*t_LC_script_body);
+                }
+            }
+        }
+        
+    }
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] If we managed to load a stack as either binary
+    //   or script, then do the normal processing.
+    if (sptr != NULL)
+    {
 		if (stacks != NULL)
 		{
 			MCStack *tstk = stacks;
@@ -755,42 +912,44 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		// this - so we just ignore the result for now (note that all the 'load'
 		// methods *fail* to check for no-memory errors!).
 		if (s_loaded_parent_script_reference)
-			sptr -> resolveparentscripts();
-		
+            sptr -> resolveparentscripts();
+        
+        return IO_NORMAL;
+    }
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] Finally attempt to load the script in legacy
+    //   modes - either as a single script, or as a HyperCard conversion.
+    MCS_seek_set(stream, 0);
+    if (stacks == NULL)
+    {
+        MCnoui = True;
+        MCscreen = new MCUIDC;
+        /* UNCHECKED */ MCStackSecurityCreateStack(stacks);
+        MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
+        stacks->setparent(this);
+        stacks->setname_cstring("revScript");
+        uint4 size = (uint4)MCS_fsize(stream);
+        MCAutoPointer<char> script;
+        script = new char[size + 2];
+        (*script)[size] = '\n';
+        (*script)[size + 1] = '\0';
+        if (IO_read(*script, size, stream) != IO_NORMAL)
+            return IO_ERROR;
+        MCAutoStringRef t_script_str;
+        /* UNCHECKED */ MCStringCreateWithCString(*script, &t_script_str);
+        if (!stacks -> setscript_from_commandline(*t_script_str))
+            return IO_ERROR;
+    }
+    else
+    {
+        // MW-2008-06-12: [[ Bug 6476 ]] Media won't open HC stacks
+        if (!MCdispatcher->cut(True) || hc_import(p_name, stream, sptr) != IO_NORMAL)
+        {
+            MCresult->sets("file is not a stack");
+            return IO_ERROR;
+        }
 	}
-	else
-	{
-		MCS_seek_set(stream, 0);
-		if (stacks == NULL)
-		{
-			MCnoui = True;
-			MCscreen = new MCUIDC;
-			/* UNCHECKED */ MCStackSecurityCreateStack(stacks);
-			MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
-			stacks->setparent(this);
-			stacks->setname_cstring("revScript");
-			uint4 size = (uint4)MCS_fsize(stream);
-            MCAutoPointer<char> script;
-            script = new char[size + 2];
-            (*script)[size] = '\n';
-            (*script)[size + 1] = '\0';
-            if (IO_read(*script, size, stream) != IO_NORMAL)
-                return IO_ERROR;
-            MCAutoStringRef t_script_str;
-            /* UNCHECKED */ MCStringCreateWithCString(*script, &t_script_str);
-            if (!stacks -> setscript(*t_script_str))
-                return IO_ERROR;
-		}
-		else
-		{
-			// MW-2008-06-12: [[ Bug 6476 ]] Media won't open HC stacks
-			if (!MCdispatcher->cut(True) || hc_import(p_name, stream, sptr) != IO_NORMAL)
-			{
-				MCresult->sets("file is not a stack");
-				return IO_ERROR;
-			}
-		}
-	}
+    
 	return IO_NORMAL;
 }
 
@@ -890,12 +1049,101 @@ void MCDispatch::cleanup(IO_handle stream, MCStringRef linkname, MCStringRef bna
 
 IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname)
 {
-	IO_stat stat;
-	stat = dosavestack(sptr, p_fname);
+    IO_stat stat;
+    
+    // MW-2014-09-30: [[ ScriptOnlyStack ]] If the stack is scriptOnly, then save
+    //   it differently.
+    if (sptr -> isscriptonly())
+    {
+        stat = dosavescriptonlystack(sptr, p_fname);
+    }
+    else
+    {
+        stat = dosavestack(sptr, p_fname);
 
-	MCLogicalFontTableFinish();
-
+        MCLogicalFontTableFinish();
+    }
+    
 	return stat;
+}
+
+// MW-2014-09-30: [[ ScriptOnlyStack ]] Script only stacks get saved as a text file.
+//   Everything but the stack script is lost.
+IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fname)
+{
+    if (MCModeCheckSaveStack(sptr, p_fname) != IO_NORMAL)
+		return IO_ERROR;
+	
+    MCAutoStringRef linkname;
+    if (!MCStringIsEmpty(p_fname))
+        linkname = p_fname;
+	else if (!MCStringIsEmpty(sptr -> getfilename()))
+		linkname = sptr -> getfilename();
+    else
+    {
+        MCresult->sets("stack does not have a filename");
+        return IO_ERROR;
+    }
+
+    if (*linkname == NULL)
+	{
+		MCresult->sets("can't open stack script file, bad path");
+		return IO_ERROR;
+	}
+	if (MCS_noperm(*linkname))
+	{
+		MCresult->sets("can't open stack script file, no permission");
+		return IO_ERROR;
+	}
+    
+    // Compute the body of the script file.
+	MCAutoStringRef t_converted;
+
+	// MW-2014-10-24: [[ Bug 13791 ]] We need to post-process the generated string on some
+	//   platforms for line-ending conversion so temporarily need a stringref - hence we
+	//   put the processing in its own block.
+	{
+		MCAutoStringRef t_script_body;
+
+		// Write out the standard script stack header, and then the script itself
+		MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
+
+		// Convert line endings - but only if the native line ending isn't CR!
+#ifndef __CR__
+		MCStringConvertLineEndingsToLiveCode(*t_script_body, &t_converted);
+#else
+		t_converted = *t_script_body;
+#endif
+	}
+    
+    // Open the output stream.
+	IO_handle stream;
+    if ((stream = MCS_open(*linkname, kMCOpenFileModeWrite, True, False, 0)) == NULL)
+	{
+		MCresult->sets("can't open stack script file");
+        return IO_ERROR;
+    }
+
+    // Convert the output string to UTF-8
+    MCAutoStringRefAsUTF8String t_utf8_script;
+    t_utf8_script .Lock(*t_converted);
+
+    // Write out the byte-order mark, followed by the script body.
+    if (IO_write("\xEF\xBB\xBF", 1, 3, stream) != IO_NORMAL ||
+        IO_write(*t_utf8_script, 1, t_utf8_script . Size(), stream) != IO_NORMAL)
+    {
+        MCresult -> sets("error writing stack script file");
+        MCS_close(stream);
+        return IO_ERROR;
+    }
+    
+    // Close the stream.
+    MCS_close(stream);
+    
+    // Set the filename.
+    sptr->setfilename(*linkname);
+    
+    return IO_NORMAL;
 }
 
 IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)

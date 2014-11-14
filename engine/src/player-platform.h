@@ -35,6 +35,9 @@ enum
     kMCPlayerControllerPartVolumeBar,
     kMCPlayerControllerPartVolumeWell,
     kMCPlayerControllerPartVolumeSelector,
+    kMCPlayerControllerPartRateWell,
+    kMCPlayerControllerPartRateBar,
+    kMCPlayerControllerPartRateSelector,
     kMCPlayerControllerPartPlay,
     kMCPlayerControllerPartScrubBack,
     kMCPlayerControllerPartScrubForward,
@@ -45,6 +48,7 @@ enum
     kMCPlayerControllerPartSelectedArea,
     kMCPlayerControllerPartVolumeArea,
     kMCPlayerControllerPartPlayedArea,
+    kMCPlayerControllerPartBuffer,
     
 };
 
@@ -76,9 +80,12 @@ class MCPlayer : public MCControl, public MCPlayerInterface
     bool m_scrub_back_is_pressed : 1;
     bool m_scrub_forward_is_pressed : 1;
     bool m_modify_selection_while_playing : 1;
+
+    bool m_is_attached : 1;
+    bool m_should_attach : 1;
     
 	static MCPropertyInfo kProperties[];
-	static MCObjectPropertyTable kPropertyTable;
+    static MCObjectPropertyTable kPropertyTable;
 	
 public:
 	MCPlayer();
@@ -133,7 +140,6 @@ public:
 	MCRectangle getactiverect(void);
     // End MCObjet functions
     
-
     ////////////////////////////////////////////////////////////////////////////////
     // virtual MCPlayerInterface functions
     //
@@ -151,7 +157,7 @@ public:
 	virtual void editmovie(Boolean edit);
 	virtual void playselection(Boolean play);     //play the selected part of QT moive only
 	virtual Boolean ispaused();
-
+    
     virtual void gettracks(MCStringRef& r_tracks);
     
     virtual Boolean setenabledtracks(MCStringRef s);
@@ -190,7 +196,11 @@ public:
         layer_redrawrect(getcontrollerrect());
 	}
 	
-	Boolean isdisposable()
+    real8 getplayrate();
+    void updateplayrate(real8 p_rate);
+    uint4 getmovieloadedtime();
+	
+    Boolean isdisposable()
 	{
 		return disposable;
 	}
@@ -273,6 +283,8 @@ public:
 	virtual void GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time);
 	virtual void SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time);
 	virtual void GetDuration(MCExecContext& ctxt, uinteger_t& r_duration);
+    // PM-2014-11-03: [[ Bug 13920 ]] Make sure we support loadedTime property
+    virtual void GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_loaded_time);
 	virtual void GetLooping(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetLooping(MCExecContext& ctxt, bool setting);
 	virtual void GetPaused(MCExecContext& ctxt, bool& r_setting);
@@ -331,7 +343,9 @@ public:
     virtual void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
     virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
     virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
-        
+    
+    void GetStatus(MCExecContext& ctxt, intenum_t& r_status);
+    
     ////////////////////////////////////////////////////////////////////////////////
     // MCPlayer specific implementation for the platform player
     
@@ -374,19 +388,28 @@ public:
     void drawControllerSelectionFinishButton(MCGContextRef p_gcontext);
     void drawControllerSelectedAreaButton(MCGContextRef p_gcontext);
     void drawControllerPlayedAreaButton(MCGContextRef p_gcontext);
+    void drawControllerBufferedAreaButton(MCGContextRef p_gcontext);
     
     void drawcontrollerbutton(MCDC *dc, const MCRectangle& rect);
     void redrawcontroller(void);
     
     int hittestcontroller(int x, int y);
     
+    Boolean handle_kdown(MCStringRef p_string, KeySym key);
+    Boolean handle_shift_kdown(MCStringRef p_string, KeySym key);
     void handle_mdown(int which);
     void handle_mstilldown(int which);
     void handle_shift_mdown(int which);
+    void shift_play(void);
+    
     void handle_mup(int which);
     void handle_mfocus(int x, int y);
     
     void popup_closed(void);
+    
+    // PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
+    void attachplayer(void);
+    void detachplayer(void);
 };
 #endif
 

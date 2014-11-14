@@ -285,10 +285,18 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
             if (p_whole_chunk && !p_further_chunks)
             {
+                // AL-2014-10-15: [[ Bug 13680 ]] Make sure the previously found delimiter's length is used to adjust the string offsets.
+                
+                // Wholechunk operations need additional processing of mark indices to preserve the presence or otherwise of trailing delimiters.
+                // If we found a trailing delimiter for this item or line, make sure it is included in the mark.
+                // e.g. mark item 3 of a,b,c, -> a,b,(c,) so that delete item 3 of a,b,c, -> a,b,
+                
                 if (r_end < t_length)
-                    r_end++;
+                    r_end += t_found_range . length;
+                // If we didn't, and this operation does not force additional delimiters, then include the previous delimiter in the mark.
+                // e.g. mark item 3 of a,b,c -> a,b(,c) so that delete item 3 of a,b,c -> a,b
                 else if (r_start > 0 && !r_add)
-                    r_start--;
+                    r_start -= t_found_range . length;
             }
         }
             break;
@@ -408,8 +416,13 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             {
                 while (r_end < t_length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_end)))
                     r_end++;
-                while (r_start > 0 && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
-                    r_start--;
+                // AL-2014-09-29: [[ Bug 13550 ]] Only delete preceding whitespace if wholechunks is true
+                //  and word chunk range goes to the end of the string. 
+                if (r_end == t_length)
+                {
+                    while (r_start > 0 && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
+                        r_start--;
+                }
                 return;
             }
             
@@ -870,11 +883,13 @@ void MCStringsAddChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, uindex_t p
     
     /* UNCHECKED */ MCStringCopy(*t_string, (MCStringRef&)x_text . text);
     
-    x_text . start += p_to_add;
-    x_text . finish += p_to_add;
+    // SN-2014-09-03: [[ Bug 13314 ]] The line delimiter might be more than 1 character-long
+    x_text . start += MCStringGetLength(t_delimiter) * p_to_add;
+    x_text . finish += MCStringGetLength(t_delimiter) * p_to_add;
     
     // the text has changed
-    x_text . changed = true;
+    // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+    x_text . changed = p_to_add * MCStringGetLength(t_delimiter);
 }
 
 void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCStringRef& r_string)
@@ -1063,23 +1078,27 @@ void MCStringsMarkCodeunitsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ord
 
 void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
 {
-    // The incoming indices are for codeunits
-    MCRange t_cu_range;
-    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
-    
-    // So cut the string down, and then convert to data.
-    MCAutoStringRef t_string;
-    MCStringCopySubstring((MCStringRef)x_mark . text, t_cu_range, &t_string);
-    
-    MCAutoDataRef t_data;
-    ctxt . ConvertToData(*t_string, &t_data);
-    
-    MCValueRelease(x_mark . text);
-    x_mark . text = MCValueRetain(*t_data);
+    // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
+    // Cut the string down, and then convert to data if it is not already data
+    if (MCValueGetTypeCode(x_mark . text) != kMCValueTypeCodeData)
+    {
+        // The incoming indices are for codeunits
+        MCRange t_cu_range;
+        t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+        
+        MCAutoStringRef t_string;
+        MCStringCopySubstring((MCStringRef)x_mark . text, t_cu_range, &t_string);
+        
+        MCAutoDataRef t_data;
+        ctxt . ConvertToData(*t_string, &t_data);
+        
+        MCValueRelease(x_mark . text);
+        x_mark . text = MCValueRetain(*t_data);
+    }
     
     int4 t_first;
     int4 t_chunk_count;
-    MCStringsGetExtentsByRange(ctxt, CT_BYTE, p_first, p_last, *t_data, t_first, t_chunk_count);
+    MCStringsGetExtentsByRange(ctxt, CT_BYTE, p_first, p_last, x_mark . text, t_first, t_chunk_count);
     
     // convert codeunit indices to byte indices
     x_mark . start = x_mark . start + t_first;
@@ -1088,23 +1107,26 @@ void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, int
 
 void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
 {
-    // The incoming indices are for codeunits
-    MCRange t_cu_range;
-    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
-    
-    // So cut the string down, and then convert to data.
-    MCAutoStringRef t_string;
-    MCStringCopySubstring((MCStringRef)x_mark . text, t_cu_range, &t_string);
-    
-    MCAutoDataRef t_data;
-    ctxt . ConvertToData(*t_string, &t_data);
-    
-    MCValueRelease(x_mark . text);
-    x_mark . text = MCValueRetain(*t_data);
-    
+    // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
+    // Cut the string down, and then convert to data if it is not already data
+    if (MCValueGetTypeCode(x_mark . text) != kMCValueTypeCodeData)
+    {
+        // The incoming indices are for codeunits
+        MCRange t_cu_range;
+        t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+        
+        MCAutoStringRef t_string;
+        MCStringCopySubstring((MCStringRef)x_mark . text, t_cu_range, &t_string);
+        
+        MCAutoDataRef t_data;
+        ctxt . ConvertToData(*t_string, &t_data);
+        
+        MCValueRelease(x_mark . text);
+        x_mark . text = MCValueRetain(*t_data);
+    }
     int4 t_first;
     int4 t_chunk_count;
-    MCStringsGetExtentsByOrdinal(ctxt, CT_BYTE, p_ordinal_type, *t_data, t_first, t_chunk_count);
+    MCStringsGetExtentsByOrdinal(ctxt, CT_BYTE, p_ordinal_type, x_mark . text, t_first, t_chunk_count);
     
     x_mark . start = x_mark . start + t_first;
     x_mark . finish = x_mark . start + t_chunk_count;

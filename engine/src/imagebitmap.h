@@ -119,7 +119,8 @@ MCGRaster MCImageBitmapGetMCGRaster(MCImageBitmap *p_bitmap, bool p_is_premultip
 MCImageBitmap MCImageBitmapFromMCGRaster(const MCGRaster &p_raster);
 bool MCImageBitmapCopyAsMCGImage(MCImageBitmap *p_bitmap, bool p_is_premultiplied, MCGImageRef &r_image);
 bool MCImageBitmapCopyAsMCGImageAndRelease(MCImageBitmap *&x_bitmap, bool p_is_premultiplied, MCGImageRef &r_image);
-bool MCImageBitmapCreateWithTransformedMCGImage(MCGImageRef p_src, MCGAffineTransform p_transform, MCGImageFilter p_quality, MCImageBitmap *&r_bitmap);
+// IM-2014-09-02: [[ Bug 13295 ]] Add optional target size param.
+bool MCImageBitmapCreateWithTransformedMCGImage(MCGImageRef p_src, MCGAffineTransform p_transform, MCGImageFilter p_quality, const MCGIntegerSize *p_target_size, MCImageBitmap *&r_bitmap);
 
 ////////////////////////////////////////////////////////////////////////////////
 

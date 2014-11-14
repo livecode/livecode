@@ -560,3 +560,21 @@ IO_stat MCObjectOutputStream::Flush(bool p_end)
 
 	return IO_NORMAL;
 }
+
+// SN-2014-10-27: [[ Bug 13554 ]] The string length is different according to the support of Unicode
+uint32_t MCObjectOutputStream::MeasureStringRefNew(MCStringRef p_string, bool p_supports_unicode)
+{
+    if (p_supports_unicode)
+    {
+        MCAutoStringRefAsUTF8String t_utf8_string;
+        /* UNCHECKED */ t_utf8_string . Lock(p_string);
+        
+        // We write first the size (uint32_t) and then the UTF-8 string.
+        return 4 + t_utf8_string . Size();
+    }
+    else
+    {
+        // C-strings are written as null-terminated strings
+        return 1 + MCStringGetLength(p_string);
+    }
+}

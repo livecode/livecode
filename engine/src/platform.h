@@ -552,6 +552,7 @@ bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef transform, MCImag
 typedef class MCPlatformWindowMask *MCPlatformWindowMaskRef;
 
 void MCPlatformWindowMaskCreate(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask);
+void MCPlatformWindowMaskCreateWithAlphaAndRelease(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask);
 void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef mask);
 void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef mask);
 
@@ -903,7 +904,8 @@ bool MCPlatformSurfaceLockGraphics(MCPlatformSurfaceRef surface, MCGIntegerRecta
 void MCPlatformSurfaceUnlockGraphics(MCPlatformSurfaceRef surface, MCGIntegerRectangle region, MCGContextRef p_context, MCGRaster& p_raster);
 
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to match new platform surface API.
-bool MCPlatformSurfaceLockPixels(MCPlatformSurfaceRef surface, MCGIntegerRectangle region, MCGRaster& r_raster);
+// IM-2014-08-26: [[ Bug 13261 ]] Return the actual locked area covered by the pixels
+bool MCPlatformSurfaceLockPixels(MCPlatformSurfaceRef surface, MCGIntegerRectangle region, MCGRaster& r_raster, MCGIntegerRectangle &r_locked_area);
 void MCPlatformSurfaceUnlockPixels(MCPlatformSurfaceRef surface, MCGIntegerRectangle region, MCGRaster& p_raster);
 
 bool MCPlatformSurfaceLockSystemContext(MCPlatformSurfaceRef surface, void*& r_context);
@@ -979,6 +981,7 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyPlayRate,
 	kMCPlatformPlayerPropertyVolume,
     kMCPlatformPlayerPropertyMarkers,
+    kMCPlatformPlayerPropertyLoadedTime,
     
     kMCPlatformPlayerPropertyShowSelection,
 	kMCPlatformPlayerPropertyOnlyPlaySelection,

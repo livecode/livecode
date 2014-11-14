@@ -355,7 +355,7 @@ typedef signed long int int64_t;
 #define UINT16_MIN (0U)
 #define UINT16_MAX (65535U)
 #define INT16_MIN (-32768)
-#define INT16_MAX (32767U)
+#define INT16_MAX (32767)
 
 #define UINT32_MIN (0U)
 #define UINT32_MAX (4294967295U)
@@ -1605,6 +1605,9 @@ bool MCStringConvertToUnicode(MCStringRef string, unichar_t*& r_chars, uindex_t&
 // terminated, but this is not reflected in the char count.
 bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
 
+// Normalizes and converts to native
+bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
+
 // Converts the contents of the string to UTF-8. The caller takes ownership of the
 // char array. Note that the returned array is NUL terminated but this is not
 // reflected in the char count.
@@ -1612,6 +1615,9 @@ bool MCStringConvertToUTF8(MCStringRef string, char*& r_chars, uindex_t& r_char_
 
 // Converts the contents of the string to UTF-32.
 bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_t &r_char_count);
+
+// Normalizes and converts to c-string
+bool MCStringNormalizeAndConvertToCString(MCStringRef string, char*& r_cstring);
 
 // Converts the content to char_t*
 bool MCStringConvertToCString(MCStringRef string, char*& r_cstring);
@@ -1682,6 +1688,9 @@ bool MCStringFirstIndexOf(MCStringRef string, MCStringRef needle, uindex_t after
 // Find the first offset of needle in string - where needle is a Unicode character
 // (note it is a codepoint, not unichar - i.e. a 20-bit value).
 bool MCStringFirstIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
+// Find the first offset of needle in given range of string - where needle is a Unicode character
+// (note it is a codepoint, not unichar - i.e. a 20-bit value).
+bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
 
 // Find the last offset of needle in string, on or before index 'before',
 // processing as appropriate according to options.
@@ -1886,8 +1895,11 @@ bool MCDataPrependBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte
 bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
 
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
+bool MCDataInsertBytes(MCDataRef self, uindex_t p_at, const byte_t *p_bytes, uindex_t p_byte_count);
+
 bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
+bool MCDataReplaceBytes(MCDataRef r_data, MCRange p_range, const byte_t *p_new_data, uindex_t p_byte_count);
 
 bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 

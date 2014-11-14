@@ -119,17 +119,28 @@ void MCGlyphRunDestroy(MCGlyphRun& p_run)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// AL-2014-10-08: [[ Bug 13542 ]] Cache harfbuzz face structures
+static MCGCacheTableRef s_hb_face_cache = nil;
+
+#define kMCHarfbuzzFaceCacheTableSize 32
+#define kMCHarfbuzzFaceCacheByteSize kMCHarfbuzzFaceCacheTableSize * 256
+#define kMCHarfbuzzFaceCacheMaxOccupancy kMCHarfbuzzFaceCacheTableSize * 0.5
+
 void MCGPlatformInitialize(void)
 {
+    s_hb_face_cache = nil;
+    /* UNCHECKED */ MCGCacheTableCreate(kMCHarfbuzzFaceCacheTableSize, kMCHarfbuzzFaceCacheMaxOccupancy, kMCHarfbuzzFaceCacheByteSize, s_hb_face_cache);
 }
 
 void MCGPlatformFinalize(void)
 {
+    MCGCacheTableDestroy(s_hb_face_cache);
+    s_hb_face_cache = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static hb_font_t *HBSkiaFaceToHBFont(hb_skia_face *p_typeface)
+static hb_font_t *HBSkiaFaceToHBFont(MCHarfbuzzSkiaFace *p_typeface)
 {
     return hb_sk_font_create(p_typeface, nil);
 }
@@ -156,16 +167,79 @@ static hb_script_t HBScriptFromText(const unichar_t *p_text, uindex_t p_count)
     return hb_icu_script_to_script(t_script);
 }
 
+MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uint32_t p_size)
+{
+	bool t_success;
+	t_success = true;
+	
+	if (t_success)
+		t_success = s_hb_face_cache != nil;
+	
+	void *t_key;
+	t_key = nil;
+    
+    uint32_t t_id;
+    t_id = p_typeface -> uniqueID();
+    
+    // AL-2014-10-08: [[ Bug 13542 ]] Retrieve harfbuzz face from cache if possible
+	if (t_success)
+    {
+		t_success = MCMemoryNew(sizeof(t_id), t_key);
+        MCMemoryCopy(t_key, &t_id, sizeof(t_id));
+    }
+	
+	if (t_success)
+	{
+		MCHarfbuzzSkiaFace *t_hb_sk_face;
+		t_hb_sk_face = (MCHarfbuzzSkiaFace *)MCGCacheTableGet(s_hb_face_cache, t_key, sizeof(t_id));
+		if (t_hb_sk_face != nil)
+		{
+            // AL-2014-10-27: [[ Bug 13802 ]] Make sure to set the size when we retrieve the cached face
+            t_hb_sk_face -> skia_face -> size = p_size;
+			MCMemoryDelete(t_key);
+			return t_hb_sk_face;
+		}
+        
+        hb_skia_face_t *t_face;
+        t_face = new hb_skia_face_t;
+            
+        t_face -> typeface = p_typeface;
+        t_face -> size = p_size;
+        
+        t_hb_sk_face = new MCHarfbuzzSkiaFace;
+        t_hb_sk_face -> face = nil;
+        t_hb_sk_face -> skia_face = nil;
+
+        hb_sk_set_face(t_hb_sk_face, t_face);
+        t_hb_sk_face -> skia_face = t_face;
+        p_typeface -> ref();
+        
+		MCGCacheTableSet(s_hb_face_cache, t_key, sizeof(t_id), t_hb_sk_face, sizeof(MCHarfbuzzSkiaFace));
+        return t_hb_sk_face;
+	}
+	
+	if (!t_success)
+		MCMemoryDelete(t_key);
+    
+	return nil;
+}
+
 void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, bool p_rtl, const MCGFont &p_font, MCGlyphRun*& r_runs, uindex_t& r_run_count)
 {
     MCAutoArray<MCGlyphRun> t_runs;
     SkTypeface *t_typeface = (SkTypeface *)p_font . fid;
-    
-    hb_skia_face t_face;
-    t_face . typeface = t_typeface;
-    t_face . size = p_font . size;
-    
+ 
     //MCLog("typeface name %d", t_typeface -> uniqueID());
+    
+    MCHarfbuzzSkiaFace *t_hb_sk_face;
+    t_hb_sk_face = MCHarfbuzzGetFaceForSkiaTypeface(t_typeface, p_font . size);
+    
+    if (t_hb_sk_face == nil)
+    {
+        r_run_count = 0;
+        r_runs = nil;
+        return;
+    }
     
     // Set up the HarfBuzz buffer
     hb_buffer_t *buffer = hb_buffer_create();
@@ -175,7 +249,8 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
     hb_buffer_set_script(buffer, HBScriptFromText(p_text, p_char_count));
     
     hb_buffer_add_utf16(buffer, p_text, p_char_count, 0, p_char_count);
-    hb_shape(HBSkiaFaceToHBFont(&t_face), buffer, NULL, 0);
+    
+    hb_shape(HBSkiaFaceToHBFont(t_hb_sk_face), buffer, NULL, 0);
     
     int glyph_count = hb_buffer_get_length(buffer);
     hb_glyph_info_t *glyph_info = hb_buffer_get_glyph_infos(buffer, 0);
@@ -233,6 +308,8 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
                     t_runs . Push(t_fallback_runs[i]);
                 
                 t_fallback -> unref();
+                
+                MCMemoryDeleteArray(t_fallback_runs);
             }
             else
             {

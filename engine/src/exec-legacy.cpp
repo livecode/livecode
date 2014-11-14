@@ -527,6 +527,11 @@ void MCLegacyGetMenuBar(MCExecContext& ctxt, MCStringRef& r_value)
 		MCmenubar -> getstringprop(ctxt, 0, P_LONG_NAME, False, r_value);
 }
 
+// SN-2014-09-01: [[ Bug 13300 ]] Updated 'set the menubar' to have a (useless) setter at the global scope
+void MCLegacySetMenuBar(MCExecContext& ctxt, MCStringRef p_value)
+{
+}
+
 void MCLegacyGetEditMenus(MCExecContext& ctxt, bool& r_value)
 {
 	r_value = true;

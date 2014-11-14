@@ -49,6 +49,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/dir.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <sys/statvfs.h>
 #include <dlfcn.h>
 #include <termios.h>
 //#include <langinfo.h>
@@ -287,7 +288,9 @@ bool MCS_lnx_readlink(MCStringRef p_path, MCStringRef& r_link)
     MCAutoStringRefAsSysString t_path;
     /* UNCHECKED */ t_path.Lock(p_path);
     if (lstat64(*t_path, &t_stat) == -1 ||
-        !t_buffer.New(t_stat.st_size))
+        // SN-2014-09-02: [[ Bug 13323 ]] The size needs be 1 bigger to allow
+        // a final NIL-byte.
+        !t_buffer.New(t_stat.st_size + 1))
         return false;
 
     t_size = readlink(*t_path, (char*)t_buffer.Ptr(), t_stat.st_size);
@@ -1037,10 +1040,14 @@ public:
         return "x86";
 #endif
 #endif /* MCS_getprocessor_dsk_lnx */
-#ifdef __LP64__
+#if   defined(__X86_64__)
         return MCN_x86_64;
-#else
+#elif defined(__ARM__)
+        return MCN_arm;
+#elif defined(__I386__)
         return MCN_x86;
+#else
+#  error "One of __X86_64__, __ARM__ or __I386__ must be defined"
 #endif
     }
 
@@ -1450,7 +1457,27 @@ public:
 #ifdef /* MCS_getfreediskspace_dsk_lnx */ LEGACY_SYSTEM
         return 1.0;
 #endif /* MCS_getfreediskspace_dsk_lnx */
-        return 1.0;
+
+		/* GetFreeDiskSpace should return the number of bytes free on
+		 * the current filesystem that contains the current working
+		 * directory. */
+		struct statvfs t_fsstat;
+
+		if (-1 == statvfs (".", &t_fsstat))
+		{
+			return 0;
+		}
+
+		/* There are two ways to get a measure of free diskspace: one
+		 * which measures how much free space there is, and one that
+		 * measures how much free space is available to use.  Here, we
+		 * choose the latter.  See also comments on bug 13674. */
+
+		real8 t_space;
+		t_space = t_fsstat.f_bavail;
+		// t_space = (real8) t_fsstat.f_bfree;
+		t_space *= t_fsstat.f_bsize;
+		return t_space;
     }
 
     virtual Boolean GetDevices(MCStringRef& r_devices)
@@ -1528,7 +1555,7 @@ public:
         t_found = stat64(*t_path_sys, &buf) == 0;
 
         if (t_found)
-            t_found = ((buf.st_mode & S_IFMT) == S_IFDIR);
+            t_found = S_ISDIR(buf.st_mode);
 
         return t_found;
     }
@@ -1550,7 +1577,7 @@ public:
         struct stat64 buf;
         if (stat64(*t_path_sys, &buf))
             return False;
-        if (buf.st_mode & S_IFDIR)
+        if (S_ISDIR(buf.st_mode))
             return True;
         if (!(buf.st_mode & S_IWUSR))
             return True;
@@ -1685,33 +1712,20 @@ public:
         }
 
         FILE *t_fptr;
-        // [[ Bug 12192 ]] We want to create an executable file on Linux
-        // when calling OpenFile from MCS_save(binary|text)file
-        if (p_mode == kMCOpenFileModeExecutableWrite)
-        {
-            int t_fd = open(*t_path_sys, O_CREAT | O_TRUNC | O_WRONLY, 0777);
-            if (t_fd != -1)
-                t_fptr = fdopen(t_fd, "w");
-            else
-                t_fptr = NULL;
-        }
-        else
-        {
-            const char *t_mode;
-            if (p_mode == kMCOpenFileModeRead)
-                t_mode = IO_READ_MODE;
-            else if (p_mode == kMCOpenFileModeWrite)
-                t_mode = IO_WRITE_MODE;
-            else if (p_mode == kMCOpenFileModeUpdate)
-                t_mode = IO_UPDATE_MODE;
-            else if (p_mode == kMCOpenFileModeAppend)
-                t_mode = IO_APPEND_MODE;
+        const char *t_mode;
+        if (p_mode == kMCOpenFileModeRead)
+            t_mode = IO_READ_MODE;
+        else if (p_mode == kMCOpenFileModeWrite)
+            t_mode = IO_WRITE_MODE;
+        else if (p_mode == kMCOpenFileModeUpdate)
+            t_mode = IO_UPDATE_MODE;
+        else if (p_mode == kMCOpenFileModeAppend)
+            t_mode = IO_APPEND_MODE;
 
-            t_fptr = fopen(*t_path_sys, t_mode);
+        t_fptr = fopen(*t_path_sys, t_mode);
 
-            if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
-                t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
-        }
+        if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
+            t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
         if (t_fptr != NULL)
         {
@@ -1732,7 +1746,6 @@ public:
             t_fptr = fdopen(p_fd, IO_READ_MODE);
             break;
         case kMCOpenFileModeWrite:
-        case kMCOpenFileModeExecutableWrite:
             t_fptr = fdopen(p_fd, IO_WRITE_MODE);
             break;
         case kMCOpenFileModeUpdate:
@@ -1759,7 +1772,7 @@ public:
 
         if (p_mode == kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_READ_MODE);
-        else if (p_mode == kMCOpenFileModeWrite || p_mode == kMCOpenFileModeExecutableWrite)
+        else if (p_mode == kMCOpenFileModeWrite)
             t_fptr = fopen(*t_path_sys, IO_WRITE_MODE);
         else if (p_mode == kMCOpenFileModeUpdate)
             t_fptr = fopen(*t_path_sys, IO_UPDATE_MODE);
@@ -2803,6 +2816,9 @@ public:
                 if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
                 {
                     MCAutoStringRefAsSysString t_name_sys;
+                    // SN-2014-08-22: [[ Bug 12903 ]] t_doc_sys was only defined in the
+                    //  bock it locks the document string.
+                    MCAutoStringRefAsSysString t_doc_sys;
                     /* UNCHECKED */ t_name_sys.Lock(MCNameGetString(p_name));
 
                     char **argv = NULL;
@@ -2834,7 +2850,6 @@ public:
                     }
                     else
                     {
-                        MCAutoStringRefAsSysString t_doc_sys;
                         /* UNCHECKED */ t_doc_sys.Lock(p_doc);
 
                         argv = new char *[3];

@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "redraw.h"
 #include "systhreads.h"
+#include "objectstream.h"
 
 #include "exec.h"
 #include "exec-interface.h"
@@ -1232,15 +1233,13 @@ Boolean MCField::mup(uint2 which, bool p_release)
 		}
 		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
 		{
-			MCAutoValueRef t_data;
-			if (MCselectiondata -> Fetch(TRANSFER_TYPE_UNICODE_TEXT, &t_data))
+			MCAutoStringRef t_string;
+			if (MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT, (MCValueRef&)&t_string))
 			{
 				extend = extendwords = False;
 				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
 				setfocus(mx, my);
-                MCAutoStringRef t_text_str;
-                /* UNCHECKED */ MCStringDecode((MCDataRef)*t_data, kMCStringEncodingUTF16, false, &t_text_str);
-				typetext(*t_text_str);
+				typetext(*t_string);
 			}
 		}
 		break;
@@ -1572,8 +1571,14 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 				if (pgptr == paragraphs)
 					break;
 			}
+            // SN-2014-09-17: [[ Bug 13462 ]] If no break has been found, we return the height of the field
 			if (theight != height)
-				ep.concatuint(height - theight, EC_RETURN, j++ == 0);
+            {
+                if (j)
+                    ep.concatuint(height - theight, EC_RETURN, false);
+                else
+                    ep.concatuint(height, EC_RETURN, true);
+            }
 		}
 		break;
     // JS-2013-05-15: [[ PageRanges ]] Return the pageRanges of the whole field.
@@ -2921,6 +2926,8 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
         // with a non-zero si valus is the first paragraph.
         MCRange t_cu_range, t_char_range;
         t_cu_range = MCRangeMake(si, t_pg->gettextlength() - si);
+        // SN-2014-09-11: [[ Bug 13361 ]] We need to remove the codeunits we skipped in the paragraph before counting.
+        ei -= si;
         si = 0;
         /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
         ++t_cu_range.length; // implicit paragraph break
@@ -3180,14 +3187,66 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 //  SAVING AND LOADING
 //
 
+#define FIELD_EXTRA_TEXTDIRECTION (1 << 0)
+
 IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
-	return defaultextendedsave(p_stream, p_part);
+	uint32_t t_size, t_flags;
+	t_size = 0;
+	t_flags = 0;
+    
+    // MW-2014-06-20: [[ Bug 13315 ]] Save the textDirection of the field
+    if (text_direction != kMCTextDirectionAuto)
+    {
+        t_flags |= FIELD_EXTRA_TEXTDIRECTION;
+        t_size += sizeof(uint8_t);
+    }
+    
+	IO_stat t_stat;
+	t_stat = p_stream . WriteTag(t_flags, t_size);
+
+    if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TEXTDIRECTION))
+        t_stat = p_stream . WriteU8(text_direction);
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedsave(p_stream, p_part);
+    
+	return t_stat;
 }
 
 IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
-	return defaultextendedload(p_stream, p_version, p_length);
+    IO_stat t_stat;
+	t_stat = IO_NORMAL;
+    
+    if (p_length > 0)
+    {
+		uint4 t_flags, t_length, t_header_length;
+		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+        
+		if (t_stat == IO_NORMAL)
+			t_stat = p_stream . Mark();
+        
+        // MW-2014-06-20: [[ 13315 ]] Load the textDirection of the field.
+        if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TEXTDIRECTION) != 0)
+        {
+            uint8_t t_value;
+            t_stat = p_stream . ReadU8(t_value);
+            if (t_stat == IO_NORMAL)
+                text_direction = (MCTextDirection)t_value;
+        }
+        
+        if (t_stat == IO_NORMAL)
+            t_stat = p_stream . Skip(t_length);
+        
+        if (t_stat == IO_NORMAL)
+            p_length -= t_length + t_header_length;
+    }
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedload(p_stream, p_version, p_length);
+    
+	return t_stat;
 }
 
 IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
@@ -3199,7 +3258,11 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint1(OT_FIELD, stream)) != IO_NORMAL)
 		return stat;
 
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+    // AL-2014-09-12: [[ Bug 13315 ]] Force an extension if field has explicit textDirection.
+    bool t_has_extension;
+	t_has_extension = text_direction != kMCTextDirectionAuto;
+    
+	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
 		return stat;
 
 	if ((stat = IO_write_int2(leftmargin, stream)) != IO_NORMAL)

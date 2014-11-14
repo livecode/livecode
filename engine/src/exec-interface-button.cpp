@@ -224,6 +224,8 @@ static MCExecEnumTypeElementInfo _kMCInterfaceButtonIconGravityElementInfo[] =
 	{ "left", kMCGravityLeft, false },
 	{ "right", kMCGravityRight, false },
 	{ "bottom", kMCGravityBottom, false },
+    // AL-2014-09-12: [[ Bug 13422 ]] Reinstate "top" value for gravity
+    { "top", kMCGravityTop, false },
 	{ "topLeft", kMCGravityTopLeft, false },
 	{ "topRight", kMCGravityTopRight, false },
 	{ "bottomLeft", kMCGravityBottomLeft, false },
@@ -563,6 +565,9 @@ void MCButton::GetIconGravity(MCExecContext &ctxt, intenum_t &r_gravity)
 void MCButton::SetIconGravity(MCExecContext &ctxt, intenum_t p_gravity)
 {
     m_icon_gravity = (MCGravity)p_gravity;
+    
+    // AL-2014-09-12: [[ Bug 13422 ]] Redraw after setting iconGravity
+    Redraw();
 }
 
 void MCButton::GetSharedHilite(MCExecContext& ctxt, bool& r_setting)
@@ -628,7 +633,11 @@ void MCButton::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 	MCValueAssign(label, p_label);
     // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
     //  we need to rely on the F_LABEL flag
-    flags |= F_LABEL;
+    // AL-2014-09-10: [[ Bug 13401 ]] If label is empty, the flag should reflect the lack of label
+    if (MCStringIsEmpty(label))
+        flags &= ~F_LABEL;
+    else
+        flags |= F_LABEL;
 
 	if (entry != NULL)
 		entry->settext(0, label, False);

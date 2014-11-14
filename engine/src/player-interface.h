@@ -48,6 +48,14 @@ enum QTVRstate {
 };
 #endif
 
+enum MCInterfacePlayerStatus
+{
+    kMCInterfacePlayerStatusNone,
+    kMCInterfacePlayerStatusLoading,
+    kMCInterfacePlayerStatusPlaying,
+    kMCInterfacePlayerStatusPaused,
+};
+
 // SN-2014-07-03: [[ PlatformPlayer ]] Player constraints must be the same for
 // new platform or old player
 struct MCMultimediaQTVRConstraints;
@@ -194,6 +202,8 @@ public:
 	virtual void GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time) = 0;
 	virtual void SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time) = 0;
 	virtual void GetDuration(MCExecContext& ctxt, uinteger_t& r_duration) = 0;
+    // PM-2014-11-03: [[ Bug 13920 ]] Make sure we support loadedTime property
+    virtual void GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_loaded_time) = 0;
 	virtual void GetLooping(MCExecContext& ctxt, bool& r_setting) = 0;
 	virtual void SetLooping(MCExecContext& ctxt, bool setting) = 0;
 	virtual void GetPaused(MCExecContext& ctxt, bool& r_setting) = 0;

@@ -27,13 +27,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "mcerror.h"
 #include "util.h"
+
 #include "variable.h"
+#include "player.h"
 
 #include "context.h"
 
 #include "printer.h"
 
 #include "mode.h"
+
+// SN-2014-08-25: [[ Bug 13187 ]] Added for the MCplayers' syncbuffering call
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+#endif
 
 extern char *strndup(const char *p_string, unsigned int p_length);
 
@@ -722,7 +729,15 @@ void MCPrinter::DoPrint(MCCard *p_card, const MCRectangle& p_src, const MCRectan
 		t_dst_printer_rect . bottom = p_dst . y + p_dst . height;
 
 		SetStatusFromResult(m_device -> Begin(t_src_printer_rect, t_dst_printer_rect, t_context));
-
+        
+        // SN-2014-08-25: [[ Bug 13187 ]] MCplayers' syncbuffering relocated
+        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+            if (t_player -> getstack() == p_card -> getstack())
+                t_player -> syncbuffering(t_context);
+#ifdef FEATURE_PLATFORM_PLAYER
+        MCPlatformWaitForEvent(0.0, true);
+#endif
+        
 		// Draw the card into the context.
 		if (m_loop_status == STATUS_READY)
 		{

@@ -44,6 +44,7 @@ MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedRotationRateOfDevice, 1)
 MC_EXEC_DEFINE_GET_METHOD(Sensor, RotationRateOfDevice, 1)
 MC_EXEC_DEFINE_GET_METHOD(Sensor, LocationCalibrationTimeout, 1)
 MC_EXEC_DEFINE_SET_METHOD(Sensor, LocationCalibrationTimeout, 1)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, LocationAuthorizationStatus, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -246,12 +247,14 @@ void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
     if (MCSystemGetLocationReading(t_reading, false))
     {
         r_location = nil;
-        MCCStringFormat(r_location, "%Lf,%Lf,%Lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
+        // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator.
+        MCCStringFormat(r_location, "%lf,%lf,%lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
     }
 #endif /* MCSensorGetLocationOfDevice */
     MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, false))
-        MCStringFormat(r_location, "%Lf,%Lf,%Lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
+        // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator.
+        MCStringFormat(r_location, "%lf,%lf,%lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
 }
 
 void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_heading)
@@ -357,12 +360,16 @@ void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, MCStringRef &r_heading)
     if (MCSystemGetHeadingReading(t_reading, true))
     {
         r_heading = nil;
-        MCCStringFormat(r_heading, "%Lf", t_reading.heading);
+        // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator. Currently, simulator does not support heading, acceleration or rotation, but since this might change in the future, use %lf instead
+        MCCStringFormat(r_heading, "%lf", t_reading.heading);
     }
 #endif /* MCSensorGetHeadingOfDevice */
     MCSensorHeadingReading t_reading;
     if (MCSystemGetHeadingReading(t_reading, true))
-        MCStringFormat(r_heading, "%Lf", t_reading.heading);
+        // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator.
+        //  Currently, simulator does not support heading, acceleration or rotation, but since this might
+        //  change in the future, use %lf instead
+        MCStringFormat(r_heading, "%lf", t_reading.heading);
 }
 
 void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_acceleration)
@@ -432,12 +439,16 @@ void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, MCStringRef &r_acceler
     if (MCSystemGetAccelerationReading(t_reading, true))
     {
         r_acceleration = nil;
-        MCCStringFormat(r_acceleration, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
+        // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator. Currently, simulator does not support heading, acceleration or rotation, but since this might change in the future, use %lf instead
+        MCCStringFormat(r_acceleration, "%lf,%lf,%lf", t_reading.x, t_reading.y, t_reading.z);
     }
 #endif /* MCSensorGetAccelerationOfDevice */
     MCSensorAccelerationReading t_reading;
     if (MCSystemGetAccelerationReading(t_reading, true))
-        MCStringFormat(r_acceleration, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
+        // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator.
+        //  Currently, simulator does not support heading, acceleration or rotation, but since this might
+        //  change in the future, use %lf instead
+        MCStringFormat(r_acceleration, "%lf,%lf,%lf", t_reading.x, t_reading.y, t_reading.z);
 }
 
 void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_rotation_rate)
@@ -508,14 +519,18 @@ void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotatio
     if (MCSystemGetRotationRateReading(t_reading, true))
     {
         r_rotation_rate = nil;
-        MCCStringFormat(r_rotation_rate, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
+        // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator. Currently, simulator does not support heading, acceleration or rotation, but since this might change in the future, use %lf instead
+        MCCStringFormat(r_rotation_rate, "%lf,%lf,%lf", t_reading.x, t_reading.y, t_reading.z);
     }
 #endif /* MCSensorGetRotationRateOfDevice */
     MCSensorRotationRateReading t_reading;
     if (MCSystemGetRotationRateReading(t_reading, true))
     {
         r_rotation_rate = nil;
-        MCStringFormat(r_rotation_rate, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
+        // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator.
+        //  Currently, simulator does not support heading, acceleration or rotation, but since this might
+        //  change in the future, use %lf instead
+        MCStringFormat(r_rotation_rate, "%lf,%lf,%lf", t_reading.x, t_reading.y, t_reading.z);
     }
 }
 
@@ -534,6 +549,15 @@ void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeo
     MCSystemGetLocationCalibrationTimeout(r_timeout);
 #endif /* MCSensorGetLocationCalibration */
     MCSystemGetLocationCalibrationTimeout(r_timeout);
+}
+
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+void MCSensorGetLocationAuthorizationStatus(MCExecContext& ctxt, MCStringRef &r_status)
+{
+    if (MCSystemGetLocationAuthorizationStatus(r_status))
+        return;
+
+    ctxt . Throw();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

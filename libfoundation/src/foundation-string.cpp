@@ -405,6 +405,7 @@ static bool MCStringCreateMutableUnicode(uindex_t p_initial_capacity, MCStringRe
 	if (t_success)
 	{
 		self -> flags |= kMCStringFlagIsMutable;
+		self->char_count = 0;
 		r_string = self;
 	}
     
@@ -427,6 +428,7 @@ bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 	if (t_success)
 	{
 		self -> flags |= kMCStringFlagIsMutable;
+		self->char_count = 0;
 		r_string = self;
 	}
 
@@ -535,6 +537,10 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 		{
 			if (*t_format_ptr == '%')
 			{
+                // AL-2014-09-19: Flush chars between format strings
+                if (t_format_ptr != t_format_start_ptr)
+                    break;
+                
 				t_format_ptr++;
 				
 				if (*t_format_ptr == '@')
@@ -573,10 +579,13 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					}
 				}
 				
+				// MW-2014-10-23: [[ Bug 13757 ]] Make sure we process the VS specific 'I64d' format
+				//   as 64-bit.
 				if (strncmp(t_format_ptr, "lld", 3) == 0 ||
 					strncmp(t_format_ptr, "llu", 3) == 0 ||
 					strncmp(t_format_ptr, "lf", 2) == 0 ||
-					strncmp(t_format_ptr, "f", 1) == 0)
+					strncmp(t_format_ptr, "f", 1) == 0 ||
+					strncmp(t_format_ptr, "I64d", 4) == 0)
 					t_arg_count += FORMAT_ARG_64_BIT;
 				else
 					t_arg_count += FORMAT_ARG_32_BIT;
@@ -1277,7 +1286,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         MCRange t_input, t_out;
         t_input . offset = 0;
         t_input . length = self -> char_count;
-        MCStringUnmapCodepointIndices(self, t_input, t_out);
+        MCStringMapCodepointIndices(self, t_input, t_out);
     }
     
     // Quick-n-dirty workaround
@@ -1287,8 +1296,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         r_out_range = p_in_range;
         return true;
     }
-    
-    
+
     return MCStringMapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
 }
 
@@ -1696,6 +1704,15 @@ bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r
 	return true;
 }
 
+bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count)
+{
+    MCAutoStringRef t_normalized;
+    if (!MCStringNormalizedCopyNFC(string, &t_normalized))
+        return false;
+    
+    return MCStringConvertToNative(*t_normalized, r_chars, r_char_count);
+}
+
 bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_char_count)
 {
 	// Allocate an array of chars one byte bigger than needed. As the allocated array
@@ -1709,6 +1726,14 @@ bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_cha
 	return true;
 }
 
+bool MCStringNormalizeAndConvertToCString(MCStringRef string, char*& r_cstring)
+{
+    MCAutoStringRef t_normalized;
+    if (!MCStringNormalizedCopyNFC(string, &t_normalized))
+        return false;
+    
+    return MCStringConvertToCString(*t_normalized, r_cstring);
+}
 
 bool MCStringConvertToCString(MCStringRef p_string, char*& r_cstring)
 {
@@ -2269,6 +2294,11 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
         p_needle = p_needle -> string;
     
 	__MCStringClampRange(self, p_range);
+    
+    // SN-2014-09-05: [[ Bug 13346 ]] Empty is *never* contained in a string. In the loop, a commong string of length 0
+    // will be found, which unfortunaly matches the length of the empty needle.
+    if (MCStringIsEmpty(p_needle))
+        return false;
 
     bool self_native = MCStringIsNative(self);
     if (self_native)
@@ -2353,7 +2383,8 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
     else
         self_chars = self -> chars + p_after;
     
-    t_result = MCUnicodeFirstIndexOf(self_chars, self -> char_count, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
+    // AL-2014-09-05: [[ Bug 13352 ]] Crash due to not taking into account p_after by adjusting length of string.
+    t_result = MCUnicodeFirstIndexOf(self_chars, self -> char_count - p_after, MCStringIsNative(self), p_needle -> chars, p_needle -> char_count, MCStringIsNative(p_needle), (MCUnicodeCompareOption)p_options, r_offset);
     
     // Correct the output index
     if (t_result == true)
@@ -2364,12 +2395,16 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
 
 bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_after, MCStringOptions p_options, uindex_t& r_offset)
 {
+    return MCStringFirstIndexOfCharInRange(self, p_needle, MCRangeMake(p_after, self -> char_count - p_after), p_options, r_offset);
+}
+
+bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset)
+{
     if (__MCStringIsIndirect(self))
         self = self -> string;
-
-	// Make sure the after index is in range.
-	p_after = MCMin(p_after, self -> char_count);
-
+    
+    __MCStringClampRange(self, p_range);
+    
     if (MCStringIsNative(self))
     {
         if (p_needle >= 0xFF)
@@ -2380,7 +2415,7 @@ bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p
         if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
             t_char = MCNativeCharFold(t_char);
         
-        for(uindex_t t_offset = p_after; t_offset < self -> char_count; t_offset += 1)
+        for(uindex_t t_offset = p_range . offset; t_offset < p_range . offset + p_range . length; t_offset += 1)
         {
             char_t t_other_char;
             t_other_char = self -> native_chars[t_offset];
@@ -2397,11 +2432,11 @@ bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p
     }
     
     bool t_result;
-    t_result = MCUnicodeFirstIndexOfChar(self -> chars + p_after, self -> char_count - p_after, p_needle, (MCUnicodeCompareOption)p_options, r_offset);
+    t_result = MCUnicodeFirstIndexOfChar(self -> chars + p_range . offset, p_range . length, p_needle, (MCUnicodeCompareOption)p_options, r_offset);
     
     // Correct the output index
     if (t_result == true)
-        r_offset += p_after;
+        r_offset += p_range . offset;
     
     return t_result;
 }
@@ -3361,12 +3396,12 @@ bool MCStringReplaceNativeChars(MCStringRef self, MCRange p_range, const char_t 
 {
     MCAssert(MCStringIsMutable(self));
     
-    __MCStringClampRange(self, p_range);
-    
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
             return false;
+    
+    __MCStringClampRange(self, p_range);
     
     // Work out the new size of the string.
     uindex_t t_new_char_count;
@@ -3407,12 +3442,12 @@ bool MCStringReplaceChars(MCStringRef self, MCRange p_range, const unichar_t *p_
 {
     MCAssert(MCStringIsMutable(self));
     
-    __MCStringClampRange(self, p_range);
-    
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
             return false;
+    
+    __MCStringClampRange(self, p_range);
     
     // Work out the new size of the string.
     uindex_t t_new_char_count;

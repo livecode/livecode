@@ -90,7 +90,8 @@ bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p
 	
     // MM-2014-07-31: [[ ThreadedRendering ]] Updated to use the new stack surface API.
 	MCGRaster t_raster;
-	if (!p_surface -> LockPixels(t_dirty, t_raster))
+	MCGIntegerRectangle t_locked_area;
+	if (!p_surface -> LockPixels(t_dirty, t_raster, t_locked_area))
 		return false;
 	    
     self -> raster = t_raster;
@@ -100,7 +101,7 @@ bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p
 	self -> tile_row_color = 0;
 	
 	self -> tile_size = MCTileCacheGetTileSize(self -> tilecache);
-	self -> dirty = MCRectangleFromMCGIntegerRectangle(t_dirty);
+	self -> dirty = MCRectangleFromMCGIntegerRectangle(t_locked_area);
 	self -> clip = self -> dirty;
 	self -> combiner = s_surface_combiners_nda[GXcopy];
 	self -> opacity = 255;

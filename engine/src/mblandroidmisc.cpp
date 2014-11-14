@@ -566,18 +566,6 @@ void MCMobileCreateImageFromData(const char *p_bytes, uint32_t p_length)
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCMobilePickPhoto(const char *p_source, int32_t p_max_width, int32_t p_max_height)
-{
-#ifdef /* MCMobilePickPhoto */ LEGACY_EXEC
-	MCAndroidEngineCall("showPhotoPicker", "vs", nil, p_source);
-#endif /* MCMobilePickPhoto */
-}
-
-static char *s_pick_photo_data = nil;
-static uint32_t s_pick_photo_size = 0;
-static char *s_pick_photo_err = nil;
-static bool s_pick_photo_returned = false;
-
 #ifdef /* MCHandlePickPhotoAndroid */ LEGACY_EXEC
 static Exec_stat MCHandlePickPhoto(void *context, MCParameter *p_parameters)
 {
@@ -731,7 +719,10 @@ bool MCSystemVibrate (int32_t p_number_of_vibrates)
 
 bool MCSystemGetPixelDensity(real64_t& r_density)
 {
-    MCAndroidEngineRemoteCall("getPixelDensity", "f", &r_density);
+    // SN-2014-09-04: [[ Bug 13336 ]] 'f' is the signature for a 'float' pointer
+    float t_density;
+    MCAndroidEngineRemoteCall("getPixelDensity", "f", &t_density);
+    r_density = t_density;
     return true;
 }
 

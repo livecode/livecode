@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 package com.runrev.android.nativecontrol;
 
+import com.runrev.android.Engine;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -497,6 +498,27 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
         mOnVideoSizeChangedListener = l;
     }
 
+    /////////////////////////////////
+    public interface OnMovieTouchedListener
+	{
+		void onMovieTouched();
+	}
+
+    protected OnMovieTouchedListener mOnMovieTouchedListener;
+
+    public void setOnMovieTouchedListener(OnMovieTouchedListener p_listener)
+    {
+        mOnMovieTouchedListener = p_listener;
+    }
+
+    protected void dispatchMovieTouched()
+    {
+        if (mOnMovieTouchedListener != null)
+            mOnMovieTouchedListener.onMovieTouched();
+    }
+
+    /////////////////////////////////
+    
     SurfaceHolder.Callback mSHCallback = new SurfaceHolder.Callback()
     {
         public void surfaceChanged(SurfaceHolder holder, int format,
@@ -563,6 +585,13 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             toggleMediaControlsVisiblity();
 			return true;
         }
+        // PM-2014-09-11: [[ Bug 13048 ]] Send movieTouched msg when touching the video screen
+        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN)
+        {
+            dispatchMovieTouched();
+            return true;
+        }
+
         return false;
     }
 

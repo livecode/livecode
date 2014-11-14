@@ -571,6 +571,9 @@ public:
 
 	virtual void OnBeforeClose(CefRefPtr<CefBrowser> p_browser) OVERRIDE
 	{
+		if (m_owner != nil)
+			m_owner->OnCefBrowserClosed(p_browser);
+		
 		MCCefDecrementInstanceCount();
 	}
 
@@ -884,6 +887,10 @@ void MCCefBrowserBase::OnCefBrowserCreated(CefRefPtr<CefBrowser> p_browser)
 {
 	if (m_browser == nil)
 		m_browser = p_browser;
+}
+
+void MCCefBrowserBase::OnCefBrowserClosed(CefRefPtr<CefBrowser> p_browser)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1206,15 +1213,55 @@ void MCCefBrowserBase::SetBorder(bool p_border)
 	/* TODO - IMPLEMENT */
 }
 
+// IM-2014-08-25: [[ Bug 13272 ]] Implement CEF browser scrollbar property.
+bool MCCefBrowserBase::GetOverflowHidden()
+{
+	// property available through JavaScript
+	bool t_success;
+	t_success = true;
+	
+	CefString t_value;
+	
+	t_success = EvalJavaScript("document.body.style.overflow", t_value);
+	
+	// assume scrollbars are visible if property fetch fails
+	if (!t_success)
+		return true;
+	
+	return t_value == L"hidden";
+}
+
+// IM-2014-08-25: [[ Bug 13272 ]] Implement CEF browser scrollbar property.
+void MCCefBrowserBase::SetOverflowHidden(bool p_hidden)
+{
+	// property available through JavaScript
+	
+	bool t_success;
+	t_success = true;
+	
+	char *t_overflow_script;
+	t_overflow_script = nil;
+	
+	t_success = MCCStringFormat(t_overflow_script, "document.body.style.overflow = \"%s\"", p_hidden ? "hidden" : "");
+	
+	CefString t_return_value;
+	
+	if (t_success)
+		t_success = EvalJavaScript(t_overflow_script, t_return_value);
+	
+	MCCStringFree(t_overflow_script);
+}
+
 bool MCCefBrowserBase::GetScrollbars(void)
 {
-	/* TODO - IMPLEMENT */
-	return false;
+	// IM-2014-08-25: [[ Bug 13272 ]] Show / hide scrollbars by setting the overflow style to empty / "hidden".
+	return !GetOverflowHidden();
 }
 
 void MCCefBrowserBase::SetScrollbars(bool p_scrollbars)
 {
-	/* TODO - IMPLEMENT */
+	// IM-2014-08-25: [[ Bug 13272 ]] Show / hide scrollbars by setting the overflow style to empty / "hidden".
+	/* UNCHECKED */ SetOverflowHidden(!p_scrollbars);
 }
 
 void MCCefBrowserBase::GetRect(int& r_left, int& r_top, int& r_right, int& r_bottom)

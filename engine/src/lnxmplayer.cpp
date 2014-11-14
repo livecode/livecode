@@ -155,7 +155,8 @@ bool MPlayer::launch_player(void)
 	
 	// Install a signal handler to let us know if the the child process exits...
 	//signal(SIGCHLD, handler);
-	
+    
+    x11::Window t_xid = x11::gdk_x11_drawable_get_xid(m_window);
 
 	m_cpid = fork() ;
 	if ( m_cpid == -1 )
@@ -186,8 +187,6 @@ bool MPlayer::launch_player(void)
 		dup(m_pfd_read[WRITE]);
 		close(m_pfd_read[WRITE]);
 		
-        x11::Window t_xid = x11::gdk_x11_drawable_get_xid(m_window);
-        
 		char t_widbuf[20];
 		sprintf(t_widbuf, "%lu", t_xid);
 		

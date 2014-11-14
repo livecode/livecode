@@ -228,7 +228,7 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 					t_copy_transform = MCGAffineTransformConcat(p_pattern->transform, t_transform);
 					t_copy_transform = MCGAffineTransformConcat(MCGAffineTransformInvert(t_transform), t_copy_transform);
 					
-					t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame.image, t_copy_transform, p_pattern->filter, t_bitmap);
+					t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame.image, t_copy_transform, p_pattern->filter, nil, t_bitmap);
 					
 					if (t_success)
 						t_success = MCImageBitmapCopyAsMCGImageAndRelease(t_bitmap, true, t_image);

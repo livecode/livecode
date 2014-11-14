@@ -342,7 +342,7 @@ template<MCGradientFillKind x_type> static inline int4 compute_index(int4 p_x, i
 			break;
 		default:
 			//assert (false);
-			return NULL;
+			return 0;
 	}
 	if (p_mirror)
 	{
@@ -832,9 +832,7 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 			else
 				t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);
 		}
-
         // AL-2014-07-21: [[ Bug 12867 ]] Ensure RBGA values are always packed in native format
-        // MM-2013-12-04: [[ Bug 11528 ]] Tweak byte order for Android.
         uint8_t t_red, t_green, t_blue, t_alpha;
 		MCGPixelUnpack(kMCGPixelFormatBGRA, t_ramp[i] . color, t_red, t_green, t_blue, t_alpha);
         t_ramp[i] . hw_color = MCGPixelPackNative(t_red, t_green, t_blue, t_alpha);

@@ -40,7 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 
 #ifndef FIELD_OFFSET
-#define FIELD_OFFSET(type, field)    ((LONG)(LONG_PTR)&(((type *)0)->field))
+#define FIELD_OFFSET(type, field)    ((LONG)(intptr_t)&(((type *)0)->field))
 #endif
 
 typedef char CHAR;
@@ -48,10 +48,11 @@ typedef unsigned short WCHAR;
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
-typedef unsigned long DWORD;
 
-typedef long *LONG_PTR;
-typedef long LONG;
+// FG-2014-09-17: [[ Bugfix 13463 ]] "long" is 64 bits on Linux x86_64
+typedef uint32_t DWORD;
+typedef int32_t LONG;
+
 
 #define IMAGE_DOS_SIGNATURE                 0x5A4D      // MZ
 #define IMAGE_OS2_SIGNATURE                 0x454E      // NE
@@ -542,7 +543,7 @@ static inline void swap_dword(DWORD& x)
 #endif
 }
 
-static inline void swap_long(long& x)
+static inline void swap_long(LONG& x)
 {
 #ifdef __BIG_ENDIAN__
 	uint32_t y;
@@ -638,9 +639,16 @@ struct MCWindowsResources
 	bool is_table;
 	union
 	{
-		struct
+		// FG-2014-09-17: [[ Bugfix 13463 ]]
+        // The members of this union should be aligned with similarly-sized
+        // fields in order to prevent issues on 64-bit systems (in particular,
+        // a bool should not be lined up with a pointer as compilers are allowed
+        // to write anything they like into the high-order bytes).
+        struct
 		{
 			uint32_t entry_count;
+            uint32_t _pad_codepage;     // PADDING
+            bool _pad_in_file;          // PADDING
 			MCWindowsResources *entries;
 		} table;
 
@@ -1091,7 +1099,9 @@ static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRe
 	byte_t *t_bytes;
 	uindex_t t_byte_count;
 	/* UNCHECKED */ MCStringConvertToBytes(*t_value, kMCStringEncodingUTF16LE, false, t_bytes, t_byte_count);
-	if (t_bytes[t_byte_count - 1] != '\0' || t_bytes[t_byte_count - 2] != '\0')
+    
+    // FG-2014-09-17: [[ Bugfix 13463 ]] Convert may return 0 bytes for the empty string
+	if (t_byte_count == 0 || t_bytes[t_byte_count - 1] != '\0' || t_bytes[t_byte_count - 2] != '\0')
 	{
 		byte_t* temp = t_bytes;                       
 		t_bytes = new byte_t[t_byte_count + 2];		

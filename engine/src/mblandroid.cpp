@@ -29,6 +29,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroid.h"
 #include "variable.h"
 
+// MW-2005-02-22: Make this global scope for now to enable opensslsocket.cpp
+//   to access it.
+real8 curtime;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCSystemLaunchUrl(MCStringRef p_url);

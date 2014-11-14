@@ -1092,12 +1092,11 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 	MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
-		// Get the pointer to the variable this parameter maps to or NULL
-		// if it is an expression.
-		MCVariable* t_var;
-        t_var = tptr -> evalvar(ctxt);
-
-		if (t_var == NULL)
+        // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
+        MCContainer *t_container;
+        if (tptr -> evalcontainer(ctxt, t_container))
+            tptr -> set_argument_container(t_container);
+        else
         {
             MCExecValue t_value;
             tptr -> clear_argument();
@@ -1118,14 +1117,20 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 
             tptr->give_exec_argument(t_value);
 		}
-		else
-			tptr->set_argument_var(t_var);
 
 		tptr = tptr->getnext();
 	}
 
     ctxt . SetLineAndPos(line, pos);
     MCEngineExecDispatch(ctxt, is_function ? HT_FUNCTION : HT_MESSAGE, *t_message, t_target_ptr, params);
+    
+    // AL-2014-09-17: [[ Bug 13465 ]] Clear parameters after executing dispatch
+    tptr = params;
+    while (tptr != NULL)
+	{
+        tptr -> clear_argument();
+        tptr = tptr->getnext();
+    }
 }
 
 MCMessage::~MCMessage()
@@ -2258,8 +2263,13 @@ void MCMM::exec_ctxt(MCExecContext &ctxt)
 			else
 				MCMultimediaExecPlayLastVideoOperation(ctxt, PP_UNDEFINED);
 		}
+        // AL-2014-09-12: [[ Bug 13428 ]] The only valid audio action without a clip is stop
+        else if (audio)
+        {
+            MCMultimediaExecStopPlaying(ctxt);
+        }
 	}
-	else 
+	else
 	{
 		MCObject *optr = nil;
 		if (stack != NULL)

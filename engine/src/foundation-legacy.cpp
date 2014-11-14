@@ -694,9 +694,11 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 
 bool MCValueIsEmpty(MCValueRef p_value)
 {
+    // AL-2014-10-31: [[ Bug 13890 ]] An empty array is not necessarily equal to kMCEmptyArray,
+    //  so we need to use MCArrayIsEmpty instead.
     return p_value == kMCNull ||
             p_value == kMCEmptyName ||
-            p_value == kMCEmptyArray ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray && MCArrayIsEmpty((MCArrayRef)p_value)) ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString && MCStringIsEmpty((MCStringRef)p_value)) ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName && MCNameIsEmpty((MCNameRef)p_value)) ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && MCDataIsEmpty((MCDataRef)p_value)) ||
@@ -1589,6 +1591,12 @@ static bool get_array_info(void *p_context, MCArrayRef p_array, MCNameRef p_key,
 	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString &&
 		MCStringGetLength((MCStringRef)p_value) > MAXUINT2)
 		ctxt -> is_large = true;
+    
+    // MW-2014-10-21: [[ Bug 13732 ]] Make sure we check the length of dataref's too to
+    //   ensure we mark the array as large if necessary.
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData &&
+        MCDataGetLength((MCDataRef)p_value) > MAXUINT2)
+        ctxt -> is_large = true;
 
 	if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeArray)
 		ctxt -> non_array_count += 1;

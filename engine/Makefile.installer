@@ -9,7 +9,6 @@ MODE_SOURCES= \
 MODE_DEFINES=\
 	MODE_INSTALLER
 
-MODE_LDFLAGS=\
-	-Wl,--script=installer-$(ARCH).link
+MODE_LDFLAGS_FINAL=--script=installer-$(ARCH).link
 
 include Makefile.common

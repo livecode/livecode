@@ -523,7 +523,8 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 			if (ctxt . effective || t_style . has_text_align)
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " align=\"%s\"", MCtextalignstrings[t_style.text_align]);
 			if (!t_style . has_list_indent && (t_style . has_first_indent || ctxt . effective))
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " firstindent=\"%s\"", t_style.first_indent);
+                // AL-2014-09-09: [[ Bug 13353 ]] firstindent parameter is integer not string
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " firstindent=\"%d\"", t_style.first_indent);
 			else if (t_style . has_list_indent)
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " listindent=\"%d\"", t_style.list_indent);
 			if (ctxt . effective || t_style . has_left_indent)
@@ -1500,8 +1501,10 @@ static void import_html_append_utf8_chars(import_html_t& ctxt, const char *p_cha
 
 static void import_html_push_tag(import_html_t& ctxt, import_html_tag_type_t p_tag, MCFieldCharacterStyle& p_style)
 {
+    // MW-2014-08-26: [[ Bug 13256 ]] 'styles' has an implicit bottom element, so we need to ensure
+    //   capacity is at least 1 greater than index.
 	// Ensure there is room in the stack for a new entry.
-	if (ctxt . style_index + 1 > ctxt . style_capacity)
+	if (ctxt . style_index + 2 > ctxt . style_capacity)
 		if (!MCMemoryResizeArray(ctxt . style_capacity * 2, ctxt . styles, ctxt . style_capacity))
 			return;
 			

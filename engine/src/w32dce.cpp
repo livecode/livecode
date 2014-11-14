@@ -565,6 +565,11 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			donepending = False;
 			waittime = t_pending_eventtime - curtime;
 		}
+		
+		// MW-2014-08-20: [[ Bug 12361 ]] If the waittime is negative then it gets coerced
+		//   to a large positive value which causes waits to stall until an event occurs.
+		if (waittime < 0.0)
+			waittime = 0.0;
 
 		MCModeQueueEvents();
 		if (MCquit)

@@ -111,7 +111,8 @@ bool MCDateTimeInitialize()
 	g_basic_locale->abbrev_month_names[10]= MCSTR("Nov");
 	g_basic_locale->abbrev_month_names[11]= MCSTR("Dec");
 	
-	g_basic_locale->date_formats[0] = MCSTR("^%#m/%#d/%#y");
+    // SN-2014-09-17: [[ Bug 13460 ]] No hashtag for the year
+	g_basic_locale->date_formats[0] = MCSTR("^%#m/%#d/%y");
 	g_basic_locale->date_formats[1] = MCSTR("%a, %b %#d, %#Y");
 	g_basic_locale->date_formats[2] = MCSTR("%A, %B %#d, %#Y");
 	

@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C8544DE199E10A400A568B6 /* revpdfprinter_coretext.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C8544DD199E10A400A568B6 /* revpdfprinter_coretext.mm */; };
 		4D82FC5517147FD200C48403 /* libcairomobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D379C6E17141FF600B9037C /* libcairomobile.a */; };
 		4DFA22CF134BC6D5000634AA /* revpdfprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFA22CD134BC6D5000634AA /* revpdfprinter.cpp */; };
 		4DFA231A134BC96F000634AA /* libcoremobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DFA2319134BC96B000634AA /* libcoremobile.a */; };
-		4DFA233A134BC9E9000634AA /* revpdfprinter_ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DFA2339134BC9E9000634AA /* revpdfprinter_ios.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +45,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4C8544DD199E10A400A568B6 /* revpdfprinter_coretext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = revpdfprinter_coretext.mm; path = src/revpdfprinter_coretext.mm; sourceTree = "<group>"; };
 		4D08A3CE138FFAEC0081F990 /* revpdfprinter.ios */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = revpdfprinter.ios; sourceTree = "<group>"; };
 		4D7EFD6312E72A5A00D67888 /* Debug Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Debug Mobile.xcconfig"; path = "../rules/Debug Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4D7EFD6412E72A5A00D67888 /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../rules/Release Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
@@ -54,7 +55,6 @@
 		4DFA22CC134BC6D5000634AA /* revpdfprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = revpdfprinter.h; path = src/revpdfprinter.h; sourceTree = "<group>"; };
 		4DFA22CD134BC6D5000634AA /* revpdfprinter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = revpdfprinter.cpp; path = src/revpdfprinter.cpp; sourceTree = "<group>"; };
 		4DFA2311134BC96B000634AA /* libcore-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libcore-mobile.xcodeproj"; path = "../libcore/libcore-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
-		4DFA2339134BC9E9000634AA /* revpdfprinter_ios.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = revpdfprinter_ios.mm; path = src/revpdfprinter_ios.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,7 +112,7 @@
 			children = (
 				4DFA22CC134BC6D5000634AA /* revpdfprinter.h */,
 				4DFA22CD134BC6D5000634AA /* revpdfprinter.cpp */,
-				4DFA2339134BC9E9000634AA /* revpdfprinter_ios.mm */,
+				4C8544DD199E10A400A568B6 /* revpdfprinter_coretext.mm */,
 			);
 			name = Sources;
 			sourceTree = "<group>";
@@ -172,6 +172,8 @@
 /* Begin PBXProject section */
 		4D7EFD3A12E72A1C00D67888 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4D7EFD3D12E72A1C00D67888 /* Build configuration list for PBXProject "revpdfprinter-mobile" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -245,7 +247,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4DFA22CF134BC6D5000634AA /* revpdfprinter.cpp in Sources */,
-				4DFA233A134BC9E9000634AA /* revpdfprinter_ios.mm in Sources */,
+				4C8544DE199E10A400A568B6 /* revpdfprinter_coretext.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -215,6 +215,10 @@ hash_t MCNativeCharsHash(const char_t *p_chars, uindex_t p_char_count, MCStringO
 {
     bool t_fold;
     t_fold = (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded);
+    
+    // AL-2014-10-23: [[ Bug 13763 ]] Map native char to unichar before hashing
+    unichar_t t_char;
+    
     // Fowler-Noll-Vo 1a hash function
     if (sizeof(hash_t) == sizeof(uint64_t))
     {
@@ -227,12 +231,13 @@ hash_t MCNativeCharsHash(const char_t *p_chars, uindex_t p_char_count, MCStringO
         {
             // Hash the byte
             if (t_fold)
-                t_hash ^= (uint16_t)(MCNativeCharFold(*p_chars++)) & 0xFF;
+                t_hash ^= (uint16_t)(t_char = MCUnicodeCharMapFromNative(MCNativeCharFold(*p_chars++))) & 0xFF;
             else
-                t_hash ^= (uint16_t)(*p_chars++) & 0xFF;
+                t_hash ^= (uint16_t)(t_char = MCUnicodeCharMapFromNative(*p_chars++)) & 0xFF;
             t_hash *= kPrime;
             
-            // Hash the 0 byte that would be there if we were hashing the unichars.
+            // Hash the second byte of the unichar
+            t_hash ^= t_char >> 8;
             t_hash *= kPrime;
         }
         return t_hash;
@@ -248,12 +253,13 @@ hash_t MCNativeCharsHash(const char_t *p_chars, uindex_t p_char_count, MCStringO
         {
             // Hash the byte
             if (t_fold)
-                t_hash ^= (uint16_t)(MCNativeCharFold(*p_chars++)) & 0xFF;
+                t_hash ^= (uint16_t)(t_char = MCUnicodeCharMapFromNative(MCNativeCharFold(*p_chars++))) & 0xFF;
             else
-                t_hash ^= (uint16_t)(*p_chars++) & 0xFF;
+                t_hash ^= (uint16_t)(t_char = MCUnicodeCharMapFromNative(*p_chars++)) & 0xFF;
             t_hash *= kPrime;
             
-            // Hash the 0 byte that would be there if we were hashing the unichars.
+            // Hash the second byte of the unichar
+            t_hash ^= t_char >> 8;
             t_hash *= kPrime;
         }
         return t_hash;

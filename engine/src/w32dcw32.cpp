@@ -144,9 +144,21 @@ void CALLBACK mouseproc(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
 	PostMessageA(pms->getinvisiblewindow(), WM_APP, 0, 0);
 }
 
+// SN-2014-09-10: [[ Bug 13348 ]] We need to know what was intended (key down or key up)
+// when WM_[SYS|IME_]CHAR is triggered (it seems like WM_KEYUP events are only translated 
+// to WM_CHAR when the key is kept pressed).
+enum KeyMove
+{
+	KM_KEY_DOWN,
+	KM_KEY_UP,
+	KM_NO_KEY_MOVE
+};
+
 typedef struct
 {
 	Boolean dispatch, abort, reset, handled, live;
+	// SN-2014-09-10: [[ Bug 13348 ]] KeyMove added to the stateinfo of the event
+	KeyMove keymove;
 	KeySym keysym;
 }
 stateinfo;
@@ -262,6 +274,8 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 	curinfo->handled = False;
 	curinfo->keysym = 0;
 	curinfo->live = True;
+	// SN-2014-09-10: [[ Bug 13348 ]] No key move by default
+	curinfo->keymove = KM_NO_KEY_MOVE;
 	if (mousewheel == 0)
 		mousewheel = RegisterWindowMessageW(MSH_MOUSEWHEEL);
 	if (dispatch && pendingevents != NULL
@@ -293,7 +307,21 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 				        || msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
 					curinfo->keysym = getkeysym(msg.wParam, msg.lParam);
 				
+				// SN-2014-09-10: [[ Bug 13348 ]] Set the key move appropriately
+				if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
+					curinfo->keymove = KM_KEY_UP;
+				else if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN)
+					curinfo->keymove = KM_KEY_DOWN;
+
                 TranslateMessage(&msg);
+
+				// SN-2014-09-05: [[ Bug 13348 ]] Remove the WM_KEYDOWN, WM_SYSKEYDOWN messages
+				// in case TranslateMessage succeeded, and queued a WM_[SYS]CHAR message
+				bool t_cleaned_queue;
+				t_cleaned_queue = PeekMessageW(&msg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE);				
+				if (!t_cleaned_queue)
+					t_cleaned_queue = PeekMessageW(&msg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
+
 				DispatchMessageW(&msg);
 			}
 		}
@@ -313,9 +341,12 @@ static stateinfo dummycurinfo;
 static HWND capturehwnd;
 static uint2 lastdown;
 static Boolean doubledown;
-static char lastchar;
-static WPARAM lastwParam;
+// SN-2014-09-10: [[ Bug 13348 ]] We want to keep the last codepoint now, 
+// not the last char
+static uint32_t lastcodepoint;
 static KeySym lastkeysym;
+// SN-2014-09-12: [[ Bug 13423 ]] Keeps whether a the next char follows a dead char
+static Boolean deadcharfollower = False;
 static Boolean doubleclick;
 Boolean tripleclick;
 static uint4 clicktime;
@@ -649,6 +680,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		break;
 
+	// SN-2014-09-12: [[ Bug 13423 ]] The next character typed will follow a dead char. Sets the flag.
+	case WM_DEADCHAR:
+	case WM_SYSDEADCHAR:
+		deadcharfollower = true;
+		break;
+
 	case WM_CHAR:
 	case WM_SYSCHAR:
 	case WM_IME_CHAR:
@@ -661,18 +698,26 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			pms->appendevent(tptr);
 			break;
 		}
+
+		// SN-2014-09-10: [[ Bug 13348 ]] The keysym is got as for the WM_KEYDOWN case
+		if (curinfo->keysym == 0) // event came from some other dispatch
+			// SN-2014-09-12: [[ Bug 13423 ]] If we are following a dead char, no conversion needed:
+			// the message is fired without passing by MCScreenDC::handle, that's why
+			// curinfo->keysym hasn't been set, and the typed char is in wParam
+			if (deadcharfollower)
+				keysym = wParam;
+			else
+				keysym = pms->getkeysym(wParam, lParam);
+		else
+			keysym = curinfo->keysym;
+
+		lastkeysym = keysym;
 		
 		// UTF-16 or ANSI character has been received
 		WCHAR t_char;
 		t_char = LOWORD(wParam);
 
-		lastchar = wParam;
-
 		MCAutoStringRef t_input;
-
-		// No need to send control characters as text
-		if (iswcntrl(t_char))
-			break;
 
 		// MW-2010-11-17: [[ Bug 3892 ]] Ctrl+Alt can be the same as AltGr.
 		//   If we have Ctrl+Alt set, we discard the modifiers
@@ -710,8 +755,19 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		// Translate the input character into its corresponding keysym
 		// TODO: surrogate pairs?
 		codepoint_t t_codepoint = MCStringGetCodepointAtIndex(*t_input, 0);
+		// SN-2014-09-10: [[ Bug 13348 ]] Only add the codepoint if it is not a control char
+		if (iswcntrl(t_codepoint))
+			lastcodepoint = 0;
+		else	
+			lastcodepoint = t_codepoint;
+
 		KeySym t_keysym;
-		if (t_codepoint > 0x7F)
+
+		// No need to send control characters as text
+		if (iswcntrl(t_char))
+			t_keysym = keysym;
+		// SN-2014-09-18: [[ MERGE-6_7_RC_2 ]] We accept the whole extended ASCII table
+		else if (t_codepoint > 0xFF)
 		{
 			// This is a non-ASCII codepoint
 			t_keysym = t_codepoint | XK_Class_codepoint;
@@ -726,11 +782,17 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		{
 			// Submit the character as both text and a key stroke
 			uint16_t count = LOWORD(lParam);
+
 			while (count--)
 			{
-				// Key down and key up
-				MCdispatcher->wkdown(dw, *t_input, t_keysym);
-				MCdispatcher->wkup(dw, *t_input, t_keysym);
+				// SN-2014-09-05: [[ Bug 13348 ]] Call the appropriate message
+				//	 [[ MERGE-6_7_RC_2 ]] and add the KeyDown/Up in case we follow
+				//   a dead-key started sequence
+				if (curinfo->keymove == KM_KEY_DOWN || deadcharfollower)
+					MCdispatcher->wkdown(dw, *t_input, t_keysym);
+				
+				if (curinfo->keymove == KM_KEY_UP || deadcharfollower)
+  					MCdispatcher->wkup(dw, *t_input, t_keysym);
 			}
 
 			curinfo->handled = curinfo->reset = true;
@@ -750,7 +812,11 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		else
 			keysym = curinfo->keysym;
 
+		// SN-2014-09-18: [[ MERGE-6_7_RC_2 ]] Reaching here means that any
+		// dead-key sequence is aborted. Reset the flag and the codepoint
+		deadcharfollower = False;
 		lastkeysym = keysym;
+		lastcodepoint = 0;
 
 		if (MCmodifierstate & MS_CONTROL)
 			if (wParam == VK_CANCEL || keysym == '.')
@@ -760,9 +826,6 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				else
 					MCinterrupt = True;
 			}
-			else
-				if (msg == WM_KEYDOWN)
-					buffer[0] = lastchar = wParam;
 
 		if (curinfo->dispatch)
 		{
@@ -786,7 +849,8 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 						return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 					
 					// If the repeat count was >1, simulate the corresponding key up messages
-					if (count || lParam & 0x40000000)
+					// SN-2014-09-15: [[ Bug 13423 ]] We want to send a KEYUP for the dead char, if it failed to combine
+					if (count || lParam & 0x40000000 || deadcharfollower)
 						MCdispatcher->wkup(dw, kMCEmptyString, keysym);
 				}
 				curinfo->handled = curinfo->reset = True;
@@ -801,13 +865,39 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 	}
 	break;
+
 	case WM_KEYUP:
 	case WM_SYSKEYUP:
 	{	
 		if (curinfo->keysym == 0) // event came from some other dispatch
 			keysym = pms->getkeysym(wParam, lParam);
-		else
+		// SN-2014-09-15: [[ Bug 13423 ]] We don't regard the event if we are following a dead char WITH a
+		// keysym: that's the dead char itself.
+		// SN-2014-09-18: [[ MERGE-6_7_RC_2 ]] SYSKEYUP shall pass
+		else if (!deadcharfollower || msg == WM_SYSKEYUP)
 			keysym = curinfo->keysym;
+		else
+			break;
+
+		// SN-2014-09-10: [[ Bug 13348 ]] We want to get the last codepoint translated, if any,
+		// since the KEYUP events are not translated (but when keeping pressed a key)
+		MCAutoStringRef t_string;
+
+		// SN-2014-09-18: [[ MERGE-6_7_RC_2 ]] Only build a string if there is a codepoint
+		if (lastkeysym == keysym && lastcodepoint)
+		{
+			unichar_t t_pair[2];
+			uindex_t t_char_count;
+			
+			t_char_count = MCStringCodepointToSurrogates(lastcodepoint, t_pair);
+			/* UNCHECKED */ MCStringCreateWithChars(t_pair, t_char_count, &t_string);
+		}
+		else
+		{
+			lastkeysym = keysym;
+			lastcodepoint = 0;
+			t_string = kMCEmptyString;
+		}
 
 		if (curinfo->dispatch)
 		{
@@ -815,7 +905,9 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			{
 				// Character messages handle the text keyup themselves
 				MCeventtime = GetMessageTime(); //krevent->time;
-				MCdispatcher->wkup(dw, kMCEmptyString, keysym);
+				// SN-2014-09-10: [[ Bug 13348 ]] Send the string we could build from the last
+				// codepoint.
+				MCdispatcher->wkup(dw, *t_string, keysym);
 				curinfo->handled = curinfo->reset = True;
 			}
 		}

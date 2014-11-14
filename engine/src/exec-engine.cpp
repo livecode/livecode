@@ -200,18 +200,19 @@ static MCExecCustomTypeInfo _kMCEngineNumberFormatTypeInfo =
 
 //////////
 
+// AL-2014-10-29: [[ Bug 13704 ]] Security permissions set type should use bits rather than bit-shifted values
 static MCExecSetTypeElementInfo _kMCEngineSecurityCategoriesElementInfo[] =
 {
-	{ "disk", MC_SECUREMODE_DISK },
-	{ "network", MC_SECUREMODE_NETWORK },
-	{ "process", MC_SECUREMODE_PROCESS },
-	{ "registryRead", MC_SECUREMODE_REGISTRY_READ },
-	{ "registryWrite", MC_SECUREMODE_REGISTRY_WRITE },
-	{ "printing", MC_SECUREMODE_PRINT },	
-	{ "privacy", MC_SECUREMODE_PRIVACY },
-	{ "applescript", MC_SECUREMODE_APPLESCRIPT },
-	{ "doalternate", MC_SECUREMODE_DOALTERNATE },
-	{ "external", MC_SECUREMODE_EXTERNAL },
+	{ "disk", kMCSecureModeTypeDiskBit },
+	{ "network", kMCSecureModeTypeNetworkBit },
+	{ "process", kMCSecureModeTypeProcessBit },
+	{ "registryRead", kMCSecureModeTypeRegistryReadBit },
+	{ "registryWrite", kMCSecureModeTypeRegistryWriteBit },
+	{ "printing", kMCSecureModeTypePrintBit },	
+	{ "privacy", kMCSecureModeTypePrivacyBit },
+	{ "applescript", kMCSecureModeTypeApplescriptBit },
+	{ "doalternate", kMCSecureModeTypeDoalternateBit },
+	{ "external", kMCSecureModeTypeExternalBit },
 };
 
 static MCExecSetTypeInfo _kMCEngineSecurityCategoriesTypeInfo =
@@ -697,7 +698,7 @@ void MCEngineExecGet(MCExecContext& ctxt, MCValueRef p_value)
 
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (!MCS_put(ctxt, MCStringIsNative(p_value) ? kMCSPutOutput : kMCSPutUnicodeOutput, p_value))
+	if (!MCS_put(ctxt, kMCSPutOutput, p_value))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
@@ -705,7 +706,7 @@ void MCEngineExecPutOutputUnicode(MCExecContext& ctxt, MCDataRef p_value)
 {
 	MCAutoStringRef t_string;
 	if (!MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(p_value), MCDataGetLength(p_value)/sizeof(unichar_t), &t_string)
-		|| !MCS_put(ctxt, kMCSPutUnicodeOutput, *t_string))
+		|| !MCS_put(ctxt, kMCSPutOutput, *t_string))
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
@@ -735,17 +736,24 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
         if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData &&
             MCValueGetTypeCode(p_value) == kMCValueTypeCodeData)
         {
-            if (p_var . mark . changed)
+            // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+            if (p_var . mark . changed != 0)
             {
                 MCAutoDataRef t_data;
-                if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
+                if (!MCDataMutableCopyAndRelease((MCDataRef)p_var . mark . text, &t_data))
                     return;
                 
                 /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), (MCDataRef)p_value);
                 p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
             }
             else
+            {
+                // AL-2014-11-12: [[ Bug 13987 ]] Release the mark here, so that eg 'put x into byte y of z'
+                //  can take advantage of the fact that z has only one reference. Otherwise it requires a copy
+                MCValueRelease(p_var . mark . text);
+                
                 p_var . variable -> replace(ctxt, (MCDataRef)p_value, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+            }
         }
         else
         {
@@ -756,19 +764,25 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 return;
             }
             
-            if (p_var . mark . changed)
+            // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+            if (p_var . mark . changed != 0)
             {
                 MCAutoStringRef t_string;
-                if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
+                if (!MCStringMutableCopyAndRelease((MCStringRef)p_var . mark . text, &t_string))
                     return;
             
                 /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
                 p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
             }
             else
+            {
+                // AL-2014-11-12: [[ Bug 13987 ]] Release the mark here, so that eg 'put x into char y of z'
+                //  can take advantage of the fact that z has only one reference. Otherwise it requires a copy
+                MCValueRelease(p_var . mark . text);
+                
                 p_var . variable -> replace(ctxt, *t_value_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
+            }
         }
-        MCValueRelease(p_var . mark . text);
 	}
 }
 
@@ -1051,12 +1065,19 @@ void MCEngineExecStartUsingStack(MCExecContext& ctxt, MCStack *p_stack)
 void MCEngineExecStartUsingStackByName(MCExecContext& ctxt, MCStringRef p_name)
 {
 	MCStack *sptr;
-	if ((sptr = MCdefaultstackptr->findstackname_string(p_name)) == NULL ||
-		!sptr->parsescript(True))
-		{
-			ctxt . LegacyThrow(EE_START_BADTARGET);
-			return;
-		}
+	if ((sptr = MCdefaultstackptr->findstackname_string(p_name)) == NULL)
+    {
+        ctxt . LegacyThrow(EE_START_BADTARGET);
+        return;
+    }
+    
+    // MW-2014-10-23: Throw a different error if the script won't compile.
+    if (!sptr->parsescript(True))
+    {
+        ctxt . LegacyThrow(EE_START_WONTCOMPILE);
+        return;
+    }
+    
 	MCEngineExecStartUsingStack(ctxt, sptr);
 }
 
@@ -1838,31 +1859,28 @@ void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
-void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedText& r_mark)
+void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, bool p_data, MCMarkedText& r_mark)
 {
     if (p_variable == nil)
 	{
 		ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
 		return;
 	}
-
-//    MCVariable *t_resolved_var;
-//    t_resolved_var = p_variable -> evalvar(ctxt);
-//    
-//    if (t_resolved_var == NULL)
-//    {
-//        ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
-//        return;
-//    }    
-    // Ensure to convert the inner variable into a string ref
-//    t_resolved_var -> converttomutablestring(ctxt);
-//    r_mark . text = (MCStringRef)t_resolved_var -> getvalueref();
-    
-    if (!ctxt . EvalExprAsStringRef(p_variable, EE_CHUNK_SETCANTGETDEST, (MCStringRef&)r_mark . text))
-        return;
-    
-    r_mark . start = 0;
-    r_mark . finish = MCStringGetLength((MCStringRef)r_mark . text);
+    // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
+    if (p_data)
+    {
+        if (!ctxt . EvalExprAsDataRef(p_variable, EE_CHUNK_SETCANTGETDEST, (MCDataRef&)r_mark . text))
+            return;
+        r_mark . start = 0;
+        r_mark . finish = MCDataGetLength((MCDataRef)r_mark . text);
+    }
+    else
+    {
+        if (!ctxt . EvalExprAsStringRef(p_variable, EE_CHUNK_SETCANTGETDEST, (MCStringRef&)r_mark . text))
+            return;
+        r_mark . start = 0;
+        r_mark . finish = MCStringGetLength((MCStringRef)r_mark . text);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

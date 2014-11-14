@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4C8CFC2517146544000F2C85 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C8CFC2417146544000F2C85 /* Carbon.framework */; };
+		4CF4B888199E101C00E33AEE /* revpdfprinter_coretext.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4CF4B887199E101C00E33AEE /* revpdfprinter_coretext.mm */; };
 		4D9D1D5217142A7800BE4F14 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9D1D3E17142A1000BE4F14 /* libz.a */; };
 		4D9D1D5317142A7B00BE4F14 /* libcairo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9D1D4817142A1C00BE4F14 /* libcairo.a */; };
 		4DA9C01B10E20D0500055232 /* revpdfprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA9C01A10E20D0500055232 /* revpdfprinter.cpp */; };
@@ -62,6 +63,7 @@
 
 /* Begin PBXFileReference section */
 		4C8CFC2417146544000F2C85 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		4CF4B887199E101C00E33AEE /* revpdfprinter_coretext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = revpdfprinter_coretext.mm; path = src/revpdfprinter_coretext.mm; sourceTree = "<group>"; };
 		4D6758E00A79F97300FA96D2 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		4D6758E30A79F97300FA96D2 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		4D6758FE0A79F9A400FA96D2 /* revpdfprinter.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = revpdfprinter.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -144,6 +146,7 @@
 		4D6759060A79FA0B00FA96D2 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				4CF4B887199E101C00E33AEE /* revpdfprinter_coretext.mm */,
 				E88527491704950100CEFCC5 /* revpdfprinter_ios.mm */,
 				E885274A1704950100CEFCC5 /* revpdfprinter_lnx.cpp */,
 				4DA9C05D10E20E2E00055232 /* revpdfprinter_osx.cpp */,
@@ -281,8 +284,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4CF4B888199E101C00E33AEE /* revpdfprinter_coretext.mm in Sources */,
 				4DA9C01B10E20D0500055232 /* revpdfprinter.cpp in Sources */,
-				4DA9C05E10E20E2E00055232 /* revpdfprinter_osx.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

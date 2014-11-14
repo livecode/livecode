@@ -47,7 +47,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	statemnt.cpp styledtext.cpp tooltip.cpp \
 	transfer.cpp uidc.cpp gradient.cpp edittool.cpp \
 	undolst.cpp util.cpp variable.cpp vclip.cpp visual.cpp \
-	eps.cpp mcssl.cpp notify.cpp fonttable.cpp \
+	eps.cpp mcssl.cpp opensslsocket.cpp socket_resolve.cpp notify.cpp fonttable.cpp \
 	answer.cpp ask.cpp external.cpp player.cpp surface.cpp \
 	combiners.cpp path.cpp metacontext.cpp \
 	printer.cpp unicode.cpp rtf.cpp rtfsupport.cpp text.cpp \

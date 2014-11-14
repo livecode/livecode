@@ -95,10 +95,9 @@ public:
 
     bool evalobjectchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk);
     bool evalvarchunk(MCExecContext& ctxt, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
-    bool evalurlchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk);
-
     bool evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectChunkPtr &t_obj);
-    
+    bool evalurlchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, int p_preposition, MCUrlChunkPtr& r_chunk);
+	
 	void take_components(MCChunk *tchunk);
 
     // getobj calls getoptionalobj and throws in case nothing is returned.

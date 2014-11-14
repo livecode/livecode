@@ -303,6 +303,7 @@ void MCMultimediaExecStopPlaying(MCExecContext& ctxt)
 {
 	MCU_play_stop();
 }
+
 void MCMultimediaExecStopPlayingObject(MCExecContext& ctxt, MCObject *p_object)
 {
 	if (p_object->gettype() == CT_PLAYER)
@@ -580,6 +581,9 @@ void MCMultimediaExecPrepareVideoClip(MCExecContext& ctxt, MCStack *p_target, in
 
 void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_clip, bool p_looping)
 {
+    // AL-2014-09-12: [[ Bug 13428 ]] Missed an MCU_play_stop() in the refactoring
+    MCU_play_stop();
+    
 	MCStack *sptr;
 	sptr = p_target != nil ? p_target : MCdefaultstackptr;
 

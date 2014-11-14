@@ -238,6 +238,10 @@ void MCInterfaceStackFileVersionParse(MCExecContext& ctxt, MCStringRef p_input, 
 void MCInterfaceStackFileVersionFormat(MCExecContext& ctxt, const MCInterfaceStackFileVersion& p_input, MCStringRef& r_output);
 void MCInterfaceStackFileVersionFree(MCExecContext& ctxt, MCInterfaceStackFileVersion& p_input);
 
+//////////
+
+void MCInterfaceTabStopsParse(MCExecContext& ctxt, bool p_is_relative, uinteger_t* p_tabs, uindex_t p_count, uint2*& r_new_stops, uindex_t& r_new_stop_count);
+
 #endif // EXEC_INTERFACE_H
 
 //////////

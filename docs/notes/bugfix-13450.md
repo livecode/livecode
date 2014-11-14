@@ -1,0 +1,1 @@
+# Independence resolution does not work well with a Browser Object

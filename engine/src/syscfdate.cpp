@@ -226,15 +226,16 @@ static bool osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_dat
 			CFRelease(t_calendar);
 	}
 	
-	MCStringRef t_icu_format;
+	MCAutoStringRef t_icu_format;
 	if (t_success)
-	{
-		if (!MCStringCreateWithCFString(CFDateFormatterGetFormat(t_formatter), t_icu_format))
-			t_success = false;
-	}
-	
+        t_success = MCStringCreateWithCFString(CFDateFormatterGetFormat(t_formatter), &t_icu_format);
+
 	MCStringRef t_format;
-	t_success = MCStringCreateMutable(0, t_format);
+    t_format = nil;
+
+    // AL-2014-08-19: [[ Bug 13219 ]] Don't overwrite previous values of the success variable.
+    if (t_success)
+        t_success = MCStringCreateMutable(0, t_format);
 	
 	if (t_success)
 	{
@@ -245,19 +246,19 @@ static bool osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_dat
 		
 		uindex_t t_offset = 0;
 		uindex_t t_length;
-		t_length = MCStringGetLength(t_icu_format);
+		t_length = MCStringGetLength(*t_icu_format);
 		
 		while(t_offset < t_length && t_success)
 		{
 			unichar_t t_char;
-			t_char = MCStringGetCharAtIndex(t_icu_format, t_offset++);
+			t_char = MCStringGetCharAtIndex(*t_icu_format, t_offset++);
 			
 			if (isalpha(t_char))
 			{
 				// Count the number of identical characters in a row
 				unsigned int t_count;
 				t_count = 1;
-				while(t_offset < t_length && MCStringGetCharAtIndex(t_icu_format, t_offset) == t_char)
+				while(t_offset < t_length && MCStringGetCharAtIndex(*t_icu_format, t_offset) == t_char)
 					t_count += 1, t_offset++;
 
 				switch(t_char)
@@ -345,7 +346,7 @@ static bool osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_dat
 				while (t_offset < t_length)
 				{
 					unichar_t t_next;
-					t_next = MCStringGetCharAtIndex(t_icu_format, t_offset++);
+					t_next = MCStringGetCharAtIndex(*t_icu_format, t_offset++);
 					if (t_next == '\'')
 						break;
 					/* UNCHECKED */ MCStringAppendChar(t_format, t_next);
@@ -360,7 +361,12 @@ static bool osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_dat
 	if (t_formatter != NULL)
 		CFRelease(t_formatter);
 	
-	return t_success && MCStringCopyAndRelease(t_format, r_string);
+	if (t_success)
+        MCStringCopyAndRelease(t_format, r_string);
+    else
+        MCValueRelease(t_format);
+    
+    return t_success;
 }
 
 static CFAbsoluteTime osx_cf_datetime_to_time(int p_year, int p_month, int p_day, int p_hour, int p_minute, int p_second)

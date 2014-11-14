@@ -68,6 +68,12 @@ bool MCParagraph::hasattrs(void)
 	return attrs != nil;
 }
 
+void MCParagraph::cleanattrs(void)
+{
+	if (attrs != nil && attrs -> flags == 0)
+        clearattrs();
+}
+
 #ifdef LEGACY_EXEC
 void MCParagraph::storeattrs(MCArrayRef dst)
 {
@@ -93,48 +99,33 @@ void MCParagraph::fetchattrs(MCArrayRef src)
     
     t_color . name = nil;
 
+    // AL-2014-09-30: [[ Bug 13559 ]] Don't explicitly set any paragraph styles that aren't in the array (even to empty)
     if (ctxt . CopyElementAsInteger(src, MCNAME("textAlign"), false, t_intenum_value))
         SetTextAlign(ctxt, &t_intenum_value);
-    else
-        SetTextAlign(ctxt, nil);
 
     if (ctxt . CopyElementAsInteger(src, MCNAME("listStyle"), false, t_intenum_value))
         SetListStyle(ctxt, t_intenum_value);
 
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("listDepth"), false, t_uint_value))
         SetListDepth(ctxt, &t_uint_value);
-    else
-        SetListDepth(ctxt, nil);
 
     if (ctxt . CopyElementAsInteger(src, MCNAME("listIndent"), false, t_integer_value))
         SetListIndent(ctxt, &t_integer_value);
-    else
-        SetListIndent(ctxt, nil);
 
     if (ctxt . CopyElementAsInteger(src, MCNAME("firstIndent"), false, t_integer_value))
         SetFirstIndent(ctxt, &t_integer_value);
-    else
-        SetFirstIndent(ctxt, nil);
 
     if (ctxt . CopyElementAsInteger(src, MCNAME("leftIndent"), false, t_integer_value))
         SetLeftIndent(ctxt, &t_integer_value);
-    else
-        SetLeftIndent(ctxt, nil);
 
     if (ctxt . CopyElementAsInteger(src, MCNAME("rightIndent"), false, t_integer_value))
         SetRightIndent(ctxt, &t_integer_value);
-    else
-        SetRightIndent(ctxt, nil);
 
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("spaceAbove"), false, t_uint_value))
         SetSpaceAbove(ctxt, &t_uint_value);
-    else
-        SetSpaceAbove(ctxt, nil);
 
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("spaceBelow"), false, t_uint_value))
         SetSpaceBelow(ctxt, &t_uint_value);
-    else
-        SetSpaceBelow(ctxt, nil);
 
     if (ctxt . CopyElementAsString(src, MCNAME("tabStops"), false, t_stringref_value))
     {
@@ -166,9 +157,6 @@ void MCParagraph::fetchattrs(MCArrayRef src)
 
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("borderWidth"), false, t_uint_value))
         SetBorderWidth(ctxt, &t_uint_value);
-    else
-        SetBorderWidth(ctxt, nil);
-
 
     if (ctxt . CopyElementAsString(src, MCNAME("borderColor"), false, t_stringref_value))
     {
@@ -185,8 +173,6 @@ void MCParagraph::fetchattrs(MCArrayRef src)
         SetHGrid(ctxt, &t_bool);
         MCValueRelease(t_boolean_value);
     }
-    else
-        SetHGrid(ctxt, nil);
 
     if (ctxt . CopyElementAsBoolean(src, MCNAME("vGrid"), false, t_boolean_value))
     {
@@ -195,8 +181,6 @@ void MCParagraph::fetchattrs(MCArrayRef src)
         SetVGrid(ctxt, &t_bool);
         MCValueRelease(t_boolean_value);
     }
-    else
-        SetVGrid(ctxt, nil);
 
     if (ctxt . CopyElementAsBoolean(src, MCNAME("dontWrap"), false, t_boolean_value))
     {
@@ -204,18 +188,12 @@ void MCParagraph::fetchattrs(MCArrayRef src)
         t_bool = t_boolean_value == kMCTrue;
         SetDontWrap(ctxt, &t_bool);
     }
-    else
-        SetDontWrap(ctxt, nil);
 
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("padding"), false, t_uint_value))
         SetPadding(ctxt, &t_uint_value);
-    else
-        SetPadding(ctxt, nil);
 
     if (ctxt . CopyElementAsInteger(src, MCNAME("listIndex"), false, t_integer_value))
         SetListIndent(ctxt, &t_integer_value);
-    else
-        SetListIndent(ctxt, nil);
 }
 
 IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)

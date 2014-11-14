@@ -2289,7 +2289,8 @@ static void skip_word(const char *&sptr, const char *&eptr)
 void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedText& x_mark, bool includechars)
 {
     int4 t_first, t_last;
-    x_mark . changed = false;
+    // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+    x_mark . changed = 0;
     bool t_further_chunks = false;
     
     if (cline != nil)
@@ -3066,7 +3067,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 
     if (*t_valueref != nil || t_exec_expr)
     {
-        if (isstringchunk() || byte != nil)
+        if (isstringchunk() || isdatachunk())
         {
             MCMarkedText t_new_mark;
             t_new_mark . text = nil;
@@ -3075,9 +3076,10 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             
             bool t_success = true;
             
+            // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
             if (isstringchunk())
             {
-                // Must be a string ref
+                // Need a string ref, at least initially
                 MCAutoStringRef t_text_str;
                 if (t_exec_expr)
                 {
@@ -3093,9 +3095,28 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                     return;
                 }
                 t_new_mark . text = MCValueRetain(*t_text_str);
-                mark(ctxt, false, false, t_new_mark);
-                
             }
+            else
+            {
+                // Must be data
+                MCAutoDataRef t_data;
+                if (t_exec_expr)
+                {
+                    MCExecTypeConvertAndReleaseAlways(ctxt, t_text . type, &t_text, kMCExecValueTypeDataRef, &(&t_data));
+                    t_success = !ctxt . HasError();
+                }
+                else
+                    t_success = ctxt . ConvertToData(*t_valueref, &t_data);
+                
+                if (!t_success)
+                {
+                    ctxt.Throw();
+                    return;
+                }
+                t_new_mark . text = MCValueRetain(*t_data);
+            }
+            
+            mark(ctxt, false, false, t_new_mark);
             
             if (!isdatachunk())
                 MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;
@@ -3328,7 +3349,7 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
     {
         MCUrlChunkPtr t_url_chunk;
         t_url_chunk . url = nil;
-        if (!evalurlchunk(ctxt, false, true, t_url_chunk))
+        if (!evalurlchunk(ctxt, false, true, p_type, t_url_chunk))
             return false;
 
         MCNetworkExecPutIntoUrl(ctxt, p_value, p_type, t_url_chunk);
@@ -3414,7 +3435,7 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCExecValue p_va
         MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_valueref));
         MCUrlChunkPtr t_url_chunk;
         t_url_chunk . url = nil;
-        if (!evalurlchunk(ctxt, false, true, t_url_chunk))
+        if (!evalurlchunk(ctxt, false, true, p_type, t_url_chunk))
             return false;
         
         MCNetworkExecPutIntoUrl(ctxt, *t_valueref, p_type, t_url_chunk);
@@ -4432,7 +4453,7 @@ Chunk_term MCChunk::getlastchunktype(void)
 bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
 {
     if (isstringchunk() || isdatachunk())
-        MCEngineMarkVariable(ctxt, destvar, r_chunk . mark);
+        MCEngineMarkVariable(ctxt, destvar, isdatachunk(), r_chunk . mark);
 
     mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
 
@@ -4448,16 +4469,21 @@ bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force
     return true;
 }
 
-bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr &r_chunk)
+bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, int p_type, MCUrlChunkPtr &r_chunk)
 {
     MCAutoStringRef t_url;
 
     if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADEXPRESSION, &t_url))
         return false;
-
-    MCNetworkMarkUrl(ctxt, *t_url, r_chunk . mark);
-
-    mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
+    
+    // AL-2014-09-10: Don't fetch the url if this is a simple 'put into url...'
+    if (p_type != PT_INTO || getlastchunktype() != CT_UNDEFINED)
+    {
+        MCNetworkMarkUrl(ctxt, *t_url, r_chunk . mark);
+        mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
+    }
+    else
+        r_chunk . mark . text = nil;
 
     if (ctxt . HasError())
     {
@@ -4495,7 +4521,8 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         MCMarkedText t_mark;
         t_mark . finish = INDEX_MAX;
         t_mark . start = 0;
-        t_mark . changed = false;
+        // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+        t_mark . changed = 0;
         t_mark . text = nil;
         r_chunk . object = t_object.object;
         r_chunk . part_id = t_object.part_id;
@@ -4739,7 +4766,7 @@ bool MCChunk::issubstringchunk(void) const
 bool MCChunk::isstringchunk(void) const
 {
     if (cline != nil || paragraph != nil || sentence != nil || item != nil || token != nil || trueword != nil
-        || word != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil)
+        || word != nil || character != nil || codepoint != nil || codeunit != nil)
 		return true;
     
     return false;
@@ -5709,7 +5736,8 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
     break_iterator = nil;
     sp = nil;
     range = MCRangeMake(0, 0);
-    exhausted = false;
+    // AL-2014-10-24: [[ Bug 13783 ]] Set exhausted to true if the string is immediately exhausted
+    exhausted = MCStringIsEmpty(p_text);
     length = MCStringGetLength(text);
     first_chunk = true;
     break_position = 0;
@@ -5839,8 +5867,8 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             else
             {
                 range . length = t_found_range . offset - range . offset;
-                // keep track of matched delimiter length.
-                //delimiter_length = t_found_range . length;
+                // AL-2014-10-15: [[ Bug 13671 ]] Keep track of matched delimiter length to increment offset correctly
+                delimiter_length = t_found_range . length;
             }
             
         }
@@ -5954,6 +5982,11 @@ bool MCTextChunkIterator::isamong(MCExecContext& ctxt, MCStringRef p_needle)
     while (next(ctxt))
         if (MCStringSubstringIsEqualTo(text, range, p_needle, ctxt . GetStringComparisonType()))
             return true;
+    
+    // AL-2014-09-10: [[ Bug 13356 ]] If we were not 'exhausted', then there was a trailing delimiter
+    //  which means empty is considered to be among the chunks.
+    if (MCStringIsEmpty(p_needle) && !exhausted)
+        return true;
     
     return false;
 }

@@ -96,6 +96,8 @@ public:
 	
 	virtual bool PlatformGetAuthCredentials(bool p_is_proxy, const CefString &p_url, const CefString &p_realm, MCCefAuthScheme p_auth_scheme, CefString &r_user, CefString &r_password);
 	
+	virtual void OnCefBrowserClosed(CefRefPtr<CefBrowser> p_browser);
+	
 private:
 	CefWindowHandle m_parent_window;
 	int32_t m_left, m_top, m_right, m_bottom;
@@ -183,6 +185,12 @@ void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
 	[t_handle removeFromSuperview];
 }
 
+void MCCefBrowserOSX::OnCefBrowserClosed(CefRefPtr<CefBrowser> p_browser)
+{
+	// IM-2014-09-16: [[ Bug 13286 ]] clear reference to detached parent window
+	m_parent_window = nil;
+}
+
 MCCefBrowserOSX::MCCefBrowserOSX(CefWindowHandle p_parent_window) : MCCefBrowserBase()
 {
 	m_parent_window = p_parent_window;
@@ -201,6 +209,10 @@ static unsigned int cef_com_runrev_livecode_nativeViewId(id self, SEL _cmd)
 
 bool MCCefBrowserOSX::GetWindowHandle(CefWindowHandle &r_hwnd)
 {
+	// IM-2014-09-16: [[ Bug 13286 ]] If we have no parent window then the browser has already closed
+	if (m_parent_window == nil)
+		return false;
+	
 	CefRefPtr<CefBrowser> t_browser;
 	t_browser = GetCefBrowser();
 	
@@ -285,6 +297,10 @@ bool MCCefBrowserOSX::PlatformSetVisible(bool p_visible)
 
 bool MCCefBrowserOSX::PlatformGetWindowID(int32_t &r_id)
 {
+	// IM-2014-09-16: [[ Bug 13286 ]] If we have no parent window then the browser has already closed
+	if (m_parent_window == nil)
+		return false;
+	
 	r_id = (int32_t) [[m_parent_window window] windowNumber];
 	
 	return true;

@@ -222,6 +222,16 @@ public:
 		//   set.
 		return (flags & F_HAS_ATTS) != 0;
 	}
+    
+    void cleanatts()
+	{
+        // MW-2012-02-17: [[ SplitTextAttrs ]] If we no longer have any atts, delete the struct.
+        if ((flags & F_HAS_ATTS) == 0)
+        {
+            delete atts;
+            atts = nil;
+        }
+	}
 
 	bool getflag(unsigned int f) const
 	{

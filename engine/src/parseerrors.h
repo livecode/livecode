@@ -1694,6 +1694,10 @@ enum Parse_errors
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
 	// {PE-0551} open: expected 'host'
 	PE_OPEN_NOHOST,
+    
+    // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+    // {PE-0552} bidiDirection: bad parameters
+	PE_BIDIDIRECTION_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

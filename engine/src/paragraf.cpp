@@ -485,8 +485,10 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		uint32_t t_length;
 		MCAutoPointer<char> t_text_data;
-		// This string can contain a mixture of Unicode and native...
-		if ((stat = IO_read_string_legacy_full(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
+        
+		// This string can contain a mixture of Unicode and native - t_length is the number
+        // of bytes.
+        if ((stat = IO_read_string_legacy_full(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
 			return stat;
 
         if (!MCStringCreateMutable(0, m_text))
@@ -531,38 +533,65 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					// using the correct encoding and get fixed up below.
 					findex_t index, len;
 					newblock->GetRange(index, len);
-					t_last_added = index+len;
+                    t_last_added = index+len;
 
+                    // SN-2014-10-31: [[ Bug 13881 ]] Ensure that the block hasn't been corrupted.
+                    //  (leads to a potential crash, in case the corrupted stack ends up to be valid).
+                    if (index > t_length)
+                        return IO_ERROR;
+                    
                     // Some stacks seem to be saved with invalid blocks that
                     // exceed the length of the paragraph character data
-                    if (len > t_length)
-                        len = t_length;
+                    // SN-2014-09-29: [[ Bug 13552 ]] Clamp the length appropriately
+                    if (len + index > t_length)
+                    {
+                        // MW-2014-09-29: [[ Bug 13552 ]] Make sure we only recalculate if the length
+                        //   is not 0.
+                        if (len != 0)
+                            len = t_length - index;
+                    }
                     
                     uindex_t t_index;
                     t_index = MCStringGetLength(m_text);
 
 					if (newblock->IsSavedAsUnicode())
 					{
-						len >>= 1;
+						//len >>= 1;
 						if (len && t_length > 0)
 						{
 							uint2 *dptr = (uint2*)(*t_text_data + index);
-							
+                            
 							// Byte swap, if required
-							uindex_t t_len = len;
-                            while (len--)
+                            // SN-2014-09-29: [[ Bug 13552 ]] Make sure to take in account odd number of bytes
+                            // for unicode, as it may occur
+							uindex_t t_len = 0;
+                            while (len >= 2)
+                            {
 								swap_uint2(dptr++);
+                                len -= 2;
+                                t_len += 1;
+                            }
 
                             // Append to the paragraph text
                             if (!MCStringAppendChars(m_text, (const unichar_t*)dptr - t_len, t_len))
                                 return IO_ERROR;
 							
+                            if (len > 0)
+                            {
+                                if (!MCStringAppendChar(m_text, (unichar_t)*(const uint8_t *)dptr))
+                                    return IO_ERROR;
+                                t_len += 1;
+                            }
+                            
 							// The indices used by the block are incorrect and need
 							// to be updated (offsets into the stored string and
 							// the string held by the paragraph will differ if any
 							// portion of the stored string was non-UTF-16)
                             newblock->SetRange(t_index, t_len);
 						}
+                        // SN-2014-09-29: [[ Bug 13552 ]] Update the block range, even if its length is 0
+                        else
+                            newblock->SetRange(t_index, 0);
 					}
 					else
 					{
@@ -953,13 +982,19 @@ void MCParagraph::defrag()
 
 // MW-2012-01-25: [[ ParaStyles ]] This method causes a reflow of the paragraph depending
 //   on the setting of 'dontWrap'.
-void MCParagraph::layout(bool p_force)
+// AL-2014-09-22: [[ Bug 11817 ]] Added cascade parameter to enable conditional r
+//  of subsequent paragraphs if the number of lines changes
+bool MCParagraph::layout(bool p_force, bool p_check_redraw)
 {
 	// MP-2013-09-02: [[ FasterField ]] If we don't need layout, and layout isn't being forced,
 	//   do nothing.
 	if (!needs_layout && !p_force)
-		return;
+		return false;
 
+    uindex_t t_count;
+    if (p_check_redraw)
+        t_count = countlines();
+    
     // Update the text direction properties of the paragraph
     resolvetextdirections();
     
@@ -967,10 +1002,28 @@ void MCParagraph::layout(bool p_force)
 		noflow();
 	else
 		flow();
-	
+    
 	// MP-2013-09-02: [[ FasterField ]] We've layed out the paragraph, so it doesn't need to
 	//   be again until mutated.
 	needs_layout = false;
+    
+    if (p_check_redraw)
+        return t_count != countlines();
+    
+    return false;
+}
+
+uindex_t MCParagraph::countlines()
+{
+    MCLine *t_line = lines;
+    uindex_t t_count = 0;
+    do
+    {
+        t_count++;
+        t_line = t_line -> next();
+    }
+    while (t_line != lines);
+    return t_count;
 }
 
 //reflow paragraph with wrapping
@@ -1128,7 +1181,8 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             
             // AL-2014-07-29: [[ Bug 12951 ]] Selection rect should include whitespace between tabbed cells
             // If this is the first block of a segment, check if the selection covers the front of the segment.
-            if (bptr == sgptr -> GetFirstBlock() && endindex > bi && (startindex < bi || (t_show_front && startindex == bi)))
+            // SN-2014-08-22: [[ Bug 13249 ]] startindex and endindex are not set when hiliting the whole line of a field.
+            if (bptr == sgptr -> GetFirstBlock() && endindex > bi && (startindex < bi || (t_show_front && (startindex == bi || startindex == INT32_MAX))))
             {
                 t_segment_front = true;
                 findex_t ei, el;
@@ -1140,8 +1194,9 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             }
             
             // If this is the last block of a segment, check if the selection covers the back of the segment.
+            // SN-2014-08-22: [[ Bug 13249 ]] startindex and endindex are not set when hiliting the whole line of a field.
             if (!t_whole_segment && bptr == sgptr -> GetLastBlock() && startindex < bi + bl &&
-                ((sgptr -> next() != segments && endindex > bi + bl) || (t_show_back && endindex == bi + bl)))
+                ((sgptr -> next() != segments && endindex > bi + bl) || (t_show_back && (endindex == bi + bl || endindex == INT32_MAX))))
                 t_segment_back = true;
 
              // If selection covers the whole segment, we can fill it and skip to the first block of the next segment.           
@@ -1230,7 +1285,8 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             MCBlock *t_last_visual = lptr -> GetLastSegment() -> GetLastVisualBlock();
             
             // AL-2014-07-17: [[ Bug 12951 ]] Include segment offset in the block coordinate calculation
-            srect.x = x + lptr -> GetLastSegment() -> GetLeftEdge() + t_last_visual->getorigin() + t_last_visual->getwidth();
+            // SN-2014-09-11: [[ Bug 13407 ]] Include the part not drawn in case of text overflow
+            srect.x = x + lptr -> GetLastSegment() -> GetRightEdge();
             srect.width = swidth - (srect.x - sx);
             dc->fillrect(srect);
         }
@@ -3188,7 +3244,10 @@ MCRectangle MCParagraph::getdirty(uint2 fixedheight)
 
 	dirty.x = 0;
 	dirty.y = 0;
-	dirty.width = dirty.height = 0;
+    // SN-2014-08-25: [[ Bug 13263 ]] We want to have a height, even if the line is empty - that ensures
+    //  that a line is redrawn when the last remaining char is deleted
+	dirty.width = 0;
+    dirty.height = fixedheight;
 
 	// MW-2012-01-08: [[ ParaStyles ]] Compute spacing top and bottom.
 	int32_t t_space_above, t_space_below;
@@ -4238,6 +4297,11 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 {
 	if (lptr == NULL)
 		lptr = lines;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph
+    if (attrs != nil)
+        theight -= attrs -> space_above;
+    
 	do
 	{
 		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
@@ -4248,6 +4312,12 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 	}
 	while (lptr != lines);
 	lptr = NULL;
+    
+    // SN-2014-09-17: [[ Bug 13462 ]] Added the space above and below each paragraph.
+    // There is no failure for this paragraph if only the space below does not fit in the field
+    if (attrs != nil)
+        theight = MCU_max(((int32_t)theight) - attrs -> space_below, 0);
+    
 	return True;
 }
 

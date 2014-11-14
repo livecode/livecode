@@ -950,7 +950,8 @@ void MCStack::SetIconic(MCExecContext& ctxt, bool setting)
 {
 	uint4 newstate = state;
 	
-	if (setting != ((newstate & CS_ICONIC) == True))
+	// SN-2014-08-28: [[ Bug 13289 ]] Actually set the flags to the new iconic state
+	if (changestate(setting, CS_ICONIC))
 	{
 		if (setting)
 			newstate |= CS_ICONIC;
@@ -1650,7 +1651,8 @@ void MCStack::GetLinkHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_c
 	else
 	{
 		Linkatts *la = getlinkatts();
-		get_interface_color(la->color, la->colorname, r_color);
+        // AL-2014-10-21: [[ Bug 13717 ]] Get the correct link attribute
+		get_interface_color(la->hilitecolor, la->hilitecolorname, r_color);
 	}
 }
 
@@ -1662,7 +1664,8 @@ void MCStack::SetLinkHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColo
 void MCStack::GetEffectiveLinkHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
 {
 	Linkatts *la = getlinkatts();
-	get_interface_color(la->color, la->colorname, r_color);
+    // AL-2014-10-21: [[ Bug 13717 ]] Get the correct link attribute
+	get_interface_color(la->hilitecolor, la->hilitecolorname, r_color);
 }
 
 void MCStack::GetLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
@@ -1672,19 +1675,22 @@ void MCStack::GetLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_
 	else
 	{
 		Linkatts *la = getlinkatts();
-		get_interface_color(la->color, la->colorname, r_color);
+        // AL-2014-10-21: [[ Bug 13717 ]] Get the correct link attribute
+		get_interface_color(la->visitedcolor, la->visitedcolorname, r_color);
 	}
 }
 
 void MCStack::SetLinkVisitedColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
 {
-	SetLinkAtt(ctxt, P_LINK_HILITE_COLOR, p_color);
+    // AL-2014-10-21: [[ Bug 13717 ]] Set the correct link attribute
+	SetLinkAtt(ctxt, P_LINK_VISITED_COLOR, p_color);
 }
 
 void MCStack::GetEffectiveLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
 {
 	Linkatts *la = getlinkatts();
-	get_interface_color(la->color, la->colorname, r_color);
+    // AL-2014-10-21: [[ Bug 13717 ]] Get the correct link attribute
+	get_interface_color(la->visitedcolor, la->visitedcolorname, r_color);
 }
 
 void MCStack::GetUnderlineLinks(MCExecContext& ctxt, bool*& r_value)
@@ -1761,18 +1767,8 @@ void MCStack::SetWindowShape(MCExecContext& ctxt, uinteger_t p_shape)
 			t_image = resolveimageid(windowshapeid);
 			if (t_image != NULL)
 			{
-				MCWindowShape *t_new_mask;
-				setextendedstate(True, ECS_MASK_CHANGED);
-				t_image -> setflag(True, F_I_ALWAYS_BUFFER);
-				t_image -> open();
-				t_new_mask = t_image -> makewindowshape();
-				t_image -> close();
-                // MW-2014-06-11: [[ Bug 12495 ]] Refactored action as different whether using platform API or not.
-                // MW-2014-07-29: [[ Bug 12997 ]] Merge error - refactored code from 6.7 not integrated.
-                if (t_new_mask != NULL)
-                    updatewindowshape(t_new_mask);
-                
-                // Update window mask immediately changes things so no need to reopenwindow.
+                // IM-2014-10-22: [[ Bug 13746 ]] use common loadwindowshape() method
+                loadwindowshape();
                 return;
 			}
 		}

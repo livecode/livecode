@@ -1942,13 +1942,19 @@ void MCMutableImageRep::image_undo(Ustruct *us)
 {
 	if (state & CS_DRAW)
 		return;
+    
+    // PM-2014-10-01: [[ Bug 13568 ]] Make sure that pressing undo (cmd+z) twice when using paint tools, the second undo undoes the first one.
+    MCImageBitmap *t_old_bitmap;
+    MCImageCopyBitmap(m_bitmap, t_old_bitmap);
 
-	MCImageFreeBitmap(m_bitmap);
-	m_bitmap = m_undo_image;
-	m_undo_image = nil;
-
-	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-	m_owner->invalidate_rep(rect);
+    MCImageFreeBitmap(m_bitmap);
+    m_bitmap = m_undo_image;
+    m_undo_image = nil;
+    /* UNCHECKED */ MCImageCopyBitmap(t_old_bitmap, m_undo_image);
+    
+    // MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
+    m_owner->invalidate_rep(rect);
+   
 }
 
 void MCMutableImageRep::image_freeundo(Ustruct *us)

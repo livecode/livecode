@@ -627,8 +627,9 @@ static bool MCUnicodeCanBreakBetween(uint2 x, uint2 y)
 	//   where the space follows the char. This is because a break will consume all space
 	//   chars after it thus we want to measure up to but not including the spaces.
 	bool t_x_isspace, t_y_isspace;
+    // AL-2014-09-03: [[ Bug 13332 ]] Don't break before a non-breaking space
     t_x_isspace = MCUnicodeIsWhitespace(x);
-    t_y_isspace = MCUnicodeIsWhitespace(y);
+    t_y_isspace = y != 0x00A0 && MCUnicodeIsWhitespace(y);
 
 	if (t_x_isspace && t_y_isspace)
 		return false;
@@ -701,12 +702,13 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	//   but use the integer width to break. This ensures measure(a & b) == measure(a) + measure(b)
 	//   (otherwise you get drift as the accumulated width the block calculates is different
 	//    from the width of the text that is drawn).
-	coord_t t_width;
-	t_width = 0;
+
+	coord_t t_width_float;
+	t_width_float = 0;
 
 	// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
 	//   positioning issues.
-	int4 t_last_break_width;
+	coord_t t_last_break_width;
 	t_last_break_width = 0;
 	uint2 t_last_break_i;
 	t_last_break_i = m_index;
@@ -778,22 +780,22 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
             MCRange t_range;
             t_range = MCRangeMake(initial_i, i - initial_i);
             // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-            t_width += MCFontMeasureTextSubstringFloat(m_font,  parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
-		}
-
-		if (t_can_fit && t_width > maxwidth)
+            t_width_float += MCFontMeasureTextSubstringFloat(m_font,  parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
+        }
+        
+		if (t_can_fit && t_width_float > maxwidth)
 			break;
 
 		if (t_can_break)
 			t_break_index = i;
 
-        if (t_width <= maxwidth)
+        if (t_width_float <= maxwidth)
         {
             t_can_fit = true;
             t_whole_block = t_end_of_block;
         }
 
-		if (t_width >= maxwidth)
+		if (t_width_float >= maxwidth)
 			break;
 	}
 
@@ -2183,13 +2185,41 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 		setshift(p_style . text_shift);
 }
 
+// SN-2014-10-31: [[ Bug 13879 ]] Update the way the string is measured.
 uint32_t measure_stringref(MCStringRef p_string)
 {
-	if (MCStringIsNative(p_string))
-        return 2 + MCU_min(MCStringGetLength(p_string) + 1, MAXUINT2);
-    else
-        return 2 + MCU_min((MCStringGetLength(p_string) + 1) * sizeof(unichar_t), MAXUINT2);
+    MCStringEncoding t_encoding;
+    uint32_t t_additional_bytes = 0;
+    
 
+    if (MCstackfileversion < 7000)
+        t_encoding = kMCStringEncodingNative;
+    else
+        t_encoding = kMCStringEncodingUTF8;
+   
+    // Encode the string to get the right length
+    MCAutoDataRef t_data;
+    /* UNCHECKED */ MCStringEncode(p_string, t_encoding, false, &t_data);
+    uint32_t t_length;
+    t_length = MCDataGetLength(*t_data);
+    
+    if (MCstackfileversion < 7000)
+    {
+        // Full string is written in 5.5 format:
+        //  - length is written as a uint2
+        //  - NULL char is included
+        t_additional_bytes = 2 + 1;
+    }
+    else
+    {
+        // 7.0 format may write the length as a uint4
+        if (t_length < 16384)
+            t_additional_bytes = 2;
+        else
+            t_additional_bytes = 4;
+    }
+    
+    return t_length + t_additional_bytes;
 }
 
 // MW-2012-03-04: [[ StackFile5500 ]] Utility routine for computing the length of
@@ -2241,7 +2271,9 @@ bool MCBlock::GetFirstLineBreak(findex_t& r_index)
 	t_index = m_index;
 
 	uindex_t t_offset;
-    if (!MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\v', t_index, kMCStringOptionCompareExact, t_offset))
+    // AL-2014-08-21: [[ Bug 13247 ]] Don't repeatedly search to the end of the paragraph to find line break.
+    //  The search should only be in the range of the block.
+    if (!MCStringFirstIndexOfCharInRange(parent->GetInternalStringRef(), '\v', MCRangeMake(m_index, m_size), kMCStringOptionCompareExact, t_offset))
         return false;
     
     // SN-2014-03-20: [[ bug 11947 ]] ensure the index is incremented to avoid an infinite loop...

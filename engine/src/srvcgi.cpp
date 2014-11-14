@@ -551,8 +551,10 @@ static void cgi_unescape_url(MCDataRef p_url, MCRange p_url_range, MCDataRef &r_
     const byte_t *t_url_string;
 
     t_url_string = MCDataGetBytePtr(p_url);
-
-    /* UNCHECKED */ MCDataCreateMutable(MCDataGetLength(p_url), &t_unescaped_url);
+    
+    // SN-2014-09-04: [[ Bug 13340 ]] Creating a mutable data with an initial capacity increases the byte_count
+    //  and any appending goes after those unitialised, original bytes.
+    /* UNCHECKED */ MCDataCreateMutable(0, &t_unescaped_url);
 
     while (t_index < t_last_index)
     {

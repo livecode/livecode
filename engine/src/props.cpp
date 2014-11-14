@@ -238,6 +238,8 @@ static PropList buttonprops[] =
 		{"hilitePattern", P_HILITE_PATTERN},
         {"hoverIcon", P_HOVER_ICON},
         {"icon", P_ICON},
+        // AL-2014-07-23: [[ Bug 12894 ]] Add iconGravity to button properties list
+        {"iconGravity", P_ICON_GRAVITY},
         {"id", P_ID},
         {"ink", P_INK},
         {"innerGlow", P_BITMAP_EFFECT_INNER_GLOW},
@@ -393,8 +395,6 @@ static PropList imageprops[] =
         {"hiliteColor", P_HILITE_COLOR},
         {"hilitePattern", P_HILITE_PATTERN},
         {"hotSpot", P_HOT_SPOT},
-        // AL-2014-07-23: [[ Bug 12894 ]] Add iconGravity to image properties list
-        {"iconGravity", P_ICON_GRAVITY},
         {"id", P_ID},
         {"ink", P_INK},
         {"innerGlow", P_BITMAP_EFFECT_INNER_GLOW},

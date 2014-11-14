@@ -536,7 +536,7 @@ Boolean MCIPhoneSystem::FileExists(MCStringRef p_path)
 	
 	bool t_found;
 	t_found = stat(*t_utf8_path, &t_info) == 0;
-	if (t_found && (t_info.st_mode & S_IFDIR) == 0)
+	if (t_found && !S_ISDIR(t_info.st_mode))
 		return True;
 	
 	return False;
@@ -550,7 +550,7 @@ Boolean MCIPhoneSystem::FolderExists(MCStringRef p_path)
     /* UNCHECKED */ t_utf8_path . Lock(p_path);
 	bool t_found;
 	t_found = stat(*t_utf8_path, &t_info) == 0;
-	if (t_found && (t_info.st_mode & S_IFDIR) != 0)
+	if (t_found && S_ISDIR(t_info.st_mode))
 		return True;
 	
 	return False;
@@ -564,7 +564,7 @@ Boolean MCIPhoneSystem::FileNotAccessible(MCStringRef p_path)
 	if (stat(*t_utf8_path, &t_info) != 0)
 		return false;
 	
-	if ((t_info . st_mode & S_IFDIR) != 0)
+	if (S_ISDIR(t_info . st_mode))
 		return true;
 	
 	if ((t_info . st_mode & S_IWUSR) == 0)
@@ -599,7 +599,6 @@ IO_handle MCIPhoneSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean
         t_mode = 0;
         break;
     case kMCOpenFileModeWrite:
-    case kMCOpenFileModeExecutableWrite:
         t_mode = 1;
         break;
     case kMCOpenFileModeUpdate:
@@ -852,7 +851,7 @@ bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callb
 		t_entry . user_id = t_stat . st_uid;
 		t_entry . group_id = t_stat . st_gid;
 		t_entry . permissions = t_stat . st_mode & 0777;
-		t_entry . is_folder = (t_stat . st_mode & S_IFDIR) != 0;
+		t_entry . is_folder = S_ISDIR(t_stat . st_mode);
 		
 		t_success = p_callback(p_context, &t_entry);
         

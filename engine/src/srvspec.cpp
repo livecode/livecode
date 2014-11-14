@@ -487,7 +487,7 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	
 	if (MCStringIsEmpty(*t_error))
 	{
-		url_execute(p_url, url_execute_post, (void *)MCDataGetBytePtr(p_data), &t_error);
+		url_execute(p_url, url_execute_post, (void *)p_data, &t_error);
 	}
 
 	if (!MCStringIsEmpty(*t_error))
@@ -497,44 +497,31 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	}
 }
 
-static size_t url_upload_read_callback(void *ptr, size_t size, size_t nmemb, void *stream)
-{
-	MCString *t_data;
-	t_data = static_cast<MCString *>(stream);
-	
-	size_t t_amount;
-	t_amount = size * nmemb;
-	if (t_amount > t_data -> getlength())
-		t_amount = t_data -> getlength();
-	
-	memcpy(ptr, t_data -> getstring(), t_amount);
-	
-	t_data -> set(t_data -> getstring() + t_amount, t_data -> getlength() - t_amount);
-	
-	return t_amount;
-}
-
 static const char *url_execute_upload(void *p_state, CURL *p_curl)
 {
+  MCDataRef state;
+	state = static_cast<MCDataRef>(p_state);
+	
 	const char *t_error;
 	t_error = NULL;
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(p_curl, CURLOPT_UPLOAD, 1) != CURLE_OK)
-			t_error = "couldn't configure upload";
+
+	if (curl_easy_setopt(p_curl, CURLOPT_CUSTOMREQUEST, "PUT") != CURLE_OK)
+		return "couldn't configure upload";
 	}
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(p_curl, CURLOPT_READFUNCTION, url_upload_read_callback) != CURLE_OK)
-			t_error = "couldn't set read function";
+		if (curl_easy_setopt(p_curl, CURLOPT_POSTFIELDS, MCDataGetBytePtr(state)) != CURLE_OK)
+			t_error = "couldn't set upload data";
 	}
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(p_curl, CURLOPT_READDATA, p_state) != CURLE_OK)
-			t_error = "couldn't set read data";
+		if (curl_easy_setopt(p_curl, CURLOPT_POSTFIELDSIZE, MCDataGetLength(state)) != CURLE_OK)
+			t_error = "couldn't set upload size";
 	}
 	
 	return t_error;
@@ -552,7 +539,7 @@ void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	
 	if (MCStringIsEmpty(*t_error))
     {
-        url_execute(p_url, url_execute_upload, (void *)MCDataGetBytePtr(p_data), &t_error);
+      url_execute(p_url, url_execute_upload, (void *)p_data, &t_error);
 	}
 	
 	if (!MCStringIsEmpty(*t_error))
@@ -688,18 +675,6 @@ bool MCS_put_binary(MCExecContext& ctxt, MCSPutKind p_kind, MCDataRef p_data)
 		MCServerPutBinaryOutput(p_data);
 		break;
 
-	case kMCSPutUnicodeOutput:
-		MCServerPutUnicodeOutput(p_data);
-		break;
-			
-	case kMCSPutUnicodeContent:
-		MCServerPutUnicodeContent(p_data);
-		break;
-			
-	case kMCSPutUnicodeMarkup:
-		MCServerPutUnicodeMarkup(p_data);
-		break;
-			
 	default:
 		break;
 	}

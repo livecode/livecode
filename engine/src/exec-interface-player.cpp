@@ -181,6 +181,24 @@ static MCExecSetTypeInfo _kMCInterfaceMediaTypesTypeInfo =
 
 //////////
 
+static MCExecEnumTypeElementInfo _kMCInterfacePlayerStatusElementInfo[] =
+{
+    { "", kMCInterfacePlayerStatusNone, true },
+	{ "loading", kMCInterfacePlayerStatusLoading, true },
+	{ "playing", kMCInterfacePlayerStatusPlaying, true },
+	{ "paused", kMCInterfacePlayerStatusPaused, true },
+};
+
+static MCExecEnumTypeInfo _kMCInterfacePlayerStatusTypeInfo =
+{
+	"Interface.PlayerStatus",
+	sizeof(_kMCInterfacePlayerStatusElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfacePlayerStatusElementInfo
+};
+
+//////////
+
+MCExecEnumTypeInfo *kMCInterfacePlayerStatusTypeInfo = &_kMCInterfacePlayerStatusTypeInfo;
 MCExecSetTypeInfo *kMCInterfaceMediaTypesTypeInfo = &_kMCInterfaceMediaTypesTypeInfo;
 MCExecCustomTypeInfo *kMCMultimediaTrackTypeInfo = &_kMCMultimediaTrackTypeInfo;
 MCExecCustomTypeInfo *kMCMultimediaQTVRConstraintsTypeInfo = &_kMCMultimediaQTVRConstraintsTypeInfo;
@@ -253,6 +271,17 @@ void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 		if (p_name != nil)
 			filename = MCValueRetain(p_name);
 		prepare(kMCEmptyString);
+#ifdef FEATURE_PLATFORM_PLAYER
+        // PM-2014-10-24: [[ Bug 13776 ]] Make sure we attach the player after prepare()
+        // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
+        if (m_platform_player != nil && !m_is_attached && m_should_attach)
+        {
+            MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+            m_is_attached = true;
+            m_should_attach = false;
+        }
+#endif
+
 		Redraw();
 	}
 }
@@ -283,6 +312,16 @@ void MCPlayer::SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time)
 void MCPlayer::GetDuration(MCExecContext& ctxt, uinteger_t& r_duration)
 {
 	r_duration = getduration();
+}
+
+// PM-2014-11-03: [[ Bug 13920 ]] Make sure we support loadedTime property
+void MCPlayer::GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_loaded_time)
+{
+#ifdef FEATURE_PLATFORM_PLAYER
+	r_loaded_time = getmovieloadedtime();
+#else
+    r_loaded_time = 0;
+#endif
 }
 
 void MCPlayer::GetLooping(MCExecContext& ctxt, bool& r_setting)
@@ -652,3 +691,17 @@ void MCPlayer::SetHiliteColor(MCExecContext &ctxt, const MCInterfaceNamedColor &
     Redraw();
 }
 
+#ifdef FEATURE_PLATFORM_PLAYER
+void MCPlayer::GetStatus(MCExecContext& ctxt, intenum_t& r_status)
+{
+    if(getmovieloadedtime() != 0 && getmovieloadedtime() < getduration())
+        r_status = kMCInterfacePlayerStatusLoading;
+    else if (!ispaused())
+        r_status = kMCInterfacePlayerStatusPlaying;
+    else if (ispaused())
+        r_status = kMCInterfacePlayerStatusPaused;
+    else
+        r_status = kMCInterfacePlayerStatusNone;
+    
+}
+#endif
