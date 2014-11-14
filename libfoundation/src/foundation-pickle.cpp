@@ -719,7 +719,7 @@ static bool MCPickleWriteValueRef(MCStreamRef stream, MCValueRef p_value)
             if (t_success)
                 t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindString);
             if (t_success)
-                t_success = MCPickleWriteStringRef(stream, MCNameGetString((MCNameRef)p_value));
+                t_success = MCPickleWriteStringRef(stream, (MCStringRef)p_value);
             break;
         case kMCValueTypeCodeData:
             if (t_success)
