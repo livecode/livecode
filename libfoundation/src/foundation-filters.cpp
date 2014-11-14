@@ -340,98 +340,107 @@ static const char *url_table[256] =
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result)
 {
-    MCAutoStringRefAsNativeChars t_native;
-    char_t *s;
+    char *t_utf8_string;
+    char *s;
     uint32_t l;
     int32_t size;
     
-    if (!t_native . Lock(p_source, s, l))
+    // SN-2014-11-13: [[ Bug 14015 ]] We don't want to nativise the string,
+    // but rather to encode it in UTF-8 and write the bytes (a '%' will be added).
+    if (!MCStringConvertToUTF8(p_source, t_utf8_string, l))
         return false;
     
+    s = t_utf8_string;
     size = l + 1;
     size += size / 4;
     
-	MCAutoNativeCharArray buffer;
-	if (!buffer . New(size))
-		return false;
+    MCAutoNativeCharArray buffer;
+    if (!buffer . New(size))
+        return false;
     
-	char_t *dptr = buffer . Chars();
-	while (l--)
-	{
-		if (dptr - buffer . Chars() + 7 > size)
-		{
-			uint32_t newsize = size + size / 4 + 7;
-			uint32_t offset = dptr - buffer . Chars();
-			if (!buffer . Extend(newsize))
-				return false;
-			dptr = buffer . Chars() + offset;
-			size = newsize;
-		}
-		const char_t *sptr = (const char_t *)url_table[(uint8_t)*s++];
-		do
-		{
-			*dptr++ = *sptr++;
-		}
-		while (*sptr);
-	}
-	
-	buffer . Shrink(dptr - buffer . Chars());
+    char_t *dptr = buffer . Chars();
+    while (l--)
+    {
+        if (dptr - buffer . Chars() + 7 > size)
+        {
+            uint32_t newsize = size + size / 4 + 7;
+            uint32_t offset = dptr - buffer . Chars();
+            if (!buffer . Extend(newsize))
+                return false;
+            dptr = buffer . Chars() + offset;
+            size = newsize;
+        }
+        const char_t *sptr = (const char_t *)url_table[(uint8_t)*s++];
+        do
+        {
+            *dptr++ = *sptr++;
+        }
+        while (*sptr);
+    }
     
-	return buffer . CreateStringAndRelease(r_result);
+    buffer . Shrink(dptr - buffer . Chars());
+    
+    MCMemoryDeleteArray(t_utf8_string);
+    return buffer . CreateStringAndRelease(r_result);
 }
 
 bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result)
 {
-    MCAutoStringRefAsNativeChars t_native;
-    MCAutoNativeCharArray t_buffer;
+    // SN-2014-11-13: [[ Bug 14015 ]] We don't want to use a nativised string, but
+    // bytes, as we can get UTF-8 characters (now usable in 7.0)
+    MCAutoByteArray t_buffer;
     char_t *t_srcptr;
-	uindex_t t_srclen;
+    uindex_t t_srclen;
     
-    if (!t_native . Lock(p_source, t_srcptr, t_srclen))
+    if (!MCStringConvertToNative(p_source, t_srcptr, t_srclen))
         return false;
     
-	if (!t_buffer.New(t_srclen))
-		return false;
+    if (!t_buffer . New(t_srclen))
+        return false;
     
-	const uint8_t *sptr = (uint8_t *)t_srcptr;
-	const uint8_t *eptr = sptr + t_srclen;
-	uint8_t *dptr = (uint8_t*)t_buffer.Chars();
-	while (sptr < eptr)
-	{
-		if (*sptr == '%')
-		{
-			uint8_t source = MCNativeCharUppercase(*++sptr);
-			uint8_t value = 0;
-			if (isdigit(source))
-				value = (source - '0') << 4;
-			else
-				if (source >= 'A' && source <= 'F')
-					value = (source - 'A' + 10) << 4;
-			source = MCNativeCharUppercase(*++sptr);
-			if (isdigit(source))
-				value += source - '0';
-			else
-				if (source >= 'A' && source <= 'F')
-					value += source - 'A' + 10;
-			if (value != 13)
-				*dptr++ = value;
-		}
-		else
-			if (*sptr == '+')
-				*dptr++ = ' ';
-			else
-				if (*sptr == '\r')
-				{
-					if (*(sptr + 1) == '\n')
-						sptr++;
-					*dptr++ = '\n';
-				}
-				else
-					*dptr++ = *sptr;
-		sptr++;
-	}
-	t_buffer.Shrink(dptr - t_buffer.Chars());
-	return t_buffer.CreateStringAndRelease(r_result);
+    const uint8_t *sptr = (uint8_t *)t_srcptr;
+    const uint8_t *eptr = sptr + t_srclen;
+    uint8_t *dptr = (uint8_t*)t_buffer . Bytes();
+    while (sptr < eptr)
+    {
+        if (*sptr == '%')
+        {
+            uint8_t source = MCNativeCharUppercase(*++sptr);
+            uint8_t value = 0;
+            if (isdigit(source))
+                value = (source - '0') << 4;
+            else
+                if (source >= 'A' && source <= 'F')
+                    value = (source - 'A' + 10) << 4;
+            source = MCNativeCharUppercase(*++sptr);
+            if (isdigit(source))
+                value += source - '0';
+            else
+                if (source >= 'A' && source <= 'F')
+                    value += source - 'A' + 10;
+            if (value != 13)
+                *dptr++ = value;
+        }
+        else
+            if (*sptr == '+')
+                *dptr++ = ' ';
+            else
+                if (*sptr == '\r')
+                {
+                    if (*(sptr + 1) == '\n')
+                        sptr++;
+                    *dptr++ = '\n';
+                }
+                else
+                    *dptr++ = *sptr;
+        sptr++;
+    }
+    t_buffer.Shrink(dptr - t_buffer.Bytes());
+    
+    MCMemoryDeleteArray(t_srcptr);
+    
+    // SN-2014-11-13: [[ Bug 14015 ]] The string is UTF-8 encoded, not native.
+    return MCStringCreateWithBytes(t_buffer . Bytes(), t_buffer.ByteCount(), kMCStringEncodingUTF8, false, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
