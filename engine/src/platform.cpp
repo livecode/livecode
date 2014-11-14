@@ -408,3 +408,30 @@ void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef p_sound)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+// No theming for mobile platforms yet
+#ifdef _MOBILE
+bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
+{
+    return false;
+}
+
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef&)
+{
+    return false;
+}
+#endif
+
+
+////////////////////////////////////////////////////////////////////////////////

@@ -1541,6 +1541,7 @@
 		4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC7EE13DD8AFC006233A4 /* name.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = name.cpp; path = src/name.cpp; sourceTree = "<group>"; };
 		7269EC371A13D1DE000723DB /* linux-theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "linux-theme.cpp"; path = "src/linux-theme.cpp"; sourceTree = "<group>"; };
+		7269EC421A162199000723DB /* windows-theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "windows-theme.cpp"; path = "src/windows-theme.cpp"; sourceTree = "<group>"; };
 		72B67C501A0BBDF600BB2594 /* mac-theme.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-theme.mm"; path = "src/mac-theme.mm"; sourceTree = "<group>"; };
 		76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-recorder.mm"; path = "src/mac-qt-recorder.mm"; sourceTree = "<group>"; };
 		76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-recorder.cpp"; path = "src/platform-recorder.cpp"; sourceTree = "<group>"; };
@@ -2195,6 +2196,7 @@
 				A04643F40BAAA63A0030A830 /* w32text.cpp */,
 				A04643F60BAAA63A0030A830 /* w32theme.cpp */,
 				4DAC56770D869D1600CE5BAF /* w32transfer.cpp */,
+				7269EC421A162199000723DB /* windows-theme.cpp */,
 			);
 			name = "Desktop - Windows";
 			sourceTree = "<group>";
