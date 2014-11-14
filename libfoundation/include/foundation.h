@@ -1754,6 +1754,7 @@ bool MCStringAppendChars(MCStringRef string, const unichar_t *chars, uindex_t co
 bool MCStringAppendNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
 bool MCStringAppendChar(MCStringRef string, unichar_t p_char);
 bool MCStringAppendNativeChar(MCStringRef string, char_t p_char);
+bool MCStringAppendCodepoint(MCStringRef string, codepoint_t p_codepoint);
 
 // Prepend prefix to string.
 //
@@ -1764,6 +1765,7 @@ bool MCStringPrependChars(MCStringRef string, const unichar_t *chars, uindex_t c
 bool MCStringPrependNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
 bool MCStringPrependChar(MCStringRef string, unichar_t p_char);
 bool MCStringPrependNativeChar(MCStringRef string, char_t p_char);
+bool MCStringPrependCodepoint(MCStringRef string, codepoint_t p_codepoint);
 
 // Insert new_string into string at offset 'at'.
 //
@@ -1774,6 +1776,7 @@ bool MCStringInsertChars(MCStringRef string, uindex_t at, const unichar_t *chars
 bool MCStringInsertNativeChars(MCStringRef string, uindex_t at, const char_t *chars, uindex_t count);
 bool MCStringInsertChar(MCStringRef string, uindex_t at, unichar_t p_char);
 bool MCStringInsertNativeChar(MCStringRef string, uindex_t at, char_t p_char);
+bool MCStringInsertCodepoint (MCStringRef string, uindex_t p_at, codepoint_t p_codepoint);
 
 // Remove 'range' characters from 'string'.
 //
@@ -1895,8 +1898,11 @@ bool MCDataPrependBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte
 bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
 
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
+bool MCDataInsertBytes(MCDataRef self, uindex_t p_at, const byte_t *p_bytes, uindex_t p_byte_count);
+
 bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
+bool MCDataReplaceBytes(MCDataRef r_data, MCRange p_range, const byte_t *p_new_data, uindex_t p_byte_count);
 
 bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 

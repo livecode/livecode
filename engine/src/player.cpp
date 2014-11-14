@@ -38,6 +38,8 @@ MCPropertyInfo MCPlayer::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_DONT_REFRESH, Bool, MCPlayer, DontRefresh)
     // PM-2014-09-15: [[ Bug 13437 ]] Make sure the time-related vars are large enough to hold larger time values
 	DEFINE_RW_OBJ_PROPERTY(P_CURRENT_TIME, UInt32, MCPlayer, CurrentTime)
+    // PM-2014-11-03: [[ Bug 13920 ]] Make sure the loadedTime property is defined
+    DEFINE_RO_OBJ_PROPERTY(P_MOVIE_LOADED_TIME, UInt32, MCPlayer, LoadedTime)
 	DEFINE_RO_OBJ_PROPERTY(P_DURATION, UInt32, MCPlayer, Duration)
 	DEFINE_RW_OBJ_PROPERTY(P_LOOPING, Bool, MCPlayer, Looping)
 	DEFINE_RW_OBJ_PROPERTY(P_PAUSED, Bool, MCPlayer, Paused)

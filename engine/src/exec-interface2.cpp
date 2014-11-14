@@ -1549,8 +1549,16 @@ void MCInterfaceSetDefaultMenubar(MCExecContext& ctxt, MCNameRef p_value)
 																	 
 	if (gptr == NULL)
 	{
-		ctxt . LegacyThrow(EE_PROPERTY_NODEFAULTMENUBAR);
-		return;
+        // AL-2014-10-31: [[ Bug 13884 ]] Resolve chunk properly if the name is not found
+        //  so that setting the defaultMenubar by the long id of a group works.
+        MCObjectPtr t_object;
+        if (!MCInterfaceTryToResolveObject(ctxt, MCNameGetString(p_value), t_object) ||
+            t_object . object -> gettype() != CT_GROUP)
+        {
+            ctxt . LegacyThrow(EE_PROPERTY_NODEFAULTMENUBAR);
+            return;
+        }
+        gptr = (MCGroup *)t_object . object;
 	}
 	
 	MCdefaultmenubar = gptr;

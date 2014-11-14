@@ -604,7 +604,8 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		MCImageBitmap *t_copy = nil;
 		if (m_rep != nil)
 		{
-            t_success = copybitmap(false, t_copy);
+            // PM-2014-11-05: [[ Bug 13938 ]] Make sure new alphaData does not add to previous one
+            t_success = lockbitmap(t_copy, false);
 		}
 		else
 		{
@@ -720,10 +721,8 @@ void MCImage::SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle)
 void MCImage::GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle)
 {
     if (m_center_rect . x != INT16_MIN)
-    {
-        r_rectangle = new MCRectangle;
+        // AL-2014-11-05: [[ Bug 13943 ]] Return center rect correctly
         *r_rectangle = m_center_rect;
-    }
     else
         r_rectangle = NULL;
 }
