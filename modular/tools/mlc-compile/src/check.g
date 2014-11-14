@@ -133,7 +133,7 @@
         QueryId(Id -> error)
 
     'rule' CheckBindingIsTypeId(Id):
-        QueryId(Id -> type)
+        QueryKindOfSymbolId(Id -> type)
         
     'rule' CheckBindingIsTypeId(Id):
         Id'Name -> Name
@@ -149,7 +149,7 @@
         QueryId(Id -> error)
 
     'rule' CheckBindingIsHandlerId(Id):
-        QueryId(Id -> handler)
+        QueryKindOfSymbolId(Id -> handler)
         
     'rule' CheckBindingIsHandlerId(Id):
         Id'Name -> Name
@@ -165,10 +165,10 @@
         QueryId(Id -> error)
 
     'rule' CheckBindingIsVariableId(Id):
-        QueryId(Id -> variable)
+        QueryKindOfSymbolId(Id -> variable)
         
     'rule' CheckBindingIsVariableId(Id):
-        QueryId(Id -> parameter)
+        QueryKindOfSymbolId(Id -> parameter)
 
     'rule' CheckBindingIsVariableId(Id):
         Id'Name -> Name
@@ -184,13 +184,13 @@
         QueryId(Id -> error)
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
-        QueryId(Id -> variable)
+        QueryKindOfSymbolId(Id -> variable)
         
     'rule' CheckBindingIsVariableOrHandlerId(Id):
-        QueryId(Id -> parameter)
+        QueryKindOfSymbolId(Id -> parameter)
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
-        QueryId(Id -> handler)
+        QueryKindOfSymbolId(Id -> handler)
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
         Id'Name -> Name
@@ -206,17 +206,16 @@
         QueryId(Id -> error)
 
     'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
-        QueryId(Id -> syntaxexpressionrule)
+        QueryClassOfSyntaxId(Id -> expressionphrase)
 
     'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
-        QueryId(Id -> syntaxexpressionlistrule)
+        QueryClassOfSyntaxId(Id -> expressionlistphrase)
         
     'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
-        QueryId(Id -> syntaxrule(Info))
-        Info'Class -> phrase
+        QueryClassOfSyntaxId(Id -> phrase)
         
     'rule' CheckBindingIsSyntaxRuleOfExpressionType(Id):
-        QueryId(Id -> syntaxrule(_))
+        QueryClassOfSyntaxId(Id -> _)
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToAPhrase(Position, Name)
@@ -236,7 +235,7 @@
         QueryId(Id -> error)
 
     'rule' CheckBindingIsSyntaxMark(Id):
-        QueryId(Id -> syntaxmark(_))
+        QueryTypeOfSyntaxMarkId(Id -> _)
         
     'rule' CheckBindingIsSyntaxMark(Id):
         Id'Name -> Name
@@ -270,22 +269,7 @@
         QueryId(Id -> error)
 
     'rule' CheckBindingIsSyntaxMarkUse(Id):
-        QueryId(Id -> syntaxmark(_))
-
-    'rule' CheckBindingIsSyntaxMarkUse(Id):
-        QueryId(Id -> syntaxoutputmark)
-
-    'rule' CheckBindingIsSyntaxMarkUse(Id):
-        QueryId(Id -> syntaxinputmark)
-
-    'rule' CheckBindingIsSyntaxMarkUse(Id):
-        QueryId(Id -> syntaxcontextmark)
-        
-    'rule' CheckBindingIsSyntaxMarkUse(Id):
-        QueryId(Id -> syntaxcontainermark)
-
-    'rule' CheckBindingIsSyntaxMarkUse(Id):
-        QueryId(Id -> syntaxiteratormark)
+        QueryTypeOfSyntaxMarkId(Id -> _)
 
     'rule' CheckBindingIsSyntaxMarkUse(Id):
         Id'Name -> Name
@@ -436,21 +420,15 @@
         QueryId(Id -> error)
 
     'rule' ComputeSyntaxRuleType(Id -> expression):
-        QueryId(Id -> syntaxexpressionrule)
+        QueryClassOfSyntaxId(Id -> expressionphrase)
 
     'rule' ComputeSyntaxRuleType(Id -> expression):
-        QueryId(Id -> syntaxexpressionlistrule)
+        QueryClassOfSyntaxId(Id -> expressionlistphrase)
         
     'rule' ComputeSyntaxRuleType(Id -> phrase):
-        QueryId(Id -> syntaxrule(Info))
-        Info'Class -> phrase
-        
-    'rule' ComputeSyntaxRuleType(Id -> expression):
-        QueryId(Id -> syntaxrule(Info))
-        Info'Class -> expression
+        QueryClassOfSyntaxId(Id -> phrase)
         
     'rule' ComputeSyntaxRuleType(Id -> error):
-        QueryId(Id -> Meaning)
         Fatal_InternalInconsistency("Referenced syntax rule bound to non-expression")
 
 'action' ComputeSyntaxArgumentType(SYNTAXCONSTANT -> SYNTAXMARKTYPE)
@@ -467,22 +445,11 @@
         
     'rule' ComputeSyntaxArgumentType(string(_, _) -> string):
 
-    'rule' ComputeSyntaxArgumentType(variable(_, Name) -> output):
-        QueryId(Name -> syntaxoutputmark)
-
-    'rule' ComputeSyntaxArgumentType(variable(_, Name) -> input):
-        QueryId(Name -> syntaxinputmark)
-
-    'rule' ComputeSyntaxArgumentType(variable(_, Name) -> context):
-        QueryId(Name -> syntaxcontextmark)
-
     'rule' ComputeSyntaxArgumentType(variable(_, Name) -> Type):
-        QueryId(Name -> syntaxmark(Info))
-        Info'Type -> Type
+        QueryTypeOfSyntaxMarkId(Name -> Type)
 
     'rule' ComputeSyntaxArgumentType(indexedvariable(_, Name, _) -> Type):
-        QueryId(Name -> syntaxmark(Info))
-        Info'Type -> Type
+        QueryTypeOfSyntaxMarkId(Name -> Type)
         
     'rule' ComputeSyntaxArgumentType(_ -> error):
         --
@@ -689,7 +656,7 @@
 'action' CheckSyntaxMethod(SYNTAXCLASS, SYNTAXMETHOD)
 
     'rule' CheckSyntaxMethod(Class, method(Position, Name, Arguments)):
-        QueryMethodIdSignature(Name -> signature(Parameters, ReturnType))
+        QueryHandlerIdSignature(Name -> signature(Parameters, ReturnType))
         CheckSyntaxMethodReturnType(Position, ReturnType)
         CheckSyntaxMethodArguments(Position, Parameters, Arguments)
 
@@ -825,31 +792,20 @@
 'action' ComputeSyntaxPrefixAndSuffixOfRule(ID -> SYNTAXTERM, SYNTAXTERM)
 
     'rule' ComputeSyntaxPrefixAndSuffixOfRule(Name -> Prefix, Suffix)
-        QueryId(Name -> Meaning)
+        QuerySyntaxId(Name -> Info)
         (|
-            (|
-                where(Meaning -> syntaxexpressionrule)
-            ||
-                where(Meaning -> syntaxexpressionlistrule)
-            |)
-            where(SYNTAXTERM'expression -> Prefix)
-            where(SYNTAXTERM'expression -> Suffix)
+            Info'Prefix -> undefined
+            Info'Syntax -> Syntax
+            ComputeSyntaxPrefixAndSuffix(Syntax -> Prefix, Suffix)
+            Info'Prefix <- Prefix
+            Info'Suffix <- Suffix
         ||
-            where(Meaning -> syntaxrule(Info))
-            (|
-                Info'Prefix -> undefined
-                Info'Syntax -> Syntax
-                ComputeSyntaxPrefixAndSuffix(Syntax -> Prefix, Suffix)
-                Info'Prefix <- Prefix
-                Info'Suffix <- Suffix
-            ||
-                Info'Prefix -> Prefix
-                Info'Suffix -> Suffix
-            |)
-        ||
-            where(SYNTAXTERM'error -> Prefix)
-            where(SYNTAXTERM'error -> Suffix)
+            Info'Prefix -> Prefix
+            Info'Suffix -> Suffix
         |)
+        
+    'rule' ComputeSyntaxPrefixAndSuffixOfRule(_ -> error, error):
+        -- do nothing
 
 'action' UnionSyntaxTerm(SYNTAXTERM, SYNTAXTERM -> SYNTAXTERM)
 
@@ -879,13 +835,11 @@
         -- optionals are nullable
 
     'rule' SyntaxIsNullable(rule(_, Name)):
-        QueryId(Name -> syntaxrule(Info))
-        Info'Syntax -> Syntax
+        QuerySyntaxOfSyntaxId(Name -> Syntax)
         SyntaxIsNullable(Syntax)
         
     'rule' SyntaxIsNullable(markedrule(_, _, Name)):
-        QueryId(Name -> syntaxrule(Info))
-        Info'Syntax -> Syntax
+        QuerySyntaxOfSyntaxId(Name -> Syntax)
         SyntaxIsNullable(Syntax)
 
     'rule' SyntaxIsNullable(mark(_, _, _)):
@@ -893,10 +847,48 @@
 
 --------------------------------------------------------------------------------
 
-'action' QueryMethodIdSignature(ID -> SIGNATURE)
+'action' QueryHandlerIdSignature(ID -> SIGNATURE)
 
-    'rule' QueryMethodIdSignature(Id -> Signature)
-        QueryId(Id -> handler(Signature))
+    'rule' QueryHandlerIdSignature(Id -> Signature)
+        QueryId(Id -> symbol(Info))
+        Info'Kind -> handler
+        Info'Type -> handler(_, Signature)
+
+'condition' QueryKindOfSymbolId(ID -> SYMBOLKIND)
+
+    'rule' QueryKindOfSymbolId(Id -> Kind):
+        QueryId(Id -> Meaning)
+        where(Meaning -> symbol(Info))
+        Info'Kind -> Kind
+        
+'condition' QueryClassOfSyntaxId(ID -> SYNTAXCLASS)
+
+    'rule' QueryClassOfSyntaxId(Id -> Class):
+        QueryId(Id -> Meaning)
+        where(Meaning -> syntax(Info))
+        Info'Class -> Class
+
+'condition' QuerySyntaxOfSyntaxId(ID -> SYNTAX)
+
+    'rule' QuerySyntaxOfSyntaxId(Id -> Syntax):
+        QueryId(Id -> Meaning)
+        where(Meaning -> syntax(Info))
+        Info'Class -> Class
+        ne(Class, expressionphrase)
+        ne(Class, expressionlistphrase)
+        Info'Syntax -> Syntax
+
+'condition' QueryTypeOfSyntaxMarkId(ID -> SYNTAXMARKTYPE)
+
+    'rule' QueryTypeOfSyntaxMarkId(Id -> Type):
+        QueryId(Id -> Meaning)
+        where(Meaning -> syntaxmark(Info))
+        Info'Type -> Type
+
+'condition' QuerySyntaxId(ID -> SYNTAXINFO)
+
+    'rule' QuerySyntaxId(Id -> Info):
+        QueryId(Id -> syntax(Info))
 
 'action' QueryId(ID -> MEANING)
 

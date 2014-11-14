@@ -174,7 +174,7 @@
 'nonterm' ConstantDefinition(-> DEFINITION)
 
     'rule' ConstantDefinition(-> constant(Position, Access, Name, Value)):
-        Access(-> Access) "constant" @(-> Position) Identifier(-> Name) "is" Expression(-> Value)
+        Access(-> Access) "constant" @(-> Position) Identifier(-> Name) "is" ConstantTermExpression(-> Value)
 
 'nonterm' Access(-> ACCESS)
 
@@ -689,23 +689,8 @@
 
 'nonterm' TermExpression(-> EXPRESSION)
 
-    'rule' TermExpression(-> null(Position)):
-        "null" @(-> Position)
-
-    'rule' TermExpression(-> true(Position)):
-        "true" @(-> Position)
-
-    'rule' TermExpression(-> false(Position)):
-        "false" @(-> Position)
-
-    'rule' TermExpression(-> integer(Position, Value)):
-        INTEGER_LITERAL(-> Value) @(-> Position)
-
-    'rule' TermExpression(-> real(Position, Value)):
-        DOUBLE_LITERAL(-> Value) @(-> Position)
-
-    'rule' TermExpression(-> string(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position)
+    'rule' TermExpression(-> Constant):
+        ConstantTermExpression(-> Constant)
 
     'rule' TermExpression(-> slot(Position, Name)):
         Identifier(-> Name) @(-> Position)
@@ -719,6 +704,25 @@
     'rule' TermExpression(-> Expression):
         "(" Expression(-> Expression) ")"
 
+'nonterm' ConstantTermExpression(-> EXPRESSION)
+
+    'rule' ConstantTermExpression(-> undefined(Position)):
+        "undefined" @(-> Position)
+
+    'rule' ConstantTermExpression(-> true(Position)):
+        "true" @(-> Position)
+
+    'rule' ConstantTermExpression(-> false(Position)):
+        "false" @(-> Position)
+
+    'rule' ConstantTermExpression(-> integer(Position, Value)):
+        INTEGER_LITERAL(-> Value) @(-> Position)
+
+    'rule' ConstantTermExpression(-> real(Position, Value)):
+        DOUBLE_LITERAL(-> Value) @(-> Position)
+
+    'rule' ConstantTermExpression(-> string(Position, Value)):
+        STRING_LITERAL(-> Value) @(-> Position)
 
 ----------
 

@@ -17,8 +17,8 @@
     MEANING
     MODULEINFO
     SYMBOLINFO SYMBOLKIND
+    SYNTAXINFO
     SYNTAXMARKINFO SYNTAXMARKTYPE
-    SYNTAXRULEINFO
     NAME DOUBLE
 
 --------------------------------------------------------------------------------
@@ -125,7 +125,7 @@
     nil
     
 'type' EXPRESSION
-    null(Position: POS)
+    undefined(Position: POS)
     true(Position: POS)
     false(Position: POS)
     integer(Position: POS, Value: INT)
@@ -157,6 +157,8 @@
     prefix(Precedence: INT)
     postfix(Precedence: INT)
     binary(Assoc: SYNTAXASSOC, Precedence: INT)
+    expressionphrase
+    expressionlistphrase
 
 'type' SYNTAXASSOC
     left
@@ -200,22 +202,8 @@
     definingid(Id: ID)
     module(Info: MODULEINFO)
     symbol(Info: SYMBOLINFO)
-    type
-    constant
-    variable
-    handler(Signature: SIGNATURE)
-    property
-    event
-    parameter
-    syntaxrule(Info: SYNTAXRULEINFO)
+    syntax(Info: SYNTAXINFO)
     syntaxmark(Info: SYNTAXMARKINFO)
-    syntaxexpressionrule
-    syntaxexpressionlistrule
-    syntaxoutputmark
-    syntaxinputmark
-    syntaxcontextmark
-    syntaxcontainermark
-    syntaxiteratormark
     error
     nil
 
@@ -232,6 +220,8 @@
     input
     output
     context
+    iterator
+    container
     
 'type' SYMBOLKIND
     module
@@ -251,10 +241,10 @@
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
 
 'table' MODULEINFO(Index: INT)
-'table' SYMBOLINFO(Index: INT, Module: ID, Kind: SYMBOLKIND, Type: TYPE)
-
+'table' SYMBOLINFO(Index: INT, Parent: ID, Kind: SYMBOLKIND, Type: TYPE)
+'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
 'table' SYNTAXMARKINFO(Index: INT, Type: SYNTAXMARKTYPE)
-'table' SYNTAXRULEINFO(Class: SYNTAXCLASS, Syntax: SYNTAX, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
+
 
 'table' TYPEINFO(Position: POS)
 

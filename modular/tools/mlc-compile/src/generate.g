@@ -463,7 +463,7 @@
 
 'action' GenerateExpressionInRegister(INT, EXPRESSION)
 
-    'rule' GenerateExpressionInRegister(Result, null(_)):
+    'rule' GenerateExpressionInRegister(Result, undefined(_)):
         EmitAssignUndefined(Result)
 
     'rule' GenerateExpressionInRegister(Result, true(_)):
@@ -623,7 +623,7 @@
         eq(Index, -1)
 
         -- Extenal if module index is not 0
-        Info'Module -> ModuleId
+        Info'Parent -> ModuleId
         QueryModuleId(ModuleId -> ModuleInfo)
         ModuleInfo'Index -> ModuleIndex
         ne(ModuleIndex, 0)
@@ -633,7 +633,7 @@
     'rule' IsExternalId(Id):
         -- Extenal if module index is not 0
         QuerySymbolId(Id -> Info)
-        Info'Module -> ModuleId
+        Info'Parent -> ModuleId
         QueryModuleId(ModuleId -> ModuleInfo)
         ModuleInfo'Index -> ModuleIndex
         ne(ModuleIndex, 0)
@@ -642,7 +642,7 @@
 
     'rule' QueryModuleOfId(Id -> ModuleId):
         QuerySymbolId(Id -> Info)
-        Info'Module -> ModuleId
+        Info'Parent -> ModuleId
 
 'action' QuerySymbolId(ID -> SYMBOLINFO)
 

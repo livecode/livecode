@@ -16,7 +16,7 @@
 'action' Bind(MODULE)
 
     'rule' Bind(Module:module(Position, Name, Imports, Definitions)):
-        --DefineId(Name, module)
+        DefineModuleId(Name)
 
         -- Step 1: Ensure all id's referencing definitions point to the definition.
         --         and no duplicate definitions have been attempted.
@@ -30,7 +30,7 @@
         LeaveScope
         
         -- Step 2: Ensure all definitions have their appropriate meaning
-        Define(Definitions)
+        Define(Name, Definitions)
         
         --DumpBindings(Module)
 
@@ -103,60 +103,64 @@
 
 -- The 'Define' phase associates meanings with the definining ids.
 --
-'action' Define(DEFINITION)
+'action' Define(ID, DEFINITION)
 
-    'rule' Define(sequence(Left, Right)):
-        Define(Left)
-        Define(Right)
+    'rule' Define(ModuleId, sequence(Left, Right)):
+        Define(ModuleId, Left)
+        Define(ModuleId, Right)
         
-    'rule' Define(type(Position, _, Name, Type)):
-        DefineId(Name, type)
+    'rule' Define(ModuleId, type(Position, _, Name, Type)):
+        DefineSymbolId(Name, ModuleId, type, Type)
         [|
             where(Type -> handler(_, signature(Parameters, _)))
-            DefineParameters(Parameters)
+            DefineParameters(Name, Parameters)
         |]
     
-    'rule' Define(constant(Position, _, Name, _)):
-        DefineId(Name, constant)
+    'rule' Define(ModuleId, constant(Position, _, Name, Value)):
+        ComputeTypeOfConstantTermExpression(Value -> Type)
+        DefineSymbolId(Name, ModuleId, constant, Type)
     
-    'rule' Define(variable(Position, _, Name, _)):
-        DefineId(Name, variable)
+    'rule' Define(ModuleId, variable(Position, _, Name, Type)):
+        DefineSymbolId(Name, ModuleId, variable, Type)
     
-    'rule' Define(handler(Position, _, Name, Signature:signature(Parameters, _), _, _)):
-        DefineId(Name, handler(Signature))
-        DefineParameters(Parameters)
+    'rule' Define(ModuleId, handler(Position, _, Name, Signature:signature(Parameters, _), _, _)):
+        DefineSymbolId(Name, ModuleId, handler, handler(Position, Signature))
+        DefineParameters(Name, Parameters)
     
-    'rule' Define(foreignhandler(Position, _, Name, Signature:signature(Parameters, _), _)):
-        DefineId(Name, handler(Signature))
-        DefineParameters(Parameters)
+    'rule' Define(ModuleId, foreignhandler(Position, _, Name, Signature:signature(Parameters, _), _)):
+        DefineSymbolId(Name, ModuleId, handler, handler(Position, Signature))
+        DefineParameters(Name, Parameters)
 
-    'rule' Define(property(Position, _, Name)):
-        DefineId(Name, property)
+    'rule' Define(ModuleId, property(Position, _, Name)):
+        DefineSymbolId(Name, ModuleId, property, nil)
 
-    'rule' Define(event(Position, _, Name)):
-        DefineId(Name, event)
+    'rule' Define(ModuleId, event(Position, _, Name)):
+        DefineSymbolId(Name, ModuleId, event, nil)
     
-    'rule' Define(syntax(Position, _, Name, Class, Syntax, _)):
-        Info::SYNTAXRULEINFO
-        Info'Class <- Class
-        Info'Syntax <- Syntax
-        Info'Prefix <- undefined
-        Info'Suffix <- undefined
-        DefineId(Name, syntaxrule(Info))
+    'rule' Define(ModuleId, syntax(Position, _, Name, Class, Syntax, _)):
+        DefineSyntaxId(Name, ModuleId, Class, Syntax)
     
-    'rule' Define(nil):
+    'rule' Define(ModuleId, nil):
         -- do nothing
 
-'action' DefineParameters(PARAMETERLIST)
+'action' DefineParameters(ID, PARAMETERLIST)
 
-    'rule' DefineParameters(parameterlist(parameter(_, _, Name, _), Tail)):
-        DefineId(Name, parameter)
-        DefineParameters(Tail)
+    'rule' DefineParameters(ModuleId, parameterlist(parameter(_, _, Name, Type), Tail)):
+        DefineSymbolId(Name, ModuleId, parameter, Type)
+        DefineParameters(ModuleId, Tail)
         
-    'rule' DefineParameters(nil):
+    'rule' DefineParameters(ModuleId, nil):
         -- do nothing
 
-'action' DefineFields(FIELDLIST)
+'action' ComputeTypeOfConstantTermExpression(EXPRESSION -> TYPE)
+    'rule' ComputeTypeOfConstantTermExpression(undefined(Position) -> undefined(Position)):
+    'rule' ComputeTypeOfConstantTermExpression(true(Position) -> boolean(Position)):
+    'rule' ComputeTypeOfConstantTermExpression(false(Position) -> boolean(Position)):
+    'rule' ComputeTypeOfConstantTermExpression(integer(Position, _) -> integer(Position)):
+    'rule' ComputeTypeOfConstantTermExpression(real(Position, _) -> real(Position)):
+    'rule' ComputeTypeOfConstantTermExpression(string(Position, _) -> string(Position)):
+
+/*'action' DefineFields(FIELDLIST)
 
     'rule' DefineFields(fieldlist(Field, Tail)):
         (|
@@ -171,17 +175,22 @@
         |)
         
     'rule' DefineFields(nil):
-        -- do nothing
+        -- do nothing*/
 
 --------------------------------------------------------------------------------
 
 'var' LastSyntaxMarkIndexVar : INT
 
+-- We need to define variables at the point they are present, rather than at the
+-- start. So we store the handler id for the parent link in the info rather than
+-- thread the parent through.
+'var' CurrentHandlerId : ID
+
 'sweep' Apply(ANY)
 
     ----------
 
-    'rule' Apply(DEFINITION'handler(_, _, _, signature(Parameters, Type), _, Body)):
+    'rule' Apply(DEFINITION'handler(_, _, Id, signature(Parameters, Type), _, Body)):
         -- The type of the handler is resolved in the current scope
         Apply(Type)
         
@@ -196,6 +205,7 @@
 
         -- Now apply all ids in the body. This will also declare local variables as
         -- it goes along
+        CurrentHandlerId <- Id
         Apply(Body)
 
         LeaveScope
@@ -290,7 +300,8 @@
 
     'rule' Apply(STATEMENT'variable(_, Name, Type)):
         DeclareId(Name)
-        DefineId(Name, variable)
+        CurrentHandlerId -> ParentId
+        DefineSymbolId(Name, ParentId, variable, Type)
         Apply(Type)
         
     'rule' Apply(STATEMENT'repeatupto(_, Slot, Start, Finish, Step, Body)):
@@ -432,10 +443,34 @@
     --    Id'Name -> Name
     --    Error_InvalidNameForSyntaxMarkVariable(Position, Name)
 
-'action' DefineId(ID, MEANING)
+--------------------------------------------------------------------------------
 
-    'rule' DefineId(Id, Meaning)
-        Id'Meaning <- Meaning
+'action' DefineModuleId(ID)
+
+    'rule' DefineModuleId(Id):
+        Info::MODULEINFO
+        Info'Index <- -1
+        Id'Meaning <- module(Info)
+
+'action' DefineSymbolId(ID, ID, SYMBOLKIND, TYPE)
+
+    'rule' DefineSymbolId(Id, ParentId, Kind, Type)
+        Info::SYMBOLINFO
+        Info'Index <- -1
+        Info'Parent <- ParentId
+        Info'Kind <- Kind
+        Info'Type <- Type
+        Id'Meaning <- symbol(Info)
+
+'action' DefineSyntaxId(ID, ID, SYNTAXCLASS, SYNTAX)
+
+    'rule' DefineSyntaxId(Id, ModuleId, Class, Syntax):
+        Info::SYNTAXINFO
+        Info'Class <- Class
+        Info'Syntax <- Syntax
+        Info'Prefix <- undefined
+        Info'Suffix <- undefined
+        Id'Meaning <- syntax(Info)
 
 --------------------------------------------------------------------------------
 
@@ -451,19 +486,19 @@
 'action' InitializeBind
 
     'rule' InitializeBind:
-        MakePredefinedId("output", syntaxoutputmark -> Id1)
+        MakePredefinedSyntaxMarkId("output", output -> Id1)
         OutputSyntaxMarkIdVar <- Id1
-        MakePredefinedId("input", syntaxinputmark -> Id2)
+        MakePredefinedSyntaxMarkId("input", input -> Id2)
         InputSyntaxMarkIdVar <- Id2
-        MakePredefinedId("context", syntaxcontextmark -> Id3)
+        MakePredefinedSyntaxMarkId("context", context -> Id3)
         ContextSyntaxMarkIdVar <- Id3
-        MakePredefinedId("iterator", syntaxiteratormark -> Id4)
+        MakePredefinedSyntaxMarkId("iterator", iterator -> Id4)
         IteratorSyntaxMarkIdVar <- Id4
-        MakePredefinedId("container", syntaxcontainermark -> Id5)
+        MakePredefinedSyntaxMarkId("container", container -> Id5)
         ContainerSyntaxMarkIdVar <- Id5
-        MakePredefinedId("Expression", syntaxexpressionrule -> Id6)
+        MakePredefinedSyntaxId("Expression", expressionphrase, expression, expression -> Id6)
         ExpressionSyntaxRuleIdVar <- Id6
-        MakePredefinedId("ExpressionList", syntaxexpressionlistrule -> Id7)
+        MakePredefinedSyntaxId("ExpressionList", expressionphrase, expression, expression -> Id7)
         ExpressionListSyntaxRuleIdVar <- Id7
 
 'action' DeclarePredefinedIds
@@ -488,13 +523,29 @@
         ContainerSyntaxMarkIdVar -> Id5
         DeclareId(Id5)
 
-'action' MakePredefinedId(STRING, MEANING -> ID)
+'action' MakePredefinedSyntaxId(STRING, SYNTAXCLASS, SYNTAXTERM, SYNTAXTERM -> ID)
 
-    'rule' MakePredefinedId(String, Meaning -> Id)
+    'rule' MakePredefinedSyntaxId(String, Class, Prefix, Suffix -> Id):
         Id::ID
         MakeNameLiteral(String -> Name)
         Id'Name <- Name
-        Id'Meaning <- Meaning
+        Info::SYNTAXINFO
+        Info'Index <- -1
+        Info'Class <- Class
+        Info'Prefix <- Prefix
+        Info'Suffix <- Suffix
+        Id'Meaning <- syntax(Info)
+
+'action' MakePredefinedSyntaxMarkId(STRING, SYNTAXMARKTYPE -> ID)
+
+    'rule' MakePredefinedSyntaxMarkId(String, Type -> Id)
+        Id::ID
+        MakeNameLiteral(String -> Name)
+        Id'Name <- Name
+        Info::SYNTAXMARKINFO
+        Info'Index <- -1
+        Info'Type <- Type
+        Id'Meaning <- syntaxmark(Info)
 
 --------------------------------------------------------------------------------
 
