@@ -407,16 +407,18 @@ MCStackdirFormatName_TestUnquotable (MCStringRef p_string)
 		codepoint_t t_codepoint = t_filter->GetNextCodepoint();
 		t_filter->AdvanceCursor();
 
-		/* The first character is not permitted to be a digit. */
-		if (!first_char &&
-			(t_codepoint >= '0' && t_codepoint <= '9')) continue;
+		/* The first character must be a letter. */
+		if (!first_char)
+		{
+			if (t_codepoint >= '0' && t_codepoint <= '9') continue;
+			if (t_codepoint == '_') continue;
+			if (t_codepoint == '-') continue;
+			if (t_codepoint == '.') continue;
+		}
 		first_char = false;
 
 		if (t_codepoint >= 'A' && t_codepoint <= 'Z') continue;
 		if (t_codepoint >= 'a' && t_codepoint <= 'z') continue;
-		if (t_codepoint == '_') continue;
-		if (t_codepoint == '-') continue;
-		if (t_codepoint == '.') continue;
 
 		valid_unquoted = false;
 		break;
@@ -935,15 +937,17 @@ MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner,
 	{
 		bool t_valid_char = false;
 
-		/* The first character isn't allowed to be a digit */
-		t_valid_char |= (!t_found &&
-						 (t_char >= '0' && t_char <= '9'));
+		/* The first character must be a letter */
+		if (t_found)
+		{
+			t_valid_char |= (t_char >= '0' && t_char <= '9');
+			t_valid_char |= (t_char == '_');
+			t_valid_char |= (t_char == '-');
+			t_valid_char |= (t_char == '.');
+		}
 
 		t_valid_char |= (t_char >= 'a' && t_char <= 'z');
 		t_valid_char |= (t_char >= 'A' && t_char <= 'Z');
-		t_valid_char |= (t_char == '_');
-		t_valid_char |= (t_char == '-');
-		t_valid_char |= (t_char == '.');
 
 		if (!t_valid_char) break;
 
