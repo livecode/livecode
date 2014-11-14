@@ -753,7 +753,7 @@ MCStackdirIOScanNumberFraction (MCStackdirIOScannerRef scanner,
 
 		/* Add each digit into the fraction part */
 		uint32_t t_digit = t_char - '0';
-		r_fraction_part += t_digit * exp10 (- (++t_places));
+		r_fraction_part += t_digit * pow (10, - (++t_places));
 
 		MCStackdirIOScannerNextChar (scanner);
 	}
@@ -807,7 +807,7 @@ MCStackdirIOScanNumberExponent (MCStackdirIOScannerRef scanner,
 	real64_t t_exponent;
 	errno = 0;
 	t_exponent = copysign (t_exponent_unsigned, t_exponent_sign);
-	r_exponent_factor = exp10 (t_exponent);
+	r_exponent_factor = pow (10, t_exponent);
 
 	if (errno == ERANGE)
 	{
