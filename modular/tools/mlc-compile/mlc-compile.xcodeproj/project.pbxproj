@@ -76,6 +76,20 @@
 			remoteGlobalIDString = 4D3AA08E19CC47F900886BE7;
 			remoteInfo = grts;
 		};
+		4D44E39B1A160ABA0073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D322F1619DD945E008476D3;
+			remoteInfo = script;
+		};
+		4D44E39D1A160ABA0073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DDA20661A139BA1001B0CA2;
+			remoteInfo = "libscript-test";
+		};
 		4D6F071E19CC37BB00DDC6E0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */;
@@ -161,6 +175,7 @@
 		4D3AA0B319CC594800886BE7 /* NEXT_UNIT.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = NEXT_UNIT.t; path = src/NEXT_UNIT.t; sourceTree = SOURCE_ROOT; };
 		4D3AA0B419CC594800886BE7 /* STRING_LITERAL.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = STRING_LITERAL.t; path = src/STRING_LITERAL.t; sourceTree = SOURCE_ROOT; };
 		4D3AA0B519CC597300886BE7 /* SEPARATOR.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = SEPARATOR.t; path = src/SEPARATOR.t; sourceTree = SOURCE_ROOT; };
+		4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libscript.xcodeproj; path = ../../../libscript/libscript.xcodeproj; sourceTree = "<group>"; };
 		4D6E0E7119E710BE001AE5CC /* check.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = check.g; path = src/check.g; sourceTree = SOURCE_ROOT; };
 		4D6E0E7919E7158C001AE5CC /* check.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = check.c; path = src/_GG_/check.c; sourceTree = "<group>"; };
 		4D6F070B19CC36DD00DDC6E0 /* mlc-compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mlc-compile"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -191,6 +206,7 @@
 		4DE027CF19EE9702004485C9 /* char-chunk.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "char-chunk.mlc"; path = "../../library/src/char-chunk.mlc"; sourceTree = "<group>"; };
 		4DE027D019EE9702004485C9 /* list.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = list.mlc; path = ../../library/src/list.mlc; sourceTree = "<group>"; };
 		4DE027D119EE9A89004485C9 /* grammar-examples.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "grammar-examples.mlc"; sourceTree = "<group>"; };
+		4DE027DF19F104FB004485C9 /* generate.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = generate.g; path = src/generate.g; sourceTree = SOURCE_ROOT; };
 		4DEB63ED19E5220E009DF2EA /* report.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = report.h; path = src/report.h; sourceTree = SOURCE_ROOT; };
 		4DEB63EE19E525F2009DF2EA /* literal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = literal.c; path = src/literal.c; sourceTree = SOURCE_ROOT; };
 		4DEB63F119E52842009DF2EA /* report.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = report.c; path = src/report.c; sourceTree = SOURCE_ROOT; };
@@ -258,6 +274,15 @@
 			name = Library;
 			sourceTree = "<group>";
 		};
+		4D44E3961A160ABA0073FFA2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D44E39C1A160ABA0073FFA2 /* libscript.a */,
+				4D44E39E1A160ABA0073FFA2 /* libscript-test */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		4D6F070019CC36B700DDC6E0 = {
 			isa = PBXGroup;
 			children = (
@@ -282,13 +307,13 @@
 		4D6F070D19CC36DD00DDC6E0 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				4D6F072719CC386B00DDC6E0 /* grammar.g */,
+				4DA53A2F19E448C50089FBDC /* bind.g */,
+				4D6E0E7119E710BE001AE5CC /* check.g */,
+				4DEB640219E59227009DF2EA /* syntax.g */,
+				4DE027DF19F104FB004485C9 /* generate.g */,
 				4DEB63F419E52EEB009DF2EA /* support.g */,
 				4D3AA08219CC3EA600886BE7 /* types.g */,
-				4D6F072719CC386B00DDC6E0 /* grammar.g */,
-				4D78D29C19E9586400DDEF0B /* grammar_full.g */,
-				4DA53A2F19E448C50089FBDC /* bind.g */,
-				4DEB640219E59227009DF2EA /* syntax.g */,
-				4D6E0E7119E710BE001AE5CC /* check.g */,
 				4D3AA09D19CC49D000886BE7 /* ILLEGAL.b */,
 				4DEB640E19E69E50009DF2EA /* COMMENTS.b */,
 				4D3AA09E19CC49D000886BE7 /* LAYOUT.b */,
@@ -323,6 +348,7 @@
 		4D6F071819CC37A200DDC6E0 /* References */ = {
 			isa = PBXGroup;
 			children = (
+				4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */,
 				4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */,
 			);
 			name = References;
@@ -368,6 +394,7 @@
 		4DA53A2B19E443610089FBDC /* Full */ = {
 			isa = PBXGroup;
 			children = (
+				4D78D29C19E9586400DDEF0B /* grammar_full.g */,
 				4D78D29B19E9499000DDEF0B /* gen-full.h */,
 				4D78D28C19E9446F00DDEF0B /* syntax.c */,
 				4D78D28D19E9446F00DDEF0B /* check.c */,
@@ -454,6 +481,10 @@
 					ProductGroup = 4D6F071A19CC37BB00DDC6E0 /* Products */;
 					ProjectRef = 4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */;
 				},
+				{
+					ProductGroup = 4D44E3961A160ABA0073FFA2 /* Products */;
+					ProjectRef = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -469,6 +500,20 @@
 			fileType = archive.ar;
 			path = libgrts.a;
 			remoteRef = 4D3AA09719CC485A00886BE7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D44E39C1A160ABA0073FFA2 /* libscript.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libscript.a;
+			remoteRef = 4D44E39B1A160ABA0073FFA2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D44E39E1A160ABA0073FFA2 /* libscript-test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "libscript-test";
+			remoteRef = 4D44E39D1A160ABA0073FFA2 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		4D6F071F19CC37BB00DDC6E0 /* gentle */ = {
@@ -500,6 +545,7 @@
 				"$(SRCROOT)/src/support.g",
 				"$(SRCROOT)/src/syntax.g",
 				"$(SRCROOT)/src/check.g",
+				"$(SRCROOT)/src/generate.g",
 			);
 			name = Gentle;
 			outputPaths = (
@@ -513,10 +559,11 @@
 				"$(SRCROOT)/src/_GG_/support.c",
 				"$(SRCROOT)/src/_GG_/syntax.c",
 				"$(SRCROOT)/src/_GG_/check.c",
+				"$(SRCROOT)/src/_GG_/generate.c",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\nmkdir -p \"_GG_\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" support.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" grammar.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\nmv \"_GG_/gen.h\" \"_GG_/gen-bootstrap.h\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" types.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" bind.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" check.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" syntax.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "cd src\nmkdir -p \"_GG_\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" support.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" grammar.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\nmv \"_GG_/gen.h\" \"_GG_/gen-bootstrap.h\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" types.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" bind.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" check.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" syntax.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_GG_\" generate.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
 		4D21B65E19E43BE100B64BEF /* Reflex */ = {
@@ -598,6 +645,7 @@
 				"$(SRCROOT)/src/bind.g",
 				"$(SRCROOT)/src/check.g",
 				"$(SRCROOT)/src/syntax.g",
+				"$(SRCROOT)/src/generate.g",
 			);
 			name = Gentle;
 			outputPaths = (
@@ -610,10 +658,11 @@
 				"$(SRCROOT)/src/_G_/bind.c",
 				"$(SRCROOT)/src/_G_/check.c",
 				"$(SRCROOT)/src/_G_/syntax.c",
+				"$(SRCROOT)/src/_G_/generate.c",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" grammar_full.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\nmv \"_G_/gen.h\" \"_G_/gen-full.h\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" types.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" bind.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" check.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" syntax.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" grammar_full.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\nmv \"_G_/gen.h\" \"_G_/gen-full.h\"\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" types.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" bind.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" check.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" syntax.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/gentle\" -subdir \"_G_\" generate.g\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
 		4DA53A1E19E43CD70089FBDC /* Bootstrap */ = {

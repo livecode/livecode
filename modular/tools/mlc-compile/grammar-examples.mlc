@@ -31,12 +31,17 @@ type MyTypeAlias is MyAny
 //
 // An opaque type defines a new script type whose internals are managed by
 // a collection of handlers (foreign or not). Opaque types are automatically
-// boxed and unboxed when passing out of/into foreign handlers.
+// boxed and unboxed wherever necessary.
+//
 opaque type MyOpaqueType
     
     // The 'measure' method is called once and should return the size of the
     // opaque type in bytes.
     measure is MyOpaqueType_Measure
+    
+    // The 'typecheck' method of a type is called to ensure the value is of that
+    // type.
+    typecheck is MyOpaqueType_TypeCheck
 
     // The 'initialize' method is called whenever the contents of the type
     // needs to be initialized after allocation. If this method is not supplied,
@@ -51,7 +56,7 @@ opaque type MyOpaqueType
     // The 'move' method is called whenever the contents of the type is moved
     // in memory. If this method is not supplied, copy and finalize will be
     // used instead.
-    move is MyOpaqueType_Move
+    Move is MyOpaqueType_Move
     
     // The 'copy' method is called whenever the contents of the type is copied.
     // If this method is not supplied, then a byte-for-byte copy will be performed.
@@ -71,7 +76,7 @@ opaque type MyOpaqueType
     // can be as many convert methods as desired as long as the output types are
     // all distinct.
     convert is MyOpaqueType_ConvertToString
-    convert is MyOpaqueType_ConvertToInteger
+    --convert is MyOpaqueType_ConvertToInteger
 
     // The 'encode' method (if present) will allow the type to be serializable.
     // For this to be possible, the encoded type can be any high-level type.
@@ -86,6 +91,7 @@ end type
 // Methods for a 'base' opaque type are as follows. The 'contents' pointers are all
 // pointers to the start of the type's allocated memory.
 foreign handler MyOpaqueType_Measure() as uint binds to "<undefined>"
+foreign handler MyOpaqueType_TypeCheck() as bool binds to "<undefined>"
 foreign handler MyOpaqueType_Initialize(in pContents as pointer) as undefined binds to "<undefined>"
 foreign handler MyOpaqueType_Finalize(in pContents as pointer) as undefined binds to "<undefined>"
 foreign handler MyOpaqueType_Move(in pOldContents as pointer, in pNewContents as pointer) as undefined binds to "<undefined>"
@@ -103,7 +109,7 @@ foreign handler MyOpaqueType_Decode(in pEncodedContents as array, in pContents a
 opaque type MyPointerOpaqueType based on pointer
     initialize is MyPointerOpaqueType_Initialize
     finalize is MyPointerOpaqueType_Finalize
-    move is MyPointerOpaqueType_Move
+    Move is MyPointerOpaqueType_Move
     copy is MyPointerOpaqueType_Copy
     equal is MyPointerOpaqueType_Equal
     hash is MyPointerOpaqueType_Hash
@@ -204,9 +210,9 @@ variable mMyPointerOpaqueTypeVariable as MyPointerOpaqueType
 // Handler definitions
 //
 
-foreign handler MyForeignStatementHandler(in pArg1 as int) binds to "MyBinding"
-foreign handler MyForeignExpressionHandler(in pArg1 as integer, in pArg2 as string, in pArg3 as MyHandlerType) binds to "MyBinding"
-foreign handler MyForeignIteratorHandler() binds to "MyBinding"
+foreign handler MyForeignStatementHandler(in pArg1 as int) as undefined binds to "MyBinding"
+foreign handler MyForeignExpressionHandler(in pArg1 as integer, in pArg2 as string, in pArg3 as MyHandlerType) as undefined binds to "MyBinding"
+foreign handler MyForeignIteratorHandler() as undefined binds to "MyBinding"
 
 handler MyHandler(in pArg1 as integer, in pArg2 as string, in pArg3 as MyHandlerType) as boolean
 end handler

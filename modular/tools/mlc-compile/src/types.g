@@ -13,7 +13,10 @@
     EXPRESSION EXPRESSIONLIST
     SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST SYNTAXTERM
     ID IDLIST
+    INTLIST
     MEANING
+    MODULEINFO
+    SYMBOLINFO SYMBOLKIND
     SYNTAXMARKINFO SYNTAXMARKTYPE
     SYNTAXRULEINFO
     NAME DOUBLE
@@ -195,7 +198,8 @@
 
 'type' MEANING
     definingid(Id: ID)
-    module
+    module(Info: MODULEINFO)
+    symbol(Info: SYMBOLINFO)
     type
     constant
     variable
@@ -228,8 +232,26 @@
     input
     output
     context
+    
+'type' SYMBOLKIND
+    module
+    type
+    constant
+    variable
+    handler
+    property
+    event
+    parameter
+    local
+
+'type' INTLIST
+    intlist(Head: INT, Tail: INTLIST)
+    nil
 
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
+
+'table' MODULEINFO(Index: INT)
+'table' SYMBOLINFO(Index: INT, Module: ID, Kind: SYMBOLKIND, Type: TYPE)
 
 'table' SYNTAXMARKINFO(Index: INT, Type: SYNTAXMARKTYPE)
 'table' SYNTAXRULEINFO(Class: SYNTAXCLASS, Syntax: SYNTAX, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
