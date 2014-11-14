@@ -23,7 +23,9 @@ void build_library_module(MCStreamRef stream)
     };
     MCAutoTypeInfoRef t_compute_value_sig;
     CHECK(MCHandlerTypeInfoCreate(t_fields, 2, kMCNumberTypeInfo, &t_compute_value_sig));
+    
     uindex_t t_handler_index;
+    MCScriptAddDefinitionToModule(t_builder, t_handler_index);
     MCScriptBeginHandlerInModule(t_builder, MCNAME("computeValue"), *t_compute_value_sig, t_handler_index);
     uindex_t t_alternate, t_endif;
     MCScriptDeferLabelForBytecodeInModule(t_builder, t_alternate);
@@ -72,20 +74,25 @@ void build_widget_module(MCStreamRef stream)
     MCScriptAddImportToModule(t_builder, t_dependency, MCNAME("computeValue"), kMCScriptDefinitionKindHandler, *t_compute_value_sig, t_compute_value_def);
     
     uindex_t t_number_value_var_index;
+    MCScriptAddDefinitionToModule(t_builder, t_number_value_var_index);
     MCScriptAddVariableToModule(t_builder, MCNAME("sNumberValue"), kMCNumberTypeInfo, t_number_value_var_index);
     uindex_t t_number_value_prop_index;
+    MCScriptAddDefinitionToModule(t_builder, t_number_value_prop_index);
     MCScriptAddPropertyToModule(t_builder, MCNAME("numberValue"), t_number_value_var_index, t_number_value_var_index, t_number_value_prop_index);
     MCScriptAddExportToModule(t_builder, t_number_value_prop_index);
     
     uindex_t t_usedef_var_index;
+    MCScriptAddDefinitionToModule(t_builder, t_usedef_var_index);
     MCScriptAddVariableToModule(t_builder, MCNAME("sUseDefault"), kMCBooleanTypeInfo, t_usedef_var_index);
     uindex_t t_usedef_prop_index;
+    MCScriptAddDefinitionToModule(t_builder, t_usedef_prop_index);
     MCScriptAddPropertyToModule(t_builder, MCNAME("useDefault"), t_usedef_var_index, t_usedef_var_index, t_usedef_prop_index);
     MCScriptAddExportToModule(t_builder, t_usedef_prop_index);
     
     MCAutoTypeInfoRef t_virt_number_value_getter_sig;
     CHECK(MCHandlerTypeInfoCreate(nil, 0, kMCNumberTypeInfo, &t_virt_number_value_getter_sig));
     uindex_t t_virt_number_value_getter;
+    MCScriptAddDefinitionToModule(t_builder, t_virt_number_value_getter);
     MCScriptBeginHandlerInModule(t_builder, MCNAME("virtualNumberValue"), *t_virt_number_value_getter_sig, t_virt_number_value_getter);
     MCScriptEmitFetchGlobalInModule(t_builder, 1, t_usedef_var_index);
     MCScriptEmitFetchGlobalInModule(t_builder, 2, t_number_value_var_index);
@@ -97,6 +104,7 @@ void build_widget_module(MCStreamRef stream)
     MCScriptEndHandlerInModule(t_builder);
     
     uindex_t t_virt_number_value_prop_index;
+    MCScriptAddDefinitionToModule(t_builder, t_virt_number_value_prop_index);
     MCScriptAddPropertyToModule(t_builder, MCNAME("virtualNumberValue"), t_virt_number_value_getter, 0, t_virt_number_value_prop_index);
     MCScriptAddExportToModule(t_builder, t_virt_number_value_prop_index);
     
