@@ -132,7 +132,7 @@
     real(Position: POS, Value: DOUBLE)
     string(Position: POS, Value: STRING)
     slot(Position: POS, Name: ID)
-    --as(Position: POS, Value: EXPRESSION, Type: TYPE)
+    as(Position: POS, Value: EXPRESSION, Type: TYPE)
     list(Position: POS, List: EXPRESSIONLIST)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)

@@ -710,8 +710,8 @@
     'rule' TermExpression(-> slot(Position, Name)):
         Identifier(-> Name) @(-> Position)
 
-    /*'rule' TermExpression(-> as(Position, Value, Type)):
-        TermExpression(-> Value) "as" @(-> Position) Type(-> Type)*/
+    'rule' TermExpression(-> as(Position, Value, Type)):
+        TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
 
     'rule' TermExpression(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"

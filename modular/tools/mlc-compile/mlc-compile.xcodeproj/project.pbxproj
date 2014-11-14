@@ -76,6 +76,20 @@
 			remoteGlobalIDString = 4D3AA08E19CC47F900886BE7;
 			remoteInfo = grts;
 		};
+		4D44E39B1A160ABA0073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D322F1619DD945E008476D3;
+			remoteInfo = script;
+		};
+		4D44E39D1A160ABA0073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DDA20661A139BA1001B0CA2;
+			remoteInfo = "libscript-test";
+		};
 		4D6F071E19CC37BB00DDC6E0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */;
@@ -161,6 +175,7 @@
 		4D3AA0B319CC594800886BE7 /* NEXT_UNIT.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = NEXT_UNIT.t; path = src/NEXT_UNIT.t; sourceTree = SOURCE_ROOT; };
 		4D3AA0B419CC594800886BE7 /* STRING_LITERAL.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = STRING_LITERAL.t; path = src/STRING_LITERAL.t; sourceTree = SOURCE_ROOT; };
 		4D3AA0B519CC597300886BE7 /* SEPARATOR.t */ = {isa = PBXFileReference; lastKnownFileType = text; name = SEPARATOR.t; path = src/SEPARATOR.t; sourceTree = SOURCE_ROOT; };
+		4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libscript.xcodeproj; path = ../../../libscript/libscript.xcodeproj; sourceTree = "<group>"; };
 		4D6E0E7119E710BE001AE5CC /* check.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = check.g; path = src/check.g; sourceTree = SOURCE_ROOT; };
 		4D6E0E7919E7158C001AE5CC /* check.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = check.c; path = src/_GG_/check.c; sourceTree = "<group>"; };
 		4D6F070B19CC36DD00DDC6E0 /* mlc-compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mlc-compile"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -259,6 +274,15 @@
 			name = Library;
 			sourceTree = "<group>";
 		};
+		4D44E3961A160ABA0073FFA2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D44E39C1A160ABA0073FFA2 /* libscript.a */,
+				4D44E39E1A160ABA0073FFA2 /* libscript-test */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		4D6F070019CC36B700DDC6E0 = {
 			isa = PBXGroup;
 			children = (
@@ -324,6 +348,7 @@
 		4D6F071819CC37A200DDC6E0 /* References */ = {
 			isa = PBXGroup;
 			children = (
+				4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */,
 				4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */,
 			);
 			name = References;
@@ -456,6 +481,10 @@
 					ProductGroup = 4D6F071A19CC37BB00DDC6E0 /* Products */;
 					ProjectRef = 4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */;
 				},
+				{
+					ProductGroup = 4D44E3961A160ABA0073FFA2 /* Products */;
+					ProjectRef = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -471,6 +500,20 @@
 			fileType = archive.ar;
 			path = libgrts.a;
 			remoteRef = 4D3AA09719CC485A00886BE7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D44E39C1A160ABA0073FFA2 /* libscript.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libscript.a;
+			remoteRef = 4D44E39B1A160ABA0073FFA2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D44E39E1A160ABA0073FFA2 /* libscript-test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "libscript-test";
+			remoteRef = 4D44E39D1A160ABA0073FFA2 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		4D6F071F19CC37BB00DDC6E0 /* gentle */ = {
@@ -637,7 +680,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/mlc-bootstrap-compile\" -bootstrap -template \"${SRCROOT}/src/grammar.g\" -output \"${SRCROOT}/src/grammar_full.g\" \"${SRCROOT}/../../library/src/string.mlc\" \"${SRCROOT}/../../library/src/binary.mlc\" \"${SRCROOT}/../../library/src/type.mlc\" \"${SRCROOT}/../../library/src/arithmetic.mlc\" \"${SRCROOT}/../../library/src/canvas.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/mlc-bootstrap-compile\" -bootstrap -template \"${SRCROOT}/src/grammar.g\" -output \"${SRCROOT}/src/grammar_full.g\" \"${SRCROOT}/../../library/src/string.mlc\" \"${SRCROOT}/../../library/src/binary.mlc\" \"${SRCROOT}/../../library/src/type.mlc\" \"${SRCROOT}/../../library/src/arithmetic.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
