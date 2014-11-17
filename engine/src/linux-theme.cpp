@@ -299,6 +299,18 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
             
         case kMCPlatformThemePropertyFocusColor:
             break;
+            
+        case kMCPlatformThemePropertyTopEdgeColor:
+        case kMCPlatformThemePropertyLeftEdgeColor:
+            t_found = true;
+            t_color = t_style->light[t_gtk_state];
+            break;
+        
+        case kMCPlatformThemePropertyBottomEdgeColor:
+        case kMCPlatformThemePropertyRightEdgeColor:
+            t_found = true;
+            t_color = t_style->dark[t_gtk_state];
+            break;
     }
     
     if (t_found)
