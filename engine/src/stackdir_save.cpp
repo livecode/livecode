@@ -124,6 +124,15 @@ struct _MCStackdirIORemoveFolderRecursiveContext
 	MCStringRef m_parent_dir;
 };
 
+typedef struct _MCStackdirIOArrayGetPropertyInfoContext MCStackdirIOArrayGetPropertyInfoContext;
+typedef MCStackdirIOArrayGetPropertyInfoContext *MCStackdirIOArrayGetPropertyInfoContextRef;
+
+struct _MCStackdirIOArrayGetPropertyInfoContext
+{
+	MCStackdirIORef m_op;
+	MCArrayRef m_flags;
+};
+
 /* ----------------------------------------------------------------
  * [Private] Utility functions
  * ---------------------------------------------------------------- */
@@ -132,7 +141,10 @@ struct _MCStackdirIORemoveFolderRecursiveContext
 static bool MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path);
 
 /* Split up a property record */
-static bool MCStackdirIOArrayGetPropertyInfo (MCStackdirIORef op, MCValueRef p_info, MCNameRef & r_type, MCValueRef & r_literal);
+static bool MCStackdirIOArrayGetPropertyInfo (MCStackdirIORef op, MCValueRef p_info, MCNameRef & r_type, MCArrayRef & r_flags, MCValueRef & r_literal);
+
+/* Format property flags */
+static bool MCStackdirIOSaveFormatFlags (MCStackdirIORef op, MCArrayRef p_flags, MCStringRef & r_formatted);
 
 /* ----------------------------------------------------------------
  * [Private] Save operations
@@ -189,13 +201,13 @@ static bool MCStackdirIOSaveArrayDescriptorsRecursive (MCStackdirIORef op, MCArr
  *
  * The p_type_spec is permitted to be nil or empty.
  */
-static bool MCStackdirIOSaveImmediateDescriptor (MCStackdirIORef op, MCStringRef p_storage_spec, MCStringRef p_type_spec, MCStringRef p_literal, MCStringRef & r_descriptor);
+static bool MCStackdirIOSaveImmediateDescriptor (MCStackdirIORef op, MCStringRef p_storage_spec, MCStringRef p_type_spec, MCStringRef p_flags, MCStringRef p_literal, MCStringRef & r_descriptor);
 
 /* Format an external property descriptor.
  *
  * The p_type_spec and the p_file_name are permitted to be nil or empty.
  */
-static bool MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op, MCStringRef p_storage_spec, MCStringRef p_type_spec, MCStringRef p_file_type, MCStringRef & r_descriptor);
+static bool MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op, MCStringRef p_storage_spec, MCStringRef p_type_spec, MCStringRef p_flags, MCStringRef p_file_type, MCStringRef & r_descriptor);
 
 /* Create a property descriptor and add it to a property list.
  *
@@ -391,21 +403,47 @@ MCStackdirIORemoveFolderRecursive (MCStackdirIORef op, MCStringRef p_path)
 }
 
 static bool
+MCStackdirIOArrayGetPropertyInfo_Callback (void *context,
+										   MCArrayRef array,
+										   MCNameRef p_key,
+										   MCValueRef p_value)
+{
+	MCStackdirIOArrayGetPropertyInfoContextRef info =
+		(MCStackdirIOArrayGetPropertyInfoContextRef) context;
+
+	/* Keys beginning with "_" aren't flag names */
+	if (MCStringBeginsWithCString (MCNameGetString (p_key),
+								   (const char_t *) "_",
+								   kMCStringOptionCompareExact))
+		return true;
+
+	/* Other keys *are* flag names */
+	index_t t_index = MCArrayGetCount (info->m_flags) + 1;
+	if (!MCArrayStoreValueAtIndex (info->m_flags, t_index, p_key))
+		return MCStackdirIOErrorOutOfMemory (info->m_op);
+	return true;
+}
+
+static bool
 MCStackdirIOArrayGetPropertyInfo (MCStackdirIORef op,
 								  MCValueRef p_info,
 								  MCNameRef & r_type,
+								  MCArrayRef & r_flags,
 								  MCValueRef & r_literal)
 {
 	/*
 	 * If the property information (p_info) is an array, it must have
-	 * two sections:
+	 * three keys:
 	 *
-	 * - p_value["_type"] should be an MCNameRef with the type of the
+	 * - p_info["_type"] should be an MCNameRef with the type of the
 	 *   property's value.  This might be kMCEmptyString if the
 	 *   property is of a basic type.
 	 *
-	 * - p_value["_literal"] could be any basic type, and has to be
+	 * - p_info["_literal"] could be any basic type, and has to be
 	 *   formatted correctly.
+	 *
+	 * - All keys in the array not starting with "_" are interpreted
+	 *   as flag names.
 	 *
 	 * All other types have the type inferred to be an empty string.
 	 */
@@ -413,6 +451,7 @@ MCStackdirIOArrayGetPropertyInfo (MCStackdirIORef op,
 	if (!MCValueIsArray (p_info))
 	{
 		r_literal = MCValueRetain (p_info);
+		r_flags = MCValueRetain (kMCEmptyArray);
 		r_type = MCValueRetain (kMCEmptyName);
 		return true;
 	}
@@ -424,11 +463,67 @@ MCStackdirIOArrayGetPropertyInfo (MCStackdirIORef op,
 		  MCValueGetTypeCode (t_type) == kMCValueTypeCodeName))
 		return MCStackdirIOSaveErrorBadTypeInfo (op);
 
+	MCAutoArrayRef t_flags;
+	if (!MCArrayCreateMutable (&t_flags))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	MCStackdirIOArrayGetPropertyInfoContext t_flags_context;
+	t_flags_context.m_op = op;
+	t_flags_context.m_flags = *t_flags;
+	if (!MCArrayApply (t_array,
+					   MCStackdirIOArrayGetPropertyInfo_Callback,
+					   &t_flags_context))
+
+		return false;
+
 	r_type = (MCNameRef) MCValueRetain (t_type);
+	r_flags = MCValueRetain (*t_flags);
 	r_literal = MCValueRetain (t_literal);
 	return true;
 }
 
+static bool
+MCStackdirIOSaveFormatFlags (MCStackdirIORef op,
+							 MCArrayRef p_flags,
+							 MCStringRef & r_formatted)
+{
+	index_t t_num_flags = MCArrayGetCount (p_flags);
+
+	if (0 == t_num_flags)
+	{
+		r_formatted = MCValueRetain (kMCEmptyString);
+		return true;
+	}
+
+	if (!MCStringCreateMutable (0, r_formatted))
+		return MCStackdirIOErrorOutOfMemory (op);
+
+	for (index_t t_index = 1; t_index <= t_num_flags; ++t_index)
+	{
+		bool t_success;
+		MCValueRef t_flag;
+		t_success = MCArrayFetchValueAtIndex (p_flags, t_index, t_flag);
+		/* Ill-formed array is stackdir programming error */
+		MCAssert (t_success);
+
+		MCAutoStringRef t_formatted_flag;
+		if (!(MCStackdirFormatLiteral ((MCNameRef) t_flag,
+									   &t_formatted_flag) &&
+			  MCStringAppendFormat (r_formatted, "!%@",
+									*t_formatted_flag)))
+			return MCStackdirIOErrorOutOfMemory (op);
+
+		/* Add a space if there are still more flags */
+		if (t_index < t_num_flags)
+		{
+			if (!MCStringAppendChar (r_formatted, ' '))
+				return MCStackdirIOErrorOutOfMemory (op);
+		}
+	}
+
+	/* Remove the trailing space character */
+	return true;
+}
 
 /* ================================================================
  * Save transactions
@@ -673,19 +768,23 @@ MCStackdirIOSaveArrayDescriptorsRecursive_Callback (void *context,
 	/* Extract property type and literal from the p_value */
 	MCNameRef t_prop_name = p_key;
 	MCNewAutoNameRef t_prop_type;
+	MCAutoArrayRef t_prop_flags;
 	MCAutoValueRef t_prop_literal;
 
 	if (!MCStackdirIOArrayGetPropertyInfo (info->m_op,
 										   p_value,
 										   &t_prop_type,
+										   &t_prop_flags,
 										   &t_prop_literal))
 		return false;
 
 	/* Format parts of property descriptor */
-	MCAutoStringRef t_name, t_type_spec, t_literal;
+	MCAutoStringRef t_name, t_type_spec, t_flags, t_literal;
 
 	if (!MCStackdirFormatLiteral (t_prop_name, &t_name))
 		return MCStackdirIOSaveErrorFormatArrayPropertyName (info->m_op);
+	if (!MCStackdirIOSaveFormatFlags (info->m_op, *t_prop_flags, &t_flags))
+		return false;
 	if (!MCStackdirFormatLiteral (*t_prop_literal, &t_literal))
 		return MCStackdirIOSaveErrorFormatArrayPropertyValue (info->m_op);
 
@@ -710,6 +809,7 @@ MCStackdirIOSaveArrayDescriptorsRecursive_Callback (void *context,
 	if (!MCStackdirIOSaveImmediateDescriptor (info->m_op,
 											  *t_storage_spec,
 											  *t_type_spec,
+											  *t_flags,
 											  *t_literal,
 											  &t_property_descriptor))
 		return false;
@@ -771,6 +871,7 @@ static bool
 MCStackdirIOSaveImmediateDescriptor (MCStackdirIORef op,
 									 MCStringRef p_storage_spec,
 									 MCStringRef p_type_spec,
+									 MCStringRef p_flags,
 									 MCStringRef p_literal,
 									 MCStringRef & r_descriptor)
 {
@@ -787,9 +888,12 @@ MCStackdirIOSaveImmediateDescriptor (MCStackdirIORef op,
 	 */
 	bool t_has_type = (p_type_spec != nil &&
 					   !MCStringIsEmpty (p_type_spec));
+	bool t_has_flags = !MCStringIsEmpty (p_flags);
 
 	if (t_success && t_has_type)
 		t_success = MCListAppend (*t_list, p_type_spec);
+	if (t_success && t_has_flags)
+		t_success = MCListAppend (*t_list, p_flags);
 	if (t_success)
 		t_success = MCListAppend (*t_list, p_literal);
 
@@ -805,6 +909,7 @@ static bool
 MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op,
 									MCStringRef p_storage_spec,
 									MCStringRef p_type_spec,
+									MCStringRef p_flags,
 									MCStringRef p_file_type,
 									MCStringRef & r_descriptor)
 {
@@ -820,9 +925,12 @@ MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op,
 	 */
 	bool t_has_type = (p_type_spec != nil &&
 					   !MCStringIsEmpty (p_type_spec));
+	bool t_has_flags = !MCStringIsEmpty (p_flags);
 
 	if (t_success && t_has_type)
 		t_success = MCListAppend (*t_list, p_type_spec);
+	if (t_success && t_has_flags)
+		t_success = MCListAppend (*t_list, p_flags);
 	if (t_success)
 		t_success = (MCListAppendCString (*t_list, "&") &&
 					 MCListAppend (*t_list, p_file_type));
@@ -864,6 +972,7 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 
 	MCNameRef  t_prop_name = p_name;
 	MCNewAutoNameRef  t_prop_type;
+	MCAutoArrayRef t_prop_flags;
 	MCAutoValueRef t_prop_literal;
 
 	MCStringRef t_invalid_property_message =
@@ -871,16 +980,20 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 
 	/* First, extract the type and literal information from the
 	 * p_value. */
-	if (!MCStackdirIOArrayGetPropertyInfo (op, p_value, &t_prop_type,
+	if (!MCStackdirIOArrayGetPropertyInfo (op, p_value,
+										   &t_prop_type,
+										   &t_prop_flags,
 										   &t_prop_literal))
 		return false;
 
 	/* Next format each of the parts of the property descriptor */
 	MCValueTypeCode t_prop_literal_typecode = MCValueGetTypeCode (*t_prop_literal);
-	MCAutoStringRef t_storage_spec, t_type_spec, t_literal;
+	MCAutoStringRef t_storage_spec, t_type_spec, t_flags, t_literal;
 
 	if (!MCStackdirFormatLiteral (t_prop_name, &t_storage_spec))
 		return MCStackdirIOSaveErrorFormatPropertyName (op);
+	if (!MCStackdirIOSaveFormatFlags (op, *t_prop_flags, &t_flags))
+		return false;
 	if (!MCStackdirFormatLiteral (*t_prop_literal, &t_literal))
 		return MCStackdirIOSaveErrorFormatPropertyValue (op);
 
@@ -914,20 +1027,13 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 			break;
 
 		case kMCValueTypeCodeString:
-			/* Special case for "script" properties */
-			if (MCNameIsEqualTo (t_prop_name, MCNAME("script")))
-			{
-				t_target = kMCStackdirIOPropertyTargetExternal;
-				break;
-			}
-			/* FALL THROUGH TO NEXT CASE */
-
 		case kMCValueTypeCodeData:
 			{
 				/* Strings and data must have a sensible encoded length */
 				uindex_t t_literal_len = MCStringGetLength (*t_literal);
 				uindex_t t_descriptor_len = (t_literal_len +
 											 MCStringGetLength (*t_storage_spec) +
+											 MCStringGetLength (*t_flags) +
 											 MCStringGetLength (*t_type_spec));
 
 				if (t_literal_len > kMCStackdirIOPropertyTargetMaxValueLen &&
@@ -1054,6 +1160,7 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 		/* UNCHECKED */ MCStackdirIOSaveExternalDescriptor (op,
 							*t_storage_spec,
 							*t_type_spec,
+							*t_flags,
 							t_external_file_type,
 							&t_property_descriptor);
 		break;
@@ -1062,6 +1169,7 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 		/* UNCHECKED */ MCStackdirIOSaveImmediateDescriptor (op,
 							*t_storage_spec,
 							*t_type_spec,
+							*t_flags,
 							*t_literal,
 							&t_property_descriptor);
 		break;
