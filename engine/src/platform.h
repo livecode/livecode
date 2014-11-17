@@ -1268,7 +1268,11 @@ enum MCPlatformThemeProperty
     kMCPlatformThemePropertyAlpha,                  // [Integer]    Whole-control transparency
     kMCPlatformThemePropertyShadowColor,            // [Color]      Color for control shadow
     kMCPlatformThemePropertyBorderColor,            // [Color]      Color for control borders
-    kMCPlatformThemePropertyFocusColor              // [Color]      Color for keyboard focus indicator
+    kMCPlatformThemePropertyFocusColor,             // [Color]      Color for keyboard focus indicator
+    kMCPlatformThemePropertyTopEdgeColor,           // [Color]      Color for the top edge of 3D controls
+    kMCPlatformThemePropertyBottomEdgeColor,        // [Color]      Color for the bottom edge of 3D controls
+    kMCPlatformThemePropertyLeftEdgeColor,          // [Color]      Color for the left edge of 3D controls
+    kMCPlatformThemePropertyRightEdgeColor          // [Color]      Color for the right edge of 3D controls
 };
 
 enum MCPlatformThemePropertyType

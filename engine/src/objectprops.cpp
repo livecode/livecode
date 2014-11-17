@@ -1998,6 +1998,16 @@ bool MCObject::getthemeselectorsforprop(Properties which, MCPlatformControlType&
             t_prop = kMCPlatformThemePropertyShadowColor;
             break;
             
+        case P_TOP_COLOR:
+            t_proptype = kMCPlatformThemePropertyTypeColor;
+            t_prop = kMCPlatformThemePropertyTopEdgeColor;
+            break;
+            
+        case P_BOTTOM_COLOR:
+            t_proptype = kMCPlatformThemePropertyTypeColor;
+            t_prop = kMCPlatformThemePropertyBottomEdgeColor;
+            break;
+            
         case P_TEXT_FONT:
             t_proptype = kMCPlatformThemePropertyTypeFont;
             t_prop = kMCPlatformThemePropertyTextFont;
