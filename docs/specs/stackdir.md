@@ -17,7 +17,8 @@ Version | Comments
 0.0.3   | General rework. Self-describing literals; optional named types for all values; removed enums and records from fundamental types; revised lexical analysis; record each object's parent instead of children.
 0.0.4   | Replace `STORAGE_SPEC` separator with "`:`"; change external storage indicator to "`&`" and relocate in property descriptor; simplify grammar slightly; add "`_kind`" file in object directory. Added implementation notes appendix.
 0.0.5   | Replace "raw" values by "data" values; require unquoted strings to start with a letter; clarify that the `_parent` file contains a `NAME_STRING`.
-1.0.0   | Initial implemented version.
+0.0.9   | Initial implemented version.
+0.0.10  | Remove SHA-1 and explicit filenames for external values; add "`!flag`" syntax.
 
 Summary
 -------
@@ -276,7 +277,7 @@ permitted to contain raw data components.
 
 If no `VALUE` is provided, the value is undefined.
 
-    VALUE ::= [ TYPE_SPEC WS ]  ( EXTERNAL | IMMEDIATE )
+    VALUE ::= [TYPE_SPEC WS] [FLAGS] (EXTERNAL | IMMEDIATE)
 
 Values may be provided immediately (i.e. in the descriptor) or may be
 located in an external file.
@@ -286,6 +287,13 @@ located in an external file.
     TYPE_SPEC ::= NAME_STRING
 
 Each type is identified by name.
+
+#### Flags ####
+
+    FLAGS     ::= ("!" FLAG_NAME WS)+
+    FLAG_NAME ::= NAME_STRING
+
+Types may have any number of optional named flags attached to them.
 
 #### Immediate values ####
 
@@ -410,42 +418,31 @@ representation of the key.
 
 #### External values ####
 
-    EXTERNAL  ::= "&" WS FILE_TYPE WS FILE_HASH [WS FILE_NAME]
+    EXTERNAL  ::= "&" WS FILE_TYPE
     FILE_TYPE ::= "string" | "data" | "array"
-    FILE_HASH ::= STRING
-    FILE_NAME ::= STRING
 
 Large pieces of data that cannot be reasonably fitted into a single
 line may be split out into separate files. String values, data string
 values and array values may be marked as being provided externally.
 
-To ensure that changes to the external value file causes a detectable
-change in the property descriptor list, the property descriptor
-contains a `FILE_HASH`. This is the SHA-1 hash of the contents of the
-external value file.
-
-If the property `STORAGE_SPEC` contains only a single `NAME_STRING`
-component, then the `FILE_NAME` MAY be omitted. In this case the
-`FILE_NAME` MUST be constructed according to the following procedure:
+The file name is constructed according to the following procedure:
 
 1. Convert the single `NAME_STRING` of the property's `NAME_PATH` to a
    filename according to the rules described in the “Filename
    encoding” section of this specification.
 
-2. Add a suffix to the depending on the FILE_TYPE:
+2. Add a suffix to the depending on the `FILE_TYPE`:
 
-  1. If the FILE_TYPE is "`string`", add the suffix "`.txt`"
+  1. If the `FILE_TYPE` is "`string`", add the suffix "`.txt`"
 
-  2. If the FILE_TYPE is "`data`", add the suffix "`.bin`"
+  2. If the `FILE_TYPE` is "`data`", add the suffix "`.bin`"
 
-  3. If the FILE_TYPE is "`array`", add the suffix "`.map`"
+  3. If the `FILE_TYPE` is "`array`", add the suffix "`.map`"
 
-If the resulting filename has more than 256 characters, then it cannot
-be used and either an alternative `FILE_NAME` SHOULD be generated and
-explicitly specified in the property descriptor, or immediate storage
-used for the value. To prevent corruption of the stackfile using large
-property values with crafted property names, generated filenames MUST
-NOT match any of the regular expressions:
+If the resulting filename has more than 256 characters, then immediate
+storage MUST used for the value. To prevent corruption of the
+stackfile using large property values with crafted property names,
+generated filenames MUST NOT match any of the regular expressions:
 
     _[^_ux]
     \.(propset|shared)$
@@ -605,10 +602,12 @@ converting it to a filename according to the rules described in the
 "Filename encoding" section of this specification.
 
 For the default property set, the `<PROPSET_DIRNAME>` MUST be set to
-"`_empty`".  If the length of the `<PROPSET_DIRNAME>` with the "`.propset`"
-suffix is more than 256 characters, then it cannot be used. In this
-case, a suitable `<PROPSET_DIRNAME>` string SHOULD be generated and
-stored in the "`_propsets`" file in the object directory.
+"`_empty`".  If the length of the `<PROPSET_DIRNAME>` with the
+"`.propset`" suffix is more than 256 characters, then it cannot be
+used. In this case, a suitable `<PROPSET_DIRNAME>` string SHOULD be
+generated and stored in the "`_propsets`" file in the object
+directory.  The generated `<PROPSET_DIRNAME>` MUST obey the "Filename
+encoding" rules.
 
 The "`_propsets`" file contains mappings from custom property set
 names to custom property directory filenames.  One mapping is stored
