@@ -2048,10 +2048,11 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
                 }
 
             }
+            
+            // Only fall back to the dispatcher's default colours if theming failed
+            if (!t_found)
+                t_found = MCdispatcher -> GetColor(ctxt, which, effective, r_color);
         }
-        
-        if (!t_found)
-            t_found = MCdispatcher -> GetColor(ctxt, which, effective, r_color);
         
         return t_found;
     }
