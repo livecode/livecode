@@ -175,7 +175,7 @@ Boolean MCColors::mup(uint2 which, bool p_release)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	switch (which)
 	{
@@ -188,7 +188,7 @@ Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& e
 		break;
 #endif /* MCColors::getprop */ 
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

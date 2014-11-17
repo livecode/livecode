@@ -379,6 +379,21 @@ bool coretext_font_unload(MCStringRef p_path, bool p_globally)
     return t_success;
 }
 
+void coretext_get_font_name(void *p_font, MCNameRef& r_name)
+{
+    CFStringRef t_font_name;
+    t_font_name = CTFontCopyDisplayName((CTFontRef)p_font);
+    
+    MCAutoStringRef t_font_name_string;
+    MCStringCreateWithCFString(t_font_name, &t_font_name_string);
+    MCNameCreate(*t_font_name_string, r_name);
+}
+
+uint32_t coretext_get_font_size(void *p_font)
+{
+    return CTFontGetSize((CTFontRef)p_font);
+}
+
 #ifdef _MACOSX
 ATSUFontID coretext_font_to_atsufontid(void *p_font)
 {
