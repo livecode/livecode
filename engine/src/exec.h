@@ -3637,6 +3637,7 @@ extern MCExecMethodInfo *kMCEngineExecGetMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecPutIntoVariableMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecPutOutputMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecDoMethodInfo;
+extern MCExecMethodInfo *kMCEngineExecDoInCallerMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecInsertScriptOfObjectIntoMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecQuitMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecCancelMessageMethodInfo;
@@ -3759,6 +3760,7 @@ void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef value);
 void MCEngineExecPutOutputUnicode(MCExecContext& ctxt, MCDataRef value);
 
 void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos);
+void MCEngineExecDoInCaller(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos);
 void MCEngineExecInsertScriptOfObjectInto(MCExecContext& ctxt, MCObject *p_script, bool p_in_front);
 void MCEngineExecQuit(MCExecContext& ctxt, integer_t p_retcode);
 
