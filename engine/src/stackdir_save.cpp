@@ -195,7 +195,7 @@ static bool MCStackdirIOSaveImmediateDescriptor (MCStackdirIORef op, MCStringRef
  *
  * The p_type_spec and the p_file_name are permitted to be nil or empty.
  */
-static bool MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op, MCStringRef p_storage_spec, MCStringRef p_type_spec, MCStringRef p_file_type, MCDataRef p_file_contents, MCStringRef p_file_name, MCStringRef & r_descriptor);
+static bool MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op, MCStringRef p_storage_spec, MCStringRef p_type_spec, MCStringRef p_file_type, MCStringRef & r_descriptor);
 
 /* Create a property descriptor and add it to a property list.
  *
@@ -806,39 +806,26 @@ MCStackdirIOSaveExternalDescriptor (MCStackdirIORef op,
 									MCStringRef p_storage_spec,
 									MCStringRef p_type_spec,
 									MCStringRef p_file_type,
-									MCDataRef p_file_contents,
-									MCStringRef p_file_name,
 									MCStringRef & r_descriptor)
 {
 	MCAutoListRef t_list;
 	MCAutoStringRef t_hash;
 	bool t_success;
 	t_success = (MCListCreateMutable (' ', &t_list) &&
-				 MCListAppend (*t_list, p_storage_spec) &&
-				 MCStackdirIODataSha1 (p_file_contents, &t_hash));
+				 MCListAppend (*t_list, p_storage_spec));
 
 	/* Lexical analysis:
 	 *
-	 *    STORAGE_SPEC WS [TYPE_SPEC WS] "&" WS FILE_TYPE WS FILE_HASH [WS FILE_NAME]
+	 *    STORAGE_SPEC WS [TYPE_SPEC WS] "&" WS FILE_TYPE
 	 */
 	bool t_has_type = (p_type_spec != nil &&
 					   !MCStringIsEmpty (p_type_spec));
-	bool t_has_file_name = (p_file_name != nil &&
-							!MCStringIsEmpty (p_file_name));
 
 	if (t_success && t_has_type)
 		t_success = MCListAppend (*t_list, p_type_spec);
-	MCAutoStringRef t_hash_literal;
 	if (t_success)
 		t_success = (MCListAppendCString (*t_list, "&") &&
-					 MCListAppend (*t_list, p_file_type) &&
-					 MCStackdirFormatLiteral (*t_hash, &t_hash_literal) &&
-					 MCListAppend (*t_list, *t_hash_literal));
-	MCAutoStringRef t_file_name_literal;
-	if (t_success && t_has_file_name)
-		t_success = (MCStackdirFormatLiteral (p_file_name,
-											  &t_file_name_literal) &&
-					 MCListAppend (*t_list, *t_file_name_literal));
+					 MCListAppend (*t_list, p_file_type));
 
 	if (t_success)
 		t_success = MCListCopyAsString (*t_list, r_descriptor);
@@ -1068,8 +1055,6 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 							*t_storage_spec,
 							*t_type_spec,
 							t_external_file_type,
-							*t_external_file_contents,
-							kMCEmptyString, /* Always use generated filename */
 							&t_property_descriptor);
 		break;
 	case kMCStackdirIOPropertyTargetOverflow:

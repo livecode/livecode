@@ -159,12 +159,6 @@ MC_STACKDIR_ERROR_FUNC (MCStackdirIOLoadErrorPropertyExternalTypeCode,
 						kMCStackdirStatusSyntaxError,
 						"Invalid external storage type (expected 'array', "
 						"'data' or 'string')")
-MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyExternalHash,
-							 kMCStackdirStatusSyntaxError,
-							 "Invalid external storage hash (expected string)")
-MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyExternalPath,
-							 kMCStackdirStatusSyntaxError,
-							 "Invalid external filename (expected string)")
 MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyExternalRead,
 							 kMCStackdirStatusIOError,
 							 "Failed to read external file")
@@ -318,9 +312,7 @@ MCStackdirIOLoadProperty_Unquoted (MCStackdirIORef op,
 static inline bool
 MCStackdirIOLoadProperty_ParseExternal (MCStackdirIORef op,
 										MCStackdirIOScannerRef scanner,
-										MCStringRef & r_type,
-										MCStringRef & r_hash,
-										MCStringRef & r_filename)
+										MCStringRef & r_type)
 {
 	/* The external indicator character "&" should already have been
 	 * consumed. */
@@ -336,47 +328,13 @@ MCStackdirIOLoadProperty_ParseExternal (MCStackdirIORef op,
 		return MCStackdirIOLoadErrorPropertyExternalType (op,
 					kMCEmptyString, t_type_token.m_line, t_type_token.m_column);
 
-	/* The second item (after some whitespace) must be the file
-	 * hash. */
-	MCStackdirIOToken t_hash_token;
-	if (!(MCStackdirIOScannerConsume (scanner, t_hash_token,
-									  kMCStackdirIOTokenTypeSpace) &&
-		  MCStackdirIOScannerConsume (scanner, t_hash_token,
-									  kMCStackdirIOTokenTypeString)))
-		return MCStackdirIOLoadErrorPropertyExternalHash (op,
-					kMCEmptyString, t_hash_token.m_line, t_hash_token.m_column);
-
-	/* The third (optional) item (after more whitespace) may be the
-	 * file name. */
-	MCStackdirIOToken t_filename_token;
-	bool t_have_filename = false;
-	if (MCStackdirIOScannerPeek (scanner, t_filename_token,
-								 kMCStackdirIOTokenTypeSpace))
-	{
-		if (!(MCStackdirIOScannerConsume (scanner, t_filename_token,
-										  kMCStackdirIOTokenTypeSpace) &&
-			  MCStackdirIOScannerConsume (scanner, t_filename_token,
-										  kMCStackdirIOTokenTypeString)))
-			return MCStackdirIOLoadErrorPropertyExternalPath (op,
-						kMCEmptyString, t_filename_token.m_line,
-						t_filename_token.m_column);
-
-		t_have_filename = true;
-	}
-
 	r_type = MCValueRetain ((MCStringRef) t_type_token.m_value);
-	r_hash = MCValueRetain ((MCStringRef) t_hash_token.m_value);
-	if (t_have_filename)
-		r_filename = MCValueRetain ((MCStringRef) t_filename_token.m_value);
-	else
-		r_filename = MCValueRetain (kMCEmptyString);
 	return true;
 }
 
 static bool
 MCStackdirIOLoadProperty_LoadExternal (MCStackdirIORef op,
 									   MCStringRef p_path,
-									   MCStringRef p_hash,
 									   MCValueTypeCode p_type_code,
 									   MCValueRef & r_value)
 {
@@ -384,9 +342,6 @@ MCStackdirIOLoadProperty_LoadExternal (MCStackdirIORef op,
 	MCAutoDataRef t_content;
 	if (!MCS_loadbinaryfile (p_path, &t_content))
 		return MCStackdirIOLoadErrorPropertyExternalRead (op, p_path);
-
-	/* FIXME verify the SHA-1. This might be complex in the presence
-	 * of conflicts. */
 
 	/* Convert the data */
 	switch (p_type_code)
@@ -447,13 +402,9 @@ MCStackdirIOLoadProperty_External (MCStackdirIORef op,
 	/* Dealing with external files is more complicated!
 	 * First parse the information from the property descriptor */
 	MCAutoStringRef t_external_type_string;
-	MCAutoStringRef t_external_hash;
-	MCAutoStringRef t_external_file_name;
 	if (!MCStackdirIOLoadProperty_ParseExternal (op,
 												 scanner,
-												 &t_external_type_string,
-												 &t_external_hash,
-												 &t_external_file_name))
+												 &t_external_type_string))
 		return false;
 
 	/* Decode the storage type */
@@ -486,38 +437,30 @@ MCStackdirIOLoadProperty_External (MCStackdirIORef op,
 	if (t_external_type_code == kMCValueTypeCodeNull)
 		return MCStackdirIOLoadErrorPropertyExternalTypeCode (op);
 
-	/* If a file name wasn't specified, generate one.  In some
-	 * cases it may not be possible to do so, in which case
-	 * one should have been provided. */
+	/* Generate the filename.  In some cases it may not be possible to
+	 * do so, in which case one should have been provided. */
 	/* FIXME it may be possible to factor this out from both here and
 	 * the corresponding save code. */
 	MCAutoStringRef t_file_name;
-	if (MCStringIsEmpty (*t_external_file_name))
+	MCStringRef t_suffix;
+	switch (t_external_type_code)
 	{
-		MCStringRef t_suffix;
-		switch (t_external_type_code)
-		{
-		case kMCValueTypeCodeString:
-			t_suffix = kMCStackdirStringSuffix;
-			break;
-		case kMCValueTypeCodeArray:
-			t_suffix = kMCStackdirArraySuffix;
-			break;
-		case kMCValueTypeCodeData:
-			t_suffix = kMCStackdirDataSuffix;
-			break;
-		default:
-			MCUnreachable ();
-		}
-		if (!MCStackdirFormatFilename (p_storage_spec,
-									   t_suffix,
-									   &t_file_name))
-			return MCStackdirIOLoadErrorPropertyExternalPathRequired (op);
+	case kMCValueTypeCodeString:
+		t_suffix = kMCStackdirStringSuffix;
+		break;
+	case kMCValueTypeCodeArray:
+		t_suffix = kMCStackdirArraySuffix;
+		break;
+	case kMCValueTypeCodeData:
+		t_suffix = kMCStackdirDataSuffix;
+		break;
+	default:
+		MCUnreachable ();
 	}
-	else
-	{
-		&t_file_name = MCValueRetain (*t_external_file_name);
-	}
+	if (!MCStackdirFormatFilename (p_storage_spec,
+								   t_suffix,
+								   &t_file_name))
+		return MCStackdirIOLoadErrorPropertyExternalPathRequired (op);
 
 	/* Construct the full path to the external file */
 	MCAutoStringRef t_path;
@@ -527,7 +470,6 @@ MCStackdirIOLoadProperty_External (MCStackdirIORef op,
 	/* Load the data */
 	return MCStackdirIOLoadProperty_LoadExternal (op,
 												  *t_path,
-												  *t_external_hash,
 												  t_external_type_code,
 												  r_value);
 }

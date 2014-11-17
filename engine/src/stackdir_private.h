@@ -180,9 +180,6 @@ bool MCStackdirIOSaveUTF8 (MCStackdirIORef op, MCStringRef p_path, MCStringRef p
 /* Read and decode a UTF-8 text file */
 bool MCStackdirIOLoadUTF8 (MCStackdirIORef op, MCStringRef p_path, MCStringRef & p_contents, bool p_allow_missing);
 
-/* Generate a SHA-1 hash as a string */
-bool MCStackdirIODataSha1 (MCDataRef p_data, MCStringRef & p_hash);
-
 /* ----------------------------------------------------------------
  * [Private] Tests on expanded stackfile bundles
  * ---------------------------------------------------------------- */
