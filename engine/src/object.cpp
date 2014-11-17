@@ -1851,38 +1851,51 @@ uint32_t MCObject::getcoloraspixel(uint2 di)
 
 // MW-2012-02-14: [[ FontRefs ]] New method for getting the font props from the
 //   object without creating a fontstruct.
-void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
+uint32_t MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 {
-	// MW-2012-02-19: [[ SplitTextAttrs ]] If we don't have all the attrs at this
+    // Flags for which font properties have been set explicitly at some level
+    uint32_t t_explicit_flags;
+    t_explicit_flags = 0;
+    
+    // MW-2012-02-19: [[ SplitTextAttrs ]] If we don't have all the attrs at this
 	//   level, we must fetch the parent attrs first.
 	if ((m_font_flags & FF_HAS_ALL_FATTR) != FF_HAS_ALL_FATTR)
 	{
 		if (this != MCdispatcher)
 		{
 			if (parent == nil)
-				MCdefaultstackptr -> getfontattsnew(fname, size, style);
+				t_explicit_flags = MCdefaultstackptr -> getfontattsnew(fname, size, style);
 			else
-				parent -> getfontattsnew(fname, size, style);
+				t_explicit_flags = parent -> getfontattsnew(fname, size, style);
 		}
-		else
-		{
-            MCFontRef t_default_font;
-            MCPlatformGetControlThemePropFont(kMCPlatformControlTypeGlobal, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, t_default_font);
-            
-            MCFontStruct* t_font_struct;
-            t_font_struct = MCFontGetFontStruct(t_default_font);
-            
-            const char* t_name_cstring;
-            Boolean t_printer;
-            
-            MCdispatcher->getfontlist()->getfontstructinfo(fname, size, style, t_printer, t_font_struct);
-            
-            // This should never happen as the dispatcher always has font props
-			// set.
-            //MCUnreachable();
-		}
+
+        MCFontRef t_default_font;
+        MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, t_default_font);
+        
+        MCFontStruct* t_font_struct;
+        t_font_struct = MCFontGetFontStruct(t_default_font);
+        
+        Boolean t_printer;
+        MCNameRef t_fname;
+        uint2 t_size, t_style;
+        MCdispatcher->getfontlist()->getfontstructinfo(t_fname, t_size, t_style, t_printer, t_font_struct);
+        
+        if ((t_explicit_flags & FF_HAS_TEXTFONT) == 0)
+            fname = t_fname;
+        
+        if ((t_explicit_flags & FF_HAS_TEXTSIZE) == 0)
+            size = t_size;
+        
+        if ((t_explicit_flags & FF_HAS_TEXTSTYLE) == 0)
+            style = t_style;
+        
+        // This should never happen as the dispatcher always has font props set.
+        //MCUnreachable();
 	}
 
+    // These flags have been set explicitly
+    t_explicit_flags |= m_font_flags & FF_HAS_ALL_FATTR;
+    
 	// If we have a textfont, replace that value.
 	if ((m_font_flags & FF_HAS_TEXTFONT) != 0)
 		fname = m_font_attrs -> name;
@@ -1894,6 +1907,8 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 	// If we have a textstyle, replace that value.
 	if ((m_font_flags & FF_HAS_TEXTSTYLE) != 0)
 		style = m_font_attrs -> style;
+    
+    return t_explicit_flags;
 }
 
 

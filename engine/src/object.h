@@ -591,7 +591,7 @@ public:
 
 	// MW-2012-02-17: [[ LogFonts ]] Fetch the (effective) font attrs for the
 	//   object.
-	void getfontattsnew(MCNameRef& fname, uint2& fsize, uint2& fstyle);
+	uint32_t getfontattsnew(MCNameRef& fname, uint2& fsize, uint2& fstyle);
 	//void getfontattsnew(MCStringRef& fname, uint2& fsize, uint2& fstyle);
 
 	// MW-2012-02-16: [[ LogFonts ]] Return the (effective) textFont setting. 
@@ -811,7 +811,7 @@ public:
 	bool GetPixel(MCExecContext& ctxt, Properties which, bool effective, uinteger_t& r_pixel);
 	void SetPixel(MCExecContext& ctxt, Properties which, uinteger_t pixel);
 
-	bool GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color);
+	bool GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color, bool recursive = false);
 	void SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedColor& p_color);
 	bool GetColors(MCExecContext& ctxt, bool effective, MCStringRef& r_colors);
 
