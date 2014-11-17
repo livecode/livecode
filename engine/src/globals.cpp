@@ -997,7 +997,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	//   screen, otherwise we don't have a root fontref!
 	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
 #if defined(TARGET_PLATFORM_WINDOWS)
-	if (MCmajorosversion >= 0x0600)
+	/*if (MCmajorosversion >= 0x0600)
 	{
 		// Vista onwards
 		MCdispatcher -> setfontattrs("Segoe UI", 12, FA_DEFAULT_STYLE);
@@ -1006,7 +1006,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	{
 		// Pre-Vista
 		MCdispatcher -> setfontattrs("Tahoma", 11, FA_DEFAULT_STYLE);
-	}
+	}*/
 #elif defined(TARGET_PLATFORM_MACOS_X)
     /*if (MCmajorosversion < 0x10A0)
         MCdispatcher -> setfontattrs("Lucida Grande", 11, FA_DEFAULT_STYLE);
