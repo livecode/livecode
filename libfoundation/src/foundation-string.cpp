@@ -245,14 +245,49 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 bool MCStringCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
     MCStringRef t_string;
+    t_string = nil;
     
-    if (!MCStringCreateWithBytes(p_bytes, p_byte_count, p_encoding, p_is_external_rep, t_string))
-        return false;
+    switch (p_encoding)
+    {
+        case kMCStringEncodingASCII:
+        case kMCStringEncodingNative:
+            break;
+        default:
+            if (!MCStringCreateWithBytes(p_bytes, p_byte_count, p_encoding, p_is_external_rep, t_string))
+                return false;
+            
+            r_string = t_string;
+            free(p_bytes);
+            return true;
+    }
     
-    r_string = t_string;
-    free(p_bytes);
+    bool t_success;
+    t_success = true;
     
-    return true;
+    if (p_byte_count == 0 && kMCEmptyString != nil)
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        free(p_bytes);
+        return true;
+    }
+    
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeString, t_string);
+    
+    if (t_success)
+        t_success = MCMemoryReallocate(p_bytes, p_byte_count + 1, p_bytes);
+    
+    if (t_success)
+    {
+        p_bytes[p_byte_count] = '\0';
+        t_string -> native_chars = p_bytes;
+        t_string -> char_count = p_byte_count;
+        r_string = t_string;
+    }
+    else
+        MCMemoryDelete(t_string);
+    
+    return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
