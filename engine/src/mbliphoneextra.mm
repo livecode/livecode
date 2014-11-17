@@ -731,10 +731,8 @@ bool MCSystemGetDeviceScale(real64_t& r_scale)
 
 bool MCSystemGetPixelDensity(real64_t& r_density)
 {
-    // AL-2014-11-17: [[ Bug 14031 ]] pixelDensity on iOS should return device scale
-    r_density = MCIPhoneGetDeviceScale();
-    
-    return true;
+    // Not implemented on IPhone
+    return false;
 }
 
 // SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]

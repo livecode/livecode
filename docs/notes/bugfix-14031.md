@@ -1,1 +1,0 @@
-# mobilePixelDensity returns empty on iOS
