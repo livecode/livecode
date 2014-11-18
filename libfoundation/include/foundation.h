@@ -290,7 +290,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__
 #define __LITTLE_ENDIAN__
 #define __X86_64__
-#define __HUGE__
+#define __MEDIUM__
 #elif defined(__arm__)
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
@@ -1265,7 +1265,7 @@ struct MCRecordTypeFieldInfo
 };
 
 // Create a description of a record with the given fields.
-bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
+bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
 
 // Return the number of fields in the record.
 uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
@@ -1295,7 +1295,9 @@ struct MCHandlerTypeFieldInfo
 };
 
 // Create a description of a handler with the given signature.
-bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
+// If field_count is negative, the fields array must be terminated by
+// an MCHandlerTypeFieldInfo where name is null.
+bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
 
 // Get the return type of the handler. A return-type of kMCNullTypeInfo means no
 // value is returned.
