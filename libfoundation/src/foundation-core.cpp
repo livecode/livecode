@@ -79,15 +79,17 @@ void MCFinalize(void)
     __MCProperListFinalize();
 	__MCLocaleFinalize();
     __MCRecordFinalize();
+    __MCDataFinalize();
     __MCSetFinalize();
 	__MCListFinalize();
 	__MCArrayFinalize();
-    __MCDataFinalize();
     __MCNumberFinalize();
     __MCTypeInfoFinalize();
     __MCErrorFinalize();
 	__MCNameFinalize();
 	__MCStringFinalize();
+    __MCDataFinalize();
+    __MCNumberFinalize();
 	__MCValueFinalize();
     __MCUnicodeFinalize();
 }
