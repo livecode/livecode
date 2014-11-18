@@ -22,6 +22,8 @@
 		4D7FA7A81594E09500EEF440 /* foundation-unicodechars.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA79B1594E09500EEF440 /* foundation-unicodechars.cpp */; };
 		4D7FA7A91594E09500EEF440 /* foundation-value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA79C1594E09500EEF440 /* foundation-value.cpp */; };
 		4DB3EBE416A5C00800E90D30 /* foundation-string-cf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB3EBE316A5C00800E90D30 /* foundation-string-cf.cpp */; };
+		4DBBAEED1A0CEA6C004AAC31 /* foundation-typeinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DBBAEEC1A0CEA6C004AAC31 /* foundation-typeinfo.cpp */; };
+		4DDA1F7D1A0D1452001B0CA2 /* foundation-record.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA1F7C1A0D1452001B0CA2 /* foundation-record.cpp */; };
 		721CAAA81834D10D00858545 /* foundation-locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 721CAAA61834D10D00858545 /* foundation-locale.cpp */; };
 		721CAAA91834D10D00858545 /* foundation-unicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 721CAAA71834D10D00858545 /* foundation-unicode.cpp */; };
 		7237187918E42F580006C484 /* foundation-text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7237187718E42F580006C484 /* foundation-text.cpp */; };
@@ -64,6 +66,8 @@
 		4D7FA7AC1594E09F00EEF440 /* foundation-stdlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-stdlib.h"; path = "include/foundation-stdlib.h"; sourceTree = "<group>"; };
 		4D7FA7AD1594E09F00EEF440 /* foundation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = foundation.h; path = include/foundation.h; sourceTree = "<group>"; };
 		4DB3EBE316A5C00800E90D30 /* foundation-string-cf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-string-cf.cpp"; path = "src/foundation-string-cf.cpp"; sourceTree = "<group>"; };
+		4DBBAEEC1A0CEA6C004AAC31 /* foundation-typeinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-typeinfo.cpp"; path = "src/foundation-typeinfo.cpp"; sourceTree = "<group>"; };
+		4DDA1F7C1A0D1452001B0CA2 /* foundation-record.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-record.cpp"; path = "src/foundation-record.cpp"; sourceTree = "<group>"; };
 		4DF42A430B048617003F2D95 /* libfoundation.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfoundation.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DF42A520B04862E003F2D95 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42A530B04862E003F2D95 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -159,6 +163,8 @@
 				721CAAAC18350B0E00858545 /* foundation-unicode-private.h */,
 				BE19F5D718FE92600001B410 /* foundation-bidi.cpp */,
 				7237187718E42F580006C484 /* foundation-text.cpp */,
+				4DBBAEEC1A0CEA6C004AAC31 /* foundation-typeinfo.cpp */,
+				4DDA1F7C1A0D1452001B0CA2 /* foundation-record.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -188,6 +194,8 @@
 /* Begin PBXProject section */
 		4DF42A350B04860B003F2D95 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4DF42A360B04860B003F2D95 /* Build configuration list for PBXProject "libfoundation" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -222,6 +230,7 @@
 				4D7FA7A31594E09500EEF440 /* foundation-nativechars.cpp in Sources */,
 				4D7FA7A41594E09500EEF440 /* foundation-number.cpp in Sources */,
 				4D7FA7A51594E09500EEF440 /* foundation-set.cpp in Sources */,
+				4DDA1F7D1A0D1452001B0CA2 /* foundation-record.cpp in Sources */,
 				4D7FA7A61594E09500EEF440 /* foundation-stream.cpp in Sources */,
 				4D7FA7A71594E09500EEF440 /* foundation-string.cpp in Sources */,
 				4D7FA7A81594E09500EEF440 /* foundation-unicodechars.cpp in Sources */,
@@ -230,6 +239,7 @@
 				4D5837A31806A024006DE6A2 /* foundation-objc.mm in Sources */,
 				76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */,
 				721CAAA81834D10D00858545 /* foundation-locale.cpp in Sources */,
+				4DBBAEED1A0CEA6C004AAC31 /* foundation-typeinfo.cpp in Sources */,
 				721CAAA91834D10D00858545 /* foundation-unicode.cpp in Sources */,
 				BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */,
 				7237187918E42F580006C484 /* foundation-text.cpp in Sources */,

@@ -29,12 +29,18 @@ const char *__MCSysCharset;
 
 bool MCInitialize(void)
 {
-	if (!__MCUnicodeInitialize())
+    if (!__MCUnicodeInitialize())
         return false;
     
     if (!__MCValueInitialize())
 		return false;
 
+    if (!__MCErrorInitialize())
+        return false;
+
+    if (!__MCTypeInfoInitialize())
+        return false;
+    
 	if (!__MCStringInitialize())
 		return false;
 
@@ -53,6 +59,9 @@ bool MCInitialize(void)
     if (!__MCDataInitialize())
         return false;
     
+    if (!__MCRecordInitialize())
+        return false;
+    
     if (!__MCLocaleInitialize())
         return false;
 
@@ -62,12 +71,15 @@ bool MCInitialize(void)
 void MCFinalize(void)
 {
 	__MCLocaleFinalize();
+    __MCRecordFinalize();
     __MCSetFinalize();
 	__MCListFinalize();
 	__MCArrayFinalize();
 	__MCNameFinalize();
 	__MCStringFinalize();
     __MCDataFinalize();
+    __MCTypeInfoFinalize();
+    __MCErrorFinalize();
 	__MCValueFinalize();
     __MCUnicodeFinalize();
 }
@@ -83,7 +95,7 @@ bool MCMemoryAllocate(size_t p_size, void*& r_block)
 		r_block = t_block;
 		return true;
 	}
-	return MCErrorThrow(kMCErrorOutOfMemory);
+	return MCErrorThrowOutOfMemory();
 }
 
 bool MCMemoryAllocateCopy(const void *p_block, size_t p_block_size, void*& r_block)
@@ -93,7 +105,7 @@ bool MCMemoryAllocateCopy(const void *p_block, size_t p_block_size, void*& r_blo
 		MCMemoryCopy(r_block, p_block, p_block_size);
 		return true;
 	}
-	return MCErrorThrow(kMCErrorOutOfMemory);
+	return MCErrorThrowOutOfMemory();
 }
 
 bool MCMemoryReallocate(void *p_block, size_t p_new_size, void*& r_new_block)
@@ -105,7 +117,7 @@ bool MCMemoryReallocate(void *p_block, size_t p_new_size, void*& r_new_block)
 		r_new_block = t_new_block;
 		return true;
 	}
-	return MCErrorThrow(kMCErrorOutOfMemory);
+	return MCErrorThrowOutOfMemory();
 }
 
 void MCMemoryDeallocate(void *p_block)
@@ -222,6 +234,27 @@ hash_t MCHashBytes(const void *p_bytes, size_t length)
     case 0:  ;
     }
 
+    return H;
+}
+
+hash_t MCHashBytesStream(hash_t p_start, const void *p_bytes, size_t length)
+{
+    MCAssert((length % 4) == 0);
+    uint8_t *bytes = (uint8_t *)p_bytes;
+    
+    /* The ELF hash algorithm, used in the ELF object file format */
+    uint32_t H = p_start, T1, T2;
+    int32_t rem = length;
+    
+    while (3 < rem)
+	{
+		ELF_STEP(bytes[length - rem]);
+		ELF_STEP(bytes[length - rem + 1]);
+		ELF_STEP(bytes[length - rem + 2]);
+		ELF_STEP(bytes[length - rem + 3]);
+		rem -= 4;
+    }
+    
     return H;
 }
 

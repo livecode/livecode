@@ -47,6 +47,41 @@ struct __MCValue
 
 //////////
 
+enum
+{
+    kMCTypeInfoTypeCodeMask = 0xff,
+};
+
+struct __MCTypeInfo: public __MCValue
+{
+    union
+    {
+        struct
+        {
+            MCNameRef name;
+            MCTypeInfoRef typeinfo;
+        } named;
+        struct
+        {
+            MCRecordTypeFieldInfo *fields;
+            uindex_t field_count;
+        } record;
+        struct
+        {
+            MCHandlerTypeFieldInfo *fields;
+            uindex_t field_count;
+            MCTypeInfoRef return_type;
+        } handler;
+        struct
+        {
+            MCNameRef domain;
+            MCStringRef message;
+        } error;
+    };
+};
+
+//////////
+
 struct __MCNull: public __MCValue
 {
 };
@@ -280,6 +315,33 @@ struct __MCSet: public __MCValue
 
 ////////
 
+enum
+{
+    // The data are mutable
+    kMCRecordFlagIsMutable = 1,
+};
+
+struct __MCRecord: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+    MCValueRef *fields;
+};
+
+////////
+
+struct __MCError: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+    MCStringRef message;
+    MCArrayRef info;
+    
+    MCValueRef target;
+    uindex_t row;
+    uindex_t column;
+};
+
+////////
+
 struct __MCCustomValue: public __MCValue
 {
 	const MCValueCustomCallbacks *callbacks;
@@ -311,8 +373,9 @@ template<class T> inline bool __MCValueCreate(MCValueTypeCode p_type_code, T*& r
 //////////
 
 bool __MCUnicodeInitialize();
-bool __MCLocaleInitialize();
 void __MCUnicodeFinalize();
+
+bool __MCLocaleInitialize();
 void __MCLocaleFinalize();
 
 bool __MCValueInitialize(void);
@@ -369,6 +432,29 @@ hash_t __MCDataHash(__MCData *self);
 bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data);
 bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description);
 bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value);
+
+bool __MCRecordInitialize(void);
+void __MCRecordFinalize(void);
+void __MCRecordDestroy(__MCRecord *data);
+hash_t __MCRecordHash(__MCRecord *self);
+bool __MCRecordIsEqualTo(__MCRecord *self, __MCRecord *p_other_data);
+bool __MCRecordCopyDescription(__MCRecord *self, MCStringRef &r_description);
+bool __MCRecordImmutableCopy(__MCRecord *self, bool p_release, __MCRecord *&r_immutable_value);
+
+bool __MCErrorInitialize();
+void __MCErrorFinalize();
+void __MCErrorDestroy(__MCError *error);
+hash_t __MCErrorHash(__MCError *error);
+bool __MCErrorIsEqualTo(__MCError *error, __MCError *other_error);
+bool __MCErrorCopyDescription(__MCError *error, MCStringRef& r_string);
+
+bool __MCTypeInfoInitialize(void);
+void __MCTypeInfoFinalize(void);
+void __MCTypeInfoDestroy(__MCTypeInfo *self);
+hash_t __MCTypeInfoHash(__MCTypeInfo *self);
+bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self);
+bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description);
+MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
 
 ////////////////////////////////////////////////////////////////////////////////
 
