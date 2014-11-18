@@ -69,13 +69,8 @@ struct _MCStackdirIO
 	/* ---- Load only members */
 	/* Stack state */
 	MCArrayRef m_load_state;
-	/* Alternative stack state in case of VCS conflict */
-	MCArrayRef m_load_state_theirs;
-	/* Whether to permit VCS conflicts */
-	bool m_load_allow_conflicts;
 	/* Source location information from load operation */
 	MCArrayRef m_source_info;
-	MCArrayRef m_source_info_theirs;
 };
 
 /* Create a new IO operation state structure.

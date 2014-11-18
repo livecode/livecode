@@ -53,10 +53,6 @@ struct _MCStackdirIOObjectLoad
 	/* State and source info for "ours" */
 	MCArrayRef m_state;
 	MCArrayRef m_source_info;
-
-	/* State and source info for "theirs" */
-	MCArrayRef m_state_theirs;
-	MCArrayRef m_source_info_theirs;
 };
 
 /* This structure is only used to pass information about the LSB
@@ -835,12 +831,9 @@ MCStackdirIOLoadObject (MCStackdirIORef op,
 						MCStringRef p_obj_path)
 {
 	/* Create state and source info arrays */
-	MCAutoArrayRef t_object_state, t_object_state_theirs,
-		t_object_source_info, t_object_source_info_theirs;
+	MCAutoArrayRef t_object_state, t_object_source_info;
 	if (!(MCArrayCreateMutable (&t_object_state) &&
-		  MCArrayCreateMutable (&t_object_state_theirs) &&
-		  MCArrayCreateMutable (&t_object_source_info) &&
-		  MCArrayCreateMutable (&t_object_source_info_theirs)))
+		  MCArrayCreateMutable (&t_object_source_info)))
 		return MCStackdirIOErrorOutOfMemory (op);
 
 	/* Create object load information structure */
@@ -849,8 +842,6 @@ MCStackdirIOLoadObject (MCStackdirIORef op,
 	t_load_info.m_path = p_obj_path;
 	t_load_info.m_state = *t_object_state;
 	t_load_info.m_source_info = *t_object_source_info;
-	t_load_info.m_state_theirs = *t_object_state_theirs;
-	t_load_info.m_source_info_theirs = *t_object_source_info_theirs;
 
 	if (!(MCStackdirIOLoadObjectKind (&t_load_info) &&
 		  MCStackdirIOLoadObjectParent (&t_load_info) &&
@@ -864,12 +855,8 @@ MCStackdirIOLoadObject (MCStackdirIORef op,
 	if (!(MCNameCreate (p_uuid, &t_uuid_name) &&
 		  MCArrayStoreValue (op->m_load_state, true, *t_uuid_name,
 							 (MCValueRef) *t_object_state) &&
-		  MCArrayStoreValue (op->m_load_state_theirs, true, *t_uuid_name,
-							 (MCValueRef) *t_object_state_theirs) &&
 		  MCArrayStoreValue (op->m_source_info, true, *t_uuid_name,
-							 (MCValueRef) *t_object_source_info) &&
-		  MCArrayStoreValue (op->m_source_info_theirs, true, *t_uuid_name,
-							 (MCValueRef) *t_object_source_info_theirs)))
+							 (MCValueRef) *t_object_source_info)))
 		return MCStackdirIOErrorOutOfMemory (op);
 
 	return true;
@@ -1168,34 +1155,9 @@ MCStackdirIONewLoad (MCStackdirIORef & op)
 }
 
 bool
-MCStackdirIOHasConflict (MCStackdirIORef op)
-{
-	MCStackdirIOAssertLoad (op);
-
-	/* FIXME This is a stub and needs a proper implementation. */
-	return false;
-}
-
-void
-MCStackdirIOSetConflictPermitted (MCStackdirIORef op,
-								  bool enabled)
-{
-	MCStackdirIOAssertLoad (op);
-	op->m_load_allow_conflicts = enabled;
-}
-
-bool
-MCStackdirIOGetConflictPermitted (MCStackdirIORef op)
-{
-	MCStackdirIOAssertLoad (op);
-	return op->m_load_allow_conflicts;
-}
-
-bool
 MCStackdirIOGetState (MCStackdirIORef op,
 					  MCArrayRef *r_state,
-					  MCArrayRef *r_source_info,
-					  MCStackdirResult mode)
+					  MCArrayRef *r_source_info)
 {
 	MCStackdirIOAssertLoad (op);
 
@@ -1204,28 +1166,8 @@ MCStackdirIOGetState (MCStackdirIORef op,
 
 	MCArrayRef t_state;
 	MCArrayRef t_source_info;
-	switch (mode)
-	{
-	case kMCStackdirResultOurs:
-		t_state = op->m_load_state;
-		t_source_info = op->m_source_info;
-		break;
-
-	case kMCStackdirResultTheirs:
-		/* If conflicts are disabled, do nothing */
-		if (!MCStackdirIOGetConflictPermitted (op)) return false;
-
-		/* If there was no conflict, then return the "ours" data. */
-		if (!MCStackdirIOHasConflict (op))
-			return MCStackdirIOGetState (op, r_state, r_source_info);
-
-		t_state = op->m_load_state_theirs;
-		t_source_info = op->m_source_info_theirs;
-		break;
-
-	default:
-		MCUnreachable ();
-	}
+	t_state = op->m_load_state;
+	t_source_info = op->m_source_info;
 
 	if (r_state != nil)
 	{
@@ -1330,9 +1272,7 @@ MCStackdirIOCommitLoad (MCStackdirIORef op)
 	MCStackdirIOAssertLoad (op);
 
 	if (!(MCArrayCreateMutable (op->m_load_state) &&
-		  MCArrayCreateMutable (op->m_source_info) &&
-		  MCArrayCreateMutable (op->m_load_state_theirs) &&
-		  MCArrayCreateMutable (op->m_source_info_theirs)))
+		  MCArrayCreateMutable (op->m_source_info)))
 	{
 		MCStackdirIOErrorOutOfMemory (op);
 		return;

@@ -25,13 +25,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * stack state to and from the corresponding on-disk representation.
  */
 
-enum MCStackdirResult
-{
-	kMCStackdirResultOurs = 1,
-	kMCStackdirResultTheirs = 2,
-	kMCStackdirResultDefault = kMCStackdirResultOurs,
-};
-
 enum MCStackdirStatus
 {
 	kMCStackdirStatusSuccess     = 0,    /* Success */
@@ -39,7 +32,6 @@ enum MCStackdirStatus
 	kMCStackdirStatusOutOfMemory = 1,    /* Memory allocation error */
 	kMCStackdirStatusIOError     = 2,    /* Error during file IO */
 	kMCStackdirStatusSyntaxError = 3,    /* Syntax error */
-	kMCStackdirStatusConflict    = 4,    /* Unrecoverable VCS conflict */
 
 	kMCStackdirStatusBadPath     = 5,    /* Stack path is invalid */
 	kMCStackdirStatusBadState    = 6,    /* Stack state array is invalid */
@@ -103,22 +95,6 @@ void MCStackdirIOSetState (MCStackdirIORef op, MCArrayRef p_state);
 /* Create a new load operation */
 bool MCStackdirIONewLoad (MCStackdirIORef & op);
 
-/* Set whether conflicts are permitted.
- *
- * If enabled is false, loading will fail if a conflict is
- * detected.
- */
-void MCStackdirIOSetConflictPermitted (MCStackdirIORef op, bool enabled);
-
-/* Query whether conflicts are permitted. */
-bool MCStackdirIOGetConflictPermitted (MCStackdirIORef op);
-
-/* Query whether a conflict was detected.
- *
- * If the operation has not yet been performed, returns false.
- */
-bool MCStackdirIOHasConflict (MCStackdirIORef op);
-
 /* Retrieve the state and/or source location information.
  *
  * If either the r_state or r_source_info arguments are nil, no data
@@ -130,9 +106,7 @@ bool MCStackdirIOHasConflict (MCStackdirIORef op);
  * error occurred or the operation has not yet been performed),
  * returns false.  Otherwise, returns true.
  */
-bool MCStackdirIOGetState (MCStackdirIORef op,
-						   MCArrayRef *r_state, MCArrayRef *r_source_info,
-						   MCStackdirResult mode = kMCStackdirResultDefault);
+bool MCStackdirIOGetState (MCStackdirIORef op, MCArrayRef *r_state, MCArrayRef *r_source_info);
 
 /* ----------------------------------------------------------------
  * Internal debugging commands

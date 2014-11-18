@@ -464,9 +464,7 @@ MCStackdirIODestroy (MCStackdirIORef & op)
 	MCValueRelease (op->m_save_state);
 
 	MCValueRelease (op->m_load_state);
-	MCValueRelease (op->m_load_state_theirs);
 	MCValueRelease (op->m_source_info);
-	MCValueRelease (op->m_source_info_theirs);
 
 	MCMemoryDelete (op);
 
