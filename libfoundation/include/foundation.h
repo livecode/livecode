@@ -558,6 +558,7 @@ typedef struct __MCString *MCStringRef;
 typedef struct __MCName *MCNameRef;
 typedef struct __MCData *MCDataRef;
 typedef struct __MCArray *MCArrayRef;
+typedef struct __MCHandler *MCHandlerRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCRecord *MCRecordRef;
@@ -1223,6 +1224,9 @@ MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef type);
 
 // Returns the name of the type, if it has one.
 MCNameRef MCTypeInfoGetName(MCTypeInfoRef type);
+
+// Returns true if the type is optional.
+bool MCTypeInfoIsOptional(MCTypeInfoRef type);
 
 // Returns true if the source typeinfo can be assigned to a slot with the target
 // typeinfo with no typecheck or conversion.
@@ -2167,6 +2171,14 @@ bool MCRecordIsMutable(MCRecordRef self);
 
 bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
 bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  HANDLER DEFINITIONS
+//
+
+void *MCHandlerGetDefinition(MCHandlerRef handler);
+void *MCHandlerGetInstance(MCHandlerRef handler);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

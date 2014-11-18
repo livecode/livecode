@@ -37,7 +37,8 @@ bool MCErrorCreate(MCTypeInfoRef p_typeinfo, MCArrayRef p_info, MCErrorRef& r_er
     
     self -> typeinfo = MCValueRetain(p_typeinfo);
     self -> message = MCValueRetain(MCErrorTypeInfoGetMessage(p_typeinfo));
-    self -> info = MCValueRetain(p_info);
+    if (p_info != nil)
+        self -> info = MCValueRetain(p_info);
     
     self -> target = nil;
     self -> row = 0;
@@ -168,7 +169,7 @@ bool __MCErrorInitialize(void)
     
     if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("unknown"), kMCGenericErrorTypeInfo))
         return false;
-    if (!MCTypeInfoBindAndRelease(MCNAME("livecode.lang.GenericError"), kMCGenericErrorTypeInfo, kMCOutOfMemoryErrorTypeInfo))
+    if (!MCTypeInfoBindAndRelease(MCNAME("livecode.lang.GenericError"), kMCGenericErrorTypeInfo, kMCGenericErrorTypeInfo))
         return false;
     
     if (!MCErrorCreate(kMCOutOfMemoryErrorTypeInfo, nil, s_out_of_memory_error))
