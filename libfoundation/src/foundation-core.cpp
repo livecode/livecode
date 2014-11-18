@@ -43,7 +43,7 @@ bool MCInitialize(void)
     
     if (!__MCErrorInitialize())
         return false;
-
+    
     if (!__MCTypeInfoInitialize())
         return false;
     
@@ -52,10 +52,10 @@ bool MCInitialize(void)
     
 	if (!__MCArrayInitialize())
 		return false;
-
+    
 	if (!__MCListInitialize())
 		return false;
-
+    
 	if (!__MCSetInitialize())
 		return false;
     
