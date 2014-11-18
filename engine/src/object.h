@@ -810,7 +810,7 @@ public:
 	void SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedColor& p_color);
 	bool GetColors(MCExecContext& ctxt, bool effective, MCStringRef& r_colors);
 
-	bool GetPattern(MCExecContext& ctxt, Properties which, bool effective, uint4& r_pattern);
+	bool GetPattern(MCExecContext& ctxt, Properties which, bool effective, uint4*& r_pattern);
 	void SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_id);
 	bool GetPatterns(MCExecContext& ctxt, bool effective, MCStringRef& r_patterns);
 
@@ -917,28 +917,28 @@ public:
 
 	void GetForePattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetForePattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveForePattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveForePattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetBackPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveBackPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveBackPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetHilitePattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetHilitePattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveHilitePattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveHilitePattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetBorderPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetBorderPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveBorderPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveBorderPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetTopPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetTopPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveTopPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveTopPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetBottomPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetBottomPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveBottomPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveBottomPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetShadowPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetShadowPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveShadowPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveShadowPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	void GetFocusPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 	virtual void SetFocusPattern(MCExecContext& ctxt, uinteger_t* pattern);
-	void GetEffectiveFocusPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetEffectiveFocusPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
 
 	void GetPatterns(MCExecContext& ctxt, MCStringRef& r_patterns);
 	void SetPatterns(MCExecContext& ctxt, MCStringRef patterns);
