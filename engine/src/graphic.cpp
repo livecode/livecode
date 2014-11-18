@@ -1929,7 +1929,7 @@ void MCGraphic::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRecta
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)
-		dc->drawline(sx, sy - (MCFontGetAscent(m_font) >> 1), sx + twidth, sy - (MCFontGetAscent(m_font) >> 1));
+		dc->drawline(sx, sy - (MCFontGetAscent(m_font) / 2), sx + twidth, sy - (MCFontGetAscent(m_font) / 2));
 }
 
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.

@@ -35,7 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 extern void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic);
 extern void coretext_font_destroy(void *p_font);
-extern void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
+extern void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight);
 extern void coretext_get_font_names(MCExecPoint &ep);
 extern void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint &ep);
 extern void coretext_get_font_name(void *p_font, char*& r_name);
@@ -114,12 +114,11 @@ void MCFontnode::calculatemetrics()
 {
 	font -> ascent = reqsize - 1;
 	font -> descent = reqsize * 2 / 14 + 1;
-	
+
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
-	float ascent, descent;
-	coretext_font_get_metrics(font -> fid,  ascent, descent);
-	if (ceilf(ascent) + ceilf(descent) > reqsize)
-		font -> ascent++;
+    coretext_font_get_metrics(font -> fid, font -> m_ascent, font -> m_descent, font -> m_leading, font -> m_xheight);
+    if (ceilf(font -> m_ascent) + ceilf(font -> m_descent) > reqsize)
+        font -> ascent++;
 }
 
 MCFontnode::~MCFontnode()

@@ -378,6 +378,13 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_em;
+    coord_t m_xheight;
+    coord_t m_capheight;
+    coord_t m_leading;
 };
 
 #define fixmaskrop(a) (a)

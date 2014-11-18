@@ -225,22 +225,38 @@ bool MCFontHasPrinterMetrics(MCFontRef self)
 	return (self -> style & kMCFontStylePrinterMetrics) != 0;
 }
 
-int32_t MCFontGetAscent(MCFontRef self)
+coord_t MCFontGetAscent(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (self -> fontstruct == nil)
 		return 0;
 	
-	return self -> fontstruct -> ascent;
+	return self -> fontstruct -> m_ascent;
 }
 
-int32_t MCFontGetDescent(MCFontRef self)
+coord_t MCFontGetDescent(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (self -> fontstruct == nil)
 		return 0;
 	
-	return self -> fontstruct -> descent;
+	return self -> fontstruct -> m_descent;
+}
+
+coord_t MCFontGetLeading(MCFontRef self)
+{
+    if (self -> fontstruct == nil)
+        return 0;
+    
+    return self -> fontstruct -> m_leading;
+}
+
+coord_t MCFontGetXHeight(MCFontRef self)
+{
+    if (self -> fontstruct == nil)
+        return 0;
+    
+    return self -> fontstruct -> m_xheight;
 }
 
 void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, MCFontBreakTextCallback p_callback, void *p_callback_data)

@@ -234,10 +234,12 @@ void coretext_font_destroy(void *p_font)
         CFRelease((CTFontRef) p_font);
 }
 
-void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent)
+void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight)
 {
-	r_ascent = CTFontGetAscent((CTFontRef) p_font);
-	r_descent = CTFontGetDescent((CTFontRef) p_font);
+    r_ascent = CTFontGetAscent((CTFontRef) p_font);
+    r_descent = CTFontGetDescent((CTFontRef) p_font);
+    r_leading = CTFontGetLeading((CTFontRef) p_font);
+    r_xheight = CTFontGetXHeight((CTFontRef) p_font);
 }
 
 void coretext_get_font_names(MCExecPoint &ep)

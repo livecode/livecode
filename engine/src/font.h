@@ -50,8 +50,10 @@ void MCFontRelease(MCFontRef font);
 
 bool MCFontHasPrinterMetrics(MCFontRef font);
 
-int32_t MCFontGetAscent(MCFontRef font);
-int32_t MCFontGetDescent(MCFontRef font);
+coord_t MCFontGetAscent(MCFontRef font);
+coord_t MCFontGetDescent(MCFontRef font);
+coord_t MCFontGetLeading(MCFontRef font);
+coord_t MCFontGetXHeight(MCFontRef font);
 
 typedef void (*MCFontBreakTextCallback)(MCFontRef font, const char *start, uindex_t length, bool is_unicode, void *ctxt);
 void MCFontBreakText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCFontBreakTextCallback callback, void *callback_data);
