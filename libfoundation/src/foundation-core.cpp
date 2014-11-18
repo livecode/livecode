@@ -49,13 +49,13 @@ bool MCInitialize(void)
     
     if (!__MCNumberInitialize())
         return false;
-
+    
 	if (!__MCArrayInitialize())
 		return false;
-
+    
 	if (!__MCListInitialize())
 		return false;
-
+    
 	if (!__MCSetInitialize())
 		return false;
     
