@@ -388,9 +388,9 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 		t_length = MCDataGetLength (*t_file_contents);
 		t_file -> script = new char[t_length + 1];
 
-		memcpy (t_file -> script,
-				MCDataGetBytePtr (*t_file_contents),
-				t_length);
+		MCMemoryCopy (t_file -> script,
+					  MCDataGetBytePtr (*t_file_contents),
+					  t_length);
 		/* Ensure trailing nul */
 		t_file -> script[t_length] = 0;
 
