@@ -202,7 +202,7 @@ hash_t MCHashInteger(integer_t i)
 
 hash_t MCHashPointer(void *p)
 {
-    return MCHashInteger((integer_t)p);
+    return MCHashInteger((intptr_t)p);
 }
 
 hash_t MCHashDouble(double d)
