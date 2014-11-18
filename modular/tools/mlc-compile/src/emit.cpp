@@ -446,7 +446,7 @@ void EmitRecordTypeField(NameRef name, long type_index)
 void EmitEndRecordType(long& r_type_index)
 {
     MCAutoTypeInfoRef t_typeinfo;
-    MCRecordTypeInfoCreate(s_current_record_fields, s_current_record_field_count, &t_typeinfo);
+    MCRecordTypeInfoCreate(s_current_record_fields, s_current_record_field_count, s_current_record_basetype, &t_typeinfo);
     if (!define_typeinfo(*t_typeinfo, r_type_index))
         return;
     
