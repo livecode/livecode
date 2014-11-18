@@ -196,11 +196,53 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          put shortFilePath(tBuildFolder) into tBuildFolder
       end if
       
+      -------- Unpack all the files used by the externals
+      // MERG-2014-11-18: [[ TemplateManifest ]] Look for a template manifest provided by the developer in copy files
+      local tManifestFile
+      
+      revStandaloneProgress "Integrating externals..."
+      
+      if tExternals is not empty then
+         put return after tExternals
+      end if
+      repeat for each line tFile in tFiles
+         local tFilePath, tFileName
+         computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
+         
+         -- Look for manifest template
+         set the itemDelimiter to slash
+         if the last item of tFilePath is "AndroidManifest.xml" then
+            put tFilePath into tManifestFile
+         end if
+         
+         -- Only look for lcext files.
+         set the itemDelimiter to "."
+         if the last item of tFilePath is not "lcext" then
+            next repeat
+         end if
+         
+         -- Only process if the target exists
+         if there is no file tFilePath then
+            throw "could not find referenced external -" && tFile
+         end if
+         
+         -- MERG-2013-09-05: [[ Bug 11152 ]] Only list the external if it was successfully
+         --   extracted.
+         -- Now attempt to process the external
+         if addExternalFromFile(tFilePath, tClassesBuildFolder, tArmLibsBuildFolder) then
+            -- Add the external to the list to load
+            put char 1 to -7 of tFileName & return after tExternals
+         end if
+      end repeat
+      delete the last char of tExternals
+      set the itemDelimiter to comma
+      
       -------- Create the Manifest
       revStandaloneProgress "Writing manifest..."
       
-      local tManifestFile
-      put tBuildFolder & slash & "AndroidManifest.xml" into tManifestFile
+      if tManifestFile is empty then
+         put tBuildFolder & slash & "AndroidManifest.xml" into tManifestFile
+      end if
       
       local tManifest
       put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
@@ -362,38 +404,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       if the result is not empty then
          throw "could not create manifest"
       end if
-      
-      -------- Unpack all the files used by the externals
-      revStandaloneProgress "Integrating externals..."
-      
-      set the itemDelimiter to "."
-      if tExternals is not empty then
-         put return after tExternals
-      end if
-      repeat for each line tFile in tFiles
-         local tFilePath, tFileName
-         computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
-         
-         -- Only look for lcext files.
-         if the last item of tFilePath is not "lcext" then
-            next repeat
-         end if
-         
-         -- Only process if the target exists
-         if there is no file tFilePath then
-            throw "could not find referenced external -" && tFile
-         end if
-         
-         -- MERG-2013-09-05: [[ Bug 11152 ]] Only list the external if it was successfully
-         --   extracted.
-         -- Now attempt to process the external
-         if addExternalFromFile(tFilePath, tClassesBuildFolder, tArmLibsBuildFolder) then
-            -- Add the external to the list to load
-            put char 1 to -7 of tFileName & return after tExternals
-         end if
-      end repeat
-      delete the last char of tExternals
-      set the itemDelimiter to comma
       
       -------- Build the Classes
       revStandaloneProgress "Building classes..."
