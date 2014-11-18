@@ -382,6 +382,8 @@ bool MCS_registry_type_to_string(uint32_t p_type, MCStringRef& r_string)
 		}
 	}
 
+    // SN-2014-11-18: [[ Bug 14052 ]] Avoid to return a nil string (the result is not checked anyway).
+    r_string = MCValueRetain(kMCEmptyString);
 	return false;
 }
 
