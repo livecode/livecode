@@ -340,6 +340,7 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
         t_hash = MCHashBytesStream(t_hash, &self -> named, sizeof(self -> named));
     else if (t_code == kMCValueTypeCodeRecord)
     {
+        t_hash = MCHashBytesStream(t_hash, &self -> record . base, sizeof(self -> record . base));
         t_hash = MCHashBytesStream(t_hash, &self -> record . field_count, sizeof(self -> record . field_count));
         t_hash = MCHashBytesStream(t_hash, self -> record . fields, sizeof(MCRecordTypeFieldInfo) * self -> record . field_count);
     }
@@ -371,6 +372,9 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
     
     if (t_code == kMCValueTypeCodeRecord)
     {
+        if (self -> record . base != other_self -> record . base)
+            return false;
+        
         if (self -> record . field_count != other_self -> record . field_count)
             return false;
         
