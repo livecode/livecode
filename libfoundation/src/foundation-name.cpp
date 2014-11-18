@@ -21,6 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNameRef kMCEmptyName;
+MCNameRef kMCTrueName;
+MCNameRef kMCFalseName;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -388,6 +390,12 @@ bool __MCNameInitialize(void)
 		return false;
 
 	if (!MCNameCreate(kMCEmptyString, kMCEmptyName))
+		return false;
+
+	if (!MCNameCreate(kMCTrueString, kMCTrueName))
+		return false;
+		
+	if (!MCNameCreate(kMCFalseString, kMCFalseName))
 		return false;
 
 	s_name_table_occupancy = 0;

@@ -75,15 +75,17 @@ void MCFinalize(void)
 {
 	__MCLocaleFinalize();
     __MCRecordFinalize();
+    __MCDataFinalize();
     __MCSetFinalize();
 	__MCListFinalize();
 	__MCArrayFinalize();
-    __MCDataFinalize();
     __MCNumberFinalize();
     __MCTypeInfoFinalize();
     __MCErrorFinalize();
 	__MCNameFinalize();
 	__MCStringFinalize();
+    __MCDataFinalize();
+    __MCNumberFinalize();
 	__MCValueFinalize();
     __MCUnicodeFinalize();
 }
@@ -196,6 +198,11 @@ void MCMemoryDeleteArray(void *p_array)
 hash_t MCHashInteger(integer_t i)
 {
 	return ((i > 0) ? (hash_t)i : (hash_t)(-i)) * HASHFACTOR;
+}
+
+hash_t MCHashPointer(void *p)
+{
+    return MCHashInteger((integer_t)p);
 }
 
 hash_t MCHashDouble(double d)
