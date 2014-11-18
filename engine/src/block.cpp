@@ -894,9 +894,10 @@ coord_t MCBlock::gettabwidth(coord_t x, const char *text, uint2 i)
 void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t cx, int2 y, uint2 start, uint2 length, Boolean image, uint32_t style)
 {
 	// MW-2012-02-16: [[ FontRefs ]] Fetch the font metrics we need to draw.
-	int32_t t_ascent, t_descent;
+	coord_t t_ascent, t_descent, t_leading, t_xheight;
 	t_ascent = MCFontGetAscent(m_font);
 	t_descent = MCFontGetDescent(m_font);
+    t_leading = MCFontGetLeading(m_font);
 	
 	// MW-2012-01-25: [[ ParaStyles ]] Fetch the vGrid setting from the owning paragraph.
 	if (parent -> getvgrid())
@@ -1770,7 +1771,7 @@ uint2 MCBlock::getascent(void)
 	if (flags & F_HAS_IMAGE && atts->image != NULL)
 		return MCU_max(0, atts->image->getrect().height - shift + 2);
 	else
-		return MCU_max(0, heightfromsize(MCFontGetAscent(m_font)) - MCFontGetDescent(m_font) - shift);
+		return MCU_max(0, heightfromsize(ceilf(MCFontGetAscent(m_font))) - uint2(ceilf(MCFontGetDescent(m_font))) - shift);
 }
 
 uint2 MCBlock::getdescent(void)
@@ -1779,7 +1780,35 @@ uint2 MCBlock::getdescent(void)
 	if (flags & F_HAS_IMAGE && atts->image != NULL)
 		return MCU_max(0, shift);
 	else
-		return MCU_max(0, MCFontGetDescent(m_font) + shift);
+		return MCU_max(0, uint2(ceilf(MCFontGetDescent(m_font))) + shift);
+}
+
+coord_t MCBlock::GetAscent() const
+{
+   	int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    // MW-2007-07-05: [[ Bug 1943 ]] - Images do not have correct ascent height *MIGHT NEED REVERSION*
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return MCU_max(0, atts->image->getrect().height - shift + 2);
+    else
+        return MCU_max(0.0f, MCFontGetAscent(m_font) - shift);
+}
+
+coord_t MCBlock::GetDescent() const
+{
+    int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return MCU_max(0, shift);
+    else
+        return MCU_max(0.0f, MCFontGetDescent(m_font) + shift);
+}
+
+coord_t MCBlock::GetLeading() const
+{
+    int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return GetAscent()+GetDescent();
+    else
+        return MCFontGetLeading(m_font);
 }
 
 void MCBlock::freeatts()

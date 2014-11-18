@@ -884,9 +884,10 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	
 	dc->save();
 
-	uint2 ascent, descent;
+	coord_t ascent, descent, leading, linespace, baseline;
 	ascent = fixeda;
 	descent = fixedd;
+    leading = 0;
 
 	// MW-2012-03-16: [[ Bug 10001 ]] Compute the paragraph offset (from leftmargin) and minimal width.
 	int32_t t_paragraph_offset, t_paragraph_width;
@@ -950,9 +951,12 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	{
 		if (fixeda == 0)
 		{
-			ascent = lptr -> getascent();
-			descent = lptr -> getdescent();
+			ascent = lptr -> GetAscent();
+			descent = lptr -> GetDescent();
+            leading = lptr -> GetLeading();
 		}
+        
+        linespace = ascent + descent + leading;
 
 		if (t_current_y < t_clip . y + t_clip . height && t_current_y + ascent + descent > t_clip . y)
 		{
@@ -960,7 +964,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 			t_current_x = t_inner_rect . x + computelineinneroffset(t_inner_rect . width, lptr);
 
 			if (startindex != endindex || state & PS_FRONT || state & PS_BACK)
-				fillselect(dc, lptr, t_current_x, t_current_y, ascent + descent, t_select_x, t_select_width);
+				fillselect(dc, lptr, t_current_x, t_current_y, linespace, t_select_x, t_select_width);
 
 			uint32_t t_list_style;
 			t_list_style = getliststyle();
@@ -1020,12 +1024,12 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 			lptr->draw(dc, t_current_x, t_current_y + ascent - 1, si, ei, text, pstyle);
 			if (fstart != fend)
-				drawfound(dc, lptr, t_current_x, t_current_y, ascent + descent, fstart, fend);
+				drawfound(dc, lptr, t_current_x, t_current_y, linespace, fstart, fend);
 			if (compstart != compend)
-				drawcomposition(dc, lptr, t_current_x, t_current_y, ascent + descent, compstart, compend, compconvstart, compconvend);
+				drawcomposition(dc, lptr, t_current_x, t_current_y, linespace, compstart, compend, compconvstart, compconvend);
 		}
 
-		t_current_y += ascent + descent;
+		t_current_y += linespace;
 
 		lptr = lptr->next();
 	}
@@ -2983,7 +2987,7 @@ uint2 MCParagraph::getwidth() const
 
 uint2 MCParagraph::getheight(uint2 fixedheight) const
 {
-	uint2 height = 0;
+	coord_t height = 0;
 
 	// MW-2012-03-05: [[ HiddenText ]] If the paragraph is currently hidden, then it
 	//   is of height 0.
@@ -3000,7 +3004,7 @@ uint2 MCParagraph::getheight(uint2 fixedheight) const
 		do
 		{
 			if (fixedheight == 0)
-				height += lptr->getheight();
+				height += lptr->GetHeight();
 			else
 				height += fixedheight;
 			lptr = lptr->next();
