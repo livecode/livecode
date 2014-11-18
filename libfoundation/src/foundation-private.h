@@ -65,6 +65,7 @@ struct __MCTypeInfo: public __MCValue
         {
             MCRecordTypeFieldInfo *fields;
             uindex_t field_count;
+            MCTypeInfoRef base;
         } record;
         struct
         {

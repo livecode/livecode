@@ -87,7 +87,7 @@ bool MCTypeInfoBindAndRelease(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCType
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, uindex_t p_field_count, MCTypeInfoRef& r_typeinfo)
+bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, uindex_t p_field_count, MCTypeInfoRef p_base, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
@@ -107,6 +107,7 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, uindex_t p_fi
         self -> record . fields[i] . type = MCValueRetain(p_fields[i] . type);
     }
     self -> record . field_count = p_field_count;
+    self -> record . base = MCValueRetain(p_base != nil ? p_base : kMCNullTypeInfo);
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
@@ -313,6 +314,7 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
     }
     else if (__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord)
     {
+        MCValueRelease(self -> record . base);
         for(uindex_t i = 0; i < self -> record . field_count; i++)
         {
             MCValueRelease(self -> record . fields[i] . name);
