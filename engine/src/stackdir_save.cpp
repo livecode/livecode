@@ -146,6 +146,9 @@ static bool MCStackdirIOArrayGetPropertyInfo (MCStackdirIORef op, MCValueRef p_i
 /* Format property flags */
 static bool MCStackdirIOSaveFormatFlags (MCStackdirIORef op, MCArrayRef p_flags, MCStringRef & r_formatted);
 
+/* Test whether a property record contains a specific flag */
+static bool MCStackdirIOPropertyInfoHasFlag (MCStackdirIORef op, MCValueRef p_info, MCNameRef p_flag);
+
 /* ----------------------------------------------------------------
  * [Private] Save operations
  * ---------------------------------------------------------------- */
@@ -523,6 +526,19 @@ MCStackdirIOSaveFormatFlags (MCStackdirIORef op,
 
 	/* Remove the trailing space character */
 	return true;
+}
+
+static bool
+MCStackdirIOPropertyInfoHasFlag (MCStackdirIORef op,
+								 MCValueRef p_info,
+								 MCNameRef p_flag)
+{
+	if (!MCValueIsArray (p_info)) return false;
+
+	MCArrayRef t_array = (MCArrayRef) p_info;
+
+	MCValueRef t_ignored;
+	return MCArrayFetchValue (t_array, true, p_flag, t_ignored);
 }
 
 /* ================================================================
@@ -1038,6 +1054,12 @@ MCStackdirIOSaveProperty (MCStackdirIORef op,
 
 				if (t_literal_len > kMCStackdirIOPropertyTargetMaxValueLen &&
 					t_descriptor_len > kMCStackdirIOPropertyTargetMaxDescriptorLen)
+					t_target = kMCStackdirIOPropertyTargetExternal;
+
+				/* If the "external" flag is present, always save
+				 * externally. */
+				if (MCStackdirIOPropertyInfoHasFlag (op, p_value,
+													 kMCStackdirExternalFlag))
 					t_target = kMCStackdirIOPropertyTargetExternal;
 			}
 			break;

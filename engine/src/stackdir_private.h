@@ -113,6 +113,8 @@ bool MCStackdirIONew (MCStackdirIORef &op);
 #define kMCStackdirFalseLiteral MCSTR("false")
 #define kMCStackdirArrayLiteral MCSTR("array")
 
+#define kMCStackdirExternalFlag MCNAME("external")
+
 #define kMCStackdirSaveBackupDir MCSTR("_save_backup")
 
 /* Contents of version file */
