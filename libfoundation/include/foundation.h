@@ -290,7 +290,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__
 #define __LITTLE_ENDIAN__
 #define __X86_64__
-#define __HUGE__
+#define __MEDIUM__
 #elif defined(__arm__)
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
