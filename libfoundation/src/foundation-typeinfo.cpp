@@ -156,7 +156,7 @@ MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef unresolved_self, uindex
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, uindex_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
+bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_return_type, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
@@ -169,12 +169,17 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, uindex_t p_
     }
     
     self -> flags |= kMCValueTypeCodeHandler;
-    
-    for(uindex_t i = 0; i < p_field_count; i++)
+
+	uindex_t i;
+	i = 0;
+	/* If the p_field_count < 0 then the p_fields are expected to be
+	 * terminated by a custodian with name = nil. */
+	while ((p_field_count >= 0) ? (i < p_field_count) : p_fields[i].name != nil)
     {
         self -> handler . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
+		++i;
     }
     self -> handler . field_count = p_field_count;
     
