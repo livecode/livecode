@@ -110,9 +110,15 @@ bool MCStringCreateWithCString(const char* p_cstring, MCStringRef& r_string)
 	return MCStringCreateWithNativeChars((const char_t*)p_cstring, p_cstring == nil ? 0 : strlen(p_cstring), r_string);
 }
 
-bool MCStringCreateWithCStringAndRelease(char_t* p_cstring, MCStringRef& r_string)
+bool MCStringCreateWithCStringAndRelease(char* p_cstring, MCStringRef& r_string)
 {
-	return MCStringCreateWithNativeCharsAndRelease(p_cstring, p_cstring == nil ? 0 : strlen((const char*)p_cstring), r_string);
+	if (MCStringCreateWithNativeChars((const char_t *)p_cstring, p_cstring == nil ? 0 : strlen((const char*)p_cstring), r_string))
+    {
+        delete p_cstring;
+        return true;
+    }
+    
+    return false;
 }
 
 const char *MCStringGetCString(MCStringRef p_string)
@@ -413,12 +419,34 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 
 bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
-	if (MCStringCreateWithNativeChars(p_chars, p_char_count, r_string))
-	{
-		MCMemoryDeallocate(p_chars);
-		return true;
-	}
-	return false;
+    bool t_success;
+    t_success = true;
+    
+    if (p_char_count == 0 && kMCEmptyString != nil)
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        MCMemoryDeallocate(p_chars);
+        return true;
+    }
+    
+    __MCString *self;
+    self = nil;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeString, self);
+    
+    if (t_success)
+        t_success = MCMemoryReallocate(p_chars, p_char_count + 1, p_chars);
+    
+    if (t_success)
+    {
+        p_chars[p_char_count] = '\0';
+        self -> native_chars = p_chars;
+        self -> char_count = p_char_count;
+    }
+    else
+        MCMemoryDelete(self);
+    
+    return t_success;
 }
 
 static bool MCStringCreateMutableUnicode(uindex_t p_initial_capacity, MCStringRef& r_string)

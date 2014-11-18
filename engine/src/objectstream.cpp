@@ -290,22 +290,23 @@ IO_stat MCObjectInputStream::ReadTranslatedStringRef(MCStringRef &r_value)
     // If the string needs to be converted, do so
     if (MCtranslatechars)
     {
-        MCAutoStringRefAsCString t_string;
-        t_string . Lock(t_read);
-        char *t_cstring;
-        t_cstring = strclone(*t_string);
+        char_t *t_chars;
+        uindex_t t_char_count;
+        
+        MCStringConvertToNative(t_read, t_chars, t_char_count);
+
 #ifdef __MACROMAN__
-        IO_iso_to_mac(t_cstring, strlen(t_cstring));
+        IO_iso_to_mac((char *)t_chars, t_char_count);
 #else
-        IO_mac_to_iso(t_cstring, strlen(t_cstring));
+        IO_mac_to_iso((char *)t_chars, t_char_count);
 #endif
         
         // Conversion complete
         uindex_t t_length = MCStringGetLength(t_read);
         MCValueRelease(t_read);
-        if (!MCStringCreateWithNativeCharsAndRelease((char_t*)t_cstring, t_length, t_read))
+        if (!MCStringCreateWithNativeCharsAndRelease(t_chars, t_char_count, t_read))
         {
-            free(t_cstring);
+            MCMemoryDeleteArray(t_chars);
             return IO_ERROR;
         }
     }

@@ -846,8 +846,9 @@ public:
 
 	bool CreateStringAndRelease(MCStringRef& r_string)
 	{
-		if (MCStringCreateWithNativeCharsAndRelease(m_chars, m_char_count, r_string))
+		if (MCStringCreateWithNativeChars(m_chars, m_char_count, r_string))
 		{
+            MCMemoryDeleteArray(m_chars);
 			m_chars = nil;
 			m_char_count = 0;
 			return true;

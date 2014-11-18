@@ -93,9 +93,10 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
         t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), m_nffw, m_nftrailing, m_nfforce);
 
         bool t_success;
-        t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_length, r_string) &&
+        t_success = MCStringCreateWithNativeChars((char_t *)t_buffer, t_length, r_string) &&
                 MCStringSetNumericValue(r_string, MCNumberFetchAsReal((MCNumberRef)p_value));
 
+        delete[] t_buffer;
         return t_success;
     }
     break;
