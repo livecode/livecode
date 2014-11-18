@@ -98,6 +98,7 @@ static bool MCStackdirIOScanUnquotedString (MCStackdirIOScannerRef scanner, MCSt
 static bool MCStackdirIOScanString (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
 static bool MCStackdirIOScanData (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
 static bool MCStackdirIOScanSharedHeader (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
+static bool MCStackdirIOScanFlag (MCStackdirIOScannerRef scanner, MCStackdirIOToken & r_token);
 
 /* Table of scanner functions. These are called in order */
 typedef bool (*MCStackdirIOScanFunc)(MCStackdirIOScannerRef, MCStackdirIOToken &);
@@ -108,6 +109,7 @@ static const MCStackdirIOScanFunc kMCStackdirIOScanFuncs[] =
 		MCStackdirIOScanSpace,
 		MCStackdirIOScanStorageSeparator,
 		MCStackdirIOScanExternalIndicator,
+		MCStackdirIOScanFlag,
 		MCStackdirIOScanString,
 		MCStackdirIOScanData,
 		MCStackdirIOScanNumber,
@@ -1241,6 +1243,26 @@ MCStackdirIOScanSharedHeader (MCStackdirIOScannerRef scanner,
 
 	r_token.m_value = MCValueRetain (*t_value);
 	r_token.m_type = kMCStackdirIOTokenTypeSharedHeader;
+	return true;
+}
+
+/* ----------------------------------------------------------------
+ * Scanning flags
+ * ---------------------------------------------------------------- */
+
+static bool
+MCStackdirIOScanFlag (MCStackdirIOScannerRef scanner,
+					  MCStackdirIOToken & r_token)
+{
+	codepoint_t t_char;
+
+	/* Flags have to start with '!' */
+	if (!MCStackdirIOScannerGetChar (scanner, t_char) ||
+		(t_char != '!'))
+		return false;
+
+	MCStackdirIOScannerNextChar (scanner);
+	r_token.m_type = kMCStackdirIOTokenTypeFlag;
 	return true;
 }
 

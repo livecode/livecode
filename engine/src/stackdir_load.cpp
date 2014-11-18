@@ -176,6 +176,15 @@ MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyStorageSeparator,
 							 kMCStackdirStatusSyntaxError,
 							 "Invalid storage specifier terminator (expected "
 							 "space or ':')")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyFlagMissing,
+							 kMCStackdirStatusSyntaxError,
+							 "Flag indicator without flag name")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyFlagSep,
+							 kMCStackdirStatusSyntaxError,
+							 "Invalid flag separator (expected space)")
+MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyFlagType,
+							 kMCStackdirStatusSyntaxError,
+							 "Invalid flag name (expected string")
 MC_STACKDIR_ERROR_FUNC_FULL (MCStackdirIOLoadErrorPropertyLiteral,
 							 kMCStackdirStatusSyntaxError,
 							 "Invalid property value (expected literal or "
@@ -528,44 +537,114 @@ MCStackdirIOLoadProperty (MCStackdirIORef op,
 	}
 
 	/* The next token might be a type.  Alternatively, it might be a
-	 * literal value.  If it's a string or unquoted string, store it
-	 * and check for a value again later. */
-	MCStackdirIOToken t_type_token;
-	bool t_have_type;
-	MCStackdirIOScannerConsume (scanner, t_type_token);
+	 * flag, or a literal value.  If it's a string or unquoted string,
+	 * check if it's followed by a space -- that indicates that it
+	 * must be a type. */
+	MCStackdirIOToken t_type_token, t_value_token;
+	MCNewAutoNameRef t_type;
+	bool t_have_type, t_have_flags, t_have_value;
+	MCStackdirIOScannerPeek (scanner, t_type_token);
 	switch (t_type_token.m_type)
 	{
 	case kMCStackdirIOTokenTypeString:
 	case kMCStackdirIOTokenTypeUnquotedString:
-		t_have_type = true;
+		{
+			MCStackdirIOToken t_type_sep_token;
+			MCStackdirIOScannerConsume (scanner, t_type_token);
+			/* Check if the following token is a space */
+			if (MCStackdirIOScannerPeek (scanner, t_type_sep_token,
+										 kMCStackdirIOTokenTypeSpace))
+			{
+				MCStackdirIOScannerConsume (scanner, t_type_sep_token);
+				if (!MCNameCreate ((MCStringRef) t_type_token.m_value,
+								   &t_type))
+					return MCStackdirIOErrorOutOfMemory (op);
+
+				t_have_type = true;
+				t_have_flags = true;
+				t_have_value = false;
+			}
+			else
+			{
+				MCStackdirIOTokenCopy (t_type_token, t_value_token);
+
+				t_have_type = false;
+				t_have_flags = false;
+				t_have_value = true;
+			}
+		}
 		break;
 	default:
 		t_have_type = false;
+		t_have_flags = true;
+		t_have_value = false;
 		break;
 	}
 
-	/* If it looks like there *might* be a type specifier, look for a
-	 * following value specifier. */
-	MCStackdirIOToken t_value_token;
-	MCNewAutoNameRef t_type;
-	if (t_have_type &&
-		MCStackdirIOScannerPeek (scanner, t_value_token,
-								 kMCStackdirIOTokenTypeSpace))
-	{
-		MCStackdirIOScannerConsume (scanner, t_value_token,
-									kMCStackdirIOTokenTypeSpace);
-		MCStackdirIOScannerConsume (scanner, t_value_token); /* value */
+	if (!t_have_type)
+		&t_type = MCValueRetain (kMCEmptyName);
 
-		if (!MCNameCreate ((MCStringRef) t_type_token.m_value, &t_type))
+	/* Check for flags */
+	MCStackdirIOToken t_flag_token;
+	MCAutoArrayRef t_flags;
+	if (t_have_flags &&
+		MCStackdirIOScannerPeek (scanner, t_flag_token,
+								 kMCStackdirIOTokenTypeFlag))
+	{
+		if (!MCArrayCreateMutable (&t_flags))
 			return MCStackdirIOErrorOutOfMemory (op);
+		t_have_flags = true;
 	}
 	else
 	{
-		t_have_type = false;
-		MCStackdirIOTokenCopy (t_type_token, t_value_token);
+		&t_flags = MCValueRetain (kMCEmptyArray);
+		t_have_flags = false;
+	}
 
-		/* No type spec, so just use an empty type */
-		&t_type = MCValueRetain (kMCEmptyName);
+	/* Consume flags in a loop */
+	index_t t_num_flags = 0;
+	while (t_have_flags &&
+		   MCStackdirIOScannerPeek (scanner, t_flag_token,
+									kMCStackdirIOTokenTypeFlag))
+	{
+		MCStackdirIOScannerConsume (scanner, t_flag_token);
+
+		/* The next tokens must be a string or unquoted string */
+		if (!MCStackdirIOScannerConsume (scanner, t_flag_token))
+			return MCStackdirIOLoadErrorPropertyFlagMissing (op,
+						kMCEmptyString, t_flag_token.m_line,
+						t_flag_token.m_column);
+
+		/* The flag name must be followed by a space character */
+		MCStackdirIOToken t_flag_sep_token;
+		if (!MCStackdirIOScannerConsume (scanner, t_flag_sep_token,
+										  kMCStackdirIOTokenTypeSpace))
+			return MCStackdirIOLoadErrorPropertyFlagSep (op,
+						kMCEmptyString, t_flag_token.m_line,
+						t_flag_token.m_column);
+
+		switch (t_flag_token.m_type)
+		{
+		case kMCStackdirIOTokenTypeString:
+		case kMCStackdirIOTokenTypeUnquotedString:
+			if (!MCArrayStoreValueAtIndex (*t_flags,
+										   ++t_num_flags,
+										   t_flag_token.m_value))
+				return MCStackdirIOErrorOutOfMemory (op);
+			break;
+		default:
+			return MCStackdirIOLoadErrorPropertyFlagType (op,
+						kMCEmptyString, t_flag_token.m_line,
+						t_flag_token.m_column);
+		}
+	}
+
+	/* Obtain the value specifier.  We may have read it earlier while
+	 * looking for the type. */
+	if (!t_have_value)
+	{
+		MCStackdirIOScannerConsume (scanner, t_value_token); /* value */
+		t_have_value = true;
 	}
 
 	/* Interpret the value */
@@ -620,7 +699,9 @@ MCStackdirIOLoadProperty (MCStackdirIORef op,
 	if (!MCNameCreate (*t_storage_spec, &t_key))
 		return MCStackdirIOErrorOutOfMemory (op);
 
-	if (MCNameIsEmpty (*t_type) && !MCValueIsArray (*t_value))
+	if (MCNameIsEmpty (*t_type) &&
+		MCArrayIsEmpty (*t_flags) &&
+		!MCValueIsArray (*t_value))
 	{
 		/* If there's no derived type involved, and the value *isn't*
 		 * an array, then just store the value directly in the state
@@ -643,14 +724,36 @@ MCStackdirIOLoadProperty (MCStackdirIORef op,
 			  MCArrayStoreValue (*t_literal_info,
 								 true,
 								 kMCStackdirLiteralKey,
-								 *t_value) &&
-			  MCArrayStoreValue (x_propset,
-								 true,
-								 *t_key,
-								 *t_literal_info)))
+								 *t_value)))
 			return MCStackdirIOErrorOutOfMemory (op);
+
+		index_t t_flag_index;
+		index_t t_num_flags = MCArrayGetCount (*t_flags);
+		for (t_flag_index = 1; t_flag_index <= t_num_flags; ++t_flag_index)
+		{
+			MCValueRef t_flag_string;
+			bool t_success;
+			t_success = MCArrayFetchValueAtIndex (*t_flags,
+												  t_flag_index,
+												  t_flag_string);
+			MCAssert (t_success); /* We just built this, it has to work! */
+
+			MCNewAutoNameRef t_flag_key;
+			if (!(MCNameCreate ((MCStringRef) t_flag_string, &t_flag_key) &&
+				  MCArrayStoreValue (*t_literal_info,
+									 true,
+									 *t_flag_key,
+									 kMCTrue)))
+				return MCStackdirIOErrorOutOfMemory (op);
+		}
+
+		if (!MCArrayStoreValue (x_propset,
+								true,
+								*t_key,
+								*t_literal_info))
+		return MCStackdirIOErrorOutOfMemory (op);
 	}
-	return true;
+return true;
 }
 
 static bool
