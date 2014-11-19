@@ -30,6 +30,9 @@ struct MCScriptModuleBuilder
     uindex_t current_param_count;
     uindex_t current_local_count;
     
+    uindex_t *current_handler_group;
+    uindex_t current_handler_group_size;
+    
     MCScriptBytecodeLabel *labels;
     uindex_t label_count;
     MCScriptBytecodeInstruction *instructions;
@@ -53,6 +56,9 @@ void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptMo
     self -> module . module_kind = p_kind;
     self -> module . name = MCValueRetain(p_name);
     self -> current_handler = UINDEX_MAX;
+    
+    self -> current_handler_group = nil;
+    self -> current_handler_group_size = 0;
     
     if (self -> valid)
         self -> valid = MCProperListCreateMutable(self -> definition_names);
@@ -313,6 +319,81 @@ void MCScriptAddEventToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, M
     
     t_definition -> kind = kMCScriptDefinitionKindEvent;
     t_definition -> signature = MCValueRetain(p_signature);
+}
+
+///////////
+
+void MCScriptBeginHandlerGroupInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (!MCMemoryResizeArray(0, self -> current_handler_group, self -> current_handler_group_size))
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptContinueHandlerGroupInModule(MCScriptModuleBuilderRef self, uindex_t index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    for(uindex_t i = 0; i < self -> current_handler_group_size; i++)
+        if (self -> current_handler_group[i] == index)
+            return;
+    
+    if (!MCMemoryResizeArray(self -> current_handler_group_size + 1, self -> current_handler_group, self -> current_handler_group_size))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    self -> current_handler_group[self -> current_handler_group_size - 1] = index;
+}
+
+void MCScriptEndHandlerGroupInModule(MCScriptModuleBuilderRef self, uindex_t& r_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    for(uindex_t i = 0; i < self -> module . definition_count; i++)
+    {
+        if (self -> module . definitions[i] -> kind != kMCScriptDefinitionKindHandlerGroup)
+            continue;
+        
+        MCScriptHandlerGroupDefinition *t_group;
+        t_group = (MCScriptHandlerGroupDefinition *)self -> module . definitions[i];
+        if (self -> current_handler_group_size != t_group -> handler_count)
+            continue;
+        
+        if (MCMemoryCompare(t_group -> handlers, self -> current_handler_group, sizeof(uindex_t) * self -> current_handler_group_size) != 0)
+            continue;
+        
+        r_index = i;
+        return;
+    }
+    
+    uindex_t t_index;
+    MCScriptAddDefinitionToModule(self, t_index);
+    if (!self -> valid)
+        return;
+    
+    if (!MCMemoryNew((MCScriptHandlerGroupDefinition *&)self -> module . definitions[t_index]))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    MCScriptHandlerGroupDefinition *t_group;
+    t_group = (MCScriptHandlerGroupDefinition *)self -> module . definitions[t_index];
+    
+    t_group -> handler_count = self -> current_handler_group_size;
+    t_group -> handlers = self -> current_handler_group;
+    
+    self -> current_handler_group_size = 0;
+    self -> current_handler_group = nil;
 }
 
 ///////////

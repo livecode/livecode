@@ -238,6 +238,10 @@ void MCScriptAddParameterToHandlerInModule(MCScriptModuleBuilderRef builder, MCN
 void MCScriptAddVariableToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef type, uindex_t& r_index);
 void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef builder);
 
+void MCScriptBeginHandlerGroupInModule(MCScriptModuleBuilderRef builder);
+void MCScriptAddHandlerToHandlerGroupInModule(MCScriptModuleBuilderRef builder, uindex_t index);
+void MCScriptEndHandlerGroupInModule(MCScriptModuleBuilderRef builder, uindex_t& r_index);
+
 void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, MCStringRef binding, uindex_t index);
 
 void MCScriptAddPropertyToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t getter, uindex_t setter, uindex_t index);
