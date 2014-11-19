@@ -570,7 +570,6 @@
 		7699BD471A1CD51A00636397 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
 		7699BD481A1CD51A00636397 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 766E32A1180EE5BC00CF7FCF /* libgraphics.a */; };
 		7699BD491A1CD51A00636397 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
-		7699BD4A1A1CD51A00636397 /* libkernel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DEE29F60FDE41BE0009423C /* libkernel.a */; };
 		7699BD4B1A1CD51A00636397 /* libsecurity-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D1F9C2E171C64320091C6CB /* libsecurity-community.a */; };
 		7699BD4C1A1CD51A00636397 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C797917134897000BCF78 /* libz.a */; };
 		7699BD4D1A1CD51A00636397 /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7981171348A6000BCF78 /* libpng.a */; };
@@ -854,6 +853,7 @@
 		76EF31AA181E803C00FAC195 /* sysosxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A9181E801800FAC195 /* sysosxrandom.cpp */; };
 		76EF32CC182268BF00FAC195 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32CA182268BC00FAC195 /* foundation-legacy.cpp */; };
 		76F0CCF418CA328300C01A67 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F0CC9018CA28E500C01A67 /* libskia.a */; };
+		76F1A3011A1CDCAA00A3DBB1 /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7699BE7F1A1CD72200636397 /* test.cpp */; };
 		76F717611811A2DE007301F6 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 766E32A1180EE5BC00CF7FCF /* libgraphics.a */; };
 		76FA930A17FC7301003DB770 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
 		A71F80540F4F178C003012FD /* Standalone.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80530F4F178C003012FD /* Standalone.icns */; };
@@ -1286,13 +1286,6 @@
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = libgraphics;
 		};
-		7699BD201A1CD51A00636397 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4D587D940B80944100200116 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 4DEE29F50FDE41BE0009423C;
-			remoteInfo = kernel;
-		};
 		7699BD221A1CD51A00636397 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D587D940B80944100200116 /* Project object */;
@@ -1404,6 +1397,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = libskia;
+		};
+		76F1A2FF1A1CDC9900A3DBB1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D587D940B80944100200116 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7699BD621A1CD51E00636397;
+			remoteInfo = "kernel-test";
 		};
 		BE0986A0194872D20065CEEA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -2487,7 +2487,6 @@
 				7699BD471A1CD51A00636397 /* libicuuc.a in Frameworks */,
 				7699BD481A1CD51A00636397 /* libgraphics.a in Frameworks */,
 				7699BD491A1CD51A00636397 /* libfoundation.a in Frameworks */,
-				7699BD4A1A1CD51A00636397 /* libkernel.a in Frameworks */,
 				7699BD4B1A1CD51A00636397 /* libsecurity-community.a in Frameworks */,
 				7699BD4C1A1CD51A00636397 /* libz.a in Frameworks */,
 				7699BD4D1A1CD51A00636397 /* libpng.a in Frameworks */,
@@ -4041,8 +4040,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				76F1A3001A1CDC9900A3DBB1 /* PBXTargetDependency */,
 				7699BE7B1A1CD5BE00636397 /* PBXTargetDependency */,
-				7699BD1F1A1CD51A00636397 /* PBXTargetDependency */,
 				7699BD211A1CD51A00636397 /* PBXTargetDependency */,
 				7699BD231A1CD51A00636397 /* PBXTargetDependency */,
 			);
@@ -5055,6 +5054,7 @@
 			files = (
 				7699BE811A1CD73700636397 /* mode_test.cpp in Sources */,
 				7699BD371A1CD51A00636397 /* lextable.cpp in Sources */,
+				76F1A3011A1CDCAA00A3DBB1 /* test.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5483,11 +5483,6 @@
 			name = libskia;
 			targetProxy = 72D60321184768580022379C /* PBXContainerItemProxy */;
 		};
-		7699BD1F1A1CD51A00636397 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 4DEE29F50FDE41BE0009423C /* kernel */;
-			targetProxy = 7699BD201A1CD51A00636397 /* PBXContainerItemProxy */;
-		};
 		7699BD211A1CD51A00636397 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4D1F9C2D171C64320091C6CB /* security-community */;
@@ -5562,6 +5557,11 @@
 			isa = PBXTargetDependency;
 			name = libgraphics;
 			targetProxy = 76EF3184181E708A00FAC195 /* PBXContainerItemProxy */;
+		};
+		76F1A3001A1CDC9900A3DBB1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7699BD621A1CD51E00636397 /* kernel-test */;
+			targetProxy = 76F1A2FF1A1CDC9900A3DBB1 /* PBXContainerItemProxy */;
 		};
 		BE0986A1194872D20065CEEA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -5833,6 +5833,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					MODE_TEST,
+					_TEST,
 				);
 				INFOPLIST_FILE = "Test-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
@@ -5850,6 +5851,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					MODE_TEST,
+					_TEST,
 				);
 				INFOPLIST_FILE = "Test-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
@@ -5864,6 +5866,12 @@
 		7699BE771A1CD51E00636397 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(GLOBAL_GCC_PREPROCESSOR_DEFINITIONS)",
+					_DEBUG,
+					MODE_TEST,
+					_TEST,
+				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = "kernel-test";
@@ -5873,6 +5881,13 @@
 		7699BE781A1CD51E00636397 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(GLOBAL_GCC_PREPROCESSOR_DEFINITIONS)",
+					_RELEASE,
+					NDEBUG,
+					MODE_TEST,
+					_TEST,
+				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = "kernel-test";

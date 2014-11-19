@@ -26,6 +26,7 @@
 #include "execpt.h"
 #include "dispatch.h"
 #include "mcio.h"
+#include "variable.h"
 
 #include "test.h"
 
@@ -106,7 +107,7 @@ void MCExecuteLowLevelTest(int p_index)
 
 struct MCHighLevelTest
 {
-    const char *filename;
+    MCStringRef filename;
 };
 
 static bool s_highlevel_tests_fetched = false;
@@ -137,22 +138,26 @@ static void MCEnsureHighLevelTests(void)
     
     s_highlevel_tests_fetched = true;
     
-    MCdefaultstackptr -> domess(s_fetch_highleveltest_script);
+    MCAutoStringRef t_message;
+    /* UNCHECKED */ MCStringCreateWithCString(s_fetch_highleveltest_script, &t_message);
+    MCdefaultstackptr -> domess(*t_message);
     
-    MCExecPoint ep;
+    MCValueRef t_value;
+    t_value = MCresult -> getvalueref();
     
-    MCVariableArray *t_array;
-    t_array = MCresult -> getvalue() . get_array();
+    if (MCValueGetTypeCode(t_value) != kMCValueTypeCodeArray ||
+        !MCArrayIsSequence((MCArrayRef)t_value))
+        return;
     
-    s_highlevel_test_count = t_array -> getnfilled();
+    s_highlevel_test_count = MCArrayGetCount((MCArrayRef)t_value);
     MCMemoryNewArray(s_highlevel_test_count, s_highlevel_tests);
     
-    for(int i = 0; i < s_highlevel_test_count; i++)
-    {
-        MCHashentry *t_entry;
-        t_entry = t_array -> lookupindex(i + 1, False);
-        s_highlevel_tests[i] . filename = t_entry -> value . get_string() . clone();
-    }
+    MCNameRef t_key;
+    MCValueRef t_test;
+    uintptr_t t_iterator = 0;
+    uindex_t i = 0;
+    while (MCArrayIterate((MCArrayRef)t_value, t_iterator, t_key, t_test))
+        s_highlevel_tests[i++] . filename = (MCStringRef)MCValueRetain(t_test);
 }
 
 int MCCountHighLevelTests(void)
@@ -164,7 +169,11 @@ int MCCountHighLevelTests(void)
 void MCExecuteHighLevelTest(int p_index)
 {
     MCStack *t_stack;
-    t_stack = MCdispatcher -> findstackname(s_highlevel_tests[p_index] . filename);
+    
+    MCNewAutoNameRef t_test_name;
+    MCNameCreate(s_highlevel_tests[p_index] . filename, &t_test_name);
+    
+    t_stack = MCdispatcher -> findstackname(*t_test_name);
     if (t_stack == nil)
     {
         MCTestLog("HighLevelTest:LoadFailure:%s", s_highlevel_tests[p_index] . filename);

@@ -63,7 +63,7 @@ public:
 	MCDispatch();
 	// virtual functions from MCObject
 	virtual ~MCDispatch();
-#ifdef _TEST
+#ifdef MODE_TEST
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 #endif
     

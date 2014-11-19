@@ -116,6 +116,31 @@ const char *MCparsingerrors = "";
 const char *MCexecutionerrors = "";
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+//  Property tables specific to TEST mode
+//
+
+MCObjectPropertyTable MCObject::kModePropertyTable =
+{
+    nil,
+    0,
+    nil,
+};
+
+MCObjectPropertyTable MCStack::kModePropertyTable =
+{
+    nil,
+    0,
+    nil,
+};
+
+MCPropertyTable MCProperty::kModePropertyTable =
+{
+    0,
+    nil,
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 class MCInternalTestCmd: public MCStatement
 {
@@ -151,9 +176,9 @@ public:
         if (t_status == PS_NORMAL && (sp . next(t_type) != PS_NORMAL || t_type != ST_ID))
             t_status = PS_ERROR;
         
-        if (t_status == PS_NORMAL && sp . gettoken() == "assert")
+        if (t_status == PS_NORMAL && MCStringIsEqualToCString(sp . gettoken_stringref(), "assert", kMCCompareCaseless))
             m_abort = false;
-        else if (t_status == PS_NORMAL && sp . gettoken() == "abort")
+        else if (t_status == PS_NORMAL && MCStringIsEqualToCString(sp . gettoken_stringref(), "abort", kMCCompareCaseless))
             m_abort = true;
         else
             t_status = PS_ERROR;
@@ -196,37 +221,26 @@ public:
         return t_status;
     }
     
-    Exec_stat exec(MCExecPoint& ep)
+    void exec_ctxt(MCExecContext& ctxt)
     {
-        if (m_label -> eval(ep) != ES_NORMAL)
-            return ES_ERROR;
-        
-        char *message;
-        message = ep . getsvalue() . clone();
+        MCAutoStringRef t_label;
+        if (!ctxt . EvalOptionalExprAsStringRef(m_label, kMCEmptyString, EE_PARAM_BADSOURCE, &t_label))
+            return;
         
         if (m_abort)
         {
-            MCTestDoAbort(message, MCdefaultstackptr -> getname_cstring(), line, true);
-            delete message;
-            return ES_NORMAL;
+            MCTestDoAbort(MCStringGetCString(*t_label), MCdefaultstackptr -> getname_cstring(), line, true);
+            return;
         }
-        
-        if (m_expr -> eval(ep) != ES_NORMAL)
-        {
-            delete message;
-            return ES_ERROR;
-        }
-        
         
         bool t_value;
-        t_value = (ep . getsvalue() != MCtruemcstring);
-        if (m_type == TYPE_FALSE)
-            MCTestDoAssertTrue(message, t_value, MCdefaultstackptr -> getname_cstring(), line, true);
-        else
-            MCTestDoAssertFalse(message, t_value, MCdefaultstackptr -> getname_cstring(), line, true);
+        if (!ctxt . EvalExprAsNonStrictBool(m_expr, EE_PARAM_BADEXP, t_value))
+            return;
         
-        delete message;
-        return ES_NORMAL;
+        if (m_type == TYPE_FALSE)
+            MCTestDoAssertTrue(MCStringGetCString(*t_label), t_value, MCdefaultstackptr -> getname_cstring(), line, true);
+        else
+            MCTestDoAssertFalse(MCStringGetCString(*t_label), t_value, MCdefaultstackptr -> getname_cstring(), line, true);
     }
     
 private:
@@ -279,14 +293,22 @@ void MCDispatch::timer(MCNameRef p_name, MCParameter *p_parameters)
 
 IO_stat MCDispatch::startup(void)
 {
-	startdir = MCS_getcurdir();
-	enginedir = strclone(MCcmd);
-	char *eptr = strrchr(enginedir, PATH_SEPARATOR);
-	if (eptr != NULL)
-		*eptr = '\0';
-	else
-		*enginedir = '\0';
-	char *openpath = MCcmd; //point to MCcmd string
+    MCAutoStringRef t_startdir;
+    MCS_getcurdir(&t_startdir);
+    
+    char *t_startdir_cstring, *t_mccmd;
+    /* UNCHECKED */ MCStringConvertToCString(*t_startdir, t_startdir_cstring);
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
+    startdir = t_startdir_cstring;
+    enginedir = t_mccmd;
+    
+    
+    char *eptr;
+    eptr = strrchr(enginedir, PATH_SEPARATOR);
+    if (eptr != NULL)
+        *eptr = '\0';
+    else
+        *enginedir = '\0';
 
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
@@ -308,8 +330,7 @@ IO_stat MCDispatch::startup(void)
     t_stack -> setparent(this);
     t_stack -> setfilename(MCcmd);
 	stacks = t_stack;
-    
-	MCcmd = openpath;
+
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
 
 	t_stack -> extraopen(false);
@@ -325,6 +346,7 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for TEST mode.
 //
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
@@ -334,6 +356,7 @@ Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, 
 {
 	return ES_NOT_HANDLED;
 }
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -351,11 +374,6 @@ void MCStack::mode_takewindow(MCStack *other)
 void MCStack::mode_takefocus(void)
 {
 	MCscreen->setinputfocus(window);
-}
-
-char *MCStack::mode_resolve_filename(const char *filename)
-{
-	return NULL;
 }
 
 bool MCStack::mode_needstoopen(void)
@@ -410,7 +428,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 //
 //  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
 //
-
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
@@ -430,7 +448,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of mode hooks for INSTALLER mode.
@@ -438,9 +456,9 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 
 // In standalone mode, the standalone stack built into the engine cannot
 // be saved.
-IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
+IO_stat MCModeCheckSaveStack(MCStack *stack, const MCStringRef p_filename)
 {
-	if (sptr == MCdispatcher -> getstacks())
+	if (stack == MCdispatcher -> getstacks())
 	{
 		MCresult->sets("can't save into test");
 		return IO_ERROR;
@@ -451,9 +469,9 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
 
 // In standalone mode, the environment depends on various command-line/runtime
 // globals.
-const char *MCModeGetEnvironment(void)
+MCNameRef MCModeGetEnvironment(void)
 {
-	return "installer";
+    return MCNAME("test");
 }
 
 uint32_t MCModeGetEnvironmentType(void)
@@ -481,13 +499,13 @@ bool MCModeShouldLoadStacksOnStartup(void)
 }
 
 // In standalone mode, we try to work out what went wrong...
-void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
+void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text)
 {
-	r_caption = "Initialization Error";
-	if (MCresult -> getvalue() . is_string())
-		r_text = MCresult -> getvalue() . get_string() . clone();
-	else
-		r_text = "unknown reason";
+    r_caption = MCSTR("Initialization Error");
+    if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+        r_text = MCValueRetain((MCStringRef)MCresult -> getvalueref());
+    else
+        r_text = MCSTR("unknown reason");
 }
 
 // In standalone mode, we can only set an object's script if has non-zero id.
@@ -503,7 +521,7 @@ bool MCModeShouldCheckCantStandalone(void)
 }
 
 // The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
+bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef)
 {
 	return false;
 }
@@ -582,16 +600,16 @@ Window MCModeGetParentWindow(void)
 	return t_window;
 }
 
-bool MCModeCanAccessDomain(const char *p_name)
+bool MCModeCanAccessDomain(MCStringRef p_name)
 {
-	return false;
+    return false;
 }
 
 void MCModeQueueEvents(void)
 {
 }
 
-Exec_stat MCModeExecuteScriptInBrowser(const MCString& script)
+Exec_stat MCModeExecuteScriptInBrowser(MCStringRef p_script)
 {
 	MCeerror -> add(EE_ENVDO_NOTSUPPORTED, 0, 0);
 	return ES_ERROR;
@@ -613,7 +631,7 @@ void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 		MCscreen -> clearIME(p_stack -> getwindow());
 }
 
-void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, const char *text_font, const char *message)
+void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message)
 {
 }
 
@@ -649,30 +667,30 @@ bool MCModeGetPixelScalingEnabled(void)
 //  Implementation of remote dialog methods
 //
 
-void MCRemoteFileDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char * const p_types[], uint32_t p_type_count, const char *p_initial_folder, const char *p_initial_file, bool p_save, bool p_files)
+void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value)
 {
 }
 
-void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue)
+void MCRemoteColorDialog(MCStringRef p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue, bool& r_chosen, MCColor& r_chosen_color)
 {
 }
 
-void MCRemoteFolderDialog(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial)
+void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value)
 {
 }
 
-void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePrintSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 
-void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size)
+void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, uint32_t &r_result)
 {
 }
 
 #ifdef _MACOSX
 uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, uint32_t p_index, MCStack *p_stack)
 {
-	return 0;
+    return 0;
 }
 #endif
 
