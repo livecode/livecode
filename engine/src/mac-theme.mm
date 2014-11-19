@@ -197,6 +197,8 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
         
         case kMCPlatformThemePropertyBorderColor:
         {
+            t_found = true;
+            t_color = [NSColor blackColor];
             break;
         }
             
@@ -214,6 +216,22 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
         {
             t_found = true;
             t_color = [NSColor keyboardFocusIndicatorColor];
+            break;
+        }
+            
+        case kMCPlatformThemePropertyTopEdgeColor:
+        case kMCPlatformThemePropertyLeftEdgeColor:
+        {
+            t_found = true;
+            t_color = [NSColor controlLightHighlightColor];
+            break;
+        }
+            
+        case kMCPlatformThemePropertyBottomEdgeColor:
+        case kMCPlatformThemePropertyRightEdgeColor:
+        {
+            t_found = true;
+            t_color = [NSColor controlShadowColor];
             break;
         }
             
