@@ -658,6 +658,7 @@ static bool MCPickleWriteValueRef(MCStreamRef stream, MCValueRef p_value)
     {
         case kMCValueTypeCodeNull:
             t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindNull);
+            break;
         case kMCValueTypeCodeBoolean:
             t_success = MCStreamWriteUInt8(stream, (MCBooleanRef)p_value == kMCTrue ? kMCEncodedValueKindTrue : kMCEncodedValueKindFalse);
             break;
