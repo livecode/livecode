@@ -73,7 +73,11 @@ CUSTOM_INCLUDES=\
 
 CUSTOM_CCFLAGS=\
 	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -fno-exceptions -fno-rtti -fno-strict-aliasing \
-	-fmessage-length=0 -march=i486
+	-fmessage-length=0
+
+ifeq ($(ARCH),i386)
+	CUSTOM_CCFLAGS+= -march=i486
+endif
 
 include/revbuild.h: include/revbuild.h.in ../version
 	../prebuilt/bin/Revolution.lnx "./encode_version.rev" "./"
