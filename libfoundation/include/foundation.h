@@ -1275,7 +1275,7 @@ struct MCRecordTypeFieldInfo
 bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
 
 // Return the base type of the record.
-MCTypeInfoRef MCRecordTypeGetBaseTypeInfo(MCTypeInfoRef typeinfo);
+MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef typeinfo);
 
 // Return the number of fields in the record.
 uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
@@ -1285,6 +1285,9 @@ MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef typeinfo, uindex_t index);
 
 // Return the type of the field at the given index.
 MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Return true if typeinfo is derived from p_base_typeinfo.
+bool MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef typeinfo, MCTypeInfoRef p_base_typeinfo);
 
 //////////
 
@@ -2197,6 +2200,12 @@ bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
 
 bool MCRecordMutableCopy(MCRecordRef record, MCRecordRef& r_new_record);
 bool MCRecordMutableCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
+
+bool MCRecordCopyAsBaseType(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
+bool MCRecordCopyAsBaseTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
+
+bool MCRecordCopyAsDerivedType(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
+bool MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
 
 bool MCRecordIsMutable(MCRecordRef self);
 
