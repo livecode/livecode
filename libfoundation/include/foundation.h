@@ -1267,6 +1267,9 @@ struct MCRecordTypeFieldInfo
 // Create a description of a record with the given fields.
 bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
 
+// Return the base type of the record.
+MCTypeInfoRef MCRecordTypeGetBaseTypeInfo(MCTypeInfoRef typeinfo);
+
 // Return the number of fields in the record.
 uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
 
