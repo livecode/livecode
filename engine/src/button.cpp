@@ -960,7 +960,7 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 		return True;
 	}
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
+		|| (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	Tool tool = getstack()->gettool(this);
 
@@ -1019,9 +1019,9 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 			        && (menumode != WM_TOP_LEVEL || getstyleint(flags) != F_MENU)
 			        && state & CS_MFOCUSED && !(state & CS_SELECTED))
 			{
-				if (MClook == LF_MOTIF || flags & F_SHOW_ICON
-				        || getstyleint(flags) != F_RADIO
-				        && getstyleint(flags) != F_CHECK)
+				if (MClook == LF_MOTIF || flags & F_SHOW_ICON ||
+					(getstyleint(flags) != F_RADIO &&
+					 getstyleint(flags) != F_CHECK))
 				{
 					if (MCU_point_in_rect(rect, x, y))
 					{
@@ -1231,10 +1231,12 @@ Boolean MCButton::mdown(uint2 which)
 				entry->mdown(which);
 			}
 			else
+			{
 				if (flags & F_AUTO_HILITE || family != 0)
-					if (MClook == LF_MOTIF || flags & F_SHOW_ICON
-					        || getstyleint(flags) != F_RADIO
-					        && getstyleint(flags) != F_CHECK)
+				{
+					if (MClook == LF_MOTIF || flags & F_SHOW_ICON ||
+						(getstyleint(flags) != F_RADIO &&
+						 getstyleint(flags) != F_CHECK))
 					{
 						if (getstyleint(flags) != F_RADIO || !(state & CS_HILITED))
 						{
@@ -1257,6 +1259,8 @@ Boolean MCButton::mdown(uint2 which)
 						// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 						layer_redrawall();
 					}
+				}
+			}
 			if ((!IsMacLF() || entry != NULL)
 			        && flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED))
 				getstack()->kfocusset(this);
@@ -1425,10 +1429,12 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 	if (state & CS_GRAB)
 	{
 		if (flags && F_AUTO_HILITE)
+		{
 			if (starthilite)
 				state &= ~CS_HILITED;
 			else
 				state |= CS_HILITED;
+		}
 		ungrab(which);
 		return True;
 	}
@@ -1472,16 +1478,18 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 					            || getstyleint(flags) == F_CHECK))
 					{
 						if (MCU_point_in_rect(rect, mx, my))
+						{
 							if (getstyleint(flags) == F_CHECK)
 								state ^= CS_HILITED;
 							else
 								state |= CS_HILITED;
+						}
 						// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 						layer_redrawall();
 					}
 					else
-						if (state & CS_HILITED && (flags & F_AUTO_HILITE || family != 0)
-						        || state & CS_ARMED && flags & F_AUTO_ARM)
+						if ((state & CS_HILITED && (flags & F_AUTO_HILITE || family != 0)) ||
+							(state & CS_ARMED && flags & F_AUTO_ARM))
 						{
 							if (getstyleint(flags) == F_CHECK)
 							{
@@ -1493,10 +1501,12 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 								if (getstyleint(flags) == F_RADIO)
 								{
 									if (flags & F_AUTO_ARM && flags & F_AUTO_HILITE)
+									{
 										if (state & CS_ARMED)
 											state |= CS_HILITED;
 										else
 											state &= ~CS_HILITED;
+									}
 								}
 								else
 									state &= ~CS_HILITED;
@@ -3505,7 +3515,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 		{
 			uint2 fheight;
 			fheight = gettextheight();
-			if ((!IsMacLFAM() || MCModeMakeLocalWindows()) && menumode == WM_COMBO || menumode == WM_OPTION && MClook == LF_WIN95)
+			if (((!IsMacLFAM() || MCModeMakeLocalWindows()) && menumode == WM_COMBO) || (menumode == WM_OPTION && MClook == LF_WIN95))
 			{
 				uindex_t nlines = 1;
 				//major menustring
@@ -3561,9 +3571,9 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 						MCStringRef t_tab;
 						t_tab = (MCStringRef)t_tabval;
-						if (MCStringGetCharAtIndex(t_tab, 0) == '!'
-						        || MCStringGetCharAtIndex(t_tab, 0) == '('
-								&& MCStringGetCharAtIndex(t_tab, 1) == '!')
+						if (MCStringGetCharAtIndex(t_tab, 0) == '!' ||
+							(MCStringGetCharAtIndex(t_tab, 0) == '(' &&
+							 MCStringGetCharAtIndex(t_tab, 1) == '!'))
 						{
 							menuflags &= ~F_STYLE;
 							menuflags |= F_CHECK;
@@ -3740,6 +3750,7 @@ void MCButton::freemenu(Boolean force)
 	macfreemenu();
 #endif
 	if (menu != NULL && !(state & CS_SUBMENU))
+	{
 		if (!MCNameIsEmpty(menuname))
 		{
 			menu->removeaccels(getstack());
@@ -3747,6 +3758,7 @@ void MCButton::freemenu(Boolean force)
 			menu = NULL;
 		}
 		else
+		{
 			if (!MCStringIsEmpty(menustring) || force)
 			{
 				closemenu(False, True);
@@ -3756,6 +3768,8 @@ void MCButton::freemenu(Boolean force)
 				delete menu;
 				menu = NULL;
 			}
+		}
+	}
 }
 
 void MCButton::docascade(MCStringRef p_pick)
@@ -4719,7 +4733,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		{
 			if (menumode != WM_CASCADE)
 				flags &= ~F_AUTO_ARM;
-			flags = flags & ~F_STYLE | F_MENU | F_OPAQUE;
+			flags = (flags & ~F_STYLE) | F_MENU | F_OPAQUE;
 		}
 		if (flags & F_AUTO_ARM)
 			flags |= F_OPAQUE | F_TRAVERSAL_ON;
