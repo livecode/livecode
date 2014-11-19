@@ -1182,6 +1182,9 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 				whichValue = INT_VALUE;
 				break;
 			case 's':
+                // AL-2014-10-30: [[ Bug 13876 ]] Use internal MCStringRef format specifier (%@) when %s is used
+                //  to preserve non-native chars in string.
+                dptr[-1] = '@';
 				break;
 			case 'e':
 			case 'E':
@@ -1225,11 +1228,30 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 					ctxt.LegacyThrow(EE_FORMAT_BADSOURCE, t_value);
 					return;
 				}
-
-                MCAutoStringRefAsCString t_cstring;
-                t_success = t_cstring . Lock(*t_string);
+                    
                 if (t_success)
-                    t_success = MCStringAppendFormat(*t_result, newFormat, *t_cstring);
+                {
+                    // AL-2014-10-30: If there is a width parameter, we need to jump through some hoops to make
+                    //  sure the correct result is returned for non-native strings - namely pad the string with enough
+                    //  spaces so that the result has the specified number of graphemes.
+                    if (width != 0)
+                    {
+                        uindex_t t_length = MCStringGetLength(*t_string);
+                        MCRange t_range;
+                        t_range = MCRangeMake(0, t_length);
+                        // Find the grapheme length of 
+                        MCStringUnmapGraphemeIndices(*t_string, kMCBasicLocale, t_range, t_range);
+                        
+                        // If the width sub-specifier is greater than the grapheme length of the string, then pad appropriately
+                        if (width > t_range . length)
+                            t_success = MCStringAppendFormat(*t_result, "%*s%@", width - t_range . length, "", *t_string);
+                        else
+                            t_success = MCStringAppendFormat(*t_result, "%@", *t_string);
+                    }
+                    else
+                        // AL-2014-10-30: [[ Bug 13876 ]] Don't convert to cstring for format
+                        t_success = MCStringAppendFormat(*t_result, newFormat, *t_string);
+                }
 				break;
 			}
 

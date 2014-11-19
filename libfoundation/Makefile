@@ -3,12 +3,28 @@ TYPE=archive
 
 include ../rules/environment.linux.makefile
 
-SOURCES=foundation-array.cpp foundation-core.cpp foundation-debug.cpp \
-	foundation-list.cpp foundation-name.cpp foundation-nativechars.cpp \
-        foundation-data.cpp foundation-number.cpp foundation-set.cpp \
-        foundation-stream.cpp foundation-string.cpp foundation-unicodechars.cpp \
-        foundation-value.cpp foundation-error.cpp foundation-unicode.cpp \
-	foundation-locale.cpp foundation-bidi.cpp foundation-text.cpp
+SOURCES= \
+	foundation-array.cpp \
+	foundation-bidi.cpp \
+	foundation-core.cpp \
+	foundation-data.cpp \
+	foundation-debug.cpp \
+	foundation-error.cpp \
+	foundation-handler.cpp \
+	foundation-list.cpp \
+	foundation-locale.cpp \
+	foundation-name.cpp \
+	foundation-nativechars.cpp \
+	foundation-number.cpp \
+	foundation-record.cpp \
+	foundation-set.cpp \
+	foundation-stream.cpp \
+	foundation-string.cpp \
+	foundation-text.cpp \
+	foundation-typeinfo.cpp \
+	foundation-unicodechars.cpp \
+	foundation-unicode.cpp \
+	foundation-value.cpp
 
 CUSTOM_DEFINES=
 

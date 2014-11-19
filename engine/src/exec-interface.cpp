@@ -1714,6 +1714,8 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
             MCStringCopySubstring(p_typing, MCRangeMake(i, 1), &t_char);
 			t_string = *t_char;
         }
+        // PM-2014-10-03: [[ Bug 13907 ]] Make sure we don't pass nil to kdown
+        t_string = (*t_char != nil ? *t_char : kMCEmptyString);
 		MCdefaultstackptr->kdown(t_string, keysym);
 		MCdefaultstackptr->kup(t_string, keysym);
 		nexttime += (real8)MCtyperate / 1000.0;

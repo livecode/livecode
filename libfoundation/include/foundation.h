@@ -290,7 +290,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__
 #define __LITTLE_ENDIAN__
 #define __X86_64__
-#define __HUGE__
+#define __MEDIUM__
 #elif defined(__arm__)
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
@@ -1340,7 +1340,10 @@ struct MCRecordTypeFieldInfo
 };
 
 // Create a description of a record with the given fields.
-bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
+bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
+
+// Return the base type of the record.
+MCTypeInfoRef MCRecordTypeGetBaseTypeInfo(MCTypeInfoRef typeinfo);
 
 // Return the base type of the record.
 MCTypeInfoRef MCRecordTypeGetBaseTypeInfo(MCTypeInfoRef typeinfo);
@@ -1372,7 +1375,9 @@ struct MCHandlerTypeFieldInfo
 };
 
 // Create a description of a handler with the given signature.
-bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, uindex_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
+// If field_count is negative, the fields array must be terminated by
+// an MCHandlerTypeFieldInfo where name is null.
+bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
 
 // Get the return type of the handler. A return-type of kMCNullTypeInfo means no
 // value is returned.
@@ -1938,6 +1943,7 @@ bool MCStringAppendChars(MCStringRef string, const unichar_t *chars, uindex_t co
 bool MCStringAppendNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
 bool MCStringAppendChar(MCStringRef string, unichar_t p_char);
 bool MCStringAppendNativeChar(MCStringRef string, char_t p_char);
+bool MCStringAppendCodepoint(MCStringRef string, codepoint_t p_codepoint);
 
 // Prepend prefix to string.
 //
@@ -1948,6 +1954,7 @@ bool MCStringPrependChars(MCStringRef string, const unichar_t *chars, uindex_t c
 bool MCStringPrependNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
 bool MCStringPrependChar(MCStringRef string, unichar_t p_char);
 bool MCStringPrependNativeChar(MCStringRef string, char_t p_char);
+bool MCStringPrependCodepoint(MCStringRef string, codepoint_t p_codepoint);
 
 // Insert new_string into string at offset 'at'.
 //
@@ -1958,6 +1965,7 @@ bool MCStringInsertChars(MCStringRef string, uindex_t at, const unichar_t *chars
 bool MCStringInsertNativeChars(MCStringRef string, uindex_t at, const char_t *chars, uindex_t count);
 bool MCStringInsertChar(MCStringRef string, uindex_t at, unichar_t p_char);
 bool MCStringInsertNativeChar(MCStringRef string, uindex_t at, char_t p_char);
+bool MCStringInsertCodepoint (MCStringRef string, uindex_t p_at, codepoint_t p_codepoint);
 
 // Remove 'range' characters from 'string'.
 //
@@ -2085,8 +2093,11 @@ bool MCDataPrependBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte
 bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
 
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
+bool MCDataInsertBytes(MCDataRef self, uindex_t p_at, const byte_t *p_bytes, uindex_t p_byte_count);
+
 bool MCDataRemove(MCDataRef r_data, MCRange p_range);
 bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
+bool MCDataReplaceBytes(MCDataRef r_data, MCRange p_range, const byte_t *p_new_data, uindex_t p_byte_count);
 
 bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
@@ -2273,7 +2284,7 @@ bool MCSetList(MCSetRef set, uindex_t*& r_element, uindex_t& r_element_count);
 
 bool MCRecordCreate(MCTypeInfoRef typeinfo, const MCValueRef *values, uindex_t value_count, MCRecordRef& r_record);
 
-bool MCRecordCreateMutable(MCRecordRef& r_record);
+bool MCRecordCreateMutable(MCTypeInfoRef p_typeinfo, MCRecordRef& r_record);
 
 bool MCRecordCopy(MCRecordRef record, MCRecordRef& r_new_record);
 bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);

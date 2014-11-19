@@ -242,14 +242,24 @@ struct __MCString: public __MCValue
 enum
 {
     // The data are mutable
-    kMCDataFlagIsMutable = 1,
+    kMCDataFlagIsMutable = 1 << 0,
+    // The data are indirect (i.e. contents is within another immutable data ref).
+    kMCDataFlagIsIndirect = 1 << 1,
 };
 
+// AL-2014-11-12: [[ Bug 13987 ]] Implement copy on write for MCDataRef
 struct __MCData: public __MCValue
 {
-	uindex_t byte_count;
-	byte_t *bytes;
-	uindex_t capacity;
+    union
+    {
+        MCDataRef contents;
+        struct
+        {
+            uindex_t byte_count;
+            byte_t *bytes;
+            uindex_t capacity;
+        };
+    };
 };
 
 //////////

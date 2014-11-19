@@ -2185,13 +2185,41 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 		setshift(p_style . text_shift);
 }
 
+// SN-2014-10-31: [[ Bug 13879 ]] Update the way the string is measured.
 uint32_t measure_stringref(MCStringRef p_string)
 {
-	if (MCStringIsNative(p_string))
-        return 2 + MCU_min(MCStringGetLength(p_string) + 1, MAXUINT2);
-    else
-        return 2 + MCU_min((MCStringGetLength(p_string) + 1) * sizeof(unichar_t), MAXUINT2);
+    MCStringEncoding t_encoding;
+    uint32_t t_additional_bytes = 0;
+    
 
+    if (MCstackfileversion < 7000)
+        t_encoding = kMCStringEncodingNative;
+    else
+        t_encoding = kMCStringEncodingUTF8;
+   
+    // Encode the string to get the right length
+    MCAutoDataRef t_data;
+    /* UNCHECKED */ MCStringEncode(p_string, t_encoding, false, &t_data);
+    uint32_t t_length;
+    t_length = MCDataGetLength(*t_data);
+    
+    if (MCstackfileversion < 7000)
+    {
+        // Full string is written in 5.5 format:
+        //  - length is written as a uint2
+        //  - NULL char is included
+        t_additional_bytes = 2 + 1;
+    }
+    else
+    {
+        // 7.0 format may write the length as a uint4
+        if (t_length < 16384)
+            t_additional_bytes = 2;
+        else
+            t_additional_bytes = 4;
+    }
+    
+    return t_length + t_additional_bytes;
 }
 
 // MW-2012-03-04: [[ StackFile5500 ]] Utility routine for computing the length of
