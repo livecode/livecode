@@ -28,6 +28,7 @@ typedef enum
 	kMCImageRepResident,
 	kMCImageRepVector,
 	kMCImageRepCompressed,
+	kMCImageRepPixelData,
 	
 	kMCImageRepResampled,
 } MCImageRepType;
@@ -398,6 +399,29 @@ protected:
 	uint32_t m_locked_source;
 	
 	MCStringRef m_filename;
+};
+
+class MCPixelDataImageRep : public MCLoadableImageRep
+{
+public:
+	MCPixelDataImageRep(MCDataRef p_data, uint32_t p_width, uint32_t p_height, MCGPixelFormat p_format, bool p_premultiplied);
+	~MCPixelDataImageRep();
+	
+	MCImageRepType GetType() { return kMCImageRepPixelData; }
+	uint32_t GetDataCompression();
+	uindex_t GetFrameCount();
+	
+protected:
+	bool LoadImageFrames(MCBitmapFrame* &r_frames, uindex_t &r_frame_count, bool &r_premultiplied);
+	bool CalculateGeometry(uint32_t &r_width, uint32_t &r_height);
+	
+	//////////
+	
+	MCDataRef m_pixel_data;
+	uint32_t m_pixel_width;
+	uint32_t m_pixel_height;
+	MCGPixelFormat m_pixel_format;
+	bool m_pixels_premultiplied;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

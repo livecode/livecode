@@ -498,6 +498,104 @@ void MCCachedImageRep::MoveRepToHead(MCCachedImageRep *p_rep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCPixelDataImageRep::MCPixelDataImageRep(MCDataRef p_data, uint32_t p_width, uint32_t p_height, MCGPixelFormat p_format, bool p_premultiplied)
+{
+	m_pixel_data = MCValueRetain(p_data);
+	m_pixel_width = p_width;
+	m_pixel_height = p_height;
+	m_pixel_format = p_format;
+	m_pixels_premultiplied = p_premultiplied;
+}
+
+MCPixelDataImageRep::~MCPixelDataImageRep()
+{
+	MCValueRelease(m_pixel_data);
+	m_pixel_data = nil;
+}
+
+uint32_t MCPixelDataImageRep::GetDataCompression()
+{
+	return F_RLE;
+}
+
+uindex_t MCPixelDataImageRep::GetFrameCount()
+{
+	return 1;
+}
+
+bool MCPixelDataImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_premultiplied)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCBitmapFrame *t_frames;
+	t_frames = nil;
+	
+	if (t_success)
+		t_success = MCMemoryNew(t_frames);
+	
+	if (t_success)
+		t_success = MCImageBitmapCreate(m_pixel_width, m_pixel_height, t_frames->image);
+	
+	if (t_success)
+	{
+		uint32_t t_pixel_count;
+		t_pixel_count = MCMin(MCDataGetLength(m_pixel_data) / sizeof(uint32_t), m_pixel_width * m_pixel_height);
+		
+//		uint32_t t_pixel_width;
+//		t_pixel_width = (t_pixel_count + m_pixel_height - 1) / m_pixel_height; // rounding up to nearest pixel
+		
+		uint32_t i = 0;
+		
+		uint32_t *t_src_ptr;
+		t_src_ptr = (uint32_t*)MCDataGetBytePtr(m_pixel_data);
+		
+		uint8_t *t_dst_ptr;
+		t_dst_ptr = (uint8_t*)t_frames->image->data;
+		for (uint32_t y = 0; y < m_pixel_height; y++)
+		{
+			uint32_t *t_dst_pixel;
+			t_dst_pixel = (uint32_t*)t_dst_ptr;
+			
+			for (uint32_t x = 0; x < m_pixel_width; x++)
+			{
+//				if (x < t_pixel_width && i < t_pixel_count)
+				if (i < t_pixel_count)
+					*t_dst_pixel++ = MCGPixelToNative(m_pixel_format, t_src_ptr[i++]);
+				else
+					*t_dst_pixel++ = MCGPixelPackNative(0, 0, 0, 1);
+			}
+			
+			t_dst_ptr += t_frames->image->stride;
+		}
+	}
+	
+	if (t_success)
+	{
+		t_frames->duration = 0;
+		t_frames->x_scale = 1.0;
+		t_frames->y_scale = 1.0;
+		
+		r_frames = t_frames;
+		r_frame_count = 1;
+		r_premultiplied = m_pixels_premultiplied;
+	}
+	else
+		MCImageFreeFrames(t_frames, 1);
+	
+	return t_success;
+}
+
+bool MCPixelDataImageRep::CalculateGeometry(uint32_t &r_width, uint32_t &r_height)
+{
+	r_width = m_pixel_width;
+	r_height = m_pixel_height;
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCImageRepCreateReferencedWithSearchKey(MCStringRef p_filename, MCStringRef p_searchkey, MCImageRep *&r_rep)
 {
 	bool t_success;
@@ -602,6 +700,24 @@ bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_hor
 	
 	return t_success;
 	
+}
+
+bool MCImageRepGetPixelRep(MCDataRef p_pixel_data, uint32_t p_width, uint32_t p_height, MCGPixelFormat p_format, bool p_premultiplied, MCImageRep *&r_rep)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCPixelDataImageRep *t_rep;
+	t_rep = new MCPixelDataImageRep(p_pixel_data, p_width, p_height, p_format, p_premultiplied);
+	
+	t_success = t_rep != nil;
+	if (t_success)
+	{
+		MCCachedImageRep::AddRep(t_rep);
+		r_rep = t_rep->Retain();
+	}
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -30,11 +30,15 @@ MCImageRep MCImageRepRetain(MCImageRep p_image_rep);
 void MCImageRepRelease(MCImageRep p_image_rep);
 bool MCImageRepCreateWithPath(MCStringRef p_path, MCImageRep &r_image_rep);
 bool MCImageRepCreateWithData(MCDataRef p_data, MCImageRep &r_image_rep);
-bool MCImageRepCreateWithPixels(uint32_t p_width, uint32_t p_height, MCDataRef p_pixels, MCImageRep &r_image_rep);
+bool MCImageRepCreateWithPixels(MCDataRef p_pixels, uint32_t p_width, uint32_t p_height, MCGPixelFormat p_format, bool p_premultiplied, MCImageRep &r_image_rep);
 bool MCImageRepGetGeometry(MCImageRep p_image_rep, uint32_t &r_width, uint32_t &r_height);
+bool MCImageRepGetFrameDuration(MCImageRep p_image_rep, uint32_t p_frame, uint32_t &r_duration);
 
-bool MCImageRepLockForTransform(MCImageRep p_image_rep, const MCGAffineTransform &p_transform, uint32_t p_frame, MCGImageRef &r_image, MCGSize &r_scale, uint32_t &r_duration);
-bool MCImageRepUnlock(MCImageRep p_image_rep, MCGImageRef p_image);
+bool MCImageRepLockForTransform(MCImageRep p_image_rep, const MCGAffineTransform &p_transform, uint32_t p_frame, MCGImageRef &r_image, MCGSize &r_scale);
+void MCImageRepUnlock(MCImageRep p_image_rep, MCGImageRef p_image);
+
+bool MCImageRepLockRasterForTransform(MCImageRep p_image_rep, const MCGAffineTransform &p_transform, uint32_t p_frame, MCGRaster &r_raster, MCGSize &r_scale);
+void MCImageRepUnlockRaster(MCImageRep p_image_rep, const MCGRaster &p_raster);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,6 +99,7 @@ typedef struct MCCanvasSolidPaintStruct : public MCCanvasPaintStruct
 
 void MCCanvasSolidPaintType_Copy(MCCanvasSolidPaint *p_src, MCCanvasSolidPaint *p_dst);
 void MCCanvasSolidPaintType_Finalize(MCCanvasSolidPaint *p_paint);
+bool MCCanvasSolidPaintType_TypeCheck(MCCanvasPaint *p_paint);
 
 // Pattern opaque type
 typedef struct MCCanvasPatternStruct : public MCCanvasPaintStruct
@@ -105,6 +110,7 @@ typedef struct MCCanvasPatternStruct : public MCCanvasPaintStruct
 
 void MCCanvasPatternType_Finalize(MCCanvasPattern *p_pattern);
 void MCCanvasPatternType_Copy(MCCanvasPattern *p_src, MCCanvasPattern *p_dst);
+bool MCCanvasPatternType_TypeCheck(MCCanvasPaint *p_paint);
 
 // Gradient Stop record type
 struct MCCanvasGradientStop
@@ -128,6 +134,7 @@ typedef struct MCCanvasGradientStruct : public MCCanvasPaintStruct
 
 void MCCanvasGradientType_Finalize(MCCanvasGradient *p_gradient);
 void MCCanvasGradientType_Copy(MCCanvasGradient *p_src, MCCanvasGradient *p_dst);
+bool MCCanvasGradientType_TypeCheck(MCCanvasPaint *p_paint);
 
 // Path opaque type
 struct MCCanvasPath
