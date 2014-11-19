@@ -186,6 +186,26 @@ MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef unresolved_self, uindex
 	return t_base_type -> record . fields[t_base_index] . type;
 }
 
+bool
+MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef unresolved_self,
+                              MCTypeInfoRef unresolved_other)
+{
+	MCTypeInfoRef self, other;
+	self = __MCTypeInfoResolve(unresolved_self);
+	other = __MCTypeInfoResolve(unresolved_other);
+
+	MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+	MCAssert((other -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+
+	MCTypeInfoRef t_base;
+	while (t_base != kMCNullTypeInfo)
+	{
+		if (t_base == other) return true;
+		t_base = MCRecordTypeInfoGetBaseType(t_base);
+	}
+	return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void

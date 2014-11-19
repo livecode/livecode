@@ -1279,6 +1279,9 @@ MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef typeinfo, uindex_t index);
 // Return the type of the field at the given index.
 MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef typeinfo, uindex_t index);
 
+// Return true if typeinfo is derived from p_base_typeinfo.
+bool MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef typeinfo, MCTypeInfoRef p_base_typeinfo);
+
 //////////
 
 // Handler types describe the signature of a function.
