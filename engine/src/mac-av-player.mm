@@ -841,6 +841,8 @@ void MCAVFoundationPlayer::Start(double rate)
                                                                        queue: nil usingBlock: ^(void) {
                                                                            [m_player pause];
                                                                            [m_player seekToTime: t_original_end_time toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+                                                                           // PM-2014-11-10: [[ Bug 13968 ]] Make sure we loop within start and finish time when playSelection is true 
+                                                                           MovieFinished();
                                                                        }];
     }
     

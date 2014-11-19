@@ -151,10 +151,6 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 {
 	Parse_stat stat;
 	Symbol_type type;
-
-	// MW-2013-11-08: [[ RefactorIt ]] Make sure 'it' is always defined as the first
-	//   local variable.
-	/* UNCHECKED */ newvar(MCN_it, kMCEmptyName, &m_it);
 	
 	firstline = sp.getline();
 	hlist = sp.gethlist();
@@ -204,6 +200,10 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				sp.backup();
 		}
 	}
+    
+    bool t_needs_it;
+    t_needs_it = true;
+    
 	while (sp.next(type) == PS_NORMAL)
 	{
 		if (type == ST_SEP)
@@ -220,9 +220,17 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 		}
 
 		if (newparam(sp) != PS_NORMAL)
-				return PS_ERROR;
-			}
+            return PS_ERROR;
+        
+        // AL-2014-11-04: [[ Bug 13902 ]] Check if the param we just created was called 'it'.
+        if (MCNameIsEqualTo(pinfo[npnames - 1] . name, MCN_it))
+            t_needs_it = false;
+    }
 		
+    // AL-2014-11-04: [[ Bug 13902 ]] Only define it as a var if it wasn't one of the parameter names.
+    if (t_needs_it)
+        /* UNCHECKED */ newvar(MCN_it, kMCEmptyName, &m_it);
+    
 	if (sp.skip_eol() != PS_NORMAL)
 	{
 		MCperror->add(PE_HANDLER_BADPARAMEOL, sp);
@@ -350,6 +358,12 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
                 
 				newparams[i]->give_value(ctxt, t_value);
 			}
+            
+            // AL-2014-11-04: [[ Bug 13902 ]] If 'it' was this parameter's name then create the MCVarref as a
+            //  param type, with this handler and param index, so that use of the get command syncs up correctly.
+            if (i < npnames && MCNameIsEqualTo(pinfo[i] . name, MCN_it))
+                m_it = new MCVarref(this, i, True);
+            
 			plist = plist->getnext();
 		}
 		else

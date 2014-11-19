@@ -564,7 +564,18 @@ static inline bool MCScriptIsLocalInFrameOptional(MCScriptFrame *p_frame, uindex
     /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> handler -> signature),
                                         "local out of range on optional check");
     
-    return false;
+    MCTypeInfoRef t_type;
+    uindex_t t_param_count;
+    t_param_count = MCHandlerTypeInfoGetParameterCount(p_frame -> handler -> signature);
+    if (p_local < t_param_count)
+        t_type = MCHandlerTypeInfoGetParameterType(p_frame -> handler -> signature, p_local);
+    else
+        t_type = p_frame -> handler -> locals[p_local - t_param_count];
+    
+    MCResolvedTypeInfo t_resolved_type;
+    /* RESOLVE UNCHECKED */ MCTypeInfoResolve(t_type, t_resolved_type);
+    
+    return t_resolved_type . is_optional;
 }
 
 static inline bool MCScriptCanLocalInFrameHoldValue(MCScriptFrame *p_frame, uindex_t p_local, MCValueRef p_value)

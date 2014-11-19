@@ -1284,7 +1284,8 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				t_success = copybitmap(false, t_copy);
+                // PM-2014-11-05: [[ Bug 13938 ]] Make sure new alphaData does not add to previous one
+				t_success = lockbitmap(t_copy, false);
 			}
 			else
 			{
@@ -1671,8 +1672,11 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	if (s_have_control_colors)
 	{
 		t_flags |= IMAGE_EXTRA_CONTROLCOLORS;
+        // increase t_length to accommodate s_control_color_count and s_control_color_flags
 		t_length += sizeof(uint16_t) + sizeof(uint16_t);
-		t_length += s_control_color_count * 3 * sizeof(uint16_t);
+        // increase t_length to accommodate the color
+        t_length += s_control_color_count * 3 * sizeof(uint16_t);
+        
 		for (uint16_t i = 0; i < s_control_color_count; i++)
 			if (s_control_color_names[i] != nil)
             {
@@ -1682,7 +1686,8 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
                 t_length += p_stream . MeasureStringRefNew(s_control_color_names[i], MCstackfileversion >= 7000);
             }
 			else
-				t_length += 1;
+                // AL-2014-11-07: [[ Bug 13851 ]] Measure empty string if the color name is nil
+                t_length += p_stream . MeasureStringRefNew(kMCEmptyString, MCstackfileversion >= 7000);
 	
 		t_length += sizeof(uint16_t);
 		t_length += s_control_pixmap_count * sizeof(uint4);
