@@ -89,6 +89,14 @@ bool MCTypeInfoBindAndRelease(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCType
 
 bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_base, MCTypeInfoRef& r_typeinfo)
 {
+	MCTypeInfoRef t_resolved_base;
+	t_resolved_base = nil;
+	if (p_base != nil)
+	{
+		t_resolved_base = __MCTypeInfoResolve(p_base);
+		MCAssert((t_resolved_base -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+	}
+
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
@@ -112,7 +120,7 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 		++i;
     }
     self -> record . field_count = p_field_count;
-    self -> record . base = MCValueRetain(p_base != nil ? p_base : kMCNullTypeInfo);
+    self -> record . base = MCValueRetain(t_resolved_base != nil ? t_resolved_base : kMCNullTypeInfo);
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
