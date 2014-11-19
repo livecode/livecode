@@ -84,8 +84,6 @@ void MCFinalize(void)
     __MCErrorFinalize();
 	__MCNameFinalize();
 	__MCStringFinalize();
-    __MCDataFinalize();
-    __MCNumberFinalize();
 	__MCValueFinalize();
     __MCUnicodeFinalize();
 }
