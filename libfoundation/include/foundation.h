@@ -1089,7 +1089,7 @@ struct MCValueCustomCallbacks
 };
 
 // Create a custom value with the given callbacks.
-bool MCValueCreateCustom(const MCValueCustomCallbacks *callbacks, size_t extra_bytes, MCValueRef& r_value);
+bool MCValueCreateCustom(MCTypeInfoRef typeinfo, size_t extra_bytes, MCValueRef& r_value);
 
 // Fetch the typecode of the given value.
 MCValueTypeCode MCValueGetTypeCode(MCValueRef value);
@@ -1099,9 +1099,6 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef value);
 
 // Fetch the retain count.
 uindex_t MCValueGetRetainCount(MCValueRef value);
-
-// Fetch the custom typecode (the callback ptr!).
-const MCValueCustomCallbacks *MCValueGetCallbacks(MCValueRef value);
 
 // This only works for custom valuerefs at the moment!
 bool MCValueIsMutable(MCValueRef value);
@@ -1208,10 +1205,10 @@ template<typename T> inline bool MCValueInterAndRelease(T value, T& r_value)
 	return false;
 }
 
-template<typename T> inline bool MCValueCreateCustom(const MCValueCustomCallbacks *p_callbacks, size_t p_extra_bytes, T& r_value)
+template<typename T> inline bool MCValueCreateCustom(MCTypeInfoRef type, size_t p_extra_bytes, T& r_value)
 {
 	MCValueRef t_value;
-	if (MCValueCreateCustom(p_callbacks, p_extra_bytes, t_value))
+	if (MCValueCreateCustom(type, p_extra_bytes, t_value))
 		return r_value = (T)t_value, true;
 	return false;
 }
@@ -1225,11 +1222,15 @@ template<typename T> inline bool MCValueCreateCustom(const MCValueCustomCallback
 // equality of typeinfo's defined by the typeinfo's kind. Once created, typeinfo's
 // are equal iff their pointers are equal. (Note equal is not the same as conformance!)
 
-// These are typeinfo's for all the 'builtin' valueref types.
+// The 'any' type is essentially a union of all typeinfos.
+extern MCTypeInfoRef kMCAnyTypeInfo;
+
+// These are typeinfos for all the 'builtin' valueref types.
 extern MCTypeInfoRef kMCNullTypeInfo;
 extern MCTypeInfoRef kMCBooleanTypeInfo;
 extern MCTypeInfoRef kMCNumberTypeInfo;
 extern MCTypeInfoRef kMCStringTypeInfo;
+extern MCTypeInfoRef kMCNameTypeInfo;
 extern MCTypeInfoRef kMCDataTypeInfo;
 extern MCTypeInfoRef kMCArrayTypeInfo;
 extern MCTypeInfoRef kMCSetTypeInfo;
@@ -1238,24 +1239,97 @@ extern MCTypeInfoRef kMCProperListTypeInfo;
 
 //////////
 
-// Return the typecode of a value of the given type.
-MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef type);
+// Returns true if the typeinfo is an alias.
+bool MCTypeInfoIsAlias(MCTypeInfoRef typeinfo);
 
-// Returns the name of the type, if it has one.
-MCNameRef MCTypeInfoGetName(MCTypeInfoRef type);
+// Returns true if the typeinfo is a name.
+bool MCTypeInfoIsNamed(MCTypeInfoRef typeinfo);
 
-// Returns true if the type is optional.
-bool MCTypeInfoIsOptional(MCTypeInfoRef type);
+// Returns true if the typeinfo is an optional typeinfo.
+bool MCTypeInfoIsOptional(MCTypeInfoRef typeinfo);
+
+// Returns true if the typeinfo is of record type.
+bool MCTypeInfoIsRecord(MCTypeInfoRef typeinfo);
+
+// Returns true if the typeinfo is of handler type.
+bool MCTypeInfoIsHandler(MCTypeInfoRef typeinfo);
+
+// Returns true if the typeinfo is of error type.
+bool MCTypeInfoIsError(MCTypeInfoRef typeinfo);
+
+// Typeinfo's form a chain with elements in the chain potentially providing critical
+// information about the specified type. This structure describes the represented
+// type, after a typeinfo chain has been suitably processed.
+struct MCResolvedTypeInfo
+{
+    bool is_optional : 1;
+    MCTypeInfoRef named_type;
+    MCTypeInfoRef type;
+};
+
+// Resolves the given typeinfo to the base typeinfo (either a bound named typeinfo,
+// or an anonymous non-meta typeinfo) if possible, and indicates if it is optional.
+bool MCTypeInfoResolve(MCTypeInfoRef typeinfo, MCResolvedTypeInfo& r_resolution);
 
 // Returns true if the source typeinfo can be assigned to a slot with the target
 // typeinfo with no typecheck or conversion.
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
 
-// Binds the given typeinfo to the given name (creating a named typeinfo). A bound
-// typeinfo acts like its target apart from the non-nil return from GetName. Bindings
-// never chain - a typeinfo is either a named binding, or an actual typeinfo.
-bool MCTypeInfoBind(MCNameRef name, MCTypeInfoRef typeinfo, MCTypeInfoRef& r_typeinfo);
-bool MCTypeInfoBindAndRelease(MCNameRef name, MCTypeInfoRef typeinfo, MCTypeInfoRef& r_typeinfo);
+//////////
+
+// Creates a typeinfo for one of the builtin typecodes.
+bool MCBuiltinTypeInfoCreate(MCValueTypeCode typecode, MCTypeInfoRef& r_target);
+
+//////////
+
+// Creates a type which is alias for another type.
+bool MCAliasTypeInfoCreate(MCNameRef name, MCTypeInfoRef target, MCTypeInfoRef& r_alias_typeinfo);
+
+// Returnts the name of the alias.
+MCNameRef MCAliasTypeInfoGetName(MCTypeInfoRef typeinfo);
+
+// Returns the target typeinfo.
+MCTypeInfoRef MCAliasTypeInfoGetTarget(MCTypeInfoRef typeinfo);
+
+//////////
+
+// Creates a type which refers to a named type. Named types are resolved by binding
+// them to another type. It is an error to bind a bound named type, and an
+// error to attempt to resolve an unbound named type.
+bool MCNamedTypeInfoCreate(MCNameRef name, MCTypeInfoRef& r_named_typeinfo);
+
+// Returns true if the given named type is bound.
+bool MCNamedTypeInfoIsBound(MCTypeInfoRef typeinfo);
+
+// Returns the bound typeinfo, or nil if the type is unbound.
+MCTypeInfoRef MCNamedTypeInfoGetBoundTypeInfo(MCTypeInfoRef typeinfo);
+
+// Bind the given named type to the target type. The bound_type cannot be a named
+// type.
+bool MCNamedTypeInfoBind(MCTypeInfoRef typeinfo, MCTypeInfoRef bound_type);
+
+// Unbind the given named type.
+bool MCNamedTypeInfoUnbind(MCTypeInfoRef typeinfo);
+
+// Resolve the given named type to its underlying type.
+bool MCNamedTypeInfoResolve(MCTypeInfoRef typeinfo, MCTypeInfoRef& r_bound_type);
+
+//////////
+
+// Creates an optional type. It is not allowed to create an optional type of an
+// optional type. (Note optional named types are allowed, even if the named type
+// is optional).
+bool MCOptionalTypeInfoCreate(MCTypeInfoRef base, MCTypeInfoRef& r_optional_typeinfo);
+
+// Returns the base type of the given optional type.
+MCTypeInfoRef MCOptionalTypeInfoGetBaseTypeInfo(MCTypeInfoRef typeinfo);
+
+//////////
+
+// Create a typeinfo describing a custom typeinfo.
+bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *callbacks, MCTypeInfoRef& r_typeinfo);
+
+const MCValueCustomCallbacks *MCCustomTypeInfoGetCallbacks(MCTypeInfoRef typeinfo);
 
 //////////
 

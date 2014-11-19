@@ -50,6 +50,14 @@ struct __MCValue
 enum
 {
     kMCTypeInfoTypeCodeMask = 0xff,
+    
+    // We use typecodes well above the fixed ones we have to
+    // indicate 'special' typeinfo (i.e. those with no real
+    // valueref type underneath).
+    kMCTypeInfoTypeIsAny = 255,
+    kMCTypeInfoTypeIsNamed = 254,
+    kMCTypeInfoTypeIsAlias = 253,
+    kMCTypeInfoTypeIsOptional = 252,
 };
 
 struct __MCTypeInfo: public __MCValue
@@ -60,7 +68,11 @@ struct __MCTypeInfo: public __MCValue
         {
             MCNameRef name;
             MCTypeInfoRef typeinfo;
-        } named;
+        } named, alias;
+        struct
+        {
+            MCTypeInfoRef basetype;
+        } optional;
         struct
         {
             MCRecordTypeFieldInfo *fields;
@@ -78,6 +90,10 @@ struct __MCTypeInfo: public __MCValue
             MCNameRef domain;
             MCStringRef message;
         } error;
+        struct
+        {
+            MCValueCustomCallbacks callbacks;
+        } custom;
     };
 };
 
@@ -363,7 +379,7 @@ struct __MCError: public __MCValue
 
 struct __MCCustomValue: public __MCValue
 {
-	const MCValueCustomCallbacks *callbacks;
+    MCTypeInfoRef typeinfo;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -482,6 +498,9 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self);
 bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self);
 bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description);
 MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
+
+bool __MCStreamInitialize(void);
+void __MCStreamFinalize(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

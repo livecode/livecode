@@ -71,11 +71,15 @@ bool MCInitialize(void)
     if (!__MCProperListInitialize())
         return false;
     
+    if (!__MCStreamInitialize())
+        return false;
+    
 	return true;
 }
 
 void MCFinalize(void)
 {
+    __MCStreamFinalize();
     __MCProperListFinalize();
 	__MCLocaleFinalize();
     __MCRecordFinalize();
