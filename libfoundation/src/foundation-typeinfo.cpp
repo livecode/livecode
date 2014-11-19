@@ -407,8 +407,8 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
 	uindex_t i;
 	i = 0;
 	/* If the p_field_count < 0 then the p_fields are expected to be
-	 * terminated by a custodian with name = nil. */
-	while ((p_field_count >= 0) ? (i < p_field_count) : p_fields[i].name != nil)
+	 * terminated by a custodian with type = nil. */
+	while ((p_field_count >= 0) ? (i < p_field_count) : p_fields[i].type != nil)
     {
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
