@@ -950,9 +950,15 @@ void MCBlock::split(findex_t p_index)
 void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cell_right, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style)
 {
 	// MW-2012-02-16: [[ FontRefs ]] Fetch the font metrics we need to draw.
-	int32_t t_ascent, t_descent;
+	coord_t t_ascent, t_descent, t_leading, t_xheight;
 	t_ascent = MCFontGetAscent(m_font);
 	t_descent = MCFontGetDescent(m_font);
+    t_leading = MCFontGetLeading(m_font);
+    t_xheight = MCFontGetXHeight(m_font);
+    
+    // Width for strike-through/underline lines. Factor is arbitrary...
+    coord_t t_strikewidth;
+    t_strikewidth = ceilf(MCFontGetAscent(m_font)/16);
 	
 	// MW-2012-01-25: [[ ParaStyles ]] Fetch the vGrid setting from the owning paragraph.
 	if (parent -> getvgrid())
@@ -1011,9 +1017,17 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 			if (t_next_index - t_index > 0)
 			{
 				if ((style & FA_UNDERLINE) != 0)
-					dc -> drawline(x, y + 1, x + t_width, y + 1);
+                {
+                    MCRectangle t_underlinerect;
+                    t_underlinerect = MCU_make_rect(x, y + t_strikewidth, t_width, t_strikewidth);
+                    dc -> fillrect(t_underlinerect);
+                }
 				if ((style & FA_STRIKEOUT) != 0)
-					dc -> drawline(x, y - (t_ascent >> 1), x + t_width, y - (t_ascent >> 1));
+                {
+                    MCRectangle t_strikerect;
+                    t_strikerect = MCU_make_rect(x, y - (t_xheight / 2) - (t_strikewidth / 2), t_width, t_strikewidth);
+                    dc -> fillrect(t_strikerect);
+                }
 				if ((style & FA_BOX) != 0)
 				{
 					// MW-2012-09-04: [[ Bug 9759 ]] Adjust any pattern origin to scroll with text.
@@ -1111,9 +1125,17 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 
 		// Apply strike/underline.
 		if ((style & FA_UNDERLINE) != 0)
-			dc -> drawline(t_line_x, y + 1, t_line_x + t_line_width, y + 1);
+        {
+            MCRectangle t_underlinerect;
+            t_underlinerect = MCU_make_rect(t_line_x, y + t_strikewidth, t_line_width, t_strikewidth);
+            dc -> fillrect(t_underlinerect);
+        }
 		if ((style & FA_STRIKEOUT) != 0)
-			dc -> drawline(t_line_x, y - (t_ascent >> 1), t_line_x + t_line_width, y - (t_ascent >> 1));		
+        {
+            MCRectangle t_strikerect;
+            t_strikerect = MCU_make_rect(t_line_x, y - (t_xheight / 2) - (t_strikewidth / 2), t_line_width, t_strikewidth);
+            dc -> fillrect(t_strikerect);
+        }
 	}
 }
 
@@ -1889,7 +1911,7 @@ uint2 MCBlock::getascent(void)
 	if (flags & F_HAS_IMAGE && atts->image != NULL)
 		return MCU_max(0, atts->image->getrect().height - shift + 2);
 	else
-		return MCU_max(0, heightfromsize(MCFontGetAscent(m_font)) - MCFontGetDescent(m_font) - shift);
+		return MCU_max(0, heightfromsize(ceilf(MCFontGetAscent(m_font))) - uint2(ceilf(MCFontGetDescent(m_font))) - shift);
 }
 
 uint2 MCBlock::getdescent(void)
@@ -1898,7 +1920,35 @@ uint2 MCBlock::getdescent(void)
 	if (flags & F_HAS_IMAGE && atts->image != NULL)
 		return MCU_max(0, shift);
 	else
-		return MCU_max(0, MCFontGetDescent(m_font) + shift);
+		return MCU_max(0, uint2(ceilf(MCFontGetDescent(m_font))) + shift);
+}
+
+coord_t MCBlock::GetAscent() const
+{
+   	int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    // MW-2007-07-05: [[ Bug 1943 ]] - Images do not have correct ascent height *MIGHT NEED REVERSION*
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return MCU_max(0, atts->image->getrect().height - shift + 2);
+    else
+        return MCU_max(0.0f, MCFontGetAscent(m_font) - shift);
+}
+
+coord_t MCBlock::GetDescent() const
+{
+    int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return MCU_max(0, shift);
+    else
+        return MCU_max(0.0f, MCFontGetDescent(m_font) + shift);
+}
+
+coord_t MCBlock::GetLeading() const
+{
+    int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+    if (flags & F_HAS_IMAGE && atts->image != NULL)
+        return GetAscent()+GetDescent();
+    else
+        return MCFontGetLeading(m_font);
 }
 
 void MCBlock::freeatts()

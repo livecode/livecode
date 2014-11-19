@@ -1722,6 +1722,25 @@
 		768D66A41762087500F203A3 /* mbliphonetextmessaging.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextmessaging.mm; path = src/mbliphonetextmessaging.mm; sourceTree = "<group>"; };
 		7269EC371A13D1DE000723DB /* linux-theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "linux-theme.cpp"; path = "src/linux-theme.cpp"; sourceTree = "<group>"; };
 		7269EC421A162199000723DB /* windows-theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "windows-theme.cpp"; path = "src/windows-theme.cpp"; sourceTree = "<group>"; };
+		7269EC5F1A1CE64C000723DB /* mblandroidnotification.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidnotification.cpp; path = src/mblandroidnotification.cpp; sourceTree = "<group>"; };
+		7269EC601A1CE64C000723DB /* mblandroidplayer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidplayer.cpp; path = src/mblandroidplayer.cpp; sourceTree = "<group>"; };
+		7269EC611A1CE64C000723DB /* mblandroidscroller.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidscroller.cpp; path = src/mblandroidscroller.cpp; sourceTree = "<group>"; };
+		7269EC621A1CE64C000723DB /* mblandroidsensor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsensor.cpp; path = src/mblandroidsensor.cpp; sourceTree = "<group>"; };
+		7269EC631A1CE64C000723DB /* mblandroidsound.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsound.cpp; path = src/mblandroidsound.cpp; sourceTree = "<group>"; };
+		7269EC641A1CE64C000723DB /* mblandroidstore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidstore.cpp; path = src/mblandroidstore.cpp; sourceTree = "<group>"; };
+		7269EC651A1CE64C000723DB /* mblandroidtextmessaging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextmessaging.cpp; path = src/mblandroidtextmessaging.cpp; sourceTree = "<group>"; };
+		7269EC661A1CE64C000723DB /* mblandroidtypeface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtypeface.cpp; path = src/mblandroidtypeface.cpp; sourceTree = "<group>"; };
+		7269EC671A1CE64C000723DB /* mblandroidtypeface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = mblandroidtypeface.h; path = src/mblandroidtypeface.h; sourceTree = "<group>"; };
+		7269EC681A1CE684000723DB /* mblandroidad.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidad.cpp; path = src/mblandroidad.cpp; sourceTree = "<group>"; };
+		7269EC691A1CE684000723DB /* mblandroidalert.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidalert.cpp; path = src/mblandroidalert.cpp; sourceTree = "<group>"; };
+		7269EC6A1A1CE684000723DB /* mblandroidbrowser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbrowser.cpp; path = src/mblandroidbrowser.cpp; sourceTree = "<group>"; };
+		7269EC6B1A1CE684000723DB /* mblandroidbusyindicator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbusyindicator.cpp; path = src/mblandroidbusyindicator.cpp; sourceTree = "<group>"; };
+		7269EC6C1A1CE684000723DB /* mblandroidcalendar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcalendar.cpp; path = src/mblandroidcalendar.cpp; sourceTree = "<group>"; };
+		7269EC6D1A1CE684000723DB /* mblandroidcontact.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontact.cpp; path = src/mblandroidcontact.cpp; sourceTree = "<group>"; };
+		7269EC6E1A1CE684000723DB /* mblandroidcontrol.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontrol.cpp; path = src/mblandroidcontrol.cpp; sourceTree = "<group>"; };
+		7269EC6F1A1CE684000723DB /* mblandroidcontrol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = mblandroidcontrol.h; path = src/mblandroidcontrol.h; sourceTree = "<group>"; };
+		7269EC701A1CE684000723DB /* mblandroidfont.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidfont.cpp; path = src/mblandroidfont.cpp; sourceTree = "<group>"; };
+		7269EC711A1CE684000723DB /* mblandroidinput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidinput.cpp; path = src/mblandroidinput.cpp; sourceTree = "<group>"; };
 		72B67C501A0BBDF600BB2594 /* mac-theme.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-theme.mm"; path = "src/mac-theme.mm"; sourceTree = "<group>"; };
 		76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-recorder.mm"; path = "src/mac-qt-recorder.mm"; sourceTree = "<group>"; };
 		76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-recorder.cpp"; path = "src/platform-recorder.cpp"; sourceTree = "<group>"; };
@@ -2525,6 +2544,25 @@
 				768D668E176207CB00F203A3 /* mblandroidstore.cpp */,
 				768D668F176207CB00F203A3 /* mblandroidtextmessaging.cpp */,
 				4DD54D15134F591500981610 /* com */,
+				7269EC681A1CE684000723DB /* mblandroidad.cpp */,
+				7269EC691A1CE684000723DB /* mblandroidalert.cpp */,
+				7269EC6A1A1CE684000723DB /* mblandroidbrowser.cpp */,
+				7269EC6B1A1CE684000723DB /* mblandroidbusyindicator.cpp */,
+				7269EC6C1A1CE684000723DB /* mblandroidcalendar.cpp */,
+				7269EC6D1A1CE684000723DB /* mblandroidcontact.cpp */,
+				7269EC6E1A1CE684000723DB /* mblandroidcontrol.cpp */,
+				7269EC6F1A1CE684000723DB /* mblandroidcontrol.h */,
+				7269EC701A1CE684000723DB /* mblandroidfont.cpp */,
+				7269EC711A1CE684000723DB /* mblandroidinput.cpp */,
+				7269EC5F1A1CE64C000723DB /* mblandroidnotification.cpp */,
+				7269EC601A1CE64C000723DB /* mblandroidplayer.cpp */,
+				7269EC611A1CE64C000723DB /* mblandroidscroller.cpp */,
+				7269EC621A1CE64C000723DB /* mblandroidsensor.cpp */,
+				7269EC631A1CE64C000723DB /* mblandroidsound.cpp */,
+				7269EC641A1CE64C000723DB /* mblandroidstore.cpp */,
+				7269EC651A1CE64C000723DB /* mblandroidtextmessaging.cpp */,
+				7269EC661A1CE64C000723DB /* mblandroidtypeface.cpp */,
+				7269EC671A1CE64C000723DB /* mblandroidtypeface.h */,
 				4DD54D20134F591500981610 /* mblandroid.java */,
 				4DD54D21134F591500981610 /* mblandroid.cpp */,
 				4DD54D22134F591500981610 /* mblandroid.h */,

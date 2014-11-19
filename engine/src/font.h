@@ -50,8 +50,10 @@ void MCFontRelease(MCFontRef font);
 
 bool MCFontHasPrinterMetrics(MCFontRef font);
 
-int32_t MCFontGetAscent(MCFontRef font);
-int32_t MCFontGetDescent(MCFontRef font);
+coord_t MCFontGetAscent(MCFontRef font);
+coord_t MCFontGetDescent(MCFontRef font);
+coord_t MCFontGetLeading(MCFontRef font);
+coord_t MCFontGetXHeight(MCFontRef font);
 
 typedef void (*MCFontBreakTextCallback)(MCFontRef font, MCStringRef p_text, MCRange p_range, void *ctxt);
 void MCFontBreakText(MCFontRef font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback callback, void *callback_data, bool p_rtl);
@@ -60,6 +62,7 @@ void MCFontBreakText(MCFontRef font, MCStringRef p_text, MCRange p_range, MCFont
 //   the field to calculate accumulated width of text in blocks.
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform);
+MCGFloat MCFontMeasureTextFloat(MCFontRef font, MCStringRef p_text, const MCGAffineTransform &p_transform);
 int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform);
 int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text, const MCGAffineTransform &p_transform);
 

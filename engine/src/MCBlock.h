@@ -171,6 +171,9 @@ public:
 	void reset();
 	uint2 getascent(void);
 	uint2 getdescent(void);
+    coord_t GetAscent() const;
+    coord_t GetDescent() const;
+    coord_t GetLeading() const;
 	void freeatts();
 	void freerefs();
 	void openimage();

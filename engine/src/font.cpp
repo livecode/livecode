@@ -219,22 +219,38 @@ bool MCFontHasPrinterMetrics(MCFontRef self)
 	return (self -> style & kMCFontStylePrinterMetrics) != 0;
 }
 
-int32_t MCFontGetAscent(MCFontRef self)
+coord_t MCFontGetAscent(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (self -> fontstruct == nil)
 		return 0;
 	
-	return self -> fontstruct -> ascent;
+	return self -> fontstruct -> m_ascent;
 }
 
-int32_t MCFontGetDescent(MCFontRef self)
+coord_t MCFontGetDescent(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (self -> fontstruct == nil)
 		return 0;
 	
-	return self -> fontstruct -> descent;
+	return self -> fontstruct -> m_descent;
+}
+
+coord_t MCFontGetLeading(MCFontRef self)
+{
+    if (self -> fontstruct == nil)
+        return 0;
+    
+    return self -> fontstruct -> m_leading;
+}
+
+coord_t MCFontGetXHeight(MCFontRef self)
+{
+    if (self -> fontstruct == nil)
+        return 0;
+    
+    return self -> fontstruct -> m_xheight;
 }
 
 void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback p_callback, void *p_callback_data, bool p_rtl)
@@ -435,6 +451,12 @@ int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text, const MCGAffineT
 {
 	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
     return MCFontMeasureTextSubstring(p_font, p_text, t_range, p_transform);
+}
+
+MCGFloat MCFontMeasureTextFloat(MCFontRef p_font, MCStringRef p_text, const MCGAffineTransform &p_transform)
+{
+    MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
+    return MCFontMeasureTextSubstringFloat(p_font, p_text, t_range, p_transform);
 }
 
 MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef p_font, MCStringRef p_string, MCRange p_range, const MCGAffineTransform &p_transform)

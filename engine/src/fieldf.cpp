@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "mctheme.h"
 #include "redraw.h"
+#include "line.h"
 
 #include "context.h"
 
@@ -1024,10 +1025,46 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 			d = fixedd;
 		}
 
+        // Calculate the total heights of all paragraphs for vertical centring
+        // purposes (this is currently only for combo box entry fields)
+        if (parent && parent->gettype() == CT_BUTTON)
+        {
+            coord_t t_totalpgheight;
+            t_totalpgheight = 0.0f;
+            MCParagraph* t_pg = pgptr;
+            do
+            {
+                t_totalpgheight += pgptr->getheight(fixedheight);
+                t_pg = t_pg->next();
+            }
+            while (t_pg != paragraphs);
+            
+            // Single-line fields look better when centred slightly differently
+            bool t_single_line;
+            t_single_line = paragraphs->next() == paragraphs && t_pg->getlines()->next() == t_pg->getlines();
+            if (t_single_line)
+            {
+                t_totalpgheight -= paragraphs->getlines()->GetLeading();
+            }
+            
+            // Adjust the drawing y coordinate to account for centring
+            if (t_totalpgheight < getfheight())
+            {
+                // Amount of unused space in the field
+                coord_t t_spare;
+                t_spare = getfheight() - t_totalpgheight;
+
+                if (t_single_line)
+                    y += t_spare/2 + (paragraphs->getlines()->GetAscent() - paragraphs->getlines()->GetDescent())/4;
+                else
+                    y += t_spare/2;
+            }
+        }
+        
 		int32_t pgheight;
 		do
 		{
-			pgheight = pgptr->getheight(fixedheight);
+            pgheight = pgptr->getheight(fixedheight);
 			
 			// MW-2012-03-15: [[ Bug 10069 ]] A paragraph might render a grid line above or below
 			//   so make sure we render paragraphs above and below the apparant limits.

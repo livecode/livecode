@@ -269,6 +269,9 @@ extern void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize,
 
 #endif
 
+// VS before 2013 doesn't provide this function
+inline float roundf(float f) { return f >= 0.0f ? floorf(f + 0.5f) : ceilf(f - 0.5f); }
+
 // MW-2010-10-14: This constant is the amount of 'extra' stack space ensured to be present
 //   after a recursionlimit check has failed.
 #define MC_UNCHECKED_STACKSIZE 65536U
@@ -280,6 +283,11 @@ struct MCFontStruct
 	int ascent;
 	int descent;
 	Boolean printer;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define SECONDS_MIN 0.0
@@ -337,6 +345,13 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_em;
+    coord_t m_xheight;
+    coord_t m_capheight;
+    coord_t m_leading;
 };
 
 #define fixmaskrop(a) (a)
@@ -395,6 +410,11 @@ struct MCFontStruct
 	uint16_t size;
 	uint2 ascent;
 	uint2 descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -443,6 +463,11 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
@@ -484,6 +509,11 @@ struct MCFontStruct
 	int ascent;
 	int descent;
 	MCSysFontHandle fid;
+    
+    coord_t m_ascent;
+    coord_t m_descent;
+    coord_t m_leading;
+    coord_t m_xheight;
 };
 
 #define fixmaskrop(a) (a)
