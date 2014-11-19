@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 extern void *iphone_font_create(const char *name, uint32_t size, bool bold, bool italic);
 extern void iphone_font_destroy(void *font);
-extern void iphone_font_get_metrics(void *font, float& a, float& d);
+extern void iphone_font_get_metrics(void *font, float& a, float& d, float& leading, float& xheight);
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 extern void *android_font_create(const char *name, uint32_t size, bool bold, bool italic);
 extern void android_font_destroy(void *font);
@@ -59,9 +59,8 @@ MCFontnode::MCFontnode(const MCString& p_name, uint2& p_size, uint2 p_style)
 	font -> ascent = p_size - 1;
 	font -> descent = p_size * 2 / 14 + 1;
 	
-	float ascent, descent;
-	iphone_font_get_metrics(font -> fid,  ascent, descent);
-	if (ceilf(ascent) + ceilf(descent) > p_size)
+	iphone_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
+	if (ceilf(font->m_ascent) + ceilf(font->m_descent) > p_size)
 		font -> ascent++;
 	
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
