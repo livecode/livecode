@@ -130,8 +130,11 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
     return false;
 }
 
-MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef self)
+MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef unresolved_self)
 {
+	MCTypeInfoRef self;
+	self = __MCTypeInfoResolve(unresolved_self);
+	MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
     return self -> record . base;
 }
 
