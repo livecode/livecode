@@ -550,11 +550,11 @@ void android_font_destroy(void *font)
 	MCMemoryDelete(font);
 }
 
-void android_font_get_metrics(void *font, float& a, float& d)
+void android_font_get_metrics(void *font, float& a, float& d, float& leading, float& xheight)
 {
 	MCAndroidFont *t_font = (MCAndroidFont*)font;
     
-	/* UNCHECKED */ MCAndroidTypefaceGetMetrics(t_font->typeface, t_font->size, a, d);
+	/* UNCHECKED */ MCAndroidTypefaceGetMetrics(t_font->typeface, t_font->size, a, d, leading, xheight);
 }
 
 float android_font_measure_text(void *p_font, const char *p_text, uint32_t p_text_length, bool p_is_unicode)
