@@ -198,7 +198,7 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
         case kMCPlatformThemePropertyBorderColor:
         {
             t_found = true;
-            t_color = [NSColor keyboardFocusIndicatorColor];
+            t_color = [NSColor blackColor];
             break;
         }
             
