@@ -2638,6 +2638,7 @@ enum MCPickleFieldType
     kMCPickleFieldTypeNameRef,
     kMCPickleFieldTypeTypeInfoRef,
     kMCPickleFieldTypeArrayOfByte,
+    kMCPickleFieldTypeArrayOfUIndex,
     kMCPickleFieldTypeArrayOfValueRef,
     kMCPickleFieldTypeArrayOfNameRef,
     kMCPickleFieldTypeArrayOfTypeInfoRef,
@@ -2722,6 +2723,7 @@ struct MCPickleVariantInfo
 #define MC_PICKLE_INTENUM(EType, EField) MC_PICKLE_FIELD(IntEnum, EField, k##EType##__Last)
 
 #define MC_PICKLE_ARRAY_OF_BYTE(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfByte, Field, CountField, 0)
+#define MC_PICKLE_ARRAY_OF_UINDEX(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfUIndex, Field, CountField, 0)
 #define MC_PICKLE_ARRAY_OF_VALUEREF(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfValueRef, Field, CountField, 0)
 #define MC_PICKLE_ARRAY_OF_NAMEREF(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfNameRef, Field, CountField, 0)
 #define MC_PICKLE_ARRAY_OF_TYPEINFOREF(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfTypeInfoRef, Field, CountField, 0)

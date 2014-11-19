@@ -446,6 +446,13 @@ static bool MCPickleReadField(MCStreamRef stream, MCPickleFieldType p_kind, void
                             MCMemoryNewArray(*(uindex_t *)p_aux_ptr, *(uint8_t **)p_field_ptr) &&
                             MCStreamRead(stream, *(void **)p_field_ptr, *(uindex_t *)p_aux_ptr);
             break;
+        case kMCPickleFieldTypeArrayOfUIndex:
+            
+            t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
+                        MCMemoryNewArray(*(uindex_t *)p_aux_ptr, *(uindex_t **)p_field_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+                t_success = MCPickleReadCompactUInt(stream, (*(uindex_t **)p_field_ptr)[i]);
+            break;
         case kMCPickleFieldTypeArrayOfValueRef:
             t_success = MCPickleReadCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
                             MCMemoryNewArray(*(uindex_t *)p_aux_ptr, *(MCValueRef **)p_field_ptr);
@@ -825,6 +832,11 @@ static bool MCPickleWriteField(MCStreamRef stream, MCPickleFieldType p_kind, voi
             t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr) &&
                             MCStreamWrite(stream, *(const uint8_t **)p_field_ptr, *(uindex_t *)p_aux_ptr);
             break;
+        case kMCPickleFieldTypeArrayOfUIndex:
+            t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
+            for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
+                t_success = MCPickleWriteCompactUInt(stream, (*(uindex_t **)p_field_ptr)[i]);
+            break;
         case kMCPickleFieldTypeArrayOfValueRef:
             t_success = MCPickleWriteCompactUInt(stream, *(uindex_t *)p_aux_ptr);
             for(uindex_t i = 0; t_success && i < *(uindex_t *)p_aux_ptr; i++)
@@ -918,6 +930,7 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
             break;
             
         case kMCPickleFieldTypeArrayOfByte:
+        case kMCPickleFieldTypeArrayOfUIndex:
             free(*(void **)p_field_ptr);
             *(MCValueRef *)p_field_ptr = nil;
             break;
