@@ -627,7 +627,7 @@
         EmitDataType(-> Index)
     'rule' GenerateType(array(_) -> Index):
         EmitArrayType(-> Index)
-    'rule' GenerateType(list(_) -> Index):
+    'rule' GenerateType(list(_, _) -> Index):
         EmitListType(-> Index)
         
     'rule' GenerateType(pointer(_) -> Index):

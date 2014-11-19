@@ -78,7 +78,7 @@
     string(Position: POS)
     data(Position: POS)
     array(Position: POS)
-    list(Position: POS)
+    list(Position: POS, Element: TYPE)
     nil
 
 'type' FIELDLIST

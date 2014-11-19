@@ -480,11 +480,19 @@
     'rule' Type(-> array(Position)):
         "array" @(-> Position)
 
-    'rule' Type(-> list(Position)):
-        "list" @(-> Position)
+    'rule' Type(-> list(Position, ElementType)):
+        "list" @(-> Position) OptionalElementType(-> ElementType)
 
     'rule' Type(-> undefined(Position)):
         "undefined" @(-> Position)
+        
+'nonterm' OptionalElementType(-> TYPE)
+
+    'rule' OptionalElementType(-> Type)
+        "of" Type(-> Type)
+        
+    'rule' OptionalElementType(-> optional(Position, any(Position))):
+        @(-> Position)
 
 --------------------------------------------------------------------------------
 -- Statement Syntax
