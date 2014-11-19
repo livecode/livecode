@@ -54,6 +54,10 @@ MC_PICKLE_BEGIN_RECORD(MCScriptEventDefinition)
     MC_PICKLE_TYPEINFOREF(signature)
 MC_PICKLE_END_RECORD()
 
+MC_PICKLE_BEGIN_RECORD(MCScriptHandlerGroupDefinition)
+    MC_PICKLE_ARRAY_OF_UINDEX(handlers, handler_count)
+MC_PICKLE_END_RECORD()
+
 MC_PICKLE_BEGIN_VARIANT(MCScriptDefinition, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindExternal, MCScriptExternalDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindType, MCScriptTypeDefinition)
@@ -63,6 +67,7 @@ MC_PICKLE_BEGIN_VARIANT(MCScriptDefinition, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindForeignHandler, MCScriptForeignHandlerDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindProperty, MCScriptPropertyDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindEvent, MCScriptEventDefinition)
+    MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindHandlerGroup, MCScriptHandlerGroupDefinition)
 MC_PICKLE_END_VARIANT()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptModule)

@@ -166,6 +166,12 @@ struct MCScriptHandlerDefinition: public MCScriptDefinition
     uindex_t register_offset;
 };
 
+struct MCScriptHandlerGroupDefinition: public MCScriptDefinition
+{
+    uindex_t *handlers;
+    uindex_t handler_count;
+};
+
 struct MCScriptForeignHandlerDefinition: public MCScriptDefinition
 {
     MCTypeInfoRef signature;
