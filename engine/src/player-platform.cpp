@@ -875,6 +875,7 @@ MCPlayer::MCPlayer()
     // PM-2104-10-14: [[ Bug 13569 ]] Make sure changes to player in preOpenCard are not visible
     m_is_attached = false;
     m_should_attach = false;
+    m_reset_dontuseqt = false;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -912,6 +913,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
+    
+    m_reset_dontuseqt = false;
 }
 
 MCPlayer::~MCPlayer()
@@ -973,7 +976,6 @@ void MCPlayer::open()
         m_is_attached = true;
         m_should_attach = false;
     }
-    
 }
 
 void MCPlayer::close()
@@ -998,7 +1000,7 @@ void MCPlayer::close()
     }
     // PM-2014-11-03: [[ Bug 13917 ]] m_platform_player should be recreated when reopening a recently closed stack, to take into account if the value of dontuseqt has changed in the meanwhile
     if (m_platform_player != nil)
-        m_platform_player = nil;
+        m_reset_dontuseqt = true;
 }
 
 Boolean MCPlayer::kdown(const char *string, KeySym key)
@@ -2089,7 +2091,7 @@ Boolean MCPlayer::prepare(const char *options)
 	if (!opened)
 		return False;
     
-	if (m_platform_player == nil)
+	if (m_platform_player == nil || m_reset_dontuseqt)
 		MCPlatformCreatePlayer(m_platform_player);
     
 	if (strnequal(filename, "https:", 6) || strnequal(filename, "http:", 5) || strnequal(filename, "ftp:", 4) || strnequal(filename, "file:", 5) || strnequal(filename, "rtsp:", 5))
