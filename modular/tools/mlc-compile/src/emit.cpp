@@ -20,7 +20,8 @@ extern "C" void EmitVariableDefinition(long index, PositionRef position, NameRef
 extern "C" void EmitBeginHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitEndHandlerDefinition(void);
 extern "C" void EmitForeignHandlerDefinition(long index, PositionRef position, NameRef name, long type_index, long binding);
-extern "C" void EmitNamedType(long index, long& r_new_index);
+extern "C" void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index);
+extern "C" void EmitAliasType(NameRef name, long typeindex, long& r_new_index);
 extern "C" void EmitOptionalType(long index, long& r_new_index);
 extern "C" void EmitPointerType(long& r_new_index);
 extern "C" void EmitBoolType(long& r_new_index);
@@ -281,12 +282,28 @@ void EmitEndHandlerDefinition(void)
     MCLog("[Emit] EndHandlerDefinition()", 0);
 }
 
-void EmitNamedType(long index, long& r_new_index)
+void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index)
 {
-    if (!define_typeinfo(kMCNullTypeInfo, r_new_index))
+    MCAutoStringRef t_string;
+    MCStringFormat(&t_string, "%@.%@", to_mcnameref(module_name), to_mcnameref(name));
+    MCNewAutoNameRef t_name;
+    MCNameCreate(*t_string, &t_name);
+    MCAutoTypeInfoRef t_type;
+    MCNamedTypeInfoCreate(*t_name, &t_type);
+    if (!define_typeinfo(*t_type, r_new_index))
         return;
     
-    MCLog("[Emit] NamedType(%ld -> %ld)", index, r_new_index);
+    MCLog("[Emit] NamedType(%@, %@ -> %ld)", to_mcnameref(module_name), to_mcnameref(name), r_new_index);
+}
+
+void EmitAliasType(NameRef name, long target_index, long& r_new_index)
+{
+    MCAutoTypeInfoRef t_type;
+    MCAliasTypeInfoCreate(to_mcnameref(name), to_mctypeinforef(target_index), &t_type);
+    if (!define_typeinfo(*t_type, r_new_index))
+        return;
+    
+    MCLog("[Emit] AliasType(%@, %ld -> %ld)", to_mcnameref(name), target_index, r_new_index);
 }
 
 void EmitOptionalType(long base_index, long& r_new_index)
