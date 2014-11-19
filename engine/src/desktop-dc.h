@@ -18,8 +18,8 @@ public:
 	virtual void Retain(void);
 	virtual void Release(void);	
 	
-	virtual bool Query(MCTransferType*& r_types, unsigned int& r_type_count);
-	virtual bool Fetch(MCTransferType p_type, MCSharedString*& r_data);
+	virtual bool Query(MCTransferType*& r_types, size_t& r_type_count);
+	virtual bool Fetch(MCTransferType p_type, MCDataRef& r_data);
 	
 private:
 	bool IsValid(void);
@@ -30,7 +30,7 @@ private:
 	{
 		MCTransferType type;
 		MCPlatformPasteboardFlavor flavor;
-		MCSharedString *data;
+		MCDataRef data;
 	};
 	
 	uint32_t m_references;
@@ -68,11 +68,11 @@ public:
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
 
-	virtual const char *getdisplayname();
+	virtual MCNameRef getdisplayname();
 	virtual uint2 getmaxpoints(void);
 	virtual uint2 getvclass(void);
 	virtual uint2 getdepth(void);
-	virtual void getvendorstring(MCExecPoint &ep);
+	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
 	
 	virtual MCColor *getaccentcolors();
@@ -94,7 +94,7 @@ public:
 	virtual void raisewindow(Window window);
 	virtual void iconifywindow(Window window);
 	virtual void uniconifywindow(Window window);
-	virtual void setname(Window window, const char *newname);
+	virtual void setname(Window window, MCStringRef newname);
 	virtual void setinputfocus(Window window);
 	virtual uint4 dtouint4(Drawable d);
 	virtual Boolean uint4towindow(uint4, Window &w);
@@ -113,7 +113,7 @@ public:
 	virtual bool transformimagecolors(MCColorTransformRef transform, MCImageBitmap *image);
 	
 	virtual void beep();
-	virtual void getbeep(uint4 which, MCExecPoint &ep);
+	virtual void getbeep(uint4 which, int4 &r_beep);
 	virtual void setbeep(uint4 which, int4 beep);
 	
 	virtual MCStack *platform_getstackatpoint(int32_t x, int32_t y);
@@ -124,7 +124,7 @@ public:
 	virtual Boolean istripleclick();
 	virtual Boolean abortkey();
 	virtual uint2 querymods();
-	virtual void getkeysdown(MCExecPoint &ep);
+	virtual bool getkeysdown(MCListRef& r_list);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
@@ -136,11 +136,11 @@ public:
 	virtual void closeIME();
 	
 	virtual void seticon(uint4 p_icon);
-	virtual void seticonmenu(const char *p_menu);
-	virtual void configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip);
+	virtual void seticonmenu(MCStringRef p_menu);
+	virtual void configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip);
 	virtual void enactraisewindows(void);
 	
-	virtual void listprinters(MCExecPoint& ep);
+	virtual bool listprinters(MCStringRef& r_printers);
 	virtual MCPrinter *createprinter(void);
 	
 	virtual void flushclipboard(void);
@@ -148,13 +148,17 @@ public:
 	virtual bool setclipboard(MCPasteboard *p_pasteboard);
 	virtual MCPasteboard *getclipboard(void);
 	
-    virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
-    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
+	virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
 	
-	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
+    // SN-2014-07-23: [[ Bug 12907 ]] File > Import as control > Snapshot from screen
+    //  Mismatching types - thus the 'unimplemented' MCUICDC::snapshot was called instead of the MCScreenDC one
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size);
 	
 	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
-	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
+    // SN-2014-07-23: [[ Bug 12907 ]] File > Import as control > Snapshot from screen
+    //  Update as well MCSreenDC::createscriptenvironment (and callees)
+	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 	
 	// IM-2014-01-28: [[ HiDPI ]] Return true if the platform can detect
 	//   desktop changes and will clear the cache when changes occur.

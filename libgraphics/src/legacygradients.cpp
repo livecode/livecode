@@ -832,7 +832,6 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 			else
 				t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);
 		}
-        
         // AL-2014-07-21: [[ Bug 12867 ]] Ensure RBGA values are always packed in native format
         uint8_t t_red, t_green, t_blue, t_alpha;
 		MCGPixelUnpack(kMCGPixelFormatBGRA, t_ramp[i] . color, t_red, t_green, t_blue, t_alpha);

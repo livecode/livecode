@@ -1,0 +1,27 @@
+setup
+
+local tOutput
+
+put shell("tasklist /V") into taskList
+
+if taskList contains "cmd.exe" then
+	get shell("taskkill /IM notepad.exe")
+end if
+
+open process "cmd.exe" for text update
+
+write "echo foo" & CR to process "cmd.exe"
+
+read from process "cmd.exe" until "echo foo"
+
+read from process "cmd.exe" for 1 line
+
+read from process "cmd.exe" for 1 line
+
+put char 1 to 3 of it into tOutput
+
+test tOutput is "foo"
+
+close process "cmd.exe"
+
+teardown

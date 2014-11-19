@@ -1,0 +1,1 @@
+# core image visual effects broken in LC7DP9

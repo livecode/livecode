@@ -40,7 +40,7 @@ public:
 	bool Finalize(void);
 	bool IsInited() {return bInited;}
 
-	bool Start(const char* p_string);
+	bool Start(const char* p_string, bool p_is_utf8);
 	bool SpeakToFile(const char* p_string, const char* p_file);
 	bool Stop(void);
 	bool Busy(void);

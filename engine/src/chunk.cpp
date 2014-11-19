@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "object.h"
 #include "dispatch.h"
@@ -46,8 +46,70 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "util.h"
 #include "debug.h"
+#include "variable.h"
 
 #include "globals.h"
+
+#include "syntax.h"
+#include "exec.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef COLLECTING_CHUNKS
+#include "newchunk.h"
+class MCSyntaxCollector
+{
+public:
+	MCSyntaxCollector(MCScriptPoint& sp, Boolean doingthe, bool p_dest)
+		: m_sp(sp), m_the(doingthe), m_dest(p_dest)
+	{
+		m_start = m_sp . getcurptr();
+	}
+
+	~MCSyntaxCollector(void)
+	{
+		m_end = m_sp . getcurptr();
+		
+		FILE *f;
+		f = fopen("G:\\Scratch\\Chunks.txt", "a");
+		if (f != NULL)
+		{
+			if (m_dest)
+				fprintf(f, "C: ");
+			else
+				fprintf(f, "E: ");
+
+			if (m_the)
+				fprintf(f, "the ");
+
+			for(int32_t i = 0; i < m_end - m_start; ++i)
+			{
+				if (m_start[i] == '\\')
+				{
+					fputc('\\', f);
+					fputc('\\', f);
+				}
+				else if (m_start[i] == '\n')
+				{
+					fputc('\\', f);
+					fputc('n', f);
+				}
+				else
+					fputc(m_start[i], f);
+			}
+			fputc('\n', f);
+			fclose(f);
+		}
+	}
+
+private:
+	MCScriptPoint& m_sp;
+	bool m_dest;
+	Boolean m_the;
+	const uint1 *m_start;
+	const uint1 *m_end;
+};
+#endif
 
 MCCRef::MCCRef()
 {
@@ -66,6 +128,8 @@ MCChunk::MCChunk(Boolean isforset)
 {
 	url = stack = background = card = group = object = NULL;
 	cline = item = word = token = character = NULL;
+    paragraph = sentence = trueword = NULL;
+    codepoint = codeunit = byte = NULL;
 	source = NULL;
 	destvar = NULL;
 	destobj = NULL;
@@ -109,6 +173,12 @@ MCChunk::~MCChunk()
 	delete word;
 	delete token;
 	delete character;
+    delete codepoint;
+    delete codeunit;
+    delete byte;
+    delete paragraph;
+    delete sentence;
+    delete trueword;
 	delete source;
 	delete destvar;
 }
@@ -190,9 +260,10 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				//   then it should be evaluated as a string. However, if the string chunk
 				//   is of a previously parsed object then we must pass as a dest so the
 				//   object resolves correctly.
-				if (desttype != DT_ISDEST && (cline != NULL || item != NULL
-				                              || word != NULL || token != NULL
-				                              || character != NULL) &&
+				if (desttype != DT_ISDEST && (cline != NULL || paragraph != NULL || sentence != NULL
+				                              || item != NULL || word != NULL || trueword != NULL
+				                              || token != NULL || character != NULL || codepoint != NULL
+                                              || codeunit != NULL || byte != NULL) &&
 											 (stack == nil && background == nil &&
 											  card == nil && group == nil &&
 											  object == nil))
@@ -380,19 +451,37 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 
 					case CT_LINE:
 						cline = curref;
-						break;
+                        break;
+                    case CT_PARAGRAPH:
+                        paragraph = curref;
+                        break;
+                    case CT_SENTENCE:
+                        sentence = curref;
+                        break;
 					case CT_ITEM:
 						item = curref;
 						break;
 					case CT_WORD:
 						word = curref;
 						break;
+                    case CT_TRUEWORD:
+                        trueword = curref;
+                        break;
 					case CT_TOKEN:
 						token = curref;
 						break;
 					case CT_CHARACTER:
 						character = curref;
 						break;
+                    case CT_CODEPOINT:
+                        codepoint = curref;
+                        break;
+                    case CT_CODEUNIT:
+                        codeunit = curref;
+                        break;
+                    case CT_BYTE:
+                        byte = curref;
+                        break;
 					default: /* curref->otype */
 						fprintf(stderr, "MCChunk: ERROR bad chunk type %d\n", nterm);
 						break;
@@ -438,8 +527,9 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						if (function == F_SELECTED_LINE || function == F_SELECTED_CHUNK)
 						{}
 					}
-					else if (cline != NULL || item != NULL || word != NULL
-						        || token != NULL || character != NULL)
+					else if (cline != NULL || paragraph != NULL || sentence != NULL || item != NULL
+                             || trueword != NULL || word != NULL || token != NULL || character != NULL
+                             || codepoint != NULL || codeunit != NULL || byte != NULL)
 					{
 						sp.backup();
 						if (sp.parseexp(True, False, &source) != PS_NORMAL)
@@ -618,6 +708,24 @@ MCVarref *MCChunk::getrootvarref(void)
 
 void MCChunk::take_components(MCChunk *tchunk)
 {
+    if (tchunk->byte != NULL)
+	{
+		delete byte;
+		byte = tchunk->byte;
+		tchunk->byte = NULL;
+    }
+    if (tchunk->codeunit != NULL)
+	{
+		delete codeunit;
+		codeunit = tchunk->codeunit;
+		tchunk->codeunit = NULL;
+    }
+    if (tchunk->codepoint != NULL)
+	{
+		delete codepoint;
+		codepoint = tchunk->codepoint;
+		tchunk->codepoint = NULL;
+    }
 	if (tchunk->character != NULL)
 	{
 		delete character;
@@ -636,25 +744,676 @@ void MCChunk::take_components(MCChunk *tchunk)
 		word = tchunk->word;
 		tchunk->word = NULL;
 	}
+    if (tchunk->trueword != NULL)
+	{
+		delete trueword;
+		trueword = tchunk->trueword;
+		tchunk->trueword = NULL;
+    }
 	if (tchunk->item != NULL)
 	{
 		delete item;
 		item = tchunk->item;
 		tchunk->item = NULL;
 	}
+    if (tchunk->sentence != NULL)
+	{
+		delete sentence;
+		sentence = tchunk->sentence;
+		tchunk->sentence = NULL;
+    }
+    if (tchunk->paragraph != NULL)
+	{
+		delete paragraph;
+		paragraph = tchunk->paragraph;
+		tchunk->paragraph = NULL;
+    }
 	if (tchunk->cline != NULL)
 	{
 		delete cline;
 		cline = tchunk->cline;
 		tchunk->cline = NULL;
-	}
+    }
     
     // MW-2014-05-28: [[ Bug 11928 ]] As soon as we take components from a chunk then
     //   mark us as transient text, so that we don't use the same components next time.
     m_transient_text_chunk = true;
 }
 
-Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
+bool MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, Boolean p_recurse)
+{
+    r_object . object = nil;
+    
+    getoptionalobj(ctxt, r_object, p_recurse);
+
+    if (r_object . object == nil)
+    {
+        ctxt . Throw();
+        return false;
+    }
+
+    return true;
+}
+
+void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObject *&r_object, uint4& r_parid, Boolean p_recurse)
+{
+    MCObjectPtr t_obj_ptr;
+
+    getoptionalobj(ctxt, t_obj_ptr, p_recurse);
+    
+    // ensure that the context does not contain an error until we decide how strict chunk parsing is.
+    ctxt . IgnoreLastError();
+    
+    r_object = t_obj_ptr . object;
+    r_parid = t_obj_ptr . part_id;
+}
+
+void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean p_recurse)
+{
+    MCObjectPtr t_object;
+    t_object . object = nil;
+    t_object . part_id = 0;
+    
+    r_object . object = nil;
+    r_object . part_id = 0;
+
+    if (desttype != DT_UNDEFINED && desttype != DT_ISDEST)
+    {
+        if (desttype == DT_EXPRESSION || desttype == DT_VARIABLE)
+        {
+            bool t_error = true;
+            MCAutoStringRef t_value;
+            if (p_recurse)
+            {
+                if (desttype == DT_EXPRESSION)
+                    ctxt . EvalExprAsStringRef(source, EE_CHUNK_BADOBJECTEXP, &t_value);
+                else
+                    ctxt . EvalExprAsStringRef(destvar, EE_CHUNK_BADOBJECTEXP, &t_value);
+
+                if (ctxt . HasError())
+                    return;
+/*
+                MCAutoValueRef t_value;
+                ep . copyasvalueref(&t_value);
+                MCEngineEvalValueAsObject(ctxt, *t_value, t_object);
+*/
+
+                // SN-2014-04-08 [[ Bug 12147 ]] create button in group command fails 
+                MCScriptPoint sp(ctxt, *t_value);
+                MCChunk *tchunk = new MCChunk(False);
+                MCerrorlock++;
+                Symbol_type type;
+                if (tchunk->parse(sp, False) == PS_NORMAL
+                        && sp.next(type) == PS_EOF)
+                    t_error = false;
+                
+                MCerrorlock--;
+                
+                if (!t_error)
+                {
+                    if (tchunk->getobj(ctxt, t_object, False))
+                        take_components(tchunk);
+                    else
+                        t_error= true;
+                }
+                
+                delete tchunk;
+            }
+            // SN-2013-11-7: If no recurse, there is no error to trigger
+            // Otherwise, the caller gets a 'marred' context with an error
+            else
+                return;
+
+            if (t_error)
+            {
+                ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP, *t_value);
+                return;
+            }
+        }
+        else if (desttype == DT_OWNER)
+        {
+            // MW-2008-11-05: [[ Owner Reference ]] If the desttype is DT_OWNER it means that <source>
+            //   must point to an MCChunk object (as that's how its parsed).
+            //   In this case attempt to evaluate it and then step up one in the ownership chain. Note
+            //   that we can't step higher than a mainstack, so we set objptr to NULL in this case.
+            if (!static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True))
+            {
+                ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
+                return;
+            }
+
+            MCEngineEvalOwnerAsObject(ctxt, t_object, t_object);
+        }
+        else if (desttype >= DT_FIRST_OBJECT && desttype < DT_LAST_OBJECT)
+        {
+            MCEngineEvalTemplateAsObject(ctxt, desttype, t_object);
+        }
+        else
+        {
+            switch(desttype)
+            {
+                case DT_THIS_ME:
+                    t_object . object = destobj;
+                    t_object . part_id = 0;
+                    break;
+                case DT_ME:
+                    //MCEngineEvalMeAsObject(ctxt, t_object);
+                    if (ctxt . GetParentScript() == NULL)
+                        t_object . object = destobj;
+                    else
+                        t_object . object = ctxt . GetObject();
+                    t_object . part_id = 0;
+                    break;
+                case DT_MENU_OBJECT:
+                    MCEngineEvalMenuObjectAsObject(ctxt, t_object);
+                    break;
+                case DT_TARGET:
+                    MCEngineEvalTargetAsObject(ctxt, t_object);
+                    break;
+                case DT_ERROR:
+                    MCEngineEvalErrorObjectAsObject(ctxt, t_object);
+                    break;
+                case DT_SELECTED:
+                    MCInterfaceEvalSelectedObjectAsObject(ctxt, t_object);
+                    break;
+                case DT_TOP_STACK:
+                    MCInterfaceEvalTopStackAsObject(ctxt, t_object);
+                    break;
+                case DT_CLICK_STACK:
+                    MCInterfaceEvalClickStackAsObject(ctxt, t_object);
+                    break;
+                case DT_MOUSE_STACK:
+                    MCInterfaceEvalMouseStackAsObject(ctxt, t_object);
+                    break;
+                case DT_FUNCTION:
+                    switch (function)
+                {
+                    case F_CLICK_CHUNK:
+                    case F_CLICK_CHAR_CHUNK:
+                    case F_CLICK_FIELD:
+                    case F_CLICK_LINE:
+                    case F_CLICK_TEXT:
+                        MCInterfaceEvalClickFieldAsObject(ctxt, t_object);
+                        break;
+                    case F_SELECTED_CHUNK:
+                    case F_SELECTED_FIELD:
+                    case F_SELECTED_LINE:
+                    case F_SELECTED_TEXT:
+                        MCInterfaceEvalSelectedFieldAsObject(ctxt, t_object);
+                        break;
+                    case F_SELECTED_IMAGE:
+                        MCInterfaceEvalSelectedImageAsObject(ctxt, t_object);
+                        break;
+                    case F_FOUND_CHUNK:
+                    case F_FOUND_FIELD:
+                    case F_FOUND_LINE:
+                    case F_FOUND_TEXT:
+                        MCInterfaceEvalFoundFieldAsObject(ctxt, t_object);
+                        break;
+                    case F_MOUSE_CONTROL:
+                    case F_MOUSE_CHUNK:
+                    case F_MOUSE_CHAR_CHUNK:
+                    case F_MOUSE_LINE:
+                    case F_MOUSE_TEXT:
+                        MCInterfaceEvalMouseControlAsObject(ctxt, t_object);
+                        break;
+                    case F_FOCUSED_OBJECT:
+                        MCInterfaceEvalFocusedObjectAsObject(ctxt, t_object);
+                        break;
+                    case F_DRAG_SOURCE:
+                        MCPasteboardEvalDragSourceAsObject(ctxt, t_object);
+                        break;
+                    case F_DRAG_DESTINATION:
+                        MCPasteboardEvalDragDestinationAsObject(ctxt, t_object);
+                        break;
+                    default:
+                        break;
+                }
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (t_object . object == nil)
+        {
+            ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+            return;
+        }
+        if (background == nil && card == nil && group == nil && object == nil)
+        {
+            r_object . object = t_object . object;
+            r_object . part_id = t_object . part_id;
+            return;
+        }
+        switch (t_object . object -> gettype())
+        {
+            case CT_AUDIO_CLIP:
+            case CT_VIDEO_CLIP:
+            case CT_LAYER:
+            case CT_MENU:
+            case CT_BUTTON:
+            case CT_IMAGE:
+            case CT_FIELD:
+            case CT_GRAPHIC:
+            case CT_EPS:
+            case CT_SCROLLBAR:
+            case CT_PLAYER:
+            case CT_MAGNIFY:
+            case CT_COLOR_PALETTE:
+                MCCard *t_card;
+                t_card = t_object . object -> getcard(t_object . part_id);
+                if (t_card == nil)
+                {
+                    // Optional obj: this doesn't throw an error
+                    //  but rather leave r_object . object set to nil
+                    return;
+                }
+
+                t_object . part_id = t_card -> getid();
+                r_object . object = t_object . object;
+                r_object . part_id = t_object . part_id;
+                return;
+            default:
+                break;
+        }
+    }
+    else if (stack == nil && background == nil && card == nil && group == nil && object == nil)
+    {
+        // Optional obj: this doesn't throw an error
+        //  but rather leave r_object . object set to nil
+        return;
+    }
+    else if (url != nil)
+    {
+        if (stack -> etype == CT_EXPRESSION)
+        {
+            MCAutoStringRef t_data;
+            if (url -> startpos == nil || !ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADSTACKEXP, &t_data))
+                return;
+
+            MCInterfaceEvalBinaryStackAsObject(ctxt, *t_data, t_object);
+        }
+    }
+    else
+    {
+        MCInterfaceEvalDefaultStackAsObject(ctxt, t_object);
+    }
+
+    if (stack != nil)
+    {
+        MCInterfaceEvalStackOfObject(ctxt, t_object, t_object);
+        switch (stack->etype)
+        {
+            case CT_EXPRESSION:
+            {
+                MCNewAutoNameRef t_expression;
+                if (!ctxt . EvalExprAsNameRef(stack -> startpos, EE_CHUNK_BADSTACKEXP, &t_expression))
+                    return;
+
+                MCInterfaceEvalStackOfStackByName(ctxt, t_object, *t_expression, t_object);
+
+            }
+                break;
+            case CT_ID:
+            {
+                uint4 t_id;
+                if (!ctxt . EvalExprAsUInt(stack -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
+                    return;
+
+                MCInterfaceEvalStackOfStackById(ctxt, t_object, t_id, t_object);
+            }
+                break;
+            case CT_THIS:
+                break;
+            default:
+                ctxt . LegacyThrow(EE_CHUNK_BADSTACKEXP);
+                return;
+        }
+
+        if (stack->next != NULL)
+        {
+            switch (stack->next->etype)
+            {
+                case CT_EXPRESSION:
+                {
+                    MCNewAutoNameRef t_expression;
+                    if (!ctxt . EvalExprAsNameRef(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, &t_expression))
+                        return;
+
+                    MCInterfaceEvalSubstackOfStackByName(ctxt, t_object, *t_expression, t_object);
+                }
+                    break;
+                case CT_ID:
+                {
+                    uint4 t_id;
+                    if (!ctxt . EvalExprAsUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
+                        return;
+
+                    MCInterfaceEvalSubstackOfStackById(ctxt, t_object, t_id, t_object);
+                }
+                    break;
+                case CT_THIS:
+                    break;
+                default:
+                    ctxt . LegacyThrow(EE_CHUNK_BADSTACKEXP);
+                    return;
+            }
+        }
+    }
+
+    if (object != nil && (object->otype == CT_AUDIO_CLIP || object->otype == CT_VIDEO_CLIP))
+    {
+        MCInterfaceEvalStackOfObject(ctxt, t_object, t_object);
+        switch (ct_class(object -> etype))
+        {
+            case CT_ORDINAL:
+                if (object -> otype == CT_AUDIO_CLIP)
+                    MCInterfaceEvalAudioClipOfStackByOrdinal(ctxt, t_object, object -> etype, t_object);
+                else
+                    MCInterfaceEvalVideoClipOfStackByOrdinal(ctxt, t_object, object -> etype, t_object);
+                break;
+            case CT_ID:
+            {
+                uint4 t_id;
+                if (!ctxt . EvalExprAsUInt(object -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
+                    return;
+
+                if (object -> otype == CT_AUDIO_CLIP)
+                    MCInterfaceEvalAudioClipOfStackById(ctxt, t_object, t_id, t_object);
+                else
+                    MCInterfaceEvalVideoClipOfStackById(ctxt, t_object, t_id, t_object);
+            }
+                break;
+            case CT_EXPRESSION:
+            {
+                MCNewAutoNameRef t_expression;
+                if (!ctxt . EvalExprAsNameRef(object -> startpos, EE_CHUNK_BADOBJECTEXP, &t_expression))
+                    return;
+
+                if (object -> otype == CT_AUDIO_CLIP)
+                    MCInterfaceEvalAudioClipOfStackByName(ctxt, t_object, *t_expression, t_object);
+                else
+                    MCInterfaceEvalVideoClipOfStackByName(ctxt, t_object, *t_expression, t_object);
+            }
+                break;
+            default:
+                ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
+                break;
+        }
+        if (!ctxt . HasError())
+        {
+            r_object . object = t_object . object;
+            r_object . part_id = t_object . part_id;
+        }
+
+        return;
+    }
+
+    if (background != nil)
+    {
+        MCInterfaceEvalStackOfObject(ctxt, t_object, t_object);
+        switch (ct_class(background->etype))
+        {
+            case CT_ORDINAL:
+                if (card == nil)
+                    MCInterfaceEvalBackgroundOfStackByOrdinal(ctxt, t_object, background -> etype, t_object);
+                else
+                    MCInterfaceEvalStackWithBackgroundByOrdinal(ctxt, t_object, background -> etype, t_object);
+                break;
+            case CT_ID:
+            {
+                uint4 t_id;
+                if (!ctxt . EvalExprAsUInt(background -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
+                    return;
+
+                if (card == nil)
+                    MCInterfaceEvalBackgroundOfStackById(ctxt, t_object, t_id, t_object);
+                else
+                    MCInterfaceEvalStackWithBackgroundById(ctxt, t_object, t_id, t_object);
+            }
+                break;
+            case CT_EXPRESSION:
+            {
+                MCNewAutoNameRef t_expression;
+                if (!ctxt . EvalExprAsNameRef(background -> startpos, EE_CHUNK_BADBACKGROUNDEXP, &t_expression))
+                    return;
+
+                if (card == nil)
+                    MCInterfaceEvalBackgroundOfStackByName(ctxt, t_object, *t_expression, t_object);
+                else
+                    MCInterfaceEvalStackWithBackgroundByName(ctxt, t_object, *t_expression, t_object);
+            }
+                break;
+            default:
+                ctxt . LegacyThrow(EE_CHUNK_BADBACKGROUNDEXP);
+                return;
+        }
+    }
+
+    if (card != nil)
+    {
+        MCInterfaceEvalStackWithOptionalBackground(ctxt, t_object, t_object);
+        switch (ct_class(card->etype))
+        {
+            case CT_DIRECT:
+                // recent
+                break;
+            case CT_ORDINAL:
+                if (background != nil)
+                    MCInterfaceEvalCardOfBackgroundByOrdinal(ctxt, t_object, marked, card -> etype, t_object);
+                else
+                    MCInterfaceEvalCardOfStackByOrdinal(ctxt, t_object, marked, card -> etype, t_object);
+                break;
+            case CT_ID:
+            {
+                uint4 t_id;
+                if (!ctxt . EvalExprAsUInt(card -> startpos, EE_CHUNK_BADCARDEXP, t_id))
+                    return;
+
+                if (background != nil)
+                    MCInterfaceEvalCardOfBackgroundById(ctxt, t_object, marked, t_id, t_object);
+                else
+                    MCInterfaceEvalCardOfStackById(ctxt, t_object, marked, t_id, t_object);
+            }
+                break;
+            case CT_EXPRESSION:
+            {
+                MCNewAutoNameRef t_expression;
+                if (!ctxt . EvalExprAsNameRef(card -> startpos, EE_CHUNK_BADCARDEXP, &t_expression))
+                    return;
+
+                if (background != nil)
+                    MCInterfaceEvalCardOfBackgroundByName(ctxt, t_object, marked, *t_expression, t_object);
+                else
+                    MCInterfaceEvalCardOfStackByName(ctxt, t_object, marked, *t_expression, t_object);
+            }
+                break;
+            default:
+                ctxt . LegacyThrow(EE_CHUNK_BADCARDEXP);
+                return;
+        }
+    }
+    else if (group != nil || object != nil)
+    {
+        MCInterfaceEvalThisCardOfStack(ctxt, t_object, t_object);
+    }
+
+    // MW-2011-08-09: [[ Groups ]] If there was an explicit stack reference,
+    //   but no explicit card, we search the stack directly for the CT_ID
+    //   case.
+    bool t_stack_override;
+    t_stack_override = false;
+    if (stack != nil && card == nil)
+        t_stack_override = true;
+
+    MCCRef *tgptr = group;
+    while (tgptr != nil)
+    {
+        switch (ct_class(tgptr -> etype))
+        {
+            case CT_ORDINAL:
+//              if (tgptr == group && (card != nil || background == nil))
+                if (t_object . object -> gettype() == CT_CARD)
+                    MCInterfaceEvalGroupOfCardByOrdinal(ctxt, t_object, tgptr -> ptype, tgptr -> etype, t_object);
+                else
+                    MCInterfaceEvalGroupOfGroupByOrdinal(ctxt, t_object, tgptr -> etype, t_object);
+                break;
+            case CT_ID:
+            {
+                uint4 t_id;
+                if (!ctxt . EvalExprAsUInt(tgptr -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
+                    return;
+
+                // MW-2011-08-09: [[ Groups ]] If there was an explicit stack reference,
+                //   but no explicit card, we search the stack directly for the CT_ID
+                //   case.
+                // (Assuming the group wasn't found on the card)
+//              if (tgptr == group && (card != nil || background == nil))
+                if (t_object . object -> gettype() == CT_CARD)
+                {
+                    if (t_stack_override)
+                        MCInterfaceEvalGroupOfCardOrStackById(ctxt, t_object, tgptr -> ptype, t_id, t_object);
+                    else
+                        MCInterfaceEvalGroupOfCardById(ctxt, t_object, tgptr -> ptype, t_id, t_object);
+                }
+                else
+                {
+                    // if we have a group then stack override is irrelevant.
+                    MCInterfaceEvalGroupOfGroupById(ctxt, t_object, t_id, t_object);
+                }
+            }
+                break;
+            case CT_EXPRESSION:
+            {
+                MCNewAutoNameRef t_expression;
+                if (!ctxt . EvalExprAsNameRef(tgptr -> startpos, EE_CHUNK_BADBACKGROUNDEXP, &t_expression))
+                    return;
+
+                if (t_object . object -> gettype() == CT_CARD)
+                    MCInterfaceEvalGroupOfCardByName(ctxt, t_object, tgptr -> ptype, *t_expression, t_object);
+                else
+                    MCInterfaceEvalGroupOfGroupByName(ctxt, t_object, *t_expression, t_object);
+            }
+                break;
+            default:
+                ctxt . LegacyThrow(EE_CHUNK_BADBACKGROUNDEXP);
+                return;
+        }
+        tgptr = tgptr -> next;
+    }
+
+    // Stack override handles the case of 'control id ...' where there is no card
+    // reference. It enables access to top-level objects in the stack via id.
+
+    if (card == nil)
+        t_stack_override = true;
+
+    // MW-2011-08-08: [[ Bug ]] Loop through chain of object chunks. This allows
+    //   things like field ... of control ... of.
+    if (object != nil)
+    {
+        MCCRef *toptr = object;
+        while (toptr != nil)
+        {
+            if (toptr -> otype == CT_MENU)
+                MCInterfaceEvalMenubarAsObject(ctxt, t_object);
+
+            switch (ct_class(toptr -> etype))
+            {
+                case CT_ORDINAL:
+                    //                        if (toptr == object && group == nil)
+                    if (t_object . object -> gettype() == CT_CARD)
+                        MCInterfaceEvalObjectOfCardByOrdinal(ctxt, t_object, toptr -> otype, toptr -> ptype, toptr -> etype, t_object);
+                    else
+                        MCInterfaceEvalObjectOfGroupByOrdinal(ctxt, t_object, toptr -> otype, toptr -> etype, t_object);
+                    break;
+                case CT_ID:
+                {
+                    uint4 t_id;
+                    if (!ctxt . EvalExprAsUInt(toptr -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
+                        return;
+                    
+                    // If we are in stack override mode, then search the stack *after*
+                    // searching the card as searching the stack will take longer.
+                    //                        if (toptr == object && group == nil)
+                    if (t_object . object -> gettype() == CT_CARD)
+                    {
+                        if (t_stack_override)
+                            MCInterfaceEvalObjectOfCardOrStackById(ctxt, t_object, toptr -> otype, toptr -> ptype, t_id, t_object);
+                        else
+                            MCInterfaceEvalObjectOfCardById(ctxt, t_object, toptr -> otype, toptr -> ptype, t_id, t_object);
+                    }
+                    else
+                    {
+                        // if we have a group then stack override is irrelevant.
+                        MCInterfaceEvalObjectOfGroupById(ctxt, t_object, toptr -> otype, t_id, t_object);
+                    }
+                }
+                    break;
+                case CT_EXPRESSION:
+                {
+                    MCNewAutoNameRef t_expression;
+                    if (!ctxt . EvalExprAsNameRef(toptr -> startpos, EE_CHUNK_BADOBJECTEXP, &t_expression))
+                        return;
+                    
+                    if (t_object . object -> gettype() == CT_CARD)
+                        MCInterfaceEvalObjectOfCardByName(ctxt, t_object, toptr -> otype, toptr -> ptype, *t_expression, t_object);
+                    else
+                        MCInterfaceEvalObjectOfGroupByName(ctxt, t_object, toptr -> otype, *t_expression, t_object);
+                }
+                    break;
+                default:
+                    ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
+                    return;
+            }
+            toptr = toptr -> next;
+        }
+    }
+
+    if (!ctxt . HasError())
+    {
+        r_object . object = t_object . object;
+        r_object . part_id = t_object . part_id;
+    }
+}
+
+bool MCChunk::getobj(MCExecContext &ctxt, MCObject *&objptr, uint4 &parid, Boolean recurse)
+{
+    objptr = nil;
+    parid = 0;
+
+    MCObjectPtr t_object;
+
+    if (!getobj(ctxt, t_object, recurse))
+        return false;
+
+    objptr = t_object . object;
+    parid = t_object . part_id;
+
+    return true;
+}
+
+#ifdef LEGACY_EXEC
+Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr, uint4 &parid, Boolean recurse)
+{
+    objptr = nil;
+    parid = 0;
+
+    MCObjectPtr t_object;
+
+    if (getobj(ep, t_object, recurse) == ES_NORMAL)
+    {
+        objptr = t_object . object;
+        parid = t_object . part_id;
+        return ES_NORMAL;
+    }
+
+    return ES_ERROR;
+}
+#endif
+
+#ifdef LEGACY_EXEC
+Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
                           uint4 &parid, Boolean recurse)
 {
 	objptr = NULL;
@@ -936,7 +1695,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 			if (stack->etype == CT_ID)
 				sptr = sptr->findstackid(ep2.getuint4());
 			else
-				sptr = sptr->findstackname(ep2.getsvalue());
+				sptr = sptr->findstackname_oldstring(ep2.getsvalue());
 			break;
 		case CT_THIS:
 			break;
@@ -958,7 +1717,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 				if (stack->next->etype == CT_ID)
 					sptr = sptr->findsubstackid(ep2.getuint4());
 				else
-					sptr = sptr->findsubstackname(ep2.getsvalue());
+					sptr = sptr->findsubstackname_oldstring(ep2.getsvalue());
 				break;
 			case CT_THIS:
 				break;
@@ -977,7 +1736,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 	if (object != NULL && (object->otype == CT_AUDIO_CLIP || object->otype == CT_VIDEO_CLIP))
 	{
 		if (ct_class(object->etype) == CT_ORDINAL)
-			objptr = sptr->getAV(object->etype, MCnullmcstring, object->otype);
+			objptr = sptr->getAV(object->etype, kMCEmptyString, object->otype);
 		else
 		{
 			if (object->startpos->eval(ep2) != ES_NORMAL)
@@ -985,9 +1744,11 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 				MCeerror->add(EE_CHUNK_BADOBJECTEXP, line, pos);
 				return ES_ERROR;
 			}
-			objptr = sptr->getAV(object->etype, ep2.getsvalue(), object->otype);
+            MCNewAutoNameRef t_name;
+            ep2 . copyasnameref(&t_name);
+			objptr = sptr->getAV(object->etype, MCNameGetString(*t_name), object->otype);
 			if (objptr == NULL)
-				objptr = sptr->getobjname(object->otype, ep2.getsvalue());
+				objptr = sptr->getobjname(object->otype, *t_name);
 		}
 		if (objptr == NULL)
 		{
@@ -1035,7 +1796,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 		switch (ct_class(background->etype))
 		{
 		case CT_ORDINAL:
-			bptr = (MCGroup *)sptr->getbackground(background->etype, MCnullmcstring,
+			bptr = (MCGroup *)sptr->getbackground(background->etype, kMCEmptyString,
 			                                      CT_GROUP);
 			break;
 		case CT_ID:
@@ -1045,8 +1806,11 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 				MCeerror->add(EE_CHUNK_BADBACKGROUNDEXP, line, pos);
 				return ES_ERROR;
 			}
-			bptr = (MCGroup *)sptr->getbackground(background->etype,
-			                                      ep2.getsvalue(), CT_GROUP);
+			{
+				MCAutoStringRef t_string;
+				/* UNCHECKED */ ep2.copyasstringref(&t_string);
+				bptr = (MCGroup *)sptr->getbackground(background->etype, *t_string, CT_GROUP);
+			}
 			break;
 		default:
 			MCeerror->add(EE_CHUNK_BADBACKGROUNDEXP, line, pos);
@@ -1083,11 +1847,12 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 			{
 				if (marked)
 					sptr->setmark();
-				cptr = sptr->getchild(card->etype, MCnullmcstring, card->otype);
+				cptr = sptr->getchild(card->etype, kMCEmptyString, card->otype);
 			}
 			break;
 		case CT_ID:
 		case CT_EXPRESSION:
+		{
 			if (marked)
 				sptr->setmark();
 			if (card->startpos->eval(ep2) != ES_NORMAL)
@@ -1096,7 +1861,10 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 				MCeerror->add(EE_CHUNK_BADCARDEXP, line, pos);
 				return ES_ERROR;
 			}
-			cptr = sptr->getchild(card->etype, ep2.getsvalue(), card->otype);
+			MCAutoStringRef t_exp;
+			/* UNCHECKED */ ep2 . copyasstringref(&t_exp);
+			cptr = sptr->getchild(card->etype, *t_exp, card->otype);
+		}
 			break;
 		default:
 			sptr->clearbackground();
@@ -1106,7 +1874,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 	}
 	else if (cptr == NULL && bptr == NULL)
 	{
-		cptr = sptr->getchild(CT_THIS, MCnullmcstring, CT_CARD);
+		cptr = sptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
 		thiscard = True;
 	}
 
@@ -1160,9 +1928,11 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 			if (t_etype != CT_ID)
 				t_stack_override = false;
 
+			MCAutoStringRef t_expression;
+			/* UNCHECKED */ ep2 . copyasstringref(&t_expression);
 			if (cptr != NULL)
 			{
-				gptr = (MCGroup *)cptr->getchild(tgptr->etype, ep2.getsvalue(), tgptr->otype, tgptr->ptype);
+				gptr = (MCGroup *)cptr->getchild(tgptr->etype, *t_expression, tgptr->otype, tgptr->ptype);
 
 				// If the control couldn't be found on the card, and we are in
 				// stack override mode, then search the stack. We do this *after*
@@ -1174,7 +1944,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 				}
 			}
 			else
-				gptr = (MCGroup *)bptr->getchild(tgptr->etype, ep2.getsvalue(), tgptr->otype, tgptr->ptype);
+				gptr = (MCGroup *)bptr->getchild(tgptr->etype, *t_expression, tgptr->otype, tgptr->ptype);
 
 		}
 		else
@@ -1234,11 +2004,14 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 			if (t_etype != CT_ID)
 				t_stack_override = false;
 
+			MCAutoStringRef t_expression;
+			/* UNCHECKED */ ep2 . copyasstringref(&t_expression);
+
 			if (gptr != NULL)
-				objptr = gptr->getchild(toptr->etype, ep2.getsvalue(), toptr->otype, toptr->ptype);
+				objptr = gptr->getchild(toptr->etype, *t_expression, toptr->otype, toptr->ptype);
 			else if (cptr != NULL)
 			{
-				objptr = cptr->getchild(toptr->etype, ep2.getsvalue(), toptr->otype, toptr->ptype);
+				objptr = cptr->getchild(toptr->etype, *t_expression, toptr->otype, toptr->ptype);
 
 				// If the control couldn't be found on the card, and we are in
 				// stack override mode, then search the stack. We do this *after*
@@ -1250,7 +2023,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 				}
 			}
 			else
-				objptr = bptr->getchild(toptr->etype, ep2.getsvalue(), toptr->otype, toptr->ptype);
+				objptr = bptr->getchild(toptr->etype, *t_expression, toptr->otype, toptr->ptype);
 		}
 		else
 		{
@@ -1297,6 +2070,19 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 	}
 
 	return ES_NORMAL;
+
+    objptr = nil;
+	parid = 0;
+    
+    MCObjectPtr t_object;
+    if (getobj(ep, t_object, recurse) == ES_NORMAL)
+    {
+        objptr = t_object . object;
+        parid = t_object . part_id;
+        return ES_NORMAL;
+    }
+    
+    return ES_ERROR;
 }
 
 Exec_stat MCChunk::extents(MCCRef *ref, int4 &start, int4 &number,
@@ -1437,8 +2223,9 @@ static int4 countwords(MCExecPoint &ep, const char *sptr, const char *eptr)
 static int4 counttokens(MCExecPoint &ep, const char *sptr, const char *eptr)
 {
 	int4 tokens = 0;
-	MCString s(sptr, eptr - sptr);
-	MCScriptPoint sp(s);
+    MCAutoStringRef s;
+    /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) sptr, eptr - sptr, &s);
+	MCScriptPoint sp(*s);
 	Parse_stat ps = sp.nexttoken();
 	while (ps != PS_ERROR && ps != PS_EOF)
 	{
@@ -1467,10 +2254,260 @@ static void skip_word(const char *&sptr, const char *&eptr)
 		while (sptr < eptr && !isspace((uint1)*sptr))
 			sptr++;
 }
+#endif
 
+void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedText& x_mark, bool includechars)
+{
+    int4 t_first, t_last;
+    // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+    x_mark . changed = 0;
+    bool t_further_chunks = false;
+    
+    if (cline != nil)
+    {
+        t_further_chunks = (paragraph != nil || sentence != nil || item != nil || word != nil || trueword != nil
+                            || character != nil || codepoint != nil || codeunit != nil || byte != nil);
+        if (cline -> etype == CT_RANGE || cline -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(cline -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+        
+            if (cline -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(cline -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkLinesOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkLinesOfTextByOrdinal(ctxt, cline -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (paragraph != nil)
+    {
+        t_further_chunks = (sentence != nil || item != nil || word != nil || trueword != nil
+                            || character != nil || codepoint != nil || codeunit != nil || byte != nil);
+        if (paragraph -> etype == CT_RANGE || paragraph -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(paragraph -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (paragraph -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(paragraph -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkParagraphsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkParagraphsOfTextByOrdinal(ctxt, paragraph -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (sentence != nil)
+    {
+        t_further_chunks = (item != nil || word != nil || trueword != nil || character != nil 
+                            || codepoint != nil || codeunit != nil || byte != nil);
+        if (sentence -> etype == CT_RANGE || sentence -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(sentence -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (sentence -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(sentence -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkSentencesOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkSentencesOfTextByOrdinal(ctxt, sentence -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (item != nil)
+    {
+        t_further_chunks = (word != nil || trueword != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil);
+        if (item -> etype == CT_RANGE || item -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(item -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (item -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(item -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkItemsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkItemsOfTextByOrdinal(ctxt, item -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (word != nil)
+    {
+        t_further_chunks = (trueword != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil);
+        if (word -> etype == CT_RANGE || word -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(word -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (word -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(word -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkWordsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkWordsOfTextByOrdinal(ctxt, word -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (trueword != nil)
+    {
+        t_further_chunks = (character != nil || codepoint != nil || codeunit != nil || byte != nil);
+        if (trueword -> etype == CT_RANGE || trueword -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(trueword -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (trueword -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(trueword -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkTrueWordsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkTrueWordsOfTextByOrdinal(ctxt, trueword -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (token != nil)
+    {
+        if (token -> etype == CT_RANGE || token -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(token -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+
+            if (token -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(token -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkTokensOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkTokensOfTextByOrdinal(ctxt, token -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (character != nil)
+    {
+        if (character -> etype == CT_RANGE || character -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(character -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+
+            if (character -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(character -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkCharsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkCharsOfTextByOrdinal(ctxt, character -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+
+    if (codepoint != nil)
+    {
+        if (codepoint -> etype == CT_RANGE || codepoint -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(codepoint -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (codepoint -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(codepoint -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkCodepointsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+           MCStringsMarkCodepointsOfTextByOrdinal(ctxt, codepoint -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (codeunit != nil)
+    {
+        if (codeunit -> etype == CT_RANGE || codeunit -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(codeunit -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (codeunit -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(codeunit -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkCodeunitsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkCodeunitsOfTextByOrdinal(ctxt, codeunit -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (byte != nil)
+    {
+        if (byte -> etype == CT_RANGE || byte -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(byte -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (byte -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(byte -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkBytesOfTextByRange(ctxt, t_first, t_last, x_mark);
+        }
+        else
+            MCStringsMarkBytesOfTextByOrdinal(ctxt, byte -> etype, x_mark);
+    }
+}
+
+#ifdef LEGACY_EXEC
 // MW-2012-02-23: [[ FieldChars ]] Added the 'includechars' flag, if true any char chunk
 //   will be processed; otherwise it will be ignored.
-Exec_stat MCChunk::mark(MCExecPoint &ep, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool includechars)
+Exec_stat MCChunk::mark_legacy(MCExecPoint &ep, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool includechars)
 {
 	start = 0;
 	end = ep.getsvalue().getlength();
@@ -1646,17 +2683,19 @@ Exec_stat MCChunk::mark(MCExecPoint &ep, int4 &start, int4 &end, Boolean force, 
 			return ES_ERROR;
 		}
 		uint4 offset = sptr - startptr;
-		MCString string(sptr, eptr - sptr);
-		MCScriptPoint sp(string);
+        MCAutoStringRef string;
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) sptr, eptr - sptr, &string);
+
+        MCScriptPoint sp(*string);
 		MCerrorlock++;
 
 		Parse_stat ps = sp.nexttoken();
 		while (s-- && ps != PS_ERROR && ps != PS_EOF)
 			ps = sp.nexttoken();
-		start = sp.gettoken().getstring() - sp.getscript() + offset;
+		start = sp.gettoken_oldstring().getstring() - sp.getscript() + offset;
 		while (--n && ps != PS_ERROR && ps != PS_EOF)
 			ps = sp.nexttoken();
-		end = sp.gettoken().getstring() + sp.gettoken().getlength()
+		end = sp.gettoken_oldstring().getstring() + sp.gettoken_oldstring().getlength()
 		      - sp.getscript() + offset;
 		MCerrorlock--;
 		sptr = startptr + start;
@@ -1685,7 +2724,7 @@ Exec_stat MCChunk::gets(MCExecPoint &ep)
 {
 	int4 start, end;
 
-	if (mark(ep, start, end, False, False) != ES_NORMAL)
+	if (mark_legacy(ep, start, end, False, False) != ES_NORMAL)
 	{
 		MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
 		return ES_ERROR;
@@ -1694,7 +2733,7 @@ Exec_stat MCChunk::gets(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
-Exec_stat MCChunk::eval(MCExecPoint &ep)
+Exec_stat MCChunk::eval_legacy(MCExecPoint &ep)
 {
 	if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
 	        && group == NULL && object == NULL)
@@ -1810,12 +2849,13 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 			}
 		}
 	}
+
 	if (cline != NULL || item != NULL || word != NULL || token != NULL
 	        || character != NULL)
 	{
 		// MW-2007-11-28: [[ Bug 5610 ]] If we have an array, force a conversion to string (empty)
 		//   for backwards compatibility.
-		if (ep . getformat() == VF_ARRAY)
+		if (ep . isarray())
 			ep . clear();
 		if (ep.tos() != ES_NORMAL || gets(ep) != ES_NORMAL)
 		{
@@ -1826,7 +2866,249 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
-Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
+Exec_stat MCChunk::evaltextchunk(MCExecPoint &ep, MCCRef *ref, MCStringRef p_source, Chunk_term p_chunk_type, MCStringRef& r_text)
+{
+    MCExecContext ctxt(ep); 
+	if (ref != nil)
+    {
+        int4 t_start;
+        int4 t_end;
+        if (ref -> etype == CT_RANGE)
+        {
+            if (ref->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGESTART, line, pos);
+                return ES_ERROR;
+            }
+            t_start = ep . getint4();
+            
+            if (ref->endpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADRANGEEND, line, pos);
+                return ES_ERROR;
+            }
+            t_end = ep.getint4();
+            
+            MCStringsEvalTextChunkByRange(ctxt, p_source, p_chunk_type, t_start, t_end, false, r_text);
+        }
+        else if (ref -> etype == CT_EXPRESSION)
+        {
+            if (ref->startpos->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+            {
+                MCeerror->add(EE_CHUNK_BADEXPRESSION, line, pos);
+                return ES_ERROR;
+            }
+            t_start = ep . getint4();
+            
+            MCStringsEvalTextChunkByExpression(ctxt, p_source, p_chunk_type, t_start, false, r_text);
+        }
+        else
+            MCStringsEvalTextChunkByOrdinal(ctxt, p_source, p_chunk_type, ref -> etype, false, r_text);
+    }
+    else
+    {
+        r_text = MCValueRetain(p_source);
+    }
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
+    return ES_ERROR;
+}
+#endif
+
+void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
+{
+    MCExecValue t_text;
+    MCAutoValueRef t_valueref;
+    bool t_exec_expr = false;
+
+    if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
+        && group == NULL && object == NULL)
+    {
+        if (desttype != DT_OWNER)
+        {
+            if (!ctxt . EvaluateExpression(source, EE_CHUNK_CANTGETSOURCE, t_text))
+                return;
+            t_exec_expr = true;
+        }
+        else
+        {
+            // MW-2008-11-05: [[ Owner Reference ]] This case handles the syntax:
+            //     <text chunk> of the owner of ...
+            //   In this case we evaluate the owner property of the resolved object.
+            MCObjectPtr t_object;
+            if (!static_cast<MCChunk *>(source) -> getobj(ctxt, t_object, True))
+            {
+                ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
+                return;
+            }
+
+            MCEngineEvalOwner(ctxt, t_object, (MCStringRef&)&t_valueref);
+        }
+    }
+    else if (destvar != NULL)
+    {
+        if (!ctxt . EvaluateExpression(destvar, EE_CHUNK_CANTGETDEST, t_text))
+            return;
+        t_exec_expr = true;
+    }
+    else
+    {
+        MCAutoValueRef t_url_output;
+        if (url != NULL)
+        {
+            MCAutoStringRef t_target;
+            if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_CANTGETDEST, &t_target))
+                return;
+
+            MCU_geturl(ctxt, *t_target, &t_url_output);
+        }
+
+        MCObjectPtr t_object;
+        getoptionalobj(ctxt, t_object, True);
+
+        if (t_object . object == nil)
+        {
+            if (url == NULL || stack != NULL || background != NULL ||
+                card != NULL || group != NULL || object != NULL)
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
+                return;
+            }
+            t_valueref = *t_url_output;
+        }
+        else
+        {
+            switch (function)
+            {
+                case F_CLICK_CHUNK:
+                    MCInterfaceEvalClickChunk(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_CLICK_CHAR_CHUNK:
+                    MCInterfaceEvalClickCharChunk(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_CLICK_LINE:
+                    MCInterfaceEvalClickLine(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_CLICK_TEXT:
+                    MCInterfaceEvalClickText(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_SELECTED_CHUNK:
+                    MCInterfaceEvalSelectedChunk(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_SELECTED_LINE:
+                    MCInterfaceEvalSelectedLine(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_SELECTED_TEXT:
+                    MCInterfaceEvalSelectedText(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_FOUND_CHUNK:
+                    MCInterfaceEvalFoundChunk(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_FOUND_LINE:
+                    MCInterfaceEvalFoundLine(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_FOUND_TEXT:
+                    MCInterfaceEvalFoundText(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_MOUSE_CHUNK:
+                    MCInterfaceEvalMouseChunk(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_MOUSE_LINE:
+                    MCInterfaceEvalMouseLine(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_MOUSE_CHAR_CHUNK:
+                    MCInterfaceEvalMouseCharChunk(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                case F_MOUSE_TEXT:
+                    MCInterfaceEvalMouseText(ctxt, (MCStringRef&)&t_valueref);
+                    break;
+                default:
+                    MCMarkedText t_mark;
+                    MCInterfaceMarkContainer(ctxt, t_object, false, t_mark);
+                    MCStringsEvalTextChunk(ctxt, t_mark, (MCStringRef&)&t_valueref);
+                    MCValueRelease(t_mark . text);
+                    break;
+            }
+        }
+    }
+
+    if (*t_valueref != nil || t_exec_expr)
+    {
+        if (isstringchunk() || isdatachunk())
+        {
+            MCMarkedText t_new_mark;
+            t_new_mark . text = nil;
+            t_new_mark . start = 0;
+            t_new_mark . finish = MAXUINT4;
+            
+            bool t_success = true;
+            
+            // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
+            if (isstringchunk())
+            {
+                // Need a string ref, at least initially
+                MCAutoStringRef t_text_str;
+                if (t_exec_expr)
+                {
+                    MCExecTypeConvertAndReleaseAlways(ctxt, t_text . type, &t_text, kMCExecValueTypeStringRef, &(&t_text_str));
+                    t_success = !ctxt . HasError();
+                }
+                else
+                    t_success = ctxt . ConvertToString(*t_valueref, &t_text_str);
+                
+                if (!t_success)
+                {
+                    ctxt.Throw();
+                    return;
+                }
+                t_new_mark . text = MCValueRetain(*t_text_str);
+            }
+            else
+            {
+                // Must be data
+                MCAutoDataRef t_data;
+                if (t_exec_expr)
+                {
+                    MCExecTypeConvertAndReleaseAlways(ctxt, t_text . type, &t_text, kMCExecValueTypeDataRef, &(&t_data));
+                    t_success = !ctxt . HasError();
+                }
+                else
+                    t_success = ctxt . ConvertToData(*t_valueref, &t_data);
+                
+                if (!t_success)
+                {
+                    ctxt.Throw();
+                    return;
+                }
+                t_new_mark . text = MCValueRetain(*t_data);
+            }
+            
+            mark(ctxt, false, false, t_new_mark);
+            
+            if (!isdatachunk())
+                MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;
+            else
+                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value), r_text . type = kMCExecValueTypeDataRef;
+
+            MCValueRelease(t_new_mark . text);
+        }
+        else
+        {
+            if (t_exec_expr)
+                r_text = t_text;
+            else
+                MCExecTypeSetValueRef(r_text, MCValueRetain(*t_valueref));
+        }
+    }
+    else
+        MCExecTypeSetValueRef(r_text, MCValueRetain(kMCEmptyString));
+}
+
+#ifdef LEGACY_EXEC
+Exec_stat MCChunk::set_legacy(MCExecPoint &ep, Preposition_type ptype)
 {
 	MCObject *objptr = NULL;
 	MCField *fptr = NULL;
@@ -1896,7 +3178,7 @@ Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 
 	// MW-2007-11-28: [[ Bug 5610 ]] If we have an array, force a conversion to string (empty)
 	//   for backwards compatibility.
-	if (ep.getformat() == VF_ARRAY)
+	if (ep . isarray())
 		ep . clear();
 	else if (ep.tos() != ES_NORMAL)
 	{
@@ -1918,7 +3200,7 @@ Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 			return ES_ERROR;
 		}
 		uint4 oldlength = ep2.getsvalue().getlength();
-		if (mark(ep2, start, end, True, False) != ES_NORMAL)
+		if (mark_legacy(ep2, start, end, True, False) != ES_NORMAL)
 		{
 			MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
 			return ES_ERROR;
@@ -1929,6 +3211,7 @@ Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 		// MW-2005-03-10: Fix bug 2471. Only do this optimisation if the destination is *ONLY* a string
 		// MW-2012-03-15: [[ Bug ]] Only take the shortcut if the varible is not env, not msg and there
 		//   are no watched vars.
+#ifdef OLD_EXEC
 		if (destvar -> getisplain() && ep2.getformat() == VF_STRING && end - start == ep.getsvalue().getlength() && ptype == PT_INTO
 		        && ep2.getsvalue().getlength() == oldlength && MCnwatchedvars == 0)
 		{
@@ -1936,6 +3219,7 @@ Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 			       ep.getsvalue().getlength());
 			return ES_NORMAL;
 		}
+#endif
 	}
 	else
 	{
@@ -1958,7 +3242,7 @@ Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 			}
 			else
 				objptr->getprop(parid, P_TEXT, ep2, False);
-			if (mark(ep2, start, end, True, False) != ES_NORMAL)
+			if (mark_legacy(ep2, start, end, True, False) != ES_NORMAL)
 			{
 				MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
 				return ES_ERROR;
@@ -2019,7 +3303,167 @@ Exec_stat MCChunk::set(MCExecPoint &ep, Preposition_type ptype)
 				}
 	return ES_NORMAL;
 }
+#endif
 
+bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_value, bool p_unicode)
+{
+    if (destvar != nil)
+    {
+        MCVariableChunkPtr t_var_chunk;
+        if (!evalvarchunk(ctxt, false, true, t_var_chunk))
+            return false;
+
+        MCEngineExecPutIntoVariable(ctxt, p_value, p_type, t_var_chunk);
+    }
+    else if (isurlchunk())
+    {
+        MCUrlChunkPtr t_url_chunk;
+        t_url_chunk . url = nil;
+        if (!evalurlchunk(ctxt, false, true, p_type, t_url_chunk))
+            return false;
+
+        MCNetworkExecPutIntoUrl(ctxt, p_value, p_type, t_url_chunk);
+
+        MCValueRelease(t_url_chunk . url);
+        MCValueRelease(t_url_chunk . mark . text);
+    }
+    else
+    {
+        MCObjectChunkPtr t_obj_chunk;
+        if (!evalobjectchunk(ctxt, false, true, t_obj_chunk))
+            return false;
+
+        if (p_unicode)
+        {
+            if (t_obj_chunk . object -> gettype() != CT_FIELD)
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }
+
+            MCAutoDataRef t_data;
+            if (!ctxt . ConvertToData(p_value, &t_data))
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }
+            MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, p_type, t_obj_chunk);
+        }
+        else
+        {
+            MCAutoStringRef t_string;
+            if (!ctxt . ConvertToString(p_value, &t_string))
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }
+
+            if (t_obj_chunk . object -> gettype() == CT_FIELD)
+                MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
+            else
+            {
+                // AL-2014-08-04: [[ Bug 13081 ]] 'put into <chunk>' is valid for any container type
+                switch (t_obj_chunk . object -> gettype())
+                {
+                    case CT_BUTTON:
+                    case CT_IMAGE:
+                    case CT_AUDIO_CLIP:
+                    case CT_VIDEO_CLIP:
+                        MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
+                        break;
+                    default:
+                        ctxt . LegacyThrow(EE_CHUNK_SETNOTACONTAINER);
+                        break;
+                }
+            }
+        }
+        MCValueRelease(t_obj_chunk . mark . text);
+    }
+
+    if (!ctxt . HasError())
+        return true;
+
+    return false;
+}
+
+bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCExecValue p_value, bool p_unicode)
+{    
+    if (destvar != nil)
+    {
+        MCVariableChunkPtr t_var_chunk;
+        if (!evalvarchunk(ctxt, false, true, t_var_chunk))
+            return false;
+
+        MCEngineExecPutIntoVariable(ctxt, p_value, p_type, t_var_chunk);
+    }
+    else if (isurlchunk())
+    {
+        MCAutoValueRef t_valueref;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_valueref));
+        MCUrlChunkPtr t_url_chunk;
+        t_url_chunk . url = nil;
+        if (!evalurlchunk(ctxt, false, true, p_type, t_url_chunk))
+            return false;
+        
+        MCNetworkExecPutIntoUrl(ctxt, *t_valueref, p_type, t_url_chunk);
+        
+        MCValueRelease(t_url_chunk . url);
+        MCValueRelease(t_url_chunk . mark . text);
+    }
+    else
+    {
+        MCObjectChunkPtr t_obj_chunk;
+        if (!evalobjectchunk(ctxt, false, true, t_obj_chunk))
+            return false;
+        
+        if (p_unicode)
+        {
+            if (t_obj_chunk . object -> gettype() != CT_FIELD)
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }
+            
+            MCAutoDataRef t_data;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDataRef, &(&t_data));
+            if (ctxt . HasError())
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }
+            MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, p_type, t_obj_chunk);
+        }
+        else if (t_obj_chunk . object -> gettype() == CT_FIELD)
+        {
+            MCAutoStringRef t_string;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_string));
+            if (ctxt . HasError())
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }            
+            
+            MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
+        }
+        else
+            MCInterfaceExecPutIntoObject(ctxt, p_value, p_type, t_obj_chunk);
+
+        MCValueRelease(t_obj_chunk . mark . text);
+    }
+    
+    if (!ctxt . HasError())
+        return true;
+    
+    return false;
+}
+
+#ifdef LEGACY_EXEC
 Exec_stat MCChunk::setunicode(MCExecPoint& ep, Preposition_type p_prep)
 {
 	if (destvar == nil && url == nil)
@@ -2088,9 +3532,10 @@ Exec_stat MCChunk::setunicode(MCExecPoint& ep, Preposition_type p_prep)
 	MCeerror -> add(EE_CHUNK_CANTSETUNICODEDEST, line, pos);
 	return ES_ERROR;
 }
+#endif
 
-Exec_stat MCChunk::count(Chunk_term tocount, Chunk_term ptype,
-                         MCExecPoint &ep)
+#ifdef /* MCChunk::count */ LEGACY_EXEC
+Exec_stat MCChunk::count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &ep)
 {
 	// MW-2009-07-22: First non-control chunk is now CT_ELEMENT.
 	if (tocount < CT_ELEMENT)
@@ -2154,42 +3599,20 @@ Exec_stat MCChunk::count(Chunk_term tocount, Chunk_term ptype,
 		// MW-2009-07-22: If the value of the chunk is an array, then either
 		//   the count will be zero (if a string chunk has been requested),
 		//   otherwise it will be the count of the keys...
-		if (ep . getformat() != VF_ARRAY)
+		if (!ep . isarray())
 		{
-			uint4 length = ep.getsvalue().getlength();
-			if (ep.getsvalue() != MCnullmcstring)
-			{
-				const char *sptr = ep.getsvalue().getstring();
-				const char *eptr = sptr + length;
-				switch(tocount)
-				{
-				case CT_LINE:
-					i = countlines(ep, sptr, eptr);
-					break;
-				case CT_ITEM:
-					i = countitems(ep, sptr, eptr);
-					break;
-				case CT_WORD:
-					i = countwords(ep, sptr, eptr);
-					break;
-				case CT_TOKEN:
-					i = counttokens(ep, sptr, eptr);
-					break;
-				case CT_CHARACTER:
-					i = length;
-					break;
-				default:
-					break;
-				}
-			}
-		}
+            MCAutoStringRef t_string;
+            ep . copyasstringref(&t_string);
+            MCExecContext ctxt(ep);
+            MCStringsCountChunks(ctxt, tocount, *t_string, i);
+        }
 		else
 		{
 			switch(tocount)
 			{
 			case CT_KEY:
 			case CT_ELEMENT:
-				i = ep . getarray() -> get_array() -> getnfilled();
+				i = MCArrayGetCount(ep . getarrayref());
 				break;
 			default:
 				i = 0;
@@ -2199,9 +3622,108 @@ Exec_stat MCChunk::count(Chunk_term tocount, Chunk_term ptype,
 
 		ep.setnvalue(i);
 	}
-	return ES_NORMAL;
+    return ES_NORMAL;
+}
+#endif /* MCChunk::count */
+
+void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, uinteger_t& r_count)
+{
+    // MW-2009-07-22: First non-control chunk is now CT_ELEMENT.
+    if (tocount <= CT_LAST_CONTROL)
+    {
+        uint2 i = 0;
+        MCObject *optr;
+        uint4 parid;
+        getoptionalobj(ctxt, optr, parid, True);
+
+        if (optr == nil)
+        {
+            if (stack != NULL)
+            {
+                // AL-2014-06-09: [[ Bug 12596 ]] Throw error when the chunk expression
+                //  does not resolve to an object on the specified stack.
+                ctxt . Throw();
+                return;
+            }
+            optr = MCdefaultstackptr;
+        }
+        if (tocount == CT_MARKED)
+        {
+            MCStack *sptr = optr->getstack();
+            sptr->setmark();
+            if (optr->gettype() == CT_GROUP)
+            {
+                MCGroup *gptr = (MCGroup *)optr;
+                gptr->count(CT_CARD, NULL, i);
+            }
+            else
+                sptr->count(CT_CARD, CT_UNDEFINED, NULL, i);
+            sptr->clearmark();
+        }
+        else
+            switch (optr->gettype())
+            {
+            case CT_STACK:
+                {
+                    MCStack *sptr = (MCStack *)optr;
+                    sptr->count(tocount, ptype, NULL, i);
+                }
+                break;
+            case CT_CARD:
+                {
+                    MCCard *cptr = (MCCard *)optr;
+                    cptr->count(tocount, ptype, NULL, i, True);
+                }
+                break;
+            case CT_GROUP:
+                {
+                    MCGroup *gptr = (MCGroup *)optr;
+                    gptr->count(tocount, NULL, i);
+                    if (tocount == CT_LAYER || tocount == CT_GROUP)
+                        i--;
+                }
+                break;
+            default:
+                break;
+            }
+        r_count = i;
+    }
+    else if (tocount < CT_BYTE)
+    {
+        MCAutoStringRef t_string;
+        if (!ctxt . EvalExprAsStringRef(this, EE_CHUNK_BADEXPRESSION, &t_string))
+            return;
+        
+        MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
+    }
+    else if (tocount == CT_BYTE)
+    {
+        MCAutoDataRef t_data;
+        if (!ctxt . EvalExprAsDataRef(this, EE_CHUNK_BADEXPRESSION, &t_data))
+            return;
+        
+       r_count = MCDataGetLength(*t_data);
+    }
+    else
+    {
+        MCAutoValueRef t_value;
+
+        // MW-2009-07-22: If the value of the chunk is an array, then either
+        //   the count will be zero (if a string chunk has been requested),
+        //   otherwise it will be the count of the keys...
+        // SN-2013-11-5: Apperently eval() is no longer able to return an array
+        if (!ctxt . EvalExprAsValueRef(this, EE_CHUNK_BADEXPRESSION, &t_value))
+            return;
+
+        if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeArray)
+            r_count = MCArrayGetCount((MCArrayRef)*t_value);
+        else
+            // AL-2014-07-10: [[ Bug 12795 ]] Don't call MCStringsCountChunks with a non-string chunk expression.
+            r_count = 0;
+    }
 }
 
+#ifdef LEGACY_EXEC
 // MW-2012-12-13: [[ Bug 10592 ]] If wholechunk is False then we don't expand
 //   line chunks to include the CR at the end.
 Exec_stat MCChunk::fmark(MCField *fptr, int4 &start, int4 &end, Boolean wholechunk)
@@ -2329,7 +3851,7 @@ Exec_stat MCChunk::markcharactersinfield(uint32_t p_part_id, MCExecPoint& ep, in
 				t_start--;
 			break;
 		default:
-			assert(false);
+			MCUnreachable();
 			break;
 	}
 		
@@ -2362,7 +3884,7 @@ Exec_stat MCChunk::fieldmark(MCExecPoint &ep, MCField *fptr, uint4 parid,
 		{
 			fptr->returntext(ep, start, end);
 			int4 si, ei;
-			if (mark(ep, si, ei, force, wholechunk, false) != ES_NORMAL)
+			if (mark_legacy(ep, si, ei, force, wholechunk, false) != ES_NORMAL)
 			{
 				MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
 				return ES_ERROR;
@@ -2396,7 +3918,7 @@ Exec_stat MCChunk::fieldmark(MCExecPoint &ep, MCField *fptr, uint4 parid,
 		
 		// Perform the 'mark' operation.
 		MCString oldstring = ep.getsvalue();
-		if (mark(ep, start, end, force, wholechunk, !t_has_unicode) != ES_NORMAL)
+		if (mark_legacy(ep, start, end, force, wholechunk, !t_has_unicode) != ES_NORMAL)
 		{
 			MCeerror->add(EE_CHUNK_BADTEXT, line, pos);
 			return ES_ERROR;
@@ -2447,7 +3969,9 @@ Exec_stat MCChunk::fieldmark(MCExecPoint &ep, MCField *fptr, uint4 parid,
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef /* MCChunk::getobjforprop */ LEGACY_EXEC
 Exec_stat MCChunk::getobjforprop(MCExecPoint& ep, MCObject*& r_object, uint4& r_parid)
 {
 	MCObject *objptr;
@@ -2471,13 +3995,45 @@ Exec_stat MCChunk::getobjforprop(MCExecPoint& ep, MCObject*& r_object, uint4& r_
 	MCeerror->add(EE_CHUNK_NOPROP, line, pos);
 	return ES_ERROR;
 }
+#endif /* MCChunk::getobjforprop */
 
-// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
-Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
+bool MCChunk::getobjforprop(MCExecContext& ctxt, MCObject*& r_object, uint4& r_parid)
 {
 	MCObject *objptr;
 	uint4 parid;
+    
+	if (!getobj(ctxt, objptr, parid, True))
+	{
+		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
+		return false;
+	}
+	Boolean tfunction = False;
+	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
+        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
+        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
+        && function != F_SELECTED_IMAGE
+        && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
+		tfunction = True;
+	if (!tfunction && cline == nil && paragraph == nil && sentence == nil
+        && item == nil && trueword == nil && word == nil && token == nil
+        && character == nil && codepoint == nil && codeunit == nil && byte == nil)
+	{
+		r_object = objptr;
+		r_parid = parid;
+		return true;
+	}
+    
+	MCeerror->add(EE_CHUNK_NOPROP, line, pos);
+	return false;
+}
 
+#ifdef LEGACY_EXEC
+// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
+Exec_stat MCChunk::getprop_legacy(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
+{
+	MCObject *objptr;
+	uint4 parid;
+    
 	if (url != NULL)
 	{
 		if (url->startpos == NULL || url->startpos->eval(ep) != ES_NORMAL)
@@ -2487,7 +4043,7 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 		}
 		MCU_geturl(ep);
 	}
-	if (getobj(ep, objptr, parid, True) != ES_NORMAL)
+	if (getobj_legacy(ep, objptr, parid, True) != ES_NORMAL)
 	{
 		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 		return ES_ERROR;
@@ -2504,7 +4060,7 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 			t_stat = objptr->getprop(parid, which, ep, effective);
 		else
 			t_stat = objptr->getarrayprop(parid, which, ep, index, effective);
-
+        
 		if (t_stat != ES_NORMAL)
 		{
 			MCeerror->add(EE_CHUNK_NOPROP, line, pos);
@@ -2522,7 +4078,7 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 		MCField *fptr = (MCField *)objptr;
 		if (fieldmark(ep, fptr, parid, start, end, False, False) != ES_NORMAL)
 			return ES_ERROR;
-
+        
 		// MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
 		//   handle specific styles.
 		if (fptr->gettextatts(parid, which, ep, index, effective, start, end, islinechunk()) != ES_NORMAL)
@@ -2535,11 +4091,11 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
-Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
+Exec_stat MCChunk::setprop_legacy(Properties which, MCExecPoint &ep, MCNameRef index, Boolean effective)
 {
 	MCObject *objptr;
 	uint4 parid;
-
+    
 	if (url != NULL)
 	{
 		if (url->startpos == NULL || url->startpos->eval(ep) != ES_NORMAL)
@@ -2549,7 +4105,7 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 		}
 		MCU_geturl(ep);
 	}
-	if (getobj(ep, objptr, parid, True) != ES_NORMAL)
+	if (getobj_legacy(ep, objptr, parid, True) != ES_NORMAL)
 	{
 		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 		return ES_ERROR;
@@ -2566,7 +4122,7 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 			t_stat = objptr->setprop(parid, which, ep, effective);
 		else
 			t_stat = objptr->setarrayprop(parid, which, ep, index, effective);
-
+        
 		if (t_stat != ES_NORMAL)
 		{
 			MCeerror->add(EE_CHUNK_NOPROP, line, pos);
@@ -2601,7 +4157,7 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 			int4 start, end;
 			if (fieldmark(ep2, fptr, parid, start, end, False, True) != ES_NORMAL)
 				return ES_ERROR;
-
+            
 			// MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
 			//   handle specific styles.
 			// MW-2011-12-08: [[ StyledText ]] Pass the ep, rather than the svalue of
@@ -2621,7 +4177,289 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 	
 	return ES_NORMAL;
 }
+#endif
 
+static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop, MCPropertyInfoChunkType p_chunk_type)
+{
+	for(uindex_t i = 0; i < p_table -> size; i++)
+		if (p_table -> table[i] . property == p_which && (!p_table -> table[i] . has_effective || p_table -> table[i] . effective == p_effective) &&
+            (p_array_prop == p_table -> table[i] . is_array_prop) &&
+            (p_chunk_type == p_table -> table[i] . chunk_type))
+			return &p_table -> table[i];
+	
+	if (p_table -> parent != nil)
+		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop, p_chunk_type);
+	
+	return nil;
+}
+
+// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
+bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
+{
+    MCObjectChunkPtr t_obj_chunk;
+    if (evalobjectchunk(ctxt, false, false, t_obj_chunk) != ES_NORMAL)
+        return false;
+
+    MCPropertyInfo *t_info;
+    
+    if (t_obj_chunk . chunk == CT_UNDEFINED)
+    {
+        bool t_success;
+        t_success = t_obj_chunk . object -> getprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
+        MCValueRelease(t_obj_chunk . mark . text);
+        return t_success;
+    }
+    else
+	{
+        // AL-2014-07-09: [[ Bug 12733 ]] Buttons are also valid containers wrt text chunk properties.
+		if (t_obj_chunk . object -> gettype() != CT_FIELD &&
+            t_obj_chunk . object -> gettype() != CT_BUTTON)
+		{
+			MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
+            MCValueRelease(t_obj_chunk . mark . text);
+			return false;
+		}
+        
+        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
+        //   prop, else its an array prop.
+        bool t_is_array_prop;
+        t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
+        
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
+        
+        if (islinechunk() && t_info == nil)
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
+        
+        if (t_info == nil || t_info -> getter == nil)
+        {
+            MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
+            MCValueRelease(t_obj_chunk . mark . text);
+            return false;
+        }
+        
+        if (t_is_array_prop)
+        {
+            MCObjectChunkIndexPtr t_obj_chunk_index;
+            t_obj_chunk_index . object = t_obj_chunk . object;
+            t_obj_chunk_index . part_id = t_obj_chunk . part_id;
+            t_obj_chunk_index . chunk = t_obj_chunk . chunk;
+            t_obj_chunk_index . mark = t_obj_chunk . mark;
+            t_obj_chunk_index . index = index;
+            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk_index, r_value);
+        }
+        else
+            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
+	}
+    
+    MCValueRelease(t_obj_chunk . mark . text);
+    return !ctxt . HasError();
+}
+
+// MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
+bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
+{
+    MCObjectChunkPtr t_obj_chunk;
+    if (evalobjectchunk(ctxt, false, true, t_obj_chunk) != ES_NORMAL)
+        return false;
+    
+    MCPropertyInfo *t_info;
+    
+    if (t_obj_chunk . chunk == CT_UNDEFINED)
+    {
+        bool t_success = t_obj_chunk . object -> setprop(ctxt, t_obj_chunk . part_id, which, index, effective, p_value);
+        MCValueRelease(t_obj_chunk . mark . text);
+        return t_success;
+    }
+    else
+    {
+        // AL-2014-07-09: [[ Bug 12733 ]] Buttons are also valid containers wrt text chunk properties.
+        if (t_obj_chunk . object -> gettype() != CT_FIELD &&
+            t_obj_chunk . object -> gettype() != CT_BUTTON)
+        {
+            MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
+            MCValueRelease(t_obj_chunk . mark . text);
+            return false;
+        }
+    
+        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
+        //   prop, else its an array prop.
+        bool t_is_array_prop;
+        t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
+        
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
+        if (islinechunk() && t_info == nil)
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
+        
+        if (t_info == nil || t_info -> setter == nil)
+        {
+            MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
+            MCValueRelease(t_obj_chunk . mark . text);
+            return false;
+        }
+        
+        // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
+        //   handle specific styles.
+        // MW-2012-01-25: [[ ParaStyles ]] Pass whether this was an explicit line chunk
+        //   or not. This is used to disambiguate the setting of 'backColor'.
+        
+        if (t_is_array_prop)
+        {
+            MCObjectChunkIndexPtr t_obj_chunk_index;
+            t_obj_chunk_index . object = t_obj_chunk . object;
+            t_obj_chunk_index . part_id = t_obj_chunk . part_id;
+            t_obj_chunk_index . chunk = t_obj_chunk . chunk;
+            t_obj_chunk_index . mark = t_obj_chunk . mark;
+            t_obj_chunk_index . index = index;
+            
+            MCExecStoreProperty(ctxt, t_info, &t_obj_chunk_index, p_value);
+        }
+        else
+            MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, p_value);
+    }
+
+    MCValueRelease(t_obj_chunk . mark. text);
+
+    if (!ctxt . HasError())
+    {
+        // MM-2012-09-05: [[ Property Listener ]] Make sure any listeners are updated of the property change.
+        //  Handled at this point rather than MCProperty::set as here we know if it is a valid object set prop.
+        t_obj_chunk . object -> signallisteners(which);
+        return true;
+    }
+    
+    return false;
+}
+
+Chunk_term MCChunk::getlastchunktype(void)
+{
+    if (byte != nil)
+        return CT_BYTE;
+    if (codeunit != nil)
+        return CT_CODEUNIT;
+    if (codepoint != nil)
+        return CT_CODEPOINT;
+	if (character != nil)
+		return CT_CHARACTER;
+	if (item != nil)
+		return CT_ITEM;
+    if (trueword != nil)
+        return CT_TRUEWORD;
+	if (word != nil)
+		return CT_WORD;
+	if (token != nil)
+		return CT_TOKEN;
+    if (sentence != nil)
+        return CT_SENTENCE;
+    if (paragraph != nil)
+        return CT_PARAGRAPH;
+	if (cline != nil)
+		return CT_LINE;
+	return CT_UNDEFINED;
+}
+
+bool MCChunk::evalvarchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCVariableChunkPtr& r_chunk)
+{
+    if (isstringchunk() || isdatachunk())
+        MCEngineMarkVariable(ctxt, destvar, isdatachunk(), r_chunk . mark);
+
+    mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
+
+    if (ctxt . HasError())
+    {
+        ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
+        return false;
+	}
+
+	r_chunk . variable = destvar;
+    r_chunk . chunk = getlastchunktype();
+
+    return true;
+}
+
+bool MCChunk::evalurlchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, int p_type, MCUrlChunkPtr &r_chunk)
+{
+    MCAutoStringRef t_url;
+
+    if (!ctxt . EvalExprAsStringRef(url -> startpos, EE_CHUNK_BADEXPRESSION, &t_url))
+        return false;
+    
+    // AL-2014-09-10: Don't fetch the url if this is a simple 'put into url...'
+    if (p_type != PT_INTO || getlastchunktype() != CT_UNDEFINED)
+    {
+        MCNetworkMarkUrl(ctxt, *t_url, r_chunk . mark);
+        mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
+    }
+    else
+        r_chunk . mark . text = nil;
+
+    if (ctxt . HasError())
+    {
+        ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
+        return false;
+    }
+
+    r_chunk . url = MCValueRetain(*t_url);
+    r_chunk . chunk = getlastchunktype();
+
+    return true;
+}
+
+bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr &r_chunk)
+{
+    MCObjectPtr t_object;
+    if (!getobj(ctxt, t_object, True))
+    {
+        ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
+        return false;
+    }
+
+    bool t_function = false;
+    if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
+        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
+        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
+        && function != F_SELECTED_IMAGE
+        && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
+        t_function = true;
+
+    // AL-2014-03-27: [[ Bug 12042 ]] Object chunk evaluation should include
+    //  paragraph, sentence, and trueword chunks.
+    if (!t_function && !isstringchunk() && !isdatachunk())
+    {
+        MCMarkedText t_mark;
+        t_mark . finish = INDEX_MAX;
+        t_mark . start = 0;
+        // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
+        t_mark . changed = 0;
+        t_mark . text = nil;
+        r_chunk . object = t_object.object;
+        r_chunk . part_id = t_object.part_id;
+        r_chunk . chunk = CT_UNDEFINED;
+        r_chunk . mark = t_mark;
+        return true;
+    }
+
+    if (t_function && t_object . object -> gettype() == CT_FIELD)
+        MCInterfaceMarkFunction(ctxt, t_object, function, p_whole_chunk, r_chunk . mark);
+    else
+        MCInterfaceMarkContainer(ctxt, t_object, p_whole_chunk, r_chunk . mark);
+
+    mark(ctxt, p_force, p_whole_chunk, r_chunk . mark);
+
+    if (ctxt . HasError())
+    {
+        MCValueRelease(r_chunk . mark . text);
+        ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
+        return false;
+    }
+
+    r_chunk . object = t_object . object;
+    r_chunk . part_id = t_object . part_id;
+    r_chunk . chunk = !t_function ? getlastchunktype() : CT_CHARACTER;
+
+    return true;
+}
+
+#ifdef LEGACY_EXEC
 Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text, Boolean first)
 {
 	MCObject *objptr;
@@ -2681,9 +4519,13 @@ Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text,
 			}
 			else
 			{
+				// Anything that isn't a field or combo-box, or button
 				MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
 				return ES_ERROR;
 			}
+
+		// Field or combo-box - fptr contains field
+
 		int4 start = 0;
 		int4 end = 0;
 		if (text)
@@ -2707,6 +4549,7 @@ Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text,
 	}
 	return ES_NORMAL;
 }
+#endif
 
 // This method returns true if the chunk represents a text chunk. A text chunk
 // is considered to be one which:
@@ -2717,30 +4560,27 @@ Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text,
 //
 bool MCChunk::istextchunk(void) const
 {
-	Boolean tfunction;
-	
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
+    bool t_function = false;
+    if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
         && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
         && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
         && function != F_SELECTED_IMAGE
-		&& function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		tfunction = True;
-	else
-		tfunction = False;
-		
-	if (!tfunction && cline == NULL && item == NULL
-	        && token == NULL && word == NULL && character == NULL)
-		return false;
-
-	return true;
+        && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
+        t_function = true;
+    
+    if (!t_function && !isstringchunk() && !isdatachunk())
+        return false;
+    
+    return true;
 }
 
 // MW-2012-01-25: [[ ParaStyles ]] Returns true if this is an explicit 'line' chunk.
 // MW-2012-02-13: [[ Bug ]] Some function chunks should also be treated as lines.
 bool MCChunk::islinechunk(void) const
 {
-	// If we have any of item, token, word or character entries then we are not a line.
-	if (item != nil || token != nil || word != nil || character != nil)
+	// If we have any of item, token, word, character, codepoint, codeunit or byte entries then we are not a line.
+	if (paragraph != nil || sentence != nil || item != nil || token != nil || trueword != nil
+        || word != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil)
 		return false;
 
 	// If there is a line entry, then we must be a line.
@@ -2762,7 +4602,7 @@ bool MCChunk::isvarchunk(void) const
 	if (source != nil)
 		return false;
 	
-	if (cline != nil || item != nil || token != nil || word != nil || character != nil)
+	if (isstringchunk() || isdatachunk())
 		return false;
 	
 	if (destvar != nil)
@@ -2771,6 +4611,32 @@ bool MCChunk::isvarchunk(void) const
 	return false;
 }
 
+bool MCChunk::isurlchunk(void) const
+{
+	return url != nil;
+}
+
+bool MCChunk::issubstringchunk(void) const
+{
+	if (destvar == nil)
+		return false;
+
+	if (isstringchunk() || isdatachunk())
+		return true;
+
+	return false;
+}
+
+bool MCChunk::isstringchunk(void) const
+{
+    if (cline != nil || paragraph != nil || sentence != nil || item != nil || token != nil || trueword != nil
+        || word != nil || character != nil || codepoint != nil || codeunit != nil)
+		return true;
+    
+    return false;
+}
+
+#ifdef LEGACY_EXEC
 // This method works out the start and end points of the text chunk in the
 // given field.
 //
@@ -2801,7 +4667,9 @@ Exec_stat MCChunk::marktextchunk(MCExecPoint& ep, MCField*& r_field, uint4& r_pa
 
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCChunk::del(MCExecPoint &ep)
 {
 	int4 start, end;
@@ -2920,7 +4788,7 @@ Exec_stat MCChunk::changeprop(MCExecPoint &ep, Properties prop, Boolean value)
 		ep . utf16toutf8();
 
 		int4 start, end;
-		if (mark(ep, start, end, True, False) != ES_NORMAL)
+		if (mark_legacy(ep, start, end, True, False) != ES_NORMAL)
 		{
 			MCeerror->add(EE_CHUNK_CANTMARK, line, pos);
 			return ES_ERROR;
@@ -2977,3 +4845,1103 @@ Exec_stat MCChunk::changeprop(MCExecPoint &ep, Properties prop, Boolean value)
 	}
 	return ES_NORMAL;
 }
+#endif
+////////////////////////////////////////////////////////////////////////////////
+
+void MCChunk::compile(MCSyntaxFactoryRef ctxt)
+{
+#ifdef NEW_CHUNK
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+    
+ 	if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
+        && group == NULL && object == NULL)
+	{
+		if (desttype != DT_OWNER)
+		{
+			source -> compile(ctxt);
+		}
+		else
+		{
+            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+            static_cast<MCChunk *>(source) -> compile_object_ptr(ctxt);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCEngineEvalOwnerMethodInfo);
+		}
+	}
+	else if (destvar != NULL)
+	{
+		destvar -> compile(ctxt);
+	}
+	else
+	{
+		if (url != NULL)
+		{
+            //(is MCU_geturl implicit here?)
+            url -> startpos -> compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCEngineEvalValueAsObjectMethodInfo);
+
+            // what if url compiles as text?
+		}
+        else
+        {
+            this -> compile_object_ptr(ctxt);
+        }
+
+        MCExecMethodInfo *t_method = nil;
+        switch (function)
+        {
+            case F_CLICK_CHUNK:
+                t_method = kMCInterfaceEvalClickChunkMethodInfo;
+                break;
+            case F_CLICK_CHAR_CHUNK:
+                t_method = kMCInterfaceEvalClickCharChunkMethodInfo;
+                break;
+            case F_CLICK_LINE:
+                t_method = kMCInterfaceEvalClickLineMethodInfo;
+                break;
+            case F_CLICK_TEXT:
+                t_method = kMCInterfaceEvalClickTextMethodInfo;
+                break;
+            case F_SELECTED_CHUNK:
+                t_method = kMCInterfaceEvalSelectedChunkMethodInfo;
+                break;
+            case F_SELECTED_LINE:
+                t_method = kMCInterfaceEvalSelectedLineMethodInfo;
+                break;
+            case F_SELECTED_TEXT:
+                t_method = kMCInterfaceEvalSelectedTextMethodInfo;
+                break;
+            case F_FOUND_CHUNK:
+                t_method = kMCInterfaceEvalFoundChunkMethodInfo;
+                break;
+            case F_FOUND_LINE:
+                t_method = kMCInterfaceEvalFoundLineMethodInfo;
+                break;
+            case F_FOUND_TEXT:
+                t_method = kMCInterfaceEvalFoundTextMethodInfo;
+                break;
+            case F_MOUSE_CHUNK:
+                t_method = kMCInterfaceEvalMouseChunkMethodInfo;
+                break;
+            case F_MOUSE_LINE:
+                t_method = kMCInterfaceEvalMouseLineMethodInfo;
+                break;
+            case F_MOUSE_CHAR_CHUNK:
+                t_method = kMCInterfaceEvalMouseCharChunkMethodInfo;
+                break;
+            case F_MOUSE_TEXT:
+                t_method = kMCInterfaceEvalMouseTextMethodInfo;
+                break;
+            default:
+                t_method = kMCInterfaceEvalTextOfContainerMethodInfo;
+                break;
+        }
+        MCSyntaxFactoryEvalMethod(ctxt, t_method);
+	}
+
+	if (cline != nil)
+    {
+        if (cline -> etype == CT_RANGE)
+        {
+            cline->startpos->compile(ctxt);
+            cline->endpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalLinesOfTextByRangeMethodInfo);
+        }
+        else if (cline -> etype == CT_EXPRESSION)
+        {
+            cline->startpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalLinesOfTextByExpressionMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryEvalConstantInt(ctxt, cline -> etype);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalLinesOfTextByOrdinalMethodInfo);
+        }
+    }
+
+	if (item != nil)
+    {
+        if (item -> etype == CT_RANGE)
+        {
+            item->startpos->compile(ctxt);
+            item->endpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalItemsOfTextByRangeMethodInfo);
+        }
+        else if (cline -> etype == CT_EXPRESSION)
+        {
+            item->startpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalItemsOfTextByExpressionMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryEvalConstantInt(ctxt, item -> etype);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalItemsOfTextByOrdinalMethodInfo);
+        }
+    }
+    
+    if (word != nil)
+    {
+        if (word -> etype == CT_RANGE)
+        {
+            word->startpos->compile(ctxt);
+            word->endpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalWordsOfTextByRangeMethodInfo);
+        }
+        else if (word -> etype == CT_EXPRESSION)
+        {
+            word->startpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalWordsOfTextByExpressionMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryEvalConstantInt(ctxt, word -> etype);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalWordsOfTextByOrdinalMethodInfo);
+        }
+    }
+    
+    if (token != nil)
+    {
+        if (token -> etype == CT_RANGE)
+        {
+            token->startpos->compile(ctxt);
+            token->endpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTokensOfTextByRangeMethodInfo);
+        }
+        else if (token -> etype == CT_EXPRESSION)
+        {
+            token->startpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTokensOfTextByExpressionMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryEvalConstantInt(ctxt, token -> etype);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalTokensOfTextByOrdinalMethodInfo);
+        }
+    }
+    
+    if (character != nil)
+    {
+        if (character -> etype == CT_RANGE)
+        {
+            character->startpos->compile(ctxt);
+            character->endpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCharsOfTextByRangeMethodInfo);
+        }
+        else if (character -> etype == CT_EXPRESSION)
+        {
+            character->startpos->compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCharsOfTextByExpressionMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryEvalConstantInt(ctxt, character -> etype);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalCharsOfTextByOrdinalMethodInfo);
+        }
+    }
+    
+	MCSyntaxFactoryEndExpression(ctxt);
+#endif
+}
+
+void MCChunk::compile_in(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
+void MCChunk::compile_out(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
+void MCChunk::compile_inout(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
+/*
+
+Root
+	: <expr>
+	| <var>
+	| me | the menuObject | the target | the owner
+	| template<object>
+	| the errorObject | the selectedObject
+	| the topStack | the clickStack | the mouseStack
+	| <function>
+	
+StackChunk
+	: stack <ref>
+	| stack <ref> of stack <ref>
+	| stack <ref> of Root
+	| stack <ref> of stack <ref> of Root
+	
+
+
+if desttype is DT_ISDEST then it means that the chunk is to be treated in
+container context - in particular the contents of vars is not eval'd to an obj.
+
+if desttype is not DT_ISDEST and desttype is not DT_UNDEFINED then
+	resolve target object
+else if no object chunks then
+	error
+else if url chunk then
+	fetch stack from stream
+else
+	stack context is defaultStack
+	
+if there is a mainstack chunk then
+	resolve stack in context of parent (if any)
+	if there is a substack chunk then
+		resolve substack in context of parent (if any)
+
+if no stack has been resolved then
+	error
+	
+if there is an audioClip or videoCLip chunk then
+	resolve vc or ac in context of resolved stack
+	return resolved vc / ac
+	
+if there are no more object chunks then
+	return resolved stack
+	
+if background is not 
+
+*/
+
+void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
+{
+#ifdef NEW_CHUNK
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos); 
+
+	if (desttype != DT_UNDEFINED && desttype != DT_ISDEST)
+	{
+		if (desttype == DT_EXPRESSION)
+		{
+			source -> compile(ctxt);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCEngineEvalValueAsObjectMethodInfo);
+		}
+		else if (desttype == DT_VARIABLE)
+		{
+			destvar -> compile(ctxt);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCEngineEvalValueAsObjectMethodInfo);
+		}
+		else if (desttype == DT_OWNER)
+		{
+			static_cast<MCChunk *>(source) -> compile_object_ptr(ctxt);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCEngineEvalOwnerAsObjectMethodInfo);
+		}
+		else if (desttype >= DT_FIRST_OBJECT && desttype < DT_LAST_OBJECT)
+		{
+			MCSyntaxFactoryEvalConstantUInt(ctxt, desttype);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCEngineEvalTemplateAsObjectMethodInfo);
+		}
+		else
+		{
+			MCExecMethodInfo *t_method;
+			switch(desttype)
+			{
+			case DT_ME:
+				t_method = kMCEngineEvalMeAsObjectMethodInfo;
+				break;
+			case DT_MENU_OBJECT:
+				t_method = kMCEngineEvalMenuObjectAsObjectMethodInfo;
+				break;
+			case DT_TARGET:
+				t_method = kMCEngineEvalTargetAsObjectMethodInfo;
+				break;
+			case DT_ERROR:
+				t_method = kMCEngineEvalErrorObjectAsObjectMethodInfo;
+				break;
+			case DT_SELECTED:
+				t_method = kMCInterfaceEvalSelectedObjectAsObjectMethodInfo;
+				break;
+			case DT_TOP_STACK:
+				t_method = kMCInterfaceEvalTopStackAsObjectMethodInfo;
+				break;
+			case DT_CLICK_STACK:
+				t_method = kMCInterfaceEvalClickStackAsObjectMethodInfo;
+				break;
+			case DT_MOUSE_STACK:
+				t_method = kMCInterfaceEvalMouseStackAsObjectMethodInfo;
+				break;
+			case DT_FUNCTION:
+				switch(function)
+				{
+				case F_CLICK_CHUNK:
+				case F_CLICK_CHAR_CHUNK:
+				case F_CLICK_FIELD:
+				case F_CLICK_LINE:
+				case F_CLICK_TEXT:
+					t_method = kMCInterfaceEvalClickFieldAsObjectMethodInfo;
+					break;
+				case F_SELECTED_CHUNK:
+				case F_SELECTED_FIELD:
+				case F_SELECTED_LINE:
+				case F_SELECTED_TEXT:
+					t_method = kMCInterfaceEvalSelectedFieldAsObjectMethodInfo;
+					break;
+				case F_SELECTED_IMAGE:
+					t_method = kMCInterfaceEvalSelectedImageAsObjectMethodInfo;
+					break;
+				case F_FOUND_CHUNK:
+				case F_FOUND_FIELD:
+				case F_FOUND_LINE:
+				case F_FOUND_TEXT:
+					t_method = kMCInterfaceEvalFoundFieldAsObjectMethodInfo;
+					break;
+				case F_MOUSE_CONTROL:
+				case F_MOUSE_CHUNK:
+				case F_MOUSE_CHAR_CHUNK:
+				case F_MOUSE_LINE:
+				case F_MOUSE_TEXT:
+					t_method = kMCInterfaceEvalMouseControlAsObjectMethodInfo;
+					break;
+				case F_FOCUSED_OBJECT:
+					t_method = kMCInterfaceEvalFocusedObjectAsObjectMethodInfo;
+					break;
+				case F_DRAG_SOURCE:
+					t_method = kMCPasteboardEvalDragSourceAsObjectMethodInfo;
+					break;
+				case F_DRAG_DESTINATION:
+					t_method = kMCPasteboardEvalDragDestinationAsObjectMethodInfo;
+					break;
+				default:
+					t_method = nil;
+					break;
+				}
+				break;
+			default:
+				t_method = nil;
+				break;
+			}
+			
+			if (t_method != nil)
+				MCSyntaxFactoryEvalMethod(ctxt, t_method);
+			else
+				return /* ES_ERROR */ ;
+		}
+		
+		// IF OBJECT IS CONTROL THEN RETURN (?) better to handle as type problem
+	}
+	else if (stack == nil && background == nil && card == nil && group == nil && object == nil)
+	{
+        return /* ES_ERROR */ ;
+	}
+	else if (url != nil)
+    {
+        if (stack -> etype == CT_EXPRESSION)
+        {
+            url -> startpos -> compile(ctxt);
+            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalBinaryStackAsObjectMethodInfo);
+        }
+        else
+        {
+            return /* ES_ERROR */ ;
+        }
+	}
+	else
+		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalDefaultStackAsObjectMethodInfo);
+    
+	// At this point the top of the stack should be an expr evaluating to an objptr.
+    
+    // If objptr is nil then an error will already have been thrown.
+		
+	// If we have a stack clause, then we resolve the stack of the objptr. These methods
+	// all take a 'stack' type so will throw an error if things like:
+	//   stack foo of the templateField
+	// are tried.
+	// Additionally, these methods will throw an error if the objptr is nil since this means
+	// an attempt was made to do something like:
+	//   stack foo of the mouseStack
+	// when 'the mouseStack' is nil.
+	// The search here first checks the target stack, then its substacks, then the dispatcher
+	// (which recuses to findstack on each of them).
+	if (stack != nil)
+	{
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackOfObjectMethodInfo);
+		switch(stack -> etype)
+		{
+		case CT_EXPRESSION:
+			stack -> startpos -> compile(ctxt);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackOfStackByNameMethodInfo);
+			break;
+		case CT_ID:
+			stack -> startpos -> compile(ctxt);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackOfStackByIdMethodInfo);
+			break;
+		case CT_THIS:
+			break;
+		default:
+			// ERROR
+			break;
+		}
+		
+		// If there is another stack reference, then it means resolve a substack. This
+		// is slightly different from StackOfStack since it *only* searches substacks.
+		if (stack -> next != nil)
+		{
+			switch(stack -> next -> etype)
+			{
+			case CT_EXPRESSION:
+				stack -> next -> startpos -> compile(ctxt);
+				MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSubstackOfStackByNameMethodInfo);
+				break;
+			case CT_ID:
+				stack -> next -> startpos -> compile(ctxt);
+				MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSubstackOfStackByIdMethodInfo);
+				break;
+			case CT_THIS:
+				break;
+			default:
+				// ERROR
+				break;
+			}
+		}
+	}
+    
+	// Next - if there is an audioClip/videoClip chunk of <optional stack> then resolve that
+	// 
+	if (object != nil && (object -> otype == CT_AUDIO_CLIP || object -> otype == CT_VIDEO_CLIP))
+	{
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackOfObjectMethodInfo);
+        switch (ct_class(object -> etype))
+        {
+            case CT_ORDINAL:
+                MCSyntaxFactoryEvalConstantUInt(ctxt, object -> etype);
+                MCSyntaxFactoryEvalMethod(ctxt, object -> otype == CT_AUDIO_CLIP ? kMCInterfaceEvalAudioClipOfStackByOrdinalMethodInfo : kMCInterfaceEvalVideoClipOfStackByOrdinalMethodInfo);
+                break;
+            case CT_ID:
+                object -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, object -> otype == CT_AUDIO_CLIP ? kMCInterfaceEvalAudioClipOfStackByIdMethodInfo : kMCInterfaceEvalVideoClipOfStackByIdMethodInfo);
+                break;
+            case CT_EXPRESSION:
+                object -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, object -> otype == CT_AUDIO_CLIP ? kMCInterfaceEvalAudioClipOfStackByNameMethodInfo : kMCInterfaceEvalVideoClipOfStackByNameMethodInfo);
+            default:
+                // ERROR
+                break;
+        }
+        MCSyntaxFactoryEndExpression(ctxt);
+        return;
+    }
+
+	if (background != nil)
+	{
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackOfObjectMethodInfo);
+		switch(ct_class(background -> etype))
+		{
+		case CT_ORDINAL:
+			MCSyntaxFactoryEvalConstantUInt(ctxt, background -> etype);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalBackgroundOfStackByOrdinalMethodInfo);
+			break;
+		case CT_ID:
+			background -> startpos -> compile(ctxt);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalBackgroundOfStackByIdMethodInfo);
+			break;
+		case CT_EXPRESSION:
+			background -> startpos -> compile(ctxt);
+			MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalBackgroundOfStackByNameMethodInfo);
+			break;
+		default:
+			// ERROR
+			break;
+		}
+	}
+    
+	if (card != nil)
+	{
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackWithOptionalBackgroundMethodInfo);
+		MCSyntaxFactoryEvalConstantBool(ctxt, marked);
+			
+		switch(ct_class(card -> etype))
+		{
+		// case CT_DIRECT: (DONT THINK THIS IS POSSIBLE)
+		//	break;
+		case CT_ORDINAL:
+			MCSyntaxFactoryEvalConstantUInt(ctxt, card -> etype);
+			MCSyntaxFactoryEvalMethod(ctxt, background == nil ? kMCInterfaceEvalCardOfStackByOrdinalMethodInfo : kMCInterfaceEvalCardOfBackgroundByOrdinalMethodInfo);
+			break;
+		case CT_ID:
+		case CT_EXPRESSION:
+			card -> startpos -> compile(ctxt);
+			MCSyntaxFactoryEvalMethod(ctxt, background == nil ? kMCInterfaceEvalCardOfStackByIdMethodInfo : kMCInterfaceEvalCardOfBackgroundByIdMethodInfo);
+			MCSyntaxFactoryEvalMethod(ctxt, background == nil ? kMCInterfaceEvalCardOfStackByNameMethodInfo : kMCInterfaceEvalCardOfBackgroundByNameMethodInfo);
+			break;
+		default:
+			// ERROR
+			break;
+		}
+	}
+	else if (background == nil && (group != nil || object != nil))
+	{
+		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalThisCardOfStackMethodInfo);
+	}
+               
+    // group number/name/id of <group of><group of>... stack
+               
+    if (group != nil)
+    {
+        MCCRef *tgptr = group;
+        while (tgptr != nil)
+        {
+            MCSyntaxFactoryEvalConstantUInt(ctxt, tgptr -> ptype);
+            switch (ct_class(tgptr -> etype))
+            {
+                case CT_ORDINAL:
+                    MCSyntaxFactoryEvalConstantUInt(ctxt, tgptr -> etype);
+                    MCSyntaxFactoryEvalMethodWithArgs(ctxt, kMCInterfaceEvalGroupOfGroupByOrdinalMethodInfo, 0, 2);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardByOrdinalMethodInfo);
+                    break;
+                case CT_ID:
+                    tgptr -> startpos -> compile(ctxt);
+                    // MW-2011-08-09: [[ Groups ]] If there was an explicit stack reference,
+                    //   but no explicit card, we search the stack directly for the CT_ID
+                    //   case.
+                    // (Assuming the group wasn't found on the card)
+                    if (card == nil && stack != nil)
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardOrStackByIdMethodInfo);
+                    else
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardByIdMethodInfo);
+                    // if we have a group then stack override is irrelevant.
+                    MCSyntaxFactoryEvalMethodWithArgs(ctxt, kMCInterfaceEvalGroupOfGroupByIdMethodInfo, 0, 2);
+                    break;
+                case CT_EXPRESSION:
+                    tgptr -> startpos -> compile(ctxt);
+                    MCSyntaxFactoryEvalMethodWithArgs(ctxt, kMCInterfaceEvalGroupOfGroupByNameMethodInfo, 0, 2);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardByNameMethodInfo);
+                    break;
+                default:
+                    // ERROR
+                    break;
+            }
+            tgptr = tgptr -> next;
+        }
+    }
+               
+    // MW-2011-08-08: [[ Bug ]] Loop through chain of object chunks. This allows
+    //   things like field ... of control ... of.
+               
+    if (object != nil)
+    {
+        MCCRef *toptr = object;
+        while (toptr != nil)
+        {
+            if (toptr -> otype == CT_MENU)
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalMenubarAsObjectMethodInfo);
+            else
+            {
+                MCSyntaxFactoryEvalConstantUInt(ctxt, toptr -> otype);
+                MCSyntaxFactoryEvalConstantUInt(ctxt, toptr -> ptype);
+                
+                switch (ct_class(toptr -> etype))
+                {
+                    case CT_ORDINAL:
+                        MCSyntaxFactoryEvalConstantUInt(ctxt, toptr -> etype);
+                        MCSyntaxFactoryEvalMethodWithArgs(ctxt, kMCInterfaceEvalObjectOfGroupByOrdinalMethodInfo, 0, 1, 3);
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfCardByOrdinalMethodInfo);
+                        break;
+                    case CT_ID:
+                        toptr -> startpos -> compile(ctxt);
+                        // If we are in stack override mode, then search the stack *after*
+                        // searching the card as searching the stack will take longer.
+                        if (group == nil && card == nil && stack != nil)
+                            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfCardOrStackByIdMethodInfo);
+                        else 
+                            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfCardByIdMethodInfo);
+                        // if we have a group then stack override is irrelevant.
+                        MCSyntaxFactoryEvalMethodWithArgs(ctxt, kMCInterfaceEvalObjectOfGroupByIdMethodInfo, 0, 1, 3);
+                        break;
+                    case CT_EXPRESSION:
+                        toptr -> startpos -> compile(ctxt);
+                        MCSyntaxFactoryEvalMethodWithArgs(ctxt, kMCInterfaceEvalObjectOfGroupByNameMethodInfo, 0, 1, 3);
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfCardByNameMethodInfo);
+                        break;
+                    default:
+                        // ERROR
+                        break;
+                }
+            }
+            toptr = toptr -> next;
+        }
+    }
+    MCSyntaxFactoryEndExpression(ctxt);
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool MCStringsIsAmongTheChunksOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, Chunk_term p_chunk_type, MCStringOptions p_options, MCRange p_range)
+{
+	MCRange t_range;
+	if (!MCStringFind(p_string, p_range, p_chunk, p_options, &t_range))
+		return false;
+    
+	MCStringRef t_delimiter;
+	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
+	
+
+    uindex_t t_length;
+    // if there is no delimiter to the left then continue searching the string.
+	if (t_range . offset != 0 &&
+        !MCStringSharedSuffix(p_string, MCRangeMake(0, t_range . offset), t_delimiter, p_options, t_length))
+		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
+    
+    // if there is no delimiter to the right then continue searching the string.
+	if (t_range . offset + t_range . length != MCStringGetLength(p_string) &&
+        !MCStringSharedPrefix(p_string, MCRangeMake(t_range . offset + t_range . length, UINDEX_MAX), t_delimiter, p_options, t_length))
+		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
+    
+	return true;
+}
+
+static bool MCStringsIsAmongTheParagraphsOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, MCStringOptions p_options, MCRange p_range)
+{
+	MCRange t_range;
+	if (!MCStringFind(p_string, p_range, p_chunk, p_options, &t_range))
+		return false;
+
+	codepoint_t t_delimiter;
+    // if there is no delimiter to the left then continue searching the string.
+	if (t_range . offset != 0)
+    {
+        t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset - 1);
+        // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+        if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
+            return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_chunk, p_string, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
+    }
+    
+    // if there is no delimiter to the right then continue searching the string.
+	if (t_range . offset + t_range . length != MCStringGetLength(p_string))
+    {
+        t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset + t_range . length);
+        // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+        if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
+            return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_chunk, p_string, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
+    }
+	return true;
+}
+
+static bool MCStringsFindChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_needle, Chunk_term p_chunk_type, MCStringOptions p_options, MCRange p_range, uindex_t& r_offset)
+{
+    // If we can't find the chunk in the remainder of the string, we are done.
+    MCRange t_range;
+    if (!MCStringFind(p_string, p_range, p_needle, p_options, &t_range))
+        return false;
+    
+    // Work out the delimiter.
+	MCStringRef t_delimiter;
+	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
+    
+    uindex_t t_length;
+    // If we are in wholeMatches mode, ensure the delimiter is either side.
+	if (ctxt . GetWholeMatches())
+	{
+		if (t_range . offset > 0 &&
+            !MCStringSharedSuffix(p_string, MCRangeMake(0, t_range . offset), t_delimiter, p_options, t_length))
+			return MCStringsFindChunkInRange(ctxt, p_string, p_needle, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
+		if (t_range . offset + t_range . length < MCStringGetLength(p_string) &&
+            !MCStringSharedPrefix(p_string, MCRangeMake(t_range . offset + t_range . length, UINDEX_MAX), t_delimiter, p_options, t_length))
+			return MCStringsFindChunkInRange(ctxt, p_string, p_needle, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length + 1, p_range . length), r_offset);
+	}
+    
+    r_offset = t_range . offset;
+    return true;
+}
+
+static bool MCStringsFindParagraphInRange(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_needle, MCStringOptions p_options, MCRange p_range, uindex_t& r_offset)
+{
+    // If we can't find the chunk in the remainder of the string, we are done.
+    MCRange t_range;
+    if (!MCStringFind(p_string, p_range, p_needle, p_options, &t_range))
+        return false;
+    
+    // If we are in wholeMatches mode, ensure the delimiter is either side.
+	if (ctxt . GetWholeMatches())
+	{
+        codepoint_t t_delimiter;
+        // if there is no delimiter to the left then continue searching the string.
+        if (t_range . offset != 0)
+        {
+            t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset - 1);
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
+                return MCStringsFindParagraphInRange(ctxt, p_string, p_needle, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
+        }
+        
+        // if there is no delimiter to the right then continue searching the string.
+        if (t_range . offset + t_range . length != MCStringGetLength(p_string))
+        {
+            t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset + t_range . length);
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            if (t_delimiter != '\n' /*&& t_delimiter != 0x2029*/)
+                return MCStringsFindParagraphInRange(ctxt, p_string, p_needle, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
+        }
+	}
+    
+    r_offset = t_range . offset;
+    return true;
+}
+
+MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text)
+{
+    /* UNCHECKED */ MCStringCopy(p_text, text);
+    type = p_chunk_type;
+    
+    if (type == CT_CHARACTER && (MCStringIsNative(text) || (MCStringIsSimple(text) && MCStringIsUncombined(text))))
+        type = CT_CODEUNIT;
+    
+    MCBreakIteratorRef break_iterator;
+    
+    break_iterator = nil;
+    sp = nil;
+    range = MCRangeMake(0, 0);
+    // AL-2014-10-24: [[ Bug 13783 ]] Set exhausted to true if the string is immediately exhausted
+    exhausted = MCStringIsEmpty(p_text);
+    length = MCStringGetLength(text);
+    first_chunk = true;
+    break_position = 0;
+    delimiter_length = 0;
+    
+    switch (type)
+    {
+        case CT_TOKEN:
+            sp = new MCScriptPoint(p_text);
+            break;
+        case CT_CHARACTER:
+        case CT_SENTENCE:
+        {
+            MCRange t_range;
+            uindex_t t_end;
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, p_chunk_type == CT_SENTENCE ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            t_range . length = 0;
+            t_range . offset = 0;
+            
+            while ((t_end = MCLocaleBreakIteratorAdvance(break_iterator)) != kMCLocaleBreakIteratorDone)
+            {
+                t_range . offset += t_range . length;
+                t_range . length = t_end - t_range . offset;                
+                breaks . Push(t_range);
+            }
+        }
+            break;
+        case CT_TRUEWORD:
+        {
+            MCAutoArray<uindex_t> t_breaks;
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            MCRange t_range = MCRangeMake(0, 0);
+
+            while (MCLocaleWordBreakIteratorAdvance(text, break_iterator, t_range)
+                    && t_range . offset + t_range . length != kMCLocaleBreakIteratorDone)
+            {
+                breaks . Push(t_range);
+            }
+        }
+            break;
+        case CT_LINE:
+        case CT_ITEM:
+        case CT_PARAGRAPH:
+            // delimiter length may vary for line and item.
+            delimiter_length = 1;
+        default:
+            break;
+    }
+    
+    if (break_iterator != nil)
+        MCLocaleBreakIteratorRelease(break_iterator);
+}
+
+MCTextChunkIterator::~MCTextChunkIterator()
+{    
+    MCValueRelease(text);
+    delete sp;
+}
+
+bool MCTextChunkIterator::next(MCExecContext& ctxt)
+{
+    if (type == CT_TRUEWORD || type == CT_SENTENCE || type == CT_CHARACTER)
+    {
+        // We have a word, sentence or character delimiter, we just have to get the range stored from the constructor
+        if (break_position < breaks . Size())
+        {
+            range = breaks[break_position++];
+            
+            if (break_position == breaks . Size())
+                exhausted = true;
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    if (sp != nil)
+    {
+        MCerrorlock++;
+        
+        bool t_found = true;
+        uint2 t_pos;
+        Parse_stat ps = sp -> nexttoken();
+        if (ps == PS_ERROR || ps == PS_EOF)
+            t_found = false;
+        
+        if (t_found)
+        {
+            range . offset = sp -> getindex();
+            range . length = MCStringGetLength(sp -> gettoken_stringref());
+        }
+        
+        return t_found;
+    }
+    
+    uindex_t t_offset = range . offset + range . length;
+    
+    if (!first_chunk)
+        t_offset += delimiter_length;
+    
+    if (t_offset >= length)
+        return false;
+    
+    range . offset = t_offset;
+    first_chunk = false;
+    
+    switch (type)
+    {
+        case CT_LINE:
+        case CT_ITEM:
+        {
+            MCStringRef t_line_delimiter = ctxt . GetLineDelimiter();
+            MCStringRef t_item_delimiter = ctxt . GetItemDelimiter();
+            
+            MCStringRef t_delimiter = (type == CT_LINE) ? t_line_delimiter : t_item_delimiter;
+            
+            MCRange t_found_range;
+            // calculate the length of the line / item
+            if (!MCStringFind(text, MCRangeMake(t_offset, UINDEX_MAX), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
+            {
+                range . length = length - range . offset;
+                exhausted = true;
+            }
+            else
+            {
+                range . length = t_found_range . offset - range . offset;
+                // AL-2014-10-15: [[ Bug 13671 ]] Keep track of matched delimiter length to increment offset correctly
+                delimiter_length = t_found_range . length;
+            }
+            
+        }
+            return true;
+            
+        case CT_PARAGRAPH:
+        {
+            uindex_t t_pg_offset;
+            bool t_newline_found, t_pg_found;
+            
+            t_pg_offset = t_offset;
+            t_newline_found = MCStringFirstIndexOfChar(text, '\n', t_offset, kMCCompareExact, t_offset);
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            t_pg_found = false; /*MCStringFirstIndexOfChar(text, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);*/
+            
+            t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
+            
+            // calculate the length of the paragraph
+            if (t_newline_found || t_pg_found)
+                range . length = t_offset - range . offset;
+            else
+            {
+                // AL-2014-03-20: [[ Bug 11945 ]] We've got a final paragraph if delimiters are not found
+                range . length = length - t_offset;
+                exhausted = true;
+            }
+        }
+            return true;
+            
+        case CT_WORD:
+        {
+            // if there are consecutive spaces at the beginning, skip them
+            while (t_offset < length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(text, t_offset)))
+                t_offset++;
+            
+            if (t_offset >= length)
+                return false;
+            
+            range . offset = t_offset;
+            
+            MCStringsSkipWord(ctxt, text, false, t_offset);
+            
+            if (t_offset == length)
+                exhausted = true;
+            
+            range . length = t_offset - range . offset;
+        }
+            return true;
+            
+        case CT_CODEPOINT:
+            range . length = MCStringIsValidSurrogatePair(text, range . offset) ? 2 : 1;
+            return true;
+            
+        case CT_CODEUNIT:
+        case CT_BYTE:
+            range . length = 1;
+            
+            if (t_offset == length - 1)
+                exhausted = true;
+            
+            return true;
+    
+        default:
+            assert(false);
+    }
+}
+
+bool MCTextChunkIterator::copystring(MCStringRef& r_string)
+{
+    return MCStringCopySubstring(text, range, r_string);
+}
+
+uindex_t MCTextChunkIterator::countchunks(MCExecContext& ctxt)
+{
+    uindex_t t_count = 0;
+    while (next(ctxt))
+        t_count++;
+    
+    return t_count;
+}
+
+bool MCTextChunkIterator::isamong(MCExecContext& ctxt, MCStringRef p_needle)
+{
+    switch (type)
+    {
+        case CT_LINE:
+        case CT_ITEM:
+        case CT_PARAGRAPH:
+        {
+            // if the pattern is empty, we use the default behavior -
+            // i.e. go through chunk by chunk to find an empty one.
+            if (MCStringIsEmpty(p_needle))
+                break;
+            
+            
+            // Otherwise we need to find p_needle and check to see if there is a delimiter either side.
+            // This is because of the case where the delimiter is within p_needle - e.g.
+            // "a,b" is among the items of "a,b,c,d" should return true.
+            
+            if (type == CT_PARAGRAPH)
+                return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_needle, text, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
+            
+            return MCStringsIsAmongTheChunksOfRange(ctxt, p_needle, text, type, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
+        }
+        default:
+            if (MCStringIsEmpty(p_needle))
+                return false;
+            break;
+    }
+    
+    while (next(ctxt))
+        if (MCStringSubstringIsEqualTo(text, range, p_needle, ctxt . GetStringComparisonType()))
+            return true;
+    
+    // AL-2014-09-10: [[ Bug 13356 ]] If we were not 'exhausted', then there was a trailing delimiter
+    //  which means empty is considered to be among the chunks.
+    if (MCStringIsEmpty(p_needle) && !exhausted)
+        return true;
+    
+    return false;
+}
+
+uindex_t MCTextChunkIterator::chunkoffset(MCExecContext& ctxt, MCStringRef p_needle, uindex_t p_start_offset)
+{
+    MCStringOptions t_options;
+	t_options = ctxt.GetStringComparisonType();
+	
+    // Ensure that when no item is skipped, the offset starts from the first item - without skipping it
+    uindex_t t_chunk_offset;
+    t_chunk_offset = 1;
+    
+	// Skip ahead to the first (1-indexed) chunk of interest.
+    p_start_offset += 1;
+    while (p_start_offset)
+    {
+        if (!next(ctxt))
+            break;
+        p_start_offset--;
+    }
+	
+	// If we skip past the last chunk, we are done.
+	if (p_start_offset > 0)
+		return 0;
+	
+    // MW-2013-01-21: item/line/paragraph offset do not currently operate on a 'split' basis.
+    //   Instead, they return the index of the chunk in which p_chunk starts and if
+    //   wholeMatches is true, then before and after the found range must be the del
+    //   or eos. e.g.
+    //     itemOffset("a,b", "aa,b,cc") => 1 if wholeMatches false, 0 otherwise
+    //     itemOffset("b,c", "a,b,c") => 2
+    
+    switch (type)
+    {
+        case CT_ITEM:
+        case CT_LINE:
+        case CT_PARAGRAPH:
+        {
+            // If we're looking for empty, then we have to iterate through the chunks.
+            if (MCStringIsEmpty(p_needle))
+                break;
+            
+            uindex_t t_found_offset;
+            if (type != CT_PARAGRAPH)
+            {
+                if (!MCStringsFindChunkInRange(ctxt, text, p_needle, type, t_options, MCRangeMake(range . offset, length - range . offset), t_found_offset))
+                    return 0;
+            }
+            else
+            {
+                if (!MCStringsFindParagraphInRange(ctxt, text, p_needle, t_options, MCRangeMake(range . offset, length - range . offset), t_found_offset))
+                    return 0;
+            }
+            
+            MCStringRef t_delimiter;
+            t_delimiter = type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
+            
+            // Count the number of delimiters between the start of the first chunk
+            // and the start of the found string.
+            
+            // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.
+            if (type != CT_PARAGRAPH)
+                t_chunk_offset += MCStringCount(text, MCRangeMake(range . offset, t_found_offset - range . offset), t_delimiter, t_options);
+            else
+                t_chunk_offset += MCStringCountChar(text, MCRangeMake(range . offset, t_found_offset - range . offset), '\n', t_options);
+            
+            return t_chunk_offset;
+        }
+        default:
+            break;
+    }
+    
+    // Otherwise, just iterate through the chunks.
+    do
+	{
+        if (ctxt.GetWholeMatches())
+        {
+            if (MCStringSubstringIsEqualTo(text, range, p_needle, t_options))
+                return t_chunk_offset;
+        }
+        else
+        {
+            if (MCStringSubstringContains(text, range, p_needle, t_options))
+                return t_chunk_offset;
+        }
+        t_chunk_offset++;
+	}
+    while (next(ctxt));
+    
+    // if not found then return 0.
+	return 0;
+}
+

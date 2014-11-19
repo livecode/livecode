@@ -17,14 +17,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "text.h"
-#include "unicode.h"
 
 // p_input - pointer to UTF-16 codepoints
 // p_input_length - number of codepoints pointed to by <p_input>
 // p_output - pointer to buffer to hold output
 // r_used - returns amount of input consumed
 // r_made - returns amount of output used
-void MCTextRunnify(const uint2 *p_input, uint4 p_input_length, uint1 *p_output, uint4& r_used, uint4& r_made)
+void MCTextRunnify(const unichar_t *p_input, uint4 p_input_length, char_t *p_output, uint4& r_used, uint4& r_made)
 {
 	uint4 t_index;
 	t_index = 0;
@@ -41,14 +40,14 @@ void MCTextRunnify(const uint2 *p_input, uint4 p_input_length, uint1 *p_output, 
 		t_start = t_index;
 
 		uint4 t_codepoint;
-		t_codepoint = MCUnicodeCodepointAdvance(p_input, p_input_length, t_index);
+		t_codepoint = MCUnicodeCodepointAdvance((const unichar_t*)p_input, p_input_length, t_index);
 
 		while(t_index < t_length)
 		{
 			uint4 t_old_index;
 			t_old_index = t_index;
 
-			t_codepoint = MCUnicodeCodepointAdvance(p_input, p_input_length, t_index);
+			t_codepoint = MCUnicodeCodepointAdvance((const unichar_t*)p_input, p_input_length, t_index);
 
 			if (MCUnicodeCodepointIsBase(t_codepoint))
 			{
@@ -57,7 +56,7 @@ void MCTextRunnify(const uint2 *p_input, uint4 p_input_length, uint1 *p_output, 
 			}
 		}
 
-		if (MCUnicodeMapToNative(p_input + t_start, t_index - t_start, p_output[t_native_length]))
+		if (MCUnicodeMapToNative((const unichar_t*)p_input + t_start, t_index - t_start, p_output[t_native_length]))
 		{
 			if (t_start > 0 && t_native_length == 0)
 			{

@@ -174,8 +174,9 @@ public:
 
 	void drawline(int2 x1, int2 y1, int2 x2, int2 y2);
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
-	void drawsegments(MCSegment *segments, uint2 nsegs);
-	void drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override = false);
+	void drawsegments(MCLineSegment *segments, uint2 nsegs);
+	void drawtext(coord_t x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextBreaking = kMCDrawTextBreak, MCDrawTextDirection = kMCDrawTextDirectionLTR);
+    void drawtext_substring(coord_t x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, MCDrawTextBreaking = kMCDrawTextBreak, MCDrawTextDirection = kMCDrawTextDirectionLTR);
 	void drawrect(const MCRectangle& rect, bool inside);
 	void fillrect(const MCRectangle& rect, bool inside);
 	void fillrects(MCRectangle *rects, uint2 nrects);
@@ -193,7 +194,7 @@ public:
 	void drawpict(uint1 *data, uint4 length, bool embed, const MCRectangle& drect, const MCRectangle& crect);
 	void drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
 
-	void drawlink(const char *link, const MCRectangle& region);
+	void drawlink(MCStringRef link, const MCRectangle& region);
 
 	void applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height);
 

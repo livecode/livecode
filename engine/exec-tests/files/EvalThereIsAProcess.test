@@ -1,0 +1,20 @@
+setup
+
+local tProc
+if the platform is "win32" then
+	put "cmd.exe /C dir" into tProc
+else
+	put "ls -l" into tProc
+end if
+
+open process tProc
+
+test there is a process tProc
+test not (there is not a process tProc)
+
+close process tProc
+
+test not (there is a process tProc)
+test there is not a process tProc
+
+teardown

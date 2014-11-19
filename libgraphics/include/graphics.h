@@ -17,7 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_GRAPHICS__
 #define __MC_GRAPHICS__
 
-#include "core.h"
+#include "foundation.h"
+#include "foundation-auto.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +48,7 @@ typedef struct __MCGRegion *MCGRegionRef;
 typedef uint32_t MCGPixelFormat;
 
 // IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
-#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE)
+#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(_LINUX)
 #define kMCGPixelFormatNative kMCGPixelFormatRGBA
 // IM-2013-11-01: [[ Bug 11198 ]] Set PPC pixel format to ARGB
 #elif defined(__ppc__)
@@ -492,6 +493,19 @@ struct MCGFont
 	bool		ideal : 1;
 };
 
+inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, int32_t ascent, int32_t descent, bool ideal)
+{
+    MCGFont t_font;
+    t_font . fid = fid;
+	t_font . size = size;
+	t_font . fixed_advance = fixed_advance;
+	t_font . ascent = ascent;
+	t_font . descent = descent;
+	t_font . ideal = ideal;
+    
+    return t_font;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline bool MCGPointIsEqual(const MCGPoint &p_a, const MCGPoint &p_b)
@@ -832,7 +846,7 @@ bool MCGContextCopyImage(MCGContextRef context, MCGImageRef &r_image);
 
 void MCGContextDrawText(MCGContextRef context, const char* text, uindex_t length, MCGPoint location, uint32_t font_size, void *typeface);
 MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t length, uint32_t font_size, void *typeface);
-void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, MCGPoint location, const MCGFont &font);
+void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, MCGPoint location, const MCGFont &font, bool p_rtl);
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
 

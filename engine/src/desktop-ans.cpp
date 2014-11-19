@@ -16,7 +16,6 @@
 
 #include "platform.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -24,9 +23,13 @@
 #include "parsedef.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "globals.h"
+#include "exec.h"
 #include "stack.h"
 #include "ans.h"
+
+#include "variable.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +55,7 @@ static MCPlatformWindowRef compute_sheet_owner(unsigned int p_options)
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2012-02-13: Updated to use Cocoa APIs.  Code mostly cribbed from plugin dialog stuff
-int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options)
+int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
@@ -60,11 +63,10 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 	MCPlatformBeginFolderDialog(t_owner, p_title, p_prompt, p_initial);
 	
 	MCPlatformDialogResult t_result;
-	char *t_folder;
-	t_folder = nil;
+	MCAutoStringRef t_folder;
 	for(;;)
 	{
-		t_result = MCPlatformEndFolderDialog(t_folder);
+		t_result = MCPlatformEndFolderDialog(&t_folder);
 		if (t_result != kMCPlatformDialogResultContinue)
 			break;
 		
@@ -72,18 +74,14 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 	}
 	
 	if (t_result == kMCPlatformDialogResultSuccess)
-		ep . copysvalue(t_folder);
-	else
-		ep . clear();
-	
-	free(t_folder);
+		r_value = MCValueRetain(*t_folder);
 	
 	return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool filter_to_type_list(const char *p_filter, char**&r_types, uint32_t &r_type_count)
+static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uint32_t &r_type_count)
 {
 	bool t_success;
 	t_success = true;
@@ -94,27 +92,35 @@ static bool filter_to_type_list(const char *p_filter, char**&r_types, uint32_t &
 	uint32_t t_filter_length;
 	if (t_success)
 	{
-		t_filter_length = MCCStringLength(p_filter);
+        t_filter_length = MCStringGetLength(p_filter);
 		t_success = t_filter_length >= 4;
 	}
+    
+    if (!t_success)
+    {
+        r_type_count = 0;
+        return true;
+    }
 	
-	char *t_types;
-	t_types = nil;
+    MCStringRef t_types;
+    if (t_success)
+        t_success = MCStringCreateMutable(0, t_types);
+    
 	if (t_success)
-		t_success = MCCStringClone("||", t_types);
+        t_success = MCStringAppendFormat(t_types, "||", strlen("||"));
 	
 	if (t_success)
-	{
-		const char *t_current_type;
-		t_current_type = p_filter;
+    {
+        uint32_t t_current_pos;
+        t_current_pos = 0;
 		for (uint32_t i = 0; t_success && i < t_filter_length / 4; i++)
 		{
 			if (i > 0)
-				t_success = MCCStringAppend(t_types, ",");
+                t_success = MCStringAppendNativeChar(t_types, ',');
 			if (t_success)
 			{
-				t_success = MCCStringAppendFormat(t_types, "%c%c%c%c", t_current_type[0], t_current_type[1], t_current_type[2], t_current_type[3]);
-				t_current_type += 4;
+                t_success = MCStringAppendSubstring(t_types, p_filter, MCRangeMake(t_current_pos, 4));
+                t_current_pos += 4;
 			}
 		}
 	}
@@ -130,18 +136,18 @@ static bool filter_to_type_list(const char *p_filter, char**&r_types, uint32_t &
 	else
 	{
 		r_type_count = 0;
-		/* UNCHECKED */ MCCStringFree(t_types);
-	}		
+        MCValueRelease(t_types);
+    }
 	
-	return t_success;	
+	return t_success;
 }
 
-int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+
+int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
-	char **t_types;
-	uint32_t t_type_count;
-	t_types = nil;
-	filter_to_type_list(p_filter, t_types, t_type_count);
+    MCAutoStringRefArray t_types;
+    
+    filter_to_type_list(p_filter, t_types.PtrRef(), t_types.CountRef());
 	
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
@@ -152,15 +158,16 @@ int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const c
 	else
 		t_kind = kMCPlatformFileDialogKindOpen;
 	
-	MCPlatformBeginFileDialog(t_kind, t_owner, p_title, p_prompt, t_types, t_type_count, p_initial);
+	MCPlatformBeginFileDialog(t_kind, t_owner, p_title, p_prompt, *t_types, t_types . Count(), p_initial);
 	
 	MCPlatformDialogResult t_result;
-	char *t_file, *t_type;
-	t_file = nil;
-	t_type = nil;
+	MCAutoStringRef t_file, t_type;
+    
 	for(;;)
 	{
-		t_result = MCPlatformEndFileDialog(t_kind, t_file, t_type);
+        MCValueRelease(*t_file);
+        MCValueRelease(*t_type);
+		t_result = MCPlatformEndFileDialog(t_kind, &t_file, &t_type);
 		if (t_result != kMCPlatformDialogResultContinue)
 			break;
 		
@@ -168,18 +175,12 @@ int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const c
 	}
 	
 	if (t_result == kMCPlatformDialogResultSuccess)
-		ep . copysvalue(t_file);
-	else
-		ep . clear();
-	
-	free(t_file);
-	free(t_type);
-	/* UNCHECKED */ MCCStringArrayFree(t_types, t_type_count);
+		r_value = MCValueRetain(*t_file);
 	
 	return 0;
 }
 
-int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
@@ -193,12 +194,13 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 	MCPlatformBeginFileDialog(t_kind, t_owner, p_title, p_prompt, p_types, p_type_count, p_initial);
 	
 	MCPlatformDialogResult t_result;
-	char *t_file, *t_type;
-	t_file = nil;
-	t_type = nil;
+	MCAutoStringRef t_file, t_type;
+    
 	for(;;)
 	{
-		t_result = MCPlatformEndFileDialog(t_kind, t_file, t_type);
+        MCValueRelease(*t_file);
+        MCValueRelease(*t_type);
+		t_result = MCPlatformEndFileDialog(t_kind, &t_file, &t_type);
 		if (t_result != kMCPlatformDialogResultContinue)
 			break;
 		
@@ -206,39 +208,35 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 	}
 	
 	if (t_result == kMCPlatformDialogResultSuccess)
-	{
-		ep . copysvalue(t_file);
-		if (t_type != nil)
-			MCresult -> copysvalue(t_type);
-	}
-	else
-		ep . clear();
-	
-	free(t_file);
-	free(t_type);
+    {        
+        r_value = MCValueRetain(*t_file);
+        if (*t_type != nil)
+            r_result = MCValueRetain(*t_file);
+    }
 	
 	return 0;
 	
 }
-int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
+
+int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
-	char **t_types;
-	uint32_t t_type_count;
-	t_types = nil;
-	filter_to_type_list(p_filter, t_types, t_type_count);
+    MCAutoStringRefArray t_types;
+    
+    filter_to_type_list(p_filter, t_types.PtrRef(), t_types.CountRef());
 	
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
 	
-	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, t_types, t_type_count, p_initial);
+	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, *t_types, t_types . Count(), p_initial);
 	
 	MCPlatformDialogResult t_result;
-	char *t_file, *t_type;
-	t_file = nil;
-	t_type = nil;
+	MCAutoStringRef t_file, t_type;
+    
 	for(;;)
 	{
-		t_result = MCPlatformEndFileDialog(kMCPlatformFileDialogKindSave, t_file, t_type);
+        MCValueRelease(*t_file);
+        MCValueRelease(*t_type);
+		t_result = MCPlatformEndFileDialog(kMCPlatformFileDialogKindSave, &t_file, &t_type);
 		if (t_result != kMCPlatformDialogResultContinue)
 			break;
 		
@@ -246,18 +244,12 @@ int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, con
 	}
 	
 	if (t_result == kMCPlatformDialogResultSuccess)
-		ep . copysvalue(t_file);
-	else
-		ep . clear();
-	
-	free(t_file);
-	free(t_type);
-	/* UNCHECKED */ MCCStringArrayFree(t_types, t_type_count);
+		r_value = MCValueRetain(*t_file);
 	
 	return 0;
 }
 
-int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
+int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	MCPlatformWindowRef t_owner;
     t_owner = compute_sheet_owner(p_options);
@@ -265,12 +257,13 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, p_types, p_type_count, p_initial);
 	
 	MCPlatformDialogResult t_result;
-	char *t_file, *t_type;
-	t_file = nil;
-	t_type = nil;
+	MCAutoStringRef t_file, t_type;
+    
 	for(;;)
 	{
-		t_result = MCPlatformEndFileDialog(kMCPlatformFileDialogKindSave, t_file, t_type);
+        MCValueRelease(*t_file);
+        MCValueRelease(*t_type);
+		t_result = MCPlatformEndFileDialog(kMCPlatformFileDialogKindSave, &t_file, &t_type);
 		if (t_result != kMCPlatformDialogResultContinue)
 			break;
 		
@@ -279,15 +272,13 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 	
 	if (t_result == kMCPlatformDialogResultSuccess)
 	{
-		ep . copysvalue(t_file);
-		if (t_type != nil)
-			MCresult -> copysvalue(t_type);
+        r_value = MCValueRetain(*t_file);
+        // SN-2014-10-31: [[ Bug 13893 ]] MCPlatformEndFileDialog might return a nil value
+        if (*t_type != nil)
+            r_result = MCValueRetain(*t_type);
+        else
+            r_result = nil;
 	}
-	else
-		ep . clear();
-	
-	free(t_file);
-	free(t_type);
 	
 	return 0;
 	
@@ -295,19 +286,9 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boolean p_as_sheet)
-{
-	MCColor t_color;
-	if (p_initial == NULL)
-		t_color = MCpencolor;
-	else
-	{
-		char *cname = NULL;
-		MCscreen->parsecolor(p_initial, &t_color, &cname);
-		delete cname;
-	}
-	
-	MCPlatformBeginColorDialog(p_title, t_color);
+bool MCA_color(MCStringRef p_title, MCColor p_initial, bool as_sheet, bool& r_chosen, MCColor& r_chosen_color)
+{	
+	MCPlatformBeginColorDialog(p_title, p_initial);
 	
 	MCPlatformDialogResult t_result;
 	MCColor t_new_color;
@@ -322,27 +303,30 @@ int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boole
 	
 	if (t_result == kMCPlatformDialogResultSuccess)
 	{
-		ep.setcolor(t_new_color);
+        r_chosen_color = t_new_color;
+        r_chosen = true;
 		MCresult->clear(False);
 	}
 	else
 	{
-		ep.clear();
 		MCresult->sets(MCcancelstring);
+        r_chosen = false;
 	}
 
-	return 0;
+    // SN-2014-07-23: [[ Bug 12901 ]] Object colors not selectable in inspector
+    //  A bool is expected from MCS_color, not an int defaulting to 0.
+	return true;
 }
 
 // MERG-2013-08-18: Stubs for colorDialogColors. Possibly implement when color dialog moves to Cocoa
-void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+void MCA_getcolordialogcolors(MCColor*& r_list, uindex_t& r_count)
 {
     
 }
 
-void MCA_getcolordialogcolors(MCExecPoint& p_ep)
+void MCA_setcolordialogcolors(MCColor* p_list, uindex_t p_count)
 {
-	p_ep.clear();
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

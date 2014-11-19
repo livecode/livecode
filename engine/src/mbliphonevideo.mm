@@ -16,14 +16,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -172,8 +172,8 @@ static NSObject *s_movie_player_delegate = nil;
 
 - (void)movieWindowTouched: (UIControl*) p_sender
 {
-	extern MCExecPoint *MCEPptr;
-	MCEventQueuePostCustom(new MCMovieTouchedEvent(MCEPptr -> getobj()));
+	extern MCExecContext *MCECptr;
+	MCEventQueuePostCustom(new MCMovieTouchedEvent(MCECptr -> GetObject()));
 }
 
 @end
@@ -296,20 +296,28 @@ static bool play_fullscreen_movie_new(NSURL *p_movie, bool p_looping, bool p_wit
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemPlayVideo(const char *p_file)
+bool MCSystemPlayVideo(MCStringRef p_video)
 {
 	// MW-2010-06-22: Add support for streaming video by detecting a URL rather
 	//   than a file;
 	NSURL *t_url;
 	t_url = nil;
-	if (strncmp(p_file, "http://", 7) == 0 || strncmp(p_file, "https://", 8) == 0)
-		t_url = [NSURL URLWithString: [NSString stringWithCString: p_file encoding: NSMacOSRomanStringEncoding]];
+	if (MCStringBeginsWithCString(p_video, (const char_t *)"http://", kMCStringOptionCompareExact)
+		|| MCStringBeginsWithCString(p_video, (const char_t *)"https://", kMCStringOptionCompareExact))
+	{
+		CFStringRef cfstrurl = nil;
+		/* UNCHECKED */ MCStringConvertToCFStringRef(p_video, cfstrurl);
+		t_url = [NSURL URLWithString: (NSString *)cfstrurl];
+		CFRelease(cfstrurl);
+	}
 	else
 	{
-		char *t_path;
-		t_path = MCS_resolvepath(p_file);
-		t_url = [NSURL fileURLWithPath: [NSString stringWithCString: t_path encoding: NSMacOSRomanStringEncoding]];
-		delete t_path;
+		MCAutoStringRef t_path;
+		CFStringRef cfstrpath = nil;
+		/* UNCHECKED */ MCS_resolvepath(p_video, &t_path);
+		/* UNCHECKED */ MCStringConvertToCFStringRef(*t_path, cfstrpath);
+		t_url = [NSURL fileURLWithPath: (NSString *)cfstrpath];
+		CFRelease(cfstrpath);
 	}
 	
 	if (t_url == nil)

@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "core.h"
+#include "foundation.h"
 
 #include <include/cef_app.h>
 

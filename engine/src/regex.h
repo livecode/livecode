@@ -52,7 +52,7 @@ typedef struct _regexp
 	regex_t rexp;
 	// JS-2013-07-01: [[ EnhancedFilter ]] The pattern associated with the compiled
 	//   regexp (used by the cache).
-    char *pattern;
+    MCStringRef pattern;
 	// JS-2013-07-01: [[ EnhancedFilter ]] The flags used to compile the pattern
 	//   (used to implement caseSensitive option).
     int flags;
@@ -61,12 +61,11 @@ typedef struct _regexp
 }
 regexp;
 
-const char *MCR_geterror();
-
 // JS-2013-07-01: [[ EnhancedFilter ]] Updated to manage case and allow case-insensitive matching.
 // MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's no reason not to use the cache.
-regexp *MCR_compile(const char *exp, Boolean casesensitive);
-int MCR_exec(regexp *prog, const char *string, uint4 len);
+regexp *MCR_compile(MCStringRef exp, bool casesensitive);
+int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range);
+void MCR_copyerror(MCStringRef &r_error);
 void MCR_free(regexp *prog);
 
 // JS-2013-07-01: [[ EnhancedFilter ]] Clear out the PCRE cache.

@@ -19,9 +19,12 @@ encryptedobjectstream.h
 encryptedstack.cpp
 encryptedstack.h
 stacksecurity_encrypted.cpp
+util/perfect/perfect.linux-*
 
 # Compiled source #
 ###################
+*.i
+*.ii
 *.com
 *.class
 *.dll
@@ -73,6 +76,10 @@ xcuserdata/
 *.vcproj.*.user
 *.ncb
 *.suo
+*.mode1v3
+*.xcworkspacedata
+*.creator.user
+
 
 # Build folders #
 #################
@@ -83,3 +90,11 @@ build/
 # SDKs          #
 #################
 sdks/
+
+# Ignore prebuilts #
+###################
+prebuilt/include
+prebuilt/lib
+prebuilt/build
+prebuilt/packaged
+prebuilt/fetched

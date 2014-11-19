@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -62,9 +61,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "stacksecurity.h"
 
+#include "exec.h"
 #include "graphicscontext.h"
 
 #include "resolution.h"
+
+// PM-2014-11-11: [[ Bug 13970 ]] Added for the MCplayers' syncbuffering call
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,18 +106,18 @@ MCObject::MCObject()
 	ncolors = 0;
 
 	colors = NULL;
-	colornames = NULL;
+	colornames = nil;
 	npatterns = 0;
 	patterns = NULL;
 	opened = 0;
-	script = NULL;
+	_script = MCValueRetain(kMCEmptyString);
 	hlist = NULL;
 	scriptdepth = 0;
 	state = CS_CLEAR;
 	borderwidth = DEFAULT_BORDER;
 	shadowoffset = DEFAULT_SHADOW;
 	props = NULL;
-	tooltip = NULL;
+	tooltip = MCValueRetain(kMCEmptyString);
 	altid = 0;
 	ink = GXcopy;
 	extraflags = 0;
@@ -167,18 +172,21 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	if (ncolors > 0)
 	{
 		colors = new MCColor[ncolors];
-		colornames = new char *[ncolors];
+		colornames = new MCStringRef[ncolors];
 		uint2 i;
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			colors[i] = oref.colors[i];
-			colornames[i] = strclone(oref.colornames[i]);
+			if (oref . colornames[i] != nil)
+				colornames[i] = MCValueRetain(oref.colornames[i]);
+			else
+				colornames[i] = nil;
 		}
 	}
 	else
 	{
 		colors = NULL;
-		colornames = NULL;
+		colornames = nil;
 	}
 	npatterns = oref.npatterns;
 	if (npatterns > 0)
@@ -193,7 +201,7 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 		patterns = NULL;
 	}
 	opened = 0;
-	script = strclone(oref.script);
+	_script = MCValueRetain(oref._script);
 	m_script_encrypted = oref.m_script_encrypted;
 	hlist = NULL;
 	scriptdepth = 0;
@@ -201,7 +209,7 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	borderwidth = oref.borderwidth;
 	shadowoffset = oref.shadowoffset;
 	/* UNCHECKED */ oref . clonepropsets(props);
-	tooltip = strclone(oref.tooltip);
+	tooltip = MCValueRetain(oref.tooltip);
 	altid = oref.altid;
 	ink = oref.ink;
 	extraflags = oref.extraflags;
@@ -268,16 +276,18 @@ MCObject::~MCObject()
 	delete hlist;
 	MCNameDelete(_name);
 	delete colors;
-	if (colornames != NULL)
+	if (colornames != nil)
 	{
 		while (ncolors--)
-			delete colornames[ncolors];
+			if (colornames[ncolors] != nil)
+				MCValueRelease(colornames[ncolors]);
 		delete colornames;
 	}
+
+	MCValueRelease(_script);
 	MCMemoryDeleteArray(patterns);
-	delete script;
 	deletepropsets();
-	delete tooltip;
+	MCValueRelease(tooltip);
 	
 	MCModeObjectDestroyed(this);
 
@@ -315,10 +325,9 @@ void MCObject::setname_cstring(const char *p_new_name)
 	/* UNCHECKED */ MCNameCreateWithCString(p_new_name, _name);
 }
 
-void MCObject::setname_oldstring(const MCString& p_new_name)
+void MCObject::setscript(MCStringRef p_script)
 {
-	MCNameDelete(_name);
-	/* UNCHECKED */ MCNameCreateWithOldString(p_new_name, _name);
+	MCValueAssign(_script, p_script);
 }
 
 void MCObject::open()
@@ -393,19 +402,19 @@ Boolean MCObject::kfocusprev(Boolean bottom)
 void MCObject::kunfocus()
 {}
 
-Boolean MCObject::kdown(const char *string, KeySym key)
+Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 {
-	char kstring[U4L];
-	sprintf(kstring, "%d", (int)key);
-	if (message_with_args(MCM_raw_key_down, kstring) == ES_NORMAL)
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringFormat(&t_string, "%d", key);
+	if (message_with_valueref_args(MCM_raw_key_down, *t_string) == ES_NORMAL)
 		return True;
 	if (key >= XK_F1 && key <= XK_F35)
 	{
-		char cstring[U2L];
-		sprintf(cstring, "%d", (int)(key - XK_F1 + 1));
-		if (message_with_args(MCM_function_key, cstring) == ES_NORMAL)
+		MCAutoStringRef t_cstring;
+		/* UNCHECKED */ MCStringFormat(&t_cstring, "%d", key - XK_F1 + 1);
+		if (message_with_valueref_args(MCM_function_key, *t_cstring) == ES_NORMAL)
 			return True;
-		if (key == XK_F1 && message_with_args(MCM_help, string) == ES_NORMAL)
+		if (key == XK_F1 && message_with_valueref_args(MCM_help, p_string) == ES_NORMAL)
 			return True;
 		//return False;
 	}
@@ -486,59 +495,54 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 			}
 		break;
 	case XK_Left:
-		if (message_with_args(MCM_arrow_key, "left") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("left")) == ES_NORMAL)
 			return True;
 		break;
 	case XK_Right:
-		if (message_with_args(MCM_arrow_key, "right") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("right")) == ES_NORMAL)
 			return True;
 		break;
 	case XK_Up:
-		if (message_with_args(MCM_arrow_key, "up") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("up")) == ES_NORMAL)
 			return True;
 		break;
 	case XK_Down:
-		if (message_with_args(MCM_arrow_key, "down") == ES_NORMAL)
+		if (message_with_valueref_args(MCM_arrow_key, MCSTR("down")) == ES_NORMAL)
 			return True;
 		break;
 	default:
-		char tstring[U2L];
-		if (key > 0xFF)
-			sprintf(tstring, "%ld", key);
+		MCAutoStringRef t_string;
+			
+		// Special keys as their number converted to a string, the rest by value
+		if (key > 0x7F && (key & XK_Class_mask) == XK_Class_compat)
+			/* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
+            else if (MCmodifierstate & MS_CONTROL)
+            /* UNCHECKED */ MCStringFormat(&t_string, "%c", (char)key);
 		else
-			if ((uint1)string[0] < ' ' || MCmodifierstate & MS_CONTROL)
-			{
-				tstring[0] = (char)key;
-				tstring[1] = '\0';
-			}
-			else
-			{
-				tstring[0] = string[0];
-				tstring[1] = '\0';
-			}
+			t_string = p_string;
+			
 		if (MCmodifierstate & MS_CONTROL)
-		{
-			if ((key > 0xFF || string[0] != '\0' || tstring[0] == ' ')
-			        && (message_with_args(MCM_command_key_down, tstring) == ES_NORMAL))
+        {
+			if (message_with_valueref_args(MCM_command_key_down, *t_string) == ES_NORMAL)
 				return True;
 		}
 		else if (MCmodifierstate & MS_MOD1)
-		{
-			if ((key > 0xFF || string[0] != '\0' || tstring[0] == ' ')
-			        && (message_with_args(MCM_option_key_down, tstring) == ES_NORMAL))
+        {
+				if (message_with_valueref_args(MCM_option_key_down, *t_string) == ES_NORMAL)
 				return True;
-		}
+        }
 #ifdef _MACOSX
 		else if (MCmodifierstate & MS_MAC_CONTROL)
-		{
-			if ((key > 0xFF || string[0] != '\0' || tstring[0] == ' ')
-			        && (message_with_args(MCM_control_key_down, tstring) == ES_NORMAL))
+        {
+			if (message_with_valueref_args(MCM_control_key_down, *t_string) == ES_NORMAL)
 				return True;
-		}
+        }
 #endif
 		else
-			if ((string[0] != '\0' && message_with_args(MCM_key_down, string) == ES_NORMAL))
-					return True;
+        {
+			if (!MCStringIsEmpty(p_string) && message_with_valueref_args(MCM_key_down, p_string) == ES_NORMAL)
+				return True;
+        }
 		break;
 	}
 
@@ -574,7 +578,7 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 	if (state & CS_MENU_ATTACHED && attachedmenu != NULL)
 	{
 		MCStack *oldmenu = attachedmenu;
-		MCString pick;
+		MCAutoStringRef t_pick;
 		uint2 mh;
 		switch (key)
 		{
@@ -585,17 +589,16 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 		case XK_Return:
 		case XK_KP_Enter:
 			closemenu(False, True);
-			oldmenu->menukdown(string, key, pick, mh);
-			delete (char *)pick.getstring();
+			oldmenu->menukdown(p_string, key, &t_pick, mh);
 			message_with_args(MCM_mouse_up, Button1);
 			return True;
 		default:
-			MCButton *mbptr = attachedmenu->findmnemonic(string[0]);
+			MCButton *mbptr = attachedmenu->findmnemonic(key);
 			if (mbptr != NULL)
 			{
 				closemenu(False, True);
-				oldmenu->menukdown(string, key, pick, mh);
-				mbptr->activate(False, string[0]);
+				oldmenu->menukdown(p_string, key, &t_pick, mh);
+				mbptr->activate(False, key);
 				message_with_args(MCM_mouse_up, Button1);
 				return True;
 			}
@@ -604,19 +607,24 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 	return False;
 }
 
-Boolean MCObject::kup(const char *string, KeySym key)
+Boolean MCObject::kup(MCStringRef p_string, KeySym key)
 {
-	char kstring[U4L];
-	sprintf(kstring, "%d", (int)key);
-	if (message_with_args(MCM_raw_key_up, kstring) == ES_NORMAL)
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringFormat(&t_string, "%d", key);
+	if (message_with_valueref_args(MCM_raw_key_up, *t_string) == ES_NORMAL)
 		return True;
 
 	// MW-2005-08-31: We need an unsigned comparison here - otherwise accented characters
 	//   don't trigger a keyup!
 	// OK-2010-04-01: [[Bug 6215]] - Need to also check for arrow keys here using the KeySym
 	//   as they don't have an ascii code.
-	if ((unsigned)(string[0]) >= 32 && string[0] != 127 && key != XK_Left && key != XK_Right && key != XK_Up && key != XK_Down)
-		if (message_with_args(MCM_key_up, string) == ES_NORMAL)
+	// TODO: filter out the C1 control codes too
+	// SN-2014-09-10: [[ Bug 13348 ]] We need to take in consideration what is in the string, not the
+	// key typed
+	unichar_t t_char;
+	t_char = MCStringGetCharAtIndex(p_string, 0);
+	if (t_char >= 32 && t_char != 127 && key != XK_Left && key != XK_Right && key != XK_Up && key != XK_Down)
+		if (message_with_valueref_args(MCM_key_up, p_string) == ES_NORMAL)
 			return True;
 	return False;
 }
@@ -710,12 +718,11 @@ Boolean MCObject::mup(uint2 which, bool p_release)
 		{
 			MCStack *oldmenu = attachedmenu;
 			closemenu(True, True);
-			MCString pick;
+			MCAutoStringRef t_pick;
 			uint2 menuhistory;
 			MCmenupoppedup = true;
-			oldmenu->menumup(which, pick, menuhistory);
+			oldmenu->menumup(which, &t_pick, menuhistory);
 			MCmenupoppedup = false;
-			delete (char *)pick.getstring();
 		}
 		return True;
 	}
@@ -750,26 +757,25 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		handler.clearpass(); // detect passed messages
 		Exec_stat stat = message(mptr, params, True, True);
 		if (stat == ES_NOT_HANDLED && !handler.getpass())
-		{
-			char *tptr = NULL;
-			const char *t_mptr_cstring;
-			t_mptr_cstring = MCNameGetCString(mptr);
-			if (params != NULL)
-			{
-				MCExecPoint ep(this, NULL, NULL);
-				params->eval(ep);
-				char *p = ep.getsvalue().clone();
-				tptr = new char[strlen(t_mptr_cstring) + ep.getsvalue().getlength() + 2];
-				sprintf(tptr, "%s %s", t_mptr_cstring, p);
-				delete p;
+        {
+            MCAutoStringRef t_mptr_string;
+			if (params != nil)
+            {
+                MCExecContext ctxt(this, nil, nil);
+                MCAutoValueRef t_value_valueref;
+				/* UNCHECKED */ params->eval(ctxt, &t_value_valueref);
+                MCAutoStringRef t_value;
+                /* UNCHECKED */ ctxt . ConvertToString(*t_value_valueref, &t_value);
+                MCStringFormat(&t_mptr_string, "%@ %@", mptr, *t_value);
 			}
-			
+			else
+				t_mptr_string = MCNameGetString(mptr);
+
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
 			if (t_handler == NULL || !t_handler -> isprivate())
-				domess(params == NULL ? t_mptr_cstring : tptr);
+                domess(*t_mptr_string);
 
-			delete tptr;
 		}
 		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
 			senderror();
@@ -837,38 +843,39 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 	
 	scriptdepth++;
 	if (scriptdepth == 255)
-		MCfreescripts = False; // prevent recursion wrap
-	MCExecPoint ep(this, hlist, hptr);
+        MCfreescripts = False; // prevent recursion wrap
+    MCExecContext ctxt(this, hlist, hptr);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
 		if (MCtracestackptr == getstack())
 			MCtrace = True;
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 		if (MCtrace && !oldtrace)
 		{
-			MCB_done(ep);
+			MCB_done(ctxt);
 			MCtrace = False;
 		}
 	}
 	else
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
 	{
 		// MW-2011-06-23: [[ SERVER ]] If the handler has a file index, it
 		//   isn't attached to an object. So record the error slightly
 		//   differently.
 		if (hptr -> getfileindex() == 0)
-		{
-			MCExecPoint ep(this, NULL, NULL);
-			getprop(0, P_LONG_ID, ep, False);
-			MCeerror->add(EE_OBJECT_NAME, 0, 0, ep.getsvalue());
+        {
+            MCExecContext ctxt(this, nil, nil);
+            MCAutoStringRef t_id;
+			getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+            MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 		}
 		else
 		{
-			char t_buffer[U2L];
-			sprintf(t_buffer, "%u", hptr -> getfileindex());
-			MCeerror -> add(EE_SCRIPT_FILEINDEX, 0, 0, t_buffer);
+            MCAutoStringRef t_error;
+            MCStringFormat(&t_error, "%u", hptr -> getfileindex());
+            MCeerror -> add(EE_SCRIPT_FILEINDEX, 0, 0, *t_error);
 		}
 	}
 	scriptdepth--;
@@ -897,27 +904,28 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (t_parentscript_object->scriptdepth == 255)
 		MCfreescripts = False; // prevent recursion wrap
 
-	MCExecPoint ep(this, t_parentscript_object -> hlist, hptr);
-	ep.setparentscript(parentscript);
+    MCExecContext ctxt(this, t_parentscript_object -> hlist, hptr);
+	ctxt.SetParentScript(parentscript);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
 		if (MCtracestackptr == getstack())
 			MCtrace = True;
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 		if (MCtrace && !oldtrace)
 		{
-			MCB_done(ep);
+			MCB_done(ctxt);
 			MCtrace = False;
 		}
 	}
 	else
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
-	{
-		MCExecPoint ep(this, NULL, NULL);
-		parentscript -> GetParent() -> GetObject() -> getprop(0, P_LONG_ID, ep, False);
-		MCeerror->add(EE_OBJECT_NAME, 0, 0, ep.getsvalue());
+    {
+        MCExecContext ctxt(this, nil, nil);
+        MCAutoStringRef t_id;
+        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+        MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
 	scriptdepth--;
 	t_parentscript_object->scriptdepth--;
@@ -929,10 +937,10 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 //   in a parentScript, if any, and executes it if found. [ Inherited parentscripts
 //   should be ignored for now as the semantics for those is not clear ].
 Exec_stat MCObject::handleparent(Handler_type p_handler_type, MCNameRef p_message, MCParameter *p_parameters)
-{
+{	
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
-	
+
 	// Fetch the first parentScript (Use).
 	MCParentScriptUse *t_parentscript;
 	t_parentscript = parent_script;
@@ -979,7 +987,7 @@ Exec_stat MCObject::handleparent(Handler_type p_handler_type, MCNameRef p_messag
 		//   instance).
 		t_parentscript = t_parentscript -> GetSuper();
 	}
-	
+
 	return t_stat;
 }
 
@@ -1126,6 +1134,57 @@ MCRectangle MCObject::getrectangle(bool p_effective) const
     return t_rect;
 }
 
+bool MCObject::changeflag(bool setting, uint32_t mask)
+{
+	if (setting && !(flags & mask))
+	{
+		flags |= mask;
+		return true;
+	}
+	
+	if (!setting && (flags & mask))
+	{
+		flags &= ~mask;
+		return true;
+	}
+
+	return false;
+}
+
+bool MCObject::changeextraflag(bool setting, uint32_t mask)
+{
+	if (setting && !(extraflags & mask))
+	{
+		extraflags |= mask;
+		return true;
+	}
+	
+	if (!setting && (extraflags & mask))
+	{
+		extraflags &= ~mask;
+		return true;
+	}
+
+	return false;
+}
+
+bool MCObject::changestate(bool setting, uint32_t mask)
+{
+	if (setting && !(state & mask))
+	{
+		state |= mask;
+		return true;
+	}
+	
+	if (!setting && (state & mask))
+	{
+		state &= ~mask;
+		return true;
+	}
+
+	return false;
+}
+
 void MCObject::setflag(uint4 on, uint4 flag)
 {
 	if (on)
@@ -1150,11 +1209,14 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 		state &= ~newstate;
 }
 
-Exec_stat MCObject::setsprop(Properties which, const MCString &s)
+
+
+Exec_stat MCObject::setsprop(Properties which, MCStringRef s)
 {
-	MCExecPoint ep(this, NULL, NULL);
-	ep.setsvalue(s);
-	return setprop(0, which, ep, False);
+    MCExecContext ctxt(this, nil, nil);
+    setstringprop(ctxt, 0, which, False, s);
+    
+    return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
 }
 
 void MCObject::help()
@@ -1167,7 +1229,7 @@ void MCObject::help()
 MCCard *MCObject::getcard(uint4 cid)
 {
 	if (cid == 0)
-		return getstack()->getchild(CT_THIS, MCnullmcstring, CT_CARD);
+		return getstack()->getchild(CT_THIS, kMCEmptyString, CT_CARD);
 	return getstack()->getcardid(cid);
 }
 
@@ -1376,6 +1438,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	}
 }
 
+#ifdef LEGACY_EXEC 
 Boolean MCObject::setcolor(uint2 index, const MCString &data)
 {
 	uint2 i, j;
@@ -1469,13 +1532,14 @@ Boolean MCObject::setcolors(const MCString &data)
 	}
 	return True;
 }
+#endif
 
-Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
+Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 {
 	uint2 i;
 	bool t_isopened;
 	t_isopened = (opened != 0) || (gettype() == CT_STACK && static_cast<MCStack*>(this)->getextendedstate(ECS_ISEXTRAOPENED));
-	if (data.getlength() == 0)
+	if (MCStringIsEmpty(data))
 	{
 		if (getpindex(newpixmap, i))
 		{
@@ -1509,27 +1573,29 @@ Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 	return True;
 }
 
-Boolean MCObject::setpatterns(const MCString &data)
+Boolean MCObject::setpatterns(MCStringRef data)
 {
-	char *string = data.clone();
-	char *sptr = string;
 	uint2 p;
 	Boolean done = False;
+    uindex_t t_start_pos, t_end_pos;
+    t_start_pos = 0;
+    t_end_pos = t_start_pos;
 	for (p = P_FORE_PATTERN ; p <= P_FOCUS_PATTERN ; p++)
 	{
-		char *eptr;
-		if ((eptr = strchr(sptr, '\n')) != NULL)
-			*eptr++ = '\0';
-		else
-			eptr = &sptr[strlen(sptr)];
-		if (!setpattern(p - P_FORE_PATTERN, sptr))
+		MCAutoStringRef t_substring;
+        if (!MCStringFirstIndexOfChar(data, '\n', t_start_pos, kMCCompareExact, t_end_pos))
+            MCStringCopySubstring(data, MCRangeMake(t_start_pos, MCStringGetLength(data) - t_start_pos), &t_substring);
+        else
+        {
+            MCStringCopySubstring(data, MCRangeMake(t_start_pos, t_end_pos - t_start_pos), &t_substring);
+            t_start_pos = t_end_pos + 1;
+        }
+            
+        if (!setpattern(p - P_FORE_PATTERN, *t_substring))
 		{
-			delete string;
 			return False;
 		}
-		sptr = eptr;
 	}
-	delete string;
 	return True;
 }
 
@@ -1552,10 +1618,10 @@ Boolean MCObject::getcindex(uint2 di, uint2 &i)
 uint2 MCObject::createcindex(uint2 di)
 {
 	MCColor *oldcolors = colors;
-	char **oldnames = colornames;
+	MCStringRef *oldnames = colornames;
 	ncolors++;
 	colors = new MCColor[ncolors];
-	colornames = new char *[ncolors];
+	colornames = new MCStringRef[ncolors];
 	uint2 ri = 0;
 	uint2 i = 0;
 	uint2 c = 0;
@@ -1566,7 +1632,7 @@ uint2 MCObject::createcindex(uint2 di)
 		if (i == di)
 		{
 			dflags |= m;
-			colornames[c] = NULL;
+			colornames[c] = nil;
 			ri = c++;
 		}
 		else
@@ -1588,7 +1654,12 @@ uint2 MCObject::createcindex(uint2 di)
 
 void MCObject::destroycindex(uint2 di, uint2 i)
 {
-	delete colornames[i];
+	if (colornames[i] != nil)
+	{
+		MCValueRelease(colornames[i]);
+		colornames[i] = nil;
+	}
+	
 	ncolors--;
 	while (i < ncolors)
 	{
@@ -1710,7 +1781,7 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		{
 			// This should never happen as the dispatcher always has font props
 			// set.
-			assert(false);
+			MCUnreachable();
 		}
 	}
 
@@ -1727,12 +1798,6 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		style = m_font_attrs -> style;
 }
 
-void MCObject::getfontattsnew(const char *& fname, uint2 &size, uint2 &style)
-{
-	MCNameRef t_fname_name;
-	getfontattsnew(t_fname_name, size, style);
-	fname = MCNameGetCString(t_fname_name);
-}
 
 MCNameRef MCObject::gettextfont(void)
 {
@@ -1888,10 +1953,12 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	{
 		if (MCnoui)
 		{
+            MCAutoPointer<char> t_mccmd;
+            /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_mccmd);
 			uint2 line, pos;
 			MCeerror->geterrorloc(line, pos);
 			fprintf(stderr, "%s: Script execution error at line %d, column %d\n",
-			        MCcmd, line, pos);
+			        *t_mccmd, line, pos);
 		}
 		else
 			if (!send)
@@ -1903,62 +1970,45 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	return stat;
 }
 
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1)
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1)
 {
 	MCParameter p1;
-	p1.sets_argument(v1);
+	p1.setvalueref_argument(v1);
 	return message(mess, &p1);
 }
 
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1, const MCString &v2)
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MCValueRef v2)
 {
 	MCParameter p1, p2;
-	p1.sets_argument(v1);
+	p1.setvalueref_argument(v1);
 	p1.setnext(&p2);
-	p2.sets_argument(v2);
+	p2.setvalueref_argument(v2);
 	return message(mess, &p1);
 }
 
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1, const MCString &v2, const MCString& v3)
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MCValueRef v2, MCValueRef v3)
 {
 	MCParameter p1, p2, p3;
-	p1.sets_argument(v1);
+	p1.setvalueref_argument(v1);
 	p1.setnext(&p2);
-	p2.sets_argument(v2);
+	p2.setvalueref_argument(v2);
 	p2.setnext(&p3);
-	p3.sets_argument(v3);
+	p3.setvalueref_argument(v3);
 	return message(mess, &p1);
 }
 
-Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1, const MCString &v2, const MCString& v3, const MCString& v4)
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MCValueRef v2, MCValueRef v3, MCValueRef v4)
 {
 	MCParameter p1, p2, p3, p4;
-	p1.sets_argument(v1);
+	p1.setvalueref_argument(v1);
 	p1.setnext(&p2);
-	p2.sets_argument(v2);
+	p2.setvalueref_argument(v2);
 	p2.setnext(&p3);
-	p3.sets_argument(v3);
+	p3.setvalueref_argument(v3);
 	p3.setnext(&p4);
-	p4.sets_argument(v4);
+	p4.setvalueref_argument(v4);
 	return message(mess, &p1);
 }
-
-Exec_stat MCObject::message_with_args(MCNameRef mess, MCNameRef v1)
-{
-	MCParameter p1;
-	p1.setnameref_unsafe_argument(v1);
-	return message(mess, &p1);
-}
-
-Exec_stat MCObject::message_with_args(MCNameRef mess, MCNameRef v1, MCNameRef v2)
-{
-	MCParameter p1, p2;
-	p1.setnameref_unsafe_argument(v1);
-	p1.setnext(&p2);
-	p2.setnameref_unsafe_argument(v2);
-	return message(mess, &p1);
-}
-
 Exec_stat MCObject::message_with_args(MCNameRef mess, int4 v1)
 {
 	MCParameter p1;
@@ -2001,19 +2051,22 @@ Exec_stat MCObject::message_with_args(MCNameRef mess, int4 v1, int4 v2, int4 v3,
 
 void MCObject::senderror()
 {
-	char *perror = NULL;
+	MCAutoStringRef t_perror;
 	if (!MCperror->isempty())
-	{
-		MCExecPoint ep(this, NULL, NULL);
-		MCerrorptr->getprop(0, P_LONG_ID, ep, False);
+    {
+        MCExecContext ctxt(this, nil, nil);
+        MCAutoStringRef t_id;
+		MCerrorptr->getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
 		MCperror->add
-		(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
-		perror = MCperror->getsvalue().clone();
+        (PE_OBJECT_NAME, 0, 0, *t_id);
+		/* UNCHECKED */ MCperror->copyasstringref(&t_perror);
 		MCperror->clear();
 	}
 	if (MCerrorptr == NULL)
 		MCerrorptr = this;
-	MCscreen->delaymessage(MCerrorlockptr == NULL ? MCerrorptr : MCerrorlockptr, MCM_error_dialog, MCeerror->getsvalue().clone(), perror);
+	MCAutoStringRef t_eerror;
+	/* UNCHECKED */ MCeerror->copyasstringref(&t_eerror);
+	MCscreen->delaymessage(MCerrorlockptr == NULL ? MCerrorptr : MCerrorlockptr, MCM_error_dialog, *t_eerror, *t_perror);
 	MCeerror->clear();
 	MCerrorptr = NULL;
 }
@@ -2031,111 +2084,128 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 		"private"
 	};
 	enum { max_htype = (sizeof(htypes)/sizeof(htypes[0])) - 1 };
-
+    
 	MCAssert(htype <= max_htype);
 	MCStaticAssert(max_htype == HT_MAX);
+    MCmessagemessages = False;
 
-	MCmessagemessages = False;
-	MCExecPoint ep(this, NULL, NULL);
-	MCresult->fetch(ep);
-
-	// MW-2011-08-22: [[ Bug 9686 ]] Make sure we save the value of 'the result'
-	//   to be restored after the (not)handled message has been processed.
-	ep.grab();
+    MCExecContext ctxt(this, nil, nil);
+    MCExecValue t_value;
+	MCresult->eval_ctxt(ctxt, t_value);
 
 	if (h)
-		message_with_args(MCM_message_handled, htypes[htype], MCNameGetOldString(m));
+		message_with_valueref_args(MCM_message_handled, MCSTR(htypes[htype]), m);
 	else
-		message_with_args(MCM_message_not_handled, htypes[htype], MCNameGetOldString(m));
+		message_with_valueref_args(MCM_message_not_handled, MCSTR(htypes[htype]), m);
 
-	MCresult->store(ep, False);
+	MCresult->give_value(ctxt, t_value);
 
 	MCmessagemessages = True;
 }
 
-Exec_stat MCObject::names(Properties which, MCExecPoint &ep, uint4 parid)
+#ifdef LEGACY_EXEC
+Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 {
+	MCAutoValueRef t_name;
+	if (names(which, &t_name) &&
+		ep . setvalueref(*t_name))
+		return ES_NORMAL;
+	/* CHECK MCERROR */
+	return ES_ERROR;
+}
+#endif
+
+bool MCObject::names(Properties which, MCValueRef& r_name_val)
+{
+	MCStringRef &r_name = (MCStringRef&)r_name_val;
+	
 	const char *itypestring = gettypestring();
-	char *tmptypestring = NULL;
+	MCAutoPointer<char> tmptypestring;
 	if (parent != NULL && gettype() >= CT_BUTTON && getstack()->hcaddress())
 	{
 		tmptypestring = new char[strlen(itypestring) + 7];
 		if (parent->gettype() == CT_GROUP)
-			sprintf(tmptypestring, "%s %s", "bkgnd", itypestring);
+			sprintf(*tmptypestring, "%s %s", "bkgnd", itypestring);
 		else
-			sprintf(tmptypestring, "%s %s", "card", itypestring);
-		itypestring = tmptypestring;
+			sprintf(*tmptypestring, "%s %s", "card", itypestring);
+		itypestring = *tmptypestring;
 	}
-	Exec_stat stat = ES_NORMAL;
 	switch (which)
 	{
 	case P_ID:
 	case P_SHORT_ID:
-		ep.setint(obj_id);
-		break;
+		return MCStringFormat(r_name, "%u", obj_id);
 	case P_ABBREV_ID:
-		ep.setstringf("%s id %d", itypestring, obj_id);
-		break;
+		return MCStringFormat(r_name, "%s id %d", itypestring, obj_id);
+
+	// The stack object has its own version of long * which we check for here. We
+	// could make 'names()' virtual and do this that way, but since there shouldn't
+	// really be an exception to how id is formatted (and there won't be for any
+	// future object types) we handle it here.
+	case P_LONG_NAME:
 	case P_LONG_ID:
-		if (parent == NULL)
+		if (gettype() == CT_STACK)
 		{
-			char *buffer = ep.getbuffer(strlen(itypestring) + 13);
-			sprintf(buffer, "the template%s", itypestring);
-			buffer[12] = MCS_toupper(buffer[12]);
-			ep.setstrlen();
+			MCStack *t_this;
+			t_this = static_cast<MCStack *>(this);
+			
+			MCStringRef t_filename;
+			t_filename = t_this -> getfilename();
+			if (MCStringIsEmpty(t_filename))
+			{
+				if (MCdispatcher->ismainstack(t_this))
+				{
+					if (!isunnamed())
+						return MCStringFormat(r_name, "stack \"%@\"", getname());
+					r_name = MCValueRetain(kMCEmptyString);
+					return true;
+				}
+				if (isunnamed())
+				{
+					r_name = MCValueRetain(kMCEmptyString);
+					return true;
+				}
+				which = P_LONG_NAME;
+			}
+			else
+				return MCStringFormat(r_name, "stack \"%@\"", t_filename);
 		}
-		else
+
+		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
+		//   but *only* for this control (continue with names the rest of the way).
+		Properties t_which_requested;
+		t_which_requested = which;
+		if (which == P_LONG_NAME && isunnamed())
+			which = P_LONG_ID;
+		if (parent != NULL)
 		{
-			MCExecPoint ep2(ep);
-			parent->getprop(parid, P_LONG_ID, ep2, False);
+			MCAutoValueRef t_parent;
+			if (!parent -> names(t_which_requested, &t_parent))
+				return false;
 			if (gettype() == CT_GROUP && parent->gettype() == CT_STACK)
 				itypestring = "bkgnd";
-			ep.setstringf("%s id %d of ", itypestring, obj_id);
-			ep.appendmcstring(ep2.getsvalue());
+			if (which == P_LONG_ID)
+				return MCStringFormat(r_name, "%s id %d of %@", itypestring, obj_id, *t_parent);
+			return MCStringFormat(r_name, "%s \"%@\" of %@", itypestring, getname(), *t_parent);
 		}
-		break;
+		return MCStringFormat(r_name, "the template%c%s", MCS_toupper(itypestring[0]), itypestring + 1);
+
 	case P_NAME:
 	case P_ABBREV_NAME:
 		if (isunnamed())
-			stat = getprop(parid, P_ABBREV_ID, ep, False);
-		else
-			ep.setstringf("%s \"%s\"", itypestring, getname_cstring());
-		break;
+            return names(P_ABBREV_ID, r_name_val);
+		return MCStringFormat(r_name, "%s \"%@\"", itypestring, getname());
 	case P_SHORT_NAME:
-		if (isunnamed())
-			stat = names(P_ABBREV_ID, ep, parid);
-		else
-			ep.setnameref_unsafe(getname());
-		break;
-	case P_LONG_NAME:
-		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
-		//   but *only* for this control (continue with names the rest of the way).
-		if (parent == NULL)
-		{
-			if (!isunnamed())
-				ep.setstringf("%s \"%s\"", itypestring, getname_cstring());
-			else
-				ep.setstringf("%s id %d", itypestring, obj_id);
-		}
-		else
-		{
-			MCExecPoint ep2(ep);
-			parent->getprop(parid, P_LONG_NAME, ep2, False);
-			if (gettype() == CT_GROUP && parent->gettype() == CT_STACK)
-				itypestring = "bkgnd";
-			if (!isunnamed())
-				ep.setstringf("%s \"%s\" of ", itypestring, getname_cstring());
-			else
-				ep.setstringf("%s id %d of ", itypestring, obj_id);
-			ep.appendmcstring(ep2.getsvalue());
-		}
-		break;
+            if (isunnamed())
+                return names(P_ABBREV_ID, r_name_val);
+            r_name = MCValueRetain(MCNameGetString(getname()));
+		return true;
 	default:
-		stat = ES_ERROR;
 		break;
 	}
-	delete tmptypestring;
-	return stat;
+
+	// Shouldn't actually get here, so just return false.
+	return false;
 }
 
 // MW-2012-10-17: [[ Bug 10476 ]] Returns true if message should be fired.
@@ -2162,8 +2232,8 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 {
 	if (!force && hashandlers & HH_DEAD_SCRIPT)
 		return False;
-	if (script == nil || parent == NULL)
-        hashandlers = 0;
+	if (MCStringIsEmpty(_script) || parent == NULL)
+		hashandlers = 0;
 	else
 		if (force || hlist == NULL)
 		{
@@ -2175,7 +2245,7 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			getstack() -> unsecurescript(this);
 			
 			Parse_stat t_stat;
-			t_stat = hlist -> parse(this, script);
+			t_stat = hlist -> parse(this, _script);
 			
 			getstack() -> securescript(this);
 			
@@ -2183,11 +2253,14 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			{
 				hashandlers |= HH_DEAD_SCRIPT;
 				if (report && parent != NULL)
-				{
-					MCExecPoint ep(this, NULL, NULL);
-					getprop(0, P_LONG_ID, ep, False);
-					MCperror->add(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
-					message_with_args(MCM_script_error, MCperror->getsvalue());
+                {
+                    MCExecContext ctxt(this, nil, nil);
+                    MCAutoStringRef t_id;
+					getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+                    MCperror->add(PE_OBJECT_NAME, 0, 0, *t_id);
+					MCAutoStringRef t_string;
+					/* UNCHECKED */ MCperror->copyasstringref(&t_string);
+					message_with_valueref_args(MCM_script_error, *t_string);
 					MCperror->clear();
 				}
 				delete hlist;
@@ -2334,14 +2407,14 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	bwidth = MCU_min(bwidth, drect.height >> 1);
 	if (bwidth == 0)
 		return;
-	MCSegment tb[DEFAULT_BORDER * 2];
-	MCSegment bb[DEFAULT_BORDER * 2];
-	MCSegment *t = tb;
-	MCSegment *b = bb;
+	MCLineSegment tb[DEFAULT_BORDER * 2];
+	MCLineSegment bb[DEFAULT_BORDER * 2];
+	MCLineSegment *t = tb;
+	MCLineSegment *b = bb;
 	if (bwidth > DEFAULT_BORDER)
 	{
-		t = new MCSegment[bwidth * 2];
-		b = new MCSegment[bwidth * 2];
+		t = new MCLineSegment[bwidth * 2];
+		b = new MCLineSegment[bwidth * 2];
 	}
 	int2 lx = drect.x;
 	int2 rx = drect.x + drect.width;
@@ -2504,33 +2577,90 @@ void MCObject::positionrel(const MCRectangle &drect,
 	}
 }
 
-Exec_stat MCObject::domess(const char *sptr)
+// SN-2014-04-03 [[ Bug 12075 ]] Tooltips need to be able to resolve the text direction of their label
+void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font)
 {
-	const char *temp = "on message\n%s\nend message\n";
-	char *tscript = new char[strlen(temp) + strlen(sptr) - 1];
-	sprintf(tscript, temp, sptr);
+    
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+    // AL-2014-06-24: [[ Bug 12343 ]] Restore splitting of object text into differing directional sections
+    //  when drawing on android; HarfBuzz needs all the directions resolved to display in the correct order.
+    MCAutoArray<uint8_t> t_levels;
+    
+    MCBidiResolveTextDirection(p_string, MCBidiFirstStrongIsolate(p_string, 0), t_levels . PtrRef(), t_levels . SizeRef());
+    
+    MCRange t_block_range;
+
+    bool t_initially_ltr;
+    t_initially_ltr = (t_levels[0] & 1) == 0;
+    
+    uindex_t t_length = t_levels . Size();
+    
+    for (uindex_t i = 0; i < t_length; ++i)
+    {
+        uint8_t t_cur_level;
+        // Check the range of this text direction
+        if (t_initially_ltr)
+        {
+            t_cur_level = t_levels[i];
+            
+            t_block_range . offset = i;
+            while (i + 1 < t_levels . Size() && t_cur_level == t_levels[i + 1])
+                ++i;
+            
+            t_block_range . length = i + 1 - t_block_range . offset;
+        }
+        else
+        {
+            // If the resolved text direction is rtl, we need to traverse the runs backwards
+            //  for the correct display order.
+            t_cur_level = t_levels[t_length - (i + 1)];
+            
+            uindex_t t_range_end = t_length - i;
+            t_block_range . length = i;
+            while (i + 1 < t_length && t_cur_level == t_levels[t_length - (i + 2)])
+                ++i;
+            
+            t_block_range . offset = t_length - (i + 1);
+            t_block_range . length = t_range_end - t_block_range . offset;
+        }
+        
+        // RTL when the level is odd
+        dc -> drawtext_substring(sx, sy, p_string, t_block_range, font, false, kMCDrawTextNoBreak, (t_cur_level & 1) ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
+        sx += MCFontMeasureTextSubstring(font, p_string, t_block_range, getstack() -> getdevicetransform());
+    }
+#else
+    bool t_is_rtl;
+    t_is_rtl = !MCStringResolvesLeftToRight(p_string);
+    dc -> drawtext(sx, sy, p_string, font, false, kMCDrawTextNoBreak, t_is_rtl ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
+#endif
+}
+
+Exec_stat MCObject::domess(MCStringRef sptr)
+{
+	MCAutoStringRef t_temp_script;
+	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on message\n%@\nend message\n", sptr);
+	
 	MCHandlerlist *handlist = new MCHandlerlist;
 	// SMR 1947, suppress parsing errors
 	MCerrorlock++;
-	if (handlist->parse(this, tscript) != PS_NORMAL)
+	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
 	{
 		MCerrorlock--;
 		delete handlist;
-		delete tscript;
 		return ES_ERROR;
 	}
 	MCerrorlock--;
 	MCObject *oldtargetptr = MCtargetptr;
 	MCtargetptr = this;
 	MCHandler *hptr;
-	handlist->findhandler(HT_MESSAGE, MCM_message, hptr);
-	MCExecPoint ep(this, handlist, hptr);
+    handlist->findhandler(HT_MESSAGE, MCM_message, hptr);
+
+    MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-	Exec_stat stat = hptr->exec(ep, NULL);
+	Exec_stat stat = hptr->exec(ctxt, NULL);
 	MClockerrors = oldlock;
 	delete handlist;
-	delete tscript;
 	MCtargetptr = oldtargetptr;
 	if (stat == ES_NORMAL)
 		return ES_NORMAL;
@@ -2541,58 +2671,55 @@ Exec_stat MCObject::domess(const char *sptr)
 	}
 }
 
-Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
+void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_value)
 {
-	const char *temp = "on eval\nreturn %s\nend eval\n";
-	char *tscript = new char[strlen(temp) + strlen(sptr) - 1];
-	sprintf(tscript, temp, sptr);
+	MCAutoStringRef t_temp_script;
+	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", p_script);
+	
 	MCHandlerlist *handlist = new MCHandlerlist;
-	if (handlist->parse(this, tscript) != PS_NORMAL)
+	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
 	{
-		ep.setstaticcstring("Error parsing expression\n");
+		r_value = MCSTR("Error parsing expression\n");
 		delete handlist;
-		delete tscript;
-		return ES_ERROR;
+		ctxt.Throw();
+		return;
 	}
 	MCObject *oldtargetptr = MCtargetptr;
 	MCtargetptr = this;
 	MCHandler *hptr;
-	MCHandler *oldhandler = ep.gethandler();
-	MCHandlerlist *oldhlist = ep.gethlist();
+	MCHandler *oldhandler = ctxt.GetHandler();
+	MCHandlerlist *oldhlist = ctxt.GetHandlerList();
 	handlist->findhandler(HT_MESSAGE, MCM_eval, hptr);
-	ep.sethlist(handlist);
-	ep.sethandler(hptr);
+	ctxt.SetHandlerList(handlist);
+	ctxt.SetHandler(hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-	Exec_stat stat;
-	if (hptr->exec(ep, NULL) != ES_NORMAL)
+	
+	if (hptr->exec(ctxt, NULL) != ES_NORMAL)
 	{
-		ep.setstaticcstring("Error parsing expression\n");
-		stat = ES_ERROR;
+		r_value = MCSTR("Error parsing expression\n");
+		ctxt.Throw();
 	}
 	else
 	{
-		MCresult->fetch(ep);
-		stat = ES_NORMAL;
+		MCresult->copyasvalueref(r_value);
 	}
 	MClockerrors = oldlock;
 	MCtargetptr = oldtargetptr;
-	ep.sethlist(oldhlist);
-	ep.sethandler(oldhandler);
-	delete tscript;
+	ctxt.SetHandlerList(oldhlist);
+	ctxt.SetHandler(oldhandler);
 	delete handlist;
-	return stat;
 }
 
 // MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
-void MCObject::editscript(MCString p_at)
+void MCObject::editscript(MCStringRef p_at)
 {
-	MCExecPoint ep(this, NULL, NULL);
-	getprop(0, P_LONG_ID, ep, False);
-    if (p_at != NULL)
-        getcard()->message_with_args(MCM_edit_script, ep.getsvalue(), p_at);
+    MCAutoValueRef t_name;
+	names(P_LONG_ID, &t_name);
+    if (p_at != nil)
+        getcard()->message_with_valueref_args(MCM_edit_script, *t_name, p_at);
     else
-        getcard()->message_with_args(MCM_edit_script, ep.getsvalue());
+        getcard()->message_with_valueref_args(MCM_edit_script, *t_name);
 }
 
 void MCObject::removefrom(MCObjectList *l)
@@ -2742,6 +2869,14 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	{
 		t_context -> setopacity(blendlevel * 255 / 100);
 		t_context -> setfunction(GXblendSrcOver);
+
+        // PM-2014-11-11: [[ Bug 13970 ]] Make sure each player is buffered correctly for export snapshot
+        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+            t_player -> syncbuffering(t_context);
+            
+#ifdef FEATURE_PLATFORM_PLAYER
+        MCPlatformWaitForEvent(0.0, true);
+#endif
 		if (t_effects != nil)
 			t_context -> begin_with_effects(t_effects, static_cast<MCControl *>(this) -> getrect());
 		// MW-2011-09-06: [[ Redraw ]] Render the control isolated, but not as a sprite.
@@ -2765,7 +2900,6 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 			t_closing_control -> MCObject::close();
 		}
 	}
-
 	delete t_context;
 	MCGContextRelease(t_gcontext);
 	return t_bitmap;
@@ -2794,16 +2928,17 @@ bool MCObject::isselectable(bool p_only_object) const
 //  SAVING AND LOADING
 //
 
-IO_stat MCObject::load(IO_handle stream, const char *version)
+IO_stat MCObject::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	uint2 i;
 
 	if ((stat = IO_read_uint4(&obj_id, stream)) != IO_NORMAL)
 		return stat;
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	MCNameRef t_name;
-	if ((stat = IO_read_nameref(t_name, stream)) != IO_NORMAL)
+	if ((stat = IO_read_nameref_new(t_name, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
 	MCNameDelete(_name);
 	_name = t_name;
@@ -2827,7 +2962,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	t_has_font_index = false;
 	if (flags & F_FONT)
 	{
-		if (strncmp(version, "1.3", 3) > 0)
+		if (version > 1300)
 		{
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
 				return stat;
@@ -2842,7 +2977,9 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 		{
 			char *fontname;
 			uint2 fontsize, fontstyle;
-			if ((stat = IO_read_string(fontname, stream)) != IO_NORMAL)
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] This codepath is only hit on sfv <= 1300,
+			//   so will never be unicode.
+			if ((stat = IO_read_cstring_legacy(fontname, stream, 2)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_read_uint2(&fontheight, stream)) != IO_NORMAL)
 				return stat;
@@ -2850,18 +2987,25 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 				return stat;
 			if ((stat = IO_read_uint2(&fontstyle, stream)) != IO_NORMAL)
 				return stat;
-			setfontattrs(fontname, fontsize, fontstyle);
+            MCAutoStringRef t_fontname;
+            /* UNCHECKED */ MCStringCreateWithCString(fontname, &t_fontname);
+			setfontattrs(*t_fontname, fontsize, fontstyle);
 			delete fontname;
 		}
 	}
 	else if (parent != nil && (parent -> m_font_flags & FF_HAS_UNICODE_TAG) != 0)
 		m_font_flags |= FF_HAS_UNICODE_TAG;
-
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_SCRIPT)
 	{
-		if ((stat = IO_read_string(script, stream)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(_script, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
-		
+        
+        // SN-2014-11-07: [[ Bug 13957 ]] It's possible to get a NULL script but having the
+        //  F_SCRIPT flag. Unset the flag in case it's needed
+        if (_script == NULL)
+            flags &= ~F_SCRIPT;
 		getstack() -> securescript(this);
 	}
 
@@ -2872,19 +3016,25 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	if (ncolors > 0)
 	{
 		colors = new MCColor[ncolors];
-		colornames = new char *[ncolors];
+		colornames = new MCStringRef[ncolors];
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			if ((stat = IO_read_mccolor(colors[i], stream)) != IO_NORMAL)
 				break;
-			if ((stat = IO_read_string(colornames[i], stream)) != IO_NORMAL)
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if ((stat = IO_read_stringref_new(colornames[i], stream, version >= 7000)) != IO_NORMAL)
 				break;
+			if (MCStringIsEmpty(colornames[i]))
+			{
+				MCValueRelease(colornames[i]);
+				colornames[i] = nil;
+			}
 			colors[i].pixel = i;
 		}
 		if (stat != IO_NORMAL)
 		{
 			while (i < ncolors)
-				colornames[i++] = NULL;
+				colornames[i++] = nil;
 			return stat;
 		}
 	}
@@ -2907,8 +3057,10 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 		return stat;
 	if ((stat = IO_read_uint2(&rect.height, stream)) != IO_NORMAL)
 		return stat;
-	if (addflags & AF_CUSTOM_PROPS)
-		if ((stat = loadunnamedpropset(stream)) != IO_NORMAL)
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv < 7000, then we have just the unnamed
+	//   propset here.
+	if (version < 7000 && addflags & AF_CUSTOM_PROPS)
+		if ((stat = loadunnamedpropset_legacy(stream)) != IO_NORMAL)
 			return stat;
 	if (addflags & AF_BORDER_WIDTH)
 		if ((stat = IO_read_uint1(&borderwidth, stream)) != IO_NORMAL)
@@ -2923,22 +3075,26 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 		//   is older.
 		// MW-2012-03-13: [[ UnicodeToolTip ]] If the file format is older than 5.5
 		//   then convert native to utf-8.
-		if (strncmp(version, "5.5", 3) < 0)
+		if (version < 5500)
 		{
-			char *t_native_tooltip;
-			if ((stat = IO_read_string(t_native_tooltip, stream)) != IO_NORMAL)
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] This code path is only hit if sfv < 5500
+			//   so leave as legacy.
+			// Read the tooltip, as encoded in its native format
+			if ((stat = IO_read_stringref_legacy(tooltip, stream, false)) != IO_NORMAL)
 				return stat;
-			MCExecPoint ep;
-			ep . setsvalue(t_native_tooltip);
-			ep . nativetoutf8();
-			tooltip = ep . getsvalue() . clone();
-			delete t_native_tooltip;
+		}
+		else if (version < 7000)
+		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] Special-case 5.5 format, read in as UTF-8
+			//   formatted.
+			// The tooltip should be written out encoded in UTF-8 (not UTF-16)
+			if ((stat = IO_read_stringref_legacy_utf8(tooltip, stream)) != IO_NORMAL)
+				return stat;
 		}
 		else
 		{
-			// MW-2012-09-19: [[ Bug 10233 ]] When we read in the tooltip, make sure
-			//   we don't translate it as it is encoded as UTF-8.
-			if ((stat = IO_read_string_no_translate(tooltip, stream)) != IO_NORMAL)
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] sfv >= 7000 so unicode.
+			if ((stat = IO_read_stringref_new(tooltip, stream, true)) != IO_NORMAL)
 				return stat;
 		}
 	}
@@ -2965,31 +3121,35 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 			// we pass t_length - 1 to extendedload (after adjusting for script). We
 			// then verify we've read a nice NUL byte at the end.
 			MCObjectInputStream *t_stream = nil;
-			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, t_stream);
-			t_length -= 1;
-
-			stat = t_stream -> ReadCString(script);
-			if (stat == IO_NORMAL)
+            // SN-2014-03-27 [[ Bug 11993 ]] 7.0 file format doesn't put the nil byte needed for decryption
+            // We need to provide the information to the ObjectInputStream
+			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, version >= 7000, t_stream);
+			if (version < 7000)
 			{
-				if (MCtranslatechars && script != NULL)
-				{
-#ifdef __MACROMAN__
-					IO_iso_to_mac(script, strlen(script));
-#else
-					IO_mac_to_iso(script, strlen(script));
-#endif
-				}
-				t_length -= script == NULL ? 1 : strlen(script) + 1;
+				t_length -= 1;
 				
-				if (script != nil)
-					getstack() -> securescript(this);
+				MCAutoStringRef t_script_string;
+				stat = t_stream -> ReadTranslatedStringRef(&t_script_string);
+				if (stat == IO_NORMAL)
+				{
+					// Adjust the remaining length based on the length of the string read
+					if (MCStringIsEmpty(*t_script_string))
+						t_length -= 1;
+					else
+						t_length -= MCStringGetLength(*t_script_string) + 1;
+
+					setscript(*t_script_string);
+					
+					if (!MCStringIsEmpty(*t_script_string))
+						getstack() -> securescript(this);
+				}
 			}
 
 			if (stat == IO_NORMAL && t_length > 0)
 				stat = extendedload(*t_stream, version, t_length);
 
 			// Read the implicit nul byte
-			if (stat == IO_NORMAL)
+			if (version < 7000 && stat == IO_NORMAL)
 			{
 				uint1 t_byte;
 				stat = t_stream -> ReadU8(t_byte);
@@ -3006,15 +3166,15 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 		
 		if (stat != IO_NORMAL)
 			return stat;
-
-		if (script != NULL)
-			flags |= F_SCRIPT;
 	}
 	else if (addflags & AF_LONG_SCRIPT)
 	{
-		if ((stat = IO_read_string(script, stream, 4)) != IO_NORMAL)
+		MCAutoStringRef t_script_string;
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_read_stringref_new(&t_script_string, stream, version >= 7000, 4)) != IO_NORMAL)
 			return stat;
-		flags |= F_SCRIPT;
+		
+		setscript(*t_script_string);
 		
 		getstack() -> securescript(this);
 	}
@@ -3025,7 +3185,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 
 	// MW-2013-03-28: The restrictions byte is no longer relevant due to new
 	//   licensing.
-	if (strcmp(version, "2.7") >= 0)
+	if (version >= 2700)
 	{
 		uint1 t_restrictions;
 		if ((stat = IO_read_uint1(&t_restrictions, stream)) != IO_NORMAL)
@@ -3063,7 +3223,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	t_extended = MCstackfileversion >= 2700 && p_force_ext;
 
 	// Check whether there are any custom properties with array values and if so, force extension
-	if (hasarraypropsets())
+	if (MCstackfileversion < 7000 && hasarraypropsets_legacy())
 		t_extended = true;
 
 	// MW-2008-10-28: [[ ParentScripts ]] Make sure we mark this as extended if there
@@ -3100,9 +3260,14 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	//
 	if ((stat = IO_write_uint4(t_written_id, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_write_nameref(_name, stream)) != IO_NORMAL)
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_write_nameref_new(_name, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 		return stat;
 
+	if (!MCStringIsEmpty(_script))
+		flags |= F_SCRIPT;
+	
 	uint32_t t_old_flags;
 	t_old_flags = flags;
 
@@ -3113,15 +3278,26 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	uint2 addflags = npatterns;
 	if (t_extended)
 		addflags |= AF_EXTENDED;
-	if (flags & F_SCRIPT && strlen(script) >= MAXUINT2 || t_extended)
+	
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv < 7000 then we need to encode for
+	//   long scripts, and put extended data after it.
+	if (MCstackfileversion < 7000)
 	{
-		addflags |= AF_LONG_SCRIPT;
-		flags &= ~F_SCRIPT;
+		if (flags & F_SCRIPT && MCStringGetLength(_script) >= MAXUINT2 || t_extended)
+		{
+			addflags |= AF_LONG_SCRIPT;
+			flags &= ~F_SCRIPT;
+		}
 	}
+	
 	stat = IO_write_uint4(flags, stream);
-	if (addflags & AF_LONG_SCRIPT && script != NULL)
-		flags |= F_SCRIPT;
-
+	
+	if (MCstackfileversion < 7000)
+	{
+		if (addflags & AF_LONG_SCRIPT && !MCStringIsEmpty(_script))
+			flags |= F_SCRIPT;
+	}
+	
 	flags = t_old_flags;
 
 	if (stat != IO_NORMAL)
@@ -3137,29 +3313,36 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(fontheight, stream)) != IO_NORMAL)
 			return stat;
 	}
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
-		getstack() -> unsecurescript(this);
-		stat = IO_write_string(script, stream);
+        getstack() -> unsecurescript(this);
+        stat = IO_write_stringref_new(_script, stream, MCstackfileversion >= 7000);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
 	}
+	
 	if ((stat = IO_write_uint2(dflags, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_write_uint2(ncolors, stream)) != IO_NORMAL)
 		return stat;
 	for (i = 0 ; i < ncolors ; i++)
-		if ((stat = IO_write_mccolor(colors[i], stream)) != IO_NORMAL
-		        || (stat = IO_write_string(colornames[i], stream)) != IO_NORMAL)
+	{
+		if ((stat = IO_write_mccolor(colors[i], stream)) != IO_NORMAL)
 			return stat;
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_write_stringref_new(colornames[i] != nil ? colornames[i] : kMCEmptyString, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+			return stat;
+	}
 	if (props != NULL)
 		addflags |= AF_CUSTOM_PROPS;
 	if (borderwidth != DEFAULT_BORDER)
 		addflags |= AF_BORDER_WIDTH;
 	if (shadowoffset != DEFAULT_SHADOW)
 		addflags |= AF_SHADOW_OFFSET;
-	if (tooltip != NULL)
+	if (!MCStringIsEmpty(tooltip))
 		addflags |= AF_TOOL_TIP;
 	if (altid != 0)
 		addflags |= AF_ALT_ID;
@@ -3195,8 +3378,8 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 	if ((stat = IO_write_uint2(rect.height, stream)) != IO_NORMAL)
 		return stat;
-	if (addflags & AF_CUSTOM_PROPS)
-		if ((stat = saveunnamedpropset(stream)) != IO_NORMAL)
+	if (MCstackfileversion < 7000 && addflags & AF_CUSTOM_PROPS)
+		if ((stat = saveunnamedpropset_legacy(stream)) != IO_NORMAL)
 			return stat;
 	if (addflags & AF_BORDER_WIDTH)
 		if ((stat = IO_write_uint1(borderwidth, stream)) != IO_NORMAL)
@@ -3213,21 +3396,22 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		//   then convert utf-8 to native before saving.
 		if (MCstackfileversion < 5500)
 		{
-			MCExecPoint ep;
-			char *t_native_tooltip;
-			ep . setsvalue(tooltip);
-			ep . utf8tonative();
-			t_native_tooltip = ep . getsvalue() . clone();
-			if ((stat = IO_write_string(t_native_tooltip, stream)) != IO_NORMAL)
-			{
-				delete t_native_tooltip;
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] sfv < 5500, so native output.
+            // Tooltip is encoded in the native format
+            if ((stat = IO_write_stringref_legacy(tooltip, stream, false)) != IO_NORMAL)
 				return stat;
-			}
-			delete t_native_tooltip;
+		}
+		else if (MCstackfileversion < 7000)
+		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] Special-case 5.5 format - uses UTF-8.
+			// Tooltip is encoded as UTF-8
+			if ((stat = IO_write_stringref_legacy_utf8(tooltip, stream)) != IO_NORMAL)
+				return stat;
 		}
 		else
 		{
-			if ((stat = IO_write_string(tooltip, stream)) != IO_NORMAL)
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] sfv >= 7000, so use unicode.
+			if ((stat = IO_write_stringref_new(tooltip, stream, true)) != IO_NORMAL)
 				return stat;
 		}
 	}
@@ -3247,64 +3431,89 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint1(t_converted_ink, stream)) != IO_NORMAL)
 			return stat;
 
-	if (t_extended)
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv < 7000 then here we write
+	//   longscript or script+extended. Otherwise we just write out the extended area.
+	if (MCstackfileversion < 7000)
 	{
-		uint4 t_length_offset;
-		if (MCS_isfake(stream))
-			t_length_offset = MCS_faketell(stream);
-		else
-			t_length_offset = (uint4)MCS_tell(stream);
-
-		stat = IO_write_uint4(t_length_offset, stream);
-
-		if (stat == IO_NORMAL)
+		if (t_extended)
 		{
-			MCObjectOutputStream *t_stream = nil;
-			/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
-			getstack() -> unsecurescript(this);
-			stat = t_stream -> WriteCString(script);
-			getstack() -> securescript(this);
-			if (stat == IO_NORMAL)
-				stat = extendedsave(*t_stream, p_part);
-			if (stat == IO_NORMAL)
-				stat = t_stream -> Flush(true);
-			
-			delete t_stream;
-		}
-		if (stat == IO_NORMAL)
-			stat = IO_write_uint1(0, stream);
-		if (stat == IO_NORMAL)
-		{
-			uint4 t_cur_offset;
-			if (MCS_isfake(stream))
-				t_cur_offset = MCS_faketell(stream);
-			else
-				t_cur_offset = (uint4)MCS_tell(stream);
+			uint4 t_length_offset;
 
-			uint4 t_length;
-			t_length = MCSwapInt32HostToNetwork(t_cur_offset - t_length_offset - 4);
+			t_length_offset = MCS_tell(stream);
 
-			if (MCS_isfake(stream))
-				MCS_fakewriteat(stream, t_length_offset, &t_length, sizeof(uint4));
-			else
+			stat = IO_write_uint4(t_length_offset, stream);
+
+			if (stat == IO_NORMAL)
 			{
-				stat = MCS_seek_set(stream, t_length_offset);
+				MCObjectOutputStream *t_stream = nil;
+				/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
+				getstack() -> unsecurescript(this);
+				stat = t_stream -> WriteStringRefNew(_script, false);
+				getstack() -> securescript(this);
 				if (stat == IO_NORMAL)
-					stat = MCS_write(&t_length, sizeof(uint4), 1, stream);
+					stat = extendedsave(*t_stream, p_part);
 				if (stat == IO_NORMAL)
-					stat = MCS_seek_set(stream, t_cur_offset);
+					stat = t_stream -> Flush(true);
+				
+				delete t_stream;
 			}
+			if (stat == IO_NORMAL)
+				stat = IO_write_uint1(0, stream);
+			if (stat == IO_NORMAL)
+			{
+				uint4 t_cur_offset;
+				
+				t_cur_offset = MCS_tell(stream);
+
+				uint4 t_length;
+				t_length = MCSwapInt32HostToNetwork(t_cur_offset - t_length_offset - 4);
+
+				MCS_writeat(&t_length, sizeof(uint4), t_length_offset, stream);
+			}
+			if (stat != IO_NORMAL)
+				return stat;
 		}
-		if (stat != IO_NORMAL)
-			return stat;
+		else if (addflags & AF_LONG_SCRIPT)
+		{
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			getstack() -> unsecurescript(this);
+			stat = IO_write_stringref_new(_script, stream, MCstackfileversion >= 7000, 4);
+			getstack() -> securescript(this);
+			if (stat != IO_NORMAL)
+				return stat;
+		}
 	}
-	else if (addflags & AF_LONG_SCRIPT)
-	{
-		getstack() -> unsecurescript(this);
-		stat = IO_write_string(script, stream, 4);
-		getstack() -> securescript(this);
-		if (stat != IO_NORMAL)
-			return stat;
+	else
+    {
+		if (t_extended)
+		{
+			uint4 t_length_offset;
+			t_length_offset = MCS_tell(stream);
+			stat = IO_write_uint4(t_length_offset, stream);
+			if (stat == IO_NORMAL)
+			{
+				MCObjectOutputStream *t_stream = nil;
+				/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
+				if (stat == IO_NORMAL)
+					stat = extendedsave(*t_stream, p_part);
+				if (stat == IO_NORMAL)
+					stat = t_stream -> Flush(true);
+				delete t_stream;
+			}
+			if (stat == IO_NORMAL)
+			{
+				uint4 t_cur_offset;
+				
+				t_cur_offset = MCS_tell(stream);
+				
+				uint4 t_length;
+				t_length = MCSwapInt32HostToNetwork(t_cur_offset - t_length_offset - 4);
+				
+				MCS_writeat(&t_length, sizeof(uint4), t_length_offset, stream);
+			}
+			if (stat != IO_NORMAL)
+				return stat;
+        }
 	}
 
 //---- New in 2.7
@@ -3336,7 +3545,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCObject::defaultextendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCObject::defaultextendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -3373,7 +3582,10 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
 	// First calculate the size of the array custom property data
 	uint32_t t_prop_size;
-	t_prop_size = measurearraypropsets();
+	t_prop_size = 0;
+	
+	if (MCstackfileversion < 7000)
+		t_prop_size += measurearraypropsets_legacy();
 
 	// Calculate the tag to write out
 	uint32_t t_flags;
@@ -3401,8 +3613,16 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		//     uint32 id
 		//     cstring stack
 		//     cstring mainstack
-		t_size += 1 + 1 + 4 + strlen(MCNameGetCString(parent_script -> GetParent() -> GetObjectStack())) + 1;
-		t_size += 1; // was mainstack reference
+        
+        // in 5.5 format, the length of the string + 1 (for nul char) is written out,
+        // whereas in 7.0 we write out the 32-bit length and then the string.
+        
+        // AL-2014-07-31: [[ Bug 13043 ]] It is possible for utf8 string length to be different
+        // here from the char count of the string.
+        // SN-2014-10-27: [[ Bug 13554 ]] String length calculation refactored
+        t_size += 1 + 1 + 4
+                + p_stream . MeasureStringRefNew(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()), MCstackfileversion >= 7000)
+                + p_stream . MeasureStringRefNew(kMCEmptyString, MCstackfileversion >= 7000);
 	}
 
 	// MW-2009-09-24: Slight oversight on my part means that there is no record
@@ -3442,7 +3662,7 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	t_stat = p_stream . WriteTag(t_flags, t_size);
 	
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_ARRAYPROPS) != 0)
-		t_stat = savearraypropsets(p_stream);
+		t_stat = savearraypropsets_legacy(p_stream);
 	
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_PARENTSCRIPT) != 0)
 	{
@@ -3451,10 +3671,12 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 			t_stat = p_stream . WriteU8(128 + 0);
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . WriteU32(parent_script -> GetParent() -> GetObjectId());
+		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteNameRef(parent_script -> GetParent() -> GetObjectStack());
+			t_stat = p_stream . WriteNameRefNew(parent_script -> GetParent() -> GetObjectStack(), MCstackfileversion >= 7000);
+		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteCString(nil); // was mainstack reference
+			t_stat = p_stream . WriteStringRefNew(kMCEmptyString, MCstackfileversion >= 7000); // was mainstack reference
 	}
 
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)
@@ -3476,7 +3698,7 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return IO_NORMAL;
 }
 
-IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length)
 {
 	if (p_length == 0)
 		return IO_NORMAL;
@@ -3490,7 +3712,7 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, const char *p_vers
 		t_stat = p_stream . Mark();
 
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_ARRAYPROPS) != 0)
-		t_stat = loadarraypropsets(p_stream);
+		t_stat = loadarraypropsets_legacy(p_stream);
 
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_PARENTSCRIPT) != 0)
 	{
@@ -3504,17 +3726,18 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, const char *p_vers
 		uint32_t t_id;
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . ReadU32(t_id);
-
+		
+		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		MCNameRef t_stack;
 		t_stack = NULL;
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadNameRef(t_stack);
-
+			t_stat = p_stream . ReadNameRefNew(t_stack, version >= 7000);
+		
+		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		// This is no longer used, but might remain in older stackfiles.
-		char *t_mainstack;
-		t_mainstack = NULL;
+		MCAutoStringRef t_mainstack;
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadCString(t_mainstack);
+			t_stat = p_stream . ReadStringRefNew(&t_mainstack, version >= 7000);
 
 		if (t_stat == IO_NORMAL)
 		{
@@ -3526,7 +3749,6 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, const char *p_vers
 		}
 
 		MCNameDelete(t_stack);
-		delete t_mainstack;
 	}
 	
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)
@@ -3588,7 +3810,7 @@ bool MCObject::resolveparentscript(void)
 	// We have a parent script, so use MCdispatcher to try and find the
 	// stack.
 	MCStack *t_stack;
-	t_stack = getstack() -> findstackname(MCNameGetOldString(t_script -> GetObjectStack()));
+	t_stack = getstack() -> findstackname(t_script -> GetObjectStack());
 
 	// Next search for the control we need.
 	MCControl *t_control;
@@ -3623,12 +3845,12 @@ bool MCObject::resolveparentscript(void)
 // the behavior hierarchy. We first search the behavior chain's for successive ancestors
 // of the object, up to and including its stack. If this fails, fall back to the original
 // search.
-MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
+MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 {
 	// If the name string ptr is nil, then this is an id search.
 	bool t_is_id;
 	t_is_id = false;
-	if (p_name . getstring() == nil)
+	if (p_name == nil)
 		t_is_id = true;
 
 	MCControl *t_control;
@@ -3662,7 +3884,11 @@ MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
 			if (t_is_id)
 				t_control = t_behavior_stack -> getcontrolid(CT_IMAGE, p_image_id, true);
 			else
-				t_control = t_behavior_stack -> getcontrolname(CT_IMAGE, p_name);
+			{
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCNameCreate(p_name, &t_name);
+				t_control = t_behavior_stack -> getcontrolname(CT_IMAGE, *t_name);
+			}
 			if (t_control != NULL)
 				break;
 
@@ -3690,7 +3916,11 @@ MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
 		if (t_is_id)
 			t_control = static_cast<MCControl *>(getstack() -> getobjid(CT_IMAGE, p_image_id));
 		else
-			t_control = static_cast<MCControl *>(getstack() -> getobjname(CT_IMAGE, p_name));
+		{
+			MCNewAutoNameRef t_name;
+			/* UNCHECKED */ MCNameCreate(p_name, &t_name);
+			t_control = static_cast<MCControl *>(getstack() -> getobjname(CT_IMAGE, *t_name));
+		}
 	}
 	
 	return static_cast<MCImage *>(t_control);
@@ -3698,10 +3928,10 @@ MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
 
 MCImage *MCObject::resolveimageid(uint32_t p_id)
 {
-	return resolveimage(MCString(nil, 0), p_id);
+	return resolveimage(nil, p_id);
 }
 
-MCImage *MCObject::resolveimagename(const MCString& p_name)
+MCImage *MCObject::resolveimagename(MCStringRef p_name)
 {
 	return resolveimage(p_name, 0);
 }
@@ -3725,6 +3955,7 @@ MCObjectHandle *MCObject::gethandle(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef OLD_EXEC
 struct MCObjectChangeIdVisitor: public MCObjectVisitor
 {
 	uint32_t old_card_id;
@@ -3827,6 +4058,7 @@ Exec_stat MCObject::changeid(uint32_t p_new_id)
 
 	return ES_NORMAL;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -4301,7 +4533,7 @@ void MCObject::mapfont(void)
 	{
 		// This should never happen as the only object with nil parent when
 		// opened should be MCdispatcher, which always has font attrs.
-		assert(false);
+		MCUnreachable();
 	}
 	
 	// MW-2012-03-02: [[ Bug 10044 ]] If we had to temporarily map the parent's font
@@ -4494,10 +4726,10 @@ void MCObject::setfontattrs(uint32_t p_which, MCNameRef p_textfont, uint2 p_text
 
 // MW-2012-02-17: [[ LogFonts ]] Set the logical font attrs to the given values
 //   using a c-string for the name.
-void MCObject::setfontattrs(const char *p_textfont, uint2 p_textsize, uint2 p_textstyle)
+void MCObject::setfontattrs(MCStringRef p_textfont, uint2 p_textsize, uint2 p_textstyle)
 {
 	MCAutoNameRef t_textfont_name;
-	/* UNCHECKED */ t_textfont_name . CreateWithCString(p_textfont);
+	/* UNCHECKED */ MCNameCreate(p_textfont, t_textfont_name);
 	setfontattrs(FF_HAS_ALL_FATTR, t_textfont_name, p_textsize, p_textstyle);
 }
 
@@ -4554,7 +4786,7 @@ void MCObject::scheduledelete(void)
 		getstack() -> uncacheobjectbyid(this);
 }
 
-MCRectangle MCObject::measuretext(const MCString& p_text, bool p_is_unicode)
+MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)
 {
     bool t_mapped_font;
     t_mapped_font = false;
@@ -4568,9 +4800,9 @@ MCRectangle MCObject::measuretext(const MCString& p_text, bool p_is_unicode)
     t_bounds . x = 0;
 	// MW-2013-08-23: [[ MeasureText ]] Shortcut if no text - useful for just
 	//   getting the font ascent/descent (as used in MCGroup methods).
-	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-	if (p_text . getlength() != 0)
-		t_bounds . width = MCFontMeasureText(m_font, p_text . getstring(), p_text . getlength(), p_is_unicode, getstack() -> getdevicetransform());
+    // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+	if (MCStringGetLength(p_text) != 0)
+        t_bounds . width = MCFontMeasureText(m_font, p_text, getstack() -> getdevicetransform());
 	else
 		t_bounds . width = 0;
     t_bounds . y = -MCFontGetAscent(m_font);

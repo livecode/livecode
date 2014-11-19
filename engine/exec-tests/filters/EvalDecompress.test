@@ -1,0 +1,19 @@
+setup "not compressed data"
+test-error decompress("hello world")
+test-error decompress("")
+teardown
+
+setup "incomplete compressed data"
+test-error decompress(byte 1 to -2 of compress("hello world"))
+teardown
+
+setup "corrupted data"
+put compress("hello world") into tCompressed
+put numToByte(255 - byteToNum(byte -9 of tCompressed)) into byte -9 of tCompressed
+test-error decompress(tCompressed)
+teardown
+
+setup "functionality"
+test decompress(compress(empty)) is empty
+test decompress(compress("hello world")) is "hello world"
+teardown

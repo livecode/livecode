@@ -1,0 +1,10 @@
+setup
+
+test the ciphernames is not empty
+
+repeat for each line tCipher in the ciphernames
+	test the number of items in tCipher is 2
+	test item 2 of tCipher is an integer
+end repeat
+
+teardown

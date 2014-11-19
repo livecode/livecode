@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "mcerror.h"
 #include "util.h"
 
@@ -29,12 +29,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 void MCError::add(uint2 id, MCScriptPoint &sp)
 {
-	add(id, sp.getline(), sp.getpos(), sp.gettoken());
+	add(id, sp.getline(), sp.getpos(), sp.gettoken_stringref());
 }
 
 void MCError::add(uint2 id, uint2 line, uint2 pos)
 {
-	add(id, line, pos, MCnullmcstring);
+	add(id, line, pos, kMCEmptyString);
+}
+
+void MCError::add(uint2 id, uint2 line, uint2 pos, const char *msg)
+{
+    MCAutoStringRef t_string;
+    MCStringCreateWithCString(msg, &t_string);
+	add(id, line, pos, *t_string);
 }
 
 void MCError::add(uint2 id, uint2 line, uint2 pos, uint32_t v)
@@ -44,15 +51,34 @@ void MCError::add(uint2 id, uint2 line, uint2 pos, uint32_t v)
 	add(id, line, pos, t_buffer);
 }
 
-void MCError::add(uint2 id, uint2 line, uint2 pos, MCNameRef n)
+void MCError::add(uint2 id, uint2 line, uint2 pos, MCValueRef n)
 {
-	add(id, line, pos, MCNameGetOldString(n));
+    if (MCerrorlock != 0 || thrown)
+		return;
+    
+    if (n != nil)
+	{
+		MCAutoStringRef t_string;
+		MCValueConvertToStringForSave(n, &t_string);
+		doadd(id, line, pos, *t_string);
+	}
+	else
+	{
+		doadd(id, line, pos, kMCEmptyString);
+	}
 }
 
+#ifdef LLEGACY_EXEC
 void MCError::add(uint2 id, uint2 line, uint2 pos, const MCString &token)
 {
 	if (MCerrorlock != 0 || thrown)
 		return;
+	doadd(id, line, pos, token);
+}
+#endif
+
+void MCError::doadd(uint2 id, uint2 line, uint2 pos, MCStringRef p_token)
+{
 	if (line != 0 && errorline == 0)
 	{
 		errorline = line;
@@ -60,54 +86,61 @@ void MCError::add(uint2 id, uint2 line, uint2 pos, const MCString &token)
 	}
 	if (depth > 1024)
 		return;
-	char *newerror = new char[U2L * 3 + token.getlength()];
-	if (token == MCnullmcstring)
-		sprintf(newerror, "%d,%d,%d", id, line, pos);
+
+    MCAutoStringRef newerror;
+    
+	if (MCStringIsEmpty(p_token))
+		/* UNCHECKED */ MCStringFormat(&newerror, "%d,%d,%d", id, line, pos);
 	else
 	{
-		const char *eptr = token.getstring();
-		int4 length = 0;
-		while (length < (int4)token.getlength())
-		{
-			if (*eptr++ == '\n')
-				break;
-			length++;
-		}
-		sprintf(newerror, "%d,%d,%d,%*.*s", id, line, pos,
-		        length, length, token.getstring());
+        MCStringRef t_line = nil;
+        uindex_t t_newline;
+        if (MCStringFirstIndexOfChar(p_token, '\n', 0, kMCCompareExact, t_newline))
+            /* UNCHECKED */ MCStringCopySubstring(p_token, MCRangeMake(0, t_newline), t_line);
+
+		/* UNCHECKED */ MCStringFormat(&newerror, "%d,%d,%d,%@", id, line, pos, t_line != nil ? t_line : p_token);
+        
+        MCValueRelease(t_line);
 	}
-	MCU_addline(buffer, newerror, strlen(buffer) == 0);
+    if (!MCStringIsEmpty(buffer))
+        MCStringAppendChar(buffer, '\n');
+    
+	MCStringAppend(buffer, *newerror);
 	depth += 1;
-	delete newerror;
 }
 
 void MCError::append(MCError& p_other)
 {
-	MCU_addline(buffer, p_other . buffer, strlen(buffer) == 0);
+	MCStringAppendFormat(buffer, MCStringIsEmpty(buffer) ? "%@" : "\n%@", p_other . buffer);
 }
 
+#ifdef LEGACY_EXEC
 const MCString &MCError::getsvalue()
 {
-	if (!thrown)
-		svalue.set(buffer, strlen(buffer));
-	return svalue;
+    if (!thrown)
+        svalue.set(buffer, strlen(buffer));
+    return svalue;
+}
+#endif
+
+void MCError::copystringref(MCStringRef s, Boolean t)
+{
+	MCValueRelease(buffer);
+    MCStringMutableCopy(s, buffer);
+	thrown = t;
 }
 
-void MCError::copysvalue(const MCString &s, Boolean t)
+bool MCError::copyasstringref(MCStringRef &r_string)
 {
-	delete buffer;
-	buffer = s.clone();
-	thrown = t;
-	if (thrown)
-		svalue.set(buffer, strlen(buffer));
+	return MCStringCopy(buffer, r_string);
 }
 
 void MCError::clear()
 {
-	delete buffer;
+	MCValueRelease(buffer);
 	errorline = errorpos = 0;
 	depth = 0;
-	buffer = MCU_empty();
+    MCStringCreateMutable(0, buffer);
 	thrown = False;
 	if (this == MCeerror)
 		MCerrorptr = NULL;

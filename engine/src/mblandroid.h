@@ -25,79 +25,107 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 struct MCAndroidSystem: public MCSystemInterface
 {
-public:
-	bool Initialize(void);
-	void Finalize(void);
+    virtual MCServiceInterface *QueryService(MCServiceType type);
+    
+	virtual bool Initialize(void);
+	virtual void Finalize(void);
 	
-	void Debug(const char *p_string);
-
-	real64_t GetCurrentTime(void);
+	virtual void Debug(MCStringRef p_string);
+    
+	virtual real64_t GetCurrentTime(void);
+    
+	virtual bool GetVersion(MCStringRef& r_string);
+	virtual bool GetMachine(MCStringRef& r_string);
+	virtual MCNameRef GetProcessor(void);
+	virtual bool GetAddress(MCStringRef& r_address);
+    
+	virtual uint32_t GetProcessId(void);
 	
-	uint32_t GetProcessId(void);
+	virtual void Alarm(real64_t p_when);
+	virtual void Sleep(real64_t p_when);
 	
-	char *GetVersion(void);
-	char *GetMachine(void);
-	char *GetProcessor(void);
-	char *GetAddress(void);
+	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value);
+	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value);
 	
-	void Alarm(real64_t p_when);
-	void Sleep(real64_t p_when);
+	virtual Boolean CreateFolder(MCStringRef p_path);
+	virtual Boolean DeleteFolder(MCStringRef p_path);
 	
-	void SetEnv(const char *name, const char *value);
-	char *GetEnv(const char *name);
+	virtual Boolean DeleteFile(MCStringRef p_path);
 	
-	bool CreateFolder(const char *p_path);
-	bool DeleteFolder(const char *p_path);
+	virtual Boolean RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name);
 	
-	bool DeleteFile(const char *p_path);
+	virtual Boolean BackupFile(MCStringRef p_old_name, MCStringRef p_new_name);
+	virtual Boolean UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name);
 	
-	bool RenameFileOrFolder(const char *p_old_name, const char *p_new_name);
+	virtual Boolean CreateAlias(MCStringRef p_target, MCStringRef p_alias);
+	// NOTE: 'ResolveAlias' returns a standard (not native) path.
+	virtual Boolean ResolveAlias(MCStringRef p_target, MCStringRef& r_dest);
 	
-	bool BackupFile(const char *p_old_name, const char *p_new_name);
-	bool UnbackupFile(const char *p_old_name, const char *p_new_name);
+	virtual bool GetCurrentFolder(MCStringRef& r_path);
+	///* LEGACY */ char *GetCurrentFolder(void);
+	virtual Boolean SetCurrentFolder(MCStringRef p_path);
 	
-	bool CreateAlias(const char *p_target, const char *p_alias);
-	char *ResolveAlias(const char *p_target);
+	// NOTE: 'GetStandardFolder' returns a standard (not native) path.
+	virtual Boolean GetStandardFolder(MCNameRef p_type, MCStringRef& r_folder);
 	
-	char *GetCurrentFolder(void);
-	bool SetCurrentFolder(const char *p_path);
+    virtual real8 GetFreeDiskSpace();
+    virtual Boolean GetDevices(MCStringRef& r_devices);
+    virtual Boolean GetDrives(MCStringRef& r_drives);
+    
+	virtual Boolean FileExists(MCStringRef p_path);
+	virtual Boolean FolderExists(MCStringRef p_path);
+	virtual Boolean FileNotAccessible(MCStringRef p_path);
 	
-	bool FileExists(const char *p_path);
-	bool FolderExists(const char *p_path);
-	bool FileNotAccessible(const char *p_path);
+	virtual Boolean ChangePermissions(MCStringRef p_path, uint2 p_mask);
+	virtual uint2 UMask(uint2 p_mask);
 	
-	bool ChangePermissions(const char *p_path, uint2 p_mask);
-	uint2 UMask(uint2 p_mask);
+	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map);
+	virtual IO_handle OpenFd(uint32_t fd, intenum_t p_mode);
+    virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode);
 	
-	MCSystemFileHandle *OpenFile(const char *p_path, uint32_t p_mode, bool p_map);
-	MCSystemFileHandle *OpenStdFile(uint32_t i);
-	MCSystemFileHandle *OpenDevice(const char *p_path, uint32_t p_mode, const char *p_control_string);
+	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
+	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name);
 	
-	char *GetTemporaryFileName(void);
-	char *GetStandardFolder(const char *folder);
+	virtual MCSysModuleHandle LoadModule(MCStringRef p_path);
+	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
+	virtual void UnloadModule(MCSysModuleHandle p_module);
 	
-	void *LoadModule(const char *p_path);
-	void *ResolveModuleSymbol(void *p_module, const char *p_symbol);
-	void UnloadModule(void *p_module);
+	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context);
+    
+	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native);
+	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path);
+	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path);
 	
-	char *LongFilePath(const char *p_path);
-	char *ShortFilePath(const char *p_path);
-	
-	char *PathToNative(const char *p_rev_path);
-	char *PathFromNative(const char *p_rev_path);
-	char *ResolvePath(const char *p_rev_path);
-	char *ResolveNativePath(const char *p_rev_path);
-	
-	bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context);
-	
-	bool Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_data, uint32_t& r_data_length, int& r_retcode);
-	
-	char *GetHostName(void);
-	bool HostNameToAddress(const char *p_hostname, MCSystemHostResolveCallback p_callback, void *p_context);
-	bool AddressToHostName(const char *p_address, MCSystemHostResolveCallback p_callback, void *p_context);
-
-	uint32_t TextConvert(const void *string, uint32_t string_length, void *buffer, uint32_t buffer_length, uint32_t from_charset, uint32_t to_charset);
-	bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used);
+	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path);
+	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path);
+    
+	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode);
+    
+	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset);
+	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used);
+    
+    virtual void CheckProcesses(void);
+    
+    virtual uint32_t GetSystemError(void);
+    
+    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated);
+    virtual void CloseProcess(uint2 p_index);
+    virtual void Kill(int4 p_pid, int4 p_sig);
+    virtual void KillAll(void);
+    virtual Boolean Poll(real8 p_delay, int p_fd);
+    
+    virtual Boolean IsInteractiveConsole(int p_fd);
+    
+    virtual int GetErrno(void);
+    virtual void SetErrno(int p_errno);
+    
+    virtual void LaunchDocument(MCStringRef p_document);
+    virtual void LaunchUrl(MCStringRef p_document);
+    
+    virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language);
+    virtual bool AlternateLanguages(MCListRef& r_list);
+    
+    virtual bool GetDNSservers(MCListRef& r_list);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

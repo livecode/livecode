@@ -146,7 +146,7 @@ MCStatement *MCN_new_statement(int2 which)
 	case S_INSERT:
 		return new MCInsert;
 	case S_INTERSECT:
-		return new MCArrayIntersect;
+		return new MCArrayIntersectCmd;
 	case S_KILL:
 		return new MCKill;
 	case S_LAUNCH:
@@ -283,7 +283,7 @@ MCStatement *MCN_new_statement(int2 which)
 	case S_UNHILITE:
 		return new MCUnhilite;
 	case S_UNION:
-		return new MCArrayUnion;
+		return new MCArrayUnionCmd;
 	case S_UNLOAD:
 		return new MCUnload;
 	case S_UNLOCK:
@@ -346,12 +346,17 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCBase64Encode;
 	case F_BASE_CONVERT:
 		return new MCBaseConvert;
+    // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+    case F_BIDI_DIRECTION:
+        return new MCBidiDirection;
 	case F_BINARY_ENCODE:
 		return new MCBinaryEncode;
 	case F_BINARY_DECODE:
 		return new MCBinaryDecode;
 	case F_BUILD_NUMBER:
 		return new MCBuildNumber;
+    case F_BYTE_OFFSET:
+        return new MCByteOffset;
 	case F_CACHED_URLS:
 		return new MCCachedUrls;
 	case F_CAPS_LOCK_KEY:
@@ -384,6 +389,10 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCClickV;
 	case F_CLIPBOARD:
 		return new MCClipboard;
+    case F_CODEPOINT_OFFSET:
+        return new MCCodepointOffset;
+    case F_CODEUNIT_OFFSET:
+        return new MCCodeunitOffset;
 	case F_COLOR_NAMES:
 		return new MCColorNames;
 	case F_COMMAND_KEY:
@@ -602,8 +611,14 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCMovie;
 	case F_MOVING_CONTROLS:
 		return new MCMovingControls;
+    case F_NATIVE_CHAR_TO_NUM:
+        return new MCNativeCharToNum;
 	case F_NUM_TO_CHAR:
 		return new MCNumToChar;
+    case F_NUM_TO_NATIVE_CHAR:
+        return new MCNumToNativeChar;
+    case F_NUM_TO_UNICODE_CHAR:
+        return new MCNumToUnicodeChar;
 	case F_NUM_TO_BYTE:
 		return new MCNumToByte;
 	case F_OFFSET:
@@ -626,6 +641,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCOwner;
 	case F_PA:
 		return new MCPeerAddress;
+    case F_PARAGRAPH_OFFSET:
+        return new MCParagraphOffset;
 	case F_PARAM:
 		return new MCParam;
 	case F_PARAMS:
@@ -701,6 +718,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCSelectedObject;
 	case F_SELECTED_TEXT:
 		return new MCSelectedText;
+    case F_SENTENCE_OFFSET:
+        return new MCSentenceOffset;
 	case F_SET_REGISTRY:
 		return new MCSetRegistry;
 	case F_SET_RESOURCE:
@@ -745,6 +764,10 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCTarget;
 	case F_TEMP_NAME:
 		return new MCTempName;
+    case F_TEXT_DECODE:
+        return new MCTextDecode;
+    case F_TEXT_ENCODE:
+        return new MCTextEncode;
 	case F_TEXT_HEIGHT_SUM:
 		return new MCTextHeightSum;
 	case F_TICKS:
@@ -759,8 +782,12 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCToUpper;
 	case F_TRANSPOSE:
 		return new MCTranspose;
+    case F_TRUEWORD_OFFSET:
+        return new MCTrueWordOffset;
 	case F_TRUNC:
 		return new MCTrunc;
+    case F_UNICODE_CHAR_TO_NUM:
+        return new MCUnicodeCharToNum;
 	case F_VALUE:
 		return new MCValue;
 	case F_VARIABLES:
@@ -799,6 +826,10 @@ MCExpression *MCN_new_function(int2 which)
         return new MCMeasureText(false);
     case F_MEASURE_UNICODE_TEXT:
         return new MCMeasureText(true);
+    case F_NORMALIZE_TEXT:
+        return new MCNormalizeText;
+    case F_CODEPOINT_PROPERTY:
+        return new MCCodepointProperty;
     default:
 		break;
 	}

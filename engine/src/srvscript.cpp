@@ -21,7 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "scriptpt.h"
 #include "newobj.h"
 #include "mcerror.h"
@@ -33,7 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "cmds.h"
 
-#include "core.h"
 
 #include "system.h"
 #include "srvscript.h"
@@ -43,9 +43,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MCServerScript::MCServerScript(void)
 {
 	m_files = NULL;
-	m_ep = NULL;
+	m_ctxt = NULL;
 	m_include_depth = 0;
 	m_current_file = nil;
+	
+	// MW-2013-11-08: [[ RefactorIt ]] This varref is created when hlist is.
+	m_it = nil;
 }
 
 MCServerScript::~MCServerScript(void)
@@ -55,51 +58,62 @@ MCServerScript::~MCServerScript(void)
 		File *t_file;
 		t_file = m_files;
 		m_files = m_files -> next;
-		
-		if (t_file -> handle != NULL)
-			t_file -> handle -> Close();
-		delete t_file -> filename;
-		delete t_file -> script;
+
+        // Closing a MCMemoryMappedFileHandle calls unmap()
+        // and thus deallocates the memory mapped - which is what's stored in t_file -> script
+        if (t_file -> handle != NULL)
+            t_file -> handle -> Close();
+        else
+            delete t_file -> script;
+
+        MCValueRelease(filename);
+
 		delete t_file;
 	}
+	
+	// MW-2013-11-08: [[ RefactorIt ]] Dispose of the it varref.
+	delete m_it;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCServerScript::ListFiles(MCExecPoint& ep)
+void MCServerScript::ListFiles(MCStringRef &r_string)
 {
-	ep . clear();
+	MCListRef t_list;
+	/* UNCHECKED */ MCListCreateMutable('\n', t_list);
 	for(File *t_file = m_files; t_file != NULL; t_file = t_file -> next)
-		ep . concatcstring(t_file -> filename, EC_RETURN, t_file == m_files);
+		/* UNCHECKED */ MCListAppend(t_list, t_file->filename);
+	
+	/* UNCHECKED */ MCListCopyAsStringAndRelease(t_list, r_string);
 }
 
-uint4 MCServerScript::GetFileIndexForContext(MCExecPoint& ep)
+uint4 MCServerScript::GetFileIndexForContext(MCExecContext &ctxt)
 {
 	uint32_t t_file_index;
-	if (ep . gethandler() != NULL)
-		t_file_index = ep . gethandler() -> getfileindex();
+	if (ctxt.GetHandler() != NULL)
+		t_file_index = ctxt.GetHandler() -> getfileindex();
 	else
 		t_file_index = m_current_file == nil ? 0 : m_current_file -> index;
 	
 	return t_file_index;
 }
 
-const char *MCServerScript::GetFileForContext(MCExecPoint& ep)
+bool MCServerScript::GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file)
 {
 	uint32_t t_file_index;
-	if (ep . gethandler() != NULL)
-		t_file_index = ep . gethandler() -> getfileindex();
+	if (ctxt.GetHandler() != NULL)
+		t_file_index = ctxt.GetHandler() -> getfileindex();
 	else
 		t_file_index = m_current_file == nil ? 0 : m_current_file -> index;
 	
 	for(File *t_file = m_files; t_file != NULL; t_file = t_file -> next)
 		if (t_file -> index == t_file_index)
-			return t_file -> filename;
+            return MCStringCopy(t_file -> filename, r_file);
 	
-	return NULL;
+    return false;
 }
 
-uint4 MCServerScript::FindFileIndex(const char *p_filename, bool p_add)
+uint4 MCServerScript::FindFileIndex(MCStringRef p_filename, bool p_add)
 {
 	File *t_file;
 	t_file = FindFile(p_filename, p_add);
@@ -110,30 +124,36 @@ uint4 MCServerScript::FindFileIndex(const char *p_filename, bool p_add)
 	return t_file -> index;
 }
 
-MCServerScript::File *MCServerScript::FindFile(const char *p_filename, bool p_add)
+// SN-2014-09-05: [[ Bug 13378 ]] Added forgotten function GetIt
+MCVarref* MCServerScript::GetIt()
+{
+    return m_it;
+}
+
+MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_add)
 {
 	// First resolve the filename.
-	char *t_filename;
-	t_filename = MCsystem -> ResolvePath(p_filename);
+
+	MCAutoStringRef t_resolved_filename;
+	MCsystem -> ResolvePath(p_filename, &t_resolved_filename);
 	
 	// Look through the file list...
 	File *t_file;
 	for(t_file = m_files; t_file != NULL; t_file = t_file -> next)
-		if (strcmp(t_file -> filename, t_filename) == 0)
+        if (MCStringIsEqualTo(t_file -> filename, *t_resolved_filename, kMCStringOptionCompareExact))
 			break;
 	
 	// If we are here the file doesn't exist (yet). If we aren't in
 	// adding mode, then just return nil.
 	if (t_file != NULL || !p_add)
 	{
-		delete t_filename;
 		return t_file;
 	}
 
 	// Create a new entry.
 	t_file = new File;
 	t_file -> next = m_files;
-	t_file -> filename = t_filename;
+    t_file -> filename = MCValueRetain(*t_resolved_filename);
 	t_file -> index = m_files == NULL ? 1 : m_files -> index + 1;
 	t_file -> script = NULL;
 	t_file -> handle = NULL;
@@ -302,36 +322,43 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 }
 
 // MW-2009-06-02: Add support for 'require' style includes.
-bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool p_require)
+bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p_require)
 {
-	if (p_filename == NULL || p_filename[0] == '\0')
+	if (MCStringIsEmpty(p_filename))
 	{
 		MCeerror->add(EE_INCLUDE_BADFILENAME, 0, 0, p_filename);
 		return false;
 	}
 
 	if (hlist == NULL)
+	{
 		hlist = new MCHandlerlist;
+	}
 	
-	if (m_ep == NULL)
-		m_ep = new MCExecPoint(this, hlist, NULL);
+	if (m_ctxt == NULL)
+	{
+		m_ctxt = new MCExecContext(this, hlist, NULL);
+		// MW-2013-11-08: [[ RefactorIt ]] Make sure we have an 'it' var in global context.
+		/* UNCHECKED */ hlist -> newvar(MCN_it, nil, &m_it, False);
+	}
 
 	// Save the old default folder
-	char *t_old_folder;
-	t_old_folder = MCsystem->GetCurrentFolder();
+	MCAutoStringRef t_old_folder;
+	MCsystem->GetCurrentFolder(&t_old_folder);
 
 	if (m_current_file != nil)
-	{
+    {
 		// Set the default folder to the folder containing the current script
-		char *t_full_path;
-		t_full_path = MCsystem->LongFilePath(m_current_file->filename);
+		MCAutoStringRef t_full_path;
+        /* UNCHECKED */ MCsystem->LongFilePath(m_current_file -> filename, &t_full_path);
+		
 		uindex_t t_last_separator;
-		if (MCCStringLastIndexOf(t_full_path, '/', t_last_separator))
+		if (MCStringLastIndexOfChar(*t_full_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator))
 		{
-			t_full_path[t_last_separator] = '\0';
-			MCsystem->SetCurrentFolder(t_full_path);
+			MCAutoStringRef t_folder;
+			/* UNCHECKED */ MCStringCopySubstring(*t_full_path, MCRangeMake(0, t_last_separator), &t_folder);
+			MCsystem->SetCurrentFolder(*t_folder);
 		}
-		MCCStringFree(t_full_path);
 	}
 
 	// Look for the file
@@ -339,8 +366,7 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	t_file = FindFile(p_filename, true);
 	
 	// Set back the old default folder
-	MCsystem->SetCurrentFolder(t_old_folder);
-	MCCStringFree(t_old_folder);
+	MCsystem->SetCurrentFolder(*t_old_folder);
 
 	// If we are 'requiring' and the script is already loaded, we are done.
 	if (t_file -> script != NULL && p_require)
@@ -350,8 +376,9 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	if (t_file -> script == NULL)
 	{
 		// Attempt to open the file
-		MCSystemFileHandle *t_handle;
-		t_handle = MCsystem -> OpenFile(t_file -> filename, kMCSystemFileModeRead | kMCSystemFileModeNulTerminate, true);
+        MCSystemFileHandle *t_handle;
+        t_handle = MCsystem -> OpenFile(t_file -> filename, kMCOpenFileModeRead, true);
+
 		if (t_handle == NULL)
 		{
 			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);
@@ -389,13 +416,63 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	// Set the current one.
 	m_current_file = t_file;
 	
-	// Note that script point does not copy 'script' and requires it to be NUL-
-	// terminated. Indeed, this string *has* to persist until termination as
-	// constants, handler names and variable names use substrings of it directly.
-	MCScriptPoint sp(this, hlist, t_file -> script);
-    
     // MERG 2013-12-24: [[ Shebang ]] Don't use tagged mode in script files
-    if (!(t_file -> script[0] == '#' && t_file -> script[1] == '!'))
+    bool t_is_script_file;
+    t_is_script_file = false;
+    if (t_file -> script[0] == '#' && t_file -> script[1] == '!')
+        t_is_script_file = true;
+    
+    // MW-2014-10-24: [[ Bug 13730 ]] When in script file mode, we check the second
+    //   line for a match to the RE "coding[=:]\s*([-\w.]+)" and take this to be the
+    //   source encoding.
+    MCStringEncoding t_encoding;
+    t_encoding = kMCStringEncodingNative;
+    if (t_is_script_file)
+    {
+        char *t_end_of_first_line;
+        t_end_of_first_line = strchr(t_file -> script, '\n');
+        if (t_end_of_first_line != NULL)
+        {
+            t_end_of_first_line += 1;
+            if (t_end_of_first_line[0] == '\r')
+                t_end_of_first_line += 1;
+            if (t_end_of_first_line[0] == '#')
+            {
+                const char *t_end_of_second_line;
+                t_end_of_second_line = strchr(t_end_of_first_line, '\n');
+                if (t_end_of_second_line == NULL)
+                    t_end_of_second_line = t_end_of_first_line + strlen(t_end_of_first_line);
+                
+                MCAutoStringRef t_line;
+                /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)t_end_of_first_line, t_end_of_second_line - t_end_of_first_line, &t_line);
+
+                MCAutoStringRef t_encoding_str;
+                
+                regexp *t_regexp;
+                t_regexp = MCR_compile(MCSTR("coding[=:]\\s*([-\\w.]+)"), false);
+                if (t_regexp != NULL)
+                {
+                    if (MCR_exec(t_regexp, *t_line, MCRangeMake(0, MCStringGetLength(*t_line))) != 0 &&
+                        t_regexp -> matchinfo[1] . rm_so != -1)
+                    {
+                        uindex_t t_start, t_length;
+                        t_start = t_regexp->matchinfo[1].rm_so;
+                        t_length = t_regexp->matchinfo[1].rm_eo - t_start;
+                        /* UNCHECKED */ MCStringCopySubstring(*t_line, MCRangeMake(t_start, t_length), &t_encoding_str);
+                    }
+                }
+                
+                if (*t_encoding_str != NULL)
+                    MCStringsEvalTextEncoding(*t_encoding_str, t_encoding);
+            }
+        }
+    }
+    
+    MCAutoStringRef t_file_script;
+    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)t_file -> script, strlen(t_file -> script), t_encoding, false, &t_file_script);
+	MCScriptPoint sp(this, hlist, *t_file_script);
+
+    if (!t_is_script_file)
         sp . allowtags(True);
 	
 	// The statement chain that will executed.
@@ -450,22 +527,29 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 		while(t_stat == PS_NORMAL && !MCexitall && t_statement != nil)
 		{
 			if (MCtrace || MCnbreakpoints)
-				MCB_trace(*m_ep, t_statement -> getline(), t_statement -> getpos());
+				MCB_trace(*m_ctxt, t_statement -> getline(), t_statement -> getpos());
 			
 			if (!MCexitall)
 			{
+				m_ctxt -> SetLineAndPos(t_statement -> getline(), t_statement -> getpos());
+				
 				Exec_stat t_exec_stat;
-				t_exec_stat = t_statement -> exec(*m_ep);
+				t_statement -> exec_ctxt(*m_ctxt);
+				t_exec_stat = m_ctxt -> GetExecStat();
+				m_ctxt -> IgnoreLastError();
+				
 				if (t_exec_stat != ES_NORMAL)
 				{
 					// Throw an error in the debugger
 					if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 						do
 						{
-							if (!MCB_error(*m_ep, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT))
+							if (!MCB_error(*m_ctxt, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT))
 								break;
+							m_ctxt -> IgnoreLastError();
+							t_statement -> exec_ctxt(*m_ctxt);
 						}
-						while (MCtrace && (t_exec_stat = t_statement->exec(*m_ep)) != ES_NORMAL);
+						while (MCtrace && (t_exec_stat = m_ctxt -> GetExecStat()) != ES_NORMAL);
 
 					// Flag an error.
 					t_stat = PS_ERROR;
@@ -497,7 +581,7 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 		
 		// Throw an error in the debugger
 		if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			MCB_error(*m_ep, 0, 0, EE_SCRIPT_SYNTAXERROR);
+			MCB_error(*m_ctxt, 0, 0, EE_SCRIPT_SYNTAXERROR);
 	}
 	else
 	{

@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="$(ProgramFiles)\QuickTime SDK\CIncludes"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libcore\include&quot;;&quot;$(ProgramFiles)\QuickTime SDK\CIncludes&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;REVVIDEOGRABBER_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -112,7 +112,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="$(ProgramFiles)\QuickTime SDK\CIncludes"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libcore\include&quot;;&quot;$(ProgramFiles)\QuickTime SDK\CIncludes&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;REVVIDEOGRABBER_EXPORTS"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"

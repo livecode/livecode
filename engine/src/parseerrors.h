@@ -1658,22 +1658,46 @@ enum Parse_errors
 	// MM-2014-02-12: [[ SecureSocket ]]	
 	// {PE-0541} secure: expected 'verification'
 	PE_SECURE_BADMESSAGE,
+
+    // {PE-0542} textDecode: bad parameters
+    PE_TEXTDECODE_BADPARAM,
+    
+    // {PE-0543} textEncode: bad parameters
+    PE_TEXTENCODE_BADPARAM,
+    
+    // {PE-0544} normalizeText: bad parameters
+    PE_NORMALIZETEXT_BADPARAM,
+    
+    // {PE-0545} codepointProperty: bad parameters
+    PE_CODEPOINTPROPERTY_BADPARAM,
+    
+    // SN-2014-05-06 [[ Bug 12360 ]] Bad encoding expression
+    // {PE-0546} open: bad encoding parameter
+    PE_OPEN_BADENCODING,
+    
+    // SN-2014-05-06 [[ Bug 12360 ]]
+    // {PE-0547} open: no encoding when opening in binary mode
+    PE_OPEN_BADBINARYENCODING,
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant secure socket <socket> with verification for host <host>
-	// {PE-0542} secure: bad host name
+	// {PE-0548} secure: bad host name
 	PE_SECURE_BADHOST,
 
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant secure socket <socket> with verification for host <host>
-	// {PE-0543} secure: expected 'host'
+	// {PE-0549} secure: expected 'host'
 	PE_SECURE_NOHOST,
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
-	// {PE-0544} open: bad host name
+	// {PE-0550} open: bad host name
 	PE_OPEN_BADHOST,
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
-	// {PE-0545} open: expected 'host'
-	PE_OPEN_NOHOST,	
+	// {PE-0551} open: expected 'host'
+	PE_OPEN_NOHOST,
+    
+    // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+    // {PE-0552} bidiDirection: bad parameters
+	PE_BIDIDIRECTION_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

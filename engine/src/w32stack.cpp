@@ -16,13 +16,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -283,8 +282,7 @@ void MCStack::setopacity(uint1 p_level)
 				window -> handle . window = (MCSysWindowHandle)CreateWindowExA(t_ex_style, t_is_xp_menu ? MC_MENU_WIN_CLASS_NAME : mode >= WM_PULLDOWN ? MC_POPUP_WIN_CLASS_NAME : MC_WIN_CLASS_NAME, getname_cstring(), t_style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, t_rect . left, t_rect . top, t_rect . right - t_rect . left, t_rect . bottom - t_rect . top, NULL, NULL, MChInst, NULL);
 			
 			// MW-2010-10-22: [[ Bug 8151 ]] Make sure we update the title string.
-			if (titlestring != nil)
-				MCscreen -> setname(window, titlestring);
+			MCscreen -> setname(window, titlestring);
 
 			SetWindowLongA((HWND)window->handle.window, GWL_USERDATA, mode);
 			

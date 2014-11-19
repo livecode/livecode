@@ -1,0 +1,321 @@
+REVO5500     ˆ ExecTestFramework  @    Å Ωáä       
+    5S ï            ˇˇˇˇ     cRevStandaloneSettings    &scriptLibraries  Internet
+Geometry
+PrintingMacOSX  true	OSX,name  ExecTestFrameworkUNIX,fileSelector  trueWindows  trueWindows,LegalCopyright  #2012  All rights reserved worldwideUNIX,pageSetup  trueOSX,documentType   Linux  trueinclusions  searchWindows,documenticonFile  aC:/Program Files/RunRev/LiveCode 5.5.3/Runtime/Windows/x86-32/Support/Sample Icons/genericdoc.ico
+answerDialog  trueOSX,documentExtension   Windows,FileDescription  %ExecTestFramework 1.0.0.0 for WindowsOSX,longVersion  ExecTestFramework 1.0.0.0UNIX,printerChooser  trueOSX,copyright  #2012  All rights reserved worldwideOSX,identifier  com..exectestframeworkname  ExecTestFrameworkOSX,shortVersion  1.0.0.0Windows,fileversion1  1Windows,fileversion2  0Windows,productversion1  1Windows,fileversion3  0Windows,productversion2  0Windows,fileversion4  0Windows,productversion3  0cursors  falseWindows,productversion4  0	OSX,info  !ExecTestFramework Version 1.0.0.0MacOSX PowerPC-32  false
+askDialog  trueWindows,iconFile  aC:/Program Files/RunRev/LiveCode 5.5.3/Runtime/Windows/x86-32/Support/Sample Icons/genericapp.icoOSX,signature  ????Windows,ProductName  ExecTestFrameworkUNIX,colorChooser  trueMacOSX x86-32  falseWindows,companyname    cREVGeometryCache    stackID  1014 cREVGeneral    breakpointconditions   breakpoints   breakpointstates   stackfileversion  5.5AlreadyHidden  false  Í    	P!3on preOpenCard
+   put "<all>" & return & listModules() into button "Modules"
+end preOpenCard
+
+----------------------------------------------------------------------------------------
+
+command runTests pMode, pTestToRun
+   put empty into field "Log"
+   
+   -- The path to the engine we want is a mode engine within the checked-out
+   -- branch we have.
+   local tBuildFolder, tInputEngine, tOutputEngine
+   set the itemDelimiter to slash
+   put item 1 to -4 of the filename of this stack & slash & "_build/" & pMode into tBuildFolder
+   put tBuildFolder & "/standalone.exe" into tInputEngine
+   put tBuildFolder & "/exec-tests.exe" into tOutputEngine
+   
+   if there is no file tInputEngine then
+      answer "Cannot find standalone engine - " && tInputEngine
+      exit runTests
+   end if
+   
+   if there is a file tOutputEngine then
+      delete file tOutputEngine
+      if there is a file tOutputEngine then
+         answer "Cannot build tests as cannot delete existing test engine - " & tOutputEngine
+         exit runTests
+      end if
+   end if
+   
+   local tTestIndex
+   put 1 into tTestIndex
+   
+   local tTestScript
+   put the script of button "Template" & return after tTestScript
+   
+   local tModules
+   if pTestToRun is empty then
+      if the label of button "Modules" is "<all>" then
+         put listModules() into tModules
+      else
+         put the label of button "Modules" into tModules
+      end if
+   else
+      set the itemDelimiter to "."
+      put item 1 of pTestToRun into tModules
+      set the itemDelimiter to comma
+   end if
+   
+   local tSuccess
+   put true into tSuccess
+   repeat for each line tModule in tModules
+      repeat for each line tTest in listTestsForModule(tModule)
+         if pTestToRun is not empty and (pTestToRun & ".test") is not (tModule & "." & tTest) then
+            next repeat
+         end if
+         get processTest(tModule, tTest, tTestIndex)
+         if it is not empty then
+            put it & return after tTestScript
+         else
+            put false into tSuccess
+         end if
+      end repeat
+   end repeat
+   
+   if not tSuccess then
+      exit runTests
+   end if
+   
+   create stack "__TESTS__"
+   set the script of stack "__TESTS__" to tTestScript
+   copy button "revLibURL" of stack "revLibrary" to card 1 of stack "__TESTS__"
+   set the name of it to "revLibUrl"
+   save stack "__TESTS__" as tBuildFolder & slash & "exec-tests.livecode"
+   delete stack "__TESTS__"
+   
+   local tDeployInfo
+   put tInputEngine into tDeployInfo["engine"]
+   put tBuildFolder & slash & "exec-tests.livecode" into tDeployInfo["stackfile"]
+   put tOutputEngine into tDeployInfo["output"]
+   _internal deploy windows tDeployInfo
+   if the result is not empty then
+      answer "Cannot build test engine due to -" && the result
+      exit runTests
+   end if
+   
+   /*local tNextTestIndex, tProcessOutputs
+   put 1 into tNextTestIndex
+   repeat forever
+      repeat for each line tProcess in the openProcesses
+         read from process tProcess until empty
+         if it is not empty then
+            put it after tProcessOutputs[tProcess]
+         end if
+         if the result is not empty then
+            close process tProcess
+            put tProcessOutputs[tProcess] after field "Log"
+            delete variable tProcessOutputs[tProcess]
+         end if
+      end repeat
+      repeat while the number of lines in the openProcesses < 16 
+         if tNextTestIndex > tTestIndex then
+            exit repeat
+         end if
+         open process (tOutputEngine && tNextTestIndex) for binary read
+         add 1 to tNextTestIndex
+      end repeat
+      if the openProcesses is empty then
+         exit repeat
+      end if
+   end repeat*/
+   
+   set the hideConsoleWindows to true
+   repeat with i = 1 to tTestIndex
+      get shell(tOutputEngine && i)
+      put it after field "Log"
+      set the vScroll of field "log" to the formattedHeight of field "log"
+   end repeat
+   
+end runTests
+
+function processTest pModule, pTest, @pIndex
+   local tInput, tOutput
+   put url ("file:" & testsPath() & slash & pModule & slash & pTest) into tInput
+   
+   if tInput is empty then
+      return return
+   end if
+   
+   local tLineIndex
+   put 1 into tLineIndex
+   repeat for each line tLine in tInput
+      switch word 1 of tLine
+         case "setup"
+            put "command runTest_" & pIndex & return after tOutput
+            processTestSetupLine tOutput, pModule, pTest, tLineIndex, word 2 to -1 of tLine
+            break
+         case "teardown"
+            processTestTeardownLine tOutput, pModule, pTest, tLineIndex, word 2 to -1 of tLine
+            put "end runTest_" & pIndex & return & return after tOutput
+            add 1 to pIndex
+            break
+         case "test"
+            processTestTestLine tOutput, pModule, pTest, tLineIndex, word 2 to -1 of tLine
+            break
+         case "test-error"
+            processTestTestErrorLine tOutput, pModule, pTest, tLineIndex, word 2 to -1 of tLine
+            break
+         case "test-no-error"
+            processTestTestNoErrorLine tOutput, pModule, pTest, tLineIndex, word 2 to -1 of tLine
+            break
+         default
+            put "/*"&tLineIndex&"*/" && tLine & return after tOutput
+            break
+      end switch
+      add 1 to tLineIndex
+   end repeat
+   
+   set the script of button "Test Compile" to tOutput
+   if the result is not empty then
+      put the result
+      log pModule & "." & pTest & ", line " & char 3 to -3 of word 1 of line (item 2 of the result) of tOutput & ":" && "compile error"
+      return empty
+   end if
+   
+   return tOutput
+end processTest
+
+command processTestSetupLine @xOutput, pModule, pTest, pLineIndex, pLine
+   put "local ___temp___, ___error___" & return after xOutput
+   if pLine is empty then
+      get "functionality"
+   else
+      get char 2 to -2 of pLine
+   end if
+   put "log" && quote & (pModule & "." & pTest) & ":" && it & quote & return after xOutput
+end processTestSetupLine
+
+command processTestTeardownLine @xOutput, pModule, pTest, pLineIndex, pLine
+end processTestTeardownLine
+
+command processTestTestLine @xOutput, pModule, pTest, pLineIndex, pLine
+   put "/*"&pLineIndex&"*/ if not (" & pLine & ") then log" && quote & "  failure - line" && pLineIndex & quote & ";else;end if;" & return after xOutput
+end processTestTestLine
+
+command processTestTestErrorLine @xOutput, pModule, pTest, pLineIndex, pLine
+   put "put empty into ___error___" & return after xOutput
+   put "try" & return after xOutput
+   put "/*"&pLineIndex&"*/ put (" & pLine & ") into ___temp___" & return after xOutput
+   put "catch ___error___" & return after xOutput
+   put "end try" & return after xOutput
+   put "if __error__ is empty then log" && quote & "  failure - line" && pLineIndex & quote & ";else;end if;" & return after xOutput
+end processTestTestErrorLine
+
+command processTestTestNoErrorLine @xOutput, pModule, pTest, pLineIndex, pLine
+   put "put empty into ___error___" & return after xOutput
+   put "try" & return after xOutput
+   put "/*"&pLineIndex&"*/ put (" & pLine & ") into ___temp___" & return after xOutput
+   put "catch ___error___" & return after xOutput
+   put "end try" & return after xOutput
+   put "if ___error___ is not empty then log" && quote & "  failure - line" && pLineIndex & quote & ";else;end if;" & return after xOutput
+end processTestTestNoErrorLine
+
+----------------------------------------------------------------------------------------
+
+command log pMessage
+   put pMessage & return after field "Log"
+end log
+
+----------------------------------------------------------------------------------------
+
+function listModules
+   return listFolders(testsPath())
+end listModules
+
+function listTestsForModule pModule
+   return listFiles(testsPath() & slash & pModule)
+end listTestsForModule
+
+function testsPath
+   set the itemDelimiter to slash
+   return item 1 to -2 of the filename of this stack
+end testsPath
+
+----------------------------------------------------------------------------------------
+
+function listFiles pFolder
+   local tOldFolder
+   put the folder into tOldFolder
+   set the folder to pFolder
+   get the files
+   set the folder to tOldFolder
+   return it
+end listFiles
+
+function listFolders pFolder
+   local tOldFolder
+   put the folder into tOldFolder
+   set the folder to pFolder
+   get the folders
+   filter it without ".*"
+   set the folder to tOldFolder
+   return it
+end listFolders
+
+----------------------------------------------------------------------------------------
+     Ä     áä    ê cREVGeneral    scripteditorvscroll  1690scripteditorselection  7390 cREVGeometryCacheIDs    1337778958150  10061343307582076  10131337781157440  10091337778944808  10041337787028791  1011 cREVGeometrycache    order  
+total  5  Ï  Ó  Ò  Û  ı  Ï Test ‡Eãp ,on mouseUp
+   runTests "debug"
+end mouseUp
+     Ä    R     2          cREVGeneral    revUniqueID  
+1337778944808scripteditorvscroll  0scripteditorselection  22	     
+  Ó Log  É)`    Ä   àn    ∂       cREVGeneral    scripteditorvscroll  0revUniqueID  
+1337778958150scripteditorselection  0  Í    Ô    	`    @ {  l ¥  Ò 	Template ‡Eãp;on startup
+   create stack "Test"
+   insert script of me into back
+   --insert the script of button "revLibURL" of me into back
+   send "postStartup" to me in 0 millisecs
+end startup
+
+on postStartup
+   try
+      dispatch "runTest_" & $1 to stack "Test"
+   catch tError
+      repeat for each line tLine in tError
+         log "  failure - " & tLine
+      end repeat
+   end try
+   delete stack "Test"
+   quit 0
+end postStartup
+
+command log pMessage
+   write pMessage & return to stdout
+end log
+
+command use pLib
+   insert the script of button pLib of me into back
+end use
+     Ä 8  R     6          cREVGeneral    revUniqueID  
+1337781157440scripteditorvscroll  0scripteditorselection  311	       Û 
+Test Compile ‡Eãp´command runTest_12
+local ___temp___, ___error___
+log "network.ExecUnloadUrl.test: functionality"
+/*2*/ 
+/*3*/ load URL "http://www.google.com/"
+/*4*/ 
+/*5*/ ---wait until the cachedUrls contains "http://www.google.com/" with messages
+/*6*/ 
+/*7*/ unload URL "http://www.google.com/"
+/*8*/ 
+/*9*/ if not (not (the cachedURLs contains "http://www.google.com")) then log "  failure - line 9";else;end if;
+/*10*/ 
+end runTest_12
+
+     Ä  ‚  R     4          cREVGeneral    revUniqueID  
+1337787028791scripteditorvscroll  0scripteditorselection  439	       ı Modules ¿Âe    Ä  Z  Ñ     2 <all>    í<all>
+arrays
+datetime
+engine
+files
+filters
+graphics
+ide
+interface
+legacy
+logic
+math
+multimedia
+network
+pasteboard
+scripting
+security
+strings
+text         cREVGeneral    revUniqueID  
+1343307582076scripteditorvscroll  0scripteditorselection  0	      

@@ -1,0 +1,11 @@
+setup
+
+create button
+
+create button
+
+group button 1 and button 2
+
+test there is a group 1 on the current card
+
+teardown

@@ -108,9 +108,9 @@ void MCImageFreeFrames(MCBitmapFrame *p_frames, uindex_t p_count);
 ////////////////////////////////////////////////////////////////////////////////
 
 // MW-2013-05-04: Methods to determine the type of potential image data.
-bool MCImageDataIsJPEG(const MCString& data);
-bool MCImageDataIsPNG(const MCString& data);
-bool MCImageDataIsGIF(const MCString& data);
+bool MCImageDataIsJPEG(MCDataRef p_data);
+bool MCImageDataIsPNG(MCDataRef p_data);
+bool MCImageDataIsGIF(MCDataRef p_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 

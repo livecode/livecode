@@ -1,0 +1,1 @@
+# Retrieving data from url results in garbled data on iOS from LiveCode 7

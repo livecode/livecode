@@ -1,0 +1,18 @@
+--- DOES NOT SEEM TO WORK!!
+
+setup
+
+create field
+
+set the rect of the last field to 100,100,200,200
+set the text of the last field to "a"
+get the formattedRect of char 1 of field 1
+
+get ((item 1 of it + item 3 of it) div 2), ((item 2 of it + item 4 of it) div 2)
+set the screenMouseLoc to globalLoc(it)
+test the mouseLine is "line 1 of field 1"
+
+set the screenMouseLoc to globalLoc("0,0")
+test the mouseLine is empty
+
+teardown

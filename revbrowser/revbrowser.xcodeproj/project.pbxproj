@@ -372,8 +372,6 @@
 /* Begin PBXProject section */
 		4DF42A990B0488B2003F2D95 /* Project object */ = {
 			isa = PBXProject;
-			attributes = {
-			};
 			buildConfigurationList = 4DF42A9A0B0488B2003F2D95 /* Build configuration list for PBXProject "revbrowser" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -568,6 +566,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(HEADER_SEARCH_PATHS)",
 					"$(SOLUTION_DIR)/thirdparty/libcef",
+					"$(SOLUTION_DIR)/libcore/include",
 				);
 			};
 			name = Debug;
@@ -579,6 +578,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(HEADER_SEARCH_PATHS)",
 					"$(SOLUTION_DIR)/thirdparty/libcef",
+					"$(SOLUTION_DIR)/libcore/include",
 				);
 			};
 			name = Release;
@@ -593,6 +593,11 @@
 				);
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS)",
+					"$(SOLUTION_DIR)/thirdparty/libcef",
+					"$(SOLUTION_DIR)/libcore/include",
+				);
 				INFOPLIST_FILE = "rsrc/revbrowser-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -617,6 +622,11 @@
 					"\"$(SRCROOT)/../prebuilt/lib/libcef\"",
 				);
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(HEADER_SEARCH_PATHS)",
+					"$(SOLUTION_DIR)/thirdparty/libcef",
+					"$(SOLUTION_DIR)/libcore/include",
+				);
 				INFOPLIST_FILE = "rsrc/revbrowser-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",

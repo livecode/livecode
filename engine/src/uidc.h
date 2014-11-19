@@ -101,6 +101,9 @@ enum Transfer_mode {
     TRM_DRAGDROP
 };
 
+// Converts a keysym to its lower-case equivalent
+KeySym MCKeySymToLower(KeySym p_key);
+
 typedef struct
 {
 	MCObject *object;
@@ -262,7 +265,7 @@ protected:
 	uint32_t nmessages;
 	uint32_t maxmessages;
 	MCColor *colors;
-	char **colornames;
+	MCStringRef *colornames;
 	int2 *allocs;
 	int2 ncolors;
 	Boolean modalclosed;
@@ -292,17 +295,17 @@ public:
 	MCUIDC();
 	virtual ~MCUIDC();
 	
-	virtual bool setbeepsound ( const char * p_internal) ;
-	virtual const char * getbeepsound ( void );
+	virtual bool setbeepsound ( MCStringRef p_beep_sound) ;
+	virtual bool getbeepsound ( MCStringRef& r_beep_sound );
 
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 
-	virtual void setstatus(const char *status);
+	virtual void setstatus(MCStringRef status);
 
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
 
-	virtual const char *getdisplayname();
+	virtual MCNameRef getdisplayname();
 	
 	virtual void resetcursors();
 	virtual void setcursor(Window w, MCCursorRef c);
@@ -399,7 +402,7 @@ public:
 	virtual void uniconifywindow(Window window);
 
 	// Set the name of 'window' to the UTF-8 string 'newname'
-	virtual void setname(Window window, const char *newname);
+	virtual void setname(Window window, MCStringRef newname);
 	virtual void setcmap(MCStack *sptr);
 
 	virtual void sync(Window w);
@@ -425,12 +428,13 @@ public:
 	virtual uint4 dtouint4(Drawable d);
 	virtual Boolean uint4towindow(uint4, Window &w);
 
-	virtual void getbeep(uint4 property, MCExecPoint &ep);
+	virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
-	virtual void getvendorstring(MCExecPoint &ep);
+	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
+
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size);
 
 	virtual void enablebackdrop(bool p_hard = false);
 	virtual void disablebackdrop(bool p_hard = false);
@@ -451,8 +455,9 @@ public:
 	virtual void waitfocus();
 	virtual uint2 querymods();
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
-	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
-	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
+    virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
+    virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
+    virtual void delaymessage(MCObject *optr, MCNameRef name, MCStringRef p1 = nil, MCStringRef p2 = nil);
 	
 	// Wait for at most 'duration' seconds. If 'dispatch' is true then event
 	// dispatch will occur. If 'anyevent' is true then the call will return
@@ -478,25 +483,26 @@ public:
 	virtual void flushevents(uint2 e);
 	virtual void updatemenubar(Boolean force);
 	virtual Boolean istripleclick();
-	virtual void getkeysdown(MCExecPoint &ep);
+	virtual bool getkeysdown(MCListRef& r_list);
 	
-	virtual uint1 fontnametocharset(const char *oldfontname);
-	virtual char *charsettofontname(uint1 charset, const char *oldfontname);
+	virtual uint1 fontnametocharset(MCStringRef p_fontname);
+//	virtual char *charsettofontname(uint1 charset, const char *oldfontname);
 	
 	virtual void clearIME(Window w);
+    virtual void configureIME(int32_t x, int32_t y);
 	virtual void openIME();
 	virtual void activateIME(Boolean activate);
 	virtual void closeIME();
 
 	virtual void seticon(uint4 p_icon);
-	virtual void seticonmenu(const char *p_menu);
-	virtual void configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip);
+	virtual void seticonmenu(MCStringRef p_menu);
+	virtual void configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip);
 	virtual void enactraisewindows(void);
 
 	//
 
 	virtual MCPrinter *createprinter(void);
-	virtual void listprinters(MCExecPoint& ep);
+	virtual bool listprinters(MCStringRef& r_printers);
 
 	//
 
@@ -582,18 +588,18 @@ public:
 	
 	//
 
-	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
 
-	virtual int32_t popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message);
-	virtual char *popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint);
+	virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
+	virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	
 	//
     
     // TD-2013-05-29: [[ DynamicFonts ]]
-	virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
-    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
+	virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
     
     //
 	
@@ -612,7 +618,7 @@ public:
 	void cancelmessageindex(uint2 i, Boolean dodelete);
 	void cancelmessageid(uint4 id);
 	void cancelmessageobject(MCObject *optr, MCNameRef name);
-	void delaymessage(MCObject *optr, MCNameRef name, char *p1 = NULL, char *p2 = NULL);
+    bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
     void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params);
     int doshiftmessage(int index, real8 newtime);
     
@@ -620,26 +626,28 @@ public:
     //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
     bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
     
-	void listmessages(MCExecPoint &ep);
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);
 	Boolean getlockmoves() const;
 	void setlockmoves(Boolean b);
 	void addmove(MCObject *optr, MCPoint *pts, uint2 npts,
 	             real8 &duration, Boolean waiting);
-	void listmoves(MCExecPoint &ep);
+	bool listmoves(MCExecContext& ctxt, MCListRef& r_list);
 	void stopmove(MCObject *optr, Boolean finish);
 	void handlemoves(real8 &curtime, real8 &eventtime);
 	void siguser();
-	Boolean lookupcolor(const MCString &s, MCColor *color);
+	Boolean lookupcolor(MCStringRef s, MCColor *color);
 	void dropper(Window w, int2 mx, int2 my, MCColor *cptr);
-	Boolean parsecolor(const MCString &s, MCColor *color, char **cname);
+	bool parsecolor(MCStringRef p_string, MCColor& r_color);
+	Boolean parsecolor(MCStringRef s, MCColor& r_color, MCStringRef *cname);
 	Boolean parsecolors(const MCString &values, MCColor *colors,
 	                    char *cnames[], uint2 ncolors);
 	void alloccolor(MCColor &color);
 	void querycolor(MCColor &color);
+#ifdef LEGACY_EXEC
 	Boolean getcolors(MCExecPoint &);
+#endif
 	Boolean setcolors(const MCString &);
-	void getcolornames(MCExecPoint &);
+	bool getcolornames(MCStringRef&);
 	void getpaletteentry(uint4 n, MCColor &c);
 
 	Boolean hasmessages()

@@ -1,0 +1,83 @@
+setup "number mod number"
+
+test (7 mod 3) is 1
+test (8 mod 3) is 2
+test (9 mod 3) is 0
+
+test (-7 mod 3) is -1
+test (-8 mod 3) is -2
+test (-9 mod 3) is 0
+
+test (7 mod -3) is 1
+test (8 mod -3) is 2
+test (9 mod -3) is 0
+
+test (-7 mod -3) is -1
+test (-8 mod -3) is -2
+test (-9 mod -3) is 0
+
+teardown
+
+
+setup "array mod number"
+
+local tA1, tA2
+
+repeat with i = 1 to 10
+	put i into tA1[i]
+end repeat
+
+put tA1 mod 3 into tA2
+
+repeat with i = 1 to 10
+	test tA2[i] is (tA1[i] mod 3)
+end repeat
+
+// empty array entry is 0
+put empty into tA1
+put empty into tA1[0]
+put tA1 mod 3 into tA2
+test tA2[0] is 0
+
+teardown
+
+
+setup "array mod array"
+
+local tA1, tA2, tA3
+
+repeat with i = 1 to 10
+	put i into tA1[i]
+	put (11 - i) into tA2[i]
+end repeat
+
+put tA1 mod tA2 into tA3
+
+repeat with i = 1 to 10
+	test tA3[i] is (tA1[i] mod tA2[i])
+end repeat
+
+teardown
+
+
+setup "mod errors"
+
+local tA1, tA2
+// div by zero
+test-error 5 mod 0
+put 5 into tA1[0]
+put 0 into tA2[0]
+test-error tA1 mod 0
+test-error tA1 mod tA2
+
+// missing array entries
+put 6 into tA1[1]
+put 1 into tA2[0]
+test-error tA1 mod tA2
+
+// non-number array entries
+put "abc" into tA2[1]
+test-error tA1 mod tA2
+test-error tA2 mod tA1
+
+teardown

@@ -16,13 +16,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 
 #include "exec.h"
@@ -141,9 +140,17 @@ static int32_t s_location_calibration_timeout = 0;
 - (void)locationManager: (CLLocationManager *)manager didFailWithError: (NSError *)error
 {
 	if (s_location_enabled)
-		MCSensorPostErrorMessage(kMCSensorTypeLocation, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	{
+		MCAutoStringRef t_error;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		MCSensorPostErrorMessage(kMCSensorTypeLocation, *t_error);
+	}
 	else if (s_heading_enabled)
-        MCSensorPostErrorMessage(kMCSensorTypeHeading, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	{
+        MCAutoStringRef t_error;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		MCSensorPostErrorMessage(kMCSensorTypeHeading, *t_error);
+	}
 }
 
 - (void)locationManager: (CLLocationManager *)manager didUpdateToLocation: (CLLocation *)newLocation fromLocation: (CLLocation *)oldLocation
@@ -293,10 +300,9 @@ double MCSystemGetSensorDispatchThreshold(MCSensorType p_sensor)
     return 0.0;
 }
 
-const char* MCIPhoneGetLocationAuthorizationStatus(void)
+bool MCSystemGetLocationAuthorizationStatus(MCStringRef& r_status)
 {    
-    const char *t_status_string;
-    t_status_string = "";
+    MCAutoStringRef t_status_string;
 	
 #ifdef __IPHONE_8_0
 	if (MCmajorosversion >= 800)
@@ -305,26 +311,26 @@ const char* MCIPhoneGetLocationAuthorizationStatus(void)
 		switch (t_status)
 		{
 			case kCLAuthorizationStatusNotDetermined:
-				t_status_string = "notDetermined";
+                t_status_string = MCSTR("notDetermined");
 				break;
 				
 				// This application is not authorized to use location services.  Due
 				// to active restrictions on location services, the user cannot change
 				// this status, and may not have personally denied authorization
 			case kCLAuthorizationStatusRestricted:
-				t_status_string = "restricted";
+                t_status_string = MCSTR("restricted");
 				break;
 				
 				// User has explicitly denied authorization for this application, or
 				// location services are disabled in Settings.
 			case kCLAuthorizationStatusDenied:
-				t_status_string = "denied";
+                t_status_string = MCSTR("denied");
 				break;
 				
 				// User has granted authorization to use their location at any time,
 				// including monitoring for regions, visits, or significant location changes.
 			case kCLAuthorizationStatusAuthorizedAlways:
-				t_status_string = "authorizedAlways";
+                t_status_string = MCSTR("authorizedAlways");
 				break;
 				
 				// User has granted authorization to use their location only when your app
@@ -332,23 +338,26 @@ const char* MCIPhoneGetLocationAuthorizationStatus(void)
 				// receive location updates while in the background).  Authorization to use
 				// launch APIs has not been granted.
 			case kCLAuthorizationStatusAuthorizedWhenInUse:
-				t_status_string = "authorizedWhenInUse";
+                t_status_string = MCSTR("authorizedWhenInUse");
 				break;
 				
 			default:
+                t_status_string = kMCEmptyString;
 				break;
 		}
 	}
+#else
+    t_status_string = kMCEmptyString;
 #endif
     
-    return t_status_string;
+    return MCStringCopy(*t_status_string, r_status);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // LOCATION SENSEOR
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool start_tracking_location(bool p_loosely)
+bool MCSystemStartTrackingLocation(bool p_loosely)
 {
     if ([CLLocationManager locationServicesEnabled] == YES)
     {
@@ -372,7 +381,7 @@ static bool start_tracking_location(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_location()
+bool MCSystemStopTrackingLocation()
 {
     if (s_location_enabled)
     {
@@ -437,7 +446,7 @@ bool MCSystemGetLocationCalibrationTimeout(int32_t& r_timeout)
 // HEADING SENSEOR
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool start_tracking_heading(bool p_loosely)
+bool MCSystemStartTrackingHeading(bool p_loosely)
 {
     if ([CLLocationManager headingAvailable] == YES)
     {
@@ -458,7 +467,7 @@ static bool start_tracking_heading(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_heading()
+bool MCSystemStopTrackingHeading()
 {
     if (s_heading_enabled)
     {
@@ -513,11 +522,15 @@ static void (^acceleration_update)(CMAccelerometerData *, NSError *) = ^(CMAccel
 		if (error == nil)
 			MCSensorPostChangeMessage(kMCSensorTypeAcceleration);
 		else
-			MCSensorPostErrorMessage(kMCSensorTypeAcceleration, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);		
+		{
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			MCSensorPostErrorMessage(kMCSensorTypeAcceleration, *t_error);
+		}
 	}
 };
 
-static bool start_tracking_acceleration(bool p_loosely)
+bool MCSystemStartTrackingAcceleration(bool p_loosely)
 {    
     initialize_core_motion();
     if ([s_motion_manager isAccelerometerAvailable] == YES)
@@ -533,7 +546,7 @@ static bool start_tracking_acceleration(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_acceleration()
+bool MCSystemStopTrackingAcceleration()
 {
     if (s_acceleration_enabled)
     {
@@ -575,11 +588,15 @@ static void (^rotation_rate_update)(CMGyroData *, NSError *) = ^(CMGyroData *gyr
 		if (error == nil)
             MCSensorPostChangeMessage(kMCSensorTypeRotationRate);
 		else
-			MCSensorPostErrorMessage(kMCSensorTypeRotationRate, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+		{
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			MCSensorPostErrorMessage(kMCSensorTypeRotationRate, *t_error);
+		}
 	}
 };
 
-static bool start_tracking_rotation_rate(bool p_loosely)
+bool MCSystemStartTrackingRotationRate(bool p_loosely)
 {    
     initialize_core_motion();
     if ([s_motion_manager isGyroAvailable] == YES)
@@ -595,7 +612,7 @@ static bool start_tracking_rotation_rate(bool p_loosely)
     return false;
 }
 
-static bool stop_tracking_rotation_rate()
+bool MCSystemStopTrackingRotationRate()
 {
     if (s_rotation_rate_enabled)
     {
@@ -627,7 +644,7 @@ bool MCSystemGetRotationRateReading(MCSensorRotationRateReading &r_reading, bool
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 bool MCSystemStartTrackingSensor(MCSensorType p_sensor, bool p_loosely)
 {
     switch (p_sensor)
@@ -659,5 +676,5 @@ bool MCSystemStopTrackingSensor(MCSensorType p_sensor)
     }
     return false;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////

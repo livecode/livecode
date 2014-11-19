@@ -1,0 +1,13 @@
+setup
+
+// set up test keys & values
+local tTestKey = "HKEY_CURRENT_USER\Software\LiveCode\Tests\ListRegistry\"
+repeat for each item tKey in "Key1,Key2,Key1\Key1"
+	test setRegistry(tTestKey & tKey & "\value", "value of" && tKey)
+end repeat
+
+test listRegistry(tTestKey) is ("Key1" & return & "Key2")
+test listRegistry(tTestKey & "Key1") is "Key1"
+test listRegistry(tTestKey & "Key2") is empty
+
+teardown

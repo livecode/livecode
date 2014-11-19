@@ -1,0 +1,10 @@
+setup
+
+test (not false) is true
+test (not true) is false
+
+repeat for each item tbool in "true,false"
+	test (not (not tbool) ) is tbool
+end repeat
+
+teardown

@@ -91,7 +91,7 @@ class MCHandlerlist
 	// MW-2008-10-28: [[ ParentScripts ]] We keep track of the initializers for
 	//   the script locals so we can initialize the vars correctly when a use
 	//   is used.
-	MCNameRef *vinits;
+	MCValueRef *vinits;
 
 	// MW-2008-10-28: [[ ParentScripts ]] Store the old variables in a vector
 	//   rather than a list. Once a variable has been re-used when re-compiling
@@ -114,22 +114,33 @@ public:
 	// MW-2011-08-23: [[ UQL ]] 'ignore_uql' ignores UQL vars when searching.
     //   This is used when going from handler to script scope for var searches.
 	Parse_stat findvar(MCNameRef name, bool ignore_uql, MCVarref **);
-	Parse_stat newvar(MCNameRef name, MCNameRef init, MCVarref **, Boolean initialised);
+	Parse_stat newvar(MCNameRef name, MCValueRef init, MCVarref **, Boolean initialised);
 	Parse_stat findconstant(MCNameRef name, MCExpression **);
-	Parse_stat newconstant(MCNameRef name, MCNameRef value);
-	void appendlocalnames(MCExecPoint &ep);
-	void appendglobalnames(MCExecPoint &ep, bool first);
+	Parse_stat newconstant(MCNameRef name, MCValueRef value);
+	bool getlocalnames(MCListRef& r_list);
+	bool getglobalnames(MCListRef& r_list);
+	void appendlocalnames(MCStringRef& r_string);
+	void appendglobalnames(MCStringRef& r_string, bool first);
 	void newglobal(MCNameRef name);
-	Parse_stat parse(MCObject *, const char *);
-
+	
+	Parse_stat parse(MCObject *, MCStringRef);
+	void compile(MCSyntaxFactoryRef ctxt);
+	
 	Exec_stat findhandler(Handler_type, MCNameRef name, MCHandler *&);
 	bool hashandler(Handler_type type, MCNameRef name);
 	void addhandler(Handler_type type, MCHandler *handler);
 
 	uint2 getnglobals(void);
 	MCVariable *getglobal(uint2 p_index);
+#ifdef LEGACY_EXEC
 	bool enumerate(MCExecPoint& ep, bool p_first = true);
+#endif
+    bool enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
 
+	// MW-2013-11-15: [[ Bug 11277 ]] Methods for eval/exec in handlerlist context.
+	void eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value);
+	void doscript(MCExecContext& ctxt, MCStringRef p_string, uinteger_t p_line = 0, uinteger_t p_pos = 0);
+	
 	uint2 getnvars(void)
 	{
 		return nvars;
@@ -140,7 +151,7 @@ public:
 		return vars;
 	}
 
-	MCNameRef *getvinits(void)
+	MCValueRef *getvinits(void)
 	{
 		return vinits;
 	}

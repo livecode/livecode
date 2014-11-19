@@ -1,0 +1,11 @@
+setup
+
+test trunc(1.0001) is 1
+test trunc(2.5) is 2
+test trunc(3.5001) is 3
+
+test trunc(-1.0001) is -1
+test trunc(-2.5) is -2
+test trunc(-3.5001) is -3
+
+teardown

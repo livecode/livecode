@@ -44,7 +44,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "scriptpt.h"
 #include "mcerror.h"
 
@@ -74,12 +75,12 @@ Parse_stat MCInternal::parse(MCScriptPoint& sp)
 	}
 
 	// Get the first token
-	MCString t_first_token;
-	t_first_token = sp . gettoken();
+    MCAutoStringRef t_first_token;
+    t_first_token = sp . gettoken_stringref();
 
 	// Look for a match on the first token.
 	for(uint32_t i = 0; MCinternalverbs[i] . first_token != nil; i++)
-		if (t_first_token == MCinternalverbs[i] . first_token)
+        if (MCStringIsEqualToCString(*t_first_token, MCinternalverbs[i] . first_token, kMCCompareExact))
 		{
 			// If the second token is non-nil then check for a match
 			if (MCinternalverbs[i] . second_token != nil)
@@ -91,7 +92,7 @@ Parse_stat MCInternal::parse(MCScriptPoint& sp)
 				// If the next token isn't an id, or doesn't match try
 				// the next entry
 				if (t_type != ST_ID ||
-					sp . gettoken() != MCinternalverbs[i] . second_token)
+                    !MCStringIsEqualToCString(sp . gettoken_stringref(), MCinternalverbs[i] . second_token, kMCCompareExact))
 				{
 					sp . backup();
 					continue;
@@ -122,9 +123,11 @@ Parse_stat MCInternal::parse(MCScriptPoint& sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCInternal::exec(MCExecPoint& ep)
+void MCInternal::exec_ctxt(MCExecContext &ctxt)
 {
-	return f_statement -> exec(ep);
+    f_statement -> exec_ctxt(ctxt);
+    if (ctxt . GetExecStat() != ES_NORMAL)
+        ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

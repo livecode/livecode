@@ -23,6 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "date.h"
 
+#include "foundation-locale.h"
+
 #include <CoreFoundation/CoreFoundation.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,9 +73,35 @@ bool MCS_secondstodatetime(double p_seconds, MCDateTime& r_datetime)
 	return true;
 }
 
+// REMOVE ME
 const MCDateTimeLocale *MCS_getdatetimelocale(void)
 {
 	return do_cache_locale();
+}
+
+MCLocaleRef MCS_getsystemlocale()
+{
+    // Get the system locale
+    CFLocaleRef t_cf_locale;
+    t_cf_locale = CFLocaleCopyCurrent();
+    
+    // From this, extract the locale identifier
+    CFStringRef t_cf_locale_id;
+    t_cf_locale_id = CFLocaleGetIdentifier(t_cf_locale);
+    CFRelease(t_cf_locale);
+    
+    // And turn this into a StringRef
+    MCAutoStringRef t_locale_id;
+    if (!MCStringCreateWithCFString(t_cf_locale_id, &t_locale_id))
+        return nil;
+    
+    // Finally, construct a Locale object using this name
+    MCLocaleRef t_locale;
+    if (!MCLocaleCreateWithName(*t_locale_id, t_locale))
+        return nil;
+    
+    // Done
+    return t_locale;
 }
 	
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +156,7 @@ char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true)
 	return t_cstring;
 }
 
-static char *osx_cf_format_time(CFLocaleRef p_locale, CFStringRef p_format, CFAbsoluteTime p_time)
+static bool osx_cf_format_time(CFLocaleRef p_locale, CFStringRef p_format, CFAbsoluteTime p_time, MCStringRef &r_string)
 {
 	bool t_success;
 	t_success = true;
@@ -154,14 +182,14 @@ static char *osx_cf_format_time(CFLocaleRef p_locale, CFStringRef p_format, CFAb
 	if (t_success)
 		CFDateFormatterSetProperty(t_formatter, kCFDateFormatterTimeZone, t_gmt_timezone);
 	
-	char *t_formatted_time;
-	t_formatted_time = NULL;
+	MCStringRef t_formatted_time;
 	if (t_success)
 	{
 		CFDateFormatterSetFormat(t_formatter, p_format);
-		t_formatted_time = osx_cfstring_to_cstring(CFDateFormatterCreateStringWithAbsoluteTime(NULL, t_formatter, p_time));
-		if (t_formatted_time == NULL)
+		CFStringRef cfstr = CFDateFormatterCreateStringWithAbsoluteTime(NULL, t_formatter, p_time);
+		if (!MCStringCreateWithCFString(cfstr, t_formatted_time))
 			t_success = false;
+		CFRelease(cfstr);
 	}
 	
 	if (t_gmt_timezone != NULL)
@@ -170,10 +198,10 @@ static char *osx_cf_format_time(CFLocaleRef p_locale, CFStringRef p_format, CFAb
 	if (t_formatter != NULL)
 		CFRelease(t_formatter);
 	
-	return t_formatted_time;
+	return t_success && MCStringCopyAndRelease(t_formatted_time, r_string);
 }
 
-static char *osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_date_style, CFDateFormatterStyle p_time_style)
+static bool osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_date_style, CFDateFormatterStyle p_time_style, MCStringRef &r_string)
 {
 	bool t_success;
 	t_success = true;
@@ -198,116 +226,109 @@ static char *osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_da
 			CFRelease(t_calendar);
 	}
 	
-	char *t_icu_format;
-	t_icu_format = NULL;
+	MCAutoStringRef t_icu_format;
 	if (t_success)
-	{
-		t_icu_format = osx_cfstring_to_cstring(CFDateFormatterGetFormat(t_formatter), false);
-		if (t_icu_format == NULL)
-			t_success = false;
-	}
+        t_success = MCStringCreateWithCFString(CFDateFormatterGetFormat(t_formatter), &t_icu_format);
+
+	MCStringRef t_format;
+    t_format = nil;
+
+    // AL-2014-08-19: [[ Bug 13219 ]] Don't overwrite previous values of the success variable.
+    if (t_success)
+        t_success = MCStringCreateMutable(0, t_format);
 	
-	char *t_format;
-	t_format = NULL;
 	if (t_success)
 	{
-		t_format = (char *)malloc(strlen(t_icu_format) * 3 + 2);
-		
-		char *t_buffer;
-		t_buffer = t_format;
-		
 		if (p_date_style == kCFDateFormatterShortStyle)
-			*t_buffer++ = '^';
+			/* UNCHECKED */ MCStringAppendChar(t_format, '^');
 		else if (p_time_style != kCFDateFormatterNoStyle)
-			*t_buffer++ = '!';
+			/* UNCHECKED */ MCStringAppendChar(t_format, '!');
 		
-		char *t_input;
-		t_input = t_icu_format;
+		uindex_t t_offset = 0;
+		uindex_t t_length;
+		t_length = MCStringGetLength(*t_icu_format);
 		
-		while(*t_input != '\0' && t_success)
+		while(t_offset < t_length && t_success)
 		{
-			char t_token;
-			t_token = *t_input++;
+			unichar_t t_char;
+			t_char = MCStringGetCharAtIndex(*t_icu_format, t_offset++);
 			
-			if (isalpha(t_token))
+			if (isalpha(t_char))
 			{
+				// Count the number of identical characters in a row
 				unsigned int t_count;
 				t_count = 1;
-				while(*t_input != '\0' && *t_input == t_token)
-					t_count += 1, t_input++;
-				
-				const char *t_component;
-				t_component = NULL;
-				
-				switch(t_token)
+				while(t_offset < t_length && MCStringGetCharAtIndex(*t_icu_format, t_offset) == t_char)
+					t_count += 1, t_offset++;
+
+				switch(t_char)
 				{
 					case 'y': // YEAR
 						if (t_count == 2)
-							t_component = "%y";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%y");
 						else
-							t_component = "%Y";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%Y");
 						break;
 					case 'M': // MONTH IN YEAR
 						if (t_count == 1)
-							t_component = "%#m";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%#m");
 						else if (t_count == 2)
-							t_component = "%m";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%m");
 						else if (t_count == 3)
-							t_component = "%b";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%b");
 						else
-							t_component = "%B";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%B");
 						break;
 					case 'd': // DAY IN MONTH
 						if (t_count == 1)
-							t_component = "%#d";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%#d");
 						else
-							t_component = "%d";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%d");
 						break;
 					case 'E': // DAY IN WEEK
 						if (t_count < 4)
-							t_component = "%a";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%a");
 						else
-							t_component = "%A";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%A");
 						break;
 					case 'K': // ZERO-BASED TWELVE HOUR
 						if (t_count == 1)
-							t_component = "%#J";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%#J");
 						else
-							t_component = "%J";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%J");
 						break;
 					case 'h': // ONE-BASED TWELVE HOUR
 						if (t_count == 1)
-							t_component = "%#I";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%#I");
 						else
-							t_component = "%I";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%I");
 						break;
 					case 'H': // ZERO-BASED TWENTY-FOUR HOUR
 						if (t_count == 1)
-							t_component = "%#H";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%#H");
 						else
-							t_component = "%H";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%H");
 						break;
 					case 'm': // MINUTE
 						if (t_count == 1)
-							t_component = "%#M";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%#M");
 						else
-							t_component = "%M";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%M");
 						break;
 					case 's': // SECOND
 						if (t_count == 1)
-							t_component = "%#S";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%#S");
 						else
-							t_component = "%S";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%S");
 						break;
 					case 'a': // PERIOD
-						t_component = "%p";
+							/* UNCHECKED */ MCStringAppendFormat(t_format, "%%p");
 						break;
 						
 					case 'G': // ERA
 					case 'Z': // TIME ZONE
-						t_component = NULL;
 						break;
-						
+	
 					case 'S': // MILLISECOND
 					case 'D': // DAY IN YEAR
 					case 'F': // DAY OF WEEK IN MONTH
@@ -318,53 +339,34 @@ static char *osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_da
 						t_success = false;
 						break;
 				}
-				
-				if (t_component != NULL)
-				{
-					unsigned int t_component_length;
-					t_component_length = strlen(t_component);
-					memcpy(t_buffer, t_component, t_component_length);
-					t_buffer += t_component_length;
-				}
+
 			}
-			else if (t_token == '\'')
+			else if (t_char == '\'')
 			{
-				if (*t_input == '\'')
-					*t_buffer++ = '\'';
-				else
+				while (t_offset < t_length)
 				{
-					// MW-2013-02-13: [[ Bug 9947 ]] Make sure we advance the buffer ptr when
-					//   copying verbatim chars!
-					while(*t_input != '\0' && *t_input != '\'')
-						*t_buffer++ = *t_input++;
+					unichar_t t_next;
+					t_next = MCStringGetCharAtIndex(*t_icu_format, t_offset++);
+					if (t_next == '\'')
+						break;
+					/* UNCHECKED */ MCStringAppendChar(t_format, t_next);
 				}
-				
-				t_input++;
 			}
 			else
-				*t_buffer++ = t_token;
+				/* UNCHECKED */ MCStringAppendChar(t_format, t_char);
 		}
-		
-		*t_buffer++ = '\0';
-		
-		t_format = (char *)realloc(t_format, t_buffer - t_format);
+
 	}
-	
-	if (t_icu_format != NULL)
-		free(t_icu_format);
-	
+
 	if (t_formatter != NULL)
 		CFRelease(t_formatter);
 	
-	if (!t_success)
-	{
-		if (t_format != NULL)
-			free(t_format);
-		
-		t_format = NULL;
-	}
-	
-	return t_format;
+	if (t_success)
+        MCStringCopyAndRelease(t_format, r_string);
+    else
+        MCValueRelease(t_format);
+    
+    return t_success;
 }
 
 static CFAbsoluteTime osx_cf_datetime_to_time(int p_year, int p_month, int p_day, int p_hour, int p_minute, int p_second)
@@ -403,41 +405,21 @@ static bool osx_cf_cache_locale(MCDateTimeLocale *p_info)
 			t_success = false;
 	}
 	
-	char *t_short_time_format;
-	t_short_time_format = NULL;
+	MCAutoStringRef t_short_time_format;
 	if (t_success)
-	{
-		t_short_time_format = osx_cf_fetch_format(t_locale, kCFDateFormatterNoStyle, kCFDateFormatterShortStyle);
-		if (t_short_time_format == NULL)
-			t_success = false;
-	}
+		t_success = osx_cf_fetch_format(t_locale, kCFDateFormatterNoStyle, kCFDateFormatterShortStyle, &t_short_time_format);
 	
-	char *t_long_time_format;
-	t_long_time_format = NULL;
+	MCAutoStringRef t_long_time_format;
 	if (t_success)
-	{
-		t_long_time_format = osx_cf_fetch_format(t_locale, kCFDateFormatterNoStyle, kCFDateFormatterMediumStyle);
-		if (t_long_time_format == NULL)
-			t_success = false;
-	}
+		t_success = osx_cf_fetch_format(t_locale, kCFDateFormatterNoStyle, kCFDateFormatterMediumStyle, &t_long_time_format);
+
+	MCAutoStringRef t_short_date_format;
+	if (t_success)
+		t_success = osx_cf_fetch_format(t_locale, kCFDateFormatterShortStyle, kCFDateFormatterNoStyle, &t_short_date_format);
 	
-	char *t_short_date_format;
-	t_short_date_format = NULL;
+	MCAutoStringRef t_long_date_format;
 	if (t_success)
-	{
-		t_short_date_format = osx_cf_fetch_format(t_locale, kCFDateFormatterShortStyle, kCFDateFormatterNoStyle);
-		if (t_short_date_format == NULL)
-			t_success = false;
-	}	
-	
-	char *t_long_date_format;
-	t_long_date_format = NULL;
-	if (t_success)
-	{
-		t_long_date_format = osx_cf_fetch_format(t_locale, kCFDateFormatterFullStyle, kCFDateFormatterNoStyle);
-		if (t_long_date_format == NULL)
-			t_success = false;
-	}
+		t_success = osx_cf_fetch_format(t_locale, kCFDateFormatterFullStyle, kCFDateFormatterNoStyle, &t_long_date_format);
 	
 	if (t_success)
 	{
@@ -445,45 +427,55 @@ static bool osx_cf_cache_locale(MCDateTimeLocale *p_info)
 		{
 			CFAbsoluteTime t_time;
 			t_time = osx_cf_datetime_to_time(2001, t_month, 1, 12, 0, 0);
-			p_info -> month_names[t_month - 1] = osx_cf_format_time(t_locale, CFSTR("MMMM"), t_time);
-			p_info -> abbrev_month_names[t_month - 1] = osx_cf_format_time(t_locale, CFSTR("MMM"), t_time);
+			MCStringRef t_temp;
+			
+			t_success = osx_cf_format_time(t_locale, CFSTR("MMMM"), t_time, t_temp);
+			MCValueAssign(p_info->month_names[t_month - 1], t_temp);
+			MCValueRelease(t_temp);
+			
+			t_success = osx_cf_format_time(t_locale, CFSTR("MMM"), t_time, t_temp);
+			MCValueAssign(p_info->abbrev_month_names[t_month - 1], t_temp);
+			MCValueRelease(t_temp);
 		}
 		
 		for(unsigned int t_day = 1; t_day <= 7; ++t_day)
 		{
 			CFAbsoluteTime t_time;
 			t_time = osx_cf_datetime_to_time(2007, 4, 7 + t_day, 12, 0, 0);
-			p_info -> weekday_names[t_day - 1] = osx_cf_format_time(t_locale, CFSTR("EEEE"), t_time);
-			p_info -> abbrev_weekday_names[t_day - 1] = osx_cf_format_time(t_locale, CFSTR("EEE"), t_time);
+			MCStringRef t_temp;
+			
+			t_success = osx_cf_format_time(t_locale, CFSTR("EEEE"), t_time, t_temp);
+			MCValueAssign(p_info->weekday_names[t_day - 1], t_temp);
+			MCValueRelease(t_temp);
+			
+			t_success = osx_cf_format_time(t_locale, CFSTR("EEE"), t_time, t_temp);
+			MCValueAssign(p_info->abbrev_weekday_names[t_day - 1], t_temp);
+			MCValueRelease(t_temp);
 		}
 		
-		p_info -> date_formats[0] = t_short_date_format;
-		char *t_abbrev_date_format;
-		t_abbrev_date_format = strdup(t_long_date_format);
-		for(uint4 i = 0; t_abbrev_date_format[i] != '\0'; ++i)
-			if (t_abbrev_date_format[i] == '%')
-				if (t_abbrev_date_format[i + 1] == 'A')
-					t_abbrev_date_format[i + 1] = 'a';
-				else if (t_abbrev_date_format[i + 1] == 'B')
-					t_abbrev_date_format[i + 1] = 'b';
-		p_info -> date_formats[1] = t_abbrev_date_format;
-		p_info -> date_formats[2] = t_long_date_format;
+		MCValueAssign(p_info->date_formats[0], *t_short_date_format);
+		MCValueAssign(p_info->date_formats[2], *t_long_date_format);
 		
-		p_info -> time_formats[0] = t_short_time_format;
-		p_info -> time_formats[1] = t_long_time_format;
+		MCStringRef t_abbrev;
+		t_success = MCStringMutableCopy(*t_long_date_format, t_abbrev);
+		t_success = MCStringFindAndReplace(t_abbrev, MCSTR("%A"), MCSTR("%a"), kMCStringOptionCompareExact);
+		t_success = MCStringFindAndReplace(t_abbrev, MCSTR("%B"), MCSTR("%b"), kMCStringOptionCompareExact);
+		MCValueRelease(p_info->date_formats[1]);
+		t_success = MCStringCopyAndRelease(t_abbrev, p_info->date_formats[1]);
+
+		MCValueAssign(p_info->time_formats[0], *t_short_time_format);
+		MCValueAssign(p_info->time_formats[1], *t_long_time_format);
+
+		MCValueAssign(p_info->time24_formats[0], *t_short_time_format);
+		MCValueAssign(p_info->time24_formats[1], *t_long_time_format);
 		
-		p_info -> time24_formats[0] = t_short_time_format;
-		p_info -> time24_formats[1] = t_long_time_format;
+		MCAutoStringRef t_am;
+		t_success = osx_cf_format_time(t_locale, CFSTR("a"), osx_cf_datetime_to_time(2001, 1, 1, 6, 0, 0), &t_am);
+		MCValueAssign(p_info->time_morning_suffix, *t_am);
 		
-		p_info -> time_morning_suffix = osx_cf_format_time(t_locale, CFSTR("a"), osx_cf_datetime_to_time(2001, 1, 1, 6, 0, 0));
-		p_info -> time_evening_suffix = osx_cf_format_time(t_locale, CFSTR("a"), osx_cf_datetime_to_time(2001, 1, 1, 18, 0, 0));
-	}
-	else
-	{
-		free(t_short_date_format);
-		free(t_long_date_format);
-		free(t_short_time_format);
-		free(t_long_time_format);
+		MCAutoStringRef t_pm;
+		t_success = osx_cf_format_time(t_locale, CFSTR("a"), osx_cf_datetime_to_time(2001, 1, 1, 18, 0, 0), &t_pm);
+		MCValueAssign(p_info->time_evening_suffix, *t_pm);
 	}
 	
 	if (t_locale != NULL)
@@ -494,7 +486,7 @@ static bool osx_cf_cache_locale(MCDateTimeLocale *p_info)
 
 static MCDateTimeLocale *do_cache_locale(void)
 {
-	extern MCDateTimeLocale g_english_locale;
+	extern MCDateTimeLocale *g_basic_locale;
 	
 	if (s_locale_info != nil)
 		return s_locale_info;
@@ -504,7 +496,7 @@ static MCDateTimeLocale *do_cache_locale(void)
 	s_locale_info = new MCDateTimeLocale;
 	
 	if (!osx_cf_cache_locale(s_locale_info))
-		*s_locale_info = g_english_locale;
+		*s_locale_info = *g_basic_locale;
 	
 	// MM-2011-09-14: [[ BZ 9721 ]] Make sure a value is returned
 	return s_locale_info;

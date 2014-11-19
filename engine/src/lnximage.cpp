@@ -30,28 +30,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphics.h"
 
 // Linux image conversion functions
-
-bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap)
+bool MCImageBitmapCreateWithGdkPixbuf(GdkPixbuf *p_image, MCImageBitmap *&r_bitmap)
 {
-	MCImageBitmap *t_bitmap;
-	uindex_t t_width = p_image->width;
-	uindex_t t_height = p_image->height;
-	
-	if (!MCImageBitmapCreate(t_width, t_height, t_bitmap))
-		return false;
-
-	uint8_t *t_src_ptr = (uint8_t*)p_image->data;
-	uint8_t *t_dst_ptr = (uint8_t*)t_bitmap->data;
-	while (t_height--)
-	{
-		MCMemoryCopy(t_dst_ptr, t_src_ptr, t_width * 4);
-		t_src_ptr += p_image->bytes_per_line;
-		t_dst_ptr += t_bitmap->stride;
-	}
-	
-	MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
-	r_bitmap = t_bitmap;
-	return true;
+    MCImageBitmap *t_bitmap;
+    uindex_t t_width = gdk_pixbuf_get_width(p_image);
+    uindex_t t_height = gdk_pixbuf_get_height(p_image);
+    
+    if (!MCImageBitmapCreate(t_width, t_height, t_bitmap))
+        return false;
+    
+    uint8_t *t_src_ptr = (uint8_t*)gdk_pixbuf_get_pixels(p_image);
+    uint8_t *t_dst_ptr = (uint8_t*)t_bitmap->data;
+    while (t_height--)
+    {
+        MCMemoryCopy(t_dst_ptr, t_src_ptr, t_width * gdk_pixbuf_get_n_channels(p_image));
+        t_src_ptr += gdk_pixbuf_get_rowstride(p_image);
+        t_dst_ptr += t_bitmap->stride;
+    }
+    
+    MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
+    r_bitmap = t_bitmap;
+    return true;
 }
 
 bool MCGImageToX11Bitmap(MCGImageRef p_image, MCBitmap *&r_bitmap)
@@ -68,20 +67,20 @@ bool MCGImageToX11Bitmap(MCGImageRef p_image, MCBitmap *&r_bitmap)
 		t_success = MCGImageGetRaster(p_image, t_raster);
 		
 	if (t_success)
-		t_success = nil != (t_bitmap = ((MCScreenDC*)MCscreen)->createimage(32, t_raster.width, t_raster.height, False, 0, False, False));
+		t_success = nil != (t_bitmap = ((MCScreenDC*)MCscreen)->createimage(32, t_raster.width, t_raster.height, false, 0));
 		
 	if (t_success)
 	{
 		const uint8_t *t_src_ptr;
 		t_src_ptr = (uint8_t*)t_raster.pixels;
 		uint8_t *t_dst_ptr;
-		t_dst_ptr = (uint8_t*)t_bitmap->data;
+		t_dst_ptr = (uint8_t*)gdk_pixbuf_get_pixels(t_bitmap);
 		
 		for (uint32_t i = 0; i < t_raster.height; i++)
 		{
 			MCMemoryCopy(t_dst_ptr, t_src_ptr, t_raster.width * sizeof(uint32_t));
 			t_src_ptr += t_raster.stride;
-			t_dst_ptr += t_bitmap->bytes_per_line;
+			t_dst_ptr += gdk_pixbuf_get_rowstride(t_bitmap);
 		}
 		
 		r_bitmap = t_bitmap;
@@ -99,11 +98,13 @@ bool MCX11BitmapToX11Pixmap(MCBitmap *p_bitmap, Pixmap &r_pixmap)
 	t_pixmap = nil;
 	
 	if (t_success)
-		t_success = nil != (t_pixmap = ((MCScreenDC*)MCscreen)->createpixmap(p_bitmap->width, p_bitmap->height, p_bitmap->depth, False));
+		t_success = nil != (t_pixmap = ((MCScreenDC*)MCscreen)->createpixmap(gdk_pixbuf_get_width(p_bitmap),
+                                                                             gdk_pixbuf_get_height(p_bitmap),
+                                                                             32, False));
 		
 	if (t_success)
 	{
-		((MCScreenDC*)MCscreen)->putimage(t_pixmap, p_bitmap, 0, 0, 0, 0, p_bitmap->width, p_bitmap->height);
+		((MCScreenDC*)MCscreen)->putimage(t_pixmap, p_bitmap, 0, 0, 0, 0, gdk_pixbuf_get_width(p_bitmap), gdk_pixbuf_get_height(p_bitmap));
 		r_pixmap = t_pixmap;
 	}
 	
@@ -127,7 +128,7 @@ bool MCGImageToX11Pixmap(MCGImageRef p_image, Pixmap &r_pixmap)
 	return t_success;
 }
 
-// IM-2014-04-15: [[ Bug 11603 ]] Convert pattern ref to X11 Pixmap with scale transform applied
+// IM-2014-04-15: [[ Bug 11603 ]] Convert pattern ref to GDK Pixmap with scale transform applied
 bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap)
 {
 	bool t_success;
@@ -141,13 +142,13 @@ bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap)
 	t_bitmap = nil;
 	
 	if (t_success)
-		t_success = nil != (t_bitmap = ((MCScreenDC*)MCscreen)->createimage(32, t_width, t_height, True, 0, False, False));
+		t_success = nil != (t_bitmap = ((MCScreenDC*)MCscreen)->createimage(32, t_width, t_height, true, 0));
 
 	MCGContextRef t_context;
 	t_context = nil;
 	
 	if (t_success)
-		t_success = MCGContextCreateWithPixels(t_width, t_height, t_bitmap->bytes_per_line, t_bitmap->data, false, t_context);
+		t_success = MCGContextCreateWithPixels(t_width, t_height, gdk_pixbuf_get_rowstride(t_bitmap), gdk_pixbuf_get_pixels(t_bitmap), false, t_context);
 		
 	MCGImageRef t_image;
 	t_image = nil;

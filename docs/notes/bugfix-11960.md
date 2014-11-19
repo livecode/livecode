@@ -1,0 +1,1 @@
+# LC crashes when selecting wrapped text in Contents pane

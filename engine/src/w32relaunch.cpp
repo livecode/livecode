@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "util.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "debug.h"
 #include "param.h"
 
@@ -66,11 +66,11 @@ struct message_t
 };
 
 extern void md5_compute(const char *p_data, unsigned int p_length, void *p_buffer);
-extern char *MCcmdline;
+extern MCStringRef MCcmdline;
 
 static char *s_previous_folder = NULL;
 
-char *strndup(const char *p_string, unsigned int p_length)
+char *strndup(const char *p_string, size_t p_length)
 {
 	char *t_result;
 	t_result = (char *)malloc(p_length + 1);
@@ -223,7 +223,7 @@ bool message_send_with_data(message_t *p_message, unsigned int *r_reply)
 	return true;
 }
 
-bool relaunch_get_current_instance(instance_t& r_instance, const char *p_id)
+bool relaunch_get_current_instance(instance_t& r_instance, MCStringRef p_id)
 {
 	char t_executable_path[4096];
 
@@ -258,7 +258,9 @@ bool relaunch_get_current_instance(instance_t& r_instance, const char *p_id)
 		t_file_id[t_file_id_length++] = 0;
 
 	unsigned int t_stack_id[4];
-	md5_compute(p_id, strlen(p_id), t_stack_id);
+    MCAutoPointer<char> t_id;
+    /* UNCHECKED */ MCStringConvertToCString(p_id, &t_id);
+	md5_compute(*t_id, MCStringGetLength(p_id), t_stack_id);
 
 	unsigned int t_process_id;
 	t_process_id = GetCurrentProcessId();
@@ -408,7 +410,7 @@ bool relaunch_list_instances(const char *p_instance_folder, const instance_t& p_
 	return true;
 }
 
-bool relaunch_startup(const char *p_stack_name)
+bool relaunch_startup(MCStringRef p_stack_name)
 {
 	bool t_error;
 	t_error = false;
@@ -444,11 +446,14 @@ bool relaunch_startup(const char *p_stack_name)
 	{
 		for(unsigned int t_instance = 0; t_instance < t_existing_instance_count; ++t_instance)
 		{
+			MCAutoStringRefAsWString t_cmdline_wstr;
+			/* UNCHECKED */ t_cmdline_wstr.Lock(MCcmdline);
+			
 			message_t t_message;
 			t_message . window = t_existing_instances[t_instance] . message_window;
 			t_message . id = CWM_RELAUNCH;
-			t_message . data = (void *)MCcmdline;
-			t_message . data_length = strlen(MCcmdline);
+			t_message . data = *t_cmdline_wstr;
+			t_message . data_length = MCStringGetLength(MCcmdline);
 			t_message . timeout = 1 << 30;
 
 			unsigned int t_reply;

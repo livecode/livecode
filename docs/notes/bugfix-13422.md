@@ -1,0 +1,1 @@
+# setting iconGravity needs redraw, and top throws error

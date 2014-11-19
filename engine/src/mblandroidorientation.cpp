@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "system.h"
 
 #include "globdefs.h"
@@ -24,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -38,8 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblandroid.h"
 #include "mblandroidutil.h"
+#include "mblsyntax.h"
 
-extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 extern MCAndroidDeviceConfiguration s_device_configuration;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,11 +53,11 @@ typedef enum
 
 typedef enum
 {
+    // AL-2014-10-24 : [[ Bug 13780 ]] Make sure Android orientation enum matches the orientation map
 	kMCDisplayOrientationPortrait,
-	kMCDisplayOrientationLandscapeLeft,
+    kMCDisplayOrientationLandscapeLeft,
 	kMCDisplayOrientationPortraitUpsideDown,
 	kMCDisplayOrientationLandscapeRight,
-
 	kMCDisplayOrientationFaceUp,
 } MCAndroidDisplayOrientation;
 
@@ -70,7 +69,7 @@ static const char *s_orientation_names[] = {
 	"landscape left",
 	"portrait upside down",
 	"landscape right",
-	nil
+	""
 //	"face up",
 };
 
@@ -159,24 +158,17 @@ static MCAndroidDisplayOrientation android_display_orientation_from_rotation(MCA
 			if (s_device_configuration.orientation_map[i] == p_rotation)
 				return (MCAndroidDisplayOrientation) i;
 	}
-
+    
 	switch (p_format)
 	{
-	case kMCDisplayFormatPortrait:
-		return s_portrait_display_map[p_rotation / 90];
-	case kMCDisplayFormatLandscape:
-		return s_landscape_display_map[p_rotation / 90];
-	case kMCDisplayFormatSquare:
-	case kMCDisplayFormatUnknown:
-		return (MCAndroidDisplayOrientation) (p_rotation / 90);
+        case kMCDisplayFormatPortrait:
+            return s_portrait_display_map[p_rotation / 90];
+        case kMCDisplayFormatLandscape:
+            return s_landscape_display_map[p_rotation / 90];
+        case kMCDisplayFormatSquare:
+        case kMCDisplayFormatUnknown:
+            return (MCAndroidDisplayOrientation) (p_rotation / 90);
 	}
-}
-
-static const char *android_display_rotation_to_string(MCAndroidDisplayFormat p_format, int p_rotation)
-{
-	if (p_format == kMCDisplayFormatUnknown)
-		return "unknown";
-	return s_orientation_names[android_display_orientation_from_rotation(p_format, p_rotation)];
 }
 
 static MCAndroidDisplayOrientation android_device_orientation_from_rotation(MCAndroidDisplayFormat p_device_format, int p_rotation)
@@ -196,136 +188,13 @@ static MCAndroidDisplayOrientation android_device_orientation_from_rotation(MCAn
 	case kMCDisplayFormatPortrait:
 	case kMCDisplayFormatSquare:
 	case kMCDisplayFormatUnknown:
-		return (MCAndroidDisplayOrientation) (p_rotation / 90);
-	case kMCDisplayFormatLandscape:
-		return (MCAndroidDisplayOrientation) (((270 + p_rotation) % 360) / 90);
+        return (MCAndroidDisplayOrientation) (p_rotation / 90);
+    case kMCDisplayFormatLandscape:
+        return (MCAndroidDisplayOrientation) (((270 + p_rotation) % 360) / 90);
 	}
 }
 
-static const char *android_device_rotation_to_string(MCAndroidDisplayFormat p_device_format, int p_rotation)
-{
-	if (p_device_format == kMCDisplayFormatUnknown)
-		return "unknown";
-	if (p_rotation == -1)
-		return "face up";
-
-	return s_orientation_names[android_device_orientation_from_rotation(p_device_format, p_rotation)];
-}
-
-#ifdef /* MCHandleOrientationAndroid */ LEGACY_EXEC
-Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters)
-{
-	int32_t t_rotation;
-	MCAndroidDisplayFormat t_format;
-
-	t_rotation = android_get_display_rotation();
-	t_format = android_get_display_format();
-
-//	MCLog("display format %d", t_format);
-//	MCLog("display rotation %d", t_rotation);
-
-	MCresult->sets(MCString(android_display_rotation_to_string(t_format, t_rotation)));
-	return ES_NORMAL;
-}
-#endif /* MCHandleOrientationAndroid */
-
-#ifdef /* MCHandleDeviceOrientationAndroid */ LEGACY_EXEC
-Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
-{
-	int32_t t_dev_rotation;
-	MCAndroidDisplayFormat t_dev_format;
-
-	t_dev_rotation = android_get_device_rotation();
-	t_dev_format = android_get_device_format();
-
-//	MCLog("device format %d", t_dev_format);
-//	MCLog("device rotation %d", t_dev_rotation);
-
-	MCresult->sets(MCString(android_device_rotation_to_string(t_dev_format, t_dev_rotation)));
-	return ES_NORMAL;
-}
-#endif /* MCHandleDeviceOrientationAndroid */
-
-#ifdef /* MCHandleAllowedOrientationsAndroid */ LEGACY_EXEC
-Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
-{
-	MCExecPoint ep(nil, nil, nil);
-	for(uint32_t j = 0; s_orientation_names[j] != nil; j++)
-		if ((s_allowed_orientations & (1 << j)) != 0)
-			ep . concatcstring(s_orientation_names[j], EC_COMMA, ep . isempty());
-
-	MCresult -> store(ep, True);
-	
-	return ES_NORMAL;
-}
-#endif /* MCHandleAllowedOrientationsAndroid */
-
-#ifdef /* MCHandleSetAllowedOrientationsAndroid */ LEGACY_EXEC
-Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters)
-{
-	bool t_success;
-	t_success = true;
-	
-	char *t_orientations;
-	t_orientations = nil;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "s", &t_orientations);
-	
-	char **t_orientations_array;
-	uint32_t t_orientations_count;
-	t_orientations_array = nil;
-	t_orientations_count = 0;
-	if (t_success)
-		t_success = MCCStringSplit(t_orientations, ',', t_orientations_array, t_orientations_count);
-	
-	uint32_t t_orientations_set;
-	t_orientations_set = 0;
-	if (t_success)
-		for(uint32_t i = 0; i < t_orientations_count; i++)
-			for(uint32_t j = 0; s_orientation_names[j] != nil; j++)
-				if (MCCStringEqualCaseless(t_orientations_array[i], s_orientation_names[j]))
-					t_orientations_set |= (1 << j);
-	
-	s_allowed_orientations = t_orientations_set;
-	
-	for(uint32_t i = 0; i < t_orientations_count; i++)
-		MCCStringFree(t_orientations_array[i]);
-	MCMemoryDeleteArray(t_orientations_array);
-	
-	MCCStringFree(t_orientations);
-	
-	return ES_NORMAL;
-}
-#endif /* MCHandleSetAllowedOrientationsAndroid */
-
-Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleLockOrientation */ LEGACY_EXEC
-	if (s_orientation_lock < MAXUINT4)
-		s_orientation_lock++;
-	return ES_NORMAL;
-#endif /* MCHandleLockOrientation */
-}
-
-Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleUnlockOrientation */ LEGACY_EXEC
-	if (s_orientation_lock > 0)
-		s_orientation_lock--;
-	return ES_NORMAL;
-#endif /* MCHandleUnlockOrientation */
-}
-
-#ifdef /* MCHandleOrientationLockedAndroid */ LEGACY_EXEC
-Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters)
-{
-	MCresult->sets(MCU_btos(s_orientation_lock > 0));
-	return ES_NORMAL;
-}
-#endif /* MCHandleOrientationLockedAndroid */
-
 ////////////////////////////////////////////////////////////////////////////////
-
 
 struct MCOrientationChangedEvent: public MCCustomEvent
 {
@@ -344,8 +213,8 @@ struct MCOrientationChangedEvent: public MCCustomEvent
 		MCAndroidDisplayFormat t_dev_format = android_get_device_format();
 		int t_dev_rotation = android_get_device_rotation();
 		MCAndroidDisplayOrientation t_dev_orientation = android_device_orientation_from_rotation(t_dev_format, t_dev_rotation);
-
-		if ((1 << (int)t_dev_orientation) & s_allowed_orientations)
+        // AL-2014-09-22: [[ Bug 13426 ]] Revert bugfix 13057 now that orientation enum is as before
+		if ((1 << (int)(t_dev_orientation)) & s_allowed_orientations)
 			android_set_display_orientation(t_dev_orientation);
 	}
 };
@@ -355,4 +224,122 @@ void MCAndroidOrientationChanged(int orientation)
 //	MCLog("MCAndroidOrientationChanged(%d)", orientation);
 	MCCustomEvent *t_orientation_event = new MCOrientationChangedEvent();
 	MCEventQueuePostCustom(t_orientation_event);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+MCOrientation get_orientation(MCAndroidDisplayOrientation p_orientation)
+{
+    // AL-2014-09-19; [[ Bug 13426 ]] Return the bits for orientation enum, rather than the bit-shifted values
+	switch (p_orientation)
+	{
+	case kMCDisplayOrientationPortrait:
+		return ORIENTATION_PORTRAIT_BIT;
+	case kMCDisplayOrientationPortraitUpsideDown:
+		return ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT;
+	case kMCDisplayOrientationLandscapeRight:
+		return ORIENTATION_LANDSCAPE_RIGHT_BIT;
+	case kMCDisplayOrientationLandscapeLeft:
+		return ORIENTATION_LANDSCAPE_LEFT_BIT;
+	case kMCDisplayOrientationFaceUp:
+		return ORIENTATION_FACE_UP_BIT;
+	default:
+		return ORIENTATION_UNKNOWN_BIT;
+	}
+}
+
+uint32_t get_orientation_set(uint32_t p_orientations)
+{
+	uint32_t t_orientations = 0;
+	if (p_orientations & (1 << kMCDisplayOrientationPortrait))
+		t_orientations |= ORIENTATION_PORTRAIT;
+	if (p_orientations & (1 << kMCDisplayOrientationPortraitUpsideDown))
+		t_orientations |= ORIENTATION_PORTRAIT_UPSIDE_DOWN;
+	if (p_orientations & (1 << kMCDisplayOrientationLandscapeRight))
+		t_orientations |= ORIENTATION_LANDSCAPE_RIGHT;
+	if (p_orientations & (1 << kMCDisplayOrientationLandscapeLeft))
+		t_orientations |= ORIENTATION_LANDSCAPE_LEFT;
+	if (p_orientations & (1 << kMCDisplayOrientationFaceUp))
+		t_orientations |= ORIENTATION_FACE_UP;
+
+	return t_orientations;
+}
+
+uint32_t get_android_orientations(uint32_t p_orientations)
+{
+	uint32_t t_orientations = 0;
+	if (p_orientations & (ORIENTATION_PORTRAIT))
+		t_orientations |= 1 << kMCDisplayOrientationPortrait;
+	if (p_orientations & (ORIENTATION_PORTRAIT_UPSIDE_DOWN))
+		t_orientations |= 1 << kMCDisplayOrientationPortraitUpsideDown;
+	if (p_orientations & (ORIENTATION_LANDSCAPE_RIGHT))
+		t_orientations |= 1 << kMCDisplayOrientationLandscapeRight;
+	if (p_orientations & (ORIENTATION_LANDSCAPE_LEFT))
+		t_orientations |= 1 << kMCDisplayOrientationLandscapeLeft;
+	if (p_orientations & (ORIENTATION_FACE_UP))
+		t_orientations |= 1 << kMCDisplayOrientationFaceUp;
+
+	return t_orientations;
+}
+
+void MCSystemGetAllowedOrientations(uint32_t& r_orientations)
+{
+	r_orientations = get_orientation_set(s_allowed_orientations);
+}
+
+void MCSystemSetAllowedOrientations(uint32_t p_orientations)
+{
+	s_allowed_orientations = get_android_orientations(p_orientations);
+}
+
+void MCSystemGetOrientation(MCOrientation& r_orientation)
+{
+	int32_t t_rotation;
+	MCAndroidDisplayFormat t_format;
+
+	t_rotation = android_get_display_rotation();
+	t_format = android_get_display_format();
+
+	if (t_format == kMCDisplayFormatUnknown)
+		r_orientation = ORIENTATION_UNKNOWN_BIT;
+	else
+		r_orientation = get_orientation(android_display_orientation_from_rotation(t_format, t_rotation));
+}
+
+void MCSystemGetDeviceOrientation(MCOrientation& r_orientation)
+{
+	int32_t t_dev_rotation;
+	MCAndroidDisplayFormat t_dev_format;
+
+	t_dev_rotation = android_get_device_rotation();
+	t_dev_format = android_get_device_format();
+
+	r_orientation = get_orientation(android_device_orientation_from_rotation(t_dev_format, t_dev_rotation));
+}
+
+void MCSystemLockOrientation()
+{
+#ifdef /* MCHandleLockOrientation */ LEGACY_EXEC
+	if (s_orientation_lock < MAXUINT4)
+		s_orientation_lock++;
+	return ES_NORMAL;
+#endif /* MCHandleLockOrientation */
+	if (s_orientation_lock < MAXUINT4)
+		s_orientation_lock++;
+}
+
+void MCSystemUnlockOrientation()
+{
+#ifdef /* MCHandleUnlockOrientation */ LEGACY_EXEC
+	if (s_orientation_lock > 0)
+		s_orientation_lock--;
+	return ES_NORMAL;
+#endif /* MCHandleUnlockOrientation */
+	if (s_orientation_lock > 0)
+		s_orientation_lock--;
+}
+
+void MCSystemGetOrientationLocked(bool &r_locked)
+{
+	r_locked = s_orientation_lock > 0;
 }

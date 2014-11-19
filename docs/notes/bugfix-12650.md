@@ -1,0 +1,1 @@
+# Copying externals files to android app fails

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -60,20 +59,6 @@ void MCSystemSensorFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidStartTrackingLocation(bool p_loosely);
-bool MCAndroidStopTrackingLocation();
-
-bool MCAndroidStartTrackingHeading(bool p_loosely);
-bool MCAndroidStopTrackingHeading();
-
-bool MCAndroidStartTrackingAcceleration(bool p_loosely);
-bool MCAndroidStopTrackingAcceleration();
-
-bool MCAndroidStartTrackingRotationRate(bool p_loosely);
-bool MCAndroidStopTrackingRotationRate();
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available)
 {    
     MCAndroidEngineRemoteCall("isSensorAvailable", "bi", &r_available, (int32_t)p_sensor);
@@ -81,7 +66,7 @@ bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 bool MCSystemStartTrackingSensor(MCSensorType p_sensor, bool p_loosely)
 {
     switch (p_sensor)
@@ -119,7 +104,7 @@ bool MCSystemStopTrackingSensor(MCSensorType p_sensor)
             return false;
     }
 }
-
+*/
 bool MCSystemGetLocationReading(MCSensorLocationReading &r_reading, bool p_detailed)
 {
     if (s_location_reading == nil)
@@ -158,7 +143,7 @@ bool MCSystemGetRotationRateReading(MCSensorRotationRateReading &r_reading, bool
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidStartTrackingLocation(bool p_loosely)
+bool MCSystemStartTrackingLocation(bool p_loosely)
 {
     bool t_success = true;
         
@@ -168,7 +153,7 @@ bool MCAndroidStartTrackingLocation(bool p_loosely)
     return t_success;
 }
 
-bool MCAndroidStopTrackingLocation()
+bool MCSystemStopTrackingLocation()
 {
     bool t_success = true;
     
@@ -176,7 +161,7 @@ bool MCAndroidStopTrackingLocation()
     return t_success;
 }
 
-bool MCAndroidStartTrackingHeading(bool p_loosely)
+bool MCSystemStartTrackingHeading(bool p_loosely)
 {
     bool t_success = true;
     
@@ -189,7 +174,7 @@ bool MCAndroidStartTrackingHeading(bool p_loosely)
     return t_success;
 }
 
-bool MCAndroidStopTrackingHeading()
+bool MCSystemStopTrackingHeading()
 {
     bool t_success = true;
     
@@ -197,7 +182,7 @@ bool MCAndroidStopTrackingHeading()
     return t_success;
 }
 
-bool MCAndroidStartTrackingAcceleration(bool p_loosely)
+bool MCSystemStartTrackingAcceleration(bool p_loosely)
 {
     bool t_success = true;
     
@@ -207,7 +192,7 @@ bool MCAndroidStartTrackingAcceleration(bool p_loosely)
     return t_success;
 }
 
-bool MCAndroidStopTrackingAcceleration()
+bool MCSystemStopTrackingAcceleration()
 {
     bool t_success = true;
     
@@ -215,7 +200,7 @@ bool MCAndroidStopTrackingAcceleration()
     return t_success;
 }
 
-bool MCAndroidStartTrackingRotationRate(bool p_loosely)
+bool MCSystemStartTrackingRotationRate(bool p_loosely)
 {
     bool t_success = true;
         
@@ -225,12 +210,19 @@ bool MCAndroidStartTrackingRotationRate(bool p_loosely)
     return t_success;
 }
 
-bool MCAndroidStopTrackingRotationRate()
+bool MCSystemStopTrackingRotationRate()
 {
     bool t_success = true;
     
     MCAndroidEngineRemoteCall("stopTrackingRotationRate", "b", &t_success);
     return t_success;
+}
+
+// SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
+bool MCSystemGetLocationAuthorizationStatus(MCStringRef& r_status)
+{
+    // Non implemented on Android
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

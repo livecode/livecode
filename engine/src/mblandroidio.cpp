@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "system.h"
 #include "mblandroid.h"
 
@@ -29,34 +28,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
-	static MCStdioFileHandle *Open(const char *p_path, const char *p_mode)
-	{
-		FILE *t_stream;
-		t_stream = fopen(p_path, p_mode);
-		if (t_stream == NULL)
-			return NULL;
-		
-		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
-		t_handle -> m_stream = t_stream;
-		
-		return t_handle;
-	}
-	
-	static MCStdioFileHandle *OpenFd(int fd, const char *p_mode)
-	{
-		FILE *t_stream;
-		t_stream = fdopen(fd, p_mode);
-		if (t_stream == NULL)
-			return NULL;
-		
-		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
-		t_handle -> m_stream = t_stream;
-		
-		return t_handle;
-		
-	}
+    
+    MCStdioFileHandle(FILE* p_fptr)
+    {
+        m_stream = p_fptr;
+    }
 	
 	virtual void Close(void)
 	{
@@ -76,11 +52,10 @@ public:
 		return true;
 	}
 	
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	virtual bool Write(const void *p_buffer, uint32_t p_length)
 	{
 		size_t t_amount;
 		t_amount = fwrite(p_buffer, 1, p_length, m_stream);
-		r_written = t_amount;
 		
 		if (t_amount < p_length)
 			return false;
@@ -132,6 +107,16 @@ public:
 	{
 		return NULL;
 	}
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        return false;
+    }
+    
+    virtual bool IsExhausted(void)
+    {
+        return feof(m_stream);
+    }
 	
 private:
 	FILE *m_stream;
@@ -139,46 +124,22 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern char *MCcmd;
-bool path_to_apk_path(const char * p_path, const char *&r_apk_path);
-bool apk_file_exists(const char *p_apk_path);
-bool apk_get_file_length(const char *p_apk_path, int32_t &r_length);
-bool apk_get_file_offset(const char *p_apk_path, int32_t &r_offset);
+extern MCStringRef MCcmd;
+bool path_to_apk_path(MCStringRef p_path, MCStringRef &r_apk_path);
+bool apk_file_exists(MCStringRef p_apk_path);
+bool apk_get_file_length(MCStringRef p_apk_path, int32_t &r_length);
+bool apk_get_file_offset(MCStringRef p_apk_path, int32_t &r_offset);
 
 class MCAssetFileHandle: public MCSystemFileHandle
 {
 public:
-	static MCAssetFileHandle *Open(const char *p_path, const char *p_mode)
-	{
-		int32_t t_size = 0;
-		int32_t t_offset = 0;
-
-		if (!MCCStringEqual(p_mode, "r"))
-			return NULL;
-
-		if (!apk_get_file_length(p_path, t_size) || !apk_get_file_offset(p_path, t_offset))
-			return NULL;
-
-		FILE *t_stream;
-		t_stream = fopen(MCcmd, p_mode);
-		if (t_stream == NULL)
-			return NULL;
-		
-		if (fseeko(t_stream, t_offset, SEEK_SET) != 0)
-		{
-			fclose(t_stream);
-			return NULL;
-		}
-
-		MCAssetFileHandle *t_handle;
-		t_handle = new MCAssetFileHandle;
-		t_handle -> m_stream = t_stream;
-		t_handle -> m_size = t_size;
-		t_handle -> m_offset = t_offset;
-		t_handle -> m_position = 0;
-		
-		return t_handle;
-	}
+    MCAssetFileHandle(FILE* p_fptr, uint32_t p_size, uint32_t p_offset)
+    {
+        m_stream = p_fptr;
+        m_size = p_size;
+        m_offset = p_offset;
+        m_position = 0;
+    }
 		
 	virtual void Close(void)
 	{
@@ -202,7 +163,7 @@ public:
 		return true;
 	}
 	
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	virtual bool Write(const void *p_buffer, uint32_t p_length)
 	{
 		return false;
 	}
@@ -266,6 +227,16 @@ public:
 	{
 		return NULL;
 	}
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        return false;
+    }
+    
+    virtual bool IsExhausted(void)
+    {
+        return m_position >= m_size;
+    }
 	
 private:
 	FILE *m_stream;
@@ -276,31 +247,91 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCSystemFileHandle *MCAndroidSystem::OpenFile(const char *p_path, uint32_t p_mode, bool p_map)
+IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
 {
 	static const char *s_modes[] = { "r", "w", "r+", "a" };
+    
+    uint32_t t_mode;
+    switch(p_mode)
+    {
+    case kMCOpenFileModeRead:
+        t_mode = 0;
+        break;
+    case kMCOpenFileModeWrite:
+        t_mode = 1;
+        break;
+    case kMCOpenFileModeUpdate:
+        t_mode = 2;
+        break;
+    case kMCOpenFileModeAppend:
+        t_mode = 3;
+        break;
+    }
 
-	const char *t_apk_path = nil;
-	if (path_to_apk_path(p_path, t_apk_path))
-		return MCAssetFileHandle::Open(t_apk_path, s_modes[p_mode & 0xff]);
+	MCAutoStringRef t_apk_path;
+    IO_handle t_handle;
+    t_handle = nil;
+    
+	if (path_to_apk_path(p_path, &t_apk_path))
+    {
+        FILE *t_stream;
+		int32_t t_size = 0;
+		int32_t t_offset = 0;
+        
+        if (p_mode != kMCOpenFileModeRead)
+			return NULL;
+        
+		if (!apk_get_file_length(*t_apk_path, t_size) || !apk_get_file_offset(*t_apk_path, t_offset))
+			return NULL;
+        
+        MCAutoStringRefAsUTF8String t_utf8_mccmd;
+        /* UNCHECKED */ t_utf8_mccmd . Lock(MCcmd);
+		t_stream = fopen(*t_utf8_mccmd, s_modes[t_mode]);
+		if (t_stream == NULL)
+			return NULL;
+		
+		if (fseeko(t_stream, t_offset, SEEK_SET) != 0)
+		{
+			fclose(t_stream);
+			return NULL;
+		}
+        
+		t_handle = new MCAssetFileHandle(t_stream, t_size, t_offset);
+    }
 	else
 	{
-		MCSystemFileHandle *t_handle;
-		t_handle = MCStdioFileHandle::Open(p_path, s_modes[p_mode & 0xff]);
-		if (t_handle == NULL && p_mode == kMCSystemFileModeUpdate)
-			t_handle = MCStdioFileHandle::Open(p_path, "w+");
-		
-		return t_handle;
+        FILE *t_stream;
+        MCAutoStringRefAsUTF8String t_utf8_path;
+        /* UNCHECKED */ t_utf8_path . Lock(p_path);
+		t_stream = fopen(*t_utf8_path, s_modes[t_mode]);
+		if (t_stream == NULL)
+			return NULL;
+        
+		if (t_stream == NULL && p_mode == kMCOpenFileModeUpdate)
+			t_stream = fopen(*t_utf8_path, "w+");
+        
+        if (t_stream == NULL)
+            return NULL;
+        
+        t_handle = new MCStdioFileHandle(t_stream);
 	}
+    
+    return t_handle;
 }
 
-MCSystemFileHandle *MCAndroidSystem::OpenStdFile(uint32_t i)
+IO_handle MCAndroidSystem::OpenFd(uint32_t fd, intenum_t p_mode)
 {
 	static const char *s_modes[] = { "r", "w", "w" };
-	return MCStdioFileHandle::OpenFd(i, s_modes[i]);
+    
+    FILE *t_stream;
+    t_stream = fdopen(fd, s_modes[fd]);
+    if (t_stream == NULL)
+        return NULL;
+    
+	return new MCStdioFileHandle(t_stream);
 }
 
-MCSystemFileHandle *MCAndroidSystem::OpenDevice(const char *p_path, uint32_t p_mode, const char *p_control_string)
+IO_handle MCAndroidSystem::OpenDevice(MCStringRef p_path, intenum_t p_mode)
 {
 	return NULL;
 }

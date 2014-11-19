@@ -29,10 +29,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "object.h"
 #include "context.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "stack.h"
 #include "region.h"
 #include "osspec.h"
+#include "variable.h"
  
 #include "card.h"
 #include "mcerror.h"
@@ -599,10 +600,17 @@ MCPrinterResult MCPSPrinterDevice::Bookmark(const char *title, double x, double 
 
 char * getdefaultprinter(void)
 {
-	MCExecPoint ep ( NULL, NULL, NULL ) ;
-	MCdefaultstackptr->domess(DEFAULT_PRINTER_SCRIPT);
-	MCresult->fetch(ep);
-	return strdup(ep.getcstring());
+    MCAutoValueRef t_value;
+    MCExecContext ctxt(nil, nil, nil);
+    MCAutoStringRef t_string;
+    char *t_cstring;
+
+	MCdefaultstackptr->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
+
+    /* UNCHECKED */ MCresult->eval(ctxt, &t_value);
+    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+    /* UNCHECKED */  MCStringConvertToCString(*t_string, t_cstring);
+    return t_cstring;
 }
 
 void MCPSPrinter::DoInitialize(void)
@@ -638,10 +646,14 @@ void MCPSPrinter::DoFinalize(void)
 }
 
 
-bool MCPSPrinter::DoReset(const char *p_name)
+bool MCPSPrinter::DoReset(MCStringRef p_name)
 {
-	if ( p_name != NULL ) 
-		m_printersettings . printername = strdup(p_name);
+    if (!MCStringIsEmpty(p_name))
+    {
+        MCAutoStringRefAsSysString t_name;
+        /* UNCHECKED */ t_name.Lock(p_name);
+        m_printersettings . printername = strdup(*t_name);
+    }
 	
 	FlushSettings();
 	
@@ -650,14 +662,14 @@ bool MCPSPrinter::DoReset(const char *p_name)
 }
 
 
-bool MCPSPrinter::DoResetSettings(const MCString& p_settings)
+bool MCPSPrinter::DoResetSettings(MCDataRef p_settings)
 {
 	bool t_success;
 	t_success = true;
 
 	MCDictionary t_dictionary;
 	if (t_success)	
-		t_success = t_dictionary . Unpickle(p_settings . getstring(), p_settings . getlength());
+		t_success = t_dictionary . Unpickle(MCDataGetBytePtr(p_settings), MCDataGetLength(p_settings));
 
 	MCString t_name;
 	if (t_success)
@@ -722,7 +734,7 @@ MCPrinterDialogResult MCPSPrinter::DoPageSetup(bool p_window_modal, Window p_own
 
 
 
-MCPrinterResult MCPSPrinter::DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device)
+MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device)
 {
 	MCPSPrinterDevice *t_device = new MCPSPrinterDevice ;
 	
@@ -730,18 +742,29 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(const char *p_document, MCPrinterDevic
 	if (GetDeviceOutputType() == PRINTER_OUTPUT_FILE)
 		t_output_file = GetDeviceOutputLocation();
 	else
-		t_output_file = C_FNAME;
+        t_output_file = C_FNAME;
 
-	stream = MCS_open(t_output_file, IO_CREATE_MODE, False, False, 0);
-	
-	// MW-2013-11-11: [[ Bug 11197 ]] Make sure we check we managed to open the file.
+    MCAutoStringRef t_path;
+    /* UNCHECKED */ MCStringCreateWithSysString(t_output_file, &t_path);
+
+    stream = MCS_open(*t_path, kMCOpenFileModeWrite, False, False, 0);
+    
+    // MW-2013-11-11: [[ Bug 11197 ]] Make sure we check we managed to open the file.
 	if (stream == nil)
 		return PRINTER_RESULT_FAILURE;
-	
-	PSwrite("%!PS-Adobe-3.0\n");
-	sprintf(buffer, "%%%%Creator: Revolution %s\n", MCversionstring); PSwrite(buffer);
+    
+    MCAutoPointer<char> t_MCN_version;
+    /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(MCN_version_string), &t_MCN_version);
+
+    // PostScript + Unicode = complicated...
+    //
+    // PS has no concept of Unicode internally and it depends on both the font
+    // and the PostScript engine. General support for Unicode text in PS
+    // documents isn't easy and is not implemented here. :-(
+    PSwrite("%!PS-Adobe-3.0\n");
+	sprintf(buffer, "%%%%Creator: Revolution %s\n", *t_MCN_version); PSwrite(buffer);
 	PSwrite("%%DocumentData: Clean8Bit\n");
-	sprintf(buffer, "%%%%Title: %s\n", p_document ) ; PSwrite(buffer ) ;
+    sprintf(buffer, "%%%%Title: %s\n", MCStringGetNativeCharPtr(p_document) ) ; PSwrite(buffer ) ;
 	PSwrite("%%MCOrientation Portrait\n");
 	PSwrite("%%EndComments\n");
 	
@@ -799,7 +822,7 @@ MCPrinterResult MCPSPrinter::DoEndPrint(MCPrinterDevice* p_device)
 			sprintf(buffer, GetDeviceCommand(), C_FNAME ) ;
 		
 		//fprintf(stderr, "Print command : [%s]\n", buffer ) ;
-		exec_command ( buffer ) ; 
+        exec_command ( buffer ) ;
 	}
 	
 	if ( p_device != NULL)
@@ -819,8 +842,12 @@ void MCPSPrinter::FlushSettings ( void )
 	SetJobCopies ( m_printersettings . copies ) ;
 	SetJobCollate ( m_printersettings . collate ) ;
 	
-	if ( m_printersettings . outputfilename != NULL ) 
-		SetDeviceOutput( m_printersettings . printertype, m_printersettings . outputfilename ) ;
+    if ( m_printersettings . outputfilename != NULL )
+    {
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ MCStringCreateWithSysString(m_printersettings.outputfilename, &t_string);
+        SetDeviceOutput( m_printersettings . printertype, *t_string);
+    }
 	
 	if ( m_printersettings . page_range_count > 0 )
 		SetJobRanges ( m_printersettings . page_range_count, m_printersettings . page_ranges ) ;
@@ -1234,8 +1261,14 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	char *text = new char[l + 1];
 	memcpy(text, p_mark -> text . data , l);
 	
-	// MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
-    uint2 w = MCFontMeasureText(p_mark -> text . font, text, l, false, MCGAffineTransformMakeIdentity());
+	bool t_is_unicode;
+	t_is_unicode = p_mark -> text . unicode_override;
+    
+	MCAutoStringRef t_text_string;
+	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_text_string);
+
+    // MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
+    uint2 w = MCFontMeasureText(p_mark -> text . font, *t_text_string, MCGAffineTransformMakeIdentity());
 	
 	text[l] = '\0';
 	const char *sptr = text;
@@ -1336,15 +1369,14 @@ void MCPSMetaContext::setfont(MCFontStruct *font)
 	uint2 i = 0;
 	uint4 fontcount = NDEFAULT_FONTS ;
 
-	const char * fontname; 
+	MCNameRef fontname_n; 
 	uint2 fontstyle;
 	uint2 fontsize;
-	MCFontlistGetCurrent() -> getfontreqs(font, fontname, fontsize, fontstyle);
-
+	MCFontlistGetCurrent() -> getfontreqs(font, fontname_n, fontsize, fontstyle);
 
 	while (i < fontcount)
 	{
-		if (strcasecmp(fontname, defaultfonts[i].fontname) == 0 )
+		if (MCNameIsEqualToCString(fontname_n, defaultfonts[i].fontname, kMCCompareExact))
 		{
 			strcpy(psFont, defaultfonts[i].printerfontname);
 			
@@ -1519,16 +1551,16 @@ void MCPSMetaContext::create_pattern ( MCGImageRef p_pattern )
 
 void exec_command ( char * command ) 
 {
-	MCExecPoint ep;
-	sprintf(ep.getbuffer(strlen(command)), command);
-	ep.setstrlen();
-	if (MCS_runcmd(ep) != IO_NORMAL)
+    MCAutoStringRef t_command;
+    MCAutoStringRef t_output;
+    /* UNCHECKED */ MCStringCreateWithSysString(command, &t_command);
+
+    if (MCS_runcmd(*t_command, &t_output) != IO_NORMAL)
 	{
 		MCeerror->add(EE_PRINT_ERROR, 0, 0);
 	}
 	else
-		MCresult->sets(ep.getsvalue());
-	
+        MCresult->setvalueref(*t_output);
 }
 
 

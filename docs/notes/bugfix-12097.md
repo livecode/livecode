@@ -1,0 +1,1 @@
+# setting acceleratorModifiers of button causes crash

@@ -1,0 +1,1 @@
+# Error when getting or setting char chunk properties of buttons

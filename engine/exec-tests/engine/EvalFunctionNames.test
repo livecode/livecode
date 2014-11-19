@@ -1,0 +1,4 @@
+setup
+test the functionNames is not empty
+test "functionNames" is among the lines of the functionNames
+teardown

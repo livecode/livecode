@@ -1,0 +1,13 @@
+setup
+
+create button
+
+create button
+
+select button 1 and button 2
+
+select empty
+
+test not (the selectedObjects contains the long id of button 1 or the selectedObjects contains the long id of button 2)
+
+teardown

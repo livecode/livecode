@@ -11,7 +11,11 @@ CUSTOM_INCLUDES=\
 
 CUSTOM_CCFLAGS=\
 	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -fno-exceptions -fno-rtti \
-	-fmessage-length=0 -march=i486 \
+	-fmessage-length=0 \
 	$(KERNEL_CCFLAGS)
+
+ifeq ($(ARCH),i386)
+	CUSTOM_CCFLAGS:=$(CUSTOM_CCFLAGS) -march=i486
+endif
 
 include ../rules/archive.linux.makefile

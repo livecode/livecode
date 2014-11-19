@@ -114,6 +114,9 @@ void MCStack::view_copy(const MCStack &p_view)
 	
 	m_view_stack_visible_rect = p_view.m_view_stack_visible_rect;
 	
+    // FG-2014-01-30 [[ Valgrind ]] Unitinialized value
+    m_view_rect = p_view.m_view_rect;
+
 	// MW-2011-08-26: [[ TileCache ]] Stacks start off with no tilecache.
 	m_view_tilecache = nil;
 	m_view_bg_layer_id = 0;

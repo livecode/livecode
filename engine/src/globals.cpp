@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "undolst.h"
 #include "sellst.h"
 #include "stacklst.h"
@@ -51,6 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "external.h"
 #include "parentscript.h"
 #include "osspec.h"
+#include "variable.h"
 
 #include "printer.h"
 
@@ -69,6 +69,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "resolution.h"
 
+#include "date.h"
 #include "systhreads.h"
 #include "stacktile.h"
 
@@ -83,7 +84,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblad.h"
 #include "mblcontrol.h"
 #include "mblsensor.h"
+#include "mblsyntax.h"
 #endif
+
+#ifdef _IOS_MOBILE
+#include "mblsyntax.h"
+#endif
+
+#include "exec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -92,9 +100,9 @@ Bool MCquitisexplicit;
 int MCidleRate = 200;
 
 Boolean MCaqua;
-char *MCcmd;
-char *MCfiletype;
-char *MCstackfiletype;
+MCStringRef MCcmd;
+MCStringRef MCfiletype;
+MCStringRef MCstackfiletype;
 
 
 #ifdef TARGET_PLATFORM_LINUX
@@ -110,7 +118,7 @@ Boolean MCuseXft = True;
 Boolean MCuselibgnome = False ;
 Boolean MCuseESD = False ;
 
-char **MCstacknames = NULL;
+MCStringRef *MCstacknames = NULL;
 int2 MCnstacks = 0;
 
 Boolean MCnofiles = False;
@@ -180,9 +188,9 @@ Boolean MCproportionalthumbs = True;
 MCColor MCzerocolor;
 MCColor MConecolor;
 MCColor MCpencolor;
-char *MCpencolorname;
+MCStringRef MCpencolorname;
 MCColor MCbrushcolor;
-char *MCbrushcolorname;
+MCStringRef MCbrushcolorname;
 uint4 MCpenpmid = PI_PATTERNS;
 MCPatternRef MCpenpattern;
 uint4 MCbrushpmid = PI_PATTERNS;
@@ -191,11 +199,11 @@ uint4 MCbackdroppmid;
 MCPatternRef MCbackdroppattern;
 MCImageList *MCpatternlist;
 MCColor MCaccentcolor;
-char *MCaccentcolorname;
+MCStringRef MCaccentcolorname;
 MCColor MChilitecolor = { 0, 0, 0, 0x8080, 0, 0 };
-char *MChilitecolorname;
+MCStringRef MChilitecolorname;
 MCColor MCselectioncolor;
-char *MCselectioncolorname;
+MCStringRef MCselectioncolorname;
 Linkatts MClinkatts = { { 0, 0, 0, 0xEFBE, 0, 0 }, NULL,
                         { 0, 0xFFFF, 0, 0, 0, 0 }, NULL,
                         { 0, 0x5144, 0x1861, 0x8038, 0, 0 }, NULL, True };
@@ -300,7 +308,7 @@ MCUIDC *MCscreen;
 MCPrinter *MCprinter;
 MCPrinter *MCsystemprinter;
 
-char *MCscriptfont;
+MCStringRef MCscriptfont;
 uint2 MCscriptsize;
 uint2 MCscrollbarwidth = DEFAULT_SB_WIDTH;
 uint2 MCfocuswidth = 2;
@@ -337,19 +345,16 @@ Boolean MCsystemCS = True;
 Boolean MCsystemPS = True;
 Boolean MChidewindows;
 Boolean MCbufferimages;
-char *MCserialcontrolsettings;
-char *MCshellcmd;
-char *MCvcplayer;
-char *MCbackdropcolor;
+MCStringRef MCserialcontrolsettings;
+MCStringRef MCshellcmd;
+MCStringRef MCvcplayer;
 
-char *MCftpproxyhost;
+MCStringRef MCftpproxyhost;
 uint2 MCftpproxyport;
 
-char *MChttpproxy;
+MCStringRef MChttpproxy;
 
-char *MClongdateformat;
-char *MCshortdateformat;
-char *MChttpheaders;
+MCStringRef MChttpheaders;
 int4 MCrandomseed;
 Boolean MCshowinvisibles;
 MCObjectList *MCbackscripts;
@@ -364,8 +369,8 @@ MCVariable *MCglobals;
 MCVariable *MCmb;
 MCVariable *MCeach;
 MCVariable *MCdialogdata;
-char *MChcstat;
-char *MCcurdir;
+MCStringRef MChcstat;
+
 MCVariable *MCresult;
 MCVariable *MCurlresult;
 Boolean MCexitall;
@@ -375,25 +380,12 @@ Boolean MCrecording;
 MCPlatformSoundRecorderRef MCrecorder;
 #endif
 
-// MW-2012-03-08: [[ StackFile5500 ]] Make stackfile version 5.5 the default.
-uint4 MCstackfileversion = 5500;
-
-#if defined(_WINDOWS)
-uint2 MClook = LF_WIN95;
-const char *MCttbgcolor = "255,255,231";
-const char *MCttfont = "MS Sans Serif";
-uint2 MCttsize = 12;
-#elif defined(_MACOSX)
-uint2 MClook = LF_MAC;
-const char *MCttbgcolor = "255,255,207";
-const char *MCttfont = "Lucida Grande";
-uint2 MCttsize = 11;
-#else
-uint2 MClook = LF_MOTIF;
-const char *MCttbgcolor = "255,255,207";
-const char *MCttfont = "Helvetica";
-uint2 MCttsize = 12;
-#endif
+// AL-2014-18-02: [[ UnicodeFileFormat ]] Make stackfile version 7.0 the default.
+uint4 MCstackfileversion = 7000;
+uint2 MClook;
+MCStringRef MCttbgcolor;
+MCStringRef MCttfont;
+uint2 MCttsize;
 uint2 MCtrylock;
 uint2 MCerrorlock;
 Boolean MCwatchcursor;
@@ -446,12 +438,6 @@ MCString MCfalsemcstring;
 MCString MCnullmcstring;
 Boolean MCinlineinput = True;
 
-uint4 MCiconid = 0;
-char *MCiconmenu = NULL;
-uint4 MCstatusiconid = 0;
-char *MCstatusiconmenu = NULL;
-char *MCstatusicontooltip = NULL;
-
 uint4 MCqtidlerate = 50;
 
 Boolean MChidebackdrop = False;
@@ -499,6 +485,11 @@ Boolean MCmainstackschanged = False;
 //   UDP sockets.
 Boolean MCallowdatagrambroadcasts = False;
 
+char *MCsysencoding = nil;
+
+MCLocaleRef kMCBasicLocale = nil;
+MCLocaleRef kMCSystemLocale = nil;
+
 // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
 MCThreadMutexRef MCanimationmutex = NULL;
 MCThreadMutexRef MCpatternmutex = NULL;
@@ -512,9 +503,15 @@ MCThreadMutexRef MCgraphicmutex = NULL;
 extern MCUIDC *MCCreateScreenDC(void);
 extern void MCU_finalize_names();
 
+#ifdef _IOS_MOBILE
+extern void MCReachabilityEventInitialize();
+extern void MCReachabilityEventFinalize();
+#endif
+
 #ifdef _ANDROID_MOBILE
 void MCAndroidCustomFontsInitialize();
 void MCAndroidCustomFontsFinalize();
+void MCAndroidFinalizeBuildInfo();
 #endif
 	
 // Reset all global variables to their on-load defaults. This is required on
@@ -525,9 +522,9 @@ void X_clear_globals(void)
 	MCquit = False;
 	MCquitisexplicit = False;
 	MCidleRate = 200;
-	MCcmd = nil;
-	MCfiletype = nil;
-	MCstackfiletype = nil;
+	/* FRAGILE */ MCcmd = MCValueRetain(kMCEmptyString);
+	MCfiletype = MCValueRetain(kMCEmptyString);
+	MCstackfiletype = MCValueRetain(kMCEmptyString);
 	MCstacknames = nil;
 	MCnstacks = 0;
 	MCnofiles = False;
@@ -539,8 +536,14 @@ void X_clear_globals(void)
 	MCraisemenus = True;
 	MCraisepalettes = True;
 	MCsystemmodals = True;
-	MCactivatepalettes = True;
-	MChidepalettes = False;
+    MCactivatepalettes = True;
+    // SN-2014-10-2-: [[ Bug 13684 ]] Bugfix brought in 7.0 initialisation
+    // MW-2007-07-05: [[ Bug 2288 ]] Default for hidePalettes is not system-standard
+#ifdef _MACOSX
+	MChidepalettes = True;
+#else
+    MChidepalettes = False;
+#endif
 	MCdontuseNS = False;
 	MCdontuseQT = False;
 	MCdontuseQTeffects = False;
@@ -562,7 +565,7 @@ void X_clear_globals(void)
 	MCmmap = True;
 	MCshmpix = False;
 	MCnoui = False;
-	MCdisplayname = nil;
+	MCdisplayname = NULL;
 	MCshmoff = False;
 	MCshmon = False;
 	MCvisualid = 0;
@@ -687,10 +690,10 @@ void X_clear_globals(void)
 	MCscreen = nil;
 	MCsystemprinter = nil;
 	MCprinter = nil;
-	MCscriptfont = nil;
+	MCscriptfont = MCValueRetain(kMCEmptyString);
 	MCscriptsize = 0;
 	MCscrollbarwidth = DEFAULT_SB_WIDTH;
-	uint2 MCfocuswidth = 2;
+	MCfocuswidth = 2;
 	MCsizewidth = 8;
 	MCminsize = 8;
 	MCcloneoffset = 32;
@@ -724,16 +727,13 @@ void X_clear_globals(void)
 	MCsystemPS = True;
 	MChidewindows = False;
 	MCbufferimages = False;
-	MCserialcontrolsettings = nil;
-	MCshellcmd = nil;
-	MCvcplayer = nil;
-	MCbackdropcolor = nil;
-	MCftpproxyhost = nil;
+	MCserialcontrolsettings = MCValueRetain(kMCEmptyString);
+	MCshellcmd = MCValueRetain(kMCEmptyString);
+	MCvcplayer = MCValueRetain(kMCEmptyString);
+	MCftpproxyhost = MCValueRetain(kMCEmptyString);
 	MCftpproxyport = 0;
-	MChttpproxy = nil;
-	MClongdateformat = nil;
-	MCshortdateformat = nil;
-	MChttpheaders = nil;
+	MChttpproxy = MCValueRetain(kMCEmptyString);
+	MChttpheaders = MCValueRetain(kMCEmptyString);
 	MCrandomseed = 0;
 	MCshowinvisibles = False;
 	MCbackscripts = nil;
@@ -746,7 +746,7 @@ void X_clear_globals(void)
 	MCeach = nil;
 	MCdialogdata = nil;
 	MChcstat = nil;
-	MCcurdir = nil;
+	
 	MCresult = nil;
 	MCurlresult = nil;
 	MCexitall = False;
@@ -755,12 +755,15 @@ void X_clear_globals(void)
 #ifdef FEATURE_PLATFORM_RECORDER
     MCrecorder = nil;
 #endif
-	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
-	MCstackfileversion = 5500;
-	MClook = LF_MOTIF;
-	MCttbgcolor = "255,255,207";
-	MCttfont = "Helvetica";
-	MCttsize = 12;
+    
+	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make 7.0 stackfile version the default.
+	MCstackfileversion = 7000;
+
+    MClook = LF_MOTIF;
+    MCttbgcolor = MCSTR("255,255,207");
+    MCttfont = MCSTR("Helvetica");
+    MCttsize = 12;
+
 	MCtrylock = 0;
 	MCerrorlock = 0;
 	MCwatchcursor = False;
@@ -825,7 +828,7 @@ void X_clear_globals(void)
 
 	for(uint32_t i = 0; i < PI_NCURSORS; i++)
 		MCcursors[i] = nil;
-	
+    
 	// MM-2012-09-05: [[ Property Listener ]]
 	MCobjectpropertieschanged = False;
 	MCpropertylistenerthrottletime = 250;
@@ -842,22 +845,32 @@ void X_clear_globals(void)
     MCgraphicmutex = NULL;
 
 #ifdef _ANDROID_MOBILE
+    extern void MCAndroidMediaPickInitialize();
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
     MCAdInitialize();
     MCNativeControlInitialize();
     MCSensorInitialize();
     MCAndroidCustomFontsInitialize();
+	MCSystemSoundInitialize();
+    MCAndroidMediaPickInitialize();
 #endif
+	
+#ifdef _IOS_MOBILE
+	MCSystemSoundInitialize();
+    MCReachabilityEventInitialize();    
+#endif
+	
+	MCDateTimeInitialize();
 }
 
-bool X_open(int argc, char *argv[], char *envp[])
+bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 {
 	MCperror = new MCError();
 	MCeerror = new MCError();
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCresult", MCresult);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCresult"), MCresult);
 
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCurlresult", MCurlresult);
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCdialogdata", MCdialogdata);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCurlresult"), MCurlresult);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCdialogdata"), MCdialogdata);
 	
 	////
 
@@ -901,31 +914,44 @@ bool X_open(int argc, char *argv[], char *envp[])
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_each, MCeach);
 
+    // SN-2014-06-12 [[ RefactorServer ]] We don't want to duplicate the environment variables
+    // on server, as they have been copied to $_SERVER
+#ifndef _SERVER
 	if (envp != nil)
-		for (uint32_t i = 0 ; envp[i] != NULL ; i++)
+		for (uint32_t i = 0 ; envp[i] != nil ; i++)
 		{
-			char *sptr = envp[i];
-			if (isupper((uint1)sptr[0]))
+			MCStringRef t_env_var = envp[i];
+			if (isupper(MCStringGetCharAtIndex(t_env_var, 0)))
 			{
-				sptr = strchr(sptr, '=');
-				uint2 length = sptr - envp[i];
-				char *vname = new char[length + 2];
-				vname[0] = '$';
-				strncpy(&vname[1], envp[i], length);
-				vname[length + 1] = '\0';
+				uindex_t t_equal;
+				/* UNCHECKED */ MCStringFirstIndexOfChar(t_env_var, '=', 0, kMCStringOptionCompareExact, t_equal);
+
+				MCAutoStringRef t_vname;
+				/* UNCHECKED */ MCStringCreateMutable(0, &t_vname);
+				/* UNCHECKED */ MCStringAppendChar(*t_vname, '$');
+				/* UNCHECKED */ MCStringAppendSubstring(*t_vname, t_env_var, MCRangeMake(0, t_equal));
+
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCNameCreate(*t_vname, &t_name);
 
 				MCVariable *tvar;
-				/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
-				if (strequal(vname, "$MCNOFILES") && *(sptr + 1) != '0')
+				/* UNCHECKED */ MCVariable::ensureglobal(*t_name, tvar);
+				if (MCStringIsEqualToCString(*t_vname, "$MCNOFILES", kMCCompareExact) 
+					&& MCStringGetCharAtIndex(t_env_var, t_equal + 1) != '0')
 				{
 					MCnofiles = True;
 					MCsecuremode = MC_SECUREMODE_ALL;
 				}
-				tvar->copysvalue(sptr + 1);
-
-				delete vname;
+				
+				MCAutoStringRef t_value;
+				/* UNCHECKED */ MCStringCopySubstring(t_env_var, 
+													  MCRangeMake(t_equal + 1, MCStringGetLength(t_env_var) - t_equal - 1),
+													  &t_value);
+				
+				tvar->setvalueref(*t_value);
 			}
 		}
+#endif // _SERVER
 
 	/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
 	MCtemplateaudio = new MCAudioClip;
@@ -954,22 +980,24 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCcstack = new MCCardlist;
 
 #ifdef _LINUX_DESKTOP
-	MCvcplayer = strclone("xanim");
+	MCValueAssign(MCvcplayer, MCSTR("xanim"));
 #else
-	MCvcplayer = strclone("");
+	MCValueAssign(MCvcplayer, MCSTR(""));
 #endif
 
-	MCfiletype = strclone("ttxtTEXT");
-	const char *tname = strrchr(MCcmd, PATH_SEPARATOR);
-	if (tname == NULL)
-		tname = MCcmd;
+	MCValueAssign(MCfiletype, MCSTR("ttxtTEXT"));
+    uindex_t t_last_path_separator;
+    // find the actual command to execute
+     if (!MCStringLastIndexOfChar(MCcmd, PATH_SEPARATOR, MCStringGetLength(MCcmd), kMCStringOptionCompareExact, t_last_path_separator))
+		t_last_path_separator = 0;
 	else
-		tname++;
-	if (MCU_strncasecmp(tname, "rev", 3))
-		MCstackfiletype = strclone("MCRDMSTK");
+		t_last_path_separator++;
+    
+	if (MCStringFind(MCcmd, MCRangeMake(t_last_path_separator, 3), MCSTR("rev"), kMCStringOptionCompareExact, nil))
+		MCValueAssign(MCstackfiletype, MCSTR("MCRDMSTK"));
 	else
-		MCstackfiletype = strclone("RevoRSTK");
-	MCserialcontrolsettings = strclone("baud=9600 parity=N data=8 stop=1");
+		MCValueAssign(MCstackfiletype, MCSTR("RevoRSTK"));
+	MCValueAssign(MCserialcontrolsettings, MCSTR("baud=9600 parity=N data=8 stop=1"));
 
 	MCdispatcher = new MCDispatch;
     MCdispatcher -> add_transient_stack(MCtooltip);
@@ -986,13 +1014,19 @@ bool X_open(int argc, char *argv[], char *envp[])
 		MCscreen = MCCreateScreenDC();
 				
 		if (!MCscreen->open())
-			return False;
+			return false;
 
 		MCscreen->alloccolor(MClinkatts.color);
 		MCscreen->alloccolor(MClinkatts.hilitecolor);
 		MCscreen->alloccolor(MClinkatts.visitedcolor);
 	}
-	
+
+    MCExecContext ctxt(nil, nil, nil);
+	MCInterfaceInitialize(ctxt);
+
+	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
+	MCResInitPixelScaling();
+
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
 	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
@@ -1000,26 +1034,29 @@ bool X_open(int argc, char *argv[], char *envp[])
 	if (MCmajorosversion >= 0x0600)
 	{
 		// Vista onwards
-		MCdispatcher -> setfontattrs("Segoe UI", 12, FA_DEFAULT_STYLE);
+		MCdispatcher -> setfontattrs(MCSTR("Segoe UI"), 12, FA_DEFAULT_STYLE);
 	}
 	else
 	{
 		// Pre-Vista
-		MCdispatcher -> setfontattrs("Tahoma", 11, FA_DEFAULT_STYLE);
+		MCdispatcher -> setfontattrs(MCSTR("Tahoma"), 11, FA_DEFAULT_STYLE);
 	}
 #elif defined(TARGET_PLATFORM_MACOS_X)
     if (MCmajorosversion < 0x10A0)
-        MCdispatcher -> setfontattrs("Lucida Grande", 11, FA_DEFAULT_STYLE);
+        MCdispatcher -> setfontattrs(MCSTR("Lucida Grande"), 11, FA_DEFAULT_STYLE);
     else
     {
-        MCdispatcher -> setfontattrs("Helvetica Neue", 11, FA_DEFAULT_STYLE);
-        MCttfont = "Helvetica Neue";
+        MCdispatcher -> setfontattrs(MCSTR("Helvetica Neue"), 11, FA_DEFAULT_STYLE);
+        MCttfont = MCSTR("Helvetica Neue");
     }
 #elif defined(TARGET_PLATFORM_LINUX)
-	MCdispatcher -> setfontattrs("Helvetica", 12, FA_DEFAULT_STYLE);
+	MCdispatcher -> setfontattrs(MCSTR("Helvetica"), 12, FA_DEFAULT_STYLE);
 #else
-	MCdispatcher -> setfontattrs(DEFAULT_TEXT_FONT, DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
+	MCdispatcher -> setfontattrs(MCSTR(DEFAULT_TEXT_FONT), DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
 #endif
+
+    // MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
+	//   screen, otherwise we don't have a root fontref!
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
@@ -1039,7 +1076,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 		}
 		else
 			delete newtheme;
-	}
+    }
 
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
@@ -1063,6 +1100,9 @@ int X_close(void)
 		MCscreen -> disablebackdrop(false);
 		MCscreen -> disablebackdrop(true);
 	}
+
+    MCExecContext ctxt(nil, nil, nil);
+	MCInterfaceFinalize(ctxt);
 
 	MCstacks->closeall();
 	MCselected->clear(False);
@@ -1096,16 +1136,12 @@ int X_close(void)
 	delete MCtooltip;
 	MCtooltip = NULL;
 
-	delete MChttpproxy;
-
-	delete MCbackdropcolor;
-	delete MCpencolorname;
-	delete MCbrushcolorname;
-	delete MChilitecolorname;
-	delete MCaccentcolorname;
-	delete MCselectioncolorname;
-	delete MClongdateformat;
-	delete MCshortdateformat;
+	MCValueRelease(MChttpproxy);
+	MCValueRelease(MCpencolorname);
+	MCValueRelease(MCbrushcolorname);
+	MCValueRelease(MChilitecolorname);
+	MCValueRelease(MCaccentcolorname);
+	MCValueRelease(MCselectioncolorname);
 
 	while (MCnfiles)
 		IO_closefile(MCfiles[0].name);
@@ -1153,21 +1189,24 @@ int X_close(void)
 	delete MCstacks;
 	delete MCcstack;
 	delete MCrecent;
-	delete IO_stdin;
-	delete IO_stdout;
-	delete IO_stderr;
+
+	// Temporary workaround for a crash
+    //MCS_close(IO_stdin);
+	//MCS_close(IO_stdout);
+	//MCS_close(IO_stderr);
+
 	delete MCpatternlist;
 	delete MCresult;
 	delete MCurlresult;
 	delete MCdialogdata;
-	delete MChcstat;
-	delete MCcurdir;
+	MCValueRelease(MChcstat);
+
 	delete MCusing;
-	delete MChttpheaders;
-	delete MCscriptfont;
-	delete MClinkatts.colorname;
-	delete MClinkatts.hilitecolorname;
-	delete MClinkatts.visitedcolorname;
+	MCValueRelease(MChttpheaders);
+	MCValueRelease(MCscriptfont);
+	MCValueRelease(MClinkatts . colorname);
+	MCValueRelease(MClinkatts . hilitecolorname);
+	MCValueRelease(MClinkatts . visitedcolorname);
 	MCB_clearwatches();
 	MCB_clearbreaks(nil);
 	MCU_cleaninserted();
@@ -1177,8 +1216,10 @@ int X_close(void)
 		MCglobals = MCglobals->getnext();
 		delete tvar;
 	}
+
 	// JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism
     MCR_clearcache();
+
 	delete MCperror;
 	delete MCeerror;
 
@@ -1186,11 +1227,11 @@ int X_close(void)
 	delete MCdragdata;
 	delete MCselectiondata;
 
-	delete MCshellcmd;
-	delete MCvcplayer;
-	delete MCfiletype;
-	delete MCstackfiletype;
-	delete MCserialcontrolsettings;
+	MCValueRelease(MCshellcmd);
+	MCValueRelease(MCvcplayer);
+	MCValueRelease(MCfiletype);
+	MCValueRelease(MCstackfiletype);
+	MCValueRelease(MCserialcontrolsettings);
 	
 	MCprinter -> Finalize();
 	delete MCprinter;
@@ -1198,23 +1239,24 @@ int X_close(void)
 	delete MCsslcertificates;
 	delete MCdefaultnetworkinterface;
 	
+#ifndef _MOBILE
 	ShutdownSSL();
+#endif
 	MCS_shutdown();
 	delete MCundos;
 	while (MCcur_effects != NULL)
 	{
 		MCEffectList *veptr = MCcur_effects;
 		MCcur_effects = MCcur_effects->getnext();
+        // AL-2014-08-14: [[ Bug 13176 ]] Release visual effect strings
+        MCValueRelease(veptr -> name);
+        MCValueRelease(veptr -> sound);
 		delete veptr;
 	}
 
 	if (MCcurtheme != NULL)
 		MCcurtheme -> unload();
 	delete MCcurtheme;
-
-	delete MCiconmenu;
-	delete MCstatusiconmenu;
-	delete MCstatusicontooltip;
 
 	// Cleanup the cursors array - *before* we close the screen!!
 	if (MCModeMakeLocalWindows())
@@ -1234,12 +1276,15 @@ int X_close(void)
 	MCExternal::Cleanup();
 
 	// Cleanup the MClicenseparameters block
-	delete MClicenseparameters . license_token;
-	delete MClicenseparameters . license_name;
-	delete MClicenseparameters . license_organization;
-	delete MClicenseparameters . addons;
+    MCValueRelease(MClicenseparameters . license_token);
+    MCValueRelease(MClicenseparameters . license_name);
+    MCValueRelease(MClicenseparameters . license_organization);
+	MCValueRelease(MClicenseparameters . addons);
 
 	// Cleanup the startup stacks list
+	for(uint4 i = 0; i < MCnstacks; ++i)
+		MCValueRelease(MCstacknames[i]);
+
 	delete MCstacknames;
 
 	// Cleanup the parentscript stuff
@@ -1249,9 +1294,6 @@ int X_close(void)
 	MCLogicalFontTableFinalize();
 	// MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
 	MCFontFinalize();
-	
-	MCU_finalize_names();
-	MCNameFinalize();
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
@@ -1271,9 +1313,28 @@ int X_close(void)
     MCAdFinalize();
     MCNativeControlFinalize();
     MCSensorFinalize();
+    MCAndroidFinalizeBuildInfo();
     MCAndroidCustomFontsFinalize();
+	MCSystemSoundFinalize();
 #endif
 	
+#ifdef _IOS_MOBILE
+	MCSystemSoundFinalize();
+    MCReachabilityEventFinalize();
+#endif
+	
+	MCDateTimeFinalize();
+	
+	MCU_finalize_names();
+	
+	if (MCsysencoding != nil)
+		MCMemoryDelete(MCsysencoding);
+
+    if (kMCSystemLocale != nil)
+        MCLocaleRelease(kMCSystemLocale);
+    if (kMCBasicLocale != nil)
+        MCLocaleRelease(kMCBasicLocale);
+    
 	return MCretcode;
 }
 

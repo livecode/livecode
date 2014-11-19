@@ -237,11 +237,11 @@ public:
 	void SetHyperlink(MCNameRef p_link);
 	MCNameRef GetHyperlink(void);
 	
-	void SetMetadata(MCNameRef p_metadata);
-	MCNameRef GetMetadata(void);
+    void SetMetadata(MCStringRef p_metadata);
+    MCStringRef GetMetadata(void);
 
-	void SetParagraphMetadata(MCNameRef p_metadata);
-	MCNameRef GetParagraphMetadata(void);
+    void SetParagraphMetadata(MCStringRef p_metadata);
+    MCStringRef GetParagraphMetadata(void);
 
 	// MW-2012-03-14: [[ RtfParaStyles ]] The collection of setters and getters for
 	//   the paragraph styles.
@@ -299,8 +299,8 @@ private:
 		uint32_t paragraph_background_color;
 		uint32_t border_color;
 
-		MCNameRef metadata;
-		MCNameRef paragraph_metadata;
+        MCStringRef metadata;
+        MCStringRef paragraph_metadata;
 		MCNameRef hyperlink;
 	};
 
@@ -624,31 +624,31 @@ inline uint32_t RTFState::GetBorderColor(void) const
 	return m_entries -> border_color;
 }
 
-inline void RTFState::SetMetadata(MCNameRef p_metadata)
+inline void RTFState::SetMetadata(MCStringRef p_metadata)
 {
 	if (m_entries == NULL)
 		return;
-	MCNameClone(p_metadata, m_entries -> metadata);
+    /* UNCHECKED */ MCStringCopy(p_metadata, m_entries -> metadata);
 }
 
-inline MCNameRef RTFState::GetMetadata(void)
+inline MCStringRef RTFState::GetMetadata(void)
 {
 	if (m_entries == NULL)
-		return kMCEmptyName;
+        return kMCEmptyString;
 	return m_entries -> metadata;
 }
 
-inline void RTFState::SetParagraphMetadata(MCNameRef p_metadata)
+inline void RTFState::SetParagraphMetadata(MCStringRef p_metadata)
 {
 	if (m_entries == NULL)
 		return;
-	MCNameClone(p_metadata, m_entries -> paragraph_metadata);
+    /* UNCHECKED */ MCStringCopy(p_metadata, m_entries -> paragraph_metadata);
 }
 
-inline MCNameRef RTFState::GetParagraphMetadata(void)
+inline MCStringRef RTFState::GetParagraphMetadata(void)
 {
 	if (m_entries == NULL)
-		return kMCEmptyName;
+        return kMCEmptyString;
 	return m_entries -> paragraph_metadata;
 }
 

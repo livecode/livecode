@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -1385,10 +1384,12 @@ void MCTileCacheUpdateSprite(MCTileCacheRef self, uint32_t p_id, const MCRectang
 
 	// Compute the bounds of the touched cells.
 	int32_t t_left, t_top, t_right, t_bottom;
-	t_left = MCMax(t_sprite -> left, MCTileCacheTileFloor(self, t_tile_rect . x));
-	t_top = MCMax(t_sprite -> top, MCTileCacheTileFloor(self, t_tile_rect . y));
-	t_right = MCMin(t_sprite -> right, MCTileCacheTileCeiling(self, t_tile_rect . x + t_tile_rect . width));
-	t_bottom = MCMin(t_sprite -> bottom, MCTileCacheTileCeiling(self, t_tile_rect . y + t_tile_rect . height));
+    // AL-2014-10-28 : [[ Bug 13833 ]] Ensure we use the correct version of MCMax.
+    //  Using the uint8_t version causes incorrect values for bounds.
+	t_left = MCMax((int32_t)t_sprite -> left, MCTileCacheTileFloor(self, t_tile_rect . x));
+	t_top = MCMax((int32_t)t_sprite -> top, MCTileCacheTileFloor(self, t_tile_rect . y));
+	t_right = MCMin((int32_t)t_sprite -> right, MCTileCacheTileCeiling(self, t_tile_rect . x + t_tile_rect . width));
+	t_bottom = MCMin((int32_t)t_sprite -> bottom, MCTileCacheTileCeiling(self, t_tile_rect . y + t_tile_rect . height));
 	
 	// Now iterate over the tiles, dirtying those that are in the region.
 	for(int32_t y = t_top; y < t_bottom; y++)

@@ -1,0 +1,12 @@
+setup
+create field
+
+set the text of the last field to "abc" & return & "def"
+
+select line 1 of the last field
+test the selectedLoc is item 1 to 2 of (the formattedrect of line 1 of field 1)
+
+select empty
+test the selectedLoc is empty
+
+teardown

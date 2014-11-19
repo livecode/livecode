@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -136,31 +135,25 @@ void MCAndroidCreateContactCanceled(int32_t p_contact_id)
 
 // 
 
-bool MCAndroidContactToJavaMap(MCVariableValue *p_contact, jobject &r_map)
+bool MCAndroidContactToJavaMap(MCArrayRef p_contact, jobject &r_map)
 {
-	if (!p_contact->is_array())
-		return false;
-	
 	bool t_success = true;
 	
 	JNIEnv *t_env = MCJavaGetThreadEnv();
-	MCExecPoint ep(nil, nil, nil);
 	
-	t_success = MCJavaMapFromArray(t_env, ep, p_contact, r_map);
+	t_success = MCJavaMapFromArray(t_env, p_contact, r_map);
 	
 	return t_success;
 }
 
-bool MCAndroidContactFromJavaMap(jobject p_map, MCVariableValue *&r_contact)
+bool MCAndroidContactFromJavaMap(jobject p_map, MCArrayRef &r_contact)
 {
-	JNIEnv *t_env = MCJavaGetThreadEnv();
-	MCExecPoint ep(nil, nil, nil);
-	
-	return MCJavaMapToArray(t_env, ep, p_map, r_contact);
+	JNIEnv *t_env = MCJavaGetThreadEnv();	
+	return MCJavaMapToArray(t_env, p_map, r_contact);
 }
 
-bool MCSystemUpdateContact(MCVariableValue *p_contact,
-						   const char *p_title, const char *p_message, const char *p_alternate_name,
+bool MCSystemUpdateContact(MCArrayRef p_contact,
+						   MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name,
 						   int32_t &r_result)
 {
     MCLog("MCSystemUpdateContact", NULL);
@@ -172,12 +165,13 @@ bool MCSystemUpdateContact(MCVariableValue *p_contact,
 	if (t_success)
 	{
 		s_contact_status = kMCAndroidContactWaiting;
-		MCAndroidEngineRemoteCall("updateContact", "vmsss", nil, t_map, p_title, p_message, p_alternate_name);
+		MCAndroidEngineRemoteCall("updateContact", "vmxxx", nil, t_map, p_title, p_message, p_alternate_name);
 		while (s_contact_status == kMCAndroidContactWaiting)
 			MCscreen->wait(60.0, False, True);
 		r_result = s_contact_selected;
 		return true;
 	}
+
 	return false;
 }
 
@@ -195,7 +189,7 @@ void MCAndroidUpdateContactCanceled(int32_t p_contact_id)
 	s_contact_status = kMCAndroidContactCanceled;
 }
 
-bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCVariableValue *&r_contact_data)
+bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef &r_contact_data)
 {
     MCLog("MCSystemGetContactData: %d", p_contact_id);
 	jobject t_jmap = nil;
@@ -219,7 +213,7 @@ bool MCSystemRemoveContact(int32_t p_contact_id)
     return true;
 }
 
-bool MCSystemAddContact(MCVariableValue *p_contact, int32_t &r_result)
+bool MCSystemAddContact(MCArrayRef p_contact, int32_t &r_result)
 {
     MCLog("MCSystemAddContact", NULL);
 	
@@ -235,14 +229,10 @@ bool MCSystemAddContact(MCVariableValue *p_contact, int32_t &r_result)
 	return false;
 }
 
-bool MCSystemFindContact(const char* p_contact_name, char *& r_result)
+bool MCSystemFindContact(MCStringRef p_contact_name, MCStringRef& r_result)
 {
-    char *t_result;
-    MCLog("MCSystemFindContact: %s", p_contact_name);
-    MCAndroidEngineRemoteCall("findContact", "vs", nil, p_contact_name);
-    r_result = s_contacts_selected.clone();
-    MCLog("MCSystemFindContact result: %s", r_result);
-    return true;
+    MCAndroidEngineRemoteCall("findContact", "vx", nil, p_contact_name);
+    return MCStringCreateWithCString(s_contacts_selected . getstring(), r_result);
 }
 
 // Get data from Java and assign the values to class values that are then returned to the 

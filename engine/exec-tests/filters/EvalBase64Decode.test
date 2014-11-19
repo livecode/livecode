@@ -1,0 +1,3 @@
+setup
+test base64decode("YWJjMTIz") is "abc123"
+teardown

@@ -1,0 +1,13 @@
+setup
+
+create card
+
+push current card
+
+create field
+
+pop card into field 1
+
+test field 1 is the long id of the current card
+
+teardown

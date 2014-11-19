@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-#include "core.h"
 #include "zlib.h"
 
 #include "minizip.h"
@@ -213,7 +212,7 @@ struct MCMiniZipStream
 
 struct MCMiniZipItem
 {
-	char *name;
+	MCStringRef name;
 	uint32_t compression;
 	uint32_t checksum;
 	uint32_t compressed_size;
@@ -273,9 +272,9 @@ void MCMiniZipClose(MCMiniZipRef self)
 		return;
 
 	for(uint32_t i = 0; i < self -> item_count; i++)
-		MCCStringFree(self -> items[i] . name);
-	MCMemoryDeleteArray(self -> items);
+		MCValueRelease(self->items[i].name);
 
+	MCMemoryDeleteArray(self -> items);
 	MCMemoryDelete(self);
 }
 
@@ -290,13 +289,13 @@ bool MCMiniZipListItems(MCMiniZipRef self, MCMiniZipListItemsCallback p_callback
 	return true;
 }
 
-bool MCMiniZipDescribeItem(MCMiniZipRef self, const char *p_item_name, MCMiniZipItemInfo& r_info)
+bool MCMiniZipDescribeItem(MCMiniZipRef self, MCStringRef p_item_name, MCMiniZipItemInfo& r_info)
 {
 	// Search our items for the requested one
 	MCMiniZipItem *t_item;
 	t_item = nil;
 	for(uint32_t i = 0; i < self -> item_count; i++)
-		if (MCCStringEqual(p_item_name, self -> items[i] . name))
+		if (MCStringIsEqualTo(p_item_name, self -> items[i] . name, kMCStringOptionCompareCaseless))
 		{
 			t_item = &self -> items[i];
 			break;
@@ -320,7 +319,7 @@ static bool extract_item_to_memory(void *context, const void *data, uint32_t dat
 	return true;
 }
 
-bool MCMiniZipExtractItemToMemory(MCMiniZipRef self, const char *p_item, void*& r_bytes, uint32_t& r_byte_count)
+bool MCMiniZipExtractItemToMemory(MCMiniZipRef self, MCStringRef p_item, void*& r_bytes, uint32_t& r_byte_count)
 {
 	bool t_success;
 	t_success = true;
@@ -348,13 +347,13 @@ bool MCMiniZipExtractItemToMemory(MCMiniZipRef self, const char *p_item, void*& 
 	return t_success;
 }
 
-bool MCMiniZipExtractItem(MCMiniZipRef self, const char *p_item_name, MCMiniZipExtractItemCallback p_callback, void *p_context)
+bool MCMiniZipExtractItem(MCMiniZipRef self, MCStringRef p_item_name, MCMiniZipExtractItemCallback p_callback, void *p_context)
 {
 	// Search our items for the requested one
 	MCMiniZipItem *t_item;
 	t_item = nil;
 	for(uint32_t i = 0; i < self -> item_count; i++)
-		if (MCCStringEqual(p_item_name, self -> items[i] . name))
+		if (MCStringIsEqualTo(p_item_name, self -> items[i] . name, kMCStringOptionCompareCaseless))
 		{
 			t_item = &self -> items[i];
 			break;
@@ -642,7 +641,7 @@ static bool MCMiniZipReadCentralDir(MCMiniZipRef self)
 		self -> items[i] . header_offset = t_header . file_header_offset;
 
 		// Clone the filename string
-		if (!MCCStringCloneSubstring((const char *)(self -> data + t_header_offset + kZipFileHeaderSize), t_header . filename_length, self -> items[i] . name))
+		if (!MCStringCreateWithBytes((const byte_t *)(self->data + t_header_offset + kZipFileHeaderSize), t_header.filename_length, kMCStringEncodingNative, false, self->items[i].name))
 			return MCMiniZipThrow(kMCMiniZipErrorNoMemory);
 
 		// Increment the number of items

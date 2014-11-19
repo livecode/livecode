@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "field.h"
 #include "handler.h"
 #include "hndlrlst.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "scriptpt.h"
 #include "mcerror.h"
 #include "util.h"
@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "parentscript.h"
 #include "dispatch.h"
+#include "variable.h"
 
 ////////
 
@@ -112,7 +113,7 @@ MCVariable *MCParentScriptUse::GetVariable(uint32_t i)
 	t_handlers = GetParent() -> GetObject() -> gethandlers();
 
 	// Fetch the initializers for our parentScript
-	MCNameRef *t_vinits;
+	MCValueRef *t_vinits;
 	t_vinits = t_handlers -> getvinits();
 
 	// Fetch the linked list of variables from the handler-list
@@ -129,7 +130,7 @@ MCVariable *MCParentScriptUse::GetVariable(uint32_t i)
 		// AL-2013-02-04: [[ Bug 9981 ]] Make sure the variable is created with its name so
 		//   it can be watched.
 		/* UNCHECKED */ MCVariable::createwithname(t_vars -> getname(), m_locals[j]);
-		m_locals[j] -> setnameref_unsafe(t_vinits[j] != nil ? t_vinits[j] : kMCEmptyName);
+		m_locals[j] -> setvalueref(t_vinits[j] != nil ? t_vinits[j] : kMCNull);
 	}
 
 	return m_locals[i];
@@ -159,7 +160,7 @@ void MCParentScriptUse::ClearVars(void)
 	m_local_count = 0;
 }
 
-void MCParentScriptUse::PreserveVars(uint32_t *p_map, MCNameRef *p_new_var_inits, uint32_t p_new_var_count)
+void MCParentScriptUse::PreserveVars(uint32_t *p_map, MCValueRef *p_new_var_inits, uint32_t p_new_var_count)
 {
 	// If we don't have any vars then do nothing, since they will be initialized
 	// correctly on first use.
@@ -200,7 +201,7 @@ void MCParentScriptUse::PreserveVars(uint32_t *p_map, MCNameRef *p_new_var_inits
 		/* UNCHECKED */ MCVariable::create(t_new_locals[i]);
 
 		// Initialize the variable
-		t_new_locals[i] -> setnameref_unsafe(p_new_var_inits[i] != nil ? p_new_var_inits[i] : kMCEmptyName);
+		t_new_locals[i] -> setvalueref(p_new_var_inits[i] != nil ? p_new_var_inits[i] : kMCNull);
 	}
 
 	m_locals = t_new_locals;
@@ -533,7 +534,7 @@ MCParentScript *MCParentScript::Lookup(MCObject *p_object)
 	return nil;
 }
 
-void MCParentScript::PreserveVars(MCObject *p_object, uint32_t *p_map, MCNameRef *p_new_var_inits, uint32_t p_new_var_count)
+void MCParentScript::PreserveVars(MCObject *p_object, uint32_t *p_map, MCValueRef *p_new_var_inits, uint32_t p_new_var_count)
 {
 	MCParentScript *t_script;
 	t_script = Lookup(p_object);

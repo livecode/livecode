@@ -1,0 +1,6 @@
+setup
+test the colornames is not empty
+test "red" is among the lines of the colornames
+test "green" is among the lines of the colornames
+test "blue" is among the lines of the colornames
+teardown

@@ -18,7 +18,6 @@
 
 #include <Carbon/Carbon.h>
 
-#include "core.h"
 #include "globdefs.h"
 #include "region.h"
 #include "graphics.h"
@@ -72,12 +71,18 @@ static bool s_lock_responder_change = false;
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	return m_can_become_key;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    return m_can_become_key;
 }
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-	NSResponder *t_previous;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    NSResponder *t_previous;
 	t_previous = [self firstResponder];
     
 	if (![super makeFirstResponder: p_responder])
@@ -166,12 +171,18 @@ static bool s_lock_responder_change = false;
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	return m_can_become_key;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    return m_can_become_key;
 }
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
-	NSResponder *t_previous;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    NSResponder *t_previous;
 	t_previous = [self firstResponder];
 
 	if (![super makeFirstResponder: p_responder])
@@ -557,11 +568,17 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)canBecomeKeyView
 {
-	return YES;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    return YES;
 }
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
 {
+    if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
     // MW-2014-04-23: [[ CocoaBackdrop ]] This method is called after the window has
     //   been re-ordered but before anything else - an ideal time to sync the backdrop.
     MCMacPlatformSyncBackdrop();
@@ -570,12 +587,18 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)acceptsFirstResponder
 {
-	return YES;
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    return YES;
 }
 
 - (BOOL)becomeFirstResponder
 {
-	//MCPlatformCallbackSendViewFocus([(MCWindowDelegate *)[[self window] delegate] platformWindow]);
+	if ([NSApp pseudoModalFor] != nil)
+        return NO;
+    
+    //MCPlatformCallbackSendViewFocus([(MCWindowDelegate *)[[self window] delegate] platformWindow]);
 	return YES;
 }
 
@@ -601,7 +624,10 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseDown: (NSEvent *)event
 {
-	if ([self useTextInput])
+	if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    if ([self useTextInput])
 		if ([[self inputContext] handleEvent: event])
 			return;
 	
@@ -610,7 +636,10 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseUp: (NSEvent *)event
 {
-	if ([self useTextInput])
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    if ([self useTextInput])
 		if ([[self inputContext] handleEvent: event])
 			return;
 	
@@ -619,12 +648,18 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseMoved: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)mouseDragged: (NSEvent *)event
 {
-	if ([self useTextInput])
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    if ([self useTextInput])
 		if ([[self inputContext] handleEvent: event])
 			return;
 	
@@ -633,6 +668,9 @@ static bool s_lock_responder_change = false;
 
 - (void)rightMouseDown: (NSEvent *)event
 {
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
         return;
@@ -642,6 +680,9 @@ static bool s_lock_responder_change = false;
 
 - (void)rightMouseUp: (NSEvent *)event
 {
+    if ([NSApp pseudoModalFor] != nil)
+    return;
+    
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
         return;
@@ -651,16 +692,25 @@ static bool s_lock_responder_change = false;
 
 - (void)rightMouseMoved: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)rightMouseDragged: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)otherMouseDown: (NSEvent *)event
 {
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
         return;
@@ -670,6 +720,9 @@ static bool s_lock_responder_change = false;
 
 - (void)otherMouseUp: (NSEvent *)event
 {
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
         return;
@@ -679,12 +732,18 @@ static bool s_lock_responder_change = false;
 
 - (void)otherMouseMoved: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)otherMouseDragged: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)mouseEntered: (NSEvent *)event
@@ -697,7 +756,10 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseExited: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    [self handleMouseMove: event];
 }
 
 - (void)flagsChanged: (NSEvent *)event
@@ -796,11 +858,8 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 {
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
-	if ([self useTextInput])
-	{
-		//if ([[self inputContext] handleEvent: event])
-		return;
-	}
+    // SN-2014-10-31: [[ Bug 13832 ]] We want the rawKeyUp and keyUp messages to be sent in their due course when
+    //  useTextInput is true, since the key messages have been enqueued appropriately
 	[self handleKeyPress: event isDown: NO];
 }
 
@@ -879,7 +938,9 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (m_input_method_event != nil)
 	{
 		[self handleKeyPress: m_input_method_event isDown: YES];
-		[self handleKeyPress: m_input_method_event isDown: NO];
+        // SN-2014-11-03: [[ Bug 13832 ]] keyUp will be called, and the message will have been queued.
+//		[self handleKeyPress: m_input_method_event isDown: NO];
+        
         // PM-2014-09-15: [[ Bug 13442 ]] Set m_input_method_event to nil to prevent rawKeyDown from firing twice when altKey is down
         m_input_method_event = nil;
 	}
@@ -1210,7 +1271,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 //////////
 
-- shouldDelayWindowOrderingForEvent: (NSEvent *)event
+- (BOOL)shouldDelayWindowOrderingForEvent: (NSEvent *)event
 {
 	return NO;
 }
@@ -1841,7 +1902,7 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	}
 	
 	if (m_changes . title_changed)
-		[m_window_handle setTitle: m_title != nil ? [NSString stringWithCString: m_title encoding: NSUTF8StringEncoding] : @""];
+		[m_window_handle setTitle: m_title != nil ? [NSString stringWithMCStringRef: m_title] : @""];
 	
 	if (m_changes . has_modified_mark_changed)
 		[m_window_handle setDocumentEdited: m_has_modified_mark];

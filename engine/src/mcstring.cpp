@@ -74,7 +74,6 @@ const char *MCtoolnames[] =
     };
 
 const uint4 MCbuildnumber = MC_BUILD_REVISION;
-const char *MCversionstring = MC_BUILD_ENGINE_SHORT_VERSION;
 
 const char *MCcopystring = "Copy of ";
 const char *MCstandardstring = "standard";
@@ -115,8 +114,6 @@ const char *MCgroupstring = "group";
 const char *MClinkstring = "link";
 const char *MCtruestring = "true";
 const char *MCfalsestring = "false";
-const char *MCdownstring = "down";
-const char *MCupstring = "up";
 const char *MCshiftstring = "shift";
 const char *MCcommandstring = "command";
 const char *MCcontrolstring = "control";
@@ -158,22 +155,15 @@ const char *MCcolorstring = "colorPalette";
 const char *MCmagnifierstring = "magnifier";
 
 const char *MCnotfoundstring = "not found";
-const char *MCplatformstring = PLATFORM_STRING;
 const char *MClnfamstring = "Appearance Manager";
 const char *MClnfmacstring = "Macintosh";
 const char *MClnfmotifstring = "Motif";
 const char *MClnfwinstring = "Windows 95";
 const char *MCuntitledstring = "Untitled";
 // MW-2012-08-29: [[ Bug 10309 ]] Update 'applicationstring' to be 'LiveCode'.
-const char *MCapplicationstring = "LiveCode";
-const char *MCanswernamestring = "Answer Dialog";
-const char *MCasknamestring = "Ask Dialog";
-const char *MCfsnamestring = "File Selector";
-const char *MCcsnamestring = "Color Chooser";
+const char *MCapplicationstring = "livecode";
 const char *MChelpnamestring = "Help";
 const char *MChomenamestring = "Home";
-const char *MChcstatnamestring = "HyperCard Import Status";
-const char *MCmessagenamestring = "Message Box";
 const char *MCdonestring = "done";
 const char *MCnullstring = "";
 const char *MCintersectstring = "intersect";
@@ -188,8 +178,155 @@ MCNameRef MCN_msg;
 MCNameRef MCN_each;
 MCNameRef MCN_it;
 
-MCNameRef MCN_default_text_font;
+MCNameRef MCN_cancel;
 
+MCNameRef MCN_default_text_font;
+MCNameRef MCN_platform_string;
+MCNameRef MCN_version_string;
+
+MCNameRef MCN_metadata;
+MCNameRef MCN_runs;
+MCNameRef MCN_style;
+
+MCNameRef MCN_down;
+MCNameRef MCN_up;
+
+MCNameRef MCN_empty;
+MCNameRef MCN_files;
+MCNameRef MCN_image;
+MCNameRef MCN_objects;
+MCNameRef MCN_private;
+MCNameRef MCN_text;
+//MCNameRef MCN_unicode;
+MCNameRef MCN_styles;
+MCNameRef MCN_rtf;
+MCNameRef MCN_html;
+
+MCNameRef MCN_browser;
+MCNameRef MCN_command_line;
+MCNameRef MCN_development;
+MCNameRef MCN_helper_application;
+MCNameRef MCN_installer;
+MCNameRef MCN_mobile;
+MCNameRef MCN_player;
+MCNameRef MCN_server;
+MCNameRef MCN_standalone_application;
+
+MCNameRef MCN_all;
+MCNameRef MCN_auto_key;
+MCNameRef MCN_disk;
+MCNameRef MCN_activate;
+MCNameRef MCN_high_level;
+MCNameRef MCN_system;
+
+MCNameRef MCN_ansi;
+MCNameRef MCN_arabic;
+MCNameRef MCN_bulgarian;
+MCNameRef MCN_chinese;
+MCNameRef MCN_english;
+MCNameRef MCN_greek;
+MCNameRef MCN_hebrew;
+MCNameRef MCN_japanese;
+MCNameRef MCN_korean;
+MCNameRef MCN_lithuanian;
+MCNameRef MCN_polish;
+MCNameRef MCN_roman;
+MCNameRef MCN_russian;
+MCNameRef MCN_simple_chinese;
+MCNameRef MCN_thai;
+MCNameRef MCN_turkish;
+MCNameRef MCN_ukrainian;
+MCNameRef MCN_unicode;
+MCNameRef MCN_utf8;
+MCNameRef MCN_vietnamese;
+MCNameRef MCN_w_char;
+MCNameRef MCN_asterisk_char;
+
+MCNameRef MCN_plain;
+MCNameRef MCN_bold;
+MCNameRef MCN_italic;
+MCNameRef MCN_bold_italic;
+
+MCNameRef MCN_unknown;
+MCNameRef MCN_x86;
+MCNameRef MCN_x86_64;
+MCNameRef MCN_motorola_powerpc;
+MCNameRef MCN_i386;
+MCNameRef MCN_arm;
+
+MCNameRef MCN_local_mac;
+MCNameRef MCN_local_win32;
+MCNameRef MCN_android;
+MCNameRef MCN_iphone;
+MCNameRef MCN_wince;
+
+MCNameRef MCN_mac_os;
+MCNameRef MCN_win32;
+
+MCNameRef MCN_done;
+
+MCNameRef MCN_staticgray;
+MCNameRef MCN_grayscale;
+MCNameRef MCN_staticcolor;
+MCNameRef MCN_pseudocolor;
+MCNameRef MCN_truecolor;
+MCNameRef MCN_directcolor;
+
+MCNameRef MCN_bounds;
+MCNameRef MCN_pixels;
+MCNameRef MCN_opaque_pixels;
+
+MCNameRef MCN_desktop;
+MCNameRef MCN_documents;
+MCNameRef MCN_engine;
+MCNameRef MCN_fonts;
+MCNameRef MCN_home;
+MCNameRef MCN_start;
+//MCNameRef MCN_system;
+MCNameRef MCN_temporary;
+MCNameRef MCN_support;
+
+MCNameRef MCN_apple;
+MCNameRef MCN_control;
+MCNameRef MCN_extension;
+MCNameRef MCN_preferences;
+
+MCNameRef MCN_unhandled;
+MCNameRef MCN_handled;
+MCNameRef MCN_passed;
+
+MCNameRef MCN_page_setup_dialog;
+MCNameRef MCN_pagesetup;
+MCNameRef MCN_print_dialog;
+MCNameRef MCN_printer;
+MCNameRef MCN_color_chooser;
+MCNameRef MCN_color;
+MCNameRef MCN_file_selector;
+MCNameRef MCN_file;
+//MCNameRef MCN_files;
+MCNameRef MCN_folder;
+MCNameRef MCN_folders;
+MCNameRef MCN_answer_dialog;
+MCNameRef MCN_ask_dialog;
+
+//MCNameRef MCN_plain;
+MCNameRef MCN_clear;
+//MCNameRef MCN_color;
+MCNameRef MCN_effect;
+MCNameRef MCN_error;
+//MCNameRef MCN_file;
+//MCNameRef MCN_folder;
+MCNameRef MCN_information;
+MCNameRef MCN_password;
+//MCNameRef MCN_printer;
+MCNameRef MCN_program;
+MCNameRef MCN_question;
+MCNameRef MCN_record;
+MCNameRef MCN_titled;
+MCNameRef MCN_warning;
+
+MCNameRef MCN_messagename;
+MCNameRef MCN_hcstat;
 MCNameRef MCM_apple_event;
 MCNameRef MCM_arrow_key;
 MCNameRef MCM_assert_error;
@@ -343,6 +480,7 @@ MCNameRef MCM_scrollbar_page_inc;
 MCNameRef MCM_selected_object_changed;
 MCNameRef MCM_selection_changed;
 MCNameRef MCM_signal;
+MCNameRef MCM_shell;
 MCNameRef MCM_shut_down;
 MCNameRef MCM_shut_down_request;
 MCNameRef MCM_socket_error;
@@ -382,11 +520,11 @@ MCNameRef MCN_email;
 MCNameRef MCN_phone;
 MCNameRef MCN_address;
 
-MCNameRef MCN_home;
+//MCNameRef MCN_home;
 MCNameRef MCN_work;
 MCNameRef MCN_other;
-MCNameRef MCN_mobile;
-MCNameRef MCN_iphone;
+//MCNameRef MCN_mobile;
+//MCNameRef MCN_iphone;
 MCNameRef MCN_main;
 MCNameRef MCN_homefax;
 MCNameRef MCN_workfax;
@@ -476,8 +614,156 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("each", MCN_each);
 	/* UNCHECKED */ MCNameCreateWithCString("it", MCN_it);
 	
-	/* UNCHECKED */ MCNameCreateWithCString(DEFAULT_TEXT_FONT, MCN_default_text_font);
+    // SN-2014-08-11: [[ Bug 13144 ]] Cancel string should be 'Cancel', not 'cancel'
+	/* UNCHECKED */ MCNameCreateWithCString("Cancel", MCN_cancel);
 
+	/* UNCHECKED */ MCNameCreateWithCString(DEFAULT_TEXT_FONT, MCN_default_text_font);
+	/* UNCHECKED */ MCNameCreateWithCString(PLATFORM_STRING, MCN_platform_string);
+	/* UNCHECKED */ MCNameCreateWithCString(MC_BUILD_ENGINE_SHORT_VERSION, MCN_version_string);
+
+	/* UNCHECKED */ MCNameCreateWithCString("metadata", MCN_metadata);
+	/* UNCHECKED */ MCNameCreateWithCString("runs", MCN_runs);
+	/* UNCHECKED */ MCNameCreateWithCString("style", MCN_style);
+
+	/* UNCHECKED */ MCNameCreateWithCString("down", MCN_down);
+	/* UNCHECKED */ MCNameCreateWithCString("up", MCN_up);
+
+	/* UNCHECKED */ MCNameCreateWithCString("empty", MCN_empty);
+	/* UNCHECKED */ MCNameCreateWithCString("files", MCN_files);
+	/* UNCHECKED */ MCNameCreateWithCString("image", MCN_image);
+	/* UNCHECKED */ MCNameCreateWithCString("objects", MCN_objects);
+	/* UNCHECKED */ MCNameCreateWithCString("private", MCN_private);
+	/* UNCHECKED */ MCNameCreateWithCString("text", MCN_text);
+//	/* UNCHECKED */ MCNameCreateWithCString("unicode", MCN_unicode);
+	/* UNCHECKED */ MCNameCreateWithCString("styles", MCN_styles);
+	/* UNCHECKED */ MCNameCreateWithCString("rtf", MCN_rtf);
+	/* UNCHECKED */ MCNameCreateWithCString("html", MCN_html);
+
+	/* UNCHECKED */ MCNameCreateWithCString("browser", MCN_browser);
+	/* UNCHECKED */ MCNameCreateWithCString("command line", MCN_command_line);
+	/* UNCHECKED */ MCNameCreateWithCString("development", MCN_development);
+	/* UNCHECKED */ MCNameCreateWithCString("helper application", MCN_helper_application);
+	/* UNCHECKED */ MCNameCreateWithCString("installer", MCN_installer);
+	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
+	/* UNCHECKED */ MCNameCreateWithCString("player", MCN_player);
+	/* UNCHECKED */ MCNameCreateWithCString("server", MCN_server);
+	/* UNCHECKED */ MCNameCreateWithCString("standalone application", MCN_standalone_application);
+
+	/* UNCHECKED */ MCNameCreateWithCString("all", MCN_all);
+	/* UNCHECKED */ MCNameCreateWithCString("autokey", MCN_auto_key);
+	/* UNCHECKED */ MCNameCreateWithCString("disk", MCN_disk);
+	/* UNCHECKED */ MCNameCreateWithCString("activate", MCN_activate);
+	/* UNCHECKED */ MCNameCreateWithCString("highlevel", MCN_high_level);
+	/* UNCHECKED */ MCNameCreateWithCString("system", MCN_system);
+
+	/* UNCHECKED */ MCNameCreateWithCString("ansi", MCN_ansi);
+	/* UNCHECKED */ MCNameCreateWithCString("arabic", MCN_arabic);
+	/* UNCHECKED */ MCNameCreateWithCString("bulgarian", MCN_bulgarian);
+	/* UNCHECKED */ MCNameCreateWithCString("chinese", MCN_chinese);
+	/* UNCHECKED */ MCNameCreateWithCString("english", MCN_english);
+	/* UNCHECKED */ MCNameCreateWithCString("greek", MCN_greek);
+	/* UNCHECKED */ MCNameCreateWithCString("hebrew", MCN_hebrew);
+	/* UNCHECKED */ MCNameCreateWithCString("japanese", MCN_japanese);
+	/* UNCHECKED */ MCNameCreateWithCString("korean", MCN_korean);
+	/* UNCHECKED */ MCNameCreateWithCString("lithuanian", MCN_lithuanian);
+	/* UNCHECKED */ MCNameCreateWithCString("polish", MCN_polish);
+	/* UNCHECKED */ MCNameCreateWithCString("roman", MCN_roman);
+	/* UNCHECKED */ MCNameCreateWithCString("russian", MCN_russian);
+	/* UNCHECKED */ MCNameCreateWithCString("simpleChinese", MCN_simple_chinese);
+	/* UNCHECKED */ MCNameCreateWithCString("thai", MCN_thai);
+	/* UNCHECKED */ MCNameCreateWithCString("turkish", MCN_turkish);
+	/* UNCHECKED */ MCNameCreateWithCString("ukrainian", MCN_ukrainian);
+	/* UNCHECKED */ MCNameCreateWithCString("unicode", MCN_unicode);
+	/* UNCHECKED */ MCNameCreateWithCString("utf8", MCN_utf8);
+	/* UNCHECKED */ MCNameCreateWithCString("vietnamese", MCN_vietnamese);
+	/* UNCHECKED */ MCNameCreateWithCString("w", MCN_w_char);
+	/* UNCHECKED */ MCNameCreateWithCString("*", MCN_asterisk_char);
+
+	/* UNCHECKED */ MCNameCreateWithCString("plain", MCN_plain);
+	/* UNCHECKED */ MCNameCreateWithCString("bold", MCN_bold);
+	/* UNCHECKED */ MCNameCreateWithCString("italic", MCN_italic);
+	/* UNCHECKED */ MCNameCreateWithCString("bold-italic", MCN_bold_italic);
+
+	/* UNCHECKED */ MCNameCreateWithCString("unknown", MCN_unknown);
+	/* UNCHECKED */ MCNameCreateWithCString("x86", MCN_x86);
+    /* UNCHECKED */ MCNameCreateWithCString("x86_64", MCN_x86_64);
+	/* UNCHECKED */ MCNameCreateWithCString("Motorola PowerPC", MCN_motorola_powerpc);
+	/* UNCHECKED */ MCNameCreateWithCString("i386", MCN_i386);
+	/* UNCHECKED */ MCNameCreateWithCString("ARM", MCN_arm);
+
+	/* UNCHECKED */ MCNameCreateWithCString("local Mac", MCN_local_mac);
+	/* UNCHECKED */ MCNameCreateWithCString("local Win32", MCN_local_win32);
+	/* UNCHECKED */ MCNameCreateWithCString("android", MCN_android);
+	/* UNCHECKED */ MCNameCreateWithCString("iphone", MCN_iphone);
+	/* UNCHECKED */ MCNameCreateWithCString("wince", MCN_wince);
+
+	/* UNCHECKED */ MCNameCreateWithCString("Mac OS", MCN_mac_os);
+	/* UNCHECKED */ MCNameCreateWithCString("Win32", MCN_win32);
+
+	/* UNCHECKED */ MCNameCreateWithCString("done", MCN_done);
+
+	/* UNCHECKED */ MCNameCreateWithCString("StaticGray", MCN_staticgray);
+	/* UNCHECKED */ MCNameCreateWithCString("GrayScale", MCN_grayscale);
+	/* UNCHECKED */ MCNameCreateWithCString("StaticColor", MCN_staticcolor);
+	/* UNCHECKED */ MCNameCreateWithCString("PseudoColor", MCN_pseudocolor);
+	/* UNCHECKED */ MCNameCreateWithCString("TrueColor", MCN_truecolor);
+	/* UNCHECKED */ MCNameCreateWithCString("DirectColor", MCN_directcolor);
+
+	/* UNCHECKED */ MCNameCreateWithCString("bounds", MCN_bounds);
+	/* UNCHECKED */ MCNameCreateWithCString("pixels", MCN_pixels);
+	/* UNCHECKED */ MCNameCreateWithCString("opaque pixels", MCN_opaque_pixels);
+
+	/* UNCHECKED */ MCNameCreateWithCString("desktop", MCN_desktop);
+	/* UNCHECKED */ MCNameCreateWithCString("documents", MCN_documents);
+	/* UNCHECKED */ MCNameCreateWithCString("engine", MCN_engine);
+	/* UNCHECKED */ MCNameCreateWithCString("fonts", MCN_fonts);
+	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
+	/* UNCHECKED */ MCNameCreateWithCString("start", MCN_start);
+//	/* UNCHECKED */ MCNameCreateWithCString("system", MCN_system);
+	/* UNCHECKED */ MCNameCreateWithCString("temporary", MCN_temporary);
+	/* UNCHECKED */ MCNameCreateWithCString("support", MCN_support);
+
+	/* UNCHECKED */ MCNameCreateWithCString("Apple", MCN_apple);
+	/* UNCHECKED */ MCNameCreateWithCString("Control", MCN_control);
+	/* UNCHECKED */ MCNameCreateWithCString("Extension", MCN_extension);
+	/* UNCHECKED */ MCNameCreateWithCString("Preferences", MCN_preferences);
+	
+	/* UNCHECKED */ MCNameCreateWithCString("unhandled", MCN_unhandled);
+	/* UNCHECKED */ MCNameCreateWithCString("handled", MCN_handled);
+	/* UNCHECKED */ MCNameCreateWithCString("passed", MCN_passed);
+
+	/* UNCHECKED */ MCNameCreateWithCString("Page Setup Dialog", MCN_page_setup_dialog);
+	/* UNCHECKED */ MCNameCreateWithCString("pagesetup", MCN_pagesetup);
+	/* UNCHECKED */ MCNameCreateWithCString("Print Dialog", MCN_print_dialog);
+	/* UNCHECKED */ MCNameCreateWithCString("printer", MCN_printer);
+	/* UNCHECKED */ MCNameCreateWithCString("Color Chooser", MCN_color_chooser);
+	/* UNCHECKED */ MCNameCreateWithCString("color", MCN_color);
+	/* UNCHECKED */ MCNameCreateWithCString("File Selector", MCN_file_selector);
+	/* UNCHECKED */ MCNameCreateWithCString("file", MCN_file);
+	///* UNCHECKED */ MCNameCreateWithCString("files", MCN_files);
+	/* UNCHECKED */ MCNameCreateWithCString("folder", MCN_folder);
+	/* UNCHECKED */ MCNameCreateWithCString("folders", MCN_folders);
+	/* UNCHECKED */ MCNameCreateWithCString("Answer Dialog", MCN_answer_dialog);
+	/* UNCHECKED */ MCNameCreateWithCString("Ask Dialog", MCN_ask_dialog);
+
+	///* UNCHECKED */ MCNameCreateWithCString("plain", MCN_plain);
+	/* UNCHECKED */ MCNameCreateWithCString("clear", MCN_clear);
+	///* UNCHECKED */ MCNameCreateWithCString("color", MCN_color);
+	/* UNCHECKED */ MCNameCreateWithCString("effect", MCN_effect);
+	/* UNCHECKED */ MCNameCreateWithCString("error", MCN_error);
+	///* UNCHECKED */ MCNameCreateWithCString("file", MCN_file);
+	///* UNCHECKED */ MCNameCreateWithCString("folder", MCN_folder);
+	/* UNCHECKED */ MCNameCreateWithCString("information", MCN_information);
+	/* UNCHECKED */ MCNameCreateWithCString("password", MCN_password);
+	///* UNCHECKED */ MCNameCreateWithCString("printer", MCN_printer);
+	/* UNCHECKED */ MCNameCreateWithCString("program", MCN_program);
+	/* UNCHECKED */ MCNameCreateWithCString("question", MCN_question);
+	/* UNCHECKED */ MCNameCreateWithCString("record", MCN_record);
+	/* UNCHECKED */ MCNameCreateWithCString("titled", MCN_titled);
+	/* UNCHECKED */ MCNameCreateWithCString("warning", MCN_warning);
+
+	/* UNCHECKED */ MCNameCreateWithCString("Message Box", MCN_messagename);
+	/* UNCHECKED */ MCNameCreateWithCString("HyperCard Import Status", MCN_hcstat);
 	/* UNCHECKED */ MCNameCreateWithCString("appleEvent", MCM_apple_event);
 	/* UNCHECKED */ MCNameCreateWithCString("arrowKey", MCM_arrow_key);
 	/* UNCHECKED */ MCNameCreateWithCString("assertError", MCM_assert_error);
@@ -628,6 +914,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("scrollbarPageInc", MCM_scrollbar_page_inc);
 	/* UNCHECKED */ MCNameCreateWithCString("selectedObjectChanged", MCM_selected_object_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("selectionChanged", MCM_selection_changed);
+	/* UNCHECKED */ MCNameCreateWithCString("shell", MCM_shell);
 	/* UNCHECKED */ MCNameCreateWithCString("signal", MCM_signal);
 	/* UNCHECKED */ MCNameCreateWithCString("shutDown", MCM_shut_down);
 	/* UNCHECKED */ MCNameCreateWithCString("shutDownRequest", MCM_shut_down_request);
@@ -669,12 +956,12 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("phone", MCN_phone);
 	/* UNCHECKED */ MCNameCreateWithCString("address", MCN_address);
 
-	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
+//	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
 	/* UNCHECKED */ MCNameCreateWithCString("work", MCN_work);
 	/* UNCHECKED */ MCNameCreateWithCString("other", MCN_other);
 
-	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
-	/* UNCHECKED */ MCNameCreateWithCString("iphone", MCN_iphone);
+//	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
+//	/* UNCHECKED */ MCNameCreateWithCString("iphone", MCN_iphone);
 	/* UNCHECKED */ MCNameCreateWithCString("main", MCN_main);
 	/* UNCHECKED */ MCNameCreateWithCString("homefax", MCN_homefax);
 	/* UNCHECKED */ MCNameCreateWithCString("workfax", MCN_workfax);
@@ -764,9 +1051,156 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_msg);
 	MCNameDelete(MCN_each);
 	MCNameDelete(MCN_it);
+
+	MCNameDelete(MCN_cancel);
 	
 	MCNameDelete(MCN_default_text_font);
+    MCNameDelete(MCN_platform_string);
+	MCNameDelete(MCN_version_string);
 
+	MCNameDelete(MCN_metadata);
+	MCNameDelete(MCN_runs);
+	MCNameDelete(MCN_style);
+
+	MCNameDelete(MCN_down);
+	MCNameDelete(MCN_up);
+
+	MCNameDelete(MCN_empty);
+	MCNameDelete(MCN_files);
+	MCNameDelete(MCN_image);
+	MCNameDelete(MCN_objects);
+	MCNameDelete(MCN_private);
+	MCNameDelete(MCN_text);
+//	MCNameDelete(MCN_unicode);
+	MCNameDelete(MCN_styles);
+	MCNameDelete(MCN_rtf);
+	MCNameDelete(MCN_html);
+
+	MCNameDelete(MCN_browser);
+	MCNameDelete(MCN_command_line);
+	MCNameDelete(MCN_development);
+	MCNameDelete(MCN_helper_application);
+	MCNameDelete(MCN_installer);
+	MCNameDelete(MCN_mobile);
+	MCNameDelete(MCN_player);
+	MCNameDelete(MCN_server);
+	MCNameDelete(MCN_standalone_application);
+
+	MCNameDelete(MCN_all);
+	MCNameDelete(MCN_auto_key);
+	MCNameDelete(MCN_disk);
+	MCNameDelete(MCN_activate);
+	MCNameDelete(MCN_high_level);
+	MCNameDelete(MCN_system);
+
+	MCNameDelete(MCN_ansi);
+	MCNameDelete(MCN_arabic);
+	MCNameDelete(MCN_bulgarian);
+	MCNameDelete(MCN_chinese);
+	MCNameDelete(MCN_english);
+	MCNameDelete(MCN_greek);
+	MCNameDelete(MCN_hebrew);
+	MCNameDelete(MCN_japanese);
+	MCNameDelete(MCN_korean);
+	MCNameDelete(MCN_lithuanian);
+	MCNameDelete(MCN_polish);
+	MCNameDelete(MCN_roman);
+	MCNameDelete(MCN_russian);
+	MCNameDelete(MCN_simple_chinese);
+	MCNameDelete(MCN_thai);
+	MCNameDelete(MCN_turkish);
+	MCNameDelete(MCN_ukrainian);
+	MCNameDelete(MCN_unicode);
+	MCNameDelete(MCN_utf8);
+	MCNameDelete(MCN_vietnamese);
+	MCNameDelete(MCN_w_char);
+	MCNameDelete(MCN_asterisk_char);
+
+	MCNameDelete(MCN_plain);
+	MCNameDelete(MCN_bold);
+	MCNameDelete(MCN_italic);
+	MCNameDelete(MCN_bold_italic);
+
+	MCNameDelete(MCN_unknown);
+	MCNameDelete(MCN_x86);
+	MCNameDelete(MCN_x86_64);
+    MCNameDelete(MCN_motorola_powerpc);
+    MCNameDelete(MCN_i386);
+    MCNameDelete(MCN_arm);
+
+	MCNameDelete(MCN_local_mac);
+	MCNameDelete(MCN_local_win32);
+	MCNameDelete(MCN_android);
+	MCNameDelete(MCN_iphone);
+	MCNameDelete(MCN_wince);
+
+	MCNameDelete(MCN_mac_os);
+	MCNameDelete(MCN_win32);
+
+	MCNameDelete(MCN_done);
+
+	MCNameDelete(MCN_staticgray);
+	MCNameDelete(MCN_grayscale);
+	MCNameDelete(MCN_staticcolor);
+	MCNameDelete(MCN_pseudocolor);
+	MCNameDelete(MCN_truecolor);
+	MCNameDelete(MCN_directcolor);
+
+	MCNameDelete(MCN_bounds);
+	MCNameDelete(MCN_pixels);
+	MCNameDelete(MCN_opaque_pixels);
+
+	MCNameDelete(MCN_desktop);
+	MCNameDelete(MCN_documents);
+	MCNameDelete(MCN_engine);
+	MCNameDelete(MCN_fonts);
+	MCNameDelete(MCN_home);
+	MCNameDelete(MCN_start);
+//	MCNameDelete(MCN_system);
+	MCNameDelete(MCN_temporary);
+
+	MCNameDelete(MCN_apple);
+	MCNameDelete(MCN_control);
+	MCNameDelete(MCN_extension);
+	MCNameDelete(MCN_preferences);
+	
+	MCNameDelete(MCN_unhandled);
+	MCNameDelete(MCN_handled);
+	MCNameDelete(MCN_passed);
+
+	MCNameDelete(MCN_page_setup_dialog);
+	MCNameDelete(MCN_pagesetup);
+	MCNameDelete(MCN_print_dialog);
+	MCNameDelete(MCN_printer);
+	MCNameDelete(MCN_color_chooser);
+	MCNameDelete(MCN_color);
+	MCNameDelete(MCN_file_selector);
+	MCNameDelete(MCN_file);
+	//MCNameDelete(MCN_files);
+	MCNameDelete(MCN_folder);
+	MCNameDelete(MCN_folders);
+	MCNameDelete(MCN_answer_dialog);
+	MCNameDelete(MCN_ask_dialog);
+
+	//MCNameDelete(MCN_plain);
+	MCNameDelete(MCN_clear);
+	//MCNameDelete(MCN_color);
+	MCNameDelete(MCN_effect);
+	MCNameDelete(MCN_error);
+	//MCNameDelete(MCN_file);
+	//MCNameDelete(MCN_folder);
+	MCNameDelete(MCN_information);
+	MCNameDelete(MCN_password);
+	//MCNameDelete(MCN_printer);
+	MCNameDelete(MCN_program);
+	MCNameDelete(MCN_question);
+	MCNameDelete(MCN_record);
+	MCNameDelete(MCN_titled);
+	MCNameDelete(MCN_warning);
+	
+	MCNameDelete(MCN_messagename);
+    MCNameDelete(MCN_hcstat);
+    
 	MCNameDelete(MCM_apple_event);
 	MCNameDelete(MCM_arrow_key);
 	MCNameDelete(MCM_assert_error);
@@ -914,6 +1348,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_scrollbar_page_inc);
 	MCNameDelete(MCM_selected_object_changed);
 	MCNameDelete(MCM_selection_changed);
+	MCNameDelete(MCM_shell);
 	MCNameDelete(MCM_signal);
 	MCNameDelete(MCM_shut_down);
 	MCNameDelete(MCM_shut_down_request);
@@ -955,11 +1390,11 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_phone);
 	MCNameDelete(MCN_address);
 	
-	MCNameDelete(MCN_home);
+//	MCNameDelete(MCN_home);
 	MCNameDelete(MCN_work);
 	MCNameDelete(MCN_other);
-	MCNameDelete(MCN_mobile);
-	MCNameDelete(MCN_iphone);
+//	MCNameDelete(MCN_mobile);
+//	MCNameDelete(MCN_iphone);
 	MCNameDelete(MCN_main);
 	MCNameDelete(MCN_homefax);
 	MCNameDelete(MCN_workfax);

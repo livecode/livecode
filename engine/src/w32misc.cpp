@@ -110,42 +110,42 @@ int32_t MCCustomPrinterComputeFontSize(double p_size, void *p_font)
 //  REFACTORED FROM TEXT.CPP
 //
 
-bool MCSTextConvertToUnicode(MCTextEncoding p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used)
-{
-	if (p_input_length == 0)
-	{
-		r_used = 0;
-		return true;
-	}
-
-	UINT t_codepage;
-	if (p_input_encoding >= kMCTextEncodingWindowsNative)
-		t_codepage = p_input_encoding - kMCTextEncodingWindowsNative;
-	else if (p_input_encoding >= kMCTextEncodingMacNative)
-		t_codepage = 10000 + p_input_encoding - kMCTextEncodingMacNative;
-	else
-	{
-		r_used = 0;
-		return true;
-	}
-
-	// MW-2009-08-27: It is possible for t_codepage == 65001 which means UTF-8. In this case we can't
-	//   use the precomposed flag...
-
-	int t_required_size;
-	t_required_size = MultiByteToWideChar(t_codepage, t_codepage == 65001 ? 0 : MB_PRECOMPOSED, (LPCSTR)p_input, p_input_length, NULL, 0);
-	if (t_required_size > (int)p_output_length / 2)
-	{
-		r_used = t_required_size * 2;
-		return false;
-	}
-
-	int t_used;
-	t_used = MultiByteToWideChar(t_codepage, t_codepage == 65001 ? 0 : MB_PRECOMPOSED, (LPCSTR)p_input, p_input_length, (LPWSTR)p_output, p_output_length);
-	r_used = t_used * 2;
-
-	return true;
-}
+//bool MCSTextConvertToUnicode(MCTextEncoding p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used)
+//{
+//	if (p_input_length == 0)
+//	{
+//		r_used = 0;
+//		return true;
+//	}
+//
+//	UINT t_codepage;
+//	if (p_input_encoding >= kMCTextEncodingWindowsNative)
+//		t_codepage = p_input_encoding - kMCTextEncodingWindowsNative;
+//	else if (p_input_encoding >= kMCTextEncodingMacNative)
+//		t_codepage = 10000 + p_input_encoding - kMCTextEncodingMacNative;
+//	else
+//	{
+//		r_used = 0;
+//		return true;
+//	}
+//
+//	// MW-2009-08-27: It is possible for t_codepage == 65001 which means UTF-8. In this case we can't
+//	//   use the precomposed flag...
+//
+//	int t_required_size;
+//	t_required_size = MultiByteToWideChar(t_codepage, t_codepage == 65001 ? 0 : MB_PRECOMPOSED, (LPCSTR)p_input, p_input_length, NULL, 0);
+//	if (t_required_size > (int)p_output_length / 2)
+//	{
+//		r_used = t_required_size * 2;
+//		return false;
+//	}
+//
+//	int t_used;
+//	t_used = MultiByteToWideChar(t_codepage, t_codepage == 65001 ? 0 : MB_PRECOMPOSED, (LPCSTR)p_input, p_input_length, (LPWSTR)p_output, p_output_length);
+//	r_used = t_used * 2;
+//
+//	return true;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 //

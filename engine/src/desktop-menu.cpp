@@ -16,7 +16,6 @@
 
 #include "platform.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -24,7 +23,8 @@
 #include "parsedef.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "scriptpt.h"
 #include "mcerror.h"
 #include "globals.h"
@@ -137,21 +137,10 @@ static bool map_keysym_to_accelerator(KeySym p_keysym, MCPlatformAccelerator& r_
 	return false;
 }
 
-static char *utf8cstring_from_mcstring(const MCString& p_string, bool p_is_unicode)
-{
-	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(p_string);
-	if (p_is_unicode)
-		ep . utf16toutf8();
-	else
-		ep . nativetoutf8();
-	return strdup(ep . getcstring());
-}
-
 class MCMenuBuilderCallback: public IParseMenuCallback
 {
 	MCPlatformMenuRef m_root_menu;
-	const char *m_menu_title;
+	MCStringRef m_menu_title;
 	
 	MCPlatformMenuRef *m_menus;
 	uindex_t m_menu_depth;
@@ -159,9 +148,9 @@ class MCMenuBuilderCallback: public IParseMenuCallback
 	MCButton *m_button;
 	
 public:
-	MCMenuBuilderCallback(MCButton *p_button, const char *p_menu_title, MCPlatformMenuRef p_root_menu)
+	MCMenuBuilderCallback(MCButton *p_button, MCStringRef p_menu_title, MCPlatformMenuRef p_root_menu)
 	{
-		m_menu_title = p_menu_title;
+		m_menu_title = MCValueRetain(p_menu_title);
 		m_root_menu = p_root_menu;
 		m_menus = nil;
 		m_menu_depth = 0;
@@ -172,6 +161,7 @@ public:
 	{
 		assert(m_menu_depth == 0);
 		MCMemoryDeleteArray(m_menus);
+        MCValueRelease(m_menu_title);
 	}
 	
 	MCPlatformMenuRef TopMenu(void)
@@ -230,32 +220,32 @@ public:
 		return true;
 	}
 	
-	MCPlatformMenuItemAction ComputeAction(const char *p_item_title, const char *p_item_tag)
+	MCPlatformMenuItemAction ComputeAction(MCStringRef p_item_title, MCStringRef p_item_tag)
 	{
 		// First check to see if the item tag is known.
 		for(uindex_t i = 0; i < sizeof(s_known_menu_item_tags) / sizeof(s_known_menu_item_tags[0]); i++)
-			if (MCU_strcasecmp(p_item_tag, s_known_menu_item_tags[i] . tag) == 0)
+			if (MCStringIsEqualToCString(p_item_tag, s_known_menu_item_tags[i] . tag, kMCStringOptionCompareCaseless))
 				return s_known_menu_item_tags[i] . action;
 		
 		if (m_menu_title != nil)
 		{
 			// If the menu title is "Edit" and the item title begins with "Preferences"
 			// then tag with the preferences action.
-			if (MCU_strcasecmp(m_menu_title, "Edit") == 0 &&
-				MCU_strncasecmp(p_item_title, "Preferences", 11) == 0)
+			if (MCStringIsEqualTo(m_menu_title, MCSTR("Edit"), kMCStringOptionCompareCaseless) &&
+				MCStringBeginsWith(p_item_title, MCSTR("Preferences"), kMCStringOptionCompareCaseless))
 				return kMCPlatformMenuItemActionPreferences;
 	
 			// If the menu title is "Help" and the item title begins with "About"
-			// then tag with the about aciton.
-			if (MCU_strcasecmp(m_menu_title, "Help") == 0 &&
-				MCU_strncasecmp(p_item_title, "About", 5) == 0)
+			// then tag with the about action.
+			if (MCStringIsEqualTo(m_menu_title, MCSTR("Help"), kMCStringOptionCompareCaseless) &&
+				MCStringBeginsWith(p_item_title, MCSTR("About"), kMCStringOptionCompareCaseless))
 				return kMCPlatformMenuItemActionAbout;
             
             // MW-2014-04-22: [[ Bug 12252 ]] Special-case 'File > Exit' item - mark it as a quit.
             // If the menu title is "File" and the item title is "Exit"
             // then tag with the quit action.
-            if (MCU_strcasecmp(m_menu_title, "File") == 0 &&
-                MCU_strcasecmp(p_item_title, "Exit") == 0)
+            if (MCStringIsEqualTo(m_menu_title, MCSTR("File"), kMCStringOptionCompareCaseless) &&
+                MCStringIsEqualTo(p_item_title, MCSTR("Exit"), kMCStringOptionCompareCaseless))
                 return kMCPlatformMenuItemActionQuit;
 		}
 		
@@ -271,19 +261,20 @@ public:
 		while(p_menuitem -> depth < m_menu_depth - 1)
 			PopMenu();
 		
-		MCAutoPointer<char> t_item_title;
-		t_item_title = utf8cstring_from_mcstring(p_menuitem -> label, p_menuitem -> is_unicode);
+        MCAutoStringRefAsUTF8String t_utf_title;
+        
+        if (!t_utf_title . Lock(p_menuitem -> label))
+            return false;
 		
-		if (MCU_strcasecmp(*t_item_title, "-") == 0)
+        // SN-2014-08-05: [[ Bug 13103 ]] The item label must be "-" to be a menu separator,
+        //  not only start with '-'
+		if (MCStringIsEqualToCString(p_menuitem -> label, "-", kMCStringOptionCompareExact))
 			MCPlatformAddMenuSeparatorItem(TopMenu(), UINDEX_MAX);
 		else
 		{
 			uindex_t t_item_index;
 			MCPlatformCountMenuItems(TopMenu(), t_item_index);
 			MCPlatformAddMenuItem(TopMenu(), UINDEX_MAX);
-			
-			MCAutoPointer<char> t_item_tag;
-			t_item_tag = utf8cstring_from_mcstring(p_menuitem -> tag, false);
 			
 			MCPlatformAccelerator t_item_accelerator;
 			if (p_menuitem -> accelerator &&
@@ -321,28 +312,36 @@ public:
 			}
 			
 			MCPlatformMenuItemAction t_action;
-			t_action = ComputeAction(*t_item_title, *t_item_tag);
+			t_action = ComputeAction(p_menuitem -> label, p_menuitem -> tag);
             
             // MW-2014-04-22: [[ Bug 12252 ]] If the menuitem didn't have a direct tag, map
             //   special-cased actions to appropriate tag.
-            const char *t_tag;
-            t_tag = *t_item_tag;
+            MCStringRef t_tag;
+            // SN-2014-07-29: [[ Bug 12998 ]] We want to check if the has_tag member, not if the menu item
+            //  contains a tag (which is always true)
+            t_tag = MCValueRetain(p_menuitem -> tag);
             if (!p_menuitem -> has_tag)
             {
+                MCAutoStringRef t_replacement;
                 if (t_action == kMCPlatformMenuItemActionAbout)
-                    t_tag = "About";
+                    /* UNCHECKED */ MCStringCreateWithCString("About", &t_replacement);
                 else if (t_action == kMCPlatformMenuItemActionQuit)
-                    t_tag = "Quit";
+                    /* UNCHECKED */ MCStringCreateWithCString("Quit", &t_replacement);
                 else if (t_action == kMCPlatformMenuItemActionPreferences)
-                    t_tag = "Preferences";
+                    /* UNCHECKED */ MCStringCreateWithCString("Preferences", &t_replacement);
+                
+                if (*t_replacement != nil)
+                    MCValueAssign(t_tag, *t_replacement);
             }
 			
-			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &t_item_title . PtrRef());
-			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &t_tag);
+			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeMCString, &(p_menuitem -> label));
+			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeMCString, &t_tag);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyAction, kMCPlatformPropertyTypeMenuItemAction, &t_action);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyAccelerator, kMCPlatformPropertyTypeAccelerator, &t_item_accelerator);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_item_enabled);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyHighlight, kMCPlatformPropertyTypeMenuItemHighlight, &t_item_highlight);
+            
+            MCValueRelease(t_tag);
 		}
 		
 		return true;
@@ -359,8 +358,8 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static char *s_popup_menupick = nil;
-static uindex_t s_popup_menuitem = 0;
+static MCStringRef s_popup_menupick = nil;
+static int2 s_popup_menuitem = 0;
 
 void MCButton::macopenmenu(void)
 {
@@ -410,28 +409,21 @@ void MCButton::macopenmenu(void)
 			{
 				setmenuhistoryprop(s_popup_menuitem + 1);
 				
-				MCAutoPointer<char> t_label;
-				MCPlatformGetMenuItemProperty(m_system_menu, s_popup_menuitem, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &(&t_label));
-				MCExecPoint ep;
-				ep . setsvalue(*t_label);
-				if (hasunicode())
-					ep . utf8toutf16();
-				else
-					ep . utf8tonative();
-				delete label;
-				label = (char *)ep . getsvalue() . clone();
-				labelsize = ep . getsvalue() . getlength();
+				MCAutoStringRef t_label;
+				MCPlatformGetMenuItemProperty(m_system_menu, s_popup_menuitem, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeMCString, &(&t_label));
+                
+				/* UNCHECKED */ MCStringCopy(*t_label, label);
 				flags |= F_LABEL;
 				
                 // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,
                 //  in case some menus are nested
-                char *t_menupick;
+                MCStringRef t_menupick;
                 t_menupick = s_popup_menupick;
                 s_popup_menupick = nil;
                 
-				Exec_stat es = message_with_args(MCM_menu_pick, t_menupick);
+				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
                 
-				free(t_menupick);
+				MCValueRelease(t_menupick);
 				
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
@@ -451,13 +443,13 @@ void MCButton::macopenmenu(void)
 
                 // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,
                 //  in case some menus are nested
-                char *t_menupick;
+                MCStringRef t_menupick;
                 t_menupick = s_popup_menupick;
                 s_popup_menupick = nil;
                 
-				Exec_stat es = message_with_args(MCM_menu_pick, t_menupick);
-				
-				free(t_menupick);
+				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
+                
+				MCValueRelease(t_menupick);
 				
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
@@ -489,29 +481,24 @@ Bool MCButton::macfindmenu(bool p_just_for_accel)
 	if (m_system_menu != nil || p_just_for_accel)
 		return True;
 	
-	MCString t_menu_title;
-	bool t_is_unicode;
-	getlabeltext(t_menu_title, t_is_unicode);
+	MCStringRef t_menu_title;
+	t_menu_title = getlabeltext();
 	
 	// Get the menu string.
-	MCString t_menu_string;
-	getmenustring(t_menu_string);
+	MCStringRef t_menu_string;
+	t_menu_string = getmenustring();
 	
-	// Convert the title to a string
-	MCAutoPointer<char> t_menu_title_string;
-	t_menu_title_string = utf8cstring_from_mcstring(t_menu_title, t_is_unicode);
-
 	MCPlatformCreateMenu(m_system_menu);
-	MCPlatformSetMenuTitle(m_system_menu, *t_menu_title_string);
+	MCPlatformSetMenuTitle(m_system_menu, t_menu_title);
 	
 	// Now build the menu from the spec string.
-	MCMenuBuilderCallback t_callback(this, *t_menu_title_string, m_system_menu);
-	MCParseMenuString(t_menu_string, &t_callback, hasunicode(), menumode);
+	MCMenuBuilderCallback t_callback(this, t_menu_title, m_system_menu);
+	MCParseMenuString(t_menu_string, &t_callback, menumode);
 	
 	return True;
 }
 
-void MCButton::getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, uint2 key, uint1 mods, MCString &s, bool isunicode, bool issubmenu)
+void MCButton::getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu)
 {
 }
 
@@ -531,31 +518,26 @@ static uindex_t s_menubar_lock_count = 0;
 
 static void populate_menubar_menu_from_button(MCPlatformMenuRef p_menubar, uindex_t p_menubar_index, MCPlatformMenuRef p_menu, MCButton *p_menu_button)
 {
-	MCString t_menu_title;
-	bool t_is_unicode;
-	p_menu_button -> getlabeltext(t_menu_title, t_is_unicode);
+	MCStringRef t_menu_title;
+	t_menu_title = p_menu_button -> getlabeltext();
 	
 	// Get the menu string.
-	MCString t_menu_string;
-	p_menu_button -> getmenustring(t_menu_string);
+	MCStringRef t_menu_string;
+	t_menu_string = p_menu_button -> getmenustring();
 	
 	// Get the enabled state.
 	bool t_menu_enabled;
 	t_menu_enabled = !p_menu_button -> isdisabled();
 	
-	// Convert the title to a string
-	MCAutoPointer<char> t_menu_title_string;
-	t_menu_title_string = utf8cstring_from_mcstring(t_menu_title, t_is_unicode);
-	
 	// Create the menu.
-	MCPlatformSetMenuTitle(p_menu, *t_menu_title_string);
+	MCPlatformSetMenuTitle(p_menu, t_menu_title);
 	
-	MCPlatformSetMenuItemProperty(p_menubar, p_menubar_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &t_menu_title_string . PtrRef());
+	MCPlatformSetMenuItemProperty(p_menubar, p_menubar_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeMCString, &t_menu_title);
 	MCPlatformSetMenuItemProperty(p_menubar, p_menubar_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_menu_enabled);
 	
 	// Now build the menu from the spec string.
-	MCMenuBuilderCallback t_callback(p_menu_button, *t_menu_title_string, p_menu);
-	MCParseMenuString(t_menu_string, &t_callback, p_menu_button -> hasunicode(), WM_PULLDOWN);
+	MCMenuBuilderCallback t_callback(p_menu_button, t_menu_title, p_menu);
+	MCParseMenuString(t_menu_string, &t_callback, WM_PULLDOWN);
 }
 
 void MCScreenDC::updatemenubar(Boolean force)
@@ -616,12 +598,11 @@ void MCScreenDC::updatemenubar(Boolean force)
 		MCstacks -> deleteaccelerator(t_menu_button, t_menu_button -> getstack());
 		
 		// Get the menu title.
-		MCString t_menu_title;
-		bool t_is_unicode;
-		t_menu_button -> getlabeltext(t_menu_title, t_is_unicode);
+        MCStringRef t_menu_title;
+		t_menu_title = t_menu_button -> getlabeltext();
 		
 		// If the menu button is not visible, or has not title then continue.
-		if (t_menu_title . getlength() == 0 ||
+		if (MCStringIsEmpty(t_menu_title) ||
 			!t_menu_button -> getflag(F_VISIBLE))
 			continue;
 		
@@ -746,26 +727,20 @@ static MCPlatformMenuRef create_menu(MCPlatformMenuRef p_menu, MenuItemDescripto
 		{
 			MCPlatformAddMenuItem(t_menu, t_index);
 			
-			char *t_title, *t_tag;
-			MCExecPoint ep;
-			ep . setsvalue(MCString(t_item -> name, t_item -> name_length));
-			ep . nativetoutf8();
-			t_title = ep . getsvalue() . clone();
+			MCStringRef t_title, t_tag;
+            
+            MCStringCreateWithBytes((byte_t*)t_item -> name, t_item -> name_length, kMCStringEncodingNative, false, t_title);
 			
 			if (t_item -> tag_length != 0)
-			{
-				ep . setsvalue(MCString(t_item -> tag, t_item -> tag_length));
-				ep . nativetoutf8();
-				t_tag = ep . getsvalue() . clone();
-			}
+				MCStringCreateWithBytes((byte_t*)t_item -> tag, t_item -> tag_length, kMCStringEncodingNative, false, t_tag);
 			else
-				t_tag = ep . getsvalue() . clone();
+				t_tag = MCValueRetain(t_title);
 			
 			bool t_enabled;
 			t_enabled = !t_item -> disabled;
 			
-			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &t_title);
-			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &t_tag);
+			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeMCString, &t_title);
+			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeMCString, &t_tag);
 			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 			
 			if (t_item -> submenu != nil)
@@ -776,8 +751,8 @@ static MCPlatformMenuRef create_menu(MCPlatformMenuRef p_menu, MenuItemDescripto
 				MCPlatformReleaseMenu(t_submenu);
 			}
 			
-			free(t_title);
-			free(t_tag);
+			MCValueRelease(t_title);
+			MCValueRelease(t_tag);
 		}
 		
 		t_index++;
@@ -799,20 +774,27 @@ static void free_menu(MenuItemDescriptor *p_items)
 	}
 }
 
-void MCScreenDC::seticonmenu(const char *p_menu)
+void MCScreenDC::seticonmenu(MCStringRef p_menu)
 {
 	MenuItemDescriptor *t_items, *t_current_item;
 	uint4 t_id;
 	
+	const char *t_menu;
+    const char *t_menu_ptr;
+    MCAutoStringRefAsUTF8String temp;
+    /* UNCHECKED */ temp . Lock(p_menu);
+	t_menu = strclone(*temp);
+    t_menu_ptr = t_menu;
+    
 	t_items = NULL;
 	t_current_item = NULL;
 	t_id = 65536;
 	
-	if (p_menu != NULL)
-		while(*p_menu != '\0')
+	if (t_menu != NULL)
+		while(*t_menu != '\0')
 		{
 			const char *t_item_start, *t_item_end, *t_item_middle;
-			t_item_start = p_menu;
+			t_item_start = t_menu;
 			t_item_end = strchr(t_item_start, '\n');
 			if (t_item_end == NULL)
 				t_item_end = strchr(t_item_start, '\0');
@@ -828,7 +810,7 @@ void MCScreenDC::seticonmenu(const char *p_menu)
 			t_item = new MenuItemDescriptor;
 			if (t_item == NULL)
 				break;
-			
+            
 			if (t_current_item == NULL)
 				t_items = t_item, t_current_item = t_items;
 			else
@@ -837,10 +819,10 @@ void MCScreenDC::seticonmenu(const char *p_menu)
 			t_item -> next = NULL;
 			
 			if (*t_item_start == '(')
-				t_item_start++, p_menu++, t_item -> disabled = true;
+				t_item_start++, t_menu++, t_item -> disabled = true;
 			else
 				t_item -> disabled = false;
-			
+            
 			t_item -> name = t_item_start;
 			if (t_item_middle == NULL)
 			{
@@ -855,14 +837,14 @@ void MCScreenDC::seticonmenu(const char *p_menu)
 				t_item -> tag_length = t_item_end - t_item_middle - 1;
 			}
 			
-			t_item -> depth = t_item_start - p_menu;
+			t_item -> depth = t_item_start - t_menu;
 			t_item -> submenu = NULL;
 			t_item -> id = t_id++;
 			
 			if (*t_item_end == '\0')
-				p_menu = t_item_end;
+				t_menu = t_item_end;
 			else
-				p_menu = t_item_end + 1;
+				t_menu = t_item_end + 1;
 		}
 	
 	if (t_items != NULL)
@@ -871,6 +853,7 @@ void MCScreenDC::seticonmenu(const char *p_menu)
 	MCPlatformRemoveAllMenuItems(icon_menu);
 		
 	create_menu(icon_menu, t_items);
+    delete[] t_menu_ptr;
 	
 	free_menu(t_items);
 }
@@ -903,26 +886,36 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	uindex_t t_parent_menu_index;
 	MCPlatformGetMenuParent(p_menu, t_parent_menu, t_parent_menu_index);
 	
-	// If the parent menu is not the menubar, we aren't interested.
-	if (t_parent_menu != s_menubar)
-		return;
+    // SN-2014-11-10: [[ Bug 13836 ]] We can also be the menubar's LiveCode item - in which case an
+    //  update is allowed as well
+    bool t_update_menubar;
+    t_update_menubar = p_menu == s_menubar;
+    
+    // If the parent menu is not the menubar, we aren't interested.
+    if (t_parent_menu != s_menubar && !t_update_menubar)
+        return;
 	
 	// If the button it is 'attached' to still exists, dispatch the menu update
 	// message (currently mouseDown("")). We do this whilst the menubar is locked
 	// from updates as we mustn't fiddle about with it too much in this case!
-	if (s_menubar_targets[t_parent_menu_index] -> Exists())
+	if (t_update_menubar || s_menubar_targets[t_parent_menu_index] -> Exists())
 	{
         // MW-2014-06-10: [[ Bug 12590 ]] Make sure we lock screen around the menu update message.
         MCRedrawLockScreen();
-		s_menubar_lock_count += 1;
-		s_menubar_targets[t_parent_menu_index] -> Get() -> message_with_args(MCM_mouse_down, "1");
+        s_menubar_lock_count += 1;
+        // SN-2014-11-06: [[ Bug 13836 ]] MCmenubar (or MCdefaultmenubar) should get mouseDown, not the target (it gets menuPick)
+        if (MCmenubar != nil)
+            MCmenubar -> message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
+        else if (MCdefaultmenubar != nil)
+            MCdefaultmenubar -> message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 		s_menubar_lock_count -= 1;
         MCRedrawUnlockScreen();
 	}
 	
+    // SN-2014-11-10: [[ Bug 13836 ]] Make sure that
 	// Now we've got the menu to update, process the new menu spec, but only if the
 	// menu button still exists!
-	if (s_menubar_targets[t_parent_menu_index] -> Exists())
+	if (!t_update_menubar && s_menubar_targets[t_parent_menu_index] -> Exists())
 	{
 		MCButton *t_button;
 		t_button = (MCButton *)s_menubar_targets[t_parent_menu_index] -> Get();
@@ -940,8 +933,8 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	// we can use the top-level menu to determine where to send the pick.
 	
 	// Use a temporary ep to accumulate the result.
-	MCExecPoint ep(nil, nil, nil);
-	ep . clear();
+    MCAutoStringRef t_result;
+    /* UNCHECKED */ MCStringCreateMutable(0, &t_result);
 	
 	// Keep track of the current (menu / item) pair we are working on.
 	MCPlatformMenuRef t_current_menu, t_last_menu;
@@ -955,15 +948,15 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 			break;
 		
 		// Fetch the tag of menu item.
-		MCAutoPointer<char> t_item_tag;
-		MCPlatformGetMenuItemProperty(t_current_menu, t_current_menu_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &(&t_item_tag));
+		MCAutoStringRef t_item_tag;
+		MCPlatformGetMenuItemProperty(t_current_menu, t_current_menu_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeMCString, &(&t_item_tag));
 		
 		// If the ep is not empty, then prepend "|"
-		if (!ep . isempty())
-			ep . insert("|", 0, 0);
+		if (!MCStringIsEmpty(*t_result))
+			/* UNCHECKED */ MCStringPrependNativeChar(*t_result, '|');
 		
 		// Now insert the tag.
-		ep . insert(*t_item_tag, 0, 0);
+        /* UNCHECKED */ MCStringPrepend(*t_result, *t_item_tag);
 		
 		// Store the last menu index.
 		t_last_menu = t_current_menu;
@@ -973,9 +966,6 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 		MCPlatformGetMenuParent(t_current_menu, t_current_menu, t_current_menu_index);
 	}
 	
-	// Convert the pick string from UTF8 to native.
-	ep . utf8tonative();
-	
 	// If the current menu is non-nil, we are dispatching to a main-menu; otherwise it
 	// will be the current popup menu or icon menu.
 	if (t_current_menu != nil)
@@ -983,7 +973,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 		if (s_menubar_targets[t_current_menu_index] -> Exists())
 		{
 			((MCButton *)s_menubar_targets[t_current_menu_index] -> Get()) -> setmenuhistoryprop(t_last_menu_index + 1);
-			s_menubar_targets[t_current_menu_index] -> Get() -> message_with_args(MCM_menu_pick, ep . getsvalue());
+			s_menubar_targets[t_current_menu_index] -> Get() -> message_with_valueref_args(MCM_menu_pick, *t_result);
 		}
 	}
 	else
@@ -991,12 +981,12 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 		if (((MCScreenDC *)MCscreen) -> isiconmenu(t_last_menu))
 		{
 			if (MCdefaultstackptr != NULL)
-				MCdefaultstackptr -> getcard() -> message_with_args(MCM_icon_menu_pick, ep . getsvalue());
+				MCdefaultstackptr -> getcard() -> message_with_valueref_args(MCM_icon_menu_pick, *t_result);
 		}
 		else
 		{
 			s_popup_menuitem = t_last_menu_index;
-			s_popup_menupick = ep . getsvalue() . clone();
+			s_popup_menupick = MCValueRetain(*t_result);
 		}
 	}
 }

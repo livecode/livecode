@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "hndlrlst.h"
 #include "handler.h"
 #include "scriptpt.h"
@@ -36,6 +36,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parentscript.h"
 
 #include "globals.h"
+
+#include "syntax.h"
+#include "redraw.h"
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCStatement::MCStatement()
 {
@@ -52,10 +57,20 @@ Parse_stat MCStatement::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStatement::exec(MCExecPoint &ep)
 {
-	fprintf(stderr, "ERROR: tried to exec a statement\n");
-	return ES_ERROR;
+	MCExecContext ctxt(ep);
+	exec_ctxt(ctxt);
+	if (!ctxt . HasError())
+        return ctxt . GetExecStat();
+	return ctxt . Catch(line, pos);
+}
+#endif
+
+void MCStatement::exec_ctxt(MCExecContext&)
+{
+	fprintf(stderr, "ERROR: exec method for statement not implemented properly\n");
 }
 
 uint4 MCStatement::linecount()
@@ -121,8 +136,7 @@ Parse_stat MCStatement::gettargets(MCScriptPoint &sp, MCChunk **targets,
 		case PS_EOF:
 			if (needchunk)
 			{
-				MCperror->add
-				(PE_STATEMENT_BADCHUNK, sp);
+				MCperror->add(PE_STATEMENT_BADCHUNK, sp);
 				return PS_ERROR;
 			}
 			return PS_NORMAL;
@@ -134,8 +148,7 @@ Parse_stat MCStatement::gettargets(MCScriptPoint &sp, MCChunk **targets,
 		if (newptr->parse(sp, False) != PS_NORMAL)
 		{
 			delete newptr;
-			MCperror->add
-			(PE_STATEMENT_BADCHUNK, sp);
+			MCperror->add(PE_STATEMENT_BADCHUNK, sp);
 			return PS_ERROR;
 		}
 		if (pptr == NULL)
@@ -159,8 +172,7 @@ Parse_stat MCStatement::gettargets(MCScriptPoint &sp, MCChunk **targets,
 		case PS_EOF:
 			return PS_NORMAL;
 		default:
-			MCperror->add
-			(PE_STATEMENT_NOTAND, sp);
+			MCperror->add(PE_STATEMENT_NOTAND, sp);
 			return PS_ERROR;
 		}
 		needchunk = True;
@@ -191,8 +203,7 @@ Parse_stat MCStatement::getparams(MCScriptPoint &sp, MCParameter **params)
 		case PS_EOF:
 			if (needparam)
 			{
-				MCperror->add
-				(PE_STATEMENT_BADPARAM, sp);
+				MCperror->add(PE_STATEMENT_BADPARAM, sp);
 				return PS_ERROR;
 			}
 			return PS_NORMAL;
@@ -204,8 +215,7 @@ Parse_stat MCStatement::getparams(MCScriptPoint &sp, MCParameter **params)
 		if (newptr->parse(sp) != PS_NORMAL)
 		{
 			delete newptr;
-			MCperror->add
-			(PE_STATEMENT_BADPARAM, sp);
+			MCperror->add(PE_STATEMENT_BADPARAM, sp);
 			return PS_ERROR;
 		}
 		if (pptr == NULL)
@@ -228,14 +238,12 @@ Parse_stat MCStatement::getparams(MCScriptPoint &sp, MCParameter **params)
 		case PS_EOF:
 			return PS_NORMAL;
 		default:
-			MCperror->add
-			(PE_STATEMENT_NOTSEP, sp);
+			MCperror->add(PE_STATEMENT_NOTSEP, sp);
 			return PS_ERROR;
 		}
 		if (type != ST_SEP)
 		{
-			MCperror->add
-			(PE_STATEMENT_BADSEP, sp);
+			MCperror->add(PE_STATEMENT_BADSEP, sp);
 			return PS_ERROR;
 		}
 		needparam = True;
@@ -252,14 +260,12 @@ Parse_stat MCStatement::getmods(MCScriptPoint &sp, uint2 &mstate)
 	{
 		if (sp.next(type) != PS_NORMAL)
 		{
-			MCperror->add
-			(PE_STATEMENT_NOKEY, sp);
+			MCperror->add(PE_STATEMENT_NOKEY, sp);
 			return PS_ERROR;
 		}
 		if (sp.lookup(SP_FACTOR, te) != PS_NORMAL || te->type != TT_FUNCTION)
 		{
-			MCperror->add
-			(PE_STATEMENT_BADKEY, sp);
+			MCperror->add(PE_STATEMENT_BADKEY, sp);
 			return PS_ERROR;
 		}
 		switch (te->which)
@@ -277,8 +283,7 @@ Parse_stat MCStatement::getmods(MCScriptPoint &sp, uint2 &mstate)
 			mstate |= MS_SHIFT;
 			break;
 		default:
-			MCperror->add
-			(PE_STATEMENT_BADKEY, sp);
+			MCperror->add(PE_STATEMENT_BADKEY, sp);
 			return PS_ERROR;
 		}
 		if (sp.skip_token(SP_COMMAND, TT_ELSE, S_UNDEFINED) == PS_NORMAL)
@@ -294,14 +299,12 @@ Parse_stat MCStatement::getmods(MCScriptPoint &sp, uint2 &mstate)
 		case PS_EOF:
 			return PS_NORMAL;
 		default:
-			MCperror->add
-			(PE_STATEMENT_BADSEP, sp);
+			MCperror->add(PE_STATEMENT_BADSEP, sp);
 			return PS_ERROR;
 		}
 		if (type != ST_SEP)
 		{
-			MCperror->add
-			(PE_STATEMENT_BADSEP, sp);
+			MCperror->add(PE_STATEMENT_BADSEP, sp);
 			return PS_ERROR;
 		}
 	}
@@ -340,13 +343,20 @@ void MCStatement::initpoint(MCScriptPoint &sp)
 	pos = sp.getpos();
 }
 
-void MCStatement::getit(MCScriptPoint &sp, MCVarref *&it)
+void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 {
-	// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
-	//   execution outwith a handler.
-	if (sp.findnewvar(MCN_it, kMCEmptyName, &it) != PS_NORMAL)
-		it = it; // This should handle an error.
-}
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+	MCSyntaxFactoryExecUnimplemented(ctxt);
+	MCSyntaxFactoryEndStatement(ctxt);
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef _MOBILE
+extern bool MCIsPlatformMessage(MCNameRef handler_name);
+extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
+#endif
 
 MCComref::MCComref(MCNameRef n)
 {
@@ -354,6 +364,7 @@ MCComref::MCComref(MCNameRef n)
 	handler = nil;
 	params = NULL;
 	resolved = false;
+    platform_message = false;
 }
 
 MCComref::~MCComref()
@@ -375,9 +386,18 @@ Parse_stat MCComref::parse(MCScriptPoint &sp)
 		MCperror->add(PE_STATEMENT_BADPARAMS, sp);
 		return PS_ERROR;
 	}
+#ifdef _MOBILE
+    if (MCIsPlatformMessage(name))
+    {
+        platform_message = true;
+        resolved = true;
+    }
+#endif
+    
 	return PS_NORMAL;
 }
 
+#if /* MCComref::exec */ LEGACY_EXEC
 Exec_stat MCComref::exec(MCExecPoint &ep)
 {
 	if (MCscreen->abortkey())
@@ -409,15 +429,16 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 			handler = t_resolved_handler;
 
 		resolved = true;
-		}
-
+    }
+    
 	Exec_stat stat;
+    MCExecContext ctxt(ep);
 	MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
 		MCVariable* t_var;
 		t_var = tptr -> evalvar(ep);
-
+        
 		if (t_var == NULL)
 		{
 			tptr -> clear_argument();
@@ -433,48 +454,55 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		}
 		else
 			tptr->set_argument_var(t_var);
-
+        
 		tptr = tptr->getnext();
-
+        
 	}
 	MCObject *p = ep.getobj();
-	MCExecPoint *oldep = MCEPptr;
-	MCEPptr = &ep;
+	MCExecContext *oldctxt = MCECptr;
+	MCECptr = &ctxt;
 	stat = ES_NOT_HANDLED;
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
 		ep.setline(line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
-
+    
+#ifdef _MOBILE
+    if (platform_message)
+    {
+        stat = MCHandlePlatformMessage(name, params);
+    }
+#endif
+    
 	if (handler != nil)
 	{
-		// MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
-		//   parent, then use a special method.
-		if (ep . getparentscript() == NULL)
-			stat = p -> exechandler(handler, params);
-		else
-			stat = p -> execparenthandler(handler, params, ep . getparentscript());
-
-		switch(stat)
-		{
-		case ES_ERROR:
-		case ES_PASS:
-			MCeerror->add(EE_STATEMENT_BADCOMMAND, line, pos, handler -> getname());
-			if (MCerrorptr == NULL)
-				MCerrorptr = p;
-			stat = ES_ERROR;
-			break;
-
-		case ES_EXIT_HANDLER:
-			stat = ES_NORMAL;
-			break;
-
-		default:
-			break;
-		}
+        // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
+        //   parent, then use a special method.
+        if (ep . getparentscript() == NULL)
+            stat = p -> exechandler(handler, params);
+        else
+            stat = p -> execparenthandler(handler, params, ep . getparentscript());
+        
+        switch(stat)
+        {
+            case ES_ERROR:
+            case ES_PASS:
+                MCeerror->add(EE_STATEMENT_BADCOMMAND, line, pos, handler -> getname());
+                if (MCerrorptr == NULL)
+                    MCerrorptr = p;
+                stat = ES_ERROR;
+                break;
+                
+            case ES_EXIT_HANDLER:
+                stat = ES_NORMAL;
+                break;
+                
+            default:
+                break;
+        }
 	}
 	else
 	{
@@ -499,8 +527,16 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 			}
 		MCdynamicpath = olddynamic;
 	}
-	MCEPptr = oldep;
+	MCECptr = oldctxt;
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;
 }
+#endif
+
+void MCComref::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, platform_message, false);
+}
+
+////////////////////////////////////////////////////////////////////////////////

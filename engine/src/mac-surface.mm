@@ -16,7 +16,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-#include "core.h"
 #include "globdefs.h"
 #include "region.h"
 #include "graphics.h"

@@ -1,0 +1,12 @@
+setup
+
+test-error matchText("abcd", "[[[")
+
+local tMatch1, tMatch2
+test matchText("abcd", "(..)(..)", tMatch1, tMatch2) is true
+test tMatch1 is "ab"
+test tMatch2 is "cd"
+
+test matchText("abcd", "(.*)x(.*)x", tMatch1, tMatch2) is false
+
+teardown

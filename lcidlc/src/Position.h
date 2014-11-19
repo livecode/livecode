@@ -17,9 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __POSITION__
 #define __POSITION__
 
-#ifndef __CORE__
-#include "Core.h"
-#endif
+#include "foundation.h"
 
 typedef uint32_t Position;
 

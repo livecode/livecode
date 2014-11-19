@@ -1,0 +1,3 @@
+setup
+test compress("hello world") is not "hello world"
+teardown

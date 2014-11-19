@@ -16,14 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "image.h"
 #include "stack.h"
@@ -44,7 +43,7 @@ bool read_all(IO_handle p_stream, uint8_t *&r_data, uindex_t &r_data_size)
 
 	t_success = MCMemoryAllocate(t_size, t_buffer);
 	if (t_success)
-		t_success = IO_NORMAL == MCS_read(t_buffer, sizeof(uint8_t), t_size, p_stream);
+		t_success = IO_NORMAL == MCS_readfixed(t_buffer, t_size, p_stream);
 
 	if (t_success)
 	{
@@ -68,7 +67,7 @@ bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t 
 	uint8_t t_head[EMF_HEAD_SIZE];
 	uindex_t t_size = META_HEAD_SIZE;
 
-	t_success = IO_NORMAL == MCS_read(t_head, sizeof(uint8_t), t_size, p_stream) &&
+	t_success = IO_NORMAL == MCS_readfixed(t_head, t_size, p_stream) &&
 		t_size == META_HEAD_SIZE;
 
 	if (t_success)
@@ -84,10 +83,9 @@ bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t 
 		// win32 metafile (emf)
 		else if (memcmp(&t_head[40], "\x20\x45\x4D\x46", 4) == 0)
 		{
-			t_size = EMF_HEAD_SIZE;
-			t_success = IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos) &&
-				IO_NORMAL == MCS_read(t_head, sizeof(uint8_t), t_size, p_stream) &&
-				t_size == EMF_HEAD_SIZE;
+			t_success =
+                IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos) &&
+                IO_NORMAL == MCS_readfixed(t_head, EMF_HEAD_SIZE, p_stream);
 
 			if (t_success)
 			{
@@ -103,11 +101,10 @@ bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t 
 			uindex_t t_offset = 0;
 			if (memcmp(t_head, "\0\0\0\0\0\0\0\0", 8) == 0)
 			{
-				t_size = META_HEAD_SIZE;
 				t_offset = 512;
-				t_success = IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos + t_offset) &&
-					IO_NORMAL == MCS_read(t_head, sizeof(uint8_t), t_size, p_stream) &&
-					t_size == META_HEAD_SIZE;
+				t_success =
+                    IO_NORMAL == MCS_seek_set(p_stream, t_stream_pos + t_offset) &&
+                    IO_NORMAL == MCS_readfixed(t_head, META_HEAD_SIZE, p_stream);
 			}
 
 			// PICT file
@@ -175,10 +172,12 @@ bool MCImageDecode(IO_handle p_stream, MCBitmapFrame *&r_frames, uindex_t &r_fra
 bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCBitmapFrame *&r_frames, uindex_t &r_frame_count)
 {
 	bool t_success = true;
+    MCAutoDataRef t_data;
 
 	IO_handle t_stream = nil;
 
-	t_success = nil != (t_stream = MCS_fakeopen(MCString((const char*)p_data, p_size)));
+    if (t_success)
+        t_success = nil != (t_stream = MCS_fakeopen((const char *)p_data, p_size));
 
 	if (t_success)
 		t_success = MCImageDecode(t_stream, r_frames, r_frame_count);
@@ -216,7 +215,7 @@ bool MCImageLoaderFormatToCompression(MCImageLoaderFormat p_format, uint32_t &r_
 }
 
 // if the image is in a directly supported format return the raw data otherwise decode & return the bitmap
-bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotspot, char *&r_name, MCImageCompressedBitmap *&r_compressed, MCImageBitmap *&r_bitmap)
+bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotspot, MCStringRef&r_name, MCImageCompressedBitmap *&r_compressed, MCImageBitmap *&r_bitmap)
 {
 	bool t_success;
 	t_success = true;
@@ -257,8 +256,7 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 			
 			uint32_t t_xhot, t_yhot;
 			
-			char *t_name;
-			t_name = nil;
+			MCAutoStringRef t_name;
 			
 			MCBitmapFrame *t_frames;
 			t_frames = nil;
@@ -269,7 +267,7 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 				t_success = t_loader->GetHotSpot(t_xhot, t_yhot);
 			
 			if (t_success)
-				t_success = t_loader->TakeName(t_name);
+				t_success = t_loader->GetName(&t_name);
 			
 			if (t_success)
 				t_success = t_loader->TakeFrames(t_frames, t_count);
@@ -286,12 +284,12 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 			{
 				r_hotspot.x = t_xhot;
 				r_hotspot.y = t_yhot;
-				r_name = t_name;
+                r_name = MCValueRetain(*t_name);
 				r_bitmap = t_frames[0].image;
 				t_frames[0].image = nil;
 			}
 			else
-				MCCStringFree(t_name);
+                r_name = MCValueRetain(kMCEmptyString);
 			
 			MCImageFreeFrames(t_frames, t_count);
 			
@@ -303,13 +301,13 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 	return t_success;
 }
 
-IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream)
+IO_stat MCImage::import(MCStringRef newname, IO_handle stream, IO_handle mstream)
 {
 	bool t_success = true;
 
 	MCImageCompressedBitmap *t_compressed = nil;
 	MCImageBitmap *t_bitmap = nil;
-	char *t_name = nil;
+	MCStringRef t_name = nil;
 	MCPoint t_hotspot = {1, 1};
 
 	t_success = MCImageImport(stream, mstream, t_hotspot, t_name, t_compressed, t_bitmap);
@@ -351,20 +349,28 @@ IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream
 		}
 
 		if (isunnamed() && t_name != nil)
-			setname_cstring(t_name);
+        {
+            MCNewAutoNameRef t_name_nameref;
+            /* UNCHECKED */ MCNameCreate(t_name, &t_name_nameref);
+			setname(*t_name_nameref);
+        }
 		if (isunnamed() && newname != nil)
 		{
-			const char *tname = strrchr(newname, PATH_SEPARATOR);
-			if (tname != NULL)
-				tname += 1;
-			else
-				tname = newname;
-			setname_cstring(tname);
-		}
+            MCNewAutoNameRef t_name_nameref;
+            uindex_t t_offset;
+            if (MCStringLastIndexOfChar(newname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_offset))
+            {
+                /* UNCHECKED */ MCStringCopySubstring(newname, MCRangeMake(t_offset + 1, MCStringGetLength(newname) - t_offset - 1), t_name);
+                /* UNCHECKED */ MCNameCreate(t_name, &t_name_nameref);
+            }
+            else
+                /* UNCHECKED */ MCNameCreate(newname, &t_name_nameref);
 
+			setname(*t_name_nameref);
+		}
 	}
 
-	MCCStringFree(t_name);
+	MCValueRelease(t_name);
 
 	return t_success ? IO_NORMAL : IO_ERROR;
 }

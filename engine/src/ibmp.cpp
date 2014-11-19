@@ -28,8 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 
-#include "core.h"
-
 #if kMCGPixelFormatNative == kMCGPixelFormatBGRA
 #define NATIVE_IMAGE_FORMAT EX_RAW_BGRA
 #elif kMCGPixelFormatNative == kMCGPixelFormatRGBA
@@ -555,7 +553,7 @@ bool bmp_read_color_table(IO_handle p_stream, uindex_t &x_bytes_read, uint32_t p
 	for (uindex_t i = 0; t_success && i < p_color_count; i++)
 	{
 		uindex_t t_byte_count = t_color_size;
-		t_success = IO_NORMAL == MCS_read(t_color, sizeof(uint8_t), t_byte_count, p_stream);
+		t_success = IO_NORMAL == MCS_readfixed(t_color, t_byte_count * sizeof(uint8_t), p_stream);
 		MCBitmapConvertRow<EX_RAW_RGB, NATIVE_IMAGE_FORMAT>((uint8_t*)t_dst_ptr, t_color, 1);
 		*t_dst_ptr++ = MCGPixelPackNative(t_color[2], t_color[1], t_color[0], 255);
 	}
@@ -644,7 +642,7 @@ bool bmp_read_rle4_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitm
 				t_run_bytes = (t_value + 1) / 2;
 				t_run_bytes = (t_run_bytes + 1) & ~0x1;
 				
-				t_success = IO_NORMAL == MCS_read(t_run_buffer, 1, t_run_bytes, p_stream);
+				t_success = IO_NORMAL == MCS_readfixed(t_run_buffer, t_run_bytes, p_stream);
 				
 				if (t_success)
 					x_bytes_read += t_run_bytes;
@@ -740,7 +738,7 @@ bool bmp_read_rle8_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitm
 				uint32_t t_run_bytes;
 				t_run_bytes = (t_value + 1) & ~0x1;
 				
-				t_success = IO_NORMAL == MCS_read(t_run_buffer, 1, t_run_bytes, p_stream);
+				t_success = IO_NORMAL == MCS_readfixed(t_run_buffer, t_run_bytes, p_stream);
 				
 				if (t_success)
 					x_bytes_read += t_run_bytes;
@@ -784,7 +782,7 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 
 	for (uindex_t y = 0; t_success && y < p_bitmap->height; y++)
 	{
-		t_success = IO_NORMAL == MCS_read(t_src_buffer, sizeof(uint8_t), t_src_stride, p_stream);
+		t_success = IO_NORMAL == MCS_readfixed(t_src_buffer, t_src_stride, p_stream);
 		if (t_success)
 		{
 			if (p_depth <= 8)
@@ -903,7 +901,7 @@ bool bmp_read_bitfield_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImage
 
 	for (uindex_t y = 0; t_success && y < p_bitmap->height; y++)
 	{
-		t_success = IO_NORMAL == MCS_read(t_src_buffer, sizeof(uint8_t), t_src_stride, p_stream);
+		t_success = IO_NORMAL == MCS_readfixed(t_src_buffer, t_src_stride, p_stream);
 		if (t_success)
 			bmp_convert_bitfield_row((uint32_t*)t_dst_ptr, t_src_buffer, p_bitmap->width, p_depth, p_a_mask, p_r_mask, p_g_mask, p_b_mask);
 
@@ -945,7 +943,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatBMP; }
 
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -954,7 +952,7 @@ private:
 	bool m_is_os2;
 };
 
-bool MCBitmapStructImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
+bool MCBitmapStructImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count)
 {
 	bool t_success;
 	t_success = true;
@@ -1015,7 +1013,7 @@ bool MCBitmapStructImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height
 		
 		r_xhot = r_yhot = 0;
 		
-		r_name = nil;
+		r_name = MCValueRetain(kMCEmptyString);
 		r_frame_count = 1;
 	}
 	
@@ -1139,12 +1137,12 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatBMP; }
 
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count);
 
 private:
 };
 
-bool MCBitmapImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
+bool MCBitmapImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count)
 {
 	bool t_success;
 	t_success = true;
@@ -1375,7 +1373,7 @@ private:
 			m_start = 0;
 		}
 
-		if (IO_NORMAL != MCS_read(m_buffer + m_end, sizeof(uint8_t), p_count, m_stream))
+		if (IO_NORMAL != MCS_readfixed(m_buffer + m_end, p_count, m_stream))
 			return false;
 
 		m_end += p_count;
@@ -1471,7 +1469,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatNetPBM; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -1492,7 +1490,7 @@ MCNetPBMImageLoader::~MCNetPBMImageLoader()
 		delete m_reader;
 }
 
-bool MCNetPBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
+bool MCNetPBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 
@@ -1535,7 +1533,7 @@ bool MCNetPBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint
 		r_height = t_height;
 		
 		r_xhot = r_yhot = 0;
-		r_name = nil;
+		r_name = MCValueRetain(kMCEmptyString);
 		r_frame_count = 1;
 	}
 
@@ -1836,7 +1834,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatXBM; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -1851,7 +1849,7 @@ MCXBMImageLoader::~MCXBMImageLoader()
 {
 }
 
-bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
+bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 	
@@ -1938,11 +1936,14 @@ bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 		r_height = t_height;
 		r_xhot = t_xhot;
 		r_yhot = t_yhot;
-		r_name = t_name;
+		/* UNCHECKED */ MCStringCreateWithCString(t_name, r_name);
 		r_frame_count = 1;
 	}
 	else
+    {
 		MCCStringFree(t_name);
+        r_name = MCValueRetain(kMCEmptyString);
+    }
 
 	return t_success;
 }
@@ -2161,7 +2162,9 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 	if (p_color_end - p_color_start != 7 || p_line[p_color_start] != '#')
 	{
 		MCColor t_color;
-		if (MCscreen->lookupcolor(MCString(p_line + p_color_start, p_color_end - p_color_start), &t_color))
+        MCAutoStringRef t_s;
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) p_line + p_color_start, p_color_end - p_color_start, &t_s);
+		if (MCscreen->lookupcolor(*t_s, &t_color))
 		{
 			r_color = MCGPixelPackNative(t_color.red >> 8, t_color.green >> 8, t_color.blue >> 8, 255);
 			return true;
@@ -2481,7 +2484,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatXPM; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -2506,7 +2509,7 @@ MCXPMImageLoader::~MCXPMImageLoader()
 	MCMemoryDeleteArray(m_color_chars);
 }
 
-bool MCXPMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
+bool MCXPMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 	
@@ -2532,7 +2535,7 @@ bool MCXPMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 		
 		r_xhot = r_yhot = 0;
 		
-		r_name = nil;
+		r_name = MCValueRetain(kMCEmptyString);
 		r_frame_count = 1;
 	}
 	
@@ -2670,7 +2673,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatXWD; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -2685,7 +2688,7 @@ MCXWDImageLoader::~MCXWDImageLoader()
 {
 }
 
-bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, char *&r_name, uint32_t &r_frame_count)
+bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count)
 {
 	bool t_success = true;
 	
@@ -2709,7 +2712,7 @@ bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 
 	if (t_success)
 		t_success = nil != (newname = new char[namesize]) &&
-		IO_read(newname, sizeof(char), namesize, stream) == IO_NORMAL;
+		IO_read(newname, namesize, stream) == IO_NORMAL;
 
 	if (t_success)
 	{
@@ -2718,11 +2721,14 @@ bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 		
 		r_xhot = r_yhot = 0;
 		
-		r_name = newname;
+		/* UNCHEKCED */ MCStringCreateWithCString(newname, r_name);
 		r_frame_count = 1;
 	}
 	else
+    {
 		MCCStringFree(newname);
+        r_name = MCValueRetain(kMCEmptyString);
+    }
 
 	return t_success;
 }
@@ -2761,7 +2767,7 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 			bytes *= m_fh.pixmap_depth;
 		t_newimage_data = new char[bytes];
 		t_success = t_newimage_data != nil &&
-			IO_read(t_newimage_data, sizeof(uint1), bytes, stream) == IO_NORMAL;
+			IO_read(t_newimage_data, bytes, stream) == IO_NORMAL;
 	}
 
 	uint32_t t_width, t_height;

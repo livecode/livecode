@@ -33,7 +33,7 @@ public:
 	MCCdata(uint4 newid);
 	MCCdata(const MCCdata &fref);
 	~MCCdata();
-	IO_stat load(IO_handle stream, MCObject *parent, const char *version);
+	IO_stat load(IO_handle stream, MCObject *parent, uint32_t version);
 	IO_stat save(IO_handle stream, Object_type type, uint4 p_part);
 	uint4 getid();
 	void setid(uint4 newid);
@@ -41,13 +41,13 @@ public:
 	void setparagraphs(MCParagraph *&newpar);
 	Boolean getset();
 	void setset(Boolean newdata);
-	void setdata(int4 newdata)
+	void setdata(uintptr_t newdata)
 	{
 		data = (void *)newdata;
 	}
-	int4 getdata()
+	uintptr_t getdata()
 	{
-		return (int4)(intptr_t)data;
+		return (uintptr_t)data;
 	}
 	MCCdata *next()
 	{

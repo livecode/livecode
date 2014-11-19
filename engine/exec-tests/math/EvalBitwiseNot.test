@@ -1,0 +1,5 @@
+setup
+
+test bitNot baseConvert("0F3C5A69", 16, 10) is baseConvert("F0C3A596", 16, 10)
+
+teardown

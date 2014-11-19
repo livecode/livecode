@@ -22,7 +22,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "debug.h"
 #include "hndlrlst.h"
 #include "handler.h"
@@ -32,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "newobj.h"
 #include "cmds.h"
 #include "redraw.h"
+#include "variable.h"
 
 #include "globals.h"
 
@@ -104,24 +106,30 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 		MCAutoNameRef t_token_name;
 		/* UNCHECKED */ t_token_name . Clone(sp . gettoken_nameref());
 
-		MCExpression *e = NULL;
-		MCVarref *v = NULL;
-		if (sp.gethandler() == NULL)
-			if (constant)
-				sp.gethlist()->findconstant(t_token_name, &e);
-			else
-				sp.gethlist()->findvar(t_token_name, false, &v);
-		else
-			if (constant)
-				sp.gethandler()->findconstant(t_token_name, &e);
-			else
-				sp.gethandler()->findvar(t_token_name, &v);
-		if (e != NULL || v != NULL)
+		// MW-2013-11-08: [[ RefactorIt ]] The 'it' variable is always present now,
+		//   so there's no need to 'local it'. However, scripts do contain this so
+		//   don't do a check for an existing var in this case.
+		if (!MCNameIsEqualTo(t_token_name, MCN_it, kMCCompareCaseless))
 		{
-			MCperror->add(PE_LOCAL_SHADOW, sp);
-			delete v;
-			delete e;
-			return PS_ERROR;
+			MCExpression *e = NULL;
+			MCVarref *v = NULL;
+			if (sp.gethandler() == NULL)
+				if (constant)
+					sp.gethlist()->findconstant(t_token_name, &e);
+				else
+					sp.gethlist()->findvar(t_token_name, false, &v);
+			else
+				if (constant)
+					sp.gethandler()->findconstant(t_token_name, &e);
+				else
+					sp.gethandler()->findvar(t_token_name, &v);
+			if (e != NULL || v != NULL)
+			{
+				MCperror->add(PE_LOCAL_SHADOW, sp);
+				delete v;
+				delete e;
+				return PS_ERROR;
+			}
 		}
 
 		MCVariable *tmp;
@@ -134,12 +142,12 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 				}
 
 		MCVarref *tvar = NULL;
-		MCString init;
+		MCAutoStringRef init;
 		bool initialised = false;
 		if (sp.skip_token(SP_FACTOR, TT_BINOP, O_EQ) == PS_NORMAL)
 		{
-			if (sp.next(type) != PS_NORMAL || MCexplicitvariables && type != ST_LIT
-			        && type != ST_NUM)
+            // MW-2014-11-06: [[ Bug 3680 ]] If there is nothing after '=' it's an error.
+			if (sp.next(type) != PS_NORMAL)
 			{
 				if (constant)
 					MCperror->add(PE_CONSTANT_BADINIT, sp);
@@ -147,9 +155,12 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 					MCperror->add(PE_LOCAL_BADINIT, sp);
 				return PS_ERROR;
 			}
-			if (type == ST_MIN)
-			{ // negative initializer
-				const char *sptr = sp.gettoken().getstring();
+            
+            // MW-2014-11-06: [[ Bug 3680 ]] We allow either - or + next, but only if the
+            //   next token is a number.
+			if (type == ST_MIN || type == ST_OP && sp.token_is_cstring("+"))
+			{
+                // negative or positive initializer
 				if (sp.next(type) != PS_NORMAL || type != ST_NUM)
 				{
 					if (constant)
@@ -158,11 +169,39 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 						MCperror->add(PE_LOCAL_BADINIT, sp);
 					return PS_ERROR;
 				}
-				uint4 l = sp.gettoken().getstring() + sp.gettoken().getlength() - sptr;
-				init.set(sptr, l);
+                if (type == ST_MIN)
+                    /* UNCHECKED */ MCStringFormat(&init, "-%@", sp.gettoken_stringref());
+                else
+                    init = sp.gettoken_stringref();
 			}
 			else
-				init = sp.gettoken();
+            {
+                // MW-2014-11-06: [[ Bug 3680 ]] If we are in explicit var mode, and the token
+                //   is not a string literal or a number, then it must be a constant in the constant
+                //   table that is the same as its token.
+                if (MCexplicitvariables && type == ST_ID)
+                {
+                    // If the unquoted literal is a recognised constant and the constant's value
+                    // is identical (case-sensitively) to the value, it is fine to make it a literal.
+                    const char *t_value;
+                    if (sp . lookupconstantvalue(t_value) &&
+                        MCStringIsEqualToCString(sp . gettoken_stringref(), t_value, kMCStringOptionCompareExact))
+                        type = ST_LIT;
+                }
+                
+                // MW-2014-11-06: [[ Bug 3680 ]] If now, explicitvariables is on and we don't have a literal or
+                //   a number, its an error.
+                if (MCexplicitvariables && type != ST_LIT && type != ST_NUM)
+                {
+					if (constant)
+						MCperror->add(PE_CONSTANT_BADINIT, sp);
+					else
+						MCperror->add(PE_LOCAL_BADINIT, sp);
+					return PS_ERROR;
+                }
+                
+                init = sp.gettoken_stringref();
+            }
 
 			initialised = true;
 		}
@@ -171,20 +210,18 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 				MCperror->add(PE_CONSTANT_NOINIT, sp);
 				return PS_ERROR;
 			}
-			else
-				init = NULL;
 
-		MCAutoNameRef t_init_name;
+		MCAutoValueRef t_init_value;
 		if (initialised)
-			/* UNCHECKED */ t_init_name . CreateWithOldString(init);
+			/* UNCHECKED */ t_init_value = *init;
 		else
-			t_init_name . Clone(kMCEmptyName);
+			t_init_value = kMCNull;
 
 		if (sp.gethandler() == NULL)
 		{
 			if (constant)
-				sp.gethlist()->newconstant(t_token_name, t_init_name);
-			else if (sp.gethlist()->newvar(t_token_name, t_init_name, &tvar, initialised) != PS_NORMAL)
+				sp.gethlist()->newconstant(t_token_name, *t_init_value);
+			else if (sp.gethlist()->newvar(t_token_name, *t_init_value, &tvar, initialised) != PS_NORMAL)
 				{
 					MCperror->add(PE_LOCAL_BADNAME, sp);
 					return PS_ERROR;
@@ -192,8 +229,8 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 
 		}
 		else if (constant)
-			sp.gethandler()->newconstant(t_token_name, t_init_name);
-		else if (sp.gethandler()->newvar(t_token_name, t_init_name, &tvar) != PS_NORMAL)
+			sp.gethandler()->newconstant(t_token_name, *t_init_value);
+		else if (sp.gethandler()->newvar(t_token_name, *t_init_value, &tvar) != PS_NORMAL)
 				{
 					MCperror->add(PE_LOCAL_BADNAME, sp);
 					return PS_ERROR;
@@ -416,8 +453,10 @@ Parse_stat MCIf::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCIf::exec */ LEGACY_EXEC
 Exec_stat MCIf::exec(MCExecPoint &ep)
 {
+	MCExecContext ctxt(ep);
 	Exec_stat stat;
 	while ((stat = cond->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints)
 	        && !MCtrylock && !MClockerrors)
@@ -441,7 +480,7 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 	{
 		if (MCtrace || MCnbreakpoints)
 		{
-			MCB_trace(ep, tspr->getline(), tspr->getpos());
+			MCB_trace(ctxt, tspr->getline(), tspr->getpos());
 			if (MCexitall)
 				break;
 		}
@@ -483,6 +522,12 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+}
+#endif /* MCIf::exec */
+
+void MCIf::exec_ctxt(MCExecContext &ctxt)
+{
+    MCKeywordsExecIf(ctxt, cond, thenstatements, elsestatements, line, pos);
 }
 
 uint4 MCIf::linecount()
@@ -631,7 +676,7 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 					}
 					if (sp.lookup(SP_FACTOR, te) != PS_NORMAL)
 					{
-						if (sp.gettoken() != "down")
+						if (!sp.token_is_cstring("down"))
 						{
 							MCperror->add
 							(PE_REPEAT_NOWITHTO, sp);
@@ -761,6 +806,7 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCRepeat::exec */ LEGACY_EXEC
 Exec_stat MCRepeat::exec(MCExecPoint &ep)
 {
 	real8 endn = 0.0;
@@ -769,17 +815,21 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 	MCScriptPoint *sp = NULL;
 	Parse_stat ps;
 	const char *sptr;
-	uint4 l;
-	MCVariableValue *tvar = NULL;
-	MCHashentry *hptr = NULL;
-	uint4 kindex = 0;
 	Boolean donumeric = False;
 	Exec_stat stat;
+	MCExecContext ctxt(ep);
+	MCAutoArrayRef t_array;
+	MCNameRef t_key;
+	MCValueRef t_value;
+	uintptr_t t_iterator;
+	uint4 l;
+
 	switch (form)
 	{
 	case RF_FOR:
 		if (loopvar != NULL)
 		{
+			MCExecContext ctxt2(ep2);
 			while ((stat = endcond->eval(ep2)) != ES_NORMAL
 			        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 				if (!MCB_error(ep2, getline(), getpos(), EE_REPEAT_BADFORCOND))
@@ -791,37 +841,22 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 			}
 			if (each == FU_ELEMENT)
 			{
-				tvar = ep2.getarray();
-				if (tvar != NULL && tvar -> is_array())
-				{
+				ep2 . copyasarrayref(&t_array);
+				t_iterator = 0;
+
+				if (MCArrayIterate(*t_array, t_iterator, t_key, t_value))
 					l = 1;
-					kindex = 0;
-					donumeric = tvar -> get_array() -> isnumeric();
-					hptr = tvar -> get_array() -> getnextelement(kindex, hptr, donumeric, ep);
-					if (hptr == NULL)
-					{
-						kindex = 0;
-						donumeric = False;
-						hptr = tvar -> get_array() -> getnextelement(kindex, hptr, donumeric, ep);
-					}
-				}
 				else
 					l = 0;
+
 			}
 			else if (each == FU_KEY)
 			{
-				tvar = ep2.getarray();
-				if (tvar != NULL && tvar -> is_array())
-				{
+				ep2 . copyasarrayref(&t_array);
+				t_iterator = 0;
+
+				if (MCArrayIterate(*t_array, t_iterator, t_key, t_value))
 					l = 1;
-					kindex = 0;
-					donumeric = False;
-					hptr = tvar -> get_array() -> getnextkey(kindex, hptr);
-					// [[ Bug 3871 ]] : If hptr is NULL then we are done already (this can happen
-					//                  with an empty custom property set).
-					if (hptr == NULL)
-						l = 0;
-				}
 				else
 					l = 0;
 			}
@@ -950,17 +985,15 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 					case FU_KEY:
 						// MW-2010-12-15: [[ Bug 9218 ]] Make a copy of the key so that it can't be mutated
 						//   accidentally.
-						ep . setstaticcstring(hptr -> string);
+						ep . setvalueref(t_key);
 						loopvar -> set(ep);
-						hptr = tvar -> get_array() -> getnextkey(kindex, hptr);
-						if (hptr == NULL)
+						if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
 							l = 0;
 						break;
 					case FU_ELEMENT:
-						hptr -> value . fetch(ep);
+						ep . setvalueref(t_value);
 						loopvar -> set(ep);
-						hptr = tvar -> get_array() -> getnextelement(kindex, hptr, donumeric, ep);
-						if (hptr == NULL)
+						if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
 							l = 0;
 						break;
 					case FU_LINE:
@@ -999,7 +1032,7 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 						MCU_skip_spaces(sptr, l);
 						break;
 					case FU_TOKEN:
-						s = sp->gettoken();
+						s = sp->gettoken_oldstring();
 						ps = sp->nexttoken();
 						if (ps == PS_ERROR || ps == PS_EOF)
 							l = 0;
@@ -1101,7 +1134,7 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 		{
 			if (MCtrace || MCnbreakpoints)
 			{
-				MCB_trace(ep, tspr->getline(), tspr->getpos());
+				MCB_trace(ctxt, tspr->getline(), tspr->getpos());
 				if (MCexitall)
 					break;
 			}
@@ -1209,7 +1242,7 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 		}
 		if (MCtrace || MCnbreakpoints)
 		{
-			MCB_trace(ep, getline(), getpos());
+			MCB_trace(ctxt, getline(), getpos());
 			if (MCexitall)
 				break;
 		}
@@ -1218,6 +1251,31 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 	}
 	delete sp;
 	return ES_NORMAL;
+}
+#endif /* MCRepeat::exec */
+
+void MCRepeat::exec_ctxt(MCExecContext& ctxt)
+{
+    switch (form)
+	{
+        case RF_FOR:
+            MCKeywordsExecRepeatFor(ctxt, statements, endcond, loopvar, each, line, pos);
+            break;
+        case RF_WITH:
+            MCKeywordsExecRepeatWith(ctxt, statements, step, startcond, endcond, loopvar, stepval, line, pos);
+            break;
+        case RF_FOREVER:
+            MCKeywordsExecRepeatForever(ctxt, statements, line, pos);
+            break;
+        case RF_UNTIL:
+            MCKeywordsExecRepeatUntil(ctxt, statements, endcond, line, pos);
+            break;
+        case RF_WHILE:
+            MCKeywordsExecRepeatWhile(ctxt, statements, endcond, line, pos);
+            break;
+        default:
+            break;
+    }
 }
 
 uint4 MCRepeat::linecount()
@@ -1273,6 +1331,7 @@ Parse_stat MCExit::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCExit::exec */ LEGACY_EXEC
 Exec_stat MCExit::exec(MCExecPoint &ep)
 {
 	if (exit == ES_EXIT_ALL)
@@ -1281,6 +1340,12 @@ Exec_stat MCExit::exec(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 	return exit;
+}
+#endif /* MCExit::exec */
+
+void MCExit::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecExit(ctxt, exit);
 }
 
 uint4 MCExit::linecount()
@@ -1309,9 +1374,17 @@ Parse_stat MCNext::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+
+#ifdef /* MCNext::exec */ LEGACY_EXEC
 Exec_stat MCNext::exec(MCExecPoint &ep)
 {
 	return ES_NEXT_REPEAT;
+}
+#endif /* MCNext::exec */
+
+void MCNext::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecNext(ctxt);
 }
 
 uint4 MCNext::linecount()
@@ -1347,6 +1420,7 @@ Parse_stat MCPass::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCPass::exec */ LEGACY_EXEC
 Exec_stat MCPass::exec(MCExecPoint &ep)
 {
 	if (all)
@@ -1354,15 +1428,31 @@ Exec_stat MCPass::exec(MCExecPoint &ep)
 	else
 		return ES_PASS;
 }
+#endif /* MCPass::exec */
 
 uint4 MCPass::linecount()
 {
 	return 0;
 }
 
+void MCPass::exec_ctxt(MCExecContext& ctxt)
+{
+	if (all)
+		MCKeywordsExecPassAll(ctxt);
+	else
+		MCKeywordsExecPass(ctxt);
+}
+
+#if /* MCBreak::exec */ LEGACY_EXEC
 Exec_stat MCBreak::exec(MCExecPoint &ep)
 {
 	return ES_EXIT_SWITCH;
+}
+#endif /* MCBreak::exec */
+
+void MCBreak::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecBreak(ctxt);
 }
 
 uint4 MCBreak::linecount()
@@ -1496,9 +1586,12 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#if /* MCSwitch::exec */ LEGACY_EXEC
 Exec_stat MCSwitch::exec(MCExecPoint &ep)
 {
 	MCExecPoint ep2(ep);
+	MCExecContext ctxt(ep);
+	MCExecContext ctxt2(ep2);
 	Exec_stat stat;
 	if (cond != NULL)
 	{
@@ -1552,7 +1645,7 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 		{
 			if (MCtrace || MCnbreakpoints)
 			{
-				MCB_trace(ep, tspr->getline(), tspr->getpos());
+				MCB_trace(ctxt, tspr->getline(), tspr->getpos());
 				if (MCexitall)
 					break;
 			}
@@ -1600,6 +1693,12 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 }
+#endif /* MCSwitch::exec */
+
+void MCSwitch::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecSwitch(ctxt, cond, cases, ncases, defaultcase, caseoffsets, statements, getline(), getpos());
+}
 
 uint4 MCSwitch::linecount()
 {
@@ -1623,14 +1722,29 @@ Parse_stat MCThrowKeyword::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#if /* MCThrowKeyword::exec */ LEGACY_EXEC
 Exec_stat MCThrowKeyword::exec(MCExecPoint &ep)
 {
 	if (error->eval(ep) != ES_NORMAL)
 		MCeerror->add
 		(EE_THROW_BADERROR, line, pos);
 	else
-		MCeerror->copysvalue(ep.getsvalue(), True);
+    {
+        MCAutoStringRef t_value;
+        ep . copyasstringref(&t_value);
+		MCeerror->copystringref(*t_value, True);
+    }
 	return ES_ERROR;
+}
+#endif /* MCThrowKeyword::exec */
+
+void MCThrowKeyword::exec_ctxt(MCExecContext& ctxt)
+{
+	MCAutoStringRef t_error;
+	if (!ctxt . EvalExprAsStringRef(error, EE_THROW_BADERROR, &t_error))
+		return;
+	
+	MCKeywordsExecThrow(ctxt, *t_error);
 }
 
 uint4 MCThrowKeyword::linecount()
@@ -1766,8 +1880,10 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCTry::exec */ LEGACY_EXEC
 Exec_stat MCTry::exec(MCExecPoint &ep)
 {
+	MCExecContext ctxt(ep);
 	Try_state state = TS_TRY;
 	MCStatement *tspr = trystatements;
 	Exec_stat stat;
@@ -1777,7 +1893,7 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 	{
 		if (MCtrace || MCnbreakpoints)
 		{
-			MCB_trace(ep, tspr->getline(), tspr->getpos());
+			MCB_trace(ctxt, tspr->getline(), tspr->getpos());
 			if (MCexitall)
 				break;
 		}
@@ -1862,8 +1978,10 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 		case ES_PASS:
 			if (state == TS_CATCH)
 			{
-				errorvar->evalvar(ep)->fetch(ep);
-				MCeerror->copysvalue(ep.getsvalue(), False);
+				errorvar->evalvar(ep)->eval(ep);
+                MCAutoStringRef t_value;
+                ep . copyasstringref(&t_value);
+				MCeerror->copystringref(*t_value, False);
 				MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
 				stat = ES_ERROR;
 			}
@@ -1887,9 +2005,17 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 	MCtrylock--;
 	return retcode;
 }
+#endif /* MCTry::exec */ 
+
+void MCTry::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecTry(ctxt, trystatements, catchstatements, finallystatements, errorvar, line, pos);
+}
 
 uint4 MCTry::linecount()
 {
 	return countlines(trystatements) + countlines(catchstatements)
 	       + countlines(finallystatements);
 }
+
+////////////////////////////////////////////////////////////////////////////////

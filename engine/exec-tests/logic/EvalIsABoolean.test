@@ -1,0 +1,21 @@
+setup
+
+test true is a boolean
+test not (true is not a boolean)
+
+test false is a boolean
+test "true" is a boolean
+test "false" is a boolean
+
+test "False" is a boolean
+test "FALSE" is a boolean
+test "fAlSe" is a boolean
+test "tRuE" is a boolean
+
+test "abc" is not a boolean
+test 1 is not a boolean
+test 1.23 is not a boolean
+
+test empty is not a boolean
+
+teardown

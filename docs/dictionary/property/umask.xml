@@ -27,6 +27,7 @@
     <linux/>
     <ios/>
     <android/>
+    <mac/>
   </platforms>
   <classes>
     <desktop/>
@@ -39,9 +40,37 @@
   </security>
   <summary>Specifies the <glossary tag="Unix">Unix</glossary> access permissions of <function tag="files">files</function> and <function tag="folders">folders</function> created by the <glossary tag="application">application</glossary>.</summary>
   <examples>
-    <example>set the umask to 002 <code><i>-- owner read/write, anyone can read</i></code></example>
+    <example><p>set the convertOctals to true</p><p>set the umask to 0077</p></example>
   </examples>
   <description>
-    <p>Use the <b>umask</b> command to set the access permissions for <function tag="files">files</function> and <function tag="folders">folders</function> you create.</p><p/><p><b>Value:</b></p><p>The <b>umask</b> is a positive <keyword tag="integer">integer</keyword> of three digits, or empty.</p><p/><p>By default, the <b>umask</b> is set to the user's <glossary tag="Unix">Unix</glossary> "umask" setting.</p><p/><p><b>Comments:</b></p><p>The <b>umask</b> blocks the specified permissions from being granted for newly created <function tag="files">files</function> and <function tag="folders">folders</function>. It affects <function tag="files">files</function> created with the <command tag="open file">open file</command> <glossary tag="command">command</glossary>, <function tag="folders">folders</function> created with the <command tag="create folder">create folder</command> <glossary tag="command">command</glossary>, and <function tag="files">files</function> and <function tag="folders">folders</function> created on the local system with the <keyword tag="URL">URL</keyword> <glossary tag="keyword">keyword</glossary>.</p><p/><p>Each digit of the <b>umask</b> <glossary tag="property">property</glossary> is an <glossary tag="octal">octal</glossary> number that specifies a set of permissions:</p><p/><p>        * Read permission (4) lets a user read or copy the file or folder.</p><p>        * Write permission (2) lets a user change the contents of the file or folder.</p><p>        * Execute permission (1) lets a user run the file (if it is a program file), or work with files in the folder.</p><p/><p>You add the numbers corresponding to each permission together to get the digit. For example, to specify that write permission is to be blocked, use the digit<code> 2</code>. To specify that read and execute permission should both be blocked, use the digit<code> 5 </code>(4 + 1).</p><p/><p>The first digit of the <b>umask</b> specifies the permissions to be blocked for the owner of the <keyword tag="file">file</keyword> or <property tag="defaultFolder">folder</property>; the second digit specifies the permissions to be blocked for members of the group that owns the <keyword tag="file">file</keyword>; and the third digit specifies permissions to be blocked for all other users. For example, if the <b>umask</b> is<code> 022</code> when LiveCode creates a file, the file owner has all the normal permissions, but the group and all other users do not have write permission, even if LiveCode would normally create the file so as to give them write permission.</p><p/><p>On Mac OS and Windows systems, the <b>umask</b> <glossary tag="property">property</glossary> has no effect and always reports zero.</p>
+    <p>Use the <b>umask</b> command to set the access permissions for
+    <function tag="files">files</function> and <function tag="folders">folders</function> created by LiveCode.</p>
+    <p/>
+
+    <p><b>Value:</b></p>
+    <p>The <b>umask</b> is a positive <keyword tag="integer">integer</keyword>, or empty.</p>
+    <p>By default, the <b>umask</b> is set to the user's <glossary tag="Unix">Unix</glossary> "umask" setting.</p>
+    <p/>
+
+    <p><b>Comments:</b></p>
+    <p>The <b>umask</b> blocks specific permissions from being granted for newly created <function tag="files">files</function> and <function tag="folders">folders</function>.  It affects <function tag="files">files</function> created with the <command tag="open file">open file</command> <glossary tag="command">command</glossary>, <function tag="folders">folders</function> created with the <command tag="create folder">create folder</command> <glossary tag="command">command</glossary>, and <function tag="files">files</function> and <function tag="folders">folders</function> created on the local system with the <keyword tag="URL">URL</keyword> <glossary tag="keyword">keyword</glossary>.</p>
+
+    <p>The <b>umask</b> is most easily represented in <glossary tag="octal">octal</glossary>.  Each digit of the <glossary tag="octal">octal</glossary> representation of the <b>umask</b> specifies a set of permissions:</p>
+    <ul>
+      <li>Read permission (4) lets a user read or copy the file or folder.</li>
+      <li>Write permission (2) lets a user change the contents of the file or folder.</li>
+      <li>Execute permission (1) lets a user run the file (if it is a program file), or work with files in the folder.</li>
+    </ul>
+    <p>Each digit is the sum of the permission values that are to be blocked.  For example, to specify that read and execute permission should both be blocked, use the octal digit <code>4 + 1 = 5</code>.</p>
+
+    <p>The first <glossary tag="octal">octal</glossary> digit of the umask specifies the permissions to be blocked for the owner of the file or folder; the second digit specifies the permissions to be blocked for members of the group that owns the file or folder; and the third digit specifies permissions to be blocked for all other users.  For example, if the <b>umask</b> is <code>0022</code> when LiveCode creates a file, the file owner has all the normal permissions, but the group and all other users do not have write permission (even if LiveCode would normally create the file so as to give them write permission).</p>
+    <p/>
+    <p>On Mac OS Classic and Windows systems, the <b>umask</b> <glossary tag="property">property</glossary> has no effect and always reports zero.</p>
+
+    <p><tip>You will almost always want to set the <property tag="convertOctals">convertOctals</property> to <code>true</code> before setting the <b>umask</b>.  If you don't, the value you provide will be interpreted as decimal rather than octal.</tip></p>
+
+    <p><tip>For more information on the <glossary tag="Unix">Unix</glossary> "umask", consult your platform's documentation (e.g. <code>man 2 umask</code>).</tip></p>
+
+    <p><tip>The value of <b>umask</b> will be inherited by all <glossary tag="process">processes</glossary> created by LiveCode.  This includes processes created using <command tag="open process"></command> and <function tag="shell">shell</function>.</tip></p>
   </description>
 </doc>

@@ -103,14 +103,82 @@ uint8_t type_table[256] =
     ST_ID,   ST_ID,   ST_ID,   ST_ID    //      0xFC    0xFD    0xFE    0xFF
 };
 
+uint8_t unicode_type_table[256] =
+{
+    ST_EOF,         ST_ID,          ST_ID,          ST_ID,          //     ^@      ^A      ^B      ^C
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^D      ^E      ^F      ^G
+    ST_ID,          ST_SPC,         ST_EOL,         ST_ID,          //     ^H      ^I      ^J      ^K
+    ST_ID,          ST_EOL,         ST_ID,          ST_ID,          //     ^L      ^M      ^N      ^O
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^P      ^Q      ^R      ^S
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^T      ^U      ^V      ^W
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^X      ^Y      ^Z      ^[
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^\      ^]      ^^      ^_
+    ST_SPC,         ST_OP,          ST_LIT,         ST_COM,         //              !       "       #
+    ST_ID,          ST_OP,          ST_OP,          ST_ID,          //      $       %       &       '
+    ST_LP,          ST_RP,          ST_OP,          ST_OP,          //      (       )       *       +
+    ST_SEP,         ST_MIN,         ST_NUM,         ST_OP,          //      ,       -       .       /
+    ST_NUM,         ST_NUM,         ST_NUM,         ST_NUM,         //      0       1       2       3
+    ST_NUM,         ST_NUM,         ST_NUM,         ST_NUM,         //      4       5       6       7
+    ST_NUM,         ST_NUM,         ST_OP,          ST_SEMI,        //      8       9       :       ;
+    ST_OP,          ST_OP,          ST_OP,          ST_TAG,         //      <       =       >       ?
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      @       A       B       C
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      D       E       F       G
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      H       I       J       K
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      L       M       N       O
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      P       Q       R       S
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      T       U       V       W
+    ST_ID,          ST_ID,          ST_ID,          ST_LB,          //      X       Y       Z       [
+    ST_ESC,         ST_RB,          ST_OP,          ST_ID,          //      \       ]       ^       _
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      `       a       b       c
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      d       e       f       g
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      h       i       j       k
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      l       m       n       o
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      p       q       r       s
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      t       u       v       w
+    ST_ID,          ST_ID,          ST_ID,          ST_LB,          //      x       y       z       {
+    ST_OP,          ST_RB,          ST_OP,          ST_ID,          //      |       }       ~       DEL
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x80    0x81    0x82    0x83
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x84    0x85    0x86    0x87
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x88    0x89    0x8A    0x8B
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x8C    0x8D    0x8E    0x8F
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x90    0x91    0x92    0x93
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x94    0x95    0x96    0x97
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x98    0x99    0x9A    0x9B
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x9C    0x9D    0x9E    0x9F
+    ST_SPC,         ST_ID,          ST_ID,          ST_ID,          //      0xA0    0xA1    0xA2    0xA3
+    ST_UNDEFINED,   ST_ID,          ST_UNDEFINED,   ST_ID,          //      0xA4    0xA5    0xA6    0xA7
+    ST_ESC,         ST_ID,          ST_ID,          ST_ID,          //      0xA8    0xA9    0xAA    0xAB
+    ST_ESC,         ST_UNDEFINED,   ST_ID,          ST_ID,          //      0xAC    0xAD    0xAE    0xAF
+    ST_ID,          ST_ID,          ST_UNDEFINED,   ST_UNDEFINED,	//      0xB0    0xB1    0xB2    0xB3
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xB4    0xB5    0xB6    0xB7
+    ST_ID,          ST_UNDEFINED,   ST_ID,          ST_ID,          //      0xB8    0xB9    0xBA    0xBB
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_ID,          //      0xBC    0xBD    0xBE    0xBF
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xC0    0xC1    0xC2    0xC3
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xC4    0xC5    0xC6    0xC7
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xC8    0xC9    0xCA    0xCB
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xCC    0xCD    0xCE    0xCF
+    ST_UNDEFINED,   ST_ID,          ST_ID,          ST_ID,          //      0xD0    0xD1    0xD2    0xD3
+    ST_ID,          ST_ID,          ST_ID,          ST_UNDEFINED,	//      0xD4    0xD5    0xD6    0xD7
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xD8    0xD9    0xDA    0xDB
+    ST_ID,          ST_UNDEFINED,   ST_UNDEFINED,   ST_ID,          //      0xDC    0xDD    0xDE    0xDF
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xE0    0xE1    0xE2    0xE3
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xE4    0xE5    0xE6    0xE7
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xE8    0xE9    0xEA    0xEB
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xEC    0xED    0xEE    0xEF
+    ST_UNDEFINED,   ST_ID,          ST_ID,          ST_ID,          //      0xF0    0xF1    0xF2    0xF3
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xF4    0xF5    0xF6    0xF7
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xF8    0xF9    0xFA    0xFB
+    ST_ID,          ST_UNDEFINED,   ST_UNDEFINED,   ST_ID,          //      0xFC    0xFD    0xFE    0xFF
+};
+
 Cvalue constant_table[] =
 {
     {"arrow", "29", 29.0},
     {"backslash", "\\", BAD_NUMERIC},
     {"busy", "6", 6.0},
     {"clock", "14", 14.0},
-    {"colon", ":", 58.0},
-    {"comma", ",", 44.0},
+    {"colon", ":", BAD_NUMERIC},
+    {"comma", ",", BAD_NUMERIC},
     {"cr", "\n", BAD_NUMERIC},
     {"crlf", "\r\n", BAD_NUMERIC},
     {"cross", "7", 7.0},
@@ -143,7 +211,7 @@ Cvalue constant_table[] =
     {"scrollbarfactor", "65535", 65535.0},
     {"seven", "7", 7.0},
     {"six", "6", 6.0},
-    {"slash", "/", 47.0},
+    {"slash", "/", BAD_NUMERIC},
     {"space", " ", BAD_NUMERIC},
     {"tab", "\t", BAD_NUMERIC},
     {"ten", "10", 10.0},
@@ -564,6 +632,8 @@ LT factor_table[] =
         {"bg", TT_CHUNK, CT_BACKGROUND},
         {"bgbehavior", TT_PROPERTY, P_BACKGROUND_BEHAVIOR},
         {"bgs", TT_CLASS, CT_BACKGROUND},
+        // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+        {"bididirection", TT_FUNCTION, F_BIDI_DIRECTION},
         {"binarydecode", TT_FUNCTION, F_BINARY_DECODE},
         {"binaryencode", TT_FUNCTION, F_BINARY_ENCODE},
         {"bitand", TT_BINOP, O_AND_BITS},
@@ -601,8 +671,9 @@ LT factor_table[] =
         {"button", TT_CHUNK, CT_BUTTON},
         {"buttons", TT_CLASS, CT_BUTTON},
         {"by", TT_PREP, PT_BY},
-		{"byte", TT_CHUNK, CT_CHARACTER},
-		{"bytes", TT_CLASS, CT_CHARACTER},
+		{"byte", TT_CHUNK, CT_BYTE},
+        {"byteoffset", TT_FUNCTION, F_BYTE_OFFSET},
+		{"bytes", TT_CLASS, CT_BYTE},
 		{"bytetonum", TT_FUNCTION, F_BYTE_TO_NUM},
         {"cachedurl", TT_FUNCTION, F_CACHED_URLS},
         {"cachedurls", TT_FUNCTION, F_CACHED_URLS},
@@ -651,6 +722,14 @@ LT factor_table[] =
         {"clipstorect", TT_PROPERTY, P_CLIPS_TO_RECT},
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
+        {"codepoint", TT_CHUNK, CT_CODEPOINT},
+        {"codepointoffset", TT_FUNCTION, F_CODEPOINT_OFFSET},
+        {"codepointproperty", TT_FUNCTION, F_CODEPOINT_PROPERTY},
+		{"codepoints", TT_CLASS, CT_CODEPOINT},
+        {"codepointtonum", TT_FUNCTION, F_UNICODE_CHAR_TO_NUM},
+        {"codeunit", TT_CHUNK, CT_CODEUNIT},
+        {"codeunitoffset", TT_FUNCTION, F_CODEUNIT_OFFSET},
+		{"codeunits", TT_CLASS, CT_CODEUNIT},
         {"collapsebox", TT_PROPERTY, P_COLLAPSE_BOX},
 		// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
 		{"colordialogcolors", TT_PROPERTY, P_COLOR_DIALOG_COLORS},
@@ -699,6 +778,7 @@ LT factor_table[] =
         {"currenttime", TT_PROPERTY, P_CURRENT_TIME},
         {"currentwindow", TT_FUNCTION, F_TOP_STACK},
         {"cursor", TT_PROPERTY, P_CURSOR},
+        {"cursorMovement", TT_PROPERTY, P_CURSORMOVEMENT},
         {"customkeys", TT_PROPERTY, P_CUSTOM_KEYS},
         {"customproperties", TT_PROPERTY, P_CUSTOM_PROPERTIES},
         {"custompropertyset", TT_PROPERTY, P_CUSTOM_PROPERTY_SET},
@@ -864,6 +944,7 @@ LT factor_table[] =
         {"formattedtext", TT_PROPERTY, P_FORMATTED_TEXT},
         {"formattedtop", TT_PROPERTY, P_FORMATTED_TOP},
         {"formattedwidth", TT_PROPERTY, P_FORMATTED_WIDTH},
+        {"formsensitive", TT_PROPERTY, P_FORM_SENSITIVE},
         {"foundchunk", TT_FUNCTION, F_FOUND_CHUNK},
         {"foundfield", TT_FUNCTION, F_FOUND_FIELD},
         {"foundline", TT_FUNCTION, F_FOUND_LINE},
@@ -1156,6 +1237,7 @@ LT factor_table[] =
         {"multiplelines", TT_PROPERTY, P_MULTIPLE_HILITES},
         {"multispace", TT_PROPERTY, P_MULTI_SPACE},
         {"name", TT_PROPERTY, P_NAME},
+        {"nativechartonum", TT_FUNCTION, F_NATIVE_CHAR_TO_NUM},
         {"navigationarrows", TT_PROPERTY, P_NAVIGATION_ARROWS},
 		{"networkinterfaces", TT_PROPERTY, P_NETWORK_INTERFACES},
         {"next", TT_CHUNK, CT_NEXT},
@@ -1163,12 +1245,15 @@ LT factor_table[] =
         {"no", TT_UNOP, O_NOT},
         {"nodes", TT_PROPERTY, P_NODES},
         {"noncontiguoushilites", TT_PROPERTY, P_NONCONTIGUOUS_HILITES},
+        {"normalizetext", TT_FUNCTION, F_NORMALIZE_TEXT},
         {"not", TT_UNOP, O_NOT},
         {"num", TT_PROPERTY, P_NUMBER},
         {"number", TT_PROPERTY, P_NUMBER},
         {"numberformat", TT_PROPERTY, P_NUMBER_FORMAT},
 		{"numtobyte", TT_FUNCTION, F_NUM_TO_BYTE},
         {"numtochar", TT_FUNCTION, F_NUM_TO_CHAR},
+        {"numtocodepoint", TT_FUNCTION, F_NUM_TO_UNICODE_CHAR},
+        {"numtonativechar", TT_FUNCTION, F_NUM_TO_NATIVE_CHAR},
         {"of", TT_OF, PT_OF},
         {"offset", TT_FUNCTION, F_OFFSET},
         {"on", TT_OF, PT_ON},
@@ -1199,6 +1284,9 @@ LT factor_table[] =
         {"paintcompression", TT_PROPERTY, P_PAINT_COMPRESSION},
         {"palindromeframes", TT_PROPERTY, P_PALINDROME_FRAMES},
         {"pan", TT_PROPERTY, P_PAN},
+        {"paragraph", TT_CHUNK, CT_PARAGRAPH},
+        {"paragraphoffset", TT_FUNCTION, F_PARAGRAPH_OFFSET},
+        {"paragraphs", TT_CLASS, CT_PARAGRAPH},
         {"param", TT_FUNCTION, F_PARAM},
         {"paramcount", TT_FUNCTION, F_PARAM_COUNT},
         {"params", TT_FUNCTION, F_PARAMS},
@@ -1425,6 +1513,9 @@ LT factor_table[] =
         {"securemode", TT_PROPERTY, P_SECURE_MODE},
 		{"securitycategories", TT_PROPERTY, P_SECURITY_CATEGORIES},
 		{"securitypermissions", TT_PROPERTY, P_SECURITY_PERMISSIONS},
+        {"segment", TT_CHUNK, CT_WORD},
+        {"segmentoffset", TT_FUNCTION, F_WORD_OFFSET},
+        {"segments", TT_CLASS, CT_WORD},
         {"selected", TT_PROPERTY, P_SELECTED},
         //{"selectedareacolor", TT_PROPERTY, P_SELECTED_AREA_COLOR},
         {"selectedbutton", TT_FUNCTION, F_SELECTED_BUTTON},
@@ -1445,6 +1536,9 @@ LT factor_table[] =
         {"selectionmode", TT_PROPERTY, P_SELECTION_MODE},
         {"selobj", TT_FUNCTION, F_SELECTED_OBJECT},
         {"selobjs", TT_FUNCTION, F_SELECTED_OBJECT},
+        {"sentence", TT_CHUNK, CT_SENTENCE},
+        {"sentenceoffset", TT_FUNCTION, F_SENTENCE_OFFSET},
+        {"sentences", TT_CLASS, CT_SENTENCE},
         {"serialcontrolstring", TT_PROPERTY, P_SERIAL_CONTROL_STRING},
 		{"sessioncookiename", TT_PROPERTY, P_SESSION_COOKIE_NAME},
 		{"sessionid", TT_PROPERTY, P_SESSION_ID},
@@ -1572,6 +1666,9 @@ LT factor_table[] =
         {"textarrows", TT_PROPERTY, P_TEXT_ARROWS},
         {"textcolor", TT_PROPERTY, P_FORE_COLOR},
         {"textdata", TT_PROPERTY, P_TEXT},
+        {"textdecode", TT_FUNCTION, F_TEXT_DECODE},
+        {"textdirection", TT_PROPERTY, P_TEXTDIRECTION},
+        {"textencode", TT_FUNCTION, F_TEXT_ENCODE},
         {"textfont", TT_PROPERTY, P_TEXT_FONT},
         {"textheight", TT_PROPERTY, P_TEXT_HEIGHT},
         {"textheightsum", TT_FUNCTION, F_TEXT_HEIGHT_SUM},
@@ -1626,6 +1723,9 @@ LT factor_table[] =
         {"tracks", TT_PROPERTY, P_TRACKS},
         {"transpose", TT_FUNCTION, F_TRANSPOSE},
         {"traversalon", TT_PROPERTY, P_TRAVERSAL_ON},
+        {"trueword", TT_CHUNK, CT_TRUEWORD},
+        {"truewordoffset", TT_FUNCTION, F_TRUEWORD_OFFSET},
+        {"truewords", TT_CLASS, CT_TRUEWORD},
         {"trunc", TT_FUNCTION, F_TRUNC},
         {"twelvehourtime", TT_PROPERTY, P_TWELVE_TIME},
         {"typingrate", TT_PROPERTY, P_TYPE_RATE},
@@ -1923,6 +2023,7 @@ static LT show_table[] =
 static LT sort_table[] =
     {
         {"ascending", TT_UNDEFINED, ST_ASCENDING},
+        {"binary", TT_UNDEFINED, ST_BINARY},
         {"by", TT_UNDEFINED, ST_BY},
         {"cards", TT_UNDEFINED, ST_CARDS},
         {"cds", TT_UNDEFINED, ST_CARDS},
@@ -2068,12 +2169,16 @@ static LT tool_table[] =
 
 static LT unit_table[] =
     {
-		{"byte", TT_UNDEFINED, FU_CHARACTER},
-		{"bytes", TT_UNDEFINED, FU_CHARACTER},
+		{"byte", TT_UNDEFINED, FU_BYTE},
+		{"bytes", TT_UNDEFINED, FU_BYTE},
         {"char", TT_UNDEFINED, FU_CHARACTER},
         {"character", TT_UNDEFINED, FU_CHARACTER},
         {"characters", TT_UNDEFINED, FU_CHARACTER},
         {"chars", TT_UNDEFINED, FU_CHARACTER},
+        {"codepoint", TT_UNDEFINED, FU_CODEPOINT},
+        {"codepoints", TT_UNDEFINED, FU_CODEPOINT},
+        {"codeunit", TT_UNDEFINED, FU_CODEUNIT},
+        {"codeunit", TT_UNDEFINED, FU_CODEUNIT},
         {"element", TT_UNDEFINED, FU_ELEMENT},
         {"int1", TT_UNDEFINED, FU_INT1},
         {"int1s", TT_UNDEFINED, FU_INT1},
@@ -2088,12 +2193,20 @@ static LT unit_table[] =
 		{"key", TT_UNDEFINED, FU_KEY},
         {"line", TT_UNDEFINED, FU_LINE},
         {"lines", TT_UNDEFINED, FU_LINE},
+        {"paragraph", TT_UNDEFINED, FU_PARAGRAPH},
+        {"paragraphs", TT_UNDEFINED, FU_PARAGRAPH},
         {"real4", TT_UNDEFINED, FU_REAL4},
         {"real4s", TT_UNDEFINED, FU_REAL4},
         {"real8", TT_UNDEFINED, FU_REAL8},
         {"real8s", TT_UNDEFINED, FU_REAL8},
+        {"segment", TT_UNDEFINED, FU_WORD},
+        {"segments", TT_UNDEFINED, FU_WORD},
+        {"sentence", TT_UNDEFINED, FU_SENTENCE},
+        {"sentences", TT_UNDEFINED, FU_SENTENCE},
         {"token", TT_UNDEFINED, FU_TOKEN},
         {"tokens", TT_UNDEFINED, FU_TOKEN},
+        {"trueword", TT_UNDEFINED, FU_TRUEWORD},
+        {"truewords", TT_UNDEFINED, FU_TRUEWORD},
         {"uint1", TT_UNDEFINED, FU_UINT1},
         {"uint1s", TT_UNDEFINED, FU_UINT1},
         {"uint2", TT_UNDEFINED, FU_UINT2},

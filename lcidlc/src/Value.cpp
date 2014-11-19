@@ -17,6 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <stdlib.h>
 
 #include "Value.h"
+#include "CString.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,6 +95,50 @@ void ValueRelease(ValueRef self)
 	}
 	
 	MCMemoryDelete(self);
+}
+
+// MERG-2013-06-14: [[ ExternalsApiV5 ]] Implement type checking methods.
+
+bool ValueIsEmpty(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeEmpty;
+}
+
+bool ValueIsBoolean(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeBoolean;
+}
+
+bool ValueIsInteger(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeInteger;
+}
+
+bool ValueIsReal(ValueRef self)
+{
+    if (self == nil)
+		return false;
+    return self->type == kValueTypeReal;
+}
+
+bool ValueIsString(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeString;
+}
+
+bool ValueIsName(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,7 +292,11 @@ bool NumberCreateWithNativeChars(const char *p_chars, uindex_t p_char_count, Val
 		self -> references = 1;
 
 		char *t_end;
+#ifdef WIN32
+		self -> integer = _strtoui64(t_cstring, &t_end, 10);
+#else
 		self -> integer = strtoull(t_cstring, &t_end, 10);
+#endif
 		if (*t_end == '\0')
 			self -> type = kValueTypeInteger;
 		else
@@ -280,8 +329,44 @@ int64_t NumberGetInteger(NumberRef self)
 double NumberGetReal(NumberRef self)
 {
 	if (self -> type == kValueTypeInteger)
-		return self -> integer;
+		return (double)self -> integer;
 	return self -> real;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// MERG-2013-06-14: [[ ExternalsApiV5 ]] Implement boolean ValueRef methods.
+bool BooleanCreateWithBool(bool value, ValueRef& r_value)
+{
+    bool t_success;
+	t_success = true;
+	
+	Value *self;
+	self = nil;
+	if (t_success)
+		t_success = MCMemoryNew(self);
+    
+	if (t_success)
+	{
+		self -> references = 1;
+		self -> type = kValueTypeBoolean;
+        self -> boolean = value;
+        
+		r_value = self;
+	}
+	else
+	{
+		MCMemoryDelete(self);
+	}
+	
+	return t_success;
+
+}
+
+bool BooleanGetBool(ValueRef self)
+{
+    return self -> boolean;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

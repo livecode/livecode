@@ -24,8 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "field.h"
-#include "unicode.h"
-#include "core.h"
 #include "mode.h"
 #include "dispatch.h"
 #include "eventqueue.h"
@@ -104,7 +102,8 @@ struct MCEvent
 			{
 				struct
 				{
-					char *string;
+                    // SN-2014-06-23: pick updated to StringRef
+					MCStringRef string;
 				} pick;
 			};
 		} menu;
@@ -294,7 +293,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		MCObject *t_target;
 		t_target = t_event -> menu . target -> Get();
 		if (t_target != nil)
-			t_target->message_with_args(MCM_mouse_down, "");
+			t_target->message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
 	}
 	break;
 
@@ -303,7 +302,8 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		MCObject *t_target;
 		t_target = t_event -> menu . target -> Get();
 		if (t_target != nil)
-			t_target->message_with_args(MCM_menu_pick, t_event -> menu . pick . string);
+            // SN-2014-06-23: pick updated to StringRef
+			t_target->message_with_valueref_args(MCM_menu_pick, t_event -> menu . pick . string);
 	}
 	break;
 			
@@ -422,7 +422,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			MCeventtime = t_event -> mouse . time;
 			MCmodifierstate = t_event -> mouse . wheel . modifiers;
 			if (t_event -> mouse . wheel . dv != 0)
-				mfocused -> kdown("", t_event -> mouse . wheel . dv < 0 ? XK_WheelUp : XK_WheelDown);
+				mfocused -> kdown(kMCEmptyString, t_event -> mouse . wheel . dv < 0 ? XK_WheelUp : XK_WheelDown);
 			
 			mfocused = MCmousestackptr->getcard()->getmfocused();
 			if (mfocused == NULL)
@@ -431,7 +431,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 				mfocused = MCmousestackptr;
 			
 			if (t_event -> mouse . wheel . dh != 0)
-				mfocused -> kdown("", t_event -> mouse . wheel . dh < 0 ? XK_WheelLeft : XK_WheelRight);
+				mfocused -> kdown(kMCEmptyString, t_event -> mouse . wheel . dh < 0 ? XK_WheelLeft : XK_WheelRight);
 		}
 		break;
 
@@ -476,40 +476,21 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			// character.
 			if (t_event -> key . press . char_code == 0)
 			{
-				t_target -> kdown(MCnullstring, t_event -> key . press . key_code);
-				t_target -> kup(MCnullstring, t_event -> key . press . key_code);
+				t_target -> kdown(kMCEmptyString, t_event -> key . press . key_code);
+				t_target -> kup(kMCEmptyString, t_event -> key . press . key_code);
 				break;
 			}
 
 			// Otherwise 'char_code' is the unicode codepoint, so first map to
 			// UTF-16 (not done properly yet...)
-			uint2 t_unichar;
-			t_unichar = (uint2)t_event -> key . press . char_code;
+			unichar_t t_unichar;
+			t_unichar = (unichar_t)t_event -> key . press . char_code;
 
-			// If we successfully map to native, then we can dispatch as a normal kdown
-			uint1 t_char;
-			if (MCUnicodeMapToNative(&t_unichar, 1, t_char))
-			{
-				char t_buffer[2];
-				t_buffer[0] = t_char;
-				t_buffer[1] = '\0';
-				t_target -> kdown(t_buffer, t_event -> key . press . key_code);
-				t_target -> kup(t_buffer, t_event -> key . press . key_code);
-				break;
-			}
-
-			// Otherwise we dispatch in a unicode way...
-			if (!t_target -> kdown(MCnullstring, t_event -> key . press . key_code))
-				if (MCactivefield != nil)
-				{
-					MCString t_unibuffer;
-					t_unibuffer . set((char *)&t_unichar, 2);
-
-					// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
-					//   unicode mode.
-					MCactivefield -> finsertnew(FT_IMEINSERT, t_unibuffer, LCH_UNICODE, true);
-				}
-			t_target -> kup(MCnullstring, t_event -> key . press . key_code);
+			// Now the string is created with the appropriate unicode-capable function
+			MCAutoStringRef t_buffer;
+            MCStringCreateWithChars(&t_unichar, 1, &t_buffer);
+			t_target -> kdown(*t_buffer, t_event -> key . press . key_code);
+			t_target -> kup(*t_buffer, t_event -> key . press . key_code);
 		}
 		break;
 
@@ -525,12 +506,12 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 
 			MCactivefield -> setcompositioncursoroffset(t_event -> ime . compose . offset * 2);
 
-			MCString t_unichars;
-			t_unichars . set((const char *)t_event -> ime . compose . chars, t_event -> ime . compose . char_count * sizeof(uint16_t));
+			MCAutoStringRef t_unichars;
+			MCStringCreateWithChars((const unichar_t *)t_event->ime.compose.chars, t_event->ime.compose.char_count, &t_unichars);
 			
 			// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
 			//   unicode mode.
-			MCactivefield -> finsertnew(FT_IMEINSERT, t_unichars, LCH_UNICODE, true);
+			MCactivefield -> finsertnew(FT_IMEINSERT, *t_unichars, LCH_UNICODE);
 			if (t_event -> ime . compose . enabled)
 			{
 				MCRectangle r;
@@ -548,32 +529,32 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 	case kMCEventTypeMotion:
 		{
 			MCNameRef t_message;
-			const char *t_motion;
+			MCStringRef t_motion;
 			switch(t_event -> motion . type)
 			{
 				case kMCEventMotionShakeBegan:
-					t_motion = "shake";
+					t_motion = MCSTR("shake");
 					t_message = MCM_motion_start;
 					break;
 				case kMCEventMotionShakeEnded:
-					t_motion = "shake";
+					t_motion = MCSTR("shake");
 					t_message = MCM_motion_end;
 					break;
 				case kMCEventMotionShakeCancelled:
-					t_motion = "shake";
+					t_motion = MCSTR("shake");
 					t_message = MCM_motion_release;
 					break;
 			}
 			
-			MCdefaultstackptr -> getcurcard() -> message_with_args(t_message, t_motion);
+			MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(t_message, t_motion);
 		}
 		break;
 		
 	case kMCEventTypeAcceleration:
 		{
-			char t_value[64 * 4 + 4];
-			sprintf(t_value, "%.6f,%.6f,%.6f,%f", t_event -> acceleration . x, t_event -> acceleration . y, t_event -> acceleration . z, t_event -> acceleration . t);
-			MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_acceleration_changed, t_value);
+			MCAutoStringRef t_value;
+            /* UNCHECKED */ MCStringFormat(&t_value, "%.6f,%.6f,%.6f,%f", t_event -> acceleration . x, t_event -> acceleration . y, t_event -> acceleration . z, t_event -> acceleration . t);
+			MCdefaultstackptr -> getcurcard() -> message_with_valueref_args(MCM_acceleration_changed, *t_value);
 		}
 		break;
 		
@@ -626,7 +607,8 @@ static void MCEventQueueDestroyEvent(MCEvent *p_event)
 	else if (p_event -> type == kMCEventTypeMenuPick)
 	{
 		p_event -> menu . target -> Release();
-		delete p_event -> menu . pick . string;
+        // SN-2014-06-23: pick updated to StringRef
+		MCValueRelease(p_event -> menu . pick . string);
 	}
 #ifdef _MOBILE
 	else if (p_event -> type == kMCEventTypeCustom)
@@ -1078,15 +1060,15 @@ bool MCEventQueuePostUpdateMenu(MCObjectHandle *p_target)
 	return true;
 }
 
-bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, const char *p_string)
+bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, MCStringRef p_string)
 {
 	MCEvent *t_event;
 	if (!MCEventQueuePost(kMCEventTypeMenuPick, t_event))
 		return false;
 	p_target -> Retain();
 	t_event -> menu . target = p_target;
-	t_event -> menu . pick . string = strdup(p_string);
-	return true;
+    // SN-2014-06-23: pick updated to StringRef
+	return MCStringCopy(p_string, t_event -> menu . pick . string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

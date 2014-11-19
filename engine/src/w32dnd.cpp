@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "transfer.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "image.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -139,13 +139,13 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 
 		if (CoCreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER, __uuidof(IDragSourceHelper), (void **)&t_source_helper) == S_OK)
 		{
-			MCSharedString *t_dib;
-			t_dib = p_image -> converttodragimage();
-			if (t_dib != NULL)
+			MCAutoDataRef t_dib;
+			p_image -> converttodragimage(&t_dib);
+			if (*t_dib != nil)
 			{
 				const void *t_data;
-				t_data = t_dib -> Get() . getstring();
-
+				t_data = (const void *)MCDataGetBytePtr(*t_dib);
+				
 				HDC t_dc;
 				t_dc = GetDC(static_cast<MCScreenDC *>(MCscreen) -> getinvisiblewindow());
 
@@ -169,8 +169,6 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 
 					DeleteObject(t_drag_bitmap);
 				}
-
-				t_dib -> Release();
 			}
 		}
 

@@ -17,7 +17,6 @@
 #include <Cocoa/Cocoa.h>
 #include <Carbon/Carbon.h>
 
-#include "core.h"
 #include "typedefs.h"
 #include "platform.h"
 #include "platform-internal.h"

@@ -1,0 +1,13 @@
+setup
+
+test cos(pi) is -1
+test cos(2 * pi / 3) is -0.5
+test cos(pi / 2) is 0
+test cos(pi / 3) is 0.5
+test cos(0) is 1
+
+//repeat with i = 0 to 90
+//	test acos(cos(i / (2*pi))) is i / (2*pi)
+//end repeat
+
+teardown

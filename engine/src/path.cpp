@@ -20,12 +20,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "dispatch.h"
 #include "image.h"
 #include "stack.h"
 #include "util.h"
+#include "variable.h"
 
 #include "globals.h"
 
@@ -242,7 +243,7 @@ MCPath *MCPath::create_polyline(MCPoint *points, uint2 count, bool adjust)
 	return t_path;
 }
 
-MCPath *MCPath::create_polypolyline(MCSegment *segments, uint2 count, bool adjust)
+MCPath *MCPath::create_polypolyline(MCLineSegment *segments, uint2 count, bool adjust)
 {
 	MCPath *t_path;
 	uint2 t_count;

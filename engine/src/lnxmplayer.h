@@ -26,7 +26,7 @@ class MPlayer
 	
 		// Initilize the mplayer process and load in the specified media file.
 		// This also creates a new child window of the given stack
-		bool init ( char * p_filename, MCStack *p_stack, MCRectangle p_rect );
+        bool init (const char *p_filename, MCStack *p_stack, MCRectangle p_rect );
 		bool shutdown ( void ) ;
 	
 		// Basic commands for manipulating the media
@@ -63,7 +63,7 @@ class MPlayer
 		char * m_filename ;
 		uint4 m_osd_level ;
 		MCStack *m_stack ;
-		Window m_window; 
+		GdkWindow *m_window;
 		MCRectangle m_player_rect ;
 		int m_pfd_write[2];
 		int m_pfd_read[2];
