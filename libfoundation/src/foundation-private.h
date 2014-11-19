@@ -457,6 +457,8 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self);
 bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description);
 MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
 
+void __MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self, uindex_t p_index, __MCTypeInfo *& r_base_type, uindex_t & r_base_index);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 hash_t MCNativeCharsHash(const char_t *chars, uindex_t char_count, MCStringOptions p_options);

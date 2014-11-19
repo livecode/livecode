@@ -144,8 +144,16 @@ uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef unresolved_self)
     self = __MCTypeInfoResolve(unresolved_self);
     
     MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+
+	/* Sum field counts of all base record types */
+	uindex_t t_field_count;
+	t_field_count = 0;
+	while (self != kMCNullTypeInfo) {
+		t_field_count += self -> record . field_count;
+		self = MCRecordTypeInfoGetBaseType (self);
+	};
     
-    return self -> record . field_count;
+    return t_field_count;
 }
 
 MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef unresolved_self, uindex_t p_index)
@@ -154,9 +162,13 @@ MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef unresolved_self, uindex_t p
     self = __MCTypeInfoResolve(unresolved_self);
     
     MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
-    MCAssert(self -> record . field_count > p_index);
-    
-    return self -> record . fields[p_index] . name;
+
+	MCTypeInfoRef t_base_type;
+	uindex_t t_base_index;
+	__MCRecordTypeInfoGetBaseTypeForField(self, p_index,
+	                                      t_base_type, t_base_index);
+
+	return t_base_type -> record . fields[t_base_index] . name;
 }
 
 MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef unresolved_self, uindex_t p_index)
@@ -165,9 +177,40 @@ MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef unresolved_self, uindex
     self = __MCTypeInfoResolve(unresolved_self);
     
     MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
-    MCAssert(self -> record . field_count > p_index);
-    
-    return self -> record . fields[p_index] . type;
+
+	MCTypeInfoRef t_base_type;
+	uindex_t t_base_index;
+	__MCRecordTypeInfoGetBaseTypeForField(self, p_index,
+	                                      t_base_type, t_base_index);
+
+	return t_base_type -> record . fields[t_base_index] . type;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void
+__MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self,
+                                       uindex_t p_index,
+                                       __MCTypeInfo *& r_base,
+                                       uindex_t & r_base_index)
+{
+	uindex_t t_total_field_count;
+	t_total_field_count = MCRecordTypeInfoGetFieldCount(self);
+	MCAssert(t_total_field_count > p_index);
+
+	/* Search for the base record type where the requested field is
+	 * defined. */
+	uindex_t t_base_field_count;
+	t_base_field_count = t_total_field_count;
+	while (t_base_field_count > p_index)
+	{
+		MCAssert (self != kMCNullTypeInfo);
+		t_base_field_count -= self -> record . field_count;
+		self = MCRecordTypeInfoGetBaseType(self);
+	}
+
+	r_base = self;
+	r_base_index = p_index - t_base_field_count;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
