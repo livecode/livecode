@@ -2161,22 +2161,36 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		uint2 nlines = 0;
 		MCU_break_string(slabel, lines, nlines, isunicode);
 
-		uint2 fheight;
-		fheight = gettextheight();
-
 		uint2 fontstyle;
 		fontstyle = gettextstyle();
 
-		int32_t fascent, fdescent;
+		coord_t fascent, fdescent, fleading;
 		fascent = MCFontGetAscent(m_font);
 		fdescent = MCFontGetDescent(m_font);
-
+        fleading = MCFontGetLeading(m_font);
+        
+        coord_t fheight;
+        fheight = fascent + fdescent + fleading;
+        
 		int2 centerx = trect.x + leftmargin + ((trect.width - leftmargin - rightmargin) >> 1);
 		int2 centery = trect.y + topmargin + ((trect.height - topmargin - bottommargin) >> 1);
-		uint2 theight = nlines == 1 ? fascent : nlines * fheight;
-		int2 sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
-		int2 sy = centery - (theight >> 1) + fascent;
-		
+
+        coord_t sx, sy, theight;
+        if (nlines == 1)
+        {
+            // Centre things on the middle of the ascent
+            sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+            sy = roundf(centery + (fascent-fdescent)/2);
+            theight = fascent;
+        }
+        else
+        {
+            // Centre things by centring the bounding box of the text
+            sx = trect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+            sy = centery - (nlines * fheight / 2) + fleading/2 + fascent;
+            theight = nlines * fheight;
+        }
+        
 		uint2 i;
 		uint2 twidth = 0;
 		for (i = 0 ; i < nlines ; i++)
