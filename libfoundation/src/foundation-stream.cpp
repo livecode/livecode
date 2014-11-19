@@ -26,6 +26,8 @@ struct __MCStream
 	const MCStreamCallbacks *callbacks;
 };
 
+MCTypeInfoRef kMCStreamTypeInfo;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct __MCMemoryInputStream
@@ -293,7 +295,7 @@ static MCValueCustomCallbacks kMCStreamCustomValueCallbacks =
 bool MCStreamCreate(const MCStreamCallbacks *p_callbacks, size_t p_extra_bytes, MCStreamRef& r_stream)
 {
 	__MCStream *self;
-	if (!MCValueCreateCustom(&kMCStreamCustomValueCallbacks, sizeof(__MCStream) + p_extra_bytes, self))
+	if (!MCValueCreateCustom(kMCStreamTypeInfo, sizeof(__MCStream) + p_extra_bytes, self))
 		return false;
 
 	self -> callbacks = p_callbacks;
@@ -749,6 +751,21 @@ bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value)
 	}
 
 	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool __MCStreamInitialize(void)
+{
+    if (!MCCustomTypeInfoCreate(&kMCStreamCustomValueCallbacks, kMCStreamTypeInfo))
+        return false;
+    
+    return true;
+}
+
+void __MCStreamFinalize(void)
+{
+    MCValueRelease(kMCStreamTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

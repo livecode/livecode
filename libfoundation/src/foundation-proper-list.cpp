@@ -674,10 +674,13 @@ static bool __MCProperListExpandAt(MCProperListRef self, uindex_t p_at, uindex_t
 {
     MCAssert(!MCProperListIsIndirect(self));
     
+    uindex_t t_old_length;
+    t_old_length = self -> length;
+    
     if (!MCMemoryResizeArray(self -> length + p_count, self -> list, self -> length))
         return false;
     
-    MCMemoryMove(self -> list + p_at + p_count, self -> list + p_at, self -> length - p_at);
+    MCMemoryMove(self -> list + p_at + p_count, self -> list + p_at, (t_old_length - p_at) * sizeof(MCValueRef));
     
     return true;
 }
@@ -686,7 +689,7 @@ static bool __MCProperListShrinkAt(MCProperListRef self, uindex_t p_at, uindex_t
 {
     MCAssert(!MCProperListIsIndirect(self));
     
-    MCMemoryMove(self -> list + p_at, self -> list + p_at + p_count, self -> length - (p_at + p_count));
+    MCMemoryMove(self -> list + p_at, self -> list + p_at + p_count, (self -> length - (p_at + p_count)) * sizeof(MCValueRef));
     
     if (!MCMemoryResizeArray(self -> length - p_count, self -> list, self -> length))
         return false;

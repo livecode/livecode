@@ -128,10 +128,10 @@ foreign handler MyPointerOpaqueType_Hash(in pLeft as pointer, in pRight as point
 //
 // A record type is a collection of fields all stored together.
 //
-record type MyRecordType
+/*record type MyRecordType
     Offset as integer
     Length as integer
-end type
+end type*/
 
 // Handler type definition
 //

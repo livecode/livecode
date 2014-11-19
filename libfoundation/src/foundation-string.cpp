@@ -3082,6 +3082,15 @@ bool MCStringAppendChar(MCStringRef self, unichar_t p_char)
 	return MCStringAppendChars(self, &p_char, 1);
 }
 
+bool
+MCStringAppendCodepoint (MCStringRef self, codepoint_t p_codepoint)
+{
+	uindex_t t_num_units;
+	unichar_t t_units[2];
+	t_num_units = MCStringCodepointToSurrogates (p_codepoint, t_units);
+	return MCStringAppendChars (self, t_units, t_num_units);
+}
+
 bool MCStringPrepend(MCStringRef self, MCStringRef p_prefix)
 {
 	MCAssert(MCStringIsMutable(self));
@@ -3215,6 +3224,15 @@ bool MCStringPrependNativeChar(MCStringRef self, char_t p_char)
 bool MCStringPrependChar(MCStringRef self, unichar_t p_char)
 {
 	return MCStringPrependChars(self, &p_char, 1);
+}
+
+bool
+MCStringPrependCodepoint (MCStringRef self, codepoint_t p_codepoint)
+{
+	uindex_t t_num_units;
+	unichar_t t_units[2];
+	t_num_units = MCStringCodepointToSurrogates (p_codepoint, t_units);
+	return MCStringPrependChars (self, t_units, t_num_units);
 }
 
 bool MCStringInsert(MCStringRef self, uindex_t p_at, MCStringRef p_substring)
@@ -3352,6 +3370,15 @@ bool MCStringInsertNativeChar(MCStringRef self, uindex_t p_at, char_t p_char)
 bool MCStringInsertChar(MCStringRef self, uindex_t p_at, unichar_t p_char)
 {
 	return MCStringInsertChars(self, p_at, &p_char, 1);
+}
+
+bool
+MCStringInsertCodepoint (MCStringRef self, uindex_t p_at, codepoint_t p_codepoint)
+{
+	uindex_t t_num_units;
+	unichar_t t_units[2];
+	t_num_units = MCStringCodepointToSurrogates (p_codepoint, t_units);
+	return MCStringInsertChars (self, p_at, t_units, t_num_units);
 }
 
 bool MCStringRemove(MCStringRef self, MCRange p_range)

@@ -71,18 +71,22 @@ bool MCInitialize(void)
     if (!__MCProperListInitialize())
         return false;
     
+    if (!__MCStreamInitialize())
+        return false;
+    
 	return true;
 }
 
 void MCFinalize(void)
 {
+    __MCStreamFinalize();
     __MCProperListFinalize();
 	__MCLocaleFinalize();
     __MCRecordFinalize();
+    __MCDataFinalize();
     __MCSetFinalize();
 	__MCListFinalize();
 	__MCArrayFinalize();
-    __MCDataFinalize();
     __MCNumberFinalize();
     __MCTypeInfoFinalize();
     __MCErrorFinalize();
@@ -204,7 +208,7 @@ hash_t MCHashInteger(integer_t i)
 
 hash_t MCHashPointer(void *p)
 {
-    return MCHashInteger((integer_t)p);
+    return MCHashInteger((intptr_t)p);
 }
 
 hash_t MCHashDouble(double d)

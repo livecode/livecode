@@ -66,6 +66,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+// PM-2014-11-11: [[ Bug 13970 ]] Added for the MCplayers' syncbuffering call
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uint1 MCObject::dashlist[2] = {4, 4};
@@ -2864,6 +2869,14 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	{
 		t_context -> setopacity(blendlevel * 255 / 100);
 		t_context -> setfunction(GXblendSrcOver);
+
+        // PM-2014-11-11: [[ Bug 13970 ]] Make sure each player is buffered correctly for export snapshot
+        for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+            t_player -> syncbuffering(t_context);
+            
+#ifdef FEATURE_PLATFORM_PLAYER
+        MCPlatformWaitForEvent(0.0, true);
+#endif
 		if (t_effects != nil)
 			t_context -> begin_with_effects(t_effects, static_cast<MCControl *>(this) -> getrect());
 		// MW-2011-09-06: [[ Redraw ]] Render the control isolated, but not as a sprite.
@@ -2988,7 +3001,11 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	{
 		if ((stat = IO_read_stringref_new(_script, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
-		
+        
+        // SN-2014-11-07: [[ Bug 13957 ]] It's possible to get a NULL script but having the
+        //  F_SCRIPT flag. Unset the flag in case it's needed
+        if (_script == NULL)
+            flags &= ~F_SCRIPT;
 		getstack() -> securescript(this);
 	}
 

@@ -106,6 +106,7 @@ static MCStringRef to_mcstringref(long p_string)
 
 static MCTypeInfoRef to_mctypeinforef(long p_type_index)
 {
+    MCAssert(p_type_index < s_typeinfo_count);
     return s_typeinfos[p_type_index];
 }
 
@@ -155,9 +156,31 @@ void EmitEndModule(void)
     void *t_buffer;
     size_t t_size;
     MCMemoryOutputStreamFinish(t_stream, t_buffer, t_size);
+    MCValueRelease(t_stream);
     
     if (t_success)
+    {
         MCLog("Generated module file of size %ld\n", t_size);
+        
+        MCScriptModuleRef t_module;
+        MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
+        t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
+        MCValueRelease(t_stream);
+        
+        if (t_success)
+            t_success = MCScriptEnsureModuleIsUsable(t_module);
+        
+        MCScriptInstanceRef t_instance;
+        if (t_success)
+            t_success = MCScriptCreateInstanceOfModule(t_module, t_instance);
+        
+        MCValueRef t_result;
+        if (t_success)
+            t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("test"), nil, 0, t_result);
+        
+        if (t_success)
+            MCLog("Executed test with result %@", t_result);
+    }
     
     MCFinalize();
 }
@@ -268,7 +291,9 @@ void EmitNamedType(long index, long& r_new_index)
 
 void EmitOptionalType(long base_index, long& r_new_index)
 {
-    if (!define_typeinfo(kMCNullTypeInfo, r_new_index))
+    MCAutoTypeInfoRef t_typeinfo;
+    MCOptionalTypeInfoCreate(to_mctypeinforef(base_index), &t_typeinfo);
+    if (!define_typeinfo(*t_typeinfo, r_new_index))
         return;
     
     MCLog("[Emit] OptionalType(%ld -> %ld)", base_index, r_new_index);
@@ -324,7 +349,7 @@ void EmitDoubleType(long& r_new_index)
 
 void EmitAnyType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNullTypeInfo, r_new_index))
+    if (!define_typeinfo(kMCAnyTypeInfo, r_new_index))
         return;
     
     MCLog("[Emit] AnyType(-> %ld)", r_new_index);
@@ -424,7 +449,7 @@ void EmitRecordTypeField(NameRef name, long type_index)
 void EmitEndRecordType(long& r_type_index)
 {
     MCAutoTypeInfoRef t_typeinfo;
-    MCRecordTypeInfoCreate(s_current_record_fields, s_current_record_field_count, &t_typeinfo);
+    MCRecordTypeInfoCreate(s_current_record_fields, s_current_record_field_count, s_current_record_basetype, &t_typeinfo);
     if (!define_typeinfo(*t_typeinfo, r_type_index))
         return;
     
@@ -657,13 +682,13 @@ void EmitAssignUndefined(long reg)
 
 void EmitAssignTrue(long reg)
 {
-    MCScriptEmitAssignConstantInModule(s_builder, reg, kMCNull);
+    MCScriptEmitAssignConstantInModule(s_builder, reg, kMCTrue);
     MCLog("[Emit] AssignUndefined(%ld)", reg);
 }
 
 void EmitAssignFalse(long reg)
 {
-    MCScriptEmitAssignConstantInModule(s_builder, reg, kMCNull);
+    MCScriptEmitAssignConstantInModule(s_builder, reg, kMCFalse);
     MCLog("[Emit] AssignUndefined(%ld)", reg);
 }
 

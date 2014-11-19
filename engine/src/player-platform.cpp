@@ -993,6 +993,9 @@ void MCPlayer::close()
         MCPlatformDetachPlayer(m_platform_player);
         m_is_attached = false;
     }
+    // PM-2014-11-03: [[ Bug 13917 ]] m_platform_player should be recreated when reopening a recently closed stack, to take into account if the value of dontuseqt has changed in the meanwhile
+    if (m_platform_player != nil)
+        m_platform_player = nil;
 }
 
 Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
@@ -1862,6 +1865,7 @@ void MCPlayer::freetmp()
 		MCValueAssign(filename, kMCEmptyString);
 	}
 }
+
 uint4 MCPlayer::getmovieloadedtime()
 {
     uint4 loadedtime;

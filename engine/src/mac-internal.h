@@ -81,6 +81,23 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
+//   at the MouseSync event.
+@interface com_runrev_livecode_MCApplication: NSApplication
+{
+    NSWindow* m_pseudo_modal_for;
+}
+
+-(id)init;
+
+- (void)sendEvent:(NSEvent *)event;
+
+// FG-2014-11-07: [[ Bugfix 13628 ]] Fake being modal for a non-modal window
+- (void)becomePseudoModalFor: (NSWindow*)window;
+- (NSWindow*)pseudoModalFor;
+
+@end
+
 @interface com_runrev_livecode_MCWindow: NSWindow
 {
 	bool m_can_become_key : 1;
@@ -343,6 +360,10 @@ class MCMacPlatformSurface;
 
 - (void)aboutMenuItemSelected: (id)sender;
 - (void)preferencesMenuItemSelected: (id)sender;
+// SN-2014-11-06: [[ Bug 13940 ]] Added declaration for quitMenuItemSelected
+//  and quitApplicationSelected, the latter quitting the app straight.
+- (void)quitMenuItemSelected: (id)sender;
+- (void)quitApplicationSelected: (id)sender;
 
 - (void)menuNeedsUpdate: (NSMenu *)menu;
 
@@ -539,7 +560,8 @@ NSMenu *MCMacPlatformGetIconMenu(void);
 
 void MCMacPlatformLockMenuSelect(void);
 void MCMacPlatformUnlockMenuSelect(void);
-bool MCMacPlatformWasMenuSelect(void);
+// SN-2014-11-06: [[ Bug 13836 ]] Returns whether the last item selected was a shadowed item
+bool MCMacPlatformWasShadowItemSelected(void);
 
 bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
 
