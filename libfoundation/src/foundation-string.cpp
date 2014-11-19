@@ -546,6 +546,10 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 				if (*t_format_ptr == '@')
 					break;
 				
+                // AL-2014-11-19: [[ Bug 14059 ]] Add support for variable length zero padding
+                if (*t_format_ptr == '0')
+                    t_format_ptr++;
+                
 				if (*t_format_ptr == '*')
 				{
 					t_arg_count += FORMAT_ARG_32_BIT;
