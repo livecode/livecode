@@ -412,17 +412,31 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			uint2 nlines = 0;
 			MCU_break_string(slabel, lines, nlines, isunicode);
 
-			uint2 fheight;
-			fheight = gettextheight();
-
-			int32_t fascent, fdescent;
-			fascent = MCFontGetAscent(m_font);
-			fdescent = MCFontGetDescent(m_font);
-
-			int2 sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
-			int2 sy = centery - (nlines * fheight >> 1) + fascent + fdescent - 2;
-			uint2 theight = nlines == 1 ? fascent : nlines * fheight;
+            coord_t fascent, fdescent, fleading, fxheight;
+            fascent = MCFontGetAscent(m_font);
+            fdescent = MCFontGetDescent(m_font);
+            fleading = MCFontGetLeading(m_font);
+            fxheight = MCFontGetXHeight(m_font);
             
+			coord_t fheight;
+            fheight = fascent + fdescent + fleading;
+
+            coord_t sx, sy, theight;
+            if (nlines == 1)
+            {
+                // Centre things on the middle of the ascent
+                sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+                sy = roundf(centery + (fascent-fdescent)/2);
+                theight = fascent;
+            }
+            else
+            {
+                // Centre things by centring the bounding box of the text
+                sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
+                sy = centery - (nlines * fheight / 2) + fleading/2 + fascent;
+                theight = nlines * fheight;
+            }
+
             // MW-2014-06-19: [[ IconGravity ]] Use old method of calculating icon location if gravity is none.
 			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL && m_icon_gravity == kMCGravityNone)
 			{
@@ -434,9 +448,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					          - (icons->curicon->getrect().width >> 1);
 					break;
 				case F_ALIGN_CENTER:
-					centery -= (theight >> 1) + 1;
-					sy = shadowrect.y + shadowrect.height - bottommargin - theight
-					     + fascent - fdescent - 1;
+                        centery -= (theight / 2) + 1;
+                        sy = shadowrect.y + shadowrect.height - bottommargin - theight
+                            + fascent - fdescent - 1;
 					break;
 				case F_ALIGN_RIGHT:
 					centerx = shadowrect.x + leftmargin
@@ -450,9 +464,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				icondrawed = True;
 			}
 
-			uint2 starty = sy;
+			coord_t starty = sy;
 			uint2 i;
-			uint2 twidth = 0;
+			coord_t twidth = 0;
 			
 			dc->save();
 			dc->cliprect(t_content_rect);
@@ -460,7 +474,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			for (i = 0 ; i < nlines ; i++)
 			{
 				// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-				twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode, getstack() -> getdevicetransform());
+				twidth = MCFontMeasureTextFloat(m_font, lines[i].getstring(), lines[i].getlength(), isunicode, getstack() -> getdevicetransform());
 				switch (flags & F_ALIGNMENT)
 				{
 				case F_ALIGN_LEFT:
@@ -483,7 +497,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					}
 					break;
 				case F_ALIGN_CENTER:
-					sx = centerx - (twidth >> 1);
+					sx = floorf(centerx - (twidth / 2));
 					if (menumode == WM_OPTION || menumode == WM_COMBO)
 						sx -= optionrect.width;
 					// MH-2007-03-16 [[ Bug 3598 ]] Centering of the label did not work correctly on mac os classic and non vista windows option buttons.
@@ -627,10 +641,10 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	if (getstyleint(flags) == F_MENU && menumode == WM_OPTION
 	        && MClook != LF_WIN95)
 		sx += 2;
-	if (MCaqua && IsMacLFAM()
+	/*if (MCaqua && IsMacLFAM()
 	        && (getstyleint(flags) == F_STANDARD  || getstyleint(flags) == F_MENU
 	            && menumode == WM_OPTION))
-		sy--;
+		sy--;*/
     dc -> drawtext(sx, sy, s.getstring(), s.getlength(), m_font, false, isunicode);
 	if (acceltext != NULL)
 	{
