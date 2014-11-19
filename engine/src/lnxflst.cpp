@@ -198,6 +198,22 @@ MCFontStruct *MCNewFontlist::getfont(const MCString& p_family, uint2& p_size, ui
 		t_font -> descent = t_height - t_ascent;
 	}
 
+    t_font -> m_ascent = t_face -> size -> metrics.ascender / 64.0f;
+    t_font -> m_descent = t_face -> size -> metrics.descender / -64.0f; // Note: descender is negative in FT!
+    t_font -> m_leading = (t_face -> size -> metrics.height / 64.0f) - t_font -> m_ascent - t_font -> m_descent;
+
+    // Guess the x-height based on the strikethrough position
+    PangoFontDescription* t_desc;
+    PangoFontMetrics* t_metrics;
+    int t_strikepos, t_strikewidth;
+    t_desc = pango_font_describe(t_p_font);
+    t_metrics = pango_context_get_metrics(m_pango, t_desc, NULL);
+    t_strikepos = pango_font_metrics_get_strikethrough_position(t_metrics);
+    t_strikewidth = pango_font_metrics_get_underline_thickness(t_metrics);
+    pango_font_metrics_unref(t_metrics);
+    pango_font_description_free(t_desc);
+    t_font -> m_xheight = 2 * (float(t_strikepos - t_strikewidth/2) / PANGO_SCALE);
+    
 	pango_fc_font_unlock_face((PangoFcFont*)t_p_font);
 
 	g_object_unref(t_p_font);
