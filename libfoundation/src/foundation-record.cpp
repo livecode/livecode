@@ -258,6 +258,104 @@ bool MCRecordStoreValue(MCRecordRef self, MCNameRef p_field, MCValueRef p_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool
+MCRecordCopyAsBaseType(MCRecordRef self,
+                       MCTypeInfoRef p_base_typeinfo,
+                       MCRecordRef & r_new_record)
+{
+	bool t_success;
+	MCValueRetain(self);
+	t_success = MCRecordCopyAsBaseTypeAndRelease(self,
+	                                             p_base_typeinfo,
+	                                             r_new_record);
+	if (!t_success) MCValueRelease(self);
+	return t_success;
+}
+
+bool
+MCRecordCopyAsBaseTypeAndRelease(MCRecordRef self,
+                                 MCTypeInfoRef p_base_typeinfo,
+                                 MCRecordRef & r_new_record)
+{
+	MCAssert(MCRecordTypeInfoIsDerivedFrom(self -> typeinfo, p_base_typeinfo));
+
+	/* If there's only one reference, just swap the typeinfo out and
+	 * make it immutable */
+	if (self -> references == 1)
+	{
+		self -> typeinfo = p_base_typeinfo;
+		self -> flags &= ~kMCRecordFlagIsMutable;
+		r_new_record = self;
+		return true;
+	}
+
+	if (!MCRecordCreate(p_base_typeinfo, self -> fields,
+	                    MCRecordTypeInfoGetFieldCount (p_base_typeinfo),
+	                    r_new_record))
+		return false;
+
+	MCValueRelease(self);
+	return true;
+}
+
+bool
+MCRecordCopyAsDerivedType(MCRecordRef self,
+                          MCTypeInfoRef p_derived_typeinfo,
+                          MCRecordRef & r_new_record)
+{
+	bool t_success;
+	MCValueRetain(self);
+	t_success = MCRecordCopyAsDerivedTypeAndRelease(self,
+	                                                p_derived_typeinfo,
+	                                                r_new_record);
+	if (!t_success) MCValueRelease(self);
+	return t_success;
+}
+
+bool
+MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef self,
+                                    MCTypeInfoRef p_derived_typeinfo,
+                                    MCRecordRef & r_new_record)
+{
+	MCAssert(MCRecordTypeInfoIsDerivedFrom(p_derived_typeinfo, self -> typeinfo));
+
+	uindex_t t_field_count, t_new_field_count;
+	t_field_count = MCRecordTypeInfoGetFieldCount(self -> typeinfo);
+	t_new_field_count = MCRecordTypeInfoGetFieldCount(p_derived_typeinfo);
+
+	/* If there's only one reference, then we need to: 1) swap the
+	 * typeinfo, 2) resize the field array and fill the new fields
+	 * with null values, and 3) make the record immutable. */
+	if (self -> references == 1)
+	{
+		/* Resize the array */
+		if (!MCMemoryResizeArray(t_new_field_count, self -> fields, t_field_count))
+			return false;
+		/* Clear new values */
+		for (uindex_t i = t_field_count; i < t_new_field_count; ++i)
+			self -> fields[i] = MCValueRetain(kMCNull);
+
+		/* Set the typeinfo and make immutable */
+		self -> typeinfo = p_derived_typeinfo;
+		self -> flags &= ~kMCRecordFlagIsMutable;
+
+		r_new_record = self;
+		return true;
+	}
+
+	/* Otherwise, create and manually populate the new array */
+	MCRecordRef t_result;
+	if (!MCRecordCreateMutable(p_derived_typeinfo, t_result))
+		return false;
+
+	for (uindex_t i = 0; i < t_field_count; ++i)
+		t_result -> fields[i] = MCValueRetain(self -> fields[i]);
+
+	return MCRecordCopyAndRelease(t_result, r_new_record);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __MCRecordDestroy(__MCRecord *self)
 {
     MCTypeInfoRef t_resolved_typeinfo;

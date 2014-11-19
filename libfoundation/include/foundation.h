@@ -2194,6 +2194,12 @@ bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
 bool MCRecordMutableCopy(MCRecordRef record, MCRecordRef& r_new_record);
 bool MCRecordMutableCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
 
+bool MCRecordCopyAsBaseType(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
+bool MCRecordCopyAsBaseTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
+
+bool MCRecordCopyAsDerivedType(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
+bool MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
+
 bool MCRecordIsMutable(MCRecordRef self);
 
 bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
