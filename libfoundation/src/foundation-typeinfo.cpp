@@ -118,6 +118,11 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, uindex_t p_fi
     return false;
 }
 
+MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef self)
+{
+    return self -> record . base;
+}
+
 uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef unresolved_self)
 {
     MCTypeInfoRef self;
