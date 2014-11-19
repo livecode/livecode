@@ -377,7 +377,7 @@ inline uint1 MCS_toupper(uint1 p_char)
 }
 
 extern uint2 MCctypetable[];
-#define _ctype(x, y) ((MCctypetable[(x)] & (1 << (y))) != 0)
+#define _ctype(x, y) ((MCctypetable[(uindex_t) (x)] & (1 << (y))) != 0)
 #define isalpha(x) (_ctype(x, 0))
 #define isupper(x) (_ctype(x, 1))
 #define islower(x) (_ctype(x, 2))

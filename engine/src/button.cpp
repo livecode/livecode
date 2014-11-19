@@ -592,8 +592,8 @@ void MCButton::kfocus()
 
 Boolean MCButton::kfocusnext(Boolean top)
 {
-	if ((IsMacLF() && !(state & CS_SHOW_DEFAULT))
-	        && !(flags & F_AUTO_ARM) && entry == NULL
+	if (((IsMacLF() && !(state & CS_SHOW_DEFAULT))
+		 && !(flags & F_AUTO_ARM) && entry == NULL)
 	        || !(flags & F_VISIBLE || MCshowinvisibles)
 	        || !(flags & F_TRAVERSAL_ON) || state & CS_KFOCUSED || flags & F_DISABLED)
 		return False;
@@ -602,8 +602,8 @@ Boolean MCButton::kfocusnext(Boolean top)
 
 Boolean MCButton::kfocusprev(Boolean bottom)
 {
-	if ((IsMacLF() && !(state & CS_SHOW_DEFAULT))
-	        && !(flags & F_AUTO_ARM) && entry == NULL
+	if (((IsMacLF() && !(state & CS_SHOW_DEFAULT))
+		 && !(flags & F_AUTO_ARM) && entry == NULL)
 	        || !(flags & F_VISIBLE || MCshowinvisibles)
 	        || !(flags & F_TRAVERSAL_ON) || state & CS_KFOCUSED || flags & F_DISABLED)
 		return False;
@@ -816,14 +816,14 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 		if ((((key == XK_Right || key == XK_space
 		        || key == XK_Return || key == XK_KP_Enter)
 		        && (menumode == WM_CASCADE || menumode == WM_OPTION))
-		        || key == XK_Down && menumode != WM_CASCADE)
+			 || (key == XK_Down && menumode != WM_CASCADE))
 		        && state & CS_KFOCUSED && findmenu())
 		{
 			openmenu(True);
 			return True;
 		}
-		if ((key == XK_space || (state & CS_SHOW_DEFAULT || state & CS_ARMED)
-		        && (key == XK_Return || key == XK_KP_Enter))
+		if ((key == XK_space || ((state & CS_SHOW_DEFAULT || state & CS_ARMED)
+								 && (key == XK_Return || key == XK_KP_Enter)))
 		        && !(MCmodifierstate & MS_MOD1))
 		{
 			activate(False, t_char);

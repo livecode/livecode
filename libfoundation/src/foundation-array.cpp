@@ -65,17 +65,14 @@ bool MCArrayCreate(bool p_case_sensitive, const MCNameRef *p_keys, const MCValue
 	MCArrayRef t_array;
 	t_array = nil;
 	if (t_success)
-		t_success = __MCValueCreate(kMCValueTypeCodeArray, t_array);
+		t_success = MCArrayCreateMutable(t_array);
 
 	if (t_success)
 		for(uindex_t i = 0; i < p_length && t_success; i++)
 			t_success = MCArrayStoreValue(t_array, p_case_sensitive, p_keys[i], p_values[i]);
 
 	if (t_success)
-	{
-		r_array = t_array;
-		return true;
-	}
+		return MCArrayCopyAndRelease(t_array, r_array);
 
 	MCValueRelease(t_array);
 	return false;
@@ -506,6 +503,19 @@ bool MCArrayStoreValueAtIndex(MCArrayRef self, index_t p_index, MCValueRef p_val
 		return false;
 
 	return MCArrayStoreValue(self, true, *t_key, p_value);
+}
+
+bool
+MCArrayRemoveValueAtIndex(MCArrayRef self, index_t p_index)
+{
+	char t_index_str[16];
+	sprintf(t_index_str, "%d", p_index);
+	MCNewAutoNameRef t_key;
+	if (!MCNameCreateWithNativeChars((const char_t *)t_index_str,
+									 strlen(t_index_str),
+									 &t_key))
+		return false;
+	return MCArrayRemoveValue(self, true, *t_key);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

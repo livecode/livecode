@@ -227,3 +227,28 @@ bool __MCNumberIsEqualTo(__MCNumber *self, __MCNumber *p_other_self)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+MCNumberRef kMCZero;
+MCNumberRef kMCOne;
+MCNumberRef kMCMinusOne;
+
+bool __MCNumberInitialize(void)
+{
+    if (!MCNumberCreateWithInteger(0, kMCZero))
+        return false;
+    
+    if (!MCNumberCreateWithInteger(1, kMCOne))
+        return false;
+		
+    if (!MCNumberCreateWithInteger(-1, kMCMinusOne))
+        return false;
+		
+    return true;
+}
+
+void __MCNumberFinalize(void)
+{
+    MCValueRelease(kMCZero);
+}
+
+////////////////////////////////////////////////////////////////////////////////
