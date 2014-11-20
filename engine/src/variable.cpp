@@ -552,6 +552,37 @@ Exec_stat MCVariable::append(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_leng
 }
 #endif
 
+bool MCVariable::can_become_data(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length)
+{
+    MCValueRef t_current_value;
+    t_current_value = nil;
+ 
+    if (p_length == 0)
+    {
+        // If we are already data, then we can stay data
+        if (value . type == kMCExecValueTypeDataRef)
+            return true;
+        
+        // If we are anything other than a value, we can always convert to data safely
+        if (!MCExecTypeIsValueRef(value . type))
+            return true;
+        
+        // Otherwise, check the value ref
+        t_current_value = value . valueref_value;
+    }
+    else
+        t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+    
+    // The only values that cannot convert losslessly to data are strings or names that contain non-native characters
+    if (MCValueGetTypeCode(t_current_value) == kMCValueTypeCodeString)
+        return MCStringIsNative((MCStringRef)t_current_value);
+    
+    if (MCValueGetTypeCode(t_current_value) == kMCValueTypeCodeName)
+        return MCStringIsNative(MCNameGetString((MCNameRef)t_current_value));
+    
+    return true;
+}
+
 bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting)
 {
 	return modify(ctxt, p_value, nil, 0, p_setting);
@@ -599,14 +630,10 @@ bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p
 	return false;
 }
 
-bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
-{    
-    MCAutoStringRef t_value;
-    if (!ctxt . ConvertToString(p_value, &t_value))
-        return false;
-    
-	if (p_length == 0)
-	{
+bool MCVariable::modify_string(MCExecContext& ctxt, MCStringRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
+{
+    if (p_length == 0)
+    {
         if (!converttomutablestring(ctxt))
             return false;
         
@@ -614,37 +641,49 @@ bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_pa
         // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
         // The value is now a stringref
         if (p_setting == kMCVariableSetAfter)
-            t_success = MCStringAppend(value . stringref_value, *t_value);
+            t_success = MCStringAppend(value . stringref_value, p_value);
         else if (p_setting == kMCVariableSetBefore)
-            t_success = MCStringPrepend(value . stringref_value, *t_value);
+            t_success = MCStringPrepend(value . stringref_value, p_value);
         
         if (!t_success)
-			return false;
+            return false;
         
         synchronize(ctxt, true);
         
-		return true;
-	}
-
-	MCValueRef t_current_value;
-	t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
-	
-	MCStringRef t_current_value_as_string;
-	t_current_value_as_string = nil;
-    // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
-	if (ctxt . ConvertToString(t_current_value, t_current_value_as_string) &&
-		MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
-		((p_setting == kMCVariableSetAfter && MCStringAppend(t_current_value_as_string, *t_value)) ||
-                (p_setting == kMCVariableSetBefore && MCStringPrepend(t_current_value_as_string, *t_value))) &&
-		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
-	{
-		MCValueRelease(t_current_value_as_string);
-        synchronize(ctxt, true);
-		return true;
-	}
+        return true;
+    }
     
-	MCValueRelease(t_current_value_as_string);
-	return false;
+    MCValueRef t_current_value;
+    t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+    
+    MCStringRef t_current_value_as_string;
+    t_current_value_as_string = nil;
+    // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
+    if (ctxt . ConvertToString(t_current_value, t_current_value_as_string) &&
+        MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
+        ((p_setting == kMCVariableSetAfter && MCStringAppend(t_current_value_as_string, p_value)) ||
+         (p_setting == kMCVariableSetBefore && MCStringPrepend(t_current_value_as_string, p_value))) &&
+        setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
+    {
+        MCValueRelease(t_current_value_as_string);
+        synchronize(ctxt, true);
+        return true;
+    }
+    
+    MCValueRelease(t_current_value_as_string);
+    return false;
+}
+
+bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
+{
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && can_become_data(ctxt, p_path, p_length))
+        return modify_data(ctxt, (MCDataRef)p_value, p_path, p_length, p_setting);
+
+    MCAutoStringRef t_value;
+    if (!ctxt . ConvertToString(p_value, &t_value))
+        return false;
+    
+    return modify_string(ctxt, *t_value, p_path, p_length, p_setting);
 }
 
 bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting)
@@ -656,14 +695,13 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
 {
     if (p_value . type == kMCExecValueTypeDataRef)
     {
-        if (p_length == 0 && value . type == kMCExecValueTypeDataRef)
-            return modify_data(ctxt, p_value . dataref_value, p_path, p_length, p_setting);
-        
-        MCValueRef t_current_value;
-        t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
-        
-        if (MCValueGetTypeCode(t_current_value) == kMCValueTypeCodeData)
-            return modify_data(ctxt, p_value . dataref_value, p_path, p_length, p_setting);
+        if (can_become_data(ctxt, p_path, p_length))
+        {
+            // AL-2014-11-20: In this codepath, we are taking the value rather than retaining, so make sure the DataRef is released.
+            MCAutoDataRef t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDataRef, &(&t_value));
+            return modify_data(ctxt, *t_value, p_path, p_length, p_setting);
+        }
     }
     
     MCAutoStringRef t_value;
@@ -672,49 +710,7 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
     if (ctxt . HasError())
         return ctxt . IgnoreLastError(), false;
     
-    return modify(ctxt, *t_value, p_path, p_length, p_setting);
-    
-    /*
-	if (p_length == 0)
-	{
-        if (!converttomutablestring(ctxt))
-            return false;
-        
-        // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
-        // The value is now a stringref
-        bool t_success = false;        
-        if (p_setting == kMCVariableSetAfter)
-            t_success = MCStringAppend(value . stringref_value, *t_value);
-        else if (p_setting == kMCVariableSetBefore)
-            t_success = MCStringPrepend(value . stringref_value, *t_value);
-        
-        if (!t_success)
-			return false;
-        
-        synchronize(ctxt, true);
-        
-		return true;
-	}
-    
-	MCValueRef t_current_value;
-	t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
-	
-	MCStringRef t_current_value_as_string;
-	t_current_value_as_string = nil;
-    // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
-	if (ctxt . ConvertToString(t_current_value, t_current_value_as_string) &&
-		MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
-		((p_setting == kMCVariableSetAfter && MCStringAppend(t_current_value_as_string, *t_value)) ||
-                (p_setting == kMCVariableSetBefore && MCStringPrepend(t_current_value_as_string, *t_value))) &&
-		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
-	{
-		MCValueRelease(t_current_value_as_string);
-        synchronize(ctxt, true);
-		return true;
-	}
-    
-	MCValueRelease(t_current_value_as_string);
-	return false; */
+    return modify_string(ctxt, *t_value, p_path, p_length, p_setting);
 }
 
 bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range)
@@ -722,87 +718,102 @@ bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange 
     return replace(ctxt, p_replacement, p_range, nil, 0);
 }
 
-bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
+bool MCVariable::replace_data(MCExecContext& ctxt, MCDataRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
 {
     if (p_length == 0)
     {
-        if (MCValueGetTypeCode(p_replacement) == kMCValueTypeCodeData)
-        {
-            if (!converttomutabledata(ctxt))
-                return false;
+        if (!converttomutabledata(ctxt))
+            return false;
             
-            // We are now sure to have a dataref in our ExecValue
-            MCDataReplace(value . dataref_value, p_range, (MCDataRef)p_replacement);
-        }
-        else
-        {
-            if (!converttomutablestring(ctxt))
-                return false;
-        
-            // We are now sure to have a stringref in our ExecValue
-            MCStringReplace(value . stringref_value, p_range, (MCStringRef)p_replacement);
-        }
+        // We are now sure to have a dataref in our ExecValue
+        MCDataReplace(value . dataref_value, p_range, (MCDataRef)p_replacement);
         
         synchronize(ctxt, true);
         
         return true;
     }
     
+    MCValueRef t_current_value;
+    t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
     
-	MCValueRef t_current_value;
-	t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
-	
-    
-    if (MCValueGetTypeCode(p_replacement) == kMCValueTypeCodeData)
-    {
-        MCDataRef t_current_value_as_data;
-        t_current_value_as_data = nil;
-
-        if (ctxt . ConvertToData(t_current_value, t_current_value_as_data) &&
-            MCDataMutableCopyAndRelease(t_current_value_as_data, t_current_value_as_data) &&
-            MCDataReplace(t_current_value_as_data, p_range, (MCDataRef)p_replacement) &&
-            setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_data))
-        {
-            MCValueRelease(t_current_value_as_data);
-            synchronize(ctxt, true);
-            return true;
-        }
+    MCDataRef t_current_value_as_data;
+    t_current_value_as_data = nil;
         
+    if (ctxt . ConvertToData(t_current_value, t_current_value_as_data) &&
+        MCDataMutableCopyAndRelease(t_current_value_as_data, t_current_value_as_data) &&
+        MCDataReplace(t_current_value_as_data, p_range, (MCDataRef)p_replacement) &&
+        setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_data))
+    {
         MCValueRelease(t_current_value_as_data);
-        return false;
+        synchronize(ctxt, true);
+        return true;
+    }
+        
+    MCValueRelease(t_current_value_as_data);
+    return false;
+}
+
+bool MCVariable::replace_string(MCExecContext& ctxt, MCStringRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
+{
+    if (p_length == 0)
+    {
+        if (!converttomutablestring(ctxt))
+            return false;
+        
+        // We are now sure to have a stringref in our ExecValue
+        MCStringReplace(value . stringref_value, p_range, p_replacement);
+        
+        synchronize(ctxt, true);
+        
+        return true;
     }
     
-	MCStringRef t_current_value_as_string;
-	t_current_value_as_string = nil;
-    // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
-	if (ctxt . ConvertToString(t_current_value, t_current_value_as_string) &&
-		MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
-        MCStringReplace(t_current_value_as_string, p_range, (MCStringRef)p_replacement) &&
-		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
-	{
-		MCValueRelease(t_current_value_as_string);
-        synchronize(ctxt, true);
-		return true;
-	}
+    MCValueRef t_current_value;
+    t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
     
-	MCValueRelease(t_current_value_as_string);
-	return false;
+    MCStringRef t_current_value_as_string;
+    t_current_value_as_string = nil;
+    // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
+    if (ctxt . ConvertToString(t_current_value, t_current_value_as_string) &&
+        MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
+        MCStringReplace(t_current_value_as_string, p_range, p_replacement) &&
+        setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
+    {
+        MCValueRelease(t_current_value_as_string);
+        synchronize(ctxt, true);
+        return true;
+    }
+    
+    MCValueRelease(t_current_value_as_string);
+    return false;
+}
+
+bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
+{
+    if (MCValueGetTypeCode(p_replacement) == kMCValueTypeCodeData && can_become_data(ctxt, p_path, p_length))
+        return replace_data(ctxt, (MCDataRef)p_replacement, p_range, p_path, p_length);
+    
+    MCAutoStringRef t_replacement;
+    if (!ctxt . ConvertToString(p_replacement, &t_replacement))
+        return false;
+    
+    return replace_string(ctxt, *t_replacement, p_range, p_path, p_length);
 }
 
 bool MCVariable::deleterange(MCExecContext& ctxt, MCRange p_range)
 {
     if (value . type == kMCExecValueTypeDataRef)
-        return replace(ctxt, kMCEmptyData, p_range);
+        return replace_data(ctxt, kMCEmptyData, p_range, nil, 0);
     
-    return replace(ctxt, kMCEmptyString, p_range);
+    return replace_string(ctxt, kMCEmptyString, p_range, nil, 0);
 }
 
 bool MCVariable::deleterange(MCExecContext& ctxt, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
 {
     if (MCValueGetTypeCode(getvalueref(p_path, p_length, ctxt . GetCaseSensitive())) == kMCValueTypeCodeData)
-        return replace(ctxt, kMCEmptyData, p_range, p_path, p_length);
+        return replace_data(ctxt, kMCEmptyData, p_range, p_path, p_length);
     
-    return replace(ctxt, kMCEmptyString, p_range, p_path, p_length);
+    return replace_string(ctxt, kMCEmptyString, p_range, p_path, p_length);
 }
 
 #ifdef LEGACY_EXEC
