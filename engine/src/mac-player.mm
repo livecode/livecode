@@ -68,6 +68,8 @@ void MCPlatformPlayer::Attach(MCPlatformWindowRef p_window)
 	MCPlatformRetainWindow(m_window);
     
 	m_window -> AttachObject(this, DoWindowStateChanged);
+    // TODO: RealizeAndNotify was not public
+    m_window -> RealizeAndNotify();
 }
 
 void MCPlatformPlayer::Detach(void)
