@@ -59,6 +59,8 @@ static inline MCGBlendMode MCBitmapEffectBlendModeToMCGBlendMode(MCBitmapEffectB
 			return kMCGBlendModeColor;
 		case kMCBitmapEffectBlendModeLuminosity:
 			return kMCGBlendModeLuminosity;
+		default:
+			MCUnreachable();
 	}
 }
 
