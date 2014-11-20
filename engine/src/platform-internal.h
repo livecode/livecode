@@ -129,6 +129,7 @@ public:
 	void HandleDragMove(MCPoint location, MCPlatformDragOperation& r_operation);
 	void HandleDragLeave(void);
 	void HandleDragDrop(bool& r_accepted);
+    // Called to tell attachments there is a handle.
     void RealizeAndNotify(void);
 	
 	//////////
@@ -154,8 +155,6 @@ public:
 	virtual void DoMapFrameRectToContentRect(MCRectangle frame, MCRectangle& r_content) = 0;
 	
 protected:
-	// Called to tell attachments there is a handle.
-	//void RealizeAndNotify(void);
 	
 	// The window's reference count.
 	uint32_t m_references;

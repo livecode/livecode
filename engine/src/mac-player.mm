@@ -68,7 +68,7 @@ void MCPlatformPlayer::Attach(MCPlatformWindowRef p_window)
 	MCPlatformRetainWindow(m_window);
     
 	m_window -> AttachObject(this, DoWindowStateChanged);
-    // TODO: RealizeAndNotify was not public
+    // PM-2014-11-20: [[ Bug 14035 ]] When closing and reopening a stack with a player object, video does not show
     m_window -> RealizeAndNotify();
 }
 
