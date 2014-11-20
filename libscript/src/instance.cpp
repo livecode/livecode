@@ -893,7 +893,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 t_frame = MCScriptDestroyFrame(t_frame);
             }
             break;
-            case kMCScriptBytecodeOpInvoke:
+            case kMCScriptBytecodeOpCall:
             {
                 // invoke <index>, <result>, <arg_1>, ..., <arg_n>
                 int t_index;
@@ -906,7 +906,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 				t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity - 1);
             }
             break;
-            case kMCScriptBytecodeOpInvokeIndirect:
+            case kMCScriptBytecodeOpCallIndirect:
             {
                 // invoke *<src>, <result>, <arg_1>, ..., <arg_n>
 				int t_src;

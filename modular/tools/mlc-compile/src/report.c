@@ -132,6 +132,7 @@ DEFINE_ERROR(OutputSyntaxArgumentMustBindToOutParameter, "'output' syntax argume
 DEFINE_ERROR(ContainerSyntaxArgumentMustBindToInParameter, "'container' syntax argument must bind to in parameter")
 DEFINE_ERROR(IteratorSyntaxArgumentMustBindToInOutParameter, "'iterator' syntax argument must bind to inout parameter")
 DEFINE_ERROR(PhraseBoundMarkSyntaxArgumentMustBindToInParameter, "Syntax mark argument which is of phrase type must bind to in parameter")
+DEFINE_ERROR(VariableSyntaxArgumentMustBindToConsistentMode, "Syntax mark argument bound to parameters of different mode")
 
 ////////////////////////////////////////////////////////////////////////////////
 

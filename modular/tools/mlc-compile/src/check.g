@@ -659,6 +659,21 @@
         QueryHandlerIdSignature(Name -> signature(Parameters, ReturnType))
         CheckSyntaxMethodReturnType(Position, ReturnType)
         CheckSyntaxMethodArguments(Position, Parameters, Arguments)
+        (|
+            IsLValueSyntaxMethodBinding(Arguments)
+            ComputeLModeOfSyntaxMethodArguments(Parameters, Arguments)
+        ||
+            ComputeRModeOfSyntaxMethodArguments(Parameters, Arguments)
+        |)
+        
+'condition' IsLValueSyntaxMethodBinding(SYNTAXCONSTANTLIST)
+
+    'rule' IsLValueSyntaxMethodBinding(constantlist(variable(_, Name), _))
+        QuerySyntaxMarkId(Name -> Info)
+        Info'Type -> input
+        
+    'rule' IsLValueSyntaxMethodBinding(constantlist(_, Rest)):
+        IsLValueSyntaxMethodBinding(Rest)
 
 'action' CheckSyntaxMethodReturnType(POS, TYPE)
 
@@ -755,6 +770,61 @@
         print(Type)
 
 ----------
+
+'action' ComputeLModeOfSyntaxMethodArguments(PARAMETERLIST, SYNTAXCONSTANTLIST)
+
+    'rule' ComputeLModeOfSyntaxMethodArguments(parameterlist(parameter(_, Mode, _, _), ParamRest), constantlist(Arg, ArgRest)):
+        ComputeSyntaxMethodArgumentLMode(Arg, Mode)
+        ComputeLModeOfSyntaxMethodArguments(ParamRest, ArgRest)
+        
+    'rule' ComputeLModeOfSyntaxMethodArguments(_, _):
+        --
+
+'action' ComputeRModeOfSyntaxMethodArguments(PARAMETERLIST, SYNTAXCONSTANTLIST)
+
+    'rule' ComputeRModeOfSyntaxMethodArguments(parameterlist(parameter(_, Mode, _, _), ParamRest), constantlist(Arg, ArgRest)):
+        ComputeSyntaxMethodArgumentRMode(Arg, Mode)
+        ComputeRModeOfSyntaxMethodArguments(ParamRest, ArgRest)
+        
+    'rule' ComputeRModeOfSyntaxMethodArguments(_, _):
+        --
+
+
+'action' ComputeSyntaxMethodArgumentRMode(SYNTAXCONSTANT, MODE)
+
+    'rule' ComputeSyntaxMethodArgumentRMode(variable(Position, Id), Mode):
+        QuerySyntaxMarkId(Id -> Info)
+        Info'Type -> expression
+        Info'RMode -> CurrentMode
+        (|
+            eq(CurrentMode, Mode)
+        ||
+            eq(CurrentMode, uncomputed)
+            Info'RMode <- Mode
+        ||
+            Error_VariableSyntaxArgumentMustBindToConsistentMode(Position)
+        |)
+        
+    'rule' ComputeSyntaxMethodArgumentRMode(_, _):
+        -- do nothing.
+
+'action' ComputeSyntaxMethodArgumentLMode(SYNTAXCONSTANT, MODE)
+
+    'rule' ComputeSyntaxMethodArgumentLMode(variable(Position, Id), Mode):
+        QuerySyntaxMarkId(Id -> Info)
+        Info'Type -> expression
+        Info'LMode -> CurrentMode
+        (|
+            eq(CurrentMode, Mode)
+        ||
+            eq(CurrentMode, uncomputed)
+            Info'LMode <- Mode
+        ||
+            Error_VariableSyntaxArgumentMustBindToConsistentMode(Position)
+        |)
+        
+    'rule' ComputeSyntaxMethodArgumentLMode(_, _):
+        -- do nothing.
 
 'action' ComputeSyntaxPrefixAndSuffix(SYNTAX -> SYNTAXTERM, SYNTAXTERM)
 
@@ -901,6 +971,11 @@
 
     'rule' QuerySyntaxId(Id -> Info):
         QueryId(Id -> syntax(Info))
+
+'condition' QuerySyntaxMarkId(ID -> SYNTAXMARKINFO)
+
+    'rule' QuerySyntaxMarkId(Id -> Info):
+        QueryId(Id -> syntaxmark(Info))
 
 'action' QueryId(ID -> MEANING)
 

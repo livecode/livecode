@@ -20,42 +20,45 @@
     -- Handle the top-level definition
     'rule' GenerateSyntax(DEFINITION'syntax(_, _, Id, Class, Syntax, Methods)):
         Id'Name -> Name
+        Id'Meaning -> syntax(Info)
+        Info'Parent -> ParentId
+        ParentId'Name -> ModuleName
         (|
             where(Class -> phrase)
-            BeginPhraseSyntaxRule(Name)
+            BeginPhraseSyntaxRule(ModuleName, Name)
         ||
             where(Class -> statement)
-            BeginStatementSyntaxRule(Name)
+            BeginStatementSyntaxRule(ModuleName, Name)
         ||
             where(Class -> expression)
-            BeginExpressionSyntaxRule(Name)
+            BeginExpressionSyntaxRule(ModuleName, Name)
         ||
             where(Class -> prefix(Precedence))
-            BeginPrefixOperatorSyntaxRule(Name, Precedence)
+            BeginPrefixOperatorSyntaxRule(ModuleName, Name, Precedence)
         ||
             where(Class -> postfix(Precedence))
-            BeginPostfixOperatorSyntaxRule(Name, Precedence)
+            BeginPostfixOperatorSyntaxRule(ModuleName, Name, Precedence)
         ||
             where(Class -> binary(left, Precedence))
-            BeginLeftBinaryOperatorSyntaxRule(Name, Precedence)
+            BeginLeftBinaryOperatorSyntaxRule(ModuleName, Name, Precedence)
         ||
             where(Class -> binary(right, Precedence))
-            BeginRightBinaryOperatorSyntaxRule(Name, Precedence)
+            BeginRightBinaryOperatorSyntaxRule(ModuleName, Name, Precedence)
         ||
             where(Class -> binary(neutral, Precedence))
-            BeginNeutralBinaryOperatorSyntaxRule(Name, Precedence)
+            BeginNeutralBinaryOperatorSyntaxRule(ModuleName, Name, Precedence)
         |)
 
         BeginSyntaxGrammar()
         GenerateSyntax(Syntax)
         EndSyntaxGrammar()
         
-        BeginSyntaxMappings()
-        GenerateSyntax(Methods)
-        EndSyntaxMappings()
+        --BeginSyntaxMappings()
+        --GenerateSyntax(Methods)
+        --EndSyntaxMappings()
 
         EndSyntaxRule()
-        
+
     -- Handle the syntax grammar part of the definition
     'rule' GenerateSyntax(SYNTAX'concatenate(_, Left, Right)):
         GenerateSyntax(Left)
@@ -89,7 +92,11 @@
         Id'Name -> Name
         Variable'Meaning -> syntaxmark(Info)
         Info'Index -> Index
-        PushMarkedDescentSyntaxGrammar(Index, Name)
+        Info'LMode -> LMode
+        Info'RMode -> RMode
+        MapMode(LMode -> LModeInt)
+        MapMode(RMode -> RModeInt)
+        PushMarkedDescentSyntaxGrammar(Index, Name, LModeInt, RModeInt)
         
     'rule' GenerateSyntax(SYNTAX'rule(_, Id)):
         Id'Name -> Name
@@ -117,6 +124,7 @@
             Fatal_InternalInconsistency("invalid constant type for marked variable")
         |)
 
+/* This is handled when the module is compiled after syntax has been generated.
     -- Handle the syntax mapping part of the definition
     'rule' GenerateSyntax(SYNTAXMETHOD'method(_, Id, Arguments)):
         Id'Name -> Name
@@ -151,5 +159,28 @@
         Value'Meaning -> syntaxmark(Info)
         Info'Index -> Index
         PushMarkArgumentSyntaxMapping(Index)
+*/
+
+'action' MapMode(MODE -> INT)
+    'rule' MapMode(uncomputed -> 0):
+    'rule' MapMode(in -> 0):
+    'rule' MapMode(out -> 1):
+    'rule' MapMode(inout -> 2):
+
+/*'action' GenerateLModeOfMark(INT, MODE)
+    'rule' GenerateLModeOfMark(Index, in):
+        SetLModeOfMarkToIn(Index)
+    'rule' GenerateLModeOfMark(Index, out):
+        SetLModeOfMarkToOut(Index)
+    'rule' GenerateLModeOfMark(Index, inout):
+        SetLModeOfMarkToInOut(Index)
+
+'action' GenerateRModeOfMark(INT, MODE)
+    'rule' GenerateRModeOfMark(Index, in):
+        SetRModeOfMarkToIn(Index)
+    'rule' GenerateRModeOfMark(Index, out):
+        SetRModeOfMarkToOut(Index)
+    'rule' GenerateRModeOfMark(Index, inout):
+        SetRModeOfMarkToInOut(Index)*/
 
 --------------------------------------------------------------------------------

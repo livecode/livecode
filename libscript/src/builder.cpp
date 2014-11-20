@@ -33,6 +33,8 @@ struct MCScriptModuleBuilder
     uindex_t *current_handler_group;
     uindex_t current_handler_group_size;
     
+    uindex_t current_syntax;
+    
     MCScriptBytecodeLabel *labels;
     uindex_t label_count;
     MCScriptBytecodeInstruction *instructions;
@@ -59,6 +61,8 @@ void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptMo
     
     self -> current_handler_group = nil;
     self -> current_handler_group_size = 0;
+    
+    self -> current_syntax = UINDEX_MAX;
     
     if (self -> valid)
         self -> valid = MCProperListCreateMutable(self -> definition_names);
@@ -114,7 +118,10 @@ void MCScriptAddDependencyToModule(MCScriptModuleBuilderRef self, MCNameRef p_de
     
     for(uindex_t i = 0; i < self -> module . dependency_count; i++)
         if (MCNameIsEqualTo(p_dependency, self -> module . dependencies[i] . name))
+        {
+            r_index = i;
             return;
+        }
     
     if (!MCMemoryResizeArray(self -> module . dependency_count + 1, self -> module . dependencies, self -> module . dependency_count))
     {
@@ -323,7 +330,115 @@ void MCScriptAddEventToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, M
 
 ///////////
 
-void MCScriptBeginHandlerGroupInModule(MCScriptModuleBuilderRef self)
+void MCScriptBeginSyntaxInModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (p_index >= self -> module . definition_count ||
+        self -> module . definitions[p_index] != nil ||
+        !MCMemoryNew((MCScriptSyntaxDefinition*&)self -> module . definitions[p_index]) ||
+        !MCProperListPushElementOntoBack(self -> definition_names, p_name))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    MCScriptSyntaxDefinition *t_definition;
+    t_definition = static_cast<MCScriptSyntaxDefinition *>(self -> module . definitions[p_index]);
+    
+    t_definition -> kind = kMCScriptDefinitionKindSyntax;
+    
+    self -> current_syntax = p_index;
+}
+
+void MCScriptBeginSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p_handler)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_syntax == UINDEX_MAX)
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptAddBuiltinArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_syntax == UINDEX_MAX)
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptAddConstantArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, MCValueRef value)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_syntax == UINDEX_MAX)
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptAddVariableArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_syntax == UINDEX_MAX)
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptAddIndexedVariableArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t var_index, uindex_t element_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_syntax == UINDEX_MAX)
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptEndSyntaxMethodInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_syntax == UINDEX_MAX)
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptEndSyntaxInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    if (self -> current_syntax == UINDEX_MAX)
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+///////////
+
+void MCScriptBeginDefinitionGroupInModule(MCScriptModuleBuilderRef self)
 {
     if (self == nil || !self -> valid)
         return;
@@ -335,7 +450,7 @@ void MCScriptBeginHandlerGroupInModule(MCScriptModuleBuilderRef self)
     }
 }
 
-void MCScriptContinueHandlerGroupInModule(MCScriptModuleBuilderRef self, uindex_t index)
+void MCScriptContinueDefinitionGroupInModule(MCScriptModuleBuilderRef self, uindex_t index)
 {
     if (self == nil || !self -> valid)
         return;
@@ -353,18 +468,18 @@ void MCScriptContinueHandlerGroupInModule(MCScriptModuleBuilderRef self, uindex_
     self -> current_handler_group[self -> current_handler_group_size - 1] = index;
 }
 
-void MCScriptEndHandlerGroupInModule(MCScriptModuleBuilderRef self, uindex_t& r_index)
+void MCScriptEndDefinitionGroupInModule(MCScriptModuleBuilderRef self, uindex_t& r_index)
 {
     if (self == nil || !self -> valid)
         return;
     
     for(uindex_t i = 0; i < self -> module . definition_count; i++)
     {
-        if (self -> module . definitions[i] -> kind != kMCScriptDefinitionKindHandlerGroup)
+        if (self -> module . definitions[i] -> kind != kMCScriptDefinitionKindDefinitionGroup)
             continue;
         
-        MCScriptHandlerGroupDefinition *t_group;
-        t_group = (MCScriptHandlerGroupDefinition *)self -> module . definitions[i];
+        MCScriptDefinitionGroupDefinition *t_group;
+        t_group = (MCScriptDefinitionGroupDefinition *)self -> module . definitions[i];
         if (self -> current_handler_group_size != t_group -> handler_count)
             continue;
         
@@ -380,14 +495,14 @@ void MCScriptEndHandlerGroupInModule(MCScriptModuleBuilderRef self, uindex_t& r_
     if (!self -> valid)
         return;
     
-    if (!MCMemoryNew((MCScriptHandlerGroupDefinition *&)self -> module . definitions[t_index]))
+    if (!MCMemoryNew((MCScriptDefinitionGroupDefinition *&)self -> module . definitions[t_index]))
     {
         self -> valid = false;
         return;
     }
     
-    MCScriptHandlerGroupDefinition *t_group;
-    t_group = (MCScriptHandlerGroupDefinition *)self -> module . definitions[t_index];
+    MCScriptDefinitionGroupDefinition *t_group;
+    t_group = (MCScriptDefinitionGroupDefinition *)self -> module . definitions[t_index];
     
     t_group -> handler_count = self -> current_handler_group_size;
     t_group -> handlers = self -> current_handler_group;
@@ -793,27 +908,27 @@ void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef self, uindex_t p_src_re
     __emit_instruction(self, kMCScriptBytecodeOpReturn, 1, p_src_reg);
 }
 
-void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_index, uindex_t p_result_reg)
+void MCScriptBeginCallInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_index, uindex_t p_result_reg)
 {
     if (self == nil || !self -> valid)
         return;
     
-    __begin_instruction(self, kMCScriptBytecodeOpInvoke);
+    __begin_instruction(self, kMCScriptBytecodeOpCall);
     __continue_instruction(self, p_handler_index);
     __continue_instruction(self, p_result_reg);
 }
 
-void MCScriptBeginIndirectInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_reg, uindex_t p_result_reg)
+void MCScriptBeginIndirectCallInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_reg, uindex_t p_result_reg)
 {
     if (self == nil || !self -> valid)
         return;
     
-    __begin_instruction(self, kMCScriptBytecodeOpInvokeIndirect);
+    __begin_instruction(self, kMCScriptBytecodeOpCallIndirect);
     __continue_instruction(self, p_handler_reg);
     __continue_instruction(self, p_result_reg);
 }
 
-void MCScriptContinueInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_arg_reg)
+void MCScriptContinueCallInModule(MCScriptModuleBuilderRef self, uindex_t p_arg_reg)
 {
     if (self == nil || !self -> valid)
         return;
@@ -821,7 +936,7 @@ void MCScriptContinueInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_ar
     __continue_instruction(self, p_arg_reg);
 }
 
-void MCScriptEndInvokeInModule(MCScriptModuleBuilderRef self)
+void MCScriptEndCallInModule(MCScriptModuleBuilderRef self)
 {
     if (self == nil || !self -> valid)
         return;

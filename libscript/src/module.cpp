@@ -5,6 +5,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_PICKLE_BEGIN_RECORD(MCScriptDependency)
+    MC_PICKLE_NAMEREF(name)
+    MC_PICKLE_UINDEX(version)
+MC_PICKLE_END_RECORD()
+
 MC_PICKLE_BEGIN_RECORD(MCScriptExportedDefinition)
     MC_PICKLE_NAMEREF(name)
     MC_PICKLE_UINDEX(index)
@@ -15,6 +20,11 @@ MC_PICKLE_BEGIN_RECORD(MCScriptImportedDefinition)
     MC_PICKLE_INTENUM(MCScriptDefinitionKind, kind)
     MC_PICKLE_NAMEREF(name)
     // MC_PICKLE_TYPEINFOREF(type)
+MC_PICKLE_END_RECORD()
+
+MC_PICKLE_BEGIN_RECORD(MCScriptSyntaxMethod)
+    MC_PICKLE_UINDEX(handler)
+    MC_PICKLE_ARRAY_OF_UINDEX(arguments, argument_count)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptExternalDefinition)
@@ -54,8 +64,9 @@ MC_PICKLE_BEGIN_RECORD(MCScriptEventDefinition)
     MC_PICKLE_TYPEINFOREF(signature)
 MC_PICKLE_END_RECORD()
 
-MC_PICKLE_BEGIN_RECORD(MCScriptHandlerGroupDefinition)
-    MC_PICKLE_ARRAY_OF_UINDEX(handlers, handler_count)
+MC_PICKLE_BEGIN_RECORD(MCScriptSyntaxDefinition)
+    MC_PICKLE_UINDEX(variable_count)
+    MC_PICKLE_ARRAY_OF_RECORD(MCScriptSyntaxMethod, methods, method_count)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_VARIANT(MCScriptDefinition, kind)
@@ -67,13 +78,13 @@ MC_PICKLE_BEGIN_VARIANT(MCScriptDefinition, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindForeignHandler, MCScriptForeignHandlerDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindProperty, MCScriptPropertyDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindEvent, MCScriptEventDefinition)
-    MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindHandlerGroup, MCScriptHandlerGroupDefinition)
+    MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindSyntax, MCScriptSyntaxDefinition)
 MC_PICKLE_END_VARIANT()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptModule)
     MC_PICKLE_INTENUM(MCScriptModuleKind, module_kind)
     MC_PICKLE_NAMEREF(name)
-    MC_PICKLE_ARRAY_OF_NAMEREF(dependencies, dependency_count)
+    MC_PICKLE_ARRAY_OF_RECORD(MCScriptDependency, dependencies, dependency_count)
     MC_PICKLE_ARRAY_OF_VALUEREF(values, value_count)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptExportedDefinition, exported_definitions, exported_definition_count)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptImportedDefinition, imported_definitions, imported_definition_count)
@@ -166,14 +177,14 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         // check arity == 1
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
-                    case kMCScriptBytecodeOpInvoke:
+                    case kMCScriptBytecodeOpCall:
                         // check index operand is within definition range
                         // check definition[index] is handler
                         // check signature of defintion[index] conforms with invoke arity
                         for(uindex_t i = 1; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
-                    case kMCScriptBytecodeOpInvokeIndirect:
+                    case kMCScriptBytecodeOpCallIndirect:
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;

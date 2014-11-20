@@ -137,8 +137,8 @@
     'rule' Define(ModuleId, event(Position, Access, Name)):
         DefineSymbolId(Name, ModuleId, Access, event, nil)
     
-    'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Syntax, _)):
-        DefineSyntaxId(Name, ModuleId, Class, Syntax)
+    'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Syntax, Methods)):
+        DefineSyntaxId(Name, ModuleId, Class, Syntax, Methods)
     
     'rule' Define(ModuleId, nil):
         -- do nothing
@@ -432,6 +432,8 @@
             MarkInfo::SYNTAXMARKINFO
             MarkInfo'Index <- Index
             MarkInfo'Type <- uncomputed
+            MarkInfo'LMode <- uncomputed
+            MarkInfo'RMode <- uncomputed
             where(syntaxmark(MarkInfo) -> Meaning)
             DefineMeaning(Name, Meaning)
             LastSyntaxMarkIndexVar <- Index + 1
@@ -463,12 +465,14 @@
         Info'Access <- Access
         Id'Meaning <- symbol(Info)
 
-'action' DefineSyntaxId(ID, ID, SYNTAXCLASS, SYNTAX)
+'action' DefineSyntaxId(ID, ID, SYNTAXCLASS, SYNTAX, SYNTAXMETHODLIST)
 
-    'rule' DefineSyntaxId(Id, ModuleId, Class, Syntax):
+    'rule' DefineSyntaxId(Id, ModuleId, Class, Syntax, Methods):
         Info::SYNTAXINFO
         Info'Class <- Class
+        Info'Parent <- ModuleId
         Info'Syntax <- Syntax
+        Info'Methods <- Methods
         Info'Prefix <- undefined
         Info'Suffix <- undefined
         Id'Meaning <- syntax(Info)
@@ -499,7 +503,7 @@
         ContainerSyntaxMarkIdVar <- Id5
         MakePredefinedSyntaxId("Expression", expressionphrase, expression, expression -> Id6)
         ExpressionSyntaxRuleIdVar <- Id6
-        MakePredefinedSyntaxId("ExpressionList", expressionphrase, expression, expression -> Id7)
+        MakePredefinedSyntaxId("ExpressionList", expressionlistphrase, expression, expression -> Id7)
         ExpressionListSyntaxRuleIdVar <- Id7
 
 'action' DeclarePredefinedIds

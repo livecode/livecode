@@ -98,11 +98,32 @@
     EmitImportedConstant
     EmitImportedVariable
     EmitImportedHandler
+    EmitImportedSyntax
     EmitTypeDefinition
     EmitVariableDefinition
     EmitBeginHandlerDefinition
     EmitEndHandlerDefinition
     EmitForeignHandlerDefinition
+    EmitBeginSyntaxDefinition
+    EmitEndSyntaxDefinition
+    EmitBeginSyntaxMethod
+    EmitEndSyntaxMethod
+    EmitUndefinedSyntaxMethodArgument
+    EmitTrueSyntaxMethodArgument
+    EmitFalseSyntaxMethodArgument
+    EmitIntegerSyntaxMethodArgument
+    EmitRealSyntaxMethodArgument
+    EmitStringSyntaxMethodArgument
+    EmitVariableSyntaxMethodArgument
+    EmitIndexedVariableSyntaxMethodArgument
+    EmitInputSyntaxMethodArgument
+    EmitOutputSyntaxMethodArgument
+    EmitContextSyntaxMethodArgument
+    EmitContainerSyntaxMethodArgument
+    EmitIteratorSyntaxMethodArgument
+    EmitBeginDefinitionGroup
+    EmitContinueDefinitionGroup
+    EmitEndDefinitionGroup
     EmitNamedType
     EmitAliasType
     EmitOptionalType
@@ -142,8 +163,14 @@
     EmitPushRepeatLabels
     EmitPopRepeatLabels
     EmitCurrentRepeatLabels
-    EmitBeginInvoke
-    EmitBeginIndirectInvoke
+    EmitBeginCall
+    EmitBeginIndirectCall
+    EmitContinueCall
+    EmitEndCall
+    EmitBeginExecuteInvoke
+    EmitBeginEvaluateInvoke
+    EmitBeginAssignInvoke
+    EmitBeginIterateInvoke
     EmitBeginBuiltinInvoke
     EmitContinueInvoke
     EmitEndInvoke
@@ -200,6 +227,7 @@
     Error_ContainerSyntaxArgumentMustBindToInParameter
     Error_IteratorSyntaxArgumentMustBindToInOutParameter
     Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter
+    Error_VariableSyntaxArgumentMustBindToConsistentMode
 
 --------------------------------------------------------------------------------
 
@@ -278,14 +306,14 @@
 
 'action' GenerateSyntaxRules()
 
-'action' BeginPhraseSyntaxRule(NAME)
-'action' BeginStatementSyntaxRule(NAME)
-'action' BeginExpressionSyntaxRule(NAME)
-'action' BeginPrefixOperatorSyntaxRule(NAME, INT)
-'action' BeginPostfixOperatorSyntaxRule(NAME, INT)
-'action' BeginLeftBinaryOperatorSyntaxRule(NAME, INT)
-'action' BeginRightBinaryOperatorSyntaxRule(NAME, INT)
-'action' BeginNeutralBinaryOperatorSyntaxRule(NAME, INT)
+'action' BeginPhraseSyntaxRule(NAME, NAME)
+'action' BeginStatementSyntaxRule(NAME, NAME)
+'action' BeginExpressionSyntaxRule(NAME, NAME)
+'action' BeginPrefixOperatorSyntaxRule(NAME, NAME, INT)
+'action' BeginPostfixOperatorSyntaxRule(NAME, NAME, INT)
+'action' BeginLeftBinaryOperatorSyntaxRule(NAME, NAME, INT)
+'action' BeginRightBinaryOperatorSyntaxRule(NAME, NAME, INT)
+'action' BeginNeutralBinaryOperatorSyntaxRule(NAME, NAME, INT)
 'action' EndSyntaxRule()
 
 'action' BeginSyntaxGrammar()
@@ -296,13 +324,20 @@
 'action' RepeatSyntaxGrammar()
 'action' PushEmptySyntaxGrammar()
 'action' PushKeywordSyntaxGrammar(Token: STRING)
-'action' PushMarkedDescentSyntaxGrammar(Index: INT, Rule: NAME)
+'action' PushMarkedDescentSyntaxGrammar(Index: INT, Rule: NAME, LMode: INT, RMode: INT)
 'action' PushDescentSyntaxGrammar(Rule: NAME)
 'action' PushMarkedTrueSyntaxGrammar(Index: INT)
 'action' PushMarkedFalseSyntaxGrammar(Index: INT)
 'action' PushMarkedIntegerSyntaxGrammar(Index: INT, Value: INT)
 'action' PushMarkedRealSyntaxGrammar(Index: INT, Value: DOUBLE)
 'action' PushMarkedStringSyntaxGrammar(Index: INT, Value: STRING)
+
+'action' SetLModeOfMarkToIn(Index: INT)
+'action' SetRModeOfMarkToIn(Index: INT)
+'action' SetLModeOfMarkToOut(Index: INT)
+'action' SetRModeOfMarkToOut(Index: INT)
+'action' SetLModeOfMarkToInOut(Index: INT)
+'action' SetRModeOfMarkToInOut(Index: INT)
 
 'action' BeginSyntaxMappings()
 'action' EndSyntaxMappings()
@@ -329,6 +364,7 @@
 'action' EmitImportedConstant(ModuleIndex: INT, Name: NAME, TypeIndex: INT -> Index: INT)
 'action' EmitImportedVariable(ModuleIndex: INT, Name: NAME, TypeIndex: INT -> Index: INT)
 'action' EmitImportedHandler(ModuleIndex: INT, Name: NAME, TypeIndex: INT -> Index: INT)
+'action' EmitImportedSyntax(ModuleIndex: INT, Name: NAME, TypeIndex: INT -> Index: INT)
 
 'action' EmitExportedDefinition(Index: INT)
 
@@ -339,6 +375,28 @@
 'action' EmitBeginHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitEndHandlerDefinition()
 'action' EmitForeignHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, Binding: STRING)
+
+'action' EmitBeginSyntaxDefinition(Index: INT, Position: POS, Name: NAME)
+'action' EmitEndSyntaxDefinition()
+'action' EmitBeginSyntaxMethod(HandlerIndex: INT)
+'action' EmitEndSyntaxMethod()
+'action' EmitUndefinedSyntaxMethodArgument()
+'action' EmitTrueSyntaxMethodArgument()
+'action' EmitFalseSyntaxMethodArgument()
+'action' EmitInputSyntaxMethodArgument()
+'action' EmitOutputSyntaxMethodArgument()
+'action' EmitContextSyntaxMethodArgument()
+'action' EmitContainerSyntaxMethodArgument()
+'action' EmitIteratorSyntaxMethodArgument()
+'action' EmitIntegerSyntaxMethodArgument(Value: INT)
+'action' EmitRealSyntaxMethodArgument(Value: DOUBLE)
+'action' EmitStringSyntaxMethodArgument(Value: STRING)
+'action' EmitVariableSyntaxMethodArgument(Index: INT)
+'action' EmitIndexedVariableSyntaxMethodArgument(VarIndex: INT, Element: INT)
+
+'action' EmitBeginDefinitionGroup()
+'action' EmitContinueDefinitionGroup(Index: INT)
+'action' EmitEndDefinitionGroup(-> Index: INT)
 
 'action' EmitOptionalType(INT -> INT)
 'action' EmitNamedType(Module: NAME, Name: NAME -> INT)
@@ -382,9 +440,15 @@
 'action' EmitPushRepeatLabels(Head: INT, Tail: INT)
 'action' EmitCurrentRepeatLabels(-> Next: INT, Exit: INT)
 'action' EmitPopRepeatLabels()
-'action' EmitBeginInvoke(Index: INT, ResultRegister: INT)
-'action' EmitBeginIndirectInvoke(Register: INT, ResultRegister: INT)
-'action' EmitBeginBuiltinInvoke(Name: STRING, ResultRegister: INT)
+'action' EmitBeginCall(Index: INT, ResultRegister: INT)
+'action' EmitBeginIndirectCall(Register: INT, ResultRegister: INT)
+'action' EmitContinueCall(Register: INT)
+'action' EmitEndCall()
+'action' EmitBeginExecuteInvoke(Index: INT, ContextRegister: INT, ResultRegister: INT)
+'action' EmitBeginEvaluateInvoke(Index: INT, ContextRegister: INT, OutputRegister: INT)
+'action' EmitBeginAssignInvoke(Index: INT, ContextRegister: INT, InputRegister: INT)
+'action' EmitBeginIterateInvoke(Index: INT, ContextRegister: INT, IteratorRegister: INT, ContainerRegister: INT)
+'action' EmitBeginBuiltinInvoke(Builtin: STRING, ResultRegister: INT)
 'action' EmitContinueInvoke(Register: INT)
 'action' EmitEndInvoke()
 'action' EmitAssignUndefined(Register: INT)
@@ -446,5 +510,6 @@
 'action' Error_ContainerSyntaxArgumentMustBindToInParameter(Position: POS)
 'action' Error_IteratorSyntaxArgumentMustBindToInOutParameter(Position: POS)
 'action' Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter(Position: POS)
+'action' Error_VariableSyntaxArgumentMustBindToConsistentMode(Positiobn: POS)
 
 --------------------------------------------------------------------------------

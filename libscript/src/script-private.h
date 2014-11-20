@@ -109,6 +109,13 @@ struct MCScriptDependency
     MCScriptInstanceRef instance;
 };
 
+struct MCScriptSyntaxMethod
+{
+    uindex_t handler;
+    uindex_t *arguments;
+    uindex_t argument_count;
+};
+
 struct MCScriptImportedDefinition
 {
     uindex_t module;
@@ -166,10 +173,20 @@ struct MCScriptHandlerDefinition: public MCScriptDefinition
     uindex_t register_offset;
 };
 
-struct MCScriptHandlerGroupDefinition: public MCScriptDefinition
+struct MCScriptDefinitionGroupDefinition: public MCScriptDefinition
 {
     uindex_t *handlers;
     uindex_t handler_count;
+};
+
+struct MCScriptSyntaxDefinition: public MCScriptDefinition
+{
+    // The number of inputs.
+    uindex_t variable_count;
+    
+    // The list of methods.
+    MCScriptSyntaxMethod *methods;
+    uindex_t method_count;
 };
 
 struct MCScriptForeignHandlerDefinition: public MCScriptDefinition
@@ -350,7 +367,7 @@ enum MCScriptBytecodeOp
     // It is a runtime error if, on-exit, any out parameters which have a non-optional
     // type are undefined.
     //
-	kMCScriptBytecodeOpInvoke,
+	kMCScriptBytecodeOpCall,
 	// Indirect handler invocation:
 	//   invoke *<handler>, <result>, <arg_1>, ..., <arg_n>
 	// The handler reference in register <handler> is invoked with the given registers
@@ -359,7 +376,12 @@ enum MCScriptBytecodeOp
     // Conformance rules are the same as for normal invoke, except the signature of
     // the handler is potentially dynamic.
     //
-	kMCScriptBytecodeOpInvokeIndirect,
+	kMCScriptBytecodeOpCallIndirect,
+    
+    kMCScriptBytecodeOpInvokeExecute,
+    kMCScriptBytecodeOpInvokeEvaluate,
+    kMCScriptBytecodeOpInvokeAssign,
+    kMCScriptBytecodeOpInvokeIterate,
 	
 	// Local fetch:
 	//   fetch-local <dst>, <local-index>

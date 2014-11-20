@@ -47,6 +47,9 @@
     'rule' GenerateImportedDefinitions(STATEMENT'call(_, Handler, Arguments)):
         GenerateImportedDefinition(Handler)
         GenerateImportedDefinitions(Arguments)
+
+    'rule' GenerateImportedDefinitions(STATEMENT'invoke(_, Info, _)):
+        GenerateImportedInvokeDefinition(Info)
         
     'rule' GenerateImportedDefinitions(EXPRESSION'slot(_, Name)):
         GenerateImportedDefinition(Name)
@@ -54,6 +57,9 @@
     'rule' GenerateImportedDefinitions(EXPRESSION'call(_, Handler, Arguments)):
         GenerateImportedDefinition(Handler)
         GenerateImportedDefinitions(Arguments)
+
+    'rule' GenerateImportedDefinitions(EXPRESSION'invoke(_, Info, _)):
+        GenerateImportedInvokeDefinition(Info)
 
 'action' GenerateImportedDefinition(ID)
 
@@ -98,6 +104,35 @@
     'rule' GenerateImportedDefinition(Id):
         -- If we get here then either the id isn't imported, or we have previously
         -- generated it.
+
+'action' GenerateImportedInvokeDefinition(INVOKELIST)
+
+    'rule' GenerateImportedInvokeDefinition(invokelist(Info, Tail)):
+        GenerateImportedInvokeInfo(Info)
+        GenerateImportedInvokeDefinition(Tail)
+        
+    'rule' GenerateImportedInvokeDefinition(nil):
+        -- do nothing
+
+'action' GenerateImportedInvokeInfo(INVOKEINFO)
+
+    'rule' GenerateImportedInvokeInfo(Info):
+        Info'Index -> Index
+        eq(Index, -1)
+        
+        Info'ModuleName -> ModuleNameString
+        MakeNameLiteral(ModuleNameString -> ModuleName)
+        EmitModuleDependency(ModuleName -> ModuleIndex)
+        Info'ModuleIndex <- ModuleIndex
+        
+        Info'Name -> NameString
+        MakeNameLiteral(NameString -> Name)
+        EmitUndefinedType(-> SymbolTypeIndex)
+        EmitImportedSyntax(ModuleIndex, Name, SymbolTypeIndex -> SymbolIndex)
+        Info'Index <- SymbolIndex
+
+    'rule' GenerateImportedInvokeInfo(Info):
+        -- If we get here then we've previously processed this invoke.
 
 ----
 
@@ -144,6 +179,9 @@
 
     'rule' GenerateDefinitionIndexes(foreignhandler(_, _, Name, _, _)):
         GenerateDefinitionIndex(Name)
+
+    'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _)):
+        GenerateDefinitionIndex(Name)
     
     'rule' GenerateDefinitionIndexes(_):
         -- nothing
@@ -151,9 +189,47 @@
 'action' GenerateDefinitionIndex(ID)
 
     'rule' GenerateDefinitionIndex(Id):
+        QuerySyntaxId(Id -> Info)
+        EmitDefinitionIndex(-> Index)
+        Info'Index <- Index
+
+    'rule' GenerateDefinitionIndex(Id):
         QuerySymbolId(Id -> Info)
         EmitDefinitionIndex(-> Index)
         Info'Index <- Index
+
+'condition' IsRValueMethodPresent(SYNTAXMETHODLIST)
+
+    'rule' IsRValueMethodPresent(methodlist(method(_, _, Arguments), Tail)):
+        (|
+            IsMarkTypePresentInArguments(output, Arguments)
+        ||
+            IsRValueMethodPresent(Tail)
+        |)
+        
+'condition' IsLValueMethodPresent(SYNTAXMETHODLIST)
+
+    'rule' IsLValueMethodPresent(methodlist(method(_, _, Arguments), Tail)):
+        (|
+            IsMarkTypePresentInArguments(input, Arguments)
+        ||
+            IsRValueMethodPresent(Tail)
+        |)
+
+'condition' IsMarkTypePresentInArguments(SYNTAXMARKTYPE, SYNTAXCONSTANTLIST)
+
+    'rule' IsMarkTypePresentInArguments(MarkType, constantlist(variable(_, Name), _)):
+        QuerySyntaxMarkId(Name -> Info)
+        Info'Type -> Type
+        eq(MarkType, Type)
+        
+    'rule' IsMarkTypePresentInArguments(MarkType, constantlist(indexedvariable(_, Name, _), _)):
+        QuerySyntaxMarkId(Name -> Info)
+        Info'Type -> Type
+        eq(MarkType, Type)
+
+    'rule' IsMarkTypePresentInArguments(MarkType, constantlist(_, Tail)):
+        IsMarkTypePresentInArguments(MarkType, Tail)
 
 ----
 
@@ -178,10 +254,19 @@
     'rule' GenerateExportedDefinitions(foreignhandler(_, public, Id, _, _)):
         GenerateExportedDefinition(Id)
         
+    'rule' GenerateExportedDefinitions(syntax(_, _, Id, _, _, _)):
+        GenerateExportedDefinition(Id)
+        
     'rule' GenerateExportedDefinitions(_):
         -- Non-public, non-exportable definition fallthrough.
 
 'action' GenerateExportedDefinition(ID)
+
+    'rule' GenerateExportedDefinition(Id):
+        QuerySyntaxId(Id -> Info)
+        Info'Index -> Index
+        ne(Index, -1)
+        EmitExportedDefinition(Index)
 
     'rule' GenerateExportedDefinition(Id):
         QuerySymbolId(Id -> Info)
@@ -224,7 +309,9 @@
         Info'Index -> DefIndex
         EmitBeginHandlerDefinition(DefIndex, Position, Name, TypeIndex)
         GenerateParameters(Parameters)
-        GenerateBody(Body)
+        EmitCreateRegister(-> ContextReg)
+        EmitCreateRegister(-> ResultReg)
+        GenerateBody(ResultReg, ContextReg, Body)
         EmitReturnNothing()
         EmitEndHandlerDefinition()
 
@@ -242,11 +329,87 @@
     'rule' GenerateDefinitions(event(_, _, _)):
         -- TODO
         
-    'rule' GenerateDefinitions(syntax(_, _, _, _, _, _)):
-        -- TODO
+    'rule' GenerateDefinitions(syntax(Position, _, Id, Class, _, _)):
+        QuerySyntaxId(Id -> Info)
+        Id'Name -> Name
+        Info'Methods -> Methods
+        Info'Index -> Index
+        EmitBeginSyntaxDefinition(Index, Position, Name)
+        GenerateSyntaxMethods(Methods)
+        EmitEndSyntaxDefinition()
         
     'rule' GenerateDefinitions(nil):
         -- nothing
+
+----
+
+'action' GenerateSyntaxMethods(SYNTAXMETHODLIST)
+
+    'rule' GenerateSyntaxMethods(methodlist(method(Position, Id, Arguments), Tail)):
+        QuerySymbolId(Id -> Info)
+        Info'Index -> HandlerIndex
+        EmitBeginSyntaxMethod(HandlerIndex)
+        GenerateSyntaxMethodArguments(Arguments)
+        EmitEndSyntaxMethod()
+        
+    'rule' GenerateSyntaxMethods(nil):
+        -- do nothing
+
+'action' GenerateSyntaxMethodArguments(SYNTAXCONSTANTLIST)
+
+    'rule' GenerateSyntaxMethodArguments(constantlist(Head, Tail)):
+        GenerateSyntaxMethodArgument(Head)
+        GenerateSyntaxMethodArguments(Tail)
+        
+    'rule' GenerateSyntaxMethodArguments(nil):
+        -- do nothing
+
+'action' GenerateSyntaxMethodArgument(SYNTAXCONSTANT)
+
+    'rule' GenerateSyntaxMethodArgument(undefined(_)):
+        EmitUndefinedSyntaxMethodArgument()
+
+    'rule' GenerateSyntaxMethodArgument(true(_)):
+        EmitTrueSyntaxMethodArgument()
+
+    'rule' GenerateSyntaxMethodArgument(false(_)):
+        EmitFalseSyntaxMethodArgument()
+
+    'rule' GenerateSyntaxMethodArgument(integer(_, Value)):
+        EmitIntegerSyntaxMethodArgument(Value)
+
+    'rule' GenerateSyntaxMethodArgument(real(_, Value)):
+        EmitRealSyntaxMethodArgument(Value)
+
+    'rule' GenerateSyntaxMethodArgument(string(_, Value)):
+        EmitStringSyntaxMethodArgument(Value)
+
+    'rule' GenerateSyntaxMethodArgument(variable(_, Name)):
+        QuerySyntaxMarkId(Name -> Info)
+        (|
+            Info'Type -> context
+            EmitContextSyntaxMethodArgument()
+        ||
+            Info'Type -> input
+            EmitInputSyntaxMethodArgument()
+        ||
+            Info'Type -> output
+            EmitOutputSyntaxMethodArgument()
+        ||
+            Info'Type -> iterator
+            EmitIteratorSyntaxMethodArgument()
+        ||
+            Info'Type -> container
+            EmitContainerSyntaxMethodArgument()
+        ||
+            Info'Index -> Index
+            EmitVariableSyntaxMethodArgument(Index)
+        |)
+
+    'rule' GenerateSyntaxMethodArgument(indexedvariable(_, Name, ElementIndex)):
+        QuerySyntaxMarkId(Name -> Info)
+        Info'Index -> Index
+        EmitIndexedVariableSyntaxMethodArgument(Index, ElementIndex)
 
 ----
 
@@ -264,48 +427,48 @@
         -- nothing
         
 
-'action' GenerateBody(STATEMENT)
+'action' GenerateBody(INT, INT, STATEMENT)
 
-    'rule' GenerateBody(sequence(Left, Right)):
-        GenerateBody(Left)
-        GenerateBody(Right)
+    'rule' GenerateBody(Result, Context, sequence(Left, Right)):
+        GenerateBody(Result, Context, Left)
+        GenerateBody(Result, Context, Right)
 
-    'rule' GenerateBody(variable(Position, Id, Type)):
+    'rule' GenerateBody(Result, Context, variable(Position, Id, Type)):
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
         GenerateType(Type -> TypeIndex)
         EmitHandlerVariable(Name, TypeIndex -> Index)
         Info'Index <- Index
     
-    'rule' GenerateBody(if(Position, Condition, Consequent, Alternate)):
+    'rule' GenerateBody(Result, Context, if(Position, Condition, Consequent, Alternate)):
         EmitDeferLabel(-> AlternateLabel)
         EmitDeferLabel(-> EndIfLabel)
-        GenerateExpression(Condition -> ResultRegister)
+        GenerateExpression(Context, Condition -> ResultRegister)
         EmitJumpIfFalse(ResultRegister, AlternateLabel)
         EmitDestroyRegister(ResultRegister)
-        GenerateBody(Consequent)
+        GenerateBody(Result, Context, Consequent)
         EmitJump(EndIfLabel)
         EmitResolveLabel(AlternateLabel)
-        GenerateBody(Alternate)
+        GenerateBody(Result, Context, Alternate)
         EmitResolveLabel(EndIfLabel)
         
-    'rule' GenerateBody(repeatforever(Position, Body)):
+    'rule' GenerateBody(Result, Context, repeatforever(Position, Body)):
         EmitDeferLabel(-> RepeatHead)
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatHead, RepeatTail)
         EmitResolveLabel(RepeatHead)
-        GenerateBody(Body)
+        GenerateBody(Result, Context, Body)
         EmitJump(RepeatHead)
         EmitResolveLabel(RepeatTail)
         EmitPopRepeatLabels()
         
-    'rule' GenerateBody(repeatcounted(Position, Count, Body)):
+    'rule' GenerateBody(Result, Context, repeatcounted(Position, Count, Body)):
         -- repeat n times uses a builtin invoke:
         -- bool RepeatCountedIterator(inout count)
         --   if count == 0 then return false
         --   count -= 1
         --   return true
-        GenerateExpression(Count -> CountRegister)
+        GenerateExpression(Context, Count -> CountRegister)
         EmitDeferLabel(-> RepeatHead)
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatHead, RepeatTail)
@@ -317,41 +480,41 @@
         EmitEndInvoke()
         EmitJumpIfFalse(CountRegister, RepeatTail)
         EmitDestroyRegister(ContinueRegister)
-        GenerateBody(Body)
+        GenerateBody(Result, Context, Body)
         EmitJump(RepeatHead)
         EmitResolveLabel(RepeatTail)
         EmitDestroyRegister(CountRegister)
         EmitPopRepeatLabels()
         
-    'rule' GenerateBody(repeatwhile(Position, Condition, Body)):
+    'rule' GenerateBody(Result, Context, repeatwhile(Position, Condition, Body)):
         EmitDeferLabel(-> RepeatHead)
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatHead, RepeatTail)
         
         EmitResolveLabel(RepeatHead)
-        GenerateExpression(Condition -> ContinueRegister)
+        GenerateExpression(Context, Condition -> ContinueRegister)
         EmitJumpIfFalse(ContinueRegister, RepeatTail)
         EmitDestroyRegister(ContinueRegister)
-        GenerateBody(Body)
+        GenerateBody(Result, Context, Body)
         EmitJump(RepeatHead)
         EmitResolveLabel(RepeatTail)
         EmitPopRepeatLabels()
 
-    'rule' GenerateBody(repeatuntil(Position, Condition, Body)):
+    'rule' GenerateBody(Result, Context, repeatuntil(Position, Condition, Body)):
         EmitDeferLabel(-> RepeatHead)
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatHead, RepeatTail)
         
         EmitResolveLabel(RepeatHead)
-        GenerateExpression(Condition -> ContinueRegister)
+        GenerateExpression(Context, Condition -> ContinueRegister)
         EmitJumpIfTrue(ContinueRegister, RepeatTail)
         EmitDestroyRegister(ContinueRegister)
-        GenerateBody(Body)
+        GenerateBody(Result, Context, Body)
         EmitJump(RepeatHead)
         EmitResolveLabel(RepeatTail)
         EmitPopRepeatLabels()
         
-    'rule' GenerateBody(repeatupto(Position, Slot, Start, Finish, Step, Body)):
+    'rule' GenerateBody(Result, Context, repeatupto(Position, Slot, Start, Finish, Step, Body)):
         QuerySymbolId(Slot -> Info)
         Info'Index -> VarIndex
         Info'Kind -> VarKind
@@ -361,14 +524,14 @@
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatNext, RepeatTail)
         
-        GenerateExpression(Start -> CounterRegister)
-        GenerateExpression(Finish -> LimitRegister)
+        GenerateExpression(Context, Start -> CounterRegister)
+        GenerateExpression(Context, Finish -> LimitRegister)
         (|
             where(Step -> nil)
             EmitCreateRegister(-> StepRegister)
             EmitAssignInteger(StepRegister, 1)
         ||
-            GenerateExpression(Step -> StepRegister)
+            GenerateExpression(Context, Step -> StepRegister)
         |)
 
         EmitResolveLabel(RepeatHead)
@@ -382,7 +545,7 @@
         EmitJumpIfFalse(ContinueRegister, RepeatTail)
         EmitDestroyRegister(ContinueRegister)
 
-        GenerateBody(Body)
+        GenerateBody(Result, Context, Body)
 
         EmitResolveLabel(RepeatNext)
         EmitFetchVar(VarKind, CounterRegister, VarIndex)
@@ -398,7 +561,7 @@
         EmitDestroyRegister(LimitRegister)
         EmitDestroyRegister(StepRegister)
 
-    'rule' GenerateBody(repeatdownto(Position, Slot, Start, Finish, Step, Body)):
+    'rule' GenerateBody(Result, Context, repeatdownto(Position, Slot, Start, Finish, Step, Body)):
         QuerySymbolId(Slot -> Info)
         Info'Index -> VarIndex
         Info'Kind -> VarKind
@@ -408,14 +571,14 @@
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatNext, RepeatTail)
         
-        GenerateExpression(Start -> CounterRegister)
-        GenerateExpression(Finish -> LimitRegister)
+        GenerateExpression(Context, Start -> CounterRegister)
+        GenerateExpression(Context, Finish -> LimitRegister)
         (|
             where(Step -> nil)
             EmitCreateRegister(-> StepRegister)
             EmitAssignInteger(StepRegister, -1)
         ||
-            GenerateExpression(Step -> StepRegister)
+            GenerateExpression(Context, Step -> StepRegister)
         |)
 
         EmitResolveLabel(RepeatHead)
@@ -429,7 +592,7 @@
         EmitJumpIfFalse(ContinueRegister, RepeatTail)
         EmitDestroyRegister(ContinueRegister)
 
-        GenerateBody(Body)
+        GenerateBody(Result, Context, Body)
 
         EmitResolveLabel(RepeatNext)
         EmitFetchVar(VarKind, CounterRegister, VarIndex)
@@ -444,95 +607,102 @@
         EmitDestroyRegister(LimitRegister)
         EmitDestroyRegister(StepRegister)
         
-    'rule' GenerateBody(repeatforeach(Position, Iterator, Slot, Container, Body)):
+    'rule' GenerateBody(Result, Context, repeatforeach(Position, Iterator, Slot, Container, Body)):
         -- TODO
         
-    'rule' GenerateBody(nextrepeat(Position)):
+    'rule' GenerateBody(Result, Context, nextrepeat(Position)):
         EmitCurrentRepeatLabels(-> Next, _)
         EmitJump(Next)
         
-    'rule' GenerateBody(exitrepeat(Position)):
+    'rule' GenerateBody(Result, Context, exitrepeat(Position)):
         EmitCurrentRepeatLabels(-> _, Exit)
         EmitJump(Exit)
         
-    'rule' GenerateBody(return(Position, Value)):
-        GenerateExpression(Value -> ReturnReg)
+    'rule' GenerateBody(Result, Context, return(Position, Value)):
+        GenerateExpression(Context, Value -> ReturnReg)
         EmitReturn(ReturnReg)
         
-    'rule' GenerateBody(call(Position, Handler, Arguments)): -- NOT COMPLETE!
+    'rule' GenerateBody(Result, Context, call(Position, Handler, Arguments)):
+        EmitCreateRegister(-> ResultRegister)
+        GenerateCallInRegister(ResultRegister, Context, Position, Handler, Arguments)
+        EmitDestroyRegister(ResultRegister)
+
+    'rule' GenerateBody(Result, Context, invoke(_, Invokes, Arguments)):
+        -- TODO
+        
+    'rule' GenerateBody(Result, Context, nil):
+        -- nothing
+
+----
+
+'action' GenerateCallInRegister(INT, INT, POS, ID, EXPRESSIONLIST) -- NOT COMPLETE!
+
+    'rule' GenerateCallInRegister(ResultRegister, Context, Position, Handler, Arguments):
         QuerySymbolId(Handler -> Info)
         Info'Index -> Index
         Info'Kind -> Kind
-        EmitCreateRegister(-> ResultRegister)
-        GenerateExpressionList(Arguments -> ArgumentsList)
+        GenerateExpressionList(Context, Arguments -> ArgumentsList)
         (|
             where(Kind -> handler)
-            EmitBeginInvoke(Index, ResultRegister)
+            EmitBeginCall(Index, ResultRegister)
             where(-1 -> HandlerRegister)
         ||
             EmitCreateRegister(-> HandlerRegister)
             EmitFetchVar(Kind, Index, HandlerRegister)
-            EmitBeginIndirectInvoke(HandlerRegister, ResultRegister)
+            EmitBeginIndirectCall(HandlerRegister, ResultRegister)
         |)
         EmitInvokeRegisterList(ArgumentsList)
-        EmitEndInvoke
+        EmitEndCall
         EmitDestroyRegisterList(ArgumentsList)
         [|
             ne(HandlerRegister, -1)
             EmitDestroyRegister(HandlerRegister)
         |]
-        EmitDestroyRegister(ResultRegister)
-
-    'rule' GenerateBody(invoke(_, Method, Arguments)):
-        -- TODO
-        
-    'rule' GenerateBody(nil):
-        -- nothing
 
 ----
 
-'action' GenerateExpression(EXPRESSION -> INT)
+'action' GenerateExpression(INT, EXPRESSION -> INT)
 
-    'rule' GenerateExpression(Expr -> Reg):
+    'rule' GenerateExpression(Context, Expr -> Reg):
         EmitCreateRegister(-> Reg)
-        GenerateExpressionInRegister(Reg, Expr)
+        GenerateExpressionInRegister(Reg, Context, Expr)
 
-'action' GenerateExpressionInRegister(INT, EXPRESSION)
+'action' GenerateExpressionInRegister(INT, INT, EXPRESSION)
 
-    'rule' GenerateExpressionInRegister(Result, undefined(_)):
+    'rule' GenerateExpressionInRegister(Result, Context, undefined(_)):
         EmitAssignUndefined(Result)
 
-    'rule' GenerateExpressionInRegister(Result, true(_)):
+    'rule' GenerateExpressionInRegister(Result, Context, true(_)):
         EmitAssignTrue(Result)
         
-    'rule' GenerateExpressionInRegister(Result, false(_)):
+    'rule' GenerateExpressionInRegister(Result, Context, false(_)):
         EmitAssignFalse(Result)
         
-    'rule' GenerateExpressionInRegister(Result, integer(_, Value)):
+    'rule' GenerateExpressionInRegister(Result, Context, integer(_, Value)):
         EmitAssignInteger(Result, Value)
         
-    'rule' GenerateExpressionInRegister(Result, real(_, Value)):
+    'rule' GenerateExpressionInRegister(Result, Context, real(_, Value)):
         EmitAssignReal(Result, Value)
         
-    'rule' GenerateExpressionInRegister(Result, string(_, Value)):
+    'rule' GenerateExpressionInRegister(Result, Context, string(_, Value)):
         EmitAssignString(Result, Value)
         
-    'rule' GenerateExpressionInRegister(Result, slot(_, Id)):
+    'rule' GenerateExpressionInRegister(Result, Context, slot(_, Id)):
         QuerySymbolId(Id -> Info)
         Info'Kind -> Kind
         Info'Index -> Index
         EmitFetchVar(Kind, Result, Index)
         
-    'rule' GenerateExpressionInRegister(Result, as(_, _, _)):
+    'rule' GenerateExpressionInRegister(Result, Context, as(_, _, _)):
         -- TODO
     
-    'rule' GenerateExpressionInRegister(Result, list(_, _)):
+    'rule' GenerateExpressionInRegister(Result, Context, list(_, _)):
         -- TODO
     
-    'rule' GenerateExpressionInRegister(Result, call(_, Handler, Arguments)):
-        -- TODO
+    'rule' GenerateExpressionInRegister(Result, Context, call(Position, Handler, Arguments)):
+        GenerateCallInRegister(Result, Context, Position, Handler, Arguments)
     
-    'rule' GenerateExpressionInRegister(Result, invoke(_, _, _)):
+    'rule' GenerateExpressionInRegister(Result, Context, invoke(_, _, _)):
         -- TODO
 
 ----
@@ -571,13 +741,13 @@
     'rule' EmitDestroyRegisterList(nil):
         -- nothing
 
-'action' GenerateExpressionList(EXPRESSIONLIST -> INTLIST)
+'action' GenerateExpressionList(INT, EXPRESSIONLIST -> INTLIST)
 
-    'rule' GenerateExpressionList(expressionlist(Head, Tail) -> intlist(HeadReg, TailRegs)):
-        GenerateExpression(Head -> HeadReg)
-        GenerateExpressionList(Tail -> TailRegs)
+    'rule' GenerateExpressionList(Context, expressionlist(Head, Tail) -> intlist(HeadReg, TailRegs)):
+        GenerateExpression(Context, Head -> HeadReg)
+        GenerateExpressionList(Context, Tail -> TailRegs)
         
-    'rule' GenerateExpressionList(nil -> nil)
+    'rule' GenerateExpressionList(_, nil -> nil)
         -- nothing
 
 --------------------------------------------------------------------------------
@@ -750,5 +920,7 @@
         
 -- Defined in check.g
 'action' QueryId(ID -> MEANING)
+'condition' QuerySyntaxId(ID -> SYNTAXINFO)
+'condition' QuerySyntaxMarkId(ID -> SYNTAXMARKINFO)
 
 --------------------------------------------------------------------------------

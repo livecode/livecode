@@ -616,8 +616,9 @@
 'action' ProcessOperatorExpression(-> EXPRESSION)
 
     'rule' ProcessOperatorExpression(-> invoke(Position, Method, Arguments)):
-        PopOperatorExpression(-> Position, Method, Arity)
+        PopOperatorExpression(-> Position, MethodIndex, Arity)
         ProcessOperatorExpressionChildren(Arity -> Arguments)
+        CustomInvokeLists(MethodIndex -> Method)
 
     'rule' ProcessOperatorExpression(-> Expr):
         PopOperatorExpressionArgument(-> Expr)
@@ -929,6 +930,12 @@
         
 --*--*--*--*--*--*--*--
 
+'action' InitializeCustomInvokeLists()
+    'rule' InitializeCustomInvokeLists():
+        -- nothing
+'action' CustomInvokeLists(INT -> INVOKELIST)
+    'rule' CustomInvokeLists(_ -> nil):
+        -- nothing
 'nonterm' CustomStatements(-> STATEMENT)
     'rule' CustomStatements(-> nil):
         "THISCANNEVERHAPPEN"

@@ -11,6 +11,7 @@
     PARAMETER MODE PARAMETERLIST
     STATEMENT
     EXPRESSION EXPRESSIONLIST
+    INVOKELIST INVOKEINFO INVOKESIGNATURE
     SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST SYNTAXTERM
     ID IDLIST
     INTLIST
@@ -99,6 +100,7 @@
     parameter(Position: POS, Mode: MODE, Name: ID, Type: TYPE)
     
 'type' MODE
+    uncomputed
     in
     out
     inout
@@ -118,7 +120,7 @@
     exitrepeat(Position: POS)
     return(Position: POS, Value: EXPRESSION)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
-    invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
+    invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
     nil
     
 'type' EXPRESSIONLIST
@@ -136,7 +138,15 @@
     as(Position: POS, Value: EXPRESSION, Type: TYPE)
     list(Position: POS, List: EXPRESSIONLIST)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
-    invoke(Position: POS, Method: INT, Arguments: EXPRESSIONLIST)
+    invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
+    nil
+
+'type' INVOKELIST
+    invokelist(Info: INVOKEINFO, Rest: INVOKELIST)
+    nil
+
+'type' INVOKESIGNATURE
+    invokesignature(Mode: MODE, Tail: INVOKESIGNATURE)
     nil
 
 'type' SYNTAX
@@ -243,9 +253,9 @@
 
 'table' MODULEINFO(Index: INT)
 'table' SYMBOLINFO(Index: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
-'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
-'table' SYNTAXMARKINFO(Index: INT, Type: SYNTAXMARKTYPE)
-
+'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
+'table' SYNTAXMARKINFO(Index: INT, RMode: MODE, LMode: MODE, Type: SYNTAXMARKTYPE)
+'table' INVOKEINFO(Index: INT, ModuleIndex: INT, Name: STRING, ModuleName: STRING, RSignature: INVOKESIGNATURE, LSignature: INVOKESIGNATURE)
 
 'table' TYPEINFO(Position: POS)
 

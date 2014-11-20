@@ -13,6 +13,7 @@ extern "C" void EmitImportedType(long module_index, NameRef name, long type_inde
 extern "C" void EmitImportedConstant(long module_index, NameRef name, long type_index, long& r_index);
 extern "C" void EmitImportedVariable(long module_index, NameRef name, long type_index, long& r_index);
 extern "C" void EmitImportedHandler(long module_index, NameRef name, long type_index, long& r_index);
+extern "C" void EmitImportedSyntax(long p_module_index, NameRef p_name, long p_type_index, long& r_index);
 extern "C" void EmitExportedDefinition(long index);
 extern "C" void EmitDefinitionIndex(long& r_index);
 extern "C" void EmitTypeDefinition(long index, PositionRef position, NameRef name, long type_index);
@@ -20,6 +21,25 @@ extern "C" void EmitVariableDefinition(long index, PositionRef position, NameRef
 extern "C" void EmitBeginHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitEndHandlerDefinition(void);
 extern "C" void EmitForeignHandlerDefinition(long index, PositionRef position, NameRef name, long type_index, long binding);
+
+extern "C" void EmitBeginSyntaxDefinition(long p_index, PositionRef p_position, NameRef p_name);
+extern "C" void EmitEndSyntaxDefinition(void);
+extern "C" void EmitBeginSyntaxMethod(long p_handler_index);
+extern "C" void EmitEndSyntaxMethod(void);
+extern "C" void EmitUndefinedSyntaxMethodArgument(void);
+extern "C" void EmitTrueSyntaxMethodArgument(void);
+extern "C" void EmitFalseSyntaxMethodArgument(void);
+extern "C" void EmitInputSyntaxMethodArgument(void);
+extern "C" void EmitOutputSyntaxMethodArgument(void);
+extern "C" void EmitContextSyntaxMethodArgument(void);
+extern "C" void EmitIteratorSyntaxMethodArgument(void);
+extern "C" void EmitContainerSyntaxMethodArgument(void);
+extern "C" void EmitIntegerSyntaxMethodArgument(long p_int);
+extern "C" void EmitRealSyntaxMethodArgument(long p_double);
+extern "C" void EmitStringSyntaxMethodArgument(long p_string);
+extern "C" void EmitVariableSyntaxMethodArgument(long p_index);
+extern "C" void EmitIndexedVariableSyntaxMethodArgument(long p_var_index, long p_element_index);
+
 extern "C" void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index);
 extern "C" void EmitAliasType(NameRef name, long typeindex, long& r_new_index);
 extern "C" void EmitOptionalType(long index, long& r_new_index);
@@ -59,8 +79,10 @@ extern "C" void EmitJumpIfFalse(long reg, long label);
 extern "C" void EmitPushRepeatLabels(long next, long exit);
 extern "C" void EmitPopRepeatLabels(void);
 extern "C" void EmitCurrentRepeatLabels(long& r_next, long& r_exit);
-extern "C" void EmitBeginInvoke(long index, long resultreg);
-extern "C" void EmitBeginIndirectInvoke(long reg, long resultreg);
+extern "C" void EmitBeginCall(long index, long resultreg);
+extern "C" void EmitBeginIndirectCall(long reg, long resultreg);
+extern "C" void EmitContinueCall(long reg);
+extern "C" void EmitEndCall(void);
 extern "C" void EmitBeginBuiltinInvoke(long name, long resultreg);
 extern "C" void EmitContinueInvoke(long reg);
 extern "C" void EmitEndInvoke(void);
@@ -231,6 +253,15 @@ void EmitImportedHandler(long p_module_index, NameRef p_name, long p_type_index,
     MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
 }
 
+void EmitImportedSyntax(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
+{
+    uindex_t t_index;
+    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindSyntax, to_mctypeinforef(p_type_index), t_index);
+    r_index = t_index;
+    
+    MCLog("[Emit] ImportedSyntax(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
+}
+
 void EmitExportedDefinition(long p_index)
 {
     MCScriptAddExportToModule(s_builder, p_index);
@@ -280,6 +311,131 @@ void EmitEndHandlerDefinition(void)
     MCScriptEndHandlerInModule(s_builder);
     
     MCLog("[Emit] EndHandlerDefinition()", 0);
+}
+
+void EmitBeginSyntaxDefinition(long p_index, PositionRef p_position, NameRef p_name)
+{
+    MCScriptBeginSyntaxInModule(s_builder, to_mcnameref(p_name), p_index);
+    
+    MCLog("[Emit] BeginSyntaxDefinition(%ld, %@)", p_index, to_mcnameref(p_name));
+}
+
+void EmitEndSyntaxDefinition(void)
+{
+    MCScriptEndSyntaxInModule(s_builder);
+
+    MCLog("[Emit] EndSyntaxDefinition()", 0);
+}
+
+void EmitBeginSyntaxMethod(long p_handler_index)
+{
+    MCScriptBeginSyntaxMethodInModule(s_builder, p_handler_index);
+    
+    MCLog("[Emit] BeginSyntaxMethod(%ld)", p_handler_index);
+}
+
+void EmitEndSyntaxMethod(void)
+{
+    MCScriptEndSyntaxMethodInModule(s_builder);
+    
+    MCLog("[Emit] EmitEndSyntaxMethod()", 0);
+}
+
+void EmitInputSyntaxMethodArgument(void)
+{
+    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 0);
+    
+    MCLog("[Emit] InputSyntaxMethodArgument()", 0);
+}
+
+void EmitOutputSyntaxMethodArgument(void)
+{
+    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 1);
+    
+    MCLog("[Emit] OutputSyntaxMethodArgument()", 0);
+}
+
+void EmitContextSyntaxMethodArgument(void)
+{
+    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 2);
+    
+    MCLog("[Emit] ContextSyntaxMethodArgument()", 0);
+}
+
+void EmitIteratorSyntaxMethodArgument(void)
+{
+    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 3);
+    
+    MCLog("[Emit] IteratorSyntaxMethodArgument()", 0);
+}
+
+void EmitContainerSyntaxMethodArgument(void)
+{
+    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 4);
+    
+    MCLog("[Emit] ContainerSyntaxMethodArgument()", 0);
+}
+
+void EmitUndefinedSyntaxMethodArgument(void)
+{
+    MCScriptAddConstantArgumentToSyntaxMethodInModule(s_builder, kMCNull);
+    
+    MCLog("[Emit] UndefinedSyntaxMethodArgument()", 0);
+}
+
+void EmitTrueSyntaxMethodArgument(void)
+{
+    MCScriptAddConstantArgumentToSyntaxMethodInModule(s_builder, kMCTrue);
+    
+    MCLog("[Emit] TrueSyntaxMethodArgument()", 0);
+}
+
+void EmitFalseSyntaxMethodArgument(void)
+{
+    MCScriptAddConstantArgumentToSyntaxMethodInModule(s_builder, kMCFalse);
+    
+    MCLog("[Emit] FalseSyntaxMethodArgument()", 0);
+}
+
+void EmitIntegerSyntaxMethodArgument(long p_int)
+{
+    MCAutoNumberRef t_number;
+    MCNumberCreateWithInteger(p_int, &t_number);
+    MCScriptAddConstantArgumentToSyntaxMethodInModule(s_builder, *t_number);
+    
+    MCLog("[Emit] IntegerSyntaxMethodArgument(%ld)", p_int);
+}
+
+void EmitRealSyntaxMethodArgument(long p_double)
+{
+    MCAutoNumberRef t_number;
+    MCNumberCreateWithInteger(p_double, &t_number);
+    MCScriptAddConstantArgumentToSyntaxMethodInModule(s_builder, *t_number);
+    
+    MCLog("[Emit] RealSyntaxMethodArgument(%lf)", *(double *)p_double);
+}
+
+void EmitStringSyntaxMethodArgument(long p_string)
+{
+    MCAutoStringRef t_string;
+    MCStringCreateWithCString((const char *)p_string, &t_string);
+    MCScriptAddConstantArgumentToSyntaxMethodInModule(s_builder, *t_string);
+    
+    MCLog("[Emit] RealSyntaxMethodArgument(\"%s\")", (const char *)p_string);
+}
+
+void EmitVariableSyntaxMethodArgument(long p_index)
+{
+    MCScriptAddVariableArgumentToSyntaxMethodInModule(s_builder, p_index);
+    
+    MCLog("[Emit] VariableSyntaxMethodArgument(%ld)", p_index);
+}
+
+void EmitIndexedVariableSyntaxMethodArgument(long p_var_index, long p_element_index)
+{
+    MCScriptAddIndexedVariableArgumentToSyntaxMethodInModule(s_builder, p_var_index, p_element_index);
+    
+    MCLog("[Emit] IndexedVariableSyntaxMethodArgument(%ld, %ld)", p_var_index, p_element_index);
 }
 
 void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index)
@@ -658,35 +814,45 @@ void EmitCurrentRepeatLabels(long& r_next, long& r_exit)
 
 //////////
 
-void EmitBeginInvoke(long index, long resultreg)
+void EmitBeginCall(long index, long resultreg)
 {
-    MCScriptBeginInvokeInModule(s_builder, index, resultreg);
-    MCLog("[Emit] BeginInvoke(%ld, %ld)", index, resultreg);
+    MCScriptBeginCallInModule(s_builder, index, resultreg);
+    MCLog("[Emit] BeginCall(%ld, %ld)", index, resultreg);
 }
 
-void EmitBeginIndirectInvoke(long reg, long resultreg)
+void EmitBeginIndirectCall(long reg, long resultreg)
 {
-    MCScriptBeginIndirectInvokeInModule(s_builder, reg, resultreg);
-    MCLog("[Emit] BeginIndirectInvoke(%ld, %ld)", reg, resultreg);
+    MCScriptBeginIndirectCallInModule(s_builder, reg, resultreg);
+    MCLog("[Emit] BeginIndirectCall(%ld, %ld)", reg, resultreg);
 }
+
+void EmitContinueCall(long reg)
+{
+    MCScriptContinueCallInModule(s_builder, reg);
+    MCLog("[Emit] ContinueCall(%ld)", reg);
+}
+
+void EmitEndCall(void)
+{
+    MCScriptEndCallInModule(s_builder);
+    MCLog("[Emit] EndCall()", 0);
+}
+
+//////////
 
 void EmitBeginBuiltinInvoke(long name, long resultreg)
 {
     // TODO
-    MCScriptBeginInvokeInModule(s_builder, 0, resultreg);
+    MCScriptBeginCallInModule(s_builder, 0, resultreg);
     MCLog("[Emit] BeginBuiltinInvoke(%s, %ld)", (const char *)name, resultreg);
 }
 
 void EmitContinueInvoke(long reg)
 {
-    MCScriptContinueInvokeInModule(s_builder, reg);
-    MCLog("[Emit] ContinueInvoke(%ld)", reg);
 }
 
 void EmitEndInvoke(void)
 {
-    MCScriptEndInvokeInModule(s_builder);
-    MCLog("[Emit] EndInvoke()", 0);
 }
 
 //////////

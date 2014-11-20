@@ -145,7 +145,7 @@ handler type MyHandlerType(in pBoolParam as bool, in pArrayParam as array, out r
 // foreign handler context it means pass the value as an MLC type (ValueRef).
 
 // 'any' is the union of all (high-level) types
-type MyAny is any
+public type MyAny is any
 
 // 'boolean' is the true / false type
 type MyBoolean is boolean
@@ -271,7 +271,10 @@ handler MyStatementHandler(pParam)
     //    MyStatementHandler(pParam)
     //end repeat
     
-    return 100
+    put 100 after tMyVar
+    add 200 to tMyVar
+
+    return MyStatementHandler(100)
 end handler
 
 ////////////////////////////////////////////////////////////////////////////////

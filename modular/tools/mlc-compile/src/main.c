@@ -37,7 +37,11 @@ void bootstrap_main(int argc, char *argv[])
     }
     
     if (MoveToNextFile())
+    {
+        yyExtend();
+        InitializeCustomInvokeLists();
         ROOT();
+    }
     
     /*
     // Get the filename.
@@ -84,7 +88,11 @@ static void full_main(int argc, char *argv[])
     
     AddFile(argv[0]);
     if (MoveToNextFile())
+    {
+        yyExtend();
+        InitializeCustomInvokeLists();
         ROOT();
+    }
 }
 
 int main(int argc, char *argv[])

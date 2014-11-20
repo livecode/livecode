@@ -96,10 +96,10 @@ void build_widget_module(MCStreamRef stream)
     MCScriptBeginHandlerInModule(t_builder, MCNAME("virtualNumberValue"), *t_virt_number_value_getter_sig, t_virt_number_value_getter);
     MCScriptEmitFetchGlobalInModule(t_builder, 1, t_usedef_var_index);
     MCScriptEmitFetchGlobalInModule(t_builder, 2, t_number_value_var_index);
-    MCScriptBeginInvokeInModule(t_builder, t_compute_value_def, 0);
-    MCScriptContinueInvokeInModule(t_builder, 1);
-    MCScriptContinueInvokeInModule(t_builder, 2);
-    MCScriptEndInvokeInModule(t_builder);
+    MCScriptBeginCallInModule(t_builder, t_compute_value_def, 0);
+    MCScriptContinueCallInModule(t_builder, 1);
+    MCScriptContinueCallInModule(t_builder, 2);
+    MCScriptEndCallInModule(t_builder);
     MCScriptEmitReturnInModule(t_builder, 0);
     MCScriptEndHandlerInModule(t_builder);
     
