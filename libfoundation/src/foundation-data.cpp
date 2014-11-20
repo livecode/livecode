@@ -624,8 +624,15 @@ void __MCDataFinalize(void)
 
 void __MCDataDestroy(__MCData *self)
 {
-    if (self -> bytes != nil)
-        MCMemoryDeleteArray(self -> bytes);
+    if (__MCDataIsIndirect(self))
+    {
+        MCValueRelease(self -> contents);
+    }
+    else
+    {
+        if (self -> bytes != nil)
+            MCMemoryDeleteArray(self -> bytes);
+    }
 }
 
 bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value)
