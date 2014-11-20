@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 #include "foundation-private.h"
 
@@ -32,24 +33,6 @@ static uindex_t s_name_table_capacity;
 
 static void __MCNameGrowTable(void);
 static void __MCNameShrinkTable(void);
-
-////////////////////////////////////////////////////////////////////////////////
-
-MCNameRef MCNAME(const char *p_string)
-{
-	MCStringRef t_string;
-	t_string = MCSTR(p_string);
-	
-	MCNameRef t_name;
-	/* UNCHECKED */ MCNameCreate(t_string, t_name);
-	
-	MCValueRef t_name_unique;
-	/* UNCHECKED */ MCValueInter(t_name, t_name_unique);
-	
-	MCValueRelease(t_name);
-	
-	return (MCNameRef)t_name_unique;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
