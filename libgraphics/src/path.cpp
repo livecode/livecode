@@ -104,6 +104,11 @@ bool MCGPathIsMutable(MCGPathRef self)
 	return self -> is_mutable;
 }
 
+bool MCGPathIsEmpty(MCGPathRef self)
+{
+	return self -> path -> isEmpty();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCGPathCopy(MCGPathRef self, MCGPathRef& r_new_path)
@@ -167,6 +172,68 @@ void MCGPathMutableCopyAndRelease(MCGPathRef self, MCGPathRef& r_new_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCGPathMutableCopySubpathsContext
+{
+	int32_t first_subpath;
+	int32_t last_subpath;
+	int32_t current_subpath;
+	
+	MCGPathRef path;
+	
+	bool done;
+};
+
+bool MCGPathMutableCopySubpathsCallback(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count)
+{
+	MCGPathMutableCopySubpathsContext *t_context;
+	t_context = static_cast<MCGPathMutableCopySubpathsContext*>(p_context);
+	
+	if (p_command == kMCGPathCommandMoveTo)
+		t_context->current_subpath++;
+
+	// skip processing if subpath outside the requested range
+	if (t_context->current_subpath < t_context->first_subpath)
+		return true;
+	// end iteration after last requested subpath processed
+	if (t_context->current_subpath > t_context->last_subpath)
+	{
+		t_context->done = true;
+		return false;
+	}
+	
+	switch (p_command)
+	{
+		case kMCGPathCommandMoveTo:
+			MCGPathMoveTo(t_context->path, p_points[0]);
+			break;
+			
+		case kMCGPathCommandLineTo:
+			MCGPathLineTo(t_context->path, p_points[0]);
+			break;
+			
+		case kMCGPathCommandQuadCurveTo:
+			MCGPathQuadraticTo(t_context->path, p_points[0], p_points[1]);
+			break;
+			
+		case kMCGPathCommandCubicCurveTo:
+			MCGPathCubicTo(t_context->path, p_points[0], p_points[1], p_points[2]);
+			break;
+
+		case kMCGPathCommandCloseSubpath:
+			MCGPathCloseSubpath(t_context->path);
+			break;
+			
+		case kMCGPathCommandEnd:
+			t_context->done = true;
+			break;
+			
+		default:
+			MCAssert(false);
+	}
+	
+	return MCGPathIsValid(t_context->path);
+}
+
 bool MCGPathMutableCopySubpaths(MCGPathRef self, uint32_t p_first, uint32_t p_last, MCGPathRef &r_subpaths)
 {
 	if (!MCGPathIsValid(self))
@@ -181,63 +248,16 @@ bool MCGPathMutableCopySubpaths(MCGPathRef self, uint32_t p_first, uint32_t p_la
 	if (t_success)
 		t_success = MCGPathCreateMutable(t_path);
 	
+	MCGPathMutableCopySubpathsContext t_context;
 	if (t_success)
 	{
-		SkPath::Iter t_iter(*self->path, false);
-		SkPath::Verb t_verb;
-		SkPoint t_points[4];
-		uint32_t t_subpath_index;
-		t_subpath_index = 0;
+		t_context.first_subpath = p_first;
+		t_context.last_subpath = p_last;
+		t_context.current_subpath = -1;
+		t_context.path = t_path;
+		t_context.done = false;
 		
-		
-		do
-		{
-			t_verb = t_iter.next(t_points);
-			// Move command indicates the start of a new subpath
-			if (t_verb == SkPath::kMove_Verb)
-				t_subpath_index++;
-		}
-		while (t_success && t_subpath_index < p_first && t_verb != SkPath::kDone_Verb);
-		
-		if (t_success && t_verb == SkPath::kMove_Verb)
-		{
-			t_path->path->moveTo(t_points[0]);
-			
-			do
-			{
-				t_verb = t_iter.next(t_points);
-				switch(t_verb)
-				{
-					case SkPath::kMove_Verb:
-						t_subpath_index++;
-						if (t_subpath_index <= p_last)
-							t_path->path->moveTo(t_points[0]);
-						break;
-						
-					case SkPath::kLine_Verb:
-						if (t_iter.isCloseLine())
-							t_path->path->close();
-						else
-							t_path->path->lineTo(t_points[0]);
-						break;
-						
-					case SkPath::kQuad_Verb:
-						t_path->path->quadTo(t_points[0], t_points[1]);
-						break;
-						
-					case SkPath::kCubic_Verb:
-						t_path->path->cubicTo(t_points[0], t_points[1], t_points[2]);
-						break;
-						
-					default:
-						break;
-				}
-				
-				// TODO - check validity of SkPath
-			}
-			while (t_success && t_subpath_index <= p_last && t_verb != SkPath::kDone_Verb);
-			
-		}
+		t_success = MCGPathIterate(self, MCGPathMutableCopySubpathsCallback, &t_context) || t_context.done;
 	}
 	
 	if (t_success)
@@ -641,3 +661,73 @@ bool MCGPathTransform(MCGPathRef self, const MCGAffineTransform &p_transform)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCGPathIterate(MCGPathRef self, MCGPathIterateCallback p_callback, void *p_context)
+{
+	if (!MCGPathIsValid(self))
+		return false;
+	
+	bool t_success;
+	t_success = true;
+	
+	MCGPoint t_points[3];
+	uint32_t t_point_count;
+	MCGPathCommand t_command;
+	
+	SkPath::Iter t_iter(*self->path, false);
+	SkPath::Verb t_verb;
+	SkPoint t_sk_points[4];
+	
+	while (t_success && (t_verb = t_iter.next(t_sk_points)) != SkPath::kDone_Verb)
+	{
+		switch(t_verb)
+		{
+			case SkPath::kMove_Verb:
+				t_command = kMCGPathCommandMoveTo;
+				t_points[0] = MCGPointFromSkPoint(t_sk_points[0]);
+				t_point_count = 1;
+				break;
+				
+			case SkPath::kLine_Verb:
+				if (t_iter.isCloseLine())
+				{
+					t_command = kMCGPathCommandCloseSubpath;
+					t_point_count = 0;
+				}
+				else
+				{
+					t_command = kMCGPathCommandLineTo;
+					t_points[0] = MCGPointFromSkPoint(t_sk_points[0]);
+					t_point_count = 1;
+				}
+				break;
+				
+			case SkPath::kQuad_Verb:
+				t_command = kMCGPathCommandQuadCurveTo;
+				t_points[0] = MCGPointFromSkPoint(t_sk_points[0]);
+				t_points[1] = MCGPointFromSkPoint(t_sk_points[1]);
+				t_point_count = 2;
+				break;
+				
+			case SkPath::kCubic_Verb:
+				t_command = kMCGPathCommandCubicCurveTo;
+				t_points[0] = MCGPointFromSkPoint(t_sk_points[0]);
+				t_points[1] = MCGPointFromSkPoint(t_sk_points[1]);
+				t_points[2] = MCGPointFromSkPoint(t_sk_points[2]);
+				t_point_count = 3;
+				break;
+				
+			default:
+				// Unknown path instruction
+				t_success = false;
+				break;
+		}
+		
+		t_success = p_callback(p_context, t_command, t_points, t_point_count);
+	}
+	
+	if (t_success)
+		t_success = p_callback(p_context, kMCGPathCommandEnd, nil, 0);
+	
+	return t_success;
+}

@@ -715,15 +715,16 @@ MCGRectangle MCGMaskGetBounds(MCGMaskRef mask);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef uint8_t MCGPathCommand;
-enum
+enum MCGPathCommand
 {
 	kMCGPathCommandEnd,
 	kMCGPathCommandMoveTo,
 	kMCGPathCommandLineTo,
-	kMCGPathCommandCurveTo,
+	kMCGPathCommandCubicCurveTo,
 	kMCGPathCommandQuadCurveTo,
 	kMCGPathCommandCloseSubpath,
+	
+	kMCGPathCommandCount
 };
 
 bool MCGPathCreate(const MCGPathCommand *commands, const MCGFloat *parameters, MCGPathRef& r_path);
@@ -733,6 +734,7 @@ MCGPathRef MCGPathRetain(MCGPathRef path);
 void MCGPathRelease(MCGPathRef path);
 
 bool MCGPathIsValid(MCGPathRef path);
+bool MCGPathIsEmpty(MCGPathRef path);
 
 void MCGPathCopy(MCGPathRef path, MCGPathRef& r_new_path);
 void MCGPathCopyAndRelease(MCGPathRef path, MCGPathRef& r_new_path);
@@ -766,6 +768,9 @@ void MCGPathSimplify(MCGPathRef path, MCGPathRef& r_simple_path);
 bool MCGPathTransform(MCGPathRef path, const MCGAffineTransform &p_transform);
 
 bool MCGPathGetBoundingBox(MCGPathRef path, MCGRectangle &r_bounds);
+
+typedef bool (*MCGPathIterateCallback)(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count);
+bool MCGPathIterate(MCGPathRef p_path, MCGPathIterateCallback p_callback, void *p_context);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -21,7 +21,7 @@ record type Rectangle
 	y as CanvasFloat
 	width as CanvasFloat
 	height as CanvasFloat
-end record
+end type
 
 
 // Transform
@@ -52,21 +52,27 @@ end type
 // Solid Paint
 foreign handler MCCanvasSolidPaintType_Copy(in pSrc as pointer, out pDst as pointer) as undefined binds to "<builtin>"
 foreign type
+foreign handler MCCanvasSolidPaintType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
 opaque type SolidPaint based on Paint
 	copy is MCCanvasSolidPaintType_Copy
+	typecheck is MCCanvasSolidPaintType_TypeCheck
 end type
 
 // Pattern
+foreign handler MCCanvasPatternType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
 opaque type Pattern based on Paint
+	typecheck is MCCanvasPatternType_TypeCheck
 end type
 
 // Gradient
 record type GradientStop
-	position is CanvasFloat
-	color is Color
+	position as CanvasFloat
+	color as Color
 end type
 
+foreign handler MCCanvasGradientType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
 opaque type Gradient based on Paint
+	typecheck is MCCanvasGradientType_TypeCheck
 end type
 
 // Image
@@ -239,18 +245,6 @@ begin
 	MCCanvasTransformGetRotation(mTransform, output)
 end syntax
 
-//syntax RadiansRotationTransformProperty is expression
-//	"the" "rotation" "of" <mTransform: Expression> "in" "radians"
-//begin
-//	MCCanvasTransformGetRotationInRadians(mTransform, output)
-//end syntax
-//
-//syntax DegreeRotationTransformProperty is expression
-//	"the" "rotation" "of" <mTransform: Expression> "in" "degrees"
-//begin
-//	MCCanvasTransformGetRotationInDegrees(mTransform, output)
-//end syntax
-
 syntax SkewTransformProperty is prefix operator with precedence 4
 	"the" "skew" "of" <mTransform: Expression>
 begin
@@ -332,7 +326,7 @@ end syntax
 foreign handler MCCanvasSolidPaintGetColor(in pSolid as SolidPaint, out rColor as Color) as undefined binds to "<builtin>"
 foreign handler MCCanvasSolidPaintSetColor(inout pSolid as SolidPaint, in pColor as Color) as undefined binds to "<builtin>"
 
-syntax SolidPaintColorProperty as prefix operator with precedence 4
+syntax SolidPaintColorProperty is prefix operator with precedence 4
 	"the" "color" "of" <mSolid: Expression>
 begin
 	MCCanvasSolidPaintGetColor(mSolid, output)
