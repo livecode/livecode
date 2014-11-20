@@ -78,7 +78,7 @@
     string(Position: POS)
     data(Position: POS)
     array(Position: POS)
-    list(Position: POS)
+    list(Position: POS, Element: TYPE)
     nil
 
 'type' FIELDLIST
@@ -242,7 +242,7 @@
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
 
 'table' MODULEINFO(Index: INT)
-'table' SYMBOLINFO(Index: INT, Parent: ID, Kind: SYMBOLKIND, Type: TYPE)
+'table' SYMBOLINFO(Index: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
 'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
 'table' SYNTAXMARKINFO(Index: INT, Type: SYNTAXMARKTYPE)
 

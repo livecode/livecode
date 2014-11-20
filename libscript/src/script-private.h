@@ -114,7 +114,7 @@ struct MCScriptImportedDefinition
     uindex_t module;
     MCScriptDefinitionKind kind;
     MCNameRef name;
-    MCTypeInfoRef type;
+    //MCTypeInfoRef type;
     
     // The resolved definition - not pickled
     MCScriptDefinition *definition;
@@ -164,6 +164,12 @@ struct MCScriptHandlerDefinition: public MCScriptDefinition
     
     // The start of the registers.
     uindex_t register_offset;
+};
+
+struct MCScriptHandlerGroupDefinition: public MCScriptDefinition
+{
+    uindex_t *handlers;
+    uindex_t handler_count;
 };
 
 struct MCScriptForeignHandlerDefinition: public MCScriptDefinition

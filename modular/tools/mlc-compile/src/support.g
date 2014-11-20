@@ -104,6 +104,7 @@
     EmitEndHandlerDefinition
     EmitForeignHandlerDefinition
     EmitNamedType
+    EmitAliasType
     EmitOptionalType
     EmitPointerType
     EmitBoolType
@@ -340,7 +341,8 @@
 'action' EmitForeignHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, Binding: STRING)
 
 'action' EmitOptionalType(INT -> INT)
-'action' EmitNamedType(INT -> INT)
+'action' EmitNamedType(Module: NAME, Name: NAME -> INT)
+'action' EmitAliasType(Name: NAME, TypeIndex: INT -> INT)
 'action' EmitPointerType(-> INT)
 'action' EmitBoolType(-> INT)
 'action' EmitIntType(-> INT)

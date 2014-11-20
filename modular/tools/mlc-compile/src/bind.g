@@ -109,35 +109,35 @@
         Define(ModuleId, Left)
         Define(ModuleId, Right)
         
-    'rule' Define(ModuleId, type(Position, _, Name, Type)):
-        DefineSymbolId(Name, ModuleId, type, Type)
+    'rule' Define(ModuleId, type(Position, Access, Name, Type)):
+        DefineSymbolId(Name, ModuleId, Access, type, Type)
         [|
             where(Type -> handler(_, signature(Parameters, _)))
             DefineParameters(Name, Parameters)
         |]
     
-    'rule' Define(ModuleId, constant(Position, _, Name, Value)):
+    'rule' Define(ModuleId, constant(Position, Access, Name, Value)):
         ComputeTypeOfConstantTermExpression(Value -> Type)
-        DefineSymbolId(Name, ModuleId, constant, Type)
+        DefineSymbolId(Name, ModuleId, Access, constant, Type)
     
-    'rule' Define(ModuleId, variable(Position, _, Name, Type)):
-        DefineSymbolId(Name, ModuleId, variable, Type)
+    'rule' Define(ModuleId, variable(Position, Access, Name, Type)):
+        DefineSymbolId(Name, ModuleId, Access, variable, Type)
     
-    'rule' Define(ModuleId, handler(Position, _, Name, Signature:signature(Parameters, _), _, _)):
-        DefineSymbolId(Name, ModuleId, handler, handler(Position, Signature))
+    'rule' Define(ModuleId, handler(Position, Access, Name, Signature:signature(Parameters, _), _, _)):
+        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, Signature))
         DefineParameters(Name, Parameters)
     
-    'rule' Define(ModuleId, foreignhandler(Position, _, Name, Signature:signature(Parameters, _), _)):
-        DefineSymbolId(Name, ModuleId, handler, handler(Position, Signature))
+    'rule' Define(ModuleId, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _)):
+        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, Signature))
         DefineParameters(Name, Parameters)
 
-    'rule' Define(ModuleId, property(Position, _, Name)):
-        DefineSymbolId(Name, ModuleId, property, nil)
+    'rule' Define(ModuleId, property(Position, Access, Name)):
+        DefineSymbolId(Name, ModuleId, Access, property, nil)
 
-    'rule' Define(ModuleId, event(Position, _, Name)):
-        DefineSymbolId(Name, ModuleId, event, nil)
+    'rule' Define(ModuleId, event(Position, Access, Name)):
+        DefineSymbolId(Name, ModuleId, Access, event, nil)
     
-    'rule' Define(ModuleId, syntax(Position, _, Name, Class, Syntax, _)):
+    'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Syntax, _)):
         DefineSyntaxId(Name, ModuleId, Class, Syntax)
     
     'rule' Define(ModuleId, nil):
@@ -146,7 +146,7 @@
 'action' DefineParameters(ID, PARAMETERLIST)
 
     'rule' DefineParameters(ModuleId, parameterlist(parameter(_, _, Name, Type), Tail)):
-        DefineSymbolId(Name, ModuleId, parameter, Type)
+        DefineSymbolId(Name, ModuleId, inferred, parameter, Type)
         DefineParameters(ModuleId, Tail)
         
     'rule' DefineParameters(ModuleId, nil):
@@ -301,7 +301,7 @@
     'rule' Apply(STATEMENT'variable(_, Name, Type)):
         DeclareId(Name)
         CurrentHandlerId -> ParentId
-        DefineSymbolId(Name, ParentId, variable, Type)
+        DefineSymbolId(Name, ParentId, inferred, variable, Type)
         Apply(Type)
         
     'rule' Apply(STATEMENT'repeatupto(_, Slot, Start, Finish, Step, Body)):
@@ -452,14 +452,15 @@
         Info'Index <- -1
         Id'Meaning <- module(Info)
 
-'action' DefineSymbolId(ID, ID, SYMBOLKIND, TYPE)
+'action' DefineSymbolId(ID, ID, ACCESS, SYMBOLKIND, TYPE)
 
-    'rule' DefineSymbolId(Id, ParentId, Kind, Type)
+    'rule' DefineSymbolId(Id, ParentId, Access, Kind, Type)
         Info::SYMBOLINFO
         Info'Index <- -1
         Info'Parent <- ParentId
         Info'Kind <- Kind
         Info'Type <- Type
+        Info'Access <- Access
         Id'Meaning <- symbol(Info)
 
 'action' DefineSyntaxId(ID, ID, SYNTAXCLASS, SYNTAX)

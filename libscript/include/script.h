@@ -214,6 +214,7 @@ enum MCScriptDefinitionKind
 	kMCScriptDefinitionKindForeignHandler,
 	kMCScriptDefinitionKindProperty,
 	kMCScriptDefinitionKindEvent,
+    kMCScriptDefinitionKindHandlerGroup,
     
 	kMCScriptDefinitionKind__Last,
 };

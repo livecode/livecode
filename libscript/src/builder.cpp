@@ -159,7 +159,7 @@ void MCScriptAddImportToModule(MCScriptModuleBuilderRef self, uindex_t p_index, 
     t_import -> module = p_index;
     t_import -> kind = p_kind;
     t_import -> name = MCValueRetain(p_name);
-    t_import -> type = MCValueRetain(p_type);
+    // t_import -> type = MCValueRetain(p_type);
     
     MCScriptExternalDefinition *t_definition;
     t_definition = static_cast<MCScriptExternalDefinition *>(self -> module . definitions[self -> module . definition_count - 1]);

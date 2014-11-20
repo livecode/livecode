@@ -73,9 +73,10 @@
         SymbolInfo'Kind -> SymbolKind
         SymbolInfo'Type -> SymbolType
         
-        -- Generate a type for the symbol
-        GenerateType(SymbolType -> SymbolTypeIndex)
-        
+        -- Generate a type for the symbol (this is unused for now so just use undefined)
+        -- GenerateType(SymbolType -> SymbolTypeIndex)
+        EmitUndefinedType(-> SymbolTypeIndex)
+
         -- Now add the import definition to the module
         (|
             where(SymbolKind -> type)
@@ -581,6 +582,23 @@
 
 --------------------------------------------------------------------------------
 
+'condition' IsNamedTypeId(ID)
+
+    'rule' IsNamedTypeId(Id):
+        -- If the id is defined in another module then it is a named type.
+        -- If the id is defined in this module and is public then it is a named type.
+        -- Otherwise it is an alias.
+        QuerySymbolId(Id -> Info)
+        Info'Parent -> ModuleId
+        QueryModuleId(ModuleId -> ModuleInfo)
+        ModuleInfo'Index -> Index
+        (|
+            ne(Index, 0)
+        ||
+            Info'Access -> public
+        |)
+
+
 'action' GenerateType(TYPE -> INT)
 
     'rule' GenerateType(optional(_, Base) -> Index):
@@ -589,8 +607,18 @@
 
     'rule' GenerateType(named(_, Id) -> Index):
         QuerySymbolId(Id -> Info)
-        Info'Index -> OtherTypeIndex
-        EmitNamedType(OtherTypeIndex -> Index)
+        (|
+            IsNamedTypeId(Id)
+            Id'Name -> Name
+            Info'Parent -> ParentId
+            ParentId'Name -> ParentName
+            EmitNamedType(ParentName, Name -> Index)
+        ||
+            Id'Name -> Name
+            Info'Type -> Type
+            GenerateType(Type -> TypeIndex)
+            EmitAliasType(Name, TypeIndex -> Index)
+        |)
 
     'rule' GenerateType(record(_, Base, Fields) -> Index):
         GenerateType(Base -> BaseTypeIndex)
@@ -627,7 +655,7 @@
         EmitDataType(-> Index)
     'rule' GenerateType(array(_) -> Index):
         EmitArrayType(-> Index)
-    'rule' GenerateType(list(_) -> Index):
+    'rule' GenerateType(list(_, _) -> Index):
         EmitListType(-> Index)
         
     'rule' GenerateType(pointer(_) -> Index):
