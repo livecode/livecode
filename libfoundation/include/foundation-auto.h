@@ -61,17 +61,70 @@ private:
     MCAutoValueRefBase<T>& operator = (MCAutoValueRefBase<T>& x);
 };
 
+class MCAutoStringRef : public MCAutoValueRefBase<MCStringRef>
+{
+public:
+	MCAutoStringRef(void) : MCAutoValueRefBase<MCStringRef>() {};
+	~MCAutoStringRef(void) {};
+
+	MCAutoStringRef(const char * p_cstring) : MCAutoValueRefBase()
+	{
+		MCAutoStringRef t_string;
+		uindex_t t_len;
+
+		t_len = strlen (p_cstring);
+
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) p_cstring, t_len, &t_string);
+
+		MCValueRef t_unique_value;
+		MCValueInter(*t_string, t_unique_value);
+		&(*this) = (MCStringRef) MCValueRetain(t_unique_value);
+	}
+
+	MCStringRef operator = (MCStringRef value)
+	{
+		return MCAutoValueRefBase<MCStringRef>::operator=(value);
+	}
+};
+
+class MCNewAutoNameRef : public MCAutoValueRefBase<MCNameRef>
+{
+public:
+	MCNewAutoNameRef(void) : MCAutoValueRefBase<MCNameRef>() {};
+	~MCNewAutoNameRef(void) {};
+
+	MCNewAutoNameRef(const char * p_cstring) : MCAutoValueRefBase()
+	{
+		MCAutoStringRef t_string(p_cstring);
+		MCNewAutoNameRef t_name;
+		/* UNCHECKED */ MCNameCreate(*t_string, &t_name);
+
+		MCValueRef t_unique_value;
+		MCValueInter(*t_name, t_unique_value);
+		&(*this) = (MCNameRef) MCValueRetain(t_unique_value);
+	}
+
+	MCNameRef operator = (MCNameRef value)
+	{
+		return MCAutoValueRefBase<MCNameRef>::operator=(value);
+	}
+};
+
+/* Creates an MCStringRef wrapping the given constant c-string. Note
+ * that the c-string should usually be a C literal string. */
+#define MCSTR(x) *MCAutoStringRef((x))
+/* Creates an MCNameRef wrapping the given constant c-string. Note
+ * that the c-string should usually be a C literal string. */
+#define MCNAME(x) *MCNewAutoNameRef((x))
+
 typedef MCAutoValueRefBase<MCValueRef> MCAutoValueRef;
 typedef MCAutoValueRefBase<MCNumberRef> MCAutoNumberRef;
-typedef MCAutoValueRefBase<MCStringRef> MCAutoStringRef;
 typedef MCAutoValueRefBase<MCArrayRef> MCAutoArrayRef;
 typedef MCAutoValueRefBase<MCListRef> MCAutoListRef;
 typedef MCAutoValueRefBase<MCBooleanRef> MCAutoBooleanRef;
 typedef MCAutoValueRefBase<MCSetRef> MCAutoSetRef;
 
-typedef MCAutoValueRefBase<MCNameRef> MCNewAutoNameRef;
 typedef MCAutoValueRefBase<MCDataRef> MCAutoDataRef;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

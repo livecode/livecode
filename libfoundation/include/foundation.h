@@ -1262,9 +1262,6 @@ extern MCNumberRef kMCMinusOne;
 //  NAME DEFINITIONS
 //
 
-// Like MCSTR but for NameRefs
-MCNameRef MCNAME(const char *);
-
 // Create a name using the given string.
 bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
 // Create a name using chars.
@@ -1377,10 +1374,6 @@ extern MCStringRef kMCLineEndString;
 extern MCStringRef kMCTabString;
 
 /////////
-
-// Creates an MCStringRef wrapping the given constant c-string. Note that
-// the c-string must be a C static string.
-MCStringRef MCSTR(const char *string);
 
 const char *MCStringGetCString(MCStringRef p_string);
 bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
