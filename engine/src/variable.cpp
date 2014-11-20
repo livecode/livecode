@@ -695,8 +695,13 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
 {
     if (p_value . type == kMCExecValueTypeDataRef)
     {
-        if (p_setting == kMCVariableSetInto || can_become_data(ctxt, p_path, p_length))
-            return modify_data(ctxt, p_value . dataref_value, p_path, p_length, p_setting);
+        if (can_become_data(ctxt, p_path, p_length))
+        {
+            // AL-2014-11-20: In this codepath, we are taking the value rather than retaining, so make sure the DataRef is released.
+            MCAutoDataRef t_value;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDataRef, &(&t_value));
+            return modify_data(ctxt, *t_value, p_path, p_length, p_setting);
+        }
     }
     
     MCAutoStringRef t_value;
