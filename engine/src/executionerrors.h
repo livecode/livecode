@@ -2334,6 +2334,7 @@ enum Exec_errors
 	EE_RELAYER_NOTARGET,
 
 	// {EE-0769} relayer: couldn't resolve source control
+
 	EE_RELAYER_NOSOURCE,
 
 	// {EE-0770} relayer: source not a control
@@ -2612,6 +2613,14 @@ enum Exec_errors
     // MW-2014-10-23: Improve the error message you get from 'start using <name>'
     // {EE-0843} start: script of specified stack won't compile
     EE_START_WONTCOMPILE,
+
+	// MDW-2014-09-28: [[ feature_floor ]]
+	// {EE-0844} floor: bad parameter
+	EE_FLOOR_BADSOURCE,
+
+	// MDW-2014-09-28: [[ feature_floor ]]
+	// {EE-0845} ceil: bad parameter
+	EE_CEIL_BADSOURCE,
 };
 
 extern const char *MCexecutionerrors;

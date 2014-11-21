@@ -1874,6 +1874,8 @@ extern MCExecMethodInfo *kMCMathEvalRoundMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalStatRoundToPrecisionMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalStatRoundMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalTruncMethodInfo;
+extern MCExecMethodInfo *kMCMathEvalFloorMethodInfo;
+extern MCExecMethodInfo *kMCMathEvalCeilMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalAcosMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalAsinMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalAtanMethodInfo;
@@ -1961,6 +1963,8 @@ void MCMathEvalRound(MCExecContext& ctxt, real64_t p_number, real64_t& r_result)
 void MCMathEvalStatRoundToPrecision(MCExecContext& ctxt, real64_t p_number, real64_t p_precision, real64_t& r_result);
 void MCMathEvalStatRound(MCExecContext& ctxt, real64_t p_number, real64_t& r_result);
 void MCMathEvalTrunc(MCExecContext& ctxt, real64_t p_number, real64_t& r_result);
+void MCMathEvalFloor(MCExecContext& ctxt, real64_t p_number, real64_t& r_result);
+void MCMathEvalCeil(MCExecContext& ctxt, real64_t p_number, real64_t& r_result);
 
 void MCMathEvalAcos(MCExecContext& ctxt, real64_t p_in, real64_t& r_result);
 void MCMathEvalAsin(MCExecContext& ctxt, real64_t p_in, real64_t& r_result);
