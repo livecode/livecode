@@ -1060,7 +1060,7 @@ static void GenerateSyntaxRuleMarks(SyntaxNodeRef p_node, struct SyntaxNodeMark 
 static void GenerateSyntaxRuleSubHeader(SyntaxNodeRef p_node, SyntaxRuleKind p_kind)
 {
     if (p_kind >= kSyntaxRuleKindPrefixOperator)
-        fprintf(stderr, "  'rule' CustomRule%d:\n", p_node -> concrete_rule);
+        fprintf(stderr, "  'rule' CustomRule%d(-> Sentinal):\n", p_node -> concrete_rule);
     else
     {
         fprintf(stderr, "  'rule' CustomRule%d(-> ", p_node -> concrete_rule);
@@ -1140,10 +1140,10 @@ static void GenerateSyntaxRuleConstructor(SyntaxNodeRef p_node, SyntaxRuleRef p_
     if (p_rule != NULL && p_rule -> kind >= kSyntaxRuleKindPrefixOperator)
     {
         static const char *s_calls[] = { "PushOperatorExpressionPrefix", "PushOperatorExpressionPostfix", "PushOperatorExpressionLeftBinary", "PushOperatorExpressionRightBinary", "PushOperatorExpressionNeutralBinary" };
-        fprintf(stderr, "    %s(Position, %ld, %d)\n", s_calls[p_rule -> kind - kSyntaxRuleKindPrefixOperator],
+        fprintf(stderr, "    %s(Position, %ld, %d -> Sentinal)\n", s_calls[p_rule -> kind - kSyntaxRuleKindPrefixOperator],
                 p_rule -> precedence, p_node -> concrete_rule);
         for(int i = 0; i < p_node -> mark_count; i++)
-            fprintf(stderr, "    PushOperatorExpressionOperand(Mark%ld)\n", p_node -> marks[i] . index);
+            fprintf(stderr, "    PushOperatorExpressionArgument(Mark%ld -> _)\n", p_node -> marks[i] . index);
     }
     else if (p_rule != NULL)
     {
@@ -1200,7 +1200,7 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
         fprintf(stderr, ")\n");
     }
     else if (p_kind >= kSyntaxRuleKindPrefixOperator)
-        fprintf(stderr, "'nonterm' CustomRule%d\n", t_index);
+        fprintf(stderr, "'nonterm' CustomRule%d(-> INT)\n", t_index);
     else
         fprintf(stderr, "'nonterm' CustomRule%d(-> %s)\n", t_index, p_kind == kSyntaxRuleKindStatement ? "STATEMENT" : "EXPRESSION");
     
@@ -1288,7 +1288,7 @@ static void GenerateUmbrellaSyntaxRule(const char *p_name, SyntaxRuleKind p_firs
     }
     else
     {
-        fprintf(stderr, "'nonterm' %s\n", p_name);
+        fprintf(stderr, "'nonterm' %s(-> INT)\n", p_name);
         
         for(SyntaxRuleGroupRef t_group = s_groups; t_group != NULL; t_group = t_group -> next)
         {
@@ -1297,13 +1297,13 @@ static void GenerateUmbrellaSyntaxRule(const char *p_name, SyntaxRuleKind p_firs
             
             if (t_rule -> kind >= p_first && t_rule -> kind <= p_last)
             {
-                fprintf(stderr, "  'rule' %s:\n", p_name);
-                fprintf(stderr, "    CustomRule%d\n", t_rule -> expr -> concrete_rule);
+                fprintf(stderr, "  'rule' %s(-> Sentinal):\n", p_name);
+                fprintf(stderr, "    CustomRule%d(-> Sentinal)\n", t_rule -> expr -> concrete_rule);
                 t_made = 1;
             }
         }
         if (t_made == 0)
-            fprintf(stderr, "  'rule' %s:\n    \"__%s\"\n", p_name, p_name);
+            fprintf(stderr, "  'rule' %s(-> 10000):\n    \"__%s\"\n", p_name, p_name);
     }
 }
 

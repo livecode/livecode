@@ -264,16 +264,17 @@
 --------------------------------------------------------------------------------
 
 'action' ReorderOperatorExpression
+'action' ReorderOperatorExpression(Sentinal: INT)
 'condition' PopOperatorExpression(-> Position: POS, Method: INT, Arity: INT)
 'action' PopOperatorExpressionArgument(-> EXPRESSION)
 
-'action' PushOperatorExpressionPrefix(Position: POS, Precedence: INT, Method: INT)
-'action' PushOperatorExpressionPostfix(Position: POS, Precedence: INT, Method: INT)
-'action' PushOperatorExpressionLeftBinary(Position: POS, Precedence: INT, Method: INT)
-'action' PushOperatorExpressionRightBinary(Position: POS, Precedence: INT, Method: INT)
-'action' PushOperatorExpressionNeutralBinary(Position: POS, Precedence: INT, Method: INT)
-'action' PushOperatorExpressionArgument(Operand: EXPRESSION)
-'action' PushOperatorExpressionOperand(Argument: EXPRESSION)
+'action' PushOperatorExpressionPrefix(Position: POS, Precedence: INT, Method: INT -> INT)
+'action' PushOperatorExpressionPostfix(Position: POS, Precedence: INT, Method: INT -> INT)
+'action' PushOperatorExpressionLeftBinary(Position: POS, Precedence: INT, Method: INT -> INT)
+'action' PushOperatorExpressionRightBinary(Position: POS, Precedence: INT, Method: INT -> INT)
+'action' PushOperatorExpressionNeutralBinary(Position: POS, Precedence: INT, Method: INT -> INT)
+'action' PushOperatorExpressionArgument(Operand: EXPRESSION -> INT)
+'action' PushOperatorExpressionOperand(Argument: EXPRESSION -> INT)
 
 --------------------------------------------------------------------------------
 

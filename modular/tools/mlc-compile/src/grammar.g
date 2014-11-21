@@ -635,65 +635,71 @@
 'nonterm' Expression(-> EXPRESSION)
 
     'rule' Expression(-> Result):
-        FlatExpression
-        ReorderOperatorExpression
+        FlatExpression(-> Sentinal)
+        ReorderOperatorExpression(Sentinal)
         ProcessOperatorExpression(-> Result)
 
 ----------
 
-'nonterm' FlatExpression
+'action' min(INT, INT -> INT)
+    'rule' min(A, B -> A):
+        le(A, B)
+    'rule' min(A, B -> B):
 
-    'rule' FlatExpression:
-        FlatExpressionTerm FlatExpressionBinaryOperator FlatExpression
-        
-    'rule' FlatExpression:
-        FlatExpressionTerm
-        
-'nonterm' FlatExpressionTerm
+'nonterm' FlatExpression(-> INT)
 
-    'rule' FlatExpressionTerm:
-        FlatExpressionPrefixOperators FlatExpressionOperand FlatExpressionPostfixOperators
+    'rule' FlatExpression(-> Sentinal):
+        FlatExpressionTerm(-> Sentinal) FlatExpressionBinaryOperator(-> _) FlatExpression(-> _)
         
-'nonterm' FlatExpressionPrefixOperators
+    'rule' FlatExpression(-> Sentinal):
+        FlatExpressionTerm(-> Sentinal)
+        
+'nonterm' FlatExpressionTerm(-> INT)
 
-    'rule' FlatExpressionPrefixOperators:
-        FlatExpressionPrefixOperator FlatExpressionPrefixOperators
+    'rule' FlatExpressionTerm(-> Sentinal):
+        FlatExpressionPrefixOperators(-> Sentinal1) FlatExpressionOperand(-> Sentinal2) FlatExpressionPostfixOperators(-> _)
+        min(Sentinal1, Sentinal2 -> Sentinal)
         
-    'rule' FlatExpressionPrefixOperators:
+'nonterm' FlatExpressionPrefixOperators(-> INT)
+
+    'rule' FlatExpressionPrefixOperators(-> Sentinal):
+        FlatExpressionPrefixOperator(-> Sentinal) FlatExpressionPrefixOperators(-> _)
+        
+    'rule' FlatExpressionPrefixOperators(-> 10000):
         -- nothing
 
-'nonterm' FlatExpressionPostfixOperators
+'nonterm' FlatExpressionPostfixOperators(-> INT)
 
-    'rule' FlatExpressionPostfixOperators:
-        FlatExpressionPostfixOperator FlatExpressionPostfixOperators
+    'rule' FlatExpressionPostfixOperators(-> Sentinal):
+        FlatExpressionPostfixOperator(-> Sentinal) FlatExpressionPostfixOperators(-> _)
         
-    'rule' FlatExpressionPostfixOperators:
+    'rule' FlatExpressionPostfixOperators(-> 10000):
         -- nothing
         
-'nonterm' FlatExpressionPrefixOperator
+'nonterm' FlatExpressionPrefixOperator(-> INT)
         
-    'rule' FlatExpressionPrefixOperator:
-        CustomPrefixOperators
+    'rule' FlatExpressionPrefixOperator(-> Sentinal):
+        CustomPrefixOperators(-> Sentinal)
 
-'nonterm' FlatExpressionPostfixOperator
+'nonterm' FlatExpressionPostfixOperator(-> INT)
 
-    'rule' FlatExpressionPostfixOperator:
-        CustomPostfixOperators
+    'rule' FlatExpressionPostfixOperator(-> Sentinal):
+        CustomPostfixOperators(-> Sentinal)
 
-'nonterm' FlatExpressionBinaryOperator
+'nonterm' FlatExpressionBinaryOperator(-> INT)
         
-    'rule' FlatExpressionBinaryOperator:
-        CustomBinaryOperators
+    'rule' FlatExpressionBinaryOperator(-> Sentinal):
+        CustomBinaryOperators(-> Sentinal)
 
-'nonterm' FlatExpressionOperand
+'nonterm' FlatExpressionOperand(-> INT)
         
-    'rule' FlatExpressionOperand:
+    'rule' FlatExpressionOperand(-> Sentinal)
         TermExpression(-> Term)
-        PushOperatorExpressionOperand(Term)
+        PushOperatorExpressionOperand(Term -> Sentinal)
         
-    'rule' FlatExpressionOperand:
+    'rule' FlatExpressionOperand(-> Sentinal):
         CustomTerms(-> Term)
-        PushOperatorExpressionOperand(Term)
+        PushOperatorExpressionOperand(Term -> Sentinal)
 
 ----------
 
@@ -939,14 +945,14 @@
 'nonterm' CustomStatements(-> STATEMENT)
     'rule' CustomStatements(-> nil):
         "THISCANNEVERHAPPEN"
-'nonterm' CustomPostfixOperators
-    'rule' CustomPostfixOperators:
+'nonterm' CustomPostfixOperators(-> INT)
+    'rule' CustomPostfixOperators(-> 10000):
         "THISCANNEVERHAPPEN"
-'nonterm' CustomPrefixOperators
-    'rule' CustomPrefixOperators:
+'nonterm' CustomPrefixOperators(-> INT)
+    'rule' CustomPrefixOperators(-> 10000):
         "THISCANNEVERHAPPEN"
-'nonterm' CustomBinaryOperators
-    'rule' CustomBinaryOperators:
+'nonterm' CustomBinaryOperators(-> INT)
+    'rule' CustomBinaryOperators(-> 10000):
         "THISCANNEVERHAPPEN"
 'nonterm' CustomTerms(-> EXPRESSION)
     'rule' CustomTerms(-> nil):
