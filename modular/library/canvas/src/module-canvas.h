@@ -55,11 +55,13 @@ struct MCCArray
 
 typedef MCGFloat MCCanvasFloat;
 
-// Rectangle record type
+// Rectangle opaque type
 typedef MCGRectangle MCCanvasRectangle;
+uinteger_t MCCanvasRectangleType_Measure(void);
 
-// Point record type
+// Point opaque type
 typedef MCGPoint MCCanvasPoint;
+uinteger_t MCCanvasPointType_Measure(void);
 
 // Color custom value type
 
@@ -77,8 +79,9 @@ void MCCanvasColorGetRGBA(MCCanvasColorRef color, MCCanvasFloat &r_red, MCCanvas
 bool MCCanvasColorCopy(MCCanvasColorRef p_color, MCCanvasColorRef &r_copy);
 void MCCanvasColorDelete(MCCanvasColorRef p_color);
 
-// Transform record type
+// Transform opaque type
 typedef MCGAffineTransform MCCanvasTransform;
+uinteger_t MCCanvasTransformType_Measure(void);
 
 // Image opaque type
 typedef MCImageRep *MCCanvasImage;
@@ -243,6 +246,40 @@ struct MCCanvas
 // Module initialization
 void MCCanvasModuleInitialize();
 void MCCanvasModuleFinalize();
+
+//////////
+
+// Rectangle
+
+// Constructors
+void MCCanvasRectangleMakeWithLTRB(MCCanvasFloat p_left, MCCanvasFloat p_top, MCCanvasFloat p_right, MCCanvasFloat p_bottom, MCCanvasRectangle &r_rect);
+
+// Properties
+void MCCanvasRectangleGetLeft(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_left);
+void MCCanvasRectangleSetLeft(MCCanvaRectangle &x_rect, MCCanvasFloat p_left);
+void MCCanvasRectangleGetTop(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_top);
+void MCCanvasRectangleSetTop(MCCanvaRectangle &x_rect, MCCanvasFloat p_top);
+void MCCanvasRectangleGetRight(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_right);
+void MCCanvasRectangleSetRight(MCCanvaRectangle &x_rect, MCCanvasFloat p_right);
+void MCCanvasRectangleGetBottom(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_bottom);
+void MCCanvasRectangleSetBottom(MCCanvaRectangle &x_rect, MCCanvasFloat p_bottom);
+void MCCanvasRectangleGetWidth(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_width);
+void MCCanvasRectangleSetWidth(MCCanvaRectangle &x_rect, MCCanvasFloat p_width);
+void MCCanvasRectangleGetHeight(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_height);
+void MCCanvasRectangleSetHeight(MCCanvaRectangle &x_rect, MCCanvasFloat p_height);
+
+//////////
+
+// Point
+
+// Constructors
+void MCCanvasPointMake(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasPoint &r_point);
+
+// Properties
+void MCCanvasPointGetX(const MCCanvasPoint &p_point, MCCanvasFloat &r_x);
+void MCCanvasPointSetX(MCCanvasPoint &x_point, MCCanvasFloat p_x);
+void MCCanvasPointGetY(const MCCanvasPoint &p_point, MCCanvasFloat &r_y);
+void MCCanvasPointSetY(MCCanvasPoint &x_point, MCCanvasFloat p_y);
 
 //////////
 

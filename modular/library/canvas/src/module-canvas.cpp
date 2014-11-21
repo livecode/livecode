@@ -182,6 +182,24 @@ bool MCSolveQuadraticEqn(MCGFloat p_a, MCGFloat p_b, MCGFloat p_c, MCGFloat &r_x
 
 // Type Definitions
 
+// Rectangle opaque type methods
+uinteger_t MCCanvasRectangleType_Measure(void)
+{
+	return sizeof(MCCanvasRectangle);
+}
+
+// Point opaque type methods
+uinteger_t MCCanvasPointType_Measure(void)
+{
+	return sizeof(MCCanvasPoint);
+}
+
+// Transform opaque type methods
+uinteger_t MCCanvasTransformType_Measure(void)
+{
+	return sizeof(MCCanvasTransform);
+}
+
 // Image opaque type methods
 uinteger_t MCCanvasImageType_Measure(void)
 {
@@ -697,6 +715,112 @@ MCGColor MCCanvasColorToMCGColor(MCCanvasColorRef p_color)
 	MCCanvasFloat t_red, t_green, t_blue, t_alpha;
 	MCCanvasColorGetRGBA(p_color, t_red, t_green, t_blue, t_alpha);
 	return MCGColorMakeRGBA(t_red, t_green, t_blue, t_alpha);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Rectangle
+
+// Constructors
+
+void MCCanvasRectangleMakeWithLTRB(MCCanvasFloat p_left, MCCanvasFloat p_top, MCCanvasFloat p_right, MCCanvasFloat p_bottom, MCCanvasRectangle &r_rect)
+{
+	r_rect = MCGRectangleMake(p_left, p_top, p_right - p_left, p_bottom - p_top);
+}
+
+// Properties
+
+void MCCanvasRectangleGetLeft(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_left)
+{
+	r_left = p_rect.origin.x;
+}
+
+void MCCanvasRectangleSetLeft(MCCanvasRectangle &x_rect, MCCanvasFloat p_left)
+{
+	x_rect.origin.x = p_left;
+}
+
+void MCCanvasRectangleGetTop(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_top)
+{
+	r_top = p_rect.origin.y
+}
+
+void MCCanvasRectangleSetTop(MCCanvasRectangle &x_rect, MCCanvasFloat p_top)
+{
+	x_rect.origin.y = p_top;
+}
+
+void MCCanvasRectangleGetRight(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_right)
+{
+	r_right = p_rect.origin.x + p_rect.size.width;
+}
+
+void MCCanvasRectangleSetRight(MCCanvasRectangle &x_rect, MCCanvasFloat p_right)
+{
+	x_rect.origin.x = p_right - x_rect.size.width;
+}
+
+void MCCanvasRectangleGetBottom(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_bottom)
+{
+	r_bottom = p_rect.origin.y + p_rect.size.height;
+}
+
+void MCCanvasRectangleSetBottom(MCCanvasRectangle &x_rect, MCCanvasFloat p_bottom)
+{
+	x_rect.origin.y = p_bottom - x_rect.size.height;
+}
+
+void MCCanvasRectangleGetWidth(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_width)
+{
+	r_width = p_rect.size.width;
+}
+
+void MCCanvasRectangleSetWidth(MCCanvasRectangle &x_rect, MCCanvasFloat p_width)
+{
+	x_rect.size.width = p_width;
+}
+
+void MCCanvasRectangleGetHeight(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_height)
+{
+	r_height = p_rect.size.height;
+}
+
+void MCCanvasRectangleSetHeight(MCCanvasRectangle &x_rect, MCCanvasFloat p_height)
+{
+	x_rect.size.height = p_height;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Point
+
+// Constructors
+
+void MCCanvasPointMake(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasPoint &r_point)
+{
+	r_point = MCGPointMake(p_x, p_y);
+}
+
+// Properties
+
+void MCCanvasPointGetX(const MCCanvasPoint &p_point, MCCanvasFloat &r_x)
+{
+	r_x = p_point.x;
+}
+
+void MCCanvasPointSetX(MCCanvasPoint &x_point, MCCanvasFloat p_x)
+{
+	x_point.x = p_x;
+}
+
+void MCCanvasPointGetY(const MCCanvasPoint &p_point, MCCanvasFloat &r_y)
+{
+	r_y = p_point.y;
+}
+
+void MCCanvasPointSetY(MCCanvasPoint &x_point, MCCanvasFloat p_y)
+{
+	x_point.y = p_y;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
