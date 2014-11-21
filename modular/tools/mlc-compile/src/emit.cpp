@@ -40,6 +40,10 @@ extern "C" void EmitStringSyntaxMethodArgument(long p_string);
 extern "C" void EmitVariableSyntaxMethodArgument(long p_index);
 extern "C" void EmitIndexedVariableSyntaxMethodArgument(long p_var_index, long p_element_index);
 
+extern "C" void EmitBeginDefinitionGroup(void);
+extern "C" void EmitContinueDefinitionGroup(long index);
+extern "C" void EmitEndDefinitionGroup(long *r_index);
+
 extern "C" void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index);
 extern "C" void EmitAliasType(NameRef name, long typeindex, long& r_new_index);
 extern "C" void EmitOptionalType(long index, long& r_new_index);
@@ -84,6 +88,10 @@ extern "C" void EmitBeginIndirectCall(long reg, long resultreg);
 extern "C" void EmitContinueCall(long reg);
 extern "C" void EmitEndCall(void);
 extern "C" void EmitBeginBuiltinInvoke(long name, long resultreg);
+extern "C" void EmitBeginExecuteInvoke(long index, long contextreg, long resultreg);
+extern "C" void EmitBeginEvaluateInvoke(long index, long contextreg, long outputreg);
+extern "C" void EmitBeginAssignInvoke(long index, long contextreg, long inputreg);
+extern "C" void EmitBeginIterateInvoke(long index, long contextreg, long iteratorreg, long containerreg);
 extern "C" void EmitContinueInvoke(long reg);
 extern "C" void EmitEndInvoke(void);
 extern "C" void EmitAssignUndefined(long reg);
@@ -98,6 +106,9 @@ extern "C" void EmitFetchGlobal(long reg, long var);
 extern "C" void EmitStoreGlobal(long reg, long var);
 extern "C" void EmitReturn(long reg);
 extern "C" void EmitReturnNothing(void);
+extern "C" void EmitAttachRegisterToExpression(long reg, long expr);
+extern "C" void EmitDetachRegisterFromExpression(long expr);
+extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
 
 //////////
 
@@ -438,6 +449,29 @@ void EmitIndexedVariableSyntaxMethodArgument(long p_var_index, long p_element_in
     MCLog("[Emit] IndexedVariableSyntaxMethodArgument(%ld, %ld)", p_var_index, p_element_index);
 }
 
+void EmitBeginDefinitionGroup(void)
+{
+    MCScriptBeginDefinitionGroupInModule(s_builder);
+
+    MCLog("[Emit] BeginDefinitionGroup()", 0);
+}
+
+void EmitContinueDefinitionGroup(long p_index)
+{
+    MCScriptAddHandlerToDefinitionGroupInModule(s_builder, p_index);
+    
+    MCLog("[Emit] ContinueDefinitionGroup(%ld)", p_index);
+}
+
+void EmitEndDefinitionGroup(long *r_index)
+{
+    uindex_t t_index;
+    MCScriptEndDefinitionGroupInModule(s_builder, t_index);
+    *r_index = t_index;
+    
+    MCLog("[Emit] EndDefinitionGroup(-> %ld)", *r_index);
+}
+
 void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index)
 {
     MCAutoStringRef t_string;
@@ -744,6 +778,7 @@ void EmitCreateRegister(long& r_regindex)
     {
         MCMemoryResizeArray(s_register_count + 1, s_registers, s_register_count);
         t_reg = s_register_count - 1;
+        s_registers[t_reg] = 1;
     }
     
     r_regindex = t_reg;
@@ -847,12 +882,34 @@ void EmitBeginBuiltinInvoke(long name, long resultreg)
     MCLog("[Emit] BeginBuiltinInvoke(%s, %ld)", (const char *)name, resultreg);
 }
 
+void EmitBeginExecuteInvoke(long index, long contextreg, long resultreg)
+{
+    MCLog("[Emit] BeginExecuteInvoke(%ld, %ld, %ld)", index, contextreg, resultreg);
+}
+
+void EmitBeginEvaluateInvoke(long index, long contextreg, long outputreg)
+{
+    MCLog("[Emit] BeginEvaluateInvoke(%ld, %ld, %ld)", index, contextreg, outputreg);
+}
+
+void EmitBeginAssignInvoke(long index, long contextreg, long inputreg)
+{
+    MCLog("[Emit] BeginAssignInvoke(%ld, %ld, %ld)", index, contextreg, inputreg);
+}
+
+void EmitBeginIterateInvoke(long index, long contextreg, long iteratorreg, long containerreg)
+{
+    MCLog("[Emit] BeginIterateInvoke(%ld, %ld, %ld)", index, contextreg, iteratorreg, containerreg);
+}
+
 void EmitContinueInvoke(long reg)
 {
+    MCLog("[Emit] ContinueInvoke(%ld)", reg);
 }
 
 void EmitEndInvoke(void)
 {
+    MCLog("[Emit] EndInvoke()", 0);
 }
 
 //////////
@@ -938,4 +995,84 @@ void EmitReturnNothing(void)
     EmitAssignUndefined(t_reg);
     EmitReturn(t_reg);
     EmitDestroyRegister(t_reg);
+}
+
+////////
+
+struct AttachedReg
+{
+    AttachedReg *next;
+    long expr;
+    long reg;
+};
+
+static AttachedReg *s_attached_regs = nil;
+
+static bool FindAttachedReg(long expr, AttachedReg*& r_attach)
+{
+    for(AttachedReg *t_reg = s_attached_regs; t_reg != nil; t_reg = t_reg -> next)
+        if (t_reg-> expr == expr)
+        {
+            r_attach = t_reg;
+            return true;
+        }
+    
+    return false;
+}
+
+void EmitAttachRegisterToExpression(long reg, long expr)
+{
+    AttachedReg *t_attach;
+    if (FindAttachedReg(expr, t_attach))
+        Fatal_InternalInconsistency("Register attached to expression which is already attached");
+    
+    MCMemoryNew(t_attach);
+    t_attach -> next = s_attached_regs;
+    t_attach -> expr = expr;
+    t_attach -> reg = reg;
+    s_attached_regs = t_attach;
+}
+
+void EmitDetachRegisterFromExpression(long expr)
+{
+    if (s_attached_regs == nil)
+        return;
+    
+    AttachedReg *t_remove;
+    t_remove = nil;
+    
+    if (s_attached_regs -> expr == expr)
+    {
+        t_remove = s_attached_regs;
+        s_attached_regs = s_attached_regs -> next;
+    }
+    else
+    {
+        for(AttachedReg *t_reg = s_attached_regs; t_reg -> next != nil; t_reg = t_reg -> next)
+            if (t_reg -> next -> expr == expr)
+            {
+                t_remove = t_reg -> next;
+                t_reg -> next = t_reg -> next -> next;
+                break;
+            }
+    }
+    
+    MCMemoryDelete(t_remove);
+}
+
+int EmitIsRegisterAttachedToExpression(long expr)
+{
+    AttachedReg *t_attach;
+    return FindAttachedReg(expr, t_attach);
+}
+
+int EmitGetRegisterAttachedToExpression(long expr, long *reg)
+{
+    AttachedReg *t_attach;
+    if (!FindAttachedReg(expr, t_attach))
+        return 0;
+    
+    *reg = t_attach -> reg;
+
+    return 1;
 }

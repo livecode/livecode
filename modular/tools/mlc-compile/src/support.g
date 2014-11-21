@@ -163,10 +163,7 @@
     EmitPushRepeatLabels
     EmitPopRepeatLabels
     EmitCurrentRepeatLabels
-    EmitBeginCall
-    EmitBeginIndirectCall
-    EmitContinueCall
-    EmitEndCall
+    EmitBeginIndirectExecuteInvoke
     EmitBeginExecuteInvoke
     EmitBeginEvaluateInvoke
     EmitBeginAssignInvoke
@@ -186,6 +183,9 @@
     EmitStoreGlobal
     EmitReturn
     EmitReturnNothing
+    EmitAttachRegisterToExpression
+    EmitDetachRegisterFromExpression
+    EmitGetRegisterAttachedToExpression
 
     ErrorsDidOccur
     Fatal_OutOfMemory
@@ -263,7 +263,6 @@
 
 --------------------------------------------------------------------------------
 
-'action' ReorderOperatorExpression
 'action' ReorderOperatorExpression(Sentinal: INT)
 'condition' PopOperatorExpression(-> Position: POS, Method: INT, Arity: INT)
 'action' PopOperatorExpressionArgument(-> EXPRESSION)
@@ -441,10 +440,7 @@
 'action' EmitPushRepeatLabels(Head: INT, Tail: INT)
 'action' EmitCurrentRepeatLabels(-> Next: INT, Exit: INT)
 'action' EmitPopRepeatLabels()
-'action' EmitBeginCall(Index: INT, ResultRegister: INT)
-'action' EmitBeginIndirectCall(Register: INT, ResultRegister: INT)
-'action' EmitContinueCall(Register: INT)
-'action' EmitEndCall()
+'action' EmitBeginIndirectExecuteInvoke(Register: INT, ContextRegister: INT, ResultRegister: INT)
 'action' EmitBeginExecuteInvoke(Index: INT, ContextRegister: INT, ResultRegister: INT)
 'action' EmitBeginEvaluateInvoke(Index: INT, ContextRegister: INT, OutputRegister: INT)
 'action' EmitBeginAssignInvoke(Index: INT, ContextRegister: INT, InputRegister: INT)
@@ -464,6 +460,10 @@
 'action' EmitStoreGlobal(Register: INT, Var: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
+
+'action' EmitAttachRegisterToExpression(INT, EXPRESSION)
+'action' EmitDetachRegisterFromExpression(EXPRESSION)
+'condition' EmitGetRegisterAttachedToExpression(EXPRESSION -> INT)
 
 --------------------------------------------------------------------------------
 

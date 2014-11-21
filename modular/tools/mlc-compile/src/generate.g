@@ -48,8 +48,9 @@
         GenerateImportedDefinition(Handler)
         GenerateImportedDefinitions(Arguments)
 
-    'rule' GenerateImportedDefinitions(STATEMENT'invoke(_, Info, _)):
+    'rule' GenerateImportedDefinitions(STATEMENT'invoke(_, Info, Arguments)):
         GenerateImportedInvokeDefinition(Info)
+        GenerateImportedDefinitions(Arguments)
         
     'rule' GenerateImportedDefinitions(EXPRESSION'slot(_, Name)):
         GenerateImportedDefinition(Name)
@@ -58,8 +59,9 @@
         GenerateImportedDefinition(Handler)
         GenerateImportedDefinitions(Arguments)
 
-    'rule' GenerateImportedDefinitions(EXPRESSION'invoke(_, Info, _)):
+    'rule' GenerateImportedDefinitions(EXPRESSION'invoke(_, Info, Arguments)):
         GenerateImportedInvokeDefinition(Info)
+        GenerateImportedDefinitions(Arguments)
 
 'action' GenerateImportedDefinition(ID)
 
@@ -312,6 +314,8 @@
         EmitCreateRegister(-> ContextReg)
         EmitCreateRegister(-> ResultReg)
         GenerateBody(ResultReg, ContextReg, Body)
+        EmitDestroyRegister(ContextReg)
+        EmitDestroyRegister(ResultReg)
         EmitReturnNothing()
         EmitEndHandlerDefinition()
 
@@ -623,15 +627,222 @@
         EmitReturn(ReturnReg)
         
     'rule' GenerateBody(Result, Context, call(Position, Handler, Arguments)):
-        EmitCreateRegister(-> ResultRegister)
-        GenerateCallInRegister(ResultRegister, Context, Position, Handler, Arguments)
-        EmitDestroyRegister(ResultRegister)
+        GenerateCallInRegister(Result, Context, Position, Handler, Arguments)
 
     'rule' GenerateBody(Result, Context, invoke(_, Invokes, Arguments)):
-        -- TODO
+        GenerateInvoke_GetExecuteSignature(Invokes -> Signature)
+        GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
+        GenerateInvoke_Execute(Context, Result, Invokes, Arguments)
+        GenerateInvoke_AssignArguments(Context, Signature, Arguments)
+        GenerateInvoke_FreeArguments(Arguments)
         
     'rule' GenerateBody(Result, Context, nil):
         -- nothing
+
+----
+
+-- Evaluate the arguments for the invoke with the given signature. This attaches
+-- a register to each expression which is used to perform the invoke.
+-- For 'in' arguments the expression is evaluated as normal as no assign-invoke
+-- is required.
+-- For 'inout' arguments the expression is evaluated as normal but if the expr is
+-- an invoke, its argument registers are retained for use in the corresponding
+-- assign-invoke.
+-- For 'out' arguments the expression is not evaluated, but if the expr is an invoke
+-- then its arguments are evaluated ready for the corresponding assign-invoke.
+--
+'action' GenerateInvoke_EvaluateArguments(INT, INVOKESIGNATURE, EXPRESSIONLIST)
+
+    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(in, SigRest), expressionlist(Expr, ArgRest)):
+        GenerateInvoke_EvaluateArgumentForIn(ContextReg, Expr)
+        GenerateInvoke_EvaluateArguments(ContextReg, SigRest, ArgRest)
+        
+    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(inout, SigRest), expressionlist(Expr, ArgRest)):
+        GenerateInvoke_EvaluateArgumentForInOut(ContextReg, Expr)
+        GenerateInvoke_EvaluateArguments(ContextReg, SigRest, ArgRest)
+
+    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(out, SigRest), expressionlist(Expr, ArgRest)):
+        GenerateInvoke_EvaluateArgumentForOut(ContextReg, Expr)
+        GenerateInvoke_EvaluateArguments(ContextReg, SigRest, ArgRest)
+        
+    'rule' GenerateInvoke_EvaluateArguments(_, nil, nil):
+        -- do nothing.
+
+-- In arguments are simple, just evaluate the expr into a register attached to the
+-- node.
+'action' GenerateInvoke_EvaluateArgumentForIn(INT, EXPRESSION)
+
+    'rule' GenerateInvoke_EvaluateArgumentForIn(ContextReg, Expr):
+        EmitCreateRegister(-> ResultReg)
+        EmitAttachRegisterToExpression(ResultReg, Expr)
+        GenerateExpressionInRegister(ResultReg, ContextReg, Expr)
+
+-- Out arguments are a little bit trickier. If the expr is an invoke then we must
+-- evaluate its arguments, but do no more. Otherwise, it has to be something we
+-- can store in (i.e. slot). If it is neither of these things then our compiler has
+-- not checked things properly!
+'action' GenerateInvoke_EvaluateArgumentForOut(INT, EXPRESSION)
+
+    'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, Invoke:invoke(_, Invokes, Arguments)):
+        EmitCreateRegister(-> ResultReg)
+        EmitAttachRegisterToExpression(ResultReg, Invoke)
+        GenerateInvoke_GetAssignSignature(Invokes -> Signature)
+        GenerateInvoke_EvaluateArguments(ContextReg, Signature, Arguments)
+
+    'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, Slot:slot(_, _)):
+        EmitCreateRegister(-> ResultReg)
+        EmitAttachRegisterToExpression(ResultReg, Slot)
+        
+    'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, _):
+        Fatal_InternalInconsistency("Invalid expression for out argument not checked properly!")
+
+-- Inout arguments are a combination of 'in' and 'out'. If the expr is an invoke then
+-- we must evaluate its arguments and call its evaluate side. Otherwise the expr has to
+-- be a slot which we must also evaluate. Anything else is an inconsistency.
+'action' GenerateInvoke_EvaluateArgumentForInOut(INT, EXPRESSION)
+
+    'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, Invoke:invoke(_, Invokes, Arguments)):
+        EmitCreateRegister(-> OutputReg)
+        EmitAttachRegisterToExpression(OutputReg, Invoke)
+        GenerateInvoke_GetEvaluateSignature(Invokes -> Signature)
+        GenerateInvoke_EvaluateArguments(ContextReg, Signature, Arguments)
+        GenerateInvoke_Evaluate(ContextReg, OutputReg, Invokes, Arguments)
+        GenerateInvoke_AssignArguments(ContextReg, Signature, Arguments)
+
+    'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, Slot:slot(_, _)):
+        EmitCreateRegister(-> ResultReg)
+        EmitAttachRegisterToExpression(ResultReg, Slot)
+        GenerateExpressionInRegister(ResultReg, ContextReg, Slot)
+        
+    'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, _):
+        Fatal_InternalInconsistency("Invalid expression for inout argument not checked properly!")
+
+----
+
+'action' GenerateInvoke_AssignArguments(INT, INVOKESIGNATURE, EXPRESSIONLIST)
+
+    'rule' GenerateInvoke_AssignArguments(ContextReg, invokesignature(in, SigRest), expressionlist(Expr, ArgRest)):
+        -- nothing to do for in arguments
+        GenerateInvoke_AssignArguments(ContextReg, SigRest, ArgRest)
+        
+    'rule' GenerateInvoke_AssignArguments(ContextReg, invokesignature(_, SigRest), expressionlist(Expr, ArgRest)):
+        -- out and inout are the same
+        GenerateInvoke_AssignArgument(ContextReg, Expr)
+        GenerateInvoke_AssignArguments(ContextReg, SigRest, ArgRest)
+
+    'rule' GenerateInvoke_AssignArguments(_, nil, nil):
+        -- do nothing.
+        
+'action' GenerateInvoke_AssignArgument(INT, EXPRESSION)
+
+    'rule' GenerateInvoke_AssignArgument(ContextReg, Invoke:invoke(_, Invokes, Arguments)):
+        EmitGetRegisterAttachedToExpression(Invoke -> InputReg)
+        GenerateInvoke_Assign(ContextReg, InputReg, Invokes, Arguments)
+        
+    'rule' GenerateInvoke_AssignArgument(ContextReg, Slot:slot(_, Id)):
+        EmitGetRegisterAttachedToExpression(Slot -> InputReg)
+        QuerySymbolId(Id -> Info)
+        Info'Kind -> Kind
+        Info'Index -> Index
+        EmitStoreVar(Kind, InputReg, Index)
+
+----
+
+'action' GenerateInvoke_FreeArguments(EXPRESSIONLIST)
+
+    'rule' GenerateInvoke_FreeArguments(expressionlist(Expr, Rest)):
+        [|
+            EmitGetRegisterAttachedToExpression(Expr -> Reg)
+            EmitDestroyRegister(Reg)
+            EmitDetachRegisterFromExpression(Expr)
+        |]
+        GenerateInvoke_FreeArgument(Expr)
+        GenerateInvoke_FreeArguments(Rest)
+        
+    'rule' GenerateInvoke_FreeArguments(nil):
+        -- do nothing
+        
+'action' GenerateInvoke_FreeArgument(EXPRESSION)
+
+    'rule' GenerateInvoke_FreeArgument(invoke(_, _, Arguments)):
+        GenerateInvoke_FreeArguments(Arguments)
+    
+    'rule' GenerateInvoke_FreeArgument(_):
+        -- nothing to do
+
+----
+
+'action' GenerateInvoke_Execute(INT, INT, INVOKELIST, EXPRESSIONLIST)
+
+    'rule' GenerateInvoke_Execute(ContextReg, ResultReg, Invokes, Arguments):
+        GenerateDefinitionGroupForInvokes(Invokes -> Index)
+        EmitBeginExecuteInvoke(Index, ContextReg, ResultReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitEndInvoke()
+
+'action' GenerateInvoke_Evaluate(INT, INT, INVOKELIST, EXPRESSIONLIST)
+
+    'rule' GenerateInvoke_Evaluate(ContextReg, OutputReg, Invokes, Arguments):
+        GenerateDefinitionGroupForInvokes(Invokes -> Index)
+        EmitBeginEvaluateInvoke(Index, ContextReg, OutputReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitEndInvoke()
+
+'action' GenerateInvoke_Assign(INT, INT, INVOKELIST, EXPRESSIONLIST)
+
+    'rule' GenerateInvoke_Assign(ContextReg, InputReg, Invokes, Arguments):
+        GenerateDefinitionGroupForInvokes(Invokes -> Index)
+        EmitBeginAssignInvoke(Index, ContextReg, InputReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitEndInvoke()
+
+----
+
+'action' GenerateInvoke_EmitInvokeArguments(EXPRESSIONLIST)
+
+    'rule' GenerateInvoke_EmitInvokeArguments(expressionlist(Head, Tail)):
+        EmitGetRegisterAttachedToExpression(Head -> Reg)
+        EmitContinueInvoke(Reg)
+        GenerateInvoke_EmitInvokeArguments(Tail)
+
+    'rule' GenerateInvoke_EmitInvokeArguments(nil):
+        -- do nothings
+
+----
+
+'action' GenerateInvoke_GetExecuteSignature(INVOKELIST -> INVOKESIGNATURE)
+
+    'rule' GenerateInvoke_GetExecuteSignature(invokelist(Head, _) -> Signature):
+        Head'RSignature -> Signature
+
+'action' GenerateInvoke_GetEvaluateSignature(INVOKELIST -> INVOKESIGNATURE)
+
+    'rule' GenerateInvoke_GetEvaluateSignature(invokelist(Head, _) -> Signature):
+        Head'RSignature -> Signature
+
+'action' GenerateInvoke_GetAssignSignature(INVOKELIST -> INVOKESIGNATURE)
+
+    'rule' GenerateInvoke_GetAssignSignature(invokelist(Head, _) -> Signature):
+        Head'LSignature -> Signature
+
+----
+
+'action' GenerateDefinitionGroupForInvokes(INVOKELIST -> INT)
+
+    'rule' GenerateDefinitionGroupForInvokes(InvokeList -> Index)
+        EmitBeginDefinitionGroup()
+        GenerateDefinitionGroupForInvokeList(InvokeList)
+        EmitEndDefinitionGroup(-> Index)
+
+'action' GenerateDefinitionGroupForInvokeList(INVOKELIST)
+
+    'rule' GenerateDefinitionGroupForInvokeList(invokelist(Head, Tail)):
+        Head'Index -> Index
+        EmitContinueDefinitionGroup(Index)
+        GenerateDefinitionGroupForInvokeList(Tail)
+        
+    'rule' GenerateDefinitionGroupForInvokeList(nil):
+        -- do nothing
 
 ----
 
@@ -641,23 +852,23 @@
         QuerySymbolId(Handler -> Info)
         Info'Index -> Index
         Info'Kind -> Kind
-        GenerateExpressionList(Context, Arguments -> ArgumentsList)
-        (|
-            where(Kind -> handler)
-            EmitBeginCall(Index, ResultRegister)
-            where(-1 -> HandlerRegister)
-        ||
-            EmitCreateRegister(-> HandlerRegister)
-            EmitFetchVar(Kind, Index, HandlerRegister)
-            EmitBeginIndirectCall(HandlerRegister, ResultRegister)
-        |)
-        EmitInvokeRegisterList(ArgumentsList)
-        EmitEndCall
-        EmitDestroyRegisterList(ArgumentsList)
-        [|
-            ne(HandlerRegister, -1)
-            EmitDestroyRegister(HandlerRegister)
-        |]
+        Info'Type -> handler(_, signature(HandlerSig, _))
+        GenerateCall_GetInvokeSignature(HandlerSig -> InvokeSig)
+
+        GenerateInvoke_EvaluateArguments(Context, InvokeSig, Arguments)
+        EmitBeginExecuteInvoke(Index, Context, ResultRegister)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitEndInvoke
+        GenerateInvoke_AssignArguments(Context, InvokeSig, Arguments)
+        GenerateInvoke_FreeArguments(Arguments)
+
+'action' GenerateCall_GetInvokeSignature(PARAMETERLIST -> INVOKESIGNATURE)
+
+    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest) -> invokesignature(Mode, InvokeRest)):
+        GenerateCall_GetInvokeSignature(ParamRest -> InvokeRest)
+    
+    'rule' GenerateCall_GetInvokeSignature(nil -> nil):
+        -- do nothing
 
 ----
 
@@ -702,8 +913,12 @@
     'rule' GenerateExpressionInRegister(Result, Context, call(Position, Handler, Arguments)):
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments)
     
-    'rule' GenerateExpressionInRegister(Result, Context, invoke(_, _, _)):
-        -- TODO
+    'rule' GenerateExpressionInRegister(Result, Context, invoke(_, Invokes, Arguments)):
+        GenerateInvoke_GetEvaluateSignature(Invokes -> Signature)
+        GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
+        GenerateInvoke_Evaluate(Context, Result, Invokes, Arguments)
+        GenerateInvoke_AssignArguments(Context, Signature, Arguments)
+        GenerateInvoke_FreeArguments(Arguments)
 
 ----
 
