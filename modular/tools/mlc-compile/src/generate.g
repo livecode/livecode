@@ -846,7 +846,7 @@
 
 ----
 
-'action' GenerateCallInRegister(INT, INT, POS, ID, EXPRESSIONLIST) -- NOT COMPLETE!
+'action' GenerateCallInRegister(INT, INT, POS, ID, EXPRESSIONLIST)
 
     'rule' GenerateCallInRegister(ResultRegister, Context, Position, Handler, Arguments):
         QuerySymbolId(Handler -> Info)
