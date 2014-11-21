@@ -499,10 +499,21 @@ static bool __MCCanvasColorEqual(MCValueRef p_left, MCValueRef p_right)
 	return MCMemoryCompare(t_left, t_right, sizeof(__MCCanvasColorImpl)) == 0;
 }
 
+static inline uint64_t MCGColorMakeARGB16(MCCanvasFloat p_red, MCCanvasFloat p_green, MCCanvasFloat p_blue, MCCanvasFloat p_alpha)
+{
+	return (uint64_t)(p_alpha * UINT16_MAX) << 48 |
+	(uint64_t)(p_red * UINT16_MAX) << 32 |
+	(uint64_t)(p_green * UINT16_MAX) << 16 |
+	(uint64_t)(p_blue * UINT16_MAX);
+}
+
 static hash_t __MCCanvasColorHash(MCValueRef p_value)
 {
-	// TODO - implement hash
-	return false;
+	MCCanvasFloat t_red, t_green, t_blue, t_alpha;
+	MCCanvasColorGetRGBA((MCCanvasColorRef)p_value, t_red, t_green, t_blue, t_alpha);
+	
+	// return as ARGB16
+	return MCGColorMakeARGB16(t_red, t_green, t_blue, t_alpha);
 }
 
 static bool __MCCanvasColorDescribe(MCValueRef p_value, MCStringRef &r_desc)
@@ -513,7 +524,7 @@ static bool __MCCanvasColorDescribe(MCValueRef p_value, MCStringRef &r_desc)
 
 static MCValueCustomCallbacks kMCCanvasColorCustomValueCallbacks =
 {
-	false, // TODO - is_singleton?
+	false,
 	__MCCanvasColorDestroy,
 	__MCCanvasColorCopy,
 	__MCCanvasColorEqual,
@@ -533,19 +544,36 @@ void MCCanvasColorTypeFinalize()
 
 bool MCCanvasColorCreateRGBA(MCCanvasFloat p_red, MCCanvasFloat p_green, MCCanvasFloat p_blue, MCCanvasFloat p_alpha, MCCanvasColorRef &r_color)
 {
-	if (MCValueCreateCustom(kMCCanvasColorTypeInfo, sizeof(__MCCanvasColorImpl), r_color))
+	bool t_success;
+	t_success = true;
+	
+	MCCanvasColorRef t_color;
+	t_color = nil;
+	
+	MCCanvasColorRef t_unique_color;
+	t_unique_color = nil;
+	
+	if (t_success)
+		t_success = MCValueCreateCustom(kMCCanvasColorTypeInfo, sizeof(__MCCanvasColorImpl), r_color);
+	
+	if (t_success)
 	{
-		__MCCanvasColorImpl *t_color;
-		t_color = (__MCCanvasColorImpl*)MCValueGetExtraBytesPtr(r_color);
-		t_color->red = p_red;
-		t_color->green = p_green;
-		t_color->blue = p_blue;
-		t_color->alpha = p_alpha;
+		__MCCanvasColorImpl *t_color_impl;
+		t_color_impl = (__MCCanvasColorImpl*)MCValueGetExtraBytesPtr(r_color);
+		t_color_impl->red = p_red;
+		t_color_impl->green = p_green;
+		t_color_impl->blue = p_blue;
+		t_color_impl->alpha = p_alpha;
 		
-		return true;
+		t_success = MCValueInter(t_color, t_unique_color);
 	}
 	
-	return false;
+	MCValueRelease(t_color);
+	
+	if (t_success)
+		r_color = t_unique_color;
+	
+	return t_success;
 }
 
 MCCanvasFloat MCCanvasColorGetRed(MCCanvasColorRef color)
