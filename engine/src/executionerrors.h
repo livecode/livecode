@@ -2334,6 +2334,7 @@ enum Exec_errors
 	EE_RELAYER_NOTARGET,
 
 	// {EE-0769} relayer: couldn't resolve source control
+
 	EE_RELAYER_NOSOURCE,
 
 	// {EE-0770} relayer: source not a control
@@ -2621,6 +2622,13 @@ enum Exec_errors
     // {EE-0858} MCInternalPayloadPatch: error in base item expression
     EE_INTERNAL_BASE_BADITEM,
 
+	// MDW-2014-09-28: [[ feature_floor ]]
+	// {EE-0859} floor: bad parameter
+	EE_FLOOR_BADSOURCE,
+
+	// MDW-2014-09-28: [[ feature_floor ]]
+	// {EE-0860} ceil: bad parameter
+	EE_CEIL_BADSOURCE,
 };
 
 extern const char *MCexecutionerrors;
