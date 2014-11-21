@@ -20,15 +20,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	OBJECT_H
 #define	OBJECT_H
 
-#ifndef DLLIST_H
 #include "dllst.h"
-#endif
-
-#ifndef __MC_IMAGE_BITMAP_H__
-#include "imagebitmap.h"
-#endif
-
+#include "parsedef.h"
+#include "objdefs.h"
 #include "globals.h"
+#include "imagebitmap.h"
 #include "platform.h"
 
 enum {

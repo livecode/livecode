@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_FONT__
 
 #include "graphics.h"
+#include "parsedef.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
