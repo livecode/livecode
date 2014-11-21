@@ -356,6 +356,71 @@ MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef self,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool
+MCRecordEncodeAsArray(MCRecordRef record,
+                      MCArrayRef & r_array)
+{
+	MCAssert (record != nil);
+
+	MCTypeInfoRef t_typeinfo = MCValueGetTypeInfo (record);
+	uindex_t t_num_fields = MCRecordTypeInfoGetFieldCount (t_typeinfo);
+
+	/* Each field name in the record is used as a key in the array.
+	 * N.b. records decode/encode to dictionaries, not maps, so field
+	 * names are case insensitive. */
+	MCArrayRef t_new_array;
+	if (!MCArrayCreateMutable (t_new_array))
+		return false;
+
+	for (uindex_t i = 0; i < t_num_fields; ++i)
+	{
+		MCNameRef t_field_name = MCRecordTypeInfoGetFieldName (t_typeinfo, i);
+		MCValueRef t_field_value;
+
+		if (!(MCRecordFetchValue (record, t_field_name, t_field_value) &&
+		      !MCArrayStoreValue (t_new_array, false,
+		                          t_field_name, t_field_value)))
+		{
+			MCValueRelease (t_new_array);
+			return false;
+		}
+	}
+
+	return MCArrayCopyAndRelease (t_new_array, r_array);
+}
+
+bool
+MCRecordDecodeFromArray(MCArrayRef array,
+                        MCTypeInfoRef p_typeinfo,
+                        MCRecordRef & r_record)
+{
+	/* Create the result record */
+	MCRecordRef t_new_record;
+	if (!MCRecordCreateMutable (p_typeinfo, t_new_record))
+		return false;
+
+	/* We require each field name in the record to be a key in the
+	 * array, and for the types to match.  N.b. records decode/encode
+	 * to dictionaries, not maps, so field names are case
+	 * insensitive. */
+	uindex_t t_num_fields = MCRecordTypeInfoGetFieldCount (p_typeinfo);
+	for (uindex_t i = 0; i < t_num_fields; ++i)
+	{
+		MCNameRef t_field_name = MCRecordTypeInfoGetFieldName (p_typeinfo, i);
+		MCValueRef t_field_value;
+		if (!(MCArrayFetchValue (array, false, t_field_name, t_field_value) &&
+		      MCRecordStoreValue (t_new_record, t_field_name, t_field_value)))
+		{
+			MCValueRelease (t_new_record);
+			return false;
+		}
+	}
+
+	return MCRecordCopyAndRelease (t_new_record, r_record);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __MCRecordDestroy(__MCRecord *self)
 {
     MCTypeInfoRef t_resolved_typeinfo;
