@@ -301,7 +301,7 @@
     'rule' Apply(STATEMENT'variable(_, Name, Type)):
         DeclareId(Name)
         CurrentHandlerId -> ParentId
-        DefineSymbolId(Name, ParentId, inferred, variable, Type)
+        DefineSymbolId(Name, ParentId, inferred, local, Type)
         Apply(Type)
         
     'rule' Apply(STATEMENT'repeatupto(_, Slot, Start, Finish, Step, Body)):

@@ -171,6 +171,9 @@
         QueryKindOfSymbolId(Id -> parameter)
 
     'rule' CheckBindingIsVariableId(Id):
+        QueryKindOfSymbolId(Id -> local)
+
+    'rule' CheckBindingIsVariableId(Id):
         Id'Name -> Name
         Id'Position -> Position
         Error_NotBoundToAVariable(Position, Name)
@@ -188,6 +191,9 @@
         
     'rule' CheckBindingIsVariableOrHandlerId(Id):
         QueryKindOfSymbolId(Id -> parameter)
+
+    'rule' CheckBindingIsVariableOrHandlerId(Id):
+        QueryKindOfSymbolId(Id -> local)
 
     'rule' CheckBindingIsVariableOrHandlerId(Id):
         QueryKindOfSymbolId(Id -> handler)
