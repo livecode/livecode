@@ -116,6 +116,26 @@ bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
     return true;
 }
 
+static bool MCPrimitiveTypeInfoConforms(MCTypeInfoRef self, MCTypeInfoRef p_other)
+{
+    switch(MCPrimitiveTypeInfoGetTypeCode(self))
+    {
+        case kMCPrimitiveTypeCodeBool:
+            return p_other == kMCBooleanTypeInfo;
+        case kMCPrimitiveTypeCodeUInt:
+        case kMCPrimitiveTypeCodeInt:
+        case kMCPrimitiveTypeCodeFloat:
+        case kMCPrimitiveTypeCodeDouble:
+            return p_other == kMCNumberTypeInfo;
+        case kMCPrimitiveTypeCodePointer:
+            return false;
+    }
+    
+    MCUnreachable();
+    
+    return false;
+}
+
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
 {
     // If the typeinfos are the same, conformance is obvious.
@@ -154,6 +174,10 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
     // then its up to optionality to decide conformance.
     if (t_resolved_target . type == t_resolved_source . type)
         return !t_resolved_source . is_optional || t_resolved_target . is_optional;
+    
+    // Check primitive type conformance.
+    if (MCTypeInfoIsPrimitive(t_resolved_target . type))
+        return MCPrimitiveTypeInfoConforms(t_resolved_target . type, t_resolved_source . type);
     
     return false;
 }
