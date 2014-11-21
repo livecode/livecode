@@ -755,10 +755,15 @@ public:
 
 	//////////
 
-	T& operator [] (const int p_index)
+	T& operator [] (int p_index)
 	{
 		return m_ptr[p_index];
 	}
+    
+    const T& operator [] (int p_index) const
+    {
+        return m_ptr[p_index];
+    }
 
 private:
 	T *m_ptr;
