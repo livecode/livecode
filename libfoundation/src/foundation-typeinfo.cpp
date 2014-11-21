@@ -71,6 +71,11 @@ bool MCTypeInfoIsError(MCTypeInfoRef self)
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeError;
 }
 
+bool MCTypeInfoIsPrimitive(MCTypeInfoRef self)
+{
+    return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsPrimitive;
+}
+
 bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
 {
     intenum_t t_ext_typecode;
@@ -169,6 +174,30 @@ bool MCBuiltinTypeInfoCreate(MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)
     MCValueRelease(self);
     
     return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCPrimitiveTypeInfoCreate(MCPrimitiveTypeCode p_code, MCTypeInfoRef& r_typeinfo)
+{
+    __MCTypeInfo *self;
+    if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
+        return false;
+    
+    self -> flags |= kMCTypeInfoTypeIsPrimitive;
+    self -> primitive . code = p_code;
+    
+    if (MCValueInterAndRelease(self, r_typeinfo))
+        return true;
+    
+    MCValueRelease(self);
+    
+    return false;
+}
+
+MCPrimitiveTypeCode MCPrimitiveTypeInfoGetTypeCode(MCTypeInfoRef self)
+{
+    return self -> primitive . code;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -614,6 +643,10 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     {
         t_hash = MCHashBytesStream(t_hash, &self -> optional . basetype, sizeof(self -> optional . basetype));
     }
+    else if (t_code == kMCTypeInfoTypeIsPrimitive)
+    {
+        t_hash = MCHashBytesStream(t_hash, &self -> primitive . code, sizeof(self -> primitive . code));
+    }
     else if (t_code == kMCValueTypeCodeRecord)
     {
         t_hash = MCHashBytesStream(t_hash, &self -> record . base, sizeof(self -> record . base));
@@ -657,7 +690,10 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
     
     if (t_code == kMCTypeInfoTypeIsOptional)
         return self -> optional . basetype == other_self -> optional . basetype;
-        
+    
+    if (t_code == kMCTypeInfoTypeIsPrimitive)
+        return self -> primitive . code == other_self -> primitive . code;
+    
     if (t_code == kMCValueTypeCodeRecord)
     {
         if (self -> record . base != other_self -> record . base)

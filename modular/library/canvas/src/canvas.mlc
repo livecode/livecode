@@ -51,7 +51,6 @@ end type
 
 // Solid Paint
 foreign handler MCCanvasSolidPaintType_Copy(in pSrc as pointer, out pDst as pointer) as undefined binds to "<builtin>"
-foreign type
 foreign handler MCCanvasSolidPaintType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
 opaque type SolidPaint based on Paint
 	copy is MCCanvasSolidPaintType_Copy
@@ -695,7 +694,7 @@ foreign handler MCCanvasPathMakeWithInstructionsAsString(in pString as string, o
 syntax MakePath is prefix operator with precedence 4
 	"path" <mString: Expression>
 begin
-	MCCanvasPathMakeWithString(mString, output)
+	MCCanvasPathMakeWithInstructionsAsString(mString, output)
 end syntax
 
 // Primitive Constructors
@@ -713,11 +712,11 @@ begin
 	MCCanvasPathMakeWithRoundedRectangle(mRect, mRadii[0], mRadii[1], output)
 end syntax
 
-syntax MakePathWithRectangle is prefix operator with precedence 4
-	"rectangle" "path" "of" <mRect: ExpressionList>
-begin
-	MCCanvasPathMakeWithRectangle(mRect[0], mRect[1], mRect[2], mRect[3], output)
-end syntax
+//syntax MakePathWithRectangle is prefix operator with precedence 4
+//	"rectangle" "path" "of" <mRect: ExpressionList>
+//begin
+//	MCCanvasPathMakeWithRectangle(mRect[0], mRect[1], mRect[2], mRect[3], output)
+//end syntax
 
 syntax MakePathWithCircle is prefix operator with precedence 4
 	"circle" "path" "centered" "at" <mPoint: Expression> "with" "radius" <mRadius: Expression>
@@ -1036,7 +1035,7 @@ foreign handler MCCanvasCanvasTranslate(inout xCanvas as Canvas, in pX as Canvas
 foreign handler MCCanvasCanvasSaveState(inout xCanvas as Canvas) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasRestoreState(inout xCanvas as Canvas) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasBeginLayer(inout xCanvas as Canvas) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasBeginLayerWithEffect(inout xCanvas as Canvas, in pEffect as GraphicEffect, in pRect as Rect) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasBeginLayerWithEffect(inout xCanvas as Canvas, in pEffect as GraphicEffect, in pRect as Rectangle) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasEndLayer(inout xCanvas as Canvas) as undefined binds to "<builtin>"
 
 foreign handler MCCanvasCanvasFill(inout xCanvas as Canvas) as undefined binds to "<builtin>"
@@ -1045,8 +1044,8 @@ foreign handler MCCanvasCanvasStroke(inout xCanvas as Canvas) as undefined binds
 foreign handler MCCanvasCanvasStrokePath(inout xCanvas as Canvas, in pPath as Path) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasClipToRect(inout xCanvas as Canvas, in pClip as Rectangle) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasAddPath(inout xCanvas as Canvas, in pPath as Path) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasDrawImage(inout xCanvas, in pImage as Image, in pDest as Rectangle) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasDrawRectOfImage(inout xCanvas, in pImage as Image, in pSrc as Rectangle, in pDst as Rectangle) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasDrawImage(inout xCanvas, in pImage as Image, in pDest as Rectangle, in pQuality as int) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasDrawRectOfImage(inout xCanvas, in pImage as Image, in pSrc as Rectangle, in pDst as Rectangle, in pQuality as int) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasMoveTo(inout xCanvas as Canvas, in pPoint as Point) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasLineTo(inout xCanvas as Canvas, in pPoint as Point) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasCurveThroughPoint(inout xCanvas as Canvas, in pThrough as Point, in pTo as Point) as undefined binds to "<builtin>"
@@ -1097,7 +1096,7 @@ begin
 end syntax
 
 syntax CanvasEndLayer is statement
-	"end" "layer" "on" <mCanvas: Expression>
+	"endlayer" "on" <mCanvas: Expression>
 begin
 	MCCanvasCanvasEndLayer(mCanvas)
 end syntax
@@ -1116,11 +1115,11 @@ begin
 	MCCanvasCanvasStrokePath(mCanvas, mPath)
 end syntax
 
-syntax CanvasClip is statement
-	"clip" "to" <mRect: ExpressionList> "on" <mCanvas: Expression>
-begin
-	MCCanvasCanvasClipToRect(mCanvas, mRect[0], mRect[1], mRect[2], mRect[3])
-end syntax
+//syntax CanvasClip is statement
+//	"clip" "to" <mRect: ExpressionList> "on" <mCanvas: Expression>
+//begin
+//	MCCanvasCanvasClipToRect(mCanvas, mRect[0], mRect[1], mRect[2], mRect[3])
+//end syntax
 
 syntax CanvasAddPath is statement
 	"add" <mPath: Expression> "to" <mCanvas: Expression>
@@ -1134,7 +1133,7 @@ begin
 end syntax
 
 syntax CanvasDrawImage is statement
-	"draw" [ <mSrcRect: Expression> "of" ] <mImage: Expression> "into" <mDestRect: Expression> "of" <mCanvas: Expression> [ "at" <mQuality: ImageResizeQuality> "quality"]
+	"draw" [ <mSrcRect: Expression> "of" ] "image" <mImage: Expression> "into" <mDstRect: Expression> "of" <mCanvas: Expression> [ "at" <mQuality: ImageResizeQuality> "quality"]
 begin
 	MCCanvasCanvasDrawImage(mCanvas, mImage, mDstRect, 0)
 	MCCanvasCanvasDrawImage(mCanvas, mImage, mDstRect, mQuality)

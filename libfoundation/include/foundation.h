@@ -1257,6 +1257,9 @@ bool MCTypeInfoIsHandler(MCTypeInfoRef typeinfo);
 // Returns true if the typeinfo is of error type.
 bool MCTypeInfoIsError(MCTypeInfoRef typeinfo);
 
+// Returns true if the typeinfo is of primitive type.
+bool MCTypeInfoIsPrimitive(MCTypeInfoRef typeinfo);
+
 // Typeinfo's form a chain with elements in the chain potentially providing critical
 // information about the specified type. This structure describes the represented
 // type, after a typeinfo chain has been suitably processed.
@@ -1279,6 +1282,23 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
 
 // Creates a typeinfo for one of the builtin typecodes.
 bool MCBuiltinTypeInfoCreate(MCValueTypeCode typecode, MCTypeInfoRef& r_target);
+
+//////////
+
+enum MCPrimitiveTypeCode
+{
+    kMCPrimitiveTypeCodeBool,
+    kMCPrimitiveTypeCodeInt,
+    kMCPrimitiveTypeCodeUInt,
+    kMCPrimitiveTypeCodeFloat,
+    kMCPrimitiveTypeCodeDouble,
+    kMCPrimitiveTypeCodePointer,
+};
+
+// Creates a typeinfo describing a primitive type.
+bool MCPrimitiveTypeInfoCreate(MCPrimitiveTypeCode kind, MCTypeInfoRef& r_target);
+
+MCPrimitiveTypeCode MCPrimitiveTypeInfoGetTypeCode(MCTypeInfoRef typeinfo);
 
 //////////
 

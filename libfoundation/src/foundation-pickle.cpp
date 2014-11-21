@@ -58,6 +58,13 @@ enum
     kMCEncodedValueKindRecordTypeInfo,
     kMCEncodedValueKindHandlerTypeInfo,
     kMCEncodedValueKindErrorTypeInfo,
+    
+    kMCEncodedValueKindPrimitivePointerTypeInfo,
+    kMCEncodedValueKindPrimitiveBoolTypeInfo,
+    kMCEncodedValueKindPrimitiveUIntTypeInfo,
+    kMCEncodedValueKindPrimitiveIntTypeInfo,
+    kMCEncodedValueKindPrimitiveFloatTypeInfo,
+    kMCEncodedValueKindPrimitiveDoubleTypeInfo,
 };
 
 static bool failed(void)
@@ -223,6 +230,36 @@ static bool MCPickleReadTypeInfoRefContents(MCStreamRef stream, uint8_t p_kind, 
     else if (p_kind == kMCEncodedValueKindErrorTypeInfo)
     {
         // TODO: Implement error typeinfo reader.
+    }
+    else if (p_kind == kMCEncodedValueKindPrimitivePointerTypeInfo)
+    {
+        if (!MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodePointer, r_value))
+            return failed();
+    }
+    else if (p_kind == kMCEncodedValueKindPrimitiveBoolTypeInfo)
+    {
+        if (!MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeBool, r_value))
+            return failed();
+    }
+    else if (p_kind == kMCEncodedValueKindPrimitiveUIntTypeInfo)
+    {
+        if (!MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeUInt, r_value))
+            return failed();
+    }
+    else if (p_kind == kMCEncodedValueKindPrimitiveIntTypeInfo)
+    {
+        if (!MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeInt, r_value))
+        return failed();
+    }
+    else if (p_kind == kMCEncodedValueKindPrimitiveFloatTypeInfo)
+    {
+        if (!MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeFloat, r_value))
+            return failed();
+    }
+    else if (p_kind == kMCEncodedValueKindPrimitiveDoubleTypeInfo)
+    {
+        if (!MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeDouble, r_value))
+            return failed();
     }
     else
         return failed();
@@ -401,6 +438,12 @@ static bool MCPickleReadValueRef(MCStreamRef stream, MCValueRef& r_value)
         case kMCEncodedValueKindRecordTypeInfo:
         case kMCEncodedValueKindHandlerTypeInfo:
         case kMCEncodedValueKindErrorTypeInfo:
+        case kMCEncodedValueKindPrimitivePointerTypeInfo:
+        case kMCEncodedValueKindPrimitiveBoolTypeInfo:
+        case kMCEncodedValueKindPrimitiveUIntTypeInfo:
+        case kMCEncodedValueKindPrimitiveIntTypeInfo:
+        case kMCEncodedValueKindPrimitiveFloatTypeInfo:
+        case kMCEncodedValueKindPrimitiveDoubleTypeInfo:
             if (!MCPickleReadTypeInfoRefContents(stream, t_kind, (MCTypeInfoRef&)r_value))
                 return failed();
             break;
@@ -660,8 +703,25 @@ static bool MCPickleWriteTypeInfoRef(MCStreamRef stream, MCTypeInfoRef p_value)
         t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindArrayTypeInfo);
     else if (p_value == kMCProperListTypeInfo)
         t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindProperListTypeInfo);
-    else
-        t_success = false;
+    else if (MCTypeInfoIsPrimitive(p_value))
+    {
+        MCPrimitiveTypeCode t_code;
+        t_code = MCPrimitiveTypeInfoGetTypeCode(p_value);
+        if (t_code == kMCPrimitiveTypeCodePointer)
+            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindPrimitivePointerTypeInfo);
+        else if (t_code == kMCPrimitiveTypeCodeBool)
+            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindPrimitiveBoolTypeInfo);
+        else if (t_code == kMCPrimitiveTypeCodeUInt)
+            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindPrimitiveUIntTypeInfo);
+        else if (t_code == kMCPrimitiveTypeCodeInt)
+            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindPrimitiveIntTypeInfo);
+        else if (t_code == kMCPrimitiveTypeCodeFloat)
+            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindPrimitiveFloatTypeInfo);
+        else if (t_code == kMCPrimitiveTypeCodeDouble)
+            t_success = MCStreamWriteUInt8(stream, kMCEncodedValueKindPrimitiveDoubleTypeInfo);
+        else
+            t_success = false;
+    }
     
     if (!t_success)
         return failed();
