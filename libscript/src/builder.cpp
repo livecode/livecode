@@ -45,6 +45,10 @@ struct MCScriptModuleBuilder
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void __emit_constant(MCScriptModuleBuilderRef self, MCValueRef p_constant, uindex_t& r_index);
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptModuleBuilderRef& r_builder)
 {
     MCScriptModuleBuilder *self;
@@ -362,9 +366,20 @@ void MCScriptBeginSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p
         self -> valid = false;
         return;
     }
+    
+    MCScriptSyntaxDefinition *t_syntax;
+    t_syntax = static_cast<MCScriptSyntaxDefinition *>(self -> module . definitions[self -> current_syntax]);
+    
+    if (!MCMemoryResizeArray(t_syntax -> method_count + 1, t_syntax -> methods, t_syntax -> method_count))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    t_syntax -> methods[t_syntax -> method_count - 1] . handler = p_handler;
 }
 
-void MCScriptAddBuiltinArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t index)
+static void MCScriptAddArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p_index)
 {
     if (self == nil || !self -> valid)
         return;
@@ -374,42 +389,51 @@ void MCScriptAddBuiltinArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef s
         self -> valid = false;
         return;
     }
-}
-
-void MCScriptAddConstantArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, MCValueRef value)
-{
-    if (self == nil || !self -> valid)
-        return;
     
-    if (self -> current_syntax == UINDEX_MAX)
+    MCScriptSyntaxDefinition *t_syntax;
+    t_syntax = static_cast<MCScriptSyntaxDefinition *>(self -> module . definitions[self -> current_syntax]);
+    
+    MCScriptSyntaxMethod *t_method;
+    t_method = &t_syntax -> methods[t_syntax -> method_count - 1];
+    
+    if (!MCMemoryResizeArray(t_method -> argument_count + 1, t_method -> arguments, t_method -> argument_count))
     {
         self -> valid = false;
         return;
     }
+    
+    t_method -> arguments[t_method -> argument_count - 1] = p_index;
 }
 
-void MCScriptAddVariableArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t index)
+void MCScriptAddBuiltinArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p_index)
 {
+    // Encode builtin arguments as bottom bit zero.
+    p_index = p_index << 1;
+    MCScriptAddArgumentToSyntaxMethodInModule(self, p_index);
+}
+
+void MCScriptAddConstantArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, MCValueRef p_value)
+{
+    uindex_t t_index;
+    __emit_constant(self, p_value, t_index);
+    
     if (self == nil || !self -> valid)
         return;
     
-    if (self -> current_syntax == UINDEX_MAX)
-    {
-        self -> valid = false;
-        return;
-    }
+    // Encode constants as bottom bit zero, then -2 to adjust for builtins.
+    MCScriptAddArgumentToSyntaxMethodInModule(self, (t_index + 2) << 1);
 }
 
-void MCScriptAddIndexedVariableArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t var_index, uindex_t element_index)
+void MCScriptAddVariableArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p_index)
 {
-    if (self == nil || !self -> valid)
-        return;
-    
-    if (self -> current_syntax == UINDEX_MAX)
-    {
-        self -> valid = false;
-        return;
-    }
+    // Encode non-indexed variables as bottom bit 0, subsequent bit 0.
+    MCScriptAddArgumentToSyntaxMethodInModule(self, (p_index << 2));
+}
+
+void MCScriptAddIndexedVariableArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p_var_index, uindex_t p_element_index)
+{
+    // Encode indexed variables as bottom bit 0, subsequent bit 1, next 2 bits index.
+    MCScriptAddArgumentToSyntaxMethodInModule(self, (1 << 1) | ((p_element_index & 0x3) << 2) | (p_var_index << 4));
 }
 
 void MCScriptEndSyntaxMethodInModule(MCScriptModuleBuilderRef self)
@@ -434,6 +458,8 @@ void MCScriptEndSyntaxInModule(MCScriptModuleBuilderRef self)
         self -> valid = false;
         return;
     }
+
+    self -> current_syntax = UINDEX_MAX;
 }
 
 ///////////
@@ -450,7 +476,7 @@ void MCScriptBeginDefinitionGroupInModule(MCScriptModuleBuilderRef self)
     }
 }
 
-void MCScriptContinueDefinitionGroupInModule(MCScriptModuleBuilderRef self, uindex_t index)
+void MCScriptAddHandlerToDefinitionGroupInModule(MCScriptModuleBuilderRef self, uindex_t index)
 {
     if (self == nil || !self -> valid)
         return;
@@ -475,6 +501,9 @@ void MCScriptEndDefinitionGroupInModule(MCScriptModuleBuilderRef self, uindex_t&
     
     for(uindex_t i = 0; i < self -> module . definition_count; i++)
     {
+        if (self -> module . definitions[i] == nil)
+            continue;
+        
         if (self -> module . definitions[i] -> kind != kMCScriptDefinitionKindDefinitionGroup)
             continue;
         
@@ -504,11 +533,14 @@ void MCScriptEndDefinitionGroupInModule(MCScriptModuleBuilderRef self, uindex_t&
     MCScriptDefinitionGroupDefinition *t_group;
     t_group = (MCScriptDefinitionGroupDefinition *)self -> module . definitions[t_index];
     
+    t_group -> kind = kMCScriptDefinitionKindDefinitionGroup;
     t_group -> handler_count = self -> current_handler_group_size;
     t_group -> handlers = self -> current_handler_group;
     
     self -> current_handler_group_size = 0;
     self -> current_handler_group = nil;
+    
+    r_index = t_index;
 }
 
 ///////////
@@ -908,27 +940,47 @@ void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef self, uindex_t p_src_re
     __emit_instruction(self, kMCScriptBytecodeOpReturn, 1, p_src_reg);
 }
 
-void MCScriptBeginCallInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_index, uindex_t p_result_reg)
+void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_index, uindex_t p_result_reg)
 {
     if (self == nil || !self -> valid)
         return;
     
-    __begin_instruction(self, kMCScriptBytecodeOpCall);
+    __begin_instruction(self, kMCScriptBytecodeOpInvoke);
     __continue_instruction(self, p_handler_index);
     __continue_instruction(self, p_result_reg);
 }
 
-void MCScriptBeginIndirectCallInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_reg, uindex_t p_result_reg)
+void MCScriptBeginInvokeAssignInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_index, uindex_t p_result_reg)
 {
     if (self == nil || !self -> valid)
         return;
     
-    __begin_instruction(self, kMCScriptBytecodeOpCallIndirect);
+    __begin_instruction(self, kMCScriptBytecodeOpInvokeAssign);
+    __continue_instruction(self, p_handler_index);
+    __continue_instruction(self, p_result_reg);
+}
+
+void MCScriptBeginInvokeEvaluateInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_index, uindex_t p_result_reg)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    __begin_instruction(self, kMCScriptBytecodeOpInvokeEvaluate);
+    __continue_instruction(self, p_handler_index);
+    __continue_instruction(self, p_result_reg);
+}
+
+void MCScriptBeginIndirectInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_reg, uindex_t p_result_reg)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    __begin_instruction(self, kMCScriptBytecodeOpInvokeIndirect);
     __continue_instruction(self, p_handler_reg);
     __continue_instruction(self, p_result_reg);
 }
 
-void MCScriptContinueCallInModule(MCScriptModuleBuilderRef self, uindex_t p_arg_reg)
+void MCScriptContinueInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_arg_reg)
 {
     if (self == nil || !self -> valid)
         return;
@@ -936,7 +988,7 @@ void MCScriptContinueCallInModule(MCScriptModuleBuilderRef self, uindex_t p_arg_
     __continue_instruction(self, p_arg_reg);
 }
 
-void MCScriptEndCallInModule(MCScriptModuleBuilderRef self)
+void MCScriptEndInvokeInModule(MCScriptModuleBuilderRef self)
 {
     if (self == nil || !self -> valid)
         return;

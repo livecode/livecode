@@ -69,6 +69,10 @@ MC_PICKLE_BEGIN_RECORD(MCScriptSyntaxDefinition)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptSyntaxMethod, methods, method_count)
 MC_PICKLE_END_RECORD()
 
+MC_PICKLE_BEGIN_RECORD(MCScriptDefinitionGroupDefinition)
+    MC_PICKLE_ARRAY_OF_UINDEX(handlers, handler_count)
+MC_PICKLE_END_RECORD()
+
 MC_PICKLE_BEGIN_VARIANT(MCScriptDefinition, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindExternal, MCScriptExternalDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindType, MCScriptTypeDefinition)
@@ -79,6 +83,7 @@ MC_PICKLE_BEGIN_VARIANT(MCScriptDefinition, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindProperty, MCScriptPropertyDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindEvent, MCScriptEventDefinition)
     MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindSyntax, MCScriptSyntaxDefinition)
+    MC_PICKLE_VARIANT_CASE(kMCScriptDefinitionKindDefinitionGroup, MCScriptDefinitionGroupDefinition)
 MC_PICKLE_END_VARIANT()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptModule)
@@ -177,14 +182,16 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         // check arity == 1
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
-                    case kMCScriptBytecodeOpCall:
+                    case kMCScriptBytecodeOpInvoke:
+                    case kMCScriptBytecodeOpInvokeEvaluate:
+                    case kMCScriptBytecodeOpInvokeAssign:
                         // check index operand is within definition range
-                        // check definition[index] is handler
+                        // check definition[index] is handler or definition group
                         // check signature of defintion[index] conforms with invoke arity
                         for(uindex_t i = 1; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
-                    case kMCScriptBytecodeOpCallIndirect:
+                    case kMCScriptBytecodeOpInvokeIndirect:
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;

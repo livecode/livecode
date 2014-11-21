@@ -367,7 +367,8 @@ enum MCScriptBytecodeOp
     // It is a runtime error if, on-exit, any out parameters which have a non-optional
     // type are undefined.
     //
-	kMCScriptBytecodeOpCall,
+	kMCScriptBytecodeOpInvoke,
+	
 	// Indirect handler invocation:
 	//   invoke *<handler>, <result>, <arg_1>, ..., <arg_n>
 	// The handler reference in register <handler> is invoked with the given registers
@@ -376,13 +377,12 @@ enum MCScriptBytecodeOp
     // Conformance rules are the same as for normal invoke, except the signature of
     // the handler is potentially dynamic.
     //
-	kMCScriptBytecodeOpCallIndirect,
-    
-    kMCScriptBytecodeOpInvokeExecute,
+	kMCScriptBytecodeOpInvokeIndirect,
+    // invoke-eval <handler>, <output>, <arg_1>, ..., <arg_n>
     kMCScriptBytecodeOpInvokeEvaluate,
+    // invoke-assign <handler>, <input>, <arg_1>, ..., <arg_n>
     kMCScriptBytecodeOpInvokeAssign,
-    kMCScriptBytecodeOpInvokeIterate,
-	
+    
 	// Local fetch:
 	//   fetch-local <dst>, <local-index>
 	// Assigns the current value of <glob-index> to register <dst>.

@@ -270,10 +270,12 @@ void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef builder, uindex_t dst_r
 void MCScriptEmitDefcheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
 void MCScriptEmitTypecheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg, MCValueRef typeinfo);
 void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
-void MCScriptBeginCallInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index, uindex_t result_reg);
-void MCScriptBeginIndirectCallInModule(MCScriptModuleBuilderRef builder, uindex_t handler_reg, uindex_t result_reg);
-void MCScriptContinueCallInModule(MCScriptModuleBuilderRef builder, uindex_t arg_reg);
-void MCScriptEndCallInModule(MCScriptModuleBuilderRef builder);
+void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index, uindex_t result_reg);
+void MCScriptBeginInvokeIndirectInModule(MCScriptModuleBuilderRef builder, uindex_t handler_reg, uindex_t result_reg);
+void MCScriptBeginInvokeEvaluateInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index, uindex_t result_reg);
+void MCScriptBeginInvokeAssignInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index, uindex_t result_reg);
+void MCScriptContinueInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t arg_reg);
+void MCScriptEndInvokeInModule(MCScriptModuleBuilderRef builder);
 void MCScriptEmitFetchLocalInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t local_index);
 void MCScriptEmitStoreLocalInModule(MCScriptModuleBuilderRef builder, uindex_t src_reg, uindex_t local_index);
 void MCScriptEmitFetchGlobalInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t glob_index);
