@@ -35,12 +35,11 @@ record type Transform
 end type
 
 // Color
-// TODO - specify default values
-record type Color
-	red as CanvasFloat
-	green as CanvasFloat
-	blue as CanvasFloat
-	alpha as CanvasFloat
+// TODO - specify color as custom value type kMCCanvasColorTypeInfo
+// TODO - provide 'default' constructor (opaque black)
+foreign handler MCCanvasColorType_Measure() as uint binds to "<builtin>"
+opaque type Color
+	measure is MCCanvasColorType_Measure
 end type
 
 // Paint (supertype of pattern, gradient, solidpaint)
@@ -51,7 +50,6 @@ end type
 
 // Solid Paint
 foreign handler MCCanvasSolidPaintType_Copy(in pSrc as pointer, out pDst as pointer) as undefined binds to "<builtin>"
-foreign type
 foreign handler MCCanvasSolidPaintType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
 opaque type SolidPaint based on Paint
 	copy is MCCanvasSolidPaintType_Copy
@@ -60,6 +58,8 @@ end type
 
 // Pattern
 foreign handler MCCanvasPatternType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
+foreign handler MCCanvasPatternType_Copy(in pSrc as pointer, out pDst as pointer) as undefined binds to "<builtin>"
+foreign handler MCCanvasPatternType_Finalize(in pPaint as pointer) as undefined binds to "<builtin>"
 opaque type Pattern based on Paint
 	typecheck is MCCanvasPatternType_TypeCheck
 end type
@@ -97,9 +97,13 @@ opaque type Path
 end type
 
 // Effect
-foreign handler MCCanvasGraphicEffectType_Measure() as uint binds to "<builtin>"
+foreign handler MCCanvasEffectType_Measure() as uint binds to "<builtin>"
+foreign handler MCCanvasEffectType_Finalize(in pEffect as pointer) as undefined binds to "<builtin>"
+foreign handler MCCanvasEffectType_Copy(in pSrc as pointer, in pDest as pointer) as undefined binds to "<builtin>"
 opaque type GraphicEffect
-	measure is MCCanvasGraphicEffectType_Measure
+	measure is MCCanvasEffectType_Measure
+	finalize is MCCanvasEffectType_Finalize
+	copy is MCCanvasEffectType_Copy
 end type
 
 // Canvas
@@ -138,7 +142,6 @@ end syntax
 //////////
 
 // Properties
-// TODO - remove if unnecessary for record types
 
 foreign handler MCCanvasColorGetRed(in pColor as Color, out rRed as CanvasFloat) as undefined binds to "<builtin>"
 foreign handler MCCanvasColorSetRed(inout xColor as Color, in pRed as CanvasFloat) as undefined binds to "<builtin>"
@@ -203,8 +206,6 @@ begin
 	MCCanvasTransformMakeScale(mScale[0], mScale[1], output)
 end syntax
 
-//syntax MakeRotationTranform is expression
-//	"transform" "with" "rotation" "by" (<mRadians: ValueInDegrees> | <mRadians: Expression> "radians")
 syntax MakeRotationTranform is prefix operator with precedence 4
 	"transform" "with" "rotation" "by" <mRadians: Expression>
 begin
@@ -294,7 +295,6 @@ begin
 end syntax
 
 syntax RotateTransform is statement
-//	"rotate" <mTransform: Expression> "by" ( <mRadians: ValueInDegrees> | <mRadians: Expression> "radians" )
 	"rotate" <mTransform: Expression> "by" <mRadians: Expression>
 begin
 	MCCanvasTransformRotate(mTransform, mRadians)
@@ -355,12 +355,6 @@ begin
 	MCCanvasPatternMakeWithRotatedImage(mImage, mRadians, output)
 end syntax
 
-//syntax MakeRotatedPattern is expression
-//	"pattern" "with" <mImage: Expression> "rotated" "by" ( <mRadians: ValueInDegrees> | <mRadians: Expression> "radians" )
-//begin
-//	MCCanvasPatternMakeWithRotatedImage(mImage, mRadians, output)
-//end syntax
-
 //////////
 
 // Properties
@@ -407,7 +401,6 @@ begin
 end syntax
 
 syntax RotatePattern is statement
-//	"rotate" <mPattern: Expression> "by" ( <mRadians: ValueInDegrees> | <mRadians: Expression> "radians" )
 	"rotate" <mPattern: Expression> "by" <mRadians: Expression>
 begin
 	MCCanvasPatternRotate(mPattern, mRadians)
@@ -622,7 +615,8 @@ end syntax
 
 foreign handler MCCanvasImageGetWidth(in pImage as Image, out rWidth as uint) as undefined binds to "<builtin>"
 foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as uint) as undefined binds to "<builtin>"
-foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as array) as undefined binds to "<builtin>"
+// TODO - add support for metadata
+//foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as array) as undefined binds to "<builtin>"
 foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as data) as undefined binds to "<builtin>"
 
 syntax ImageWidthProperty is prefix operator with precedence 4
@@ -637,11 +631,11 @@ begin
 	MCCanvasImageGetHeight(mImage, output)
 end syntax
 
-syntax ImageMetadataProperty is prefix operator with precedence 4
-	"the" "metadata" "of" <mImage: Expression>
-begin
-	MCCanvasImageGetMetadata(mImage, output)
-end syntax
+//syntax ImageMetadataProperty is prefix operator with precedence 4
+//	"the" "metadata" "of" <mImage: Expression>
+//begin
+//	MCCanvasImageGetMetadata(mImage, output)
+//end syntax
 
 syntax ImagePixelsProperty is prefix operator with precedence 4
 	"the" "pixels" "of" <mImage: Expression>
@@ -653,10 +647,13 @@ end syntax
 
 // Operations
 
+// TODO - how to specify resize quality?
+// TODO - add resize operation? "resize <image> to <width>,<height>"
+
 foreign handler MCCanvasImageTransform(inout xImage as Image, in pTransform as Transform) as undefined binds to "<builtin>"
 foreign handler MCCanvasImageScale(inout xImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
 foreign handler MCCanvasImageRotate(inout xImage as Image, in pRadians as CanvasFloat) as undefined binds to "<builtin>"
-foreign handler MCCanvasImageCrop(inout xImage as Image, in pLeft as integer, in pTop as integer, in pRight as integer, in pBottom as integer) as undefined binds to "<builtin>"
+foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rectangle) as undefined binds to "<builtin>"
 
 syntax TransformImage is statement
 	"transform" <mImage: Expression> "by" <mTransform: Expression>
@@ -672,7 +669,6 @@ begin
 end syntax
 
 syntax RotateImage is statement
-//	"rotate" <mImage: Expression> "by" ( <mRadians: ValueInDegrees> | <mRadians: Expression> "radians" )
 	"rotate" <mImage: Expression> "by" <mRadians: Expression>
 begin
 	MCCanvasImageRotate(mImage, mRadians)
@@ -737,24 +733,11 @@ begin
 	MCCanvasPathMakeWithLine(mPointA, mPointB, output)
 end syntax
 
-
-// put the boundingrect of tPath into tRect
-
-//local tPath as Path
-//local tRect as Rectangle
-
-//put path of rectangle x,y,x2,y2 into tPath
-//put rectangle x1,y1,x2,y2 into tRect
-
-//put rectangle tRect into tPath
-
-
 syntax MakePathWithPoints is prefix operator with precedence 4
 	( "polygon" <mClosed=true> | "polyline" <mClosed=false> ) "path" "with" "points" <mPoints: Expression>
 begin
 	MCCanvasPathMakeWithPoints(mPoints, mClosed, output)
 end syntax
-
 
 //////////
 

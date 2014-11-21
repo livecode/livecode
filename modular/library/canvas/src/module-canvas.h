@@ -24,21 +24,21 @@
 
 // TODO - move to MCImageRep wrapper library
 
-typedef struct _MCImageRep *MCImageRep;
+class MCImageRep;
 
-MCImageRep MCImageRepRetain(MCImageRep p_image_rep);
-void MCImageRepRelease(MCImageRep p_image_rep);
-bool MCImageRepCreateWithPath(MCStringRef p_path, MCImageRep &r_image_rep);
-bool MCImageRepCreateWithData(MCDataRef p_data, MCImageRep &r_image_rep);
-bool MCImageRepCreateWithPixels(MCDataRef p_pixels, uint32_t p_width, uint32_t p_height, MCGPixelFormat p_format, bool p_premultiplied, MCImageRep &r_image_rep);
-bool MCImageRepGetGeometry(MCImageRep p_image_rep, uint32_t &r_width, uint32_t &r_height);
-bool MCImageRepGetFrameDuration(MCImageRep p_image_rep, uint32_t p_frame, uint32_t &r_duration);
+MCImageRep *MCImageRepRetain(MCImageRep *p_image_rep);
+void MCImageRepRelease(MCImageRep *p_image_rep);
+bool MCImageRepCreateWithPath(MCStringRef p_path, MCImageRep *&r_image_rep);
+bool MCImageRepCreateWithData(MCDataRef p_data, MCImageRep *&r_image_rep);
+bool MCImageRepCreateWithPixels(MCDataRef p_pixels, uint32_t p_width, uint32_t p_height, MCGPixelFormat p_format, bool p_premultiplied, MCImageRep *&r_image_rep);
+bool MCImageRepGetGeometry(MCImageRep *p_image_rep, uint32_t &r_width, uint32_t &r_height);
+bool MCImageRepGetFrameDuration(MCImageRep *p_image_rep, uint32_t p_frame, uint32_t &r_duration);
 
-bool MCImageRepLockForTransform(MCImageRep p_image_rep, const MCGAffineTransform &p_transform, uint32_t p_frame, MCGImageRef &r_image, MCGSize &r_scale);
-void MCImageRepUnlock(MCImageRep p_image_rep, MCGImageRef p_image);
+bool MCImageRepLockForTransform(MCImageRep *p_image_rep, const MCGAffineTransform &p_transform, uint32_t p_frame, MCGImageRef &r_image, MCGSize &r_scale);
+void MCImageRepUnlock(MCImageRep *p_image_rep, MCGImageRef p_image);
 
-bool MCImageRepLockRasterForTransform(MCImageRep p_image_rep, const MCGAffineTransform &p_transform, uint32_t p_frame, MCGRaster &r_raster, MCGSize &r_scale);
-void MCImageRepUnlockRaster(MCImageRep p_image_rep, const MCGRaster &p_raster);
+bool MCImageRepLockRasterForTransform(MCImageRep *p_image_rep, const MCGAffineTransform &p_transform, uint32_t p_frame, MCGRaster &r_raster, MCGSize &r_scale);
+void MCImageRepUnlockRaster(MCImageRep *p_image_rep, const MCGRaster &p_raster);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -53,23 +53,35 @@ struct MCCArray
 ////////////////////////////////////////////////////////////////////////////////
 // Type Definitions
 
+typedef MCGFloat MCCanvasFloat;
+
 // Rectangle record type
 typedef MCGRectangle MCCanvasRectangle;
 
 // Point record type
 typedef MCGPoint MCCanvasPoint;
 
-// Color record type
-struct MCCanvasColor
-{
-	MCGFloat red, green, blue, alpha;
-};
+// Color custom value type
+
+typedef struct __MCCanvasColor *MCCanvasColorRef;
+
+extern MCTypeInfoRef kMCCanvasColorTypeInfo;
+
+bool MCCanvasColorCreateRGBA(MCCanvasFloat p_red, MCCanvasFloat p_green, MCCanvasFloat p_blue, MCCanvasFloat p_alpha, MCCanvasColorRef &r_color);
+MCCanvasFloat MCCanvasColorGetRed(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetGreen(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetBlue(MCCanvasColorRef color);
+MCCanvasFloat MCCanvasColorGetAlpha(MCCanvasColorRef color);
+void MCCanvasColorGetRGBA(MCCanvasColorRef color, MCCanvasFloat &r_red, MCCanvasFloat &r_green, MCCanvasFloat &r_blue, MCCanvasFloat &r_alpha);
+
+bool MCCanvasColorCopy(MCCanvasColorRef p_color, MCCanvasColorRef &r_copy);
+void MCCanvasColorDelete(MCCanvasColorRef p_color);
 
 // Transform record type
 typedef MCGAffineTransform MCCanvasTransform;
 
 // Image opaque type
-typedef MCImageRep MCCanvasImage;
+typedef MCImageRep *MCCanvasImage;
 uinteger_t MCCanvasImageType_Measure(void);
 void MCCanvasImageType_Finalize(MCCanvasImage *p_image);
 void MCCanvasImageType_Copy(MCCanvasImage *p_src_image, MCCanvasImage *p_dst_image);
@@ -94,7 +106,7 @@ void MCCanvasPaintType_Copy(MCCanvasPaint *p_src, MCCanvasPaint *p_dst);
 // Solid Paint opaque type
 typedef struct MCCanvasSolidPaintStruct : public MCCanvasPaintStruct
 {
-	MCCanvasColor color;
+	MCCanvasColorRef color;
 } *MCCanvasSolidPaint;
 
 void MCCanvasSolidPaintType_Copy(MCCanvasSolidPaint *p_src, MCCanvasSolidPaint *p_dst);
@@ -104,8 +116,8 @@ bool MCCanvasSolidPaintType_TypeCheck(MCCanvasPaint *p_paint);
 // Pattern opaque type
 typedef struct MCCanvasPatternStruct : public MCCanvasPaintStruct
 {
-	MCImageRep image;
-	MCGAffineTransform transform;
+	MCCanvasImage image;
+	MCCanvasTransform transform;
 } *MCCanvasPattern;
 
 void MCCanvasPatternType_Finalize(MCCanvasPattern *p_pattern);
@@ -115,8 +127,8 @@ bool MCCanvasPatternType_TypeCheck(MCCanvasPaint *p_paint);
 // Gradient Stop record type
 struct MCCanvasGradientStop
 {
-	MCGFloat offset;
-	MCCanvasColor color;
+	MCCanvasFloat offset;
+	MCCanvasColorRef color;
 };
 
 // Gradient opaque type
@@ -128,7 +140,7 @@ typedef struct MCCanvasGradientStruct : public MCCanvasPaintStruct
 	bool mirror;
 	bool wrap;
 	uint32_t repeats;
-	MCGAffineTransform transform;
+	MCCanvasTransform transform;
 	MCGImageFilter filter;
 } *MCCanvasGradient;
 
@@ -178,17 +190,20 @@ struct MCCanvasEffect
 {
 	MCCanvasEffectType type;
 	
-	MCGFloat opacity;
+	MCCanvasFloat opacity;
 	MCGBlendMode blend_mode;
-	MCCanvasColor color;
+	MCCanvasColorRef color;
 	
-	MCGFloat size;
-	MCGFloat spread;
+	MCCanvasFloat size;
+	MCCanvasFloat spread;
 	
-	MCGFloat distance;
-	MCGFloat angle;
+	MCCanvasFloat distance;
+	MCCanvasFloat angle;
 };
+
 uinteger_t MCCanvasEffectType_Measure(void);
+void MCCanvasEffectType_Finalize(MCCanvasEffect *p_effect);
+void MCCanvasEffectType_Copy(MCCanvasEffect *p_src, MCCanvasEffect *p_dst);
 
 // Canvas opaque type
 struct MCCanvasProperties
@@ -196,7 +211,7 @@ struct MCCanvasProperties
 	MCCanvasPaint paint;
 	MCGFillRule fill_rule;
 	bool antialias;
-	MCGFloat opacity;
+	MCCanvasFloat opacity;
 	MCGBlendMode blend_mode;
 	bool stippled;
 	MCGImageFilter image_filter;
@@ -234,7 +249,7 @@ void MCCanvasModuleFinalize();
 // Color
 
 // Constructors
-void MCCanvasColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha, MCCanvasColor &r_color);
+void MCCanvasColorMakeRGBA(MCCanvasFloat p_red, MCCanvasFloat p_green, MCCanvasFloat p_blue, MCCanvasFloat p_alpha, MCCanvasColorRef &r_color);
 
 // Properties
 // TODO - don't think these are needed for a record type object
@@ -245,21 +260,22 @@ void MCCanvasColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MC
 
 // Constructors
 void MCCanvasTransformMakeIdentity(MCCanvasTransform &r_transform);
-void MCCanvasTransformMakeScale(MCGFloat p_xscale, MCGFloat p_yscale, MCCanvasTransform &r_transform);
-void MCCanvasTransformMakeRotation(MCGFloat p_angle, MCCanvasTransform &r_transform);
-void MCCanvasTransformMakeTranslation(MCGFloat p_x, MCGFloat p_y, MCCanvasTransform &r_transform);
-void MCCanvasTransformMakeSkew(MCGFloat p_x, MCGFloat p_y, MCCanvasTransform &r_transform);
-void MCCanvasTransformMakeWithMatrix(MCGFloat p_a, MCGFloat p_b, MCGFloat p_c, MCGFloat p_d, MCGFloat p_tx, MCGFloat p_ty, MCCanvasTransform &r_transform);
+void MCCanvasTransformMakeScale(MCCanvasFloat p_xscale, MCCanvasFloat p_yscale, MCCanvasTransform &r_transform);
+void MCCanvasTransformMakeRotation(MCCanvasFloat p_angle, MCCanvasTransform &r_transform);
+void MCCanvasTransformMakeTranslation(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasTransform &r_transform);
+void MCCanvasTransformMakeSkew(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasTransform &r_transform);
+void MCCanvasTransformMakeWithMatrix(MCCanvasFloat p_a, MCCanvasFloat p_b, MCCanvasFloat p_c, MCCanvasFloat p_d, MCCanvasFloat p_tx, MCCanvasFloat p_ty, MCCanvasTransform &r_transform);
 
 // Properties
 void MCCanvasTransformGetMatrix(const MCCanvasTransform &p_transform, MCArrayRef &r_matrix);
 void MCCanvasTransformSetMatrix(MCCanvasTransform &x_transform, MCArrayRef p_matrix);
 void MCCanvasTransformGetInverse(const MCCanvasTransform &p_transform, MCCanvasTransform &r_transform);
 // T = Tscale * Trotate * Tskew * Ttranslate
+// TODO - scale / skew / translation return type?
 void MCCanvasTransformGetScale(const MCCanvasTransform &p_transform, MCGSize &r_scale);
 void MCCanvasTransformSetScale(MCCanvasTransform &x_transform, const MCGSize &p_scale);
-void MCCanvasTransformGetRotation(const MCCanvasTransform &p_transform, MCGFloat &r_rotation);
-void MCCanvasTransformSetRotation(MCCanvasTransform &x_transform, MCGFloat p_rotation);
+void MCCanvasTransformGetRotation(const MCCanvasTransform &p_transform, MCCanvasFloat &r_rotation);
+void MCCanvasTransformSetRotation(MCCanvasTransform &x_transform, MCCanvasFloat p_rotation);
 void MCCanvasTransformGetSkew(const MCCanvasTransform &p_transform, MCGSize &r_skew);
 void MCCanvasTransformSetSkew(MCCanvasTransform &x_transform, const MCGSize &p_skew);
 void MCCanvasTransformGetTranslation(const MCCanvasTransform &p_transform, MCGSize &r_translation);
@@ -267,10 +283,10 @@ void MCCanvasTransformSetTranslation(MCCanvasTransform &x_transform, const MCGSi
 
 // Operations
 void MCCanvasTransformConcat(MCCanvasTransform &x_transform_a, const MCCanvasTransform p_transform_b);
-void MCCanvasTransformScale(MCCanvasTransform &x_transform, const MCGSize &p_scale);
-void MCCanvasTransformRotate(MCCanvasTransform &x_transform, MCGFloat p_rotation);
-void MCCanvasTransformTranslate(MCCanvasTransform &x_transform, const MCGSize &p_translation);
-void MCCanvasTransformSkew(MCCanvasTransform &x_transform, MCGFloat p_xskew, MCGFloat p_yskew);
+void MCCanvasTransformScale(MCCanvasTransform &x_transform, MCCanvasFloat p_x_scale, MCCanvasFloat p_y_scale);
+void MCCanvasTransformRotate(MCCanvasTransform &x_transform, MCCanvasFloat p_rotation);
+void MCCanvasTransformTranslate(MCCanvasTransform &x_transform, MCCanvasFloat p_dx, MCCanvasFloat p_dy);
+void MCCanvasTransformSkew(MCCanvasTransform &x_transform, MCCanvasFloat p_x_skew, MCCanvasFloat p_y_skew);
 
 //////////
 
@@ -285,20 +301,25 @@ void MCCanvasImageMakeWithPixels(integer_t p_width, integer_t p_height, MCDataRe
 void MCCanvasImageGetWidth(const MCCanvasImage &p_image, uint32_t &r_width);
 void MCCanvasImageGetHeight(const MCCanvasImage &p_image, uint32_t &r_height);
 void MCCanvasImageGetPixels(const MCCanvasImage &p_image, MCDataRef &r_pixels);
-void MCCanvasImageGetMetadata(const MCCanvasImage &p_image, MCArrayRef &r_metadata);
+// TODO - Add support for image metadata
+//void MCCanvasImageGetMetadata(const MCCanvasImage &p_image, MCArrayRef &r_metadata);
 
-// TODO - Image operations
+// TODO - Implement image operations
+//void MCCanvasImageTransform(MCCanvasImage &x_image, const MCCanvasTransform &p_transform);
+//void MCCanvasImageScale(MCCanvasImage &x_image, MCCanvasFloat p_x_scale, MCCanvasFloat p_y_scale);
+//void MCCanvasImageRotate(MCCanvasImage &x_image, MCCanvasFloat p_angle);
+//void MCCanvasImageCrop(MCCanvasImage &x_image, const MCCanvasRectangle &p_rect);
 
 //////////
 
 // Solid Paint
 
 // Constructors
-void MCCanvasSolidPaintCreateWithColor(const MCCanvasColor &p_color, MCCanvasSolidPaint &x_paint);
+void MCCanvasSolidPaintCreateWithColor(MCCanvasColorRef p_color, MCCanvasSolidPaint &x_paint);
 
 // Properties
-void MCCanvasSolidPaintGetColor(const MCCanvasSolidPaint &p_paint, MCCanvasColor &r_color);
-void MCCanvasSolidPaintSetColor(MCCanvasSolidPaint &x_paint, const MCCanvasColor &p_color);
+void MCCanvasSolidPaintGetColor(const MCCanvasSolidPaint &p_paint, MCCanvasColorRef &r_color);
+void MCCanvasSolidPaintSetColor(MCCanvasSolidPaint &x_paint, MCCanvasColorRef p_color);
 
 //////////
 
@@ -307,9 +328,9 @@ void MCCanvasSolidPaintSetColor(MCCanvasSolidPaint &x_paint, const MCCanvasColor
 // Constructors
 void MCCanvasPatternMakeWithTransformedImage(const MCCanvasImage &p_image, const MCCanvasTransform &p_transform, MCCanvasPattern &r_pattern);
 void MCCanvasPatternMakeWithImage(const MCCanvasImage &p_image, MCCanvasPattern &r_pattern);
-void MCCanvasPatternMakeWithScaledImage(const MCCanvasImage &p_image, MCGFloat p_xscale, MCGFloat p_yscale, MCCanvasPattern &r_pattern);
-void MCCanvasPatternMakeWithRotatedImage(const MCCanvasImage &p_image, MCGFloat p_angle, MCCanvasPattern &r_pattern);
-void MCCanvasPatternMakeWithTranslatedImage(const MCCanvasImage &p_image, MCGFloat p_x, MCGFloat p_y, MCCanvasPattern &r_pattern);
+void MCCanvasPatternMakeWithScaledImage(const MCCanvasImage &p_image, MCCanvasFloat p_xscale, MCCanvasFloat p_yscale, MCCanvasPattern &r_pattern);
+void MCCanvasPatternMakeWithRotatedImage(const MCCanvasImage &p_image, MCCanvasFloat p_angle, MCCanvasPattern &r_pattern);
+void MCCanvasPatternMakeWithTranslatedImage(const MCCanvasImage &p_image, MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasPattern &r_pattern);
 
 // Properties
 void MCCanvasPatternGetImage(const MCCanvasPattern &p_pattern, MCCanvasImage &r_image);
@@ -319,9 +340,9 @@ void MCCanvasPatternSetTransform(MCCanvasPattern &x_pattern, const MCCanvasTrans
 
 // Operations
 void MCCanvasPatternTransform(MCCanvasPattern &x_pattern, const MCCanvasTransform &p_transform);
-void MCCanvasPatternScale(MCCanvasPattern &x_pattern, MCGFloat p_xscale, MCGFloat p_yscale);
-void MCCanvasPatternRotate(MCCanvasPattern &x_pattern, MCGFloat p_angle);
-void MCCanvasPatternTranslate(MCCanvasPattern &x_pattern, MCGFloat p_x, MCGFloat p_y);
+void MCCanvasPatternScale(MCCanvasPattern &x_pattern, MCCanvasFloat p_xscale, MCCanvasFloat p_yscale);
+void MCCanvasPatternRotate(MCCanvasPattern &x_pattern, MCCanvasFloat p_angle);
+void MCCanvasPatternTranslate(MCCanvasPattern &x_pattern, MCCanvasFloat p_x, MCCanvasFloat p_y);
 // TODO - add skew?"
 
 //////////
@@ -342,21 +363,21 @@ void MCCanvasGradientGetWrap(const MCCanvasGradient &p_gradient, bool &r_wrap);
 void MCCanvasGradientSetWrap(MCCanvasGradient &x_gradient, bool p_wrap);
 void MCCanvasGradientGetMirror(const MCCanvasGradient &p_gradient, bool &r_mirror);
 void MCCanvasGradientSetMirror(MCCanvasGradient &x_gradient, bool p_mirror);
-void MCCanvasGradientGetFrom(const MCCanvasGradient &p_gradient, MCGPoint &r_from);
-void MCCanvasGradientSetFrom(MCCanvasGradient &x_gradient, const MCGPoint &p_from);
-void MCCanvasGradientGetTo(const MCCanvasGradient &p_gradient, MCGPoint &r_to);
-void MCCanvasGradientSetTo(MCCanvasGradient &x_gradient, const MCGPoint &p_to);
-void MCCanvasGradientGetVia(const MCCanvasGradient &p_gradient, MCGPoint &r_via);
-void MCCanvasGradientSetVia(MCCanvasGradient &x_gradient, const MCGPoint &p_via);
+void MCCanvasGradientGetFrom(const MCCanvasGradient &p_gradient, MCCanvasPoint &r_from);
+void MCCanvasGradientSetFrom(MCCanvasGradient &x_gradient, const MCCanvasPoint &p_from);
+void MCCanvasGradientGetTo(const MCCanvasGradient &p_gradient, MCCanvasPoint &r_to);
+void MCCanvasGradientSetTo(MCCanvasGradient &x_gradient, const MCCanvasPoint &p_to);
+void MCCanvasGradientGetVia(const MCCanvasGradient &p_gradient, MCCanvasPoint &r_via);
+void MCCanvasGradientSetVia(MCCanvasGradient &x_gradient, const MCCanvasPoint &p_via);
 void MCCanvasGradientGetTransform(const MCCanvasGradient &p_gradient, MCCanvasTransform &r_transform);
 void MCCanvasGradientSetTransform(MCCanvasGradient &x_gradient, const MCCanvasTransform &p_transform);
 
 // Operators
 void MCCanvasGradientAddStop(MCCanvasGradient &x_gradient, const MCCanvasGradientStop &p_stop);
 void MCCanvasGradientTransform(MCCanvasGradient &x_gradient, const MCCanvasTransform &p_transform);
-void MCCanvasGradientScale(MCCanvasGradient &x_gradient, MCGFloat p_xscale, MCGFloat p_yscale);
-void MCCanvasGradientRotate(MCCanvasGradient &x_gradient, MCGFloat p_angle);
-void MCCanvasGradientTranslate(MCCanvasGradient &x_gradient, MCGFloat p_x, MCGFloat p_y);
+void MCCanvasGradientScale(MCCanvasGradient &x_gradient, MCCanvasFloat p_xscale, MCCanvasFloat p_yscale);
+void MCCanvasGradientRotate(MCCanvasGradient &x_gradient, MCCanvasFloat p_angle);
+void MCCanvasGradientTranslate(MCCanvasGradient &x_gradient, MCCanvasFloat p_x, MCCanvasFloat p_y);
 
 //////////
 
@@ -364,27 +385,27 @@ void MCCanvasGradientTranslate(MCCanvasGradient &x_gradient, MCGFloat p_x, MCGFl
 
 // Constructors
 void MCCanvasPathMakeWithInstructionsAsString(MCStringRef p_instructions, MCCanvasPath &r_path);
-void MCCanvasPathMakeWithRoundedRectangle(const MCGRectangle &p_rect, MCGFloat p_x_radius, MCGFloat p_y_radius, MCCanvasPath &r_path);
-void MCCanvasPathMakeWithRectangle(const MCGRectangle &p_rect, MCCanvasPath &r_path);
-void MCCanvasPathMakeWithEllipse(const MCGPoint &p_center, MCGFloat p_radius_x, MCGFloat p_radius_y, MCCanvasPath &r_path);
-void MCCanvasPathMakeWithLine(const MCGPoint &p_start, const MCGPoint &p_end, MCCanvasPath &r_path);
-void MCCanvasPathMakeWithPoints(const MCGPoint *p_points, uint32_t p_point_count, bool p_close, MCCanvasPath &r_path);
+void MCCanvasPathMakeWithRoundedRectangle(const MCCanvasRectangle &p_rect, MCCanvasFloat p_x_radius, MCCanvasFloat p_y_radius, MCCanvasPath &r_path);
+void MCCanvasPathMakeWithRectangle(const MCCanvasRectangle &p_rect, MCCanvasPath &r_path);
+void MCCanvasPathMakeWithEllipse(const MCCanvasPoint &p_center, MCCanvasFloat p_radius_x, MCCanvasFloat p_radius_y, MCCanvasPath &r_path);
+void MCCanvasPathMakeWithLine(const MCCanvasPoint &p_start, const MCCanvasPoint &p_end, MCCanvasPath &r_path);
+void MCCanvasPathMakeWithPoints(const MCCArray<MCCanvasPoint> &p_points, bool p_close, MCCanvasPath &r_path);
 
 // Properties
 void MCCanvasPathGetSubpaths(MCCanvasPath &p_path, integer_t p_start, integer_t p_end, MCCanvasPath &r_subpaths);
-void MCCanvasPathGetBoundingBox(MCCanvasPath &p_path, MCGRectangle &r_bounds);
+void MCCanvasPathGetBoundingBox(MCCanvasPath &p_path, MCCanvasRectangle &r_bounds);
 void MCCanvasPathGetInstructionsAsString(const MCCanvasPath &p_path, MCStringRef &r_instruction_string);
 
 // Operations
 void MCCanvasPathTransform(MCCanvasPath &x_path, const MCCanvasTransform &p_transform);
-void MCCanvasPathScale(MCCanvasPath &x_path, MCGFloat p_xscale, MCGFloat p_yscale);
-void MCCanvasPathRotate(MCCanvasPath &x_path, MCGFloat p_angle);
-void MCCanvasPathTranslate(MCCanvasPath &x_path, MCGFloat p_x, MCGFloat p_y);
+void MCCanvasPathScale(MCCanvasPath &x_path, MCCanvasFloat p_xscale, MCCanvasFloat p_yscale);
+void MCCanvasPathRotate(MCCanvasPath &x_path, MCCanvasFloat p_angle);
+void MCCanvasPathTranslate(MCCanvasPath &x_path, MCCanvasFloat p_x, MCCanvasFloat p_y);
 void MCCanvasPathAddPath(MCCanvasPath &x_path, const MCCanvasPath &p_to_add);
-void MCCanvasPathMoveTo(MCCanvasPath &x_path, const MCGPoint &p_point);
-void MCCanvasPathLineTo(MCCanvasPath &x_path, const MCGPoint &p_point);
-void MCCanvasPathCurveThroughPoint(MCCanvasPath &x_path, const MCGPoint &p_through, const MCGPoint &p_to);
-void MCCanvasPathCurveThroughPoints(MCCanvasPath &x_path, const MCGPoint &p_through_a, const MCGPoint &p_through_b, const MCGPoint &p_to);
+void MCCanvasPathMoveTo(MCCanvasPath &x_path, const MCCanvasPoint &p_point);
+void MCCanvasPathLineTo(MCCanvasPath &x_path, const MCCanvasPoint &p_point);
+void MCCanvasPathCurveThroughPoint(MCCanvasPath &x_path, const MCCanvasPoint &p_through, const MCCanvasPoint &p_to);
+void MCCanvasPathCurveThroughPoints(MCCanvasPath &x_path, const MCCanvasPoint &p_through_a, const MCCanvasPoint &p_through_b, const MCCanvasPoint &p_to);
 void MCCanvasPathClosePath(MCCanvasPath &x_path);
 
 //////////
@@ -396,20 +417,20 @@ void MCCanvasGraphicEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_p
 
 // Properties
 void MCCanvasGraphicEffectGetTypeAsString(const MCCanvasEffect &p_effect, MCStringRef &r_type);
-void MCCanvasGraphicEffectGetColor(const MCCanvasEffect &p_effect, MCCanvasColor &r_color);
-void MCCanvasGraphicEffectSetColor(MCCanvasEffect &x_effect, const MCCanvasColor &p_color);
+void MCCanvasGraphicEffectGetColor(const MCCanvasEffect &p_effect, MCCanvasColorRef &r_color);
+void MCCanvasGraphicEffectSetColor(MCCanvasEffect &x_effect, MCCanvasColorRef p_color);
 void MCCanvasEffectGetBlendModeAsString(const MCCanvasEffect &p_effect, MCStringRef &r_blend_mode);
 void MCCanvasEffectSetBlendModeAsString(MCCanvasEffect &x_effect, MCStringRef p_blend_mode);
-void MCCanvasEffectGetOpacity(const MCCanvasEffect &p_effect, MCGFloat &r_opacity);
-void MCCanvasEffectSetOpacity(MCCanvasEffect &x_effect, MCGFloat p_opacity);
-void MCCanvasEffectGetSize(const MCCanvasEffect &p_effect, MCGFloat &r_size);
-void MCCanvasEffectSetSize(MCCanvasEffect &x_effect, MCGFloat p_size);
-void MCCanvasEffectGetSpread(const MCCanvasEffect &p_effect, MCGFloat &r_spread);
-void MCCanvasEffectSetSpread(MCCanvasEffect &x_effect, MCGFloat p_spread);
-void MCCanvasEffectGetDistance(const MCCanvasEffect &p_effect, MCGFloat &r_distance);
-void MCCanvasEffectSetDistance(MCCanvasEffect &x_effect, MCGFloat p_distance);
-void MCCanvasEffectGetAngle(const MCCanvasEffect &p_effect, MCGFloat &r_angle);
-void MCCanvasEffectSetAngle(MCCanvasEffect &x_effect, MCGFloat p_angle);
+void MCCanvasEffectGetOpacity(const MCCanvasEffect &p_effect, MCCanvasFloat &r_opacity);
+void MCCanvasEffectSetOpacity(MCCanvasEffect &x_effect, MCCanvasFloat p_opacity);
+void MCCanvasEffectGetSize(const MCCanvasEffect &p_effect, MCCanvasFloat &r_size);
+void MCCanvasEffectSetSize(MCCanvasEffect &x_effect, MCCanvasFloat p_size);
+void MCCanvasEffectGetSpread(const MCCanvasEffect &p_effect, MCCanvasFloat &r_spread);
+void MCCanvasEffectSetSpread(MCCanvasEffect &x_effect, MCCanvasFloat p_spread);
+void MCCanvasEffectGetDistance(const MCCanvasEffect &p_effect, MCCanvasFloat &r_distance);
+void MCCanvasEffectSetDistance(MCCanvasEffect &x_effect, MCCanvasFloat p_distance);
+void MCCanvasEffectGetAngle(const MCCanvasEffect &p_effect, MCCanvasFloat &r_angle);
+void MCCanvasEffectSetAngle(MCCanvasEffect &x_effect, MCCanvasFloat p_angle);
 
 //////////
 
@@ -422,8 +443,8 @@ void MCCanvasGetFillRuleAsString(const MCCanvas &p_canvas, MCStringRef &r_string
 void MCCanvasSetFillRuleAsString(MCCanvas &x_canvas, MCStringRef p_string);
 void MCCanvasGetAntialias(const MCCanvas &p_canvas, bool &r_antialias);
 void MCCanvasSetAntialias(MCCanvas &x_canvas, bool p_antialias);
-void MCCanvasGetOpacity(const MCCanvas &p_canvas, MCGFloat &r_opacity);
-void MCCanvasSetOpacity(MCCanvas &x_canvas, MCGFloat p_opacity);
+void MCCanvasGetOpacity(const MCCanvas &p_canvas, MCCanvasFloat &r_opacity);
+void MCCanvasSetOpacity(MCCanvas &x_canvas, MCCanvasFloat p_opacity);
 void MCCanvasGetBlendModeAsString(const MCCanvas &p_canvas, MCStringRef &r_blend_mode);
 void MCCanvasSetBlendModeAsString(MCCanvas &x_canvas, MCStringRef p_blend_mode);
 void MCCanvasGetStippled(const MCCanvas &p_canvas, bool &r_stippled);
@@ -433,9 +454,9 @@ void MCCanvasSetImageResizeQualityAsString(MCCanvas &x_canvas, MCStringRef p_qua
 
 // Operations
 void MCCanvasCanvasTransform(MCCanvas &x_canvas, const MCCanvasTransform &p_transform);
-void MCCanvasCanvasScale(MCCanvas &x_canvas, MCGFloat p_scale_x, MCGFloat p_scale_y);
-void MCCanvasCanvasRotate(MCCanvas &x_canvas, MCGFloat p_angle);
-void MCCanvasCanvasTranslate(MCCanvas &x_canvas, MCGFloat p_x, MCGFloat p_y);
+void MCCanvasCanvasScale(MCCanvas &x_canvas, MCCanvasFloat p_scale_x, MCCanvasFloat p_scale_y);
+void MCCanvasCanvasRotate(MCCanvas &x_canvas, MCCanvasFloat p_angle);
+void MCCanvasCanvasTranslate(MCCanvas &x_canvas, MCCanvasFloat p_x, MCCanvasFloat p_y);
 void MCCanvasCanvasSaveState(MCCanvas &x_canvas);
 void MCCanvasCanvasRestore(MCCanvas &x_canvas);
 void MCCanvasCanvasBeginLayer(MCCanvas &x_canvas);
