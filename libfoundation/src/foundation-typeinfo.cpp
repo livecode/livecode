@@ -115,6 +115,13 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 	i = 0;
 	while ((p_field_count >= 0) ? (i < p_field_count) : (p_fields[i].name != nil))
 	{
+		/* Verify that the field names are all caselessly distinct.
+		 * N.b. O(N^2) algorithm is inefficient, but will only be run
+		 * in debug builds and will only happen once per type. */
+		for (uindex_t j = 0; j < i; ++j)
+		{
+			MCAssert(!MCNameIsEqualTo(p_fields[i] . name, p_fields[j] . name));
+		}
         self -> record . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> record . fields[i] . type = MCValueRetain(p_fields[i] . type);
 		++i;

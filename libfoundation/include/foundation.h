@@ -2212,6 +2212,9 @@ bool MCRecordIsMutable(MCRecordRef self);
 bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
 bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
 
+bool MCRecordEncodeAsArray(MCRecordRef record, MCArrayRef & r_array);
+bool MCRecordDecodeFromArray(MCArrayRef array, MCTypeInfoRef p_typeinfo, MCRecordRef & r_record);
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  HANDLER DEFINITIONS
