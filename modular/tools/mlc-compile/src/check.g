@@ -84,7 +84,8 @@
         CheckBindings(Body)
 
     'rule' CheckBindings(STATEMENT'call(_, Handler, Arguments)):
-        /* B4 */ CheckBindingIsVariableOrHandlerId(Handler)
+        -- TODO: Implement indirect calls
+        /* B4 */ CheckBindingIsHandlerId(Handler)
         CheckBindings(Arguments)
 
     --
@@ -93,7 +94,8 @@
         /* BE1 */ CheckBindingIsVariableOrHandlerId(Name)
 
     'rule' CheckBindings(EXPRESSION'call(_, Handler, Arguments)):
-        /* BE2 */ CheckBindingIsVariableOrHandlerId(Handler)
+        -- TODO: Implement indirect calls
+        /* BE2 */ CheckBindingIsHandlerId(Handler)
         CheckBindings(Arguments)
         
     --
