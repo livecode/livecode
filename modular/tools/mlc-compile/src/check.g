@@ -673,6 +673,9 @@
         ||
             ComputeRModeOfSyntaxMethodArguments(Parameters, Arguments)
         |)
+
+    'rule' CheckSyntaxMethod(Class, method(Position, Name, Arguments)):
+        -- fails if the id isn't a handler id (i.e. is error)
         
 'condition' IsLValueSyntaxMethodBinding(SYNTAXCONSTANTLIST)
 
@@ -937,7 +940,7 @@
 
 --------------------------------------------------------------------------------
 
-'action' QueryHandlerIdSignature(ID -> SIGNATURE)
+'condition' QueryHandlerIdSignature(ID -> SIGNATURE)
 
     'rule' QueryHandlerIdSignature(Id -> Signature)
         QueryId(Id -> symbol(Info))
