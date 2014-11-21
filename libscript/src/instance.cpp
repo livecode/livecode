@@ -191,12 +191,12 @@ bool MCScriptThrowNotABooleanError(MCScriptModuleRef module, uindex_t address, M
     return MCErrorThrowGeneric();
 }
 
-bool MCScriptThrowWrongNumberOfArgumentsForInvokeError(MCScriptModuleRef module, uindex_t address, MCScriptHandlerDefinition *def, uindex_t arity)
+bool MCScriptThrowWrongNumberOfArgumentsForInvokeError(MCScriptModuleRef module, uindex_t address, MCScriptDefinition *def, uindex_t arity)
 {
     return MCErrorThrowGeneric();
 }
 
-bool MCScriptThrowInvalidValueForArgumentError(MCScriptModuleRef module, uindex_t address, MCScriptHandlerDefinition *def, uindex_t index, MCValueRef value)
+bool MCScriptThrowInvalidValueForArgumentError(MCScriptModuleRef module, uindex_t address, MCScriptDefinition *def, uindex_t index, MCValueRef value)
 {
     return MCErrorThrowGeneric();
 }
@@ -675,6 +675,85 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
 
 static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
 {
+    uindex_t t_result_reg;
+    t_result_reg = p_arguments[0];
+    
+    p_arity -= 1;
+    p_arguments += 1;
+    
+    if (MCHandlerTypeInfoGetParameterCount(p_handler -> signature) != p_arity)
+        return MCScriptThrowWrongNumberOfArgumentsForInvokeError(x_frame -> instance -> module, x_frame -> address, p_handler, p_arity - 1);
+    
+    uindex_t t_pindex;
+    uintptr_t t_result;
+    uintptr_t t_in[16];
+    uintptr_t t_out[16];
+    t_pindex = 0;
+    for(uindex_t i = 0; i < p_arity; i++)
+    {
+        MCHandlerTypeFieldMode t_mode;
+        t_mode = MCHandlerTypeInfoGetParameterMode(p_handler -> signature, i);
+        
+        MCTypeInfoRef t_type;
+        t_type = MCHandlerTypeInfoGetParameterType(p_handler -> signature, i);
+        
+        uintptr_t t_actual_value;
+        if (t_mode != kMCHandlerTypeFieldModeOut)
+        {
+            MCValueRef t_value;
+            t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i]);
+        
+            MCTypeInfoRef t_source_type;
+            t_source_type = MCValueGetTypeInfo(t_value);
+            
+            if (!MCTypeInfoConforms(t_source_type, t_type))
+                return MCScriptThrowInvalidValueForArgumentError(x_frame -> instance -> module, x_frame -> address, p_handler, i, t_value);
+            
+            if (MCTypeInfoIsPrimitive(t_type))
+            {
+                switch(MCPrimitiveTypeInfoGetTypeCode(t_type))
+                {
+                    case kMCPrimitiveTypeCodeBool:
+                        t_actual_value = (t_value == kMCTrue ? 1 : 0);
+                        break;
+                    case kMCPrimitiveTypeCodeInt:
+                        t_actual_value = (uintptr_t)MCNumberFetchAsInteger((MCNumberRef)t_value);
+                        break;
+                    case kMCPrimitiveTypeCodeUInt:
+                        t_actual_value = (uintptr_t)MCNumberFetchAsUnsignedInteger((MCNumberRef)t_value);
+                        break;
+                    case kMCPrimitiveTypeCodeFloat:
+                    {
+                        float t_float;
+                        t_float = (uintptr_t)MCNumberFetchAsReal((MCNumberRef)t_value);
+                        MCMemoryCopy(&t_actual_value, &t_value, sizeof(t_value));
+                    }
+                    break;
+                    case kMCPrimitiveTypeCodePointer:
+                    case kMCPrimitiveTypeCodeDouble:
+                        // TODO: Double and pointer
+                        t_actual_value = 0;
+                        MCAssert(false);
+                        break;
+                }
+            }
+            else
+                t_actual_value = (uintptr_t)t_value;
+        }
+        else
+            t_actual_value = 0;
+        
+        if (t_mode == kMCHandlerTypeFieldModeIn)
+            t_in[t_pindex] = t_actual_value;
+        else
+        {
+            t_in[t_pindex] = (uintptr_t)&t_out[t_pindex];
+            t_out[t_pindex] = t_actual_value;
+        }
+        
+        t_pindex += 1;
+    }
+    
 	return false;
 }
 
