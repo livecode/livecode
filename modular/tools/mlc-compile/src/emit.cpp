@@ -368,20 +368,23 @@ void EmitOutputSyntaxMethodArgument(void)
 
 void EmitContextSyntaxMethodArgument(void)
 {
-    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 2);
+    // TODO: Sort out context
+    // MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 2);
     
     MCLog("[Emit] ContextSyntaxMethodArgument()", 0);
 }
 
 void EmitIteratorSyntaxMethodArgument(void)
 {
-    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 3);
+    // TODO: Sort out iterate
+    //MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 3);
     
     MCLog("[Emit] IteratorSyntaxMethodArgument()", 0);
 }
 
 void EmitContainerSyntaxMethodArgument(void)
 {
+    // TODO: Sort out iterate
     MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 4);
     
     MCLog("[Emit] ContainerSyntaxMethodArgument()", 0);
@@ -508,7 +511,9 @@ void EmitOptionalType(long base_index, long& r_new_index)
 
 void EmitPointerType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNullTypeInfo, r_new_index))
+    MCAutoTypeInfoRef t_typeinfo;
+    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodePointer, &t_typeinfo);
+    if (!define_typeinfo(*t_typeinfo, r_new_index))
         return;
     
     MCLog("[Emit] PointerType(-> %ld)", r_new_index);
@@ -516,7 +521,9 @@ void EmitPointerType(long& r_new_index)
 
 void EmitBoolType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNullTypeInfo, r_new_index))
+    MCAutoTypeInfoRef t_typeinfo;
+    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeBool, &t_typeinfo);
+    if (!define_typeinfo(*t_typeinfo, r_new_index))
         return;
     
     MCLog("[Emit] BoolType(-> %ld)", r_new_index);
@@ -524,7 +531,9 @@ void EmitBoolType(long& r_new_index)
 
 void EmitIntType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNullTypeInfo, r_new_index))
+    MCAutoTypeInfoRef t_typeinfo;
+    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeInt, &t_typeinfo);
+    if (!define_typeinfo(*t_typeinfo, r_new_index))
         return;
     
     MCLog("[Emit] IntType(-> %ld)", r_new_index);
@@ -532,7 +541,9 @@ void EmitIntType(long& r_new_index)
 
 void EmitUIntType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNullTypeInfo, r_new_index))
+    MCAutoTypeInfoRef t_typeinfo;
+    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeUInt, &t_typeinfo);
+    if (!define_typeinfo(*t_typeinfo, r_new_index))
         return;
     
     MCLog("[Emit] UIntType(-> %ld)", r_new_index);
@@ -540,7 +551,9 @@ void EmitUIntType(long& r_new_index)
 
 void EmitFloatType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNullTypeInfo, r_new_index))
+    MCAutoTypeInfoRef t_typeinfo;
+    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeFloat, &t_typeinfo);
+    if (!define_typeinfo(*t_typeinfo, r_new_index))
         return;
     
     MCLog("[Emit] FloatType(-> %ld)", r_new_index);
@@ -548,7 +561,9 @@ void EmitFloatType(long& r_new_index)
 
 void EmitDoubleType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNullTypeInfo, r_new_index))
+    MCAutoTypeInfoRef t_typeinfo;
+    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeDouble, &t_typeinfo);
+    if (!define_typeinfo(*t_typeinfo, r_new_index))
         return;
     
     MCLog("[Emit] DoubleType(-> %ld)", r_new_index);
@@ -849,66 +864,46 @@ void EmitCurrentRepeatLabels(long& r_next, long& r_exit)
 
 //////////
 
-void EmitBeginCall(long index, long resultreg)
-{
-    MCScriptBeginCallInModule(s_builder, index, resultreg);
-    MCLog("[Emit] BeginCall(%ld, %ld)", index, resultreg);
-}
-
-void EmitBeginIndirectCall(long reg, long resultreg)
-{
-    MCScriptBeginIndirectCallInModule(s_builder, reg, resultreg);
-    MCLog("[Emit] BeginIndirectCall(%ld, %ld)", reg, resultreg);
-}
-
-void EmitContinueCall(long reg)
-{
-    MCScriptContinueCallInModule(s_builder, reg);
-    MCLog("[Emit] ContinueCall(%ld)", reg);
-}
-
-void EmitEndCall(void)
-{
-    MCScriptEndCallInModule(s_builder);
-    MCLog("[Emit] EndCall()", 0);
-}
-
-//////////
-
 void EmitBeginBuiltinInvoke(long name, long resultreg)
 {
-    // TODO
-    MCScriptBeginCallInModule(s_builder, 0, resultreg);
+    // TODO: Builtin invoke
+    MCScriptBeginInvokeInModule(s_builder, 0, resultreg);
     MCLog("[Emit] BeginBuiltinInvoke(%s, %ld)", (const char *)name, resultreg);
 }
 
 void EmitBeginExecuteInvoke(long index, long contextreg, long resultreg)
 {
+    MCScriptBeginInvokeInModule(s_builder, index, resultreg);
     MCLog("[Emit] BeginExecuteInvoke(%ld, %ld, %ld)", index, contextreg, resultreg);
 }
 
 void EmitBeginEvaluateInvoke(long index, long contextreg, long outputreg)
 {
+    MCScriptBeginInvokeEvaluateInModule(s_builder, index, outputreg);
     MCLog("[Emit] BeginEvaluateInvoke(%ld, %ld, %ld)", index, contextreg, outputreg);
 }
 
 void EmitBeginAssignInvoke(long index, long contextreg, long inputreg)
 {
+    MCScriptBeginInvokeAssignInModule(s_builder, index, inputreg);
     MCLog("[Emit] BeginAssignInvoke(%ld, %ld, %ld)", index, contextreg, inputreg);
 }
 
 void EmitBeginIterateInvoke(long index, long contextreg, long iteratorreg, long containerreg)
 {
+    // TODO: Iterate invoke
     MCLog("[Emit] BeginIterateInvoke(%ld, %ld, %ld)", index, contextreg, iteratorreg, containerreg);
 }
 
 void EmitContinueInvoke(long reg)
 {
+    MCScriptContinueInvokeInModule(s_builder, reg);
     MCLog("[Emit] ContinueInvoke(%ld)", reg);
 }
 
 void EmitEndInvoke(void)
 {
+    MCScriptEndInvokeInModule(s_builder);
     MCLog("[Emit] EndInvoke()", 0);
 }
 
