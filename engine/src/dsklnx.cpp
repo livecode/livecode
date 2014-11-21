@@ -1852,7 +1852,7 @@ public:
         dlclose(p_module);
     }
 
-    virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+    virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_lnx */ LEGACY_SYSTEM
         uint4 flag = files ? S_IFREG : S_IFDIR;
@@ -1912,9 +1912,15 @@ public:
         closedir(dirptr);
         *dptr = tptr;
 #endif /* MCS_getentries_dsk_lnx */
+		MCAutoStringRefAsSysString t_path;
+		if (p_folder == nil)
+			/* UNCHECKED */ t_path . Lock(MCSTR("."));
+		else
+			/* UNCHECKED */ t_path . Lock(p_folder);
+
         DIR *dirptr;
 
-        if ((dirptr = opendir(".")) == NULL)
+        if ((dirptr = opendir(*t_path)) == NULL)
         {
             return false;
         }
@@ -1923,6 +1929,19 @@ public:
 
         bool t_success = true;
 
+		/* For each directory entry, we need to construct a path that can
+		 * be passed to stat(2).  Allocate a buffer large enough for the
+		 * path, a path separator character, and any possible filename. */
+		size_t t_path_len = strlen(*t_path);
+		size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
+		char *t_entry_path = new char[t_entry_path_len + 1];
+		strcpy (t_entry_path, *t_path);
+		if ((*t_path)[t_path_len - 1] != '/')
+		{
+			strcat (t_entry_path, "/");
+			++t_path_len;
+		}
+
         while (t_success && (direntp = readdir64(dirptr)) != NULL)
         {
             MCSystemFolderEntry p_entry;
@@ -1930,8 +1949,14 @@ public:
 
             if (MCCStringEqual(direntp->d_name, "."))
                 continue;
+
+			/* Truncate the directory entry path buffer to the path
+			 * separator. */
+			t_entry_path[t_path_len] = 0;
+			strcat (t_entry_path, direntp->d_name);
+
             struct stat buf;
-            stat(direntp->d_name, &buf);
+            stat(t_entry_path, &buf);
 
             if (direntp -> d_name != nil && MCStringCreateWithSysString(direntp -> d_name, t_unicode_name))
                 p_entry.name = t_unicode_name;
@@ -1951,6 +1976,7 @@ public:
             MCValueRelease(t_unicode_name);
         }
 
+		delete t_entry_path;
         closedir(dirptr);
 
         return t_success;

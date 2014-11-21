@@ -3345,7 +3345,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return uint32_t(u64);
 	}
 
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_w32 */ LEGACY_SYSTEM
         p_context . clear();
@@ -3410,20 +3410,23 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         WIN32_FIND_DATAW data;
         HANDLE ffh;            //find file handle
 
-        MCAutoStringRef t_curdir_native;
+        MCAutoStringRef t_dir_native;
         MCAutoStringRef t_search_path;
         
 		// The search is done in the current directory
-		MCS_getcurdir_native(&t_curdir_native);
+		if (p_folder == nil)
+			MCS_getcurdir_native(&t_dir_native);
+		else
+			&t_dir_native = MCValueRetain (p_folder);
 
 		// Search strings need to have a wild-card added
-		if (MCStringGetCharAtIndex(*t_curdir_native, MCStringGetLength(*t_curdir_native) - 1) == '\\')
+		if (MCStringGetCharAtIndex(*t_dir_native, MCStringGetLength(*t_dir_native) - 1) == '\\')
 		{
-			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@*", *t_curdir_native);
+			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@*", *t_dir_native);
 		}
 		else
 		{
-			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@\\*", *t_curdir_native);
+			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@\\*", *t_dir_native);
 		}
 
 		// Iterate through the contents of the directory

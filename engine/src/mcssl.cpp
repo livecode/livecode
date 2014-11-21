@@ -760,7 +760,7 @@ bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path)
 	
 	t_context.ssl_context = p_ssl_ctx;
 	
-	t_success = MCsystem -> ListFolderEntries((MCSystemListFolderEntriesCallback)cert_dir_list_callback, &t_context);
+	t_success = MCsystem -> ListFolderEntries(nil, (MCSystemListFolderEntriesCallback)cert_dir_list_callback, &t_context);
 	
 	return t_success;
 }

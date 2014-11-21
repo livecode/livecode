@@ -503,7 +503,7 @@ struct MCSystemInterface
 	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol) = 0;
 	virtual void UnloadModule(MCSysModuleHandle p_module) = 0;
 	
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context) = 0;
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context) = 0;
     
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native) = 0;
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path) = 0;

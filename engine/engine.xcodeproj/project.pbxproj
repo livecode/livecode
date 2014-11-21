@@ -976,6 +976,10 @@
 		BEF618A9194720B600C42C57 /* notify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DC66D8A1045D41700D1CFA3 /* notify.cpp */; };
 		BEFD23CD17B5233800B9310D /* sysspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD486613BA28DA008DB91F /* sysspec.cpp */; };
 		BEFE81D417B2B32800C9D14F /* dskmac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEFE81D317B2B32800C9D14F /* dskmac.cpp */; };
+		C74A5C9B1A16400100A114D9 /* stackdir_codec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74A5C951A16400100A114D9 /* stackdir_codec.cpp */; };
+		C74A5C9C1A16400100A114D9 /* stackdir_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74A5C961A16400100A114D9 /* stackdir_common.cpp */; };
+		C74A5C9D1A16400100A114D9 /* stackdir_load.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74A5C971A16400100A114D9 /* stackdir_load.cpp */; };
+		C74A5C9E1A16400100A114D9 /* stackdir_save.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74A5C991A16400100A114D9 /* stackdir_save.cpp */; };
 		E8189EB615D17E8000194F25 /* exec-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8189EB515D17E8000194F25 /* exec-logic.cpp */; };
 		E82206E1184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E82206E2184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
@@ -2249,6 +2253,12 @@
 		BEF3110417C217C30073D70F /* dskw32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskw32.cpp; path = src/dskw32.cpp; sourceTree = "<group>"; };
 		BEF618A71947205D00C42C57 /* srvtheme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvtheme.cpp; path = src/srvtheme.cpp; sourceTree = "<group>"; };
 		BEFE81D317B2B32800C9D14F /* dskmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmac.cpp; path = src/dskmac.cpp; sourceTree = "<group>"; };
+		C74A5C951A16400100A114D9 /* stackdir_codec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackdir_codec.cpp; path = src/stackdir_codec.cpp; sourceTree = "<group>"; };
+		C74A5C961A16400100A114D9 /* stackdir_common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackdir_common.cpp; path = src/stackdir_common.cpp; sourceTree = "<group>"; };
+		C74A5C971A16400100A114D9 /* stackdir_load.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackdir_load.cpp; path = src/stackdir_load.cpp; sourceTree = "<group>"; };
+		C74A5C981A16400100A114D9 /* stackdir_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stackdir_private.h; path = src/stackdir_private.h; sourceTree = "<group>"; };
+		C74A5C991A16400100A114D9 /* stackdir_save.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackdir_save.cpp; path = src/stackdir_save.cpp; sourceTree = "<group>"; };
+		C74A5C9A1A16400100A114D9 /* stackdir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stackdir.h; path = src/stackdir.h; sourceTree = "<group>"; };
 		E8189EB515D17E8000194F25 /* exec-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-logic.cpp"; path = "src/exec-logic.cpp"; sourceTree = "<group>"; };
 		E82206E0184F810A00117D10 /* resolution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resolution.cpp; path = src/resolution.cpp; sourceTree = "<group>"; };
 		E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacy_spec.cpp; path = src/legacy_spec.cpp; sourceTree = "<group>"; };
@@ -2594,6 +2604,7 @@
 				E8A4910A170F1F9F00769C7A /* Core - Misc */,
 				E8A49109170F192000769C7A /* Core - Objects */,
 				E8A7EEFD16FC985100C39491 /* Core - Security */,
+				C74A5C9F1A16400700A114D9 /* Core - VCS */,
 				4DE7ED0B13B33B4E002634F5 /* Desktop */,
 				4D6F92F012AA5C8000026A72 /* Desktop - Linux */,
 				4D6F92ED12AA5C7800026A72 /* Desktop - Mac */,
@@ -3464,6 +3475,19 @@
 				BE2424371953536F00982E53 /* IMarketBillingService.java */,
 			);
 			name = billing;
+			sourceTree = "<group>";
+		};
+		C74A5C9F1A16400700A114D9 /* Core - VCS */ = {
+			isa = PBXGroup;
+			children = (
+				C74A5C951A16400100A114D9 /* stackdir_codec.cpp */,
+				C74A5C961A16400100A114D9 /* stackdir_common.cpp */,
+				C74A5C971A16400100A114D9 /* stackdir_load.cpp */,
+				C74A5C981A16400100A114D9 /* stackdir_private.h */,
+				C74A5C991A16400100A114D9 /* stackdir_save.cpp */,
+				C74A5C9A1A16400100A114D9 /* stackdir.h */,
+			);
+			name = "Core - VCS";
 			sourceTree = "<group>";
 		};
 		E864B42215BDABB400F5361C /* Legacy */ = {
@@ -4825,6 +4849,7 @@
 				4DEE2AAB0FDE42710009423C /* express.cpp in Sources */,
 				4DEE2AAD0FDE42710009423C /* external.cpp in Sources */,
 				4DEE2AAE0FDE42710009423C /* field.cpp in Sources */,
+				C74A5C9D1A16400100A114D9 /* stackdir_load.cpp in Sources */,
 				4DEE2AAF0FDE42710009423C /* fieldf.cpp in Sources */,
 				4DEE2AB00FDE42710009423C /* fieldh.cpp in Sources */,
 				4DEE2AB10FDE42710009423C /* fields.cpp in Sources */,
@@ -4928,6 +4953,7 @@
 				4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */,
 				4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */,
 				4D05B91113E06AB4001CD82A /* dskosxmain.mm in Sources */,
+				C74A5C9C1A16400100A114D9 /* stackdir_common.cpp in Sources */,
 				4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */,
 				4DDB66721413A02000E5C84C /* redraw.cpp in Sources */,
 				BEA3DA2419F0219200D9D2B3 /* color.cpp in Sources */,
@@ -4959,6 +4985,7 @@
 				4D67BB24164A76090092CF4C /* exec-ide.cpp in Sources */,
 				4D67BBB9164AB2C50092CF4C /* exec-printing.cpp in Sources */,
 				4D606EB01670C781004A71AA /* exec-debugging.cpp in Sources */,
+				C74A5C9B1A16400100A114D9 /* stackdir_codec.cpp in Sources */,
 				4D83866416789E27003BEC7C /* exec-dialog.cpp in Sources */,
 				4D83866516789E27003BEC7C /* exec-server.cpp in Sources */,
 				4DDC6CA716A2CFBF007B6879 /* syntax.cpp in Sources */,
@@ -5013,6 +5040,7 @@
 				BE369208195880F300386D30 /* desktop-ans.cpp in Sources */,
 				BE369209195880F300386D30 /* desktop-dc.cpp in Sources */,
 				BE36920A195880F300386D30 /* desktop-image.cpp in Sources */,
+				C74A5C9E1A16400100A114D9 /* stackdir_save.cpp in Sources */,
 				BE36920B195880F300386D30 /* desktop-menu.cpp in Sources */,
 				BE36920C195880F300386D30 /* desktop-pasteboard.cpp in Sources */,
 				BE36920D195880F300386D30 /* desktop-stack.cpp in Sources */,

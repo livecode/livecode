@@ -944,7 +944,7 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 	t_state.details = p_detailed;
 	t_state.list = *t_list;
 	
-	if (!MCsystem -> ListFolderEntries(MCS_getentries_callback, (void*)&t_state))
+	if (!MCsystem -> ListFolderEntries(nil, MCS_getentries_callback, (void*)&t_state))
 		return false;
     
 	if (!MCListCopy(*t_list, r_list))

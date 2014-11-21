@@ -90,7 +90,7 @@ struct MCAndroidSystem: public MCSystemInterface
 	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
 	virtual void UnloadModule(MCSysModuleHandle p_module);
 	
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context);
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context);
     
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native);
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path);
