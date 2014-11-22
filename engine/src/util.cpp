@@ -1397,7 +1397,7 @@ void MCU_snap(int2 &p)
 // MDW-2014-07-09: [[ oval_points ]] need to factor in startAngle and arcAngle
 // this is now used for both roundrects and ovals
 void MCU_roundrect(MCPoint *&points, uint2 &npoints,
-                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle)
+                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags)
 {
 	uint2 i, j, k, count;
 	uint2 x, y;
@@ -1448,8 +1448,15 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 			(arclength < 0 && count < startAngle) ||
 			(arclength < 0 && count > arcAngle+startAngle) )
 		{
-			x = origin_horiz;
-			y = origin_vert;
+			if (flags & F_OPAQUE)
+			{
+				x = origin_horiz;
+				y = origin_vert;
+			}
+			else
+			{
+				break;
+			}
 		}
 		else if (count < 90) // quadrant 1
 		{
