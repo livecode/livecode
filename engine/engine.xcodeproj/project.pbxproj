@@ -541,6 +541,7 @@
 		766E3299180EE4ED00CF7FCF /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3295180EE4E000CF7FCF /* imagelist.cpp */; };
 		766E329A180EE4EE00CF7FCF /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3293180EE4E000CF7FCF /* graphicscontext.cpp */; };
 		766E329B180EE4EE00CF7FCF /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3295180EE4E000CF7FCF /* imagelist.cpp */; };
+		72B67C511A0BBDF600BB2594 /* mac-theme.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72B67C501A0BBDF600BB2594 /* mac-theme.mm */; };
 		76CCAA7C19800BCD00C79271 /* mac-qt-recorder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */; };
 		76CCAA7E1980152A00C79271 /* platform-recorder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */; };
 		76D47DE918030E50006F9102 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */; };
@@ -1719,6 +1720,9 @@
 		768D66A21762087500F203A3 /* mbliphonesensor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonesensor.mm; path = src/mbliphonesensor.mm; sourceTree = "<group>"; };
 		768D66A31762087500F203A3 /* mbliphonestore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonestore.mm; path = src/mbliphonestore.mm; sourceTree = "<group>"; };
 		768D66A41762087500F203A3 /* mbliphonetextmessaging.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextmessaging.mm; path = src/mbliphonetextmessaging.mm; sourceTree = "<group>"; };
+		7269EC371A13D1DE000723DB /* linux-theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "linux-theme.cpp"; path = "src/linux-theme.cpp"; sourceTree = "<group>"; };
+		7269EC421A162199000723DB /* windows-theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "windows-theme.cpp"; path = "src/windows-theme.cpp"; sourceTree = "<group>"; };
+		72B67C501A0BBDF600BB2594 /* mac-theme.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-theme.mm"; path = "src/mac-theme.mm"; sourceTree = "<group>"; };
 		76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-recorder.mm"; path = "src/mac-qt-recorder.mm"; sourceTree = "<group>"; };
 		76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-recorder.cpp"; path = "src/platform-recorder.cpp"; sourceTree = "<group>"; };
 		76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field-chunk.cpp"; path = "src/exec-interface-field-chunk.cpp"; sourceTree = "<group>"; };
@@ -2309,6 +2313,7 @@
 				76EF31A3181E7CCE00FAC195 /* osxcisupport.mm */,
 				76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */,
 				4CF4B87F199E0C1C00E33AEE /* coretextlayout.mm */,
+				72B67C501A0BBDF600BB2594 /* mac-theme.mm */,
 				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
 				4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */,
 				4D03C2160BC5803900026EA7 /* osxfiles.cpp */,
@@ -2366,6 +2371,7 @@
 				A04643F40BAAA63A0030A830 /* w32text.cpp */,
 				A04643F60BAAA63A0030A830 /* w32theme.cpp */,
 				4DAC56770D869D1600CE5BAF /* w32transfer.cpp */,
+				7269EC421A162199000723DB /* windows-theme.cpp */,
 			);
 			name = "Desktop - Windows";
 			sourceTree = "<group>";
@@ -2413,6 +2419,7 @@
 				4D77411A1226B930001C9150 /* lnxtransfer.h */,
 				4DFECFE413CEF2DB00288995 /* lnxprefix.h */,
 				4DFED11E13CEFC5400288995 /* lnxtheme.h */,
+				7269EC371A13D1DE000723DB /* linux-theme.cpp */,
 			);
 			name = "Desktop - Linux";
 			sourceTree = "<group>";
@@ -4296,6 +4303,7 @@
 				4DEE2AD50FDE42710009423C /* objectstream.cpp in Sources */,
 				4DEE2AD60FDE42710009423C /* objptr.cpp in Sources */,
 				4DEE2AD70FDE42710009423C /* opensslsocket.cpp in Sources */,
+				72B67C511A0BBDF600BB2594 /* mac-theme.mm in Sources */,
 				4DEE2AD80FDE42710009423C /* operator.cpp in Sources */,
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
 				4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */,

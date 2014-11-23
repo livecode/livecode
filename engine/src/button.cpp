@@ -1684,7 +1684,7 @@ void MCButton::setrect(const MCRectangle &nrect)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCButton::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCButton::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	uint2 fheight;
 	uint2 j = 0;
@@ -1962,7 +1962,7 @@ Exec_stat MCButton::getprop_legacy(uint4 parid, Properties which, MCExecPoint& e
         break;
 #endif /* MCButton::getprop */
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
@@ -4750,4 +4750,63 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		}
 	}
 	return IO_NORMAL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformControlType MCButton::getcontroltype()
+{
+    MCPlatformControlType t_type;
+    t_type = kMCPlatformControlTypeButton;
+    if (getstyleint(flags) == F_MENU)
+    {
+        t_type = kMCPlatformControlTypeMenu;
+        switch (menumode)
+        {
+            case WM_POPUP:
+                t_type = kMCPlatformControlTypePopupMenu;
+                break;
+                
+            case WM_OPTION:
+                t_type = kMCPlatformControlTypeOptionMenu;
+                break;
+                
+            case WM_COMBO:
+                t_type = kMCPlatformControlTypeComboBox;
+                break;
+                
+            case WM_PULLDOWN:
+                t_type = kMCPlatformControlTypePulldownMenu;
+                break;
+                
+            default:
+                break;
+        }
+    }
+    else if (menucontrol != MENUCONTROL_NONE)
+    {
+        t_type = kMCPlatformControlTypeMenuItem;
+    }
+    
+    return t_type;
+}
+
+MCPlatformControlPart MCButton::getcontrolsubpart()
+{
+    return kMCPlatformControlPartNone;
+}
+
+MCPlatformControlState MCButton::getcontrolstate()
+{
+    int t_state;
+    t_state = MCControl::getcontrolstate();
+    
+    if (flags & F_DEFAULT)
+        t_state |= kMCPlatformControlStateDefault;
+    
+    if (t_state & kMCPlatformControlStateMouseFocus
+        && MCbuttonstate & 1)
+        t_state |= kMCPlatformControlStatePressed;
+    
+    return MCPlatformControlState(t_state);
 }

@@ -1215,4 +1215,83 @@ void MCPlatformSwitchFocusToView(MCPlatformWindowRef window, uint32_t id);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum MCPlatformControlType
+{
+    kMCPlatformControlTypeGlobal = 0,   // Global theming (i.e the theme inherited by all controls)
+    kMCPlatformControlTypeButton,       // Buttons not covered more specifically
+    kMCPlatformControlTypeCheckbox,     // On-off tick box
+    kMCPlatformControlTypeRadioButton,  // One-of-many selection button
+    kMCPlatformControlTypeTabButton,    // Selector buttons on a tab control
+    kMCPlatformControlTypeTabPane,      // Pane area of a tab control
+    kMCPlatformControlTypeLabel,        // Non-modifiable text
+    kMCPlatformControlTypeInputField,   // Standard text entry box
+    kMCPlatformControlTypeList,         // Itemised text box
+    kMCPlatformControlTypeMenu,         // Menus not covered more specifically
+    kMCPlatformControlTypeMenuItem,     // Item within a menu
+    kMCPlatformControlTypeOptionMenu,   // Select a single item
+    kMCPlatformControlTypePulldownMenu, // Menu as found in menubars
+    kMCPlatformControlTypeComboBox,     // Input field/option menu combination
+    kMCPlatformControlTypePopupMenu,    // Menu as appears when right-clicking
+    kMCPlatformControlTypeProgressBar,  // Visual indicator of progress
+    kMCPlatformControlTypeScrollBar,    // For scrolling, apparently
+    kMCPlatformControlTypeSlider,       // Selects a value between two extremes
+    kMCPlatformControlTypeSpinArrows,   // Up-down arrows for value adjustment
+    kMCPlatformControlTypeWindow,       // Windows can have theming props too
+    kMCPlatformControlTypeMessageBox    // Pop-up alert dialogue
+};
+
+typedef unsigned int MCPlatformControlState;
+enum
+{
+    kMCPlatformControlStateDisabled         = (1<<0),   // Control is disabled
+    kMCPlatformControlStateOn               = (1<<1),   // Control is "on" (e.g. ticked checkbox)
+    kMCPlatformControlStateMouseOver        = (1<<2),   // Mouse is within the control's bounds
+    kMCPlatformControlStateMouseFocus       = (1<<3),   // Control has mouse focus
+    kMCPlatformControlStatePressed          = (1<<5),   // Mouse is down (and this control has mouse focus)
+    kMCPlatformControlStateDefault          = (1<<6),   // Control is the default action
+    kMCPlatformControlStateReadOnly         = (1<<7),   // Control is not modifiable
+    kMCPlatformControlStateSelected         = (1<<8),   // Control is selected
+    kMCPlatformControlStateWindowActive     = (1<<9),   // Control is in focused window
+    
+    kMCPlatformControlStateCompatibility    = (1<<31),   // Use backwards-compatible theming
+    
+    kMCPlatformControlStateNormal           = kMCPlatformControlStateCompatibility
+};
+
+enum MCPlatformControlPart
+{
+    kMCPlatformControlPartNone              // No sub-part of the control
+};
+
+enum MCPlatformThemeProperty
+{
+    // These properties may vary by control type
+    kMCPlatformThemePropertyTextFont,               // [Font]       Font for text drawing
+    kMCPlatformThemePropertyTextColor,              // [Color]      Text color
+    kMCPlatformThemePropertyTextSize,               // [Integer]    Text point size
+    kMCPlatformThemePropertyBackgroundColor,        // [Color]      Background color
+    kMCPlatformThemePropertyAlpha,                  // [Integer]    Whole-control transparency
+    kMCPlatformThemePropertyShadowColor,            // [Color]      Color for control shadow
+    kMCPlatformThemePropertyBorderColor,            // [Color]      Color for control borders
+    kMCPlatformThemePropertyFocusColor,             // [Color]      Color for keyboard focus indicator
+    kMCPlatformThemePropertyTopEdgeColor,           // [Color]      Color for the top edge of 3D controls
+    kMCPlatformThemePropertyBottomEdgeColor,        // [Color]      Color for the bottom edge of 3D controls
+    kMCPlatformThemePropertyLeftEdgeColor,          // [Color]      Color for the left edge of 3D controls
+    kMCPlatformThemePropertyRightEdgeColor          // [Color]      Color for the right edge of 3D controls
+};
+
+enum MCPlatformThemePropertyType
+{
+    kMCPlatformThemePropertyTypeFont,
+    kMCPlatformThemePropertyTypeColor,
+    kMCPlatformThemePropertyTypeInteger
+};
+
+bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&);
+bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&);
+bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&);
+bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef&);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif

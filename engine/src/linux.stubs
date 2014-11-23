@@ -91,6 +91,9 @@ pango libpango-1.0.so.0
 	pango_matrix_translate: (pointer, double, double) -> ()
 	pango_matrix_concat: (pointer, pointer) -> ()
 
+	pango_font_description_get_family: (pointer) -> (pointer)
+	pango_font_description_get_size: (pointer) -> (integer)
+
 lcms liblcms.so.1
 	cmsOpenProfileFromFile: (pointer, pointer) -> (pointer)
 	cmsOpenProfileFromMem: (pointer, integer) -> (pointer)
@@ -460,6 +463,17 @@ gtk libgtk-x11-2.0.so.0
 	gtk_im_context_set_surrounding: (pointer, pointer, integer, integer) -> ()
 	gtk_im_context_set_use_preedit: (pointer, integer) -> ()
 	gtk_im_context_get_preedit_string: (pointer, pointer, pointer, pointer) -> ()
+
+	gtk_widget_get_style: (pointer) -> (pointer)
+	gtk_check_button_new: () -> (pointer)
+	gtk_radio_button_new: (pointer) -> (pointer)
+	gtk_tree_view_new: () -> (pointer)
+	gtk_menu_new: () -> (pointer)
+	gtk_combo_box_new: () -> (pointer)
+	gtk_combo_box_new_with_entry: () -> (pointer)
+	gtk_fixed_get_type: (pointer) -> (pointer)
+	gtk_fixed_put: (pointer, pointer, integer, integer) -> ()
+	gtk_menu_item_new: () -> (pointer)
 
 gtk_print_dialog libgtk-x11-2.0.so.0
 	gtk_print_unix_dialog_new: (pointer, pointer) -> (pointer)

@@ -516,7 +516,7 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
 {
 	uint2 i;
 	int graphic_type;
@@ -829,7 +829,7 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 		break;
 #endif /* MCGraphic::getprop */
 	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }
