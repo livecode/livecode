@@ -145,7 +145,7 @@ extern void MCU_snap(int2 &p);
 
 // MDW-2014-07-06: [[ oval_points ]]
 extern void MCU_roundrect(MCPoint *&points, uint2 &npoints,
-                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle);
+                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags);
 #ifdef LEGACY_EXEC
 extern void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &);
 #endif
