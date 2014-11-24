@@ -1065,7 +1065,8 @@ LCError LCArrayListKeysOnPath(LCArrayRef p_array, unsigned int p_options, const 
 	for(unsigned int i = 0; i < t_key_count && t_error == kLCErrorNone; i++)
 	{
 		MCVariableRef t_key_var;
-		t_error = (LCError)s_interface -> variable_iterate_keys(t_var, &t_iterator, kMCOptionAsCString, &t_keys[i], &t_key_var);
+        // SN-2014-11-24: [[ Bug 14057 ]] Get the keys are UTF-8 C-string, to allow Unicode keys to be understood.
+		t_error = (LCError)s_interface -> variable_iterate_keys(t_var, &t_iterator, kMCOptionAsUTF8CString, &t_keys[i], &t_key_var);
 		if (t_error == kLCErrorNone)
 		{
 			t_keys[i] = strdup(t_keys[i]);
