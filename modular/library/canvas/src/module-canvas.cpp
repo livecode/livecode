@@ -481,10 +481,170 @@ void MCCanvasTypesInitialize();
 void MCCanvasTypesFinalize();
 
 MCTypeInfoRef kMCCanvasColorTypeInfo;
+MCTypeInfoRef kMCCanvasTypeInfo;
 
-//////////
+////////////////////////////////////////////////////////////////////////////////
 
-// MCCanvasColorRef
+bool MCCanvasBlendModeFromString(MCStringRef p_string, MCGBlendMode &r_blend_mode);
+bool MCCanvasBlendModeToString(MCGBlendMode p_blend_mode, MCStringRef &r_string);
+bool MCCanvasEffectTypeToString(MCCanvasEffectType p_type, MCStringRef &r_string);
+bool MCCanvasGradientTypeFromString(MCStringRef p_string, MCGGradientFunction &r_type);
+bool MCCanvasGradientTypeToString(MCGGradientFunction p_type, MCStringRef &r_string);
+bool MCCanvasFillRuleFromString(MCStringRef p_string, MCGFillRule &r_fill_rule);
+bool MCCanvasFillRuleToString(MCGFillRule p_fill_rule, MCStringRef &r_string);
+bool MCCanvasImageFilterFromString(MCStringRef p_string, MCGImageFilter &r_filter);
+bool MCCanvasImageFilterToString(MCGImageFilter p_filter, MCStringRef &r_string);
+bool MCCanvasPathCommandToString(MCGPathCommand p_command, MCStringRef &r_string);
+bool MCCanvasPathCommandFromString(MCStringRef p_string, MCGPathCommand &r_command);
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCNameRef s_blend_mode_map[kMCGBlendModeCount];
+static MCNameRef s_transform_matrix_keys[9];
+static MCNameRef s_effect_type_map[_MCCanvasEffectTypeCount];
+static MCNameRef s_effect_property_map[_MCCanvasEffectPropertyCount];
+static MCNameRef s_gradient_type_map[kMCGGradientFunctionCount];
+static MCNameRef s_canvas_fillrule_map[kMCGFillRuleCount];
+static MCNameRef s_image_filter_map[kMCGImageFilterCount];
+static MCNameRef s_path_command_map[kMCGPathCommandCount];
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCCanvasStringsInitialize();
+void MCCanvasStringsFinalize();
+
+void MCCanvasModuleInitialize()
+{
+	MCCanvasStringsInitialize();
+	MCCanvasTypesInitialize();
+}
+
+void MCCanvasModuleFinalize()
+{
+	MCCanvasStringsFinalize();
+	MCCanvasTypesFinalize();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCGColor MCCanvasColorToMCGColor(MCCanvasColorRef p_color)
+{
+	MCCanvasFloat t_red, t_green, t_blue, t_alpha;
+	MCCanvasColorGetRGBA(p_color, t_red, t_green, t_blue, t_alpha);
+	return MCGColorMakeRGBA(t_red, t_green, t_blue, t_alpha);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Rectangle
+
+// Constructors
+
+void MCCanvasRectangleMakeWithLTRB(MCCanvasFloat p_left, MCCanvasFloat p_top, MCCanvasFloat p_right, MCCanvasFloat p_bottom, MCCanvasRectangle &r_rect)
+{
+	r_rect = MCGRectangleMake(p_left, p_top, p_right - p_left, p_bottom - p_top);
+}
+
+// Properties
+
+void MCCanvasRectangleGetLeft(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_left)
+{
+	r_left = p_rect.origin.x;
+}
+
+void MCCanvasRectangleSetLeft(MCCanvasRectangle &x_rect, MCCanvasFloat p_left)
+{
+	x_rect.origin.x = p_left;
+}
+
+void MCCanvasRectangleGetTop(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_top)
+{
+	r_top = p_rect.origin.y;
+}
+
+void MCCanvasRectangleSetTop(MCCanvasRectangle &x_rect, MCCanvasFloat p_top)
+{
+	x_rect.origin.y = p_top;
+}
+
+void MCCanvasRectangleGetRight(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_right)
+{
+	r_right = p_rect.origin.x + p_rect.size.width;
+}
+
+void MCCanvasRectangleSetRight(MCCanvasRectangle &x_rect, MCCanvasFloat p_right)
+{
+	x_rect.origin.x = p_right - x_rect.size.width;
+}
+
+void MCCanvasRectangleGetBottom(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_bottom)
+{
+	r_bottom = p_rect.origin.y + p_rect.size.height;
+}
+
+void MCCanvasRectangleSetBottom(MCCanvasRectangle &x_rect, MCCanvasFloat p_bottom)
+{
+	x_rect.origin.y = p_bottom - x_rect.size.height;
+}
+
+void MCCanvasRectangleGetWidth(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_width)
+{
+	r_width = p_rect.size.width;
+}
+
+void MCCanvasRectangleSetWidth(MCCanvasRectangle &x_rect, MCCanvasFloat p_width)
+{
+	x_rect.size.width = p_width;
+}
+
+void MCCanvasRectangleGetHeight(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_height)
+{
+	r_height = p_rect.size.height;
+}
+
+void MCCanvasRectangleSetHeight(MCCanvasRectangle &x_rect, MCCanvasFloat p_height)
+{
+	x_rect.size.height = p_height;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Point
+
+// Constructors
+
+void MCCanvasPointMake(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasPoint &r_point)
+{
+	r_point = MCGPointMake(p_x, p_y);
+}
+
+// Properties
+
+void MCCanvasPointGetX(const MCCanvasPoint &p_point, MCCanvasFloat &r_x)
+{
+	r_x = p_point.x;
+}
+
+void MCCanvasPointSetX(MCCanvasPoint &x_point, MCCanvasFloat p_x)
+{
+	x_point.x = p_x;
+}
+
+void MCCanvasPointGetY(const MCCanvasPoint &p_point, MCCanvasFloat &r_y)
+{
+	r_y = p_point.y;
+}
+
+void MCCanvasPointSetY(MCCanvasPoint &x_point, MCCanvasFloat p_y)
+{
+	x_point.y = p_y;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Color
+
+// MCCanvasColorRef Type methods
 
 struct __MCCanvasColorImpl
 {
@@ -540,25 +700,7 @@ static bool __MCCanvasColorDescribe(MCValueRef p_value, MCStringRef &r_desc)
 	return false;
 }
 
-static MCValueCustomCallbacks kMCCanvasColorCustomValueCallbacks =
-{
-	false,
-	__MCCanvasColorDestroy,
-	__MCCanvasColorCopy,
-	__MCCanvasColorEqual,
-	__MCCanvasColorHash,
-	__MCCanvasColorDescribe,
-};
-
-void MCCanvasColorTypeInitialize()
-{
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasColorCustomValueCallbacks, kMCCanvasColorTypeInfo);
-}
-
-void MCCanvasColorTypeFinalize()
-{
-	MCValueRelease(kMCCanvasColorTypeInfo);
-}
+//////////
 
 bool MCCanvasColorCreateRGBA(MCCanvasFloat p_red, MCCanvasFloat p_green, MCCanvasFloat p_blue, MCCanvasFloat p_alpha, MCCanvasColorRef &r_color)
 {
@@ -665,167 +807,6 @@ void MCCanvasColorDelete(MCCanvasColorRef p_color)
 {
 	MCValueRelease(p_color);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCCanvasBlendModeFromString(MCStringRef p_string, MCGBlendMode &r_blend_mode);
-bool MCCanvasBlendModeToString(MCGBlendMode p_blend_mode, MCStringRef &r_string);
-bool MCCanvasEffectTypeToString(MCCanvasEffectType p_type, MCStringRef &r_string);
-bool MCCanvasGradientTypeFromString(MCStringRef p_string, MCGGradientFunction &r_type);
-bool MCCanvasGradientTypeToString(MCGGradientFunction p_type, MCStringRef &r_string);
-bool MCCanvasFillRuleFromString(MCStringRef p_string, MCGFillRule &r_fill_rule);
-bool MCCanvasFillRuleToString(MCGFillRule p_fill_rule, MCStringRef &r_string);
-bool MCCanvasImageFilterFromString(MCStringRef p_string, MCGImageFilter &r_filter);
-bool MCCanvasImageFilterToString(MCGImageFilter p_filter, MCStringRef &r_string);
-bool MCCanvasPathCommandToString(MCGPathCommand p_command, MCStringRef &r_string);
-bool MCCanvasPathCommandFromString(MCStringRef p_string, MCGPathCommand &r_command);
-
-////////////////////////////////////////////////////////////////////////////////
-
-static MCNameRef s_blend_mode_map[kMCGBlendModeCount];
-static MCNameRef s_transform_matrix_keys[9];
-static MCNameRef s_effect_type_map[_MCCanvasEffectTypeCount];
-static MCNameRef s_effect_property_map[_MCCanvasEffectPropertyCount];
-static MCNameRef s_gradient_type_map[kMCGGradientFunctionCount];
-static MCNameRef s_canvas_fillrule_map[kMCGFillRuleCount];
-static MCNameRef s_image_filter_map[kMCGImageFilterCount];
-static MCNameRef s_path_command_map[kMCGPathCommandCount];
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCCanvasStringsInitialize();
-void MCCanvasStringsFinalize();
-
-void MCCanvasModuleInitialize()
-{
-	MCCanvasStringsInitialize();
-	MCCanvasTypesInitialize();
-}
-
-void MCCanvasModuleFinalize()
-{
-	MCCanvasStringsFinalize();
-	MCCanvasTypesFinalize();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MCGColor MCCanvasColorToMCGColor(MCCanvasColorRef p_color)
-{
-	MCCanvasFloat t_red, t_green, t_blue, t_alpha;
-	MCCanvasColorGetRGBA(p_color, t_red, t_green, t_blue, t_alpha);
-	return MCGColorMakeRGBA(t_red, t_green, t_blue, t_alpha);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Rectangle
-
-// Constructors
-
-void MCCanvasRectangleMakeWithLTRB(MCCanvasFloat p_left, MCCanvasFloat p_top, MCCanvasFloat p_right, MCCanvasFloat p_bottom, MCCanvasRectangle &r_rect)
-{
-	r_rect = MCGRectangleMake(p_left, p_top, p_right - p_left, p_bottom - p_top);
-}
-
-// Properties
-
-void MCCanvasRectangleGetLeft(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_left)
-{
-	r_left = p_rect.origin.x;
-}
-
-void MCCanvasRectangleSetLeft(MCCanvasRectangle &x_rect, MCCanvasFloat p_left)
-{
-	x_rect.origin.x = p_left;
-}
-
-void MCCanvasRectangleGetTop(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_top)
-{
-	r_top = p_rect.origin.y
-}
-
-void MCCanvasRectangleSetTop(MCCanvasRectangle &x_rect, MCCanvasFloat p_top)
-{
-	x_rect.origin.y = p_top;
-}
-
-void MCCanvasRectangleGetRight(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_right)
-{
-	r_right = p_rect.origin.x + p_rect.size.width;
-}
-
-void MCCanvasRectangleSetRight(MCCanvasRectangle &x_rect, MCCanvasFloat p_right)
-{
-	x_rect.origin.x = p_right - x_rect.size.width;
-}
-
-void MCCanvasRectangleGetBottom(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_bottom)
-{
-	r_bottom = p_rect.origin.y + p_rect.size.height;
-}
-
-void MCCanvasRectangleSetBottom(MCCanvasRectangle &x_rect, MCCanvasFloat p_bottom)
-{
-	x_rect.origin.y = p_bottom - x_rect.size.height;
-}
-
-void MCCanvasRectangleGetWidth(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_width)
-{
-	r_width = p_rect.size.width;
-}
-
-void MCCanvasRectangleSetWidth(MCCanvasRectangle &x_rect, MCCanvasFloat p_width)
-{
-	x_rect.size.width = p_width;
-}
-
-void MCCanvasRectangleGetHeight(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_height)
-{
-	r_height = p_rect.size.height;
-}
-
-void MCCanvasRectangleSetHeight(MCCanvasRectangle &x_rect, MCCanvasFloat p_height)
-{
-	x_rect.size.height = p_height;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Point
-
-// Constructors
-
-void MCCanvasPointMake(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasPoint &r_point)
-{
-	r_point = MCGPointMake(p_x, p_y);
-}
-
-// Properties
-
-void MCCanvasPointGetX(const MCCanvasPoint &p_point, MCCanvasFloat &r_x)
-{
-	r_x = p_point.x;
-}
-
-void MCCanvasPointSetX(MCCanvasPoint &x_point, MCCanvasFloat p_x)
-{
-	x_point.x = p_x;
-}
-
-void MCCanvasPointGetY(const MCCanvasPoint &p_point, MCCanvasFloat &r_y)
-{
-	r_y = p_point.y;
-}
-
-void MCCanvasPointSetY(MCCanvasPoint &x_point, MCCanvasFloat p_y)
-{
-	x_point.y = p_y;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Color
 
 // Constructors
 
@@ -2227,15 +2208,46 @@ void MCCanvasEffectSetAngle(MCCanvasEffect &x_effect, MCCanvasFloat p_angle)
 
 // Canvas
 
-// Properties
+struct MCCanvasProperties
+{
+	MCCanvasPaint paint;
+	MCGFillRule fill_rule;
+	bool antialias;
+	MCCanvasFloat opacity;
+	MCGBlendMode blend_mode;
+	bool stippled;
+	MCGImageFilter image_filter;
+};
 
-void MCCanvasDirtyProperties(MCCanvas &p_canvas)
+struct __MCCanvasImpl
+{
+	bool paint_changed : 1;
+	bool fill_rule_changed : 1;
+	bool antialias_changed : 1;
+	bool opacity_changed : 1;
+	bool blend_mode_changed : 1;
+	bool stippled_changed : 1;
+	
+	MCCanvasProperties *prop_stack;
+	uint32_t prop_max;
+	uint32_t prop_index;
+	
+	MCCanvasProperties &props() { return prop_stack[prop_index]; }
+	const MCCanvasProperties &props() const { return prop_stack[prop_index]; }
+	
+	MCGContextRef context;
+};
+
+void MCCanvasDirtyProperties(__MCCanvasImpl &p_canvas)
 {
 	p_canvas.antialias_changed = p_canvas.blend_mode_changed = p_canvas.fill_rule_changed = p_canvas.opacity_changed = p_canvas.paint_changed = p_canvas.stippled_changed = true;
 }
 
 bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 {
+	bool t_success;
+	t_success = true;
+	
 	MCCanvasProperties t_properties;
 	t_properties.antialias = true;
 	t_properties.blend_mode = kMCGBlendModeSourceOver;
@@ -2246,25 +2258,34 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 	t_properties.image_filter = kMCGImageFilterMedium;
 	
 	MCCanvasColorRef t_black;
-	/* UNCHECKED */ MCCanvasColorCreateRGBA(0, 0, 0, 1, t_black);
-
+	t_black = nil;
+	
+	if (t_success)
+		t_success = MCCanvasColorCreateRGBA(0, 0, 0, 1, t_black);
+	
 	MCCanvasSolidPaint t_black_paint;
 	t_black_paint = nil;
-	MCCanvasSolidPaintCreateWithColor(t_black, t_black_paint);
-
-	MCCanvasColorDelete(t_black);
 	
-	if (t_black_paint == nil)
+	if (t_success)
 	{
-		// TODO - throw error
-		return false;
+		MCCanvasSolidPaintCreateWithColor(t_black, t_black_paint);
+		t_success = t_black_paint != nil;
 	}
 	
-	t_properties.paint = t_black_paint;
+	MCCanvasColorDelete(t_black);
 	
-	p_properties = t_properties;
+	if (t_success)
+	{
+		t_properties.paint = t_black_paint;
+		
+		p_properties = t_properties;
+	}
+	else
+	{
+		// TODO - throw error
+	}
 	
-	return true;
+	return t_success;
 }
 
 bool MCCanvasPropertiesCopy(MCCanvasProperties &p_src, MCCanvasProperties &p_dst)
@@ -2292,7 +2313,7 @@ void MCCanvasPropertiesClear(MCCanvasProperties &p_properties)
 	MCMemoryClear(&p_properties, sizeof(MCCanvasProperties));
 }
 
-bool MCCanvasPropertiesPush(MCCanvas &x_canvas)
+bool MCCanvasPropertiesPush(__MCCanvasImpl &x_canvas)
 {
 	if (x_canvas.prop_index <= x_canvas.prop_max)
 	{
@@ -2308,7 +2329,7 @@ bool MCCanvasPropertiesPush(MCCanvas &x_canvas)
 	return true;
 }
 
-bool MCCanvasPropertiesPop(MCCanvas &x_canvas)
+bool MCCanvasPropertiesPop(__MCCanvasImpl &x_canvas)
 {
 	if (x_canvas.prop_index == 0)
 		return false;
@@ -2321,125 +2342,213 @@ bool MCCanvasPropertiesPop(MCCanvas &x_canvas)
 	return true;
 }
 
-bool MCCanvasCreate(MCGContextRef p_context, MCCanvas &r_canvas)
+bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas)
 {
-	// init property stack with 5 levels
-	MCCanvas t_canvas;
+	bool t_success;
+	t_success = true;
 	
-	if (!MCMemoryNewArray(5, t_canvas.prop_stack))
-		return false;
+	MCCanvasRef t_canvas;
+	t_canvas = nil;
 	
-	t_canvas.prop_max = 5;
+	if (t_success)
+		t_success = MCValueCreateCustom(kMCCanvasTypeInfo, sizeof(__MCCanvasImpl), r_canvas);
 	
-	if (!MCCanvasPropertiesInit(t_canvas.prop_stack[0]))
+	__MCCanvasImpl *t_canvas_impl;
+	t_canvas_impl = nil;
+
+	if (t_success)
 	{
-		MCMemoryDeleteArray(t_canvas.prop_stack);
-		return false;
+		// init property stack with 5 levels
+		t_canvas_impl = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(t_canvas);
+		t_success = MCMemoryNewArray(5, t_canvas_impl->prop_stack);
 	}
 	
-	t_canvas.prop_index = 0;
-	t_canvas.context = p_context;
-	MCCanvasDirtyProperties(t_canvas);
+	if (t_success)
+	{
+		t_canvas_impl->prop_max = 5;
+		t_success = MCCanvasPropertiesInit(t_canvas_impl->prop_stack[0]);
+	}
+	
+	if (t_success)
+	{
+		t_canvas_impl->prop_index = 0;
+		t_canvas_impl->context = p_context;
+		MCCanvasDirtyProperties(*t_canvas_impl);
+		
+		r_canvas = t_canvas;
+	}
+	else
+		MCValueRelease(t_canvas);
+	
+	return t_success;
+}
 
-	r_canvas = t_canvas;
+// MCCanvasRef Type Methods
+
+void __MCCanvasDestroy(MCValueRef p_canvas)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(p_canvas);
+	
+	if (t_canvas->prop_stack != nil)
+	{
+		for (uint32_t i = 0; i <= t_canvas->prop_index; i++)
+			MCCanvasPropertiesClear(t_canvas->prop_stack[i]);
+		MCMemoryDeleteArray(t_canvas->prop_stack);
+	}
+}
+
+bool __MCCanvasCopy(MCValueRef p_canvas, bool p_release, MCValueRef &r_copy)
+{
+	if (p_release)
+		r_copy = p_canvas;
+	else
+		r_copy = MCValueRetain(p_canvas);
 	
 	return true;
 }
 
-void MCCanvasGetPaint(const MCCanvas &p_canvas, MCCanvasPaint &r_paint)
+bool __MCCanvasEqual(MCValueRef p_left, MCValueRef p_right)
 {
-	MCCanvasPaintType_Copy(&p_canvas.props().paint, &r_paint);
+	return p_left == p_right;
 }
 
-void MCCanvasSetPaint(MCCanvas &x_canvas, const MCCanvasPaint &p_paint)
+hash_t __MCCanvasHash(MCValueRef p_canvas)
 {
+	return (hash_t)p_canvas;
+}
+
+bool __MCCanvasDescribe(MCValueRef p_canvas, MCStringRef &r_description)
+{
+	// TODO - provide canvas description?
+	return false;
+}
+
+// Properties
+
+static inline MCCanvasProperties &MCCanvasGetProps(MCCanvasRef p_canvas)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(p_canvas);
+	
+	return t_canvas->props();
+}
+
+void MCCanvasGetPaint(MCCanvasRef p_canvas, MCCanvasPaint &r_paint)
+{
+	MCCanvasPaintType_Copy(&MCCanvasGetProps(p_canvas).paint, &r_paint);
+}
+
+void MCCanvasSetPaint(MCCanvasRef &x_canvas, const MCCanvasPaint &p_paint)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
 	MCCanvasPaint t_paint;
 	/* UNCHECKED */ MCCanvasPaintType_Copy(&p_paint, &t_paint);
 	
-	MCCanvasPaintType_Finalize(&x_canvas.props().paint);
-	x_canvas.props().paint = t_paint;
-	x_canvas.paint_changed = true;
+	MCCanvasPaintType_Finalize(&t_canvas->props().paint);
+	t_canvas->props().paint = t_paint;
+	t_canvas->paint_changed = true;
 }
 
-void MCCanvasGetFillRuleAsString(const MCCanvas &p_canvas, MCStringRef &r_string)
+void MCCanvasGetFillRuleAsString(MCCanvasRef p_canvas, MCStringRef &r_string)
 {
-	if (!MCCanvasFillRuleToString(p_canvas.props().fill_rule, r_string))
+	if (!MCCanvasFillRuleToString(MCCanvasGetProps(p_canvas).fill_rule, r_string))
 	{
 		// TODO - throw error
 	}
 }
 
-void MCCanvasSetFillRuleAsString(MCCanvas &x_canvas, MCStringRef p_string)
+void MCCanvasSetFillRuleAsString(MCCanvasRef &x_canvas, MCStringRef p_string)
 {
-	if (!MCCanvasFillRuleFromString(p_string, x_canvas.props().fill_rule))
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	if (!MCCanvasFillRuleFromString(p_string, t_canvas->props().fill_rule))
 	{
 		// TODO - throw error
 		return;
 	}
 	
-	x_canvas.fill_rule_changed = true;
+	t_canvas->fill_rule_changed = true;
 }
 
-void MCCanvasGetAntialias(const MCCanvas &p_canvas, bool &r_antialias)
+void MCCanvasGetAntialias(MCCanvasRef p_canvas, bool &r_antialias)
 {
-	r_antialias = p_canvas.props().antialias;
+	r_antialias = MCCanvasGetProps(p_canvas).antialias;
 }
 
-void MCCanvasSetAntialias(MCCanvas &x_canvas, bool p_antialias)
+void MCCanvasSetAntialias(MCCanvasRef &x_canvas, bool p_antialias)
 {
-	x_canvas.props().antialias = p_antialias;
-	x_canvas.antialias_changed = true;
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	t_canvas->props().antialias = p_antialias;
+	t_canvas->antialias_changed = true;
 }
 
-void MCCanvasGetOpacity(const MCCanvas &p_canvas, MCCanvasFloat &r_opacity)
+void MCCanvasGetOpacity(MCCanvasRef p_canvas, MCCanvasFloat &r_opacity)
 {
-	r_opacity = p_canvas.props().opacity;
+	r_opacity = MCCanvasGetProps(p_canvas).opacity;
 }
 
-void MCCanvasSetOpacity(MCCanvas &x_canvas, MCCanvasFloat p_opacity)
+void MCCanvasSetOpacity(MCCanvasRef &x_canvas, MCCanvasFloat p_opacity)
 {
-	x_canvas.props().opacity = p_opacity;
-	x_canvas.opacity_changed = true;
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	t_canvas->props().opacity = p_opacity;
+	t_canvas->opacity_changed = true;
 }
 
-void MCCanvasGetBlendModeAsString(const MCCanvas &p_canvas, MCStringRef &r_blend_mode)
+void MCCanvasGetBlendModeAsString(MCCanvasRef p_canvas, MCStringRef &r_blend_mode)
 {
-	/* UNCHECKED */ MCCanvasBlendModeToString(p_canvas.props().blend_mode, r_blend_mode);
+	/* UNCHECKED */ MCCanvasBlendModeToString(MCCanvasGetProps(p_canvas).blend_mode, r_blend_mode);
 }
 
-void MCCanvasSetBlendModeAsString(MCCanvas &x_canvas, MCStringRef p_blend_mode)
+void MCCanvasSetBlendModeAsString(MCCanvasRef &x_canvas, MCStringRef p_blend_mode)
 {
-	/* UNCHECKED */ MCCanvasBlendModeFromString(p_blend_mode, x_canvas.props().blend_mode);
-	x_canvas.blend_mode_changed = true;
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	/* UNCHECKED */ MCCanvasBlendModeFromString(p_blend_mode, t_canvas->props().blend_mode);
+	t_canvas->blend_mode_changed = true;
 }
 
-void MCCanvasGetStippled(const MCCanvas &p_canvas, bool &r_stippled)
+void MCCanvasGetStippled(MCCanvasRef p_canvas, bool &r_stippled)
 {
-	r_stippled = p_canvas.props().stippled;
+	r_stippled = MCCanvasGetProps(p_canvas).stippled;
 }
 
-void MCCanvasSetStippled(MCCanvas &x_canvas, bool p_stippled)
+void MCCanvasSetStippled(MCCanvasRef &x_canvas, bool p_stippled)
 {
-	x_canvas.props().stippled = p_stippled;
-	x_canvas.stippled_changed = true;
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	t_canvas->props().stippled = p_stippled;
+	t_canvas->stippled_changed = true;
 }
 
-void MCCanvasGetImageResizeQualityAsString(const MCCanvas &p_canvas, MCStringRef &r_quality)
+void MCCanvasGetImageResizeQualityAsString(MCCanvasRef p_canvas, MCStringRef &r_quality)
 {
-	/* UNCHECKED */ MCCanvasImageFilterToString(p_canvas.props().image_filter, r_quality);
+	/* UNCHECKED */ MCCanvasImageFilterToString(MCCanvasGetProps(p_canvas).image_filter, r_quality);
 }
 
-void MCCanvasSetImageResizeQualityAsString(MCCanvas &x_canvas, MCStringRef p_quality)
+void MCCanvasSetImageResizeQualityAsString(MCCanvasRef &x_canvas, MCStringRef p_quality)
 {
-	/* UNCHECKED */ MCCanvasImageFilterFromString(p_quality, x_canvas.props().image_filter);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	/* UNCHECKED */ MCCanvasImageFilterFromString(p_quality, t_canvas->props().image_filter);
 	// need to re-apply pattern paint if quality changes
-	if (x_canvas.props().paint->type == kMCCanvasPaintTypePattern)
-		x_canvas.paint_changed = true;
+	if (t_canvas->props().paint->type == kMCCanvasPaintTypePattern)
+		t_canvas->paint_changed = true;
 }
 
 //////////
 
-void MCCanvasApplySolidPaint(MCCanvas &x_canvas, const MCCanvasSolidPaint &p_paint)
+void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, const MCCanvasSolidPaint &p_paint)
 {
 	MCCanvasFloat t_red, t_green, t_blue, t_alpha;
 	MCCanvasColorGetRGBA(p_paint->color, t_red, t_green, t_blue, t_alpha);
@@ -2448,7 +2557,7 @@ void MCCanvasApplySolidPaint(MCCanvas &x_canvas, const MCCanvasSolidPaint &p_pai
 	MCGContextSetStrokeRGBAColor(x_canvas.context, t_red, t_green, t_blue, t_alpha);
 }
 
-void MCCanvasApplyPatternPaint(MCCanvas &x_canvas, const MCCanvasPattern &p_pattern)
+void MCCanvasApplyPatternPaint(__MCCanvasImpl &x_canvas, const MCCanvasPattern &p_pattern)
 {
 	MCGImageRef t_image;
 	t_image = nil;
@@ -2476,7 +2585,7 @@ void MCCanvasApplyPatternPaint(MCCanvas &x_canvas, const MCCanvasPattern &p_patt
 	
 }
 
-bool MCCanvasApplyGradientPaint(MCCanvas &x_canvas, const MCCanvasGradient &p_gradient)
+bool MCCanvasApplyGradientPaint(__MCCanvasImpl &x_canvas, const MCCanvasGradient &p_gradient)
 {
 	bool t_success;
 	t_success = true;
@@ -2508,7 +2617,7 @@ bool MCCanvasApplyGradientPaint(MCCanvas &x_canvas, const MCCanvasGradient &p_gr
 	return t_success;
 }
 
-void MCCanvasApplyPaint(MCCanvas &x_canvas, MCCanvasPaint &p_paint)
+void MCCanvasApplyPaint(__MCCanvasImpl &x_canvas, MCCanvasPaint &p_paint)
 {
 	switch (p_paint->type)
 	{
@@ -2532,7 +2641,7 @@ void MCCanvasApplyPaint(MCCanvas &x_canvas, MCCanvasPaint &p_paint)
 	}
 }
 
-void MCCanvasApplyChanges(MCCanvas &x_canvas)
+void MCCanvasApplyChanges(__MCCanvasImpl &x_canvas)
 {
 	if (x_canvas.paint_changed)
 	{
@@ -2576,60 +2685,72 @@ void MCCanvasApplyChanges(MCCanvas &x_canvas)
 
 //////////
 
-void MCCanvasCanvasTransform(MCCanvas &x_canvas, const MCCanvasTransform &p_transform)
+void MCCanvasCanvasTransform(MCCanvasRef &x_canvas, const MCCanvasTransform &p_transform)
 {
-	MCGContextConcatCTM(x_canvas.context, p_transform);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCGContextConcatCTM(t_canvas->context, p_transform);
 	// Need to re-apply pattern paint when transform changes
-	if (x_canvas.props().paint->type == kMCCanvasPaintTypePattern)
-		x_canvas.paint_changed = true;
+	if (t_canvas->props().paint->type == kMCCanvasPaintTypePattern)
+		t_canvas->paint_changed = true;
 }
 
-void MCCanvasCanvasScale(MCCanvas &x_canvas, MCCanvasFloat p_scale_x, MCCanvasFloat p_scale_y)
+void MCCanvasCanvasScale(MCCanvasRef &x_canvas, MCCanvasFloat p_scale_x, MCCanvasFloat p_scale_y)
 {
 	MCCanvasCanvasTransform(x_canvas, MCGAffineTransformMakeScale(p_scale_x, p_scale_y));
 }
 
-void MCCanvasCanvasRotate(MCCanvas &x_canvas, MCCanvasFloat p_angle)
+void MCCanvasCanvasRotate(MCCanvasRef &x_canvas, MCCanvasFloat p_angle)
 {
 	MCCanvasCanvasTransform(x_canvas, MCGAffineTransformMakeRotation(p_angle));
 }
 
-void MCCanvasCanvasTranslate(MCCanvas &x_canvas, MCCanvasFloat p_x, MCCanvasFloat p_y)
+void MCCanvasCanvasTranslate(MCCanvasRef &x_canvas, MCCanvasFloat p_x, MCCanvasFloat p_y)
 {
 	MCCanvasCanvasTransform(x_canvas, MCGAffineTransformMakeTranslation(p_x, p_y));
 }
 
 //////////
 
-void MCCanvasCanvasSaveState(MCCanvas &x_canvas)
+void MCCanvasCanvasSaveState(MCCanvasRef &x_canvas)
 {
-	if (!MCCanvasPropertiesPush(x_canvas))
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	if (!MCCanvasPropertiesPush(*t_canvas))
 	{
 		// TODO - throw error
 		return;
 	}
-	MCGContextSave(x_canvas.context);
+	MCGContextSave(t_canvas->context);
 }
 
-void MCCanvasCanvasRestore(MCCanvas &x_canvas)
+void MCCanvasCanvasRestore(MCCanvasRef &x_canvas)
 {
-	if (!MCCanvasPropertiesPop(x_canvas))
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	if (!MCCanvasPropertiesPop(*t_canvas))
 	{
 		// TODO - throw error
 		return;
 	}
-	MCGContextRestore(x_canvas.context);
+	MCGContextRestore(t_canvas->context);
 }
 
-void MCCanvasCanvasBeginLayer(MCCanvas &x_canvas)
+void MCCanvasCanvasBeginLayer(MCCanvasRef &x_canvas)
 {
-	MCCanvasApplyChanges(x_canvas);
-	if (!MCCanvasPropertiesPush(x_canvas))
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCCanvasApplyChanges(*t_canvas);
+	if (!MCCanvasPropertiesPush(*t_canvas))
 	{
 		// TODO - throw error
 		return;
 	}
-	MCGContextBegin(x_canvas.context, true);
+	MCGContextBegin(t_canvas->context, true);
 }
 
 static void MCPolarCoordsToCartesian(MCGFloat p_distance, MCGFloat p_angle, MCGFloat &r_x, MCGFloat &r_y)
@@ -2639,10 +2760,13 @@ static void MCPolarCoordsToCartesian(MCGFloat p_distance, MCGFloat p_angle, MCGF
 }
 
 
-void MCCanvasCanvasBeginLayerWithEffect(MCCanvas &x_canvas, const MCCanvasEffect &p_effect, const MCCanvasRectangle &p_rect)
+void MCCanvasCanvasBeginLayerWithEffect(MCCanvasRef &x_canvas, const MCCanvasEffect &p_effect, const MCCanvasRectangle &p_rect)
 {
-	MCCanvasApplyChanges(x_canvas);
-	if (!MCCanvasPropertiesPush(x_canvas))
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCCanvasApplyChanges(*t_canvas);
+	if (!MCCanvasPropertiesPush(*t_canvas))
 	{
 		// TODO - throw error
 		return;
@@ -2709,63 +2833,81 @@ void MCCanvasCanvasBeginLayerWithEffect(MCCanvas &x_canvas, const MCCanvasEffect
 			MCAssert(false);
 	}
 	
-	MCGContextBeginWithEffects(x_canvas.context, p_rect, t_effects);
+	MCGContextBeginWithEffects(t_canvas->context, p_rect, t_effects);
 }
 
-void MCCanvasCanvasEndLayer(MCCanvas &x_canvas)
+void MCCanvasCanvasEndLayer(MCCanvasRef &x_canvas)
 {
-	if (!MCCanvasPropertiesPop(x_canvas))
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	if (!MCCanvasPropertiesPop(*t_canvas))
 	{
 		// TODO - throw error
 		return;
 	}
-	MCGContextRestore(x_canvas.context);
+	MCGContextRestore(t_canvas->context);
 }
 
-void MCCanvasCanvasFill(MCCanvas &x_canvas)
+void MCCanvasCanvasFill(MCCanvasRef &x_canvas)
 {
-	MCCanvasApplyChanges(x_canvas);
-	MCGContextFill(x_canvas.context);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCCanvasApplyChanges(*t_canvas);
+	MCGContextFill(t_canvas->context);
 }
 
-void MCCanvasCanvasStroke(MCCanvas &x_canvas)
+void MCCanvasCanvasStroke(MCCanvasRef &x_canvas)
 {
-	MCCanvasApplyChanges(x_canvas);
-	MCGContextStroke(x_canvas.context);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCCanvasApplyChanges(*t_canvas);
+	MCGContextStroke(t_canvas->context);
 }
 
-void MCCanvasCanvasClipToRect(MCCanvas &x_canvas, const MCCanvasRectangle &p_rect)
+void MCCanvasCanvasClipToRect(MCCanvasRef &x_canvas, const MCCanvasRectangle &p_rect)
 {
-	MCGContextClipToRect(x_canvas.context, p_rect);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCGContextClipToRect(t_canvas->context, p_rect);
 }
 
-void MCCanvasCanvasAddPath(MCCanvas &x_canvas, const MCCanvasPath &p_path)
+void MCCanvasCanvasAddPath(MCCanvasRef &x_canvas, const MCCanvasPath &p_path)
 {
-	MCGContextAddPath(x_canvas.context, p_path.path);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCGContextAddPath(t_canvas->context, p_path.path);
 }
 
-void MCCanvasCanvasFillPath(MCCanvas &x_canvas, const MCCanvasPath &p_path)
+void MCCanvasCanvasFillPath(MCCanvasRef &x_canvas, const MCCanvasPath &p_path)
 {
 	MCCanvasCanvasAddPath(x_canvas, p_path);
 	MCCanvasCanvasFill(x_canvas);
 }
 
-void MCCanvasCanvasStrokePath(MCCanvas &x_canvas, const MCCanvasPath &p_path)
+void MCCanvasCanvasStrokePath(MCCanvasRef &x_canvas, const MCCanvasPath &p_path)
 {
 	MCCanvasCanvasAddPath(x_canvas, p_path);
 	MCCanvasCanvasStroke(x_canvas);
 }
 
-void MCCanvasCanvasDrawRectOfImage(MCCanvas &x_canvas, const MCCanvasImage &p_image, const MCCanvasRectangle &p_src_rect, const MCCanvasRectangle &p_dst_rect)
+void MCCanvasCanvasDrawRectOfImage(MCCanvasRef &x_canvas, const MCCanvasImage &p_image, const MCCanvasRectangle &p_src_rect, const MCCanvasRectangle &p_dst_rect)
 {
-	MCCanvasApplyChanges(x_canvas);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCCanvasApplyChanges(*t_canvas);
 
 	MCGImageRef t_image;
 	t_image = nil;
 	
 	MCGSize t_scale;
 	
-	if (MCImageRepLockForTransform(p_image, MCGContextGetDeviceTransform(x_canvas.context), 0, t_image, t_scale))
+	if (MCImageRepLockForTransform(p_image, MCGContextGetDeviceTransform(t_canvas->context), 0, t_image, t_scale))
 	{
 		MCGAffineTransform t_transform;
 		t_transform = MCGAffineTransformMakeScale(1.0 / t_scale.width, 1.0 / t_scale.height);
@@ -2773,13 +2915,13 @@ void MCCanvasCanvasDrawRectOfImage(MCCanvas &x_canvas, const MCCanvasImage &p_im
 		MCGRectangle t_src_rect;
 		t_src_rect = MCGRectangleScale(p_src_rect, t_scale.width, t_scale.height);
 		
-		MCGContextDrawRectOfImage(x_canvas.context, t_image, t_src_rect, p_dst_rect, x_canvas.props().image_filter);
+		MCGContextDrawRectOfImage(t_canvas->context, t_image, t_src_rect, p_dst_rect, t_canvas->props().image_filter);
 		
 		MCImageRepUnlock(p_image, t_image);
 	}
 }
 
-void MCCanvasCanvasDrawImage(MCCanvas &x_canvas, const MCCanvasImage &p_image, const MCCanvasRectangle p_dst_rect)
+void MCCanvasCanvasDrawImage(MCCanvasRef &x_canvas, const MCCanvasImage &p_image, const MCCanvasRectangle p_dst_rect)
 {
 	MCCanvasRectangle t_src_rect;
 	uint32_t t_width, t_height;
@@ -2789,41 +2931,78 @@ void MCCanvasCanvasDrawImage(MCCanvas &x_canvas, const MCCanvasImage &p_image, c
 	MCCanvasCanvasDrawRectOfImage(x_canvas, p_image, t_src_rect, p_dst_rect);
 }
 
-void MCCanvasCanvasMoveTo(MCCanvas &x_canvas, const MCCanvasPoint &p_point)
+void MCCanvasCanvasMoveTo(MCCanvasRef &x_canvas, const MCCanvasPoint &p_point)
 {
-	MCGContextMoveTo(x_canvas.context, p_point);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCGContextMoveTo(t_canvas->context, p_point);
 }
 
-void MCCanvasCanvasLineTo(MCCanvas &x_canvas, const MCCanvasPoint &p_point)
+void MCCanvasCanvasLineTo(MCCanvasRef &x_canvas, const MCCanvasPoint &p_point)
 {
-	MCGContextLineTo(x_canvas.context, p_point);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCGContextLineTo(t_canvas->context, p_point);
 }
 
-void MCCanvasCanvasCurveThroughPoint(MCCanvas &x_canvas, const MCCanvasPoint &p_through, const MCCanvasPoint &p_to)
+void MCCanvasCanvasCurveThroughPoint(MCCanvasRef &x_canvas, const MCCanvasPoint &p_through, const MCCanvasPoint &p_to)
 {
-	MCGContextQuadraticTo(x_canvas.context, p_through, p_to);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCGContextQuadraticTo(t_canvas->context, p_through, p_to);
 }
 
-void MCCanvasCanvasCurveThroughPoints(MCCanvas &x_canvas, const MCCanvasPoint &p_through_a, const MCCanvasPoint &p_through_b, const MCCanvasPoint &p_to)
+void MCCanvasCanvasCurveThroughPoints(MCCanvasRef &x_canvas, const MCCanvasPoint &p_through_a, const MCCanvasPoint &p_through_b, const MCCanvasPoint &p_to)
 {
-	MCGContextCubicTo(x_canvas.context, p_through_a, p_through_b, p_to);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCGContextCubicTo(t_canvas->context, p_through_a, p_through_b, p_to);
 }
 
-void MCCanvasCanvasClosePath(MCCanvas &x_canvas)
+void MCCanvasCanvasClosePath(MCCanvasRef &x_canvas)
 {
-	MCGContextCloseSubpath(x_canvas.context);
+	__MCCanvasImpl *t_canvas;
+	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(x_canvas);
+	
+	MCGContextCloseSubpath(t_canvas->context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCValueCustomCallbacks kMCCanvasColorCustomValueCallbacks =
+{
+	false,
+	__MCCanvasColorDestroy,
+	__MCCanvasColorCopy,
+	__MCCanvasColorEqual,
+	__MCCanvasColorHash,
+	__MCCanvasColorDescribe,
+};
+
+static MCValueCustomCallbacks kMCCanvasCustomValueCallbacks =
+{
+	true,
+	__MCCanvasDestroy,
+	__MCCanvasCopy,
+	__MCCanvasEqual,
+	__MCCanvasHash,
+	__MCCanvasDescribe,
+};
+
 void MCCanvasTypesInitialize()
 {
-	MCCanvasColorTypeInitialize();
+	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasColorCustomValueCallbacks, kMCCanvasColorTypeInfo);
+	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasCustomValueCallbacks, kMCCanvasTypeInfo);
 }
 
 void MCCanvasTypesFinalize()
 {
-	MCCanvasColorTypeFinalize();
+	MCValueRelease(kMCCanvasColorTypeInfo);
+	MCValueRelease(kMCCanvasTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
