@@ -91,7 +91,7 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 {
 	MCTypeInfoRef t_resolved_base;
 	t_resolved_base = nil;
-	if (p_base != nil)
+	if (p_base != kMCNullTypeInfo)
 	{
 		t_resolved_base = __MCTypeInfoResolve(p_base);
 		MCAssert((t_resolved_base -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
