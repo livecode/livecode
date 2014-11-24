@@ -6,8 +6,6 @@ module com.livecode.canvas
 
 type CanvasFloat is float
 
-// TODO - add initializers, getters & setters for rect, point, types
-
 // Point
 foreign handler MCCanvasPointType_Measure() as uint binds to "<builtin>"
 opaque type Point
@@ -99,6 +97,8 @@ opaque type GraphicEffect
 end type
 
 // Canvas
+// TODO - specify Canvas as custom value type kMCCanvasTypeInfo
+// ??? foreign type Canvas binds to kMCCanvasType
 foreign handler MCCanvasCanvasType_Measure() as uint binds to "<builtin>"
 opaque type Canvas
 	measure is MCCanvasCanvasType_Measure

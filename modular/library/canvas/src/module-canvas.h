@@ -208,36 +208,13 @@ uinteger_t MCCanvasEffectType_Measure(void);
 void MCCanvasEffectType_Finalize(MCCanvasEffect *p_effect);
 void MCCanvasEffectType_Copy(MCCanvasEffect *p_src, MCCanvasEffect *p_dst);
 
-// Canvas opaque type
-struct MCCanvasProperties
-{
-	MCCanvasPaint paint;
-	MCGFillRule fill_rule;
-	bool antialias;
-	MCCanvasFloat opacity;
-	MCGBlendMode blend_mode;
-	bool stippled;
-	MCGImageFilter image_filter;
-};
+// Canvas custom value type
 
-struct MCCanvas
-{
-	bool paint_changed : 1;
-	bool fill_rule_changed : 1;
-	bool antialias_changed : 1;
-	bool opacity_changed : 1;
-	bool blend_mode_changed : 1;
-	bool stippled_changed : 1;
-	
-	MCCanvasProperties *prop_stack;
-	uint32_t prop_max;
-	uint32_t prop_index;
-	
-	MCCanvasProperties &props() { return prop_stack[prop_index]; }
-	const MCCanvasProperties &props() const { return prop_stack[prop_index]; }
-	
-	MCGContextRef context;
-};
+typedef struct __MCCanvas *MCCanvasRef;
+
+extern MCTypeInfoRef kMCCanvasTypeInfo;
+
+bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -256,17 +233,17 @@ void MCCanvasRectangleMakeWithLTRB(MCCanvasFloat p_left, MCCanvasFloat p_top, MC
 
 // Properties
 void MCCanvasRectangleGetLeft(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_left);
-void MCCanvasRectangleSetLeft(MCCanvaRectangle &x_rect, MCCanvasFloat p_left);
+void MCCanvasRectangleSetLeft(MCCanvasRectangle &x_rect, MCCanvasFloat p_left);
 void MCCanvasRectangleGetTop(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_top);
-void MCCanvasRectangleSetTop(MCCanvaRectangle &x_rect, MCCanvasFloat p_top);
+void MCCanvasRectangleSetTop(MCCanvasRectangle &x_rect, MCCanvasFloat p_top);
 void MCCanvasRectangleGetRight(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_right);
-void MCCanvasRectangleSetRight(MCCanvaRectangle &x_rect, MCCanvasFloat p_right);
+void MCCanvasRectangleSetRight(MCCanvasRectangle &x_rect, MCCanvasFloat p_right);
 void MCCanvasRectangleGetBottom(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_bottom);
-void MCCanvasRectangleSetBottom(MCCanvaRectangle &x_rect, MCCanvasFloat p_bottom);
+void MCCanvasRectangleSetBottom(MCCanvasRectangle &x_rect, MCCanvasFloat p_bottom);
 void MCCanvasRectangleGetWidth(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_width);
-void MCCanvasRectangleSetWidth(MCCanvaRectangle &x_rect, MCCanvasFloat p_width);
+void MCCanvasRectangleSetWidth(MCCanvasRectangle &x_rect, MCCanvasFloat p_width);
 void MCCanvasRectangleGetHeight(const MCCanvasRectangle &p_rect, MCCanvasFloat &r_height);
-void MCCanvasRectangleSetHeight(MCCanvaRectangle &x_rect, MCCanvasFloat p_height);
+void MCCanvasRectangleSetHeight(MCCanvasRectangle &x_rect, MCCanvasFloat p_height);
 
 //////////
 
@@ -474,44 +451,44 @@ void MCCanvasEffectSetAngle(MCCanvasEffect &x_effect, MCCanvasFloat p_angle);
 // Canvas
 
 // Properties
-void MCCanvasGetPaint(const MCCanvas &p_canvas, MCCanvasPaint &r_paint);
-void MCCanvasSetPaint(MCCanvas &x_canvas, const MCCanvasPaint &p_paint);
-void MCCanvasGetFillRuleAsString(const MCCanvas &p_canvas, MCStringRef &r_string);
-void MCCanvasSetFillRuleAsString(MCCanvas &x_canvas, MCStringRef p_string);
-void MCCanvasGetAntialias(const MCCanvas &p_canvas, bool &r_antialias);
-void MCCanvasSetAntialias(MCCanvas &x_canvas, bool p_antialias);
-void MCCanvasGetOpacity(const MCCanvas &p_canvas, MCCanvasFloat &r_opacity);
-void MCCanvasSetOpacity(MCCanvas &x_canvas, MCCanvasFloat p_opacity);
-void MCCanvasGetBlendModeAsString(const MCCanvas &p_canvas, MCStringRef &r_blend_mode);
-void MCCanvasSetBlendModeAsString(MCCanvas &x_canvas, MCStringRef p_blend_mode);
-void MCCanvasGetStippled(const MCCanvas &p_canvas, bool &r_stippled);
-void MCCanvasSetStippled(MCCanvas &x_canvas, bool p_stippled);
-void MCCanvasGetImageResizeQualityAsString(const MCCanvas &p_canvas, MCStringRef &r_quality);
-void MCCanvasSetImageResizeQualityAsString(MCCanvas &x_canvas, MCStringRef p_quality);
+void MCCanvasGetPaint(MCCanvasRef p_canvas, MCCanvasPaint &r_paint);
+void MCCanvasSetPaint(MCCanvasRef &x_canvas, const MCCanvasPaint &p_paint);
+void MCCanvasGetFillRuleAsString(MCCanvasRef p_canvas, MCStringRef &r_string);
+void MCCanvasSetFillRuleAsString(MCCanvasRef &x_canvas, MCStringRef p_string);
+void MCCanvasGetAntialias(MCCanvasRef p_canvas, bool &r_antialias);
+void MCCanvasSetAntialias(MCCanvasRef &x_canvas, bool p_antialias);
+void MCCanvasGetOpacity(MCCanvasRef p_canvas, MCCanvasFloat &r_opacity);
+void MCCanvasSetOpacity(MCCanvasRef &x_canvas, MCCanvasFloat p_opacity);
+void MCCanvasGetBlendModeAsString(MCCanvasRef p_canvas, MCStringRef &r_blend_mode);
+void MCCanvasSetBlendModeAsString(MCCanvasRef &x_canvas, MCStringRef p_blend_mode);
+void MCCanvasGetStippled(MCCanvasRef p_canvas, bool &r_stippled);
+void MCCanvasSetStippled(MCCanvasRef &x_canvas, bool p_stippled);
+void MCCanvasGetImageResizeQualityAsString(MCCanvasRef p_canvas, MCStringRef &r_quality);
+void MCCanvasSetImageResizeQualityAsString(MCCanvasRef &x_canvas, MCStringRef p_quality);
 
 // Operations
-void MCCanvasCanvasTransform(MCCanvas &x_canvas, const MCCanvasTransform &p_transform);
-void MCCanvasCanvasScale(MCCanvas &x_canvas, MCCanvasFloat p_scale_x, MCCanvasFloat p_scale_y);
-void MCCanvasCanvasRotate(MCCanvas &x_canvas, MCCanvasFloat p_angle);
-void MCCanvasCanvasTranslate(MCCanvas &x_canvas, MCCanvasFloat p_x, MCCanvasFloat p_y);
-void MCCanvasCanvasSaveState(MCCanvas &x_canvas);
-void MCCanvasCanvasRestore(MCCanvas &x_canvas);
-void MCCanvasCanvasBeginLayer(MCCanvas &x_canvas);
+void MCCanvasCanvasTransform(MCCanvasRef &x_canvas, const MCCanvasTransform &p_transform);
+void MCCanvasCanvasScale(MCCanvasRef &x_canvas, MCCanvasFloat p_scale_x, MCCanvasFloat p_scale_y);
+void MCCanvasCanvasRotate(MCCanvasRef &x_canvas, MCCanvasFloat p_angle);
+void MCCanvasCanvasTranslate(MCCanvasRef &x_canvas, MCCanvasFloat p_x, MCCanvasFloat p_y);
+void MCCanvasCanvasSaveState(MCCanvasRef &x_canvas);
+void MCCanvasCanvasRestore(MCCanvasRef &x_canvas);
+void MCCanvasCanvasBeginLayer(MCCanvasRef &x_canvas);
 // TODO - work out effect area rect
-void MCCanvasCanvasBeginLayerWithEffect(MCCanvas &x_canvas, const MCCanvasEffect &p_effect, const MCCanvasRectangle &p_rect);
-void MCCanvasCanvasEndLayer(MCCanvas &x_canvas);
-void MCCanvasCanvasFill(MCCanvas &x_canvas);
-void MCCanvasCanvasFillPath(MCCanvas &x_canvas, const MCCanvasPath &p_path);
-void MCCanvasCanvasStroke(MCCanvas &x_canvas);
-void MCCanvasCanvasStrokePath(MCCanvas &x_canvas, const MCCanvasPath &p_path);
-void MCCanvasCanvasClipToRect(MCCanvas &x_canvas, const MCCanvasRectangle &p_rect);
-void MCCanvasCanvasAddPath(MCCanvas &x_canvas, const MCCanvasPath &p_path);
-void MCCanvasCanvasDrawRectOfImage(MCCanvas &x_canvas, const MCCanvasImage &p_image, const MCCanvasRectangle &p_src_rect, const MCCanvasRectangle &p_dst_rect, uint32_t p_quality);
-void MCCanvasCanvasMoveTo(MCCanvas &x_canvas, const MCCanvasPoint &p_point);
-void MCCanvasCanvasLineTo(MCCanvas &x_canvas, const MCCanvasPoint &p_point);
-void MCCanvasCanvasCurveThroughPoint(MCCanvas &x_canvas, const MCCanvasPoint &p_through, const MCCanvasPoint &p_to);
-void MCCanvasCanvasCurveThroughPoints(MCCanvas &x_canvas, const MCCanvasPoint &p_through_a, const MCCanvasPoint &p_through_b, const MCCanvasPoint &p_to);
-void MCCanvasCanvasClosePath(MCCanvas &x_canvas);
+void MCCanvasCanvasBeginLayerWithEffect(MCCanvasRef &x_canvas, const MCCanvasEffect &p_effect, const MCCanvasRectangle &p_rect);
+void MCCanvasCanvasEndLayer(MCCanvasRef &x_canvas);
+void MCCanvasCanvasFill(MCCanvasRef &x_canvas);
+void MCCanvasCanvasFillPath(MCCanvasRef &x_canvas, const MCCanvasPath &p_path);
+void MCCanvasCanvasStroke(MCCanvasRef &x_canvas);
+void MCCanvasCanvasStrokePath(MCCanvasRef &x_canvas, const MCCanvasPath &p_path);
+void MCCanvasCanvasClipToRect(MCCanvasRef &x_canvas, const MCCanvasRectangle &p_rect);
+void MCCanvasCanvasAddPath(MCCanvasRef &x_canvas, const MCCanvasPath &p_path);
+void MCCanvasCanvasDrawRectOfImage(MCCanvasRef &x_canvas, const MCCanvasImage &p_image, const MCCanvasRectangle &p_src_rect, const MCCanvasRectangle &p_dst_rect, uint32_t p_quality);
+void MCCanvasCanvasMoveTo(MCCanvasRef &x_canvas, const MCCanvasPoint &p_point);
+void MCCanvasCanvasLineTo(MCCanvasRef &x_canvas, const MCCanvasPoint &p_point);
+void MCCanvasCanvasCurveThroughPoint(MCCanvasRef &x_canvas, const MCCanvasPoint &p_through, const MCCanvasPoint &p_to);
+void MCCanvasCanvasCurveThroughPoints(MCCanvasRef &x_canvas, const MCCanvasPoint &p_through_a, const MCCanvasPoint &p_through_b, const MCCanvasPoint &p_to);
+void MCCanvasCanvasClosePath(MCCanvasRef &x_canvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 
