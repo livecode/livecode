@@ -880,10 +880,12 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (!t_state -> files != p_entry -> is_folder)
 		return true;
     
+#if defined(_MACOSX)
     // Mac doesn't list the '..' folder
     if (p_entry -> is_folder && MCListIsEmpty(t_state -> list)
             && !MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
         MCListAppendCString(t_state -> list, "..");
+#endif
 	
 	if (t_state -> details)
 	{
