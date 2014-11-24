@@ -201,6 +201,11 @@ bool MCScriptThrowInvalidValueForArgumentError(MCScriptModuleRef module, uindex_
     return MCErrorThrowGeneric();
 }
 
+bool MCScriptThrowUnableToResolveForeignHandlerError(MCScriptModuleRef module, uindex_t address, MCScriptDefinition *def)
+{
+    return MCErrorThrowGeneric();
+}
+
 ///////////
 
 MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *self)
@@ -268,7 +273,7 @@ bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
         MCScriptHandlerDefinition *t_handler_def;
         t_handler_def = MCScriptDefinitionAsHandler(t_getter);
         
-        /* LOAD CHECK */ __MCScriptAssert__(MCHandlerTypeInfoConformsToPropertyGetter(t_handler_def -> signature),
+        /* LOAD CHECK */ __MCScriptAssert__(MCHandlerTypeInfoConformsToPropertyGetter(self -> module -> types[t_handler_def -> type] -> typeinfo),
                                             "incorrect signature for property getter");
     
         if (!MCScriptCallHandlerOfInstanceInternal(self, t_handler_def, nil, 0, r_value))
@@ -311,10 +316,13 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
         MCScriptVariableDefinition *t_variable_def;
         t_variable_def = MCScriptDefinitionAsVariable(t_setter);
         
+        MCTypeInfoRef t_type;
+        t_type = self -> module -> types[t_variable_def -> type] -> typeinfo;
+        
         // Make sure the value is of the correct type - if not it is an error.
         // (The caller has to ensure things are converted as appropriate).
-        if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_variable_def -> type))
-            return MCScriptThrowInvalidValueForPropertyError(self -> module, p_property, t_variable_def -> type, p_value);
+        if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_type))
+            return MCScriptThrowInvalidValueForPropertyError(self -> module, p_property, t_type, p_value);
         
         // Variables are backed by an slot in the instance.
         uindex_t t_slot_index;
@@ -337,12 +345,12 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
         MCScriptHandlerDefinition *t_handler_def;
         t_handler_def = MCScriptDefinitionAsHandler(t_setter);
         
-        /* LOAD CHECK */ __MCScriptAssert__(MCHandlerTypeInfoConformsToPropertySetter(t_handler_def -> signature),
+        /* LOAD CHECK */ __MCScriptAssert__(MCHandlerTypeInfoConformsToPropertySetter(self -> module -> types[t_handler_def -> type] -> typeinfo),
                                             "incorrect signature for property setter");
         
         // Get the required type of the parameter.
         MCTypeInfoRef t_property_type;
-        t_property_type = MCHandlerTypeInfoGetParameterType(t_handler_def -> signature, 0);
+        t_property_type = MCHandlerTypeInfoGetParameterType(self -> module -> types[t_handler_def -> type] -> typeinfo, 0);
         
         // Make sure the value if of the correct type - if not it is an error.
         // (The caller has to ensure things are converted as appropriate).
@@ -375,7 +383,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
     
     // Get the signature of the handler.
     MCTypeInfoRef t_signature;
-    t_signature = t_definition -> signature;
+    t_signature = self -> module -> types[t_definition -> type] -> typeinfo;
     
     // Check the number of arguments.
     uindex_t t_required_param_count;
@@ -543,14 +551,14 @@ static inline void MCScriptResolveDefinitionInFrame(MCScriptFrame *p_frame, uind
 
 static inline MCValueRef MCScriptFetchFromLocalInFrame(MCScriptFrame *p_frame, uindex_t p_local)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> handler -> signature),
+    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
                                         "local out of range on fetch");
     return p_frame -> slots[p_local];
 }
 
 static inline void MCScriptStoreToLocalInFrame(MCScriptFrame *p_frame, uindex_t p_local, MCValueRef p_value)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> handler -> signature),
+    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
                                         "local out of range on store");
     if (p_frame -> slots[p_local] != p_value)
     {
@@ -561,16 +569,19 @@ static inline void MCScriptStoreToLocalInFrame(MCScriptFrame *p_frame, uindex_t 
 
 static inline bool MCScriptIsLocalInFrameOptional(MCScriptFrame *p_frame, uindex_t p_local)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> handler -> signature),
+    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
                                         "local out of range on optional check");
+    
+    MCTypeInfoRef t_handler_type;
+    t_handler_type = p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo;
     
     MCTypeInfoRef t_type;
     uindex_t t_param_count;
-    t_param_count = MCHandlerTypeInfoGetParameterCount(p_frame -> handler -> signature);
+    t_param_count = MCHandlerTypeInfoGetParameterCount(t_handler_type);
     if (p_local < t_param_count)
-        t_type = MCHandlerTypeInfoGetParameterType(p_frame -> handler -> signature, p_local);
+        t_type = MCHandlerTypeInfoGetParameterType(t_handler_type, p_local);
     else
-        t_type = p_frame -> handler -> locals[p_local - t_param_count];
+        t_type = p_frame -> instance -> module -> types[p_frame -> handler -> locals[p_local - t_param_count]] -> typeinfo;
     
     MCResolvedTypeInfo t_resolved_type;
     /* RESOLVE UNCHECKED */ MCTypeInfoResolve(t_type, t_resolved_type);
@@ -580,9 +591,21 @@ static inline bool MCScriptIsLocalInFrameOptional(MCScriptFrame *p_frame, uindex
 
 static inline bool MCScriptCanLocalInFrameHoldValue(MCScriptFrame *p_frame, uindex_t p_local, MCValueRef p_value)
 {
-    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> handler -> signature),
+    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
                                         "local out of range on type check");
-    return MCTypeInfoConforms(MCValueGetTypeInfo(p_value), p_frame -> handler -> locals[p_local]);
+
+    MCTypeInfoRef t_handler_type;
+    t_handler_type = p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo;
+    
+    MCTypeInfoRef t_type;
+    uindex_t t_param_count;
+    t_param_count = MCHandlerTypeInfoGetParameterCount(t_handler_type);
+    if (p_local < t_param_count)
+        t_type = MCHandlerTypeInfoGetParameterType(t_handler_type, p_local);
+    else
+        t_type = p_frame -> instance -> module -> types[p_frame -> handler -> locals[p_local - t_param_count]] -> typeinfo;
+    
+    return MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_type);
 }
 
 static inline MCValueRef MCScriptFetchFromRegisterInFrame(MCScriptFrame *p_frame, int p_register)
@@ -618,18 +641,21 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
     p_arity -= 1;
     p_arguments += 1;
     
-    if (MCHandlerTypeInfoGetParameterCount(p_handler -> signature) != p_arity)
+    MCTypeInfoRef t_signature;
+    t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
+    
+    if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_arity)
         return MCScriptThrowWrongNumberOfArgumentsForInvokeError(x_frame -> instance -> module, x_frame -> address, p_handler, p_arity - 1);
     
     for(uindex_t i = 0; i < p_arity; i++)
     {
-        if (MCHandlerTypeInfoGetParameterMode(p_handler -> signature, i) == kMCHandlerTypeFieldModeOut)
+        if (MCHandlerTypeInfoGetParameterMode(t_signature, i) == kMCHandlerTypeFieldModeOut)
             continue;
         
         MCValueRef t_value;
         t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i]);
         
-        if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), MCHandlerTypeInfoGetParameterType(p_handler -> signature, i)))
+        if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), MCHandlerTypeInfoGetParameterType(t_signature, i)))
             return MCScriptThrowInvalidValueForArgumentError(x_frame -> instance -> module, x_frame -> address, p_handler, i, t_value);
     }
         
@@ -640,10 +666,10 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
     bool t_needs_mapping;
     t_needs_mapping = false;
 
-    for(int i = 0; i < MCHandlerTypeInfoGetParameterCount(p_handler -> signature); i++)
+    for(int i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
     {
         MCHandlerTypeFieldMode t_mode;
-        t_mode = MCHandlerTypeInfoGetParameterMode(p_handler -> signature, i);
+        t_mode = MCHandlerTypeInfoGetParameterMode(t_signature, i);
         
         MCValueRef t_value;
         if (t_mode != kMCHandlerTypeFieldModeOut)
@@ -675,20 +701,29 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
 
 static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
 {
+#if 0
     uindex_t t_result_reg;
     t_result_reg = p_arguments[0];
     
     p_arity -= 1;
     p_arguments += 1;
     
+    if (p_handler -> function == nil)
+    {
+        if (!__resolve_function(p_handler -> binding, p_handler -> function) ||
+            !__build_function_cif(p_handler -> signature, p_handler -> function_cif))
+            return MCScriptThrowUnableToResolveForeignHandlerError(x_frame -> instance -> module, x_frame -> address,p_handler);
+    }
+    
     if (MCHandlerTypeInfoGetParameterCount(p_handler -> signature) != p_arity)
         return MCScriptThrowWrongNumberOfArgumentsForInvokeError(x_frame -> instance -> module, x_frame -> address, p_handler, p_arity - 1);
     
-    uindex_t t_pindex;
-    uintptr_t t_result;
-    uintptr_t t_in[16];
-    uintptr_t t_out[16];
-    t_pindex = 0;
+    uindex_t t_arg_index;
+    uindex_t t_arg_storage_index;
+    void *t_arg_values[16];
+    uintptr_t t_arg_storage[32];
+    t_arg_index = 0;
+    t_arg_storage_index = 0;
     for(uindex_t i = 0; i < p_arity; i++)
     {
         MCHandlerTypeFieldMode t_mode;
@@ -697,7 +732,8 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
         MCTypeInfoRef t_type;
         t_type = MCHandlerTypeInfoGetParameterType(p_handler -> signature, i);
         
-        uintptr_t t_actual_value;
+        uintptr_t *t_storage;
+        t_storage = &t_arg_storage[t_arg_storage_index];
         if (t_mode != kMCHandlerTypeFieldModeOut)
         {
             MCValueRef t_value;
@@ -714,47 +750,66 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 switch(MCPrimitiveTypeInfoGetTypeCode(t_type))
                 {
                     case kMCPrimitiveTypeCodeBool:
-                        t_actual_value = (t_value == kMCTrue ? 1 : 0);
+                        *t_storage = (t_value == kMCTrue ? 1 : 0);
+                        t_arg_storage_index += 1;
                         break;
                     case kMCPrimitiveTypeCodeInt:
-                        t_actual_value = (uintptr_t)MCNumberFetchAsInteger((MCNumberRef)t_value);
+                        *t_storage = (uintptr_t)MCNumberFetchAsInteger((MCNumberRef)t_value);
+                        t_arg_storage_index += 1;
                         break;
                     case kMCPrimitiveTypeCodeUInt:
-                        t_actual_value = (uintptr_t)MCNumberFetchAsUnsignedInteger((MCNumberRef)t_value);
+                        *t_storage = (uintptr_t)MCNumberFetchAsUnsignedInteger((MCNumberRef)t_value);
+                        t_arg_storage_index += 1;
                         break;
                     case kMCPrimitiveTypeCodeFloat:
                     {
                         float t_float;
                         t_float = (uintptr_t)MCNumberFetchAsReal((MCNumberRef)t_value);
-                        MCMemoryCopy(&t_actual_value, &t_value, sizeof(t_value));
+                        MCMemoryCopy(t_storage, &t_value, sizeof(t_float));
+                        t_arg_storage_index += 1;
+                    }
+                    break;
+                    case kMCPrimitiveTypeCodeDouble:
+                    {
+                        double t_double;
+                        t_double = (uintptr_t)MCNumberFetchAsReal((MCNumberRef)t_value);
+                        MCMemoryCopy(t_storage, &t_value, sizeof(t_double));
+                        t_arg_storage_index += 2;
                     }
                     break;
                     case kMCPrimitiveTypeCodePointer:
-                    case kMCPrimitiveTypeCodeDouble:
-                        // TODO: Double and pointer
-                        t_actual_value = 0;
+                        // TODO: Pointer
                         MCAssert(false);
                         break;
                 }
             }
             else
-                t_actual_value = (uintptr_t)t_value;
+            {
+                *t_storage = (uintptr_t)t_value;
+                t_arg_storage_index += 1;
+            }
         }
-        else
-            t_actual_value = 0;
-        
-        if (t_mode == kMCHandlerTypeFieldModeIn)
-            t_in[t_pindex] = t_actual_value;
         else
         {
-            t_in[t_pindex] = (uintptr_t)&t_out[t_pindex];
-            t_out[t_pindex] = t_actual_value;
+            if (MCTypeInfoIsPrimitive(t_type) && MCPrimitiveTypeInfoGetTypeCode(t_type) == kMCPrimitiveTypeCodeDouble)
+                t_arg_storage_index += 2;
+            else
+                t_arg_storage_index += 1;
         }
         
-        t_pindex += 1;
+        if (t_mode == kMCHandlerTypeFieldModeIn)
+            t_arg_values[t_arg_index] = t_storage;
+        else
+            t_arg_values[t_arg_index] = &t_storage;
+        
+        t_arg_index += 1;
     }
     
+    void *t_result;
+    
 	return false;
+#endif
+    return false;
 }
 
 static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
@@ -807,13 +862,16 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
     MCScriptFrame *t_frame;
     if (!MCScriptCreateFrame(nil, self, p_handler, t_frame))
         return false;
-
+    
+    MCTypeInfoRef t_signature;
+    t_signature = self -> module -> types[p_handler -> type] -> typeinfo;
+    
     // Populate the parameter slots in the frame with the input arguments. These
     // are always the first <arg-count> slots.
     for(uindex_t i = 0; i < p_argument_count; i++)
     {
         MCValueRef t_value;
-        if (MCHandlerTypeInfoGetParameterMode(p_handler -> signature, i) != kMCHandlerTypeFieldModeOut)
+        if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeOut)
             t_value = MCValueRetain(p_arguments[i]);
         else
             t_value = MCValueRetain(kMCNull);
@@ -929,14 +987,18 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 // Fetch the value of the result.
                 MCValueRef t_value;
                 t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_reg);
-
+                
+                // Fetch the signature of the current handler.
+                MCTypeInfoRef t_signature;
+                t_signature = self -> module -> types[t_frame -> handler -> type] -> typeinfo;
+                
                 // Check the return type is correct.
-                if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), MCHandlerTypeInfoGetReturnType(t_frame -> handler -> signature)))
-                    t_success = MCScriptThrowInvalidValueForResultError(t_frame -> instance -> module, t_frame -> instance -> module -> bytecode - t_bytecode, MCHandlerTypeInfoGetReturnType(t_frame -> handler -> signature), t_value);
+                if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), MCHandlerTypeInfoGetReturnType(t_signature)))
+                    t_success = MCScriptThrowInvalidValueForResultError(t_frame -> instance -> module, t_frame -> instance -> module -> bytecode - t_bytecode, MCHandlerTypeInfoGetReturnType(t_signature), t_value);
                 
                 // Check that out parameters are defined.
-                for(uindex_t i = 0; t_success && i < MCHandlerTypeInfoGetParameterCount(t_frame -> handler -> signature); i++)
-                    if (MCHandlerTypeInfoGetParameterMode(t_frame -> handler -> signature, i) == kMCHandlerTypeFieldModeOut)
+                for(uindex_t i = 0; t_success && i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
+                    if (MCHandlerTypeInfoGetParameterMode(t_signature, i) == kMCHandlerTypeFieldModeOut)
                         if (MCScriptFetchFromLocalInFrame(t_frame, i) == kMCNull &&
                             !MCScriptIsLocalInFrameOptional(t_frame, i))
                             t_success = MCScriptThrowOutParameterNotDefinedError(t_frame -> instance -> module, t_frame -> instance -> module -> bytecode - t_bytecode, i);
@@ -949,8 +1011,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                         // Set the result value argument.
                         r_value = MCValueRetain(t_value);
                         
-                        for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_frame -> handler -> signature); i++)
-                            if (MCHandlerTypeInfoGetParameterMode(t_frame -> handler -> signature, i) != kMCHandlerTypeFieldModeIn)
+                        for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
+                            if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeIn)
                                 p_arguments[i] = MCValueRetain(MCScriptFetchFromLocalInFrame(t_frame, i));
                     }
                     else
@@ -959,8 +1021,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                         MCScriptStoreToRegisterInFrame(t_frame -> caller, t_frame -> result, t_value);
                         
                         if (t_frame -> mapping != nil)
-                            for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_frame -> handler -> signature); i++)
-                                if (MCHandlerTypeInfoGetParameterMode(t_frame -> handler -> signature, i) != kMCHandlerTypeFieldModeIn)
+                            for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
+                                if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeIn)
                                     MCScriptStoreToRegisterInFrame(t_frame -> caller, t_frame -> mapping[i], MCScriptFetchFromLocalInFrame(t_frame, i));
                         
                         // Update the bytecode pointer to that of the caller.
@@ -1064,7 +1126,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 t_value = t_instance -> slots[t_var_definition -> slot_index];
                 
                 if (t_value == kMCNull &&
-                    !MCTypeInfoIsOptional(t_var_definition -> type))
+                    !MCTypeInfoIsOptional(t_instance -> module -> types[t_var_definition -> type] -> typeinfo))
                     t_success = MCScriptThrowGlobalVariableUsedBeforeDefinedError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_index);
                 
                 if (t_success)
@@ -1091,7 +1153,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCValueRef t_value;
                 t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_dst);
                 
-                if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_var_definition -> type))
+                if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_instance -> module -> types[t_var_definition -> type] -> typeinfo))
                     t_success = MCScriptThrowInvalidValueForGlobalVariableError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_index, t_value);
                 
                 if (t_success)

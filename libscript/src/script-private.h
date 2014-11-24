@@ -92,6 +92,60 @@ void MCScriptDestroyPackage(MCScriptPackageRef package);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum MCScriptTypeKind
+{
+    kMCScriptTypeKindDefined,
+    kMCScriptTypeKindOptional,
+    kMCScriptTypeKindHandler,
+    kMCScriptTypeKindRecord,
+};
+
+struct MCScriptType
+{
+    MCScriptTypeKind kind;
+    
+    // (computed)
+    MCTypeInfoRef typeinfo;
+};
+
+struct MCScriptDefinedType: public MCScriptType
+{
+    uindex_t index;
+};
+
+struct MCScriptOptionalType: public MCScriptType
+{
+    uindex_t type;
+};
+
+struct MCScriptHandlerTypeParameter
+{
+    MCScriptHandlerTypeParameterMode mode;
+    uindex_t type;
+};
+
+struct MCScriptHandlerType: public MCScriptType
+{
+    MCScriptHandlerTypeParameter *parameters;
+    uindex_t parameter_count;
+    uindex_t return_type;
+};
+
+struct MCScriptRecordTypeField
+{
+    MCNameRef name;
+    uindex_t type;
+};
+
+struct MCScriptRecordType: public MCScriptType
+{
+    uindex_t base_type;
+    MCScriptRecordTypeField *fields;
+    uindex_t field_count;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct MCScriptDefinition;
 
 struct MCScriptExportedDefinition
@@ -139,7 +193,7 @@ struct MCScriptExternalDefinition: public MCScriptDefinition
 
 struct MCScriptTypeDefinition: public MCScriptDefinition
 {
-	MCTypeInfoRef type;
+    uindex_t type;
 };
 
 struct MCScriptConstantDefinition: public MCScriptDefinition
@@ -149,7 +203,7 @@ struct MCScriptConstantDefinition: public MCScriptDefinition
 
 struct MCScriptVariableDefinition: public MCScriptDefinition
 {
-	MCTypeInfoRef type;
+	uindex_t type;
     
     // (computed) The index of the variable in an instance's slot table - not pickled
 	uindex_t slot_index;
@@ -157,9 +211,9 @@ struct MCScriptVariableDefinition: public MCScriptDefinition
 
 struct MCScriptHandlerDefinition: public MCScriptDefinition
 {
-	MCTypeInfoRef signature;
+	uindex_t type;
     
-    MCTypeInfoRef *locals;
+    uindex_t *locals;
     uindex_t local_count;
     
 	uindex_t start_address;
@@ -191,8 +245,12 @@ struct MCScriptSyntaxDefinition: public MCScriptDefinition
 
 struct MCScriptForeignHandlerDefinition: public MCScriptDefinition
 {
-    MCTypeInfoRef signature;
+    uindex_t type;
     MCStringRef binding;
+    
+    // Bound function information - not pickled.
+    void *function;
+    void *function_cif;
 };
 
 struct MCScriptPropertyDefinition: public MCScriptDefinition
@@ -203,7 +261,7 @@ struct MCScriptPropertyDefinition: public MCScriptDefinition
 
 struct MCScriptEventDefinition: public MCScriptDefinition
 {
-	MCTypeInfoRef signature;
+	uindex_t type;
 };
 
 MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *definition);
@@ -231,6 +289,11 @@ struct MCScriptModule: public MCScriptObject
     // used in the module structure.
     MCValueRef *values;
     uindex_t value_count;
+    
+    // The type pool for the module - this abstracts typeinfo so that
+    // they can refer to definitions.
+    MCScriptType **types;
+    uindex_t type_count;
     
     // The exported definitions. This is a list of all public definitions mapping name to
     // index.

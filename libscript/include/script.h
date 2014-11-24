@@ -220,23 +220,41 @@ enum MCScriptDefinitionKind
 	kMCScriptDefinitionKind__Last,
 };
 
+enum MCScriptHandlerTypeParameterMode
+{
+    kMCScriptHandlerTypeParameterModeIn,
+    kMCScriptHandlerTypeParameterModeOut,
+    kMCScriptHandlerTypeParameterModeInOut,
+    
+    kMCScriptHandlerTypeParameterMode__Last
+};
+
 void MCScriptBeginModule(MCScriptModuleKind kind, MCNameRef name, MCScriptModuleBuilderRef& r_builder);
 bool MCScriptEndModule(MCScriptModuleBuilderRef builder, MCStreamRef stream);
 
 void MCScriptAddDependencyToModule(MCScriptModuleBuilderRef builder, MCNameRef dependency, uindex_t& r_index);
 
 void MCScriptAddExportToModule(MCScriptModuleBuilderRef builder, uindex_t index);
-void MCScriptAddImportToModule(MCScriptModuleBuilderRef builder, uindex_t module_index, MCNameRef definition, MCScriptDefinitionKind kind, MCTypeInfoRef type, uindex_t& r_index);
+void MCScriptAddImportToModule(MCScriptModuleBuilderRef builder, uindex_t module_index, MCNameRef definition, MCScriptDefinitionKind kind, uindex_t type, uindex_t& r_index);
+
+void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef builder, uindex_t index, uindex_t& r_type);
+void MCScriptAddOptionalTypeToModule(MCScriptModuleBuilderRef builder, uindex_t type, uindex_t& r_new_type);
+void MCScriptBeginHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t return_type);
+void MCScriptContinueHandlerTypeInModule(MCScriptModuleBuilderRef builder, MCScriptHandlerTypeParameterMode mode, MCNameRef name, uindex_t type);
+void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef builder, uindex_t& r_new_type);
+void MCScriptBeginRecordTypeInModule(MCScriptModuleBuilderRef builder, uindex_t base_type);
+void MCScriptContinueRecordTypeInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type);
+void MCScriptEndRecordTypeInModule(MCScriptModuleBuilderRef builder, uindex_t& r_new_type);
 
 void MCScriptAddDefinitionToModule(MCScriptModuleBuilderRef builder, uindex_t& r_index);
 
-void MCScriptAddTypeToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef type, uindex_t index);
+void MCScriptAddTypeToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t index);
 void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCValueRef value, uindex_t index);
-void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef type, uindex_t index);
+void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t index);
 
-void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, uindex_t index);
-void MCScriptAddParameterToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef type, uindex_t& r_index);
-void MCScriptAddVariableToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef type, uindex_t& r_index);
+void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t signature, uindex_t index);
+void MCScriptAddParameterToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t& r_index);
+void MCScriptAddVariableToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t& r_index);
 void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef builder);
 
 void MCScriptBeginSyntaxInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t index);
@@ -252,11 +270,11 @@ void MCScriptBeginDefinitionGroupInModule(MCScriptModuleBuilderRef builder);
 void MCScriptAddHandlerToDefinitionGroupInModule(MCScriptModuleBuilderRef builder, uindex_t index);
 void MCScriptEndDefinitionGroupInModule(MCScriptModuleBuilderRef builder, uindex_t& r_index);
 
-void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, MCStringRef binding, uindex_t index);
+void MCScriptAddForeignHandlerToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t signature, MCStringRef binding, uindex_t index);
 
 void MCScriptAddPropertyToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t getter, uindex_t setter, uindex_t index);
 
-void MCScriptAddEventToModule(MCScriptModuleBuilderRef builder, MCNameRef name, MCTypeInfoRef signature, uindex_t index);
+void MCScriptAddEventToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t signature, uindex_t index);
 
 void MCScriptDeferLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uindex_t& r_label);
 void MCScriptResolveLabelForBytecodeInModule(MCScriptModuleBuilderRef builder, uindex_t label);
@@ -267,8 +285,8 @@ void MCScriptEmitJumpIfFalseInModule(MCScriptModuleBuilderRef builder, uindex_t 
 void MCScriptEmitJumpIfTrueInModule(MCScriptModuleBuilderRef builder, uindex_t value_reg, uindex_t target_label);
 void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, MCValueRef constant);
 void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t src_reg);
-void MCScriptEmitDefcheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
-void MCScriptEmitTypecheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg, MCValueRef typeinfo);
+//void MCScriptEmitDefcheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
+//void MCScriptEmitTypecheckInModule(MCScriptModuleBuilderRef builder, uindex_t reg, MCValueRef typeinfo);
 void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
 void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index, uindex_t result_reg);
 void MCScriptBeginInvokeIndirectInModule(MCScriptModuleBuilderRef builder, uindex_t handler_reg, uindex_t result_reg);

@@ -1,9 +1,49 @@
+#include <foundation.h>
+#include <foundation-auto.h>
+
 #include "script.h"
 #include "script-private.h"
 
 #include <stddef.h>
 
 ////////////////////////////////////////////////////////////////////////////////
+
+MC_PICKLE_BEGIN_RECORD(MCScriptDefinedType)
+    MC_PICKLE_UINDEX(index)
+MC_PICKLE_END_RECORD()
+
+MC_PICKLE_BEGIN_RECORD(MCScriptOptionalType)
+    MC_PICKLE_UINDEX(type)
+MC_PICKLE_END_RECORD()
+
+MC_PICKLE_BEGIN_RECORD(MCScriptHandlerTypeParameter)
+    MC_PICKLE_INTENUM(MCScriptHandlerTypeParameterMode, mode)
+    MC_PICKLE_UINDEX(type)
+MC_PICKLE_END_RECORD()
+
+MC_PICKLE_BEGIN_RECORD(MCScriptHandlerType)
+    MC_PICKLE_ARRAY_OF_RECORD(MCScriptHandlerTypeParameter, parameters, parameter_count)
+    MC_PICKLE_UINDEX(return_type)
+MC_PICKLE_END_RECORD()
+
+MC_PICKLE_BEGIN_RECORD(MCScriptRecordTypeField)
+    MC_PICKLE_NAMEREF(name)
+    MC_PICKLE_UINDEX(type)
+MC_PICKLE_END_RECORD()
+
+MC_PICKLE_BEGIN_RECORD(MCScriptRecordType)
+    MC_PICKLE_UINDEX(base_type)
+    MC_PICKLE_ARRAY_OF_RECORD(MCScriptRecordTypeField, fields, field_count)
+MC_PICKLE_END_RECORD()
+
+MC_PICKLE_BEGIN_VARIANT(MCScriptType, kind)
+    MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindDefined, MCScriptDefinedType)
+    MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindOptional, MCScriptOptionalType)
+    MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindHandler, MCScriptHandlerType)
+    MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindRecord, MCScriptRecordType)
+MC_PICKLE_END_VARIANT()
+
+//////////
 
 MC_PICKLE_BEGIN_RECORD(MCScriptDependency)
     MC_PICKLE_NAMEREF(name)
@@ -32,7 +72,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptExternalDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptTypeDefinition)
-    MC_PICKLE_TYPEINFOREF(type)
+    MC_PICKLE_UINDEX(type)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptConstantDefinition)
@@ -40,18 +80,18 @@ MC_PICKLE_BEGIN_RECORD(MCScriptConstantDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptVariableDefinition)
-    MC_PICKLE_TYPEINFOREF(type)
+    MC_PICKLE_UINDEX(type)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
-    MC_PICKLE_TYPEINFOREF(signature)
-    MC_PICKLE_ARRAY_OF_TYPEINFOREF(locals, local_count)
+    MC_PICKLE_UINDEX(type)
+    MC_PICKLE_ARRAY_OF_UINDEX(locals, local_count)
     MC_PICKLE_UINDEX(start_address)
     MC_PICKLE_UINDEX(finish_address)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptForeignHandlerDefinition)
-    MC_PICKLE_TYPEINFOREF(signature)
+    MC_PICKLE_UINDEX(type)
     MC_PICKLE_STRINGREF(binding)
 MC_PICKLE_END_RECORD()
 
@@ -61,7 +101,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptPropertyDefinition)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptEventDefinition)
-    MC_PICKLE_TYPEINFOREF(signature)
+    MC_PICKLE_UINDEX(type)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptSyntaxDefinition)
@@ -91,6 +131,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptModule)
     MC_PICKLE_NAMEREF(name)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptDependency, dependencies, dependency_count)
     MC_PICKLE_ARRAY_OF_VALUEREF(values, value_count)
+    MC_PICKLE_ARRAY_OF_VARIANT(MCScriptType, types, type_count)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptExportedDefinition, exported_definitions, exported_definition_count)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptImportedDefinition, imported_definitions, imported_definition_count)
     MC_PICKLE_ARRAY_OF_VARIANT(MCScriptDefinition, definitions, definition_count)
@@ -111,6 +152,9 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
     for(uindex_t i = 0; i < self -> dependency_count; i++)
         if (self -> dependencies[i] . instance != nil)
             MCScriptReleaseInstance(self -> dependencies[i] . instance);
+    for(uindex_t i = 0; i < self -> type_count; i++)
+        if (self -> types[i] -> typeinfo != nil)
+            MCValueRelease(self -> types[i] -> typeinfo);
     
     // Remove ourselves from the global module list.
     if (s_modules == self)
@@ -219,7 +263,9 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                 return false;
             
             // The total number of slots we need is params (inc result) + temps.
-            t_handler -> register_offset = MCHandlerTypeInfoGetParameterCount(t_handler -> signature) + t_handler -> local_count;
+            MCTypeInfoRef t_signature;
+            t_signature = self -> types[t_handler -> type] -> typeinfo;
+            t_handler -> register_offset = MCHandlerTypeInfoGetParameterCount(t_signature) + t_handler -> local_count;
             t_handler -> slot_count = t_handler -> register_offset + t_temporary_count;
         }
     
@@ -303,17 +349,17 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
     if (self -> is_usable)
         return true;
     
-    // First validate the module - if this fails we do nothing more.
-    if (!MCScriptValidateModule(self))
-        return false;
-    
-    // Next ensure we can resolve all its external dependencies.
+    // First ensure we can resolve all its external dependencies.
     for(uindex_t i = 0; i < self -> dependency_count; i++)
     {
+        // Skip the 'builtin' module for now.
+        if (MCNameIsEqualTo(self -> dependencies[i] . name, MCNAME("__builtin__")))
+            continue;
+        
         MCScriptModuleRef t_module;
         if (!MCScriptLookupModule(self -> dependencies[i] . name, t_module))
             return false;
-     
+        
         // A used module must be a library.
         if (t_module -> module_kind != kMCScriptModuleKindLibrary)
             return false;
@@ -337,7 +383,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             
             t_import_def -> definition = t_def;
         }
-            
+        
         // A used module must be usable.
         if (!MCScriptEnsureModuleIsUsable(t_module))
             return false;
@@ -346,6 +392,157 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
         if (!MCScriptCreateInstanceOfModule(t_module, self -> dependencies[i] . instance))
             return false;
     }
+
+    // Now build all the typeinfo's
+    for(uindex_t i = 0; i < self -> type_count; i++)
+    {
+        MCAutoTypeInfoRef t_typeinfo;
+        switch(self -> types[i] -> kind)
+        {
+            case kMCScriptTypeKindDefined:
+            {
+                MCScriptDefinedType *t_type;
+                t_type = static_cast<MCScriptDefinedType *>(self -> types[i]);
+                
+                MCScriptDefinition *t_def;
+                t_def = self -> definitions[t_type -> index];
+                if (t_def -> kind == kMCScriptDefinitionKindType)
+                {
+                    MCNameRef t_public_name;
+                    t_public_name = nil;
+                    for(uindex_t j = 0; j < self -> exported_definition_count; j++)
+                        if (self -> exported_definitions[j] . index == t_type -> index)
+                        {
+                            t_public_name = self -> exported_definitions[j] . name;
+                            break;
+                        }
+                    
+                    MCScriptTypeDefinition *t_type_def;
+                    t_type_def = static_cast<MCScriptTypeDefinition *>(t_def);
+                    
+                    if (t_public_name != nil)
+                    {
+                        MCAutoStringRef t_name_string;
+                        if (!MCStringFormat(&t_name_string, "%@.%@", self -> name, t_public_name))
+                            return false;
+                        
+                        MCNewAutoNameRef t_name;
+                        if (!MCNameCreate(*t_name_string, &t_name))
+                            return false;
+                        
+                        // If the target type is an alias, named type or optional type then
+                        // we just create an alias. Otherwise it must be a record, foreign,
+                        // handler type - this means it must be named.
+                        MCTypeInfoRef t_target_type;
+                        t_target_type = self -> types[t_type_def -> type] -> typeinfo;
+                        if (MCTypeInfoIsAlias(t_target_type) ||
+                            MCTypeInfoIsNamed(t_target_type) ||
+                            MCTypeInfoIsOptional(t_target_type))
+                        {
+                            if (!MCAliasTypeInfoCreate(*t_name, t_target_type, &t_typeinfo))
+                                return false;
+                        }
+                        else
+                        {
+                            if (!MCNamedTypeInfoCreate(*t_name, &t_typeinfo))
+                                return false;
+                            
+                            if (!MCNamedTypeInfoBind(*t_typeinfo, t_target_type))
+                                return false;
+                        }
+                    }
+                    else
+                    {
+                        if (!MCAliasTypeInfoCreate(kMCEmptyName, self -> types[t_type_def -> type] -> typeinfo, &t_typeinfo))
+                            return false;
+                    }
+                }
+                else if (t_def -> kind == kMCScriptDefinitionKindExternal)
+                {
+                    MCScriptExternalDefinition *t_ext_def;
+                    t_ext_def = static_cast<MCScriptExternalDefinition *>(t_def);
+                    
+                    MCScriptImportedDefinition *t_import;
+                    t_import = &self -> imported_definitions[t_ext_def -> index];
+                    
+                    if (t_import -> definition == nil)
+                    {
+                        if (MCNameIsEqualTo(t_import -> name, MCNAME("any")))
+                            t_typeinfo = kMCAnyTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("undefined")))
+                            t_typeinfo = kMCNullTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("string")))
+                            t_typeinfo = kMCStringTypeInfo;
+                        else
+                            MCAssert(false);
+                    }
+                    else
+                    {
+                        MCScriptModuleRef t_module;
+                        t_module = self -> dependencies[t_import -> module] . instance -> module;
+                        t_typeinfo = t_module -> types[static_cast<MCScriptTypeDefinition *>(t_import -> definition) -> type] -> typeinfo;
+                    }
+                }
+                else
+                    return false;
+            }
+            break;
+            case kMCScriptTypeKindOptional:
+            {
+                MCScriptOptionalType *t_type;
+                t_type = static_cast<MCScriptOptionalType *>(self -> types[i]);
+                if (!MCOptionalTypeInfoCreate(self -> types[t_type -> type] -> typeinfo, &t_typeinfo))
+                    return false;
+            }
+            break;
+            case kMCScriptTypeKindRecord:
+            {
+                MCScriptRecordType *t_type;
+                t_type = static_cast<MCScriptRecordType *>(self -> types[i]);
+                
+                MCAutoArray<MCRecordTypeFieldInfo> t_fields;
+                for(uindex_t i = 0; i < t_type -> field_count; i++)
+                {
+                    MCRecordTypeFieldInfo t_field;
+                    t_field . name = t_type -> fields[i] . name;
+                    t_field . type = self -> types[t_type -> fields[i] . type] -> typeinfo;
+                    if (!t_fields . Push(t_field))
+                        return false;
+                }
+                
+                if (!MCRecordTypeInfoCreate(t_fields . Ptr(), t_type -> field_count, self -> types[t_type -> base_type] -> typeinfo, &t_typeinfo))
+                    return false;
+            }
+            break;
+            case kMCScriptTypeKindHandler:
+            {
+                MCScriptHandlerType *t_type;
+                t_type = static_cast<MCScriptHandlerType *>(self -> types[i]);
+                
+                MCAutoArray<MCHandlerTypeFieldInfo> t_parameters;
+                for(uindex_t i = 0; i < t_type -> parameter_count; i++)
+                {
+                    MCHandlerTypeFieldInfo t_parameter;
+                    t_parameter . mode = (MCHandlerTypeFieldMode)t_type -> parameters[i] . mode;
+                    t_parameter . type = self -> types[t_type -> parameters[i] . type] -> typeinfo;
+                    if (!t_parameters . Push(t_parameter))
+                        return false;
+                }
+                
+                if (!MCHandlerTypeInfoCreate(t_parameters . Ptr(), t_type -> parameter_count, self -> types[t_type -> return_type] -> typeinfo, &t_typeinfo))
+                    return false;
+            }
+            break;
+        }
+        
+        self -> types[i] -> typeinfo = MCValueRetain(*t_typeinfo);
+    }
+    
+    // First validate the module - if this fails we do nothing more.
+    if (!MCScriptValidateModule(self))
+        return false;
+    
+    // Now bind all the public types.
     
     self -> is_usable = true;
     
