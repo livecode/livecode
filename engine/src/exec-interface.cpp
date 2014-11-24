@@ -2819,7 +2819,8 @@ void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, M
 			return;
 		}
 		else
-			MCInterfaceExecSubwindow(ctxt, p_target, parentptr, parentptr->getrect(), p_at, p_aligned, WM_DRAWER);
+            // AL-2014-11-24: [[ Bug 14076 ]] Don't override window mode with WM_DRAWER
+			MCInterfaceExecSubwindow(ctxt, p_target, parentptr, parentptr->getrect(), p_at, p_aligned, p_mode);
 	}
 	else if (MCdefaultstackptr->getopened() || MCtopstackptr == NULL)
 		MCInterfaceExecSubwindow(ctxt, p_target, MCdefaultstackptr, MCdefaultstackptr->getrect(), p_at, p_aligned, p_mode);
