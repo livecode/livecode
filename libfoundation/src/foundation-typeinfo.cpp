@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 #include "foundation-private.h"
 
@@ -71,9 +72,9 @@ bool MCTypeInfoIsError(MCTypeInfoRef self)
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeError;
 }
 
-bool MCTypeInfoIsPrimitive(MCTypeInfoRef self)
+bool MCTypeInfoIsForeign(MCTypeInfoRef self)
 {
-    return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsPrimitive;
+    return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsForeign;
 }
 
 bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
@@ -116,68 +117,73 @@ bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
     return true;
 }
 
-static bool MCPrimitiveTypeInfoConforms(MCTypeInfoRef self, MCTypeInfoRef p_other)
-{
-    switch(MCPrimitiveTypeInfoGetTypeCode(self))
-    {
-        case kMCPrimitiveTypeCodeBool:
-            return p_other == kMCBooleanTypeInfo;
-        case kMCPrimitiveTypeCodeUInt:
-        case kMCPrimitiveTypeCodeInt:
-        case kMCPrimitiveTypeCodeFloat:
-        case kMCPrimitiveTypeCodeDouble:
-            return p_other == kMCNumberTypeInfo;
-        case kMCPrimitiveTypeCodePointer:
-            return false;
-    }
-    
-    MCUnreachable();
-    
-    return false;
-}
-
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
 {
-    // If the typeinfos are the same, conformance is obvious.
-    if (source == target)
-        return true;
+    // We require that source is concrete - this means that it must be a named
+    // type.
+    MCAssert(MCTypeInfoIsNamed(source));
     
-    // Otherwise we resolve source and target
-    MCResolvedTypeInfo t_resolved_source, t_resolved_target;
-    /* RESOLVE UNCHECKED */ MCTypeInfoResolve(source, t_resolved_source);
-    /* RESOLVE UNCHECKED */ MCTypeInfoResolve(target, t_resolved_target);
-    
-    // Check null (undefined) type conformance.
-    if (t_resolved_source . type == kMCNullTypeInfo)
-        return t_resolved_target . is_optional;
-    
-    // Check any type conformance - this is fine as source is only optional if
-    // target is.
-    if (t_resolved_target . type == kMCAnyTypeInfo)
-        return !t_resolved_source . is_optional || t_resolved_target . is_optional;
-    
-    // Check record conformance - the named source type has to be either the named
-    // target type, or one of its super-types.
-    if (MCTypeInfoIsRecord(t_resolved_target . type))
+    // Resolve the source type.
+    MCResolvedTypeInfo t_resolved_source;
+    if (!MCTypeInfoResolve(source, t_resolved_source))
     {
-        // Check up the base-type chain.
-        MCTypeInfoRef t_target_type;
-        for(t_target_type = t_resolved_target . named_type; t_target_type != nil; t_target_type = t_target_type -> named . typeinfo -> record . base)
-            if (t_resolved_source . named_type != t_resolved_target . named_type)
-                return false;
-        
-        // Now it comes down to optionality.
-        return !t_resolved_source . is_optional || t_resolved_target . is_optional;
+        MCAssert(false);
+        return false;
     }
     
-    // If the source and target underlying types are the same and they are not records,
-    // then its up to optionality to decide conformance.
-    if (t_resolved_target . type == t_resolved_source . type)
-        return !t_resolved_source . is_optional || t_resolved_target . is_optional;
+    // We require that target is resolvable.
+    MCResolvedTypeInfo t_resolved_target;
+    if (!MCTypeInfoResolve(target, t_resolved_target))
+    {
+        MCAssert(false);
+        return false;
+    }
     
-    // Check primitive type conformance.
-    if (MCTypeInfoIsPrimitive(t_resolved_target . type))
-        return MCPrimitiveTypeInfoConforms(t_resolved_target . type, t_resolved_source . type);
+    // If source and target are the same, we are done.
+    if (t_resolved_source . named_type == t_resolved_target . named_type)
+        return true;
+    
+    // If source is undefined, then target must be optional.
+    if (source == kMCNullTypeInfo)
+        return t_resolved_target . is_optional;
+    
+    // If source is of foreign type then target must be the source's bridge type
+    // the source type, or one of the source's supertypes.
+    if (MCTypeInfoIsForeign(t_resolved_source . type))
+    {
+        // Check to see if the target is the source's bridge type.
+        if (t_resolved_target . named_type == t_resolved_source . type -> foreign . descriptor . bridgetype)
+            return true;
+        
+        // Now check to see if the target is one of the source's supertypes.
+        for(MCTypeInfoRef t_supertype = t_resolved_source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> foreign . descriptor . basetype)
+            if (t_resolved_target . named_type == t_supertype)
+                return true;
+        
+        return false;
+    }
+    
+    // If the target is of foreign type, then the source must be the target's
+    // bridge type.
+    if (MCTypeInfoIsForeign(t_resolved_target . type))
+    {
+        if (t_resolved_target . named_type == t_resolved_source . type -> foreign . descriptor . bridgetype)
+            return true;
+        
+        return false;
+    }
+    
+    // If the source is of record type, then the target must be the same type of
+    // one of the source's super types.
+    if (MCTypeInfoIsRecord(t_resolved_source . type))
+    {
+        // Now check to see if the target is one of the source's supertypes.
+        for(MCTypeInfoRef t_supertype = t_resolved_source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> record . base)
+            if (t_resolved_target . named_type == t_supertype)
+                return true;
+        
+        return false;
+    }
     
     return false;
 }
@@ -198,30 +204,6 @@ bool MCBuiltinTypeInfoCreate(MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)
     MCValueRelease(self);
     
     return false;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCPrimitiveTypeInfoCreate(MCPrimitiveTypeCode p_code, MCTypeInfoRef& r_typeinfo)
-{
-    __MCTypeInfo *self;
-    if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
-        return false;
-    
-    self -> flags |= kMCTypeInfoTypeIsPrimitive;
-    self -> primitive . code = p_code;
-    
-    if (MCValueInterAndRelease(self, r_typeinfo))
-        return true;
-    
-    MCValueRelease(self);
-    
-    return false;
-}
-
-MCPrimitiveTypeCode MCPrimitiveTypeInfoGetTypeCode(MCTypeInfoRef self)
-{
-    return self -> primitive . code;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -358,6 +340,40 @@ bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *callbacks, MCTypeInfoR
     
     self -> flags |= kMCValueTypeCodeCustom;
     self -> custom . callbacks = *callbacks;
+    
+    if (MCValueInterAndRelease(self, r_typeinfo))
+        return true;
+    
+    MCValueRelease(self);
+    
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCTypeInfoRef& r_typeinfo)
+{
+    __MCTypeInfo *self;
+    if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
+        return false;
+    
+    if (!MCMemoryNewArray(p_descriptor -> layout_size, self -> foreign . descriptor . layout, self -> foreign . descriptor . layout_size))
+        return false;
+    
+    self -> flags |= kMCTypeInfoTypeIsForeign;
+    self -> foreign . descriptor . size = p_descriptor -> size;
+    self -> foreign . descriptor . basetype = MCValueRetain(p_descriptor -> basetype);
+    self -> foreign . descriptor . bridgetype = MCValueRetain(p_descriptor -> bridgetype);
+    MCMemoryCopy(self -> foreign . descriptor . layout, p_descriptor -> layout, p_descriptor -> layout_size * sizeof(self -> foreign . descriptor . layout[0]));
+    self -> foreign . descriptor . initialize = p_descriptor -> initialize;
+    self -> foreign . descriptor . finalize = p_descriptor -> finalize;
+    self -> foreign . descriptor . defined = p_descriptor -> defined;
+    self -> foreign . descriptor . move = p_descriptor -> move;
+    self -> foreign . descriptor . copy = p_descriptor -> copy;
+    self -> foreign . descriptor . equal = p_descriptor -> equal;
+    self -> foreign . descriptor . hash = p_descriptor -> hash;
+    self -> foreign . descriptor . doimport = p_descriptor -> doimport;
+    self -> foreign . descriptor . doexport = p_descriptor -> doexport;
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
@@ -614,6 +630,12 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
     {
         MCValueRelease(self -> optional . basetype);
     }
+    else if (t_ext_typecode == kMCTypeInfoTypeIsForeign)
+    {
+        MCValueRelease(self -> foreign . descriptor . basetype);
+        MCValueRelease(self -> foreign . descriptor . bridgetype);
+        MCMemoryDeleteArray(self -> foreign . descriptor . layout);
+    }
     else if (t_ext_typecode == kMCValueTypeCodeRecord)
     {
         MCValueRelease(self -> record . base);
@@ -651,11 +673,17 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     t_hash = MCHashBytesStream(t_hash, &t_code, sizeof(uint32_t));
     if (t_code == kMCTypeInfoTypeIsAlias)
     {
-        // Aliases are only equal if both name and type are the same. This is because
-        // they are informative (for debugging purposes) rather than having any
-        // semantic value.
-        t_hash = MCHashBytesStream(t_hash, &self -> alias . name, sizeof(self -> alias . name));
-        t_hash = MCHashBytesStream(t_hash, &self -> alias . typeinfo, sizeof(self -> alias . typeinfo));
+        // If the alias name is empty, then we treat it as a unique unnamed type.
+        if (self -> alias . name == kMCEmptyName)
+            t_hash = MCHashPointer(self);
+        else
+        {
+            // Aliases are only equal if both name and type are the same. This is because
+            // they are informative (for debugging purposes) rather than having any
+            // semantic value.
+            t_hash = MCHashBytesStream(t_hash, &self -> alias . name, sizeof(self -> alias . name));
+            t_hash = MCHashBytesStream(t_hash, &self -> alias . typeinfo, sizeof(self -> alias . typeinfo));
+        }
     }
     else if (t_code == kMCTypeInfoTypeIsNamed)
     {
@@ -667,9 +695,10 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     {
         t_hash = MCHashBytesStream(t_hash, &self -> optional . basetype, sizeof(self -> optional . basetype));
     }
-    else if (t_code == kMCTypeInfoTypeIsPrimitive)
+    else if (t_code == kMCTypeInfoTypeIsForeign)
     {
-        t_hash = MCHashBytesStream(t_hash, &self -> primitive . code, sizeof(self -> primitive . code));
+        // All foreign typeinfos are unique regardless of callbacks passed. So just hash the pointer.
+        t_hash = MCHashPointer(self);
     }
     else if (t_code == kMCValueTypeCodeRecord)
     {
@@ -710,13 +739,17 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
                 self -> alias . typeinfo == other_self -> alias . typeinfo;
     
     if (t_code == kMCTypeInfoTypeIsNamed)
+    {
+        if (self -> named . name == kMCEmptyName || other_self -> named . name == kMCEmptyName)
+            return false;
         return MCNameIsEqualTo(self -> named . name, other_self -> named . name);
+    }
     
     if (t_code == kMCTypeInfoTypeIsOptional)
         return self -> optional . basetype == other_self -> optional . basetype;
     
-    if (t_code == kMCTypeInfoTypeIsPrimitive)
-        return self -> primitive . code == other_self -> primitive . code;
+    if (t_code == kMCTypeInfoTypeIsForeign)
+        return self == other_self;
     
     if (t_code == kMCValueTypeCodeRecord)
     {
@@ -764,20 +797,38 @@ bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description)
     return false;
 }
 
+static bool __create_named_builtin(MCNameRef p_name, MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)
+{
+    MCAutoTypeInfoRef t_raw_typeinfo;
+    if (!MCBuiltinTypeInfoCreate(p_code, &t_raw_typeinfo))
+        return false;
+    
+    MCAutoTypeInfoRef t_typeinfo;
+    if (!MCNamedTypeInfoCreate(p_name, &t_typeinfo))
+        return false;
+    
+    if (!MCNamedTypeInfoBind(*t_typeinfo, *t_raw_typeinfo))
+        return false;
+    
+    r_typeinfo = MCValueRetain(*t_typeinfo);
+    
+    return true;
+}
+
 bool __MCTypeInfoInitialize(void)
 {
     return
-        MCBuiltinTypeInfoCreate(kMCValueTypeCodeNull, kMCNullTypeInfo) &&
-        MCBuiltinTypeInfoCreate(kMCValueTypeCodeBoolean, kMCBooleanTypeInfo) &&
-        MCBuiltinTypeInfoCreate(kMCValueTypeCodeNumber, kMCNumberTypeInfo) &&
-        MCBuiltinTypeInfoCreate(kMCValueTypeCodeString, kMCStringTypeInfo) &&
-        MCBuiltinTypeInfoCreate(kMCValueTypeCodeName, kMCNameTypeInfo) &&
-        MCBuiltinTypeInfoCreate(kMCValueTypeCodeData, kMCDataTypeInfo) &&
-        MCBuiltinTypeInfoCreate(kMCValueTypeCodeArray, kMCArrayTypeInfo) &&
-        MCBuiltinTypeInfoCreate(kMCValueTypeCodeList, kMCListTypeInfo) &&
-        MCBuiltinTypeInfoCreate(kMCValueTypeCodeSet, kMCSetTypeInfo) &&
-        MCBuiltinTypeInfoCreate(kMCValueTypeCodeProperList, kMCProperListTypeInfo) &&
-        MCBuiltinTypeInfoCreate(kMCTypeInfoTypeIsAny, kMCAnyTypeInfo);
+        __create_named_builtin(MCNAME("livecode.lang.undefined"), kMCValueTypeCodeNull, kMCNullTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.boolean"), kMCValueTypeCodeBoolean, kMCBooleanTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.number"), kMCValueTypeCodeNumber, kMCNumberTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.string"), kMCValueTypeCodeString, kMCStringTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.name"), kMCValueTypeCodeName, kMCNameTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.data"), kMCValueTypeCodeData, kMCDataTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.array"), kMCValueTypeCodeArray, kMCArrayTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.stringlist"), kMCValueTypeCodeList, kMCListTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.set"), kMCValueTypeCodeSet, kMCSetTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.list"), kMCValueTypeCodeProperList, kMCProperListTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.any"), kMCTypeInfoTypeIsAny, kMCAnyTypeInfo);
 }
 
 void __MCTypeInfoFinalize(void)

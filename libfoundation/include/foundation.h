@@ -565,6 +565,7 @@ typedef struct __MCRecord *MCRecordRef;
 typedef struct __MCError *MCErrorRef;
 typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
+typedef struct __MCForeignValue *MCForeignValueRef;
 
 // Forward declaration
 typedef struct __MCLocale* MCLocaleRef;
@@ -1068,6 +1069,7 @@ enum
 	kMCValueTypeCodeHandler,
 	kMCValueTypeCodeTypeInfo,
     kMCValueTypeCodeError,
+    kMCValueTypeCodeForeignValue,
 };
 
 enum
@@ -1257,8 +1259,8 @@ bool MCTypeInfoIsHandler(MCTypeInfoRef typeinfo);
 // Returns true if the typeinfo is of error type.
 bool MCTypeInfoIsError(MCTypeInfoRef typeinfo);
 
-// Returns true if the typeinfo is of primitive type.
-bool MCTypeInfoIsPrimitive(MCTypeInfoRef typeinfo);
+// Returns true if the typeinfo is of foreign type.
+bool MCTypeInfoIsForeign(MCTypeInfoRef typeinfo);
 
 // Typeinfo's form a chain with elements in the chain potentially providing critical
 // information about the specified type. This structure describes the represented
@@ -1275,7 +1277,19 @@ struct MCResolvedTypeInfo
 bool MCTypeInfoResolve(MCTypeInfoRef typeinfo, MCResolvedTypeInfo& r_resolution);
 
 // Returns true if the source typeinfo can be assigned to a slot with the target
-// typeinfo with no typecheck or conversion.
+// typeinfo. It is assumed that 'source' is a concrete typeinfo (one which has
+// come from an actual value - in particular this means it will not be optional).
+// It is further assumed that target is resolvable (i.e. if named, it has a binding).
+//
+// Conformance follows the following rules in order:
+//   - if source is undefined (kMCNullTypeInfo), then target must be optional.
+//   - if source is of foreign type, then target must either be the source's bridge
+//     type, the source type, or one of the source's supertypes.
+//   - if target is of foreign type, then source must be target's bridge type.
+//   - if source is of record type, then target must be the same type or one of source's
+//     supertypes.
+//   - if source is builtin then target must be the same builtin type.
+//
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
 
 //////////
@@ -1285,20 +1299,44 @@ bool MCBuiltinTypeInfoCreate(MCValueTypeCode typecode, MCTypeInfoRef& r_target);
 
 //////////
 
-enum MCPrimitiveTypeCode
+enum MCForeignPrimitiveType
 {
-    kMCPrimitiveTypeCodeBool,
-    kMCPrimitiveTypeCodeInt,
-    kMCPrimitiveTypeCodeUInt,
-    kMCPrimitiveTypeCodeFloat,
-    kMCPrimitiveTypeCodeDouble,
-    kMCPrimitiveTypeCodePointer,
+    kMCForeignPrimitiveTypeVoid,
+    kMCForeignPrimitiveTypeBool,
+    kMCForeignPrimitiveTypeUInt8,
+    kMCForeignPrimitiveTypeSInt8,
+    kMCForeignPrimitiveTypeUInt16,
+    kMCForeignPrimitiveTypeSInt16,
+    kMCForeignPrimitiveTypeUInt32,
+    kMCForeignPrimitiveTypeSInt32,
+    kMCForeignPrimitiveTypeUInt64,
+    kMCForeignPrimitiveTypeSInt64,
+    kMCForeignPrimitiveTypeFloat32,
+    kMCForeignPrimitiveTypeFloat64,
+    kMCForeignPrimitiveTypePointer,
 };
 
-// Creates a typeinfo describing a primitive type.
-bool MCPrimitiveTypeInfoCreate(MCPrimitiveTypeCode kind, MCTypeInfoRef& r_target);
+struct MCForeignTypeDescriptor
+{
+    size_t size;
+    MCTypeInfoRef basetype;
+    MCTypeInfoRef bridgetype;
+    MCForeignPrimitiveType *layout;
+    uindex_t layout_size;
+    bool (*initialize)(void *contents);
+    bool (*finalize)(void *contents);
+    bool (*defined)(void *contents, bool& r_defined);
+    bool (*move)(void *source, void *target);
+    bool (*copy)(void *source, void *target);
+    bool (*equal)(void *left, void *right, bool& r_equal);
+    bool (*hash)(void *contents, hash_t& r_hash);
+    bool (*doimport)(void *contents, bool release, MCValueRef& r_value);
+    bool (*doexport)(MCValueRef value, bool release, void *contents);
+};
 
-MCPrimitiveTypeCode MCPrimitiveTypeInfoGetTypeCode(MCTypeInfoRef typeinfo);
+bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *descriptor, MCTypeInfoRef& r_typeinfo);
+
+const MCForeignTypeDescriptor *MCForeignTypeInfoGetDescriptor(MCTypeInfoRef typeinfo);
 
 //////////
 
@@ -2363,6 +2401,14 @@ bool MCErrorThrowOutOfMemory(void);
 
 // Throw a generic runtime error (one that hasn't had a class made for it yet).
 bool MCErrorThrowGeneric(void);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  FOREIGN DEFINITIONS
+//
+
+bool MCForeignValueCreate(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
+bool MCForeignValueCreateAndRelease(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

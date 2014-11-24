@@ -58,17 +58,13 @@ enum
     kMCTypeInfoTypeIsNamed = 254,
     kMCTypeInfoTypeIsAlias = 253,
     kMCTypeInfoTypeIsOptional = 252,
-    kMCTypeInfoTypeIsPrimitive = 252,
+    kMCTypeInfoTypeIsForeign = 252,
 };
 
 struct __MCTypeInfo: public __MCValue
 {
     union
     {
-        struct
-        {
-            MCPrimitiveTypeCode code;
-        } primitive;
         struct
         {
             MCNameRef name;
@@ -99,6 +95,10 @@ struct __MCTypeInfo: public __MCValue
         {
             MCValueCustomCallbacks callbacks;
         } custom;
+        struct
+        {
+            MCForeignTypeDescriptor descriptor;
+        } foreign;
     };
 };
 
