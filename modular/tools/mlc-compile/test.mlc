@@ -1,2 +1,16 @@
 module test
+
+public type MyType is optional any
+
+handler dosomething(in foo, inout bar, out baz)
+end handler
+
+public handler test() as undefined
+    variable tVar as string
+    //put char 1 of tVar after tVar
+    //put "Hello" after tVar
+    //put tVar && "World!" before tVar
+    //dosomething(char 1 of tVar, char 2 of tVar, char 3 of char 4 of char 5 of char 6 of char 7 of char 8 of tVar)
+end handler
+
 end module

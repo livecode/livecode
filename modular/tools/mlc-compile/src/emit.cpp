@@ -44,6 +44,7 @@ extern "C" void EmitBeginDefinitionGroup(void);
 extern "C" void EmitContinueDefinitionGroup(long index);
 extern "C" void EmitEndDefinitionGroup(long *r_index);
 
+extern "C" void EmitDefinedType(long index, long& r_type_index);
 extern "C" void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index);
 extern "C" void EmitAliasType(NameRef name, long typeindex, long& r_new_index);
 extern "C" void EmitOptionalType(long index, long& r_new_index);
@@ -112,8 +113,8 @@ extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
 
 //////////
 
-static MCTypeInfoRef *s_typeinfos = nil;
-static uindex_t s_typeinfo_count = 0;
+//static MCTypeInfoRef *s_typeinfos = nil;
+//static uindex_t s_typeinfo_count = 0;
 
 static MCNameRef to_mcnameref(NameRef p_name)
 {
@@ -138,6 +139,7 @@ static MCStringRef to_mcstringref(long p_string)
     return t_uniq_string;
 }
 
+/*
 static MCTypeInfoRef to_mctypeinforef(long p_type_index)
 {
     MCAssert(p_type_index < s_typeinfo_count);
@@ -160,6 +162,17 @@ static bool define_typeinfo(MCTypeInfoRef p_typeinfo, long& r_index)
     
     return true;
 }
+
+static bool define_named_typeinfo(const char *name, long& r_index)
+{
+    MCAutoStringRef t_string;
+    MCStringCreateWithCString(name, &t_string);
+    MCNewAutoNameRef t_name;
+    MCNameCreate(*t_string, &t_name);
+    MCAutoTypeInfoRef t_typeinfo;
+    MCNamedTypeInfoCreate(*t_name, &t_typeinfo);
+    return define_typeinfo(*t_typeinfo, r_index);
+}*/
 
 //////////
 
@@ -202,6 +215,14 @@ void EmitEndModule(void)
         MCValueRelease(t_stream);
         
         if (t_success)
+        {
+            FILE *t_out;
+            t_out = fopen("/Users/mark/Desktop/test.lcm", "w");
+            fwrite(t_buffer, 1, t_size, t_out);
+            fclose(t_out);
+        }
+        
+        if (t_success)
             t_success = MCScriptEnsureModuleIsUsable(t_module);
         
         MCScriptInstanceRef t_instance;
@@ -231,7 +252,7 @@ void EmitModuleDependency(NameRef p_name, long& r_index)
 void EmitImportedType(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindType, to_mctypeinforef(p_type_index), t_index);
+    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindType, p_type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
@@ -240,7 +261,7 @@ void EmitImportedType(long p_module_index, NameRef p_name, long p_type_index, lo
 void EmitImportedConstant(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindConstant, to_mctypeinforef(p_type_index), t_index);
+    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindConstant, p_type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
@@ -249,7 +270,7 @@ void EmitImportedConstant(long p_module_index, NameRef p_name, long p_type_index
 void EmitImportedVariable(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindVariable, to_mctypeinforef(p_type_index), t_index);
+    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindVariable, p_type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
@@ -258,7 +279,7 @@ void EmitImportedVariable(long p_module_index, NameRef p_name, long p_type_index
 void EmitImportedHandler(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindHandler, to_mctypeinforef(p_type_index), t_index);
+    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindHandler, p_type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
@@ -267,7 +288,7 @@ void EmitImportedHandler(long p_module_index, NameRef p_name, long p_type_index,
 void EmitImportedSyntax(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindSyntax, to_mctypeinforef(p_type_index), t_index);
+    MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindSyntax, p_type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] ImportedSyntax(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
@@ -291,28 +312,28 @@ void EmitDefinitionIndex(long& r_index)
 
 void EmitTypeDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
 {
-    MCScriptAddTypeToModule(s_builder, to_mcnameref(p_name), to_mctypeinforef(p_type_index), p_index);
+    MCScriptAddTypeToModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
     
     MCLog("[Emit] TypeDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
 }
 
 void EmitVariableDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
 {
-    MCScriptAddVariableToModule(s_builder, to_mcnameref(p_name), to_mctypeinforef(p_type_index), p_index);
+    MCScriptAddVariableToModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
     
     MCLog("[Emit] VariableDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
 }
 
 void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index, long p_binding)
 {
-    MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), to_mctypeinforef(p_type_index), to_mcstringref(p_binding), p_index);
+    MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), p_type_index, to_mcstringref(p_binding), p_index);
     
     MCLog("[Emit] ForeignHandlerDefinition(%ld, %@, %ld, %@)", p_index, to_mcnameref(p_name), p_type_index, to_mcstringref(p_binding));
 }
 
 void EmitBeginHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
 {
-    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), to_mctypeinforef(p_type_index), p_index);
+    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
     
     MCLog("[Emit] BeginHandlerDefinition(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
 }
@@ -475,6 +496,25 @@ void EmitEndDefinitionGroup(long *r_index)
     MCLog("[Emit] EndDefinitionGroup(-> %ld)", *r_index);
 }
 
+/////////
+
+static bool define_builtin_typeinfo(const char *name, long& r_new_index)
+{
+    uindex_t t_mod_index;
+    MCScriptAddDependencyToModule(s_builder, MCNAME("__builtin__"), t_mod_index);
+    
+    uindex_t t_index;
+    MCScriptAddImportToModule(s_builder, t_mod_index, MCNAME(name), kMCScriptDefinitionKindType, 0, t_index);
+    
+    uindex_t t_typeindex;
+    MCScriptAddDefinedTypeToModule(s_builder, t_index, t_typeindex);
+    
+    r_new_index = t_typeindex;
+    
+    return true;
+}
+
+#if 0
 void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index)
 {
     MCAutoStringRef t_string;
@@ -498,22 +538,28 @@ void EmitAliasType(NameRef name, long target_index, long& r_new_index)
     
     MCLog("[Emit] AliasType(%@, %ld -> %ld)", to_mcnameref(name), target_index, r_new_index);
 }
+#endif
+
+void EmitDefinedType(long index, long& r_type_index)
+{
+    uindex_t t_type_index;
+    MCScriptAddDefinedTypeToModule(s_builder, index, t_type_index);
+    r_type_index = t_type_index;
+    
+    MCLog("[Emit] DefinedType(%ld -> %ld)", index, r_type_index);
+}
 
 void EmitOptionalType(long base_index, long& r_new_index)
 {
-    MCAutoTypeInfoRef t_typeinfo;
-    MCOptionalTypeInfoCreate(to_mctypeinforef(base_index), &t_typeinfo);
-    if (!define_typeinfo(*t_typeinfo, r_new_index))
-        return;
-    
+    uindex_t t_index;
+    MCScriptAddOptionalTypeToModule(s_builder, base_index, t_index);
+    r_new_index = t_index;
     MCLog("[Emit] OptionalType(%ld -> %ld)", base_index, r_new_index);
 }
 
 void EmitPointerType(long& r_new_index)
 {
-    MCAutoTypeInfoRef t_typeinfo;
-    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodePointer, &t_typeinfo);
-    if (!define_typeinfo(*t_typeinfo, r_new_index))
+    if (!define_builtin_typeinfo("pointer", r_new_index))
         return;
     
     MCLog("[Emit] PointerType(-> %ld)", r_new_index);
@@ -521,9 +567,7 @@ void EmitPointerType(long& r_new_index)
 
 void EmitBoolType(long& r_new_index)
 {
-    MCAutoTypeInfoRef t_typeinfo;
-    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeBool, &t_typeinfo);
-    if (!define_typeinfo(*t_typeinfo, r_new_index))
+    if (!define_builtin_typeinfo("bool", r_new_index))
         return;
     
     MCLog("[Emit] BoolType(-> %ld)", r_new_index);
@@ -531,9 +575,7 @@ void EmitBoolType(long& r_new_index)
 
 void EmitIntType(long& r_new_index)
 {
-    MCAutoTypeInfoRef t_typeinfo;
-    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeInt, &t_typeinfo);
-    if (!define_typeinfo(*t_typeinfo, r_new_index))
+    if (!define_builtin_typeinfo("int", r_new_index))
         return;
     
     MCLog("[Emit] IntType(-> %ld)", r_new_index);
@@ -541,9 +583,7 @@ void EmitIntType(long& r_new_index)
 
 void EmitUIntType(long& r_new_index)
 {
-    MCAutoTypeInfoRef t_typeinfo;
-    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeUInt, &t_typeinfo);
-    if (!define_typeinfo(*t_typeinfo, r_new_index))
+    if (!define_builtin_typeinfo("uint", r_new_index))
         return;
     
     MCLog("[Emit] UIntType(-> %ld)", r_new_index);
@@ -551,9 +591,7 @@ void EmitUIntType(long& r_new_index)
 
 void EmitFloatType(long& r_new_index)
 {
-    MCAutoTypeInfoRef t_typeinfo;
-    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeFloat, &t_typeinfo);
-    if (!define_typeinfo(*t_typeinfo, r_new_index))
+    if (!define_builtin_typeinfo("float", r_new_index))
         return;
     
     MCLog("[Emit] FloatType(-> %ld)", r_new_index);
@@ -561,9 +599,7 @@ void EmitFloatType(long& r_new_index)
 
 void EmitDoubleType(long& r_new_index)
 {
-    MCAutoTypeInfoRef t_typeinfo;
-    MCPrimitiveTypeInfoCreate(kMCPrimitiveTypeCodeDouble, &t_typeinfo);
-    if (!define_typeinfo(*t_typeinfo, r_new_index))
+    if (!define_builtin_typeinfo("double", r_new_index))
         return;
     
     MCLog("[Emit] DoubleType(-> %ld)", r_new_index);
@@ -571,7 +607,7 @@ void EmitDoubleType(long& r_new_index)
 
 void EmitAnyType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCAnyTypeInfo, r_new_index))
+    if (!define_builtin_typeinfo("any", r_new_index))
         return;
     
     MCLog("[Emit] AnyType(-> %ld)", r_new_index);
@@ -579,7 +615,7 @@ void EmitAnyType(long& r_new_index)
 
 void EmitBooleanType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCBooleanTypeInfo, r_new_index))
+    if (!define_builtin_typeinfo("boolean", r_new_index))
         return;
     
     MCLog("[Emit] BooleanType(-> %ld)", r_new_index);
@@ -587,7 +623,7 @@ void EmitBooleanType(long& r_new_index)
 
 void EmitIntegerType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNumberTypeInfo, r_new_index))
+    if (!define_builtin_typeinfo("number", r_new_index))
         return;
     
     MCLog("[Emit] IntegerType(-> %ld)", r_new_index);
@@ -595,7 +631,8 @@ void EmitIntegerType(long& r_new_index)
 
 void EmitRealType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNumberTypeInfo, r_new_index))
+    // TODO: Real / Integer types.
+    if (!define_builtin_typeinfo("number", r_new_index))
         return;
     
     MCLog("[Emit] RealType(-> %ld)", r_new_index);
@@ -603,7 +640,7 @@ void EmitRealType(long& r_new_index)
 
 void EmitNumberType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNumberTypeInfo, r_new_index))
+    if (!define_builtin_typeinfo("number", r_new_index))
         return;
     
     MCLog("[Emit] NumberType(-> %ld)", r_new_index);
@@ -611,7 +648,7 @@ void EmitNumberType(long& r_new_index)
 
 void EmitStringType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCStringTypeInfo, r_new_index))
+    if (!define_builtin_typeinfo("string", r_new_index))
         return;
     
     MCLog("[Emit] StringType(-> %ld)", r_new_index);
@@ -619,7 +656,7 @@ void EmitStringType(long& r_new_index)
 
 void EmitDataType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCDataTypeInfo, r_new_index))
+    if (!define_builtin_typeinfo("data", r_new_index))
         return;
     
     MCLog("[Emit] DataType(-> %ld)", r_new_index);
@@ -627,7 +664,7 @@ void EmitDataType(long& r_new_index)
 
 void EmitArrayType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCArrayTypeInfo, r_new_index))
+    if (!define_builtin_typeinfo("array", r_new_index))
         return;
     
     MCLog("[Emit] ArrayType(-> %ld)", r_new_index);
@@ -635,7 +672,7 @@ void EmitArrayType(long& r_new_index)
 
 void EmitListType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCProperListTypeInfo, r_new_index))
+    if (!define_builtin_typeinfo("list", r_new_index))
         return;
     
     MCLog("[Emit] ListType(-> %ld)", r_new_index);
@@ -643,7 +680,7 @@ void EmitListType(long& r_new_index)
 
 void EmitUndefinedType(long& r_new_index)
 {
-    if (!define_typeinfo(kMCNullTypeInfo, r_new_index))
+    if (!define_builtin_typeinfo("undefined", r_new_index))
         return;
     
     MCLog("[Emit] UndefinedType(-> %ld)", r_new_index);
@@ -655,34 +692,25 @@ static MCTypeInfoRef s_current_record_basetype = nil;
 static MCRecordTypeFieldInfo *s_current_record_fields = nil;
 static uindex_t s_current_record_field_count = 0;
 
-void EmitBeginRecordType(long base_type_index)
+void EmitBeginRecordType(long p_base_type_index)
 {
-    s_current_record_basetype = to_mctypeinforef(base_type_index);
-    s_current_record_field_count = 0;
+    MCScriptBeginRecordTypeInModule(s_builder, p_base_type_index);
+    MCLog("[Emit] BeginRecordType(%ld)", p_base_type_index);
 }
 
 void EmitRecordTypeField(NameRef name, long type_index)
 {
-    MCMemoryResizeArray(s_current_record_field_count + 1, s_current_record_fields, s_current_record_field_count);
-    s_current_record_fields[s_current_record_field_count - 1] . name = to_mcnameref(name);
-    s_current_record_fields[s_current_record_field_count - 1] . type = to_mctypeinforef(type_index);
+    MCScriptContinueRecordTypeInModule(s_builder, to_mcnameref(name), type_index);
+    MCLog("[Emit] RecordTypeField(%@, %ld)", to_mcnameref(name), type_index);
 }
 
 void EmitEndRecordType(long& r_type_index)
 {
-    MCAutoTypeInfoRef t_typeinfo;
-    MCRecordTypeInfoCreate(s_current_record_fields, s_current_record_field_count, s_current_record_basetype, &t_typeinfo);
-    if (!define_typeinfo(*t_typeinfo, r_type_index))
-        return;
+    uindex_t t_index;
+    MCScriptEndRecordTypeInModule(s_builder, t_index);
+    r_type_index = t_index;
     
-    MCLog("[Emit] BeginRecordType(%ld -> %ld)", s_current_record_basetype, r_type_index);
-    for(uindex_t i = 0; i < s_current_record_field_count; i++)
-    {
-        long t_index;
-        define_typeinfo(s_current_record_fields[i] . type, t_index);
-        MCLog("[Emit] RecordTypeField(%@, %ld)", s_current_record_fields[i] . name, t_index);
-    }
-    MCLog("[Emit] EndRecordType()", 0);
+    MCLog("[Emit] EndRecordType(-> %ld)", r_type_index);
 }
 
 //////////
@@ -693,15 +721,14 @@ static uindex_t s_current_handler_field_count = 0;
 
 void EmitBeginHandlerType(long return_type_index)
 {
-    s_current_handler_returntype = to_mctypeinforef(return_type_index);
-    s_current_handler_field_count = 0;
+    MCScriptBeginHandlerTypeInModule(s_builder, return_type_index);
+    MCLog("[Emit] BeginRecordType(%ld)", return_type_index);
 }
 
 static void EmitHandlerTypeParameter(MCHandlerTypeFieldMode mode, NameRef name, long type_index)
 {
-    MCMemoryResizeArray(s_current_handler_field_count + 1, s_current_handler_fields, s_current_handler_field_count);
-    s_current_handler_fields[s_current_handler_field_count - 1] . mode = mode;
-    s_current_handler_fields[s_current_handler_field_count - 1] . type = to_mctypeinforef(type_index);
+    MCScriptContinueHandlerTypeInModule(s_builder, (MCScriptHandlerTypeParameterMode)mode, to_mcnameref(name), type_index);
+    MCLog("[Emit] HandlerTypeParameter(%d, %@, %ld)", mode, to_mcnameref(name), type_index);
 }
 
 void EmitHandlerTypeInParameter(NameRef name, long type_index)
@@ -721,19 +748,10 @@ void EmitHandlerTypeInOutParameter(NameRef name, long type_index)
 
 void EmitEndHandlerType(long& r_type_index)
 {
-    MCAutoTypeInfoRef t_typeinfo;
-    MCHandlerTypeInfoCreate(s_current_handler_fields, s_current_handler_field_count, s_current_handler_returntype, &t_typeinfo);
-    if (!define_typeinfo(*t_typeinfo, r_type_index))
-        return;
-    
-    MCLog("[Emit] BeginHandlerType(%ld -> %ld)", s_current_handler_returntype, r_type_index);
-    for(uindex_t i = 0; i < s_current_handler_field_count; i++)
-    {
-        long t_index;
-        define_typeinfo(s_current_handler_fields[i] . type, t_index);
-        MCLog("[Emit] HandlerTypeField(%d, %ld)", s_current_handler_fields[i] . mode, t_index);
-    }
-    MCLog("[Emit] EndHandlerType()", 0);
+    uindex_t t_index;
+    MCScriptEndHandlerTypeInModule(s_builder, t_index);
+    r_type_index = t_index;
+    MCLog("[Emit] EndHandlerType(-> %ld)", t_index);
 }
 
 ///////////
@@ -741,7 +759,7 @@ void EmitEndHandlerType(long& r_type_index)
 void EmitHandlerParameter(NameRef name, long type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddParameterToHandlerInModule(s_builder, to_mcnameref(name), to_mctypeinforef(type_index), t_index);
+    MCScriptAddParameterToHandlerInModule(s_builder, to_mcnameref(name), type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] HandlerParameter(%@, %ld -> %ld)", to_mcnameref(name), type_index, r_index);
@@ -750,7 +768,7 @@ void EmitHandlerParameter(NameRef name, long type_index, long& r_index)
 void EmitHandlerVariable(NameRef name, long type_index, long& r_index)
 {
     uindex_t t_index;
-    MCScriptAddVariableToHandlerInModule(s_builder, to_mcnameref(name), to_mctypeinforef(type_index), t_index);
+    MCScriptAddVariableToHandlerInModule(s_builder, to_mcnameref(name), type_index, t_index);
     r_index = t_index;
     
     MCLog("[Emit] HandlerVariable(%@, %ld -> %ld)", to_mcnameref(name), type_index, r_index);

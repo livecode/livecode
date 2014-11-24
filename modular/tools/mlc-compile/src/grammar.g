@@ -430,6 +430,9 @@
     'rule' Type(-> named(Position, Name)):
         Identifier(-> Name) @(-> Position)
         
+    'rule' Type(-> optional(Position, Base)):
+        "optional" @(-> Position) Type(-> Base)
+
     'rule' Type(-> pointer(Position)):
         "pointer" @(-> Position)
 

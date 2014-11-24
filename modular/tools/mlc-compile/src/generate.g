@@ -972,7 +972,7 @@
     'rule' IsNamedTypeId(Id):
         -- If the id is defined in another module then it is a named type.
         -- If the id is defined in this module and is public then it is a named type.
-        -- Otherwise it is an alias.
+        -- Otherwise it is an alias to an 'unnamed' type.
         QuerySymbolId(Id -> Info)
         Info'Parent -> ModuleId
         QueryModuleId(ModuleId -> ModuleInfo)
@@ -992,18 +992,8 @@
 
     'rule' GenerateType(named(_, Id) -> Index):
         QuerySymbolId(Id -> Info)
-        (|
-            IsNamedTypeId(Id)
-            Id'Name -> Name
-            Info'Parent -> ParentId
-            ParentId'Name -> ParentName
-            EmitNamedType(ParentName, Name -> Index)
-        ||
-            Id'Name -> Name
-            Info'Type -> Type
-            GenerateType(Type -> TypeIndex)
-            EmitAliasType(Name, TypeIndex -> Index)
-        |)
+        Info'Index -> DefinedIndex
+        EmitDefinedType(DefinedIndex -> Index)
 
     'rule' GenerateType(record(_, Base, Fields) -> Index):
         GenerateType(Base -> BaseTypeIndex)

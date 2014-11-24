@@ -208,11 +208,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4D21B64119E4354C00B64BEF /* linechunk.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = linechunk.mlc; path = ../../library/src/linechunk.mlc; sourceTree = "<group>"; };
-		4D21B64219E4354C00B64BEF /* binary.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = binary.mlc; path = ../../library/src/binary.mlc; sourceTree = "<group>"; };
-		4D21B64419E4354C00B64BEF /* itemchunk.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = itemchunk.mlc; path = ../../library/src/itemchunk.mlc; sourceTree = "<group>"; };
-		4D21B64519E4354C00B64BEF /* segmentchunk.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = segmentchunk.mlc; path = ../../library/src/segmentchunk.mlc; sourceTree = "<group>"; };
-		4D21B64619E4354C00B64BEF /* string.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = string.mlc; path = ../../library/src/string.mlc; sourceTree = "<group>"; };
 		4D21B66B19E43BE100B64BEF /* mlc-bootstrap-compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mlc-bootstrap-compile"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D3AA08219CC3EA600886BE7 /* types.g */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = types.g; path = src/types.g; sourceTree = SOURCE_ROOT; };
 		4D3AA08319CC3ED200886BE7 /* types.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = types.c; path = src/_G_/types.c; sourceTree = "<group>"; };
@@ -247,6 +242,27 @@
 		4D44E3C41A1642A70073FFA2 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../../../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
 		4D44E3C51A1642A70073FFA2 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../../../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
 		4D44E3D41A1642BC0073FFA2 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		4D44E4831A1F698D0073FFA2 /* arithmetic.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = arithmetic.mlc; path = ../../library/src/arithmetic.mlc; sourceTree = "<group>"; };
+		4D44E4841A1F698D0073FFA2 /* binary.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = binary.mlc; path = ../../library/src/binary.mlc; sourceTree = "<group>"; };
+		4D44E4851A1F698D0073FFA2 /* bitwise.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = bitwise.mlc; path = ../../library/src/bitwise.mlc; sourceTree = "<group>"; };
+		4D44E4861A1F698D0073FFA2 /* byte.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = byte.mlc; path = ../../library/src/byte.mlc; sourceTree = "<group>"; };
+		4D44E4871A1F698D0073FFA2 /* char.mlc */ = {isa = PBXFileReference; explicitFileType = text; name = char.mlc; path = ../../library/src/char.mlc; sourceTree = "<group>"; };
+		4D44E4881A1F698D0073FFA2 /* encoding.mlc */ = {isa = PBXFileReference; explicitFileType = text; name = encoding.mlc; path = ../../library/src/encoding.mlc; sourceTree = "<group>"; };
+		4D44E4891A1F698D0073FFA2 /* file.mlc */ = {isa = PBXFileReference; explicitFileType = text; name = file.mlc; path = ../../library/src/file.mlc; sourceTree = "<group>"; };
+		4D44E48A1A1F698D0073FFA2 /* itemchunk.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = itemchunk.mlc; path = ../../library/src/itemchunk.mlc; sourceTree = "<group>"; };
+		4D44E48B1A1F698D0073FFA2 /* linechunk.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = linechunk.mlc; path = ../../library/src/linechunk.mlc; sourceTree = "<group>"; };
+		4D44E48C1A1F698D0073FFA2 /* list.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = list.mlc; path = ../../library/src/list.mlc; sourceTree = "<group>"; };
+		4D44E48D1A1F698D0073FFA2 /* logic.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = logic.mlc; path = ../../library/src/logic.mlc; sourceTree = "<group>"; };
+		4D44E48E1A1F698D0073FFA2 /* map.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = map.mlc; path = ../../library/src/map.mlc; sourceTree = "<group>"; };
+		4D44E48F1A1F698D0073FFA2 /* math-foundation.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = "math-foundation.mlc"; path = "../../library/src/math-foundation.mlc"; sourceTree = "<group>"; };
+		4D44E4901A1F698D0073FFA2 /* math.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = math.mlc; path = ../../library/src/math.mlc; sourceTree = "<group>"; };
+		4D44E4911A1F698D0073FFA2 /* segmentchunk.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = segmentchunk.mlc; path = ../../library/src/segmentchunk.mlc; sourceTree = "<group>"; };
+		4D44E4921A1F698D0073FFA2 /* sort.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = sort.mlc; path = ../../library/src/sort.mlc; sourceTree = "<group>"; };
+		4D44E4931A1F698D0073FFA2 /* string.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = string.mlc; path = ../../library/src/string.mlc; sourceTree = "<group>"; };
+		4D44E4941A1F698D0073FFA2 /* type-convert.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = "type-convert.mlc"; path = "../../library/src/type-convert.mlc"; sourceTree = "<group>"; };
+		4D44E4951A1F698D0073FFA2 /* type.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = type.mlc; path = ../../library/src/type.mlc; sourceTree = "<group>"; };
+		4D44E4961A1F698D0073FFA2 /* url.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = url.mlc; path = ../../library/src/url.mlc; sourceTree = "<group>"; };
+		4D44E4971A1F8A970073FFA2 /* canvas.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = canvas.mlc; path = ../../library/canvas/src/canvas.mlc; sourceTree = "<group>"; };
 		4D6E0E7119E710BE001AE5CC /* check.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = check.g; path = src/check.g; sourceTree = SOURCE_ROOT; };
 		4D6E0E7919E7158C001AE5CC /* check.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = check.c; path = src/_GG_/check.c; sourceTree = "<group>"; };
 		4D6F070B19CC36DD00DDC6E0 /* mlc-compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mlc-compile"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -273,7 +289,6 @@
 		4DA53A3419E51C690089FBDC /* position.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = position.c; path = src/position.c; sourceTree = SOURCE_ROOT; };
 		4DA53A3719E51C990089FBDC /* position.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = position.h; path = src/position.h; sourceTree = SOURCE_ROOT; };
 		4DA53A3819E51F570089FBDC /* literal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = literal.h; path = src/literal.h; sourceTree = SOURCE_ROOT; };
-		4DE027D019EE9702004485C9 /* list.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = list.mlc; path = ../../library/src/list.mlc; sourceTree = "<group>"; };
 		4DE027D119EE9A89004485C9 /* grammar-examples.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "grammar-examples.mlc"; sourceTree = "<group>"; };
 		4DE027DF19F104FB004485C9 /* generate.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = generate.g; path = src/generate.g; sourceTree = SOURCE_ROOT; };
 		4DEB63ED19E5220E009DF2EA /* report.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = report.h; path = src/report.h; sourceTree = SOURCE_ROOT; };
@@ -286,11 +301,6 @@
 		4DEB640419E592B7009DF2EA /* syntax.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = syntax.c; path = src/_GG_/syntax.c; sourceTree = "<group>"; };
 		4DEB640919E6822E009DF2EA /* syntax-gen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "syntax-gen.c"; path = "src/syntax-gen.c"; sourceTree = SOURCE_ROOT; };
 		4DEB640E19E69E50009DF2EA /* COMMENTS.b */ = {isa = PBXFileReference; lastKnownFileType = text; name = COMMENTS.b; path = src/COMMENTS.b; sourceTree = SOURCE_ROOT; };
-		4DEB641919E6C74B009DF2EA /* arithmetic.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = arithmetic.mlc; path = ../../library/src/arithmetic.mlc; sourceTree = "<group>"; };
-		4DEB641A19E6C74B009DF2EA /* bitwise.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = bitwise.mlc; path = ../../library/src/bitwise.mlc; sourceTree = "<group>"; };
-		4DEB641B19E6C74B009DF2EA /* logic.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = logic.mlc; path = ../../library/src/logic.mlc; sourceTree = "<group>"; };
-		4DEB641C19E6C74B009DF2EA /* math-foundation.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "math-foundation.mlc"; path = "../../library/src/math-foundation.mlc"; sourceTree = "<group>"; };
-		4DEB641D19E6C74B009DF2EA /* type.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = type.mlc; path = ../../library/src/type.mlc; sourceTree = "<group>"; };
 		4DEB642719E81D95009DF2EA /* operator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = operator.c; path = src/operator.c; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -346,17 +356,27 @@
 		4D3AA12719D311C900886BE7 /* Library */ = {
 			isa = PBXGroup;
 			children = (
-				4DE027D019EE9702004485C9 /* list.mlc */,
-				4DEB641919E6C74B009DF2EA /* arithmetic.mlc */,
-				4DEB641A19E6C74B009DF2EA /* bitwise.mlc */,
-				4DEB641B19E6C74B009DF2EA /* logic.mlc */,
-				4DEB641C19E6C74B009DF2EA /* math-foundation.mlc */,
-				4DEB641D19E6C74B009DF2EA /* type.mlc */,
-				4D21B64119E4354C00B64BEF /* linechunk.mlc */,
-				4D21B64219E4354C00B64BEF /* binary.mlc */,
-				4D21B64419E4354C00B64BEF /* itemchunk.mlc */,
-				4D21B64519E4354C00B64BEF /* segmentchunk.mlc */,
-				4D21B64619E4354C00B64BEF /* string.mlc */,
+				4D44E4971A1F8A970073FFA2 /* canvas.mlc */,
+				4D44E4831A1F698D0073FFA2 /* arithmetic.mlc */,
+				4D44E4841A1F698D0073FFA2 /* binary.mlc */,
+				4D44E4851A1F698D0073FFA2 /* bitwise.mlc */,
+				4D44E4861A1F698D0073FFA2 /* byte.mlc */,
+				4D44E4871A1F698D0073FFA2 /* char.mlc */,
+				4D44E4881A1F698D0073FFA2 /* encoding.mlc */,
+				4D44E4891A1F698D0073FFA2 /* file.mlc */,
+				4D44E48A1A1F698D0073FFA2 /* itemchunk.mlc */,
+				4D44E48B1A1F698D0073FFA2 /* linechunk.mlc */,
+				4D44E48C1A1F698D0073FFA2 /* list.mlc */,
+				4D44E48D1A1F698D0073FFA2 /* logic.mlc */,
+				4D44E48E1A1F698D0073FFA2 /* map.mlc */,
+				4D44E48F1A1F698D0073FFA2 /* math-foundation.mlc */,
+				4D44E4901A1F698D0073FFA2 /* math.mlc */,
+				4D44E4911A1F698D0073FFA2 /* segmentchunk.mlc */,
+				4D44E4921A1F698D0073FFA2 /* sort.mlc */,
+				4D44E4931A1F698D0073FFA2 /* string.mlc */,
+				4D44E4941A1F698D0073FFA2 /* type-convert.mlc */,
+				4D44E4951A1F698D0073FFA2 /* type.mlc */,
+				4D44E4961A1F698D0073FFA2 /* url.mlc */,
 			);
 			name = Library;
 			sourceTree = "<group>";
@@ -802,7 +822,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/mlc-bootstrap-compile\" -bootstrap -template \"${SRCROOT}/src/grammar.g\" -output \"${SRCROOT}/src/grammar_full.g\" \"${SRCROOT}/../../library/src/string.mlc\" \"${SRCROOT}/../../library/src/binary.mlc\" \"${SRCROOT}/../../library/src/type.mlc\" \"${SRCROOT}/../../library/src/arithmetic.mlc\" \"${SRCROOT}/../../library/canvas/src/canvas.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/mlc-bootstrap-compile\" -bootstrap -template \"${SRCROOT}/src/grammar.g\" -output \"${SRCROOT}/src/grammar_full.g\" \"${SRCROOT}/../../library/src/string.mlc\" \"${SRCROOT}/../../library/src/binary.mlc\" \"${SRCROOT}/../../library/src/type.mlc\" \"${SRCROOT}/../../library/src/arithmetic.mlc\" \"${SRCROOT}/../../library/src/bitwise.mlc\" \"${SRCROOT}/../../library/src/byte.mlc\" \"${SRCROOT}/../../library/src/char.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

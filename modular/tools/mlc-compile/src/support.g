@@ -124,8 +124,7 @@
     EmitBeginDefinitionGroup
     EmitContinueDefinitionGroup
     EmitEndDefinitionGroup
-    EmitNamedType
-    EmitAliasType
+    EmitDefinedType
     EmitOptionalType
     EmitPointerType
     EmitBoolType
@@ -398,9 +397,10 @@
 'action' EmitContinueDefinitionGroup(Index: INT)
 'action' EmitEndDefinitionGroup(-> Index: INT)
 
+'action' EmitDefinedType(INT -> INT)
 'action' EmitOptionalType(INT -> INT)
-'action' EmitNamedType(Module: NAME, Name: NAME -> INT)
-'action' EmitAliasType(Name: NAME, TypeIndex: INT -> INT)
+--'action' EmitNamedType(Module: NAME, Name: NAME -> INT)
+--'action' EmitAliasType(Name: NAME, TypeIndex: INT -> INT)
 'action' EmitPointerType(-> INT)
 'action' EmitBoolType(-> INT)
 'action' EmitIntType(-> INT)
