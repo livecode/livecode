@@ -966,15 +966,17 @@ bool __MCValueImmutableCopy(__MCValue *self, bool p_release, __MCValue*& r_new_v
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNullRef kMCNull;
-MCBooleanRef kMCTrue;
-MCBooleanRef kMCFalse;
-
 bool MCBooleanCreateWithBool(bool p_value, MCBooleanRef& r_boolean)
 {
     r_boolean = MCValueRetain(p_value ? kMCTrue : kMCFalse);
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNullRef kMCNull;
+MCBooleanRef kMCTrue;
+MCBooleanRef kMCFalse;
 
 bool __MCValueInitialize(void)
 {
