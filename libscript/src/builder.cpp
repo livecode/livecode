@@ -844,8 +844,6 @@ static uindex_t __measure_uint(uindex_t p_value)
     if ((p_value & (1 << 31)) != 0)
         return 2;
     
-    p_value &= ~(1 << 31);
-    
     if (p_value < (1 << 7))
         return 1;
     if (p_value < (1 << 14))
@@ -865,18 +863,18 @@ static uindex_t __measure_instruction(MCScriptModuleBuilderRef self, MCScriptByt
     if (p_instruction -> arity >= 15)
         t_size += 1;
     
-    /*if (p_instruction -> operation == kMCScriptBytecodeOpJump)
-        t_size += 3;
-    else if (p_instruction -> operation >= kMCScriptBytecodeOpJumpIfUndefined && p_instruction -> operation <= kMCScriptBytecodeOpJumpIfFalse)
+    if (p_instruction -> operation == kMCScriptBytecodeOpJump)
+        t_size += 2;
+    else if (p_instruction -> operation >= kMCScriptBytecodeOpJumpIfFalse && p_instruction -> operation <= kMCScriptBytecodeOpJumpIfTrue)
     {
         t_size += __measure_uint(self -> operands[p_instruction -> operands]);
-        t_size += 3;
+        t_size += 2;
     }
     else
-    {*/
+    {
         for(uindex_t i = 0; i < p_instruction -> arity; i++)
             t_size += __measure_uint(self -> operands[p_instruction -> operands + i]);
-    /*}*/
+    }
     
     return t_size;
 }
@@ -1112,6 +1110,8 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         
         for(uindex_t j = 0; j < t_arity; j++)
             __emit_bytecode_uint(self, t_operands[j]);
+        
+        MCLog("[%06d] %d(%d)", t_address, t_op, t_arity);
     }
     
     t_handler -> finish_address = self -> module . bytecode_count;
