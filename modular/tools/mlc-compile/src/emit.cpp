@@ -97,6 +97,7 @@ extern "C" void EmitBeginAssignInvoke(long index, long contextreg, long inputreg
 extern "C" void EmitBeginIterateInvoke(long index, long contextreg, long iteratorreg, long containerreg);
 extern "C" void EmitContinueInvoke(long reg);
 extern "C" void EmitEndInvoke(void);
+extern "C" void EmitAssign(long dst, long src);
 extern "C" void EmitAssignUndefined(long reg);
 extern "C" void EmitAssignTrue(long reg);
 extern "C" void EmitAssignFalse(long reg);
@@ -207,6 +208,7 @@ void EmitEndModule(void)
     MCMemoryOutputStreamFinish(t_stream, t_buffer, t_size);
     MCValueRelease(t_stream);
     
+#if 0
     if (t_success)
     {
         MCLog("Generated module file of size %ld\n", t_size);
@@ -238,6 +240,21 @@ void EmitEndModule(void)
         if (t_success)
             MCLog("Executed test with result %@", t_result);
     }
+#endif
+    
+    if (t_success)
+    {
+        MCLog("Generated module file of size %ld\n", t_size);
+        FILE *t_output;
+        t_output = OpenOutputFile();
+        if (t_output != NULL)
+        {
+            fwrite(t_buffer, 1, t_size, t_output);
+            fclose(t_output);
+            free(t_buffer);
+        }
+    }
+    
     
     MCFinalize();
 }
@@ -989,6 +1006,12 @@ void EmitAssignString(long reg, long value)
     MCStringCreateWithCString((const char *)value, &t_string);
     MCScriptEmitAssignConstantInModule(s_builder, reg, *t_string);
     MCLog("[Emit] AssignString(%ld, \"%s\")", reg, (const char *)value);
+}
+
+void EmitAssign(long dst, long src)
+{
+    MCScriptEmitAssignInModule(s_builder, dst, src);
+    MCLog("[Emit] Assign(%ld, %ld)", dst, src);
 }
 
 /////////

@@ -39,6 +39,19 @@
 		4D44E3D61A1642C60073FFA2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3D41A1642BC0073FFA2 /* CoreFoundation.framework */; };
 		4D44E4D71A24A62E0073FFA2 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E4CA1A24A5ED0073FFA2 /* libffi.a */; };
 		4D44E4D91A24A6350073FFA2 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E4CA1A24A5ED0073FFA2 /* libffi.a */; };
+		4D44E4EA1A24D6910073FFA2 /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D44E4E91A24D6910073FFA2 /* test.cpp */; };
+		4D44E4F31A24D8CF0073FFA2 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E4CA1A24A5ED0073FFA2 /* libffi.a */; };
+		4D44E4F41A24D8CF0073FFA2 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3B51A1642320073FFA2 /* libfoundation.a */; };
+		4D44E4F51A24D8CF0073FFA2 /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E39C1A160ABA0073FFA2 /* libscript.a */; };
+		4D44E4F61A24D8E40073FFA2 /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3BF1A1642A70073FFA2 /* libicudata.a */; };
+		4D44E4F71A24D8E40073FFA2 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C01A1642A70073FFA2 /* libicui18n.a */; };
+		4D44E4F81A24D8E40073FFA2 /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C11A1642A70073FFA2 /* libicuio.a */; };
+		4D44E4F91A24D8E40073FFA2 /* libicule.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C21A1642A70073FFA2 /* libicule.a */; };
+		4D44E4FA1A24D8E40073FFA2 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C31A1642A70073FFA2 /* libiculx.a */; };
+		4D44E4FB1A24D8E40073FFA2 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C41A1642A70073FFA2 /* libicutu.a */; };
+		4D44E4FC1A24D8E40073FFA2 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C51A1642A70073FFA2 /* libicuuc.a */; };
+		4D44E4FE1A24D8F10073FFA2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E4FD1A24D8F10073FFA2 /* CoreFoundation.framework */; };
+		4D44E50F1A24EC620073FFA2 /* libstdmlc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E5091A24EA460073FFA2 /* libstdmlc.a */; };
 		4D6E0E7B19E71592001AE5CC /* check.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6E0E7919E7158C001AE5CC /* check.c */; };
 		4D6F072919CC388F00DDC6E0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F072819CC388F00DDC6E0 /* main.c */; };
 		4D78D28E19E9446F00DDEF0B /* syntax.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D78D28C19E9446F00DDEF0B /* syntax.c */; };
@@ -158,6 +171,55 @@
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = libffi;
 		};
+		4D44E4EB1A24D8C70073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D6F070119CC36B700DDC6E0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D6F070A19CC36DD00DDC6E0;
+			remoteInfo = "mlc-compile";
+		};
+		4D44E4ED1A24D8C70073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E4C51A24A5ED0073FFA2 /* libffi.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = libffi;
+		};
+		4D44E4EF1A24D8C70073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3B01A1642320073FFA2 /* libfoundation.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95;
+			remoteInfo = foundation;
+		};
+		4D44E4F11A24D8C70073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D322F1519DD945E008476D3;
+			remoteInfo = script;
+		};
+		4D44E5081A24EA460073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E5011A24EA460073FFA2 /* stdmlc.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D21B5DC19DEEC5600B64BEF;
+			remoteInfo = stdmlc;
+		};
+		4D44E50A1A24EA460073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E5011A24EA460073FFA2 /* stdmlc.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 765345C119F7E9A80032E6E2;
+			remoteInfo = "stdlib-testing";
+		};
+		4D44E50C1A24EA5C0073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E5011A24EA460073FFA2 /* stdmlc.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D21B5DB19DEEC5600B64BEF;
+			remoteInfo = stdmlc;
+		};
 		4D6F071E19CC37BB00DDC6E0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */;
@@ -197,6 +259,15 @@
 
 /* Begin PBXCopyFilesBuildPhase section */
 		4D21B66719E43BE100B64BEF /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		4D44E4DE1A24D6610073FFA2 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -273,6 +344,10 @@
 		4D44E4961A1F698D0073FFA2 /* url.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = url.mlc; path = ../../library/src/url.mlc; sourceTree = "<group>"; };
 		4D44E4971A1F8A970073FFA2 /* canvas.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = canvas.mlc; path = ../../library/canvas/src/canvas.mlc; sourceTree = "<group>"; };
 		4D44E4C51A24A5ED0073FFA2 /* libffi.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libffi.xcodeproj; path = ../../../thirdparty/libffi/libffi.xcodeproj; sourceTree = "<group>"; };
+		4D44E4E01A24D6610073FFA2 /* mlc-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mlc-test"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D44E4E91A24D6910073FFA2 /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = test.cpp; path = src/test.cpp; sourceTree = SOURCE_ROOT; };
+		4D44E4FD1A24D8F10073FFA2 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/CoreFoundation.framework; sourceTree = DEVELOPER_DIR; };
+		4D44E5011A24EA460073FFA2 /* stdmlc.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = stdmlc.xcodeproj; path = ../../library/stdmlc.xcodeproj; sourceTree = "<group>"; };
 		4D6E0E7119E710BE001AE5CC /* check.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = check.g; path = src/check.g; sourceTree = SOURCE_ROOT; };
 		4D6E0E7919E7158C001AE5CC /* check.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = check.c; path = src/_GG_/check.c; sourceTree = "<group>"; };
 		4D6F070B19CC36DD00DDC6E0 /* mlc-compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mlc-compile"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -331,6 +406,25 @@
 				4D44E3CF1A1642A70073FFA2 /* libiculx.a in Frameworks */,
 				4D44E3BD1A16424F0073FFA2 /* libfoundation.a in Frameworks */,
 				4D21B66619E43BE100B64BEF /* libgrts.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4D44E4DD1A24D6610073FFA2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D44E4FE1A24D8F10073FFA2 /* CoreFoundation.framework in Frameworks */,
+				4D44E4F31A24D8CF0073FFA2 /* libffi.a in Frameworks */,
+				4D44E4F41A24D8CF0073FFA2 /* libfoundation.a in Frameworks */,
+				4D44E4F51A24D8CF0073FFA2 /* libscript.a in Frameworks */,
+				4D44E50F1A24EC620073FFA2 /* libstdmlc.a in Frameworks */,
+				4D44E4F61A24D8E40073FFA2 /* libicudata.a in Frameworks */,
+				4D44E4F71A24D8E40073FFA2 /* libicui18n.a in Frameworks */,
+				4D44E4F81A24D8E40073FFA2 /* libicuio.a in Frameworks */,
+				4D44E4F91A24D8E40073FFA2 /* libicule.a in Frameworks */,
+				4D44E4FA1A24D8E40073FFA2 /* libiculx.a in Frameworks */,
+				4D44E4FB1A24D8E40073FFA2 /* libicutu.a in Frameworks */,
+				4D44E4FC1A24D8E40073FFA2 /* libicuuc.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -418,9 +512,19 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		4D44E5021A24EA460073FFA2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D44E5091A24EA460073FFA2 /* libstdmlc.a */,
+				4D44E50B1A24EA460073FFA2 /* stdlib-testing */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		4D6F070019CC36B700DDC6E0 = {
 			isa = PBXGroup;
 			children = (
+				4D44E4FD1A24D8F10073FFA2 /* CoreFoundation.framework */,
 				4D44E3D41A1642BC0073FFA2 /* CoreFoundation.framework */,
 				4D3AA12719D311C900886BE7 /* Library */,
 				4D78D29019E9452B00DDEF0B /* Tests */,
@@ -436,6 +540,7 @@
 			children = (
 				4D6F070B19CC36DD00DDC6E0 /* mlc-compile */,
 				4D21B66B19E43BE100B64BEF /* mlc-bootstrap-compile */,
+				4D44E4E01A24D6610073FFA2 /* mlc-test */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -477,6 +582,7 @@
 				4DEB640919E6822E009DF2EA /* syntax-gen.c */,
 				4DEB642719E81D95009DF2EA /* operator.c */,
 				4D44E3AA1A1632160073FFA2 /* emit.cpp */,
+				4D44E4E91A24D6910073FFA2 /* test.cpp */,
 			);
 			name = Sources;
 			path = "mlc-compile";
@@ -492,6 +598,7 @@
 				4D44E3C31A1642A70073FFA2 /* libiculx.a */,
 				4D44E3C41A1642A70073FFA2 /* libicutu.a */,
 				4D44E3C51A1642A70073FFA2 /* libicuuc.a */,
+				4D44E5011A24EA460073FFA2 /* stdmlc.xcodeproj */,
 				4D44E4C51A24A5ED0073FFA2 /* libffi.xcodeproj */,
 				4D44E3B01A1642320073FFA2 /* libfoundation.xcodeproj */,
 				4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */,
@@ -584,6 +691,29 @@
 			productReference = 4D21B66B19E43BE100B64BEF /* mlc-bootstrap-compile */;
 			productType = "com.apple.product-type.tool";
 		};
+		4D44E4DF1A24D6610073FFA2 /* mlc-test */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4D44E4E61A24D6610073FFA2 /* Build configuration list for PBXNativeTarget "mlc-test" */;
+			buildPhases = (
+				4D44E4DC1A24D6610073FFA2 /* Sources */,
+				4D44E4DD1A24D6610073FFA2 /* Frameworks */,
+				4D44E4DE1A24D6610073FFA2 /* CopyFiles */,
+				4D44E5001A24D98E0073FFA2 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4D44E4EC1A24D8C70073FFA2 /* PBXTargetDependency */,
+				4D44E4EE1A24D8C70073FFA2 /* PBXTargetDependency */,
+				4D44E4F01A24D8C70073FFA2 /* PBXTargetDependency */,
+				4D44E4F21A24D8C70073FFA2 /* PBXTargetDependency */,
+				4D44E50D1A24EA5C0073FFA2 /* PBXTargetDependency */,
+			);
+			name = "mlc-test";
+			productName = "mlc-test";
+			productReference = 4D44E4E01A24D6610073FFA2 /* mlc-test */;
+			productType = "com.apple.product-type.tool";
+		};
 		4D6F070A19CC36DD00DDC6E0 /* mlc-compile */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4D6F071219CC36DD00DDC6E0 /* Build configuration list for PBXNativeTarget "mlc-compile" */;
@@ -645,11 +775,16 @@
 					ProductGroup = 4D44E3961A160ABA0073FFA2 /* Products */;
 					ProjectRef = 4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */;
 				},
+				{
+					ProductGroup = 4D44E5021A24EA460073FFA2 /* Products */;
+					ProjectRef = 4D44E5011A24EA460073FFA2 /* stdmlc.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
 				4D6F070A19CC36DD00DDC6E0 /* mlc-compile */,
 				4D21B65619E43BE100B64BEF /* mlc-bootstrap-compile */,
+				4D44E4DF1A24D6610073FFA2 /* mlc-test */,
 			);
 		};
 /* End PBXProject section */
@@ -688,6 +823,20 @@
 			fileType = archive.ar;
 			path = libffi.a;
 			remoteRef = 4D44E4C91A24A5ED0073FFA2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D44E5091A24EA460073FFA2 /* libstdmlc.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libstdmlc.a;
+			remoteRef = 4D44E5081A24EA460073FFA2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D44E50B1A24EA460073FFA2 /* stdlib-testing */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "stdlib-testing";
+			remoteRef = 4D44E50A1A24EA460073FFA2 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		4D6F071F19CC37BB00DDC6E0 /* gentle */ = {
@@ -808,6 +957,19 @@
 			shellScript = "cd src\n\"${BUILT_PRODUCTS_DIR}/reflex\" -subdir \"_G_\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
+		4D44E5001A24D98E0073FFA2 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/string.lcm\" \"${SRCROOT}/../../library/src/string.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/binary.lcm\" \"${SRCROOT}/../../library/src/binary.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/arithmetic.lcm\" \"${SRCROOT}/../../library/src/arithmetic.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/test.lcm\" \"${SRCROOT}/test.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\ncp \"${BUILT_PRODUCTS_DIR}/mlc-compile\" \"${SRCROOT}/mlc-compile\"\ncp \"${BUILT_PRODUCTS_DIR}/mlc-test\" \"${SRCROOT}/mlc-test\"";
+		};
 		4D6F072A19CC38B200DDC6E0 /* Gentle */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -884,6 +1046,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4D44E4DC1A24D6610073FFA2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D44E4EA1A24D6910073FFA2 /* test.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4D6F070719CC36DD00DDC6E0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -949,6 +1119,31 @@
 			isa = PBXTargetDependency;
 			name = foundation;
 			targetProxy = 4D44E3BB1A1642480073FFA2 /* PBXContainerItemProxy */;
+		};
+		4D44E4EC1A24D8C70073FFA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4D6F070A19CC36DD00DDC6E0 /* mlc-compile */;
+			targetProxy = 4D44E4EB1A24D8C70073FFA2 /* PBXContainerItemProxy */;
+		};
+		4D44E4EE1A24D8C70073FFA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libffi;
+			targetProxy = 4D44E4ED1A24D8C70073FFA2 /* PBXContainerItemProxy */;
+		};
+		4D44E4F01A24D8C70073FFA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = foundation;
+			targetProxy = 4D44E4EF1A24D8C70073FFA2 /* PBXContainerItemProxy */;
+		};
+		4D44E4F21A24D8C70073FFA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = script;
+			targetProxy = 4D44E4F11A24D8C70073FFA2 /* PBXContainerItemProxy */;
+		};
+		4D44E50D1A24EA5C0073FFA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = stdmlc;
+			targetProxy = 4D44E50C1A24EA5C0073FFA2 /* PBXContainerItemProxy */;
 		};
 		4D6F072319CC37C900DDC6E0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1053,10 +1248,92 @@
 			};
 			name = Release;
 		};
+		4D44E4E71A24D6610073FFA2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		4D44E4E81A24D6610073FFA2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 		4D6F070519CC36B700DDC6E0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
 				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = _DEBUG;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1073,6 +1350,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -1159,6 +1438,15 @@
 			buildConfigurations = (
 				4D21B66919E43BE100B64BEF /* Debug */,
 				4D21B66A19E43BE100B64BEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4D44E4E61A24D6610073FFA2 /* Build configuration list for PBXNativeTarget "mlc-test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4D44E4E71A24D6610073FFA2 /* Debug */,
+				4D44E4E81A24D6610073FFA2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

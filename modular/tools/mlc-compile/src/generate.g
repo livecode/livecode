@@ -641,6 +641,16 @@
     'rule' GenerateBody(Result, Context, call(Position, Handler, Arguments)):
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments)
 
+    'rule' GenerateBody(Result, Context, put(Position, Source, Target)):
+        GenerateInvoke_EvaluateArgumentForIn(Context, Source)
+        GenerateInvoke_EvaluateArgumentForOut(Context, Target)
+        EmitGetRegisterAttachedToExpression(Source -> SrcReg)
+        EmitGetRegisterAttachedToExpression(Target -> DstReg)
+        EmitAssign(DstReg, SrcReg)
+        GenerateInvoke_AssignArgument(Context, Target)
+        GenerateInvoke_FreeArgument(Source)
+        GenerateInvoke_FreeArgument(Target)
+
     'rule' GenerateBody(Result, Context, invoke(_, Invokes, Arguments)):
         GenerateInvoke_GetExecuteSignature(Invokes -> Signature)
         GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
@@ -763,11 +773,6 @@
 'action' GenerateInvoke_FreeArguments(EXPRESSIONLIST)
 
     'rule' GenerateInvoke_FreeArguments(expressionlist(Expr, Rest)):
-        [|
-            EmitGetRegisterAttachedToExpression(Expr -> Reg)
-            EmitDestroyRegister(Reg)
-            EmitDetachRegisterFromExpression(Expr)
-        |]
         GenerateInvoke_FreeArgument(Expr)
         GenerateInvoke_FreeArguments(Rest)
         
@@ -776,7 +781,12 @@
         
 'action' GenerateInvoke_FreeArgument(EXPRESSION)
 
-    'rule' GenerateInvoke_FreeArgument(invoke(_, _, Arguments)):
+    'rule' GenerateInvoke_FreeArgument(Expr:invoke(_, _, Arguments)):
+        [|
+            EmitGetRegisterAttachedToExpression(Expr -> Reg)
+            EmitDestroyRegister(Reg)
+            EmitDetachRegisterFromExpression(Expr)
+        |]
         GenerateInvoke_FreeArguments(Arguments)
     
     'rule' GenerateInvoke_FreeArgument(_):

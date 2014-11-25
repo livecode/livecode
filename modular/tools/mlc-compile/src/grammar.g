@@ -577,6 +577,9 @@
         
     'rule' Statement(-> return(Position, Value)):
         "return" @(-> Position) Expression(-> Value)
+        
+    'rule' Statement(-> put(Position, Source, Target)):
+        "put" @(-> Position) Expression(-> Source) "into" Expression(-> Target)
 
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"

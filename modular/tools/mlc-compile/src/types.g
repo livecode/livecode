@@ -119,6 +119,7 @@
     nextrepeat(Position: POS)
     exitrepeat(Position: POS)
     return(Position: POS, Value: EXPRESSION)
+    put(Position: POS, Source: EXPRESSION, Target: EXPRESSION)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
     nil

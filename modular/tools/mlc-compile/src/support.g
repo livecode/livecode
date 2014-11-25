@@ -172,6 +172,7 @@
     EmitBeginBuiltinInvoke
     EmitContinueInvoke
     EmitEndInvoke
+    EmitAssign
     EmitAssignUndefined
     EmitAssignTrue
     EmitAssignFalse
@@ -458,6 +459,7 @@
 'action' EmitAssignInteger(Register: INT, Value: INT)
 'action' EmitAssignReal(Register: INT, Value: DOUBLE)
 'action' EmitAssignString(Register: INT, Value: STRING)
+'action' EmitAssign(Dst: INT, Src: INT)
 'action' EmitFetchLocal(Register: INT, Var: INT)
 'action' EmitStoreLocal(Register: INT, Var: INT)
 'action' EmitFetchGlobal(Register: INT, Var: INT)

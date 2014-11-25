@@ -215,6 +215,8 @@ void SetTemplateFile(const char *p_output)
 
 FILE *OpenOutputFile(void)
 {
+    if (s_output_file == NULL)
+        return NULL;
     return fopen(s_output_file, "w");
 }
 

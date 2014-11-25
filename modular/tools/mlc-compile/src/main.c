@@ -80,13 +80,20 @@ void bootstrap_main(int argc, char *argv[])
 static void full_main(int argc, char *argv[])
 {
     // If there is no filename, error.
-    if (argc != 1)
+    if (argc != 1 && argc != 3)
     {
         fprintf(stderr, "Invalid arguments\n");
         return 1;
     }
     
-    AddFile(argv[0]);
+    int i;
+    i = 0;
+    if (strcmp(argv[i], "-output") == 0 && i + 1 < argc)
+    {
+        SetOutputFile(argv[++i]);
+        i++;
+    }
+    AddFile(argv[i]);
     if (MoveToNextFile())
     {
         yyExtend();
