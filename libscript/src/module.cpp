@@ -155,6 +155,14 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
     for(uindex_t i = 0; i < self -> type_count; i++)
         if (self -> types[i] -> typeinfo != nil)
             MCValueRelease(self -> types[i] -> typeinfo);
+    for(uindex_t i = 0; i < self -> definition_count; i++)
+        if (self -> definitions[i] -> kind == kMCScriptDefinitionKindForeignHandler)
+        {
+            MCScriptForeignHandlerDefinition *t_def;
+            t_def = static_cast<MCScriptForeignHandlerDefinition *>(self -> definitions[i]);
+            MCMemoryDeleteArray(t_def -> function_argtypes);
+            MCMemoryDelete(t_def -> function_cif);
+        }
     
     // Remove ourselves from the global module list.
     if (s_modules == self)
@@ -471,8 +479,28 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                             t_typeinfo = kMCAnyTypeInfo;
                         else if (MCNameIsEqualTo(t_import -> name, MCNAME("undefined")))
                             t_typeinfo = kMCNullTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("boolean")))
+                            t_typeinfo = kMCBooleanTypeInfo;
                         else if (MCNameIsEqualTo(t_import -> name, MCNAME("string")))
                             t_typeinfo = kMCStringTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("number")))
+                            t_typeinfo = kMCNumberTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("array")))
+                            t_typeinfo = kMCArrayTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("list")))
+                            t_typeinfo = kMCProperListTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("bool")))
+                            t_typeinfo = kMCBoolTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("int")))
+                            t_typeinfo = kMCIntTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("uint")))
+                            t_typeinfo = kMCUIntTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("float")))
+                            t_typeinfo = kMCFloatTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("double")))
+                            t_typeinfo = kMCDoubleTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("pointer")))
+                            t_typeinfo = kMCPointerTypeInfo;
                         else
                             MCAssert(false);
                     }

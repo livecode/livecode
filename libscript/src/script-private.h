@@ -250,6 +250,7 @@ struct MCScriptForeignHandlerDefinition: public MCScriptDefinition
     
     // Bound function information - not pickled.
     void *function;
+    void *function_argtypes;
     void *function_cif;
 };
 
