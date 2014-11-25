@@ -97,6 +97,11 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 		MCAssert((t_resolved_base -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
 	}
 
+	/* If the p_field_count < 0 then the p_fields are expected to be
+	 * terminated by a custodian with name = nil. */
+	if (p_field_count < 0)
+		for (p_field_count = 0; p_fields[p_field_count].name != nil; ++p_field_count);
+
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
@@ -109,11 +114,7 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
     
     self -> flags |= kMCValueTypeCodeRecord;
 
-	/* If the p_field_count < 0 then the p_fields are expected to be
-	 * terminated by a custodian with name = nil. */
-	uindex_t i;
-	i = 0;
-	while ((p_field_count >= 0) ? (i < p_field_count) : (p_fields[i].name != nil))
+	for (uindex_t i = 0; i < p_field_count; ++i)
 	{
 		/* Verify that the field names are all caselessly distinct.
 		 * N.b. O(N^2) algorithm is inefficient, but will only be run
@@ -124,7 +125,6 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 		}
         self -> record . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> record . fields[i] . type = MCValueRetain(p_fields[i] . type);
-		++i;
     }
     self -> record . field_count = p_field_count;
     self -> record . base = MCValueRetain(t_resolved_base != nil ? t_resolved_base : kMCNullTypeInfo);
