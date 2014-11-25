@@ -255,6 +255,11 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
     
+	/* If the p_field_count < 0 then the p_fields are expected to be
+	 * terminated by a custodian with name = nil. */
+	if (p_field_count < 0)
+		for (p_field_count = 0; p_fields[p_field_count].name != nil; ++p_field_count);
+
     if (!MCMemoryNewArray(p_field_count, self -> handler . fields))
     {
         MCMemoryDelete(self);
@@ -263,16 +268,11 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
     
     self -> flags |= kMCValueTypeCodeHandler;
 
-	uindex_t i;
-	i = 0;
-	/* If the p_field_count < 0 then the p_fields are expected to be
-	 * terminated by a custodian with name = nil. */
-	while ((p_field_count >= 0) ? (i < p_field_count) : p_fields[i].name != nil)
+	for (uindex_t i = 0; i < p_field_count; ++i)
     {
         self -> handler . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
-		++i;
     }
     self -> handler . field_count = p_field_count;
     
