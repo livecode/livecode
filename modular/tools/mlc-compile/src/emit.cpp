@@ -326,7 +326,13 @@ void EmitVariableDefinition(long p_index, PositionRef p_position, NameRef p_name
 
 void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index, long p_binding)
 {
-    MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), p_type_index, to_mcstringref(p_binding), p_index);
+    MCAutoStringRef t_binding_str;
+    if (strcmp((const char *)p_binding, "<builtin>") == 0)
+        t_binding_str = MCNameGetString(to_mcnameref(p_name));
+    else
+        t_binding_str = to_mcstringref(p_binding);
+    
+    MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), p_type_index, *t_binding_str, p_index);
     
     MCLog("[Emit] ForeignHandlerDefinition(%ld, %@, %ld, %@)", p_index, to_mcnameref(p_name), p_type_index, to_mcstringref(p_binding));
 }
