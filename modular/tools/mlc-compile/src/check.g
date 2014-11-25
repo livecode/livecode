@@ -25,6 +25,7 @@
 -- to be a pointer to the definingid. The next step is to check that bindings
 -- are appropriate to each id:
 --   BD1) DEFINITION'constant(Value) - all id's in Value must be constant.
+--   BD2) DEFINITION'property(Getter, Setter) - both id's must be handlers or variables
 --
 --   BT1) TYPE'named(Id) - Id must be bound to a type.
 --   BT2) TYPE'opaque(FIELD'action(Handler)) - Handler must be bound to a handler.
@@ -52,6 +53,10 @@
 
     'rule' CheckBindings(DEFINITION'constant(Position, _, _, Value)):
         /* BD1 */ CheckBindingsOfConstantExpression(Value)
+
+    'rule' CheckBindings(DEFINITION'property(Position, _, _, Getter, Setter)):
+        /* BD2 */ CheckBindingIsVariableOrHandlerId(Getter)
+        /* BD2 */ CheckBindingIsVariableOrHandlerId(Setter)
 
     --
 

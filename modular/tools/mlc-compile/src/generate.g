@@ -327,11 +327,23 @@
         Info'Index -> DefIndex
         EmitForeignHandlerDefinition(DefIndex, Position, Name, TypeIndex, Binding)
         
-    'rule' GenerateDefinitions(property(_, _, _)):
-        -- TODO
+    'rule' GenerateDefinitions(property(Position, _, Id, Getter, Setter)):
+        QuerySymbolId(Id -> Info)
+        Id'Name -> Name
+        Info'Index -> DefIndex
+        QuerySymbolId(Getter -> GetInfo)
+        GetInfo'Index -> GetIndex
+        QuerySymbolId(Setter -> SetInfo)
+        SetInfo'Index -> SetIndex
+        EmitPropertyDefinition(DefIndex, Position, Name, GetIndex, SetIndex)
         
-    'rule' GenerateDefinitions(event(_, _, _)):
-        -- TODO
+    'rule' GenerateDefinitions(event(Position, _, Id, Signature)):
+        GenerateType(handler(Position, Signature) -> TypeIndex)
+
+        QuerySymbolId(Id -> Info)
+        Id'Name -> Name
+        Info'Index -> DefIndex
+        EmitEventDefinition(DefIndex, Position, Name, TypeIndex)
         
     'rule' GenerateDefinitions(syntax(Position, _, Id, Class, _, _)):
         QuerySyntaxId(Id -> Info)

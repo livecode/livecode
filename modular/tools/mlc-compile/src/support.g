@@ -104,6 +104,8 @@
     EmitBeginHandlerDefinition
     EmitEndHandlerDefinition
     EmitForeignHandlerDefinition
+    EmitPropertyDefinition
+    EmitEventDefinition
     EmitBeginSyntaxDefinition
     EmitEndSyntaxDefinition
     EmitBeginSyntaxMethod
@@ -374,6 +376,8 @@
 'action' EmitBeginHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitEndHandlerDefinition()
 'action' EmitForeignHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, Binding: STRING)
+'action' EmitPropertyDefinition(Index: INT, Position: POS, Name: NAME, GetIndex: INT, SetIndex: INT)
+'action' EmitEventDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 
 'action' EmitBeginSyntaxDefinition(Index: INT, Position: POS, Name: NAME)
 'action' EmitEndSyntaxDefinition()
