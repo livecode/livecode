@@ -747,7 +747,7 @@ bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep)
+bool MCImageRepGetResident(const void *p_data, uindex_t p_size, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
@@ -834,3 +834,73 @@ bool MCImageRepGetPixelRep(MCDataRef p_pixel_data, uint32_t p_width, uint32_t p_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// ImageRep Function API
+
+MCImageRep *MCImageRepRetain(MCImageRep *p_image_rep)
+{
+	if (p_image_rep == nil)
+		return nil;
+	
+	return p_image_rep->Retain();
+}
+
+void MCImageRepRelease(MCImageRep *p_image_rep)
+{
+	if (p_image_rep == nil)
+		return;
+	
+	p_image_rep->Release();
+}
+
+bool MCImageRepCreateWithPath(MCStringRef p_path, MCImageRep *&r_image_rep)
+{
+	return MCImageRepGetReferenced(p_path, r_image_rep);
+}
+
+bool MCImageRepCreateWithData(MCDataRef p_data, MCImageRep *&r_image_rep)
+{
+	return MCImageRepGetResident(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), r_image_rep);
+}
+
+bool MCImageRepCreateWithPixels(MCDataRef p_pixels, uint32_t p_width, uint32_t p_height, MCGPixelFormat p_format, bool p_premultiplied, MCImageRep *&r_image_rep)
+{
+	return MCImageRepGetPixelRep(p_pixels, p_width, p_height, p_format, p_premultiplied, r_image_rep);
+}
+
+bool MCImageRepGetGeometry(MCImageRep *p_image_rep, uint32_t &r_width, uint32_t &r_height)
+{
+	return p_image_rep->GetGeometry(r_width, r_height);
+}
+
+bool MCImageRepGetFrameDuration(MCImageRep *p_image_rep, uint32_t p_frame, uint32_t &r_duration)
+{
+	if (p_frame >= p_image_rep->GetFrameCount())
+		return false;
+	
+	return p_image_rep->GetFrameDuration(p_frame, r_duration);
+}
+
+bool MCImageRepLock(MCImageRep *p_image_rep, uint32_t p_index, MCGFloat p_density, MCGImageFrame &r_frame)
+{
+	return p_image_rep->LockImageFrame(p_index, p_density, r_frame);
+}
+
+void MCImageRepUnlock(MCImageRep *p_image_rep, uint32_t p_index, MCGImageFrame &p_frame)
+{
+	p_image_rep->UnlockImageFrame(p_index, p_frame);
+}
+
+bool MCImageRepLockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCGFloat p_density, MCImageBitmap *&r_raster)
+{
+	return p_image_rep->LockBitmap(p_index, p_density, r_raster);
+}
+
+void MCImageRepUnlock(MCImageRep *p_image_rep, uint32_t p_index, MCImageBitmap *p_raster)
+{
+	p_image_rep->UnlockBitmap(p_index, p_raster);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+

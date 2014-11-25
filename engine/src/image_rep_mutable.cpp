@@ -192,7 +192,6 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	m_locked_bitmap = nil;
 	m_gframe.image = nil;
 	
-	m_frame.x_scale = m_frame.y_scale = 1.0;
 	m_gframe.x_scale = m_gframe.y_scale = 1.0;
 }
 

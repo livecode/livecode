@@ -453,7 +453,7 @@ protected:
 bool MCImageRepCreateReferencedWithSearchKey(MCStringRef p_filename, MCStringRef p_searchkey, MCImageRep *&r_rep);
 
 bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep);
-bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
+bool MCImageRepGetResident(const void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);
 bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep);
