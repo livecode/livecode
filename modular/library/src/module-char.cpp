@@ -23,6 +23,7 @@ void MCCharEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_output)
     r_output = MCStringGetLength(p_target);
 }
 
+#if 0
 void MCCharEvalIsAmongTheCharsOf(MCHandlerContext& ctxt, MCStringRef p_needle, MCStringRef p_target, bool& r_output)
 {
     // Error if there is more than one char in needle.
@@ -32,11 +33,12 @@ void MCCharEvalIsAmongTheCharsOf(MCHandlerContext& ctxt, MCStringRef p_needle, M
     uindex_t t_dummy;
     r_output = MCStringFirstIndexOfChar(p_target, MCStringGetCodepointAtIndex(p_needle, 0), 0, ctxt . GetStringComparisonOptions(), t_dummy);
 }
+#endif
 
 void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfCodepointChunkByRange(p_target, p_start, p_finish, t_start, t_count);
     if (!MCStringCopySubstring(p_target, MCRangeMake(t_start, t_count), r_output))
         return;
 }
@@ -44,7 +46,7 @@ void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_tar
 void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
     MCAutoStringRef t_data;
     if (!MCStringMutableCopy(x_target, &t_data))
@@ -60,18 +62,18 @@ void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_fini
 
 void MCCharFetchCharOf(index_t p_index, MCStringRef p_target, MCStringRef& r_output)
 {
-    MCCharChunkFetchCharRangeOf(p_index, p_index, p_target, r_output);
+    MCCharFetchCharRangeOf(p_index, p_index, p_target, r_output);
 }
 
 void MCCharStoreCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
-    MCCharChunkStoreCharRangeOf(p_value, p_index, p_index, x_target);
+    MCCharStoreCharRangeOf(p_value, p_index, p_index, x_target);
 }
 
 void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_index, p_index, t_start, t_count);
     
     MCAutoStringRef t_data;
     if (!MCStringMutableCopy(x_target, &t_data))
@@ -88,7 +90,7 @@ void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x
 void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_index, p_index, t_start, t_count);
     
     MCAutoStringRef t_data;
     if (!MCStringMutableCopy(x_target, &t_data))
@@ -102,6 +104,7 @@ void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MCStringRef& 
         return;
 }
 
+#if 0
 void MCCharEvalOffsetOfCharsInRange(MCHandlerContext ctxt, MCStringRef p_needle, MCStringRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
 {
     uindex_t t_offset;
@@ -143,6 +146,7 @@ void MCCharEvalEndsWith(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRe
 {
     r_result = MCStringBeginsWith(p_source, p_prefix, ctxt . GetStringComparisonOptions());
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

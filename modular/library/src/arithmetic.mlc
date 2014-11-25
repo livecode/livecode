@@ -2,18 +2,18 @@ module com.livecode.arithmetic
 
 --
 
-foreign handler ExecAddIntegerToInteger(in Value, inout Target) as undefined binds to "<builtin>"
-foreign handler ExecAddRealToReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
-foreign handler ExecAddNumberToNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
-foreign handler ExecSubtractIntegerFromInteger(in Value as integer, inout Target as integer) as undefined binds to "<builtin>"
-foreign handler ExecSubtractRealFromReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
-foreign handler ExecSubtractNumberFromNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
-foreign handler ExecMultiplyIntegerByInteger(in Value as integer, inout Target as integer) as undefined binds to "<builtin>"
-foreign handler ExecMultiplyRealByReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
-foreign handler ExecMultiplyNumberByNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
-foreign handler ExecDivideIntegerByInteger(in Value as integer, inout Target as integer) as undefined binds to "<builtin>"
-foreign handler ExecDivideRealByReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
-foreign handler ExecDivideNumberByNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecAddIntegerToInteger(in Value as int, inout Target as int) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecAddRealToReal(in Value as double, inout Target as double) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecAddNumberToNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecSubtractIntegerFromInteger(in Value as int, inout Target as int) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecSubtractRealFromReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecSubtractNumberFromNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecMultiplyIntegerByInteger(in Value as int, inout Target as int) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecMultiplyRealByReal(in Value as double, inout Target as double) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecMultiplyNumberByNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecDivideIntegerByInteger(in Value as int, inout Target as int) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecDivideRealByReal(in Value as double, inout Target as double) as undefined binds to "<builtin>"
+foreign handler MCArithmeticExecDivideNumberByNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
 
 foreign handler EvalPlusInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
 foreign handler EvalPlusReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
@@ -67,9 +67,7 @@ Value:      An expression that evaluates to a number.
 syntax AddNumberTo is statement
     "add" <Value: Expression> "to" <Target: Expression>
 begin
-    ExecAddIntegerToInteger(Value, Target)
-    ExecAddRealToReal(Value, Target)
-    ExecAddNumberToNumber(Value, Target)
+    MCArithmeticExecAddNumberToNumber(Value, Target)
 end syntax
 
 
@@ -83,9 +81,9 @@ Value:      An expression that evaluates to a number.
 syntax SubtractNumberFrom is statement
     "subtract" <Value: Expression> "from" <Target: Expression>
 begin
-    ExecSubtractIntegerFromInteger(Value, Target)
-    ExecSubtractRealFromReal(Value, Target)
-    ExecSubtractNumberFromNumber(Value, Target)
+    MCArithmeticExecSubtractIntegerFromInteger(Value, Target)
+    MCArithmeticExecSubtractRealFromReal(Value, Target)
+    MCArithmeticExecSubtractNumberFromNumber(Value, Target)
 end syntax
 
 /*
@@ -98,9 +96,9 @@ Value:      An expression that evaluates to a number.
 syntax MultiplyNumberBy is statement
     "multiply" <Value: Expression> "by" <Target: Expression>
 begin
-    ExecMultiplyIntegerByInteger(Value, Target)
-    ExecMultiplyRealByReal(Value, Target)
-    ExecMultiplyNumberByNumber(Value, Target)
+    MCArithmeticExecMultiplyIntegerByInteger(Value, Target)
+    MCArithmeticExecMultiplyRealByReal(Value, Target)
+    MCArithmeticExecMultiplyNumberByNumber(Value, Target)
 end syntax
 
 /*
@@ -113,9 +111,9 @@ Value:      An expression that evaluates to a number.
 syntax DivideNumberBy is statement
     "divide" <Value: Expression> "by" <Target: Expression>
 begin
-    ExecDivideIntegerByInteger(Value, Target)
-    ExecDivideRealByReal(Value, Target)
-    ExecDivideNumberByNumber(Value, Target)
+    MCArithmeticExecDivideIntegerByInteger(Value, Target)
+    MCArithmeticExecDivideRealByReal(Value, Target)
+    MCArithmeticExecDivideNumberByNumber(Value, Target)
 end syntax
 
 --

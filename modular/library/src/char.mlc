@@ -176,7 +176,7 @@ output:             True if the chars of <Needle> occur as a subsequence of the 
 syntax ContainsChars is neutral binary operator with precedence 1
     <Target: Expression> "contains" <Needle: Expression>
 begin
-    EvalContainsChars(Target, Needle, output)
+    EvalIsAmongTheCharsOf(Target, Needle, output)
 end syntax
 
 --
@@ -190,9 +190,9 @@ output:             Returns true if the characters in <Prefix> occur at the star
 */
 
 syntax BeginsWithString is neutral binary operator with precedence 1
-    <Source: Expression> "begins" "with" <Prefix: Expression>
+    <Source: Expression> "begins" <Foo: Expression> "and" <Bar: Expression> "with" <Prefix: Expression>
 begin
-    EvalBeginsWith(Source, Prefix, output)
+    //EvalBeginsWith(Source, Prefix, output)
 end syntax
 
 /*
@@ -207,7 +207,7 @@ output:             Returns true if the characters in <Prefix> occur at the end 
 syntax EndsWithString is neutral binary operator with precedence 1
     <Source: Expression> "ends" "with" <Suffix: Expression>
 begin
-    EvalEndsWith(Source, Suffix, output)
+    //EvalEndsWith(Source, Suffix, output)
 end syntax
 
 --
