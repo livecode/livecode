@@ -153,7 +153,12 @@ uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef unresolved_self)
     self = __MCTypeInfoResolve(unresolved_self);
     
     MCAssert(__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord);
+    return __MCRecordTypeInfoGetFieldCount(self);
+}
 
+uindex_t
+__MCRecordTypeInfoGetFieldCount(MCTypeInfoRef self)
+{
 	/* Sum field counts of all base record types */
 	uindex_t t_field_count;
 	t_field_count = 0;
