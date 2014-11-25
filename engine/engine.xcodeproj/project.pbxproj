@@ -291,7 +291,6 @@
 		4D6C27FD1647D942007C96B7 /* exec-graphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FB1647D942007C96B7 /* exec-graphics.cpp */; };
 		4D6C27FE1647D942007C96B7 /* exec-security.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FC1647D942007C96B7 /* exec-security.cpp */; };
 		4D6C28B61647DC4F007C96B7 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
-		4D6F2AE718981E7F0099947D /* (null) in Sources */ = {isa = PBXBuildFile; };
 		4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D77F1DD183F8298002EEBB4 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */; };
@@ -514,6 +513,18 @@
 		721CAACB18351E7400858545 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC518351E7400858545 /* libiculx.a */; };
 		721CAACC18351E7400858545 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
 		721CAACD18351E7400858545 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
+		7261910C1A1F596200851787 /* text-controlblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7261910A1A1F596200851787 /* text-controlblock.cpp */; };
+		7261910F1A1F67EC00851787 /* text-breakingengine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7261910D1A1F67EC00851787 /* text-breakingengine.cpp */; };
+		726191121A1F73AC00851787 /* text-simplebreakingengine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 726191101A1F73AC00851787 /* text-simplebreakingengine.cpp */; };
+		726191151A1F744600851787 /* text-pane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 726191131A1F744600851787 /* text-pane.cpp */; };
+		7269ECBC1A1DFEC1000723DB /* text-run.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7269ECBA1A1DFEC1000723DB /* text-run.cpp */; };
+		7269ECBF1A1DFED5000723DB /* text-imageblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7269ECBD1A1DFED5000723DB /* text-imageblock.cpp */; };
+		7269ECC21A1DFEE4000723DB /* text-breakblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7269ECC01A1DFEE4000723DB /* text-breakblock.cpp */; };
+		7269ECC51A1DFEF5000723DB /* text-line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7269ECC31A1DFEF5000723DB /* text-line.cpp */; };
+		7269ECC71A1DFF0D000723DB /* text-segment.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7269ECC61A1DFF0D000723DB /* text-segment.cpp */; };
+		7269ECCA1A1E31B9000723DB /* text-cell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7269ECC81A1E31B9000723DB /* text-cell.cpp */; };
+		7269ECCD1A1E4BAF000723DB /* text-block.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7269ECCB1A1E4BAF000723DB /* text-block.cpp */; };
+		7269ECD01A1E507C000723DB /* text-paragraph.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7269ECCE1A1E507C000723DB /* text-paragraph.cpp */; };
 		7278F63A1843A2B100E35A65 /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC218351E7400858545 /* libicudata.a */; };
 		7278F63B1843A2B100E35A65 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC018351E1800858545 /* libicui18n.a */; };
 		7278F63C1843A2B100E35A65 /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC318351E7400858545 /* libicuio.a */; };
@@ -523,6 +534,7 @@
 		7278F6401843A2B100E35A65 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
 		72876DE618CF32C400C20405 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F0CC9018CA28E500C01A67 /* libskia.a */; };
 		72876DE718CF32D700C20405 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F0CC9018CA28E500C01A67 /* libskia.a */; };
+		72B67C511A0BBDF600BB2594 /* mac-theme.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72B67C501A0BBDF600BB2594 /* mac-theme.mm */; };
 		72C28AFA1911300D007F2AA0 /* segment.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72C28AF91911300D007F2AA0 /* segment.cpp */; };
 		72D6032418476FC90022379C /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC218351E7400858545 /* libicudata.a */; };
 		72D6032518476FC90022379C /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC018351E1800858545 /* libicui18n.a */; };
@@ -541,7 +553,6 @@
 		766E3299180EE4ED00CF7FCF /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3295180EE4E000CF7FCF /* imagelist.cpp */; };
 		766E329A180EE4EE00CF7FCF /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3293180EE4E000CF7FCF /* graphicscontext.cpp */; };
 		766E329B180EE4EE00CF7FCF /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3295180EE4E000CF7FCF /* imagelist.cpp */; };
-		72B67C511A0BBDF600BB2594 /* mac-theme.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72B67C501A0BBDF600BB2594 /* mac-theme.mm */; };
 		76CCAA7C19800BCD00C79271 /* mac-qt-recorder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */; };
 		76CCAA7E1980152A00C79271 /* platform-recorder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */; };
 		76D47DE918030E50006F9102 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */; };
@@ -1640,6 +1651,52 @@
 		721CAAC618351E7400858545 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
 		721CAAC718351E7400858545 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
 		7238DF4E1848B189007EA049 /* MCBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MCBlock.h; path = src/MCBlock.h; sourceTree = "<group>"; };
+		7261910A1A1F596200851787 /* text-controlblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-controlblock.cpp"; path = "src/text-controlblock.cpp"; sourceTree = "<group>"; };
+		7261910B1A1F596200851787 /* text-controlblock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-controlblock.h"; path = "src/text-controlblock.h"; sourceTree = "<group>"; };
+		7261910D1A1F67EC00851787 /* text-breakingengine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-breakingengine.cpp"; path = "src/text-breakingengine.cpp"; sourceTree = "<group>"; };
+		7261910E1A1F67EC00851787 /* text-breakingengine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-breakingengine.h"; path = "src/text-breakingengine.h"; sourceTree = "<group>"; };
+		726191101A1F73AC00851787 /* text-simplebreakingengine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-simplebreakingengine.cpp"; path = "src/text-simplebreakingengine.cpp"; sourceTree = "<group>"; };
+		726191111A1F73AC00851787 /* text-simplebreakingengine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-simplebreakingengine.h"; path = "src/text-simplebreakingengine.h"; sourceTree = "<group>"; };
+		726191131A1F744600851787 /* text-pane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-pane.cpp"; path = "src/text-pane.cpp"; sourceTree = "<group>"; };
+		726191141A1F744600851787 /* text-pane.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-pane.h"; path = "src/text-pane.h"; sourceTree = "<group>"; };
+		7269EC371A13D1DE000723DB /* linux-theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "linux-theme.cpp"; path = "src/linux-theme.cpp"; sourceTree = "<group>"; };
+		7269EC421A162199000723DB /* windows-theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "windows-theme.cpp"; path = "src/windows-theme.cpp"; sourceTree = "<group>"; };
+		7269EC5F1A1CE64C000723DB /* mblandroidnotification.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidnotification.cpp; path = src/mblandroidnotification.cpp; sourceTree = "<group>"; };
+		7269EC601A1CE64C000723DB /* mblandroidplayer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidplayer.cpp; path = src/mblandroidplayer.cpp; sourceTree = "<group>"; };
+		7269EC611A1CE64C000723DB /* mblandroidscroller.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidscroller.cpp; path = src/mblandroidscroller.cpp; sourceTree = "<group>"; };
+		7269EC621A1CE64C000723DB /* mblandroidsensor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsensor.cpp; path = src/mblandroidsensor.cpp; sourceTree = "<group>"; };
+		7269EC631A1CE64C000723DB /* mblandroidsound.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsound.cpp; path = src/mblandroidsound.cpp; sourceTree = "<group>"; };
+		7269EC641A1CE64C000723DB /* mblandroidstore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidstore.cpp; path = src/mblandroidstore.cpp; sourceTree = "<group>"; };
+		7269EC651A1CE64C000723DB /* mblandroidtextmessaging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextmessaging.cpp; path = src/mblandroidtextmessaging.cpp; sourceTree = "<group>"; };
+		7269EC661A1CE64C000723DB /* mblandroidtypeface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtypeface.cpp; path = src/mblandroidtypeface.cpp; sourceTree = "<group>"; };
+		7269EC671A1CE64C000723DB /* mblandroidtypeface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = mblandroidtypeface.h; path = src/mblandroidtypeface.h; sourceTree = "<group>"; };
+		7269EC681A1CE684000723DB /* mblandroidad.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidad.cpp; path = src/mblandroidad.cpp; sourceTree = "<group>"; };
+		7269EC691A1CE684000723DB /* mblandroidalert.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidalert.cpp; path = src/mblandroidalert.cpp; sourceTree = "<group>"; };
+		7269EC6A1A1CE684000723DB /* mblandroidbrowser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbrowser.cpp; path = src/mblandroidbrowser.cpp; sourceTree = "<group>"; };
+		7269EC6B1A1CE684000723DB /* mblandroidbusyindicator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbusyindicator.cpp; path = src/mblandroidbusyindicator.cpp; sourceTree = "<group>"; };
+		7269EC6C1A1CE684000723DB /* mblandroidcalendar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcalendar.cpp; path = src/mblandroidcalendar.cpp; sourceTree = "<group>"; };
+		7269EC6D1A1CE684000723DB /* mblandroidcontact.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontact.cpp; path = src/mblandroidcontact.cpp; sourceTree = "<group>"; };
+		7269EC6E1A1CE684000723DB /* mblandroidcontrol.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontrol.cpp; path = src/mblandroidcontrol.cpp; sourceTree = "<group>"; };
+		7269EC6F1A1CE684000723DB /* mblandroidcontrol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = mblandroidcontrol.h; path = src/mblandroidcontrol.h; sourceTree = "<group>"; };
+		7269EC701A1CE684000723DB /* mblandroidfont.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidfont.cpp; path = src/mblandroidfont.cpp; sourceTree = "<group>"; };
+		7269EC711A1CE684000723DB /* mblandroidinput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidinput.cpp; path = src/mblandroidinput.cpp; sourceTree = "<group>"; };
+		7269ECB91A1DFE9D000723DB /* text-segment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-segment.h"; path = "src/text-segment.h"; sourceTree = "<group>"; };
+		7269ECBA1A1DFEC1000723DB /* text-run.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-run.cpp"; path = "src/text-run.cpp"; sourceTree = "<group>"; };
+		7269ECBB1A1DFEC1000723DB /* text-run.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-run.h"; path = "src/text-run.h"; sourceTree = "<group>"; };
+		7269ECBD1A1DFED5000723DB /* text-imageblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-imageblock.cpp"; path = "src/text-imageblock.cpp"; sourceTree = "<group>"; };
+		7269ECBE1A1DFED5000723DB /* text-imageblock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-imageblock.h"; path = "src/text-imageblock.h"; sourceTree = "<group>"; };
+		7269ECC01A1DFEE4000723DB /* text-breakblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-breakblock.cpp"; path = "src/text-breakblock.cpp"; sourceTree = "<group>"; };
+		7269ECC11A1DFEE4000723DB /* text-breakblock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-breakblock.h"; path = "src/text-breakblock.h"; sourceTree = "<group>"; };
+		7269ECC31A1DFEF5000723DB /* text-line.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-line.cpp"; path = "src/text-line.cpp"; sourceTree = "<group>"; };
+		7269ECC41A1DFEF5000723DB /* text-line.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-line.h"; path = "src/text-line.h"; sourceTree = "<group>"; };
+		7269ECC61A1DFF0D000723DB /* text-segment.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-segment.cpp"; path = "src/text-segment.cpp"; sourceTree = "<group>"; };
+		7269ECC81A1E31B9000723DB /* text-cell.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-cell.cpp"; path = "src/text-cell.cpp"; sourceTree = "<group>"; };
+		7269ECC91A1E31B9000723DB /* text-cell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-cell.h"; path = "src/text-cell.h"; sourceTree = "<group>"; };
+		7269ECCB1A1E4BAF000723DB /* text-block.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-block.cpp"; path = "src/text-block.cpp"; sourceTree = "<group>"; };
+		7269ECCC1A1E4BAF000723DB /* text-block.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-block.h"; path = "src/text-block.h"; sourceTree = "<group>"; };
+		7269ECCE1A1E507C000723DB /* text-paragraph.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "text-paragraph.cpp"; path = "src/text-paragraph.cpp"; sourceTree = "<group>"; };
+		7269ECCF1A1E507C000723DB /* text-paragraph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "text-paragraph.h"; path = "src/text-paragraph.h"; sourceTree = "<group>"; };
+		72B67C501A0BBDF600BB2594 /* mac-theme.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-theme.mm"; path = "src/mac-theme.mm"; sourceTree = "<group>"; };
 		72C22E951945E48E00B18E8D /* syslnxfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxfs.cpp; path = src/syslnxfs.cpp; sourceTree = "<group>"; };
 		72C22E961945E48E00B18E8D /* syslnxregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxregion.cpp; path = src/syslnxregion.cpp; sourceTree = "<group>"; };
 		72C22E971945E48E00B18E8D /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
@@ -1720,28 +1777,6 @@
 		768D66A21762087500F203A3 /* mbliphonesensor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonesensor.mm; path = src/mbliphonesensor.mm; sourceTree = "<group>"; };
 		768D66A31762087500F203A3 /* mbliphonestore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonestore.mm; path = src/mbliphonestore.mm; sourceTree = "<group>"; };
 		768D66A41762087500F203A3 /* mbliphonetextmessaging.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextmessaging.mm; path = src/mbliphonetextmessaging.mm; sourceTree = "<group>"; };
-		7269EC371A13D1DE000723DB /* linux-theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "linux-theme.cpp"; path = "src/linux-theme.cpp"; sourceTree = "<group>"; };
-		7269EC421A162199000723DB /* windows-theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "windows-theme.cpp"; path = "src/windows-theme.cpp"; sourceTree = "<group>"; };
-		7269EC5F1A1CE64C000723DB /* mblandroidnotification.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidnotification.cpp; path = src/mblandroidnotification.cpp; sourceTree = "<group>"; };
-		7269EC601A1CE64C000723DB /* mblandroidplayer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidplayer.cpp; path = src/mblandroidplayer.cpp; sourceTree = "<group>"; };
-		7269EC611A1CE64C000723DB /* mblandroidscroller.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidscroller.cpp; path = src/mblandroidscroller.cpp; sourceTree = "<group>"; };
-		7269EC621A1CE64C000723DB /* mblandroidsensor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsensor.cpp; path = src/mblandroidsensor.cpp; sourceTree = "<group>"; };
-		7269EC631A1CE64C000723DB /* mblandroidsound.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsound.cpp; path = src/mblandroidsound.cpp; sourceTree = "<group>"; };
-		7269EC641A1CE64C000723DB /* mblandroidstore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidstore.cpp; path = src/mblandroidstore.cpp; sourceTree = "<group>"; };
-		7269EC651A1CE64C000723DB /* mblandroidtextmessaging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextmessaging.cpp; path = src/mblandroidtextmessaging.cpp; sourceTree = "<group>"; };
-		7269EC661A1CE64C000723DB /* mblandroidtypeface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtypeface.cpp; path = src/mblandroidtypeface.cpp; sourceTree = "<group>"; };
-		7269EC671A1CE64C000723DB /* mblandroidtypeface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = mblandroidtypeface.h; path = src/mblandroidtypeface.h; sourceTree = "<group>"; };
-		7269EC681A1CE684000723DB /* mblandroidad.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidad.cpp; path = src/mblandroidad.cpp; sourceTree = "<group>"; };
-		7269EC691A1CE684000723DB /* mblandroidalert.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidalert.cpp; path = src/mblandroidalert.cpp; sourceTree = "<group>"; };
-		7269EC6A1A1CE684000723DB /* mblandroidbrowser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbrowser.cpp; path = src/mblandroidbrowser.cpp; sourceTree = "<group>"; };
-		7269EC6B1A1CE684000723DB /* mblandroidbusyindicator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbusyindicator.cpp; path = src/mblandroidbusyindicator.cpp; sourceTree = "<group>"; };
-		7269EC6C1A1CE684000723DB /* mblandroidcalendar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcalendar.cpp; path = src/mblandroidcalendar.cpp; sourceTree = "<group>"; };
-		7269EC6D1A1CE684000723DB /* mblandroidcontact.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontact.cpp; path = src/mblandroidcontact.cpp; sourceTree = "<group>"; };
-		7269EC6E1A1CE684000723DB /* mblandroidcontrol.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontrol.cpp; path = src/mblandroidcontrol.cpp; sourceTree = "<group>"; };
-		7269EC6F1A1CE684000723DB /* mblandroidcontrol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = mblandroidcontrol.h; path = src/mblandroidcontrol.h; sourceTree = "<group>"; };
-		7269EC701A1CE684000723DB /* mblandroidfont.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidfont.cpp; path = src/mblandroidfont.cpp; sourceTree = "<group>"; };
-		7269EC711A1CE684000723DB /* mblandroidinput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidinput.cpp; path = src/mblandroidinput.cpp; sourceTree = "<group>"; };
-		72B67C501A0BBDF600BB2594 /* mac-theme.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-theme.mm"; path = "src/mac-theme.mm"; sourceTree = "<group>"; };
 		76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-recorder.mm"; path = "src/mac-qt-recorder.mm"; sourceTree = "<group>"; };
 		76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-recorder.cpp"; path = "src/platform-recorder.cpp"; sourceTree = "<group>"; };
 		76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field-chunk.cpp"; path = "src/exec-interface-field-chunk.cpp"; sourceTree = "<group>"; };
@@ -2150,6 +2185,7 @@
 				E8A4910A170F1F9F00769C7A /* Core - Misc */,
 				E8A49109170F192000769C7A /* Core - Objects */,
 				E8A7EEFD16FC985100C39491 /* Core - Security */,
+				7269ECB81A1DFE55000723DB /* Core - Text */,
 				4DE7ED0B13B33B4E002634F5 /* Desktop */,
 				4D6F92F012AA5C8000026A72 /* Desktop - Linux */,
 				4D6F92ED12AA5C7800026A72 /* Desktop - Mac */,
@@ -2857,6 +2893,37 @@
 				4C529CC219741CC8007C5F7C /* sysw32threads.cpp */,
 			);
 			name = System;
+			sourceTree = "<group>";
+		};
+		7269ECB81A1DFE55000723DB /* Core - Text */ = {
+			isa = PBXGroup;
+			children = (
+				7269ECCC1A1E4BAF000723DB /* text-block.h */,
+				7269ECC11A1DFEE4000723DB /* text-breakblock.h */,
+				7261910E1A1F67EC00851787 /* text-breakingengine.h */,
+				7269ECC91A1E31B9000723DB /* text-cell.h */,
+				7261910B1A1F596200851787 /* text-controlblock.h */,
+				7269ECBE1A1DFED5000723DB /* text-imageblock.h */,
+				7269ECC41A1DFEF5000723DB /* text-line.h */,
+				726191141A1F744600851787 /* text-pane.h */,
+				7269ECCF1A1E507C000723DB /* text-paragraph.h */,
+				7269ECBB1A1DFEC1000723DB /* text-run.h */,
+				7269ECB91A1DFE9D000723DB /* text-segment.h */,
+				726191111A1F73AC00851787 /* text-simplebreakingengine.h */,
+				7269ECCB1A1E4BAF000723DB /* text-block.cpp */,
+				7269ECC01A1DFEE4000723DB /* text-breakblock.cpp */,
+				7261910D1A1F67EC00851787 /* text-breakingengine.cpp */,
+				7269ECC81A1E31B9000723DB /* text-cell.cpp */,
+				7261910A1A1F596200851787 /* text-controlblock.cpp */,
+				7269ECBD1A1DFED5000723DB /* text-imageblock.cpp */,
+				7269ECC31A1DFEF5000723DB /* text-line.cpp */,
+				726191131A1F744600851787 /* text-pane.cpp */,
+				7269ECCE1A1E507C000723DB /* text-paragraph.cpp */,
+				7269ECBA1A1DFEC1000723DB /* text-run.cpp */,
+				7269ECC61A1DFF0D000723DB /* text-segment.cpp */,
+				726191101A1F73AC00851787 /* text-simplebreakingengine.cpp */,
+			);
+			name = "Core - Text";
 			sourceTree = "<group>";
 		};
 		766E329D180EE5BB00CF7FCF /* Products */ = {
@@ -4046,7 +4113,6 @@
 				4D1F9D53171C682E0091C6CB /* hndlrlst.cpp in Sources */,
 				4D1F9D54171C682E0091C6CB /* idraw.cpp in Sources */,
 				4D1F9D55171C682E0091C6CB /* ifile.cpp in Sources */,
-				E8AF7D2419F7E3BF000F68E9 /* graphics_util.cpp in Sources */,
 				4D1F9D56171C682E0091C6CB /* igif.cpp in Sources */,
 				4D1F9D57171C682E0091C6CB /* iimport.cpp in Sources */,
 				4D1F9D58171C682E0091C6CB /* ijpg.cpp in Sources */,
@@ -4298,9 +4364,11 @@
 				4DEE2AA60FDE42710009423C /* dispatch.cpp in Sources */,
 				4DEE2AA70FDE42710009423C /* dllst.cpp in Sources */,
 				4DEE2AA80FDE42710009423C /* edittool.cpp in Sources */,
+				7269ECBF1A1DFED5000723DB /* text-imageblock.cpp in Sources */,
 				4DEE2AA90FDE42710009423C /* eps.cpp in Sources */,
 				4DEE2AAB0FDE42710009423C /* express.cpp in Sources */,
 				4DEE2AAD0FDE42710009423C /* external.cpp in Sources */,
+				7269ECC51A1DFEF5000723DB /* text-line.cpp in Sources */,
 				4DEE2AAE0FDE42710009423C /* field.cpp in Sources */,
 				4DEE2AAF0FDE42710009423C /* fieldf.cpp in Sources */,
 				4DEE2AB00FDE42710009423C /* fieldh.cpp in Sources */,
@@ -4327,6 +4395,8 @@
 				4DEE2AC60FDE42710009423C /* iutil.cpp in Sources */,
 				4DEE2AC70FDE42710009423C /* keywords.cpp in Sources */,
 				4DEE2AC80FDE42710009423C /* line.cpp in Sources */,
+				7269ECCA1A1E31B9000723DB /* text-cell.cpp in Sources */,
+				726191151A1F744600851787 /* text-pane.cpp in Sources */,
 				4DEE2AC90FDE42710009423C /* literal.cpp in Sources */,
 				4DEE2ACA0FDE42710009423C /* magnify.cpp in Sources */,
 				4DEE2ACC0FDE42710009423C /* mcerror.cpp in Sources */,
@@ -4344,6 +4414,7 @@
 				72B67C511A0BBDF600BB2594 /* mac-theme.mm in Sources */,
 				4DEE2AD80FDE42710009423C /* operator.cpp in Sources */,
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
+				7269ECBC1A1DFEC1000723DB /* text-run.cpp in Sources */,
 				4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */,
 				4DEE2AE50FDE42710009423C /* osxflst.cpp in Sources */,
 				4DEE2AE60FDE42710009423C /* osxprinter.cpp in Sources */,
@@ -4371,12 +4442,15 @@
 				4DEE2B010FDE42710009423C /* stacke.cpp in Sources */,
 				4DEE2B020FDE42710009423C /* stacklst.cpp in Sources */,
 				4DEE2B030FDE42710009423C /* statemnt.cpp in Sources */,
+				7269ECC71A1DFF0D000723DB /* text-segment.cpp in Sources */,
 				4DEE2B040FDE42710009423C /* styledtext.cpp in Sources */,
 				4DEE2B050FDE42710009423C /* text.cpp in Sources */,
 				4DEE2B060FDE42710009423C /* tooltip.cpp in Sources */,
+				7269ECD01A1E507C000723DB /* text-paragraph.cpp in Sources */,
 				4DEE2B070FDE42710009423C /* transfer.cpp in Sources */,
 				4DEE2B080FDE42710009423C /* uidc.cpp in Sources */,
 				4DEE2B0A0FDE42710009423C /* undolst.cpp in Sources */,
+				7269ECCD1A1E4BAF000723DB /* text-block.cpp in Sources */,
 				4DEE2B0C0FDE42710009423C /* util.cpp in Sources */,
 				4DEE2B0D0FDE42710009423C /* variable.cpp in Sources */,
 				4C529CAF1973CC08007C5F7C /* mac-av-player.mm in Sources */,
@@ -4384,6 +4458,7 @@
 				4DEE2B120FDE42710009423C /* visual.cpp in Sources */,
 				4DAB7B370FE120060009F91E /* bitmapeffect.cpp in Sources */,
 				4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */,
+				7269ECC21A1DFEE4000723DB /* text-breakblock.cpp in Sources */,
 				4DF65E3310016337005A19CA /* capsule.cpp in Sources */,
 				4D00CD77103305D4003D3C0D /* bitmapeffectblur.cpp in Sources */,
 				4D17F4371042877000C49A3B /* externalv0.cpp in Sources */,
@@ -4411,6 +4486,7 @@
 				BEA3DA2419F0219200D9D2B3 /* color.cpp in Sources */,
 				4D432F1F141A2DFE001164F9 /* tilecachesw.cpp in Sources */,
 				4D433504141BC5FC001164F9 /* tilecachecg.cpp in Sources */,
+				726191121A1F73AC00851787 /* text-simplebreakingengine.cpp in Sources */,
 				4CC1535714E7FB91009FA80E /* paragrafattr.cpp in Sources */,
 				4CC1536214E7FE1D009FA80E /* fieldstyledtext.cpp in Sources */,
 				4D592DEB14EED23600EADBB6 /* fonttable.cpp in Sources */,
@@ -4474,6 +4550,7 @@
 				BEBC51DD195350C300215C85 /* mac-core.mm in Sources */,
 				BEBC51DE195350C300215C85 /* mac-cursor.mm in Sources */,
 				BEBC51DF195350C300215C85 /* mac-dialog.mm in Sources */,
+				7261910F1A1F67EC00851787 /* text-breakingengine.cpp in Sources */,
 				BEBC51E0195350C300215C85 /* mac-font.mm in Sources */,
 				BEBC51E1195350C300215C85 /* mac-menu.mm in Sources */,
 				BEBC51E2195350C300215C85 /* mac-pasteboard.mm in Sources */,
@@ -4484,6 +4561,7 @@
 				BEBC51E7195350C300215C85 /* mac-sound.mm in Sources */,
 				BEBC51E8195350C300215C85 /* mac-surface.mm in Sources */,
 				BEBC51E9195350C300215C85 /* mac-window.mm in Sources */,
+				7261910C1A1F596200851787 /* text-controlblock.cpp in Sources */,
 				BEBC51F01953510200215C85 /* platform-surface.cpp in Sources */,
 				BEBC51F11953510200215C85 /* platform-window.cpp in Sources */,
 				BEBC51F21953510200215C85 /* platform.cpp in Sources */,
