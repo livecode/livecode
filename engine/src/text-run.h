@@ -49,6 +49,7 @@ public:
     virtual MCTextBlockType getBlockType() const;
     virtual coord_t getCursorPositionBefore(uindex_t p_grapheme_offset);
     virtual coord_t getCursorPositionAfter(uindex_t p_grapheme_offset);
+    virtual bool mergeWithNext();
     virtual MCTextRun* splitAfter(uindex_t p_codeunit_offset);
     virtual coord_t getTextAscent() const;
     virtual coord_t getTextDescent() const;

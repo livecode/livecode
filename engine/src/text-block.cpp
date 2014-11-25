@@ -35,7 +35,7 @@ MCTextBlock::MCTextBlock(const MCTextBlock& p_copy, const MCRange& p_codeunit_ra
   MCTextCell(p_copy),
   m_grapheme_range(MCRangeMake(0, 0)),
   m_codeunit_range(p_codeunit_range),
-  m_segment(NULL),
+  m_segment(p_copy.m_segment),
   m_paragraph(p_copy.m_paragraph)
 {
     ;
@@ -128,10 +128,10 @@ void MCTextBlock::setBidiLevel(uint8_t p_level)
 
 uindex_t MCTextBlock::graphemeToCodeunit(uindex_t p_grapheme) const
 {
-    return m_paragraph->graphemeToCodeunit(p_grapheme + m_grapheme_range.offset);
+    return m_paragraph->graphemeToCodeunit(p_grapheme + m_grapheme_range.offset) - m_codeunit_range.offset;
 }
 
 uindex_t MCTextBlock::codeunitToGrapheme(uindex_t p_codeunit) const
 {
-    return m_paragraph->codeunitToGrapheme(p_codeunit + m_codeunit_range.offset);
+    return m_paragraph->codeunitToGrapheme(p_codeunit + m_codeunit_range.offset) - m_grapheme_range.offset;
 }

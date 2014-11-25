@@ -67,6 +67,70 @@ void MCTextCell::setNeedsLayout()
         getParent()->setNeedsLayout();
 }
 
+
+bool MCTextCell::isReversedLineOrder() const
+{
+    switch (getLayoutDirection())
+    {
+        case kMCTextCellLayoutLeftThenDown:
+        case kMCTextCellLayoutRightThenDown:
+        case kMCTextCellLayoutDownThenLeft:
+        case kMCTextCellLayoutUpThenLeft:
+            return false;
+            
+        case kMCTextCellLayoutLeftThenUp:
+        case kMCTextCellLayoutRightThenUp:
+        case kMCTextCellLayoutDownThenRight:
+        case kMCTextCellLayoutUpThenRight:
+            return true;
+            
+        default:
+            MCUnreachable();
+    }
+}
+
+bool MCTextCell::isReversedTextOrder() const
+{
+    switch (getLayoutDirection())
+    {
+        case kMCTextCellLayoutLeftThenDown:
+        case kMCTextCellLayoutLeftThenUp:
+        case kMCTextCellLayoutDownThenLeft:
+        case kMCTextCellLayoutDownThenRight:
+            return false;
+            
+        case kMCTextCellLayoutRightThenDown:
+        case kMCTextCellLayoutRightThenUp:
+        case kMCTextCellLayoutUpThenRight:
+        case kMCTextCellLayoutUpThenLeft:
+            return true;
+            
+        default:
+            MCUnreachable();
+    }
+}
+
+bool MCTextCell::isVerticalLayout() const
+{
+    switch (getLayoutDirection())
+    {
+        case kMCTextCellLayoutLeftThenDown:
+        case kMCTextCellLayoutLeftThenUp:
+        case kMCTextCellLayoutRightThenDown:
+        case kMCTextCellLayoutRightThenUp:
+            return false;
+            
+        case kMCTextCellLayoutDownThenLeft:
+        case kMCTextCellLayoutDownThenRight:
+        case kMCTextCellLayoutUpThenLeft:
+        case kMCTextCellLayoutUpThenRight:
+            return true;
+            
+        default:
+            MCUnreachable();
+    }
+}
+
 MCTextCell::MCTextCell() :
   m_x(0.0),
   m_y(0.0),
@@ -76,8 +140,8 @@ MCTextCell::MCTextCell() :
   m_max_height(INFINITY),
   m_local_attributes(NULL),
   m_effective_attributes(NULL),
-  m_horizontal_alignment(kMCTextCellAlignStart),
-  m_vertical_alignment(kMCTextCellAlignStart),
+  m_horizontal_alignment(kMCTextCellAlignCenter),
+  m_vertical_alignment(kMCTextCellAlignCenter),
   m_layout_direction(kMCTextCellLayoutLeftThenDown),
   m_flags(kMCTextCellNeedsLayout)
 {

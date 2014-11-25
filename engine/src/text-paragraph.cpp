@@ -115,7 +115,11 @@ void MCTextParagraph::performLayout()
         t_line = t_line->next();
     }
     while (t_line != m_lines);
-    recordSize(t_max_width, t_total_height);
+    
+    if (isinf(getMaxWidth()))
+        recordSize(t_max_width, t_total_height);
+    else
+        recordSize(getMaxWidth(), t_total_height);
     
     // Ensure all children are positioned correctly
     finishLayout();
@@ -130,7 +134,7 @@ void MCTextParagraph::clearLayout()
         MCTextLine* t_line;
         MCTextBlock* t_blocks;
         t_line = m_lines->remove(m_lines);
-        t_blocks = m_lines->clearAllSegments();
+        t_blocks = t_line->clearAllSegments();
         t_blocks->appendto(m_blocks);
         delete t_line;
     }
@@ -287,7 +291,7 @@ void MCTextParagraph::refreshBlocks()
     // Clear the existing mapping arrays
     m_grapheme_to_unit.Delete();
     m_grapheme_to_unit.Push(0);
-    m_unit_to_grapheme.Resize(MCStringGetLength(m_text));
+    m_unit_to_grapheme.Resize(MCStringGetLength(m_text) + 1);
     
     // Create a break iterator for generating the grapheme <-> codeunit mappings
     MCBreakIteratorRef t_break_iter;
@@ -305,13 +309,28 @@ void MCTextParagraph::refreshBlocks()
         t_grapheme_count++;
         t_last_boundary = t_boundary;
     }
+
+    m_unit_to_grapheme[MCStringGetLength(m_text)] = t_grapheme_count;
+    m_grapheme_to_unit.Push(MCStringGetLength(m_text));
     
     MCLocaleBreakIteratorRelease(t_break_iter);
+    
+    // Merge all blocks together that we can
+    MCTextBlock* t_block;
+    t_block = m_blocks;
+    do
+    {
+        // Merge this block with as many trailing blocks as possible
+        while (t_block->mergeWithNext())
+            ;
+        
+        t_block = t_block->next();
+    }
+    while (t_block != m_blocks);
     
     // Scan through the existing blocks. We use codeunits for the text scan
     // because all the control characters of interest are encoded in a single
     // unit and we can therefore avoid the codepoint -> codeunit mapping costs.
-    MCTextBlock* t_block;
     t_block = m_blocks;
     do
     {
@@ -595,67 +614,4 @@ coord_t MCTextParagraph::getFirstLineIndent() const
 {
     // TODO: implement
     return 0.0f;
-}
-
-bool MCTextParagraph::isReversedLineOrder() const
-{
-    switch (getLayoutDirection())
-    {
-        case kMCTextCellLayoutLeftThenDown:
-        case kMCTextCellLayoutRightThenDown:
-        case kMCTextCellLayoutDownThenLeft:
-        case kMCTextCellLayoutUpThenLeft:
-            return false;
-        
-        case kMCTextCellLayoutLeftThenUp:
-        case kMCTextCellLayoutRightThenUp:
-        case kMCTextCellLayoutDownThenRight:
-        case kMCTextCellLayoutUpThenRight:
-            return true;
-            
-        default:
-            MCUnreachable();
-    }
-}
-
-bool MCTextParagraph::isReversedTextOrder() const
-{
-    switch (getLayoutDirection())
-    {
-        case kMCTextCellLayoutLeftThenDown:
-        case kMCTextCellLayoutLeftThenUp:
-        case kMCTextCellLayoutDownThenLeft:
-        case kMCTextCellLayoutDownThenRight:
-            return false;
-            
-        case kMCTextCellLayoutRightThenDown:
-        case kMCTextCellLayoutRightThenUp:
-        case kMCTextCellLayoutUpThenRight:
-        case kMCTextCellLayoutUpThenLeft:
-            return true;
-            
-        default:
-            MCUnreachable();
-    }
-}
-
-bool MCTextParagraph::isVerticalLayout() const
-{
-    switch (getLayoutDirection())
-    {
-        case kMCTextCellLayoutLeftThenDown:
-        case kMCTextCellLayoutLeftThenUp:
-        case kMCTextCellLayoutRightThenDown:
-        case kMCTextCellLayoutRightThenUp:
-            return false;
-            
-        case kMCTextCellLayoutDownThenLeft:
-        case kMCTextCellLayoutDownThenRight:
-        case kMCTextCellLayoutUpThenLeft:
-        case kMCTextCellLayoutUpThenRight:
-            return true;
-            
-        default:
-            MCUnreachable();
-    }
 }

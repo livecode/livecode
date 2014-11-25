@@ -20,6 +20,7 @@
 #include "foundation-locale.h"
 #include "foundation-unicode.h"
 #include "text-block.h"
+#include "text-breakblock.h"
 #include "text-run.h"
 
 
@@ -44,6 +45,20 @@ bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_avai
     t_break = false;
     do
     {
+        // Is this a line-breaking block?
+        if (t_block->getBlockType() == kMCTextBlockTypeBreak)
+        {
+            MCTextBreakBlock* t_break_block;
+            t_break_block = static_cast<MCTextBreakBlock*>(t_block);
+            if (t_break_block->getBreakClass() >= kMCTextBlockBreakClassLine)
+            {
+                // Accept this block and no more
+                t_block = t_block->next();
+                t_break = true;
+                break;
+            }
+        }
+        
         // Measure the whole block first to avoid the iterator if not required
         coord_t t_block_width;
         t_block_width = t_block->measure();
@@ -65,9 +80,11 @@ bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_avai
         }
         
         // Point the break iterator at the start of this block
+        MCRange t_block_range;
         uindex_t t_offset;
-        t_offset = p_blocks->getCodeunitRange().offset;
-        if (p_blocks->getCodeunitRange().offset != 0)
+        t_block_range = t_block->getCodeunitRange();
+        t_offset = t_block_range.offset;
+        if (t_block_range.offset != 0)
             MCLocaleBreakIteratorAfter(t_iter, t_offset-1);
         
         // See how many words we can fit
@@ -75,6 +92,10 @@ bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_avai
         t_break_pos = t_last_break_pos = t_offset;
         while ((t_break_pos = MCLocaleBreakIteratorAdvance(t_iter)) != kMCLocaleBreakIteratorDone)
         {
+            // Don't go past the end of the block
+            if (t_break_pos > t_block_range.offset + t_block_range.length)
+                break;
+            
             // Can we fit this sequence of words?
             coord_t t_subwidth;
             t_subwidth = t_block->getSubWidth(0, t_block->codeunitToGrapheme(t_break_pos - t_offset));
@@ -94,12 +115,7 @@ bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_avai
         if (t_break_pos != t_offset)
         {
             // Block will have to be split. Create a new one.
-            MCTextRun* t_new_run;
-            MCRange t_new_range;
-            t_new_range = MCRangeMake(t_break_pos, t_offset + t_block->getCodeunitRange().length - t_break_pos);
-            t_new_run = new MCTextRun(*static_cast<MCTextRun*>(t_block), t_new_range);
-            t_block->adjustCodeunitRange(0, -(t_break_pos - t_offset));
-            t_block->append(t_new_run);
+            t_block->splitAfter(t_break_pos - t_offset);
             
             // Increment the pointer to point to the block that doesn't fit
             t_block = t_block->next();
