@@ -204,7 +204,7 @@ MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef unresolved_self,
 	MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
 	MCAssert((other -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
 
-	MCTypeInfoRef t_base;
+	MCTypeInfoRef t_base = self;
 	while (t_base != kMCNullTypeInfo)
 	{
 		if (t_base == other) return true;
