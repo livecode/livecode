@@ -283,7 +283,8 @@ MCRecordCopyAsBaseTypeAndRelease(MCRecordRef self,
 	 * make it immutable */
 	if (self -> references == 1)
 	{
-		self -> typeinfo = p_base_typeinfo;
+		MCValueRelease(self -> typeinfo);
+		self -> typeinfo = MCValueRetain(p_base_typeinfo);
 		self -> flags &= ~kMCRecordFlagIsMutable;
 		r_new_record = self;
 		return true;
@@ -336,7 +337,8 @@ MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef self,
 			self -> fields[i] = MCValueRetain(kMCNull);
 
 		/* Set the typeinfo and make immutable */
-		self -> typeinfo = p_derived_typeinfo;
+		MCValueRelease(self -> typeinfo);
+		self -> typeinfo = MCValueRetain(p_derived_typeinfo);
 		self -> flags &= ~kMCRecordFlagIsMutable;
 
 		r_new_record = self;
@@ -428,6 +430,7 @@ void __MCRecordDestroy(__MCRecord *self)
     
     for(uindex_t i = 0; i < __count_fields(t_resolved_typeinfo); i++)
         MCValueRelease(self -> fields[i]);
+    MCValueRelease(self -> typeinfo);
     MCMemoryDelete(self -> fields);
 }
 
