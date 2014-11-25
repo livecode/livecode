@@ -60,8 +60,10 @@ public:
 	virtual uindex_t GetFrameCount() = 0;
 	// IM-2014-11-25: [[ ImageRep ]] Return the duration of the given frame.
 	virtual bool GetFrameDuration(uindex_t p_index, uint32_t &r_duration) = 0;
-	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame) = 0;
-	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame) = 0;
+	
+	// IM-2014-11-25: [[ ImageRep ]] Simplify raster locking by returning just the bitmap rather than all frame info.
+	virtual bool LockBitmap(uindex_t p_index, MCGFloat p_density, MCImageBitmap *&r_bitmap) = 0;
+	virtual void UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap) = 0;
 
 	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame) = 0;
 	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame) = 0;
@@ -128,8 +130,8 @@ public:
 	MCLoadableImageRep();
 	virtual ~MCLoadableImageRep();
 
-	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
-	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
+	virtual bool LockBitmap(uindex_t p_index, MCGFloat p_density, MCImageBitmap *&r_bitmap);
+	virtual void UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap);
 	
 	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
 	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
@@ -385,8 +387,8 @@ public:
 	uint32_t GetDataCompression();
 	
 	uindex_t GetFrameCount();
-	bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
-	void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
+	bool LockBitmap(uindex_t p_index, MCGFloat p_density, MCImageBitmap *&r_bitmap);
+	void UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap);
 	
 	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
 	void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);

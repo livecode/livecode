@@ -83,18 +83,22 @@ bool MCResampledImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_
 	
 	for (uindex_t i = 0; t_success && i < t_frame_count; i++)
 	{
-		MCBitmapFrame *t_src_frame = nil;
+		MCImageBitmap *t_src_bitmap;
+		t_src_bitmap = nil;
 		
-		t_success = m_source->LockBitmapFrame(i, t_scale, t_src_frame);
+		t_success = m_source->GetFrameDuration(i, t_frames[i].duration);
+		
+		if (t_success)
+			t_success = m_source->LockBitmap(i, t_scale, t_src_bitmap);
+		
 		if (t_success)
 		{
-			t_frames[i].duration = t_src_frame->duration;
-			
-			t_success = MCImageScaleBitmap(t_src_frame->image, m_target_width, m_target_height, INTERPOLATION_BICUBIC, t_frames[i].image);
+			t_success = MCImageScaleBitmap(t_src_bitmap, m_target_width, m_target_height, INTERPOLATION_BICUBIC, t_frames[i].image);
 			if (t_success)
 				MCImageFlipBitmapInPlace(t_frames[i].image, m_h_flip, m_v_flip);
+			
+			m_source->UnlockBitmap(i, t_src_bitmap);
 		}
-		m_source->UnlockBitmapFrame(i, t_src_frame);
 	}
 	
 	if (t_success)

@@ -392,7 +392,7 @@ void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_fra
     MCGImageRelease(p_frame . image);
 }
 
-bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, MCBitmapFrame *&r_frame)
+bool MCLoadableImageRep::LockBitmap(uindex_t p_frame, MCGFloat p_density, MCImageBitmap *&r_bitmap)
 {
 	if (!EnsureHeader())
 		return false;
@@ -405,21 +405,21 @@ bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, M
 		return false;
 	
 	Retain();
-			
-	r_frame = &m_bitmap_frames[p_frame];
+	
+	r_bitmap = m_bitmap_frames[p_frame].image;
 	
 	return true;
 }
 
-void MCLoadableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
+void MCLoadableImageRep::UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap)
 {
-	if (p_frame == nil)
+	if (p_bitmap == nil)
 		return;
 
 	if (p_index >= m_frame_count)
 		return;
 
-	if (m_bitmap_frames == nil || &m_bitmap_frames[p_index] != p_frame)
+	if (m_bitmap_frames == nil || m_bitmap_frames[p_index].image != p_bitmap)
 		return;
 
 	if (m_frames == nil)

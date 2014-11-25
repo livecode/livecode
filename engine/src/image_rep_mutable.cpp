@@ -97,7 +97,6 @@ bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCG
 	
     MCGImageFrame t_frame;
     t_frame.x_scale = t_frame.y_scale = 1.0;
-    t_frame.duration = 0.0;
     
 	if (!MCGImageCreateWithRasterNoCopy(t_raster, t_frame.image))
 		return false;
@@ -119,29 +118,29 @@ void MCMutableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_fram
 	Release();
 }
 
-bool MCMutableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, MCBitmapFrame *&r_frame)
+bool MCMutableImageRep::LockBitmap(uindex_t p_frame, MCGFloat p_density, MCImageBitmap *&r_bitmap)
 {
 	if (p_frame > 0)
 		return false;
 	
-	if (!MCImageCopyBitmap(m_bitmap, m_frame.image))
+	if (!MCImageCopyBitmap(m_bitmap, m_locked_bitmap))
 		return false;
-	MCImageBitmapUnpremultiply(m_frame.image);
+	MCImageBitmapUnpremultiply(m_locked_bitmap);
 	
 	Retain();
 	
-	r_frame = &m_frame;
+	r_bitmap = m_locked_bitmap;
 	
 	return true;
 }
 
-void MCMutableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
+void MCMutableImageRep::UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap)
 {
-	if (p_index > 0 || p_frame != &m_frame)
+	if (p_index > 0 || p_bitmap != m_locked_bitmap)
 		return;
 	
-	MCImageFreeBitmap(m_frame.image);
-	m_frame.image = nil;
+	MCImageFreeBitmap(m_locked_bitmap);
+	m_locked_bitmap = nil;
 	
 	Release();
 }
@@ -190,10 +189,9 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	mx = my = 0;
 	state = 0;
 
-	m_frame.image = nil;
+	m_locked_bitmap = nil;
 	m_gframe.image = nil;
 	
-	m_frame.duration = 0;
 	m_frame.x_scale = m_frame.y_scale = 1.0;
 	m_gframe.x_scale = m_gframe.y_scale = 1.0;
 }
@@ -207,7 +205,7 @@ MCMutableImageRep::~MCMutableImageRep()
 
 	MCImageFreeMask(m_draw_mask);
 
-	MCImageFreeBitmap(m_frame.image);
+	MCImageFreeBitmap(m_locked_bitmap);
 	MCGImageRelease(m_gframe.image);
 }
 
