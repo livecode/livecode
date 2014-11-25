@@ -575,45 +575,37 @@ static inline void MCScriptStoreToLocalInFrame(MCScriptFrame *p_frame, uindex_t 
     }
 }
 
+static inline MCTypeInfoRef MCScriptFetchTypeForLocalInFrame(MCScriptFrame *p_frame, uindex_t p_local)
+{
+    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
+                                        "local out of range on type fetch");
+    
+    MCTypeInfoRef t_handler_type;
+    t_handler_type = p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo;
+    
+    MCTypeInfoRef t_type;
+    uindex_t t_param_count;
+    t_param_count = MCHandlerTypeInfoGetParameterCount(t_handler_type);
+    if (p_local < t_param_count)
+        t_type = MCHandlerTypeInfoGetParameterType(t_handler_type, p_local);
+    else
+        t_type = p_frame -> instance -> module -> types[p_frame -> handler -> locals[p_local - t_param_count]] -> typeinfo;
+    
+    return t_type;
+}
+
 static inline bool MCScriptIsLocalInFrameOptional(MCScriptFrame *p_frame, uindex_t p_local)
 {
     /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
                                         "local out of range on optional check");
     
-    MCTypeInfoRef t_handler_type;
-    t_handler_type = p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo;
-    
     MCTypeInfoRef t_type;
-    uindex_t t_param_count;
-    t_param_count = MCHandlerTypeInfoGetParameterCount(t_handler_type);
-    if (p_local < t_param_count)
-        t_type = MCHandlerTypeInfoGetParameterType(t_handler_type, p_local);
-    else
-        t_type = p_frame -> instance -> module -> types[p_frame -> handler -> locals[p_local - t_param_count]] -> typeinfo;
-    
+    t_type = MCScriptFetchTypeForLocalInFrame(p_frame, p_local);
+
     MCResolvedTypeInfo t_resolved_type;
     /* RESOLVE UNCHECKED */ MCTypeInfoResolve(t_type, t_resolved_type);
     
     return t_resolved_type . is_optional;
-}
-
-static inline bool MCScriptCanLocalInFrameHoldValue(MCScriptFrame *p_frame, uindex_t p_local, MCValueRef p_value)
-{
-    /* LOAD CHECK */ __MCScriptAssert__(p_local >= 0 && p_local < p_frame -> handler -> local_count + MCHandlerTypeInfoGetParameterCount(p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo),
-                                        "local out of range on type check");
-
-    MCTypeInfoRef t_handler_type;
-    t_handler_type = p_frame -> instance -> module -> types[p_frame -> handler -> type] -> typeinfo;
-    
-    MCTypeInfoRef t_type;
-    uindex_t t_param_count;
-    t_param_count = MCHandlerTypeInfoGetParameterCount(t_handler_type);
-    if (p_local < t_param_count)
-        t_type = MCHandlerTypeInfoGetParameterType(t_handler_type, p_local);
-    else
-        t_type = p_frame -> instance -> module -> types[p_frame -> handler -> locals[p_local - t_param_count]] -> typeinfo;
-    
-    return MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_type);
 }
 
 static inline MCValueRef MCScriptFetchFromRegisterInFrame(MCScriptFrame *p_frame, int p_register)
@@ -1276,6 +1268,11 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     if (t_value == kMCTrue)
                         t_next_bytecode = t_bytecode + t_offset;
                 }
+                else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
+                {
+                    if (*(bool *)MCForeignValueGetContentsPtr(t_value) == 0)
+                        t_next_bytecode = t_bytecode + t_offset;
+                }
                 else
                     t_success = MCScriptThrowNotABooleanError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_value);
             }
@@ -1294,6 +1291,11 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
                 {
                     if (t_value == kMCFalse)
+                        t_next_bytecode = t_bytecode + t_offset;
+                }
+                else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
+                {
+                    if (*(bool *)MCForeignValueGetContentsPtr(t_value) == 0)
                         t_next_bytecode = t_bytecode + t_offset;
                 }
                 else
@@ -1447,11 +1449,64 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCValueRef t_value;
                 t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_dst);
                 
-                if (!MCScriptCanLocalInFrameHoldValue(t_frame, t_index, t_value))
+                MCTypeInfoRef t_output_type;
+                t_output_type = MCScriptFetchTypeForLocalInFrame(t_frame, t_index);
+                
+                MCTypeInfoRef t_input_type;
+                t_input_type = MCValueGetTypeInfo(t_value);
+                
+                MCResolvedTypeInfo t_resolved_input_type, t_resolved_output_type;
+                if (!MCTypeInfoResolve(t_input_type, t_resolved_input_type))
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_input_type);
+                if (t_success &&
+                    !MCTypeInfoResolve(t_output_type, t_resolved_output_type))
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_output_type);
+                if (t_success &&
+                    !MCResolvedTypeInfoConforms(t_resolved_input_type, t_resolved_output_type))
                     t_success = MCScriptThrowInvalidValueForLocalVariableError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_index, t_value);
                 
+                MCValueRef t_transformed_value;
                 if (t_success)
-                    MCScriptStoreToLocalInFrame(t_frame, t_index, t_value);
+                {
+                    if (MCTypeInfoIsForeign(t_resolved_input_type . type))
+                    {
+                        if (MCTypeInfoIsForeign(t_resolved_output_type . type))
+                        {
+                            // Both foreign and conform, which means they are compatible.
+                            t_transformed_value = t_value;
+                        }
+                        else
+                        {
+                            // Input foreign, output not foreign - need to import.
+                            const MCForeignTypeDescriptor *t_descriptor;
+                            t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_input_type . type);
+                            if (!t_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_transformed_value))
+                                t_success = false;
+                        }
+                    }
+                    else
+                    {
+                        if (MCTypeInfoIsForeign(t_resolved_output_type . type))
+                        {
+                            // Input not foreign, output foreign so need to export.
+                            if (!MCForeignValueExport(t_resolved_output_type . named_type, t_value, (MCForeignValueRef&)t_transformed_value))
+                                t_success = false;
+                        }
+                        else
+                        {
+                            // Input is not foreign, output is not foreign so they must be
+                            // compatible.
+                            t_transformed_value = t_value;
+                        }
+                    }
+                }
+                
+                if (t_success)
+                {
+                    MCScriptStoreToLocalInFrame(t_frame, t_index, t_transformed_value);
+                    if (t_transformed_value != t_value)
+                        MCValueRelease(t_transformed_value);
+                }
             }
             break;
             case kMCScriptBytecodeOpFetchGlobal:
