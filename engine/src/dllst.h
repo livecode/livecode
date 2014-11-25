@@ -20,6 +20,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	DLLIST_H
 #define	DLLIST_H
 
+// Forward declarations
+class MCObject;
+
 class MCDLlist
 {
 protected:
@@ -64,4 +67,19 @@ public:
 	void verify(char *where);
 #endif
 };
+
+// Define to unify some boilerplate for MCDLlist-derived classes
+//      MCDLlistAdaptorFunctions(ClassName);
+#define MCDLlistAdaptorFunctions(T) \
+    T* next()                           { return static_cast<T*>(this->MCDLlist::next()); } \
+    T* prev()                           { return static_cast<T*>(this->MCDLlist::prev()); } \
+    const T* next() const               { return static_cast<const T*>(this->MCDLlist::next()); } \
+    const T* prev() const               { return static_cast<const T*>(this->MCDLlist::prev()); } \
+    void totop(T*& list)                { MCDLlist* l = list; this->MCDLlist::totop(l); list = static_cast<T*>(l); } \
+    void insertto(T*& list)             { MCDLlist* l = list; this->MCDLlist::insertto(l); list = static_cast<T*>(l); } \
+    void appendto(T*& list)             { MCDLlist* l = list; this->MCDLlist::appendto(l); list = static_cast<T*>(l); } \
+    void append(T* node)                { this->MCDLlist::append(node); } \
+    void splitat(T* node)               { this->MCDLlist::splitat(node); } \
+    T* remove(T*& list)                 { MCDLlist *l = list, *r; r = this->MCDLlist::remove(l); list = static_cast<T*>(l); return static_cast<T*>(r); } \
+
 #endif

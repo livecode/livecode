@@ -20,15 +20,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	OBJECT_H
 #define	OBJECT_H
 
-#ifndef DLLIST_H
 #include "dllst.h"
-#endif
-
-#ifndef __MC_IMAGE_BITMAP_H__
-#include "imagebitmap.h"
-#endif
-
+#include "parsedef.h"
+#include "objdefs.h"
 #include "globals.h"
+#include "imagebitmap.h"
+#include "platform.h"
 
 enum {
     MAC_SHADOW,
@@ -315,11 +312,15 @@ public:
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 #ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
+
+    // FG-2014-11-07: [[ Better theming ]] Gets a propery according to the native UI theme
+    virtual Exec_stat getsystemthemeprop(Properties which, MCExecPoint&);
 #endif
+
 	virtual void select();
 	virtual void deselect();
 	virtual Boolean del();
@@ -561,8 +562,8 @@ public:
 	Boolean isvisible();
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
-	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o);
-	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False);
+	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected = false);
+	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False, bool selected = false);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);
 	Boolean setpattern(uint2 newpixmap, MCStringRef);
@@ -586,7 +587,7 @@ public:
 
 	// MW-2012-02-17: [[ LogFonts ]] Fetch the (effective) font attrs for the
 	//   object.
-	void getfontattsnew(MCNameRef& fname, uint2& fsize, uint2& fstyle);
+	uint32_t getfontattsnew(MCNameRef& fname, uint2& fsize, uint2& fstyle);
 	//void getfontattsnew(MCStringRef& fname, uint2& fsize, uint2& fstyle);
 
 	// MW-2012-02-16: [[ LogFonts ]] Return the (effective) textFont setting. 
@@ -806,7 +807,7 @@ public:
 	bool GetPixel(MCExecContext& ctxt, Properties which, bool effective, uinteger_t& r_pixel);
 	void SetPixel(MCExecContext& ctxt, Properties which, uinteger_t pixel);
 
-	bool GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color);
+	bool GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color, bool recursive = false);
 	void SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedColor& p_color);
 	bool GetColors(MCExecContext& ctxt, bool effective, MCStringRef& r_colors);
 
@@ -1122,6 +1123,12 @@ protected:
     Exec_stat setscriptprop(MCExecPoint& ep);
 #endif
 
+    // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    virtual MCPlatformControlState getcontrolstate();
+    bool getthemeselectorsforprop(Properties, MCPlatformControlType&, MCPlatformControlPart&, MCPlatformControlState&, MCPlatformThemeProperty&, MCPlatformThemePropertyType&);
+    
 private:
 #ifdef OLD_EXEC
 	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
@@ -1185,7 +1192,7 @@ private:
 	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
 	// MW-2013-08-23: [[ MeasureText ]] Made private as external uses of them can be
 	//   done via measuretext() in a safe way.
-	void mapfont(void);
+	bool mapfont(bool recursive = false);
 	void unmapfont(void);
 
 	friend class MCObjectHandle;

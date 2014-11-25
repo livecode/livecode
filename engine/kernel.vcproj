@@ -3519,6 +3519,10 @@
 					RelativePath="src\w32transfer.h"
 					>
 				</File>
+				<File
+					RelativePath=".\src\windows-theme.cpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

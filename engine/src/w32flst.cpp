@@ -240,6 +240,11 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 		font -> descent = size * 2 / 14 + 1;
 	}
 	font->printer = printer;
+    
+    font->m_ascent = tm.tmAscent;
+    font->m_descent = tm.tmDescent;
+    font->m_leading = tm.tmExternalLeading;
+    font->m_xheight = tm.tmAveCharWidth;
 }
 
 MCFontnode::~MCFontnode()

@@ -180,10 +180,12 @@ public:
 
 	virtual uint2 gettransient() const;
 	virtual void setrect(const MCRectangle &nrect);
+
 #ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
     virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
+
 	virtual void closemenu(Boolean kfocus, Boolean disarm);
 	
 	// MW-2011-09-20: [[ Collision ]] Compute shape of button - will use mask of icon if possible.
@@ -473,5 +475,12 @@ private:
 	void trytochangetonative(void);
 
 	friend class ButtonMenuCallback;
+    
+protected:
+    
+    // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+    virtual MCPlatformControlState getcontrolstate();
 };
 #endif
