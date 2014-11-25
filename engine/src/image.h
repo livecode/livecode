@@ -156,6 +156,8 @@ public:
 	void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+	// IM-2014-11-25: [[ ImageRep ]] Added ImageRep method to get frame duration.
+	bool GetFrameDuration(uindex_t p_index, uint32_t &r_duration);
 	
 	uint32_t GetDataCompression();
 

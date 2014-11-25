@@ -45,10 +45,16 @@ MCResampledImageRep::~MCResampledImageRep()
 
 //////////
 
-bool MCResampledImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
+bool MCResampledImageRep::LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count)
 {
+	uint32_t t_frame_count;
+	
+	if (0 == (t_frame_count = m_source->GetFrameCount()))
+		return false;
+	
 	r_width = m_target_width;
 	r_height = m_target_height;
+	r_frame_count = t_frame_count;
 	
 	return true;
 }

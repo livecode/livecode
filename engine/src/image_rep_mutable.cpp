@@ -151,6 +151,15 @@ uindex_t MCMutableImageRep::GetFrameCount()
 	return 1;
 }
 
+bool MCMutableImageRep::GetFrameDuration(uindex_t p_index, uint32_t &r_duration)
+{
+	if (p_index > 0)
+		return false;
+	
+	r_duration = 0;
+	return true;
+}
+
 bool MCMutableImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
 {
 	r_width = m_bitmap->width;
@@ -184,7 +193,7 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	m_frame.image = nil;
 	m_gframe.image = nil;
 	
-	m_frame.duration = m_gframe.duration = 0;
+	m_frame.duration = 0;
 	m_frame.x_scale = m_frame.y_scale = 1.0;
 	m_gframe.x_scale = m_gframe.y_scale = 1.0;
 }

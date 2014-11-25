@@ -547,12 +547,10 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 				advanceframe();
 				if (irepeatcount)
 				{
-					MCGImageFrame t_frame;
-					if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
-					{
-						MCscreen->addtimer(this, MCM_internal, t_frame.duration);
-						m_rep->UnlockImageFrame(currentframe, t_frame);
-					}
+					// IM-2014-11-25: [[ ImageRep ]] Use ImageRep method to get frame duration
+					uint32_t t_frame_duration;
+					if (m_rep->GetFrameDuration(currentframe, t_frame_duration))
+						MCscreen->addtimer(this, MCM_internal, t_frame_duration);
 				}
 			}
 	}

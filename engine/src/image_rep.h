@@ -37,8 +37,6 @@ struct MCGImageFrame
 {
 	MCGImageRef image;
 	
-	uint32_t duration;
-	
 	// IM-2013-10-30: [[ FullscreenMode ]] add density value to image frames
 	// IM-2014-08-07: [[ Bug 13021 ]] Split density into x / y scale components
 	MCGFloat x_scale;
@@ -60,6 +58,8 @@ public:
 	virtual uint32_t GetDataCompression() = 0;
 	
 	virtual uindex_t GetFrameCount() = 0;
+	// IM-2014-11-25: [[ ImageRep ]] Return the duration of the given frame.
+	virtual bool GetFrameDuration(uindex_t p_index, uint32_t &r_duration) = 0;
 	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame) = 0;
 	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame) = 0;
 
@@ -135,6 +135,8 @@ public:
 	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+	virtual uindex_t GetFrameCount(void);
+	virtual bool GetFrameDuration(uindex_t p_index, uint32_t &r_duration);
 
 	//////////
 
@@ -142,22 +144,35 @@ public:
 	virtual void ReleaseFrames();
 	
 protected:
-	virtual bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
+	// IM-2014-11-25: [[ ImageRep ]] Return some basic info readable from the image header.
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_frame_count) = 0;
 	// IM-2013-11-05: [[ RefactorGraphics ]] Add return parameter to indicate whether or not
 	// returned frames are premultiplied
 	virtual bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied) = 0;
 
-	bool m_have_geometry;
-	uindex_t m_width, m_height;
-
-
 private:
 	bool ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p_frame_count, bool p_premultiplied);
-	bool EnsureMCGImageFrames();
+
+	// IM-2014-11-25: [[ ImageRep ]] Try to obtain image header info if not already available.
+	bool EnsureHeader();
+	// IM-2014-11-25: [[ ImageRep ]] Try to obtain the duration of each frame if not already available.
+	bool EnsureFrameDurations();
+	// IM-2014-11-25: [[ ImageRep ]] Try to make sure we have frames, whether premultiplied or not.
+	bool EnsureFrames();
+	// IM-2014-11-25: [[ ImageRep ]] Try to obtain unpremultiplied bitmap frames if not available.
+	bool EnsureBitmapFrames();
+	// IM-2014-11-25: [[ ImageRep ]] Try to obtain premultiplied image frames if not available.
+	bool EnsureImageFrames();
+	
+	bool m_have_header;
+	bool m_have_frame_durations;
+	
+	uindex_t m_width, m_height;
+	uint32_t *m_frame_durations;
 	
 	uindex_t m_lock_count;
 
-	MCBitmapFrame *m_locked_frames;
+	MCBitmapFrame *m_bitmap_frames;
 	MCGImageFrame *m_frames;
 	uindex_t m_frame_count;
 	bool m_frames_premultiplied;
@@ -169,23 +184,21 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 // Encoded image representation
 
+class MCImageLoader;
+
 class MCEncodedImageRep : public MCLoadableImageRep
 {
 public:
-	MCEncodedImageRep()
-	{
-		m_compression = F_RLE;
-	}
+	MCEncodedImageRep();
 
 	virtual ~MCEncodedImageRep();
 
-	virtual uindex_t GetFrameCount();
 	uint32_t GetDataCompression();
 
 protected:
 	// returns the image frames as decoded from the input stream
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
-	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
+	bool LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count);
 
 	//////////
 
@@ -194,8 +207,16 @@ protected:
 
 	//////////
 
+private:
+	// IM-2014-11-25: [[ ImageRep ]] Reworked to keep image loader class until the frames have been loaded.
+	bool SetupImageLoader();
+	void ClearImageLoader();
+	
+	bool m_have_compression;
 	uint32_t m_compression;
-	uint32_t m_header_frame_count;
+	
+	MCImageLoader *m_loader;
+	IO_handle m_stream;
 };
 
 //////////
@@ -283,7 +304,7 @@ public:
 
 protected:
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
-	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
+	bool LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count);
 
 	//////////
 
@@ -313,7 +334,7 @@ public:
 
 protected:
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
-	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
+	bool LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count);
 
 	//////////
 
@@ -342,7 +363,7 @@ public:
 	
 protected:
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
-	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
+	bool LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count);
 	
 	//////////
 	
@@ -371,6 +392,7 @@ public:
 	void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+	bool GetFrameDuration(uindex_t p_index, uint32_t &r_duration);
 	
 	//////////
 
@@ -413,7 +435,7 @@ public:
 	
 protected:
 	bool LoadImageFrames(MCBitmapFrame* &r_frames, uindex_t &r_frame_count, bool &r_premultiplied);
-	bool CalculateGeometry(uint32_t &r_width, uint32_t &r_height);
+	bool LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count);
 	
 	//////////
 	

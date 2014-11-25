@@ -139,6 +139,15 @@ bool MCDensityMappedImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
 	return true;
 }
 
+bool MCDensityMappedImageRep::GetFrameDuration(uindex_t p_index, uint32_t &r_duration)
+{
+	uindex_t t_match;
+	if (!GetBestMatch(1.0, t_match))
+		return false;
+	
+	return m_sources[t_match]->GetFrameDuration(p_index, r_duration);
+}
+
 uint32_t MCDensityMappedImageRep::GetDataCompression()
 {
 	uindex_t t_match;
