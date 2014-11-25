@@ -67,7 +67,7 @@ bool MCTypeInfoBind(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCTypeInfoRef& r
     
     self -> flags |= 0xff;
     self -> named . name = MCValueRetain(p_name);
-    self -> named . typeinfo = __MCTypeInfoResolve(p_typeinfo);
+    self -> named . typeinfo = MCValueRetain(__MCTypeInfoResolve(p_typeinfo));
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
