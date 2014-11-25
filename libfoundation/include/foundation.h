@@ -2424,6 +2424,8 @@ bool MCForeignValueCreateAndRelease(MCTypeInfoRef typeinfo, void *contents, MCFo
 
 void *MCForeignValueGetContentsPtr(MCValueRef value);
 
+bool MCForeignValueExport(MCTypeInfoRef typeinfo, MCValueRef value, MCForeignValueRef& r_value);
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  STREAM DEFINITIONS
