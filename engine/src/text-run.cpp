@@ -78,14 +78,14 @@ MCTextBlockType MCTextRun::getBlockType() const
 coord_t MCTextRun::getCursorPositionBefore(uindex_t p_grapheme_offset)
 {
     MCRange t_range;
-    t_range = MCRangeMake(0, graphemeToCodeunit(p_grapheme_offset));
+    t_range = MCRangeMake(m_codeunit_range.offset, graphemeToCodeunit(p_grapheme_offset));
     return MCFontMeasureTextSubstringFloat(m_font, fetchStringRef(), t_range, getTransform());
 }
 
 coord_t MCTextRun::getCursorPositionAfter(uindex_t p_grapheme_offset)
 {
     MCRange t_range;
-    t_range = MCRangeMake(0, graphemeToCodeunit(p_grapheme_offset+1));
+    t_range = MCRangeMake(m_codeunit_range.offset, graphemeToCodeunit(p_grapheme_offset+1));
     return MCFontMeasureTextSubstringFloat(m_font, fetchStringRef(), t_range, getTransform());
 }
 

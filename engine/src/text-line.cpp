@@ -54,8 +54,7 @@ MCTextCell* MCTextLine::getChildren() const
 void MCTextLine::performLayout()
 {
     // Clear the font metric and size information
-    coord_t t_width;
-    m_ascent = m_descent = m_leading = t_width = 0.0f;
+    m_ascent = m_descent = m_leading = 0.0f;
     
     // Iterate through the list of segments and lay them out
     MCTextSegment* t_segment;
@@ -82,13 +81,16 @@ void MCTextLine::performLayout()
         m_ascent = MCMax(m_ascent, t_segment->getTextAscent());
         m_descent = MCMax(m_descent, t_segment->getTextDescent());
         m_leading = MCMax(m_leading, t_segment->getTextLeading());
-        t_width = MCMax(t_width, t_x + t_segment->getWidth());
         
         // Move on to the next segment
         t_segment_count++;
         t_segment = t_segment->next();
     }
     while (t_segment != m_segments);
+    
+    // Width of the line is determined by the last segment in the line
+    coord_t t_width;
+    t_width = m_segments->prev()->getX() + m_segments->prev()->getWidth();
     
     // Update the maximum sizes of the segments - these are needed for alignment
     // and clipping purposes
@@ -313,5 +315,8 @@ bool MCTextLine::fitSegment(MCTextSegment* p_segment, coord_t p_available_width)
 coord_t MCTextLine::offsetForSegment(uindex_t p_index, coord_t p_prev_segment_end)
 {
     // TODO: implement
-    return p_prev_segment_end + 20;
+    if (p_index > 0 || p_prev_segment_end > 0)
+        return p_prev_segment_end + 20;
+    else
+        return 0;
 }

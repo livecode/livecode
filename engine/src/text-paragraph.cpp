@@ -451,13 +451,14 @@ void MCTextParagraph::refreshBlocks()
                 {
                     // In the middle of the block
                     // Split the block at the start of the special block
-                    t_block->splitAfter(t_range.offset);
+                    t_block->splitAfter(t_range.offset - t_block_range.offset);
                     t_block->next()->adjustCodeunitRange(t_range.length, -t_range.length);
                     t_block->append(t_new_block);
                 }
                 
                 // No need to re-scan the newly added block
                 t_block = t_new_block;
+                break;
             }
         }
         

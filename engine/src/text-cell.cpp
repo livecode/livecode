@@ -144,8 +144,8 @@ MCTextCell::MCTextCell() :
   m_max_height(INFINITY),
   m_local_attributes(NULL),
   m_effective_attributes(NULL),
-  m_horizontal_alignment(kMCTextCellAlignEnd),
-  m_vertical_alignment(kMCTextCellAlignStart),
+  m_horizontal_alignment(kMCTextCellAlignCenter),
+  m_vertical_alignment(kMCTextCellAlignCenter),
   m_layout_direction(kMCTextCellLayoutLeftThenDown),
   m_flags(kMCTextCellNeedsLayout)
 {
