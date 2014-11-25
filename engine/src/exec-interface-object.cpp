@@ -3312,6 +3312,9 @@ void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effect
 		table = videoclipprops;
 		tablesize = ELEMENTS(videoclipprops);
 		break;
+    case CT_WIDGET:
+        // WIDGET-TODO: Implement properties
+        break;
 	default:
 		return;
 	}

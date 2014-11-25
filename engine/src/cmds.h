@@ -704,10 +704,12 @@ class MCLoad : public MCStatement
 {
 	MCExpression *url;
 	MCExpression *message;
+    bool is_extension : 1;
 public:
 	MCLoad()
 	{
 		url = message = NULL;
+        is_extension = false;
 	}
 	virtual ~MCLoad();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -718,10 +720,12 @@ public:
 class MCUnload : public MCStatement
 {
 	MCExpression *url;
+    bool is_extension : 1;
 public:
 	MCUnload()
 	{
 		url = NULL;
+        is_extension = false;
 	}
 	virtual ~MCUnload();
 	virtual Parse_stat parse(MCScriptPoint &);

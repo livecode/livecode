@@ -760,6 +760,9 @@ Boolean MCControl::del()
 		message(MCM_delete_group);
 		message(MCM_delete_background);
 		break;
+    case CT_WIDGET:
+        message(MCM_delete_widget);
+        break;
 	default:
 		break;
 	}

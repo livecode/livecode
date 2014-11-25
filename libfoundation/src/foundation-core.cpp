@@ -35,6 +35,9 @@ bool MCInitialize(void)
     if (!__MCValueInitialize())
 		return false;
     
+    if (!__MCNumberInitialize())
+        return false;
+
 	if (!__MCStringInitialize())
 		return false;
     
@@ -84,6 +87,8 @@ void MCFinalize(void)
     __MCErrorFinalize();
 	__MCNameFinalize();
 	__MCStringFinalize();
+    __MCDataFinalize();
+    __MCNumberFinalize();
 	__MCValueFinalize();
     __MCUnicodeFinalize();
 }

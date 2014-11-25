@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "aclip.h"
 #include "vclip.h"
+#include "widget.h"
 #include "osspec.h"
 #include "variable.h"
 
@@ -1529,6 +1530,10 @@ void MCInterfaceExecResetTemplate(MCExecContext& ctxt, Reset_type p_type)
 			delete MCtemplatevideo;
 			MCtemplatevideo = new MCVideoClip;
 			break;
+        case RT_TEMPLATE_WIDGET:
+            delete MCtemplatewidget;
+            MCtemplatewidget = new MCWidget;
+            break;
 		default:
 			break;
 	}
@@ -2104,6 +2109,7 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 		case CT_EPS:
 		case CT_COLOR_PALETTE:
 		case CT_FIELD:
+        case CT_WIDGET:
 		{
 			if (p_dst . object -> gettype() == CT_STACK)
 				p_dst . object = static_cast<MCStack *>(p_dst . object) -> getcurcard();
@@ -3054,6 +3060,8 @@ MCControl* MCInterfaceExecCreateControlGetObject(MCExecContext& ctxt, int p_type
 		return MCtemplateeps;
 	case CT_FIELD:
 		return MCtemplatefield;
+    case CT_WIDGET:
+        return MCtemplatewidget;
 	default:
 		return NULL;
 	}
@@ -3167,6 +3175,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 	case CT_EPS:
 	case CT_COLOR_PALETTE:
 	case CT_MAGNIFY:
+    case CT_WIDGET:
 		if (p_target -> getstack() -> islocked())
 		{
 			ctxt . LegacyThrow(EE_CLONE_LOCKED);

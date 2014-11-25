@@ -139,6 +139,7 @@ enum Dest_type {
     DT_VIDEO_CLIP,
     DT_PLAYER,
     DT_STACK,
+    DT_WIDGET,
 	DT_LAST_OBJECT,
     DT_SELECTED,
     DT_ERROR,
@@ -537,6 +538,7 @@ enum Functions {
     F_TEMPLATE_VIDEO_CLIP,
     F_TEMPLATE_PLAYER,
     F_TEMPLATE_STACK,
+    F_TEMPLATE_WIDGET,
     F_TEXT_DECODE,
     F_TEXT_ENCODE,
     F_TEXT_HEIGHT_SUM,
@@ -1674,6 +1676,7 @@ enum Properties {
     P_LOCALIZED_TITLE,
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
+    P_KIND,
 };
 
 enum Look_and_feel {
@@ -1725,6 +1728,7 @@ enum Reset_type {
     RT_TEMPLATE_SCROLLBAR,
     RT_TEMPLATE_STACK,
     RT_TEMPLATE_VIDEO_CLIP,
+    RT_TEMPLATE_WIDGET,
 };
 
 
@@ -1890,6 +1894,8 @@ enum Sugar_constants {
 	
     // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
 	SG_HOST,
+    
+    SG_EXTENSION,
 };
 
 enum Statements {

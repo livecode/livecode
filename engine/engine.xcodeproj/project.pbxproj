@@ -291,6 +291,8 @@
 		4D6C27FD1647D942007C96B7 /* exec-graphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FB1647D942007C96B7 /* exec-graphics.cpp */; };
 		4D6C27FE1647D942007C96B7 /* exec-security.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FC1647D942007C96B7 /* exec-security.cpp */; };
 		4D6C28B61647DC4F007C96B7 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
+		4D6F06AC19CC1D0F00DDC6E0 /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F06AA19CC1D0F00DDC6E0 /* widget.cpp */; };
+		4D6F2AE718981E7F0099947D /* (null) in Sources */ = {isa = PBXBuildFile; };
 		4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D77F1DD183F8298002EEBB4 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */; };
@@ -1806,6 +1808,8 @@
 		4D6C27FC1647D942007C96B7 /* exec-security.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-security.cpp"; path = "src/exec-security.cpp"; sourceTree = "<group>"; };
 		4D6ED4F30E4B3B8800BDFDE4 /* objectstream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectstream.cpp; path = src/objectstream.cpp; sourceTree = "<group>"; };
 		4D6ED4F40E4B3B8800BDFDE4 /* objectstream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = objectstream.h; path = src/objectstream.h; sourceTree = "<group>"; };
+		4D6F06AA19CC1D0F00DDC6E0 /* widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = widget.cpp; path = src/widget.cpp; sourceTree = "<group>"; };
+		4D6F06AB19CC1D0F00DDC6E0 /* widget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = widget.h; path = src/widget.h; sourceTree = "<group>"; };
 		4D6F92F112AA5CC000026A72 /* w32color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32color.cpp; path = src/w32color.cpp; sourceTree = "<group>"; };
 		4D6F92F212AA5CC000026A72 /* w32cursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32cursor.cpp; path = src/w32cursor.cpp; sourceTree = "<group>"; };
 		4D6F92F312AA5CC000026A72 /* w32icon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32icon.cpp; path = src/w32icon.cpp; sourceTree = "<group>"; };
@@ -3761,6 +3765,8 @@
 		E8A49109170F192000769C7A /* Core - Objects */ = {
 			isa = PBXGroup;
 			children = (
+				4D6F06AA19CC1D0F00DDC6E0 /* widget.cpp */,
+				4D6F06AB19CC1D0F00DDC6E0 /* widget.h */,
 				4D587E870B8096FD00200116 /* aclip.cpp */,
 				4D587DDB0B8096E600200116 /* aclip.h */,
 				4D587E6B0B8096FD00200116 /* block.cpp */,
@@ -4944,6 +4950,7 @@
 				4DEE2A970FDE42710009423C /* cmds.cpp in Sources */,
 				4DEE2A980FDE42710009423C /* cmdsc.cpp in Sources */,
 				4DEE2A990FDE42710009423C /* cmdse.cpp in Sources */,
+				4D6F06AC19CC1D0F00DDC6E0 /* widget.cpp in Sources */,
 				4DEE2A9A0FDE42710009423C /* cmdsf.cpp in Sources */,
 				4DEE2A9B0FDE42710009423C /* cmdsm.cpp in Sources */,
 				4DEE2A9C0FDE42710009423C /* cmdsp.cpp in Sources */,

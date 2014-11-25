@@ -3794,6 +3794,9 @@ void MCEngineExecUnlockMessages(MCExecContext& ctxt);
 void MCEngineExecSet(MCExecContext& ctxt, MCProperty *target, MCValueRef value);
 void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef value);
 
+void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef filename);
+void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef filename);
+
 void MCEngineSetCaseSensitive(MCExecContext& ctxt, bool p_value);
 void MCEngineGetCaseSensitive(MCExecContext& ctxt, bool& r_value);
 void MCEngineSetFormSensitive(MCExecContext& ctxt, bool p_value);
@@ -3851,6 +3854,7 @@ void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStri
 void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
 
 void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition);
+
 ///////////
 
 extern MCExecMethodInfo *kMCFilesEvalDirectoriesMethodInfo;

@@ -446,6 +446,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 					case CT_EPS:
 					case CT_COLOR_PALETTE:
 					case CT_MAGNIFY:
+                    case CT_WIDGET:
 						object = curref;
 						break;
 
@@ -581,6 +582,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				case F_TEMPLATE_PLAYER:
 				case F_TEMPLATE_GRAPHIC:
 				case F_TEMPLATE_EPS:
+                case F_TEMPLATE_WIDGET:
 					desttype = (Dest_type)(te->which - F_TEMPLATE_BUTTON + DT_BUTTON);
 					break;
 				case F_SELECTED_OBJECT:
@@ -1544,6 +1546,9 @@ Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
 		case DT_EPS:
 			objptr = MCtemplateeps;
 			return ES_NORMAL;
+        case DT_WIDGET:
+            objptr = MCtemplatewidget;
+            return ES_NORMAL;
 		case DT_ERROR:
 			objptr = MCerrorptr;
 			break;
@@ -1647,6 +1652,7 @@ Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
 		case CT_PLAYER:
 		case CT_MAGNIFY:
 		case CT_COLOR_PALETTE:
+        case CT_WIDGET:
 			MCCard *t_card;
 			t_card = objptr -> getcard(parid);
 			if (t_card == NULL)

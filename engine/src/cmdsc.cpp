@@ -920,6 +920,7 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
 		case CT_PLAYER:
 		case CT_GRAPHIC:
 		case CT_EPS:
+        case CT_WIDGET:
 			otype = (Chunk_term)te->which;
 			break;
 		case CT_ALIAS:
@@ -999,6 +1000,7 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 MCControl *MCCreate::getobject(MCObject *&parent)
 {
 	switch (otype)
@@ -1027,6 +1029,7 @@ MCControl *MCCreate::getobject(MCObject *&parent)
 		return NULL;
 	}
 }
+#endif
 
 void MCCreate::exec_ctxt(MCExecContext& ctxt)
 {
@@ -2297,24 +2300,31 @@ MCLoad::~MCLoad()
 Parse_stat MCLoad::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-
-	sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
+    
+    if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EXTENSION) == PS_NORMAL)
+        is_extension = true;
+    else
+        sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
 
 	if (sp.parseexp(False, True, &url) != PS_NORMAL)
 	{
 		MCperror->add(PE_LOAD_BADURLEXP, sp);
 		return PS_ERROR;
 	}
-
-	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+    
+	if (!is_extension)
 	{
-		sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED);
-		if (sp.parseexp(False, True, &message) != PS_NORMAL)
+		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 		{
-			MCperror->add(PE_LOAD_BADMESSAGEEXP, sp);
-			return PS_ERROR;
+			sp.skip_token(SP_SUGAR, TT_CHUNK, CT_UNDEFINED);
+			if (sp.parseexp(False, True, &message) != PS_NORMAL)
+			{
+				MCperror->add(PE_LOAD_BADMESSAGEEXP, sp);
+				return PS_ERROR;
+			}
 		}
 	}
+
 	return PS_NORMAL;
 }
 
@@ -2345,17 +2355,28 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
 	delete mptr;
 	return ES_NORMAL;
 #endif /* MCLoad */
-
-    MCNewAutoNameRef t_message;
     
-    if (!ctxt . EvalOptionalExprAsNameRef(message, kMCEmptyName, EE_LOAD_BADMESSAGEEXP, &t_message))
-            return;
-	
-    MCAutoStringRef t_url;
-    if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_url))
-        return;    
-    
-    MCNetworkExecLoadUrl(ctxt, *t_url, *t_message);
+	if (is_extension)
+	{
+		MCAutoStringRef t_filename;
+		if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_filename))
+			return;
+        
+        MCEngineExecLoadExtension(ctxt, *t_filename);
+	}
+	else
+    {
+        MCNewAutoNameRef t_message;
+        
+        if (!ctxt . EvalOptionalExprAsNameRef(message, kMCEmptyName, EE_LOAD_BADMESSAGEEXP, &t_message))
+                return;
+        
+        MCAutoStringRef t_url;
+        if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_url))
+            return;    
+        
+        MCNetworkExecLoadUrl(ctxt, *t_url, *t_message);
+    }
 }
 
 void MCLoad::compile(MCSyntaxFactoryRef ctxt)
@@ -2382,8 +2403,11 @@ MCUnload::~MCUnload()
 Parse_stat MCUnload::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-
-	sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
+    
+	if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EXTENSION))
+		is_extension = true;
+	else
+		sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
 
 	if (sp.parseexp(False, True, &url) != PS_NORMAL)
 	{
@@ -2404,12 +2428,15 @@ void MCUnload::exec_ctxt(MCExecContext &ctxt)
 	MCS_unloadurl(ep . getobj(), ep . getcstring());
 	return ES_NORMAL;
 #endif /* MCUnload */
-
+    
     MCAutoStringRef t_url;
     if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADURLEXP, &t_url))
         return;
     
-    MCNetworkExecUnloadUrl(ctxt, *t_url);
+	if (is_extension)
+		MCEngineExecUnloadExtension(ctxt, *t_url);
+	else
+		MCNetworkExecUnloadUrl(ctxt, *t_url);
 }
 
 void MCUnload::compile(MCSyntaxFactoryRef ctxt)
