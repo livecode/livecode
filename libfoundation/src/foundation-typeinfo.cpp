@@ -158,7 +158,7 @@ uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef unresolved_self)
 	while (self != kMCNullTypeInfo) {
 		t_field_count += self -> record . field_count;
 		self = MCRecordTypeInfoGetBaseType (self);
-	};
+	}
     
     return t_field_count;
 }
