@@ -43,8 +43,8 @@
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     handler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Definitions: DEFINITION, Body: STATEMENT)
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
-    property(Position: POS, Access: ACCESS, Name: ID)
-    event(Position: POS, Access: ACCESS, Name: ID)
+    property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: ID)
+    event(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE)
     syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST)
     nil
 

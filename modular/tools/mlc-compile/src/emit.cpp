@@ -21,6 +21,8 @@ extern "C" void EmitVariableDefinition(long index, PositionRef position, NameRef
 extern "C" void EmitBeginHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitEndHandlerDefinition(void);
 extern "C" void EmitForeignHandlerDefinition(long index, PositionRef position, NameRef name, long type_index, long binding);
+extern "C" void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index);
+extern "C" void EmitPropertyDefinition(long p_index, PositionRef p_position, NameRef p_name, long setter, long getter);
 
 extern "C" void EmitBeginSyntaxDefinition(long p_index, PositionRef p_position, NameRef p_name);
 extern "C" void EmitEndSyntaxDefinition(void);
@@ -335,6 +337,20 @@ void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef 
     MCScriptAddForeignHandlerToModule(s_builder, to_mcnameref(p_name), p_type_index, *t_binding_str, p_index);
     
     MCLog("[Emit] ForeignHandlerDefinition(%ld, %@, %ld, %@)", p_index, to_mcnameref(p_name), p_type_index, to_mcstringref(p_binding));
+}
+
+void EmitPropertyDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_getter, long p_setter)
+{
+    MCScriptAddPropertyToModule(s_builder, to_mcnameref(p_name), p_getter, p_setter, p_index);
+    
+    MCLog("[Emit] PropertyDefinition(%ld, %@, %ld, %ld)", p_index, to_mcnameref(p_name), p_getter, p_setter);
+}
+
+void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
+{
+    MCScriptAddEventToModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
+    
+    MCLog("[Emit] EmitEvent(%ld, %@, %ld)", p_index, to_mcnameref(p_name), p_type_index);
 }
 
 void EmitBeginHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)

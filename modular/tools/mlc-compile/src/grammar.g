@@ -352,15 +352,15 @@
 
 'nonterm' PropertyDefinition(-> DEFINITION)
 
-    'rule' PropertyDefinition(-> property(Position, public, Name)):
-        "property" @(-> Position) Identifier(-> Name)
+    'rule' PropertyDefinition(-> property(Position, public, Name, Getter, Setter)):
+        "property" @(-> Position) Identifier(-> Name) "get" Identifier(-> Getter) "set" Identifier(-> Setter)
         
 ---------- Event
 
 'nonterm' EventDefinition(-> DEFINITION)
 
-    'rule' EventDefinition(-> event(Position, public, Name)):
-        "event" @(-> Position) Identifier(-> Name)
+    'rule' EventDefinition(-> event(Position, public, Name, Signature)):
+        "event" @(-> Position) Identifier(-> Name) Signature(-> Signature)
 
 ---------- Syntax
 

@@ -80,6 +80,31 @@ bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, 
     return true;
 }
 
+bool MCForeignValueExport(MCTypeInfoRef p_typeinfo, MCValueRef p_value, MCForeignValueRef& r_value)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
+    
+    __MCForeignValue *t_value;
+    if (!__MCValueCreate(kMCValueTypeCodeForeignValue, p_typeinfo -> foreign . descriptor . size, (__MCValue*&)t_value))
+        return false;
+
+    if (!t_resolved_typeinfo -> foreign . descriptor . doexport(p_value, false, t_value + 1))
+    {
+        MCMemoryDelete(t_value);
+        return false;
+    }
+    
+    t_value -> typeinfo = MCValueRetain(p_typeinfo);
+    
+    r_value = t_value;
+    
+    return true;
+}
+
 void *MCForeignValueGetContentsPtr(MCValueRef self)
 {
     return ((__MCForeignValue *)self) + 1;

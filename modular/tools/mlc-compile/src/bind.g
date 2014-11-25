@@ -62,10 +62,10 @@
     'rule' Declare(foreignhandler(Position, _, Name, _, _)):
         DeclareId(Name)
     
-    'rule' Declare(property(Position, _, Name)):
+    'rule' Declare(property(Position, _, Name, _, _)):
         DeclareId(Name)
     
-    'rule' Declare(event(Position, _, Name)):
+    'rule' Declare(event(Position, _, Name, _)):
         DeclareId(Name)
 
     'rule' Declare(syntax(Position, _, Name, _, _, _)):
@@ -131,11 +131,12 @@
         DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, Signature))
         DefineParameters(Name, Parameters)
 
-    'rule' Define(ModuleId, property(Position, Access, Name)):
+    'rule' Define(ModuleId, property(Position, Access, Name, Getter, Setter)):
         DefineSymbolId(Name, ModuleId, Access, property, nil)
 
-    'rule' Define(ModuleId, event(Position, Access, Name)):
+    'rule' Define(ModuleId, event(Position, Access, Name, Signature:signature(Parameters, _))):
         DefineSymbolId(Name, ModuleId, Access, event, nil)
+        DefineParameters(Name, Parameters)
     
     'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Syntax, Methods)):
         DefineSyntaxId(Name, ModuleId, Class, Syntax, Methods)
@@ -219,6 +220,21 @@
         DeclareParameters(Parameters)
         Apply(Parameters)
         LeaveScope
+
+    'rule' Apply(DEFINITION'property(_, _, _, Getter, Setter)):
+        -- Resolve the getter and setter ids
+        ApplyId(Getter)
+        ApplyId(Setter)
+        
+    'rule' Apply(DEFINITION'event(_, _, _, signature(Parameters, Type))):
+        Apply(Type)
+        
+        -- Enter a new scope to check parameters.
+        EnterScope
+        DeclareParameters(Parameters)
+        Apply(Parameters)
+        LeaveScope
+
 
     ----------
 
@@ -581,10 +597,13 @@
     'rule' DumpBindings(DEFINITION'foreignhandler(_, _, Name, Signature, _)):
         DumpId("foreign handler", Name)
         DumpBindings(Signature)
-    'rule' DumpBindings(DEFINITION'property(_, _, Name)):
+    'rule' DumpBindings(DEFINITION'property(_, _, Name, Getter, Setter)):
         DumpId("property", Name)
-    'rule' DumpBindings(DEFINITION'event(_, _, Name)):
+        DumpId("property getter", Getter)
+        DumpId("property setter", Setter)
+    'rule' DumpBindings(DEFINITION'event(_, _, Name, Signature)):
         DumpId("event", Name)
+        DumpBindings(Signature)
     'rule' DumpBindings(DEFINITION'syntax(_, _, Name, _, Syntax, Methods)):
         DumpId("syntax", Name)
         DumpBindings(Syntax)
