@@ -233,8 +233,15 @@ MCScriptHandlerDefinition *MCScriptDefinitionAsHandler(MCScriptDefinition *self)
 MCScriptForeignHandlerDefinition *MCScriptDefinitionAsForeignHandler(MCScriptDefinition *self)
 {
     __MCScriptAssert__(self -> kind == kMCScriptDefinitionKindForeignHandler,
-                       "definition not a forieng handler");
+                       "definition not a foreign handler");
     return static_cast<MCScriptForeignHandlerDefinition *>(self);
+}
+
+MCScriptDefinitionGroupDefinition *MCScriptDefinitionAsDefinitionGroup(MCScriptDefinition *self)
+{
+    __MCScriptAssert__(self -> kind == kMCScriptDefinitionKindDefinitionGroup,
+                       "definition not a definition group");
+    return static_cast<MCScriptDefinitionGroupDefinition *>(self);
 }
 
 ///////////
@@ -703,7 +710,7 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
 {
     p_handler -> function = dlsym(RTLD_MAIN_ONLY, MCStringGetCString(p_handler -> binding));
     if (p_handler -> function == nil)
-        return false;
+        return MCErrorThrowGeneric();
     
     MCTypeInfoRef t_signature;
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
@@ -713,7 +720,7 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
     
     MCResolvedTypeInfo t_resolved_return_type;
     if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
-        return false;
+        return MCErrorThrowGeneric();
     
     ffi_type *t_ffi_return_type;
     if (t_return_type != kMCNullTypeInfo)
@@ -772,7 +779,7 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
     {
         MCMemoryDeleteArray(t_ffi_arg_types);
         MCMemoryDelete(t_cif);
-        return false;
+        return MCErrorThrowGeneric();
     }
     
     p_handler -> function_argtypes = t_ffi_arg_types;
@@ -972,15 +979,23 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
         // We now have the argument in storage, so process according to mode.
         if (t_modes[t_arg_index] == kMCHandlerTypeFieldModeIn)
         {
-            // In mode arguments are the value themselves.
-            t_args[t_arg_index] = t_argument;
             
             // In mode types are the map of the foreign type, or pointer if a
             // valueref.
             if (t_descriptor != nil)
+            {
+                // In mode arguments are the value themselves.
+                t_args[t_arg_index] = t_argument;
                 t_arg_types[t_arg_index] = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_types[t_arg_index] . type);
+            }
             else
+            {
+                // Allocate space for the storage pointer
+                t_args[t_arg_index] = t_storage + t_storage_index;
+                t_storage_index += sizeof(uintptr_t);
+                *(void **)t_args[t_arg_index] = t_argument;
                 t_arg_types[t_arg_index] = &ffi_type_pointer;
+            }
         }
         else
         {
@@ -1171,6 +1186,60 @@ static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytec
 		
 		return MCScriptPerformForeignInvoke(x_frame, p_instance, t_foreign_handler, p_arguments, p_arity);
 	}
+    else if (p_handler -> kind == kMCScriptDefinitionKindDefinitionGroup)
+    {
+        MCScriptDefinitionGroupDefinition *t_group;
+        t_group = MCScriptDefinitionAsDefinitionGroup(p_handler);
+        
+        for(uindex_t i = 0; i < t_group -> handler_count; i++)
+        {
+            MCScriptInstanceRef t_instance;
+            MCScriptSyntaxDefinition *t_syntax_def;
+            MCScriptResolveDefinitionInFrame(x_frame, t_group -> handlers[i], t_instance, (MCScriptDefinition*&)t_syntax_def);
+            
+            for(uindex_t k = 0; k < t_syntax_def -> method_count; k++)
+            {
+                MCScriptDefinition *t_definition;
+                t_definition = t_instance -> module -> definitions[t_syntax_def -> methods[k] . handler];
+                
+                uindex_t t_type_index;
+                if (t_definition -> kind == kMCScriptDefinitionKindHandler)
+                    t_type_index = static_cast<MCScriptHandlerDefinition *>(t_definition) -> type;
+                else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
+                    t_type_index = static_cast<MCScriptForeignHandlerDefinition *>(t_definition) -> type;
+                else
+                    /* LOAD CHECK */ __MCScriptUnreachable__("non-handler definition in handler group");
+            
+                MCTypeInfoRef t_type;
+                t_type = t_instance -> module -> types[t_type_index] -> typeinfo;
+                
+                if (MCHandlerTypeInfoGetParameterCount(t_type) != p_arity - 1)
+                    continue;
+                
+                bool t_matched;
+                t_matched = true;
+                for(uindex_t j = 0; j < p_arity - 1; j++)
+                {
+                    if (MCHandlerTypeInfoGetParameterMode(t_type, j) == kMCHandlerTypeFieldModeOut)
+                        continue;
+                    
+                    MCValueRef t_value;
+                    t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[j + 1]);
+                    
+                    if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), MCHandlerTypeInfoGetParameterType(t_type, j)))
+                    {
+                        t_matched = false;
+                        break;
+                    }
+                }
+            
+                if (t_matched)
+                    return MCScriptPerformInvoke(x_frame, x_next_bytecode, t_instance, t_definition, p_arguments, p_arity);
+            }
+        }
+        
+        return MCErrorThrowGeneric(); //MCScriptThrowAmbiguousHandlerGroupInvocation();
+    }
 	
 	/* LOAD CHECK */ __MCScriptUnreachable__("non-handler definition passed to invoke");
     
