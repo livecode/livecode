@@ -31,6 +31,7 @@ MCTypeInfoRef kMCListTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCValueTypeCode __MCTypeInfoGetTypeCode(MCTypeInfoRef self);
 static bool __MCTypeInfoIsNamed(MCTypeInfoRef self);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,7 +40,7 @@ MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef self)
 {
     MCTypeInfoRef t_actual_typeinfo;
     t_actual_typeinfo = __MCTypeInfoResolve(self);
-    return t_actual_typeinfo -> flags & kMCTypeInfoTypeCodeMask;
+    return __MCTypeInfoGetTypeCode (t_actual_typeinfo);
 }
 
 MCNameRef MCTypeInfoGetName(MCTypeInfoRef self)
@@ -88,13 +89,14 @@ bool MCTypeInfoBindAndRelease(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCType
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_base, MCTypeInfoRef& r_typeinfo)
+	
 {
 	MCTypeInfoRef t_resolved_base;
 	t_resolved_base = kMCNullTypeInfo;
 	if (p_base != kMCNullTypeInfo)
 	{
 		t_resolved_base = __MCTypeInfoResolve(p_base);
-		MCAssert((t_resolved_base -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+		MCAssert(__MCTypeInfoGetTypeCode(t_resolved_base) == kMCValueTypeCodeRecord);
 	}
 
 	/* If the p_field_count < 0 then the p_fields are expected to be
@@ -141,7 +143,7 @@ MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef unresolved_self)
 {
 	MCTypeInfoRef self;
 	self = __MCTypeInfoResolve(unresolved_self);
-	MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+	MCAssert(__MCTypeInfoGetTypeCode (unresolved_self) == kMCValueTypeCodeRecord);
     return self -> record . base;
 }
 
@@ -150,7 +152,7 @@ uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef unresolved_self)
     MCTypeInfoRef self;
     self = __MCTypeInfoResolve(unresolved_self);
     
-    MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+    MCAssert(__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord);
 
 	/* Sum field counts of all base record types */
 	uindex_t t_field_count;
@@ -201,8 +203,8 @@ MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef unresolved_self,
 	self = __MCTypeInfoResolve(unresolved_self);
 	other = __MCTypeInfoResolve(unresolved_other);
 
-	MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
-	MCAssert((other -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+	MCAssert(__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord);
+	MCAssert(__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord);
 
 	MCTypeInfoRef t_base = self;
 	while (t_base != kMCNullTypeInfo)
