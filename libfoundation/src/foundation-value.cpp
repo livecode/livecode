@@ -73,6 +73,8 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
             return kMCListTypeInfo;
         case kMCValueTypeCodeSet:
             return kMCSetTypeInfo;
+        case kMCValueTypeCodeProperList:
+            return kMCProperListTypeInfo;
         case kMCValueTypeCodeCustom:
             return ((__MCCustomValue *)p_value) -> typeinfo;
         case kMCValueTypeCodeRecord:
@@ -82,7 +84,11 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
             return nil;
         case kMCValueTypeCodeError:
             return ((__MCError *)p_value) -> typeinfo;
+        case kMCValueTypeCodeForeignValue:
+            return ((__MCForeignValue *)p_value) -> typeinfo;
     }
+    
+    MCLog("%p, %d", p_value, MCValueGetTypeCode(p_value));
     
     MCUnreachable();
 }
@@ -181,6 +187,8 @@ hash_t MCValueHash(MCValueRef p_value)
         return __MCTypeInfoHash((__MCTypeInfo*) self);
     case kMCValueTypeCodeError:
         return __MCErrorHash((__MCError*)self);
+    case kMCValueTypeCodeForeignValue:
+        return __MCForeignValueHash((__MCForeignValue *)self);
 	default:
 		break;
 	}
@@ -248,6 +256,8 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
         return __MCTypeInfoIsEqualTo((__MCTypeInfo *)self, (__MCTypeInfo *)other_self);
     case kMCValueTypeCodeError:
         return __MCErrorIsEqualTo((__MCError *)self, (__MCError *)other_self);
+    case kMCValueTypeCodeForeignValue:
+        return __MCForeignValueIsEqualTo((__MCForeignValue *)self, (__MCForeignValue *)other_self);
 	// Shouldn't happen!
 	default:
 		break;
@@ -293,6 +303,8 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
         return __MCTypeInfoCopyDescription((__MCTypeInfo*)p_value, r_desc);
     case kMCValueTypeCodeError:
         return __MCErrorCopyDescription((__MCError*)p_value, r_desc);
+    case kMCValueTypeCodeForeignValue:
+        return __MCForeignValueCopyDescription((__MCForeignValue *)p_value, r_desc);
 	default:
 		break;
 	}
@@ -478,6 +490,9 @@ void __MCValueDestroy(__MCValue *self)
         break;
     case kMCValueTypeCodeError:
         __MCErrorDestroy((__MCError *)self);
+        break;
+    case kMCValueTypeCodeForeignValue:
+        __MCForeignValueDestroy((__MCForeignValue *)self);
         break;
     default:
         // Shouldn't get here
@@ -954,6 +969,12 @@ bool __MCValueImmutableCopy(__MCValue *self, bool p_release, __MCValue*& r_new_v
 MCNullRef kMCNull;
 MCBooleanRef kMCTrue;
 MCBooleanRef kMCFalse;
+
+bool MCBooleanCreateWithBool(bool p_value, MCBooleanRef& r_boolean)
+{
+    r_boolean = MCValueRetain(p_value ? kMCTrue : kMCFalse);
+    return true;
+}
 
 bool __MCValueInitialize(void)
 {

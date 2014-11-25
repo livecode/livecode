@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4D44E3771A13A4080073FFA2 /* foundation-handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D44E3761A13A4080073FFA2 /* foundation-handler.cpp */; };
+		4D44E4C01A238EF30073FFA2 /* foundation-foreign.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D44E4BF1A238EF30073FFA2 /* foundation-foreign.cpp */; };
 		4D5837A31806A024006DE6A2 /* foundation-objc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5837A21806A024006DE6A2 /* foundation-objc.mm */; };
 		4D7FA79D1594E09500EEF440 /* foundation-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA78F1594E09500EEF440 /* foundation-array.cpp */; };
 		4D7FA79E1594E09500EEF440 /* foundation-core.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA7901594E09500EEF440 /* foundation-core.cpp */; };
@@ -53,6 +54,7 @@
 /* Begin PBXFileReference section */
 		1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-data.cpp"; path = "src/foundation-data.cpp"; sourceTree = "<group>"; };
 		4D44E3761A13A4080073FFA2 /* foundation-handler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-handler.cpp"; path = "src/foundation-handler.cpp"; sourceTree = "<group>"; };
+		4D44E4BF1A238EF30073FFA2 /* foundation-foreign.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-foreign.cpp"; path = "src/foundation-foreign.cpp"; sourceTree = "<group>"; };
 		4D58375B18069F4B006DE6A2 /* foundation-objc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-objc.h"; path = "include/foundation-objc.h"; sourceTree = "<group>"; };
 		4D5837A21806A024006DE6A2 /* foundation-objc.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "foundation-objc.mm"; path = "src/foundation-objc.mm"; sourceTree = "<group>"; };
 		4D7FA78F1594E09500EEF440 /* foundation-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-array.cpp"; path = "src/foundation-array.cpp"; sourceTree = "<group>"; };
@@ -192,6 +194,7 @@
 				4DBBAEEC1A0CEA6C004AAC31 /* foundation-typeinfo.cpp */,
 				4DDA1F7C1A0D1452001B0CA2 /* foundation-record.cpp */,
 				4D44E3761A13A4080073FFA2 /* foundation-handler.cpp */,
+				4D44E4BF1A238EF30073FFA2 /* foundation-foreign.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -265,6 +268,7 @@
 				4D7FA7A71594E09500EEF440 /* foundation-string.cpp in Sources */,
 				4D7FA7A81594E09500EEF440 /* foundation-unicodechars.cpp in Sources */,
 				4D7FA7A91594E09500EEF440 /* foundation-value.cpp in Sources */,
+				4D44E4C01A238EF30073FFA2 /* foundation-foreign.cpp in Sources */,
 				4DB3EBE416A5C00800E90D30 /* foundation-string-cf.cpp in Sources */,
 				4D5837A31806A024006DE6A2 /* foundation-objc.mm in Sources */,
 				76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */,

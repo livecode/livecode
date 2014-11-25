@@ -1239,6 +1239,13 @@ extern MCTypeInfoRef kMCSetTypeInfo;
 extern MCTypeInfoRef kMCListTypeInfo;
 extern MCTypeInfoRef kMCProperListTypeInfo;
 
+extern MCTypeInfoRef kMCBoolTypeInfo;
+extern MCTypeInfoRef kMCIntTypeInfo;
+extern MCTypeInfoRef kMCUIntTypeInfo;
+extern MCTypeInfoRef kMCFloatTypeInfo;
+extern MCTypeInfoRef kMCDoubleTypeInfo;
+extern MCTypeInfoRef kMCPointerTypeInfo;
+
 //////////
 
 // Returns true if the typeinfo is an alias.
@@ -1292,6 +1299,8 @@ bool MCTypeInfoResolve(MCTypeInfoRef typeinfo, MCResolvedTypeInfo& r_resolution)
 //
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
 
+bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolvedTypeInfo& target);
+
 //////////
 
 // Creates a typeinfo for one of the builtin typecodes.
@@ -1324,8 +1333,8 @@ struct MCForeignTypeDescriptor
     MCForeignPrimitiveType *layout;
     uindex_t layout_size;
     bool (*initialize)(void *contents);
-    bool (*finalize)(void *contents);
-    bool (*defined)(void *contents, bool& r_defined);
+    void (*finalize)(void *contents);
+    bool (*defined)(void *contents);
     bool (*move)(void *source, void *target);
     bool (*copy)(void *source, void *target);
     bool (*equal)(void *left, void *right, bool& r_equal);
@@ -1337,6 +1346,7 @@ struct MCForeignTypeDescriptor
 bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *descriptor, MCTypeInfoRef& r_typeinfo);
 
 const MCForeignTypeDescriptor *MCForeignTypeInfoGetDescriptor(MCTypeInfoRef typeinfo);
+void *MCForeignTypeInfoGetLayoutType(MCTypeInfoRef typeinfo);
 
 //////////
 
@@ -1472,12 +1482,14 @@ extern MCNullRef kMCNull;
 extern MCBooleanRef kMCFalse;
 extern MCBooleanRef kMCTrue;
 
+extern "C" bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  NUMBER DEFINITIONS
 //
 
-bool MCNumberCreateWithInteger(integer_t value, MCNumberRef& r_number);
+extern "C" bool MCNumberCreateWithInteger(integer_t value, MCNumberRef& r_number);
 bool MCNumberCreateWithUnsignedInteger(uinteger_t value, MCNumberRef& r_number);
 bool MCNumberCreateWithReal(real64_t value, MCNumberRef& r_number);
 
@@ -2409,6 +2421,8 @@ bool MCErrorThrowGeneric(void);
 
 bool MCForeignValueCreate(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
 bool MCForeignValueCreateAndRelease(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
+
+void *MCForeignValueGetContentsPtr(MCValueRef value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

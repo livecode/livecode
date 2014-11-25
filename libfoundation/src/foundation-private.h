@@ -58,7 +58,7 @@ enum
     kMCTypeInfoTypeIsNamed = 254,
     kMCTypeInfoTypeIsAlias = 253,
     kMCTypeInfoTypeIsOptional = 252,
-    kMCTypeInfoTypeIsForeign = 252,
+    kMCTypeInfoTypeIsForeign = 251,
 };
 
 struct __MCTypeInfo: public __MCValue
@@ -98,6 +98,7 @@ struct __MCTypeInfo: public __MCValue
         struct
         {
             MCForeignTypeDescriptor descriptor;
+            void *ffi_layout_type;
         } foreign;
     };
 };
@@ -397,6 +398,13 @@ struct __MCCustomValue: public __MCValue
     MCTypeInfoRef typeinfo;
 };
 
+////////
+
+struct __MCForeignValue: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern const uindex_t __kMCValueHashTableSizes[];
@@ -513,6 +521,13 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self);
 bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self);
 bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description);
 MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
+
+bool __MCForeignValueInitialize(void);
+void __MCForeignValueFinalize(void);
+void __MCForeignValueDestroy(__MCForeignValue *self);
+hash_t __MCForeignValueHash(__MCForeignValue *self);
+bool __MCForeignValueIsEqualTo(__MCForeignValue *self, __MCForeignValue *other_self);
+bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_description);
 
 bool __MCStreamInitialize(void);
 void __MCStreamFinalize(void);

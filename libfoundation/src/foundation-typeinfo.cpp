@@ -17,6 +17,8 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
+#include <ffi/ffi.h>
+
 #include "foundation-private.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,25 +141,35 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
         return false;
     }
     
+    return MCResolvedTypeInfoConforms(t_resolved_source, t_resolved_target);
+}
+
+bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolvedTypeInfo& target)
+{
     // If source and target are the same, we are done.
-    if (t_resolved_source . named_type == t_resolved_target . named_type)
+    if (source . named_type == target . named_type)
         return true;
     
     // If source is undefined, then target must be optional.
-    if (source == kMCNullTypeInfo)
-        return t_resolved_target . is_optional;
+    if (source . named_type == kMCNullTypeInfo)
+        return target . is_optional;
+    
+    // If the target is any, then all is well.
+    if (target . named_type == kMCAnyTypeInfo)
+        return true;
     
     // If source is of foreign type then target must be the source's bridge type
     // the source type, or one of the source's supertypes.
-    if (MCTypeInfoIsForeign(t_resolved_source . type))
+    if (MCTypeInfoIsForeign(source . type))
     {
         // Check to see if the target is the source's bridge type.
-        if (t_resolved_target . named_type == t_resolved_source . type -> foreign . descriptor . bridgetype)
+        if (source . type -> foreign . descriptor . bridgetype != kMCNullTypeInfo &&
+            target . named_type == source . type -> foreign . descriptor . bridgetype)
             return true;
         
         // Now check to see if the target is one of the source's supertypes.
-        for(MCTypeInfoRef t_supertype = t_resolved_source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> foreign . descriptor . basetype)
-            if (t_resolved_target . named_type == t_supertype)
+        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> foreign . descriptor . basetype)
+            if (target . named_type == t_supertype)
                 return true;
         
         return false;
@@ -165,9 +177,10 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
     
     // If the target is of foreign type, then the source must be the target's
     // bridge type.
-    if (MCTypeInfoIsForeign(t_resolved_target . type))
+    if (MCTypeInfoIsForeign(target . type))
     {
-        if (t_resolved_target . named_type == t_resolved_source . type -> foreign . descriptor . bridgetype)
+        if (target . type -> foreign . descriptor . bridgetype != kMCNullTypeInfo &&
+            target . type -> foreign . descriptor . bridgetype == source . named_type)
             return true;
         
         return false;
@@ -175,11 +188,11 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
     
     // If the source is of record type, then the target must be the same type of
     // one of the source's super types.
-    if (MCTypeInfoIsRecord(t_resolved_source . type))
+    if (MCTypeInfoIsRecord(source . type))
     {
         // Now check to see if the target is one of the source's supertypes.
-        for(MCTypeInfoRef t_supertype = t_resolved_source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> record . base)
-            if (t_resolved_target . named_type == t_supertype)
+        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> record . base)
+            if (target . named_type == t_supertype)
                 return true;
         
         return false;
@@ -351,6 +364,77 @@ bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *callbacks, MCTypeInfoR
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static ffi_type *__map_primitive_type(MCForeignPrimitiveType p_type)
+{
+    switch(p_type)
+    {
+        case kMCForeignPrimitiveTypeVoid:
+            return &ffi_type_void;
+        case kMCForeignPrimitiveTypeBool:
+            if (sizeof(bool) == 1)
+                return &ffi_type_uint8;
+            if (sizeof(bool) == 2)
+                return &ffi_type_uint16;
+            if (sizeof(bool) == 4)
+                return &ffi_type_uint32;
+            return &ffi_type_uint64;
+        case kMCForeignPrimitiveTypeUInt8:
+            return &ffi_type_uint8;
+        case kMCForeignPrimitiveTypeSInt8:
+            return &ffi_type_sint8;
+        case kMCForeignPrimitiveTypeUInt16:
+            return &ffi_type_uint16;
+        case kMCForeignPrimitiveTypeSInt16:
+            return &ffi_type_sint16;
+        case kMCForeignPrimitiveTypeUInt32:
+            return &ffi_type_uint32;
+        case kMCForeignPrimitiveTypeSInt32:
+            return &ffi_type_sint32;
+        case kMCForeignPrimitiveTypeUInt64:
+            return &ffi_type_uint64;
+        case kMCForeignPrimitiveTypeSInt64:
+            return &ffi_type_sint64;
+        case kMCForeignPrimitiveTypeFloat32:
+            return &ffi_type_float;
+        case kMCForeignPrimitiveTypeFloat64:
+            return &ffi_type_double;
+        case kMCForeignPrimitiveTypePointer:
+            return &ffi_type_pointer;
+    }
+    
+    MCUnreachable();
+    
+    return nil;
+}
+
+static bool __MCForeignTypeInfoComputeLayoutType(MCTypeInfoRef self)
+{
+    // If the typeinfo has a layout size of size 1, then it is just a value.
+    if (self -> foreign . descriptor . layout_size == 1)
+        self -> foreign . ffi_layout_type = __map_primitive_type(self -> foreign . descriptor . layout[0]);
+    else
+    {
+        ffi_type *t_type;
+        if (!MCMemoryNew(t_type))
+            return false;
+        if (!MCMemoryNewArray(self -> foreign . descriptor . layout_size + 1, t_type -> elements))
+        {
+            MCMemoryDelete(t_type);
+            return false;
+        }
+        
+        t_type -> alignment = 0;
+        t_type -> type = FFI_TYPE_STRUCT;
+        for(uindex_t i = 0; i < self -> foreign . descriptor . layout_size; i++)
+            t_type -> elements[i] = __map_primitive_type(self -> foreign . descriptor . layout[i]);
+        t_type -> elements[self -> foreign . descriptor . layout_size] = NULL;
+        
+        self -> foreign . ffi_layout_type = t_type;
+    }
+    
+    return true;
+}
+
 bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
@@ -361,6 +445,7 @@ bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCType
         return false;
     
     self -> flags |= kMCTypeInfoTypeIsForeign;
+    
     self -> foreign . descriptor . size = p_descriptor -> size;
     self -> foreign . descriptor . basetype = MCValueRetain(p_descriptor -> basetype);
     self -> foreign . descriptor . bridgetype = MCValueRetain(p_descriptor -> bridgetype);
@@ -375,12 +460,28 @@ bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCType
     self -> foreign . descriptor . doimport = p_descriptor -> doimport;
     self -> foreign . descriptor . doexport = p_descriptor -> doexport;
     
+    if (!__MCForeignTypeInfoComputeLayoutType(self))
+    {
+        MCValueRelease(self);
+        return false;
+    }
+    
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
     
     MCValueRelease(self);
     
     return false;
+}
+
+const MCForeignTypeDescriptor *MCForeignTypeInfoGetDescriptor(MCTypeInfoRef self)
+{
+    return &self -> foreign . descriptor;
+}
+
+void *MCForeignTypeInfoGetLayoutType(MCTypeInfoRef self)
+{
+    return self -> foreign . ffi_layout_type;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
