@@ -119,6 +119,7 @@ bool MCRecordCreateMutable(MCTypeInfoRef p_typeinfo, MCRecordRef& r_record)
         for(uindex_t i = 0; i < t_field_count; i++)
             self -> fields[i] = MCValueRetain(kMCNull);
         
+        self -> typeinfo = MCValueRetain (p_typeinfo);
         self -> flags |= kMCRecordFlagIsMutable;
         
         r_record = self;
