@@ -904,6 +904,7 @@ static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value
     uindex_t t_index;
     if ((p_value & (1 << 31)) != 0)
     {
+        p_value &= ~(1 << 31);
         t_bytes[0] = ((p_value >> 7) & 0x7f) | 0x80;
         t_bytes[1] = (p_value & 0x7f);
         t_index = 2;
@@ -1109,8 +1110,8 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         if (t_arity >= 15)
             __emit_bytecode_byte(self, t_arity - 15);
         
-        for(uindex_t i = 0; i < t_arity; i++)
-            __emit_bytecode_uint(self, t_operands[i]);
+        for(uindex_t j = 0; j < t_arity; j++)
+            __emit_bytecode_uint(self, t_operands[j]);
     }
     
     t_handler -> finish_address = self -> module . bytecode_count;
