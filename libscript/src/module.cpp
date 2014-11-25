@@ -483,6 +483,8 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                             t_typeinfo = kMCBooleanTypeInfo;
                         else if (MCNameIsEqualTo(t_import -> name, MCNAME("string")))
                             t_typeinfo = kMCStringTypeInfo;
+                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("data")))
+                            t_typeinfo = kMCStringTypeInfo;
                         else if (MCNameIsEqualTo(t_import -> name, MCNAME("number")))
                             t_typeinfo = kMCNumberTypeInfo;
                         else if (MCNameIsEqualTo(t_import -> name, MCNAME("array")))
