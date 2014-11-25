@@ -31,6 +31,7 @@ MCTypeInfoRef kMCListTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCValueTypeCode __MCTypeInfoGetTypeCode(MCTypeInfoRef self);
 static bool __MCTypeInfoIsNamed(MCTypeInfoRef self);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,7 +40,7 @@ MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef self)
 {
     MCTypeInfoRef t_actual_typeinfo;
     t_actual_typeinfo = __MCTypeInfoResolve(self);
-    return t_actual_typeinfo -> flags & kMCTypeInfoTypeCodeMask;
+    return __MCTypeInfoGetTypeCode (t_actual_typeinfo);
 }
 
 MCNameRef MCTypeInfoGetName(MCTypeInfoRef self)
@@ -67,7 +68,7 @@ bool MCTypeInfoBind(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCTypeInfoRef& r
     
     self -> flags |= 0xff;
     self -> named . name = MCValueRetain(p_name);
-    self -> named . typeinfo = __MCTypeInfoResolve(p_typeinfo);
+    self -> named . typeinfo = MCValueRetain(__MCTypeInfoResolve(p_typeinfo));
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
@@ -88,14 +89,20 @@ bool MCTypeInfoBindAndRelease(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCType
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_base, MCTypeInfoRef& r_typeinfo)
+	
 {
 	MCTypeInfoRef t_resolved_base;
-	t_resolved_base = nil;
+	t_resolved_base = kMCNullTypeInfo;
 	if (p_base != kMCNullTypeInfo)
 	{
 		t_resolved_base = __MCTypeInfoResolve(p_base);
-		MCAssert((t_resolved_base -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+		MCAssert(__MCTypeInfoGetTypeCode(t_resolved_base) == kMCValueTypeCodeRecord);
 	}
+
+	/* If the p_field_count < 0 then the p_fields are expected to be
+	 * terminated by a custodian with name = nil. */
+	if (p_field_count < 0)
+		for (p_field_count = 0; p_fields[p_field_count].name != nil; ++p_field_count);
 
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
@@ -109,11 +116,7 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
     
     self -> flags |= kMCValueTypeCodeRecord;
 
-	/* If the p_field_count < 0 then the p_fields are expected to be
-	 * terminated by a custodian with name = nil. */
-	uindex_t i;
-	i = 0;
-	while ((p_field_count >= 0) ? (i < p_field_count) : (p_fields[i].name != nil))
+	for (uindex_t i = 0; i < p_field_count; ++i)
 	{
 		/* Verify that the field names are all caselessly distinct.
 		 * N.b. O(N^2) algorithm is inefficient, but will only be run
@@ -124,10 +127,9 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 		}
         self -> record . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> record . fields[i] . type = MCValueRetain(p_fields[i] . type);
-		++i;
     }
     self -> record . field_count = p_field_count;
-    self -> record . base = MCValueRetain(t_resolved_base != nil ? t_resolved_base : kMCNullTypeInfo);
+    self -> record . base = MCValueRetain(t_resolved_base);
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
@@ -141,7 +143,7 @@ MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef unresolved_self)
 {
 	MCTypeInfoRef self;
 	self = __MCTypeInfoResolve(unresolved_self);
-	MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+	MCAssert(__MCTypeInfoGetTypeCode (unresolved_self) == kMCValueTypeCodeRecord);
     return self -> record . base;
 }
 
@@ -150,15 +152,20 @@ uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef unresolved_self)
     MCTypeInfoRef self;
     self = __MCTypeInfoResolve(unresolved_self);
     
-    MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+    MCAssert(__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord);
+    return __MCRecordTypeInfoGetFieldCount(self);
+}
 
+uindex_t
+__MCRecordTypeInfoGetFieldCount(MCTypeInfoRef self)
+{
 	/* Sum field counts of all base record types */
 	uindex_t t_field_count;
 	t_field_count = 0;
 	while (self != kMCNullTypeInfo) {
 		t_field_count += self -> record . field_count;
 		self = MCRecordTypeInfoGetBaseType (self);
-	};
+	}
     
     return t_field_count;
 }
@@ -201,10 +208,10 @@ MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef unresolved_self,
 	self = __MCTypeInfoResolve(unresolved_self);
 	other = __MCTypeInfoResolve(unresolved_other);
 
-	MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
-	MCAssert((other -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
+	MCAssert(__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord);
+	MCAssert(__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord);
 
-	MCTypeInfoRef t_base;
+	MCTypeInfoRef t_base = self;
 	while (t_base != kMCNullTypeInfo)
 	{
 		if (t_base == other) return true;
@@ -248,6 +255,11 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
     
+	/* If the p_field_count < 0 then the p_fields are expected to be
+	 * terminated by a custodian with name = nil. */
+	if (p_field_count < 0)
+		for (p_field_count = 0; p_fields[p_field_count].name != nil; ++p_field_count);
+
     if (!MCMemoryNewArray(p_field_count, self -> handler . fields))
     {
         MCMemoryDelete(self);
@@ -256,16 +268,11 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
     
     self -> flags |= kMCValueTypeCodeHandler;
 
-	uindex_t i;
-	i = 0;
-	/* If the p_field_count < 0 then the p_fields are expected to be
-	 * terminated by a custodian with name = nil. */
-	while ((p_field_count >= 0) ? (i < p_field_count) : p_fields[i].name != nil)
+	for (uindex_t i = 0; i < p_field_count; ++i)
     {
         self -> handler . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
-		++i;
     }
     self -> handler . field_count = p_field_count;
     
