@@ -78,11 +78,6 @@ void MCTextLine::performLayout()
         coord_t t_x = t_xpos;
         t_xpos = offsetForSegment(t_segment_count, t_previous_segment_end);
         
-        // Set the bounds of the segment. This is necessary so that clipping
-        // will happen correctly in the case of fixed tab positions where the
-        // contents of the segment are wider than the available width.
-        t_segment->setMaxSize(t_xpos - t_x, INFINITY);
-        
         // Update the measurements for this line
         m_ascent = MCMax(m_ascent, t_segment->getTextAscent());
         m_descent = MCMax(m_descent, t_segment->getTextDescent());
@@ -91,6 +86,26 @@ void MCTextLine::performLayout()
         
         // Move on to the next segment
         t_segment_count++;
+        t_segment = t_segment->next();
+    }
+    while (t_segment != m_segments);
+    
+    // Update the maximum sizes of the segments - these are needed for alignment
+    // and clipping purposes
+    t_segment = m_segments;
+    do
+    {
+        if (t_segment->next() != m_segments)
+        {
+            // Bound is the start of the next segment
+            setMaxSize(t_segment->next()->getX() - t_segment->getX(), INFINITY);
+        }
+        else
+        {
+            // Bound is the rest of the line
+            setMaxSize(t_width - t_segment->getX(), INFINITY);
+        }
+    
         t_segment = t_segment->next();
     }
     while (t_segment != m_segments);
@@ -298,5 +313,5 @@ bool MCTextLine::fitSegment(MCTextSegment* p_segment, coord_t p_available_width)
 coord_t MCTextLine::offsetForSegment(uindex_t p_index, coord_t p_prev_segment_end)
 {
     // TODO: implement
-    return 10*p_index;
+    return p_prev_segment_end + 20;
 }

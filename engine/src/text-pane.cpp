@@ -125,14 +125,14 @@ void MCTextPane::draw(MCDC* dc)
 void MCTextPane::repositionChildren()
 {
     // Based on vertical alignment, calculate the offset for positioning
-    coord_t t_y;
-    t_y = 0.0f;
+    coord_t t_offset;
+    t_offset = 0.0f;
     if (getHeight() < getMaxHeight())
     {
         switch (getVerticalAlignment())
         {
             case kMCTextCellAlignCenter:
-                t_y = (getMaxHeight() - getHeight())/2;
+                t_offset = (getMaxHeight() - getHeight())/2;
                 break;
                 
             case kMCTextCellAlignStart:
@@ -140,7 +140,7 @@ void MCTextPane::repositionChildren()
                 break;
                 
             case kMCTextCellAlignEnd:
-                t_y = getMaxHeight() - getHeight();
+                t_offset = getMaxHeight() - getHeight();
                 break;
                 
             default:
@@ -149,6 +149,7 @@ void MCTextPane::repositionChildren()
     }
     
     // Position each of the paragraphs in turn
+    coord_t t_y = 0;
     MCTextParagraph* t_paragraph;
     t_paragraph = m_paragraphs;
     do
@@ -159,12 +160,12 @@ void MCTextPane::repositionChildren()
             // Position from the bottom, remembering to account for the height
             // of this paragraph as well
             t_y += t_paragraph->getHeight();
-            t_paragraph->setPosition(0, getHeight() - t_y);
+            t_paragraph->setPosition(0, getHeight() - t_y + t_offset);
         }
         else
         {
             // Position from the top of the pane
-            t_paragraph->setPosition(0, t_y);
+            t_paragraph->setPosition(0, t_y + t_offset);
             t_y += t_paragraph->getHeight();
         }
         

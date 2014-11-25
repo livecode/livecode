@@ -581,6 +581,10 @@ coord_t MCTextParagraph::getLineX(MCTextLine* p_line) const
             MCUnreachable();
     }
     
+    // If the text direction is reversed, reverse the line coordinate
+    if (isReversedTextOrder())
+        t_x = t_available_width - p_line->getWidth() - t_x;
+    
     return t_x;
 }
 

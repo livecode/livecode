@@ -77,8 +77,8 @@ void MCTextSegment::performLayout()
         // Tell the block to finish its own layout
         t_block->performLayout();
         
-        // The width of the segment is the greatest x value in any block
-        t_width = MCMax(t_width, t_block->getX() + t_block->getWidth());
+        // The width of the segment is sum of the width of the blocks
+        t_width += t_block->getWidth();
         
         // The font metrics are the greatest values found in any block
         m_ascent = MCMax(m_ascent, t_block->getTextAscent());

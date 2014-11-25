@@ -38,6 +38,10 @@ void MCTextCell::setPosition(coord_t p_x, coord_t p_y)
 
 void MCTextCell::setMaxSize(coord_t p_width, coord_t p_height)
 {
+    // Do nothing if the size hasn't changed
+    if (m_max_width == p_width && m_max_height == p_height)
+        return;
+    
     m_max_width = p_width;
     m_max_height = p_height;
     
@@ -140,8 +144,8 @@ MCTextCell::MCTextCell() :
   m_max_height(INFINITY),
   m_local_attributes(NULL),
   m_effective_attributes(NULL),
-  m_horizontal_alignment(kMCTextCellAlignCenter),
-  m_vertical_alignment(kMCTextCellAlignCenter),
+  m_horizontal_alignment(kMCTextCellAlignEnd),
+  m_vertical_alignment(kMCTextCellAlignStart),
   m_layout_direction(kMCTextCellLayoutLeftThenDown),
   m_flags(kMCTextCellNeedsLayout)
 {
