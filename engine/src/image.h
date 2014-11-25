@@ -149,13 +149,15 @@ public:
 	MCImageRepType GetType() { return kMCImageRepMutable; }
 	uindex_t GetFrameCount();
 	
-	bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
-	void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
+	bool LockBitmap(uindex_t p_index, MCGFloat p_density, MCImageBitmap *&r_bitmap);
+	void UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap);
 	
 	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame& r_frame);
 	void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame);
 	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
+	// IM-2014-11-25: [[ ImageRep ]] Added ImageRep method to get frame duration.
+	bool GetFrameDuration(uindex_t p_index, uint32_t &r_duration);
 	
 	uint32_t GetDataCompression();
 
@@ -244,7 +246,7 @@ public:
 private:
 	MCImage *m_owner;
 	MCGImageFrame m_gframe;
-	MCBitmapFrame m_frame;
+	MCImageBitmap *m_locked_bitmap;
 
 	MCImageBitmap *m_bitmap;
 	MCImageBitmap *m_unpre_bitmap;
@@ -301,7 +303,6 @@ class MCImage : public MCControl
 
 	// IM-2014-05-12: [[ ImageRepUpdate ]] The possible sources of the currently locked bitmap
 	MCImageRep *m_locked_rep;
-	MCBitmapFrame *m_locked_bitmap_frame;
 	MCGImageRef m_locked_image;
 	MCImageBitmap *m_locked_bitmap;
 
