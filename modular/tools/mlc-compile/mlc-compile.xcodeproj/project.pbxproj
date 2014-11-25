@@ -37,6 +37,8 @@
 		4D44E3D31A1642A70073FFA2 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3C51A1642A70073FFA2 /* libicuuc.a */; };
 		4D44E3D51A1642BC0073FFA2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3D41A1642BC0073FFA2 /* CoreFoundation.framework */; };
 		4D44E3D61A1642C60073FFA2 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E3D41A1642BC0073FFA2 /* CoreFoundation.framework */; };
+		4D44E4D71A24A62E0073FFA2 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E4CA1A24A5ED0073FFA2 /* libffi.a */; };
+		4D44E4D91A24A6350073FFA2 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E4CA1A24A5ED0073FFA2 /* libffi.a */; };
 		4D6E0E7B19E71592001AE5CC /* check.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6E0E7919E7158C001AE5CC /* check.c */; };
 		4D6F072919CC388F00DDC6E0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F072819CC388F00DDC6E0 /* main.c */; };
 		4D78D28E19E9446F00DDEF0B /* syntax.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D78D28C19E9446F00DDEF0B /* syntax.c */; };
@@ -148,6 +150,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = foundation;
+		};
+		4D44E4C91A24A5ED0073FFA2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D44E4C51A24A5ED0073FFA2 /* libffi.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2AAC046055464E500DB518D;
+			remoteInfo = libffi;
 		};
 		4D6F071E19CC37BB00DDC6E0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -263,6 +272,7 @@
 		4D44E4951A1F698D0073FFA2 /* type.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = type.mlc; path = ../../library/src/type.mlc; sourceTree = "<group>"; };
 		4D44E4961A1F698D0073FFA2 /* url.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = url.mlc; path = ../../library/src/url.mlc; sourceTree = "<group>"; };
 		4D44E4971A1F8A970073FFA2 /* canvas.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = canvas.mlc; path = ../../library/canvas/src/canvas.mlc; sourceTree = "<group>"; };
+		4D44E4C51A24A5ED0073FFA2 /* libffi.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libffi.xcodeproj; path = ../../../thirdparty/libffi/libffi.xcodeproj; sourceTree = "<group>"; };
 		4D6E0E7119E710BE001AE5CC /* check.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = check.g; path = src/check.g; sourceTree = SOURCE_ROOT; };
 		4D6E0E7919E7158C001AE5CC /* check.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = check.c; path = src/_GG_/check.c; sourceTree = "<group>"; };
 		4D6F070B19CC36DD00DDC6E0 /* mlc-compile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "mlc-compile"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -309,6 +319,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D44E4D71A24A62E0073FFA2 /* libffi.a in Frameworks */,
 				4D44E3D61A1642C60073FFA2 /* CoreFoundation.framework in Frameworks */,
 				4D44E3CD1A1642A70073FFA2 /* libicule.a in Frameworks */,
 				4D44E3D31A1642A70073FFA2 /* libicuuc.a in Frameworks */,
@@ -327,6 +338,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D44E4D91A24A6350073FFA2 /* libffi.a in Frameworks */,
 				4D44E3D51A1642BC0073FFA2 /* CoreFoundation.framework in Frameworks */,
 				4D44E3CC1A1642A70073FFA2 /* libicule.a in Frameworks */,
 				4D44E3D21A1642A70073FFA2 /* libicuuc.a in Frameworks */,
@@ -394,6 +406,14 @@
 			isa = PBXGroup;
 			children = (
 				4D44E3B51A1642320073FFA2 /* libfoundation.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4D44E4C61A24A5ED0073FFA2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D44E4CA1A24A5ED0073FFA2 /* libffi.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -472,6 +492,7 @@
 				4D44E3C31A1642A70073FFA2 /* libiculx.a */,
 				4D44E3C41A1642A70073FFA2 /* libicutu.a */,
 				4D44E3C51A1642A70073FFA2 /* libicuuc.a */,
+				4D44E4C51A24A5ED0073FFA2 /* libffi.xcodeproj */,
 				4D44E3B01A1642320073FFA2 /* libfoundation.xcodeproj */,
 				4D44E3951A160ABA0073FFA2 /* libscript.xcodeproj */,
 				4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */,
@@ -613,6 +634,10 @@
 					ProjectRef = 4D6F071919CC37BB00DDC6E0 /* gentle.xcodeproj */;
 				},
 				{
+					ProductGroup = 4D44E4C61A24A5ED0073FFA2 /* Products */;
+					ProjectRef = 4D44E4C51A24A5ED0073FFA2 /* libffi.xcodeproj */;
+				},
+				{
 					ProductGroup = 4D44E3B11A1642320073FFA2 /* Products */;
 					ProjectRef = 4D44E3B01A1642320073FFA2 /* libfoundation.xcodeproj */;
 				},
@@ -656,6 +681,13 @@
 			fileType = archive.ar;
 			path = libfoundation.a;
 			remoteRef = 4D44E3B41A1642320073FFA2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D44E4CA1A24A5ED0073FFA2 /* libffi.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libffi.a;
+			remoteRef = 4D44E4C91A24A5ED0073FFA2 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		4D6F071F19CC37BB00DDC6E0 /* gentle */ = {
