@@ -925,32 +925,72 @@ void MCWidget::OnMouseCancelHover(real32_t p_duration)
 
 void MCWidget::OnTouchStart(uinteger_t p_id, coord_t p_x, coord_t p_y, real32_t p_pressure, real32_t p_radius)
 {
-    fprintf(stderr, "MCWidget::OnTouchStart\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(5);
+    
+    MCNumberCreateWithUnsignedInteger(p_id, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    MCNumberCreateWithReal(p_pressure, reinterpret_cast<MCNumberRef&>(t_params[3]));
+    MCNumberCreateWithReal(p_radius, reinterpret_cast<MCNumberRef&>(t_params[4]));
+    
+    CallHandler(MCNAME("OnTouchStart"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnTouchMove(uinteger_t p_id, coord_t p_x, coord_t p_y, real32_t p_pressure, real32_t p_radius)
 {
-    fprintf(stderr, "MCWidget::OnTouchMove\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(5);
+    
+    MCNumberCreateWithUnsignedInteger(p_id, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    MCNumberCreateWithReal(p_pressure, reinterpret_cast<MCNumberRef&>(t_params[3]));
+    MCNumberCreateWithReal(p_radius, reinterpret_cast<MCNumberRef&>(t_params[4]));
+    
+    CallHandler(MCNAME("OnTouchMove"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnTouchEnter(uinteger_t p_id)
 {
-    fprintf(stderr, "MCWidget::OnTouchEnter\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    
+    MCNumberCreateWithUnsignedInteger(p_id, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    
+    CallHandler(MCNAME("OnTouchEnter"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnTouchLeave(uinteger_t p_id)
 {
-    fprintf(stderr, "MCWidget::OnTouchLeave\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    
+    MCNumberCreateWithUnsignedInteger(p_id, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    
+    CallHandler(MCNAME("OnTouchLeave"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnTouchFinish(uinteger_t p_id, coord_t p_x, coord_t p_y)
 {
-    fprintf(stderr, "MCWidget::OnTouchFinish\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(3);
+    
+    MCNumberCreateWithUnsignedInteger(p_id, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    
+    CallHandler(MCNAME("OnTouchFinish"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnTouchCancel(uinteger_t p_id)
 {
-    fprintf(stderr, "MCWidget::OnTouchCancel\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    
+    MCNumberCreateWithUnsignedInteger(p_id, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    
+    CallHandler(MCNAME("OnTouchCancel"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnFocusEnter()
