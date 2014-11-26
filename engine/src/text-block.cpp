@@ -22,7 +22,7 @@
 
 
 MCTextBlock::MCTextBlock(MCTextParagraph* p_paragraph, const MCRange& p_codeunit_range) :
-  MCTextCell(),
+  MCTextCell(*p_paragraph),
   m_grapheme_range(MCRangeMake(0, 0)),
   m_codeunit_range(p_codeunit_range),
   m_segment(NULL),

@@ -26,7 +26,7 @@
 
 
 MCTextLine::MCTextLine(MCTextParagraph* p_paragraph) :
-  MCTextCell(),
+  MCTextCell(*p_paragraph),
   m_parent(p_paragraph),
   m_segments(NULL),
   m_ascent(0.0f),

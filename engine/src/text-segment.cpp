@@ -25,7 +25,7 @@
 
 
 MCTextSegment::MCTextSegment(MCTextParagraph* p_paragraph) :
-  MCTextCell(),
+  MCTextCell(*p_paragraph),
   m_line(NULL),
   m_paragraph(p_paragraph),
   m_blocks(NULL),
