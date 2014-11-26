@@ -514,9 +514,10 @@
 		721CAACB18351E7400858545 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC518351E7400858545 /* libiculx.a */; };
 		721CAACC18351E7400858545 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
 		721CAACD18351E7400858545 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
+		723BDBFF19E6C34E007365F3 /* native-layer-mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 723BDBFE19E6C34E007365F3 /* native-layer-mac.mm */; };
 		726191571A2608F300851787 /* widget-events.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 726191551A2608F300851787 /* widget-events.cpp */; };
 		726191601A26094900851787 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7261915D1A26091900851787 /* libffi.a */; };
-		723BDBFF19E6C34E007365F3 /* native-layer-mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 723BDBFE19E6C34E007365F3 /* native-layer-mac.mm */; };
+		726191781A260B7F00851787 /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 726191731A260B6D00851787 /* libscript.a */; };
 		7278F63A1843A2B100E35A65 /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC218351E7400858545 /* libicudata.a */; };
 		7278F63B1843A2B100E35A65 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC018351E1800858545 /* libicui18n.a */; };
 		7278F63C1843A2B100E35A65 /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC318351E7400858545 /* libicuio.a */; };
@@ -990,6 +991,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = D2AAC045055464E500DB518D;
 			remoteInfo = libffi;
+		};
+		726191721A260B6D00851787 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7261916C1A260B6C00851787 /* libscript.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D322F1619DD945E008476D3;
+			remoteInfo = script;
+		};
+		726191741A260B6D00851787 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7261916C1A260B6C00851787 /* libscript.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DDA20661A139BA1001B0CA2;
+			remoteInfo = "libscript-test";
+		};
+		726191761A260B7900851787 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7261916C1A260B6C00851787 /* libscript.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D322F1519DD945E008476D3;
+			remoteInfo = script;
 		};
 		72D60321184768580022379C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1661,11 +1683,12 @@
 		721CAAC618351E7400858545 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
 		721CAAC718351E7400858545 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
 		7238DF4E1848B189007EA049 /* MCBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MCBlock.h; path = src/MCBlock.h; sourceTree = "<group>"; };
+		723BDBFD19E6C25D007365F3 /* native-layer-mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "native-layer-mac.h"; path = "src/native-layer-mac.h"; sourceTree = "<group>"; };
+		723BDBFE19E6C34E007365F3 /* native-layer-mac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "native-layer-mac.mm"; path = "src/native-layer-mac.mm"; sourceTree = "<group>"; };
 		726191551A2608F300851787 /* widget-events.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "widget-events.cpp"; path = "src/widget-events.cpp"; sourceTree = "<group>"; };
 		726191561A2608F300851787 /* widget-events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "widget-events.h"; path = "src/widget-events.h"; sourceTree = "<group>"; };
 		726191581A26091900851787 /* libffi.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libffi.xcodeproj; path = ../thirdparty/libffi/libffi.xcodeproj; sourceTree = "<group>"; };
-		723BDBFD19E6C25D007365F3 /* native-layer-mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "native-layer-mac.h"; path = "src/native-layer-mac.h"; sourceTree = "<group>"; };
-		723BDBFE19E6C34E007365F3 /* native-layer-mac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "native-layer-mac.mm"; path = "src/native-layer-mac.mm"; sourceTree = "<group>"; };
+		7261916C1A260B6C00851787 /* libscript.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libscript.xcodeproj; path = ../libscript/libscript.xcodeproj; sourceTree = "<group>"; };
 		72C22E951945E48E00B18E8D /* syslnxfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxfs.cpp; path = src/syslnxfs.cpp; sourceTree = "<group>"; };
 		72C22E961945E48E00B18E8D /* syslnxregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxregion.cpp; path = src/syslnxregion.cpp; sourceTree = "<group>"; };
 		72C22E971945E48E00B18E8D /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
@@ -1971,6 +1994,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				726191781A260B7F00851787 /* libscript.a in Frameworks */,
 				726191601A26094900851787 /* libffi.a in Frameworks */,
 				BE6444481965B8BE00C2092C /* AudioToolbox.framework in Frameworks */,
 				721CAAC818351E7400858545 /* libicudata.a in Frameworks */,
@@ -2183,6 +2207,7 @@
 		4D587FAE0B809C0C00200116 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				7261916C1A260B6C00851787 /* libscript.xcodeproj */,
 				726191581A26091900851787 /* libffi.xcodeproj */,
 				4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */,
 				E8AF4890174D5563000B2F9E /* libskia.xcodeproj */,
@@ -2201,7 +2226,6 @@
 		4D5880AA0B80BDFE00200116 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				723BDC0019E6D4D6007365F3 /* MapKit.framework */,
 				BE6444461965B8A700C2092C /* AudioToolbox.framework */,
 				1DDE08EA1945F10A000E3705 /* QTKit.framework */,
 				1DDE08E81945F0DE000E3705 /* CoreMedia.framework */,
@@ -2856,6 +2880,15 @@
 			isa = PBXGroup;
 			children = (
 				7261915D1A26091900851787 /* libffi.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7261916D1A260B6C00851787 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				726191731A260B6D00851787 /* libscript.a */,
+				726191751A260B6D00851787 /* libscript-test */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3535,6 +3568,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				726191771A260B7900851787 /* PBXTargetDependency */,
 				7261915F1A26094100851787 /* PBXTargetDependency */,
 				4D1F9C49171C655E0091C6CB /* PBXTargetDependency */,
 				4DEE2B2B0FDE42E70009423C /* PBXTargetDependency */,
@@ -3673,6 +3707,10 @@
 					ProjectRef = 4D587FC50B809C2E00200116 /* libpng.xcodeproj */;
 				},
 				{
+					ProductGroup = 7261916D1A260B6C00851787 /* Products */;
+					ProjectRef = 7261916C1A260B6C00851787 /* libscript.xcodeproj */;
+				},
+				{
 					ProductGroup = 76EF3175181E6ED600FAC195 /* Products */;
 					ProjectRef = E8AF4890174D5563000B2F9E /* libskia.xcodeproj */;
 				},
@@ -3766,6 +3804,20 @@
 			fileType = archive.ar;
 			path = libffi.a;
 			remoteRef = 7261915C1A26091900851787 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		726191731A260B6D00851787 /* libscript.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libscript.a;
+			remoteRef = 726191721A260B6D00851787 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		726191751A260B6D00851787 /* libscript-test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "libscript-test";
+			remoteRef = 726191741A260B6D00851787 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		766E32A1180EE5BC00CF7FCF /* libgraphics.a */ = {
@@ -4341,7 +4393,6 @@
 				4DEE2AB60FDE42710009423C /* gradient.cpp in Sources */,
 				4DEE2AB70FDE42710009423C /* graphic.cpp in Sources */,
 				4DEE2AB80FDE42710009423C /* group.cpp in Sources */,
-				723BDBEC19DD9148007365F3 /* widget-events.cpp in Sources */,
 				4CF4B864199E05F300E33AEE /* customprinter.cpp in Sources */,
 				4DEE2AB90FDE42710009423C /* handler.cpp in Sources */,
 				4DEE2ABA0FDE42710009423C /* hc.cpp in Sources */,
@@ -4726,6 +4777,11 @@
 			name = libffi;
 			targetProxy = 7261915E1A26094100851787 /* PBXContainerItemProxy */;
 		};
+		726191771A260B7900851787 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = script;
+			targetProxy = 726191761A260B7900851787 /* PBXContainerItemProxy */;
+		};
 		72D60322184768580022379C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = libskia;
@@ -4880,6 +4936,33 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D587DB40B80949B00200116 /* Debug.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/lcidlc/include\"",
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpq/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libiodbc/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libopenssl/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libffi/darwin/include\"",
+					"$(SOLUTION_DIR)/libscript/include",
+				);
 				LIBRARY_SEARCH_PATHS = "$(SOLUTION_DIR)/prebuilt/lib/mac";
 			};
 			name = Debug;
@@ -4888,6 +4971,33 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D587DB20B80949B00200116 /* Release.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/lcidlc/include\"",
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpq/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libiodbc/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libopenssl/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libffi/darwin/include\"",
+					"$(SOLUTION_DIR)/libscript/include",
+				);
 				LIBRARY_SEARCH_PATHS = "$(SOLUTION_DIR)/prebuilt/lib/mac";
 			};
 			name = Release;
