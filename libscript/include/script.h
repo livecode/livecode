@@ -12,35 +12,10 @@
 struct MCScriptPackage;
 struct MCScriptModule;
 struct MCScriptInstance;
-struct MCScriptError;
 
 typedef MCScriptPackage*MCScriptPackageRef;
 typedef MCScriptModule *MCScriptModuleRef;
 typedef MCScriptInstance *MCScriptInstanceRef;
-typedef MCScriptError *MCScriptErrorRef;
-
-////////////////////////////////////////////////////////////////////////////////
-
-enum MCScriptErrorCode
-{
-    kMCScriptErrorCodeOutOfMemory,
-};
-
-// Copy the last error that has occurred on this thread from the script functions.
-// The function returns false if there is no error.
-bool MCScriptCopyLastError(MCScriptErrorRef& r_error);
-
-// Release a script error.
-void MCScriptReleaseError(MCScriptErrorRef error);
-
-// Retain a script error.
-void MCScriptRetainError(MCScriptErrorRef error);
-
-// Get the code of a script error.
-MCScriptErrorCode MCScriptGetErrorCode(MCScriptErrorRef error);
-
-// Get a description of a script error.
-MCStringRef MCScriptGetErrorDescription(MCScriptErrorRef error);
 
 ////////////////////////////////////////////////////////////////////////////////
 

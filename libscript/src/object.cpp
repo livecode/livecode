@@ -31,9 +31,6 @@ void MCScriptDestroyObject(MCScriptObject *self)
     {
         case kMCScriptObjectKindNone:
             break;
-        case kMCScriptObjectKindError:
-            MCScriptDestroyError((MCScriptError *)self);
-            break;
         case kMCScriptObjectKindPackage:
             MCScriptDestroyPackage((MCScriptPackage *)self);
             break;

@@ -6,7 +6,6 @@
 enum MCScriptObjectKind
 {
     kMCScriptObjectKindNone,
-    kMCScriptObjectKindError,
     kMCScriptObjectKindPackage,
     kMCScriptObjectKindModule,
     kMCScriptObjectKindInstance,
@@ -54,23 +53,6 @@ extern void __MCScriptAssertFailed__(const char *label, const char *expr, const 
 #define __MCScriptAssert__(expr, label)
 
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
-
-struct MCScriptError: public MCScriptObject
-{
-    MCScriptErrorCode code;
-    MCStringRef description;
-};
-
-bool MCScriptCreateError(MCScriptErrorCode code, MCStringRef description, MCScriptErrorRef& r_result);
-void MCScriptDestroyError(MCScriptErrorRef error);
-
-bool MCScriptThrowError(MCScriptErrorRef error);
-
-bool MCScriptThrowLastError(void);
-
-bool MCScriptThrowLastFoundationError(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

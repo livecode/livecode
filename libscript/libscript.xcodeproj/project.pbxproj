@@ -11,7 +11,6 @@
 		4D21B5FF19E3DFCB00B64BEF /* module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B5FE19E3DFCB00B64BEF /* module.cpp */; };
 		4D21B60119E3DFED00B64BEF /* package.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60019E3DFED00B64BEF /* package.cpp */; };
 		4D21B60319E3DFF800B64BEF /* instance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60219E3DFF800B64BEF /* instance.cpp */; };
-		4D21B60519E3E00000B64BEF /* error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D21B60419E3E00000B64BEF /* error.cpp */; };
 		4D322F2219DD95A4008476D3 /* object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D322F2119DD95A4008476D3 /* object.cpp */; };
 		4D44E3641A139F460073FFA2 /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D322F1619DD945E008476D3 /* libscript.a */; };
 		4D44E3651A139F480073FFA2 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D44E35F1A139D8F0073FFA2 /* libfoundation.a */; };
@@ -76,7 +75,6 @@
 		4D21B5FE19E3DFCB00B64BEF /* module.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = module.cpp; path = src/module.cpp; sourceTree = "<group>"; };
 		4D21B60019E3DFED00B64BEF /* package.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = package.cpp; path = src/package.cpp; sourceTree = "<group>"; };
 		4D21B60219E3DFF800B64BEF /* instance.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = instance.cpp; path = src/instance.cpp; sourceTree = "<group>"; };
-		4D21B60419E3E00000B64BEF /* error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = error.cpp; path = src/error.cpp; sourceTree = "<group>"; };
 		4D322F1619DD945E008476D3 /* libscript.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libscript.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D322F2119DD95A4008476D3 /* object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = object.cpp; path = src/object.cpp; sourceTree = "<group>"; };
 		4D44E3571A139D510073FFA2 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = "<group>"; };
@@ -176,7 +174,6 @@
 				4D21B5FE19E3DFCB00B64BEF /* module.cpp */,
 				4D21B60019E3DFED00B64BEF /* package.cpp */,
 				4D21B60219E3DFF800B64BEF /* instance.cpp */,
-				4D21B60419E3E00000B64BEF /* error.cpp */,
 				4DDA20441A136FF4001B0CA2 /* builder.cpp */,
 				4DDA206F1A139BC0001B0CA2 /* test.cpp */,
 			);
@@ -305,7 +302,6 @@
 				4D21B60319E3DFF800B64BEF /* instance.cpp in Sources */,
 				4DDA20451A136FF4001B0CA2 /* builder.cpp in Sources */,
 				4D21B60119E3DFED00B64BEF /* package.cpp in Sources */,
-				4D21B60519E3E00000B64BEF /* error.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
