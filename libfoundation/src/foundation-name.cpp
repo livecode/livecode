@@ -249,6 +249,21 @@ bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name)
 			self -> key == p_other_name -> key;
 }
 
+bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive)
+{
+    if (self == p_other_name)
+        return true;
+
+    if (p_case_sensitive && p_form_sensitive)
+        return false;
+    else if (!p_case_sensitive && !p_form_sensitive)
+        return self -> key == p_other_name -> key;
+    else if (p_case_sensitive)
+        return MCStringIsEqualTo(self -> string, p_other_name -> string, kMCStringOptionCompareNonliteral);
+    else
+        return MCStringIsEqualTo(self -> string, p_other_name -> string, kMCStringOptionCompareFolded);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void __MCNameDestroy(__MCName *self)

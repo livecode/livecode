@@ -519,6 +519,113 @@ compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
     return p_left -> byte_count - p_right -> byte_count;
 }
 
+bool MCDataContains(MCDataRef p_data, MCDataRef p_needle)
+{
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
+    
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    const byte_t *t_bytes;
+    t_bytes = p_data -> bytes;
+    
+    bool t_found = false;
+    for (uindex_t i = 0; i < t_byte_count - t_needle_byte_count + 1; i++)
+        if (MCMemoryCompare(t_bytes++, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0)
+        {
+            t_found = true;
+            break;
+        }
+    
+    return t_found;
+}
+
+bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle)
+{
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
+    
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    return MCMemoryCompare(p_data -> bytes, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0;
+}
+
+bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle)
+{
+    uindex_t t_needle_byte_count, t_byte_count;
+    t_needle_byte_count = p_needle -> byte_count;
+    t_byte_count = p_data -> byte_count;
+    
+    if (t_needle_byte_count > t_byte_count)
+        return false;
+    
+    return MCMemoryCompare(p_data -> bytes + t_byte_count - t_needle_byte_count, p_needle -> bytes, sizeof(byte_t) * t_needle_byte_count) == 0;
+}
+
+bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index)
+{
+    __MCDataClampRange(p_data, t_range);
+    
+    uindex_t t_limit, t_chunk_byte_count;
+    t_chunk_byte_count = MCDataGetLength(p_chunk);
+    t_limit = t_range . offset + t_range . length - t_chunk_byte_count + 1;
+    
+    const byte_t *t_bytes = MCDataGetBytePtr(p_data);
+    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
+    
+    uindex_t t_offset, t_result;
+    t_result = 0;
+    
+    bool t_found;
+    t_found = false;
+    
+    for (t_offset = t_range . offset; t_offset < t_limit; t_offset++)
+        if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
+        {
+            t_result = t_offset - t_range . offset;
+            t_found = true;
+            break;
+        }
+    
+    r_index = t_result;
+    return t_found;
+}
+
+
+bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index)
+{
+    __MCDataClampRange(p_data, t_range);
+    
+    uindex_t t_limit, t_chunk_byte_count;
+    t_chunk_byte_count = MCDataGetLength(p_chunk);
+    t_limit = t_range . offset + t_range . length - t_chunk_byte_count + 1;
+    
+    const byte_t *t_bytes = MCDataGetBytePtr(p_data);
+    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
+    
+    uindex_t t_offset, t_result;
+    t_result = 0;
+    
+    bool t_found;
+    t_found = false;
+    
+    while (--t_limit)
+        if (MCMemoryCompare(t_bytes + t_limit, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
+        {
+            t_result = t_limit - t_range . offset;
+            t_found = true;
+            break;
+        }
+    
+    r_index = t_result;
+    return t_found;
+}
+
+
 #if defined(__MAC__) || defined (__IOS__)
 bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata)
 {
