@@ -17,13 +17,15 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-void MCStringEvalConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
+#include <foundation-locale.h>
+
+extern "C" void MCStringEvalConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
 {
     if (!MCStringFormat(r_output, "%@%@", p_left, p_right))
         return;
 }
 
-void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x_target)
+extern "C" void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
     MCStringEvalConcatenate(p_source, x_target, &t_string);
@@ -31,21 +33,21 @@ void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x_target)
     MCValueAssign(x_target, *t_string);
 }
 
-void MCStringExecPutStringAfter(MCStringRef p_source, MCStringRef& x_target)
+extern "C" void MCStringExecPutStringAfter(MCStringRef p_source, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
-    MCStringEvalConcatenate(x_target, p_source, &t_string);
+    MCStringEvalConcatenate(x_target == (MCStringRef)kMCNull ? kMCEmptyString : x_target, p_source, &t_string);
     
     MCValueAssign(x_target, *t_string);
 }
 
-void MCStringEvalConcatenateWithSpace(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
+extern "C" void MCStringEvalConcatenateWithSpace(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
 {
     if (!MCStringFormat(r_output, "%@ %@", p_left, p_right))
         return;
 }
 
-void MCStringEvalLowercaseOf(MCStringRef p_source, MCStringRef& r_output)
+extern "C" void MCStringEvalLowercaseOf(MCStringRef p_source, MCStringRef& r_output)
 {
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(p_source, &t_string))
@@ -58,7 +60,7 @@ void MCStringEvalLowercaseOf(MCStringRef p_source, MCStringRef& r_output)
         return;
 }
 
-void MCStringEvalUppercaseOf(MCStringRef p_source, MCStringRef& r_output)
+extern "C" void MCStringEvalUppercaseOf(MCStringRef p_source, MCStringRef& r_output)
 {
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(p_source, &t_string))

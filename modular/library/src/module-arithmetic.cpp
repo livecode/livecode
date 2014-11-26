@@ -17,7 +17,7 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-void MCArithmeticExecAddIntegerToInteger(integer_t p_number, integer_t& x_target)
+extern "C" void MCArithmeticExecAddIntegerToInteger(integer_t p_number, integer_t& x_target)
 {
     if (p_number > 0 && INTEGER_MAX - p_number < x_target)
         // overflow
@@ -29,16 +29,12 @@ void MCArithmeticExecAddIntegerToInteger(integer_t p_number, integer_t& x_target
         x_target += p_number;
 }
 
-void MCArithmeticExecAddRealToReal(double p_number, double& x_target)
+extern "C" void MCArithmeticExecAddRealToReal(double p_number, double& x_target)
 {
-    if (p_number > 0 && MAXFLOAT - p_number > x_target)
-        // overflow
-        return;
-    else
-        x_target += p_number;
+    x_target += p_number;
 }
 
-void MCArithmeticExecAddNumberToNumber(MCNumberRef p_number, MCNumberRef& x_target)
+extern "C" void MCArithmeticExecAddNumberToNumber(MCNumberRef p_number, MCNumberRef& x_target)
 {    
     double t_target, t_number;
     t_target = MCNumberFetchAsReal(x_target);
@@ -52,7 +48,7 @@ void MCArithmeticExecAddNumberToNumber(MCNumberRef p_number, MCNumberRef& x_targ
     MCNumberCreateWithReal(t_target, x_target);
 }
 
-void MCArithmeticExecSubtractIntegerFromInteger(integer_t p_number, integer_t& x_target)
+extern "C" void MCArithmeticExecSubtractIntegerFromInteger(integer_t p_number, integer_t& x_target)
 {
     if (p_number > 0 && INTEGER_MIN + p_number > x_target)
         // overflow
@@ -64,7 +60,7 @@ void MCArithmeticExecSubtractIntegerFromInteger(integer_t p_number, integer_t& x
         x_target -= p_number;
 }
 
-void MCArithmeticExecSubtractRealFromReal(double p_number, double& x_target)
+extern "C" void MCArithmeticExecSubtractRealFromReal(double p_number, double& x_target)
 {
     if (p_number < 0 && MAXFLOAT + p_number < x_target)
         // overflow
@@ -73,7 +69,7 @@ void MCArithmeticExecSubtractRealFromReal(double p_number, double& x_target)
         x_target -= p_number;
 }
 
-void MCArithmeticExecSubtractNumberFromNumber(MCNumberRef p_number, MCNumberRef& x_target)
+extern "C" void MCArithmeticExecSubtractNumberFromNumber(MCNumberRef p_number, MCNumberRef& x_target)
 {
     double t_target, t_number;
     t_target = MCNumberFetchAsReal(x_target);
@@ -87,7 +83,7 @@ void MCArithmeticExecSubtractNumberFromNumber(MCNumberRef p_number, MCNumberRef&
     MCNumberCreateWithReal(t_target, x_target);
 }
 
-void MCArithmeticExecMultiplyIntegerByInteger(integer_t p_number, integer_t& x_target)
+extern "C" void MCArithmeticExecMultiplyIntegerByInteger(integer_t p_number, integer_t& x_target)
 {
     if (p_number > 0 && INTEGER_MAX / p_number < x_target)
         // overflow
@@ -99,7 +95,7 @@ void MCArithmeticExecMultiplyIntegerByInteger(integer_t p_number, integer_t& x_t
         x_target *= p_number;
 }
 
-void MCArithmeticExecMultiplyRealByReal(double p_number, double& x_target)
+extern "C" void MCArithmeticExecMultiplyRealByReal(double p_number, double& x_target)
 {
     if (p_number < 0 && MAXFLOAT / p_number < x_target)
         // overflow
@@ -108,7 +104,7 @@ void MCArithmeticExecMultiplyRealByReal(double p_number, double& x_target)
         x_target *= p_number;
 }
 
-void MCArithmeticExecMultiplyNumberByNumber(MCNumberRef p_number, MCNumberRef& x_target)
+extern "C" void MCArithmeticExecMultiplyNumberByNumber(MCNumberRef p_number, MCNumberRef& x_target)
 {
     double t_target, t_number;
     t_target = MCNumberFetchAsReal(x_target);
@@ -122,12 +118,12 @@ void MCArithmeticExecMultiplyNumberByNumber(MCNumberRef p_number, MCNumberRef& x
     MCNumberCreateWithReal(t_target, x_target);
 }
 
-void MCArithmeticExecDivideIntegerByInteger(integer_t p_number, integer_t& x_target)
+extern "C" void MCArithmeticExecDivideIntegerByInteger(integer_t p_number, integer_t& x_target)
 {
     x_target /= p_number;
 }
 
-void MCArithmeticExecDivideRealByReal(double p_number, double& x_target)
+extern "C" void MCArithmeticExecDivideRealByReal(double p_number, double& x_target)
 {
     if (p_number > 0 && p_number < 1 && MAXFLOAT * p_number < x_target)
         // overflow
@@ -135,7 +131,7 @@ void MCArithmeticExecDivideRealByReal(double p_number, double& x_target)
     x_target /= p_number;
 }
 
-void MCArithmeticExecDivideNumberByNumber(MCNumberRef p_number, MCNumberRef& x_target)
+extern "C" void MCArithmeticExecDivideNumberByNumber(MCNumberRef p_number, MCNumberRef& x_target)
 {
     double t_target, t_number;
     t_target = MCNumberFetchAsReal(x_target);

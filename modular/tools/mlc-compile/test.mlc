@@ -9,12 +9,13 @@ public handler test()
     MCBooleanCreateWithBool(MCNumberCreateWithInteger(100, tVar), tResult)
     if MCNumberCreateWithInteger(200, tVar) then
     end if
-    variable tVar2
+    variable tVar2 as string
     put "" into tVar2
     put "Hello World" after tVar2
+    put "!" after tVar2
     put 0 into tVar
     add 100 to tVar
-    return tVar
+    return tVar2
 end handler
 
 end module

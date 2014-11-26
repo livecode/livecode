@@ -4,28 +4,28 @@ This module specifies the syntax definitions and bindings for operations on bina
 
 module com.livecode.string
 
-foreign handler ExecPutStringBefore(in Source as string, inout Target as string) as undefined binds to "<builtin>"
-foreign handler ExecPutStringAfter(in Source as string, inout Target as string) as undefined binds to "<builtin>"
+foreign handler MCStringExecPutStringBefore(in Source as string, inout Target as string) as undefined binds to "<builtin>"
+foreign handler MCStringExecPutStringAfter(in Source as string, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler ExecReplace(in Pattern as string, in Replacement as string, inout Target as string) as undefined binds to "<builtin>"
+foreign handler MCStringExecReplace(in Pattern as string, in Replacement as string, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler EvalConcatenate(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
-foreign handler EvalConcatenateWithSpace(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
+foreign handler MCStringEvalConcatenate(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
+foreign handler MCStringEvalConcatenateWithSpace(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
 
-foreign handler EvalLowercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
-foreign handler EvalUppercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
+foreign handler MCStringEvalLowercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
+foreign handler MCStringEvalUppercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
 
 // The following all need some notion of context 
-foreign handler EvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
-foreign handler EvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
+foreign handler MCStringEvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
+foreign handler MCStringEvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
 
-foreign handler EvalOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
-foreign handler EvalOffsetAfter(in Needle as string, in After as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
+foreign handler MCStringEvalOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
+foreign handler MCStringEvalOffsetAfter(in Needle as string, in After as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
 
-foreign handler EvalLastOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
-foreign handler EvalLastOffsetBefore(in Needle as string, in Before as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
+foreign handler MCStringEvalLastOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
+foreign handler MCStringEvalLastOffsetBefore(in Needle as string, in Before as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
 
-foreign handler EvalContainsChars(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
+foreign handler MCStringEvalContainsChars(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
 
 --
 
@@ -41,7 +41,7 @@ Example: 			put tPrefix before tString
 syntax PutStringBefore is statement
     "put" <Source: Expression> "before" <Target: Expression>
 begin
-    ExecPutStringBefore(Source, Target)
+    MCStringExecPutStringBefore(Source, Target)
 end syntax
 
 /*
@@ -56,7 +56,7 @@ Example: 			put tSuffix after tString
 syntax PutStringAfter is statement
     "put" <Source: Expression> "after" <Target: Expression>
 begin
-    ExecPutStringAfter(Source, Target)
+    MCStringExecPutStringAfter(Source, Target)
 end syntax
 
 --
@@ -74,7 +74,7 @@ Example: 			replace " " with "_" in tString
 syntax ReplaceString is statement
     "replace" <Pattern: Expression> "with" <Replacement: Expression> "in" <Target: Expression>
 begin
-    ExecReplace(Pattern, Replacement, Target)
+    MCStringExecReplace(Pattern, Replacement, Target)
 end syntax
 
 --
@@ -92,7 +92,7 @@ Example: 			put tLeft & tRight into tConcatenated
 syntax ConcatenateStrings is left binary operator with precedence 2
     <Left: Expression> "&" <Right: Expression>
 begin
-    EvalConcatenate(Left, Right, output)
+    MCStringEvalConcatenate(Left, Right, output)
 end syntax
 
 /*
@@ -108,7 +108,7 @@ Example: 			put tLeft && tRight into tConcatSpace
 syntax ConcatenateStringsWithSpace is left binary operator with precedence 2
     <Left: Expression> "&&" <Right: Expression>
 begin
-    EvalConcatenateWithSpace(Left, Right, output)
+    MCStringEvalConcatenateWithSpace(Left, Right, output)
 end syntax
 
 --
@@ -123,7 +123,7 @@ output:
 syntax UppercaseString is prefix operator with precedence 1
     "the" "upper" "of" <Source: Expression>
 begin
-    EvalUppercaseOf(Source, output)
+    MCStringEvalUppercaseOf(Source, output)
 end syntax
 
 /*
@@ -136,7 +136,7 @@ output:
 syntax LowercaseString is prefix operator with precedence 1
     "the" "lower" "of" <Source: Expression>
 begin
-    EvalLowercaseOf(Source, output)
+    MCStringEvalLowercaseOf(Source, output)
 end syntax
 
 --

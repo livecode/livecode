@@ -41,7 +41,7 @@ void MCByteEvalContainsBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_out
 {
     r_output = MCDataContains(p_target, p_needle);
 }
-
+ 
 void MCByteEvalBeginsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
 {
     r_output = MCDataBeginsWith(p_target, p_needle);
