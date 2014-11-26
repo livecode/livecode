@@ -39,6 +39,23 @@
 		BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE19F5D718FE92600001B410 /* foundation-bidi.cpp */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		C74D7EE11A2639F200BC7FE8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C74D7EDD1A2639F200BC7FE8 /* libffi.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2AAC046055464E500DB518D;
+			remoteInfo = libffi;
+		};
+		C74D7EE31A2639F900BC7FE8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C74D7EDD1A2639F200BC7FE8 /* libffi.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = libffi;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		4DF42A690B04872D003F2D95 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -100,6 +117,7 @@
 		76E711FD1A0BA45300B68F93 /* foundation-math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-math.h"; path = "include/foundation-math.h"; sourceTree = "<group>"; };
 		BE19F5D718FE92600001B410 /* foundation-bidi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-bidi.cpp"; path = "src/foundation-bidi.cpp"; sourceTree = "<group>"; };
 		BE19F5D918FE93490001B410 /* foundation-bidi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-bidi.h"; path = "include/foundation-bidi.h"; sourceTree = "<group>"; };
+		C74D7EDD1A2639F200BC7FE8 /* libffi.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libffi.xcodeproj; path = ../thirdparty/libffi/libffi.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +153,7 @@
 		4DF42A330B04860B003F2D95 = {
 			isa = PBXGroup;
 			children = (
+				C74D7EDD1A2639F200BC7FE8 /* libffi.xcodeproj */,
 				4DF42A480B04861E003F2D95 /* Configurations */,
 				4DCA07BB11E8D720005CF640 /* Headers */,
 				4DF42A570B048683003F2D95 /* Source */,
@@ -199,6 +218,14 @@
 			name = Source;
 			sourceTree = "<group>";
 		};
+		C74D7EDE1A2639F200BC7FE8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C74D7EE21A2639F200BC7FE8 /* libffi.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -213,6 +240,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				C74D7EE41A2639F900BC7FE8 /* PBXTargetDependency */,
 			);
 			name = foundation;
 			productName = external;
@@ -239,12 +267,28 @@
 			mainGroup = 4DF42A330B04860B003F2D95;
 			productRefGroup = 4DF42A440B048617003F2D95 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = C74D7EDE1A2639F200BC7FE8 /* Products */;
+					ProjectRef = C74D7EDD1A2639F200BC7FE8 /* libffi.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				4DF42A420B048617003F2D95 /* foundation */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		C74D7EE21A2639F200BC7FE8 /* libffi.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libffi.a;
+			remoteRef = C74D7EE11A2639F200BC7FE8 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4DF42A400B048617003F2D95 /* Sources */ = {
@@ -280,11 +324,18 @@
 				76E711FC1A0BA24B00B68F93 /* foundation-math.cpp in Sources */,
 				7696676D19E81D92008B0972 /* foundation-chunk.cpp in Sources */,
 				7653455919F656650032E6E2 /* foundation-proper-list.cpp in Sources */,
-				769372121A03AEC00001A9FF /* foundation-filters.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C74D7EE41A2639F900BC7FE8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libffi;
+			targetProxy = C74D7EE31A2639F900BC7FE8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		4DF42A370B04860B003F2D95 /* Debug */ = {
