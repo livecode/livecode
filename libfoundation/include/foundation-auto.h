@@ -72,6 +72,7 @@ typedef MCAutoValueRefBase<MCNameRef> MCNewAutoNameRef;
 typedef MCAutoValueRefBase<MCDataRef> MCAutoDataRef;
 typedef MCAutoValueRefBase<MCProperListRef> MCAutoProperListRef;
 typedef MCAutoValueRefBase<MCTypeInfoRef> MCAutoTypeInfoRef;
+typedef MCAutoValueRefBase<MCRecordRef> MCAutoRecordRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 

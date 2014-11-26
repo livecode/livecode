@@ -321,6 +321,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  COMPILER HINT MACROS
+//
+
+// If we are using GCC or Clang, we can give the compiler various
+// hints. This is particularly useful for Clang's static analysis
+// feature.
+#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
+#  define ATTRIBUTE_NORETURN  __attribute__((__noreturn__))
+#  define ATTRIBUTE_UNUSED __attribute__((__unused__))
+#else
+#  define ATTRIBUTE_NORETURN
+#  define ATTRIBUTE_UNUSED
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  FIXED WIDTH INTEGER TYPES
 //
 
@@ -773,15 +789,6 @@ void MCFinalize(void);
 //
 
 #ifdef _DEBUG
-
-// If we are using GCC or Clang, we can give the compiler the hint that the
-// assertion functions do not return. This is particularly useful for Clang's
-// static analysis feature.
-#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
-#define ATTRIBUTE_NORETURN  __attribute__((__noreturn__))
-#else
-#define ATTRIBUTE_NORETURN
-#endif
 
 extern void __MCAssert(const char *file, uint32_t line, const char *message) ATTRIBUTE_NORETURN;
 #define MCAssert(m_expr) (void)( (!!(m_expr)) || (__MCAssert(__FILE__, __LINE__, #m_expr), 0) )
@@ -1411,7 +1418,7 @@ struct MCRecordTypeFieldInfo
 bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
 
 // Return the base type of the record.
-MCTypeInfoRef MCRecordTypeGetBaseTypeInfo(MCTypeInfoRef typeinfo);
+MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef typeinfo);
 
 // Return the base type of the record.
 MCTypeInfoRef MCRecordTypeGetBaseTypeInfo(MCTypeInfoRef typeinfo);
@@ -1424,6 +1431,9 @@ MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef typeinfo, uindex_t index);
 
 // Return the type of the field at the given index.
 MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Return true if typeinfo is derived from p_base_typeinfo.
+bool MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef typeinfo, MCTypeInfoRef p_base_typeinfo);
 
 //////////
 
@@ -2362,10 +2372,19 @@ bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
 bool MCRecordMutableCopy(MCRecordRef record, MCRecordRef& r_new_record);
 bool MCRecordMutableCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
 
+bool MCRecordCopyAsBaseType(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
+bool MCRecordCopyAsBaseTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
+
+bool MCRecordCopyAsDerivedType(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
+bool MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
+
 bool MCRecordIsMutable(MCRecordRef self);
 
 bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
 bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
+
+bool MCRecordEncodeAsArray(MCRecordRef record, MCArrayRef & r_array);
+bool MCRecordDecodeFromArray(MCArrayRef array, MCTypeInfoRef p_typeinfo, MCRecordRef & r_record);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
