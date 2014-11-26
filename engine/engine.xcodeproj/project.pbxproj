@@ -292,7 +292,6 @@
 		4D6C27FE1647D942007C96B7 /* exec-security.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FC1647D942007C96B7 /* exec-security.cpp */; };
 		4D6C28B61647DC4F007C96B7 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
 		4D6F06AC19CC1D0F00DDC6E0 /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F06AA19CC1D0F00DDC6E0 /* widget.cpp */; };
-		4D6F2AE718981E7F0099947D /* (null) in Sources */ = {isa = PBXBuildFile; };
 		4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D77F1DD183F8298002EEBB4 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */; };
@@ -515,6 +514,8 @@
 		721CAACB18351E7400858545 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC518351E7400858545 /* libiculx.a */; };
 		721CAACC18351E7400858545 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
 		721CAACD18351E7400858545 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
+		726191571A2608F300851787 /* widget-events.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 726191551A2608F300851787 /* widget-events.cpp */; };
+		726191601A26094900851787 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7261915D1A26091900851787 /* libffi.a */; };
 		7278F63A1843A2B100E35A65 /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC218351E7400858545 /* libicudata.a */; };
 		7278F63B1843A2B100E35A65 /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC018351E1800858545 /* libicui18n.a */; };
 		7278F63C1843A2B100E35A65 /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC318351E7400858545 /* libicuio.a */; };
@@ -973,6 +974,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = external;
+		};
+		7261915C1A26091900851787 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 726191581A26091900851787 /* libffi.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2AAC046055464E500DB518D;
+			remoteInfo = libffi;
+		};
+		7261915E1A26094100851787 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 726191581A26091900851787 /* libffi.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = libffi;
 		};
 		72D60321184768580022379C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1642,6 +1657,9 @@
 		721CAAC618351E7400858545 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
 		721CAAC718351E7400858545 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
 		7238DF4E1848B189007EA049 /* MCBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MCBlock.h; path = src/MCBlock.h; sourceTree = "<group>"; };
+		726191551A2608F300851787 /* widget-events.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "widget-events.cpp"; path = "src/widget-events.cpp"; sourceTree = "<group>"; };
+		726191561A2608F300851787 /* widget-events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "widget-events.h"; path = "src/widget-events.h"; sourceTree = "<group>"; };
+		726191581A26091900851787 /* libffi.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libffi.xcodeproj; path = ../thirdparty/libffi/libffi.xcodeproj; sourceTree = "<group>"; };
 		72C22E951945E48E00B18E8D /* syslnxfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxfs.cpp; path = src/syslnxfs.cpp; sourceTree = "<group>"; };
 		72C22E961945E48E00B18E8D /* syslnxregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syslnxregion.cpp; path = src/syslnxregion.cpp; sourceTree = "<group>"; };
 		72C22E971945E48E00B18E8D /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
@@ -1939,6 +1957,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				726191601A26094900851787 /* libffi.a in Frameworks */,
 				BE6444481965B8BE00C2092C /* AudioToolbox.framework in Frameworks */,
 				721CAAC818351E7400858545 /* libicudata.a in Frameworks */,
 				721CAAC918351E7400858545 /* libicuio.a in Frameworks */,
@@ -2150,6 +2169,7 @@
 		4D587FAE0B809C0C00200116 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				726191581A26091900851787 /* libffi.xcodeproj */,
 				4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */,
 				E8AF4890174D5563000B2F9E /* libskia.xcodeproj */,
 				766E329C180EE5BB00CF7FCF /* libgraphics.xcodeproj */,
@@ -2817,6 +2837,14 @@
 			name = System;
 			sourceTree = "<group>";
 		};
+		726191591A26091900851787 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7261915D1A26091900851787 /* libffi.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		766E329D180EE5BB00CF7FCF /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -3150,6 +3178,8 @@
 		E8A49109170F192000769C7A /* Core - Objects */ = {
 			isa = PBXGroup;
 			children = (
+				726191551A2608F300851787 /* widget-events.cpp */,
+				726191561A2608F300851787 /* widget-events.h */,
 				4D6F06AA19CC1D0F00DDC6E0 /* widget.cpp */,
 				4D6F06AB19CC1D0F00DDC6E0 /* widget.h */,
 				4D587E870B8096FD00200116 /* aclip.cpp */,
@@ -3478,6 +3508,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7261915F1A26094100851787 /* PBXTargetDependency */,
 				4D1F9C49171C655E0091C6CB /* PBXTargetDependency */,
 				4DEE2B2B0FDE42E70009423C /* PBXTargetDependency */,
 				4D221ACD171D59F500E7E557 /* PBXTargetDependency */,
@@ -3581,6 +3612,10 @@
 				{
 					ProductGroup = 4DB9036A0DAB898B0014A170 /* Products */;
 					ProjectRef = 4DB903690DAB898B0014A170 /* libexternal.xcodeproj */;
+				},
+				{
+					ProductGroup = 726191591A26091900851787 /* Products */;
+					ProjectRef = 726191581A26091900851787 /* libffi.xcodeproj */;
 				},
 				{
 					ProductGroup = 4D7FA7B71594E0FA00EEF440 /* Products */;
@@ -3697,6 +3732,13 @@
 			fileType = "compiled.mach-o.dylib";
 			path = revsecurity.dylib;
 			remoteRef = 4DBF58641801CA57009CAB2E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		7261915D1A26091900851787 /* libffi.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libffi.a;
+			remoteRef = 7261915C1A26091900851787 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		766E32A1180EE5BC00CF7FCF /* libgraphics.a */ = {
@@ -4006,7 +4048,6 @@
 				4D1F9D53171C682E0091C6CB /* hndlrlst.cpp in Sources */,
 				4D1F9D54171C682E0091C6CB /* idraw.cpp in Sources */,
 				4D1F9D55171C682E0091C6CB /* ifile.cpp in Sources */,
-				E8AF7D2419F7E3BF000F68E9 /* graphics_util.cpp in Sources */,
 				4D1F9D56171C682E0091C6CB /* igif.cpp in Sources */,
 				4D1F9D57171C682E0091C6CB /* iimport.cpp in Sources */,
 				4D1F9D58171C682E0091C6CB /* ijpg.cpp in Sources */,
@@ -4432,6 +4473,7 @@
 				BEBC51DB195350C300215C85 /* mac-abort.mm in Sources */,
 				BEBC51DC195350C300215C85 /* mac-color.mm in Sources */,
 				BEBC51DD195350C300215C85 /* mac-core.mm in Sources */,
+				726191571A2608F300851787 /* widget-events.cpp in Sources */,
 				BEBC51DE195350C300215C85 /* mac-cursor.mm in Sources */,
 				BEBC51DF195350C300215C85 /* mac-dialog.mm in Sources */,
 				BEBC51E0195350C300215C85 /* mac-font.mm in Sources */,
@@ -4648,6 +4690,11 @@
 			isa = PBXTargetDependency;
 			name = external;
 			targetProxy = 4DEE2BD20FDE4A1E0009423C /* PBXContainerItemProxy */;
+		};
+		7261915F1A26094100851787 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libffi;
+			targetProxy = 7261915E1A26094100851787 /* PBXContainerItemProxy */;
 		};
 		72D60322184768580022379C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
