@@ -17,7 +17,7 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-#include <ffi/ffi.h>
+#include <ffi.h>
 
 #include "foundation-private.h"
 
@@ -37,7 +37,6 @@ MCTypeInfoRef kMCProperListTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCValueTypeCode __MCTypeInfoGetTypeCode(MCTypeInfoRef self);
 static bool __MCTypeInfoIsNamed(MCTypeInfoRef self);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -500,7 +499,7 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 	if (p_base != kMCNullTypeInfo)
 	{
 		t_resolved_base = __MCTypeInfoResolve(p_base);
-		MCAssert(__MCTypeInfoGetTypeCode(t_resolved_base) == kMCValueTypeCodeRecord);
+		MCAssert(MCTypeInfoIsRecord (t_resolved_base));
 	}
 
 	/* If the p_field_count < 0 then the p_fields are expected to be
@@ -547,7 +546,7 @@ MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef unresolved_self)
 {
 	MCTypeInfoRef self;
 	self = __MCTypeInfoResolve(unresolved_self);
-	MCAssert(__MCTypeInfoGetTypeCode (unresolved_self) == kMCValueTypeCodeRecord);
+	MCAssert(MCTypeInfoIsRecord (self));
     return self -> record . base;
 }
 
@@ -556,7 +555,7 @@ uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef unresolved_self)
     MCTypeInfoRef self;
     self = __MCTypeInfoResolve(unresolved_self);
     
-    MCAssert(__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord);
+    MCAssert(MCTypeInfoIsRecord (self));
     return __MCRecordTypeInfoGetFieldCount(self);
 }
 
@@ -612,8 +611,8 @@ MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef unresolved_self,
 	self = __MCTypeInfoResolve(unresolved_self);
 	other = __MCTypeInfoResolve(unresolved_other);
 
-	MCAssert(__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord);
-	MCAssert(__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord);
+	MCAssert(MCTypeInfoIsRecord (self));
+	MCAssert(MCTypeInfoIsRecord (other));
 
 	MCTypeInfoRef t_base = self;
 	while (t_base != kMCNullTypeInfo)
@@ -662,7 +661,7 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
 	/* If the p_field_count < 0 then the p_fields are expected to be
 	 * terminated by a custodian with name = nil. */
 	if (p_field_count < 0)
-		for (p_field_count = 0; p_fields[p_field_count].name != nil; ++p_field_count);
+		for (p_field_count = 0; p_fields[p_field_count].type != nil; ++p_field_count);
 
     if (!MCMemoryNewArray(p_field_count, self -> handler . fields))
     {

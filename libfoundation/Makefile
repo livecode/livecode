@@ -10,17 +10,23 @@ SOURCES= \
 	foundation-data.cpp \
 	foundation-debug.cpp \
 	foundation-error.cpp \
+	foundation-filters.cpp \
+	foundation-foreign.cpp \
 	foundation-handler.cpp \
 	foundation-list.cpp \
 	foundation-locale.cpp \
+	foundation-math.cpp \
 	foundation-name.cpp \
 	foundation-nativechars.cpp \
 	foundation-number.cpp \
+	foundation-pickle.cpp \
+	foundation-proper-list.cpp \
 	foundation-record.cpp \
 	foundation-set.cpp \
 	foundation-stream.cpp \
 	foundation-string.cpp \
 	foundation-text.cpp \
+	foundation-typeconvert.cpp \
 	foundation-typeinfo.cpp \
 	foundation-unicodechars.cpp \
 	foundation-unicode.cpp \

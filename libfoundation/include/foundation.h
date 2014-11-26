@@ -437,8 +437,12 @@ typedef uint32_t intset_t;
 #define _UINTPTR_T
 #ifdef __LP64__
 typedef uint64_t uintptr_t;
+#define UINTPTR_MIN UINT64_MIN
+#define UINTPTR_MAX UINT64_MAX
 #else
 typedef uint32_t uintptr_t;
+#define UINTPTR_MIN UINT32_MIN
+#define UINTPTR_MAX UINT32_MAX
 #endif
 #endif
 
@@ -446,15 +450,14 @@ typedef uint32_t uintptr_t;
 #define _INTPTR_T
 #ifdef __LP64__
 typedef int64_t intptr_t;
-#else
-typedef int32_t intptr_t;
-#endif
-#endif
-
 #define INTPTR_MIN INT64_MIN
 #define INTPTR_MAX INT64_MAX
-#define UINTPTR_MIN UINT64_MIN
-#define UINTPTR_MAX UINT64_MAX
+#else
+typedef int32_t intptr_t;
+#define INTPTR_MIN INT32_MIN
+#define INTPTR_MAX INT32_MAX
+#endif
+#endif
 
 #define INTEGER_MIN INT32_MIN
 #define INTEGER_MAX INT32_MAX
@@ -488,6 +491,10 @@ typedef int64_t compare_t;
 #define INDEX_MAX INT32_MAX
 
 #endif
+
+typedef uintptr_t size_t;
+#define SIZE_MIN UINTPTR_MIN
+#define SIZE_MAX UINTPTR_MAX
 
 typedef int64_t filepos_t;
 
