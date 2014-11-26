@@ -40,21 +40,6 @@ static bool __check_conformance(MCTypeInfoRef p_typeinfo, const MCValueRef *p_va
     return true;
 }
 
-static uindex_t __count_fields(MCTypeInfoRef p_typeinfo)
-{
-    uindex_t t_count;
-    if (p_typeinfo -> record . base != kMCNullTypeInfo)
-    {
-        MCTypeInfoRef t_resolved_typeinfo;
-        t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
-        t_count = __count_fields(t_resolved_typeinfo);
-    }
-    else
-        t_count = 0;
-    
-    return t_count + p_typeinfo -> record . field_count;
-}
-
 bool MCRecordCreate(MCTypeInfoRef p_typeinfo, const MCValueRef *p_values, uindex_t p_value_count, MCRecordRef& r_record)
 {
     bool t_success;
@@ -104,7 +89,7 @@ bool MCRecordCreateMutable(MCTypeInfoRef p_typeinfo, MCRecordRef& r_record)
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
     uindex_t t_field_count;
-    t_field_count = __count_fields(t_resolved_typeinfo);
+    t_field_count = __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo);
     
     __MCRecord *self;
     self = nil;
@@ -119,6 +104,7 @@ bool MCRecordCreateMutable(MCTypeInfoRef p_typeinfo, MCRecordRef& r_record)
         for(uindex_t i = 0; i < t_field_count; i++)
             self -> fields[i] = MCValueRetain(kMCNull);
         
+        self -> typeinfo = MCValueRetain (p_typeinfo);
         self -> flags |= kMCRecordFlagIsMutable;
         
         r_record = self;
@@ -144,7 +130,7 @@ bool MCRecordCopy(MCRecordRef self, MCRecordRef& r_new_record)
     MCTypeInfoRef t_resolved_typeinfo;
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
-    return MCRecordCreate(self -> typeinfo, self -> fields, __count_fields(t_resolved_typeinfo), r_new_record);
+    return MCRecordCreate(self -> typeinfo, self -> fields, __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo), r_new_record);
 }
 
 bool MCRecordCopyAndRelease(MCRecordRef self, MCRecordRef& r_new_record)
@@ -169,7 +155,7 @@ bool MCRecordCopyAndRelease(MCRecordRef self, MCRecordRef& r_new_record)
     
     // Otherwise make a copy of the data and then release the original
     bool t_success;
-    t_success = MCRecordCreate(self -> typeinfo, self -> fields, __count_fields(t_resolved_typeinfo), r_new_record);
+    t_success = MCRecordCreate(self -> typeinfo, self -> fields, __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo), r_new_record);
     MCValueRelease(self);
     
     return t_success;
@@ -181,7 +167,7 @@ bool MCRecordMutableCopy(MCRecordRef self, MCRecordRef& r_new_record)
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     MCRecordRef t_new_self;
-    if (!MCRecordCreate(self -> typeinfo, self -> fields, __count_fields(t_resolved_typeinfo), t_new_self))
+    if (!MCRecordCreate(self -> typeinfo, self -> fields, __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo), t_new_self))
         return false;
     
     t_new_self -> flags |= kMCRecordFlagIsMutable;
@@ -258,13 +244,179 @@ bool MCRecordStoreValue(MCRecordRef self, MCNameRef p_field, MCValueRef p_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool
+MCRecordCopyAsBaseType(MCRecordRef self,
+                       MCTypeInfoRef p_base_typeinfo,
+                       MCRecordRef & r_new_record)
+{
+	bool t_success;
+	MCValueRetain(self);
+	t_success = MCRecordCopyAsBaseTypeAndRelease(self,
+	                                             p_base_typeinfo,
+	                                             r_new_record);
+	if (!t_success) MCValueRelease(self);
+	return t_success;
+}
+
+bool
+MCRecordCopyAsBaseTypeAndRelease(MCRecordRef self,
+                                 MCTypeInfoRef p_base_typeinfo,
+                                 MCRecordRef & r_new_record)
+{
+	MCAssert(MCRecordTypeInfoIsDerivedFrom(self -> typeinfo, p_base_typeinfo));
+
+	/* If there's only one reference, just swap the typeinfo out and
+	 * make it immutable */
+	if (self -> references == 1)
+	{
+		MCValueRelease(self -> typeinfo);
+		self -> typeinfo = MCValueRetain(p_base_typeinfo);
+		self -> flags &= ~kMCRecordFlagIsMutable;
+		r_new_record = self;
+		return true;
+	}
+
+	if (!MCRecordCreate(p_base_typeinfo, self -> fields,
+	                    MCRecordTypeInfoGetFieldCount (p_base_typeinfo),
+	                    r_new_record))
+		return false;
+
+	MCValueRelease(self);
+	return true;
+}
+
+bool
+MCRecordCopyAsDerivedType(MCRecordRef self,
+                          MCTypeInfoRef p_derived_typeinfo,
+                          MCRecordRef & r_new_record)
+{
+	bool t_success;
+	MCValueRetain(self);
+	t_success = MCRecordCopyAsDerivedTypeAndRelease(self,
+	                                                p_derived_typeinfo,
+	                                                r_new_record);
+	if (!t_success) MCValueRelease(self);
+	return t_success;
+}
+
+bool
+MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef self,
+                                    MCTypeInfoRef p_derived_typeinfo,
+                                    MCRecordRef & r_new_record)
+{
+	MCAssert(MCRecordTypeInfoIsDerivedFrom(p_derived_typeinfo, self -> typeinfo));
+
+	uindex_t t_field_count, t_new_field_count;
+	t_field_count = MCRecordTypeInfoGetFieldCount(self -> typeinfo);
+	t_new_field_count = MCRecordTypeInfoGetFieldCount(p_derived_typeinfo);
+
+	/* If there's only one reference, then we need to: 1) swap the
+	 * typeinfo, 2) resize the field array and fill the new fields
+	 * with null values, and 3) make the record immutable. */
+	if (self -> references == 1)
+	{
+		/* Resize the array */
+		if (!MCMemoryResizeArray(t_new_field_count, self -> fields, t_field_count))
+			return false;
+		/* Clear new values */
+		for (uindex_t i = t_field_count; i < t_new_field_count; ++i)
+			self -> fields[i] = MCValueRetain(kMCNull);
+
+		/* Set the typeinfo and make immutable */
+		MCValueRelease(self -> typeinfo);
+		self -> typeinfo = MCValueRetain(p_derived_typeinfo);
+		self -> flags &= ~kMCRecordFlagIsMutable;
+
+		r_new_record = self;
+		return true;
+	}
+
+	/* Otherwise, create and manually populate the new array */
+	MCRecordRef t_result;
+	if (!MCRecordCreateMutable(p_derived_typeinfo, t_result))
+		return false;
+
+	for (uindex_t i = 0; i < t_field_count; ++i)
+		t_result -> fields[i] = MCValueRetain(self -> fields[i]);
+
+	return MCRecordCopyAndRelease(t_result, r_new_record);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool
+MCRecordEncodeAsArray(MCRecordRef record,
+                      MCArrayRef & r_array)
+{
+	MCAssert (record != nil);
+
+	MCTypeInfoRef t_typeinfo = MCValueGetTypeInfo (record);
+	uindex_t t_num_fields = MCRecordTypeInfoGetFieldCount (t_typeinfo);
+
+	/* Each field name in the record is used as a key in the array.
+	 * N.b. records decode/encode to dictionaries, not maps, so field
+	 * names are case insensitive. */
+	MCArrayRef t_new_array;
+	if (!MCArrayCreateMutable (t_new_array))
+		return false;
+
+	for (uindex_t i = 0; i < t_num_fields; ++i)
+	{
+		MCNameRef t_field_name = MCRecordTypeInfoGetFieldName (t_typeinfo, i);
+		MCValueRef t_field_value;
+
+		if (!(MCRecordFetchValue (record, t_field_name, t_field_value) &&
+		      !MCArrayStoreValue (t_new_array, false,
+		                          t_field_name, t_field_value)))
+		{
+			MCValueRelease (t_new_array);
+			return false;
+		}
+	}
+
+	return MCArrayCopyAndRelease (t_new_array, r_array);
+}
+
+bool
+MCRecordDecodeFromArray(MCArrayRef array,
+                        MCTypeInfoRef p_typeinfo,
+                        MCRecordRef & r_record)
+{
+	/* Create the result record */
+	MCRecordRef t_new_record;
+	if (!MCRecordCreateMutable (p_typeinfo, t_new_record))
+		return false;
+
+	/* We require each field name in the record to be a key in the
+	 * array, and for the types to match.  N.b. records decode/encode
+	 * to dictionaries, not maps, so field names are case
+	 * insensitive. */
+	uindex_t t_num_fields = MCRecordTypeInfoGetFieldCount (p_typeinfo);
+	for (uindex_t i = 0; i < t_num_fields; ++i)
+	{
+		MCNameRef t_field_name = MCRecordTypeInfoGetFieldName (p_typeinfo, i);
+		MCValueRef t_field_value;
+		if (!(MCArrayFetchValue (array, false, t_field_name, t_field_value) &&
+		      MCRecordStoreValue (t_new_record, t_field_name, t_field_value)))
+		{
+			MCValueRelease (t_new_record);
+			return false;
+		}
+	}
+
+	return MCRecordCopyAndRelease (t_new_record, r_record);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void __MCRecordDestroy(__MCRecord *self)
 {
     MCTypeInfoRef t_resolved_typeinfo;
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
-    for(uindex_t i = 0; i < __count_fields(t_resolved_typeinfo); i++)
+    for(uindex_t i = 0; i < __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo); i++)
         MCValueRelease(self -> fields[i]);
+    MCValueRelease(self -> typeinfo);
     MCMemoryDelete(self -> fields);
 }
 
@@ -275,7 +427,12 @@ hash_t __MCRecordHash(__MCRecord *self)
     
     hash_t t_hash;
     t_hash = 0;
-    for(uindex_t i = 0; i < __count_fields(t_resolved_typeinfo); i++)
+
+	hash_t t_typeinfo_hash;
+	t_typeinfo_hash = MCValueHash(t_resolved_typeinfo);
+	t_hash = MCHashBytesStream(t_hash, &t_typeinfo_hash, sizeof(hash_t));
+
+    for(uindex_t i = 0; i < __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo); i++)
     {
         hash_t t_element_hash;
         t_element_hash = MCValueHash(self -> fields[i]);
@@ -294,7 +451,7 @@ bool __MCRecordIsEqualTo(__MCRecord *self, __MCRecord *other_self)
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     // Each field within the record must be equal to be equal.
-    for(uindex_t i = 0; i < __count_fields(t_resolved_typeinfo); i++)
+    for(uindex_t i = 0; i < __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo); i++)
         if (!MCValueIsEqualTo(self -> fields[i], other_self -> fields[i]))
             return false;
 
