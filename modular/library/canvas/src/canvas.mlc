@@ -129,43 +129,43 @@ begin
 	MCCanvasRectangleMakeWithLTRB(mRect[0], mRect[1], mRect[2], mRect[3], output)
 end syntax
 
-syntax LeftRectangleProperty as prefix operator with precedence 4
-	"the" ( "left" | "x" ) "of" <mRect>
+syntax LeftRectangleProperty is prefix operator with precedence 4
+	"the" ( "left" | "x" ) "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetLeft(mRect, output)
 	MCCanvasRectangleSetLeft(mRect, input)
 end syntax
 
-syntax TopRectangleProperty as prefix operator with precedence 4
-	"the" ( "top" | "y" ) "of" <mRect>
+syntax TopRectangleProperty is prefix operator with precedence 4
+	"the" ( "top" | "y" ) "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetTop(mRect, output)
 	MCCanvasRectangleSetTop(mRect, input)
 end syntax
 
-syntax RightRectangleProperty as prefix operator with precedence 4
-	"the" "right" "of" <mRect>
+syntax RightRectangleProperty is prefix operator with precedence 4
+	"the" "right" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetRight(mRect, output)
 	MCCanvasRectangleSetRight(mRect, input)
 end syntax
 
-syntax BottomRectangleProperty as prefix operator with precedence 4
-	"the" "bottom" "of" <mRect>
+syntax BottomRectangleProperty is prefix operator with precedence 4
+	"the" "bottom" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetBottom(mRect, output)
 	MCCanvasRectangleSetBottom(mRect, input)
 end syntax
 
-syntax WidthRectangleProperty as prefix operator with precedence 4
-	"the" "width" "of" <mRect>
+syntax WidthRectangleProperty is prefix operator with precedence 4
+	"the" "width" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetWidth(mRect, output)
 	MCCanvasRectangleSetWidth(mRect, input)
 end syntax
 
-syntax HeightRectangleProperty as prefix operator with precedence 4
-	"the" "height" "of" <mRect>
+syntax HeightRectangleProperty is prefix operator with precedence 4
+	"the" "height" "of" <mRect:Expression>
 begin
 	MCCanvasRectangleGetHeight(mRect, output)
 	MCCanvasRectangleSetHeight(mRect, input)
@@ -1114,8 +1114,8 @@ foreign handler MCCanvasCanvasStroke(inout xCanvas as Canvas) as undefined binds
 foreign handler MCCanvasCanvasStrokePath(inout xCanvas as Canvas, in pPath as Path) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasClipToRect(inout xCanvas as Canvas, in pClip as Rectangle) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasAddPath(inout xCanvas as Canvas, in pPath as Path) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasDrawImage(inout xCanvas, in pImage as Image, in pDest as Rectangle, in pQuality as int) as undefined binds to "<builtin>"
-foreign handler MCCanvasCanvasDrawRectOfImage(inout xCanvas, in pImage as Image, in pSrc as Rectangle, in pDst as Rectangle, in pQuality as int) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasDrawImage(inout xCanvas, in pImage as Image, in pDest as Rectangle) as undefined binds to "<builtin>"
+foreign handler MCCanvasCanvasDrawRectOfImage(inout xCanvas, in pImage as Image, in pSrc as Rectangle, in pDst as Rectangle) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasMoveTo(inout xCanvas as Canvas, in pPoint as Point) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasLineTo(inout xCanvas as Canvas, in pPoint as Point) as undefined binds to "<builtin>"
 foreign handler MCCanvasCanvasCurveThroughPoint(inout xCanvas as Canvas, in pThrough as Point, in pTo as Point) as undefined binds to "<builtin>"

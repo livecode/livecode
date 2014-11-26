@@ -24,6 +24,26 @@
 
 // TODO - move to MCImageRep wrapper library
 
+struct MCGImageFrame
+{
+	MCGImageRef image;
+	
+	MCGFloat x_scale;
+	MCGFloat y_scale;
+};
+
+// An MCImageBitmap is a non-premultiplied ARGB image, as decoded from the storage format
+struct MCImageBitmap
+{
+	uint32_t width;
+	uint32_t height;
+	uint32_t stride;
+	uint32_t *data;
+	
+	bool has_transparency;
+	bool has_alpha;
+};
+
 class MCImageRep;
 
 MCImageRep *MCImageRepRetain(MCImageRep *p_image_rep);
@@ -34,11 +54,11 @@ bool MCImageRepCreateWithPixels(MCDataRef p_pixels, uint32_t p_width, uint32_t p
 bool MCImageRepGetGeometry(MCImageRep *p_image_rep, uint32_t &r_width, uint32_t &r_height);
 bool MCImageRepGetFrameDuration(MCImageRep *p_image_rep, uint32_t p_frame, uint32_t &r_duration);
 
-bool MCImageRepLockForTransform(MCImageRep *p_image_rep, const MCGAffineTransform &p_transform, uint32_t p_frame, MCGImageRef &r_image, MCGSize &r_scale);
-void MCImageRepUnlock(MCImageRep *p_image_rep, MCGImageRef p_image);
+bool MCImageRepLock(MCImageRep *p_image_rep, uint32_t p_index, MCGFloat p_density, MCGImageFrame &r_frame);
+void MCImageRepUnlock(MCImageRep *p_image_rep, uint32_t p_index, MCGImageFrame &p_frame);
 
-bool MCImageRepLockRasterForTransform(MCImageRep *p_image_rep, const MCGAffineTransform &p_transform, uint32_t p_frame, MCGRaster &r_raster, MCGSize &r_scale);
-void MCImageRepUnlockRaster(MCImageRep *p_image_rep, const MCGRaster &p_raster);
+bool MCImageRepLockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCGFloat p_density, MCImageBitmap *&r_raster);
+void MCImageRepUnlockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCImageBitmap *p_raster);
 
 ////////////////////////////////////////////////////////////////////////////////
 

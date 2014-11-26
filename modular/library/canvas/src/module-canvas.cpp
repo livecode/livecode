@@ -126,6 +126,13 @@ bool MCArrayFetchCanvasColor(MCArrayRef p_array, MCNameRef p_key, MCCanvasColorR
 
 ////////////////////////////////////////////////////////////////////////////////
 
+inline MCGFloat MCGAffineTransformGetEffectiveScale(const MCGAffineTransform &p_transform)
+{
+	return MCMax(MCAbs(p_transform.a) + MCAbs(p_transform.c), MCAbs(p_transform.d) + MCAbs(p_transform.b));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCGPointParse(MCStringRef p_string, MCGPoint &r_point)
 {
 	bool t_success;
@@ -1210,41 +1217,40 @@ void MCCanvasImageGetHeight(const MCCanvasImage &p_image, uint32_t &r_height)
 
 void MCCanvasImageGetPixels(const MCCanvasImage &p_image, MCDataRef &r_pixels)
 {
-	MCGRaster t_raster;
-	MCGSize t_scale;
+	MCImageBitmap *t_raster;
 	
 	// TODO - handle case of missing normal density image
 	// TODO - throw appropriate errors
-	if (MCImageRepLockRasterForTransform(p_image, MCGAffineTransformMakeIdentity(), 0, t_raster, t_scale))
+	if (MCImageRepLockRaster(p_image, 0, 1.0, t_raster))
 	{
 		uint8_t *t_buffer;
 		t_buffer = nil;
 		
 		uint32_t t_buffer_size;
-		t_buffer_size = t_raster.height * t_raster.stride;
+		t_buffer_size = t_raster->height * t_raster->stride;
 		
 		/* UNCHECKED */ MCMemoryAllocate(t_buffer_size, t_buffer);
 		
 		uint8_t *t_pixel_row;
 		t_pixel_row = t_buffer;
 		
-		for (uint32_t y = 0; y < t_raster.height; y++)
+		for (uint32_t y = 0; y < t_raster->height; y++)
 		{
 			uint32_t *t_pixel_ptr;
 			t_pixel_ptr = (uint32_t*)t_pixel_row;
 			
-			for (uint32_t x = 0; x < t_raster.width; x++)
+			for (uint32_t x = 0; x < t_raster->width; x++)
 			{
 				*t_pixel_ptr = MCGPixelFromNative(kMCGPixelFormatARGB, *t_pixel_ptr);
 				t_pixel_ptr++;
 			}
 			
-			t_pixel_row += t_raster.stride;
+			t_pixel_row += t_raster->stride;
 		}
 		
 		/* UNCHECKED */ MCDataCreateWithBytesAndRelease(t_buffer, t_buffer_size, r_pixels);
 		
-		MCImageRepUnlockRaster(p_image, t_raster);
+		MCImageRepUnlockRaster(p_image, 0, t_raster);
 	}
 }
 
@@ -2559,28 +2565,28 @@ void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, const MCCanvasSolidPaint 
 
 void MCCanvasApplyPatternPaint(__MCCanvasImpl &x_canvas, const MCCanvasPattern &p_pattern)
 {
-	MCGImageRef t_image;
-	t_image = nil;
+	MCGImageFrame t_frame;
 	
 	MCGAffineTransform t_transform;
-	
-	MCGSize t_scale;
 	
 	MCGAffineTransform t_combined;
 	t_combined = MCGAffineTransformConcat(p_pattern->transform, MCGContextGetDeviceTransform(x_canvas.context));
 	
-	if (MCImageRepLockForTransform(p_pattern->image, t_combined, 0, t_image, t_scale))
+	MCGFloat t_scale;
+	t_scale = MCGAffineTransformGetEffectiveScale(t_combined);
+	
+	if (MCImageRepLock(p_pattern->image, 0, t_scale, t_frame))
 	{
-		t_transform = MCGAffineTransformMakeScale(1.0 / t_scale.width, 1.0 / t_scale.height);
+		t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.x_scale, 1.0 / t_frame.y_scale);
 		
 		// return image & transform scaled for image density
 		t_transform = MCGAffineTransformConcat(p_pattern->transform, t_transform);
 		
 
-		MCGContextSetFillPattern(x_canvas.context, t_image, t_transform, x_canvas.props().image_filter);
-		MCGContextSetStrokePattern(x_canvas.context, t_image, t_transform, x_canvas.props().image_filter);
+		MCGContextSetFillPattern(x_canvas.context, t_frame.image, t_transform, x_canvas.props().image_filter);
+		MCGContextSetStrokePattern(x_canvas.context, t_frame.image, t_transform, x_canvas.props().image_filter);
 		
-		MCImageRepUnlock(p_pattern->image, t_image);
+		MCImageRepUnlock(p_pattern->image, 0, t_frame);
 	}
 	
 }
@@ -2902,22 +2908,22 @@ void MCCanvasCanvasDrawRectOfImage(MCCanvasRef &x_canvas, const MCCanvasImage &p
 	
 	MCCanvasApplyChanges(*t_canvas);
 
-	MCGImageRef t_image;
-	t_image = nil;
+	MCGImageFrame t_frame;
 	
-	MCGSize t_scale;
+	MCGFloat t_scale;
+	t_scale = MCGAffineTransformGetEffectiveScale(MCGContextGetDeviceTransform(t_canvas->context));
 	
-	if (MCImageRepLockForTransform(p_image, MCGContextGetDeviceTransform(t_canvas->context), 0, t_image, t_scale))
+	if (MCImageRepLock(p_image, 0, t_scale, t_frame))
 	{
 		MCGAffineTransform t_transform;
-		t_transform = MCGAffineTransformMakeScale(1.0 / t_scale.width, 1.0 / t_scale.height);
+		t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.x_scale, 1.0 / t_frame.y_scale);
 		
 		MCGRectangle t_src_rect;
-		t_src_rect = MCGRectangleScale(p_src_rect, t_scale.width, t_scale.height);
+		t_src_rect = MCGRectangleScale(p_src_rect, t_frame.x_scale, t_frame.y_scale);
 		
-		MCGContextDrawRectOfImage(t_canvas->context, t_image, t_src_rect, p_dst_rect, t_canvas->props().image_filter);
+		MCGContextDrawRectOfImage(t_canvas->context, t_frame.image, t_src_rect, p_dst_rect, t_canvas->props().image_filter);
 		
-		MCImageRepUnlock(p_image, t_image);
+		MCImageRepUnlock(p_image, 0, t_frame);
 	}
 }
 
