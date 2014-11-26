@@ -150,12 +150,12 @@ Target:             An expression which evaluates to binary data.
 output:             Either locates the element containers between the given indices for use as a 
                     single container for the target of another operation, or evaluates the elements
                     between the given indices as a list.
-
+*/
 
 syntax RangeElementsOf is prefix operator with precedence 1
 	"element" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
-	FetchElementRangeOf(Start, Finish, Target, output)
+    FetchElementRangeOf(Start, Finish, Target, output)
 	StoreElementRangeOf(input, Start, Finish, Target)
 end syntax
 

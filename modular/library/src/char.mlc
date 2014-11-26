@@ -1,6 +1,6 @@
 module com.livecode.char
 
-foreign handler FetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
+foreign handler MCCharFetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
 foreign handler StoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
 foreign handler FetchCharRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"
 foreign handler StoreCharRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
@@ -54,7 +54,7 @@ Example: 			get char 5 of tString // Evaluates char 5
 syntax SingletonCharOf is prefix operator with precedence 1
 	"char" <Index: Expression> "of" <Target: Expression>
 begin
-	FetchCharOf(Index, Target, output)
+	MCCharFetchCharOf(Index, Target, output)
 	StoreCharOf(input, Index, Target)
 end syntax
 
@@ -176,7 +176,7 @@ output:             True if the chars of <Needle> occur as a subsequence of the 
 syntax ContainsChars is neutral binary operator with precedence 1
     <Target: Expression> "contains" <Needle: Expression>
 begin
-    EvalContainsChars(Target, Needle, output)
+    EvalIsAmongTheCharsOf(Target, Needle, output)
 end syntax
 
 --
@@ -190,9 +190,9 @@ output:             Returns true if the characters in <Prefix> occur at the star
 */
 
 syntax BeginsWithString is neutral binary operator with precedence 1
-    <Source: Expression> "begins" "with" <Prefix: Expression>
+    <Source: Expression> "begins" <Foo: Expression> "and" <Bar: Expression> "with" <Prefix: Expression>
 begin
-    EvalBeginsWith(Source, Prefix, output)
+    //EvalBeginsWith(Source, Prefix, output)
 end syntax
 
 /*
@@ -207,7 +207,7 @@ output:             Returns true if the characters in <Prefix> occur at the end 
 syntax EndsWithString is neutral binary operator with precedence 1
     <Source: Expression> "ends" "with" <Suffix: Expression>
 begin
-    EvalEndsWith(Source, Suffix, output)
+    //EvalEndsWith(Source, Suffix, output)
 end syntax
 
 --

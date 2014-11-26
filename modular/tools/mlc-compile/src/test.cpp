@@ -4,10 +4,12 @@
 
 extern "C" void MCStringExecPutStringAfter(void);
 extern "C" void MCArithmeticExecAddIntegerToInteger(void);
+extern "C" void MCCharFetchCharOf(void);
 void dummy(void)
 {
     MCStringExecPutStringAfter();
     MCArithmeticExecAddIntegerToInteger();
+    MCCharFetchCharOf();
 }
 
 static MCScriptModuleRef load_module(const char *p_filename)

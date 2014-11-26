@@ -968,7 +968,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/string.lcm\" \"${SRCROOT}/../../library/src/string.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/binary.lcm\" \"${SRCROOT}/../../library/src/binary.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/arithmetic.lcm\" \"${SRCROOT}/../../library/src/arithmetic.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/test.lcm\" \"${SRCROOT}/test.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\ncp \"${BUILT_PRODUCTS_DIR}/mlc-compile\" \"${SRCROOT}/mlc-compile\"\ncp \"${BUILT_PRODUCTS_DIR}/mlc-test\" \"${SRCROOT}/mlc-test\"";
+			shellScript = "\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/string.lcm\" \"${SRCROOT}/../../library/src/string.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/binary.lcm\" \"${SRCROOT}/../../library/src/binary.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/arithmetic.lcm\" \"${SRCROOT}/../../library/src/arithmetic.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/char.lcm\" \"${SRCROOT}/../../library/src/char.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/mlc-compile\" -output \"${SRCROOT}/test.lcm\" \"${SRCROOT}/test.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\ncp \"${BUILT_PRODUCTS_DIR}/mlc-compile\" \"${SRCROOT}/mlc-compile\"\ncp \"${BUILT_PRODUCTS_DIR}/mlc-test\" \"${SRCROOT}/mlc-test\"";
 		};
 		4D6F072A19CC38B200DDC6E0 /* Gentle */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1205,7 +1205,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+					"$(SRCROOT)/../../../prebuilt/lib/mac",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "mlc-bootstrap-compile";
@@ -1242,7 +1242,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+					"$(SRCROOT)/../../../prebuilt/lib/mac",
 				);
 				PRODUCT_NAME = "mlc-bootstrap-compile";
 			};
@@ -1282,7 +1282,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+					"$(SRCROOT)/../../../prebuilt/lib/mac",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1320,7 +1320,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+					"$(SRCROOT)/../../../prebuilt/lib/mac",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1393,7 +1393,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+					"$(SRCROOT)/../../../prebuilt/lib/mac",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1424,7 +1424,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
+					"$(SRCROOT)/../../../prebuilt/lib/mac",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

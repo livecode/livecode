@@ -110,7 +110,7 @@ output:             True if <Needle> is among the bytes of <Target>, and false o
 syntax IsAmongTheBytesOf is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
-    EvalIsInBytes(Target, Needle, output)
+    EvalContainsBytes(Target, Needle, output)
 end syntax
 
 --

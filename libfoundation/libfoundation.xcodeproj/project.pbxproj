@@ -307,30 +307,6 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				HEADER_SEARCH_PATHS = (
-					"\"$(SOLUTION_DIR)/engine/include\"",
-					"\"$(SOLUTION_DIR)/libfoundation/include\"",
-					"\"$(SOLUTION_DIR)/libexternal/include\"",
-					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
-					"\"$(SOLUTION_DIR)/libgraphics/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpq/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libiodbc/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
-					"\"$(SOLUTION_DIR)/prebuilt/include\"",
-				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"/Users/alilloyd/Documents/GitHub/livecode-widgets/thirdparty/libz/../../_build/mac/Debug",
@@ -345,30 +321,6 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				HEADER_SEARCH_PATHS = (
-					"\"$(SOLUTION_DIR)/engine/include\"",
-					"\"$(SOLUTION_DIR)/libfoundation/include\"",
-					"\"$(SOLUTION_DIR)/libexternal/include\"",
-					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
-					"\"$(SOLUTION_DIR)/libgraphics/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libpq/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libiodbc/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
-					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
-					"\"$(SOLUTION_DIR)/prebuilt/include\"",
-				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"/Users/alilloyd/Documents/GitHub/livecode-widgets/thirdparty/libz/../../_build/mac/Debug",
