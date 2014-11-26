@@ -492,6 +492,10 @@ typedef int64_t compare_t;
 
 #endif
 
+typedef uintptr_t size_t;
+#define SIZE_MIN UINTPTR_MIN
+#define SIZE_MAX UINTPTR_MAX
+
 typedef int64_t filepos_t;
 
 ////////////////////////////////////////////////////////////////////////////////
