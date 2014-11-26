@@ -32,7 +32,6 @@
 		7237187918E42F580006C484 /* foundation-text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7237187718E42F580006C484 /* foundation-text.cpp */; };
 		761D53EC19EBC70B00DBF726 /* foundation-typeconvert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 761D53EB19EBC70B00DBF726 /* foundation-typeconvert.cpp */; };
 		7653455919F656650032E6E2 /* foundation-proper-list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7653455819F656640032E6E2 /* foundation-proper-list.cpp */; };
-		769372121A03AEC00001A9FF /* foundation-filters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 769372111A03AEC00001A9FF /* foundation-filters.cpp */; };
 		7696676D19E81D92008B0972 /* foundation-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7696676C19E81D92008B0972 /* foundation-chunk.cpp */; };
 		76E711FC1A0BA24B00B68F93 /* foundation-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76E711FB1A0BA24B00B68F93 /* foundation-math.cpp */; };
 		76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */; };
