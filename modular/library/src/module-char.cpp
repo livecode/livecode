@@ -60,7 +60,7 @@ void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_fini
         return;
 }
 
-void MCCharFetchCharOf(index_t p_index, MCStringRef p_target, MCStringRef& r_output)
+extern "C" void MCCharFetchCharOf(index_t p_index, MCStringRef p_target, MCStringRef& r_output)
 {
     MCCharFetchCharRangeOf(p_index, p_index, p_target, r_output);
 }

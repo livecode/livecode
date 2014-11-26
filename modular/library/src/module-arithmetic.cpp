@@ -31,11 +31,7 @@ extern "C" void MCArithmeticExecAddIntegerToInteger(integer_t p_number, integer_
 
 extern "C" void MCArithmeticExecAddRealToReal(double p_number, double& x_target)
 {
-    if (p_number > 0 && MAXFLOAT - p_number > x_target)
-        // overflow
-        return;
-    else
-        x_target += p_number;
+    x_target += p_number;
 }
 
 extern "C" void MCArithmeticExecAddNumberToNumber(MCNumberRef p_number, MCNumberRef& x_target)

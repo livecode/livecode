@@ -17,6 +17,8 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
+#include <foundation-locale.h>
+
 extern "C" void MCStringEvalConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
 {
     if (!MCStringFormat(r_output, "%@%@", p_left, p_right))
@@ -34,7 +36,7 @@ extern "C" void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x
 extern "C" void MCStringExecPutStringAfter(MCStringRef p_source, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
-    MCStringEvalConcatenate(x_target, p_source, &t_string);
+    MCStringEvalConcatenate(x_target == (MCStringRef)kMCNull ? kMCEmptyString : x_target, p_source, &t_string);
     
     MCValueAssign(x_target, *t_string);
 }
@@ -45,7 +47,6 @@ extern "C" void MCStringEvalConcatenateWithSpace(MCStringRef p_left, MCStringRef
         return;
 }
 
-#if 0
 extern "C" void MCStringEvalLowercaseOf(MCStringRef p_source, MCStringRef& r_output)
 {
     MCAutoStringRef t_string;
@@ -71,4 +72,3 @@ extern "C" void MCStringEvalUppercaseOf(MCStringRef p_source, MCStringRef& r_out
     if (!MCStringCopy(*t_string, r_output))
         return;
 }
-#endif
