@@ -444,6 +444,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\native-layer-win32.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\native-layer-win32.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\native-layer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\native-layer.h"
+				>
+			</File>
+			<File
 				RelativePath="src\objdefs.h"
 				>
 			</File>
@@ -645,6 +661,22 @@
 			</File>
 			<File
 				RelativePath="src\vclip.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget-events.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget-events.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget.h"
 				>
 			</File>
 		</Filter>
@@ -6111,11 +6143,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\systhreads.h"
+				RelativePath=".\src\system.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\system.h"
+				RelativePath=".\src\systhreads.h"
 				>
 			</File>
 			<File
@@ -6246,15 +6278,15 @@
 					/>
 				</FileConfiguration>
 			</File>
-            <File
+			<File
 				RelativePath=".\src\sysw32threads.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					>
 					<Tool
-                    Name="VCCLCompilerTool"
-                    PrecompiledHeaderThrough="w32prefix.h"
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="w32prefix.h"
 					/>
 				</FileConfiguration>
 			</File>

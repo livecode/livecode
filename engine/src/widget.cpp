@@ -1,3 +1,19 @@
+/* Copyright (C) 2014 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #include "prefix.h"
 
 #include "globdefs.h"
@@ -29,6 +45,7 @@
 
 #include "widget-events.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCGContextRef MCwidgetcontext;
@@ -50,15 +67,18 @@ MCObjectPropertyTable MCWidget::kPropertyTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWidget::MCWidget(void)
+MCWidget::MCWidget(void) :
+  m_native_layer(nil)
 {
 
 }
 
-MCWidget::MCWidget(const MCWidget& p_other)
-	: MCControl(p_other)
+MCWidget::MCWidget(const MCWidget& p_other) :
+  MCControl(p_other),
+  m_native_layer(nil)
 {
-
+    m_native_layer = createNativeLayer();
+    m_native_layer->OnAttach();
 }
 
 MCWidget::~MCWidget(void)
@@ -494,6 +514,16 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
     // Not handled for now.
     return false;
 }
+
+void MCWidget::toolchanged(Tool p_new_tool)
+{
+    OnToolChanged(p_new_tool);
+}
+
+void MCWidget::layerchanged()
+{
+    OnLayerChanged();
+}
 	
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)
 {
@@ -546,7 +576,7 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	MCGContextSave(MCwidgetcontext);
 	MCGContextSetShouldAntialias(MCwidgetcontext, true);
 	MCGContextTranslateCTM(MCwidgetcontext, rect . x, rect . y);
-    MCwidgeteventmanager->event_draw(dc, dirty, p_isolated, p_sprite);
+    MCwidgeteventmanager->event_draw(this, dc, dirty, p_isolated, p_sprite);
 	MCGContextRestore(MCwidgetcontext);
 	MCwidgetcontext = nil;
 	
@@ -567,6 +597,14 @@ Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 	MCRectangle drect = MCU_intersect_rect(p_rect, rect);
 
 	return drect.width != 0 && drect.height != 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCWidget::inEditMode()
+{
+    Tool t_tool = getstack()->gettool(this);
+    return t_tool != T_BROWSE && t_tool != T_HELP;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -623,28 +661,66 @@ bool MCWidget::isDragSource() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCNativeLayer* MCWidget::getNativeLayer() const
+{
+    return m_native_layer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCWidget::OnOpen()
 {
+    if (m_native_layer)
+        m_native_layer->OnOpen();
+    
     fprintf(stderr, "MCWidget::OnOpen\n");
 }
 
 void MCWidget::OnClose()
 {
+    if (m_native_layer)
+        m_native_layer->OnClose();
+    
     fprintf(stderr, "MCWidget::OnClose\n");
 }
 
-void MCWidget::OnPaint(class MCPaintContext& p_context)
+void MCWidget::OnAttach()
 {
+    if (m_native_layer)
+        m_native_layer->OnAttach();
+    
+    fprintf(stderr, "MCWidget::OnAttach\n");
+}
+
+void MCWidget::OnDetach()
+{
+    if (m_native_layer)
+        m_native_layer->OnDetach();
+    
+    fprintf(stderr, "MCWidget::OnDetach\n");
+}
+
+void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
+{
+    if (m_native_layer)
+        m_native_layer->OnPaint(p_dc, p_rect);
+    
     fprintf(stderr, "MCWidget::OnPaint\n");
 }
 
 void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
 {
+    if (m_native_layer)
+        m_native_layer->OnGeometryChanged(p_old_rect);
+    
     fprintf(stderr, "MCWidget::OnGeometryChanged\n");
 }
 
 void MCWidget::OnVisibilityChanged(bool p_visible)
 {
+    if (m_native_layer)
+        m_native_layer->OnVisibilityChanged(p_visible);
+    
     fprintf(stderr, "MCWidget::OnVisibilityChanged\n");
 }
 
@@ -683,6 +759,22 @@ void MCWidget::OnDestroy()
 void MCWidget::OnParentPropChanged()
 {
     fprintf(stderr, "MCWidget::OnParentPropChanged\n");
+}
+
+void MCWidget::OnToolChanged(Tool p_new_tool)
+{
+    if (m_native_layer)
+        m_native_layer->OnToolChanged(p_new_tool);
+    
+    fprintf(stderr, "MCWidget::OnToolChanged\n");
+}
+
+void MCWidget::OnLayerChanged()
+{
+    if (m_native_layer)
+        m_native_layer->OnLayerChanged();
+    
+    fprintf(stderr, "MCWidget::OnLayerChanged\n");
 }
 
 void MCWidget::OnMouseEnter()

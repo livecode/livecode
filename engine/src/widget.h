@@ -1,9 +1,24 @@
+/* Copyright (C) 2014 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #ifndef __MC_WIDGET__
 #define __MC_WIDGET__
 
-#ifndef __MC_CONTROL__
 #include "control.h"
-#endif
+#include "native-layer.h"
 
 
 class MCWidget: public MCControl
@@ -58,9 +73,15 @@ public:
     virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
 	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
     
+    virtual void toolchanged(Tool p_new_tool);
+    
+    virtual void layerchanged();
     
     void SetKind(MCExecContext& ctxt, MCNameRef p_kind);
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
+    
+    // Returns true if the widget is in edit mode
+    bool inEditMode();
     
     ////////// Functions used by the event manager for event processing
     bool handlesMouseDown() const;
@@ -77,10 +98,14 @@ public:
     bool waitForDoubleClick() const;// Don't send click straight away
     bool isDragSource() const;      // Widget is source for drag-drop operations
     
+    // Needed by the native layer code
+    MCNativeLayer* getNativeLayer() const;
+    
 protected:
+    
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
-	
+    
 private:
 
     //////////
@@ -92,7 +117,9 @@ private:
     
     void OnOpen();
     void OnClose();
-    void OnPaint(class MCPaintContext& p_context);
+    void OnAttach();
+    void OnDetach();
+    void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
     void OnGeometryChanged(const MCRectangle& p_old_rect);
     void OnVisibilityChanged(bool p_visible);
     void OnHitTest(const MCRectangle& p_intersect, bool& r_inside);
@@ -102,6 +129,8 @@ private:
     void OnCreate();
     void OnDestroy();
     void OnParentPropChanged();
+    void OnToolChanged(Tool p_new_tool);
+    void OnLayerChanged();
     
     ////////// Basic mouse events
     
@@ -175,6 +204,12 @@ private:
 	bool CallHandler(MCNameRef p_name, MCParameter *parameters);
 	bool CallGetProp(MCNameRef p_property_name, MCNameRef p_key, MCValueRef& r_value);
 	bool CallSetProp(MCNameRef p_property_name, MCNameRef p_key, MCValueRef value);
+    
+    // The native layer(s) belonging to this widget
+    MCNativeLayer* m_native_layer;
+    
+    // Implemented by the platform-specific native layers: creates a new layer
+    MCNativeLayer* createNativeLayer();
 };
 
 #endif

@@ -1,3 +1,19 @@
+/* Copyright (C) 2014 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #include "prefix.h"
 
 #include "globdefs.h"
@@ -233,11 +249,11 @@ void MCWidgetEventManager::event_recompute(MCWidget* p_widget)
     p_widget->OnParentPropChanged();
 }
 
-void MCWidgetEventManager::event_draw(MCDC* p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite)
+void MCWidgetEventManager::event_draw(MCWidget* p_widget, MCDC* p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite)
 {
     // Ignored parameter: p_isolated
     // Ignored parameter: p_sprite
-    
+    p_widget->OnPaint(p_dc, p_dirty);
 }
 
 void MCWidgetEventManager::event_touch(MCWidget* p_widget, uint32_t p_id, MCEventTouchPhase p_phase, int2 p_x, int2 p_y)

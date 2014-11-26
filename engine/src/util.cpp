@@ -2028,6 +2028,18 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
     
+    MCStacknode *t_node, *t_first_node;
+    t_node = t_first_node = MCstacks->topnode();
+    while (t_node)
+    {
+        t_node->getstack()->toolchanged(MCcurtool);
+        
+        if (t_node->next() == t_first_node)
+            t_node = nil;
+        else
+            t_node = t_node->next();
+    }
+    
     // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
     for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
         t_player -> syncbuffering(nil);

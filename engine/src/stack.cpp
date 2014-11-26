@@ -3050,6 +3050,12 @@ void MCStack::recompute()
 		curcard->recompute();
 }
 
+void MCStack::toolchanged(Tool p_new_tool)
+{
+    if (curcard != NULL)
+        curcard->toolchanged(p_new_tool);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCStack::loadexternals(void)

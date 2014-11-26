@@ -1484,6 +1484,20 @@ void MCCard::recompute()
 	}
 }
 
+void MCCard::toolchanged(Tool p_new_tool)
+{
+    if (objptrs != NULL)
+    {
+        MCObjptr *optr = objptrs;
+        do
+        {
+            optr->getref()->toolchanged(p_new_tool);
+            optr = optr->next();
+        }
+        while (optr != objptrs);
+    }
+}
+
 void MCCard::kfocusset(MCControl *target)
 {
 	if (objptrs != NULL)
@@ -1927,6 +1941,8 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 		gptr->clearfocus(optr);
 	}
 
+    optr->layerchanged();
+    
 	if (getstack() == MCmousestackptr
 	        && MCU_point_in_rect(optr->getrect(), MCmousex, MCmousey))
 		mfocus(MCmousex, MCmousey);

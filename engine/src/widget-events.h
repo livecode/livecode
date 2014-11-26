@@ -1,3 +1,19 @@
+/* Copyright (C) 2014 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #ifndef __MC_WIDGET_EVENTS__
 #define __MC_WIDGET_EVENTS__
 
@@ -29,7 +45,7 @@ public:
     void event_timer(MCWidget*, MCNameRef p_message, MCParameter *p_parameters);
     void event_setrect(MCWidget*, const MCRectangle& p_rectangle);
     void event_recompute(MCWidget*);
-    void event_draw(MCDC *p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite);
+    void event_draw(MCWidget*, MCDC *p_dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite);
     void event_mdrag(MCWidget*);
     
     // Non-MCControl event for handling touches

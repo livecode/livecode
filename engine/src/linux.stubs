@@ -297,6 +297,11 @@ gdk libgdk-x11-2.0.so.0
 	gdk_window_set_skip_pager_hint: (pointer, integer) -> ()
 	gdk_window_constrain_size: (pointer, integer, integer, integer, pointer, pointer) -> ()
 	gdk_window_unmaximize: (pointer) -> ()
+	gdk_window_restack: (pointer, pointer, integer) -> ()	
+	gdk_window_reparent: (pointer, pointer, integer, integer) -> ()
+	gdk_window_is_viewable: (pointer) -> (integer)
+	gdk_cairo_set_source_window: (pointer, pointer, double, double) -> ()
+	gdk_window_input_shape_combine_region: (pointer, pointer, integer, integer) -> ()
 
 gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_get_pixels: (pointer) -> (pointer)
@@ -460,6 +465,31 @@ gtk libgtk-x11-2.0.so.0
 	gtk_im_context_set_surrounding: (pointer, pointer, integer, integer) -> ()
 	gtk_im_context_set_use_preedit: (pointer, integer) -> ()
 	gtk_im_context_get_preedit_string: (pointer, pointer, pointer, pointer) -> ()
+
+	gtk_widget_set_size_request: (pointer, integer, integer) -> ()
+	gtk_socket_get_type: () -> (integer)
+	gtk_socket_new: () -> (pointer)
+	gtk_fixed_put: (pointer, pointer, integer, integer) -> ()
+	gtk_socket_add_id: (pointer, integer) -> ()
+	gtk_widget_hide: (pointer) -> ()
+	gtk_widget_show: (pointer) -> ()
+	gtk_fixed_move: (pointer, pointer, integer, integer) -> ()
+	gtk_fixed_get_type: () -> (integer)
+	gtk_bin_get_child: (pointer) -> (pointer)
+	gtk_widget_set_realized: (pointer, integer) -> ()
+	gtk_widget_set_window: (pointer, pointer) -> ()
+	gtk_socket_get_plug_window: (pointer) -> (pointer)
+	gtk_widget_set_parent_window: (pointer, pointer) -> ()
+	gtk_widget_get_window: (pointer) -> (pointer)
+	gtk_socket_get_id: (pointer) -> (integer)
+	gtk_offscreen_window_new: () -> (pointer)
+	gtk_offscreen_window_get_pixbuf: (pointer) -> (pointer)
+	gtk_offscreen_window_get_type: () -> (integer)
+
+	gtk_plug_new: (integer) -> (pointer)
+	gtk_plug_get_type: () -> (integer)
+	gtk_plug_get_id: (pointer) -> (integer)
+	gtk_widget_unparent: (pointer) -> ()
 
 gtk_print_dialog libgtk-x11-2.0.so.0
 	gtk_print_unix_dialog_new: (pointer, pointer) -> (pointer)
