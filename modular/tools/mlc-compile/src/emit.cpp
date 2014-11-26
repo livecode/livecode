@@ -113,6 +113,7 @@ extern "C" void EmitReturnNothing(void);
 extern "C" void EmitAttachRegisterToExpression(long reg, long expr);
 extern "C" void EmitDetachRegisterFromExpression(long expr);
 extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
+extern "C" void EmitPosition(PositionRef position);
 
 //////////
 
@@ -1133,4 +1134,17 @@ int EmitGetRegisterAttachedToExpression(long expr, long *reg)
     *reg = t_attach -> reg;
 
     return 1;
+}
+
+void EmitPosition(PositionRef p_position)
+{
+    FileRef t_file;
+    GetFileOfPosition(p_position, &t_file);
+    const char *t_filename;
+    GetFileName(t_file, &t_filename);
+    NameRef t_filename_name;
+    MakeNameLiteral(t_filename, &t_filename_name);
+    long t_line;
+    GetRowOfPosition(p_position, &t_line);
+    MCScriptEmitPositionInModule(s_builder, to_mcnameref(t_filename_name), t_line);
 }

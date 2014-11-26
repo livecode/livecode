@@ -1,0 +1,9 @@
+module __builtin__
+
+foreign handler RepeatCounted(inout pCount as number) as boolean binds to "MCScriptBuiltinRepeatCounted"
+foreign handler RepeatUpToCondition(in pCounter as number, in pLimit as number) as boolean binds to "MCScriptBuiltinRepeatUpToCondition"
+foreign handler RepeatUpToIterate(in pCounter as number, in pStep as number) as number binds to "MCScriptBuiltinRepeatUpToIterate"
+foreign handler RepeatDownToCondition(in pCounter as number, in pLimit as number) as boolean binds to "MCScriptBuiltinRepeatUpToCondition"
+foreign handler RepeatDownToIterate(in pCounter as number, in pStep as number) as number binds to "MCScriptBuiltinRepeatUpToIterate"
+
+end module

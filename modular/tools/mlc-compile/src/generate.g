@@ -459,6 +459,7 @@
     'rule' GenerateBody(Result, Context, if(Position, Condition, Consequent, Alternate)):
         EmitDeferLabel(-> AlternateLabel)
         EmitDeferLabel(-> EndIfLabel)
+        EmitPosition(Position)
         GenerateExpression(Context, Condition -> ResultRegister)
         EmitJumpIfFalse(ResultRegister, AlternateLabel)
         EmitDestroyRegister(ResultRegister)
@@ -471,6 +472,7 @@
     'rule' GenerateBody(Result, Context, repeatforever(Position, Body)):
         EmitDeferLabel(-> RepeatHead)
         EmitDeferLabel(-> RepeatTail)
+        EmitPosition(Position)
         EmitPushRepeatLabels(RepeatHead, RepeatTail)
         EmitResolveLabel(RepeatHead)
         GenerateBody(Result, Context, Body)
@@ -489,6 +491,7 @@
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatHead, RepeatTail)
 
+        EmitPosition(Position)
         EmitResolveLabel(RepeatHead)
         EmitCreateRegister(-> ContinueRegister)
         EmitBeginBuiltinInvoke("RepeatCounted", ContinueRegister)
@@ -507,6 +510,7 @@
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatHead, RepeatTail)
         
+        EmitPosition(Position)
         EmitResolveLabel(RepeatHead)
         GenerateExpression(Context, Condition -> ContinueRegister)
         EmitJumpIfFalse(ContinueRegister, RepeatTail)
@@ -521,6 +525,7 @@
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatHead, RepeatTail)
         
+        EmitPosition(Position)
         EmitResolveLabel(RepeatHead)
         GenerateExpression(Context, Condition -> ContinueRegister)
         EmitJumpIfTrue(ContinueRegister, RepeatTail)
@@ -540,6 +545,7 @@
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatNext, RepeatTail)
         
+        EmitPosition(Position)
         GenerateExpression(Context, Start -> CounterRegister)
         GenerateExpression(Context, Finish -> LimitRegister)
         (|
@@ -567,7 +573,6 @@
         EmitFetchVar(VarKind, CounterRegister, VarIndex)
         EmitBeginBuiltinInvoke("RepeatUpToIterate", CounterRegister)
         EmitContinueInvoke(CounterRegister)
-        EmitContinueInvoke(LimitRegister)
         EmitContinueInvoke(StepRegister)
         EmitEndInvoke()
 
@@ -587,6 +592,7 @@
         EmitDeferLabel(-> RepeatTail)
         EmitPushRepeatLabels(RepeatNext, RepeatTail)
         
+        EmitPosition(Position)
         GenerateExpression(Context, Start -> CounterRegister)
         GenerateExpression(Context, Finish -> LimitRegister)
         (|
@@ -614,7 +620,6 @@
         EmitFetchVar(VarKind, CounterRegister, VarIndex)
         EmitBeginBuiltinInvoke("RepeatDownToIterate", CounterRegister)
         EmitContinueInvoke(CounterRegister)
-        EmitContinueInvoke(LimitRegister)
         EmitContinueInvoke(StepRegister)
         EmitEndInvoke()
         EmitJump(RepeatHead)
@@ -628,20 +633,25 @@
         
     'rule' GenerateBody(Result, Context, nextrepeat(Position)):
         EmitCurrentRepeatLabels(-> Next, _)
+        EmitPosition(Position)
         EmitJump(Next)
         
     'rule' GenerateBody(Result, Context, exitrepeat(Position)):
         EmitCurrentRepeatLabels(-> _, Exit)
+        EmitPosition(Position)
         EmitJump(Exit)
         
     'rule' GenerateBody(Result, Context, return(Position, Value)):
+        EmitPosition(Position)
         GenerateExpression(Context, Value -> ReturnReg)
         EmitReturn(ReturnReg)
         
     'rule' GenerateBody(Result, Context, call(Position, Handler, Arguments)):
+        EmitPosition(Position)
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments)
 
     'rule' GenerateBody(Result, Context, put(Position, Source, Target)):
+        EmitPosition(Position)
         GenerateInvoke_EvaluateArgumentForIn(Context, Source)
         GenerateInvoke_EvaluateArgumentForOut(Context, Target)
         EmitGetRegisterAttachedToExpression(Source -> SrcReg)
@@ -651,7 +661,8 @@
         GenerateInvoke_FreeArgument(Source)
         GenerateInvoke_FreeArgument(Target)
 
-    'rule' GenerateBody(Result, Context, invoke(_, Invokes, Arguments)):
+    'rule' GenerateBody(Result, Context, invoke(Position, Invokes, Arguments)):
+        EmitPosition(Position)
         GenerateInvoke_GetExecuteSignature(Invokes -> Signature)
         GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
         GenerateInvoke_Execute(Context, Result, Invokes, Arguments)

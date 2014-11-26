@@ -188,6 +188,7 @@
     EmitAttachRegisterToExpression
     EmitDetachRegisterFromExpression
     EmitGetRegisterAttachedToExpression
+    EmitPosition
 
     ErrorsDidOccur
     Fatal_OutOfMemory
@@ -466,6 +467,7 @@
 'action' EmitStoreGlobal(Register: INT, Var: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
+'action' EmitPosition(Position: POS)
 
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)
 'action' EmitDetachRegisterFromExpression(EXPRESSION)

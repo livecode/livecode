@@ -125,6 +125,8 @@ void AddFile(const char *p_filename)
     t_name = strrchr(p_filename, '/');
     if (t_name == NULL)
         t_name = p_filename;
+    else
+        t_name += 1;
     t_new_file -> name = strdup(t_name);
     if (t_new_file -> name == NULL)
         Fatal_OutOfMemory();
