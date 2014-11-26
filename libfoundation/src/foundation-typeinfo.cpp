@@ -17,7 +17,7 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-#include <ffi/ffi.h>
+#include <ffi.h>
 
 #include "foundation-private.h"
 
