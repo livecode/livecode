@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "eventqueue.h"
 #include "debug.h"
 #include "group.h"
+#include "widget-events.h"
 
 #include "resolution.h"
 
@@ -1141,21 +1142,30 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 
 	if (t_target != nil)
 	{
-		switch(p_phase)
-		{
-			case kMCEventTouchPhaseBegan:
-				t_target -> message_with_args(MCM_touch_start, p_id);
-				break;
-			case kMCEventTouchPhaseMoved:
-				t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
-				break;
-			case kMCEventTouchPhaseEnded:
-				t_target -> message_with_args(MCM_touch_end, p_id);
-				break;
-			case kMCEventTouchPhaseCancelled:
-				t_target -> message_with_args(MCM_touch_release, p_id);
-				break;
-		}
+        // Touches on widgets are handled differently
+        if (t_target->gettype() == CT_WIDGET)
+        {
+            MCwidgeteventmanager->event_touch(reinterpret_cast<MCWidget*>(t_target),
+                                              p_id, p_phase, t_touch_loc.x, t_touch_loc.y);
+        }
+        else
+        {
+            switch(p_phase)
+            {
+                case kMCEventTouchPhaseBegan:
+                    t_target -> message_with_args(MCM_touch_start, p_id);
+                    break;
+                case kMCEventTouchPhaseMoved:
+                    t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
+                    break;
+                case kMCEventTouchPhaseEnded:
+                    t_target -> message_with_args(MCM_touch_end, p_id);
+                    break;
+                case kMCEventTouchPhaseCancelled:
+                    t_target -> message_with_args(MCM_touch_release, p_id);
+                    break;
+            }
+        }
 	}
 }
 

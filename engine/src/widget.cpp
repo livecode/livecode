@@ -27,6 +27,8 @@
 #include "globals.h"
 #include "context.h"
 
+#include "widget-events.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCGContextRef MCwidgetcontext;
@@ -50,21 +52,13 @@ MCObjectPropertyTable MCWidget::kPropertyTable =
 
 MCWidget::MCWidget(void)
 {
-	m_mouse_over = false;
-	m_mouse_x = INT32_MIN;
-	m_mouse_y = INT32_MAX;
-	m_button_state = 0;
-	m_modifier_state = 0;
+
 }
 
 MCWidget::MCWidget(const MCWidget& p_other)
 	: MCControl(p_other)
 {
-	m_mouse_over = false;
-	m_mouse_x = INT32_MIN;
-	m_mouse_y = INT32_MAX;
-	m_button_state = 0;
-	m_modifier_state = 0;
+
 }
 
 MCWidget::~MCWidget(void)
@@ -89,12 +83,12 @@ const MCObjectPropertyTable *MCWidget::getpropertytable(void) const
 void MCWidget::open(void)
 {
 	MCControl::open();
-    OnOpen();
+    MCwidgeteventmanager->event_open(this);
 }
 
 void MCWidget::close(void)
 {
-    OnClose();
+    MCwidgeteventmanager->event_close(this);
 	MCControl::close();
 }
 
@@ -102,28 +96,19 @@ void MCWidget::kfocus(void)
 {
 	MCControl::kfocus();
 	if (getstate(CS_KFOCUSED))
-		OnFocus();
+        MCwidgeteventmanager->event_kfocus(this);
 }
 
 void MCWidget::kunfocus(void)
 {
 	if (getstate(CS_KFOCUSED))
-		OnUnfocus();
+        MCwidgeteventmanager->event_kunfocus(this);
 	MCControl::kunfocus();
 }
 
 Boolean MCWidget::kdown(MCStringRef p_key_string, KeySym p_key)
 {
-	uint32_t t_modifiers;
-	t_modifiers = 0;
-	/*if ((MCmodifierstate & MS_CONTROL) != 0)
-		t_modifiers |= kMCWidgetModifierKeyControl;
-	if ((MCmodifierstate & MS_MOD1) != 0)
-		t_modifiers |= kMCWidgetModifierKeyOption;
-	if ((MCmodifierstate & MS_SHIFT) != 0)
-		t_modifiers |= kMCWidgetModifierKeyShift;*/
-
-	if (OnKeyPress(p_key_string, t_modifiers))
+	if (MCwidgeteventmanager->event_kdown(this, p_key_string, p_key))
 		return True;
 
 	return MCObject::kdown(p_key_string, p_key);
@@ -131,23 +116,22 @@ Boolean MCWidget::kdown(MCStringRef p_key_string, KeySym p_key)
 
 Boolean MCWidget::kup(MCStringRef p_key_string, KeySym p_key)
 {
-	return False;
+	if (MCwidgeteventmanager->event_kup(this, p_key_string, p_key))
+        return True;
+    
+    return False;
 }
 
 Boolean MCWidget::mdown(uint2 p_which)
 {
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mdown(p_which);
-	
-	if ((m_button_state & (1 << p_which)) != 0)
-		return True;
 
 	switch(getstack() -> gettool(this))
 	{
 	case T_BROWSE:
 		setstate(True, CS_MFOCUSED);
-		m_button_state |= 1 << p_which;
-		OnMouseDown(p_which);
+        MCwidgeteventmanager->event_mdown(this, p_which);
 		break;
 
 	case T_POINTER:
@@ -173,13 +157,9 @@ Boolean MCWidget::mup(uint2 p_which, bool p_release)
 	switch(getstack() -> gettool(this))
 	{
 	case T_BROWSE:
-		m_button_state &= ~(1 << p_which);
-		if (m_button_state == 0)
+        MCwidgeteventmanager->event_mup(this, p_which, p_release);
+		if (MCwidgeteventmanager->GetMouseButtonState() == 0)
 			setstate(False, CS_MFOCUSED);
-		if (!p_release)
-			OnMouseUp(p_which);
-		else
-			OnMouseRelease(p_which);
 		break;
 
 	case T_POINTER:
@@ -207,9 +187,6 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 	if (getstack() -> gettool(this) != T_BROWSE)
 		return MCControl::mfocus(p_x, p_y);
 	
-	if (m_button_state == 0 && !maskrect(MCU_make_rect(p_x, p_y, 1, 1)))
-		return False;
-	
 	// Update the mouse loc.
 	mx = p_x;
 	my = p_y;
@@ -219,65 +196,56 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 	t_mouse_x = p_x - getrect() . x;
 	t_mouse_y = p_y - getrect() . y;
 	
-	// Check to see if pos has changed
-	bool t_pos_changed;
-	t_pos_changed = false;
-	if (t_mouse_x != m_mouse_x || t_mouse_y != m_mouse_y)
-	{
-		m_mouse_x = t_mouse_x;
-		m_mouse_y = t_mouse_y;
-		t_pos_changed = true;
-	}
-		
-	// If we weren't previously under the mouse, we are now.
-	if (!m_mouse_over)
-	{
-		m_mouse_over = true;
-		OnMouseEnter();
-	}
-	
-	// Dispatch a position update if needed.
-	if (t_pos_changed)
-		OnMouseMove(t_mouse_x, t_mouse_y);
-	
-	return True;
+    return MCwidgeteventmanager->event_mfocus(this, p_x, p_y);
 }
 
 void MCWidget::munfocus(void)
 {
 	if (getstack() -> gettool(this) != T_BROWSE ||
-		(!m_mouse_over && m_button_state == 0))
+		(MCwidgeteventmanager->GetMouseWidget() != this
+         && MCwidgeteventmanager->GetMouseButtonState() == 0))
 	{
 		MCControl::munfocus();
 		return;
 	}
 	
-	if (m_button_state != 0)
-	{
-		for(int32_t i = 0; i < 3; i++)
-			if ((m_button_state & (1 << i)) != 0)
-			{
-				m_button_state &= ~(1 << i);
-				OnMouseRelease(i);
-			}
-	}
-	
-	m_mouse_over = false;
-	OnMouseLeave();
+    MCwidgeteventmanager->event_munfocus(this);
+}
+
+void MCWidget::mdrag(void)
+{
+    MCwidgeteventmanager->event_mdrag(this);
 }
 
 Boolean MCWidget::doubledown(uint2 p_which)
 {
-	return False;
+    return MCwidgeteventmanager->event_doubledown(this, p_which);
 }
 
 Boolean MCWidget::doubleup(uint2 p_which)
 {
-	return False;
+    return MCwidgeteventmanager->event_doubleup(this, p_which);
+}
+
+MCObject* MCWidget::hittest(int32_t x, int32_t y)
+{
+    bool t_inside = false;
+    MCRectangle t_rect;
+    t_rect = MCU_make_rect(x, y, 1, 1);
+    
+    // Start with a basic (fast-path) bounds test
+    OnBoundsTest(t_rect, t_inside);
+    
+    // If within bounds, do a more thorough hit test
+    if (t_inside)
+        OnHitTest(t_rect, t_inside);
+    
+    return t_inside ? this : nil;
 }
 
 void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
 {
+    MCwidgeteventmanager->event_timer(this, p_message, p_parameters);
 }
 
 void MCWidget::setrect(const MCRectangle& p_rectangle)
@@ -287,11 +255,12 @@ void MCWidget::setrect(const MCRectangle& p_rectangle)
 	
 	rect = p_rectangle;
 	
-	OnReshape(t_old_rect);
+    MCwidgeteventmanager->event_setrect(this, t_old_rect);
 }
 
 void MCWidget::recompute(void)
 {
+    MCwidgeteventmanager->event_recompute(this);
 }
 
 static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
@@ -577,7 +546,7 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	MCGContextSave(MCwidgetcontext);
 	MCGContextSetShouldAntialias(MCwidgetcontext, true);
 	MCGContextTranslateCTM(MCwidgetcontext, rect . x, rect . y);
-	OnPaint();
+    MCwidgeteventmanager->event_draw(dc, dirty, p_isolated, p_sprite);
 	MCGContextRestore(MCwidgetcontext);
 	MCwidgetcontext = nil;
 	
@@ -602,90 +571,275 @@ Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCWidget::OnOpen(void)
+bool MCWidget::handlesMouseDown() const
 {
-    CallEvent("open", nil);
+    return true;
 }
 
-void MCWidget::OnClose(void)
+bool MCWidget::handlesMouseUp() const
 {
-    CallEvent("close", nil);
+    return true;
 }
 
-void MCWidget::OnReshape(const MCRectangle& p_old_rect)
+bool MCWidget::handlesMouseRelease() const
 {
-	MCParameter t_param;
-	t_param . setrect_argument(p_old_rect);
-	
-	CallEvent("reshape", &t_param);
+    return true;
 }
 
-void MCWidget::OnFocus(void)
+bool MCWidget::handlesKeyPress() const
 {
+    return true;
 }
 
-void MCWidget::OnUnfocus(void)
+bool MCWidget::handlesTouches() const
 {
+    return false;
 }
 
-void MCWidget::OnMouseEnter(void)
+bool MCWidget::wantsClicks() const
 {
-	CallEvent("mouseEnter", nil);
+    return true;
 }
 
-void MCWidget::OnMouseMove(int32_t x, int32_t y)
+bool MCWidget::wantsTouches() const
 {
-	MCParameter t_param_1, t_param_2;
-	t_param_1 . setn_argument(x);
-	t_param_2 . setn_argument(y);
-	t_param_1 . setnext(&t_param_2);
-	CallEvent("mouseMove", &t_param_1);
+    return false;
 }
 
-void MCWidget::OnMouseLeave(void)
+bool MCWidget::wantsDoubleClicks() const
 {
-	CallEvent("mouseLeave", nil);
+    return true;
 }
 
-void MCWidget::OnMouseDown(uint32_t p_button)
+bool MCWidget::waitForDoubleClick() const
 {
-	MCParameter t_param;
-	t_param . setn_argument(p_button);
-	CallEvent("mouseDown", &t_param);
+    return false;
 }
 
-void MCWidget::OnMouseUp(uint32_t p_button)
+bool MCWidget::isDragSource() const
 {
-	MCParameter t_param;
-	t_param . setn_argument(p_button);
-	CallEvent("mouseUp", &t_param);
-}
-
-void MCWidget::OnMouseRelease(uint32_t p_button)
-{
-	MCParameter t_param;
-	t_param . setn_argument(p_button);
-	CallEvent("mouseRelease", &t_param);
-}
-
-bool MCWidget::OnKeyPress(MCStringRef key, uint32_t modifiers)
-{
-	return false;
-}
-
-bool MCWidget::OnHitTest(const MCRectangle& region)
-{
-	return false;
-}
-
-void MCWidget::OnPaint(void)
-{
-	CallEvent("paint", nil);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCWidget::CallEvent(const char *p_name, MCParameter *p_parameters)
+void MCWidget::OnOpen()
+{
+    fprintf(stderr, "MCWidget::OnOpen\n");
+}
+
+void MCWidget::OnClose()
+{
+    fprintf(stderr, "MCWidget::OnClose\n");
+}
+
+void MCWidget::OnPaint(class MCPaintContext& p_context)
+{
+    fprintf(stderr, "MCWidget::OnPaint\n");
+}
+
+void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
+{
+    fprintf(stderr, "MCWidget::OnGeometryChanged\n");
+}
+
+void MCWidget::OnVisibilityChanged(bool p_visible)
+{
+    fprintf(stderr, "MCWidget::OnVisibilityChanged\n");
+}
+
+void MCWidget::OnHitTest(const MCRectangle& p_intersect, bool& r_hit)
+{
+    fprintf(stderr, "MCWidget::OnHitTest\n");
+    r_hit = maskrect(p_intersect);
+}
+
+void MCWidget::OnBoundsTest(const MCRectangle& p_intersect, bool& r_hit)
+{
+    fprintf(stderr, "MCWidget::OnBoundsTest\n");
+    r_hit = maskrect(p_intersect);
+}
+
+void MCWidget::OnSave(class MCWidgetSerializer& p_stream)
+{
+    fprintf(stderr, "MCWidget::OnSave\n");
+}
+
+void MCWidget::OnLoad(class MCWidgetSerializer& p_stream)
+{
+    fprintf(stderr, "MCWidget::OnLoad\n");
+}
+
+void MCWidget::OnCreate()
+{
+    fprintf(stderr, "MCWidget::OnCreate\n");
+}
+
+void MCWidget::OnDestroy()
+{
+    fprintf(stderr, "MCWidget::OnDestroy\n");
+}
+
+void MCWidget::OnParentPropChanged()
+{
+    fprintf(stderr, "MCWidget::OnParentPropChanged\n");
+}
+
+void MCWidget::OnMouseEnter()
+{
+    fprintf(stderr, "MCWidget::OnMouseEnter\n");
+}
+
+void MCWidget::OnMouseLeave()
+{
+    fprintf(stderr, "MCWidget::OnMouseLeave\n");
+}
+
+void MCWidget::OnMouseMove(coord_t p_x, coord_t p_y)
+{
+    fprintf(stderr, "MCWidget::OnMouseMove\n");
+}
+
+void MCWidget::OnMouseCancel(uinteger_t p_button)
+{
+    fprintf(stderr, "MCWidget::OnMouseCancel\n");
+}
+
+void MCWidget::OnMouseDown(coord_t p_x, coord_t p_y , uinteger_t p_button)
+{
+    fprintf(stderr, "MCWidget::OnMouseDown\n");
+}
+
+void MCWidget::OnMouseUp(coord_t p_x, coord_t p_y, uinteger_t p_button)
+{
+    fprintf(stderr, "MCWidget::OnMouseUp\n");
+}
+
+void MCWidget::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y)
+{
+    fprintf(stderr, "MCWidget::OnMouseScroll\n");
+}
+
+void MCWidget::OnMouseStillDown(uinteger_t p_button, real32_t p_duration)
+{
+    fprintf(stderr, "MCWidget::OnMouseStillDown\n");
+}
+
+void MCWidget::OnMouseHover(coord_t p_x, coord_t p_y, real32_t p_duration)
+{
+    fprintf(stderr, "MCWidget::OnMouseHover\n");
+}
+
+void MCWidget::OnMouseStillHover(coord_t p_x, coord_t p_y, real32_t p_duration)
+{
+    fprintf(stderr, "MCWidget::OnMouseStillHover\n");
+}
+
+void MCWidget::OnMouseCancelHover(real32_t p_duration)
+{
+    fprintf(stderr, "MCWidget::OnMouseCancelHover\n");
+}
+
+void MCWidget::OnTouchStart(uinteger_t p_id, coord_t p_x, coord_t p_y, real32_t p_pressure, real32_t p_radius)
+{
+    fprintf(stderr, "MCWidget::OnTouchStart\n");
+}
+
+void MCWidget::OnTouchMove(uinteger_t p_id, coord_t p_x, coord_t p_y, real32_t p_pressure, real32_t p_radius)
+{
+    fprintf(stderr, "MCWidget::OnTouchMove\n");
+}
+
+void MCWidget::OnTouchEnter(uinteger_t p_id)
+{
+    fprintf(stderr, "MCWidget::OnTouchEnter\n");
+}
+
+void MCWidget::OnTouchLeave(uinteger_t p_id)
+{
+    fprintf(stderr, "MCWidget::OnTouchLeave\n");
+}
+
+void MCWidget::OnTouchFinish(uinteger_t p_id, coord_t p_x, coord_t p_y)
+{
+    fprintf(stderr, "MCWidget::OnTouchFinish\n");
+}
+
+void MCWidget::OnTouchCancel(uinteger_t p_id)
+{
+    fprintf(stderr, "MCWidget::OnTouchCancel\n");
+}
+
+void MCWidget::OnFocusEnter()
+{
+    fprintf(stderr, "MCWidget::OnFocusEnter\n");
+}
+
+void MCWidget::OnFocusLeave()
+{
+    fprintf(stderr, "MCWidget::OnFocusLEave\n");
+}
+
+void MCWidget::OnKeyPress(MCStringRef p_keytext)
+{
+    fprintf(stderr, "MCWidget::OnKeyPress\n");
+}
+
+void MCWidget::OnModifiersChanged(uinteger_t p_modifier_mask)
+{
+    fprintf(stderr, "MCWidget::OnModifiersChanged\n");
+}
+
+void MCWidget::OnActionKeyPress(MCStringRef p_keyname)
+{
+    fprintf(stderr, "MCWidget::OnActionKeyPress\n");
+}
+
+void MCWidget::OnDragEnter(bool& r_accept)
+{
+    fprintf(stderr, "MCWidget::OnDragEnter\n");
+    r_accept = true;
+}
+
+void MCWidget::OnDragLeave()
+{
+    fprintf(stderr, "MCWidget::OnDragLeave\n");
+}
+
+void MCWidget::OnDragMove(coord_t p_x, coord_t p_y)
+{
+    fprintf(stderr, "MCWidget::OnDragMove\n");
+}
+
+void MCWidget::OnDragDrop()
+{
+    fprintf(stderr, "MCWidget::OnDragDrop\n");
+}
+
+void MCWidget::OnDragStart(bool& r_accept)
+{
+    fprintf(stderr, "MCWidget::OnDragStart\n");
+    r_accept = true;
+}
+
+void MCWidget::OnDragFinish()
+{
+    fprintf(stderr, "MCWidget::OnDragFinish\n");
+}
+
+void MCWidget::OnClick(coord_t p_x, coord_t p_y, uinteger_t p_button, uinteger_t p_count)
+{
+    fprintf(stderr, "MCWidget::OnClick\n");
+}
+
+void MCWidget::OnDoubleClick(coord_t p_x, coord_t p_y, uinteger_t p_button)
+{
+    fprintf(stderr, "MCWidget::OnDoubleClick\n");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCWidget::CallHandler(MCNameRef p_name, MCParameter *p_parameters)
 {
 	MCWidget *t_old_widget_object;
 	t_old_widget_object = MCwidgetobject;
