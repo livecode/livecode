@@ -181,6 +181,13 @@ struct MCScriptImportedDefinition
     MCScriptDefinition *definition;
 };
 
+struct MCScriptPosition
+{
+    uindex_t address;
+    uindex_t file;
+    uindex_t line;
+};
+
 struct MCScriptDefinition
 {
     MCScriptDefinitionKind kind;
@@ -314,6 +321,15 @@ struct MCScriptModule: public MCScriptObject
     // The bytecode used by the module.
     uint8_t *bytecode;
     uindex_t bytecode_count;
+    
+    // The following information may not be present if debugging info has been
+    // stripped.
+    MCNameRef *definition_names;
+    uindex_t definition_name_count;
+    MCNameRef *source_files;
+    uindex_t source_file_count;
+    MCScriptPosition *positions;
+    uindex_t position_count;
     
     // After a module has been validated and had its dependencies resolved, this
     // var is true - not pickled

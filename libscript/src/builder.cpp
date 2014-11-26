@@ -16,6 +16,8 @@ struct MCScriptBytecodeInstruction
     uindex_t arity;
     uindex_t operands;
     uindex_t address;
+    uindex_t file;
+    uindex_t line;
 };
 
 struct MCScriptModuleBuilder
@@ -23,9 +25,6 @@ struct MCScriptModuleBuilder
     bool valid;
     
     MCScriptModule module;
-
-    MCNameRef *definition_names;
-    uindex_t definition_name_count;
     
     uindex_t current_handler;
     uindex_t current_param_count;
@@ -44,6 +43,9 @@ struct MCScriptModuleBuilder
     uindex_t instruction_count;
     uindex_t *operands;
     uindex_t operand_count;
+    
+    uindex_t current_file;
+    uindex_t current_line;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,18 +56,18 @@ static void __emit_constant(MCScriptModuleBuilderRef self, MCValueRef p_constant
 
 static bool __append_definition_name(MCScriptModuleBuilderRef self, MCNameRef p_name)
 {
-    if (!MCMemoryResizeArray(self -> definition_name_count + 1, self -> definition_names, self -> definition_name_count))
+    if (!MCMemoryResizeArray(self -> module . definition_name_count + 1, self -> module . definition_names, self -> module . definition_name_count))
         return false;
     
-    self -> definition_names[self -> definition_name_count - 1] = MCValueRetain(p_name);
+    self -> module . definition_names[self -> module . definition_name_count - 1] = MCValueRetain(p_name);
     
     return true;
 }
 
 static void __assign_definition_name(MCScriptModuleBuilderRef self, uindex_t p_index, MCNameRef p_name)
 {
-    MCValueRelease(self -> definition_names[p_index]);
-    self -> definition_names[p_index] = MCValueRetain(p_name);
+    MCValueRelease(self -> module . definition_names[p_index]);
+    self -> module . definition_names[p_index] = MCValueRetain(p_name);
 }
 
 void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptModuleBuilderRef& r_builder)
@@ -87,8 +89,8 @@ void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptMo
     
     self -> current_syntax = UINDEX_MAX;
     
-    self -> definition_names = nil;
-    self -> definition_name_count = 0;
+    self -> current_file = 0;
+    self -> current_line = 0;
     
     r_builder = self;
 }
@@ -122,10 +124,6 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
         t_success = false;
     
     MCScriptReleaseRawModule(&self -> module);
-    
-    for(uindex_t i = 0; i < self -> definition_name_count; i++)
-        MCValueRelease(self -> definition_names[i]);
-    MCMemoryDeleteArray(self -> definition_names);
     
     MCMemoryDeleteArray(self -> labels);
     MCMemoryDeleteArray(self -> instructions);
@@ -172,7 +170,7 @@ void MCScriptAddExportToModule(MCScriptModuleBuilderRef self, uindex_t p_definit
         return;
     }
     
-    self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . name = MCValueRetain(self -> definition_names[p_definition]);
+    self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . name = MCValueRetain(self -> module . definition_names[p_definition]);
     self -> module  . exported_definitions[self -> module . exported_definition_count - 1] . index = p_definition;
     
     // If the definition is a type, then make sure we make it a 'defined' type otherwise
@@ -972,6 +970,9 @@ static void __begin_instruction(MCScriptModuleBuilderRef self, MCScriptBytecodeO
         return;
     }
     
+    self -> instructions[self -> instruction_count - 1] . file = self -> current_file;
+    self -> instructions[self -> instruction_count - 1] . line = self -> current_line;
+    
     self -> instructions[self -> instruction_count - 1] . operation = p_operation;
     self -> instructions[self -> instruction_count - 1] . arity = 0;
     self -> instructions[self -> instruction_count - 1] . operands = self -> operand_count;
@@ -1011,6 +1012,30 @@ static void __emit_instruction(MCScriptModuleBuilderRef self, MCScriptBytecodeOp
     va_end(t_args);
     
     __end_instruction(self);
+}
+
+static void __emit_position(MCScriptModuleBuilderRef self, uindex_t p_address, uindex_t p_file, uindex_t p_line)
+{
+    MCScriptPosition *t_last_pos;
+    if (self -> module . position_count > 0)
+        t_last_pos = &self -> module . positions[self -> module . position_count - 1];
+    else
+        t_last_pos = nil;
+    
+    if (t_last_pos != nil &&
+        t_last_pos -> file == p_file &&
+        t_last_pos -> line == p_line)
+        return;
+    
+    if (!MCMemoryResizeArray(self -> module . position_count + 1, self -> module . positions, self -> module . position_count))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    self -> module . positions[self -> module . position_count - 1] . address = p_address;
+    self -> module . positions[self -> module . position_count - 1] . address = p_file;
+    self -> module . positions[self -> module . position_count - 1] . address = p_line;
 }
 
 void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
@@ -1103,6 +1128,8 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         t_arity = self -> instructions[i] . arity;
         t_operands = &self -> operands[self -> instructions[i] . operands];
         
+        __emit_position(self, t_address, self -> instructions[i] . file, self -> instructions[i] . line);
+        
         __emit_bytecode_byte(self, t_op | (MCMin(t_arity, 15) << 4));
         
         if (t_arity >= 15)
@@ -1110,8 +1137,6 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         
         for(uindex_t j = 0; j < t_arity; j++)
             __emit_bytecode_uint(self, t_operands[j]);
-        
-        MCLog("[%06d] %d(%d)", t_address, t_op, t_arity);
     }
     
     t_handler -> finish_address = self -> module . bytecode_count;
@@ -1328,6 +1353,30 @@ void MCScriptEmitStoreGlobalInModule(MCScriptModuleBuilderRef self, uindex_t p_s
         return;
     
     __emit_instruction(self, kMCScriptBytecodeOpStoreGlobal, 2, p_src_reg, p_glob_index);
+}
+
+void MCScriptEmitPositionInModule(MCScriptModuleBuilderRef self, MCNameRef p_file, uindex_t p_line)
+{
+    if (self == nil || !self -> valid)
+        return;
+
+    self -> current_line = p_line;
+    
+    for(uindex_t i = 0; i < self -> module . source_file_count; i++)
+        if (MCNameIsEqualTo(p_file, self -> module . source_files[i]))
+        {
+            self -> current_file = i;
+            return;
+        }
+    
+    if (!MCMemoryResizeArray(self -> module . source_file_count + 1, self -> module . source_files, self -> module . source_file_count))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    self -> module . source_files[self -> module . source_file_count - 1] = MCValueRetain(p_file);
+    self -> current_file = self -> module . source_file_count - 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

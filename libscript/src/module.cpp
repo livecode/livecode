@@ -67,6 +67,12 @@ MC_PICKLE_BEGIN_RECORD(MCScriptSyntaxMethod)
     MC_PICKLE_ARRAY_OF_UINDEX(arguments, argument_count)
 MC_PICKLE_END_RECORD()
 
+MC_PICKLE_BEGIN_RECORD(MCScriptPosition)
+    MC_PICKLE_UINDEX(address)
+    MC_PICKLE_UINDEX(file)
+    MC_PICKLE_UINDEX(line)
+MC_PICKLE_END_RECORD()
+
 MC_PICKLE_BEGIN_RECORD(MCScriptExternalDefinition)
     MC_PICKLE_UINDEX(index)
 MC_PICKLE_END_RECORD()
@@ -136,6 +142,10 @@ MC_PICKLE_BEGIN_RECORD(MCScriptModule)
     MC_PICKLE_ARRAY_OF_RECORD(MCScriptImportedDefinition, imported_definitions, imported_definition_count)
     MC_PICKLE_ARRAY_OF_VARIANT(MCScriptDefinition, definitions, definition_count)
     MC_PICKLE_ARRAY_OF_BYTE(bytecode, bytecode_count)
+
+    MC_PICKLE_ARRAY_OF_NAMEREF(definition_names, definition_name_count)
+    MC_PICKLE_ARRAY_OF_NAMEREF(source_files, source_file_count)
+    MC_PICKLE_ARRAY_OF_RECORD(MCScriptPosition, positions, position_count)
 MC_PICKLE_END_RECORD()
 
 ////////////////////////////////////////////////////////////////////////////////
