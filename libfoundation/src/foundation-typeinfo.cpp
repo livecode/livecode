@@ -661,7 +661,7 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
 	/* If the p_field_count < 0 then the p_fields are expected to be
 	 * terminated by a custodian with name = nil. */
 	if (p_field_count < 0)
-		for (p_field_count = 0; p_fields[p_field_count].name != nil; ++p_field_count);
+		for (p_field_count = 0; p_fields[p_field_count].type != nil; ++p_field_count);
 
     if (!MCMemoryNewArray(p_field_count, self -> handler . fields))
     {
