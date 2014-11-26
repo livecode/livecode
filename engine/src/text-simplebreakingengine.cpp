@@ -24,11 +24,23 @@
 #include "text-run.h"
 
 
+// Non-breaking space characters
+enum
+{
+    kMCCodepointNBSP        = 0x00A0,       // Non-breaking space
+    kMCCodepointFigureSpace = 0x2007,       // Digit-sized space
+    kMCCodepointNNBSP       = 0x202F        // Narrow non-breaking space
+};
+
+
 MCTextSimpleBreakingEngine::~MCTextSimpleBreakingEngine()
 {
     ;
 }
 
+// Yes, this algorithm is about as "simple" as a text breaking algorithm can get
+// without producing some very strange-looking results... "complex" would be a
+// proper hyphenation engine.
 bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_available_width, bool p_start_of_line, MCTextBlock*& r_last_fit)
 {
     // Create a word break iterator to find potential breaking boundaries
@@ -97,6 +109,20 @@ bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_avai
             if (t_break_pos > t_block_range.offset + t_block_range.length)
                 break;
             
+            // Advance past any non-breaking spaces and punctuation characters.
+            // All of the interesting codepoints are represented using a single
+            // codeunit so use them for efficiency.
+            codepoint_t t_codepoint;
+            t_codepoint = MCStringGetCharAtIndex(p_blocks->fetchStringRef(), t_break_pos);
+            
+            while (t_break_pos < t_block_range.offset + t_block_range.length
+                   && (t_codepoint == kMCCodepointNBSP || t_codepoint == kMCCodepointNNBSP
+                       || t_codepoint == kMCCodepointFigureSpace
+                       || MCUnicodeIsPunctuation(t_codepoint)))
+            {
+                t_codepoint = MCStringGetCharAtIndex(p_blocks->fetchStringRef(), ++t_break_pos);
+            }
+            
             // Can we fit this sequence of words?
             // We always accept at least one word to avoid the degenerate case
             // of having a word that is longer than a whole line causing an
@@ -106,6 +132,16 @@ bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_avai
             if (t_subwidth > t_remaining_width && !p_start_of_line)
             {
                 t_break_pos = t_last_break_pos;
+                
+                // We have found the limit for what will fit. Accept any
+                // trailing whitespace as it can be compressed to zero length
+                // at the end of a line.
+                while (t_break_pos < t_block_range.offset + t_block_range.length
+                       && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_blocks->fetchStringRef(), t_break_pos)))
+                {
+                    t_break_pos++;
+                }
+                
                 break;
             }
             
@@ -119,8 +155,14 @@ bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_avai
         // Did any of the words fit?
         if (t_break_pos != t_offset)
         {
-            // Block will have to be split. Create a new one.
-            t_block->splitAfter(t_break_pos - t_offset);
+            // Check whether we need to split in the middle of a block (this
+            // might not be the case if we ignored trailing whitespace in the
+            // block).
+            if (t_break_pos < t_block_range.offset + t_block_range.length)
+            {
+                // Block will have to be split. Create a new one.
+                t_block->splitAfter(t_break_pos - t_offset);
+            }
             
             // Increment the pointer to point to the block that doesn't fit
             t_block = t_block->next();
