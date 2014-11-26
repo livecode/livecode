@@ -1530,10 +1530,6 @@ void MCInterfaceExecResetTemplate(MCExecContext& ctxt, Reset_type p_type)
 			delete MCtemplatevideo;
 			MCtemplatevideo = new MCVideoClip;
 			break;
-        case RT_TEMPLATE_WIDGET:
-            delete MCtemplatewidget;
-            MCtemplatewidget = new MCWidget;
-            break;
 		default:
 			break;
 	}
@@ -3060,8 +3056,6 @@ MCControl* MCInterfaceExecCreateControlGetObject(MCExecContext& ctxt, int p_type
 		return MCtemplateeps;
 	case CT_FIELD:
 		return MCtemplatefield;
-    case CT_WIDGET:
-        return MCtemplatewidget;
 	default:
 		return NULL;
 	}
@@ -3101,6 +3095,30 @@ void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, i
 	MCAutoValueRef t_id;
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
+}
+
+void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MCNameRef p_kind, MCGroup* p_container, bool p_force_invisible)
+{
+    if (MCdefaultstackptr->islocked())
+    {
+        ctxt . LegacyThrow(EE_CREATE_LOCKED);
+        return;
+    }
+    
+    MCWidget* t_widget = MCWidget::createInstanceOfKind(p_kind);
+    if (t_widget == NULL)
+        return;
+    Boolean wasvisible = t_widget->isvisible();
+    if (p_force_invisible)
+        t_widget->setflag(!p_force_invisible, F_VISIBLE);
+    t_widget->setparent(p_container);
+    
+    if (p_new_name != nil)
+        t_widget->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
+    
+    MCAutoValueRef t_id;
+    t_widget->names(P_LONG_ID, &t_id);
+    ctxt . SetItToValue(*t_id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

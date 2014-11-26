@@ -495,6 +495,7 @@ class MCCreate : public MCStatement
 	Chunk_term otype;
 	MCExpression *newname;
 	MCExpression *file;
+    MCExpression *kind;
     MCChunk *container;
     Boolean directory: 1;
     Boolean visible: 1;
@@ -507,6 +508,7 @@ public:
 		otype = CT_UNDEFINED;
 		newname = NULL;
 		file = NULL;
+        kind = NULL;
 		container = NULL;
 		directory = False;
 		alias = False;

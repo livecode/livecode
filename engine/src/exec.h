@@ -3025,6 +3025,7 @@ void MCInterfaceExecCreateScriptOnlyStack(MCExecContext& ctxt, MCStringRef p_new
 void MCInterfaceExecCreateStackWithGroup(MCExecContext& ctxt, MCGroup *p_group_to_copy, MCStringRef p_new_name, bool p_force_invisible);
 void MCInterfaceExecCreateCard(MCExecContext& ctxt, MCStringRef p_new_name, bool p_force_invisible);
 void MCInterfaceExecCreateControl(MCExecContext& ctxt, MCStringRef p_new_name, int p_type, MCGroup *p_container, bool p_force_invisible);
+void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MCNameRef p_kind, MCGroup *p_container, bool p_force_invisible);
 
 void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p_new_name, bool p_force_invisible);
 

@@ -198,7 +198,6 @@ extern MCScrollbar *MCtemplatescrollbar;
 extern MCPlayer *MCtemplateplayer;
 extern MCImage *MCtemplateimage;
 extern MCField *MCtemplatefield;
-extern MCWidget *MCtemplatewidget;
 
 extern MCImage *MCmagimage;
 extern MCMagnify *MCmagnifier;

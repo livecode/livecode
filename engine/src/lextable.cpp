@@ -1658,7 +1658,6 @@ LT factor_table[] =
         {"templatescrollbar", TT_FUNCTION, F_TEMPLATE_SCROLLBAR},
         {"templatestack", TT_FUNCTION, F_TEMPLATE_STACK},
         {"templatevideoclip", TT_FUNCTION, F_TEMPLATE_VIDEO_CLIP},
-        {"templatewidget", TT_FUNCTION, F_TEMPLATE_WIDGET},
         {"tempname", TT_FUNCTION, F_TEMP_NAME},
 		// MW-2011-11-24: [[ Nice Folders ]] The adjective for 'the temporary folder'.
 		{"temporary", TT_PROPERTY, P_TEMPORARY_FOLDER},
@@ -1995,7 +1994,6 @@ static LT reset_table[] =
         {"templateplayer", TT_UNDEFINED, RT_TEMPLATE_PLAYER},
         {"templatescrollbar", TT_UNDEFINED, RT_TEMPLATE_SCROLLBAR},
         {"templatestack", TT_UNDEFINED, RT_TEMPLATE_STACK},
-        {"templatewidget", TT_UNDEFINED, RT_TEMPLATE_WIDGET},
         {"templatevideoclip", TT_UNDEFINED, RT_TEMPLATE_VIDEO_CLIP},
     };
 

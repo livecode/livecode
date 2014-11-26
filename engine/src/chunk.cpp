@@ -582,7 +582,6 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				case F_TEMPLATE_PLAYER:
 				case F_TEMPLATE_GRAPHIC:
 				case F_TEMPLATE_EPS:
-                case F_TEMPLATE_WIDGET:
 					desttype = (Dest_type)(te->which - F_TEMPLATE_BUTTON + DT_BUTTON);
 					break;
 				case F_SELECTED_OBJECT:
@@ -1546,9 +1545,6 @@ Exec_stat MCChunk::getobj_legacy(MCExecPoint &ep, MCObject *&objptr,
 		case DT_EPS:
 			objptr = MCtemplateeps;
 			return ES_NORMAL;
-        case DT_WIDGET:
-            objptr = MCtemplatewidget;
-            return ES_NORMAL;
 		case DT_ERROR:
 			objptr = MCerrorptr;
 			break;

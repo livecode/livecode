@@ -879,7 +879,8 @@ bool MCCopyCmd::iscut(void) const
 
 MCCreate::~MCCreate()
 {
-	delete newname;
+    delete kind;
+    delete newname;
 	delete file;
 	delete container;
 }
@@ -920,7 +921,7 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
 		case CT_PLAYER:
 		case CT_GRAPHIC:
 		case CT_EPS:
-        case CT_WIDGET:
+            case CT_WIDGET:
 			otype = (Chunk_term)te->which;
 			break;
 		case CT_ALIAS:
@@ -992,6 +993,19 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
             }
         }
         else
+        {
+            MCperror -> add(PE_CREATE_BADTYPE, sp);
+            return PS_ERROR;
+        }
+    }
+    else if (otype == CT_WIDGET)
+    {
+        if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) != PS_NORMAL)
+        {
+            MCperror -> add(PE_CREATE_BADTYPE, sp);
+            return PS_ERROR;
+        }
+        if (sp.parseexp(False, True, &kind) != PS_NORMAL)
         {
             MCperror -> add(PE_CREATE_BADTYPE, sp);
             return PS_ERROR;
@@ -1266,6 +1280,29 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
             case CT_CARD:
                 MCInterfaceExecCreateCard(ctxt, *t_new_name, visible == False);
                 break;
+            case CT_WIDGET:
+            {
+                MCNewAutoNameRef t_kind;
+                MCObject *parent = nil;
+                kind->eval_typed(ctxt, kMCExecValueTypeNameRef, &(&t_kind));
+                if (ctxt.HasError())
+                {
+                    ctxt . LegacyThrow(EE_CREATE_BADEXP);
+                    return;
+                }
+                if (container != nil)
+                {
+                    uint32_t parid;
+                    
+                    if (!container->getobj(ctxt, parent, parid, True) || parent->gettype() != CT_GROUP)
+                    {
+                        ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
+                        return;
+                    }
+                }
+                MCInterfaceExecCreateWidget(ctxt, *t_new_name, *t_kind, (MCGroup *)parent, visible == False);
+                break;
+            }
             default:
             {
                 MCObject *parent = nil;

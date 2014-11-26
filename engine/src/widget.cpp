@@ -55,7 +55,7 @@ MCWidget *MCwidgetobject;
 
 MCPropertyInfo MCWidget::kProperties[] =
 {
-	DEFINE_RW_OBJ_PROPERTY(P_KIND, Name, MCWidget, Kind)
+	DEFINE_RO_OBJ_PROPERTY(P_KIND, Name, MCWidget, Kind)
 };
 
 MCObjectPropertyTable MCWidget::kPropertyTable =
@@ -67,22 +67,52 @@ MCObjectPropertyTable MCWidget::kPropertyTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCWidget::MCWidget(void) :
+MCWidget::MCWidget(MCNameRef p_kind) :
+  m_kind(p_kind),
+  m_instance(nil),
   m_native_layer(nil)
 {
-
+    ;
 }
 
 MCWidget::MCWidget(const MCWidget& p_other) :
   MCControl(p_other),
+  m_kind(MCValueRetain(p_other.m_kind)),
+  m_instance(nil),
   m_native_layer(nil)
 {
-    m_native_layer = createNativeLayer();
-    m_native_layer->OnAttach();
+    ;
 }
 
 MCWidget::~MCWidget(void)
 {
+    ;
+}
+
+MCWidget* MCWidget::createInstanceOfKind(MCNameRef p_kind)
+{
+    // Attempt to look-up the module for the given kind and ensure that all of
+    // its dependencies have been satisfied.
+    MCScriptModuleRef t_module;
+    if (!MCScriptLookupModule(p_kind, t_module) || !MCScriptEnsureModuleIsUsable(t_module))
+        return nil;
+    
+    // Create a new instance of the given module
+    MCScriptInstanceRef t_instance;
+    if (!MCScriptCreateInstanceOfModule(t_module, t_instance))
+        t_instance = nil;
+    
+    MCScriptReleaseModule(t_module);
+    
+    if (t_instance == nil)
+        return nil;
+    
+    // Create the widget and set its instance
+    MCWidget* t_widget;
+    t_widget = new MCWidget(p_kind);
+    t_widget->m_instance = t_instance;
+    
+    return t_widget;
 }
 
 Chunk_term MCWidget::gettype(void) const
@@ -673,7 +703,7 @@ void MCWidget::OnOpen()
     if (m_native_layer)
         m_native_layer->OnOpen();
     
-    fprintf(stderr, "MCWidget::OnOpen\n");
+    CallHandler(MCNAME("OnOpen"), nil, 0);
 }
 
 void MCWidget::OnClose()
@@ -681,7 +711,7 @@ void MCWidget::OnClose()
     if (m_native_layer)
         m_native_layer->OnClose();
     
-    fprintf(stderr, "MCWidget::OnClose\n");
+    CallHandler(MCNAME("OnClose"), nil, 0);
 }
 
 void MCWidget::OnAttach()
@@ -689,7 +719,7 @@ void MCWidget::OnAttach()
     if (m_native_layer)
         m_native_layer->OnAttach();
     
-    fprintf(stderr, "MCWidget::OnAttach\n");
+    CallHandler(MCNAME("OnAttach"), nil, 0);
 }
 
 void MCWidget::OnDetach()
@@ -697,7 +727,7 @@ void MCWidget::OnDetach()
     if (m_native_layer)
         m_native_layer->OnDetach();
     
-    fprintf(stderr, "MCWidget::OnDetach\n");
+    CallHandler(MCNAME("OnDetach"), nil, 0);
 }
 
 void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
@@ -721,7 +751,12 @@ void MCWidget::OnVisibilityChanged(bool p_visible)
     if (m_native_layer)
         m_native_layer->OnVisibilityChanged(p_visible);
     
-    fprintf(stderr, "MCWidget::OnVisibilityChanged\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    
+    MCBooleanCreateWithBool(p_visible, reinterpret_cast<MCBooleanRef&>(t_params[0]));
+    
+    CallHandler(MCNAME("OnVisibilityChanged"), nil, 0);
 }
 
 void MCWidget::OnHitTest(const MCRectangle& p_intersect, bool& r_hit)
@@ -748,17 +783,17 @@ void MCWidget::OnLoad(class MCWidgetSerializer& p_stream)
 
 void MCWidget::OnCreate()
 {
-    fprintf(stderr, "MCWidget::OnCreate\n");
+    CallHandler(MCNAME("OnCreate"), nil, 0);
 }
 
 void MCWidget::OnDestroy()
 {
-    fprintf(stderr, "MCWidget::OnDestroy\n");
+    CallHandler(MCNAME("OnDestroy"), nil, 0);
 }
 
 void MCWidget::OnParentPropChanged()
 {
-    fprintf(stderr, "MCWidget::OnParentPropChanged\n");
+    CallHandler(MCNAME("OnParentPropertyChanged"), nil, 0);
 }
 
 void MCWidget::OnToolChanged(Tool p_new_tool)
@@ -774,62 +809,118 @@ void MCWidget::OnLayerChanged()
     if (m_native_layer)
         m_native_layer->OnLayerChanged();
     
-    fprintf(stderr, "MCWidget::OnLayerChanged\n");
+    CallHandler(MCNAME("OnLayerChanged"), nil, 0);
 }
 
 void MCWidget::OnMouseEnter()
 {
-    fprintf(stderr, "MCWidget::OnMouseEnter\n");
+    CallHandler(MCNAME("OnMouseEnter"), nil, 0);
 }
 
 void MCWidget::OnMouseLeave()
 {
-    fprintf(stderr, "MCWidget::OnMouseLeave\n");
+    CallHandler(MCNAME("OnMouseLeave"), nil, 0);
 }
 
 void MCWidget::OnMouseMove(coord_t p_x, coord_t p_y)
 {
-    fprintf(stderr, "MCWidget::OnMouseMove\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(2);
+    
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    
+    CallHandler(MCNAME("OnMouseMove"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnMouseCancel(uinteger_t p_button)
 {
-    fprintf(stderr, "MCWidget::OnMouseCancel\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    
+    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    
+    CallHandler(MCNAME("OnMouseCancel"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnMouseDown(coord_t p_x, coord_t p_y , uinteger_t p_button)
 {
-    fprintf(stderr, "MCWidget::OnMouseDown\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(3);
+    
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    
+    CallHandler(MCNAME("OnMouseDown"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnMouseUp(coord_t p_x, coord_t p_y, uinteger_t p_button)
 {
-    fprintf(stderr, "MCWidget::OnMouseUp\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(3);
+    
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    
+    CallHandler(MCNAME("OnMouseUp"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y)
 {
-    fprintf(stderr, "MCWidget::OnMouseScroll\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(2);
+    
+    MCNumberCreateWithReal(p_delta_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_delta_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    
+    CallHandler(MCNAME("OnMouseScroll"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnMouseStillDown(uinteger_t p_button, real32_t p_duration)
 {
-    fprintf(stderr, "MCWidget::OnMouseStillDown\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(2);
+    
+    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_duration, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    
+    CallHandler(MCNAME("OnMouseStillDown"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnMouseHover(coord_t p_x, coord_t p_y, real32_t p_duration)
 {
-    fprintf(stderr, "MCWidget::OnMouseHover\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(3);
+    
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithReal(p_duration, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    
+    CallHandler(MCNAME("OnMouseHover"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnMouseStillHover(coord_t p_x, coord_t p_y, real32_t p_duration)
 {
-    fprintf(stderr, "MCWidget::OnMouseStillHover\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(3);
+    
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithReal(p_duration, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    
+    CallHandler(MCNAME("OnMouseStillHover"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnMouseCancelHover(real32_t p_duration)
 {
-    fprintf(stderr, "MCWidget::OnMouseCancelHover\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    
+    MCNumberCreateWithReal(p_duration, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    
+    CallHandler(MCNAME("OnMouseCancelHover"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnTouchStart(uinteger_t p_id, coord_t p_x, coord_t p_y, real32_t p_pressure, real32_t p_radius)
@@ -864,84 +955,153 @@ void MCWidget::OnTouchCancel(uinteger_t p_id)
 
 void MCWidget::OnFocusEnter()
 {
-    fprintf(stderr, "MCWidget::OnFocusEnter\n");
+    CallHandler(MCNAME("OnFocusEnter"), nil, 0);
 }
 
 void MCWidget::OnFocusLeave()
 {
-    fprintf(stderr, "MCWidget::OnFocusLEave\n");
+    CallHandler(MCNAME("OnFocusLeave"), nil, 0);
 }
 
 void MCWidget::OnKeyPress(MCStringRef p_keytext)
 {
-    fprintf(stderr, "MCWidget::OnKeyPress\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    
+    t_params[0] = MCValueRetain(p_keytext);
+    
+    CallHandler(MCNAME("OnKeyPress"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnModifiersChanged(uinteger_t p_modifier_mask)
 {
-    fprintf(stderr, "MCWidget::OnModifiersChanged\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    
+    MCNumberCreateWithUnsignedInteger(p_modifier_mask, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    
+    CallHandler(MCNAME("OnModifiersChanged"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnActionKeyPress(MCStringRef p_keyname)
 {
-    fprintf(stderr, "MCWidget::OnActionKeyPress\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(1);
+    
+    t_params[0] = MCValueRetain(p_keyname);
+    
+    CallHandler(MCNAME("OnActionKeyPress"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnDragEnter(bool& r_accept)
 {
-    fprintf(stderr, "MCWidget::OnDragEnter\n");
-    r_accept = true;
+    MCValueRef t_retval;
+    if (CallHandler(MCNAME("OnDragEnter"), nil, 0, &t_retval))
+    {
+        MCExecContext t_ctxt;
+        if (!t_ctxt.ConvertToBool(t_retval, r_accept))
+            r_accept = false;
+        MCValueRelease(t_retval);
+    }
+    else
+    {
+        // Call failed
+        r_accept = false;
+    }
 }
 
 void MCWidget::OnDragLeave()
 {
-    fprintf(stderr, "MCWidget::OnDragLeave\n");
+    CallHandler(MCNAME("OnDragLeave"), nil, 0);
 }
 
 void MCWidget::OnDragMove(coord_t p_x, coord_t p_y)
 {
-    fprintf(stderr, "MCWidget::OnDragMove\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(2);
+    
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    
+    CallHandler(MCNAME("OnDragMove"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnDragDrop()
 {
-    fprintf(stderr, "MCWidget::OnDragDrop\n");
+    CallHandler(MCNAME("OnDragDrop"), nil, 0);
 }
 
 void MCWidget::OnDragStart(bool& r_accept)
 {
-    fprintf(stderr, "MCWidget::OnDragStart\n");
-    r_accept = true;
+    MCValueRef t_retval;
+    if (CallHandler(MCNAME("OnDragStart"), nil, 0, &t_retval))
+    {
+        MCExecContext t_ctxt;
+        if (!t_ctxt.ConvertToBool(t_retval, r_accept))
+            r_accept = false;
+        MCValueRelease(t_retval);
+    }
+    else
+    {
+        // Call failed
+        r_accept = false;
+    }
 }
 
 void MCWidget::OnDragFinish()
 {
-    fprintf(stderr, "MCWidget::OnDragFinish\n");
+    CallHandler(MCNAME("OnDragFinish"), nil, 0);
 }
 
 void MCWidget::OnClick(coord_t p_x, coord_t p_y, uinteger_t p_button, uinteger_t p_count)
 {
-    fprintf(stderr, "MCWidget::OnClick\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(4);
+    
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[3]));
+    
+    CallHandler(MCNAME("OnClick"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnDoubleClick(coord_t p_x, coord_t p_y, uinteger_t p_button)
 {
-    fprintf(stderr, "MCWidget::OnDoubleClick\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(3);
+    
+    MCNumberCreateWithReal(p_x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(p_y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithUnsignedInteger(p_button, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    
+    CallHandler(MCNAME("OnDoubleClick"), t_params.Ptr(), t_params.Size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCWidget::CallHandler(MCNameRef p_name, MCParameter *p_parameters)
+bool MCWidget::CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t p_param_count, MCValueRef* r_retval)
 {
 	MCWidget *t_old_widget_object;
 	t_old_widget_object = MCwidgetobject;
 	MCwidgetobject = this;
 	
     // Invoke event handler.
+    bool t_success;
+    MCValueRef t_retval;
+    t_success = MCScriptCallHandlerOfInstance(m_instance, p_name, x_parameters, p_param_count, t_retval);
+    
+    if (t_success)
+    {
+        if (r_retval != NULL)
+            *r_retval = t_retval;
+        else
+            MCValueRelease(t_retval);
+    }
     
 	MCwidgetobject = t_old_widget_object;
     
-	return true;
+	return t_success;
 }
 
 bool MCWidget::CallGetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef& r_value)
@@ -951,10 +1111,12 @@ bool MCWidget::CallGetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef& r_
 	MCwidgetobject = this;
 	
     // Invoke event handler.
+    bool t_success;
+    t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
     
 	MCwidgetobject = t_old_widget_object;
     
-	return true;
+	return t_success;
 }
 
 bool MCWidget::CallSetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef p_value)
@@ -964,35 +1126,17 @@ bool MCWidget::CallSetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef p_v
 	MCwidgetobject = this;
 	
     // Invoke event handler.
+    bool t_success;
+    t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
     
 	MCwidgetobject = t_old_widget_object;
     
-	return true;
-}
-
-void MCWidget::SetKind(MCExecContext& ctxt, MCNameRef p_new_kind)
-{
-    // Look for extension
-    
-	int t_opened;
-	t_opened = opened;
-	while(opened)
-		close();
-	
-    // Replace current implementation with new implementation.
-    
-	while(t_opened > 0)
-	{
-		open();
-		t_opened -= 1;
-	}
-	
-    layer_redrawall();
+	return t_success;
 }
 
 void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 {
-    r_kind = MCValueRetain(kMCEmptyName);
+    r_kind = MCValueRetain(m_kind);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

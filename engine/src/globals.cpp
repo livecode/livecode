@@ -290,7 +290,6 @@ MCScrollbar *MCtemplatescrollbar;
 MCPlayer *MCtemplateplayer;
 MCImage *MCtemplateimage;
 MCField *MCtemplatefield;
-MCWidget *MCtemplatewidget;
 
 MCImage *MCmagimage;
 MCMagnify *MCmagnifier;
@@ -676,7 +675,6 @@ void X_clear_globals(void)
 	MCtemplateplayer = nil;
 	MCtemplateimage = nil;
 	MCtemplatefield = nil;
-    MCtemplatewidget = nil;
 	MCmagimage = nil;
 	MCmagnifier = nil;
 	MCdragsource = nil;
@@ -967,7 +965,6 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCtemplateplayer = new MCPlayer;
 	MCtemplateimage = new MCImage;
 	MCtemplatefield = new MCField;
-    MCtemplatewidget = new MCWidget;
 	
 	MCtooltip = new MCTooltip;
 
@@ -1187,7 +1184,6 @@ int X_close(void)
 
 	delete MCtemplateimage;
 	delete MCtemplatefield;
-    delete MCtemplatewidget;
 	delete MCselected;
 	delete MCtodestroy;
 	delete MCstacks;

@@ -122,6 +122,16 @@ public:
 
 	//////////
 
+    T* Ptr()
+    {
+        return m_values;
+    }
+    
+    uindex_t Size()
+    {
+        return m_value_count;
+    }
+    
 	T*& PtrRef()
 	{
 		MCAssert(m_values == nil);

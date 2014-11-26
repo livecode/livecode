@@ -20,11 +20,13 @@
 #include "control.h"
 #include "native-layer.h"
 
+#include "script.h"
+
 
 class MCWidget: public MCControl
 {
 public:
-	MCWidget(void);
+	
 	MCWidget(const MCWidget& p_other);
 	virtual ~MCWidget(void);
 
@@ -77,7 +79,6 @@ public:
     
     virtual void layerchanged();
     
-    void SetKind(MCExecContext& ctxt, MCNameRef p_kind);
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);
     
     // Returns true if the widget is in edit mode
@@ -100,6 +101,9 @@ public:
     
     // Needed by the native layer code
     MCNativeLayer* getNativeLayer() const;
+    
+    // Creates a new widget of the given kind
+    static MCWidget* createInstanceOfKind(MCNameRef p_kind);
     
 protected:
     
@@ -201,9 +205,16 @@ private:
 	//////////
     //////////
 	
-	bool CallHandler(MCNameRef p_name, MCParameter *parameters);
+	bool CallHandler(MCNameRef p_name, MCValueRef* x_parameters, uindex_t p_param_count, MCValueRef* r_retval = NULL);
 	bool CallGetProp(MCNameRef p_property_name, MCNameRef p_key, MCValueRef& r_value);
 	bool CallSetProp(MCNameRef p_property_name, MCNameRef p_key, MCValueRef value);
+    
+    // Private constructor - widgets must be created via createInstanceOfKind
+    MCWidget(MCNameRef p_kind);
+    
+    // The kind and script instance for this widget
+    MCNameRef m_kind;
+    MCScriptInstanceRef m_instance;
     
     // The native layer(s) belonging to this widget
     MCNativeLayer* m_native_layer;

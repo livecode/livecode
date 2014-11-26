@@ -1785,9 +1785,6 @@ void MCEngineEvalTemplateAsObject(MCExecContext& ctxt, uinteger_t p_template_typ
         case DT_EPS:
             t_object = (MCObject *)MCtemplateeps;
             break;
-        case DT_WIDGET:
-            t_object = (MCObject *)MCtemplatewidget;
-            break;
         default:
             break;
     }
