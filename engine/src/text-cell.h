@@ -156,8 +156,10 @@ public:
     MCTextCellAlignment getHorizontalAlignment() const;
     MCTextCellAlignment getVerticalAlignment() const;
     MCTextCellLayoutDirection getLayoutDirection() const;
+    MCTextDirection getTextDirection() const;
     void setAlignment(MCTextCellAlignment p_horizontal, MCTextCellAlignment p_vertical);
     void setLayoutDirection(MCTextCellLayoutDirection p_direction);
+    void setTextDirection(MCTextDirection p_direction);
 
     // Marks the cell as requiring re-layout
     void setNeedsLayout();
@@ -233,6 +235,9 @@ private:
     
     // The layout direction for this cell
     MCTextCellLayoutDirection m_layout_direction;
+    
+    // Text directionality for this cell
+    MCTextDirection m_text_direction;
     
     // Flags
     MCTextCellFlags m_flags;

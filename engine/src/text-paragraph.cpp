@@ -212,6 +212,14 @@ uindex_t MCTextParagraph::codeunitToGrapheme(uindex_t p_codeunit) const
     return m_unit_to_grapheme[p_codeunit];
 }
 
+MCTextDirection MCTextParagraph::getConcreteTextDirection()
+{
+    if (getTextDirection() == kMCTextDirectionAuto)
+        return MCTextDirection(MCBidiFirstStrongIsolate(m_text, 0));
+    else
+        return getTextDirection();
+}
+
 MCTextSegment* MCTextParagraph::createSegments()
 {
     // Early return if there are no blocks to operate on (because the paragraph
@@ -475,7 +483,7 @@ void MCTextParagraph::runBidiAlgorithm()
     // Run the Unicode BiDi algorithm to get the direction level for each
     // codeunit within this paragraph.
     MCAutoArray<uint8_t> t_levels;
-    MCBidiResolveTextDirection(m_text, 0, t_levels.PtrRef(), t_levels.SizeRef());
+    MCBidiResolveTextDirection(m_text, getConcreteTextDirection(), t_levels.PtrRef(), t_levels.SizeRef());
     
     // Scan through the list of blocks and ensure that each block has a
     // consistent direction level (if not, it will need to be split)

@@ -63,6 +63,39 @@ MCTextCellLayoutDirection MCTextCell::getLayoutDirection() const
     return m_layout_direction;
 }
 
+MCTextDirection MCTextCell::getTextDirection() const
+{
+    return m_text_direction;
+}
+
+void MCTextCell::setAlignment(MCTextCellAlignment p_horizontal, MCTextCellAlignment p_vertical)
+{
+    if (p_horizontal == m_horizontal_alignment && p_vertical == m_vertical_alignment)
+        return;
+    
+    m_horizontal_alignment = p_horizontal;
+    m_vertical_alignment = p_vertical;
+    repositionChildren();
+}
+
+void MCTextCell::setLayoutDirection(MCTextCellLayoutDirection p_direction)
+{
+    if (p_direction == m_layout_direction)
+        return;
+    
+    m_layout_direction = p_direction;
+    repositionChildren();
+}
+
+void MCTextCell::setTextDirection(MCTextDirection p_direction)
+{
+    if (p_direction == m_text_direction)
+        return;
+    
+    m_text_direction = p_direction;
+    setNeedsLayout();
+}
+
 void MCTextCell::setNeedsLayout()
 {
     m_flags |= kMCTextCellNeedsLayout;
@@ -144,9 +177,9 @@ MCTextCell::MCTextCell() :
   m_max_height(INFINITY),
   m_local_attributes(NULL),
   m_effective_attributes(NULL),
-  m_horizontal_alignment(kMCTextCellAlignCenter),
+  m_horizontal_alignment(kMCTextCellAlignStart),
   m_vertical_alignment(kMCTextCellAlignCenter),
-  m_layout_direction(kMCTextCellLayoutLeftThenDown),
+  m_layout_direction(kMCTextCellLayoutLeftThenUp),
   m_flags(kMCTextCellNeedsLayout)
 {
     ;

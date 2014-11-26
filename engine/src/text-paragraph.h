@@ -61,6 +61,10 @@ public:
     uindex_t graphemeToCodeunit(uindex_t) const;
     uindex_t codeunitToGrapheme(uindex_t) const;
     
+    // Calculates the concrete text direction for this paragraph (i.e either
+    // LTR or RTL but not "auto").
+    MCTextDirection getConcreteTextDirection();
+    
 private:
     
     // The lines of this paragraph
