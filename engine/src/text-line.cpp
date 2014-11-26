@@ -188,7 +188,9 @@ MCTextSegment* MCTextLine::addSegmentsWrapped(MCTextSegment* p_segments, coord_t
     t_remaining_width = p_max_width;
     do
     {
-        t_continue = fitSegment(t_segment, t_remaining_width);
+        bool t_first_segment;
+        t_first_segment = t_segment == p_segments;
+        t_continue = fitSegment(t_segment, t_first_segment, t_remaining_width);
         
         // The remove operation implicitly advances the t_segment pointer
         MCTextSegment* t_new_segment;
@@ -244,7 +246,7 @@ bool MCTextLine::endsWithExplicitLineBreak() const
     return t_explicit_break;
 }
 
-bool MCTextLine::fitSegment(MCTextSegment* p_segment, coord_t p_available_width)
+bool MCTextLine::fitSegment(MCTextSegment* p_segment, bool p_first_segment, coord_t p_available_width)
 {
     // If the available space is infinite, just scan forward for the first line
     // breaking block and skip the expense of running a breaking algorithm.
@@ -285,7 +287,7 @@ bool MCTextLine::fitSegment(MCTextSegment* p_segment, coord_t p_available_width)
     MCTextBlock *t_first_block, *t_last_block;
     bool t_continue;
     t_first_block = p_segment->getBlocks();
-    t_continue = t_engine->fitBlocks(t_first_block, p_available_width, t_last_block);
+    t_continue = t_engine->fitBlocks(t_first_block, p_available_width, p_first_segment, t_last_block);
     
     // If not all blocks fit, a split will be required
     if (t_last_block != t_first_block->prev())

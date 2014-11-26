@@ -29,7 +29,7 @@ MCTextSimpleBreakingEngine::~MCTextSimpleBreakingEngine()
     ;
 }
 
-bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_available_width, MCTextBlock*& r_last_fit)
+bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_available_width, bool p_start_of_line, MCTextBlock*& r_last_fit)
 {
     // Create a word break iterator to find potential breaking boundaries
     MCBreakIteratorRef t_iter;
@@ -65,6 +65,7 @@ bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_avai
         if (t_block_width <= t_remaining_width)
         {
             // Accept all of this block
+            p_start_of_line = false;
             t_remaining_width -= t_block_width;
             t_block = t_block->next();
             continue;
@@ -97,14 +98,18 @@ bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_avai
                 break;
             
             // Can we fit this sequence of words?
+            // We always accept at least one word to avoid the degenerate case
+            // of having a word that is longer than a whole line causing an
+            // infinite loop.
             coord_t t_subwidth;
             t_subwidth = t_block->getSubWidth(0, t_block->codeunitToGrapheme(t_break_pos - t_offset));
-            if (t_subwidth > t_remaining_width)
+            if (t_subwidth > t_remaining_width && !p_start_of_line)
             {
                 t_break_pos = t_last_break_pos;
                 break;
             }
             
+            p_start_of_line = false;
             t_last_break_pos = t_break_pos;
         }
         
@@ -128,9 +133,8 @@ bool MCTextSimpleBreakingEngine::fitBlocks(MCTextBlock* p_blocks, coord_t p_avai
         if (t_block != p_blocks)
             break;
         
-        // We are still on the first block and the first word does not fit...
-        // TODO: handle this!
-        MCAssert(false);
+        // We should have accepted at least one block in all circumstances
+        MCUnreachable();
     }
     while (t_block != p_blocks);
     
