@@ -50,6 +50,15 @@ struct __MCValue
 enum
 {
     kMCTypeInfoTypeCodeMask = 0xff,
+    
+    // We use typecodes well above the fixed ones we have to
+    // indicate 'special' typeinfo (i.e. those with no real
+    // valueref type underneath).
+    kMCTypeInfoTypeIsAny = 255,
+    kMCTypeInfoTypeIsNamed = 254,
+    kMCTypeInfoTypeIsAlias = 253,
+    kMCTypeInfoTypeIsOptional = 252,
+    kMCTypeInfoTypeIsForeign = 251,
 };
 
 struct __MCTypeInfo: public __MCValue
@@ -60,7 +69,11 @@ struct __MCTypeInfo: public __MCValue
         {
             MCNameRef name;
             MCTypeInfoRef typeinfo;
-        } named;
+        } named, alias;
+        struct
+        {
+            MCTypeInfoRef basetype;
+        } optional;
         struct
         {
             MCRecordTypeFieldInfo *fields;
@@ -78,6 +91,15 @@ struct __MCTypeInfo: public __MCValue
             MCNameRef domain;
             MCStringRef message;
         } error;
+        struct
+        {
+            MCValueCustomCallbacks callbacks;
+        } custom;
+        struct
+        {
+            MCForeignTypeDescriptor descriptor;
+            void *ffi_layout_type;
+        } foreign;
     };
 };
 
@@ -267,6 +289,10 @@ enum
 	// If set then the array is indirect (i.e. contents is within another
 	// immutable array).
 	kMCArrayFlagIsIndirect = 1 << 7,
+    // If set then the array keys are case sensitive.
+    kMCArrayFlagIsCaseSensitive = 1 << 8,
+    // If set the the array keys are form sensitive.
+    kMCArrayFlagIsFormSensitive = 1 << 9,
 };
 
 struct __MCArrayKeyValue
@@ -314,6 +340,30 @@ struct __MCSet: public __MCValue
 	uindex_t limb_count;
 };
 
+//////////
+
+enum
+{
+	// If set then the list is mutable.
+	kMCProperListFlagIsMutable = 1 << 0,
+    // If set then the list is indirect (i.e. contents is within another
+	// immutable list).
+	kMCProperListFlagIsIndirect = 1 << 1,
+};
+
+struct __MCProperList: public __MCValue
+{
+	union
+	{
+		MCProperListRef contents;
+        struct
+        {
+            MCValueRef *list;
+            uindex_t length;
+        };
+	};
+};
+
 ////////
 
 enum
@@ -345,7 +395,14 @@ struct __MCError: public __MCValue
 
 struct __MCCustomValue: public __MCValue
 {
-	const MCValueCustomCallbacks *callbacks;
+    MCTypeInfoRef typeinfo;
+};
+
+////////
+
+struct __MCForeignValue: public __MCValue
+{
+    MCTypeInfoRef typeinfo;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,6 +491,14 @@ bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data);
 bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description);
 bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value);
 
+bool __MCProperListInitialize(void);
+void __MCProperListFinalize(void);
+void __MCProperListDestroy(__MCProperList *list);
+hash_t __MCProperListHash(__MCProperList *list);
+bool __MCProperListIsEqualTo(__MCProperList *list, __MCProperList *other_list);
+bool __MCProperListCopyDescription(__MCProperList *list, MCStringRef& r_string);
+bool __MCProperListImmutableCopy(__MCProperList *list, bool release, __MCProperList*& r_immutable_value);
+
 bool __MCRecordInitialize(void);
 void __MCRecordFinalize(void);
 void __MCRecordDestroy(__MCRecord *data);
@@ -459,6 +524,16 @@ MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self);
 
 uindex_t __MCRecordTypeInfoGetFieldCount (__MCTypeInfo *self);
 void __MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self, uindex_t p_index, __MCTypeInfo *& r_base_type, uindex_t & r_base_index);
+
+bool __MCForeignValueInitialize(void);
+void __MCForeignValueFinalize(void);
+void __MCForeignValueDestroy(__MCForeignValue *self);
+hash_t __MCForeignValueHash(__MCForeignValue *self);
+bool __MCForeignValueIsEqualTo(__MCForeignValue *self, __MCForeignValue *other_self);
+bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_description);
+
+bool __MCStreamInitialize(void);
+void __MCStreamFinalize(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -47,6 +47,9 @@ bool MCInitialize(void)
     if (!__MCTypeInfoInitialize())
         return false;
     
+    if (!__MCForeignValueInitialize())
+        return false;
+    
     if (!__MCNumberInitialize())
         return false;
     
@@ -68,11 +71,19 @@ bool MCInitialize(void)
     if (!__MCLocaleInitialize())
         return false;
 
+    if (!__MCProperListInitialize())
+        return false;
+    
+    if (!__MCStreamInitialize())
+        return false;
+    
 	return true;
 }
 
 void MCFinalize(void)
 {
+    __MCStreamFinalize();
+    __MCProperListFinalize();
 	__MCLocaleFinalize();
     __MCRecordFinalize();
     __MCDataFinalize();
@@ -80,6 +91,7 @@ void MCFinalize(void)
 	__MCListFinalize();
 	__MCArrayFinalize();
     __MCNumberFinalize();
+    __MCForeignValueFinalize();
     __MCTypeInfoFinalize();
     __MCErrorFinalize();
 	__MCNameFinalize();

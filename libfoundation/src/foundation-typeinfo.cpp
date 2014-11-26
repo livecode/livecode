@@ -15,19 +15,25 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
+
+#include <ffi/ffi.h>
 
 #include "foundation-private.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCTypeInfoRef kMCAnyTypeInfo;
 MCTypeInfoRef kMCNullTypeInfo;
 MCTypeInfoRef kMCBooleanTypeInfo;
 MCTypeInfoRef kMCNumberTypeInfo;
 MCTypeInfoRef kMCStringTypeInfo;
+MCTypeInfoRef kMCNameTypeInfo;
 MCTypeInfoRef kMCDataTypeInfo;
 MCTypeInfoRef kMCArrayTypeInfo;
 MCTypeInfoRef kMCSetTypeInfo;
 MCTypeInfoRef kMCListTypeInfo;
+MCTypeInfoRef kMCProperListTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,54 +42,452 @@ static bool __MCTypeInfoIsNamed(MCTypeInfoRef self);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCValueTypeCode MCTypeInfoGetTypeCode(MCTypeInfoRef self)
+
+static intenum_t __MCTypeInfoGetExtendedTypeCode(MCTypeInfoRef self)
 {
-    MCTypeInfoRef t_actual_typeinfo;
-    t_actual_typeinfo = __MCTypeInfoResolve(self);
-    return __MCTypeInfoGetTypeCode (t_actual_typeinfo);
+    return (self -> flags & 0xff);
 }
 
-MCNameRef MCTypeInfoGetName(MCTypeInfoRef self)
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCTypeInfoIsAlias(MCTypeInfoRef self)
 {
-    if (__MCTypeInfoIsNamed(self))
-        return self -> named . name;
-    return nil;
+    return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsAlias;
+}
+
+bool MCTypeInfoIsNamed(MCTypeInfoRef self)
+{
+    return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsNamed;
 }
 
 bool MCTypeInfoIsOptional(MCTypeInfoRef self)
 {
-    return false;
+    return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsOptional;
+}
+
+bool MCTypeInfoIsHandler(MCTypeInfoRef self)
+{
+    return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeHandler;
+}
+
+bool MCTypeInfoIsRecord(MCTypeInfoRef self)
+{
+    return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeRecord;
+}
+
+bool MCTypeInfoIsError(MCTypeInfoRef self)
+{
+    return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeError;
+}
+
+bool MCTypeInfoIsForeign(MCTypeInfoRef self)
+{
+    return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsForeign;
+}
+
+bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
+{
+    intenum_t t_ext_typecode;
+    t_ext_typecode = __MCTypeInfoGetExtendedTypeCode(self);
+
+    if (t_ext_typecode == kMCTypeInfoTypeIsAlias)
+        return MCTypeInfoResolve(self -> alias . typeinfo, r_resolution);
+
+    if (t_ext_typecode == kMCTypeInfoTypeIsNamed)
+    {
+        // Attempt to resolve the binding, this will throw an error if it fails.
+        MCTypeInfoRef t_next_type;
+        if (!MCNamedTypeInfoResolve(self, t_next_type))
+            return false;
+        
+        // We've successfully resolved the type, so return this one as the resolution.
+        r_resolution . named_type = self;
+        r_resolution . type = t_next_type;
+        
+        return true;
+    }
+
+    if (t_ext_typecode == kMCTypeInfoTypeIsOptional)
+    {
+        if (!MCTypeInfoResolve(self -> optional . basetype, r_resolution))
+            return false;
+        
+        r_resolution . is_optional = true;
+        
+        return true;
+    }
+    
+    // Resolving any other form of type, returns the (un-named) naked typeinfo.
+    r_resolution . is_optional = false;
+    r_resolution . named_type = nil;
+    r_resolution . type = self;
+    
+    return true;
 }
 
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
 {
-    return source == target;
+    // We require that source is concrete - this means that it must be a named
+    // type.
+    MCAssert(MCTypeInfoIsNamed(source));
+    
+    // Resolve the source type.
+    MCResolvedTypeInfo t_resolved_source;
+    if (!MCTypeInfoResolve(source, t_resolved_source))
+    {
+        MCAssert(false);
+        return false;
+    }
+    
+    // We require that target is resolvable.
+    MCResolvedTypeInfo t_resolved_target;
+    if (!MCTypeInfoResolve(target, t_resolved_target))
+    {
+        MCAssert(false);
+        return false;
+    }
+    
+    return MCResolvedTypeInfoConforms(t_resolved_source, t_resolved_target);
 }
 
-bool MCTypeInfoBind(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCTypeInfoRef& r_typeinfo)
+bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolvedTypeInfo& target)
+{
+    // If source and target are the same, we are done.
+    if (source . named_type == target . named_type)
+        return true;
+    
+    // If source is undefined, then target must be optional.
+    if (source . named_type == kMCNullTypeInfo)
+        return target . is_optional;
+    
+    // If the target is any, then all is well.
+    if (target . named_type == kMCAnyTypeInfo)
+        return true;
+    
+    // If source is of foreign type then target must be the source's bridge type
+    // the source type, or one of the source's supertypes.
+    if (MCTypeInfoIsForeign(source . type))
+    {
+        // Check to see if the target is the source's bridge type.
+        if (source . type -> foreign . descriptor . bridgetype != kMCNullTypeInfo &&
+            target . named_type == source . type -> foreign . descriptor . bridgetype)
+            return true;
+        
+        // Now check to see if the target is one of the source's supertypes.
+        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> foreign . descriptor . basetype)
+            if (target . named_type == t_supertype)
+                return true;
+        
+        return false;
+    }
+    
+    // If the target is of foreign type, then the source must be the target's
+    // bridge type.
+    if (MCTypeInfoIsForeign(target . type))
+    {
+        if (target . type -> foreign . descriptor . bridgetype != kMCNullTypeInfo &&
+            target . type -> foreign . descriptor . bridgetype == source . named_type)
+            return true;
+        
+        return false;
+    }
+    
+    // If the source is of record type, then the target must be the same type of
+    // one of the source's super types.
+    if (MCTypeInfoIsRecord(source . type))
+    {
+        // Now check to see if the target is one of the source's supertypes.
+        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> record . base)
+            if (target . named_type == t_supertype)
+                return true;
+        
+        return false;
+    }
+    
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCBuiltinTypeInfoCreate(MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
     
-    self -> flags |= 0xff;
-    self -> named . name = MCValueRetain(p_name);
-    self -> named . typeinfo = MCValueRetain(__MCTypeInfoResolve(p_typeinfo));
+    self -> flags |= p_code & 0xff;
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
     
+    MCValueRelease(self);
+    
     return false;
 }
 
-bool MCTypeInfoBindAndRelease(MCNameRef p_name, MCTypeInfoRef p_typeinfo, MCTypeInfoRef& r_typeinfo)
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCAliasTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef p_target, MCTypeInfoRef& r_typeinfo)
 {
-    if (MCTypeInfoBind(p_name, p_typeinfo, r_typeinfo))
+    __MCTypeInfo *self;
+    if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
+        return false;
+    
+    self -> flags |= kMCTypeInfoTypeIsAlias & 0xff;
+    self -> alias . name = MCValueRetain(p_name);
+    self -> alias . typeinfo = MCValueRetain(p_target);
+    
+    if (MCValueInterAndRelease(self, r_typeinfo))
+        return true;
+    
+    MCValueRelease(self);
+    
+    return false;
+}
+
+MCNameRef MCAliasTypeInfoGetName(MCTypeInfoRef self)
+{
+    return self -> alias . name;
+}
+
+MCTypeInfoRef MCAliasTypeInfoGetTarget(MCTypeInfoRef self)
+{
+    return self -> alias . typeinfo;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCNamedTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
+{
+    __MCTypeInfo *self;
+    if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
+        return false;
+    
+    self -> flags |= kMCTypeInfoTypeIsNamed & 0xff;
+    self -> named . name = MCValueRetain(p_name);
+    
+    // Note that we don't do anything with the 'typeinfo' field of the named typeinfo.
+    // This is because it does not form part of the uniqueness of the typeinfo, thus
+    // when we inter we get an existing named typeinfo with the same name.
+    
+    if (MCValueInterAndRelease(self, r_typeinfo))
+        return true;
+    
+    MCValueRelease(self);
+    
+    return false;
+}
+
+bool MCNamedTypeInfoIsBound(MCTypeInfoRef self)
+{
+    return self -> named . typeinfo != nil;
+}
+
+MCTypeInfoRef MCNamedTypeInfoGetBoundTypeInfo(MCTypeInfoRef self)
+{
+    return self -> named . typeinfo;
+}
+
+bool MCNamedTypeInfoBind(MCTypeInfoRef self, MCTypeInfoRef p_target)
+{
+    if (self -> named . typeinfo != nil)
+        return MCErrorThrowGeneric();
+    
+    self -> named . typeinfo = MCValueRetain(p_target);
+    
+    return true;
+}
+
+bool MCNamedTypeInfoUnbind(MCTypeInfoRef self)
+{
+    if (self -> named . typeinfo == nil)
+        return MCErrorThrowGeneric();
+    
+    MCValueRelease(self -> named . typeinfo);
+    self -> named . typeinfo = nil;
+    
+    return true;
+}
+
+bool MCNamedTypeInfoResolve(MCTypeInfoRef self, MCTypeInfoRef& r_bound_type)
+{
+    if (self -> named . typeinfo == nil)
+        return MCErrorThrowGeneric();
+    
+    r_bound_type = self -> named . typeinfo;
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCOptionalTypeInfoCreate(MCTypeInfoRef p_base, MCTypeInfoRef& r_new_type)
+{
+    if (__MCTypeInfoGetExtendedTypeCode(p_base) == kMCTypeInfoTypeIsOptional)
     {
-        MCValueRelease(p_typeinfo);
+        r_new_type = MCValueRetain(p_base);
         return true;
     }
+    
+    __MCTypeInfo *self;
+    if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
+        return false;
+    
+    self -> flags |= kMCTypeInfoTypeIsOptional;
+    self -> optional . basetype = MCValueRetain(p_base);
+    
+    if (MCValueInterAndRelease(self, r_new_type))
+        return true;
+    
+    MCValueRelease(self);
+    
     return false;
+}
+
+MCTypeInfoRef MCOptionalTypeInfoGetBaseTypeInfo(MCTypeInfoRef p_base)
+{
+    return p_base -> optional . basetype;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *callbacks, MCTypeInfoRef r_typeinfo)
+{
+    __MCTypeInfo *self;
+    if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
+        return false;
+    
+    self -> flags |= kMCValueTypeCodeCustom;
+    self -> custom . callbacks = *callbacks;
+    
+    if (MCValueInterAndRelease(self, r_typeinfo))
+        return true;
+    
+    MCValueRelease(self);
+    
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static ffi_type *__map_primitive_type(MCForeignPrimitiveType p_type)
+{
+    switch(p_type)
+    {
+        case kMCForeignPrimitiveTypeVoid:
+            return &ffi_type_void;
+        case kMCForeignPrimitiveTypeBool:
+            if (sizeof(bool) == 1)
+                return &ffi_type_uint8;
+            if (sizeof(bool) == 2)
+                return &ffi_type_uint16;
+            if (sizeof(bool) == 4)
+                return &ffi_type_uint32;
+            return &ffi_type_uint64;
+        case kMCForeignPrimitiveTypeUInt8:
+            return &ffi_type_uint8;
+        case kMCForeignPrimitiveTypeSInt8:
+            return &ffi_type_sint8;
+        case kMCForeignPrimitiveTypeUInt16:
+            return &ffi_type_uint16;
+        case kMCForeignPrimitiveTypeSInt16:
+            return &ffi_type_sint16;
+        case kMCForeignPrimitiveTypeUInt32:
+            return &ffi_type_uint32;
+        case kMCForeignPrimitiveTypeSInt32:
+            return &ffi_type_sint32;
+        case kMCForeignPrimitiveTypeUInt64:
+            return &ffi_type_uint64;
+        case kMCForeignPrimitiveTypeSInt64:
+            return &ffi_type_sint64;
+        case kMCForeignPrimitiveTypeFloat32:
+            return &ffi_type_float;
+        case kMCForeignPrimitiveTypeFloat64:
+            return &ffi_type_double;
+        case kMCForeignPrimitiveTypePointer:
+            return &ffi_type_pointer;
+    }
+    
+    MCUnreachable();
+    
+    return nil;
+}
+
+static bool __MCForeignTypeInfoComputeLayoutType(MCTypeInfoRef self)
+{
+    // If the typeinfo has a layout size of size 1, then it is just a value.
+    if (self -> foreign . descriptor . layout_size == 1)
+        self -> foreign . ffi_layout_type = __map_primitive_type(self -> foreign . descriptor . layout[0]);
+    else
+    {
+        ffi_type *t_type;
+        if (!MCMemoryNew(t_type))
+            return false;
+        if (!MCMemoryNewArray(self -> foreign . descriptor . layout_size + 1, t_type -> elements))
+        {
+            MCMemoryDelete(t_type);
+            return false;
+        }
+        
+        t_type -> alignment = 0;
+        t_type -> type = FFI_TYPE_STRUCT;
+        for(uindex_t i = 0; i < self -> foreign . descriptor . layout_size; i++)
+            t_type -> elements[i] = __map_primitive_type(self -> foreign . descriptor . layout[i]);
+        t_type -> elements[self -> foreign . descriptor . layout_size] = NULL;
+        
+        self -> foreign . ffi_layout_type = t_type;
+    }
+    
+    return true;
+}
+
+bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCTypeInfoRef& r_typeinfo)
+{
+    __MCTypeInfo *self;
+    if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
+        return false;
+    
+    if (!MCMemoryNewArray(p_descriptor -> layout_size, self -> foreign . descriptor . layout, self -> foreign . descriptor . layout_size))
+        return false;
+    
+    self -> flags |= kMCTypeInfoTypeIsForeign;
+    
+    self -> foreign . descriptor . size = p_descriptor -> size;
+    self -> foreign . descriptor . basetype = MCValueRetain(p_descriptor -> basetype);
+    self -> foreign . descriptor . bridgetype = MCValueRetain(p_descriptor -> bridgetype);
+    MCMemoryCopy(self -> foreign . descriptor . layout, p_descriptor -> layout, p_descriptor -> layout_size * sizeof(self -> foreign . descriptor . layout[0]));
+    self -> foreign . descriptor . initialize = p_descriptor -> initialize;
+    self -> foreign . descriptor . finalize = p_descriptor -> finalize;
+    self -> foreign . descriptor . defined = p_descriptor -> defined;
+    self -> foreign . descriptor . move = p_descriptor -> move;
+    self -> foreign . descriptor . copy = p_descriptor -> copy;
+    self -> foreign . descriptor . equal = p_descriptor -> equal;
+    self -> foreign . descriptor . hash = p_descriptor -> hash;
+    self -> foreign . descriptor . doimport = p_descriptor -> doimport;
+    self -> foreign . descriptor . doexport = p_descriptor -> doexport;
+    
+    if (!__MCForeignTypeInfoComputeLayoutType(self))
+    {
+        MCValueRelease(self);
+        return false;
+    }
+    
+    if (MCValueInterAndRelease(self, r_typeinfo))
+        return true;
+    
+    MCValueRelease(self);
+    
+    return false;
+}
+
+const MCForeignTypeDescriptor *MCForeignTypeInfoGetDescriptor(MCTypeInfoRef self)
+{
+    return &self -> foreign . descriptor;
+}
+
+void *MCForeignTypeInfoGetLayoutType(MCTypeInfoRef self)
+{
+    return self -> foreign . ffi_layout_type;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,7 +674,6 @@ bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *p_fields, index_t p_f
 
 	for (uindex_t i = 0; i < p_field_count; ++i)
     {
-        self -> handler . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
     }
@@ -306,17 +709,6 @@ uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef unresolved_self)
     return self -> handler . field_count;
 }
 
-MCNameRef MCHandlerTypeInfoGetParameterName(MCTypeInfoRef unresolved_self, uindex_t p_index)
-{
-    MCTypeInfoRef self;
-    self = __MCTypeInfoResolve(unresolved_self);
-    
-    MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeHandler);
-    MCAssert(self -> handler . field_count > p_index);
-    
-    return self -> handler . fields[p_index] . name;
-}
-
 MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef unresolved_self, uindex_t p_index)
 {
     MCTypeInfoRef self;
@@ -347,10 +739,17 @@ bool MCErrorTypeInfoCreate(MCNameRef p_domain, MCStringRef p_message, MCTypeInfo
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
     
+    self -> flags |= kMCValueTypeCodeError;
+    
     self -> error . domain = MCValueRetain(p_domain);
     self -> error . message = MCValueRetain(p_message);
     
-    r_typeinfo = self;
+    if (MCValueInterAndRelease(self, r_typeinfo))
+        return true;
+    
+    MCValueRelease(self);
+    
+    return false;
     
     return true;
 }
@@ -373,13 +772,15 @@ MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef unresolved_self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool __MCTypeInfoCreateBuiltin(MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)
+bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *p_callbacks, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
     if (!__MCValueCreate(kMCValueTypeCodeTypeInfo, self))
         return false;
     
-    self -> flags |= p_code & 0xff;
+    self -> flags |= kMCValueTypeCodeCustom;
+    
+    self -> custom . callbacks = *p_callbacks;
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
@@ -389,33 +790,47 @@ static bool __MCTypeInfoCreateBuiltin(MCValueTypeCode p_code, MCTypeInfoRef& r_t
     return false;
 }
 
-static MCValueTypeCode __MCTypeInfoGetTypeCode(MCTypeInfoRef self)
+const MCValueCustomCallbacks *MCCustomTypeInfoGetCallbacks(MCTypeInfoRef self)
 {
-    return (self -> flags & kMCTypeInfoTypeCodeMask);
-}
-
-static bool __MCTypeInfoIsNamed(MCTypeInfoRef self)
-{
-    return __MCTypeInfoGetTypeCode(self) == 0xff;
-}
-
-MCTypeInfoRef __MCTypeInfoResolve(MCTypeInfoRef self)
-{
-    if (__MCTypeInfoIsNamed(self))
-        return self -> named . typeinfo;
-    return self;
+    return &self -> custom . callbacks;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self)
+{
+    if (__MCTypeInfoGetExtendedTypeCode(self) != kMCTypeInfoTypeIsNamed)
+        return self;
+    
+    return self -> named . typeinfo;
+}
+
 void __MCTypeInfoDestroy(__MCTypeInfo *self)
 {
-    if (__MCTypeInfoIsNamed(self))
+    intenum_t t_ext_typecode;
+    t_ext_typecode = __MCTypeInfoGetExtendedTypeCode(self);
+    
+    if (t_ext_typecode == kMCTypeInfoTypeIsAlias)
+    {
+        MCValueRelease(self -> alias . name);
+        MCValueRelease(self -> alias . typeinfo);
+    }
+    else if (t_ext_typecode == kMCTypeInfoTypeIsNamed)
     {
         MCValueRelease(self -> named . name);
         MCValueRelease(self -> named . typeinfo);
     }
-    else if (__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeRecord)
+    else if (t_ext_typecode == kMCTypeInfoTypeIsOptional)
+    {
+        MCValueRelease(self -> optional . basetype);
+    }
+    else if (t_ext_typecode == kMCTypeInfoTypeIsForeign)
+    {
+        MCValueRelease(self -> foreign . descriptor . basetype);
+        MCValueRelease(self -> foreign . descriptor . bridgetype);
+        MCMemoryDeleteArray(self -> foreign . descriptor . layout);
+    }
+    else if (t_ext_typecode == kMCValueTypeCodeRecord)
     {
         MCValueRelease(self -> record . base);
         for(uindex_t i = 0; i < self -> record . field_count; i++)
@@ -425,17 +840,16 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         }
         MCMemoryDeleteArray(self -> record . fields);
     }
-    else if (__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeHandler)
+    else if (t_ext_typecode == kMCValueTypeCodeHandler)
     {
         for(uindex_t i = 0; i < self -> handler . field_count; i++)
         {
-            MCValueRelease(self -> handler . fields[i] . name);
             MCValueRelease(self -> handler . fields[i] . type);
         }
         MCValueRelease(self -> handler . return_type);
         MCMemoryDeleteArray(self -> handler . fields);
     }
-    else if (__MCTypeInfoGetTypeCode(self) == kMCValueTypeCodeError)
+    else if (t_ext_typecode == kMCValueTypeCodeError)
     {
         MCValueRelease(self -> error . domain);
         MCValueRelease(self -> error . message);
@@ -447,12 +861,39 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     hash_t t_hash;
     t_hash = 0;
     
-    uint32_t t_code;
-    t_code = __MCTypeInfoGetTypeCode(self);
+    intenum_t t_code;
+    t_code = __MCTypeInfoGetExtendedTypeCode(self);
     
     t_hash = MCHashBytesStream(t_hash, &t_code, sizeof(uint32_t));
-    if (__MCTypeInfoIsNamed(self))
-        t_hash = MCHashBytesStream(t_hash, &self -> named, sizeof(self -> named));
+    if (t_code == kMCTypeInfoTypeIsAlias)
+    {
+        // If the alias name is empty, then we treat it as a unique unnamed type.
+        if (self -> alias . name == kMCEmptyName)
+            t_hash = MCHashPointer(self);
+        else
+        {
+            // Aliases are only equal if both name and type are the same. This is because
+            // they are informative (for debugging purposes) rather than having any
+            // semantic value.
+            t_hash = MCHashBytesStream(t_hash, &self -> alias . name, sizeof(self -> alias . name));
+            t_hash = MCHashBytesStream(t_hash, &self -> alias . typeinfo, sizeof(self -> alias . typeinfo));
+        }
+    }
+    else if (t_code == kMCTypeInfoTypeIsNamed)
+    {
+        // Named types are only hashed on the name as a named type can only be bound
+        // to a single type at any one time (for obvious reasons!).
+        t_hash = MCHashBytesStream(t_hash, &self -> alias . name, sizeof(self -> alias . name));
+    }
+    else if (t_code == kMCTypeInfoTypeIsOptional)
+    {
+        t_hash = MCHashBytesStream(t_hash, &self -> optional . basetype, sizeof(self -> optional . basetype));
+    }
+    else if (t_code == kMCTypeInfoTypeIsForeign)
+    {
+        // All foreign typeinfos are unique regardless of callbacks passed. So just hash the pointer.
+        t_hash = MCHashPointer(self);
+    }
     else if (t_code == kMCValueTypeCodeRecord)
     {
         t_hash = MCHashBytesStream(t_hash, &self -> record . base, sizeof(self -> record . base));
@@ -470,20 +911,39 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
         t_hash = MCHashBytesStream(t_hash, &self -> error . domain, sizeof(self -> error . domain));
         t_hash = MCHashBytesStream(t_hash, self -> error . message, sizeof(self -> error . message));
     }
-    
+    else if (t_code == kMCValueTypeCodeCustom)
+    {
+        // All custom typeinfos are unique regardless of callbacks passed. So just hash the pointer.
+        t_hash = MCHashPointer(self);
+    }
+
     return t_hash;
 }
 
 bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
 {
-    if (__MCTypeInfoGetTypeCode(self) != __MCTypeInfoGetTypeCode(other_self))
+    if (__MCTypeInfoGetExtendedTypeCode(self) != __MCTypeInfoGetExtendedTypeCode(other_self))
         return false;
     
-    MCValueTypeCode t_code;
-    t_code = __MCTypeInfoGetTypeCode(self);
-    if (t_code == 0xff)
-        return MCNameIsEqualTo(self -> named . name, other_self -> named . name) &&
-                    self -> named . typeinfo == other_self -> named . typeinfo;
+    intenum_t t_code;
+    t_code = __MCTypeInfoGetExtendedTypeCode(self);
+    
+    if (t_code == kMCTypeInfoTypeIsAlias)
+        return MCNameIsEqualTo(self -> alias . name, other_self -> alias . name) &&
+                self -> alias . typeinfo == other_self -> alias . typeinfo;
+    
+    if (t_code == kMCTypeInfoTypeIsNamed)
+    {
+        if (self -> named . name == kMCEmptyName || other_self -> named . name == kMCEmptyName)
+            return false;
+        return MCNameIsEqualTo(self -> named . name, other_self -> named . name);
+    }
+    
+    if (t_code == kMCTypeInfoTypeIsOptional)
+        return self -> optional . basetype == other_self -> optional . basetype;
+    
+    if (t_code == kMCTypeInfoTypeIsForeign)
+        return self == other_self;
     
     if (t_code == kMCValueTypeCodeRecord)
     {
@@ -506,8 +966,7 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
             return false;
         
         for(uindex_t i = 0; i < self -> handler . field_count; i++)
-            if (!MCNameIsEqualTo(self -> handler . fields[i] . name, other_self -> handler . fields[i] . name) ||
-                self -> handler . fields[i] . type != other_self -> handler . fields[i] . type ||
+            if (self -> handler . fields[i] . type != other_self -> handler . fields[i] . type ||
                 self -> handler . fields[i] . mode != other_self -> handler . fields[i] . mode)
                 return false;
     }
@@ -516,6 +975,11 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
         if (self -> error . domain != other_self -> error . domain)
             return false;
         if (self -> error . message != other_self -> error . message)
+            return false;
+    }
+    else if (t_code == kMCValueTypeCodeCustom)
+    {
+        if (self != other_self)
             return false;
     }
     
@@ -527,17 +991,38 @@ bool __MCTypeInfoCopyDescription(__MCTypeInfo *self, MCStringRef& r_description)
     return false;
 }
 
+static bool __create_named_builtin(MCNameRef p_name, MCValueTypeCode p_code, MCTypeInfoRef& r_typeinfo)
+{
+    MCAutoTypeInfoRef t_raw_typeinfo;
+    if (!MCBuiltinTypeInfoCreate(p_code, &t_raw_typeinfo))
+        return false;
+    
+    MCAutoTypeInfoRef t_typeinfo;
+    if (!MCNamedTypeInfoCreate(p_name, &t_typeinfo))
+        return false;
+    
+    if (!MCNamedTypeInfoBind(*t_typeinfo, *t_raw_typeinfo))
+        return false;
+    
+    r_typeinfo = MCValueRetain(*t_typeinfo);
+    
+    return true;
+}
+
 bool __MCTypeInfoInitialize(void)
 {
     return
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeNull, kMCNullTypeInfo) &&
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeBoolean, kMCBooleanTypeInfo) &&
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeNumber, kMCNumberTypeInfo) &&
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeString, kMCStringTypeInfo) &&
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeData, kMCDataTypeInfo) &&
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeArray, kMCArrayTypeInfo) &&
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeList, kMCListTypeInfo) &&
-        __MCTypeInfoCreateBuiltin(kMCValueTypeCodeSet, kMCSetTypeInfo);
+        __create_named_builtin(MCNAME("livecode.lang.undefined"), kMCValueTypeCodeNull, kMCNullTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.boolean"), kMCValueTypeCodeBoolean, kMCBooleanTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.number"), kMCValueTypeCodeNumber, kMCNumberTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.string"), kMCValueTypeCodeString, kMCStringTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.name"), kMCValueTypeCodeName, kMCNameTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.data"), kMCValueTypeCodeData, kMCDataTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.array"), kMCValueTypeCodeArray, kMCArrayTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.stringlist"), kMCValueTypeCodeList, kMCListTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.set"), kMCValueTypeCodeSet, kMCSetTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.list"), kMCValueTypeCodeProperList, kMCProperListTypeInfo) &&
+        __create_named_builtin(MCNAME("livecode.lang.any"), kMCTypeInfoTypeIsAny, kMCAnyTypeInfo);
 }
 
 void __MCTypeInfoFinalize(void)
@@ -546,10 +1031,13 @@ void __MCTypeInfoFinalize(void)
     MCValueRelease(kMCBooleanTypeInfo);
     MCValueRelease(kMCNumberTypeInfo);
     MCValueRelease(kMCStringTypeInfo);
+    MCValueRelease(kMCNameTypeInfo);
     MCValueRelease(kMCDataTypeInfo);
     MCValueRelease(kMCArrayTypeInfo);
     MCValueRelease(kMCListTypeInfo);
     MCValueRelease(kMCSetTypeInfo);
+    MCValueRelease(kMCProperListTypeInfo);
+    MCValueRelease(kMCAnyTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -78,6 +78,27 @@ bool MCArrayCreate(bool p_case_sensitive, const MCNameRef *p_keys, const MCValue
 	return false;
 }
 
+bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *p_keys, const MCValueRef *p_values, uindex_t p_length, MCArrayRef& r_array)
+{
+	bool t_success;
+	t_success = true;
+    
+	MCArrayRef t_array;
+	t_array = nil;
+	if (t_success)
+		t_success = MCArrayCreateMutableWithOptions(t_array, p_case_sensitive, p_form_sensitive);
+    
+	if (t_success)
+		for(uindex_t i = 0; i < p_length && t_success; i++)
+			t_success = MCArrayStoreValue(t_array, p_case_sensitive, p_keys[i], p_values[i]);
+    
+	if (t_success)
+		return MCArrayCopyAndRelease(t_array, r_array);
+    
+	MCValueRelease(t_array);
+	return false;
+}
+
 bool MCArrayCreateMutable(MCArrayRef& r_array)
 {
 	if (!__MCValueCreate(kMCValueTypeCodeArray, r_array))
@@ -87,6 +108,22 @@ bool MCArrayCreateMutable(MCArrayRef& r_array)
 
 	return true;
 }	
+
+bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive)
+{
+	if (!__MCValueCreate(kMCValueTypeCodeArray, r_array))
+		return false;
+    
+    r_array -> flags |= kMCArrayFlagIsMutable;
+    
+    if (p_case_sensitive)
+        r_array -> flags |= kMCArrayFlagIsCaseSensitive;
+
+    if (p_form_sensitive)
+        r_array -> flags |= kMCArrayFlagIsFormSensitive;
+    
+	return true;
+}
 
 bool MCArrayCopy(MCArrayRef self, MCArrayRef& r_new_array)
 {
@@ -274,6 +311,16 @@ uindex_t MCArrayGetCount(MCArrayRef self)
 	if (!__MCArrayIsIndirect(self))
 		return self -> key_value_count;
 	return self -> contents -> key_value_count;
+}
+
+bool MCArrayIsCaseSensitive(MCArrayRef self)
+{
+    return (self -> flags & kMCArrayFlagIsCaseSensitive) != 0;
+}
+
+bool MCArrayIsFormSensitive(MCArrayRef self)
+{
+    return (self -> flags & kMCArrayFlagIsFormSensitive) != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -813,9 +860,7 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MC
 		}
 		else
 		{
-			if (!p_case_sensitive &&
-				MCNameIsEqualTo(t_entry -> key, p_key) ||
-				t_entry -> key == p_key)
+            if (MCNameIsEqualTo(t_entry -> key, p_key, p_case_sensitive, MCArrayIsFormSensitive(self)))
 			{
 				r_slot = t_probe;
 				return true;
