@@ -77,6 +77,8 @@ void bootstrap_main(int argc, char *argv[])
     return 0;*/
 }
 
+extern int OutputFileAsC;
+
 static void full_main(int argc, char *argv[])
 {
     // If there is no filename, error.
@@ -91,6 +93,12 @@ static void full_main(int argc, char *argv[])
     if (strcmp(argv[i], "-output") == 0 && i + 1 < argc)
     {
         SetOutputFile(argv[++i]);
+        i++;
+    }
+    else if (strcmp(argv[i], "-outputc") == 0 && i + 1 < argc)
+    {
+        SetOutputFile(argv[++i]);
+        OutputFileAsC = 1;
         i++;
     }
     AddFile(argv[i]);

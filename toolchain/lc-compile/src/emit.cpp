@@ -6,6 +6,8 @@
 #include "literal.h"
 #include "position.h"
 
+int OutputFileAsC = 0;
+
 extern "C" void EmitBeginModule(NameRef name, long& r_index);
 extern "C" void EmitEndModule(void);
 extern "C" void EmitModuleDependency(NameRef name, long& r_index);
@@ -181,6 +183,7 @@ static bool define_named_typeinfo(const char *name, long& r_index)
 //////////
 
 static MCScriptModuleBuilderRef s_builder;
+static NameRef s_module_name;
 
 //////////
 
@@ -189,6 +192,8 @@ void EmitBeginModule(NameRef p_name, long& r_index)
     MCInitialize();
     
     MCLog("[Emit] BeginModule(%@) -> 0", to_mcnameref(p_name));
+
+    s_module_name = p_name;
     
     MCScriptBeginModule(kMCScriptModuleKindLibrary, to_mcnameref(p_name), s_builder);
     r_index = 0;
@@ -248,7 +253,20 @@ void EmitEndModule(void)
         MCLog("Generated module file of size %ld\n", t_size);
         FILE *t_output;
         t_output = OpenOutputFile();
-        if (t_output != NULL)
+        
+        if (OutputFileAsC)
+        {
+            fprintf(t_output, "static unsigned char module_data[] = {");
+            for(size_t i = 0; i < t_size; i++)
+            {
+                if ((i % 16) == 0)
+                    fprintf(t_output, "\n");
+                fprintf(t_output, "0x%02x, ", ((unsigned char *)t_buffer)[i]);
+            }
+            fprintf(t_output, "};\n");
+            fprintf(t_output, "__attribute__((used)) __attribute__((section(\"__MODULES,__modules\"))) static volatile struct { unsigned char *data; unsigned long length; } module_info = { module_data, sizeof(module_data) };\n");
+        }
+        else if (t_output != NULL)
         {
             fwrite(t_buffer, 1, t_size, t_output);
             fclose(t_output);

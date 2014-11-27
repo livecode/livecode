@@ -171,6 +171,13 @@
 			remoteGlobalIDString = 4D3AA08E19CC47F900886BE7;
 			remoteInfo = grts;
 		};
+		4D79B6E71A27407900DD750C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D0391191A27369800CB9E06 /* libscript.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D79B6541A273B6900DD750C;
+			remoteInfo = stdscript;
+		};
 		4DA53A1C19E43CC60089FBDC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D6F070119CC36B700DDC6E0 /* Project object */;
@@ -341,6 +348,7 @@
 			isa = PBXGroup;
 			children = (
 				4D0391201A27369800CB9E06 /* libscript.a */,
+				4D79B6E81A27407900DD750C /* libstdscript.a */,
 				4D0391221A27369800CB9E06 /* libscript-test */,
 			);
 			name = Products;
@@ -646,6 +654,13 @@
 			remoteRef = 4D44E5541A2735410073FFA2 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		4D79B6E81A27407900DD750C /* libstdscript.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libstdscript.a;
+			remoteRef = 4D79B6E71A27407900DD750C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXShellScriptBuildPhase section */
@@ -809,7 +824,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" -bootstrap -template \"${SRCROOT}/src/grammar.g\" -output \"${SRCROOT}/src/grammar_full.g\" \"${SRCROOT}/../../library/src/string.mlc\" \"${SRCROOT}/../../library/src/binary.mlc\" \"${SRCROOT}/../../library/src/type.mlc\" \"${SRCROOT}/../../library/src/arithmetic.mlc\" \"${SRCROOT}/../../library/src/bitwise.mlc\" \"${SRCROOT}/../../library/src/byte.mlc\" \"${SRCROOT}/../../library/src/char.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" -bootstrap -template \"${SRCROOT}/src/grammar.g\" -output \"${SRCROOT}/src/grammar_full.g\" \"${SRCROOT}/../../libscript/src/string.mlc\" \"${SRCROOT}/../../libscript/src/binary.mlc\" \"${SRCROOT}/../../libscript/src/type.mlc\" \"${SRCROOT}/../../libscript/src/arithmetic.mlc\" \"${SRCROOT}/../../libscript/src/bitwise.mlc\" \"${SRCROOT}/../../libscript/src/byte.mlc\" \"${SRCROOT}/../../libscript/src/char.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
