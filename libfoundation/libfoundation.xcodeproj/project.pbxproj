@@ -18,6 +18,7 @@
 		4D44E4C01A238EF30073FFA2 /* foundation-foreign.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D44E4BF1A238EF30073FFA2 /* foundation-foreign.cpp */; };
 		4D5837A31806A024006DE6A2 /* foundation-objc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5837A21806A024006DE6A2 /* foundation-objc.mm */; };
 		4D79B6421A27376800DD750C /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C74D7EE21A2639F200BC7FE8 /* libffi.a */; };
+		4D79B7191A27517600DD750C /* foundation-filters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 769372111A03AEC00001A9FF /* foundation-filters.cpp */; };
 		4D7FA79D1594E09500EEF440 /* foundation-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA78F1594E09500EEF440 /* foundation-array.cpp */; };
 		4D7FA79E1594E09500EEF440 /* foundation-core.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA7901594E09500EEF440 /* foundation-core.cpp */; };
 		4D7FA79F1594E09500EEF440 /* foundation-debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA7911594E09500EEF440 /* foundation-debug.cpp */; };
@@ -334,6 +335,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D79B7191A27517600DD750C /* foundation-filters.cpp in Sources */,
 				761D53EC19EBC70B00DBF726 /* foundation-typeconvert.cpp in Sources */,
 				4D7FA79D1594E09500EEF440 /* foundation-array.cpp in Sources */,
 				4D7FA79E1594E09500EEF440 /* foundation-core.cpp in Sources */,
