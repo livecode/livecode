@@ -275,6 +275,9 @@
 
     'rule' RecordField(-> slot(Position, Name, Type)):
         Identifier(-> Name) @(-> Position) OptionalTypeClause(-> Type)
+        
+    'rule' RecordField(-> slot(Position, Name, Type)):
+        StringyIdentifier(-> Name) @(-> Position) OptionalTypeClause(-> Type)
 
 --
 
@@ -893,6 +896,15 @@
     'rule' Identifier(-> Id):
         "iterator" @(-> Position)
         MakeNameLiteral("iterator" -> Identifier)
+        Id::ID
+        Id'Position <- Position
+        Id'Name <- Identifier
+
+'nonterm' StringyIdentifier(-> ID)
+
+    'rule' StringyIdentifier(-> Id):
+        STRING_LITERAL(-> String) @(-> Position)
+        MakeNameLiteral(String -> Identifier)
         Id::ID
         Id'Position <- Position
         Id'Name <- Identifier
