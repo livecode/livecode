@@ -418,6 +418,29 @@ void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef self, uindex_t p_in
     __add_script_type(self, t_type, r_type);
 }
 
+void MCScriptAddForeignTypeToModule(MCScriptModuleBuilderRef self, MCStringRef p_binding, uindex_t& r_type)
+{
+    for(uindex_t i = 0; i < self -> module . type_count; i++)
+        if (self -> module . types[i] -> kind == kMCScriptTypeKindDefined)
+            if (MCStringIsEqualTo(static_cast<MCScriptForeignType *>(self -> module . types[i]) -> binding, p_binding, kMCStringOptionCompareExact))
+            {
+                r_type = i;
+                return;
+            }
+    
+    MCScriptForeignType *t_type;
+    if (!MCMemoryNew(t_type))
+    {
+        self -> valid = false;
+        return;
+    }
+    
+    t_type -> kind = kMCScriptTypeKindForeign;
+    t_type -> binding = MCValueRetain(p_binding);
+    
+    __add_script_type(self, t_type, r_type);
+}
+
 void MCScriptAddOptionalTypeToModule(MCScriptModuleBuilderRef self, uindex_t p_type, uindex_t& r_type)
 {
     if (self -> module . types[p_type] -> kind == kMCScriptTypeKindOptional)

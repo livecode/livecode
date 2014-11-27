@@ -708,7 +708,7 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
 
 static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler)
 {
-    p_handler -> function = dlsym(RTLD_MAIN_ONLY, MCStringGetCString(p_handler -> binding));
+    p_handler -> function = dlsym(RTLD_DEFAULT, MCStringGetCString(p_handler -> binding));
     if (p_handler -> function == nil)
         return MCErrorThrowGeneric();
     

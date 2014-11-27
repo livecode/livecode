@@ -5,11 +5,16 @@
 #include "script-private.h"
 
 #include <stddef.h>
+#include <dlfcn.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_PICKLE_BEGIN_RECORD(MCScriptDefinedType)
     MC_PICKLE_UINDEX(index)
+MC_PICKLE_END_RECORD()
+
+MC_PICKLE_BEGIN_RECORD(MCScriptForeignType)
+    MC_PICKLE_STRINGREF(binding)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptOptionalType)
@@ -535,6 +540,21 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     return false;
             }
             break;
+            case kMCScriptTypeKindForeign:
+            {
+                MCScriptForeignType *t_type;
+                t_type = static_cast<MCScriptForeignType *>(self -> types[i]);
+                
+                void *t_symbol;
+                t_symbol = dlsym(RTLD_DEFAULT, MCStringGetCString(t_type -> binding));
+                if (t_symbol == nil)
+                {
+                    MCLog("Unable to resolve foreign type '%@'", t_type -> binding);
+                    return false;
+                }
+                
+                t_type -> typeinfo = MCValueRetain(*(MCTypeInfoRef *)t_symbol);
+            }
             case kMCScriptTypeKindRecord:
             {
                 MCScriptRecordType *t_type;
