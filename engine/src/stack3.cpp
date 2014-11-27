@@ -1430,10 +1430,15 @@ void MCStack::appendaclip(MCAudioClip *aptr)
 	aptr->appendto(aclips);
 	aptr->setid(newid());
 	aptr->setparent(this);
+    
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Send newAudioclip message
+    aptr->message(MCM_new_audioclip);
 }
 
 void MCStack::removeaclip(MCAudioClip *aptr)
 {
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Send deleteAudioclip message
+    aptr->message(MCM_delete_audioclip);
 	aptr->remove(aclips);
 }
 
@@ -1442,12 +1447,16 @@ void MCStack::appendvclip(MCVideoClip *vptr)
 	vptr->appendto(vclips);
 	vptr->setid(newid());
 	vptr->setparent(this);
+    
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Send newVideoclip message
+    vptr->message(MCM_new_videoclip);
 }
 
 void MCStack::removevclip(MCVideoClip *vptr)
 {
-	vptr->remove
-	(vclips);
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Send deleteVideoclip message
+    vptr->message(MCM_delete_videoclip);
+	vptr->remove(vclips);
 }
 
 void MCStack::appendcontrol(MCControl *optr)

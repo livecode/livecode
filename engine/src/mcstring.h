@@ -466,6 +466,17 @@ extern MCNameRef MCM_uniconify_stack;
 extern MCNameRef MCM_unload_url;
 extern MCNameRef MCM_update_var;
 
+// AL-2014-11-27: [[ NewIdeMEssages ]] Add new ide messages
+extern MCNameRef MCM_delete_audioclip;
+extern MCNameRef MCM_delete_videoclip;
+extern MCNameRef MCM_new_audioclip;
+extern MCNameRef MCM_new_videoclip;
+extern MCNameRef MCM_insert_frontscript;
+extern MCNameRef MCM_insert_backscript;
+extern MCNameRef MCM_remove_frontscript;
+extern MCNameRef MCM_remove_backscript;
+extern MCNameRef MCM_ungroup_group;
+
 #ifdef _MOBILE
 extern MCNameRef MCN_firstname;
 extern MCNameRef MCN_lastname;
