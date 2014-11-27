@@ -383,6 +383,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4DF42A520B04862E003F2D95 /* Debug.xcconfig */;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../prebuilt/lib/mac\"";
 			};
 			name = Debug;
 		};
@@ -390,6 +391,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4DF42A560B04862E003F2D95 /* Release.xcconfig */;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../prebuilt/lib/mac\"";
 			};
 			name = Release;
 		};
@@ -399,11 +401,7 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"/Users/alilloyd/Documents/GitHub/livecode-widgets/thirdparty/libz/../../_build/mac/Debug",
-					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = foundation;
 			};
 			name = Debug;
@@ -414,11 +412,7 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"/Users/alilloyd/Documents/GitHub/livecode-widgets/thirdparty/libz/../../_build/mac/Debug",
-					"/Users/mark/Workspace/livecode-widgets/prebuilt/lib/mac",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = foundation;
 			};
 			name = Release;
