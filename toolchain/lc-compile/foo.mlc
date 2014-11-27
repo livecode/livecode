@@ -5,7 +5,14 @@ foreign handler MCStringGetLength(in stringref as string) as uint binds to "<bui
 foreign handler MCStringMutableCopy(in i as string, out o as string) as bool binds to "<builtin>"
 foreign handler MCStringAppendChar(in stringref as string, in c as uint) as bool binds to "<builtin>"
 foreign handler MCStringPrepend(in stringref as string, in prepend as string) as bool binds to "<builtin>"
+foreign handler MCStringAppend(in stringref as string, in prepend as string) as bool binds to "<builtin>"
 foreign handler write(in fildes as int, in buf as pointer, in nbyte as uint) as int binds to "write"
+
+foreign handler MCTextPaneCreate(in pStack as int, out rPointer as pointer) as bool binds to "<builtin>"
+foreign handler MCTextPaneSetContentsPlain(in pPane as pointer, in pText as string) as bool binds to "<builtin>"
+foreign handler MCTextPanePaintShim(in pPane as pointer) binds to "<builtin>"
+foreign handler MCTextPaneGet() as pointer binds to "<builtin>"
+foreign handler MCTextPaneSet(in pPane as pointer) binds to "<builtin>"
 
 handler println(in textin as string)
 	variable ptr as pointer
@@ -18,7 +25,22 @@ handler println(in textin as string)
 end handler
 
 public handler OnOpen()
+	variable tPane as pointer
+	variable tMessage as string
+
 	println("OnOpen")
+
+	MCStringMutableCopy("Hello, World!", tMessage)
+	MCStringAppendChar(11, tMessage)
+	MCStringAppend(tMessage, "I'm a widget.")
+	MCStringAppendChar(11, tMessage)
+	MCStringAppend(tMessage, "What are you?")
+
+	MCTextPaneCreate(0, tPane)
+	MCTextPaneSet(tPane)
+	MCTextPaneSetContentsPlain(tPane, tMessage)
+
+	println("Pane created")
 end handler
 
 public handler OnClose()
@@ -33,7 +55,10 @@ public handler OnDetach()
 	println("OnDetach")
 end handler
 
-/* OnPaint */
+public handler OnPaint()
+	println("OnPaint")
+	MCTextPanePaintShim(MCTextPaneGet())
+end handler
 
 /* OnGeometryChanged */
 

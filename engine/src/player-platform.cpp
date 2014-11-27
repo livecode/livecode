@@ -1215,7 +1215,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 }
 
 #ifdef LEGACY_EXEC
-Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
 	uint2 i = 0;
 	switch (which)
@@ -1393,7 +1393,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
             break;
 #endif /* MCPlayer::getprop */
         default:
-            return MCControl::getprop(parid, which, ep, effective);
+            return MCControl::getprop(parid, which, ep, effective, recursive);
 	}
 	return ES_NORMAL;
 }

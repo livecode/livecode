@@ -38,6 +38,7 @@ MCLine::MCLine(MCParagraph *paragraph)
 	firstblock = lastblock = NULL;
     firstsegment = lastsegment = NULL;
 	width = ascent = descent = 0;
+    m_ascent = m_descent = m_leading = 0.0f;
 	dirtywidth = 0;
     m_offset = 0;
 }
@@ -65,7 +66,11 @@ MCLine::~MCLine()
 	}
 	ascent = lptr->ascent;
 	descent = lptr->descent;
+    m_ascent = lptr->m_ascent;
+    m_descent = lptr->m_descent;
+    m_leading = lptr->m_leading;
 	lptr->ascent = lptr->descent = 0;
+    lptr->m_ascent = lptr->m_descent = lptr->m_leading = 0;
 	lptr->firstblock = lptr->lastblock = NULL;
 	lptr->width = 0;
 }*/
@@ -264,6 +269,7 @@ void MCLine::appendall(MCBlock *bptr, bool p_flow)
     }
 	
     dirtywidth = MCU_max(width, oldwidth);
+    m_ascent = m_descent = m_leading = 0;
 }
 
 void MCLine::appendsegments(MCSegment *first, MCSegment *last)
@@ -309,6 +315,17 @@ void MCLine::setscents(MCBlock *bptr)
 	uint2 dheight = bptr->getdescent();
 	if (dheight > descent)
 		descent = dheight;
+    
+    coord_t t_aheight, t_dheight, t_leading;
+    t_aheight = bptr->GetAscent();
+    t_dheight = bptr->GetDescent();
+    t_leading = bptr->GetLeading();
+    if (t_aheight > m_ascent)
+        m_ascent = t_aheight;
+    if (t_dheight > m_descent)
+        m_descent = t_dheight;
+    if (t_leading > m_leading)
+        m_leading = t_leading;
 }
 
 uint2 MCLine::getdirtywidth()
@@ -491,6 +508,26 @@ uint2 MCLine::getascent()
 uint2 MCLine::getdescent()
 {
 	return descent;
+}
+
+coord_t MCLine::GetAscent() const
+{
+    return m_ascent;
+}
+
+coord_t MCLine::GetDescent() const
+{
+    return m_descent;
+}
+
+coord_t MCLine::GetLeading() const
+{
+    return m_leading;
+}
+
+coord_t MCLine::GetHeight() const
+{
+    return GetAscent() + GetDescent() + GetLeading();
 }
 
 // MW-2012-02-10: [[ FixedTable ]] In fixed-width table mode the paragraph needs to

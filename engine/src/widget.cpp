@@ -746,12 +746,15 @@ void MCWidget::OnDetach()
     CallHandler(MCNAME("OnDetach"), nil, 0);
 }
 
+MCDC* g_widget_paint_dc;
+
 void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
 {
     if (m_native_layer)
         m_native_layer->OnPaint(p_dc, p_rect);
     
-    fprintf(stderr, "MCWidget::OnPaint\n");
+    g_widget_paint_dc = p_dc;
+    CallHandler(MCNAME("OnPaint"), nil, 0);
 }
 
 void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
@@ -1196,3 +1199,13 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// Because... stupidity
+#include "text-api.h"
+
+void* foo1 = (void*)&MCTextPaneCreate;
+void* foo2 = (void*)&MCTextPaneSetContentsPlain;
+void* foo3 = (void*)&MCTextPaneSet;
+void* foo4 = (void*)&MCTextPaneGet;
+void* foo5 = (void*)&MCTextPanePaintShim;
+

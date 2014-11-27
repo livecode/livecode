@@ -64,7 +64,7 @@ bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, 
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
     __MCForeignValue *t_value;
-    if (!__MCValueCreate(kMCValueTypeCodeForeignValue, p_typeinfo -> foreign . descriptor . size, (__MCValue*&)t_value))
+    if (!__MCValueCreate(kMCValueTypeCodeForeignValue, t_resolved_typeinfo -> foreign . descriptor . size, (__MCValue*&)t_value))
         return false;
     
     if (!t_resolved_typeinfo -> foreign . descriptor . move(p_contents, t_value + 1))

@@ -3016,7 +3016,6 @@ static MCForeignTypeDescriptor kMCCanvasPointTypeDescriptor =
     nil,
     nil,
     nil,
-    nil,
 };
 
 void MCCanvasTypesInitialize()

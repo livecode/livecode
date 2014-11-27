@@ -128,7 +128,7 @@ typedef struct MCCanvasPaintStruct
 
 uinteger_t MCCanvasPaintType_Measure(void);
 void MCCanvasPaintType_Finalize(MCCanvasPaint *p_paint);
-void MCCanvasPaintType_Copy(MCCanvasPaint *p_src, MCCanvasPaint *p_dst);
+void MCCanvasPaintType_Copy(const MCCanvasPaint *p_src, MCCanvasPaint *p_dst);
 
 // Solid Paint opaque type
 typedef struct MCCanvasSolidPaintStruct : public MCCanvasPaintStruct

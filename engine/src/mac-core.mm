@@ -1981,7 +1981,7 @@ int main(int argc, char *argv[], char *envp[])
 	
 	if (!MCInitialize())
 		exit(-1);
-	
+    
 	// On OSX, argv and envp are encoded as UTF8
 	MCStringRef *t_new_argv;
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
