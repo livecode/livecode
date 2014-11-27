@@ -2999,10 +2999,31 @@ static MCValueCustomCallbacks kMCCanvasCustomValueCallbacks =
 	__MCCanvasDescribe,
 };
 
+MCTypeInfoRef kMCCanvasPointTypeInfo = nil;
+static MCForeignTypeDescriptor kMCCanvasPointTypeDescriptor =
+{
+    sizeof(MCCanvasPoint),
+    kMCNullTypeInfo,
+    kMCNullTypeInfo,
+    nil,
+    0,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+};
+
 void MCCanvasTypesInitialize()
 {
 	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasColorCustomValueCallbacks, kMCCanvasColorTypeInfo);
 	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasCustomValueCallbacks, kMCCanvasTypeInfo);
+    /* UNCHECKED */ MCForeignTypeInfoCreate(&kMCCanvasPointTypeDescriptor, kMCCanvasPointTypeInfo);
 }
 
 void MCCanvasTypesFinalize()
