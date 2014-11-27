@@ -296,6 +296,8 @@
 		4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D77F1DD183F8298002EEBB4 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */; };
 		4D77F1DE183F8298002EEBB4 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */; };
+		4D79B72F1A275AA500DD750C /* module-canvas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B72E1A275AA500DD750C /* module-canvas.cpp */; };
+		4D79B7321A275B2900DD750C /* canvas.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B7301A275ADE00DD750C /* canvas.mlc */; };
 		4D7FA7BF1594E10500EEF440 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
 		4D7FA7C71594E17500EEF440 /* exec-datetime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */; };
 		4D81A4C411171F6B008AE3F1 /* objectprops.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C111171F6A008AE3F1 /* objectprops.cpp */; };
@@ -990,6 +992,20 @@
 		E8DDE5E016C2B1A7007367E4 /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXBuildRule section */
+		4D79B7311A275B0000DD750C /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.mlc";
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_FILE_DIR)/${INPUT_FILE_NAME}.c",
+			);
+			script = "\"${BUILT_PRODUCTS_DIR}/lc-compile\" -outputc \"${DERIVED_FILE_DIR}/${INPUT_FILE_NAME}.c\" \"${INPUT_FILE_PATH}\"";
+		};
+/* End PBXBuildRule section */
+
 /* Begin PBXContainerItemProxy section */
 		4C13880B18A12E3600EFF7B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1116,6 +1132,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = libpcre;
+		};
+		4D79B72C1A275A7C00DD750C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7261916C1A260B6C00851787 /* libscript.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D79B6541A273B6900DD750C;
+			remoteInfo = stdscript;
 		};
 		4D7FA7BA1594E0FA00EEF440 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1879,6 +1902,8 @@
 		4D7741191226B930001C9150 /* lnxtransfer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxtransfer.cpp; path = src/lnxtransfer.cpp; sourceTree = "<group>"; };
 		4D77411A1226B930001C9150 /* lnxtransfer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lnxtransfer.h; path = src/lnxtransfer.h; sourceTree = "<group>"; };
 		4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-keywords.cpp"; path = "src/exec-keywords.cpp"; sourceTree = "<group>"; };
+		4D79B72E1A275AA500DD750C /* module-canvas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-canvas.cpp"; path = "src/module-canvas.cpp"; sourceTree = "<group>"; };
+		4D79B7301A275ADE00DD750C /* canvas.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = canvas.mlc; path = src/canvas.mlc; sourceTree = "<group>"; };
 		4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../libfoundation/libfoundation.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-datetime.cpp"; path = "src/exec-datetime.cpp"; sourceTree = "<group>"; };
 		4D81A4C111171F6A008AE3F1 /* objectprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectprops.cpp; path = src/objectprops.cpp; sourceTree = "<group>"; };
@@ -2644,6 +2669,7 @@
 		4D587DCC0B8096B000200116 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				4D79B7291A275A7C00DD750C /* Modules */,
 				BEBC51EA195350DE00215C85 /* Platform */,
 				76EF32C9182268A700FAC195 /* Foundation */,
 				E864B42215BDABB400F5361C /* Legacy */,
@@ -2993,6 +3019,15 @@
 				4D01C89712247CBA00AAD151 /* mode_installer_osx.cpp */,
 			);
 			name = "Mode - Installer";
+			sourceTree = "<group>";
+		};
+		4D79B7291A275A7C00DD750C /* Modules */ = {
+			isa = PBXGroup;
+			children = (
+				4D79B7301A275ADE00DD750C /* canvas.mlc */,
+				4D79B72E1A275AA500DD750C /* module-canvas.cpp */,
+			);
+			name = Modules;
 			sourceTree = "<group>";
 		};
 		4D7FA7B71594E0FA00EEF440 /* Products */ = {
@@ -3357,6 +3392,7 @@
 			isa = PBXGroup;
 			children = (
 				726191731A260B6D00851787 /* libscript.a */,
+				4D79B72D1A275A7C00DD750C /* libstdscript.a */,
 				726191751A260B6D00851787 /* libscript-test */,
 			);
 			name = Products;
@@ -4107,6 +4143,7 @@
 				4DEE29F40FDE41BE0009423C /* Frameworks */,
 			);
 			buildRules = (
+				4D79B7311A275B0000DD750C /* PBXBuildRule */,
 			);
 			dependencies = (
 				72D60322184768580022379C /* PBXTargetDependency */,
@@ -4300,6 +4337,13 @@
 			fileType = archive.ar;
 			path = libpcre.a;
 			remoteRef = 4D6C7998171348CD000BCF78 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D79B72D1A275A7C00DD750C /* libstdscript.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libstdscript.a;
+			remoteRef = 4D79B72C1A275A7C00DD750C /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */ = {
@@ -4922,6 +4966,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D79B7321A275B2900DD750C /* canvas.mlc in Sources */,
 				4DEE2C370FDE51370009423C /* securemode.cpp in Sources */,
 				4DEE2A8D0FDE42710009423C /* aclip.cpp in Sources */,
 				4DEE2A8E0FDE42710009423C /* answer.cpp in Sources */,
@@ -5056,6 +5101,7 @@
 				4DFFC7E013DD8A91006233A4 /* syscfdate.cpp in Sources */,
 				4DFFC7E113DD8A91006233A4 /* sysunxnetwork.cpp in Sources */,
 				4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */,
+				4D79B72F1A275AA500DD750C /* module-canvas.cpp in Sources */,
 				4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */,
 				4D05B91113E06AB4001CD82A /* dskosxmain.mm in Sources */,
 				4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */,
