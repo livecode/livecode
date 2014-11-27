@@ -12,14 +12,14 @@ foreign handler ExecDecodeUsingBase64(in Source as string, out Value as data) as
 foreign handler ExecEncodeUsingBinary(in Source as data, in Format as string, out Value as string) as undefined binds to "<builtin>"
 foreign handler ExecDecodeUsingBinary(in Source as string, in Format as string, out Value as data) as undefined binds to "<builtin>"
 
-foreign handler ExecEncodeUsingUTF8(in Target as string, out Target as data) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingUTF8(in Target as data, out Target as string) as undefined binds to "<builtin>"
-foreign handler ExecEncodeUsingUTF16(in Target as string, out Target as data) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingUTF16(in Target as data, out Target as string) as undefined binds to "<builtin>"
-foreign handler ExecEncodeUsingUTF32(in Target as string, out Target as data) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingUTF32(in Target as data, out Target as string) as undefined binds to "<builtin>"
-foreign handler ExecEncodeUsingASCII(in Target as string, out Target as data) as undefined binds to "<builtin>"
-foreign handler ExecDecodeUsingASCII(in Target as data, out Target as string) as undefined binds to "<builtin>"
+foreign handler ExecEncodeUsingUTF8(in Source as string, out Target as data) as undefined binds to "<builtin>"
+foreign handler ExecDecodeUsingUTF8(in Source as data, out Target as string) as undefined binds to "<builtin>"
+foreign handler ExecEncodeUsingUTF16(in Source as string, out Target as data) as undefined binds to "<builtin>"
+foreign handler ExecDecodeUsingUTF16(in Source as data, out Target as string) as undefined binds to "<builtin>"
+foreign handler ExecEncodeUsingUTF32(in Source as string, out Target as data) as undefined binds to "<builtin>"
+foreign handler ExecDecodeUsingUTF32(in Source as data, out Target as string) as undefined binds to "<builtin>"
+foreign handler ExecEncodeUsingASCII(in Source as string, out Target as data) as undefined binds to "<builtin>"
+foreign handler ExecDecodeUsingASCII(in Source as data, out Target as string) as undefined binds to "<builtin>"
 
 foreign handler EvalURLEncoded(in Target as string, out Value as string) as undefined binds to "<builtin>"
 foreign handler EvalURLDecoded(in Target as string, out Value as string) as undefined binds to "<builtin>"
@@ -136,13 +136,13 @@ end syntax
 
 --
 
-syntax URLEncoded is prefix operator
+syntax URLEncoded is prefix operator with precedence 3
     "the" "url" "encoded" "of" <Target: Expression>
 begin
     EvalURLEncoded(Target, output)
 end syntax
 
-syntax URLDecoded is statement
+syntax URLDecoded is prefix operator with precedence 3
     "the" "url" "decoded" "of" <Target: Expression>
 begin
     EvalURLDecoded(Target, output)

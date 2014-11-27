@@ -46,10 +46,10 @@ output:     If the operand expression evaluates to true, the value of the expres
             Otherwise, the value of the expression is true.
 */
 
-syntax LogicNot is prefix operator of precedence 1
+syntax LogicNot is prefix operator with precedence 1
     "not" <Operand: Expression>
 begin
-    EvalNot(Operand, output)
+    MCLogicEvalNot(Operand, output)
 end syntax
 
 --

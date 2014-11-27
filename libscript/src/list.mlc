@@ -61,7 +61,7 @@ Target:         An expression which evaluates to a list.
 syntax PushOntoList is statement
     "push" <Value: Expression> "onto" [ "front" "of" <IsFront=true> | "back" "of" <IsFront=false> ] <Target:Expression>
 begin
-    MCListExecPushSingleElementOnto(Value, isFront, Target)
+    MCListExecPushSingleElementOnto(Value, IsFront, Target)
 end syntax
 
 /* 
