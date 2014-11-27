@@ -18,17 +18,17 @@
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
 
-void MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
+extern "C" void MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
 {
     r_output = MCValueRetain(MCProperListFetchHead(p_target));
 }
 
-void MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
+extern "C" void MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
 {
     r_output = MCValueRetain(MCProperListFetchTail(p_target));
 }
 
-void MCListExecPushSingleElementOnto(MCValueRef p_value, bool p_is_front, MCProperListRef& x_target)
+extern "C" void MCListExecPushSingleElementOnto(MCValueRef p_value, bool p_is_front, MCProperListRef& x_target)
 {
     if (p_is_front)
     {
@@ -44,7 +44,7 @@ void MCListExecPushSingleElementOnto(MCValueRef p_value, bool p_is_front, MCProp
 //    ctxt . Throw();
 }
 
-void MCListExecPopElementInto(MCProperListRef& x_source, bool p_is_front, MCValueRef& r_output)
+extern "C" void MCListExecPopElementInto(MCProperListRef& x_source, bool p_is_front, MCValueRef& r_output)
 {
     if (p_is_front)
     {
@@ -60,45 +60,45 @@ void MCListExecPopElementInto(MCProperListRef& x_source, bool p_is_front, MCValu
 //    ctxt . Throw();
 }
 
-void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
+extern "C" void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
 {
     r_output = MCProperListGetLength(p_target);
 }
 
-void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, MCProperListRef p_target, bool& r_output)
+extern "C" void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, MCProperListRef p_target, bool& r_output)
 {
     uindex_t t_dummy;
     r_output = MCProperListFirstIndexOfElement(p_target, p_needle, 0, t_dummy);
 }
 
-void MCListEvalContains(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
+extern "C" void MCListEvalContains(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
 {
     uindex_t t_dummy;
     r_output = MCProperListFirstIndexOfList(p_target, p_needle, 0, t_dummy);
 }
 
-void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
+extern "C" void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(p_target, p_index, t_start, t_count);
     r_output = MCValueRetain(MCProperListFetchElementAtIndex(p_target, t_start));
 }
 
-void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+extern "C" void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
     MCProperListInsertElement(x_target, p_value, t_start);
 }
 
-void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef p_target, MCProperListRef& r_output)
+extern "C" void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef p_target, MCProperListRef& r_output)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(p_target, p_start, p_finish, t_start, t_count);
     MCProperListCopySublist(p_target, MCRangeMake(p_start, p_finish - p_start + 1), r_output);
 }
 
-void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
+extern "C" void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
@@ -106,7 +106,7 @@ void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_fi
     MCProperListInsertElement(x_target, p_value, t_start);
 }
 
-void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+extern "C" void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     t_start += t_count;
@@ -114,7 +114,7 @@ void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperList
     MCProperListInsertElement(x_target, p_value, t_start);
 }
 
-void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+extern "C" void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
@@ -123,7 +123,7 @@ void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, MCProperLis
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, index_t p_finish, MCProperListRef& x_target)
+extern "C" void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
@@ -132,12 +132,12 @@ void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, ind
     MCProperListInsertList(x_target, p_list, t_start);
 }
 
-void MCListSpliceIntoElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+extern "C" void MCListSpliceIntoElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     MCListSpliceIntoElementRangeOf(p_list, p_index, p_index, x_target);
 }
 
-void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+extern "C" void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
@@ -145,7 +145,7 @@ void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_index, MCProp
     MCProperListInsertList(x_target, p_list, t_start);
 }
 
-void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+extern "C" void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);

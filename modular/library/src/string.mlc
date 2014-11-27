@@ -27,6 +27,11 @@ foreign handler MCStringEvalLastOffsetBefore(in Needle as string, in Before as i
 
 foreign handler MCStringEvalContainsChars(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
 
+foreign handler MCStringEvalIsEqualTo(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCStringEvalIsNotEqualTo(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCStringEvalIsLessThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCStringEvalIsGreaterThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -137,6 +142,72 @@ syntax LowercaseString is prefix operator with precedence 1
     "the" "lower" "of" <Source: Expression>
 begin
     MCStringEvalLowercaseOf(Source, output)
+end syntax
+
+--
+
+/*
+Summary:    Determines whether <Left> and <Right> are equal or not.
+
+Left:       An expression which evaluates to a string.
+Right:      An expression which evaluates to a string.
+
+output:     Returns true if the result of evaluating <Left> is the same as that of <Right>, and false otherwise.
+
+*/
+
+syntax IsEqualTo is neutral binary operator with precedence 1
+    <Left: Expression> "is" <Right: Expression>
+begin
+    MCStringEvalIsEqualTo(Left, Right, output)
+end syntax
+
+/*
+Summary:    Determines whether <Left> and <Right> are equal or not.
+
+Left:       An expression which evaluates to a string.
+Right:      An expression which evaluates to a string.
+
+output:     Returns false if the result of evaluating <Left> is the same as that of <Right>, and true otherwise.
+
+*/
+
+syntax IsNotEqualTo is neutral binary operator with precedence 1
+    <Left: Expression> "is" "not" <Right: Expression>
+begin
+    MCStringEvalIsNotEqualTo(Left, Right, output)
+end syntax
+
+/*
+Summary:    Determines whether <Left> is less than <Right> under a char by char comparison
+
+Left:       An expression which evaluates to a string.
+Right:      An expression which evaluates to a string.
+
+output:     Returns true if <Left> and <Right> are not equal, and the first char in <Right> that is not equal to the
+            corresponding char in <Left> is of greater value.
+*/
+
+syntax LessThan is neutral binary operator with precedence 1
+    <Left: Expression> "<" <Right: Expression>
+begin
+    MCStringEvalIsLessThan(Left, Right, output)
+end syntax
+
+/*
+Summary:    Determines whether <Left> is greater than <Right> under a char by char comparison
+
+Left:       An expression which evaluates to a string.
+Right:      An expression which evaluates to a string.
+
+output:     Returns true if <Left> and <Right> are not equal, and the first char in <Left> that is not equal to the
+            corresponding char in <Right> is of greater value.
+*/
+
+syntax GreaterThan is neutral binary operator with precedence 1
+    <Left: Expression> ">" <Right: Expression>
+begin
+    MCStringEvalIsGreaterThan(Left, Right, output)
 end syntax
 
 --

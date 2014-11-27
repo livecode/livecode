@@ -18,7 +18,7 @@
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
 
-void MCCharEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_output)
+extern "C" void MCCharEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_output)
 {
     r_output = MCStringGetLength(p_target);
 }
@@ -35,7 +35,7 @@ void MCCharEvalIsAmongTheCharsOf(MCHandlerContext& ctxt, MCStringRef p_needle, M
 }
 #endif
 
-void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
+extern "C" void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodepointChunkByRange(p_target, p_start, p_finish, t_start, t_count);
@@ -43,7 +43,7 @@ void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_tar
         return;
 }
 
-void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
+extern "C" void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_start, p_finish, t_start, t_count);
@@ -65,12 +65,12 @@ extern "C" void MCCharFetchCharOf(index_t p_index, MCStringRef p_target, MCStrin
     MCCharFetchCharRangeOf(p_index, p_index, p_target, r_output);
 }
 
-void MCCharStoreCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
+extern "C" void MCCharStoreCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
     MCCharStoreCharRangeOf(p_value, p_index, p_index, x_target);
 }
 
-void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
+extern "C" void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_index, p_index, t_start, t_count);
@@ -87,7 +87,7 @@ void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x
         return;
 }
 
-void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
+extern "C" void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_index, p_index, t_start, t_count);

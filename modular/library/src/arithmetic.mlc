@@ -15,45 +15,45 @@ foreign handler MCArithmeticExecDivideIntegerByInteger(in Value as int, inout Ta
 foreign handler MCArithmeticExecDivideRealByReal(in Value as double, inout Target as double) as undefined binds to "<builtin>"
 foreign handler MCArithmeticExecDivideNumberByNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
 
-foreign handler EvalPlusInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalPlusReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalPlusNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
-foreign handler EvalMinusInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalMinusReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalMinusNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalPlusInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalPlusReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalPlusNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalMinusInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalMinusReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalMinusNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalIntegerPlusInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalRealPlusReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalNumberPlusNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
-foreign handler EvalIntegerMinusInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalRealMinusReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalNumberMinusNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
-foreign handler EvalIntegerTimesInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalRealTimesReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalNumberTimesNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
-foreign handler EvalIntegerOverInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalRealOverReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalNumberOverNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalIntegerPlusInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalRealPlusReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalNumberPlusNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalIntegerMinusInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalRealMinusReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalNumberMinusNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalIntegerTimesInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalRealTimesReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalNumberTimesNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalIntegerOverInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalRealOverReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalNumberOverNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalIntegerModInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalRealModReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalNumberModNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
-foreign handler EvalIntegerWrapInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalRealWrapReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalNumberWrapNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalIntegerModInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalRealModReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalNumberModNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalIntegerWrapInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalRealWrapReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalNumberWrapNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalIntegerIsGreaterThanInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalRealIsGreaterThanReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalNumberIsGreaterThanNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalIntegerIsGreaterThanOrEqualToInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalRealIsGreaterThanOrEqualToReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalNumberIsGreaterThanOrEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalIntegerIsLessThanInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalRealIsLessThanReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalNumberIsLessThanNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalIntegerIsLessThanOrEqualToInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalRealIsLessThanOrEqualToReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalNumberIsLessThanOrEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalIntegerIsGreaterThanInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalRealIsGreaterThanReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalNumberIsGreaterThanNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalIntegerIsGreaterThanOrEqualToInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalRealIsGreaterThanOrEqualToReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalNumberIsGreaterThanOrEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalIntegerIsLessThanInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalRealIsLessThanReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalNumberIsLessThanNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalIntegerIsLessThanOrEqualToInteger(in Left as integer, in Right as integer, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalRealIsLessThanOrEqualToReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
+foreign handler MCArithmeticEvalNumberIsLessThanOrEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
 
 --
 
@@ -128,9 +128,9 @@ output:     The result of evaluating <Operand>.
 syntax PlusUnaryOperator is prefix operator with precedence 1
     "+" <Operand: Expression>
 begin
-    EvalPlusInteger(Operand, output)
-    EvalPlusReal(Operand, output)
-    EvalPlusNumber(Operand, output)
+    MCArithmeticEvalPlusInteger(Operand, output)
+    MCArithmeticEvalPlusReal(Operand, output)
+    MCArithmeticEvalPlusNumber(Operand, output)
 end syntax
 
 /*
@@ -143,9 +143,9 @@ output:     The negated result of evaluating <Operand>.
 syntax MinusUnaryOperator is prefix operator with precedence 1
     "-" <Operand: Expression>
 begin
-    EvalMinusInteger(Operand, output)
-    EvalMinusReal(Operand, output)
-    EvalMinusNumber(Operand, output)
+    MCArithmeticEvalMinusInteger(Operand, output)
+    MCArithmeticEvalMinusReal(Operand, output)
+    MCArithmeticEvalMinusNumber(Operand, output)
 end syntax
 
 --
@@ -160,9 +160,9 @@ output:     The result of adding the numbers <Left> and <Right>.
 syntax PlusOperator is left binary operator with precedence 2
     <Left: Expression> "+" <Right: Expression>
 begin
-    EvalIntegerPlusInteger(Left, Right, output)
-    EvalRealPlusReal(Left, Right, output)
-    EvalNumberPlusNumber(Left, Right, output)
+    MCArithmeticEvalIntegerPlusInteger(Left, Right, output)
+    MCArithmeticEvalRealPlusReal(Left, Right, output)
+    MCArithmeticEvalNumberPlusNumber(Left, Right, output)
 end syntax
 
 /*
@@ -175,9 +175,9 @@ output:     The result of subtracting the number <Right> from <Left>.
 syntax MinusOperator is left binary operator with precedence 2
     <Left: Expression> "-" <Right: Expression>
 begin
-    EvalIntegerMinusInteger(Left, Right, output)
-    EvalRealMinusReal(Left, Right, output)
-    EvalNumberMinusNumber(Left, Right, output)
+    MCArithmeticEvalIntegerMinusInteger(Left, Right, output)
+    MCArithmeticEvalRealMinusReal(Left, Right, output)
+    MCArithmeticEvalNumberMinusNumber(Left, Right, output)
 end syntax
 
 /*
@@ -190,9 +190,9 @@ output:     The result of multiplying the numbers <Left> and <Right>.
 syntax TimesOperator is left binary operator with precedence 1
     <Left: Expression> "*" <Right: Expression>
 begin
-    EvalIntegerTimesInteger(Left, Right, output)
-    EvalRealTimesReal(Left, Right, output)
-    EvalNumberTimesNumber(Left, Right, output)
+    MCArithmeticEvalIntegerTimesInteger(Left, Right, output)
+    MCArithmeticEvalRealTimesReal(Left, Right, output)
+    MCArithmeticEvalNumberTimesNumber(Left, Right, output)
 end syntax
 
 /*
@@ -205,9 +205,9 @@ output:     The result of dividing the number <Left> by <Right>.
 syntax OverOperator is left binary operator with precedence 1
     <Left: Expression> "/" <Right: Expression>
 begin
-    EvalIntegerOverInteger(Left, Right, output)
-    EvalRealOverReal(Left, Right, output)
-    EvalNumberOverNumber(Left, Right, output)
+    MCArithmeticEvalIntegerOverInteger(Left, Right, output)
+    MCArithmeticEvalRealOverReal(Left, Right, output)
+    MCArithmeticEvalNumberOverNumber(Left, Right, output)
 end syntax
 
 --
@@ -222,9 +222,9 @@ output:     The remainder on dividing <Left> by <Right>.
 syntax ModOperator is neutral binary operator with precedence 1
     <Left: Expression> "mod" <Right: Expression>
 begin
-    EvalIntegerModInteger(Left, Right, output)
-    EvalRealModReal(Left, Right, output)
-    EvalNumberModNumber(Left, Right, output)
+    MCArithmeticEvalIntegerModInteger(Left, Right, output)
+    MCArithmeticEvalRealModReal(Left, Right, output)
+    MCArithmeticEvalNumberModNumber(Left, Right, output)
 end syntax
 
 /*
@@ -236,9 +236,9 @@ Right:      An expression that evaluates to a number.
 syntax WrapOperator is neutral binary operator with precedence 1
     <Left: Expression> "wrap" <Right: Expression>
 begin
-    EvalIntegerWrapInteger(Left, Right, output)
-    EvalRealWrapReal(Left, Right, output)
-    EvalNumberWrapNumber(Left, Right, output)
+    MCArithmeticEvalIntegerWrapInteger(Left, Right, output)
+    MCArithmeticEvalRealWrapReal(Left, Right, output)
+    MCArithmeticEvalNumberWrapNumber(Left, Right, output)
 end syntax
 
 --
@@ -253,9 +253,9 @@ output:     True if <Left> is greater than <Right>, and false otherwise.
 syntax IsGreaterThan is neutral binary operator with precedence 3
     <Left: Expression> ">" <Right: Expression>
 begin
-    EvalIntegerIsGreaterThanInteger(Left, Right, output)
-    EvalRealIsGreaterThanReal(Left, Right, output)
-    EvalNumberIsGreaterThanNumber(Left, Right, output)
+    MCArithmeticEvalIntegerIsGreaterThanInteger(Left, Right, output)
+    MCArithmeticEvalRealIsGreaterThanReal(Left, Right, output)
+    MCArithmeticEvalNumberIsGreaterThanNumber(Left, Right, output)
 end syntax
 
 /*
@@ -268,9 +268,9 @@ output:     True if <Left> is greater than or equal to <Right>, and false otherw
 syntax IsGreaterThanOrEqualTo is neutral binary operator with precedence 3
     <Left: Expression> ">=" <Right: Expression>
 begin
-    EvalIntegerIsGreaterThanOrEqualToInteger(Left, Right, output)
-    EvalRealIsGreaterThanOrEqualToReal(Left, Right, output)
-    EvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output)
+    MCArithmeticEvalIntegerIsGreaterThanOrEqualToInteger(Left, Right, output)
+    MCArithmeticEvalRealIsGreaterThanOrEqualToReal(Left, Right, output)
+    MCArithmeticEvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output)
 end syntax
 
 /*
@@ -283,9 +283,9 @@ output:     True if <Left> is less than <Right>, and false otherwise.
 syntax IsLessThan is neutral binary operator with precedence 3
     <Left: Expression> "<" <Right: Expression>
 begin
-    EvalIntegerIsLessThanInteger(Left, Right, output)
-    EvalRealIsLessThanReal(Left, Right, output)
-    EvalNumberIsLessThanNumber(Left, Right, output)
+    MCArithmeticEvalIntegerIsLessThanInteger(Left, Right, output)
+    MCArithmeticEvalRealIsLessThanReal(Left, Right, output)
+    MCArithmeticEvalNumberIsLessThanNumber(Left, Right, output)
 end syntax
 
 /*
@@ -299,9 +299,9 @@ output:     True if <Left> is less than or equal to <Right>, and false otherwise
 syntax IsLessThanOrEqualTo is neutral binary operator with precedence 3
     <Left: Expression> "<=" <Right: Expression>
 begin
-    EvalIntegerIsLessThanOrEqualToInteger(Left, Right, output)
-    EvalRealIsLessThanOrEqualToReal(Left, Right, output)
-    EvalNumberIsLessThanOrEqualToNumber(Left, Right, output)
+    MCArithmeticEvalIntegerIsLessThanOrEqualToInteger(Left, Right, output)
+    MCArithmeticEvalRealIsLessThanOrEqualToReal(Left, Right, output)
+    MCArithmeticEvalNumberIsLessThanOrEqualToNumber(Left, Right, output)
 end syntax
 
 --

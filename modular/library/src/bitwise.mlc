@@ -4,12 +4,12 @@ This module specifies the syntax definitions and bindings for bitwise operations
 
 module com.livecode.bitwise
 
-foreign handler EvalBitwiseAnd(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalBitwiseOr(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalBitwiseNot(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalBitwiseXor(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCBitwiseEvalBitwiseAnd(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCBitwiseEvalBitwiseOr(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCBitwiseEvalBitwiseNot(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCBitwiseEvalBitwiseXor(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
 
-foreign handler EvalBitwiseShift(in Target as integer, in Shift as integer, out Value as integer) as undefined binds to "<builtin>"
+foreign handler MCBitwiseEvalBitwiseShift(in Target as integer, in Shift as integer, out Value as integer) as undefined binds to "<builtin>"
 
 --
 
@@ -27,7 +27,7 @@ output:         The integer whose binary representation is the result of the bit
 syntax BitwiseAnd is left binary operator with precedence 2
     <Left: Expression> "bitwise" "and" <Right: Expression>
 begin
-    EvalBitwiseAnd(Left, Right, output)
+    MCBitwiseEvalBitwiseAnd(Left, Right, output)
 end syntax
 
 /*
@@ -44,7 +44,7 @@ output:         The integer whose binary representation is the result of the bit
 syntax BitwiseOr is left binary operator with precedence 4
     <Left: Expression> "bitwise" "or" <Right: Expression>
 begin
-    EvalBitwiseOr(Left, Right, output)
+    MCBitwiseEvalBitwiseOr(Left, Right, output)
 end syntax
 
 /*
@@ -62,7 +62,7 @@ output:         The integer whose binary representation is the result of the bit
 syntax BitwiseXor is left binary operator with precedence 3
     <Left: Expression> "bitwise" "xor" <Right: Expression>
 begin
-    EvalBitwiseXor(Left, Right, output)
+    MCBitwiseEvalBitwiseXor(Left, Right, output)
 end syntax
 
 /*
@@ -78,7 +78,7 @@ output:         The integer whose binary representation is the result of the bit
 syntax BitwiseNot is prefix operator with precedence 1
     "bitwise" "not" <Operand: Expression>
 begin
-    EvalBitwiseNot(Operand, output)
+    MCBitwiseEvalBitwiseNot(Operand, output)
 end syntax
 
 --
@@ -96,7 +96,7 @@ output:         The integer whose binary representation is the result of shiftin
 syntax BitwiseShift is postfix operator with precedence 1
     <Operand: Expression> "shifted" "by" <Shift: Expression> "bitwise"
 begin
-    EvalBitwiseShift(Operand, Shift, output)
+    MCBitwiseEvalBitwiseShift(Operand, Shift, output)
 end syntax
 
 --
