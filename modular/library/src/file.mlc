@@ -4,16 +4,53 @@ This module specifies the syntax definitions and bindings for file i/o operation
 
 module com.livecode.file
 
+--
+
+opaque type Stream
+    measure is MCFileStreamType_Measure
+    finalize is MCFileStreamType_Finalize
+    copy is MCFileStreamType_Copy
+end type
+
+--
+
+foreign handler ExecOpenFileForRead(in File as string) as Stream binds to "<builtin>"
+foreign handler ExecOpenFileForWrite(in File as string) as Stream binds to "<builtin>"
+foreign handler ExecOpenFileForUpdate(in File as string) as Stream binds to "<builtin>"
+foreign handler ExecOpenNewFile(in File as string) as Stream binds to "<builtin>"
+
+foreign handler ExecReadFromStream(in Amount as uint, in Source as Stream) as string binds to "<builtin>"
+
+foreign handler MCFileStreamType_Measure() as uint binds to "<undefined>"
+foreign handler MCFileStreamType_Finalize(in Target as Stream) as undefined binds to "<undefined>"
+foreign handler MCFileStreamType_Copy(in Source as Stream, out Destination as Stream) as undefined binds to "<undefined>"
 
 --
 
 syntax OpenFileForRead is statement
-    "open" "file" <File: Expression> "for" "read"
+    "open" "read" "only" "stream" "for" "file" <File: Expression>
 begin
-    OpenFileForRead(File)
+    ExecOpenFileForRead(File)
 end syntax
 
-syntax 
+syntax OpenFileForRead is statement
+    "open" "write" "only" "stream" "for" "file" <File: Expression>
+begin
+    ExecOpenFileForWrite(File)
+end syntax
 
+syntax OpenFileForRead is statement
+    "open" "read" "write" "stream" "for" "file" <File: Expression>
+begin
+    ExecOpenFileForUpdate(File)
+end syntax
+
+--
+
+syntax ReadFromStream is statement
+    "read" <Amount: Expression> "from" "stream" <Source: Expression>
+begin
+    ExecReadFromStream(Amount, Source)
+end syntax
 
 end module

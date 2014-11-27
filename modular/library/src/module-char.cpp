@@ -132,7 +132,7 @@ void MCCharEvalOffsetOfCharsAfter(MCHandlerContext ctxt, MCStringRef p_needle, u
     MCCharEvalOffsetOfCharsInRange(ctxt, p_needle, MCRangeMake(p_after, UINDEX_MAX), p_target, p_is_last, r_output);
 }
 
-void MCCharEvalOffsetOfCharsBefore(MCDataRef p_needle, MCDataRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
+void MCCharEvalOffsetOfCharsBefore(MCStringRef p_needle, MCStringRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
 {
     MCCharEvalOffsetOfCharsInRange(ctxt, p_needle, MCRangeMake(0, p_before), p_target, p_is_last, r_output);
 }
