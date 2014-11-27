@@ -43,6 +43,7 @@ MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_VARIANT(MCScriptType, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindDefined, MCScriptDefinedType)
+    MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindForeign, MCScriptForeignType)
     MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindOptional, MCScriptOptionalType)
     MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindHandler, MCScriptHandlerType)
     MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindRecord, MCScriptRecordType)
