@@ -212,7 +212,10 @@
 
     'rule' TypeDefinition(-> type(Position, Access, Name, Type)):
         Access(-> Access) "type" @(-> Position) Identifier(-> Name) "is" Type(-> Type)
-        
+    
+    'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
+        Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" STRING_LITERAL(-> Binding)
+
     'rule' TypeDefinition(-> type(Position, Access, Name, opaque(Position, Base, Fields))):
         Access(-> Access) "opaque" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
             TypeFields(-> Fields)

@@ -49,7 +49,7 @@
         
     'rule' Declare(type(Position, _, Name, _)):
         DeclareId(Name)
-    
+
     'rule' Declare(constant(Position, _, Name, _)):
         DeclareId(Name)
     
