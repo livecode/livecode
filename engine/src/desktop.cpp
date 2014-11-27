@@ -314,7 +314,7 @@ void MCPlatformHandleMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
 		MCmousex = t_mouseloc.x;
 		MCmousey = t_mouseloc.y;
 		
-		MCLog("MouseMove(%p, %d, %d)", t_target, t_mouseloc . x, t_mouseloc . y);
+        //MCLog("MouseMove(%p, %d, %d)", t_target, t_mouseloc . x, t_mouseloc . y);
 		
 		t_target -> mfocus(t_mouseloc . x, t_mouseloc . y);		
 	}
@@ -350,7 +350,7 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, 
 		
 		tripleclick = p_count == 2;
 		
-		MCLog("MouseDown(%p, %d, %d)", t_target, p_button, p_count);
+        //MCLog("MouseDown(%p, %d, %d)", t_target, p_button, p_count);
 		
 		if (p_count != 1)
 		{
@@ -396,7 +396,7 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 		MCObject *t_target;
 		t_target = t_menu != nil ? t_menu : MCclickstackptr;
 		
-		MCLog("MouseUp(%p, %d, %d)", t_target, p_button, p_count);
+        //MCLog("MouseUp(%p, %d, %d)", t_target, p_button, p_count);
 		
 		if (p_count != 1)
 			t_target -> mup(p_button + 1, false);
@@ -460,7 +460,7 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
             MClockmessages = old_lock;
         }
         
-		MCLog("MouseRelease(%p, %d)", t_target, p_button);
+        //MCLog("MouseRelease(%p, %d)", t_target, p_button);
 	}
 }
 

@@ -524,14 +524,14 @@ MCCachedImageRep::~MCCachedImageRep()
 
 void MCCachedImageRep::FlushCache()
 {
-	MCLog("MCImageRep::FlushCache() - %d bytes", s_cache_size);
+    //MCLog("MCImageRep::FlushCache() - %d bytes", s_cache_size);
 	while (s_tail != nil)
 	{
 		s_tail->ReleaseFrames();
 		
 		s_tail = s_tail->m_prev;
 	}
-	MCLog("%d bytes remaining", s_cache_size);
+    //MCLog("%d bytes remaining", s_cache_size);
 }
 
 void MCCachedImageRep::FlushCacheToLimit()
@@ -539,14 +539,14 @@ void MCCachedImageRep::FlushCacheToLimit()
 	// allow tail to move forward - anything beyond the tail will have no frames
 	// loaded or is locked & will move to head on unlock
 
-	MCLog("MCImageRep::FlushCacheToLimit() - %d bytes", s_cache_size);
+    //MCLog("MCImageRep::FlushCacheToLimit() - %d bytes", s_cache_size);
 	while (s_cache_size > s_cache_limit && s_tail != nil)
 	{
 		s_tail->ReleaseFrames();
 
 		s_tail = s_tail->m_prev;
 	}
-	MCLog("%d bytes remaining", s_cache_size);
+    //MCLog("%d bytes remaining", s_cache_size);
 }
 
 void MCCachedImageRep::init()
@@ -737,7 +737,7 @@ bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 	
 	if (MCCachedImageRep::FindWithKey(p_filename, t_rep))
 	{
-		MCLog("image rep cache hit for file %@", p_filename);
+        //MCLog("image rep cache hit for file %@", p_filename);
 		r_rep = t_rep->Retain();
 		return true;
 	}

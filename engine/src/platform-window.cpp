@@ -28,7 +28,7 @@
 
 MCPlatformWindow::MCPlatformWindow(void)
 {
-	MCLog("Create window %p", this);
+    //MCLog("Create window %p", this);
 	
 	m_references = 1;
 	
@@ -67,7 +67,7 @@ MCPlatformWindow::MCPlatformWindow(void)
 
 MCPlatformWindow::~MCPlatformWindow(void)
 {
-	MCLog("Destroy window %p", this);
+    //MCLog("Destroy window %p", this);
 	
 	MCRegionDestroy(m_dirty_region);
 	
