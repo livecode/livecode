@@ -3111,7 +3111,8 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
     Boolean wasvisible = t_widget->isvisible();
     if (p_force_invisible)
         t_widget->setflag(!p_force_invisible, F_VISIBLE);
-    t_widget->setparent(p_container);
+    t_widget->setparent(MCdefaultstackptr->getcard());
+    t_widget->attach(OP_CENTER, false);
     
     if (p_new_name != nil)
         t_widget->setstringprop(ctxt, 0, P_NAME, False, p_new_name);

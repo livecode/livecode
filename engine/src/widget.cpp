@@ -89,8 +89,24 @@ MCWidget::~MCWidget(void)
     ;
 }
 
+#include "mcio.h"
+#include "system.h"
+
 MCWidget* MCWidget::createInstanceOfKind(MCNameRef p_kind)
 {
+    // Force-load the module
+    static bool s_loaded = false;
+    if (!s_loaded)
+    {
+        IO_handle h;
+        MCStreamRef s;
+        MCScriptModuleRef t_ignored;
+        h = MCS_open(MCSTR("/Users/frasergordon/Workspace/LiveCode/livecode-8-priv/toolchain/lc-compile/foo.lcm"), kMCOpenFileModeRead, True, False, 0);
+        MCMemoryInputStreamCreate(h->GetFilePointer(), h->GetFileSize(), s);
+        MCScriptCreateModuleFromStream(s, t_ignored);
+        s_loaded = true;
+    }
+    
     // Attempt to look-up the module for the given kind and ensure that all of
     // its dependencies have been satisfied.
     MCScriptModuleRef t_module;

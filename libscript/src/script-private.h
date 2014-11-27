@@ -51,6 +51,7 @@ extern void __MCScriptAssertFailed__(const char *label, const char *expr, const 
 #define __MCScriptValidateObject__(obj)
 #define __MCScriptValidateObjectAndKind__(obj, kind)
 #define __MCScriptAssert__(expr, label)
+#define __MCScriptUnreachable__(label)
 
 #endif
 
