@@ -166,6 +166,7 @@ void MCEncodingEvalURLDecoded(MCStringRef p_target, MCStringRef& r_output)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("ENCODING MODULE", test, result)
 void MCEncodingRunTests()
@@ -248,3 +249,4 @@ void MCEncodingExecDecompress(MCDataRef& x_target)
     log_result("url decode %3F", MCStringIsEqualTo(*t_decoded2, t_test_c, kMCStringOptionCompareCaseless));
     
 }
+#endif

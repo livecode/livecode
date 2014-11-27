@@ -982,7 +982,6 @@
 		BEF618A9194720B600C42C57 /* notify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DC66D8A1045D41700D1CFA3 /* notify.cpp */; };
 		BEFD23CD17B5233800B9310D /* sysspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFD486613BA28DA008DB91F /* sysspec.cpp */; };
 		BEFE81D417B2B32800C9D14F /* dskmac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEFE81D317B2B32800C9D14F /* dskmac.cpp */; };
-		C74D7EE61A263A2300BC7FE8 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C74D7EE51A263A2200BC7FE8 /* libffi.a */; };
 		E8189EB615D17E8000194F25 /* exec-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8189EB515D17E8000194F25 /* exec-logic.cpp */; };
 		E82206E1184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
 		E82206E2184F810A00117D10 /* resolution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E82206E0184F810A00117D10 /* resolution.cpp */; };
@@ -2193,7 +2192,6 @@
 		768D66A31762087500F203A3 /* mbliphonestore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonestore.mm; path = src/mbliphonestore.mm; sourceTree = "<group>"; };
 		768D66A41762087500F203A3 /* mbliphonetextmessaging.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextmessaging.mm; path = src/mbliphonetextmessaging.mm; sourceTree = "<group>"; };
 		7699BD601A1CD51A00636397 /* Test-Community.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Test-Community.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		7699BD611A1CD51B00636397 /* Installer copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Installer copy-Info.plist"; path = "/Users/alilloyd/Documents/GitHub/livecode-ali/livecode/engine/Installer copy-Info.plist"; sourceTree = "<absolute>"; };
 		7699BE791A1CD51E00636397 /* libkernel-test.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libkernel-test.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7699BE7E1A1CD72200636397 /* mode_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mode_test.cpp; path = src/mode_test.cpp; sourceTree = "<group>"; };
 		7699BE7F1A1CD72200636397 /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = test.cpp; path = src/test.cpp; sourceTree = "<group>"; };
@@ -2612,7 +2610,6 @@
 				4D58819C0B80C68600200116 /* Resources */,
 				4D6C26DA1647D765007C96B7 /* Tests */,
 				4D587DCC0B8096B000200116 /* Sources */,
-				7699BD611A1CD51B00636397 /* Installer copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};

@@ -166,6 +166,7 @@ extern "C" void MCByteStoreBeforeByteOf(MCDataRef p_value, index_t p_index, MCDa
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("BYTE MODULE", test, result)
 void MCByteRunTests()
@@ -273,3 +274,5 @@ void MCByteRunTests()
     
     log_result("first offset of bytes before no occurrences", t_offset == 0);
 }
+#endif
+

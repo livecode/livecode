@@ -3,6 +3,53 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCBuiltinModule
+{
+    const char *name;
+    unsigned char *data;
+    unsigned long size;
+};
+
+static MCScriptModuleRef *s_builtin_modules = nil;
+static uindex_t s_builtin_module_count = 0;
+static bool MCFetchBuiltinModuleSection(MCBuiltinModule*& r_modules, unsigned int& r_count);
+
+bool MCScriptInitialize(void)
+{
+    MCBuiltinModule *t_modules;
+    unsigned int t_module_count;
+    if (!MCFetchBuiltinModuleSection(t_modules, t_module_count))
+        return true;
+    
+    if (!MCMemoryNewArray(t_module_count, s_builtin_modules))
+        return false;
+    
+    for(uindex_t i = 0; i < t_module_count; i++)
+    {
+        MCStreamRef t_stream;
+        if (!MCMemoryInputStreamCreate(t_modules[i] . data, t_modules[i] . size, t_stream))
+            return false;
+        
+        if (!MCScriptCreateModuleFromStream(t_stream, s_builtin_modules[i]))
+            return false;
+        
+        MCValueRelease(t_stream);
+    }
+    
+    s_builtin_module_count = t_module_count;
+    
+    return false;
+}
+
+void MCScriptFinalize(void)
+{
+    for(uindex_t i = 0; i < s_builtin_module_count; i++)
+        MCScriptReleaseModule(s_builtin_modules[i]);
+    MCMemoryDeleteArray(s_builtin_modules);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCScriptCreateObject(MCScriptObjectKind p_kind, size_t p_size, MCScriptObject*& r_object)
 {
     MCScriptObject *self;
@@ -97,3 +144,27 @@ void __MCScriptAssertFailed__(const char *label, const char *expr, const char *f
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+
+#include <mach-o/loader.h>
+#include <mach-o/getsect.h>
+#include <mach-o/dyld.h>
+
+static bool MCFetchBuiltinModuleSection(MCBuiltinModule*& r_modules, unsigned int& r_count)
+{
+    
+    unsigned long t_section_data_size;
+    char *t_section_data;
+    t_section_data = getsectdata("__MODULES", "__modules", &t_section_data_size);
+    if (t_section_data != nil)
+    {
+        t_section_data += (unsigned long)_dyld_get_image_vmaddr_slide(0);
+        r_modules = (MCBuiltinModule *)t_section_data;
+        r_count = t_section_data_size / sizeof(MCBuiltinModule);
+        return true;
+    }
+    
+    return false;
+}
+#endif

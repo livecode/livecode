@@ -2,7 +2,7 @@
 This module specifies the syntax definitions and bindings for operations on binary data in modular LiveCode.
 */
 
-module com.livecode.binary
+module com.livecode.byte
 
 foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
 

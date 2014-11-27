@@ -34,9 +34,9 @@ begin
 end syntax
 
 syntax AmongLinesOf is neutral binary operator with precedence 1
-	<Needle: Expression> "is" ["not <IsNot=true>] "among" "the" "lines" "of" <Target: Expression>
+	<Needle: Expression> "is" ["not" <IsNot=true>] "among" "the" "lines" "of" <Target: Expression>
 begin
-	EvalIsAmongTheLinesOf(Needle, Target, output)
+	EvalIsAmongTheLinesOf(Needle, Target, IsNot, output)
 end syntax
 
 syntax LineOffset is prefix operator with precedence 1

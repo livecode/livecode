@@ -293,6 +293,7 @@ void MCMapStoreElementOfMatrix(MCValueRef p_value, MCArrayRef& x_target, MCPrope
     // ctxt . Throw()
 }
 
+#ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("MAP MODULE", test, result)
 void MCMapRunTests()
@@ -510,3 +511,4 @@ void MCMapRunTests()
     
     log_result("store/fetch element of matrix", t_value == kMCTrue);
 }
+#endif

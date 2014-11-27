@@ -59,7 +59,7 @@ Right:      An expression that evaluates to a number.
 output:     The result of raising <Left> to the power <Right>.
 */
 
-syntax ExpOperator is left binary operator with precedence 2
+syntax PowOperator is left binary operator with precedence 2
     <Left: Expression> "^" <Right: Expression>
 begin
     EvalIntegerToPowerOfInteger(Left, Right, output)
@@ -122,9 +122,9 @@ Operand:    An expression that evaluates to a number.
 syntax Base10LogOperator is prefix operator with precedence 1
     "the" "log" "of" <Operand: Expression>
 begin
-    EvalLogInteger(Operand, output)
-    EvalLogReal(Operand, output)
-    EvalLogNumber(Operand, output)
+    EvalBase10LogInteger(Operand, output)
+    EvalBase10LogReal(Operand, output)
+    EvalBase10LogNumber(Operand, output)
 end syntax
 
 --

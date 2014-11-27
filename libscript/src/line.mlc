@@ -1,4 +1,4 @@
-module com.livecode.linechunk
+module com.livecode.line
 
 foreign handler FetchLineOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
 foreign handler StoreLineOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
@@ -34,9 +34,9 @@ begin
 end syntax
 
 syntax AmongLinesOf is neutral binary operator with precedence 1
-	<Needle: Expression> "is" ["not <IsNot=true>] "among" "the" "lines" "of" <Target: Expression>
+	<Needle: Expression> "is" [ "not" <IsNot=true> ] "among" "the" "lines" "of" <Target: Expression>
 begin
-	EvalIsAmongTheLinesOf(Needle, Target, output)
+	EvalIsAmongTheLinesOf(Needle, Target, IsNot, output)
 end syntax
 
 syntax LineOffset is prefix operator with precedence 1

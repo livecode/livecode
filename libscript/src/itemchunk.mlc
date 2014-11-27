@@ -13,39 +13,39 @@ foreign handler EvalOffsetOfItemIn(in Needle as string, in Target as string, out
 
 --
 
-syntax SingletonItemOf is left unary operator with precedence 1
+syntax SingletonItemOf is prefix operator with precedence 1
 	"item" <Index: Expression> "of" <Target: Expression>
 begin
 	FetchItemOf(Index, Target, output)
 	StoreItemOf(input, Index, Target)
 end syntax
 
-syntax RangeItemOf is left unary operator with precedence 1
+syntax RangeItemOf is prefix operator with precedence 1
 	"item" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
 	FetchItemRangeOf(Start, Finish, Target, output)
 	StoreItemRangeOf(input, Start, Finish, Target)
 end syntax
 
-syntax CountItemsOf is left unary operator with precedence 1
+syntax CountItemsOf is prefix operator with precedence 1
 	"the" "number" "of" "items" "in" <Target: Expression>
 begin
 	EvalNumberOfItemsIn(Target, output)
 end syntax
 
-syntax AmongItemsOf is left unary operator with precedence 1
+syntax AmongItemsOf is left binary operator with precedence 1
 	<Needle: Expression> "is" "among" "the" "items" "of" <Target: Expression>
 begin
-	EvalIsAmongTheItemsOf(Needle, Target, output)
+	EvalIsAmongTheItemsOf(Needle, Target, false, output)
 end syntax
 
-syntax NotAmongItemsOf is left unary operator with precedence 1
+syntax NotAmongItemsOf is left binary operator with precedence 1
 	<Needle: Expression> "is" "not" "among" "the" "items" "of" <Target: Expression>
 begin
-	EvalIsNotAmongTheItemsOf(Needle, Target, output)
+	EvalIsAmongTheItemsOf(Needle, Target, true, output)
 end syntax
 
-syntax ItemOffset is left unary operator with precedence 1
+syntax ItemOffset is prefix operator with precedence 1
 	"the" "offset" "of" "item" <Needle: Expression> "in" <Target: Expression>
 begin
 	EvalOffsetOfItemIn(Needle, Target, output)

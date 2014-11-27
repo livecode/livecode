@@ -59,6 +59,9 @@
 		4D6F06F019CC2EB800DDC6E0 /* output.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = output.c; path = "gentle-97/lib/output.c"; sourceTree = "<group>"; };
 		4D6F06F119CC2EB800DDC6E0 /* strings.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = strings.c; path = "gentle-97/lib/strings.c"; sourceTree = "<group>"; };
 		4D6F06F619CC2F6800DDC6E0 /* reflex */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = reflex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D79B6451A27379500DD750C /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../../rules/Debug.xcconfig; sourceTree = "<group>"; };
+		4D79B6461A27379500DD750C /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../../rules/Global.xcconfig; sourceTree = "<group>"; };
+		4D79B6481A2737AC00DD750C /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../../rules/Release.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +92,7 @@
 		4D6F06C119CC2D7800DDC6E0 = {
 			isa = PBXGroup;
 			children = (
+				4D79B6441A27378600DD750C /* Configurations */,
 				4D6F06D619CC2E6800DDC6E0 /* src */,
 				4D6F06CD19CC2DFA00DDC6E0 /* Products */,
 			);
@@ -148,6 +152,16 @@
 				4D6F06F119CC2EB800DDC6E0 /* strings.c */,
 			);
 			name = grts;
+			sourceTree = "<group>";
+		};
+		4D79B6441A27378600DD750C /* Configurations */ = {
+			isa = PBXGroup;
+			children = (
+				4D79B6481A2737AC00DD750C /* Release.xcconfig */,
+				4D79B6451A27379500DD750C /* Debug.xcconfig */,
+				4D79B6461A27379500DD750C /* Global.xcconfig */,
+			);
+			name = Configurations;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -306,21 +320,21 @@
 		};
 		4D6F06C619CC2D7800DDC6E0 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4D79B6451A27379500DD750C /* Debug.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_C_LANGUAGE_STANDARD = ansi;
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
-				SDKROOT = macosx10.6;
+				OWNER = ..;
 			};
 			name = Debug;
 		};
 		4D6F06C719CC2D7800DDC6E0 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4D79B6481A2737AC00DD750C /* Release.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_C_LANGUAGE_STANDARD = ansi;
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
-				SDKROOT = macosx10.6;
+				OWNER = ..;
 			};
 			name = Release;
 		};
