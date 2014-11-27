@@ -422,6 +422,9 @@ void __MCRecordDestroy(__MCRecord *self)
 
 hash_t __MCRecordHash(__MCRecord *self)
 {
+    MCTypeInfoRef t_resolved_typeinfo;
+    t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
+    
     hash_t t_hash;
     t_hash = 0;
 
