@@ -429,7 +429,7 @@ hash_t __MCRecordHash(__MCRecord *self)
     t_hash = 0;
 
 	hash_t t_typeinfo_hash;
-	t_typeinfo_hash = MCValueHash(t_resolved_typeinfo);
+	t_typeinfo_hash = MCHashPointer(self -> typeinfo);
 	t_hash = MCHashBytesStream(t_hash, &t_typeinfo_hash, sizeof(hash_t));
 
     for(uindex_t i = 0; i < __MCRecordTypeInfoGetFieldCount(t_resolved_typeinfo); i++)
