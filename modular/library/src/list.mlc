@@ -1,28 +1,28 @@
 module com.livecode.list
 
-foreign handler EvalHeadOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
-foreign handler EvalTailOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
+foreign handler MCListEvalHeadOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
+foreign handler MCListEvalTailOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
 
-foreign handler ExecPushElementOnto(in Value as any, in IsFront as bool, inout Target as list) as undefined binds to "<builtin>"
-foreign handler ExecPopElementInto(inout Source as list, in IsFront as bool, out Target as any) as undefined binds to "<builtin>"
+foreign handler MCListExecPushElementOnto(in Value as any, in IsFront as bool, inout Target as list) as undefined binds to "<builtin>"
+foreign handler MCListExecPopElementInto(inout Source as list, in IsFront as bool, out Target as any) as undefined binds to "<builtin>"
 
-foreign handler EvalNumberOfElementsIn(in Target as list, out Count as index) as undefined binds to "<builtin>"
+foreign handler MCListEvalNumberOfElementsIn(in Target as list, out Count as index) as undefined binds to "<builtin>"
 
-foreign handler EvalIsAmongTheElementsOf(in Needle as any, in Target as list, out Result as bool) as undefined binds to "<builtin>"
-foreign handler EvalContainsElements(in Target as list, in Needle as list, out Result as bool) as undefined binds to "<builtin>"
+foreign handler MCListEvalIsAmongTheElementsOf(in Needle as any, in Target as list, out Result as bool) as undefined binds to "<builtin>"
+foreign handler MCListEvalContainsElements(in Target as list, in Needle as list, out Result as bool) as undefined binds to "<builtin>"
 
-foreign handler FetchElementOf(in Index as index, in Target as list, out Value as any) as undefined binds to "<builtin>"
-foreign handler StoreElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
-foreign handler FetchElementRangeOf(in Start as index, in Finish as index, in Target as list, out Value as list) as undefined binds to "<builtin>"
-foreign handler StoreElementRangeOf(in Value as any, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler MCListFetchElementOf(in Index as index, in Target as list, out Value as any) as undefined binds to "<builtin>"
+foreign handler MCListStoreElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler MCListFetchElementRangeOf(in Start as index, in Finish as index, in Target as list, out Value as list) as undefined binds to "<builtin>"
+foreign handler MCListStoreElementRangeOf(in Value as any, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
 
-foreign handler StoreBeforeElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
-foreign handler StoreAfterElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler MCListStoreBeforeElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler MCListStoreAfterElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
 
-foreign handler SpliceIntoElementRangeOf(in Source as list, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
-foreign handler SpliceIntoElementOf(in Source as list, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
-foreign handler SpliceBeforeElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
-foreign handler SpliceAfterElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler MCListSpliceIntoElementRangeOf(in Source as list, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler MCListSpliceIntoElementOf(in Source as list, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler MCListSpliceBeforeElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+foreign handler MCListSpliceAfterElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
 
 --
 
@@ -34,7 +34,7 @@ Target:         An expression which evaluates to a list.
 syntax HeadOf is prefix operator with precedence 1
     "the" "head" "of" <Target: Expression>
 begin
-    EvalHeadOf(Target, output)
+    MCListEvalHeadOf(Target, output)
 end syntax
 
 /* 
@@ -45,7 +45,7 @@ Target:         An expression which evaluates to a list.
 syntax TailOf is prefix operator with precedence 1
     "the" "tail" "of" <Target: Expression>
 begin
-    EvalTailOf(Target, output)
+    MCListEvalTailOf(Target, output)
 end syntax
 
 --
@@ -61,7 +61,7 @@ Target:         An expression which evaluates to a list.
 syntax PushOntoList is statement
     "push" <Value: Expression> "onto" [ "front" "of" <IsFront=true> | "back" "of" <IsFront=false> ] <Target:Expression>
 begin
-    ExecPushSingleElementOnto(Value, isFront, Target)
+    MCListExecPushSingleElementOnto(Value, isFront, Target)
 end syntax
 
 /* 
@@ -74,7 +74,7 @@ Target:         An expression which evaluates to a container.
 syntax PopList is statement
     "pop" [ "front" "of" <IsFront=true> | "back" "of" <IsFront=false> ] <Source: Expression> "into" <Target: Expression>
 begin
-    ExecPopElementInto(Source, IsFront, Target)
+    MCListExecPopElementInto(Source, IsFront, Target)
 end syntax
 
 --
@@ -87,7 +87,7 @@ Target:         An expression which evaluates to a list.
 syntax CountElementsOf is prefix operator with precedence 1
     "the" "number" "of" "elements" "in" <Target: Expression>
 begin
-    EvalNumberOfElementsIn(Target, output)
+    MCListEvalNumberOfElementsIn(Target, output)
 end syntax
 
 --
@@ -104,7 +104,7 @@ output:         Returns true if <Needle> can be found among the elements of <Tar
 syntax IsInElements is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
-    EvalIsAmongTheElementsOf(Needle, Target, output)
+    MCListEvalIsAmongTheElementsOf(Needle, Target, output)
 end syntax
 
 /* 
@@ -118,7 +118,7 @@ output:         Returns true if the elements of <Needle> occur as a subsequence 
 syntax ContainsElements is neutral binary operator with precedence 1
     <Target: Expression> "contains" <Target: Expression>
 begin
-    EvalContainsElements(Target, Needle, output)
+    MCListEvalContainsElements(Target, Needle, output)
 end syntax
 
 --
@@ -136,8 +136,26 @@ output:             Either locates the element container at the given index for 
 syntax SingletonElementOf is prefix operator with precedence 1
 	"element" <Index: Expression> "of" <Target: Expression>
 begin
-	FetchElementOf(Index, Target, output)
-	StoreElementOf(input, Index, Target)
+    MCListFetchElementOf(Index, Target, output)
+    MCListStoreElementOf(input, Index, Target)
+end syntax
+
+/*
+
+Summary:            Designates the element at index <Index> in <Target>.
+Synonym:            SingletonElementOf
+Index: 				An expression which evaluates to a valid integer index of <Target>.
+Target:				An expression which evaluates to a list.
+output:             Either locates the element container at the given index for use as the target
+                    container of another operation, or evaluates the element at the given index
+                    as the source of another operation.
+*/
+
+syntax SingletonArrElementOf is prefix operator with precedence 1
+    <Target: Expression> "[" <Index: Expression> "]"
+begin
+    MCListFetchElementOf(Index, Target, output)
+    MCListStoreElementOf(input, Index, Target)
 end syntax
 
 /*
@@ -148,15 +166,15 @@ Start:              An expression which evaluates to a valid integer index of <T
 Finish:             An expression which evaluates to a valid integer index of <Target>.
 Target:             An expression which evaluates to binary data.
 output:             Either locates the element containers between the given indices for use as a 
-                    single container for the target of another operation, or evaluates the elements
+                    MCListSingle container for the target of another operation, or evaluates the elements
                     between the given indices as a list.
 */
 
 syntax RangeElementsOf is prefix operator with precedence 1
 	"element" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
-    FetchElementRangeOf(Start, Finish, Target, output)
-	StoreElementRangeOf(input, Start, Finish, Target)
+    MCListFetchElementRangeOf(Start, Finish, Target, output)
+    MCListStoreElementRangeOf(input, Start, Finish, Target)
 end syntax
 
 --
@@ -164,13 +182,13 @@ end syntax
 syntax BeforeElementOf is prefix operator with precedence 1
     "before" "element" <Index: Expression> "of" <Target: Expression>
 begin
-    StoreBeforeElementOf(input, Index, Target)
+    MCListStoreBeforeElementOf(input, Index, Target)
 end syntax
 
 syntax AfterElementOf is prefix operator with precedence 1
     "after" "element" <Index: Expression> "of" <Target: Expression>
 begin
-    StoreAfterElementOf(input, Index, Target)
+    MCListStoreAfterElementOf(input, Index, Target)
 end syntax
 
 --
@@ -189,7 +207,7 @@ Target:             An expression which evaluates to a list.
 syntax SpliceIntoRange is statement
     "splice" <Source: Expression> "into" "element" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
-    SpliceIntoElementRangeOf(Source, Start, Finish, Target)
+    MCListSpliceIntoElementRangeOf(Source, Start, Finish, Target)
 end syntax
 
 /*
@@ -205,7 +223,7 @@ Target:             An expression which evaluates to a list.
 syntax SpliceIntoElement is statement
     "splice" <Source: Expression> "into" "element" <Index: Expression> "of" <Target: Expression>
 begin
-    SpliceIntoElementOf(Source, Start, Finish, Target)
+    MCListSpliceIntoElementOf(Source, Start, Finish, Target)
 end syntax
 
 /*
@@ -220,7 +238,7 @@ Target:             An expression which evaluates to a list.
 syntax SpliceBeforeElement is statement
     "splice" <Source: Expression> "before" "element" <Index: Expression> "of" <Target: Expression>
 begin
-    SpliceBeforeElementOf(Source, Start, Finish, Target)
+    MCListSpliceBeforeElementOf(Source, Start, Finish, Target)
 end syntax
 
 /*
@@ -235,7 +253,7 @@ Target:             An expression which evaluates to a list.
 syntax SpliceAfterElement is statement
     "splice" <Source: Expression> "after" "element" <Index: Expression> "of" <Target: Expression>
 begin
-    SpliceAfterElementOf(Source, Start, Finish, Target)
+    MCListSpliceAfterElementOf(Source, Start, Finish, Target)
 end syntax
 
 --

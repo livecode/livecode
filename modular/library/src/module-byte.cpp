@@ -18,12 +18,12 @@
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
 
-void MCByteEvalNumberOfBytesIn(MCDataRef p_source, uindex_t& r_output)
+extern "C" void MCByteEvalNumberOfBytesIn(MCDataRef p_source, uindex_t& r_output)
 {
     r_output = MCDataGetLength(p_source);
 }
 
-void MCByteEvalIsAmongTheBytesOf(MCDataRef p_needle, MCDataRef p_target, bool p_is_not, bool& r_output)
+extern "C" void MCByteEvalIsAmongTheBytesOf(MCDataRef p_needle, MCDataRef p_target, bool p_is_not, bool& r_output)
 {
     // Error if there is more than one byte.
     if (MCDataGetLength(p_needle) != 1)
@@ -37,22 +37,22 @@ void MCByteEvalIsAmongTheBytesOf(MCDataRef p_needle, MCDataRef p_target, bool p_
     r_output = t_found;
 }
 
-void MCByteEvalContainsBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
+extern "C" void MCByteEvalContainsBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
 {
     r_output = MCDataContains(p_target, p_needle);
 }
  
-void MCByteEvalBeginsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
+extern "C" void MCByteEvalBeginsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
 {
     r_output = MCDataBeginsWith(p_target, p_needle);
 }
 
-void MCByteEvalEndsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
+extern "C" void MCByteEvalEndsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
 {
     r_output = MCDataEndsWith(p_target, p_needle);
 }
 
-void MCByteEvalOffsetOfBytesInRange(MCDataRef p_needle, MCDataRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
+extern "C" void MCByteEvalOffsetOfBytesInRange(MCDataRef p_needle, MCDataRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
 {
     // Incoming range must be 0-based.
     uindex_t t_offset;
@@ -74,12 +74,12 @@ void MCByteEvalOffsetOfBytesInRange(MCDataRef p_needle, MCDataRef p_target, bool
     r_output = t_offset;
 }
 
-void MCByteEvalOffsetOfBytes(MCDataRef p_needle, MCDataRef p_target, bool p_is_last, uindex_t& r_output)
+extern "C" void MCByteEvalOffsetOfBytes(MCDataRef p_needle, MCDataRef p_target, bool p_is_last, uindex_t& r_output)
 {
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, p_is_last, MCRangeMake(0, UINDEX_MAX), r_output);
 }
 
-void MCByteEvalOffsetOfBytesAfter(MCDataRef p_needle, MCDataRef p_target, uindex_t p_after, bool p_is_last, uindex_t& r_output)
+extern "C" void MCByteEvalOffsetOfBytesAfter(MCDataRef p_needle, MCDataRef p_target, uindex_t p_after, bool p_is_last, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByExpression(p_target, p_after, t_start, t_count);
@@ -87,7 +87,7 @@ void MCByteEvalOffsetOfBytesAfter(MCDataRef p_needle, MCDataRef p_target, uindex
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, p_is_last, MCRangeMake(t_start + t_count, UINDEX_MAX), r_output);
 }
 
-void MCByteEvalOffsetOfBytesBefore(MCDataRef p_needle, MCDataRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
+extern "C" void MCByteEvalOffsetOfBytesBefore(MCDataRef p_needle, MCDataRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByExpression(p_target, p_before, t_start, t_count);
@@ -95,7 +95,7 @@ void MCByteEvalOffsetOfBytesBefore(MCDataRef p_needle, MCDataRef p_target, uinde
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, !p_is_first, MCRangeMake(0, t_start), r_output);
 }
 
-void MCByteFetchByteRangeOf(index_t p_start, index_t p_finish, MCDataRef p_target, MCDataRef& r_output)
+extern "C" void MCByteFetchByteRangeOf(index_t p_start, index_t p_finish, MCDataRef p_target, MCDataRef& r_output)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByRange(p_target, p_start, p_finish, t_start, t_count);
@@ -103,7 +103,7 @@ void MCByteFetchByteRangeOf(index_t p_start, index_t p_finish, MCDataRef p_targe
         return;
 }
 
-void MCByteStoreByteRangeOf(MCDataRef p_value, index_t p_start, index_t p_finish, MCDataRef& x_target)
+extern "C" void MCByteStoreByteRangeOf(MCDataRef p_value, index_t p_start, index_t p_finish, MCDataRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByRange(x_target, p_start, p_finish, t_start, t_count);
@@ -120,17 +120,17 @@ void MCByteStoreByteRangeOf(MCDataRef p_value, index_t p_start, index_t p_finish
         return;
 }
 
-void MCByteFetchByteOf(index_t p_index, MCDataRef p_target, MCDataRef& r_output)
+extern "C" void MCByteFetchByteOf(index_t p_index, MCDataRef p_target, MCDataRef& r_output)
 {
     MCByteFetchByteRangeOf(p_index, p_index, p_target, r_output);
 }
 
-void MCByteStoreByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
+extern "C" void MCByteStoreByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
 {
     MCByteStoreByteRangeOf(p_value, p_index, p_index, x_target);
 }
 
-void MCByteStoreAfterByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
+extern "C" void MCByteStoreAfterByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByExpression(x_target, p_index, t_start, t_count);
@@ -147,7 +147,7 @@ void MCByteStoreAfterByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_tar
         return;
 }
 
-void MCByteStoreBeforeByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
+extern "C" void MCByteStoreBeforeByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByRange(x_target, p_index, p_index, t_start, t_count);

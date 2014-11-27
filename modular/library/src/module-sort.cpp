@@ -94,7 +94,7 @@ static compare_t MCSortCompareDateTime(void *context, MCValueRef p_left, MCValue
     return 0;
 }
 
-void MCSortExecSortListAscendingText(MCProperListRef& x_target)
+extern "C" void MCSortExecSortListAscendingText(MCProperListRef& x_target)
 {
     // For now, just compare caseless.
     MCStringOptions t_option;
@@ -102,7 +102,7 @@ void MCSortExecSortListAscendingText(MCProperListRef& x_target)
     MCProperListStableSort(x_target, false, MCSortCompareText, &t_option);
 }
 
-void MCSortExecSortListDescendingText(MCProperListRef& x_target)
+extern "C" void MCSortExecSortListDescendingText(MCProperListRef& x_target)
 {
     // For now, just compare caseless.
     MCStringOptions t_option;
@@ -110,22 +110,22 @@ void MCSortExecSortListDescendingText(MCProperListRef& x_target)
     MCProperListStableSort(x_target, true, MCSortCompareText, &t_option);
 }
 
-void MCSortExecSortListAscendingBinary(MCProperListRef& x_target)
+extern "C" void MCSortExecSortListAscendingBinary(MCProperListRef& x_target)
 {
     MCProperListStableSort(x_target, false, MCSortCompareBinary, nil);
 }
 
-void MCSortExecSortListDescendingBinary(MCProperListRef& x_target)
+extern "C" void MCSortExecSortListDescendingBinary(MCProperListRef& x_target)
 {
     MCProperListStableSort(x_target, true, MCSortCompareBinary, nil);
 }
 
-void MCSortExecSortListAscendingNumeric(MCProperListRef& x_target)
+extern "C" void MCSortExecSortListAscendingNumeric(MCProperListRef& x_target)
 {
     MCProperListStableSort(x_target, false, MCSortCompareNumeric, nil);
 }
 
-void MCSortExecSortListDescendingNumeric(MCProperListRef& x_target)
+extern "C" void MCSortExecSortListDescendingNumeric(MCProperListRef& x_target)
 {
     MCProperListStableSort(x_target, true, MCSortCompareNumeric, nil);
 }

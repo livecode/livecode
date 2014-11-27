@@ -90,7 +90,7 @@ static bool list_array_elements(void *context, MCArrayRef p_target, MCNameRef p_
     return MCProperListPushElementOntoBack(t_list, p_value);
 }
 
-void MCMapEvalKeysOf(MCArrayRef p_target, MCProperListRef& r_output)
+extern "C" void MCMapEvalKeysOf(MCArrayRef p_target, MCProperListRef& r_output)
 {
     MCProperListRef t_list;
     if (MCProperListCreateMutable(t_list) &&
@@ -101,7 +101,7 @@ void MCMapEvalKeysOf(MCArrayRef p_target, MCProperListRef& r_output)
     // ctxt . Throw()
 }
 
-void MCMapEvalElementsOf(MCArrayRef p_target, MCProperListRef& r_output)
+extern "C" void MCMapEvalElementsOf(MCArrayRef p_target, MCProperListRef& r_output)
 {
     MCProperListRef t_list;
     if (MCProperListCreateMutable(t_list) &&
@@ -112,17 +112,17 @@ void MCMapEvalElementsOf(MCArrayRef p_target, MCProperListRef& r_output)
     // ctxt . Throw()
 }
 
-void MCMapEvalNumberOfElementsIn(MCArrayRef p_target, uindex_t& r_output)
+extern "C" void MCMapEvalNumberOfElementsIn(MCArrayRef p_target, uindex_t& r_output)
 {
     r_output = MCArrayGetCount(p_target);
 }
 
-void MCMapEvalIsAmongTheElementsOf(MCValueRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
+extern "C" void MCMapEvalIsAmongTheElementsOf(MCValueRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
     r_output = !MCArrayApply(p_target, is_not_among_the_elements_of, p_needle);
 }
 
-void MCMapEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
+extern "C" void MCMapEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
     MCNewAutoNameRef t_key;
     create_key_for_array(p_needle, p_target, &t_key);
@@ -200,7 +200,7 @@ void MCMapStoreElementOfBinary(MCValueRef p_value, MCArrayRef& x_target, MCDataR
     // ctxt . Throw()
 }
 
-void MCMapFetchElementOf(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
+extern "C" void MCMapFetchElementOf(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
 {
     MCNewAutoNameRef t_key;
     
@@ -215,7 +215,7 @@ void MCMapFetchElementOf(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_o
     // ctxt . Throw();
 }
 
-void MCMapStoreElementOf(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
+extern "C" void MCMapStoreElementOf(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
 {
     MCNewAutoNameRef t_key;
     
