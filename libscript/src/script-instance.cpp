@@ -1004,20 +1004,18 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             // to put the valueref in.
             t_arg_types[t_arg_index] = &ffi_type_pointer;
             
-            if (t_descriptor != nil)
-                t_args[t_arg_index] = t_argument;
-            else
+            if (t_descriptor == nil)
             {
                 // Allocate space for the storage pointer
                 t_args[t_arg_index] = t_storage + t_storage_index;
                 t_storage_index += sizeof(uintptr_t);
-                
-                // The argument is the storage pointer.
-                *(void **)t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
-                
-                **(void ***)t_args[t_arg_index] = t_argument;
             }
+            
+            // The argument is the storage pointer.
+            *(void **)t_args[t_arg_index] = t_storage + t_storage_index;
+            t_storage_index += sizeof(uintptr_t);
+            
+            **(void ***)t_args[t_arg_index] = t_argument;
             
         }
     }
