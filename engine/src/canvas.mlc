@@ -53,7 +53,7 @@ end type
 // Gradient
 record type GradientStop
 	position as CanvasFloat
-	color as Color
+	"color" as Color
 end type
 
 foreign handler MCCanvasGradientType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
