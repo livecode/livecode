@@ -421,7 +421,7 @@ void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef self, uindex_t p_in
 void MCScriptAddForeignTypeToModule(MCScriptModuleBuilderRef self, MCStringRef p_binding, uindex_t& r_type)
 {
     for(uindex_t i = 0; i < self -> module . type_count; i++)
-        if (self -> module . types[i] -> kind == kMCScriptTypeKindDefined)
+        if (self -> module . types[i] -> kind == kMCScriptTypeKindForeign)
             if (MCStringIsEqualTo(static_cast<MCScriptForeignType *>(self -> module . types[i]) -> binding, p_binding, kMCStringOptionCompareExact))
             {
                 r_type = i;
