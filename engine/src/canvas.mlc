@@ -26,11 +26,7 @@ end type
 
 // Color
 // TODO - specify color as custom value type kMCCanvasColorTypeInfo
-// ??? foreign type Color binds to kMCCanvasColorType
-foreign handler MCCanvasColorType_Measure() as uint binds to "<builtin>"
-opaque type Color
-	measure is MCCanvasColorType_Measure
-end type
+foreign type Color binds to "kMCCanvasColorTypeInfo"
 
 // Paint (supertype of pattern, gradient, solidpaint)
 foreign handler MCCanvasPaintType_Measure() as uint binds to "<builtin>"
@@ -98,11 +94,7 @@ end type
 
 // Canvas
 // TODO - specify Canvas as custom value type kMCCanvasTypeInfo
-// ??? foreign type Canvas binds to kMCCanvasType
-foreign handler MCCanvasCanvasType_Measure() as uint binds to "<builtin>"
-opaque type Canvas
-	measure is MCCanvasCanvasType_Measure
-end type
+foreign type Canvas binds to "kMCCanvasTypeInfo"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Rectangle
