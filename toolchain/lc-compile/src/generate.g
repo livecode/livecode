@@ -1027,6 +1027,9 @@
         QuerySymbolId(Id -> Info)
         Info'Index -> DefinedIndex
         EmitDefinedType(DefinedIndex -> Index)
+        
+    'rule' GenerateType(foreign(_, Binding) -> Index):
+        EmitForeignType(Binding -> Index)
 
     'rule' GenerateType(record(_, Base, Fields) -> Index):
         GenerateType(Base -> BaseTypeIndex)

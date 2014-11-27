@@ -49,6 +49,7 @@ extern "C" void EmitContinueDefinitionGroup(long index);
 extern "C" void EmitEndDefinitionGroup(long *r_index);
 
 extern "C" void EmitDefinedType(long index, long& r_type_index);
+extern "C" void EmitForeignType(long binding, long& r_type_index);
 extern "C" void EmitNamedType(NameRef module_name, NameRef name, long& r_new_index);
 extern "C" void EmitAliasType(NameRef name, long typeindex, long& r_new_index);
 extern "C" void EmitOptionalType(long index, long& r_new_index);
@@ -608,6 +609,15 @@ void EmitDefinedType(long index, long& r_type_index)
     r_type_index = t_type_index;
     
     MCLog("[Emit] DefinedType(%ld -> %ld)", index, r_type_index);
+}
+
+void EmitForeignType(long p_binding, long& r_type_index)
+{
+    uindex_t t_type_index;
+    MCScriptAddForeignTypeToModule(s_builder, to_mcstringref(p_binding), t_type_index);
+    r_type_index = t_type_index;
+    
+    MCLog("[Emit] ForeignType(%s -> %ld)", (const char *)p_binding, r_type_index);
 }
 
 void EmitOptionalType(long base_index, long& r_new_index)

@@ -78,6 +78,7 @@ void MCScriptDestroyPackage(MCScriptPackageRef package);
 enum MCScriptTypeKind
 {
     kMCScriptTypeKindDefined,
+    kMCScriptTypeKindForeign,
     kMCScriptTypeKindOptional,
     kMCScriptTypeKindHandler,
     kMCScriptTypeKindRecord,
@@ -94,6 +95,11 @@ struct MCScriptType
 struct MCScriptDefinedType: public MCScriptType
 {
     uindex_t index;
+};
+
+struct MCScriptForeignType: public MCScriptType
+{
+    MCStringRef binding;
 };
 
 struct MCScriptOptionalType: public MCScriptType

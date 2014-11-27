@@ -26,11 +26,7 @@ end type
 
 // Color
 // TODO - specify color as custom value type kMCCanvasColorTypeInfo
-// ??? foreign type Color binds to kMCCanvasColorType
-foreign handler MCCanvasColorType_Measure() as uint binds to "<builtin>"
-opaque type Color
-	measure is MCCanvasColorType_Measure
-end type
+foreign type Color binds to "kMCCanvasColorTypeInfo"
 
 // Paint (supertype of pattern, gradient, solidpaint)
 foreign handler MCCanvasPaintType_Measure() as uint binds to "<builtin>"
@@ -57,7 +53,7 @@ end type
 // Gradient
 record type GradientStop
 	position as CanvasFloat
-	color as Color
+	"color" as Color
 end type
 
 foreign handler MCCanvasGradientType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
@@ -98,11 +94,7 @@ end type
 
 // Canvas
 // TODO - specify Canvas as custom value type kMCCanvasTypeInfo
-// ??? foreign type Canvas binds to kMCCanvasType
-foreign handler MCCanvasCanvasType_Measure() as uint binds to "<builtin>"
-opaque type Canvas
-	measure is MCCanvasCanvasType_Measure
-end type
+foreign type Canvas binds to "kMCCanvasTypeInfo"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Rectangle
@@ -704,6 +696,7 @@ foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as uint) 
 // TODO - add support for metadata
 //foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as array) as undefined binds to "<builtin>"
 foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as data) as undefined binds to "<builtin>"
+// TODO - add image frame index property?
 
 syntax ImageWidthProperty is prefix operator with precedence 4
 	"the" "width" "of" <mImage: Expression>

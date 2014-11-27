@@ -61,6 +61,7 @@
     any(Position: POS)
     undefined(Position: POS)
     named(Position: POS, Name: ID)
+    foreign(Position: POS, Binding: STRING)
     optional(Position: POS, Type: TYPE)
     opaque(Position: POS, Base: TYPE, Fields: FIELDLIST)
     record(Position: POS, Base: TYPE, Fields: FIELDLIST)

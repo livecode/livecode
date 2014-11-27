@@ -1824,7 +1824,7 @@ bool MCCanvasPathUnparseInstructionsCallback(void *p_context, MCGPathCommand p_c
 		t_success = MCStringAppendFormat(t_string, " %f,%f", p_points[i].x, p_points[i].y);
 	
 	if (t_success)
-		t_success = MCStringAppendChar(t_string, U'\n');
+		t_success = MCStringAppendChar(t_string, '\n');
 	
 	return t_success;
 }
