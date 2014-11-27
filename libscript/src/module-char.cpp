@@ -150,9 +150,11 @@ void MCCharEvalEndsWith(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRe
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("CHAR MODULE", test, result)
 void MCCharRunTests()
 {
     // Need handler context object to test
 }
+#endif

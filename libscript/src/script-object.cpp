@@ -5,6 +5,7 @@
 
 struct MCBuiltinModule
 {
+    const char *name;
     unsigned char *data;
     unsigned long size;
 };

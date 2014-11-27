@@ -157,6 +157,7 @@ extern "C" void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_ind
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("LIST MODULE", test, result)
 void MCListRunTests()
@@ -245,3 +246,4 @@ void MCListRunTests()
     
     MCValueRelease(t_lst);
 }
+#endif

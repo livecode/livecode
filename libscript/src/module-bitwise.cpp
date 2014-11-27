@@ -47,7 +47,10 @@ extern "C" void MCBitwiseEvalBitwiseShift(integer_t p_operand, integer_t p_shift
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _TEST
 void MCBitwiseRunTests()
 {
     
 }
+#endif
+

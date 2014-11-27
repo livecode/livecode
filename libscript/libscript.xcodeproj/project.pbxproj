@@ -35,7 +35,6 @@
 		4D79B6931A273BBB00DD750C /* module-bitwise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65B1A273BA000DD750C /* module-bitwise.cpp */; };
 		4D79B6941A273BBB00DD750C /* module-byte.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65C1A273BA000DD750C /* module-byte.cpp */; };
 		4D79B6951A273BBB00DD750C /* module-char.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65D1A273BA000DD750C /* module-char.cpp */; };
-		4D79B6961A273BBB00DD750C /* module-encoding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65E1A273BA000DD750C /* module-encoding.cpp */; };
 		4D79B6981A273BBB00DD750C /* module-list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6601A273BA000DD750C /* module-list.cpp */; };
 		4D79B6991A273BBB00DD750C /* module-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6611A273BA000DD750C /* module-logic.cpp */; };
 		4D79B69A1A273BBB00DD750C /* module-map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6621A273BA000DD750C /* module-map.cpp */; };
@@ -556,7 +555,6 @@
 				4D79B6931A273BBB00DD750C /* module-bitwise.cpp in Sources */,
 				4D79B6941A273BBB00DD750C /* module-byte.cpp in Sources */,
 				4D79B6951A273BBB00DD750C /* module-char.cpp in Sources */,
-				4D79B6961A273BBB00DD750C /* module-encoding.cpp in Sources */,
 				4D79B6981A273BBB00DD750C /* module-list.cpp in Sources */,
 				4D79B6991A273BBB00DD750C /* module-logic.cpp in Sources */,
 				4D79B69A1A273BBB00DD750C /* module-map.cpp in Sources */,

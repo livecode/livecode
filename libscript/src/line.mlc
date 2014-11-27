@@ -1,4 +1,4 @@
-module com.livecode.linechunk
+module com.livecode.line
 
 foreign handler FetchLineOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
 foreign handler StoreLineOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"

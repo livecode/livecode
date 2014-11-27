@@ -81,6 +81,7 @@ void MCTypeEvalIsNotEqual(MCValueRef p_left, MCValueRef p_right, bool& r_output)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("TYPE MODULE", test, result)
 void MCTypeRunTests()
@@ -123,3 +124,4 @@ void MCTypeRunTests()
     log_result("round trip real -> string -> real", t_result);
     
 }
+#endif

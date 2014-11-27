@@ -156,6 +156,7 @@ void MCSortExecSortStringListDescendingNumeric(MCProperListRef<MCStringRef>& x_t
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _TEST
 extern void log(const char *module, const char *test, bool result);
 #define log_result(test, result) log("SORT MODULE", test, result)
 void MCSortRunTests()
@@ -215,3 +216,4 @@ void MCSortRunTests()
     
     MCValueRelease(t_list);
 }
+#endif
