@@ -73,6 +73,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "systhreads.h"
 #include "stacktile.h"
 
+#include "widget-events.h"
+
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
 
@@ -1081,6 +1083,8 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
 	
+    MCwidgeteventmanager = new MCWidgetEventManager;
+    
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
 	MCresult -> clear();
@@ -1236,6 +1240,8 @@ int X_close(void)
 	MCprinter -> Finalize();
 	delete MCprinter;
 	
+    delete MCwidgeteventmanager;
+    
 	delete MCsslcertificates;
 	delete MCdefaultnetworkinterface;
 	

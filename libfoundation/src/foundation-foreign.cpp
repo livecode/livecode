@@ -445,7 +445,7 @@ bool __MCForeignValueInitialize(void)
     d . hash = __pointer_hash;
     d . doimport = nil;
     d . doexport = nil;
-    if (!__build_typeinfo("__builtin__.pointer", &d, kMCDoubleTypeInfo))
+    if (!__build_typeinfo("__builtin__.pointer", &d, kMCPointerTypeInfo))
         return false;
     
     return true;

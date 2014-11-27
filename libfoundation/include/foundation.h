@@ -837,6 +837,8 @@ enum { MC_CONCAT(__MCSA_,__LINE__) = sizeof(__MCStaticAssert<expr>) }
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" {
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  BYTE-WISE OPERATIONS
@@ -888,6 +890,8 @@ void MCMemoryDeallocate(void *block);
 
 //////////
 
+}
+    
 template<typename T> bool MCMemoryAllocate(size_t p_size, T*& r_block)
 {
 	void *t_block;
@@ -921,6 +925,8 @@ template<typename T> bool MCMemoryReallocate(T *p_block, size_t p_new_size, T*& 
 	return false;
 }
 
+extern "C" {
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  FIXED-SIZE RECORD ALLOCATION (INITIALIZED)
@@ -940,6 +946,8 @@ void MCMemoryDelete(void *p_record);
 // SN-2014-06-19 [[ Bug 12651 ]] back key can not work, and it crush
 // The placement new is needed in MCMemorytNew
 // to properly allocate the classes in MCMessageEvent::create
+
+}
 
 #ifdef _DEBUG
 #ifdef new
@@ -968,7 +976,6 @@ template<typename T> void MCMemoryDelete(T* p_record)
 {
 	MCMemoryDelete(static_cast<void *>(p_record));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1027,6 +1034,8 @@ template<typename T> void MCMemoryDeleteArray(T* p_array)
 {
 	MCMemoryDeleteArray(static_cast<void *>(p_array));
 }
+
+extern "C" {
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1192,6 +1201,8 @@ inline void *MCValueGetExtraBytesPtr(MCValueRef value) { return ((uint8_t *)valu
 
 //////////
 
+}
+
 template<typename T> inline T MCValueRetain(T value)
 {
 	return (T)MCValueRetain((MCValueRef)value);
@@ -1228,6 +1239,8 @@ template<typename T> inline bool MCValueCreateCustom(MCTypeInfoRef type, size_t 
 		return r_value = (T)t_value, true;
 	return false;
 }
+
+extern "C" {
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1556,11 +1569,15 @@ MCStringRef MCNameGetString(MCNameRef name);
 // Returns true if the given name is the empty name.
 bool MCNameIsEmpty(MCNameRef name);
 
+}
+
 // Returns true if the names are equal (caselessly). Note that MCNameIsEqualTo
 // is *not* the same as MCValueIsEqualTo as it is a comparison up to case (of
 // the name's string) rather than exact.
 bool MCNameIsEqualTo(MCNameRef left, MCNameRef right);
 bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensitive, bool p_form_sensitive);
+
+extern "C" {
 
 // The empty name object;
 extern MCNameRef kMCEmptyName;
@@ -2294,9 +2311,13 @@ extern MCListRef kMCEmptyList;
 // Create a list from a static list of values - NOT IMPLEMENTED YET.
 // bool MCListCreate(char delimiter, const MCValueRef *values, uindex_t value_count, MCListRef& r_list);
 
+}
+
 // Create a mutable list - initially empty.
 bool MCListCreateMutable(char_t delimiter, MCListRef& r_list);
 bool MCListCreateMutable(MCStringRef p_delimiter, MCListRef& r_list);
+
+extern "C" {
 
 // Eventually this will accept any value type, but for now - just strings, names, and booleans.
 bool MCListAppend(MCListRef list, MCValueRef value);
@@ -2857,4 +2878,6 @@ bool MCTypeConvertStringToLongInteger(MCStringRef p_string, integer_t& r_convert
 bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool p_convert_octals = false);
 bool MCTypeConvertStringToBool(MCStringRef p_string, bool& r_converted);
 
+}
+    
 #endif

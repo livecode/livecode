@@ -839,7 +839,7 @@ void MCMutableImageRep::endrub()
 
 void MCMutableImageRep::startseldrag()
 {
-	MCLog("MCMutableImageRep<%p>::startseldrag()", this);
+    //MCLog("MCMutableImageRep<%p>::startseldrag()", this);
 	state |= CS_DRAG;
 	if (state & CS_BEEN_MOVED)
 	{
@@ -852,7 +852,7 @@ void MCMutableImageRep::startseldrag()
 
 void MCMutableImageRep::endsel()
 {
-	MCLog("MCMutableImageRep<%p>::endsel()", this);
+    //MCLog("MCMutableImageRep<%p>::endsel()", this);
 	if (state & CS_BEEN_MOVED)
 	{
 		stampsel();
@@ -1630,7 +1630,7 @@ void MCMutableImageRep::croptoopaque()
 
 void MCMutableImageRep::selimage()
 {
-	MCLog("MCMutableImageRep<%p>::selimage()", this);
+    //MCLog("MCMutableImageRep<%p>::selimage()", this);
 	if (MCcurtool != T_SELECT)
 	{
 		oldtool = MCcurtool;
@@ -1662,7 +1662,7 @@ void MCMutableImageRep::selimage()
 
 void MCMutableImageRep::getsel(Boolean cut)
 {
-	MCLog("MCMutableImageRep<%p>::getsel()", this);
+    //MCLog("MCMutableImageRep<%p>::getsel()", this);
 	/* UNCHECKED */ MCImageCopyBitmapRegion(m_bitmap, selrect, m_selection_image);
 	
 	if (cut)
@@ -1673,7 +1673,7 @@ void MCMutableImageRep::getsel(Boolean cut)
 
 void MCMutableImageRep::cutoutsel()
 {
-	MCLog("MCMutableImageRep<%p>::cutoutsel()", this);
+    //MCLog("MCMutableImageRep<%p>::cutoutsel()", this);
 	if (state & CS_BEEN_MOVED)
 		MCImageBitmapClear(m_selection_image);
 	else
@@ -1693,7 +1693,7 @@ void MCImageBitmapMerge(MCImageBitmap *p_dst, MCImageBitmap *p_src, uindex_t p_d
 
 void MCMutableImageRep::stampsel()
 {
-	MCLog("MCMutableImageRep<%p>::stampsel()", this);
+    //MCLog("MCMutableImageRep<%p>::stampsel()", this);
 	// merge m_selection_image(0, 0) onto m_bitmap(selrect) srcOver
 	MCImageBitmapMerge(m_bitmap, m_selection_image, selrect.x, selrect.y, 0, 0, selrect.width, selrect.height);
 	
@@ -1907,7 +1907,7 @@ void MCMutableImageRep::flipsel(Boolean ishorizontal)
 
 void MCMutableImageRep::pasteimage(MCImageBitmap *p_bitmap)
 {
-	MCLog("MCMutableImageRep<%p>::pasteimage()", this);
+    //MCLog("MCMutableImageRep<%p>::pasteimage()", this);
 	if (MCcurtool != T_SELECT)
 	{
 		oldtool = MCcurtool;
@@ -1965,7 +1965,7 @@ void MCMutableImageRep::image_undo(Ustruct *us)
 
 void MCMutableImageRep::image_freeundo(Ustruct *us)
 {
-	MCLog("MCMutableImage::image_free_undo(%p) - freeing image %p", us, m_undo_image);
+    //MCLog("MCMutableImage::image_free_undo(%p) - freeing image %p", us, m_undo_image);
 	MCImageFreeBitmap(m_undo_image);
 	m_undo_image = nil;
 }
