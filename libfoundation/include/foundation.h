@@ -585,6 +585,7 @@ typedef struct __MCHandler *MCHandlerRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCRecord *MCRecordRef;
+typedef struct __MCEnum *MCEnumRef;
 typedef struct __MCError *MCErrorRef;
 typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
@@ -1081,6 +1082,7 @@ enum
 	kMCValueTypeCodeCustom,
 	kMCValueTypeCodeRecord,
 	kMCValueTypeCodeHandler,
+	kMCValueTypeCodeEnum,
 	kMCValueTypeCodeTypeInfo,
     kMCValueTypeCodeError,
     kMCValueTypeCodeForeignValue,
@@ -1179,6 +1181,8 @@ bool MCValueIsUnique(MCValueRef value);
 // bumps the reference count and returns the same value as they already satisfy
 //   x == y iff IsEqualTo(x, y)
 //
+// The r_unique_value returned by MCValueRef should be released with
+// MCValueRelease when no longer needed.
 bool MCValueInter(MCValueRef value, MCValueRef& r_unique_value);
 
 // As the 'Inter' method except that 'value' will be released. This allows
@@ -1276,6 +1280,9 @@ bool MCTypeInfoIsRecord(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is of handler type.
 bool MCTypeInfoIsHandler(MCTypeInfoRef typeinfo);
+
+// Returns true if the typeinfo is of enum type.
+bool MCTypeInfoIsEnum(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is of error type.
 bool MCTypeInfoIsError(MCTypeInfoRef typeinfo);
@@ -1476,6 +1483,28 @@ MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef typeinfo,
 
 // Return the type of the index'th parameter.
 MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typeinfo, uindex_t index);
+
+//////////
+
+// Enumerated types represent a type that can take only a limited
+// range of values.
+
+// Create a new enumerated type description, permitting the specified
+// valid values.  At least one valid value must be specified.  If
+// value_count is negative, the values array must be null-terminated.
+// All the values must be distinct (i.e. MCValueIsEqualTo(values[i],
+// values[j]) must be false for all {i,j}).
+bool MCEnumTypeInfoCreate(const MCValueRef *values, index_t value_count, MCTypeInfoRef & r_typeinfo);
+
+// Get the number of distinct values permitted by the enumerated type.
+uindex_t MCEnumTypeInfoGetValueCount(MCTypeInfoRef typeinfo);
+
+// Get one of the distinct values permitted by the enumerated type.
+// N.b. the returned value is not retained.
+MCValueRef MCEnumTypeInfoGetValue(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Test whether a value is permitted by the enumerated type
+bool MCEnumTypeInfoHasValue(MCTypeInfoRef typeinfo, MCValueRef value);
 
 //////////
 
@@ -2400,6 +2429,22 @@ bool MCRecordDecodeFromArray(MCArrayRef array, MCTypeInfoRef p_typeinfo, MCRecor
 
 void *MCHandlerGetDefinition(MCHandlerRef handler);
 void *MCHandlerGetInstance(MCHandlerRef handler);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  ENUM DEFINITIONS
+//
+
+/* Create a new enumerated value with the specified initial value. */
+bool MCEnumCreate(MCTypeInfoRef typeinfo, MCValueRef value, MCEnumRef & r_enum);
+
+/* Copy an enumerated value */
+bool MCEnumCopy(MCEnumRef self, MCEnumRef & r_new_enum);
+bool MCEnumCopyAndRelease(MCEnumRef self, MCEnumRef & r_new_enum);
+
+/* Retrieve the enumerated value's underlying concrete value.  The
+ * returned value is not retained. */
+MCValueRef MCEnumGetValue(MCEnumRef self);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

@@ -9,6 +9,7 @@ SOURCES= \
 	foundation-core.cpp \
 	foundation-data.cpp \
 	foundation-debug.cpp \
+	foundation-enum.cpp \
 	foundation-error.cpp \
 	foundation-filters.cpp \
 	foundation-foreign.cpp \

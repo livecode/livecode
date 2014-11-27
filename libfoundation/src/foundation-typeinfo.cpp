@@ -84,6 +84,11 @@ bool MCTypeInfoIsForeign(MCTypeInfoRef self)
     return __MCTypeInfoGetExtendedTypeCode(self) == kMCTypeInfoTypeIsForeign;
 }
 
+bool MCTypeInfoIsEnum(MCTypeInfoRef self)
+{
+	return __MCTypeInfoGetExtendedTypeCode(self) == kMCValueTypeCodeEnum;
+}
+
 bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
 {
     intenum_t t_ext_typecode;
@@ -191,6 +196,20 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
         return false;
     }
     
+	// If the target is of enum type, then the source type must
+	// conform to the type of one of the enum's permitted values.
+	if (MCTypeInfoIsEnum (target . type))
+	{
+		for (uindex_t i = 0; i < target . type -> enum_ . value_count; ++i)
+		{
+			MCValueRef t_enum_value = target . type -> enum_ . values[i];
+			if (MCTypeInfoConforms (source . named_type,
+			                        MCValueGetTypeInfo (t_enum_value)))
+				return true;
+		}
+		return false;
+	}
+
     // If the source is of record type, then the target must be the same type of
     // one of the source's super types.
     if (MCTypeInfoIsRecord(source . type))
@@ -732,6 +751,111 @@ MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef unresolved_self, u
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static int
+__MCEnumTypeInfoCreate_ValueCompare (const void *a,
+                                     const void *b)
+{
+	/* Since this is called with interned values, it's okay just to do
+	 * a pointer comparison. */
+	return (int) ((intptr_t) a - (intptr_t) b);
+}
+
+bool
+MCEnumTypeInfoCreate (const MCValueRef *p_values,
+                      index_t p_value_count,
+                      MCTypeInfoRef & r_typeinfo)
+{
+	/* If no explicit value count was provided, count the values by looking
+	 * for the null custodian */
+	if (p_value_count < 0)
+		for (p_value_count = 0; p_values[p_value_count] != nil; ++p_value_count);
+
+	/* Create the type info structure and allocate enough memory for the value
+	 * array */
+	__MCTypeInfo *self;
+	if (!__MCValueCreate (kMCValueTypeCodeTypeInfo, self))
+		return false;
+	if (!MCMemoryNewArray (p_value_count, self->enum_.values))
+	{
+		MCMemoryDelete (self);
+		return false;
+	}
+
+	self->flags |= kMCValueTypeCodeEnum;
+
+	bool t_success = true;
+	for (uindex_t i = 0; t_success && i < p_value_count; ++i)
+	{
+		/* Intern the value, to make it unique */
+		MCValueRef t_interned;
+		if (t_success)
+			t_success = MCValueInter(p_values[i], self->enum_.values[i]);
+	}
+
+	if (t_success)
+	{
+		/* Put values in some canonical order */
+		qsort (self->enum_.values,
+		       p_value_count,
+		       sizeof(*(self->enum_.values)),
+		       __MCEnumTypeInfoCreate_ValueCompare);
+
+		/* Ensure that values are unique */
+		if (p_value_count > 1)
+			for (uindex_t i = 1; i < p_value_count; ++i)
+				MCAssert (self->enum_.values[i] != self->enum_.values[i-1]);
+
+		self->enum_.value_count = p_value_count;
+	}
+
+	if (t_success)
+		t_success = MCValueInterAndRelease(self, r_typeinfo);
+
+	if (!t_success)
+		MCValueRelease(self);
+
+	return t_success;
+}
+
+uindex_t
+MCEnumTypeInfoGetValueCount (MCTypeInfoRef p_unresolved)
+{
+	MCTypeInfoRef self = __MCTypeInfoResolve (p_unresolved);
+
+	MCAssert (MCTypeInfoIsEnum (self));
+
+	return self->enum_.value_count;
+}
+
+MCValueRef
+MCEnumTypeInfoGetValue (MCTypeInfoRef p_unresolved,
+                        uindex_t p_index)
+{
+	MCTypeInfoRef self = __MCTypeInfoResolve (p_unresolved);
+
+	MCAssert (MCTypeInfoIsEnum (self));
+	MCAssert (p_index < self->enum_.value_count);
+
+	return self->enum_.values[p_index];
+}
+
+bool
+MCEnumTypeInfoHasValue (MCTypeInfoRef p_unresolved,
+                        const MCValueRef p_value)
+{
+	MCTypeInfoRef self = __MCTypeInfoResolve (p_unresolved);
+
+	MCAssert (MCTypeInfoIsEnum (self));
+
+	for (uindex_t i = 0; i < self->enum_.value_count; ++i)
+		if (MCValueIsEqualTo (p_value, self->enum_.values[i]))
+			return true;
+
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCErrorTypeInfoCreate(MCNameRef p_domain, MCStringRef p_message, MCTypeInfoRef& r_typeinfo)
 {
     __MCTypeInfo *self;
@@ -848,6 +972,14 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         MCValueRelease(self -> handler . return_type);
         MCMemoryDeleteArray(self -> handler . fields);
     }
+    else if (t_ext_typecode == kMCValueTypeCodeEnum)
+    {
+		for (uindex_t i = 0; i < self -> enum_ . value_count; ++i)
+		{
+			MCValueRelease (self -> enum_ . values[i]);
+		}
+		MCMemoryDeleteArray (self -> enum_ . values);
+    }
     else if (t_ext_typecode == kMCValueTypeCodeError)
     {
         MCValueRelease(self -> error . domain);
@@ -905,6 +1037,14 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
         t_hash = MCHashBytesStream(t_hash, &self -> handler . return_type, sizeof(self -> handler . return_type));
         t_hash = MCHashBytesStream(t_hash, self -> handler . fields, sizeof(MCRecordTypeFieldInfo) * self -> handler . field_count);
     }
+	else if (t_code == kMCValueTypeCodeEnum)
+	{
+		t_hash = MCHashBytesStream(t_hash, &self -> enum_ . value_count,
+		                           sizeof(self -> enum_ . value_count));
+		t_hash = MCHashBytesStream(t_hash, &self -> enum_ . values,
+		                           (sizeof(*(self -> enum_ . values)) *
+		                            self -> enum_ . value_count));
+	}
     else if (t_code == kMCValueTypeCodeError)
     {
         t_hash = MCHashBytesStream(t_hash, &self -> error . domain, sizeof(self -> error . domain));
@@ -969,6 +1109,17 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
                 self -> handler . fields[i] . mode != other_self -> handler . fields[i] . mode)
                 return false;
     }
+	else if (t_code == kMCValueTypeCodeEnum)
+	{
+		if (self -> enum_ . value_count != other_self -> enum_ . value_count)
+			return false;
+		for (uindex_t i = 0; i < self -> enum_ . value_count; ++i)
+		{
+			if (!MCValueIsEqualTo(self -> enum_ . values[i],
+			                      other_self -> enum_ . values[i]))
+				return false;
+		}
+	}
     else if (t_code == kMCValueTypeCodeError)
     {
         if (self -> error . domain != other_self -> error . domain)
