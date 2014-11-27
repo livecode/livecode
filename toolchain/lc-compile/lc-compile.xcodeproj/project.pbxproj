@@ -28,6 +28,10 @@
 		4D78D28F19E9446F00DDEF0B /* check.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D78D28D19E9446F00DDEF0B /* check.c */; };
 		4D79B64C1A27381400DD750C /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B64B1A27381400DD750C /* CoreFoundation.framework */; };
 		4D79B64D1A27381A00DD750C /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B64B1A27381400DD750C /* CoreFoundation.framework */; };
+		4D79B6F71A274C1800DD750C /* libstdscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B6E81A27407900DD750C /* libstdscript.a */; };
+		4D79B6F81A274C2200DD750C /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D03910D1A27366200CB9E06 /* libfoundation.a */; };
+		4D79B6F91A274C5500DD750C /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D0391201A27369800CB9E06 /* libscript.a */; };
+		4D79B6FA1A274C6600DD750C /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B64B1A27381400DD750C /* CoreFoundation.framework */; };
 		4DA53A2719E4435D0089FBDC /* gen.l in Sources */ = {isa = PBXBuildFile; fileRef = 4DA53A2119E4435D0089FBDC /* gen.l */; };
 		4DA53A2819E4435D0089FBDC /* gen.y in Sources */ = {isa = PBXBuildFile; fileRef = 4DA53A2419E4435D0089FBDC /* gen.y */; };
 		4DA53A2919E4435D0089FBDC /* grammar.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DA53A2519E4435D0089FBDC /* grammar.c */; };
@@ -178,6 +182,13 @@
 			remoteGlobalIDString = 4D79B6541A273B6900DD750C;
 			remoteInfo = stdscript;
 		};
+		4D79B6F51A274C1400DD750C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D0391191A27369800CB9E06 /* libscript.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D79B6531A273B6900DD750C;
+			remoteInfo = stdscript;
+		};
 		4DA53A1C19E43CC60089FBDC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D6F070119CC36B700DDC6E0 /* Project object */;
@@ -309,6 +320,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D79B6FA1A274C6600DD750C /* CoreFoundation.framework in Frameworks */,
+				4D79B6F91A274C5500DD750C /* libscript.a in Frameworks */,
+				4D79B6F81A274C2200DD750C /* libfoundation.a in Frameworks */,
+				4D79B6F71A274C1800DD750C /* libstdscript.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -537,6 +552,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4D79B6F61A274C1400DD750C /* PBXTargetDependency */,
 				4D44E4EC1A24D8C70073FFA2 /* PBXTargetDependency */,
 			);
 			name = "lc-test";
@@ -776,7 +792,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${BUILT_PRODUCTS_DIR}/lc-compile\" -output \"${SRCROOT}/string.lcm\" \"${SRCROOT}/../../library/src/string.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/lc-compile\" -output \"${SRCROOT}/binary.lcm\" \"${SRCROOT}/../../library/src/binary.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/lc-compile\" -output \"${SRCROOT}/arithmetic.lcm\" \"${SRCROOT}/../../library/src/arithmetic.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/lc-compile\" -output \"${SRCROOT}/char.lcm\" \"${SRCROOT}/../../library/src/char.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n\"${BUILT_PRODUCTS_DIR}/lc-compile\" -output \"${SRCROOT}/test.lcm\" \"${SRCROOT}/test.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\ncp \"${BUILT_PRODUCTS_DIR}/lc-compile\" \"${SRCROOT}/lc-compile\"\ncp \"${BUILT_PRODUCTS_DIR}/lc-test\" \"${SRCROOT}/lc-test\"";
+			shellScript = "\"${BUILT_PRODUCTS_DIR}/lc-compile\" -output \"${SRCROOT}/test.lcm\" \"${SRCROOT}/test.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\ncp \"${BUILT_PRODUCTS_DIR}/lc-compile\" \"${SRCROOT}/lc-compile\"\ncp \"${BUILT_PRODUCTS_DIR}/lc-test\" \"${SRCROOT}/lc-test\"";
 		};
 		4D6F072A19CC38B200DDC6E0 /* Gentle */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -943,6 +959,11 @@
 			target = 4D6F070A19CC36DD00DDC6E0 /* lc-compile */;
 			targetProxy = 4D44E4EB1A24D8C70073FFA2 /* PBXContainerItemProxy */;
 		};
+		4D79B6F61A274C1400DD750C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = stdscript;
+			targetProxy = 4D79B6F51A274C1400DD750C /* PBXContainerItemProxy */;
+		};
 		4DA53A1D19E43CC60089FBDC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4D21B65619E43BE100B64BEF /* lc-bootstrap-compile */;
@@ -1070,12 +1091,12 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/../../../prebuilt/lib/mac",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libstdscript.a",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1107,11 +1128,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/../../../prebuilt/lib/mac",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				OTHER_LDFLAGS = (
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libstdscript.a",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1120,19 +1141,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D0390F71A2735A800CB9E06 /* Debug.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
-				GCC_ENABLE_CPP_RTTI = NO;
-				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = _DEBUG;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(SRCROOT)/../../../libfoundation/include",
-					"$(SRCROOT)/../../../libscript/include",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OWNER = ..;
-				SDKROOT = macosx10.6;
 			};
 			name = Debug;
 		};
@@ -1140,18 +1149,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D0390F91A2735A800CB9E06 /* Release.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
-				GCC_ENABLE_CPP_RTTI = NO;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(SRCROOT)/../../../libfoundation/include",
-					"$(SRCROOT)/../../../libscript/include",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OWNER = ..;
-				SDKROOT = macosx10.6;
 			};
 			name = Release;
 		};

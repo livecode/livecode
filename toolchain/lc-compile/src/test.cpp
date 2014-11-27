@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
     }
     
     MCInitialize();
+    MCScriptInitialize();
     
     // Skip command arg.
     argc -= 1;

@@ -264,7 +264,10 @@ void EmitEndModule(void)
                 fprintf(t_output, "0x%02x, ", ((unsigned char *)t_buffer)[i]);
             }
             fprintf(t_output, "};\n");
-            fprintf(t_output, "__attribute__((used)) __attribute__((section(\"__MODULES,__modules\"))) static volatile struct { unsigned char *data; unsigned long length; } module_info = { module_data, sizeof(module_data) };\n");
+            
+            const char *t_name;
+            GetStringOfNameLiteral(s_module_name, &t_name);
+            fprintf(t_output, "__attribute__((used)) __attribute__((section(\"__MODULES,__modules\"))) static volatile struct { const char *name; unsigned char *data; unsigned long length; } module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_name);
         }
         else if (t_output != NULL)
         {
