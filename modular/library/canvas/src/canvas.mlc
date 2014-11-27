@@ -704,6 +704,7 @@ foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as uint) 
 // TODO - add support for metadata
 //foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as array) as undefined binds to "<builtin>"
 foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as data) as undefined binds to "<builtin>"
+// TODO - add image frame index property?
 
 syntax ImageWidthProperty is prefix operator with precedence 4
 	"the" "width" "of" <mImage: Expression>

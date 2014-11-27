@@ -60,6 +60,10 @@ void MCImageRepUnlock(MCImageRep *p_image_rep, uint32_t p_index, MCGImageFrame &
 bool MCImageRepLockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCGFloat p_density, MCImageBitmap *&r_raster);
 void MCImageRepUnlockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCImageBitmap *p_raster);
 
+//////////
+
+bool MCImageRepGetTransformed(MCImageRep *p_image_rep, const MCGAffineTransform &p_transform, const MCGSize *p_output_size, MCGImageFilter p_resize_quality, MCImageRep *&r_transformed);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO - move to foundation library ?
@@ -286,7 +290,6 @@ void MCCanvasPointSetY(MCCanvasPoint &x_point, MCCanvasFloat p_y);
 void MCCanvasColorMakeRGBA(MCCanvasFloat p_red, MCCanvasFloat p_green, MCCanvasFloat p_blue, MCCanvasFloat p_alpha, MCCanvasColorRef &r_color);
 
 // Properties
-// TODO - don't think these are needed for a record type object
 
 //////////
 
@@ -305,7 +308,6 @@ void MCCanvasTransformGetMatrix(const MCCanvasTransform &p_transform, MCArrayRef
 void MCCanvasTransformSetMatrix(MCCanvasTransform &x_transform, MCArrayRef p_matrix);
 void MCCanvasTransformGetInverse(const MCCanvasTransform &p_transform, MCCanvasTransform &r_transform);
 // T = Tscale * Trotate * Tskew * Ttranslate
-// TODO - scale / skew / translation return type?
 void MCCanvasTransformGetScale(const MCCanvasTransform &p_transform, MCGSize &r_scale);
 void MCCanvasTransformSetScale(MCCanvasTransform &x_transform, const MCGSize &p_scale);
 void MCCanvasTransformGetRotation(const MCCanvasTransform &p_transform, MCCanvasFloat &r_rotation);
