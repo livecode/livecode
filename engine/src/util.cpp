@@ -2271,15 +2271,24 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 		        && *(fptr + 2) == '.' && *(fptr + 3) == '/')
 		{//look for "/../" pattern
             if (fptr == t_unicode_str)
+				/* Delete "/.." component */
 				t_length -= strmove(fptr, fptr + 3, true);
 			else
 			{
 				unichar_t *bptr = fptr - 1;
 				while (True)
 				{ //search backword for '/'
-					if (*bptr == '/' || bptr == t_unicode_str)
+					if (*bptr == '/')
 					{
+						/* Delete "/xxx/.." component */
 						t_length -= strmove(bptr, fptr + 3, true);
+						fptr = bptr;
+						break;
+					}
+					else if (bptr == t_unicode_str)
+					{
+						/* Delete "xxx/../" component */
+						t_length -= strmove (bptr, fptr + 4, true);
 						fptr = bptr;
 						break;
 					}
