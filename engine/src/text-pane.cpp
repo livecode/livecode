@@ -169,6 +169,7 @@ void MCTextPane::repositionChildren()
             t_y += t_paragraph->getHeight();
         }
         
+        t_paragraph->repositionChildren();
         t_paragraph = t_paragraph->next();
     }
     while (t_paragraph != m_paragraphs);
@@ -184,6 +185,9 @@ void MCTextPane::setContentsPlain(MCStringRef p_string)
     m_paragraphs->setContentsPlain(p_string);
     
     // TODO: examine the list of blocks in the paragraph for paragraph breaks
+    
+    // Pane needs to be laid-out
+    setNeedsLayout();
 }
 
 MCGAffineTransform MCTextPane::getTransform() const

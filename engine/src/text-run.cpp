@@ -49,6 +49,7 @@ void MCTextRun::performLayout()
 {
     // The height of the block is the sum of the font height parameters and the
     // width is simply the width of all of the text
+    adjustCodeunitRange(0, 0);
     recordSize(measure(), getTextAscent()+getTextDescent()+getTextLeading());
     setMaxSize(getWidth(), getHeight());
     finishLayout();
