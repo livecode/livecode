@@ -8,11 +8,16 @@ foreign handler MCStringPrepend(in stringref as string, in prepend as string) as
 foreign handler MCStringAppend(in stringref as string, in prepend as string) as bool binds to "<builtin>"
 foreign handler write(in fildes as int, in buf as pointer, in nbyte as uint) as int binds to "write"
 
+foreign handler MCTextPaneSet(in pPane as pointer) as undefined binds to "<builtin>"
 foreign handler MCTextPaneCreate(in pStack as int, out rPointer as pointer) as bool binds to "<builtin>"
 foreign handler MCTextPaneSetContentsPlain(in pPane as pointer, in pText as string) as bool binds to "<builtin>"
-foreign handler MCTextPanePaintShim(in pPane as pointer) binds to "<builtin>"
+foreign handler MCTextPanePaintShim(in pPane as pointer) as undefined binds to "<builtin>"
 foreign handler MCTextPaneGet() as pointer binds to "<builtin>"
-foreign handler MCTextPaneSet(in pPane as pointer) binds to "<builtin>"
+foreign handler MCTextCellSetMaxSize(in pCell as pointer, in pWidth as float, in pHeight as float) as undefined binds to "<builtin>"
+
+foreign handler MCWidgetRedraw() as undefined binds to "<builtin>"
+
+//variable sPane as pointer
 
 handler println(in textin as string)
 	variable ptr as pointer
@@ -31,14 +36,16 @@ public handler OnOpen()
 	println("OnOpen")
 
 	MCStringMutableCopy("Hello, World!", tMessage)
-	MCStringAppendChar(11, tMessage)
-	MCStringAppend(tMessage, "I'm a widget.")
-	MCStringAppendChar(11, tMessage)
-	MCStringAppend(tMessage, "What are you?")
+//	MCStringAppendChar(tMessage, 11)
+//	MCStringAppend(tMessage, "I'm a widget.")
+//	MCStringAppendChar(tMessage, 11)
+//	MCStringAppend(tMessage, "What are you?")
 
 	MCTextPaneCreate(0, tPane)
 	MCTextPaneSet(tPane)
 	MCTextPaneSetContentsPlain(tPane, tMessage)
+
+	//MCTextPaneCreate(0, sPane)
 
 	println("Pane created")
 end handler
@@ -60,7 +67,10 @@ public handler OnPaint()
 	MCTextPanePaintShim(MCTextPaneGet())
 end handler
 
-/* OnGeometryChanged */
+public handler OnGeometryChanged(in pX as real, in pY as real, in pW as number, in pH as number)
+	println("OnGeometryChanged")
+	MCTextCellSetMaxSize(MCTextPaneGet(), pW, pH)
+end handler
 
 public handler OnVisibilityChanged(in visible as boolean)
 	println("OnVisibilityChanged")
@@ -186,6 +196,13 @@ end handler
 
 public handler OnClick(in pX as real, in pY as real, in pButton as integer, in pMultiplicity as integer)
 	println("OnClick")
+
+	variable tText as string
+	MCStringMutableCopy("Hello, World!", tText)
+	MCStringAppendChar(tText, 11)
+	MCStringAppend(tText, "I'm a widget. What are you?")
+	MCTextPaneSetContentsPlain(MCTextPaneGet(), tText)
+	MCWidgetRedraw()
 end handler
 
 public handler OnDoubleClick(in pX as real, in pY as real, in pButton as integer)

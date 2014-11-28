@@ -762,7 +762,15 @@ void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
     if (m_native_layer)
         m_native_layer->OnGeometryChanged(p_old_rect);
     
-    fprintf(stderr, "MCWidget::OnGeometryChanged\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(4);
+    
+    MCNumberCreateWithReal(rect.x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(rect.y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithReal(rect.width, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    MCNumberCreateWithReal(rect.height, reinterpret_cast<MCNumberRef&>(t_params[3]));
+    
+    CallHandler(MCNAME("OnGeometryChanged"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnVisibilityChanged(bool p_visible)
@@ -1208,4 +1216,10 @@ void* foo2 = (void*)&MCTextPaneSetContentsPlain;
 void* foo3 = (void*)&MCTextPaneSet;
 void* foo4 = (void*)&MCTextPaneGet;
 void* foo5 = (void*)&MCTextPanePaintShim;
+
+extern "C" void MCWidgetRedraw()
+{
+    MCwidgetobject->Redraw();
+}
+
 
