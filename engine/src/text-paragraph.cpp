@@ -200,6 +200,9 @@ void MCTextParagraph::setContentsPlain(MCStringRef p_string)
     
     // Perform a block refresh to ensure that any breaks are dealt with
     refreshBlocks();
+    
+    // A re-layout will be needed
+    setNeedsLayout();
 }
 
 uindex_t MCTextParagraph::graphemeToCodeunit(uindex_t p_grapheme) const

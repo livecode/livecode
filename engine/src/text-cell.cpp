@@ -177,9 +177,10 @@ MCTextCell::MCTextCell() :
   m_max_height(INFINITY),
   m_local_attributes(NULL),
   m_effective_attributes(NULL),
-  m_horizontal_alignment(kMCTextCellAlignStart),
+  m_horizontal_alignment(kMCTextCellAlignCenter),
   m_vertical_alignment(kMCTextCellAlignCenter),
-  m_layout_direction(kMCTextCellLayoutLeftThenUp),
+  m_layout_direction(kMCTextCellLayoutLeftThenDown),
+  m_text_direction(kMCTextDirectionAuto),
   m_flags(kMCTextCellNeedsLayout)
 {
     ;
@@ -197,6 +198,7 @@ MCTextCell::MCTextCell(const MCTextCell& p_copy) :
   m_horizontal_alignment(p_copy.m_horizontal_alignment),
   m_vertical_alignment(p_copy.m_vertical_alignment),
   m_layout_direction(p_copy.m_layout_direction),
+  m_text_direction(p_copy.m_text_direction),
   m_flags(p_copy.m_flags | kMCTextCellNeedsLayout)
 {
     ;
