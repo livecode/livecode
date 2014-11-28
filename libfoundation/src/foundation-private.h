@@ -535,6 +535,7 @@ bool __MCForeignValueCopyDescription(__MCForeignValue *self, MCStringRef& r_desc
 bool __MCStreamInitialize(void);
 void __MCStreamFinalize(void);
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 hash_t MCNativeCharsHash(const char_t *chars, uindex_t char_count, MCStringOptions p_options);

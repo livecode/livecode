@@ -361,7 +361,7 @@ void MCGraphicsContext::clearclip(void)
 
 void MCGraphicsContext::setorigin(int2 x, int2 y)
 {
-	MCGContextTranslateCTM(m_gcontext, -1.0f * x, -1.0f * y);
+	MCGContextTranslateCTM(m_gcontext, 1.0f * x, 1.0f * y);
 }
 
 void MCGraphicsContext::clearorigin(void)

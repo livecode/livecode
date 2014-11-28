@@ -26,7 +26,8 @@
 MCTextPane::MCTextPane() :
   MCTextCell(),
   m_paragraphs(NULL),
-  m_stack(NULL)
+  m_stack(NULL),
+  m_text_wrap(true)
 {
     // TESTING
     m_stack = MCdefaultstackptr;
@@ -61,39 +62,27 @@ void MCTextPane::performLayout()
     // the total size of the paragraphs can be calculated.
     MCTextParagraph* t_paragraph;
     coord_t t_total_height;
+    coord_t t_max_width;
     t_paragraph = m_paragraphs;
-    t_total_height = 0.0f;
+    t_total_height = t_max_width = 0.0f;
     do
     {
+        if (getTextWrap())
+            t_paragraph->setMaxSize(getMaxWidth(), INFINITY);
+        else
+            t_paragraph->setMaxSize(INFINITY, INFINITY);
+        
         t_paragraph->performLayout();
         t_total_height += t_paragraph->getHeight();
+        t_max_width = MCMax(t_max_width, t_paragraph->getWidth());
         t_paragraph = t_paragraph->next();
     }
     while (t_paragraph != m_paragraphs);
     
-    // Based on the vertical alignment requested, where should the origin be?
-    m_aligned_offset_y = 0.0f;
-    if (t_total_height < getMaxHeight())
-    {
-        switch (getVerticalAlignment())
-        {
-            case kMCTextCellAlignCenter:
-                m_aligned_offset_y = (getMaxHeight() - t_total_height) / 2;
-                break;
-                
-            case kMCTextCellAlignStart:
-            case kMCTextCellAlignJustify:
-                // No change
-                break;
-                
-            case kMCTextCellAlignEnd:
-                m_aligned_offset_y = getMaxHeight() - t_total_height;
-                break;
-            
-            default:
-                MCAssert(false);
-        }
-    }
+    if (getTextWrap())
+        recordSize(getMaxWidth(), t_total_height);
+    else
+        recordSize(t_max_width, t_total_height);
     
     // Position the paragraphs correctly
     finishLayout();
@@ -133,6 +122,58 @@ void MCTextPane::draw(MCDC* dc)
     while (t_paragraph != m_paragraphs);
 }
 
+void MCTextPane::repositionChildren()
+{
+    // Based on vertical alignment, calculate the offset for positioning
+    coord_t t_offset;
+    t_offset = 0.0f;
+    if (getHeight() < getMaxHeight())
+    {
+        switch (getVerticalAlignment())
+        {
+            case kMCTextCellAlignCenter:
+                t_offset = (getMaxHeight() - getHeight())/2;
+                break;
+                
+            case kMCTextCellAlignStart:
+            case kMCTextCellAlignJustify:
+                break;
+                
+            case kMCTextCellAlignEnd:
+                t_offset = getMaxHeight() - getHeight();
+                break;
+                
+            default:
+                MCUnreachable();
+        }
+    }
+    
+    // Position each of the paragraphs in turn
+    coord_t t_y = 0;
+    MCTextParagraph* t_paragraph;
+    t_paragraph = m_paragraphs;
+    do
+    {
+        // Position the paragraph at the top or bottom of the pane, as required
+        if (isReversedLineOrder())
+        {
+            // Position from the bottom, remembering to account for the height
+            // of this paragraph as well
+            t_y += t_paragraph->getHeight();
+            t_paragraph->setPosition(0, getHeight() - t_y + t_offset);
+        }
+        else
+        {
+            // Position from the top of the pane
+            t_paragraph->setPosition(0, t_y + t_offset);
+            t_y += t_paragraph->getHeight();
+        }
+        
+        t_paragraph = t_paragraph->next();
+    }
+    while (t_paragraph != m_paragraphs);
+}
+
 void MCTextPane::setContentsPlain(MCStringRef p_string)
 {
     // Clear the existing contents
@@ -152,6 +193,9 @@ MCGAffineTransform MCTextPane::getTransform() const
 
 void MCTextPane::deleteContents()
 {
+    if (m_paragraphs == NULL)
+        return;
+    
     // The layout needs to be reset
     clearLayout();
     

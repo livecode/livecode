@@ -38,7 +38,7 @@ public:
     // will fit, it may be split so that the initial part will fit. A pointer to
     // the last block that would fit is returned along with a boolean to
     // indicate whether fitting should continue.
-    virtual bool fitBlocks(MCTextBlock* p_blocks, coord_t p_available_width, MCTextBlock*& r_last_fit) = 0;
+    virtual bool fitBlocks(MCTextBlock* p_blocks, coord_t p_available_width, bool p_start_of_line, MCTextBlock*& r_last_fit) = 0;
 };
 
 

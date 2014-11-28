@@ -26,7 +26,7 @@
 
 
 MCTextLine::MCTextLine(MCTextParagraph* p_paragraph) :
-  MCTextCell(),
+  MCTextCell(*p_paragraph),
   m_parent(p_paragraph),
   m_segments(NULL),
   m_ascent(0.0f),
@@ -54,8 +54,7 @@ MCTextCell* MCTextLine::getChildren() const
 void MCTextLine::performLayout()
 {
     // Clear the font metric and size information
-    coord_t t_width;
-    m_ascent = m_descent = m_leading = t_width = 0.0f;
+    m_ascent = m_descent = m_leading = 0.0f;
     
     // Iterate through the list of segments and lay them out
     MCTextSegment* t_segment;
@@ -78,19 +77,37 @@ void MCTextLine::performLayout()
         coord_t t_x = t_xpos;
         t_xpos = offsetForSegment(t_segment_count, t_previous_segment_end);
         
-        // Set the bounds of the segment. This is necessary so that clipping
-        // will happen correctly in the case of fixed tab positions where the
-        // contents of the segment are wider than the available width.
-        t_segment->setMaxSize(t_xpos - t_x, INFINITY);
-        
         // Update the measurements for this line
         m_ascent = MCMax(m_ascent, t_segment->getTextAscent());
         m_descent = MCMax(m_descent, t_segment->getTextDescent());
         m_leading = MCMax(m_leading, t_segment->getTextLeading());
-        t_width = MCMax(t_width, t_x + t_segment->getWidth());
         
         // Move on to the next segment
         t_segment_count++;
+        t_segment = t_segment->next();
+    }
+    while (t_segment != m_segments);
+    
+    // Width of the line is determined by the last segment in the line
+    coord_t t_width;
+    t_width = m_segments->prev()->getX() + m_segments->prev()->getWidth();
+    
+    // Update the maximum sizes of the segments - these are needed for alignment
+    // and clipping purposes
+    t_segment = m_segments;
+    do
+    {
+        if (t_segment->next() != m_segments)
+        {
+            // Bound is the start of the next segment
+            setMaxSize(t_segment->next()->getX() - t_segment->getX(), INFINITY);
+        }
+        else
+        {
+            // Bound is the rest of the line
+            setMaxSize(t_width - t_segment->getX(), INFINITY);
+        }
+    
         t_segment = t_segment->next();
     }
     while (t_segment != m_segments);
@@ -171,7 +188,9 @@ MCTextSegment* MCTextLine::addSegmentsWrapped(MCTextSegment* p_segments, coord_t
     t_remaining_width = p_max_width;
     do
     {
-        t_continue = fitSegment(t_segment, t_remaining_width);
+        bool t_first_segment;
+        t_first_segment = t_segment == p_segments;
+        t_continue = fitSegment(t_segment, t_first_segment, t_remaining_width);
         
         // The remove operation implicitly advances the t_segment pointer
         MCTextSegment* t_new_segment;
@@ -227,7 +246,7 @@ bool MCTextLine::endsWithExplicitLineBreak() const
     return t_explicit_break;
 }
 
-bool MCTextLine::fitSegment(MCTextSegment* p_segment, coord_t p_available_width)
+bool MCTextLine::fitSegment(MCTextSegment* p_segment, bool p_first_segment, coord_t p_available_width)
 {
     // If the available space is infinite, just scan forward for the first line
     // breaking block and skip the expense of running a breaking algorithm.
@@ -268,7 +287,7 @@ bool MCTextLine::fitSegment(MCTextSegment* p_segment, coord_t p_available_width)
     MCTextBlock *t_first_block, *t_last_block;
     bool t_continue;
     t_first_block = p_segment->getBlocks();
-    t_continue = t_engine->fitBlocks(t_first_block, p_available_width, t_last_block);
+    t_continue = t_engine->fitBlocks(t_first_block, p_available_width, p_first_segment, t_last_block);
     
     // If not all blocks fit, a split will be required
     if (t_last_block != t_first_block->prev())
@@ -298,5 +317,8 @@ bool MCTextLine::fitSegment(MCTextSegment* p_segment, coord_t p_available_width)
 coord_t MCTextLine::offsetForSegment(uindex_t p_index, coord_t p_prev_segment_end)
 {
     // TODO: implement
-    return 10*p_index;
+    if (p_index > 0 || p_prev_segment_end > 0)
+        return p_prev_segment_end + 20;
+    else
+        return 0;
 }

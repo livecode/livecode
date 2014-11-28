@@ -41,9 +41,14 @@ public:
     virtual void performLayout();
     virtual void clearLayout();
     virtual void draw(MCDC* dc);
+    virtual void repositionChildren();
     
     // Sets the contents of this pane to the plain-text string given
     void setContentsPlain(MCStringRef p_string);
+    
+    // Text pane accessors
+    bool getTextWrap() const                        { return m_text_wrap; }
+    void setTextWrap(bool p_wrap)                   { m_text_wrap = p_wrap; }
     
 protected:
     
@@ -55,14 +60,11 @@ private:
     // The list of paragraphs in this pane
     MCTextParagraph* m_paragraphs;
     
-    // Offsets within the content area to draw the paragraphs. These are
-    // calculated based on the size of the contained paragraphs and what
-    // alignment has been requested.
-    coord_t m_aligned_origin_x;
-    coord_t m_aligned_offset_y;
-    
     // The stack to which this pane belongs (needed for stack scaling)
     MCStack* m_stack;
+    
+    // Whether to wrap the text within the pane or not
+    bool m_text_wrap;
     
     
     // Deletes all of the paragraphs (and therefore contents) of the pane

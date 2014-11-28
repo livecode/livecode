@@ -68,8 +68,10 @@ public:
     MCTextCellAlignment getHorizontalAlignment() const;
     MCTextCellAlignment getVerticalAlignment() const;
     MCTextCellLayoutDirection getLayoutDirection() const;
+    MCTextDirection getTextDirection() const;
     void setAlignment(MCTextCellAlignment p_horizontal, MCTextCellAlignment p_vertical);
     void setLayoutDirection(MCTextCellLayoutDirection p_direction);
+    void setTextDirection(MCTextDirection p_direction);
 
     // Marks the cell as requiring re-layout
     void setNeedsLayout();
@@ -78,6 +80,19 @@ public:
     // that can be made without the cost of a full re-layout. By default, it
     // does nothing.
     virtual void repositionChildren();
+    
+    // Returns true if the order of lines should be reversed (from bottom to top
+    // for horizontal text or from right to left for vertical text)
+    bool isReversedLineOrder() const;
+    
+    // Returns true if the order of text runs within a line should be reversed
+    // (starting from the right for horizontal text or from the bottom for
+    // vertical text)
+    bool isReversedTextOrder() const;
+    
+    // Returns true if the text should be laid out vertically rather than
+    // horizontally.
+    bool isVerticalLayout() const;
     
 protected:
     
@@ -132,6 +147,9 @@ private:
     
     // The layout direction for this cell
     MCTextCellLayoutDirection m_layout_direction;
+    
+    // Text directionality for this cell
+    MCTextDirection m_text_direction;
     
     // Flags
     MCTextCellFlags m_flags;

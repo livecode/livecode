@@ -61,18 +61,9 @@ public:
     uindex_t graphemeToCodeunit(uindex_t) const;
     uindex_t codeunitToGrapheme(uindex_t) const;
     
-    // Returns true if the order of lines should be reversed (from bottom to top
-    // for horizontal text or from right to left for vertical text)
-    bool isReversedLineOrder() const;
-    
-    // Returns true if the order of text runs within a line should be reversed
-    // (starting from the right for horizontal text or from the bottom for
-    // vertical text)
-    bool isReversedTextOrder() const;
-    
-    // Returns true if the text should be laid out vertically rather than
-    // horizontally.
-    bool isVerticalLayout() const;
+    // Calculates the concrete text direction for this paragraph (i.e either
+    // LTR or RTL but not "auto").
+    MCTextDirection getConcreteTextDirection();
     
 private:
     

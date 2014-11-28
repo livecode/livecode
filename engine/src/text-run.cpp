@@ -17,6 +17,7 @@
 
 #include "text-run.h"
 
+#include "text-paragraph.h"
 #include "text-line.h"
 #include "text-segment.h"
 #include "font.h"
@@ -49,6 +50,7 @@ void MCTextRun::performLayout()
     // The height of the block is the sum of the font height parameters and the
     // width is simply the width of all of the text
     recordSize(measure(), getTextAscent()+getTextDescent()+getTextLeading());
+    setMaxSize(getWidth(), getHeight());
     finishLayout();
 }
 
@@ -76,15 +78,30 @@ MCTextBlockType MCTextRun::getBlockType() const
 coord_t MCTextRun::getCursorPositionBefore(uindex_t p_grapheme_offset)
 {
     MCRange t_range;
-    t_range = MCRangeMake(0, graphemeToCodeunit(p_grapheme_offset));
+    t_range = MCRangeMake(m_codeunit_range.offset, graphemeToCodeunit(p_grapheme_offset));
     return MCFontMeasureTextSubstringFloat(m_font, fetchStringRef(), t_range, getTransform());
 }
 
 coord_t MCTextRun::getCursorPositionAfter(uindex_t p_grapheme_offset)
 {
     MCRange t_range;
-    t_range = MCRangeMake(0, graphemeToCodeunit(p_grapheme_offset+1));
+    t_range = MCRangeMake(m_codeunit_range.offset, graphemeToCodeunit(p_grapheme_offset+1));
     return MCFontMeasureTextSubstringFloat(m_font, fetchStringRef(), t_range, getTransform());
+}
+
+bool MCTextRun::mergeWithNext()
+{
+    // Merge if the block is identical in terms of attributes
+    // TODO: proper attributes
+    if (next() == getParagraph()->getBlocks()
+        || next()->getBlockType() != kMCTextBlockTypeRun)
+        return false;
+    
+    m_codeunit_range.length += next()->getCodeunitRange().length;
+    m_grapheme_range.length += next()->getGraphemeRange().length;
+    MCTextBlock* t_dummy = this;
+    delete next()->remove(t_dummy);
+    return true;
 }
 
 MCTextRun* MCTextRun::splitAfter(uindex_t p_codeunit_offset)
@@ -94,6 +111,7 @@ MCTextRun* MCTextRun::splitAfter(uindex_t p_codeunit_offset)
     t_new_range = MCRangeMake(m_codeunit_range.offset+p_codeunit_offset, m_codeunit_range.length-p_codeunit_offset);
     t_new_run = new MCTextRun(m_paragraph, t_new_range);
     adjustCodeunitRange(0, -(m_codeunit_range.length - p_codeunit_offset));
+    t_new_run->adjustCodeunitRange(0, 0);
     append(t_new_run);
     return t_new_run;
 }

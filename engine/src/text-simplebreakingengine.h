@@ -31,7 +31,7 @@ public:
     virtual ~MCTextSimpleBreakingEngine();
     
     // Inherited from MCTextBreakingEngine
-    virtual bool fitBlocks(MCTextBlock* p_blocks, coord_t p_available_width, MCTextBlock*& r_last_fit);
+    virtual bool fitBlocks(MCTextBlock* p_blocks, coord_t p_available_width, bool p_start_of_line, MCTextBlock*& r_last_fit);
 };
 
 

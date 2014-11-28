@@ -25,7 +25,7 @@
 
 
 MCTextSegment::MCTextSegment(MCTextParagraph* p_paragraph) :
-  MCTextCell(),
+  MCTextCell(*p_paragraph),
   m_line(NULL),
   m_paragraph(p_paragraph),
   m_blocks(NULL),
@@ -77,8 +77,8 @@ void MCTextSegment::performLayout()
         // Tell the block to finish its own layout
         t_block->performLayout();
         
-        // The width of the segment is the greatest x value in any block
-        t_width = MCMax(t_width, t_block->getX() + t_block->getWidth());
+        // The width of the segment is sum of the width of the blocks
+        t_width += t_block->getWidth();
         
         // The font metrics are the greatest values found in any block
         m_ascent = MCMax(m_ascent, t_block->getTextAscent());
@@ -124,7 +124,7 @@ void MCTextSegment::repositionChildren()
     // Calculate the offset that we are going to use for the position, based on
     // the alignment that the contents of the segment should take.
     coord_t t_x = 0.0f;
-    switch (getHorizontalAlignment())
+    /*switch (getHorizontalAlignment())
     {
         case kMCTextCellAlignCenter:
             t_x += (getMaxWidth() - getWidth()) / 2;
@@ -140,7 +140,7 @@ void MCTextSegment::repositionChildren()
             
         default:
             MCUnreachable();
-    }
+    }*/
     
     // Position the blocks in visual order
     for (uindex_t i = 0; i < m_visual_order.Size(); i++)
@@ -194,6 +194,16 @@ MCTextBlock* MCTextSegment::addBlocks(MCTextBlock* p_blocks)
 
 MCTextBlock* MCTextSegment::clearAllBlocks()
 {
+    // The blocks no longer belong to this segment
+    MCTextBlock* t_block;
+    t_block = m_blocks;
+    do
+    {
+        t_block->setSegment(NULL);
+        t_block = t_block->next();
+    }
+    while (t_block != m_blocks);
+    
     // Just return the list of blocks directly
     MCTextBlock* t_blocks = m_blocks;
     m_blocks = NULL;

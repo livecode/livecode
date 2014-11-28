@@ -87,7 +87,7 @@ private:
     // If not, the segment is split so that it will fit. False will be returned
     // if there was a failure to fit the entire segment or if an explicit line
     // break was encountered.
-    bool fitSegment(MCTextSegment* p_segment, coord_t p_available_width);
+    bool fitSegment(MCTextSegment* p_segment, bool p_first_segment, coord_t p_available_width);
     
     // Calculates the x offset for where the given segment should be placed
     coord_t offsetForSegment(uindex_t t_index, coord_t p_prev_segment_end);
