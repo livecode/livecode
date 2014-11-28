@@ -457,7 +457,7 @@
     'rule' Type(-> uint(Position)):
         "uindex" @(-> Position)
 
-    'rule' Type(-> double(Position)):
+    'rule' Type(-> float(Position)):
         "float" @(-> Position)
 
     'rule' Type(-> double(Position)):

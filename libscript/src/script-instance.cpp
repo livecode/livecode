@@ -1106,7 +1106,8 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 else
                 {
                     // Otherwise, we build a foreign value out of it.
-                    if (!MCForeignValueCreateAndRelease(t_types[i] . type, t_args[i], (MCForeignValueRef&)t_out_values[i]))
+                    // Foreign out or in-out parameters are indirect...
+                    if (!MCForeignValueCreateAndRelease(t_types[i] . type, *(void**)t_args[i], (MCForeignValueRef&)t_out_values[i]))
                     {
                         // If that failed, finalize the contents.
                         t_descriptor -> finalize(t_args[i]);
