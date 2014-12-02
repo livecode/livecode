@@ -975,7 +975,6 @@ void MCPlayer::open()
         m_is_attached = true;
         m_should_attach = false;
     }
-    
 }
 
 void MCPlayer::close()
