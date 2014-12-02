@@ -914,7 +914,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     const MCForeignTypeDescriptor *t_src_descriptor;
                     t_src_descriptor = MCForeignTypeInfoGetDescriptor(t_source . type);
                     
-                    if (!t_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_argument))
+                    if (!t_src_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_argument))
                         break;
                     
                     // Need to release the argument.
@@ -1193,64 +1193,180 @@ static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytec
 		
 		return MCScriptPerformForeignInvoke(x_frame, p_instance, t_foreign_handler, p_arguments, p_arity);
 	}
-    else if (p_handler -> kind == kMCScriptDefinitionKindDefinitionGroup)
-    {
-        MCScriptDefinitionGroupDefinition *t_group;
-        t_group = MCScriptDefinitionAsDefinitionGroup(p_handler);
-        
-        for(uindex_t i = 0; i < t_group -> handler_count; i++)
-        {
-            MCScriptInstanceRef t_instance;
-            MCScriptSyntaxDefinition *t_syntax_def;
-            MCScriptResolveDefinitionInFrame(x_frame, t_group -> handlers[i], t_instance, (MCScriptDefinition*&)t_syntax_def);
-            
-            for(uindex_t k = 0; k < t_syntax_def -> method_count; k++)
-            {
-                MCScriptDefinition *t_definition;
-                t_definition = t_instance -> module -> definitions[t_syntax_def -> methods[k] . handler];
-                
-                uindex_t t_type_index;
-                if (t_definition -> kind == kMCScriptDefinitionKindHandler)
-                    t_type_index = static_cast<MCScriptHandlerDefinition *>(t_definition) -> type;
-                else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
-                    t_type_index = static_cast<MCScriptForeignHandlerDefinition *>(t_definition) -> type;
-                else
-                    /* LOAD CHECK */ __MCScriptUnreachable__("non-handler definition in handler group");
-            
-                MCTypeInfoRef t_type;
-                t_type = t_instance -> module -> types[t_type_index] -> typeinfo;
-                
-                if (MCHandlerTypeInfoGetParameterCount(t_type) != p_arity - 1)
-                    continue;
-                
-                bool t_matched;
-                t_matched = true;
-                for(uindex_t j = 0; j < p_arity - 1; j++)
-                {
-                    if (MCHandlerTypeInfoGetParameterMode(t_type, j) == kMCHandlerTypeFieldModeOut)
-                        continue;
-                    
-                    MCValueRef t_value;
-                    t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[j + 1]);
-                    
-                    if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), MCHandlerTypeInfoGetParameterType(t_type, j)))
-                    {
-                        t_matched = false;
-                        break;
-                    }
-                }
-            
-                if (t_matched)
-                    return MCScriptPerformInvoke(x_frame, x_next_bytecode, t_instance, t_definition, p_arguments, p_arity);
-            }
-        }
-        
-        return MCErrorThrowGeneric(); //MCScriptThrowAmbiguousHandlerGroupInvocation();
-    }
 	
 	/* LOAD CHECK */ __MCScriptUnreachable__("non-handler definition passed to invoke");
     
     return false;
+}
+
+static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
+{
+    MCScriptDefinitionGroupDefinition *t_group;
+    t_group = MCScriptDefinitionAsDefinitionGroup(p_handler);
+    
+    for(uindex_t i = 0; i < t_group -> handler_count; i++)
+    {
+        MCScriptInstanceRef t_instance;
+        MCScriptDefinition *t_definition;
+        MCScriptResolveDefinitionInFrame(x_frame, t_group -> handlers[i], t_instance, t_definition);
+        
+        uindex_t t_type_index;
+        if (t_definition -> kind == kMCScriptDefinitionKindHandler)
+            t_type_index = static_cast<MCScriptHandlerDefinition *>(t_definition) -> type;
+        else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
+            t_type_index = static_cast<MCScriptForeignHandlerDefinition *>(t_definition) -> type;
+        else
+        /* LOAD CHECK */ __MCScriptUnreachable__("non-handler definition in handler group");
+        
+        MCTypeInfoRef t_type;
+        t_type = t_instance -> module -> types[t_type_index] -> typeinfo;
+        
+        if (MCHandlerTypeInfoGetParameterCount(t_type) != p_arity - 1)
+            continue;
+        
+        bool t_matched;
+        t_matched = true;
+        for(uindex_t j = 0; j < p_arity - 1; j++)
+        {
+            if (MCHandlerTypeInfoGetParameterMode(t_type, j) == kMCHandlerTypeFieldModeOut)
+                continue;
+            
+            MCValueRef t_value;
+            t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[j + 1]);
+            
+            if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), MCHandlerTypeInfoGetParameterType(t_type, j)))
+            {
+                t_matched = false;
+                break;
+            }
+        }
+        
+        if (t_matched)
+            return MCScriptPerformInvoke(x_frame, x_next_bytecode, t_instance, t_definition, p_arguments, p_arity);
+    }
+    
+    return MCErrorThrowGeneric(); //MCScriptThrowAmbiguousHandlerGroupInvocation();
+}
+
+static bool MCScriptPerformSyntaxInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity, MCScriptBytecodeOp p_op)
+{
+#if 0
+    MCScriptDefinitionGroupDefinition *t_group;
+    t_group = MCScriptDefinitionAsDefinitionGroup(p_handler);
+    
+    for(uindex_t i = 0; i < t_group -> handler_count; i++)
+    {
+        MCScriptInstanceRef t_instance;
+        MCScriptSyntaxDefinition *t_syntax_def;
+        MCScriptResolveDefinitionInFrame(x_frame, t_group -> handlers[i], t_instance, (MCScriptDefinition*&)t_syntax_def);
+        
+        // We must check each method and score as how appropriate to use. The
+        // method with first the lowest score wins. The score of a method is
+        // the count of the number of arguments which are not type-equal, but
+        // do conform. For example, "+" has three variants:
+        //    number + number
+        //    int + int
+        //    double + double
+        // So given int+int, the scores would be 2, 0, _.
+        // Given int+double, the scores would be 2, _, _.
+        // Given number+int, the scores would be 1, 1, _.
+        //
+        // The input arguments are mapped to the method arguments using the syntax
+        // argument list. This is encoded as follows:
+        //   builtin arguments (input - 0, output - 1)
+        //     => 2 * index
+        //   constant arguments
+        //     => (index + 2) * 2
+        //   actual arguments
+        //     => index * 4
+        //
+        // Methods are further filtered by the op type. For Assign, the method mapping
+        // must include input; for Evaluate the method mapping must include output. For
+        // execute, it must include neither.
+        //
+        uindex_t t_min_score, t_min_score_index;
+        t_min_score = UINDEX_MAX;
+        t_min_score_index = UINDEX_MAX;
+        
+        for(uindex_t k = 0; k < t_syntax_def -> method_count; k++)
+        {
+            MCScriptDefinition *t_definition;
+            t_definition = t_instance -> module -> definitions[t_syntax_def -> methods[k] . handler];
+            
+            uindex_t t_type_index;
+            if (t_definition -> kind == kMCScriptDefinitionKindHandler)
+                t_type_index = static_cast<MCScriptHandlerDefinition *>(t_definition) -> type;
+            else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
+                t_type_index = static_cast<MCScriptForeignHandlerDefinition *>(t_definition) -> type;
+            else
+            /* LOAD CHECK */ __MCScriptUnreachable__("non-handler definition in handler group");
+            
+            MCTypeInfoRef t_type;
+            t_type = t_instance -> module -> types[t_type_index] -> typeinfo;
+            
+            uindex_t t_argument_count;
+            t_argument_count = t_syntax_def -> methods[k] . argument_count;
+            
+            uindex_t *t_arguments;
+            t_arguments = t_syntax_def -> methods[k] . arguments;
+            
+            bool t_has_input, t_has_output;
+            t_has_input = false;
+            t_has_output = false;
+            
+            for(uindex_t i = 0; i < t_argument_count; i++)
+            {
+                uindex_t t_arg;
+                t_arg = t_arguments[i];
+                
+                MCValueRef t_value;
+                if (t_arg == 0)
+                    t_has_input = true;
+                else if (t_arg == 1)
+                    t_has_output = true;
+                else if (t_arg == 2)
+                    // container - todo
+                else if (t_arg == 3)
+                    // iterator - todo
+                else
+                {
+                    uindex t_index;
+                    t_index = (t_arg - 4);
+                    if ((t_index & 1) == 0)
+                    {
+                        // constant
+                    }
+                    else
+                        // var
+                }
+            }
+            
+            if (MCHandlerTypeInfoGetParameterCount(t_type) != p_arity - 1)
+                continue;
+            
+            bool t_matched;
+            t_matched = true;
+            for(uindex_t j = 0; j < p_arity - 1; j++)
+            {
+                if (MCHandlerTypeInfoGetParameterMode(t_type, j) == kMCHandlerTypeFieldModeOut)
+                    continue;
+                
+                MCValueRef t_value;
+                t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[j + 1]);
+                
+                if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), MCHandlerTypeInfoGetParameterType(t_type, j)))
+                {
+                    t_matched = false;
+                    break;
+                }
+            }
+            
+            if (t_matched)
+                return MCScriptPerformInvoke(x_frame, x_next_bytecode, t_instance, t_definition, p_arguments, p_arity);
+        }
+    }
+#endif
+    return MCErrorThrowGeneric(); //MCScriptThrowAmbiguousHandlerGroupInvocation();
 }
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments)
@@ -1462,10 +1578,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             }
             break;
             case kMCScriptBytecodeOpInvoke:
-            case kMCScriptBytecodeOpInvokeEvaluate:
-            case kMCScriptBytecodeOpInvokeAssign:
             {
-                // invoke <index>, <result>, <arg_1>, ..., <arg_n>
+                // invoke <index>, <special>, <arg_1>, ..., <arg_n>
                 int t_index;
                 t_index = t_arguments[0];
 				
@@ -1473,7 +1587,10 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCScriptDefinition *t_definition;
                 MCScriptResolveDefinitionInFrame(t_frame, t_index, t_instance, t_definition);
 
-				t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity - 1);
+                if (t_definition -> kind != kMCScriptDefinitionKindDefinitionGroup)
+                    t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity - 1);
+                else
+                    t_success = MCScriptPerformMultiInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_arguments + 1, t_arity - 1);
             }
             break;
             case kMCScriptBytecodeOpInvokeIndirect:
