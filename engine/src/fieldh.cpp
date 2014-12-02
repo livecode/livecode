@@ -701,7 +701,11 @@ bool MCField::importparagraph(MCParagraph*& x_paragraphs, const MCFieldParagraph
 		t_new_paragraph -> importattrs(*p_style);
 	
 	if (x_paragraphs != nil)
+    {
+        // SN-2014-12-02: [[ Bug 14117 ]] Check the metadata of the block previously added in the list.
+        x_paragraphs -> prev() -> checkmetadata();
 		x_paragraphs -> prev() -> append(t_new_paragraph);
+    }
 	else
 		x_paragraphs = t_new_paragraph;
 	

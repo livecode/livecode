@@ -433,6 +433,10 @@ public:
 
 	// Get the metadata (if any) in the block containing index si
 	const char *getmetadataatindex(uint2 si);
+    
+    // SN-2014-12-02: [[ Bug 14117 ]] Checks whether the metadata in a paragraph's blocks
+    //  are in fact the metadata of the whole paragraph.
+    void checkmetadata();
 
 	// Return true if the link (if any) in the block containing index si
 	// has been visited.
