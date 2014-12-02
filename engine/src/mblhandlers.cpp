@@ -6455,6 +6455,11 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 
 	if (t_success)
 		MCNativeControlExecDo(ctxt, *t_control_name, *t_property, t_params . Ptr(), t_params . Size());
+
+    
+    // SN-2014-11-20: [[ Bug 14062 ]] Cleanup the memory
+    for (uint32_t i = 0; i < t_params . Size(); ++i)
+        MCValueRelease(t_params[i]);\
 	
 	return ES_NORMAL;
 }
