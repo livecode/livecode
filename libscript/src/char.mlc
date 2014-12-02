@@ -12,9 +12,9 @@ foreign handler EvalIsAmongTheCharsOf(in Needle as string, in Source as string, 
 foreign handler StoreBeforeCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
 foreign handler StoreAfterCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler EvalOffsetOfChars(in Needle as string, in Target as string, in IsLast as bool, out Offset as index) as undefined binds to "<builtin>"
-foreign handler EvalOffsetOfCharsBefore(in Needle as string, in Before as index, in Target as string, in IsLast as bool, out Offset as index) as undefined binds to "<builtin>"
-foreign handler EvalOffsetOfCharsAfter(in Needle as string, in After as index, in Target as string, in IsFirst as bool, out Offset as index) as undefined binds to "<builtin>"
+foreign handler EvalOffsetOfChars(in IsLast as bool, in Needle as string, in Target as string, out Offset as index) as undefined binds to "<builtin>"
+foreign handler EvalOffsetOfCharsBefore(in IsLast as bool, in Needle as string, in Before as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
+foreign handler EvalOffsetOfCharsAfter(in IsFirst as bool, in Needle as string, in After as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
 
 --
 
@@ -125,7 +125,7 @@ output:             Returns the number of chars between the first char of <Targe
 syntax CharOffset is prefix operator with precedence 1
     "the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" ["chars"] <Needle: Expression> "in" <Target: Expression>
 begin
-    EvalOffsetOfChars(Needle, Target, IsLast, output)
+    EvalOffsetOfChars(IsLast, Needle, Target, output)
 end syntax
 
 /*
@@ -143,7 +143,7 @@ output:             Returns the number of chars between the first char of <Targe
 syntax CharOffsetAfter is prefix operator with precedence 1
     "the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" ["chars"] <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
-    EvalOffsetOfCharsAfter(Needle, After, Target, IsLast, output)
+    EvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
 end syntax
 
 /*
@@ -162,7 +162,7 @@ output:             Returns the number of chars between the first char of <Targe
 syntax CharOffsetBefore is prefix operator with precedence 1
     "the" ["first" <IsFirst=true> | "last" <IsFirst=false>] "offset" "of" ["chars"] <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
-    EvalOffsetOfCharsBefore(Needle, Before, Target, IsFirst, output)
+    EvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
 end syntax
 
 
