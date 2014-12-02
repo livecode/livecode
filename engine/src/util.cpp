@@ -2321,18 +2321,19 @@ void MCU_base64decode(MCStringRef in, MCDataRef &out)
 	/* UNCHECKED */ MCFiltersBase64Decode(in, out);
 }
 
-bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
+// SN-2014-12-02": [[ Bug 14015 ]] The fix should only affect the URLs explicitely encoded as UTF-8
+bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
 
-void MCU_urlencode(MCStringRef p_url, MCStringRef &r_encoded)
+void MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded)
 {
-	/* UNCHECKED */ MCFiltersUrlEncode(p_url, r_encoded);
+	/* UNCHECKED */ MCFiltersUrlEncode(p_url, p_use_utf8, r_encoded);
 }
 
-bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result);
+bool MCFiltersUrlDecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
 
-void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result)
+void MCU_urldecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result)
 {
-	/* UNCHECKED */ MCFiltersUrlDecode(p_source, r_result);
+	/* UNCHECKED */ MCFiltersUrlDecode(p_source, p_use_utf8, r_result);
 }
 
 Boolean MCU_freeinserted(MCObjectList *&l)

@@ -1176,7 +1176,7 @@ bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef
 	MCAutoStringRef t_input_files_livecode;
 	/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input_files, &t_input_files_livecode);
 	MCAutoStringRef t_input_files_livecode_decoded;
-	MCU_urldecode(*t_input_files_livecode, &t_input_files_livecode_decoded);
+	MCU_urldecode(*t_input_files_livecode, true, &t_input_files_livecode_decoded);
 	
 	MCAutoPointer<MCRange> t_ranges;
 	uindex_t t_range_count;

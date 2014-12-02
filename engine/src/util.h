@@ -190,8 +190,8 @@ extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCPar
 extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCDataRef in, MCStringRef &out);
 extern void MCU_base64decode(MCStringRef in, MCDataRef &out);
-extern void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result);
-extern void MCU_urlencode(MCStringRef p_url, MCStringRef &r_encoded);
+extern void MCU_urldecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
+extern void MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
 //extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
