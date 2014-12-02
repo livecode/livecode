@@ -139,6 +139,8 @@ DEFINE_ERROR(LSyntaxMethodArgumentsDontConform, "Assignment syntax method argume
 DEFINE_ERROR(RSyntaxMethodArgumentsDontConform, "Evaluate syntax method arguments must match order of syntax rule then end with 'output'")
 DEFINE_ERROR(ExpressionSyntaxMethodArgumentsDontConform, "Expression syntax method arguments must either have 'input' first, or 'output' last (but not both)")
 
+DEFINE_ERROR(HandlersBoundToSyntaxMustBePublic, "Handlers bound to syntax rules must be public")
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void yyerror(const char *p_text)

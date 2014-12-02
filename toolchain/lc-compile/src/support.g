@@ -79,7 +79,9 @@
     PushMarkedStringSyntaxGrammar
     BeginSyntaxMappings
     EndSyntaxMappings
-    BeginMethodSyntaxMapping
+    BeginExecuteMethodSyntaxMapping
+    BeginEvaluateMethodSyntaxMapping
+    BeginAssignMethodSyntaxMapping
     EndMethodSyntaxMapping
     PushUndefinedArgumentSyntaxMapping
     PushTrueArgumentSyntaxMapping
@@ -87,7 +89,9 @@
     PushIntegerArgumentSyntaxMapping
     PushRealArgumentSyntaxMapping
     PushStringArgumentSyntaxMapping
-    PushMarkArgumentSyntaxMapping
+    PushInMarkArgumentSyntaxMapping
+    PushOutMarkArgumentSyntaxMapping
+    PushInOutMarkArgumentSyntaxMapping
 
     EmitBeginModule
     EmitEndModule
@@ -236,6 +240,7 @@
     Error_LSyntaxMethodArgumentsDontConform
     Error_RSyntaxMethodArgumentsDontConform
     Error_ExpressionSyntaxMethodArgumentsDontConform
+    Error_HandlersBoundToSyntaxMustBePublic
 
 --------------------------------------------------------------------------------
 
@@ -350,15 +355,20 @@
 'action' BeginSyntaxMappings()
 'action' EndSyntaxMappings()
 
-'action' BeginMethodSyntaxMapping(Name: NAME)
+'action' BeginExecuteMethodSyntaxMapping(Name: NAME)
+'action' BeginEvaluateMethodSyntaxMapping(Name: NAME)
+'action' BeginAssignMethodSyntaxMapping(Name: NAME)
 'action' EndMethodSyntaxMapping()
+'action' PushInMarkArgumentSyntaxMapping(MarkIndex: INT)
+'action' PushOutMarkArgumentSyntaxMapping(MarkIndex: INT)
+'action' PushInOutMarkArgumentSyntaxMapping(MarkIndex: INT)
+
 'action' PushUndefinedArgumentSyntaxMapping()
 'action' PushTrueArgumentSyntaxMapping()
 'action' PushFalseArgumentSyntaxMapping()
 'action' PushIntegerArgumentSyntaxMapping(Value: INT)
 'action' PushRealArgumentSyntaxMapping(Value: DOUBLE)
 'action' PushStringArgumentSyntaxMapping(Value: STRING)
-'action' PushMarkArgumentSyntaxMapping(MarkIndex: INT)
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
 
 --------------------------------------------------------------------------------
@@ -531,5 +541,6 @@
 'action' Error_LSyntaxMethodArgumentsDontConform(Position: POS)
 'action' Error_RSyntaxMethodArgumentsDontConform(Position: POS)
 'action' Error_ExpressionSyntaxMethodArgumentsDontConform(Position: POS)
+'action' Error_HandlersBoundToSyntaxMustBePublic(Position: POS)
 
 --------------------------------------------------------------------------------

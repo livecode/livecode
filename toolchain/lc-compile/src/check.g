@@ -669,7 +669,13 @@
 'action' CheckSyntaxMethod(SYNTAXCLASS, SYNTAXMETHOD)
 
     'rule' CheckSyntaxMethod(Class, method(Position, Name, Arguments)):
-        QueryHandlerIdSignature(Name -> signature(Parameters, ReturnType))
+        QuerySymbolId(Name -> Info)
+        Info'Type -> handler(_, signature(Parameters, ReturnType))
+        Info'Access -> Access
+        [|
+            ne(Access, public)
+            Error_HandlersBoundToSyntaxMustBePublic(Position)
+        |]
         CheckSyntaxMethodReturnType(Position, ReturnType)
         CheckSyntaxMethodArguments(Position, Parameters, Arguments)
         (|
@@ -1092,5 +1098,7 @@
         
     'rule' QueryId(Id -> Meaning):
         Id'Meaning -> Meaning
+        
+'action' QuerySymbolId(ID -> SYMBOLINFO)
 
 --------------------------------------------------------------------------------
