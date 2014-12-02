@@ -84,6 +84,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Engine, Get, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, PutIntoVariable, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, PutOutput, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Do, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Engine, DoInCaller, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, InsertScriptOfObjectInto, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Quit, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, CancelMessage, 1)
@@ -848,6 +849,35 @@ void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p
 
 	if (added)
 		MCnexecutioncontexts--;
+}
+
+void MCEngineExecDoInCaller(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos)
+{
+    Boolean added = False;
+    if (MCnexecutioncontexts < MAX_CONTEXTS)
+    {
+        ctxt.SetLineAndPos(p_line, p_pos);
+        MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+        added = True;
+    }
+    
+    if (MCnexecutioncontexts < 2)
+    {
+        if (added)
+            MCnexecutioncontexts--;
+        ctxt . LegacyThrow(EE_DO_NOCALLER);
+        return;
+    }
+    
+    MCExecContext *caller = MCexecutioncontexts[MCnexecutioncontexts - 2];
+    
+    if (caller -> GetHandler() != nil)
+        caller -> GetHandler() -> doscript(*caller, p_script, p_line, p_pos);
+    else
+        caller -> GetHandlerList() -> doscript(*caller, p_script, p_line, p_pos);
+    
+    if (added)
+        MCnexecutioncontexts--;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
