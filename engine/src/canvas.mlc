@@ -28,6 +28,7 @@ type SolidPaint is Paint
 type Pattern is Paint
 
 // Gradient
+foreign type GradientStop binds to "kMCCanvasGradientStopTypeInfo"
 type Gradient is Paint
 
 // Image
