@@ -7,93 +7,39 @@ module com.livecode.canvas
 type CanvasFloat is float
 
 // Point
-foreign handler MCCanvasPointType_Measure() as uint binds to "<builtin>"
-opaque type Point
-	measure is MCCanvasPointType_Measure
-end type
+foreign type Point binds to "kMCCanvasPointTypeInfo"
 
 // Rectangle
-foreign handler MCCanvasRectangleType_Measure() as uint binds to "<builtin>"
-opaque type Rectangle
-	measure is MCCanvasRectangleType_Measure
-end type
+foreign type Rectangle binds to "kMCCanvasRectangleTypeInfo"
 
 // Transform
-foreign handler MCCanvasTransformType_Measure() as uint binds to "<builtin>"
-opaque type Transform
-	measure is MCCanvasTransformType_Measure
-end type
+foreign type Transform binds to "kMCCanvasTransformTypeInfo"
 
 // Color
-// TODO - specify color as custom value type kMCCanvasColorTypeInfo
 foreign type Color binds to "kMCCanvasColorTypeInfo"
 
 // Paint (supertype of pattern, gradient, solidpaint)
-foreign handler MCCanvasPaintType_Measure() as uint binds to "<builtin>"
-opaque type Paint
-	measure is MCCanvasPaintType_Measure
-end type
+foreign type Paint binds to "kMCCanvasPaintTypeInfo"
 
 // Solid Paint
-foreign handler MCCanvasSolidPaintType_Copy(in pSrc as pointer, out pDst as pointer) as undefined binds to "<builtin>"
-foreign handler MCCanvasSolidPaintType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
-opaque type SolidPaint based on Paint
-	copy is MCCanvasSolidPaintType_Copy
-	typecheck is MCCanvasSolidPaintType_TypeCheck
-end type
+type SolidPaint is Paint
 
 // Pattern
-foreign handler MCCanvasPatternType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
-foreign handler MCCanvasPatternType_Copy(in pSrc as pointer, out pDst as pointer) as undefined binds to "<builtin>"
-foreign handler MCCanvasPatternType_Finalize(in pPaint as pointer) as undefined binds to "<builtin>"
-opaque type Pattern based on Paint
-	typecheck is MCCanvasPatternType_TypeCheck
-end type
+type Pattern is Paint
 
 // Gradient
-record type GradientStop
-	position as CanvasFloat
-	"color" as Color
-end type
-
-foreign handler MCCanvasGradientType_TypeCheck(in pPaint as pointer) as bool binds to "<builtin>"
-opaque type Gradient based on Paint
-	typecheck is MCCanvasGradientType_TypeCheck
-end type
+type Gradient is Paint
 
 // Image
-foreign handler MCCanvasImageType_Measure() as uint binds to "<builtin>"
-foreign handler MCCanvasImageType_Finalize(in pImage as pointer) as undefined binds to "<builtin>"
-foreign handler MCCanvasImageType_Copy(in pSrcImage as pointer, in pDestImage as pointer) as undefined binds to "<builtin>"
-
-opaque type Image
-	measure is MCCanvasImageType_Measure
-	finalize is MCCanvasImageType_Finalize
-	copy is MCCanvasImageType_Copy
-end type
+foreign type Image binds to "kMCCanvasImageTypeInfo"
 
 // Path
-foreign handler MCCanvasPathType_Measure() as uint binds to "<builtin>"
-foreign handler MCCanvasPathType_Finalize(in pPath as pointer) as undefined binds to "<builtin>"
-foreign handler MCCanvasPathType_Copy(in pSrcPath as pointer, in pDestPath as pointer) as undefined binds to "<builtin>"
-opaque type Path
-	measure is MCCanvasPathType_Measure
-	finalize is MCCanvasPathType_Finalize
-	copy is MCCanvasPathType_Copy
-end type
+foreign type Path binds to "kMCCanvasPathTypeInfo"
 
 // Effect
-foreign handler MCCanvasEffectType_Measure() as uint binds to "<builtin>"
-foreign handler MCCanvasEffectType_Finalize(in pEffect as pointer) as undefined binds to "<builtin>"
-foreign handler MCCanvasEffectType_Copy(in pSrc as pointer, in pDest as pointer) as undefined binds to "<builtin>"
-opaque type GraphicEffect
-	measure is MCCanvasEffectType_Measure
-	finalize is MCCanvasEffectType_Finalize
-	copy is MCCanvasEffectType_Copy
-end type
+foreign type GraphicEffect binds to "kMCCanvasEffectTypeInfo"
 
 // Canvas
-// TODO - specify Canvas as custom value type kMCCanvasTypeInfo
 foreign type Canvas binds to "kMCCanvasTypeInfo"
 
 ////////////////////////////////////////////////////////////////////////////////
