@@ -3169,6 +3169,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 					CloseHandle(t_file_handle);
 				}
 			}
+			// SN-2014-11-27: [[ Bug 14110 ]] A StdioFileHandle should be created if the file mapping failed
+			// (for empty files for instance).
+			else
+				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
 		}
 		else
 			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
