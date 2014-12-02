@@ -4290,6 +4290,10 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         if (islinechunk() && t_info == nil)
             t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
         
+        // SN-2014-11-24: [[ Bug 14053 ]] Even if the chunk is not an explicit line, the property of the line containing this chunk should be set
+        if (t_info == nil && !islinechunk())
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeLine);
+        
         if (t_info == nil || t_info -> setter == nil)
         {
             MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
