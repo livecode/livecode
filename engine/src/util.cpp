@@ -1397,10 +1397,11 @@ void MCU_snap(int2 &p)
 // MDW-2014-07-09: [[ oval_points ]] need to factor in startAngle and arcAngle
 // this is now used for both roundrects and ovals
 void MCU_roundrect(MCPoint *&points, uint2 &npoints,
-                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle)
+                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags)
 {
 	uint2 i, j, k, count;
 	uint2 x, y;
+	bool ignore = false;
 
 	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
 	{
@@ -1443,13 +1444,21 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 	// check for startAngle/arcAngle interaction
 	for (count = 0; count < (QA_NPOINTS*4); count++)
 	{
+		ignore = false;
 		// open wedge segment
 		if ((count < startAngle && arclength > 0 && count > arclength) || 
 			(arclength < 0 && count < startAngle) ||
 			(arclength < 0 && count > arcAngle+startAngle) )
 		{
-			x = origin_horiz;
-			y = origin_vert;
+			if (flags & F_OPAQUE)
+			{
+				x = origin_horiz;
+				y = origin_vert;
+			}
+			else
+			{
+				ignore = true;
+			}
 		}
 		else if (count < 90) // quadrant 1
 		{
@@ -1472,11 +1481,14 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 			y = tr . y + tr . height           - (qa_points[k] . y * rr_height / MAXINT2);
 		}
 
-		if (x != points[i-1] . x || y != points[i-1] . y)
+		if (ignore == false)
 		{
-			points[i] . x = x;
-			points[i] . y = y;
-			i++;
+			if (x != points[i-1] . x || y != points[i-1] . y)
+			{
+				points[i] . x = x;
+				points[i] . y = y;
+				i++;
+			}
 		}
 
 		j--;
