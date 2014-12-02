@@ -672,7 +672,8 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 			uint32_t t_length;
 			t_length = MCU_r8tos(t_buffer, t_buffer_length, MCNumberFetchAsReal((MCNumberRef)self), 8, 6, 0);
 
-			t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_length, r_string);
+			t_success = MCStringCreateWithNativeChars((char_t *)t_buffer, t_length, r_string);
+            delete[] t_buffer;
 		}
 		break;
 	case kMCValueTypeCodeString:

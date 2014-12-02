@@ -3386,10 +3386,11 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     MCresult->sets("error reading file");
                 else
                 {
-                    /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)buffer, toread, r_data);
+                    /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, toread, r_data);
                     MCresult->clear(False);
                 }
             }
+            delete[] buffer;
         }
         
         FSCloseFork(fRefNum);
@@ -3965,7 +3966,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 {
                     errno = getAddressFromDesc(senderDesc, sender);
                     AEDisposeDesc(&senderDesc);
-                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)sender, r_value);
+                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease(sender, r_value);
                     return;
                 }
                 delete[] sender;
@@ -8233,21 +8234,26 @@ static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r
             {
                 byte_t *result = new byte_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithBytesAndRelease(result, s, kMCStringEncodingUTF8, false, r_result);
+                /* UNCHECKED */ MCStringCreateWithBytes(result, s, kMCStringEncodingUTF8, false, r_result);
+                delete[] result;
                 break;
             }
             case typeChar:
             {
                 char_t *result = new char_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease(result, s, r_result);
+                /* UNCHECKED */ MCStringCreateWithNativeChars(result, s, r_result);
+                delete[] result;
                 break;
             }
             case typeType:
             {
                 FourCharCode t_type;
                 AEGetAttributePtr(ae, key, dt, &rType, &t_type, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)FourCharCodeToString(t_type), 4, r_result);
+                char *result;
+                result = FourCharCodeToString(t_type);
+                /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                delete[] result;
 			}
                 break;
             case typeShortInteger:
@@ -8339,14 +8345,18 @@ static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_res
             {
                 char_t *result = new char_t[s + 1];
                 AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease(result, s, r_result);
+                /* UNCHECKED */ MCStringCreateWithNativeChars(result, s, r_result);
+                delete[] result;
                 break;
             }
             case typeType:
             {
                 FourCharCode t_type;
                 AEGetParamPtr(ae, key, dt, &rType, &t_type, s, &rSize);
-                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)FourCharCodeToString(t_type), 4, r_result);
+                char *result;
+                result = FourCharCodeToString(t_type);
+                /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)result, 4, r_result);
+                delete[] result;
 			}
                 break;
             case typeShortInteger:

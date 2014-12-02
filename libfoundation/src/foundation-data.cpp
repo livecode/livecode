@@ -84,13 +84,26 @@ bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataR
 
 bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data)
 {
-    if (MCDataCreateWithBytes(p_bytes, p_byte_count, r_data))
-    {
-        MCMemoryDeallocate(p_bytes);
-        return true;
-    }
+    // AL-2014-11-17: Create with bytes and release should just take the bytes.
     
-    return false;
+    bool t_success;
+    t_success = true;
+    
+    __MCData *self;
+    self = nil;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeData, self);
+    
+    if (t_success)
+    {
+        self -> bytes = p_bytes;
+        self -> byte_count = p_byte_count;
+        r_data = self;
+    }
+    else
+        MCMemoryDelete(self);
+    
+    return t_success;
 }
 
 bool MCDataIsEmpty(MCDataRef p_data)
