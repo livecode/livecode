@@ -1633,8 +1633,57 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCValueRef t_value;
                 t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_dst);
                 
-                if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_instance -> module -> types[t_var_definition -> type] -> typeinfo))
+                MCTypeInfoRef t_output_type;
+                t_output_type = t_instance -> module -> types[t_var_definition -> type] -> typeinfo;
+                
+                MCTypeInfoRef t_input_type;
+                t_input_type = MCValueGetTypeInfo(t_value);
+                
+                MCResolvedTypeInfo t_resolved_input_type, t_resolved_output_type;
+                if (!MCTypeInfoResolve(t_input_type, t_resolved_input_type))
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_input_type);
+                if (t_success &&
+                    !MCTypeInfoResolve(t_output_type, t_resolved_output_type))
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_output_type);
+                if (t_success &&
+                    !MCResolvedTypeInfoConforms(t_resolved_input_type, t_resolved_output_type))
                     t_success = MCScriptThrowInvalidValueForGlobalVariableError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_index, t_value);
+                
+                MCValueRef t_transformed_value;
+                if (t_success)
+                {
+                    if (MCTypeInfoIsForeign(t_resolved_input_type . type))
+                    {
+                        if (MCTypeInfoIsForeign(t_resolved_output_type . type))
+                        {
+                            // Both foreign and conform, which means they are compatible.
+                            t_transformed_value = t_value;
+                        }
+                        else
+                        {
+                            // Input foreign, output not foreign - need to import.
+                            const MCForeignTypeDescriptor *t_descriptor;
+                            t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_input_type . type);
+                            if (!t_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_transformed_value))
+                                t_success = false;
+                        }
+                    }
+                    else
+                    {
+                        if (MCTypeInfoIsForeign(t_resolved_output_type . type))
+                        {
+                            // Input not foreign, output foreign so need to export.
+                            if (!MCForeignValueExport(t_resolved_output_type . named_type, t_value, (MCForeignValueRef&)t_transformed_value))
+                                t_success = false;
+                        }
+                        else
+                        {
+                            // Input is not foreign, output is not foreign so they must be
+                            // compatible.
+                            t_transformed_value = t_value;
+                        }
+                    }
+                }
                 
                 if (t_success)
                 {
@@ -1643,6 +1692,8 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                         MCValueRelease(t_instance -> slots[t_var_definition -> slot_index]);
                         t_instance -> slots[t_var_definition -> slot_index] = MCValueRetain(t_value);
                     }
+                    if (t_transformed_value != t_value)
+                        MCValueRelease(t_transformed_value);
                 }
             }
             break;
