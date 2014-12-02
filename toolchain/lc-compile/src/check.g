@@ -678,10 +678,101 @@
         ||
             ComputeRModeOfSyntaxMethodArguments(Parameters, Arguments)
         |)
+        CheckSyntaxMethodCanBeBound(Position, Class, Parameters, ReturnType, Arguments)
 
     'rule' CheckSyntaxMethod(Class, method(Position, Name, Arguments)):
         -- fails if the id isn't a handler id (i.e. is error)
         
+'action' CheckSyntaxMethodCanBeBound(POS, SYNTAXCLASS, PARAMETERLIST, TYPE, SYNTAXCONSTANTLIST)
+
+    'rule' CheckSyntaxMethodCanBeBound(Position, phrase, Parameters, ReturnType, Arguments):
+        (|
+            CheckEquivalentSyntaxMethodArguments(-1, Parameters, Arguments)
+        || 
+            Error_SyntaxMethodArgumentsMustMatch(Position)
+        |)
+        
+    'rule' CheckSyntaxMethodCanBeBound(Position, statement, Parameters, ReturnType, Arguments):
+        (|
+            CheckEquivalentSyntaxMethodArguments(-1, Parameters, Arguments)
+        || 
+            Error_SyntaxMethodArgumentsMustMatch(Position)
+        |)
+
+    'rule' CheckSyntaxMethodCanBeBound(Position, Class, Parameters, ReturnType, Arguments):
+        (|
+            where(Class -> expression)
+        ||
+            where(Class -> prefix(_))
+        ||
+            where(Class -> postfix(_))
+        ||
+            where(Class -> binary(_, _))
+        |)
+        (|
+            IsFirstArgumentInput(Arguments)
+            (|
+                CheckEquivalentSyntaxMethodArguments(-1, Parameters, Arguments)
+            ||
+                Error_LSyntaxMethodArgumentsDontConform(Position)
+            |)
+        ||
+            IsLastArgumentOutput(Arguments)
+            (|
+                CheckEquivalentSyntaxMethodArguments(-1, Parameters, Arguments)
+            ||
+                Error_RSyntaxMethodArgumentsDontConform(Position)
+            |)
+        ||
+            Error_ExpressionSyntaxMethodArgumentsDontConform(Position)
+        |)
+
+    'rule' CheckSyntaxMethodCanBeBound(Position, Class, Parameters, ReturnType, Arguments):
+        print(Class)
+        eq(0,1)
+        
+'condition' IsFirstArgumentInput(SYNTAXCONSTANTLIST)
+
+    'rule' IsFirstArgumentInput(constantlist(variable(_, Id), Tail)):
+        QuerySyntaxMarkId(Id -> Info)
+        Info'Type -> input
+        
+'condition' IsLastArgumentOutput(SYNTAXCONSTANTLIST)
+
+    'rule' IsLastArgumentOutput(constantlist(variable(_, Id), nil)):
+        QuerySyntaxMarkId(Id -> Info)
+        Info'Type -> output
+
+    'rule' IsLastArgumentOutput(constantlist(Head, Tail)):
+        IsLastArgumentOutput(Tail)
+
+-- Syntax method arguments are equivalent to parameters if the parameter list is bound to a
+-- monotonically increasing list of index vars.
+'condition' CheckEquivalentSyntaxMethodArguments(INT, PARAMETERLIST, SYNTAXCONSTANTLIST)
+
+    'rule' CheckEquivalentSyntaxMethodArguments(Index, parameterlist(ParamHead, ParamTail), constantlist(variable(_, Id), ArgTail)):
+        QuerySyntaxMarkId(Id -> Info)
+        (|
+            (|
+                Info'Type -> input
+            ||
+                Info'Type -> output
+            ||
+                Info'Type -> iterator
+            ||
+                Info'Type -> container
+            |)
+            where(Index -> VarIndex)
+        ||
+            Info'Index -> VarIndex
+            gt(VarIndex, Index)
+        |)
+        CheckEquivalentSyntaxMethodArguments(VarIndex, ParamTail, ArgTail)
+
+    'rule' CheckEquivalentSyntaxMethodArguments(Index, nil, nil):
+        --
+
+
 'condition' IsLValueSyntaxMethodBinding(SYNTAXCONSTANTLIST)
 
     'rule' IsLValueSyntaxMethodBinding(constantlist(variable(_, Name), _))

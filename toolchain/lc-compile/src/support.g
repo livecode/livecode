@@ -232,6 +232,10 @@
     Error_IteratorSyntaxArgumentMustBindToInOutParameter
     Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter
     Error_VariableSyntaxArgumentMustBindToConsistentMode
+    Error_SyntaxMethodArgumentsMustMatch
+    Error_LSyntaxMethodArgumentsDontConform
+    Error_RSyntaxMethodArgumentsDontConform
+    Error_ExpressionSyntaxMethodArgumentsDontConform
 
 --------------------------------------------------------------------------------
 
@@ -522,5 +526,10 @@
 'action' Error_IteratorSyntaxArgumentMustBindToInOutParameter(Position: POS)
 'action' Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter(Position: POS)
 'action' Error_VariableSyntaxArgumentMustBindToConsistentMode(Positiobn: POS)
+
+'action' Error_SyntaxMethodArgumentsMustMatch(Position: POS)
+'action' Error_LSyntaxMethodArgumentsDontConform(Position: POS)
+'action' Error_RSyntaxMethodArgumentsDontConform(Position: POS)
+'action' Error_ExpressionSyntaxMethodArgumentsDontConform(Position: POS)
 
 --------------------------------------------------------------------------------
