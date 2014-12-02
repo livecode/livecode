@@ -1,20 +1,20 @@
 module com.livecode.char
 
-foreign handler MCCharFetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
-foreign handler StoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
-foreign handler FetchCharRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"
-foreign handler StoreCharRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler StoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler FetchCharRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"
+public foreign handler StoreCharRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler EvalNumberOfCharsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
+public foreign handler EvalNumberOfCharsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
 
-foreign handler EvalIsAmongTheCharsOf(in Needle as string, in Source as string, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsAmongTheCharsOf(in Needle as string, in Source as string, out Value as bool) as undefined binds to "<builtin>"
 
-foreign handler StoreBeforeCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
-foreign handler StoreAfterCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler StoreBeforeCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler StoreAfterCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler EvalOffsetOfChars(in IsLast as bool, in Needle as string, in Target as string, out Offset as index) as undefined binds to "<builtin>"
-foreign handler EvalOffsetOfCharsBefore(in IsLast as bool, in Needle as string, in Before as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
-foreign handler EvalOffsetOfCharsAfter(in IsFirst as bool, in Needle as string, in After as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler EvalOffsetOfChars(in IsLast as bool, in Needle as string, in Target as string, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler EvalOffsetOfCharsBefore(in IsLast as bool, in Needle as string, in Before as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler EvalOffsetOfCharsAfter(in IsFirst as bool, in Needle as string, in After as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
 
 --
 

@@ -4,17 +4,17 @@ This module specifies the syntax definitions and bindings for operations on bina
 
 module com.livecode.binary
 
-foreign handler MCBinaryExecPutBytesBefore(in Source as data, inout Target as data) as undefined binds to "<builtin>"
-foreign handler MCBinaryExecPutBytesAfter(in Source as data, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCBinaryExecPutBytesBefore(in Source as data, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler MCBinaryExecPutBytesAfter(in Source as data, inout Target as data) as undefined binds to "<builtin>"
 
-foreign handler MCBinaryEvalConcatenateBytes(in Left as data, in Right as data, out Result as data) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalConcatenateBytes(in Left as data, in Right as data, out Result as data) as undefined binds to "<builtin>"
 
-foreign handler MCBinaryEvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
 
-foreign handler MCBinaryEvalIsEqualTo(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
-foreign handler MCBinaryEvalIsNotEqualTo(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
-foreign handler MCBinaryEvalIsLessThan(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
-foreign handler MCBinaryEvalIsGreaterThan(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalIsEqualTo(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalIsNotEqualTo(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalIsLessThan(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCBinaryEvalIsGreaterThan(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
 --
 
 /*
