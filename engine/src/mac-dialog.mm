@@ -843,7 +843,7 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
     [mCancelButton setNeedsDisplay:YES];
     
     // Update frame for the OK button
-    NSRect okRect = { { okRect.origin.x + ButtonWidth + ButtonSpacing,
+    NSRect okRect = { { cancelRect.origin.x + ButtonWidth + ButtonSpacing,
         ButtonBottomMargin },
         { ButtonWidth, ButtonHeight } };
     [mOkButton setButtonType: NSMomentaryLightButton];
