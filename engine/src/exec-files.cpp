@@ -455,6 +455,8 @@ void MCFilesEvalQueryRegistryWithType(MCExecContext& ctxt, MCStringRef p_key, MC
 		{
 			ctxt.SetTheResultToValue(*t_error);
 			r_string = MCValueRetain(kMCEmptyString);
+            // SN-2014-11-18: [[ Bug 14052 ]] Assign the empty string to the type as well.
+            r_type = MCValueRetain(kMCEmptyString);
 		}
 		else
 			ctxt.SetTheResultToEmpty();
