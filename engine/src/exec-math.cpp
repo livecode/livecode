@@ -833,10 +833,10 @@ void MCMathArrayApplyOperationWithArray(MCExecContext& ctxt, MCArrayRef p_left, 
 	uintptr_t t_index = 0;
 
 	MCS_seterrno(0);
-	while (MCArrayIterate(p_left, t_index, t_key, t_value_left))
+	while (MCArrayIterate(p_right, t_index, t_key, t_value_right))
 	{
 		real64_t t_double_left, t_double_right;
-		if (!MCArrayFetchValue(p_right, ctxt.GetCaseSensitive(), t_key, t_value_right) ||
+		if (!MCArrayFetchValue(p_left, ctxt.GetCaseSensitive(), t_key, t_value_left) ||
 			!ctxt.ConvertToReal(t_value_left, t_double_left) ||
 			!ctxt.ConvertToReal(t_value_right, t_double_right))
 		{
