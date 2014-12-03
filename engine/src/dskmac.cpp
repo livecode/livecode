@@ -4435,6 +4435,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         sigaction(SIGILL, &action, NULL);
         sigaction(SIGBUS, &action, NULL);
         
+        MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
+        
 #ifndef _MAC_SERVER
         // MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
         //   Without this you can't poll read when a slave process.
@@ -4462,10 +4464,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         for(uint4 i = 0; i < 256; ++i)
             MClowercasingtable[i] = (uint1)i;
         LowercaseText((char *)MClowercasingtable, 256, smRoman);
-        
-        // MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
-        //   property here (otherwise it is nil in -ui mode).
-        MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
         
         //
         
