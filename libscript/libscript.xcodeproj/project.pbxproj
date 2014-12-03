@@ -60,6 +60,7 @@
 		4D79B6E31A27405600DD750C /* type.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B67E1A273BA000DD750C /* type.mlc */; };
 		4DDA20451A136FF4001B0CA2 /* script-builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA20441A136FF4001B0CA2 /* script-builder.cpp */; };
 		4DDA20701A139BC0001B0CA2 /* script-test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA206F1A139BC0001B0CA2 /* script-test.cpp */; };
+		766113441A2F298E0042DE7F /* list.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6751A273BA000DD750C /* list.mlc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -528,6 +529,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				766113441A2F298E0042DE7F /* list.mlc in Sources */,
 				4D79B6CF1A27405600DD750C /* arithmetic.mlc in Sources */,
 				4D79B6D01A27405600DD750C /* binary.mlc in Sources */,
 				4D79B6D11A27405600DD750C /* bitwise.mlc in Sources */,

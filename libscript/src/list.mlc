@@ -1,28 +1,30 @@
 module com.livecode.list
 
-foreign handler MCListEvalHeadOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
-foreign handler MCListEvalTailOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
+public foreign handler MCListEvalHeadOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
+public foreign handler MCListEvalTailOf(in Target as list, out Value as any) as undefined binds to "<builtin>"
 
-foreign handler MCListExecPushElementOnto(in Value as any, in IsFront as bool, inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCListExecPopElementInto(inout Source as list, in IsFront as bool, out Target as any) as undefined binds to "<builtin>"
+public foreign handler MCListExecPushSingleElementOnto(in Value as any, in IsFront as bool, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListExecPopElementInto(in IsFront as bool, inout Source as list, out Target as any) as undefined binds to "<builtin>"
 
-foreign handler MCListEvalNumberOfElementsIn(in Target as list, out Count as index) as undefined binds to "<builtin>"
+public foreign handler MCListEvalNumberOfElementsIn(in Target as list, out Count as index) as undefined binds to "<builtin>"
 
-foreign handler MCListEvalIsAmongTheElementsOf(in Needle as any, in Target as list, out Result as bool) as undefined binds to "<builtin>"
-foreign handler MCListEvalContainsElements(in Target as list, in Needle as list, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalIsAmongTheElementsOf(in Needle as any, in Target as list, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler MCListEvalContainsElements(in Target as list, in Needle as list, out Result as bool) as undefined binds to "<builtin>"
 
-foreign handler MCListFetchElementOf(in Index as index, in Target as list, out Value as any) as undefined binds to "<builtin>"
-foreign handler MCListStoreElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCListFetchElementRangeOf(in Start as index, in Finish as index, in Target as list, out Value as list) as undefined binds to "<builtin>"
-foreign handler MCListStoreElementRangeOf(in Value as any, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListFetchElementOf(in Index as index, in Target as list, out Value as any) as undefined binds to "<builtin>"
+public foreign handler MCListStoreElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListFetchElementRangeOf(in Start as index, in Finish as index, in Target as list, out Value as list) as undefined binds to "<builtin>"
+public foreign handler MCListStoreElementRangeOf(in Value as any, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
 
-foreign handler MCListStoreBeforeElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCListStoreAfterElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListFetchIndexOf(in Target as list, in Index as index, out Value as any) as undefined binds to "<builtin>"
 
-foreign handler MCListSpliceIntoElementRangeOf(in Source as list, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCListSpliceIntoElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCListSpliceBeforeElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCListSpliceAfterElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListStoreBeforeElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListStoreAfterElementOf(in Value as any, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+
+public foreign handler MCListSpliceIntoElementRangeOf(in Source as list, in Start as index, in Finish as index, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceIntoElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceBeforeElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCListSpliceAfterElementOf(in Source as list, in Index as index, inout Target as list) as undefined binds to "<builtin>"
 
 --
 
@@ -59,9 +61,9 @@ Target:         An expression which evaluates to a list.
 */
 
 syntax PushOntoList is statement
-    "push" <Value: Expression> "onto" [ "front" "of" <IsFront=true> | "back" "of" <IsFront=false> ] <Target:Expression>
+    "push" <Value: Expression> "onto" ( "front" "of" <IsFront=true> | "back" "of" <IsFront=false> | <IsFront=false> ) <Target:Expression>
 begin
-    MCListExecPushElementOnto(Value, IsFront, Target)
+    MCListExecPushSingleElementOnto(Value, IsFront, Target)
 end syntax
 
 /* 
@@ -72,9 +74,9 @@ Target:         An expression which evaluates to a container.
 */
 
 syntax PopList is statement
-    "pop" [ "front" "of" <IsFront=true> | "back" "of" <IsFront=false> ] <Source: Expression> "into" <Target: Expression>
+    "pop" ( "front" "of" <IsFront=true> | "back" "of" <IsFront=false> | <IsFront=false> ) <Source: Expression> "into" <Target: Expression>
 begin
-    MCListExecPopElementInto(Source, IsFront, Target)
+    MCListExecPopElementInto(IsFront, Source, Target)
 end syntax
 
 --
@@ -151,11 +153,15 @@ output:             Either locates the element container at the given index for 
                     as the source of another operation.
 */
 
+--public handler MCListFetchElementOfReversed(in pTarget as list, in pIndex as int, out rElement) as undefined
+  --MCListFetchElementOf(pIndex, pTarget, rElement)
+--end handler
+
 syntax SingletonArrElementOf is postfix operator with precedence 1
     <Target: Expression> "[" <Index: Expression> "]"
 begin
-    MCListFetchElementOf(Index, Target, output)
-    MCListStoreElementOf(input, Index, Target)
+    MCListFetchIndexOf(Target, Index, output)
+    --MCListStoreElementOf(input, Index, Target)
 end syntax
 
 /*

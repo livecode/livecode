@@ -48,16 +48,18 @@ extern "C" void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, ind
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
-    MCAutoStringRef t_data;
-    if (!MCStringMutableCopy(x_target, &t_data))
+    MCAutoStringRef t_string;
+    if (!MCStringMutableCopy(x_target, &t_string))
         return;
     
-    if (!MCStringReplace(*t_data, MCRangeMake(t_start, t_count), p_value))
+    if (!MCStringReplace(*t_string, MCRangeMake(t_start, t_count), p_value))
         return;
     
-    MCValueRelease(x_target);
-    if (!MCStringCopy(*t_data, x_target))
+    MCAutoStringRef t_new_string;
+    if (!MCStringCopy(*t_string, &t_new_string))
         return;
+    
+    MCValueAssign(x_target, *t_new_string);
 }
 
 extern "C" void MCCharFetchCharOf(index_t p_index, MCStringRef p_target, MCStringRef& r_output)
@@ -74,17 +76,20 @@ extern "C" void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCS
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    t_start += t_count;
     
-    MCAutoStringRef t_data;
-    if (!MCStringMutableCopy(x_target, &t_data))
+    MCAutoStringRef t_string;
+    if (!MCStringMutableCopy(x_target, &t_string))
         return;
     
-    if (!MCStringInsert(*t_data, t_start + t_count, p_value))
+    if (!MCStringInsert(*t_string, t_start, p_value))
         return;
     
-    MCValueRelease(x_target);
-    if (!MCStringCopy(*t_data, x_target))
+    MCAutoStringRef t_new_string;
+    if (!MCStringCopy(*t_string, &t_new_string))
         return;
+    
+    MCValueAssign(x_target, *t_new_string);
 }
 
 extern "C" void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
@@ -92,16 +97,18 @@ extern "C" void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MC
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_index, p_index, t_start, t_count);
     
-    MCAutoStringRef t_data;
-    if (!MCStringMutableCopy(x_target, &t_data))
+    MCAutoStringRef t_string;
+    if (!MCStringMutableCopy(x_target, &t_string))
         return;
     
-    if (!MCStringInsert(*t_data, t_start, p_value))
+    if (!MCStringInsert(*t_string, t_start, p_value))
         return;
     
-    MCValueRelease(x_target);
-    if (!MCStringCopy(*t_data, x_target))
+    MCAutoStringRef t_new_string;
+    if (!MCStringCopy(*t_string, &t_new_string))
         return;
+    
+    MCValueAssign(x_target, *t_new_string);
 }
 
 #if 0

@@ -115,9 +115,11 @@ extern "C" void MCByteStoreByteRangeOf(MCDataRef p_value, index_t p_start, index
     if (!MCDataReplace(*t_data, MCRangeMake(t_start, t_count), p_value))
         return;
     
-    MCValueRelease(x_target);
-    if (!MCDataCopy(*t_data, x_target))
+    MCAutoDataRef t_new_data;
+    if (!MCDataCopy(*t_data, &t_new_data))
         return;
+    
+    MCValueAssign(x_target, *t_new_data);
 }
 
 extern "C" void MCByteFetchByteOf(index_t p_index, MCDataRef p_target, MCDataRef& r_output)
@@ -134,17 +136,20 @@ extern "C" void MCByteStoreAfterByteOf(MCDataRef p_value, index_t p_index, MCDat
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfByteChunkByExpression(x_target, p_index, t_start, t_count);
+    t_start += t_count;
     
     MCAutoDataRef t_data;
     if (!MCDataMutableCopy(x_target, &t_data))
         return;
     
-    if (!MCDataInsert(*t_data, t_start + t_count, p_value))
+    if (!MCDataInsert(*t_data, t_start, p_value))
         return;
     
-    MCValueRelease(x_target);
-    if (!MCDataCopy(*t_data, x_target))
+    MCAutoDataRef t_new_data;
+    if (!MCDataCopy(*t_data, &t_new_data))
         return;
+    
+    MCValueAssign(x_target, *t_new_data);
 }
 
 extern "C" void MCByteStoreBeforeByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
@@ -159,9 +164,11 @@ extern "C" void MCByteStoreBeforeByteOf(MCDataRef p_value, index_t p_index, MCDa
     if (!MCDataInsert(*t_data, t_start, p_value))
         return;
     
-    MCValueRelease(x_target);
-    if (!MCDataCopy(*t_data, x_target))
+    MCAutoDataRef t_new_data;
+    if (!MCDataCopy(*t_data, &t_new_data))
         return;
+    
+    MCValueAssign(x_target, *t_new_data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
