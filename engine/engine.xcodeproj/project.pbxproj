@@ -3028,6 +3028,8 @@
 			children = (
 				4D79B7301A275ADE00DD750C /* canvas.mlc */,
 				4D79B72E1A275AA500DD750C /* module-canvas.cpp */,
+				E8A1AD001A27799B0078F401 /* module-canvas.h */,
+				E8A1AD031A27817E0078F401 /* module-canvas-internal.h */,
 			);
 			name = Modules;
 			sourceTree = "<group>";
