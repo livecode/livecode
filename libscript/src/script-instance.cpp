@@ -890,10 +890,18 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 else
                 {
                     // The source type is not foreign - it must be the target type's
-                    // bridge type. Thus we must export the value.
-                    if (!t_descriptor -> doexport(t_value, false, t_storage + t_storage_index))
-                        break;
-                        
+                    // bridge type or null. Thus we must export the value.
+                    if (t_value == kMCNull)
+                    {
+                        if (!t_descriptor -> initialize(t_storage + t_storage_index))
+                            break;
+                    }
+                    else
+                    {
+                        if (!t_descriptor -> doexport(t_value, false, t_storage + t_storage_index))
+                            break;
+                    }
+                    
                     t_argument = t_storage + t_storage_index;
                     t_storage_index += t_descriptor -> size;
                     
