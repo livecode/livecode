@@ -251,8 +251,6 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpInvoke:
-                    case kMCScriptBytecodeOpInvokeEvaluate:
-                    case kMCScriptBytecodeOpInvokeAssign:
                         // check index operand is within definition range
                         // check definition[index] is handler or definition group
                         // check signature of defintion[index] conforms with invoke arity
@@ -401,7 +399,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 return false;
             
             if (t_def -> kind != t_import_def -> kind)
-                return false;
+            {
+                if (t_import_def -> kind != kMCScriptDefinitionKindHandler ||
+                    t_def -> kind != kMCScriptDefinitionKindForeignHandler)
+                    return false;
+            }
             
             // Check that signatures match.
             

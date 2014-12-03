@@ -447,10 +447,6 @@ enum MCScriptBytecodeOp
     // the handler is potentially dynamic.
     //
 	kMCScriptBytecodeOpInvokeIndirect,
-    // invoke-eval <handler>, <output>, <arg_1>, ..., <arg_n>
-    kMCScriptBytecodeOpInvokeEvaluate,
-    // invoke-assign <handler>, <input>, <arg_1>, ..., <arg_n>
-    kMCScriptBytecodeOpInvokeAssign,
     
 	// Local fetch:
 	//   fetch-local <dst>, <local-index>

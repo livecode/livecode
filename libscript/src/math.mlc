@@ -1,54 +1,54 @@
 
 module com.livecode.math
 
-foreign handler EvalIntegerToPowerOfInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalRealToPowerOfReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalNumberToPowerOfNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalIntegerToPowerOfInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler EvalRealToPowerOfReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalNumberToPowerOfNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalBase10LogInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalBase10LogReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalBase10LogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalBase10LogInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalBase10LogReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalBase10LogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalNaturalLogInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalNaturalLogReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalNaturalLogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalNaturalLogInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalNaturalLogReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalNaturalLogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalExpInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalExpReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalExpNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalExpInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalExpReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalExpNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalSinInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalSinReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalSinNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalSinInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalSinReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalSinNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalCosInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalCosReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalCosNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalCosInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalCosReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalCosNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalTanInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalTanReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalTanNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalTanInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalTanReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalTanNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalAbsInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalAbsReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalAbsNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalAbsInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler EvalAbsReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalAbsNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalTruncInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalTruncReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalTruncNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalTruncInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler EvalTruncReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalTruncNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalMinInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalMinReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalMinNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
-foreign handler EvalMaxInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalMaxReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalMaxNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalMinInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler EvalMinReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalMinNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler EvalMaxInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler EvalMaxReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalMaxNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 
-foreign handler EvalRandomReal(out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalRandomReal(out Value as real) as undefined binds to "<builtin>"
 
-foreign handler EvalConvertBase(in Operand as string, in Source as integer, in Target as integer, out Value as string) as undefined binds to "<builtin>"
-foreign handler EvalConvertFromBase(in Operand as string, in Source as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler EvalConvertToBase(in Operand as integer, in Target as integer, out Value as string) as undefined binds to "<builtin>"
+public foreign handler EvalConvertBase(in Operand as string, in Source as integer, in Target as integer, out Value as string) as undefined binds to "<builtin>"
+public foreign handler EvalConvertFromBase(in Operand as string, in Source as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler EvalConvertToBase(in Operand as integer, in Target as integer, out Value as string) as undefined binds to "<builtin>"
 
 --
 

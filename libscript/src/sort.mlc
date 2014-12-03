@@ -1,15 +1,15 @@
 module com.livecode.sort
 
-foreign handler MCSortExecSortListAscendingText(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListAscendingBinary(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-// foreign handler MCSortExecSortStringListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListAscendingDateTime(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListDescendingText(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListDescendingBinary(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-// foreign handler MCSortExecSortStringListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-foreign handler MCSortExecSortListDescendingDateTime(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingText(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingBinary(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+// public foreign handler MCSortExecSortStringListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListAscendingDateTime(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingText(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingBinary(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+// public foreign handler MCSortExecSortStringListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
+public foreign handler MCSortExecSortListDescendingDateTime(inout Target as list) as undefined binds to "<builtin>"
 
 --
 

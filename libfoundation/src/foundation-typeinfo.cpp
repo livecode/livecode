@@ -102,6 +102,7 @@ bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
         // We've successfully resolved the type, so return this one as the resolution.
         r_resolution . named_type = self;
         r_resolution . type = t_next_type;
+        r_resolution . is_optional = false;
         
         return true;
     }
