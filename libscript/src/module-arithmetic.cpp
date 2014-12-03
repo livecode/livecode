@@ -417,3 +417,8 @@ extern "C" void MCArithmeticEvalMinusNumber(MCNumberRef p_operand, MCNumberRef& 
     else
         MCNumberCreateWithInteger(-MCNumberFetchAsReal(p_operand), r_output);
 }
+
+extern "C" void MCArithmeticEvalEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
+{
+    r_output = p_left == p_right;
+}

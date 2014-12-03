@@ -61,6 +61,7 @@
 		4DDA20451A136FF4001B0CA2 /* script-builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA20441A136FF4001B0CA2 /* script-builder.cpp */; };
 		4DDA20701A139BC0001B0CA2 /* script-test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA206F1A139BC0001B0CA2 /* script-test.cpp */; };
 		766113441A2F298E0042DE7F /* list.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6751A273BA000DD750C /* list.mlc */; };
+		766113541A2F4F720042DE7F /* type-convert.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 766113531A2F4F720042DE7F /* type-convert.mlc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -199,6 +200,7 @@
 		4DDA20441A136FF4001B0CA2 /* script-builder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-builder.cpp"; path = "src/script-builder.cpp"; sourceTree = "<group>"; };
 		4DDA20661A139BA1001B0CA2 /* libscript-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "libscript-test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DDA206F1A139BC0001B0CA2 /* script-test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-test.cpp"; path = "src/script-test.cpp"; sourceTree = "<group>"; };
+		766113531A2F4F720042DE7F /* type-convert.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = "type-convert.mlc"; path = "src/type-convert.mlc"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -241,6 +243,7 @@
 		4D322F0D19DD945E008476D3 = {
 			isa = PBXGroup;
 			children = (
+				766113531A2F4F720042DE7F /* type-convert.mlc */,
 				4D44E3661A139F590073FFA2 /* CoreFoundation.framework */,
 				4D44E3471A139C070073FFA2 /* Configurations */,
 				4D05714B19E321C00080F97B /* References */,
@@ -529,6 +532,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				766113541A2F4F720042DE7F /* type-convert.mlc in Sources */,
 				766113441A2F298E0042DE7F /* list.mlc in Sources */,
 				4D79B6CF1A27405600DD750C /* arithmetic.mlc in Sources */,
 				4D79B6D01A27405600DD750C /* binary.mlc in Sources */,

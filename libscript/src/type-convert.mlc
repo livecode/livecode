@@ -4,7 +4,7 @@ This module specifies the syntax for the complex type conversion operations avai
 
 module com.livecode.typeconvert
 
-public foreign handler MCTypeConvertExecStringSplitByDelimiter(in Target as string, in Delimiter as string, out Value as list) as undefined binds to "<builtin>"
+public foreign handler MCTypeConvertExecSplitStringByDelimiter(in Target as string, in Delimiter as string, out Value as list) as undefined binds to "<builtin>"
 public foreign handler MCTypeConvertExecCombineListWithDelimiter(in Target as list, in Delimiter as string, out Value as string) as undefined binds to "<builtin>"
 
 --
@@ -25,7 +25,7 @@ Example:
 syntax StringSplitBy is statement
 "split" <Target: Expression> "by" <Delimiter : Expression> "into" <Value: Expression>
 begin
-    MCTypeConvertExecStringSplitByDelimiter(Target, Delimiter, Value)
+    MCTypeConvertExecSplitStringByDelimiter(Target, Delimiter, Value)
 end syntax
 
 /*
