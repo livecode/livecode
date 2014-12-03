@@ -341,10 +341,7 @@ static inline void MCCanvasRectangleMakeWithMCGRectangle(const MCGRectangle &p_r
 {
 	MCCanvasRectangleRef t_rect;
 	if (!MCCanvasRectangleCreateWithMCGRectangle(p_rect, t_rect))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCValueAssign(r_rect, t_rect);
 	MCValueRelease(t_rect);
@@ -529,10 +526,7 @@ static inline void MCCanvasPointMakeWithMCGPoint(const MCGPoint &p_point, MCCanv
 	MCCanvasPointRef t_point;
 	t_point = nil;
 	if (!MCCanvasPointCreateWithMCGPoint(p_point, t_point))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCValueAssign(r_point, t_point);
 	MCValueRelease(t_point);
@@ -687,10 +681,7 @@ void MCCanvasColorMake(const __MCCanvasColorImpl &p_color, MCCanvasColorRef &r_c
 	MCCanvasColorRef t_color;
 	t_color = nil;
 	if (!MCCanvasColorCreate(p_color, t_color))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCValueAssign(r_color, t_color);
 	MCValueRelease(t_color);
@@ -849,10 +840,7 @@ void MCCanvasTransformMake(const MCGAffineTransform &p_transform, MCCanvasTransf
 	t_transform = nil;
 	
 	if (!MCCanvasTransformCreateWithMCGAffineTransform(p_transform, t_transform))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCValueAssign(r_transform, t_transform);
 	MCValueRelease(t_transform);
@@ -920,10 +908,7 @@ void MCCanvasTransformGetMatrix(MCCanvasTransformRef p_transform, MCArrayRef &r_
 	if (t_success)
 		r_matrix = t_matrix;
 	else
-	{
-		// TODO - throw memory error
 		MCValueRelease(t_matrix);
-	}
 }
 
 void MCCanvasTransformSetMatrix(MCArrayRef p_matrix, MCCanvasTransformRef &x_transform)
@@ -1253,10 +1238,7 @@ void MCCanvasImageMake(MCImageRep *p_image, MCCanvasImageRef &r_image)
 	t_image = nil;
 	
 	if (!MCCanvasImageCreateWithImageRep(p_image, t_image))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCValueAssign(r_image, t_image);
 	MCValueRelease(t_image);
@@ -1591,10 +1573,7 @@ void MCCanvasSolidPaintMakeWithColor(MCCanvasColorRef p_color, MCCanvasSolidPain
 	t_paint = nil;
 	
 	if (!MCCanvasSolidPaintCreateWithColor(p_color, t_paint))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCValueAssign(r_paint, t_paint);
 	MCValueRelease(t_paint);
@@ -1693,10 +1672,7 @@ void MCCanvasPatternMakeWithTransformedImage(MCCanvasImageRef p_image, MCCanvasT
 	t_pattern = nil;
 	
 	if (!MCCanvasPatternCreateWithImage(p_image, p_transform, t_pattern))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCValueAssign(r_pattern, t_pattern);
 	MCValueRelease(t_pattern);
@@ -1903,10 +1879,7 @@ void MCCanvasGradientStopMake(MCCanvasFloat p_offset, MCCanvasColorRef p_color, 
 	t_stop = nil;
 	
 	if (!MCCanvasGradientStopCreate(p_offset, p_color, t_stop))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCValueAssign(r_stop, t_stop);
 	MCValueRelease(t_stop);
@@ -2058,10 +2031,7 @@ void MCCanvasGradientMake(const __MCCanvasGradientImpl &p_gradient, MCCanvasGrad
 {
 	MCCanvasGradientRef t_gradient;
 	if (!MCCanvasGradientCreate(p_gradient, t_gradient))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCValueAssign(r_gradient, t_gradient);
 	MCValueRelease(t_gradient);
@@ -2425,34 +2395,26 @@ void MCCanvasGradientAddStop(MCCanvasGradientStopRef p_stop, MCCanvasGradientRef
 	MCProperListRef t_mutable_ramp;
 	t_mutable_ramp = nil;
 	
-	if (!MCProperListMutableCopy(t_gradient.ramp, t_mutable_ramp))
-	{
-		// TODO - throw memory error
-		return;
-	}
+	if (t_success)
+		t_success = MCProperListMutableCopy(t_gradient.ramp, t_mutable_ramp);
 	
-	if (!MCProperListPushElementOntoBack(t_mutable_ramp, p_stop))
-	{
-		// TODO - throw memory error
-		MCValueRelease(t_mutable_ramp);
-		return;
-	}
+	if (t_success)
+		t_success = MCProperListPushElementOntoBack(t_mutable_ramp, p_stop);
 	
 	MCProperListRef t_new_ramp;
 	t_new_ramp = nil;
 	
-	if (!MCProperListCopyAndRelease(t_mutable_ramp, t_new_ramp))
+	if (t_success)
+		t_success = MCProperListCopyAndRelease(t_mutable_ramp, t_new_ramp);
+	
+	if (t_success)
 	{
-		// TODO - throw memory error
-		MCValueRelease(t_mutable_ramp);
-		return;
+		t_gradient.ramp = t_new_ramp;
+		MCCanvasGradientMake(t_gradient, x_gradient);
+		MCValueRelease(t_new_ramp);
 	}
-	
-	t_gradient.ramp = t_new_ramp;
-	
-	MCCanvasGradientMake(t_gradient, x_gradient);
-	
-	MCValueRelease(t_new_ramp);
+	else
+		MCValueRelease(t_mutable_ramp);
 }
 
 void MCCanvasGradientTransform(MCCanvasGradientRef &x_gradient, const MCGAffineTransform &p_transform)
@@ -2539,9 +2501,12 @@ bool MCCanvasPathCreateWithMCGPath(MCGPathRef p_path, MCCanvasPathRef &r_path)
 	
 	if (t_success)
 	{
-		*MCCanvasPathGet(t_path) = MCGPathRetain(p_path);
-		t_success = MCValueInter(t_path, r_path);
+		MCGPathCopy(p_path, *MCCanvasPathGet(t_path));
+		t_success = MCGPathIsValid(*MCCanvasPathGet(t_path));
 	}
+	
+	if (t_success)
+		t_success = MCValueInter(t_path, r_path);
 	
 	MCValueRelease(t_path);
 	
@@ -2608,30 +2573,30 @@ void MCCanvasPathMakeWithMCGPath(MCGPathRef p_path, MCCanvasPathRef &r_path)
 	t_path = nil;
 	
 	if (!MCCanvasPathCreateWithMCGPath(p_path, t_path))
-	{
-		// TODO - throw memory error;
 		return;
-	}
 	
 	MCValueAssign(r_path, t_path);
 	MCValueRelease(t_path);
 }
 
+// TODO - investigate error handling in libgraphics, libskia - don't think skia mem errors are tested for
 void MCCanvasPathMakeWithInstructionsAsString(MCStringRef p_instructions, MCCanvasPathRef &r_path)
 {
+	bool t_success;
+	t_success = true;
+	
 	MCGPathRef t_path;
 	t_path = nil;
 	
-	if (!MCGPathCreateMutable(t_path))
-	{
-		// TODO - throw memory error
-		return;
-	}
+	if (t_success)
+		t_success = MCGPathCreateMutable(t_path);
 	
-	if (!MCCanvasPathParseInstructions(p_instructions, MCCanvasPathMakeWithInstructionsCallback, t_path))
-		return;
+	if (t_success)
+		t_success = MCCanvasPathParseInstructions(p_instructions, MCCanvasPathMakeWithInstructionsCallback, t_path);
 	
-	MCCanvasPathMakeWithMCGPath(t_path, r_path);
+	if (t_success)
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
+	
 	MCGPathRelease(t_path);
 }
 
@@ -2641,20 +2606,12 @@ void MCCanvasPathMakeWithRoundedRectangle(MCCanvasRectangleRef p_rect, MCCanvasF
 	t_path = nil;
 	
 	if (!MCGPathCreateMutable(t_path))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCGPathAddRoundedRectangle(t_path, *MCCanvasRectangleGet(p_rect), MCGSizeMake(p_x_radius, p_y_radius));
-	if (!MCGPathIsValid(t_path))
-	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-		return;
-	}
+	if (MCGPathIsValid(t_path))
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
 	
-	MCCanvasPathMakeWithMCGPath(t_path, r_path);
 	MCGPathRelease(t_path);
 }
 
@@ -2664,20 +2621,12 @@ void MCCanvasPathMakeWithRectangle(MCCanvasRectangleRef p_rect, MCCanvasPathRef 
 	t_path = nil;
 	
 	if (!MCGPathCreateMutable(t_path))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
-	/* UNCHECKED */ MCGPathAddRectangle(t_path, *MCCanvasRectangleGet(p_rect));
-	if (!MCGPathIsValid(t_path))
-	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-		return;
-	}
-	
-	MCCanvasPathMakeWithMCGPath(t_path, r_path);
+	MCGPathAddRectangle(t_path, *MCCanvasRectangleGet(p_rect));
+	if (MCGPathIsValid(t_path))
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
+
 	MCGPathRelease(t_path);
 }
 
@@ -2687,20 +2636,12 @@ void MCCanvasPathMakeWithEllipse(MCCanvasPointRef p_center, MCCanvasFloat p_radi
 	t_path = nil;
 	
 	if (!MCGPathCreateMutable(t_path))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
-	/* UNCHECKED */ MCGPathAddEllipse(t_path, *MCCanvasPointGet(p_center), MCGSizeMake(p_radius_x, p_radius_y), 0);
-	if (!MCGPathIsValid(t_path))
-	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-		return;
-	}
+	MCGPathAddEllipse(t_path, *MCCanvasPointGet(p_center), MCGSizeMake(p_radius_x, p_radius_y), 0);
+	if (MCGPathIsValid(t_path))
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
 	
-	MCCanvasPathMakeWithMCGPath(t_path, r_path);
 	MCGPathRelease(t_path);
 }
 
@@ -2710,20 +2651,12 @@ void MCCanvasPathMakeWithLine(MCCanvasPointRef p_start, MCCanvasPointRef p_end, 
 	t_path = nil;
 	
 	if (!MCGPathCreateMutable(t_path))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
-	/* UNCHECKED */ MCGPathAddLine(t_path, *MCCanvasPointGet(p_start), *MCCanvasPointGet(p_end));
-	if (!MCGPathIsValid(t_path))
-	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-		return;
-	}
+	MCGPathAddLine(t_path, *MCCanvasPointGet(p_start), *MCCanvasPointGet(p_end));
+	if (MCGPathIsValid(t_path))
+		MCCanvasPathMakeWithMCGPath(t_path, r_path);
 	
-	MCCanvasPathMakeWithMCGPath(t_path, r_path);
 	MCGPathRelease(t_path);
 }
 
@@ -2739,13 +2672,7 @@ bool MCCanvasPointsListToMCGPoints(MCProperListRef p_points, MCGPoint *r_points)
 	t_point_count = MCProperListGetLength(p_points);
 	
 	if (t_success)
-	{
-		if (!MCMemoryNewArray(t_point_count, t_points))
-		{
-			// TODO - throw memory error
-			t_success = false;
-		}
-	}
+		t_success = MCMemoryNewArray(t_point_count, t_points);
 	
 	for (uint32_t i = 0; t_success && i < t_point_count; i++)
 	{
@@ -2780,26 +2707,13 @@ void MCCanvasPathMakeWithPoints(MCProperListRef p_points, bool p_close, MCCanvas
 	t_path = nil;
 	
 	if (t_success)
-	{
-		if (!MCGPathCreateMutable(t_path))
-		{
-			// TODO - throw memory error
-			t_success = false;
-		}
-	}
+		t_success = MCGPathCreateMutable(t_path);
 	
 	MCGPoint *t_points;
 	t_points = nil;
 	
 	if (t_success)
 		t_success = MCCanvasPointsListToMCGPoints(p_points, t_points);
-	{
-		if (!MCMemoryNewArray(MCProperListGetLength(p_points), t_points))
-		{
-			// TODO - throw memory error
-			t_success = false;
-		}
-	}
 	
 	if (t_success)
 	{
@@ -2808,11 +2722,7 @@ void MCCanvasPathMakeWithPoints(MCProperListRef p_points, bool p_close, MCCanvas
 		else
 			MCGPathAddPolyline(t_path, t_points, MCProperListGetLength(p_points));
 		
-		if (!MCGPathIsValid(t_path))
-		{
-			// TODO - throw memory error
-			t_success = false;
-		}
+		t_success = MCGPathIsValid(t_path);
 	}
 	
 	if (t_success)
@@ -2830,10 +2740,7 @@ void MCCanvasPathGetSubpaths(MCCanvasPathRef p_path, integer_t p_start, integer_
 	t_path = nil;
 	
 	if (!MCGPathMutableCopySubpaths(*MCCanvasPathGet(p_path), p_start, p_end, t_path))
-	{
-		// TODO - throw error
 		return;
-	}
 	
 	MCCanvasPathMakeWithMCGPath(t_path, r_subpaths);
 	MCGPathRelease(t_path);
@@ -2856,23 +2763,24 @@ void MCCanvasPathGetInstructionsAsString(MCCanvasPathRef p_path, MCStringRef &r_
 void MCCanvasPathTransform(MCCanvasPathRef &x_path, const MCGAffineTransform &p_transform)
 {
 	// Path transformations are applied immediately
+	bool t_success;
+	t_success = true;
+	
 	MCGPathRef t_path;
 	t_path = nil;
 
-	MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		return;
+		MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	if (!MCGPathTransform(t_path, p_transform))
-	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-	}
+	if (t_success)
+		t_success = MCGPathTransform(t_path, p_transform);
 	
-	MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	if (t_success)
+		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	
 	MCGPathRelease(t_path);
 }
 
@@ -2898,145 +2806,157 @@ void MCCanvasPathTranslate(MCCanvasPathRef &x_path, MCCanvasFloat p_x, MCCanvasF
 
 void MCCanvasPathAddPath(MCCanvasPathRef p_source, MCCanvasPathRef &x_dest)
 {
+	bool t_success;
+	t_success = true;
+	
 	MCGPathRef t_path;
 	t_path = nil;
 	
-	MCGPathMutableCopy(*MCCanvasPathGet(x_dest), t_path);
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		return;
+		MCGPathMutableCopy(*MCCanvasPathGet(x_dest), t_path);
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCGPathAddPath(t_path, *MCCanvasPathGet(p_source));
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-		return;
+		MCGPathAddPath(t_path, *MCCanvasPathGet(p_source));
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCCanvasPathMakeWithMCGPath(t_path, x_dest);
+	if (t_success)
+		MCCanvasPathMakeWithMCGPath(t_path, x_dest);
+	
 	MCGPathRelease(t_path);
 }
 
 void MCCanvasPathMoveTo(MCCanvasPointRef p_point, MCCanvasPathRef &x_path)
 {
+	bool t_success;
+	t_success = true;
+	
 	MCGPathRef t_path;
 	t_path = nil;
 	
-	MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		return;
+		MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCGPathMoveTo(t_path, *MCCanvasPointGet(p_point));
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-		return;
+		MCGPathMoveTo(t_path, *MCCanvasPointGet(p_point));
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	if (t_success)
+		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	
 	MCGPathRelease(t_path);
 }
 
 void MCCanvasPathLineTo(MCCanvasPointRef p_point, MCCanvasPathRef &x_path)
 {
+	bool t_success;
+	t_success = true;
+	
 	MCGPathRef t_path;
 	t_path = nil;
 	
-	MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		return;
+		MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCGPathLineTo(t_path, *MCCanvasPointGet(p_point));
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-		return;
+		MCGPathLineTo(t_path, *MCCanvasPointGet(p_point));
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	if (t_success)
+		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	
 	MCGPathRelease(t_path);
 }
 
 void MCCanvasPathCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to, MCCanvasPathRef &x_path)
 {
+	bool t_success;
+	t_success = true;
+	
 	MCGPathRef t_path;
 	t_path = nil;
 	
-	MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		return;
+		MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCGPathQuadraticTo(t_path, *MCCanvasPointGet(p_through), *MCCanvasPointGet(p_to));
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-		return;
+		MCGPathQuadraticTo(t_path, *MCCanvasPointGet(p_through), *MCCanvasPointGet(p_to));
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	if (t_success)
+		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	
 	MCGPathRelease(t_path);
 }
 
 void MCCanvasPathCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasPathRef &x_path)
 {
+	bool t_success;
+	t_success = true;
+	
 	MCGPathRef t_path;
 	t_path = nil;
 	
-	MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		return;
+		MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCGPathCubicTo(t_path, *MCCanvasPointGet(p_through_a), *MCCanvasPointGet(p_through_b), *MCCanvasPointGet(p_to));
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-		return;
+		MCGPathCubicTo(t_path, *MCCanvasPointGet(p_through_a), *MCCanvasPointGet(p_through_b), *MCCanvasPointGet(p_to));
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	if (t_success)
+		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	
 	MCGPathRelease(t_path);
 }
 
 void MCCanvasPathClosePath(MCCanvasPathRef &x_path)
 {
+	bool t_success;
+	t_success = true;
+	
 	MCGPathRef t_path;
 	t_path = nil;
 	
-	MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		return;
+		MCGPathMutableCopy(*MCCanvasPathGet(x_path), t_path);
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	/* UNCHECKED */ MCGPathCloseSubpath(t_path);
-	if (!MCGPathIsValid(t_path))
+	if (t_success)
 	{
-		// TODO - throw memory error
-		MCGPathRelease(t_path);
-		return;
+		MCGPathCloseSubpath(t_path);
+		t_success = MCGPathIsValid(t_path);
 	}
 	
-	MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	if (t_success)
+		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+	
 	MCGPathRelease(t_path);
 }
 
@@ -3344,10 +3264,7 @@ void MCCanvasEffectMake(const __MCCanvasEffectImpl &p_effect, MCCanvasEffectRef 
 	t_effect = nil;
 	
 	if (!MCCanvasEffectCreate(p_effect, t_effect))
-	{
-		// TODO - throw memory error
 		return;
-	}
 	
 	MCValueAssign(r_effect, t_effect);
 	MCValueRelease(t_effect);
@@ -3683,7 +3600,10 @@ bool MCCanvasPropertiesPush(__MCCanvasImpl &x_canvas)
 bool MCCanvasPropertiesPop(__MCCanvasImpl &x_canvas)
 {
 	if (x_canvas.prop_index == 0)
+	{
+		// TODO - throw canvas pop error
 		return false;
+	}
 	
 	MCCanvasPropertiesClear(x_canvas.prop_stack[x_canvas.prop_index]);
 	x_canvas.prop_index--;
@@ -4079,10 +3999,8 @@ void MCCanvasCanvasSaveState(MCCanvasRef &x_canvas)
 	t_canvas = MCCanvasGet(x_canvas);
 	
 	if (!MCCanvasPropertiesPush(*t_canvas))
-	{
-		// TODO - throw error
 		return;
-	}
+
 	MCGContextSave(t_canvas->context);
 }
 
@@ -4092,10 +4010,8 @@ void MCCanvasCanvasRestore(MCCanvasRef &x_canvas)
 	t_canvas = MCCanvasGet(x_canvas);
 	
 	if (!MCCanvasPropertiesPop(*t_canvas))
-	{
-		// TODO - throw error
 		return;
-	}
+
 	MCGContextRestore(t_canvas->context);
 }
 
@@ -4106,10 +4022,8 @@ void MCCanvasCanvasBeginLayer(MCCanvasRef &x_canvas)
 	
 	MCCanvasApplyChanges(*t_canvas);
 	if (!MCCanvasPropertiesPush(*t_canvas))
-	{
-		// TODO - throw error
 		return;
-	}
+
 	MCGContextBegin(t_canvas->context, true);
 }
 
@@ -4127,10 +4041,7 @@ void MCCanvasCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRect
 	
 	MCCanvasApplyChanges(*t_canvas);
 	if (!MCCanvasPropertiesPush(*t_canvas))
-	{
-		// TODO - throw error
 		return;
-	}
 
 	MCGBitmapEffects t_effects;
 	t_effects.has_color_overlay = t_effects.has_drop_shadow = t_effects.has_inner_glow = t_effects.has_inner_shadow = t_effects.has_outer_glow = false;
@@ -4205,10 +4116,8 @@ void MCCanvasCanvasEndLayer(MCCanvasRef &x_canvas)
 	t_canvas = MCCanvasGet(x_canvas);
 	
 	if (!MCCanvasPropertiesPop(*t_canvas))
-	{
-		// TODO - throw error
 		return;
-	}
+
 	MCGContextRestore(t_canvas->context);
 }
 
