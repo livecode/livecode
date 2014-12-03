@@ -68,6 +68,8 @@ syntax AddNumberTo is statement
     "add" <Value: Expression> "to" <Target: Expression>
 begin
     MCArithmeticExecAddNumberToNumber(Value, Target)
+    MCArithmeticExecAddRealToReal(Value, Target)
+    MCArithmeticExecAddIntegerToInteger(Value, Target)
 end syntax
 
 

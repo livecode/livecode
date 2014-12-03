@@ -1,7 +1,7 @@
 module com.livecode.char
 
 public foreign handler MCCharFetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
-public foreign handler StoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
 public foreign handler FetchCharRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"
 public foreign handler StoreCharRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
 
@@ -55,7 +55,7 @@ syntax SingletonCharOf is prefix operator with precedence 1
 	"char" <Index: Expression> "of" <Target: Expression>
 begin
 	MCCharFetchCharOf(Index, Target, output)
-	StoreCharOf(input, Index, Target)
+	MCCharStoreCharOf(input, Index, Target)
 end syntax
 
 /*
