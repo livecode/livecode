@@ -1912,6 +1912,34 @@ void MCCanvasGradientStopMake(MCCanvasFloat p_offset, MCCanvasColorRef p_color, 
 	MCValueRelease(t_stop);
 }
 
+//	Properties
+
+void MCCanvasGradientStopGetOffset(MCCanvasGradientStopRef p_stop, MCCanvasFloat &r_offset)
+{
+	r_offset = MCCanvasGradientStopGet(p_stop)->offset;
+}
+
+void MCCanvasGradientStopSetOffset(MCCanvasFloat p_offset, MCCanvasGradientStopRef &x_stop)
+{
+	__MCCanvasGradientStopImpl *t_stop;
+	t_stop = MCCanvasGradientStopGet(x_stop);
+	
+	MCCanvasGradientStopMake(p_offset, t_stop->color, x_stop);
+}
+
+void MCCanvasGradientStopGetColor(MCCanvasGradientStopRef p_stop, MCCanvasColorRef &r_color)
+{
+	r_color = MCValueRetain(MCCanvasGradientStopGet(p_stop)->color);
+}
+
+void MCCanvasGradientStopSetColor(MCCanvasColorRef p_color, MCCanvasGradientStopRef &x_stop)
+{
+	__MCCanvasGradientStopImpl *t_stop;
+	t_stop = MCCanvasGradientStopGet(x_stop);
+	
+	MCCanvasGradientStopMake(t_stop->offset, p_color, x_stop);
+}
+
 // Gradient
 
 bool MCCanvasPaintIsGradient(MCCanvasPaintRef p_paint)

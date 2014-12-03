@@ -475,6 +475,11 @@ end syntax
 
 // Properties
 
+foreign handler MCCanvasGradientStopGetOffset(in pStop as GradientStop, out rOffset as CanvasFloat) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientStopSetOffset(in pOffset as CanvasFloat, inout xStop as GradientStop) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientStopGetColor(in pStop as GradientStop, out rColor as Color) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientStopSetColor(in pColor as Color, inout xStop as GradientStop) as undefined binds to "<builtin>"
+
 foreign handler MCCanvasGradientGetRamp(in pGradient as Gradient, out rRamp as list of GradientStop) as undefined binds to "<builtin>"
 foreign handler MCCanvasGradientSetRamp(in pRamp as list of GradientStop, inout xGradient as Gradient) as undefined binds to "<builtin>"
 // foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as integer, in pEnd as integer, out rStops as list of GradientStop) as undefined binds to "<builtin>"
@@ -495,6 +500,20 @@ foreign handler MCCanvasGradientGetVia(in pGradient as Gradient, out rVia as Poi
 foreign handler MCCanvasGradientSetVia(in pVia as Point, inout xGradient as Gradient) as undefined binds to "<builtin>"
 foreign handler MCCanvasGradientGetTransform(in pGradient as Gradient, out rTransform as Transform) as undefined binds to "<builtin>"
 foreign handler MCCanvasGradientSetTransform(in pTransform as Transform, inout xGradient as Gradient) as undefined binds to "<builtin>"
+
+syntax GradientStopOffsetProperty is prefix operator with precedence 4
+	"the" "offset" "of" <mStop: Expression>
+begin
+	MCCanvasGradientStopGetOffset(mStop, output)
+	MCCanvasGradientStopSetOffset(input, mStop)
+end syntax
+
+syntax GradientStopColorProperty is prefix operator with precedence 4
+	"the" "color" "of" <mStop: Expression>
+begin
+	MCCanvasGradientStopGetColor(mStop, output)
+	MCCanvasGradientStopSetColor(input, mStop)
+end syntax
 
 syntax GradientRampProperty is prefix operator with precedence 4
 	"the" "ramp" "of" <mGradient: Expression>
