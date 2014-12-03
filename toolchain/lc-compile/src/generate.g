@@ -779,13 +779,14 @@
 
     'rule' GenerateInvoke_AssignArgument(ContextReg, Invoke:invoke(_, Invokes, Arguments)):
         EmitGetRegisterAttachedToExpression(Invoke -> InputReg)
-        GenerateDefinitionGroupForInvokes(Invokes, evaluate, Arguments -> Index, Signature)
+        GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
         EmitCreateRegister(-> IgnoredResultReg)
         EmitBeginExecuteInvoke(Index, ContextReg, IgnoredResultReg)
         EmitContinueInvoke(InputReg)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke()
         EmitDestroyRegister(IgnoredResultReg)
+        GenerateInvoke_AssignArguments(ContextReg, Signature, Arguments)
         
     'rule' GenerateInvoke_AssignArgument(ContextReg, Slot:slot(_, Id)):
         EmitGetRegisterAttachedToExpression(Slot -> InputReg)
