@@ -329,8 +329,7 @@ void MCCanvasGradientGetTransform(MCCanvasGradientRef p_gradient, MCCanvasTransf
 void MCCanvasGradientSetTransform(MCCanvasTransformRef p_transform, MCCanvasGradientRef &x_gradient);
 
 // Operators
-// TODO - does this need param reordering?
-void MCCanvasGradientAddStop(MCCanvasGradientRef &x_gradient, MCCanvasGradientStopRef p_stop);
+void MCCanvasGradientAddStop(MCCanvasGradientStopRef p_stop, MCCanvasGradientRef &x_gradient);
 void MCCanvasGradientTransform(MCCanvasGradientRef &x_gradient, MCCanvasTransformRef p_transform);
 void MCCanvasGradientScale(MCCanvasGradientRef &x_gradient, MCCanvasFloat p_xscale, MCCanvasFloat p_yscale);
 void MCCanvasGradientRotate(MCCanvasGradientRef &x_gradient, MCCanvasFloat p_angle);

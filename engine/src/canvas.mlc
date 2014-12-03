@@ -572,8 +572,7 @@ end syntax
 
 // Operations
 
-//foreign handler MCCanvasGradientAddStop(inout xGradient as Gradient, in pOffset as CanvasFloat, in pColor as Color) as undefined binds to "<builtin>"
-foreign handler MCCanvasGradientAddStop(inout xGradient as Gradient, in pStop as GradientStop) as undefined binds to "<builtin>"
+foreign handler MCCanvasGradientAddStop(in pStop as GradientStop, inout xGradient as Gradient) as undefined binds to "<builtin>"
 
 foreign handler MCCanvasGradientTransform(inout xGradient as Gradient, in pTransform as Transform) as undefined binds to "<builtin>"
 foreign handler MCCanvasGradientScale(inout xGradient as Gradient, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
@@ -581,11 +580,9 @@ foreign handler MCCanvasGradientRotate(inout xGradient as Gradient, in pRadians 
 foreign handler MCCanvasGradientTranslate(inout xGradient as Gradient, in pX as CanvasFloat, in pY as CanvasFloat) as undefined binds to "<builtin>"
 
 syntax AddGradientStop is statement
-//	"add" "stop" "at" <mOffset: Expression> "with" <mColor: Expression> "to" <mGradient: Expression>
 	"add" <mStop: Expression> "to" <mGradient:Expression>
 begin
-//	MCCanvasGradientAddStop(mGradient, mOffset, mColor)
-	MCCanvasGradientAddStop(mGradient, mStop)
+	MCCanvasGradientAddStop(mStop, mGradient)
 end syntax
 
 syntax TransformGradient is statement

@@ -305,13 +305,24 @@ static bool __MCCanvasRectangleDescribe(MCValueRef p_value, MCStringRef &r_desc)
 
 bool MCCanvasRectangleCreateWithMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectangleRef &r_rectangle)
 {
-	if (!MCValueCreateCustom(kMCCanvasRectangleTypeInfo, sizeof(__MCCanvasRectangleImpl), r_rectangle))
-		return false;
+	bool t_success;
+	t_success = true;
 	
-	*(MCCanvasRectangleGet(r_rectangle)) = p_rect;
-	return true;
+	MCCanvasRectangleRef t_rectangle;
+	t_rectangle = nil;
 	
-	// TODO - make rectangles unique?
+	if (t_success)
+		t_success = MCValueCreateCustom(kMCCanvasRectangleTypeInfo, sizeof(__MCCanvasRectangleImpl), t_rectangle);
+	
+	if (t_success)
+	{
+		*(MCCanvasRectangleGet(t_rectangle)) = p_rect;
+		t_success = MCValueInter(t_rectangle, r_rectangle);
+	}
+	
+	MCValueRelease(t_rectangle);
+	
+	return t_success;
 }
 
 __MCCanvasRectangleImpl *MCCanvasRectangleGet(MCCanvasRectangleRef p_rect)
@@ -481,13 +492,24 @@ static bool __MCCanvasPointDescribe(MCValueRef p_value, MCStringRef &r_desc)
 
 bool MCCanvasPointCreateWithMCGPoint(const MCGPoint &p_point, MCCanvasPointRef &r_point)
 {
-	if (!MCValueCreateCustom(kMCCanvasPointTypeInfo, sizeof(__MCCanvasPointImpl), r_point))
-		return false;
+	bool t_success;
+	t_success = true;
 	
-	*MCCanvasPointGet(r_point) = p_point;
-	return true;
-
-	// TODO - make points unique?
+	MCCanvasPointRef t_point;
+	t_point = nil;
+	
+	if (t_success)
+		t_success = MCValueCreateCustom(kMCCanvasPointTypeInfo, sizeof(__MCCanvasPointImpl), t_point);
+	
+	if (t_success)
+	{
+		*MCCanvasPointGet(t_point) = p_point;
+		t_success = MCValueInter(t_point, r_point);
+	}
+	
+	MCValueRelease(t_point);
+	
+	return t_success;
 }
 
 __MCCanvasPointImpl *MCCanvasPointGet(MCCanvasPointRef p_point)
@@ -2337,7 +2359,7 @@ void MCCanvasGradientSetTransform(MCCanvasTransformRef p_transform, MCCanvasGrad
 
 // Operators
 
-void MCCanvasGradientAddStop(MCCanvasGradientRef &x_gradient, MCCanvasGradientStopRef p_stop)
+void MCCanvasGradientAddStop(MCCanvasGradientStopRef p_stop, MCCanvasGradientRef &x_gradient)
 {
 	if (!MCCanvasPaintIsGradient(x_gradient))
 	{
