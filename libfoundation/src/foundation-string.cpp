@@ -442,6 +442,7 @@ bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_co
         p_chars[p_char_count] = '\0';
         self -> native_chars = p_chars;
         self -> char_count = p_char_count;
+        r_string = self;
     }
     else
         MCMemoryDelete(self);

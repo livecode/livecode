@@ -1068,21 +1068,21 @@ static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_
 				if (MCCStringEqualCaseless(p_header->param_name[i], "name"))
                 {
                     MCAutoStringRef t_name;
-                    MCStringCreateWithCStringAndRelease((char_t*)p_header->param_value[i], &t_name);
+                    MCStringCreateWithCStringAndRelease(p_header->param_value[i], &t_name);
                     MCNameCreate(*t_name, t_context->name);
                 }
 				else if (MCCStringEqualCaseless(p_header->param_name[i], "filename"))
-                    MCStringCreateWithCStringAndRelease((char_t*)p_header->param_value[i], t_context->file_name);
+                    MCStringCreateWithCStringAndRelease(p_header->param_value[i], t_context->file_name);
 			}
 		}
 		else if (MCCStringEqualCaseless(p_header->name, "Content-Type"))
 		{
-            MCStringCreateWithCStringAndRelease((char_t*)p_header->value, t_context->type);
+            MCStringCreateWithCStringAndRelease(p_header->value, t_context->type);
 			
 			for (uint32_t i = 0; i < p_header->param_count; i++)
 			{
 				if (MCCStringEqualCaseless(p_header->param_name[i], "boundary"))
-                    MCStringCreateWithCStringAndRelease((char_t*)p_header->param_value[i], t_context->boundary);
+                    MCStringCreateWithCStringAndRelease(p_header->param_value[i], t_context->boundary);
 			}
 		}
 	}

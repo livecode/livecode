@@ -291,7 +291,6 @@
 		4D6C27FD1647D942007C96B7 /* exec-graphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FB1647D942007C96B7 /* exec-graphics.cpp */; };
 		4D6C27FE1647D942007C96B7 /* exec-security.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FC1647D942007C96B7 /* exec-security.cpp */; };
 		4D6C28B61647DC4F007C96B7 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
-		4D6F2AE718981E7F0099947D /* (null) in Sources */ = {isa = PBXBuildFile; };
 		4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D77F1DD183F8298002EEBB4 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */; };
@@ -4001,7 +4000,6 @@
 				4D1F9D53171C682E0091C6CB /* hndlrlst.cpp in Sources */,
 				4D1F9D54171C682E0091C6CB /* idraw.cpp in Sources */,
 				4D1F9D55171C682E0091C6CB /* ifile.cpp in Sources */,
-				E8AF7D2419F7E3BF000F68E9 /* graphics_util.cpp in Sources */,
 				4D1F9D56171C682E0091C6CB /* igif.cpp in Sources */,
 				4D1F9D57171C682E0091C6CB /* iimport.cpp in Sources */,
 				4D1F9D58171C682E0091C6CB /* ijpg.cpp in Sources */,
@@ -4767,10 +4765,6 @@
 					MODE_INSTALLER,
 				);
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Installer;
 			};
@@ -4784,10 +4778,6 @@
 					MODE_INSTALLER,
 				);
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Installer;
 			};
@@ -4813,10 +4803,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
@@ -4827,10 +4813,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
@@ -4841,11 +4823,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D587DB40B80949B00200116 /* Debug.xcconfig */;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SOLUTION_DIR)/prebuilt/lib/mac",
-					"\"$(SRCROOT)/../_build/mac/Debug\"",
-				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lcustomssl",
@@ -4859,11 +4836,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D587DB20B80949B00200116 /* Release.xcconfig */;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SOLUTION_DIR)/prebuilt/lib/mac",
-					"\"$(SRCROOT)/../_build/mac/Debug\"",
-				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lcustomssl",
@@ -4877,10 +4849,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Standalone-Community";
 			};
@@ -4890,10 +4858,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Standalone-Community";
 			};
