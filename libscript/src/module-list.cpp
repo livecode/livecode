@@ -112,7 +112,8 @@ extern "C" void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProp
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
         return;
-
+    
+    MCProperListRemoveElements(*t_mutable_list, t_start, t_count);
     MCProperListInsertElement(*t_mutable_list, p_value, t_start);
     
     MCAutoProperListRef t_immutable;
@@ -150,9 +151,12 @@ extern "C" void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, i
 
 extern "C" void MCListFetchIndexOf(MCProperListRef p_target, index_t p_index, MCValueRef& r_output)
 {
-    uindex_t t_start, t_count;
-    MCChunkGetExtentsOfElementChunkByExpression(p_target, p_index, t_start, t_count);
-    r_output = MCValueRetain(MCProperListFetchElementAtIndex(p_target, t_start));
+    MCListFetchElementOf(p_index, p_target, r_output);
+}
+
+extern "C" void MCListStoreIndexOf(MCValueRef p_value, MCProperListRef& x_target, index_t p_index)
+{
+    MCListStoreElementOf(p_value, p_index, x_target);
 }
 
 extern "C" void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)

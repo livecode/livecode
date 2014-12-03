@@ -96,48 +96,128 @@ static compare_t MCSortCompareDateTime(void *context, MCValueRef p_left, MCValue
 
 extern "C" void MCSortExecSortListAscendingText(MCProperListRef& x_target)
 {
+    MCAutoProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(x_target, &t_mutable_list))
+        return;
+    
     // For now, just compare caseless.
     MCStringOptions t_option;
     t_option = kMCStringOptionCompareCaseless;
-    MCProperListStableSort(x_target, false, MCSortCompareText, &t_option);
+    MCProperListStableSort(*t_mutable_list, false, MCSortCompareText, &t_option);
+    
+    MCAutoProperListRef t_sorted_list;
+    if (!MCProperListCopy(*t_mutable_list, &t_sorted_list))
+        return;
+    
+    MCValueAssign(x_target, *t_sorted_list);
 }
 
 extern "C" void MCSortExecSortListDescendingText(MCProperListRef& x_target)
 {
+    MCAutoProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(x_target, &t_mutable_list))
+        return;
+    
     // For now, just compare caseless.
     MCStringOptions t_option;
     t_option = kMCStringOptionCompareCaseless;
-    MCProperListStableSort(x_target, true, MCSortCompareText, &t_option);
+    MCProperListStableSort(*t_mutable_list, true, MCSortCompareText, &t_option);
+    
+    MCAutoProperListRef t_sorted_list;
+    if (!MCProperListCopy(*t_mutable_list, &t_sorted_list))
+        return;
+    
+    MCValueAssign(x_target, *t_sorted_list);
 }
 
 extern "C" void MCSortExecSortListAscendingBinary(MCProperListRef& x_target)
 {
-    MCProperListStableSort(x_target, false, MCSortCompareBinary, nil);
+    MCAutoProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(x_target, &t_mutable_list))
+        return;
+    
+    MCProperListStableSort(*t_mutable_list, false, MCSortCompareBinary, nil);
+    
+    MCAutoProperListRef t_sorted_list;
+    if (!MCProperListCopy(*t_mutable_list, &t_sorted_list))
+        return;
+    
+    MCValueAssign(x_target, *t_sorted_list);
 }
 
 extern "C" void MCSortExecSortListDescendingBinary(MCProperListRef& x_target)
 {
-    MCProperListStableSort(x_target, true, MCSortCompareBinary, nil);
+    MCAutoProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(x_target, &t_mutable_list))
+        return;
+    
+    MCProperListStableSort(*t_mutable_list, true, MCSortCompareBinary, nil);
+    
+    MCAutoProperListRef t_sorted_list;
+    if (!MCProperListCopy(*t_mutable_list, &t_sorted_list))
+        return;
+    
+    MCValueAssign(x_target, *t_sorted_list);
 }
 
 extern "C" void MCSortExecSortListAscendingNumeric(MCProperListRef& x_target)
 {
-    MCProperListStableSort(x_target, false, MCSortCompareNumeric, nil);
+    MCAutoProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(x_target, &t_mutable_list))
+        return;
+    
+    MCProperListStableSort(*t_mutable_list, false, MCSortCompareNumeric, nil);
+    
+    MCAutoProperListRef t_sorted_list;
+    if (!MCProperListCopy(*t_mutable_list, &t_sorted_list))
+        return;
+    
+    MCValueAssign(x_target, *t_sorted_list);
 }
 
 extern "C" void MCSortExecSortListDescendingNumeric(MCProperListRef& x_target)
 {
-    MCProperListStableSort(x_target, true, MCSortCompareNumeric, nil);
+    MCAutoProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(x_target, &t_mutable_list))
+        return;
+    
+    MCProperListStableSort(*t_mutable_list, true, MCSortCompareNumeric, nil);
+    
+    MCAutoProperListRef t_sorted_list;
+    if (!MCProperListCopy(*t_mutable_list, &t_sorted_list))
+        return;
+    
+    MCValueAssign(x_target, *t_sorted_list);
 }
 
 void MCSortExecSortListAscendingDateTime(MCProperListRef& x_target)
 {
-    MCProperListStableSort(x_target, false, MCSortCompareDateTime, nil);
+    MCAutoProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(x_target, &t_mutable_list))
+        return;
+    
+    MCProperListStableSort(*t_mutable_list, false, MCSortCompareDateTime, nil);
+    
+    MCAutoProperListRef t_sorted_list;
+    if (!MCProperListCopy(*t_mutable_list, &t_sorted_list))
+        return;
+    
+    MCValueAssign(x_target, *t_sorted_list);
 }
 
 void MCSortExecSortListDescendingDateTime(MCProperListRef& x_target)
 {
-    MCProperListStableSort(x_target, true, MCSortCompareDateTime, nil);
+    MCAutoProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(x_target, &t_mutable_list))
+        return;
+    
+    MCProperListStableSort(*t_mutable_list, true, MCSortCompareDateTime, nil);
+    
+    MCAutoProperListRef t_sorted_list;
+    if (!MCProperListCopy(*t_mutable_list, &t_sorted_list))
+        return;
+    
+    MCValueAssign(x_target, *t_sorted_list);
 }
 
 /*

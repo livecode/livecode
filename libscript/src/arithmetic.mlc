@@ -55,6 +55,8 @@ public foreign handler MCArithmeticEvalIntegerIsLessThanOrEqualToInteger(in Left
 public foreign handler MCArithmeticEvalRealIsLessThanOrEqualToReal(in Left as double, in Right as double, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalNumberIsLessThanOrEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
 
+
+public foreign handler MCArithmeticEvalEqualToInteger(in Left as int, in Right as int, out Value as bool) as undefined binds to "<builtin>"
 --
 
 /*
@@ -307,5 +309,19 @@ begin
 end syntax
 
 --
+
+/*
+Summary:    Equal to relation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+output:     True if <Left> is equal to <Right>, and false otherwise.
+*/
+
+
+syntax IsEqualTo is neutral binary operator with precedence 3
+    <Left: Expression> "=" <Right: Expression>
+begin
+    MCArithmeticEvalEqualToInteger(Left, Right, output)
+end syntax
 
 end module
