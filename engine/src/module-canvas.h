@@ -359,11 +359,11 @@ void MCCanvasPathTransform(MCCanvasPathRef &x_path, MCCanvasTransformRef p_trans
 void MCCanvasPathScale(MCCanvasPathRef &x_path, MCCanvasFloat p_xscale, MCCanvasFloat p_yscale);
 void MCCanvasPathRotate(MCCanvasPathRef &x_path, MCCanvasFloat p_angle);
 void MCCanvasPathTranslate(MCCanvasPathRef &x_path, MCCanvasFloat p_x, MCCanvasFloat p_y);
-void MCCanvasPathAddPath(MCCanvasPathRef &x_path, MCCanvasPathRef p_to_add);
-void MCCanvasPathMoveTo(MCCanvasPathRef &x_path, MCCanvasPointRef p_point);
-void MCCanvasPathLineTo(MCCanvasPathRef &x_path, MCCanvasPointRef p_point);
-void MCCanvasPathCurveThroughPoint(MCCanvasPathRef &x_path, MCCanvasPointRef p_through, MCCanvasPointRef p_to);
-void MCCanvasPathCurveThroughPoints(MCCanvasPathRef &x_path, MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to);
+void MCCanvasPathAddPath(MCCanvasPathRef p_source, MCCanvasPathRef &x_dest);
+void MCCanvasPathMoveTo(MCCanvasPointRef p_point, MCCanvasPathRef &x_path);
+void MCCanvasPathLineTo(MCCanvasPointRef p_point, MCCanvasPathRef &x_path);
+void MCCanvasPathCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to, MCCanvasPathRef &x_path);
+void MCCanvasPathCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasPathRef &x_path);
 void MCCanvasPathClosePath(MCCanvasPathRef &x_path);
 
 //////////
@@ -419,19 +419,19 @@ void MCCanvasCanvasSaveState(MCCanvasRef &x_canvas);
 void MCCanvasCanvasRestore(MCCanvasRef &x_canvas);
 void MCCanvasCanvasBeginLayer(MCCanvasRef &x_canvas);
 // TODO - work out effect area rect
-void MCCanvasCanvasBeginLayerWithEffect(MCCanvasRef &x_canvas, MCCanvasEffectRef p_effect, MCCanvasRectangleRef p_rect);
+void MCCanvasCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRectangleRef p_rect, MCCanvasRef &x_canvas);
 void MCCanvasCanvasEndLayer(MCCanvasRef &x_canvas);
 void MCCanvasCanvasFill(MCCanvasRef &x_canvas);
-void MCCanvasCanvasFillPath(MCCanvasRef &x_canvas, MCCanvasPathRef p_path);
+void MCCanvasCanvasFillPath(MCCanvasPathRef p_path, MCCanvasRef &x_canvas);
 void MCCanvasCanvasStroke(MCCanvasRef &x_canvas);
-void MCCanvasCanvasStrokePath(MCCanvasRef &x_canvas, MCCanvasPathRef p_path);
-void MCCanvasCanvasClipToRect(MCCanvasRef &x_canvas, MCCanvasRectangleRef p_rect);
-void MCCanvasCanvasAddPath(MCCanvasRef &x_canvas, MCCanvasPathRef p_path);
-void MCCanvasCanvasDrawRectOfImage(MCCanvasRef &x_canvas, MCCanvasImageRef p_image, MCCanvasRectangleRef p_src_rect, MCCanvasRectangleRef p_dst_rect, uint32_t p_quality);
-void MCCanvasCanvasMoveTo(MCCanvasRef &x_canvas, MCCanvasPointRef p_point);
-void MCCanvasCanvasLineTo(MCCanvasRef &x_canvas, MCCanvasPointRef p_point);
-void MCCanvasCanvasCurveThroughPoint(MCCanvasRef &x_canvas, MCCanvasPointRef p_through, MCCanvasPointRef p_to);
-void MCCanvasCanvasCurveThroughPoints(MCCanvasRef &x_canvas, MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to);
+void MCCanvasCanvasStrokePath(MCCanvasPathRef p_path, MCCanvasRef &x_canvas);
+void MCCanvasCanvasClipToRect(MCCanvasRectangleRef p_rect, MCCanvasRef &x_canvas);
+void MCCanvasCanvasAddPath(MCCanvasPathRef p_path, MCCanvasRef &x_canvas);
+void MCCanvasCanvasDrawRectOfImage(MCCanvasRectangleRef p_src_rect, MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef &x_canvas);
+void MCCanvasCanvasMoveTo(MCCanvasPointRef p_point, MCCanvasRef &x_canvas);
+void MCCanvasCanvasLineTo(MCCanvasPointRef p_point, MCCanvasRef &x_canvas);
+void MCCanvasCanvasCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to, MCCanvasRef &x_canvas);
+void MCCanvasCanvasCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasRef &x_canvas);
 void MCCanvasCanvasClosePath(MCCanvasRef &x_canvas);
 
 ////////////////////////////////////////////////////////////////////////////////
