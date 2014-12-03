@@ -1237,6 +1237,10 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
            p_node -> kind == kSyntaxNodeKindAlternate ||
            p_node -> kind == kSyntaxNodeKindRepeat);
     
+    int t_index;
+    t_index = *x_index;
+    *x_index += 1;
+    
     if (p_node -> kind == kSyntaxNodeKindConcatenate)
     {
         for(int i = 0; i < p_node -> alternate . operand_count; i++)
@@ -1258,9 +1262,6 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
     }
     
     // Now generate this rule.
-    int t_index;
-    t_index = *x_index;
-    *x_index += 1;
     
     p_node -> marks = NULL;
     p_node -> mark_count = 0;
