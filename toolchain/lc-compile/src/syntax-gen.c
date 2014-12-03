@@ -89,12 +89,29 @@ struct SyntaxNode
     long right_lmode, right_rmode;
 };
 
+typedef enum SyntaxMethodType SyntaxMethodType;
+enum SyntaxMethodType
+{
+    kSyntaxMethodTypeExecute,
+    kSyntaxMethodTypeEvaluate,
+    kSyntaxMethodTypeAssign,
+};
+
+typedef struct SyntaxArgument *SyntaxArgumentRef;
+struct SyntaxArgument
+{
+    SyntaxArgumentRef next;
+    long mode;
+    long index;
+};
+
 typedef struct SyntaxMethod *SyntaxMethodRef;
 struct SyntaxMethod
 {
+    SyntaxMethodRef next;
     NameRef name;
+    SyntaxMethodType type;
     struct SyntaxArgument *arguments;
-    unsigned int argument_count;
 };
 
 typedef enum SyntaxRuleKind SyntaxRuleKind;
@@ -122,6 +139,8 @@ struct SyntaxRule
     SyntaxNodeRef expr;
     SyntaxMethodRef methods;
     long *mapping;
+
+    SyntaxMethodRef current_method;
 };
 
 typedef struct SyntaxRuleGroup *SyntaxRuleGroupRef;
@@ -828,18 +847,50 @@ void PushMarkedStringSyntaxGrammar(long p_mark, const char *p_value)
 void BeginSyntaxMappings(void)
 {
     assert(s_rule != NULL);
+    s_rule -> current_method = NULL;
 }
 
 void EndSyntaxMappings(void)
 {
 }
 
-void BeginMethodSyntaxMapping(NameRef p_name)
+static void BeginMethodSyntaxMapping(SyntaxMethodType p_type, NameRef p_name)
 {
+    SyntaxMethodRef t_method;
+    t_method = (SyntaxMethodRef)Allocate(sizeof(struct SyntaxMethod));
+    t_method -> type = p_type;
+    t_method -> name = p_name;
+    t_method -> next = NULL;
+    s_rule -> current_method = t_method;
+}
+
+void BeginExecuteMethodSyntaxMapping(NameRef p_name)
+{
+    BeginMethodSyntaxMapping(kSyntaxMethodTypeExecute, p_name);
+}
+
+void BeginEvaluateMethodSyntaxMapping(NameRef p_name)
+{
+    BeginMethodSyntaxMapping(kSyntaxMethodTypeEvaluate, p_name);
+}
+
+void BeginAssignMethodSyntaxMapping(NameRef p_name)
+{
+    BeginMethodSyntaxMapping(kSyntaxMethodTypeAssign, p_name);
 }
 
 void EndMethodSyntaxMapping(void)
 {
+    if (s_rule -> methods == NULL)
+        s_rule -> methods = s_rule -> current_method;
+    else
+    {
+        SyntaxMethodRef t_last;
+        for(t_last = s_rule -> methods; t_last -> next != NULL; t_last = t_last -> next)
+            ;
+        t_last -> next = s_rule -> current_method;
+    }
+    s_rule -> current_method = NULL;
 }
 
 void PushUndefinedArgumentSyntaxMapping(void)
@@ -866,8 +917,37 @@ void PushStringArgumentSyntaxMapping(const char *p_value)
 {
 }
 
-void PushMarkArgumentSyntaxMapping(long p_index)
+static void PushMarkArgumentSyntaxMapping(long p_mode, long p_index)
 {
+    SyntaxArgumentRef t_arg;
+    t_arg = (SyntaxArgumentRef)Allocate(sizeof(struct SyntaxArgument));
+    t_arg -> mode = p_mode;
+    t_arg -> index = p_index;
+    t_arg -> next = NULL;
+    if (s_rule -> current_method -> arguments == NULL)
+        s_rule -> current_method -> arguments = t_arg;
+    else
+    {
+        SyntaxArgumentRef t_last;
+        for(t_last = s_rule -> current_method -> arguments; t_last -> next != NULL; t_last = t_last -> next)
+            ;
+        t_last -> next = t_arg;
+    }
+}
+
+void PushInMarkArgumentSyntaxMapping(long p_index)
+{
+    PushMarkArgumentSyntaxMapping(0, p_index);
+}
+
+void PushOutMarkArgumentSyntaxMapping(long p_index)
+{
+    PushMarkArgumentSyntaxMapping(1, p_index);
+}
+
+void PushInOutMarkArgumentSyntaxMapping(long p_index)
+{
+    PushMarkArgumentSyntaxMapping(2, p_index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1157,6 +1237,10 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
            p_node -> kind == kSyntaxNodeKindAlternate ||
            p_node -> kind == kSyntaxNodeKindRepeat);
     
+    int t_index;
+    t_index = *x_index;
+    *x_index += 1;
+    
     if (p_node -> kind == kSyntaxNodeKindConcatenate)
     {
         for(int i = 0; i < p_node -> alternate . operand_count; i++)
@@ -1178,9 +1262,6 @@ static void GenerateSyntaxRule(int *x_index, SyntaxNodeRef p_node, SyntaxRuleKin
     }
     
     // Now generate this rule.
-    int t_index;
-    t_index = *x_index;
-    *x_index += 1;
     
     p_node -> marks = NULL;
     p_node -> mark_count = 0;
@@ -1307,6 +1388,88 @@ static void GenerateUmbrellaSyntaxRule(const char *p_name, SyntaxRuleKind p_firs
     }
 }
 
+static void GenerateInvokeMethodArg(SyntaxArgumentRef p_arg)
+{
+    if (p_arg == NULL)
+    {
+        fprintf(stderr, "nil");
+        return;
+    }
+    
+    static const char *s_modes[] = { "in", "out", "inout" };
+    fprintf(stderr, "invokesignature(%s, %ld, ", s_modes[p_arg -> mode], p_arg -> index);
+    GenerateInvokeMethodArg(p_arg -> next);
+    fprintf(stderr, ")");
+}
+
+static void GenerateInvokeMethodList(int p_index, int p_method_index, SyntaxMethodRef p_method)
+{
+    if (p_method == NULL)
+    {
+        fprintf(stderr, "    where(INVOKEMETHODLIST'nil -> MethodList_%d_%d)\n", p_index, p_method_index);
+        return;
+    }
+
+    GenerateInvokeMethodList(p_index, p_method_index + 1, p_method -> next);
+    
+    static const char *s_method_types[] = { "execute", "evaluate", "assign" };
+    
+    const char *t_name;
+    GetStringOfNameLiteral(p_method -> name, &t_name);
+    fprintf(stderr, "    where(INVOKEMETHODLIST'methodlist(\"%s\", %s, ", t_name, s_method_types[p_method -> type]);
+    
+    GenerateInvokeMethodArg(p_method -> arguments);
+    
+    fprintf(stderr, ", MethodList_%d_%d) -> MethodList_%d_%d)\n", p_index, p_method_index + 1, p_index, p_method_index);
+}
+
+static void GenerateInvokeLists(void)
+{
+    for(SyntaxRuleGroupRef t_group = s_groups; t_group != NULL; t_group = t_group -> next)
+        fprintf(stderr, "'var' CustomInvokeList%d: INVOKELIST\n", t_group -> index);
+    
+    int t_method_index;
+    t_method_index = 1;
+    
+    fprintf(stderr, "'action' InitializeCustomInvokeLists()\n");
+    fprintf(stderr, "  'rule' InitializeCustomInvokeLists():\n");
+    for(SyntaxRuleGroupRef t_group = s_groups; t_group != NULL; t_group = t_group -> next)
+    {
+        int t_index;
+        t_index = 1;
+        
+        fprintf(stderr, "    where(INVOKELIST'nil -> List_%d_0)\n", t_group -> index);
+        for(SyntaxRuleRef t_rule = t_group -> rules; t_rule != NULL; t_rule = t_rule -> next)
+        {
+            GenerateInvokeMethodList(t_method_index, 0, t_rule -> methods);
+            
+            const char *t_module, *t_name;
+            GetStringOfNameLiteral(t_rule -> module, &t_module);
+            GetStringOfNameLiteral(t_rule -> name, &t_name);
+            fprintf(stderr, "    Info_%d_%d::INVOKEINFO\n", t_group -> index, t_index);
+            fprintf(stderr, "    Info_%d_%d'Index <- -1\n", t_group -> index, t_index);
+            fprintf(stderr, "    Info_%d_%d'ModuleIndex <- -1\n", t_group -> index, t_index);
+            fprintf(stderr, "    Info_%d_%d'Name <- \"%s\"\n", t_group -> index, t_index, t_name);
+            fprintf(stderr, "    Info_%d_%d'ModuleName <- \"%s\"\n", t_group -> index, t_index, t_module);
+            fprintf(stderr, "    Info_%d_%d'Methods <- MethodList_%d_%d\n", t_group -> index, t_index, t_method_index, 0);
+            
+            fprintf(stderr, "    where(invokelist(Info_%d_%d, List_%d_%d) -> List_%d_%d)\n", t_group -> index, t_index, t_group -> index, t_index - 1, t_group -> index, t_index);
+            t_index += 1;
+            t_method_index += 1;
+        }
+        fprintf(stderr, "    CustomInvokeList%d <- List_%d_%d\n", t_group -> index, t_group -> index, t_index - 1);
+    }
+    
+    fprintf(stderr, "'action' CustomInvokeLists(INT -> INVOKELIST)\n");
+    for(SyntaxRuleGroupRef t_group = s_groups; t_group != NULL; t_group = t_group -> next)
+    {
+        fprintf(stderr, "  'rule' CustomInvokeLists(Index -> List):\n");
+        fprintf(stderr, "    eq(Index, %d)\n", t_group -> index);
+        fprintf(stderr, "    CustomInvokeList%d -> List\n", t_group -> index);
+    }
+}
+
+#if 0
 static void GenerateInvokeLists(void)
 {
     for(SyntaxRuleGroupRef t_group = s_groups; t_group != NULL; t_group = t_group -> next)
@@ -1376,6 +1539,7 @@ static void GenerateInvokeLists(void)
         fprintf(stderr, "    CustomInvokeList%d -> List\n", t_group -> index);
     }
 }
+#endif
 
 void GenerateSyntaxRules(void)
 {

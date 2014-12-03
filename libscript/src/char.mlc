@@ -1,20 +1,20 @@
 module com.livecode.char
 
-foreign handler MCCharFetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
-foreign handler StoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
-foreign handler FetchCharRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"
-foreign handler StoreCharRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchCharOf(in Index as index, in Target as string, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharFetchCharRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreCharRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler EvalNumberOfCharsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalNumberOfCharsIn(in Target as string, out Count as index) as undefined binds to "<builtin>"
 
-foreign handler EvalIsAmongTheCharsOf(in Needle as string, in Source as string, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalIsAmongTheCharsOf(in Needle as string, in Source as string, out Value as bool) as undefined binds to "<builtin>"
 
-foreign handler StoreBeforeCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
-foreign handler StoreAfterCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreBeforeCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCCharStoreAfterCharOf(in Value as string, in Index as index, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler EvalOffsetOfChars(in Needle as string, in Target as string, in IsLast as bool, out Offset as index) as undefined binds to "<builtin>"
-foreign handler EvalOffsetOfCharsBefore(in Needle as string, in Before as index, in Target as string, in IsLast as bool, out Offset as index) as undefined binds to "<builtin>"
-foreign handler EvalOffsetOfCharsAfter(in Needle as string, in After as index, in Target as string, in IsFirst as bool, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfChars(in IsLast as bool, in Needle as string, in Target as string, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as bool, in Needle as string, in Before as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as bool, in Needle as string, in After as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
 
 --
 
@@ -33,7 +33,7 @@ Example:
 syntax CountCharsOf is prefix operator with precedence 1
 	"the" "number" "of" "chars" "in" <Target: Expression>
 begin
-	EvalNumberOfCharsIn(Target, output)
+	MCCharEvalNumberOfCharsIn(Target, output)
 end syntax
 
 --
@@ -55,7 +55,7 @@ syntax SingletonCharOf is prefix operator with precedence 1
 	"char" <Index: Expression> "of" <Target: Expression>
 begin
 	MCCharFetchCharOf(Index, Target, output)
-	StoreCharOf(input, Index, Target)
+	MCCharStoreCharOf(input, Index, Target)
 end syntax
 
 /*
@@ -76,8 +76,8 @@ Example: 			get char 5 to 10 of tString // Evaluates chars 5 to 10
 syntax RangeCharOf is prefix operator with precedence 1
 	"char" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
-	FetchCharRangeOf(Start, Finish, Target, output)
-	StoreCharRangeOf(input, Start, Finish, Target)
+	MCCharFetchCharRangeOf(Start, Finish, Target, output)
+	MCCharStoreCharRangeOf(input, Start, Finish, Target)
 end syntax
 
 --
@@ -92,7 +92,7 @@ output:             True if <Needle> is among the chars of <Target>, and false o
 syntax CharIsIn is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Source: Expression>
 begin
-    EvalIsAmongTheCharsOf(Needle, Source, output)
+    MCCharEvalIsAmongTheCharsOf(Needle, Source, output)
 end syntax
 
 --
@@ -100,13 +100,13 @@ end syntax
 syntax BeforeCharOf is prefix operator with precedence 1
     "before" "char" <Index: Expression> "of" <Target: Expression>
 begin
-    StoreBeforeCharOf(input, Index, Target)
+    MCCharStoreBeforeCharOf(input, Index, Target)
 end syntax
 
 syntax AfterCharOf is prefix operator with precedence 1
     "after" "char" <Index: Expression> "of" <Target: Expression>
 begin
-    StoreAfterCharOf(input, Index, Target)
+    MCCharStoreAfterCharOf(input, Index, Target)
 end syntax
 
 --
@@ -125,7 +125,7 @@ output:             Returns the number of chars between the first char of <Targe
 syntax CharOffset is prefix operator with precedence 1
     "the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" ["chars"] <Needle: Expression> "in" <Target: Expression>
 begin
-    EvalOffsetOfChars(Needle, Target, IsLast, output)
+    MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
 end syntax
 
 /*
@@ -141,9 +141,9 @@ output:             Returns the number of chars between the first char of <Targe
 */
 
 syntax CharOffsetAfter is prefix operator with precedence 1
-    "the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" ["chars"] <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" ["chars"] <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
-    EvalOffsetOfCharsAfter(Needle, After, Target, IsLast, output)
+    MCCharEvalOffsetOfCharsAfter(IsLast, Needle, After, Target, output)
 end syntax
 
 /*
@@ -162,7 +162,7 @@ output:             Returns the number of chars between the first char of <Targe
 syntax CharOffsetBefore is prefix operator with precedence 1
     "the" ["first" <IsFirst=true> | "last" <IsFirst=false>] "offset" "of" ["chars"] <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
-    EvalOffsetOfCharsBefore(Needle, Before, Target, IsFirst, output)
+    MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
 end syntax
 
 
@@ -176,7 +176,7 @@ output:             True if the chars of <Needle> occur as a subsequence of the 
 syntax ContainsChars is neutral binary operator with precedence 1
     <Target: Expression> "contains" <Needle: Expression>
 begin
-    EvalIsAmongTheCharsOf(Target, Needle, output)
+    MCCharEvalIsAmongTheCharsOf(Target, Needle, output)
 end syntax
 
 --
