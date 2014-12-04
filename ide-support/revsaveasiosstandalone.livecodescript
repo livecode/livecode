@@ -177,7 +177,17 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             put "8_1" into tSDKs["armv7"]["suffix"]
             put revMobileRuntimeFolder(pTarget, tSDKs["armv7"]["suffix"]) into tSDKs["armv7"]["runtime path"]
          end if
-         
+         if tSettings["ios,build type"] is among the items of ",Universal,Arm64" then
+	    get revIDEDeployIOSGetDeviceSDK("8.1")
+	    if there is no folder (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") then
+	       throw "performing iOS device builds requires the iOS 8.1 SDK platform to be installed (available with XCode 6.1)"
+	    end if
+	    put it into tSDKs["arm64"]["root path"]
+	    put it & "/usr/bin" into tSDKs["arm64"]["tools path"]
+	    put (it & "/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.1.sdk") into tSDKs["arm64"]["sdk path"]
+ 	    put "8_1" into tSDKs["arm64"]["suffix"]
+	    put revMobileRuntimeFolder(pTarget, tSDKs["arm64"]["suffix"]) into tSDKs["arm64"]["runtime path"]
+	 end if
          
       end if
    else
@@ -350,7 +360,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       
       -- MM-2012-09-18: We now build the armv6 and armv7 engines using separate SDKs.
       --
-      repeat for each word tInstSet in "armv6 armv7"
+      repeat for each word tInstSet in "armv6 armv7 arm64"
          if tSDKs[tInstSet]["suffix"] is empty then
             next repeat
          end if
@@ -483,12 +493,16 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          case "Arm v7"
             put tSDKs["armv7"]["engine file"] into tLinkEngineFile
             break
+	 case "Arm64"
+	    put tSDKs["arm64"]["engine file"] into tLinkEngineFile
+	    break
          case "Universal"
          default
             put tempName() into tLinkEngineFile
-            get shell("lipo -create" && quote & tSDKs["armv6"]["engine file"] & quote && quote & tSDKs["armv7"]["engine file"] & quote && "-output" && quote & tLinkEngineFile & quote)
+            get shell("lipo -create" && quote & tSDKs["armv6"]["engine file"] & quote && quote & tSDKs["armv7"]["engine file"] quote && quote & tSDKs["arm64"]["engine file"] & quote && "-output" && quote & tLinkEngineFile & quote)
             delete file tSDKs["armv6"]["engine file"]
             delete file tSDKs["armv7"]["engine file"]
+	    delete file tSDKs["arm64"]["engine file"]
             if it is not empty  then
                throw "creating universal arm engine failed with" && it
             end if
@@ -986,7 +1000,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
             end if
          else
             put "external-tmp" into rExternals[it]["type"]        
-            repeat for each word tInstSet in "armv6 armv7"
+            repeat for each word tInstSet in "armv6 armv7 arm64"
                if pSDKs[tInstSet]["suffix"] is not empty then
                   put the tempName into tTarget
                   if lcextExtractExternal(tSource, "Device-" & pSDKs[tInstSet]["suffix"], tTarget) then
@@ -1072,7 +1086,7 @@ end lcextExtractExternal
 -- where we extract the appropraite external for the instruciton set(s) we are building for.
 --
 private command revCopyMobileExternals pExternals, pAppBundle, pTarget, pSDKs, @rExternals 
-   repeat for each word tInstSet in "sim armv6 armv7"
+   repeat for each word tInstSet in "sim armv6 armv7 arm64"
       if pSDKs[tInstSet]["suffix"] is not empty then
          repeat for each line tLine in pExternals      
             local tFile
@@ -1096,7 +1110,7 @@ end revCopyMobileExternals
 -- where we extract the appropraite external for the instruciton set(s) we are building for.
 --
 private command revCopyMobileDrivers pDrivers, pAppBundle, pTarget, pSDKs, @rExternals
-   repeat for each word tInstSet in "sim armv6 armv7"
+   repeat for each word tInstSet in "sim armv6 armv7 arm64"
       if pSDKs[tInstSet]["suffix"] is not empty then
          repeat for each line tLine in pDrivers
             local tFile
