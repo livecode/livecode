@@ -183,6 +183,8 @@ hash_t MCValueHash(MCValueRef p_value)
         return __MCProperListHash((__MCProperList *)self);
     case kMCValueTypeCodeRecord:
         return __MCRecordHash((__MCRecord*) self);
+	case kMCValueTypeCodeEnum:
+		return __MCEnumHash((__MCEnum *) self);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoHash((__MCTypeInfo*) self);
     case kMCValueTypeCodeError:
@@ -252,6 +254,8 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
         return __MCProperListIsEqualTo((__MCProperList*)self, (__MCProperList*)other_self);
     case kMCValueTypeCodeRecord:
         return __MCRecordIsEqualTo((__MCRecord*)self, (__MCRecord*)other_self);
+	case kMCValueTypeCodeEnum:
+		return __MCEnumIsEqualTo((__MCEnum *) self, (__MCEnum *) other_self);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoIsEqualTo((__MCTypeInfo *)self, (__MCTypeInfo *)other_self);
     case kMCValueTypeCodeError:
@@ -299,6 +303,8 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
         return __MCProperListCopyDescription((__MCProperList*)p_value, r_desc);
     case kMCValueTypeCodeRecord:
         return __MCRecordCopyDescription((__MCRecord*)p_value, r_desc);
+	case kMCValueTypeCodeEnum:
+		return __MCEnumCopyDescription((__MCEnum *) p_value, r_desc);
     case kMCValueTypeCodeTypeInfo:
         return __MCTypeInfoCopyDescription((__MCTypeInfo*)p_value, r_desc);
     case kMCValueTypeCodeError:
@@ -485,6 +491,8 @@ void __MCValueDestroy(__MCValue *self)
     case kMCValueTypeCodeRecord:
         __MCRecordDestroy((__MCRecord *)self);
         break;
+	case kMCValueTypeCodeEnum:
+		__MCEnumDestroy((__MCEnum *) self);
     case kMCValueTypeCodeTypeInfo:
         __MCTypeInfoDestroy((__MCTypeInfo *)self);
         break;
@@ -950,6 +958,12 @@ bool __MCValueImmutableCopy(__MCValue *self, bool p_release, __MCValue*& r_new_v
         if (__MCRecordImmutableCopy((__MCRecord*)self, p_release, t_new_value))
             return r_new_value = t_new_value, true;
     }
+	case kMCValueTypeCodeEnum:
+	{
+		__MCEnum *t_new_value;
+		if (__MCEnumImmutableCopy ((__MCEnum *) self, p_release, t_new_value))
+			return r_new_value = t_new_value, true;
+	}
     return false;
             
 	default:
