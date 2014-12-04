@@ -251,8 +251,6 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
                         break;
                     case kMCScriptBytecodeOpInvoke:
-                    case kMCScriptBytecodeOpInvokeEvaluate:
-                    case kMCScriptBytecodeOpInvokeAssign:
                         // check index operand is within definition range
                         // check definition[index] is handler or definition group
                         // check signature of defintion[index] conforms with invoke arity
@@ -367,6 +365,16 @@ bool MCScriptLookupModule(MCNameRef p_name, MCScriptModuleRef& r_module)
     return false;
 }
 
+bool MCScriptIsModuleALibrary(MCScriptModuleRef self)
+{
+    return self -> module_kind == kMCScriptModuleKindLibrary;
+}
+
+bool MCScriptIsModuleAWidget(MCScriptModuleRef self)
+{
+    return self -> module_kind == kMCScriptModuleKindWidget;
+}
+
 bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 {
     // If the module has already been ensured as usable, we are done.
@@ -384,8 +392,8 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
         if (!MCScriptLookupModule(self -> dependencies[i] . name, t_module))
             return false;
         
-        // A used module must be a library.
-        if (t_module -> module_kind != kMCScriptModuleKindLibrary)
+        // A used module must not be a widget.
+        if (t_module -> module_kind == kMCScriptModuleKindWidget)
             return false;
         
         // Check all the imported definitions from the module, and compute indicies.
@@ -401,7 +409,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 return false;
             
             if (t_def -> kind != t_import_def -> kind)
-                return false;
+            {
+                if (t_import_def -> kind != kMCScriptDefinitionKindHandler ||
+                    t_def -> kind != kMCScriptDefinitionKindForeignHandler)
+                    return false;
+            }
             
             // Check that signatures match.
             
@@ -612,6 +624,145 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCScriptCopyDependenciesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_module_names)
+{
+    MCAutoProperListRef t_modules;
+    if (!MCProperListCreateMutable(&t_modules))
+        return false;
+    
+    for(uindex_t i = 0; i < self -> dependency_count; i++)
+        if (!MCProperListPushElementOntoBack(*t_modules, self -> dependencies[i] . name))
+            return false;
+    
+    if (!MCProperListCopy(*t_modules, r_module_names))
+        return false;
+    
+    return true;
+}
+
+bool MCScriptCopyPropertiesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_property_names)
+{
+    MCAutoProperListRef t_props;
+    if (!MCProperListCreateMutable(&t_props))
+        return false;
+    
+    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindProperty)
+            if (!MCProperListPushElementOntoBack(*t_props, self -> exported_definitions[i] . name))
+                return false;
+    
+    if (!MCProperListCopy(*t_props, r_property_names))
+        return false;
+    
+    return true;
+}
+
+bool MCScriptQueryPropertyOfModule(MCScriptModuleRef self, MCNameRef p_property, /* get */ MCTypeInfoRef& r_getter, /* get */ MCTypeInfoRef& r_setter)
+{
+    MCScriptPropertyDefinition *t_def;
+    
+    if (!self -> is_usable)
+        return false; // TODO - throw error
+    
+    if (!MCScriptLookupPropertyDefinitionInModule(self, p_property, t_def))
+        return false; // TODO - throw error
+    
+    MCScriptDefinition *t_getter;
+    t_getter = t_def -> getter != 0 ? self -> definitions[t_def -> getter - 1] : nil;
+    
+    if (t_getter != nil)
+    {
+        if (t_getter -> kind == kMCScriptDefinitionKindVariable)
+            r_getter = self -> types[static_cast<MCScriptVariableDefinition *>(t_getter) -> type] -> typeinfo;
+        else
+            r_getter = MCHandlerTypeInfoGetReturnType(self -> types[static_cast<MCScriptHandlerDefinition *>(t_getter) -> type] -> typeinfo);
+    }
+    else
+        r_getter = nil;
+    
+    MCScriptDefinition *t_setter;
+    t_setter = t_def -> setter != 0 ? self -> definitions[t_def -> setter - 1] : nil;
+    
+    if (t_setter != nil)
+    {
+        if (t_setter -> kind == kMCScriptDefinitionKindVariable)
+            r_setter = self -> types[static_cast<MCScriptVariableDefinition *>(t_setter) -> type] -> typeinfo;
+        else
+            r_setter = MCHandlerTypeInfoGetParameterType(self -> types[static_cast<MCScriptHandlerDefinition *>(t_setter) -> type] -> typeinfo, 0);
+    }
+    else
+        r_setter = nil;
+    
+    return true;
+}
+
+bool MCScriptCopyEventsOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_event_names)
+{
+    MCAutoProperListRef t_events;
+    if (!MCProperListCreateMutable(&t_events))
+        return false;
+    
+    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindEvent)
+            if (!MCProperListPushElementOntoBack(*t_events, self -> exported_definitions[i] . name))
+                return false;
+    
+    if (!MCProperListCopy(*t_events, r_event_names))
+        return false;
+    
+    return true;
+}
+
+bool MCScriptQueryEventOfModule(MCScriptModuleRef self, MCNameRef p_event, /* get */ MCTypeInfoRef& r_signature)
+{
+    MCScriptEventDefinition *t_def;
+    
+    if (!self -> is_usable)
+        return false; // TODO - throw error
+    
+    if (!MCScriptLookupEventDefinitionInModule(self, p_event, t_def))
+        return false; // TODO - throw error
+    
+    r_signature = self -> types[t_def -> type] -> typeinfo;
+    
+    return true;
+}
+
+bool MCScriptCopyHandlersOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_handler_names)
+{
+    MCAutoProperListRef t_handlers;
+    if (!MCProperListCreateMutable(&t_handlers))
+        return false;
+    
+    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindHandler ||
+            self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindForeignHandler)
+            if (!MCProperListPushElementOntoBack(*t_handlers, self -> exported_definitions[i] . name))
+                return false;
+    
+    if (!MCProperListCopy(*t_handlers, r_handler_names))
+        return false;
+    
+    return true;
+}
+
+bool MCScriptQueryHandlerOfModule(MCScriptModuleRef self, MCNameRef p_handler, /* get */ MCTypeInfoRef& r_signature)
+{
+    MCScriptHandlerDefinition *t_def;
+    
+    if (!self -> is_usable)
+        return false; // TODO - throw error
+    
+    if (!MCScriptLookupHandlerDefinitionInModule(self, p_handler, t_def))
+        return false; // TODO - throw error
+    
+    r_signature = self -> types[t_def -> type] -> typeinfo;
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCScriptWriteRawModule(MCStreamRef stream, MCScriptModule *p_module)
 {
     return MCPickleWrite(stream, kMCScriptModulePickleInfo, p_module);
@@ -642,6 +793,25 @@ bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef self, MCNameRef 
             continue;
         
         r_definition = static_cast<MCScriptPropertyDefinition *>(self -> definitions[self -> exported_definitions[i] . index]);
+        return true;
+    }
+    
+    return false;
+}
+
+bool MCScriptLookupEventDefinitionInModule(MCScriptModuleRef self, MCNameRef p_property, MCScriptEventDefinition*& r_definition)
+{
+    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
+    
+    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
+    {
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindEvent)
+            continue;
+        
+        if (!MCNameIsEqualTo(p_property, self -> exported_definitions[i] . name))
+            continue;
+        
+        r_definition = static_cast<MCScriptEventDefinition *>(self -> definitions[self -> exported_definitions[i] . index]);
         return true;
     }
     

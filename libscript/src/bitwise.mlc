@@ -4,12 +4,12 @@ This module specifies the syntax definitions and bindings for bitwise operations
 
 module com.livecode.bitwise
 
-foreign handler MCBitwiseEvalBitwiseAnd(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler MCBitwiseEvalBitwiseOr(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler MCBitwiseEvalBitwiseNot(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
-foreign handler MCBitwiseEvalBitwiseXor(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseAnd(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseOr(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseNot(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseXor(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
 
-foreign handler MCBitwiseEvalBitwiseShift(in Target as integer, in Shift as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseShift(in Target as integer, in Shift as integer, out Value as integer) as undefined binds to "<builtin>"
 
 --
 

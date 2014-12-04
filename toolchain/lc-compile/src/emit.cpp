@@ -9,6 +9,8 @@
 int OutputFileAsC = 0;
 
 extern "C" void EmitBeginModule(NameRef name, long& r_index);
+extern "C" void EmitBeginWidgetModule(NameRef name, long& r_index);
+extern "C" void EmitBeginLibraryModule(NameRef name, long& r_index);
 extern "C" void EmitEndModule(void);
 extern "C" void EmitModuleDependency(NameRef name, long& r_index);
 extern "C" void EmitImportedType(long module_index, NameRef name, long type_index, long& r_index);
@@ -196,6 +198,30 @@ void EmitBeginModule(NameRef p_name, long& r_index)
 
     s_module_name = p_name;
     
+    MCScriptBeginModule(kMCScriptModuleKindNone, to_mcnameref(p_name), s_builder);
+    r_index = 0;
+}
+
+void EmitBeginWidgetModule(NameRef p_name, long& r_index)
+{
+    MCInitialize();
+    
+    MCLog("[Emit] BeginWidgetModule(%@) -> 0", to_mcnameref(p_name));
+    
+    s_module_name = p_name;
+    
+    MCScriptBeginModule(kMCScriptModuleKindWidget, to_mcnameref(p_name), s_builder);
+    r_index = 0;
+}
+
+void EmitBeginLibraryModule(NameRef p_name, long& r_index)
+{
+    MCInitialize();
+    
+    MCLog("[Emit] BeginLibraryModule(%@) -> 0", to_mcnameref(p_name));
+    
+    s_module_name = p_name;
+    
     MCScriptBeginModule(kMCScriptModuleKindLibrary, to_mcnameref(p_name), s_builder);
     r_index = 0;
 }
@@ -306,7 +332,7 @@ void EmitImportedConstant(long p_module_index, NameRef p_name, long p_type_index
     MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindConstant, p_type_index, t_index);
     r_index = t_index;
     
-    MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
+    MCLog("[Emit] ImportedConstant(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
 }
 
 void EmitImportedVariable(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
@@ -315,7 +341,7 @@ void EmitImportedVariable(long p_module_index, NameRef p_name, long p_type_index
     MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindVariable, p_type_index, t_index);
     r_index = t_index;
     
-    MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
+    MCLog("[Emit] ImportedVariable(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
 }
 
 void EmitImportedHandler(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
@@ -324,7 +350,7 @@ void EmitImportedHandler(long p_module_index, NameRef p_name, long p_type_index,
     MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindHandler, p_type_index, t_index);
     r_index = t_index;
     
-    MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
+    MCLog("[Emit] ImportedHandler(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
 }
 
 void EmitImportedSyntax(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
@@ -460,7 +486,7 @@ void EmitContextSyntaxMethodArgument(void)
 void EmitIteratorSyntaxMethodArgument(void)
 {
     // TODO: Sort out iterate
-    //MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 3);
+    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 2);
     
     MCLog("[Emit] IteratorSyntaxMethodArgument()", 0);
 }
@@ -468,7 +494,7 @@ void EmitIteratorSyntaxMethodArgument(void)
 void EmitContainerSyntaxMethodArgument(void)
 {
     // TODO: Sort out iterate
-    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 4);
+    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 3);
     
     MCLog("[Emit] ContainerSyntaxMethodArgument()", 0);
 }
@@ -966,6 +992,7 @@ void EmitBeginExecuteInvoke(long index, long contextreg, long resultreg)
     MCLog("[Emit] BeginExecuteInvoke(%ld, %ld, %ld)", index, contextreg, resultreg);
 }
 
+#if 0
 void EmitBeginEvaluateInvoke(long index, long contextreg, long outputreg)
 {
     MCScriptBeginInvokeEvaluateInModule(s_builder, index, outputreg);
@@ -983,6 +1010,7 @@ void EmitBeginIterateInvoke(long index, long contextreg, long iteratorreg, long 
     // TODO: Iterate invoke
     MCLog("[Emit] BeginIterateInvoke(%ld, %ld, %ld)", index, contextreg, iteratorreg, containerreg);
 }
+#endif
 
 void EmitContinueInvoke(long reg)
 {

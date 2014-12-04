@@ -192,12 +192,19 @@ void MCMapStoreElementOfBinary(MCValueRef p_value, MCArrayRef& x_target, MCDataR
     MCAutoStringRef t_key_string;
     MCNewAutoNameRef t_key;
     
-    if (MCStringCreateWithBytes(MCDataGetBytePtr(p_key), MCDataGetLength(p_key), kMCStringEncodingNative, false, &t_key_string) &&
-        MCNameCreate(*t_key_string, &t_key) &&
-        MCArrayStoreValue(x_target, false, *t_key, p_value))
+    MCAutoArrayRef t_array;
+    MCArrayMutableCopy(x_target, &t_array);
+    
+    if (!MCStringCreateWithBytes(MCDataGetBytePtr(p_key), MCDataGetLength(p_key), kMCStringEncodingNative, false, &t_key_string) ||
+        !MCNameCreate(*t_key_string, &t_key) ||
+        !MCArrayStoreValue(*t_array, false, *t_key, p_value))
         return;
     
-    // ctxt . Throw()
+    MCAutoArrayRef t_new_array;
+    if (!MCArrayCopy(*t_array, &t_new_array))
+        return;
+    
+    MCValueAssign(x_target, *t_new_array);
 }
 
 extern "C" void MCMapFetchElementOf(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
@@ -211,19 +218,23 @@ extern "C" void MCMapFetchElementOf(MCArrayRef p_target, MCStringRef p_key, MCVa
         return;
         
     }
-
-    // ctxt . Throw();
 }
 
 extern "C" void MCMapStoreElementOf(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
 {
     MCNewAutoNameRef t_key;
+    MCAutoArrayRef t_array;
+    MCArrayMutableCopy(x_target, &t_array);
     
-    if (create_key_for_array(p_key, x_target, &t_key) &&
-        MCArrayStoreValue(x_target, MCArrayIsCaseSensitive(x_target), *t_key, p_value))
+    if (!create_key_for_array(p_key, x_target, &t_key) ||
+        !MCArrayStoreValue(*t_array, MCArrayIsCaseSensitive(*t_array), *t_key, p_value))
         return;
     
-    // ctxt . Throw();
+    MCAutoArrayRef t_new_array;
+    if (!MCArrayCopy(*t_array, &t_new_array))
+        return;
+    
+    MCValueAssign(x_target, *t_new_array);
 }
 
 void MCMapFetchElementOfNumeric(MCArrayRef p_target, integer_t p_key, MCValueRef& r_output)
@@ -246,8 +257,6 @@ void MCMapStoreElementOfNumeric(MCValueRef p_value, MCArrayRef& x_target, intege
         MCMapStoreElementOf(p_value, x_target, *t_string);
         return;
     }
-    
-    // ctxt . Throw
 }
 
 void MCMapFetchElementOfMatrix(MCArrayRef p_target, MCProperListRef p_key, MCValueRef& r_output)
@@ -277,20 +286,28 @@ void MCMapStoreElementOfMatrix(MCValueRef p_value, MCArrayRef& x_target, MCPrope
 {
     bool t_success;
     
+    MCNewAutoNameRef t_key;
+    MCAutoArrayRef t_array;
+    MCArrayMutableCopy(x_target, &t_array);
+    
     MCNameRef *t_path;
     uindex_t t_path_length;
     t_success = create_key_for_matrix(p_key, t_path, t_path_length) &&
-                MCArrayStoreValueOnPath(x_target, true, t_path, t_path_length, p_value);
+                MCArrayStoreValueOnPath(*t_array, true, t_path, t_path_length, p_value);
 
     for (uindex_t i = 0; i < t_path_length; i++)
         MCValueRelease(t_path[i]);
     
     MCMemoryDeleteArray(t_path);
     
-    if (t_success)
+    if (!t_success)
         return;
     
-    // ctxt . Throw()
+    MCAutoArrayRef t_new_array;
+    if (!MCArrayCopy(*t_array, &t_new_array))
+        return;
+    
+    MCValueAssign(x_target, *t_new_array);
 }
 
 #ifdef _TEST

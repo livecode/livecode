@@ -53,9 +53,9 @@
         GenerateSyntax(Syntax)
         EndSyntaxGrammar()
         
-        --BeginSyntaxMappings()
-        --GenerateSyntax(Methods)
-        --EndSyntaxMappings()
+        BeginSyntaxMappings()
+        GenerateSyntax(Methods)
+        EndSyntaxMappings()
 
         EndSyntaxRule()
 
@@ -124,14 +124,56 @@
             Fatal_InternalInconsistency("invalid constant type for marked variable")
         |)
 
-/* This is handled when the module is compiled after syntax has been generated.
-    -- Handle the syntax mapping part of the definition
     'rule' GenerateSyntax(SYNTAXMETHOD'method(_, Id, Arguments)):
+        QueryHandlerIdSignature(Id -> signature(Parameters, ReturnType))
         Id'Name -> Name
-        BeginMethodSyntaxMapping(Name)
-        GenerateSyntax(Arguments)
+        (|
+            IsFirstArgumentInput(Arguments)
+            BeginAssignMethodSyntaxMapping(Name)
+        ||
+            IsLastArgumentOutput(Arguments)
+            BeginEvaluateMethodSyntaxMapping(Name)
+        ||
+            BeginExecuteMethodSyntaxMapping(Name)
+        |)
+        GenerateSyntaxMethodArgumentsForBootstrap(Parameters, Arguments)
         EndMethodSyntaxMapping()
         
+'condition' QueryHandlerIdSignature(ID -> SIGNATURE)
+'condition' IsFirstArgumentInput(SYNTAXCONSTANTLIST)
+'condition' IsLastArgumentOutput(SYNTAXCONSTANTLIST)
+
+'action' GenerateSyntaxMethodArgumentsForBootstrap(PARAMETERLIST, SYNTAXCONSTANTLIST)
+
+    'rule' GenerateSyntaxMethodArgumentsForBootstrap(parameterlist(parameter(_, Mode, _, _), ParamRest), constantlist(variable(_, VarName), ArgRest)):
+        QuerySyntaxMarkId(VarName -> VarInfo)
+        (|
+            VarInfo'Type -> input
+            where(-1 -> Index)
+        ||
+            VarInfo'Type -> output
+            where(-1 -> Index)
+        ||
+            VarInfo'Index -> Index 
+            (|
+                where(Mode -> in)
+                PushInMarkArgumentSyntaxMapping(Index)
+            ||
+                where(Mode -> out)
+                PushOutMarkArgumentSyntaxMapping(Index)
+            ||
+                where(Mode -> inout)
+                PushInOutMarkArgumentSyntaxMapping(Index)
+            |)
+        |)
+        GenerateSyntaxMethodArgumentsForBootstrap(ParamRest, ArgRest)
+
+    'rule' GenerateSyntaxMethodArgumentsForBootstrap(nil, nil):
+        -- do nothing
+
+'condition' QuerySyntaxMarkId(ID -> SYNTAXMARKINFO)
+
+/*
     'rule' GenerateSyntax(SYNTAXCONSTANT'undefined(_)):
         PushUndefinedArgumentSyntaxMapping()
         

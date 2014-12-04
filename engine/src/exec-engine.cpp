@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uuid.h"
 
+#include "script.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Engine, Version, 1)
@@ -1959,12 +1961,343 @@ void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef filename)
+struct MCLoadedExtension
 {
+    MCLoadedExtension *next;
+    MCStringRef filename;
+    MCScriptModuleRef module;
+    MCScriptInstanceRef instance;
+};
+
+MCLoadedExtension *MCextensions = nil;
+bool MCextensionschanged = false;
+MCArrayRef MCextensionshandlermap = nil;
+
+static void __rebuild_library_handler_list(void)
+{
+    if (MCextensionshandlermap != nil)
+        MCValueRelease(MCextensionshandlermap);
+    
+    MCArrayCreateMutable(MCextensionshandlermap);
+    
+    for(MCLoadedExtension *t_ext = MCextensions; t_ext != nil; t_ext = t_ext -> next)
+        if (MCScriptIsModuleALibrary(t_ext -> module))
+        {
+            MCAutoProperListRef t_handlers;
+            MCScriptCopyHandlersOfModule(t_ext -> module, &t_handlers);
+            for(uindex_t i = 0; i < MCProperListGetLength(*t_handlers); i++)
+            {
+                MCNameRef t_name;
+                t_name = (MCNameRef)MCProperListFetchElementAtIndex(*t_handlers, i);
+                
+                MCValueRef t_value;
+                if (MCArrayFetchValue(MCextensionshandlermap, false, t_name, t_value))
+                    continue;
+                
+                MCAutoValueRef t_ptr;
+                MCForeignValueCreate(kMCPointerTypeInfo, &t_ext, (MCForeignValueRef&)t_ptr);
+                MCArrayStoreValue(MCextensionshandlermap, false, t_name, *t_ptr);
+            }
+        }
 }
 
-void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef filename)
+static bool __convert_from_script_type(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value)
 {
+    MCValueRef t_new_value;
+    t_new_value = nil;
+    
+    MCResolvedTypeInfo t_resolved_type;
+    MCTypeInfoResolve(p_type, t_resolved_type);
+    if (t_resolved_type . named_type == kMCBooleanTypeInfo)
+    {
+        if (!ctxt . ConvertToBoolean(x_value, (MCBooleanRef&)t_new_value))
+            return false;
+    }
+    else if (t_resolved_type . named_type == kMCNumberTypeInfo)
+    {
+        if (!ctxt . ConvertToNumber(x_value, (MCNumberRef&)t_new_value))
+            return false;
+    }
+    else if (t_resolved_type . named_type == kMCStringTypeInfo)
+    {
+        if (!ctxt . ConvertToString(x_value, (MCStringRef&)t_new_value))
+            return false;
+    }
+    else if (t_resolved_type . named_type == kMCDataTypeInfo)
+    {
+        if (!ctxt . ConvertToData(x_value, (MCDataRef&)t_new_value))
+            return false;
+    }
+    else if (t_resolved_type . named_type == kMCArrayTypeInfo)
+    {
+        if (!ctxt . ConvertToArray(x_value, (MCArrayRef&)t_new_value))
+            return false;
+    }
+    else if (t_resolved_type . named_type == kMCProperListTypeInfo)
+    {
+        MCAutoArrayRef t_array;
+        if (!ctxt . ConvertToArray(x_value, &t_array))
+            return false;
+        //if (!__convert_array_to_proper_list(*t_array, t_new_value))
+        //    return false;
+        return false;
+    }
+    else if (MCTypeInfoIsRecord(t_resolved_type . named_type))
+    {
+        MCAutoArrayRef t_array;
+        if (!ctxt . ConvertToArray(x_value, &t_array))
+            return false;
+        //if (!__convert_array_to_record(*t_array, t_resolved_type . named_type, t_new_value))
+        //    return false;
+        return false;
+    }
+    else if (MCTypeInfoIsForeign(t_resolved_type . named_type))
+    {
+        const MCForeignTypeDescriptor *t_descriptor;
+        t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_type . named_type);
+        if (t_descriptor -> bridgetype == kMCNullTypeInfo)
+            return false;
+        if (!__convert_from_script_type(ctxt, t_descriptor -> bridgetype, x_value))
+            return false;
+        if (!t_descriptor -> doexport(x_value, false, t_new_value))
+            return false;
+    }
+    else
+        return false;
+    
+    MCValueAssign(x_value, t_new_value);
+    
+    return true;
+}
+
+static bool __convert_to_script_type(MCExecContext& ctxt, MCValueRef p_value)
+{
+    switch(MCValueGetTypeCode(p_value))
+    {
+        // Script understands all of these types so no conversion necessary.
+        case kMCValueTypeCodeNull:
+        case kMCValueTypeCodeBoolean:
+        case kMCValueTypeCodeNumber:
+        case kMCValueTypeCodeString:
+        case kMCValueTypeCodeName:
+        case kMCValueTypeCodeData:
+            return true;
+            
+        case kMCValueTypeCodeProperList:
+            // convert to a numeric array
+            return false;
+            
+        case kMCValueTypeCodeRecord:
+            // convert to a named array
+            return false;
+            
+        case kMCValueTypeCodeForeignValue:
+            // convert to the bridge type then convert to script type.
+            return false;
+            
+        default:
+            // handler, custom, list, set, error - these aren't mappable yet.
+            return false;
+            
+    }
+    return false;
+}
+
+void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
+{
+    MCAutoStringRef t_resolved_filename;
+    /* UNCHECKED */ MCS_resolvepath(p_filename, &t_resolved_filename);
+    
+    MCAutoDataRef t_data;
+    if (!MCS_loadbinaryfile(*t_resolved_filename, &t_data))
+        return;
+    
+    MCStreamRef t_stream;
+    /* UNCHECKED */ MCMemoryInputStreamCreate(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), t_stream);
+    
+    MCScriptModuleRef t_module;
+    if (!MCScriptCreateModuleFromStream(t_stream, t_module))
+    {
+        MCresult -> sets("failed to load module");
+        MCValueRelease(t_stream);
+        return;
+    }
+    
+    MCValueRelease(t_stream);
+    
+    if (!MCScriptEnsureModuleIsUsable(t_module))
+    {
+        MCresult -> sets("module is not usable");
+        MCScriptReleaseModule(t_module);
+        return;
+    }
+    
+    MCScriptInstanceRef t_instance;
+    t_instance = nil;
+    if (MCScriptIsModuleALibrary(t_module))
+    {
+        if (!MCScriptCreateInstanceOfModule(t_module, t_instance))
+        {
+            MCresult -> sets("could not instantiate module");
+            MCScriptReleaseModule(t_module);
+            return;
+        }
+    }
+    
+    MCLoadedExtension *t_ext;
+    /* UNCHECKED */ MCMemoryNew(t_ext);
+    
+    t_ext -> filename = MCValueRetain(*t_resolved_filename);
+    t_ext -> module = t_module;
+    t_ext -> instance = t_instance;
+    
+    t_ext -> next = MCextensions;
+    MCextensions = t_ext;
+    
+    MCextensionschanged = true;
+}
+
+void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_filename)
+{
+    MCAutoStringRef t_resolved_filename;
+    /* UNCHECKED */ MCS_resolvepath(p_filename, &t_resolved_filename);
+    
+    for(MCLoadedExtension *t_previous = nil, *t_ext = MCextensions; t_ext != nil; t_previous = t_ext, t_ext = t_ext -> next)
+        if (MCStringIsEqualTo(t_ext -> filename, *t_resolved_filename, kMCStringOptionCompareCaseless))
+        {
+            MCScriptReleaseInstance(t_ext -> instance);
+            MCScriptReleaseModule(t_ext -> module);
+            MCValueRelease(t_ext -> filename);
+            if (t_previous != nil)
+                t_previous -> next = t_ext -> next;
+            else
+                MCextensions = t_ext -> next;
+            MCMemoryDelete(t_ext);
+            
+            MCextensionschanged = true;
+        }
+}
+
+Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_parameters)
+{
+    if (MCextensionschanged)
+        __rebuild_library_handler_list();
+    
+    if (MCextensionshandlermap == nil)
+        return ES_NOT_HANDLED;
+    
+    MCForeignValueRef t_ptr;
+    if (!MCArrayFetchValue(MCextensionshandlermap, false, p_message, (MCValueRef&)t_ptr))
+        return ES_NOT_HANDLED;
+    
+    MCLoadedExtension *t_ext;
+    t_ext = *(MCLoadedExtension **)MCForeignValueGetContentsPtr(t_ptr);
+    
+    MCTypeInfoRef t_signature;
+    MCScriptQueryHandlerOfModule(t_ext -> module, p_message, t_signature);
+    
+    uindex_t t_arg_count;
+    t_arg_count = MCHandlerTypeInfoGetParameterCount(t_signature);
+    
+    MCAutoArray<MCValueRef> t_arguments;
+    
+    bool t_success;
+    t_success = true;
+    
+    MCParameter *t_param;
+    t_param = p_parameters;
+    for(uindex_t i = 0; i < t_arg_count && t_success; i++)
+    {
+        // Wrong number of parameters error.
+        if (t_param == nil)
+        {
+            t_success = false;
+            break;
+        }
+        
+        MCHandlerTypeFieldMode t_mode;
+        t_mode = MCHandlerTypeInfoGetParameterMode(t_signature, i);
+        
+        if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeOut)
+        {
+            MCValueRef t_value;
+            if (!t_param -> eval(*MCECptr, t_value))
+            {
+                t_success = false;
+                break;
+            }
+            
+            MCTypeInfoRef t_arg_type;
+            t_arg_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
+            
+            if (!__convert_from_script_type(*MCECptr, t_arg_type, t_value))
+            {
+                MCValueRelease(t_value);
+                t_success = false;
+                break;
+            }
+            
+            if (!t_arguments . Push(t_value))
+            {
+                t_success = false;
+                break;
+            }
+        }
+        else if (!t_arguments . Push(nil))
+        {
+            t_success = false;
+            break;
+        }
+        
+        t_param = t_param -> getnext();
+    }
+    
+    MCValueRef t_result;
+    t_result = nil;
+    if (MCScriptCallHandlerOfInstance(t_ext -> instance, p_message, t_arguments . Ptr(), t_arguments . Size(), t_result))
+    {
+        MCParameter *t_param;
+        t_param = p_parameters;
+        for(uindex_t i = 0; i < t_arg_count && t_success; i++)
+        {
+            MCHandlerTypeFieldMode t_mode;
+            t_mode = MCHandlerTypeInfoGetParameterMode(t_signature, i);
+            
+            if (t_mode != kMCHandlerTypeFieldModeIn)
+            {
+                MCContainer *t_container;
+                if (t_param -> evalcontainer(*MCECptr, t_container))
+                {
+                    if (!__convert_to_script_type(*MCECptr, t_arguments[i]) ||
+                        !t_container -> set(*MCECptr, t_arguments[i]))
+                        t_success = false;
+                    delete t_container;
+                }
+            }
+            
+            t_param = t_param -> getnext();
+        }
+        
+        if (t_success &&
+            !__convert_to_script_type(*MCECptr, t_result))
+        {
+            t_success = false;
+        }
+        
+        if (t_success)
+            MCresult -> setvalueref(t_result);
+        
+        if (t_result != nil)
+            MCValueRelease(t_result);
+    }
+    else
+        t_success = false;
+    
+    for(uindex_t i = 0; i < t_arguments.Size(); i++)
+        if (t_arguments[i] != nil)
+            MCValueRelease(t_arguments[i]);
+    
+    return t_success ? ES_NORMAL : ES_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

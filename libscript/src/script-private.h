@@ -342,6 +342,7 @@ void MCScriptReleaseRawModule(MCScriptModule *module);
 void MCScriptDestroyModule(MCScriptModuleRef module);
 
 bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptPropertyDefinition*& r_definition);
+bool MCScriptLookupEventDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptEventDefinition*& r_definition);
 bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef module, MCNameRef handler, MCScriptHandlerDefinition*& r_definition);
 bool MCScriptLookupDefinitionInModule(MCScriptModuleRef self, MCNameRef p_name, MCScriptDefinition*& r_definition);
 
@@ -447,10 +448,6 @@ enum MCScriptBytecodeOp
     // the handler is potentially dynamic.
     //
 	kMCScriptBytecodeOpInvokeIndirect,
-    // invoke-eval <handler>, <output>, <arg_1>, ..., <arg_n>
-    kMCScriptBytecodeOpInvokeEvaluate,
-    // invoke-assign <handler>, <input>, <arg_1>, ..., <arg_n>
-    kMCScriptBytecodeOpInvokeAssign,
     
 	// Local fetch:
 	//   fetch-local <dst>, <local-index>

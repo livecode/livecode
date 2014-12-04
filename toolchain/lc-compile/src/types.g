@@ -4,14 +4,14 @@
     support
 
 'export'
-    MODULE MODULELIST
+    MODULE MODULELIST MODULEKIND
     IMPORT
     DEFINITION SIGNATURE ACCESS
     TYPE FIELD FIELDLIST
     PARAMETER MODE PARAMETERLIST
     STATEMENT
     EXPRESSION EXPRESSIONLIST
-    INVOKELIST INVOKEINFO INVOKESIGNATURE
+    INVOKELIST INVOKEINFO INVOKESIGNATURE INVOKEMETHODTYPE INVOKEMETHODLIST
     SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST SYNTAXTERM
     ID IDLIST
     INTLIST
@@ -28,8 +28,14 @@
     modulelist(Head: MODULE, Tail: MODULELIST)
     nil
 
+'type' MODULEKIND
+    module
+    library
+    widget
+    application
+
 'type' MODULE
-    module(Position: POS, Name: ID, Imports: IMPORT, Definitions: DEFINITION)
+    module(Position: POS, Kind: MODULEKIND, Name: ID, Imports: IMPORT, Definitions: DEFINITION)
 
 'type' IMPORT
     sequence(Left: IMPORT, Right: IMPORT)
@@ -148,7 +154,7 @@
     nil
 
 'type' INVOKESIGNATURE
-    invokesignature(Mode: MODE, Tail: INVOKESIGNATURE)
+    invokesignature(Mode: MODE, Index: INT, Tail: INVOKESIGNATURE)
     nil
 
 'type' SYNTAX
@@ -251,13 +257,22 @@
     intlist(Head: INT, Tail: INTLIST)
     nil
 
+'type' INVOKEMETHODTYPE
+    execute
+    evaluate
+    assign
+
+'type' INVOKEMETHODLIST
+    methodlist(Name: STRING, Type: INVOKEMETHODTYPE, Signature: INVOKESIGNATURE, Tail: INVOKEMETHODLIST)
+    nil
+
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
 
 'table' MODULEINFO(Index: INT)
 'table' SYMBOLINFO(Index: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
 'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
 'table' SYNTAXMARKINFO(Index: INT, RMode: MODE, LMode: MODE, Type: SYNTAXMARKTYPE)
-'table' INVOKEINFO(Index: INT, ModuleIndex: INT, Name: STRING, ModuleName: STRING, RSignature: INVOKESIGNATURE, LSignature: INVOKESIGNATURE)
+'table' INVOKEINFO(Index: INT, ModuleIndex: INT, Name: STRING, ModuleName: STRING, Methods: INVOKEMETHODLIST)
 
 'table' TYPEINFO(Position: POS)
 

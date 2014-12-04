@@ -359,6 +359,12 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 //	}
 //#endif
 
+    if ((stat == ES_NOT_HANDLED || stat == ES_PASS))
+    {
+        extern Exec_stat MCEngineHandleLibraryMessage(MCNameRef name, MCParameter *params);
+        stat = MCEngineHandleLibraryMessage(mess, params);
+    }
+    
 	if (MCmessagemessages && stat != ES_PASS)
 		MCtargetptr->sendmessage(htype, mess, False);
 		

@@ -38,7 +38,7 @@ bool MCScriptInitialize(void)
     
     s_builtin_module_count = t_module_count;
     
-    return false;
+    return true;
 }
 
 void MCScriptFinalize(void)

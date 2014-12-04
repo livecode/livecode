@@ -4,25 +4,26 @@ This module specifies the syntax definitions and bindings for operations on bina
 
 module com.livecode.byte
 
-foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
+public foreign handler EvalNumberOfBytesIn(in Target as data, out Count as index) as undefined binds to "<builtin>"
 
-foreign handler EvalOffsetOfBytes(in Needle as data, in Target as data, in IsLast as bool, out Offset as index) as undefined binds to "<builtin>"
-foreign handler EvalOffsetOfBytesBefore(in Needle as data, in Before as index, in Target as data, in IsLast as bool, out Offset as index) as undefined binds to "<builtin>"
-foreign handler EvalOffsetOfBytesAfter(in Needle as data, in After as index, in Target as data, in IsFirst as bool, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler EvalOffsetOfBytes(in IsLast as bool, in Needle as data, in Target as data, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler EvalOffsetOfBytesBefore(in IsLast as bool, in Needle as data, in Before as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
+public foreign handler EvalOffsetOfBytesAfter(in IsFirst as bool, in Needle as data, in After as index, in Target as data, out Offset as index) as undefined binds to "<builtin>"
 
-foreign handler EvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsAmongTheBytesOf(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
 
-foreign handler EvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalBeginsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalEndsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalContainsBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsInBytes(in Needle as data, in Target as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalBeginsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalEndsWithBytes(in Target as data, in Needle as data, out Value as bool) as undefined binds to "<builtin>"
 
-foreign handler FetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
-foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
-foreign handler FetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
-foreign handler StoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler FetchByteOf(in Index as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
+public foreign handler StoreByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler FetchByteRangeOf(in Start as index, in Finish as index, in Target as data, out Value as data) as undefined binds to "<builtin>"
+public foreign handler StoreByteRangeOf(in Value as data, in Start as index, in Finish as index, inout Target as data) as undefined binds to "<builtin>"
 
-foreign handler StoreBeforeByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
-foreign handler StoreAfterByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler StoreBeforeByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
+public foreign handler StoreAfterByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
 
 --
 
@@ -60,7 +61,7 @@ output:             Returns the number of bytes between the first byte of <Targe
 syntax ByteOffset is prefix operator with precedence 1
     "the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
 begin
-    EvalOffsetOfBytes(Needle, Target, IsLast, output)
+    EvalOffsetOfBytes(IsLast, Needle, Target, output)
 end syntax
 
 /*
@@ -78,7 +79,7 @@ output:             Returns the number of bytes between the first byte of <Targe
 syntax ByteOffsetAfter is prefix operator with precedence 1
 	"the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
-	EvalOffsetOfBytesAfter(Needle, After, Target, IsLast, output)
+	EvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
 end syntax
 
 /*
@@ -97,7 +98,7 @@ output:             Returns the number of bytes between the first byte of <Targe
 syntax ByteOffsetBefore is prefix operator with precedence 1
     "the" ["first" <IsFirst=true> | "last" <IsFirst=false>] "offset" "of" "bytes" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
-    EvalOffsetOfBytesBefore(Needle, Before, Target, IsFirst, output)
+    EvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
 end syntax
 
 /*
@@ -110,7 +111,7 @@ output:             True if <Needle> is among the bytes of <Target>, and false o
 syntax IsAmongTheBytesOf is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
-    EvalContainsBytes(Target, Needle, output)
+    EvalIsInBytes(Needle, Target, output)
 end syntax
 
 --
