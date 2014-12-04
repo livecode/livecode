@@ -35,6 +35,16 @@ MCTypeInfoRef kMCSetTypeInfo;
 MCTypeInfoRef kMCListTypeInfo;
 MCTypeInfoRef kMCProperListTypeInfo;
 
+MCTypeInfoRef kMCOptionalBooleanTypeInfo;
+MCTypeInfoRef kMCOptionalNumberTypeInfo;
+MCTypeInfoRef kMCOptionalStringTypeInfo;
+MCTypeInfoRef kMCOptionalNameTypeInfo;
+MCTypeInfoRef kMCOptionalDataTypeInfo;
+MCTypeInfoRef kMCOptionalArrayTypeInfo;
+MCTypeInfoRef kMCOptionalSetTypeInfo;
+MCTypeInfoRef kMCOptionalListTypeInfo;
+MCTypeInfoRef kMCOptionalProperListTypeInfo;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool __MCTypeInfoIsNamed(MCTypeInfoRef self);
@@ -998,19 +1008,32 @@ static bool __create_named_builtin(MCNameRef p_name, MCValueTypeCode p_code, MCT
     return true;
 }
 
+static bool __create_named_builtin(MCNameRef p_name, MCValueTypeCode p_code, MCTypeInfoRef & r_typeinfo, MCTypeInfoRef & r_optional_typeinfo)
+{
+	if (!__create_named_builtin (p_name, p_code, r_typeinfo))
+		return false;
+
+	MCAutoTypeInfoRef t_optional;
+	if (!MCOptionalTypeInfoCreate (r_typeinfo, &t_optional))
+		return false;
+
+	r_optional_typeinfo = MCValueRetain (*t_optional);
+	return true;
+}
+
 bool __MCTypeInfoInitialize(void)
 {
     return
         __create_named_builtin(MCNAME("livecode.lang.undefined"), kMCValueTypeCodeNull, kMCNullTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.boolean"), kMCValueTypeCodeBoolean, kMCBooleanTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.number"), kMCValueTypeCodeNumber, kMCNumberTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.string"), kMCValueTypeCodeString, kMCStringTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.name"), kMCValueTypeCodeName, kMCNameTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.data"), kMCValueTypeCodeData, kMCDataTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.array"), kMCValueTypeCodeArray, kMCArrayTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.stringlist"), kMCValueTypeCodeList, kMCListTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.set"), kMCValueTypeCodeSet, kMCSetTypeInfo) &&
-        __create_named_builtin(MCNAME("livecode.lang.list"), kMCValueTypeCodeProperList, kMCProperListTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.boolean"), kMCValueTypeCodeBoolean, kMCBooleanTypeInfo, kMCOptionalBooleanTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.number"), kMCValueTypeCodeNumber, kMCNumberTypeInfo, kMCOptionalNumberTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.string"), kMCValueTypeCodeString, kMCStringTypeInfo, kMCOptionalStringTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.name"), kMCValueTypeCodeName, kMCNameTypeInfo, kMCOptionalNameTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.data"), kMCValueTypeCodeData, kMCDataTypeInfo, kMCOptionalDataTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.array"), kMCValueTypeCodeArray, kMCArrayTypeInfo, kMCOptionalArrayTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.stringlist"), kMCValueTypeCodeList, kMCListTypeInfo, kMCOptionalListTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.set"), kMCValueTypeCodeSet, kMCSetTypeInfo, kMCOptionalSetTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.list"), kMCValueTypeCodeProperList, kMCProperListTypeInfo, kMCOptionalProperListTypeInfo) &&
         __create_named_builtin(MCNAME("livecode.lang.any"), kMCTypeInfoTypeIsAny, kMCAnyTypeInfo);
 }
 
