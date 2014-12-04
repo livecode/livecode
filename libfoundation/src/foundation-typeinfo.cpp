@@ -1201,6 +1201,16 @@ void __MCTypeInfoFinalize(void)
     MCValueRelease(kMCSetTypeInfo);
     MCValueRelease(kMCProperListTypeInfo);
     MCValueRelease(kMCAnyTypeInfo);
+
+    MCValueRelease(kMCOptionalBooleanTypeInfo);
+    MCValueRelease(kMCOptionalNumberTypeInfo);
+    MCValueRelease(kMCOptionalStringTypeInfo);
+    MCValueRelease(kMCOptionalNameTypeInfo);
+    MCValueRelease(kMCOptionalDataTypeInfo);
+    MCValueRelease(kMCOptionalArrayTypeInfo);
+    MCValueRelease(kMCOptionalListTypeInfo);
+    MCValueRelease(kMCOptionalSetTypeInfo);
+    MCValueRelease(kMCOptionalProperListTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
