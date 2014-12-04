@@ -800,7 +800,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	if (MCactivefield == nil)
 		return;
 	
-	MCRedrawLockScreen();
+    // SN-2014-12-04: [[ Bug 14152 ]] Locking the screen here doesn't allow the screen to refresh after
+    //  text input, inside an MCWait loop
+//	MCRedrawLockScreen();
 	
 	int32_t t_r_si, t_r_ei;
 	t_r_si = 0;
@@ -930,7 +932,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	MCactivefield -> setcompositioncursoroffset(t_s_si - t_r_si);
 	MCactivefield -> seltext(t_s_si, t_s_ei, True);
 	
-	MCRedrawUnlockScreen();
+    // SN-2014-12-04: [[ Bug 14152 ]] Locking the screen here doesn't allow the screen to refresh after
+    //  text input, inside an MCWait loop
+//	MCRedrawUnlockScreen();
 }
 
 static void synthesize_key_press(MCPlatformWindowRef p_window, char p_char, KeySym p_sym)
