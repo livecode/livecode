@@ -790,6 +790,7 @@ MCTypeInfoRef __MCTypeInfoResolve(__MCTypeInfo *self)
     if (__MCTypeInfoGetExtendedTypeCode(self) != kMCTypeInfoTypeIsNamed)
         return self;
     
+	MCAssert (self -> named . typeinfo != nil);
     return self -> named . typeinfo;
 }
 
