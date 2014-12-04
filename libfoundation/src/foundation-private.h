@@ -91,6 +91,11 @@ struct __MCTypeInfo: public __MCValue
             MCNameRef domain;
             MCStringRef message;
         } error;
+		struct
+		{
+			MCValueRef *values;
+			uindex_t value_count;
+		} enum_; /* "enum" is a keyword */
         struct
         {
             MCValueCustomCallbacks callbacks;
@@ -380,6 +385,14 @@ struct __MCRecord: public __MCValue
 
 ////////
 
+struct __MCEnum: public __MCValue
+{
+	MCTypeInfoRef typeinfo;
+	MCValueRef value;
+};
+
+////////
+
 struct __MCError: public __MCValue
 {
     MCTypeInfoRef typeinfo;
@@ -506,6 +519,14 @@ hash_t __MCRecordHash(__MCRecord *self);
 bool __MCRecordIsEqualTo(__MCRecord *self, __MCRecord *p_other_data);
 bool __MCRecordCopyDescription(__MCRecord *self, MCStringRef &r_description);
 bool __MCRecordImmutableCopy(__MCRecord *self, bool p_release, __MCRecord *&r_immutable_value);
+
+bool __MCEnumInitialize(void);
+void __MCEnumFinalize(void);
+void __MCEnumDestroy(__MCEnum *self);
+hash_t __MCEnumHash(__MCEnum *self);
+bool __MCEnumIsEqualTo(__MCEnum *self, __MCEnum *other_self);
+bool __MCEnumCopyDescription(__MCEnum *self, MCStringRef &r_description);
+bool __MCEnumImmutableCopy(__MCEnum *self, bool p_release, __MCEnum *&r_immutable_value);
 
 bool __MCErrorInitialize();
 void __MCErrorFinalize();

@@ -585,9 +585,11 @@ typedef struct __MCHandler *MCHandlerRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCRecord *MCRecordRef;
+typedef struct __MCEnum *MCEnumRef;
 typedef struct __MCError *MCErrorRef;
 typedef struct __MCStream *MCStreamRef;
 typedef struct __MCProperList *MCProperListRef;
+typedef struct __MCProperList *MCProperSetRef;
 typedef struct __MCForeignValue *MCForeignValueRef;
 
 // Forward declaration
@@ -1081,6 +1083,7 @@ enum
 	kMCValueTypeCodeCustom,
 	kMCValueTypeCodeRecord,
 	kMCValueTypeCodeHandler,
+	kMCValueTypeCodeEnum,
 	kMCValueTypeCodeTypeInfo,
     kMCValueTypeCodeError,
     kMCValueTypeCodeForeignValue,
@@ -1179,6 +1182,8 @@ bool MCValueIsUnique(MCValueRef value);
 // bumps the reference count and returns the same value as they already satisfy
 //   x == y iff IsEqualTo(x, y)
 //
+// The r_unique_value returned by MCValueRef should be released with
+// MCValueRelease when no longer needed.
 bool MCValueInter(MCValueRef value, MCValueRef& r_unique_value);
 
 // As the 'Inter' method except that 'value' will be released. This allows
@@ -1253,6 +1258,16 @@ extern MCTypeInfoRef kMCSetTypeInfo;
 extern MCTypeInfoRef kMCListTypeInfo;
 extern MCTypeInfoRef kMCProperListTypeInfo;
 
+extern MCTypeInfoRef kMCOptionalBooleanTypeInfo;
+extern MCTypeInfoRef kMCOptionalNumberTypeInfo;
+extern MCTypeInfoRef kMCOptionalStringTypeInfo;
+extern MCTypeInfoRef kMCOptionalNameTypeInfo;
+extern MCTypeInfoRef kMCOptionalDataTypeInfo;
+extern MCTypeInfoRef kMCOptionalArrayTypeInfo;
+extern MCTypeInfoRef kMCOptionalSetTypeInfo;
+extern MCTypeInfoRef kMCOptionalListTypeInfo;
+extern MCTypeInfoRef kMCOptionalProperListTypeInfo;
+
 extern MCTypeInfoRef kMCBoolTypeInfo;
 extern MCTypeInfoRef kMCIntTypeInfo;
 extern MCTypeInfoRef kMCUIntTypeInfo;
@@ -1276,6 +1291,9 @@ bool MCTypeInfoIsRecord(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is of handler type.
 bool MCTypeInfoIsHandler(MCTypeInfoRef typeinfo);
+
+// Returns true if the typeinfo is of enum type.
+bool MCTypeInfoIsEnum(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is of error type.
 bool MCTypeInfoIsError(MCTypeInfoRef typeinfo);
@@ -1476,6 +1494,28 @@ MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef typeinfo,
 
 // Return the type of the index'th parameter.
 MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typeinfo, uindex_t index);
+
+//////////
+
+// Enumerated types represent a type that can take only a limited
+// range of values.
+
+// Create a new enumerated type description, permitting the specified
+// valid values.  At least one valid value must be specified.  If
+// value_count is negative, the values array must be null-terminated.
+// All the values must be distinct (i.e. MCValueIsEqualTo(values[i],
+// values[j]) must be false for all {i,j}).
+bool MCEnumTypeInfoCreate(const MCValueRef *values, index_t value_count, MCTypeInfoRef & r_typeinfo);
+
+// Get the number of distinct values permitted by the enumerated type.
+uindex_t MCEnumTypeInfoGetValueCount(MCTypeInfoRef typeinfo);
+
+// Get one of the distinct values permitted by the enumerated type.
+// N.b. the returned value is not retained.
+MCValueRef MCEnumTypeInfoGetValue(MCTypeInfoRef typeinfo, uindex_t index);
+
+// Test whether a value is permitted by the enumerated type
+bool MCEnumTypeInfoHasValue(MCTypeInfoRef typeinfo, MCValueRef value);
 
 //////////
 
@@ -2403,6 +2443,22 @@ void *MCHandlerGetInstance(MCHandlerRef handler);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  ENUM DEFINITIONS
+//
+
+/* Create a new enumerated value with the specified initial value. */
+bool MCEnumCreate(MCTypeInfoRef typeinfo, MCValueRef value, MCEnumRef & r_enum);
+
+/* Copy an enumerated value */
+bool MCEnumCopy(MCEnumRef self, MCEnumRef & r_new_enum);
+bool MCEnumCopyAndRelease(MCEnumRef self, MCEnumRef & r_new_enum);
+
+/* Retrieve the enumerated value's underlying concrete value.  The
+ * returned value is not retained. */
+MCValueRef MCEnumGetValue(MCEnumRef self);
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  ERROR DEFINITIONS
 //
 
@@ -2732,6 +2788,68 @@ bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, 
 bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
 
 bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  PROPER SET DEFINITIONS
+//
+
+/* Create an immutable list containing the given values. */
+bool MCProperSetCreate(const MCValueRef *p_values, uindex_t p_value_count, MCProperSetRef& r_set);
+
+/* Create an empty mutable set. */
+bool MCProperSetCreateMutable(MCProperSetRef& r_list);
+
+/* Copy a set */
+bool MCProperSetCopy(MCProperSetRef set, MCProperSetRef & r_new_set);
+bool MCProperSetCopyAndRelease(MCProperSetRef set, MCProperSetRef & r_new_set);
+bool MCProperSetMutableCopy(MCProperSetRef set, MCProperSetRef & r_new_set);
+bool MCProperSetMutableCopyAndRelease(MCProperSetRef set, MCProperSetRef & r_new_set);
+
+/* Returns true iff the set is mutable */
+bool MCProperSetIsMutable(MCProperSetRef set);
+
+/* Returns true iff the set is empty */
+bool MCProperSetIsEmpty(MCProperSetRef set);
+
+/* Returns the number of elements in the set */
+uindex_t MCProperSetGetCount(MCProperSetRef set);
+
+/* Retuns true iff p_value is a member of the set */
+bool MCProperSetContains(MCProperSetRef set, MCValueRef p_value);
+
+/* Ensure that p_value is a member of the set. The set must be mutable. */
+bool MCProperSetAddElement(MCProperSetRef set, MCValueRef p_value);
+
+/* Ensure that p_value is not a member of the set.  The set must be
+ * mutable. */
+bool MCProperSetRemoveElement(MCProperSetRef set, MCValueRef p_value);
+
+/* Returns true iff self contains the same elements as other */
+bool MCProperSetIsEqualTo(MCProperSetRef set, MCProperSetRef other);
+
+/* Iterate over the elements in the set. */
+bool MCProperSetIterate(MCProperSetRef set, uintptr_t & x_iterator, MCValueRef & r_element);
+
+/* Apply the callback to each element of the list.  The contents must
+ * not be modified */
+typedef MCProperListApplyCallback MCProperSetApplyCallback;
+bool MCProperSetApply(MCProperSetRef set, MCProperSetApplyCallback p_callback, void *context);
+
+/* Compute the union of two sets */
+bool MCProperSetUnion(MCProperSetRef set, MCProperSetRef other, MCProperSetRef & r_union);
+
+/* Compute the intersection of two sets */
+bool MCProperSetIntersection(MCProperSetRef set, MCProperSetRef other, MCProperSetRef & r_intersection);
+
+/* Compute the difference of two sets */
+bool MCProperSetDifference(MCProperSetRef set, MCProperSetRef other, MCProperSetRef & r_difference);
+
+/* Compute the disjunction (exclusive or) of two sets */
+bool MCProperSetDisjunction(MCProperSetRef set, MCProperSetRef other, MCProperSetRef & r_disjunction);
+
+/* Convert a set to a list */
+bool MCProperSetCopyAsProperList(MCProperSetRef set, MCProperListRef & r_list);
 
 ////////////////////////////////////////////////////////////////////////////////
 
