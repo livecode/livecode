@@ -360,6 +360,13 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 		t_is_unicode = true;
         flags |= F_HAS_UNICODE;
 	}
+
+    // SN-2014-12-04: [[ Bug 14149 ]] Add the F_HAS_TAB flag, for legacy saving
+    if (MCstackfileversion < 7000)
+    {
+        if (segment && segment != segment -> next())
+            flags |= F_HAS_TAB;
+    }
 	
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If we have unicode, or one of the font attr are
 	//   set then we must serialize a font.
