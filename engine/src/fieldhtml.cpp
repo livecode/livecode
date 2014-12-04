@@ -516,7 +516,8 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "<p");
 			if (t_style . has_metadata)
 			{
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " metadata=`\"");
+                // SN-2014-11-24: [[ Bug 14064 ]] Remove the additionnal '`'
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " metadata=\"");
                 export_html_emit_cstring(ctxt.m_text, t_style.metadata, kExportHtmlEscapeTypeAttribute);
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\"");
 			}

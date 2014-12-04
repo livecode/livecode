@@ -5681,10 +5681,6 @@
 					MODE_INSTALLER,
 				);
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Installer;
 			};
@@ -5698,10 +5694,6 @@
 					MODE_INSTALLER,
 				);
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Installer;
 			};
@@ -5727,10 +5719,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
@@ -5741,10 +5729,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
@@ -5755,11 +5739,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D587DB40B80949B00200116 /* Debug.xcconfig */;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SOLUTION_DIR)/prebuilt/lib/mac",
-					"\"$(SRCROOT)/../_build/mac/Debug\"",
-				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lcustomssl",
@@ -5773,11 +5752,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D587DB20B80949B00200116 /* Release.xcconfig */;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SOLUTION_DIR)/prebuilt/lib/mac",
-					"\"$(SRCROOT)/../_build/mac/Debug\"",
-				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lcustomssl",
@@ -5791,10 +5765,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Standalone-Community";
 			};
@@ -5804,10 +5774,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
-				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Standalone-Community";
 			};

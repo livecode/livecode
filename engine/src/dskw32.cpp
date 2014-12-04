@@ -81,7 +81,7 @@ int *g_mainthread_errno;
 
 //////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
+extern bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
 extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -382,6 +382,8 @@ bool MCS_registry_type_to_string(uint32_t p_type, MCStringRef& r_string)
 		}
 	}
 
+    // SN-2014-11-18: [[ Bug 14052 ]] Avoid to return a nil string (the result is not checked anyway).
+    r_string = MCValueRetain(kMCEmptyString);
 	return false;
 }
 
@@ -3169,6 +3171,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 					CloseHandle(t_file_handle);
 				}
 			}
+			// SN-2014-11-27: [[ Bug 14110 ]] A StdioFileHandle should be created if the file mapping failed
+			// (for empty files for instance).
+			else
+				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
 		}
 		else
 			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);

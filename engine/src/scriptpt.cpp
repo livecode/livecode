@@ -1728,6 +1728,12 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 					break;
 				case TT_FUNCTION:
 					newfact = MCN_new_function(te->which);
+                    // SN-2014-11-25: [[ Bug 14088 ]] MCN_new_function returns NULL in case the function doesn't exist
+                    if (newfact == NULL)
+                    {
+                        MCperror->add(PE_EXPRESSION_BADFUNCTION, *this);
+                        return PS_ERROR;
+                    }
 					thesp = *this;
 					thesp.backup();
 					if (newfact->parse(*this, doingthe) != PS_NORMAL)

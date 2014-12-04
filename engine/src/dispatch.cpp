@@ -979,10 +979,12 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 			t_found = true;
 		}
 	}
-
+    
 	if (!t_found)
-	{
-		MCAutoStringRef t_leaf_name;
+    {
+        // SN-2014-11-18: [[ Bug 14043 ]] If p_path is was not correct, we then use the leaf, and append it to different locations
+        //  in all the next steps.
+        MCAutoStringRef t_leaf_name;
 		uindex_t t_leaf_index;
 		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
 			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
@@ -995,38 +997,40 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 			/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
 			t_found = true;
 		}
-	}
 
-	if (!t_found)
-	{
-		if (openstartup(p_name, &t_open_path, stream) ||
-		        openenv(p_name, MCSTR("MCPATH"), &t_open_path, stream, 0) ||
-		        openenv(p_name, MCSTR("PATH"), &t_open_path, stream, 0))
-			t_found = true;
-	}
-
-	if (!t_found)
-	{
-
-		MCAutoStringRef t_homename;
-		if (MCS_getenv(MCSTR("HOME"), &t_homename) && !MCStringIsEmpty(*t_homename))
-		{
-			MCAutoStringRef t_trimmed_homename;
-			if (MCStringGetCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
-				/* UNCHECKED */ MCStringCopySubstring(*t_homename, MCRangeMake(0, MCStringGetLength(*t_homename) - 1), &t_trimmed_homename);
-			else
-				t_trimmed_homename = *t_homename;
-
-			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/%@", *t_trimmed_homename, p_name);
-
-			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/stacks/%@", *t_trimmed_homename, p_name);
-
-			if (!t_found)
-				t_found = attempt_to_loadfile(stream, &t_open_path, "%@/components/%@", *t_trimmed_homename, p_name);
-		}
-	}
+        if (!t_found)
+        {
+            // SN-2014-11-18: [[ Bug 14043 ]] The whole path was appended, instead of only the leaf.
+            if (openstartup(*t_leaf_name, &t_open_path, stream) ||
+                openenv(*t_leaf_name, MCSTR("MCPATH"), &t_open_path, stream, 0) ||
+                openenv(*t_leaf_name, MCSTR("PATH"), &t_open_path, stream, 0))
+                t_found = true;
+        }
+        
+        if (!t_found)
+        {
+            
+            MCAutoStringRef t_homename;
+            if (MCS_getenv(MCSTR("HOME"), &t_homename) && !MCStringIsEmpty(*t_homename))
+            {
+                MCAutoStringRef t_trimmed_homename;
+                if (MCStringGetCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
+                /* UNCHECKED */ MCStringCopySubstring(*t_homename, MCRangeMake(0, MCStringGetLength(*t_homename) - 1), &t_trimmed_homename);
+                else
+                    t_trimmed_homename = *t_homename;
+                
+                // SN-2014-11-18: [[ Bug 14043 ]] The whole path was appended, instead of only the leaf.
+                if (!t_found)
+                    t_found = attempt_to_loadfile(stream, &t_open_path, "%@/%@", *t_trimmed_homename, *t_leaf_name);
+                
+                if (!t_found)
+                    t_found = attempt_to_loadfile(stream, &t_open_path, "%@/stacks/%@", *t_trimmed_homename, *t_leaf_name);
+                
+                if (!t_found)
+                    t_found = attempt_to_loadfile(stream, &t_open_path, "%@/components/%@", *t_trimmed_homename, *t_leaf_name);
+            }
+        }
+    }
 
 
 	if (stream == NULL)

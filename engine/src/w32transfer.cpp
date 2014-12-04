@@ -1342,7 +1342,8 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		}
 		MCAutoStringRef t_out_string;
 		/* UNCHECKED */ MCListCopyAsStringAndRelease(t_output, &t_out_string);
-		/* UNCHECKED */ MCStringEncode(*t_out_string, kMCStringEncodingNative, false, &t_out_data);
+		// SN-2014-11-13: [[ Bug 13993 ]] The files are now stored in UTF-16 in the clipboard
+		/* UNCHECKED */ MCStringEncode(*t_out_string, kMCStringEncodingUTF16, false, &t_out_data);
 	}
 	break;
 	default:

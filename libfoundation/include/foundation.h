@@ -1676,7 +1676,7 @@ bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count,
 
 // Create an immutable string from the given (native) c-string.
 bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
-bool MCStringCreateWithCStringAndRelease(char_t *cstring, MCStringRef& r_string);
+bool MCStringCreateWithCStringAndRelease(char *cstring, MCStringRef& r_string);
 
 #ifdef __HAS_CORE_FOUNDATION__
 // Create a string from a CoreFoundation string object.

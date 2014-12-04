@@ -2197,6 +2197,9 @@ void MCField::GetEffectiveBackColorOfLineChunk(MCExecContext& ctxt, uint32_t p_p
 void MCField::SetBackColorOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceNamedColor& p_color)
 {
     SetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, false, p_part_id, si, ei, &MCParagraph::SetBackColor, p_color);
+
+    // AL-2014-11-18: [[ Bug 14049 ]] Redraw without relayout after changing paragraph color
+    MCObject::Redraw();
 }
 
 void MCField::GetBorderColorOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceNamedColor& r_color)

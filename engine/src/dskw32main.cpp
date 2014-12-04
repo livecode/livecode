@@ -180,11 +180,36 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		csptr++;
 	}
 
+	// SN-2014-11-19: [[ Bug 14058 ]] GetCommandLineW returns the executable name and the arguments, 
+	// but we do not want to include the former in MCcmdline
+	csptr = lpWCmdLine;
+	if (*csptr == '"')
+	{
+		// The executable is the whole enquoted string
+		++csptr;
+		while(*csptr && *csptr != '"')
+			csptr++;
+	}
+	else
+	{
+		// The executable goes up to the first space
+		while(*csptr && !iswspace(*csptr))
+			csptr++;
+	}
+	if (*csptr)
+	{
+		// We discard all the spaces after the quote/space we found
+		csptr++;
+		while (*csptr && iswspace(*csptr))
+			++csptr;
+	}
+
 	if (!MCInitialize())
 		exit(-1);
 	
     // Ensure the command line variable gets set
-    /* UNCHECKED */ MCStringCreateWithWString(lpWCmdLine, MCcmdline);
+	// SN-2014-11-19: [[ Bug 14058 ]] We use the updated command line (a nil pointer is fine)
+    /* UNCHECKED */ MCStringCreateWithWString(csptr, MCcmdline);
     
 	// Convert the WStrings (UTF-16) into StringRefs
     LPWSTR *lpWargv = CommandLineToArgvW(lpWCmdLine, &argc);
