@@ -1007,7 +1007,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			while (ei > 0 && sptr != pgptr);
 
 			// MW-2012-01-25: [[ FieldMetrics ]] Make sure the rect we return is in card coords.
-			ep.setrectangle(minx + getcontentx(), y + yoffset, maxx + getcontentx(), (maxy - y) + yoffset);
+            // AL-2014-10-28: [[ Bug 13829 ]] The left and right of the formattedRect should be
+            // floorf'd and ceilf'd respectively, to give the correct integer bounds.
+			ep.setrectangle(floorf(minx + getcontentx()), y + yoffset, ceilf(maxx + getcontentx()), (maxy - y) + yoffset);
 		}
 		else
 			ep.setrectangle(0, 0, 0, 0);

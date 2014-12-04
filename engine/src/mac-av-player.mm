@@ -388,6 +388,10 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
     int32_t t_current_time;
     t_current_time = CMTimeToLCTime([m_player currentTime]);
     
+    // PM-2014-10-28: [[ Bug 13773 ]] If the thumb is after the first marker and the user drags it before the first marker, then we have to reset m_last marker, so as to be dispatched
+    if (t_current_time < m_last_marker)
+        m_last_marker = -1;
+    
     // PM-2014-08-12: [[ Bug 13156 ]] When clicked'n'hold the back button of the controller, t_current_time was negative after returning to the start of the video, and this was causing the last callback of the queue to be invoked after the first one. So make sure that t_current_time is valid.
     
     if (t_current_time > CMTimeToLCTime(m_player.currentItem.asset.duration) || t_current_time < 0)
@@ -410,12 +414,17 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
             {
                 m_last_marker = m_markers[t_index - 1];
                 MCPlatformCallbackSendPlayerMarkerChanged(this, m_last_marker);
+                m_synchronizing = true;
             }
         }
     }
     
-    if (!m_synchronizing)
+    // PM-2014-10-28: [[ Bug 13773 ]] Make sure we don't send a currenttimechanged messsage if the callback is processed
+    if (!m_synchronizing && IsPlaying())
         MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
+    
+    m_synchronizing = false;
+    
 }
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
@@ -832,6 +841,8 @@ void MCAVFoundationPlayer::Start(double rate)
                                                                        queue: nil usingBlock: ^(void) {
                                                                            [m_player pause];
                                                                            [m_player seekToTime: t_original_end_time toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+                                                                           // PM-2014-11-10: [[ Bug 13968 ]] Make sure we loop within start and finish time when playSelection is true 
+                                                                           MovieFinished();
                                                                        }];
     }
     

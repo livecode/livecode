@@ -52,7 +52,8 @@ command deployDo pTargetStack, pTargetDevice
    
    local tTempApkFIle
    if tError is empty then
-      put tempName() into tTempApkFIle
+      // SN-2014-10-27: [[ Bug 13800 ]] The APK must be "specified as a full path to an .apk file"
+      put tempName() & ".apk" into tTempApkFIle
       try
          dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
                pTargetStack, tTempApkFile, "Test"

@@ -465,10 +465,8 @@ void MCStack::view_configure(bool p_user)
 	MCRectangle t_view_rect;
 	mode_getrealrect(t_view_rect);
 
-	// IM-2014-09-23: [[ Bug 13349 ]] If window geometry change occurs while there's a pending resize
-	//    then use the requested rect rather than the new one.
-	if (m_view_need_resize)
-		t_view_rect = m_view_rect;
+	// IM-2014-10-29: [[ Bug 13812 ]] Remove need resize check and unset flag
+	m_view_need_resize = false;
 	
 	if (!MCU_equal_rect(t_view_rect, m_view_rect))
 	{

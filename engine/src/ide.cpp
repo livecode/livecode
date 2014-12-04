@@ -1205,7 +1205,17 @@ Exec_stat MCIdeScriptReplace::exec(MCExecPoint& p_exec)
 		t_start_index = t_start;
 		t_end_index = t_end;
 		
-		t_start_index -= 1;
+        // MW-2014-10-24: [[ Bug 13598 ]] If we are passed (0,0) then treat this as (1,1) - i.e
+        //   first char of field.
+        // SN-2014-11-11: [[ Bug 13900 ]] We want to avoid any issue with a 0 start index.
+        //  If we get so, that was given for the first line, and the end index is offset by 1 as well.
+        if (t_start_index == 0)
+        {
+            t_start_index = 1;
+            t_end_index++;
+        }
+        
+        t_start_index -= 1;
 		
 		if (t_start_index > t_end_index)
 			t_end_index = t_start_index;

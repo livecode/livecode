@@ -74,6 +74,7 @@ MCImage *MCDispatch::imagecache;
 static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The following is not ASCII text,\n# so now would be a good time to q out of more\f\nexec mc $0 \"$@\"\n";
 
 #define NEWHEADERSIZE 8
+#define HEADERPREFIXSIZE 4
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
 
@@ -422,17 +423,32 @@ IO_stat readheader(IO_handle& stream, char *version)
 
 	if (IO_read(tnewheader, sizeof(char), size, stream) == IO_NORMAL)
 	{
-		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
-		if (strncmp(tnewheader, newheader, NEWHEADERSIZE) == 0 ||
-			strncmp(tnewheader, newheader5500, NEWHEADERSIZE) == 0)
+		// AL-2014-10-27: [[ Bug 12558 ]] Check for valid header prefix
+		if (strncmp(tnewheader, "REVO", HEADERPREFIXSIZE) == 0)
 		{
-			sprintf(version, "%c.%c.%c.%c", tnewheader[4], tnewheader[5], tnewheader[6], tnewheader[7]);
-			if (tnewheader[7] == '0')
-			{
-				version[5] = '\0';
-				if (tnewheader[6] == '0')
-					version[3] = '\0';
-			}
+            // The version is valid if it consists of 4 alphanumeric values.
+            // Later versions will always strcmp greater than 6.7 version strings
+            // so we just check to see if it is valid.
+            for (uint1 i = 0; i < 4; i++)
+            {
+                char t_char = tnewheader[i + 4];
+                if ('0' <= t_char && t_char <= '9')
+                    continue;
+                else if ('A' <= t_char && t_char <= 'Z')
+                    continue;
+                else if ('a' <= t_char && t_char <= 'z')
+                    continue;
+                else
+                    return IO_ERROR;
+            }
+            
+            sprintf(version, "%c.%c.%c.%c", tnewheader[4], tnewheader[5], tnewheader[6], tnewheader[7]);
+            if (tnewheader[7] == '0')
+            {
+                version[5] = '\0';
+                if (tnewheader[6] == '0')
+                    version[3] = '\0';
+            }
 		}
 		else
 		{
@@ -557,12 +573,12 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
     // MW-2014-09-30: [[ ScriptOnlyStack ]] First see if it is a binary stack.
 	if (readheader(stream, version) == IO_NORMAL)
 	{
-		if (strcmp(version, MCversionstring) > 0)
-		{
-			MCresult->sets("stack was produced by a newer version");
-			return IO_ERROR;
-		}
-
+        if (strcmp(version, MCversionstring) > 0)
+        {
+            MCresult->sets("stack was produced by a newer version");
+            return IO_ERROR;
+        }
+        
 		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
 		//   parentscript resolution is required to false.
 		s_loaded_parent_script_reference = false;

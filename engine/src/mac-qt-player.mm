@@ -375,6 +375,10 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
             QTTime t_current_time;
             t_current_time = [self -> m_movie currentTime];
             
+            // PM-2014-10-28: [[ Bug 13773 ]] If the thumb is after the first marker and the user drags it before the first marker, then we have to reset m_last marker, so as to be dispatched
+            if (t_current_time . timeValue < self -> m_last_marker)
+                self -> m_last_marker = -1;
+            
             if (do_QTTimeCompare(t_current_time, self -> m_last_current_time) != 0)
             {
                 self -> m_last_current_time = t_current_time;
@@ -396,12 +400,16 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
                         {
                             self -> m_last_marker = self -> m_markers[t_index - 1];
                             MCPlatformCallbackSendPlayerMarkerChanged(self, self -> m_last_marker);
+                            self -> m_synchronizing = true;
                         }
                     }
                 }
                 
-                if (!self -> m_offscreen)
+                // PM-2014-10-28: [[ Bug 13773 ]] Make sure we don't send a currenttimechanged messsage if the callback is processed
+                if (!self -> m_offscreen && !self -> m_synchronizing && self -> IsPlaying())
                     self -> CurrentTimeChanged();
+                
+                self -> m_synchronizing = false;
             }
         }
         break;

@@ -837,8 +837,11 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_poin
 		fakepoint.y = cy + (int2)(sin(iangle) * dy);
 		r_points[i] = fakepoint;
 	}
-	r_points[nsides] = fakepoint;
-	r_point_count = nsides;
+    
+    // SN-2014-11-11: [[ Bug 13974 ]] The last side is linked to the first point, for a
+    // regular polygon.
+	r_points[nsides] = r_points[0];
+	r_point_count = nsides + 1;
 	return (true);
 }
 

@@ -1008,7 +1008,13 @@ bool X_open(int argc, char *argv[], char *envp[])
 		MCdispatcher -> setfontattrs("Tahoma", 11, FA_DEFAULT_STYLE);
 	}
 #elif defined(TARGET_PLATFORM_MACOS_X)
-	MCdispatcher -> setfontattrs("Lucida Grande", 11, FA_DEFAULT_STYLE);
+    if (MCmajorosversion < 0x10A0)
+        MCdispatcher -> setfontattrs("Lucida Grande", 11, FA_DEFAULT_STYLE);
+    else
+    {
+        MCdispatcher -> setfontattrs("Helvetica Neue", 11, FA_DEFAULT_STYLE);
+        MCttfont = "Helvetica Neue";
+    }
 #elif defined(TARGET_PLATFORM_LINUX)
 	MCdispatcher -> setfontattrs("Helvetica", 12, FA_DEFAULT_STYLE);
 #else

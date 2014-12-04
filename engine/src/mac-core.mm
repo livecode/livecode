@@ -49,15 +49,18 @@ enum
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
-//   at the MouseSync event.
-@interface com_runrev_livecode_MCApplication: NSApplication
-
-- (void)sendEvent:(NSEvent *)event;
-
-@end
-
 @implementation com_runrev_livecode_MCApplication
+
+-(id)init
+{
+    self = [super init];
+    if (self)
+    {
+        m_pseudo_modal_for = nil;
+    }
+    
+    return self;
+}
 
 - (void)sendEvent:(NSEvent *)event
 {
@@ -97,11 +100,22 @@ enum
     if (s_moving_window == nil)
         return;
     
-    // IM-2014-10-01: [[ Bug 13526 ]] Don't call windowWillMoveFinish here as the reported
-    //   window frame will be wrong. The windowDidMove message received by the window
-    //   delegate is sufficient to signal the end of window dragging.
+	// IM-2014-10-29: [[ Bug 13814 ]] Call windowMoveFinished to signal end of dragging,
+	//   which is not reported to the delegate when the window doesn't actually move.
+	[[((MCMacPlatformWindow*)s_moving_window)->GetHandle() delegate] windowMoveFinished];
+
     MCPlatformReleaseWindow(s_moving_window);
     s_moving_window = nil;
+}
+
+- (void)becomePseudoModalFor: (NSWindow*)window
+{
+    m_pseudo_modal_for = window;
+}
+
+- (NSWindow*)pseudoModalFor
+{
+    return m_pseudo_modal_for;
 }
 
 @end
