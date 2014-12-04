@@ -58,7 +58,6 @@ struct __MCCanvasPaintImpl
 	MCCanvasPaintType type;
 };
 
-bool MCCanvasPaintCreate(const __MCCanvasPaintImpl &p_paint, MCCanvasPaintRef &r_paint);
 __MCCanvasPaintImpl *MCCanvasPaintGet(MCCanvasPaintRef p_paint);
 
 // Solid Paint type
