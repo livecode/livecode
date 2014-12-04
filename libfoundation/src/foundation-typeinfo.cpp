@@ -1183,7 +1183,7 @@ bool __MCTypeInfoInitialize(void)
 	    __create_named_builtin(MCNAME("livecode.lang.data"), kMCValueTypeCodeData, kMCDataTypeInfo, kMCOptionalDataTypeInfo) &&
 	    __create_named_builtin(MCNAME("livecode.lang.array"), kMCValueTypeCodeArray, kMCArrayTypeInfo, kMCOptionalArrayTypeInfo) &&
 	    __create_named_builtin(MCNAME("livecode.lang.stringlist"), kMCValueTypeCodeList, kMCListTypeInfo, kMCOptionalListTypeInfo) &&
-	    __create_named_builtin(MCNAME("livecode.lang.set"), kMCValueTypeCodeSet, kMCSetTypeInfo, kMCOptionalSetTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.bitset"), kMCValueTypeCodeSet, kMCSetTypeInfo, kMCOptionalSetTypeInfo) &&
 	    __create_named_builtin(MCNAME("livecode.lang.list"), kMCValueTypeCodeProperList, kMCProperListTypeInfo, kMCOptionalProperListTypeInfo) &&
         __create_named_builtin(MCNAME("livecode.lang.any"), kMCTypeInfoTypeIsAny, kMCAnyTypeInfo);
 }
