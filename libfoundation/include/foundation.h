@@ -1257,6 +1257,7 @@ extern MCTypeInfoRef kMCArrayTypeInfo;
 extern MCTypeInfoRef kMCSetTypeInfo;
 extern MCTypeInfoRef kMCListTypeInfo;
 extern MCTypeInfoRef kMCProperListTypeInfo;
+extern MCTypeInfoRef kMCProperSetTypeInfo;
 
 extern MCTypeInfoRef kMCOptionalBooleanTypeInfo;
 extern MCTypeInfoRef kMCOptionalNumberTypeInfo;
@@ -1267,6 +1268,7 @@ extern MCTypeInfoRef kMCOptionalArrayTypeInfo;
 extern MCTypeInfoRef kMCOptionalSetTypeInfo;
 extern MCTypeInfoRef kMCOptionalListTypeInfo;
 extern MCTypeInfoRef kMCOptionalProperListTypeInfo;
+extern MCTypeInfoRef kMCOptionalProperSetTypeInfo;
 
 extern MCTypeInfoRef kMCBoolTypeInfo;
 extern MCTypeInfoRef kMCIntTypeInfo;

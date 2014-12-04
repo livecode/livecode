@@ -34,6 +34,7 @@ MCTypeInfoRef kMCArrayTypeInfo;
 MCTypeInfoRef kMCSetTypeInfo;
 MCTypeInfoRef kMCListTypeInfo;
 MCTypeInfoRef kMCProperListTypeInfo;
+MCTypeInfoRef kMCProperSetTypeInfo;
 
 MCTypeInfoRef kMCOptionalBooleanTypeInfo;
 MCTypeInfoRef kMCOptionalNumberTypeInfo;
@@ -44,6 +45,7 @@ MCTypeInfoRef kMCOptionalArrayTypeInfo;
 MCTypeInfoRef kMCOptionalSetTypeInfo;
 MCTypeInfoRef kMCOptionalListTypeInfo;
 MCTypeInfoRef kMCOptionalProperListTypeInfo;
+MCTypeInfoRef kMCOptionalProperSetTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1185,6 +1187,7 @@ bool __MCTypeInfoInitialize(void)
 	    __create_named_builtin(MCNAME("livecode.lang.stringlist"), kMCValueTypeCodeList, kMCListTypeInfo, kMCOptionalListTypeInfo) &&
 	    __create_named_builtin(MCNAME("livecode.lang.bitset"), kMCValueTypeCodeSet, kMCSetTypeInfo, kMCOptionalSetTypeInfo) &&
 	    __create_named_builtin(MCNAME("livecode.lang.list"), kMCValueTypeCodeProperList, kMCProperListTypeInfo, kMCOptionalProperListTypeInfo) &&
+	    __create_named_builtin(MCNAME("livecode.lang.set"), kMCValueTypeCodeProperList, kMCProperSetTypeInfo, kMCOptionalProperSetTypeInfo) && // Alias for ProperList
         __create_named_builtin(MCNAME("livecode.lang.any"), kMCTypeInfoTypeIsAny, kMCAnyTypeInfo);
 }
 
@@ -1200,6 +1203,7 @@ void __MCTypeInfoFinalize(void)
     MCValueRelease(kMCListTypeInfo);
     MCValueRelease(kMCSetTypeInfo);
     MCValueRelease(kMCProperListTypeInfo);
+    MCValueRelease(kMCProperSetTypeInfo);
     MCValueRelease(kMCAnyTypeInfo);
 
     MCValueRelease(kMCOptionalBooleanTypeInfo);
@@ -1211,6 +1215,7 @@ void __MCTypeInfoFinalize(void)
     MCValueRelease(kMCOptionalListTypeInfo);
     MCValueRelease(kMCOptionalSetTypeInfo);
     MCValueRelease(kMCOptionalProperListTypeInfo);
+    MCValueRelease(kMCOptionalProperSetTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
