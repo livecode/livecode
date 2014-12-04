@@ -99,12 +99,28 @@
 
 'nonterm' Module(-> MODULE)
 
-    'rule' Module(-> module(Position, Name, Imports, Definitions)):
+    'rule' Module(-> module(Position, module, Name, Imports, Definitions)):
         OptionalSeparator
         "module" @(-> Position) Identifier(-> Name) Separator
         Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "module" OptionalSeparator
+        END_OF_UNIT
+
+    'rule' Module(-> module(Position, widget, Name, Imports, Definitions)):
+        OptionalSeparator
+        "widget" @(-> Position) Identifier(-> Name) Separator
+        Imports(-> Imports)
+        Definitions(-> Definitions)
+        "end" "widget" OptionalSeparator
+        END_OF_UNIT
+
+    'rule' Module(-> module(Position, library, Name, Imports, Definitions)):
+        OptionalSeparator
+        "library" @(-> Position) Identifier(-> Name) Separator
+        Imports(-> Imports)
+        Definitions(-> Definitions)
+        "end" "library" OptionalSeparator
         END_OF_UNIT
 
 --------------------------------------------------------------------------------

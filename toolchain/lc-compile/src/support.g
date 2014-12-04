@@ -94,6 +94,8 @@
     PushInOutMarkArgumentSyntaxMapping
 
     EmitBeginModule
+    EmitBeginLibraryModule
+    EmitBeginWidgetModule
     EmitEndModule
     EmitDefinitionIndex
     EmitExportedDefinition
@@ -374,6 +376,8 @@
 --------------------------------------------------------------------------------
 
 'action' EmitBeginModule(Name: NAME -> ModuleIndex: INT)
+'action' EmitBeginWidgetModule(Name: NAME -> ModuleIndex: INT)
+'action' EmitBeginLibraryModule(Name: NAME -> ModuleIndex: INT)
 'action' EmitEndModule()
 
 'action' EmitModuleDependency(Name: NAME -> ModuleIndex: INT)

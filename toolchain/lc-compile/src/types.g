@@ -4,7 +4,7 @@
     support
 
 'export'
-    MODULE MODULELIST
+    MODULE MODULELIST MODULEKIND
     IMPORT
     DEFINITION SIGNATURE ACCESS
     TYPE FIELD FIELDLIST
@@ -28,8 +28,14 @@
     modulelist(Head: MODULE, Tail: MODULELIST)
     nil
 
+'type' MODULEKIND
+    module
+    library
+    widget
+    application
+
 'type' MODULE
-    module(Position: POS, Name: ID, Imports: IMPORT, Definitions: DEFINITION)
+    module(Position: POS, Kind: MODULEKIND, Name: ID, Imports: IMPORT, Definitions: DEFINITION)
 
 'type' IMPORT
     sequence(Left: IMPORT, Right: IMPORT)

@@ -9,6 +9,8 @@
 int OutputFileAsC = 0;
 
 extern "C" void EmitBeginModule(NameRef name, long& r_index);
+extern "C" void EmitBeginWidgetModule(NameRef name, long& r_index);
+extern "C" void EmitBeginLibraryModule(NameRef name, long& r_index);
 extern "C" void EmitEndModule(void);
 extern "C" void EmitModuleDependency(NameRef name, long& r_index);
 extern "C" void EmitImportedType(long module_index, NameRef name, long type_index, long& r_index);
@@ -194,6 +196,30 @@ void EmitBeginModule(NameRef p_name, long& r_index)
     
     MCLog("[Emit] BeginModule(%@) -> 0", to_mcnameref(p_name));
 
+    s_module_name = p_name;
+    
+    MCScriptBeginModule(kMCScriptModuleKindNone, to_mcnameref(p_name), s_builder);
+    r_index = 0;
+}
+
+void EmitBeginWidgetModule(NameRef p_name, long& r_index)
+{
+    MCInitialize();
+    
+    MCLog("[Emit] BeginWidgetModule(%@) -> 0", to_mcnameref(p_name));
+    
+    s_module_name = p_name;
+    
+    MCScriptBeginModule(kMCScriptModuleKindWidget, to_mcnameref(p_name), s_builder);
+    r_index = 0;
+}
+
+void EmitBeginLibraryModule(NameRef p_name, long& r_index)
+{
+    MCInitialize();
+    
+    MCLog("[Emit] BeginLibraryModule(%@) -> 0", to_mcnameref(p_name));
+    
     s_module_name = p_name;
     
     MCScriptBeginModule(kMCScriptModuleKindLibrary, to_mcnameref(p_name), s_builder);

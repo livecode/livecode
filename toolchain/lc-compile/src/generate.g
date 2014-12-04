@@ -11,10 +11,19 @@
 
 'action' Generate(MODULE)
 
-    'rule' Generate(module(_, Id, Imports, Definitions)):
+    'rule' Generate(module(_, Kind, Id, Imports, Definitions)):
         QueryModuleId(Id -> Info)
         Id'Name -> ModuleName
-        EmitBeginModule(ModuleName -> ModuleIndex)
+        (|
+            where(Kind -> module)
+            EmitBeginModule(ModuleName -> ModuleIndex)
+        ||
+            where(Kind -> widget)
+            EmitBeginWidgetModule(ModuleName -> ModuleIndex)
+        ||
+            where(Kind -> library)
+            EmitBeginLibraryModule(ModuleName -> ModuleIndex)
+        |)
         Info'Index <- ModuleIndex
 
         -- Emit all imported declarations and dependent modules.
