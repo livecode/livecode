@@ -733,7 +733,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 				MCeerror->add(EE_GO_BADWINDOWEXP, line, pos);
 				return ES_ERROR;
 			}
-			if (ep.ton() == ES_NORMAL && MCscreen->uint4towindow(ep.getuint4(), w))
+			if (ep.ton() == ES_NORMAL && MCscreen->uinttowindow(ep.getuint4(), w))
 				oldstack = MCdispatcher->findstackd(w);
 			else
 				oldstack = ep.getobj()->getstack()->findstackname(ep.getsvalue());
