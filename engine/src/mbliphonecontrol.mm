@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mbliphone.h"
 #include "mbliphonecontrol.h"
+#include "mbliphoneapp.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -264,6 +265,11 @@ Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 		}
 		return ES_NORMAL;
 		
+        case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
+        {
+        }
+        return ES_NORMAL;
+            
 		default:
 			break;
 	}
@@ -319,6 +325,9 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 			if (m_view != nil)
 				FormatColor(ep, [m_view backgroundColor]);
 			return ES_NORMAL;
+            
+        case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
+            return ES_NORMAL;
             
         default:
             break;

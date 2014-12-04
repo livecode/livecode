@@ -186,6 +186,7 @@ static struct {const char *name; MCNativeControlProperty property;} s_native_con
 	{"opaque", kMCNativeControlPropertyOpaque},
 	{"alpha", kMCNativeControlPropertyAlpha},
 	{"backgroundColor", kMCNativeControlPropertyBackgroundColor},
+    {"ignoreVoiceOverSensitivity", kMCNativeControlPropertyIgnoreVoiceOverSensitivity},
 	
 	{"dataDetectorTypes", kMCNativeControlPropertyDataDetectorTypes},
 	

@@ -206,6 +206,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	
 	m_keyboard_activation_pending = false;
     m_keyboard_is_visible = false;
+    m_ignore_voice_over = false;
 	
     m_pending_push_notification = nil;
     m_pending_local_notification = nil;
@@ -969,6 +970,20 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 }
 
 //////////
+
+- (void)setIgnoreVoiceOver:(BOOL) ignore_voice_over
+{
+    m_ignore_voice_over = ignore_voice_over;
+}
+
+
+- (BOOL)getIgnoreVoiceOver
+{
+    return m_ignore_voice_over;
+}
+
+////////////
+
 
 - (uint32_t)allowedOrientations
 {
@@ -1748,6 +1763,10 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 // PM-2014-10-13: [[ Bug 13659 ]] Make sure we can interact with the LC app when Voice Over is enabled/disabled while our view is already onscreen
 - (void)voiceOverStatusChanged
 {
+    // The user has chosen to ignore voice over, ie cannot interact with LC stacks when voice over is on
+    if ([[MCIPhoneApplication sharedApplication] getIgnoreVoiceOver])
+        return;
+    
     UIView *t_main_view;
     t_main_view = [[MCIPhoneApplication sharedApplication] fetchMainView];
     
@@ -1851,6 +1870,10 @@ UIView *MCIPhoneGetView(void)
     // we need to register an observer for the notification in the viewDidLoad method
     UIView *t_main_view;
     t_main_view = [[MCIPhoneApplication sharedApplication] fetchMainView];
+    
+    // The user has chosen to ignore voice over, ie cannot interact with LC stacks when voice over is on
+    if ([[MCIPhoneApplication sharedApplication] getIgnoreVoiceOver])
+        return t_main_view;
     
     if (UIAccessibilityIsVoiceOverRunning())
     {

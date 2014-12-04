@@ -93,6 +93,7 @@ protected:
 private:
 	MCNativeBrowserDelegate *m_delegate;
 	bool m_delay_requests;
+    bool m_ignore_voice_over_sensitivity;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +102,7 @@ MCNativeBrowserControl::MCNativeBrowserControl(void)
 {
 	m_delegate = nil;
 	m_delay_requests = false;
+    m_ignore_voice_over_sensitivity = false;
 }
 
 MCNativeBrowserControl::~MCNativeBrowserControl(void)
@@ -180,6 +182,30 @@ Exec_stat MCNativeBrowserControl::Set(MCNativeControlProperty p_property, MCExec
 			if (t_view != nil)
 				[GetScrollView() setScrollEnabled: ep . getsvalue() == MCtruemcstring ? YES : NO];
 			return ES_NORMAL;
+            
+        // PM-2014-12-04: [[ Bug 13659 ]] Allow user to toggle Voice Over Sensitivity for mobile browser window
+        case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
+            if (t_view != nil && UIAccessibilityIsVoiceOverRunning())
+            {
+                if (ep . getsvalue() == MCtruemcstring)
+                {
+                    //[t_view setAccessibilityTraits:UIAccessibilityTraitNone];
+                    //t_view.isAccessibilityElement = NO;
+                    [t_view setAccessibilityElementsHidden:YES];
+                    m_ignore_voice_over_sensitivity = true;
+                }
+                else
+                {
+                    //t_view.isAccessibilityElement = YES;
+#ifdef __IPHONE_5_0
+                    //[t_view setAccessibilityTraits:UIAccessibilityTraitAllowsDirectInteraction];
+#endif
+                    [t_view setAccessibilityElementsHidden:NO];
+                    m_ignore_voice_over_sensitivity = false;
+                }
+
+            }
+            return ES_NORMAL;
 			
         default:
             break;
@@ -235,6 +261,11 @@ Exec_stat MCNativeBrowserControl::Get(MCNativeControlProperty p_property, MCExec
 		case kMCNativeControlPropertyScrollingEnabled:
 			ep.setsvalue(MCU_btos(t_view != nil ? [GetScrollView() isScrollEnabled] == YES : NO));
 			return ES_NORMAL;
+        // PM-2014-12-04: [[ Bug 13659 ]] Allow user to toggle Voice Over Sensitivity for mobile browser window
+        case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
+            ep.setsvalue(MCU_btos(t_view != nil ? m_ignore_voice_over_sensitivity == true : NO));
+            return ES_NORMAL;
+            
             
         default:
             break;
