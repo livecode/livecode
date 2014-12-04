@@ -365,6 +365,16 @@ bool MCScriptLookupModule(MCNameRef p_name, MCScriptModuleRef& r_module)
     return false;
 }
 
+bool MCScriptIsModuleALibrary(MCScriptModuleRef self)
+{
+    return self -> module_kind == kMCScriptModuleKindLibrary;
+}
+
+bool MCScriptIsModuleAWidget(MCScriptModuleRef self)
+{
+    return self -> module_kind == kMCScriptModuleKindWidget;
+}
+
 bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 {
     // If the module has already been ensured as usable, we are done.
@@ -382,8 +392,8 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
         if (!MCScriptLookupModule(self -> dependencies[i] . name, t_module))
             return false;
         
-        // A used module must be a library.
-        if (t_module -> module_kind != kMCScriptModuleKindLibrary)
+        // A used module must not be a widget.
+        if (t_module -> module_kind == kMCScriptModuleKindWidget)
             return false;
         
         // Check all the imported definitions from the module, and compute indicies.
@@ -711,6 +721,39 @@ bool MCScriptQueryEventOfModule(MCScriptModuleRef self, MCNameRef p_event, /* ge
         return false; // TODO - throw error
     
     if (!MCScriptLookupEventDefinitionInModule(self, p_event, t_def))
+        return false; // TODO - throw error
+    
+    r_signature = self -> types[t_def -> type] -> typeinfo;
+    
+    return true;
+}
+
+bool MCScriptCopyHandlersOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_handler_names)
+{
+    MCAutoProperListRef t_handlers;
+    if (!MCProperListCreateMutable(&t_handlers))
+        return false;
+    
+    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindHandler ||
+            self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindForeignHandler)
+            if (!MCProperListPushElementOntoBack(*t_handlers, self -> exported_definitions[i] . name))
+                return false;
+    
+    if (!MCProperListCopy(*t_handlers, r_handler_names))
+        return false;
+    
+    return true;
+}
+
+bool MCScriptQueryHandlerOfModule(MCScriptModuleRef self, MCNameRef p_handler, /* get */ MCTypeInfoRef& r_signature)
+{
+    MCScriptHandlerDefinition *t_def;
+    
+    if (!self -> is_usable)
+        return false; // TODO - throw error
+    
+    if (!MCScriptLookupHandlerDefinitionInModule(self, p_handler, t_def))
         return false; // TODO - throw error
     
     r_signature = self -> types[t_def -> type] -> typeinfo;

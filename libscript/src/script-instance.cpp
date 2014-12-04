@@ -1488,7 +1488,12 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                         
                         for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
                             if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeIn)
-                                p_arguments[i] = MCValueRetain(MCScriptFetchFromLocalInFrame(t_frame, i));
+                            {
+                                if (p_arguments[i] != nil)
+                                    MCValueAssign(p_arguments[i], MCScriptFetchFromLocalInFrame(t_frame, i));
+                                else
+                                    p_arguments[i] = MCValueRetain(MCScriptFetchFromLocalInFrame(t_frame, i));
+                            }
                     }
                     else
                     {
