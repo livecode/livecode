@@ -1370,7 +1370,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // jump <offset>
                 int t_offset;
-                t_offset = (t_arguments[0] & 1) != 0 ? -(t_arguments[0] >> 1) : t_arguments[0] >> 1;
+                t_offset = (t_arguments[0] & 1) != 0 ? -(signed)(t_arguments[0] >> 1) : t_arguments[0] >> 1;
                 
                 // <offset> is relative to the start of this instruction.
                 t_next_bytecode = t_bytecode + t_offset;
@@ -1381,7 +1381,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 // jumpiftrue <register>, <offset>
                 int t_register, t_offset;
                 t_register = t_arguments[0];
-                t_offset = (t_arguments[1] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
+                t_offset = (t_arguments[1] & 1) != 0 ? -(signed)(t_arguments[1] >> 1) : t_arguments[1] >> 1;
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
@@ -1406,7 +1406,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 // jumpiffalse <register>, <offset>
                 int t_register, t_offset;
                 t_register = t_arguments[0];
-                t_offset = (t_arguments[1] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
+                t_offset = (t_arguments[1] & 1) != 0 ? -(signed)(t_arguments[1] >> 1) : t_arguments[1] >> 1;
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
