@@ -115,8 +115,6 @@ enum MCIPhoneApplicationStatus
     
     bool m_keyboard_is_visible : 1;
     
-    bool m_ignore_voice_over : 1;
-
     // We store the payload from a pending local notification here until the stack has become active and is ready to receive the message with the data.
     NSString *m_pending_local_notification;
     // We store the payload from a pending push notification here until the stack has become active and is ready to receive the message with the data.

@@ -181,10 +181,6 @@ Exec_stat MCNativeBrowserControl::Set(MCNativeControlProperty p_property, MCExec
 				[GetScrollView() setScrollEnabled: ep . getsvalue() == MCtruemcstring ? YES : NO];
 			return ES_NORMAL;
             
-        // PM-2014-12-04: [[ Bug 13659 ]] Allow user to toggle Voice Over Sensitivity for mobile browser window
-       // case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
-           // return ES_NORMAL;
-			
         default:
             break;
 	}
