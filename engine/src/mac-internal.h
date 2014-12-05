@@ -137,6 +137,38 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// SN-2014-12-05: [[ Bug 14019 ]] Interface declaration moved to be available from mac-menu.mm
+
+// SN-2014-10-20: [[ Bug 13628 ]] ColorDelegate to react when the colour picker window is closed
+@interface com_runrev_livecode_MCColorPanelDelegate: NSObject<NSWindowDelegate>
+{
+    NSButton *mCancelButton;
+    NSButton *mOkButton;
+    NSView   *mColorPickerView;
+    NSView   *mUpdatedView;
+    NSColorPanel *mColorPanel;
+    
+    MCPlatformDialogResult mResult;
+    MCColor mColorPicked;
+}
+
+-(id)   initWithColorPanel: (NSColorPanel*)p_panel
+               contentView: (NSView*) p_view;
+-(void) dealloc;
+-(void) windowWillClose: (NSNotification *)notification;
+-(void) windowDidResize:(NSNotification *)notification;
+-(void) getColor;
+//-(void) changeColor:(id)sender;
+-(void) pickerCancelClicked;
+-(void) pickerOkClicked;
+-(void) relayout;
+
+@end
+
+@compatibility_alias MCColorPanelDelegate com_runrev_livecode_MCColorPanelDelegate;
+
+////////////////////////////////////////////////////////////////////////////////
+
 @interface com_runrev_livecode_MCWindowDelegate: NSObject<NSWindowDelegate>
 {
 	MCMacPlatformWindow *m_window;
