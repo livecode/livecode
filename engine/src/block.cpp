@@ -978,10 +978,10 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 					t_next_tab = -1;
             }
 			else*/
-				t_next_tab = -1;
+				t_next_tab = UINDEX_MAX;
 
 			findex_t t_next_index;
-			if (t_next_tab == -1)
+			if (t_next_tab == UINDEX_MAX)
 				t_next_index = start + length;
 			else
 				t_next_index = t_next_tab;
@@ -1033,7 +1033,7 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 
 			x += t_width;
 
-			if (t_next_tab != -1)
+			if (t_next_tab != UINDEX_MAX)
 			{
 				x = p_cell_right;
 				t_next_index = parent->IncrementIndex(t_next_index);
