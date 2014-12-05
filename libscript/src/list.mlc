@@ -27,11 +27,20 @@ public foreign handler MCListSpliceIntoElementOf(in Source as list, in Index as 
 public foreign handler MCListSpliceBeforeElementOf(in Source as list, in Index as int, inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCListSpliceAfterElementOf(in Source as list, in Index as int, inout Target as list) as undefined binds to "<builtin>"
 
+public foreign handler MCListEvalEmpty(out Value as list) as undefined binds to "<builtin>"
+
 --
 
 /*
 Summary:        Returns the first element of <Target>.
 Target:         An expression which evaluates to a list.
+
+Example:
+	variable tVar as list
+	push "first element" onto tVar
+	
+	if 
+	
 */
 
 syntax HeadOf is prefix operator with precedence 1
@@ -264,5 +273,11 @@ begin
 end syntax
 
 --
+
+syntax EmptyList is expression
+	"the" "empty" "list"
+begin
+	MCListEvalEmpty(output)
+end syntax
 
 end module

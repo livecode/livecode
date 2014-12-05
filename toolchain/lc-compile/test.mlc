@@ -12,18 +12,16 @@ public handler test()
     variable tDelimiter as string
     put newline into tDelimiter
 
-    --testLogic(tResults)
-   -- testList(tResults)
-    --testSort(tResults)
+    testLogic(tResults)
+    testList(tResults)
+    testSort(tResults)
     --testArithmetic(tResults)
 
-    variable tVar as list
-    MCProperListCreate(undefined, 0, tVar)
-    push 2 onto tVar
-    if the head of tVar is 2 then
-        push "success" onto tResults
-    end if
-
+	variable tVar as double
+	put 0.5 into tVar
+	if tVar is 0.5 then
+	end if
+	
     variable tResultString as string
     put "" into tResultString
     combine tResults with tDelimiter into tResultString
@@ -52,7 +50,7 @@ end handler
 public handler testArithmetic(inout xResults as list) as undefined
 
 	variable tInt as int
-	variable tReal as real
+	variable tReal as double
 	--variable tNumber
 	
 	put 10 into tInt
@@ -88,7 +86,7 @@ public handler testArithmetic(inout xResults as list) as undefined
 	--divide tNumber by 40
 	
 	testLog("Arithmetic", "DivideInt", tInt is 0, xResults)
-	testLog("Arithmetic", "DivideReal", tReal is 0.5, xResults)
+	--testLog("Arithmetic", "DivideReal", tReal is 0.5, xResults)
 	--testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)		
 
 end handler

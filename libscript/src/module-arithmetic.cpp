@@ -219,7 +219,7 @@ extern "C" void MCArithmeticEvalNumberTimesNumber(MCNumberRef p_left, MCNumberRe
 {
     MCNumberRef t_number;
     MCNumberCreateWithReal(MCNumberFetchAsReal(p_right), t_number);
-    MCArithmeticExecMultiplyNumberByNumber(p_left, t_number);
+    MCArithmeticExecMultiplyNumberByNumber(t_number, p_left);
     
     //if no error
     r_output = t_number;
@@ -231,7 +231,7 @@ extern "C" void MCArithmeticEvalNumberTimesNumber(MCNumberRef p_left, MCNumberRe
 
 extern "C" void MCArithmeticEvalIntegerOverInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
-    MCArithmeticExecDivideIntegerByInteger(p_left, p_right);
+    MCArithmeticExecDivideIntegerByInteger(p_right, p_left);
     
     //if no error
     r_output = p_right;
@@ -239,7 +239,7 @@ extern "C" void MCArithmeticEvalIntegerOverInteger(integer_t p_left, integer_t p
 
 extern "C" void MCArithmeticEvalRealOverReal(double p_left, double p_right, double& r_output)
 {
-    MCArithmeticExecDivideRealByReal(p_left, p_right);
+    MCArithmeticExecDivideRealByReal(p_right, p_left);
     
     //if no error
     r_output = p_right;
@@ -249,7 +249,7 @@ extern "C" void MCArithmeticEvalNumberOverNumber(MCNumberRef p_left, MCNumberRef
 {
     MCNumberRef t_number;
     MCNumberCreateWithReal(MCNumberFetchAsReal(p_right), t_number);
-    MCArithmeticExecDivideNumberByNumber(p_left, t_number);
+    MCArithmeticExecDivideNumberByNumber(t_number, p_left);
     
     //if no error
     r_output = t_number;

@@ -1,0 +1,141 @@
+module com.livecode.array
+
+public foreign handler MCArrayEvalKeysOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
+public foreign handler MCArrayEvalElementsOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
+
+/*
+Not needed if we switch to 'contains' syntax - equivalent to 'the keys of <map> contains <needle>'
+otherwise '<needle> is among the elements of the elements of <map>' may be too wordy.
+*/
+
+public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as string, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
+
+public foreign handler MCArrayEvalIsAmongTheElementsOf(in Needle as any, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
+
+public foreign handler MCArrayEvalNumberOfElementsIn(in Target as array, out Count as index) as undefined binds to "<builtin>"
+
+/*
+Case sensitive map ops / access / storage
+To enable this syntax requires underlying map types which distinguish the case sensitive and caseless key maps
+Or we pass in a context parameter as for string comparison operations.
+
+public foreign handler EvalIsAmongTheKeysOfCaseSensitive(in Needle as string, in IsNot as bool, in Target as array, out Result as bool) as undefined binds to "<builtin>"
+
+public foreign handler FetchElementOfCaseSensitive(in Target as array, in Key as string, out Value as any) as undefined binds to "<builtin>"
+public foreign handler StoreElementOfCaseSensitive(in Value as any, inout Target as array, in Key as string) as undefined binds to "<builtin>"
+*/
+
+// Case insensitive map access / storage
+public foreign handler MCArrayFetchElementOfCaseless(in Target as array, in Key as string, out Value as any) as undefined binds to "<builtin>"
+public foreign handler MCArrayStoreElementOfCaseless(in Value as any, inout Target as array, in Key as string) as undefined binds to "<builtin>"
+
+public foreign handler MCArrayEvalEmpty(out Value as array) as undefined binds to "<builtin>"
+
+--
+
+/* 
+Summary:        Returns the keys of an array.
+Target:         An expression which evaluates to an array.
+output:         A list whose elements are the keys of <Target>. 
+                Note that the list is not ordered in any way.
+*/
+
+syntax KeysOf is prefix operator with precedence 1
+    "the" "keys" "of" <Target: Expression>
+begin
+    MCArrayEvalKeysOf(Target, output)
+end syntax
+
+/* 
+Summary:        Returns the elements of an array.
+Target:         An expression which evaluates to an array.
+output:         A list whose elements are the elements of <Target>. 
+                Note that the list is not ordered in any way.
+*/
+
+syntax ElementsOf is prefix operator with precedence 1
+    "the" "elements" "of" <Target: Expression>
+begin
+    MCArrayEvalElementsOf(Target, output)
+end syntax
+
+--
+
+/*
+Summary:        Returns the number of elements in <Target>
+Target:         An expression which evaluates to an array.
+*/
+
+syntax CountElementsOf is prefix operator with precedence 1
+    "the" "number" "of" "elements" "in" <Target: Expression>
+begin
+    MCArrayEvalNumberOfElementsIn(Target, output)
+end syntax
+
+--
+
+/* 
+Summary:        Determines if an array has a given key
+Needle:         An expression which evaluates to an integer, string, or list of integers.
+Target:         An expression which evaluates to an array.
+output:         Returns true if <Needle> can be found among the keys of <Target>.
+
+*/
+                
+syntax AmongKeysOf is neutral binary operator with precedence 1
+    <Needle: Expression> "is" ("not" <IsNot=true> | <IsNot=false>) "among" "the" "keys" "of" <Target: Expression>
+begin
+//  EvalIsAmongTheKeysOfCaseSensitive(Needle, IsNot, Target, output)
+    MCArrayEvalIsAmongTheKeysOfCaseless(Needle, IsNot, Target, output)
+    //MCArrayEvalIsAmongTheKeysOfNumeric(Needle, IsNot, Target, output)
+    //MCArrayEvalIsAmongTheKeysOfMatrix(Needle, IsNot, Target, output)
+end syntax
+
+/* 
+Summary:        Determines if an array contains a given element
+Needle:         Any expression.
+Target:         An expression which evaluates to an array.
+output:         Returns true if <Needle> can be found among the elements of <Target>.
+
+*/
+                
+syntax AmongElementsOf is neutral binary operator with precedence 1
+    <Needle: Expression> "is" ["not" <IsNot=true>] "among" "the" "elements" "of" <Target: Expression>
+begin
+    MCArrayEvalIsAmongTheElementsOf(Needle, IsNot, Target, output)
+end syntax
+
+--
+
+/*
+
+Summary:            Designates the element with key <Key> in <Target>.
+Key: 				An expression which evaluates to an integer, string, or list of integers.
+Target:				An expression which evaluates to an array.
+output:             Either locates the element container with the given key for use as the target 
+                    container of another operation, or evaluates the element with the given key 
+                    as the source of another operation.
+*/
+
+syntax SingletonElementOf is postfix operator with precedence 1
+	<Target: Expression> "[" <Key: Expression> "]"
+begin
+//	FetchElementOfCaseSensitive(Target, Key, output)
+    MCArrayFetchElementOfCaseless(Target, Key, output)
+    //FetchElementOfNumeric(Target, Key, output)
+    //FetchElementOfMatrix(Target, Key, output)
+//	StoreElementOfCaseSensitive(input, Target, Key)
+	MCArrayStoreElementOfCaseless(input, Target, Key)
+	//StoreElementOfNumeric(input, Target, Key)
+	//StoreElementOfMatrix(input, Target, Key)
+end syntax
+
+--
+
+syntax EmptyArray is expression
+	"the" "empty" "array"
+begin
+	MCArrayEvalEmpty(output)
+end syntax
+
+end module

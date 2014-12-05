@@ -32,6 +32,8 @@ public foreign handler MCStringEvalIsNotEqualTo(in Left as string, in Right as s
 public foreign handler MCStringEvalIsLessThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCStringEvalIsGreaterThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
 
+public foreign handler MCStringEvalEmpty(out Value as string) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -211,5 +213,11 @@ begin
 end syntax
 
 --
+
+syntax EmptyString is expression
+	"the" "empty" "string"
+begin
+	MCStringEvalEmpty(output)
+end syntax
 
 end module

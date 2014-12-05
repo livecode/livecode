@@ -260,6 +260,11 @@ extern "C" void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_ind
     MCValueAssign(x_target, *t_immutable);
 }
 
+extern "C" void MCListEvalEmpty(MCProperListRef& r_output)
+{
+    r_output = MCValueRetain(kMCEmptyProperList);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST

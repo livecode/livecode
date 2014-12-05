@@ -92,3 +92,8 @@ extern "C" void MCStringEvalIsGreaterThan(MCStringRef p_left, MCStringRef p_righ
 {
     r_result = MCStringCompareTo(p_left, p_right, kMCStringOptionCompareExact) > 0;
 }
+
+extern "C" void MCStringEvalEmpty(MCStringRef& r_output)
+{
+    r_output = MCValueRetain(kMCEmptyString);
+}
