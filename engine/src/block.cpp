@@ -38,6 +38,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+static MCRectangle
+MCBlockMakeRectangle(double x, double y,
+                     double width, double height)
+{
+	MCRectangle p_result;
+	p_result.x = lrint(x);
+	p_result.y = lrint(y);
+	p_result.width = lrint(width);
+	p_result.height = lrint(height);
+	return p_result;
+}
+
 // Default MCBlock constructor - makes a block with everything initialized
 // to zero.
 MCBlock::MCBlock(void)
@@ -1019,13 +1031,13 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 					// MW-2012-09-04: [[ Bug 9759 ]] Adjust any pattern origin to scroll with text.
 					parent -> getparent() -> setforeground(dc, DI_BORDER, False, True);
 					parent -> getparent() -> adjustpixmapoffset(dc, DI_BORDER);
-					MCRectangle trect = { x - 1, y - t_ascent, t_width + 3, t_ascent + t_descent };
+					MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 3, t_ascent + t_descent);
 					dc->drawrect(trect);
 					parent -> getparent() -> setforeground(dc, DI_FORE, False, True);
 				}
 				else if ((style & FA_3D_BOX) != 0)
 				{
-					MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+					MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 					parent -> getparent() -> draw3d(dc, trect, ETCH_RAISED, 1);
 					parent -> getparent() -> setforeground(dc, DI_FORE, False, True);
 				}
@@ -1346,7 +1358,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 			// MW-2012-09-04: [[ Bug 9759 ]] Adjust any pattern origin to scroll with text.
 			f->setforeground(dc, DI_BORDER, False, True);
 			f->adjustpixmapoffset(dc, DI_BORDER);
-			MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+			MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 			
 			// MW-2014-03-11: [[ Bug 11882 ]] Ensure we use miter join for drawing the border.
 			dc->setlineatts(1, LineSolid, CapButt, JoinMiter);
@@ -1357,7 +1369,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 		}
 		else if (fontstyle & FA_3D_BOX)
 		{
-			MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
+			MCRectangle trect = MCBlockMakeRectangle(x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent);
 			f->draw3d(dc, trect, ETCH_RAISED, 1);
 			f->setforeground(dc, DI_FORE, False, True);
 		}
