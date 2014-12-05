@@ -1,8 +1,13 @@
 #include "script.h"
 #include "script-private.h"
 
-#include <ffi/ffi.h>
+#include "ffi.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -708,7 +713,11 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
 
 static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler)
 {
+#ifdef _WIN32
+	p_handler -> function = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(p_handler -> binding));
+#else
     p_handler -> function = dlsym(RTLD_DEFAULT, MCStringGetCString(p_handler -> binding));
+#endif
     if (p_handler -> function == nil)
         return MCErrorThrowGeneric();
     

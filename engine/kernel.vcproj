@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProgramFiles)\QuickTime SDK\CIncludes&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;;&quot;$(ProgramFiles)\QuickTime SDK\CIncludes&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -98,7 +98,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProgramFiles)\QuickTime SDK\CIncludes&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;;&quot;$(ProgramFiles)\QuickTime SDK\CIncludes&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="prefix.h"
@@ -165,6 +165,10 @@
 		<ProjectReference
 			ReferencedProjectIdentifier="{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}"
 			RelativePathToProject=".\libgraphics\libgraphics.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}"
+			RelativePathToProject=".\libscript\libscript.vcproj"
 		/>
 	</References>
 	<Files>

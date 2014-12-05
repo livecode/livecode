@@ -1,6 +1,13 @@
 #ifndef __MC_SCRIPT_PRIVATE__
 #define __MC_SCRIPT_PRIVATE__
 
+#include <stdlib.h>
+
+// Win32 doesn't have the "__func__" macro
+#ifdef _WIN32
+#define __func__ __FUNCTION__
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCScriptObjectKind

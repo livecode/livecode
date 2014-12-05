@@ -209,6 +209,10 @@
 			ReferencedProjectIdentifier="{0491E47C-B996-4DBF-8D26-C88263DF6176}"
 			RelativePathToProject=".\engine\kernel-development.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}"
+			RelativePathToProject=".\thirdparty\libffi\libffi.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter

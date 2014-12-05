@@ -5,7 +5,12 @@
 #include "script-private.h"
 
 #include <stddef.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -547,7 +552,11 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 t_type = static_cast<MCScriptForeignType *>(self -> types[i]);
                 
                 void *t_symbol;
+#ifdef _WIN32
+				t_symbol = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(t_type -> binding));
+#else
                 t_symbol = dlsym(RTLD_DEFAULT, MCStringGetCString(t_type -> binding));
+#endif
                 if (t_symbol == nil)
                 {
                     MCLog("Unable to resolve foreign type '%@'", t_type -> binding);
