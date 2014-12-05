@@ -713,7 +713,7 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	// MW-2013-12-19: [[ Bug 11606 ]] Track the width of the text within the block as a float
 	//   but use the integer width to break. This ensures measure(a & b) == measure(a) + measure(b)
 	//   (otherwise you get drift as the accumulated width the block calculates is different
-	//    from the width of the text that is drawn).
+	//    from the width of the text that is drawn). 
 
 	coord_t t_width_float;
 	t_width_float = 0;
@@ -2272,9 +2272,6 @@ uint32_t MCBlock::measureattrs(void)
 
 bool MCBlock::GetFirstLineBreak(findex_t& r_index)
 {
-	findex_t t_index;
-	t_index = m_index;
-
 	uindex_t t_offset;
     // AL-2014-08-21: [[ Bug 13247 ]] Don't repeatedly search to the end of the paragraph to find line break.
     //  The search should only be in the range of the block.
