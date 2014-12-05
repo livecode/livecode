@@ -962,11 +962,6 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 	// MW-2012-01-25: [[ ParaStyles ]] Fetch the vGrid setting from the owning paragraph.
 	if (parent -> getvgrid())
 	{
-		// MW-2012-02-09: [[ ParaStyles ]] Fetch the padding setting from the owning paragraph.
-		// MW-2012-03-19: [[ Bug 10069 ]] Use the horiztonal padding value here.
-		int32_t t_padding;
-		t_padding = parent -> gethpadding();
-
         MCRectangle t_cell_clip;
         t_cell_clip = dc->getclip();
         dc -> save();
