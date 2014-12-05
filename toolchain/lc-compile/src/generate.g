@@ -9,12 +9,29 @@
 
 --------------------------------------------------------------------------------
 
+'type' NAMELIST
+    namelist(Name: NAME, Rest: NAMELIST)
+    nil
+
+'var' ModuleDependencyList : NAMELIST
+
 'action' Generate(MODULE)
 
-    'rule' Generate(module(_, Id, Imports, Definitions)):
+    'rule' Generate(Module:module(_, Kind, Id, _, Imports, Definitions)):
+        ModuleDependencyList <- nil
+        
         QueryModuleId(Id -> Info)
         Id'Name -> ModuleName
-        EmitBeginModule(ModuleName -> ModuleIndex)
+        (|
+            where(Kind -> module)
+            EmitBeginModule(ModuleName -> ModuleIndex)
+        ||
+            where(Kind -> widget)
+            EmitBeginWidgetModule(ModuleName -> ModuleIndex)
+        ||
+            where(Kind -> library)
+            EmitBeginLibraryModule(ModuleName -> ModuleIndex)
+        |)
         Info'Index <- ModuleIndex
 
         -- Emit all imported declarations and dependent modules.
@@ -31,6 +48,241 @@
         GenerateExportedDefinitions(Definitions)
         
         EmitEndModule()
+        
+        GenerateManifest(Module)
+
+----------
+
+'action' GenerateManifest(MODULE)
+
+    'rule' GenerateManifest(module(_, Kind, Id, Metadata, Imports, Definitions)):
+        OutputBeginManifest()
+        Id'Name -> Name
+        OutputWriteI("<package version=\"0.0\" name=\"", Name, "\">\n")
+        [|
+            QueryMetadata(Metadata, "version" -> VersionString)
+            OutputWriteS("  <version>", VersionString, "</version>\n")
+        |]
+        OutputWrite("  <license>community</license>\n")
+        [|
+            QueryMetadata(Metadata, "label" -> LabelString)
+            OutputWriteS("  <label>", LabelString, "</label>\n")
+        |]
+        [|
+            QueryMetadata(Metadata, "description" -> DescriptionString)
+            OutputWriteS("  <description>", DescriptionString, "</description>\n")
+        |]
+        ModuleDependencyList -> Requirements
+        GenerateManifestRequires(Requirements)
+        (|
+            where(Kind -> widget)
+            OutputWrite("  <widget>\n")
+            GenerateManifestDefinitions(Definitions)
+            OutputWrite("  </widget>\n")
+        ||
+            where(Kind -> library)
+            OutputWrite("  <library>\n")
+            GenerateManifestDefinitions(Definitions)
+            OutputWrite("  </library>\n")
+        ||
+        |)
+        OutputWrite("</package>")
+        OutputEnd()
+        
+'condition' QueryMetadata(METADATA, STRING -> STRING)
+
+    'rule' QueryMetadata(metadata(_, Key, Value, Rest), WantedKey -> Value):
+        IsNameEqualToString(Key, WantedKey)
+        
+    'rule' QueryMetadata(metadata(_, _, _, Rest), WantedKey -> Value):
+        QueryMetadata(Rest, WantedKey -> Value)
+
+'action' AddModuleToDependencyList(NAME)
+
+    'rule' AddModuleToDependencyList(Name):
+        ModuleDependencyList -> List
+        IsNameInList(Name, List)
+        
+    'rule' AddModuleToDependencyList(Name):
+        ModuleDependencyList -> List
+        ModuleDependencyList <- namelist(Name, List)
+        
+'action' GenerateManifestRequires(NAMELIST)
+
+    'rule' GenerateManifestRequires(namelist(Head, Tail)):
+        GenerateManifestRequires(Tail)
+        OutputWriteI("  <requires name=\"", Head, "\">\n")
+    
+    'rule' GenerateManifestRequires(nil):
+        -- do nothing
+
+'action' GenerateManifestDefinitions(DEFINITION)
+
+    'rule' GenerateManifestDefinitions(sequence(Left, Right)):
+        GenerateManifestDefinitions(Left)
+        GenerateManifestDefinitions(Right)
+        
+    'rule' GenerateManifestDefinitions(type(_, public, Name, _)):
+    
+    'rule' GenerateManifestDefinitions(constant(_, public, Name, _)):
+    
+    'rule' GenerateManifestDefinitions(variable(_, public, Name, _)):
+    
+    'rule' GenerateManifestDefinitions(handler(_, public, Name, Signature, _, _)):
+        GenerateManifestHandlerDefinition(Name, Signature)
+
+    'rule' GenerateManifestDefinitions(foreignhandler(_, public, Name, Signature, _)):
+        GenerateManifestHandlerDefinition(Name, Signature)
+
+    'rule' GenerateManifestDefinitions(property(_, public, Name, Getter, Setter)):
+        QuerySymbolId(Getter -> GetInfo)
+        GetInfo'Type -> GetType
+        QuerySymbolId(Setter -> SetInfo)
+        SetInfo'Type -> SetType
+        GenerateManifestPropertyDefinition(Name, GetType, SetType)
+
+    'rule' GenerateManifestDefinitions(event(_, public, Name, Signature)):
+        GenerateManifestEventDefinition(Name, Signature)
+
+    'rule' GenerateManifestDefinitions(_):
+        -- nothing
+
+'action' GenerateManifestType(TYPE)
+
+    'rule' GenerateManifestType(Type):
+        [|
+            IsTypeOptional(Type)
+            OutputWrite("optional ")
+        |]
+        GenerateManifestTypeBody(Type)
+
+'condition' IsTypeOptional(TYPE)
+
+    'rule' IsTypeOptional(optional(_, Base)):
+        -- do nothing
+        
+    'rule' IsTypeOptional(named(_, Id))
+        QuerySymbolId(Id -> Info)
+        Info'Type -> Type
+        IsTypeOptional(Type)
+
+'action' GenerateManifestTypeBody(TYPE)
+
+    'rule' GenerateManifestTypeBody(optional(_, Base)):
+        GenerateManifestTypeBody(Base)
+
+    'rule' GenerateManifestTypeBody(named(_, Id)):
+        QuerySymbolId(Id -> Info)
+        Info'Type -> Type
+        (|
+            where(Type -> optional(_, _))
+            GenerateManifestTypeBody(Type)
+        ||
+            where(Type -> named(_, _))
+            GenerateManifestTypeBody(Type)
+        ||
+            Id'Name -> Name
+            OutputWriteI("", Name, "")
+        |)
+
+    'rule' GenerateManifestTypeBody(any(_)):
+        OutputWrite("any")
+
+    'rule' GenerateManifestTypeBody(undefined(_)):
+        OutputWrite("undefined")
+
+    'rule' GenerateManifestTypeBody(boolean(_)):
+        OutputWrite("boolean")
+    'rule' GenerateManifestTypeBody(integer(_)):
+        OutputWrite("integer")
+    'rule' GenerateManifestTypeBody(real(_)):
+        OutputWrite("real")
+    'rule' GenerateManifestTypeBody(number(_)):
+        OutputWrite("number")
+    'rule' GenerateManifestTypeBody(string(_)):
+        OutputWrite("string")
+    'rule' GenerateManifestTypeBody(data(_)):
+        OutputWrite("data")
+    'rule' GenerateManifestTypeBody(array(_)):
+        OutputWrite("array")
+    'rule' GenerateManifestTypeBody(list(_, _)):
+        OutputWrite("list")
+        
+    'rule' GenerateManifestTypeBody(pointer(_)):
+        OutputWrite("pointer")
+    'rule' GenerateManifestTypeBody(bool(_)):
+        OutputWrite("bool")
+    'rule' GenerateManifestTypeBody(int(_)):
+        OutputWrite("int")
+    'rule' GenerateManifestTypeBody(uint(_)):
+        OutputWrite("uint")
+    'rule' GenerateManifestTypeBody(float(_)):
+        OutputWrite("float")
+    'rule' GenerateManifestTypeBody(double(_)):
+        OutputWrite("double")
+
+    'rule' GenerateManifestTypeBody(Type):
+        print(Type)
+        Fatal_InternalInconsistency("attempt to generate uncoded type for manifest")
+
+'action' GenerateManifestSignatureParameters(PARAMETERLIST)
+
+    'rule' GenerateManifestSignatureParameters(parameterlist(parameter(_, Mode, _, Type), Tail)):
+        (|
+            where(Mode -> in)
+            OutputWrite("in ")
+        ||
+            where(Mode -> out)
+            OutputWrite("out ")
+        ||
+            where(Mode -> inout)
+            OutputWrite("inout ")
+        |)
+        GenerateManifestType(Type)
+        [|
+            ne(Tail, nil)
+            OutputWrite(",")
+        |]
+        GenerateManifestSignatureParameters(Tail)
+
+    'rule' GenerateManifestSignatureParameters(nil):
+        -- do nothing
+
+'action' GenerateManifestSignature(SIGNATURE)
+
+    'rule' GenerateManifestSignature(signature(Parameters, ReturnType)):
+        OutputWrite("parameters=\"")
+        GenerateManifestSignatureParameters(Parameters)
+        OutputWrite("\" return=\"")
+        GenerateManifestType(ReturnType)
+        OutputWrite("\"")
+
+'action' GenerateManifestHandlerDefinition(ID, SIGNATURE)
+
+    'rule' GenerateManifestHandlerDefinition(Id, Signature):
+        Id'Name -> Name
+        OutputWriteI("    <handler name=\"", Name, "\" ")
+        GenerateManifestSignature(Signature)
+        OutputWrite("/>\n")
+
+'action' GenerateManifestEventDefinition(ID, SIGNATURE)
+
+    'rule' GenerateManifestEventDefinition(Id, Signature):
+        Id'Name -> Name
+        OutputWriteI("    <event name=\"", Name, "\" ")
+        GenerateManifestSignature(Signature)
+        OutputWrite("/>\n")
+
+'action' GenerateManifestPropertyDefinition(ID, TYPE, TYPE)
+
+    'rule' GenerateManifestPropertyDefinition(Id, GetType, SetType):
+        --
+
+'condition' IsNameInList(NAME, NAMELIST)
+    'rule' IsNameInList(Id, namelist(Head, Tail)):
+        eq(Id, Head)
+    'rule' IsNameInList(Id, namelist(Head, Tail)):
+        IsNameInList(Id, Tail)
 
 ----------
 
@@ -48,9 +300,9 @@
         GenerateImportedDefinition(Handler)
         GenerateImportedDefinitions(Arguments)
 
-    'rule' GenerateImportedDefinitions(STATEMENT'invoke(_, Info, Arguments)):
-        GenerateImportedInvokeDefinition(Info)
-        GenerateImportedDefinitions(Arguments)
+    --'rule' GenerateImportedDefinitions(STATEMENT'invoke(_, Info, Arguments)):
+    --    GenerateImportedInvokeDefinition(Info)
+    --    GenerateImportedDefinitions(Arguments)
         
     'rule' GenerateImportedDefinitions(EXPRESSION'slot(_, Name)):
         GenerateImportedDefinition(Name)
@@ -59,9 +311,9 @@
         GenerateImportedDefinition(Handler)
         GenerateImportedDefinitions(Arguments)
 
-    'rule' GenerateImportedDefinitions(EXPRESSION'invoke(_, Info, Arguments)):
-        GenerateImportedInvokeDefinition(Info)
-        GenerateImportedDefinitions(Arguments)
+    --'rule' GenerateImportedDefinitions(EXPRESSION'invoke(_, Info, Arguments)):
+    --    GenerateImportedInvokeDefinition(Info)
+    --    GenerateImportedDefinitions(Arguments)
 
 'action' GenerateImportedDefinition(ID)
 
@@ -74,6 +326,8 @@
         
         -- Ensure we have a dependency for the module
         GenerateModuleDependency(ModuleId -> ModuleIndex)
+        ModuleId'Name -> ModuleName
+        AddModuleToDependencyList(ModuleName)
         
         -- Fetch the info about the symbol.
         QuerySymbolId(Id -> SymbolInfo)
@@ -107,35 +361,6 @@
         -- If we get here then either the id isn't imported, or we have previously
         -- generated it.
 
-'action' GenerateImportedInvokeDefinition(INVOKELIST)
-
-    'rule' GenerateImportedInvokeDefinition(invokelist(Info, Tail)):
-        GenerateImportedInvokeInfo(Info)
-        GenerateImportedInvokeDefinition(Tail)
-        
-    'rule' GenerateImportedInvokeDefinition(nil):
-        -- do nothing
-
-'action' GenerateImportedInvokeInfo(INVOKEINFO)
-
-    'rule' GenerateImportedInvokeInfo(Info):
-        Info'Index -> Index
-        eq(Index, -1)
-        
-        Info'ModuleName -> ModuleNameString
-        MakeNameLiteral(ModuleNameString -> ModuleName)
-        EmitModuleDependency(ModuleName -> ModuleIndex)
-        Info'ModuleIndex <- ModuleIndex
-        
-        Info'Name -> NameString
-        MakeNameLiteral(NameString -> Name)
-        EmitUndefinedType(-> SymbolTypeIndex)
-        EmitImportedSyntax(ModuleIndex, Name, SymbolTypeIndex -> SymbolIndex)
-        Info'Index <- SymbolIndex
-
-    'rule' GenerateImportedInvokeInfo(Info):
-        -- If we get here then we've previously processed this invoke.
-
 ----
 
 'action' GenerateModuleDependency(ID -> INT)
@@ -154,6 +379,8 @@
             -- Emit a dependency for the module and get its index
             EmitModuleDependency(ModuleName -> NewModuleIndex)
             ModuleInfo'Index <- NewModuleIndex
+
+            AddModuleToDependencyList(ModuleName)
         |]
         
         -- Now return the updated module index
@@ -180,6 +407,12 @@
         GenerateDefinitionIndex(Name)
 
     'rule' GenerateDefinitionIndexes(foreignhandler(_, _, Name, _, _)):
+        GenerateDefinitionIndex(Name)
+
+    'rule' GenerateDefinitionIndexes(property(_, _, Name, _, _)):
+        GenerateDefinitionIndex(Name)
+
+    'rule' GenerateDefinitionIndexes(event(_, _, Name, _)):
         GenerateDefinitionIndex(Name)
 
     'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _)):
@@ -494,10 +727,10 @@
         EmitPosition(Position)
         EmitResolveLabel(RepeatHead)
         EmitCreateRegister(-> ContinueRegister)
-        EmitBeginBuiltinInvoke("RepeatCounted", ContinueRegister)
+        GenerateBeginBuiltinInvoke("RepeatCounted", Context, ContinueRegister)
         EmitContinueInvoke(CountRegister)
         EmitEndInvoke()
-        EmitJumpIfFalse(CountRegister, RepeatTail)
+        EmitJumpIfFalse(ContinueRegister, RepeatTail)
         EmitDestroyRegister(ContinueRegister)
         GenerateBody(Result, Context, Body)
         EmitJump(RepeatHead)
@@ -558,7 +791,7 @@
 
         EmitResolveLabel(RepeatHead)
         EmitCreateRegister(-> ContinueRegister)
-        EmitBeginBuiltinInvoke("RepeatUpToCondition", ContinueRegister)
+        GenerateBeginBuiltinInvoke("RepeatUpToCondition", Context, ContinueRegister)
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(LimitRegister)
         EmitEndInvoke()
@@ -571,7 +804,7 @@
 
         EmitResolveLabel(RepeatNext)
         EmitFetchVar(VarKind, CounterRegister, VarIndex)
-        EmitBeginBuiltinInvoke("RepeatUpToIterate", CounterRegister)
+        GenerateBeginBuiltinInvoke("RepeatUpToIterate", Context, CounterRegister)
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(StepRegister)
         EmitEndInvoke()
@@ -605,7 +838,7 @@
 
         EmitResolveLabel(RepeatHead)
         EmitCreateRegister(-> ContinueRegister)
-        EmitBeginBuiltinInvoke("RepeatDownToCondition", ContinueRegister)
+        GenerateBeginBuiltinInvoke("RepeatDownToCondition", Context, ContinueRegister)
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(LimitRegister)
         EmitEndInvoke()
@@ -618,7 +851,7 @@
 
         EmitResolveLabel(RepeatNext)
         EmitFetchVar(VarKind, CounterRegister, VarIndex)
-        EmitBeginBuiltinInvoke("RepeatDownToIterate", CounterRegister)
+        GenerateBeginBuiltinInvoke("RepeatDownToIterate", Context, CounterRegister)
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(StepRegister)
         EmitEndInvoke()
@@ -663,14 +896,26 @@
 
     'rule' GenerateBody(Result, Context, invoke(Position, Invokes, Arguments)):
         EmitPosition(Position)
-        GenerateInvoke_GetExecuteSignature(Invokes -> Signature)
+        GenerateDefinitionGroupForInvokes(Invokes, execute, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
-        GenerateInvoke_Execute(Context, Result, Invokes, Arguments)
+        EmitBeginExecuteInvoke(Index, Context, Result)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitEndInvoke()
         GenerateInvoke_AssignArguments(Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
         
     'rule' GenerateBody(Result, Context, nil):
         -- nothing
+
+'action' GenerateBeginBuiltinInvoke(STRING, INT, INT)
+
+    'rule' GenerateBeginBuiltinInvoke(NameString, ContextReg, ResultReg):
+        MakeNameLiteral("__builtin__" -> ModuleName)
+        EmitModuleDependency(ModuleName -> ModuleIndex)
+        MakeNameLiteral(NameString -> InvokeName)
+        EmitUndefinedType(-> SymbolTypeIndex)
+        EmitImportedHandler(ModuleIndex, InvokeName, SymbolTypeIndex -> SymbolIndex)
+        EmitBeginExecuteInvoke(SymbolIndex, ContextReg, ResultReg)
 
 ----
 
@@ -686,15 +931,15 @@
 --
 'action' GenerateInvoke_EvaluateArguments(INT, INVOKESIGNATURE, EXPRESSIONLIST)
 
-    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(in, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(in, _, SigRest), expressionlist(Expr, ArgRest)):
         GenerateInvoke_EvaluateArgumentForIn(ContextReg, Expr)
         GenerateInvoke_EvaluateArguments(ContextReg, SigRest, ArgRest)
         
-    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(inout, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(inout, _, SigRest), expressionlist(Expr, ArgRest)):
         GenerateInvoke_EvaluateArgumentForInOut(ContextReg, Expr)
         GenerateInvoke_EvaluateArguments(ContextReg, SigRest, ArgRest)
 
-    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(out, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_EvaluateArguments(ContextReg, invokesignature(out, _, SigRest), expressionlist(Expr, ArgRest)):
         GenerateInvoke_EvaluateArgumentForOut(ContextReg, Expr)
         GenerateInvoke_EvaluateArguments(ContextReg, SigRest, ArgRest)
         
@@ -719,7 +964,7 @@
     'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, Invoke:invoke(_, Invokes, Arguments)):
         EmitCreateRegister(-> ResultReg)
         EmitAttachRegisterToExpression(ResultReg, Invoke)
-        GenerateInvoke_GetAssignSignature(Invokes -> Signature)
+        GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(ContextReg, Signature, Arguments)
 
     'rule' GenerateInvoke_EvaluateArgumentForOut(ContextReg, Slot:slot(_, _)):
@@ -737,9 +982,14 @@
     'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, Invoke:invoke(_, Invokes, Arguments)):
         EmitCreateRegister(-> OutputReg)
         EmitAttachRegisterToExpression(OutputReg, Invoke)
-        GenerateInvoke_GetEvaluateSignature(Invokes -> Signature)
+        GenerateDefinitionGroupForInvokes(Invokes, evaluate, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(ContextReg, Signature, Arguments)
-        GenerateInvoke_Evaluate(ContextReg, OutputReg, Invokes, Arguments)
+        EmitCreateRegister(-> IgnoredResultReg)
+        EmitBeginExecuteInvoke(Index, ContextReg, IgnoredResultReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitContinueInvoke(OutputReg)
+        EmitEndInvoke()
+        EmitDestroyRegister(IgnoredResultReg)
         GenerateInvoke_AssignArguments(ContextReg, Signature, Arguments)
 
     'rule' GenerateInvoke_EvaluateArgumentForInOut(ContextReg, Slot:slot(_, _)):
@@ -754,11 +1004,11 @@
 
 'action' GenerateInvoke_AssignArguments(INT, INVOKESIGNATURE, EXPRESSIONLIST)
 
-    'rule' GenerateInvoke_AssignArguments(ContextReg, invokesignature(in, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_AssignArguments(ContextReg, invokesignature(in, _, SigRest), expressionlist(Expr, ArgRest)):
         -- nothing to do for in arguments
         GenerateInvoke_AssignArguments(ContextReg, SigRest, ArgRest)
         
-    'rule' GenerateInvoke_AssignArguments(ContextReg, invokesignature(_, SigRest), expressionlist(Expr, ArgRest)):
+    'rule' GenerateInvoke_AssignArguments(ContextReg, invokesignature(_, _, SigRest), expressionlist(Expr, ArgRest)):
         -- out and inout are the same
         GenerateInvoke_AssignArgument(ContextReg, Expr)
         GenerateInvoke_AssignArguments(ContextReg, SigRest, ArgRest)
@@ -770,7 +1020,14 @@
 
     'rule' GenerateInvoke_AssignArgument(ContextReg, Invoke:invoke(_, Invokes, Arguments)):
         EmitGetRegisterAttachedToExpression(Invoke -> InputReg)
-        GenerateInvoke_Assign(ContextReg, InputReg, Invokes, Arguments)
+        GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
+        EmitCreateRegister(-> IgnoredResultReg)
+        EmitBeginExecuteInvoke(Index, ContextReg, IgnoredResultReg)
+        EmitContinueInvoke(InputReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitEndInvoke()
+        EmitDestroyRegister(IgnoredResultReg)
+        GenerateInvoke_AssignArguments(ContextReg, Signature, Arguments)
         
     'rule' GenerateInvoke_AssignArgument(ContextReg, Slot:slot(_, Id)):
         EmitGetRegisterAttachedToExpression(Slot -> InputReg)
@@ -800,34 +1057,15 @@
         |]
         GenerateInvoke_FreeArguments(Arguments)
     
+    'rule' GenerateInvoke_FreeArgument(Expr):
+        [|
+            EmitGetRegisterAttachedToExpression(Expr -> Reg)
+            EmitDestroyRegister(Reg)
+            EmitDetachRegisterFromExpression(Expr)
+        |]
+
     'rule' GenerateInvoke_FreeArgument(_):
         -- nothing to do
-
-----
-
-'action' GenerateInvoke_Execute(INT, INT, INVOKELIST, EXPRESSIONLIST)
-
-    'rule' GenerateInvoke_Execute(ContextReg, ResultReg, Invokes, Arguments):
-        GenerateDefinitionGroupForInvokes(Invokes -> Index)
-        EmitBeginExecuteInvoke(Index, ContextReg, ResultReg)
-        GenerateInvoke_EmitInvokeArguments(Arguments)
-        EmitEndInvoke()
-
-'action' GenerateInvoke_Evaluate(INT, INT, INVOKELIST, EXPRESSIONLIST)
-
-    'rule' GenerateInvoke_Evaluate(ContextReg, OutputReg, Invokes, Arguments):
-        GenerateDefinitionGroupForInvokes(Invokes -> Index)
-        EmitBeginEvaluateInvoke(Index, ContextReg, OutputReg)
-        GenerateInvoke_EmitInvokeArguments(Arguments)
-        EmitEndInvoke()
-
-'action' GenerateInvoke_Assign(INT, INT, INVOKELIST, EXPRESSIONLIST)
-
-    'rule' GenerateInvoke_Assign(ContextReg, InputReg, Invokes, Arguments):
-        GenerateDefinitionGroupForInvokes(Invokes -> Index)
-        EmitBeginAssignInvoke(Index, ContextReg, InputReg)
-        GenerateInvoke_EmitInvokeArguments(Arguments)
-        EmitEndInvoke()
 
 ----
 
@@ -843,6 +1081,7 @@
 
 ----
 
+/*
 'action' GenerateInvoke_GetExecuteSignature(INVOKELIST -> INVOKESIGNATURE)
 
     'rule' GenerateInvoke_GetExecuteSignature(invokelist(Head, _) -> Signature):
@@ -857,25 +1096,88 @@
 
     'rule' GenerateInvoke_GetAssignSignature(invokelist(Head, _) -> Signature):
         Head'LSignature -> Signature
+*/
 
 ----
 
-'action' GenerateDefinitionGroupForInvokes(INVOKELIST -> INT)
+'action' GenerateDefinitionGroupForInvokes(INVOKELIST, INVOKEMETHODTYPE, EXPRESSIONLIST -> INT, INVOKESIGNATURE)
 
-    'rule' GenerateDefinitionGroupForInvokes(InvokeList -> Index)
+    'rule' GenerateDefinitionGroupForInvokes(InvokeList, Type, Arguments -> Index, Signature)
         EmitBeginDefinitionGroup()
-        GenerateDefinitionGroupForInvokeList(InvokeList)
+        GenerateDefinitionGroupForInvokeList(InvokeList, Type, Arguments -> Signature)
         EmitEndDefinitionGroup(-> Index)
 
-'action' GenerateDefinitionGroupForInvokeList(INVOKELIST)
+'action' GenerateDefinitionGroupForInvokeList(INVOKELIST, INVOKEMETHODTYPE, EXPRESSIONLIST -> INVOKESIGNATURE)
 
-    'rule' GenerateDefinitionGroupForInvokeList(invokelist(Head, Tail)):
-        Head'Index -> Index
-        EmitContinueDefinitionGroup(Index)
-        GenerateDefinitionGroupForInvokeList(Tail)
+    'rule' GenerateDefinitionGroupForInvokeList(invokelist(Head, Tail), Type, Arguments -> Signature):
+        Head'ModuleName -> ModuleName
+        Head'Methods -> Methods
+        GenerateDefinitionGroupForInvokeMethodList(ModuleName, Type, Arguments, Methods -> HeadSig)
+        GenerateDefinitionGroupForInvokeList(Tail, Type, Arguments -> TailSig)
+        (|
+            eq(HeadSig, nil)
+            where(TailSig -> Signature)
+        ||
+            where(HeadSig -> Signature)
+        |)
         
-    'rule' GenerateDefinitionGroupForInvokeList(nil):
+    'rule' GenerateDefinitionGroupForInvokeList(nil, _, _ -> nil):
         -- do nothing
+
+'action' GenerateDefinitionGroupForInvokeMethodList(STRING, INVOKEMETHODTYPE, EXPRESSIONLIST, INVOKEMETHODLIST -> INVOKESIGNATURE)
+    
+    'rule' GenerateDefinitionGroupForInvokeMethodList(ModuleNameString, WantType, Arguments, methodlist(SymbolNameString, IsType, Signature, Tail) -> OutSig):
+        (|
+            eq(WantType, IsType)
+            AreAllArgumentsDefinedForInvokeMethod(Arguments, Signature)
+
+            MakeNameLiteral(ModuleNameString -> ModuleName)
+            EmitModuleDependency(ModuleName -> ModuleIndex)
+            AddModuleToDependencyList(ModuleName)
+            
+            MakeNameLiteral(SymbolNameString -> SymbolName)
+            EmitUndefinedType(-> SymbolTypeIndex)
+            EmitImportedHandler(ModuleIndex, SymbolName, SymbolTypeIndex -> SymbolIndex)
+            
+            EmitContinueDefinitionGroup(SymbolIndex)
+            
+            where(Signature -> HeadSig)
+        ||
+            where(INVOKESIGNATURE'nil -> HeadSig)
+        |)
+        GenerateDefinitionGroupForInvokeMethodList(ModuleNameString, WantType, Arguments, Tail -> TailSig)
+        (|
+            eq(HeadSig, nil)
+            where(TailSig -> OutSig)
+        ||
+            where(HeadSig -> OutSig)
+        |)
+
+        
+     'rule' GenerateDefinitionGroupForInvokeMethodList(_, _, _, nil -> nil):
+        -- do nothing
+
+'condition' AreAllArgumentsDefinedForInvokeMethod(EXPRESSIONLIST, INVOKESIGNATURE)
+
+    'rule' AreAllArgumentsDefinedForInvokeMethod(Arguments, invokesignature(_, Index, Tail)):
+        eq(Index, -1)
+        AreAllArgumentsDefinedForInvokeMethod(Arguments, Tail)
+        
+    'rule' AreAllArgumentsDefinedForInvokeMethod(Arguments, invokesignature(_, Index, Tail)):
+        GetExpressionAtIndex(Arguments, Index -> Arg)
+        ne(Arg, nil)
+        AreAllArgumentsDefinedForInvokeMethod(Arguments, Tail)
+
+    'rule' AreAllArgumentsDefinedForInvokeMethod(Arguments, nil):
+        -- do nothing
+
+'action' GetExpressionAtIndex(EXPRESSIONLIST, INT -> EXPRESSION)
+
+    'rule' GetExpressionAtIndex(expressionlist(Head, Tail), Index -> Head):
+        eq(Index, 0)
+        
+    'rule' GetExpressionAtIndex(expressionlist(_, Tail), Index -> Head):
+        GetExpressionAtIndex(Tail, Index - 1 -> Head)
 
 ----
 
@@ -897,7 +1199,7 @@
 
 'action' GenerateCall_GetInvokeSignature(PARAMETERLIST -> INVOKESIGNATURE)
 
-    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest) -> invokesignature(Mode, InvokeRest)):
+    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest) -> invokesignature(Mode, 0, InvokeRest)):
         GenerateCall_GetInvokeSignature(ParamRest -> InvokeRest)
     
     'rule' GenerateCall_GetInvokeSignature(nil -> nil):
@@ -947,9 +1249,14 @@
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments)
     
     'rule' GenerateExpressionInRegister(Result, Context, invoke(_, Invokes, Arguments)):
-        GenerateInvoke_GetEvaluateSignature(Invokes -> Signature)
+        GenerateDefinitionGroupForInvokes(Invokes, evaluate, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
-        GenerateInvoke_Evaluate(Context, Result, Invokes, Arguments)
+        EmitCreateRegister(-> IgnoredReg)
+        EmitBeginExecuteInvoke(Index, Context, IgnoredReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitContinueInvoke(Result)
+        EmitEndInvoke()
+        EmitDestroyRegister(IgnoredReg)
         GenerateInvoke_AssignArguments(Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
 

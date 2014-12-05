@@ -142,8 +142,41 @@ bool MCScriptLookupModule(MCNameRef name, MCScriptModuleRef& r_module);
 // Ensure that the module is valid and has resolved all its dependencies.
 bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef module);
 
+// Returns true if the module is a library.
+bool MCScriptIsModuleALibrary(MCScriptModuleRef module);
+
+// Returns true if the module is a widget.
+bool MCScriptIsModuleAWidget(MCScriptModuleRef module);
+
 // List the module's direct dependencies.
-bool MCScriptGetDependenciesOfModule(MCScriptModuleRef module, const MCNameRef*& r_dependencies, uindex_t& r_count);
+bool MCScriptCopyDependenciesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_module_names);
+
+// Returns a list of properties implemented by the module.
+bool MCScriptCopyPropertiesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_property_names);
+
+// Queries the type of the given property. If the setting type is nil, then the property
+// is read-only.
+bool MCScriptQueryPropertyOfModule(MCScriptModuleRef module, MCNameRef property, /* get */ MCTypeInfoRef& r_getter, /* get */ MCTypeInfoRef& r_setter);
+
+// Returns a list of the events declared by the module.
+bool MCScriptCopyEventsOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_event_names);
+
+// Query the signature of the given event.
+bool MCScriptQueryEventOfModule(MCScriptModuleRef module, MCNameRef event, /* get */ MCTypeInfoRef& r_signature);
+
+// Returns a list of the handlers declared by the module.
+bool MCScriptCopyHandlersOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_handler_names);
+
+// Query the signature of the given handler.
+bool MCScriptQueryHandlerOfModule(MCScriptModuleRef module, MCNameRef handler, /* get */ MCTypeInfoRef& r_signature);
+
+// Retain a module.
+MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef module);
+
+// Release a module.
+void MCScriptReleaseModule(MCScriptModuleRef module);
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Create an instance of the given module. If the module is single-instance it
 // returns that instance. Otherwise it returns a new instance. If the method
@@ -151,13 +184,9 @@ bool MCScriptGetDependenciesOfModule(MCScriptModuleRef module, const MCNameRef*&
 // instance.
 bool MCScriptCreateInstanceOfModule(MCScriptModuleRef module, MCScriptInstanceRef& r_instance);
 
-// Retain a module.
-MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef module);
-// Release a module.
-void MCScriptReleaseModule(MCScriptModuleRef module);
-
 // Retain a instance.
 MCScriptInstanceRef MCScriptRetainInstance(MCScriptInstanceRef instance);
+
 // Release a instance.
 void MCScriptReleaseInstance(MCScriptInstanceRef instance);
 

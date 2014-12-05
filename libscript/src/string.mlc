@@ -4,33 +4,33 @@ This module specifies the syntax definitions and bindings for operations on bina
 
 module com.livecode.string
 
-foreign handler MCStringExecPutStringBefore(in Source as string, inout Target as string) as undefined binds to "<builtin>"
-foreign handler MCStringExecPutStringAfter(in Source as string, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCStringExecPutStringBefore(in Source as string, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCStringExecPutStringAfter(in Source as string, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler MCStringExecReplace(in Pattern as string, in Replacement as string, inout Target as string) as undefined binds to "<builtin>"
+public foreign handler MCStringExecReplace(in Pattern as string, in Replacement as string, inout Target as string) as undefined binds to "<builtin>"
 
-foreign handler MCStringEvalConcatenate(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
-foreign handler MCStringEvalConcatenateWithSpace(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalConcatenate(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalConcatenateWithSpace(in Left as string, in Right as string, out Result as string) as undefined binds to "<builtin>"
 
-foreign handler MCStringEvalLowercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
-foreign handler MCStringEvalUppercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalLowercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalUppercaseOf(in Source as string, out Result as string) as undefined binds to "<builtin>"
 
 // The following all need some notion of context 
-foreign handler MCStringEvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
-foreign handler MCStringEvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
 
-foreign handler MCStringEvalOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
-foreign handler MCStringEvalOffsetAfter(in Needle as string, in After as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalOffsetAfter(in Needle as string, in After as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
 
-foreign handler MCStringEvalLastOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
-foreign handler MCStringEvalLastOffsetBefore(in Needle as string, in Before as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalLastOffset(in Needle as string, in Source as string, out Result as index) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalLastOffsetBefore(in Needle as string, in Before as index, in Source as string, out Result as index) as undefined binds to "<builtin>"
 
-foreign handler MCStringEvalContainsChars(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalContainsChars(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
 
-foreign handler MCStringEvalIsEqualTo(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
-foreign handler MCStringEvalIsNotEqualTo(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
-foreign handler MCStringEvalIsLessThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
-foreign handler MCStringEvalIsGreaterThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsEqualTo(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsNotEqualTo(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsLessThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCStringEvalIsGreaterThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
 
 --
 
@@ -156,7 +156,7 @@ output:     Returns true if the result of evaluating <Left> is the same as that 
 
 */
 
-syntax IsEqualTo is neutral binary operator with precedence 1
+syntax IsEqualTo is neutral binary operator with precedence 5
     <Left: Expression> "is" <Right: Expression>
 begin
     MCStringEvalIsEqualTo(Left, Right, output)

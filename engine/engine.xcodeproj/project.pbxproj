@@ -298,6 +298,7 @@
 		4D77F1DE183F8298002EEBB4 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */; };
 		4D79B72F1A275AA500DD750C /* module-canvas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B72E1A275AA500DD750C /* module-canvas.cpp */; };
 		4D79B7321A275B2900DD750C /* canvas.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B7301A275ADE00DD750C /* canvas.mlc */; };
+		4D79B7D41A308FFD00DD750C /* libstdscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B72D1A275A7C00DD750C /* libstdscript.a */; };
 		4D7FA7BF1594E10500EEF440 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
 		4D7FA7C71594E17500EEF440 /* exec-datetime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */; };
 		4D81A4C411171F6B008AE3F1 /* objectprops.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C111171F6A008AE3F1 /* objectprops.cpp */; };
@@ -2356,6 +2357,8 @@
 		E875FD8C17293B4F005A69F4 /* exec-interface-stack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-stack.cpp"; path = "src/exec-interface-stack.cpp"; sourceTree = "<group>"; };
 		E875FD8D17293B4F005A69F4 /* exec-interface-vclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-vclip.cpp"; path = "src/exec-interface-vclip.cpp"; sourceTree = "<group>"; };
 		E875FD8E17293B4F005A69F4 /* exec-interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-interface.h"; path = "src/exec-interface.h"; sourceTree = "<group>"; };
+		E8A1AD001A27799B0078F401 /* module-canvas.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "module-canvas.h"; path = "src/module-canvas.h"; sourceTree = "<group>"; };
+		E8A1AD031A27817E0078F401 /* module-canvas-internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "module-canvas-internal.h"; path = "src/module-canvas-internal.h"; sourceTree = "<group>"; };
 		E8A49106170F179000769C7A /* region.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = region.h; path = src/region.h; sourceTree = "<group>"; };
 		E8A49107170F179000769C7A /* tilecachegl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = tilecachegl.cpp; path = src/tilecachegl.cpp; sourceTree = "<group>"; };
 		E8A7EEFA16FC982F00C39491 /* stacksecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stacksecurity.h; path = src/stacksecurity.h; sourceTree = "<group>"; };
@@ -2439,6 +2442,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D79B7D41A308FFD00DD750C /* libstdscript.a in Frameworks */,
 				726191781A260B7F00851787 /* libscript.a in Frameworks */,
 				726191601A26094900851787 /* libffi.a in Frameworks */,
 				BE6444481965B8BE00C2092C /* AudioToolbox.framework in Frameworks */,
@@ -3026,6 +3030,8 @@
 			children = (
 				4D79B7301A275ADE00DD750C /* canvas.mlc */,
 				4D79B72E1A275AA500DD750C /* module-canvas.cpp */,
+				E8A1AD001A27799B0078F401 /* module-canvas.h */,
+				E8A1AD031A27817E0078F401 /* module-canvas-internal.h */,
 			);
 			name = Modules;
 			sourceTree = "<group>";
@@ -5968,7 +5974,11 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libstdscript.a",
+				);
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
 			};
@@ -5982,7 +5992,11 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libstdscript.a",
+				);
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
 			};

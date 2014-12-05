@@ -22,6 +22,7 @@
     MakeStringLiteral
     MakeNameLiteral
     GetStringOfNameLiteral
+    IsNameEqualToString
 
     InitializeScopes
     FinalizeScopes
@@ -79,7 +80,9 @@
     PushMarkedStringSyntaxGrammar
     BeginSyntaxMappings
     EndSyntaxMappings
-    BeginMethodSyntaxMapping
+    BeginExecuteMethodSyntaxMapping
+    BeginEvaluateMethodSyntaxMapping
+    BeginAssignMethodSyntaxMapping
     EndMethodSyntaxMapping
     PushUndefinedArgumentSyntaxMapping
     PushTrueArgumentSyntaxMapping
@@ -87,9 +90,13 @@
     PushIntegerArgumentSyntaxMapping
     PushRealArgumentSyntaxMapping
     PushStringArgumentSyntaxMapping
-    PushMarkArgumentSyntaxMapping
+    PushInMarkArgumentSyntaxMapping
+    PushOutMarkArgumentSyntaxMapping
+    PushInOutMarkArgumentSyntaxMapping
 
     EmitBeginModule
+    EmitBeginLibraryModule
+    EmitBeginWidgetModule
     EmitEndModule
     EmitDefinitionIndex
     EmitExportedDefinition
@@ -170,7 +177,6 @@
     EmitBeginEvaluateInvoke
     EmitBeginAssignInvoke
     EmitBeginIterateInvoke
-    EmitBeginBuiltinInvoke
     EmitContinueInvoke
     EmitEndInvoke
     EmitAssign
@@ -190,6 +196,12 @@
     EmitDetachRegisterFromExpression
     EmitGetRegisterAttachedToExpression
     EmitPosition
+
+    OutputBeginManifest
+    OutputEnd
+    OutputWrite
+    OutputWriteI
+    OutputWriteS
 
     ErrorsDidOccur
     Fatal_OutOfMemory
@@ -232,6 +244,11 @@
     Error_IteratorSyntaxArgumentMustBindToInOutParameter
     Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter
     Error_VariableSyntaxArgumentMustBindToConsistentMode
+    Error_SyntaxMethodArgumentsMustMatch
+    Error_LSyntaxMethodArgumentsDontConform
+    Error_RSyntaxMethodArgumentsDontConform
+    Error_ExpressionSyntaxMethodArgumentsDontConform
+    Error_HandlersBoundToSyntaxMustBePublic
 
 --------------------------------------------------------------------------------
 
@@ -264,6 +281,7 @@
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
 
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
+'condition' IsNameEqualToString(NAME, STRING)
 
 --------------------------------------------------------------------------------
 
@@ -346,20 +364,27 @@
 'action' BeginSyntaxMappings()
 'action' EndSyntaxMappings()
 
-'action' BeginMethodSyntaxMapping(Name: NAME)
+'action' BeginExecuteMethodSyntaxMapping(Name: NAME)
+'action' BeginEvaluateMethodSyntaxMapping(Name: NAME)
+'action' BeginAssignMethodSyntaxMapping(Name: NAME)
 'action' EndMethodSyntaxMapping()
+'action' PushInMarkArgumentSyntaxMapping(MarkIndex: INT)
+'action' PushOutMarkArgumentSyntaxMapping(MarkIndex: INT)
+'action' PushInOutMarkArgumentSyntaxMapping(MarkIndex: INT)
+
 'action' PushUndefinedArgumentSyntaxMapping()
 'action' PushTrueArgumentSyntaxMapping()
 'action' PushFalseArgumentSyntaxMapping()
 'action' PushIntegerArgumentSyntaxMapping(Value: INT)
 'action' PushRealArgumentSyntaxMapping(Value: DOUBLE)
 'action' PushStringArgumentSyntaxMapping(Value: STRING)
-'action' PushMarkArgumentSyntaxMapping(MarkIndex: INT)
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
 
 --------------------------------------------------------------------------------
 
 'action' EmitBeginModule(Name: NAME -> ModuleIndex: INT)
+'action' EmitBeginWidgetModule(Name: NAME -> ModuleIndex: INT)
+'action' EmitBeginLibraryModule(Name: NAME -> ModuleIndex: INT)
 'action' EmitEndModule()
 
 'action' EmitModuleDependency(Name: NAME -> ModuleIndex: INT)
@@ -453,7 +478,6 @@
 'action' EmitBeginEvaluateInvoke(Index: INT, ContextRegister: INT, OutputRegister: INT)
 'action' EmitBeginAssignInvoke(Index: INT, ContextRegister: INT, InputRegister: INT)
 'action' EmitBeginIterateInvoke(Index: INT, ContextRegister: INT, IteratorRegister: INT, ContainerRegister: INT)
-'action' EmitBeginBuiltinInvoke(Builtin: STRING, ResultRegister: INT)
 'action' EmitContinueInvoke(Register: INT)
 'action' EmitEndInvoke()
 'action' EmitAssignUndefined(Register: INT)
@@ -474,6 +498,12 @@
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)
 'action' EmitDetachRegisterFromExpression(EXPRESSION)
 'condition' EmitGetRegisterAttachedToExpression(EXPRESSION -> INT)
+
+'action' OutputBeginManifest()
+'action' OutputEnd()
+'action' OutputWrite(STRING)
+'action' OutputWriteI(STRING, NAME, STRING)
+'action' OutputWriteS(STRING, STRING, STRING)
 
 --------------------------------------------------------------------------------
 
@@ -522,5 +552,11 @@
 'action' Error_IteratorSyntaxArgumentMustBindToInOutParameter(Position: POS)
 'action' Error_PhraseBoundMarkSyntaxArgumentMustBindToInParameter(Position: POS)
 'action' Error_VariableSyntaxArgumentMustBindToConsistentMode(Positiobn: POS)
+
+'action' Error_SyntaxMethodArgumentsMustMatch(Position: POS)
+'action' Error_LSyntaxMethodArgumentsDontConform(Position: POS)
+'action' Error_RSyntaxMethodArgumentsDontConform(Position: POS)
+'action' Error_ExpressionSyntaxMethodArgumentsDontConform(Position: POS)
+'action' Error_HandlersBoundToSyntaxMustBePublic(Position: POS)
 
 --------------------------------------------------------------------------------

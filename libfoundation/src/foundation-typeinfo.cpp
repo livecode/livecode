@@ -102,6 +102,7 @@ bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
         // We've successfully resolved the type, so return this one as the resolution.
         r_resolution . named_type = self;
         r_resolution . type = t_next_type;
+        r_resolution . is_optional = false;
         
         return true;
     }
@@ -128,7 +129,7 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
 {
     // We require that source is concrete - this means that it must be a named
     // type.
-    //MCAssert(MCTypeInfoIsNamed(source));
+    MCAssert(MCTypeInfoIsNamed(source));
     
     // Resolve the source type.
     MCResolvedTypeInfo t_resolved_source;
@@ -167,10 +168,6 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
     // the source type, or one of the source's supertypes.
     if (MCTypeInfoIsForeign(source . type))
     {
-        // Check to see if the target and the source have the same type
-        if (source . type == target . type)
-            return true;
-        
         // Check to see if the target is the source's bridge type.
         if (source . type -> foreign . descriptor . bridgetype != kMCNullTypeInfo &&
             target . named_type == source . type -> foreign . descriptor . bridgetype)
@@ -279,6 +276,11 @@ bool MCNamedTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
     MCValueRelease(self);
     
     return false;
+}
+
+MCNameRef MCNamedTypeInfoGetName(MCTypeInfoRef self)
+{
+    return self -> named . name;
 }
 
 bool MCNamedTypeInfoIsBound(MCTypeInfoRef self)

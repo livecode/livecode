@@ -82,7 +82,7 @@ extern int OutputFileAsC;
 static void full_main(int argc, char *argv[])
 {
     // If there is no filename, error.
-    if (argc != 1 && argc != 3)
+    if (argc != 1 && argc != 3 && argc != 5)
     {
         fprintf(stderr, "Invalid arguments\n");
         return 1;
@@ -99,6 +99,11 @@ static void full_main(int argc, char *argv[])
     {
         SetOutputFile(argv[++i]);
         OutputFileAsC = 1;
+        i++;
+    }
+    if (strcmp(argv[i], "-manifest") == 0 && i + 1 < argc)
+    {
+        SetManifestOutputFile(argv[++i]);
         i++;
     }
     AddFile(argv[i]);

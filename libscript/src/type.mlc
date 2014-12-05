@@ -4,20 +4,18 @@ This module specifies the syntax for the basic type operations available in modu
 
 module com.livecode.type
 
-foreign handler EvalBoolAsString(in Target as bool, out Value as string) as undefined binds to "<builtin>"
-foreign handler EvalRealAsString(in Target as real, out Value as string) as undefined binds to "<builtin>"
-foreign handler EvalIntAsString(in Target as int, out Value as string) as undefined binds to "<builtin>"
-foreign handler EvalIntAsReal(in Target as int, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalStringAsBool(in Target as string, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalStringAsReal(in Target as string, out Value as real) as undefined binds to "<builtin>"
-foreign handler EvalStringAsInt(in Target as string, out Value as int) as undefined binds to "<builtin>"
+public foreign handler EvalBoolAsString(in Target as bool, out Value as string) as undefined binds to "<builtin>"
+public foreign handler EvalRealAsString(in Target as real, out Value as string) as undefined binds to "<builtin>"
+public foreign handler EvalIntAsString(in Target as int, out Value as string) as undefined binds to "<builtin>"
+public foreign handler EvalIntAsReal(in Target as int, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalStringAsBool(in Target as string, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalStringAsReal(in Target as string, out Value as real) as undefined binds to "<builtin>"
+public foreign handler EvalStringAsInt(in Target as string, out Value as int) as undefined binds to "<builtin>"
 
-foreign handler EvalIsEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalIsDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalIsNotDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalIsEqualTo(in Left as any, in Right as any, out Value as bool) as undefined binds to "<builtin>"
-foreign handler EvalIsNotEqualTo(in Left as any, in Right as any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler EvalIsNotDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
 
 --
 
@@ -97,9 +95,9 @@ output:     Returns true if the given expression <Target> evaluates to the empty
 */
 
 syntax IsEmpty is postfix operator with precedence 1
-	<Target: Expression> "is" "empty"
+    <Target: Expression> "is" "empty"
 begin
-	EvalIsEmpty(Target, output)
+    EvalIsEmpty(Target, output)
 end syntax
 
 /*

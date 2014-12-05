@@ -98,6 +98,7 @@ static FileRef s_current_file;
 static unsigned int s_next_file_index;
 static const char *s_template_file = NULL;
 static const char *s_output_file = NULL;
+static const char *s_manifest_output_file = NULL;
 
 void InitializeFiles(void)
 {
@@ -210,6 +211,11 @@ void SetOutputFile(const char *p_output)
     s_output_file = p_output;
 }
 
+void SetManifestOutputFile(const char *p_output)
+{
+    s_manifest_output_file = p_output;
+}
+
 void SetTemplateFile(const char *p_output)
 {
     s_template_file = p_output;
@@ -220,6 +226,13 @@ FILE *OpenOutputFile(void)
     if (s_output_file == NULL)
         return NULL;
     return fopen(s_output_file, "w");
+}
+
+FILE *OpenManifestOutputFile(void)
+{
+    if (s_manifest_output_file == NULL)
+        return NULL;
+    return fopen(s_manifest_output_file, "w");
 }
 
 FILE *OpenTemplateFile(void)

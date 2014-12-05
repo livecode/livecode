@@ -722,8 +722,8 @@ static void MCScriptAddArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef s
 
 void MCScriptAddBuiltinArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p_index)
 {
-    // Encode builtin arguments as bottom bit zero.
-    p_index = p_index << 1;
+    // Encode builtin arguments 0, 1, 2, 3
+    p_index = (p_index + 1) << 1;
     MCScriptAddArgumentToSyntaxMethodInModule(self, p_index);
 }
 
@@ -735,13 +735,13 @@ void MCScriptAddConstantArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef 
     if (self == nil || !self -> valid)
         return;
     
-    // Encode constants as bottom bit zero, then -2 to adjust for builtins.
+    // Encode constants as 4 + (index * 2)
     MCScriptAddArgumentToSyntaxMethodInModule(self, (t_index + 2) << 1);
 }
 
 void MCScriptAddVariableArgumentToSyntaxMethodInModule(MCScriptModuleBuilderRef self, uindex_t p_index)
 {
-    // Encode non-indexed variables as bottom bit 0, subsequent bit 0.
+    // Encode variables as 4 + (index * 2) + 1
     MCScriptAddArgumentToSyntaxMethodInModule(self, (p_index << 2));
 }
 
@@ -1300,6 +1300,7 @@ void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_handl
     __continue_instruction(self, p_result_reg);
 }
 
+#if 0
 void MCScriptBeginInvokeAssignInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_index, uindex_t p_result_reg)
 {
     if (self == nil || !self -> valid)
@@ -1319,6 +1320,7 @@ void MCScriptBeginInvokeEvaluateInModule(MCScriptModuleBuilderRef self, uindex_t
     __continue_instruction(self, p_handler_index);
     __continue_instruction(self, p_result_reg);
 }
+#endif
 
 void MCScriptBeginIndirectInvokeInModule(MCScriptModuleBuilderRef self, uindex_t p_handler_reg, uindex_t p_result_reg)
 {

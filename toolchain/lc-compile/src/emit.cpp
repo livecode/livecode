@@ -9,6 +9,8 @@
 int OutputFileAsC = 0;
 
 extern "C" void EmitBeginModule(NameRef name, long& r_index);
+extern "C" void EmitBeginWidgetModule(NameRef name, long& r_index);
+extern "C" void EmitBeginLibraryModule(NameRef name, long& r_index);
 extern "C" void EmitEndModule(void);
 extern "C" void EmitModuleDependency(NameRef name, long& r_index);
 extern "C" void EmitImportedType(long module_index, NameRef name, long type_index, long& r_index);
@@ -118,6 +120,12 @@ extern "C" void EmitDetachRegisterFromExpression(long expr);
 extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
 extern "C" void EmitPosition(PositionRef position);
 
+extern "C" void OutputBeginManifest(void);
+extern "C" void OutputEnd(void);
+extern "C" void OutputWrite(const char *msg);
+extern "C" void OutputWriteI(const char *left, NameRef name, const char *right);
+extern "C" void OutputWriteS(const char *left, const char *string, const char *right);
+
 //////////
 
 //static MCTypeInfoRef *s_typeinfos = nil;
@@ -146,41 +154,6 @@ static MCStringRef to_mcstringref(long p_string)
     return t_uniq_string;
 }
 
-/*
-static MCTypeInfoRef to_mctypeinforef(long p_type_index)
-{
-    MCAssert(p_type_index < s_typeinfo_count);
-    return s_typeinfos[p_type_index];
-}
-
-static bool define_typeinfo(MCTypeInfoRef p_typeinfo, long& r_index)
-{
-    for(uindex_t i = 0; i < s_typeinfo_count; i++)
-        if (p_typeinfo == s_typeinfos[i])
-        {
-            r_index = i;
-            return false;
-        }
-    
-    MCMemoryResizeArray(s_typeinfo_count + 1, s_typeinfos, s_typeinfo_count);
-    s_typeinfos[s_typeinfo_count - 1] = MCValueRetain(p_typeinfo);
-    
-    r_index = s_typeinfo_count - 1;
-    
-    return true;
-}
-
-static bool define_named_typeinfo(const char *name, long& r_index)
-{
-    MCAutoStringRef t_string;
-    MCStringCreateWithCString(name, &t_string);
-    MCNewAutoNameRef t_name;
-    MCNameCreate(*t_string, &t_name);
-    MCAutoTypeInfoRef t_typeinfo;
-    MCNamedTypeInfoCreate(*t_name, &t_typeinfo);
-    return define_typeinfo(*t_typeinfo, r_index);
-}*/
-
 //////////
 
 static MCScriptModuleBuilderRef s_builder;
@@ -194,6 +167,30 @@ void EmitBeginModule(NameRef p_name, long& r_index)
     
     MCLog("[Emit] BeginModule(%@) -> 0", to_mcnameref(p_name));
 
+    s_module_name = p_name;
+    
+    MCScriptBeginModule(kMCScriptModuleKindNone, to_mcnameref(p_name), s_builder);
+    r_index = 0;
+}
+
+void EmitBeginWidgetModule(NameRef p_name, long& r_index)
+{
+    MCInitialize();
+    
+    MCLog("[Emit] BeginWidgetModule(%@) -> 0", to_mcnameref(p_name));
+    
+    s_module_name = p_name;
+    
+    MCScriptBeginModule(kMCScriptModuleKindWidget, to_mcnameref(p_name), s_builder);
+    r_index = 0;
+}
+
+void EmitBeginLibraryModule(NameRef p_name, long& r_index)
+{
+    MCInitialize();
+    
+    MCLog("[Emit] BeginLibraryModule(%@) -> 0", to_mcnameref(p_name));
+    
     s_module_name = p_name;
     
     MCScriptBeginModule(kMCScriptModuleKindLibrary, to_mcnameref(p_name), s_builder);
@@ -212,42 +209,9 @@ void EmitEndModule(void)
     
     void *t_buffer;
     size_t t_size;
+    t_buffer = NULL;
     MCMemoryOutputStreamFinish(t_stream, t_buffer, t_size);
     MCValueRelease(t_stream);
-    
-#if 0
-    if (t_success)
-    {
-        MCLog("Generated module file of size %ld\n", t_size);
-        
-        MCScriptModuleRef t_module;
-        MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
-        t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
-        MCValueRelease(t_stream);
-        
-        if (t_success)
-        {
-            FILE *t_out;
-            t_out = fopen("/Users/mark/Desktop/test.lcm", "w");
-            fwrite(t_buffer, 1, t_size, t_out);
-            fclose(t_out);
-        }
-        
-        if (t_success)
-            t_success = MCScriptEnsureModuleIsUsable(t_module);
-        
-        MCScriptInstanceRef t_instance;
-        if (t_success)
-            t_success = MCScriptCreateInstanceOfModule(t_module, t_instance);
-        
-        MCValueRef t_result;
-        if (t_success)
-            t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("test"), nil, 0, t_result);
-        
-        if (t_success)
-            MCLog("Executed test with result %@", t_result);
-    }
-#endif
     
     if (t_success)
     {
@@ -274,10 +238,10 @@ void EmitEndModule(void)
         {
             fwrite(t_buffer, 1, t_size, t_output);
             fclose(t_output);
-            free(t_buffer);
         }
     }
-    
+
+    free(t_buffer);
     
     MCFinalize();
 }
@@ -306,7 +270,7 @@ void EmitImportedConstant(long p_module_index, NameRef p_name, long p_type_index
     MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindConstant, p_type_index, t_index);
     r_index = t_index;
     
-    MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
+    MCLog("[Emit] ImportedConstant(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
 }
 
 void EmitImportedVariable(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
@@ -315,7 +279,7 @@ void EmitImportedVariable(long p_module_index, NameRef p_name, long p_type_index
     MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindVariable, p_type_index, t_index);
     r_index = t_index;
     
-    MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
+    MCLog("[Emit] ImportedVariable(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
 }
 
 void EmitImportedHandler(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
@@ -324,7 +288,7 @@ void EmitImportedHandler(long p_module_index, NameRef p_name, long p_type_index,
     MCScriptAddImportToModule(s_builder, p_module_index, to_mcnameref(p_name), kMCScriptDefinitionKindHandler, p_type_index, t_index);
     r_index = t_index;
     
-    MCLog("[Emit] ImportedType(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
+    MCLog("[Emit] ImportedHandler(%ld, %@, %ld -> %d)", p_module_index, to_mcnameref(p_name), p_type_index, t_index);
 }
 
 void EmitImportedSyntax(long p_module_index, NameRef p_name, long p_type_index, long& r_index)
@@ -460,7 +424,7 @@ void EmitContextSyntaxMethodArgument(void)
 void EmitIteratorSyntaxMethodArgument(void)
 {
     // TODO: Sort out iterate
-    //MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 3);
+    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 2);
     
     MCLog("[Emit] IteratorSyntaxMethodArgument()", 0);
 }
@@ -468,7 +432,7 @@ void EmitIteratorSyntaxMethodArgument(void)
 void EmitContainerSyntaxMethodArgument(void)
 {
     // TODO: Sort out iterate
-    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 4);
+    MCScriptAddBuiltinArgumentToSyntaxMethodInModule(s_builder, 3);
     
     MCLog("[Emit] ContainerSyntaxMethodArgument()", 0);
 }
@@ -966,6 +930,7 @@ void EmitBeginExecuteInvoke(long index, long contextreg, long resultreg)
     MCLog("[Emit] BeginExecuteInvoke(%ld, %ld, %ld)", index, contextreg, resultreg);
 }
 
+#if 0
 void EmitBeginEvaluateInvoke(long index, long contextreg, long outputreg)
 {
     MCScriptBeginInvokeEvaluateInModule(s_builder, index, outputreg);
@@ -983,6 +948,7 @@ void EmitBeginIterateInvoke(long index, long contextreg, long iteratorreg, long 
     // TODO: Iterate invoke
     MCLog("[Emit] BeginIterateInvoke(%ld, %ld, %ld)", index, contextreg, iteratorreg, containerreg);
 }
+#endif
 
 void EmitContinueInvoke(long reg)
 {
@@ -1178,4 +1144,47 @@ void EmitPosition(PositionRef p_position)
     long t_line;
     GetRowOfPosition(p_position, &t_line);
     MCScriptEmitPositionInModule(s_builder, to_mcnameref(t_filename_name), t_line);
+}
+
+//////////
+
+static FILE *s_output = NULL;
+
+void OutputBeginManifest(void)
+{
+    s_output = OpenManifestOutputFile();
+}
+
+void OutputWrite(const char *p_string)
+{
+    if (s_output == NULL)
+        return;
+    
+    fprintf(s_output, "%s", p_string);
+}
+
+void OutputWriteS(const char *p_left, const char *p_string, const char *p_right)
+{
+    if (s_output == NULL)
+        return;
+    
+    fprintf(s_output, "%s%s%s", p_left, p_string, p_right);
+}
+
+void OutputWriteI(const char *p_left, NameRef p_name, const char *p_right)
+{
+    if (s_output == NULL)
+        return;
+    
+    const char *t_name_string;
+    GetStringOfNameLiteral(p_name, &t_name_string);
+    OutputWriteS(p_left, t_name_string, p_right);
+}
+
+void OutputEnd(void)
+{
+    if (s_output == NULL)
+        return;
+    
+    fclose(s_output);
 }
