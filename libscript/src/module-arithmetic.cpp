@@ -79,7 +79,7 @@ extern "C" void MCArithmeticExecSubtractNumberFromNumber(MCNumberRef p_number, M
     MCNumberCreateWithReal(t_target, x_target);
 }
 
-extern "C" void MCArithmeticExecMultiplyIntegerByInteger(integer_t p_number, integer_t& x_target)
+extern "C" void MCArithmeticExecMultiplyIntegerByInteger(integer_t& x_target, integer_t p_number)
 {
     if (p_number > 0 && INTEGER_MAX / p_number < x_target)
         // overflow
@@ -91,12 +91,12 @@ extern "C" void MCArithmeticExecMultiplyIntegerByInteger(integer_t p_number, int
         x_target *= p_number;
 }
 
-extern "C" void MCArithmeticExecMultiplyRealByReal(double p_number, double& x_target)
+extern "C" void MCArithmeticExecMultiplyRealByReal(double& x_target, double p_number)
 {
     x_target *= p_number;
 }
 
-extern "C" void MCArithmeticExecMultiplyNumberByNumber(MCNumberRef p_number, MCNumberRef& x_target)
+extern "C" void MCArithmeticExecMultiplyNumberByNumber(MCNumberRef& x_target, MCNumberRef p_number)
 {
     double t_target, t_number;
     t_target = MCNumberFetchAsReal(x_target);
@@ -110,12 +110,12 @@ extern "C" void MCArithmeticExecMultiplyNumberByNumber(MCNumberRef p_number, MCN
     MCNumberCreateWithReal(t_target, x_target);
 }
 
-extern "C" void MCArithmeticExecDivideIntegerByInteger(integer_t p_number, integer_t& x_target)
+extern "C" void MCArithmeticExecDivideIntegerByInteger(integer_t& x_target, integer_t p_number)
 {
     x_target /= p_number;
 }
 
-extern "C" void MCArithmeticExecDivideRealByReal(double p_number, double& x_target)
+extern "C" void MCArithmeticExecDivideRealByReal(double& x_target, double p_number)
 {
     if (p_number > 0 && p_number < 1 && MAXFLOAT * p_number < x_target)
         // overflow
@@ -123,7 +123,7 @@ extern "C" void MCArithmeticExecDivideRealByReal(double p_number, double& x_targ
     x_target /= p_number;
 }
 
-extern "C" void MCArithmeticExecDivideNumberByNumber(MCNumberRef p_number, MCNumberRef& x_target)
+extern "C" void MCArithmeticExecDivideNumberByNumber(MCNumberRef& x_target, MCNumberRef p_number)
 {
     double t_target, t_number;
     t_target = MCNumberFetchAsReal(x_target);

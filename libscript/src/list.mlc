@@ -118,7 +118,7 @@ output:         Returns true if the elements of <Needle> occur as a subsequence 
                 and false otherwise.
 */
                 
-syntax ContainsElements is neutral binary operator with precedence 1
+syntax ContainsElements is neutral binary operator with precedence 2
     <Target: Expression> "contains" <Needle: Expression>
 begin
     MCListEvalContainsElements(Target, Needle, output)

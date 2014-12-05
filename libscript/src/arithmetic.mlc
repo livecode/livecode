@@ -8,12 +8,12 @@ public foreign handler MCArithmeticExecAddNumberToNumber(in Value as number, ino
 public foreign handler MCArithmeticExecSubtractIntegerFromInteger(in Value as int, inout Target as int) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticExecSubtractRealFromReal(in Value as real, inout Target as real) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticExecSubtractNumberFromNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecMultiplyIntegerByInteger(in Value as int, inout Target as int) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecMultiplyRealByReal(in Value as double, inout Target as double) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecMultiplyNumberByNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecDivideIntegerByInteger(in Value as int, inout Target as int) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecDivideRealByReal(in Value as double, inout Target as double) as undefined binds to "<builtin>"
-public foreign handler MCArithmeticExecDivideNumberByNumber(in Value as number, inout Target as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecMultiplyIntegerByInteger(inout Target as int, in Value as int) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecMultiplyRealByReal(inout Target as double, in Value as double) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecMultiplyNumberByNumber(inout Target as number, in Value as number) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecDivideIntegerByInteger(inout Target as int, in Value as int) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecDivideRealByReal(inout Target as double, in Value as double) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticExecDivideNumberByNumber(inout Target as number, in Value as number) as undefined binds to "<builtin>"
 
 public foreign handler MCArithmeticEvalPlusInteger(in Operand as int, out Value as int) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalPlusReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
@@ -64,6 +64,15 @@ Summary:    Adds <Value> to <Target>.
 Target:     An expression that evaluates to a numeric container.
 Value:      An expression that evaluates to a number.   
 
+Example:
+    variable tVar as int
+    put 2 into tVar
+    add 10 to tVar -- tVar contains 12
+
+Description:
+Adds the number <Value> to <Target>.
+
+>Note: It is a syntax error if <Target> does not evaluate to a variable.
 */
 
 syntax AddNumberTo is statement
@@ -77,8 +86,18 @@ end syntax
 
 /*
 Summary:    Subtracts <Value> from <Target>.
-Target:     An expression that evaluates to a numeric container.
+Target:     An expression that evaluates to a numeric variable.
 Value:      An expression that evaluates to a number.   
+
+Example:
+	variable tVar as real
+	put 10 into tVar
+	subtract 2.5 from tVar -- tVar contains 7.5
+
+Description:
+Subtracts the number <Value> from <Target>.
+
+>Note: It is a syntax error if <Target> does not evaluate to a variable.
 
 */
 
@@ -92,32 +111,53 @@ end syntax
 
 /*
 Summary:    Multiplies <Target> by <Value>.
-Target:     An expression that evaluates to a numeric container.
+Target:     An expression that evaluates to a numeric variable.
 Value:      An expression that evaluates to a number.   
 
+Example:
+	variable tVar as int
+	put 2 into tVar
+	multiply tVar by 2 -- tVar contains 4
+
+Description:
+Multiplies the number <Target> by <Value>.
+
+>Note: It is a syntax error if <Target> does not evaluate to a variable.
 */
 
 syntax MultiplyNumberBy is statement
-    "multiply" <Value: Expression> "by" <Target: Expression>
+    "multiply" <Target: Expression> "by" <Value: Expression>
 begin
-    MCArithmeticExecMultiplyIntegerByInteger(Value, Target)
-    MCArithmeticExecMultiplyRealByReal(Value, Target)
-    MCArithmeticExecMultiplyNumberByNumber(Value, Target)
+    MCArithmeticExecMultiplyIntegerByInteger(Target, Value)
+    MCArithmeticExecMultiplyRealByReal(Target, Value)
+    MCArithmeticExecMultiplyNumberByNumber(Target, Value)
 end syntax
 
 /*
 Summary:    Divides <Target> by <Value>.
-Target:     An expression that evaluates to a numeric container.
+Target:     An expression that evaluates to a numeric variable.
 Value:      An expression that evaluates to a number.   
+
+Example:
+	variable tVar
+	put 3 into tVar
+	divide tVar by 2 -- tVar contains 1.5
+
+Description:
+Divides the number <Target> by <Value>.
+
+
+
+>Note: It is a syntax error if <Target> does not evaluate to a variable.
 
 */
 
 syntax DivideNumberBy is statement
-    "divide" <Value: Expression> "by" <Target: Expression>
+    "divide" <Target: Expression> "by" <Value: Expression>
 begin
-    MCArithmeticExecDivideIntegerByInteger(Value, Target)
-    MCArithmeticExecDivideRealByReal(Value, Target)
-    MCArithmeticExecDivideNumberByNumber(Value, Target)
+    MCArithmeticExecDivideIntegerByInteger(Target, Value)
+    MCArithmeticExecDivideRealByReal(Target, Value)
+    MCArithmeticExecDivideNumberByNumber(Target, Value)
 end syntax
 
 --
@@ -318,8 +358,15 @@ output:     True if <Left> is equal to <Right>, and false otherwise.
 */
 
 
-syntax IsEqualTo is neutral binary operator with precedence 3
+syntax IsEqualTo is neutral binary operator with precedence 4
     <Left: Expression> "=" <Right: Expression>
+begin
+    MCArithmeticEvalEqualToInteger(Left, Right, output)
+end syntax
+
+
+syntax IsNumber is neutral binary operator with precedence 5
+    <Left: Expression> "is" <Right: Expression>
 begin
     MCArithmeticEvalEqualToInteger(Left, Right, output)
 end syntax

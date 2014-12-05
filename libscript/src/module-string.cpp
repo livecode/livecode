@@ -73,24 +73,22 @@ extern "C" void MCStringEvalUppercaseOf(MCStringRef p_source, MCStringRef& r_out
         return;
 }
 
-#if 0
 extern "C" void MCStringEvalIsEqualTo(MCStringRef p_left, MCStringRef p_right, bool& r_result)
 {
-    r_result = MCStringIsEqualTo(p_left, p_right, p_options);
+    r_result = MCStringIsEqualTo(p_left, p_right, kMCStringOptionCompareExact);
 }
 
 extern "C" void MCStringEvalIsNotEqualTo(MCStringRef p_left, MCStringRef p_right, bool& r_result)
 {
-    r_result = !MCStringIsEqualTo(p_left, p_right, p_options);
+    r_result = !MCStringIsEqualTo(p_left, p_right, kMCStringOptionCompareExact);
 }
 
 extern "C" void MCStringEvalIsLessThan(MCStringRef p_left, MCStringRef p_right, bool& r_result)
 {
-    r_result = MCStringCompareTo(p_left, p_right, p_options) < 0
+    r_result = MCStringCompareTo(p_left, p_right, kMCStringOptionCompareExact) < 0;
 }
 
 extern "C" void MCStringEvalIsGreaterThan(MCStringRef p_left, MCStringRef p_right, bool& r_result)
 {
-    r_result = MCStringCompareTo(p_left, p_right, p_options) > 0
+    r_result = MCStringCompareTo(p_left, p_right, kMCStringOptionCompareExact) > 0;
 }
-#endif
