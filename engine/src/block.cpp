@@ -718,13 +718,6 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	coord_t t_width_float;
 	t_width_float = 0;
 
-	// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
-	//   positioning issues.
-	coord_t t_last_break_width;
-	t_last_break_width = 0;
-	uint2 t_last_break_i;
-	t_last_break_i = m_index;
-	
 	findex_t i;
 	i = m_index;
 	
