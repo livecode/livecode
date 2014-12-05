@@ -209,6 +209,7 @@ void EmitEndModule(void)
     
     void *t_buffer;
     size_t t_size;
+    t_buffer = NULL;
     MCMemoryOutputStreamFinish(t_stream, t_buffer, t_size);
     MCValueRelease(t_stream);
     
@@ -1164,11 +1165,17 @@ void OutputWrite(const char *p_string)
 
 void OutputWriteS(const char *p_left, const char *p_string, const char *p_right)
 {
+    if (s_output == NULL)
+        return;
+    
     fprintf(s_output, "%s%s%s", p_left, p_string, p_right);
 }
 
 void OutputWriteI(const char *p_left, NameRef p_name, const char *p_right)
 {
+    if (s_output == NULL)
+        return;
+    
     const char *t_name_string;
     GetStringOfNameLiteral(p_name, &t_name_string);
     OutputWriteS(p_left, t_name_string, p_right);
@@ -1176,5 +1183,8 @@ void OutputWriteI(const char *p_left, NameRef p_name, const char *p_right)
 
 void OutputEnd(void)
 {
+    if (s_output == NULL)
+        return;
+    
     fclose(s_output);
 }
