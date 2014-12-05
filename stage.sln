@@ -57,11 +57,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "revvideograbber", "revvideo
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel", "engine\kernel.vcproj", "{36960D7E-AD16-47BB-BA13-3770A224EC41}"
 	ProjectSection(ProjectDependencies) = postProject
-		{0FC47D0C-58FE-41D6-A473-E7AFFA33CEEE} = {0FC47D0C-58FE-41D6-A473-E7AFFA33CEEE}
-		{6DE03F12-1D0B-4B70-A6C2-939EFF044931} = {6DE03F12-1D0B-4B70-A6C2-939EFF044931}
-		{81FB1E54-0DBF-4D7D-92F5-A7774E531CE2} = {81FB1E54-0DBF-4D7D-92F5-A7774E531CE2}
-		{09791ABE-810B-4424-B3CE-F7FEDA2299DE} = {09791ABE-810B-4424-B3CE-F7FEDA2299DE}
 		{E6239DF5-EDC5-4B5F-8848-98DC19299D4B} = {E6239DF5-EDC5-4B5F-8848-98DC19299D4B}
+		{09791ABE-810B-4424-B3CE-F7FEDA2299DE} = {09791ABE-810B-4424-B3CE-F7FEDA2299DE}
+		{81FB1E54-0DBF-4D7D-92F5-A7774E531CE2} = {81FB1E54-0DBF-4D7D-92F5-A7774E531CE2}
+		{6DE03F12-1D0B-4B70-A6C2-939EFF044931} = {6DE03F12-1D0B-4B70-A6C2-939EFF044931}
+		{0FC47D0C-58FE-41D6-A473-E7AFFA33CEEE} = {0FC47D0C-58FE-41D6-A473-E7AFFA33CEEE}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcairo", "thirdparty\libcairo\libcairo.vcproj", "{5F1837C3-649E-4F70-B157-243BF819D1F8}"
@@ -91,6 +91,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel-standalone", "engine
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfoundation", "libfoundation\libfoundation.vcproj", "{8862ADC2-BEB0-4765-A1E4-0E3493718999}"
+	ProjectSection(ProjectDependencies) = postProject
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A} = {25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgraphics", "libgraphics\libgraphics.vcproj", "{F9B1E2E6-8FD9-48C2-8D5C-9900865E7096}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -102,6 +105,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcore", "libcore\libcore.vcproj", "{6899CD7E-BE16-44CE-A28B-27304F42E127}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libxslt", "thirdparty\libxslt\libxslt.vcproj", "{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lcidlc", "lcidlc\lcidlc.vcproj", "{7321A225-FAC4-45D6-BAE4-B0E943102B7E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "revtestexternal", "revtestexternal\revtestexternal.vcproj", "{2C0F855E-2EA0-4F46-9660-3C47D673B8B8}"
@@ -111,6 +115,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "revbrowser-cefprocess", "revbrowser\revbrowser-cefprocess.vcproj", "{C704BBEE-0A2A-42C3-91D1-A382541593E0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcef_stubs", "thirdparty\libcef\libcef.vcproj", "{58314BC9-A2EE-49F0-8B40-7BA12517A60C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libffi", "thirdparty\libffi\libffi.vcproj", "{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -294,6 +300,10 @@ Global
 		{58314BC9-A2EE-49F0-8B40-7BA12517A60C}.Debug|Win32.Build.0 = Debug|Win32
 		{58314BC9-A2EE-49F0-8B40-7BA12517A60C}.Release|Win32.ActiveCfg = Release|Win32
 		{58314BC9-A2EE-49F0-8B40-7BA12517A60C}.Release|Win32.Build.0 = Release|Win32
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}.Debug|Win32.Build.0 = Debug|Win32
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}.Release|Win32.ActiveCfg = Release|Win32
+		{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
