@@ -17,6 +17,8 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
+#include <float.h>
+
 extern "C" void MCArithmeticExecAddIntegerToInteger(integer_t p_number, integer_t& x_target)
 {
     if (p_number > 0 && INTEGER_MAX - p_number < x_target)
@@ -117,7 +119,7 @@ extern "C" void MCArithmeticExecDivideIntegerByInteger(integer_t& x_target, inte
 
 extern "C" void MCArithmeticExecDivideRealByReal(double& x_target, double p_number)
 {
-    if (p_number > 0 && p_number < 1 && MAXFLOAT * p_number < x_target)
+    if (p_number > 0 && p_number < 1 && FLT_MAX * p_number < x_target)
         // overflow
         return;
     x_target /= p_number;
@@ -262,7 +264,7 @@ extern "C" void MCArithmeticEvalIntegerModInteger(integer_t p_left, integer_t p_
     if (p_right == 0)
         return;
     
-    r_output = fmod(p_left, p_right);
+    r_output = fmod(double(p_left), double(p_right));
 }
 
 extern "C" void MCArithmeticEvalRealModReal(double p_left, double p_right, double& r_output)
@@ -294,9 +296,9 @@ extern "C" void MCArithmeticEvalIntegerWrapInteger(integer_t p_left, integer_t p
     integer_t t_y;
 	t_y = p_left > 0 ? p_right : -p_right;
 	if (p_left >= 0)
-		r_output = (fmod(p_left - 1, t_y) + 1);
+		r_output = (fmod(double(p_left - 1), double(t_y)) + 1);
 	else
-		r_output = -(fmod(-p_left - 1, t_y) + 1);
+		r_output = -(fmod(double(-p_left - 1), double(t_y)) + 1);
 }
 
 extern "C" void MCArithmeticEvalRealWrapReal(double p_left, double p_right, double& r_output)

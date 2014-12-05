@@ -317,4 +317,13 @@ static bool MCFetchBuiltinModuleSection(MCBuiltinModule*& r_modules, unsigned in
     
     return false;
 }
+
+#else
+
+static bool MCFetchBuiltinModuleSection(MCBuiltinModule*& r_modules, unsigned int& r_count)
+{
+	// Not implemented
+	return false;
+}
+
 #endif
