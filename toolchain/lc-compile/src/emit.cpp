@@ -197,6 +197,17 @@ void EmitBeginLibraryModule(NameRef p_name, long& r_index)
     r_index = 0;
 }
 
+// String used for output as C sources
+#define MC_AS_C_PREFIX "\n" \
+    "#ifdef _MSC_VER \n" \
+    "#  pragma section(\"__modules\") \n" \
+    "#  define MODULE_SECTION __declspec(allocate(\"__modules\")) \n" \
+    "#elif defined __APPLE__ \n" \
+    "#  define MODULE_SECTION __attribute__((section(\"__MODULES,__modules\"))) __attribute__((used)) \n" \
+    "#else \n" \
+    "#  define MODULE_SECTION __attribute__((section(\"__modules\"))) __attribute__((used)) \n" \
+    "#endif \n"
+
 void EmitEndModule(void)
 {
     MCLog("[Emit] EndModule()", 0);
@@ -232,7 +243,7 @@ void EmitEndModule(void)
             
             const char *t_name;
             GetStringOfNameLiteral(s_module_name, &t_name);
-            fprintf(t_output, "__attribute__((used)) __attribute__((section(\"__MODULES,__modules\"))) static volatile struct { const char *name; unsigned char *data; unsigned long length; } module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_name);
+            fprintf(t_output, MC_AS_C_PREFIX "\n MODULE_SECTION static volatile struct { const char *name; unsigned char *data; unsigned long length; } module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_name);
         }
         else if (t_output != NULL)
         {
