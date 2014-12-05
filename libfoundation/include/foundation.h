@@ -2684,6 +2684,9 @@ bool MCProperListCreate(const MCValueRef *values, uindex_t length, MCProperListR
 // Create an empty mutable list.
 bool MCProperListCreateMutable(MCProperListRef& r_list);
 
+// Create an immutable list taking ownership of the given array of values.
+bool MCProperListCreateAndRelease(MCValueRef *p_values, uindex_t p_length, MCProperListRef& r_list);
+    
 // Make an immutable copy of the given list. If the 'copy and release' form is
 // used then the original list is released (has its reference count reduced by
 // one).
