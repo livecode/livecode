@@ -17,6 +17,13 @@
 #include <foundation.h>
 #include "foundation-math.h"
 
+#include <float.h>
+
+// Older versions of MSVC don't supply "trunc"
+#ifdef _WIN32
+double trunc(double f) { return f < 0 ? ceil(f) : floor(f); }
+#endif
+
 void MCMathEvalRealToPowerOfReal(double p_left, double p_right, double& r_output)
 {
     if (p_right == 0)
@@ -25,7 +32,7 @@ void MCMathEvalRealToPowerOfReal(double p_left, double p_right, double& r_output
         return;
     }
     
-    if (p_right > 0 && p_left > 0 && p_left > (log(MAXFLOAT)/log(p_right)))
+    if (p_right > 0 && p_left > 0 && p_left > (log(FLT_MAX)/log(p_right)))
     {
         // overflow
         return;

@@ -10,6 +10,7 @@ struct MCBuiltinModule
     unsigned long size;
 };
 
+static MCScriptModuleRef s_builtin_module = nil;
 static MCScriptModuleRef *s_builtin_modules = nil;
 static uindex_t s_builtin_module_count = 0;
 static bool MCFetchBuiltinModuleSection(MCBuiltinModule*& r_modules, unsigned int& r_count);
@@ -38,6 +39,154 @@ bool MCScriptInitialize(void)
     
     s_builtin_module_count = t_module_count;
     
+    // This block builds the builtin module - which isn't possible to compile from
+    // source as the names of the types we are defining are currently part of the
+    // syntax of the language.
+    {
+        MCScriptModuleBuilderRef t_builder;
+        MCScriptBeginModule(kMCScriptModuleKindNone, MCNAME("__builtin__"), t_builder);
+        
+        uindex_t t_def_index, t_type_index;
+            
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCAnyTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("any"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCNullTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("undefined"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCBooleanTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("boolean"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCNumberTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("number"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCStringTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("string"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCDataTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("data"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCArrayTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("array"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCProperListTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("list"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        ////
+        
+        uindex_t t_bool_type_index;
+        MCScriptAddDefinitionToModule(t_builder, t_bool_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCBoolTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("bool"), t_type_index, t_bool_type_index);
+        MCScriptAddExportToModule(t_builder, t_bool_type_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCIntTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("int"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        uindex_t t_uint_type_index;
+        MCScriptAddDefinitionToModule(t_builder, t_uint_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCUIntTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("uint"), t_type_index, t_uint_type_index);
+        MCScriptAddExportToModule(t_builder, t_uint_type_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCFloatTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("float"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        uindex_t t_double_type_index;
+        MCScriptAddDefinitionToModule(t_builder, t_double_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCDoubleTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("double"), t_type_index, t_double_type_index);
+        MCScriptAddExportToModule(t_builder, t_double_type_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCPointerTypeInfo"), t_type_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("pointer"), t_type_index, t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        ////
+        
+        uindex_t t_bool_type_def, t_uint_type_def, t_double_type_def;
+        MCScriptAddDefinedTypeToModule(t_builder, t_bool_type_index, t_bool_type_def);
+        MCScriptAddDefinedTypeToModule(t_builder, t_uint_type_index, t_uint_type_def);
+        MCScriptAddDefinedTypeToModule(t_builder, t_double_type_index, t_double_type_def);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_bool_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeInOut, MCNAME("count"), t_uint_type_def);
+        MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatCounted"), t_type_index, MCSTR("MCScriptBuiltinRepeatCounted"), t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_bool_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("limit"), t_double_type_def);
+        MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatUpToCondition"), t_type_index, MCSTR("MCScriptBuiltinRepeatUpToCondition"), t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("step"), t_double_type_def);
+        MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatUpToIterate"), t_type_index, MCSTR("MCScriptBuiltinRepeatUpToIterate"), t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_bool_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("limit"), t_double_type_def);
+        MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatDownToCondition"), t_type_index, MCSTR("MCScriptBuiltinRepeatUpToCondition"), t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("step"), t_double_type_def);
+        MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatDownToIterate"), t_type_index, MCSTR("MCScriptBuiltinRepeatDownToIterate"), t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        ////
+        
+        MCStreamRef t_stream;
+        MCMemoryOutputStreamCreate(t_stream);
+        MCScriptEndModule(t_builder, t_stream);
+        
+        void *t_buffer;
+        size_t t_size;
+        MCMemoryOutputStreamFinish(t_stream, t_buffer, t_size);
+        MCValueRelease(t_stream);
+        
+        MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
+        if (!MCScriptCreateModuleFromStream(t_stream, s_builtin_module))
+            return false;
+        
+        MCValueRelease(t_stream);
+    }
+
     return true;
 }
 
@@ -46,6 +195,7 @@ void MCScriptFinalize(void)
     for(uindex_t i = 0; i < s_builtin_module_count; i++)
         MCScriptReleaseModule(s_builtin_modules[i]);
     MCMemoryDeleteArray(s_builtin_modules);
+    MCValueRelease(s_builtin_module);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,4 +317,13 @@ static bool MCFetchBuiltinModuleSection(MCBuiltinModule*& r_modules, unsigned in
     
     return false;
 }
+
+#else
+
+static bool MCFetchBuiltinModuleSection(MCBuiltinModule*& r_modules, unsigned int& r_count)
+{
+	// Not implemented
+	return false;
+}
+
 #endif

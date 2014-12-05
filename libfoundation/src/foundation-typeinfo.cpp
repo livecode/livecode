@@ -278,6 +278,11 @@ bool MCNamedTypeInfoCreate(MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
     return false;
 }
 
+MCNameRef MCNamedTypeInfoGetName(MCTypeInfoRef self)
+{
+    return self -> named . name;
+}
+
 bool MCNamedTypeInfoIsBound(MCTypeInfoRef self)
 {
     return self -> named . typeinfo != nil;

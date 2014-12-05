@@ -5,6 +5,7 @@
 
 'export'
     MODULE MODULELIST MODULEKIND
+    METADATA
     IMPORT
     DEFINITION SIGNATURE ACCESS
     TYPE FIELD FIELDLIST
@@ -35,7 +36,11 @@
     application
 
 'type' MODULE
-    module(Position: POS, Kind: MODULEKIND, Name: ID, Imports: IMPORT, Definitions: DEFINITION)
+    module(Position: POS, Kind: MODULEKIND, Name: ID, Metadata: METADATA, Imports: IMPORT, Definitions: DEFINITION)
+
+'type' METADATA
+    metadata(Position: POS, Key: NAME, Value: STRING, Rest: METADATA)
+    nil
 
 'type' IMPORT
     sequence(Left: IMPORT, Right: IMPORT)

@@ -22,6 +22,7 @@
     MakeStringLiteral
     MakeNameLiteral
     GetStringOfNameLiteral
+    IsNameEqualToString
 
     InitializeScopes
     FinalizeScopes
@@ -176,7 +177,6 @@
     EmitBeginEvaluateInvoke
     EmitBeginAssignInvoke
     EmitBeginIterateInvoke
-    EmitBeginBuiltinInvoke
     EmitContinueInvoke
     EmitEndInvoke
     EmitAssign
@@ -196,6 +196,12 @@
     EmitDetachRegisterFromExpression
     EmitGetRegisterAttachedToExpression
     EmitPosition
+
+    OutputBeginManifest
+    OutputEnd
+    OutputWrite
+    OutputWriteI
+    OutputWriteS
 
     ErrorsDidOccur
     Fatal_OutOfMemory
@@ -275,6 +281,7 @@
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
 
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
+'condition' IsNameEqualToString(NAME, STRING)
 
 --------------------------------------------------------------------------------
 
@@ -471,7 +478,6 @@
 'action' EmitBeginEvaluateInvoke(Index: INT, ContextRegister: INT, OutputRegister: INT)
 'action' EmitBeginAssignInvoke(Index: INT, ContextRegister: INT, InputRegister: INT)
 'action' EmitBeginIterateInvoke(Index: INT, ContextRegister: INT, IteratorRegister: INT, ContainerRegister: INT)
-'action' EmitBeginBuiltinInvoke(Builtin: STRING, ResultRegister: INT)
 'action' EmitContinueInvoke(Register: INT)
 'action' EmitEndInvoke()
 'action' EmitAssignUndefined(Register: INT)
@@ -492,6 +498,12 @@
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)
 'action' EmitDetachRegisterFromExpression(EXPRESSION)
 'condition' EmitGetRegisterAttachedToExpression(EXPRESSION -> INT)
+
+'action' OutputBeginManifest()
+'action' OutputEnd()
+'action' OutputWrite(STRING)
+'action' OutputWriteI(STRING, NAME, STRING)
+'action' OutputWriteS(STRING, STRING, STRING)
 
 --------------------------------------------------------------------------------
 

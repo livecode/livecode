@@ -15,7 +15,7 @@
 -- the defining id.
 'action' Bind(MODULE)
 
-    'rule' Bind(Module:module(Position, Kind, Name, Imports, Definitions)):
+    'rule' Bind(Module:module(Position, Kind, Name, _, Imports, Definitions)):
         DefineModuleId(Name)
 
         -- Step 1: Ensure all id's referencing definitions point to the definition.
@@ -572,7 +572,7 @@
 
 'sweep' DumpBindings(ANY)
 
-    'rule' DumpBindings(MODULE'module(_, Kind, Name, Imports, Definitions)):
+    'rule' DumpBindings(MODULE'module(_, Kind, Name, _, Imports, Definitions)):
         DumpId("module", Name)
         DumpBindings(Imports)
         DumpBindings(Definitions)

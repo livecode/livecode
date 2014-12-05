@@ -1393,6 +1393,9 @@ MCTypeInfoRef MCAliasTypeInfoGetTarget(MCTypeInfoRef typeinfo);
 // error to attempt to resolve an unbound named type.
 bool MCNamedTypeInfoCreate(MCNameRef name, MCTypeInfoRef& r_named_typeinfo);
 
+// Fetch the name of the named typeinfo.
+MCNameRef MCNamedTypeInfoGetName(MCTypeInfoRef typeinfo);
+    
 // Returns true if the given named type is bound.
 bool MCNamedTypeInfoIsBound(MCTypeInfoRef typeinfo);
 

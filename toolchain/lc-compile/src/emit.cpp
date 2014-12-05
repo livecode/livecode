@@ -120,6 +120,12 @@ extern "C" void EmitDetachRegisterFromExpression(long expr);
 extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
 extern "C" void EmitPosition(PositionRef position);
 
+extern "C" void OutputBeginManifest(void);
+extern "C" void OutputEnd(void);
+extern "C" void OutputWrite(const char *msg);
+extern "C" void OutputWriteI(const char *left, NameRef name, const char *right);
+extern "C" void OutputWriteS(const char *left, const char *string, const char *right);
+
 //////////
 
 //static MCTypeInfoRef *s_typeinfos = nil;
@@ -147,41 +153,6 @@ static MCStringRef to_mcstringref(long p_string)
     MCValueInter(*t_string, t_uniq_string);
     return t_uniq_string;
 }
-
-/*
-static MCTypeInfoRef to_mctypeinforef(long p_type_index)
-{
-    MCAssert(p_type_index < s_typeinfo_count);
-    return s_typeinfos[p_type_index];
-}
-
-static bool define_typeinfo(MCTypeInfoRef p_typeinfo, long& r_index)
-{
-    for(uindex_t i = 0; i < s_typeinfo_count; i++)
-        if (p_typeinfo == s_typeinfos[i])
-        {
-            r_index = i;
-            return false;
-        }
-    
-    MCMemoryResizeArray(s_typeinfo_count + 1, s_typeinfos, s_typeinfo_count);
-    s_typeinfos[s_typeinfo_count - 1] = MCValueRetain(p_typeinfo);
-    
-    r_index = s_typeinfo_count - 1;
-    
-    return true;
-}
-
-static bool define_named_typeinfo(const char *name, long& r_index)
-{
-    MCAutoStringRef t_string;
-    MCStringCreateWithCString(name, &t_string);
-    MCNewAutoNameRef t_name;
-    MCNameCreate(*t_string, &t_name);
-    MCAutoTypeInfoRef t_typeinfo;
-    MCNamedTypeInfoCreate(*t_name, &t_typeinfo);
-    return define_typeinfo(*t_typeinfo, r_index);
-}*/
 
 //////////
 
@@ -238,42 +209,9 @@ void EmitEndModule(void)
     
     void *t_buffer;
     size_t t_size;
+    t_buffer = NULL;
     MCMemoryOutputStreamFinish(t_stream, t_buffer, t_size);
     MCValueRelease(t_stream);
-    
-#if 0
-    if (t_success)
-    {
-        MCLog("Generated module file of size %ld\n", t_size);
-        
-        MCScriptModuleRef t_module;
-        MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
-        t_success = MCScriptCreateModuleFromStream(t_stream, t_module);
-        MCValueRelease(t_stream);
-        
-        if (t_success)
-        {
-            FILE *t_out;
-            t_out = fopen("/Users/mark/Desktop/test.lcm", "w");
-            fwrite(t_buffer, 1, t_size, t_out);
-            fclose(t_out);
-        }
-        
-        if (t_success)
-            t_success = MCScriptEnsureModuleIsUsable(t_module);
-        
-        MCScriptInstanceRef t_instance;
-        if (t_success)
-            t_success = MCScriptCreateInstanceOfModule(t_module, t_instance);
-        
-        MCValueRef t_result;
-        if (t_success)
-            t_success = MCScriptCallHandlerOfInstance(t_instance, MCNAME("test"), nil, 0, t_result);
-        
-        if (t_success)
-            MCLog("Executed test with result %@", t_result);
-    }
-#endif
     
     if (t_success)
     {
@@ -300,10 +238,10 @@ void EmitEndModule(void)
         {
             fwrite(t_buffer, 1, t_size, t_output);
             fclose(t_output);
-            free(t_buffer);
         }
     }
-    
+
+    free(t_buffer);
     
     MCFinalize();
 }
@@ -1206,4 +1144,47 @@ void EmitPosition(PositionRef p_position)
     long t_line;
     GetRowOfPosition(p_position, &t_line);
     MCScriptEmitPositionInModule(s_builder, to_mcnameref(t_filename_name), t_line);
+}
+
+//////////
+
+static FILE *s_output = NULL;
+
+void OutputBeginManifest(void)
+{
+    s_output = OpenManifestOutputFile();
+}
+
+void OutputWrite(const char *p_string)
+{
+    if (s_output == NULL)
+        return;
+    
+    fprintf(s_output, "%s", p_string);
+}
+
+void OutputWriteS(const char *p_left, const char *p_string, const char *p_right)
+{
+    if (s_output == NULL)
+        return;
+    
+    fprintf(s_output, "%s%s%s", p_left, p_string, p_right);
+}
+
+void OutputWriteI(const char *p_left, NameRef p_name, const char *p_right)
+{
+    if (s_output == NULL)
+        return;
+    
+    const char *t_name_string;
+    GetStringOfNameLiteral(p_name, &t_name_string);
+    OutputWriteS(p_left, t_name_string, p_right);
+}
+
+void OutputEnd(void)
+{
+    if (s_output == NULL)
+        return;
+    
+    fclose(s_output);
 }
