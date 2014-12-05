@@ -42,10 +42,10 @@ extern "C" void MCArithmeticExecAddNumberToNumber(MCNumberRef p_number, MCNumber
     
     MCArithmeticExecAddRealToReal(t_number, t_target);
     
-    //if no error
-    MCValueRelease(x_target);
-
-    MCNumberCreateWithReal(t_target, x_target);
+    MCAutoNumberRef t_new_number;
+    MCNumberCreateWithReal(t_target, &t_new_number);
+    
+    MCValueAssign(x_target, *t_new_number);
 }
 
 extern "C" void MCArithmeticExecSubtractIntegerFromInteger(integer_t p_number, integer_t& x_target)
@@ -73,10 +73,10 @@ extern "C" void MCArithmeticExecSubtractNumberFromNumber(MCNumberRef p_number, M
     
     MCArithmeticExecSubtractRealFromReal(t_number, t_target);
     
-    //if no error
-    MCValueRelease(x_target);
+    MCAutoNumberRef t_new_number;
+    MCNumberCreateWithReal(t_target, &t_new_number);
     
-    MCNumberCreateWithReal(t_target, x_target);
+    MCValueAssign(x_target, *t_new_number);
 }
 
 extern "C" void MCArithmeticExecMultiplyIntegerByInteger(integer_t& x_target, integer_t p_number)
@@ -104,10 +104,10 @@ extern "C" void MCArithmeticExecMultiplyNumberByNumber(MCNumberRef& x_target, MC
     
     MCArithmeticExecMultiplyRealByReal(t_number, t_target);
     
-    //if no error
-    MCValueRelease(x_target);
+    MCAutoNumberRef t_new_number;
+    MCNumberCreateWithReal(t_target, &t_new_number);
     
-    MCNumberCreateWithReal(t_target, x_target);
+    MCValueAssign(x_target, *t_new_number);
 }
 
 extern "C" void MCArithmeticExecDivideIntegerByInteger(integer_t& x_target, integer_t p_number)
@@ -131,10 +131,10 @@ extern "C" void MCArithmeticExecDivideNumberByNumber(MCNumberRef& x_target, MCNu
     
     MCArithmeticExecDivideRealByReal(t_number, t_target);
     
-    //if no error
-    MCValueRelease(x_target);
+    MCAutoNumberRef t_new_number;
+    MCNumberCreateWithReal(t_target, &t_new_number);
     
-    MCNumberCreateWithReal(t_target, x_target);
+    MCValueAssign(x_target, *t_new_number);
 }
 
 extern "C" void MCArithmeticEvalIntegerPlusInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
@@ -421,4 +421,14 @@ extern "C" void MCArithmeticEvalMinusNumber(MCNumberRef p_operand, MCNumberRef& 
 extern "C" void MCArithmeticEvalEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
 {
     r_output = p_left == p_right;
+}
+
+extern "C" void MCArithmeticEvalEqualToReal(double p_left, double p_right, bool& r_output)
+{
+    r_output = p_left == p_right;
+}
+
+extern "C" void MCArithmeticEvalEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
+{
+    r_output = MCNumberFetchAsReal(p_left) == MCNumberFetchAsReal(p_right);
 }

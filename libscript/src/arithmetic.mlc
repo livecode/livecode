@@ -57,6 +57,8 @@ public foreign handler MCArithmeticEvalNumberIsLessThanOrEqualToNumber(in Left a
 
 
 public foreign handler MCArithmeticEvalEqualToInteger(in Left as int, in Right as int, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalEqualToReal(in Left as real, in Right as real, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
 --
 
 /*
@@ -72,7 +74,7 @@ Example:
 Description:
 Adds the number <Value> to <Target>.
 
->Note: It is a syntax error if <Target> does not evaluate to a variable.
+>*Note:* It is a syntax error if <Target> does not evaluate to a variable.
 */
 
 syntax AddNumberTo is statement
@@ -97,7 +99,7 @@ Example:
 Description:
 Subtracts the number <Value> from <Target>.
 
->Note: It is a syntax error if <Target> does not evaluate to a variable.
+>*Note:* It is a syntax error if <Target> does not evaluate to a variable.
 
 */
 
@@ -122,7 +124,7 @@ Example:
 Description:
 Multiplies the number <Target> by <Value>.
 
->Note: It is a syntax error if <Target> does not evaluate to a variable.
+>*Note:* It is a syntax error if <Target> does not evaluate to a variable.
 */
 
 syntax MultiplyNumberBy is statement
@@ -143,12 +145,18 @@ Example:
 	put 3 into tVar
 	divide tVar by 2 -- tVar contains 1.5
 
+Example:
+	// int gets truncated
+	variable tVar as int
+	put 3 into tVar
+	divide tVar by 2 -- tVar contains 1
+
 Description:
 Divides the number <Target> by <Value>.
 
+>*Note:* If tVar is typed as an int, then the result will be truncated.
 
-
->Note: It is a syntax error if <Target> does not evaluate to a variable.
+>*Note:* It is a syntax error if <Target> does not evaluate to a variable.
 
 */
 
@@ -362,13 +370,17 @@ syntax IsEqualTo is neutral binary operator with precedence 4
     <Left: Expression> "=" <Right: Expression>
 begin
     MCArithmeticEvalEqualToInteger(Left, Right, output)
+    MCArithmeticEvalEqualToReal(Left, Right, output)
+    MCArithmeticEvalEqualToNumber(Left, Right, output)
 end syntax
 
 
 syntax IsNumber is neutral binary operator with precedence 5
     <Left: Expression> "is" <Right: Expression>
 begin
-    MCArithmeticEvalEqualToInteger(Left, Right, output)
+    --MCArithmeticEvalEqualToInteger(Left, Right, output)
+    MCArithmeticEvalEqualToReal(Left, Right, output)
+    MCArithmeticEvalEqualToNumber(Left, Right, output)
 end syntax
 
 end module

@@ -3,19 +3,152 @@ module test
 foreign handler MCNumberCreateWithInteger(in value as int, out value_ref as number) as bool binds to "<builtin>"
 foreign handler MCBooleanCreateWithBool(in value as bool, out value_ref as boolean) as bool binds to "<builtin>"
 
+foreign handler MCProperListCreate(in pValues as optional pointer, in pValueCount as uint, out value_ref as list) as bool binds to "<builtin>"
+
 public handler test()
-    variable tVar as number
-    variable tResult as boolean
-    MCBooleanCreateWithBool(MCNumberCreateWithInteger(100, tVar), tResult)
-    if MCNumberCreateWithInteger(200, tVar) then
+    variable tResults as list
+    MCProperListCreate(undefined, 0, tResults)
+
+    variable tDelimiter as string
+    put newline into tDelimiter
+
+    --testLogic(tResults)
+   -- testList(tResults)
+    --testSort(tResults)
+    --testArithmetic(tResults)
+
+    variable tVar as list
+    MCProperListCreate(undefined, 0, tVar)
+    push 2 onto tVar
+    if the head of tVar is 2 then
+        push "success" onto tResults
     end if
-    variable tVar2 as string
-    put "" into tVar2
-    put "Hello World" after tVar2
-    put "!" after tVar2
-    put 0 into tVar
-    add 100 to tVar
-    return tVar2
+
+    variable tResultString as string
+    put "" into tResultString
+    combine tResults with tDelimiter into tResultString
+
+    return tResultString
+end handler
+
+public handler testLog(in pModule as string, in pTest as string, in pResult as bool, inout xResults as list)
+    variable tStringResult as string
+    if pResult then
+        put "SUCCESS" into tStringResult
+    else
+        put "FAILURE" into tStringResult
+    end if
+
+    push pModule & "_" & pTest & ":" && tStringResult onto xResults
+end handler
+
+public handler testLogic(inout xResults as list)
+    variable tVar as bool
+    put not false into tVar
+
+    testLog("Logic", "Not", tVar, xResults)
+end handler
+
+public handler testArithmetic(inout xResults as list) as undefined
+
+	variable tInt as int
+	variable tReal as real
+	--variable tNumber
+	
+	put 10 into tInt
+	put 10 into tReal
+	--put 10 into tNumber
+	
+	add 2 to tInt
+	add 2 to tReal
+	--add 2 to tNumber
+	
+	testLog("Arithmetic", "AddToInt", tInt is 12, xResults)
+	testLog("Arithmetic", "AddToReal", tReal is 12, xResults)
+	--testLog("Arithmetic", "AddToNum", tNumber is 12, xResults)
+
+	subtract 2 from tInt
+	subtract 2 from tReal
+	--subtract 2 from tNumber
+	
+	testLog("Arithmetic", "SubtractFromInt", tInt is 10, xResults)
+	testLog("Arithmetic", "SubtractFromReal", tReal is 10, xResults)
+	--testLog("Arithmetic", "SubtractFromNum", tNumber is 10, xResults)
+	
+	multiply tInt by 2
+	multiply tReal by 2
+	--multiply tNumber by 2
+
+	testLog("Arithmetic", "MultiplyInt", tInt is 20, xResults)
+	testLog("Arithmetic", "MultiplyReal", tReal is 20, xResults)
+	--testLog("Arithmetic", "MultiplyNum", tNumber is 20, xResults)	
+
+	divide tInt by 40
+	divide tReal by 40
+	--divide tNumber by 40
+	
+	testLog("Arithmetic", "DivideInt", tInt is 0, xResults)
+	testLog("Arithmetic", "DivideReal", tReal is 0.5, xResults)
+	--testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)		
+
+end handler
+
+public handler testList(inout xResults as list) as undefined
+    variable tTestList as list
+    MCProperListCreate(undefined, 0, tTestList)
+
+    push "xyz" onto tTestList
+    push 2 onto tTestList
+    push "abcd" onto tTestList
+    push 1 onto tTestList
+
+    testLog("List", "NumberOfElements", the number of elements in tTestList is 4, xResults)
+    testLog("List", "HeadOf", the head of tTestList is "xyz", xResults)
+    testLog("List", "TailOf", the tail of tTestList is 1, xResults)
+
+    testLog("List", "ElementOf", element 2 of tTestList is 2, xResults)
+    testLog("List", "ElementRangeOf", element 2 of element 3 to -1 of tTestList is 1, xResults)
+
+    variable tSubList as list
+    put element -2 to -1 of tTestList into tSubList
+    testLog("List", "Contains", tTestList contains element -2 to -1 of tTestList, xResults)
+
+    testLog("List", "IsIn", "abcd" is in tSubList, xResults)
+    testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
+
+    variable tString as string
+    pop front of tSubList into tString
+
+    testLog("List", "Pop", tString is "abcd", xResults)
+    testLog("List", "Pop", the number of elements in tSubList is 1, xResults)
+
+    splice tTestList after element 1 of tSubList
+
+    testLog("List", "SpliceAfter", the number of elements in tSubList is 5, xResults)
+    testLog("List", "SpliceAfter", the tail of tSubList is 1, xResults)
+    testLog("List", "SpliceAfter", tSubList contains tTestList, xResults)
+
+end handler
+
+public handler testSort(inout xResults as list) as undefined
+    variable tTestList as list
+    MCProperListCreate(undefined, 0, tTestList)
+
+    push "xyz" onto tTestList
+    push 2 onto tTestList
+    push "abcd" onto tTestList
+    push 1 onto tTestList
+
+    sort tTestList in ascending numeric order
+
+    testLog("Sort", "AscendingNumeric", the head of tTestList is 1, xResults)
+    testLog("Sort", "NumericStable", the tail of tTestList is "abcd", xResults)
+
+    sort tTestList in ascending text order
+
+    testLog("Sort", "AscendingText", the head of tTestList is "abcd", xResults)
+    testLog("Sort", "TextStable", the tail of tTestList is 2, xResults)
+
 end handler
 
 end module
