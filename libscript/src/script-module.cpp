@@ -384,10 +384,6 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
     // First ensure we can resolve all its external dependencies.
     for(uindex_t i = 0; i < self -> dependency_count; i++)
     {
-        // Skip the 'builtin' module for now.
-        if (MCNameIsEqualTo(self -> dependencies[i] . name, MCNAME("__builtin__")))
-            continue;
-        
         MCScriptModuleRef t_module;
         if (!MCScriptLookupModule(self -> dependencies[i] . name, t_module))
             return false;
@@ -501,45 +497,9 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     MCScriptImportedDefinition *t_import;
                     t_import = &self -> imported_definitions[t_ext_def -> index];
                     
-                    if (t_import -> definition == nil)
-                    {
-                        if (MCNameIsEqualTo(t_import -> name, MCNAME("any")))
-                            t_typeinfo = kMCAnyTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("undefined")))
-                            t_typeinfo = kMCNullTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("boolean")))
-                            t_typeinfo = kMCBooleanTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("string")))
-                            t_typeinfo = kMCStringTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("data")))
-                            t_typeinfo = kMCStringTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("number")))
-                            t_typeinfo = kMCNumberTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("array")))
-                            t_typeinfo = kMCArrayTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("list")))
-                            t_typeinfo = kMCProperListTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("bool")))
-                            t_typeinfo = kMCBoolTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("int")))
-                            t_typeinfo = kMCIntTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("uint")))
-                            t_typeinfo = kMCUIntTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("float")))
-                            t_typeinfo = kMCFloatTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("double")))
-                            t_typeinfo = kMCDoubleTypeInfo;
-                        else if (MCNameIsEqualTo(t_import -> name, MCNAME("pointer")))
-                            t_typeinfo = kMCPointerTypeInfo;
-                        else
-                            MCAssert(false);
-                    }
-                    else
-                    {
-                        MCScriptModuleRef t_module;
-                        t_module = self -> dependencies[t_import -> module] . instance -> module;
-                        t_typeinfo = t_module -> types[static_cast<MCScriptTypeDefinition *>(t_import -> definition) -> type] -> typeinfo;
-                    }
+                    MCScriptModuleRef t_module;
+                    t_module = self -> dependencies[t_import -> module] . instance -> module;
+                    t_typeinfo = t_module -> types[static_cast<MCScriptTypeDefinition *>(t_import -> definition) -> type] -> typeinfo;
                 }
                 else
                     return false;
@@ -566,8 +526,9 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                     return false;
                 }
                 
-                t_type -> typeinfo = MCValueRetain(*(MCTypeInfoRef *)t_symbol);
+                t_typeinfo = MCValueRetain(*(MCTypeInfoRef *)t_symbol);
             }
+            break;
             case kMCScriptTypeKindRecord:
             {
                 MCScriptRecordType *t_type;

@@ -1772,3 +1772,14 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
+{
+    if (*x_count == 0)
+        return false;
+    
+    *x_count -= 1;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
