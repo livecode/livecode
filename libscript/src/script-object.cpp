@@ -112,10 +112,11 @@ bool MCScriptInitialize(void)
         MCScriptAddTypeToModule(t_builder, MCNAME("float"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
-        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        uindex_t t_double_type_index;
+        MCScriptAddDefinitionToModule(t_builder, t_double_type_index);
         MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCDoubleTypeInfo"), t_type_index);
-        MCScriptAddTypeToModule(t_builder, MCNAME("double"), t_type_index, t_def_index);
-        MCScriptAddExportToModule(t_builder, t_def_index);
+        MCScriptAddTypeToModule(t_builder, MCNAME("double"), t_type_index, t_double_type_index);
+        MCScriptAddExportToModule(t_builder, t_double_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
         MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCPointerTypeInfo"), t_type_index);
@@ -124,13 +125,48 @@ bool MCScriptInitialize(void)
         
         ////
         
+        uindex_t t_bool_type_def, t_uint_type_def, t_double_type_def;
+        MCScriptAddDefinedTypeToModule(t_builder, t_bool_type_index, t_bool_type_def);
+        MCScriptAddDefinedTypeToModule(t_builder, t_uint_type_index, t_uint_type_def);
+        MCScriptAddDefinedTypeToModule(t_builder, t_double_type_index, t_double_type_def);
+        
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddDefinedTypeToModule(t_builder, t_bool_type_index, t_type_index);
-        MCScriptBeginHandlerTypeInModule(t_builder, t_type_index);
-        MCScriptAddDefinedTypeToModule(t_builder, t_uint_type_index, t_type_index);
-        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeInOut, MCNAME("count"), t_type_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_bool_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeInOut, MCNAME("count"), t_uint_type_def);
         MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
         MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatCounted"), t_type_index, MCSTR("MCScriptBuiltinRepeatCounted"), t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_bool_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("limit"), t_double_type_def);
+        MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatUpToCondition"), t_type_index, MCSTR("MCScriptBuiltinRepeatUpToCondition"), t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("step"), t_double_type_def);
+        MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatUpToIterate"), t_type_index, MCSTR("MCScriptBuiltinRepeatUpToIterate"), t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_bool_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("limit"), t_double_type_def);
+        MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatDownToCondition"), t_type_index, MCSTR("MCScriptBuiltinRepeatUpToCondition"), t_def_index);
+        MCScriptAddExportToModule(t_builder, t_def_index);
+        
+        MCScriptAddDefinitionToModule(t_builder, t_def_index);
+        MCScriptBeginHandlerTypeInModule(t_builder, t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_double_type_def);
+        MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("step"), t_double_type_def);
+        MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatDownToIterate"), t_type_index, MCSTR("MCScriptBuiltinRepeatDownToIterate"), t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         ////

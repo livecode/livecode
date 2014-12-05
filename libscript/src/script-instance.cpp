@@ -1782,4 +1782,24 @@ extern "C" bool MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
     return true;
 }
 
+extern "C" bool MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
+{
+    return p_counter <= p_limit;
+}
+
+extern "C" double MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
+{
+    return p_counter + p_step;
+}
+
+extern "C" bool MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
+{
+    return p_counter >= p_limit;
+}
+
+extern "C" double MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
+{
+    return p_counter + p_step;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
