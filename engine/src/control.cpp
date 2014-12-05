@@ -1050,7 +1050,8 @@ inline MCRectangle MCGRectangleGetPixelRect(const MCGRectangle &p_rect)
 
 void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 {
-	if (!opened || !(isvisible() || MCshowinvisibles))
+    // SN-2014-11-14: [[ Bug 14028 ]] Use the current control visibility state
+	if (!opened || !(getflag(F_VISIBLE) || MCshowinvisibles))
 		return;
 
 	// MW-2009-06-11: [[ Bitmap Effects ]] A control needs to be (partially)

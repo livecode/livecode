@@ -533,8 +533,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
                         && MCmousestackptr->getcard()->getmfocused() != this
                         && MCmousestackptr->getcard()->getmfocused()->gettype() == CT_BUTTON))
                     setforeground(dc, DI_BACK, False, True);
-                else
-                    setforeground(dc, DI_FORE, False);
+                // PM-2014-11-26: [[ Bug 14070 ]] [Removed code] Make sure text color in menuButton inverts when hilited
+        
 #endif
 				drawlabel(dc, sx + loff, sy + loff, twidth, shadowrect, line, fontstyle, t_mnemonic);
 

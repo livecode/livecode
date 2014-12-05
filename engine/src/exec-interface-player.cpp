@@ -307,6 +307,11 @@ void MCPlayer::SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time)
 	setcurtime(p_time, false);
 	if (isbuffering())
 		Redraw();
+    // AL-2014-11-17: [[ Bug 13954 ]] Redraw the player controller when current time is set
+#ifdef FEATURE_PLATFORM_PLAYER
+    else
+        redrawcontroller();
+#endif
 }
 
 void MCPlayer::GetDuration(MCExecContext& ctxt, uinteger_t& r_duration)

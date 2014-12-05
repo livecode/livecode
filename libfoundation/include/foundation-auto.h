@@ -70,6 +70,7 @@ typedef MCAutoValueRefBase<MCBooleanRef> MCAutoBooleanRef;
 typedef MCAutoValueRefBase<MCSetRef> MCAutoSetRef;
 typedef MCAutoValueRefBase<MCNameRef> MCNewAutoNameRef;
 typedef MCAutoValueRefBase<MCDataRef> MCAutoDataRef;
+typedef MCAutoValueRefBase<MCProperListRef> MCAutoProperListRef;
 typedef MCAutoValueRefBase<MCTypeInfoRef> MCAutoTypeInfoRef;
 typedef MCAutoValueRefBase<MCRecordRef> MCAutoRecordRef;
 
@@ -846,8 +847,9 @@ public:
 
 	bool CreateStringAndRelease(MCStringRef& r_string)
 	{
-		if (MCStringCreateWithNativeCharsAndRelease(m_chars, m_char_count, r_string))
+		if (MCStringCreateWithNativeChars(m_chars, m_char_count, r_string))
 		{
+            MCMemoryDeleteArray(m_chars);
 			m_chars = nil;
 			m_char_count = 0;
 			return true;

@@ -2665,7 +2665,8 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 		return kMCExternalErrorExited;
 	
 	MCAutoValueRef t_value_ref;
-	MCExecTypeConvertAndReleaseAlways(t_ctxt, t_value . type, &t_value, kMCExecValueTypeValueRef, &t_value_ref);
+    // SN-2014-11-14: [[ Bug 14026 ]] We need to get the address of the pointer, not the pointer itself
+	MCExecTypeConvertAndReleaseAlways(t_ctxt, t_value . type, &t_value, kMCExecValueTypeValueRef, &(&t_value_ref));
 	if (t_ctxt . HasError())
 		return kMCExternalErrorOutOfMemory;
 	

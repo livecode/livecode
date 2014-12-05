@@ -145,7 +145,7 @@ extern void MCU_snap(int2 &p);
 
 // MDW-2014-07-06: [[ oval_points ]]
 extern void MCU_roundrect(MCPoint *&points, uint2 &npoints,
-                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle);
+                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags);
 #ifdef LEGACY_EXEC
 extern void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &);
 #endif
@@ -190,8 +190,8 @@ extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCPar
 extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCDataRef in, MCStringRef &out);
 extern void MCU_base64decode(MCStringRef in, MCDataRef &out);
-extern void MCU_urldecode(MCStringRef p_source, MCStringRef& r_result);
-extern void MCU_urlencode(MCStringRef p_url, MCStringRef &r_encoded);
+extern void MCU_urldecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
+extern void MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
 //extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);

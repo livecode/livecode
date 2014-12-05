@@ -249,6 +249,8 @@ bool __MCNumberInitialize(void)
 void __MCNumberFinalize(void)
 {
     MCValueRelease(kMCZero);
+    MCValueRelease(kMCOne);
+    MCValueRelease(kMCMinusOne);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

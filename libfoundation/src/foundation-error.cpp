@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 #include "foundation-private.h"
 
@@ -162,14 +163,20 @@ bool __MCErrorCopyDescription(__MCError *self, MCStringRef& r_string)
 
 bool __MCErrorInitialize(void)
 {
-    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("out of memory"), kMCOutOfMemoryErrorTypeInfo))
+    MCAutoTypeInfoRef t_oom_typeinfo;
+    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("out of memory"), &t_oom_typeinfo))
         return false;
-    if (!MCTypeInfoBindAndRelease(MCNAME("livecode.lang.OutOfMemoryError"), kMCOutOfMemoryErrorTypeInfo, kMCOutOfMemoryErrorTypeInfo))
+    if (!MCNamedTypeInfoCreate(MCNAME("livecode.lang.OutOfMemoryError"), kMCOutOfMemoryErrorTypeInfo))
+        return false;
+    if (!MCNamedTypeInfoBind(kMCOutOfMemoryErrorTypeInfo, *t_oom_typeinfo))
         return false;
     
-    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("unknown"), kMCGenericErrorTypeInfo))
+    MCAutoTypeInfoRef t_ge_typeinfo;
+    if (!MCErrorTypeInfoCreate(MCNAME("runtime"), MCSTR("unknown"), &t_ge_typeinfo))
         return false;
-    if (!MCTypeInfoBindAndRelease(MCNAME("livecode.lang.GenericError"), kMCGenericErrorTypeInfo, kMCGenericErrorTypeInfo))
+    if (!MCNamedTypeInfoCreate(MCNAME("livecode.lang.GenericError"), kMCGenericErrorTypeInfo))
+        return false;
+    if (!MCNamedTypeInfoBind(kMCGenericErrorTypeInfo, *t_ge_typeinfo))
         return false;
     
     if (!MCErrorCreate(kMCOutOfMemoryErrorTypeInfo, nil, s_out_of_memory_error))
