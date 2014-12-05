@@ -172,11 +172,8 @@
     EmitPushRepeatLabels
     EmitPopRepeatLabels
     EmitCurrentRepeatLabels
-    EmitBeginIndirectExecuteInvoke
-    EmitBeginExecuteInvoke
-    EmitBeginEvaluateInvoke
-    EmitBeginAssignInvoke
-    EmitBeginIterateInvoke
+    EmitBeginIndirectInvoke
+    EmitBeginInvoke
     EmitContinueInvoke
     EmitEndInvoke
     EmitAssign
@@ -186,6 +183,9 @@
     EmitAssignInteger
     EmitAssignReal
     EmitAssignString
+    EmitBeginAssignList
+    EmitContinueAssignList
+    EmitEndAssignList
     EmitFetchLocal
     EmitStoreLocal
     EmitFetchGlobal
@@ -473,11 +473,8 @@
 'action' EmitPushRepeatLabels(Head: INT, Tail: INT)
 'action' EmitCurrentRepeatLabels(-> Next: INT, Exit: INT)
 'action' EmitPopRepeatLabels()
-'action' EmitBeginIndirectExecuteInvoke(Register: INT, ContextRegister: INT, ResultRegister: INT)
-'action' EmitBeginExecuteInvoke(Index: INT, ContextRegister: INT, ResultRegister: INT)
-'action' EmitBeginEvaluateInvoke(Index: INT, ContextRegister: INT, OutputRegister: INT)
-'action' EmitBeginAssignInvoke(Index: INT, ContextRegister: INT, InputRegister: INT)
-'action' EmitBeginIterateInvoke(Index: INT, ContextRegister: INT, IteratorRegister: INT, ContainerRegister: INT)
+'action' EmitBeginIndirectInvoke(Register: INT, ContextRegister: INT, ResultRegister: INT)
+'action' EmitBeginInvoke(Index: INT, ContextRegister: INT, ResultRegister: INT)
 'action' EmitContinueInvoke(Register: INT)
 'action' EmitEndInvoke()
 'action' EmitAssignUndefined(Register: INT)
@@ -486,6 +483,9 @@
 'action' EmitAssignInteger(Register: INT, Value: INT)
 'action' EmitAssignReal(Register: INT, Value: DOUBLE)
 'action' EmitAssignString(Register: INT, Value: STRING)
+'action' EmitBeginAssignList(Register: INT)
+'action' EmitContinueAssignList(Register: INT)
+'action' EmitEndAssignList()
 'action' EmitAssign(Dst: INT, Src: INT)
 'action' EmitFetchLocal(Register: INT, Var: INT)
 'action' EmitStoreLocal(Register: INT, Var: INT)

@@ -898,7 +898,7 @@
         EmitPosition(Position)
         GenerateDefinitionGroupForInvokes(Invokes, execute, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
-        EmitBeginExecuteInvoke(Index, Context, Result)
+        EmitBeginInvoke(Index, Context, Result)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke()
         GenerateInvoke_AssignArguments(Context, Signature, Arguments)
@@ -915,7 +915,7 @@
         MakeNameLiteral(NameString -> InvokeName)
         EmitUndefinedType(-> SymbolTypeIndex)
         EmitImportedHandler(ModuleIndex, InvokeName, SymbolTypeIndex -> SymbolIndex)
-        EmitBeginExecuteInvoke(SymbolIndex, ContextReg, ResultReg)
+        EmitBeginInvoke(SymbolIndex, ContextReg, ResultReg)
 
 ----
 
@@ -985,7 +985,7 @@
         GenerateDefinitionGroupForInvokes(Invokes, evaluate, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(ContextReg, Signature, Arguments)
         EmitCreateRegister(-> IgnoredResultReg)
-        EmitBeginExecuteInvoke(Index, ContextReg, IgnoredResultReg)
+        EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitContinueInvoke(OutputReg)
         EmitEndInvoke()
@@ -1022,7 +1022,7 @@
         EmitGetRegisterAttachedToExpression(Invoke -> InputReg)
         GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
         EmitCreateRegister(-> IgnoredResultReg)
-        EmitBeginExecuteInvoke(Index, ContextReg, IgnoredResultReg)
+        EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
         EmitContinueInvoke(InputReg)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke()
@@ -1191,7 +1191,7 @@
         GenerateCall_GetInvokeSignature(HandlerSig -> InvokeSig)
 
         GenerateInvoke_EvaluateArguments(Context, InvokeSig, Arguments)
-        EmitBeginExecuteInvoke(Index, Context, ResultRegister)
+        EmitBeginInvoke(Index, Context, ResultRegister)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke
         GenerateInvoke_AssignArguments(Context, InvokeSig, Arguments)
@@ -1242,8 +1242,11 @@
     'rule' GenerateExpressionInRegister(Result, Context, as(_, _, _)):
         -- TODO
     
-    'rule' GenerateExpressionInRegister(Result, Context, list(_, _)):
-        -- TODO
+    'rule' GenerateExpressionInRegister(Result, Context, list(Position, List)):
+        GenerateExpressionList(Context, List -> ListRegs)
+        EmitBeginAssignList(Result)
+        GenerateAssignList(ListRegs)
+        EmitEndAssignList()
     
     'rule' GenerateExpressionInRegister(Result, Context, call(Position, Handler, Arguments)):
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments)
@@ -1252,7 +1255,7 @@
         GenerateDefinitionGroupForInvokes(Invokes, evaluate, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
         EmitCreateRegister(-> IgnoredReg)
-        EmitBeginExecuteInvoke(Index, Context, IgnoredReg)
+        EmitBeginInvoke(Index, Context, IgnoredReg)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitContinueInvoke(Result)
         EmitEndInvoke()
@@ -1261,6 +1264,15 @@
         GenerateInvoke_FreeArguments(Arguments)
 
 ----
+
+'action' GenerateAssignList(INTLIST)
+
+    'rule' GenerateAssignList(intlist(Head, Tail)):
+        EmitContinueAssignList(Head)
+        GenerateAssignList(Tail)
+
+    'rule' GenerateAssignList(nil):
+        -- finished
 
 'action' EmitStoreVar(SYMBOLKIND, INT, INT)
 
