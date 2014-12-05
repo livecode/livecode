@@ -3,11 +3,9 @@ module test
 foreign handler MCNumberCreateWithInteger(in value as int, out value_ref as number) as bool binds to "<builtin>"
 foreign handler MCBooleanCreateWithBool(in value as bool, out value_ref as boolean) as bool binds to "<builtin>"
 
-foreign handler MCProperListCreate(in pValues as optional pointer, in pValueCount as uint, out value_ref as list) as bool binds to "<builtin>"
-
 public handler test()
     variable tResults as list
-    MCProperListCreate(undefined, 0, tResults)
+    --put the empty list into tResults
 
     variable tDelimiter as string
     put newline into tDelimiter
@@ -15,15 +13,10 @@ public handler test()
     testLogic(tResults)
     testList(tResults)
     testSort(tResults)
-    --testArithmetic(tResults)
-
-	variable tVar as double
-	put 0.5 into tVar
-	if tVar is 0.5 then
-	end if
-	
+    testArithmetic(tResults)
+    
     variable tResultString as string
-    put "" into tResultString
+    put the empty string into tResultString
     combine tResults with tDelimiter into tResultString
 
     return tResultString
@@ -51,49 +44,49 @@ public handler testArithmetic(inout xResults as list) as undefined
 
 	variable tInt as int
 	variable tReal as double
-	--variable tNumber
+	variable tNumber
 	
 	put 10 into tInt
 	put 10 into tReal
-	--put 10 into tNumber
+	put 10 into tNumber
 	
 	add 2 to tInt
 	add 2 to tReal
-	--add 2 to tNumber
+	add 2 to tNumber
 	
 	testLog("Arithmetic", "AddToInt", tInt is 12, xResults)
 	testLog("Arithmetic", "AddToReal", tReal is 12, xResults)
-	--testLog("Arithmetic", "AddToNum", tNumber is 12, xResults)
+	testLog("Arithmetic", "AddToNum", tNumber is 12, xResults)
 
 	subtract 2 from tInt
 	subtract 2 from tReal
-	--subtract 2 from tNumber
+	subtract 2 from tNumber
 	
 	testLog("Arithmetic", "SubtractFromInt", tInt is 10, xResults)
 	testLog("Arithmetic", "SubtractFromReal", tReal is 10, xResults)
-	--testLog("Arithmetic", "SubtractFromNum", tNumber is 10, xResults)
+	testLog("Arithmetic", "SubtractFromNum", tNumber is 10, xResults)
 	
 	multiply tInt by 2
 	multiply tReal by 2
-	--multiply tNumber by 2
+	multiply tNumber by 2
 
 	testLog("Arithmetic", "MultiplyInt", tInt is 20, xResults)
 	testLog("Arithmetic", "MultiplyReal", tReal is 20, xResults)
-	--testLog("Arithmetic", "MultiplyNum", tNumber is 20, xResults)	
+	testLog("Arithmetic", "MultiplyNum", tNumber is 20, xResults)	
 
 	divide tInt by 40
 	divide tReal by 40
-	--divide tNumber by 40
+	divide tNumber by 40
 	
 	testLog("Arithmetic", "DivideInt", tInt is 0, xResults)
-	--testLog("Arithmetic", "DivideReal", tReal is 0.5, xResults)
-	--testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)		
+	testLog("Arithmetic", "DivideReal", tReal is 0.5, xResults)
+	testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)		
 
 end handler
 
 public handler testList(inout xResults as list) as undefined
     variable tTestList as list
-    MCProperListCreate(undefined, 0, tTestList)
+    put the empty list into tTestList
 
     push "xyz" onto tTestList
     push 2 onto tTestList
@@ -130,7 +123,7 @@ end handler
 
 public handler testSort(inout xResults as list) as undefined
     variable tTestList as list
-    MCProperListCreate(undefined, 0, tTestList)
+    put the empty list into tTestList
 
     push "xyz" onto tTestList
     push 2 onto tTestList
