@@ -104,7 +104,7 @@ extern "C" void MCArithmeticExecMultiplyNumberByNumber(MCNumberRef& x_target, MC
     t_target = MCNumberFetchAsReal(x_target);
     t_number = MCNumberFetchAsReal(p_number);
     
-    MCArithmeticExecMultiplyRealByReal(t_number, t_target);
+    MCArithmeticExecMultiplyRealByReal(t_target, t_number);
     
     MCAutoNumberRef t_new_number;
     MCNumberCreateWithReal(t_target, &t_new_number);
@@ -131,7 +131,7 @@ extern "C" void MCArithmeticExecDivideNumberByNumber(MCNumberRef& x_target, MCNu
     t_target = MCNumberFetchAsReal(x_target);
     t_number = MCNumberFetchAsReal(p_number);
     
-    MCArithmeticExecDivideRealByReal(t_number, t_target);
+    MCArithmeticExecDivideRealByReal(t_target, t_number);
     
     MCAutoNumberRef t_new_number;
     MCNumberCreateWithReal(t_target, &t_new_number);
