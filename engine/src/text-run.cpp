@@ -14,6 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
 
 #include "text-run.h"
 
@@ -29,7 +30,7 @@ MCTextRun::MCTextRun(MCTextParagraph* p_paragraph, const MCRange& p_codeunit_ran
   m_font(NULL)
 {
     // TESTING
-    MCFontCreate(MCNAME("Times New Roman"), 0, 12, m_font);
+    MCFontCreate(MCNAME("Times New Roman"), 0, 48, m_font);
 }
 
 MCTextRun::MCTextRun(const MCTextRun& p_copy, const MCRange& p_codeunit_range) :
@@ -37,7 +38,7 @@ MCTextRun::MCTextRun(const MCTextRun& p_copy, const MCRange& p_codeunit_range) :
   m_font(NULL)
 {
     // TESTING
-    MCFontCreate(MCNAME("Times New Roman"), 0, 12, m_font);
+    MCFontCreate(MCNAME("Times New Roman"), 0, 48, m_font);
 }
 
 MCTextRun::~MCTextRun()

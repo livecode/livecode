@@ -6,4 +6,6 @@
 //
 //
 
+#include "prefix.h"
+
 #include "text-imageblock.h"

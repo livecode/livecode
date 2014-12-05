@@ -14,8 +14,11 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
 
 #include "text-controlblock.h"
+
+#include "text-paragraph.h"
 
 
 MCTextControlBlock::MCTextControlBlock(MCTextParagraph* p_paragraph, const MCRange& p_codeunits) :

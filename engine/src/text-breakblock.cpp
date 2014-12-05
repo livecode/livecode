@@ -14,8 +14,11 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
 
 #include "text-breakblock.h"
+
+#include "text-paragraph.h"
 
 
 MCTextBreakBlock::MCTextBreakBlock(MCTextParagraph* p_paragraph, const MCRange& p_codeunits, MCTextBlockBreakClass p_class) :

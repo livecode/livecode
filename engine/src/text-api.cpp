@@ -14,10 +14,17 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
 
 #include "text-api.h"
 
 #include "text-pane.h"
+
+
+void MCTextCellSetMaxSize(MCTextCellRef p_cell, coord_t p_width, coord_t p_height)
+{
+    p_cell->setMaxSize(p_width, p_height);
+}
 
 // Creates a new, empty text pane. The specified stack is used for scaling and
 // theming only - the pane isn't a LiveCode control and isn't a child of the
