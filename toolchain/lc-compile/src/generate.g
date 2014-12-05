@@ -9,9 +9,17 @@
 
 --------------------------------------------------------------------------------
 
+'type' NAMELIST
+    namelist(Name: NAME, Rest: NAMELIST)
+    nil
+
+'var' ModuleDependencyList : NAMELIST
+
 'action' Generate(MODULE)
 
-    'rule' Generate(module(_, Kind, Id, Imports, Definitions)):
+    'rule' Generate(Module:module(_, Kind, Id, _, Imports, Definitions)):
+        ModuleDependencyList <- nil
+        
         QueryModuleId(Id -> Info)
         Id'Name -> ModuleName
         (|
@@ -40,6 +48,241 @@
         GenerateExportedDefinitions(Definitions)
         
         EmitEndModule()
+        
+        GenerateManifest(Module)
+
+----------
+
+'action' GenerateManifest(MODULE)
+
+    'rule' GenerateManifest(module(_, Kind, Id, Metadata, Imports, Definitions)):
+        OutputBeginManifest()
+        Id'Name -> Name
+        OutputWriteI("<package version=\"0.0\" name=\"", Name, "\">\n")
+        [|
+            QueryMetadata(Metadata, "version" -> VersionString)
+            OutputWriteS("  <version>", VersionString, "</version>\n")
+        |]
+        OutputWrite("  <license>community</license>\n")
+        [|
+            QueryMetadata(Metadata, "label" -> LabelString)
+            OutputWriteS("  <label>", LabelString, "</label>\n")
+        |]
+        [|
+            QueryMetadata(Metadata, "description" -> DescriptionString)
+            OutputWriteS("  <description>", DescriptionString, "</description>\n")
+        |]
+        ModuleDependencyList -> Requirements
+        GenerateManifestRequires(Requirements)
+        (|
+            where(Kind -> widget)
+            OutputWrite("  <widget>\n")
+            GenerateManifestDefinitions(Definitions)
+            OutputWrite("  </widget>\n")
+        ||
+            where(Kind -> library)
+            OutputWrite("  <library>\n")
+            GenerateManifestDefinitions(Definitions)
+            OutputWrite("  </library>\n")
+        ||
+        |)
+        OutputWrite("</package>")
+        OutputEnd()
+        
+'condition' QueryMetadata(METADATA, STRING -> STRING)
+
+    'rule' QueryMetadata(metadata(_, Key, Value, Rest), WantedKey -> Value):
+        IsNameEqualToString(Key, WantedKey)
+        
+    'rule' QueryMetadata(metadata(_, _, _, Rest), WantedKey -> Value):
+        QueryMetadata(Rest, WantedKey -> Value)
+
+'action' AddModuleToDependencyList(NAME)
+
+    'rule' AddModuleToDependencyList(Name):
+        ModuleDependencyList -> List
+        IsNameInList(Name, List)
+        
+    'rule' AddModuleToDependencyList(Name):
+        ModuleDependencyList -> List
+        ModuleDependencyList <- namelist(Name, List)
+        
+'action' GenerateManifestRequires(NAMELIST)
+
+    'rule' GenerateManifestRequires(namelist(Head, Tail)):
+        GenerateManifestRequires(Tail)
+        OutputWriteI("  <requires name=\"", Head, "\">\n")
+    
+    'rule' GenerateManifestRequires(nil):
+        -- do nothing
+
+'action' GenerateManifestDefinitions(DEFINITION)
+
+    'rule' GenerateManifestDefinitions(sequence(Left, Right)):
+        GenerateManifestDefinitions(Left)
+        GenerateManifestDefinitions(Right)
+        
+    'rule' GenerateManifestDefinitions(type(_, public, Name, _)):
+    
+    'rule' GenerateManifestDefinitions(constant(_, public, Name, _)):
+    
+    'rule' GenerateManifestDefinitions(variable(_, public, Name, _)):
+    
+    'rule' GenerateManifestDefinitions(handler(_, public, Name, Signature, _, _)):
+        GenerateManifestHandlerDefinition(Name, Signature)
+
+    'rule' GenerateManifestDefinitions(foreignhandler(_, public, Name, Signature, _)):
+        GenerateManifestHandlerDefinition(Name, Signature)
+
+    'rule' GenerateManifestDefinitions(property(_, public, Name, Getter, Setter)):
+        QuerySymbolId(Getter -> GetInfo)
+        GetInfo'Type -> GetType
+        QuerySymbolId(Setter -> SetInfo)
+        SetInfo'Type -> SetType
+        GenerateManifestPropertyDefinition(Name, GetType, SetType)
+
+    'rule' GenerateManifestDefinitions(event(_, public, Name, Signature)):
+        GenerateManifestEventDefinition(Name, Signature)
+
+    'rule' GenerateManifestDefinitions(_):
+        -- nothing
+
+'action' GenerateManifestType(TYPE)
+
+    'rule' GenerateManifestType(Type):
+        [|
+            IsTypeOptional(Type)
+            OutputWrite("optional ")
+        |]
+        GenerateManifestTypeBody(Type)
+
+'condition' IsTypeOptional(TYPE)
+
+    'rule' IsTypeOptional(optional(_, Base)):
+        -- do nothing
+        
+    'rule' IsTypeOptional(named(_, Id))
+        QuerySymbolId(Id -> Info)
+        Info'Type -> Type
+        IsTypeOptional(Type)
+
+'action' GenerateManifestTypeBody(TYPE)
+
+    'rule' GenerateManifestTypeBody(optional(_, Base)):
+        GenerateManifestTypeBody(Base)
+
+    'rule' GenerateManifestTypeBody(named(_, Id)):
+        QuerySymbolId(Id -> Info)
+        Info'Type -> Type
+        (|
+            where(Type -> optional(_, _))
+            GenerateManifestTypeBody(Type)
+        ||
+            where(Type -> named(_, _))
+            GenerateManifestTypeBody(Type)
+        ||
+            Id'Name -> Name
+            OutputWriteI("", Name, "")
+        |)
+
+    'rule' GenerateManifestTypeBody(any(_)):
+        OutputWrite("any")
+
+    'rule' GenerateManifestTypeBody(undefined(_)):
+        OutputWrite("undefined")
+
+    'rule' GenerateManifestTypeBody(boolean(_)):
+        OutputWrite("boolean")
+    'rule' GenerateManifestTypeBody(integer(_)):
+        OutputWrite("integer")
+    'rule' GenerateManifestTypeBody(real(_)):
+        OutputWrite("real")
+    'rule' GenerateManifestTypeBody(number(_)):
+        OutputWrite("number")
+    'rule' GenerateManifestTypeBody(string(_)):
+        OutputWrite("string")
+    'rule' GenerateManifestTypeBody(data(_)):
+        OutputWrite("data")
+    'rule' GenerateManifestTypeBody(array(_)):
+        OutputWrite("array")
+    'rule' GenerateManifestTypeBody(list(_, _)):
+        OutputWrite("list")
+        
+    'rule' GenerateManifestTypeBody(pointer(_)):
+        OutputWrite("pointer")
+    'rule' GenerateManifestTypeBody(bool(_)):
+        OutputWrite("bool")
+    'rule' GenerateManifestTypeBody(int(_)):
+        OutputWrite("int")
+    'rule' GenerateManifestTypeBody(uint(_)):
+        OutputWrite("uint")
+    'rule' GenerateManifestTypeBody(float(_)):
+        OutputWrite("float")
+    'rule' GenerateManifestTypeBody(double(_)):
+        OutputWrite("double")
+
+    'rule' GenerateManifestTypeBody(Type):
+        print(Type)
+        Fatal_InternalInconsistency("attempt to generate uncoded type for manifest")
+
+'action' GenerateManifestSignatureParameters(PARAMETERLIST)
+
+    'rule' GenerateManifestSignatureParameters(parameterlist(parameter(_, Mode, _, Type), Tail)):
+        (|
+            where(Mode -> in)
+            OutputWrite("in ")
+        ||
+            where(Mode -> out)
+            OutputWrite("out ")
+        ||
+            where(Mode -> inout)
+            OutputWrite("inout ")
+        |)
+        GenerateManifestType(Type)
+        [|
+            ne(Tail, nil)
+            OutputWrite(",")
+        |]
+        GenerateManifestSignatureParameters(Tail)
+
+    'rule' GenerateManifestSignatureParameters(nil):
+        -- do nothing
+
+'action' GenerateManifestSignature(SIGNATURE)
+
+    'rule' GenerateManifestSignature(signature(Parameters, ReturnType)):
+        OutputWrite("parameters=\"")
+        GenerateManifestSignatureParameters(Parameters)
+        OutputWrite("\" return=\"")
+        GenerateManifestType(ReturnType)
+        OutputWrite("\"")
+
+'action' GenerateManifestHandlerDefinition(ID, SIGNATURE)
+
+    'rule' GenerateManifestHandlerDefinition(Id, Signature):
+        Id'Name -> Name
+        OutputWriteI("    <handler name=\"", Name, "\" ")
+        GenerateManifestSignature(Signature)
+        OutputWrite("/>\n")
+
+'action' GenerateManifestEventDefinition(ID, SIGNATURE)
+
+    'rule' GenerateManifestEventDefinition(Id, Signature):
+        Id'Name -> Name
+        OutputWriteI("    <event name=\"", Name, "\" ")
+        GenerateManifestSignature(Signature)
+        OutputWrite("/>\n")
+
+'action' GenerateManifestPropertyDefinition(ID, TYPE, TYPE)
+
+    'rule' GenerateManifestPropertyDefinition(Id, GetType, SetType):
+        --
+
+'condition' IsNameInList(NAME, NAMELIST)
+    'rule' IsNameInList(Id, namelist(Head, Tail)):
+        eq(Id, Head)
+    'rule' IsNameInList(Id, namelist(Head, Tail)):
+        IsNameInList(Id, Tail)
 
 ----------
 
@@ -83,6 +326,8 @@
         
         -- Ensure we have a dependency for the module
         GenerateModuleDependency(ModuleId -> ModuleIndex)
+        ModuleId'Name -> ModuleName
+        AddModuleToDependencyList(ModuleName)
         
         -- Fetch the info about the symbol.
         QuerySymbolId(Id -> SymbolInfo)
@@ -116,37 +361,6 @@
         -- If we get here then either the id isn't imported, or we have previously
         -- generated it.
 
-/*
-'action' GenerateImportedInvokeDefinition(INVOKELIST)
-
-    'rule' GenerateImportedInvokeDefinition(invokelist(Info, Tail)):
-        GenerateImportedInvokeInfo(Info)
-        GenerateImportedInvokeDefinition(Tail)
-        
-    'rule' GenerateImportedInvokeDefinition(nil):
-        -- do nothing
-
-'action' GenerateImportedInvokeInfo(INVOKEINFO)
-
-    'rule' GenerateImportedInvokeInfo(Info):
-        Info'Index -> Index
-        eq(Index, -1)
-        
-        Info'ModuleName -> ModuleNameString
-        MakeNameLiteral(ModuleNameString -> ModuleName)
-        EmitModuleDependency(ModuleName -> ModuleIndex)
-        Info'ModuleIndex <- ModuleIndex
-        
-        Info'Name -> NameString
-        MakeNameLiteral(NameString -> Name)
-        EmitUndefinedType(-> SymbolTypeIndex)
-        EmitImportedSyntax(ModuleIndex, Name, SymbolTypeIndex -> SymbolIndex)
-        Info'Index <- SymbolIndex
-
-    'rule' GenerateImportedInvokeInfo(Info):
-        -- If we get here then we've previously processed this invoke.
-*/
-
 ----
 
 'action' GenerateModuleDependency(ID -> INT)
@@ -165,6 +379,8 @@
             -- Emit a dependency for the module and get its index
             EmitModuleDependency(ModuleName -> NewModuleIndex)
             ModuleInfo'Index <- NewModuleIndex
+
+            AddModuleToDependencyList(ModuleName)
         |]
         
         -- Now return the updated module index
@@ -191,6 +407,12 @@
         GenerateDefinitionIndex(Name)
 
     'rule' GenerateDefinitionIndexes(foreignhandler(_, _, Name, _, _)):
+        GenerateDefinitionIndex(Name)
+
+    'rule' GenerateDefinitionIndexes(property(_, _, Name, _, _)):
+        GenerateDefinitionIndex(Name)
+
+    'rule' GenerateDefinitionIndexes(event(_, _, Name, _)):
         GenerateDefinitionIndex(Name)
 
     'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _)):
@@ -901,6 +1123,7 @@
 
             MakeNameLiteral(ModuleNameString -> ModuleName)
             EmitModuleDependency(ModuleName -> ModuleIndex)
+            AddModuleToDependencyList(ModuleName)
             
             MakeNameLiteral(SymbolNameString -> SymbolName)
             EmitUndefinedType(-> SymbolTypeIndex)

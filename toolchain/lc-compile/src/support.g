@@ -22,6 +22,7 @@
     MakeStringLiteral
     MakeNameLiteral
     GetStringOfNameLiteral
+    IsNameEqualToString
 
     InitializeScopes
     FinalizeScopes
@@ -197,6 +198,12 @@
     EmitGetRegisterAttachedToExpression
     EmitPosition
 
+    OutputBeginManifest
+    OutputEnd
+    OutputWrite
+    OutputWriteI
+    OutputWriteS
+
     ErrorsDidOccur
     Fatal_OutOfMemory
     Fatal_InternalInconsistency
@@ -275,6 +282,7 @@
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
 
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
+'condition' IsNameEqualToString(NAME, STRING)
 
 --------------------------------------------------------------------------------
 
@@ -492,6 +500,12 @@
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)
 'action' EmitDetachRegisterFromExpression(EXPRESSION)
 'condition' EmitGetRegisterAttachedToExpression(EXPRESSION -> INT)
+
+'action' OutputBeginManifest()
+'action' OutputEnd()
+'action' OutputWrite(STRING)
+'action' OutputWriteI(STRING, NAME, STRING)
+'action' OutputWriteS(STRING, STRING, STRING)
 
 --------------------------------------------------------------------------------
 

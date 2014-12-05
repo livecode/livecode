@@ -36,8 +36,10 @@ int GetFileWithIndex(long index, FileRef *r_file);
 int GetCurrentFile(FileRef *r_file);
 
 void SetOutputFile(const char *filename);
+void SetManifestOutputFile(const char *filename);
 void SetTemplateFile(const char *filename);
 FILE *OpenOutputFile(void);
+FILE *OpenManifestOutputFile(void);
 FILE *OpenTemplateFile(void);
 
 #ifdef __cplusplus
