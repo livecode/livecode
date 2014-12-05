@@ -727,10 +727,10 @@
         EmitPosition(Position)
         EmitResolveLabel(RepeatHead)
         EmitCreateRegister(-> ContinueRegister)
-        EmitBeginBuiltinInvoke("RepeatCounted", ContinueRegister)
+        GenerateBeginBuiltinInvoke("RepeatCounted", Context, ContinueRegister)
         EmitContinueInvoke(CountRegister)
         EmitEndInvoke()
-        EmitJumpIfFalse(CountRegister, RepeatTail)
+        EmitJumpIfFalse(ContinueRegister, RepeatTail)
         EmitDestroyRegister(ContinueRegister)
         GenerateBody(Result, Context, Body)
         EmitJump(RepeatHead)
@@ -791,7 +791,7 @@
 
         EmitResolveLabel(RepeatHead)
         EmitCreateRegister(-> ContinueRegister)
-        EmitBeginBuiltinInvoke("RepeatUpToCondition", ContinueRegister)
+        GenerateBeginBuiltinInvoke("RepeatUpToCondition", Context, ContinueRegister)
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(LimitRegister)
         EmitEndInvoke()
@@ -804,7 +804,7 @@
 
         EmitResolveLabel(RepeatNext)
         EmitFetchVar(VarKind, CounterRegister, VarIndex)
-        EmitBeginBuiltinInvoke("RepeatUpToIterate", CounterRegister)
+        GenerateBeginBuiltinInvoke("RepeatUpToIterate", Context, CounterRegister)
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(StepRegister)
         EmitEndInvoke()
@@ -838,7 +838,7 @@
 
         EmitResolveLabel(RepeatHead)
         EmitCreateRegister(-> ContinueRegister)
-        EmitBeginBuiltinInvoke("RepeatDownToCondition", ContinueRegister)
+        GenerateBeginBuiltinInvoke("RepeatDownToCondition", Context, ContinueRegister)
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(LimitRegister)
         EmitEndInvoke()
@@ -851,7 +851,7 @@
 
         EmitResolveLabel(RepeatNext)
         EmitFetchVar(VarKind, CounterRegister, VarIndex)
-        EmitBeginBuiltinInvoke("RepeatDownToIterate", CounterRegister)
+        GenerateBeginBuiltinInvoke("RepeatDownToIterate", Context, CounterRegister)
         EmitContinueInvoke(CounterRegister)
         EmitContinueInvoke(StepRegister)
         EmitEndInvoke()
@@ -906,6 +906,16 @@
         
     'rule' GenerateBody(Result, Context, nil):
         -- nothing
+
+'action' GenerateBeginBuiltinInvoke(STRING, INT, INT)
+
+    'rule' GenerateBeginBuiltinInvoke(NameString, ContextReg, ResultReg):
+        MakeNameLiteral("__builtin__" -> ModuleName)
+        EmitModuleDependency(ModuleName -> ModuleIndex)
+        MakeNameLiteral(NameString -> InvokeName)
+        EmitUndefinedType(-> SymbolTypeIndex)
+        EmitImportedHandler(ModuleIndex, InvokeName, SymbolTypeIndex -> SymbolIndex)
+        EmitBeginExecuteInvoke(SymbolIndex, ContextReg, ResultReg)
 
 ----
 

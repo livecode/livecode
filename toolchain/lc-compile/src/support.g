@@ -177,7 +177,6 @@
     EmitBeginEvaluateInvoke
     EmitBeginAssignInvoke
     EmitBeginIterateInvoke
-    EmitBeginBuiltinInvoke
     EmitContinueInvoke
     EmitEndInvoke
     EmitAssign
@@ -479,7 +478,6 @@
 'action' EmitBeginEvaluateInvoke(Index: INT, ContextRegister: INT, OutputRegister: INT)
 'action' EmitBeginAssignInvoke(Index: INT, ContextRegister: INT, InputRegister: INT)
 'action' EmitBeginIterateInvoke(Index: INT, ContextRegister: INT, IteratorRegister: INT, ContainerRegister: INT)
-'action' EmitBeginBuiltinInvoke(Builtin: STRING, ResultRegister: INT)
 'action' EmitContinueInvoke(Register: INT)
 'action' EmitEndInvoke()
 'action' EmitAssignUndefined(Register: INT)
