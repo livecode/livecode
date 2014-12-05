@@ -59,7 +59,7 @@ output:             Returns the number of bytes between the first byte of <Targe
 */
 
 syntax ByteOffset is prefix operator with precedence 1
-    "the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "bytes" <Needle: Expression> "in" <Target: Expression>
 begin
     EvalOffsetOfBytes(IsLast, Needle, Target, output)
 end syntax
@@ -77,7 +77,7 @@ output:             Returns the number of bytes between the first byte of <Targe
 */
 
 syntax ByteOffsetAfter is prefix operator with precedence 1
-	"the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
+	"the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" "bytes" <Needle: Expression> "after" <After: Expression> "in" <Target: Expression>
 begin
 	EvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
 end syntax
@@ -96,7 +96,7 @@ output:             Returns the number of bytes between the first byte of <Targe
 */
 
 syntax ByteOffsetBefore is prefix operator with precedence 1
-    "the" ["first" <IsFirst=true> | "last" <IsFirst=false>] "offset" "of" "bytes" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" "bytes" <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     EvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
 end syntax

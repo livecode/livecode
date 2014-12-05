@@ -1393,6 +1393,9 @@ MCTypeInfoRef MCAliasTypeInfoGetTarget(MCTypeInfoRef typeinfo);
 // error to attempt to resolve an unbound named type.
 bool MCNamedTypeInfoCreate(MCNameRef name, MCTypeInfoRef& r_named_typeinfo);
 
+// Fetch the name of the named typeinfo.
+MCNameRef MCNamedTypeInfoGetName(MCTypeInfoRef typeinfo);
+    
 // Returns true if the given named type is bound.
 bool MCNamedTypeInfoIsBound(MCTypeInfoRef typeinfo);
 
@@ -2681,6 +2684,9 @@ bool MCProperListCreate(const MCValueRef *values, uindex_t length, MCProperListR
 // Create an empty mutable list.
 bool MCProperListCreateMutable(MCProperListRef& r_list);
 
+// Create an immutable list taking ownership of the given array of values.
+bool MCProperListCreateAndRelease(MCValueRef *p_values, uindex_t p_length, MCProperListRef& r_list);
+    
 // Make an immutable copy of the given list. If the 'copy and release' form is
 // used then the original list is released (has its reference count reduced by
 // one).

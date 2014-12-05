@@ -16,6 +16,8 @@ public foreign handler MCCharEvalOffsetOfChars(in IsLast as bool, in Needle as s
 public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as bool, in Needle as string, in Before as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
 public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as bool, in Needle as string, in After as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
 
+public foreign handler MCCharEvalNewlineCharacter(out Value as string) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -123,7 +125,7 @@ output:             Returns the number of chars between the first char of <Targe
 */
 
 syntax CharOffset is prefix operator with precedence 1
-    "the" ["first" <IsLast=false> | "last" <IsLast=true>] "offset" "of" ["chars"] <Needle: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsLast=false> | "last" <IsLast=true> | <IsLast=false> ) "offset" "of" ["chars"] <Needle: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfChars(IsLast, Needle, Target, output)
 end syntax
@@ -160,7 +162,7 @@ output:             Returns the number of chars between the first char of <Targe
 */
 
 syntax CharOffsetBefore is prefix operator with precedence 1
-    "the" ["first" <IsFirst=true> | "last" <IsFirst=false>] "offset" "of" ["chars"] <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
+    "the" ( "first" <IsFirst=true> | "last" <IsFirst=false> | <IsFirst=false> ) "offset" "of" ["chars"] <Needle: Expression> "before" <Before: Expression> "in" <Target: Expression>
 begin
     MCCharEvalOffsetOfCharsBefore(IsFirst, Needle, Before, Target, output)
 end syntax
@@ -211,5 +213,11 @@ begin
 end syntax
 
 --
+
+syntax NewLineCharacter is expression
+    "newline"
+begin
+    MCCharEvalNewlineCharacter(output)
+end syntax
 
 end module

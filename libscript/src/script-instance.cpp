@@ -1,8 +1,13 @@
 #include "script.h"
 #include "script-private.h"
 
-#include <ffi/ffi.h>
+#include "ffi.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -708,7 +713,11 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
 
 static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler)
 {
+#ifdef _WIN32
+	p_handler -> function = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(p_handler -> binding));
+#else
     p_handler -> function = dlsym(RTLD_DEFAULT, MCStringGetCString(p_handler -> binding));
+#endif
     if (p_handler -> function == nil)
         return MCScriptThrowUnableToResolveForeignHandlerError(p_frame -> instance -> module, p_frame -> address,p_handler);
     
@@ -1370,7 +1379,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             {
                 // jump <offset>
                 int t_offset;
-                t_offset = (t_arguments[0] & 1) != 0 ? -(t_arguments[0] >> 1) : t_arguments[0] >> 1;
+                t_offset = (t_arguments[0] & 1) != 0 ? -(signed)(t_arguments[0] >> 1) : t_arguments[0] >> 1;
                 
                 // <offset> is relative to the start of this instruction.
                 t_next_bytecode = t_bytecode + t_offset;
@@ -1381,7 +1390,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 // jumpiftrue <register>, <offset>
                 int t_register, t_offset;
                 t_register = t_arguments[0];
-                t_offset = (t_arguments[1] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
+                t_offset = (t_arguments[1] & 1) != 0 ? -(signed)(t_arguments[1] >> 1) : t_arguments[1] >> 1;
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
@@ -1406,7 +1415,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 // jumpiffalse <register>, <offset>
                 int t_register, t_offset;
                 t_register = t_arguments[0];
-                t_offset = (t_arguments[1] & 1) != 0 ? -(t_arguments[1] >> 1) : t_arguments[1] >> 1;
+                t_offset = (t_arguments[1] & 1) != 0 ? -(signed)(t_arguments[1] >> 1) : t_arguments[1] >> 1;
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
@@ -1439,6 +1448,36 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // Store the constant in the frame.
                 MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_value);
+            }
+            break;
+            case kMCScriptBytecodeOpAssignList:
+            {
+                int t_dst;
+                t_dst = t_arguments[0];
+                
+                MCValueRef *t_values;
+                if (!MCMemoryNewArray(t_arity - 1, t_values))
+                    t_success = false;
+                
+                if (t_success)
+                {
+                    for(uindex_t i = 1; i < t_arity; i++)
+                        t_values[i - 1] = MCScriptFetchFromRegisterInFrame(t_frame, t_arguments[i]);
+                }
+                
+                MCProperListRef t_list;
+                if (t_success)
+                {
+                    t_success = MCProperListCreateAndRelease(t_values, t_arity - 1, t_list);
+                    if (!t_success)
+                        free(t_values);
+                }
+                
+                if (t_success)
+                {
+                    MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_list);
+                    MCValueRelease(t_list);
+                }
             }
             break;
             case kMCScriptBytecodeOpAssign:
@@ -1769,6 +1808,37 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
             t_frame = MCScriptDestroyFrame(t_frame);
     
     return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
+{
+    if (*x_count == 0)
+        return false;
+    
+    *x_count -= 1;
+    return true;
+}
+
+extern "C" bool MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
+{
+    return p_counter <= p_limit;
+}
+
+extern "C" double MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
+{
+    return p_counter + p_step;
+}
+
+extern "C" bool MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
+{
+    return p_counter >= p_limit;
+}
+
+extern "C" double MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
+{
+    return p_counter + p_step;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

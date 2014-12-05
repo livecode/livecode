@@ -840,7 +840,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" -bootstrap -template \"${SRCROOT}/src/grammar.g\" -output \"${SRCROOT}/src/grammar_full.g\" \"${SRCROOT}/../../libscript/src/string.mlc\" \"${SRCROOT}/../../libscript/src/binary.mlc\" \"${SRCROOT}/../../libscript/src/type.mlc\" \"${SRCROOT}/../../libscript/src/arithmetic.mlc\" \"${SRCROOT}/../../libscript/src/bitwise.mlc\" \"${SRCROOT}/../../libscript/src/byte.mlc\" \"${SRCROOT}/../../libscript/src/char.mlc\" \"${SRCROOT}/../../engine/src/canvas.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
+			shellScript = "cd src\nmkdir -p \"_G_\"\n\"${BUILT_PRODUCTS_DIR}/lc-bootstrap-compile\" -bootstrap -template \"${SRCROOT}/src/grammar.g\" -output \"${SRCROOT}/src/grammar_full.g\" \"${SRCROOT}/../../libscript/src/string.mlc\" \"${SRCROOT}/../../libscript/src/binary.mlc\" \"${SRCROOT}/../../libscript/src/arithmetic.mlc\" \"${SRCROOT}/../../libscript/src/bitwise.mlc\" \"${SRCROOT}/../../libscript/src/byte.mlc\" \"${SRCROOT}/../../libscript/src/char.mlc\" \"${SRCROOT}/../../libscript/src/list.mlc\" \"${SRCROOT}/../../libscript/src/type-convert.mlc\" \"${SRCROOT}/../../libscript/src/logic.mlc\" \"${SRCROOT}/../../libscript/src/sort.mlc\" \"${SRCROOT}/../../libscript/src/array.mlc\"\nif [ \"$?\" != \"0\" ]; then exit 1; fi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

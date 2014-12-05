@@ -16,8 +16,6 @@ public foreign handler EvalIsEmpty(in Target as any, out Value as bool) as undef
 public foreign handler EvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler EvalIsDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler EvalIsNotDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler EvalIsEqualTo(in Left as any, in Right as any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler EvalIsNotEqualTo(in Left as any, in Right as any, out Value as bool) as undefined binds to "<builtin>"
 
 --
 
@@ -97,9 +95,9 @@ output:     Returns true if the given expression <Target> evaluates to the empty
 */
 
 syntax IsEmpty is postfix operator with precedence 1
-	<Target: Expression> "is" "empty"
+    <Target: Expression> "is" "empty"
 begin
-	EvalIsEmpty(Target, output)
+    EvalIsEmpty(Target, output)
 end syntax
 
 /*

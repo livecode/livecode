@@ -680,9 +680,23 @@ void EndSyntaxGrammar(void)
 
     if (s_rule -> kind >= kSyntaxRuleKindPrefixOperator)
         TrimSyntaxNodeForOperator(s_stack[0], s_rule -> kind);
-    
+
     s_rule -> expr = s_stack[0];
     s_stack_index = 0;
+    
+    if (s_rule -> expr -> kind != kSyntaxNodeKindAlternate &&
+        s_rule -> expr -> kind != kSyntaxNodeKindConcatenate &&
+        s_rule -> expr -> kind != kSyntaxNodeKindRepeat)
+    {
+        SyntaxNodeRef t_node;
+        MakeSyntaxNode(&t_node);
+        t_node -> kind = kSyntaxNodeKindConcatenate;
+        t_node -> concatenate . operands = NULL;
+        t_node -> concatenate . operand_count = 0;
+        t_node -> concatenate . is_nullable = 0;
+        AppendSyntaxNode(t_node, s_rule -> expr);
+        s_rule -> expr = t_node;
+    }
 }
 
 static void JoinSyntaxGrammar(SyntaxNodeKind p_kind)

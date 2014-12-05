@@ -54,7 +54,7 @@ extern "C" void MCListExecPushSingleElementOnto(MCValueRef p_value, bool p_is_fr
 //    ctxt . Throw();
 }
 
-extern "C" void MCListExecPopElementInto(MCProperListRef& x_source, bool p_is_front, MCValueRef& r_output)
+extern "C" void MCListExecPopElementInto(bool p_is_front, MCProperListRef& x_source, MCValueRef& r_output)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_source, &t_mutable_list))
@@ -91,7 +91,7 @@ extern "C" void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, MCProperList
     r_output = MCProperListFirstIndexOfElement(p_target, p_needle, 0, t_dummy);
 }
 
-extern "C" void MCListEvalContains(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
+extern "C" void MCListEvalContainsElements(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
 {
     uindex_t t_dummy;
     r_output = MCProperListFirstIndexOfList(p_target, p_needle, 0, t_dummy);
@@ -127,7 +127,7 @@ extern "C" void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCP
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(p_target, p_start, p_finish, t_start, t_count);
-    MCProperListCopySublist(p_target, MCRangeMake(p_start, p_finish - p_start + 1), r_output);
+    MCProperListCopySublist(p_target, MCRangeMake(t_start, t_count), r_output);
 }
 
 extern "C" void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
@@ -258,6 +258,11 @@ extern "C" void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_ind
         return;
     
     MCValueAssign(x_target, *t_immutable);
+}
+
+extern "C" void MCListEvalEmpty(MCProperListRef& r_output)
+{
+    r_output = MCValueRetain(kMCEmptyProperList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

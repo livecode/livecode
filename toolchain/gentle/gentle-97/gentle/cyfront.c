@@ -7532,7 +7532,7 @@ TokenCode_DECLARATIONLIST(yy_12_1_29_1, yy_12_1_29_2, yy_12_1_29_3);
 yy_12_1_30_1 = yyv_L;
 yy_12_1_30_2 = ((yy)"%token ");
 CodeAnonTokenList(yy_12_1_30_1, yy_12_1_30_2);
-yy_12_1_31_1 = ((yy)"%%");
+/* --PATCH-- */ yy_12_1_31_1 = ((yy)"%glr-parser\n%%");
 s(yy_12_1_31_1);
 nl();
 yy_12_1_33 = ((yy)0);

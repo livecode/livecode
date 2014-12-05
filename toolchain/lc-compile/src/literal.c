@@ -100,6 +100,11 @@ void GetStringOfNameLiteral(NameRef p_literal, const char **r_string)
     *r_string = ((NameRef)p_literal) -> token;
 }
 
+int IsNameEqualToString(NameRef p_name, const char *p_string)
+{
+    return strcmp(p_name -> token, p_string) == 0;
+}
+
 void NegateReal(long p_real, long *r_real)
 {
     double *t_value;

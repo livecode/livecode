@@ -1274,6 +1274,31 @@ void MCScriptEmitAssignConstantInModule(MCScriptModuleBuilderRef self, uindex_t 
     __emit_instruction(self, kMCScriptBytecodeOpAssignConstant, 2, p_reg, t_constant_index - 1);
 }
 
+void MCScriptEmitBeginAssignListInModule(MCScriptModuleBuilderRef self, uindex_t p_reg)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    __begin_instruction(self, kMCScriptBytecodeOpAssignList);
+    __continue_instruction(self, p_reg);
+}
+
+void MCScriptEmitContinueAssignListInModule(MCScriptModuleBuilderRef self, uindex_t p_reg)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    __continue_instruction(self, p_reg);
+}
+
+void MCScriptEmitEndAssignListInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    __end_instruction(self);
+}
+
 void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef self, uindex_t p_dst_reg, uindex_t p_src_reg)
 {
     if (self == nil || !self -> valid)

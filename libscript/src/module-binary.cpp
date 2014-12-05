@@ -66,3 +66,8 @@ extern "C" void MCBinaryEvalIsGreaterThan(MCDataRef p_left, MCDataRef p_right, b
 {
     r_result = MCDataCompareTo(p_left, p_right) > 0;
 }
+
+extern "C" void MCDataEvalEmpty(MCDataRef& r_output)
+{
+    r_output = MCValueRetain(kMCEmptyData);
+}

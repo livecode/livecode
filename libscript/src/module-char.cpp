@@ -23,17 +23,15 @@ extern "C" void MCCharEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_outpu
     r_output = MCStringGetLength(p_target);
 }
 
-#if 0
-void MCCharEvalIsAmongTheCharsOf(MCHandlerContext& ctxt, MCStringRef p_needle, MCStringRef p_target, bool& r_output)
+void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, MCStringRef p_target, bool& r_output)
 {
     // Error if there is more than one char in needle.
     if (MCStringGetLength(p_needle) == 1)
         return;
     
     uindex_t t_dummy;
-    r_output = MCStringFirstIndexOfChar(p_target, MCStringGetCodepointAtIndex(p_needle, 0), 0, ctxt . GetStringComparisonOptions(), t_dummy);
+    r_output = MCStringFirstIndexOfChar(p_target, MCStringGetCodepointAtIndex(p_needle, 0), 0, kMCStringOptionCompareExact, t_dummy);
 }
-#endif
 
 extern "C" void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
@@ -111,17 +109,16 @@ extern "C" void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MC
     MCValueAssign(x_target, *t_new_string);
 }
 
-#if 0
-void MCCharEvalOffsetOfCharsInRange(MCHandlerContext ctxt, MCStringRef p_needle, MCStringRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfCharsInRange(MCStringRef p_needle, MCStringRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
 {
     uindex_t t_offset;
     t_offset = 0;
     if (!MCStringIsEmpty(p_needle))
     {
         if (p_is_last)
-            MCStringLastIndexOfStringInRange(p_target, p_needle, p_range, ctxt . GetStringComparisonOptions(), t_offset);
+            MCStringLastIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
         else
-            MCStringFirstIndexOfStringInRange(p_target, p_needle, p_range, ctxt . GetStringComparisonOptions(), t_offset);
+            MCStringFirstIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
         
         // correct output index
         t_offset++;
@@ -129,31 +126,35 @@ void MCCharEvalOffsetOfCharsInRange(MCHandlerContext ctxt, MCStringRef p_needle,
     r_output = t_offset;
 }
 
-void MCCharEvalOffsetOfChars(MCHandlerContext ctxt, MCStringRef p_needle, MCStringRef p_target, bool p_is_last, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfChars(MCStringRef p_needle, MCStringRef p_target, bool p_is_last, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(ctxt, p_needle, MCRangeMake(0, UINDEX_MAX), p_target, p_is_last, r_output);
+    MCCharEvalOffsetOfCharsInRange(p_needle, p_target, p_is_last, MCRangeMake(0, UINDEX_MAX), r_output);
 }
 
-void MCCharEvalOffsetOfCharsAfter(MCHandlerContext ctxt, MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, bool p_is_last, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfCharsAfter(MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, bool p_is_last, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(ctxt, p_needle, MCRangeMake(p_after, UINDEX_MAX), p_target, p_is_last, r_output);
+    MCCharEvalOffsetOfCharsInRange(p_needle, p_target, p_is_last, MCRangeMake(p_after, UINDEX_MAX), r_output);
 }
 
-void MCCharEvalOffsetOfCharsBefore(MCStringRef p_needle, MCStringRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfCharsBefore(MCStringRef p_needle, MCStringRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(ctxt, p_needle, MCRangeMake(0, p_before), p_target, p_is_last, r_output);
+    MCCharEvalOffsetOfCharsInRange(p_needle, p_target, !p_is_first, MCRangeMake(0, p_before), r_output);
 }
 
-void MCCharEvalBeginsWith(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRef p_prefix, bool& r_result)
+extern "C" void MCCharEvalBeginsWith(MCStringRef p_source, MCStringRef p_prefix, bool& r_result)
 {
-    r_result = MCStringBeginsWith(p_source, p_prefix, ctxt . GetStringComparisonOptions());
+    r_result = MCStringBeginsWith(p_source, p_prefix, kMCStringOptionCompareExact);
 }
 
-void MCCharEvalEndsWith(MCHandlerContext& ctxt, MCStringRef p_source, MCStringRef p_suffix, bool& r_result)
+extern "C" void MCCharEvalEndsWith(MCStringRef p_source, MCStringRef p_suffix, bool& r_result)
 {
-    r_result = MCStringBeginsWith(p_source, p_prefix, ctxt . GetStringComparisonOptions());
+    r_result = MCStringEndsWith(p_source, p_suffix, kMCStringOptionCompareExact);
 }
-#endif
+
+extern "C" void MCCharEvalNewlineCharacter(MCStringRef& r_output)
+{
+    MCStringFormat(r_output, "\n");
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

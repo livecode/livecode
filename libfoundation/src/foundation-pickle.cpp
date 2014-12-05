@@ -299,7 +299,7 @@ static bool MCPickleReadValueRef(MCStreamRef stream, MCValueRef& r_value)
                 double t_value;
                 if (!MCStreamReadDouble(stream, t_value))
                     return failed();
-                if (!MCNumberCreateWithReal(t_value, (MCNumberRef&)t_value))
+                if (!MCNumberCreateWithReal(t_value, (MCNumberRef&)r_value))
                     return failed();
             }
             break;
