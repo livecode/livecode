@@ -1763,13 +1763,12 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 // PM-2014-10-13: [[ Bug 13659 ]] Make sure we can interact with the LC app when Voice Over is enabled/disabled while our view is already onscreen
 - (void)voiceOverStatusChanged
 {
-    // The user has chosen to ignore voice over, ie cannot interact with LC stacks when voice over is on
-    if ([[MCIPhoneApplication sharedApplication] getIgnoreVoiceOver])
+    if (MCignorevoiceoversensitivity == True)
         return;
     
     UIView *t_main_view;
     t_main_view = [[MCIPhoneApplication sharedApplication] fetchMainView];
-    
+
     if (UIAccessibilityIsVoiceOverRunning())
     {
         t_main_view.isAccessibilityElement = YES;

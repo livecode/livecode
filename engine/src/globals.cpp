@@ -458,6 +458,7 @@ Boolean MChidebackdrop = False;
 Boolean MCraisewindows = False;
 
 uint4 MCmajorosversion = 0;
+Boolean MCignorevoiceoversensitivity = False;
 
 MCTheme *MCcurtheme = NULL;
 
