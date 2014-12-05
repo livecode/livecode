@@ -761,6 +761,9 @@
     'rule' TermExpression(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
 
+    'rule' TermExpression(-> list(Position, List)):
+        "[" @(-> Position) ExpressionList(-> List) "]"
+
     'rule' TermExpression(-> Expression):
         "(" Expression(-> Expression) ")"
 
