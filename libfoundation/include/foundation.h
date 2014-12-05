@@ -533,6 +533,10 @@ typedef uint8_t byte_t;
 // value).
 typedef uint32_t codepoint_t;
 
+// Constant to be used to represent an invalid codepoint (e.g. "no
+// further characters)
+#define CODEPOINT_NONE UINT32_MAX
+
 // The 'unichar_t' type is used to hold a UTF-16 codeunit.
 #ifdef __WINDOWS__
 typedef wchar_t unichar_t;
