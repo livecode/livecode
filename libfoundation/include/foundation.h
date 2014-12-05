@@ -167,7 +167,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
-#define __HUGE__ 1 
+#define __MEDIUM__ 1 
 #endif
 
 // Native char set
@@ -204,7 +204,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__
 #define __LITTLE_ENDIAN__
 #define __X86_64__
-#define __HUGE__
+#define __MEDIUM__
 #elif defined(__arm__)
 #define __32_BIT__
 #define __LITTLE_ENDIAN__
@@ -248,7 +248,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
-#define __HUGE__ 1
+#define __MEDIUM__ 1
 #elif defined(__arm__)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
