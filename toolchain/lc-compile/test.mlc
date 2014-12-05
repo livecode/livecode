@@ -5,7 +5,7 @@ foreign handler MCBooleanCreateWithBool(in value as bool, out value_ref as boole
 
 public handler test()
     variable tResults as list
-    --put the empty list into tResults
+    put the empty list into tResults
 
     variable tDelimiter as string
     put newline into tDelimiter
