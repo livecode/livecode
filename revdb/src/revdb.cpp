@@ -728,7 +728,7 @@ void REVDB_Connect(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 		}
 
 		// check access permissions of known database types
-		int t_dbtype_index;
+		size_t t_dbtype_index;
 		for (t_dbtype_index = 0; t_dbtype_index < REVDB_DATABASETYPECOUNT; t_dbtype_index++)
 		{
 			if (util_stringcompare(REVDBdatabasetypestrings[t_dbtype_index], dbtype, strlen(dbtype)) == 0)
