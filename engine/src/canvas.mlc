@@ -64,7 +64,7 @@ public foreign handler MCCanvasRectangleGetHeight(in pRect as Rectangle, out rHe
 public foreign handler MCCanvasRectangleSetHeight(in pHeight as CanvasFloat, inout xRect as Rectangle) as undefined binds to "<builtin>"
 
 syntax MakeRect is prefix operator with precedence 4
-	"rectangle" <mRect: ExpressionList>
+	"rectangle" <mRect: Expression>
 begin
 	//MCCanvasRectangleMakeWithLTRB(mRect[0], mRect[1], mRect[2], mRect[3], output)
     MCCanvasRectangleMakeWithList(mRect, output)
@@ -125,7 +125,7 @@ public foreign handler MCCanvasPointGetY(in pPoint as Point, out rY as CanvasFlo
 public foreign handler MCCanvasPointSetY(in pY as CanvasFloat, inout xPoint as Point) as undefined binds to "<builtin>"
 
 syntax MakePoint is prefix operator with precedence 4
-	"point" <mPoint: ExpressionList>
+	"point" <mPoint: Expression>
 begin
 	MCCanvasPointMakeWithList(mPoint, output)
 end syntax
@@ -154,7 +154,7 @@ public foreign handler MCCanvasColorMakeWithList(in pParts as list, out rColor a
 //public foreign handler MCCanvasColorMakeWithString(in pList as string, out rColor as Color)
 
 syntax MakeColor is prefix operator with precedence 4
-	"color" <mVal: ExpressionList>
+	"color" <mVal: Expression>
 begin
 //	MCCanvasColorMakeWithString(mVal[0], output)
 //	MCCanvasColorMakeWithList(mVal[0], output)
@@ -226,7 +226,7 @@ begin
 end syntax
 
 syntax MakeScaleTransform is prefix operator with precedence 4
-	"transform" "with" "scale" <mScale: ExpressionList>
+	"transform" "with" "scale" <mScale: Expression>
 begin
 //	MCCanvasTransformMakeScale(mScale[0], mScale[0], output)
 //	MCCanvasTransformMakeScale(mScale[0], mScale[1], output)
@@ -240,7 +240,7 @@ begin
 end syntax
 
 syntax MakeTranslationTransform is prefix operator with precedence 4
-	"transform" "with" "translation" <mTranslation: ExpressionList>
+	"transform" "with" "translation" <mTranslation: Expression>
 begin
 	//MCCanvasTransformMakeTranslation(mTranslation[0], mTranslation[1], output)
     MCCanvasTransformMakeTranslationWithList(mTranslation, output)
@@ -326,7 +326,7 @@ begin
 end syntax
 
 syntax ScaleTransform is statement
-	"scale" <mTransform: Expression> "by" <mScale: ExpressionList>
+	"scale" <mTransform: Expression> "by" <mScale: Expression>
 begin
 //	MCCanvasTransformScale(mTransform, mScale[0], mScale[1])
 //	MCCanvasTransformScale(mTransform, mScale[0], mScale[0])
@@ -340,7 +340,7 @@ begin
 end syntax
 
 syntax TranslateTransform is statement
-	"translate" <mTransform: Expression> "by" <mTranslate: ExpressionList>
+	"translate" <mTransform: Expression> "by" <mTranslate: Expression>
 begin
 //	MCCanvasTransformTranslate(mTransform, mTranslate[0], mTranslate[1])
     MCCanvasTransformTranslateWithList(mTransform, mTranslate)
@@ -389,7 +389,7 @@ public foreign handler MCCanvasPatternMakeWithTranslatedImage(in pImage as Image
 public foreign handler MCCanvasPatternMakeWithImageTranslatedWithList(in pImage as Image, in pTranslation as list, out rPattern as Pattern) as undefined binds to "<builtin>"
 
 syntax MakePattern is prefix operator with precedence 4
-	"pattern" "with" <mImage: Expression> [ ( "transformed" "by" <mTransform: Expression> | "scaled" "by" <mScale: ExpressionList> | "translated" "by" <mTranslation: ExpressionList> | "rotated" "by" <mRadians: Expression> ) ]
+	"pattern" "with" <mImage: Expression> [ ( "transformed" "by" <mTransform: Expression> | "scaled" "by" <mScale: Expression> | "translated" "by" <mTranslation: Expression> | "rotated" "by" <mRadians: Expression> ) ]
 begin
 	MCCanvasPatternMakeWithImage(mImage, output)
 	MCCanvasPatternMakeWithTransformedImage(mImage, mTransform, output)
@@ -442,7 +442,7 @@ begin
 end syntax
 
 syntax ScalePattern is statement
-	"scale" <mPattern: Expression> "by" <mScale: ExpressionList>
+	"scale" <mPattern: Expression> "by" <mScale: Expression>
 begin
 //	MCCanvasPatternScale(mPattern, mScale[0], mScale[0])
 //	MCCanvasPatternScale(mPattern, mScale[0], mScale[1])
@@ -456,7 +456,7 @@ begin
 end syntax
 
 syntax TranslatePattern is statement
-	"translate" <mPattern: Expression> "by" <mTranslation: ExpressionList>
+	"translate" <mPattern: Expression> "by" <mTranslation: Expression>
 begin
 //	MCCanvasPatternTranslate(mPattern, mTranslation[0], mTranslation[1])
 	MCCanvasPatternTranslateWithList(mPattern, mTranslation)
@@ -491,7 +491,7 @@ begin
 end syntax
 
 syntax MakeGradientWithRamp is prefix operator with precedence 4
-	<mType: GradientType> "gradient" "with" "ramp" <mRamp: ExpressionList>
+	<mType: GradientType> "gradient" "with" "ramp" <mRamp: Expression>
 begin
 	MCCanvasGradientMakeWithRamp(mType, mRamp, output)
 end syntax
@@ -638,7 +638,7 @@ begin
 end syntax
 
 syntax ScaleGradient is statement
-	"scale" <mGradient: Expression> "by" <mScale: ExpressionList>
+	"scale" <mGradient: Expression> "by" <mScale: Expression>
 begin
 //	MCCanvasGradientScale(mGradient, mScale[0], mScale[0])
 //	MCCanvasGradientScale(mGradient, mScale[0], mScale[1])
@@ -652,7 +652,7 @@ begin
 end syntax
 
 syntax TranslateGradient is statement
-	"translate" <mGradient: Expression> "by" <mTranslation: ExpressionList>
+	"translate" <mGradient: Expression> "by" <mTranslation: Expression>
 begin
 //	MCCanvasGradientTranslate(mGradient, mTranslation[0], mTranslation[1])
 	MCCanvasGradientTranslateWithList(mGradient, mTranslation)
@@ -677,7 +677,7 @@ begin
 end syntax
 
 syntax MakeImageWithPixels is prefix operator with precedence 4
-	"image" "of" "size" <mSize: ExpressionList> "with" "pixels" <mPixels: Expression>
+	"image" "of" "size" <mSize: Expression> "with" "pixels" <mPixels: Expression>
 begin
 //	MCCanvasImageMakeWithPixels(mSize[0], mSize[1], mPixels, output)
 	MCCanvasImageMakeWithPixelsWithSizeAsList(mSize, mPixels, output)
@@ -738,7 +738,7 @@ public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rec
 //end syntax
 //
 //syntax ScaleImage is statement
-//	"scale" <mImage: Expression> "by" <mScale: ExpressionList>
+//	"scale" <mImage: Expression> "by" <mScale: Expression>
 //begin
 //	MCCanvasImageScale(mImage, mScale[0], mScale[0])
 //	MCCanvasImageScale(mImage, mScale[0], mScale[1])
@@ -783,7 +783,7 @@ public foreign handler MCCanvasPathMakeWithLine(in pStart as Point, in pEnd as P
 public foreign handler MCCanvasPathMakeWithPoints(in pClose as boolean, in pPoints as list, out rPath as Path) as undefined binds to "<builtin>"
 
 syntax MakePathWithRoundedRectangle is prefix operator with precedence 4
-	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" ( "radius" <mRadius: Expression> | "radii" <mRadii: ExpressionList> )
+	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" ( "radius" <mRadius: Expression> | "radii" <mRadii: Expression> )
 begin
 	MCCanvasPathMakeWithRoundedRectangle(mRect, mRadius, output)
 //	MCCanvasPathMakeWithRoundedRectangleWithRadii(mRect, mRadii[0], mRadii[1], output)
@@ -791,7 +791,7 @@ begin
 end syntax
 
 syntax MakePathWithRectangle is prefix operator with precedence 4
-	"rectangle" "path" "of" <mRect: ExpressionList>
+	"rectangle" "path" "of" <mRect: Expression>
 begin
 	MCCanvasPathMakeWithRectangle(mRect, output)
 end syntax
@@ -804,7 +804,7 @@ begin
 end syntax
 
 syntax MakePathWithEllipse is prefix operator with precedence 4
-	"ellipse" "path" "centered" "at" <mPoint: Expression> "with" "radii" <mRadii: ExpressionList>
+	"ellipse" "path" "centered" "at" <mPoint: Expression> "with" "radii" <mRadii: Expression>
 begin
 //	MCCanvasPathMakeWithEllipse(mPoint, mRadii[0], mRadii[1], output)
 	MCCanvasPathMakeWithEllipseWithRadiiAsList(mPoint, mRadii, output)
@@ -883,7 +883,7 @@ begin
 end syntax
 
 syntax PathCurveThrough is statement
-	"curve" "through" <mThroughA: Expression> [ "and" <mThroughB: Expression> ] "to" <mTo: Expression> "on" <mPath: Expression>
+	"curve" "through" <mThroughA: Expression> [ "then" <mThroughB: Expression> ] "to" <mTo: Expression> "on" <mPath: Expression>
 begin
 	MCCanvasPathCurveThroughPoint(mThroughA, mTo, mPath)
 	MCCanvasPathCurveThroughPoints(mThroughA, mThroughB, mTo, mPath)
@@ -902,7 +902,7 @@ begin
 end syntax
 
 syntax ScalePath is statement
-	"scale" <mPath: Expression> "by" <mScale: ExpressionList>
+	"scale" <mPath: Expression> "by" <mScale: Expression>
 begin
 //	MCCanvasPathScale(mPath, mScale[0], mScale[0])
 //	MCCanvasPathScale(mPath, mScale[0], mScale[1])
@@ -916,7 +916,7 @@ begin
 end syntax
 
 syntax TranslatePath is statement
-	"translate" <mPath: Expression> "by" <mTranslation: ExpressionList>
+	"translate" <mPath: Expression> "by" <mTranslation: Expression>
 begin
 //	MCCanvasPathTranslate(mPath, mTranslation[0], mTranslation[1])
 	MCCanvasPathTranslateWithList(mPath, mTranslation)
@@ -1135,7 +1135,7 @@ begin
 end syntax
 
 syntax ScaleCanvas is statement
-	"scale" <mCanvas: Expression> "by" <mScale: ExpressionList>
+	"scale" <mCanvas: Expression> "by" <mScale: Expression>
 begin
 //	MCCanvasCanvasScale(mCanvas, mScale[0], mScale[0])
 //	MCCanvasCanvasScale(mCanvas, mScale[0], mScale[1])
@@ -1149,7 +1149,7 @@ begin
 end syntax
 
 syntax TranslateCanvas is statement
-	"translate" <mCanvas: Expression> "by" <mTranslation: ExpressionList>
+	"translate" <mCanvas: Expression> "by" <mTranslation: Expression>
 begin
 //	MCCanvasCanvasTranslate(mCanvas, mTranslation[0], mTranslation[1])
 	MCCanvasCanvasTranslateWithList(mCanvas, mTranslation)
@@ -1194,7 +1194,7 @@ begin
 end syntax
 
 syntax CanvasClip is statement
-	"clip" "to" <mRect: ExpressionList> "on" <mCanvas: Expression>
+	"clip" "to" <mRect: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasCanvasClipToRect(mRect, mCanvas)
 end syntax
@@ -1211,7 +1211,7 @@ begin
 end syntax
 
 syntax CanvasDrawImage is statement
-	"draw" [ <mSrcRect: Expression> "of" ] <mImage: Expression> "into" <mDestRect: Expression> "of" <mCanvas: Expression>
+	"draw" [ "rect" <mSrcRect: Expression> "of" ] <mImage: Expression> "into" <mDestRect: Expression> "of" <mCanvas: Expression>
 begin
 	MCCanvasCanvasDrawImage(mImage, mDestRect, mCanvas)
 	MCCanvasCanvasDrawRectOfImage(mSrcRect, mImage, mDestRect, mCanvas)
@@ -1230,7 +1230,7 @@ begin
 end syntax
 
 syntax CanvasCurveThrough is statement
-	"curve" "through" <mThroughA: Expression> [ "and" <mThroughB: Expression> ] "to" <mPoint: Expression> "on" <mCanvas: Expression>
+	"curve" "through" <mThroughA: Expression> [ "then" <mThroughB: Expression> ] "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
 	MCCanvasCanvasCurveThroughPoint(mThroughA, mPoint, mCanvas)
 	MCCanvasCanvasCurveThroughPoints(mThroughA, mThroughB, mPoint, mCanvas)
