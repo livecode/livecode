@@ -183,9 +183,6 @@ static char *strlwr(char *str)
 void REVDB_Init(char *args[], int nargs, char **retstring,
 		   Bool *pass, Bool *error)
 {
-	static Bool littlecheat = False;
-	int passkey = 0;
-
 	*error = False;
 	*pass = False;
 
@@ -359,7 +356,6 @@ void REVDB_QUIT()
 		break;
 	}
 	connlist->clear();
-	DATABASEREC *databaserec = NULL;
 	DATABASERECList::iterator theIterator2;
 	for (theIterator2 = databaselist.begin(); theIterator2 != databaselist.end(); theIterator2++){
 		DATABASEREC *tdatabaserec = (DATABASEREC *)(*theIterator2);
@@ -1024,8 +1020,6 @@ void REVDB_ConnectionErr(char *args[], int nargs, char **retstring, Bool *pass, 
 /// Otherwise the number of affected rows is returned. This will be 0 for any query that is not SELECT, INSERT, UPDATE or DELETE.
 void REVDB_Execute(char *p_arguments[], int p_argument_count, char **p_return_string, Bool *p_pass, Bool *p_error)
 {
-	char *result = NULL;
-
 	*p_error = True;
 	*p_pass = False;
 
