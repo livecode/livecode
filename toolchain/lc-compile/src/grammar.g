@@ -687,9 +687,14 @@
 'nonterm' AndExpression(-> EXPRESSION)
 
     'rule' AndExpression(-> logicaland(Position, Left, Right)):
-        Expression(-> Left) "and" @(-> Position) AndExpression(-> Right)
+        AndExpression(-> Left) "and" @(-> Position) NormalExpression(-> Right)
     
     'rule' AndExpression(-> Result):
+        NormalExpression(-> Result)
+        
+'nonterm' NormalExpression(-> EXPRESSION)
+
+    'rule' NormalExpression(-> Result):
         FlatExpression(-> Sentinal)
         ReorderOperatorExpression(Sentinal)
         ProcessOperatorExpression(-> Result)

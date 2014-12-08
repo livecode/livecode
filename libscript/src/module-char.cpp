@@ -36,7 +36,7 @@ extern "C" void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, MCStringRef p_
 extern "C" void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodepointChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_start, p_finish, t_start, t_count);
     if (!MCStringCopySubstring(p_target, MCRangeMake(t_start, t_count), r_output))
         return;
 }
@@ -44,7 +44,7 @@ extern "C" void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStri
 extern "C" void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_start, p_finish, t_start, t_count);
     
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(x_target, &t_string))
@@ -73,7 +73,7 @@ extern "C" void MCCharStoreCharOf(MCStringRef p_value, index_t p_index, MCString
 extern "C" void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
     t_start += t_count;
     
     MCAutoStringRef t_string;
@@ -93,7 +93,7 @@ extern "C" void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCS
 extern "C" void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
     
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(x_target, &t_string))
@@ -123,7 +123,10 @@ extern "C" void MCCharEvalOffsetOfCharsInRange(bool p_is_last, MCStringRef p_nee
         
         // correct output index
         if (t_found)
+        {
+            t_offset -= p_range . offset;
             t_offset++;
+        }
     }
     r_output = t_offset;
 }
@@ -138,7 +141,7 @@ extern "C" void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStringRef p_needl
     MCCharEvalOffsetOfCharsInRange(p_is_last, p_needle, p_target, MCRangeMake(p_after, UINDEX_MAX), r_output);
 }
 
-extern "C" void MCCharEvalOffsetOfCharsBefore(bool p_is_first, MCStringRef p_needle, MCStringRef p_target, uindex_t p_before, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfCharsBefore(bool p_is_first, MCStringRef p_needle, uindex_t p_before, MCStringRef p_target, uindex_t& r_output)
 {
     MCCharEvalOffsetOfCharsInRange(!p_is_first, p_needle, p_target, MCRangeMake(0, p_before), r_output);
 }

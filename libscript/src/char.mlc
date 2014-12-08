@@ -69,7 +69,7 @@ Either locates the char at the given index for use as the target container of an
 
 */
 
-syntax SingletonCharOf is prefix operator with precedence 1
+syntax SingletonCharOf is prefix operator with precedence 3
 	"char" <Index: Expression> "of" <Target: Expression>
 begin
 	MCCharFetchCharOf(Index, Target, output)
@@ -92,7 +92,7 @@ Either locates the chars between the given indices either for use as the target 
 
 */
 
-syntax RangeCharOf is prefix operator with precedence 1
+syntax RangeCharOf is prefix operator with precedence 3
 	"char" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
 	MCCharFetchCharRangeOf(Start, Finish, Target, output)
@@ -139,9 +139,24 @@ Summary:            Finds the first or last occurrence of <Needle> within <Targe
 
 Needle: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string.
-output:             Returns the number of chars between the first char of <Target> and the first or last occurrence of <Needle>	within <Target>.
-                    Returns 0 if <Needle> does not occur within <Target>.
-                    Searches for first occurrence if neither first nor last is specified.
+output:             Returns the offset of <Needle> in <Target>.
+
+Example:
+	variable tVar as int
+	put the first offset of chars "art" in "cartoon" into tVar -- tVar contains 2
+
+Example:
+	variable tVar as int
+	variable tFilePath as string
+	put "/Users/user/Documents/file.txt" into tFilePath
+	put the last offset of "/" in tFilePath into tVar
+	
+	variable tFileName as string
+	put char 1 to tVar of tFilePath into tFileName -- tVar contains "file.txt"
+
+Description:
+The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of <Target> and the first (respectively last) occurrence of <Needle>. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in <Target>, then the output is 0.
+
 */
 
 syntax CharOffset is prefix operator with precedence 1
@@ -157,9 +172,15 @@ Summary:            Finds the first or last occurrence of <Needle> after a speci
 Needle: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string.
 After:              An expression which evaluates to a valid integer index of Target.
-output:             Returns the number of chars between the first char of <Target> and the first or last occurrence of <Needle>	after index <After> in <Target>.
-                    Returns 0 if <Needle> does not occur after index <After> in <Target>.
-                    Searches for first occurrence if neither first nor last is specified.
+output:             Returns the offset of <Needle> after <After> in <Target>.
+
+Example:
+	variable tVar as int
+	put the offset of chars "nse" after 4 in "nonsense" into tVar -- tVar contains 2
+	
+Description:
+The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of the substring of <Target> beginning at char <After> + 1, and the first (respectively last) occurrence of <Needle> in the substring. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in the given substring of <Target>, then the output is 0.
+
 */
 
 syntax CharOffsetAfter is prefix operator with precedence 1
@@ -175,11 +196,21 @@ Summary:            Finds the first or last occurrence of <Needle> before a spec
 Needle: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string.
 After:              An expression which evaluates to a valid integer index of Target.
-output:             
+output:             Returns the offset of <Needle> before <Before> in <Target>.
 
-Returns the number of chars between the first char of <Target> and the first or last occurrence of <Needle>	before index <Before> in <Target>.
-                    Returns 0 if <Needle> does not occur before index <Before> in <Target>.
-                    Searches for last occurrence if neither first nor last is specified.
+Example:
+	variable tVar as int
+	variable tLastDot as int
+	variable tAddress as string
+	variable tTLD as string
+	put "http://www.livecode.com/index.php" into tAddress
+	put the last offset of "." in tAddress into tLastDot
+	put the offset of "." before tLastDot in tAddress into tVar
+	put char tVar + 1 to tVar + 3 of tAddress into tTLD -- tTLD contains "com"
+	
+
+Description:
+The first (respectively last) offset of <Needle> in <Target> is number of chars between the first char of <Target>, and the first (respectively last) occurrence of <Needle> in the substring of <Target> ending at char <Before> - 1. If neither first or last is specified, then the last offset is found. If <Needle> does not occur in the given substring of <Target>, then the output is 0.
 
 */
 
@@ -214,7 +245,7 @@ output:             Returns true if the characters in <Prefix> occur at the star
 */
 
 syntax BeginsWithString is neutral binary operator with precedence 1
-    <Source: Expression> "begins" <Foo: Expression> "and" <Bar: Expression> "with" <Prefix: Expression>
+    <Source: Expression> "begins" "with" <Prefix: Expression>
 begin
     //EvalBeginsWith(Source, Prefix, output)
 end syntax

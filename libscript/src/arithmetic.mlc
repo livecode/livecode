@@ -324,7 +324,7 @@ Right:      An expression that evaluates to a number.
 output:     True if <Left> is greater than <Right>, and false otherwise.
 */
 
-syntax IsGreaterThan is neutral binary operator with precedence 3
+syntax IsGreaterThan is neutral binary operator with precedence 1
     <Left: Expression> ">" <Right: Expression>
 begin
     MCArithmeticEvalIntegerIsGreaterThanInteger(Left, Right, output)
@@ -354,7 +354,7 @@ Right:      An expression that evaluates to a number.
 output:     True if <Left> is less than <Right>, and false otherwise.
 */
 
-syntax IsLessThan is neutral binary operator with precedence 3
+syntax IsLessThan is neutral binary operator with precedence 1
     <Left: Expression> "<" <Right: Expression>
 begin
     MCArithmeticEvalIntegerIsLessThanInteger(Left, Right, output)
