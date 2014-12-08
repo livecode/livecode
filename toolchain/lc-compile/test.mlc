@@ -117,13 +117,25 @@ public handler testChar(inout xResults as list) as undefined
 	put the first offset of "abcdef" in tString into tOffset
 	testLog("Char", "CharOffset", tOffset is 0, xResults)
 	
-	put the first offset of chars "abcde" after 1 in tString into tOffset
+	put the offset of chars "abcde" after 1 in tString into tOffset
 	
 	testLog("Char", "CharOffsetAfter", tOffset is 5, xResults)
 	
 	put the first offset of chars "abcde" after 11 in tString into tOffset
 	testLog("Char", "CharOffsetAfter", tOffset is 0, xResults)
-
+	
+	variable tLastDot as int
+	variable tAddress as string
+	variable tTLD as string
+	put "http://www.livecode.com/index.php" into tAddress
+	put the last offset of "." in tAddress into tLastDot
+	put the offset of "." before tLastDot in tAddress into tOffset
+	put char tOffset + 1 to tOffset + 3 of tAddress into tTLD
+	
+	testLog("Char", "CharOffsetBefore", tTLD is "com", xResults)
+	
+	
+	
 end handler
 
 public handler testArithmetic(inout xResults as list) as undefined
