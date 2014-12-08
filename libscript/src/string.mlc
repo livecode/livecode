@@ -175,7 +175,7 @@ output:     Returns false if the result of evaluating <Left> is the same as that
 */
 
 syntax IsNotEqualTo is neutral binary operator with precedence 1
-    <Left: Expression> "is" "not" <Right: Expression>
+    <Left: Expression> "is not" <Right: Expression>
 begin
     MCStringEvalIsNotEqualTo(Left, Right, output)
 end syntax

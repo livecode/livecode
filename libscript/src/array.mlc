@@ -83,7 +83,7 @@ output:         Returns true if <Needle> can be found among the keys of <Target>
 */
                 
 syntax AmongKeysOf is neutral binary operator with precedence 1
-    <Needle: Expression> "is" ("not" <IsNot=true> | <IsNot=false>) "among" "the" "keys" "of" <Target: Expression>
+    <Needle: Expression> ( "is not" <IsNot=true> | "is" "among" <IsNot=false> ) "the" "keys" "of" <Target: Expression>
 begin
 //  EvalIsAmongTheKeysOfCaseSensitive(Needle, IsNot, Target, output)
     MCArrayEvalIsAmongTheKeysOfCaseless(Needle, IsNot, Target, output)
@@ -100,7 +100,7 @@ output:         Returns true if <Needle> can be found among the elements of <Tar
 */
                 
 syntax AmongElementsOf is neutral binary operator with precedence 1
-    <Needle: Expression> "is" ["not" <IsNot=true>] "among" "the" "elements" "of" <Target: Expression>
+    <Needle: Expression> ( "is not" <IsNot=true> | "is" "among" <IsNot=false> ) "among" "the" "elements" "of" <Target: Expression>
 begin
     MCArrayEvalIsAmongTheElementsOf(Needle, IsNot, Target, output)
 end syntax
