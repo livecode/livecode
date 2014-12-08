@@ -264,10 +264,12 @@ Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 					[m_view setBackgroundColor: t_color];
 		}
 		return ES_NORMAL;
-		
+        
+		// PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over.
+        // Note that in order to make a UIWebView accessible, we have to mark its parent view as 'not-accessible'
         case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
         {
-            if (m_view != nil /*&& UIAccessibilityIsVoiceOverRunning()*/)
+            if (m_view != nil)
             {
                 if (ep . getsvalue() == MCtruemcstring)
                 {
@@ -344,7 +346,8 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 			if (m_view != nil)
 				FormatColor(ep, [m_view backgroundColor]);
 			return ES_NORMAL;
-            
+          
+        // PM-2014-12-08: [[ Bug 13659 ]] New property of iOS native controls to allow them interact with Voice Over
         case kMCNativeControlPropertyIgnoreVoiceOverSensitivity:
             ep.setsvalue(MCU_btos(m_view != nil ? MCignorevoiceoversensitivity == True : NO));
             return ES_NORMAL;
