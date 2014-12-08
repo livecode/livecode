@@ -413,8 +413,25 @@ public:
 	Exec_stat changeid(uint32_t new_id);
 #endif
 
+	////////// UUIDS
+
+	/* Returns false until the object has had a UUID allocated to it. */
+	bool HasUuid(void) const { return have_uuid; }
+	/* Returns false unless the object has a UUID and it matches the specified
+	 * p_uuid. */
+	bool HasUuid(const MCUuid &) const;
+	/* Obtain the object's UUID.  If it does not yet have one,
+	 * attempts to allocate a pseudorandomly-generated UUID.  Returns
+	 * false on failure. */
 	bool GetUuid(MCUuid &);
-	bool SetUuid(MCUuid);
+	/* Obtain the object's UUID, if it has one.  If not, returns
+	 * false.  Note: this can be interpreted as failing to allocate a
+	 * UUID because the object is const. */
+	bool GetUuid(MCUuid &) const;
+	/* Set the UUID of the object to a specific value. */
+	bool SetUuid(const MCUuid &);
+
+	//////////
 
 	uint4 getid() const
 	{

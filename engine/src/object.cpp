@@ -4826,13 +4826,27 @@ bool MCObject::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_v
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
+MCObject::HasUuid (const MCUuid & p_uuid) const
+{
+	if (!have_uuid) return false;
+	return (0 == MCUuidCompare (p_uuid, uuid));
+}
+
+bool
+MCObject::GetUuid (MCUuid & r_uuid) const
+{
+	if (!have_uuid) return false;
+	r_uuid = uuid;
+	return true;
+}
+
+bool
 MCObject::GetUuid (MCUuid & r_uuid)
 {
 	/* Only generate a UUID the first time that one is requested. */
 	if (!have_uuid)
 	{
-		if (!MCUuidGenerateRandom(uuid))
-			return false;
+		if (!MCUuidGenerateRandom (uuid)) return false;
 		have_uuid = true;
 	}
 
@@ -4841,7 +4855,7 @@ MCObject::GetUuid (MCUuid & r_uuid)
 }
 
 bool
-MCObject::SetUuid (MCUuid p_uuid)
+MCObject::SetUuid (const MCUuid & p_uuid)
 {
 	uuid = p_uuid;
 	have_uuid = true;
