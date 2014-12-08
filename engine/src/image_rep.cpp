@@ -896,7 +896,7 @@ bool MCImageRepLockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCGFloat p_
 	return p_image_rep->LockBitmap(p_index, p_density, r_raster);
 }
 
-void MCImageRepUnlock(MCImageRep *p_image_rep, uint32_t p_index, MCImageBitmap *p_raster)
+void MCImageRepUnlockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCImageBitmap *p_raster)
 {
 	p_image_rep->UnlockBitmap(p_index, p_raster);
 }

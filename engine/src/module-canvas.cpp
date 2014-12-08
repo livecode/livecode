@@ -275,6 +275,7 @@ MCTypeInfoRef kMCCanvasTypeInfo;
 // Constant refs
 
 MCCanvasTransformRef kMCCanvasIdentityTransform = nil;
+MCCanvasColorRef kMCCanvasColorBlack = nil;
 
 void MCCanvasConstantsInitialize();
 void MCCanvasConstantsFinalize();
@@ -2341,7 +2342,7 @@ void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCa
 	t_gradient_impl.function = (MCGGradientFunction)p_type;
 	t_gradient_impl.mirror = false;
 	t_gradient_impl.wrap = false;
-	t_gradient_impl.repeats = 1; // TODO - check default
+	t_gradient_impl.repeats = 1;
 	t_gradient_impl.transform = kMCCanvasIdentityTransform;
 	t_gradient_impl.filter = kMCGImageFilterNone;
 	
@@ -2784,7 +2785,7 @@ static bool __MCCanvasPathEqual(MCValueRef p_left, MCValueRef p_right)
 	if (p_left == p_right)
 		return true;
 	
-	return MCGPathIsEqualTo(MCCanvasPathGetMCGPath(p_left), MCCanvasPathGetMCGPath(p_right));
+	return MCGPathIsEqualTo(MCCanvasPathGetMCGPath((MCCanvasPathRef)p_left), MCCanvasPathGetMCGPath((MCCanvasPathRef)p_right));
 }
 
 bool __MCCanvasPathHashCallback(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count)
@@ -2792,11 +2793,11 @@ bool __MCCanvasPathHashCallback(void *p_context, MCGPathCommand p_command, MCGPo
 	hash_t *t_hash;
 	t_hash = static_cast<hash_t*>(p_context);
 	
-	t_hash ^= MCHashInteger(p_command);
+	*t_hash ^= MCHashInteger(p_command);
 	for (uint32_t i = 0; i < p_point_count; i++)
 	{
-		t_hash ^= MCHashDouble(p_points[i].x);
-		t_hash ^= MCHashDouble(p_points[i].y);
+		*t_hash ^= MCHashDouble(p_points[i].x);
+		*t_hash ^= MCHashDouble(p_points[i].y);
 	}
 	
 	return true;
@@ -4051,6 +4052,11 @@ bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas)
 	return t_success;
 }
 
+__MCCanvasImpl *MCCanvasGet(MCCanvasRef p_canvas)
+{
+	return (__MCCanvasImpl*)MCValueGetExtraBytesPtr(p_canvas);
+}
+
 // MCCanvasRef Type Methods
 
 void __MCCanvasDestroy(MCValueRef p_canvas)
@@ -5003,12 +5009,12 @@ bool MCCanvasFillRuleFromString(MCStringRef p_string, MCGFillRule &r_fill_rule)
 	return _mcenumfromstring<MCGFillRule, s_canvas_fillrule_map, kMCGFillRuleCount>(p_string, r_fill_rule);
 }
 
-bool MCCanvasFillRuleToString(MCGImageFilter p_filter, MCStringRef &r_string)
+bool MCCanvasImageFilterToString(MCGImageFilter p_filter, MCStringRef &r_string)
 {
 	return _mcenumtostring<MCGImageFilter, s_image_filter_map, kMCGImageFilterCount>(p_filter, r_string);
 }
 
-bool MCCanvasFillRuleFromString(MCStringRef p_string, MCGImageFilter &r_filter)
+bool MCCanvasImageFilterFromString(MCStringRef p_string, MCGImageFilter &r_filter)
 {
 	return _mcenumfromstring<MCGImageFilter, s_image_filter_map, kMCGImageFilterCount>(p_string, r_filter);
 }
