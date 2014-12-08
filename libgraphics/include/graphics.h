@@ -735,6 +735,7 @@ void MCGPathRelease(MCGPathRef path);
 
 bool MCGPathIsValid(MCGPathRef path);
 bool MCGPathIsEmpty(MCGPathRef path);
+bool MCGPathIsEqualTo(MCGPathRef a, MCGPathRef b);
 
 void MCGPathCopy(MCGPathRef path, MCGPathRef& r_new_path);
 void MCGPathCopyAndRelease(MCGPathRef path, MCGPathRef& r_new_path);

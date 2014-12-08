@@ -2783,14 +2783,32 @@ static bool __MCCanvasPathEqual(MCValueRef p_left, MCValueRef p_right)
 	if (p_left == p_right)
 		return true;
 	
-	// TODO - implememt MCGPath comparison
-	return MCCanvasPathGetMCGPath((MCCanvasPathRef)p_left) == MCCanvasPathGetMCGPath((MCCanvasPathRef)p_right);
+	return MCGPathIsEqualTo(MCCanvasPathGetMCGPath(p_left), MCCanvasPathGetMCGPath(p_right));
+}
+
+bool __MCCanvasPathHashCallback(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count)
+{
+	hash_t *t_hash;
+	t_hash = static_cast<hash_t*>(p_context);
+	
+	t_hash ^= MCHashInteger(p_command);
+	for (uint32_t i = 0; i < p_point_count; i++)
+	{
+		t_hash ^= MCHashDouble(p_points[i].x);
+		t_hash ^= MCHashDouble(p_points[i].y);
+	}
+	
+	return true;
 }
 
 static hash_t __MCCanvasPathHash(MCValueRef p_value)
 {
-	// TODO - implement MCGPath hash
-	return MCHashBytes(MCValueGetExtraBytesPtr(p_value), sizeof(__MCCanvasPathImpl));
+	hash_t t_hash;
+	t_hash = 0;
+	
+	/* UNCHECKED */ MCGPathIterate(MCCanvasPathGetMCGPath((MCCanvasPathRef)p_value), __MCCanvasPathHashCallback, &t_hash);
+	
+	return t_hash;
 }
 
 static bool __MCCanvasPathDescribe(MCValueRef p_value, MCStringRef &r_desc)

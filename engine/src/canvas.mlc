@@ -469,7 +469,7 @@ end syntax
 // Constructors
 
 public foreign handler MCCanvasGradientStopMake(in pOffset as CanvasFloat, in pColor as Color, out rStop as GradientStop) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientMakeWithRamp(in pType as integer, in pRamp as list of GradientStop, out rGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientMakeWithRamp(in pType as integer, in pRamp as list, out rGradient as Gradient) as undefined binds to "<builtin>"
 
 syntax MakeGradientStop is prefix operator with precedence 4
 	"gradient" "stop" "at" <mOffset: Expression> "with" <mColor: Expression>
@@ -505,10 +505,10 @@ public foreign handler MCCanvasGradientStopSetOffset(in pOffset as CanvasFloat, 
 public foreign handler MCCanvasGradientStopGetColor(in pStop as GradientStop, out rColor as Color) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientStopSetColor(in pColor as Color, inout xStop as GradientStop) as undefined binds to "<builtin>"
 
-public foreign handler MCCanvasGradientGetRamp(in pGradient as Gradient, out rRamp as list of GradientStop) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientSetRamp(in pRamp as list of GradientStop, inout xGradient as Gradient) as undefined binds to "<builtin>"
-// public foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as integer, in pEnd as integer, out rStops as list of GradientStop) as undefined binds to "<builtin>"
-// public foreign handler MCCanvasGradientSetStops(in pStart as integer, in pEnd as integer, in rStops as list of GradientStop, inout xGradient as Gradient) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientGetRamp(in pGradient as Gradient, out rRamp as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasGradientSetRamp(in pRamp as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
+// public foreign handler MCCanvasGradientGetStops(in pGradient as Gradient, in pStart as integer, in pEnd as integer, out rStops as list) as undefined binds to "<builtin>"
+// public foreign handler MCCanvasGradientSetStops(in pStart as integer, in pEnd as integer, in rStops as list, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetTypeAsString(in pGradient as Gradient, out rType as string) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientSetTypeAsString(in pType as string, inout xGradient as Gradient) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientGetRepeat(in pGradient as Gradient, out rRepeat as integer) as undefined binds to "<builtin>"
