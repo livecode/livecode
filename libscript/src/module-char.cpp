@@ -156,6 +156,33 @@ extern "C" void MCCharEvalNewlineCharacter(MCStringRef& r_output)
     MCStringFormat(r_output, "\n");
 }
 
+// Iterate syntax methods have special calling convention at the moment:
+//
+// Post assignment of out / inout variables only occurs if the method returns true.
+// If the method returns false, then it means iteration has finished *not* that an
+// error has been thrown.
+//
+// This means that the iterand out binding will not be updated on the final test
+// of the loop which means that:
+//   repeat for each char tChar in tVar
+//   end repeat
+// Will result in tChar containing the value it had at the point of end repeat.
+extern "C" bool MCCharRepeatForEachChar(void*& x_iterator, MCStringRef& r_iterand, MCStringRef p_string)
+{
+    uindex_t t_offset;
+    t_offset = (uindex_t)x_iterator;
+    
+    if (t_offset == MCStringGetLength(p_string))
+        return false;
+    
+    if (!MCStringCopySubstring(p_string, MCRangeMake(t_offset, 1), r_iterand))
+        return false;
+    
+    x_iterator = (void *)(t_offset + 1);
+    
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST

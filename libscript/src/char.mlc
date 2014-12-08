@@ -18,6 +18,8 @@ public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as bool, in Needl
 
 public foreign handler MCCharEvalNewlineCharacter(out Value as string) as undefined binds to "<builtin>"
 
+public foreign handler MCCharRepeatForEachChar(inout Iterator as optional pointer, out Iterand as string, in Container as string) as bool binds to "<builtin>"
+
 --
 
 /*
@@ -218,6 +220,12 @@ syntax NewLineCharacter is expression
     "newline"
 begin
     MCCharEvalNewlineCharacter(output)
+end syntax
+
+syntax RepeatForEachChar is iterator
+    "char" <Iterand: Expression>
+begin
+    MCCharRepeatForEachChar(iterator, Iterand, container)
 end syntax
 
 end module
