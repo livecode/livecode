@@ -456,12 +456,6 @@ void processInputArray(char *p_variable_name, char *p_key_name, ExternalString &
 
 	GetVariableEx(t_adjusted_variable_name, t_adjusted_key_name == NULL ? "" : t_adjusted_key_name, &t_value, &t_return_value);
 
-	char *t_value_data;
-	t_value_data = (char *)t_value . buffer;
-
-	int t_value_length;
-	t_value_length = t_value . length;
-
 	r_value = t_value;
 }
 
