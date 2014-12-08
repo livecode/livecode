@@ -804,7 +804,7 @@ void REVDB_Disconnect(char *args[], int nargs, char **retstring, Bool *pass, Boo
 	}
 
 	*error = False;
-	int connectionid = atoi(*args);
+	unsigned int connectionid = strtoul (*args, NULL, 10);
 
 	if (!connectionlist . find(connectionid))
 	{	
