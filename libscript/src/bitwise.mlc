@@ -30,7 +30,7 @@ Each bit of <Left> bitwise and <Right> is 1 if and only if both the correspondin
 */
 
 syntax BitwiseAnd is left binary operator with precedence 2
-    <Left: Expression> "bitwise" "and" <Right: Expression>
+    <Left: Expression> "bitwise and" <Right: Expression>
 begin
     MCBitwiseEvalBitwiseAnd(Left, Right, output)
 end syntax
@@ -53,7 +53,7 @@ Each bit of <Left> bitwise or <Right> is 0 if and only if both the corresponding
 */
 
 syntax BitwiseOr is left binary operator with precedence 4
-    <Left: Expression> "bitwise" "or" <Right: Expression>
+    <Left: Expression> "bitwise or" <Right: Expression>
 begin
     MCBitwiseEvalBitwiseOr(Left, Right, output)
 end syntax
@@ -75,7 +75,7 @@ Each bit of <Left> bitwise xor <Right> is 1 if and only if exactly one of the co
 */
 
 syntax BitwiseXor is left binary operator with precedence 3
-    <Left: Expression> "bitwise" "xor" <Right: Expression>
+    <Left: Expression> "bitwise xor" <Right: Expression>
 begin
     MCBitwiseEvalBitwiseXor(Left, Right, output)
 end syntax
