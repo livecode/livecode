@@ -38,6 +38,33 @@ public handler boolWithSideEffect(in tResult as bool, inout tVar as string) as b
 	return tResult
 end handler
 
+public handler testString(inout xResults as list)
+	variable tString as string
+	put the empty string into tString
+	
+	testLog("String", "EmptyString", tString is "", xResults)
+	
+	put "abcde" before tString
+	testLog("String", "PutBeforeString", tString is "abcde", xResults)
+	
+	put "fghij" after tString
+	testLog("String", "PutBeforeString", tString is "abcdefghij", xResults)
+	
+	testLog("String", "ConcatenateString", tString is "abcde" & "fghij", xResults)
+	testLog("String", "ConcatenateWithSpace", "ab" && "cd" is "ab cd", xResults)
+	
+	put "purple" into tString
+	replace "p" with "t" in tString
+	testLog("String", "ReplaceString", tString is "turtle", xResults)
+	
+	testLog("String", "Uppercase", the upper of "abcd" is "ABCD", xResults)
+	testLog("String", "Lowercase", the lower of "ABCD" is "abcd", xResults)
+	
+	testLog("String", "LessThan", "!" < "A", xResults)
+	testLog("String", "GreaterThan", "a" > "A", xResults)
+	
+end handler
+
 public handler testArray(inout xResults as list)
 	variable tArray as array
 	put the empty array into tArray
@@ -234,8 +261,55 @@ public handler testArithmetic(inout xResults as list) as undefined
 	
 	testLog("Arithmetic", "DivideInt", tInt is 0, xResults)
 	testLog("Arithmetic", "DivideReal", tReal is 0.5, xResults)
-	testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)		
+	testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)
+	
+	variable tLeft as int
+	variable tRight as int
+	
+	put 10 into tLeft
+	put 2 into tRight
+	
+	testLog("Arithmetic", "PlusInt", tLeft + tRight is 12, xResults)
+	testLog("Arithmetic", "PlusNum", 10 + 2 is 12, xResults)
+	
+	testLog("Arithmetic", "MinusInt", tLeft - tRight is 8, xResults)
+	testLog("Arithmetic", "MinusNum", 10 - 2 is 8, xResults)
+	
+	testLog("Arithmetic", "TimesInt", tLeft * tRight is 20, xResults)
+	testLog("Arithmetic", "TimesNum", 10 * 2 is 20, xResults)
+	
+	testLog("Arithmetic", "DivideInt", tLeft / tRight is 5, xResults)
+	testLog("Arithmetic", "DivideNum", 10 / 2 is 5, xResults)
+	
+	variable tOne as int
+	put 1 into tOne
+	
+	testLog("Arithmetic", "ModInt", tLeft mod (tRight + tOne) is 1, xResults)
+	testLog("Arithmetic", "ModNum", 5 mod 3 is 2, xResults)
 
+	testLog("Arithmetic", "Wrap", 5 wrap 3 is 2, xResults)
+	testLog("Arithmetic", "Wrap", -3 wrap 3 is -3, xResults)
+	
+	testLog("Arithmetic", "GreaterThanInt", tLeft > tRight, xResults)
+	testLog("Arithmetic", "GreaterThanInt", not tLeft > tLeft, xResults)
+	testLog("Arithmetic", "GreaterThanNum", 2 > 1, xResults)
+	testLog("Arithmetic", "GreaterThanNum", not 1 > 1, xResults)
+	
+	testLog("Arithmetic", "GreaterThanOrEqualToInt", tLeft >= tLeft, xResults)
+	testLog("Arithmetic", "GreaterThanOrEqualToInt", not tRight >= tLeft, xResults)
+	testLog("Arithmetic", "GreaterThanOrEqualToNum", 1 >= 1, xResults)
+	testLog("Arithmetic", "GreaterThanOrEqualToNum", not 1 >= 2, xResults)
+	
+	testLog("Arithmetic", "LessThanInt", not tLeft < tLeft, xResults)
+	testLog("Arithmetic", "LessThanInt", tRight < tLeft, xResults)
+	testLog("Arithmetic", "LessThanNum", 1 < 2, xResults)
+	testLog("Arithmetic", "LessThanNum", not 1 < 1, xResults)
+	
+	testLog("Arithmetic", "LessThanOrEqualToInt", tLeft <= tLeft, xResults)
+	testLog("Arithmetic", "LessThanOrEqualToInt", not tLeft <= tRight, xResults)
+	testLog("Arithmetic", "LessThanOrEqualToNum", 1 <= 1, xResults)
+	testLog("Arithmetic", "LessThanOrEqualToNum", not 2 <= 1, xResults)
+		
 end handler
 
 public handler testList(inout xResults as list) as undefined
