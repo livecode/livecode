@@ -138,18 +138,6 @@ const char *dbtypestrings[] = {
 DATABASERECList databaselist;
 DBList connectionlist;
 
-static int computehash(char *keystr)
-{
-	unsigned int value = 0;
-	int length = strlen(keystr);
-	const char *sptr = keystr;
-	while (length--){
-		value += tolower(*sptr++);
-		value = value * 3;
-	}
-	return value & 96000 -1;
-}
-
 #define simpleparse(a,b,c) (((b > a) | (c < a))?True:False)
 
 static char * _strrev(char * str)
