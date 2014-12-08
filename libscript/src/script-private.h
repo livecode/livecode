@@ -413,10 +413,17 @@ enum MCScriptBytecodeOp
 	kMCScriptBytecodeOpJumpIfTrue,
 	
 	// Constant register assignment:
-	//   assign <dst>, <index>
+	//   assign-constant <dst>, <index>
 	// Dst is a register and index is a constant pool index. The value in dst is
     // freed, and the constant value at the specified index is assigned to it.
 	kMCScriptBytecodeOpAssignConstant,
+    
+    // List creation assignment.
+    //   assign-list <dst>, <arg_1>, ..., <arg_n>
+    // Dst is a register. The remaining arguments are registers and are used to
+    // build a list. (This can be replaced by an invoke when variadic bindings are
+    // implemented).
+    kMCScriptBytecodeOpAssignList,
     
 	// Register assignment:
 	//   assign <dst>, <src>
