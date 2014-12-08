@@ -861,8 +861,42 @@
         EmitDestroyRegister(LimitRegister)
         EmitDestroyRegister(StepRegister)
         
-    'rule' GenerateBody(Result, Context, repeatforeach(Position, Iterator, Slot, Container, Body)):
-        -- TODO
+    'rule' GenerateBody(Result, Context, repeatforeach(Position, Invoke:invoke(_, IteratorInvokes, Arguments), Container, Body)):
+        EmitDeferLabel(-> RepeatHead)
+        EmitDeferLabel(-> RepeatTail)
+        EmitPushRepeatLabels(RepeatHead, RepeatTail)
+        
+        EmitPosition(Position)
+        EmitCreateRegister(-> IteratorReg)
+        EmitAssignUndefined(IteratorReg)
+        GenerateExpression(Context, Container -> TargetReg)
+        
+        EmitResolveLabel(RepeatHead)
+        GenerateDefinitionGroupForInvokes(IteratorInvokes, iterate, Arguments -> Index, Signature)
+        GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
+        EmitCreateRegister(-> ContinueReg)
+        EmitBeginInvoke(Index, Context, ContinueReg)
+        EmitContinueInvoke(IteratorReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitContinueInvoke(TargetReg)
+        EmitEndInvoke()
+
+        EmitJumpIfFalse(ContinueReg, RepeatTail)
+        
+        GenerateInvoke_AssignArguments(Context, Signature, Arguments)
+        GenerateInvoke_FreeArguments(Arguments)
+        
+        EmitDestroyRegister(ContinueReg)
+        
+        GenerateBody(Result, Context, Body)
+        
+        EmitJump(RepeatHead)
+        
+        EmitDestroyRegister(IteratorReg)
+        EmitDestroyRegister(TargetReg)
+
+        EmitResolveLabel(RepeatTail)
+
         
     'rule' GenerateBody(Result, Context, nextrepeat(Position)):
         EmitCurrentRepeatLabels(-> Next, _)

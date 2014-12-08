@@ -589,8 +589,8 @@
             Statements(-> Body)
         "end" "repeat"
         
-    'rule' Statement(-> repeatforeach(Position, Iterator, Slot, Container, Body)):
-        "repeat" @(-> Position) "for" "each" CustomIterator(-> Iterator) Identifier(-> Slot) "in" Expression(-> Container) Separator
+    'rule' Statement(-> repeatforeach(Position, Iterator, Container, Body)):
+        "repeat" @(-> Position) "for" "each" CustomIterators(-> Iterator) "in" Expression(-> Container) Separator
             Statements(-> Body)
         "end" "repeat"
 
@@ -997,10 +997,6 @@
 'token' END_OF_UNIT
 'token' NEXT_UNIT
 
-'nonterm' CustomIterator(-> EXPRESSION)
-    'rule' CustomIterator(-> nil):
-        "THISCANNEVERHAPPEN"
-        
 --*--*--*--*--*--*--*--
 
 'action' InitializeCustomInvokeLists()
@@ -1023,6 +1019,9 @@
         "THISCANNEVERHAPPEN"
 'nonterm' CustomTerms(-> EXPRESSION)
     'rule' CustomTerms(-> nil):
+        "THISCANNEVERHAPPEN"
+'nonterm' CustomIterators(-> EXPRESSION)
+    'rule' CustomIterators(-> nil):
         "THISCANNEVERHAPPEN"
 
 

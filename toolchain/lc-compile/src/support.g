@@ -58,6 +58,7 @@
     BeginPhraseSyntaxRule
     BeginStatementSyntaxRule
     BeginExpressionSyntaxRule
+    BeginIteratorSyntaxRule
     BeginPrefixOperatorSyntaxRule
     BeginPostfixOperatorSyntaxRule
     BeginLeftBinaryOperatorSyntaxRule
@@ -83,6 +84,7 @@
     BeginExecuteMethodSyntaxMapping
     BeginEvaluateMethodSyntaxMapping
     BeginAssignMethodSyntaxMapping
+    BeginIterateMethodSyntaxMapping
     EndMethodSyntaxMapping
     PushUndefinedArgumentSyntaxMapping
     PushTrueArgumentSyntaxMapping
@@ -250,6 +252,9 @@
     Error_RSyntaxMethodArgumentsDontConform
     Error_ExpressionSyntaxMethodArgumentsDontConform
     Error_HandlersBoundToSyntaxMustBePublic
+    Error_IterateSyntaxMethodArgumentsDontConform
+    Error_IterateSyntaxMethodMustReturnBoolean
+    Error_PhraseSyntaxMethodMustReturnAValue
 
 --------------------------------------------------------------------------------
 
@@ -331,6 +336,7 @@
 
 'action' BeginPhraseSyntaxRule(NAME, NAME)
 'action' BeginStatementSyntaxRule(NAME, NAME)
+'action' BeginIteratorSyntaxRule(NAME, NAME)
 'action' BeginExpressionSyntaxRule(NAME, NAME)
 'action' BeginPrefixOperatorSyntaxRule(NAME, NAME, INT)
 'action' BeginPostfixOperatorSyntaxRule(NAME, NAME, INT)
@@ -368,6 +374,7 @@
 'action' BeginExecuteMethodSyntaxMapping(Name: NAME)
 'action' BeginEvaluateMethodSyntaxMapping(Name: NAME)
 'action' BeginAssignMethodSyntaxMapping(Name: NAME)
+'action' BeginIterateMethodSyntaxMapping(Name: NAME)
 'action' EndMethodSyntaxMapping()
 'action' PushInMarkArgumentSyntaxMapping(MarkIndex: INT)
 'action' PushOutMarkArgumentSyntaxMapping(MarkIndex: INT)
@@ -560,5 +567,8 @@
 'action' Error_RSyntaxMethodArgumentsDontConform(Position: POS)
 'action' Error_ExpressionSyntaxMethodArgumentsDontConform(Position: POS)
 'action' Error_HandlersBoundToSyntaxMustBePublic(Position: POS)
+'action' Error_IterateSyntaxMethodArgumentsDontConform(Position: POS)
+'action' Error_IterateSyntaxMethodMustReturnBoolean(Position: POS)
+'action' Error_PhraseSyntaxMethodMustReturnAValue(Position: POS)
 
 --------------------------------------------------------------------------------
