@@ -140,24 +140,6 @@ DBList connectionlist;
 
 #define simpleparse(a,b,c) (((b > a) | (c < a))?True:False)
 
-static char * _strrev(char * str)
-{
-	int SmallIndex = 0;
-	int BigIndex = strlen(str) - 1;
-	
-	while (SmallIndex < BigIndex) {
-		char Temp = str[SmallIndex];
-		
-		str[SmallIndex] = str[BigIndex];
-		str[BigIndex] = Temp;
-		
-		SmallIndex++;
-		BigIndex--;
-	}
-	
-	return str;
-	}
-
 static char *strlwr(char *str)
 {
     while (*str)
