@@ -1405,6 +1405,14 @@ void MCScriptEmitStoreGlobalInModule(MCScriptModuleBuilderRef self, uindex_t p_s
     __emit_instruction(self, kMCScriptBytecodeOpStoreGlobal, 2, p_src_reg, p_glob_index);
 }
 
+void MCScriptEmitThrowInModule(MCScriptModuleBuilderRef self, uindex_t p_reg)
+{
+    if (self == nil || !self -> valid)
+        return;
+    
+    __emit_instruction(self, kMCScriptBytecodeOpThrow, 1, p_reg);
+}
+
 void MCScriptEmitPositionInModule(MCScriptModuleBuilderRef self, MCNameRef p_file, uindex_t p_line)
 {
     if (self == nil || !self -> valid)

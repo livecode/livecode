@@ -309,6 +309,7 @@ void MCScriptEmitFetchLocalInModule(MCScriptModuleBuilderRef builder, uindex_t d
 void MCScriptEmitStoreLocalInModule(MCScriptModuleBuilderRef builder, uindex_t src_reg, uindex_t local_index);
 void MCScriptEmitFetchGlobalInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t glob_index);
 void MCScriptEmitStoreGlobalInModule(MCScriptModuleBuilderRef builder, uindex_t src_reg, uindex_t glob_index);
+void MCScriptEmitThrowInModule(MCScriptModuleBuilderRef builder, uindex_t err_reg);
 
 void MCScriptEmitPositionInModule(MCScriptModuleBuilderRef builder, MCNameRef file, uindex_t line);
 

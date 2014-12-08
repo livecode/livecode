@@ -103,7 +103,7 @@ end syntax
 --
 
 /*
-Summmary:       Shifts the bits of <Operand> left or right.
+Summary:       Shifts the bits of <Operand> left or right.
 
 Operand:        An expression which evaluates to an integer.
 Shift:          An expression which evaluates to an integer.
@@ -113,6 +113,8 @@ Example:
 	variable tVar
 	put 7 shifted by 2 bitwise into tVar -- tVar contains 28
 
+Description:
+Shifting the bits of <Operand> by x is equivalent to multiplying by 2^x
 */
 
 syntax BitwiseShift is postfix operator with precedence 1

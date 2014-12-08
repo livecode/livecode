@@ -33,6 +33,9 @@
             where(Class -> expression)
             BeginExpressionSyntaxRule(ModuleName, Name)
         ||
+            where(Class -> iterator)
+            BeginIteratorSyntaxRule(ModuleName, Name)
+        ||
             where(Class -> prefix(Precedence))
             BeginPrefixOperatorSyntaxRule(ModuleName, Name, Precedence)
         ||
@@ -128,11 +131,14 @@
         QueryHandlerIdSignature(Id -> signature(Parameters, ReturnType))
         Id'Name -> Name
         (|
-            IsFirstArgumentInput(Arguments)
+            IsFirstArgumentOfClass(Arguments, input)
             BeginAssignMethodSyntaxMapping(Name)
         ||
-            IsLastArgumentOutput(Arguments)
+            IsLastArgumentOfClass(Arguments, output)
             BeginEvaluateMethodSyntaxMapping(Name)
+        ||
+            IsFirstArgumentOfClass(Arguments, iterator)
+            BeginIterateMethodSyntaxMapping(Name)
         ||
             BeginExecuteMethodSyntaxMapping(Name)
         |)
@@ -140,8 +146,8 @@
         EndMethodSyntaxMapping()
         
 'condition' QueryHandlerIdSignature(ID -> SIGNATURE)
-'condition' IsFirstArgumentInput(SYNTAXCONSTANTLIST)
-'condition' IsLastArgumentOutput(SYNTAXCONSTANTLIST)
+'condition' IsFirstArgumentOfClass(SYNTAXCONSTANTLIST, SYNTAXMARKTYPE)
+'condition' IsLastArgumentOfClass(SYNTAXCONSTANTLIST, SYNTAXMARKTYPE)
 
 'action' GenerateSyntaxMethodArgumentsForBootstrap(PARAMETERLIST, SYNTAXCONSTANTLIST)
 
@@ -152,6 +158,12 @@
             where(-1 -> Index)
         ||
             VarInfo'Type -> output
+            where(-1 -> Index)
+        ||
+            VarInfo'Type -> container
+            where(-1 -> Index)
+        ||
+            VarInfo'Type -> iterator
             where(-1 -> Index)
         ||
             VarInfo'Index -> Index 

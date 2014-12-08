@@ -309,11 +309,12 @@ static MCNameRef s_path_command_map[kMCGPathCommandCount];
 void MCCanvasStringsInitialize();
 void MCCanvasStringsFinalize();
 
-void MCCanvasModuleInitialize()
+bool MCCanvasModuleInitialize()
 {
 	MCCanvasStringsInitialize();
 	MCCanvasTypesInitialize();
 	MCCanvasConstantsInitialize();
+    return true;
 }
 
 void MCCanvasModuleFinalize()

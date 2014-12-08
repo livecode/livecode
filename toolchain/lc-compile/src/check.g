@@ -82,8 +82,8 @@
         CheckBindings(Step)
         CheckBindings(Body)
 
-    'rule' CheckBindings(STATEMENT'repeatforeach(_, Iterator, Slot, Container, Body)):
-        /* BS3 */ CheckBindingIsVariableId(Slot)
+    'rule' CheckBindings(STATEMENT'repeatforeach(_, Iterator, Container, Body)):
+        -- /* BS3 */ CheckBindingIsVariableId(Slot)
         CheckBindings(Iterator)
         CheckBindings(Container)
         CheckBindings(Body)
@@ -676,7 +676,7 @@
             ne(Access, public)
             Error_HandlersBoundToSyntaxMustBePublic(Position)
         |]
-        CheckSyntaxMethodReturnType(Position, ReturnType)
+        CheckSyntaxMethodReturnType(Position, Class, ReturnType)
         CheckSyntaxMethodArguments(Position, Parameters, Arguments)
         (|
             IsLValueSyntaxMethodBinding(Arguments)
@@ -716,14 +716,14 @@
             where(Class -> binary(_, _))
         |)
         (|
-            IsFirstArgumentInput(Arguments)
+            IsFirstArgumentOfClass(Arguments, input)
             (|
                 CheckEquivalentSyntaxMethodArguments(-1, Parameters, Arguments)
             ||
                 Error_LSyntaxMethodArgumentsDontConform(Position)
             |)
         ||
-            IsLastArgumentOutput(Arguments)
+            IsLastArgumentOfClass(Arguments, output)
             (|
                 CheckEquivalentSyntaxMethodArguments(-1, Parameters, Arguments)
             ||
@@ -733,24 +733,36 @@
             Error_ExpressionSyntaxMethodArgumentsDontConform(Position)
         |)
 
+    'rule' CheckSyntaxMethodCanBeBound(Position, iterator, Parameters, ReturnType, Arguments):
+        (|
+            IsFirstArgumentOfClass(Arguments, iterator)
+            IsLastArgumentOfClass(Arguments, container)
+            CheckEquivalentSyntaxMethodArguments(-1, Parameters, Arguments)
+        ||
+            Error_IterateSyntaxMethodArgumentsDontConform(Position)
+        |)
+        
+
     'rule' CheckSyntaxMethodCanBeBound(Position, Class, Parameters, ReturnType, Arguments):
         print(Class)
         eq(0,1)
         
-'condition' IsFirstArgumentInput(SYNTAXCONSTANTLIST)
+'condition' IsFirstArgumentOfClass(SYNTAXCONSTANTLIST, SYNTAXMARKTYPE)
 
-    'rule' IsFirstArgumentInput(constantlist(variable(_, Id), Tail)):
+    'rule' IsFirstArgumentOfClass(constantlist(variable(_, Id), Tail), WantedClass):
         QuerySyntaxMarkId(Id -> Info)
-        Info'Type -> input
+        Info'Type -> Class
+        eq(Class, WantedClass)
         
-'condition' IsLastArgumentOutput(SYNTAXCONSTANTLIST)
+'condition' IsLastArgumentOfClass(SYNTAXCONSTANTLIST, SYNTAXMARKTYPE)
 
-    'rule' IsLastArgumentOutput(constantlist(variable(_, Id), nil)):
+    'rule' IsLastArgumentOfClass(constantlist(variable(_, Id), nil), WantedClass):
         QuerySyntaxMarkId(Id -> Info)
-        Info'Type -> output
+        Info'Type -> Class
+        eq(Class, WantedClass)
 
-    'rule' IsLastArgumentOutput(constantlist(Head, Tail)):
-        IsLastArgumentOutput(Tail)
+    'rule' IsLastArgumentOfClass(constantlist(Head, Tail), Class):
+        IsLastArgumentOfClass(Tail, Class)
 
 -- Syntax method arguments are equivalent to parameters if the parameter list is bound to a
 -- monotonically increasing list of index vars.
@@ -788,12 +800,30 @@
     'rule' IsLValueSyntaxMethodBinding(constantlist(_, Rest)):
         IsLValueSyntaxMethodBinding(Rest)
 
-'action' CheckSyntaxMethodReturnType(POS, TYPE)
+'action' CheckSyntaxMethodReturnType(POS, SYNTAXCLASS, TYPE)
 
-    'rule' CheckSyntaxMethodReturnType(_, undefined(_)):
-        -- no type is fine
+    'rule' CheckSyntaxMethodReturnType(Position, iterator, Type):
+        (|
+            where(Type -> boolean(_))
+        ||
+            where(Type -> bool(_))
+        ||
+            Error_IterateSyntaxMethodMustReturnBoolean(Position)
+        |)
         
-    'rule' CheckSyntaxMethodReturnType(Position, _):
+    'rule' CheckSyntaxMethodReturnType(Position, phrase, Type):
+        [|
+            where(Type -> undefined(_))
+            Error_PhraseSyntaxMethodMustReturnAValue(Position)
+        |]
+
+    'rule' CheckSyntaxMethodReturnType(Position, statement, _):
+        -- statement syntax methods can return anything they want
+
+    'rule' CheckSyntaxMethodReturnType(_, _, undefined(_)):
+        -- other types must not return a value
+        
+    'rule' CheckSyntaxMethodReturnType(Position, _, _):
         Error_HandlersBoundToSyntaxMustNotReturnAValue(Position)
 
 'action' CheckSyntaxMethodArguments(POS, PARAMETERLIST, SYNTAXCONSTANTLIST)

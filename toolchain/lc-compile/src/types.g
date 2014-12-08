@@ -127,13 +127,14 @@
     repeatuntil(Position: POS, Condition: EXPRESSION, Body: STATEMENT)
     repeatupto(Position: POS, Slot: ID, Start: EXPRESSION, Finish: EXPRESSION, Step: EXPRESSION, Body: STATEMENT)
     repeatdownto(Position: POS, Slot: ID, Start: EXPRESSION, Finish: EXPRESSION, Step: EXPRESSION, Body: STATEMENT)
-    repeatforeach(Position: POS, Iterator: EXPRESSION, Slot: ID, Container: EXPRESSION, Body: STATEMENT)
+    repeatforeach(Position: POS, Iterator: EXPRESSION, Container: EXPRESSION, Body: STATEMENT)
     nextrepeat(Position: POS)
     exitrepeat(Position: POS)
     return(Position: POS, Value: EXPRESSION)
     put(Position: POS, Source: EXPRESSION, Target: EXPRESSION)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
+    throw(Position: POS, Error: EXPRESSION)
     nil
     
 'type' EXPRESSIONLIST
@@ -268,6 +269,7 @@
     execute
     evaluate
     assign
+    iterate
 
 'type' INVOKEMETHODLIST
     methodlist(Name: STRING, Type: INVOKEMETHODTYPE, Signature: INVOKESIGNATURE, Tail: INVOKEMETHODLIST)
