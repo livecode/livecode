@@ -1376,7 +1376,10 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 		firstparagraph = lastparagraph = focusedparagraph;
 		firsty = focusedy;
 	}
-	MCactivefield = this;
+    // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
+    //  if it is Focusable
+    if (flags & F_TRAVERSAL_ON)
+        MCactivefield = this;
 	if (!(flags & F_LOCK_TEXT))
 	{
 		replacecursor(True, True);
@@ -1439,7 +1442,10 @@ void MCField::endselection()
 			t_data = MCSharedString::Create(ep . getsvalue());
 			if (t_data != NULL)
 			{
-				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, t_data))
+                // SN-2014-12-08: [[ Bug 12784 ]] Only make this field the selectedfield
+                //  if it is Focusable
+				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, t_data)
+                        && flags & F_TRAVERSAL_ON)
 					MCactivefield = this;
 				t_data -> Release();
 			}
