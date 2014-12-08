@@ -167,7 +167,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
-#define __HUGE__ 1 
+#define __MEDIUM__ 1 
 #endif
 
 // Native char set
@@ -189,34 +189,34 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__GNUC__) && !defined(__APPLE__) && !defined(__PLATFORM_IS_ANDROID__)
 
 // Compiler
-#define __GCC__
+#define __GCC__ 1
 
 // Platform
-#define __LINUX__
+#define __LINUX__ 1
 
 // Architecture
 #if defined(__i386)
-#define __32_BIT__
-#define __LITTLE_ENDIAN__
-#define __I386__
-#define __SMALL__
+#define __32_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __I386__ 1
+#define __SMALL__ 1
 #elif defined(__x86_64__)
-#define __64_BIT__
-#define __LITTLE_ENDIAN__
-#define __X86_64__
-#define __HUGE__
+#define __64_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __X86_64__ 1
+#define __MEDIUM__ 1
 #elif defined(__arm__)
-#define __32_BIT__
-#define __LITTLE_ENDIAN__
-#define __ARM__
-#define __SMALL__
+#define __32_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __ARM__ 1
+#define __SMALL__ 1
 #endif
 
 // Native char set
-#define __ISO_8859_1__
+#define __ISO_8859_1__ 1
 
 // Native line endings
-#define __LF__
+#define __LF__ 1
 
 #endif
 
@@ -248,7 +248,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
-#define __HUGE__ 1
+#define __MEDIUM__ 1
 #elif defined(__arm__)
 #define __32_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
@@ -532,6 +532,10 @@ typedef uint8_t byte_t;
 // The 'codepoint_t' type is used to hold a single Unicode codepoint (20-bit
 // value).
 typedef uint32_t codepoint_t;
+
+// Constant to be used to represent an invalid codepoint (e.g. "no
+// further characters)
+#define CODEPOINT_NONE UINT32_MAX
 
 // The 'unichar_t' type is used to hold a UTF-16 codeunit.
 #ifdef __WINDOWS__

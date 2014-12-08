@@ -72,6 +72,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // This is in here so we do not need GLIBC2.4
 extern "C" void __attribute__ ((noreturn)) __stack_chk_fail (void)
 {
+	abort();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

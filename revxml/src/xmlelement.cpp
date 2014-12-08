@@ -615,16 +615,16 @@ return True if element found
 Bool CXMLElement::GoChildByPath(char *tpath)
 {
 	if (!isinited()) return False;
-	char *sptr = tpath;
+	const char *sptr = tpath;
 	char *childpointer = NULL;
 	CXMLElement telement;
 	telement.CopyElement(this);
 	if (*sptr == '/') sptr++; //skip first slash
 	Bool foundmatch = False;
-	char *endptr = sptr + strlen(sptr);
+	const char *endptr = sptr + strlen(sptr);
 	while (sptr < endptr)
 	{
-		char *namestart,*nameend,*nextname,*numpointer;
+		const char *namestart,*nameend,*nextname,*numpointer;
 		nextname = strchr(sptr, '/' );
 		if (!nextname) nextname = endptr;
 		namestart = sptr;

@@ -217,7 +217,7 @@ void REVXML_QUIT()
 }
 
 //------------------------------------UTILITY FUNCTIONS--------------------------
-void DispatchMetaCardMessage(char *messagename,char *tmessage)
+void DispatchMetaCardMessage(const char *messagename, const char *tmessage)
 {
 int retvalue = 0;
 SetGlobal("xmlvariable",tmessage,&retvalue);
@@ -227,7 +227,7 @@ sprintf(mcmessage,"global xmlvariable;try;send \"%s xmlvariable\" to current car
 SendCardMessage(mcmessage, &retvalue);
 }
 
-bool stringToBool(char *p_string)
+bool stringToBool(const char *p_string)
 {
 	if (stricmp(p_string, "true") == 0)
 		return true;
