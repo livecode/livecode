@@ -4,12 +4,12 @@ This module specifies the syntax definitions and bindings for bitwise operations
 
 module com.livecode.bitwise
 
-public foreign handler MCBitwiseEvalBitwiseAnd(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseOr(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseNot(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseXor(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseAnd(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseOr(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseNot(in Operand as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseXor(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
 
-public foreign handler MCBitwiseEvalBitwiseShift(in Target as integer, in Shift as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseShift(in Target as int, in Shift as int, out Value as int) as undefined binds to "<builtin>"
 
 --
 
@@ -85,13 +85,6 @@ Summary:        Performs a bitwise NOT operation on the binary representation of
 
 Operand:        An expression which evaluates to an integer.
 output:         The integer whose binary representation is the result of the bitwise NOT operation.
-
-Example:
-	variable tVar as int
-	put bitwise not (2 * (2^31 - 1)) into tVar -- tVar contains 1
-	
-Description:
-Each bit of <Left> bitwise or <Right> is 1 if and only if exactly one of the corresponding bits of the binary representation of <Left> and that of <Right> is 1. Otherwise it is 0.
 */
 
 syntax BitwiseNot is prefix operator with precedence 1

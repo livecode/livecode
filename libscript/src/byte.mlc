@@ -1,5 +1,5 @@
 /*  
-This module specifies the syntax definitions and bindings for operations on binary data in modular LiveCode.
+This library consists of the operations on bytes included in the standard library of modular LiveCode.
 */
 
 module com.livecode.byte
@@ -53,9 +53,11 @@ Summary:            Finds the first or last occurrence of <Needle> within <Targe
 
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
-output:             Returns the number of bytes between the first byte of <Target> and the first or last occurrence of <Needle>	within <Target>.
-                    Returns 0 if <Needle> does not occur within <Target>.
-                    Searches for first occurrence if neither first nor last is specified.
+output:             Returns the offset of <Needle> in <Target>.
+
+Description:
+The first (respectively last) offset of <Needle> in <Target> is number of bytes between the first byte of <Target> and the first (respectively last) occurrence of <Needle>. If neither first or last is specified, then the first offset is found. If <Needle> does not occur in <Target>, then the output is 0.
+
 */
 
 syntax ByteOffset is prefix operator with precedence 1
@@ -71,9 +73,10 @@ Summary:            Finds the first or last occurrence of <Needle> after a speci
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 After:              An expression which evaluates to a valid integer index of Target.
-output:             Returns the number of bytes between the first byte of <Target> and the first or last occurrence of <Needle>	after index <After> in <Target>.
-                    Returns 0 if <Needle> does not occur after index <After> in <Target>.
-                    Searches for first occurrence if neither first nor last is specified.
+output:             Returns the offset of <Needle> after index <After> in <Target>.
+                    
+Description:
+The first (respectively last) offset of <Needle> in <Target> is number of bytes between byte <After> of <Target> and the first (respectively last) occurrence of <Needle> after <After>. If neither first or last is specified, then the first offset is found. If <Needle> does not occur after <After> in <Target>, then the output is 0.
 */
 
 syntax ByteOffsetAfter is prefix operator with precedence 1
@@ -89,9 +92,10 @@ Summary:            Finds the first or last occurrence of <Needle> before a spec
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 After:              An expression which evaluates to a valid integer index of Target.
-output:             Returns the number of bytes between the first byte of <Target> and the first or last occurrence of <Needle>	before index <Before> in <Target>.
-                    Returns 0 if <Needle> does not occur before index <Before> in <Target>.
-                    Searches for last occurrence if neither first nor last is specified.
+output:             Returns the offset of <Needle> before index <Before> in <Target>.
+                    
+Description:
+The first (respectively last) offset of <Needle> in <Target> is number of bytes between the first byte of <Target> and the first (respectively last) occurrence of <Needle> before <Before>. If neither first or last is specified, then the last offset is found. If <Needle> does not occur before <Before> in <Target>, then the output is 0.
 
 */
 
@@ -106,6 +110,9 @@ Summary:            Determines whether <Needle> is in <Target>.
 Needle: 			An expression which evaluates to a single byte of binary data.
 Target: 			An expression which evaluates to binary data.
 output:             True if <Needle> is among the bytes of <Target>, and false otherwise.
+
+Description:
+>*Note:* It is an error if <Needle> evaluates to data consisting of more than one byte.
 */
 
 syntax IsAmongTheBytesOf is neutral binary operator with precedence 1
@@ -121,6 +128,9 @@ Summary:            Determines whether <Needle> contains <Target>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 output:             True if the bytes of <Needle> occur as a subsequence of the bytes of <Target>, and false otherwise.
+
+Description:
+>*Note:* Since the empty data is a subsequence of every sequence of bytes, every sequence of bytes contains the empty data.
 */
 
 syntax ContainsBytes is neutral binary operator with precedence 1
@@ -134,6 +144,9 @@ Summary:            Determines whether <Target> begins with <Needle>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 output:             True if the bytes of <Needle> occur as an initial subsequence of the bytes of <Target>, and false otherwise.
+
+Description:
+>*Note:* Since the empty data is an initial subsequence of every sequence of bytes, every sequence of bytes begins with the empty data.
 */
 
 syntax BeginsWithBytes is neutral binary operator with precedence 1
@@ -147,6 +160,9 @@ Summary:            Determines whether <Target> ends with <Needle>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
 output:             True if the bytes of <Needle> occur as a final subsequence of the bytes of <Target>, and false otherwise.
+
+Description:
+>*Note:* Since the empty data is a final subsequence of every sequence of bytes, every sequence of bytes ends with the empty data.
 */
 
 syntax EndsWithBytes is neutral binary operator with precedence 1
@@ -162,11 +178,12 @@ end syntax
 Summary:            Designates the byte of data at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to binary data.
-output:             Either locates the byte of data at the given index either for use as the target container of another operation, 
-                    or evaluates the byte of data at the given index as the source of another operation.
 
-Example: 			delete byte 5 of tData // Locates byte 5 and removes it from tData
+Example: 			put the empty data into byte 5 of tData // Locates byte 5 and removes it from tData
 Example: 			get byte 5 of tData // Evaluates byte 5
+
+Description:
+Either locates the byte at the given index for use as the target container of another operation, or evaluates the byte at the given index as the source of another operation.
 
 */
 
@@ -184,11 +201,12 @@ Summary:            Designates the bytes of data between indices <Start> and <Fi
 Start:              An expression which evaluates to a valid integer index of <Target>.
 Finish:             An expression which evaluates to a valid integer index of <Target>.
 Target:             An expression which evaluates to binary data.
-output:             Either locates the bytes of data between the given indices either for use as the target container of another operation, 
-                    or evaluates the bytes of data at the given indices as the source of another operation.
                     
 Example: 			put tBytes into byte 5 to 10 of tData // Locates bytes 5 to 10 and replace them with tBytes
 Example: 			get byte 5 to 10 of tData // Evaluates bytes 5 to 10
+
+Description:
+Either locates the bytes between the given indices for use as the target container of another operation, or evaluates the bytes at the given indices as the source of another operation.
 
 */
 
@@ -201,11 +219,34 @@ end syntax
 
 --
 
+/* 
+Summary:			Designates the location beween byte <Index> - 1 and <Index> of <Target>
+
+Index:				An expression which evaluates to a valid integer index of <Target>.
+Target:				An expression which evaluates to binary data.
+
+Description:
+Use with the put statement to insert bytes in the specified location without removal. 
+
+*/
+
 syntax BeforeByteOf is prefix operator with precedence 1
     "before" "byte" <Index: Expression> "of" <Target: Expression>
 begin
     StoreBeforeByteOf(input, Index, Target)
 end syntax
+
+
+/* 
+Summary:			Designates the location beween byte <Index> and <Index> + 1 of <Target>
+
+Index:				An expression which evaluates to a valid integer index of <Target>.
+Target:				An expression which evaluates to binary data.
+
+Description:
+Use with the put statement to insert bytes in the specified location without removal. 
+
+*/
 
 syntax AfterByteOf is prefix operator with precedence 1
     "after" "byte" <Index: Expression> "of" <Target: Expression>

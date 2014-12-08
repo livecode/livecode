@@ -1,54 +1,47 @@
 
 module com.livecode.math
 
-public foreign handler EvalIntegerToPowerOfInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler EvalRealToPowerOfReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalNumberToPowerOfNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalRealToPowerOfReal(in Left as double, in Right as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalNumberToPowerOfNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler EvalBase10LogInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalBase10LogReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalBase10LogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalBase10LogReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalBase10LogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler EvalNaturalLogInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalNaturalLogReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalNaturalLogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalNaturalLogReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalNaturalLogNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler EvalExpInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalExpReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalExpNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalExpReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalExpNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler EvalSinInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalSinReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalSinNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalSinReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalSinNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler EvalCosInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalCosReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalCosNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalCosReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalCosNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler EvalTanInteger(in Operand as integer, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalTanReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalTanNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalTanReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalTanNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler EvalAbsInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler EvalAbsReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalAbsNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAbsInteger(in Operand as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAbsReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalAbsNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler EvalTruncInteger(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler EvalTruncReal(in Operand as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalTruncNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalTruncInteger(in Operand as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalTruncReal(in Operand as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalTruncNumber(in Operand as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler EvalMinInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler EvalMinReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalMinNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
-public foreign handler EvalMaxInteger(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler EvalMaxReal(in Left as real, in Right as real, out Value as real) as undefined binds to "<builtin>"
-public foreign handler EvalMaxNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMinInteger(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMinReal(in Left as double, in Right as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMinNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMaxInteger(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMaxReal(in Left as double, in Right as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalMaxNumber(in Left as number, in Right as number, out Value as number) as undefined binds to "<builtin>"
 
-public foreign handler EvalRandomReal(out Value as real) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalRandomReal(out Value as double) as undefined binds to "<builtin>"
 
-public foreign handler EvalConvertBase(in Operand as string, in Source as integer, in Target as integer, out Value as string) as undefined binds to "<builtin>"
-public foreign handler EvalConvertFromBase(in Operand as string, in Source as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler EvalConvertToBase(in Operand as integer, in Target as integer, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertBase(in Operand as string, in Source as int, in Target as int, out Value as string) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertFromBase(in Operand as string, in Source as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCMathEvalConvertToBase(in Operand as int, in Target as int, out Value as string) as undefined binds to "<builtin>"
 
 --
 
@@ -62,9 +55,8 @@ output:     The result of raising <Left> to the power <Right>.
 syntax PowOperator is left binary operator with precedence 2
     <Left: Expression> "^" <Right: Expression>
 begin
-    EvalIntegerToPowerOfInteger(Left, Right, output)
-    EvalRealToPowerOfReal(Left, Right, output)
-    EvalNumberToPowerOfNumber(Left, Right, output)
+    MCMathEvalRealToPowerOfReal(Left, Right, output)
+    MCMathEvalNumberToPowerOfNumber(Left, Right, output)
 end syntax
 
 --
@@ -78,9 +70,8 @@ Operand:    An expression that evaluates to a number.
 syntax SinOperator is prefix operator with precedence 1
     "the" "sin" "of" <Operand: Expression>
 begin
-    EvalSinInteger(Operand, output)
-    EvalSinReal(Operand, output)
-    EvalSinNumber(Operand, output)
+    MCMathEvalSinReal(Operand, output)
+    MCMathEvalSinNumber(Operand, output)
 end syntax
 
 /*
@@ -92,9 +83,8 @@ Operand:    An expression that evaluates to a number.
 syntax CosOperator is prefix operator with precedence 1
     "the" "cos" "of" <Operand: Expression>
 begin
-    EvalCosInteger(Operand, output)
-    EvalCosReal(Operand, output)
-    EvalCosNumber(Operand, output)
+    MCMathEvalCosReal(Operand, output)
+    MCMathEvalCosNumber(Operand, output)
 end syntax
 
 /*
@@ -106,9 +96,8 @@ Operand:    An expression that evaluates to a number.
 syntax TanOperator is prefix operator with precedence 1
     "the" "tan" "of" <Operand: Expression>
 begin
-    EvalTanInteger(Operand, output)
-    EvalTanReal(Operand, output)
-    EvalTanNumber(Operand, output)
+    MCMathEvalTanReal(Operand, output)
+    MCMathEvalTanNumber(Operand, output)
 end syntax
 
 --
@@ -122,9 +111,8 @@ Operand:    An expression that evaluates to a number.
 syntax Base10LogOperator is prefix operator with precedence 1
     "the" "log" "of" <Operand: Expression>
 begin
-    EvalBase10LogInteger(Operand, output)
-    EvalBase10LogReal(Operand, output)
-    EvalBase10LogNumber(Operand, output)
+    MCMathEvalBase10LogReal(Operand, output)
+    MCMathEvalBase10LogNumber(Operand, output)
 end syntax
 
 --
@@ -138,9 +126,8 @@ Operand:    An expression that evaluates to a number.
 syntax BaseELogOperator is prefix operator with precedence 1
     "the" "natural" "log" "of" <Operand: Expression>
 begin
-    EvalNaturalLogInteger(Operand, output)
-    EvalNaturalLogReal(Operand, output)
-    EvalNaturalLogNumber(Operand, output)
+    MCMathEvalNaturalLogReal(Operand, output)
+    MCMathEvalNaturalLogNumber(Operand, output)
 end syntax
 
 
@@ -153,9 +140,8 @@ output:     e to the power of <Operand>
 syntax ExpOperator is prefix operator with precedence 1
     "the" "exp" "of" <Operand: Expression>
 begin
-    EvalExpInteger(Operand, output)
-    EvalExpReal(Operand, output)
-    EvalExpNumber(Operand, output)
+    MCMathEvalExpReal(Operand, output)
+    MCMathEvalExpNumber(Operand, output)
 end syntax
 
 --
@@ -169,9 +155,9 @@ output:     The integer part of the decimal representation of <Operand>
 syntax TruncOperator is prefix operator with precedence 1
     "the" "trunc" "of" <Operand: Expression>
 begin
-    EvalTruncInteger(Operand, output)
-    EvalTruncReal(Operand, output)
-    EvalTruncNumber(Operand, output)
+    MCMathEvalTruncInteger(Operand, output)
+    MCMathEvalTruncReal(Operand, output)
+    MCMathEvalTruncNumber(Operand, output)
 end syntax
 
 /*
@@ -184,9 +170,9 @@ output:     The absolute value of <Operand>, i.e. the value of <Operand> if it i
 syntax AbsOperator is prefix operator with precedence 1
     "the" "abs" "of" <Operand: Expression>
 begin
-    EvalAbsInteger(Operand, output)
-    EvalAbsReal(Operand, output)
-    EvalAbsNumber(Operand, output)
+    MCMathEvalAbsInteger(Operand, output)
+    MCMathEvalAbsReal(Operand, output)
+    MCMathEvalAbsNumber(Operand, output)
 end syntax
 
 --
@@ -199,7 +185,7 @@ output:     A real between 0.0 and 1.0.
 syntax RandomNumber is expression
     "any" "number"
 begin
-    EvalRandomReal(output)
+    MCMathEvalRandomReal(output)
 end syntax
 
 --
@@ -214,9 +200,9 @@ output:     The value of <Left>, if it is less than the value of <Right>, and th
 syntax MinOperator is prefix operator with precedence 1
     "the" "min" "of" <Left: Expression> "and" <Right: Expression>
 begin
-    EvalMinInteger(Left, Right, output)
-    EvalMinReal(Left, Right, output)
-    EvalMinNumber(Left, Right, output)
+    MCMathEvalMinInteger(Left, Right, output)
+    MCMathEvalMinReal(Left, Right, output)
+    MCMathEvalMinNumber(Left, Right, output)
 end syntax
 
 /*
@@ -229,9 +215,9 @@ output:     The value of <Left>, if it is greater than the value of <Right>, and
 syntax MaxOperator is prefix operator with precedence 1
     "the" "max" "of" <Left: Expression> "and" <Right: Expression>
 begin
-    EvalMaxInteger(Left, Right, output)
-    EvalMaxReal(Left, Right, output)
-    EvalMaxNumber(Left, Right, output)
+    MCMathEvalMaxInteger(Left, Right, output)
+    MCMathEvalMaxReal(Left, Right, output)
+    MCMathEvalMaxNumber(Left, Right, output)
 end syntax
 
 --
@@ -247,9 +233,9 @@ output:     A string representation of the value of <Operand> when interpreted a
 syntax BaseConvert is postfix operator with precedence 1
     <Operand: Expression> "converted" ["from" "base" <Source: Expression> ] ["to" "base" <Target: Expression> ]
 begin
-    EvalConvertBase(Operand, Source, Target, output)
-    EvalConvertFromBase(Operand, Target, output)
-    EvalConvertToBase(Operand, Source, output)
+    MCMathEvalConvertBase(Operand, Source, Target, output)
+    MCMathEvalConvertFromBase(Operand, Target, output)
+    MCMathEvalConvertToBase(Operand, Source, output)
 end syntax
 
 --

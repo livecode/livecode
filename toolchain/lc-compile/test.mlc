@@ -12,7 +12,8 @@ public handler test()
     testSort(tResults)
     testArithmetic(tResults)
 	testChar(tResults)
-
+	testBitwise(tResults)
+	
     variable tResultString as string
     put the empty string into tResultString
     combine tResults with tDelimiter into tResultString
@@ -34,6 +35,25 @@ end handler
 public handler boolWithSideEffect(in tResult as bool, inout tVar as string) as bool
 	put "a" into tVar
 	return tResult
+end handler
+
+public handler testBitwise(inout xResults as list)
+	variable tVar as integer
+	
+	put 3 bitwise and 6 into tVar
+	testLog("Bitwise", "BitwiseAnd", tVar is 2, xResults)
+	
+	put 3 bitwise or 6 into tVar
+	testLog("Bitwise", "BitwiseOr", tVar is 7, xResults)
+	
+	put 3 bitwise xor 6 into tVar
+	testLog("Bitwise", "BitwiseXor", tVar is 5, xResults)
+	
+	--put bitwise not 0 into tVar
+
+	put 7 shifted by 2 bitwise into tVar 
+	testLog("Bitwise", "BitwiseShift", tVar is 28, xResults)
+	
 end handler
 
 public handler testLogic(inout xResults as list)
@@ -93,7 +113,7 @@ public handler testChar(inout xResults as list) as undefined
 	
 	testLog("Char", "StoreCharOf", tString is "abcdabcd", xResults)
 	
-	--testLog("Char", "FetchCharRangeOf", char 5 to 8 of tString is "abcd", xResults)
+	testLog("Char", "FetchCharRangeOf", char 5 to 8 of tString is "abcd", xResults)
 	
 	put "e" into char 5 to 8 of tString
 	
@@ -109,7 +129,7 @@ public handler testChar(inout xResults as list) as undefined
 	
 	testLog("Char", "AfterCharOf", tString is "abcdeabcdeabcde", xResults)
 
-	variable tOffset as int
+	variable tOffset as integer
 	put the first offset of "abcde" in tString into tOffset
 	
 	testLog("Char", "CharOffset", tOffset is 1, xResults)
@@ -124,18 +144,29 @@ public handler testChar(inout xResults as list) as undefined
 	put the first offset of chars "abcde" after 11 in tString into tOffset
 	testLog("Char", "CharOffsetAfter", tOffset is 0, xResults)
 	
-	variable tLastDot as int
+	variable tLastDot as integer
 	variable tAddress as string
 	variable tTLD as string
-	put "http://www.livecode.com/index.php" into tAddress
+	put "http://www.livecode.com/index.html" into tAddress
 	put the last offset of "." in tAddress into tLastDot
 	put the offset of "." before tLastDot in tAddress into tOffset
 	put char tOffset + 1 to tOffset + 3 of tAddress into tTLD
 	
 	testLog("Char", "CharOffsetBefore", tTLD is "com", xResults)
 	
+	variable tVar as string
+	put "123" into tVar
 	
+	variable tCount as integer
+	put the number of chars in tVar into tCount
+	subtract 1 from tCount
 	
+	repeat tCount times
+		put "," after char tCount of tVar
+		subtract 1 from tCount
+	end repeat 	
+	
+	testLog("Char", "CharExample", tVar is "1,2,3", xResults)	
 end handler
 
 public handler testArithmetic(inout xResults as list) as undefined
@@ -186,7 +217,7 @@ public handler testList(inout xResults as list) as undefined
     variable tTestList as list
     put the empty list into tTestList
 
-	variable tCount as int
+	variable tCount as integer
 	put the number of elements in tTestList into tCount
 	testLog("List", "EmptyList", tCount is 0, xResults)
 
@@ -195,16 +226,16 @@ public handler testList(inout xResults as list) as undefined
     push "abcd" onto tTestList
     push 1 onto tTestList
 
-    --testLog("List", "NumberOfElements", the number of elements in tTestList is 4, xResults)
-   -- testLog("List", "HeadOf", the head of tTestList is "xyz", xResults)
-    --testLog("List", "TailOf", the tail of tTestList is 1, xResults)
+    testLog("List", "NumberOfElements", the number of elements in tTestList is 4, xResults)
+   	testLog("List", "HeadOf", the head of tTestList is "xyz", xResults)
+	testLog("List", "TailOf", the tail of tTestList is 1, xResults)
 
-    --testLog("List", "ElementOf", element 2 of tTestList is 2, xResults)
-   -- testLog("List", "ElementRangeOf", element 2 of element 3 to -1 of tTestList is 1, xResults)
+    testLog("List", "ElementOf", element 2 of tTestList is 2, xResults)
+   	testLog("List", "ElementRangeOf", element 2 of element 3 to -1 of tTestList is 1, xResults)
 
     variable tSubList as list
     put element -2 to -1 of tTestList into tSubList
-    --testLog("List", "Contains", tTestList contains element -2 to -1 of tTestList, xResults)
+    testLog("List", "Contains", tTestList contains element -2 to -1 of tTestList, xResults)
 
     testLog("List", "IsIn", "abcd" is in tSubList, xResults)
     testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
