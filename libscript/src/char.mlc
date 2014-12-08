@@ -20,6 +20,7 @@ public foreign handler MCCharEvalOffsetOfChars(in IsLast as bool, in Needle as s
 public foreign handler MCCharEvalOffsetOfCharsBefore(in IsLast as bool, in Needle as string, in Before as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
 public foreign handler MCCharEvalOffsetOfCharsAfter(in IsFirst as bool, in Needle as string, in After as index, in Target as string, out Offset as index) as undefined binds to "<builtin>"
 
+public foreign handler MCCharEvalContains(in Source as string, in Needle as string, out Result as bool) as undefined binds to "<builtin>"
 public foreign handler MCCharEvalBeginsWith(in Source as string, in Prefix as string, out Result as bool) as undefined binds to "<builtin>"
 public foreign handler MCCharEvalEndsWith(in Source as string, in Suffix as string, out Result as bool) as undefined binds to "<builtin>"
 
@@ -283,7 +284,7 @@ Description:
 syntax ContainsChars is neutral binary operator with precedence 1
     <Source: Expression> "contains" <Needle: Expression>
 begin
-    MCCharEvalIsAmongTheCharsOf(Source, Needle, output)
+    MCCharEvalContains(Source, Needle, output)
 end syntax
 
 --

@@ -104,7 +104,7 @@ extern "C" void MCArrayEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not,
         r_output = !r_output;
 }
 
-extern "C" void MCArrayFetchElementOf(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
+extern "C" void MCArrayFetchElementOfCaseless(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
 {
     MCNewAutoNameRef t_key;
     
@@ -117,7 +117,7 @@ extern "C" void MCArrayFetchElementOf(MCArrayRef p_target, MCStringRef p_key, MC
     }
 }
 
-extern "C" void MCArrayStoreElementOf(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
+extern "C" void MCArrayStoreElementOfCaseless(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
 {
     MCNewAutoNameRef t_key;
     MCAutoArrayRef t_array;

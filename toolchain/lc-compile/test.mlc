@@ -13,6 +13,7 @@ public handler test()
     testArithmetic(tResults)
 	testChar(tResults)
 	testBitwise(tResults)
+	testArray(tResults)
 	
     variable tResultString as string
     put the empty string into tResultString
@@ -35,6 +36,30 @@ end handler
 public handler boolWithSideEffect(in tResult as bool, inout tVar as string) as bool
 	put "a" into tVar
 	return tResult
+end handler
+
+public handler testArray(inout xResults as list)
+	variable tArray as array
+	put the empty array into tArray
+	
+	
+	
+	--put "value1" into tArray[ "key1" ]
+	--put "value2" into tArray["key2"]
+	--put "value3" into tArray["key3"]
+	
+	variable tKeys as list
+	put the keys of tArray into tKeys
+	
+	variable tKeysString as string
+	combine tKeys with "," into tKeysString
+	
+	testLog("", "", tKeysString is the empty string, xResults)
+	
+	--testLog("Array", "ArrayKeysOf", tKeysString contains "key1", xResults)
+	--testLog("Array", "ArrayKeysOf", tKeysString contains "key2", xResults)
+	--testLog("Array", "ArrayKeysOf", tKeysString contains "key3", xResults)
+	
 end handler
 
 public handler testBitwise(inout xResults as list)
@@ -251,6 +276,9 @@ public handler testList(inout xResults as list) as undefined
     testLog("List", "SpliceAfter", the number of elements in tSubList is 5, xResults)
     testLog("List", "SpliceAfter", the tail of tSubList is 1, xResults)
     testLog("List", "SpliceAfter", tSubList contains tTestList, xResults)
+
+	--put "ZZZZ" into tTestList[1]
+	--testLog("List", "SingletonElement", tTestList[1] is "ZZZZ", xResults)
 
 end handler
 

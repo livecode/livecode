@@ -146,6 +146,11 @@ extern "C" void MCCharEvalOffsetOfCharsBefore(bool p_is_first, MCStringRef p_nee
     MCCharEvalOffsetOfCharsInRange(!p_is_first, p_needle, p_target, MCRangeMake(0, p_before), r_output);
 }
 
+extern "C" void MCCharEvalContains(MCStringRef p_source, MCStringRef p_needle, bool& r_result)
+{
+    r_result = MCStringContains(p_source, p_needle, kMCStringOptionCompareExact);
+}
+
 extern "C" void MCCharEvalBeginsWith(MCStringRef p_source, MCStringRef p_prefix, bool& r_result)
 {
     r_result = MCStringBeginsWith(p_source, p_prefix, kMCStringOptionCompareExact);

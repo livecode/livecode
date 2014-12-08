@@ -222,10 +222,6 @@ output:             Either locates the element container at the given index for 
                     as the source of another operation.
 */
 
---public handler MCListFetchElementOfReversed(in pTarget as list, in pIndex as int, out rElement) as undefined
-  --MCListFetchElementOf(pIndex, pTarget, rElement)
---end handler
-
 syntax SingletonArrElementOf is postfix operator with precedence 1
     <Target: Expression> "[" <Index: Expression> "]"
 begin
