@@ -773,7 +773,7 @@
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
 
     'rule' TermExpression(-> list(Position, List)):
-        "[" @(-> Position) ExpressionList(-> List) "]"
+        "[" @(-> Position) OptionalExpressionList(-> List) "]"
 
     'rule' TermExpression(-> Expression):
         "(" Expression(-> Expression) ")"
