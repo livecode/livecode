@@ -1481,9 +1481,58 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCTypeInfoRef t_signature;
                 t_signature = self -> module -> types[t_frame -> handler -> type] -> typeinfo;
                 
-                // Check the return type is correct.
-                if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), MCHandlerTypeInfoGetReturnType(t_signature)))
-                    t_success = MCScriptThrowInvalidValueForResultError(t_frame -> instance -> module, t_frame -> instance -> module -> bytecode - t_bytecode, MCHandlerTypeInfoGetReturnType(t_signature), t_value);
+                MCTypeInfoRef t_output_type;
+                t_output_type = MCHandlerTypeInfoGetReturnType(t_signature);
+                
+                MCTypeInfoRef t_input_type;
+                t_input_type = MCValueGetTypeInfo(t_value);
+                
+                MCResolvedTypeInfo t_resolved_input_type, t_resolved_output_type;
+                if (!MCTypeInfoResolve(t_input_type, t_resolved_input_type))
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_input_type);
+                if (t_success &&
+                    !MCTypeInfoResolve(t_output_type, t_resolved_output_type))
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_output_type);
+                if (t_success &&
+                    !MCResolvedTypeInfoConforms(t_resolved_input_type, t_resolved_output_type))
+                    t_success = MCScriptThrowInvalidValueForResultError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_output_type, t_value);
+                
+                MCValueRef t_transformed_value;
+                t_transformed_value = nil;
+                if (t_success)
+                {
+                    if (MCTypeInfoIsForeign(t_resolved_input_type . type))
+                    {
+                        if (MCTypeInfoIsForeign(t_resolved_output_type . type))
+                        {
+                            // Both foreign and conform, which means they are compatible.
+                            t_transformed_value = t_value;
+                        }
+                        else
+                        {
+                            // Input foreign, output not foreign - need to import.
+                            const MCForeignTypeDescriptor *t_descriptor;
+                            t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_input_type . type);
+                            if (!t_descriptor -> doimport(MCForeignValueGetContentsPtr(t_value), false, t_transformed_value))
+                                t_success = false;
+                        }
+                    }
+                    else
+                    {
+                        if (MCTypeInfoIsForeign(t_resolved_output_type . type))
+                        {
+                            // Input not foreign, output foreign so need to export.
+                            if (!MCForeignValueExport(t_resolved_output_type . named_type, t_value, (MCForeignValueRef&)t_transformed_value))
+                                t_success = false;
+                        }
+                        else
+                        {
+                            // Input is not foreign, output is not foreign so they must be
+                            // compatible.
+                            t_transformed_value = t_value;
+                        }
+                    }
+                }
                 
                 // Check that out parameters are defined.
                 for(uindex_t i = 0; t_success && i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
@@ -1498,7 +1547,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     if (t_frame -> caller == nil)
                     {
                         // Set the result value argument.
-                        r_value = MCValueRetain(t_value);
+                        r_value = MCValueRetain(t_transformed_value);
                         
                         for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
                             if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeIn)
@@ -1523,6 +1572,10 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                         t_next_bytecode = t_frame -> caller -> instance -> module -> bytecode + t_frame -> caller -> address;
                     }
                 }
+                
+                if (t_transformed_value != t_value &&
+                    t_transformed_value != nil)
+                    MCValueRelease(t_transformed_value);
                 
                 // Pop and destroy the top frame of the stack.
                 t_frame = MCScriptDestroyFrame(t_frame);
@@ -1771,6 +1824,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 t_dst = t_arguments[0];
                 
                 MCValueRef *t_values;
+                t_values = nil;
                 if (!MCMemoryNewArray(t_arity - 1, t_values))
                     t_success = false;
                 
@@ -1782,17 +1836,16 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 MCProperListRef t_list;
                 if (t_success)
-                {
-                    t_success = MCProperListCreateAndRelease(t_values, t_arity - 1, t_list);
-                    if (!t_success)
-                        free(t_values);
-                }
+                    t_success = MCProperListCreate(t_values, t_arity - 1, t_list);
                 
                 if (t_success)
                 {
                     MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_list);
                     MCValueRelease(t_list);
                 }
+                
+                if (t_values != nil)
+                    MCMemoryDeleteArray(t_values);
             }
             break;
             case kMCScriptBytecodeOpThrow:
