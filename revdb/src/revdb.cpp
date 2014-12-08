@@ -2043,7 +2043,7 @@ void REVDB_Connections(char *args[], int nargs, char **retstring,
 	{
 		result = (char *)malloc(connlist->size() * INTSTRSIZE);
 		result[0] = '\0';
-		int numconnections = 0;
+		DBObjectList::size_type numconnections = 0;
 		for (theIterator = connlist->begin(); theIterator != connlist->end(); theIterator++)
 		{
 			DBConnection *curconnection = (DBConnection *)(*theIterator);
