@@ -219,6 +219,11 @@ bool MCScriptThrowUnableToResolveTypeError(MCScriptModuleRef module, uindex_t ad
     return MCErrorThrowGeneric();
 }
 
+bool MCScriptThrowUserError(MCScriptModuleRef module, MCValueRef value)
+{
+    return MCErrorThrowGeneric();
+}
+
 ///////////
 
 MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *self)
@@ -1450,36 +1455,6 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_value);
             }
             break;
-            case kMCScriptBytecodeOpAssignList:
-            {
-                int t_dst;
-                t_dst = t_arguments[0];
-                
-                MCValueRef *t_values;
-                if (!MCMemoryNewArray(t_arity - 1, t_values))
-                    t_success = false;
-                
-                if (t_success)
-                {
-                    for(uindex_t i = 1; i < t_arity; i++)
-                        t_values[i - 1] = MCScriptFetchFromRegisterInFrame(t_frame, t_arguments[i]);
-                }
-                
-                MCProperListRef t_list;
-                if (t_success)
-                {
-                    t_success = MCProperListCreateAndRelease(t_values, t_arity - 1, t_list);
-                    if (!t_success)
-                        free(t_values);
-                }
-                
-                if (t_success)
-                {
-                    MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_list);
-                    MCValueRelease(t_list);
-                }
-            }
-            break;
             case kMCScriptBytecodeOpAssign:
             {
                 // assign <dst>, <src>
@@ -1788,6 +1763,47 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     if (t_transformed_value != t_value)
                         MCValueRelease(t_transformed_value);
                 }
+            }
+            break;
+            case kMCScriptBytecodeOpAssignList:
+            {
+                int t_dst;
+                t_dst = t_arguments[0];
+                
+                MCValueRef *t_values;
+                if (!MCMemoryNewArray(t_arity - 1, t_values))
+                    t_success = false;
+                
+                if (t_success)
+                {
+                    for(uindex_t i = 1; i < t_arity; i++)
+                        t_values[i - 1] = MCScriptFetchFromRegisterInFrame(t_frame, t_arguments[i]);
+                }
+                
+                MCProperListRef t_list;
+                if (t_success)
+                {
+                    t_success = MCProperListCreateAndRelease(t_values, t_arity - 1, t_list);
+                    if (!t_success)
+                        free(t_values);
+                }
+                
+                if (t_success)
+                {
+                    MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_list);
+                    MCValueRelease(t_list);
+                }
+            }
+            break;
+            case kMCScriptBytecodeOpThrow:
+            {
+                int t_err;
+                t_err = t_arguments[0];
+                
+                MCValueRef t_value;
+                t_value = MCScriptFetchFromLocalInFrame(t_frame, t_err);
+                
+                t_success = MCScriptThrowUserError(t_frame -> instance -> module, t_value);
             }
             break;
         }

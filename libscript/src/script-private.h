@@ -418,13 +418,6 @@ enum MCScriptBytecodeOp
     // freed, and the constant value at the specified index is assigned to it.
 	kMCScriptBytecodeOpAssignConstant,
     
-    // List creation assignment.
-    //   assign-list <dst>, <arg_1>, ..., <arg_n>
-    // Dst is a register. The remaining arguments are registers and are used to
-    // build a list. (This can be replaced by an invoke when variadic bindings are
-    // implemented).
-    kMCScriptBytecodeOpAssignList,
-    
 	// Register assignment:
 	//   assign <dst>, <src>
 	// Dst and Src are registers. The value in dst is freed, and src copied
@@ -496,6 +489,19 @@ enum MCScriptBytecodeOp
     // to the type of the target global variable.
     //
 	kMCScriptBytecodeOpStoreGlobal,
+    
+    // List creation assignment.
+    //   assign-list <dst>, <arg_1>, ..., <arg_n>
+    // Dst is a register. The remaining arguments are registers and are used to
+    // build a list. (This will be replaced by an invoke when variadic bindings are
+    // implemented).
+    kMCScriptBytecodeOpAssignList,
+    // Error throwing
+    //   throw <reg>
+    // Reg is a register containing the value to throw. (This opcode will be replaced
+    // by an invoke when automatic exception handling is added to foreign handler
+    // declarations).
+    kMCScriptBytecodeOpThrow,
 };
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);
