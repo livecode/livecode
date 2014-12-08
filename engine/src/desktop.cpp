@@ -627,7 +627,9 @@ static void map_key_to_engine(MCPlatformKeyCode p_key_code, codepoint_t p_mapped
             // MW-2014-06-25: [[ Bug 12370 ]] The engine expects keyCode to be the mapped key whenever
             //   the mapped key is ASCII. If the mapped key is not ASCII then the keyCode reflects
             //   the raw (US English) keycode.
-            if (isascii(r_native_char[0]))
+            // SN-2014-12-08: [[ Bug 14067 ]] Avoid to use the native char instead of the key code
+            // the numeric keypad keys.
+            if (isascii(r_native_char[0]) && (p_key_code < kMCPlatformKeyCodeKeypadSpace || p_key_code > kMCPlatformKeyCodeKeypadEqual))
                 r_key_code = r_native_char[0];
             else
                 r_key_code = p_key_code;

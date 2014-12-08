@@ -508,7 +508,9 @@ Boolean MCObject::kdown(const char *string, KeySym key)
 		break;
 	default:
 		char tstring[U2L];
-		if (key > 0xFF)
+        // SN-2014-12-08: [[ Bug 12681 ]] Avoid to print the keycode in case we have a
+        // numeric keypad keycode.
+        if (key > 0xFF && (key < XK_KP_Space || key > XK_KP_Equal))
 			sprintf(tstring, "%ld", key);
 		else
 			if ((uint1)string[0] < ' ' || MCmodifierstate & MS_CONTROL)
