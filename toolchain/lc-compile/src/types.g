@@ -148,6 +148,8 @@
     real(Position: POS, Value: DOUBLE)
     string(Position: POS, Value: STRING)
     slot(Position: POS, Name: ID)
+    logicaland(Position: POS, Left: EXPRESSION, Right: EXPRESSION)
+    logicalor(Position: POS, Left: EXPRESSION, Right: EXPRESSION)
     as(Position: POS, Value: EXPRESSION, Type: TYPE)
     list(Position: POS, List: EXPRESSIONLIST)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)

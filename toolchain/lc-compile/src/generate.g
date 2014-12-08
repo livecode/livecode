@@ -1239,6 +1239,20 @@
         Info'Index -> Index
         EmitFetchVar(Kind, Result, Index)
         
+    'rule' GenerateExpressionInRegister(Result, Context, logicalor(_, Left, Right)):
+        EmitDeferLabel(-> ShortLabel)
+        GenerateExpressionInRegister(Result, Context, Left)
+        EmitJumpIfTrue(Result, ShortLabel)
+        GenerateExpressionInRegister(Result, Context, Right)
+        EmitResolveLabel(ShortLabel)
+
+    'rule' GenerateExpressionInRegister(Result, Context, logicaland(_, Left, Right)):
+        EmitDeferLabel(-> ShortLabel)
+        GenerateExpressionInRegister(Result, Context, Left)
+        EmitJumpIfFalse(Result, ShortLabel)
+        GenerateExpressionInRegister(Result, Context, Right)
+        EmitResolveLabel(ShortLabel)
+
     'rule' GenerateExpressionInRegister(Result, Context, as(_, _, _)):
         -- TODO
     

@@ -678,7 +678,18 @@
 
 'nonterm' Expression(-> EXPRESSION)
 
-    'rule' Expression(-> Result):
+    'rule' Expression(-> logicalor(Position, Left, Right)):
+        Expression(-> Left) "or" @(-> Position) AndExpression(-> Right)
+        
+    'rule' Expression(-> Expr)
+        AndExpression(-> Expr)
+        
+'nonterm' AndExpression(-> EXPRESSION)
+
+    'rule' AndExpression(-> logicaland(Position, Left, Right)):
+        Expression(-> Left) "and" @(-> Position) AndExpression(-> Right)
+    
+    'rule' AndExpression(-> Result):
         FlatExpression(-> Sentinal)
         ReorderOperatorExpression(Sentinal)
         ProcessOperatorExpression(-> Result)
@@ -755,8 +766,8 @@
     'rule' TermExpression(-> slot(Position, Name)):
         Identifier(-> Name) @(-> Position)
 
-    'rule' TermExpression(-> as(Position, Value, Type)):
-        TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
+    --'rule' TermExpression(-> as(Position, Value, Type)):
+    --    TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
 
     'rule' TermExpression(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
