@@ -1087,25 +1087,6 @@
 
 ----
 
-/*
-'action' GenerateInvoke_GetExecuteSignature(INVOKELIST -> INVOKESIGNATURE)
-
-    'rule' GenerateInvoke_GetExecuteSignature(invokelist(Head, _) -> Signature):
-        Head'RSignature -> Signature
-
-'action' GenerateInvoke_GetEvaluateSignature(INVOKELIST -> INVOKESIGNATURE)
-
-    'rule' GenerateInvoke_GetEvaluateSignature(invokelist(Head, _) -> Signature):
-        Head'RSignature -> Signature
-
-'action' GenerateInvoke_GetAssignSignature(INVOKELIST -> INVOKESIGNATURE)
-
-    'rule' GenerateInvoke_GetAssignSignature(invokelist(Head, _) -> Signature):
-        Head'LSignature -> Signature
-*/
-
-----
-
 'action' GenerateDefinitionGroupForInvokes(INVOKELIST, INVOKEMETHODTYPE, EXPRESSIONLIST -> INT, INVOKESIGNATURE)
 
     'rule' GenerateDefinitionGroupForInvokes(InvokeList, Type, Arguments -> Index, Signature)
