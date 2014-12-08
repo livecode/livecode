@@ -1,8 +1,5 @@
 module test
 
-foreign handler MCNumberCreateWithInteger(in value as int, out value_ref as number) as bool binds to "<builtin>"
-foreign handler MCBooleanCreateWithBool(in value as bool, out value_ref as boolean) as bool binds to "<builtin>"
-
 public handler test()
     variable tResults as list
     put the empty list into tResults
@@ -14,7 +11,8 @@ public handler test()
     testList(tResults)
     testSort(tResults)
     testArithmetic(tResults)
-    
+	testChar(tResults)
+
     variable tResultString as string
     put the empty string into tResultString
     combine tResults with tDelimiter into tResultString
@@ -33,11 +31,99 @@ public handler testLog(in pModule as string, in pTest as string, in pResult as b
     push pModule & "_" & pTest & ":" && tStringResult onto xResults
 end handler
 
+public handler boolWithSideEffect(in tResult as bool, inout tVar as string) as bool
+	put "a" into tVar
+	return tResult
+end handler
+
 public handler testLogic(inout xResults as list)
     variable tVar as bool
     put not false into tVar
 
     testLog("Logic", "Not", tVar, xResults)
+    
+    // test boolean short circuit
+    
+    variable tString as string
+    put the empty string into tString
+    if (false and boolWithSideEffect(true, tString)) then
+    	testLog("Logic", "And", false, xResults)
+    else
+        testLog("Logic", "And", true, xResults)
+    end if	
+    
+    testLog("Logic", "AndShortCut", not (tString is "a"), xResults)
+    
+    if (true and boolWithSideEffect(true, tString)) then
+    	testLog("Logic", "And", true, xResults)
+    else
+      	testLog("Logic", "And", false, xResults)  
+    end if		
+    
+    testLog("Logic", "AndShortCut", tString is "a", xResults)
+    
+    variable tString2 as string
+    put the empty string into tString2
+    if (true or boolWithSideEffect(false, tString2)) then
+    	testLog("Logic", "Or", true, xResults)
+    else
+        testLog("Logic", "Or", false, xResults)	
+    end if	
+    
+    testLog("Logic", "OrShortCut", not (tString2 is "a"), xResults)
+    
+    if (false or boolWithSideEffect(false, tString2)) then
+    	testLog("Logic", "Or", false, xResults)
+    else
+    	testLog("Logic", "Or", true, xResults)
+    end if		
+    
+    testLog("Logic", "OrShortCut", tString2 is "a", xResults)	
+    
+end handler
+
+public handler testChar(inout xResults as list) as undefined
+	variable tString as string
+	put "abcde" into tString
+	
+	testLog("Char", "CountCharsOf", the number of chars in tString is 5, xResults)
+	testLog("Char", "FetchCharOf", char 5 of tString is "e", xResults)
+	
+	put "abcd" into char 5 of tString
+	
+	testLog("Char", "StoreCharOf", tString is "abcdabcd", xResults)
+	
+	--testLog("Char", "FetchCharRangeOf", char 5 to 8 of tString is "abcd", xResults)
+	
+	put "e" into char 5 to 8 of tString
+	
+	testLog("Char", "StoreCharRangeOf", tString is "abcde", xResults)
+	
+	testLog("Char", "CharIsIn", "a" is in "abc", xResults)
+
+	put "abcde" before char 1 of tString
+	
+	testLog("Char", "BeforeCharOf", tString is "abcdeabcde", xResults)
+	
+	put "abcde" after char 5 of tString
+	
+	testLog("Char", "AfterCharOf", tString is "abcdeabcdeabcde", xResults)
+
+	variable tOffset as int
+	put the first offset of "abcde" in tString into tOffset
+	
+	testLog("Char", "CharOffset", tOffset is 1, xResults)
+	
+	put the first offset of "abcdef" in tString into tOffset
+	testLog("Char", "CharOffset", tOffset is 0, xResults)
+	
+	put the first offset of chars "abcde" after 1 in tString into tOffset
+	
+	testLog("Char", "CharOffsetAfter", tOffset is 5, xResults)
+	
+	put the first offset of chars "abcde" after 11 in tString into tOffset
+	testLog("Char", "CharOffsetAfter", tOffset is 0, xResults)
+
 end handler
 
 public handler testArithmetic(inout xResults as list) as undefined
@@ -88,21 +174,25 @@ public handler testList(inout xResults as list) as undefined
     variable tTestList as list
     put the empty list into tTestList
 
+	variable tCount as int
+	put the number of elements in tTestList into tCount
+	testLog("List", "EmptyList", tCount is 0, xResults)
+
     push "xyz" onto tTestList
     push 2 onto tTestList
     push "abcd" onto tTestList
     push 1 onto tTestList
 
-    testLog("List", "NumberOfElements", the number of elements in tTestList is 4, xResults)
-    testLog("List", "HeadOf", the head of tTestList is "xyz", xResults)
-    testLog("List", "TailOf", the tail of tTestList is 1, xResults)
+    --testLog("List", "NumberOfElements", the number of elements in tTestList is 4, xResults)
+   -- testLog("List", "HeadOf", the head of tTestList is "xyz", xResults)
+    --testLog("List", "TailOf", the tail of tTestList is 1, xResults)
 
-    testLog("List", "ElementOf", element 2 of tTestList is 2, xResults)
-    testLog("List", "ElementRangeOf", element 2 of element 3 to -1 of tTestList is 1, xResults)
+    --testLog("List", "ElementOf", element 2 of tTestList is 2, xResults)
+   -- testLog("List", "ElementRangeOf", element 2 of element 3 to -1 of tTestList is 1, xResults)
 
     variable tSubList as list
     put element -2 to -1 of tTestList into tSubList
-    testLog("List", "Contains", tTestList contains element -2 to -1 of tTestList, xResults)
+    --testLog("List", "Contains", tTestList contains element -2 to -1 of tTestList, xResults)
 
     testLog("List", "IsIn", "abcd" is in tSubList, xResults)
     testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
