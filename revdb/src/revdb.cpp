@@ -273,7 +273,7 @@ DATABASEREC *LoadDatabaseDriver(const char *p_type)
 		t_last_component = strrchr(GetExternalFolder(), '/');
 		if (t_last_component != NULL)
 		{
-			sprintf(t_driver_path, "%.*s/drivers/%s", t_last_component - GetExternalFolder(), GetExternalFolder(), t_driver_name);
+			sprintf(t_driver_path, "%.*s/drivers/%s", (int) (t_last_component - GetExternalFolder()), GetExternalFolder(), t_driver_name);
 			t_database_rec = DoLoadDatabaseDriver(t_driver_path);
 		}
 		if (t_database_rec == NULL)
