@@ -599,10 +599,10 @@
             Statements(-> Body)
         TryStatementCatches(-> Catches)
         TryStatementFinally(-> Finally)
-        "end" "try"
+        "end" "try"*/
         
     'rule' Statement(-> throw(Position, Value)):
-        "throw" @(-> Position) Expression(-> Value)*/
+        "throw" @(-> Position) Expression(-> Value)
 
     'rule' Statement(-> nextrepeat(Position)):
         "next" @(-> Position) "repeat"

@@ -134,6 +134,7 @@
     put(Position: POS, Source: EXPRESSION, Target: EXPRESSION)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
+    throw(Position: POS, Error: EXPRESSION)
     nil
     
 'type' EXPRESSIONLIST

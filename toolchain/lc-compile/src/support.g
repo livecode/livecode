@@ -192,6 +192,7 @@
     EmitStoreGlobal
     EmitReturn
     EmitReturnNothing
+    EmitThrow
     EmitAttachRegisterToExpression
     EmitDetachRegisterFromExpression
     EmitGetRegisterAttachedToExpression
@@ -493,6 +494,7 @@
 'action' EmitStoreGlobal(Register: INT, Var: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
+'action' EmitThrow(Register: INT)
 'action' EmitPosition(Position: POS)
 
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)

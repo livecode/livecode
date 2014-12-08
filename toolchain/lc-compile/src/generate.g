@@ -904,6 +904,12 @@
         GenerateInvoke_AssignArguments(Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
         
+    'rule' GenerateBody(Result, Context, throw(Position, Error)):
+        EmitPosition(Position)
+        GenerateExpression(Context, Error -> Reg)
+        GenerateBeginBuiltinInvoke("Throw", Context, Reg)
+        EmitDestroyRegister(Reg)
+        
     'rule' GenerateBody(Result, Context, nil):
         -- nothing
 
