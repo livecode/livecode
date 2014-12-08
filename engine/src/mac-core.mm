@@ -1980,7 +1980,8 @@ int main(int argc, char *argv[], char *envp[])
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
     
-	if (!MCInitialize() || !MCScriptInitialize())
+    extern bool MCCanvasModuleInitialize(void);
+	if (!MCInitialize() || !MCScriptInitialize() || !MCCanvasModuleInitialize())
 		exit(-1);
 	
 	// On OSX, argv and envp are encoded as UTF8
