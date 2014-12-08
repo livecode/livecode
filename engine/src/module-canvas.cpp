@@ -748,11 +748,10 @@ bool MCCanvasColorCreate(const __MCCanvasColorImpl &p_color, MCCanvasColorRef &r
 	if (t_success)
 	{
 		*MCCanvasColorGet(t_color) = p_color;
-		t_success = MCValueInter(t_color, r_color);
+		t_success = MCValueInterAndRelease(t_color, r_color);
+        if (!t_success)
+            MCValueRelease(t_color);
 	}
-	
-	MCValueRelease(t_color);
-	
 	return t_success;
 }
 
