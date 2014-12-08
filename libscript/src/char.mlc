@@ -245,7 +245,7 @@ output:             Returns true if the characters in <Prefix> occur at the star
 */
 
 syntax BeginsWithString is neutral binary operator with precedence 1
-    <Source: Expression> "begins" <Foo: Expression> "and" <Bar: Expression> "with" <Prefix: Expression>
+    <Source: Expression> "begins" "with" <Prefix: Expression>
 begin
     //EvalBeginsWith(Source, Prefix, output)
 end syntax
