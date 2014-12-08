@@ -26,12 +26,25 @@ public foreign handler MCCharRepeatForEachChar(inout Iterator as optional pointe
 Summary:            Counts the number of chars in <Target>.
 
 Target: 			An expression which evaluates to a string.
+output:				The number of chars in <Target>.
 
 Example: 			
 
-	repeat with x = 1 to the number of chars in tString
-		// do something
+	variable tVar as int
+	variable tSource as string
+	put "hello" into tString
+	put the number of chars in tString into tVar
+	
+	variable tString as string
+	put the empty string into tString	
+	repeat tVar times
+		put "a" after tString
 	end repeat
+	
+	// tString contains "aaaaa"
+	
+Description:
+>*Note:* The number of chars returns the number of codeunits of the target string. It does not perform any grapheme boundary analysis.
 */
 
 syntax CountCharsOf is prefix operator with precedence 1
@@ -46,12 +59,13 @@ end syntax
 
 Summary:            Designates the char at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
-Target:				An expression which evaluates to a string.
-output:             Either locates the char at the given index either for use as the target container of another operation, 
-                    or evaluates the char at the given index as the source of another operation.
+Target:				An expression which evaluates to a string.           
 
-Example: 			delete char 5 of tString // Locates char 5 and removes it from tString
+Example: 			put the empty string into char 5 of tString // Locates char 5 and removes it from tString
 Example: 			get char 5 of tString // Evaluates char 5
+
+Description:
+Either locates the char at the given index for use as the target container of another operation, or evaluates the char at the given index as the source of another operation.
 
 */
 
@@ -68,12 +82,13 @@ Summary:            Designates the chars between indices <Start> and <Finish> in
 
 Start:              An expression which evaluates to a valid integer index of <Target>.
 Finish:             An expression which evaluates to a valid integer index of <Target>.
-Target:             An expression which evaluates to a string.
-output:             Either locates the chars between the given indices either for use as the target container of another operation, 
-                    or evaluates the chars at the given indices as the source of another operation.
+Target:             An expression which evaluates to a string.        
                     
 Example: 			put tChars into char 5 to 10 of tString // Locates chars 5 to 10 of tString and replace them with tChars
 Example: 			get char 5 to 10 of tString // Evaluates chars 5 to 10
+
+Description:
+Either locates the chars between the given indices either for use as the target container of another operation, or evaluates the chars at the given indices as the source of another operation.
 
 */
 
@@ -91,6 +106,9 @@ Summary:            Determines whether <Needle> is in <Source>.
 Needle: 			An expression which evaluates to a char.
 Target: 			An expression which evaluates to a string.
 output:             True if <Needle> is among the chars of <Target>, and false otherwise.
+
+Description:
+>*Note:* It is an error if <Needle> evaluates to a string consisting of more than one char.
 */
 
 syntax CharIsIn is neutral binary operator with precedence 1
@@ -157,7 +175,9 @@ Summary:            Finds the first or last occurrence of <Needle> before a spec
 Needle: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string.
 After:              An expression which evaluates to a valid integer index of Target.
-output:             Returns the number of chars between the first char of <Target> and the first or last occurrence of <Needle>	before index <Before> in <Target>.
+output:             
+
+Returns the number of chars between the first char of <Target> and the first or last occurrence of <Needle>	before index <Before> in <Target>.
                     Returns 0 if <Needle> does not occur before index <Before> in <Target>.
                     Searches for last occurrence if neither first nor last is specified.
 

@@ -23,7 +23,7 @@ extern "C" void MCCharEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_outpu
     r_output = MCStringGetLength(p_target);
 }
 
-void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, MCStringRef p_target, bool& r_output)
+extern "C" void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, MCStringRef p_target, bool& r_output)
 {
     // Error if there is more than one char in needle.
     if (MCStringGetLength(p_needle) == 1)
@@ -109,36 +109,38 @@ extern "C" void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MC
     MCValueAssign(x_target, *t_new_string);
 }
 
-extern "C" void MCCharEvalOffsetOfCharsInRange(MCStringRef p_needle, MCStringRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfCharsInRange(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, MCRange p_range, uindex_t& r_output)
 {
     uindex_t t_offset;
     t_offset = 0;
     if (!MCStringIsEmpty(p_needle))
     {
+        bool t_found;
         if (p_is_last)
-            MCStringLastIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
+            t_found = MCStringLastIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
         else
-            MCStringFirstIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
+            t_found = MCStringFirstIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
         
         // correct output index
-        t_offset++;
+        if (t_found)
+            t_offset++;
     }
     r_output = t_offset;
 }
 
-extern "C" void MCCharEvalOffsetOfChars(MCStringRef p_needle, MCStringRef p_target, bool p_is_last, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfChars(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(p_needle, p_target, p_is_last, MCRangeMake(0, UINDEX_MAX), r_output);
+    MCCharEvalOffsetOfCharsInRange(p_is_last, p_needle, p_target, MCRangeMake(0, UINDEX_MAX), r_output);
 }
 
-extern "C" void MCCharEvalOffsetOfCharsAfter(MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, bool p_is_last, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(p_needle, p_target, p_is_last, MCRangeMake(p_after, UINDEX_MAX), r_output);
+    MCCharEvalOffsetOfCharsInRange(p_is_last, p_needle, p_target, MCRangeMake(p_after, UINDEX_MAX), r_output);
 }
 
-extern "C" void MCCharEvalOffsetOfCharsBefore(MCStringRef p_needle, MCStringRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfCharsBefore(bool p_is_first, MCStringRef p_needle, MCStringRef p_target, uindex_t p_before, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(p_needle, p_target, !p_is_first, MCRangeMake(0, p_before), r_output);
+    MCCharEvalOffsetOfCharsInRange(!p_is_first, p_needle, p_target, MCRangeMake(0, p_before), r_output);
 }
 
 extern "C" void MCCharEvalBeginsWith(MCStringRef p_source, MCStringRef p_prefix, bool& r_result)
