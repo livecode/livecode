@@ -2165,7 +2165,8 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_filename)
     for(MCLoadedExtension *t_previous = nil, *t_ext = MCextensions; t_ext != nil; t_previous = t_ext, t_ext = t_ext -> next)
         if (MCStringIsEqualTo(t_ext -> filename, *t_resolved_filename, kMCStringOptionCompareCaseless))
         {
-            MCScriptReleaseInstance(t_ext -> instance);
+            if (t_ext -> instance != nil)
+                MCScriptReleaseInstance(t_ext -> instance);
             MCScriptReleaseModule(t_ext -> module);
             MCValueRelease(t_ext -> filename);
             if (t_previous != nil)
