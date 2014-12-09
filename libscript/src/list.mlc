@@ -553,7 +553,6 @@ Use ```the empty list``` to initialise a list variable.
 
 */
 
-
 syntax EmptyList is expression
 	"the" "empty" "list"
 begin

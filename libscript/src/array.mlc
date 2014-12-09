@@ -15,13 +15,35 @@ public foreign handler MCArrayStoreElementOfCaseless(in Value as any, inout Targ
 
 public foreign handler MCArrayEvalEmpty(out Value as array) as undefined binds to "<builtin>"
 
+public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional pointer, out Iterand as any, in Container as array) as bool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional pointer, out Iterand as string, in Container as array) as bool binds to "<builtin>"
+
 --
 
 /* 
 Summary:        Returns the keys of an array.
 Target:         An expression which evaluates to an array.
 output:         A list whose elements are the keys of <Target>. 
-                Note that the list is not ordered in any way.
+
+Example:
+	variable tArray as array
+	put the empty array into tArray
+	put "value1" into tArray["key1"]
+	put "value2" into tArray["key2"]
+	put "value3" into tArray["key3"]
+	
+	variable tKeys as list
+	put the keys of tArray into tKeys
+	sort tKeys in ascending order
+	
+	variable tKeysString as string
+	combine tKeys with "," into tKeysString 
+	// tKeysString is "key1,key2,key3"
+
+References:com.livecode.sort
+
+Description:
+>*Note:* The resulting list is not necessarily ordered in any way. Use the <com.livecode.sort> library to sort the keys.  
 */
 
 syntax KeysOf is prefix operator with precedence 2
@@ -34,7 +56,24 @@ end syntax
 Summary:        Returns the elements of an array.
 Target:         An expression which evaluates to an array.
 output:         A list whose elements are the elements of <Target>. 
-                Note that the list is not ordered in any way.
+
+Example:
+	variable tArray as array
+	put the empty array into tArray
+	put 1 into tArray["key1"]
+	put 2 into tArray["key2"]
+	put 3 into tArray["key3"]
+	
+	variable tElements as list
+	put the elements of tArray into tElements
+	sort tElements in ascending numeric order
+	
+	// tElements is [1, 2, 3]
+	
+References:com.livecode.sort
+
+Description:
+>*Note:* The resulting list is not necessarily ordered in any way. Use the <com.livecode.sort> library to sort the elements.
 */
 
 syntax ElementsOf is prefix operator with precedence 2
@@ -48,6 +87,16 @@ end syntax
 /*
 Summary:        Returns the number of elements in <Target>
 Target:         An expression which evaluates to an array.
+
+Example:
+	variable tArray as array
+	put the empty array into tArray
+	put 1 into tArray["key1"]
+	put 2 into tArray["key2"]
+	put 3 into tArray["key3"]
+	
+	variable tVar as integer
+	put the number of elements in tArray into tVar -- tVar contains 3
 */
 
 syntax CountElementsOf is prefix operator with precedence 1
@@ -94,11 +143,19 @@ end syntax
 /*
 
 Summary:            Designates the element with key <Key> in <Target>.
-Key: 				An expression which evaluates to an integer, string, or list of integers.
+Index: 				An expression which evaluates to a string.
 Target:				An expression which evaluates to an array.
-output:             Either locates the element container with the given key for use as the target 
-                    container of another operation, or evaluates the element with the given key 
-                    as the source of another operation.
+
+Example:			
+	variable tArray as array
+	put the empty array into tArray
+	put "value" into tArray["key"]
+	
+	variable tVar as string
+	put tArray["key"] into tVar -- tVar contains "value"
+
+Description:     
+Either locates the element container with the given key for use as the target container of another operation, or evaluates the element with the given key as the source of another operation.
 */
 
 syntax SingletonElementOf is postfix operator with precedence 1
@@ -110,10 +167,82 @@ end syntax
 
 --
 
+/* 
+
+Summary: 		Designates the array with zero elements
+
+Example:
+	variable tVar as array
+	variable tCount as int
+	put the empty array into tVar
+	put the number of elements in tVar into tCount -- tCount is 0
+	
+Description:
+Use ```the empty array``` to initialise an array variable.
+
+*/
+
 syntax EmptyArray is expression
 	"the" "empty" "array"
 begin
 	MCArrayEvalEmpty(output)
+end syntax
+
+--
+
+/*
+Summary:        Repeat over the elements of an array.
+Iterand:        An expression of the form 'tVar in tArray'
+
+Example:
+    variable tArray as array
+    put the empty array into tArray
+    put 1 into tArray["key1"]
+    put 2 into tArray["key2"]
+    put 3 into tArray["key3"]
+
+	variable tSum as number
+	put 0 into tSum
+    repeat for each element tElement in tArray
+        add tElement to tSum
+    end repeat
+
+    // tSum is 6
+*/
+
+syntax RepeatForEachElement is iterator
+    "element" <Iterand: Expression>
+begin
+    MCArrayRepeatForEachElement(iterator, Iterand, container)
+end syntax
+
+/*
+Summary:        Repeat over the keys of an array.
+Iterand:        An expression of the form 'tVar in tArray'
+
+Example:
+    variable tArray as array
+    put the empty array into tArray
+    put 1 into tArray["abc"]
+    put 2 into tArray["def"]
+    put 3 into tArray["ghi"]
+
+	variable tString as string
+	put "" into tString
+    
+    variable tKey as string
+    repeat for each key tKey in tArray
+        put tKey after tString
+    end repeat
+
+    variable tBool as bool
+    put tString contains "abc" into tBool -- tBool is true
+*/
+
+syntax RepeatForEachKey is iterator
+    "key" <Iterand: Expression>
+begin
+    MCArrayRepeatForEachKey(iterator, Iterand, container)
 end syntax
 
 end module

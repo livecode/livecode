@@ -138,3 +138,53 @@ extern "C" MC_DLLEXPORT void MCArrayEvalEmpty(MCArrayRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyArray);
 }
+
+extern "C" bool MCArrayRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCArrayRef p_array)
+{
+    MCValueRef t_value;
+    // If this is a numerical array, do it in order
+/*    if (MCArrayIsSequence(p_array))
+    {
+        uindex_t t_offset;
+        t_offset = (uindex_t)x_iterator;
+        
+        if (t_offset == MCArrayGetCount(p_array))
+            return false;
+        
+        if (!MCArrayFetchValueAtIndex(p_array, t_offset, t_value))
+            return false;
+    }
+    else */
+    {
+        MCNameRef t_key;
+        
+        uintptr_t t_ptr;
+        t_ptr = (uintptr_t)x_iterator;
+        
+        if (!MCArrayIterate(p_array, t_ptr, t_key, t_value))
+            return false;
+        
+        x_iterator = (void *)(t_ptr);
+    }
+    
+    r_iterand = MCValueRetain(t_value);
+    return true;
+}
+
+extern "C" bool MCArrayRepeatForEachKey(void*& x_iterator, MCStringRef& r_iterand, MCArrayRef p_array)
+{
+    MCNameRef t_key;
+    MCValueRef t_value;
+    
+    uintptr_t t_offset;
+    t_offset = (uintptr_t)x_iterator;
+    
+    if (!MCArrayIterate(p_array, t_offset, t_key, t_value))
+        return false;
+    
+    r_iterand = MCValueRetain(MCNameGetString(t_key));
+    
+    x_iterator = (void *)(t_offset);
+    
+    return true;
+}

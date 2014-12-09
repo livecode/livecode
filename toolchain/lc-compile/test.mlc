@@ -281,6 +281,34 @@ public handler testArray(inout xResults as list)
 	
 	testLog("Array", "ElementOf", tArray["key1"] is "value1", xResults)
 
+    variable tNewArray as array
+    put the empty array into tNewArray
+    put 1 into tNewArray["abc"]
+    put 2 into tNewArray["def"]
+    put 3 into tNewArray["ghi"]
+
+	variable tString as string
+	put "" into tString
+	
+	variable tKey as string
+    repeat for each key tKey in tNewArray
+        put tKey after tString
+    end repeat
+    
+    testLog("Array", "RepeatForEachKey1", tString contains "abc", xResults)
+    testLog("Array", "RepeatForEachKey1", tString contains "def", xResults)
+    testLog("Array", "RepeatForEachKey1", tString contains "ghi", xResults)
+
+	variable tSum as number
+	put 0 into tSum
+	
+	variable tElement
+    repeat for each element tElement in tNewArray
+        add tElement to tSum
+    end repeat
+    
+    testLog("Array", "RepeatForEachElement", tSum is 6, xResults)
+
 end handler
 
 public handler testBitwise(inout xResults as list)
