@@ -1312,6 +1312,26 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
     if (t_min_score_def != NULL)
         return MCScriptPerformInvoke(x_frame, x_next_bytecode, t_min_score_inst, t_min_score_def, p_arguments, p_arity);
     
+    MCLog("Failed to choose multimethod for arguments:", 0);
+    for(uindex_t i = 0; i < p_arity - 1; i++)
+        MCLog("  %d as %@", i, MCNamedTypeInfoGetName(MCValueGetTypeInfo(MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i + 1]))));
+    MCLog("Methods:", 0);
+    for(uindex_t i = 0; i < t_group -> handler_count; i++)
+    {
+        MCScriptInstanceRef t_instance;
+        MCScriptDefinition *t_definition;
+        MCScriptResolveDefinitionInFrame(x_frame, t_group -> handlers[i], t_instance, t_definition);
+        
+        uindex_t t_type_index;
+        if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
+        {
+            MCScriptForeignHandlerDefinition *t_def;
+            t_def = static_cast<MCScriptForeignHandlerDefinition *>(t_definition);
+            t_type_index = t_def -> type;
+            MCLog("  %@", t_def -> binding);
+        }
+    }
+    
     return MCErrorThrowGeneric(); //MCScriptThrowAmbiguousHandlerGroupInvocation();
 }
 
