@@ -8,14 +8,14 @@ public handler test()
     put newline into tDelimiter
 	
     testLogic(tResults)
-    --testList(tResults)
-    --testSort(tResults)
+    testList(tResults)
+    testSort(tResults)
     testArithmetic(tResults)
 	testChar(tResults)
 	testBitwise(tResults)
 	testArray(tResults)
 	testString(tResults)
-	
+
     variable tResultString as string
     put the empty string into tResultString
     combine tResults with tDelimiter into tResultString
@@ -73,24 +73,39 @@ public handler testArray(inout xResults as list)
 	variable tArray as array
 	put the empty array into tArray
 	
+	put "value1" into tArray["key1"]
+	put "value2" into tArray["key2"]
+	put "value3" into tArray["key3"]
 	
-	
-	--put "value1" into tArray[ "key1" ]
-	--put "value2" into tArray["key2"]
-	--put "value3" into tArray["key3"]
+	testLog("Array", "Count", the number of elements in tArray is 3, xResults)
 	
 	variable tKeys as list
 	put the keys of tArray into tKeys
 	
+	testLog("Array", "CountKeysOf", the number of elements in tKeys is 3, xResults)
+
 	variable tKeysString as string
 	combine tKeys with "," into tKeysString
 	
-	testLog("", "", tKeysString is the empty string, xResults)
+	testLog("Array", "KeysOf", tKeysString contains "key1", xResults)
+	testLog("Array", "KeysOf", tKeysString contains "key2", xResults)
+	testLog("Array", "KeysOf", tKeysString contains "key3", xResults)
+		
+	variable tElements as list
+	put the elements of tArray into tElements
 	
-	--testLog("Array", "ArrayKeysOf", tKeysString contains "key1", xResults)
-	--testLog("Array", "ArrayKeysOf", tKeysString contains "key2", xResults)
-	--testLog("Array", "ArrayKeysOf", tKeysString contains "key3", xResults)
+	testLog("Array", "CountElementssOf", the number of elements in tElements is 3, xResults)
 	
+	testLog("Array", "ElementsOf", "value1" is in tElements, xResults)
+	testLog("Array", "ElementsOf", "value2" is in tElements, xResults)
+	testLog("Array", "ElementsOf", "value3" is in tElements, xResults)
+		
+	testLog("Array", "IsAmongTheKeys", "key1" is among the keys of tArray, xResults)
+	
+	--testLog("Array", "IsAmongTheElements", "value1" is among the keys of tArray, xResults)
+	
+	testLog("Array", "ElementOf", tArray["key1"] is "value1", xResults)
+
 end handler
 
 public handler testBitwise(inout xResults as list)
@@ -291,7 +306,7 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "TimesReal", tLeftReal * tRightReal is 20, xResults)
 	testLog("Arithmetic", "TimesNum", 10 * 2 is 20, xResults)
 	
-	/*
+	
 	testLog("Arithmetic", "DivideInt", tLeft / tRight is 5, xResults)
 	testLog("Arithmetic", "DivideReal", tLeftReal / tRightReal is 5, xResults)
 	testLog("Arithmetic", "DivideNum", 10 / 2 is 5, xResults)
@@ -301,6 +316,7 @@ public handler testArithmetic(inout xResults as list)
 	
 	testLog("Arithmetic", "ModInt", tLeft mod (tRight + tOne) is 1, xResults)
 	testLog("Arithmetic", "ModNum", 5 mod 3 is 2, xResults)
+	
 	testLog("Arithmetic", "Wrap", 5 wrap 3 is 2, xResults)
 	testLog("Arithmetic", "Wrap", -3 wrap 3 is -3, xResults)
 	
@@ -323,7 +339,7 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "LessThanOrEqualToInt", not tLeft <= tRight, xResults)
 	testLog("Arithmetic", "LessThanOrEqualToNum", 1 <= 1, xResults)
 	testLog("Arithmetic", "LessThanOrEqualToNum", not 2 <= 1, xResults)
-	*/
+	
 end handler
 
 public handler testList(inout xResults as list)
@@ -365,8 +381,8 @@ public handler testList(inout xResults as list)
     testLog("List", "SpliceAfter", the tail of tSubList is 1, xResults)
     testLog("List", "SpliceAfter", tSubList contains tTestList, xResults)
 
-	--put "ZZZZ" into tTestList[1]
-	--testLog("List", "SingletonElement", tTestList[1] is "ZZZZ", xResults)
+	put "ZZZZ" into tTestList[1]
+	testLog("List", "SingletonElement", tTestList[1] is "ZZZZ", xResults)
 
 end handler
 
@@ -380,7 +396,7 @@ public handler testSort(inout xResults as list)
     push 1 onto tTestList
     
     sort tTestList in ascending numeric order
-/*
+
     testLog("Sort", "AscendingNumeric", the head of tTestList is 1, xResults)
     testLog("Sort", "NumericStable", the tail of tTestList is "abcd", xResults)
 
@@ -388,7 +404,6 @@ public handler testSort(inout xResults as list)
 
     testLog("Sort", "AscendingText", the head of tTestList is "abcd", xResults)
     testLog("Sort", "TextStable", the tail of tTestList is 2, xResults)
-*/
 end handler
 
 end module

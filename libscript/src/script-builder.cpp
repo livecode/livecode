@@ -924,8 +924,9 @@ static void __emit_bytecode_uint(MCScriptModuleBuilderRef self, uindex_t p_value
     if ((p_value & (1 << 31)) != 0)
     {
         p_value &= ~(1 << 31);
-        t_bytes[0] = ((p_value >> 7) & 0x7f) | 0x80;
-        t_bytes[1] = (p_value & 0x7f);
+        
+        t_bytes[0] = (p_value & 0x7f) | 0x80;
+        t_bytes[1] = ((p_value >> 7) & 0x7f);
         t_index = 2;
         
         if ((p_value >> 14) != 0)

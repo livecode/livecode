@@ -12,10 +12,10 @@ public foreign handler EvalStringAsBool(in Target as string, out Value as bool) 
 public foreign handler EvalStringAsReal(in Target as string, out Value as real) as undefined binds to "<builtin>"
 public foreign handler EvalStringAsInt(in Target as string, out Value as int) as undefined binds to "<builtin>"
 
-public foreign handler EvalIsEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler EvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler EvalIsDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
-public foreign handler EvalIsNotDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotEmpty(in Target as any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCTypeEvalIsNotDefined(in Target as any, out Value as bool) as undefined binds to "<builtin>"
 
 --
 
@@ -28,6 +28,7 @@ output:     The converted value if there is a valid conversion from the type of 
 Example:    put true as string into tVar // tVar contains the string "true"
 */
 
+/*
 syntax AsString is postfix operator with precedence 1
 	<Target: Expression> "as" "string"
 begin
@@ -35,6 +36,7 @@ begin
 	EvalIntAsString(Target, output)
 	EvalRealAsString(Target, output)
 end syntax
+*/
 
 /*
 Summary:    Converts <Target> to a real.
@@ -46,14 +48,14 @@ output:     The converted value if there is a valid conversion from the type of 
 
 Example:    put "8.0" as real into tVar // tVar contains the real number 8.0
 */
-
+/*
 syntax AsReal is postfix operator with precedence 1
 	<Target: Expression> "as" "real"
 begin
 	EvalIntAsReal(Target, output)
 	EvalStringAsReal(Target, output)
 end syntax
-
+*/
 /*
 Summary:    Converts <Target> to an integer.
 
@@ -62,12 +64,13 @@ output:     The converted value if there is a valid conversion the string <Targe
             A string has a valid conversion to an int if it consists of digits, and optionally a leading minus sign, and if the resulting integer is within the valid range for a 32-bit integer.
 Example:    put "8" as integer into tVar // tVar contains the integer 8
 */
-
+/*
 syntax AsInt is postfix operator with precedence 1
 	<Target: Expression> "as" "int"
 begin
 	EvalStringAsInt(Target, output)
 end syntax
+*/
 
 /*
 Summary:    Converts <Target> to a bool, if there is a valid conversion.
@@ -77,13 +80,13 @@ output:     The converted value if there is a valid conversion the string <Targe
 
 Example:    put "true" as bool into tVar // tVar contains the boolean value true
 */
-
+/*
 syntax AsBool is postfix operator with precedence 1
 	<Target: Expression> "as" "bool"
 begin
 	EvalStringAsBool(Target, output)
 end syntax
-
+*/
 --
 
 /*
@@ -97,7 +100,7 @@ output:     Returns true if the given expression <Target> evaluates to the empty
 syntax IsEmpty is postfix operator with precedence 1
     <Target: Expression> "is" "empty"
 begin
-    EvalIsEmpty(Target, output)
+    MCTypeEvalIsEmpty(Target, output)
 end syntax
 
 /*
@@ -109,9 +112,9 @@ output:     Returns false if the given expression <Target> evaluates to the empt
 */
 
 syntax IsNotEmpty is postfix operator with precedence 1
-	<Target: Expression> "is" "not" "empty"
+	<Target: Expression> "is not" "empty"
 begin
-	EvalIsNotEmpty(Target, output)
+	MCTypeEvalIsNotEmpty(Target, output)
 end syntax
 
 --
@@ -127,7 +130,7 @@ output:     Returns true if the given expression <Target> is defined, and false 
 syntax IsDefined is postfix operator with precedence 1
 	<Target: Expression> "is" "defined"
 begin
-	EvalIsDefined(Target, output)
+	MCTypeEvalIsDefined(Target, output)
 end syntax
 
 /*
@@ -139,9 +142,9 @@ output:     Returns false if the given expression <Target> is defined, and true 
 */
 
 syntax IsNotDefined is postfix operator with precedence 1
-	<Target: Expression> "is" "not" "defined"
+	<Target: Expression> "is not" "defined"
 begin
-	EvalIsNotDefined(Target, output)
+	MCTypeEvalIsNotDefined(Target, output)
 end syntax
 
 --

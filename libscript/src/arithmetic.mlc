@@ -407,7 +407,7 @@ begin
 end syntax
 
 syntax IsNot is neutral binary operator with precedence 5
-    <Left: Expression> "is" "not" <Right: Expression>
+    <Left: Expression> "is not" <Right: Expression>
 begin
     MCArithmeticEvalNotEqualToInteger(Left, Right, output)
     MCArithmeticEvalNotEqualToReal(Left, Right, output)
