@@ -49,6 +49,9 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
+// SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#include <dlfcn.h>
+
 #include "foundation.h"
 
 #include <Security/Authorization.h>
@@ -6728,6 +6731,20 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	return (MCSysModuleHandle)t_result;
 #endif /* MCS_loadmodule_dsk_mac */
+        
+        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#ifdef _SERVER
+        MCAutoStringRefAsUTF8String t_utf_path;
+        
+        if (!t_utf_path.Lock(p_filename))
+            return NULL;
+        
+        void *t_result;
+        
+        t_result = dlopen(*t_utf_path, RTLD_LAZY);
+        
+        return (MCSysModuleHandle)t_result;
+#else
         MCAutoStringRefAsUTF8String t_utf_path;
         
         if (!t_utf_path.Lock(p_filename))
@@ -6745,6 +6762,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         CFRelease(t_url);
         
         return (MCSysModuleHandle)t_result;
+#endif
     }
     
 	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
@@ -6762,6 +6780,11 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	return t_symbol_ptr;
 #endif /* MCS_resolvemodulesymbol_dsk_mac */
+        
+        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#ifdef _SERVER
+        return (MCSysModuleHandle)dlsym(p_module, MCStringGetCString(p_symbol));
+#else
         CFStringRef t_cf_symbol;
        
         MCStringConvertToCFStringRef(p_symbol, t_cf_symbol);
@@ -6774,6 +6797,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         CFRelease(t_cf_symbol);
         
         return (MCSysModuleHandle) t_symbol_ptr;
+#endif
     }
     
 	virtual void UnloadModule(MCSysModuleHandle p_module)
@@ -6781,7 +6805,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #ifdef /* MCS_unloadmodule_dsk_mac */ LEGACY_SYSTEM
 	CFRelease((CFBundleRef)p_module);
 #endif /* MCS_unloadmodule_dsk_mac */
-        CFRelease((CFBundleRef)p_module);        
+        
+        // SN-2014-12-09: [[ Bug 14001 ]] Update the module loading for Mac server
+#ifdef _SERVER
+        dlclose(p_module);
+#else
+        CFRelease((CFBundleRef)p_module);
+#endif
     }
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
