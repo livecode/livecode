@@ -9,11 +9,9 @@
 
 --------------------------------------------------------------------------------
 
-'type' NAMELIST
-    namelist(Name: NAME, Rest: NAMELIST)
-    nil
-
 'var' ModuleDependencyList : NAMELIST
+
+'var' IgnoredModuleList : NAMELIST
 
 'action' Generate(MODULE)
 
@@ -28,11 +26,21 @@
         ||
             where(Kind -> widget)
             EmitBeginWidgetModule(ModuleName -> ModuleIndex)
+            IgnoredModuleList <- nil
         ||
             where(Kind -> library)
             EmitBeginLibraryModule(ModuleName -> ModuleIndex)
         |)
         Info'Index <- ModuleIndex
+        
+        (|
+            ne(Kind, widget)
+            MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
+            MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
+            IgnoredModuleList <- namelist(CanvasModuleName, namelist(WidgetModuleName, nil))
+        ||
+            IgnoredModuleList <- nil
+        |)
 
         -- Emit all imported declarations and dependent modules.
         GenerateImportedDefinitions(Definitions)
@@ -283,6 +291,13 @@
         eq(Id, Head)
     'rule' IsNameInList(Id, namelist(Head, Tail)):
         IsNameInList(Id, Tail)
+
+'condition' IsNameNotInList(NAME, NAMELIST)
+    'rule' IsNameNotInList(Id, namelist(Head, Tail)):
+        ne(Id, Head)
+        IsNameNotInList(Id, Tail)
+    'rule' IsNameNotInList(Id, nil):
+        -- success
 
 ----------
 
@@ -1160,6 +1175,10 @@
             eq(ArgCount, ParamCount)
 
             MakeNameLiteral(ModuleNameString -> ModuleName)
+            
+            IgnoredModuleList -> IgnoredModules
+            IsNameNotInList(ModuleName, IgnoredModules)
+            
             EmitModuleDependency(ModuleName -> ModuleIndex)
             AddModuleToDependencyList(ModuleName)
             
