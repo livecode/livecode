@@ -422,6 +422,10 @@ public:
 	{
 		obj_id = inid;
 	}
+	void setaltid(uint4 p_id)
+	{
+		altid = p_id;
+	}
 
 	// Returns true if the object has not been named.
 	bool isunnamed(void) const
