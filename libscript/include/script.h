@@ -47,10 +47,11 @@ void MCScriptFinalize(void);
 // Packages are a zip archive with the following structure:
 //   <root>/
 //     manifest.xml
+//     module.lcm
 //     support/
 //       <files for the IDE / store etc.>
 //     modules/
-//       <compiled module files>
+//       <compiled submodule files>
 //     symbols/
 //       <compiled module debug info>
 //     resources/
@@ -66,21 +67,24 @@ void MCScriptFinalize(void);
 // metadata. Most of the information is inferable from the rest of the archive,
 // however it is repeated in the manifest to make it easier for simple introspection.
 //
+// The module file is the top-level compiled module for the package. Its contents is
+// described by the manifest file.
+//
 // The manifest.xml file has the following schema:
-//   <package version="1.0" name="com.livecode.foo">
-//     <version>X.Y.Z</version>
-//     <author>Mr Magoo</author>
-//     <license>commercial|dual|community</license>
+//   <package version="1.0">
 //     <label>Human Readable Foo</label>
+//     <author>Mr Magoo</author>
 //     <description>Foo is a super amazing widget that will do everything for you.</description>
+//     <license>commercial|dual|community</license>
+//     <name>com.livecode.foo</name>
+//     <version>X.Y.Z</version>
+//     <type>widget|library</type>
 //     <requires name="com.livecode.bar" version="X.Y.Z" />
 //     <requires name="com.livecode.baz" version="X.Y.Z" />
-//     <widget|library>
-//       <property name="foo" get="optional(integer)" set="optional(integer)" />
-//       <property name="bar" get="string" />
-//       <event name="click" parameters="in(integer),out(real)" return="optional(any)" />
-//       <handler name="magic" parameters="in(integer),inout(string)" return="undefined" />
-//     </widget>
+//     <property name="foo" get="optional(integer)" set="optional(integer)" />
+//     <property name="bar" get="string" />
+//     <event name="click" parameters="in(integer),out(real)" return="optional(any)" />
+//     <handler name="magic" parameters="in(integer),inout(string)" return="undefined" />
 //   </package>
 // Here the 'version' field in the package tag is the version of the package manifest
 // XML.
