@@ -25,6 +25,8 @@ public foreign handler StoreByteRangeOf(in Value as data, in Start as index, in 
 public foreign handler StoreBeforeByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
 public foreign handler StoreAfterByteOf(in Value as data, in Index as index, inout Target as data) as undefined binds to "<builtin>"
 
+public foreign handler RepeatForEachByte(inout Iterator as optional pointer, out Iterand as data, in Container as data) as bool binds to "<builtin>"
+
 --
 
 /*
@@ -217,6 +219,12 @@ syntax RangeByteOf is prefix operator with precedence 1
 begin
 	FetchByteRangeOf(Start, Finish, Target, output)
 	StoreByteRangeOf(input, Start, Finish, Target)
+end syntax
+
+syntax RepeatForEachByte is iterator
+    "byte" <Iterand: Expression>
+begin
+    MCByteRepeatForEachByte(iterator, Iterand, container)
 end syntax
 
 --

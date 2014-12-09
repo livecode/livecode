@@ -460,6 +460,28 @@ begin
 	MCListEvalEmpty(output)
 end syntax
 
+/*
+Summary:        Repeat over the elements of a list
+Iterand:        An expression of the form 'tVar in tList'
+
+Example:
+    variable tList as list
+    put [1, 1, 2, 3, 5, 8, 13] into tList
+
+    variable tRelist as list
+    variable tElement as any
+    put the empty list into tRelist
+
+    repeat for each element tElement in tList
+        push tElement onto tRelist
+    end repeat
+
+    // tRelist is the same as tList
+
+Description:
+The repeat for each form is more efficient that the alternative formation using repeat **tCount** times.
+*/
+
 syntax RepeatForEachElement is iterator
     "element" <Iterand: Expression>
 begin
