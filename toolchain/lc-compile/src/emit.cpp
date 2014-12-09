@@ -221,6 +221,15 @@ void EmitEndModule(void)
         
         if (OutputFileAsC)
         {
+            const char *t_string;
+            GetStringOfNameLiteral(s_module_name, &t_string);
+            
+            char *t_modified_string;
+            t_modified_string = strdup(t_string);
+            for(int i = 0; t_modified_string[i] != '\0'; i++)
+                if (t_modified_string[i] == '.')
+                    t_modified_string[i] = '_';
+            
             fprintf(t_output, "static unsigned char module_data[] = {");
             for(size_t i = 0; i < t_size; i++)
             {
@@ -232,7 +241,7 @@ void EmitEndModule(void)
             
             const char *t_name;
             GetStringOfNameLiteral(s_module_name, &t_name);
-            fprintf(t_output, "__attribute__((used)) __attribute__((section(\"__MODULES,__modules\"))) static volatile struct { const char *name; unsigned char *data; unsigned long length; } module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_name);
+            fprintf(t_output, "__attribute__((used)) __attribute__((section(\"__MODULES,__modules\"))) volatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_modified_string, t_name);
         }
         else if (t_output != NULL)
         {
@@ -757,7 +766,7 @@ static uindex_t s_current_handler_field_count = 0;
 void EmitBeginHandlerType(long return_type_index)
 {
     MCScriptBeginHandlerTypeInModule(s_builder, return_type_index);
-    MCLog("[Emit] BeginRecordType(%ld)", return_type_index);
+    MCLog("[Emit] BeginHandlerType(%ld)", return_type_index);
 }
 
 static void EmitHandlerTypeParameter(MCHandlerTypeFieldMode mode, NameRef name, long type_index)

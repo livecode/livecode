@@ -27,6 +27,8 @@ bool MCScriptInitialize(void)
     
     for(uindex_t i = 0; i < t_module_count; i++)
     {
+        MCLog("Loading builtin module - %s", t_modules[i] . name);
+        
         MCStreamRef t_stream;
         if (!MCMemoryInputStreamCreate(t_modules[i] . data, t_modules[i] . size, t_stream))
             return false;

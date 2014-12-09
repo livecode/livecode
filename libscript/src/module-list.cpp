@@ -101,6 +101,13 @@ extern "C" void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, 
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(p_target, p_index, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCProperListGetLength(p_target))
+        return;
+    
     r_output = MCValueRetain(MCProperListFetchElementAtIndex(p_target, t_start));
 }
 
@@ -108,6 +115,12 @@ extern "C" void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProp
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCProperListGetLength(x_target))
+        return;
     
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -127,6 +140,13 @@ extern "C" void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCP
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCProperListGetLength(p_target))
+        return;
+    
     MCProperListCopySublist(p_target, MCRangeMake(t_start, t_count), r_output);
 }
 
@@ -134,6 +154,12 @@ extern "C" void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, i
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCProperListGetLength(x_target))
+        return;
     
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -165,6 +191,12 @@ extern "C" void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, M
     t_start += t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
     
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCProperListGetLength(x_target))
+        return;
+    
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
         return;
@@ -183,6 +215,12 @@ extern "C" void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, 
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
 
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCProperListGetLength(x_target))
+        return;
+    
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
         return;
@@ -202,6 +240,12 @@ extern "C" void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCProperListGetLength(x_target))
+        return;
     
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -227,6 +271,12 @@ extern "C" void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_in
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
     
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCProperListGetLength(x_target))
+        return;
+    
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
         return;
@@ -244,6 +294,12 @@ extern "C" void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_ind
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCProperListGetLength(x_target))
+        return;
     
     t_start += t_count;
     

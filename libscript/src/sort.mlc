@@ -3,38 +3,63 @@ module com.livecode.sort
 public foreign handler MCSortExecSortListAscendingText(inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCSortExecSortListAscendingBinary(inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCSortExecSortListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-// public foreign handler MCSortExecSortStringListAscendingNumeric(inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCSortExecSortListAscendingDateTime(inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCSortExecSortListDescendingText(inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCSortExecSortListDescendingBinary(inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCSortExecSortListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
-// public foreign handler MCSortExecSortStringListDescendingNumeric(inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCSortExecSortListDescendingDateTime(inout Target as list) as undefined binds to "<builtin>"
 
 --
 
 /* 
 
-Summary:        Sorts <Target> in ascending order by comparing its elements on a codepoint by codepoint basis.
+Summary:        Sorts <Target> in ascending text order.
 Target:         An expression that evaluates to a list of strings.
 
+Example:
+    variable tTestList as list
+    put the empty list into tTestList
+
+    push "xyz" onto tTestList
+    push 2 onto tTestList
+    push "abcd" onto tTestList
+    push 1 onto tTestList
+
+    sort tTestList in ascending order -- tTestList is ["abcd", "xyz", 2, 1]
+
+Description:
+Text sort is performed by comparing string elements on a codepoint by codepoint basis. Non-string elements come after all string elements in the sort order. The sort is stable, so that non-string elements are not re-ordered relative to each other.
 */
 
 syntax SortListAscendingText is statement
-    "sort" <Target: Expression> "in" "ascending" "text" "order"
+    "sort" <Target: Expression> "in" "ascending" ["text"] "order"
 begin 
     MCSortExecSortListAscendingText(Target)
 end syntax
 
 /* 
 
-Summary:        Sorts <Target> in descending order by comparing its elements on a codepoint by codepoint basis.
+Summary:        Sorts <Target> in descending text order.
 Target:         An expression that evaluates to a list of strings.
+
+Example:
+    variable tTestList as list
+    put the empty list into tTestList
+
+    push "abcd" onto tTestList
+    push 1 onto tTestList
+    push "xyz" onto tTestList
+    push 2 onto tTestList
+
+    sort tTestList in descending order -- tTestList is ["xyz", "abcd", 1, 2]
+
+Description:
+Text sort is performed by comparing string elements on a codepoint by codepoint basis. Non-string elements come after all string elements in the sort order. The sort is stable, so that non-string elements are not re-ordered relative to each other.
 
 */
 
 syntax SortListDescendingText is statement
-    "sort" <Target: Expression> "in" "descending" "text" "order"
+    "sort" <Target: Expression> "in" "descending" ["text"] "order"
 begin 
     MCSortExecSortListDescendingText(Target)
 end syntax
@@ -43,9 +68,11 @@ end syntax
 
 /* 
 
-Summary:        Sorts <Target> in ascending order by comparing its elements on a byte by byte basis.
+Summary:        Sorts <Target> in ascending binary order.
 Target:         An expression that evaluates to a list of binary data.
 
+Description:
+Binary sort is performed by comparing data elements on a byte by byte basis. Non-data elements come after all data elements in the sort order. The sort is stable, so that non-data elements are not re-ordered relative to each other.
 */
 
 syntax SortListAscendingBinary is statement
@@ -56,9 +83,11 @@ end syntax
 
 /* 
 
-Summary:        Sorts <Target> in descending order by comparing its elements on a byte by byte basis.
+Summary:        Sorts <Target> in descending binary order.
 Target:         An expression that evaluates to a list of binary data.
 
+Description:
+Binary sort is performed by comparing data elements on a byte by byte basis. Non-data elements come after all data elements in the sort order. The sort is stable, so that non-data elements are not re-ordered relative to each other.
 */
 
 syntax SortListDescendingBinary is statement
@@ -71,30 +100,48 @@ end syntax
 
 /* 
 
-Summary:        Sorts <Target> in ascending order according to the cardinality of its elements.
-                If <Target> is a list of strings, the elements are ordered according to the number 
-                represented by the largest initial segment of the string that constitutes a decimal number.
-                If there is no such initial segment, the element is defined to have the minimum value with 
-                respect to the ordering.
-Target:         An expression that evaluates to a list of numbers, or strings.
+Summary:        Sorts <Target> in ascending numeric order.
+Target:         An expression that evaluates to a list of numbers.
 
+Example:
+    variable tTestList as list
+    put the empty list into tTestList
+
+    push "abcd" onto tTestList
+    push 1 onto tTestList
+    push "xyz" onto tTestList
+    push 2 onto tTestList
+
+    sort tTestList in ascending numeric order -- tTestList is [1, 2, "abcd", "xyz"]
+    
+Description:
+Numeric sort is performed by comparing numeric elements by cardinality. Non-numeric elements come after all numeric elements in the sort order. The sort is stable, so that non-numeric elements are not re-ordered relative to each other.
 */
 
 syntax SortListAscendingNumeric is statement
     "sort" <Target: Expression> "in" "ascending" "numeric" "order"
 begin 
     MCSortExecSortListAscendingNumeric(Target)
-//    MCSortExecSortStringListAscendingNumeric(Target)
 end syntax
 
 /* 
 
-Summary:        Sorts <Target> in descending order according to the standard total ordering on real numbers.
-                If <Target> is a list of strings, the elements are ordered according to the number 
-                represented by the largest initial segment of the string that constitutes a decimal number.
-                If there is no such initial segment, the element is defined to have the minimum value with 
-                respect to the ordering.
-Target:         An expression that evaluates to a list of numbers, or strings.
+Summary:        Sorts <Target> in descending numeric order.
+Target:         An expression that evaluates to a list of numbers.
+
+Example:
+    variable tTestList as list
+    put the empty list into tTestList
+
+    push "abcd" onto tTestList
+    push 1 onto tTestList
+    push "xyz" onto tTestList
+    push 2 onto tTestList
+
+    sort tTestList in descending numeric order -- tTestList is [2, 1, "abcd", "xyz"]
+    	
+Description:
+Numeric sort is performed by comparing numeric elements by cardinality. Non-numeric elements come after all numeric elements in the sort order. The sort is stable, so that non-numeric elements are not re-ordered relative to each other.
 
 */
 
@@ -102,17 +149,9 @@ syntax SortListDescendingNumeric is statement
     "sort" <Target: Expression> "in" "descending" "numeric" "order"
 begin 
     MCSortExecSortListDescendingNumeric(Target)
-//    MCSortExecSortStringListDescendingNumeric(Target)
 end syntax
 
 --
-
-/* 
-
-Summary:        Sorts <Target> in ascending chronological order.
-Target:         An expression that evaluates to a list of datetime elements.
-
-*/
 
 syntax SortListAscendingDateTime is statement
     "sort" <Target: Expression> "in" "ascending" "chronological" "order"
@@ -120,41 +159,10 @@ begin
     MCSortExecSortListAscendingDateTime(Target)
 end syntax
 
-/* 
-
-Summary:        Sorts <Target> in descending chronological order.
-Target:         An expression that evaluates to a list of datetime elements.
-
-*/
-
-
 syntax SortListDescendingDateTime is statement
     "sort" <Target: Expression> "in" "descending" "chronological" "order"
 begin 
     MCSortExecSortListDescendingDateTime(Target)
-end syntax
-
---
-
-// When we have paramaterised list type, this can select based on runtime type.
-// For now, default is text.
-
-syntax SortListAscending is statement
-    "sort" <Target: Expression> ["in" "ascending" "order"]
-begin     
-    MCSortExecSortListAscendingText(Target)
-//    MCSortExecSortListAscendingBinary(Target)
-//    MCSortExecSortListAscendingNumeric(Target)
-//    MCSortExecSortListAscendingDateTime(Target)
-end syntax
-
-syntax SortListDescending is statement
-    "sort" <Target: Expression> "in" "descending" "order"
-begin 
-    MCSortExecSortListDescendingText(Target)
-//    MCSortExecSortListDescendingBinary(Target)
-//    MCSortExecSortListDescendingNumeric(Target)
-//    MCSortExecSortListDescendingDateTime(Target)
 end syntax
 
 --

@@ -59,10 +59,13 @@ public foreign handler MCArithmeticEvalIntegerIsLessThanOrEqualToInteger(in Left
 public foreign handler MCArithmeticEvalRealIsLessThanOrEqualToReal(in Left as double, in Right as double, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalNumberIsLessThanOrEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
 
-
 public foreign handler MCArithmeticEvalEqualToInteger(in Left as int, in Right as int, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalEqualToReal(in Left as double, in Right as double, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCArithmeticEvalEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNotEqualToInteger(in Left as int, in Right as int, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNotEqualToReal(in Left as double, in Right as double, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCArithmeticEvalNotEqualToNumber(in Left as number, in Right as number, out Value as bool) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -395,12 +398,20 @@ begin
     MCArithmeticEvalEqualToNumber(Left, Right, output)
 end syntax
 
-syntax IsNumber is neutral binary operator with precedence 5
+syntax Is is neutral binary operator with precedence 5
     <Left: Expression> "is" <Right: Expression>
 begin
     MCArithmeticEvalEqualToInteger(Left, Right, output)
     MCArithmeticEvalEqualToReal(Left, Right, output)
     MCArithmeticEvalEqualToNumber(Left, Right, output)
+end syntax
+
+syntax IsNot is neutral binary operator with precedence 5
+    <Left: Expression> "is" "not" <Right: Expression>
+begin
+    MCArithmeticEvalNotEqualToInteger(Left, Right, output)
+    MCArithmeticEvalNotEqualToReal(Left, Right, output)
+    MCArithmeticEvalNotEqualToNumber(Left, Right, output)
 end syntax
 
 end module

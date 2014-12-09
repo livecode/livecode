@@ -37,6 +37,13 @@ extern "C" void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStri
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCStringGetLength(p_target))
+        return;
+    
     if (!MCStringCopySubstring(p_target, MCRangeMake(t_start, t_count), r_output))
         return;
 }
@@ -45,6 +52,12 @@ extern "C" void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, ind
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCStringGetLength(x_target))
+        return;
     
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(x_target, &t_string))
@@ -74,6 +87,13 @@ extern "C" void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCS
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCStringGetLength(x_target))
+        return;
+    
     t_start += t_count;
     
     MCAutoStringRef t_string;
@@ -94,6 +114,12 @@ extern "C" void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MC
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCStringGetLength(x_target))
+        return;
     
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(x_target, &t_string))
@@ -144,6 +170,11 @@ extern "C" void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStringRef p_needl
 extern "C" void MCCharEvalOffsetOfCharsBefore(bool p_is_first, MCStringRef p_needle, uindex_t p_before, MCStringRef p_target, uindex_t& r_output)
 {
     MCCharEvalOffsetOfCharsInRange(!p_is_first, p_needle, p_target, MCRangeMake(0, p_before), r_output);
+}
+
+extern "C" void MCCharEvalContains(MCStringRef p_source, MCStringRef p_needle, bool& r_result)
+{
+    r_result = MCStringContains(p_source, p_needle, kMCStringOptionCompareExact);
 }
 
 extern "C" void MCCharEvalBeginsWith(MCStringRef p_source, MCStringRef p_prefix, bool& r_result)

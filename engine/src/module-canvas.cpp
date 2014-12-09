@@ -746,11 +746,10 @@ bool MCCanvasColorCreate(const __MCCanvasColorImpl &p_color, MCCanvasColorRef &r
 	if (t_success)
 	{
 		*MCCanvasColorGet(t_color) = p_color;
-		t_success = MCValueInter(t_color, r_color);
+		t_success = MCValueInterAndRelease(t_color, r_color);
+        if (!t_success)
+            MCValueRelease(t_color);
 	}
-	
-	MCValueRelease(t_color);
-	
 	return t_success;
 }
 
@@ -4030,7 +4029,7 @@ bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas)
 	t_canvas = nil;
 	
 	if (t_success)
-		t_success = MCValueCreateCustom(kMCCanvasTypeInfo, sizeof(__MCCanvasImpl), r_canvas);
+		t_success = MCValueCreateCustom(kMCCanvasTypeInfo, sizeof(__MCCanvasImpl), t_canvas);
 	
 	__MCCanvasImpl *t_canvas_impl;
 	t_canvas_impl = nil;
@@ -4318,15 +4317,15 @@ void MCCanvasApplyPaint(__MCCanvasImpl &x_canvas, MCCanvasPaintRef &p_paint)
 	switch (t_paint->type)
 	{
 		case kMCCanvasPaintTypeSolid:
-			MCCanvasApplySolidPaint(x_canvas, *(__MCCanvasSolidPaintImpl*)p_paint);
+			MCCanvasApplySolidPaint(x_canvas, *(__MCCanvasSolidPaintImpl*)t_paint);
 			break;
 			
 		case kMCCanvasPaintTypePattern:
-			MCCanvasApplyPatternPaint(x_canvas, *(__MCCanvasPatternImpl*)p_paint);
+			MCCanvasApplyPatternPaint(x_canvas, *(__MCCanvasPatternImpl*)t_paint);
 			break;
 			
 		case kMCCanvasPaintTypeGradient:
-			MCCanvasApplyGradientPaint(x_canvas, *(__MCCanvasGradientImpl*)p_paint);
+			MCCanvasApplyGradientPaint(x_canvas, *(__MCCanvasGradientImpl*)t_paint);
 			break;
 	}
 }
@@ -4692,6 +4691,31 @@ void MCCanvasCanvasClosePath(MCCanvasRef &x_canvas)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCCanvasRef s_current_canvas = nil;
+
+void MCCanvasPush(MCGContextRef p_gcontext, uintptr_t& r_cookie)
+{
+    MCCanvasRef t_new_canvas;
+    MCCanvasCreate(p_gcontext, t_new_canvas);
+    r_cookie = (uintptr_t)s_current_canvas;
+    s_current_canvas = t_new_canvas;
+}
+
+void MCCanvasPop(uintptr_t p_cookie)
+{
+    MCCanvasRef t_canvas;
+    t_canvas = s_current_canvas;
+    s_current_canvas = (MCCanvasRef)p_cookie;
+    MCValueRelease(t_canvas);
+}
+
+extern "C" void MCCanvasThisCanvas(MCCanvasRef& r_canvas)
+{
+    r_canvas = MCValueRetain(s_current_canvas);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static MCValueCustomCallbacks kMCCanvasRectangleCustomValueCallbacks =
 {
 	false,
@@ -4792,18 +4816,26 @@ static MCValueCustomCallbacks kMCCanvasCustomValueCallbacks =
 	__MCCanvasDescribe,
 };
 
+static void __create_named_custom_typeinfo(const MCValueCustomCallbacks *p_callbacks, MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
+{
+    MCAutoTypeInfoRef t_unnamed;
+    /* UNCHECKED */ MCCustomTypeInfoCreate(p_callbacks, &t_unnamed);
+    /* UNCHECKED */ MCNamedTypeInfoCreate(p_name, r_typeinfo);
+    /* UNCHECKED */ MCNamedTypeInfoBind(r_typeinfo, *t_unnamed);
+}
+
 void MCCanvasTypesInitialize()
 {
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasRectangleCustomValueCallbacks, kMCCanvasRectangleTypeInfo);
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasPointCustomValueCallbacks, kMCCanvasPointTypeInfo);
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasColorCustomValueCallbacks, kMCCanvasColorTypeInfo);
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasTransformCustomValueCallbacks, kMCCanvasTransformTypeInfo);
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasImageCustomValueCallbacks, kMCCanvasImageTypeInfo);
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasPaintCustomValueCallbacks, kMCCanvasPaintTypeInfo);
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasGradientStopCustomValueCallbacks, kMCCanvasGradientStopTypeInfo);
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasPathCustomValueCallbacks, kMCCanvasPathTypeInfo);
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasEffectCustomValueCallbacks, kMCCanvasEffectTypeInfo);
-	/* UNCHECKED */ MCCustomTypeInfoCreate(&kMCCanvasCustomValueCallbacks, kMCCanvasTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(&kMCCanvasRectangleCustomValueCallbacks, MCNAME("com.livecode.canvas.Rectangle"), kMCCanvasRectangleTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(&kMCCanvasPointCustomValueCallbacks, MCNAME("com.livecode.canvas.Point"), kMCCanvasPointTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(&kMCCanvasColorCustomValueCallbacks, MCNAME("com.livecode.canvas.Color"), kMCCanvasColorTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(&kMCCanvasTransformCustomValueCallbacks, MCNAME("com.livecode.canvas.Transform"), kMCCanvasTransformTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(&kMCCanvasImageCustomValueCallbacks, MCNAME("com.livecode.canvas.Image"), kMCCanvasImageTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(&kMCCanvasPaintCustomValueCallbacks, MCNAME("com.livecode.canvas.Paint"), kMCCanvasPaintTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(&kMCCanvasGradientStopCustomValueCallbacks, MCNAME("com.livecode.canvas.GradientStop"), kMCCanvasGradientStopTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(&kMCCanvasPathCustomValueCallbacks, MCNAME("com.livecode.canvas.Path"), kMCCanvasPathTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(&kMCCanvasEffectCustomValueCallbacks, MCNAME("com.livecode.canvas.Effect"), kMCCanvasEffectTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(&kMCCanvasCustomValueCallbacks, MCNAME("com.livecode.canvas.Canvas"), kMCCanvasTypeInfo);
 }
 
 void MCCanvasTypesFinalize()

@@ -119,9 +119,6 @@ extern "C" void MCArithmeticExecDivideIntegerByInteger(integer_t& x_target, inte
 
 extern "C" void MCArithmeticExecDivideRealByReal(double& x_target, double p_number)
 {
-    if (p_number > 0 && p_number < 1 && FLT_MAX * p_number < x_target)
-        // overflow
-        return;
     x_target /= p_number;
 }
 
@@ -171,25 +168,25 @@ extern "C" void MCArithmeticEvalNumberPlusNumber(MCNumberRef p_left, MCNumberRef
 
 extern "C" void MCArithmeticEvalIntegerMinusInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
-    MCArithmeticExecSubtractIntegerFromInteger(p_left, p_right);
+    MCArithmeticExecSubtractIntegerFromInteger(p_right, p_left);
     
     //if no error
-    r_output = p_right;
+    r_output = p_left;
 }
 
 extern "C" void MCArithmeticEvalRealMinusReal(double p_left, double p_right, double& r_output)
 {
-    MCArithmeticExecSubtractRealFromReal(p_left, p_right);
+    MCArithmeticExecSubtractRealFromReal(p_right, p_left);
     
     //if no error
-    r_output = p_right;
+    r_output = p_left;
 }
 
 extern "C" void MCArithmeticEvalNumberMinusNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
 {
     MCNumberRef t_number;
-    MCNumberCreateWithReal(MCNumberFetchAsReal(p_right), t_number);
-    MCArithmeticExecSubtractNumberFromNumber(p_left, t_number);
+    MCNumberCreateWithReal(MCNumberFetchAsReal(p_left), t_number);
+    MCArithmeticExecSubtractNumberFromNumber(p_right, t_number);
     
     //if no error
     r_output = t_number;
@@ -204,7 +201,7 @@ extern "C" void MCArithmeticEvalIntegerTimesInteger(integer_t p_left, integer_t 
     MCArithmeticExecMultiplyIntegerByInteger(p_left, p_right);
     
     //if no error
-    r_output = p_right;
+    r_output = p_left;
 }
 
 extern "C" void MCArithmeticEvalRealTimesReal(double p_left, double p_right, double& r_output)
@@ -212,7 +209,7 @@ extern "C" void MCArithmeticEvalRealTimesReal(double p_left, double p_right, dou
     MCArithmeticExecMultiplyRealByReal(p_left, p_right);
     
     //if no error
-    r_output = p_right;
+    r_output = p_left;
 }
 
 extern "C" void MCArithmeticEvalNumberTimesNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
@@ -231,25 +228,25 @@ extern "C" void MCArithmeticEvalNumberTimesNumber(MCNumberRef p_left, MCNumberRe
 
 extern "C" void MCArithmeticEvalIntegerOverInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
-    MCArithmeticExecDivideIntegerByInteger(p_right, p_left);
+    MCArithmeticExecDivideIntegerByInteger(p_left, p_right);
     
     //if no error
-    r_output = p_right;
+    r_output = p_left;
 }
 
 extern "C" void MCArithmeticEvalRealOverReal(double p_left, double p_right, double& r_output)
 {
-    MCArithmeticExecDivideRealByReal(p_right, p_left);
+    MCArithmeticExecDivideRealByReal(p_left, p_right);
     
     //if no error
-    r_output = p_right;
+    r_output = p_left;
 }
 
 extern "C" void MCArithmeticEvalNumberOverNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
 {
     MCNumberRef t_number;
-    MCNumberCreateWithReal(MCNumberFetchAsReal(p_right), t_number);
-    MCArithmeticExecDivideNumberByNumber(t_number, p_left);
+    MCNumberCreateWithReal(MCNumberFetchAsReal(p_left), t_number);
+    MCArithmeticExecDivideNumberByNumber(t_number, p_right);
     
     //if no error
     r_output = t_number;
@@ -433,4 +430,19 @@ extern "C" void MCArithmeticEvalEqualToReal(double p_left, double p_right, bool&
 extern "C" void MCArithmeticEvalEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
 {
     r_output = MCNumberFetchAsReal(p_left) == MCNumberFetchAsReal(p_right);
+}
+
+extern "C" void MCArithmeticEvalNotEqualToInteger(integer_t p_left, integer_t p_right, bool& r_output)
+{
+    r_output = p_left != p_right;
+}
+
+extern "C" void MCArithmeticEvalNotEqualToReal(double p_left, double p_right, bool& r_output)
+{
+    r_output = p_left != p_right;
+}
+
+extern "C" void MCArithmeticEvalNotEqualToNumber(MCNumberRef p_left, MCNumberRef p_right, bool& r_output)
+{
+    r_output = MCNumberFetchAsReal(p_left) != MCNumberFetchAsReal(p_right);
 }

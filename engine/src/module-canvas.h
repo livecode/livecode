@@ -80,6 +80,9 @@ struct MCCArray
 bool MCCanvasModuleInitialize();
 void MCCanvasModuleFinalize();
 
+void MCCanvasPush(MCGContextRef gcontext);
+void MCCanvasPop(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Type Definitions
 
@@ -145,7 +148,7 @@ MCGPathRef MCCanvasPathGetMCGPath(MCCanvasPathRef p_path);
 bool MCCanvasGraphicEffectCreateWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
 
 
-bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas);
+extern "C" bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 

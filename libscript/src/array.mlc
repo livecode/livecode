@@ -120,14 +120,8 @@ output:             Either locates the element container with the given key for 
 syntax SingletonElementOf is postfix operator with precedence 1
 	<Target: Expression> "[" <Key: Expression> "]"
 begin
-//	FetchElementOfCaseSensitive(Target, Key, output)
     MCArrayFetchElementOfCaseless(Target, Key, output)
-    //FetchElementOfNumeric(Target, Key, output)
-    //FetchElementOfMatrix(Target, Key, output)
-//	StoreElementOfCaseSensitive(input, Target, Key)
 	MCArrayStoreElementOfCaseless(input, Target, Key)
-	//StoreElementOfNumeric(input, Target, Key)
-	//StoreElementOfMatrix(input, Target, Key)
 end syntax
 
 --
