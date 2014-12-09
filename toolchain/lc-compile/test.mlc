@@ -7,6 +7,8 @@ public handler test()
     variable tDelimiter as string
     put newline into tDelimiter
 	
+	testRepeat(tResults)
+	
     testLogic(tResults)
     testList(tResults)
     testSort(tResults)
@@ -37,6 +39,34 @@ end handler
 public handler boolWithSideEffect(in tResult as bool, inout tVar as string) as bool
 	put "a" into tVar
 	return tResult
+end handler
+
+public handler testRepeat(inout xResults as list)
+
+	variable tString as string
+	put "abcdefghijklmno" into tString
+	
+	variable tRestring as string
+	variable tChar as string
+	put "" into tRestring
+	repeat for each char tChar in tString
+		put tChar after tRestring
+	end repeat
+	
+	testLog("Repeat", "RepeatChar", tString is tRestring, xResults)
+	
+	variable tList as list
+	put [1, 1, 2, 3, 5, 8, 13] into tList
+	
+	variable tRelist as list
+	variable tElement as any
+	put the empty list into tRelist
+	repeat for each element tElement in tList
+		push tElement onto tRelist
+	end repeat
+	
+	testLog("Repeat", "RepeatElement", tRelist contains tList and tList contains tRelist, xResults)
+
 end handler
 
 public handler testString(inout xResults as list)

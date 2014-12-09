@@ -321,6 +321,21 @@ extern "C" void MCListEvalEmpty(MCProperListRef& r_output)
     r_output = MCValueRetain(kMCEmptyProperList);
 }
 
+extern "C" bool MCListRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCProperListRef p_list)
+{
+    uindex_t t_offset;
+    t_offset = (uindex_t)x_iterator;
+    
+    if (t_offset == MCProperListGetLength(p_list))
+        return false;
+    
+    r_iterand = MCValueRetain(MCProperListFetchElementAtIndex(p_list, t_offset));
+    
+    x_iterator = (void *)(t_offset + 1);
+    
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef _TEST
