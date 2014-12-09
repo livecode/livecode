@@ -738,6 +738,10 @@ public:
 	void removecontrol(MCControl *cptr);
 	void appendcard(MCCard *cptr);
 	void removecard(MCCard *cptr);
+
+	/* Get an object by UUID, searching relative to this stack. */
+	MCObject *GetObjectByUuid(const MCUuid &);
+
 	MCObject *getsubstackobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
 	MCObject *getsubstackobjname(Chunk_term type, MCNameRef);

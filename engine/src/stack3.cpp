@@ -1551,6 +1551,86 @@ MCObject *MCStack::getobjid(Chunk_term type, uint4 inid)
 		return MCdispatcher->getobjid(type, inid);
 }
 
+////////////////////////////////////////////////////////////////
+// Finding things by UUID
+//
+
+static MCObject *
+MCStackGetObjectByUuidInList (MCObject *p_list,
+                              const MCUuid & p_uuid)
+{
+	if (p_list == NULL)
+		return NULL;
+
+	MCObject *t_iter = p_list;
+	do {
+		if (t_iter->HasUuid (p_uuid))
+			return t_iter;
+		t_iter = t_iter->next ();
+	}
+	while (p_list != t_iter);
+	return NULL;
+}
+
+static MCObject *
+MCStackGetObjectByUuidInList (MCStack *p_list,
+                              const MCUuid & p_uuid)
+{
+	if (p_list == NULL)
+		return NULL;
+
+	MCObject *t_obj = NULL;
+	MCStack *t_iter = p_list;
+	do {
+		t_obj = t_iter->GetObjectByUuid (p_uuid);
+		if (t_obj) break;
+		t_iter = t_iter->next ();
+	}
+	while (p_list != t_iter);
+
+	return t_obj;
+}
+
+MCObject *
+MCStack::GetObjectByUuid (const MCUuid & p_uuid)
+{
+	MCObject *t_obj = NULL;
+
+	if (HasUuid (p_uuid)) return this;
+
+	/* Look up in UUID cache */
+	t_obj = findobjectbyuuid (p_uuid);
+	if (t_obj) return t_obj;
+
+	/* Search stack contents */
+	if (!t_obj)
+		t_obj = MCStackGetObjectByUuidInList (aclips, p_uuid);
+	if (!t_obj)
+		t_obj = MCStackGetObjectByUuidInList (vclips, p_uuid);
+	if (!t_obj)
+		t_obj = MCStackGetObjectByUuidInList (getcontrols(), p_uuid);
+	if (!t_obj)
+		t_obj = MCStackGetObjectByUuidInList (getcards(), p_uuid);
+
+	/* If the requested UUID was found in this stack, update the UUID
+	 * cache */
+	if (t_obj)
+	{
+		cacheobjectbyid (t_obj);
+		return t_obj;
+	}
+
+	/* Attempt to search substacks and then *all* stacks */
+	if (!t_obj)
+		t_obj = MCStackGetObjectByUuidInList (getsubstacks(), p_uuid);
+	if (!t_obj)
+		t_obj = MCdispatcher->GetObjectByUuid (p_uuid);
+
+	return t_obj;
+}
+
+////////////////////////////////////////////////////////////////
+
 MCObject *MCStack::getsubstackobjname(Chunk_term type, MCNameRef p_name)
 {
 	MCStack *sptr = this;

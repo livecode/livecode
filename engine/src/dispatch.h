@@ -211,6 +211,9 @@ public:
 	
 	// IM-2014-07-23: [[ Bug 12930 ]] Replace findchildstack method with iterating method
 	bool foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_callback, void *p_context);
+
+	/* Get an object by UUID, searching all stacks */
+	MCObject *GetObjectByUuid (const MCUuid &);
 	
 	MCObject *getobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjname(Chunk_term type, MCNameRef);

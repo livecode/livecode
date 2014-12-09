@@ -2506,4 +2506,26 @@ void MCDispatch::GetDefaultPattern(MCExecContext& ctxt, uinteger_t*& r_pattern)
     r_pattern = nil;
 }
 
+////////////////////////////////////////////////////////////////
+// Finding things by UUID
+//
+
+MCObject *
+MCDispatch::GetObjectByUuid (const MCUuid & p_uuid)
+{
+	if (stacks == NULL) return NULL;
+
+	MCObject *t_obj = NULL;
+	MCStack *t_iter = stacks;
+	do
+	{
+		t_obj = t_iter->GetObjectByUuid (p_uuid);
+		if (t_obj) break;
+		t_iter = t_iter->next();
+	}
+	while (t_iter != stacks);
+
+	return t_obj;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
