@@ -207,6 +207,7 @@ MCObjectPropertyTable MCStack::kPropertyTable =
 ////////////////////////////////////////////////////////////////////////////////
 
 MCStack::MCStack()
+	: _id(*this)
 {
 	obj_id = START_ID;
 	flags = F_VISIBLE | F_RESIZABLE | F_OPAQUE;
@@ -300,7 +301,8 @@ MCStack::MCStack()
 	view_init();
 }
 
-MCStack::MCStack(const MCStack &sref) : MCObject(sref)
+MCStack::MCStack(const MCStack &sref)
+	: MCObject(sref), _id(*this)
 {
 	obj_id = sref.obj_id;
 

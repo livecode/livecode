@@ -96,6 +96,7 @@ MCColor MCObject::maccolors[MAC_NCOLORS] = {
         };
 
 MCObject::MCObject()
+	: _id(*this)
 {
 	parent = NULL;
 	obj_id = 0;
@@ -155,7 +156,8 @@ MCObject::MCObject()
 	m_script_encrypted = false;
 }
 
-MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
+MCObject::MCObject(const MCObject &oref)
+	: MCDLlist(oref), _id(*this)
 {
 	if (oref.parent == NULL)
 		parent = MCdefaultstackptr;

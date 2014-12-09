@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "globals.h"
-#include "uuid.h"
+#include "objectid.h"
 
 enum {
     MAC_SHADOW,
@@ -1215,6 +1215,57 @@ private:
 	void mapfont(void);
 	void unmapfont(void);
 
+	////////// OBJECT ID MANAGEMENT
+protected:
+	/* MCConcreteObjectId is an MCObjectId that's permanently and directly
+	 * associated with a particular MCObject instance.  The accessors
+	 * operate directly on the associated MCObject.  The lifetime of an
+	 * MCConcreteObjectId instance is tied to its associated MCObject. */
+	class MCConcreteObjectId: public MCObjectId
+	{
+	public:
+		virtual MCObject *Get (void) const
+		{ return &m_owner; }
+
+		virtual void SetUuid (const MCUuid & p_uuid)
+		{ m_owner.SetUuid (p_uuid); }
+		virtual bool HasUuid (void) const
+		{ return m_owner.HasUuid (); }
+		virtual bool GetUuid (MCUuid & r_uuid) const
+		{ return m_owner.GetUuid (r_uuid); }
+
+		virtual void SetId (id_t p_id);
+		virtual bool HasId (void) const
+		{ return (0 != m_owner.getid ()); }
+		virtual id_t GetId (void) const
+		{ return m_owner.getid (); }
+
+		virtual void SetName (MCNameRef p_name)
+		{ m_owner.setname (p_name); }
+		virtual bool HasName (void) const
+		{ return !m_owner.hasname (kMCEmptyName); }
+		virtual MCNameRef GetName (void) const
+		{ return m_owner.getname (); }
+
+	protected:
+		MCConcreteObjectId (MCObject & p_owner)
+			: m_owner (p_owner)
+		{}
+
+		MCObject & m_owner;
+
+		friend class MCObject;
+	};
+
+private:
+	MCConcreteObjectId _id;
+
+public:
+	/* Get the MCObject's concrete object ID instance */
+	virtual const MCObjectId & GetObjectId (void) const { return _id; };
+
+	//////////
+
 	friend class MCObjectHandle;
 	friend class MCEncryptedStack;
 };
@@ -1263,4 +1314,7 @@ public:
 		return (MCObjectList *)MCDLlist::remove((MCDLlist *&)list);
 	}
 };
+
+////////////////////////////////////////////////////////////////
+
 #endif

@@ -1227,5 +1227,37 @@ private:
 	
 	bool mode_openasdialog(void);
 	void mode_closeasdialog(void);
+
+	////////// OBJECT ID MANAGEMENT
+protected:
+	/* MCConcreteStackId is a special version of MCConcreteObjectId
+	 * that's needed because stacks are identified by altid rather
+	 * than by id. */
+	class MCConcreteStackId: public MCObject::MCConcreteObjectId
+	{
+	public:
+		virtual void SetId (id_t p_id)
+		{ m_owner.setaltid (p_id); }
+		virtual bool HasId (void) const
+		{ return (0 != m_owner.getaltid ()); }
+		virtual id_t GetId (void) const
+		{ return m_owner.getaltid (); }
+
+	private:
+		MCConcreteStackId (MCObject & p_owner)
+			: MCConcreteObjectId(p_owner)
+		{}
+
+		friend class MCStack;
+	};
+
+private:
+	MCConcreteStackId _id;
+
+public:
+	/* Get the stack's concrete object ID instance */
+	virtual const MCObjectId & GetObjectId (void) const { return _id; };
+
+	//////////
 };
 #endif
