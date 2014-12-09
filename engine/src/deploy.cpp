@@ -179,7 +179,12 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(version_info, t_temp_array);
 	MCValueRelease(t_temp_array);
 	
-	return true;
+	if (!ctxt.CopyOptElementAsFilepathArray(p_array, MCNAME("modules"), false, t_temp_array))
+		return false;
+	MCValueAssign(modules, t_temp_array);
+	MCValueRelease(t_temp_array);
+	
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -276,6 +281,22 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	if (t_success && (!MCStringIsEmpty(p_params . startup_script)))
 		t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeStartupScript, p_params . startup_script);
 
+    // Now add the modules, if any.
+	MCDeployFileRef *t_module_files;
+	t_module_files = nil;
+	if (t_success)
+		t_success = MCMemoryNewArray(MCArrayGetCount(p_params . modules), t_module_files);
+    if (t_success)
+        for(uint32_t i = 0; i < MCArrayGetCount(p_params.modules) && t_success; i++)
+        {
+            MCValueRef t_module_filename;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params .modules, i + 1, t_module_filename);
+			if (t_success && !MCDeployFileOpen((MCStringRef)t_module_filename, kMCOpenFileModeRead, t_module_files[i]))
+				t_success = MCDeployThrow(kMCDeployErrorNoModule);
+            if (t_success)
+                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[i]);
+        }
+    
 	// Now a digest
 	if (t_success)
 		t_success = MCDeployCapsuleChecksum(t_capsule);
@@ -292,6 +313,9 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	for(uint32_t i = 0; i < MCArrayGetCount(p_params.auxillary_stackfiles); i++)
 		MCDeployFileClose(t_aux_stackfiles[i]);
 	MCMemoryDeleteArray(t_aux_stackfiles);
+	for(uint32_t i = 0; i < MCArrayGetCount(p_params.modules); i++)
+		MCDeployFileClose(t_module_files[i]);
+    MCMemoryDeleteArray(t_module_files);
 	MCDeployFileClose(t_spill);
 	MCDeployFileClose(t_stackfile);
 

@@ -36,6 +36,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)engine\src&quot;;&quot;$(SolutionDir)thirdparty\libffi\win32&quot;;&quot;$(SolutionDir)libscript\include&quot;"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

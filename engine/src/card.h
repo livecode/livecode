@@ -47,6 +47,10 @@ protected:
 
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
+
+    virtual MCPlatformControlType getcontroltype();
+    virtual MCPlatformControlPart getcontrolsubpart();
+
 public:
 	MCCard();
 	MCCard(const MCCard &cref);
@@ -76,8 +80,9 @@ public:
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
+
 #ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
     virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
 

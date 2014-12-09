@@ -1,6 +1,7 @@
 [\n\r]+ {
+    int i;
     GetCurrentPosition(&yylval.attr[0]);
-    for(int i = 0; i < yyleng; i++)
+    for(i = 0; i < yyleng; i++)
     {
         if (yytext[i] == '\n')
             AdvanceCurrentPositionToNextRow();

@@ -742,6 +742,8 @@ void MCWidget::OnDetach()
     CallHandler(MCNAME("OnDetach"), nil, 0);
 }
 
+MCDC* g_widget_paint_dc;
+
 void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
 {
     if (m_native_layer)
@@ -749,7 +751,8 @@ void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
     else
         CallHandler(MCNAME("OnPaint"), nil, 0);
     
-    fprintf(stderr, "MCWidget::OnPaint\n");
+    g_widget_paint_dc = p_dc;
+    CallHandler(MCNAME("OnPaint"), nil, 0);
 }
 
 void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
@@ -757,7 +760,15 @@ void MCWidget::OnGeometryChanged(const MCRectangle& p_old_rect)
     if (m_native_layer)
         m_native_layer->OnGeometryChanged(p_old_rect);
     
-    fprintf(stderr, "MCWidget::OnGeometryChanged\n");
+    MCAutoValueRefArray t_params;
+    t_params.New(4);
+    
+    MCNumberCreateWithReal(rect.x, reinterpret_cast<MCNumberRef&>(t_params[0]));
+    MCNumberCreateWithReal(rect.y, reinterpret_cast<MCNumberRef&>(t_params[1]));
+    MCNumberCreateWithReal(rect.width, reinterpret_cast<MCNumberRef&>(t_params[2]));
+    MCNumberCreateWithReal(rect.height, reinterpret_cast<MCNumberRef&>(t_params[3]));
+    
+    CallHandler(MCNAME("OnGeometryChanged"), t_params.Ptr(), t_params.Size());
 }
 
 void MCWidget::OnVisibilityChanged(bool p_visible)

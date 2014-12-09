@@ -3555,6 +3555,10 @@
 					RelativePath="src\w32transfer.h"
 					>
 				</File>
+				<File
+					RelativePath=".\src\windows-theme.cpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -7988,6 +7992,114 @@
 			>
 			<File
 				RelativePath=".\src\legacy_spec.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Core - Text"
+			>
+			<File
+				RelativePath=".\src\text-api.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-api.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-block.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-block.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-breakblock.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-breakblock.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-breakingengine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-breakingengine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-cell.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-cell.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-controlblock.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-controlblock.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-imageblock.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-imageblock.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-line.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-line.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-pane.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-pane.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-paragraph.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-paragraph.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-run.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-run.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-segment.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-segment.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-simplebreakingengine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\text-simplebreakingengine.h"
 				>
 			</File>
 		</Filter>

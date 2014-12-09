@@ -35,10 +35,12 @@ public:
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual Boolean mdown(uint2 which);
 	virtual Boolean mup(uint2 which, bool p_release);
+
 #ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
+
 	virtual Boolean count(Chunk_term type, MCObject *stop, uint2 &num);
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);

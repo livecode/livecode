@@ -1,6 +1,10 @@
-#ifdef BOOTSTRAP
-#include "gen-bootstrap.h"
+#ifdef _WIN32
+#  include "gen.h"
 #else
-#include "gen-full.h"
+#  ifdef BOOTSTRAP
+#    include "gen-bootstrap.h"
+#  else
+#    include "gen-full.h"
+#  endif
 #endif
 extern YYSTYPE yylval;

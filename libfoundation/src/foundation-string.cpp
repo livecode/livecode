@@ -110,9 +110,9 @@ bool MCStringCreateWithCString(const char* p_cstring, MCStringRef& r_string)
 	return MCStringCreateWithNativeChars((const char_t*)p_cstring, p_cstring == nil ? 0 : strlen(p_cstring), r_string);
 }
 
-bool MCStringCreateWithCStringAndRelease(char_t* p_cstring, MCStringRef& r_string)
+bool MCStringCreateWithCStringAndRelease(char* p_cstring, MCStringRef& r_string)
 {
-	return MCStringCreateWithNativeCharsAndRelease(p_cstring, p_cstring == nil ? 0 : strlen((const char*)p_cstring), r_string);
+	return MCStringCreateWithNativeCharsAndRelease((char_t*)p_cstring, p_cstring == nil ? 0 : strlen((const char*)p_cstring), r_string);
 }
 
 const char *MCStringGetCString(MCStringRef p_string)

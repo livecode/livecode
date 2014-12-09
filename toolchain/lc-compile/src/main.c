@@ -17,7 +17,9 @@ int IsBootstrapCompile(void)
 
 void bootstrap_main(int argc, char *argv[])
 {
-    // If there is no filename, error.
+    int i;
+	
+	// If there is no filename, error.
     if (argc == 0)
     {
         fprintf(stderr, "Invalid arguments\n");
@@ -26,7 +28,7 @@ void bootstrap_main(int argc, char *argv[])
     
     s_is_bootstrap = 1;
     
-    for(int i = 0; i < argc; i++)
+    for(i = 0; i < argc; i++)
     {
         if (strcmp(argv[i], "-template") == 0 && i + 1 < argc)
            SetTemplateFile(argv[++i]);
@@ -81,14 +83,15 @@ extern int OutputFileAsC;
 
 static void full_main(int argc, char *argv[])
 {
-    // If there is no filename, error.
+    int i;
+	
+	// If there is no filename, error.
     if (argc != 1 && argc != 3 && argc != 5)
     {
         fprintf(stderr, "Invalid arguments\n");
         return 1;
     }
     
-    int i;
     i = 0;
     if (strcmp(argv[i], "-output") == 0 && i + 1 < argc)
     {
@@ -115,9 +118,16 @@ static void full_main(int argc, char *argv[])
     }
 }
 
+// No built-in modules for the compiler
+void* g_builtin_modules[1] = {NULL};
+unsigned int g_builtin_module_count = 0;
+
 int main(int argc, char *argv[])
 {
-    // Skip command arg.
+    //extern int yydebug;
+	int t_return_code;
+	
+	// Skip command arg.
     argc -= 1;
     argv += 1;
     
@@ -127,8 +137,7 @@ int main(int argc, char *argv[])
         argc -= 1;
         argv += 1;
         
-        extern int yydebug;
-        yydebug = 1;
+        //yydebug = 1;
     }
     
     InitializeFiles();
@@ -142,8 +151,7 @@ int main(int argc, char *argv[])
         bootstrap_main(argc - 1, argv + 1);
     else
         full_main(argc, argv);
-    
-    int t_return_code;
+
     if (ErrorsDidOccur())
         t_return_code = 1;
     else

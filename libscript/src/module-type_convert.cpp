@@ -22,13 +22,13 @@ static bool MCProperListCombine(void *context, MCValueRef p_value)
     return MCListAppend(t_list, p_value);
 }
 
-extern "C" void MCTypeConvertExecSplitStringByDelimiter(MCStringRef p_target, MCStringRef p_delimiter, MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT void MCTypeConvertExecSplitStringByDelimiter(MCStringRef p_target, MCStringRef p_delimiter, MCProperListRef& r_output)
 {
     if (!MCStringSplitByDelimiter(p_target, p_delimiter, kMCStringOptionCompareExact, r_output))
 		return;
 }
 
-extern "C" void MCTypeConvertExecCombineListWithDelimiter(MCProperListRef p_target, MCStringRef p_delimiter, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT void MCTypeConvertExecCombineListWithDelimiter(MCProperListRef p_target, MCStringRef p_delimiter, MCStringRef& r_output)
 {
     MCListRef t_list;
     MCListCreateMutable(p_delimiter, t_list);

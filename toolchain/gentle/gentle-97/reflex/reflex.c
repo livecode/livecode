@@ -104,10 +104,11 @@ struct info *info_list = 0;
 /* --PATCH--BEGIN-- */
 char *modify_file(const char *in)
 {
-    if (SUBDIR == NULL)
+    char *s;
+	
+	if (SUBDIR == NULL)
         return strdup(in);
     
-    char *s;
     s = (char *)malloc(strlen(SUBDIR) + strlen(in) + 2);
     strcpy(s, SUBDIR);
     strcat(s, "/");
@@ -153,6 +154,7 @@ args(argc, argv)
    char **argv;
 {
    int i;
+   int len, j, eq, dot;
 
    struct info *new;
 
@@ -166,7 +168,6 @@ args(argc, argv)
 /* --PATCH-- */        continue;
 /* --PATCH-- */    }
        
-      int len, j, eq, dot;
       len = strlen(argv[i]);
 
       eq = -1;

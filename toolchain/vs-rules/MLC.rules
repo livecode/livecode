@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VisualStudioToolFile
+	Name="MLC"
+	Version="8.00"
+	>
+	<Rules>
+		<CustomBuildRule
+			Name="MLC (for built-in)"
+			DisplayName="MLC (for built-in)"
+			CommandLine="$(SolutionDir)_build\windows\$(ConfigurationName)\lc-compile.exe -outputc generated\$(InputName).c [inputs]"
+			Outputs="generated\$(InputName).c"
+			FileExtensions="*.mlc"
+			ExecutionDescription="Running lc-compile for &quot;$(InputName)&quot;..."
+			>
+			<Properties>
+			</Properties>
+		</CustomBuildRule>
+	</Rules>
+</VisualStudioToolFile>

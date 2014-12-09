@@ -229,11 +229,14 @@ bool coretext_font_destroy(void *p_font)
     return true;
 }
 
-bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent)
+
+bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight)
 {
-	r_ascent = CTFontGetAscent((CTFontRef) p_font);
-	r_descent = CTFontGetDescent((CTFontRef) p_font);
-    
+    r_ascent = CTFontGetAscent((CTFontRef) p_font);
+    r_descent = CTFontGetDescent((CTFontRef) p_font);
+    r_leading = CTFontGetLeading((CTFontRef) p_font);
+    r_xheight = CTFontGetXHeight((CTFontRef) p_font);
+
     return true;
 }
 
@@ -377,6 +380,21 @@ bool coretext_font_unload(MCStringRef p_path, bool p_globally)
         CFRelease(t_font_url);
     
     return t_success;
+}
+
+void coretext_get_font_name(void *p_font, MCNameRef& r_name)
+{
+    CFStringRef t_font_name;
+    t_font_name = CTFontCopyDisplayName((CTFontRef)p_font);
+    
+    MCAutoStringRef t_font_name_string;
+    MCStringCreateWithCFString(t_font_name, &t_font_name_string);
+    MCNameCreate(*t_font_name_string, r_name);
+}
+
+uint32_t coretext_get_font_size(void *p_font)
+{
+    return CTFontGetSize((CTFontRef)p_font);
 }
 
 #ifdef _MACOSX

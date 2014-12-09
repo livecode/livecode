@@ -18,7 +18,7 @@
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
 
-extern "C" void MCBinaryEvalConcatenateBytes(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_output)
+extern "C" MC_DLLEXPORT void MCBinaryEvalConcatenateBytes(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_output)
 {
     MCAutoDataRef t_data;
     if (!MCDataMutableCopy(p_left, &t_data))
@@ -31,7 +31,7 @@ extern "C" void MCBinaryEvalConcatenateBytes(MCDataRef p_left, MCDataRef p_right
         return;
 }
 
-extern "C" void MCBinaryExecPutBytesBefore(MCDataRef p_source, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT void MCBinaryExecPutBytesBefore(MCDataRef p_source, MCDataRef& x_target)
 {
     MCAutoDataRef t_data;
     MCBinaryEvalConcatenateBytes(p_source, x_target, &t_data);
@@ -39,7 +39,7 @@ extern "C" void MCBinaryExecPutBytesBefore(MCDataRef p_source, MCDataRef& x_targ
     MCValueAssign(x_target, *t_data);
 }
 
-extern "C" void MCBinaryExecPutBytesAfter(MCDataRef p_source, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT void MCBinaryExecPutBytesAfter(MCDataRef p_source, MCDataRef& x_target)
 {
     MCAutoDataRef t_data;
     MCBinaryEvalConcatenateBytes(x_target, p_source, &t_data);
@@ -47,27 +47,27 @@ extern "C" void MCBinaryExecPutBytesAfter(MCDataRef p_source, MCDataRef& x_targe
     MCValueAssign(x_target, *t_data);
 }
 
-extern "C" void MCBinaryEvalIsEqualTo(MCDataRef p_left, MCDataRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT void MCBinaryEvalIsEqualTo(MCDataRef p_left, MCDataRef p_right, bool& r_result)
 {
     r_result = MCDataIsEqualTo(p_left, p_right);
 }
 
-extern "C" void MCBinaryEvalIsNotEqualTo(MCDataRef p_left, MCDataRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT void MCBinaryEvalIsNotEqualTo(MCDataRef p_left, MCDataRef p_right, bool& r_result)
 {
     r_result = !MCDataIsEqualTo(p_left, p_right);
 }
 
-extern "C" void MCBinaryEvalIsLessThan(MCDataRef p_left, MCDataRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT void MCBinaryEvalIsLessThan(MCDataRef p_left, MCDataRef p_right, bool& r_result)
 {
     r_result = MCDataCompareTo(p_left, p_right) < 0;
 }
 
-extern "C" void MCBinaryEvalIsGreaterThan(MCDataRef p_left, MCDataRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT void MCBinaryEvalIsGreaterThan(MCDataRef p_left, MCDataRef p_right, bool& r_result)
 {
     r_result = MCDataCompareTo(p_left, p_right) > 0;
 }
 
-extern "C" void MCDataEvalEmpty(MCDataRef& r_output)
+extern "C" MC_DLLEXPORT void MCDataEvalEmpty(MCDataRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyData);
 }

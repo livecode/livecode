@@ -58,7 +58,7 @@ static bool list_array_elements(void *context, MCArrayRef p_target, MCNameRef p_
     return MCProperListPushElementOntoBack(t_list, p_value);
 }
 
-extern "C" void MCArrayEvalKeysOf(MCArrayRef p_target, MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT void MCArrayEvalKeysOf(MCArrayRef p_target, MCProperListRef& r_output)
 {
     MCProperListRef t_list;
     if (MCProperListCreateMutable(t_list) &&
@@ -69,7 +69,7 @@ extern "C" void MCArrayEvalKeysOf(MCArrayRef p_target, MCProperListRef& r_output
     // ctxt . Throw()
 }
 
-extern "C" void MCArrayEvalElementsOf(MCArrayRef p_target, MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT void MCArrayEvalElementsOf(MCArrayRef p_target, MCProperListRef& r_output)
 {
     MCProperListRef t_list;
     if (MCProperListCreateMutable(t_list) &&
@@ -80,17 +80,17 @@ extern "C" void MCArrayEvalElementsOf(MCArrayRef p_target, MCProperListRef& r_ou
     // ctxt . Throw()
 }
 
-extern "C" void MCArrayEvalNumberOfElementsIn(MCArrayRef p_target, uindex_t& r_output)
+extern "C" MC_DLLEXPORT void MCArrayEvalNumberOfElementsIn(MCArrayRef p_target, uindex_t& r_output)
 {
     r_output = MCArrayGetCount(p_target);
 }
 
-extern "C" void MCArrayEvalIsAmongTheElementsOf(MCValueRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheElementsOf(MCValueRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
     r_output = !MCArrayApply(p_target, is_not_among_the_elements_of, p_needle);
 }
 
-extern "C" void MCArrayEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
     MCNewAutoNameRef t_key;
     create_key_for_array(p_needle, p_target, &t_key);
@@ -104,7 +104,7 @@ extern "C" void MCArrayEvalIsAmongTheKeysOf(MCStringRef p_needle, bool p_is_not,
         r_output = !r_output;
 }
 
-extern "C" void MCArrayFetchElementOfCaseless(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT void MCArrayFetchElementOfCaseless(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
 {
     MCNewAutoNameRef t_key;
     
@@ -117,7 +117,7 @@ extern "C" void MCArrayFetchElementOfCaseless(MCArrayRef p_target, MCStringRef p
     }
 }
 
-extern "C" void MCArrayStoreElementOfCaseless(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
+extern "C" MC_DLLEXPORT void MCArrayStoreElementOfCaseless(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
 {
     MCNewAutoNameRef t_key;
     MCAutoArrayRef t_array;
@@ -134,7 +134,7 @@ extern "C" void MCArrayStoreElementOfCaseless(MCValueRef p_value, MCArrayRef& x_
     MCValueAssign(x_target, *t_new_array);
 }
 
-extern "C" void MCArrayEvalEmpty(MCArrayRef& r_output)
+extern "C" MC_DLLEXPORT void MCArrayEvalEmpty(MCArrayRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyArray);
 }

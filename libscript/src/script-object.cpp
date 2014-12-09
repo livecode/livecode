@@ -13,11 +13,11 @@ struct MCBuiltinModule
 static MCScriptModuleRef s_builtin_module = nil;
 static MCScriptModuleRef *s_builtin_modules = nil;
 static uindex_t s_builtin_module_count = 0;
-static bool MCFetchBuiltinModuleSection(MCBuiltinModule*& r_modules, unsigned int& r_count);
+static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
 
 bool MCScriptInitialize(void)
 {
-    MCBuiltinModule *t_modules;
+    MCBuiltinModule **t_modules;
     unsigned int t_module_count;
     if (!MCFetchBuiltinModuleSection(t_modules, t_module_count))
         return true;
@@ -27,10 +27,10 @@ bool MCScriptInitialize(void)
     
     for(uindex_t i = 0; i < t_module_count; i++)
     {
-        MCLog("Loading builtin module - %s", t_modules[i] . name);
+        MCLog("Loading builtin module - %s", t_modules[i] -> name);
         
         MCStreamRef t_stream;
-        if (!MCMemoryInputStreamCreate(t_modules[i] . data, t_modules[i] . size, t_stream))
+        if (!MCMemoryInputStreamCreate(t_modules[i] -> data, t_modules[i] -> size, t_stream))
             return false;
         
         if (!MCScriptCreateModuleFromStream(t_stream, s_builtin_modules[i]))
@@ -297,35 +297,16 @@ void __MCScriptAssertFailed__(const char *label, const char *expr, const char *f
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
-
-#include <mach-o/loader.h>
-#include <mach-o/getsect.h>
-#include <mach-o/dyld.h>
-
-static bool MCFetchBuiltinModuleSection(MCBuiltinModule*& r_modules, unsigned int& r_count)
+extern "C"
 {
-    
-    unsigned long t_section_data_size;
-    char *t_section_data;
-    t_section_data = getsectdata("__MODULES", "__modules", &t_section_data_size);
-    if (t_section_data != nil)
-    {
-        t_section_data += (unsigned long)_dyld_get_image_vmaddr_slide(0);
-        r_modules = (MCBuiltinModule *)t_section_data;
-        r_count = t_section_data_size / sizeof(MCBuiltinModule);
-        return true;
-    }
-    
-    return false;
+    extern MCBuiltinModule* g_builtin_modules[];
+    extern unsigned int g_builtin_module_count;
 }
 
-#else
-
-static bool MCFetchBuiltinModuleSection(MCBuiltinModule*& r_modules, unsigned int& r_count)
+static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count)
 {
-	// Not implemented
-	return false;
+	// Use the array defined in the module-helper.cpp file
+    r_modules = g_builtin_modules;
+    r_count = g_builtin_module_count;
+    return true;
 }
-
-#endif

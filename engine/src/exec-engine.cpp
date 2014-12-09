@@ -2112,6 +2112,10 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
     if (!MCS_loadbinaryfile(*t_resolved_filename, &t_data))
         return;
     
+    for(MCLoadedExtension *t_ext = MCextensions; t_ext != nil; t_ext = t_ext -> next)
+        if (MCStringIsEqualTo(t_ext -> filename, *t_resolved_filename, kMCStringOptionCompareCaseless))
+            return;
+    
     MCStreamRef t_stream;
     /* UNCHECKED */ MCMemoryInputStreamCreate(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), t_stream);
     

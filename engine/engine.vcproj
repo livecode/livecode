@@ -213,6 +213,10 @@
 			ReferencedProjectIdentifier="{25CCFCBE-CCB2-44FC-A4FB-F46990F4383A}"
 			RelativePathToProject=".\thirdparty\libffi\libffi.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{56CD2637-6005-4DD6-9ADF-F85C7774BB88}"
+			RelativePathToProject=".\libscript\stdscript.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
