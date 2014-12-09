@@ -341,12 +341,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 #ifdef _WIN32
 #  ifdef _MSC_VER
-#    define MCEXPORT __declspec(dllexport)
+#    define MC_DLLEXPORT __declspec(dllexport)
 #  else
-#    define MCEXPORT __attribute__(dllexport)
+#    define MC_DLLEXPORT __attribute__((dllexport))
 #  endif
 #else
-#  define MCEXPORT
+#  define MC_DLLEXPORT __attribute__((__visibility__("default")))
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -885,22 +885,22 @@ inline compare_t MCMemoryCompare(const void *left, const void *right, size_t siz
 
 // This method returns an unitialized block of memory of the given size in
 // block. An error is raised if allocation fails.
-MCEXPORT bool MCMemoryAllocate(size_t size, void*& r_block);
+MC_DLLEXPORT bool MCMemoryAllocate(size_t size, void*& r_block);
 
 // This method returns an block of memory containing the same contents as the
 // provided one.
-MCEXPORT bool MCMemoryAllocateCopy(const void *block, size_t size, void*& r_new_block);
+MC_DLLEXPORT bool MCMemoryAllocateCopy(const void *block, size_t size, void*& r_new_block);
 
 // This method reallocates a block of memory allocated using MCMemoryAllocate.
 // Any new space allocated is uninitialized. The new pointer to the block is
 // returned. Note that the block may move regardless of new size. If the input
 // block is nil, it is treated as an allocate call.
-MCEXPORT bool MCMemoryReallocate(void *block, size_t new_size, void*& r_new_block);
+MC_DLLEXPORT bool MCMemoryReallocate(void *block, size_t new_size, void*& r_new_block);
 
 // This method deallocates a block of memory allocated using MCMemoryAllocate,
 // or subsequently reallocated using MCMemoryReallocate. The block passed in
 // may be nil.
-MCEXPORT void MCMemoryDeallocate(void *block);
+MC_DLLEXPORT void MCMemoryDeallocate(void *block);
 
 //////////
 
@@ -950,10 +950,10 @@ extern "C" {
 // zero. An error is raised if allocation fails.
 //
 // Note that a block allocated with New must be freed with Delete.
-MCEXPORT bool MCMemoryNew(size_t size, void*& r_record);
+MC_DLLEXPORT bool MCMemoryNew(size_t size, void*& r_record);
 
 // This method deletes a fixed size record that was allocated with MCMemoryNew.
-MCEXPORT void MCMemoryDelete(void *p_record);
+MC_DLLEXPORT void MCMemoryDelete(void *p_record);
 
 //////////
 
@@ -1064,21 +1064,21 @@ extern "C" {
 //   value - recompute on unserialization of the object.
 
 // Return a hash for the given integer.
-MCEXPORT hash_t MCHashInteger(integer_t i);
+MC_DLLEXPORT hash_t MCHashInteger(integer_t i);
 
 // Return a hash value for the given double - note that (hopefully!) hashing
 // an integer stored as a double will be the same as hashing the integer.
-MCEXPORT hash_t MCHashDouble(double d);
+MC_DLLEXPORT hash_t MCHashDouble(double d);
 
 // Returns a hash value for the given pointer.
-MCEXPORT hash_t MCHashPointer(void *p);
+MC_DLLEXPORT hash_t MCHashPointer(void *p);
 
 // Returns a hash value for the given sequence of bytes.
-MCEXPORT hash_t MCHashBytes(const void *bytes, size_t byte_count);
+MC_DLLEXPORT hash_t MCHashBytes(const void *bytes, size_t byte_count);
 
 // Returns a hash value for the given sequence of bytes, continuing a previous
 // hashing sequence (byte_count should be a multiple of 4).
-MCEXPORT hash_t MCHashBytesStream(hash_t previous, const void *bytes, size_t byte_count);
+MC_DLLEXPORT hash_t MCHashBytesStream(hash_t previous, const void *bytes, size_t byte_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1128,39 +1128,39 @@ struct MCValueCustomCallbacks
 };
 
 // Create a custom value with the given callbacks.
-MCEXPORT bool MCValueCreateCustom(MCTypeInfoRef typeinfo, size_t extra_bytes, MCValueRef& r_value);
+MC_DLLEXPORT bool MCValueCreateCustom(MCTypeInfoRef typeinfo, size_t extra_bytes, MCValueRef& r_value);
 
 // Fetch the typecode of the given value.
-MCEXPORT MCValueTypeCode MCValueGetTypeCode(MCValueRef value);
+MC_DLLEXPORT MCValueTypeCode MCValueGetTypeCode(MCValueRef value);
 
 // Fetch the typeinfo of the given value.
-MCEXPORT MCTypeInfoRef MCValueGetTypeInfo(MCValueRef value);
+MC_DLLEXPORT MCTypeInfoRef MCValueGetTypeInfo(MCValueRef value);
 
 // Fetch the retain count.
-MCEXPORT uindex_t MCValueGetRetainCount(MCValueRef value);
+MC_DLLEXPORT uindex_t MCValueGetRetainCount(MCValueRef value);
 
 // This only works for custom valuerefs at the moment!
-MCEXPORT bool MCValueIsMutable(MCValueRef value);
+MC_DLLEXPORT bool MCValueIsMutable(MCValueRef value);
 
-MCEXPORT bool MCValueIsEmpty(MCValueRef value);
-MCEXPORT bool MCValueIsArray(MCValueRef value);
+MC_DLLEXPORT bool MCValueIsEmpty(MCValueRef value);
+MC_DLLEXPORT bool MCValueIsArray(MCValueRef value);
 
 // Reduce the reference count of the given value by one, destroying the value
 // if it reaches 0. Note that (for convience) 'value' can be nil, it which case
 // the call has no effect.
-MCEXPORT void MCValueRelease(MCValueRef value);
+MC_DLLEXPORT void MCValueRelease(MCValueRef value);
 
 // Increment the reference count of the given value by one.
-MCEXPORT MCValueRef MCValueRetain(MCValueRef value);
+MC_DLLEXPORT MCValueRef MCValueRetain(MCValueRef value);
 
 // Copies the given value ensuring the resulting value is immutable (which is
 // why it can fail).
-MCEXPORT bool MCValueCopy(MCValueRef value, MCValueRef& r_immutable_copy);
-MCEXPORT bool MCValueCopyAndRelease(MCValueRef value, MCValueRef& r_immutable_copy);
+MC_DLLEXPORT bool MCValueCopy(MCValueRef value, MCValueRef& r_immutable_copy);
+MC_DLLEXPORT bool MCValueCopyAndRelease(MCValueRef value, MCValueRef& r_immutable_copy);
 
 // Copies the given value as a mutable value - only works for custom valuerefs at the moment.
-MCEXPORT bool MCValueMutableCopy(MCValueRef value, MCValueRef& r_immutable_copy);
-MCEXPORT bool MCValueMutableCopyAndRelease(MCValueRef value, MCValueRef& r_immutable_copy);
+MC_DLLEXPORT bool MCValueMutableCopy(MCValueRef value, MCValueRef& r_immutable_copy);
+MC_DLLEXPORT bool MCValueMutableCopyAndRelease(MCValueRef value, MCValueRef& r_immutable_copy);
 
 // Compares the two values in an exact fashion and returns true if they are
 // equal. If the values are of different types, then they are not equal;
@@ -1176,22 +1176,22 @@ MCEXPORT bool MCValueMutableCopyAndRelease(MCValueRef value, MCValueRef& r_immut
 //     comprise identical codepoint sequences (as unicode strings).
 //   - array: the two arrays are equal iff they have the same keys and the
 //     values of each corresponding keys are equal.
-MCEXPORT bool MCValueIsEqualTo(MCValueRef value, MCValueRef other_value);
+MC_DLLEXPORT bool MCValueIsEqualTo(MCValueRef value, MCValueRef other_value);
 
 // Returns a hash value for the (exact) content of the value - in particular
 // no folding is done for strings or names. Note that if the hash of two values
 // is equal it does not mean the values are equal; although the converse is true
 // (by definition of IsEqualTo).
-MCEXPORT hash_t MCValueHash(MCValueRef value);
+MC_DLLEXPORT hash_t MCValueHash(MCValueRef value);
 
 // Returns a string description of the given value suitable for display and
 // debugging (although not necessarily for general string formatting).
-MCEXPORT bool MCValueCopyDescription(MCValueRef value, MCStringRef& r_desc);
+MC_DLLEXPORT bool MCValueCopyDescription(MCValueRef value, MCStringRef& r_desc);
 
 // Returns true if pointer comparison is for the value is enough to determine
 // equality. This is always true of booleans, nulls and names; other values
 // must be interred first.
-MCEXPORT bool MCValueIsUnique(MCValueRef value);
+MC_DLLEXPORT bool MCValueIsUnique(MCValueRef value);
 
 // Inter the given value returning a new (immutable) value. Any two values that
 // are equal as defined by IsEqualTo will inter to the same object. i.e. For
@@ -1202,13 +1202,13 @@ MCEXPORT bool MCValueIsUnique(MCValueRef value);
 // bumps the reference count and returns the same value as they already satisfy
 //   x == y iff IsEqualTo(x, y)
 //
-MCEXPORT bool MCValueInter(MCValueRef value, MCValueRef& r_unique_value);
+MC_DLLEXPORT bool MCValueInter(MCValueRef value, MCValueRef& r_unique_value);
 
 // As the 'Inter' method except that 'value' will be released. This allows
 // optimization in some cases as the original value can be (potentially) reused
 // to build the unique one (cutting down on copying).
 //
-MCEXPORT bool MCValueInterAndRelease(MCValueRef value, MCValueRef& r_unique_value);
+MC_DLLEXPORT bool MCValueInterAndRelease(MCValueRef value, MCValueRef& r_unique_value);
 
 // Fetch the 'extra bytes' field for the given custom value.
 inline void *MCValueGetExtraBytesPtr(MCValueRef value) { return ((uint8_t *)value) + kMCValueCustomHeaderSize; }
@@ -1266,49 +1266,49 @@ extern "C" {
 // are equal iff their pointers are equal. (Note equal is not the same as conformance!)
 
 // The 'any' type is essentially a union of all typeinfos.
-MCEXPORT extern MCTypeInfoRef kMCAnyTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCAnyTypeInfo;
 
 // These are typeinfos for all the 'builtin' valueref types.
-MCEXPORT extern MCTypeInfoRef kMCNullTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCBooleanTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCNumberTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCStringTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCNameTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCDataTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCArrayTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCSetTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCListTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCProperListTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNullTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCBooleanTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNumberTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCStringTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCNameTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCDataTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCArrayTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCSetTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCListTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCProperListTypeInfo;
 
-MCEXPORT extern MCTypeInfoRef kMCBoolTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCIntTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCBoolTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
 
 //////////
 
 // Returns true if the typeinfo is an alias.
-MCEXPORT bool MCTypeInfoIsAlias(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCTypeInfoIsAlias(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is a name.
-MCEXPORT bool MCTypeInfoIsNamed(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCTypeInfoIsNamed(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is an optional typeinfo.
-MCEXPORT bool MCTypeInfoIsOptional(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCTypeInfoIsOptional(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is of record type.
-MCEXPORT bool MCTypeInfoIsRecord(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCTypeInfoIsRecord(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is of handler type.
-MCEXPORT bool MCTypeInfoIsHandler(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCTypeInfoIsHandler(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is of error type.
-MCEXPORT bool MCTypeInfoIsError(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCTypeInfoIsError(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is of foreign type.
-MCEXPORT bool MCTypeInfoIsForeign(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCTypeInfoIsForeign(MCTypeInfoRef typeinfo);
 
 // Typeinfo's form a chain with elements in the chain potentially providing critical
 // information about the specified type. This structure describes the represented
@@ -1322,7 +1322,7 @@ struct MCResolvedTypeInfo
 
 // Resolves the given typeinfo to the base typeinfo (either a bound named typeinfo,
 // or an anonymous non-meta typeinfo) if possible, and indicates if it is optional.
-MCEXPORT bool MCTypeInfoResolve(MCTypeInfoRef typeinfo, MCResolvedTypeInfo& r_resolution);
+MC_DLLEXPORT bool MCTypeInfoResolve(MCTypeInfoRef typeinfo, MCResolvedTypeInfo& r_resolution);
 
 // Returns true if the source typeinfo can be assigned to a slot with the target
 // typeinfo. It is assumed that 'source' is a concrete typeinfo (one which has
@@ -1338,14 +1338,14 @@ MCEXPORT bool MCTypeInfoResolve(MCTypeInfoRef typeinfo, MCResolvedTypeInfo& r_re
 //     supertypes.
 //   - if source is builtin then target must be the same builtin type.
 //
-MCEXPORT bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
+MC_DLLEXPORT bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target);
 
-MCEXPORT bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolvedTypeInfo& target);
+MC_DLLEXPORT bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolvedTypeInfo& target);
 
 //////////
 
 // Creates a typeinfo for one of the builtin typecodes.
-MCEXPORT bool MCBuiltinTypeInfoCreate(MCValueTypeCode typecode, MCTypeInfoRef& r_target);
+MC_DLLEXPORT bool MCBuiltinTypeInfoCreate(MCValueTypeCode typecode, MCTypeInfoRef& r_target);
 
 //////////
 
@@ -1384,64 +1384,64 @@ struct MCForeignTypeDescriptor
     bool (*doexport)(MCValueRef value, bool release, void *contents);
 };
 
-MCEXPORT bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *descriptor, MCTypeInfoRef& r_typeinfo);
+MC_DLLEXPORT bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *descriptor, MCTypeInfoRef& r_typeinfo);
 
-MCEXPORT const MCForeignTypeDescriptor *MCForeignTypeInfoGetDescriptor(MCTypeInfoRef typeinfo);
-MCEXPORT void *MCForeignTypeInfoGetLayoutType(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT const MCForeignTypeDescriptor *MCForeignTypeInfoGetDescriptor(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT void *MCForeignTypeInfoGetLayoutType(MCTypeInfoRef typeinfo);
 
 //////////
 
 // Creates a type which is alias for another type.
-MCEXPORT bool MCAliasTypeInfoCreate(MCNameRef name, MCTypeInfoRef target, MCTypeInfoRef& r_alias_typeinfo);
+MC_DLLEXPORT bool MCAliasTypeInfoCreate(MCNameRef name, MCTypeInfoRef target, MCTypeInfoRef& r_alias_typeinfo);
 
 // Returnts the name of the alias.
-MCEXPORT MCNameRef MCAliasTypeInfoGetName(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT MCNameRef MCAliasTypeInfoGetName(MCTypeInfoRef typeinfo);
 
 // Returns the target typeinfo.
-MCEXPORT MCTypeInfoRef MCAliasTypeInfoGetTarget(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT MCTypeInfoRef MCAliasTypeInfoGetTarget(MCTypeInfoRef typeinfo);
 
 //////////
 
 // Creates a type which refers to a named type. Named types are resolved by binding
 // them to another type. It is an error to bind a bound named type, and an
 // error to attempt to resolve an unbound named type.
-MCEXPORT bool MCNamedTypeInfoCreate(MCNameRef name, MCTypeInfoRef& r_named_typeinfo);
+MC_DLLEXPORT bool MCNamedTypeInfoCreate(MCNameRef name, MCTypeInfoRef& r_named_typeinfo);
 
 // Fetch the name of the named typeinfo.
-MCEXPORT MCNameRef MCNamedTypeInfoGetName(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT MCNameRef MCNamedTypeInfoGetName(MCTypeInfoRef typeinfo);
     
 // Returns true if the given named type is bound.
-MCEXPORT bool MCNamedTypeInfoIsBound(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCNamedTypeInfoIsBound(MCTypeInfoRef typeinfo);
 
 // Returns the bound typeinfo, or nil if the type is unbound.
-MCEXPORT MCTypeInfoRef MCNamedTypeInfoGetBoundTypeInfo(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT MCTypeInfoRef MCNamedTypeInfoGetBoundTypeInfo(MCTypeInfoRef typeinfo);
 
 // Bind the given named type to the target type. The bound_type cannot be a named
 // type.
-MCEXPORT bool MCNamedTypeInfoBind(MCTypeInfoRef typeinfo, MCTypeInfoRef bound_type);
+MC_DLLEXPORT bool MCNamedTypeInfoBind(MCTypeInfoRef typeinfo, MCTypeInfoRef bound_type);
 
 // Unbind the given named type.
-MCEXPORT bool MCNamedTypeInfoUnbind(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT bool MCNamedTypeInfoUnbind(MCTypeInfoRef typeinfo);
 
 // Resolve the given named type to its underlying type.
-MCEXPORT bool MCNamedTypeInfoResolve(MCTypeInfoRef typeinfo, MCTypeInfoRef& r_bound_type);
+MC_DLLEXPORT bool MCNamedTypeInfoResolve(MCTypeInfoRef typeinfo, MCTypeInfoRef& r_bound_type);
 
 //////////
 
 // Creates an optional type. It is not allowed to create an optional type of an
 // optional type. (Note optional named types are allowed, even if the named type
 // is optional).
-MCEXPORT bool MCOptionalTypeInfoCreate(MCTypeInfoRef base, MCTypeInfoRef& r_optional_typeinfo);
+MC_DLLEXPORT bool MCOptionalTypeInfoCreate(MCTypeInfoRef base, MCTypeInfoRef& r_optional_typeinfo);
 
 // Returns the base type of the given optional type.
-MCEXPORT MCTypeInfoRef MCOptionalTypeInfoGetBaseTypeInfo(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT MCTypeInfoRef MCOptionalTypeInfoGetBaseTypeInfo(MCTypeInfoRef typeinfo);
 
 //////////
 
 // Create a typeinfo describing a custom typeinfo.
-MCEXPORT bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *callbacks, MCTypeInfoRef& r_typeinfo);
+MC_DLLEXPORT bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *callbacks, MCTypeInfoRef& r_typeinfo);
 
-MCEXPORT const MCValueCustomCallbacks *MCCustomTypeInfoGetCallbacks(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT const MCValueCustomCallbacks *MCCustomTypeInfoGetCallbacks(MCTypeInfoRef typeinfo);
 
 //////////
 
@@ -1452,25 +1452,25 @@ struct MCRecordTypeFieldInfo
 };
 
 // Create a description of a record with the given fields.
-MCEXPORT bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
+MC_DLLEXPORT bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef base_type, MCTypeInfoRef& r_typeinfo);
 
 // Return the base type of the record.
-MCEXPORT MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef typeinfo);
 
 // Return the base type of the record.
-MCEXPORT MCTypeInfoRef MCRecordTypeGetBaseTypeInfo(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT MCTypeInfoRef MCRecordTypeGetBaseTypeInfo(MCTypeInfoRef typeinfo);
 
 // Return the number of fields in the record.
-MCEXPORT uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
 
 // Return the name of the field at the given index.
-MCEXPORT MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef typeinfo, uindex_t index);
+MC_DLLEXPORT MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef typeinfo, uindex_t index);
 
 // Return the type of the field at the given index.
-MCEXPORT MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef typeinfo, uindex_t index);
+MC_DLLEXPORT MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef typeinfo, uindex_t index);
 
 // Return true if typeinfo is derived from p_base_typeinfo.
-MCEXPORT bool MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef typeinfo, MCTypeInfoRef p_base_typeinfo);
+MC_DLLEXPORT bool MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef typeinfo, MCTypeInfoRef p_base_typeinfo);
 
 //////////
 
@@ -1492,68 +1492,68 @@ struct MCHandlerTypeFieldInfo
 // Create a description of a handler with the given signature.
 // If field_count is negative, the fields array must be terminated by
 // an MCHandlerTypeFieldInfo where name is null.
-MCEXPORT bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
+MC_DLLEXPORT bool MCHandlerTypeInfoCreate(const MCHandlerTypeFieldInfo *fields, index_t field_count, MCTypeInfoRef return_type, MCTypeInfoRef& r_typeinfo);
 
 // Get the return type of the handler. A return-type of kMCNullTypeInfo means no
 // value is returned.
-MCEXPORT MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT MCTypeInfoRef MCHandlerTypeInfoGetReturnType(MCTypeInfoRef typeinfo);
 
 // Get the number of parameters the handler takes.
-MCEXPORT uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
+MC_DLLEXPORT uindex_t MCHandlerTypeInfoGetParameterCount(MCTypeInfoRef typeinfo);
 
 // Return the mode of the index'th parameter.
-MCEXPORT MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef typeinfo, uindex_t index);
+MC_DLLEXPORT MCHandlerTypeFieldMode MCHandlerTypeInfoGetParameterMode(MCTypeInfoRef typeinfo, uindex_t index);
 
 // Return the type of the index'th parameter.
-MCEXPORT MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typeinfo, uindex_t index);
+MC_DLLEXPORT MCTypeInfoRef MCHandlerTypeInfoGetParameterType(MCTypeInfoRef typeinfo, uindex_t index);
 
 //////////
 
-MCEXPORT bool MCErrorTypeInfoCreate(MCNameRef domain, MCStringRef message, MCTypeInfoRef& r_typeinfo);
+MC_DLLEXPORT bool MCErrorTypeInfoCreate(MCNameRef domain, MCStringRef message, MCTypeInfoRef& r_typeinfo);
 
-MCEXPORT MCNameRef MCErrorTypeInfoGetDomain(MCTypeInfoRef error);
-MCEXPORT MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef error);
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  BOOLEAN DEFINITIONS
-//
-
-MCEXPORT extern MCNullRef kMCNull;
+MC_DLLEXPORT MCNameRef MCErrorTypeInfoGetDomain(MCTypeInfoRef error);
+MC_DLLEXPORT MCStringRef MCErrorTypeInfoGetMessage(MCTypeInfoRef error);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  BOOLEAN DEFINITIONS
 //
 
-MCEXPORT extern MCBooleanRef kMCFalse;
-MCEXPORT extern MCBooleanRef kMCTrue;
+MC_DLLEXPORT extern MCNullRef kMCNull;
 
-MCEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
+////////////////////////////////////////////////////////////////////////////////
+//
+//  BOOLEAN DEFINITIONS
+//
+
+MC_DLLEXPORT extern MCBooleanRef kMCFalse;
+MC_DLLEXPORT extern MCBooleanRef kMCTrue;
+
+MC_DLLEXPORT bool MCBooleanCreateWithBool(bool value, MCBooleanRef& r_boolean);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  NUMBER DEFINITIONS
 //
 
-MCEXPORT bool MCNumberCreateWithInteger(integer_t value, MCNumberRef& r_number);
-MCEXPORT bool MCNumberCreateWithUnsignedInteger(uinteger_t value, MCNumberRef& r_number);
-MCEXPORT bool MCNumberCreateWithReal(real64_t value, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberCreateWithInteger(integer_t value, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberCreateWithUnsignedInteger(uinteger_t value, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberCreateWithReal(real64_t value, MCNumberRef& r_number);
 
-MCEXPORT bool MCNumberIsInteger(MCNumberRef number);
-MCEXPORT bool MCNumberIsReal(MCNumberRef number);
+MC_DLLEXPORT bool MCNumberIsInteger(MCNumberRef number);
+MC_DLLEXPORT bool MCNumberIsReal(MCNumberRef number);
 
-MCEXPORT integer_t MCNumberFetchAsInteger(MCNumberRef number);
-MCEXPORT uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
-MCEXPORT real64_t MCNumberFetchAsReal(MCNumberRef number);
+MC_DLLEXPORT integer_t MCNumberFetchAsInteger(MCNumberRef number);
+MC_DLLEXPORT uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
+MC_DLLEXPORT real64_t MCNumberFetchAsReal(MCNumberRef number);
 
-MCEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
-MCEXPORT bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
-MCEXPORT bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
+MC_DLLEXPORT bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
 
-MCEXPORT extern MCNumberRef kMCZero;
-MCEXPORT extern MCNumberRef kMCOne;
-MCEXPORT extern MCNumberRef kMCMinusOne;
+MC_DLLEXPORT extern MCNumberRef kMCZero;
+MC_DLLEXPORT extern MCNumberRef kMCOne;
+MC_DLLEXPORT extern MCNumberRef kMCMinusOne;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1561,30 +1561,30 @@ MCEXPORT extern MCNumberRef kMCMinusOne;
 //
 
 // Like MCSTR but for NameRefs
-MCEXPORT MCNameRef MCNAME(const char *);
+MC_DLLEXPORT MCNameRef MCNAME(const char *);
 
 // Create a name using the given string.
-MCEXPORT bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
+MC_DLLEXPORT bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
 // Create a name using chars.
-MCEXPORT bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
+MC_DLLEXPORT bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
 // Create a name using native chars.
-MCEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
+MC_DLLEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
 
 // Create a name using the given string, releasing the original.
-MCEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
+MC_DLLEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
 
 // Looks for an existing name matching the given string.
-MCEXPORT MCNameRef MCNameLookup(MCStringRef string);
+MC_DLLEXPORT MCNameRef MCNameLookup(MCStringRef string);
 
 // Returns a unsigned integer which can be used to order a table for a binary
 // search.
-MCEXPORT uintptr_t MCNameGetCaselessSearchKey(MCNameRef name);
+MC_DLLEXPORT uintptr_t MCNameGetCaselessSearchKey(MCNameRef name);
 
 // Returns the string content of the name.
-MCEXPORT MCStringRef MCNameGetString(MCNameRef name);
+MC_DLLEXPORT MCStringRef MCNameGetString(MCNameRef name);
 
 // Returns true if the given name is the empty name.
-MCEXPORT bool MCNameIsEmpty(MCNameRef name);
+MC_DLLEXPORT bool MCNameIsEmpty(MCNameRef name);
 
 }
 
@@ -1597,10 +1597,10 @@ bool MCNameIsEqualTo(MCNameRef self, MCNameRef p_other_name, bool p_case_sensiti
 extern "C" {
 
 // The empty name object;
-MCEXPORT extern MCNameRef kMCEmptyName;
+MC_DLLEXPORT extern MCNameRef kMCEmptyName;
 
-MCEXPORT extern MCNameRef kMCTrueName;
-MCEXPORT extern MCNameRef kMCFalseName;
+MC_DLLEXPORT extern MCNameRef kMCTrueName;
+MC_DLLEXPORT extern MCNameRef kMCFalseName;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1662,140 +1662,140 @@ enum
 /////////
 
 // The empty string.
-MCEXPORT extern MCStringRef kMCEmptyString;
+MC_DLLEXPORT extern MCStringRef kMCEmptyString;
 
 // The default string for the 'true' boolean value.
-MCEXPORT extern MCStringRef kMCTrueString;
+MC_DLLEXPORT extern MCStringRef kMCTrueString;
 
 // The default string for the 'false' boolean value.
-MCEXPORT extern MCStringRef kMCFalseString;
+MC_DLLEXPORT extern MCStringRef kMCFalseString;
 
 // The default string for the 'mixed' value of chunk properties.
-MCEXPORT extern MCStringRef kMCMixedString;
+MC_DLLEXPORT extern MCStringRef kMCMixedString;
 
 // The default string for ','.
-MCEXPORT extern MCStringRef kMCCommaString;
+MC_DLLEXPORT extern MCStringRef kMCCommaString;
 
 // The default string for '\n'.
-MCEXPORT extern MCStringRef kMCLineEndString;
+MC_DLLEXPORT extern MCStringRef kMCLineEndString;
 
 // The default string for '\t'.
-MCEXPORT extern MCStringRef kMCTabString;
+MC_DLLEXPORT extern MCStringRef kMCTabString;
 
 /////////
 
 // Creates an MCStringRef wrapping the given constant c-string. Note that
 // the c-string must be a C static string.
-MCEXPORT MCStringRef MCSTR(const char *string);
+MC_DLLEXPORT MCStringRef MCSTR(const char *string);
 
-MCEXPORT const char *MCStringGetCString(MCStringRef p_string);
-MCEXPORT bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
+MC_DLLEXPORT const char *MCStringGetCString(MCStringRef p_string);
+MC_DLLEXPORT bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
 
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
-MCEXPORT bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
-MCEXPORT bool MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 
 // Create an immutable string from the given unicode char sequence.
-MCEXPORT bool MCStringCreateWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
-MCEXPORT bool MCStringCreateWithCharsAndRelease(unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithCharsAndRelease(unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
 
 // Create an immutable string from the given NUL terminated unicode char sequence.
-MCEXPORT bool MCStringCreateWithWString(const unichar_t *wstring, MCStringRef& r_string);
-MCEXPORT bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithWString(const unichar_t *wstring, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStringRef& r_string);
 
 // Create an immutable string from the given native char sequence.
-MCEXPORT bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
-MCEXPORT bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
 
 // Create an immutable string from the given (native) c-string.
-MCEXPORT bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
-MCEXPORT bool MCStringCreateWithCStringAndRelease(char_t *cstring, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithCStringAndRelease(const char *cstring, MCStringRef& r_string);
 
 #ifdef __HAS_CORE_FOUNDATION__
 // Create a string from a CoreFoundation string object.
-MCEXPORT bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
-MCEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
 #ifdef __LINUX__
 // Create a string from a C string in the system encoding
-MCEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
+MC_DLLEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
 #endif
 
 // Create a mutable string with the given initial capacity. Note that the
 // initial capacity is only treated as a hint, the string will extend itself
 // as necessary.
-MCEXPORT bool MCStringCreateMutable(uindex_t initial_capacity, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateMutable(uindex_t initial_capacity, MCStringRef& r_string);
 
 /////////
 
 // Encode the given string with the specified encoding. Characters which cannot
 // be represented in the target encoding are replaced by '?'.
-MCEXPORT bool MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
-MCEXPORT bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
+MC_DLLEXPORT bool MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
+MC_DLLEXPORT bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
 
 // Decode the given data, intepreting in the given encoding.
-MCEXPORT bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
-MCEXPORT bool MCStringDecodeAndRelease(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringDecodeAndRelease(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 
 /////////
 
 // Create an immutable string, built using the given format specification and
 // argument list.
-MCEXPORT bool MCStringFormat(MCStringRef& r_string, const char *format, ...);
-MCEXPORT bool MCStringFormatV(MCStringRef& r_string, const char *format, va_list args);
+MC_DLLEXPORT bool MCStringFormat(MCStringRef& r_string, const char *format, ...);
+MC_DLLEXPORT bool MCStringFormatV(MCStringRef& r_string, const char *format, va_list args);
 
 /////////
 
 // Copy the given string as immutable.
-MCEXPORT bool MCStringCopy(MCStringRef string, MCStringRef& r_new_string);
+MC_DLLEXPORT bool MCStringCopy(MCStringRef string, MCStringRef& r_new_string);
 
 // Copy the given string as immutable, releasing the original.
-MCEXPORT bool MCStringCopyAndRelease(MCStringRef string, MCStringRef& r_new_string);
+MC_DLLEXPORT bool MCStringCopyAndRelease(MCStringRef string, MCStringRef& r_new_string);
 
 // Copy the given string as mutable.
-MCEXPORT bool MCStringMutableCopy(MCStringRef string, MCStringRef& r_new_string);
+MC_DLLEXPORT bool MCStringMutableCopy(MCStringRef string, MCStringRef& r_new_string);
 
 // Copy the given string as mutable, releasing the original.
-MCEXPORT bool MCStringMutableCopyAndRelease(MCStringRef string, MCStringRef& r_new_string);
+MC_DLLEXPORT bool MCStringMutableCopyAndRelease(MCStringRef string, MCStringRef& r_new_string);
 
 /////////
 
 // Copy a substring of the given string as immutable.
-MCEXPORT bool MCStringCopySubstring(MCStringRef string, MCRange range, MCStringRef& r_substring);
+MC_DLLEXPORT bool MCStringCopySubstring(MCStringRef string, MCRange range, MCStringRef& r_substring);
 
 // Copy a substring of the given string as immutable, releasing the original.
-MCEXPORT bool MCStringCopySubstringAndRelease(MCStringRef string, MCRange range, MCStringRef& r_substring);
+MC_DLLEXPORT bool MCStringCopySubstringAndRelease(MCStringRef string, MCRange range, MCStringRef& r_substring);
 
 // Copy a substring of the given string as mutable.
-MCEXPORT bool MCStringMutableCopySubstring(MCStringRef string, MCRange range, MCStringRef& r_substring);
+MC_DLLEXPORT bool MCStringMutableCopySubstring(MCStringRef string, MCRange range, MCStringRef& r_substring);
 
 // Copy a substring of the given string as mutable, releasing the original.
-MCEXPORT bool MCStringMutableCopySubstringAndRelease(MCStringRef string, MCRange range, MCStringRef& r_substring);
+MC_DLLEXPORT bool MCStringMutableCopySubstringAndRelease(MCStringRef string, MCRange range, MCStringRef& r_substring);
 
 /////////
 
 // Returns true if the string is mutable
-MCEXPORT bool MCStringIsMutable(const MCStringRef string);
+MC_DLLEXPORT bool MCStringIsMutable(const MCStringRef string);
 
 // Returns true if the string is the empty string.
-MCEXPORT bool MCStringIsEmpty(MCStringRef string);
+MC_DLLEXPORT bool MCStringIsEmpty(MCStringRef string);
 
 // Returns true if the the string only requires native characters to represent.
-MCEXPORT bool MCStringCanBeNative(MCStringRef string);
+MC_DLLEXPORT bool MCStringCanBeNative(MCStringRef string);
 
 // Returns true if under the given comparison conditions, string cannot be represented natively.
-MCEXPORT bool MCStringCantBeNative(MCStringRef string, MCStringOptions p_options);
+MC_DLLEXPORT bool MCStringCantBeNative(MCStringRef string, MCStringOptions p_options);
 
 // Returns true if the string is stored as native chars.
-MCEXPORT bool MCStringIsNative(MCStringRef string);
+MC_DLLEXPORT bool MCStringIsNative(MCStringRef string);
 
 // Returns true if the string only requires BMP characters to represent.
-MCEXPORT bool MCStringIsSimple(MCStringRef string);
+MC_DLLEXPORT bool MCStringIsSimple(MCStringRef string);
 
 // Returns true if the string only comprises non-combining characters.
-MCEXPORT bool MCStringIsUncombined(MCStringRef string);
+MC_DLLEXPORT bool MCStringIsUncombined(MCStringRef string);
 
 /////////
 
@@ -1805,77 +1805,77 @@ MCEXPORT bool MCStringIsUncombined(MCStringRef string);
 // natively encoded strings are at most the same length as their unicode encoded
 // counterparts (the subtleties being surrogate pairs map to '?', and things
 // like e,acute map to 'e-acute').
-MCEXPORT uindex_t MCStringGetLength(const MCStringRef string);
+MC_DLLEXPORT uindex_t MCStringGetLength(const MCStringRef string);
 
 // Return a pointer to the char backing-store if possible. Note that if this
 // method returns nil, then GetChars() must be used to fetch the contents as
 // unicode codeunits.
-MCEXPORT const unichar_t *MCStringGetCharPtr(MCStringRef string);
+MC_DLLEXPORT const unichar_t *MCStringGetCharPtr(MCStringRef string);
 
 // Return a pointer to the native char backing-store if possible. Note that if
 // the method returns nil, then GetNativeChars() must be used to fetch the contents
 // in native encoding.
-MCEXPORT const char_t *MCStringGetNativeCharPtr(MCStringRef string);
+MC_DLLEXPORT const char_t *MCStringGetNativeCharPtr(MCStringRef string);
 // The native length may be different from the string char count.
-MCEXPORT const char_t *MCStringGetNativeCharPtrAndLength(MCStringRef self, uindex_t& r_native_length);
+MC_DLLEXPORT const char_t *MCStringGetNativeCharPtrAndLength(MCStringRef self, uindex_t& r_native_length);
 
 // Returns the Unicode codepoint at the given codepoint index
-MCEXPORT codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
+MC_DLLEXPORT codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
 
 // Returns the char at the given index.
-MCEXPORT unichar_t MCStringGetCharAtIndex(MCStringRef string, uindex_t index);
+MC_DLLEXPORT unichar_t MCStringGetCharAtIndex(MCStringRef string, uindex_t index);
 
 // Returns the native char at the given index.
-MCEXPORT char_t MCStringGetNativeCharAtIndex(MCStringRef string, uindex_t index);
+MC_DLLEXPORT char_t MCStringGetNativeCharAtIndex(MCStringRef string, uindex_t index);
 
 // Returns the Unicode codepoint (not UTF-16 char) at the given codepoint index
-MCEXPORT codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
+MC_DLLEXPORT codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
 
 // Returns the sequence of chars making up the given range in 'chars' and returns
 // the number of chars generated. If 'chars' is nil, just the number of chars that
 // would be generated is returned.
-MCEXPORT uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
+MC_DLLEXPORT uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 
 // Returns the sequence of native chars making up the given range in 'chars' and
 // returns the number of chars generated. If 'chars' is nil, just the number of chars
 // that would be generated is returned. Any unmappable chars get generated as '?'.
-MCEXPORT uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
+MC_DLLEXPORT uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
 
 // Nativize self
-MCEXPORT void MCStringNativize(MCStringRef string);
+MC_DLLEXPORT void MCStringNativize(MCStringRef string);
 
 // Maps from a codepoint (character) range to a code unit (StringRef) range
-MCEXPORT bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);
+MC_DLLEXPORT bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);
 
 // Maps from a code unit (StringRef) range to a codepoint (character) range
-MCEXPORT bool MCStringUnmapCodepointIndices(MCStringRef, MCRange p_string_range, MCRange &r_codepoint_range);
+MC_DLLEXPORT bool MCStringUnmapCodepointIndices(MCStringRef, MCRange p_string_range, MCRange &r_codepoint_range);
 
 // Maps from a grapheme (visual character) range to a code unit (StringRef) range
-MCEXPORT bool MCStringMapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_grapheme_range, MCRange& r_string_range);
+MC_DLLEXPORT bool MCStringMapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_grapheme_range, MCRange& r_string_range);
 
 // Maps from a code unit (StringRef) range to a grapheme (visual character) range
-MCEXPORT bool MCStringUnmapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange& r_grapheme_range);
+MC_DLLEXPORT bool MCStringUnmapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange& r_grapheme_range);
 
 // Maps from a word range to a codeunit (StringRef) range
-MCEXPORT bool MCStringMapTrueWordIndices(MCStringRef, MCLocaleRef, MCRange p_word_range, MCRange& r_string_range);
+MC_DLLEXPORT bool MCStringMapTrueWordIndices(MCStringRef, MCLocaleRef, MCRange p_word_range, MCRange& r_string_range);
 
 // Maps from a codeunit (StringRef) range to a word range
-MCEXPORT bool MCStringUnmapTrueWordIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_word_range);
+MC_DLLEXPORT bool MCStringUnmapTrueWordIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_word_range);
 
 // Maps from a sentence range to a codeunit (StringRef) range
-MCEXPORT bool MCStringMapSentenceIndices(MCStringRef, MCLocaleRef, MCRange p_sentence_range, MCRange& r_string_range);
+MC_DLLEXPORT bool MCStringMapSentenceIndices(MCStringRef, MCLocaleRef, MCRange p_sentence_range, MCRange& r_string_range);
 
 // Maps from a codeunit (StringRef) range to a sentence range
-MCEXPORT bool MCStringUnmapSentenceIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_sentence_range);
+MC_DLLEXPORT bool MCStringUnmapSentenceIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_sentence_range);
 
 // Maps from a paragraph range to a codeunit (StringRef) range
-MCEXPORT bool MCStringMapParagraphIndices(MCStringRef, MCLocaleRef, MCRange p_paragraph_range, MCRange& r_string_range);
+MC_DLLEXPORT bool MCStringMapParagraphIndices(MCStringRef, MCLocaleRef, MCRange p_paragraph_range, MCRange& r_string_range);
 
 // Maps from a codeunit (StringRef) range to a word range
-MCEXPORT bool MCStringUnmapParagraphIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_paragraph_range);
+MC_DLLEXPORT bool MCStringUnmapParagraphIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_paragraph_range);
 
 // Returns true if the codepoint is alphabetic or numeric.
-MCEXPORT bool MCStringCodepointIsWordPart(codepoint_t p_codepoint);
+MC_DLLEXPORT bool MCStringCodepointIsWordPart(codepoint_t p_codepoint);
 
 // Flexible grapheme/codepoint/codeunit mapping used for "char" chunk expressions
 enum MCCharChunkType
@@ -1887,153 +1887,153 @@ enum MCCharChunkType
 
 const MCCharChunkType kMCDefaultCharChunkType = kMCCharChunkTypeGrapheme;
 
-MCEXPORT bool MCStringMapIndices(MCStringRef, MCCharChunkType, MCRange p_char_range, MCRange &r_codeunit_range);
-MCEXPORT bool MCStringUnmapIndices(MCStringRef, MCCharChunkType, MCRange p_codeunit_range, MCRange &r_char_range);
+MC_DLLEXPORT bool MCStringMapIndices(MCStringRef, MCCharChunkType, MCRange p_char_range, MCRange &r_codeunit_range);
+MC_DLLEXPORT bool MCStringUnmapIndices(MCStringRef, MCCharChunkType, MCRange p_codeunit_range, MCRange &r_char_range);
 
 /////////
 
 // Converts the contents of the string to bytes using the given encoding. The caller
 // takes ownership of the byte array. Note that the returned array is NUL terminated,
 // but this is not reflected in the byte count.
-MCEXPORT bool MCStringConvertToBytes(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count);
+MC_DLLEXPORT bool MCStringConvertToBytes(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count);
 
 // [[ Bug 12204 ]] textEncode ASCII support is actually native
 // Converts the contents of the string to ASCII characters - excluding the characters from the extended range
-MCEXPORT bool MCStringConvertToAscii(MCStringRef self, char_t *&r_chars, uindex_t& r_char_count);
+MC_DLLEXPORT bool MCStringConvertToAscii(MCStringRef self, char_t *&r_chars, uindex_t& r_char_count);
 
 // Converts the contents of the string to unicode. The caller takes ownership of the
 // char array. Note that the returned array is NUL terminated, but this is not
 // reflected in the char count.
-MCEXPORT bool MCStringConvertToUnicode(MCStringRef string, unichar_t*& r_chars, uindex_t& r_char_count);
+MC_DLLEXPORT bool MCStringConvertToUnicode(MCStringRef string, unichar_t*& r_chars, uindex_t& r_char_count);
 
 // Converts the contents of the string to native - using '?' as the unmappable char.
 // The caller takes ownership of the char array. Note that the returned array is NUL
 // terminated, but this is not reflected in the char count.
-MCEXPORT bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
+MC_DLLEXPORT bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
 
 // Normalizes and converts to native
-MCEXPORT bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
+MC_DLLEXPORT bool MCStringNormalizeAndConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
 
 // Converts the contents of the string to UTF-8. The caller takes ownership of the
 // char array. Note that the returned array is NUL terminated but this is not
 // reflected in the char count.
-MCEXPORT bool MCStringConvertToUTF8(MCStringRef string, char*& r_chars, uindex_t& r_char_count);
+MC_DLLEXPORT bool MCStringConvertToUTF8(MCStringRef string, char*& r_chars, uindex_t& r_char_count);
 
 // Converts the contents of the string to UTF-32.
-MCEXPORT bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_t &r_char_count);
+MC_DLLEXPORT bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_t &r_char_count);
 
 // Normalizes and converts to c-string
-MCEXPORT bool MCStringNormalizeAndConvertToCString(MCStringRef string, char*& r_cstring);
+MC_DLLEXPORT bool MCStringNormalizeAndConvertToCString(MCStringRef string, char*& r_cstring);
 
 // Converts the content to char_t*
-MCEXPORT bool MCStringConvertToCString(MCStringRef string, char*& r_cstring);
+MC_DLLEXPORT bool MCStringConvertToCString(MCStringRef string, char*& r_cstring);
 
 // Converts the content to wchar_t*
-MCEXPORT bool MCStringConvertToWString(MCStringRef string, unichar_t*& r_wstring);
+MC_DLLEXPORT bool MCStringConvertToWString(MCStringRef string, unichar_t*& r_wstring);
 
 // Converts the content to unicode_t*
-MCEXPORT bool MCStringConvertToUTF8String(MCStringRef string, char*& r_utf8string);
+MC_DLLEXPORT bool MCStringConvertToUTF8String(MCStringRef string, char*& r_utf8string);
 
 #if defined(__MAC__) || defined (__IOS__)
 // Converts the content to CFStringRef
-MCEXPORT bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
+MC_DLLEXPORT bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
 #endif
 
 #ifdef __WINDOWS__
-MCEXPORT bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr);
+MC_DLLEXPORT bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr);
 #endif
 
 #ifdef __LINUX__
-MCEXPORT bool MCStringConvertToSysString(MCStringRef string, const char *&sys_string);
+MC_DLLEXPORT bool MCStringConvertToSysString(MCStringRef string, const char *&sys_string);
 #endif
 
 /////////
 
 // Returns the hash of the given string, processing as according to options.
-MCEXPORT hash_t MCStringHash(MCStringRef string, MCStringOptions options);
+MC_DLLEXPORT hash_t MCStringHash(MCStringRef string, MCStringOptions options);
 
 // Returns true if the two strings are equal, processing as appropriate according
 // to options.
-MCEXPORT bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
-MCEXPORT bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
+MC_DLLEXPORT bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
+MC_DLLEXPORT bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
 
 // Returns true if the substring is equal to the other, according to options
-MCEXPORT bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange range, MCStringRef p_other, MCStringOptions p_options);
-MCEXPORT bool MCStringSubstringIsEqualToSubstring(MCStringRef string, MCRange range, MCStringRef p_other, MCRange other_range, MCStringOptions p_options);
+MC_DLLEXPORT bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange range, MCStringRef p_other, MCStringOptions p_options);
+MC_DLLEXPORT bool MCStringSubstringIsEqualToSubstring(MCStringRef string, MCRange range, MCStringRef p_other, MCRange other_range, MCStringOptions p_options);
 
 // Returns -1, 0, or 1, depending on whether left < 0, left == right or left > 0,
 // processing as appropriate according to options. The ordering used is codepoint-
 // wise lexicographic.
-MCEXPORT compare_t MCStringCompareTo(MCStringRef string, MCStringRef other, MCStringOptions options);
+MC_DLLEXPORT compare_t MCStringCompareTo(MCStringRef string, MCStringRef other, MCStringOptions options);
 
 // Returns true if the string begins with the prefix string, processing as
 // appropriate according to options.
-MCEXPORT bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options);
-MCEXPORT bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length);
-MCEXPORT bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
+MC_DLLEXPORT bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options);
+MC_DLLEXPORT bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length);
+MC_DLLEXPORT bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
 
 // Returns true if the string ends with the suffix string, processing as
 // appropriate according to options.
-MCEXPORT bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options);
-MCEXPORT bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length);
-MCEXPORT bool MCStringEndsWithCString(MCStringRef string, const char_t *suffix_cstring, MCStringOptions options);
+MC_DLLEXPORT bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options);
+MC_DLLEXPORT bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length);
+MC_DLLEXPORT bool MCStringEndsWithCString(MCStringRef string, const char_t *suffix_cstring, MCStringOptions options);
 
 // Returns true if the string contains the given needle string, processing as
 // appropriate according to options.
-MCEXPORT bool MCStringContains(MCStringRef string, MCStringRef needle, MCStringOptions options);
+MC_DLLEXPORT bool MCStringContains(MCStringRef string, MCStringRef needle, MCStringOptions options);
 
 // Returns true if the substring contains the given needle string, processing as
 // appropriate according to options.
-MCEXPORT bool MCStringSubstringContains(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options);
+MC_DLLEXPORT bool MCStringSubstringContains(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options);
 
 //////////
 
 // Find the first offset of needle in string, on or after index 'after',
 // processing as appropriate according to options.
-MCEXPORT bool MCStringFirstIndexOf(MCStringRef string, MCStringRef needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
-MCEXPORT bool MCStringFirstIndexOfStringInRange(MCStringRef string, MCStringRef p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
+MC_DLLEXPORT bool MCStringFirstIndexOf(MCStringRef string, MCStringRef needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
+MC_DLLEXPORT bool MCStringFirstIndexOfStringInRange(MCStringRef string, MCStringRef p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
 
 // Find the first offset of needle in string - where needle is a Unicode character
 // (note it is a codepoint, not unichar - i.e. a 20-bit value).
-MCEXPORT bool MCStringFirstIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
+MC_DLLEXPORT bool MCStringFirstIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
 // Find the first offset of needle in given range of string - where needle is a Unicode character
 // (note it is a codepoint, not unichar - i.e. a 20-bit value).
-MCEXPORT bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
+MC_DLLEXPORT bool MCStringFirstIndexOfCharInRange(MCStringRef self, codepoint_t p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
 
 // Find the last offset of needle in string, on or before index 'before',
 // processing as appropriate according to options.
-MCEXPORT bool MCStringLastIndexOf(MCStringRef string, MCStringRef needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
-MCEXPORT bool MCStringLastIndexOfStringInRange(MCStringRef string, MCStringRef p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
+MC_DLLEXPORT bool MCStringLastIndexOf(MCStringRef string, MCStringRef needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
+MC_DLLEXPORT bool MCStringLastIndexOfStringInRange(MCStringRef string, MCStringRef p_needle, MCRange p_range, MCStringOptions p_options, uindex_t& r_offset);
 
 // Find the last offset of needle in string - where needle is a Unicode character
 // (note it is a codepoint, not unichar - i.e. a 20-bit value).
-MCEXPORT bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
+MC_DLLEXPORT bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
 
 // Search 'range' of 'string' for 'needle' processing as appropriate to optiosn
 // and returning any located string in 'result'. If the result is false, no range is
 // returned.
-MCEXPORT bool MCStringFind(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options, MCRange* r_result);
+MC_DLLEXPORT bool MCStringFind(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options, MCRange* r_result);
 
 // Search 'range' of 'string' for 'needle' processing as appropriate to options
 // and returning the number of occurances found.
-MCEXPORT uindex_t MCStringCount(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options);
-MCEXPORT uindex_t MCStringCountChar(MCStringRef string, MCRange range, codepoint_t needle, MCStringOptions options);
+MC_DLLEXPORT uindex_t MCStringCount(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options);
+MC_DLLEXPORT uindex_t MCStringCountChar(MCStringRef string, MCRange range, codepoint_t needle, MCStringOptions options);
 
 //////////
 
 // Find the first index of separator in string processing as according to
 // options, then split the string into head and tail - the strings either side
 // of the needle.
-MCEXPORT bool MCStringDivide(MCStringRef string, MCStringRef separator, MCStringOptions options, MCStringRef& r_head, MCStringRef& r_tail);
-MCEXPORT bool MCStringDivideAtChar(MCStringRef string, codepoint_t separator, MCStringOptions options, MCStringRef& r_head, MCStringRef& r_tail);
-MCEXPORT bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCStringRef& r_head, MCStringRef& r_tail);
+MC_DLLEXPORT bool MCStringDivide(MCStringRef string, MCStringRef separator, MCStringOptions options, MCStringRef& r_head, MCStringRef& r_tail);
+MC_DLLEXPORT bool MCStringDivideAtChar(MCStringRef string, codepoint_t separator, MCStringOptions options, MCStringRef& r_head, MCStringRef& r_tail);
+MC_DLLEXPORT bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCStringRef& r_head, MCStringRef& r_tail);
 
 //////////
 
 // Break the string into ranges inbetween the given delimiter char. A trailing
 // empty range is ignored. The caller is responsible for deleting the returned
 // array.
-MCEXPORT bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separator, MCStringOptions options, MCRange*& r_ranges, uindex_t& r_range_count);
+MC_DLLEXPORT bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separator, MCStringOptions options, MCRange*& r_ranges, uindex_t& r_range_count);
 
 //////////
 
@@ -2041,130 +2041,130 @@ MCEXPORT bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separator,
 // form of a string is that which is used to perform comparisons.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-MCEXPORT bool MCStringFold(MCStringRef string, MCStringOptions options);
+MC_DLLEXPORT bool MCStringFold(MCStringRef string, MCStringOptions options);
 
 // Lowercase the string.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-MCEXPORT bool MCStringLowercase(MCStringRef string, MCLocaleRef p_in_locale);
+MC_DLLEXPORT bool MCStringLowercase(MCStringRef string, MCLocaleRef p_in_locale);
 
 // Uppercase the string.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-MCEXPORT bool MCStringUppercase(MCStringRef string, MCLocaleRef p_in_locale);
+MC_DLLEXPORT bool MCStringUppercase(MCStringRef string, MCLocaleRef p_in_locale);
 
 /////////
 
 // Append suffix to string.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-MCEXPORT bool MCStringAppend(MCStringRef string, MCStringRef suffix);
-MCEXPORT bool MCStringAppendSubstring(MCStringRef string, MCStringRef suffix, MCRange range);
-MCEXPORT bool MCStringAppendChars(MCStringRef string, const unichar_t *chars, uindex_t count);
-MCEXPORT bool MCStringAppendNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
-MCEXPORT bool MCStringAppendChar(MCStringRef string, unichar_t p_char);
-MCEXPORT bool MCStringAppendNativeChar(MCStringRef string, char_t p_char);
-MCEXPORT bool MCStringAppendCodepoint(MCStringRef string, codepoint_t p_codepoint);
+MC_DLLEXPORT bool MCStringAppend(MCStringRef string, MCStringRef suffix);
+MC_DLLEXPORT bool MCStringAppendSubstring(MCStringRef string, MCStringRef suffix, MCRange range);
+MC_DLLEXPORT bool MCStringAppendChars(MCStringRef string, const unichar_t *chars, uindex_t count);
+MC_DLLEXPORT bool MCStringAppendNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
+MC_DLLEXPORT bool MCStringAppendChar(MCStringRef string, unichar_t p_char);
+MC_DLLEXPORT bool MCStringAppendNativeChar(MCStringRef string, char_t p_char);
+MC_DLLEXPORT bool MCStringAppendCodepoint(MCStringRef string, codepoint_t p_codepoint);
 
 // Prepend prefix to string.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-MCEXPORT bool MCStringPrepend(MCStringRef string, MCStringRef prefix);
-MCEXPORT bool MCStringPrependSubstring(MCStringRef string, MCStringRef suffix, MCRange range);
-MCEXPORT bool MCStringPrependChars(MCStringRef string, const unichar_t *chars, uindex_t count);
-MCEXPORT bool MCStringPrependNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
-MCEXPORT bool MCStringPrependChar(MCStringRef string, unichar_t p_char);
-MCEXPORT bool MCStringPrependNativeChar(MCStringRef string, char_t p_char);
-MCEXPORT bool MCStringPrependCodepoint(MCStringRef string, codepoint_t p_codepoint);
+MC_DLLEXPORT bool MCStringPrepend(MCStringRef string, MCStringRef prefix);
+MC_DLLEXPORT bool MCStringPrependSubstring(MCStringRef string, MCStringRef suffix, MCRange range);
+MC_DLLEXPORT bool MCStringPrependChars(MCStringRef string, const unichar_t *chars, uindex_t count);
+MC_DLLEXPORT bool MCStringPrependNativeChars(MCStringRef string, const char_t *chars, uindex_t count);
+MC_DLLEXPORT bool MCStringPrependChar(MCStringRef string, unichar_t p_char);
+MC_DLLEXPORT bool MCStringPrependNativeChar(MCStringRef string, char_t p_char);
+MC_DLLEXPORT bool MCStringPrependCodepoint(MCStringRef string, codepoint_t p_codepoint);
 
 // Insert new_string into string at offset 'at'.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-MCEXPORT bool MCStringInsert(MCStringRef string, uindex_t at, MCStringRef new_string);
-MCEXPORT bool MCStringInsertSubstring(MCStringRef string, uindex_t at, MCStringRef new_string, MCRange range);
-MCEXPORT bool MCStringInsertChars(MCStringRef string, uindex_t at, const unichar_t *chars, uindex_t count);
-MCEXPORT bool MCStringInsertNativeChars(MCStringRef string, uindex_t at, const char_t *chars, uindex_t count);
-MCEXPORT bool MCStringInsertChar(MCStringRef string, uindex_t at, unichar_t p_char);
-MCEXPORT bool MCStringInsertNativeChar(MCStringRef string, uindex_t at, char_t p_char);
-MCEXPORT bool MCStringInsertCodepoint (MCStringRef string, uindex_t p_at, codepoint_t p_codepoint);
+MC_DLLEXPORT bool MCStringInsert(MCStringRef string, uindex_t at, MCStringRef new_string);
+MC_DLLEXPORT bool MCStringInsertSubstring(MCStringRef string, uindex_t at, MCStringRef new_string, MCRange range);
+MC_DLLEXPORT bool MCStringInsertChars(MCStringRef string, uindex_t at, const unichar_t *chars, uindex_t count);
+MC_DLLEXPORT bool MCStringInsertNativeChars(MCStringRef string, uindex_t at, const char_t *chars, uindex_t count);
+MC_DLLEXPORT bool MCStringInsertChar(MCStringRef string, uindex_t at, unichar_t p_char);
+MC_DLLEXPORT bool MCStringInsertNativeChar(MCStringRef string, uindex_t at, char_t p_char);
+MC_DLLEXPORT bool MCStringInsertCodepoint (MCStringRef string, uindex_t p_at, codepoint_t p_codepoint);
 
 // Remove 'range' characters from 'string'.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-MCEXPORT bool MCStringRemove(MCStringRef string, MCRange range);
+MC_DLLEXPORT bool MCStringRemove(MCStringRef string, MCRange range);
 
 // Retain only 'range' characters from 'string'.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-MCEXPORT bool MCStringSubstring(MCStringRef string, MCRange range);
+MC_DLLEXPORT bool MCStringSubstring(MCStringRef string, MCRange range);
 
 // Replace 'range' characters in 'string' with 'replacement'.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-MCEXPORT bool MCStringReplace(MCStringRef string, MCRange range, MCStringRef replacement);
+MC_DLLEXPORT bool MCStringReplace(MCStringRef string, MCRange range, MCStringRef replacement);
 
 // Pad the end of the string with count copies of value. If value is nil then count
 // uninitialized bytes will be inserted after at.
 //
 // Note that 'string' must be mutable.
-MCEXPORT bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef value);
+MC_DLLEXPORT bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef value);
 
 // Resolves the directionality of the string and returns true if it is left to right.
 // (Uses MCBidiFirstStrongIsolate to determine directionality).
-MCEXPORT bool MCStringResolvesLeftToRight(MCStringRef p_string);
+MC_DLLEXPORT bool MCStringResolvesLeftToRight(MCStringRef p_string);
 
 // Find and replace all instances of pattern in target with replacement.
 //
 // Note that 'string' must be mutable.
-MCEXPORT bool MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options);
-MCEXPORT bool MCStringFindAndReplaceChar(MCStringRef string, codepoint_t pattern, codepoint_t replacement, MCStringOptions options);
+MC_DLLEXPORT bool MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options);
+MC_DLLEXPORT bool MCStringFindAndReplaceChar(MCStringRef string, codepoint_t pattern, codepoint_t replacement, MCStringOptions options);
 
-MCEXPORT bool MCStringWildcardMatch(MCStringRef source, MCRange source_range, MCStringRef pattern, MCStringOptions p_options);
+MC_DLLEXPORT bool MCStringWildcardMatch(MCStringRef source, MCRange source_range, MCStringRef pattern, MCStringOptions p_options);
 
 /////////
 
 // Append a formatted string to another string.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-MCEXPORT bool MCStringAppendFormat(MCStringRef string, const char *format, ...);
-MCEXPORT bool MCStringAppendFormatV(MCStringRef string, const char *format, va_list args);
+MC_DLLEXPORT bool MCStringAppendFormat(MCStringRef string, const char *format, ...);
+MC_DLLEXPORT bool MCStringAppendFormatV(MCStringRef string, const char *format, va_list args);
 
 //////////
 
-MCEXPORT bool MCStringSplit(MCStringRef string, MCStringRef element_del, MCStringRef key_del, MCStringOptions options, MCArrayRef& r_array);
-MCEXPORT bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, MCStringRef row_del, MCStringOptions options, MCArrayRef& r_array);
+MC_DLLEXPORT bool MCStringSplit(MCStringRef string, MCStringRef element_del, MCStringRef key_del, MCStringOptions options, MCArrayRef& r_array);
+MC_DLLEXPORT bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, MCStringRef row_del, MCStringOptions options, MCArrayRef& r_array);
 
 //////////
 
 // Proper list versions of string splitting
-MCEXPORT bool MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
-MCEXPORT bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
+MC_DLLEXPORT bool MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
+MC_DLLEXPORT bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
 
 //////////
 
 // Converts two surrogate pair code units into a codepoint
-MCEXPORT codepoint_t MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail);
+MC_DLLEXPORT codepoint_t MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail);
 
 // Converts a codepoint to UTF-16 code units and returns the number of units
-MCEXPORT unsigned int MCStringCodepointToSurrogates(codepoint_t, unichar_t (&r_units)[2]);
+MC_DLLEXPORT unsigned int MCStringCodepointToSurrogates(codepoint_t, unichar_t (&r_units)[2]);
 
 // Returns true if the code unit at the given index and the next code unit form
 // a valid surrogate pair. Lone lead or trail code units are not valid pairs.
-MCEXPORT bool MCStringIsValidSurrogatePair(MCStringRef, uindex_t);
+MC_DLLEXPORT bool MCStringIsValidSurrogatePair(MCStringRef, uindex_t);
 
 //////////
 
 // Normalises a string into the requested form
-MCEXPORT bool MCStringNormalizedCopyNFC(MCStringRef, MCStringRef&);
-MCEXPORT bool MCStringNormalizedCopyNFD(MCStringRef, MCStringRef&);
-MCEXPORT bool MCStringNormalizedCopyNFKC(MCStringRef, MCStringRef&);
-MCEXPORT bool MCStringNormalizedCopyNFKD(MCStringRef, MCStringRef&);
+MC_DLLEXPORT bool MCStringNormalizedCopyNFC(MCStringRef, MCStringRef&);
+MC_DLLEXPORT bool MCStringNormalizedCopyNFD(MCStringRef, MCStringRef&);
+MC_DLLEXPORT bool MCStringNormalizedCopyNFKC(MCStringRef, MCStringRef&);
+MC_DLLEXPORT bool MCStringNormalizedCopyNFKD(MCStringRef, MCStringRef&);
 
 //////////
 
 // Utility to avoid multiple number conversion from a string when possible
-MCEXPORT bool MCStringSetNumericValue(MCStringRef self, double p_value);
-MCEXPORT bool MCStringGetNumericValue(MCStringRef self, double &r_value);
+MC_DLLEXPORT bool MCStringSetNumericValue(MCStringRef self, double p_value);
+MC_DLLEXPORT bool MCStringGetNumericValue(MCStringRef self, double &r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2172,66 +2172,66 @@ MCEXPORT bool MCStringGetNumericValue(MCStringRef self, double &r_value);
 //
 // Immutable data methods
 
-MCEXPORT extern MCDataRef kMCEmptyData;
+MC_DLLEXPORT extern MCDataRef kMCEmptyData;
 
-MCEXPORT bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
-MCEXPORT bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
+MC_DLLEXPORT bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
+MC_DLLEXPORT bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 
-MCEXPORT bool MCDataIsEmpty(MCDataRef p_data);
+MC_DLLEXPORT bool MCDataIsEmpty(MCDataRef p_data);
 
-MCEXPORT uindex_t MCDataGetLength(MCDataRef p_data);
-MCEXPORT const byte_t *MCDataGetBytePtr(MCDataRef p_data);
+MC_DLLEXPORT uindex_t MCDataGetLength(MCDataRef p_data);
+MC_DLLEXPORT const byte_t *MCDataGetBytePtr(MCDataRef p_data);
 
-MCEXPORT byte_t MCDataGetByteAtIndex(MCDataRef p_data, uindex_t p_index);
+MC_DLLEXPORT byte_t MCDataGetByteAtIndex(MCDataRef p_data, uindex_t p_index);
 
-MCEXPORT hash_t MCDataHash(MCDataRef p_data);
-MCEXPORT bool MCDataIsEqualTo(MCDataRef p_left, MCDataRef p_right);
+MC_DLLEXPORT hash_t MCDataHash(MCDataRef p_data);
+MC_DLLEXPORT bool MCDataIsEqualTo(MCDataRef p_left, MCDataRef p_right);
 
-MCEXPORT compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right);
+MC_DLLEXPORT compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right);
 
 // Mutable data methods
 
-MCEXPORT bool MCDataCreateMutable(uindex_t p_initial_capacity, MCDataRef& r_data);
+MC_DLLEXPORT bool MCDataCreateMutable(uindex_t p_initial_capacity, MCDataRef& r_data);
 
-MCEXPORT bool MCDataCopy(MCDataRef p_data, MCDataRef& r_new_data);
-MCEXPORT bool MCDataCopyAndRelease(MCDataRef p_data, MCDataRef& r_new_data);
-MCEXPORT bool MCDataMutableCopy(MCDataRef p_data, MCDataRef& r_mutable_data);
-MCEXPORT bool MCDataMutableCopyAndRelease(MCDataRef p_data, MCDataRef& r_mutable_data);
+MC_DLLEXPORT bool MCDataCopy(MCDataRef p_data, MCDataRef& r_new_data);
+MC_DLLEXPORT bool MCDataCopyAndRelease(MCDataRef p_data, MCDataRef& r_new_data);
+MC_DLLEXPORT bool MCDataMutableCopy(MCDataRef p_data, MCDataRef& r_mutable_data);
+MC_DLLEXPORT bool MCDataMutableCopyAndRelease(MCDataRef p_data, MCDataRef& r_mutable_data);
 
-MCEXPORT bool MCDataCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
-MCEXPORT bool MCDataCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
-MCEXPORT bool MCDataMutableCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
-MCEXPORT bool MCDataMutableCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+MC_DLLEXPORT bool MCDataCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+MC_DLLEXPORT bool MCDataCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+MC_DLLEXPORT bool MCDataMutableCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+MC_DLLEXPORT bool MCDataMutableCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
 
-MCEXPORT bool MCDataIsMutable(const MCDataRef p_data);
+MC_DLLEXPORT bool MCDataIsMutable(const MCDataRef p_data);
 
-MCEXPORT bool MCDataAppend(MCDataRef r_data, MCDataRef p_suffix);
-MCEXPORT bool MCDataAppendBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte_count);
-MCEXPORT bool MCDataAppendByte(MCDataRef r_data, byte_t p_byte);
+MC_DLLEXPORT bool MCDataAppend(MCDataRef r_data, MCDataRef p_suffix);
+MC_DLLEXPORT bool MCDataAppendBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte_count);
+MC_DLLEXPORT bool MCDataAppendByte(MCDataRef r_data, byte_t p_byte);
 
-MCEXPORT bool MCDataPrepend(MCDataRef r_data, MCDataRef p_prefix);
-MCEXPORT bool MCDataPrependBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte_count);
-MCEXPORT bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
+MC_DLLEXPORT bool MCDataPrepend(MCDataRef r_data, MCDataRef p_prefix);
+MC_DLLEXPORT bool MCDataPrependBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte_count);
+MC_DLLEXPORT bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
 
-MCEXPORT bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
-MCEXPORT bool MCDataInsertBytes(MCDataRef self, uindex_t p_at, const byte_t *p_bytes, uindex_t p_byte_count);
+MC_DLLEXPORT bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
+MC_DLLEXPORT bool MCDataInsertBytes(MCDataRef self, uindex_t p_at, const byte_t *p_bytes, uindex_t p_byte_count);
 
-MCEXPORT bool MCDataRemove(MCDataRef r_data, MCRange p_range);
-MCEXPORT bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
-MCEXPORT bool MCDataReplaceBytes(MCDataRef r_data, MCRange p_range, const byte_t *p_new_data, uindex_t p_byte_count);
+MC_DLLEXPORT bool MCDataRemove(MCDataRef r_data, MCRange p_range);
+MC_DLLEXPORT bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
+MC_DLLEXPORT bool MCDataReplaceBytes(MCDataRef r_data, MCRange p_range, const byte_t *p_new_data, uindex_t p_byte_count);
 
-MCEXPORT bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
+MC_DLLEXPORT bool MCDataPad(MCDataRef data, byte_t byte, uindex_t count);
 
-MCEXPORT bool MCDataContains(MCDataRef p_data, MCDataRef p_needle);
-MCEXPORT bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle);
-MCEXPORT bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle);
+MC_DLLEXPORT bool MCDataContains(MCDataRef p_data, MCDataRef p_needle);
+MC_DLLEXPORT bool MCDataBeginsWith(MCDataRef p_data, MCDataRef p_needle);
+MC_DLLEXPORT bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle);
 
-MCEXPORT bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index);
-MCEXPORT bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index);
+MC_DLLEXPORT bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index);
+MC_DLLEXPORT bool MCDataLastIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index);
 
 // convert the given data to CFDataRef
 #if defined(__MAC__) || defined (__IOS__)
-MCEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);
+MC_DLLEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2239,91 +2239,91 @@ MCEXPORT bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata);
 //  ARRAY DEFINITIONS
 //
 
-MCEXPORT extern MCArrayRef kMCEmptyArray;
+MC_DLLEXPORT extern MCArrayRef kMCEmptyArray;
 
 // Create an immutable array containing the given keys and values.
-MCEXPORT bool MCArrayCreate(bool case_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
+MC_DLLEXPORT bool MCArrayCreate(bool case_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
 // Create an immutable array containing the given keys and values with the requested string comparison options.
-MCEXPORT bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
+MC_DLLEXPORT bool MCArrayCreateWithOptions(bool p_case_sensitive, bool p_form_sensitive, const MCNameRef *keys, const MCValueRef *values, uindex_t length, MCArrayRef& r_array);
 
 // Create an empty mutable array.
-MCEXPORT bool MCArrayCreateMutable(MCArrayRef& r_array);
+MC_DLLEXPORT bool MCArrayCreateMutable(MCArrayRef& r_array);
 // Create an empty mutable array with the requested string comparison options.
-MCEXPORT bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive);
+MC_DLLEXPORT bool MCArrayCreateMutableWithOptions(MCArrayRef& r_array, bool p_case_sensitive, bool p_form_sensitive);
 
 // Make an immutable copy of the given array. If the 'copy and release' form is
 // used then the original array is released (has its reference count reduced by
 // one).
-MCEXPORT bool MCArrayCopy(MCArrayRef array, MCArrayRef& r_new_array);
-MCEXPORT bool MCArrayCopyAndRelease(MCArrayRef array, MCArrayRef& r_new_array);
+MC_DLLEXPORT bool MCArrayCopy(MCArrayRef array, MCArrayRef& r_new_array);
+MC_DLLEXPORT bool MCArrayCopyAndRelease(MCArrayRef array, MCArrayRef& r_new_array);
 
 // Make a mutable copy of the given array. If the 'copy and release' form is
 // used then the original array is released (has its reference count reduced by
 // one).
-MCEXPORT bool MCArrayMutableCopy(MCArrayRef array, MCArrayRef& r_new_array);
-MCEXPORT bool MCArrayMutableCopyAndRelease(MCArrayRef array, MCArrayRef& r_new_array);
+MC_DLLEXPORT bool MCArrayMutableCopy(MCArrayRef array, MCArrayRef& r_new_array);
+MC_DLLEXPORT bool MCArrayMutableCopyAndRelease(MCArrayRef array, MCArrayRef& r_new_array);
 
 // Returns 'true' if the given array is mutable.
-MCEXPORT bool MCArrayIsMutable(MCArrayRef array);
+MC_DLLEXPORT bool MCArrayIsMutable(MCArrayRef array);
 
 // Returns the number of elements in the array.
-MCEXPORT uindex_t MCArrayGetCount(MCArrayRef array);
+MC_DLLEXPORT uindex_t MCArrayGetCount(MCArrayRef array);
 
 // Returns whether the keys of the array have been predesignated case sensitive or not.
-MCEXPORT bool MCArrayIsCaseSensitive(MCArrayRef array);
+MC_DLLEXPORT bool MCArrayIsCaseSensitive(MCArrayRef array);
 // Returns whether the keys of the array have been predesignated form sensitive or not.
-MCEXPORT bool MCArrayIsFormSensitive(MCArrayRef array);
+MC_DLLEXPORT bool MCArrayIsFormSensitive(MCArrayRef array);
 
 // Fetch the value from the array with the given key. The returned value is
 // not retained. If being stored elsewhere ValueCopy should be used to make an
 // immutable copy first. If 'false' is returned it means the key was not found
 // (in this case r_value is undefined).
-MCEXPORT bool MCArrayFetchValue(MCArrayRef array, bool case_sensitive, MCNameRef key, MCValueRef& r_value);
+MC_DLLEXPORT bool MCArrayFetchValue(MCArrayRef array, bool case_sensitive, MCNameRef key, MCValueRef& r_value);
 // Store the given value into the array. The value is copied appropriately so
 // that the original can still be modified without affecting the copy in the
 // array.
-MCEXPORT bool MCArrayStoreValue(MCArrayRef array, bool case_sensitive, MCNameRef key, MCValueRef value);
+MC_DLLEXPORT bool MCArrayStoreValue(MCArrayRef array, bool case_sensitive, MCNameRef key, MCValueRef value);
 // Remove the given key from the array.
-MCEXPORT bool MCArrayRemoveValue(MCArrayRef array, bool case_sensitive, MCNameRef key);
+MC_DLLEXPORT bool MCArrayRemoveValue(MCArrayRef array, bool case_sensitive, MCNameRef key);
 
 // Fetches index i in the given (sequence) array.
-MCEXPORT bool MCArrayFetchValueAtIndex(MCArrayRef array, index_t index, MCValueRef& r_value);
+MC_DLLEXPORT bool MCArrayFetchValueAtIndex(MCArrayRef array, index_t index, MCValueRef& r_value);
 // Store index i in the given (sequence) array.
-MCEXPORT bool MCArrayStoreValueAtIndex(MCArrayRef array, index_t index, MCValueRef value);
+MC_DLLEXPORT bool MCArrayStoreValueAtIndex(MCArrayRef array, index_t index, MCValueRef value);
 // Remove index i from the given (sequence) array.
-MCEXPORT bool MCArrayRemoveValueAtIndex(MCArrayRef array, index_t index);
+MC_DLLEXPORT bool MCArrayRemoveValueAtIndex(MCArrayRef array, index_t index);
 
 // Fetch the value from the array on the given path. The returned value is
 // not retained. If being stored elsewhere ValueCopy should be used to make an
 // immutable copy first. If 'false' is returned it means the key was not found
 // (in this case r_value is undefined).
-MCEXPORT bool MCArrayFetchValueOnPath(MCArrayRef array, bool case_sensitive, const MCNameRef *path, uindex_t path_length, MCValueRef& r_value);
+MC_DLLEXPORT bool MCArrayFetchValueOnPath(MCArrayRef array, bool case_sensitive, const MCNameRef *path, uindex_t path_length, MCValueRef& r_value);
 // Store the given value into the array on the given path. The value is retained
 // and not copied before being inserted.
-MCEXPORT bool MCArrayStoreValueOnPath(MCArrayRef array, bool case_sensitive, const MCNameRef *path, uindex_t path_length, MCValueRef value);
+MC_DLLEXPORT bool MCArrayStoreValueOnPath(MCArrayRef array, bool case_sensitive, const MCNameRef *path, uindex_t path_length, MCValueRef value);
 // Remove the value on the given path in the array.
-MCEXPORT bool MCArrayRemoveValueOnPath(MCArrayRef array, bool case_sensitive, const MCNameRef *path, uindex_t path_length);
+MC_DLLEXPORT bool MCArrayRemoveValueOnPath(MCArrayRef array, bool case_sensitive, const MCNameRef *path, uindex_t path_length);
 
 // Apply the callback function to each element of the array. Do not modify the
 // array within the callback as this will cause undefined behavior.
 typedef bool (*MCArrayApplyCallback)(void *context, MCArrayRef array, MCNameRef key, MCValueRef value);
-MCEXPORT bool MCArrayApply(MCArrayRef array, MCArrayApplyCallback callback, void *context);
+MC_DLLEXPORT bool MCArrayApply(MCArrayRef array, MCArrayApplyCallback callback, void *context);
 
 // Iterate through the array. 'iterator' should be initialized to zero the first
 // time the method is called, and should then be called until it returns 'false'.
 // A return value of 'false' means no further elements. Do not modify the array
 // inbetween calls to Iterate as this will cause undefined behavior.
-MCEXPORT bool MCArrayIterate(MCArrayRef array, uintptr_t& iterator, MCNameRef& r_key, MCValueRef& r_value);
+MC_DLLEXPORT bool MCArrayIterate(MCArrayRef array, uintptr_t& iterator, MCNameRef& r_key, MCValueRef& r_value);
 
 // Returns true if the given array is the empty array.
-MCEXPORT bool MCArrayIsEmpty(MCArrayRef self);
+MC_DLLEXPORT bool MCArrayIsEmpty(MCArrayRef self);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  LIST DEFINITIONS
 //
 
-MCEXPORT extern MCListRef kMCEmptyList;
+MC_DLLEXPORT extern MCListRef kMCEmptyList;
 
 // Create a list from a static list of values - NOT IMPLEMENTED YET.
 // bool MCListCreate(char delimiter, const MCValueRef *values, uindex_t value_count, MCListRef& r_list);
@@ -2337,31 +2337,31 @@ bool MCListCreateMutable(MCStringRef p_delimiter, MCListRef& r_list);
 extern "C" {
 
 // Eventually this will accept any value type, but for now - just strings, names, and booleans.
-MCEXPORT bool MCListAppend(MCListRef list, MCValueRef value);
+MC_DLLEXPORT bool MCListAppend(MCListRef list, MCValueRef value);
 
 // Append a substring to the list.
-MCEXPORT bool MCListAppendSubstring(MCListRef list, MCStringRef value, MCRange range);
+MC_DLLEXPORT bool MCListAppendSubstring(MCListRef list, MCStringRef value, MCRange range);
 
 // Append a sequence of native chars as an element.
-MCEXPORT bool MCListAppendNativeChars(MCListRef list, const char_t *chars, uindex_t char_count);
+MC_DLLEXPORT bool MCListAppendNativeChars(MCListRef list, const char_t *chars, uindex_t char_count);
 
 // Append a formatted string as an element.
-MCEXPORT bool MCListAppendFormat(MCListRef list, const char *format, ...);
+MC_DLLEXPORT bool MCListAppendFormat(MCListRef list, const char *format, ...);
 
 // Make an immutable copy of the list.
-MCEXPORT bool MCListCopy(MCListRef list, MCListRef& r_new_list);
+MC_DLLEXPORT bool MCListCopy(MCListRef list, MCListRef& r_new_list);
 
 // Makes an immutable copy of the list and release the list
-MCEXPORT bool MCListCopyAndRelease(MCListRef list, MCListRef& r_new_list);
+MC_DLLEXPORT bool MCListCopyAndRelease(MCListRef list, MCListRef& r_new_list);
 
 // Make a copy of the list as a string.
-MCEXPORT bool MCListCopyAsString(MCListRef list, MCStringRef& r_string);
+MC_DLLEXPORT bool MCListCopyAsString(MCListRef list, MCStringRef& r_string);
 
 // Make an copy of the list as a string and release the list.
-MCEXPORT bool MCListCopyAsStringAndRelease(MCListRef list, MCStringRef& r_string);
+MC_DLLEXPORT bool MCListCopyAsStringAndRelease(MCListRef list, MCStringRef& r_string);
 
 // Returns true if nothing has been added to the list
-MCEXPORT bool MCListIsEmpty(MCListRef list);
+MC_DLLEXPORT bool MCListIsEmpty(MCListRef list);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2370,134 +2370,134 @@ MCEXPORT bool MCListIsEmpty(MCListRef list);
 
 extern MCSetRef kMCEmptySet;
 
-MCEXPORT bool MCSetCreateSingleton(uindex_t element, MCSetRef& r_set);
-MCEXPORT bool MCSetCreateWithIndices(uindex_t *elements, uindex_t element_count, MCSetRef& r_set);
-MCEXPORT bool MCSetCreateWithLimbsAndRelease(uindex_t *limbs, uindex_t limb_count, MCSetRef& r_set);
+MC_DLLEXPORT bool MCSetCreateSingleton(uindex_t element, MCSetRef& r_set);
+MC_DLLEXPORT bool MCSetCreateWithIndices(uindex_t *elements, uindex_t element_count, MCSetRef& r_set);
+MC_DLLEXPORT bool MCSetCreateWithLimbsAndRelease(uindex_t *limbs, uindex_t limb_count, MCSetRef& r_set);
 
-MCEXPORT bool MCSetCreateMutable(MCSetRef& r_set);
+MC_DLLEXPORT bool MCSetCreateMutable(MCSetRef& r_set);
 
-MCEXPORT bool MCSetCopy(MCSetRef set, MCSetRef& r_new_set);
-MCEXPORT bool MCSetCopyAndRelease(MCSetRef set, MCSetRef& r_new_set);
+MC_DLLEXPORT bool MCSetCopy(MCSetRef set, MCSetRef& r_new_set);
+MC_DLLEXPORT bool MCSetCopyAndRelease(MCSetRef set, MCSetRef& r_new_set);
 
-MCEXPORT bool MCSetMutableCopy(MCSetRef set, MCSetRef& r_new_set);
-MCEXPORT bool MCSetMutableCopyAndRelease(MCSetRef set, MCSetRef& r_new_set);
+MC_DLLEXPORT bool MCSetMutableCopy(MCSetRef set, MCSetRef& r_new_set);
+MC_DLLEXPORT bool MCSetMutableCopyAndRelease(MCSetRef set, MCSetRef& r_new_set);
 
-MCEXPORT bool MCSetIsMutable(MCSetRef self);
+MC_DLLEXPORT bool MCSetIsMutable(MCSetRef self);
 
-MCEXPORT bool MCSetIsEmpty(MCSetRef set);
-MCEXPORT bool MCSetIsEqualTo(MCSetRef set, MCSetRef other_set);
+MC_DLLEXPORT bool MCSetIsEmpty(MCSetRef set);
+MC_DLLEXPORT bool MCSetIsEqualTo(MCSetRef set, MCSetRef other_set);
 
-MCEXPORT bool MCSetContains(MCSetRef set, MCSetRef other_set);
-MCEXPORT bool MCSetIntersects(MCSetRef set, MCSetRef other_set);
+MC_DLLEXPORT bool MCSetContains(MCSetRef set, MCSetRef other_set);
+MC_DLLEXPORT bool MCSetIntersects(MCSetRef set, MCSetRef other_set);
 
-MCEXPORT bool MCSetContainsIndex(MCSetRef set, uindex_t index);
+MC_DLLEXPORT bool MCSetContainsIndex(MCSetRef set, uindex_t index);
 
-MCEXPORT bool MCSetIncludeIndex(MCSetRef set, uindex_t index);
-MCEXPORT bool MCSetExcludeIndex(MCSetRef set, uindex_t index);
+MC_DLLEXPORT bool MCSetIncludeIndex(MCSetRef set, uindex_t index);
+MC_DLLEXPORT bool MCSetExcludeIndex(MCSetRef set, uindex_t index);
 
-MCEXPORT bool MCSetUnion(MCSetRef set, MCSetRef other_set);
-MCEXPORT bool MCSetDifference(MCSetRef set, MCSetRef other_set);
-MCEXPORT bool MCSetIntersect(MCSetRef set, MCSetRef other_set);
+MC_DLLEXPORT bool MCSetUnion(MCSetRef set, MCSetRef other_set);
+MC_DLLEXPORT bool MCSetDifference(MCSetRef set, MCSetRef other_set);
+MC_DLLEXPORT bool MCSetIntersect(MCSetRef set, MCSetRef other_set);
 
-MCEXPORT bool MCSetIterate(MCSetRef set, uindex_t& x_iterator, uindex_t& r_element);
-MCEXPORT bool MCSetList(MCSetRef set, uindex_t*& r_element, uindex_t& r_element_count);
+MC_DLLEXPORT bool MCSetIterate(MCSetRef set, uindex_t& x_iterator, uindex_t& r_element);
+MC_DLLEXPORT bool MCSetList(MCSetRef set, uindex_t*& r_element, uindex_t& r_element_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  RECORD DEFINITIONS
 //
 
-MCEXPORT bool MCRecordCreate(MCTypeInfoRef typeinfo, const MCValueRef *values, uindex_t value_count, MCRecordRef& r_record);
+MC_DLLEXPORT bool MCRecordCreate(MCTypeInfoRef typeinfo, const MCValueRef *values, uindex_t value_count, MCRecordRef& r_record);
 
-MCEXPORT bool MCRecordCreateMutable(MCTypeInfoRef p_typeinfo, MCRecordRef& r_record);
+MC_DLLEXPORT bool MCRecordCreateMutable(MCTypeInfoRef p_typeinfo, MCRecordRef& r_record);
 
-MCEXPORT bool MCRecordCopy(MCRecordRef record, MCRecordRef& r_new_record);
-MCEXPORT bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
+MC_DLLEXPORT bool MCRecordCopy(MCRecordRef record, MCRecordRef& r_new_record);
+MC_DLLEXPORT bool MCRecordCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
 
-MCEXPORT bool MCRecordMutableCopy(MCRecordRef record, MCRecordRef& r_new_record);
-MCEXPORT bool MCRecordMutableCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
+MC_DLLEXPORT bool MCRecordMutableCopy(MCRecordRef record, MCRecordRef& r_new_record);
+MC_DLLEXPORT bool MCRecordMutableCopyAndRelease(MCRecordRef record, MCRecordRef& r_new_record);
 
-MCEXPORT bool MCRecordCopyAsBaseType(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
-MCEXPORT bool MCRecordCopyAsBaseTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
+MC_DLLEXPORT bool MCRecordCopyAsBaseType(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
+MC_DLLEXPORT bool MCRecordCopyAsBaseTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_base_typeinfo, MCRecordRef & r_new_record);
 
-MCEXPORT bool MCRecordCopyAsDerivedType(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
-MCEXPORT bool MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
+MC_DLLEXPORT bool MCRecordCopyAsDerivedType(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
+MC_DLLEXPORT bool MCRecordCopyAsDerivedTypeAndRelease(MCRecordRef record, MCTypeInfoRef p_derived_typeinfo, MCRecordRef & r_new_record);
 
-MCEXPORT bool MCRecordIsMutable(MCRecordRef self);
+MC_DLLEXPORT bool MCRecordIsMutable(MCRecordRef self);
 
-MCEXPORT bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
-MCEXPORT bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
+MC_DLLEXPORT bool MCRecordFetchValue(MCRecordRef record, MCNameRef field, MCValueRef& r_value);
+MC_DLLEXPORT bool MCRecordStoreValue(MCRecordRef record, MCNameRef field, MCValueRef value);
 
-MCEXPORT bool MCRecordEncodeAsArray(MCRecordRef record, MCArrayRef & r_array);
-MCEXPORT bool MCRecordDecodeFromArray(MCArrayRef array, MCTypeInfoRef p_typeinfo, MCRecordRef & r_record);
+MC_DLLEXPORT bool MCRecordEncodeAsArray(MCRecordRef record, MCArrayRef & r_array);
+MC_DLLEXPORT bool MCRecordDecodeFromArray(MCArrayRef array, MCTypeInfoRef p_typeinfo, MCRecordRef & r_record);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  HANDLER DEFINITIONS
 //
 
-MCEXPORT void *MCHandlerGetDefinition(MCHandlerRef handler);
-MCEXPORT void *MCHandlerGetInstance(MCHandlerRef handler);
+MC_DLLEXPORT void *MCHandlerGetDefinition(MCHandlerRef handler);
+MC_DLLEXPORT void *MCHandlerGetInstance(MCHandlerRef handler);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  ERROR DEFINITIONS
 //
 
-MCEXPORT extern MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
-MCEXPORT extern MCTypeInfoRef kMCGenericErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCOutOfMemoryErrorTypeInfo;
+MC_DLLEXPORT extern MCTypeInfoRef kMCGenericErrorTypeInfo;
 
-MCEXPORT bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
+MC_DLLEXPORT bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
 
-MCEXPORT bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
+MC_DLLEXPORT bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
 
-MCEXPORT MCNameRef MCErrorGetDomain(MCErrorRef error);
-MCEXPORT MCArrayRef MCErrorGetInfo(MCErrorRef error);
-MCEXPORT MCStringRef MCErrorGetMessage(MCErrorRef error);
+MC_DLLEXPORT MCNameRef MCErrorGetDomain(MCErrorRef error);
+MC_DLLEXPORT MCArrayRef MCErrorGetInfo(MCErrorRef error);
+MC_DLLEXPORT MCStringRef MCErrorGetMessage(MCErrorRef error);
 
-MCEXPORT uindex_t MCErrorGetDepth(MCErrorRef error);
-MCEXPORT MCValueRef MCErrorGetTargetAtLevel(MCErrorRef error, uindex_t level);
-MCEXPORT uindex_t MCErrorGetRowAtLevel(MCErrorRef error, uindex_t row);
-MCEXPORT uindex_t MCErrorGetColumnAtLevel(MCErrorRef error, uindex_t column);
+MC_DLLEXPORT uindex_t MCErrorGetDepth(MCErrorRef error);
+MC_DLLEXPORT MCValueRef MCErrorGetTargetAtLevel(MCErrorRef error, uindex_t level);
+MC_DLLEXPORT uindex_t MCErrorGetRowAtLevel(MCErrorRef error, uindex_t row);
+MC_DLLEXPORT uindex_t MCErrorGetColumnAtLevel(MCErrorRef error, uindex_t column);
 
 // Throw the given error code (local to the current thread).
-MCEXPORT bool MCErrorThrow(MCErrorRef error);
+MC_DLLEXPORT bool MCErrorThrow(MCErrorRef error);
 
 // Catch the current error code (on the current thread) if any and clear it.
-MCEXPORT bool MCErrorCatch(MCErrorRef& r_error);
+MC_DLLEXPORT bool MCErrorCatch(MCErrorRef& r_error);
 
 // Returns true if there is an error pending on the current thread.
-MCEXPORT bool MCErrorIsPending(void);
+MC_DLLEXPORT bool MCErrorIsPending(void);
 
 // Returns any pending error (on the current thread) without clearing it.
-MCEXPORT MCErrorRef MCErrorPeek(void);
+MC_DLLEXPORT MCErrorRef MCErrorPeek(void);
 
 // Throw an out of memory error.
-MCEXPORT bool MCErrorThrowOutOfMemory(void);
+MC_DLLEXPORT bool MCErrorThrowOutOfMemory(void);
 
 // Throw a generic runtime error (one that hasn't had a class made for it yet).
-MCEXPORT bool MCErrorThrowGeneric(void);
+MC_DLLEXPORT bool MCErrorThrowGeneric(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  FOREIGN DEFINITIONS
 //
 
-MCEXPORT bool MCForeignValueCreate(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
-MCEXPORT bool MCForeignValueCreateAndRelease(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
+MC_DLLEXPORT bool MCForeignValueCreate(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
+MC_DLLEXPORT bool MCForeignValueCreateAndRelease(MCTypeInfoRef typeinfo, void *contents, MCForeignValueRef& r_value);
 
-MCEXPORT void *MCForeignValueGetContentsPtr(MCValueRef value);
+MC_DLLEXPORT void *MCForeignValueGetContentsPtr(MCValueRef value);
 
-MCEXPORT bool MCForeignValueExport(MCTypeInfoRef typeinfo, MCValueRef value, MCForeignValueRef& r_value);
+MC_DLLEXPORT bool MCForeignValueExport(MCTypeInfoRef typeinfo, MCValueRef value, MCForeignValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  STREAM DEFINITIONS
 //
 
-MCEXPORT extern MCStreamRef kMCStdinStream;
-MCEXPORT extern MCStreamRef kMCStdoutStream;
-MCEXPORT extern MCStreamRef kMCStderrStream;
+MC_DLLEXPORT extern MCStreamRef kMCStdinStream;
+MC_DLLEXPORT extern MCStreamRef kMCStdoutStream;
+MC_DLLEXPORT extern MCStreamRef kMCStderrStream;
 
 // Basic stream creation.
 
@@ -2542,130 +2542,130 @@ enum
 
 // Create a stream running using the giving callbacks. Note that the lifetime
 // of 'callbacks' must exceed that of the stream.
-MCEXPORT bool MCStreamCreate(const MCStreamCallbacks *callbacks, size_t extra_bytes, MCStreamRef& r_stream);
+MC_DLLEXPORT bool MCStreamCreate(const MCStreamCallbacks *callbacks, size_t extra_bytes, MCStreamRef& r_stream);
 
 // Fetch the callback pointer attached to the stream - this can be used for type-
 // checking.
-MCEXPORT const MCStreamCallbacks *MCStreamGetCallbacks(MCStreamRef stream);
+MC_DLLEXPORT const MCStreamCallbacks *MCStreamGetCallbacks(MCStreamRef stream);
 
 // Fetch the start of the 'extra bytes' for the stream.
-MCEXPORT inline void *MCStreamGetExtraBytesPtr(MCStreamRef stream) { return ((uint8_t *)MCValueGetExtraBytesPtr(stream)) + kMCStreamHeaderSize; }
+MC_DLLEXPORT inline void *MCStreamGetExtraBytesPtr(MCStreamRef stream) { return ((uint8_t *)MCValueGetExtraBytesPtr(stream)) + kMCStreamHeaderSize; }
 
 // Memory-based input stream
 
 // Create a read-only stream targetting a memory block. The lifetime of the
 // memory block must exceed that of the stream.
-MCEXPORT bool MCMemoryInputStreamCreate(const void *block, size_t size, MCStreamRef& r_stream);
+MC_DLLEXPORT bool MCMemoryInputStreamCreate(const void *block, size_t size, MCStreamRef& r_stream);
 
 // Memory-based output stream
 
 // Create a write-only stream that outputs to memory.
-MCEXPORT bool MCMemoryOutputStreamCreate(MCStreamRef& r_stream);
+MC_DLLEXPORT bool MCMemoryOutputStreamCreate(MCStreamRef& r_stream);
 // Finish the memory output and return the buffer. The stream will continue
 // to work, but will be reset to empty and a new buffer accumulated.
-MCEXPORT bool MCMemoryOutputStreamFinish(MCStreamRef stream, void*& r_buffer, size_t& r_size);
+MC_DLLEXPORT bool MCMemoryOutputStreamFinish(MCStreamRef stream, void*& r_buffer, size_t& r_size);
 
 // Capabilities
 
 // If a stream is readable it means that the 'Read' method work.
-MCEXPORT bool MCStreamIsReadable(MCStreamRef stream);
+MC_DLLEXPORT bool MCStreamIsReadable(MCStreamRef stream);
 // If a stream is writable it means that the 'Write' method works.
-MCEXPORT bool MCStreamIsWritable(MCStreamRef stream);
+MC_DLLEXPORT bool MCStreamIsWritable(MCStreamRef stream);
 // If a stream is markable it means that the stream supports the 'Mark' and
 // 'Reset' methods.
-MCEXPORT bool MCStreamIsMarkable(MCStreamRef stream);
+MC_DLLEXPORT bool MCStreamIsMarkable(MCStreamRef stream);
 // If a stream is seekable it means that the stream supports the 'Tell' and
 // 'Seek' methods.
-MCEXPORT bool MCStreamIsSeekable(MCStreamRef stream);
+MC_DLLEXPORT bool MCStreamIsSeekable(MCStreamRef stream);
 
 // Readable streams
 
 // Returns the number of bytes available on the stream without blocking (or
 // hitting eof).
-MCEXPORT bool MCStreamGetAvailableForRead(MCStreamRef stream, size_t& r_available);
+MC_DLLEXPORT bool MCStreamGetAvailableForRead(MCStreamRef stream, size_t& r_available);
 // Attempt to read 'amount' bytes into the given buffer.
-MCEXPORT bool MCStreamRead(MCStreamRef stream, void *buffer, size_t amount);
+MC_DLLEXPORT bool MCStreamRead(MCStreamRef stream, void *buffer, size_t amount);
 
 // Returns the number of bytes space available on the stream for writing
 // without blocking.
-MCEXPORT bool MCStreamGetAvailableForWrite(MCStreamRef stream, size_t& r_available);
+MC_DLLEXPORT bool MCStreamGetAvailableForWrite(MCStreamRef stream, size_t& r_available);
 // Attempt to write 'amount' bytes to the output stream.
-MCEXPORT bool MCStreamWrite(MCStreamRef stream, const void *buffer, size_t amount);
+MC_DLLEXPORT bool MCStreamWrite(MCStreamRef stream, const void *buffer, size_t amount);
 
 // Readable and writable streams.
 
 // If reading or writing a single byte would result in failure due to end of
 // file, 'finished' will contain true.
-MCEXPORT bool MCStreamIsFinished(MCStreamRef stream, bool& r_finished);
+MC_DLLEXPORT bool MCStreamIsFinished(MCStreamRef stream, bool& r_finished);
 
 // Attempt to skip 'amount' bytes. This call only succeeds if the stream pointer
 // is 'amount' bytes away from eod.
-MCEXPORT bool MCStreamSkip(MCStreamRef stream, size_t amount);
+MC_DLLEXPORT bool MCStreamSkip(MCStreamRef stream, size_t amount);
 
 // Markable streams only
 
 // Record the current location in the stream. If the stream head moves no further
 // than 'read_limit' bytes forward, then the 'Reset' method will allow a return to
 // the mark.
-MCEXPORT bool MCStreamMark(MCStreamRef stream, size_t read_limit);
+MC_DLLEXPORT bool MCStreamMark(MCStreamRef stream, size_t read_limit);
 // Reset the stream to the last recorded mark.
-MCEXPORT bool MCStreamReset(MCStreamRef stream);
+MC_DLLEXPORT bool MCStreamReset(MCStreamRef stream);
 
 // Seekable streams only
 
 // Fetch the current stream position.
-MCEXPORT bool MCStreamTell(MCStreamRef stream, filepos_t& r_position);
+MC_DLLEXPORT bool MCStreamTell(MCStreamRef stream, filepos_t& r_position);
 // Set the current stream position.
-MCEXPORT bool MCStreamSeek(MCStreamRef stream, filepos_t position);
+MC_DLLEXPORT bool MCStreamSeek(MCStreamRef stream, filepos_t position);
 
 // Simple byte-based serialization / unserialization functions. These are all
 // wrappers around read/write, and assume no higher-level structure.
 
 // Fixed-size unsigned and signed integer functions.
-MCEXPORT bool MCStreamReadUInt8(MCStreamRef stream, uint8_t& r_value);
-MCEXPORT bool MCStreamReadUInt16(MCStreamRef stream, uint16_t& r_value);
-MCEXPORT bool MCStreamReadUInt32(MCStreamRef stream, uint32_t& r_value);
-MCEXPORT bool MCStreamReadUInt64(MCStreamRef stream, uint64_t& r_value);
-MCEXPORT bool MCStreamReadInt8(MCStreamRef stream, int8_t& r_value);
-MCEXPORT bool MCStreamReadInt16(MCStreamRef stream, int16_t& r_value);
-MCEXPORT bool MCStreamReadInt32(MCStreamRef stream, int32_t& r_value);
-MCEXPORT bool MCStreamReadInt64(MCStreamRef stream, int64_t& r_value);
+MC_DLLEXPORT bool MCStreamReadUInt8(MCStreamRef stream, uint8_t& r_value);
+MC_DLLEXPORT bool MCStreamReadUInt16(MCStreamRef stream, uint16_t& r_value);
+MC_DLLEXPORT bool MCStreamReadUInt32(MCStreamRef stream, uint32_t& r_value);
+MC_DLLEXPORT bool MCStreamReadUInt64(MCStreamRef stream, uint64_t& r_value);
+MC_DLLEXPORT bool MCStreamReadInt8(MCStreamRef stream, int8_t& r_value);
+MC_DLLEXPORT bool MCStreamReadInt16(MCStreamRef stream, int16_t& r_value);
+MC_DLLEXPORT bool MCStreamReadInt32(MCStreamRef stream, int32_t& r_value);
+MC_DLLEXPORT bool MCStreamReadInt64(MCStreamRef stream, int64_t& r_value);
 
-MCEXPORT bool MCStreamWriteUInt8(MCStreamRef stream, uint8_t value);
-MCEXPORT bool MCStreamWriteUInt16(MCStreamRef stream, uint16_t value);
-MCEXPORT bool MCStreamWriteUInt32(MCStreamRef stream, uint32_t value);
-MCEXPORT bool MCStreamWriteUInt64(MCStreamRef stream, uint64_t value);
-MCEXPORT bool MCStreamWriteInt8(MCStreamRef stream, int8_t value);
-MCEXPORT bool MCStreamWriteInt16(MCStreamRef stream, int16_t value);
-MCEXPORT bool MCStreamWriteInt32(MCStreamRef stream, int32_t value);
-MCEXPORT bool MCStreamWriteInt64(MCStreamRef stream, int64_t value);
+MC_DLLEXPORT bool MCStreamWriteUInt8(MCStreamRef stream, uint8_t value);
+MC_DLLEXPORT bool MCStreamWriteUInt16(MCStreamRef stream, uint16_t value);
+MC_DLLEXPORT bool MCStreamWriteUInt32(MCStreamRef stream, uint32_t value);
+MC_DLLEXPORT bool MCStreamWriteUInt64(MCStreamRef stream, uint64_t value);
+MC_DLLEXPORT bool MCStreamWriteInt8(MCStreamRef stream, int8_t value);
+MC_DLLEXPORT bool MCStreamWriteInt16(MCStreamRef stream, int16_t value);
+MC_DLLEXPORT bool MCStreamWriteInt32(MCStreamRef stream, int32_t value);
+MC_DLLEXPORT bool MCStreamWriteInt64(MCStreamRef stream, int64_t value);
 
 // Variable-sized unsigned and signing integer functions. These methods use
 // the top-bit of successive bytes to indicate whether more bytes follow - each
 // byte encodes 7 bits of information.
-MCEXPORT bool MCStreamReadCompactUInt32(MCStreamRef stream, uint32_t& r_value);
-MCEXPORT bool MCStreamReadCompactUInt64(MCStreamRef stream, uint64_t& r_value);
-MCEXPORT bool MCStreamReadCompactSInt32(MCStreamRef stream, uint32_t& r_value);
-MCEXPORT bool MCStreamReadCompactSInt64(MCStreamRef stream, uint64_t& r_value);
+MC_DLLEXPORT bool MCStreamReadCompactUInt32(MCStreamRef stream, uint32_t& r_value);
+MC_DLLEXPORT bool MCStreamReadCompactUInt64(MCStreamRef stream, uint64_t& r_value);
+MC_DLLEXPORT bool MCStreamReadCompactSInt32(MCStreamRef stream, uint32_t& r_value);
+MC_DLLEXPORT bool MCStreamReadCompactSInt64(MCStreamRef stream, uint64_t& r_value);
 
 // Fixed-size binary-floating point functions.
-MCEXPORT bool MCStreamReadFloat(MCStreamRef stream, float& r_value);
-MCEXPORT bool MCStreamReadDouble(MCStreamRef stream, double& r_value);
+MC_DLLEXPORT bool MCStreamReadFloat(MCStreamRef stream, float& r_value);
+MC_DLLEXPORT bool MCStreamReadDouble(MCStreamRef stream, double& r_value);
 
-MCEXPORT bool MCStreamWriteFloat(MCStreamRef stream, float value);
-MCEXPORT bool MCStreamWriteDouble(MCStreamRef stream, double value);
+MC_DLLEXPORT bool MCStreamWriteFloat(MCStreamRef stream, float value);
+MC_DLLEXPORT bool MCStreamWriteDouble(MCStreamRef stream, double value);
 
 // Known valueref functions - these assume the given type is present.
-MCEXPORT bool MCStreamReadBoolean(MCStreamRef stream, MCBooleanRef& r_boolean);
-MCEXPORT bool MCStreamReadNumber(MCStreamRef stream, MCNumberRef& r_number);
-MCEXPORT bool MCStreamReadName(MCStreamRef stream, MCNameRef& r_name);
-MCEXPORT bool MCStreamReadString(MCStreamRef stream, MCStringRef& r_string);
-MCEXPORT bool MCStreamReadArray(MCStreamRef stream, MCArrayRef& r_array);
-MCEXPORT bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set);
+MC_DLLEXPORT bool MCStreamReadBoolean(MCStreamRef stream, MCBooleanRef& r_boolean);
+MC_DLLEXPORT bool MCStreamReadNumber(MCStreamRef stream, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCStreamReadName(MCStreamRef stream, MCNameRef& r_name);
+MC_DLLEXPORT bool MCStreamReadString(MCStreamRef stream, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStreamReadArray(MCStreamRef stream, MCArrayRef& r_array);
+MC_DLLEXPORT bool MCStreamReadSet(MCStreamRef stream, MCSetRef& r_set);
 
 // Variant valueref functions - these tag the data with the type, allowing
 // easy encoding/decoding of any value type (that supports serialization).
-MCEXPORT bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value);
+MC_DLLEXPORT bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2690,13 +2690,13 @@ enum
 
 /////////
 
-MCEXPORT extern MCProperListRef kMCEmptyProperList;
+MC_DLLEXPORT extern MCProperListRef kMCEmptyProperList;
 
 // Create an immutable list containing the given values.
-MCEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, MCProperListRef& r_list);
+MC_DLLEXPORT bool MCProperListCreate(const MCValueRef *values, uindex_t length, MCProperListRef& r_list);
 
 // Create an empty mutable list.
-MCEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
+MC_DLLEXPORT bool MCProperListCreateMutable(MCProperListRef& r_list);
 
 // Create an immutable list taking ownership of the given array of values.
 bool MCProperListCreateAndRelease(MCValueRef *p_values, uindex_t p_length, MCProperListRef& r_list);
@@ -2704,75 +2704,75 @@ bool MCProperListCreateAndRelease(MCValueRef *p_values, uindex_t p_length, MCPro
 // Make an immutable copy of the given list. If the 'copy and release' form is
 // used then the original list is released (has its reference count reduced by
 // one).
-MCEXPORT bool MCProperListCopy(MCProperListRef list, MCProperListRef& r_new_list);
-MCEXPORT bool MCProperListCopyAndRelease(MCProperListRef list, MCProperListRef& r_new_list);
+MC_DLLEXPORT bool MCProperListCopy(MCProperListRef list, MCProperListRef& r_new_list);
+MC_DLLEXPORT bool MCProperListCopyAndRelease(MCProperListRef list, MCProperListRef& r_new_list);
 
 // Make a mutable copy of the given list. If the 'copy and release' form is
 // used then the original list is released (has its reference count reduced by
 // one).
-MCEXPORT bool MCProperListMutableCopy(MCProperListRef list, MCProperListRef& r_new_list);
-MCEXPORT bool MCProperListMutableCopyAndRelease(MCProperListRef list, MCProperListRef& r_new_list);
+MC_DLLEXPORT bool MCProperListMutableCopy(MCProperListRef list, MCProperListRef& r_new_list);
+MC_DLLEXPORT bool MCProperListMutableCopyAndRelease(MCProperListRef list, MCProperListRef& r_new_list);
 
 // Returns 'true' if the given list is mutable.
-MCEXPORT bool MCProperListIsMutable(MCProperListRef list);
+MC_DLLEXPORT bool MCProperListIsMutable(MCProperListRef list);
 
 // Returns the number of elements in the list.
 uindex_t MCProperListGetLength(MCProperListRef list);
 
 // Returns true if the given list is the empty list.
-MCEXPORT bool MCProperListIsEmpty(MCProperListRef list);
+MC_DLLEXPORT bool MCProperListIsEmpty(MCProperListRef list);
 
 // Iterate over the elements in the list.
-MCEXPORT bool MCProperListIterate(MCProperListRef list, uintptr_t& x_iterator, MCValueRef& r_element);
+MC_DLLEXPORT bool MCProperListIterate(MCProperListRef list, uintptr_t& x_iterator, MCValueRef& r_element);
 
 // Apply the callback to each element of list. The contents should not be modified.
 typedef bool (*MCProperListApplyCallback)(void *context, MCValueRef element);
-MCEXPORT bool MCProperListApply(MCProperListRef list, MCProperListApplyCallback p_callback, void *context);
+MC_DLLEXPORT bool MCProperListApply(MCProperListRef list, MCProperListApplyCallback p_callback, void *context);
 
 // Apply the callback to each element of list to create a new list.
 typedef bool (*MCProperListMapCallback)(MCValueRef element, MCValueRef& r_new_element);
-MCEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list);
+MC_DLLEXPORT bool MCProperListMap(MCProperListRef list, MCProperListMapCallback p_callback, MCProperListRef& r_new_list);
 
 // Sort list by comparing elements using the provided callback.
 typedef compare_t (*MCProperListQuickSortCallback)(const MCValueRef left, const MCValueRef right);
-MCEXPORT bool MCProperListSort(MCProperListRef list, bool p_reverse, MCProperListQuickSortCallback p_callback);
+MC_DLLEXPORT bool MCProperListSort(MCProperListRef list, bool p_reverse, MCProperListQuickSortCallback p_callback);
 
 typedef compare_t (*MCProperListCompareElementCallback)(void *context, const MCValueRef left, const MCValueRef right);
-MCEXPORT bool MCProperListStableSort(MCProperListRef list, bool p_reverse, MCProperListCompareElementCallback p_callback, void *context);
+MC_DLLEXPORT bool MCProperListStableSort(MCProperListRef list, bool p_reverse, MCProperListCompareElementCallback p_callback, void *context);
 
 // Fetch the first element of the list. The returned value is not retained.
-MCEXPORT MCValueRef MCProperListFetchHead(MCProperListRef list);
-MCEXPORT // Fetch the last element of the list. The returned value is not retained.
+MC_DLLEXPORT MCValueRef MCProperListFetchHead(MCProperListRef list);
+MC_DLLEXPORT // Fetch the last element of the list. The returned value is not retained.
 MCValueRef MCProperListFetchTail(MCProperListRef list);
 // Fetch the element of the list at the specified index. The returned value is not retained.
-MCEXPORT MCValueRef MCProperListFetchElementAtIndex(MCProperListRef list, uindex_t p_index);
+MC_DLLEXPORT MCValueRef MCProperListFetchElementAtIndex(MCProperListRef list, uindex_t p_index);
 
 // Copy the elements at the specified range as a list.
-MCEXPORT bool MCProperListCopySublist(MCProperListRef list, MCRange p_range, MCProperListRef& r_elements);
+MC_DLLEXPORT bool MCProperListCopySublist(MCProperListRef list, MCRange p_range, MCProperListRef& r_elements);
 
-MCEXPORT bool MCProperListPushElementOntoFront(MCProperListRef list, MCValueRef p_value);
-MCEXPORT bool MCProperListPushElementOntoBack(MCProperListRef list, MCValueRef p_value);
+MC_DLLEXPORT bool MCProperListPushElementOntoFront(MCProperListRef list, MCValueRef p_value);
+MC_DLLEXPORT bool MCProperListPushElementOntoBack(MCProperListRef list, MCValueRef p_value);
 // Pushes all of the values in p_values onto the end of the list
-MCEXPORT bool MCProperListPushElementsOntoFront(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length);
-MCEXPORT bool MCProperListPushElementsOntoBack(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length);
+MC_DLLEXPORT bool MCProperListPushElementsOntoFront(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length);
+MC_DLLEXPORT bool MCProperListPushElementsOntoBack(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length);
 
-MCEXPORT bool MCProperListAppendList(MCProperListRef list, MCProperListRef p_value);
+MC_DLLEXPORT bool MCProperListAppendList(MCProperListRef list, MCProperListRef p_value);
 
 // The returned value is owned by the caller.
-MCEXPORT bool MCProperListPopFront(MCProperListRef list, MCValueRef& r_value);
-MCEXPORT bool MCProperListPopBack(MCProperListRef list, MCValueRef& r_value);
+MC_DLLEXPORT bool MCProperListPopFront(MCProperListRef list, MCValueRef& r_value);
+MC_DLLEXPORT bool MCProperListPopBack(MCProperListRef list, MCValueRef& r_value);
 
-MCEXPORT bool MCProperListInsertElement(MCProperListRef list, MCValueRef p_value, index_t p_index);
-MCEXPORT bool MCProperListInsertElements(MCProperListRef list, const MCValueRef *p_value, uindex_t p_length, index_t p_index);
-MCEXPORT bool MCProperListInsertList(MCProperListRef list, MCProperListRef p_value, index_t p_index);
+MC_DLLEXPORT bool MCProperListInsertElement(MCProperListRef list, MCValueRef p_value, index_t p_index);
+MC_DLLEXPORT bool MCProperListInsertElements(MCProperListRef list, const MCValueRef *p_value, uindex_t p_length, index_t p_index);
+MC_DLLEXPORT bool MCProperListInsertList(MCProperListRef list, MCProperListRef p_value, index_t p_index);
 
-MCEXPORT bool MCProperListRemoveElement(MCProperListRef list, uindex_t p_index);
-MCEXPORT bool MCProperListRemoveElements(MCProperListRef list, uindex_t p_start, uindex_t p_finish);
+MC_DLLEXPORT bool MCProperListRemoveElement(MCProperListRef list, uindex_t p_index);
+MC_DLLEXPORT bool MCProperListRemoveElements(MCProperListRef list, uindex_t p_start, uindex_t p_finish);
 
-MCEXPORT bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset);
-MCEXPORT bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
+MC_DLLEXPORT bool MCProperListFirstIndexOfElement(MCProperListRef list, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset);
+MC_DLLEXPORT bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset);
 
-MCEXPORT bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
+MC_DLLEXPORT bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2880,23 +2880,23 @@ struct MCPickleVariantInfo
 #define MC_PICKLE_ARRAY_OF_VARIANT(Variant, Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfVariant, Field, CountField, k##Variant##PickleInfo)
 
 // Read in the stream in the format conforming to the specified pickle info.
-MCEXPORT bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *info, void* r_record);
+MC_DLLEXPORT bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *info, void* r_record);
 
 // Write the given record to the stream in the format conforming to the specified
 // pickle info.
-MCEXPORT bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *info, void* record);
+MC_DLLEXPORT bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *info, void* record);
 
 // Release a record read in using MCPickleRead.
-MCEXPORT void MCPickleRelease(MCPickleRecordInfo *info, void *record);
+MC_DLLEXPORT void MCPickleRelease(MCPickleRecordInfo *info, void *record);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  TYPE CONVERSION
 //
 
-MCEXPORT bool MCTypeConvertStringToLongInteger(MCStringRef p_string, integer_t& r_converted);
-MCEXPORT bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool p_convert_octals = false);
-MCEXPORT bool MCTypeConvertStringToBool(MCStringRef p_string, bool& r_converted);
+MC_DLLEXPORT bool MCTypeConvertStringToLongInteger(MCStringRef p_string, integer_t& r_converted);
+MC_DLLEXPORT bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool p_convert_octals = false);
+MC_DLLEXPORT bool MCTypeConvertStringToBool(MCStringRef p_string, bool& r_converted);
 
 }
     
