@@ -193,4 +193,8 @@ struct __MCCanvasImpl
 
 __MCCanvasImpl *MCCanvasGet(MCCanvasRef p_canvas);
 
+//////////
+
+bool MCCanvasThrowError(MCTypeInfoRef p_error_type);
+
 #endif//_MODULE_CANVAS_INTERNAL_H_

@@ -118,6 +118,13 @@ extern MCCanvasTransformRef kMCCanvasIdentityTransform;
 extern MCCanvasColorRef kMCCanvasColorBlack;
 
 ////////////////////////////////////////////////////////////////////////////////
+// Canvas Errors
+
+extern MCTypeInfoRef kMCCanvasSolidPaintTypeErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasPatternPaintTypeErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasGradientPaintTypeErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool MCCanvasRectangleCreateWithMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectangleRef &r_rectangle);
 void MCCanvasRectangleGetMCGRectangle(MCCanvasRectangleRef p_rectangle, MCGRectangle &r_rect);
