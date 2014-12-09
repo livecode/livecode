@@ -766,7 +766,7 @@ static uindex_t s_current_handler_field_count = 0;
 void EmitBeginHandlerType(long return_type_index)
 {
     MCScriptBeginHandlerTypeInModule(s_builder, return_type_index);
-    MCLog("[Emit] BeginRecordType(%ld)", return_type_index);
+    MCLog("[Emit] BeginHandlerType(%ld)", return_type_index);
 }
 
 static void EmitHandlerTypeParameter(MCHandlerTypeFieldMode mode, NameRef name, long type_index)
