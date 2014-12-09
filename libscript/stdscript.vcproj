@@ -169,6 +169,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\module-helper.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\module-list.cpp"
 				>
 			</File>
@@ -216,6 +220,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\array.mlc"
+					>
+				</File>
+				<File
 					RelativePath=".\src\binary.mlc"
 					>
 				</File>
@@ -245,10 +253,6 @@
 				</File>
 				<File
 					RelativePath=".\src\logic.mlc"
-					>
-				</File>
-				<File
-					RelativePath=".\src\map.mlc"
 					>
 				</File>
 				<File
@@ -284,6 +288,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\generated\array.c"
+					>
+				</File>
+				<File
 					RelativePath=".\generated\binary.c"
 					>
 				</File>
@@ -313,10 +321,6 @@
 				</File>
 				<File
 					RelativePath=".\generated\logic.c"
-					>
-				</File>
-				<File
-					RelativePath=".\generated\map.c"
 					>
 				</File>
 				<File

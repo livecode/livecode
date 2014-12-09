@@ -28,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "util.h"
+#include "script.h"
 
 #include <msctf.h>
 
@@ -180,7 +181,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		csptr++;
 	}
 
-	if (!MCInitialize())
+	if (!MCInitialize() || !MCScriptInitialize())
 		exit(-1);
 	
     // Ensure the command line variable gets set
