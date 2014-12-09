@@ -112,8 +112,11 @@ void FinalizeFiles(void)
 }
 
 void AddFile(const char *p_filename)
-{
-    FileRef t_new_file;
+{	
+	FileRef t_new_file;
+	FileRef *t_last_file_ptr;
+	const char *t_name;
+
     t_new_file = (FileRef)calloc(sizeof(struct File), 1);
     if (t_new_file == NULL)
         Fatal_OutOfMemory();
@@ -122,7 +125,6 @@ void AddFile(const char *p_filename)
     if (t_new_file -> path == NULL)
         Fatal_OutOfMemory();
     
-    const char *t_name;
     t_name = strrchr(p_filename, '/');
     if (t_name == NULL)
         t_name = p_filename;
@@ -134,7 +136,6 @@ void AddFile(const char *p_filename)
     
     t_new_file -> index = s_next_file_index++;
     
-    FileRef *t_last_file_ptr;
     for(t_last_file_ptr = &s_files; *t_last_file_ptr != NULL; t_last_file_ptr = &((*t_last_file_ptr) -> next))
         ;
     
@@ -145,7 +146,9 @@ int MoveToNextFile(void)
 {
     for(;;)
     {
-        if (s_current_file == NULL)
+        FILE *t_stream;
+		
+		if (s_current_file == NULL)
             s_current_file = s_files;
         else
             s_current_file = s_current_file -> next;
@@ -153,7 +156,6 @@ int MoveToNextFile(void)
         if (s_current_file == NULL)
             break;
 
-        FILE *t_stream;
         t_stream = fopen(s_current_file -> path, "r");
         if (t_stream != NULL)
         {
@@ -186,7 +188,9 @@ void GetFileIndex(FileRef p_file, long *r_index)
 
 int GetFileWithIndex(long p_index, FileRef *r_file)
 {
-    for(FileRef t_file = s_files; t_file != NULL; t_file = t_file -> next)
+    FileRef t_file;
+
+	for(t_file = s_files; t_file != NULL; t_file = t_file -> next)
         if (t_file -> index == p_index)
         {
             *r_file = t_file;
@@ -225,7 +229,7 @@ FILE *OpenOutputFile(void)
 {
     if (s_output_file == NULL)
         return NULL;
-    return fopen(s_output_file, "w");
+    return fopen(s_output_file, "wb");
 }
 
 FILE *OpenManifestOutputFile(void)

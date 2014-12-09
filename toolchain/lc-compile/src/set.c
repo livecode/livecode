@@ -51,9 +51,10 @@ void DuplicateSet(void)
 
 void ExchangeSet(void)
 {
-    EnsureSetStackDepth(2);
-    
     SetRef t_set;
+	
+	EnsureSetStackDepth(2);
+    
     t_set = s_sets[s_set_count - 1];
     s_sets[s_set_count - 1] = s_sets[s_set_count - 2];
     s_sets[s_set_count - 2] = t_set;

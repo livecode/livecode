@@ -62,7 +62,17 @@ DefSourceName (str)
 GetSourceName (str)
    char ** str;
 {
-   *str = InFileName;
+/* --PATCH-- */
+#ifndef _WIN32
+	char* file = strrchr(InFileName, '/');
+#else
+	char* file = strrchr(InFileName, '\\');
+#endif
+	if (file == NULL)
+		file = InFileName;
+	else
+		file++;
+	return *str = file;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -111,9 +121,13 @@ define_file (path)
    char * path;
 {
 /* --PATCH-- */    char cwd[4096];
-/* --PATCH-- */    getcwd(cwd, 4096);
 /* --PATCH-- */    char fullpath[4096];
+/* --PATCH-- */    getcwd(cwd, 4096);
+#ifndef _WIN32
 /* --PATCH-- */    sprintf(fullpath, "%s/%s", cwd, path);
+#else
+/* --PATCH-- */    sprintf(fullpath, "%s\\%s", cwd, path);
+#endif
     
 /* --PATCH-- */   if (! is_defined(fullpath)) {
       filecount++;

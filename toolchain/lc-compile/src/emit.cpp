@@ -6,7 +6,9 @@
 #include "literal.h"
 #include "position.h"
 
-int OutputFileAsC = 0;
+#include <stdio.h>
+
+extern "C" int OutputFileAsC = 0;
 
 extern "C" void EmitBeginModule(NameRef name, long& r_index);
 extern "C" void EmitBeginWidgetModule(NameRef name, long& r_index);

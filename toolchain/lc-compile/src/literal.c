@@ -133,7 +133,9 @@ static void FreeScope(ScopeRef p_scope)
 
 static int FindNameInScope(ScopeRef p_scope, NameRef p_name, BindingRef *r_binding)
 {
-    for(BindingRef t_binding = p_scope -> bindings; t_binding != NULL; t_binding = t_binding -> next)
+    BindingRef t_binding;
+
+	for (t_binding = p_scope -> bindings; t_binding != NULL; t_binding = t_binding -> next)
         if (t_binding -> name == p_name)
         {
             *r_binding = t_binding;
@@ -165,10 +167,11 @@ void EnterScope(void)
 
 void LeaveScope(void)
 {
-    if (s_scopes == NULL)
+    ScopeRef t_scope;
+
+	if (s_scopes == NULL)
         Fatal_InternalInconsistency("Scope stack underflow");
     
-    ScopeRef t_scope;
     t_scope = s_scopes;
     s_scopes = s_scopes -> outer;
     
@@ -177,10 +180,11 @@ void LeaveScope(void)
 
 void DefineMeaning(NameRef p_name, long p_meaning)
 {
-    if (s_scopes == NULL)
+    BindingRef t_binding;
+	
+	if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
     
-    BindingRef t_binding;
     if (FindNameInScope(s_scopes, (NameRef)p_name, &t_binding) == 0)
     {
         t_binding = (BindingRef)malloc(sizeof(struct Binding));
@@ -199,10 +203,11 @@ void DefineMeaning(NameRef p_name, long p_meaning)
 
 void UndefineMeaning(NameRef p_name)
 {
-    if (s_scopes == NULL)
+    BindingRef t_binding;
+	
+	if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when manipulating meaning");
     
-    BindingRef t_binding;
     if (FindNameInScope(s_scopes, (NameRef)p_name, &t_binding) == 1)
     {
         t_binding -> meaning = 0;
@@ -212,10 +217,11 @@ void UndefineMeaning(NameRef p_name)
 
 int HasLocalMeaning(NameRef p_name, long *r_meaning)
 {
-    if (s_scopes == NULL)
-        Fatal_InternalInconsistency("No scope when manipulating meaning");
-    
     BindingRef t_binding;
+	
+	if (s_scopes == NULL)
+        Fatal_InternalInconsistency("No scope when manipulating meaning");
+
     if (FindNameInScope(s_scopes, (NameRef)p_name, &t_binding) == 1 &&
         t_binding -> has_meaning == 1)
     {
@@ -228,10 +234,12 @@ int HasLocalMeaning(NameRef p_name, long *r_meaning)
 
 int HasMeaning(NameRef p_name, long *r_meaning)
 {
-    if (s_scopes == NULL)
+    ScopeRef t_scope;
+	
+	if (s_scopes == NULL)
         Fatal_InternalInconsistency("No scope when checking for meaning");
     
-    for(ScopeRef t_scope = s_scopes; t_scope != NULL; t_scope = t_scope -> outer)
+    for(t_scope = s_scopes; t_scope != NULL; t_scope = t_scope -> outer)
     {
         BindingRef t_binding;
         if (FindNameInScope(t_scope, (NameRef)p_name, &t_binding) == 1 &&
@@ -248,10 +256,14 @@ int HasMeaning(NameRef p_name, long *r_meaning)
 void DumpScopes(void)
 {
     int t_depth;
+	ScopeRef t_scope;
+
     t_depth = 0;
-    for(ScopeRef t_scope = s_scopes; t_scope != NULL; t_scope = t_scope -> outer)
+    for (t_scope = s_scopes; t_scope != NULL; t_scope = t_scope -> outer)
     {
-        for(BindingRef t_binding = t_scope -> bindings; t_binding != NULL; t_binding = t_binding -> next)
+        BindingRef t_binding;
+
+		for (t_binding = t_scope -> bindings; t_binding != NULL; t_binding = t_binding -> next)
             if (t_binding -> has_meaning)
                 fprintf(stderr, "[%d] %s = %ld\n", t_depth, t_binding -> name -> token, t_binding -> meaning);
         t_depth += 1;

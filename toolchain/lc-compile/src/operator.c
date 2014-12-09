@@ -70,7 +70,9 @@ static Node *MakeNode(NodeKind p_kind)
 
 static Node *LastNodeInList(Node *p_list)
 {
-    for(Node *t_node = p_list; t_node != NULL; t_node = t_node -> next)
+    Node *t_node;
+	
+	for(t_node = p_list; t_node != NULL; t_node = t_node -> next)
         if (t_node -> next == NULL)
             return t_node;
     return NULL;
@@ -78,21 +80,22 @@ static Node *LastNodeInList(Node *p_list)
 
 static void AppendToNodeList(Node **x_list, Node *p_node)
 {
-    if (*x_list == NULL)
+    Node *t_last;
+	
+	if (*x_list == NULL)
     {
         *x_list = p_node;
         return;
     }
     
-    Node *t_last;
     t_last = LastNodeInList(*x_list);
     t_last -> next = p_node;
 }
 
 static long CountNodeList(Node *p_list)
 {
-    long t_count;
-    t_count = 0;
+    long t_count = 0;
+
     while(p_list != NULL)
     {
         t_count += 1;
@@ -104,6 +107,7 @@ static long CountNodeList(Node *p_list)
 Node *DivideNodeListAt(Node **x_list, long p_index)
 {
     Node *t_return;
+
     if (p_index == 0)
     {
         t_return = *x_list;
@@ -128,6 +132,8 @@ Node *DivideNodeListAt(Node **x_list, long p_index)
 
 static int CompareNodePrecedence(Node *p_left, Node *p_right)
 {
+	NodeKind t_left_operator, t_right_operator;
+	
 	// A nil pointer indicates $ - the beginning or end of input.
 	if (p_left == NULL)
 		return -1;
@@ -135,7 +141,6 @@ static int CompareNodePrecedence(Node *p_left, Node *p_right)
 		return 1;
     
 	// Now fetch the operators for both syntax trees.
-	NodeKind t_left_operator, t_right_operator;
     t_left_operator = p_left -> kind;
     t_right_operator = p_right -> kind;
     
@@ -237,19 +242,22 @@ void EndOperatorExpression(void)
 
 void ReorderOperatorExpression(long p_sentinal)
 {
-    assert(s_clause != NULL);
-    
     Node *t_clause;
+	Node *t_input_stack, *t_output_stack;
+	
+	assert(s_clause != NULL);
+    
     t_clause = DivideNodeListAt(&s_clause, p_sentinal);
     
-    Node *t_input_stack, *t_output_stack;
     t_input_stack = NULL;
     t_output_stack = NULL;
     
 	for(;;)
 	{
-		// Fetch the top element of the stack and input.
 		Node *t_top, *t_input;
+		int t_relation;
+		
+		// Fetch the top element of the stack and input.
 		t_top = t_input_stack;
 		t_input = t_clause;
         
@@ -258,7 +266,6 @@ void ReorderOperatorExpression(long p_sentinal)
 			break;
         
 		// Now compare the top-most symbol on the stack (if any) and the next piece of syntax.
-		int t_relation;
 		t_relation = CompareNodePrecedence(t_top, t_input);
         
 		// If top <- input or top =- input then push input and advance.
@@ -361,12 +368,14 @@ void ReorderOperatorExpression(long p_sentinal)
 
 int PopOperatorExpression(long *r_position, long *r_method, long *r_arity)
 {
-    assert(s_stack != NULL);
+    Node *t_node;
+	Node *t_arguments;
+	
+	assert(s_stack != NULL);
     
     if (s_stack -> kind == kNodeKindOperand)
         return 0;
     
-    Node *t_node;
     t_node = s_stack;
     s_stack = s_stack -> next;
     
@@ -374,7 +383,6 @@ int PopOperatorExpression(long *r_position, long *r_method, long *r_arity)
     *r_method = t_node -> operator . method;
     *r_arity = t_node -> operator . arity;
     
-    Node *t_arguments;
     t_arguments = t_node -> operator . arguments;
     
     if (t_arguments != NULL)
@@ -392,10 +400,11 @@ int PopOperatorExpression(long *r_position, long *r_method, long *r_arity)
 
 void PopOperatorExpressionArgument(long *r_argument)
 {
-    assert(s_stack -> kind == kNodeKindOperand);
+    Node *t_node;
+	
+	assert(s_stack -> kind == kNodeKindOperand);
     *r_argument = s_stack -> operand . value;
     
-    Node *t_node;
     t_node = s_stack;
     s_stack = s_stack -> next;
     
@@ -445,14 +454,15 @@ void PushOperatorExpressionNeutralBinary(long p_position, long p_precedence, lon
 
 void PushOperatorExpressionArgument(long p_argument, long *r_sentinal)
 {
-    assert(s_clause != NULL);
+    Node *t_node;
+	Node *t_last;
+	
+	assert(s_clause != NULL);
     assert(LastNodeInList(s_clause) -> kind != kNodeKindOperand);
     
-    Node *t_node;
     t_node = MakeNode(kNodeKindOperand);
     t_node -> operand . value = p_argument;
     
-    Node *t_last;
     t_last = LastNodeInList(s_clause);
     t_last -> operator . arity += 1;
     AppendToNodeList(&t_last -> operator . arguments, t_node);

@@ -22344,6 +22344,7 @@ yy yy_20_1;
 /* --PATCH-- */             "#include <stdio.h>\n"
 /* --PATCH-- */             "#include <string.h>\n"
 /* --PATCH-- */             "#include <stdlib.h>\n"
+/* --PATCH-- */             "#undef min\n"
 /* --PATCH-- */             "#pragma clang diagnostic ignored \"-Wimplicit-int\"\n"
 /* --PATCH-- */             "#pragma clang diagnostic ignored \"-Wimplicit-function-declaration\"\n"
 /* --PATCH-- */             "typedef long * yy;");
