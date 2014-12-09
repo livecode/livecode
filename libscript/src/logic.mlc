@@ -3,6 +3,8 @@ module com.livecode.logic
 //foreign handler MCLogicEvalAnd(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
 //foreign handler MCLogicEvalOr(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCLogicEvalNot(in Operand as bool, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCLogicEvalIsEqualTo(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
+public foreign handler MCLogicEvalIsNotEqualTo(in Left as bool, in Right as bool, out Value as bool) as undefined binds to "<builtin>"
 
 --
 
@@ -53,5 +55,37 @@ begin
 end syntax
 
 --
+
+/*
+Summary:    Determines whether <Left> and <Right> are equal or not.
+
+Left:       An expression which evaluates to a bool.
+Right:      An expression which evaluates to a bool.
+
+output:     Returns true if <Left> evaluates to the same value as <Right>.
+
+*/
+
+syntax IsEqualTo is neutral binary operator with precedence 5
+    <Left: Expression> "is" <Right: Expression>
+begin
+    MCLogicEvalIsEqualTo(Left, Right, output)
+end syntax
+
+/*
+Summary:    Determines whether <Left> and <Right> are equal or not.
+
+Left:       An expression which evaluates to a bool.
+Right:      An expression which evaluates to a bool.
+
+output:     Returns true if <Left> evaluates to the opposite boolean value as <Right>.
+
+*/
+
+syntax IsNotEqualTo is neutral binary operator with precedence 5
+    <Left: Expression> "is not" <Right: Expression>
+begin
+    MCLogicEvalIsNotEqualTo(Left, Right, output)
+end syntax
 
 end module

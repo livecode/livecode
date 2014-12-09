@@ -100,8 +100,7 @@ public handler testArray(inout xResults as list)
 	testLog("Array", "ElementsOf", "value2" is in tElements, xResults)
 	testLog("Array", "ElementsOf", "value3" is in tElements, xResults)
 		
-	testLog("Array", "IsAmongTheKeys", "key1" is among the keys of tArray, xResults)
-	
+	--testLog("Array", "IsAmongTheKeys", "key1" is among the keys of tArray, xResults)
 	--testLog("Array", "IsAmongTheElements", "value1" is among the keys of tArray, xResults)
 	
 	testLog("Array", "ElementOf", tArray["key1"] is "value1", xResults)
@@ -128,10 +127,18 @@ public handler testBitwise(inout xResults as list)
 end handler
 
 public handler testLogic(inout xResults as list)
-    variable tVar as bool
-    put not false into tVar
 
-    testLog("Logic", "Not", tVar, xResults)
+    testLog("Logic", "Not", not false, xResults)
+    testLog("Logic", "Not", not not true, xResults)
+        
+    testLog("Logic", "Is", true is true, xResults)
+    testLog("Logic", "Is", false is false, xResults)
+
+    testLog("Logic", "Is", true is not false, xResults)
+    testLog("Logic", "Is", false is not true, xResults)
+    	
+    testLog("Logic", "Is", not true is false, xResults)
+    testLog("Logic", "Is", not false is true, xResults)
     
     // test boolean short circuit
     

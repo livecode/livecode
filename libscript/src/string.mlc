@@ -200,7 +200,7 @@ Description:
 The ```is not``` operator is case sensitive. 
 */
 
-syntax IsNotEqualTo is neutral binary operator with precedence 1
+syntax IsNotEqualTo is neutral binary operator with precedence 5
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCStringEvalIsNotEqualTo(Left, Right, output)
