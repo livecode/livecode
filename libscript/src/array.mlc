@@ -203,6 +203,8 @@ Example:
 
 	variable tSum as number
 	put 0 into tSum
+    
+    variable tElement
     repeat for each element tElement in tArray
         add tElement to tSum
     end repeat
