@@ -1100,109 +1100,109 @@ end syntax
 
 // Operations
 
-public foreign handler MCCanvasCanvasTransform(in pCanvas as Canvas, in pTransform as Transform) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasScale(in pCanvas as Canvas, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasScaleWithList(in pCanvas as Canvas, in pScale as list) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasRotate(in pCanvas as Canvas, in pAngle as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasTranslate(in pCanvas as Canvas, in pX as CanvasFloat,in pY as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasTranslateWithList(in pCanvas as Canvas, in pTranslation as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTransform(in pCanvas as Canvas, in pTransform as Transform) as undefined binds to "<builtin>"
+public foreign handler MCCanvasScale(in pCanvas as Canvas, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasScaleWithList(in pCanvas as Canvas, in pScale as list) as undefined binds to "<builtin>"
+public foreign handler MCCanvasRotate(in pCanvas as Canvas, in pAngle as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTranslate(in pCanvas as Canvas, in pX as CanvasFloat,in pY as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasTranslateWithList(in pCanvas as Canvas, in pTranslation as list) as undefined binds to "<builtin>"
 
-public foreign handler MCCanvasCanvasSaveState(in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasRestoreState(in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasBeginLayer(in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasSaveState(in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasRestoreState(in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasBeginLayer(in pCanvas as Canvas) as undefined binds to "<builtin>"
 // TODO - begin layer with effect foo in rect bar of baz?
-public foreign handler MCCanvasCanvasBeginLayerWithEffect(in pCanvas as Canvas, in pEffect as Effect, in pRect as Rectangle) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasEndLayer(in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasBeginLayerWithEffect(in pCanvas as Canvas, in pEffect as Effect, in pRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEndLayer(in pCanvas as Canvas) as undefined binds to "<builtin>"
 
-public foreign handler MCCanvasCanvasFill(in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasFillPath(in pPath as Path, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasStroke(in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasStrokePath(in pPath as Path, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasClipToRect(in pClip as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasAddPath(in pPath as Path, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasDrawImage(in pImage as Image, in pDest as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasDrawRectOfImage(in pSrc as Rectangle, in pImage as Image, in pDst as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasMoveTo(in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasLineTo(in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasCurveThroughPoint(in pThrough as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasCurveThroughPoints(in pThroughA as Point, in pThroughB as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
-public foreign handler MCCanvasCanvasClosePath(in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFill(in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasFillPath(in pPath as Path, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasStroke(in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasStrokePath(in pPath as Path, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasClipToRect(in pClip as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasAddPath(in pPath as Path, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasDrawImage(in pImage as Image, in pDest as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasDrawRectOfImage(in pSrc as Rectangle, in pImage as Image, in pDst as Rectangle, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasMoveTo(in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasLineTo(in pPoint as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasCurveThroughPoint(in pThrough as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasCurveThroughPoints(in pThroughA as Point, in pThroughB as Point, in pTo as Point, in pCanvas as Canvas) as undefined binds to "<builtin>"
+public foreign handler MCCanvasClosePath(in pCanvas as Canvas) as undefined binds to "<builtin>"
 
 syntax TransformCanvas is statement
 	"transform" <mCanvas: Expression> "by" <mTransform: Expression>
 begin
-	MCCanvasCanvasTransform(mCanvas, mTransform)
+	MCCanvasTransform(mCanvas, mTransform)
 end syntax
 
 syntax ScaleCanvas is statement
 	"scale" <mCanvas: Expression> "by" <mScale: Expression>
 begin
-//	MCCanvasCanvasScale(mCanvas, mScale[0], mScale[0])
-//	MCCanvasCanvasScale(mCanvas, mScale[0], mScale[1])
-	MCCanvasCanvasScaleWithList(mCanvas, mScale)
+//	MCCanvasScale(mCanvas, mScale[0], mScale[0])
+//	MCCanvasScale(mCanvas, mScale[0], mScale[1])
+	MCCanvasScaleWithList(mCanvas, mScale)
 end syntax
 
 syntax RotateCanvas is statement
 	"rotate" <mCanvas: Expression> "by" <mAngle: Expression>
 begin
-	MCCanvasCanvasRotate(mCanvas, mAngle)
+	MCCanvasRotate(mCanvas, mAngle)
 end syntax
 
 syntax TranslateCanvas is statement
 	"translate" <mCanvas: Expression> "by" <mTranslation: Expression>
 begin
-//	MCCanvasCanvasTranslate(mCanvas, mTranslation[0], mTranslation[1])
-	MCCanvasCanvasTranslateWithList(mCanvas, mTranslation)
+//	MCCanvasTranslate(mCanvas, mTranslation[0], mTranslation[1])
+	MCCanvasTranslateWithList(mCanvas, mTranslation)
 end syntax
 
 syntax CanvasSaveState is statement
 	"save" "state" "of" <mCanvas: Expression>
 begin
-	MCCanvasCanvasSaveState(mCanvas)
+	MCCanvasSaveState(mCanvas)
 end syntax
 
 syntax CanvasRestoreState is statement
 	"restore" "state" "of" <mCanvas: Expression>
 begin
-	MCCanvasCanvasRestoreState(mCanvas)
+	MCCanvasRestoreState(mCanvas)
 end syntax
 
 syntax CanvasBeginLayer is statement
 	"begin" "layer" "on" <mCanvas: Expression>
 begin
-	MCCanvasCanvasBeginLayer(mCanvas)
+	MCCanvasBeginLayer(mCanvas)
 end syntax
 
 syntax CanvasEndLayer is statement
 	"endlayer" "on" <mCanvas: Expression>
 begin
-	MCCanvasCanvasEndLayer(mCanvas)
+	MCCanvasEndLayer(mCanvas)
 end syntax
 
 syntax CanvasFill is statement
 	"fill" ( <mPath: Expression> "on" ) <mCanvas: Expression>
 begin
-	MCCanvasCanvasFill(mCanvas)
-	MCCanvasCanvasFillPath(mPath, mCanvas)
+	MCCanvasFill(mCanvas)
+	MCCanvasFillPath(mPath, mCanvas)
 end syntax
 
 syntax CanvasStroke is statement
 	"stroke" ( <mPath: Expression> "on" ) <mCanvas: Expression>
 begin
-	MCCanvasCanvasStroke(mCanvas)
-	MCCanvasCanvasStrokePath(mPath, mCanvas)
+	MCCanvasStroke(mCanvas)
+	MCCanvasStrokePath(mPath, mCanvas)
 end syntax
 
 syntax CanvasClip is statement
 	"clip" "to" <mRect: Expression> "on" <mCanvas: Expression>
 begin
-	MCCanvasCanvasClipToRect(mRect, mCanvas)
+	MCCanvasClipToRect(mRect, mCanvas)
 end syntax
 
 syntax CanvasAddPath is statement
 	"add" <mPath: Expression> "to" <mCanvas: Expression>
 begin
-	MCCanvasCanvasAddPath(mPath, mCanvas)
+	MCCanvasAddPath(mPath, mCanvas)
 end syntax
 
 syntax ImageResizeQuality is phrase
@@ -1213,33 +1213,33 @@ end syntax
 syntax CanvasDrawImage is statement
 	"draw" [ "rect" <mSrcRect: Expression> "of" ] <mImage: Expression> "into" <mDestRect: Expression> "of" <mCanvas: Expression>
 begin
-	MCCanvasCanvasDrawImage(mImage, mDestRect, mCanvas)
-	MCCanvasCanvasDrawRectOfImage(mSrcRect, mImage, mDestRect, mCanvas)
+	MCCanvasDrawImage(mImage, mDestRect, mCanvas)
+	MCCanvasDrawRectOfImage(mSrcRect, mImage, mDestRect, mCanvas)
 end syntax
 
 syntax CanvasMoveTo is statement
 	"move" "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
-	MCCanvasCanvasMoveTo(mPoint, mCanvas)
+	MCCanvasMoveTo(mPoint, mCanvas)
 end syntax
 
 syntax CanvasLineTo is statement
 	"line" "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
-	MCCanvasCanvasLineTo(mPoint, mCanvas)
+	MCCanvasLineTo(mPoint, mCanvas)
 end syntax
 
 syntax CanvasCurveThrough is statement
 	"curve" "through" <mThroughA: Expression> [ "then" <mThroughB: Expression> ] "to" <mPoint: Expression> "on" <mCanvas: Expression>
 begin
-	MCCanvasCanvasCurveThroughPoint(mThroughA, mPoint, mCanvas)
-	MCCanvasCanvasCurveThroughPoints(mThroughA, mThroughB, mPoint, mCanvas)
+	MCCanvasCurveThroughPoint(mThroughA, mPoint, mCanvas)
+	MCCanvasCurveThroughPoints(mThroughA, mThroughB, mPoint, mCanvas)
 end syntax
 
 syntax CanvasClosePath is statement
 	"close" "path" "on" <mCanvas: Expression>
 begin
-	MCCanvasCanvasClosePath(mCanvas)
+	MCCanvasClosePath(mCanvas)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
