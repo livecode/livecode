@@ -2,8 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="libscript"
-	ProjectGUID="{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}"
+	Name="stdscript"
+	ProjectGUID="{56CD2637-6005-4DD6-9ADF-F85C7774BB88}"
+	RootNamespace="stdscript"
 	>
 	<Platforms>
 		<Platform
@@ -11,6 +12,9 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<ToolFile
+			RelativePath="..\toolchain\vs-rules\MLC.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -25,6 +29,9 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="MLC (for built-in)"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -35,8 +42,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)engine\src&quot;;&quot;$(SolutionDir)thirdparty\libffi\win32&quot;;&quot;$(SolutionDir)libscript\include&quot;"
-				DebugInformationFormat="4"
+				AdditionalIncludeDirectories="$(SolutionDir)engine\src"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -69,13 +75,16 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)rules\Global.vsprops;$(SolutionDir)rules\Debug.vsprops"
+			InheritedPropertySheets="$(SolutionDir)rules\Global.vsprops;$(SolutionDir)rules\Release.vsprops"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MLC (for built-in)"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -88,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)engine\src&quot;;&quot;$(SolutionDir)thirdparty\libffi\win32&quot;;&quot;$(SolutionDir)libscript\include&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)engine\src"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -120,6 +129,10 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{82AB9A7D-6D59-4AA1-A6C0-9799E293C1F5}"
+			RelativePathToProject=".\toolchain\lc-compile\src\lc-compile.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -195,40 +208,148 @@
 				RelativePath=".\src\module-url.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\src\script-builder.cpp"
+			<Filter
+				Name="MLC"
 				>
-			</File>
-			<File
-				RelativePath=".\src\script-instance.cpp"
+				<File
+					RelativePath=".\src\arithmetic.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\binary.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\bitwise.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\byte.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\char.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\item.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\line.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\list.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\logic.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\map.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\math.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\segmentchunk.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\sort.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\string.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\type-convert.mlc"
+					>
+				</File>
+				<File
+					RelativePath=".\src\type.mlc"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="generated"
 				>
-			</File>
-			<File
-				RelativePath=".\src\script-module.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\script-object.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\script-package.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\script-private.h"
-				>
-			</File>
+				<File
+					RelativePath=".\generated\arithmetic.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\binary.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\bitwise.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\byte.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\char.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\item.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\line.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\list.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\logic.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\map.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\math.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\segmentchunk.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\sort.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\string.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\type-convert.c"
+					>
+				</File>
+				<File
+					RelativePath=".\generated\type.c"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\include\script.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

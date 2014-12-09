@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="libscript"
-	ProjectGUID="{E82DA459-E7D9-4D1A-96D1-F7EE03FC0BB1}"
+	Name="grts"
+	ProjectGUID="{4757D689-1C3F-495B-B28F-EC2176B60B0D}"
 	>
 	<Platforms>
 		<Platform
@@ -35,8 +35,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)engine\src&quot;;&quot;$(SolutionDir)thirdparty\libffi\win32&quot;;&quot;$(SolutionDir)libscript\include&quot;"
-				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -69,7 +67,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(SolutionDir)rules\Global.vsprops;$(SolutionDir)rules\Debug.vsprops"
+			InheritedPropertySheets="$(SolutionDir)rules\Global.vsprops;$(SolutionDir)rules\Release.vsprops"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -88,7 +86,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)engine\src&quot;;&quot;$(SolutionDir)thirdparty\libffi\win32&quot;;&quot;$(SolutionDir)libscript\include&quot;"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -128,95 +125,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\module-arithmetic.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-binary.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-bitwise.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-byte.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-char.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-encoding.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-file.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-list.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-logic.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-map.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-math.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-math_foundation.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-sort.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-string.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-type.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-type_convert.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\module-url.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\script-builder.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\script-instance.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\script-module.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\script-object.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\script-package.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\script-private.h"
+				RelativePath=".\gentle\gentle-97\gentle\grts.c"
 				>
 			</File>
 		</Filter>
@@ -225,10 +134,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\include\script.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
