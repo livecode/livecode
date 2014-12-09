@@ -3965,7 +3965,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 {
                     errno = getAddressFromDesc(senderDesc, sender);
                     AEDisposeDesc(&senderDesc);
-                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)sender, r_value);
+                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease(sender, r_value);
                     return;
                 }
                 delete[] sender;
