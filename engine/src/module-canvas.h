@@ -110,48 +110,7 @@ extern MCTypeInfoRef kMCCanvasPathTypeInfo;
 extern MCTypeInfoRef kMCCanvasEffectTypeInfo;
 extern MCTypeInfoRef kMCCanvasTypeInfo;
 
-bool MCCanvasColorCreateRGBA(MCCanvasFloat p_red, MCCanvasFloat p_green, MCCanvasFloat p_blue, MCCanvasFloat p_alpha, MCCanvasColorRef &r_color);
-MCCanvasFloat MCCanvasColorGetRed(MCCanvasColorRef color);
-MCCanvasFloat MCCanvasColorGetGreen(MCCanvasColorRef color);
-MCCanvasFloat MCCanvasColorGetBlue(MCCanvasColorRef color);
-MCCanvasFloat MCCanvasColorGetAlpha(MCCanvasColorRef color);
-void MCCanvasColorGetRGBA(MCCanvasColorRef color, MCCanvasFloat &r_red, MCCanvasFloat &r_green, MCCanvasFloat &r_blue, MCCanvasFloat &r_alpha);
-
-bool MCCanvasColorCopy(MCCanvasColorRef p_color, MCCanvasColorRef &r_copy);
-void MCCanvasColorDelete(MCCanvasColorRef p_color);
-
-// Transform opaque type
-typedef MCGAffineTransform MCCanvasTransform;
-uinteger_t MCCanvasTransformType_Measure(void);
-
-// Image opaque type
-typedef MCImageRep *MCCanvasImage;
-uinteger_t MCCanvasImageType_Measure(void);
-void MCCanvasImageType_Finalize(MCCanvasImage *p_image);
-void MCCanvasImageType_Copy(MCCanvasImage *p_src_image, MCCanvasImage *p_dst_image);
-
-// Paint opaque type
-enum MCCanvasPaintType
-{
-	kMCCanvasPaintTypeSolid,
-	kMCCanvasPaintTypePattern,
-	kMCCanvasPaintTypeGradient,
-};
-
-typedef struct MCCanvasPaintStruct
-{
-	MCCanvasPaintType type;
-} *MCCanvasPaint;
-
-uinteger_t MCCanvasPaintType_Measure(void);
-void MCCanvasPaintType_Finalize(MCCanvasPaint *p_paint);
-void MCCanvasPaintType_Copy(const MCCanvasPaint *p_src, MCCanvasPaint *p_dst);
-
-// Solid Paint opaque type
-typedef struct MCCanvasSolidPaintStruct : public MCCanvasPaintStruct
-{
-	MCCanvasColorRef color;
-} *MCCanvasSolidPaint;
+typedef MCCanvasPaintRef MCCanvasSolidPaintRef, MCCanvasPatternRef, MCCanvasGradientRef;
 
 // Constant refs
 extern MCCanvasTransformRef kMCCanvasIdentityTransform;

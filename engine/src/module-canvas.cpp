@@ -4788,25 +4788,6 @@ static MCValueCustomCallbacks kMCCanvasCustomValueCallbacks =
 	__MCCanvasDescribe,
 };
 
-MCTypeInfoRef kMCCanvasPointTypeInfo = nil;
-static MCForeignTypeDescriptor kMCCanvasPointTypeDescriptor =
-{
-    sizeof(MCCanvasPoint),
-    kMCNullTypeInfo,
-    kMCNullTypeInfo,
-    nil,
-    0,
-    nil,
-    nil,
-    nil,
-    nil,
-    nil,
-    nil,
-    nil,
-    nil,
-    nil,
-};
-
 static void __create_named_custom_typeinfo(const MCValueCustomCallbacks *p_callbacks, MCNameRef p_name, MCTypeInfoRef& r_typeinfo)
 {
     MCAutoTypeInfoRef t_unnamed;
