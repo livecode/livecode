@@ -45,10 +45,13 @@
 
 #include "widget-events.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
+void MCCanvasPop(uintptr_t p_cookie);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGContextRef MCwidgetcontext;
 MCWidget *MCwidgetobject;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,19 +97,6 @@ MCWidget::~MCWidget(void)
 
 MCWidget* MCWidget::createInstanceOfKind(MCNameRef p_kind)
 {
-    // Force-load the module
-    static bool s_loaded = false;
-    if (!s_loaded)
-    {
-        IO_handle h;
-        MCStreamRef s;
-        MCScriptModuleRef t_ignored;
-        h = MCS_open(MCSTR("/Users/frasergordon/Workspace/LiveCode/livecode-8-priv/toolchain/lc-compile/foo.lcm"), kMCOpenFileModeRead, True, False, 0);
-        MCMemoryInputStreamCreate(h->GetFilePointer(), h->GetFileSize(), s);
-        MCScriptCreateModuleFromStream(s, t_ignored);
-        s_loaded = true;
-    }
-    
     // Attempt to look-up the module for the given kind and ensure that all of
     // its dependencies have been satisfied.
     MCScriptModuleRef t_module;
@@ -618,13 +608,19 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 	}
 
-	MCwidgetcontext = ((MCGraphicsContext *)dc) -> getgcontextref();
-	MCGContextSave(MCwidgetcontext);
-	MCGContextSetShouldAntialias(MCwidgetcontext, true);
-	MCGContextTranslateCTM(MCwidgetcontext, rect . x, rect . y);
+    MCGContextRef t_gcontext;
+    t_gcontext = ((MCGraphicsContext *)dc) -> getgcontextref();
+    
+	MCGContextSave(t_gcontext);
+	MCGContextSetShouldAntialias(t_gcontext, true);
+	MCGContextTranslateCTM(t_gcontext, rect . x, rect . y);
+    
+    uintptr_t t_cookie;
+    MCCanvasPush(t_gcontext, t_cookie);
     MCwidgeteventmanager->event_draw(this, dc, dirty, p_isolated, p_sprite);
-	MCGContextRestore(MCwidgetcontext);
-	MCwidgetcontext = nil;
+    MCCanvasPop(t_cookie);
+    
+	MCGContextRestore(t_gcontext);
 	
 	if (!p_isolated)
 	{
@@ -750,6 +746,8 @@ void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
 {
     if (m_native_layer)
         m_native_layer->OnPaint(p_dc, p_rect);
+    else
+        CallHandler(MCNAME("OnPaint"), nil, 0);
     
     fprintf(stderr, "MCWidget::OnPaint\n");
 }
@@ -1193,6 +1191,16 @@ bool MCWidget::CallSetProp(MCNameRef p_property, MCNameRef p_key, MCValueRef p_v
 void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 {
     r_kind = MCValueRetain(m_kind);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" void MCWidgetExecRedrawAll(void)
+{
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    MCwidgetobject -> layer_redrawall();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
