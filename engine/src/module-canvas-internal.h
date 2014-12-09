@@ -34,7 +34,6 @@ struct __MCCanvasColorImpl
 	MCCanvasFloat red, green, blue, alpha;
 };
 
-bool MCCanvasColorCreate(const __MCCanvasColorImpl &p_color, MCCanvasColorRef &r_color);
 __MCCanvasColorImpl *MCCanvasColorGet(MCCanvasColorRef p_color);
 
 // Transform type
