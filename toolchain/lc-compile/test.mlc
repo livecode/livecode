@@ -7,20 +7,56 @@ public handler test()
     variable tDelimiter as string
     put newline into tDelimiter
 	
+	variable tVar
+	--put 0.5 into tVar
+	
+	-- test test
+	testLog("__Test", "Fail", false, tResults)
+	testLog("__Test", "Succeed", true, tResults)
+	
+	-- structural
 	testRepeat(tResults)
+	testLogicStructural(tResults)
+	
+	--com.livecode.array
+	testArray(tResults)	
+	
+	--com.livecode.typeconvert
 	testTypeConvert(tResults)
 	
-    testLogic(tResults)
+	--com.livecode.list
     testList(tResults)
-    testSort(tResults)
+    
+	--com.livecode.arithmetic
     testArithmetic(tResults)
-	testChar(tResults)
+    	
+	--com.livecode.bitwise	
 	testBitwise(tResults)
-	testArray(tResults)
-	testString(tResults)
-
-	testLog("__TestFail", "Fail", false, tResults)
 	
+	--com.livecode.char
+	testChar(tResults)
+		
+	--com.livecode.logic
+    testLogic(tResults)
+    
+	--com.livecode.math
+	--testMath(tResults)
+	
+	--com.livecode.sort
+    testSort(tResults)
+    
+	--com.livecode.string
+	testString(tResults)
+	
+	--com.livecode.type
+	testType(tResults)
+	
+	--com.livecode.binary
+	--com.livecode.byte
+	--com.livecode.item
+	--com.livecode.line
+	--com.livecode.segmentchunk
+
 	// put fails at the end
 	sort tResults in descending order
 	
@@ -45,6 +81,17 @@ end handler
 public handler boolWithSideEffect(in tResult as bool, inout tVar as string) as bool
 	put "a" into tVar
 	return tResult
+end handler
+
+public handler testType(inout xResults as list)
+
+end handler
+
+public handler testMath(inout xResults as list)
+
+	--testLog("Math", "PowerOf", 3 ^ 4 = 81, xResults)
+	--testLog("Math", "Base10Log", the log of 1000 is 3, xResults)
+
 end handler
 
 public handler testTypeConvert(inout xResults as list)
@@ -191,8 +238,9 @@ public handler testLogic(inout xResults as list)
     testLog("Logic", "Is", not true is false, xResults)
     testLog("Logic", "Is", not false is true, xResults)
     
-    // test boolean short circuit
-    
+end handler
+
+public handler testLogicStructural(inout xResults as list)
     variable tString as string
     put the empty string into tString
     if (false and boolWithSideEffect(true, tString)) then
@@ -228,7 +276,6 @@ public handler testLogic(inout xResults as list)
     end if		
     
     testLog("Logic", "OrShortCut", tString2 is "a", xResults)	
-    
 end handler
 
 public handler testChar(inout xResults as list)
@@ -363,7 +410,6 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "TimesInt", tLeft * tRight is 20, xResults)
 	testLog("Arithmetic", "TimesReal", tLeftReal * tRightReal is 20, xResults)
 	testLog("Arithmetic", "TimesNum", 10 * 2 is 20, xResults)
-	
 	
 	testLog("Arithmetic", "DivideInt", tLeft / tRight is 5, xResults)
 	testLog("Arithmetic", "DivideReal", tLeftReal / tRightReal is 5, xResults)
