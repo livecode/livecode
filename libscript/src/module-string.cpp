@@ -41,6 +41,21 @@ extern "C" void MCStringExecPutStringAfter(MCStringRef p_source, MCStringRef& x_
     MCValueAssign(x_target, *t_string);
 }
 
+extern "C" void MCStringExecReplace(MCStringRef p_pattern, MCStringRef p_replacement, MCStringRef& x_target)
+{
+    MCAutoStringRef t_string;
+    if (!MCStringMutableCopy(x_target, &t_string))
+        return;
+    
+    MCStringFindAndReplace(*t_string, p_pattern, p_replacement, kMCStringOptionCompareExact);
+    
+    MCAutoStringRef t_new_string;
+    if (!MCStringCopy(*t_string, &t_new_string))
+        return;
+    
+    MCValueAssign(x_target, *t_new_string);
+}
+
 extern "C" void MCStringEvalConcatenateWithSpace(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
 {
     if (!MCStringFormat(r_output, "%@ %@", p_left, p_right))
@@ -91,4 +106,9 @@ extern "C" void MCStringEvalIsLessThan(MCStringRef p_left, MCStringRef p_right, 
 extern "C" void MCStringEvalIsGreaterThan(MCStringRef p_left, MCStringRef p_right, bool& r_result)
 {
     r_result = MCStringCompareTo(p_left, p_right, kMCStringOptionCompareExact) > 0;
+}
+
+extern "C" void MCStringEvalEmpty(MCStringRef& r_output)
+{
+    r_output = MCValueRetain(kMCEmptyString);
 }

@@ -95,6 +95,7 @@ enum SyntaxMethodType
     kSyntaxMethodTypeExecute,
     kSyntaxMethodTypeEvaluate,
     kSyntaxMethodTypeAssign,
+    kSyntaxMethodTypeIterate,
 };
 
 typedef struct SyntaxArgument *SyntaxArgumentRef;
@@ -120,6 +121,7 @@ enum SyntaxRuleKind
     kSyntaxRuleKindFragment,
     kSyntaxRuleKindPhrase,
     kSyntaxRuleKindStatement,
+    kSyntaxRuleKindIterator,
     kSyntaxRuleKindExpression,
     kSyntaxRuleKindPrefixOperator,
     kSyntaxRuleKindPostfixOperator,
@@ -206,6 +208,11 @@ void BeginPhraseSyntaxRule(NameRef p_module, NameRef p_name)
 void BeginStatementSyntaxRule(NameRef p_module, NameRef p_name)
 {
     BeginSyntaxRule(p_module, p_name, kSyntaxRuleKindStatement, 0);
+}
+
+void BeginIteratorSyntaxRule(NameRef p_module, NameRef p_name)
+{
+    BeginSyntaxRule(p_module, p_name, kSyntaxRuleKindIterator, 0);
 }
 
 void BeginExpressionSyntaxRule(NameRef p_module, NameRef p_name)
@@ -925,6 +932,11 @@ void BeginAssignMethodSyntaxMapping(NameRef p_name)
     BeginMethodSyntaxMapping(kSyntaxMethodTypeAssign, p_name);
 }
 
+void BeginIterateMethodSyntaxMapping(NameRef p_name)
+{
+    BeginMethodSyntaxMapping(kSyntaxMethodTypeIterate, p_name);
+}
+
 void EndMethodSyntaxMapping(void)
 {
     if (s_rule -> methods == NULL)
@@ -1480,7 +1492,7 @@ static void GenerateInvokeMethodArg(SyntaxArgumentRef p_arg)
 
 static void GenerateInvokeMethodList(int p_index, int p_method_index, SyntaxMethodRef p_method)
 {
-    static const char *s_method_types[] = { "execute", "evaluate", "assign" };
+    static const char *s_method_types[] = { "execute", "evaluate", "assign", "iterate" };
     const char *t_name;
 	
 	if (p_method == NULL)
@@ -1490,7 +1502,7 @@ static void GenerateInvokeMethodList(int p_index, int p_method_index, SyntaxMeth
     }
 
     GenerateInvokeMethodList(p_index, p_method_index + 1, p_method -> next);
-   
+    
     GetStringOfNameLiteral(p_method -> name, &t_name);
     fprintf(s_output, "    where(INVOKEMETHODLIST'methodlist(\"%s\", %s, ", t_name, s_method_types[p_method -> type]);
     
@@ -1681,6 +1693,7 @@ void GenerateSyntaxRules(void)
     }
     
     GenerateUmbrellaSyntaxRule("CustomStatements", kSyntaxRuleKindStatement, kSyntaxRuleKindStatement);
+    GenerateUmbrellaSyntaxRule("CustomIterators", kSyntaxRuleKindIterator, kSyntaxRuleKindIterator);
     GenerateUmbrellaSyntaxRule("CustomTerms", kSyntaxRuleKindExpression, kSyntaxRuleKindExpression);
     GenerateUmbrellaSyntaxRule("CustomBinaryOperators", kSyntaxRuleKindLeftBinaryOperator, kSyntaxRuleKindNeutralBinaryOperator);
     GenerateUmbrellaSyntaxRule("CustomPrefixOperators", kSyntaxRuleKindPrefixOperator, kSyntaxRuleKindPrefixOperator);

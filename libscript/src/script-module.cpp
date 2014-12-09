@@ -262,6 +262,7 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         for(uindex_t i = 1; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
+                    case kMCScriptBytecodeOpAssignList:
                     case kMCScriptBytecodeOpInvokeIndirect:
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);

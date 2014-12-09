@@ -1,31 +1,22 @@
 module test
 
-foreign handler MCNumberCreateWithInteger(in value as int, out value_ref as number) as bool binds to "<builtin>"
-foreign handler MCBooleanCreateWithBool(in value as bool, out value_ref as boolean) as bool binds to "<builtin>"
-
-foreign handler MCProperListCreate(in pValues as optional pointer, in pValueCount as uint, out value_ref as list) as bool binds to "<builtin>"
-
 public handler test()
     variable tResults as list
-    MCProperListCreate(undefined, 0, tResults)
+    put the empty list into tResults
 
     variable tDelimiter as string
     put newline into tDelimiter
 
-    --testLogic(tResults)
-   -- testList(tResults)
-    --testSort(tResults)
-    --testArithmetic(tResults)
-
-    variable tVar as list
-    MCProperListCreate(undefined, 0, tVar)
-    push 2 onto tVar
-    if the head of tVar is 2 then
-        push "success" onto tResults
-    end if
-
+    testLogic(tResults)
+    testList(tResults)
+    testSort(tResults)
+    testArithmetic(tResults)
+	testChar(tResults)
+	testBitwise(tResults)
+	testArray(tResults)
+	
     variable tResultString as string
-    put "" into tResultString
+    put the empty string into tResultString
     combine tResults with tDelimiter into tResultString
 
     return tResultString
@@ -42,60 +33,292 @@ public handler testLog(in pModule as string, in pTest as string, in pResult as b
     push pModule & "_" & pTest & ":" && tStringResult onto xResults
 end handler
 
+public handler boolWithSideEffect(in tResult as bool, inout tVar as string) as bool
+	put "a" into tVar
+	return tResult
+end handler
+
+public handler testString(inout xResults as list)
+	variable tString as string
+	put the empty string into tString
+	
+	testLog("String", "EmptyString", tString is "", xResults)
+	
+	put "abcde" before tString
+	testLog("String", "PutBeforeString", tString is "abcde", xResults)
+	
+	put "fghij" after tString
+	testLog("String", "PutBeforeString", tString is "abcdefghij", xResults)
+	
+	testLog("String", "ConcatenateString", tString is "abcde" & "fghij", xResults)
+	testLog("String", "ConcatenateWithSpace", "ab" && "cd" is "ab cd", xResults)
+	
+	put "purple" into tString
+	replace "p" with "t" in tString
+	testLog("String", "ReplaceString", tString is "turtle", xResults)
+	
+	testLog("String", "Uppercase", the upper of "abcd" is "ABCD", xResults)
+	testLog("String", "Lowercase", the lower of "ABCD" is "abcd", xResults)
+	
+	testLog("String", "LessThan", "!" < "A", xResults)
+	testLog("String", "GreaterThan", "a" > "A", xResults)
+	
+end handler
+
+public handler testArray(inout xResults as list)
+	variable tArray as array
+	put the empty array into tArray
+	
+	
+	
+	--put "value1" into tArray[ "key1" ]
+	--put "value2" into tArray["key2"]
+	--put "value3" into tArray["key3"]
+	
+	variable tKeys as list
+	put the keys of tArray into tKeys
+	
+	variable tKeysString as string
+	combine tKeys with "," into tKeysString
+	
+	testLog("", "", tKeysString is the empty string, xResults)
+	
+	--testLog("Array", "ArrayKeysOf", tKeysString contains "key1", xResults)
+	--testLog("Array", "ArrayKeysOf", tKeysString contains "key2", xResults)
+	--testLog("Array", "ArrayKeysOf", tKeysString contains "key3", xResults)
+	
+end handler
+
+public handler testBitwise(inout xResults as list)
+	variable tVar as integer
+	
+	put 3 bitwise and 6 into tVar
+	testLog("Bitwise", "BitwiseAnd", tVar is 2, xResults)
+	
+	put 3 bitwise or 6 into tVar
+	testLog("Bitwise", "BitwiseOr", tVar is 7, xResults)
+	
+	put 3 bitwise xor 6 into tVar
+	testLog("Bitwise", "BitwiseXor", tVar is 5, xResults)
+	
+	--put bitwise not 0 into tVar
+
+	put 7 shifted by 2 bitwise into tVar 
+	testLog("Bitwise", "BitwiseShift", tVar is 28, xResults)
+	
+end handler
+
 public handler testLogic(inout xResults as list)
     variable tVar as bool
     put not false into tVar
 
     testLog("Logic", "Not", tVar, xResults)
+    
+    // test boolean short circuit
+    
+    variable tString as string
+    put the empty string into tString
+    if (false and boolWithSideEffect(true, tString)) then
+    	testLog("Logic", "And", false, xResults)
+    else
+        testLog("Logic", "And", true, xResults)
+    end if	
+    
+    testLog("Logic", "AndShortCut", not (tString is "a"), xResults)
+    
+    if (true and boolWithSideEffect(true, tString)) then
+    	testLog("Logic", "And", true, xResults)
+    else
+      	testLog("Logic", "And", false, xResults)  
+    end if		
+    
+    testLog("Logic", "AndShortCut", tString is "a", xResults)
+    
+    variable tString2 as string
+    put the empty string into tString2
+    if (true or boolWithSideEffect(false, tString2)) then
+    	testLog("Logic", "Or", true, xResults)
+    else
+        testLog("Logic", "Or", false, xResults)	
+    end if	
+    
+    testLog("Logic", "OrShortCut", not (tString2 is "a"), xResults)
+    
+    if (false or boolWithSideEffect(false, tString2)) then
+    	testLog("Logic", "Or", false, xResults)
+    else
+    	testLog("Logic", "Or", true, xResults)
+    end if		
+    
+    testLog("Logic", "OrShortCut", tString2 is "a", xResults)	
+    
+end handler
+
+public handler testChar(inout xResults as list) as undefined
+	variable tString as string
+	put "abcde" into tString
+	
+	testLog("Char", "CountCharsOf", the number of chars in tString is 5, xResults)
+	testLog("Char", "FetchCharOf", char 5 of tString is "e", xResults)
+	
+	put "abcd" into char 5 of tString
+	
+	testLog("Char", "StoreCharOf", tString is "abcdabcd", xResults)
+	
+	testLog("Char", "FetchCharRangeOf", char 5 to 8 of tString is "abcd", xResults)
+	
+	put "e" into char 5 to 8 of tString
+	
+	testLog("Char", "StoreCharRangeOf", tString is "abcde", xResults)
+	
+	testLog("Char", "CharIsIn", "a" is in "abc", xResults)
+
+	put "abcde" before char 1 of tString
+	
+	testLog("Char", "BeforeCharOf", tString is "abcdeabcde", xResults)
+	
+	put "abcde" after char 5 of tString
+	
+	testLog("Char", "AfterCharOf", tString is "abcdeabcdeabcde", xResults)
+
+	variable tOffset as integer
+	put the first offset of "abcde" in tString into tOffset
+	
+	testLog("Char", "CharOffset", tOffset is 1, xResults)
+	
+	put the first offset of "abcdef" in tString into tOffset
+	testLog("Char", "CharOffset", tOffset is 0, xResults)
+	
+	put the offset of chars "abcde" after 1 in tString into tOffset
+	
+	testLog("Char", "CharOffsetAfter", tOffset is 5, xResults)
+	
+	put the first offset of chars "abcde" after 11 in tString into tOffset
+	testLog("Char", "CharOffsetAfter", tOffset is 0, xResults)
+	
+	variable tLastDot as integer
+	variable tAddress as string
+	variable tTLD as string
+	put "http://www.livecode.com/index.html" into tAddress
+	put the last offset of "." in tAddress into tLastDot
+	put the offset of "." before tLastDot in tAddress into tOffset
+	put char tOffset + 1 to tOffset + 3 of tAddress into tTLD
+	
+	testLog("Char", "CharOffsetBefore", tTLD is "com", xResults)
+	
+	variable tVar as string
+	put "123" into tVar
+	
+	variable tCount as integer
+	put the number of chars in tVar into tCount
+	subtract 1 from tCount
+	
+	repeat tCount times
+		put "," after char tCount of tVar
+		subtract 1 from tCount
+	end repeat 	
+	
+	testLog("Char", "CharExample", tVar is "1,2,3", xResults)	
 end handler
 
 public handler testArithmetic(inout xResults as list) as undefined
 
 	variable tInt as int
-	variable tReal as real
-	--variable tNumber
+	variable tReal as double
+	variable tNumber
 	
 	put 10 into tInt
 	put 10 into tReal
-	--put 10 into tNumber
+	put 10 into tNumber
 	
 	add 2 to tInt
 	add 2 to tReal
-	--add 2 to tNumber
+	add 2 to tNumber
 	
 	testLog("Arithmetic", "AddToInt", tInt is 12, xResults)
 	testLog("Arithmetic", "AddToReal", tReal is 12, xResults)
-	--testLog("Arithmetic", "AddToNum", tNumber is 12, xResults)
+	testLog("Arithmetic", "AddToNum", tNumber is 12, xResults)
 
 	subtract 2 from tInt
 	subtract 2 from tReal
-	--subtract 2 from tNumber
+	subtract 2 from tNumber
 	
 	testLog("Arithmetic", "SubtractFromInt", tInt is 10, xResults)
 	testLog("Arithmetic", "SubtractFromReal", tReal is 10, xResults)
-	--testLog("Arithmetic", "SubtractFromNum", tNumber is 10, xResults)
+	testLog("Arithmetic", "SubtractFromNum", tNumber is 10, xResults)
 	
 	multiply tInt by 2
 	multiply tReal by 2
-	--multiply tNumber by 2
+	multiply tNumber by 2
 
 	testLog("Arithmetic", "MultiplyInt", tInt is 20, xResults)
 	testLog("Arithmetic", "MultiplyReal", tReal is 20, xResults)
-	--testLog("Arithmetic", "MultiplyNum", tNumber is 20, xResults)	
+	testLog("Arithmetic", "MultiplyNum", tNumber is 20, xResults)	
 
 	divide tInt by 40
 	divide tReal by 40
-	--divide tNumber by 40
+	divide tNumber by 40
 	
 	testLog("Arithmetic", "DivideInt", tInt is 0, xResults)
 	testLog("Arithmetic", "DivideReal", tReal is 0.5, xResults)
-	--testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)		
+	testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)
+	
+	variable tLeft as int
+	variable tRight as int
+	
+	put 10 into tLeft
+	put 2 into tRight
+	
+	testLog("Arithmetic", "PlusInt", tLeft + tRight is 12, xResults)
+	testLog("Arithmetic", "PlusNum", 10 + 2 is 12, xResults)
+	
+	testLog("Arithmetic", "MinusInt", tLeft - tRight is 8, xResults)
+	testLog("Arithmetic", "MinusNum", 10 - 2 is 8, xResults)
+	
+	testLog("Arithmetic", "TimesInt", tLeft * tRight is 20, xResults)
+	testLog("Arithmetic", "TimesNum", 10 * 2 is 20, xResults)
+	
+	testLog("Arithmetic", "DivideInt", tLeft / tRight is 5, xResults)
+	testLog("Arithmetic", "DivideNum", 10 / 2 is 5, xResults)
+	
+	variable tOne as int
+	put 1 into tOne
+	
+	testLog("Arithmetic", "ModInt", tLeft mod (tRight + tOne) is 1, xResults)
+	testLog("Arithmetic", "ModNum", 5 mod 3 is 2, xResults)
 
+	testLog("Arithmetic", "Wrap", 5 wrap 3 is 2, xResults)
+	testLog("Arithmetic", "Wrap", -3 wrap 3 is -3, xResults)
+	
+	testLog("Arithmetic", "GreaterThanInt", tLeft > tRight, xResults)
+	testLog("Arithmetic", "GreaterThanInt", not tLeft > tLeft, xResults)
+	testLog("Arithmetic", "GreaterThanNum", 2 > 1, xResults)
+	testLog("Arithmetic", "GreaterThanNum", not 1 > 1, xResults)
+	
+	testLog("Arithmetic", "GreaterThanOrEqualToInt", tLeft >= tLeft, xResults)
+	testLog("Arithmetic", "GreaterThanOrEqualToInt", not tRight >= tLeft, xResults)
+	testLog("Arithmetic", "GreaterThanOrEqualToNum", 1 >= 1, xResults)
+	testLog("Arithmetic", "GreaterThanOrEqualToNum", not 1 >= 2, xResults)
+	
+	testLog("Arithmetic", "LessThanInt", not tLeft < tLeft, xResults)
+	testLog("Arithmetic", "LessThanInt", tRight < tLeft, xResults)
+	testLog("Arithmetic", "LessThanNum", 1 < 2, xResults)
+	testLog("Arithmetic", "LessThanNum", not 1 < 1, xResults)
+	
+	testLog("Arithmetic", "LessThanOrEqualToInt", tLeft <= tLeft, xResults)
+	testLog("Arithmetic", "LessThanOrEqualToInt", not tLeft <= tRight, xResults)
+	testLog("Arithmetic", "LessThanOrEqualToNum", 1 <= 1, xResults)
+	testLog("Arithmetic", "LessThanOrEqualToNum", not 2 <= 1, xResults)
+		
 end handler
 
 public handler testList(inout xResults as list) as undefined
     variable tTestList as list
-    MCProperListCreate(undefined, 0, tTestList)
+    put the empty list into tTestList
+
+	variable tCount as integer
+	put the number of elements in tTestList into tCount
+	testLog("List", "EmptyList", tCount is 0, xResults)
 
     push "xyz" onto tTestList
     push 2 onto tTestList
@@ -103,11 +326,11 @@ public handler testList(inout xResults as list) as undefined
     push 1 onto tTestList
 
     testLog("List", "NumberOfElements", the number of elements in tTestList is 4, xResults)
-    testLog("List", "HeadOf", the head of tTestList is "xyz", xResults)
-    testLog("List", "TailOf", the tail of tTestList is 1, xResults)
+   	testLog("List", "HeadOf", the head of tTestList is "xyz", xResults)
+	testLog("List", "TailOf", the tail of tTestList is 1, xResults)
 
     testLog("List", "ElementOf", element 2 of tTestList is 2, xResults)
-    testLog("List", "ElementRangeOf", element 2 of element 3 to -1 of tTestList is 1, xResults)
+   	testLog("List", "ElementRangeOf", element 2 of element 3 to -1 of tTestList is 1, xResults)
 
     variable tSubList as list
     put element -2 to -1 of tTestList into tSubList
@@ -128,11 +351,14 @@ public handler testList(inout xResults as list) as undefined
     testLog("List", "SpliceAfter", the tail of tSubList is 1, xResults)
     testLog("List", "SpliceAfter", tSubList contains tTestList, xResults)
 
+	--put "ZZZZ" into tTestList[1]
+	--testLog("List", "SingletonElement", tTestList[1] is "ZZZZ", xResults)
+
 end handler
 
 public handler testSort(inout xResults as list) as undefined
     variable tTestList as list
-    MCProperListCreate(undefined, 0, tTestList)
+    put the empty list into tTestList
 
     push "xyz" onto tTestList
     push 2 onto tTestList

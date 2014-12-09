@@ -334,8 +334,7 @@
         Apply(Step)
         Apply(Body)
 
-    'rule' Apply(STATEMENT'repeatforeach(_, Iterator, Slot, Container, Body)):
-        ApplyId(Slot)
+    'rule' Apply(STATEMENT'repeatforeach(_, Iterator, Container, Body)):
         Apply(Iterator)
         Apply(Container)
         Apply(Body)
@@ -640,8 +639,8 @@
         DumpBindings(Finish)
         DumpBindings(Step)
         DumpBindings(Body)
-    'rule' DumpBindings(STATEMENT'repeatforeach(_, Iterator, Slot, Container, Body)):
-        DumpId("repeat foreach slot", Slot)
+    'rule' DumpBindings(STATEMENT'repeatforeach(_, Iterator, Container, Body)):
+        --DumpId("repeat foreach")
         DumpBindings(Iterator)
         DumpBindings(Container)
         DumpBindings(Body)

@@ -589,8 +589,8 @@
             Statements(-> Body)
         "end" "repeat"
         
-    'rule' Statement(-> repeatforeach(Position, Iterator, Slot, Container, Body)):
-        "repeat" @(-> Position) "for" "each" CustomIterator(-> Iterator) Identifier(-> Slot) "in" Expression(-> Container) Separator
+    'rule' Statement(-> repeatforeach(Position, Iterator, Container, Body)):
+        "repeat" @(-> Position) "for" "each" CustomIterators(-> Iterator) "in" Expression(-> Container) Separator
             Statements(-> Body)
         "end" "repeat"
 
@@ -599,10 +599,10 @@
             Statements(-> Body)
         TryStatementCatches(-> Catches)
         TryStatementFinally(-> Finally)
-        "end" "try"
+        "end" "try"*/
         
     'rule' Statement(-> throw(Position, Value)):
-        "throw" @(-> Position) Expression(-> Value)*/
+        "throw" @(-> Position) Expression(-> Value)
 
     'rule' Statement(-> nextrepeat(Position)):
         "next" @(-> Position) "repeat"
@@ -678,7 +678,23 @@
 
 'nonterm' Expression(-> EXPRESSION)
 
-    'rule' Expression(-> Result):
+    'rule' Expression(-> logicalor(Position, Left, Right)):
+        Expression(-> Left) "or" @(-> Position) AndExpression(-> Right)
+        
+    'rule' Expression(-> Expr)
+        AndExpression(-> Expr)
+        
+'nonterm' AndExpression(-> EXPRESSION)
+
+    'rule' AndExpression(-> logicaland(Position, Left, Right)):
+        AndExpression(-> Left) "and" @(-> Position) NormalExpression(-> Right)
+    
+    'rule' AndExpression(-> Result):
+        NormalExpression(-> Result)
+        
+'nonterm' NormalExpression(-> EXPRESSION)
+
+    'rule' NormalExpression(-> Result):
         FlatExpression(-> Sentinal)
         ReorderOperatorExpression(Sentinal)
         ProcessOperatorExpression(-> Result)
@@ -755,11 +771,14 @@
     'rule' TermExpression(-> slot(Position, Name)):
         Identifier(-> Name) @(-> Position)
 
-    'rule' TermExpression(-> as(Position, Value, Type)):
-        TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
+    --'rule' TermExpression(-> as(Position, Value, Type)):
+    --    TermExpression(-> Value) "as" @(-> Position) Type(-> Type)
 
     'rule' TermExpression(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
+
+    'rule' TermExpression(-> list(Position, List)):
+        "[" @(-> Position) OptionalExpressionList(-> List) "]"
 
     'rule' TermExpression(-> Expression):
         "(" Expression(-> Expression) ")"
@@ -983,10 +1002,6 @@
 'token' END_OF_UNIT
 'token' NEXT_UNIT
 
-'nonterm' CustomIterator(-> EXPRESSION)
-    'rule' CustomIterator(-> nil):
-        "THISCANNEVERHAPPEN"
-        
 --*--*--*--*--*--*--*--
 
 'action' InitializeCustomInvokeLists()
@@ -1009,6 +1024,9 @@
         "THISCANNEVERHAPPEN"
 'nonterm' CustomTerms(-> EXPRESSION)
     'rule' CustomTerms(-> nil):
+        "THISCANNEVERHAPPEN"
+'nonterm' CustomIterators(-> EXPRESSION)
+    'rule' CustomIterators(-> nil):
         "THISCANNEVERHAPPEN"
 
 

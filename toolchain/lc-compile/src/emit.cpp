@@ -97,11 +97,7 @@ extern "C" void EmitBeginCall(long index, long resultreg);
 extern "C" void EmitBeginIndirectCall(long reg, long resultreg);
 extern "C" void EmitContinueCall(long reg);
 extern "C" void EmitEndCall(void);
-extern "C" void EmitBeginBuiltinInvoke(long name, long resultreg);
-extern "C" void EmitBeginExecuteInvoke(long index, long contextreg, long resultreg);
-extern "C" void EmitBeginEvaluateInvoke(long index, long contextreg, long outputreg);
-extern "C" void EmitBeginAssignInvoke(long index, long contextreg, long inputreg);
-extern "C" void EmitBeginIterateInvoke(long index, long contextreg, long iteratorreg, long containerreg);
+extern "C" void EmitBeginInvoke(long index, long contextreg, long resultreg);
 extern "C" void EmitContinueInvoke(long reg);
 extern "C" void EmitEndInvoke(void);
 extern "C" void EmitAssign(long dst, long src);
@@ -111,12 +107,16 @@ extern "C" void EmitAssignFalse(long reg);
 extern "C" void EmitAssignInteger(long reg, long value);
 extern "C" void EmitAssignReal(long reg, long value);
 extern "C" void EmitAssignString(long reg, long value);
+extern "C" void EmitBeginAssignList(long reg);
+extern "C" void EmitContinueAssignList(long reg);
+extern "C" void EmitEndAssignList(void);
 extern "C" void EmitFetchLocal(long reg, long var);
 extern "C" void EmitStoreLocal(long reg, long var);
 extern "C" void EmitFetchGlobal(long reg, long var);
 extern "C" void EmitStoreGlobal(long reg, long var);
 extern "C" void EmitReturn(long reg);
 extern "C" void EmitReturnNothing(void);
+extern "C" void EmitThrow(long reg);
 extern "C" void EmitAttachRegisterToExpression(long reg, long expr);
 extern "C" void EmitDetachRegisterFromExpression(long expr);
 extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
@@ -234,6 +234,15 @@ void EmitEndModule(void)
         
         if (OutputFileAsC)
         {
+            const char *t_string;
+            GetStringOfNameLiteral(s_module_name, &t_string);
+            
+            char *t_modified_string;
+            t_modified_string = strdup(t_string);
+            for(int i = 0; t_modified_string[i] != '\0'; i++)
+                if (t_modified_string[i] == '.')
+                    t_modified_string[i] = '_';
+            
             fprintf(t_output, "static unsigned char module_data[] = {");
             for(size_t i = 0; i < t_size; i++)
             {
@@ -245,7 +254,7 @@ void EmitEndModule(void)
             
             const char *t_name;
             GetStringOfNameLiteral(s_module_name, &t_name);
-            fprintf(t_output, MC_AS_C_PREFIX "\n MODULE_SECTION static volatile struct { const char *name; unsigned char *data; unsigned long length; } module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_name);
+            fprintf(t_output, MC_AS_C_PREFIX "\nMODULE_SECTION volatile struct { const char *name; unsigned char *data; unsigned long length; } __%s_module_info = { \"%s\", module_data, sizeof(module_data) };\n", t_modified_string, t_name);
         }
         else if (t_output != NULL)
         {
@@ -930,38 +939,11 @@ void EmitCurrentRepeatLabels(long& r_next, long& r_exit)
 
 //////////
 
-void EmitBeginBuiltinInvoke(long name, long resultreg)
-{
-    // TODO: Builtin invoke
-    MCScriptBeginInvokeInModule(s_builder, 0, resultreg);
-    MCLog("[Emit] BeginBuiltinInvoke(%s, %ld)", (const char *)name, resultreg);
-}
-
-void EmitBeginExecuteInvoke(long index, long contextreg, long resultreg)
+void EmitBeginInvoke(long index, long contextreg, long resultreg)
 {
     MCScriptBeginInvokeInModule(s_builder, index, resultreg);
     MCLog("[Emit] BeginExecuteInvoke(%ld, %ld, %ld)", index, contextreg, resultreg);
 }
-
-#if 0
-void EmitBeginEvaluateInvoke(long index, long contextreg, long outputreg)
-{
-    MCScriptBeginInvokeEvaluateInModule(s_builder, index, outputreg);
-    MCLog("[Emit] BeginEvaluateInvoke(%ld, %ld, %ld)", index, contextreg, outputreg);
-}
-
-void EmitBeginAssignInvoke(long index, long contextreg, long inputreg)
-{
-    MCScriptBeginInvokeAssignInModule(s_builder, index, inputreg);
-    MCLog("[Emit] BeginAssignInvoke(%ld, %ld, %ld)", index, contextreg, inputreg);
-}
-
-void EmitBeginIterateInvoke(long index, long contextreg, long iteratorreg, long containerreg)
-{
-    // TODO: Iterate invoke
-    MCLog("[Emit] BeginIterateInvoke(%ld, %ld, %ld)", index, contextreg, iteratorreg, containerreg);
-}
-#endif
 
 void EmitContinueInvoke(long reg)
 {
@@ -1019,6 +1001,24 @@ void EmitAssignString(long reg, long value)
     MCLog("[Emit] AssignString(%ld, \"%s\")", reg, (const char *)value);
 }
 
+void EmitBeginAssignList(long reg)
+{
+    MCScriptEmitBeginAssignListInModule(s_builder, reg);
+    MCLog("[Emit] BeginAssignList(%ld)", reg);
+}
+
+void EmitContinueAssignList(long reg)
+{
+    MCScriptEmitContinueAssignListInModule(s_builder, reg);
+    MCLog("[Emit] ContinueAssignList(%ld)", reg);
+}
+
+void EmitEndAssignList(void)
+{
+    MCScriptEmitEndAssignListInModule(s_builder);
+    MCLog("[Emit] EndAssignList()", 0);
+}
+
 void EmitAssign(long dst, long src)
 {
     MCScriptEmitAssignInModule(s_builder, dst, src);
@@ -1064,6 +1064,12 @@ void EmitReturnNothing(void)
     EmitAssignUndefined(t_reg);
     EmitReturn(t_reg);
     EmitDestroyRegister(t_reg);
+}
+
+void EmitThrow(long reg)
+{
+    MCScriptEmitThrowInModule(s_builder, reg);
+    MCLog("[Emit] Throw(%ld)", reg);
 }
 
 ////////

@@ -109,6 +109,11 @@ bool MCGPathIsEmpty(MCGPathRef self)
 	return self -> path -> isEmpty();
 }
 
+bool MCGPathIsEqualTo(MCGPathRef a, MCGPathRef b)
+{
+	return *a->path == *b->path;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCGPathCopy(MCGPathRef self, MCGPathRef& r_new_path)

@@ -25,7 +25,7 @@ uinteger_t MCChunkCountByteChunkCallback(void *context)
     return MCDataGetLength(*(MCDataRef *)context);
 }
 
-uinteger_t MCChunkCountCodepointChunkCallback(void *context)
+uinteger_t MCChunkCountCodeunitChunkCallback(void *context)
 {
     return MCStringGetLength(*(MCStringRef *)context);
 }
@@ -106,14 +106,14 @@ void MCChunkGetExtentsOfByteChunkByExpression(MCDataRef p_data, integer_t p_firs
     MCChunkGetExtentsByExpression(p_first, MCChunkCountByteChunkCallback, &p_data, r_first, r_chunk_count);
 }
 
-void MCChunkGetExtentsOfCodepointChunkByRange(MCStringRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
+void MCChunkGetExtentsOfCodeunitChunkByRange(MCStringRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkGetExtentsByRange(p_first, p_last, MCChunkCountCodepointChunkCallback, &p_string, r_first, r_chunk_count);
+    MCChunkGetExtentsByRange(p_first, p_last, MCChunkCountCodeunitChunkCallback, &p_string, r_first, r_chunk_count);
 }
 
-void MCChunkGetExtentsOfCodepointChunkByExpression(MCStringRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
+void MCChunkGetExtentsOfCodeunitChunkByExpression(MCStringRef p_string, integer_t p_first, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkGetExtentsByExpression(p_first, MCChunkCountCodepointChunkCallback, &p_string, r_first, r_chunk_count);
+    MCChunkGetExtentsByExpression(p_first, MCChunkCountCodeunitChunkCallback, &p_string, r_first, r_chunk_count);
 }
 
 void MCChunkGetExtentsOfElementChunkByRange(MCProperListRef p_string, integer_t p_first, integer_t p_last, uindex_t& r_first, uindex_t& r_chunk_count)

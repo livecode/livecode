@@ -861,8 +861,42 @@
         EmitDestroyRegister(LimitRegister)
         EmitDestroyRegister(StepRegister)
         
-    'rule' GenerateBody(Result, Context, repeatforeach(Position, Iterator, Slot, Container, Body)):
-        -- TODO
+    'rule' GenerateBody(Result, Context, repeatforeach(Position, Invoke:invoke(_, IteratorInvokes, Arguments), Container, Body)):
+        EmitDeferLabel(-> RepeatHead)
+        EmitDeferLabel(-> RepeatTail)
+        EmitPushRepeatLabels(RepeatHead, RepeatTail)
+        
+        EmitPosition(Position)
+        EmitCreateRegister(-> IteratorReg)
+        EmitAssignUndefined(IteratorReg)
+        GenerateExpression(Context, Container -> TargetReg)
+        
+        EmitResolveLabel(RepeatHead)
+        GenerateDefinitionGroupForInvokes(IteratorInvokes, iterate, Arguments -> Index, Signature)
+        GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
+        EmitCreateRegister(-> ContinueReg)
+        EmitBeginInvoke(Index, Context, ContinueReg)
+        EmitContinueInvoke(IteratorReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitContinueInvoke(TargetReg)
+        EmitEndInvoke()
+
+        EmitJumpIfFalse(ContinueReg, RepeatTail)
+        
+        GenerateInvoke_AssignArguments(Context, Signature, Arguments)
+        GenerateInvoke_FreeArguments(Arguments)
+        
+        EmitDestroyRegister(ContinueReg)
+        
+        GenerateBody(Result, Context, Body)
+        
+        EmitJump(RepeatHead)
+        
+        EmitDestroyRegister(IteratorReg)
+        EmitDestroyRegister(TargetReg)
+
+        EmitResolveLabel(RepeatTail)
+
         
     'rule' GenerateBody(Result, Context, nextrepeat(Position)):
         EmitCurrentRepeatLabels(-> Next, _)
@@ -898,11 +932,17 @@
         EmitPosition(Position)
         GenerateDefinitionGroupForInvokes(Invokes, execute, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
-        EmitBeginExecuteInvoke(Index, Context, Result)
+        EmitBeginInvoke(Index, Context, Result)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke()
         GenerateInvoke_AssignArguments(Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
+        
+    'rule' GenerateBody(Result, Context, throw(Position, Error)):
+        EmitPosition(Position)
+        GenerateExpression(Context, Error -> Reg)
+        GenerateBeginBuiltinInvoke("Throw", Context, Reg)
+        EmitDestroyRegister(Reg)
         
     'rule' GenerateBody(Result, Context, nil):
         -- nothing
@@ -915,7 +955,7 @@
         MakeNameLiteral(NameString -> InvokeName)
         EmitUndefinedType(-> SymbolTypeIndex)
         EmitImportedHandler(ModuleIndex, InvokeName, SymbolTypeIndex -> SymbolIndex)
-        EmitBeginExecuteInvoke(SymbolIndex, ContextReg, ResultReg)
+        EmitBeginInvoke(SymbolIndex, ContextReg, ResultReg)
 
 ----
 
@@ -985,7 +1025,7 @@
         GenerateDefinitionGroupForInvokes(Invokes, evaluate, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(ContextReg, Signature, Arguments)
         EmitCreateRegister(-> IgnoredResultReg)
-        EmitBeginExecuteInvoke(Index, ContextReg, IgnoredResultReg)
+        EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitContinueInvoke(OutputReg)
         EmitEndInvoke()
@@ -1022,7 +1062,7 @@
         EmitGetRegisterAttachedToExpression(Invoke -> InputReg)
         GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
         EmitCreateRegister(-> IgnoredResultReg)
-        EmitBeginExecuteInvoke(Index, ContextReg, IgnoredResultReg)
+        EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
         EmitContinueInvoke(InputReg)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke()
@@ -1078,25 +1118,6 @@
 
     'rule' GenerateInvoke_EmitInvokeArguments(nil):
         -- do nothings
-
-----
-
-/*
-'action' GenerateInvoke_GetExecuteSignature(INVOKELIST -> INVOKESIGNATURE)
-
-    'rule' GenerateInvoke_GetExecuteSignature(invokelist(Head, _) -> Signature):
-        Head'RSignature -> Signature
-
-'action' GenerateInvoke_GetEvaluateSignature(INVOKELIST -> INVOKESIGNATURE)
-
-    'rule' GenerateInvoke_GetEvaluateSignature(invokelist(Head, _) -> Signature):
-        Head'RSignature -> Signature
-
-'action' GenerateInvoke_GetAssignSignature(INVOKELIST -> INVOKESIGNATURE)
-
-    'rule' GenerateInvoke_GetAssignSignature(invokelist(Head, _) -> Signature):
-        Head'LSignature -> Signature
-*/
 
 ----
 
@@ -1191,7 +1212,7 @@
         GenerateCall_GetInvokeSignature(HandlerSig -> InvokeSig)
 
         GenerateInvoke_EvaluateArguments(Context, InvokeSig, Arguments)
-        EmitBeginExecuteInvoke(Index, Context, ResultRegister)
+        EmitBeginInvoke(Index, Context, ResultRegister)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitEndInvoke
         GenerateInvoke_AssignArguments(Context, InvokeSig, Arguments)
@@ -1239,11 +1260,28 @@
         Info'Index -> Index
         EmitFetchVar(Kind, Result, Index)
         
+    'rule' GenerateExpressionInRegister(Result, Context, logicalor(_, Left, Right)):
+        EmitDeferLabel(-> ShortLabel)
+        GenerateExpressionInRegister(Result, Context, Left)
+        EmitJumpIfTrue(Result, ShortLabel)
+        GenerateExpressionInRegister(Result, Context, Right)
+        EmitResolveLabel(ShortLabel)
+
+    'rule' GenerateExpressionInRegister(Result, Context, logicaland(_, Left, Right)):
+        EmitDeferLabel(-> ShortLabel)
+        GenerateExpressionInRegister(Result, Context, Left)
+        EmitJumpIfFalse(Result, ShortLabel)
+        GenerateExpressionInRegister(Result, Context, Right)
+        EmitResolveLabel(ShortLabel)
+
     'rule' GenerateExpressionInRegister(Result, Context, as(_, _, _)):
         -- TODO
     
-    'rule' GenerateExpressionInRegister(Result, Context, list(_, _)):
-        -- TODO
+    'rule' GenerateExpressionInRegister(Result, Context, list(Position, List)):
+        GenerateExpressionList(Context, List -> ListRegs)
+        EmitBeginAssignList(Result)
+        GenerateAssignList(ListRegs)
+        EmitEndAssignList()
     
     'rule' GenerateExpressionInRegister(Result, Context, call(Position, Handler, Arguments)):
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments)
@@ -1252,7 +1290,7 @@
         GenerateDefinitionGroupForInvokes(Invokes, evaluate, Arguments -> Index, Signature)
         GenerateInvoke_EvaluateArguments(Context, Signature, Arguments)
         EmitCreateRegister(-> IgnoredReg)
-        EmitBeginExecuteInvoke(Index, Context, IgnoredReg)
+        EmitBeginInvoke(Index, Context, IgnoredReg)
         GenerateInvoke_EmitInvokeArguments(Arguments)
         EmitContinueInvoke(Result)
         EmitEndInvoke()
@@ -1261,6 +1299,15 @@
         GenerateInvoke_FreeArguments(Arguments)
 
 ----
+
+'action' GenerateAssignList(INTLIST)
+
+    'rule' GenerateAssignList(intlist(Head, Tail)):
+        EmitContinueAssignList(Head)
+        GenerateAssignList(Tail)
+
+    'rule' GenerateAssignList(nil):
+        -- finished
 
 'action' EmitStoreVar(SYMBOLKIND, INT, INT)
 

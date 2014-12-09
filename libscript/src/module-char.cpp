@@ -23,7 +23,7 @@ extern "C" void MCCharEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_outpu
     r_output = MCStringGetLength(p_target);
 }
 
-void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, MCStringRef p_target, bool& r_output)
+extern "C" void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, MCStringRef p_target, bool& r_output)
 {
     // Error if there is more than one char in needle.
     if (MCStringGetLength(p_needle) == 1)
@@ -36,7 +36,14 @@ void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needle, MCStringRef p_target, boo
 extern "C" void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodepointChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRange(p_target, p_start, p_finish, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCStringGetLength(p_target))
+        return;
+    
     if (!MCStringCopySubstring(p_target, MCRangeMake(t_start, t_count), r_output))
         return;
 }
@@ -44,7 +51,13 @@ extern "C" void MCCharFetchCharRangeOf(index_t p_start, index_t p_finish, MCStri
 extern "C" void MCCharStoreCharRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_start, p_finish, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCStringGetLength(x_target))
+        return;
     
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(x_target, &t_string))
@@ -73,7 +86,14 @@ extern "C" void MCCharStoreCharOf(MCStringRef p_value, index_t p_index, MCString
 extern "C" void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCStringGetLength(x_target))
+        return;
+    
     t_start += t_count;
     
     MCAutoStringRef t_string;
@@ -93,7 +113,13 @@ extern "C" void MCCharStoreAfterCharOf(MCStringRef p_value, index_t p_index, MCS
 extern "C" void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
-    MCChunkGetExtentsOfCodepointChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    MCChunkGetExtentsOfCodeunitChunkByRange(x_target, p_index, p_index, t_start, t_count);
+    
+    if (t_count == 0)
+        return;
+    
+    if (t_start + t_count > MCStringGetLength(x_target))
+        return;
     
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(x_target, &t_string))
@@ -109,36 +135,46 @@ extern "C" void MCCharStoreBeforeCharOf(MCStringRef p_value, index_t p_index, MC
     MCValueAssign(x_target, *t_new_string);
 }
 
-extern "C" void MCCharEvalOffsetOfCharsInRange(MCStringRef p_needle, MCStringRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfCharsInRange(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, MCRange p_range, uindex_t& r_output)
 {
     uindex_t t_offset;
     t_offset = 0;
     if (!MCStringIsEmpty(p_needle))
     {
+        bool t_found;
         if (p_is_last)
-            MCStringLastIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
+            t_found = MCStringLastIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
         else
-            MCStringFirstIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
+            t_found = MCStringFirstIndexOfStringInRange(p_target, p_needle, p_range, kMCStringOptionCompareExact, t_offset);
         
         // correct output index
-        t_offset++;
+        if (t_found)
+        {
+            t_offset -= p_range . offset;
+            t_offset++;
+        }
     }
     r_output = t_offset;
 }
 
-extern "C" void MCCharEvalOffsetOfChars(MCStringRef p_needle, MCStringRef p_target, bool p_is_last, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfChars(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(p_needle, p_target, p_is_last, MCRangeMake(0, UINDEX_MAX), r_output);
+    MCCharEvalOffsetOfCharsInRange(p_is_last, p_needle, p_target, MCRangeMake(0, UINDEX_MAX), r_output);
 }
 
-extern "C" void MCCharEvalOffsetOfCharsAfter(MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, bool p_is_last, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfCharsAfter(bool p_is_last, MCStringRef p_needle, uindex_t p_after, MCStringRef p_target, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(p_needle, p_target, p_is_last, MCRangeMake(p_after, UINDEX_MAX), r_output);
+    MCCharEvalOffsetOfCharsInRange(p_is_last, p_needle, p_target, MCRangeMake(p_after, UINDEX_MAX), r_output);
 }
 
-extern "C" void MCCharEvalOffsetOfCharsBefore(MCStringRef p_needle, MCStringRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
+extern "C" void MCCharEvalOffsetOfCharsBefore(bool p_is_first, MCStringRef p_needle, uindex_t p_before, MCStringRef p_target, uindex_t& r_output)
 {
-    MCCharEvalOffsetOfCharsInRange(p_needle, p_target, !p_is_first, MCRangeMake(0, p_before), r_output);
+    MCCharEvalOffsetOfCharsInRange(!p_is_first, p_needle, p_target, MCRangeMake(0, p_before), r_output);
+}
+
+extern "C" void MCCharEvalContains(MCStringRef p_source, MCStringRef p_needle, bool& r_result)
+{
+    r_result = MCStringContains(p_source, p_needle, kMCStringOptionCompareExact);
 }
 
 extern "C" void MCCharEvalBeginsWith(MCStringRef p_source, MCStringRef p_prefix, bool& r_result)
@@ -154,6 +190,33 @@ extern "C" void MCCharEvalEndsWith(MCStringRef p_source, MCStringRef p_suffix, b
 extern "C" void MCCharEvalNewlineCharacter(MCStringRef& r_output)
 {
     MCStringFormat(r_output, "\n");
+}
+
+// Iterate syntax methods have special calling convention at the moment:
+//
+// Post assignment of out / inout variables only occurs if the method returns true.
+// If the method returns false, then it means iteration has finished *not* that an
+// error has been thrown.
+//
+// This means that the iterand out binding will not be updated on the final test
+// of the loop which means that:
+//   repeat for each char tChar in tVar
+//   end repeat
+// Will result in tChar containing the value it had at the point of end repeat.
+extern "C" bool MCCharRepeatForEachChar(void*& x_iterator, MCStringRef& r_iterand, MCStringRef p_string)
+{
+    uindex_t t_offset;
+    t_offset = (uindex_t)x_iterator;
+    
+    if (t_offset == MCStringGetLength(p_string))
+        return false;
+    
+    if (!MCStringCopySubstring(p_string, MCRangeMake(t_offset, 1), r_iterand))
+        return false;
+    
+    x_iterator = (void *)(t_offset + 1);
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

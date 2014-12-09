@@ -32,6 +32,8 @@ public foreign handler MCStringEvalIsNotEqualTo(in Left as string, in Right as s
 public foreign handler MCStringEvalIsLessThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCStringEvalIsGreaterThan(in Left as string, in Right as string, out Value as bool) as undefined binds to "<builtin>"
 
+public foreign handler MCStringEvalEmpty(out Value as string) as undefined binds to "<builtin>"
+
 --
 
 /*
@@ -40,7 +42,6 @@ Summary:            Prepends <Source> to <Target>.
 Source: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string container.
 
-Example: 			put tPrefix before tString
 */
 
 syntax PutStringBefore is statement
@@ -55,7 +56,6 @@ Summary:            Appends <Source> to <Target>.
 Source: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string container.
 
-Example: 			put tSuffix after tString
 */
 
 syntax PutStringAfter is statement
@@ -73,7 +73,13 @@ Source: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string container.
 Replacement: 		An expression which evaluates to a string.
 
-Example: 			replace " " with "_" in tString
+Example:	
+	variable tString as string
+	put "purple" into tString
+	replace "p" with "t" in tString -- tString is "turtle"
+	
+Description:
+Replaces each occurrence of the string <Pattern> in <Target> with <Replacement>.
 */
 
 syntax ReplaceString is statement
@@ -89,9 +95,11 @@ Summary:            Concatenates <Left> and <Right>.
 
 Left: 				An expression which evaluates to a string.
 Right: 				An expression which evaluates to a string.
-output: 			String consisting of the value of the left hand expression with the value of the right hand expression appended to the end.
+output: 			The result of concatenating <Left> and <Right>.
 
-Example: 			put tLeft & tRight into tConcatenated
+Description:
+The result consists of the chars of <Left> followed by those of <Right>.
+
 */
 
 syntax ConcatenateStrings is left binary operator with precedence 2
@@ -105,9 +113,10 @@ Summary:            Concatenates <Left> and <Right> with a space between.
 
 Left: 				An expression which evaluates to a string.
 Right: 				An expression which evaluates to a string.
-output: 			String consisting of the value of the left hand expression with the value of the right hand expression appended to the end, and a space character inserted between them
+output: 			The result of concatenating <Left> and <Right> with a space between.
 
-Example: 			put tLeft && tRight into tConcatSpace
+Description:
+The result consists of the chars of <Left> followed by a space, and then the chars of <Right>.
 */
 
 syntax ConcatenateStringsWithSpace is left binary operator with precedence 2
@@ -121,7 +130,10 @@ end syntax
 /*
 Summary:            Uppercases <Source>.
 Source: 			An expression which evaluates to a string.
-output:             
+output:             <Source> with each of its chars uppercased.
+
+Description:
+
 */
 
 
@@ -134,7 +146,9 @@ end syntax
 /*
 Summary:            Lowercases <Source>.
 Source: 			An expression which evaluates to a string.
-output:             
+output:             <Source> with each of its chars lowercased.
+
+Description:           
 */
 
 
@@ -211,5 +225,11 @@ begin
 end syntax
 
 --
+
+syntax EmptyString is expression
+	"the" "empty" "string"
+begin
+	MCStringEvalEmpty(output)
+end syntax
 
 end module

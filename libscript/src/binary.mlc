@@ -1,5 +1,5 @@
 /*  
-This module specifies the syntax definitions and bindings for operations on binary data in modular LiveCode.
+This library consists of the operations on binary strings provided by the standard library of modular LiveCode.
 */
 
 module com.livecode.binary
@@ -15,6 +15,8 @@ public foreign handler MCBinaryEvalIsEqualTo(in Left as data, in Right as data, 
 public foreign handler MCBinaryEvalIsNotEqualTo(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCBinaryEvalIsLessThan(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
 public foreign handler MCBinaryEvalIsGreaterThan(in Left as data, in Right as data, out Value as bool) as undefined binds to "<builtin>"
+
+public foreign handler MCBinaryEvalEmpty(out Value as data) as undefined binds to "<builtin>"
 --
 
 /*
@@ -23,7 +25,12 @@ Summary:            Prepends <Source> bytes to <Target> bytes.
 Source: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to a binary container.
 
-Example: 			put tPrefixData before tData
+Example: 			
+	variable tData as data
+	variable tPrefixData as data
+	...
+	put tPrefixData before tData
+	
 */
 
 syntax PutBytesBefore is statement
@@ -95,8 +102,8 @@ output:     Returns false if the result of evaluating <Left> is the same as that
 
 */
 
-syntax IsNotEqualTo is neutral binary operator with precedence 5
-    <Left: Expression> "is" "not" <Right: Expression>
+syntax IsNotEqualTo is neutral binary operator with precedence 1
+    <Left: Expression> "is not" <Right: Expression>
 begin
     MCBinaryEvalIsNotEqualTo(Left, Right, output)
 end syntax
@@ -134,5 +141,11 @@ begin
 end syntax
 
 --
+
+syntax EmptyData is expression
+	"the" "empty" "data"
+begin
+	MCBinaryEvalEmpty(output)
+end syntax
 
 end module

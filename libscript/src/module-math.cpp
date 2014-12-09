@@ -24,47 +24,18 @@
 double trunc(double f) { return f < 0 ? ceil(f) : floor(f); }
 #endif
 
-void MCMathEvalRealToPowerOfReal(double p_left, double p_right, double& r_output)
+extern "C" void MCMathEvalRealToPowerOfReal(double p_left, double p_right, double& r_output)
 {
     if (p_right == 0)
     {
         r_output = 1.0;
         return;
     }
-    
-    if (p_right > 0 && p_left > 0 && p_left > (log(FLT_MAX)/log(p_right)))
-    {
-        // overflow
-        return;
-    }
+
     r_output = pow(p_left, p_right);
 }
 
-void MCMathEvalIntegerToPowerOfInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
-{
-    if (p_right == 0)
-    {
-        r_output = 1;
-        return;
-    }
-    
-    double t_result;
-    MCMathEvalRealToPowerOfReal(p_left, p_right, t_result);
-    
-    if (t_result > INTEGER_MAX || t_result < INTEGER_MIN)
-        // error
-        return;
-    
-    integer_t t_int_result;
-    t_int_result = (integer_t)t_result;
-    if (t_int_result != t_result)
-        // error
-        return;
-    
-    r_output = t_int_result;
-}
-
-void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
+extern "C" void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
 {
     double t_left, t_right;
     t_left = MCNumberFetchAsReal(p_left);
@@ -77,17 +48,12 @@ void MCMathEvalNumberToPowerOfNumber(MCNumberRef p_left, MCNumberRef p_right, MC
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-void MCMathEvalBase10LogReal(double p_operand, double& r_output)
+extern "C" void MCMathEvalBase10LogReal(double p_operand, double& r_output)
 {
     r_output = log10(p_operand);
 }
 
-void MCMathEvalBase10LogInteger(integer_t p_operand, double& r_output)
-{
-    MCMathEvalBase10LogReal(p_operand, r_output);
-}
-
-void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -99,17 +65,12 @@ void MCMathEvalBase10LogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-void MCMathEvalNaturalLogReal(double p_operand, double& r_output)
+extern "C" void MCMathEvalNaturalLogReal(double p_operand, double& r_output)
 {
     r_output = log(p_operand);
 }
 
-void MCMathEvalNaturalLogInteger(integer_t p_operand, double& r_output)
-{
-    MCMathEvalNaturalLogReal(p_operand, r_output);
-}
-
-void MCMathEvalNaturalLogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" void MCMathEvalNaturalLogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -121,17 +82,12 @@ void MCMathEvalNaturalLogNumber(MCNumberRef p_operand, MCNumberRef& r_output)
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-void MCMathEvalExpReal(double p_operand, double& r_output)
+extern "C" void MCMathEvalExpReal(double p_operand, double& r_output)
 {
     r_output = exp(p_operand);
 }
 
-void MCMathEvalExpInteger(integer_t p_operand, double& r_output)
-{
-    MCMathEvalExpReal(p_operand, r_output);
-}
-
-void MCMathEvalExpNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" void MCMathEvalExpNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -143,17 +99,12 @@ void MCMathEvalExpNumber(MCNumberRef p_operand, MCNumberRef& r_output)
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-void MCMathEvalSinReal(double p_operand, double& r_output)
+extern "C" void MCMathEvalSinReal(double p_operand, double& r_output)
 {
     r_output = sin(p_operand);
 }
 
-void MCMathEvalSinInteger(integer_t p_operand, double& r_output)
-{
-    MCMathEvalSinReal(p_operand, r_output);
-}
-
-void MCMathEvalSinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" void MCMathEvalSinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -165,17 +116,12 @@ void MCMathEvalSinNumber(MCNumberRef p_operand, MCNumberRef& r_output)
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-void MCMathEvalCosReal(double p_operand, double& r_output)
+extern "C" void MCMathEvalCosReal(double p_operand, double& r_output)
 {
     r_output = cos(p_operand);
 }
 
-void MCMathEvalCosInteger(integer_t p_operand, double& r_output)
-{
-    MCMathEvalCosReal(p_operand, r_output);
-}
-
-void MCMathEvalCosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" void MCMathEvalCosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -187,17 +133,12 @@ void MCMathEvalCosNumber(MCNumberRef p_operand, MCNumberRef& r_output)
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-void MCMathEvalTanReal(double p_operand, double& r_output)
+extern "C" void MCMathEvalTanReal(double p_operand, double& r_output)
 {
     r_output = tan(p_operand);
 }
 
-void MCMathEvalTanInteger(integer_t p_operand, double& r_output)
-{
-    MCMathEvalTanReal(p_operand, r_output);
-}
-
-void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     double t_operand;
     t_operand = MCNumberFetchAsReal(p_operand);
@@ -209,17 +150,17 @@ void MCMathEvalTanNumber(MCNumberRef p_operand, MCNumberRef& r_output)
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-void MCMathEvalAbsInteger(integer_t p_operand, integer_t& r_output)
+extern "C" void MCMathEvalAbsInteger(integer_t p_operand, integer_t& r_output)
 {
     r_output = MCAbs(p_operand);
 }
 
-void MCMathEvalAbsReal(double p_operand, double& r_output)
+extern "C" void MCMathEvalAbsReal(double p_operand, double& r_output)
 {
     r_output = MCAbs(p_operand);
 }
 
-void MCMathEvalAbsNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" void MCMathEvalAbsNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     if (MCNumberIsInteger(p_operand))
     {
@@ -234,17 +175,17 @@ void MCMathEvalAbsNumber(MCNumberRef p_operand, MCNumberRef& r_output)
     MCNumberCreateWithReal(t_abs_real, r_output);
 }
 
-void MCMathEvalTruncInteger(integer_t p_operand, integer_t& r_output)
+extern "C" void MCMathEvalTruncInteger(integer_t p_operand, integer_t& r_output)
 {
     r_output = p_operand;
 }
 
-void MCMathEvalTruncReal(double p_operand, double& r_output)
+extern "C" void MCMathEvalTruncReal(double p_operand, double& r_output)
 {
     r_output = trunc(p_operand);
 }
 
-void MCMathEvalTruncNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+extern "C" void MCMathEvalTruncNumber(MCNumberRef p_operand, MCNumberRef& r_output)
 {
     if (MCNumberIsInteger(p_operand))
     {
@@ -259,17 +200,17 @@ void MCMathEvalTruncNumber(MCNumberRef p_operand, MCNumberRef& r_output)
     MCNumberCreateWithReal(t_abs_real, r_output);
 }
 
-void MCMathEvalMinInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" void MCMathEvalMinInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = MCMin(p_left, p_right);
 }
 
-void MCMathEvalMinReal(double p_left, double p_right, double& r_output)
+extern "C" void MCMathEvalMinReal(double p_left, double p_right, double& r_output)
 {
     r_output = MCMin(p_left, p_right);
 }
 
-void MCMathEvalMinNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
+extern "C" void MCMathEvalMinNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
 {
     double t_left, t_right, t_result;
     t_left = MCNumberFetchAsReal(p_left);
@@ -280,17 +221,17 @@ void MCMathEvalMinNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-void MCMathEvalMaxInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" void MCMathEvalMaxInteger(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = MCMax(p_left, p_right);
 }
 
-void MCMathEvalMaxReal(double p_left, double p_right, double& r_output)
+extern "C" void MCMathEvalMaxReal(double p_left, double p_right, double& r_output)
 {
     r_output = MCMax(p_left, p_right);
 }
 
-void MCMathEvalMaxNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
+extern "C" void MCMathEvalMaxNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r_output)
 {
     double t_left, t_right, t_result;
     t_left = MCNumberFetchAsReal(p_left);
@@ -301,14 +242,14 @@ void MCMathEvalMaxNumber(MCNumberRef p_left, MCNumberRef p_right, MCNumberRef& r
     MCNumberCreateWithReal(t_result, r_output);
 }
 
-void MCMathEvalRandomReal(double& r_output)
+extern "C" void MCMathEvalRandomReal(double& r_output)
 {
     r_output = MCMathRandom();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MCMathEvalConvertToBase10(MCStringRef p_operand, integer_t p_source_base, integer_t& r_output)
+extern "C" void MCMathEvalConvertToBase10(MCStringRef p_operand, integer_t p_source_base, integer_t& r_output)
 {
     // p_source_base must be an integer between 2 and 32
     bool t_negative;
@@ -325,7 +266,7 @@ void MCMathEvalConvertToBase10(MCStringRef p_operand, integer_t p_source_base, i
     }
 }
 
-void MCMathEvalConvertFromBase10(integer_t p_operand, integer_t p_dest_base, MCStringRef& r_output)
+extern "C" void MCMathEvalConvertFromBase10(integer_t p_operand, integer_t p_dest_base, MCStringRef& r_output)
 {
     // p_dest_base must be an integer between 2 and 32
     if (p_operand < 0)
@@ -342,7 +283,7 @@ void MCMathEvalConvertFromBase10(integer_t p_operand, integer_t p_dest_base, MCS
 //    ctxt . Throw();
 }
 
-void MCMathEvalConvertBase(MCStringRef p_operand, integer_t p_source_base, integer_t p_dest_base, MCStringRef& r_output)
+extern "C" void MCMathEvalConvertBase(MCStringRef p_operand, integer_t p_source_base, integer_t p_dest_base, MCStringRef& r_output)
 {
     // p_source_base and p_dest_base must be integers between 2 and 32
     bool t_negative;

@@ -23,7 +23,6 @@
 		4D79B6851A273BA000DD750C /* module-encoding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65E1A273BA000DD750C /* module-encoding.cpp */; };
 		4D79B6871A273BA000DD750C /* module-list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6601A273BA000DD750C /* module-list.cpp */; };
 		4D79B6881A273BA000DD750C /* module-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6611A273BA000DD750C /* module-logic.cpp */; };
-		4D79B6891A273BA000DD750C /* module-map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6621A273BA000DD750C /* module-map.cpp */; };
 		4D79B68A1A273BA000DD750C /* module-math_foundation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6631A273BA000DD750C /* module-math_foundation.cpp */; };
 		4D79B68B1A273BA000DD750C /* module-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6641A273BA000DD750C /* module-math.cpp */; };
 		4D79B68C1A273BA000DD750C /* module-sort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6651A273BA000DD750C /* module-sort.cpp */; };
@@ -37,7 +36,6 @@
 		4D79B6951A273BBB00DD750C /* module-char.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B65D1A273BA000DD750C /* module-char.cpp */; };
 		4D79B6981A273BBB00DD750C /* module-list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6601A273BA000DD750C /* module-list.cpp */; };
 		4D79B6991A273BBB00DD750C /* module-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6611A273BA000DD750C /* module-logic.cpp */; };
-		4D79B69A1A273BBB00DD750C /* module-map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6621A273BA000DD750C /* module-map.cpp */; };
 		4D79B69B1A273BBB00DD750C /* module-math_foundation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6631A273BA000DD750C /* module-math_foundation.cpp */; };
 		4D79B69C1A273BBB00DD750C /* module-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6641A273BA000DD750C /* module-math.cpp */; };
 		4D79B69D1A273BBB00DD750C /* module-sort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6651A273BA000DD750C /* module-sort.cpp */; };
@@ -52,7 +50,6 @@
 		4D79B6D61A27405600DD750C /* item.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6711A273BA000DD750C /* item.mlc */; };
 		4D79B6D81A27405600DD750C /* line.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6731A273BA000DD750C /* line.mlc */; };
 		4D79B6DB1A27405600DD750C /* logic.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6761A273BA000DD750C /* logic.mlc */; };
-		4D79B6DC1A27405600DD750C /* map.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6771A273BA000DD750C /* map.mlc */; };
 		4D79B6DE1A27405600DD750C /* math.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6791A273BA000DD750C /* math.mlc */; };
 		4D79B6DF1A27405600DD750C /* segmentchunk.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B67A1A273BA000DD750C /* segmentchunk.mlc */; };
 		4D79B6E01A27405600DD750C /* sort.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B67B1A273BA000DD750C /* sort.mlc */; };
@@ -62,6 +59,9 @@
 		4DDA20701A139BC0001B0CA2 /* script-test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA206F1A139BC0001B0CA2 /* script-test.cpp */; };
 		766113441A2F298E0042DE7F /* list.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B6751A273BA000DD750C /* list.mlc */; };
 		766113541A2F4F720042DE7F /* type-convert.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 766113531A2F4F720042DE7F /* type-convert.mlc */; };
+		766113891A31FB640042DE7F /* module-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766113881A31FB640042DE7F /* module-array.cpp */; };
+		7661138A1A31FB690042DE7F /* module-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766113881A31FB640042DE7F /* module-array.cpp */; };
+		7661138D1A31FE1B0042DE7F /* array.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 7661138C1A31FDFD0042DE7F /* array.mlc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -171,7 +171,6 @@
 		4D79B65E1A273BA000DD750C /* module-encoding.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-encoding.cpp"; path = "src/module-encoding.cpp"; sourceTree = "<group>"; };
 		4D79B6601A273BA000DD750C /* module-list.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-list.cpp"; path = "src/module-list.cpp"; sourceTree = "<group>"; };
 		4D79B6611A273BA000DD750C /* module-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-logic.cpp"; path = "src/module-logic.cpp"; sourceTree = "<group>"; };
-		4D79B6621A273BA000DD750C /* module-map.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-map.cpp"; path = "src/module-map.cpp"; sourceTree = "<group>"; };
 		4D79B6631A273BA000DD750C /* module-math_foundation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-math_foundation.cpp"; path = "src/module-math_foundation.cpp"; sourceTree = "<group>"; };
 		4D79B6641A273BA000DD750C /* module-math.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-math.cpp"; path = "src/module-math.cpp"; sourceTree = "<group>"; };
 		4D79B6651A273BA000DD750C /* module-sort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-sort.cpp"; path = "src/module-sort.cpp"; sourceTree = "<group>"; };
@@ -188,7 +187,6 @@
 		4D79B6731A273BA000DD750C /* line.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = line.mlc; path = src/line.mlc; sourceTree = "<group>"; };
 		4D79B6751A273BA000DD750C /* list.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = list.mlc; path = src/list.mlc; sourceTree = "<group>"; };
 		4D79B6761A273BA000DD750C /* logic.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = logic.mlc; path = src/logic.mlc; sourceTree = "<group>"; };
-		4D79B6771A273BA000DD750C /* map.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = map.mlc; path = src/map.mlc; sourceTree = "<group>"; };
 		4D79B6781A273BA000DD750C /* math-foundation.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "math-foundation.mlc"; path = "src/math-foundation.mlc"; sourceTree = "<group>"; };
 		4D79B6791A273BA000DD750C /* math.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = math.mlc; path = src/math.mlc; sourceTree = "<group>"; };
 		4D79B67A1A273BA000DD750C /* segmentchunk.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = segmentchunk.mlc; path = src/segmentchunk.mlc; sourceTree = "<group>"; };
@@ -201,6 +199,8 @@
 		4DDA20661A139BA1001B0CA2 /* libscript-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "libscript-test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DDA206F1A139BC0001B0CA2 /* script-test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "script-test.cpp"; path = "src/script-test.cpp"; sourceTree = "<group>"; };
 		766113531A2F4F720042DE7F /* type-convert.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = "type-convert.mlc"; path = "src/type-convert.mlc"; sourceTree = "<group>"; };
+		766113881A31FB640042DE7F /* module-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-array.cpp"; path = "src/module-array.cpp"; sourceTree = "<group>"; };
+		7661138C1A31FDFD0042DE7F /* array.mlc */ = {isa = PBXFileReference; lastKnownFileType = text; name = array.mlc; path = src/array.mlc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -308,6 +308,7 @@
 			isa = PBXGroup;
 			children = (
 				4D79B6591A273BA000DD750C /* module-arithmetic.cpp */,
+				766113881A31FB640042DE7F /* module-array.cpp */,
 				4D79B65A1A273BA000DD750C /* module-binary.cpp */,
 				4D79B65B1A273BA000DD750C /* module-bitwise.cpp */,
 				4D79B65C1A273BA000DD750C /* module-byte.cpp */,
@@ -315,7 +316,6 @@
 				4D79B65E1A273BA000DD750C /* module-encoding.cpp */,
 				4D79B6601A273BA000DD750C /* module-list.cpp */,
 				4D79B6611A273BA000DD750C /* module-logic.cpp */,
-				4D79B6621A273BA000DD750C /* module-map.cpp */,
 				4D79B6631A273BA000DD750C /* module-math_foundation.cpp */,
 				4D79B6641A273BA000DD750C /* module-math.cpp */,
 				4D79B6651A273BA000DD750C /* module-sort.cpp */,
@@ -323,6 +323,7 @@
 				4D79B6671A273BA000DD750C /* module-type_convert.cpp */,
 				4D79B6681A273BA000DD750C /* module-type.cpp */,
 				4D79B66A1A273BA000DD750C /* arithmetic.mlc */,
+				7661138C1A31FDFD0042DE7F /* array.mlc */,
 				4D79B66B1A273BA000DD750C /* binary.mlc */,
 				4D79B66C1A273BA000DD750C /* bitwise.mlc */,
 				4D79B66D1A273BA000DD750C /* byte.mlc */,
@@ -332,7 +333,6 @@
 				4D79B6731A273BA000DD750C /* line.mlc */,
 				4D79B6751A273BA000DD750C /* list.mlc */,
 				4D79B6761A273BA000DD750C /* logic.mlc */,
-				4D79B6771A273BA000DD750C /* map.mlc */,
 				4D79B6781A273BA000DD750C /* math-foundation.mlc */,
 				4D79B6791A273BA000DD750C /* math.mlc */,
 				4D79B67A1A273BA000DD750C /* segmentchunk.mlc */,
@@ -520,10 +520,10 @@
 				4D79B6851A273BA000DD750C /* module-encoding.cpp in Sources */,
 				4D21B60119E3DFED00B64BEF /* script-package.cpp in Sources */,
 				4D79B68F1A273BA000DD750C /* module-type.cpp in Sources */,
+				766113891A31FB640042DE7F /* module-array.cpp in Sources */,
 				4D79B6811A273BA000DD750C /* module-binary.cpp in Sources */,
 				4D79B6841A273BA000DD750C /* module-char.cpp in Sources */,
 				4D79B68A1A273BA000DD750C /* module-math_foundation.cpp in Sources */,
-				4D79B6891A273BA000DD750C /* module-map.cpp in Sources */,
 				4D79B68D1A273BA000DD750C /* module-string.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -532,8 +532,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7661138D1A31FE1B0042DE7F /* array.mlc in Sources */,
 				766113541A2F4F720042DE7F /* type-convert.mlc in Sources */,
 				766113441A2F298E0042DE7F /* list.mlc in Sources */,
+				7661138A1A31FB690042DE7F /* module-array.cpp in Sources */,
 				4D79B6CF1A27405600DD750C /* arithmetic.mlc in Sources */,
 				4D79B6D01A27405600DD750C /* binary.mlc in Sources */,
 				4D79B6D11A27405600DD750C /* bitwise.mlc in Sources */,
@@ -542,7 +544,6 @@
 				4D79B6D61A27405600DD750C /* item.mlc in Sources */,
 				4D79B6D81A27405600DD750C /* line.mlc in Sources */,
 				4D79B6DB1A27405600DD750C /* logic.mlc in Sources */,
-				4D79B6DC1A27405600DD750C /* map.mlc in Sources */,
 				4D79B6DE1A27405600DD750C /* math.mlc in Sources */,
 				4D79B6DF1A27405600DD750C /* segmentchunk.mlc in Sources */,
 				4D79B6E01A27405600DD750C /* sort.mlc in Sources */,
@@ -555,7 +556,6 @@
 				4D79B6951A273BBB00DD750C /* module-char.cpp in Sources */,
 				4D79B6981A273BBB00DD750C /* module-list.cpp in Sources */,
 				4D79B6991A273BBB00DD750C /* module-logic.cpp in Sources */,
-				4D79B69A1A273BBB00DD750C /* module-map.cpp in Sources */,
 				4D79B69B1A273BBB00DD750C /* module-math_foundation.cpp in Sources */,
 				4D79B69C1A273BBB00DD750C /* module-math.cpp in Sources */,
 				4D79B69D1A273BBB00DD750C /* module-sort.cpp in Sources */,

@@ -23,9 +23,6 @@
 /* Begin PBXBuildFile section */
 		1D733BC5198AA31C0098E717 /* stacktile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BBB19733AB10014058F /* stacktile.cpp */; };
 		1D733BC6198AA3340098E717 /* sysunxthreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BB91972A6B90014058F /* sysunxthreads.cpp */; };
-		1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
-		1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D01945DD31000E3705 /* mac-qt-player.mm */; };
-		1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D21945DD43000E3705 /* mac-av-player.mm */; };
 		1DDE08E71945F036000E3705 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		1DDE08E91945F0DE000E3705 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
 		1DE9AF8E1963197C008529DC /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
@@ -35,8 +32,6 @@
 		3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C0A3CC310BAF6120074D630 /* iquantization.cpp */; };
 		4C13880F18A12E6600EFF7B6 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
 		4C13881D18A12ED800EFF7B6 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
-		4C529CAF1973CC08007C5F7C /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D21945DD43000E3705 /* mac-av-player.mm */; };
-		4C8B5BBA1972B7300014058F /* sysunxthreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BB91972A6B90014058F /* sysunxthreads.cpp */; };
 		4C8B5BBC19733AB10014058F /* stacktile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BBB19733AB10014058F /* stacktile.cpp */; };
 		4CC1535714E7FB91009FA80E /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
 		4CC1536214E7FE1D009FA80E /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
@@ -49,7 +44,6 @@
 		4D01C88E12247B0F00AAD151 /* bsdiff_apply.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D01C88D12247B0F00AAD151 /* bsdiff_apply.cpp */; };
 		4D01C89812247CBA00AAD151 /* mode_installer_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D01C89712247CBA00AAD151 /* mode_installer_osx.cpp */; };
 		4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B90D13E06AAB001CD82A /* dskmain.cpp */; };
-		4D05B91113E06AB4001CD82A /* dskosxmain.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B90E13E06AAC001CD82A /* dskosxmain.mm */; };
 		4D17F4371042877000C49A3B /* externalv0.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D17F4351042877000C49A3B /* externalv0.cpp */; };
 		4D17F4381042877000C49A3B /* externalv1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D17F4361042877000C49A3B /* externalv1.cpp */; };
 		4D1F9C3C171C64DF0091C6CB /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8A7EF0016FC98A200C39491 /* stacksecurity.cpp */; };
@@ -298,6 +292,9 @@
 		4D77F1DE183F8298002EEBB4 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */; };
 		4D79B7321A275B2900DD750C /* canvas.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B7301A275ADE00DD750C /* canvas.mlc */; };
 		4D79B7D41A308FFD00DD750C /* libstdscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B72D1A275A7C00DD750C /* libstdscript.a */; };
+		4D79B8991A36050800DD750C /* sysunxthreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B8981A3604F200DD750C /* sysunxthreads.cpp */; };
+		4D79B89B1A36055B00DD750C /* platform-recorder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B89A1A36054900DD750C /* platform-recorder.cpp */; };
+		4D79B89D1A36058300DD750C /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B89C1A36057400DD750C /* image_rep_densitymapped.cpp */; };
 		4D7FA7BF1594E10500EEF440 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
 		4D7FA7C71594E17500EEF440 /* exec-datetime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */; };
 		4D81A4C411171F6B008AE3F1 /* objectprops.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C111171F6A008AE3F1 /* objectprops.cpp */; };
@@ -502,7 +499,6 @@
 		4DEE2B0F0FDE42710009423C /* vclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E620B8096FD00200116 /* vclip.cpp */; };
 		4DEE2B120FDE42710009423C /* visual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E480B8096FD00200116 /* visual.cpp */; };
 		4DEE2C370FDE51370009423C /* securemode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DEE2B4A0FDE44690009423C /* securemode.cpp */; };
-		4DEE2C7A0FDE52770009423C /* libkernel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DEE29F60FDE41BE0009423C /* libkernel.a */; };
 		4DEE2CA20FDE53620009423C /* libkernel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DEE29F60FDE41BE0009423C /* libkernel.a */; };
 		4DF65E3310016337005A19CA /* capsule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DF65E2F10016337005A19CA /* capsule.cpp */; };
 		4DFDDAB71074D70900FAE527 /* eventqueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFDDAB61074D70900FAE527 /* eventqueue.cpp */; };
@@ -552,7 +548,6 @@
 		72D6032918476FC90022379C /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
 		72D6032A18476FC90022379C /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
 		72DDBF7A19EC011300361E88 /* native-layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72DDBF7919EC011300361E88 /* native-layer.cpp */; };
-		7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		7635171E182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		763FF4E918522CBE00B45FBA /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */; };
 		763FF4EA18522CC100B45FBA /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */; };
@@ -863,7 +858,6 @@
 		7699BE811A1CD73700636397 /* mode_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7699BE7E1A1CD72200636397 /* mode_test.cpp */; };
 		72B67C511A0BBDF600BB2594 /* mac-theme.mm in Sources */ = {isa = PBXBuildFile; fileRef = 72B67C501A0BBDF600BB2594 /* mac-theme.mm */; };
 		76CCAA7C19800BCD00C79271 /* mac-qt-recorder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 76CCAA7B198003B000C79271 /* mac-qt-recorder.mm */; };
-		76CCAA7E1980152A00C79271 /* platform-recorder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76CCAA7D19800EFE00C79271 /* platform-recorder.cpp */; };
 		76D47DE918030E50006F9102 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */; };
 		76EF3163181E6BD900FAC195 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 766E32A1180EE5BC00CF7FCF /* libgraphics.a */; };
 		76EF3165181E6BF700FAC195 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 766E32A1180EE5BC00CF7FCF /* libgraphics.a */; };
@@ -1886,7 +1880,6 @@
 		4D7740F51226B930001C9150 /* lnxaudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lnxaudio.h; path = src/lnxaudio.h; sourceTree = "<group>"; };
 		4D7740F61226B930001C9150 /* lnxclipboard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxclipboard.cpp; path = src/lnxclipboard.cpp; sourceTree = "<group>"; };
 		4D7740F71226B930001C9150 /* lnxcolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxcolor.cpp; path = src/lnxcolor.cpp; sourceTree = "<group>"; };
-		4D7740F91226B930001C9150 /* lnxcontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lnxcontext.h; path = src/lnxcontext.h; sourceTree = "<group>"; };
 		4D7740FA1226B930001C9150 /* lnxcursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxcursor.cpp; path = src/lnxcursor.cpp; sourceTree = "<group>"; };
 		4D7740FC1226B930001C9150 /* lnxdc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxdc.cpp; path = src/lnxdc.cpp; sourceTree = "<group>"; };
 		4D7740FD1226B930001C9150 /* lnxdc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lnxdc.h; path = src/lnxdc.h; sourceTree = "<group>"; };
@@ -1919,6 +1912,9 @@
 		4D77F1DC183F8298002EEBB4 /* exec-keywords.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-keywords.cpp"; path = "src/exec-keywords.cpp"; sourceTree = "<group>"; };
 		4D79B72E1A275AA500DD750C /* module-canvas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-canvas.cpp"; path = "src/module-canvas.cpp"; sourceTree = "<group>"; };
 		4D79B7301A275ADE00DD750C /* canvas.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = canvas.mlc; path = src/canvas.mlc; sourceTree = "<group>"; };
+		4D79B8981A3604F200DD750C /* sysunxthreads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxthreads.cpp; path = src/sysunxthreads.cpp; sourceTree = "<group>"; };
+		4D79B89A1A36054900DD750C /* platform-recorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-recorder.cpp"; path = "src/platform-recorder.cpp"; sourceTree = "<group>"; };
+		4D79B89C1A36057400DD750C /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../libfoundation/libfoundation.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-datetime.cpp"; path = "src/exec-datetime.cpp"; sourceTree = "<group>"; };
 		4D81A4C111171F6A008AE3F1 /* objectprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectprops.cpp; path = src/objectprops.cpp; sourceTree = "<group>"; };
@@ -2540,7 +2536,6 @@
 				4D7FA7BF1594E10500EEF440 /* libfoundation.a in Frameworks */,
 				1DDE08E91945F0DE000E3705 /* CoreMedia.framework in Frameworks */,
 				1DDE08E71945F036000E3705 /* AVFoundation.framework in Frameworks */,
-				4DEE2C7A0FDE52770009423C /* libkernel.a in Frameworks */,
 				4D221ACB171D59ED00E7E557 /* libkernel-development.a in Frameworks */,
 				4D1F9C4E171C65CE0091C6CB /* libsecurity-community.a in Frameworks */,
 				76F717611811A2DE007301F6 /* libgraphics.a in Frameworks */,
@@ -3029,7 +3024,6 @@
 				4D7740F51226B930001C9150 /* lnxaudio.h */,
 				4D7740F61226B930001C9150 /* lnxclipboard.cpp */,
 				4D7740F71226B930001C9150 /* lnxcolor.cpp */,
-				4D7740F91226B930001C9150 /* lnxcontext.h */,
 				4D7740FA1226B930001C9150 /* lnxcursor.cpp */,
 				4D7740FC1226B930001C9150 /* lnxdc.cpp */,
 				4D7740FD1226B930001C9150 /* lnxdc.h */,
@@ -3469,6 +3463,7 @@
 		4DFD486413BA28BF008DB91F /* System */ = {
 			isa = PBXGroup;
 			children = (
+				4D79B8981A3604F200DD750C /* sysunxthreads.cpp */,
 				72C22E951945E48E00B18E8D /* syslnxfs.cpp */,
 				72C22E961945E48E00B18E8D /* syslnxregion.cpp */,
 				72C22E971945E48E00B18E8D /* sysunxrandom.cpp */,
@@ -3686,6 +3681,7 @@
 			isa = PBXGroup;
 			children = (
 				BEBC51EB195350F700215C85 /* platform-internal.h */,
+				4D79B89A1A36054900DD750C /* platform-recorder.cpp */,
 				BEBC51EC195350F700215C85 /* platform-surface.cpp */,
 				BEBC51ED195350F700215C85 /* platform-window.cpp */,
 				BEBC51EE195350F700215C85 /* platform.cpp */,
@@ -3770,6 +3766,7 @@
 		E8A49105170F16DA00769C7A /* Core - Graphics */ = {
 			isa = PBXGroup;
 			children = (
+				4D79B89C1A36057400DD750C /* image_rep_densitymapped.cpp */,
 				BE168E6D19598EAD00B957D0 /* region.cpp */,
 				766E3292180EE4E000CF7FCF /* graphics_util.h */,
 				766E3293180EE4E000CF7FCF /* graphicscontext.cpp */,
@@ -5112,6 +5109,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D79B89D1A36058300DD750C /* image_rep_densitymapped.cpp in Sources */,
+				4D79B89B1A36055B00DD750C /* platform-recorder.cpp in Sources */,
+				4D79B8991A36050800DD750C /* sysunxthreads.cpp in Sources */,
 				4D79B7321A275B2900DD750C /* canvas.mlc in Sources */,
 				4DEE2C370FDE51370009423C /* securemode.cpp in Sources */,
 				4DEE2A8D0FDE42710009423C /* aclip.cpp in Sources */,
@@ -5232,7 +5232,6 @@
 				7269ECCD1A1E4BAF000723DB /* text-block.cpp in Sources */,
 				4DEE2B0C0FDE42710009423C /* util.cpp in Sources */,
 				4DEE2B0D0FDE42710009423C /* variable.cpp in Sources */,
-				4C529CAF1973CC08007C5F7C /* mac-av-player.mm in Sources */,
 				4DEE2B0F0FDE42710009423C /* vclip.cpp in Sources */,
 				4DEE2B120FDE42710009423C /* visual.cpp in Sources */,
 				4DAB7B370FE120060009F91E /* bitmapeffect.cpp in Sources */,
@@ -5259,7 +5258,6 @@
 				4DFFC7E113DD8A91006233A4 /* sysunxnetwork.cpp in Sources */,
 				4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */,
 				4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */,
-				4D05B91113E06AB4001CD82A /* dskosxmain.mm in Sources */,
 				4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */,
 				4DDB66721413A02000E5C84C /* redraw.cpp in Sources */,
 				BEA3DA2419F0219200D9D2B3 /* color.cpp in Sources */,
@@ -5316,7 +5314,6 @@
 				76EF31AA181E803C00FAC195 /* sysosxrandom.cpp in Sources */,
 				4D8589F9173AAA0900B20951 /* uuid.cpp in Sources */,
 				76EF32CC182268BF00FAC195 /* foundation-legacy.cpp in Sources */,
-				7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */,
 				4D77F1DD183F8298002EEBB4 /* exec-keywords.cpp in Sources */,
 				763FF4EA18522CC100B45FBA /* image_rep_resampled.cpp in Sources */,
 				E8AF7D2319F7E3BF000F68E9 /* graphics_util.cpp in Sources */,
@@ -5355,14 +5352,10 @@
 				BE36920E195880F300386D30 /* desktop.cpp in Sources */,
 				BE168E6E19598EAD00B957D0 /* region.cpp in Sources */,
 				BE20AE05195B24B300850531 /* quicktimestubs.mac.cpp in Sources */,
-				1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */,
 				1DED772C19129F27000FFFE3 /* button.cpp in Sources */,
-				1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */,
-				1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */,
 				BE64444119656F7300C2092C /* player.cpp in Sources */,
 				BEEC4C67196C0DF3000DA7F5 /* mac-av-player.mm in Sources */,
 				BEEC4C68196C0DF3000DA7F5 /* mac-qt-player.mm in Sources */,
-				4C8B5BBA1972B7300014058F /* sysunxthreads.cpp in Sources */,
 				4C8B5BBC19733AB10014058F /* stacktile.cpp in Sources */,
 				BEB059451993C046006AE3FD /* imageloader.cpp in Sources */,
 				BEB059471993CE0D006AE3FD /* exec-scripting.cpp in Sources */,
@@ -5380,7 +5373,6 @@
 				BEB059531993CE69006AE3FD /* exec-interface-stack.cpp in Sources */,
 				BEB059541993CE6B006AE3FD /* exec-interface-vclip.cpp in Sources */,
 				76CCAA7C19800BCD00C79271 /* mac-qt-recorder.mm in Sources */,
-				76CCAA7E1980152A00C79271 /* platform-recorder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6131,6 +6123,8 @@
 					"-ObjC",
 					"-force_load",
 					"$(BUILT_PRODUCTS_DIR)/libstdscript.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libkernel.a",
 				);
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
@@ -6149,6 +6143,8 @@
 					"-ObjC",
 					"-force_load",
 					"$(BUILT_PRODUCTS_DIR)/libstdscript.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libkernel.a",
 				);
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;

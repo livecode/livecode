@@ -58,6 +58,7 @@
     BeginPhraseSyntaxRule
     BeginStatementSyntaxRule
     BeginExpressionSyntaxRule
+    BeginIteratorSyntaxRule
     BeginPrefixOperatorSyntaxRule
     BeginPostfixOperatorSyntaxRule
     BeginLeftBinaryOperatorSyntaxRule
@@ -83,6 +84,7 @@
     BeginExecuteMethodSyntaxMapping
     BeginEvaluateMethodSyntaxMapping
     BeginAssignMethodSyntaxMapping
+    BeginIterateMethodSyntaxMapping
     EndMethodSyntaxMapping
     PushUndefinedArgumentSyntaxMapping
     PushTrueArgumentSyntaxMapping
@@ -172,11 +174,8 @@
     EmitPushRepeatLabels
     EmitPopRepeatLabels
     EmitCurrentRepeatLabels
-    EmitBeginIndirectExecuteInvoke
-    EmitBeginExecuteInvoke
-    EmitBeginEvaluateInvoke
-    EmitBeginAssignInvoke
-    EmitBeginIterateInvoke
+    EmitBeginIndirectInvoke
+    EmitBeginInvoke
     EmitContinueInvoke
     EmitEndInvoke
     EmitAssign
@@ -186,12 +185,16 @@
     EmitAssignInteger
     EmitAssignReal
     EmitAssignString
+    EmitBeginAssignList
+    EmitContinueAssignList
+    EmitEndAssignList
     EmitFetchLocal
     EmitStoreLocal
     EmitFetchGlobal
     EmitStoreGlobal
     EmitReturn
     EmitReturnNothing
+    EmitThrow
     EmitAttachRegisterToExpression
     EmitDetachRegisterFromExpression
     EmitGetRegisterAttachedToExpression
@@ -249,6 +252,9 @@
     Error_RSyntaxMethodArgumentsDontConform
     Error_ExpressionSyntaxMethodArgumentsDontConform
     Error_HandlersBoundToSyntaxMustBePublic
+    Error_IterateSyntaxMethodArgumentsDontConform
+    Error_IterateSyntaxMethodMustReturnBoolean
+    Error_PhraseSyntaxMethodMustReturnAValue
 
 --------------------------------------------------------------------------------
 
@@ -330,6 +336,7 @@
 
 'action' BeginPhraseSyntaxRule(NAME, NAME)
 'action' BeginStatementSyntaxRule(NAME, NAME)
+'action' BeginIteratorSyntaxRule(NAME, NAME)
 'action' BeginExpressionSyntaxRule(NAME, NAME)
 'action' BeginPrefixOperatorSyntaxRule(NAME, NAME, INT)
 'action' BeginPostfixOperatorSyntaxRule(NAME, NAME, INT)
@@ -367,6 +374,7 @@
 'action' BeginExecuteMethodSyntaxMapping(Name: NAME)
 'action' BeginEvaluateMethodSyntaxMapping(Name: NAME)
 'action' BeginAssignMethodSyntaxMapping(Name: NAME)
+'action' BeginIterateMethodSyntaxMapping(Name: NAME)
 'action' EndMethodSyntaxMapping()
 'action' PushInMarkArgumentSyntaxMapping(MarkIndex: INT)
 'action' PushOutMarkArgumentSyntaxMapping(MarkIndex: INT)
@@ -473,11 +481,8 @@
 'action' EmitPushRepeatLabels(Head: INT, Tail: INT)
 'action' EmitCurrentRepeatLabels(-> Next: INT, Exit: INT)
 'action' EmitPopRepeatLabels()
-'action' EmitBeginIndirectExecuteInvoke(Register: INT, ContextRegister: INT, ResultRegister: INT)
-'action' EmitBeginExecuteInvoke(Index: INT, ContextRegister: INT, ResultRegister: INT)
-'action' EmitBeginEvaluateInvoke(Index: INT, ContextRegister: INT, OutputRegister: INT)
-'action' EmitBeginAssignInvoke(Index: INT, ContextRegister: INT, InputRegister: INT)
-'action' EmitBeginIterateInvoke(Index: INT, ContextRegister: INT, IteratorRegister: INT, ContainerRegister: INT)
+'action' EmitBeginIndirectInvoke(Register: INT, ContextRegister: INT, ResultRegister: INT)
+'action' EmitBeginInvoke(Index: INT, ContextRegister: INT, ResultRegister: INT)
 'action' EmitContinueInvoke(Register: INT)
 'action' EmitEndInvoke()
 'action' EmitAssignUndefined(Register: INT)
@@ -486,6 +491,9 @@
 'action' EmitAssignInteger(Register: INT, Value: INT)
 'action' EmitAssignReal(Register: INT, Value: DOUBLE)
 'action' EmitAssignString(Register: INT, Value: STRING)
+'action' EmitBeginAssignList(Register: INT)
+'action' EmitContinueAssignList(Register: INT)
+'action' EmitEndAssignList()
 'action' EmitAssign(Dst: INT, Src: INT)
 'action' EmitFetchLocal(Register: INT, Var: INT)
 'action' EmitStoreLocal(Register: INT, Var: INT)
@@ -493,6 +501,7 @@
 'action' EmitStoreGlobal(Register: INT, Var: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
+'action' EmitThrow(Register: INT)
 'action' EmitPosition(Position: POS)
 
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)
@@ -558,5 +567,8 @@
 'action' Error_RSyntaxMethodArgumentsDontConform(Position: POS)
 'action' Error_ExpressionSyntaxMethodArgumentsDontConform(Position: POS)
 'action' Error_HandlersBoundToSyntaxMustBePublic(Position: POS)
+'action' Error_IterateSyntaxMethodArgumentsDontConform(Position: POS)
+'action' Error_IterateSyntaxMethodMustReturnBoolean(Position: POS)
+'action' Error_PhraseSyntaxMethodMustReturnAValue(Position: POS)
 
 --------------------------------------------------------------------------------

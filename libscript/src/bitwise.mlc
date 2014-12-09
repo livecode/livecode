@@ -4,12 +4,12 @@ This module specifies the syntax definitions and bindings for bitwise operations
 
 module com.livecode.bitwise
 
-public foreign handler MCBitwiseEvalBitwiseAnd(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseOr(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseNot(in Operand as integer, out Value as integer) as undefined binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseXor(in Left as integer, in Right as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseAnd(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseOr(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseNot(in Operand as int, out Value as int) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseXor(in Left as int, in Right as int, out Value as int) as undefined binds to "<builtin>"
 
-public foreign handler MCBitwiseEvalBitwiseShift(in Target as integer, in Shift as integer, out Value as integer) as undefined binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseShift(in Target as int, in Shift as int, out Value as int) as undefined binds to "<builtin>"
 
 --
 
@@ -18,14 +18,19 @@ Summary:        Performs a bitwise AND operation on the binary representations o
 
 Left:           An expression which evaluates to an integer.
 Right:          An expression which evaluates to an integer.
-output:         The integer whose binary representation is the result of the bitwise AND operation
-                on the binary representations of <Left> and <Right> - i.e each bit of the result is 
-                1 if and only if the corresponding bit of <Left> and of <Right> is 1. Otherwise it is 0.
+output:         The integer whose binary representation is the result of the bitwise AND operation.
 
+Example:
+	variable tVar as int
+	put 3 bitwise and 6 into tVar -- tVar contains 2
+	
+Description:
+Each bit of <Left> bitwise and <Right> is 1 if and only if both the corresponding bit of the binary representation of <Left> and that of <Right> is 1. Otherwise it is 0.
+	
 */
 
 syntax BitwiseAnd is left binary operator with precedence 2
-    <Left: Expression> "bitwise" "and" <Right: Expression>
+    <Left: Expression> "bitwise and" <Right: Expression>
 begin
     MCBitwiseEvalBitwiseAnd(Left, Right, output)
 end syntax
@@ -35,14 +40,20 @@ Summary:        Performs a bitwise OR operation on the binary representations of
 
 Left:           An expression which evaluates to an integer.
 Right:          An expression which evaluates to an integer.
-output:         The integer whose binary representation is the result of the bitwise OR operation
-                on the binary representations of <Left> and <Right> - i.e each bit of the result is 
-                0 if and only if the corresponding bit of <Left> and of <Right> is 0. Otherwise it is 1.
+output:         The integer whose binary representation is the result of the bitwise OR operation.
+                
+
+Example:
+	variable tVar as int
+	put 3 bitwise or 6 into tVar -- tVar contains 7
+	
+Description:
+Each bit of <Left> bitwise or <Right> is 0 if and only if both the corresponding bit of the binary representation of <Left> and that of <Right> is 0. Otherwise it is 1.
 
 */
 
 syntax BitwiseOr is left binary operator with precedence 4
-    <Left: Expression> "bitwise" "or" <Right: Expression>
+    <Left: Expression> "bitwise or" <Right: Expression>
 begin
     MCBitwiseEvalBitwiseOr(Left, Right, output)
 end syntax
@@ -52,15 +63,19 @@ Summary:        Performs a bitwise XOR operation on the binary representations o
 
 Left:           An expression which evaluates to an integer.
 Right:          An expression which evaluates to an integer.
-output:         The integer whose binary representation is the result of the bitwise XOR operation
-                on the binary representations of <Left> and <Right> - i.e each bit of the result is 
-                1 if and only if exactly one of the corresponding bits of <Left> and <Right> is 1. Otherwise 
-                it is 0.
+output:         The integer whose binary representation is the result of the bitwise XOR operation.
+
+Example:
+	variable tVar as int
+	put 3 bitwise xor 6 into tVar -- tVar contains 5
+	
+Description:
+Each bit of <Left> bitwise xor <Right> is 1 if and only if exactly one of the corresponding bits of the binary representation of <Left> and that of <Right> is 1. Otherwise it is 0.
 
 */
 
 syntax BitwiseXor is left binary operator with precedence 3
-    <Left: Expression> "bitwise" "xor" <Right: Expression>
+    <Left: Expression> "bitwise xor" <Right: Expression>
 begin
     MCBitwiseEvalBitwiseXor(Left, Right, output)
 end syntax
@@ -69,10 +84,7 @@ end syntax
 Summary:        Performs a bitwise NOT operation on the binary representation of <Operand>.
 
 Operand:        An expression which evaluates to an integer.
-output:         The integer whose binary representation is the result of the bitwise NOT operation
-                on the binary representation of <Operand> - i.e each bit of the result is 0 if and 
-                only if the corresponding bit of <Operand> is 1. Otherwise it is 1.
-
+output:         The integer whose binary representation is the result of the bitwise NOT operation.
 */
 
 syntax BitwiseNot is prefix operator with precedence 1
@@ -84,13 +96,18 @@ end syntax
 --
 
 /*
-Summmary:       Shifts the bits of <Operand> left or right.
+Summary:       Shifts the bits of <Operand> left or right.
 
 Operand:        An expression which evaluates to an integer.
 Shift:          An expression which evaluates to an integer.
-output:         The integer whose binary representation is the result of shifting the bits of the 
-                binary representation of <Operand> by <Shift> places left or right.
+output:         The result of bit-shifting <Operand> by <Shift> places.
 
+Example:
+	variable tVar
+	put 7 shifted by 2 bitwise into tVar -- tVar contains 28
+
+Description:
+Shifting the bits of <Operand> by x is equivalent to multiplying by 2^x
 */
 
 syntax BitwiseShift is postfix operator with precedence 1

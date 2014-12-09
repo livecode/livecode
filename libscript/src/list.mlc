@@ -27,11 +27,30 @@ public foreign handler MCListSpliceIntoElementOf(in Source as list, in Index as 
 public foreign handler MCListSpliceBeforeElementOf(in Source as list, in Index as int, inout Target as list) as undefined binds to "<builtin>"
 public foreign handler MCListSpliceAfterElementOf(in Source as list, in Index as int, inout Target as list) as undefined binds to "<builtin>"
 
+public foreign handler MCListEvalEmpty(out Value as list) as undefined binds to "<builtin>"
+
 --
 
 /*
 Summary:        Returns the first element of <Target>.
 Target:         An expression which evaluates to a list.
+output:			The first element of <Target>
+
+Example:
+	variable tVar as list
+	put the empty list into tVar
+	push "first element" onto tVar
+	
+	variable tResult as string
+	if the head of tVar is "first element" then
+		put "success" into tResult
+	end if
+	
+Description:
+Returns the first element of the list <Target> without modifying <Target>.
+	the head of tVar
+is equivalent to 
+	tVar[1]
 */
 
 syntax HeadOf is prefix operator with precedence 1
@@ -43,6 +62,27 @@ end syntax
 /* 
 Summary:        Returns the last element of <Target>.
 Target:         An expression which evaluates to a list.
+output:			The last element of <Target>
+
+Example:
+	variable tVar as list
+	put the empty list into tVar
+	push "first element" onto tVar
+	push "last element" onto tVar
+	
+	variable tResult as string
+	if the tail of tVar is "last element" then
+		put "success" into tResult
+	end if
+	
+Description:
+Returns the first element of the list <Target> without modifying <Target>.
+
+	the tail of tVar
+	
+is equivalent to 
+
+	tVar[-1]
 */
 
 syntax TailOf is prefix operator with precedence 1
@@ -54,10 +94,24 @@ end syntax
 --
 
 /* 
-Summary:        Pushes <Value> onto <Target>, i.e. <Target> becomes the tail of the list,
-                with an index one greater than the previous tail.
+Summary:        Pushes <Value> onto <Target>.
 Value:          Any expression.
 Target:         An expression which evaluates to a list.
+
+Example:
+	variable tVar as list
+	put the empty list into tVar
+	push "something" onto tVar
+	push "something else" onto front of tVar
+	
+	variable tResult as string
+	if tVar[1] is "something else" then
+		put "success" into tResult
+	end if
+
+Description:
+When <Value> is pushed onto <Target>, <Value> (by default) becomes the tail of the list, with an index one greater than the previous tail.
+Use the 'front of' variant to push onto the front of a list instead.
 
 */
 
@@ -68,10 +122,23 @@ begin
 end syntax
 
 /* 
-Summary:        Pops the last element from <Source> into <Target>, i.e. the last element
-                of the list is removed and put into the container <Target>.
+Summary:        Pops the last element from <Source> into <Target>
 Source:         An expression which evaluates to a list.
 Target:         An expression which evaluates to a container.
+
+Example:
+	variable tVar as list
+	put the empty list into tVar
+	push "something" onto tVar
+	push "something else" onto tVar
+	
+	variable tPopped as string
+	pop tVar into tPopped -- tPopped contains "something else"
+
+Description:
+When <Source> is popped into <Target>, the last element of the list <Source> is removed and put into the container <Target>.
+Use the 'front of' variant to pop from the front of a list instead.
+
 */
 
 syntax PopList is statement
@@ -85,6 +152,7 @@ end syntax
 /*
 Summary:        Returns the number of elements in <Target>
 Target:         An expression which evaluates to a list.
+output:			The number of elements in the list <Target>.
 */
 
 syntax CountElementsOf is prefix operator with precedence 1
@@ -118,7 +186,7 @@ output:         Returns true if the elements of <Needle> occur as a subsequence 
                 and false otherwise.
 */
                 
-syntax ContainsElements is neutral binary operator with precedence 2
+syntax ContainsElements is neutral binary operator with precedence 1
     <Target: Expression> "contains" <Needle: Expression>
 begin
     MCListEvalContainsElements(Target, Needle, output)
@@ -154,10 +222,6 @@ output:             Either locates the element container at the given index for 
                     as the source of another operation.
 */
 
---public handler MCListFetchElementOfReversed(in pTarget as list, in pIndex as int, out rElement) as undefined
-  --MCListFetchElementOf(pIndex, pTarget, rElement)
---end handler
-
 syntax SingletonArrElementOf is postfix operator with precedence 1
     <Target: Expression> "[" <Index: Expression> "]"
 begin
@@ -186,11 +250,57 @@ end syntax
 
 --
 
+/* 
+Summary:			Designates the location beween element <Index> - 1 and <Index> of <Target>
+
+Index:				An expression which evaluates to a valid integer index of <Target>.
+Target:				An expression which evaluates to a list.
+
+Example:
+	variable tVar as list
+	put the empty list into tVar
+	push 1 onto tVar
+	push 3 onto tVar
+	put 2 before element 2 of tVar -- tVar is the list [1,2,3]
+
+Description:
+Use with the put statement to insert an element in the specified location without removal. 
+After executing 
+
+	put tVar before element 5 of tList
+	
+tVar is the element at index 5 of tList, and every subsequent element has its index incremented by 1.
+
+*/
 syntax BeforeElementOf is prefix operator with precedence 1
     "before" "element" <Index: Expression> "of" <Target: Expression>
 begin
     MCListStoreBeforeElementOf(input, Index, Target)
 end syntax
+
+
+/* 
+Summary:			Designates the location beween element <Index> and <Index> + 1 of <Target>
+
+Index:				An expression which evaluates to a valid integer index of <Target>.
+Target:				An expression which evaluates to a list.
+
+Example:
+	variable tVar as list
+	put the empty list into tVar
+	push 1 onto tVar
+	push 3 onto tVar
+	put 2 after element 1 of tVar -- tVar is the list [1,2,3]
+
+Description:
+Use with the put statement to insert an element in the specified location without removal. 
+After executing 
+
+	put tVar after element 5 of tList
+	
+tVar is the element at index 6 of tList, and every subsequent element has its index incremented by 1.
+
+*/
 
 syntax AfterElementOf is prefix operator with precedence 1
     "after" "element" <Index: Expression> "of" <Target: Expression>
@@ -209,6 +319,29 @@ Start:              An expression which evaluates to a valid integer index of <T
 Finish:             An expression which evaluates to a valid integer index of <Target>.
 Target:             An expression which evaluates to a list.
 
+Example:
+	variable tVar as list
+	put the empty list into tVar
+	
+	variable tCount as int
+	put 1 into tCount
+	repeat 3 times
+		push tCount onto tVar
+	end repeat
+	
+	variable tVar2 as list
+	push "these" onto tVar2
+	push "are" onto tVar2
+	push "unwanted" onto tVar2
+	push 4 onto tVar2
+	
+	splice tVar into element 1 to 3 of tVar2 -- tVar2 contains the list [1,2,3,4]
+	
+
+Description:
+Use the splice syntax to insert the elements of one list into another list. 
+
+>*Note:* ```put tList into element 1 to 3 of tList2``` results in the removal of elements 1 to 3 of tList2 and the insertion of tList **as an element**, i.e. tList2 becomes the list [tList,element 4 of tList2, element 5 of tList2 ...]
 */
 
 syntax SpliceIntoRange is statement
@@ -225,6 +358,28 @@ Source:             An expression which evaluates to a list.
 Index:              An expression which evaluates to a valid integer index of <Target>.
 Target:             An expression which evaluates to a list.
 
+Example:
+	variable tVar as list
+	put the empty list into tVar
+	
+	variable tCount as int
+	put 1 into tCount
+	repeat 3 times
+		push tCount onto tVar
+	end repeat
+	
+	variable tVar2 as list
+	push "this is unwanted" onto tVar2
+	push 4 onto tVar2
+	
+	splice tVar into element 1 of tVar2 -- tVar2 contains the list [1,2,3,4]
+	
+
+Description:
+Use the splice syntax to insert the elements of one list into another list. 
+
+>*Note:* ```put tList into element 1 of tList2``` results in the removal of element 1 of tList2 and the insertion of tList **as an element**, i.e. tList2 becomes the list [tList,element 2 of tList2, element 3 of tList2 ...]
+
 */
 
 syntax SpliceIntoElement is statement
@@ -239,6 +394,28 @@ Summary:            Inserts each of the elements of <Source> into <Target> befor
 Source:             An expression which evaluates to a list.
 Index:              An expression which evaluates to a valid integer index of <Target>.
 Target:             An expression which evaluates to a list.
+
+Example:
+	variable tVar as list
+	put the empty list into tVar
+	
+	variable tCount as int
+	put 2 into tCount
+	repeat 3 times
+		push tCount onto tVar
+	end repeat
+	
+	variable tVar2 as list
+	push 1 onto tVar2
+	push 5 onto tVar2
+	
+	splice tVar before element 2 of tVar2 -- tVar2 contains the list [1,2,3,4,5]
+	
+
+Description:
+Use the splice syntax to insert the elements of one list into another list. 
+
+>*Note:* ```put tList before element 2 of tList2``` results in the insertion of tList **as an element**, i.e. tList2 becomes the list [element 1 of tList2,tList,element 2 of tList2, element 3 of tList2 ...]
 
 */
 
@@ -255,6 +432,28 @@ Source:             An expression which evaluates to a list.
 Index:              An expression which evaluates to a valid integer index of <Target>.
 Target:             An expression which evaluates to a list.
 
+Example:
+	variable tVar as list
+	put the empty list into tVar
+	
+	variable tCount as int
+	put 2 into tCount
+	repeat 3 times
+		push tCount onto tVar
+	end repeat
+	
+	variable tVar2 as list
+	push 1 onto tVar2
+	push 5 onto tVar2
+	
+	splice tVar after element 1 of tVar2 -- tVar2 contains the list [1,2,3,4,5]
+	
+
+Description:
+Use the splice syntax to insert the elements of one list into another list. 
+
+>*Note:* ```put tList after element 1 of tList2``` results in the insertion of tList **as an element**, i.e. tList2 becomes the list [element 1 of tList2,tList,element 2 of tList2, element 3 of tList2 ...]
+
 */
 
 syntax SpliceAfterElement is statement
@@ -264,5 +463,27 @@ begin
 end syntax
 
 --
+
+/* 
+
+Summary: 		Designates the list of zero elements
+
+Example:
+	variable tVar as list
+	variable tCount as int
+	put the empty list into tVar
+	put the number of elements in tVar into tCount -- tCount is 0
+	
+Description:
+Use ```the empty list``` to initialise a list variable.
+
+*/
+
+
+syntax EmptyList is expression
+	"the" "empty" "list"
+begin
+	MCListEvalEmpty(output)
+end syntax
 
 end module

@@ -735,6 +735,7 @@ void MCGPathRelease(MCGPathRef path);
 
 bool MCGPathIsValid(MCGPathRef path);
 bool MCGPathIsEmpty(MCGPathRef path);
+bool MCGPathIsEqualTo(MCGPathRef a, MCGPathRef b);
 
 void MCGPathCopy(MCGPathRef path, MCGPathRef& r_new_path);
 void MCGPathCopyAndRelease(MCGPathRef path, MCGPathRef& r_new_path);
@@ -774,7 +775,7 @@ bool MCGPathIterate(MCGPathRef p_path, MCGPathIterateCallback p_callback, void *
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCGContextCreate(uint32_t width, uint32_t height, bool alpha, MCGContextRef& r_context);
+extern "C" bool MCGContextCreate(uint32_t width, uint32_t height, bool alpha, MCGContextRef& r_context);
 bool MCGContextCreateWithPixels(uint32_t width, uint32_t height, uint32_t stride, void *pixels, bool alpha, MCGContextRef& r_context);
 bool MCGContextCreateWithRaster(const MCGRaster& raster, MCGContextRef& r_context);
 
