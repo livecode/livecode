@@ -4305,15 +4305,15 @@ void MCCanvasApplyPaint(__MCCanvasImpl &x_canvas, MCCanvasPaintRef &p_paint)
 	switch (t_paint->type)
 	{
 		case kMCCanvasPaintTypeSolid:
-			MCCanvasApplySolidPaint(x_canvas, *(__MCCanvasSolidPaintImpl*)p_paint);
+			MCCanvasApplySolidPaint(x_canvas, *(__MCCanvasSolidPaintImpl*)t_paint);
 			break;
 			
 		case kMCCanvasPaintTypePattern:
-			MCCanvasApplyPatternPaint(x_canvas, *(__MCCanvasPatternImpl*)p_paint);
+			MCCanvasApplyPatternPaint(x_canvas, *(__MCCanvasPatternImpl*)t_paint);
 			break;
 			
 		case kMCCanvasPaintTypeGradient:
-			MCCanvasApplyGradientPaint(x_canvas, *(__MCCanvasGradientImpl*)p_paint);
+			MCCanvasApplyGradientPaint(x_canvas, *(__MCCanvasGradientImpl*)t_paint);
 			break;
 	}
 }
@@ -4675,6 +4675,31 @@ void MCCanvasCanvasClosePath(MCCanvasRef &x_canvas)
 	t_canvas = MCCanvasGet(x_canvas);
 	
 	MCGContextCloseSubpath(t_canvas->context);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCCanvasRef s_current_canvas = nil;
+
+void MCCanvasPush(MCGContextRef p_gcontext, uintptr_t& r_cookie)
+{
+    MCCanvasRef t_new_canvas;
+    MCCanvasCreate(p_gcontext, t_new_canvas);
+    r_cookie = (uintptr_t)s_current_canvas;
+    s_current_canvas = t_new_canvas;
+}
+
+void MCCanvasPop(uintptr_t p_cookie)
+{
+    MCCanvasRef t_canvas;
+    t_canvas = s_current_canvas;
+    s_current_canvas = (MCCanvasRef)p_cookie;
+    MCValueRelease(t_canvas);
+}
+
+extern "C" void MCCanvasThisCanvas(MCCanvasRef& r_canvas)
+{
+    r_canvas = MCValueRetain(s_current_canvas);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

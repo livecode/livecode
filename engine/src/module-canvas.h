@@ -80,6 +80,9 @@ struct MCCArray
 bool MCCanvasModuleInitialize();
 void MCCanvasModuleFinalize();
 
+void MCCanvasPush(MCGContextRef gcontext);
+void MCCanvasPop(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Type Definitions
 

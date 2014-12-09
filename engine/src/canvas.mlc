@@ -1244,4 +1244,14 @@ end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
 
+public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) as undefined binds to "<builtin>"
+
+syntax ThisCanvas is expression
+    "this" "canvas"
+begin
+    MCCanvasThisCanvas(output)
+end syntax
+
+////////////////////////////////////////////////////////////////////////////////
+
 end module
