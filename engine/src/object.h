@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "globals.h"
+#include "uuid.h"
 
 enum {
     MAC_SHADOW,
@@ -191,6 +192,8 @@ class MCObject : public MCDLlist
 {
 protected:
 	uint4 obj_id;
+	MCUuid uuid;
+	bool have_uuid;
 	MCObject *parent;
 	MCNameRef _name;
 	uint4 flags;
@@ -409,6 +412,9 @@ public:
 	Exec_stat setprops(uint32_t parid, MCExecPoint& ep);
 	Exec_stat changeid(uint32_t new_id);
 #endif
+
+	bool GetUuid(MCUuid &);
+	bool SetUuid(MCUuid);
 
 	uint4 getid() const
 	{

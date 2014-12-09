@@ -99,6 +99,7 @@ MCObject::MCObject()
 {
 	parent = NULL;
 	obj_id = 0;
+	have_uuid = false;
 	/* UNCHECKED */ MCNameClone(kMCEmptyName, _name);
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE;
 	fontheight = 0;
@@ -164,6 +165,7 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	/* UNCHECKED */ MCNameClone(oref . getname(), _name);
 	
 	obj_id = 0;
+	have_uuid = false; /* The copy isn't the same object; require new UUID */
 	rect = oref.rect;
 	flags = oref.flags;
 	fontheight = oref.fontheight;
@@ -4819,6 +4821,31 @@ MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)
 bool MCObject::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)
 {
 	return p_visitor -> OnObject(this);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+MCObject::GetUuid (MCUuid & r_uuid)
+{
+	/* Only generate a UUID the first time that one is requested. */
+	if (!have_uuid)
+	{
+		if (!MCUuidGenerateRandom(uuid))
+			return false;
+		have_uuid = true;
+	}
+
+	r_uuid = uuid;
+	return true;
+}
+
+bool
+MCObject::SetUuid (MCUuid p_uuid)
+{
+	uuid = p_uuid;
+	have_uuid = true;
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
