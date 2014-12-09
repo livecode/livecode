@@ -241,3 +241,27 @@ void MCUuidFromBytes(uint8_t p_bytes[16], MCUuid& r_uuid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+compare_t
+MCUuidCompare (const MCUuid & a,
+               const MCUuid & b)
+{
+	compare_t t_diff;
+	t_diff =
+		(a.time_low - b.time_low) ||
+		(a.time_mid - b.time_mid) ||
+		(a.time_hi_and_version - b.time_hi_and_version) ||
+		(a.clock_seq_hi_and_reserved - b.clock_seq_hi_and_reserved) ||
+		(a.clock_seq_low - b.clock_seq_low);
+
+	if (t_diff != 0) return t_diff;
+
+	for (uindex_t i = 0; t_diff != 0 && i < 6; ++i)
+	{
+		t_diff = a.node[i] - b.node[i];
+	}
+
+	return t_diff;
+}
+
+////////////////////////////////////////////////////////////////////////////////
