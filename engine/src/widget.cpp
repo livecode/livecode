@@ -1204,7 +1204,7 @@ void* foo3 = (void*)&MCTextPaneSet;
 void* foo4 = (void*)&MCTextPaneGet;
 void* foo5 = (void*)&MCTextPanePaintShim;
 
-extern "C" void MCWidgetRedraw()
+extern "C" MC_DLLEXPORT void MCWidgetRedraw()
 {
     MCwidgetobject->Redraw();
 }

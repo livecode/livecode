@@ -605,7 +605,7 @@ bool MCU_r8tos(real8 n, uint2 fw, uint2 trailing, uint2 force, MCStringRef &r_st
 	}
 	
 	MCStringRef t_string;
-	if (!MCStringCreateWithCStringAndRelease((char_t *)t_str, t_string))
+	if (!MCStringCreateWithCStringAndRelease(t_str, t_string))
 	{
 		delete[] t_str;
 		return false;
