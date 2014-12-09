@@ -16,27 +16,27 @@
 
 #include <foundation.h>
 
-extern "C" void MCBitwiseEvalBitwiseAnd(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseAnd(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = p_left & p_right;
 }
 
-extern "C" void MCBitwiseEvalBitwiseOr(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseOr(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = p_left | p_right;
 }
 
-extern "C" void MCBitwiseEvalBitwiseXor(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseXor(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = p_left ^ p_right;
 }
 
-extern "C" void MCBitwiseEvalBitwiseNot(integer_t p_operand, integer_t& r_output)
+extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseNot(integer_t p_operand, integer_t& r_output)
 {
     r_output = ~p_operand;
 }
 
-extern "C" void MCBitwiseEvalBitwiseShift(integer_t p_operand, integer_t p_shift, integer_t& r_output)
+extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseShift(integer_t p_operand, integer_t p_shift, integer_t& r_output)
 {
     if (p_shift < 0)
         // truncate towards 0

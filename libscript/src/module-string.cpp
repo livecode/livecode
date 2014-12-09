@@ -19,13 +19,13 @@
 
 #include <foundation-locale.h>
 
-extern "C" void MCStringEvalConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT void MCStringEvalConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
 {
     if (!MCStringFormat(r_output, "%@%@", p_left, p_right))
         return;
 }
 
-extern "C" void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x_target)
+extern "C" MC_DLLEXPORT void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
     MCStringEvalConcatenate(p_source, x_target, &t_string);
@@ -33,7 +33,7 @@ extern "C" void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x
     MCValueAssign(x_target, *t_string);
 }
 
-extern "C" void MCStringExecPutStringAfter(MCStringRef p_source, MCStringRef& x_target)
+extern "C" MC_DLLEXPORT void MCStringExecPutStringAfter(MCStringRef p_source, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
     MCStringEvalConcatenate(x_target == (MCStringRef)kMCNull ? kMCEmptyString : x_target, p_source, &t_string);
@@ -41,7 +41,7 @@ extern "C" void MCStringExecPutStringAfter(MCStringRef p_source, MCStringRef& x_
     MCValueAssign(x_target, *t_string);
 }
 
-extern "C" void MCStringExecReplace(MCStringRef p_pattern, MCStringRef p_replacement, MCStringRef& x_target)
+extern "C" MC_DLLEXPORT void MCStringExecReplace(MCStringRef p_pattern, MCStringRef p_replacement, MCStringRef& x_target)
 {
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(x_target, &t_string))
@@ -56,13 +56,13 @@ extern "C" void MCStringExecReplace(MCStringRef p_pattern, MCStringRef p_replace
     MCValueAssign(x_target, *t_new_string);
 }
 
-extern "C" void MCStringEvalConcatenateWithSpace(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT void MCStringEvalConcatenateWithSpace(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
 {
     if (!MCStringFormat(r_output, "%@ %@", p_left, p_right))
         return;
 }
 
-extern "C" void MCStringEvalLowercaseOf(MCStringRef p_source, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT void MCStringEvalLowercaseOf(MCStringRef p_source, MCStringRef& r_output)
 {
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(p_source, &t_string))
@@ -75,7 +75,7 @@ extern "C" void MCStringEvalLowercaseOf(MCStringRef p_source, MCStringRef& r_out
         return;
 }
 
-extern "C" void MCStringEvalUppercaseOf(MCStringRef p_source, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT void MCStringEvalUppercaseOf(MCStringRef p_source, MCStringRef& r_output)
 {
     MCAutoStringRef t_string;
     if (!MCStringMutableCopy(p_source, &t_string))
@@ -88,27 +88,27 @@ extern "C" void MCStringEvalUppercaseOf(MCStringRef p_source, MCStringRef& r_out
         return;
 }
 
-extern "C" void MCStringEvalIsEqualTo(MCStringRef p_left, MCStringRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT void MCStringEvalIsEqualTo(MCStringRef p_left, MCStringRef p_right, bool& r_result)
 {
     r_result = MCStringIsEqualTo(p_left, p_right, kMCStringOptionCompareExact);
 }
 
-extern "C" void MCStringEvalIsNotEqualTo(MCStringRef p_left, MCStringRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT void MCStringEvalIsNotEqualTo(MCStringRef p_left, MCStringRef p_right, bool& r_result)
 {
     r_result = !MCStringIsEqualTo(p_left, p_right, kMCStringOptionCompareExact);
 }
 
-extern "C" void MCStringEvalIsLessThan(MCStringRef p_left, MCStringRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT void MCStringEvalIsLessThan(MCStringRef p_left, MCStringRef p_right, bool& r_result)
 {
     r_result = MCStringCompareTo(p_left, p_right, kMCStringOptionCompareExact) < 0;
 }
 
-extern "C" void MCStringEvalIsGreaterThan(MCStringRef p_left, MCStringRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT void MCStringEvalIsGreaterThan(MCStringRef p_left, MCStringRef p_right, bool& r_result)
 {
     r_result = MCStringCompareTo(p_left, p_right, kMCStringOptionCompareExact) > 0;
 }
 
-extern "C" void MCStringEvalEmpty(MCStringRef& r_output)
+extern "C" MC_DLLEXPORT void MCStringEvalEmpty(MCStringRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyString);
 }

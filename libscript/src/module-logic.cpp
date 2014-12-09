@@ -14,7 +14,9 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-extern "C" void MCLogicEvalNot(bool p_bool, bool& r_result)
+#include "foundation.h"
+
+extern "C" MC_DLLEXPORT void MCLogicEvalNot(bool p_bool, bool& r_result)
 {
     r_result = !p_bool;
 }

@@ -94,7 +94,7 @@ static compare_t MCSortCompareDateTime(void *context, MCValueRef p_left, MCValue
     return 0;
 }
 
-extern "C" void MCSortExecSortListAscendingText(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCSortExecSortListAscendingText(MCProperListRef& x_target)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -112,7 +112,7 @@ extern "C" void MCSortExecSortListAscendingText(MCProperListRef& x_target)
     MCValueAssign(x_target, *t_sorted_list);
 }
 
-extern "C" void MCSortExecSortListDescendingText(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCSortExecSortListDescendingText(MCProperListRef& x_target)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -130,7 +130,7 @@ extern "C" void MCSortExecSortListDescendingText(MCProperListRef& x_target)
     MCValueAssign(x_target, *t_sorted_list);
 }
 
-extern "C" void MCSortExecSortListAscendingBinary(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCSortExecSortListAscendingBinary(MCProperListRef& x_target)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -145,7 +145,7 @@ extern "C" void MCSortExecSortListAscendingBinary(MCProperListRef& x_target)
     MCValueAssign(x_target, *t_sorted_list);
 }
 
-extern "C" void MCSortExecSortListDescendingBinary(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCSortExecSortListDescendingBinary(MCProperListRef& x_target)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -160,7 +160,7 @@ extern "C" void MCSortExecSortListDescendingBinary(MCProperListRef& x_target)
     MCValueAssign(x_target, *t_sorted_list);
 }
 
-extern "C" void MCSortExecSortListAscendingNumeric(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCSortExecSortListAscendingNumeric(MCProperListRef& x_target)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -175,7 +175,7 @@ extern "C" void MCSortExecSortListAscendingNumeric(MCProperListRef& x_target)
     MCValueAssign(x_target, *t_sorted_list);
 }
 
-extern "C" void MCSortExecSortListDescendingNumeric(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCSortExecSortListDescendingNumeric(MCProperListRef& x_target)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))

@@ -145,6 +145,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\module-array.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\module-binary.cpp"
 				>
 			</File>

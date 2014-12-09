@@ -18,17 +18,17 @@
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
 
-extern "C" void MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT void MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
 {
     r_output = MCValueRetain(MCProperListFetchHead(p_target));
 }
 
-extern "C" void MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT void MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
 {
     r_output = MCValueRetain(MCProperListFetchTail(p_target));
 }
 
-extern "C" void MCListExecPushSingleElementOnto(MCValueRef p_value, bool p_is_front, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCListExecPushSingleElementOnto(MCValueRef p_value, bool p_is_front, MCProperListRef& x_target)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -54,7 +54,7 @@ extern "C" void MCListExecPushSingleElementOnto(MCValueRef p_value, bool p_is_fr
 //    ctxt . Throw();
 }
 
-extern "C" void MCListExecPopElementInto(bool p_is_front, MCProperListRef& x_source, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT void MCListExecPopElementInto(bool p_is_front, MCProperListRef& x_source, MCValueRef& r_output)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_source, &t_mutable_list))
@@ -80,24 +80,24 @@ extern "C" void MCListExecPopElementInto(bool p_is_front, MCProperListRef& x_sou
 //    ctxt . Throw();
 }
 
-extern "C" void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
+extern "C" MC_DLLEXPORT void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
 {
     r_output = MCProperListGetLength(p_target);
 }
 
-extern "C" void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, MCProperListRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, MCProperListRef p_target, bool& r_output)
 {
     uindex_t t_dummy;
     r_output = MCProperListFirstIndexOfElement(p_target, p_needle, 0, t_dummy);
 }
 
-extern "C" void MCListEvalContainsElements(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
+extern "C" MC_DLLEXPORT void MCListEvalContainsElements(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
 {
     uindex_t t_dummy;
     r_output = MCProperListFirstIndexOfList(p_target, p_needle, 0, t_dummy);
 }
 
-extern "C" void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(p_target, p_index, t_start, t_count);
@@ -111,7 +111,7 @@ extern "C" void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, 
     r_output = MCValueRetain(MCProperListFetchElementAtIndex(p_target, t_start));
 }
 
-extern "C" void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
@@ -136,7 +136,7 @@ extern "C" void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProp
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef p_target, MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef p_target, MCProperListRef& r_output)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(p_target, p_start, p_finish, t_start, t_count);
@@ -150,7 +150,7 @@ extern "C" void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCP
     MCProperListCopySublist(p_target, MCRangeMake(t_start, t_count), r_output);
 }
 
-extern "C" void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
@@ -175,17 +175,17 @@ extern "C" void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, i
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" void MCListFetchIndexOf(MCProperListRef p_target, index_t p_index, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT void MCListFetchIndexOf(MCProperListRef p_target, index_t p_index, MCValueRef& r_output)
 {
     MCListFetchElementOf(p_index, p_target, r_output);
 }
 
-extern "C" void MCListStoreIndexOf(MCValueRef p_value, MCProperListRef& x_target, index_t p_index)
+extern "C" MC_DLLEXPORT void MCListStoreIndexOf(MCValueRef p_value, MCProperListRef& x_target, index_t p_index)
 {
     MCListStoreElementOf(p_value, p_index, x_target);
 }
 
-extern "C" void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     t_start += t_count;
@@ -210,7 +210,7 @@ extern "C" void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, M
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
@@ -236,7 +236,7 @@ extern "C" void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, index_t p_finish, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByRange(x_target, p_start, p_finish, t_start, t_count);
@@ -261,12 +261,12 @@ extern "C" void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" void MCListSpliceIntoElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCListSpliceIntoElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     MCListSpliceIntoElementRangeOf(p_list, p_index, p_index, x_target);
 }
 
-extern "C" void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
@@ -290,7 +290,7 @@ extern "C" void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_in
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     MCChunkGetExtentsOfElementChunkByExpression(x_target, p_index, t_start, t_count);
@@ -316,7 +316,7 @@ extern "C" void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_ind
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" void MCListEvalEmpty(MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT void MCListEvalEmpty(MCProperListRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyProperList);
 }

@@ -90,24 +90,24 @@ struct MCTextAttributes
 ////////////////////////////////////////////////////////////////////////////////
 
 // MCTextCell accessors
-MCTextCellType              MCTextCellGetType(MCTextCellRef);
-MCTextCellRef               MCTextCellGetParent(MCTextCellRef);
-MCTextCellRef               MCTextCellGetChildren(MCTextCellRef);
-coord_t                     MCTextCellGetX(MCTextCellRef);
-coord_t                     MCTextCellGetY(MCTextCellRef);
-coord_t                     MCTextCellGetWidth(MCTextCellRef);
-coord_t                     MCTextCellGetHeight(MCTextCellRef);
-coord_t                     MCTextCellGetMaxWidth(MCTextCellRef);
-coord_t                     MCTextCellGetMaxHeight(MCTextCellRef);
-MCTextCellAlignment         MCTextCellGetHorizontalAlignment(MCTextCellRef);
-MCTextCellAlignment         MCTextCellGetVerticalAlignment(MCTextCellRef);
-MCTextCellLayoutDirection   MCTextCellGetLayoutDirection(MCTextCellRef);
-MCTextDirection             MCTextCellGetTextDirection(MCTextCellRef);
-void                        MCTextCellSetPosition(MCTextCellRef, coord_t p_x, coord_t p_y);
-void                        MCTextCellSetMaxSize(MCTextCellRef, coord_t p_width, coord_t p_height);
-void                        MCTextCellSetAlignment(MCTextCellRef, MCTextCellAlignment p_horizontal, MCTextCellAlignment p_vertical);
-void                        MCTextCellSetLayoutDirection(MCTextCellRef, MCTextCellLayoutDirection p_direction);
-void                        MCTextCellSetTextDirection(MCTextCellRef, MCTextDirection p_direction);
+MC_DLLEXPORT MCTextCellType              MCTextCellGetType(MCTextCellRef);
+MC_DLLEXPORT MCTextCellRef               MCTextCellGetParent(MCTextCellRef);
+MC_DLLEXPORT MCTextCellRef               MCTextCellGetChildren(MCTextCellRef);
+MC_DLLEXPORT coord_t                     MCTextCellGetX(MCTextCellRef);
+MC_DLLEXPORT coord_t                     MCTextCellGetY(MCTextCellRef);
+MC_DLLEXPORT coord_t                     MCTextCellGetWidth(MCTextCellRef);
+MC_DLLEXPORT coord_t                     MCTextCellGetHeight(MCTextCellRef);
+MC_DLLEXPORT coord_t                     MCTextCellGetMaxWidth(MCTextCellRef);
+MC_DLLEXPORT coord_t                     MCTextCellGetMaxHeight(MCTextCellRef);
+MC_DLLEXPORT MCTextCellAlignment         MCTextCellGetHorizontalAlignment(MCTextCellRef);
+MC_DLLEXPORT MCTextCellAlignment         MCTextCellGetVerticalAlignment(MCTextCellRef);
+MC_DLLEXPORT MCTextCellLayoutDirection   MCTextCellGetLayoutDirection(MCTextCellRef);
+MC_DLLEXPORT MCTextDirection             MCTextCellGetTextDirection(MCTextCellRef);
+MC_DLLEXPORT void                        MCTextCellSetPosition(MCTextCellRef, coord_t p_x, coord_t p_y);
+MC_DLLEXPORT void                        MCTextCellSetMaxSize(MCTextCellRef, coord_t p_width, coord_t p_height);
+MC_DLLEXPORT void                        MCTextCellSetAlignment(MCTextCellRef, MCTextCellAlignment p_horizontal, MCTextCellAlignment p_vertical);
+MC_DLLEXPORT void                        MCTextCellSetLayoutDirection(MCTextCellRef, MCTextCellLayoutDirection p_direction);
+MC_DLLEXPORT void                        MCTextCellSetTextDirection(MCTextCellRef, MCTextDirection p_direction);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,19 +115,19 @@ void                        MCTextCellSetTextDirection(MCTextCellRef, MCTextDire
 // Creates a new, empty text pane. The specified stack is used for scaling and
 // theming only - the pane isn't a LiveCode control and isn't a child of the
 // stack.
-bool MCTextPaneCreate(class MCStack* p_on_stack, MCTextPaneRef& r_pane);
+MC_DLLEXPORT bool MCTextPaneCreate(class MCStack* p_on_stack, MCTextPaneRef& r_pane);
 
 // Deletes the given text pane
-bool MCTextPaneDelete(MCTextPaneRef p_pane);
+MC_DLLEXPORT bool MCTextPaneDelete(MCTextPaneRef p_pane);
 
 // Sets the contents of the text pane to be the given string. Other than certain
 // inline control characters (tabs, newlines, BiDi controls, etc), the string
 // is unformatted.
-bool MCTextPaneSetContentsPlain(MCTextPaneRef p_pane, MCStringRef p_contents);
+MC_DLLEXPORT bool MCTextPaneSetContentsPlain(MCTextPaneRef p_pane, MCStringRef p_contents);
     
-MCTextPaneRef MCTextPaneGet();
-void MCTextPaneSet(MCTextPaneRef p_pane);
-void MCTextPanePaintShim(MCTextPaneRef p_pane);
+MC_DLLEXPORT MCTextPaneRef MCTextPaneGet();
+MC_DLLEXPORT void MCTextPaneSet(MCTextPaneRef p_pane);
+MC_DLLEXPORT void MCTextPanePaintShim(MCTextPaneRef p_pane);
 
 ////////////////////////////////////////////////////////////////////////////////
 
