@@ -29,6 +29,7 @@ public foreign handler MCListSpliceAfterElementOf(in Source as list, in Index as
 
 public foreign handler MCListEvalEmpty(out Value as list) as undefined binds to "<builtin>"
 
+public foreign handler MCListRepeatForEachElement(inout Iterator as optional pointer, out Iterand as any, in Container as list) as bool binds to "<builtin>"
 --
 
 /*
@@ -457,6 +458,12 @@ syntax EmptyList is expression
 	"the" "empty" "list"
 begin
 	MCListEvalEmpty(output)
+end syntax
+
+syntax RepeatForEachElement is iterator
+    "element" <Iterand: Expression>
+begin
+    MCListRepeatForEachElement(iterator, Iterand, container)
 end syntax
 
 end module
