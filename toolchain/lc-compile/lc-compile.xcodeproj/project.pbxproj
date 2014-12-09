@@ -32,6 +32,7 @@
 		4D79B6F81A274C2200DD750C /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D03910D1A27366200CB9E06 /* libfoundation.a */; };
 		4D79B6F91A274C5500DD750C /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D0391201A27369800CB9E06 /* libscript.a */; };
 		4D79B6FA1A274C6600DD750C /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B64B1A27381400DD750C /* CoreFoundation.framework */; };
+		4D79B9111A3767E000DD750C /* module-helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B9101A3767E000DD750C /* module-helper.cpp */; };
 		4DA53A2719E4435D0089FBDC /* gen.l in Sources */ = {isa = PBXBuildFile; fileRef = 4DA53A2119E4435D0089FBDC /* gen.l */; };
 		4DA53A2819E4435D0089FBDC /* gen.y in Sources */ = {isa = PBXBuildFile; fileRef = 4DA53A2419E4435D0089FBDC /* gen.y */; };
 		4DA53A2919E4435D0089FBDC /* grammar.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DA53A2519E4435D0089FBDC /* grammar.c */; };
@@ -276,6 +277,7 @@
 		4D78D29B19E9499000DDEF0B /* gen-full.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "gen-full.h"; path = "src/_G_/gen-full.h"; sourceTree = "<group>"; };
 		4D78D29C19E9586400DDEF0B /* grammar_full.g */ = {isa = PBXFileReference; lastKnownFileType = text; name = grammar_full.g; path = src/grammar_full.g; sourceTree = SOURCE_ROOT; };
 		4D79B64B1A27381400DD750C /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		4D79B9101A3767E000DD750C /* module-helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "module-helper.cpp"; path = "src/module-helper.cpp"; sourceTree = SOURCE_ROOT; };
 		4DA53A2119E4435D0089FBDC /* gen.l */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.lex; name = gen.l; path = src/_GG_/gen.l; sourceTree = "<group>"; };
 		4DA53A2219E4435D0089FBDC /* gen.lit */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = gen.lit; path = src/_GG_/gen.lit; sourceTree = "<group>"; };
 		4DA53A2319E4435D0089FBDC /* gen.tkn */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = gen.tkn; path = src/_GG_/gen.tkn; sourceTree = "<group>"; };
@@ -416,6 +418,7 @@
 		4D6F070D19CC36DD00DDC6E0 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				4D79B9101A3767E000DD750C /* module-helper.cpp */,
 				4D6F072719CC386B00DDC6E0 /* grammar.g */,
 				4DA53A2F19E448C50089FBDC /* bind.g */,
 				4D6E0E7119E710BE001AE5CC /* check.g */,
@@ -887,6 +890,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D44E4EA1A24D6910073FFA2 /* test.cpp in Sources */,
+				4D79B9111A3767E000DD750C /* module-helper.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
