@@ -280,7 +280,7 @@ extern "C" void MCArithmeticEvalNumberModNumber(MCNumberRef p_left, MCNumberRef 
     t_right = MCNumberFetchAsReal(p_right);
     
     double t_result;
-    MCArithmeticEvalRealModReal(t_left, t_left, t_result);
+    MCArithmeticEvalRealModReal(t_left, t_right, t_result);
     
     MCNumberCreateWithReal(t_result, r_output);
 }
@@ -319,7 +319,7 @@ extern "C" void MCArithmeticEvalNumberWrapNumber(MCNumberRef p_left, MCNumberRef
     t_right = MCNumberFetchAsReal(p_right);
     
     double t_result;
-    MCArithmeticEvalRealWrapReal(t_left, t_left, t_result);
+    MCArithmeticEvalRealWrapReal(t_left, t_right, t_result);
     
     MCNumberCreateWithReal(t_result, r_output);
 }
