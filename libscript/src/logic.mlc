@@ -16,7 +16,7 @@ output:     If the left hand expression evaluates to false, the value of the exp
             Note that the right hand expression is only evaluated if the left hand expression is true.
 */
 
-//syntax LogicOr is left binary operator of precedence 2
+//syntax LogicOr is left binary operator of precedence 4
 //    <Left: Expression> "or" <Right: Expression>
 //begin
 //    EvalOr(Left, Right, output)
@@ -32,7 +32,7 @@ output:     If the left hand expression evaluates to true, the value of the expr
             Note that the right hand expression is only evaluated if the left hand expression is false.
 */
 
-//syntax LogicAnd is left binary operator of precedence 1
+//syntax LogicAnd is left binary operator of precedence 3
 //    <Left: Expression> "and" <Right: Expression>
 //begin
 //    EvalAnd(Left, Right, output)
@@ -46,7 +46,7 @@ output:     If the operand expression evaluates to true, the value of the expres
             Otherwise, the value of the expression is true.
 */
 
-syntax LogicNot is prefix operator with precedence 1
+syntax LogicNot is prefix operator with precedence 3
     "not" <Operand: Expression>
 begin
     MCLogicEvalNot(Operand, output)
