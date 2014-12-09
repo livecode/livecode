@@ -120,6 +120,15 @@ extern MCCanvasColorRef kMCCanvasColorBlack;
 ////////////////////////////////////////////////////////////////////////////////
 // Canvas Errors
 
+extern MCTypeInfoRef kMCCanvasRectangleListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasPointListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasColorListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasScaleListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasTranslationListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasSkewListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasRadiiListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
+
 extern MCTypeInfoRef kMCCanvasSolidPaintTypeErrorTypeInfo;
 extern MCTypeInfoRef kMCCanvasPatternPaintTypeErrorTypeInfo;
 extern MCTypeInfoRef kMCCanvasGradientPaintTypeErrorTypeInfo;
