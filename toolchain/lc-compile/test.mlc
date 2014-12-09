@@ -7,8 +7,9 @@ public handler test()
     variable tDelimiter as string
     put newline into tDelimiter
 	
-	variable tVar
-	--put 0.5 into tVar
+	variable tNumber
+	put the abs of -5.5 into tNumber
+	testLog("Math", "ABS", tNumber is 5.5, tResults)
 	
 	-- test test
 	testLog("__Test", "Fail", false, tResults)
@@ -40,7 +41,7 @@ public handler test()
     testLogic(tResults)
     
 	--com.livecode.math
-	--testMath(tResults)
+	testMath(tResults)
 	
 	--com.livecode.sort
     testSort(tResults)
@@ -89,8 +90,59 @@ end handler
 
 public handler testMath(inout xResults as list)
 
-	--testLog("Math", "PowerOf", 3 ^ 4 = 81, xResults)
-	--testLog("Math", "Base10Log", the log of 1000 is 3, xResults)
+	testLog("Math", "PowerOf", 3 ^ 4 = 81, xResults)
+	testLog("Math", "Base10Log", the log of 1000 is 3, xResults)
+	
+	--testLog("Math", "Sin", the sin of pi / 2 is 1, xResults)
+	--testLog("Math", "Cos", the cos of pi is -1, xResults)
+	--testLog("Math", "Tan", the tan of pi / 4 is 1, xResults)
+
+	testLog("Math", "Exp", the exp of 3 > 20, xResults)
+	testLog("Math", "Exp", the exp of 3 < 20.1, xResults)
+	
+	testLog("Math", "Ln", the natural log of 55 > 4, xResults)
+	testLog("Math", "Ln", the natural log of 55 < 4.01, xResults)
+	
+	testLog("Math", "ExpLog", the abs of ((the natural log of the exp of 3) - 3) < 0.00000000001, xResults)
+	testLog("Math", "LogExp", the abs of ((the exp of the natural log of 80) - 80) < 0.00000000001, xResults)
+	
+	testLog("Math", "Trunc", the trunc of 5.5 is 5, xResults)
+	
+	testLog("Math", "Abs", the abs of 5.5 is 5.5, xResults)
+	testLog("Math", "Abs", the abs of -5.5 is 5.5, xResults)
+	
+	variable tNum
+	put any number into tNum
+	testLog("Math", "Random", tNum >= 0, xResults)
+	testLog("Math", "Random", tNum <= 1, xResults)
+	
+	testLog("Math", "Random", tNum is not any number, xResults)
+
+	variable tLeft as integer
+	variable tRight as integer
+	
+	put 4 into tLeft
+	put 5 into tRight
+	
+	testLog("Math", "Min", the min of 3 and 5 is 3, xResults)
+	testLog("Math", "Min", the min of 5.5 and 5.4 is 5.4, xResults)
+	
+	testLog("Math", "MinInt", the min of tLeft and tRight is tLeft, xResults)
+	testLog("Math", "MinInt", the min of tRight and tLeft is tLeft, xResults)
+	
+	testLog("Math", "Max", the max of 3 and 5 is 5, xResults)
+	testLog("Math", "Max", the max of 5.5 and 5.4 is 5.5, xResults)
+	
+	testLog("Math", "MaxInt", the max of tLeft and tRight is tRight, xResults)
+	testLog("Math", "MaxInt", the max of tRight and tLeft is tRight, xResults)
+
+	testLog("Math", "ConvertFromBase", ("6A" converted from base 16) is 106, xResults)
+	testLog("Math", "ConvertFromBase", ("1001010" converted from base 2) is 74, xResults)
+	
+	testLog("Math", "ConvertToBase", (7 converted to base 2) is "111", xResults)
+	testLog("Math", "ConvertToBase", (500 converted to base 12) is "358", xResults)
+	
+	testLog("Math", "ConvertFromBaseToBase", ("1122" converted from base 4 to base 14) is "66", xResults)
 
 end handler
 
@@ -443,6 +495,13 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "LessThanOrEqualToInt", not tLeft <= tRight, xResults)
 	testLog("Arithmetic", "LessThanOrEqualToNum", 1 <= 1, xResults)
 	testLog("Arithmetic", "LessThanOrEqualToNum", not 2 <= 1, xResults)
+    
+    testLog("Arithmetic", "CrossTypeComparison", tLeft > 5, xResults)
+    testLog("Arithmetic", "CrossTypeComparison", tLeftReal > 5, xResults)
+    testLog("Arithmetic", "CrossTypeComparison", tLeft >= 10, xResults)
+    testLog("Arithmetic", "CrossTypeComparison", tLeftReal >= 10, xResults)
+    testLog("Arithmetic", "CrossTypeComparison", tLeftReal <= tLeft, xResults)
+    testLog("Arithmetic", "CrossTypeComparison", tLeft <= tLeftReal, xResults)
 	
 end handler
 

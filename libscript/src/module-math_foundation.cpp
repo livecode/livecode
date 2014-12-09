@@ -26,7 +26,7 @@ void MCMathFoundationExecRoundUpReal(double& x_target)
     x_target = ceil(x_target - 0.5);
 }
 
-void MCMathFoundationExecRoundToNearestReal(double& x_target)
+extern "C" void MCMathFoundationExecRoundToNearestReal(double& x_target)
 {
 	if (x_target < 0.0)
         x_target = ceil(x_target - 0.5);
@@ -34,7 +34,7 @@ void MCMathFoundationExecRoundToNearestReal(double& x_target)
         x_target = floor(x_target + 0.5);
 }
 
-void MCMathFoundationExecRoundDownNumber(MCNumberRef& x_target)
+extern "C" void MCMathFoundationExecRoundDownNumber(MCNumberRef& x_target)
 {
     double t_target = MCNumberFetchAsReal(x_target);
     MCMathFoundationExecRoundDownReal(t_target);
@@ -43,7 +43,7 @@ void MCMathFoundationExecRoundDownNumber(MCNumberRef& x_target)
     MCNumberCreateWithReal(t_target, x_target);
 }
 
-void MCMathFoundationExecRoundUpNumber(MCNumberRef& x_target)
+extern "C" void MCMathFoundationExecRoundUpNumber(MCNumberRef& x_target)
 {
     double t_target = MCNumberFetchAsReal(x_target);
     MCMathFoundationExecRoundUpReal(t_target);
@@ -52,7 +52,7 @@ void MCMathFoundationExecRoundUpNumber(MCNumberRef& x_target)
     MCNumberCreateWithReal(t_target, x_target);
 }
 
-void MCMathFoundationExecRoundToNearestNumber(MCNumberRef& x_target)
+extern "C" void MCMathFoundationExecRoundToNearestNumber(MCNumberRef& x_target)
 {
     double t_target = MCNumberFetchAsReal(x_target);
     MCMathFoundationExecRoundToNearestReal(t_target);
@@ -61,30 +61,30 @@ void MCMathFoundationExecRoundToNearestNumber(MCNumberRef& x_target)
     MCNumberCreateWithReal(t_target, x_target);
 }
 
-void MCMathFoundationEvalFloorReal(double& x_target)
+extern "C" void MCMathFoundationEvalFloorReal(double p_target, double& r_output)
 {
-    x_target = floor(x_target);
+    r_output = floor(p_target);
 }
 
-void MCMathFoundationEvalCeilingReal(double& x_target)
+extern "C" void MCMathFoundationEvalCeilingReal(double p_target, double& r_output)
 {
-    x_target = ceil(x_target);
+    r_output = ceil(p_target);
 }
 
-void MCMathFoundationEvalFloorNumber(MCNumberRef& x_target)
+extern "C" void MCMathFoundationEvalFloorNumber(MCNumberRef p_target, MCNumberRef& r_output)
 {
-    double t_target = MCNumberFetchAsReal(x_target);
-    MCMathFoundationEvalFloorReal(t_target);
+    double t_target = MCNumberFetchAsReal(p_target);
+    MCMathFoundationEvalFloorReal(t_target, t_target);
     
-    MCValueRelease(x_target);
-    MCNumberCreateWithReal(t_target, x_target);
+    if (!MCNumberCreateWithReal(t_target, r_output))
+        return;
 }
 
-void MCMathFoundationEvalCeilingNumber(MCNumberRef& x_target)
+void MCMathFoundationEvalCeilingNumber(MCNumberRef p_target, MCNumberRef& r_output)
 {
-    double t_target = MCNumberFetchAsReal(x_target);
-    MCMathFoundationEvalCeilingReal(t_target);
+    double t_target = MCNumberFetchAsReal(p_target);
+    MCMathFoundationEvalCeilingReal(t_target, t_target);
     
-    MCValueRelease(x_target);
-    MCNumberCreateWithReal(t_target, x_target);
+    if (!MCNumberCreateWithReal(t_target, r_output))
+        return;
 }
