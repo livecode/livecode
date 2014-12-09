@@ -167,9 +167,17 @@ end syntax
 Summary:        Determines if a given element is in <Target>
 Needle:         Any expression.
 Target:         An expression which evaluates to a list.
-output:         Returns true if <Needle> can be found among the elements of <Target>, 
-                i.e. if there is an index i for which <Needle> is element i of <Target> 
-                would return true.
+output:         Returns true if <Needle> can be found among the elements of <Target>.
+
+Example:
+	variable tList as list
+	put [ "a", "b", "c", "d" ] into tList
+	
+	variable tIsIn as bool
+	put "a" is in tList into tIsIn -- tIsIn contains true
+
+Description:
+<Needle> must be an element of <Target> rather than a sublist, or contained within a list element of <Target>.
 */
                 
 syntax IsInElements is neutral binary operator with precedence 1
@@ -182,8 +190,21 @@ end syntax
 Summary:        Determines if <Target> contains <Needle> as a subsequence.
 Needle:         Any expression which evaluates to a list.
 Target:         An expression which evaluates to a list.
-output:         Returns true if the elements of <Needle> occur as a subsequence of the elements of <Target>,
-                and false otherwise.
+output:         Returns true if <Target> contains <Needle>.
+
+Example:
+	variable tList as list
+	put [ "a", "b", "c", "d" ] into tList
+	
+	variable tContains as bool
+	put tList contains tList[1] into tContains -- tContains is false
+	
+	put tList contains element 1 to 2 of tList into tContains -- tContains is true
+
+Description:
+<Target> contains <Needle> if and only if the elements of <Needle> occur as a subsequence of the elements of <Target>.
+
+>*Note:* Since "" is a subsequence of elements of every list, every list contains the empty list.
 */
                 
 syntax ContainsElements is neutral binary operator with precedence 1
@@ -199,9 +220,11 @@ end syntax
 Summary:            Designates the element at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to a list.
-output:             Either locates the element container at the given index for use as the target 
-                    container of another operation, or evaluates the element at the given index 
-                    as the source of another operation.
+
+Description:     
+Either locates the element container at the given index for use as the target container of another operation, or evaluates the element at the given index as the source of another operation.
+                                        
+>*Note:* It is an error if <Index> is out of range.
 */
 
 syntax SingletonElementOf is prefix operator with precedence 1
@@ -217,9 +240,11 @@ Summary:            Designates the element at index <Index> in <Target>.
 Synonym:            SingletonElementOf
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to a list.
-output:             Either locates the element container at the given index for use as the target
-                    container of another operation, or evaluates the element at the given index
-                    as the source of another operation.
+
+Description:     
+Either locates the element container at the given index for use as the target container of another operation, or evaluates the element at the given index as the source of another operation.
+                                        
+>*Note:* It is an error if <Index> is out of range.
 */
 
 syntax SingletonArrElementOf is postfix operator with precedence 1
@@ -236,9 +261,11 @@ Summary:            Designates the elements between indices <Start> and <Finish>
 Start:              An expression which evaluates to a valid integer index of <Target>.
 Finish:             An expression which evaluates to a valid integer index of <Target>.
 Target:             An expression which evaluates to binary data.
-output:             Either locates the element containers between the given indices for use as a 
-                    MCListSingle container for the target of another operation, or evaluates the elements
-                    between the given indices as a list.
+    
+Description:     
+Either locates the element containers between the given indices for use as a list container for the target of another operation, or evaluates the elements between the given indices as a list.
+                                        
+>*Note:* It is an error if either <Start> or <Finish> are out of range.
 */
 
 syntax RangeElementsOf is prefix operator with precedence 1
@@ -271,6 +298,7 @@ After executing
 	
 tVar is the element at index 5 of tList, and every subsequent element has its index incremented by 1.
 
+>*Note:* It is an error if <Index> is out of range.
 */
 syntax BeforeElementOf is prefix operator with precedence 1
     "before" "element" <Index: Expression> "of" <Target: Expression>
@@ -300,6 +328,7 @@ After executing
 	
 tVar is the element at index 6 of tList, and every subsequent element has its index incremented by 1.
 
+>*Note:* It is an error if <Index> is out of range.
 */
 
 syntax AfterElementOf is prefix operator with precedence 1
@@ -342,6 +371,8 @@ Description:
 Use the splice syntax to insert the elements of one list into another list. 
 
 >*Note:* ```put tList into element 1 to 3 of tList2``` results in the removal of elements 1 to 3 of tList2 and the insertion of tList **as an element**, i.e. tList2 becomes the list [tList,element 4 of tList2, element 5 of tList2 ...]
+
+>*Note:* It is an error if either <Start> or <Finish> is out of range.
 */
 
 syntax SpliceIntoRange is statement
@@ -380,6 +411,8 @@ Use the splice syntax to insert the elements of one list into another list.
 
 >*Note:* ```put tList into element 1 of tList2``` results in the removal of element 1 of tList2 and the insertion of tList **as an element**, i.e. tList2 becomes the list [tList,element 2 of tList2, element 3 of tList2 ...]
 
+>*Note:* It is an error if <Index> is out of range.
+
 */
 
 syntax SpliceIntoElement is statement
@@ -417,6 +450,7 @@ Use the splice syntax to insert the elements of one list into another list.
 
 >*Note:* ```put tList before element 2 of tList2``` results in the insertion of tList **as an element**, i.e. tList2 becomes the list [element 1 of tList2,tList,element 2 of tList2, element 3 of tList2 ...]
 
+>*Note:* It is an error if <Index> is out of range.
 */
 
 syntax SpliceBeforeElement is statement
@@ -454,6 +488,7 @@ Use the splice syntax to insert the elements of one list into another list.
 
 >*Note:* ```put tList after element 1 of tList2``` results in the insertion of tList **as an element**, i.e. tList2 becomes the list [element 1 of tList2,tList,element 2 of tList2, element 3 of tList2 ...]
 
+>*Note:* It is an error if <Index> is out of range.
 */
 
 syntax SpliceAfterElement is statement

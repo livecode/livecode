@@ -75,6 +75,7 @@ Example: 			get char 5 of tString // Evaluates char 5
 Description:
 Either locates the char at the given index for use as the target container of another operation, or evaluates the char at the given index as the source of another operation.
 
+>*Note:* It is an error if <Index> is out of range.
 */
 
 syntax SingletonCharOf is prefix operator with precedence 3
@@ -97,6 +98,8 @@ Example: 			get char 5 to 10 of tString // Evaluates chars 5 to 10
 
 Description:
 Either locates the chars between the given indices for use as the target container of another operation, or evaluates the chars at the given indices as the source of another operation.
+
+>*Note:* It is an error if either <Start> or <Finish> are out of range.
 
 */
 
@@ -274,9 +277,11 @@ end syntax
 Summary:            Determines whether <Source> contains <Needle>.
 Needle: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string.
-output:             True if the chars of <Needle> occur as a subsequence of the chars of <Source>, and false otherwise.
+output:             Returns true if <Source> contains <Needle>.
 
 Description:
+<Source> contains <Needle> if and only if the chars of <Needle> occur as a subsequence of the chars of <Source>.
+
 >*Note:* Since "" is a substring of every string, every string contains the empty string.
 
 */
@@ -293,9 +298,11 @@ end syntax
 Summary:            Determines whether <Source> begins with <Prefix>
 Prefix: 			An expression which evaluates to a string.
 Source: 			An expression which evaluates to a string.
-output:             Returns true if <Prefix> is an initial subsequence of the chars of <Source>.
+output:             Returns true if <Source> begins with <Prefix>.
 
 Description:
+<Source> begins with <Prefix> if and only if the chars of <Prefix> occur as an initial subsequence of the chars of <Source>.
+
 >*Note:* Since "" is an initial substring of every string, every string begins with the empty string.
 
 */
@@ -310,9 +317,11 @@ end syntax
 Summary:            Determines whether <Source> ends with <Suffix>
 Suffix: 			An expression which evaluates to a string.
 Source: 			An expression which evaluates to a string.
-output:             Returns true if <Suffix> is a final subsequence of the chars of <Source>.
+output:             Returns true if <Source> ends with <Suffix>.
 
 Description:
+<Source> ends with <Suffix> if and only if the chars of <Suffix> occur as a final subsequence of the chars of <Source>.
+
 >*Note:* Since "" is a final substring of every string, every string ends with the empty string.
 
 */
