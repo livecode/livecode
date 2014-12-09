@@ -43,6 +43,9 @@ public handler test()
 	--com.livecode.math
 	testMath(tResults)
 	
+	--com.livecode.mathfoundation
+	testMathFoundation(tResults)
+	
 	--com.livecode.sort
     testSort(tResults)
     
@@ -85,6 +88,29 @@ public handler boolWithSideEffect(in tResult as bool, inout tVar as string) as b
 end handler
 
 public handler testType(inout xResults as list)
+
+end handler
+
+public handler testMathFoundation(inout xResults as list)
+
+	variable tNum as number
+	variable tNumReal as double
+	put -5.5 into tNum
+	put 5.5 into tNumReal
+	
+	testLog("MathFoundation", "FloorNum", the floor of tNum is -6, xResults)
+	testLog("MathFoundation", "FloorReal", the floor of tNum is 5, xResults)
+	
+	testLog("MathFoundation", "CeilNum", the ceiling of tNum is -5, xResults)
+	testLog("MathFoundation", "CeilReal", the ceiling of tNum is 6, xResults)
+	
+	round tNum
+	round tNumReal
+	
+	testLog("MathFoundation", "RoundToNearestNum", tNum is -6, xResults)
+	testLog("MathFoundation", "RoundToNearestReal", tNumReal is 6, xResults)
+	
+	testLog("MathFoundation", "RoundedToNearest", the rounded of 4.5 is 5, xResults)
 
 end handler
 

@@ -36,6 +36,7 @@ extern builtin_module_descriptor __com_livecode_line_module_info;
 extern builtin_module_descriptor __com_livecode_list_module_info;
 extern builtin_module_descriptor __com_livecode_logic_module_info;
 extern builtin_module_descriptor __com_livecode_math_module_info;
+extern builtin_module_descriptor __com_livecode_mathfoundation_module_info;
 extern builtin_module_descriptor __com_livecode_segmentchunk_module_info;
 extern builtin_module_descriptor __com_livecode_sort_module_info;
 extern builtin_module_descriptor __com_livecode_string_module_info;
@@ -56,6 +57,7 @@ builtin_module_descriptor* g_builtin_modules[] =
     &__com_livecode_list_module_info,
     &__com_livecode_logic_module_info,
     &__com_livecode_math_module_info,
+    &__com_livecode_mathfoundation_module_info,
     //&__com_livecode_segmentchunk_module_info,
     &__com_livecode_sort_module_info,
     &__com_livecode_string_module_info,
@@ -74,6 +76,7 @@ extern void (*MCCharEvalNumberOfCharsIn)();
 extern void (*MCListEvalHeadOf)();
 extern void (*MCLogicEvalNot)();
 extern void (*MCMathEvalRealToPowerOfReal)();
+extern void (*MCMathFoundationExecRoundRealToNearest)();
 extern void (*MCSortExecSortListAscendingText)();
 extern void (*MCStringEvalConcatenate)();
 extern void (*MCTypeConvertExecSplitStringByDelimiter)();
@@ -90,6 +93,7 @@ void *g_builtin_ptrs[] =
     &MCListEvalHeadOf,
     &MCLogicEvalNot,
     &MCMathEvalRealToPowerOfReal,
+    &MCMathFoundationExecRoundRealToNearest,
     &MCSortExecSortListAscendingText,
     &MCStringEvalConcatenate,
     &MCTypeConvertExecSplitStringByDelimiter

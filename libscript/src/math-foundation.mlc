@@ -1,30 +1,28 @@
 module com.livecode.mathfoundation
 
---
-
 public foreign handler MCMathFoundationExecRoundRealToNearest(inout Target as double) as undefined binds to "<builtin>"
 public foreign handler MCMathFoundationExecRoundNumberToNearest(inout Target as number) as undefined binds to "<builtin>"
-public foreign handler MCMathFoundationEvalFloorOfReal(in Target as double, out Value as double) as undefined binds to "<builtin>"
-public foreign handler MCMathFoundationEvalFloorOfNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
-public foreign handler MCMathFoundationEvalCeilOfReal(in Target as double, out Value as double) as undefined binds to "<builtin>"
-public foreign handler MCMathFoundationEvalCeilOfNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathFoundationEvalRoundedRealToNearest(in Target as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalRoundedNumberToNearest(in Target as number, out Value as number) as undefined binds to "<builtin>"
+
+public foreign handler MCMathFoundationEvalFloorReal(in Target as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalFloorNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalCeilingReal(in Target as double, out Value as double) as undefined binds to "<builtin>"
+public foreign handler MCMathFoundationEvalCeilingNumber(in Target as number, out Value as number) as undefined binds to "<builtin>"
 
 --
 
-//public constant pi is 3.14159265358979323846
+//public constant pi = 3.14159265358979323846
 
 --
 
 /*
-Rounds towards zero for negative numbers.
+Summary:    Rounds <Target> to the nearest integer.
+Target:     An expression that evaluates to a numeric container.
 
-Summary:    Rounds <Target> to the nearest integer, i.e. the greatest integer less than 
-            or equal to <Target>, or the least integer greater than or equal to <Target> 
-            depending on which is closest.
-            If <Target> is exactly halfway between two integers, rounds to the one with greatest
-            absolute value.
-
-Target:     An expression that evaluates to a number.
+Description:
+Replaces <Target> with the greatest integer less than or equal to <Target>, or the least integer greater than or equal to <Target> depending on which is closest. If <Target> is exactly halfway between two integers, rounds to the one with greatest absolute value.
 
 */
 
@@ -33,6 +31,23 @@ syntax RoundToNearest is statement
 begin 
     MCMathFoundationExecRoundRealToNearest(Target)
     MCMathFoundationExecRoundNumberToNearest(Target)
+end syntax
+
+/*
+Summary:    Rounds <Target> to the nearest integer.
+Target:     An expression that evaluates to a number.
+output:		The rounded value of <Target>
+
+Description:
+Return the greatest integer less than or equal to <Target>, or the least integer greater than or equal to <Target> depending on which is closest. If <Target> is exactly halfway between two integers, returns the one with greatest absolute value.
+
+*/
+
+syntax RoundedToNearest is prefix operator with precedence 1
+    "the" "rounded" "of" <Target: Expression>
+begin 
+    MCMathFoundationEvalRoundedRealToNearest(Target, output)
+    MCMathFoundationEvalRoundedNumberToNearest(Target, output)
 end syntax
 
 --
@@ -48,8 +63,8 @@ output:     The greatest integer less than or equal to <Target>.
 syntax FloorOperator is prefix operator with precedence 1
     "the" "floor" "of" <Target: Expression>
 begin
-    MCMathFoundationEvalFloorOfReal(Target, output)
-    MCMathFoundationEvalFloorOfNumber(Target, output)
+    MCMathFoundationEvalFloorReal(Target, output)
+    MCMathFoundationEvalFloorNumber(Target, output)
 end syntax
 
 /* 
@@ -62,8 +77,8 @@ output:     The least integer greater than or equal to <Target>.
 syntax CeilOperator is prefix operator with precedence 1
     "the" "ceiling" "of" <Target: Expression>
 begin
-    MCMathFoundationEvalCeilOfReal(Target, output)
-    MCMathFoundationEvalCeilOfNumber(Target, output)
+    MCMathFoundationEvalCeilingReal(Target, output)
+    MCMathFoundationEvalCeilingNumber(Target, output)
 end syntax
 
 end module

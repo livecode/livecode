@@ -849,6 +849,7 @@
 				"$(SRCROOT)/../../engine/src/canvas.mlc",
 				"$(SRCROOT)/../../engine/src/widget.mlc",
 				"$(SRCROOT)/../../libscript/src/math.mlc",
+				"$(SRCROOT)/../../libscript/src/math-foundation.mlc",
 			);
 			name = Bootstrap;
 			outputPaths = (
