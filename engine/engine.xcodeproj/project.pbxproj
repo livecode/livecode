@@ -295,6 +295,7 @@
 		4D79B8991A36050800DD750C /* sysunxthreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B8981A3604F200DD750C /* sysunxthreads.cpp */; };
 		4D79B89B1A36055B00DD750C /* platform-recorder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B89A1A36054900DD750C /* platform-recorder.cpp */; };
 		4D79B89D1A36058300DD750C /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B89C1A36057400DD750C /* image_rep_densitymapped.cpp */; };
+		4D79B8AD1A37118900DD750C /* widget.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B8AA1A37104800DD750C /* widget.mlc */; };
 		4D7FA7BF1594E10500EEF440 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
 		4D7FA7C71594E17500EEF440 /* exec-datetime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */; };
 		4D81A4C411171F6B008AE3F1 /* objectprops.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C111171F6A008AE3F1 /* objectprops.cpp */; };
@@ -1915,6 +1916,7 @@
 		4D79B8981A3604F200DD750C /* sysunxthreads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxthreads.cpp; path = src/sysunxthreads.cpp; sourceTree = "<group>"; };
 		4D79B89A1A36054900DD750C /* platform-recorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-recorder.cpp"; path = "src/platform-recorder.cpp"; sourceTree = "<group>"; };
 		4D79B89C1A36057400DD750C /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
+		4D79B8AA1A37104800DD750C /* widget.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = widget.mlc; path = src/widget.mlc; sourceTree = "<group>"; };
 		4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../libfoundation/libfoundation.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-datetime.cpp"; path = "src/exec-datetime.cpp"; sourceTree = "<group>"; };
 		4D81A4C111171F6A008AE3F1 /* objectprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectprops.cpp; path = src/objectprops.cpp; sourceTree = "<group>"; };
@@ -3110,6 +3112,7 @@
 		4D79B7291A275A7C00DD750C /* Modules */ = {
 			isa = PBXGroup;
 			children = (
+				4D79B8AA1A37104800DD750C /* widget.mlc */,
 				4D79B7301A275ADE00DD750C /* canvas.mlc */,
 				4D79B72E1A275AA500DD750C /* module-canvas.cpp */,
 				E8A1AD001A27799B0078F401 /* module-canvas.h */,
@@ -5109,6 +5112,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D79B8AD1A37118900DD750C /* widget.mlc in Sources */,
 				4D79B89D1A36058300DD750C /* image_rep_densitymapped.cpp in Sources */,
 				4D79B89B1A36055B00DD750C /* platform-recorder.cpp in Sources */,
 				4D79B8991A36050800DD750C /* sysunxthreads.cpp in Sources */,

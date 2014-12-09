@@ -16,6 +16,9 @@
         -- which aren't bound correctly get assigned a meaning of 'error'.
         CheckBindings(Module)
         
+        -- Check that all the uses of syntax are appropriate to context.
+        CheckInvokes(Module)
+
         -- Check the syntax definitions are all correct.
         CheckSyntaxDefinitions(Module)
 
@@ -1069,6 +1072,264 @@
 
     'rule' SyntaxIsNullable(mark(_, _, _)):
         -- marks are nullable
+
+--------------------------------------------------------------------------------
+
+'var' IgnoredModulesList : NAMELIST
+
+'sweep' CheckInvokes(ANY)
+
+    'rule' CheckInvokes(MODULE'module(_, Kind, Name, _, Imports, Definitions)):
+        (|
+            ne(Kind, widget)
+            MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
+            MakeNameLiteral("com.livecode.widget" -> WidgetModuleName)
+            IgnoredModulesList <- namelist(CanvasModuleName, namelist(WidgetModuleName, nil))
+        ||
+            IgnoredModulesList <- nil
+        |)
+
+        CheckInvokes(Definitions)
+
+    'rule' CheckInvokes(STATEMENT'call(Position, Handler, Arguments)):
+        QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
+        CheckCallArguments(Position, Parameters, Arguments)
+
+    'rule' CheckInvokes(STATEMENT'invoke(Position, Info, Arguments)):
+        (|
+            IsInvokeAllowed(Info)
+            (|
+                ComputeInvokeSignature(execute, Info, Arguments -> Signature)
+                CheckInvokeArguments(Position, Signature, Arguments)
+            ||
+                Fatal_InternalInconsistency("No execute method for statement syntax")
+            |)
+        ||
+            Error_SyntaxNotAllowedInThisContext(Position)
+        |)
+        
+    'rule' CheckInvokes(STATEMENT'put(Position, Source, Target)):
+        CheckExpressionIsEvaluatable(Source)
+        CheckExpressionIsAssignable(Target)
+        
+    'rule' CheckInvokes(STATEMENT'repeatcounted(Position, Count, Body)):
+        CheckExpressionIsEvaluatable(Count)
+        CheckInvokes(Body)
+        
+    'rule' CheckInvokes(STATEMENT'repeatwhile(Position, Condition, Body)):
+        CheckExpressionIsEvaluatable(Condition)
+        CheckInvokes(Body)
+
+    'rule' CheckInvokes(STATEMENT'repeatuntil(Position, Condition, Body)):
+        CheckExpressionIsEvaluatable(Condition)
+        CheckInvokes(Body)
+
+    'rule' CheckInvokes(STATEMENT'repeatupto(Position, Slot, Start, Finish, Step, Body)):
+        CheckExpressionIsEvaluatable(Start)
+        CheckExpressionIsEvaluatable(Finish)
+        CheckExpressionIsEvaluatable(Step)
+        CheckInvokes(Body)
+
+    'rule' CheckInvokes(STATEMENT'repeatdownto(Position, Slot, Start, Finish, Step, Body)):
+        CheckExpressionIsEvaluatable(Start)
+        CheckExpressionIsEvaluatable(Finish)
+        CheckExpressionIsEvaluatable(Step)
+        CheckInvokes(Body)
+
+    'rule' CheckInvokes(STATEMENT'repeatforeach(Position, invoke(IteratorPosition, IteratorInvoke, IteratorArguments), Container, Body)):
+        (|
+            IsInvokeAllowed(IteratorInvoke)
+            (|
+                ComputeInvokeSignature(iterate, IteratorInvoke, IteratorArguments -> IteratorSignature)
+                CheckInvokeArguments(IteratorPosition, IteratorSignature, IteratorArguments)
+            ||
+                Fatal_InternalInconsistency("No iterate method for repeat for each syntax")
+            |)
+        ||
+            Error_SyntaxNotAllowedInThisContext(Position)
+        |)
+        CheckExpressionIsEvaluatable(Container)
+        CheckInvokes(Body)
+        
+    'rule' CheckInvokes(STATEMENT'return(Position, Value)):
+        [|
+            ne(Value, nil)
+            CheckExpressionIsEvaluatable(Value)
+        |]
+
+    'rule' CheckInvokes(STATEMENT'throw(Position, Error)):
+        CheckExpressionIsEvaluatable(Error)
+
+    'rule' CheckInvokes(EXPRESSION'call(Position, Handler, Arguments)):
+        QueryHandlerIdSignature(Handler -> signature(Parameters, ReturnType))
+        CheckCallArguments(Position, Parameters, Arguments)
+    
+    'rule' CheckInvokes(EXPRESSION'invoke(Position, Info, Arguments)):
+        (|
+            IsInvokeAllowed(Info)
+            (|
+                ComputeInvokeSignature(evaluate, Info, Arguments -> Signature)
+                CheckInvokeArguments(Position, Signature, Arguments)
+            ||
+                Error_NonEvaluatableExpressionUsedForInContext(Position)
+            |)
+        ||
+            Error_SyntaxNotAllowedInThisContext(Position)
+        |)
+
+    'rule' CheckInvokes(EXPRESSION'logicaland(Position, Left, Right)):
+        CheckExpressionIsEvaluatable(Left)
+        CheckExpressionIsEvaluatable(Right)
+
+    'rule' CheckInvokes(EXPRESSION'logicalor(Position, Left, Right)):
+        CheckExpressionIsEvaluatable(Left)
+        CheckExpressionIsEvaluatable(Right)
+
+
+'action' CheckCallArguments(POS, PARAMETERLIST, EXPRESSIONLIST)
+
+    'rule' CheckCallArguments(_, nil, nil):
+        -- done!
+
+    'rule' CheckCallArguments(Position, parameterlist(parameter(_, Mode, _, _), ParamRest), expressionlist(Argument, ArgRest)):
+        [|
+            ne(Mode, out)
+            CheckExpressionIsEvaluatable(Argument)
+        |]
+        [|
+            ne(Mode, in)
+            CheckExpressionIsAssignable(Argument)
+        |]
+        CheckCallArguments(Position, ParamRest, ArgRest)
+
+    'rule' CheckCallArguments(Position, nil, _):
+        Error_TooManyArgumentsPassedToHandler(Position)
+        
+    'rule' CheckCallArguments(Position, _, nil):
+        Error_TooFewArgumentsPassedToHandler(Position)
+
+'action' CheckInvokeArguments(POS, INVOKESIGNATURE, EXPRESSIONLIST)
+
+    'rule' CheckInvokeArguments(_, nil, _):
+        -- done!
+        
+    'rule' CheckInvokeArguments(Position, invokesignature(Mode, Index, SigTail), Arguments):
+        eq(Index, -1)
+        CheckInvokeArguments(Position, SigTail, Arguments)
+        
+    'rule' CheckInvokeArguments(Position, invokesignature(Mode, Index, SigTail), Arguments):
+        GetExpressionAtIndex(Arguments, Index -> Argument)
+        [|
+            ne(Mode, out)
+            CheckExpressionIsEvaluatable(Argument)
+        |]
+        [|
+            ne(Mode, in)
+            CheckExpressionIsAssignable(Argument)
+        |]
+        CheckInvokeArguments(Position, SigTail, Arguments)
+
+'action' CheckExpressionIsEvaluatable(EXPRESSION)
+
+    'rule' CheckExpressionIsEvaluatable(invoke(Position, Info, Arguments)):
+        (|
+            IsInvokeAllowed(Info)
+            (|
+                ComputeInvokeSignature(evaluate, Info, Arguments -> Signature)
+                CheckInvokeArguments(Position, Signature, Arguments)
+            ||
+                Error_NonEvaluatableExpressionUsedForInContext(Position)
+            |)
+        ||
+            Error_SyntaxNotAllowedInThisContext(Position)
+        |)
+        
+    'rule' CheckExpressionIsEvaluatable(_):
+        -- everything else can be evaluated
+        
+'action' CheckExpressionIsAssignable(EXPRESSION)
+
+    'rule' CheckExpressionIsAssignable(invoke(Position, Info, Arguments)):
+        (|
+            IsInvokeAllowed(Info)
+            (|
+                ComputeInvokeSignature(assign, Info, Arguments -> Signature)
+                CheckInvokeArguments(Position, Signature, Arguments)
+            ||
+                Error_NonAssignableExpressionUsedForOutContext(Position)
+            |)
+        ||
+            Error_SyntaxNotAllowedInThisContext(Position)
+        |)
+        
+    'rule' CheckExpressionIsAssignable(slot(_, _)):
+        -- variables are assignable
+        
+    'rule' CheckExpressionIsAssignable(Expr):
+        -- everything else is not
+        GetExpressionPosition(Expr -> Position)
+        Error_NonAssignableExpressionUsedForOutContext(Position)
+
+'condition' IsInvokeAllowed(INVOKELIST)
+    'rule' IsInvokeAllowed(invokelist(Head, _)):
+        IsInvokeModuleAllowed(Head)
+    'rule' IsInvokeAllowed(invokelist(_, Tail)):
+        IsInvokeAllowed(Tail)
+
+'condition' IsInvokeModuleAllowed(INVOKEINFO)
+    'rule' IsInvokeModuleAllowed(Info):
+        Info'ModuleName -> NameString
+        MakeNameLiteral(NameString -> Name)
+        IgnoredModulesList -> Modules
+        IsNameNotInList(Name, Modules)
+
+'condition' ComputeInvokeSignature(INVOKEMETHODTYPE, INVOKELIST, EXPRESSIONLIST -> INVOKESIGNATURE)
+
+    'rule' ComputeInvokeSignature(Type, invokelist(Head, Tail), Arguments -> Signature)
+        IsInvokeModuleAllowed(Head)
+        Head'Methods -> Methods
+        (|
+            ComputeInvokeSignatureForMethods(Type, Methods, Arguments -> Signature)
+        ||
+            ComputeInvokeSignature(Type, Tail, Arguments -> Signature)
+        |)
+        
+'condition' ComputeInvokeSignatureForMethods(INVOKEMETHODTYPE, INVOKEMETHODLIST, EXPRESSIONLIST -> INVOKESIGNATURE)
+
+    'rule' ComputeInvokeSignatureForMethods(WantType, methodlist(_, IsType, Signature, Tail), Arguments -> OutSig):
+        (|
+            eq(WantType, IsType)
+            AreAllArgumentsDefinedForInvokeMethod(Arguments, Signature)
+            CountDefinedArguments(Arguments -> ArgCount)
+            CountInvokeParameters(Signature -> ParamCount)
+            eq(ArgCount, ParamCount)
+            where(Signature -> OutSig)
+        ||
+            ComputeInvokeSignatureForMethods(WantType, Tail, Arguments -> OutSig)
+        |)
+
+'condition' AreAllArgumentsDefinedForInvokeMethod(EXPRESSIONLIST, INVOKESIGNATURE)
+'action' CountInvokeParameters(INVOKESIGNATURE -> INT)
+'action' CountDefinedArguments(EXPRESSIONLIST -> INT)
+'action' GetExpressionAtIndex(EXPRESSIONLIST, INT -> EXPRESSION)
+'condition' IsNameNotInList(NAME, NAMELIST)
+
+'action' GetExpressionPosition(EXPRESSION -> POS)
+    'rule' GetExpressionPosition(undefined(Position) -> Position):
+    'rule' GetExpressionPosition(true(Position) -> Position):
+    'rule' GetExpressionPosition(false(Position) -> Position):
+    'rule' GetExpressionPosition(integer(Position, _) -> Position):
+    'rule' GetExpressionPosition(real(Position, _) -> Position):
+    'rule' GetExpressionPosition(string(Position, _) -> Position):
+    'rule' GetExpressionPosition(slot(Position, _) -> Position):
+    'rule' GetExpressionPosition(logicaland(Position, _, _) -> Position):
+    'rule' GetExpressionPosition(logicalor(Position, _, _) -> Position):
+    'rule' GetExpressionPosition(as(Position, _, _) -> Position):
+    'rule' GetExpressionPosition(list(Position, _) -> Position):
+    'rule' GetExpressionPosition(call(Position, _, _) -> Position):
+    'rule' GetExpressionPosition(invoke(Position, _, _) -> Position):
+    'rule' GetExpressionPosition(nil -> Position)
+        GetUndefinedPosition(-> Position)
 
 --------------------------------------------------------------------------------
 

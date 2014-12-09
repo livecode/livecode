@@ -80,6 +80,9 @@ struct MCCArray
 bool MCCanvasModuleInitialize();
 void MCCanvasModuleFinalize();
 
+void MCCanvasPush(MCGContextRef gcontext);
+void MCCanvasPop(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Type Definitions
 
@@ -156,6 +159,22 @@ extern MCCanvasTransformRef kMCCanvasIdentityTransform;
 extern MCCanvasColorRef kMCCanvasColorBlack;
 
 ////////////////////////////////////////////////////////////////////////////////
+// Canvas Errors
+
+extern MCTypeInfoRef kMCCanvasRectangleListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasPointListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasColorListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasScaleListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasTranslationListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasSkewListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasRadiiListFormatErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
+
+extern MCTypeInfoRef kMCCanvasSolidPaintTypeErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasPatternPaintTypeErrorTypeInfo;
+extern MCTypeInfoRef kMCCanvasGradientPaintTypeErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool MCCanvasRectangleCreateWithMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectangleRef &r_rectangle);
 void MCCanvasRectangleGetMCGRectangle(MCCanvasRectangleRef p_rectangle, MCGRectangle &r_rect);
@@ -183,7 +202,7 @@ bool MCCanvasGradientCreateWithRamp(integer_t p_type, MCProperListRef p_ramp, MC
 bool MCCanvasPathCreateWithMCGPath(MCGPathRef p_path, MCCanvasPathRef &r_path);
 MCGPathRef MCCanvasPathGetMCGPath(MCCanvasPathRef p_path);
 
-bool MCCanvasGraphicEffectCreateWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
+bool MCCanvasEffectCreateWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
 
 
 extern "C" bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas);
@@ -432,12 +451,12 @@ extern "C" void MCCanvasPathClosePath(MCCanvasPathRef &x_path);
 // Effect
 
 // Constructors
-extern "C" void MCCanvasGraphicEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
+extern "C" void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
 
 // Properties
-extern "C" void MCCanvasGraphicEffectGetTypeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_type);
-extern "C" void MCCanvasGraphicEffectGetColor(MCCanvasEffectRef p_effect, MCCanvasColorRef &r_color);
-extern "C" void MCCanvasGraphicEffectSetColor(MCCanvasColorRef p_color, MCCanvasEffectRef &x_effect);
+extern "C" void MCCanvasEffectGetTypeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_type);
+extern "C" void MCCanvasEffectGetColor(MCCanvasEffectRef p_effect, MCCanvasColorRef &r_color);
+extern "C" void MCCanvasEffectSetColor(MCCanvasColorRef p_color, MCCanvasEffectRef &x_effect);
 extern "C" void MCCanvasEffectGetBlendModeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_blend_mode);
 extern "C" void MCCanvasEffectSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasEffectRef &x_effect);
 extern "C" void MCCanvasEffectGetOpacity(MCCanvasEffectRef p_effect, MCCanvasFloat &r_opacity);
@@ -457,45 +476,45 @@ extern "C" void MCCanvasEffectSetAngle(MCCanvasFloat p_angle, MCCanvasEffectRef 
 
 // Properties
 extern "C" void MCCanvasGetPaint(MCCanvasRef p_canvas, MCCanvasPaintRef &r_paint);
-extern "C" void MCCanvasSetPaint(MCCanvasPaintRef p_paint, MCCanvasRef &x_canvas);
+extern "C" void MCCanvasSetPaint(MCCanvasPaintRef p_paint, MCCanvasRef p_canvas);
 extern "C" void MCCanvasGetFillRuleAsString(MCCanvasRef p_canvas, MCStringRef &r_string);
-extern "C" void MCCanvasSetFillRuleAsString(MCStringRef p_string, MCCanvasRef &x_canvas);
+extern "C" void MCCanvasSetFillRuleAsString(MCStringRef p_string, MCCanvasRef p_canvas);
 extern "C" void MCCanvasGetAntialias(MCCanvasRef p_canvas, bool &r_antialias);
-extern "C" void MCCanvasSetAntialias(bool p_antialias, MCCanvasRef &x_canvas);
+extern "C" void MCCanvasSetAntialias(bool p_antialias, MCCanvasRef p_canvas);
 extern "C" void MCCanvasGetOpacity(MCCanvasRef p_canvas, MCCanvasFloat &r_opacity);
-extern "C" void MCCanvasSetOpacity(MCCanvasFloat p_opacity, MCCanvasRef &x_canvas);
+extern "C" void MCCanvasSetOpacity(MCCanvasFloat p_opacity, MCCanvasRef p_canvas);
 extern "C" void MCCanvasGetBlendModeAsString(MCCanvasRef p_canvas, MCStringRef &r_blend_mode);
-extern "C" void MCCanvasSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasRef &x_canvas);
+extern "C" void MCCanvasSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasRef p_canvas);
 extern "C" void MCCanvasGetStippled(MCCanvasRef p_canvas, bool &r_stippled);
-extern "C" void MCCanvasSetStippled(bool p_stippled, MCCanvasRef &x_canvas);
+extern "C" void MCCanvasSetStippled(bool p_stippled, MCCanvasRef p_canvas);
 extern "C" void MCCanvasGetImageResizeQualityAsString(MCCanvasRef p_canvas, MCStringRef &r_quality);
-extern "C" void MCCanvasSetImageResizeQualityAsString(MCStringRef p_quality, MCCanvasRef &x_canvas);
+extern "C" void MCCanvasSetImageResizeQualityAsString(MCStringRef p_quality, MCCanvasRef p_canvas);
 
 // Operations
-extern "C" void MCCanvasCanvasTransform(MCCanvasRef &x_canvas, MCCanvasTransformRef p_transform);
-extern "C" void MCCanvasCanvasScale(MCCanvasRef &x_canvas, MCCanvasFloat p_scale_x, MCCanvasFloat p_scale_y);
-extern "C" void MCCanvasCanvasScaleWithList(MCCanvasRef &x_canvas, MCProperListRef p_scale);
-extern "C" void MCCanvasCanvasRotate(MCCanvasRef &x_canvas, MCCanvasFloat p_angle);
-extern "C" void MCCanvasCanvasTranslate(MCCanvasRef &x_canvas, MCCanvasFloat p_x, MCCanvasFloat p_y);
-extern "C" void MCCanvasCanvasTranslateWithList(MCCanvasRef &x_canvas, MCProperListRef p_translation);
-extern "C" void MCCanvasCanvasSaveState(MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasRestore(MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasBeginLayer(MCCanvasRef &x_canvas);
+extern "C" void MCCanvasTransform(MCCanvasRef p_canvas, MCCanvasTransformRef p_transform);
+extern "C" void MCCanvasScale(MCCanvasRef p_canvas, MCCanvasFloat p_scale_x, MCCanvasFloat p_scale_y);
+extern "C" void MCCanvasScaleWithList(MCCanvasRef p_canvas, MCProperListRef p_scale);
+extern "C" void MCCanvasRotate(MCCanvasRef p_canvas, MCCanvasFloat p_angle);
+extern "C" void MCCanvasTranslate(MCCanvasRef p_canvas, MCCanvasFloat p_x, MCCanvasFloat p_y);
+extern "C" void MCCanvasTranslateWithList(MCCanvasRef p_canvas, MCProperListRef p_translation);
+extern "C" void MCCanvasSaveState(MCCanvasRef p_canvas);
+extern "C" void MCCanvasRestore(MCCanvasRef p_canvas);
+extern "C" void MCCanvasBeginLayer(MCCanvasRef p_canvas);
 // TODO - work out effect area rect
-extern "C" void MCCanvasCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRectangleRef p_rect, MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasEndLayer(MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasFill(MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasFillPath(MCCanvasPathRef p_path, MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasStroke(MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasStrokePath(MCCanvasPathRef p_path, MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasClipToRect(MCCanvasRectangleRef p_rect, MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasAddPath(MCCanvasPathRef p_path, MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasDrawRectOfImage(MCCanvasRectangleRef p_src_rect, MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasMoveTo(MCCanvasPointRef p_point, MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasLineTo(MCCanvasPointRef p_point, MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to, MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasRef &x_canvas);
-extern "C" void MCCanvasCanvasClosePath(MCCanvasRef &x_canvas);
+extern "C" void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas);
+extern "C" void MCCanvasEndLayer(MCCanvasRef p_canvas);
+extern "C" void MCCanvasFill(MCCanvasRef p_canvas);
+extern "C" void MCCanvasFillPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas);
+extern "C" void MCCanvasStroke(MCCanvasRef p_canvas);
+extern "C" void MCCanvasStrokePath(MCCanvasPathRef p_path, MCCanvasRef p_canvas);
+extern "C" void MCCanvasClipToRect(MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas);
+extern "C" void MCCanvasAddPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas);
+extern "C" void MCCanvasDrawRectOfImage(MCCanvasRectangleRef p_src_rect, MCCanvasImageRef p_image, MCCanvasRectangleRef p_dst_rect, MCCanvasRef p_canvas);
+extern "C" void MCCanvasMoveTo(MCCanvasPointRef p_point, MCCanvasRef p_canvas);
+extern "C" void MCCanvasLineTo(MCCanvasPointRef p_point, MCCanvasRef p_canvas);
+extern "C" void MCCanvasCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef p_to, MCCanvasRef p_canvas);
+extern "C" void MCCanvasCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasRef p_canvas);
+extern "C" void MCCanvasClosePath(MCCanvasRef p_canvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 

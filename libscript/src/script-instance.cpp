@@ -539,13 +539,16 @@ static inline uindex_t MCScriptBytecodeDecodeArgument(byte_t*& x_bytecode_ptr)
 {
     uindex_t t_value;
     t_value = 0;
+    int t_shift;
+    t_shift = 0;
     for(;;)
     {
         byte_t t_next;
         t_next = *x_bytecode_ptr++;
-        t_value = (t_value << 7) | (t_next & 0x7f);
+        t_value |= (t_next & 0x7f) << t_shift;
         if ((t_next & 0x80) == 0)
             break;
+        t_shift += 7;
     }
     return t_value;
 }
@@ -662,7 +665,7 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
     
     if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_arity)
-        return MCScriptThrowWrongNumberOfArgumentsForInvokeError(x_frame -> instance -> module, x_frame -> address, p_handler, p_arity - 1);
+        return MCScriptThrowWrongNumberOfArgumentsForInvokeError(x_frame -> instance -> module, x_frame -> address, p_handler, p_arity);
     
     for(uindex_t i = 0; i < p_arity; i++)
     {
@@ -1311,6 +1314,26 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
     
     if (t_min_score_def != NULL)
         return MCScriptPerformInvoke(x_frame, x_next_bytecode, t_min_score_inst, t_min_score_def, p_arguments, p_arity);
+    
+    MCLog("Failed to choose multimethod for arguments:", 0);
+    for(uindex_t i = 0; i < p_arity - 1; i++)
+        MCLog("  %d as %@", i, MCNamedTypeInfoGetName(MCValueGetTypeInfo(MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i + 1]))));
+    MCLog("Methods:", 0);
+    for(uindex_t i = 0; i < t_group -> handler_count; i++)
+    {
+        MCScriptInstanceRef t_instance;
+        MCScriptDefinition *t_definition;
+        MCScriptResolveDefinitionInFrame(x_frame, t_group -> handlers[i], t_instance, t_definition);
+        
+        uindex_t t_type_index;
+        if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
+        {
+            MCScriptForeignHandlerDefinition *t_def;
+            t_def = static_cast<MCScriptForeignHandlerDefinition *>(t_definition);
+            t_type_index = t_def -> type;
+            MCLog("  %@", t_def -> binding);
+        }
+    }
     
     return MCErrorThrowGeneric(); //MCScriptThrowAmbiguousHandlerGroupInvocation();
 }

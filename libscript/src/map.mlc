@@ -1,4 +1,4 @@
-module com.livecode.map
+//module com.livecode.map
 
 public foreign handler EvalKeysOf(in Target as array, out Value as list) as undefined binds to "<builtin>"
 public foreign handler EvalElementsOf(in Target as array, out Value as list) as undefined binds to "<builtin>"

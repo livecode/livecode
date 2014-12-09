@@ -102,7 +102,7 @@ output:     Returns false if the result of evaluating <Left> is the same as that
 
 */
 
-syntax IsNotEqualTo is neutral binary operator with precedence 1
+syntax IsNotEqualTo is neutral binary operator with precedence 5
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCBinaryEvalIsNotEqualTo(Left, Right, output)

@@ -185,6 +185,7 @@ Example: 			get byte 5 of tData // Evaluates byte 5
 Description:
 Either locates the byte at the given index for use as the target container of another operation, or evaluates the byte at the given index as the source of another operation.
 
+>*Note:* It is an error if <Index> is out of range.
 */
 
 syntax SingletonByteOf is prefix operator with precedence 1
@@ -208,6 +209,7 @@ Example: 			get byte 5 to 10 of tData // Evaluates bytes 5 to 10
 Description:
 Either locates the bytes between the given indices for use as the target container of another operation, or evaluates the bytes at the given indices as the source of another operation.
 
+>*Note:* It is an error if either <Start> or <Finish> are out of range.
 */
 
 syntax RangeByteOf is prefix operator with precedence 1
@@ -215,43 +217,6 @@ syntax RangeByteOf is prefix operator with precedence 1
 begin
 	FetchByteRangeOf(Start, Finish, Target, output)
 	StoreByteRangeOf(input, Start, Finish, Target)
-end syntax
-
---
-
-/* 
-Summary:			Designates the location beween byte <Index> - 1 and <Index> of <Target>
-
-Index:				An expression which evaluates to a valid integer index of <Target>.
-Target:				An expression which evaluates to binary data.
-
-Description:
-Use with the put statement to insert bytes in the specified location without removal. 
-
-*/
-
-syntax BeforeByteOf is prefix operator with precedence 1
-    "before" "byte" <Index: Expression> "of" <Target: Expression>
-begin
-    StoreBeforeByteOf(input, Index, Target)
-end syntax
-
-
-/* 
-Summary:			Designates the location beween byte <Index> and <Index> + 1 of <Target>
-
-Index:				An expression which evaluates to a valid integer index of <Target>.
-Target:				An expression which evaluates to binary data.
-
-Description:
-Use with the put statement to insert bytes in the specified location without removal. 
-
-*/
-
-syntax AfterByteOf is prefix operator with precedence 1
-    "after" "byte" <Index: Expression> "of" <Target: Expression>
-begin
-    StoreAfterByteOf(input, Index, Target)
 end syntax
 
 --

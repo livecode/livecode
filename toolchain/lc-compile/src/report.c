@@ -144,7 +144,11 @@ DEFINE_ERROR(HandlersBoundToSyntaxMustBePublic, "Handlers bound to syntax rules 
 
 DEFINE_ERROR(IterateSyntaxMethodMustReturnBoolean, "Iterate syntax methods must return bool or boolean")
 DEFINE_ERROR(PhraseSyntaxMethodMustReturnAValue, "Phrase syntax methods must return a value")
-             
+
+DEFINE_ERROR(NonAssignableExpressionUsedForOutContext, "Non-container expression used for out context")
+DEFINE_ERROR(NonEvaluatableExpressionUsedForInContext, "Non-evaluatable expression used for in context")
+DEFINE_ERROR(SyntaxNotAllowedInThisContext, "This syntax is not allowed for this module type")
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void yyerror(const char *p_text)

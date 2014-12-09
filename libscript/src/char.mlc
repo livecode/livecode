@@ -75,6 +75,7 @@ Example: 			get char 5 of tString // Evaluates char 5
 Description:
 Either locates the char at the given index for use as the target container of another operation, or evaluates the char at the given index as the source of another operation.
 
+>*Note:* It is an error if <Index> is out of range.
 */
 
 syntax SingletonCharOf is prefix operator with precedence 3
@@ -97,6 +98,8 @@ Example: 			get char 5 to 10 of tString // Evaluates chars 5 to 10
 
 Description:
 Either locates the chars between the given indices for use as the target container of another operation, or evaluates the chars at the given indices as the source of another operation.
+
+>*Note:* It is an error if either <Start> or <Finish> are out of range.
 
 */
 
@@ -123,62 +126,6 @@ syntax CharIsIn is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Source: Expression>
 begin
     MCCharEvalIsAmongTheCharsOf(Needle, Source, output)
-end syntax
-
---
-
-/* 
-Summary:			Designates the location beween char <Index> - 1 and <Index> of <Target>
-
-Index:				An expression which evaluates to a valid integer index of <Target>.
-Target:				An expression which evaluates to a string.
-
-Example:
-	variable tVar as string
-	put "This is false" into tVar
-	put "sentence " before char 6 of tVar -- tVar contains "This sentence is false"
-
-Description:
-Use with the put statement to insert a string in the specified location without removal. 
-
-*/
-
-syntax BeforeCharOf is prefix operator with precedence 1
-    "before" "char" <Index: Expression> "of" <Target: Expression>
-begin
-    MCCharStoreBeforeCharOf(input, Index, Target)
-end syntax
-
-/* 
-Summary:			Designates the location beween char <Index> and <Index> + 1 of <Target>
-
-Index:				An expression which evaluates to a valid integer index of <Target>.
-Target:				An expression which evaluates to a string.
-
-Example:
-	variable tVar as string
-	put "123" into tVar
-	
-	variable tCount
-	put the number of chars in tVar into tCount
-	subtract 1 from tCount
-	
-	repeat tCount times
-		put "," after char tCount of tVar
-		subtract 1 from tCount
-	end repeat 	
-	
-	// tVar contains 1,2,3
-
-Description:
-Use with the put statement to insert a string in the specified location without removal. 
-
-*/
-
-syntax AfterCharOf is prefix operator with precedence 1
-    "after" "char" <Index: Expression> "of" <Target: Expression>
-begin
-    MCCharStoreAfterCharOf(input, Index, Target)
 end syntax
 
 --
@@ -274,9 +221,11 @@ end syntax
 Summary:            Determines whether <Source> contains <Needle>.
 Needle: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string.
-output:             True if the chars of <Needle> occur as a subsequence of the chars of <Source>, and false otherwise.
+output:             Returns true if <Source> contains <Needle>.
 
 Description:
+<Source> contains <Needle> if and only if the chars of <Needle> occur as a subsequence of the chars of <Source>.
+
 >*Note:* Since "" is a substring of every string, every string contains the empty string.
 
 */
@@ -293,9 +242,11 @@ end syntax
 Summary:            Determines whether <Source> begins with <Prefix>
 Prefix: 			An expression which evaluates to a string.
 Source: 			An expression which evaluates to a string.
-output:             Returns true if <Prefix> is an initial subsequence of the chars of <Source>.
+output:             Returns true if <Source> begins with <Prefix>.
 
 Description:
+<Source> begins with <Prefix> if and only if the chars of <Prefix> occur as an initial subsequence of the chars of <Source>.
+
 >*Note:* Since "" is an initial substring of every string, every string begins with the empty string.
 
 */
@@ -310,9 +261,11 @@ end syntax
 Summary:            Determines whether <Source> ends with <Suffix>
 Suffix: 			An expression which evaluates to a string.
 Source: 			An expression which evaluates to a string.
-output:             Returns true if <Suffix> is a final subsequence of the chars of <Source>.
+output:             Returns true if <Source> ends with <Suffix>.
 
 Description:
+<Source> ends with <Suffix> if and only if the chars of <Suffix> occur as a final subsequence of the chars of <Source>.
+
 >*Note:* Since "" is a final substring of every string, every string ends with the empty string.
 
 */

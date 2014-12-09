@@ -45,10 +45,13 @@
 
 #include "widget-events.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
+void MCCanvasPop(uintptr_t p_cookie);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGContextRef MCwidgetcontext;
 MCWidget *MCwidgetobject;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -605,13 +608,19 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 	}
 
-	MCwidgetcontext = ((MCGraphicsContext *)dc) -> getgcontextref();
-	MCGContextSave(MCwidgetcontext);
-	MCGContextSetShouldAntialias(MCwidgetcontext, true);
-	MCGContextTranslateCTM(MCwidgetcontext, rect . x, rect . y);
+    MCGContextRef t_gcontext;
+    t_gcontext = ((MCGraphicsContext *)dc) -> getgcontextref();
+    
+	MCGContextSave(t_gcontext);
+	MCGContextSetShouldAntialias(t_gcontext, true);
+	MCGContextTranslateCTM(t_gcontext, rect . x, rect . y);
+    
+    uintptr_t t_cookie;
+    MCCanvasPush(t_gcontext, t_cookie);
     MCwidgeteventmanager->event_draw(this, dc, dirty, p_isolated, p_sprite);
-	MCGContextRestore(MCwidgetcontext);
-	MCwidgetcontext = nil;
+    MCCanvasPop(t_cookie);
+    
+	MCGContextRestore(t_gcontext);
 	
 	if (!p_isolated)
 	{
@@ -739,6 +748,8 @@ void MCWidget::OnPaint(MCDC* p_dc, const MCRectangle& p_rect)
 {
     if (m_native_layer)
         m_native_layer->OnPaint(p_dc, p_rect);
+    else
+        CallHandler(MCNAME("OnPaint"), nil, 0);
     
     g_widget_paint_dc = p_dc;
     CallHandler(MCNAME("OnPaint"), nil, 0);
@@ -1195,18 +1206,12 @@ void MCWidget::GetKind(MCExecContext& ctxt, MCNameRef& r_kind)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Because... stupidity
-#include "text-api.h"
-
-void* foo1 = (void*)&MCTextPaneCreate;
-void* foo2 = (void*)&MCTextPaneSetContentsPlain;
-void* foo3 = (void*)&MCTextPaneSet;
-void* foo4 = (void*)&MCTextPaneGet;
-void* foo5 = (void*)&MCTextPanePaintShim;
-
-extern "C" MC_DLLEXPORT void MCWidgetRedraw()
+extern "C" void MCWidgetExecRedrawAll(void)
 {
-    MCwidgetobject->Redraw();
+    if (MCwidgetobject == nil)
+        return; // TODO - throw an error.
+    
+    MCwidgetobject -> layer_redrawall();
 }
 
-
+////////////////////////////////////////////////////////////////////////////////

@@ -255,6 +255,9 @@
     Error_IterateSyntaxMethodArgumentsDontConform
     Error_IterateSyntaxMethodMustReturnBoolean
     Error_PhraseSyntaxMethodMustReturnAValue
+    Error_NonAssignableExpressionUsedForOutContext
+    Error_NonEvaluatableExpressionUsedForInContext
+    Error_SyntaxNotAllowedInThisContext
 
 --------------------------------------------------------------------------------
 
@@ -548,6 +551,10 @@
 'action' Error_NotBoundToAHandler(Position: POS, Name: NAME)
 'action' Error_NotBoundToAVariable(Position: POS, Name: NAME)
 'action' Error_NotBoundToAVariableOrHandler(Position: POS, Name: NAME)
+
+'action' Error_NonAssignableExpressionUsedForOutContext(Position: POS)
+'action' Error_NonEvaluatableExpressionUsedForInContext(Position: POS)
+'action' Error_SyntaxNotAllowedInThisContext(Position: POS)
 
 'action' Error_TooManyArgumentsPassedToHandler(Position: POS)
 'action' Error_TooFewArgumentsPassedToHandler(Position: POS)

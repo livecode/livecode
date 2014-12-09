@@ -1,0 +1,11 @@
+module com.livecode.widget
+
+public foreign handler MCWidgetExecRedrawAll() as undefined binds to "<builtin>"
+
+syntax RedrawAll is statement
+  "redraw" "all"
+begin
+  MCWidgetExecRedrawAll()
+end syntax
+
+end module
