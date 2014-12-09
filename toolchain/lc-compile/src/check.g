@@ -1136,8 +1136,18 @@
         CheckExpressionIsEvaluatable(Step)
         CheckInvokes(Body)
 
-    'rule' CheckInvokes(STATEMENT'repeatforeach(Position, Iterator, Container, Body)):
-        CheckExpressionIsEvaluatable(Iterator)
+    'rule' CheckInvokes(STATEMENT'repeatforeach(Position, invoke(IteratorPosition, IteratorInvoke, IteratorArguments), Container, Body)):
+        (|
+            IsInvokeAllowed(IteratorInvoke)
+            (|
+                ComputeInvokeSignature(iterate, IteratorInvoke, IteratorArguments -> IteratorSignature)
+                CheckInvokeArguments(IteratorPosition, IteratorSignature, IteratorArguments)
+            ||
+                Fatal_InternalInconsistency("No iterate method for repeat for each syntax")
+            |)
+        ||
+            Error_SyntaxNotAllowedInThisContext(Position)
+        |)
         CheckExpressionIsEvaluatable(Container)
         CheckInvokes(Body)
         
