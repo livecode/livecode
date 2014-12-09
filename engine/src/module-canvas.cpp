@@ -3643,7 +3643,7 @@ __MCCanvasEffectImpl *MCCanvasEffectGet(MCCanvasEffectRef p_effect)
 
 // Constructors
 
-void MCCanvasGraphicEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect)
+void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect)
 {
 	// TODO - defaults for missing properties?
 	bool t_success;
@@ -3753,17 +3753,17 @@ bool MCCanvasEffectHasDistanceAndAngle(MCCanvasEffectType p_type)
 	return p_type == kMCCanvasEffectTypeInnerShadow || p_type == kMCCanvasEffectTypeOuterShadow;
 }
 
-void MCCanvasGraphicEffectGetTypeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_type)
+void MCCanvasEffectGetTypeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_type)
 {
 	/* UNCHECKED */ MCCanvasEffectTypeToString(MCCanvasEffectGet(p_effect)->type, r_type);
 }
 
-void MCCanvasGraphicEffectGetColor(MCCanvasEffectRef p_effect, MCCanvasColorRef &r_color)
+void MCCanvasEffectGetColor(MCCanvasEffectRef p_effect, MCCanvasColorRef &r_color)
 {
 	r_color = MCValueRetain(MCCanvasEffectGet(p_effect)->color);
 }
 
-void MCCanvasGraphicEffectSetColor(MCCanvasColorRef p_color, MCCanvasEffectRef &x_effect)
+void MCCanvasEffectSetColor(MCCanvasColorRef p_color, MCCanvasEffectRef &x_effect)
 {
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);

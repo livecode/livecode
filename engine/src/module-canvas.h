@@ -161,7 +161,7 @@ bool MCCanvasGradientCreateWithRamp(integer_t p_type, MCProperListRef p_ramp, MC
 bool MCCanvasPathCreateWithMCGPath(MCGPathRef p_path, MCCanvasPathRef &r_path);
 MCGPathRef MCCanvasPathGetMCGPath(MCCanvasPathRef p_path);
 
-bool MCCanvasGraphicEffectCreateWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
+bool MCCanvasEffectCreateWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
 
 
 extern "C" bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas);
@@ -410,12 +410,12 @@ extern "C" void MCCanvasPathClosePath(MCCanvasPathRef &x_path);
 // Effect
 
 // Constructors
-extern "C" void MCCanvasGraphicEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
+extern "C" void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
 
 // Properties
-extern "C" void MCCanvasGraphicEffectGetTypeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_type);
-extern "C" void MCCanvasGraphicEffectGetColor(MCCanvasEffectRef p_effect, MCCanvasColorRef &r_color);
-extern "C" void MCCanvasGraphicEffectSetColor(MCCanvasColorRef p_color, MCCanvasEffectRef &x_effect);
+extern "C" void MCCanvasEffectGetTypeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_type);
+extern "C" void MCCanvasEffectGetColor(MCCanvasEffectRef p_effect, MCCanvasColorRef &r_color);
+extern "C" void MCCanvasEffectSetColor(MCCanvasColorRef p_color, MCCanvasEffectRef &x_effect);
 extern "C" void MCCanvasEffectGetBlendModeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_blend_mode);
 extern "C" void MCCanvasEffectSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasEffectRef &x_effect);
 extern "C" void MCCanvasEffectGetOpacity(MCCanvasEffectRef p_effect, MCCanvasFloat &r_opacity);

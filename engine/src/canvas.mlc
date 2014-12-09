@@ -38,7 +38,7 @@ foreign type Image binds to "kMCCanvasImageTypeInfo"
 foreign type Path binds to "kMCCanvasPathTypeInfo"
 
 // Effect
-foreign type GraphicEffect binds to "kMCCanvasEffectTypeInfo"
+foreign type Effect binds to "kMCCanvasEffectTypeInfo"
 
 // Canvas
 foreign type Canvas binds to "kMCCanvasTypeInfo"
@@ -934,96 +934,96 @@ end syntax
 
 // Constructors
 
-public foreign handler MCCanvasGraphicEffectMakeWithPropertyArray(in pType as integer, in pProperties as array, out rGraphicEffect as GraphicEffect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as integer, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
 
-syntax GraphicEffectType is phrase
+syntax EffectType is phrase
 	( "color" "overlay" <mType=0> | "inner" "shadow" <mType=1> | "outer" "shadow" <mType=2> | "inner" "glow" <mType=3> | "outer" "glow" <mType=4> )
 begin
 end syntax
 
-syntax MakeGraphicEffectWithProperties is prefix operator with precedence 4
-	<mType: GraphicEffectType> <mProperties: Expression>
+syntax MakeEffectWithProperties is prefix operator with precedence 4
+	<mType: EffectType> <mProperties: Expression>
 begin
-	MCCanvasGraphicEffectMakeWithPropertyArray(mType, mProperties, output)
+	MCCanvasEffectMakeWithPropertyArray(mType, mProperties, output)
 end syntax
 
 //////////
 
 // Properties
 
-public foreign handler MCCanvasGraphicEffectGetTypeAsString(in pGraphicEffect as GraphicEffect, out rType as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectGetColor(in pGraphicEffect as GraphicEffect, out rColor as Color) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectSetColor(in pColor as Color, inout xGraphicEffect as GraphicEffect) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectGetBlendModeAsString(in pGraphicEffect as GraphicEffect, out rBlendMode as string) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectSetBlendModeAsString(in pBlendMode as string, inout xGraphicEffect as GraphicEffect) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectGetOpacity(in pGraphicEffect as GraphicEffect, out rOpacity as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectSetOpacity(in pOpacity as CanvasFloat, inout xGraphicEffect as GraphicEffect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetTypeAsString(in pEffect as Effect, out rType as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetColor(in pEffect as Effect, out rColor as Color) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectSetColor(in pColor as Color, inout xEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetBlendModeAsString(in pEffect as Effect, out rBlendMode as string) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectSetBlendModeAsString(in pBlendMode as string, inout xEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetOpacity(in pEffect as Effect, out rOpacity as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectSetOpacity(in pOpacity as CanvasFloat, inout xEffect as Effect) as undefined binds to "<builtin>"
 
-//MCCanvasGraphicEffectGetFilterAsString(in pGraphicEffect as GraphicEffect, out rFilter as string) as undefined binds to "<builtin>"
-//MCCanvasGraphicEffectSetFilterAsString(in pFilter as string, inout xGraphicEffect as GraphicEffect) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectGetSize(in pGraphicEffect as GraphicEffect, out rSize as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectSetSize(in pSize as CanvasFloat, inout xGraphicEffect as GraphicEffect) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectGetSpread(in pGraphicEffect as GraphicEffect, out rSpread as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectSetSpread(in pSpread as CanvasFloat, inout xGraphicEffect as GraphicEffect) as undefined binds to "<builtin>"
+//MCCanvasEffectGetFilterAsString(in pEffect as Effect, out rFilter as string) as undefined binds to "<builtin>"
+//MCCanvasEffectSetFilterAsString(in pFilter as string, inout xEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetSize(in pEffect as Effect, out rSize as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectSetSize(in pSize as CanvasFloat, inout xEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetSpread(in pEffect as Effect, out rSpread as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectSetSpread(in pSpread as CanvasFloat, inout xEffect as Effect) as undefined binds to "<builtin>"
 
-public foreign handler MCCanvasGraphicEffectGetDistance(in pGraphicEffect as GraphicEffect, out rDistance as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectSetDistance(in pDistance as CanvasFloat, inout xGraphicEffect as GraphicEffect) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectGetAngle(in pGraphicEffect as GraphicEffect, out rAngle as CanvasFloat) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGraphicEffectSetAngle(in pAngle as CanvasFloat, inout xGraphicEffect as GraphicEffect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetDistance(in pEffect as Effect, out rDistance as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectSetDistance(in pDistance as CanvasFloat, inout xEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectGetAngle(in pEffect as Effect, out rAngle as CanvasFloat) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectSetAngle(in pAngle as CanvasFloat, inout xEffect as Effect) as undefined binds to "<builtin>"
 
-syntax GraphicEffectTypeProperty is prefix operator with precedence 4
-	"the" "type" "of" <mGraphicEffect: Expression>
+syntax EffectTypeProperty is prefix operator with precedence 4
+	"the" "type" "of" <mEffect: Expression>
 begin
-	MCCanvasGraphicEffectGetTypeAsString(mGraphicEffect, output)
+	MCCanvasEffectGetTypeAsString(mEffect, output)
 end syntax
 
-syntax GraphicEffectColorProperty is prefix operator with precedence 4
-	"the" "color" "of" <mGraphicEffect: Expression>
+syntax EffectColorProperty is prefix operator with precedence 4
+	"the" "color" "of" <mEffect: Expression>
 begin
-	MCCanvasGraphicEffectGetColor(mGraphicEffect, output)
-	MCCanvasGraphicEffectSetColor(input, mGraphicEffect)
+	MCCanvasEffectGetColor(mEffect, output)
+	MCCanvasEffectSetColor(input, mEffect)
 end syntax
 
-syntax GraphicEffectBlendModeProperty is prefix operator with precedence 4
-	"the" "blend" "mode" "of" <mGraphicEffect: Expression>
+syntax EffectBlendModeProperty is prefix operator with precedence 4
+	"the" "blend" "mode" "of" <mEffect: Expression>
 begin
-	MCCanvasGraphicEffectGetBlendModeAsString(mGraphicEffect, output)
-	MCCanvasGraphicEffectSetBlendModeAsString(input, mGraphicEffect)
+	MCCanvasEffectGetBlendModeAsString(mEffect, output)
+	MCCanvasEffectSetBlendModeAsString(input, mEffect)
 end syntax
 
-syntax GraphicEffectOpacityProperty is prefix operator with precedence 4
-	"the" "opacity" "of" <mGraphicEffect: Expression>
+syntax EffectOpacityProperty is prefix operator with precedence 4
+	"the" "opacity" "of" <mEffect: Expression>
 begin
-	MCCanvasGraphicEffectGetOpacity(mGraphicEffect, output)
-	MCCanvasGraphicEffectSetOpacity(input, mGraphicEffect)
+	MCCanvasEffectGetOpacity(mEffect, output)
+	MCCanvasEffectSetOpacity(input, mEffect)
 end syntax
 
-syntax GraphicEffectSizeProperty is prefix operator with precedence 4
-	"the" "size" "of" <mGraphicEffect: Expression>
+syntax EffectSizeProperty is prefix operator with precedence 4
+	"the" "size" "of" <mEffect: Expression>
 begin
-	MCCanvasGraphicEffectGetSize(mGraphicEffect, output)
-	MCCanvasGraphicEffectSetSize(input, mGraphicEffect)
+	MCCanvasEffectGetSize(mEffect, output)
+	MCCanvasEffectSetSize(input, mEffect)
 end syntax
 
-syntax GraphicEffectSpreadProperty is prefix operator with precedence 4
-	"the" "spread" "of" <mGraphicEffect: Expression>
+syntax EffectSpreadProperty is prefix operator with precedence 4
+	"the" "spread" "of" <mEffect: Expression>
 begin
-	MCCanvasGraphicEffectGetSpread(mGraphicEffect, output)
-	MCCanvasGraphicEffectSetSpread(input, mGraphicEffect)
+	MCCanvasEffectGetSpread(mEffect, output)
+	MCCanvasEffectSetSpread(input, mEffect)
 end syntax
 
-syntax GraphicEffectDistanceProperty is prefix operator with precedence 4
-	"the" "distance" "of" <mGraphicEffect: Expression>
+syntax EffectDistanceProperty is prefix operator with precedence 4
+	"the" "distance" "of" <mEffect: Expression>
 begin
-	MCCanvasGraphicEffectGetDistance(mGraphicEffect, output)
-	MCCanvasGraphicEffectSetDistance(input, mGraphicEffect)
+	MCCanvasEffectGetDistance(mEffect, output)
+	MCCanvasEffectSetDistance(input, mEffect)
 end syntax
 
-syntax GraphicEffectAngleProperty is prefix operator with precedence 4
-	"the" "angle" "of" <mGraphicEffect: Expression>
+syntax EffectAngleProperty is prefix operator with precedence 4
+	"the" "angle" "of" <mEffect: Expression>
 begin
-	MCCanvasGraphicEffectGetAngle(mGraphicEffect, output)
-	MCCanvasGraphicEffectSetAngle(input, mGraphicEffect)
+	MCCanvasEffectGetAngle(mEffect, output)
+	MCCanvasEffectSetAngle(input, mEffect)
 end syntax
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1111,7 +1111,7 @@ public foreign handler MCCanvasCanvasSaveState(in pCanvas as Canvas) as undefine
 public foreign handler MCCanvasCanvasRestoreState(in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasCanvasBeginLayer(in pCanvas as Canvas) as undefined binds to "<builtin>"
 // TODO - begin layer with effect foo in rect bar of baz?
-public foreign handler MCCanvasCanvasBeginLayerWithEffect(in pCanvas as Canvas, in pEffect as GraphicEffect, in pRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCCanvasCanvasBeginLayerWithEffect(in pCanvas as Canvas, in pEffect as Effect, in pRect as Rectangle) as undefined binds to "<builtin>"
 public foreign handler MCCanvasCanvasEndLayer(in pCanvas as Canvas) as undefined binds to "<builtin>"
 
 public foreign handler MCCanvasCanvasFill(in pCanvas as Canvas) as undefined binds to "<builtin>"
