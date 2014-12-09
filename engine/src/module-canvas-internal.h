@@ -197,4 +197,67 @@ __MCCanvasImpl *MCCanvasGet(MCCanvasRef p_canvas);
 
 bool MCCanvasThrowError(MCTypeInfoRef p_error_type);
 
+//////////
+
+#define CANVAS_ANGLE_RADIANS 0
+#define CANVAS_ANGLE_DEGREES 1
+
+#define CANVAS_ANGLE_TYPE CANVAS_ANGLE_DEGREES
+
+inline MCCanvasFloat MCCanvasDegreesToRadians(MCCanvasFloat p_degrees)
+{
+	return p_degrees * M_PI / 180;
+}
+
+inline MCCanvasFloat MCCanvasRadiansToDegrees(MCCanvasFloat p_radians)
+{
+	return p_radians * 180 / M_PI;
+}
+
+#if CANVAS_ANGLE_TYPE == CANVAS_ANGLE_DEGREES
+
+inline MCCanvasFloat MCCanvasAngleToDegrees(MCCanvasFloat p_angle)
+{
+	return p_angle;
+}
+
+inline MCCanvasFloat MCCanvasAngleToRadians(MCCanvasFloat p_angle)
+{
+	return MCCanvasDegreesToRadians(p_angle);
+}
+
+inline MCCanvasFloat MCCanvasAngleFromDegrees(MCCanvasFloat p_degrees)
+{
+	return p_degrees;
+}
+
+inline MCCanvasFloat MCCanvasAngleFromRadians(MCCanvasFloat p_radians)
+{
+	return MCCanvasRadiansToDegrees(p_radians);
+}
+
+#else
+
+inline MCCanvasFloat MCCanvasAngleToDegrees(MCCanvasFloat p_angle)
+{
+	return MCCanvasRadiansToDegrees(p_angle);
+}
+
+inline MCCanvasFloat MCCanvasAngleToRadians(MCCanvasFloat p_angle)
+{
+	return p_angle;
+}
+
+inline MCCanvasFloat MCCanvasAngleFromDegrees(MCCanvasFloat p_degrees)
+{
+	return MCCanvasDegreesToRadians(p_degrees);
+}
+
+inline MCCanvasFloat MCCanvasAngleFromRadians(MCCanvasFloat p_radians)
+{
+	return p_radians;
+}
+
+#endif
+
 #endif//_MODULE_CANVAS_INTERNAL_H_

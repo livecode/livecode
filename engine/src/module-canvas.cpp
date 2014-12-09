@@ -1112,7 +1112,7 @@ void MCCanvasTransformMakeScaleWithList(MCProperListRef p_scale, MCCanvasTransfo
 
 void MCCanvasTransformMakeRotation(MCCanvasFloat p_angle, MCCanvasTransformRef &r_transform)
 {
-	MCCanvasTransformMake(MCGAffineTransformMakeRotation(p_angle), r_transform);
+	MCCanvasTransformMake(MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)), r_transform);
 }
 
 void MCCanvasTransformMakeTranslation(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasTransformRef &r_transform)
@@ -1340,7 +1340,7 @@ void MCCanvasTransformGetRotation(MCCanvasTransformRef p_transform, MCCanvasFloa
 		// TODO - throw transform decompose error
 		return;
 	}
-	r_rotation = t_rotation;
+	r_rotation = MCCanvasAngleFromRadians(t_rotation);
 }
 
 void MCCanvasTransformSetRotation(MCCanvasFloat p_rotation, MCCanvasTransformRef &x_transform)
@@ -1354,7 +1354,7 @@ void MCCanvasTransformSetRotation(MCCanvasFloat p_rotation, MCCanvasTransformRef
 		return;
 	}
 	
-	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, p_rotation, t_skew, t_translation), x_transform);
+	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, MCCanvasAngleToRadians(p_rotation), t_skew, t_translation), x_transform);
 }
 
 void MCCanvasTransformGetSkew(MCCanvasTransformRef p_transform, MCCanvasPointRef &r_skew)
@@ -1443,7 +1443,7 @@ void MCCanvasTransformScaleWithList(MCCanvasTransformRef &x_transform, MCProperL
 
 void MCCanvasTransformRotate(MCCanvasTransformRef &x_transform, MCCanvasFloat p_rotation)
 {
-	MCCanvasTransformConcat(x_transform, MCGAffineTransformMakeRotation(p_rotation));
+	MCCanvasTransformConcat(x_transform, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_rotation)));
 }
 
 void MCCanvasTransformTranslate(MCCanvasTransformRef &x_transform, MCCanvasFloat p_dx, MCCanvasFloat p_dy)
@@ -1992,7 +1992,7 @@ void MCCanvasPatternMakeWithImageScaledWithList(MCCanvasImageRef p_image, MCProp
 
 void MCCanvasPatternMakeWithRotatedImage(MCCanvasImageRef p_image, MCCanvasFloat p_angle, MCCanvasPatternRef &r_pattern)
 {
-	MCCanvasPatternMakeWithTransformedImage(p_image, MCGAffineTransformMakeRotation(p_angle), r_pattern);
+	MCCanvasPatternMakeWithTransformedImage(p_image, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)), r_pattern);
 }
 
 void MCCanvasPatternMakeWithTranslatedImage(MCCanvasImageRef p_image, MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasPatternRef &r_pattern)
@@ -2095,7 +2095,7 @@ void MCCanvasPatternScaleWithList(MCCanvasPatternRef &x_pattern, MCProperListRef
 
 void MCCanvasPatternRotate(MCCanvasPatternRef &x_pattern, MCCanvasFloat p_angle)
 {
-	MCCanvasPatternTransform(x_pattern, MCGAffineTransformMakeRotation(p_angle));
+	MCCanvasPatternTransform(x_pattern, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)));
 }
 
 void MCCanvasPatternTranslate(MCCanvasPatternRef &x_pattern, MCCanvasFloat p_x, MCCanvasFloat p_y)
@@ -2722,7 +2722,7 @@ void MCCanvasGradientScaleWithList(MCCanvasGradientRef &x_gradient, MCProperList
 
 void MCCanvasGradientRotate(MCCanvasGradientRef &x_gradient, MCCanvasFloat p_angle)
 {
-	MCCanvasGradientTransform(x_gradient, MCGAffineTransformMakeRotation(p_angle));
+	MCCanvasGradientTransform(x_gradient, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)));
 }
 
 void MCCanvasGradientTranslate(MCCanvasGradientRef &x_gradient, MCCanvasFloat p_x, MCCanvasFloat p_y)
@@ -3172,7 +3172,7 @@ void MCCanvasPathScaleWithList(MCCanvasPathRef &x_path, MCProperListRef p_scale)
 
 void MCCanvasPathRotate(MCCanvasPathRef &x_path, MCCanvasFloat p_angle)
 {
-	MCCanvasPathTransform(x_path, MCGAffineTransformMakeRotation(p_angle));
+	MCCanvasPathTransform(x_path, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)));
 }
 
 void MCCanvasPathTranslate(MCCanvasPathRef &x_path, MCCanvasFloat p_x, MCCanvasFloat p_y)
@@ -4384,7 +4384,7 @@ void MCCanvasCanvasScaleWithList(MCCanvasRef &x_canvas, MCProperListRef p_scale)
 
 void MCCanvasCanvasRotate(MCCanvasRef &x_canvas, MCCanvasFloat p_angle)
 {
-	MCCanvasCanvasTransform(x_canvas, MCGAffineTransformMakeRotation(p_angle));
+	MCCanvasCanvasTransform(x_canvas, MCGAffineTransformMakeRotation(MCCanvasAngleToDegrees(p_angle)));
 }
 
 void MCCanvasCanvasTranslate(MCCanvasRef &x_canvas, MCCanvasFloat p_x, MCCanvasFloat p_y)
@@ -4488,7 +4488,7 @@ void MCCanvasCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRect
 //			t_effects.inner_shadow.knockout = // TODO - knockout property?
 			t_effects.inner_shadow.size = t_effect_impl->size;
 			t_effects.inner_shadow.spread = t_effect_impl->spread;
-			MCPolarCoordsToCartesian(t_effect_impl->distance, t_effect_impl->angle, t_effects.inner_shadow.x_offset, t_effects.inner_shadow.y_offset);
+			MCPolarCoordsToCartesian(t_effect_impl->distance, MCCanvasAngleToRadians(t_effect_impl->angle), t_effects.inner_shadow.x_offset, t_effects.inner_shadow.y_offset);
 			break;
 		}
 			
@@ -4509,7 +4509,7 @@ void MCCanvasCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRect
 			t_effects.drop_shadow.color = MCCanvasColorToMCGColor(t_effect_impl->color);
 			t_effects.drop_shadow.size = t_effect_impl->size;
 			t_effects.drop_shadow.spread = t_effect_impl->spread;
-			MCPolarCoordsToCartesian(t_effect_impl->distance, t_effect_impl->angle, t_effects.drop_shadow.x_offset, t_effects.drop_shadow.y_offset);
+			MCPolarCoordsToCartesian(t_effect_impl->distance, MCCanvasAngleToRadians(t_effect_impl->angle), t_effects.drop_shadow.x_offset, t_effects.drop_shadow.y_offset);
 			break;
 		}
 			
