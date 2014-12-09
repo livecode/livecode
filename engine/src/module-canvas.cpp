@@ -423,19 +423,9 @@ bool MCProperListToRectangle(MCProperListRef p_list, MCGRectangle &r_rectangle)
 
 // Constructors
 
-static inline void MCCanvasRectangleMakeWithMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectangleRef &r_rect)
-{
-	MCCanvasRectangleRef t_rect;
-	if (!MCCanvasRectangleCreateWithMCGRectangle(p_rect, t_rect))
-		return;
-	
-	MCValueAssign(r_rect, t_rect);
-	MCValueRelease(t_rect);
-}
-
 void MCCanvasRectangleMakeWithLTRB(MCCanvasFloat p_left, MCCanvasFloat p_top, MCCanvasFloat p_right, MCCanvasFloat p_bottom, MCCanvasRectangleRef &r_rect)
 {
-	MCCanvasRectangleMakeWithMCGRectangle(MCGRectangleMake(p_left, p_top, p_right - p_left, p_bottom - p_top), r_rect);
+	/* UNCHECKED */ MCCanvasRectangleCreateWithMCGRectangle(MCGRectangleMake(p_left, p_top, p_right - p_left, p_bottom - p_top), r_rect);
 }
 
 void MCCanvasRectangleMakeWithList(MCProperListRef p_list, MCCanvasRectangleRef &r_rect)
@@ -447,10 +437,20 @@ void MCCanvasRectangleMakeWithList(MCProperListRef p_list, MCCanvasRectangleRef 
 		return;
 	}
 	
-	MCCanvasRectangleMakeWithMCGRectangle(t_rect, r_rect);
+	/* UNCHECKED */ MCCanvasRectangleCreateWithMCGRectangle(t_rect, r_rect);
 }
 
 // Properties
+
+void MCCanvasRectangleSetMCGRectangle(const MCGRectangle &p_rect, MCCanvasRectangleRef &x_rect)
+{
+	MCCanvasRectangleRef t_rect;
+	if (!MCCanvasRectangleCreateWithMCGRectangle(p_rect, t_rect))
+		return;
+	
+	MCValueAssign(x_rect, t_rect);
+	MCValueRelease(t_rect);
+}
 
 void MCCanvasRectangleGetLeft(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_left)
 {
@@ -465,7 +465,7 @@ void MCCanvasRectangleSetLeft(MCCanvasFloat p_left, MCCanvasRectangleRef &x_rect
 	MCCanvasRectangleGetMCGRectangle(x_rect, t_rect);
 	t_rect.origin.x = p_left;
 
-	MCCanvasRectangleMakeWithMCGRectangle(t_rect, x_rect);
+	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
 void MCCanvasRectangleGetTop(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_top)
@@ -481,7 +481,7 @@ void MCCanvasRectangleSetTop(MCCanvasFloat p_top, MCCanvasRectangleRef &x_rect)
 	MCCanvasRectangleGetMCGRectangle(x_rect, t_rect);
 	t_rect.origin.y = p_top;
 	
-	MCCanvasRectangleMakeWithMCGRectangle(t_rect, x_rect);
+	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
 void MCCanvasRectangleGetRight(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_right)
@@ -497,7 +497,7 @@ void MCCanvasRectangleSetRight(MCCanvasFloat p_right, MCCanvasRectangleRef &x_re
 	MCCanvasRectangleGetMCGRectangle(x_rect, t_rect);
 	t_rect.origin.x = p_right - t_rect.size.width;
 	
-	MCCanvasRectangleMakeWithMCGRectangle(t_rect, x_rect);
+	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
 void MCCanvasRectangleGetBottom(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_bottom)
@@ -513,7 +513,7 @@ void MCCanvasRectangleSetBottom(MCCanvasFloat p_bottom, MCCanvasRectangleRef &x_
 	MCCanvasRectangleGetMCGRectangle(x_rect, t_rect);
 	t_rect.origin.y = p_bottom - t_rect.size.height;
 	
-	MCCanvasRectangleMakeWithMCGRectangle(t_rect, x_rect);
+	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
 void MCCanvasRectangleGetWidth(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_width)
@@ -529,7 +529,7 @@ void MCCanvasRectangleSetWidth(MCCanvasFloat p_width, MCCanvasRectangleRef &x_re
 	MCCanvasRectangleGetMCGRectangle(x_rect, t_rect);
 	t_rect.size.width = p_width;
 	
-	MCCanvasRectangleMakeWithMCGRectangle(t_rect, x_rect);
+	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
 void MCCanvasRectangleGetHeight(MCCanvasRectangleRef p_rect, MCCanvasFloat &r_height)
@@ -545,7 +545,7 @@ void MCCanvasRectangleSetHeight(MCCanvasFloat p_height, MCCanvasRectangleRef &x_
 	MCCanvasRectangleGetMCGRectangle(x_rect, t_rect);
 	t_rect.size.height = p_height;
 	
-	MCCanvasRectangleMakeWithMCGRectangle(t_rect, x_rect);
+	MCCanvasRectangleSetMCGRectangle(t_rect, x_rect);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -632,20 +632,9 @@ bool MCProperListToPoint(MCProperListRef p_list, MCGPoint &r_point)
 
 // Constructors
 
-static inline void MCCanvasPointMakeWithMCGPoint(const MCGPoint &p_point, MCCanvasPointRef &r_point)
-{
-	MCCanvasPointRef t_point;
-	t_point = nil;
-	if (!MCCanvasPointCreateWithMCGPoint(p_point, t_point))
-		return;
-	
-	MCValueAssign(r_point, t_point);
-	MCValueRelease(t_point);
-}
-
 void MCCanvasPointMake(MCCanvasFloat p_x, MCCanvasFloat p_y, MCCanvasPointRef &r_point)
 {
-	MCCanvasPointMakeWithMCGPoint(MCGPointMake(p_x, p_y), r_point);
+	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(MCGPointMake(p_x, p_y), r_point);
 }
 
 void MCCanvasPointMakeWithList(MCProperListRef p_list, MCCanvasPointRef &r_point)
@@ -657,10 +646,19 @@ void MCCanvasPointMakeWithList(MCProperListRef p_list, MCCanvasPointRef &r_point
 		return;
 	}
 	
-	MCCanvasPointMakeWithMCGPoint(t_point, r_point);
+	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_point, r_point);
 }
 
 // Properties
+
+void MCCanvasPointSetMCGPoint(const MCGPoint &p_point, MCCanvasPointRef &x_point)
+{
+	MCCanvasPointRef t_point;
+	if (!MCCanvasPointCreateWithMCGPoint(p_point, t_point))
+		return;
+	MCValueAssign(x_point, t_point);
+	MCValueRelease(t_point);
+}
 
 void MCCanvasPointGetX(MCCanvasPointRef p_point, MCCanvasFloat &r_x)
 {
@@ -675,7 +673,7 @@ void MCCanvasPointSetX(MCCanvasFloat p_x, MCCanvasPointRef &x_point)
 	MCCanvasPointGetMCGPoint(x_point, t_point);
 	t_point.x = p_x;
 	
-	MCCanvasPointMakeWithMCGPoint(t_point, x_point);
+	MCCanvasPointSetMCGPoint(t_point, x_point);
 }
 
 void MCCanvasPointGetY(MCCanvasPointRef p_point, MCCanvasFloat &r_y)
@@ -691,7 +689,7 @@ void MCCanvasPointSetY(MCCanvasFloat p_y, MCCanvasPointRef &x_point)
 	MCCanvasPointGetMCGPoint(x_point, t_point);
 	t_point.y = p_y;
 	
-	MCCanvasPointMakeWithMCGPoint(t_point, x_point);
+	MCCanvasPointSetMCGPoint(t_point, x_point);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -828,20 +826,9 @@ bool MCProperListToRGBA(MCProperListRef p_list, MCCanvasFloat &r_red, MCCanvasFl
 
 // Constructors
 
-void MCCanvasColorMake(const __MCCanvasColorImpl &p_color, MCCanvasColorRef &r_color)
-{
-	MCCanvasColorRef t_color;
-	t_color = nil;
-	if (!MCCanvasColorCreate(p_color, t_color))
-		return;
-	
-	MCValueAssign(r_color, t_color);
-	MCValueRelease(t_color);
-}
-
 void MCCanvasColorMakeRGBA(MCCanvasFloat p_red, MCCanvasFloat p_green, MCCanvasFloat p_blue, MCCanvasFloat p_alpha, MCCanvasColorRef &r_color)
 {
-	MCCanvasColorMake(MCCanvasColorImplMake(p_red, p_blue, p_green, p_alpha), r_color);
+	/* UNCHECKED */ MCCanvasColorCreate(MCCanvasColorImplMake(p_red, p_blue, p_green, p_alpha), r_color);
 }
 
 void MCCanvasColorMakeWithList(MCProperListRef p_color, MCCanvasColorRef &r_color)
@@ -853,12 +840,21 @@ void MCCanvasColorMakeWithList(MCProperListRef p_color, MCCanvasColorRef &r_colo
 		return;
 	}
 	
-	MCCanvasColorMakeRGBA(t_red, t_green, t_blue, t_alpha, r_color);
+	/* UNCHECKED */ MCCanvasColorCreateWithRGBA(t_red, t_green, t_blue, t_alpha, r_color);
 }
 
 //////////
 
 // Properties
+
+void MCCanvasColorSet(const __MCCanvasColorImpl &p_color, MCCanvasColorRef &x_color)
+{
+	MCCanvasColorRef t_color;
+	if (!MCCanvasColorCreate(p_color, t_color))
+		return;
+	MCValueAssign(x_color, t_color);
+	MCValueRelease(t_color);
+}
 
 void MCCanvasColorGetRed(MCCanvasColorRef p_color, MCCanvasFloat &r_red)
 {
@@ -873,7 +869,8 @@ void MCCanvasColorSetRed(MCCanvasFloat p_red, MCCanvasColorRef &x_color)
 	if (t_color->red == p_red)
 		return;
 	
-	MCCanvasColorMake(*t_color, x_color);
+	t_color->red = p_red;
+	MCCanvasColorSet(*t_color, x_color);
 }
 
 void MCCanvasColorGetGreen(MCCanvasColorRef p_color, MCCanvasFloat &r_green)
@@ -889,7 +886,8 @@ void MCCanvasColorSetGreen(MCCanvasFloat p_green, MCCanvasColorRef &x_color)
 	if (t_color->green == p_green)
 		return;
 	
-	MCCanvasColorMake(*t_color, x_color);
+	t_color->green = p_green;
+	MCCanvasColorSet(*t_color, x_color);
 }
 
 void MCCanvasColorGetBlue(MCCanvasColorRef p_color, MCCanvasFloat &r_blue)
@@ -905,7 +903,8 @@ void MCCanvasColorSetBlue(MCCanvasFloat p_blue, MCCanvasColorRef &x_color)
 	if (t_color->blue == p_blue)
 		return;
 	
-	MCCanvasColorMake(*t_color, x_color);
+	t_color->blue = p_blue;
+	MCCanvasColorSet(*t_color, x_color);
 }
 
 void MCCanvasColorGetAlpha(MCCanvasColorRef p_color, MCCanvasFloat &r_alpha)
@@ -921,7 +920,8 @@ void MCCanvasColorSetAlpha(MCCanvasFloat p_alpha, MCCanvasColorRef &x_color)
 	if (t_color->alpha == p_alpha)
 		return;
 	
-	MCCanvasColorMake(*t_color, x_color);
+	t_color->alpha = p_alpha;
+	MCCanvasColorSet(*t_color, x_color);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1030,14 +1030,7 @@ bool MCProperListToScale(MCProperListRef p_list, MCGPoint &r_scale)
 
 void MCCanvasTransformMake(const MCGAffineTransform &p_transform, MCCanvasTransformRef &r_transform)
 {
-	MCCanvasTransformRef t_transform;
-	t_transform = nil;
-	
-	if (!MCCanvasTransformCreateWithMCGAffineTransform(p_transform, t_transform))
-		return;
-	
-	MCValueAssign(r_transform, t_transform);
-	MCValueRelease(t_transform);
+	/* UNCHECKED */ MCCanvasTransformCreateWithMCGAffineTransform(p_transform, r_transform);
 }
 
 void MCCanvasTransformMakeIdentity(MCCanvasTransformRef &r_transform)
@@ -1110,6 +1103,15 @@ void MCCanvasTransformMakeWithMatrixValues(MCCanvasFloat p_a, MCCanvasFloat p_b,
 
 // Properties
 
+void MCCanvasTransformSetMCGAffineTransform(const MCGAffineTransform &p_transform, MCCanvasTransformRef &x_transform)
+{
+	MCCanvasTransformRef t_transform;
+	if (!MCCanvasTransformCreateWithMCGAffineTransform(p_transform, t_transform))
+		return;
+	MCValueAssign(x_transform, t_transform);
+	MCValueRelease(t_transform);
+}
+
 void MCCanvasTransformGetMatrix(MCCanvasTransformRef p_transform, MCArrayRef &r_matrix)
 {
 	bool t_success;
@@ -1136,7 +1138,7 @@ void MCCanvasTransformGetMatrix(MCCanvasTransformRef p_transform, MCArrayRef &r_
 		MCArrayStoreReal(t_matrix, s_transform_matrix_keys[8], 1);
 		
 	if (t_success)
-		MCValueAssign(r_matrix, t_matrix);
+		t_success = MCArrayCopy(t_matrix, r_matrix);
 	MCValueRelease(t_matrix);
 }
 
@@ -1161,7 +1163,7 @@ void MCCanvasTransformSetMatrix(MCArrayRef p_matrix, MCCanvasTransformRef &x_tra
 		return;
 	}
 	
-	MCCanvasTransformMakeWithMatrixValues(a, b, c, d, tx, ty, x_transform);
+	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformMake(a, b, c, d, tx, ty), x_transform);
 }
 
 void MCCanvasTransformGetInverse(MCCanvasTransformRef p_transform, MCCanvasTransformRef &r_transform)
@@ -1261,7 +1263,8 @@ void MCCanvasTransformGetScale(MCCanvasTransformRef p_transform, MCCanvasPointRe
 		// TODO - throw transform decompose error
 		return;
 	}
-	MCCanvasPointMakeWithMCGPoint(t_scale, r_scale);
+	
+	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_scale, r_scale);
 }
 
 void MCCanvasTransformSetScale(MCCanvasPointRef p_scale, MCCanvasTransformRef &x_transform)
@@ -1274,7 +1277,8 @@ void MCCanvasTransformSetScale(MCCanvasPointRef p_scale, MCCanvasTransformRef &x
 		// TODO - throw transform decompose error
 		return;
 	}
-	MCCanvasTransformMake(MCCanvasTransformCompose(*MCCanvasPointGet(p_scale), t_rotation, t_skew, t_translation), x_transform);
+	
+	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(*MCCanvasPointGet(p_scale), t_rotation, t_skew, t_translation), x_transform);
 }
 
 void MCCanvasTransformGetRotation(MCCanvasTransformRef p_transform, MCCanvasFloat &r_rotation)
@@ -1300,7 +1304,8 @@ void MCCanvasTransformSetRotation(MCCanvasFloat p_rotation, MCCanvasTransformRef
 		// TODO - throw transform decompose error
 		return;
 	}
-	MCCanvasTransformMake(MCCanvasTransformCompose(t_scale, p_rotation, t_skew, t_translation), x_transform);
+	
+	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, p_rotation, t_skew, t_translation), x_transform);
 }
 
 void MCCanvasTransformGetSkew(MCCanvasTransformRef p_transform, MCCanvasPointRef &r_skew)
@@ -1313,7 +1318,8 @@ void MCCanvasTransformGetSkew(MCCanvasTransformRef p_transform, MCCanvasPointRef
 		// TODO - throw transform decompose error
 		return;
 	}
-	MCCanvasPointMakeWithMCGPoint(t_skew, r_skew);
+	
+	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_skew, r_skew);
 }
 
 void MCCanvasTransformSetSkew(MCCanvasPointRef p_skew, MCCanvasTransformRef &x_transform)
@@ -1326,7 +1332,8 @@ void MCCanvasTransformSetSkew(MCCanvasPointRef p_skew, MCCanvasTransformRef &x_t
 		// TODO - throw transform decompose error
 		return;
 	}
-	MCCanvasTransformMake(MCCanvasTransformCompose(t_scale, t_rotation, *MCCanvasPointGet(p_skew), t_translation), x_transform);
+	
+	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, t_rotation, *MCCanvasPointGet(p_skew), t_translation), x_transform);
 }
 
 void MCCanvasTransformGetTranslation(MCCanvasTransformRef p_transform, MCCanvasPointRef &r_translation)
@@ -1339,7 +1346,8 @@ void MCCanvasTransformGetTranslation(MCCanvasTransformRef p_transform, MCCanvasP
 		// TODO - throw transform decompose error
 		return;
 	}
-	MCCanvasPointMakeWithMCGPoint(t_translation, r_translation);
+	
+	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_translation, r_translation);
 }
 
 void MCCanvasTransformSetTranslation(MCCanvasPointRef p_translation, MCCanvasTransformRef &x_transform)
@@ -1352,7 +1360,8 @@ void MCCanvasTransformSetTranslation(MCCanvasPointRef p_translation, MCCanvasTra
 		// TODO - throw transform decompose error
 		return;
 	}
-	MCCanvasTransformMake(MCCanvasTransformCompose(t_scale, t_rotation, t_skew, *MCCanvasPointGet(p_translation)), x_transform);
+	
+	MCCanvasTransformSetMCGAffineTransform(MCCanvasTransformCompose(t_scale, t_rotation, t_skew, *MCCanvasPointGet(p_translation)), x_transform);
 }
 
 //////////
@@ -1361,7 +1370,7 @@ void MCCanvasTransformSetTranslation(MCCanvasPointRef p_translation, MCCanvasTra
 
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, const MCGAffineTransform &p_transform)
 {
-	MCCanvasTransformMake(MCGAffineTransformConcat(*MCCanvasTransformGet(x_transform), p_transform), x_transform);
+	MCCanvasTransformSetMCGAffineTransform(MCGAffineTransformConcat(*MCCanvasTransformGet(x_transform), p_transform), x_transform);
 }
 
 void MCCanvasTransformConcat(MCCanvasTransformRef &x_transform, MCCanvasTransformRef p_transform)
@@ -1499,14 +1508,7 @@ MCImageRep *MCCanvasImageGetImageRep(MCCanvasImageRef p_image)
 
 void MCCanvasImageMake(MCImageRep *p_image, MCCanvasImageRef &r_image)
 {
-	MCCanvasImageRef t_image;
-	t_image = nil;
-	
-	if (!MCCanvasImageCreateWithImageRep(p_image, t_image))
-		return;
-	
-	MCValueAssign(r_image, t_image);
-	MCValueRelease(t_image);
+	/* UNCHECKED */ MCCanvasImageCreateWithImageRep(p_image, r_image);
 }
 
 void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
@@ -1630,13 +1632,7 @@ void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 			t_pixel_row += t_raster->stride;
 		}
 		
-		MCDataRef t_data;
-		t_data = nil;
-		
-		/* UNCHECKED */ MCDataCreateWithBytesAndRelease(t_buffer, t_buffer_size, t_data);
-		
-		MCValueAssign(r_pixels, t_data);
-		MCValueRelease(t_data);
+		/* UNCHECKED */ MCDataCreateWithBytesAndRelease(t_buffer, t_buffer_size, r_pixels);
 		
 		MCImageRepUnlockRaster(t_image_rep, 0, t_raster);
 	}
@@ -1810,14 +1806,7 @@ __MCCanvasSolidPaintImpl *MCCanvasSolidPaintGet(MCCanvasSolidPaintRef p_paint)
 
 void MCCanvasSolidPaintMakeWithColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef &r_paint)
 {
-	MCCanvasSolidPaintRef t_paint;
-	t_paint = nil;
-	
-	if (!MCCanvasSolidPaintCreateWithColor(p_color, t_paint))
-		return;
-	
-	MCValueAssign(r_paint, t_paint);
-	MCValueRelease(t_paint);
+	/* UNCHECKED */ MCCanvasSolidPaintCreateWithColor(p_color, r_paint);
 }
 
 // Properties
@@ -1830,7 +1819,7 @@ void MCCanvasSolidPaintGetColor(MCCanvasSolidPaintRef p_paint, MCCanvasColorRef 
 		return;
 	}
 	
-	MCValueAssign(r_color, MCCanvasSolidPaintGet(p_paint)->color);
+	r_color = MCValueRetain(MCCanvasSolidPaintGet(p_paint)->color);
 }
 
 void MCCanvasSolidPaintSetColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef &x_paint)
@@ -1841,7 +1830,14 @@ void MCCanvasSolidPaintSetColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef 
 		return;
 	}
 	
-	MCCanvasSolidPaintMakeWithColor(p_color, x_paint);
+	MCCanvasSolidPaintRef t_paint;
+	t_paint = nil;
+	
+	if (!MCCanvasSolidPaintCreateWithColor(p_color, t_paint))
+		return;
+	
+	MCValueAssign(x_paint, t_paint);
+	MCValueRelease(t_paint);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1909,14 +1905,7 @@ __MCCanvasPatternImpl *MCCanvasPatternGet(MCCanvasPatternRef p_paint)
 
 void MCCanvasPatternMakeWithTransformedImage(MCCanvasImageRef p_image, MCCanvasTransformRef p_transform, MCCanvasPatternRef &r_pattern)
 {
-	MCCanvasPatternRef t_pattern;
-	t_pattern = nil;
-	
-	if (!MCCanvasPatternCreateWithImage(p_image, p_transform, t_pattern))
-		return;
-	
-	MCValueAssign(r_pattern, t_pattern);
-	MCValueRelease(t_pattern);
+	/* UNCHECKED */ MCCanvasPatternCreateWithImage(p_image, p_transform, r_pattern);
 }
 
 void MCCanvasPatternMakeWithTransformedImage(MCCanvasImageRef p_image, const MCGAffineTransform &p_transform, MCCanvasPatternRef &r_pattern)
@@ -1976,6 +1965,19 @@ void MCCanvasPatternMakeWithImageTranslatedWithList(MCCanvasImageRef p_image, MC
 
 // Properties
 
+void MCCanvasPatternSet(MCCanvasImageRef p_image, MCCanvasTransformRef p_transform, MCCanvasPatternRef &x_pattern)
+{
+	if (!MCCanvasPaintEnsurePattern(x_pattern))
+		return;
+	
+	MCCanvasPatternRef t_pattern;
+	if (!MCCanvasPatternCreateWithImage(p_image, p_transform, t_pattern))
+		return;
+	
+	MCValueAssign(x_pattern, t_pattern);
+	MCValueRelease(t_pattern);
+}
+
 void MCCanvasPatternGetImage(MCCanvasPatternRef p_pattern, MCCanvasImageRef &r_image)
 {
 	if (!MCCanvasPaintIsPattern(p_pattern))
@@ -1984,7 +1986,7 @@ void MCCanvasPatternGetImage(MCCanvasPatternRef p_pattern, MCCanvasImageRef &r_i
 		return;
 	}
 	
-	MCValueAssign(r_image, MCCanvasPatternGet(p_pattern)->image);
+	r_image = MCValueRetain(MCCanvasPatternGet(p_pattern)->image);
 }
 
 void MCCanvasPatternSetImage(MCCanvasImageRef p_image, MCCanvasPatternRef &x_pattern)
@@ -1995,7 +1997,7 @@ void MCCanvasPatternSetImage(MCCanvasImageRef p_image, MCCanvasPatternRef &x_pat
 		return;
 	}
 	
-	MCCanvasPatternMakeWithTransformedImage(p_image, MCCanvasPatternGet(x_pattern)->transform, x_pattern);
+	MCCanvasPatternSet(p_image, MCCanvasPatternGet(x_pattern)->transform, x_pattern);
 }
 
 void MCCanvasPatternGetTransform(MCCanvasPatternRef p_pattern, MCCanvasTransformRef &r_transform)
@@ -2006,7 +2008,7 @@ void MCCanvasPatternGetTransform(MCCanvasPatternRef p_pattern, MCCanvasTransform
 		return;
 	}
 
-	MCValueAssign(r_transform, MCCanvasPatternGet(p_pattern)->transform);
+	r_transform = MCValueRetain(MCCanvasPatternGet(p_pattern)->transform);
 }
 
 void MCCanvasPatternSetTransform(MCCanvasTransformRef p_transform, MCCanvasPatternRef &x_pattern)
@@ -2017,7 +2019,7 @@ void MCCanvasPatternSetTransform(MCCanvasTransformRef p_transform, MCCanvasPatte
 		return;
 	}
 
-	MCCanvasPatternMakeWithTransformedImage(MCCanvasPatternGet(x_pattern)->image, p_transform, x_pattern);
+	MCCanvasPatternSet(MCCanvasPatternGet(x_pattern)->image, p_transform, x_pattern);
 }
 
 // Operators
@@ -2164,17 +2166,19 @@ __MCCanvasGradientStopImpl *MCCanvasGradientStopGet(MCCanvasGradientStopRef p_st
 
 void MCCanvasGradientStopMake(MCCanvasFloat p_offset, MCCanvasColorRef p_color, MCCanvasGradientStopRef &r_stop)
 {
-	MCCanvasGradientStopRef t_stop;
-	t_stop = nil;
-	
-	if (!MCCanvasGradientStopCreate(p_offset, p_color, t_stop))
-		return;
-	
-	MCValueAssign(r_stop, t_stop);
-	MCValueRelease(t_stop);
+	/* UNCHECKED */ MCCanvasGradientStopCreate(p_offset, p_color, r_stop);
 }
 
 //	Properties
+
+void MCCanvasGradientStopSet(MCCanvasFloat p_offset, MCCanvasColorRef p_color, MCCanvasGradientStopRef &x_stop)
+{
+	MCCanvasGradientStopRef t_stop;
+	if (!MCCanvasGradientStopCreate(p_offset, p_color, t_stop))
+		return;
+	MCValueAssign(x_stop, t_stop);
+	MCValueRelease(t_stop);
+}
 
 void MCCanvasGradientStopGetOffset(MCCanvasGradientStopRef p_stop, MCCanvasFloat &r_offset)
 {
@@ -2186,12 +2190,12 @@ void MCCanvasGradientStopSetOffset(MCCanvasFloat p_offset, MCCanvasGradientStopR
 	__MCCanvasGradientStopImpl *t_stop;
 	t_stop = MCCanvasGradientStopGet(x_stop);
 	
-	MCCanvasGradientStopMake(p_offset, t_stop->color, x_stop);
+	MCCanvasGradientStopSet(p_offset, t_stop->color, x_stop);
 }
 
 void MCCanvasGradientStopGetColor(MCCanvasGradientStopRef p_stop, MCCanvasColorRef &r_color)
 {
-	MCValueAssign(r_color, MCCanvasGradientStopGet(p_stop)->color);
+	r_color = MCValueRetain(MCCanvasGradientStopGet(p_stop)->color);
 }
 
 void MCCanvasGradientStopSetColor(MCCanvasColorRef p_color, MCCanvasGradientStopRef &x_stop)
@@ -2199,7 +2203,7 @@ void MCCanvasGradientStopSetColor(MCCanvasColorRef p_color, MCCanvasGradientStop
 	__MCCanvasGradientStopImpl *t_stop;
 	t_stop = MCCanvasGradientStopGet(x_stop);
 	
-	MCCanvasGradientStopMake(t_stop->offset, p_color, x_stop);
+	MCCanvasGradientStopSet(t_stop->offset, p_color, x_stop);
 }
 
 // Gradient
@@ -2316,16 +2320,6 @@ bool MCCanvasGradientCheckStopOrder(MCProperListRef p_ramp)
 
 // Constructor
 
-void MCCanvasGradientMake(const __MCCanvasGradientImpl &p_gradient, MCCanvasGradientRef &r_gradient)
-{
-	MCCanvasGradientRef t_gradient;
-	if (!MCCanvasGradientCreate(p_gradient, t_gradient))
-		return;
-	
-	MCValueAssign(r_gradient, t_gradient);
-	MCValueRelease(t_gradient);
-}
-
 void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCanvasGradientRef &r_gradient)
 {
 	MCCanvasGradientRef t_gradient;
@@ -2346,10 +2340,20 @@ void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCa
 	t_gradient_impl.transform = kMCCanvasIdentityTransform;
 	t_gradient_impl.filter = kMCGImageFilterNone;
 	
-	MCCanvasGradientMake(t_gradient_impl, r_gradient);
+	/* UNCHECKED */ MCCanvasGradientCreate(t_gradient_impl, r_gradient);
 }
 
 // Properties
+
+void MCCanvasGradientSet(const __MCCanvasGradientImpl &p_gradient, MCCanvasGradientRef &x_gradient)
+{
+	MCCanvasGradientRef t_gradient;
+	if (!MCCanvasGradientCreate(p_gradient, t_gradient))
+		return;
+	
+	MCValueAssign(x_gradient, t_gradient);
+	MCValueRelease(t_gradient);
+}
 
 void MCCanvasGradientGetRamp(MCCanvasGradientRef p_gradient, MCProperListRef &r_ramp)
 {
@@ -2359,7 +2363,7 @@ void MCCanvasGradientGetRamp(MCCanvasGradientRef p_gradient, MCProperListRef &r_
 		return;
 	}
 	
-	MCValueAssign(r_ramp, MCCanvasGradientGet(p_gradient)->ramp);
+	r_ramp = MCValueRetain(MCCanvasGradientGet(p_gradient)->ramp);
 }
 
 void MCCanvasGradientSetRamp(MCProperListRef p_ramp, MCCanvasGradientRef &x_gradient)
@@ -2378,7 +2382,7 @@ void MCCanvasGradientSetRamp(MCProperListRef p_ramp, MCCanvasGradientRef &x_grad
 	
 	t_gradient.ramp = p_ramp;
 	
-	MCCanvasGradientMake(t_gradient, x_gradient);
+	MCCanvasGradientSet(t_gradient, x_gradient);
 }
 
 void MCCanvasGradientGetTypeAsString(MCCanvasGradientRef p_gradient, MCStringRef &r_string)
@@ -2409,7 +2413,7 @@ void MCCanvasGradientSetTypeAsString(MCStringRef p_string, MCCanvasGradientRef &
 		return;
 	}
 	
-	MCCanvasGradientMake(t_gradient, x_gradient);
+	MCCanvasGradientSet(t_gradient, x_gradient);
 }
 
 void MCCanvasGradientGetRepeat(MCCanvasGradientRef p_gradient, integer_t &r_repeat)
@@ -2436,7 +2440,7 @@ void MCCanvasGradientSetRepeat(integer_t p_repeat, MCCanvasGradientRef &x_gradie
 	
 	t_gradient.repeats = p_repeat;
 	
-	MCCanvasGradientMake(t_gradient, x_gradient);
+	MCCanvasGradientSet(t_gradient, x_gradient);
 }
 
 void MCCanvasGradientGetWrap(MCCanvasGradientRef p_gradient, bool &r_wrap)
@@ -2463,7 +2467,7 @@ void MCCanvasGradientSetWrap(bool p_wrap, MCCanvasGradientRef &x_gradient)
 	
 	t_gradient.wrap = p_wrap;
 	
-	MCCanvasGradientMake(t_gradient, x_gradient);
+	MCCanvasGradientSet(t_gradient, x_gradient);
 }
 
 void MCCanvasGradientGetMirror(MCCanvasGradientRef p_gradient, bool &r_mirror)
@@ -2490,7 +2494,7 @@ void MCCanvasGradientSetMirror(bool p_mirror, MCCanvasGradientRef &x_gradient)
 	
 	t_gradient.mirror = p_mirror;
 	
-	MCCanvasGradientMake(t_gradient, x_gradient);
+	MCCanvasGradientSet(t_gradient, x_gradient);
 }
 
 void MCCanvasGradientTransformToPoints(const MCGAffineTransform &p_transform, MCGPoint &r_from, MCGPoint &r_to, MCGPoint &r_via)
@@ -2557,7 +2561,8 @@ void MCCanvasGradientGetFrom(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r
 	
 	MCGPoint t_from, t_to, t_via;
 	MCCanvasGradientGetPoints(p_gradient, t_from, t_to, t_via);
-	MCCanvasPointMakeWithMCGPoint(t_from, r_from);
+	
+	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_from, r_from);
 }
 
 void MCCanvasGradientGetTo(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_to)
@@ -2570,7 +2575,8 @@ void MCCanvasGradientGetTo(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_t
 	
 	MCGPoint t_from, t_to, t_via;
 	MCCanvasGradientGetPoints(p_gradient, t_from, t_to, t_via);
-	MCCanvasPointMakeWithMCGPoint(t_to, r_to);
+	
+	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_to, r_to);
 }
 
 void MCCanvasGradientGetVia(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_via)
@@ -2583,7 +2589,8 @@ void MCCanvasGradientGetVia(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_
 	
 	MCGPoint t_from, t_to, t_via;
 	MCCanvasGradientGetPoints(p_gradient, t_from, t_to, t_via);
-	MCCanvasPointMakeWithMCGPoint(t_via, r_via);
+	
+	/* UNCHECKED */ MCCanvasPointCreateWithMCGPoint(t_via, r_via);
 }
 
 void MCCanvasGradientSetFrom(MCCanvasPointRef p_from, MCCanvasGradientRef &x_gradient)
@@ -2627,7 +2634,7 @@ void MCCanvasGradientSetVia(MCCanvasPointRef p_via, MCCanvasGradientRef &x_gradi
 
 void MCCanvasGradientGetTransform(MCCanvasGradientRef p_gradient, MCCanvasTransformRef &r_transform)
 {
-	MCValueAssign(r_transform, MCCanvasGradientGet(p_gradient)->transform);
+	r_transform = MCValueRetain(MCCanvasGradientGet(p_gradient)->transform);
 }
 
 void MCCanvasGradientSetTransform(MCCanvasTransformRef p_transform, MCCanvasGradientRef &x_gradient)
@@ -2641,7 +2648,7 @@ void MCCanvasGradientSetTransform(MCCanvasTransformRef p_transform, MCCanvasGrad
 	__MCCanvasGradientImpl t_gradient;
 	t_gradient = *MCCanvasGradientGet(x_gradient);
 	t_gradient.transform = p_transform;
-	MCCanvasGradientMake(t_gradient, x_gradient);
+	MCCanvasGradientSet(t_gradient, x_gradient);
 }
 
 // Operators
@@ -2699,7 +2706,7 @@ void MCCanvasGradientAddStop(MCCanvasGradientStopRef p_stop, MCCanvasGradientRef
 	if (t_success)
 	{
 		t_gradient.ramp = t_new_ramp;
-		MCCanvasGradientMake(t_gradient, x_gradient);
+		MCCanvasGradientSet(t_gradient, x_gradient);
 		MCValueRelease(t_new_ramp);
 	}
 	else
@@ -2900,14 +2907,7 @@ bool MCCanvasPathMakeWithInstructionsCallback(void *p_context, MCGPathCommand p_
 
 void MCCanvasPathMakeWithMCGPath(MCGPathRef p_path, MCCanvasPathRef &r_path)
 {
-	MCCanvasPathRef t_path;
-	t_path = nil;
-	
-	if (!MCCanvasPathCreateWithMCGPath(p_path, t_path))
-		return;
-	
-	MCValueAssign(r_path, t_path);
-	MCValueRelease(t_path);
+	/* UNCHECKED */ MCCanvasPathCreateWithMCGPath(p_path, r_path);
 }
 
 // TODO - investigate error handling in libgraphics, libskia - don't think skia mem errors are tested for
@@ -3099,6 +3099,15 @@ void MCCanvasPathMakeWithPoints(bool p_close, MCProperListRef p_points, MCCanvas
 
 // Properties
 
+void MCCanvasPathSetMCGPath(MCGPathRef p_path, MCCanvasPathRef &x_path)
+{
+	MCCanvasPathRef t_path;
+	if (!MCCanvasPathCreateWithMCGPath(p_path, t_path))
+		return;
+	MCValueAssign(x_path, t_path);
+	MCValueRelease(t_path);
+}
+
 void MCCanvasPathGetSubpaths(integer_t p_start, integer_t p_end, MCCanvasPathRef p_path, MCCanvasPathRef &r_subpaths)
 {
 	MCGPathRef t_path;
@@ -3120,7 +3129,8 @@ void MCCanvasPathGetBoundingBox(MCCanvasPathRef p_path, MCCanvasRectangleRef &r_
 {
 	MCGRectangle t_rect;
 	MCGPathGetBoundingBox(*MCCanvasPathGet(p_path), t_rect);
-	MCCanvasRectangleMakeWithMCGRectangle(t_rect, r_bounds);
+	
+	/* UNCHECKED */ MCCanvasRectangleCreateWithMCGRectangle(t_rect, r_bounds);
 }
 
 void MCCanvasPathGetInstructionsAsString(MCCanvasPathRef p_path, MCStringRef &r_instruction_string)
@@ -3128,7 +3138,7 @@ void MCCanvasPathGetInstructionsAsString(MCCanvasPathRef p_path, MCStringRef &r_
 	MCStringRef t_instruction_string;
 	t_instruction_string = nil;
 	if (MCCanvasPathUnparseInstructions(p_path, t_instruction_string))
-		MCValueAssign(r_instruction_string, t_instruction_string);
+		r_instruction_string = MCValueRetain(t_instruction_string);
 	MCValueRelease(t_instruction_string);
 }
 
@@ -3153,7 +3163,7 @@ void MCCanvasPathTransform(MCCanvasPathRef &x_path, const MCGAffineTransform &p_
 		t_success = MCGPathTransform(t_path, p_transform);
 	
 	if (t_success)
-		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+		MCCanvasPathSetMCGPath(t_path, x_path);
 	
 	MCGPathRelease(t_path);
 }
@@ -3223,7 +3233,7 @@ void MCCanvasPathAddPath(MCCanvasPathRef p_source, MCCanvasPathRef &x_dest)
 	}
 	
 	if (t_success)
-		MCCanvasPathMakeWithMCGPath(t_path, x_dest);
+		MCCanvasPathSetMCGPath(t_path, x_dest);
 	
 	MCGPathRelease(t_path);
 }
@@ -3249,7 +3259,7 @@ void MCCanvasPathMoveTo(MCCanvasPointRef p_point, MCCanvasPathRef &x_path)
 	}
 	
 	if (t_success)
-		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+		MCCanvasPathSetMCGPath(t_path, x_path);
 	
 	MCGPathRelease(t_path);
 }
@@ -3275,7 +3285,7 @@ void MCCanvasPathLineTo(MCCanvasPointRef p_point, MCCanvasPathRef &x_path)
 	}
 	
 	if (t_success)
-		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+		MCCanvasPathSetMCGPath(t_path, x_path);
 	
 	MCGPathRelease(t_path);
 }
@@ -3301,7 +3311,7 @@ void MCCanvasPathCurveThroughPoint(MCCanvasPointRef p_through, MCCanvasPointRef 
 	}
 	
 	if (t_success)
-		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+		MCCanvasPathSetMCGPath(t_path, x_path);
 	
 	MCGPathRelease(t_path);
 }
@@ -3327,7 +3337,7 @@ void MCCanvasPathCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointR
 	}
 	
 	if (t_success)
-		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+		MCCanvasPathSetMCGPath(t_path, x_path);
 	
 	MCGPathRelease(t_path);
 }
@@ -3353,7 +3363,7 @@ void MCCanvasPathClosePath(MCCanvasPathRef &x_path)
 	}
 	
 	if (t_success)
-		MCCanvasPathMakeWithMCGPath(t_path, x_path);
+		MCCanvasPathSetMCGPath(t_path, x_path);
 	
 	MCGPathRelease(t_path);
 }
@@ -3656,18 +3666,6 @@ __MCCanvasEffectImpl *MCCanvasEffectGet(MCCanvasEffectRef p_effect)
 
 // Constructors
 
-void MCCanvasEffectMake(const __MCCanvasEffectImpl &p_effect, MCCanvasEffectRef &r_effect)
-{
-	MCCanvasEffectRef t_effect;
-	t_effect = nil;
-	
-	if (!MCCanvasEffectCreate(p_effect, t_effect))
-		return;
-	
-	MCValueAssign(r_effect, t_effect);
-	MCValueRelease(t_effect);
-}
-
 void MCCanvasGraphicEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect)
 {
 	// TODO - defaults for missing properties?
@@ -3749,12 +3747,24 @@ void MCCanvasGraphicEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_p
 
 	// TODO - throw exception on error
 	if (t_success)
-		MCCanvasEffectMake(t_effect, r_effect);
+		t_success = MCCanvasEffectCreate(t_effect, r_effect);
 }
 
 //////////
 
 // Properties
+
+void MCCanvasEffectSet(const __MCCanvasEffectImpl &p_effect, MCCanvasEffectRef &x_effect)
+{
+	MCCanvasEffectRef t_effect;
+	t_effect = nil;
+	
+	if (!MCCanvasEffectCreate(p_effect, t_effect))
+		return;
+	
+	MCValueAssign(x_effect, t_effect);
+	MCValueRelease(t_effect);
+}
 
 bool MCCanvasEffectHasSizeAndSpread(MCCanvasEffectType p_type)
 {
@@ -3773,7 +3783,7 @@ void MCCanvasGraphicEffectGetTypeAsString(MCCanvasEffectRef p_effect, MCStringRe
 
 void MCCanvasGraphicEffectGetColor(MCCanvasEffectRef p_effect, MCCanvasColorRef &r_color)
 {
-	MCValueAssign(r_color, MCCanvasEffectGet(p_effect)->color);
+	r_color = MCValueRetain(MCCanvasEffectGet(p_effect)->color);
 }
 
 void MCCanvasGraphicEffectSetColor(MCCanvasColorRef p_color, MCCanvasEffectRef &x_effect)
@@ -3781,7 +3791,7 @@ void MCCanvasGraphicEffectSetColor(MCCanvasColorRef p_color, MCCanvasEffectRef &
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
 	t_effect.color = p_color;
-	MCCanvasEffectMake(t_effect, x_effect);
+	MCCanvasEffectSet(t_effect, x_effect);
 }
 
 void MCCanvasEffectGetBlendModeAsString(MCCanvasEffectRef p_effect, MCStringRef &r_blend_mode)
@@ -3798,7 +3808,7 @@ void MCCanvasEffectSetBlendModeAsString(MCStringRef p_blend_mode, MCCanvasEffect
 		// TODO - throw blend mode error
 		return;
 	}
-	MCCanvasEffectMake(t_effect, x_effect);
+	MCCanvasEffectSet(t_effect, x_effect);
 }
 
 void MCCanvasEffectGetOpacity(MCCanvasEffectRef p_effect, MCCanvasFloat &r_opacity)
@@ -3811,7 +3821,7 @@ void MCCanvasEffectSetOpacity(MCCanvasFloat p_opacity, MCCanvasEffectRef &x_effe
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
 	t_effect.opacity = p_opacity;
-	MCCanvasEffectMake(t_effect, x_effect);
+	MCCanvasEffectSet(t_effect, x_effect);
 }
 
 void MCCanvasEffectGetSize(MCCanvasEffectRef p_effect, MCCanvasFloat &r_size)
@@ -3836,7 +3846,7 @@ void MCCanvasEffectSetSize(MCCanvasFloat p_size, MCCanvasEffectRef &x_effect)
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
 	t_effect.size = p_size;
-	MCCanvasEffectMake(t_effect, x_effect);
+	MCCanvasEffectSet(t_effect, x_effect);
 }
 
 void MCCanvasEffectGetSpread(MCCanvasEffectRef p_effect, MCCanvasFloat &r_spread)
@@ -3861,7 +3871,7 @@ void MCCanvasEffectSetSpread(MCCanvasFloat p_spread, MCCanvasEffectRef &x_effect
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
 	t_effect.spread = p_spread;
-	MCCanvasEffectMake(t_effect, x_effect);
+	MCCanvasEffectSet(t_effect, x_effect);
 }
 
 void MCCanvasEffectGetDistance(MCCanvasEffectRef p_effect, MCCanvasFloat &r_distance)
@@ -3886,7 +3896,7 @@ void MCCanvasEffectSetDistance(MCCanvasFloat p_distance, MCCanvasEffectRef &x_ef
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
 	t_effect.distance = p_distance;
-	MCCanvasEffectMake(t_effect, x_effect);
+	MCCanvasEffectSet(t_effect, x_effect);
 }
 
 void MCCanvasEffectGetAngle(MCCanvasEffectRef p_effect, MCCanvasFloat &r_angle)
@@ -3911,7 +3921,7 @@ void MCCanvasEffectSetAngle(MCCanvasFloat p_angle, MCCanvasEffectRef &x_effect)
 	__MCCanvasEffectImpl t_effect;
 	t_effect = *MCCanvasEffectGet(x_effect);
 	t_effect.angle = p_angle;
-	MCCanvasEffectMake(t_effect, x_effect);
+	MCCanvasEffectSet(t_effect, x_effect);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4041,7 +4051,7 @@ bool MCCanvasCreate(MCGContextRef p_context, MCCanvasRef &r_canvas)
 	if (t_success)
 	{
 		t_canvas_impl->prop_index = 0;
-		t_canvas_impl->context = p_context;
+		t_canvas_impl->context = MCGContextRetain(p_context);
 		MCCanvasDirtyProperties(*t_canvas_impl);
 		
 		r_canvas = t_canvas;
@@ -4070,6 +4080,8 @@ void __MCCanvasDestroy(MCValueRef p_canvas)
 			MCCanvasPropertiesClear(t_canvas->prop_stack[i]);
 		MCMemoryDeleteArray(t_canvas->prop_stack);
 	}
+	
+	MCGContextRelease(t_canvas->context);
 }
 
 bool __MCCanvasCopy(MCValueRef p_canvas, bool p_release, MCValueRef &r_copy)
@@ -4107,7 +4119,7 @@ static inline MCCanvasProperties &MCCanvasGetProps(MCCanvasRef p_canvas)
 
 void MCCanvasGetPaint(MCCanvasRef p_canvas, MCCanvasPaintRef &r_paint)
 {
-	MCValueAssign(r_paint , MCCanvasGetProps(p_canvas).paint);
+	r_paint = MCValueRetain(MCCanvasGetProps(p_canvas).paint);
 }
 
 void MCCanvasSetPaint(MCCanvasPaintRef p_paint, MCCanvasRef &x_canvas)
@@ -4966,7 +4978,7 @@ bool _mcenumtostring(T p_value, MCStringRef &r_string)
 	if (N[p_value] == nil)
 		return false;
 	
-	MCValueAssign(r_string, MCNameGetString(N[p_value]));
+	r_string = MCValueRetain(MCNameGetString(N[p_value]));
 }
 
 bool MCCanvasBlendModeFromString(MCStringRef p_string, MCGBlendMode &r_blend_mode)
