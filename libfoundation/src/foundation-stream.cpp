@@ -757,7 +757,7 @@ bool MCStreamReadValue(MCStreamRef stream, MCValueRef& r_value)
 
 bool __MCStreamInitialize(void)
 {
-    if (!MCCustomTypeInfoCreate(&kMCStreamCustomValueCallbacks, kMCStreamTypeInfo))
+    if (!MCCustomTypeInfoCreate(kMCNullTypeInfo, &kMCStreamCustomValueCallbacks, kMCStreamTypeInfo))
         return false;
     
     return true;

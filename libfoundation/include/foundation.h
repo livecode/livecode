@@ -1309,6 +1309,9 @@ MC_DLLEXPORT bool MCTypeInfoIsError(MCTypeInfoRef typeinfo);
 
 // Returns true if the typeinfo is of foreign type.
 MC_DLLEXPORT bool MCTypeInfoIsForeign(MCTypeInfoRef typeinfo);
+    
+// Returns true if the typeinfo is of custom type.
+MC_DLLEXPORT bool MCTypeInfoIsCustom(MCTypeInfoRef typeinfo);
 
 // Typeinfo's form a chain with elements in the chain potentially providing critical
 // information about the specified type. This structure describes the represented
@@ -1439,7 +1442,7 @@ MC_DLLEXPORT MCTypeInfoRef MCOptionalTypeInfoGetBaseTypeInfo(MCTypeInfoRef typei
 //////////
 
 // Create a typeinfo describing a custom typeinfo.
-MC_DLLEXPORT bool MCCustomTypeInfoCreate(const MCValueCustomCallbacks *callbacks, MCTypeInfoRef& r_typeinfo);
+MC_DLLEXPORT bool MCCustomTypeInfoCreate(MCTypeInfoRef base, const MCValueCustomCallbacks *callbacks, MCTypeInfoRef& r_typeinfo);
 
 MC_DLLEXPORT const MCValueCustomCallbacks *MCCustomTypeInfoGetCallbacks(MCTypeInfoRef typeinfo);
 

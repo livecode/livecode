@@ -94,6 +94,7 @@ struct __MCTypeInfo: public __MCValue
         struct
         {
             MCValueCustomCallbacks callbacks;
+            MCTypeInfoRef base;
         } custom;
         struct
         {
