@@ -21,12 +21,12 @@ extern "C" MC_DLLEXPORT void MCLogicEvalNot(bool p_bool, bool& r_result)
     r_result = !p_bool;
 }
 
-extern "C" void MCLogicEvalIsEqualTo(bool p_left, bool p_right, bool& r_result)
+extern "C" MC_DLLEXPORT void MCLogicEvalIsEqualTo(bool p_left, bool p_right, bool& r_result)
 {
     r_result = (p_left == p_right);
 }
 
-extern "C" void MCLogicEvalIsNotEqualTo(bool p_left, bool p_right, bool& r_result)
+extern "C" MC_DLLEXPORT void MCLogicEvalIsNotEqualTo(bool p_left, bool p_right, bool& r_result)
 {
     r_result = (p_left != p_right);
 }
