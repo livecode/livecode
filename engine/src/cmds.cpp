@@ -996,7 +996,7 @@ if (sp.next(type) != PS_NORMAL)
 		return PS_ERROR;
 	}
 	if (sp.lookup(SP_MARK,te) != PS_NORMAL
-	        || te->which != MC_BY && te->which != MC_WHERE)
+	    || (te->which != MC_BY && te->which != MC_WHERE))
 	{
 		MCperror->add
 		(PE_MARK_NOTBYORWHERE, sp);
