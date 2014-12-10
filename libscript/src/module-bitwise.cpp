@@ -33,7 +33,7 @@ extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseXor(integer_t p_left, integer_t
 
 extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseNot(integer_t p_operand, integer_t& r_output)
 {
-    r_output = ~p_operand;
+    r_output = ~((int32_t)p_operand);
 }
 
 extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseShift(integer_t p_operand, integer_t p_shift, integer_t& r_output)

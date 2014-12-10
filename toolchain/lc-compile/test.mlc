@@ -319,7 +319,8 @@ public handler testBitwise(inout xResults as list)
 	put 3 bitwise xor 6 into tVar
 	testLog("Bitwise", "BitwiseXor", tVar is 5, xResults)
 	
-	--put bitwise not 0 into tVar
+	put bitwise not 5 into tVar
+	testLog("Bitwise", "BitwiseNot", tVar is - 6, xResults)
 
 	put 7 shifted by 2 bitwise into tVar 
 	testLog("Bitwise", "BitwiseShift", tVar is 28, xResults)
@@ -406,7 +407,6 @@ public handler testChar(inout xResults as list)
 	put "abcde" after char 5 of tString
 	
 	testLog("Char", "AfterCharOf", tString is "abcdeabcdeabcde", xResults)
-
 	
 	testLog("Char", "BeginsWithEmpty", tString begins with "", xResults)
 	testLog("Char", "BeginsWith", tString begins with "abcd", xResults)
