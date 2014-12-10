@@ -521,7 +521,7 @@ public handler testArithmetic(inout xResults as list)
 	put 1 into tOne
 	
 	testLog("Arithmetic", "ModInt", tLeft mod (tRight + tOne) is 1, xResults)
-	testLog("Arithmetic", "ModNum", 5 mod 3 is 2, xResults)
+	testLog("Arithmetic", "ModNum", 4^((7-1)/2) mod 7 is 1, xResults)
 	
 	testLog("Arithmetic", "Wrap", 5 wrap 3 is 2, xResults)
 	testLog("Arithmetic", "Wrap", -3 wrap 3 is -3, xResults)
