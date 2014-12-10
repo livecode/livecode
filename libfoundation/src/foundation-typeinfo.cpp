@@ -202,7 +202,7 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
     if (MCTypeInfoIsRecord(source . type))
     {
         // Now check to see if the target is one of the source's supertypes.
-        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> record . base)
+        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = __MCTypeInfoResolve(t_supertype) -> record . base)
             if (target . named_type == t_supertype)
                 return true;
         
@@ -214,7 +214,7 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
     if (MCTypeInfoIsCustom(source . type))
     {
         // Now check to see if the target is one of the source's supertypes.
-        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> custom . base)
+        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = __MCTypeInfoResolve(t_supertype) -> custom . base)
             if (target . named_type == t_supertype)
                 return true;
         
