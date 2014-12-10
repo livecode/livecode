@@ -201,6 +201,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
+		{
 			if (need_target)
 			{
 				MCperror->add(PE_CHUNK_NOCHUNK, sp);
@@ -208,6 +209,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 			}
 			else
 				break;
+		}
 		if (type == ST_ID)
 		{
 			te = NULL;
@@ -222,10 +224,10 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 						//   execution outwith a handler.
 						if (doingthe
-						        || sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL
+						    || (sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL
 						        && (MCexplicitvariables
 						            || sp.lookupconstant(&newfact) == PS_NORMAL
-						            || sp.findnewvar(sp.gettoken_nameref(), kMCEmptyName, &destvar) != PS_NORMAL))
+						            || sp.findnewvar(sp.gettoken_nameref(), kMCEmptyName, &destvar) != PS_NORMAL)))
 						{
 							delete newfact;
 							MCperror->add(PE_CHUNK_NOVARIABLE, sp);
@@ -351,8 +353,8 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 					break;
 				case CT_TYPES:
 					// MW-2011-08-08: [[ Bug ]] Allow control ... of control ...
-					if (lterm != CT_UNDEFINED && nterm > lterm
-					        || nterm == lterm && nterm != CT_GROUP && nterm != CT_LAYER && nterm != CT_STACK)
+					if ((lterm != CT_UNDEFINED && nterm > lterm)
+					    || (nterm == lterm && nterm != CT_GROUP && nterm != CT_LAYER && nterm != CT_STACK))
 					{
 						MCperror->add(PE_CHUNK_BADORDER, sp);
 						return PS_ERROR;
