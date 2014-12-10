@@ -22,14 +22,14 @@ foreign type Color binds to "kMCCanvasColorTypeInfo"
 foreign type Paint binds to "kMCCanvasPaintTypeInfo"
 
 // Solid Paint
-type SolidPaint is Paint
+foreign type SolidPaint binds to "kMCCanvasSolidPaintTypeInfo"
 
 // Pattern
-type Pattern is Paint
+foreign type Pattern binds to "kMCCanvasPatternTypeInfo"
 
 // Gradient
+foreign type Gradient binds to "kMCCanvasGradientTypeInfo"
 foreign type GradientStop binds to "kMCCanvasGradientStopTypeInfo"
-type Gradient is Paint
 
 // Image
 foreign type Image binds to "kMCCanvasImageTypeInfo"
@@ -466,30 +466,23 @@ end syntax
 
 // Gradient
 
+public foreign handler MCCanvasGradientEvaluateType(in pType as int, out rType as int) as undefined binds to "<builtin>"
+
+syntax GradientType is phrase
+	( "linear" <mType=0> | "radial" <mType=1> | "conical" <mType=2> | "diamond" <mType=3> | "spiral" <mType=4> | "xy" <mType=5> | "sqrtxy" <mType=6> )
+begin
+	MCCanvasGradientEvaluateType(mType, output)
+end syntax
+
 // Constructors
 
 public foreign handler MCCanvasGradientStopMake(in pOffset as CanvasFloat, in pColor as Color, out rStop as GradientStop) as undefined binds to "<builtin>"
 public foreign handler MCCanvasGradientMakeWithRamp(in pType as int, in pRamp as list, out rGradient as Gradient) as undefined binds to "<builtin>"
-public foreign handler MCCanvasGradientReturnType(in pType as int, out rType as int) as undefined binds to "<builtin>"
 
 syntax MakeGradientStop is prefix operator with precedence 4
 	"gradient" "stop" "at" <mOffset: Expression> "with" <mColor: Expression>
 begin
 	MCCanvasGradientStopMake(mOffset, mColor, output)
-end syntax
-
-constant kGradientTypeLinear is 0
-constant kGradientTypeRadial is 1
-constant kGradientTypeConical is 2
-constant kGradientTypeDiamond is 3
-constant kGradientTypeSpiral is 4
-constant kGradientTypeXY is 5
-constant kGradientTypeSqrtXY is 6
-
-syntax GradientType is phrase
-	( "linear" <mType=0> | "radial" <mType=1> | "conical" <mType=2> | "diamond" <mType=3> | "spiral" <mType=4> | "xy" <mType=5> | "sqrtxy" <mType=6> )
-begin
-	MCCanvasGradientReturnType(mType, output)
 end syntax
 
 syntax MakeGradientWithRamp is prefix operator with precedence 4
@@ -934,14 +927,17 @@ end syntax
 
 // Graphic Effect
 
-// Constructors
-
-public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as integer, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
+public foreign handler MCCanvasEffectEvaluateType(in pType as int, out rType as int) as undefined binds to "<builtin>"
 
 syntax EffectType is phrase
 	( "color" "overlay" <mType=0> | "inner" "shadow" <mType=1> | "outer" "shadow" <mType=2> | "inner" "glow" <mType=3> | "outer" "glow" <mType=4> )
 begin
+	MCCanvasEffectEvaluateType(mType, output)
 end syntax
+
+// Constructors
+
+public foreign handler MCCanvasEffectMakeWithPropertyArray(in pType as integer, in pProperties as array, out rEffect as Effect) as undefined binds to "<builtin>"
 
 syntax MakeEffectWithProperties is prefix operator with precedence 4
 	<mType: EffectType> <mProperties: Expression>
@@ -1112,8 +1108,7 @@ public foreign handler MCCanvasTranslateWithList(in pCanvas as Canvas, in pTrans
 public foreign handler MCCanvasSaveState(in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasRestoreState(in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasBeginLayer(in pCanvas as Canvas) as undefined binds to "<builtin>"
-// TODO - begin layer with effect foo in rect bar of baz?
-public foreign handler MCCanvasBeginLayerWithEffect(in pCanvas as Canvas, in pEffect as Effect, in pRect as Rectangle) as undefined binds to "<builtin>"
+public foreign handler MCCanvasBeginLayerWithEffect(in pEffect as Effect, in pCanvas as Canvas) as undefined binds to "<builtin>"
 public foreign handler MCCanvasEndLayer(in pCanvas as Canvas) as undefined binds to "<builtin>"
 
 public foreign handler MCCanvasFill(in pCanvas as Canvas) as undefined binds to "<builtin>"
@@ -1170,9 +1165,10 @@ begin
 end syntax
 
 syntax CanvasBeginLayer is statement
-	"begin" "layer" "on" <mCanvas: Expression>
+	"begin" "layer" [ "with" <mEffect: Expression> ] "on" <mCanvas: Expression>
 begin
 	MCCanvasBeginLayer(mCanvas)
+	MCCanvasBeginLayerWithEffect(mEffect, mCanvas)
 end syntax
 
 syntax CanvasEndLayer is statement

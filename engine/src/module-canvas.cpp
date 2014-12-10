@@ -267,6 +267,9 @@ MCTypeInfoRef kMCCanvasColorTypeInfo;
 MCTypeInfoRef kMCCanvasTransformTypeInfo;
 MCTypeInfoRef kMCCanvasImageTypeInfo;
 MCTypeInfoRef kMCCanvasPaintTypeInfo;
+MCTypeInfoRef kMCCanvasSolidPaintTypeInfo;
+MCTypeInfoRef kMCCanvasPatternTypeInfo;
+MCTypeInfoRef kMCCanvasGradientTypeInfo;
 MCTypeInfoRef kMCCanvasGradientStopTypeInfo;
 MCTypeInfoRef kMCCanvasPathTypeInfo;
 MCTypeInfoRef kMCCanvasEffectTypeInfo;
@@ -288,9 +291,6 @@ MCTypeInfoRef kMCCanvasSkewListFormatErrorTypeInfo;
 MCTypeInfoRef kMCCanvasRadiiListFormatErrorTypeInfo;
 MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
 
-MCTypeInfoRef kMCCanvasSolidPaintTypeErrorTypeInfo;
-MCTypeInfoRef kMCCanvasPatternPaintTypeErrorTypeInfo;
-MCTypeInfoRef kMCCanvasGradientPaintTypeErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1687,35 +1687,14 @@ void MCCanvasImageGetMetadata(MCCanvasImageRef p_image, MCArrayRef &r_metadata)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Paint
+// Solid Paint
 
-// defer to subtype finalize methods
-static void __MCCanvasPaintDestroy(MCValueRef p_value)
+static void __MCCanvasSolidPaintDestroy(MCValueRef p_value)
 {
-	__MCCanvasPaintImpl *t_paint;
-	t_paint = (__MCCanvasPaintImpl*)MCValueGetExtraBytesPtr(p_value);
-	
-	switch (t_paint->type)
-	{
-		case kMCCanvasPaintTypeSolid:
-			MCCanvasSolidPaintDelete((__MCCanvasSolidPaintImpl *)t_paint);
-			break;
-			
-		case kMCCanvasPaintTypePattern:
-			MCCanvasPatternDelete((__MCCanvasPatternImpl *)t_paint);
-			break;
-			
-		case kMCCanvasPaintTypeGradient:
-			MCCanvasGradientDelete((__MCCanvasGradientImpl *)t_paint);
-			break;
-			
-		default:
-			MCAssert(false);
-			
-	}
+	MCValueRelease(MCCanvasSolidPaintGet((MCCanvasSolidPaintRef)p_value)->color);
 }
 
-static bool __MCCanvasPaintCopy(MCValueRef p_value, bool p_release, MCValueRef &r_copy)
+static bool __MCCanvasSolidPaintCopy(MCValueRef p_value, bool p_release, MCValueRef &r_copy)
 {
 	if (p_release)
 		r_copy = p_value;
@@ -1725,100 +1704,22 @@ static bool __MCCanvasPaintCopy(MCValueRef p_value, bool p_release, MCValueRef &
 	return true;
 }
 
-static bool __MCCanvasPaintEqual(MCValueRef p_left, MCValueRef p_right)
+static bool __MCCanvasSolidPaintEqual(MCValueRef p_left, MCValueRef p_right)
 {
 	if (p_left == p_right)
 		return true;
 	
-	__MCCanvasPaintImpl *t_left, *t_right;
-	t_left = MCCanvasPaintGet((MCCanvasPaintRef)p_left);
-	t_right = MCCanvasPaintGet((MCCanvasPaintRef)p_right);
-	
-	if (t_left->type != t_right->type)
-		return false;
-	
-	switch (t_left->type)
-	{
-		case kMCCanvasPaintTypeSolid:
-			return MCCanvasSolidPaintEqual((__MCCanvasSolidPaintImpl*)t_left, (__MCCanvasSolidPaintImpl*)t_right);
-			
-		case kMCCanvasPaintTypePattern:
-			return MCCanvasPatternEqual((__MCCanvasPatternImpl*)t_left, (__MCCanvasPatternImpl*)t_right);
-			
-		case kMCCanvasPaintTypeGradient:
-			return MCCanvasGradientEqual((__MCCanvasGradientImpl*)t_left, (__MCCanvasGradientImpl*)t_right);
-	}
-	
-	MCAssert(false);
+	return MCValueIsEqualTo(MCCanvasSolidPaintGet((MCCanvasSolidPaintRef)p_left)->color, MCCanvasSolidPaintGet((MCCanvasSolidPaintRef)p_right)->color);
+}
+
+static hash_t __MCCanvasSolidPaintHash(MCValueRef p_value)
+{
+	return MCValueHash(MCCanvasSolidPaintGet((MCCanvasSolidPaintRef)p_value)->color);
+}
+
+static bool __MCCanvasSolidPaintDescribe(MCValueRef p_value, MCStringRef &r_string)
+{
 	return false;
-}
-
-static hash_t __MCCanvasPaintHash(MCValueRef p_value)
-{
-	__MCCanvasPaintImpl *t_paint;
-	t_paint = (__MCCanvasSolidPaintImpl*)MCValueGetExtraBytesPtr(p_value);
-	
-	switch (t_paint->type)
-	{
-		case kMCCanvasPaintTypeSolid:
-			return MCCanvasSolidPaintHash((__MCCanvasSolidPaintImpl*)t_paint);
-			
-		case kMCCanvasPaintTypePattern:
-			return MCCanvasPatternHash((__MCCanvasPatternImpl*)t_paint);
-			
-		case kMCCanvasPaintTypeGradient:
-			return MCCanvasGradientHash((__MCCanvasGradientImpl*)t_paint);
-	}
-	
-	MCAssert(false);
-	return 0;
-}
-
-static bool __MCCanvasPaintDescribe(MCValueRef p_value, MCStringRef &r_desc)
-{
-	// TODO - implement describe
-	return false;
-}
-
-__MCCanvasPaintImpl *MCCanvasPaintGet(MCCanvasPaintRef p_paint)
-{
-	return (__MCCanvasPaintImpl*)MCValueGetExtraBytesPtr(p_paint);
-}
-
-//////////
-
-// Solid Paint
-
-bool MCCanvasPaintIsSolid(MCCanvasPaintRef p_paint)
-{
-	return MCCanvasPaintGet(p_paint)->type == kMCCanvasPaintTypeSolid;
-}
-
-bool MCCanvasPaintEnsureSolid(MCCanvasPaintRef p_paint)
-{
-	if (MCCanvasPaintIsSolid(p_paint))
-		return true;
-	
-	MCCanvasThrowError(kMCCanvasSolidPaintTypeErrorTypeInfo);
-	return false;
-}
-
-void MCCanvasSolidPaintDelete(__MCCanvasSolidPaintImpl *p_paint)
-{
-	MCValueRelease(p_paint->color);
-}
-
-bool MCCanvasSolidPaintEqual(__MCCanvasSolidPaintImpl *p_left, __MCCanvasSolidPaintImpl *p_right)
-{
-	if (p_left == p_right)
-		return true;
-	
-	return MCValueIsEqualTo(p_left->color, p_right->color);
-}
-
-hash_t MCCanvasSolidPaintHash(__MCCanvasSolidPaintImpl *p_paint)
-{
-	return MCValueHash(p_paint->color);
 }
 
 bool MCCanvasSolidPaintCreateWithColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef &r_paint)
@@ -1830,14 +1731,13 @@ bool MCCanvasSolidPaintCreateWithColor(MCCanvasColorRef p_color, MCCanvasSolidPa
 	t_paint = nil;
 	
 	if (t_success)
-		t_success = MCValueCreateCustom(kMCCanvasPaintTypeInfo, sizeof(__MCCanvasSolidPaintImpl), t_paint);
+		t_success = MCValueCreateCustom(kMCCanvasSolidPaintTypeInfo, sizeof(__MCCanvasSolidPaintImpl), t_paint);
 	
 	if (t_success)
 	{
 		__MCCanvasSolidPaintImpl *t_impl;
 		t_impl = MCCanvasSolidPaintGet(t_paint);
 		
-		t_impl->type = kMCCanvasPaintTypeSolid;
 		t_impl->color = MCValueRetain(p_color);
 
 		t_success = MCValueInter(t_paint, r_paint);
@@ -1853,6 +1753,11 @@ __MCCanvasSolidPaintImpl *MCCanvasSolidPaintGet(MCCanvasSolidPaintRef p_paint)
 	return (__MCCanvasSolidPaintImpl*)MCValueGetExtraBytesPtr(p_paint);
 }
 
+bool MCCanvasPaintIsSolidPaint(MCCanvasPaintRef p_paint)
+{
+	return MCValueGetTypeInfo(p_paint) == kMCCanvasSolidPaintTypeInfo;
+}
+
 // Constructor
 
 void MCCanvasSolidPaintMakeWithColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef &r_paint)
@@ -1864,17 +1769,11 @@ void MCCanvasSolidPaintMakeWithColor(MCCanvasColorRef p_color, MCCanvasSolidPain
 
 void MCCanvasSolidPaintGetColor(MCCanvasSolidPaintRef p_paint, MCCanvasColorRef &r_color)
 {
-	if (!MCCanvasPaintEnsureSolid(p_paint))
-		return;
-	
 	r_color = MCValueRetain(MCCanvasSolidPaintGet(p_paint)->color);
 }
 
 void MCCanvasSolidPaintSetColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef &x_paint)
 {
-	if (!MCCanvasPaintEnsureSolid(x_paint))
-		return;
-	
 	MCCanvasSolidPaintRef t_paint;
 	t_paint = nil;
 	
@@ -1889,37 +1788,41 @@ void MCCanvasSolidPaintSetColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef 
 
 // Pattern
 
-bool MCCanvasPaintIsPattern(MCCanvasPaintRef p_paint)
+static void __MCCanvasPatternDestroy(MCValueRef p_value)
 {
-	return MCCanvasPaintGet(p_paint)->type == kMCCanvasPaintTypePattern;
+	MCValueRelease(MCCanvasPatternGet((MCCanvasPatternRef)p_value)->image);
 }
 
-bool MCCanvasPaintEnsurePattern(MCCanvasPaintRef p_paint)
+static bool __MCCanvasPatternCopy(MCValueRef p_value, bool p_release, MCValueRef &r_copy)
 {
-	if (MCCanvasPaintIsPattern(p_paint))
-		return true;
+	if (p_release)
+		r_copy = p_value;
+	else
+		r_copy = MCValueRetain(p_value);
 	
-	MCCanvasThrowError(kMCCanvasPatternPaintTypeErrorTypeInfo);
-	return false;
+	return true;
 }
 
-void MCCanvasPatternDelete(__MCCanvasPatternImpl *p_pattern)
-{
-	MCValueRelease(p_pattern->image);
-}
-
-bool MCCanvasPatternEqual(__MCCanvasPatternImpl *p_left, __MCCanvasPatternImpl *p_right)
+static bool __MCCanvasPatternEqual(MCValueRef p_left, MCValueRef p_right)
 {
 	if (p_left == p_right)
 		return true;
 	
-	return MCValueIsEqualTo(p_left->image, p_right->image);
+	return MCValueIsEqualTo(MCCanvasPatternGet((MCCanvasPatternRef)p_left)->image, MCCanvasPatternGet((MCCanvasPatternRef)p_right)->image);
 }
 
-hash_t MCCanvasPatternHash(__MCCanvasPatternImpl *p_paint)
+static hash_t __MCCanvasPatternHash(MCValueRef p_value)
 {
+	__MCCanvasPatternImpl *t_pattern;
+	t_pattern = MCCanvasPatternGet((MCCanvasPatternRef)p_value);
+	
 	// TODO - ask Mark how to combine hash values
-	return MCValueHash(p_paint->image) ^ MCValueHash(p_paint->transform);
+	return MCValueHash(t_pattern->image) ^ MCValueHash(t_pattern->transform);
+}
+
+static bool __MCCanvasPatternDescribe(MCValueRef p_value, MCStringRef &r_string)
+{
+	return false;
 }
 
 bool MCCanvasPatternCreateWithImage(MCCanvasImageRef p_image, MCCanvasTransformRef p_transform, MCCanvasPatternRef &r_paint)
@@ -1931,14 +1834,13 @@ bool MCCanvasPatternCreateWithImage(MCCanvasImageRef p_image, MCCanvasTransformR
 	t_paint = nil;
 	
 	if (t_success)
-		t_success = MCValueCreateCustom(kMCCanvasPaintTypeInfo, sizeof(__MCCanvasPatternImpl), t_paint);
+		t_success = MCValueCreateCustom(kMCCanvasPatternTypeInfo, sizeof(__MCCanvasPatternImpl), t_paint);
 	
 	if (t_success)
 	{
 		__MCCanvasPatternImpl *t_impl;
 		t_impl = MCCanvasPatternGet(t_paint);
 		
-		t_impl->type = kMCCanvasPaintTypePattern;
 		t_impl->image = MCValueRetain(p_image);
 		t_impl->transform = MCValueRetain(p_transform);
 		
@@ -1953,6 +1855,11 @@ bool MCCanvasPatternCreateWithImage(MCCanvasImageRef p_image, MCCanvasTransformR
 __MCCanvasPatternImpl *MCCanvasPatternGet(MCCanvasPatternRef p_paint)
 {
 	return (__MCCanvasPatternImpl*)MCValueGetExtraBytesPtr(p_paint);
+}
+
+bool MCCanvasPaintIsPattern(MCCanvasPaintRef p_paint)
+{
+	return MCValueGetTypeInfo(p_paint) == kMCCanvasPatternTypeInfo;
 }
 
 // Constructor
@@ -2015,9 +1922,6 @@ void MCCanvasPatternMakeWithImageTranslatedWithList(MCCanvasImageRef p_image, MC
 
 void MCCanvasPatternSet(MCCanvasImageRef p_image, MCCanvasTransformRef p_transform, MCCanvasPatternRef &x_pattern)
 {
-	if (!MCCanvasPaintEnsurePattern(x_pattern))
-		return;
-	
 	MCCanvasPatternRef t_pattern;
 	if (!MCCanvasPatternCreateWithImage(p_image, p_transform, t_pattern))
 		return;
@@ -2028,33 +1932,21 @@ void MCCanvasPatternSet(MCCanvasImageRef p_image, MCCanvasTransformRef p_transfo
 
 void MCCanvasPatternGetImage(MCCanvasPatternRef p_pattern, MCCanvasImageRef &r_image)
 {
-	if (!MCCanvasPaintEnsurePattern(p_pattern))
-		return;
-	
 	r_image = MCValueRetain(MCCanvasPatternGet(p_pattern)->image);
 }
 
 void MCCanvasPatternSetImage(MCCanvasImageRef p_image, MCCanvasPatternRef &x_pattern)
 {
-	if (!MCCanvasPaintEnsurePattern(x_pattern))
-		return;
-	
 	MCCanvasPatternSet(p_image, MCCanvasPatternGet(x_pattern)->transform, x_pattern);
 }
 
 void MCCanvasPatternGetTransform(MCCanvasPatternRef p_pattern, MCCanvasTransformRef &r_transform)
 {
-	if (!MCCanvasPaintEnsurePattern(p_pattern))
-		return;
-
 	r_transform = MCValueRetain(MCCanvasPatternGet(p_pattern)->transform);
 }
 
 void MCCanvasPatternSetTransform(MCCanvasTransformRef p_transform, MCCanvasPatternRef &x_pattern)
 {
-	if (!MCCanvasPaintEnsurePattern(x_pattern))
-		return;
-
 	MCCanvasPatternSet(MCCanvasPatternGet(x_pattern)->image, p_transform, x_pattern);
 }
 
@@ -2062,9 +1954,6 @@ void MCCanvasPatternSetTransform(MCCanvasTransformRef p_transform, MCCanvasPatte
 
 void MCCanvasPatternTransform(MCCanvasPatternRef &x_pattern, const MCGAffineTransform &p_transform)
 {
-	if (!MCCanvasPaintEnsurePattern(x_pattern))
-		return;
-	
 	MCCanvasTransformRef t_transform;
 	t_transform = MCValueRetain(MCCanvasPatternGet(x_pattern)->transform);
 	
@@ -2123,17 +2012,17 @@ static void __MCCanvasGradientStopDestroy(MCValueRef p_stop)
 	MCValueRelease(MCCanvasGradientStopGet((MCCanvasGradientStopRef)p_stop)->color);
 }
 
-static bool __MCCanvasGradientStopCopy(MCValueRef p_image, bool p_release, MCValueRef &r_copy)
+static bool __MCCanvasGradientStopCopy(MCValueRef p_value, bool p_release, MCValueRef &r_copy)
 {
 	if (p_release)
-		r_copy = p_image;
+		r_copy = p_value;
 	else
-		r_copy = MCValueRetain(p_image);
+		r_copy = MCValueRetain(p_value);
 	
 	return true;
 }
 
-bool __MCCanvasGradientStopEqual(MCValueRef p_left, MCValueRef p_right)
+static bool __MCCanvasGradientStopEqual(MCValueRef p_left, MCValueRef p_right)
 {
 	if (p_left == p_right)
 		return true;
@@ -2235,44 +2124,54 @@ void MCCanvasGradientStopSetColor(MCCanvasColorRef p_color, MCCanvasGradientStop
 
 // Gradient
 
-bool MCCanvasPaintIsGradient(MCCanvasPaintRef p_paint)
+static void __MCCanvasGradientDestroy(MCValueRef p_value)
 {
-	return MCCanvasPaintGet(p_paint)->type == kMCCanvasPaintTypeGradient;
-}
-
-bool MCCanvasPaintEnsureGradient(MCCanvasPaintRef p_paint)
-{
-	if (MCCanvasPaintIsGradient(p_paint))
-		return true;
+	__MCCanvasGradientImpl *t_gradient;
+	t_gradient = MCCanvasGradientGet((MCCanvasGradientRef)p_value);
 	
-	MCCanvasThrowError(kMCCanvasGradientPaintTypeErrorTypeInfo);
-	return false;
+	MCValueRelease(t_gradient->ramp);
+	MCValueRelease(t_gradient->transform);
 }
 
-void MCCanvasGradientDelete(__MCCanvasGradientImpl *p_gradient)
+static bool __MCCanvasGradientCopy(MCValueRef p_value, bool p_release, MCValueRef &r_copy)
 {
-	MCValueRelease(p_gradient->ramp);
-	MCValueRelease(p_gradient->transform);
+	if (p_release)
+		r_copy = p_value;
+	else
+		r_copy = MCValueRetain(p_value);
+	
+	return true;
 }
 
-bool MCCanvasGradientEqual(__MCCanvasGradientImpl *p_left, __MCCanvasGradientImpl *p_right)
+static bool __MCCanvasGradientEqual(MCValueRef p_left, MCValueRef p_right)
 {
 	if (p_left == p_right)
 		return true;
 	
-	return p_left->function == p_right->function &&
-	MCValueIsEqualTo(p_left->ramp, p_right->ramp) &&
-	p_left->mirror == p_right->mirror &&
-	p_left->wrap == p_right->wrap &&
-	p_left->repeats == p_right->repeats &&
-	MCValueIsEqualTo(p_left->transform, p_right->transform) &&
-	p_left->filter == p_right->filter;
+	__MCCanvasGradientImpl *t_left, *t_right;
+	t_left = MCCanvasGradientGet((MCCanvasGradientRef)p_left);
+	t_right = MCCanvasGradientGet((MCCanvasGradientRef)p_right);
+	
+	return t_left->function == t_right->function &&
+	MCValueIsEqualTo(t_left->ramp, t_right->ramp) &&
+	t_left->mirror == t_right->mirror &&
+	t_left->wrap == t_right->wrap &&
+	t_left->repeats == t_right->repeats &&
+	MCValueIsEqualTo(t_left->transform, t_right->transform) &&
+	t_left->filter == t_right->filter;
 }
 
-hash_t MCCanvasGradientHash(__MCCanvasGradientImpl *p_paint)
+static hash_t __MCCanvasGradientHash(MCValueRef p_value)
 {
+	__MCCanvasGradientImpl *t_gradient;
+	t_gradient = MCCanvasGradientGet((MCCanvasGradientRef)p_value);
 	// TODO - ask Mark how to combine hash values
-	return MCHashInteger(p_paint->mirror | (p_paint->wrap < 1)) ^ MCHashInteger(p_paint->filter) ^ MCValueHash(p_paint->ramp) ^ MCHashInteger(p_paint->repeats) ^ MCValueHash(p_paint->transform) ^ MCHashInteger(p_paint->filter);
+	return MCHashInteger(t_gradient->mirror | (t_gradient->wrap < 1)) ^ MCHashInteger(t_gradient->filter) ^ MCValueHash(t_gradient->ramp) ^ MCHashInteger(t_gradient->repeats) ^ MCValueHash(t_gradient->transform) ^ MCHashInteger(t_gradient->filter);
+}
+
+static bool __MCCanvasGradientDescribe(MCValueRef p_value, MCStringRef &r_string)
+{
+	return false;
 }
 
 bool MCCanvasGradientCreate(const __MCCanvasGradientImpl &p_gradient, MCCanvasGradientRef &r_paint)
@@ -2284,7 +2183,7 @@ bool MCCanvasGradientCreate(const __MCCanvasGradientImpl &p_gradient, MCCanvasGr
 	t_paint = nil;
 	
 	if (t_success)
-		t_success = MCValueCreateCustom(kMCCanvasPaintTypeInfo, sizeof(__MCCanvasGradientImpl), t_paint);
+		t_success = MCValueCreateCustom(kMCCanvasGradientTypeInfo, sizeof(__MCCanvasGradientImpl), t_paint);
 	
 	if (t_success)
 	{
@@ -2306,6 +2205,11 @@ bool MCCanvasGradientCreate(const __MCCanvasGradientImpl &p_gradient, MCCanvasGr
 __MCCanvasGradientImpl *MCCanvasGradientGet(MCCanvasGradientRef p_paint)
 {
 	return (__MCCanvasGradientImpl*)MCValueGetExtraBytesPtr(p_paint);
+}
+
+bool MCCanvasPaintIsGradient(MCCanvasPaintRef p_paint)
+{
+	return MCValueGetTypeInfo(p_paint) == kMCCanvasGradientTypeInfo;
 }
 
 // Gradient
@@ -2356,7 +2260,7 @@ bool MCCanvasGradientCheckStopOrder(MCProperListRef p_ramp)
 
 //////////
 
-void MCCanvasGradientReturnType(integer_t p_type, integer_t& r_type)
+void MCCanvasGradientEvaluateType(integer_t p_type, integer_t& r_type)
 {
     r_type = p_type;
 }
@@ -2374,8 +2278,6 @@ void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCa
 	
 	__MCCanvasGradientImpl t_gradient_impl;
 	MCMemoryClear(&t_gradient_impl, sizeof(__MCCanvasGradientImpl));
-	t_gradient_impl.type = kMCCanvasPaintTypeGradient;
-	
 	t_gradient_impl.function = (MCGGradientFunction)p_type;
 	t_gradient_impl.mirror = false;
 	t_gradient_impl.wrap = false;
@@ -2401,17 +2303,11 @@ void MCCanvasGradientSet(const __MCCanvasGradientImpl &p_gradient, MCCanvasGradi
 
 void MCCanvasGradientGetRamp(MCCanvasGradientRef p_gradient, MCProperListRef &r_ramp)
 {
-	if (!MCCanvasPaintEnsureGradient(p_gradient))
-		return;
-	
 	r_ramp = MCValueRetain(MCCanvasGradientGet(p_gradient)->ramp);
 }
 
 void MCCanvasGradientSetRamp(MCProperListRef p_ramp, MCCanvasGradientRef &x_gradient)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	if (!MCCanvasGradientCheckStopOrder(p_ramp))
 		return;
 	
@@ -2425,17 +2321,11 @@ void MCCanvasGradientSetRamp(MCProperListRef p_ramp, MCCanvasGradientRef &x_grad
 
 void MCCanvasGradientGetTypeAsString(MCCanvasGradientRef p_gradient, MCStringRef &r_string)
 {
-	if (!MCCanvasPaintEnsureGradient(p_gradient))
-		return;
-	
 	/* UNCHECKED */ MCCanvasGradientTypeToString(MCCanvasGradientGet(p_gradient)->function, r_string);
 }
 
 void MCCanvasGradientSetTypeAsString(MCStringRef p_string, MCCanvasGradientRef &x_gradient)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	__MCCanvasGradientImpl t_gradient;
 	t_gradient = *MCCanvasGradientGet(x_gradient);
 	
@@ -2450,17 +2340,11 @@ void MCCanvasGradientSetTypeAsString(MCStringRef p_string, MCCanvasGradientRef &
 
 void MCCanvasGradientGetRepeat(MCCanvasGradientRef p_gradient, integer_t &r_repeat)
 {
-	if (!MCCanvasPaintEnsureGradient(p_gradient))
-		return;
-	
 	r_repeat = MCCanvasGradientGet(p_gradient)->repeats;
 }
 
 void MCCanvasGradientSetRepeat(integer_t p_repeat, MCCanvasGradientRef &x_gradient)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	__MCCanvasGradientImpl t_gradient;
 	t_gradient = *MCCanvasGradientGet(x_gradient);
 	
@@ -2471,17 +2355,11 @@ void MCCanvasGradientSetRepeat(integer_t p_repeat, MCCanvasGradientRef &x_gradie
 
 void MCCanvasGradientGetWrap(MCCanvasGradientRef p_gradient, bool &r_wrap)
 {
-	if (!MCCanvasPaintEnsureGradient(p_gradient))
-		return;
-	
 	r_wrap = MCCanvasGradientGet(p_gradient)->wrap;
 }
 
 void MCCanvasGradientSetWrap(bool p_wrap, MCCanvasGradientRef &x_gradient)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	__MCCanvasGradientImpl t_gradient;
 	t_gradient = *MCCanvasGradientGet(x_gradient);
 	
@@ -2492,17 +2370,11 @@ void MCCanvasGradientSetWrap(bool p_wrap, MCCanvasGradientRef &x_gradient)
 
 void MCCanvasGradientGetMirror(MCCanvasGradientRef p_gradient, bool &r_mirror)
 {
-	if (!MCCanvasPaintEnsureGradient(p_gradient))
-		return;
-	
 	r_mirror = MCCanvasGradientGet(p_gradient)->mirror;
 }
 
 void MCCanvasGradientSetMirror(bool p_mirror, MCCanvasGradientRef &x_gradient)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	__MCCanvasGradientImpl t_gradient;
 	t_gradient = *MCCanvasGradientGet(x_gradient);
 	
@@ -2567,9 +2439,6 @@ void MCCanvasGradientSetPoints(MCCanvasGradientRef &x_gradient, const MCGPoint &
 
 void MCCanvasGradientGetFrom(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_from)
 {
-	if (!MCCanvasPaintEnsureGradient(p_gradient))
-		return;
-	
 	MCGPoint t_from, t_to, t_via;
 	MCCanvasGradientGetPoints(p_gradient, t_from, t_to, t_via);
 	
@@ -2578,9 +2447,6 @@ void MCCanvasGradientGetFrom(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r
 
 void MCCanvasGradientGetTo(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_to)
 {
-	if (!MCCanvasPaintEnsureGradient(p_gradient))
-		return;
-	
 	MCGPoint t_from, t_to, t_via;
 	MCCanvasGradientGetPoints(p_gradient, t_from, t_to, t_via);
 	
@@ -2589,9 +2455,6 @@ void MCCanvasGradientGetTo(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_t
 
 void MCCanvasGradientGetVia(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_via)
 {
-	if (!MCCanvasPaintEnsureGradient(p_gradient))
-		return;
-	
 	MCGPoint t_from, t_to, t_via;
 	MCCanvasGradientGetPoints(p_gradient, t_from, t_to, t_via);
 	
@@ -2600,9 +2463,6 @@ void MCCanvasGradientGetVia(MCCanvasGradientRef p_gradient, MCCanvasPointRef &r_
 
 void MCCanvasGradientSetFrom(MCCanvasPointRef p_from, MCCanvasGradientRef &x_gradient)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	MCGPoint t_from, t_to, t_via;
 	MCCanvasGradientGetPoints(x_gradient, t_from, t_to, t_via);
 	MCCanvasGradientSetPoints(x_gradient, *MCCanvasPointGet(p_from), t_to, t_via);
@@ -2610,9 +2470,6 @@ void MCCanvasGradientSetFrom(MCCanvasPointRef p_from, MCCanvasGradientRef &x_gra
 
 void MCCanvasGradientSetTo(MCCanvasPointRef p_to, MCCanvasGradientRef &x_gradient)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	MCGPoint t_from, t_to, t_via;
 	MCCanvasGradientGetPoints(x_gradient, t_from, t_to, t_via);
 	MCCanvasGradientSetPoints(x_gradient, t_from, *MCCanvasPointGet(p_to), t_via);
@@ -2620,9 +2477,6 @@ void MCCanvasGradientSetTo(MCCanvasPointRef p_to, MCCanvasGradientRef &x_gradien
 
 void MCCanvasGradientSetVia(MCCanvasPointRef p_via, MCCanvasGradientRef &x_gradient)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	MCGPoint t_from, t_to, t_via;
 	MCCanvasGradientGetPoints(x_gradient, t_from, t_to, t_via);
 	MCCanvasGradientSetPoints(x_gradient, t_from, t_to, *MCCanvasPointGet(p_via));
@@ -2635,9 +2489,6 @@ void MCCanvasGradientGetTransform(MCCanvasGradientRef p_gradient, MCCanvasTransf
 
 void MCCanvasGradientSetTransform(MCCanvasTransformRef p_transform, MCCanvasGradientRef &x_gradient)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	__MCCanvasGradientImpl t_gradient;
 	t_gradient = *MCCanvasGradientGet(x_gradient);
 	t_gradient.transform = p_transform;
@@ -2674,9 +2525,6 @@ bool MCProperListGetGradientStopInsertionPoint(MCProperListRef p_list, MCCanvasG
 
 void MCCanvasGradientAddStop(MCCanvasGradientStopRef p_stop, MCCanvasGradientRef &x_gradient)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	bool t_success;
 	t_success = true;
 	
@@ -2724,9 +2572,6 @@ void MCCanvasGradientAddStop(MCCanvasGradientStopRef p_stop, MCCanvasGradientRef
 
 void MCCanvasGradientTransform(MCCanvasGradientRef &x_gradient, const MCGAffineTransform &p_transform)
 {
-	if (!MCCanvasPaintEnsureGradient(x_gradient))
-		return;
-	
 	MCCanvasGradientSetTransform(x_gradient, MCGAffineTransformConcat(*MCCanvasTransformGet(MCCanvasGradientGet(x_gradient)->transform), p_transform));
 }
 
@@ -2795,7 +2640,7 @@ static bool __MCCanvasPathEqual(MCValueRef p_left, MCValueRef p_right)
 	return MCGPathIsEqualTo(MCCanvasPathGetMCGPath((MCCanvasPathRef)p_left), MCCanvasPathGetMCGPath((MCCanvasPathRef)p_right));
 }
 
-bool __MCCanvasPathHashCallback(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count)
+static bool __MCCanvasPathHashCallback(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count)
 {
 	hash_t *t_hash;
 	t_hash = static_cast<hash_t*>(p_context);
@@ -3670,6 +3515,13 @@ __MCCanvasEffectImpl *MCCanvasEffectGet(MCCanvasEffectRef p_effect)
 	return (__MCCanvasEffectImpl*)MCValueGetExtraBytesPtr(p_effect);
 }
 
+//////////
+
+void MCCanvasEffectEvaluateType(integer_t p_type, integer_t& r_type)
+{
+	r_type = p_type;
+}
+
 // Constructors
 
 void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect)
@@ -3953,7 +3805,7 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 	t_properties.stippled = false;
 	t_properties.image_filter = kMCGImageFilterMedium;
 	
-	MCCanvasPaintRef t_black_paint;
+	MCCanvasSolidPaintRef t_black_paint;
 	t_black_paint = nil;
 	
 	if (t_success)
@@ -3961,7 +3813,8 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 	
 	if (t_success)
 	{
-		t_properties.paint = t_black_paint;
+		// TODO - check this cast to supertype?
+		t_properties.paint = (MCCanvasPaintRef)t_black_paint;
 		
 		p_properties = t_properties;
 	}
@@ -4075,7 +3928,7 @@ __MCCanvasImpl *MCCanvasGet(MCCanvasRef p_canvas)
 
 // MCCanvasRef Type Methods
 
-void __MCCanvasDestroy(MCValueRef p_canvas)
+static void __MCCanvasDestroy(MCValueRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = (__MCCanvasImpl*)MCValueGetExtraBytesPtr(p_canvas);
@@ -4090,7 +3943,7 @@ void __MCCanvasDestroy(MCValueRef p_canvas)
 	MCGContextRelease(t_canvas->context);
 }
 
-bool __MCCanvasCopy(MCValueRef p_canvas, bool p_release, MCValueRef &r_copy)
+static bool __MCCanvasCopy(MCValueRef p_canvas, bool p_release, MCValueRef &r_copy)
 {
 	if (p_release)
 		r_copy = p_canvas;
@@ -4100,17 +3953,17 @@ bool __MCCanvasCopy(MCValueRef p_canvas, bool p_release, MCValueRef &r_copy)
 	return true;
 }
 
-bool __MCCanvasEqual(MCValueRef p_left, MCValueRef p_right)
+static bool __MCCanvasEqual(MCValueRef p_left, MCValueRef p_right)
 {
 	return p_left == p_right;
 }
 
-hash_t __MCCanvasHash(MCValueRef p_canvas)
+static hash_t __MCCanvasHash(MCValueRef p_canvas)
 {
 	return (hash_t)p_canvas;
 }
 
-bool __MCCanvasDescribe(MCValueRef p_canvas, MCStringRef &r_description)
+static bool __MCCanvasDescribe(MCValueRef p_canvas, MCStringRef &r_description)
 {
 	// TODO - provide canvas description?
 	return false;
@@ -4232,25 +4085,28 @@ void MCCanvasSetImageResizeQualityAsString(MCStringRef p_quality, MCCanvasRef p_
 
 //////////
 
-void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, const __MCCanvasSolidPaintImpl &p_paint)
+void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, MCCanvasSolidPaintRef p_paint)
 {
 	__MCCanvasColorImpl *t_color;
 	MCCanvasFloat t_red, t_green, t_blue, t_alpha;
-	t_color = MCCanvasColorGet(p_paint.color);
+	t_color = MCCanvasColorGet(MCCanvasSolidPaintGet(p_paint)->color);
 	
 	MCGContextSetFillRGBAColor(x_canvas.context, t_color->red, t_color->green, t_color->blue, t_color->alpha);
 	MCGContextSetStrokeRGBAColor(x_canvas.context, t_color->red, t_color->green, t_color->blue, t_color->alpha);
 }
 
-void MCCanvasApplyPatternPaint(__MCCanvasImpl &x_canvas, const __MCCanvasPatternImpl &p_pattern)
+void MCCanvasApplyPatternPaint(__MCCanvasImpl &x_canvas, MCCanvasPatternRef p_pattern)
 {
+	__MCCanvasPatternImpl *t_pattern;
+	t_pattern = MCCanvasPatternGet(p_pattern);
+	
 	MCGImageFrame t_frame;
 	
 	MCGAffineTransform t_pattern_transform;
-	t_pattern_transform = *MCCanvasTransformGet(p_pattern.transform);
+	t_pattern_transform = *MCCanvasTransformGet(t_pattern->transform);
 	
 	MCImageRep *t_pattern_image;
-	t_pattern_image = MCCanvasImageGetImageRep(p_pattern.image);
+	t_pattern_image = MCCanvasImageGetImageRep(t_pattern->image);
 	
 	MCGAffineTransform t_transform;
 	
@@ -4276,10 +4132,13 @@ void MCCanvasApplyPatternPaint(__MCCanvasImpl &x_canvas, const __MCCanvasPattern
 	
 }
 
-bool MCCanvasApplyGradientPaint(__MCCanvasImpl &x_canvas, const __MCCanvasGradientImpl &p_gradient)
+bool MCCanvasApplyGradientPaint(__MCCanvasImpl &x_canvas, MCCanvasGradientRef p_gradient)
 {
 	bool t_success;
 	t_success = true;
+	
+	__MCCanvasGradientImpl *t_gradient;
+	t_gradient = MCCanvasGradientGet(p_gradient);
 	
 	MCGFloat *t_offsets;
 	t_offsets = nil;
@@ -4288,10 +4147,10 @@ bool MCCanvasApplyGradientPaint(__MCCanvasImpl &x_canvas, const __MCCanvasGradie
 	t_colors = nil;
 	
 	MCGAffineTransform t_gradient_transform;
-	t_gradient_transform = *MCCanvasTransformGet(p_gradient.transform);
+	t_gradient_transform = *MCCanvasTransformGet(t_gradient->transform);
 	
 	uint32_t t_ramp_length;
-	t_ramp_length = MCProperListGetLength(p_gradient.ramp);
+	t_ramp_length = MCProperListGetLength(t_gradient->ramp);
 	
 	if (t_success)
 		t_success = MCMemoryNewArray(t_ramp_length, t_offsets) && MCMemoryNewArray(t_ramp_length, t_colors);
@@ -4301,13 +4160,13 @@ bool MCCanvasApplyGradientPaint(__MCCanvasImpl &x_canvas, const __MCCanvasGradie
 		for (uint32_t i = 0; i < t_ramp_length; i++)
 		{
 			MCCanvasGradientStopRef t_stop;
-			/* UNCHECKED */ MCProperListFetchGradientStopAt(p_gradient.ramp, i, t_stop);
+			/* UNCHECKED */ MCProperListFetchGradientStopAt(t_gradient->ramp, i, t_stop);
 			t_offsets[i] = MCCanvasGradientStopGet(t_stop)->offset;
 			t_colors[i] = MCCanvasColorToMCGColor(MCCanvasGradientStopGet(t_stop)->color);
 		}
 		
-		MCGContextSetFillGradient(x_canvas.context, p_gradient.function, t_offsets, t_colors, t_ramp_length, p_gradient.mirror, p_gradient.wrap, p_gradient.repeats, t_gradient_transform, p_gradient.filter);
-		MCGContextSetStrokeGradient(x_canvas.context, p_gradient.function, t_offsets, t_colors, t_ramp_length, p_gradient.mirror, p_gradient.wrap, p_gradient.repeats, t_gradient_transform, p_gradient.filter);
+		MCGContextSetFillGradient(x_canvas.context, t_gradient->function, t_offsets, t_colors, t_ramp_length, t_gradient->mirror, t_gradient->wrap, t_gradient->repeats, t_gradient_transform, t_gradient->filter);
+		MCGContextSetStrokeGradient(x_canvas.context, t_gradient->function, t_offsets, t_colors, t_ramp_length, t_gradient->mirror, t_gradient->wrap, t_gradient->repeats, t_gradient_transform, t_gradient->filter);
 	}
 
 	MCMemoryDeleteArray(t_offsets);
@@ -4318,23 +4177,14 @@ bool MCCanvasApplyGradientPaint(__MCCanvasImpl &x_canvas, const __MCCanvasGradie
 
 void MCCanvasApplyPaint(__MCCanvasImpl &x_canvas, MCCanvasPaintRef &p_paint)
 {
-	__MCCanvasPaintImpl *t_paint;
-	t_paint = MCCanvasPaintGet(p_paint);
-	
-	switch (t_paint->type)
-	{
-		case kMCCanvasPaintTypeSolid:
-			MCCanvasApplySolidPaint(x_canvas, *(__MCCanvasSolidPaintImpl*)t_paint);
-			break;
-			
-		case kMCCanvasPaintTypePattern:
-			MCCanvasApplyPatternPaint(x_canvas, *(__MCCanvasPatternImpl*)t_paint);
-			break;
-			
-		case kMCCanvasPaintTypeGradient:
-			MCCanvasApplyGradientPaint(x_canvas, *(__MCCanvasGradientImpl*)t_paint);
-			break;
-	}
+	if (MCCanvasPaintIsSolidPaint(p_paint))
+		MCCanvasApplySolidPaint(x_canvas, (MCCanvasSolidPaintRef)p_paint);
+	else if (MCCanvasPaintIsPattern(p_paint))
+		MCCanvasApplyPatternPaint(x_canvas, (MCCanvasPatternRef)p_paint);
+	else if (MCCanvasPaintIsGradient(p_paint))
+		MCCanvasApplyGradientPaint(x_canvas, (MCCanvasGradientRef)p_paint);
+	else
+		MCAssert(false);
 }
 
 void MCCanvasApplyChanges(__MCCanvasImpl &x_canvas)
@@ -4473,7 +4323,7 @@ static void MCPolarCoordsToCartesian(MCGFloat p_distance, MCGFloat p_angle, MCGF
 }
 
 
-void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
+void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
@@ -4546,7 +4396,9 @@ void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRectangleR
 			MCAssert(false);
 	}
 	
-	MCGContextBeginWithEffects(t_canvas->context, *MCCanvasRectangleGet(p_rect), t_effects);
+	MCGRectangle t_rect;
+	t_rect = MCGContextGetClipBounds(t_canvas->context);
+	MCGContextBeginWithEffects(t_canvas->context, t_rect, t_effects);
 }
 
 void MCCanvasEndLayer(MCCanvasRef p_canvas)
@@ -4770,11 +4622,41 @@ static MCValueCustomCallbacks kMCCanvasImageCustomValueCallbacks =
 static MCValueCustomCallbacks kMCCanvasPaintCustomValueCallbacks =
 {
 	false,
-	__MCCanvasPaintDestroy,
-	__MCCanvasPaintCopy,
-	__MCCanvasPaintEqual,
-	__MCCanvasPaintHash,
-	__MCCanvasPaintDescribe,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+};
+
+static MCValueCustomCallbacks kMCCanvasSolidPaintCustomValueCallbacks =
+{
+	false,
+	__MCCanvasSolidPaintDestroy,
+	__MCCanvasSolidPaintCopy,
+	__MCCanvasSolidPaintEqual,
+	__MCCanvasSolidPaintHash,
+	__MCCanvasSolidPaintDescribe,
+};
+
+static MCValueCustomCallbacks kMCCanvasPatternCustomValueCallbacks =
+{
+	false,
+	__MCCanvasPatternDestroy,
+	__MCCanvasPatternCopy,
+	__MCCanvasPatternEqual,
+	__MCCanvasPatternHash,
+	__MCCanvasPatternDescribe,
+};
+
+static MCValueCustomCallbacks kMCCanvasGradientCustomValueCallbacks =
+{
+	false,
+	__MCCanvasGradientDestroy,
+	__MCCanvasGradientCopy,
+	__MCCanvasGradientEqual,
+	__MCCanvasGradientHash,
+	__MCCanvasGradientDescribe,
 };
 
 static MCValueCustomCallbacks kMCCanvasGradientStopCustomValueCallbacks =
@@ -4833,6 +4715,9 @@ void MCCanvasTypesInitialize()
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasTransformCustomValueCallbacks, MCNAME("com.livecode.canvas.Transform"), kMCCanvasTransformTypeInfo);
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasImageCustomValueCallbacks, MCNAME("com.livecode.canvas.Image"), kMCCanvasImageTypeInfo);
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasPaintCustomValueCallbacks, MCNAME("com.livecode.canvas.Paint"), kMCCanvasPaintTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(kMCCanvasPaintTypeInfo, &kMCCanvasSolidPaintCustomValueCallbacks, MCNAME("com.livecode.canvas.SolidPaint"), kMCCanvasSolidPaintTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(kMCCanvasPaintTypeInfo, &kMCCanvasPatternCustomValueCallbacks, MCNAME("com.livecode.canvas.Pattern"), kMCCanvasPatternTypeInfo);
+	/* UNCHECKED */ __create_named_custom_typeinfo(kMCCanvasPaintTypeInfo, &kMCCanvasGradientCustomValueCallbacks, MCNAME("com.livecode.canvas.Gradient"), kMCCanvasGradientTypeInfo);
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasGradientStopCustomValueCallbacks, MCNAME("com.livecode.canvas.GradientStop"), kMCCanvasGradientStopTypeInfo);
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasPathCustomValueCallbacks, MCNAME("com.livecode.canvas.Path"), kMCCanvasPathTypeInfo);
 	/* UNCHECKED */ __create_named_custom_typeinfo(kMCNullTypeInfo, &kMCCanvasEffectCustomValueCallbacks, MCNAME("com.livecode.canvas.Effect"), kMCCanvasEffectTypeInfo);
@@ -4907,14 +4792,6 @@ void MCCanvasErrorsInitialize()
 	kMCCanvasImageSizeListFormatErrorTypeInfo = nil;
 	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.ImageSizeListFormatError"), MCSTR("image size parameter must be a list of 2 integers greater than 0."), kMCCanvasImageSizeListFormatErrorTypeInfo);
 	
-	kMCCanvasSolidPaintTypeErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.SolidPaintTypeError"), MCSTR("Paint parameter must be of type solid paint."), kMCCanvasSolidPaintTypeErrorTypeInfo);
-	
-	kMCCanvasPatternPaintTypeErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.PatternPaintTypeError"), MCSTR("Paint parameter must be of type pattern."), kMCCanvasPatternPaintTypeErrorTypeInfo);
-	
-	kMCCanvasGradientPaintTypeErrorTypeInfo = nil;
-	/* UNCHECKED */ MCCanvasCreateNamedErrorType(MCNAME("com.livecode.canvas.GradientPaintTypeError"), MCSTR("Paint parameter must be of type gradient."), kMCCanvasGradientPaintTypeErrorTypeInfo);
 }
 
 void MCCanvasErrorsFinalize()
@@ -4927,10 +4804,6 @@ void MCCanvasErrorsFinalize()
 	MCValueRelease(kMCCanvasSkewListFormatErrorTypeInfo);
 	MCValueRelease(kMCCanvasRadiiListFormatErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageSizeListFormatErrorTypeInfo);
-	
-	MCValueRelease(kMCCanvasSolidPaintTypeErrorTypeInfo);
-	MCValueRelease(kMCCanvasPatternPaintTypeErrorTypeInfo);
-	MCValueRelease(kMCCanvasGradientPaintTypeErrorTypeInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

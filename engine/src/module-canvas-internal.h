@@ -44,43 +44,20 @@ __MCCanvasTransformImpl *MCCanvasTransformGet(MCCanvasTransformRef p_transform);
 typedef MCImageRep *__MCCanvasImageImpl;
 __MCCanvasImageImpl *MCCanvasImageGet(MCCanvasImageRef p_image);
 
-// Paint type
-enum MCCanvasPaintType
-{
-	kMCCanvasPaintTypeSolid,
-	kMCCanvasPaintTypePattern,
-	kMCCanvasPaintTypeGradient,
-};
-
-struct __MCCanvasPaintImpl
-{
-	MCCanvasPaintType type;
-};
-
-__MCCanvasPaintImpl *MCCanvasPaintGet(MCCanvasPaintRef p_paint);
-
 // Solid Paint type
-struct __MCCanvasSolidPaintImpl : public __MCCanvasPaintImpl
+struct __MCCanvasSolidPaintImpl
 {
 	MCCanvasColorRef color;
 };
 
-void MCCanvasSolidPaintDelete(__MCCanvasSolidPaintImpl *p_paint);
-bool MCCanvasSolidPaintEqual(__MCCanvasSolidPaintImpl *p_left, __MCCanvasSolidPaintImpl *p_right);
-hash_t MCCanvasSolidPaintHash(__MCCanvasSolidPaintImpl *p_paint);
-
 __MCCanvasSolidPaintImpl *MCCanvasSolidPaintGet(MCCanvasSolidPaintRef p_paint);
 
 // Pattern type
-struct __MCCanvasPatternImpl : public __MCCanvasPaintImpl
+struct __MCCanvasPatternImpl
 {
 	MCCanvasImageRef image;
 	MCCanvasTransformRef transform;
 };
-
-void MCCanvasPatternDelete(__MCCanvasPatternImpl *p_paint);
-bool MCCanvasPatternEqual(__MCCanvasPatternImpl *p_left, __MCCanvasPatternImpl *p_right);
-hash_t MCCanvasPatternHash(__MCCanvasPatternImpl *p_paint);
 
 __MCCanvasPatternImpl *MCCanvasPatternGet(MCCanvasPatternRef p_paint);
 
@@ -94,7 +71,7 @@ struct __MCCanvasGradientStopImpl
 __MCCanvasGradientStopImpl *MCCanvasGradientStopGet(MCCanvasGradientStopRef p_stop);
 
 // Gradient type
-struct __MCCanvasGradientImpl : public __MCCanvasPaintImpl
+struct __MCCanvasGradientImpl
 {
 	MCGGradientFunction function;
 	MCProperListRef ramp; // List of MCGradientStopRef;
@@ -104,10 +81,6 @@ struct __MCCanvasGradientImpl : public __MCCanvasPaintImpl
 	MCCanvasTransformRef transform;
 	MCGImageFilter filter;
 };
-
-void MCCanvasGradientDelete(__MCCanvasGradientImpl *p_paint);
-bool MCCanvasGradientEqual(__MCCanvasGradientImpl *p_left, __MCCanvasGradientImpl *p_right);
-hash_t MCCanvasGradientHash(__MCCanvasGradientImpl *p_paint);
 
 __MCCanvasGradientImpl *MCCanvasGradientGet(MCCanvasGradientRef p_gradient);
 

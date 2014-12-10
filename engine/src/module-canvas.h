@@ -97,6 +97,9 @@ typedef struct __MCCanvasColor *MCCanvasColorRef;
 typedef struct __MCCanvasTransform *MCCanvasTransformRef;
 typedef struct __MCCanvasImage *MCCanvasImageRef;
 typedef struct __MCCanvasPaint *MCCanvasPaintRef;
+typedef struct __MCCanvasSolidPaint *MCCanvasSolidPaintRef;
+typedef struct __MCCanvasPattern *MCCanvasPatternRef;
+typedef struct __MCCanvasGradient *MCCanvasGradientRef;
 typedef struct __MCCanvasGradientStop *MCCanvasGradientStopRef;
 typedef struct __MCCanvasPath *MCCanvasPathRef;
 typedef struct __MCCanvasEffect *MCCanvasEffectRef;
@@ -108,12 +111,13 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasColorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTransformTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPaintTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSolidPaintTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPatternTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPathTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasEffectTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasTypeInfo;
-
-typedef MCCanvasPaintRef MCCanvasSolidPaintRef, MCCanvasPatternRef, MCCanvasGradientRef;
 
 // Constant refs
 extern MCCanvasTransformRef kMCCanvasIdentityTransform;
@@ -132,9 +136,6 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSkewListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasRadiiListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageSizeListFormatErrorTypeInfo;
 
-extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSolidPaintTypeErrorTypeInfo;
-extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPatternPaintTypeErrorTypeInfo;
-extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientPaintTypeErrorTypeInfo;
 
 }
 
@@ -154,11 +155,7 @@ void MCCanvasTransformGetMCGAffineTransform(MCCanvasTransformRef p_transform, MC
 bool MCCanvasImageCreateWithImageRep(MCImageRep *p_rep, MCCanvasImageRef &r_image);
 MCImageRep *MCCanvasImageGetImageRep(MCCanvasImageRef p_image);
 
-bool MCCanvasPaintIsSolid(MCCanvasPaintRef p_paint);
-bool MCCanvasPaintIsPattern(MCCanvasPaintRef p_paint);
-bool MCCanvasPaintIsGradient(MCCanvasPaintRef p_paint);
-
-bool MCCanvasSolidPaintCreateWithColor(MCCanvasColorRef p_color, MCCanvasPaintRef &r_paint);
+bool MCCanvasSolidPaintCreateWithColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef &r_paint);
 bool MCCanvasPatternCreateWithImage(MCCanvasImageRef p_image, MCCanvasTransformRef p_transform, MCCanvasPatternRef &r_pattern);
 bool MCCanvasGradientStopCreate(MCCanvasFloat p_offset, MCCanvasColorRef p_color, MCCanvasGradientStopRef &r_stop);
 bool MCCanvasGradientCreateWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCanvasGradientRef &r_gradient);
@@ -341,8 +338,7 @@ extern "C" MC_DLLEXPORT void MCCanvasGradientStopSetColor(MCCanvasColorRef p_col
 
 // Gradient
 
-// Compat
-extern "C" MC_DLLEXPORT void MCCanvasGradientReturnType(integer_t p_type, integer_t& r_type);
+extern "C" MC_DLLEXPORT void MCCanvasGradientEvaluateType(integer_t p_type, integer_t& r_type);
 
 // Constructors
 extern "C" MC_DLLEXPORT void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCanvasGradientRef &r_gradient);
@@ -417,6 +413,8 @@ extern "C" MC_DLLEXPORT void MCCanvasPathClosePath(MCCanvasPathRef &x_path);
 
 // Effect
 
+extern "C" MC_DLLEXPORT void MCCanvasEffectEvaluateType(integer_t p_type, integer_t &r_type);
+
 // Constructors
 extern "C" MC_DLLEXPORT void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
 
@@ -467,8 +465,7 @@ extern "C" MC_DLLEXPORT void MCCanvasTranslateWithList(MCCanvasRef p_canvas, MCP
 extern "C" MC_DLLEXPORT void MCCanvasSaveState(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasRestore(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasBeginLayer(MCCanvasRef p_canvas);
-// TODO - work out effect area rect
-extern "C" MC_DLLEXPORT void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasEndLayer(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasFill(MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasFillPath(MCCanvasPathRef p_path, MCCanvasRef p_canvas);
