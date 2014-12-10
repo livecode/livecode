@@ -2326,6 +2326,27 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
         if (t_arguments[i] != nil)
             MCValueRelease(t_arguments[i]);
     
+    // If we failed, then catch the error and create a suitable MCerror unwinding.
+    if (!t_success)
+    {
+        MCErrorRef t_error;
+        if (!MCErrorCatch(t_error))
+        {
+            MCLog("Error state indicated with no error having been thrown", 0);
+            return ES_ERROR;
+        }
+        
+        MCECptr -> LegacyThrow(EE_EXTENSION_ERROR_DOMAIN, MCErrorGetDomain(t_error));
+        MCECptr -> LegacyThrow(EE_EXTENSION_ERROR_DESCRIPTION, MCErrorGetMessage(t_error));
+        if (MCErrorGetDepth(t_error) > 0)
+        {
+            MCECptr -> LegacyThrow(EE_EXTENSION_ERROR_FILE, MCErrorGetTargetAtLevel(t_error, 0));
+            MCECptr -> LegacyThrow(EE_EXTENSION_ERROR_LINE, MCErrorGetRowAtLevel(t_error, 0));
+        }
+        
+        MCValueRelease(t_error);
+    }
+    
     return t_success ? ES_NORMAL : ES_ERROR;
 }
 
