@@ -56,6 +56,7 @@ typedef struct _Mnemonic Mnemonic;
 struct MCStackModeData;
 
 class MCStackIdCache;
+class MCStackUuidCache;
 
 // MCStackSurface is an interim abstraction that should be rolled into the Window
 // abstraction at some point - it represents a display rendering target.
@@ -213,6 +214,7 @@ protected:
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
+	MCStackUuidCache *m_uuid_cache;
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
     MCThreadMutexRef m_id_cache_lock;
@@ -866,6 +868,8 @@ public:
 	void cacheobjectbyid(MCObject *object);
 	void uncacheobjectbyid(MCObject *object);
 	MCObject *findobjectbyid(uint32_t object);
+	/* Find an object by UUID */
+	MCObject *findobjectbyuuid(const MCUuid &);
 	void freeobjectidcache(void);
 
 	// MW-2013-11-07: [[ Bug 11393 ]] This returns true if the stack should use device-independent

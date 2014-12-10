@@ -353,6 +353,37 @@ MCStackIdCache::ObjectGetKey (MCObject *object,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+class MCStackUuidCache : public MCStackCache<MCUuid>
+{
+protected:
+	virtual hash_t KeyHash (const MCUuid & key) const;
+	virtual compare_t KeyCompare (const MCUuid &, const MCUuid &) const;
+	virtual void ObjectGetKey (MCObject *object, MCUuid & key) const;
+};
+
+hash_t
+MCStackUuidCache::KeyHash (const MCUuid & key) const
+{
+	return MCHashBytes (&key, sizeof(key));
+}
+
+compare_t
+MCStackUuidCache::KeyCompare (const MCUuid & a,
+                              const MCUuid & b) const
+{
+	return MCUuidCompare (a, b);
+}
+
+void
+MCStackUuidCache::ObjectGetKey (MCObject *object,
+                                MCUuid & key) const
+{
+	MCAssert (object->HasUuid ());
+	object->GetUuid (key);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated to ensure only a single thread mutates the ID cache at a time.
 
 void MCStack::cacheobjectbyid(MCObject *p_object)
@@ -361,6 +392,8 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 		return;
 
     MCThreadMutexLock(m_id_cache_lock);
+
+	/* Attempt to create caches */
 	if (m_id_cache == nil)
 	{
 		m_id_cache = new MCStackIdCache;
@@ -370,21 +403,52 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 			m_id_cache = nil;
 		}
 	}
-		
-	if (m_id_cache != nil)
-		p_object->setinidcache (m_id_cache -> CacheObject(p_object));
+	if (m_uuid_cache == nil)
+	{
+		m_uuid_cache = new MCStackUuidCache;
+		if (!m_uuid_cache -> RehashBuckets (1))
+		{
+			delete m_uuid_cache;
+			m_uuid_cache = nil;
+		}
+	}
+
+	/* Only attempt to cache objects if both caches are present. */
+	if (m_id_cache != nil && m_uuid_cache != nil)
+	{
+		bool t_success = true;
+		if (t_success)
+			t_success = m_id_cache->CacheObject (p_object);
+		if (t_success && p_object->HasUuid ())
+			t_success = m_uuid_cache->CacheObject (p_object);
+
+		/* Either populate both caches or neither */
+		if (!t_success)
+		{
+			m_id_cache->UncacheObject (p_object);
+			if (p_object->HasUuid())
+				m_uuid_cache->UncacheObject (p_object);
+		}
+
+		p_object->setinidcache (t_success);
+	}
     MCThreadMutexUnlock(m_id_cache_lock);
 }
 
 void MCStack::uncacheobjectbyid(MCObject *p_object)
 {
-	if (m_id_cache == nil)
+	/* Require both caches to be present */
+	if (m_id_cache == nil || m_uuid_cache == nil)
 		return;
 	if (!p_object->getinidcache ())
 		return;
 		
     MCThreadMutexLock(m_id_cache_lock);
 	m_id_cache -> UncacheObject(p_object);
+
+	if (p_object->HasUuid())
+		m_uuid_cache -> UncacheObject(p_object);
+
 	p_object->setinidcache (false);
     MCThreadMutexUnlock(m_id_cache_lock);
 }
@@ -402,10 +466,27 @@ MCObject *MCStack::findobjectbyid(uint32_t p_id)
     return t_object;
 }
 
+MCObject *
+MCStack::findobjectbyuuid (const MCUuid & p_uuid)
+{
+	if (m_uuid_cache == nil)
+		return nil;
+
+	MCThreadMutexLock (m_id_cache_lock);
+	MCObject *t_object;
+	t_object = m_uuid_cache -> FindObject (p_uuid);
+	MCThreadMutexUnlock (m_id_cache_lock);
+
+	return t_object;
+}
+
 void MCStack::freeobjectidcache(void)
 {
     MCThreadMutexLock(m_id_cache_lock);
 	delete m_id_cache;
+	m_id_cache = nil;
+	delete m_uuid_cache;
+	m_uuid_cache = nil;
     MCThreadMutexUnlock(m_id_cache_lock);
 }
 

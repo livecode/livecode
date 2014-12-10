@@ -277,6 +277,7 @@ MCStack::MCStack()
 
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
+	m_uuid_cache = nil;
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
     /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
@@ -357,6 +358,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
+	m_uuid_cache = nil;
 	
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single thread mutates the ID cache at a time.
     /* UNCHECKED */ MCThreadMutexCreate(m_id_cache_lock);
