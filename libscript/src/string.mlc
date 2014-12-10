@@ -42,6 +42,17 @@ Summary:            Prepends <Source> to <Target>.
 Source: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string container.
 
+Example:
+	variable tVar as string
+	put "" into tVar
+	put "abc" before tVar -- tVar contains "abc"
+	put "lpha" before char 2 of tVar
+	put "eti" before char -1 of tVar -- tVar contains "alphabetic"
+	
+Description:
+Use to insert a string without replacement. Can be used either with a chunk expression to insert at a specified location, or without to prepend to the target string.
+
+Tags: Strings
 */
 
 syntax PutStringBefore is statement
@@ -56,6 +67,16 @@ Summary:            Appends <Source> to <Target>.
 Source: 			An expression which evaluates to a string.
 Target: 			An expression which evaluates to a string container.
 
+Example:
+	variable tVar as string
+	put "" into tVar
+	put "rent" after tVar -- tVar contains "rent"
+	put "placeme" after char 2 of tVar -- tVar contains "replacement"
+	
+Description:
+Use to insert a string without replacement. Can be used either with a chunk expression to insert at a specified location, or without to append to the target string.
+
+Tags: Strings
 */
 
 syntax PutStringAfter is statement
@@ -80,6 +101,8 @@ Example:
 	
 Description:
 Replaces each occurrence of the string <Pattern> in <Target> with <Replacement>.
+
+Tags: Strings
 */
 
 syntax ReplaceString is statement
@@ -104,6 +127,7 @@ Example:
 Description:
 The result consists of the chars of <Left> followed by those of <Right>.
 
+Tags: Strings
 */
 
 syntax ConcatenateStrings is left binary operator with precedence 2
@@ -125,6 +149,8 @@ Example:
 
 Description:
 The result consists of the chars of <Left> followed by a space, and then the chars of <Right>.
+
+Tags: Strings
 */
 
 syntax ConcatenateStringsWithSpace is left binary operator with precedence 2
@@ -142,6 +168,8 @@ output:             <Source> with each of its chars uppercased.
 
 Description:
 Lowercase letters, including special characters with diacritical marks, are converted to the uppercase equivalents. All other characters, including uppercase letters, numbers, punctuation, and special characters with no upper or lower case, are left unchanged.
+
+Tags: Strings
 */
 
 
@@ -157,7 +185,9 @@ Source: 			An expression which evaluates to a string.
 output:             <Source> with each of its chars lowercased.
 
 Description:    
-Uppercase letters, including special characters with diacritical marks, are converted to the lowercase equivalents. All other characters, including lowercase letters, numbers, punctuation, and special characters with no upper or lower case, are left unchanged.      
+Uppercase letters, including special characters with diacritical marks, are converted to the lowercase equivalents. All other characters, including lowercase letters, numbers, punctuation, and special characters with no upper or lower case, are left unchanged.     
+
+Tags: Strings 
 */
 
 
@@ -180,6 +210,7 @@ output:     Returns true if <Left> is identical to <Right>.
 Description:
 The ```is``` operator is case sensitive. 
 
+Tags: Strings
 */
 
 syntax IsEqualTo is neutral binary operator with precedence 5
@@ -198,6 +229,8 @@ output:     Returns true if <Left> is not identical to <Right>.
 
 Description:
 The ```is not``` operator is case sensitive. 
+
+Tags: Strings
 */
 
 syntax IsNotEqualTo is neutral binary operator with precedence 5
@@ -216,6 +249,8 @@ output:     Returns true if <Left> is less than <Right>
 
 Description:
 <Left> is greater than <Right> if and only if <Left> and <Right> are not equal, and the unicode codepoint of the first char in <Left> that is not equal to the corresponding char in <Right> is of greater value.
+
+Tags: Strings
 */
 
 syntax LessThan is neutral binary operator with precedence 3
@@ -233,6 +268,8 @@ output:     Returns true if <Left> is greater than <Right>.
 
 Description:
 <Left> is greater than <Right> if and only if <Left> and <Right> are not equal, and the unicode codepoint of the first char in <Left> that is not equal to the corresponding char in <Right> is of greater value.
+
+Tags: Strings
 */
 
 syntax GreaterThan is neutral binary operator with precedence 3
@@ -256,6 +293,7 @@ Example:
 Description:
 Use ```the empty string``` to initialise a string variable. The empty string is synonymous with the string literal ""
 
+Tags: Strings
 */
 
 syntax EmptyString is expression
