@@ -337,7 +337,7 @@ extern "C" void MCCanvasGradientStopSetColor(MCCanvasColorRef p_color, MCCanvasG
 // Gradient
 
 // Compat
-extern "C" integer_t MCCanvasGradientReturnType(integer_t p_type);
+extern "C" void MCCanvasGradientReturnType(integer_t p_type, integer_t& r_type);
 
 // Constructors
 extern "C" void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCanvasGradientRef &r_gradient);

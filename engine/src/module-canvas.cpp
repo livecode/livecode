@@ -2354,9 +2354,9 @@ bool MCCanvasGradientCheckStopOrder(MCProperListRef p_ramp)
 
 //////////
 
-integer_t MCCanvasGradientReturnType(integer_t p_type)
+void MCCanvasGradientReturnType(integer_t p_type, integer_t& r_type)
 {
-	return p_type;
+    r_type = p_type;
 }
 
 // Constructor
@@ -2380,6 +2380,7 @@ void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCa
 	t_gradient_impl.repeats = 1;
 	t_gradient_impl.transform = kMCCanvasIdentityTransform;
 	t_gradient_impl.filter = kMCGImageFilterNone;
+    t_gradient_impl.ramp = p_ramp;
 	
 	/* UNCHECKED */ MCCanvasGradientCreate(t_gradient_impl, r_gradient);
 }
