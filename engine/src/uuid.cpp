@@ -256,7 +256,7 @@ MCUuidCompare (const MCUuid & a,
 
 	if (t_diff != 0) return t_diff;
 
-	for (uindex_t i = 0; t_diff != 0 && i < 6; ++i)
+	for (uindex_t i = 0; t_diff == 0 && i < 6; ++i)
 	{
 		t_diff = a.node[i] - b.node[i];
 	}
