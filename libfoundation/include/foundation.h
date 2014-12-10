@@ -2774,6 +2774,9 @@ MC_DLLEXPORT bool MCProperListFirstIndexOfList(MCProperListRef list, MCProperLis
 
 MC_DLLEXPORT bool MCProperListIsEqualTo(MCProperListRef list, MCProperListRef p_other);
 
+bool MCProperListBeginsWithList(MCProperListRef list, MCProperListRef p_prefix);
+bool MCProperListEndsWithList(MCProperListRef list, MCProperListRef p_suffix);
+    
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPickleFieldType

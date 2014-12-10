@@ -301,6 +301,27 @@ begin
     MCCharEvalNewlineCharacter(output)
 end syntax
 
+/*
+Summary:        Repeat over the elements of a list
+Iterand:        An expression of the form 'tVar in tList'
+
+Example:
+	variable tString as string
+	put "stressed" into tString
+	
+	variable tReversed as string
+	variable tChar as string
+	put "" into tReversed
+	repeat for each char tChar in tString
+		put tChar before tReversed
+	end repeat
+
+    // tReversed is "desserts"
+
+Description:
+The repeat for each form is more efficient that the alternative formation using repeat **tCount** times.
+*/
+
 syntax RepeatForEachChar is iterator
     "char" <Iterand: Expression>
 begin

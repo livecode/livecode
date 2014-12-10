@@ -190,13 +190,13 @@ extern "C" MC_DLLEXPORT void MCMathEvalTruncNumber(MCNumberRef p_operand, MCNumb
     if (MCNumberIsInteger(p_operand))
     {
         integer_t t_abs;
-        MCMathEvalAbsInteger(MCNumberFetchAsInteger(p_operand), t_abs);
+        MCMathEvalTruncInteger(MCNumberFetchAsInteger(p_operand), t_abs);
         MCNumberCreateWithInteger(t_abs, r_output);
         return;
     }
     
     double t_abs_real;
-    MCMathEvalAbsReal(MCNumberFetchAsReal(p_operand), t_abs_real);
+    MCMathEvalTruncReal(MCNumberFetchAsReal(p_operand), t_abs_real);
     MCNumberCreateWithReal(t_abs_real, r_output);
 }
 

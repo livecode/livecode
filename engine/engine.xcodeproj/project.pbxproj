@@ -296,6 +296,11 @@
 		4D79B89B1A36055B00DD750C /* platform-recorder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B89A1A36054900DD750C /* platform-recorder.cpp */; };
 		4D79B89D1A36058300DD750C /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B89C1A36057400DD750C /* image_rep_densitymapped.cpp */; };
 		4D79B8AD1A37118900DD750C /* widget.mlc in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B8AA1A37104800DD750C /* widget.mlc */; };
+		4D79B8E81A375E8700DD750C /* modules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D79B8E71A375E8700DD750C /* modules.cpp */; };
+		4D79B9041A3761C700DD750C /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7261915D1A26091900851787 /* libffi.a */; };
+		4D79B9051A3761CA00DD750C /* libstdscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D79B72D1A275A7C00DD750C /* libstdscript.a */; };
+		4D79B9061A3761CE00DD750C /* libscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 726191731A260B6D00851787 /* libscript.a */; };
+		4D79B9091A3762EA00DD750C /* libkernel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DEE29F60FDE41BE0009423C /* libkernel.a */; };
 		4D7FA7BF1594E10500EEF440 /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7FA7BB1594E0FA00EEF440 /* libfoundation.a */; };
 		4D7FA7C71594E17500EEF440 /* exec-datetime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */; };
 		4D81A4C411171F6B008AE3F1 /* objectprops.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C111171F6A008AE3F1 /* objectprops.cpp */; };
@@ -1150,6 +1155,27 @@
 			remoteGlobalIDString = 4D79B6541A273B6900DD750C;
 			remoteInfo = stdscript;
 		};
+		4D79B8FE1A3761BA00DD750C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7261916C1A260B6C00851787 /* libscript.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D79B6531A273B6900DD750C;
+			remoteInfo = stdscript;
+		};
+		4D79B9021A3761BE00DD750C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 726191581A26091900851787 /* libffi.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = libffi;
+		};
+		4D79B9071A3761D500DD750C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7261916C1A260B6C00851787 /* libscript.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D322F1519DD945E008476D3;
+			remoteInfo = script;
+		};
 		4D7FA7BA1594E0FA00EEF440 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */;
@@ -1917,6 +1943,7 @@
 		4D79B89A1A36054900DD750C /* platform-recorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-recorder.cpp"; path = "src/platform-recorder.cpp"; sourceTree = "<group>"; };
 		4D79B89C1A36057400DD750C /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		4D79B8AA1A37104800DD750C /* widget.mlc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = widget.mlc; path = src/widget.mlc; sourceTree = "<group>"; };
+		4D79B8E71A375E8700DD750C /* modules.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = modules.cpp; path = src/modules.cpp; sourceTree = "<group>"; };
 		4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../libfoundation/libfoundation.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-datetime.cpp"; path = "src/exec-datetime.cpp"; sourceTree = "<group>"; };
 		4D81A4C111171F6A008AE3F1 /* objectprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectprops.cpp; path = src/objectprops.cpp; sourceTree = "<group>"; };
@@ -2502,6 +2529,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D79B9091A3762EA00DD750C /* libkernel.a in Frameworks */,
 				4D79B7D41A308FFD00DD750C /* libstdscript.a in Frameworks */,
 				726191781A260B7F00851787 /* libscript.a in Frameworks */,
 				726191601A26094900851787 /* libffi.a in Frameworks */,
@@ -2576,6 +2604,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D79B9061A3761CE00DD750C /* libscript.a in Frameworks */,
+				4D79B9051A3761CA00DD750C /* libstdscript.a in Frameworks */,
+				4D79B9041A3761C700DD750C /* libffi.a in Frameworks */,
 				BE6444471965B8A700C2092C /* AudioToolbox.framework in Frameworks */,
 				72876DE618CF32C400C20405 /* libskia.a in Frameworks */,
 				7278F63A1843A2B100E35A65 /* libicudata.a in Frameworks */,
@@ -3092,6 +3123,7 @@
 			children = (
 				4D79B8AA1A37104800DD750C /* widget.mlc */,
 				4D79B7301A275ADE00DD750C /* canvas.mlc */,
+				4D79B8E71A375E8700DD750C /* modules.cpp */,
 				4D79B72E1A275AA500DD750C /* module-canvas.cpp */,
 				E8A1AD001A27799B0078F401 /* module-canvas.h */,
 				E8A1AD031A27817E0078F401 /* module-canvas-internal.h */,
@@ -4207,11 +4239,11 @@
 			buildRules = (
 			);
 			dependencies = (
-				726191771A260B7900851787 /* PBXTargetDependency */,
-				7261915F1A26094100851787 /* PBXTargetDependency */,
-				4D1F9C49171C655E0091C6CB /* PBXTargetDependency */,
 				4DEE2B2B0FDE42E70009423C /* PBXTargetDependency */,
 				4D221ACD171D59F500E7E557 /* PBXTargetDependency */,
+				4D1F9C49171C655E0091C6CB /* PBXTargetDependency */,
+				7261915F1A26094100851787 /* PBXTargetDependency */,
+				726191771A260B7900851787 /* PBXTargetDependency */,
 				4DBF58B11801CB4E009CAB2E /* PBXTargetDependency */,
 			);
 			name = "LiveCode-Community";
@@ -4248,6 +4280,9 @@
 			buildRules = (
 			);
 			dependencies = (
+				4D79B9031A3761BE00DD750C /* PBXTargetDependency */,
+				4D79B8FF1A3761BA00DD750C /* PBXTargetDependency */,
+				4D79B9081A3761D500DD750C /* PBXTargetDependency */,
 				4DEE2B290FDE42DF0009423C /* PBXTargetDependency */,
 				4D221AFF171D5F3700E7E557 /* PBXTargetDependency */,
 				4D1F9E5C171C69C40091C6CB /* PBXTargetDependency */,
@@ -5290,6 +5325,7 @@
 				76D47DE918030E50006F9102 /* exec-interface-field-chunk.cpp in Sources */,
 				766E3298180EE4ED00CF7FCF /* graphicscontext.cpp in Sources */,
 				766E3299180EE4ED00CF7FCF /* imagelist.cpp in Sources */,
+				4D79B8E81A375E8700DD750C /* modules.cpp in Sources */,
 				76EF31A0181E7A1400FAC195 /* stackview.cpp in Sources */,
 				76EF31A4181E7CDB00FAC195 /* osxcisupport.mm in Sources */,
 				76EF31A6181E7D8700FAC195 /* cgimageutil.cpp in Sources */,
@@ -5693,6 +5729,21 @@
 			isa = PBXTargetDependency;
 			target = 4DEE29F50FDE41BE0009423C /* kernel */;
 			targetProxy = 4D2A579B1198634300135143 /* PBXContainerItemProxy */;
+		};
+		4D79B8FF1A3761BA00DD750C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = stdscript;
+			targetProxy = 4D79B8FE1A3761BA00DD750C /* PBXContainerItemProxy */;
+		};
+		4D79B9031A3761BE00DD750C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libffi;
+			targetProxy = 4D79B9021A3761BE00DD750C /* PBXContainerItemProxy */;
+		};
+		4D79B9081A3761D500DD750C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = script;
+			targetProxy = 4D79B9071A3761D500DD750C /* PBXContainerItemProxy */;
 		};
 		4D8D355B171D4B72009D9D25 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -6102,13 +6153,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
 				);
-				OTHER_LDFLAGS = (
-					"-ObjC",
-					"-force_load",
-					"$(BUILT_PRODUCTS_DIR)/libstdscript.a",
-					"-force_load",
-					"$(BUILT_PRODUCTS_DIR)/libkernel.a",
-				);
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
 			};
@@ -6122,13 +6167,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../prebuilt/lib/mac\"",
 				);
-				OTHER_LDFLAGS = (
-					"-ObjC",
-					"-force_load",
-					"$(BUILT_PRODUCTS_DIR)/libstdscript.a",
-					"-force_load",
-					"$(BUILT_PRODUCTS_DIR)/libkernel.a",
-				);
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
 				WRAPPER_EXTENSION = app;
 			};

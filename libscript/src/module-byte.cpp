@@ -145,56 +145,20 @@ extern "C" MC_DLLEXPORT void MCByteStoreByteOf(MCDataRef p_value, index_t p_inde
     MCByteStoreByteRangeOf(p_value, p_index, p_index, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCByteStoreAfterByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRef& r_iterand, MCDataRef p_data)
 {
-    uindex_t t_start, t_count;
-    MCChunkGetExtentsOfByteChunkByExpression(x_target, p_index, t_start, t_count);
+    uindex_t t_offset;
+    t_offset = (uindex_t)x_iterator;
     
-    if (t_count == 0)
-        return;
+    if (t_offset == MCDataGetLength(p_data))
+        return false;
     
-    if (t_start + t_count > MCDataGetLength(x_target))
-        return;
+    if (!MCDataCopyRange(p_data, MCRangeMake(t_offset, 1), r_iterand))
+        return false;
     
-    t_start += t_count;
+    x_iterator = (void *)(t_offset + 1);
     
-    MCAutoDataRef t_data;
-    if (!MCDataMutableCopy(x_target, &t_data))
-        return;
-    
-    if (!MCDataInsert(*t_data, t_start, p_value))
-        return;
-    
-    MCAutoDataRef t_new_data;
-    if (!MCDataCopy(*t_data, &t_new_data))
-        return;
-    
-    MCValueAssign(x_target, *t_new_data);
-}
-
-extern "C" MC_DLLEXPORT void MCByteStoreBeforeByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
-{
-    uindex_t t_start, t_count;
-    MCChunkGetExtentsOfByteChunkByRange(x_target, p_index, p_index, t_start, t_count);
-    
-    if (t_count == 0)
-        return;
-    
-    if (t_start + t_count > MCDataGetLength(x_target))
-        return;
-    
-    MCAutoDataRef t_data;
-    if (!MCDataMutableCopy(x_target, &t_data))
-        return;
-    
-    if (!MCDataInsert(*t_data, t_start, p_value))
-        return;
-    
-    MCAutoDataRef t_new_data;
-    if (!MCDataCopy(*t_data, &t_new_data))
-        return;
-    
-    MCValueAssign(x_target, *t_new_data);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

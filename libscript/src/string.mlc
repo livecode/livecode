@@ -218,7 +218,7 @@ Description:
 <Left> is greater than <Right> if and only if <Left> and <Right> are not equal, and the unicode codepoint of the first char in <Left> that is not equal to the corresponding char in <Right> is of greater value.
 */
 
-syntax LessThan is neutral binary operator with precedence 1
+syntax LessThan is neutral binary operator with precedence 3
     <Left: Expression> "<" <Right: Expression>
 begin
     MCStringEvalIsLessThan(Left, Right, output)
@@ -235,7 +235,7 @@ Description:
 <Left> is greater than <Right> if and only if <Left> and <Right> are not equal, and the unicode codepoint of the first char in <Left> that is not equal to the corresponding char in <Right> is of greater value.
 */
 
-syntax GreaterThan is neutral binary operator with precedence 1
+syntax GreaterThan is neutral binary operator with precedence 3
     <Left: Expression> ">" <Right: Expression>
 begin
     MCStringEvalIsGreaterThan(Left, Right, output)
