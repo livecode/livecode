@@ -95,10 +95,10 @@ public handler testMathFoundation(inout xResults as list)
 	put 5.5 into tNumReal
 	
 	testLog("MathFoundation", "FloorNum", the floor of tNum is -6, xResults)
-	testLog("MathFoundation", "FloorReal", the floor of tNum is 5, xResults)
+	testLog("MathFoundation", "FloorReal", the floor of tNumReal is 5, xResults)
 	
 	testLog("MathFoundation", "CeilNum", the ceiling of tNum is -5, xResults)
-	testLog("MathFoundation", "CeilReal", the ceiling of tNum is 6, xResults)
+	testLog("MathFoundation", "CeilReal", the ceiling of tNumReal is 6, xResults)
 	
 	round tNum
 	round tNumReal
@@ -115,9 +115,9 @@ public handler testMath(inout xResults as list)
 	testLog("Math", "PowerOf", 3 ^ 4 = 81, xResults)
 	testLog("Math", "Base10Log", the log of 1000 is 3, xResults)
 	
-	--testLog("Math", "Sin", the sin of pi / 2 is 1, xResults)
-	--testLog("Math", "Cos", the cos of pi is -1, xResults)
-	--testLog("Math", "Tan", the tan of pi / 4 is 1, xResults)
+	testLog("Math", "Sin", the sin of pi / 2 is 1, xResults)
+	testLog("Math", "Cos", the cos of pi is -1, xResults)
+	testLog("Math", "Tan", (the tan of pi / 4) - 1  < 0.00000000001, xResults)
 
 	testLog("Math", "Exp", the exp of 3 > 20, xResults)
 	testLog("Math", "Exp", the exp of 3 < 20.1, xResults)
