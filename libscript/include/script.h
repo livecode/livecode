@@ -146,6 +146,9 @@ bool MCScriptLookupModule(MCNameRef name, MCScriptModuleRef& r_module);
 // Ensure that the module is valid and has resolved all its dependencies.
 bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef module);
 
+// Get the name of the module.
+MCNameRef MCScriptGetNameOfModule(MCScriptModuleRef module);
+
 // Returns true if the module is a library.
 bool MCScriptIsModuleALibrary(MCScriptModuleRef module);
 

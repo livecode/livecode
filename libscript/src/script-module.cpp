@@ -371,6 +371,11 @@ bool MCScriptLookupModule(MCNameRef p_name, MCScriptModuleRef& r_module)
     return false;
 }
 
+MCNameRef MCScriptGetNameOfModule(MCScriptModuleRef self)
+{
+    return self -> name;
+}
+
 bool MCScriptIsModuleALibrary(MCScriptModuleRef self)
 {
     return self -> module_kind == kMCScriptModuleKindLibrary;
