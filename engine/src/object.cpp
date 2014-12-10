@@ -4857,6 +4857,10 @@ MCObject::GetUuid (MCUuid & r_uuid)
 bool
 MCObject::SetUuid (const MCUuid & p_uuid)
 {
+	/* If the object is in the ID cache, uncache it since its ID is changing. */
+	if (getinidcache() && have_uuid)
+		getstack()->uncacheobjectbyid(this);
+
 	uuid = p_uuid;
 	have_uuid = true;
 	return true;
