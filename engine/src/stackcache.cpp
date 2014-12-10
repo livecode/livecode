@@ -322,37 +322,11 @@ MCStackCache<K>::RehashBuckets (uindex_t p_new_item_count)
 
 class MCStackIdCache : public MCStackCache<uint32_t>
 {
-public:
-	virtual bool CacheObject (MCObject *object);
-	virtual void UncacheObject (MCObject *object);
 protected:
 	virtual hash_t KeyHash (const uint32_t & key) const;
 	virtual compare_t KeyCompare (const uint32_t &, const uint32_t &) const;
 	virtual void ObjectGetKey (MCObject *object, uint32_t & key) const;
 };
-
-bool
-MCStackIdCache::CacheObject (MCObject *object)
-{
-	if (object->getinidcache ())
-		return true;
-
-	if (!MCStackCache<uint32_t>::CacheObject (object)) return false;
-
-	object->setinidcache (true);
-	return true;
-}
-
-void
-MCStackIdCache::UncacheObject (MCObject *object)
-{
-	if (!object->getinidcache ())
-		return;
-
-	MCStackCache<uint32_t>::UncacheObject (object);
-
-	object->setinidcache (false);
-}
 
 hash_t
 MCStackIdCache::KeyHash (const uint32_t & key) const
@@ -383,6 +357,9 @@ MCStackIdCache::ObjectGetKey (MCObject *object,
 
 void MCStack::cacheobjectbyid(MCObject *p_object)
 {
+	if (p_object->getinidcache ())
+		return;
+
     MCThreadMutexLock(m_id_cache_lock);
 	if (m_id_cache == nil)
 	{
@@ -395,7 +372,7 @@ void MCStack::cacheobjectbyid(MCObject *p_object)
 	}
 		
 	if (m_id_cache != nil)
-		m_id_cache -> CacheObject(p_object);
+		p_object->setinidcache (m_id_cache -> CacheObject(p_object));
     MCThreadMutexUnlock(m_id_cache_lock);
 }
 
@@ -403,9 +380,12 @@ void MCStack::uncacheobjectbyid(MCObject *p_object)
 {
 	if (m_id_cache == nil)
 		return;
+	if (!p_object->getinidcache ())
+		return;
 		
     MCThreadMutexLock(m_id_cache_lock);
 	m_id_cache -> UncacheObject(p_object);
+	p_object->setinidcache (false);
     MCThreadMutexUnlock(m_id_cache_lock);
 }
 
