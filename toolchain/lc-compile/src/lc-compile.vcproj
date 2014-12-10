@@ -61,7 +61,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;;&quot;$(SolutionDir)toolchain\lc-compile\src&quot;"
-				PreprocessorDefinitions="YY_NO_UNISTD_H=1"
+				PreprocessorDefinitions="YY_NO_UNISTD_H=1;YYDEBUG=1"
 				WarningLevel="0"
 			/>
 			<Tool
@@ -140,7 +140,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)libscript\include&quot;;&quot;$(SolutionDir)toolchain\lc-compile\src&quot;"
-				PreprocessorDefinitions="YY_NO_UNISTD_H=1"
+				PreprocessorDefinitions="YY_NO_UNISTD_H=1;YYDEBUG=1"
 				WarningLevel="0"
 			/>
 			<Tool

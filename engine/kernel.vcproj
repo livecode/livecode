@@ -13,6 +13,9 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<ToolFile
+			RelativePath="..\toolchain\vs-rules\MLC.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -26,6 +29,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MLC (for built-in)"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -86,6 +92,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MLC (for built-in)"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -3608,13 +3617,6 @@
 				RelativePath=".\src\mblad.h"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -4006,13 +4008,6 @@
 			<File
 				RelativePath=".\src\mblsensor.h"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
@@ -8102,6 +8097,82 @@
 				RelativePath=".\src\text-simplebreakingengine.h"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="Modules"
+			>
+			<File
+				RelativePath=".\src\canvas.mlc"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-canvas-internal.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-canvas.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\module-canvas.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\modules.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\widget.mlc"
+				>
+			</File>
+			<Filter
+				Name="Generated"
+				>
+				<File
+					RelativePath=".\generated\canvas.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\generated\widget.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\ChangeLog.txt"
