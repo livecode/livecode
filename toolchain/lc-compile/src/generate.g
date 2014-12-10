@@ -66,12 +66,7 @@
     'rule' GenerateManifest(module(_, Kind, Id, Metadata, Imports, Definitions)):
         OutputBeginManifest()
         Id'Name -> Name
-        OutputWriteI("<package version=\"0.0\" name=\"", Name, "\">\n")
-        [|
-            QueryMetadata(Metadata, "version" -> VersionString)
-            OutputWriteS("  <version>", VersionString, "</version>\n")
-        |]
-        OutputWrite("  <license>community</license>\n")
+        OutputWrite("<package version=\"0.0\">\n")
         [|
             QueryMetadata(Metadata, "label" -> LabelString)
             OutputWriteS("  <label>", LabelString, "</label>\n")
@@ -80,20 +75,23 @@
             QueryMetadata(Metadata, "description" -> DescriptionString)
             OutputWriteS("  <description>", DescriptionString, "</description>\n")
         |]
-        ModuleDependencyList -> Requirements
-        GenerateManifestRequires(Requirements)
+        OutputWrite("  <license>community</license>\n")
+        OutputWriteI("  <name>", Name, "</name>\n")
+        [|
+            QueryMetadata(Metadata, "version" -> VersionString)
+            OutputWriteS("  <version>", VersionString, "</version>\n")
+        |]
         (|
             where(Kind -> widget)
-            OutputWrite("  <widget>\n")
-            GenerateManifestDefinitions(Definitions)
-            OutputWrite("  </widget>\n")
+            OutputWrite("  <type>widget</type>\n")
         ||
             where(Kind -> library)
-            OutputWrite("  <library>\n")
-            GenerateManifestDefinitions(Definitions)
-            OutputWrite("  </library>\n")
+            OutputWrite("  <type>library</type>\n")
         ||
         |)
+        ModuleDependencyList -> Requirements
+        GenerateManifestRequires(Requirements)
+        GenerateManifestDefinitions(Definitions)
         OutputWrite("</package>")
         OutputEnd()
         
@@ -269,7 +267,7 @@
 
     'rule' GenerateManifestHandlerDefinition(Id, Signature):
         Id'Name -> Name
-        OutputWriteI("    <handler name=\"", Name, "\" ")
+        OutputWriteI("  <handler name=\"", Name, "\" ")
         GenerateManifestSignature(Signature)
         OutputWrite("/>\n")
 
@@ -277,14 +275,19 @@
 
     'rule' GenerateManifestEventDefinition(Id, Signature):
         Id'Name -> Name
-        OutputWriteI("    <event name=\"", Name, "\" ")
+        OutputWriteI("  <event name=\"", Name, "\" ")
         GenerateManifestSignature(Signature)
         OutputWrite("/>\n")
 
 'action' GenerateManifestPropertyDefinition(ID, TYPE, TYPE)
 
     'rule' GenerateManifestPropertyDefinition(Id, GetType, SetType):
-        --
+        Id'Name -> Name
+        OutputWriteI("  <property name=\"", Name, "\" get=\"")
+        GenerateManifestType(GetType)
+        OutputWrite("\" set=\"")
+        GenerateManifestType(SetType)
+        OutputWrite("\"/>\n")
 
 'condition' IsNameInList(NAME, NAMELIST)
     'rule' IsNameInList(Id, namelist(Head, Tail)):
