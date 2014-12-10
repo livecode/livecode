@@ -1115,6 +1115,7 @@ LT factor_table[] =
         {"liveresizing", TT_PROPERTY, P_LIVE_RESIZING},
         {"ln", TT_FUNCTION, F_LN},
         {"ln1", TT_FUNCTION, F_LN1},
+        {"loadedextensions", TT_PROPERTY, P_LOADED_EXTENSIONS},
         {"loadedtime", TT_PROPERTY, P_MOVIE_LOADED_TIME},
         {"loc", TT_PROPERTY, P_LOCATION},
         {"localloc", TT_FUNCTION, F_LOCAL_LOC},

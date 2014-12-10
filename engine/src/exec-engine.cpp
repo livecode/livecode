@@ -2122,7 +2122,7 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
     MCScriptModuleRef t_module;
     if (!MCScriptCreateModuleFromStream(t_stream, t_module))
     {
-        MCresult -> sets("failed to load module");
+        ctxt . SetTheResultToStaticCString("failed to load module");
         MCValueRelease(t_stream);
         return;
     }
@@ -2131,7 +2131,7 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
     
     if (!MCScriptEnsureModuleIsUsable(t_module))
     {
-        MCresult -> sets("module is not usable");
+        ctxt . SetTheResultToStaticCString("module is not usable");
         MCScriptReleaseModule(t_module);
         return;
     }
@@ -2142,7 +2142,7 @@ void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef p_filename)
     {
         if (!MCScriptCreateInstanceOfModule(t_module, t_instance))
         {
-            MCresult -> sets("could not instantiate module");
+            ctxt . SetTheResultToStaticCString("could not instantiate module");
             MCScriptReleaseModule(t_module);
             return;
         }
@@ -2181,6 +2181,30 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_filename)
             
             MCextensionschanged = true;
         }
+}
+
+void MCEngineGetLoadedExtensions(MCExecContext& ctxt, MCProperListRef& r_list)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCProperListRef t_list;
+    t_list = nil;
+    if (t_success)
+        t_success = MCProperListCreateMutable(t_list);
+        
+    for(MCLoadedExtension *t_ext = MCextensions; t_success && t_ext != nil; t_ext = t_ext -> next)
+        t_success = MCProperListPushElementOntoBack(t_list, MCScriptGetNameOfModule(t_ext -> module));
+    
+    if (t_success)
+        t_success = MCProperListCopyAndRelease(t_list, r_list);
+    
+    if (!t_success)
+    {
+        MCValueRelease(t_list);
+        ctxt . Throw();
+        return;
+    }
 }
 
 Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_parameters)

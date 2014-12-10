@@ -385,6 +385,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     
     // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
     DEFINE_RO_PROPERTY(P_EDITION_TYPE, String, Engine, EditionType)
+    
+    // MW-2014-12-10: [[ Extensions ]] Returns a list of loaded extensions.
+    DEFINE_RO_PROPERTY(P_LOADED_EXTENSIONS, ProperLinesOfString, Engine, LoadedExtensions)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
@@ -903,6 +906,9 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
             
     // MW-2014-08-12: [[ EditionType ]] Add support for global editionType property.
     case P_EDITION_TYPE:
+            
+    // MW-2014-12-10: [[ Extensions ]] Add support for global loadedExtensions property.
+    case P_LOADED_EXTENSIONS:
         break;
 	        
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only

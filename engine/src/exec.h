@@ -3860,6 +3860,8 @@ void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStr
 
 void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition);
 
+void MCEngineGetLoadedExtensions(MCExecContext& ctxt, MCProperListRef& r_extensions);
+
 ///////////
 
 extern MCExecMethodInfo *kMCFilesEvalDirectoriesMethodInfo;

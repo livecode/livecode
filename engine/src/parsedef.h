@@ -1675,6 +1675,9 @@ enum Properties {
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
     P_KIND,
+
+    // MW-2014-12-10: [[ Extensions ]] 'loadedExtensions' global property
+    P_LOADED_EXTENSIONS,
 };
 
 enum Look_and_feel {
