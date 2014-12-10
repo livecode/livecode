@@ -830,3 +830,57 @@ bool MCScriptLookupDefinitionInModule(MCScriptModuleRef self, MCNameRef p_name, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static bool __index_of_definition(MCScriptModuleRef self, MCScriptDefinition *p_definition, uindex_t& r_index)
+{
+    for(uindex_t i = 0; i < self -> definition_count; i++)
+        if (self -> definitions[i] == p_definition)
+        {
+            r_index = i;
+            return true;
+        }
+    return false;
+}
+
+MCNameRef MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef self, MCScriptDefinition *p_definition)
+{
+    uindex_t t_index;
+    if (__index_of_definition(self, p_definition, t_index) &&
+        self -> definition_name_count > 0)
+        return self -> definition_names[t_index];
+    return kMCEmptyName;
+}
+
+MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef self, MCScriptDefinition *p_definition, uindex_t p_index)
+{
+    MCScriptHandlerDefinition *t_handler;
+    t_handler = static_cast<MCScriptHandlerDefinition *>(p_definition);
+    
+    MCScriptHandlerType *t_type;
+    t_type = static_cast<MCScriptHandlerType *>(self -> types[t_handler -> type]);
+    
+    if (t_type -> parameter_name_count != 0)
+        return t_type -> parameter_names[p_index];
+    
+    return kMCEmptyName;
+}
+
+MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef self, MCScriptDefinition *p_definition, uindex_t p_index)
+{
+    MCScriptHandlerDefinition *t_handler;
+    t_handler = static_cast<MCScriptHandlerDefinition *>(p_definition);
+    
+    if (t_handler -> local_name_count != 0)
+        return t_handler -> local_names[p_index];
+    
+    return kMCEmptyName;
+}
+
+MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef self, uindex_t p_index)
+{
+    if (self -> definition_name_count > 0)
+        return self -> definition_names[p_index];
+    return kMCEmptyName;
+}
+
+////////////////////////////////////////////////////////////////////////////////

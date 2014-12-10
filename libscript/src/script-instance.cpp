@@ -3,6 +3,8 @@
 
 #include "ffi.h"
 
+#include "foundation-auto.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -149,77 +151,109 @@ bool MCScriptThrowInvalidValueForParameterError(MCScriptModuleRef module, MCName
     return MCErrorThrowGeneric();
 }
 
-bool MCScriptThrowInvalidValueForResultError(MCScriptModuleRef module, uindex_t address, MCTypeInfoRef type, MCValueRef value)
+//////////
+
+static bool MCScriptThrowError(MCTypeInfoRef p_error_type, ...)
+{
+    MCAutoArrayRef t_info;
+    if (!MCArrayCreateMutable(&t_info))
+        return false;
+    
+    va_list t_args;
+    va_start(t_args, p_error_type);
+    for(;;)
+    {
+        const char *t_key;
+        t_key = va_arg(t_args, const char *);
+        if (t_key == nil)
+            break;
+        
+        MCValueRef t_value;
+        t_value = va_arg(t_args, MCValueRef);
+    
+        MCNewAutoNameRef t_name;
+        if (!MCNameCreateWithNativeChars((const char_t *)t_key, strlen(t_key), &t_name))
+            return false;
+        
+        if (!MCArrayStoreValue(*t_info, true, *t_name, t_value))
+            return false;
+    }
+    va_end(t_args);
+    
+    MCErrorRef t_error;
+    if (!MCErrorCreate(p_error_type, *t_info, t_error))
+        return false;
+    
+    return MCErrorThrow(t_error);
+}
+
+bool MCScriptThrowInvalidValueForResultError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+{
+    return MCScriptThrowError(kMCScriptInvalidReturnValueErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "type", p_expected_type, "value", p_value, nil);
+}
+
+bool MCScriptThrowInParameterNotDefinedError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index)
+{
+    return MCScriptThrowError(kMCScriptInParameterNotDefinedErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "parameter", MCScriptGetNameOfParameterInModule(p_module, p_handler, p_index), nil);
+}
+
+bool MCScriptThrowOutParameterNotDefinedError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index)
+{
+    return MCScriptThrowError(kMCScriptOutParameterNotDefinedErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "parameter", MCScriptGetNameOfParameterInModule(p_module, p_handler, p_index), nil);
+}
+
+bool MCScriptThrowLocalVariableUsedBeforeDefinedError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index)
+{
+    return MCScriptThrowError(kMCScriptVariableUsedBeforeDefinedErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "variable", MCScriptGetNameOfLocalVariableInModule(p_module, p_handler, p_index), nil);
+}
+
+bool MCScriptThrowGlobalVariableUsedBeforeDefinedError(MCScriptModuleRef p_module, uindex_t p_index)
+{
+    return MCScriptThrowError(kMCScriptVariableUsedBeforeDefinedErrorTypeInfo, "module", p_module -> name, "variable", MCScriptGetNameOfGlobalVariableInModule(p_module, p_index), nil);
+}
+
+bool MCScriptThrowInvalidValueForLocalVariableError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+{
+    return MCScriptThrowError(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "variable", MCScriptGetNameOfLocalVariableInModule(p_module, p_handler, p_index), "type", p_expected_type, "value", p_value, nil);
+}
+
+bool MCScriptThrowInvalidValueForGlobalVariableError(MCScriptModuleRef p_module, uindex_t p_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+{
+    return MCScriptThrowError(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, p_module -> name, "variable",  MCScriptGetNameOfGlobalVariableInModule(p_module, p_index), "type", p_expected_type, "value", p_value, nil);
+}
+
+bool MCScriptThrowNotABooleanError(MCValueRef p_value)
+{
+    return MCScriptThrowError(kMCScriptNotABooleanValueErrorTypeInfo, "value", p_value, nil);
+}
+
+bool MCScriptThrowWrongNumberOfArgumentsForInvokeError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, uindex_t p_provided)
+{
+    // TODO: Encode provided / expected.
+    return MCScriptThrowError(kMCScriptWrongNumberOfArgumentsErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_definition));
+}
+
+bool MCScriptThrowInvalidValueForArgumentError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, uindex_t p_arg_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+{
+    return MCScriptThrowError(kMCScriptInvalidArgumentValueErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_definition), MCScriptGetNameOfParameterInModule(p_module, p_definition, p_arg_index), "type", p_expected_type, "value", p_value, nil);
+}
+
+bool MCScriptThrowUnableToResolveForeignHandlerError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition)
+{
+    return MCScriptThrowError(kMCScriptForeignHandlerBindingErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_definition), nil);
+}
+
+bool MCScriptThrowUnableToResolveTypeError(MCTypeInfoRef p_type)
+{
+    return MCScriptThrowError(kMCScriptTypeBindingErrorTypeInfo, "type", p_type, nil);
+}
+
+bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, MCProperListRef p_arguments)
 {
     return MCErrorThrowGeneric();
 }
 
-bool MCScriptThrowOutParameterNotDefinedError(MCScriptModuleRef module, uindex_t address, uindex_t index)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowLocalVariableUsedBeforeDefinedError(MCScriptModuleRef module, uindex_t address, uindex_t index)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowGlobalVariableUsedBeforeDefinedError(MCScriptModuleRef module, uindex_t address, uindex_t index)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowInvalidValueForLocalVariableError(MCScriptModuleRef module, uindex_t address, uindex_t index, MCValueRef value)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowInvalidValueForGlobalVariableError(MCScriptModuleRef module, uindex_t address, uindex_t index, MCValueRef value)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowDefcheckFailureError(MCScriptModuleRef module, uindex_t address)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowTypecheckFailureError(MCScriptModuleRef module, uindex_t address, MCTypeInfoRef type, MCValueRef value)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowOutOfMemoryError(MCScriptModuleRef module, uindex_t address)
-{
-    return MCErrorThrowOutOfMemory();
-}
-
-bool MCScriptThrowNotABooleanError(MCScriptModuleRef module, uindex_t address, MCValueRef value)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowWrongNumberOfArgumentsForInvokeError(MCScriptModuleRef module, uindex_t address, MCScriptDefinition *def, uindex_t arity)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowInvalidValueForArgumentError(MCScriptModuleRef module, uindex_t address, MCScriptDefinition *def, uindex_t index, MCValueRef value)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowUnableToResolveForeignHandlerError(MCScriptModuleRef module, uindex_t address, MCScriptDefinition *def)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowUnableToResolveTypeError(MCScriptModuleRef module, uindex_t address, MCTypeInfoRef type)
-{
-    return MCErrorThrowGeneric();
-}
-
-bool MCScriptThrowUserError(MCScriptModuleRef module, MCValueRef value)
+bool MCScriptThrowUserError(MCValueRef value)
 {
     return MCErrorThrowGeneric();
 }
@@ -414,7 +448,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
     uindex_t t_required_param_count;
     t_required_param_count = MCHandlerTypeInfoGetParameterCount(t_signature);
     if (t_required_param_count != p_argument_count)
-        return MCScriptThrowWrongNumberOfArgumentsForHandlerError(self -> module, p_handler, t_required_param_count, p_argument_count);
+        return MCScriptThrowWrongNumberOfArgumentsForInvokeError(self -> module, t_definition, p_argument_count);
     
     // Check the types of the arguments.
     for(uindex_t i = 0; i < t_required_param_count; i++)
@@ -431,7 +465,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
             t_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
             
             if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_arguments[i]), t_type))
-                return MCScriptThrowInvalidValueForParameterError(self -> module, p_handler, nil, t_type, p_arguments[i]);
+                return MCScriptThrowInvalidValueForArgumentError(self -> module, t_definition, i, t_type, p_arguments[i]);
         }
     }
     
@@ -481,7 +515,7 @@ static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_i
         !MCMemoryNewArray(p_handler -> slot_count, self -> slots))
     {
         MCMemoryDelete(self);
-        return p_caller != nil ? MCScriptThrowOutOfMemoryError(p_caller -> instance -> module, p_caller -> address) : MCScriptThrowOutOfMemoryError(nil, 0);
+        return false;
     }
     
     for(uindex_t i = 0; i < p_handler -> slot_count; i++)
@@ -665,7 +699,7 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
     
     if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_arity)
-        return MCScriptThrowWrongNumberOfArgumentsForInvokeError(x_frame -> instance -> module, x_frame -> address, p_handler, p_arity);
+        return MCScriptThrowWrongNumberOfArgumentsForInvokeError(p_instance -> module, p_handler, p_arity);
     
     for(uindex_t i = 0; i < p_arity; i++)
     {
@@ -675,14 +709,17 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
         MCValueRef t_value;
         t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i]);
         
-        if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), MCHandlerTypeInfoGetParameterType(t_signature, i)))
-            return MCScriptThrowInvalidValueForArgumentError(x_frame -> instance -> module, x_frame -> address, p_handler, i, t_value);
-    }
+        MCTypeInfoRef t_type;
+        t_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
         
+        if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_type))
+            return MCScriptThrowInvalidValueForArgumentError(p_instance -> module, p_handler, i, t_type, t_value);
+    }
+    
     MCScriptFrame *t_callee;
     if (!MCScriptCreateFrame(x_frame, p_instance, p_handler, t_callee))
         return false;
-
+    
     bool t_needs_mapping;
     t_needs_mapping = false;
 
@@ -706,7 +743,7 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
     if (t_needs_mapping)
     {
         if (!MCMemoryNewArray(p_arity, t_callee -> mapping))
-            return MCScriptThrowOutOfMemoryError(x_frame -> instance -> module, x_frame -> address);
+            return false;
         
         MCMemoryCopy(t_callee -> mapping, p_arguments, sizeof(int) * p_arity);
     }
@@ -727,7 +764,7 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
     p_handler -> function = dlsym(RTLD_DEFAULT, MCStringGetCString(p_handler -> binding));
 #endif
     if (p_handler -> function == nil)
-        return MCScriptThrowUnableToResolveForeignHandlerError(p_frame -> instance -> module, p_frame -> address,p_handler);
+        return MCScriptThrowUnableToResolveForeignHandlerError(p_instance -> module, p_handler);
     
     MCTypeInfoRef t_signature;
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
@@ -737,7 +774,7 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
     
     MCResolvedTypeInfo t_resolved_return_type;
     if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
-        return MCErrorThrowGeneric();
+        return MCScriptThrowUnableToResolveTypeError(t_return_type);
     
     ffi_type *t_ffi_return_type;
     if (t_return_type != kMCNullTypeInfo)
@@ -823,7 +860,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
     
     if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_arity)
-        return MCScriptThrowWrongNumberOfArgumentsForInvokeError(x_frame -> instance -> module, x_frame -> address, p_handler, p_arity - 1);
+        return MCScriptThrowWrongNumberOfArgumentsForInvokeError(p_instance -> module, p_handler, p_arity - 1);
     
     MCHandlerTypeFieldMode t_modes[16];
     MCResolvedTypeInfo t_types[16];
@@ -845,7 +882,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
         
         // We need the target typeinfo regardless of mode.
         if (!MCTypeInfoResolve(t_type, t_types[t_arg_index]))
-            return MCScriptThrowUnableToResolveTypeError(x_frame -> instance -> module, x_frame -> address, t_type);
+            return MCScriptThrowUnableToResolveTypeError(t_type);
         
         // Target foreign descriptor.
         const MCForeignTypeDescriptor *t_descriptor;
@@ -866,11 +903,11 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             
             MCResolvedTypeInfo t_source;
             if (!MCTypeInfoResolve(t_source_type, t_source))
-                return MCScriptThrowUnableToResolveTypeError(x_frame -> instance -> module, x_frame -> address, t_source_type);
+                return MCScriptThrowUnableToResolveTypeError(t_source_type);
             
             // Check that the source type conforms to target.
             if (!MCResolvedTypeInfoConforms(t_source, t_types[t_arg_index]))
-                return MCScriptThrowInvalidValueForArgumentError(x_frame -> instance -> module, x_frame -> address, p_handler, t_arg_index, t_value);
+                return MCScriptThrowInvalidValueForArgumentError(p_instance -> module, p_handler, t_arg_index, t_type, t_value);
             
             if (MCTypeInfoIsForeign(t_types[t_arg_index] . type))
             {
@@ -1062,27 +1099,34 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
         uint8_t t_result[64];
         ffi_call((ffi_cif *)p_handler -> function_cif, (void(*)())p_handler -> function, &t_result, t_args);
         
-        MCTypeInfoRef t_return_type;
-        MCResolvedTypeInfo t_resolved_return_type;
-        t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
-        if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
-            t_success = false;
-        
-        if (t_success)
+        // If no error is pending then do the copyback of the result, and then
+        // arguments. Otherwise we just continue the throw.
+        if (!MCErrorIsPending())
         {
-            if (t_resolved_return_type . named_type != kMCNullTypeInfo)
+            MCTypeInfoRef t_return_type;
+            MCResolvedTypeInfo t_resolved_return_type;
+            t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
+            if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
+                t_success = false;
+            
+            if (t_success)
             {
-                if (MCTypeInfoIsForeign(t_resolved_return_type . type))
+                if (t_resolved_return_type . named_type != kMCNullTypeInfo)
                 {
-                    if (!MCForeignValueCreateAndRelease(t_resolved_return_type . named_type, t_result, (MCForeignValueRef&)t_result_value))
-                        t_success = false;
+                    if (MCTypeInfoIsForeign(t_resolved_return_type . type))
+                    {
+                        if (!MCForeignValueCreateAndRelease(t_resolved_return_type . named_type, t_result, (MCForeignValueRef&)t_result_value))
+                            t_success = false;
+                    }
+                    else
+                        t_result_value = *(MCValueRef *)t_result;
                 }
                 else
-                    t_result_value = *(MCValueRef *)t_result;
+                    t_result_value = MCValueRetain(kMCNull);
             }
-            else
-                t_result_value = MCValueRetain(kMCNull);
         }
+        else
+            t_success = false;
     }
     else
         t_result_value = nil;
@@ -1276,9 +1320,9 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
             
             MCResolvedTypeInfo t_resolved_value_type, t_resolved_param_type;
             if (!MCTypeInfoResolve(t_value_type, t_resolved_value_type))
-                return MCScriptThrowUnableToResolveTypeError(x_frame -> instance -> module, x_frame -> address, t_value_type);
+                return MCScriptThrowUnableToResolveTypeError(t_value_type);
             if (!MCTypeInfoResolve(t_param_type, t_resolved_param_type))
-                return MCScriptThrowUnableToResolveTypeError(x_frame -> instance -> module, x_frame -> address, t_param_type);
+                return MCScriptThrowUnableToResolveTypeError(t_param_type);
             
             // If the value is undefined, and the param type doesn't take an optional
             // argument - then this method is no good.
@@ -1335,7 +1379,15 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
         }
     }
     
-    return MCErrorThrowGeneric(); //MCScriptThrowAmbiguousHandlerGroupInvocation();
+    MCAutoProperListRef t_args;
+    if (!MCProperListCreateMutable(&t_args))
+        return false;
+    
+    for(uindex_t i = 0; i < p_arity - 1; i++)
+        if (!MCProperListPushElementOntoBack(*t_args, MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i + 1])))
+            return false;
+        
+    return MCScriptThrowUnableToResolveMultiInvoke(p_instance -> module, p_handler, *t_args);
 }
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments)
@@ -1435,7 +1487,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                         t_next_bytecode = t_bytecode + t_offset;
                 }
                 else
-                    t_success = MCScriptThrowNotABooleanError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_value);
+                    t_success = MCScriptThrowNotABooleanError(t_value);
             }
             break;
             case kMCScriptBytecodeOpJumpIfFalse:
@@ -1460,7 +1512,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                         t_next_bytecode = t_bytecode + t_offset;
                 }
                 else
-                    t_success = MCScriptThrowNotABooleanError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_value);
+                    t_success = MCScriptThrowNotABooleanError(t_value);
             }
             break;
             case kMCScriptBytecodeOpAssignConstant:
@@ -1512,13 +1564,13 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 MCResolvedTypeInfo t_resolved_input_type, t_resolved_output_type;
                 if (!MCTypeInfoResolve(t_input_type, t_resolved_input_type))
-                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_input_type);
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_input_type);
                 if (t_success &&
                     !MCTypeInfoResolve(t_output_type, t_resolved_output_type))
-                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_output_type);
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_output_type);
                 if (t_success &&
                     !MCResolvedTypeInfoConforms(t_resolved_input_type, t_resolved_output_type))
-                    t_success = MCScriptThrowInvalidValueForResultError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_output_type, t_value);
+                    t_success = MCScriptThrowInvalidValueForResultError(t_frame -> instance -> module, t_frame -> handler, t_input_type, t_value);
                 
                 MCValueRef t_transformed_value;
                 t_transformed_value = nil;
@@ -1562,7 +1614,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     if (MCHandlerTypeInfoGetParameterMode(t_signature, i) == kMCHandlerTypeFieldModeOut)
                         if (MCScriptFetchFromLocalInFrame(t_frame, i) == kMCNull &&
                             !MCScriptIsLocalInFrameOptional(t_frame, i))
-                            t_success = MCScriptThrowOutParameterNotDefinedError(t_frame -> instance -> module, t_frame -> instance -> module -> bytecode - t_bytecode, i);
+                            t_success = MCScriptThrowOutParameterNotDefinedError(t_frame -> instance -> module, t_frame -> handler, i);
                 
                 // If we get here then everything is conforming.
                 if (t_success)
@@ -1600,8 +1652,10 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     t_transformed_value != nil)
                     MCValueRelease(t_transformed_value);
                 
-                // Pop and destroy the top frame of the stack.
-                t_frame = MCScriptDestroyFrame(t_frame);
+                // Pop and destroy the top frame of the stack, but only if there
+                // is no error.
+                if (t_success)
+                    t_frame = MCScriptDestroyFrame(t_frame);
             }
             break;
             case kMCScriptBytecodeOpInvoke:
@@ -1653,7 +1707,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 // Check that the local is defined if not optional
                 if (t_value == kMCNull &&
                     !MCScriptIsLocalInFrameOptional(t_frame, t_index))
-                    t_success = MCScriptThrowLocalVariableUsedBeforeDefinedError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_index);
+                    t_success = MCScriptThrowLocalVariableUsedBeforeDefinedError(t_frame -> instance -> module, t_frame -> handler, t_index);
                 
                 if (t_success)
                     MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_value);
@@ -1677,13 +1731,13 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 MCResolvedTypeInfo t_resolved_input_type, t_resolved_output_type;
                 if (!MCTypeInfoResolve(t_input_type, t_resolved_input_type))
-                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_input_type);
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_input_type);
                 if (t_success &&
                     !MCTypeInfoResolve(t_output_type, t_resolved_output_type))
-                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_output_type);
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_output_type);
                 if (t_success &&
                     !MCResolvedTypeInfoConforms(t_resolved_input_type, t_resolved_output_type))
-                    t_success = MCScriptThrowInvalidValueForLocalVariableError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_index, t_value);
+                    t_success = MCScriptThrowInvalidValueForLocalVariableError(t_frame -> instance -> module, t_frame -> handler, t_index, t_output_type, t_value);
                 
                 MCValueRef t_transformed_value;
                 if (t_success)
@@ -1751,7 +1805,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 if (t_value == kMCNull &&
                     !MCTypeInfoIsOptional(t_instance -> module -> types[t_var_definition -> type] -> typeinfo))
-                    t_success = MCScriptThrowGlobalVariableUsedBeforeDefinedError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_index);
+                    t_success = MCScriptThrowGlobalVariableUsedBeforeDefinedError(t_frame -> instance -> module, t_index);
                 
                 if (t_success)
                     MCScriptStoreToRegisterInFrame(t_frame, t_dst, t_value);
@@ -1785,13 +1839,13 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 MCResolvedTypeInfo t_resolved_input_type, t_resolved_output_type;
                 if (!MCTypeInfoResolve(t_input_type, t_resolved_input_type))
-                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_input_type);
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_input_type);
                 if (t_success &&
                     !MCTypeInfoResolve(t_output_type, t_resolved_output_type))
-                    t_success = MCScriptThrowUnableToResolveTypeError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_output_type);
+                    t_success = MCScriptThrowUnableToResolveTypeError(t_output_type);
                 if (t_success &&
                     !MCResolvedTypeInfoConforms(t_resolved_input_type, t_resolved_output_type))
-                    t_success = MCScriptThrowInvalidValueForGlobalVariableError(t_frame -> instance -> module, t_bytecode - t_frame -> instance -> module -> bytecode, t_index, t_value);
+                    t_success = MCScriptThrowInvalidValueForGlobalVariableError(t_frame -> instance -> module, t_index, t_output_type, t_value);
                 
                 MCValueRef t_transformed_value;
                 if (t_success)
@@ -1879,13 +1933,17 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 MCValueRef t_value;
                 t_value = MCScriptFetchFromLocalInFrame(t_frame, t_err);
                 
-                t_success = MCScriptThrowUserError(t_frame -> instance -> module, t_value);
+                t_success = MCScriptThrowUserError(t_value);
             }
             break;
         }
         
+        // If we failed, then make sure the frame address is up to date.
         if (!t_success)
+        {
+            t_frame -> address = t_bytecode - t_frame -> instance -> module -> bytecode;
             break;
+        }
         
         if (t_frame == nil)
             break;
@@ -1894,10 +1952,43 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
         t_bytecode = t_next_bytecode;
     }
     
-    // Copy return value (if any).
+    // If we failed, we must unwind the error.
     if (!t_success)
+    {
+        // Catch the error - this is so we can detect if an error is thrown whilst
+        // unwinding.
+        MCErrorRef t_error;
+        if (!MCErrorCatch(t_error))
+            __MCScriptUnreachable__("Error indicated without throwing!");
+        
         while(t_frame != nil)
+        {
+            // If we have an error, and the module in the current frame has debug
+            // info, then map.
+            if (t_error != nil && t_frame -> instance -> module -> position_count > 0)
+            {
+                uindex_t t_index;
+                for(t_index = 0; t_index < t_frame -> instance -> module -> position_count - 1; t_index++)
+                    if (t_frame -> instance -> module -> positions[t_index + 1] . address > t_frame -> address)
+                        break;
+                
+                MCScriptPosition *t_pos;
+                t_pos = &t_frame -> instance -> module -> positions[t_index];
+                
+                // If unwinding fails (due to oom), then release the error.
+                if (!MCErrorUnwind(t_error, t_frame -> instance -> module -> source_files[t_pos -> file], t_pos -> line, 1))
+                {
+                    MCValueRelease(t_error);
+                    t_error = nil;
+                }
+            }
+            
             t_frame = MCScriptDestroyFrame(t_frame);
+        }
+        
+        // If we still have an error, throw it again.
+        MCErrorThrow(t_error);
+    }
     
     return t_success;
 }

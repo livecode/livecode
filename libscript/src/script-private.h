@@ -10,6 +10,20 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern MCTypeInfoRef kMCScriptOutParameterNotDefinedErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptInParameterNotDefinedErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptVariableUsedBeforeDefinedErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptNotABooleanValueErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptWrongNumberOfArgumentsErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptTypeBindingErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum MCScriptObjectKind
 {
     kMCScriptObjectKindNone,
@@ -125,6 +139,10 @@ struct MCScriptHandlerType: public MCScriptType
     MCScriptHandlerTypeParameter *parameters;
     uindex_t parameter_count;
     uindex_t return_type;
+    
+    // This information can be stripped.
+    MCNameRef *parameter_names;
+    uindex_t parameter_name_count;
 };
 
 struct MCScriptRecordTypeField
@@ -221,6 +239,10 @@ struct MCScriptHandlerDefinition: public MCScriptDefinition
     
 	uindex_t start_address;
 	uindex_t finish_address;
+    
+    // The names of the locals - this information can be stripped.
+    MCNameRef *local_names;
+    uindex_t local_name_count;
     
     // The number of slots required in a frame in order to execute this handler.
     // This is the sum of parameter count, local count and temporary count - not pickled
@@ -352,6 +374,11 @@ bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef module, MCNameRe
 bool MCScriptLookupEventDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptEventDefinition*& r_definition);
 bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef module, MCNameRef handler, MCScriptHandlerDefinition*& r_definition);
 bool MCScriptLookupDefinitionInModule(MCScriptModuleRef self, MCNameRef p_name, MCScriptDefinition*& r_definition);
+
+MCNameRef MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef module, MCScriptDefinition *definition);
+MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, uindex_t index);
 
 ////////////////////////////////////////////////////////////////////////////////
 
