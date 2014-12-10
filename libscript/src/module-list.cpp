@@ -316,6 +316,16 @@ extern "C" MC_DLLEXPORT void MCListSpliceAfterElementOf(MCProperListRef p_list, 
     MCValueAssign(x_target, *t_immutable);
 }
 
+extern "C" MC_DLLEXPORT void MCListSpliceBefore(MCProperListRef p_list, MCProperListRef& x_target)
+{
+    MCListSpliceBeforeElementOf(p_list, 1, x_target);
+}
+
+extern "C" MC_DLLEXPORT void MCListSpliceAfter(MCProperListRef p_list, MCProperListRef& x_target)
+{
+    MCListSpliceAfterElementOf(p_list, -1, x_target);
+}
+
 extern "C" MC_DLLEXPORT void MCListEvalEmpty(MCProperListRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyProperList);

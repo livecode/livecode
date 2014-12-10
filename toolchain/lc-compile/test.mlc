@@ -7,10 +7,6 @@ public handler test()
     variable tDelimiter as string
     put newline into tDelimiter
 	
-	variable tNumber
-	put the abs of -5.5 into tNumber
-	testLog("Math", "ABS", tNumber is 5.5, tResults)
-	
 	-- test test
 	testLog("__Test", "Fail", false, tResults)
 	testLog("__Test", "Succeed", true, tResults)
@@ -576,8 +572,20 @@ public handler testList(inout xResults as list)
    	testLog("List", "HeadOf", the head of tTestList is "xyz", xResults)
 	testLog("List", "TailOf", the tail of tTestList is 1, xResults)
 
-    testLog("List", "ElementOf", element 2 of tTestList is 2, xResults)
-   	testLog("List", "ElementRangeOf", element 2 of element 3 to -1 of tTestList is 1, xResults)
+	variable tNewList as list
+	put [1,2,3] into tNewList
+	push 0 onto front of tNewList
+	testLog("List", "PushOntoListFront", tNewList[1] is 0, xResults)
+	push 4 onto back of tNewList
+	testLog("List", "PushOntoListBack", tNewList[-1] is 4, xResults)
+	push 5 onto tNewList
+	testLog("List", "PushOntoList", tNewList[-1] is 5, xResults)
+	
+	put "A" into element 2 of tNewList
+    testLog("List", "ElementOf", element 2 of tNewList is "A", xResults)
+   	testLog("List", "ElementRangeOf1", element 2 of element 3 to -1 of tTestList is 1, xResults)
+	put "ABC" into element 2 to 4 of tNewList
+	testLog("List", "ElementRangeOf2", element -3 of tNewList is "ABC", xResults)
 
     testLog("List", "Contains", tTestList contains element -2 to -1 of tTestList, xResults)
 
@@ -588,7 +596,7 @@ public handler testList(inout xResults as list)
     put element -2 to -1 of tTestList into tSubList
 
 	testLog("List", "Is", tSubList is ["abcd", 1], xResults)
-	testLog("List", "IsNot", tSubList is not [2, "abcd", 1], xResults)
+	testLog("List", "IsNot", tSubList is not ["Abcd", 1], xResults)
 
     testLog("List", "IsIn", "abcd" is in tSubList, xResults)
     testLog("List", "IsNotIn", not tSubList is in tTestList, xResults)
@@ -596,17 +604,39 @@ public handler testList(inout xResults as list)
     variable tString as string
     pop front of tSubList into tString
 
-    testLog("List", "Pop", tString is "abcd", xResults)
-    testLog("List", "Pop", the number of elements in tSubList is 1, xResults)
+    testLog("List", "PopList1", tString is "abcd", xResults)
+    testLog("List", "PopList2", the number of elements in tSubList is 1, xResults)
 
+	variable tElt as number
+	pop front of tNewList into tElt
+	testLog("List", "PopFromFront", tElt is 0, xResults)
+	pop back of tNewList into tElt
+	testLog("List", "PopFromBack", tElt is 5, xResults)
+	
     splice tTestList after element 1 of tSubList
 
-    testLog("List", "SpliceAfter", the number of elements in tSubList is 5, xResults)
-    testLog("List", "SpliceAfter", the tail of tSubList is 1, xResults)
-    testLog("List", "SpliceAfter", tSubList contains tTestList, xResults)
+    testLog("List", "SpliceAfter1", the number of elements in tSubList is 5, xResults)
+    testLog("List", "SpliceAfter2", the tail of tSubList is 1, xResults)
+    testLog("List", "SpliceAfter3", tSubList contains tTestList, xResults)
 
 	put "ZZZZ" into tTestList[1]
 	testLog("List", "SingletonElement", tTestList[1] is "ZZZZ", xResults)
+
+	variable tList as list
+	put [1,2,3] into tList
+	
+	splice tList into element 1 to 3 of tList
+	testLog("List", "SpliceIntoRange", tList is [1,2,3], xResults)
+	splice element 1 to 2 of tList into element 1 of tList
+	testLog("List", "SpliceIntoElement", tList is [1,2,2,3], xResults)
+	
+	splice tList before element 1 of tList
+	testLog("List", "SpliceBefore", tList is [1,2,2,3,1,2,2,3], xResults)
+	
+	variable tAnotherList as list
+	put [1,2,3] into tAnotherList	
+	put tAnotherList into element 1 to 2 of tAnotherList 
+	testLog("List", "ElementRangeOf3", element -2 of tAnotherList is [1,2,3], xResults)
 
 end handler
 
