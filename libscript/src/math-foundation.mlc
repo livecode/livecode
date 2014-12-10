@@ -54,8 +54,7 @@ Tags: Math
 
 syntax RoundToNearest is statement
     "round" <Target: Expression>
-begin 
-    MCMathFoundationExecRoundRealToNearest(Target)
+begin
     MCMathFoundationExecRoundNumberToNearest(Target)
 end syntax
 
@@ -78,8 +77,7 @@ Tags: Math
 
 syntax RoundedToNearest is prefix operator with precedence 1
     "the" "rounded" "of" <Target: Expression>
-begin 
-    MCMathFoundationEvalRoundedRealToNearest(Target, output)
+begin
     MCMathFoundationEvalRoundedNumberToNearest(Target, output)
 end syntax
 
@@ -106,7 +104,6 @@ Tags: Math
 syntax FloorOperator is prefix operator with precedence 1
     "the" "floor" "of" <Target: Expression>
 begin
-    MCMathFoundationEvalFloorReal(Target, output)
     MCMathFoundationEvalFloorNumber(Target, output)
 end syntax
 
@@ -131,7 +128,6 @@ Tags: Math
 syntax CeilOperator is prefix operator with precedence 1
     "the" "ceiling" "of" <Target: Expression>
 begin
-    MCMathFoundationEvalCeilingReal(Target, output)
     MCMathFoundationEvalCeilingNumber(Target, output)
 end syntax
 

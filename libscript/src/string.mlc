@@ -213,7 +213,7 @@ The ```is``` operator is case sensitive.
 Tags: Strings
 */
 
-syntax IsEqualTo is neutral binary operator with precedence 5
+syntax StringIsString is neutral binary operator with precedence 5
     <Left: Expression> "is" <Right: Expression>
 begin
     MCStringEvalIsEqualTo(Left, Right, output)
@@ -233,7 +233,7 @@ The ```is not``` operator is case sensitive.
 Tags: Strings
 */
 
-syntax IsNotEqualTo is neutral binary operator with precedence 5
+syntax StringIsNotString is neutral binary operator with precedence 5
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCStringEvalIsNotEqualTo(Left, Right, output)
@@ -253,7 +253,7 @@ Description:
 Tags: Strings
 */
 
-syntax LessThan is neutral binary operator with precedence 3
+syntax StringIsLessThanString is neutral binary operator with precedence 3
     <Left: Expression> "<" <Right: Expression>
 begin
     MCStringEvalIsLessThan(Left, Right, output)
@@ -272,7 +272,7 @@ Description:
 Tags: Strings
 */
 
-syntax GreaterThan is neutral binary operator with precedence 3
+syntax StringIsGreaterThanString is neutral binary operator with precedence 3
     <Left: Expression> ">" <Right: Expression>
 begin
     MCStringEvalIsGreaterThan(Left, Right, output)
@@ -286,7 +286,7 @@ Summary: 		Designates the string consisting of zero chars
 
 Example:
 	variable tVar as string
-	variable tCount as int
+	variable tCount as number
 	put the empty string into tVar
 	put the number of chars in tVar into tCount -- tCount is 0
 	

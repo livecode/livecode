@@ -56,7 +56,7 @@ Example:
 	put the empty list into tVar
 	push "first element" onto tVar
 	
-	variable tResult as bool
+	variable tResult as boolean
 	if the head of tVar is "first element" then
 		put "success" into tResult
 	end if
@@ -67,12 +67,12 @@ Returns the first element of the list <Target> without modifying <Target>.
 is equivalent to 
 ```	tVar[1]```
 	
-References: com.livecode.list.SingletonArrElementOf
+References: IndexedElementOfList(operator)
 
 Tags: Lists
 */
 
-syntax HeadOf is prefix operator with precedence 1
+syntax HeadOfList is prefix operator with precedence 1
     "the" "head" "of" <Target: Expression>
 begin
     MCListEvalHeadOf(Target, output)
@@ -100,12 +100,12 @@ Returns the first element of the list <Target> without modifying <Target>.
 is equivalent to 
 ```	tVar[-1]```
 
-References: com.livecode.list.SingletonArrElementOf
+References: IndexedElementOfList(operator)
 
 Tags: Lists
 */
 
-syntax TailOf is prefix operator with precedence 1
+syntax TailOfList is prefix operator with precedence 1
     "the" "tail" "of" <Target: Expression>
 begin
     MCListEvalTailOf(Target, output)
@@ -185,7 +185,7 @@ output:			The number of elements in the list <Target>.
 Example:
 	variable tVar as list
 	put [1,2,3,4,5] into tVar
-	variable tNum as integer
+	variable tNum as number
 	put the number of elements of tVar into tNum -- tNum is 5
 	
 Description:
@@ -194,7 +194,7 @@ Returns the number of elements in the list.
 Tags: Lists
 */
 
-syntax CountElementsOf is prefix operator with precedence 1
+syntax CountElementsOfList is prefix operator with precedence 1
     "the" "number" "of" "elements" "in" <Target: Expression>
 begin
     MCListEvalNumberOfElementsIn(Target, output)
@@ -212,7 +212,7 @@ Example:
 	variable tList as list
 	put [ "a", "b", "c", "d" ] into tList
 	
-	variable tIsIn as bool
+	variable tIsIn as boolean
 	put "a" is in tList into tIsIn -- tIsIn contains true
 
 Description:
@@ -221,7 +221,7 @@ Description:
 Tags: Lists
 */
                 
-syntax IsInElements is neutral binary operator with precedence 1
+syntax IsInList is neutral binary operator with precedence 1
     <Needle: Expression> "is" "in" <Target: Expression>
 begin
     MCListEvalIsAmongTheElementsOf(Needle, Target, output)
@@ -237,7 +237,7 @@ Example:
 	variable tList as list
 	put [ "a", "b", "c", "d" ] into tList
 	
-	variable tContains as bool
+	variable tContains as boolean
 	
 	// put tList contains tList[1] into tContains -- error: tList[1] is not a list 
 	
@@ -251,7 +251,7 @@ Description:
 Tags: Lists
 */
                 
-syntax ContainsElements is neutral binary operator with precedence 1
+syntax ListContainsElements is neutral binary operator with precedence 1
     <Target: Expression> "contains" <Needle: Expression>
 begin
     MCListEvalContainsElements(Target, Needle, output)
@@ -269,7 +269,7 @@ Example:
 	variable tVar as list
 	put [1, 2, 3, 4, 5] into tVar
 	
-	variable tBegins as bool
+	variable tBegins as boolean
 	// put tList begins with tList[1] into tBegins -- error: tList[1] is not a list 
 	
 	put tList begins with [1, 2] into tBegins -- tBegins is true
@@ -282,7 +282,7 @@ Description:
 Tags: Lists
 */
 
-syntax BeginsWithList is neutral binary operator with precedence 1
+syntax ListBeginsWithList is neutral binary operator with precedence 1
     <Source: Expression> "begins" "with" <Prefix: Expression>
 begin
     MCListEvalBeginsWith(Source, Prefix, output)
@@ -298,7 +298,7 @@ Example:
 	variable tVar as list
 	put [1, 2, 3, 4, 5] into tVar
 	
-	variable tEnds as bool
+	variable tEnds as boolean
 	// put tList ends with tList[5] into tEnds -- error: tList[5] is not a list 
 	
 	put tList ends with element 1 to 5 of tList into tEnds -- tEnds is true
@@ -311,7 +311,7 @@ Description:
 Tags: Lists
 */
 
-syntax EndsWithList is neutral binary operator with precedence 1
+syntax ListEndsWithList is neutral binary operator with precedence 1
     <Source: Expression> "ends" "with" <Suffix: Expression>
 begin
     MCListEvalEndsWith(Source, Suffix, output)
@@ -330,7 +330,7 @@ output:     Returns true if <Left> is identical to <Right>.
 Example:
 	variable tList as list
 	put ["a", "b", "c"] into tList
-	variable tIs as bool
+	variable tIs as boolean
 	
 	put tList is ["A", "b", "c"] into tIs -- tIs is false
 	put tList is element 1 to -1 of tList into tIs -- tIs is true
@@ -342,7 +342,7 @@ In particular, this means that comparison between string elements is case sensit
 Tags: Lists
 */
 
-syntax IsEqualTo is neutral binary operator with precedence 5
+syntax ListIsList is neutral binary operator with precedence 5
     <Left: Expression> "is" <Right: Expression>
 begin
     MCListEvalIsEqualTo(Left, Right, output)
@@ -359,7 +359,7 @@ output:     Returns true if <Left> is not identical to <Right>.
 Example:
 	variable tList as list
 	put ["a", "b", "c"] into tList
-	variable tIsNot as bool
+	variable tIsNot as boolean
 	
 	put tList is not ["A", "b", "c"] into tIsNot -- tIs is true
 	
@@ -370,7 +370,7 @@ In particular, this means that comparison between string elements is case sensit
 Tags: Lists
 */
 
-syntax IsNotEqualTo is neutral binary operator with precedence 5
+syntax ListIsNotList is neutral binary operator with precedence 5
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCListEvalIsNotEqualTo(Left, Right, output)
@@ -400,7 +400,7 @@ Either locates the element container at the given index for use as the target co
 Tags: Lists
 */
 
-syntax SingletonElementOf is prefix operator with precedence 1
+syntax SingletonElementOfList is prefix operator with precedence 1
 	"element" <Index: Expression> "of" <Target: Expression>
 begin
     MCListFetchElementOf(Index, Target, output)
@@ -430,7 +430,7 @@ Either locates the element container at the given index for use as the target co
 Tags: Lists
 */
 
-syntax SingletonArrElementOf is postfix operator with precedence 1
+syntax IndexedElementOfList is postfix operator with precedence 1
     <Target: Expression> "[" <Index: Expression> "]"
 begin
     MCListFetchIndexOf(Target, Index, output)
@@ -461,7 +461,7 @@ Either locates the element containers between the given indices for use as a lis
 Tags: Lists
 */
 
-syntax RangeElementsOf is prefix operator with precedence 1
+syntax RangeElementsOfList is prefix operator with precedence 1
 	"element" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
     MCListFetchElementRangeOf(Start, Finish, Target, output)
@@ -483,7 +483,7 @@ Example:
 	variable tVar as list
 	put the empty list into tVar
 	
-	variable tCount as int
+	variable tCount as number
 	put 1 into tCount
 	repeat 3 times
 		push tCount onto tVar
@@ -508,7 +508,7 @@ Use the splice syntax to insert the elements of one list into another list.
 Tags: Lists
 */
 
-syntax SpliceIntoRange is statement
+syntax SpliceIntoRangeOfList is statement
     "splice" <Source: Expression> "into" "element" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
 begin
     MCListSpliceIntoElementRangeOf(Source, Start, Finish, Target)
@@ -526,7 +526,7 @@ Example:
 	variable tVar as list
 	put the empty list into tVar
 	
-	variable tCount as int
+	variable tCount as number
 	put 1 into tCount
 	repeat 3 times
 		push tCount onto tVar
@@ -549,7 +549,7 @@ Use the splice syntax to insert the elements of one list into another list.
 Tags: Lists
 */
 
-syntax SpliceIntoElement is statement
+syntax SpliceIntoElementOfList is statement
     "splice" <Source: Expression> "into" "element" <Index: Expression> "of" <Target: Expression>
 begin
     MCListSpliceIntoElementOf(Source, Index, Target)
@@ -566,7 +566,7 @@ Example:
 	variable tVar as list
 	put the empty list into tVar
 	
-	variable tCount as int
+	variable tCount as number
 	put 2 into tCount
 	repeat 3 times
 		push tCount onto tVar
@@ -589,7 +589,7 @@ Use the splice syntax to insert the elements of one list into another list.
 Tags: Lists
 */
 
-syntax SpliceBeforeElement is statement
+syntax SpliceBeforeElementOfList is statement
     "splice" <Source: Expression> "before" "element" <Index: Expression> "of" <Target: Expression>
 begin	
 	//MCListSpliceBefore(Source, Target)
@@ -607,7 +607,7 @@ Example:
 	variable tVar as list
 	put the empty list into tVar
 	
-	variable tCount as int
+	variable tCount as number
 	put 2 into tCount
 	repeat 3 times
 		push tCount onto tVar
@@ -630,7 +630,7 @@ Use the splice syntax to insert the elements of one list into another list.
 Tags: Lists
 */
 
-syntax SpliceAfterElement is statement
+syntax SpliceAfterElementOfList is statement
     "splice" <Source: Expression> "after" "element" <Index: Expression> "of" <Target: Expression>
 begin
 	//MCListSpliceAfter(Source, Target)
@@ -645,7 +645,7 @@ Summary: 		Designates the list of zero elements
 
 Example:
 	variable tVar as list
-	variable tCount as int
+	variable tCount as number
 	put the empty list into tVar
 	put the number of elements in tVar into tCount -- tCount is 0
 	
@@ -686,7 +686,7 @@ The repeat for each form is more efficient that the alternative formation using 
 Tags: Lists
 */
 
-syntax RepeatForEachElement is iterator
+syntax RepeatForEachElementOfList is iterator
     "element" <Iterand: Expression>
 begin
     MCListRepeatForEachElement(iterator, Iterand, container)

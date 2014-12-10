@@ -67,7 +67,7 @@ public handler test()
     return tResultString
 end handler
 
-public handler testLog(in pModule as string, in pTest as string, in pResult as bool, inout xResults as list)
+public handler testLog(in pModule as string, in pTest as string, in pResult as boolean, inout xResults as list)
     variable tStringResult as string
     if pResult then
         put "SUCCESS" into tStringResult
@@ -78,7 +78,7 @@ public handler testLog(in pModule as string, in pTest as string, in pResult as b
     push tStringResult && ":" && pModule & "_" & pTest onto xResults
 end handler
 
-public handler boolWithSideEffect(in tResult as bool, inout tVar as string) as bool
+public handler boolWithSideEffect(in tResult as boolean, inout tVar as string) as boolean
 	put "a" into tVar
 	return tResult
 end handler
@@ -90,21 +90,15 @@ end handler
 public handler testMathFoundation(inout xResults as list)
 
 	variable tNum as number
-	variable tNumReal as double
 	put -5.5 into tNum
-	put 5.5 into tNumReal
 	
 	testLog("MathFoundation", "FloorNum", the floor of tNum is -6, xResults)
-	testLog("MathFoundation", "FloorReal", the floor of tNumReal is 5, xResults)
 	
 	testLog("MathFoundation", "CeilNum", the ceiling of tNum is -5, xResults)
-	testLog("MathFoundation", "CeilReal", the ceiling of tNumReal is 6, xResults)
 	
 	round tNum
-	round tNumReal
 	
 	testLog("MathFoundation", "RoundToNearestNum", tNum is -6, xResults)
-	testLog("MathFoundation", "RoundToNearestReal", tNumReal is 6, xResults)
 	
 	testLog("MathFoundation", "RoundedToNearest", the rounded of 4.5 is 5, xResults)
 
@@ -456,8 +450,8 @@ end handler
 
 public handler testArithmetic(inout xResults as list)
 
-	variable tInt as int
-	variable tReal as double
+	variable tInt as number
+	variable tReal as number
 	variable tNumber
 	
 	put 10 into tInt
@@ -492,18 +486,18 @@ public handler testArithmetic(inout xResults as list)
 	divide tReal by 40
 	divide tNumber by 40
 	
-	testLog("Arithmetic", "DivideInt", tInt is 0, xResults)
+	testLog("Arithmetic", "DivideInt", tInt is 0.5, xResults)
 	testLog("Arithmetic", "DivideReal", tReal is 0.5, xResults)
 	testLog("Arithmetic", "DivideNum", tNumber is 0.5, xResults)
 	
-	variable tLeft as int
-	variable tRight as int
+	variable tLeft as integer
+	variable tRight as integer
 	
 	put 10 into tLeft
 	put 2 into tRight
 	
-	variable tLeftReal as double
-	variable tRightReal as double
+	variable tLeftReal as number
+	variable tRightReal as number
 	
 	put 10 into tLeftReal
 	put 2 into tRightReal
@@ -524,7 +518,7 @@ public handler testArithmetic(inout xResults as list)
 	testLog("Arithmetic", "DivideReal", tLeftReal / tRightReal is 5, xResults)
 	testLog("Arithmetic", "DivideNum", 10 / 2 is 5, xResults)
 	
-	variable tOne as int
+	variable tOne as integer
 	put 1 into tOne
 	
 	testLog("Arithmetic", "ModInt", tLeft mod (tRight + tOne) is 1, xResults)

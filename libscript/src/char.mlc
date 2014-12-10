@@ -38,7 +38,7 @@ output:				The number of chars in <Target>.
 
 Example: 			
 
-	variable tVar as int
+	variable tVar as number
 	variable tSource as string
 	put "hello" into tString
 	put the number of chars in tString into tVar
@@ -146,11 +146,11 @@ Target: 			An expression which evaluates to a string.
 output:             Returns the offset of <Needle> in <Target>.
 
 Example:
-	variable tVar as int
+	variable tVar as number
 	put the first offset of chars "art" in "cartoon" into tVar -- tVar contains 2
 
 Example:
-	variable tVar as int
+	variable tVar as number
 	variable tFilePath as string
 	put "/Users/user/Documents/file.txt" into tFilePath
 	put the last offset of "/" in tFilePath into tVar
@@ -180,7 +180,7 @@ After:              An expression which evaluates to a valid integer index of Ta
 output:             Returns the offset of <Needle> after <After> in <Target>.
 
 Example:
-	variable tVar as int
+	variable tVar as number
 	put the offset of chars "nse" after 4 in "nonsense" into tVar -- tVar contains 2
 	
 Description:
@@ -205,8 +205,8 @@ After:              An expression which evaluates to a valid integer index of Ta
 output:             Returns the offset of <Needle> before <Before> in <Target>.
 
 Example:
-	variable tVar as int
-	variable tLastDot as int
+	variable tVar as number
+	variable tLastDot as number
 	variable tAddress as string
 	variable tTLD as string
 	put "http://www.livecode.com/index.html" into tAddress
@@ -271,7 +271,7 @@ Description:
 Tags: Strings
 */
 
-syntax BeginsWithString is neutral binary operator with precedence 1
+syntax StringBeginsWithString is neutral binary operator with precedence 1
     <Source: Expression> "begins" "with" <Prefix: Expression>
 begin
     MCCharEvalBeginsWith(Source, Prefix, output)
@@ -299,7 +299,7 @@ Description:
 Tags: Strings
 */
 
-syntax EndsWithString is neutral binary operator with precedence 1
+syntax StringEndsWithString is neutral binary operator with precedence 1
     <Source: Expression> "ends" "with" <Suffix: Expression>
 begin
     MCCharEvalEndsWith(Source, Suffix, output)

@@ -86,7 +86,7 @@ output:     Returns true if the result of evaluating <Left> is the same as that 
 
 */
 
-syntax IsEqualTo is neutral binary operator with precedence 5
+syntax DataIsData is neutral binary operator with precedence 5
     <Left: Expression> "is" <Right: Expression>
 begin
     MCBinaryEvalIsEqualTo(Left, Right, output)
@@ -102,7 +102,7 @@ output:     Returns false if the result of evaluating <Left> is the same as that
 
 */
 
-syntax IsNotEqualTo is neutral binary operator with precedence 5
+syntax DataIsNotData is neutral binary operator with precedence 5
     <Left: Expression> "is not" <Right: Expression>
 begin
     MCBinaryEvalIsNotEqualTo(Left, Right, output)
@@ -118,7 +118,7 @@ output:     Returns true if <Left> and <Right> are not equal, and the first byte
             corresponding byte in <Left> is of greater value.
 */
 
-syntax LessThan is neutral binary operator with precedence 3
+syntax DataIsLessThanData is neutral binary operator with precedence 3
     <Left: Expression> "<" <Right: Expression>
 begin
     MCBinaryEvalIsLessThan(Left, Right, output)
@@ -134,7 +134,7 @@ output:     Returns true if <Left> and <Right> are not equal, and the first byte
             corresponding byte in <Right> is of greater value.
 */
 
-syntax GreaterThan is neutral binary operator with precedence 3
+syntax DataIsGreaterThanData is neutral binary operator with precedence 3
     <Left: Expression> ">" <Right: Expression>
 begin
     MCBinaryEvalIsGreaterThan(Left, Right, output)

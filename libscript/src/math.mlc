@@ -61,7 +61,6 @@ Tags: Math
 syntax PowOperator is left binary operator with precedence 2
     <Left: Expression> "^" <Right: Expression>
 begin
-    MCMathEvalRealToPowerOfReal(Left, Right, output)
     MCMathEvalNumberToPowerOfNumber(Left, Right, output)
 end syntax
 
@@ -81,7 +80,6 @@ Tags: Math
 syntax SinOperator is prefix operator with precedence 1
     "the" "sin" "of" <Operand: Expression>
 begin
-    MCMathEvalSinReal(Operand, output)
     MCMathEvalSinNumber(Operand, output)
 end syntax
 
@@ -99,7 +97,6 @@ Tags: Math
 syntax CosOperator is prefix operator with precedence 1
     "the" "cos" "of" <Operand: Expression>
 begin
-    MCMathEvalCosReal(Operand, output)
     MCMathEvalCosNumber(Operand, output)
 end syntax
 
@@ -117,7 +114,6 @@ Tags: Math
 syntax TanOperator is prefix operator with precedence 1
     "the" "tan" "of" <Operand: Expression>
 begin
-    MCMathEvalTanReal(Operand, output)
     MCMathEvalTanNumber(Operand, output)
 end syntax
 
@@ -137,7 +133,6 @@ Tags: Math
 syntax Base10LogOperator is prefix operator with precedence 1
     "the" "log" "of" <Operand: Expression>
 begin
-    MCMathEvalBase10LogReal(Operand, output)
     MCMathEvalBase10LogNumber(Operand, output)
 end syntax
 
@@ -158,7 +153,6 @@ Tags: Math
 syntax BaseELogOperator is prefix operator with precedence 1
     "the" "natural" "log" "of" <Operand: Expression>
 begin
-    MCMathEvalNaturalLogReal(Operand, output)
     MCMathEvalNaturalLogNumber(Operand, output)
 end syntax
 
@@ -178,7 +172,6 @@ Tags: Math
 syntax ExpOperator is prefix operator with precedence 1
     "the" "exp" "of" <Operand: Expression>
 begin
-    MCMathEvalExpReal(Operand, output)
     MCMathEvalExpNumber(Operand, output)
 end syntax
 
@@ -203,8 +196,6 @@ Tags: Math
 syntax TruncOperator is prefix operator with precedence 1
     "the" "trunc" "of" <Operand: Expression>
 begin
-    MCMathEvalTruncInteger(Operand, output)
-    MCMathEvalTruncReal(Operand, output)
     MCMathEvalTruncNumber(Operand, output)
 end syntax
 
@@ -226,8 +217,6 @@ Tags: Math
 syntax AbsOperator is prefix operator with precedence 1
     "the" "abs" "of" <Operand: Expression>
 begin
-    MCMathEvalAbsInteger(Operand, output)
-    MCMathEvalAbsReal(Operand, output)
     MCMathEvalAbsNumber(Operand, output)
 end syntax
 
@@ -265,8 +254,6 @@ Tags: Math
 syntax MinOperator is prefix operator with precedence 1
     "the" "min" "of" <Left: Expression> "and" <Right: Expression>
 begin
-    MCMathEvalMinInteger(Left, Right, output)
-    MCMathEvalMinReal(Left, Right, output)
     MCMathEvalMinNumber(Left, Right, output)
 end syntax
 
@@ -282,8 +269,6 @@ Tags: Math
 syntax MaxOperator is prefix operator with precedence 1
     "the" "max" "of" <Left: Expression> "and" <Right: Expression>
 begin
-    MCMathEvalMaxInteger(Left, Right, output)
-    MCMathEvalMaxReal(Left, Right, output)
     MCMathEvalMaxNumber(Left, Right, output)
 end syntax
 

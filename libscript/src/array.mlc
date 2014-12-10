@@ -52,7 +52,7 @@ References: com.livecode.sort
 Tags: Arrays
 */
 
-syntax KeysOf is prefix operator with precedence 2
+syntax KeysOfArray is prefix operator with precedence 2
     "the" "keys" "of" <Target: Expression>
 begin
     MCArrayEvalKeysOf(Target, output)
@@ -84,7 +84,7 @@ References: com.livecode.sort.library
 Tags: Arrays
 */
 
-syntax ElementsOf is prefix operator with precedence 2
+syntax ElementsOfArray is prefix operator with precedence 2
     "the" "elements" "of" <Target: Expression>
 begin
     MCArrayEvalElementsOf(Target, output)
@@ -103,7 +103,7 @@ Example:
 	put 2 into tArray["key2"]
 	put 3 into tArray["key3"]
 	
-	variable tVar as integer
+	variable tVar as number
 	put the number of elements in tArray into tVar -- tVar contains 3
 	
 Description:
@@ -112,7 +112,7 @@ The number of elements in tArray returns the number of key-value pairs stored in
 Tags: Arrays
 */
 
-syntax CountElementsOf is prefix operator with precedence 1
+syntax CountElementsOfArray is prefix operator with precedence 1
     "the" "number" "of" "elements" "in" <Target: Expression>
 begin
     MCArrayEvalNumberOfElementsIn(Target, output)
@@ -130,7 +130,7 @@ Example:
 	variable tArray as array
 	put "value" into tArray["key"]
 	
-	variable tIsAmong as bool
+	variable tIsAmong as boolean
 	put "key" is among the keys of tArray into tIsAmong -- tIsAmong is true
 
 Description:
@@ -145,7 +145,7 @@ References: com.livecode.list.IsInElements
 Tags: Arrays
 */
                 
-syntax AmongKeysOf is neutral binary operator with precedence 1
+syntax AmongKeysOfArray is neutral binary operator with precedence 1
     <Needle: Expression> ( "is not" <IsNot=true> | "is" <IsNot=false> | <IsNot=false> ) "among" "the" "keys" "of" <Target: Expression>
 begin
 //  EvalIsAmongTheKeysOfCaseSensitive(Needle, IsNot, Target, output)
@@ -164,7 +164,7 @@ Example:
 	variable tArray as array
 	put "value" into tArray["key"]
 	
-	variable tIsAmong as bool
+	variable tIsAmong as boolean
 	put "value" is among the elements of tArray into tIsAmong -- tIsAmong is true
 
 Description:
@@ -176,7 +176,7 @@ Tags: Arrays
 
 */
                 
-syntax AmongElementsOf is neutral binary operator with precedence 1
+syntax AmongElementsOfArray is neutral binary operator with precedence 1
     <Needle: Expression> ( "is not" <IsNot=true> | "is" <IsNot=false> | <IsNot=false> ) "among" "the" "elements" "of" <Target: Expression>
 begin
     MCArrayEvalIsAmongTheElementsOf(Needle, IsNot, Target, output)
@@ -204,7 +204,7 @@ Either locates the element container with the given key for use as the target co
 Tags: Arrays
 */
 
-syntax SingletonElementOf is postfix operator with precedence 1
+syntax SingletonElementOfArray is postfix operator with precedence 1
 	<Target: Expression> "[" <Key: Expression> "]"
 begin
     MCArrayFetchElementOfCaseless(Target, Key, output)
@@ -219,7 +219,7 @@ Summary: 		Designates the array with zero elements
 
 Example:
 	variable tVar as array
-	variable tCount as int
+	variable tCount as number
 	put the empty array into tVar
 	put the number of elements in tVar into tCount -- tCount is 0
 	
@@ -264,7 +264,7 @@ Use repeat for each element to iterate over the elements of an array in no parti
 Tags: Arrays
 */
 
-syntax RepeatForEachElement is iterator
+syntax RepeatForEachElementInArray is iterator
     "element" <Iterand: Expression>
 begin
     MCArrayRepeatForEachElement(iterator, Iterand, container)
@@ -289,7 +289,7 @@ Example:
         put tKey after tString
     end repeat
 
-    variable tBool as bool
+    variable tBool as boolean
     put tString contains "abc" into tBool -- tBool is true
         
 Description:
