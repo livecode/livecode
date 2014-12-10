@@ -655,8 +655,8 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t adv
 	uint16_t t_dst_alpha_src_red, t_dst_alpha_src_green, t_dst_alpha_src_blue, t_dst_alpha_src_alpha, t_dst_alpha_dst_alpha;
 	uint16_t t_dst_alpha_dst_red, t_dst_alpha_dst_green, t_dst_alpha_dst_blue;
 	uint16_t t_src_alpha_dst_red, t_src_alpha_dst_green, t_src_alpha_dst_blue, t_src_alpha_dst_alpha;
-	uint16_t t_inv_dst_alpha_src_red, t_inv_dst_alpha_src_green, t_inv_dst_alpha_src_blue, t_inv_dst_alpha_src_alpha;
-	uint16_t t_inv_src_alpha_dst_red, t_inv_src_alpha_dst_green, t_inv_src_alpha_dst_blue, t_inv_src_alpha_dst_alpha;
+	uint16_t t_inv_dst_alpha_src_red, t_inv_dst_alpha_src_green, t_inv_dst_alpha_src_blue, t_inv_dst_alpha_src_alpha ATTRIBUTE_UNUSED;
+	uint16_t t_inv_src_alpha_dst_red, t_inv_src_alpha_dst_green, t_inv_src_alpha_dst_blue, t_inv_src_alpha_dst_alpha ATTRIBUTE_UNUSED;
 	uint32_t t_dst_alpha_dst_alpha_src_alpha;
 	uint8_t t_red, t_green, t_blue, t_alpha;
 

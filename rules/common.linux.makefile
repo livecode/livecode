@@ -44,7 +44,7 @@ GLOBAL_LIBS=\
 	$(SOLUTION_DIR)/prebuilt/lib/linux-$(ARCH)
 
 ifeq ($(MODE),debug)
-	DEFINES+=_DEBUG
+	DEFINES+=_DEBUG HAVE_VALGRIND
 else
 	DEFINES+=_RELEASE NDEBUG
 endif
@@ -53,7 +53,9 @@ DEFINES += __LITTLE_ENDIAN__
 
 PACKAGE_INCLUDES=$(shell pkg-config --silence-errors --cflags-only-I $(GLOBAL_PACKAGES))
 
-FALLBACK_INCLUDES=-I$(SOLUTION_DIR)/thirdparty/headers/linux/include -I$(SOLUTION_DIR)/thirdparty/headers/linux/include/cairo
+# MDW-2014-11-20 [[ fix_valgrind_path]]
+# avoids the libcairo compilation error
+FALLBACK_INCLUDES=-I$(SOLUTION_DIR)/thirdparty/headers/linux/include -I$(SOLUTION_DIR)/thirdparty/headers/linux/include/cairo -I$(SOLUTION_DIR)/thirdparty/headers/linux/include/valgrind
 
 INCLUDES=$(CUSTOM_INCLUDES) $(TYPE_INCLUDES) $(GLOBAL_INCLUDES)
 
