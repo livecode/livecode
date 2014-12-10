@@ -179,7 +179,7 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
             return true;
         
         // Now check to see if the target is one of the source's supertypes.
-        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = t_supertype -> foreign . descriptor . basetype)
+        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = __MCTypeInfoResolve(t_supertype) -> foreign . descriptor . basetype)
             if (target . named_type == t_supertype)
                 return true;
         
