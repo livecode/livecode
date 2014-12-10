@@ -46,6 +46,13 @@ Summary:    Returns the boolean-logical value of the expression 'not <Operand>'
 Operand:    An expression that evaluates to a boolean value
 output:     If the operand expression evaluates to true, the value of the expression is false. 
             Otherwise, the value of the expression is true.
+
+Example:
+	variable tBool is bool
+	put not not not not true into tBool is true
+	
+Tags: Logic
+	
 */
 
 syntax LogicNot is prefix operator with precedence 3
@@ -64,6 +71,11 @@ Right:      An expression which evaluates to a bool.
 
 output:     Returns true if <Left> evaluates to the same value as <Right>.
 
+Example:
+	variable tBool is bool
+	put true is true into tBool -- tBool is true
+	
+Tags: Logic
 */
 
 syntax IsEqualTo is neutral binary operator with precedence 5
@@ -80,6 +92,11 @@ Right:      An expression which evaluates to a bool.
 
 output:     Returns true if <Left> evaluates to the opposite boolean value as <Right>.
 
+Example:
+	variable tBool is bool
+	put true is not false into tBool -- tBool is true
+	
+Tags: Logic
 */
 
 syntax IsNotEqualTo is neutral binary operator with precedence 5
