@@ -1647,7 +1647,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 r_value . type = kMCExecValueTypeNameRef;
             }
         }
-            break;
+        break;
             
         case kMCPropertyTypeColor:
         {
@@ -2337,6 +2337,27 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             ((void(*)(MCExecContext&, void *, MCExecValue&))prop -> getter)(ctxt, mark, r_value);
         }
             break;
+         
+        case kMCPropertyTypeProperItemsOfString:
+        case kMCPropertyTypeProperLinesOfString:
+        {
+            MCAutoProperListRef t_proper_list;
+            ((void(*)(MCExecContext&, void *, MCProperListRef&))prop -> getter)(ctxt, mark, &t_proper_list);
+            if (!ctxt . HasError())
+            {
+                MCListRef t_list;
+                /* UNCHECKED */ MCListCreateMutable(prop -> type == kMCPropertyTypeProperLinesOfString ? '\n' : ',', t_list);
+                uintptr_t t_iterator;
+                t_iterator = 0;
+                MCValueRef t_element;
+                while(MCProperListIterate(*t_proper_list, t_iterator, t_element))
+                    /* UNCHECKED */ MCListAppend(t_list, t_element);
+                
+                r_value . type = kMCExecValueTypeStringRef;
+                /* UNCHECKED */ MCListCopyAsStringAndRelease(t_list, r_value . stringref_value);
+            }
+        }
+        break;
             
         default:
             ctxt . Unimplemented();

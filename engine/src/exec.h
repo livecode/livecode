@@ -242,11 +242,13 @@ enum MCPropertyType
     kMCPropertyTypeOptionalColor,
 	kMCPropertyTypeOptionalEnum,
 	kMCPropertyTypeName,
+    kMCPropertyTypeProperLinesOfString,
     kMCPropertyTypeLinesOfString,
     kMCPropertyTypeLinesOfUInt,
     kMCPropertyTypeLinesOfUIntX2,
     kMCPropertyTypeLinesOfDouble,
     kMCPropertyTypeLinesOfPoint,
+    kMCPropertyTypeProperItemsOfString,
     kMCPropertyTypeItemsOfUInt,
     kMCPropertyTypeItemsOfString,
     kMCPropertyTypeMixedBool,
@@ -485,6 +487,8 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkGetOptionalEnumType(mth) MCPropertyThunkImp(mth, intenum_t*&)
 #define MCPropertyThunkGetArray(mth) MCPropertyThunkImp(mth, MCArrayRef&)
 #define MCPropertyThunkGetName(mth) MCPropertyThunkImp(mth, MCNameRef&)
+#define MCPropertyThunkGetProperLinesOfString(mth) MCPropertyThunkImp(mth, MCProperListRef&)
+#define MCPropertyThunkGetProperItemsOfString(mth) MCPropertyThunkImp(mth, MCProperListRef&)
 #define MCPropertyThunkGetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t&,uinteger_t*&)
 #define MCPropertyThunkGetLinesOfString(mth) MCPropertyListThunkImp(mth,uindex_t&,MCStringRef*&)
 #define MCPropertyThunkGetLinesOfDouble(mth) MCPropertyListThunkImp(mth,uindex_t&,double*&)
