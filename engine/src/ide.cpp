@@ -1786,7 +1786,7 @@ void MCIdeScriptColourize::exec_ctxt(MCExecContext &ctxt)
 ///////////////////////////////////////////////////////////////////////////////
 
 MCIdeScriptReplace::MCIdeScriptReplace(void)
-	: f_target(NULL), f_start(NULL), f_end(NULL), f_text(NULL), f_type(CT_UNDEFINED)
+	: f_type(CT_UNDEFINED), f_start(NULL), f_end(NULL), f_target(NULL), f_text(NULL)
 {
 }
 
