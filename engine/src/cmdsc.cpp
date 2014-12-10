@@ -1667,7 +1667,7 @@ void MCDelete::exec_ctxt(MCExecContext& ctxt)
             MCEngineExecDeleteVariableChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 
         // Release the text stored from evalvarchunk
-        for (int i = 0; i < t_chunks . Size(); ++i)
+        for (uindex_t i = 0; i < t_chunks . Size(); ++i)
         {
             MCValueRelease(t_chunks[i] . mark . text);
         }
@@ -1704,7 +1704,7 @@ void MCDelete::exec_ctxt(MCExecContext& ctxt)
         if (!t_return)
             MCInterfaceExecDeleteObjectChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 
-        for (int i = 0; i < t_chunks . Size(); ++i)
+        for (uindex_t i = 0; i < t_chunks . Size(); ++i)
             MCValueRelease(t_chunks[i] . mark . text);
 	}
     else if (targets != nil)
