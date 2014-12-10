@@ -2352,6 +2352,13 @@ bool MCCanvasGradientCheckStopOrder(MCProperListRef p_ramp)
 	return true;
 }
 
+//////////
+
+integer_t MCCanvasGradientReturnType(integer_t p_type)
+{
+	return p_type;
+}
+
 // Constructor
 
 void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCanvasGradientRef &r_gradient)
